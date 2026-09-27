@@ -347,22 +347,22 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get appTorWouldNotWake => 'tor ließ sich nicht wecken';
+  String get appTorWouldNotWake => 'Tor ließ sich nicht wecken';
 
   @override
-  String get appCheckStarted => 'gestartet';
+  String get appCheckStarted => 'Gestartet';
 
   @override
-  String get appTorNotReadyIn => 'tor nach 75s nicht bereit';
+  String get appTorNotReadyIn => 'Tor nach 75s nicht bereit';
 
   @override
-  String get appOk => 'ok';
+  String get appOk => 'OK';
 
   @override
-  String get appOkNoRelayBegan => 'ok, kein Relais antwortete';
+  String get appOkNoRelayBegan => 'OK, kein Relais antwortete';
 
   @override
-  String get appOkCapped => 'ok, gekappt';
+  String get appOkCapped => 'OK, gekappt';
 
   @override
   String appSBy(Object how, int secs, String why) {
@@ -717,7 +717,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get miuiAutostartCouldnTOpenIt =>
-      'ließ sich nicht öffnen. such in den Handy-Einstellungen nach Autostart';
+      'Ließ sich nicht öffnen. Such in den Handy-Einstellungen nach Autostart';
 
   @override
   String get notificationsNewEncryptedMessagesFrom =>
@@ -1079,7 +1079,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get bridgesNoise => 'Rauschen';
 
   @override
-  String get bridgesGood => 'gut';
+  String get bridgesGood => 'Gut';
 
   @override
   String get bridgesMakesTorTrafficLook =>
@@ -1095,7 +1095,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get bridgesWhateverTheLineSays => 'Was die Zeile sagt';
 
   @override
-  String get bridgesDepends => 'je nachdem';
+  String get bridgesDepends => 'Je nachdem';
 
   @override
   String get bridgesGotABridgeLine =>
@@ -2073,7 +2073,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get contactDeleted => 'Gelöscht';
 
   @override
-  String get contactToday => 'heute';
+  String get contactToday => 'Heute';
 
   @override
   String contactD(int count) {
@@ -2115,11 +2115,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get contactChatting => 'Chat seit';
 
   @override
-  String get contactNothingSharedYet => 'noch nichts geteilt';
+  String get contactNothingSharedYet => 'Noch nichts geteilt';
 
   @override
   String contactSharedMedia(Object count) {
-    return 'geteilte Medien · $count';
+    return 'Geteilte Medien · $count';
   }
 
   @override
@@ -2135,7 +2135,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get donateMonero => 'Monero';
 
   @override
-  String get donateManualNoBadge => 'manuell · kein Abzeichen';
+  String get donateManualNoBadge => 'Manuell · kein Abzeichen';
 
   @override
   String get donateSolana => 'Solana';
@@ -2311,7 +2311,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get gettingMessagesAlwaysOn => 'Immer an';
 
   @override
-  String get gettingMessagesMostPrivate => 'am privatesten';
+  String get gettingMessagesMostPrivate => 'Am privatesten';
 
   @override
   String get gettingMessagesMessagesArriveInstantlyNothing =>
@@ -2321,7 +2321,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get gettingMessagesCheckIns => 'Check-ins';
 
   @override
-  String get gettingMessagesLightest => 'am sparsamsten';
+  String get gettingMessagesLightest => 'Am sparsamsten';
 
   @override
   String get gettingMessagesKryfoLooksForMessages =>
@@ -2785,10 +2785,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get handleChecking => 'Prüfe…';
 
   @override
-  String get handleAvailable => '✓ verfügbar';
+  String get handleAvailable => '✓ Verfügbar';
 
   @override
-  String get handleAlreadyTaken => 'schon vergeben';
+  String get handleAlreadyTaken => 'Schon vergeben';
 
   @override
   String get handleWhatAHandleDoes => 'Was ein Benutzername bewirkt';
@@ -4454,10 +4454,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Von dieser Person erreicht dich nichts mehr. Ihre Anfrage und deren Nachrichten werden gelöscht.';
 
   @override
-  String get requestsBlocked => 'blockiert';
+  String get requestsBlocked => 'Blockiert';
 
   @override
-  String get requestsDeleted => 'gelöscht';
+  String get requestsDeleted => 'Gelöscht';
 
   @override
   String get requestsRequests => 'Anfragen';
@@ -4771,7 +4771,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get savedLongPressAnyMessage =>
-      'halte eine Nachricht gedrückt und tippe auf Speichern, um sie hier aufzubewahren.';
+      'Halte eine Nachricht gedrückt und tippe auf Speichern, um sie hier aufzubewahren.';
 
   @override
   String get savedViewInChat => 'Im Chat ansehen';
@@ -5215,10 +5215,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Nichts hier verlässt das Handy. Es ist derselbe Zustand, nach dem die Engine entscheidet, was sie tut.';
 
   @override
-  String get transportStayingAlive => 'bleibt aktiv';
+  String get transportStayingAlive => 'Bleibt aktiv';
 
   @override
-  String get transportCanSend => 'kann senden';
+  String get transportCanSend => 'Kann senden';
 
   @override
   String get commonYes => 'Ja';
@@ -5233,7 +5233,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get transportOffline => 'Offline';
 
   @override
-  String get transportQueuedToSend => 'wartet aufs Senden';
+  String get transportQueuedToSend => 'Wartet aufs Senden';
 
   @override
   String get transportOnionPublished => 'Onion veröffentlicht';
@@ -5269,13 +5269,13 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get transportOk => 'ok';
+  String get transportOk => 'OK';
 
   @override
   String get transportRelaySubscriptions => 'Relais-Abonnements';
 
   @override
-  String get transportLastSent => 'zuletzt gesendet';
+  String get transportLastSent => 'Zuletzt gesendet';
 
   @override
   String get transportNever => 'Nie';
@@ -5286,7 +5286,7 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get transportLastReceived => 'zuletzt empfangen';
+  String get transportLastReceived => 'Zuletzt empfangen';
 
   @override
   String transportSAgo2(Object rx) {
@@ -5301,22 +5301,22 @@ class AppLocalizationsDe extends AppLocalizations {
   String get transportSendAnythingWaitingNow => 'Alles Wartende jetzt senden';
 
   @override
-  String get transportOff => 'aus';
+  String get transportOff => 'Aus';
 
   @override
-  String get transportStarting => 'startet';
+  String get transportStarting => 'Startet';
 
   @override
-  String get transportBootstrapped => 'hochgefahren';
+  String get transportBootstrapped => 'Hochgefahren';
 
   @override
   String get transportPublishingAddress => 'Veröffentliche Adresse';
 
   @override
-  String get transportReachable => 'erreichbar';
+  String get transportReachable => 'Erreichbar';
 
   @override
-  String get transportOurRelayOnion => 'unser Relais (Onion)';
+  String get transportOurRelayOnion => 'Unser Relais (Onion)';
 
   @override
   String get transportNever2 => 'nie';
@@ -5374,10 +5374,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get transportBatteryExemption => 'Akku-Ausnahme';
 
   @override
-  String get transportUnknown => 'unbekannt';
+  String get transportUnknown => 'Unbekannt';
 
   @override
-  String get transportExempt => 'ausgenommen';
+  String get transportExempt => 'Ausgenommen';
 
   @override
   String get transportNotExemptTapTo => 'Keine Ausnahme · zum Beheben tippen';
@@ -5386,7 +5386,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get transportProcessUp => 'Prozess läuft';
 
   @override
-  String get transportLastStop => 'letzter Stopp';
+  String get transportLastStop => 'Letzter Stopp';
 
   @override
   String transportEngine(Object mb, Object mb2) {
@@ -5397,13 +5397,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get transportLastRelayArrival => 'Letzter Relais-Eingang';
 
   @override
-  String get transportLastCheckIn => 'letzter Check-in';
+  String get transportLastCheckIn => 'Letzter Check-in';
 
   @override
   String get transportNoneYet => 'Noch keiner';
 
   @override
-  String get transportLastTorReconnect => 'letzte tor-Neuverbindung';
+  String get transportLastTorReconnect => 'Letzte Tor-Neuverbindung';
 
   @override
   String get transportCatchUpByRelay => 'Nachholen pro Relais';
@@ -6453,10 +6453,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chatAccept => 'Annehmen';
 
   @override
-  String get bridgesConnecting => 'verbinde';
+  String get bridgesConnecting => 'Verbinde';
 
   @override
-  String get restoreMade => 'erstellt';
+  String get bridgesSavedTag => 'Gespeichert';
+
+  @override
+  String get restoreMade => 'Erstellt';
 
   @override
   String get restoreContacts => 'Kontakte';
@@ -6468,7 +6471,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get restoreAttachments => 'Anhänge';
 
   @override
-  String get restoreHiddenChats => 'versteckte Chats';
+  String get restoreHiddenChats => 'Versteckte Chats';
 
   @override
   String get restoreHiddenFollow =>
@@ -6525,10 +6528,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get transportContacts => 'Kontakte';
 
   @override
-  String get transportKnown => 'bekannt';
+  String get transportKnown => 'Bekannt';
 
   @override
-  String get transportListening => 'lauscht';
+  String get transportListening => 'Lauscht';
 
   @override
   String get transportMemory => 'Speicher';
@@ -6667,7 +6670,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get photoKnowsLookedFor => 'Gesucht nach';
 
   @override
-  String get photoKnowsNotInIt => 'nicht drin';
+  String get photoKnowsNotInIt => 'Nicht drin';
 
   @override
   String get languageNameEn => 'Englisch';

@@ -378,13 +378,13 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get appTorWouldNotWake => 'لم يستيقظ tor';
+  String get appTorWouldNotWake => 'لم يستيقظ Tor';
 
   @override
   String get appCheckStarted => 'بدأ';
 
   @override
-  String get appTorNotReadyIn => 'لم يجهز tor خلال ٧٥ ث';
+  String get appTorNotReadyIn => 'لم يجهز Tor خلال ٧٥ ث';
 
   @override
   String get appOk => 'تم';
@@ -5422,7 +5422,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get transportNoneYet => 'لا شيء بعد';
 
   @override
-  String get transportLastTorReconnect => 'آخر إعادة اتصال لـ tor';
+  String get transportLastTorReconnect => 'آخر إعادة اتصال لـ Tor';
 
   @override
   String get transportCatchUpByRelay => 'اللحاق عبر مُرحِّل';
@@ -6494,6 +6494,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get bridgesConnecting => 'جارٍ الاتصال';
+
+  @override
+  String get bridgesSavedTag => 'محفوظ';
 
   @override
   String get restoreMade => 'أُنشئت';

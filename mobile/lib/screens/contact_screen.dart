@@ -216,8 +216,6 @@ class _ContactScreenState extends State<ContactScreen> {
       appBar: AppBar(
         backgroundColor: HaloColors.surface,
         elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
         iconTheme: IconThemeData(color: HaloColors.text2),
         // the name comes up here once the big one has scrolled away
         title: HeadTitle(controller: _scroll, title: _name, from: 170),

@@ -127,9 +127,6 @@ class _ProfileScreenState extends State<ProfileScreen>
       appBar: AppBar(
         backgroundColor: HaloColors.surface,
         elevation: 0,
-        // the page slides under a plain bar, never a tinted one
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
         iconTheme: IconThemeData(color: HaloColors.text2),
         title: Text(
           l10n.profileProfile,

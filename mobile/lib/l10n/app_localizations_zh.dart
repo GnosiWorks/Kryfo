@@ -335,13 +335,13 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get appTorWouldNotWake => 'tor 无法唤醒';
+  String get appTorWouldNotWake => 'Tor 无法唤醒';
 
   @override
   String get appCheckStarted => '已开始';
 
   @override
-  String get appTorNotReadyIn => 'tor 75 秒内未就绪';
+  String get appTorNotReadyIn => 'Tor 75 秒内未就绪';
 
   @override
   String get appOk => '正常';
@@ -5135,7 +5135,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get transportNoneYet => '暂无';
 
   @override
-  String get transportLastTorReconnect => '上次 tor 重连';
+  String get transportLastTorReconnect => '上次 Tor 重连';
 
   @override
   String get transportCatchUpByRelay => '按中继补收';
@@ -6136,6 +6136,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get bridgesConnecting => '正在连接';
+
+  @override
+  String get bridgesSavedTag => '已保存';
 
   @override
   String get restoreMade => '制作于';
@@ -7231,13 +7234,13 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get appTorWouldNotWake => 'tor 無法喚醒';
+  String get appTorWouldNotWake => 'Tor 無法喚醒';
 
   @override
   String get appCheckStarted => '已開始';
 
   @override
-  String get appTorNotReadyIn => 'tor 75 秒內未就緒';
+  String get appTorNotReadyIn => 'Tor 75 秒內未就緒';
 
   @override
   String get appOk => '正常';
@@ -11984,7 +11987,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String transportMb(Object b) {
-    return '$b mb';
+    return '$b MB';
   }
 
   @override
@@ -12031,7 +12034,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get transportNoneYet => '還沒有';
 
   @override
-  String get transportLastTorReconnect => '上次 tor 重新連線';
+  String get transportLastTorReconnect => '上次 Tor 重新連線';
 
   @override
   String get transportCatchUpByRelay => '各中繼補收';
@@ -13032,6 +13035,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get bridgesConnecting => '連線中';
+
+  @override
+  String get bridgesSavedTag => '已儲存';
 
   @override
   String get restoreMade => '建立於';

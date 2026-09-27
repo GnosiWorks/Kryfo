@@ -4,16 +4,19 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../meta/meta_reader.dart';
 import '../theme.dart';
 import '../tools/cleaner.dart';
 import '../tools/tools_bridge.dart';
+import '../widgets/ease_size.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/stroke_icon.dart';
+import '../widgets/swap.dart';
 import '../widgets/tool_parts.dart';
 import '../l10n/l10n.dart';
 import '../widgets/halo_bar.dart';
@@ -64,10 +67,8 @@ class CleanScreen extends StatefulWidget {
 
 class _CleanScreenState extends State<CleanScreen>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _reveal = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 1500),
-  );
+  // made with the page, so a page left before a result has one to dispose
+  late final AnimationController _reveal;
   StreamSubscription<CopyProgress>? _sub;
   CopyProgress? _progress;
   CleanResult? _result;
@@ -86,6 +87,10 @@ class _CleanScreenState extends State<CleanScreen>
   @override
   void initState() {
     super.initState();
+    _reveal = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
     _sub = ToolsBridge.instance.progress.listen((p) {
       if (mounted && _copying) setState(() => _progress = p);
     });
@@ -124,7 +129,10 @@ class _CleanScreenState extends State<CleanScreen>
         if (_still) {
           _reveal.value = 1;
         } else {
-          _reveal.forward();
+          // felt once, as the tick lands
+          _reveal.forward().then((_) {
+            if (!_gone) HapticFeedback.lightImpact();
+          });
         }
       }
     } on ToolsFailure catch (e) {
@@ -190,20 +198,8 @@ class _CleanScreenState extends State<CleanScreen>
     }
   }
 
-  void _say(String text) {
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(
-        SnackBar(
-          backgroundColor: HaloColors.surface3,
-          behavior: SnackBarBehavior.floating,
-          content: Text(
-            text,
-            style: HaloType.sans(size: 13.5, color: HaloColors.text),
-          ),
-        ),
-      );
-  }
+  // the house toast, as the other tools say things
+  void _say(String text) => showHaloToast(context, text);
 
   @override
   Widget build(BuildContext context) {
@@ -216,59 +212,95 @@ class _CleanScreenState extends State<CleanScreen>
           children: [
             ToolBar(title: l10n.cleanCleanCopy),
             Expanded(
-              child: _failure != null
-                  ? _Failed(failure: _failure!)
-                  : r == null
-                  ? _Working(
-                      copying: _copying,
-                      progress: _progress,
-                      size: widget.file.size,
-                    )
-                  : _Done(result: r, reveal: _reveal),
-            ),
-            if (r != null)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 22),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    ToolWideButton(
-                      icon: _share,
-                      label: l10n.cleanShareCleanCopy,
-                      filled: true,
-                      onTap: _busy ? null : _shareIt,
-                    ),
-                    const SizedBox(height: 10),
-                    ToolWideButton(
-                      icon: _down,
-                      label: l10n.cleanSaveToGallery,
-                      filled: false,
-                      onTap: _busy ? null : _saveIt,
-                    ),
-                  ],
-                ),
-              )
-            else if (_failure != null)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 22),
-                child: ToolWideButton(
-                  label: l10n.commonBack,
-                  filled: false,
-                  onTap: () => Navigator.of(context).maybePop(),
-                ),
-              )
-            else if (_copying)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 22),
-                child: ToolWideButton(
-                  label: l10n.commonStop,
-                  filled: false,
-                  onTap: () => Navigator.of(context).maybePop(),
+              // the work fades into the clean copy, or what went wrong
+              child: FadeSwap(
+                child: KeyedSubtree(
+                  key: ValueKey(
+                    _failure != null
+                        ? 'failed'
+                        : r == null
+                        ? 'work'
+                        : 'done',
+                  ),
+                  child: _failure != null
+                      ? _Failed(failure: _failure!)
+                      : r == null
+                      ? _Working(
+                          copying: _copying,
+                          progress: _progress,
+                          size: widget.file.size,
+                        )
+                      : _Done(result: r, reveal: _reveal),
                 ),
               ),
+            ),
+            EaseSize(
+              child: FadeSwap(
+                child: KeyedSubtree(
+                  key: ValueKey(
+                    r != null
+                        ? 'done'
+                        : _failure != null
+                        ? 'failed'
+                        : _copying
+                        ? 'copy'
+                        : 'none',
+                  ),
+                  child: _buttons(r),
+                ),
+              ),
+            ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buttons(CleanResult? r) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (r != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 22),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ToolWideButton(
+                  icon: _share,
+                  label: l10n.cleanShareCleanCopy,
+                  filled: true,
+                  onTap: _busy ? null : _shareIt,
+                ),
+                const SizedBox(height: 10),
+                ToolWideButton(
+                  icon: _down,
+                  label: l10n.cleanSaveToGallery,
+                  filled: false,
+                  onTap: _busy ? null : _saveIt,
+                ),
+              ],
+            ),
+          )
+        else if (_failure != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 22),
+            child: ToolWideButton(
+              label: l10n.commonBack,
+              filled: false,
+              onTap: () => Navigator.of(context).maybePop(),
+            ),
+          )
+        else if (_copying)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 22),
+            child: ToolWideButton(
+              label: l10n.commonStop,
+              filled: false,
+              onTap: () => Navigator.of(context).maybePop(),
+            ),
+          ),
+      ],
     );
   }
 }
@@ -290,9 +322,13 @@ class _Working extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              copying ? l10n.cleanReadingTheFile : l10n.cleanCleaning,
-              style: HaloType.serif(size: 24, color: HaloColors.text),
+            RiseSwap(
+              alignment: Alignment.center,
+              child: Text(
+                copying ? l10n.cleanReadingTheFile : l10n.cleanCleaning,
+                key: ValueKey(copying),
+                style: HaloType.serif(size: 24, color: HaloColors.text),
+              ),
             ),
             const SizedBox(height: 8),
             Text(

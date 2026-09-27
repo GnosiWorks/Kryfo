@@ -362,22 +362,22 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get appTorWouldNotWake => 'tor не прокинувся';
+  String get appTorWouldNotWake => 'Tor не прокинувся';
 
   @override
-  String get appCheckStarted => 'почалася';
+  String get appCheckStarted => 'Почалася';
 
   @override
-  String get appTorNotReadyIn => 'tor не готовий за 75 с';
+  String get appTorNotReadyIn => 'Tor не готовий за 75 с';
 
   @override
-  String get appOk => 'ок';
+  String get appOk => 'ОК';
 
   @override
-  String get appOkNoRelayBegan => 'ок, ретранслятори мовчать';
+  String get appOkNoRelayBegan => 'ОК, ретранслятори мовчать';
 
   @override
-  String get appOkCapped => 'ок, перервано';
+  String get appOkCapped => 'ОК, перервано';
 
   @override
   String appSBy(Object how, int secs, String why) {
@@ -732,7 +732,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get miuiAutostartCouldnTOpenIt =>
-      'не вдалося відкрити. пошукай автозапуск у налаштуваннях телефону';
+      'Не вдалося відкрити. Пошукай автозапуск у налаштуваннях телефону';
 
   @override
   String get notificationsNewEncryptedMessagesFrom =>
@@ -1096,10 +1096,10 @@ class AppLocalizationsUk extends AppLocalizations {
   String get bridgesFromTheTorProject => 'Від проєкту tor';
 
   @override
-  String get bridgesNoise => 'шум';
+  String get bridgesNoise => 'Шум';
 
   @override
-  String get bridgesGood => 'добра';
+  String get bridgesGood => 'Добра';
 
   @override
   String get bridgesMakesTorTrafficLook =>
@@ -1115,7 +1115,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get bridgesWhateverTheLineSays => 'Як указано в рядку';
 
   @override
-  String get bridgesDepends => 'залежить';
+  String get bridgesDepends => 'Залежить';
 
   @override
   String get bridgesGotABridgeLine =>
@@ -1177,7 +1177,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get bridgesLooksLike => 'Схоже на';
 
   @override
-  String get bridgesSpeed => 'швидкість';
+  String get bridgesSpeed => 'Швидкість';
 
   @override
   String get bridgesGetBridges => 'Отримати мости';
@@ -2095,7 +2095,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get contactDeleted => 'Видалено';
 
   @override
-  String get contactToday => 'сьогодні';
+  String get contactToday => 'Сьогодні';
 
   @override
   String contactD(int count) {
@@ -2143,11 +2143,11 @@ class AppLocalizationsUk extends AppLocalizations {
   String get contactChatting => 'Спілкуєтеся';
 
   @override
-  String get contactNothingSharedYet => 'спільних медіа ще немає';
+  String get contactNothingSharedYet => 'Спільних медіа ще немає';
 
   @override
   String contactSharedMedia(Object count) {
-    return 'спільні медіа · $count';
+    return 'Спільні медіа · $count';
   }
 
   @override
@@ -2157,13 +2157,13 @@ class AppLocalizationsUk extends AppLocalizations {
   String get donateText => '₿';
 
   @override
-  String get donateBadgeUnlocks => 'відкриває значок';
+  String get donateBadgeUnlocks => 'Відкриває значок';
 
   @override
   String get donateMonero => 'Monero';
 
   @override
-  String get donateManualNoBadge => 'вручну · без значка';
+  String get donateManualNoBadge => 'Вручну · без значка';
 
   @override
   String get donateSolana => 'Solana';
@@ -2339,7 +2339,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get gettingMessagesAlwaysOn => 'Завжди на зв’язку';
 
   @override
-  String get gettingMessagesMostPrivate => 'найприватніше';
+  String get gettingMessagesMostPrivate => 'Найприватніше';
 
   @override
   String get gettingMessagesMessagesArriveInstantlyNothing =>
@@ -2349,7 +2349,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get gettingMessagesCheckIns => 'Перевірки';
 
   @override
-  String get gettingMessagesLightest => 'найощадливіше';
+  String get gettingMessagesLightest => 'Найощадливіше';
 
   @override
   String get gettingMessagesKryfoLooksForMessages =>
@@ -2814,10 +2814,10 @@ class AppLocalizationsUk extends AppLocalizations {
   String get handleChecking => 'Перевіряємо…';
 
   @override
-  String get handleAvailable => '✓ вільне';
+  String get handleAvailable => '✓ Вільне';
 
   @override
-  String get handleAlreadyTaken => 'уже зайняте';
+  String get handleAlreadyTaken => 'Уже зайняте';
 
   @override
   String get handleWhatAHandleDoes => 'Що дає ім’я користувача';
@@ -4479,10 +4479,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Від цієї людини до тебе більше нічого не дійде. Її запит і повідомлення зникнуть.';
 
   @override
-  String get requestsBlocked => 'заблоковано';
+  String get requestsBlocked => 'Заблоковано';
 
   @override
-  String get requestsDeleted => 'видалено';
+  String get requestsDeleted => 'Видалено';
 
   @override
   String get requestsRequests => 'Запити';
@@ -4782,10 +4782,10 @@ class AppLocalizationsUk extends AppLocalizations {
   String get roomLinkCopyRoomLink => 'Копіювати посилання';
 
   @override
-  String get savedVoiceNote => 'голосове';
+  String get savedVoiceNote => 'Голосове';
 
   @override
-  String get savedPhoto => 'фото';
+  String get savedPhoto => 'Фото';
 
   @override
   String get savedSaved => 'Збережені';
@@ -4795,7 +4795,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get savedLongPressAnyMessage =>
-      'затисни будь-яке повідомлення й натисни «Зберегти», щоб воно було тут.';
+      'Затисни будь-яке повідомлення й натисни «Зберегти», щоб воно було тут.';
 
   @override
   String get savedViewInChat => 'Показати в чаті';
@@ -5237,10 +5237,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Ніщо звідси не залишає телефон. Це той самий стан, за яким рушій вирішує, що робити.';
 
   @override
-  String get transportStayingAlive => 'підтримка зв’язку';
+  String get transportStayingAlive => 'Підтримка зв’язку';
 
   @override
-  String get transportCanSend => 'може надсилати';
+  String get transportCanSend => 'Може надсилати';
 
   @override
   String get commonYes => 'Так';
@@ -5255,7 +5255,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get transportOffline => 'Офлайн';
 
   @override
-  String get transportQueuedToSend => 'у черзі на надсилання';
+  String get transportQueuedToSend => 'У черзі на надсилання';
 
   @override
   String get transportOnionPublished => 'Onion опубліковано';
@@ -5293,13 +5293,13 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get transportOk => 'ок';
+  String get transportOk => 'ОК';
 
   @override
   String get transportRelaySubscriptions => 'Підписки на ретранслятори';
 
   @override
-  String get transportLastSent => 'надіслано';
+  String get transportLastSent => 'Надіслано';
 
   @override
   String get transportNever => 'Ніколи';
@@ -5310,7 +5310,7 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get transportLastReceived => 'отримано';
+  String get transportLastReceived => 'Отримано';
 
   @override
   String transportSAgo2(Object rx) {
@@ -5325,22 +5325,22 @@ class AppLocalizationsUk extends AppLocalizations {
   String get transportSendAnythingWaitingNow => 'Надіслати все з черги зараз';
 
   @override
-  String get transportOff => 'вимкнено';
+  String get transportOff => 'Вимкнено';
 
   @override
-  String get transportStarting => 'запускається';
+  String get transportStarting => 'Запускається';
 
   @override
-  String get transportBootstrapped => 'запущено';
+  String get transportBootstrapped => 'Запущено';
 
   @override
   String get transportPublishingAddress => 'Публікуємо адресу';
 
   @override
-  String get transportReachable => 'досяжний';
+  String get transportReachable => 'Досяжний';
 
   @override
-  String get transportOurRelayOnion => 'наш ретранслятор (onion)';
+  String get transportOurRelayOnion => 'Наш ретранслятор (onion)';
 
   @override
   String get transportNever2 => 'ніколи';
@@ -5398,19 +5398,19 @@ class AppLocalizationsUk extends AppLocalizations {
   String get transportBatteryExemption => 'Виняток для батареї';
 
   @override
-  String get transportUnknown => 'невідомо';
+  String get transportUnknown => 'Невідомо';
 
   @override
-  String get transportExempt => 'є виняток';
+  String get transportExempt => 'Є виняток';
 
   @override
   String get transportNotExemptTapTo => 'Без винятку · виправити';
 
   @override
-  String get transportProcessUp => 'процес працює';
+  String get transportProcessUp => 'Процес працює';
 
   @override
-  String get transportLastStop => 'остання зупинка';
+  String get transportLastStop => 'Остання зупинка';
 
   @override
   String transportEngine(Object mb, Object mb2) {
@@ -5421,19 +5421,19 @@ class AppLocalizationsUk extends AppLocalizations {
   String get transportLastRelayArrival => 'Останнє від ретранслятора';
 
   @override
-  String get transportLastCheckIn => 'остання перевірка';
+  String get transportLastCheckIn => 'Остання перевірка';
 
   @override
   String get transportNoneYet => 'Ще жодної';
 
   @override
-  String get transportLastTorReconnect => 'останнє перепідключення tor';
+  String get transportLastTorReconnect => 'Останнє перепідключення Tor';
 
   @override
-  String get transportCatchUpByRelay => 'наздоганяння';
+  String get transportCatchUpByRelay => 'Наздоганяння';
 
   @override
-  String get transportControlPort => 'порт керування';
+  String get transportControlPort => 'Порт керування';
 
   @override
   String transportDialsTimeouts(int dials, int timeouts) {
@@ -5464,7 +5464,7 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get transportJobRuns => 'запуски завдання';
+  String get transportJobRuns => 'Запуски завдання';
 
   @override
   String transportLast(Object jobRuns, Object ago) {
@@ -6469,7 +6469,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get seenIntroductions => 'Знайомства';
 
   @override
-  String get donateAddress => 'адреса';
+  String get donateAddress => 'Адреса';
 
   @override
   String get donateCopy => 'Копіювати';
@@ -6496,22 +6496,25 @@ class AppLocalizationsUk extends AppLocalizations {
   String get chatAccept => 'Прийняти';
 
   @override
-  String get bridgesConnecting => 'підключення';
+  String get bridgesConnecting => 'Підключення';
 
   @override
-  String get restoreMade => 'створено';
+  String get bridgesSavedTag => 'Збережено';
 
   @override
-  String get restoreContacts => 'контакти';
+  String get restoreMade => 'Створено';
 
   @override
-  String get restoreMessages => 'повідомлення';
+  String get restoreContacts => 'Контакти';
 
   @override
-  String get restoreAttachments => 'вкладення';
+  String get restoreMessages => 'Повідомлення';
 
   @override
-  String get restoreHiddenChats => 'приховані чати';
+  String get restoreAttachments => 'Вкладення';
+
+  @override
+  String get restoreHiddenChats => 'Приховані чати';
 
   @override
   String get restoreHiddenFollow =>
@@ -6547,34 +6550,34 @@ class AppLocalizationsUk extends AppLocalizations {
   String get avatarPickerTurn => 'Поворот';
 
   @override
-  String get transportStatus => 'стан';
+  String get transportStatus => 'Стан';
 
   @override
-  String get transportBootstrap => 'запуск';
+  String get transportBootstrap => 'Запуск';
 
   @override
-  String get transportNetwork => 'мережа';
+  String get transportNetwork => 'Мережа';
 
   @override
-  String get transportConnectivity => 'зв’язок';
+  String get transportConnectivity => 'Зв’язок';
 
   @override
-  String get transportRelays => 'ретранслятори';
+  String get transportRelays => 'Ретранслятори';
 
   @override
-  String get transportTraffic => 'трафік';
+  String get transportTraffic => 'Трафік';
 
   @override
-  String get transportContacts => 'контакти';
+  String get transportContacts => 'Контакти';
 
   @override
-  String get transportKnown => 'відомі';
+  String get transportKnown => 'Відомі';
 
   @override
-  String get transportListening => 'слухає';
+  String get transportListening => 'Слухає';
 
   @override
-  String get transportMemory => 'пам’ять';
+  String get transportMemory => 'Пам’ять';
 
   @override
   String get settingsConnected => 'Підключено';
@@ -6712,7 +6715,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get photoKnowsLookedFor => 'Що шукали';
 
   @override
-  String get photoKnowsNotInIt => 'немає';
+  String get photoKnowsNotInIt => 'Немає';
 
   @override
   String get languageNameEn => 'Англійська';

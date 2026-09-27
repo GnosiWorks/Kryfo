@@ -9,11 +9,14 @@ import 'package:flutter/services.dart';
 import '../dlog.dart';
 import '../lock_state.dart';
 import '../theme.dart';
+import '../widgets/ease_size.dart';
 import '../widgets/halo_sheet.dart';
+import '../widgets/halo_switch.dart';
 import '../widgets/motion.dart' show haloRoute;
 import '../widgets/press_scale.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/stagger_in.dart';
+import '../widgets/swap.dart';
 import 'hide_picker.dart';
 import 'lock_setup_screen.dart';
 import 'pin_flow_screen.dart';
@@ -358,10 +361,7 @@ class _Advanced extends StatelessWidget {
               ),
             ),
           ),
-          AnimatedSize(
-            duration: d,
-            curve: Curves.easeOutCubic,
-            alignment: Alignment.topCenter,
+          EaseSize(
             child: open
                 ? Column(
                     children: [
@@ -434,13 +434,17 @@ class _ExtraRow extends StatelessWidget {
                             ),
                           ),
                         ),
-                        Text(
-                          state,
-                          style: HaloType.mono(
-                            size: 10,
-                            color: stateColor,
-                            weight: FontWeight.w600,
-                            letter: 0.1,
+                        RiseSwap(
+                          alignment: AlignmentDirectional.centerEnd,
+                          child: Text(
+                            state,
+                            key: ValueKey(state),
+                            style: HaloType.mono(
+                              size: 10,
+                              color: stateColor,
+                              weight: FontWeight.w600,
+                              letter: 0.1,
+                            ),
                           ),
                         ),
                       ],
@@ -592,13 +596,17 @@ class _PinCard extends StatelessWidget {
                   style: HaloType.serif(size: 20, color: HaloColors.text),
                 ),
               ),
-              Text(
-                state,
-                style: HaloType.mono(
-                  size: 10,
-                  color: stateColor,
-                  weight: FontWeight.w600,
-                  letter: 0.1,
+              RiseSwap(
+                alignment: AlignmentDirectional.centerEnd,
+                child: Text(
+                  state,
+                  key: ValueKey(state),
+                  style: HaloType.mono(
+                    size: 10,
+                    color: stateColor,
+                    weight: FontWeight.w600,
+                    letter: 0.1,
+                  ),
                 ),
               ),
             ],
@@ -617,9 +625,10 @@ class _PinCard extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: GestureDetector(
+                child: PressScale(
+                  scale: 0.97,
+                  haptic: false,
                   onTap: onPrimary,
-                  behavior: HitTestBehavior.opaque,
                   child: Container(
                     height: 42,
                     alignment: Alignment.center,
@@ -640,9 +649,10 @@ class _PinCard extends StatelessWidget {
               ),
               if (secondary != null) ...[
                 const SizedBox(width: 8),
-                GestureDetector(
+                PressScale(
+                  scale: 0.97,
+                  haptic: false,
                   onTap: onSecondary,
-                  behavior: HitTestBehavior.opaque,
                   child: Container(
                     height: 42,
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -666,6 +676,8 @@ class _PinCard extends StatelessWidget {
   }
 }
 
+// an on or off row is a switch, as in settings: the row and the switch
+// each flip it
 class _Toggle extends StatelessWidget {
   final String label;
   final bool on;
@@ -685,14 +697,7 @@ class _Toggle extends StatelessWidget {
             style: HaloType.sans(size: 13.5, color: HaloColors.text),
           ),
         ),
-        Text(
-          on ? l10n.commonOn : l10n.commonOff,
-          style: HaloType.mono(
-            size: 10.5,
-            color: on ? HaloColors.green : HaloColors.text3,
-            weight: FontWeight.w600,
-          ),
-        ),
+        HaloSwitch(value: on, onChanged: (_) => onTap()),
       ],
     ),
   );

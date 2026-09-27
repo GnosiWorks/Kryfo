@@ -338,22 +338,22 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get appTorWouldNotWake => 'tor tidak mau bangun';
+  String get appTorWouldNotWake => 'Tor tidak mau bangun';
 
   @override
-  String get appCheckStarted => 'dimulai';
+  String get appCheckStarted => 'Dimulai';
 
   @override
-  String get appTorNotReadyIn => 'tor belum siap dalam 75 dtk';
+  String get appTorNotReadyIn => 'Tor belum siap dalam 75 dtk';
 
   @override
-  String get appOk => 'ok';
+  String get appOk => 'OK';
 
   @override
-  String get appOkNoRelayBegan => 'ok, tak ada relay mulai';
+  String get appOkNoRelayBegan => 'OK, tak ada relay mulai';
 
   @override
-  String get appOkCapped => 'ok, dibatasi';
+  String get appOkCapped => 'OK, dibatasi';
 
   @override
   String appSBy(Object how, int secs, String why) {
@@ -708,7 +708,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get miuiAutostartCouldnTOpenIt =>
-      'tidak bisa dibuka. cari mulai otomatis di pengaturan ponsel';
+      'Tidak bisa dibuka. Cari mulai otomatis di pengaturan ponsel';
 
   @override
   String get notificationsNewEncryptedMessagesFrom =>
@@ -1061,10 +1061,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get bridgesFromTheTorProject => 'Dari tor project';
 
   @override
-  String get bridgesNoise => 'derau';
+  String get bridgesNoise => 'Derau';
 
   @override
-  String get bridgesGood => 'bagus';
+  String get bridgesGood => 'Bagus';
 
   @override
   String get bridgesMakesTorTrafficLook =>
@@ -1080,7 +1080,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get bridgesWhateverTheLineSays => 'Sesuai isi barisnya';
 
   @override
-  String get bridgesDepends => 'tergantung';
+  String get bridgesDepends => 'Tergantung';
 
   @override
   String get bridgesGotABridgeLine =>
@@ -1139,7 +1139,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get bridgesLooksLike => 'Terlihat seperti';
 
   @override
-  String get bridgesSpeed => 'kecepatan';
+  String get bridgesSpeed => 'Kecepatan';
 
   @override
   String get bridgesGetBridges => 'Dapatkan jembatan';
@@ -2052,7 +2052,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get contactDeleted => 'Dihapus';
 
   @override
-  String get contactToday => 'hari ini';
+  String get contactToday => 'Hari ini';
 
   @override
   String contactD(int count) {
@@ -2091,11 +2091,11 @@ class AppLocalizationsId extends AppLocalizations {
   String get contactChatting => 'Mengobrol';
 
   @override
-  String get contactNothingSharedYet => 'belum ada yang dibagikan';
+  String get contactNothingSharedYet => 'Belum ada yang dibagikan';
 
   @override
   String contactSharedMedia(Object count) {
-    return 'media dibagikan · $count';
+    return 'Media dibagikan · $count';
   }
 
   @override
@@ -2105,13 +2105,13 @@ class AppLocalizationsId extends AppLocalizations {
   String get donateText => '₿';
 
   @override
-  String get donateBadgeUnlocks => 'lencana terbuka';
+  String get donateBadgeUnlocks => 'Lencana terbuka';
 
   @override
   String get donateMonero => 'Monero';
 
   @override
-  String get donateManualNoBadge => 'manual · tanpa lencana';
+  String get donateManualNoBadge => 'Manual · tanpa lencana';
 
   @override
   String get donateSolana => 'Solana';
@@ -2286,7 +2286,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get gettingMessagesAlwaysOn => 'Selalu aktif';
 
   @override
-  String get gettingMessagesMostPrivate => 'paling privat';
+  String get gettingMessagesMostPrivate => 'Paling privat';
 
   @override
   String get gettingMessagesMessagesArriveInstantlyNothing =>
@@ -2296,7 +2296,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get gettingMessagesCheckIns => 'Cek berkala';
 
   @override
-  String get gettingMessagesLightest => 'paling ringan';
+  String get gettingMessagesLightest => 'Paling ringan';
 
   @override
   String get gettingMessagesKryfoLooksForMessages =>
@@ -2755,10 +2755,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get handleChecking => 'Mengecek…';
 
   @override
-  String get handleAvailable => '✓ tersedia';
+  String get handleAvailable => '✓ Tersedia';
 
   @override
-  String get handleAlreadyTaken => 'sudah dipakai';
+  String get handleAlreadyTaken => 'Sudah dipakai';
 
   @override
   String get handleWhatAHandleDoes => 'Guna nama pengguna';
@@ -4404,10 +4404,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Tidak ada lagi darinya yang sampai ke kamu. Permintaan dan pesan-pesannya dihapus.';
 
   @override
-  String get requestsBlocked => 'diblokir';
+  String get requestsBlocked => 'Diblokir';
 
   @override
-  String get requestsDeleted => 'dihapus';
+  String get requestsDeleted => 'Dihapus';
 
   @override
   String get requestsRequests => 'Permintaan';
@@ -4703,10 +4703,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get roomLinkCopyRoomLink => 'Salin tautan ruang';
 
   @override
-  String get savedVoiceNote => 'pesan suara';
+  String get savedVoiceNote => 'Pesan suara';
 
   @override
-  String get savedPhoto => 'foto';
+  String get savedPhoto => 'Foto';
 
   @override
   String get savedSaved => 'Tersimpan';
@@ -4716,7 +4716,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get savedLongPressAnyMessage =>
-      'tekan lama pesan mana pun lalu ketuk simpan untuk menyimpannya di sini.';
+      'Tekan lama pesan mana pun lalu ketuk simpan untuk menyimpannya di sini.';
 
   @override
   String get savedViewInChat => 'Lihat di obrolan';
@@ -5161,10 +5161,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Tidak ada yang di sini keluar dari ponsel. Ini keadaan yang sama yang dipakai mesin untuk memutuskan apa yang harus dilakukan.';
 
   @override
-  String get transportStayingAlive => 'tetap hidup';
+  String get transportStayingAlive => 'Tetap hidup';
 
   @override
-  String get transportCanSend => 'bisa mengirim';
+  String get transportCanSend => 'Bisa mengirim';
 
   @override
   String get commonYes => 'Ya';
@@ -5179,7 +5179,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get transportOffline => 'Offline';
 
   @override
-  String get transportQueuedToSend => 'antre untuk dikirim';
+  String get transportQueuedToSend => 'Antre untuk dikirim';
 
   @override
   String get transportOnionPublished => 'Onion diterbitkan';
@@ -5214,13 +5214,13 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get transportOk => 'ok';
+  String get transportOk => 'OK';
 
   @override
   String get transportRelaySubscriptions => 'Langganan relay';
 
   @override
-  String get transportLastSent => 'terakhir kirim';
+  String get transportLastSent => 'Terakhir kirim';
 
   @override
   String get transportNever => 'Tidak pernah';
@@ -5231,7 +5231,7 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get transportLastReceived => 'terakhir terima';
+  String get transportLastReceived => 'Terakhir terima';
 
   @override
   String transportSAgo2(Object rx) {
@@ -5247,22 +5247,22 @@ class AppLocalizationsId extends AppLocalizations {
       'Kirim semua yang menunggu, sekarang';
 
   @override
-  String get transportOff => 'mati';
+  String get transportOff => 'Mati';
 
   @override
-  String get transportStarting => 'memulai';
+  String get transportStarting => 'Memulai';
 
   @override
-  String get transportBootstrapped => 'bootstrap selesai';
+  String get transportBootstrapped => 'Bootstrap selesai';
 
   @override
   String get transportPublishingAddress => 'Menerbitkan alamat';
 
   @override
-  String get transportReachable => 'terjangkau';
+  String get transportReachable => 'Terjangkau';
 
   @override
-  String get transportOurRelayOnion => 'relay kami (onion)';
+  String get transportOurRelayOnion => 'Relay kami (onion)';
 
   @override
   String get transportNever2 => 'tidak pernah';
@@ -5302,7 +5302,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String transportMb(Object b) {
-    return '$b mb';
+    return '$b MB';
   }
 
   @override
@@ -5320,19 +5320,19 @@ class AppLocalizationsId extends AppLocalizations {
   String get transportBatteryExemption => 'Pengecualian baterai';
 
   @override
-  String get transportUnknown => 'tidak diketahui';
+  String get transportUnknown => 'Tidak diketahui';
 
   @override
-  String get transportExempt => 'dikecualikan';
+  String get transportExempt => 'Dikecualikan';
 
   @override
   String get transportNotExemptTapTo => 'Tak dikecualikan · ketuk perbaiki';
 
   @override
-  String get transportProcessUp => 'proses hidup';
+  String get transportProcessUp => 'Proses hidup';
 
   @override
-  String get transportLastStop => 'berhenti terakhir';
+  String get transportLastStop => 'Berhenti terakhir';
 
   @override
   String transportEngine(Object mb, Object mb2) {
@@ -5343,19 +5343,19 @@ class AppLocalizationsId extends AppLocalizations {
   String get transportLastRelayArrival => 'Terakhir masuk dari relay';
 
   @override
-  String get transportLastCheckIn => 'pengecekan terakhir';
+  String get transportLastCheckIn => 'Pengecekan terakhir';
 
   @override
   String get transportNoneYet => 'Belum ada';
 
   @override
-  String get transportLastTorReconnect => 'sambung ulang tor terakhir';
+  String get transportLastTorReconnect => 'Sambung ulang Tor terakhir';
 
   @override
-  String get transportCatchUpByRelay => 'susulan lewat relay';
+  String get transportCatchUpByRelay => 'Susulan lewat relay';
 
   @override
-  String get transportControlPort => 'port kontrol';
+  String get transportControlPort => 'Port kontrol';
 
   @override
   String transportDialsTimeouts(int dials, int timeouts) {
@@ -5380,7 +5380,7 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get transportJobRuns => 'tugas berjalan';
+  String get transportJobRuns => 'Tugas berjalan';
 
   @override
   String transportLast(Object jobRuns, Object ago) {
@@ -6357,7 +6357,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get seenIntroductions => 'Perkenalan';
 
   @override
-  String get donateAddress => 'alamat';
+  String get donateAddress => 'Alamat';
 
   @override
   String get donateCopy => 'Salin';
@@ -6384,22 +6384,25 @@ class AppLocalizationsId extends AppLocalizations {
   String get chatAccept => 'Terima';
 
   @override
-  String get bridgesConnecting => 'menghubungkan';
+  String get bridgesConnecting => 'Menghubungkan';
 
   @override
-  String get restoreMade => 'dibuat';
+  String get bridgesSavedTag => 'Tersimpan';
 
   @override
-  String get restoreContacts => 'kontak';
+  String get restoreMade => 'Dibuat';
 
   @override
-  String get restoreMessages => 'pesan';
+  String get restoreContacts => 'Kontak';
 
   @override
-  String get restoreAttachments => 'lampiran';
+  String get restoreMessages => 'Pesan';
 
   @override
-  String get restoreHiddenChats => 'obrolan tersembunyi';
+  String get restoreAttachments => 'Lampiran';
+
+  @override
+  String get restoreHiddenChats => 'Obrolan tersembunyi';
 
   @override
   String get restoreHiddenFollow =>
@@ -6435,34 +6438,34 @@ class AppLocalizationsId extends AppLocalizations {
   String get avatarPickerTurn => 'Putar';
 
   @override
-  String get transportStatus => 'status';
+  String get transportStatus => 'Status';
 
   @override
-  String get transportBootstrap => 'bootstrap';
+  String get transportBootstrap => 'Bootstrap';
 
   @override
-  String get transportNetwork => 'jaringan';
+  String get transportNetwork => 'Jaringan';
 
   @override
-  String get transportConnectivity => 'konektivitas';
+  String get transportConnectivity => 'Konektivitas';
 
   @override
-  String get transportRelays => 'relay';
+  String get transportRelays => 'Relay';
 
   @override
-  String get transportTraffic => 'lalu lintas';
+  String get transportTraffic => 'Lalu lintas';
 
   @override
-  String get transportContacts => 'kontak';
+  String get transportContacts => 'Kontak';
 
   @override
-  String get transportKnown => 'dikenal';
+  String get transportKnown => 'Dikenal';
 
   @override
-  String get transportListening => 'mendengarkan';
+  String get transportListening => 'Mendengarkan';
 
   @override
-  String get transportMemory => 'memori';
+  String get transportMemory => 'Memori';
 
   @override
   String get settingsConnected => 'Terhubung';
@@ -6597,7 +6600,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get photoKnowsLookedFor => 'Yang dicari';
 
   @override
-  String get photoKnowsNotInIt => 'tidak ada';
+  String get photoKnowsNotInIt => 'Tidak ada';
 
   @override
   String get languageNameEn => 'Inggris';

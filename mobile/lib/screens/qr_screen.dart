@@ -8,7 +8,9 @@ import '../tools/qr_png.dart';
 import '../tools/tools_bridge.dart';
 import '../widgets/motion.dart';
 import '../widgets/press_scale.dart';
+import '../widgets/qr_wipe.dart';
 import '../widgets/stroke_icon.dart';
+import '../widgets/swap.dart';
 import '../widgets/tool_parts.dart';
 import '../l10n/l10n.dart';
 
@@ -447,41 +449,49 @@ class _QrScreenState extends State<QrScreen> {
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            if (warn != null)
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 12),
-                                child: Text(
-                                  warn,
-                                  textAlign: TextAlign.center,
-                                  style: HaloType.sans(
-                                    size: 13,
-                                    height: 1.4,
-                                    color: HaloColors.amber,
-                                  ),
-                                ),
-                              )
-                            else
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 12),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    BreathDot(color: HaloColors.green, size: 5),
-                                    const SizedBox(width: 7),
-                                    Flexible(
-                                      child: Text(
-                                        _kind.note,
+                            // a warning or the kind's note, each rising in
+                            // over the last
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: RiseSwap(
+                                alignment: Alignment.center,
+                                child: warn != null
+                                    ? Text(
+                                        warn,
+                                        key: ValueKey(warn),
                                         textAlign: TextAlign.center,
-                                        style: HaloType.mono(
-                                          size: 9.5,
-                                          letter: 0.1,
-                                          color: HaloColors.green,
+                                        style: HaloType.sans(
+                                          size: 13,
+                                          height: 1.4,
+                                          color: HaloColors.amber,
                                         ),
+                                      )
+                                    : Row(
+                                        key: ValueKey(_kind.note),
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          BreathDot(
+                                            color: HaloColors.green,
+                                            size: 5,
+                                            breaths: 3,
+                                          ),
+                                          const SizedBox(width: 7),
+                                          Flexible(
+                                            child: Text(
+                                              _kind.note,
+                                              textAlign: TextAlign.center,
+                                              style: HaloType.mono(
+                                                size: 9.5,
+                                                letter: 0.1,
+                                                color: HaloColors.green,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ),
-                                  ],
-                                ),
                               ),
+                            ),
                             Row(
                               children: [
                                 Expanded(
@@ -649,7 +659,9 @@ class _Swatch extends StatelessWidget {
           height: 44,
           child: Center(
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
+              duration: motionStill(context)
+                  ? Duration.zero
+                  : const Duration(milliseconds: 180),
               curve: Curves.easeOutBack,
               width: on ? 32 : 26,
               height: on ? 32 : 26,
@@ -724,10 +736,16 @@ class _Card extends StatelessWidget {
                         ),
                       ),
                     )
+                  // a code that appears assembles corner to corner
                   : Semantics(
                       label: l10n.qrQrCode,
                       image: true,
-                      child: CustomPaint(painter: _QrPainter(grid!, ink)),
+                      child: QrWipe(
+                        child: CustomPaint(
+                          size: const Size.square(212),
+                          painter: _QrPainter(grid!, ink),
+                        ),
+                      ),
                     ),
             ),
             const SizedBox(height: 4),
@@ -829,7 +847,7 @@ class _Input extends StatelessWidget {
                         hintText: field.hint.isEmpty ? null : field.hint,
                         hintStyle: HaloType.sans(
                           size: 14.5,
-                          color: HaloColors.warm.withValues(alpha: 0.55),
+                          color: HaloColors.text3,
                         ),
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 14,

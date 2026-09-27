@@ -347,22 +347,22 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get appTorWouldNotWake => 'tor uyanmadı';
+  String get appTorWouldNotWake => 'Tor uyanmadı';
 
   @override
-  String get appCheckStarted => 'başladı';
+  String get appCheckStarted => 'Başladı';
 
   @override
-  String get appTorNotReadyIn => 'tor 75 sn içinde hazır olmadı';
+  String get appTorNotReadyIn => 'Tor 75 sn içinde hazır olmadı';
 
   @override
-  String get appOk => 'tamam';
+  String get appOk => 'Tamam';
 
   @override
-  String get appOkNoRelayBegan => 'tamam, aktarıcı başlamadı';
+  String get appOkNoRelayBegan => 'Tamam, aktarıcı başlamadı';
 
   @override
-  String get appOkCapped => 'tamam, kesildi';
+  String get appOkCapped => 'Tamam, kesildi';
 
   @override
   String appSBy(Object how, int secs, String why) {
@@ -717,7 +717,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get miuiAutostartCouldnTOpenIt =>
-      'açılamadı. telefon ayarlarında otomatik başlatmayı ara';
+      'Açılamadı. Telefon ayarlarında otomatik başlatmayı ara';
 
   @override
   String get notificationsNewEncryptedMessagesFrom =>
@@ -1076,10 +1076,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get bridgesFromTheTorProject => 'Tor projesinden';
 
   @override
-  String get bridgesNoise => 'gürültü';
+  String get bridgesNoise => 'Gürültü';
 
   @override
-  String get bridgesGood => 'iyi';
+  String get bridgesGood => 'İyi';
 
   @override
   String get bridgesMakesTorTrafficLook =>
@@ -1095,7 +1095,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get bridgesWhateverTheLineSays => 'Satır ne diyorsa';
 
   @override
-  String get bridgesDepends => 'duruma göre';
+  String get bridgesDepends => 'Duruma göre';
 
   @override
   String get bridgesGotABridgeLine =>
@@ -1155,7 +1155,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get bridgesLooksLike => 'Görünüşü';
 
   @override
-  String get bridgesSpeed => 'hız';
+  String get bridgesSpeed => 'Hız';
 
   @override
   String get bridgesGetBridges => 'Köprü al';
@@ -2062,7 +2062,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get contactDeleted => 'Silindi';
 
   @override
-  String get contactToday => 'bugün';
+  String get contactToday => 'Bugün';
 
   @override
   String contactD(int count) {
@@ -2101,11 +2101,11 @@ class AppLocalizationsTr extends AppLocalizations {
   String get contactChatting => 'Yazışıyorsunuz';
 
   @override
-  String get contactNothingSharedYet => 'henüz paylaşılan bir şey yok';
+  String get contactNothingSharedYet => 'Henüz paylaşılan bir şey yok';
 
   @override
   String contactSharedMedia(Object count) {
-    return 'paylaşılan medya · $count';
+    return 'Paylaşılan medya · $count';
   }
 
   @override
@@ -2115,13 +2115,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get donateText => '₿';
 
   @override
-  String get donateBadgeUnlocks => 'rozet açılır';
+  String get donateBadgeUnlocks => 'Rozet açılır';
 
   @override
   String get donateMonero => 'Monero';
 
   @override
-  String get donateManualNoBadge => 'elle · rozet yok';
+  String get donateManualNoBadge => 'Elle · rozet yok';
 
   @override
   String get donateSolana => 'Solana';
@@ -2292,7 +2292,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get gettingMessagesAlwaysOn => 'Hep açık';
 
   @override
-  String get gettingMessagesMostPrivate => 'en gizli';
+  String get gettingMessagesMostPrivate => 'En gizli';
 
   @override
   String get gettingMessagesMessagesArriveInstantlyNothing =>
@@ -2302,7 +2302,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get gettingMessagesCheckIns => 'Kontroller';
 
   @override
-  String get gettingMessagesLightest => 'en hafif';
+  String get gettingMessagesLightest => 'En hafif';
 
   @override
   String get gettingMessagesKryfoLooksForMessages =>
@@ -2764,10 +2764,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get handleChecking => 'Kontrol ediliyor…';
 
   @override
-  String get handleAvailable => '✓ uygun';
+  String get handleAvailable => '✓ Uygun';
 
   @override
-  String get handleAlreadyTaken => 'zaten alınmış';
+  String get handleAlreadyTaken => 'Zaten alınmış';
 
   @override
   String get handleWhatAHandleDoes => 'Kullanıcı adı ne işe yarar';
@@ -4423,10 +4423,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Ondan artık hiçbir şey sana ulaşmaz. İsteği ve mesajları silinir.';
 
   @override
-  String get requestsBlocked => 'engellendi';
+  String get requestsBlocked => 'Engellendi';
 
   @override
-  String get requestsDeleted => 'silindi';
+  String get requestsDeleted => 'Silindi';
 
   @override
   String get requestsRequests => 'İstekler';
@@ -4724,10 +4724,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get roomLinkCopyRoomLink => 'Bağlantıyı kopyala';
 
   @override
-  String get savedVoiceNote => 'sesli not';
+  String get savedVoiceNote => 'Sesli not';
 
   @override
-  String get savedPhoto => 'fotoğraf';
+  String get savedPhoto => 'Fotoğraf';
 
   @override
   String get savedSaved => 'Kaydedilenler';
@@ -4737,7 +4737,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get savedLongPressAnyMessage =>
-      'herhangi bir mesaja uzun bas ve burada tutmak için kaydet.';
+      'Herhangi bir mesaja uzun bas ve burada tutmak için kaydet.';
 
   @override
   String get savedViewInChat => 'Sohbette gör';
@@ -5178,10 +5178,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Buradaki hiçbir şey telefondan çıkmaz. Motorun ne yapacağına karar verirken kullandığı durumun aynısı.';
 
   @override
-  String get transportStayingAlive => 'canlı kalma';
+  String get transportStayingAlive => 'Canlı kalma';
 
   @override
-  String get transportCanSend => 'gönderebilir';
+  String get transportCanSend => 'Gönderebilir';
 
   @override
   String get commonYes => 'Evet';
@@ -5196,7 +5196,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get transportOffline => 'Çevrimdışı';
 
   @override
-  String get transportQueuedToSend => 'gönderim sırasında';
+  String get transportQueuedToSend => 'Gönderim sırasında';
 
   @override
   String get transportOnionPublished => 'Onion yayımlandı';
@@ -5232,13 +5232,13 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get transportOk => 'tamam';
+  String get transportOk => 'Tamam';
 
   @override
   String get transportRelaySubscriptions => 'Aktarıcı abonelikleri';
 
   @override
-  String get transportLastSent => 'son gönderim';
+  String get transportLastSent => 'Son gönderim';
 
   @override
   String get transportNever => 'Hiç';
@@ -5249,7 +5249,7 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get transportLastReceived => 'son alım';
+  String get transportLastReceived => 'Son alım';
 
   @override
   String transportSAgo2(Object rx) {
@@ -5265,22 +5265,22 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bekleyen her şeyi şimdi gönder';
 
   @override
-  String get transportOff => 'kapalı';
+  String get transportOff => 'Kapalı';
 
   @override
-  String get transportStarting => 'başlıyor';
+  String get transportStarting => 'Başlıyor';
 
   @override
-  String get transportBootstrapped => 'önyüklendi';
+  String get transportBootstrapped => 'Önyüklendi';
 
   @override
   String get transportPublishingAddress => 'Adres yayımlanıyor';
 
   @override
-  String get transportReachable => 'ulaşılabilir';
+  String get transportReachable => 'Ulaşılabilir';
 
   @override
-  String get transportOurRelayOnion => 'aktarıcımız (onion)';
+  String get transportOurRelayOnion => 'Aktarıcımız (onion)';
 
   @override
   String get transportNever2 => 'hiç';
@@ -5320,7 +5320,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String transportMb(Object b) {
-    return '$b mb';
+    return '$b MB';
   }
 
   @override
@@ -5338,19 +5338,19 @@ class AppLocalizationsTr extends AppLocalizations {
   String get transportBatteryExemption => 'Pil muafiyeti';
 
   @override
-  String get transportUnknown => 'bilinmiyor';
+  String get transportUnknown => 'Bilinmiyor';
 
   @override
-  String get transportExempt => 'muaf';
+  String get transportExempt => 'Muaf';
 
   @override
   String get transportNotExemptTapTo => 'Muaf değil · düzeltmek için dokun';
 
   @override
-  String get transportProcessUp => 'süreç ayakta';
+  String get transportProcessUp => 'Süreç ayakta';
 
   @override
-  String get transportLastStop => 'son duruş';
+  String get transportLastStop => 'Son duruş';
 
   @override
   String transportEngine(Object mb, Object mb2) {
@@ -5361,19 +5361,19 @@ class AppLocalizationsTr extends AppLocalizations {
   String get transportLastRelayArrival => 'Aktarıcıdan son gelen';
 
   @override
-  String get transportLastCheckIn => 'son kontrol';
+  String get transportLastCheckIn => 'Son kontrol';
 
   @override
   String get transportNoneYet => 'Henüz yok';
 
   @override
-  String get transportLastTorReconnect => 'son tor yeniden bağlanması';
+  String get transportLastTorReconnect => 'Son Tor yeniden bağlanması';
 
   @override
-  String get transportCatchUpByRelay => 'aktarıcı bazında telafi';
+  String get transportCatchUpByRelay => 'Aktarıcı bazında telafi';
 
   @override
-  String get transportControlPort => 'kontrol portu';
+  String get transportControlPort => 'Kontrol portu';
 
   @override
   String transportDialsTimeouts(int dials, int timeouts) {
@@ -5400,7 +5400,7 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get transportJobRuns => 'görev turları';
+  String get transportJobRuns => 'Görev turları';
 
   @override
   String transportLast(Object jobRuns, Object ago) {
@@ -6382,7 +6382,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get seenIntroductions => 'Tanıştırmalar';
 
   @override
-  String get donateAddress => 'adres';
+  String get donateAddress => 'Adres';
 
   @override
   String get donateCopy => 'Kopyala';
@@ -6409,22 +6409,25 @@ class AppLocalizationsTr extends AppLocalizations {
   String get chatAccept => 'Kabul et';
 
   @override
-  String get bridgesConnecting => 'bağlanıyor';
+  String get bridgesConnecting => 'Bağlanıyor';
 
   @override
-  String get restoreMade => 'oluşturuldu';
+  String get bridgesSavedTag => 'Kaydedildi';
 
   @override
-  String get restoreContacts => 'kişiler';
+  String get restoreMade => 'Oluşturuldu';
 
   @override
-  String get restoreMessages => 'mesajlar';
+  String get restoreContacts => 'Kişiler';
 
   @override
-  String get restoreAttachments => 'ekler';
+  String get restoreMessages => 'Mesajlar';
 
   @override
-  String get restoreHiddenChats => 'gizli sohbetler';
+  String get restoreAttachments => 'Ekler';
+
+  @override
+  String get restoreHiddenChats => 'Gizli sohbetler';
 
   @override
   String get restoreHiddenFollow =>
@@ -6460,34 +6463,34 @@ class AppLocalizationsTr extends AppLocalizations {
   String get avatarPickerTurn => 'Döndür';
 
   @override
-  String get transportStatus => 'durum';
+  String get transportStatus => 'Durum';
 
   @override
-  String get transportBootstrap => 'önyükleme';
+  String get transportBootstrap => 'Önyükleme';
 
   @override
-  String get transportNetwork => 'ağ';
+  String get transportNetwork => 'Ağ';
 
   @override
-  String get transportConnectivity => 'bağlantı';
+  String get transportConnectivity => 'Bağlantı';
 
   @override
-  String get transportRelays => 'aktarıcılar';
+  String get transportRelays => 'Aktarıcılar';
 
   @override
-  String get transportTraffic => 'trafik';
+  String get transportTraffic => 'Trafik';
 
   @override
-  String get transportContacts => 'kişiler';
+  String get transportContacts => 'Kişiler';
 
   @override
-  String get transportKnown => 'bilinen';
+  String get transportKnown => 'Bilinen';
 
   @override
-  String get transportListening => 'dinleniyor';
+  String get transportListening => 'Dinleniyor';
 
   @override
-  String get transportMemory => 'bellek';
+  String get transportMemory => 'Bellek';
 
   @override
   String get settingsConnected => 'Bağlı';
@@ -6623,7 +6626,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get photoKnowsLookedFor => 'Aranan';
 
   @override
-  String get photoKnowsNotInIt => 'yok';
+  String get photoKnowsNotInIt => 'Yok';
 
   @override
   String get languageNameEn => 'İngilizce';

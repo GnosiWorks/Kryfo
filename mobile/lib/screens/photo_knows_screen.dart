@@ -17,7 +17,9 @@ import '../widgets/motion.dart';
 import '../widgets/offline_map.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/sheet_handle.dart';
+import '../widgets/ease_size.dart';
 import '../widgets/stroke_icon.dart';
+import '../widgets/swap.dart';
 import '../widgets/tool_parts.dart';
 import 'clean_screen.dart';
 import '../l10n/l10n.dart';
@@ -51,10 +53,8 @@ class PhotoKnowsScreen extends StatefulWidget {
 
 class _PhotoKnowsScreenState extends State<PhotoKnowsScreen>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _reveal = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 1600),
-  );
+  // made with the page, so a page left before a result has one to dispose
+  late final AnimationController _reveal;
   StreamSubscription<CopyProgress>? _sub;
   CopyProgress? _progress;
   String? _inPath;
@@ -70,6 +70,10 @@ class _PhotoKnowsScreenState extends State<PhotoKnowsScreen>
   @override
   void initState() {
     super.initState();
+    _reveal = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1600),
+    );
     _sub = ToolsBridge.instance.progress.listen((p) {
       if (mounted && _report == null) setState(() => _progress = p);
     });
@@ -212,73 +216,55 @@ class _PhotoKnowsScreenState extends State<PhotoKnowsScreen>
                   : ToolThumb(path: _inPath!, video: video, size: 38),
             ),
             Expanded(
-              child: _failure != null
-                  ? _Message(
-                      head: failureTitle(_failure!),
-                      body: failureBody(_failure!),
-                    )
-                  : story == null
-                  ? _Reading(progress: _progress, size: widget.file.size)
-                  : _Body(
-                      story: story,
-                      report: report!,
-                      geo: _geo,
-                      reveal: _reveal,
-                      onMore: _showAll,
-                      path: _inPath,
-                    ),
+              // the reading fades into what was found
+              child: FadeSwap(
+                child: KeyedSubtree(
+                  key: ValueKey(
+                    _failure != null
+                        ? 'failed'
+                        : story == null
+                        ? 'reading'
+                        : 'found',
+                  ),
+                  child: _failure != null
+                      ? _Message(
+                          head: failureTitle(_failure!),
+                          body: failureBody(_failure!),
+                        )
+                      : story == null
+                      ? _Reading(progress: _progress, size: widget.file.size)
+                      : _Body(
+                          story: story,
+                          report: report!,
+                          geo: _geo,
+                          reveal: _reveal,
+                          onMore: _showAll,
+                          path: _inPath,
+                        ),
+                ),
+              ),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 18),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  if (story != null && story.canClean) ...[
-                    ToolWideButton(
-                      icon: _sparkle,
-                      label: l10n.photoKnowsRemoveAllOfIt,
-                      filled: true,
-                      onTap: _clean,
-                    ),
-                    const SizedBox(height: 4),
-                  ],
-                  // with nothing to remove, the way out is the button
-                  if (story != null && !story.canClean)
-                    ToolWideButton(
-                      label: l10n.commonDone,
-                      filled: true,
-                      onTap: () => Navigator.of(context).maybePop(),
-                    )
-                  else if (_failure != null)
-                    ToolWideButton(
-                      label: l10n.commonBack,
-                      filled: true,
-                      onTap: () => Navigator.of(context).maybePop(),
-                    )
-                  else
-                    PressScale(
-                      label: story == null
-                          ? l10n.commonStop
-                          : l10n.photoKnowsKeepItAsIt,
-                      onTap: () => Navigator.of(context).maybePop(),
-                      scale: 0.96,
-                      child: SizedBox(
-                        height: 44,
-                        child: Center(
-                          child: ExcludeSemantics(
-                            child: Text(
-                              story == null
-                                  ? l10n.commonStop
-                                  : l10n.photoKnowsKeepItAsIt,
-                              style: HaloType.sans(
-                                size: 13.5,
-                                color: HaloColors.warm,
-                              ),
-                            ),
-                          ),
+                  EaseSize(
+                    child: FadeSwap(
+                      child: KeyedSubtree(
+                        key: ValueKey(
+                          _failure != null
+                              ? 'failed'
+                              : story == null
+                              ? 'reading'
+                              : story.canClean
+                              ? 'clean'
+                              : 'done',
                         ),
+                        child: _buttons(story),
                       ),
                     ),
+                  ),
                   Text(
                     video
                         ? l10n.photoKnowsReadOnThisPhone
@@ -296,6 +282,53 @@ class _PhotoKnowsScreenState extends State<PhotoKnowsScreen>
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buttons(PhotoStory? story) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (story != null && story.canClean) ...[
+          ToolWideButton(
+            icon: _sparkle,
+            label: l10n.photoKnowsRemoveAllOfIt,
+            filled: true,
+            onTap: _clean,
+          ),
+          const SizedBox(height: 4),
+        ],
+        // with nothing to remove, the way out is the button
+        if (story != null && !story.canClean)
+          ToolWideButton(
+            label: l10n.commonDone,
+            filled: true,
+            onTap: () => Navigator.of(context).maybePop(),
+          )
+        else if (_failure != null)
+          ToolWideButton(
+            label: l10n.commonBack,
+            filled: true,
+            onTap: () => Navigator.of(context).maybePop(),
+          )
+        else
+          PressScale(
+            label: story == null ? l10n.commonStop : l10n.photoKnowsKeepItAsIt,
+            onTap: () => Navigator.of(context).maybePop(),
+            scale: 0.96,
+            child: SizedBox(
+              height: 44,
+              child: Center(
+                child: ExcludeSemantics(
+                  child: Text(
+                    story == null ? l10n.commonStop : l10n.photoKnowsKeepItAsIt,
+                    style: HaloType.sans(size: 13.5, color: HaloColors.warm),
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
@@ -461,7 +494,11 @@ class _Body extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          BreathDot(color: HaloColors.green, size: 5),
+                          BreathDot(
+                            color: HaloColors.green,
+                            size: 5,
+                            breaths: 3,
+                          ),
                           const SizedBox(width: 6),
                           Text(
                             l10n.photoKnowsDrawnOffline,

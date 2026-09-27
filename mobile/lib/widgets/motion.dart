@@ -69,13 +69,15 @@ enum TorStatus { off, starting, bootstrapped, publishing, reachable }
 
 enum PrivacyMode { fast, normal, private }
 
-// the shared screen transition: a short rise and fade
+// the shared screen transition: a short rise and fade. with less movement
+// only the fade. one shape either way, so a page open when the setting
+// flips keeps its state
 Route<T> haloRoute<T>(Widget page) {
   return PageRouteBuilder<T>(
     transitionDuration: const Duration(milliseconds: 280),
     reverseTransitionDuration: const Duration(milliseconds: 280),
     pageBuilder: (_, _, _) => page,
-    transitionsBuilder: (_, anim, _, child) {
+    transitionsBuilder: (context, anim, _, child) {
       final curved = CurvedAnimation(
         parent: anim,
         curve: Curves.easeOutCubic,
@@ -85,7 +87,7 @@ Route<T> haloRoute<T>(Widget page) {
         opacity: curved,
         child: SlideTransition(
           position: Tween(
-            begin: const Offset(0, 0.035),
+            begin: motionStill(context) ? Offset.zero : const Offset(0, 0.035),
             end: Offset.zero,
           ).animate(curved),
           child: child,

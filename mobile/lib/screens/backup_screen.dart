@@ -11,10 +11,13 @@ import 'package:share_plus/share_plus.dart';
 import '../backup.dart';
 import '../main.dart' hide live;
 import '../theme.dart';
+import '../widgets/ease_size.dart';
 import '../widgets/fit_column.dart';
+import '../widgets/halo_bar.dart';
 import '../widgets/motion.dart' show houseSpring;
 import '../widgets/press_scale.dart';
 import '../widgets/stagger_in.dart';
+import '../widgets/swap.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
 
@@ -168,9 +171,6 @@ class _BackupScreenState extends State<BackupScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        // the page slides under a plain bar, never a tinted one
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
         leading: BackButton(color: HaloColors.text2),
         title: Text(
           l10n.backupBackUpKryfo,
@@ -211,11 +211,17 @@ class _BackupScreenState extends State<BackupScreen> {
             const SizedBox(height: 12),
             _PinField(label: l10n.backupConfirmPassphrase, controller: _p2),
             const SizedBox(height: 12),
-            if (_error != null)
-              Text(
-                _error!,
-                style: HaloType.sans(size: 12, color: HaloColors.rose),
-              ),
+            EaseSize(
+              child: _error == null
+                  ? const SizedBox(width: double.infinity)
+                  : RiseSwap(
+                      child: Text(
+                        _error!,
+                        key: ValueKey(_error),
+                        style: HaloType.sans(size: 12, color: HaloColors.rose),
+                      ),
+                    ),
+            ),
             const Spacer(),
             PressScale(
               scale: 0.97,
@@ -229,21 +235,35 @@ class _BackupScreenState extends State<BackupScreen> {
                   borderRadius: BorderRadius.circular(999),
                 ),
                 alignment: Alignment.center,
-                child: Text(
-                  _busy
-                      ? (_progress > 0
-                            ? l10n.backupWriting(percent(_progress))
-                            : l10n.backupCreating)
-                      : (_move
-                            ? l10n.backupMakeTheFileAnd
-                            : l10n.backupCreateBackup),
-                  style: HaloType.sans(
-                    size: 14,
-                    color: _busy ? HaloColors.text2 : HaloColors.onAmber,
-                    weight: FontWeight.w500,
+                child: RiseSwap(
+                  alignment: Alignment.center,
+                  child: Text(
+                    _busy
+                        ? (_progress > 0
+                              ? l10n.backupWriting(percent(_progress))
+                              : l10n.backupCreating)
+                        : (_move
+                              ? l10n.backupMakeTheFileAnd
+                              : l10n.backupCreateBackup),
+                    // the percent itself changes in place
+                    key: ValueKey((_busy, _progress > 0, _move)),
+                    style: HaloType.sans(
+                      size: 14,
+                      color: _busy ? HaloColors.text2 : HaloColors.onAmber,
+                      weight: FontWeight.w500,
+                    ),
                   ),
                 ),
               ),
+            ),
+            // the file, as far as it is written
+            EaseSize(
+              child: !_busy || _progress <= 0
+                  ? const SizedBox(width: double.infinity)
+                  : Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: HaloBar(value: _progress, height: 3),
+                    ),
             ),
             const SizedBox(height: 8),
           ]),

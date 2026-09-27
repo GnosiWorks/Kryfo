@@ -2829,6 +2829,7 @@ final _calls = <_Call>[
   ('chatDecline', [], (l) => l.chatDecline),
   ('chatAccept', [], (l) => l.chatAccept),
   ('bridgesConnecting', [], (l) => l.bridgesConnecting),
+  ('bridgesSavedTag', [], (l) => l.bridgesSavedTag),
   ('restoreMade', [], (l) => l.restoreMade),
   ('restoreContacts', [], (l) => l.restoreContacts),
   ('restoreMessages', [], (l) => l.restoreMessages),

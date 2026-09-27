@@ -129,9 +129,6 @@ class _DonateScreenState extends State<DonateScreen> {
       appBar: AppBar(
         backgroundColor: HaloColors.ink,
         elevation: 0,
-        // the page slides under a plain bar, never a tinted one
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
         iconTheme: IconThemeData(color: HaloColors.text2),
         title: Text(
           l10n.donateSupport,
@@ -782,9 +779,6 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
       appBar: AppBar(
         backgroundColor: HaloColors.ink,
         elevation: 0,
-        // the page slides under a plain bar, never a tinted one
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
         iconTheme: IconThemeData(color: HaloColors.text2),
         title: Text(
           l10n.donateBitcoin,

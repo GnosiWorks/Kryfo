@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../theme.dart';
+import 'motion.dart' show motionStill;
 import 'press_scale.dart';
 import 'stroke_icon.dart';
 import '../l10n/l10n.dart';
@@ -140,39 +141,49 @@ class ToolWideButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ink = filled ? HaloColors.onAmber : HaloColors.text;
-    return Opacity(
-      opacity: onTap == null ? 0.55 : 1,
-      child: PressScale(
-        label: label,
-        onTap: onTap,
-        scale: 0.96,
-        child: Container(
-          height: height ?? (filled ? 54 : 50),
-          decoration: BoxDecoration(
-            color: filled ? HaloColors.amber : null,
-            borderRadius: BorderRadius.circular(14),
-            border: filled ? null : Border.all(color: HaloColors.line2),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (icon != null) ...[
-                StrokeIcon(icon!, size: 19, color: ink),
-                const SizedBox(width: 9),
-              ],
-              ExcludeSemantics(
-                child: Text(
-                  label,
-                  style: HaloType.sans(
-                    size: filled ? 15 : 14,
-                    weight: filled ? FontWeight.w600 : FontWeight.w500,
-                    color: ink,
-                  ),
+    final on = onTap != null;
+    // one that cannot be used yet reads quieter in its own colours, never
+    // faded, and lights up when it can
+    final ink = !on
+        ? HaloColors.text3
+        : filled
+        ? HaloColors.onAmber
+        : HaloColors.text;
+    return PressScale(
+      label: label,
+      onTap: onTap,
+      scale: 0.96,
+      child: AnimatedContainer(
+        duration: motionStill(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        height: height ?? (filled ? 54 : 50),
+        decoration: BoxDecoration(
+          color: filled ? (on ? HaloColors.amber : HaloColors.surface3) : null,
+          borderRadius: BorderRadius.circular(14),
+          border: filled
+              ? null
+              : Border.all(color: on ? HaloColors.line2 : HaloColors.line),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (icon != null) ...[
+              StrokeIcon(icon!, size: 19, color: ink),
+              const SizedBox(width: 9),
+            ],
+            ExcludeSemantics(
+              child: Text(
+                label,
+                style: HaloType.sans(
+                  size: filled ? 15 : 14,
+                  weight: filled ? FontWeight.w600 : FontWeight.w500,
+                  color: ink,
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

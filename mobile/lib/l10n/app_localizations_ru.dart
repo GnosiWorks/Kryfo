@@ -362,22 +362,22 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get appTorWouldNotWake => 'tor не просыпается';
+  String get appTorWouldNotWake => 'Tor не просыпается';
 
   @override
-  String get appCheckStarted => 'начата';
+  String get appCheckStarted => 'Начата';
 
   @override
-  String get appTorNotReadyIn => 'tor не готов за 75 с';
+  String get appTorNotReadyIn => 'Tor не готов за 75 с';
 
   @override
-  String get appOk => 'ок';
+  String get appOk => 'ОК';
 
   @override
-  String get appOkNoRelayBegan => 'ок, ретрансляторы молчат';
+  String get appOkNoRelayBegan => 'ОК, ретрансляторы молчат';
 
   @override
-  String get appOkCapped => 'ок, прервано';
+  String get appOkCapped => 'ОК, прервано';
 
   @override
   String appSBy(Object how, int secs, String why) {
@@ -732,7 +732,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get miuiAutostartCouldnTOpenIt =>
-      'не открылось. поищи автозапуск в настройках телефона';
+      'Не открылось. Поищи автозапуск в настройках телефона';
 
   @override
   String get notificationsNewEncryptedMessagesFrom =>
@@ -1098,10 +1098,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get bridgesFromTheTorProject => 'От проекта tor';
 
   @override
-  String get bridgesNoise => 'шум';
+  String get bridgesNoise => 'Шум';
 
   @override
-  String get bridgesGood => 'хорошая';
+  String get bridgesGood => 'Хорошая';
 
   @override
   String get bridgesMakesTorTrafficLook =>
@@ -1117,7 +1117,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get bridgesWhateverTheLineSays => 'Как указано в строке';
 
   @override
-  String get bridgesDepends => 'по-разному';
+  String get bridgesDepends => 'По-разному';
 
   @override
   String get bridgesGotABridgeLine =>
@@ -1179,7 +1179,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get bridgesLooksLike => 'Похоже на';
 
   @override
-  String get bridgesSpeed => 'скорость';
+  String get bridgesSpeed => 'Скорость';
 
   @override
   String get bridgesGetBridges => 'Получить мосты';
@@ -2099,7 +2099,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get contactDeleted => 'Удалено';
 
   @override
-  String get contactToday => 'сегодня';
+  String get contactToday => 'Сегодня';
 
   @override
   String contactD(int count) {
@@ -2147,11 +2147,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get contactChatting => 'Общаетесь';
 
   @override
-  String get contactNothingSharedYet => 'общих медиа пока нет';
+  String get contactNothingSharedYet => 'Общих медиа пока нет';
 
   @override
   String contactSharedMedia(Object count) {
-    return 'общие медиа · $count';
+    return 'Общие медиа · $count';
   }
 
   @override
@@ -2161,13 +2161,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get donateText => '₿';
 
   @override
-  String get donateBadgeUnlocks => 'даёт значок';
+  String get donateBadgeUnlocks => 'Даёт значок';
 
   @override
   String get donateMonero => 'Monero';
 
   @override
-  String get donateManualNoBadge => 'вручную · без значка';
+  String get donateManualNoBadge => 'Вручную · без значка';
 
   @override
   String get donateSolana => 'Solana';
@@ -2342,7 +2342,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get gettingMessagesAlwaysOn => 'Всегда на связи';
 
   @override
-  String get gettingMessagesMostPrivate => 'самый приватный';
+  String get gettingMessagesMostPrivate => 'Самый приватный';
 
   @override
   String get gettingMessagesMessagesArriveInstantlyNothing =>
@@ -2352,7 +2352,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get gettingMessagesCheckIns => 'Проверки';
 
   @override
-  String get gettingMessagesLightest => 'самый лёгкий';
+  String get gettingMessagesLightest => 'Самый лёгкий';
 
   @override
   String get gettingMessagesKryfoLooksForMessages =>
@@ -2823,10 +2823,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get handleChecking => 'Проверяем…';
 
   @override
-  String get handleAvailable => '✓ свободно';
+  String get handleAvailable => '✓ Свободно';
 
   @override
-  String get handleAlreadyTaken => 'уже занято';
+  String get handleAlreadyTaken => 'Уже занято';
 
   @override
   String get handleWhatAHandleDoes => 'Зачем нужно имя пользователя';
@@ -4491,10 +4491,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'От этого человека к тебе больше ничего не дойдёт. Его запрос и сообщения удаляются.';
 
   @override
-  String get requestsBlocked => 'заблокирован';
+  String get requestsBlocked => 'Заблокирован';
 
   @override
-  String get requestsDeleted => 'удалён';
+  String get requestsDeleted => 'Удалён';
 
   @override
   String get requestsRequests => 'Запросы';
@@ -4793,10 +4793,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get roomLinkCopyRoomLink => 'Копировать ссылку';
 
   @override
-  String get savedVoiceNote => 'голосовое';
+  String get savedVoiceNote => 'Голосовое';
 
   @override
-  String get savedPhoto => 'фото';
+  String get savedPhoto => 'Фото';
 
   @override
   String get savedSaved => 'Сохранённые';
@@ -4806,7 +4806,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get savedLongPressAnyMessage =>
-      'зажми любое сообщение и нажми «Сохранить», чтобы оно осталось здесь.';
+      'Зажми любое сообщение и нажми «Сохранить», чтобы оно осталось здесь.';
 
   @override
   String get savedViewInChat => 'Показать в чате';
@@ -5247,10 +5247,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Ничто отсюда не покидает телефон. Это то же состояние, по которому движок решает, что делать.';
 
   @override
-  String get transportStayingAlive => 'держит связь';
+  String get transportStayingAlive => 'Держит связь';
 
   @override
-  String get transportCanSend => 'может отправлять';
+  String get transportCanSend => 'Может отправлять';
 
   @override
   String get commonYes => 'Да';
@@ -5265,7 +5265,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get transportOffline => 'Не в сети';
 
   @override
-  String get transportQueuedToSend => 'в очереди на отправку';
+  String get transportQueuedToSend => 'В очереди на отправку';
 
   @override
   String get transportOnionPublished => 'Onion опубликован';
@@ -5303,13 +5303,13 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get transportOk => 'ок';
+  String get transportOk => 'ОК';
 
   @override
   String get transportRelaySubscriptions => 'Подписки на ретрансляторах';
 
   @override
-  String get transportLastSent => 'последняя отправка';
+  String get transportLastSent => 'Последняя отправка';
 
   @override
   String get transportNever => 'Никогда';
@@ -5320,7 +5320,7 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get transportLastReceived => 'последнее получение';
+  String get transportLastReceived => 'Последнее получение';
 
   @override
   String transportSAgo2(Object rx) {
@@ -5336,22 +5336,22 @@ class AppLocalizationsRu extends AppLocalizations {
       'Отправить всё, что ждёт, сейчас';
 
   @override
-  String get transportOff => 'выкл.';
+  String get transportOff => 'Выкл.';
 
   @override
-  String get transportStarting => 'запуск';
+  String get transportStarting => 'Запуск';
 
   @override
-  String get transportBootstrapped => 'загрузился';
+  String get transportBootstrapped => 'Загрузился';
 
   @override
   String get transportPublishingAddress => 'Публикуем адрес';
 
   @override
-  String get transportReachable => 'доступен';
+  String get transportReachable => 'Доступен';
 
   @override
-  String get transportOurRelayOnion => 'наш ретранслятор (onion)';
+  String get transportOurRelayOnion => 'Наш ретранслятор (onion)';
 
   @override
   String get transportNever2 => 'никогда';
@@ -5409,19 +5409,19 @@ class AppLocalizationsRu extends AppLocalizations {
   String get transportBatteryExemption => 'Исключение для батареи';
 
   @override
-  String get transportUnknown => 'неизвестно';
+  String get transportUnknown => 'Неизвестно';
 
   @override
-  String get transportExempt => 'в исключениях';
+  String get transportExempt => 'В исключениях';
 
   @override
   String get transportNotExemptTapTo => 'Нет исключения · исправить';
 
   @override
-  String get transportProcessUp => 'процесс работает';
+  String get transportProcessUp => 'Процесс работает';
 
   @override
-  String get transportLastStop => 'последняя остановка';
+  String get transportLastStop => 'Последняя остановка';
 
   @override
   String transportEngine(Object mb, Object mb2) {
@@ -5432,19 +5432,19 @@ class AppLocalizationsRu extends AppLocalizations {
   String get transportLastRelayArrival => 'Последнее с ретранслятора';
 
   @override
-  String get transportLastCheckIn => 'последняя проверка';
+  String get transportLastCheckIn => 'Последняя проверка';
 
   @override
   String get transportNoneYet => 'Пока нет';
 
   @override
-  String get transportLastTorReconnect => 'последнее переподключение tor';
+  String get transportLastTorReconnect => 'Последнее переподключение Tor';
 
   @override
-  String get transportCatchUpByRelay => 'догрузка через ретранслятор';
+  String get transportCatchUpByRelay => 'Догрузка через ретранслятор';
 
   @override
-  String get transportControlPort => 'порт управления';
+  String get transportControlPort => 'Порт управления';
 
   @override
   String transportDialsTimeouts(int dials, int timeouts) {
@@ -5475,7 +5475,7 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get transportJobRuns => 'запуски задачи';
+  String get transportJobRuns => 'Запуски задачи';
 
   @override
   String transportLast(Object jobRuns, Object ago) {
@@ -6473,7 +6473,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get seenIntroductions => 'Знакомства';
 
   @override
-  String get donateAddress => 'адрес';
+  String get donateAddress => 'Адрес';
 
   @override
   String get donateCopy => 'Копировать';
@@ -6500,22 +6500,25 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chatAccept => 'Принять';
 
   @override
-  String get bridgesConnecting => 'подключение';
+  String get bridgesConnecting => 'Подключение';
 
   @override
-  String get restoreMade => 'создана';
+  String get bridgesSavedTag => 'Сохранено';
 
   @override
-  String get restoreContacts => 'контакты';
+  String get restoreMade => 'Создана';
 
   @override
-  String get restoreMessages => 'сообщения';
+  String get restoreContacts => 'Контакты';
 
   @override
-  String get restoreAttachments => 'вложения';
+  String get restoreMessages => 'Сообщения';
 
   @override
-  String get restoreHiddenChats => 'скрытые чаты';
+  String get restoreAttachments => 'Вложения';
+
+  @override
+  String get restoreHiddenChats => 'Скрытые чаты';
 
   @override
   String get restoreHiddenFollow =>
@@ -6551,34 +6554,34 @@ class AppLocalizationsRu extends AppLocalizations {
   String get avatarPickerTurn => 'Поворот';
 
   @override
-  String get transportStatus => 'статус';
+  String get transportStatus => 'Статус';
 
   @override
-  String get transportBootstrap => 'загрузка';
+  String get transportBootstrap => 'Загрузка';
 
   @override
-  String get transportNetwork => 'сеть';
+  String get transportNetwork => 'Сеть';
 
   @override
-  String get transportConnectivity => 'связность';
+  String get transportConnectivity => 'Связность';
 
   @override
-  String get transportRelays => 'ретрансляторы';
+  String get transportRelays => 'Ретрансляторы';
 
   @override
-  String get transportTraffic => 'трафик';
+  String get transportTraffic => 'Трафик';
 
   @override
-  String get transportContacts => 'контакты';
+  String get transportContacts => 'Контакты';
 
   @override
-  String get transportKnown => 'известно';
+  String get transportKnown => 'Известно';
 
   @override
-  String get transportListening => 'слушает';
+  String get transportListening => 'Слушает';
 
   @override
-  String get transportMemory => 'память';
+  String get transportMemory => 'Память';
 
   @override
   String get settingsConnected => 'Подключено';
@@ -6716,7 +6719,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get photoKnowsLookedFor => 'Что искали';
 
   @override
-  String get photoKnowsNotInIt => 'нет';
+  String get photoKnowsNotInIt => 'Нет';
 
   @override
   String get languageNameEn => 'Английский';

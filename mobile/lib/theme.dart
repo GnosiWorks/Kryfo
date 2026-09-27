@@ -238,6 +238,12 @@ ThemeData buildHaloTheme() {
     ),
     splashFactory: NoSplash.splashFactory,
     highlightColor: Colors.transparent,
+    // a page scrolled under a bar leaves it plain: material would tint it
+    // with the amber and lift it
+    appBarTheme: const AppBarThemeData(
+      scrolledUnderElevation: 0,
+      surfaceTintColor: Colors.transparent,
+    ),
     // every app bar's back is the same chevron the custom bars draw
     actionIconTheme: ActionIconThemeData(
       backButtonIconBuilder: (_) => const Icon(Icons.chevron_left, size: 26),

@@ -7,10 +7,10 @@ import 'package:kryfo/delivery_mode.dart';
 void main() {
   test('formats the last check-in', () {
     final ok = jsonEncode({'how': 'ok_norelay', 'secs': 48, 'why': 'push'});
-    expect(checkInLine(ok), 'ok, no relay began, 48s, by push');
+    expect(checkInLine(ok), 'OK, no relay began, 48s, by push');
     expect(checkInOk(ok), isTrue);
     final bad = jsonEncode({'how': 'notready', 'secs': 76, 'why': 'job'});
-    expect(checkInLine(bad), 'tor not ready in 75s, 76s, by job');
+    expect(checkInLine(bad), 'Tor not ready in 75s, 76s, by job');
     expect(checkInOk(bad), isFalse);
   });
 

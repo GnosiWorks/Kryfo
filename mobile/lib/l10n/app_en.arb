@@ -405,27 +405,27 @@
       }
     }
   },
-  "appTorWouldNotWake": "tor would not wake",
+  "appTorWouldNotWake": "Tor would not wake",
   "@appTorWouldNotWake": {
     "description": "main.dart"
   },
-  "appCheckStarted": "started",
+  "appCheckStarted": "Started",
   "@appCheckStarted": {
     "description": "main.dart: a check-in that ended before it got anywhere. shown on the transport screen as the first part of the last check-in line"
   },
-  "appTorNotReadyIn": "tor not ready in 75s",
+  "appTorNotReadyIn": "Tor not ready in 75s",
   "@appTorNotReadyIn": {
     "description": "main.dart"
   },
-  "appOk": "ok",
+  "appOk": "OK",
   "@appOk": {
     "description": "main.dart"
   },
-  "appOkNoRelayBegan": "ok, no relay began",
+  "appOkNoRelayBegan": "OK, no relay began",
   "@appOkNoRelayBegan": {
     "description": "main.dart: a check-in that brought tor up but no relay started answering in 45s"
   },
-  "appOkCapped": "ok, capped",
+  "appOkCapped": "OK, capped",
   "@appOkCapped": {
     "description": "main.dart: a check-in that was cut off at 90s"
   },
@@ -909,7 +909,7 @@
   "@miuiAutostartOpenSettings": {
     "description": "miui_autostart.dart"
   },
-  "miuiAutostartCouldnTOpenIt": "couldn't open it. look for autostart in phone settings",
+  "miuiAutostartCouldnTOpenIt": "Couldn't open it. Look for autostart in phone settings",
   "@miuiAutostartCouldnTOpenIt": {
     "description": "miui_autostart.dart"
   },
@@ -1345,11 +1345,11 @@
   "@bridgesFromTheTorProject": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesNoise": "noise",
+  "bridgesNoise": "Noise",
   "@bridgesNoise": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesGood": "good",
+  "bridgesGood": "Good",
   "@bridgesGood": {
     "description": "screens/bridges_screen.dart"
   },
@@ -1369,7 +1369,7 @@
   "@bridgesWhateverTheLineSays": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesDepends": "depends",
+  "bridgesDepends": "Depends",
   "@bridgesDepends": {
     "description": "screens/bridges_screen.dart"
   },
@@ -1441,7 +1441,7 @@
   "@bridgesLooksLike": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesSpeed": "speed",
+  "bridgesSpeed": "Speed",
   "@bridgesSpeed": {
     "description": "screens/bridges_screen.dart"
   },
@@ -2631,7 +2631,7 @@
   "@contactDeleted": {
     "description": "screens/contact_screen.dart"
   },
-  "contactToday": "today",
+  "contactToday": "Today",
   "@contactToday": {
     "description": "screens/contact_screen.dart"
   },
@@ -2670,11 +2670,11 @@
   "@contactChatting": {
     "description": "screens/contact_screen.dart"
   },
-  "contactNothingSharedYet": "nothing shared yet",
+  "contactNothingSharedYet": "Nothing shared yet",
   "@contactNothingSharedYet": {
     "description": "screens/contact_screen.dart"
   },
-  "contactSharedMedia": "shared media · {count}",
+  "contactSharedMedia": "Shared media · {count}",
   "@contactSharedMedia": {
     "description": "screens/contact_screen.dart",
     "placeholders": {
@@ -2691,7 +2691,7 @@
   "@donateText": {
     "description": "screens/donate_screen.dart"
   },
-  "donateBadgeUnlocks": "badge unlocks",
+  "donateBadgeUnlocks": "Badge unlocks",
   "@donateBadgeUnlocks": {
     "description": "screens/donate_screen.dart"
   },
@@ -2699,7 +2699,7 @@
   "@donateMonero": {
     "description": "screens/donate_screen.dart"
   },
-  "donateManualNoBadge": "manual · no badge",
+  "donateManualNoBadge": "Manual · no badge",
   "@donateManualNoBadge": {
     "description": "screens/donate_screen.dart"
   },
@@ -2901,7 +2901,7 @@
   "@gettingMessagesAlwaysOn": {
     "description": "screens/getting_messages_screen.dart"
   },
-  "gettingMessagesMostPrivate": "most private",
+  "gettingMessagesMostPrivate": "Most private",
   "@gettingMessagesMostPrivate": {
     "description": "screens/getting_messages_screen.dart"
   },
@@ -2913,7 +2913,7 @@
   "@gettingMessagesCheckIns": {
     "description": "screens/getting_messages_screen.dart"
   },
-  "gettingMessagesLightest": "lightest",
+  "gettingMessagesLightest": "Lightest",
   "@gettingMessagesLightest": {
     "description": "screens/getting_messages_screen.dart"
   },
@@ -3490,11 +3490,11 @@
   "@handleChecking": {
     "description": "screens/handle_screen.dart"
   },
-  "handleAvailable": "✓ available",
+  "handleAvailable": "✓ Available",
   "@handleAvailable": {
     "description": "screens/handle_screen.dart"
   },
-  "handleAlreadyTaken": "already taken",
+  "handleAlreadyTaken": "Already taken",
   "@handleAlreadyTaken": {
     "description": "screens/handle_screen.dart"
   },
@@ -5521,11 +5521,11 @@
   "@requestsNothingMoreFromThem": {
     "description": "screens/requests_screen.dart"
   },
-  "requestsBlocked": "blocked",
+  "requestsBlocked": "Blocked",
   "@requestsBlocked": {
     "description": "screens/requests_screen.dart"
   },
-  "requestsDeleted": "deleted",
+  "requestsDeleted": "Deleted",
   "@requestsDeleted": {
     "description": "screens/requests_screen.dart"
   },
@@ -5910,11 +5910,11 @@
   "@roomLinkCopyRoomLink": {
     "description": "screens/room_link_sheet.dart"
   },
-  "savedVoiceNote": "voice note",
+  "savedVoiceNote": "Voice note",
   "@savedVoiceNote": {
     "description": "screens/saved_screen.dart"
   },
-  "savedPhoto": "photo",
+  "savedPhoto": "Photo",
   "@savedPhoto": {
     "description": "screens/saved_screen.dart"
   },
@@ -5926,7 +5926,7 @@
   "@savedNothingSavedYet": {
     "description": "screens/saved_screen.dart"
   },
-  "savedLongPressAnyMessage": "long-press any message and tap save to keep it here.",
+  "savedLongPressAnyMessage": "Long-press any message and tap save to keep it here.",
   "@savedLongPressAnyMessage": {
     "description": "screens/saved_screen.dart"
   },
@@ -6477,11 +6477,11 @@
   "@transportNothingHereLeavesThe": {
     "description": "screens/transport_screen.dart"
   },
-  "transportStayingAlive": "staying alive",
+  "transportStayingAlive": "Staying alive",
   "@transportStayingAlive": {
     "description": "screens/transport_screen.dart"
   },
-  "transportCanSend": "can send",
+  "transportCanSend": "Can send",
   "@transportCanSend": {
     "description": "screens/transport_screen.dart"
   },
@@ -6501,7 +6501,7 @@
   "@transportOffline": {
     "description": "screens/transport_screen.dart"
   },
-  "transportQueuedToSend": "queued to send",
+  "transportQueuedToSend": "Queued to send",
   "@transportQueuedToSend": {
     "description": "screens/transport_screen.dart"
   },
@@ -6546,7 +6546,7 @@
       }
     }
   },
-  "transportOk": "ok",
+  "transportOk": "OK",
   "@transportOk": {
     "description": "screens/transport_screen.dart"
   },
@@ -6554,7 +6554,7 @@
   "@transportRelaySubscriptions": {
     "description": "screens/transport_screen.dart"
   },
-  "transportLastSent": "last sent",
+  "transportLastSent": "Last sent",
   "@transportLastSent": {
     "description": "screens/transport_screen.dart"
   },
@@ -6571,7 +6571,7 @@
       }
     }
   },
-  "transportLastReceived": "last received",
+  "transportLastReceived": "Last received",
   "@transportLastReceived": {
     "description": "screens/transport_screen.dart"
   },
@@ -6592,15 +6592,15 @@
   "@transportSendAnythingWaitingNow": {
     "description": "screens/transport_screen.dart"
   },
-  "transportOff": "off",
+  "transportOff": "Off",
   "@transportOff": {
     "description": "screens/transport_screen.dart"
   },
-  "transportStarting": "starting",
+  "transportStarting": "Starting",
   "@transportStarting": {
     "description": "screens/transport_screen.dart"
   },
-  "transportBootstrapped": "bootstrapped",
+  "transportBootstrapped": "Bootstrapped",
   "@transportBootstrapped": {
     "description": "screens/transport_screen.dart"
   },
@@ -6608,11 +6608,11 @@
   "@transportPublishingAddress": {
     "description": "screens/transport_screen.dart"
   },
-  "transportReachable": "reachable",
+  "transportReachable": "Reachable",
   "@transportReachable": {
     "description": "screens/transport_screen.dart"
   },
-  "transportOurRelayOnion": "our relay (onion)",
+  "transportOurRelayOnion": "Our relay (onion)",
   "@transportOurRelayOnion": {
     "description": "screens/transport_screen.dart"
   },
@@ -6681,7 +6681,7 @@
       }
     }
   },
-  "transportMb": "{b} mb",
+  "transportMb": "{b} MB",
   "@transportMb": {
     "description": "screens/transport_screen.dart",
     "placeholders": {
@@ -6711,11 +6711,11 @@
   "@transportBatteryExemption": {
     "description": "screens/transport_screen.dart"
   },
-  "transportUnknown": "unknown",
+  "transportUnknown": "Unknown",
   "@transportUnknown": {
     "description": "screens/transport_screen.dart"
   },
-  "transportExempt": "exempt",
+  "transportExempt": "Exempt",
   "@transportExempt": {
     "description": "screens/transport_screen.dart"
   },
@@ -6723,11 +6723,11 @@
   "@transportNotExemptTapTo": {
     "description": "screens/transport_screen.dart"
   },
-  "transportProcessUp": "process up",
+  "transportProcessUp": "Process up",
   "@transportProcessUp": {
     "description": "screens/transport_screen.dart"
   },
-  "transportLastStop": "last stop",
+  "transportLastStop": "Last stop",
   "@transportLastStop": {
     "description": "screens/transport_screen.dart"
   },
@@ -6747,7 +6747,7 @@
   "@transportLastRelayArrival": {
     "description": "screens/transport_screen.dart"
   },
-  "transportLastCheckIn": "last check-in",
+  "transportLastCheckIn": "Last check-in",
   "@transportLastCheckIn": {
     "description": "screens/transport_screen.dart"
   },
@@ -6755,15 +6755,15 @@
   "@transportNoneYet": {
     "description": "screens/transport_screen.dart"
   },
-  "transportLastTorReconnect": "last tor reconnect",
+  "transportLastTorReconnect": "Last Tor reconnect",
   "@transportLastTorReconnect": {
     "description": "screens/transport_screen.dart"
   },
-  "transportCatchUpByRelay": "catch-up by relay",
+  "transportCatchUpByRelay": "Catch-up by relay",
   "@transportCatchUpByRelay": {
     "description": "screens/transport_screen.dart"
   },
-  "transportControlPort": "control port",
+  "transportControlPort": "Control port",
   "@transportControlPort": {
     "description": "screens/transport_screen.dart"
   },
@@ -6781,7 +6781,7 @@
       }
     }
   },
-  "transportJobRuns": "job runs",
+  "transportJobRuns": "Job runs",
   "@transportJobRuns": {
     "description": "screens/transport_screen.dart"
   },
@@ -8075,7 +8075,7 @@
   "@seenIntroductions": {
     "description": "screens/seen_screen.dart"
   },
-  "donateAddress": "address",
+  "donateAddress": "Address",
   "@donateAddress": {
     "description": "screens/donate_screen.dart"
   },
@@ -8111,27 +8111,31 @@
   "@chatAccept": {
     "description": "screens/chat_screen.dart"
   },
-  "bridgesConnecting": "connecting",
+  "bridgesConnecting": "Connecting",
   "@bridgesConnecting": {
     "description": "screens/bridges_screen.dart"
   },
-  "restoreMade": "made",
+  "bridgesSavedTag": "Saved",
+  "@bridgesSavedTag": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "restoreMade": "Made",
   "@restoreMade": {
     "description": "screens/restore_screen.dart"
   },
-  "restoreContacts": "contacts",
+  "restoreContacts": "Contacts",
   "@restoreContacts": {
     "description": "screens/restore_screen.dart"
   },
-  "restoreMessages": "messages",
+  "restoreMessages": "Messages",
   "@restoreMessages": {
     "description": "screens/restore_screen.dart"
   },
-  "restoreAttachments": "attachments",
+  "restoreAttachments": "Attachments",
   "@restoreAttachments": {
     "description": "screens/restore_screen.dart"
   },
-  "restoreHiddenChats": "hidden chats",
+  "restoreHiddenChats": "Hidden chats",
   "@restoreHiddenChats": {
     "description": "screens/restore_screen.dart: what comes back, a label beside the number of hidden chats (lowercase like contacts and messages)"
   },
@@ -8175,43 +8179,43 @@
   "@avatarPickerTurn": {
     "description": "screens/avatar_picker_screen.dart"
   },
-  "transportStatus": "status",
+  "transportStatus": "Status",
   "@transportStatus": {
     "description": "screens/transport_screen.dart"
   },
-  "transportBootstrap": "bootstrap",
+  "transportBootstrap": "Bootstrap",
   "@transportBootstrap": {
     "description": "screens/transport_screen.dart"
   },
-  "transportNetwork": "network",
+  "transportNetwork": "Network",
   "@transportNetwork": {
     "description": "screens/transport_screen.dart"
   },
-  "transportConnectivity": "connectivity",
+  "transportConnectivity": "Connectivity",
   "@transportConnectivity": {
     "description": "screens/transport_screen.dart"
   },
-  "transportRelays": "relays",
+  "transportRelays": "Relays",
   "@transportRelays": {
     "description": "screens/transport_screen.dart"
   },
-  "transportTraffic": "traffic",
+  "transportTraffic": "Traffic",
   "@transportTraffic": {
     "description": "screens/transport_screen.dart"
   },
-  "transportContacts": "contacts",
+  "transportContacts": "Contacts",
   "@transportContacts": {
     "description": "screens/transport_screen.dart"
   },
-  "transportKnown": "known",
+  "transportKnown": "Known",
   "@transportKnown": {
     "description": "screens/transport_screen.dart"
   },
-  "transportListening": "listening",
+  "transportListening": "Listening",
   "@transportListening": {
     "description": "screens/transport_screen.dart"
   },
-  "transportMemory": "memory",
+  "transportMemory": "Memory",
   "@transportMemory": {
     "description": "screens/transport_screen.dart"
   },
@@ -8377,7 +8381,7 @@
   "@photoKnowsLookedFor": {
     "description": "screens/photo_knows_screen.dart: the heading over the fields the app looked for in a file that turned out to carry none of them"
   },
-  "photoKnowsNotInIt": "not in it",
+  "photoKnowsNotInIt": "Not in it",
   "@photoKnowsNotInIt": {
     "description": "screens/photo_knows_screen.dart: after each field that was looked for and is not in the file (location, time taken, phone model...)"
   },

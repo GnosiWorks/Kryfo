@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // pick the backup file, type the passphrase, see what is about to come back,
 // then restore. every failure names its cause. recovery is the encrypted
-// file plus its passphrase; there is no word list.
+// file plus its passphrase; there is no word list. a step done turns its
+// number into a tick.
 import 'dart:io';
 import '../lock_state.dart';
 
@@ -14,13 +15,16 @@ import '../main.dart' show appState, engine, shredFile;
 import '../picked.dart';
 import '../theme.dart';
 import '../widgets/confirm_sheet.dart';
+import '../widgets/ease_size.dart';
+import '../widgets/halo_bar.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/stagger_in.dart';
+import '../widgets/swap.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import '../backup_stream.dart' show isBackupV2;
 import '../widgets/halo_sheet.dart';
-import '../widgets/motion.dart' show haloRoute;
+import '../widgets/motion.dart' show haloRoute, kHouseCurve, motionStill;
 import '../widgets/sheet_handle.dart';
 import 'pin_flow_screen.dart';
 import '../l10n/l10n.dart';
@@ -391,7 +395,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
   @override
   Widget build(BuildContext context) {
     final s = _summary;
-    final still = MediaQuery.of(context).disableAnimations;
+    final moving = _busy && !_releasing && s != null;
     return Scaffold(
       backgroundColor: HaloColors.surface,
       appBar: AppBar(
@@ -424,6 +428,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
             _Step(
               n: '1',
               label: l10n.restoreTheFile,
+              done: _hasFile,
               child: PressScale(
                 onTap: _busy ? null : _pick,
                 child: Container(
@@ -448,15 +453,18 @@ class _RestoreScreenState extends State<RestoreScreen> {
                       ),
                       const SizedBox(width: 10),
                       Expanded(
-                        child: Text(
-                          _fileName ?? l10n.restorePickTheBackupFile,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: HaloType.sans(
-                            size: 13.5,
-                            color: _fileName == null
-                                ? HaloColors.text2
-                                : HaloColors.text,
+                        child: RiseSwap(
+                          child: Text(
+                            _fileName ?? l10n.restorePickTheBackupFile,
+                            key: ValueKey(_fileName),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: HaloType.sans(
+                              size: 13.5,
+                              color: _fileName == null
+                                  ? HaloColors.text2
+                                  : HaloColors.text,
+                            ),
                           ),
                         ),
                       ),
@@ -466,17 +474,14 @@ class _RestoreScreenState extends State<RestoreScreen> {
               ),
             ),
             const SizedBox(height: 14),
-            AnimatedSize(
-              duration: still
-                  ? Duration.zero
-                  : const Duration(milliseconds: 220),
-              curve: Curves.easeOutCubic,
-              alignment: Alignment.topCenter,
+            EaseSize(
+              duration: const Duration(milliseconds: 220),
               child: !_hasFile
                   ? const SizedBox(width: double.infinity)
                   : _Step(
                       n: '2',
                       label: l10n.restoreThePassphrase,
+                      done: s != null,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 14,
@@ -515,12 +520,8 @@ class _RestoreScreenState extends State<RestoreScreen> {
                       ),
                     ),
             ),
-            AnimatedSize(
-              duration: still
-                  ? Duration.zero
-                  : const Duration(milliseconds: 220),
-              curve: Curves.easeOutCubic,
-              alignment: Alignment.topCenter,
+            EaseSize(
+              duration: const Duration(milliseconds: 220),
               child: _error == null
                   ? const SizedBox(width: double.infinity)
                   : Padding(
@@ -531,12 +532,8 @@ class _RestoreScreenState extends State<RestoreScreen> {
                       ),
                     ),
             ),
-            AnimatedSize(
-              duration: still
-                  ? Duration.zero
-                  : const Duration(milliseconds: 240),
-              curve: Curves.easeOutCubic,
-              alignment: Alignment.topCenter,
+            EaseSize(
+              duration: const Duration(milliseconds: 240),
               child: s == null
                   ? const SizedBox(width: double.infinity)
                   : Padding(
@@ -563,8 +560,23 @@ class _RestoreScreenState extends State<RestoreScreen> {
                           ? l10n.restoreMoving(percent(_progress))
                           : l10n.restoreRestoring)
                     : l10n.restoreRestore,
+                // the percent changes in place, not rising each time
+                phase: _releasing
+                    ? 'release'
+                    : _busy
+                    ? (_path != null && _progress > 0 ? 'moving' : 'busy')
+                    : 'restore',
                 onTap: _busy ? null : _restore,
               ),
+            // the move, as far as it has got
+            EaseSize(
+              child: !moving || _path == null
+                  ? const SizedBox(width: double.infinity)
+                  : Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: HaloBar(value: _progress, height: 3),
+                    ),
+            ),
             if (s != null) ...[
               const SizedBox(height: 6),
               Center(
@@ -596,23 +608,21 @@ class _RestoreScreenState extends State<RestoreScreen> {
 class _Step extends StatelessWidget {
   final String n;
   final String label;
+  final bool done;
   final Widget child;
-  const _Step({required this.n, required this.label, required this.child});
+  const _Step({
+    required this.n,
+    required this.label,
+    required this.child,
+    this.done = false,
+  });
   @override
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Row(
         children: [
-          Text(
-            '0$n',
-            style: HaloType.mono(
-              size: 10,
-              color: HaloColors.amber,
-              letter: 0.2,
-              weight: FontWeight.w600,
-            ),
-          ),
+          _StepMark(n: n, done: done),
           const SizedBox(width: 10),
           Text(
             label,
@@ -628,6 +638,54 @@ class _Step extends StatelessWidget {
       child,
     ],
   );
+}
+
+// a step's number, or its tick once done: the tick pops in on the house
+// spring. simply swaps with less movement
+class _StepMark extends StatelessWidget {
+  final String n;
+  final bool done;
+  const _StepMark({required this.n, required this.done});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 18,
+      height: 14,
+      child: AnimatedSwitcher(
+        duration: motionStill(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 260),
+        transitionBuilder: (c, a) => FadeTransition(
+          opacity: a,
+          child: ScaleTransition(
+            scale: Tween(
+              begin: 0.4,
+              end: 1.0,
+            ).animate(CurvedAnimation(parent: a, curve: kHouseCurve)),
+            child: c,
+          ),
+        ),
+        child: done
+            ? Icon(
+                Icons.check_rounded,
+                key: const ValueKey('done'),
+                size: 14,
+                color: HaloColors.green,
+              )
+            : Text(
+                '0$n',
+                key: const ValueKey('n'),
+                style: HaloType.mono(
+                  size: 10,
+                  color: HaloColors.amber,
+                  letter: 0.2,
+                  weight: FontWeight.w600,
+                ),
+              ),
+      ),
+    );
+  }
 }
 
 class _SummaryCard extends StatelessWidget {
@@ -693,7 +751,12 @@ class _SummaryCard extends StatelessWidget {
             style: HaloType.mono(size: 10.5, color: HaloColors.text3),
           ),
         ),
-        Text(v, style: HaloType.sans(size: 13.5, color: HaloColors.text)),
+        Expanded(
+          child: Text(
+            v,
+            style: HaloType.mono(size: 12.5, color: HaloColors.text, letter: 0),
+          ),
+        ),
       ],
     ),
   );
@@ -701,8 +764,10 @@ class _SummaryCard extends StatelessWidget {
 
 class _Primary extends StatelessWidget {
   final String label;
+  // what the label says, for when it changes: a new phase rises in
+  final String? phase;
   final VoidCallback? onTap;
-  const _Primary({required this.label, required this.onTap});
+  const _Primary({required this.label, required this.onTap, this.phase});
   @override
   Widget build(BuildContext context) {
     final on = onTap != null;
@@ -718,12 +783,16 @@ class _Primary extends StatelessWidget {
           color: on ? HaloColors.amber : HaloColors.surface3,
           borderRadius: BorderRadius.circular(13),
         ),
-        child: Text(
-          label,
-          style: HaloType.sans(
-            size: 14,
-            weight: FontWeight.w600,
-            color: on ? HaloColors.onAmber : HaloColors.text3,
+        child: RiseSwap(
+          alignment: Alignment.center,
+          child: Text(
+            label,
+            key: ValueKey(phase ?? label),
+            style: HaloType.sans(
+              size: 14,
+              weight: FontWeight.w600,
+              color: on ? HaloColors.onAmber : HaloColors.text3,
+            ),
           ),
         ),
       ),

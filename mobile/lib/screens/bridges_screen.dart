@@ -3,17 +3,20 @@
 // kryfo matters most that is enough to get it blocked. a bridge is an entry
 // point that is not published anywhere, reached through obfs4, which makes
 // the traffic look like nothing in particular.
-import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../main.dart' hide live;
+import '../seen_timers.dart';
 import '../theme.dart';
+import '../widgets/ease_size.dart';
 import '../widgets/motion.dart';
+import '../widgets/press_scale.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/halo_switch.dart';
+import '../widgets/swap.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
 
@@ -32,7 +35,16 @@ class _BridgesScreenState extends State<BridgesScreen> {
   bool _asking = false;
   bool _reconnecting = false;
   int _elapsed = 0;
-  Timer? _tick;
+  // when the reconnect began, and the route before it
+  int _since = 0;
+  int _genBefore = 0;
+  // the reconnect is watched once a second while the page is seen. away or
+  // under the lock nothing ticks; back, it looks at once
+  final _timers = SeenTimers();
+  late final SeenJob _tick = _timers.until(
+    () => _reconnecting ? const Duration(seconds: 1) : null,
+    (_) => _watch(),
+  );
   String? _captcha;
   String? _challenge;
   String? _askError;
@@ -48,8 +60,14 @@ class _BridgesScreenState extends State<BridgesScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _timers.watch(context);
+  }
+
+  @override
   void dispose() {
-    _tick?.cancel();
+    _timers.dispose();
     _ctrl.dispose();
     _answer.dispose();
     super.dispose();
@@ -132,38 +150,37 @@ class _BridgesScreenState extends State<BridgesScreen> {
     // the route generation before the reconnect. the reconnect happens after
     // restartTor returns, so a "ready" in the next second or two is the old
     // tor. connected means a newer route that a relay has connected through.
-    final genBefore = appState.routeGen;
+    _genBefore = appState.routeGen;
     engine.restartTor();
     if (!mounted) return;
     setState(() {
       _result = r;
       _reconnecting = true;
       _elapsed = 0;
+      _since = DateTime.now().millisecondsSinceEpoch;
     });
     // a dead button for minutes looks broken. count, and stop when tor can
     // carry traffic again.
-    _tick?.cancel();
-    _tick = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (!mounted) {
-        t.cancel();
-        return;
-      }
-      setState(() => _elapsed++);
-      final through = appState.routeGen > genBefore && appState.torReady;
-      if (through || _elapsed > 240) {
-        t.cancel();
-        setState(() {
-          _reconnecting = false;
-          _busy = false;
-        });
-        if (through) {
-          HapticFeedback.mediumImpact();
-          showHaloToast(context, l10n.bridgesConnected);
-        } else {
-          showHaloToast(context, l10n.bridgesNotThroughYetTor);
-        }
-      }
+    _tick.poke();
+  }
+
+  void _watch() {
+    if (!mounted || !_reconnecting) return;
+    final through = appState.routeGen > _genBefore && appState.torReady;
+    setState(
+      () => _elapsed = (DateTime.now().millisecondsSinceEpoch - _since) ~/ 1000,
+    );
+    if (!through && _elapsed <= 240) return;
+    setState(() {
+      _reconnecting = false;
+      _busy = false;
     });
+    if (through) {
+      HapticFeedback.mediumImpact();
+      showHaloToast(context, l10n.bridgesConnected);
+    } else {
+      showHaloToast(context, l10n.bridgesNotThroughYetTor);
+    }
   }
 
   // which card the saved lines came from. the connected state sits on that
@@ -381,9 +398,10 @@ class _BridgesScreenState extends State<BridgesScreen> {
             ),
           ),
           const SizedBox(height: 20),
-          GestureDetector(
+          PressScale(
+            scale: 0.97,
+            haptic: false,
             onTap: _busy ? null : _save,
-            behavior: HitTestBehavior.opaque,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 180),
               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -410,10 +428,13 @@ class _BridgesScreenState extends State<BridgesScreen> {
                   ? Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        // an arc that turns while tor comes back, held
+                        // still with less movement
                         SizedBox(
                           width: 13,
                           height: 13,
                           child: CircularProgressIndicator(
+                            value: motionStill(context) ? 0.3 : null,
                             strokeWidth: 2,
                             color: HaloColors.violet,
                           ),
@@ -447,18 +468,25 @@ class _BridgesScreenState extends State<BridgesScreen> {
             ),
           ),
           // the engine answers "ok: 3 bridges", never a bare ok
-          if (_result != null) ...[
-            const SizedBox(height: 10),
-            Text(
-              _resultLine(_result!),
-              style: HaloType.mono(
-                size: 11,
-                color: _result!.startsWith('ok')
-                    ? HaloColors.text2
-                    : HaloColors.rose,
-              ),
-            ),
-          ],
+          EaseSize(
+            child: _result == null
+                ? const SizedBox(width: double.infinity)
+                : Padding(
+                    padding: const EdgeInsets.only(top: 10),
+                    child: RiseSwap(
+                      child: Text(
+                        _resultLine(_result!),
+                        key: ValueKey(_result),
+                        style: HaloType.mono(
+                          size: 11,
+                          color: _result!.startsWith('ok')
+                              ? HaloColors.text2
+                              : HaloColors.rose,
+                        ),
+                      ),
+                    ),
+                  ),
+          ),
           const SizedBox(height: 22),
           _Note(l10n.bridgesWhatABridgeIs, l10n.bridgesATorEntryPoint),
         ]),
@@ -523,14 +551,18 @@ class _BridgeCard extends StatelessWidget {
                   style: HaloType.sans(size: 12, color: HaloColors.text2),
                 ),
               ),
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 200),
+              RiseSwap(
+                alignment: AlignmentDirectional.centerEnd,
                 child: connected
                     ? Row(
                         key: const ValueKey('on'),
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          BreathDot(color: HaloColors.green, size: 6),
+                          BreathDot(
+                            color: HaloColors.green,
+                            size: 6,
+                            breaths: 3,
+                          ),
                           const SizedBox(width: 6),
                           Text(
                             l10n.bridgesConnected,
@@ -556,7 +588,7 @@ class _BridgeCard extends StatelessWidget {
                     : active
                     ? Text(
                         key: const ValueKey('saved'),
-                        'saved',
+                        l10n.bridgesSavedTag,
                         style: HaloType.mono(
                           size: 10,
                           color: HaloColors.violet,
@@ -741,10 +773,11 @@ class _RequestBlock extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                GestureDetector(
+                PressScale(
+                  scale: 0.95,
                   onTap: asking ? null : onSend,
-                  behavior: HitTestBehavior.opaque,
-                  child: Container(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 13,
@@ -754,7 +787,7 @@ class _RequestBlock extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
-                      asking ? '…' : 'send',
+                      asking ? '…' : l10n.commonSend,
                       style: HaloType.mono(
                         size: 12,
                         color: HaloColors.text,
@@ -796,9 +829,10 @@ class _Ghost extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => GestureDetector(
+  Widget build(BuildContext context) => PressScale(
+    scale: 0.97,
+    haptic: false,
     onTap: onTap,
-    behavior: HitTestBehavior.opaque,
     child: Row(
       children: [
         Icon(icon, size: 15, color: HaloColors.amber),

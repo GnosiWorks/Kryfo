@@ -295,9 +295,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       appBar: AppBar(
         backgroundColor: HaloColors.surface,
         elevation: 0,
-        // the list slides under a plain bar, never a tinted one
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
         leading: BackButton(color: HaloColors.text2),
         title: Text(
           l10n.commonSettings,

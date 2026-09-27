@@ -1,13 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // message requests from people not in your contacts. accept, decline or
-// block on the card, or tap it to read the conversation first.
-import 'dart:async';
-
+// block on the card, or tap it to read the conversation first. an answered
+// card folds away and the ones under it glide up.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../lock_guard.dart' show lockGuard;
 import '../main.dart' show session, appState;
 import '../theme.dart';
+import '../widgets/breathing_ring.dart';
+import '../widgets/burn_fade.dart' show FadeFold;
+import '../widgets/press_scale.dart';
+import '../widgets/row_motion.dart';
 import '../widgets/stagger_in.dart';
+import '../widgets/swap.dart';
 import '../widgets/kryfo_avatar.dart';
 import '../widgets/intro_chip.dart';
 import '../vouch_text.dart';
@@ -35,7 +40,13 @@ class _Introducer {
 }
 
 class _RequestsScreenState extends State<RequestsScreen> {
-  List<Map<String, Object?>> _pending = [];
+  // the cards drawn: the pending ones, and any answered one still folding
+  late final RowSet<Map<String, Object?>> _rows = RowSet(
+    keyOf: (r) => r['halo_id'] as String,
+    onGone: () {
+      if (mounted) setState(() {});
+    },
+  );
   final Map<String, String> _previews = {};
   final Map<String, _Introducer> _introducers = {};
   final Map<String, ShieldFlag> _flags = {};
@@ -46,6 +57,12 @@ class _RequestsScreenState extends State<RequestsScreen> {
   void initState() {
     super.initState();
     _load();
+  }
+
+  @override
+  void dispose() {
+    _rows.dispose();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -88,18 +105,27 @@ class _RequestsScreenState extends State<RequestsScreen> {
     }
     if (!mounted) return;
     setState(() {
-      _pending = rows;
+      if (_loading) {
+        _rows.start(rows);
+      } else {
+        // under the lock nothing is watched: no fold, no growing
+        _rows.update(rows, quiet: lockGuard.isLocked());
+      }
+      // a card on its way out keeps what it showed while it folds
+      final now = {for (final r in rows) r['halo_id'] as String};
+      final drawn = {for (final r in _rows.rows) r['halo_id'] as String};
+      bool stale(String id) => now.contains(id) || !drawn.contains(id);
       _previews
-        ..clear()
+        ..removeWhere((id, _) => stale(id))
         ..addAll(previews);
       _introducers
-        ..clear()
+        ..removeWhere((id, _) => stale(id))
         ..addAll(introducers);
       _flags
-        ..clear()
+        ..removeWhere((id, _) => stale(id))
         ..addAll(flags);
       _clean
-        ..clear()
+        ..removeWhere(stale)
         ..addAll(clean);
       _loading = false;
     });
@@ -179,8 +205,46 @@ class _RequestsScreenState extends State<RequestsScreen> {
     await _load();
   }
 
+  Widget _card(Map<String, Object?> row, int i) {
+    final id = row['halo_id'] as String;
+    final leaving = _rows.leaving(row);
+    return IgnorePointer(
+      key: ValueKey('req_$id'),
+      ignoring: leaving,
+      child: FadeFold(
+        leaving: leaving,
+        child: GrowIn(
+          active: _rows.fresh(row),
+          child: StaggerIn(
+            index: i,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: _RequestCard(
+                order: i,
+                haloId: id,
+                avatar: (row['avatar'] as num?)?.toInt(),
+                preview: _previews[id] ?? '',
+                introducer: _introducers[id],
+                flag: _flags[id],
+                clean: _clean.contains(id),
+                onShield: () => _shield(id),
+                onTap: () => _open(row),
+                onAccept: () => _accept(id),
+                onDecline: () => _decline(id),
+                onBlock: () => _block(id),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final rows = _rows.rows;
+    // the cards built this frame have read whether they are new
+    WidgetsBinding.instance.addPostFrameCallback((_) => _rows.built());
     return Scaffold(
       backgroundColor: HaloColors.surface,
       appBar: AppBar(
@@ -194,71 +258,72 @@ class _RequestsScreenState extends State<RequestsScreen> {
       ),
       body: _loading
           ? const SizedBox.shrink()
-          : _pending.isEmpty
-          ? _empty()
-          : ListView.separated(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-              itemCount: _pending.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 10),
-              itemBuilder: (context, i) {
-                final row = _pending[i];
-                final id = row['halo_id'] as String;
-                return _RequestCard(
-                  key: ValueKey('req_$id'),
-                  order: i,
-                  haloId: id,
-                  avatar: (row['avatar'] as num?)?.toInt(),
-                  preview: _previews[id] ?? '',
-                  introducer: _introducers[id],
-                  flag: _flags[id],
-                  clean: _clean.contains(id),
-                  onShield: () => _shield(id),
-                  onTap: () => _open(row),
-                  onAccept: () => _accept(id),
-                  onDecline: () => _decline(id),
-                  onBlock: () => _block(id),
-                );
-              },
+          // the last card folds away, then the empty page fades in
+          : FadeSwap(
+              child: rows.isEmpty
+                  ? KeyedSubtree(key: const ValueKey('none'), child: _empty())
+                  : ListView(
+                      key: const ValueKey('cards'),
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
+                      children: [
+                        for (final (i, row) in rows.indexed) _card(row, i),
+                      ],
+                    ),
             ),
     );
   }
 
   Widget _empty() {
     return Center(
-      child: StaggerIn(
-        index: 0,
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const _BreathingInbox(),
-              const SizedBox(height: 14),
-              Text(
-                l10n.requestsNoRequests,
-                style: HaloType.serif(size: 18, color: HaloColors.text2),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                l10n.requestsMessagesFromPeopleYou,
-                textAlign: TextAlign.center,
-                style: HaloType.sans(
-                  size: 13,
-                  color: HaloColors.text3,
-                  height: 1.5,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 44),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: staggerAll([
+            BreathingRing(
+              size: 98,
+              core: 66,
+              child: Container(
+                width: 66,
+                height: 66,
+                decoration: BoxDecoration(
+                  color: HaloColors.amberSoft,
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Icon(
+                  Icons.inbox_outlined,
+                  color: HaloColors.amber,
+                  size: 28,
                 ),
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              l10n.requestsNoRequests,
+              textAlign: TextAlign.center,
+              style: HaloType.serif(size: 24, color: HaloColors.text),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              l10n.requestsMessagesFromPeopleYou,
+              textAlign: TextAlign.center,
+              style: HaloType.sans(
+                size: 12.5,
+                color: HaloColors.text2,
+                height: 1.55,
+              ),
+            ),
+          ]),
         ),
       ),
     );
   }
 }
 
-// staggered fade-and-rise as each card comes in. tap opens the conversation.
-// an introduced row carries the vouching friend as an amber chip.
-class _RequestCard extends StatefulWidget {
+// tap opens the conversation. an introduced row carries the vouching friend
+// as an amber chip.
+class _RequestCard extends StatelessWidget {
   final int order;
   final String haloId;
   final int? avatar;
@@ -272,7 +337,6 @@ class _RequestCard extends StatefulWidget {
   final VoidCallback onDecline;
   final VoidCallback onBlock;
   const _RequestCard({
-    super.key,
     required this.order,
     required this.haloId,
     this.avatar,
@@ -286,158 +350,100 @@ class _RequestCard extends StatefulWidget {
     required this.onDecline,
     required this.onBlock,
   });
-  @override
-  State<_RequestCard> createState() => _RequestCardState();
-}
-
-class _RequestCardState extends State<_RequestCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _in;
-  double _s = 1.0;
-
-  @override
-  void initState() {
-    super.initState();
-    _in = AnimationController(
-      duration: const Duration(milliseconds: 360),
-      vsync: this,
-    );
-    Future.delayed(Duration(milliseconds: 60 * widget.order), () {
-      if (mounted) _in.forward();
-    });
-  }
-
-  @override
-  void dispose() {
-    _in.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
-    final fade = CurvedAnimation(parent: _in, curve: Curves.easeOut);
-    return FadeTransition(
-      opacity: fade,
-      child: SlideTransition(
-        position: Tween<Offset>(
-          begin: const Offset(0, 0.08),
-          end: Offset.zero,
-        ).animate(fade),
-        child: GestureDetector(
-          onTapDown: (_) => setState(() => _s = 0.98),
-          onTapUp: (_) => setState(() => _s = 1.0),
-          onTapCancel: () => setState(() => _s = 1.0),
-          onTap: widget.onTap,
-          child: AnimatedScale(
-            scale: _s,
-            duration: const Duration(milliseconds: 100),
-            curve: Curves.easeOut,
-            child: Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: HaloColors.surface2,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: HaloColors.line, width: 0.5),
-              ),
-              child: Row(
+    return PressScale(
+      onTap: onTap,
+      scale: 0.98,
+      haptic: false,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: HaloColors.surface2,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: HaloColors.line, width: 0.5),
+        ),
+        child: Row(
+          children: [
+            Hero(
+              tag: 'face-$haloId',
+              child: KryfoAvatar(seed: haloId, size: 44, choice: avatar),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Hero(
-                    tag: 'face-${widget.haloId}',
-                    child: KryfoAvatar(
-                      seed: widget.haloId,
-                      size: 44,
-                      choice: widget.avatar,
+                  Text(
+                    haloId,
+                    style: HaloType.mono(
+                      size: 12,
+                      color: HaloColors.text,
+                      weight: FontWeight.w500,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.haloId,
-                          style: HaloType.mono(
-                            size: 12,
-                            color: HaloColors.text,
-                            weight: FontWeight.w500,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        if (widget.introducer != null) ...[
-                          const SizedBox(height: 6),
-                          IntroducedBy(
-                            label: widget.introducer!.label,
-                            seed: widget.introducer!.seed,
-                            avatar: widget.introducer!.avatar,
-                            verified: widget.introducer!.verified,
-                            delay: Duration(
-                              milliseconds: 60 * widget.order + 180,
-                            ),
-                          ),
-                        ],
-                        if (widget.flag != null) ...[
-                          const SizedBox(height: 7),
-                          NoticeBanner(
-                            glyph: NoticeGlyph.shield,
-                            text: widget.flag!.headline,
-                            color: HaloColors.rose,
-                            delay: Duration(
-                              milliseconds: 60 * widget.order + 220,
-                            ),
-                            onTap: widget.onShield,
-                          ),
-                        ] else if (widget.clean) ...[
-                          const SizedBox(height: 7),
-                          NoticeBanner(
-                            glyph: NoticeGlyph.shield,
-                            text: l10n.requestsLooksSafeNothingSuspicious,
-                            color: HaloColors.green,
-                            delay: Duration(
-                              milliseconds: 60 * widget.order + 220,
-                            ),
-                          ),
-                        ],
-                        const SizedBox(height: 4),
-                        Text(
-                          widget.preview,
-                          style: HaloType.sans(
-                            size: 13,
-                            color: HaloColors.text2,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 10),
-                        Row(
-                          children: [
-                            _Answer(
-                              label: l10n.commonAccept,
-                              filled: true,
-                              onTap: widget.onAccept,
-                            ),
-                            const SizedBox(width: 8),
-                            _Answer(
-                              label: l10n.requestsDecline,
-                              onTap: widget.onDecline,
-                            ),
-                            const SizedBox(width: 8),
-                            _Answer(
-                              label: l10n.commonBlock,
-                              color: HaloColors.rose,
-                              onTap: widget.onBlock,
-                            ),
-                          ],
-                        ),
-                      ],
+                  if (introducer != null) ...[
+                    const SizedBox(height: 6),
+                    IntroducedBy(
+                      label: introducer!.label,
+                      seed: introducer!.seed,
+                      avatar: introducer!.avatar,
+                      verified: introducer!.verified,
+                      delay: Duration(milliseconds: 60 * order + 180),
                     ),
+                  ],
+                  if (flag != null) ...[
+                    const SizedBox(height: 7),
+                    NoticeBanner(
+                      glyph: NoticeGlyph.shield,
+                      text: flag!.headline,
+                      color: HaloColors.rose,
+                      delay: Duration(milliseconds: 60 * order + 220),
+                      onTap: onShield,
+                    ),
+                  ] else if (clean) ...[
+                    const SizedBox(height: 7),
+                    NoticeBanner(
+                      glyph: NoticeGlyph.shield,
+                      text: l10n.requestsLooksSafeNothingSuspicious,
+                      color: HaloColors.green,
+                      delay: Duration(milliseconds: 60 * order + 220),
+                    ),
+                  ],
+                  const SizedBox(height: 4),
+                  Text(
+                    preview,
+                    style: HaloType.sans(size: 13, color: HaloColors.text2),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(width: 8),
-                  Icon(Icons.chevron_right, size: 20, color: HaloColors.text3),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      _Answer(
+                        label: l10n.commonAccept,
+                        filled: true,
+                        onTap: onAccept,
+                      ),
+                      const SizedBox(width: 8),
+                      _Answer(label: l10n.requestsDecline, onTap: onDecline),
+                      const SizedBox(width: 8),
+                      _Answer(
+                        label: l10n.commonBlock,
+                        color: HaloColors.rose,
+                        onTap: onBlock,
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
-          ),
+            const SizedBox(width: 8),
+            Icon(Icons.chevron_right, size: 20, color: HaloColors.text3),
+          ],
         ),
       ),
     );
@@ -459,12 +465,12 @@ class _Answer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = color ?? (filled ? HaloColors.onAmber : HaloColors.text2);
-    return GestureDetector(
+    // the answer gives its own haptic
+    return PressScale(
       onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        curve: Curves.easeOut,
+      scale: 0.94,
+      haptic: false,
+      child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
           color: filled ? HaloColors.amber : Colors.transparent,
@@ -475,65 +481,6 @@ class _Answer extends StatelessWidget {
           label,
           style: HaloType.sans(size: 12.5, weight: FontWeight.w600, color: c),
         ),
-      ),
-    );
-  }
-}
-
-// soft amber ring breathing behind the empty inbox
-class _BreathingInbox extends StatefulWidget {
-  const _BreathingInbox();
-
-  @override
-  State<_BreathingInbox> createState() => _BreathingInboxState();
-}
-
-class _BreathingInboxState extends State<_BreathingInbox>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _pulse;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulse = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2600),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _pulse.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 72,
-      height: 72,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          AnimatedBuilder(
-            animation: _pulse,
-            builder: (_, _) {
-              final t = Curves.easeOut.transform(_pulse.value);
-              return Container(
-                width: 46 + 20 * t,
-                height: 46 + 20 * t,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: HaloColors.amber.withValues(alpha: 0.30 * (1 - t)),
-                    width: 1.2,
-                  ),
-                ),
-              );
-            },
-          ),
-          Icon(Icons.inbox_outlined, size: 34, color: HaloColors.text3),
-        ],
       ),
     );
   }

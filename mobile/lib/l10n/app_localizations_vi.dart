@@ -337,22 +337,22 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get appTorWouldNotWake => 'tor không khởi động được';
+  String get appTorWouldNotWake => 'Tor không khởi động được';
 
   @override
-  String get appCheckStarted => 'đã bắt đầu';
+  String get appCheckStarted => 'Đã bắt đầu';
 
   @override
-  String get appTorNotReadyIn => 'tor chưa sẵn sàng sau 75s';
+  String get appTorNotReadyIn => 'Tor chưa sẵn sàng sau 75s';
 
   @override
-  String get appOk => 'ok';
+  String get appOk => 'OK';
 
   @override
-  String get appOkNoRelayBegan => 'ok, không relay nào trả lời';
+  String get appOkNoRelayBegan => 'OK, không relay nào trả lời';
 
   @override
-  String get appOkCapped => 'ok, bị cắt ngang';
+  String get appOkCapped => 'OK, bị cắt ngang';
 
   @override
   String appSBy(Object how, int secs, String why) {
@@ -707,7 +707,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get miuiAutostartCouldnTOpenIt =>
-      'không mở được. hãy tìm mục tự khởi động trong cài đặt điện thoại';
+      'Không mở được. Hãy tìm mục tự khởi động trong cài đặt điện thoại';
 
   @override
   String get notificationsNewEncryptedMessagesFrom =>
@@ -1059,10 +1059,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get bridgesFromTheTorProject => 'Từ dự án tor';
 
   @override
-  String get bridgesNoise => 'nhiễu';
+  String get bridgesNoise => 'Nhiễu';
 
   @override
-  String get bridgesGood => 'tốt';
+  String get bridgesGood => 'Tốt';
 
   @override
   String get bridgesMakesTorTrafficLook =>
@@ -1078,7 +1078,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get bridgesWhateverTheLineSays => 'Tùy theo dòng đó';
 
   @override
-  String get bridgesDepends => 'tùy';
+  String get bridgesDepends => 'Tùy';
 
   @override
   String get bridgesGotABridgeLine =>
@@ -1137,7 +1137,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get bridgesLooksLike => 'Trông giống';
 
   @override
-  String get bridgesSpeed => 'tốc độ';
+  String get bridgesSpeed => 'Tốc độ';
 
   @override
   String get bridgesGetBridges => 'Lấy cầu nối';
@@ -2046,7 +2046,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get contactDeleted => 'Đã xóa';
 
   @override
-  String get contactToday => 'hôm nay';
+  String get contactToday => 'Hôm nay';
 
   @override
   String contactD(int count) {
@@ -2085,11 +2085,11 @@ class AppLocalizationsVi extends AppLocalizations {
   String get contactChatting => 'Đã trò chuyện';
 
   @override
-  String get contactNothingSharedYet => 'chưa chia sẻ gì';
+  String get contactNothingSharedYet => 'Chưa chia sẻ gì';
 
   @override
   String contactSharedMedia(Object count) {
-    return 'tệp đã chia sẻ · $count';
+    return 'Tệp đã chia sẻ · $count';
   }
 
   @override
@@ -2099,13 +2099,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get donateText => '₿';
 
   @override
-  String get donateBadgeUnlocks => 'mở khóa huy hiệu';
+  String get donateBadgeUnlocks => 'Mở khóa huy hiệu';
 
   @override
   String get donateMonero => 'Monero';
 
   @override
-  String get donateManualNoBadge => 'thủ công · không huy hiệu';
+  String get donateManualNoBadge => 'Thủ công · không huy hiệu';
 
   @override
   String get donateSolana => 'Solana';
@@ -2281,7 +2281,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get gettingMessagesAlwaysOn => 'Luôn bật';
 
   @override
-  String get gettingMessagesMostPrivate => 'riêng tư nhất';
+  String get gettingMessagesMostPrivate => 'Riêng tư nhất';
 
   @override
   String get gettingMessagesMessagesArriveInstantlyNothing =>
@@ -2291,7 +2291,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get gettingMessagesCheckIns => 'Kiểm tra định kỳ';
 
   @override
-  String get gettingMessagesLightest => 'nhẹ nhất';
+  String get gettingMessagesLightest => 'Nhẹ nhất';
 
   @override
   String get gettingMessagesKryfoLooksForMessages =>
@@ -2751,10 +2751,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get handleChecking => 'Đang kiểm tra…';
 
   @override
-  String get handleAvailable => '✓ còn trống';
+  String get handleAvailable => '✓ Còn trống';
 
   @override
-  String get handleAlreadyTaken => 'đã có người dùng';
+  String get handleAlreadyTaken => 'Đã có người dùng';
 
   @override
   String get handleWhatAHandleDoes => 'Tên người dùng để làm gì';
@@ -4395,10 +4395,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Bạn sẽ không nhận được gì từ họ nữa. Yêu cầu của họ và các tin nhắn trong đó sẽ bị xóa.';
 
   @override
-  String get requestsBlocked => 'đã chặn';
+  String get requestsBlocked => 'Đã chặn';
 
   @override
-  String get requestsDeleted => 'đã xóa';
+  String get requestsDeleted => 'Đã xóa';
 
   @override
   String get requestsRequests => 'Yêu cầu';
@@ -4696,10 +4696,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get roomLinkCopyRoomLink => 'Sao chép liên kết';
 
   @override
-  String get savedVoiceNote => 'tin nhắn thoại';
+  String get savedVoiceNote => 'Tin nhắn thoại';
 
   @override
-  String get savedPhoto => 'ảnh';
+  String get savedPhoto => 'Ảnh';
 
   @override
   String get savedSaved => 'Đã lưu';
@@ -4709,7 +4709,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get savedLongPressAnyMessage =>
-      'nhấn giữ một tin nhắn bất kỳ rồi chạm lưu để giữ nó ở đây.';
+      'Nhấn giữ một tin nhắn bất kỳ rồi chạm lưu để giữ nó ở đây.';
 
   @override
   String get savedViewInChat => 'Xem trong trò chuyện';
@@ -5152,10 +5152,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không có gì ở đây rời khỏi điện thoại. Đây chính là trạng thái mà bộ máy dùng để quyết định việc cần làm.';
 
   @override
-  String get transportStayingAlive => 'duy trì hoạt động';
+  String get transportStayingAlive => 'Duy trì hoạt động';
 
   @override
-  String get transportCanSend => 'gửi được';
+  String get transportCanSend => 'Gửi được';
 
   @override
   String get commonYes => 'Có';
@@ -5170,7 +5170,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get transportOffline => 'Ngoại tuyến';
 
   @override
-  String get transportQueuedToSend => 'chờ gửi';
+  String get transportQueuedToSend => 'Chờ gửi';
 
   @override
   String get transportOnionPublished => 'Đã công bố onion';
@@ -5205,13 +5205,13 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get transportOk => 'ok';
+  String get transportOk => 'OK';
 
   @override
   String get transportRelaySubscriptions => 'Đăng ký relay';
 
   @override
-  String get transportLastSent => 'gửi lần cuối';
+  String get transportLastSent => 'Gửi lần cuối';
 
   @override
   String get transportNever => 'Chưa bao giờ';
@@ -5222,7 +5222,7 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get transportLastReceived => 'nhận lần cuối';
+  String get transportLastReceived => 'Nhận lần cuối';
 
   @override
   String transportSAgo2(Object rx) {
@@ -5238,22 +5238,22 @@ class AppLocalizationsVi extends AppLocalizations {
       'Gửi mọi thứ đang chờ, ngay bây giờ';
 
   @override
-  String get transportOff => 'tắt';
+  String get transportOff => 'Tắt';
 
   @override
-  String get transportStarting => 'đang khởi động';
+  String get transportStarting => 'Đang khởi động';
 
   @override
-  String get transportBootstrapped => 'đã khởi tạo xong';
+  String get transportBootstrapped => 'Đã khởi tạo xong';
 
   @override
   String get transportPublishingAddress => 'Đang công bố địa chỉ';
 
   @override
-  String get transportReachable => 'liên lạc được';
+  String get transportReachable => 'Liên lạc được';
 
   @override
-  String get transportOurRelayOnion => 'relay của Kryfo (onion)';
+  String get transportOurRelayOnion => 'Relay của Kryfo (onion)';
 
   @override
   String get transportNever2 => 'chưa bao giờ';
@@ -5293,7 +5293,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String transportMb(Object b) {
-    return '$b mb';
+    return '$b MB';
   }
 
   @override
@@ -5311,19 +5311,19 @@ class AppLocalizationsVi extends AppLocalizations {
   String get transportBatteryExemption => 'Miễn tối ưu pin';
 
   @override
-  String get transportUnknown => 'không rõ';
+  String get transportUnknown => 'Không rõ';
 
   @override
-  String get transportExempt => 'được miễn';
+  String get transportExempt => 'Được miễn';
 
   @override
   String get transportNotExemptTapTo => 'Chưa được miễn · chạm để sửa';
 
   @override
-  String get transportProcessUp => 'tiến trình đã chạy';
+  String get transportProcessUp => 'Tiến trình đã chạy';
 
   @override
-  String get transportLastStop => 'lần dừng cuối';
+  String get transportLastStop => 'Lần dừng cuối';
 
   @override
   String transportEngine(Object mb, Object mb2) {
@@ -5334,19 +5334,19 @@ class AppLocalizationsVi extends AppLocalizations {
   String get transportLastRelayArrival => 'Lần cuối nhận từ relay';
 
   @override
-  String get transportLastCheckIn => 'lần kiểm tra cuối';
+  String get transportLastCheckIn => 'Lần kiểm tra cuối';
 
   @override
   String get transportNoneYet => 'Chưa có';
 
   @override
-  String get transportLastTorReconnect => 'lần cuối tor kết nối lại';
+  String get transportLastTorReconnect => 'Lần cuối Tor kết nối lại';
 
   @override
-  String get transportCatchUpByRelay => 'bắt kịp theo relay';
+  String get transportCatchUpByRelay => 'Bắt kịp theo relay';
 
   @override
-  String get transportControlPort => 'cổng điều khiển';
+  String get transportControlPort => 'Cổng điều khiển';
 
   @override
   String transportDialsTimeouts(int dials, int timeouts) {
@@ -5371,7 +5371,7 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get transportJobRuns => 'lượt chạy tác vụ';
+  String get transportJobRuns => 'Lượt chạy tác vụ';
 
   @override
   String transportLast(Object jobRuns, Object ago) {
@@ -6343,7 +6343,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get seenIntroductions => 'Lời giới thiệu';
 
   @override
-  String get donateAddress => 'địa chỉ';
+  String get donateAddress => 'Địa chỉ';
 
   @override
   String get donateCopy => 'Sao chép';
@@ -6370,22 +6370,25 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatAccept => 'Chấp nhận';
 
   @override
-  String get bridgesConnecting => 'đang kết nối';
+  String get bridgesConnecting => 'Đang kết nối';
 
   @override
-  String get restoreMade => 'ngày tạo';
+  String get bridgesSavedTag => 'Đã lưu';
 
   @override
-  String get restoreContacts => 'liên hệ';
+  String get restoreMade => 'Ngày tạo';
 
   @override
-  String get restoreMessages => 'tin nhắn';
+  String get restoreContacts => 'Liên hệ';
 
   @override
-  String get restoreAttachments => 'tệp đính kèm';
+  String get restoreMessages => 'Tin nhắn';
 
   @override
-  String get restoreHiddenChats => 'trò chuyện ẩn';
+  String get restoreAttachments => 'Tệp đính kèm';
+
+  @override
+  String get restoreHiddenChats => 'Trò chuyện ẩn';
 
   @override
   String get restoreHiddenFollow =>
@@ -6421,34 +6424,34 @@ class AppLocalizationsVi extends AppLocalizations {
   String get avatarPickerTurn => 'Xoay';
 
   @override
-  String get transportStatus => 'trạng thái';
+  String get transportStatus => 'Trạng thái';
 
   @override
-  String get transportBootstrap => 'khởi tạo';
+  String get transportBootstrap => 'Khởi tạo';
 
   @override
-  String get transportNetwork => 'mạng';
+  String get transportNetwork => 'Mạng';
 
   @override
-  String get transportConnectivity => 'kết nối';
+  String get transportConnectivity => 'Kết nối';
 
   @override
-  String get transportRelays => 'relay';
+  String get transportRelays => 'Relay';
 
   @override
-  String get transportTraffic => 'lưu lượng';
+  String get transportTraffic => 'Lưu lượng';
 
   @override
-  String get transportContacts => 'liên hệ';
+  String get transportContacts => 'Liên hệ';
 
   @override
-  String get transportKnown => 'đã biết';
+  String get transportKnown => 'Đã biết';
 
   @override
-  String get transportListening => 'đang nghe';
+  String get transportListening => 'Đang nghe';
 
   @override
-  String get transportMemory => 'bộ nhớ';
+  String get transportMemory => 'Bộ nhớ';
 
   @override
   String get settingsConnected => 'Đã kết nối';
@@ -6583,7 +6586,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get photoKnowsLookedFor => 'Đã tìm';
 
   @override
-  String get photoKnowsNotInIt => 'không có';
+  String get photoKnowsNotInIt => 'Không có';
 
   @override
   String get languageNameEn => 'Tiếng Anh';

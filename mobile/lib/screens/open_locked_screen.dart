@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 
+import '../seen_timers.dart';
 import '../theme.dart';
 import '../tools/age_ffi.dart';
 import '../tools/lock_words.dart';
 import '../tools/tools_bridge.dart';
+import '../widgets/ease_size.dart';
 import '../widgets/stroke_icon.dart';
+import '../widgets/swap.dart';
 import '../widgets/tool_parts.dart';
 import 'lock_file_screen.dart';
 import '../l10n/l10n.dart';
@@ -35,7 +36,15 @@ class OpenLockedScreen extends StatefulWidget {
 class _OpenLockedScreenState extends State<OpenLockedScreen> {
   final _pw = TextEditingController();
   late PickedFile _file = widget.file;
-  Timer? _poll;
+  // the progress, read while the file is written and the page is seen:
+  // away or under the lock nothing ticks, and back it reads at once
+  final _timers = SeenTimers();
+  late final SeenJob _poll = _timers.until(
+    () => _stage == _Stage.writing ? const Duration(milliseconds: 120) : null,
+    (_) {
+      if (mounted) setState(() => _done = ageProgress());
+    },
+  );
   var _stage = _Stage.form;
   bool _shown = false;
   int _done = 0;
@@ -52,8 +61,14 @@ class _OpenLockedScreenState extends State<OpenLockedScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _timers.watch(context);
+  }
+
+  @override
   void dispose() {
-    _poll?.cancel();
+    _timers.dispose();
     if (_stage == _Stage.writing) ageCancel();
     if (_stage == _Stage.checking) ageOpenDrop();
     // the listener goes first: clear() notifies, and a notify after the
@@ -122,11 +137,8 @@ class _OpenLockedScreenState extends State<OpenLockedScreen> {
       return _fail(AgeError.io);
     }
     if (mounted) setState(() => _stage = _Stage.writing);
-    _poll = Timer.periodic(const Duration(milliseconds: 120), (_) {
-      if (mounted) setState(() => _done = ageProgress());
-    });
+    _poll.poke();
     final err = await ageOpenFinish(outFd);
-    _poll?.cancel();
     if (err != null) {
       await ToolsBridge.instance.dropCreated(target);
       return _fail(err);
@@ -159,44 +171,57 @@ class _OpenLockedScreenState extends State<OpenLockedScreen> {
                     : l10n.openLockedOpenALockedFile,
               ),
               Expanded(
-                child: switch (_stage) {
-                  _Stage.checking => WorkingView(
-                    title: l10n.openLockedCheckingThePassword,
-                    done: 0,
-                    total: 0,
+                // each stage fades in over the last
+                child: FadeSwap(
+                  child: KeyedSubtree(
+                    key: ValueKey(_stage),
+                    child: switch (_stage) {
+                      _Stage.checking => WorkingView(
+                        title: l10n.openLockedCheckingThePassword,
+                        done: 0,
+                        total: 0,
+                      ),
+                      _Stage.writing => WorkingView(
+                        title: l10n.openLockedOpening,
+                        done: _done,
+                        total: _file.size,
+                      ),
+                      _Stage.done => _OpenedView(
+                        name: _savedAs ?? l10n.openLockedFile,
+                      ),
+                      _Stage.form => _form(),
+                    },
                   ),
-                  _Stage.writing => WorkingView(
-                    title: l10n.openLockedOpening,
-                    done: _done,
-                    total: _file.size,
-                  ),
-                  _Stage.done => _OpenedView(
-                    name: _savedAs ?? l10n.openLockedFile,
-                  ),
-                  _Stage.form => _form(),
-                },
+                ),
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 22),
-                child: switch (_stage) {
-                  _Stage.checking => const SizedBox(height: 50),
-                  _Stage.writing => ToolWideButton(
-                    label: l10n.commonStop,
-                    filled: false,
-                    onTap: ageCancel,
+                child: EaseSize(
+                  child: FadeSwap(
+                    child: KeyedSubtree(
+                      key: ValueKey(_stage),
+                      child: switch (_stage) {
+                        _Stage.checking => const SizedBox(height: 50),
+                        _Stage.writing => ToolWideButton(
+                          label: l10n.commonStop,
+                          filled: false,
+                          onTap: ageCancel,
+                        ),
+                        _Stage.done => ToolWideButton(
+                          label: l10n.commonDone,
+                          filled: false,
+                          onTap: () => Navigator.of(context).maybePop(),
+                        ),
+                        _Stage.form => ToolWideButton(
+                          icon: _unlockIcon,
+                          label: l10n.openLockedOpenFile,
+                          filled: true,
+                          onTap: _pw.text.isEmpty ? null : _open,
+                        ),
+                      },
+                    ),
                   ),
-                  _Stage.done => ToolWideButton(
-                    label: l10n.commonDone,
-                    filled: false,
-                    onTap: () => Navigator.of(context).maybePop(),
-                  ),
-                  _Stage.form => ToolWideButton(
-                    icon: _unlockIcon,
-                    label: l10n.openLockedOpenFile,
-                    filled: true,
-                    onTap: _pw.text.isEmpty ? null : _open,
-                  ),
-                },
+                ),
               ),
             ],
           ),
@@ -254,55 +279,60 @@ class _OpenLockedScreenState extends State<OpenLockedScreen> {
             onSubmit: _open,
           ),
           const SizedBox(height: 16),
-          if (_error != null)
-            Semantics(
-              liveRegion: true,
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-                decoration: BoxDecoration(
-                  color: HaloColors.rose.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: HaloColors.rose.withValues(alpha: 0.28),
-                    width: 0.5,
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      ageErrorTitle(_error!),
-                      style: HaloType.sans(
-                        size: 14,
-                        weight: FontWeight.w600,
-                        color: HaloColors.text,
+          EaseSize(
+            child: FadeSwap(
+              child: _error != null
+                  ? Semantics(
+                      key: ValueKey(_error),
+                      liveRegion: true,
+                      child: Container(
+                        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                        decoration: BoxDecoration(
+                          color: HaloColors.rose.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: HaloColors.rose.withValues(alpha: 0.28),
+                            width: 0.5,
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              ageErrorTitle(_error!),
+                              style: HaloType.sans(
+                                size: 14,
+                                weight: FontWeight.w600,
+                                color: HaloColors.text,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              ageErrorBody(_error!),
+                              style: HaloType.sans(
+                                size: 12.5,
+                                height: 1.5,
+                                color: HaloColors.warm,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  : Padding(
+                      key: const ValueKey('note'),
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: Text(
+                        l10n.openLockedThePasswordIsChecked,
+                        style: HaloType.sans(
+                          size: 12.5,
+                          height: 1.5,
+                          color: HaloColors.warm,
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      ageErrorBody(_error!),
-                      style: HaloType.sans(
-                        size: 12.5,
-                        height: 1.5,
-                        color: HaloColors.warm,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            )
-          else
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Text(
-                l10n.openLockedThePasswordIsChecked,
-                style: HaloType.sans(
-                  size: 12.5,
-                  height: 1.5,
-                  color: HaloColors.warm,
-                ),
-              ),
             ),
+          ),
         ],
       ),
     );
@@ -315,39 +345,13 @@ class _OpenedView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final still = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TweenAnimationBuilder<double>(
-              tween: Tween(begin: still ? 1 : 0, end: 1),
-              duration: const Duration(milliseconds: 280),
-              curve: Curves.easeOutBack,
-              builder: (_, t, child) => Transform.scale(
-                scale: 0.7 + 0.3 * t,
-                child: Opacity(opacity: t.clamp(0.0, 1.0), child: child),
-              ),
-              child: Container(
-                width: 84,
-                height: 84,
-                decoration: BoxDecoration(
-                  color: HaloColors.green.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: HaloColors.green, width: 2),
-                ),
-                child: Center(
-                  child: StrokeIcon(
-                    _unlockIcon,
-                    size: 36,
-                    stroke: 1.8,
-                    color: HaloColors.green,
-                  ),
-                ),
-              ),
-            ),
+            const LockSnap(open: true),
             const SizedBox(height: 16),
             Text(
               l10n.openLockedOpened2,

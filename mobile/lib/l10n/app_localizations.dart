@@ -510,37 +510,37 @@ abstract class AppLocalizations {
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **'tor would not wake'**
+  /// **'Tor would not wake'**
   String get appTorWouldNotWake;
 
   /// main.dart: a check-in that ended before it got anywhere. shown on the transport screen as the first part of the last check-in line
   ///
   /// In en, this message translates to:
-  /// **'started'**
+  /// **'Started'**
   String get appCheckStarted;
 
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **'tor not ready in 75s'**
+  /// **'Tor not ready in 75s'**
   String get appTorNotReadyIn;
 
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **'ok'**
+  /// **'OK'**
   String get appOk;
 
   /// main.dart: a check-in that brought tor up but no relay started answering in 45s
   ///
   /// In en, this message translates to:
-  /// **'ok, no relay began'**
+  /// **'OK, no relay began'**
   String get appOkNoRelayBegan;
 
   /// main.dart: a check-in that was cut off at 90s
   ///
   /// In en, this message translates to:
-  /// **'ok, capped'**
+  /// **'OK, capped'**
   String get appOkCapped;
 
   /// main.dart: the last check-in on the transport screen. push: a unifiedpush helper woke Kryfo. job: the fifteen-minute background job.
@@ -1146,7 +1146,7 @@ abstract class AppLocalizations {
   /// miui_autostart.dart
   ///
   /// In en, this message translates to:
-  /// **'couldn\'t open it. look for autostart in phone settings'**
+  /// **'Couldn\'t open it. Look for autostart in phone settings'**
   String get miuiAutostartCouldnTOpenIt;
 
   /// notifications.dart
@@ -1680,13 +1680,13 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'noise'**
+  /// **'Noise'**
   String get bridgesNoise;
 
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'good'**
+  /// **'Good'**
   String get bridgesGood;
 
   /// screens/bridges_screen.dart
@@ -1716,7 +1716,7 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'depends'**
+  /// **'Depends'**
   String get bridgesDepends;
 
   /// screens/bridges_screen.dart
@@ -1800,7 +1800,7 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'speed'**
+  /// **'Speed'**
   String get bridgesSpeed;
 
   /// screens/bridges_screen.dart
@@ -3336,7 +3336,7 @@ abstract class AppLocalizations {
   /// screens/contact_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'today'**
+  /// **'Today'**
   String get contactToday;
 
   /// screens/contact_screen.dart: how long you have been chatting, in days, in a small stat card (keep it short)
@@ -3372,13 +3372,13 @@ abstract class AppLocalizations {
   /// screens/contact_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'nothing shared yet'**
+  /// **'Nothing shared yet'**
   String get contactNothingSharedYet;
 
   /// screens/contact_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'shared media · {count}'**
+  /// **'Shared media · {count}'**
   String contactSharedMedia(Object count);
 
   /// screens/donate_screen.dart
@@ -3396,7 +3396,7 @@ abstract class AppLocalizations {
   /// screens/donate_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'badge unlocks'**
+  /// **'Badge unlocks'**
   String get donateBadgeUnlocks;
 
   /// screens/donate_screen.dart
@@ -3408,7 +3408,7 @@ abstract class AppLocalizations {
   /// screens/donate_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'manual · no badge'**
+  /// **'Manual · no badge'**
   String get donateManualNoBadge;
 
   /// screens/donate_screen.dart
@@ -3666,7 +3666,7 @@ abstract class AppLocalizations {
   /// screens/getting_messages_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'most private'**
+  /// **'Most private'**
   String get gettingMessagesMostPrivate;
 
   /// screens/getting_messages_screen.dart
@@ -3684,7 +3684,7 @@ abstract class AppLocalizations {
   /// screens/getting_messages_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'lightest'**
+  /// **'Lightest'**
   String get gettingMessagesLightest;
 
   /// screens/getting_messages_screen.dart
@@ -4434,13 +4434,13 @@ abstract class AppLocalizations {
   /// screens/handle_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'✓ available'**
+  /// **'✓ Available'**
   String get handleAvailable;
 
   /// screens/handle_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'already taken'**
+  /// **'Already taken'**
   String get handleAlreadyTaken;
 
   /// screens/handle_screen.dart
@@ -7098,13 +7098,13 @@ abstract class AppLocalizations {
   /// screens/requests_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'blocked'**
+  /// **'Blocked'**
   String get requestsBlocked;
 
   /// screens/requests_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'deleted'**
+  /// **'Deleted'**
   String get requestsDeleted;
 
   /// screens/requests_screen.dart
@@ -7572,13 +7572,13 @@ abstract class AppLocalizations {
   /// screens/saved_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'voice note'**
+  /// **'Voice note'**
   String get savedVoiceNote;
 
   /// screens/saved_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'photo'**
+  /// **'Photo'**
   String get savedPhoto;
 
   /// screens/saved_screen.dart
@@ -7596,7 +7596,7 @@ abstract class AppLocalizations {
   /// screens/saved_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'long-press any message and tap save to keep it here.'**
+  /// **'Long-press any message and tap save to keep it here.'**
   String get savedLongPressAnyMessage;
 
   /// screens/saved_screen.dart
@@ -8400,13 +8400,13 @@ abstract class AppLocalizations {
   /// screens/transport_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'staying alive'**
+  /// **'Staying alive'**
   String get transportStayingAlive;
 
   /// screens/transport_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'can send'**
+  /// **'Can send'**
   String get transportCanSend;
 
   /// screens/transport_screen.dart
@@ -8436,7 +8436,7 @@ abstract class AppLocalizations {
   /// screens/transport_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'queued to send'**
+  /// **'Queued to send'**
   String get transportQueuedToSend;
 
   /// screens/transport_screen.dart
@@ -8472,7 +8472,7 @@ abstract class AppLocalizations {
   /// screens/transport_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'ok'**
+  /// **'OK'**
   String get transportOk;
 
   /// screens/transport_screen.dart
@@ -8484,7 +8484,7 @@ abstract class AppLocalizations {
   /// screens/transport_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'last sent'**
+  /// **'Last sent'**
   String get transportLastSent;
 
   /// screens/transport_screen.dart
@@ -8502,7 +8502,7 @@ abstract class AppLocalizations {
   /// screens/transport_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'last received'**
+  /// **'Last received'**
   String get transportLastReceived;
 
   /// screens/transport_screen.dart
@@ -8526,19 +8526,19 @@ abstract class AppLocalizations {
   /// screens/transport_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'off'**
+  /// **'Off'**
   String get transportOff;
 
   /// screens/transport_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'starting'**
+  /// **'Starting'**
   String get transportStarting;
 
   /// screens/transport_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'bootstrapped'**
+  /// **'Bootstrapped'**
   String get transportBootstrapped;
 
   /// screens/transport_screen.dart
@@ -8550,13 +8550,13 @@ abstract class AppLocalizations {
   /// screens/transport_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'reachable'**
+  /// **'Reachable'**
   String get transportReachable;
 
   /// screens/transport_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'our relay (onion)'**
+  /// **'Our relay (onion)'**
   String get transportOurRelayOnion;
 
   /// screens/transport_screen.dart
@@ -8610,7 +8610,7 @@ abstract class AppLocalizations {
   /// screens/transport_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'{b} mb'**
+  /// **'{b} MB'**
   String transportMb(Object b);
 
   /// screens/transport_screen.dart
@@ -8640,13 +8640,13 @@ abstract class AppLocalizations {
   /// screens/transport_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'unknown'**
+  /// **'Unknown'**
   String get transportUnknown;
 
   /// screens/transport_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'exempt'**
+  /// **'Exempt'**
   String get transportExempt;
 
   /// screens/transport_screen.dart
@@ -8658,13 +8658,13 @@ abstract class AppLocalizations {
   /// screens/transport_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'process up'**
+  /// **'Process up'**
   String get transportProcessUp;
 
   /// screens/transport_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'last stop'**
+  /// **'Last stop'**
   String get transportLastStop;
 
   /// screens/transport_screen.dart
@@ -8682,7 +8682,7 @@ abstract class AppLocalizations {
   /// screens/transport_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'last check-in'**
+  /// **'Last check-in'**
   String get transportLastCheckIn;
 
   /// screens/transport_screen.dart
@@ -8694,19 +8694,19 @@ abstract class AppLocalizations {
   /// screens/transport_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'last tor reconnect'**
+  /// **'Last Tor reconnect'**
   String get transportLastTorReconnect;
 
   /// screens/transport_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'catch-up by relay'**
+  /// **'Catch-up by relay'**
   String get transportCatchUpByRelay;
 
   /// screens/transport_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'control port'**
+  /// **'Control port'**
   String get transportControlPort;
 
   /// screens/transport_screen.dart
@@ -8718,7 +8718,7 @@ abstract class AppLocalizations {
   /// screens/transport_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'job runs'**
+  /// **'Job runs'**
   String get transportJobRuns;
 
   /// screens/transport_screen.dart
@@ -10158,7 +10158,7 @@ abstract class AppLocalizations {
   /// screens/donate_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'address'**
+  /// **'Address'**
   String get donateAddress;
 
   /// screens/donate_screen.dart
@@ -10212,37 +10212,43 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'connecting'**
+  /// **'Connecting'**
   String get bridgesConnecting;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get bridgesSavedTag;
 
   /// screens/restore_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'made'**
+  /// **'Made'**
   String get restoreMade;
 
   /// screens/restore_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'contacts'**
+  /// **'Contacts'**
   String get restoreContacts;
 
   /// screens/restore_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'messages'**
+  /// **'Messages'**
   String get restoreMessages;
 
   /// screens/restore_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'attachments'**
+  /// **'Attachments'**
   String get restoreAttachments;
 
   /// screens/restore_screen.dart: what comes back, a label beside the number of hidden chats (lowercase like contacts and messages)
   ///
   /// In en, this message translates to:
-  /// **'hidden chats'**
+  /// **'Hidden chats'**
   String get restoreHiddenChats;
 
   /// screens/restore_screen.dart: what follows a restore of a backup that holds hidden chats
@@ -10308,61 +10314,61 @@ abstract class AppLocalizations {
   /// screens/transport_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'status'**
+  /// **'Status'**
   String get transportStatus;
 
   /// screens/transport_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'bootstrap'**
+  /// **'Bootstrap'**
   String get transportBootstrap;
 
   /// screens/transport_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'network'**
+  /// **'Network'**
   String get transportNetwork;
 
   /// screens/transport_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'connectivity'**
+  /// **'Connectivity'**
   String get transportConnectivity;
 
   /// screens/transport_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'relays'**
+  /// **'Relays'**
   String get transportRelays;
 
   /// screens/transport_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'traffic'**
+  /// **'Traffic'**
   String get transportTraffic;
 
   /// screens/transport_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'contacts'**
+  /// **'Contacts'**
   String get transportContacts;
 
   /// screens/transport_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'known'**
+  /// **'Known'**
   String get transportKnown;
 
   /// screens/transport_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'listening'**
+  /// **'Listening'**
   String get transportListening;
 
   /// screens/transport_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'memory'**
+  /// **'Memory'**
   String get transportMemory;
 
   /// screens/settings_screen.dart
@@ -10572,7 +10578,7 @@ abstract class AppLocalizations {
   /// screens/photo_knows_screen.dart: after each field that was looked for and is not in the file (location, time taken, phone model...)
   ///
   /// In en, this message translates to:
-  /// **'not in it'**
+  /// **'Not in it'**
   String get photoKnowsNotInIt;
 
   /// the name of English in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it

@@ -89,8 +89,14 @@ class _HomeScreenState extends State<HomeScreen> {
   HaloTab _tab = HaloTab.chats;
   final Set<HaloTab> _seen = {HaloTab.chats};
   StreamSubscription<void>? _sharedSub;
-  Timer? _sweeper;
+  // tool leftovers, swept every few minutes while kryfo is in front. away,
+  // the timer does not wake the phone; back, a sweep that fell due runs
+  final _sweeper = SeenTimers();
   Widget? _heldTool;
+  // the way the last tab switch went: 1 towards the end of the bar
+  int _towards = 1;
+  // the tab picked this frame: made for it, it slides in all the same
+  HaloTab? _picked;
 
   @override
   void initState() {
@@ -101,9 +107,9 @@ class _HomeScreenState extends State<HomeScreen> {
     // switch has to repaint the tabs behind this one too
     themeRevision.addListener(_repaint);
     ToolsBridge.instance.sweep();
-    _sweeper = Timer.periodic(
+    _sweeper.every(
       const Duration(minutes: 5),
-      (_) => ToolsBridge.instance.sweep(),
+      () => ToolsBridge.instance.sweep(),
     );
     WidgetsBinding.instance.addPostFrameCallback((_) => _takeShared());
   }
@@ -113,7 +119,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _sharedSub?.cancel();
     lockState.removeListener(_onLock);
     themeRevision.removeListener(_repaint);
-    _sweeper?.cancel();
+    _sweeper.dispose();
     super.dispose();
   }
 
@@ -168,9 +174,12 @@ class _HomeScreenState extends State<HomeScreen> {
   void _pick(HaloTab t) {
     if (t == _tab) return;
     setState(() {
+      _towards = t.index > _tab.index ? 1 : -1;
       _tab = t;
       _seen.add(t);
+      _picked = t;
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _picked = null);
   }
 
   Widget _body(HaloTab t) {
@@ -235,7 +244,12 @@ class _HomeScreenState extends State<HomeScreen> {
                             // here would keep the colours it was built with.
                             child: KeyedSubtree(
                               key: ValueKey(HaloColors.isLight),
-                              child: _Arrive(on: t == _tab, child: _body(t)),
+                              child: _Arrive(
+                                on: t == _tab,
+                                towards: _towards,
+                                fresh: t == _picked,
+                                child: _body(t),
+                              ),
                             ),
                           ),
                         ),
@@ -259,10 +273,22 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
+// a tab coming into view slides in from the side of the bar it lies on,
+// fading up. with less movement it is simply there
 class _Arrive extends StatefulWidget {
   final bool on;
+  // 1: the tab picked lies towards the end of the bar, so it comes in from
+  // that side. -1 from the start
+  final int towards;
+  // made by the pick: it comes in as a tab seen before does
+  final bool fresh;
   final Widget child;
-  const _Arrive({required this.on, required this.child});
+  const _Arrive({
+    required this.on,
+    required this.towards,
+    required this.child,
+    this.fresh = false,
+  });
   @override
   State<_Arrive> createState() => _ArriveState();
 }
@@ -270,33 +296,52 @@ class _Arrive extends StatefulWidget {
 class _ArriveState extends State<_Arrive> with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 280),
+    duration: kHouseTime,
     value: 1,
   );
+  late final _fade = CurvedAnimation(parent: _c, curve: Curves.easeOutCubic);
+  late final _slide = CurvedAnimation(parent: _c, curve: kHouseCurve);
+  bool _made = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_made) return;
+    _made = true;
+    if (widget.on && widget.fresh) _go();
+  }
 
   @override
   void didUpdateWidget(_Arrive old) {
     super.didUpdateWidget(old);
     if (!widget.on || old.on) return;
+    _go();
+  }
+
+  void _go() {
     if (MediaQuery.maybeOf(context)?.disableAnimations ?? false) return;
     _c.forward(from: 0);
   }
 
   @override
   void dispose() {
+    _fade.dispose();
+    _slide.dispose();
     _c.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final a = CurvedAnimation(parent: _c, curve: Curves.easeOutCubic);
+    // mirrored where the bar reads right to left
+    final rtl = Directionality.of(context) == TextDirection.rtl;
+    final from = 28.0 * widget.towards * (rtl ? -1 : 1);
     return FadeTransition(
-      opacity: a,
+      opacity: _fade,
       child: AnimatedBuilder(
-        animation: a,
+        animation: _slide,
         builder: (_, child) => Transform.translate(
-          offset: Offset(0, 8 * (1 - a.value)),
+          offset: Offset(from * (1 - _slide.value), 0),
           child: child,
         ),
         child: widget.child,

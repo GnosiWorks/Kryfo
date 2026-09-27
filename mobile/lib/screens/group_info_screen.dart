@@ -209,8 +209,6 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
       appBar: AppBar(
         backgroundColor: HaloColors.surface,
         elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
         automaticallyImplyLeading: false,
         titleSpacing: 4,
         title: Row(

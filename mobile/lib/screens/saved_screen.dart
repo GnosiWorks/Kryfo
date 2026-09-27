@@ -1,20 +1,23 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../widgets/breathing_ring.dart';
 import '../widgets/burn_fade.dart';
 import '../widgets/press_scale.dart';
+import '../widgets/swap.dart';
 import '../main.dart' hide live;
 import '../stickers/sticker_bubble.dart' show StickerLine;
 import '../stickers/sticker_wire.dart' show StickerWire;
 import '../theme.dart';
 import 'chat_screen.dart';
-import '../widgets/motion.dart' show haloRoute;
+import '../widgets/motion.dart' show haloRoute, kHouseCurve, motionStill;
 import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
 
 // every saved message across all chats, newest first. tap a card to jump to
-// that message in its chat; tap the bookmark to unsave.
+// that message in its chat; tap the bookmark to unsave: it empties, and the
+// card folds away.
 class SavedScreen extends StatefulWidget {
   const SavedScreen({super.key});
   @override
@@ -129,18 +132,23 @@ class _SavedScreenState extends State<SavedScreen> {
       body: SafeArea(
         child: !_loaded
             ? const SizedBox.shrink()
-            : _rows.isEmpty
-            ? _empty()
-            : ListView.builder(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                itemCount: _rows.length,
-                itemBuilder: (_, i) => StaggerIn(
-                  index: i,
-                  child: FadeFold(
-                    leaving: _leaving.contains(_rows[i]['msg_uid']),
-                    child: _card(_rows[i]),
-                  ),
-                ),
+            // the last one unsaved, the empty page fades in
+            : FadeSwap(
+                child: _rows.isEmpty
+                    ? KeyedSubtree(key: const ValueKey('none'), child: _empty())
+                    : ListView.builder(
+                        key: const ValueKey('cards'),
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                        itemCount: _rows.length,
+                        itemBuilder: (_, i) => StaggerIn(
+                          key: ValueKey(_rows[i]['msg_uid'] ?? i),
+                          index: i,
+                          child: FadeFold(
+                            leaving: _leaving.contains(_rows[i]['msg_uid']),
+                            child: _card(_rows[i]),
+                          ),
+                        ),
+                      ),
               ),
       ),
     );
@@ -152,28 +160,30 @@ class _SavedScreenState extends State<SavedScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 48),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 66,
-              height: 66,
-              decoration: BoxDecoration(
-                color: HaloColors.surface2,
-                shape: BoxShape.circle,
-              ),
-              alignment: Alignment.center,
-              child: Icon(
-                Icons.bookmark_border,
-                color: HaloColors.text3,
-                size: 28,
+          children: staggerAll([
+            BreathingRing(
+              size: 98,
+              core: 66,
+              child: Container(
+                width: 66,
+                height: 66,
+                decoration: BoxDecoration(
+                  color: HaloColors.amberSoft,
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Icon(
+                  Icons.bookmark_border,
+                  color: HaloColors.amber,
+                  size: 28,
+                ),
               ),
             ),
-            const SizedBox(height: 22),
-            StaggerIn(
-              index: 0,
-              child: Text(
-                l10n.savedNothingSavedYet,
-                style: HaloType.serif(size: 24, color: HaloColors.text),
-              ),
+            const SizedBox(height: 16),
+            Text(
+              l10n.savedNothingSavedYet,
+              textAlign: TextAlign.center,
+              style: HaloType.serif(size: 24, color: HaloColors.text),
             ),
             const SizedBox(height: 10),
             Text(
@@ -185,7 +195,7 @@ class _SavedScreenState extends State<SavedScreen> {
                 height: 1.55,
               ),
             ),
-          ],
+          ]),
         ),
       ),
     );
@@ -243,11 +253,7 @@ class _SavedScreenState extends State<SavedScreen> {
                   child: GestureDetector(
                     onTap: uid == null ? null : () => _unsave(uid),
                     behavior: HitTestBehavior.opaque,
-                    child: Icon(
-                      Icons.bookmark,
-                      size: 17,
-                      color: HaloColors.amber,
-                    ),
+                    child: _Bookmark(on: !_leaving.contains(uid)),
                   ),
                 ),
               ],
@@ -333,4 +339,35 @@ class _SavedScreenState extends State<SavedScreen> {
       ),
     ],
   );
+}
+
+// the bookmark on a card: unsaved, it empties with a small pop before the
+// card folds. simply swaps with less movement
+class _Bookmark extends StatelessWidget {
+  final bool on;
+  const _Bookmark({required this.on});
+
+  @override
+  Widget build(BuildContext context) {
+    final still = motionStill(context);
+    return AnimatedSwitcher(
+      duration: still ? Duration.zero : const Duration(milliseconds: 260),
+      transitionBuilder: (c, a) => FadeTransition(
+        opacity: a,
+        child: ScaleTransition(
+          scale: Tween(
+            begin: 0.5,
+            end: 1.0,
+          ).animate(CurvedAnimation(parent: a, curve: kHouseCurve)),
+          child: c,
+        ),
+      ),
+      child: Icon(
+        on ? Icons.bookmark : Icons.bookmark_border,
+        key: ValueKey(on),
+        size: 17,
+        color: on ? HaloColors.amber : HaloColors.text3,
+      ),
+    );
+  }
 }

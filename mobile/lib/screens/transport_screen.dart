@@ -1,15 +1,17 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // what the network is actually doing: state the app knows and otherwise
-// never shows
+// never shows. a value that changes state while the page is open rises in
+// over the old one
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../main.dart' hide live;
 import '../miui_autostart.dart' show forceShowBackgroundPrompt;
 import '../theme.dart';
 import '../widgets/motion.dart';
+import '../widgets/press_scale.dart';
 import '../widgets/stagger_in.dart';
+import '../widgets/swap.dart';
 import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
 import '../delivery_mode.dart';
@@ -59,7 +61,7 @@ class TransportScreen extends StatelessWidget {
               const _Alive(),
               const SizedBox(height: 24),
 
-              _Head('tor'),
+              _Head(l10n.appTor),
               _Line(l10n.transportStatus, _torWord(tor), _torTint(tor)),
               if (tor == TorStatus.starting)
                 _Line(l10n.transportBootstrap, '$pct%', HaloColors.amber),
@@ -161,12 +163,9 @@ class TransportScreen extends StatelessWidget {
                 ),
 
               const SizedBox(height: 28),
-              GestureDetector(
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  appState.flushOutboxNow();
-                },
-                behavior: HitTestBehavior.opaque,
+              PressScale(
+                scale: 0.97,
+                onTap: appState.flushOutboxNow,
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   alignment: Alignment.center,
@@ -259,9 +258,19 @@ class _Line extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        Text(
-          value,
-          style: HaloType.mono(size: 13, color: tint, weight: FontWeight.w600),
+        // a value that changes state rises in; a count or a time that
+        // moves on is simply updated
+        RiseSwap(
+          alignment: AlignmentDirectional.centerEnd,
+          child: Text(
+            value,
+            key: ValueKey(tint),
+            style: HaloType.mono(
+              size: 13,
+              color: tint,
+              weight: FontWeight.w600,
+            ),
+          ),
         ),
       ],
     ),
@@ -366,7 +375,10 @@ class _AliveState extends State<_Alive> {
         ),
         _Line(
           l10n.transportLastMessageIn,
-          _ago(appState.lastDrainAt),
+          // on its own line the word starts the value
+          appState.lastDrainAt <= 0
+              ? l10n.transportNever
+              : _ago(appState.lastDrainAt),
           HaloColors.text,
         ),
         GestureDetector(
@@ -478,8 +490,8 @@ class _AliveState extends State<_Alive> {
         ),
         for (final g in appState.gaps.reversed.take(8)) _gapLine(g),
         if (appState.gaps.isNotEmpty || appState.jobRuns > 0)
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
+          PressScale(
+            scale: 0.97,
             onTap: () async {
               await appState.clearHeartbeatHistory();
               if (mounted) setState(() {});

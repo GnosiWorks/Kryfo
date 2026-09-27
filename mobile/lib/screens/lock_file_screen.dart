@@ -3,14 +3,18 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
+import '../seen_timers.dart';
 import '../theme.dart';
 import '../tools/age_ffi.dart';
 import '../tools/lock_words.dart';
 import '../tools/tools_bridge.dart';
+import '../widgets/ease_size.dart';
 import '../widgets/halo_switch.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/stroke_icon.dart';
+import '../widgets/swap.dart';
 import '../widgets/tool_parts.dart';
 import '../l10n/l10n.dart';
 import '../widgets/halo_bar.dart';
@@ -273,10 +277,14 @@ class WorkingView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: HaloType.serif(size: 24, color: HaloColors.text),
+            RiseSwap(
+              alignment: Alignment.center,
+              child: Text(
+                title,
+                key: ValueKey(title),
+                textAlign: TextAlign.center,
+                style: HaloType.serif(size: 24, color: HaloColors.text),
+              ),
             ),
             const SizedBox(height: 8),
             Text(
@@ -306,7 +314,15 @@ class _LockFileScreenState extends State<LockFileScreen> {
   final _pw1 = TextEditingController();
   final _pw2 = TextEditingController();
   late PickedFile _file = widget.file;
-  Timer? _poll;
+  // the progress, read while the file is worked on and the page is seen:
+  // away or under the lock nothing ticks, and back it reads at once
+  final _timers = SeenTimers();
+  late final SeenJob _poll = _timers.until(
+    () => _working ? const Duration(milliseconds: 120) : null,
+    (_) {
+      if (mounted) setState(() => _done = ageProgress());
+    },
+  );
   bool _shown = false;
   bool _hideName = false;
   bool _working = false;
@@ -330,8 +346,14 @@ class _LockFileScreenState extends State<LockFileScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _timers.watch(context);
+  }
+
+  @override
   void dispose() {
-    _poll?.cancel();
+    _timers.dispose();
     if (_working) ageCancel();
     // the listeners go first: clear() notifies, and a notify after the
     // element is defunct asserts inside setState.
@@ -395,11 +417,8 @@ class _LockFileScreenState extends State<LockFileScreen> {
       }
       return;
     }
-    _poll = Timer.periodic(const Duration(milliseconds: 120), (_) {
-      if (mounted) setState(() => _done = ageProgress());
-    });
+    _poll.poke();
     final err = await ageLock(inFd, out.fd, pass);
-    _poll?.cancel();
     if (err != null) {
       try {
         File(out.path).parent.deleteSync(recursive: true);
@@ -468,56 +487,46 @@ class _LockFileScreenState extends State<LockFileScreen> {
                 title: locked ? l10n.lockFileLocked : l10n.lockFileLockAFile,
               ),
               Expanded(
-                child: _working
-                    ? WorkingView(
-                        title: _done == 0
-                            ? l10n.lockFileMixingThePassword
-                            : l10n.lockFileLocking,
-                        done: _done,
-                        total: _file.size,
-                      )
-                    : locked
-                    ? _LockedView(name: _outName!, bytes: _outBytes)
-                    : _form(),
+                // each stage fades in over the last
+                child: FadeSwap(
+                  child: KeyedSubtree(
+                    key: ValueKey(
+                      _working
+                          ? 'work'
+                          : locked
+                          ? 'locked'
+                          : 'form',
+                    ),
+                    child: _working
+                        ? WorkingView(
+                            title: _done == 0
+                                ? l10n.lockFileMixingThePassword
+                                : l10n.lockFileLocking,
+                            done: _done,
+                            total: _file.size,
+                          )
+                        : locked
+                        ? _LockedView(name: _outName!, bytes: _outBytes)
+                        : _form(),
+                  ),
+                ),
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 22),
-                child: _working
-                    ? ToolWideButton(
-                        label: l10n.commonStop,
-                        filled: false,
-                        onTap: ageCancel,
-                      )
-                    : locked
-                    ? Row(
-                        children: [
-                          Expanded(
-                            child: ToolWideButton(
-                              icon: _shareIcon,
-                              label: l10n.commonShare,
-                              filled: true,
-                              height: 52,
-                              onTap: _busy ? null : _share,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: ToolWideButton(
-                              icon: _saveIcon,
-                              label: l10n.lockFileSaveToFiles,
-                              filled: false,
-                              height: 52,
-                              onTap: _busy ? null : _save,
-                            ),
-                          ),
-                        ],
-                      )
-                    : ToolWideButton(
-                        icon: _lockIcon,
-                        label: l10n.lockFileLockFile,
-                        filled: true,
-                        onTap: _ready ? _lock : null,
+                child: EaseSize(
+                  child: FadeSwap(
+                    child: KeyedSubtree(
+                      key: ValueKey(
+                        _working
+                            ? 'work'
+                            : locked
+                            ? 'locked'
+                            : 'form',
                       ),
+                      child: _buttons(locked),
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
@@ -525,6 +534,39 @@ class _LockFileScreenState extends State<LockFileScreen> {
       ),
     );
   }
+
+  Widget _buttons(bool locked) => _working
+      ? ToolWideButton(label: l10n.commonStop, filled: false, onTap: ageCancel)
+      : locked
+      ? Row(
+          children: [
+            Expanded(
+              child: ToolWideButton(
+                icon: _shareIcon,
+                label: l10n.commonShare,
+                filled: true,
+                height: 52,
+                onTap: _busy ? null : _share,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: ToolWideButton(
+                icon: _saveIcon,
+                label: l10n.lockFileSaveToFiles,
+                filled: false,
+                height: 52,
+                onTap: _busy ? null : _save,
+              ),
+            ),
+          ],
+        )
+      : ToolWideButton(
+          icon: _lockIcon,
+          label: l10n.lockFileLockFile,
+          filled: true,
+          onTap: _ready ? _lock : null,
+        );
 
   Widget _form() {
     final grade = gradePassword(_pw1.text);
@@ -583,12 +625,15 @@ class _LockFileScreenState extends State<LockFileScreen> {
             child: Row(
               children: [
                 Expanded(
-                  child: Text(
-                    gradeLine(grade),
-                    style: HaloType.sans(
-                      size: 12,
-                      height: 1.35,
-                      color: gradeColor,
+                  child: RiseSwap(
+                    child: Text(
+                      gradeLine(grade),
+                      key: ValueKey(grade),
+                      style: HaloType.sans(
+                        size: 12,
+                        height: 1.35,
+                        color: gradeColor,
+                      ),
                     ),
                   ),
                 ),
@@ -622,14 +667,17 @@ class _LockFileScreenState extends State<LockFileScreen> {
             onToggle: () => setState(() => _shown = !_shown),
             action: TextInputAction.done,
           ),
-          if (differ)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(4, 7, 4, 0),
-              child: Text(
-                l10n.lockFileTheTwoDoNot,
-                style: HaloType.sans(size: 12, color: HaloColors.amber),
-              ),
-            ),
+          EaseSize(
+            child: !differ
+                ? const SizedBox(width: double.infinity)
+                : Padding(
+                    padding: const EdgeInsets.fromLTRB(4, 7, 4, 0),
+                    child: Text(
+                      l10n.lockFileTheTwoDoNot,
+                      style: HaloType.sans(size: 12, color: HaloColors.amber),
+                    ),
+                  ),
+          ),
           const SizedBox(height: 14),
           MergeSemantics(
             child: Row(
@@ -672,16 +720,22 @@ class _LockFileScreenState extends State<LockFileScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          if (_error != null)
-            _Note(
-              tint: HaloColors.rose,
-              text: '${ageErrorTitle(_error!)} ${ageErrorBody(_error!)}',
-            )
-          else
-            _Note(
-              tint: HaloColors.amber,
-              text: l10n.lockFileAnyoneWithThePassword,
+          EaseSize(
+            child: FadeSwap(
+              child: _error != null
+                  ? _Note(
+                      key: ValueKey(_error),
+                      tint: HaloColors.rose,
+                      text:
+                          '${ageErrorTitle(_error!)} ${ageErrorBody(_error!)}',
+                    )
+                  : _Note(
+                      key: const ValueKey('note'),
+                      tint: HaloColors.amber,
+                      text: l10n.lockFileAnyoneWithThePassword,
+                    ),
             ),
+          ),
         ],
       ),
     );
@@ -691,7 +745,7 @@ class _LockFileScreenState extends State<LockFileScreen> {
 class _Note extends StatelessWidget {
   final Color tint;
   final String text;
-  const _Note({required this.tint, required this.text});
+  const _Note({super.key, required this.tint, required this.text});
 
   @override
   Widget build(BuildContext context) {
@@ -733,7 +787,6 @@ class _LockedView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final still = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     final plain = name.endsWith('.age')
         ? name.substring(0, name.length - 4)
         : name;
@@ -741,32 +794,7 @@ class _LockedView extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 26, 16, 12),
       child: Column(
         children: [
-          TweenAnimationBuilder<double>(
-            tween: Tween(begin: still ? 1 : 0, end: 1),
-            duration: const Duration(milliseconds: 280),
-            curve: Curves.easeOutBack,
-            builder: (_, t, child) => Transform.scale(
-              scale: 0.7 + 0.3 * t,
-              child: Opacity(opacity: t.clamp(0.0, 1.0), child: child),
-            ),
-            child: Container(
-              width: 84,
-              height: 84,
-              decoration: BoxDecoration(
-                color: HaloColors.green.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-                border: Border.all(color: HaloColors.green, width: 2),
-              ),
-              child: Center(
-                child: StrokeIcon(
-                  _lockIcon,
-                  size: 36,
-                  stroke: 1.8,
-                  color: HaloColors.green,
-                ),
-              ),
-            ),
-          ),
+          const LockSnap(),
           const SizedBox(height: 16),
           Text(
             l10n.lockFileLocked2,
@@ -828,6 +856,69 @@ class _LockedView extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+// the padlock on a finished file: it pops in and its shackle snaps shut, or
+// springs open on a file just opened. felt once as it lands; simply there
+// with less movement
+class LockSnap extends StatelessWidget {
+  final bool open;
+  const LockSnap({super.key, this.open = false});
+
+  static final _body = [svgRect(5, 10.5, 14, 10, 2.5), 'M12 14.5v2.2'];
+  static const _shut = ['M8 10.5V8a4 4 0 0 1 8 0v2.5'];
+  static const _free = ['M8 10.5V8a4 4 0 0 1 7.6-1.7'];
+
+  @override
+  Widget build(BuildContext context) {
+    final still = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    final green = HaloColors.green;
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: still ? 1 : 0, end: 1),
+      duration: const Duration(milliseconds: 480),
+      onEnd: HapticFeedback.lightImpact,
+      builder: (_, t, _) {
+        final pop = Curves.easeOutBack.transform(
+          const Interval(0, 0.55).transform(t),
+        );
+        final snap = Curves.easeOutBack.transform(
+          const Interval(0.4, 1).transform(t),
+        );
+        // shut, the shackle drops from raised; open, it rises from shut
+        final lift = open ? 3 * (1 - snap) : -5 * (1 - snap);
+        return Transform.scale(
+          scale: 0.7 + 0.3 * pop,
+          child: Opacity(
+            opacity: pop.clamp(0.0, 1.0),
+            child: Container(
+              width: 84,
+              height: 84,
+              decoration: BoxDecoration(
+                color: green.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+                border: Border.all(color: green, width: 2),
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  StrokeIcon(_body, size: 36, stroke: 1.8, color: green),
+                  Transform.translate(
+                    offset: Offset(0, lift),
+                    child: StrokeIcon(
+                      open ? _free : _shut,
+                      size: 36,
+                      stroke: 1.8,
+                      color: green,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

@@ -236,12 +236,12 @@ void main() {
     );
     expect(l.appSDropped("<host>", "<secs>"), "<host> <secs>s dropped");
     expect(l.appS("<host>", "<secs>"), "<host> <secs>s");
-    expect(l.appTorWouldNotWake, "tor would not wake");
-    expect(l.appCheckStarted, "started");
-    expect(l.appTorNotReadyIn, "tor not ready in 75s");
-    expect(l.appOk, "ok");
-    expect(l.appOkNoRelayBegan, "ok, no relay began");
-    expect(l.appOkCapped, "ok, capped");
+    expect(l.appTorWouldNotWake, "Tor would not wake");
+    expect(l.appCheckStarted, "Started");
+    expect(l.appTorNotReadyIn, "Tor not ready in 75s");
+    expect(l.appOk, "OK");
+    expect(l.appOkNoRelayBegan, "OK, no relay began");
+    expect(l.appOkCapped, "OK, capped");
     expect(l.appSBy("<how>", 0, "push"), "<how>, 0s, by push");
     expect(l.appSBy("<how>", 0, "other"), "<how>, 0s, by job");
     expect(l.appSBy("<how>", 1, "push"), "<how>, 1s, by push");
@@ -396,7 +396,7 @@ void main() {
     expect(l.miuiAutostartOpenSettings, "Open settings");
     expect(
       l.miuiAutostartCouldnTOpenIt,
-      "couldn't open it. look for autostart in phone settings",
+      "Couldn't open it. Look for autostart in phone settings",
     );
     expect(
       l.notificationsNewEncryptedMessagesFrom,
@@ -560,8 +560,8 @@ void main() {
       "Bridges only change how tor connects, and you are not on onion mode right now. What you set here is saved, it just does nothing until you switch back.",
     );
     expect(l.bridgesFromTheTorProject, "From the tor project");
-    expect(l.bridgesNoise, "noise");
-    expect(l.bridgesGood, "good");
+    expect(l.bridgesNoise, "Noise");
+    expect(l.bridgesGood, "Good");
     expect(
       l.bridgesMakesTorTrafficLook,
       "Makes tor traffic look like nothing in particular. The best default for most blocked networks. Answers a captcha, then hands you a few lines.",
@@ -569,7 +569,7 @@ void main() {
     expect(l.bridgesPrivateBridge, "Private bridge");
     expect(l.bridgesALineFromA, "A line from a friend");
     expect(l.bridgesWhateverTheLineSays, "Whatever the line says");
-    expect(l.bridgesDepends, "depends");
+    expect(l.bridgesDepends, "Depends");
     expect(
       l.bridgesGotABridgeLine,
       "Got a bridge line from someone you trust, or from bridges.torproject.org? Paste it here. Obfs4 lines only, Kryfo does not speak the others yet.",
@@ -595,7 +595,7 @@ void main() {
       "A tor entry point nobody has published, reached through a wrapper so the connection does not look like tor. The rest of the route is the usual three hops.",
     );
     expect(l.bridgesLooksLike, "Looks like");
-    expect(l.bridgesSpeed, "speed");
+    expect(l.bridgesSpeed, "Speed");
     expect(l.bridgesGetBridges, "Get bridges");
     expect(
       l.bridgesAskTheTorProject,
@@ -1001,7 +1001,7 @@ void main() {
     );
     expect(l.commonDelete, "Delete");
     expect(l.contactDeleted, "Deleted");
-    expect(l.contactToday, "today");
+    expect(l.contactToday, "Today");
     expect(l.contactD(0), "0d");
     expect(l.contactD(1), "1d");
     expect(l.contactD(2), "2d");
@@ -1016,13 +1016,13 @@ void main() {
     expect(l.contactY(5), "5y");
     expect(l.contactVerified, "Verified");
     expect(l.contactChatting, "Chatting");
-    expect(l.contactNothingSharedYet, "nothing shared yet");
-    expect(l.contactSharedMedia("<count>"), "shared media · <count>");
+    expect(l.contactNothingSharedYet, "Nothing shared yet");
+    expect(l.contactSharedMedia("<count>"), "Shared media · <count>");
     expect(l.donateBitcoin, "Bitcoin");
     expect(l.donateText, "₿");
-    expect(l.donateBadgeUnlocks, "badge unlocks");
+    expect(l.donateBadgeUnlocks, "Badge unlocks");
     expect(l.donateMonero, "Monero");
-    expect(l.donateManualNoBadge, "manual · no badge");
+    expect(l.donateManualNoBadge, "Manual · no badge");
     expect(l.donateSolana, "Solana");
     expect(l.donateEthereum, "Ethereum");
     expect(l.donateText2, "Ξ");
@@ -1140,13 +1140,13 @@ void main() {
       "How new messages reach this phone. You can change it whenever you like.",
     );
     expect(l.gettingMessagesAlwaysOn, "Always on");
-    expect(l.gettingMessagesMostPrivate, "most private");
+    expect(l.gettingMessagesMostPrivate, "Most private");
     expect(
       l.gettingMessagesMessagesArriveInstantlyNothing,
       "Messages arrive instantly. Nothing leaves Tor. Uses the most battery.",
     );
     expect(l.gettingMessagesCheckIns, "Check-ins");
-    expect(l.gettingMessagesLightest, "lightest");
+    expect(l.gettingMessagesLightest, "Lightest");
     expect(
       l.gettingMessagesKryfoLooksForMessages,
       "Kryfo looks for messages every 15 minutes. Easy on battery, but messages can be late.",
@@ -1334,8 +1334,8 @@ void main() {
     expect(l.handleLinkCopied, "Link copied");
     expect(l.handleDeleteThisHandle, "Delete this handle");
     expect(l.handleChecking, "Checking…");
-    expect(l.handleAvailable, "✓ available");
-    expect(l.handleAlreadyTaken, "already taken");
+    expect(l.handleAvailable, "✓ Available");
+    expect(l.handleAlreadyTaken, "Already taken");
     expect(l.handleWhatAHandleDoes, "What a handle does");
     expect(
       l.handleAnyoneWhoKnowsIt,
@@ -2267,8 +2267,8 @@ void main() {
       l.requestsNothingMoreFromThem,
       "Nothing more from them reaches you. Their request and its messages go.",
     );
-    expect(l.requestsBlocked, "blocked");
-    expect(l.requestsDeleted, "deleted");
+    expect(l.requestsBlocked, "Blocked");
+    expect(l.requestsDeleted, "Deleted");
     expect(l.requestsRequests, "Requests");
     expect(l.requestsNoRequests, "No requests");
     expect(
@@ -2445,13 +2445,13 @@ void main() {
     expect(l.roomLinkRoomLinkCopied, "Room link copied");
     expect(l.roomLinkSendToAContact, "Send to a contact");
     expect(l.roomLinkCopyRoomLink, "Copy room link");
-    expect(l.savedVoiceNote, "voice note");
-    expect(l.savedPhoto, "photo");
+    expect(l.savedVoiceNote, "Voice note");
+    expect(l.savedPhoto, "Photo");
     expect(l.savedSaved, "Saved");
     expect(l.savedNothingSavedYet, "Nothing saved yet");
     expect(
       l.savedLongPressAnyMessage,
-      "long-press any message and tap save to keep it here.",
+      "Long-press any message and tap save to keep it here.",
     );
     expect(l.savedViewInChat, "View in chat");
     expect(l.savedPhoto2, "Photo");
@@ -2682,13 +2682,13 @@ void main() {
       l.transportNothingHereLeavesThe,
       "Nothing here leaves the phone. It is the same state the engine uses to decide what to do.",
     );
-    expect(l.transportStayingAlive, "staying alive");
-    expect(l.transportCanSend, "can send");
+    expect(l.transportStayingAlive, "Staying alive");
+    expect(l.transportCanSend, "Can send");
     expect(l.commonYes, "Yes");
     expect(l.transportNotYet, "Not yet");
     expect(l.transportOnline, "Online");
     expect(l.transportOffline, "Offline");
-    expect(l.transportQueuedToSend, "queued to send");
+    expect(l.transportQueuedToSend, "Queued to send");
     expect(l.transportOnionPublished, "Onion published");
     expect(l.transportYes("<uploads>"), "Yes (<uploads>)");
     expect(l.transportTryingS("<pubFor>"), "Trying <pubFor>s");
@@ -2697,24 +2697,24 @@ void main() {
     expect(l.transportFails(1), "1 fail");
     expect(l.transportFails(2), "2 fails");
     expect(l.transportFails(5), "5 fails");
-    expect(l.transportOk, "ok");
+    expect(l.transportOk, "OK");
     expect(l.transportRelaySubscriptions, "Relay subscriptions");
-    expect(l.transportLastSent, "last sent");
+    expect(l.transportLastSent, "Last sent");
     expect(l.transportNever, "Never");
     expect(l.transportSAgo("<sx>"), "<sx>s ago");
-    expect(l.transportLastReceived, "last received");
+    expect(l.transportLastReceived, "Last received");
     expect(l.transportSAgo2("<rx>"), "<rx>s ago");
     expect(
       l.transportWithNoContactsThe,
       "With no contacts the app subscribes to no relay addresses, so no message can reach you. Scan someone to fix it.",
     );
     expect(l.transportSendAnythingWaitingNow, "Send anything waiting, now");
-    expect(l.transportOff, "off");
-    expect(l.transportStarting, "starting");
-    expect(l.transportBootstrapped, "bootstrapped");
+    expect(l.transportOff, "Off");
+    expect(l.transportStarting, "Starting");
+    expect(l.transportBootstrapped, "Bootstrapped");
     expect(l.transportPublishingAddress, "Publishing address");
-    expect(l.transportReachable, "reachable");
-    expect(l.transportOurRelayOnion, "our relay (onion)");
+    expect(l.transportReachable, "Reachable");
+    expect(l.transportOurRelayOnion, "Our relay (onion)");
     expect(l.transportNever2, "never");
     expect(l.transportJustNow, "Just now");
     expect(l.transportMAgo("<inMinutes>"), "<inMinutes>m ago");
@@ -2723,23 +2723,23 @@ void main() {
     expect(l.transportM("<inMinutes>"), "<inMinutes>m");
     expect(l.transportHM("<inHours>", "<d>"), "<inHours>h <d>m");
     expect(l.transportD("<inDays>"), "<inDays>d");
-    expect(l.transportMb("<b>"), "<b> mb");
+    expect(l.transportMb("<b>"), "<b> MB");
     expect(l.transportYesCheckedJustNow, "Yes · checked just now");
     expect(l.transportNoLast("<ago>"), "No · last <ago>");
     expect(l.transportLastMessageIn, "Last message in");
     expect(l.transportBatteryExemption, "Battery exemption");
-    expect(l.transportUnknown, "unknown");
-    expect(l.transportExempt, "exempt");
+    expect(l.transportUnknown, "Unknown");
+    expect(l.transportExempt, "Exempt");
     expect(l.transportNotExemptTapTo, "Not exempt · tap to fix");
-    expect(l.transportProcessUp, "process up");
-    expect(l.transportLastStop, "last stop");
+    expect(l.transportProcessUp, "Process up");
+    expect(l.transportLastStop, "Last stop");
     expect(l.transportEngine("<mb>", "<mb2>"), "<mb> · engine <mb2>");
     expect(l.transportLastRelayArrival, "Last relay arrival");
-    expect(l.transportLastCheckIn, "last check-in");
+    expect(l.transportLastCheckIn, "Last check-in");
     expect(l.transportNoneYet, "None yet");
-    expect(l.transportLastTorReconnect, "last tor reconnect");
-    expect(l.transportCatchUpByRelay, "catch-up by relay");
-    expect(l.transportControlPort, "control port");
+    expect(l.transportLastTorReconnect, "Last Tor reconnect");
+    expect(l.transportCatchUpByRelay, "Catch-up by relay");
+    expect(l.transportControlPort, "Control port");
     expect(l.transportDialsTimeouts(0, 0), "0 dials · 0 timeouts");
     expect(l.transportDialsTimeouts(0, 1), "0 dials · 1 timeout");
     expect(l.transportDialsTimeouts(0, 2), "0 dials · 2 timeouts");
@@ -2756,7 +2756,7 @@ void main() {
     expect(l.transportDialsTimeouts(5, 1), "5 dials · 1 timeout");
     expect(l.transportDialsTimeouts(5, 2), "5 dials · 2 timeouts");
     expect(l.transportDialsTimeouts(5, 5), "5 dials · 5 timeouts");
-    expect(l.transportJobRuns, "job runs");
+    expect(l.transportJobRuns, "Job runs");
     expect(l.transportLast("<jobRuns>", "<ago>"), "<jobRuns> · last <ago>");
     expect(l.transportQuietStretches, "Quiet stretches");
     expect(l.transportNone, "None");
@@ -3242,7 +3242,7 @@ void main() {
     expect(l.cameraVideo, "video");
     expect(l.cameraRetake, "Retake");
     expect(l.seenIntroductions, "Introductions");
-    expect(l.donateAddress, "address");
+    expect(l.donateAddress, "Address");
     expect(l.donateCopy, "Copy");
     expect(l.donateDone, "Done");
     expect(l.donateTierSupporter, "supporter");
@@ -3251,11 +3251,12 @@ void main() {
     expect(l.chatBlock, "Block");
     expect(l.chatDecline, "Decline");
     expect(l.chatAccept, "Accept");
-    expect(l.bridgesConnecting, "connecting");
-    expect(l.restoreMade, "made");
-    expect(l.restoreContacts, "contacts");
-    expect(l.restoreMessages, "messages");
-    expect(l.restoreAttachments, "attachments");
+    expect(l.bridgesConnecting, "Connecting");
+    expect(l.bridgesSavedTag, "Saved");
+    expect(l.restoreMade, "Made");
+    expect(l.restoreContacts, "Contacts");
+    expect(l.restoreMessages, "Messages");
+    expect(l.restoreAttachments, "Attachments");
     expect(l.shieldBlock, "Block");
     expect(l.shieldDelete, "Delete");
     expect(l.shieldIgnore, "Ignore");
@@ -3263,16 +3264,16 @@ void main() {
     expect(l.avatarPickerShape, "Shape");
     expect(l.avatarPickerColour, "Colour");
     expect(l.avatarPickerTurn, "Turn");
-    expect(l.transportStatus, "status");
-    expect(l.transportBootstrap, "bootstrap");
-    expect(l.transportNetwork, "network");
-    expect(l.transportConnectivity, "connectivity");
-    expect(l.transportRelays, "relays");
-    expect(l.transportTraffic, "traffic");
-    expect(l.transportContacts, "contacts");
-    expect(l.transportKnown, "known");
-    expect(l.transportListening, "listening");
-    expect(l.transportMemory, "memory");
+    expect(l.transportStatus, "Status");
+    expect(l.transportBootstrap, "Bootstrap");
+    expect(l.transportNetwork, "Network");
+    expect(l.transportConnectivity, "Connectivity");
+    expect(l.transportRelays, "Relays");
+    expect(l.transportTraffic, "Traffic");
+    expect(l.transportContacts, "Contacts");
+    expect(l.transportKnown, "Known");
+    expect(l.transportListening, "Listening");
+    expect(l.transportMemory, "Memory");
     expect(l.settingsConnected, "Connected");
     expect(l.settingsScreenshots, "Screenshots");
     expect(l.settingsBlocked2, "Blocked");
@@ -3334,7 +3335,7 @@ void main() {
     expect(l.videoViewerCannotPlay, "This phone can't play this video here.");
     expect(l.videoViewerOpenElsewhere, "Open in another app");
     expect(l.photoKnowsLookedFor, "Looked for");
-    expect(l.photoKnowsNotInIt, "not in it");
+    expect(l.photoKnowsNotInIt, "Not in it");
     expect(l.stickerOpen, "Stickers");
     expect(l.stickerRecent, "Recent");
     expect(l.stickerA11y("<emoji>"), "Sticker <emoji>");

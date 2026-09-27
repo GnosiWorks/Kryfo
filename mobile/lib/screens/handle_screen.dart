@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // claim a public handle. the one screen that makes someone findable by
 // strangers, so it says what that costs first and is off until asked for.
+// claiming or deleting fades one page into the other.
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -9,9 +10,14 @@ import 'package:flutter/services.dart';
 import '../main.dart' show appState, engine, sessionQuiet;
 import '../theme.dart';
 import '../widgets/confirm_sheet.dart';
+import '../widgets/copied_mark.dart';
+import '../widgets/ease_size.dart';
 import '../widgets/halo_bar.dart';
 import '../widgets/halo_switch.dart';
+import '../widgets/motion.dart' show motionStill;
+import '../widgets/press_scale.dart';
 import '../widgets/stagger_in.dart';
+import '../widgets/swap.dart';
 import '../l10n/l10n.dart';
 
 class HandleScreen extends StatefulWidget {
@@ -144,71 +150,95 @@ class _HandleScreenState extends State<HandleScreen> {
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 40),
-        children: staggerAll([
-          if (_claimed != null && appState.handleForeign) ...[
-            _ForeignCard(handle: _claimed!, onForget: _forget),
-            const SizedBox(height: 22),
-          ] else if (_claimed != null) ...[
-            _ClaimedCard(handle: _claimed!, onRelease: _busy ? null : _release),
-            const SizedBox(height: 14),
-            _ListingCard(handle: _claimed!),
-            const SizedBox(height: 22),
-          ] else ...[
-            Text(
-              l10n.handleOptionalYourThreeWords,
-              style: HaloType.sans(size: 13.5, color: HaloColors.text2),
-            ),
-            const SizedBox(height: 20),
-            _Field(
-              ctrl: _ctrl,
-              hint: l10n.handleWren,
-              prefix: '@',
-              onChanged: _onTyped,
-              max: 20,
-            ),
-            const SizedBox(height: 8),
-            _Availability(state: _state),
-            const SizedBox(height: 18),
-            _Field(
-              ctrl: _bio,
-              hint: l10n.handleALineAboutYou,
-              max: 200,
-              lines: 2,
-            ),
-            const SizedBox(height: 22),
-            const _RiskBlock(),
-            const SizedBox(height: 20),
-            GestureDetector(
-              onTap: (_state == 'free' && !_busy) ? _claim : null,
-              behavior: HitTestBehavior.opaque,
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: _state == 'free'
-                      ? HaloColors.amber
-                      : HaloColors.surface2,
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(
-                    color: _state == 'free'
-                        ? Colors.transparent
-                        : HaloColors.line,
-                  ),
-                ),
-                child: Text(
-                  _busy ? l10n.handleClaiming : l10n.handleClaimThisHandle,
-                  style: HaloType.mono(
-                    size: 12.5,
-                    weight: FontWeight.w600,
-                    color: _state == 'free' ? HaloColors.ink : HaloColors.text3,
-                  ),
-                ),
+        children: [
+          FadeSwap(
+            child: KeyedSubtree(
+              key: ValueKey(
+                _claimed == null
+                    ? 'claim'
+                    : appState.handleForeign
+                    ? 'foreign'
+                    : 'claimed',
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: staggerAll(_page()),
               ),
             ),
-          ],
-        ]),
+          ),
+        ],
       ),
     );
+  }
+
+  List<Widget> _page() {
+    final free = _state == 'free';
+    final still = motionStill(context);
+    if (_claimed != null && appState.handleForeign) {
+      return [
+        _ForeignCard(handle: _claimed!, onForget: _forget),
+        const SizedBox(height: 22),
+      ];
+    }
+    if (_claimed != null) {
+      return [
+        _ClaimedCard(handle: _claimed!, onRelease: _busy ? null : _release),
+        const SizedBox(height: 14),
+        _ListingCard(handle: _claimed!),
+        const SizedBox(height: 22),
+      ];
+    }
+    return [
+      Text(
+        l10n.handleOptionalYourThreeWords,
+        style: HaloType.sans(size: 13.5, color: HaloColors.text2),
+      ),
+      const SizedBox(height: 20),
+      _Field(
+        ctrl: _ctrl,
+        hint: l10n.handleWren,
+        prefix: '@',
+        onChanged: _onTyped,
+        max: 20,
+      ),
+      const SizedBox(height: 8),
+      _Availability(state: _state),
+      const SizedBox(height: 18),
+      _Field(ctrl: _bio, hint: l10n.handleALineAboutYou, max: 200, lines: 2),
+      const SizedBox(height: 22),
+      const _RiskBlock(),
+      const SizedBox(height: 20),
+      // fills once the name is free
+      PressScale(
+        scale: 0.97,
+        onTap: (free && !_busy) ? _claim : null,
+        child: AnimatedContainer(
+          duration: still ? Duration.zero : const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: free ? HaloColors.amber : HaloColors.surface2,
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color: free ? HaloColors.amber : HaloColors.line,
+            ),
+          ),
+          child: RiseSwap(
+            alignment: Alignment.center,
+            child: Text(
+              _busy ? l10n.handleClaiming : l10n.handleClaimThisHandle,
+              key: ValueKey(_busy),
+              style: HaloType.mono(
+                size: 12.5,
+                weight: FontWeight.w600,
+                color: free ? HaloColors.ink : HaloColors.text3,
+              ),
+            ),
+          ),
+        ),
+      ),
+    ];
   }
 }
 
@@ -314,9 +344,8 @@ class _ListingCardState extends State<_ListingCard> {
               ),
             ],
           ),
-          AnimatedSize(
+          EaseSize(
             duration: const Duration(milliseconds: 220),
-            curve: Curves.easeOutCubic,
             child: _busy
                 ? const Padding(
                     padding: EdgeInsets.only(top: 12),
@@ -338,14 +367,23 @@ class _ListingCardState extends State<_ListingCard> {
   }
 }
 
-class _ClaimedCard extends StatelessWidget {
+// the handle and its public page's link. the link copies, with a tick on
+// the row that says it did
+class _ClaimedCard extends StatefulWidget {
   final String handle;
   final VoidCallback? onRelease;
   const _ClaimedCard({required this.handle, this.onRelease});
 
   @override
+  State<_ClaimedCard> createState() => _ClaimedCardState();
+}
+
+class _ClaimedCardState extends State<_ClaimedCard> {
+  int _copies = 0;
+
+  @override
   Widget build(BuildContext context) {
-    final url = 'https://relay.kryfo.app/@$handle';
+    final url = 'https://relay.kryfo.app/@${widget.handle}';
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
       decoration: BoxDecoration(
@@ -360,9 +398,13 @@ class _ClaimedCard extends StatelessWidget {
             children: [
               Icon(Icons.verified_outlined, size: 16, color: HaloColors.green),
               const SizedBox(width: 8),
-              Text(
-                ltr('@$handle'),
-                style: HaloType.serif(size: 20, color: HaloColors.text),
+              Flexible(
+                child: Text(
+                  ltr('@${widget.handle}'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: HaloType.serif(size: 20, color: HaloColors.text),
+                ),
               ),
             ],
           ),
@@ -372,15 +414,15 @@ class _ClaimedCard extends StatelessWidget {
             style: HaloType.sans(size: 13, color: HaloColors.text2),
           ),
           const SizedBox(height: 14),
-          GestureDetector(
+          PressScale(
+            scale: 0.98,
             onTap: () {
-              HapticFeedback.selectionClick();
               copySensitive(url);
+              setState(() => _copies++);
               showHaloToast(context, l10n.handleLinkCopied);
             },
-            behavior: HitTestBehavior.opaque,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              padding: const EdgeInsetsDirectional.fromSTEB(12, 8, 8, 8),
               decoration: BoxDecoration(
                 color: HaloColors.surface,
                 borderRadius: BorderRadius.circular(10),
@@ -391,19 +433,22 @@ class _ClaimedCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       url,
+                      textDirection: TextDirection.ltr,
                       style: HaloType.mono(size: 11, color: HaloColors.text2),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  Icon(Icons.copy, size: 14, color: HaloColors.text3),
+                  const SizedBox(width: 6),
+                  CopiedMark(copies: _copies),
                 ],
               ),
             ),
           ),
           const SizedBox(height: 16),
-          GestureDetector(
-            onTap: onRelease,
-            behavior: HitTestBehavior.opaque,
+          PressScale(
+            scale: 0.97,
+            haptic: false,
+            onTap: widget.onRelease,
             child: Text(
               l10n.handleDeleteThisHandle,
               style: HaloType.mono(size: 11.5, color: HaloColors.rose),
@@ -437,9 +482,16 @@ class _Availability extends StatelessWidget {
       txt = state.replaceFirst('error: ', '');
       c = HaloColors.amber;
     }
+    // each answer rises in over the last as the name is typed
     return SizedBox(
       height: 16,
-      child: Text(txt, style: HaloType.mono(size: 11, color: c)),
+      child: RiseSwap(
+        child: Text(
+          txt,
+          key: ValueKey(txt),
+          style: HaloType.mono(size: 11, color: c),
+        ),
+      ),
     );
   }
 }
@@ -479,7 +531,8 @@ class _RiskBlock extends StatelessWidget {
   }
 }
 
-class _Field extends StatelessWidget {
+// lights up while it is typed in, as the add someone sheet's field does
+class _Field extends StatefulWidget {
   final TextEditingController ctrl;
   final String hint;
   final String? prefix;
@@ -496,43 +549,65 @@ class _Field extends StatelessWidget {
   });
 
   @override
+  State<_Field> createState() => _FieldState();
+}
+
+class _FieldState extends State<_Field> {
+  bool _lit = false;
+
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-      decoration: BoxDecoration(
-        color: HaloColors.surface2,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: HaloColors.line),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (prefix != null)
-            Padding(
-              padding: const EdgeInsetsDirectional.only(top: 14, end: 2),
-              child: Text(
-                prefix!,
-                style: HaloType.mono(size: 14, color: HaloColors.text3),
-              ),
-            ),
-          Expanded(
-            child: TextField(
-              textDirection: TextDirection.ltr,
-              controller: ctrl,
-              onChanged: onChanged,
-              maxLength: max,
-              minLines: lines,
-              maxLines: lines,
-              style: HaloType.mono(size: 14, color: HaloColors.text),
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                counterText: '',
-                hintText: hint,
-                hintStyle: HaloType.mono(size: 14, color: HaloColors.text3),
-              ),
-            ),
+    return Focus(
+      onFocusChange: (v) => setState(() => _lit = v),
+      child: AnimatedContainer(
+        duration: motionStill(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+        decoration: BoxDecoration(
+          color: HaloColors.surface2,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: _lit
+                ? HaloColors.amber.withValues(alpha: 0.7)
+                : HaloColors.line,
           ),
-        ],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (widget.prefix != null)
+              Padding(
+                padding: const EdgeInsetsDirectional.only(top: 14, end: 2),
+                child: Text(
+                  widget.prefix!,
+                  style: HaloType.mono(
+                    size: 14,
+                    color: _lit ? HaloColors.amber : HaloColors.text3,
+                  ),
+                ),
+              ),
+            Expanded(
+              child: TextField(
+                textDirection: TextDirection.ltr,
+                controller: widget.ctrl,
+                onChanged: widget.onChanged,
+                maxLength: widget.max,
+                minLines: widget.lines,
+                maxLines: widget.lines,
+                cursorColor: HaloColors.amber,
+                style: HaloType.mono(size: 14, color: HaloColors.text),
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  counterText: '',
+                  hintText: widget.hint,
+                  hintStyle: HaloType.mono(size: 14, color: HaloColors.text3),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -571,8 +646,8 @@ class _ForeignCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
+          PressScale(
+            scale: 0.97,
             onTap: onForget,
             child: Container(
               width: double.infinity,
