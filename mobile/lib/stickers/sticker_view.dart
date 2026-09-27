@@ -2,9 +2,11 @@
 // a sticker on screen. one ticker for each sticker that plays. it stops
 // when the sticker scrolls off, under the app lock and under a covering
 // route (both mute it through TickerMode), and a phone set to remove
-// animations gets the still frame and no ticker at all. only time it was
-// seen playing moves it on, and below the display's rate it asks for no
-// frame between the ones it draws.
+// animations gets the still frame and no ticker at all. with the app out of
+// front nothing runs either: a phone can go on drawing frames for an app
+// behind another user or another app. only time it was seen playing moves
+// it on, and below the display's rate it asks for no frame between the
+// ones it draws.
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -14,6 +16,29 @@ import 'package:flutter/widgets.dart';
 
 import 'sticker_pack.dart';
 import 'sticker_player.dart';
+
+/// whether the app is in front, and word when that changes. stickers move
+/// only while it is
+abstract final class AppFront {
+  static bool get now {
+    final s = WidgetsBinding.instance.lifecycleState;
+    return s == null || s == AppLifecycleState.resumed;
+  }
+
+  static Listenable get changes => _Front.it;
+}
+
+// one observer for every sticker on screen
+class _Front extends ChangeNotifier with WidgetsBindingObserver {
+  _Front() {
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  static final it = _Front();
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) => notifyListeners();
+}
 
 /// how many stickers of one surface may play at once. the rest show their
 /// still until a slot frees; slots go in visual order.
@@ -131,10 +156,30 @@ class _StickerViewState extends State<StickerView>
   @override
   void initState() {
     super.initState();
+    AppFront.changes.addListener(_frontChanged);
     if (widget.start > 0 && widget.play && widget.sticker.animated) {
       _played = Duration(microseconds: (widget.start * 1000).round());
       _clock.value = loopTime(widget.sticker, widget.start, _delay);
     }
+  }
+
+  // out of front it holds where it is, slot and all, with no ticker and no
+  // timer; back in front the next paint starts it from there
+  void _frontChanged() {
+    if (!mounted) return;
+    if (!AppFront.now) {
+      _hold();
+    } else if (_wants) {
+      _box?.markNeedsPaint();
+    }
+  }
+
+  void _hold() {
+    _rest?.cancel();
+    _rest = null;
+    _stamp = null;
+    final t = _ticker;
+    if (t != null && t.isActive) t.stop();
   }
 
   @override
@@ -198,6 +243,7 @@ class _StickerViewState extends State<StickerView>
 
   @override
   void dispose() {
+    AppFront.changes.removeListener(_frontChanged);
     widget.budget?._giveBack(this);
     _rest?.cancel();
     _mode?.removeListener(_modeChanged);
@@ -207,11 +253,7 @@ class _StickerViewState extends State<StickerView>
   }
 
   void _stop() {
-    _rest?.cancel();
-    _rest = null;
-    _stamp = null;
-    final t = _ticker;
-    if (t != null && t.isActive) t.stop();
+    _hold();
     if (_slot) {
       _slot = false;
       widget.budget?._giveBack(this);
@@ -230,7 +272,7 @@ class _StickerViewState extends State<StickerView>
   }
 
   void _resume() {
-    if (!mounted || !_wants) return;
+    if (!mounted || !_wants || !AppFront.now) return;
     if (_running) return;
     final b = widget.budget;
     if (b != null && !_slot) {
@@ -252,12 +294,16 @@ class _StickerViewState extends State<StickerView>
 
   void _start() {
     _parked = false;
-    if (_rest != null) return;
+    if (_rest != null || !AppFront.now) return;
     final t = _ticker ??= createTicker(_tick);
     if (!t.isActive) t.start();
   }
 
   void _tick(Duration _) {
+    if (!AppFront.now) {
+      _hold();
+      return;
+    }
     final now = SchedulerBinding.instance.currentFrameTimeStamp;
     final box = _box;
     if (box != null && !box.onScreen) {
@@ -303,7 +349,7 @@ class _StickerViewState extends State<StickerView>
       _rest = null;
       final t = _ticker;
       if (mounted && _wants && !_parked && t != null && !t.isActive) {
-        t.start();
+        _start();
       }
     });
   }

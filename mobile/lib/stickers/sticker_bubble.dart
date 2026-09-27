@@ -116,13 +116,29 @@ class _StickerBubbleState extends State<StickerBubble>
     if (_begun) return;
     _begun = true;
     if (!_shown || !widget.arriving) return;
-    _fade
-      ..value = 0
-      ..forward();
-    if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) return;
-    // the loop starts once it has popped
-    _playing = false;
-    _pop.value = 0.72;
+    _fade.value = 0;
+    if (!(MediaQuery.maybeDisableAnimationsOf(context) ?? false)) {
+      // the loop starts once it has popped
+      _playing = false;
+      _pop.value = 0.72;
+    }
+    // one that came while the app was away comes in once it can be seen
+    if (AppFront.now) {
+      _arrive();
+    } else {
+      AppFront.changes.addListener(_frontBack);
+    }
+  }
+
+  void _frontBack() {
+    if (!AppFront.now) return;
+    AppFront.changes.removeListener(_frontBack);
+    if (mounted) _arrive();
+  }
+
+  void _arrive() {
+    _fade.forward();
+    if (_playing) return;
     _pop.animateWith(houseSpring(0.72, 1)).then((_) {
       if (!mounted) return;
       _pop.value = 1;
@@ -146,6 +162,7 @@ class _StickerBubbleState extends State<StickerBubble>
 
   @override
   void dispose() {
+    AppFront.changes.removeListener(_frontBack);
     _landing?.landed.removeListener(_landed);
     _pop.dispose();
     _fade.dispose();

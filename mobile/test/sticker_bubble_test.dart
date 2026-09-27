@@ -43,6 +43,15 @@ Future<void> _frames(WidgetTester t, int n) async {
   }
 }
 
+// frames that go on while the app is behind another user or app, which a
+// phone may draw whatever the app was told
+Future<void> _awayFrames(WidgetTester t, int n) async {
+  for (var i = 0; i < n; i++) {
+    t.binding.scheduleForcedFrame();
+    await t.pump(const Duration(milliseconds: 16));
+  }
+}
+
 double _scale(WidgetTester t) =>
     t.widget<ScaleTransition>(find.byKey(kStickerPopKey)).scale.value;
 
@@ -205,6 +214,94 @@ void main() {
     expect(_scale(t), 1);
     await _frames(t, 10);
     expect(_boxes(t).single.time, greaterThan(0));
+  });
+
+  for (final away in [
+    [AppLifecycleState.inactive],
+    [
+      AppLifecycleState.inactive,
+      AppLifecycleState.hidden,
+      AppLifecycleState.paused,
+    ],
+  ]) {
+    testWidgets(
+      'one arriving while away (${away.last.name}) waits to be seen',
+      (t) async {
+        final here = ValueNotifier(false);
+        await t.pumpWidget(
+          _host(
+            ValueListenableBuilder<bool>(
+              valueListenable: here,
+              builder: (_, on, _) => on
+                  ? StickerBubble(
+                      wire: wave,
+                      emoji: hi.emoji,
+                      isOut: false,
+                      arriving: true,
+                    )
+                  : const SizedBox(),
+            ),
+          ),
+        );
+        await _frames(t, 30);
+        for (final s in away) {
+          t.binding.handleAppLifecycleStateChanged(s);
+        }
+        final drawn = StickerView.frames;
+        here.value = true;
+        // frames go on behind another user; nothing of it moves
+        await _awayFrames(t, (5 * hi.loopMs / 16).ceil());
+        expect(StickerView.frames, drawn);
+        expect(_scale(t), closeTo(0.72, 0.001));
+        expect(_boxes(t).single.time, -1);
+        expect(t.binding.transientCallbackCount, 0);
+
+        for (final s in away.reversed.skip(1)) {
+          t.binding.handleAppLifecycleStateChanged(s);
+        }
+        t.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+        // back: it pops, then plays all its loops
+        await _frames(t, 30);
+        expect(_scale(t), 1);
+        await _frames(t, ((kStickerChatLoops - 1) * hi.loopMs / 16).floor());
+        expect(_boxes(t).single.time, greaterThanOrEqualTo(0));
+        await _frames(t, (1.5 * hi.loopMs / 16).ceil());
+        expect(_boxes(t).single.time, -1);
+      },
+    );
+  }
+
+  testWidgets('a playing one keeps the loops it has left across a trip away', (
+    t,
+  ) async {
+    await t.pumpWidget(
+      _host(
+        StickerBubble(
+          wire: wave,
+          emoji: hi.emoji,
+          isOut: false,
+          arriving: true,
+        ),
+      ),
+    );
+    // popped, and a loop and a half played
+    await _frames(t, 30 + (1.5 * hi.loopMs / 16).round());
+    expect(_boxes(t).single.time, greaterThanOrEqualTo(0));
+    t.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    t.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    t.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    final drawn = StickerView.frames;
+    await _awayFrames(t, (5 * hi.loopMs / 16).ceil());
+    expect(StickerView.frames, drawn);
+    expect(t.binding.transientCallbackCount, 0);
+    t.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    t.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    t.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    // a loop and a half still to go once it is seen again
+    await _frames(t, 3 + hi.loopMs ~/ 16);
+    expect(_boxes(t).single.time, greaterThanOrEqualTo(0));
+    await _frames(t, hi.loopMs ~/ 16 + 10);
+    expect(_boxes(t).single.time, -1);
   });
 
   testWidgets('one this version lacks is a tile with its emoji', (t) async {

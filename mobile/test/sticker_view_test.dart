@@ -31,6 +31,15 @@ Future<void> _frames(WidgetTester t, int n) async {
   }
 }
 
+// frames that go on while the app is behind another user or app, which a
+// phone may draw whatever the app was told
+Future<void> _awayFrames(WidgetTester t, int n) async {
+  for (var i = 0; i < n; i++) {
+    t.binding.scheduleForcedFrame();
+    await t.pump(const Duration(milliseconds: 17));
+  }
+}
+
 class _Lock extends ChangeNotifier {
   bool locked = false;
   void set(bool v) {
@@ -458,6 +467,53 @@ void main() {
     expect(box.time, greaterThanOrEqualTo(0));
     expect((box.time - locked).abs(), lessThan(100));
   });
+
+  // what the app gets when the phone goes to another app or another user.
+  // frames can go on behind it, as they do here
+  for (final away in [
+    [AppLifecycleState.inactive],
+    [
+      AppLifecycleState.inactive,
+      AppLifecycleState.hidden,
+      AppLifecycleState.paused,
+    ],
+  ]) {
+    testWidgets('out of front (${away.last.name}) it holds, loops and all', (
+      t,
+    ) async {
+      final loop = hi.loopMs;
+      await t.pumpWidget(
+        _plain(StickerView(sticker: hi, size: 120, fps: 30, loops: 2)),
+      );
+      await _frames(t, loop ~/ 2 ~/ 17);
+      final box = _boxes(t).single;
+      final before = box.time;
+      expect(before, greaterThan(0));
+
+      for (final s in away) {
+        t.binding.handleAppLifecycleStateChanged(s);
+      }
+      await t.pump();
+      final drawn = StickerView.frames;
+      await _awayFrames(t, 5 * loop ~/ 17);
+      expect(StickerView.frames, drawn);
+      expect(box.time, before);
+      // no ticker waiting, and no timer that would start one
+      expect(t.binding.transientCallbackCount, 0);
+
+      for (final s in away.reversed.skip(1)) {
+        t.binding.handleAppLifecycleStateChanged(s);
+      }
+      t.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await _frames(t, 3);
+      // on from where it was, its loop and a half still to play
+      expect((box.time - before).abs(), lessThan(80));
+      await _frames(t, loop ~/ 17);
+      expect(box.time, greaterThanOrEqualTo(0));
+      await _frames(t, loop ~/ 17 + 10);
+      expect(box.time, -1);
+    });
+  }
 
   testWidgets('a view told not to play draws without a ticker', (t) async {
     final s = pack.sticker(3)!;
