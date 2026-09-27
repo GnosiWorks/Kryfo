@@ -16,6 +16,12 @@ put you in danger, read all of it.
   media on disk.
 - phone number correlation. there is no number or email to tie you to a real
   identity, and no address book upload.
+- someone making you unlock the app. a decoy pin opens an empty Kryfo, as if
+  just installed. hidden chats open only with their own pin and show no trace
+  in the everyday app: no row, no count, no notification while they are shut.
+  a wipe pin removes Kryfo from the phone.
+- someone answering as the developer. the key behind the "Marios · built
+  Kryfo" chat is built into the app and checked on every message.
 
 ## what it does not protect against
 
@@ -29,11 +35,33 @@ put you in danger, read all of it.
 - the fact that you communicated. metadata is minimized, not erased. if you
   send while a contact is online, that timing existed.
 - forensics on a seized unlocked device or on backups of it.
+- a forensic copy of the phone. the decoy pin and hidden chats are for a
+  quick look, someone scrolling through a phone you were made to unlock. they
+  are not built to survive a lab. a copy of the phone can show that Kryfo
+  holds more than it shows, and a short pin against such a copy can be
+  guessed. android's storage and battery figures for the app are not hidden
+  either. if a forensic copy is the fear, the wipe pin is the tool, and not
+  having the data on the phone at all is better still.
+- someone who already knows you. a person who knows your three words or
+  handle sees different ones in the decoy, and messages stop reaching you in
+  front of them while it is open.
+- backups kept outside the app. a backup made inside the hidden chats
+  carries them, and its size can tell.
+- the law. in some countries refusing to unlock a phone, or hiding data from
+  officials, is an offence in itself. the decoy never invents conversations,
+  because showing made-up messages to officials can make things worse. know
+  the law where you are and where you travel.
+- anonymous developer chats against their own content. writing anonymously
+  hides your three words, not your writing style or what you say, and in
+  relay and fast modes the relay sees your ip.
 - this integration itself. the crypto is standard libraries (libsignal, tor,
   sqlcipher, nip-44/59) but the way they are wired together here is new and
   has not had an independent review.
+
+FORWARD_SECRECY.md says what a key taken from a phone can open later.
 
 ## status
 
 pre-alpha, unaudited, one person. do not rely on it where being wrong would
 hurt you. security issues: report privately, not in a public issue.
+SECURITY.md says how.

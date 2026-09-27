@@ -16,7 +16,23 @@ backups are files you make and control. they are encrypted with a passphrase onl
 
 to deliver a message, Kryfo routes it through tor and, when the other person is offline, leaves it in an encrypted mailbox on public nostr relays. relays only ever hold sealed, encrypted data. they do not hold your contact list or a record of your account, because no such account exists.
 
-your ip is hidden behind tor on the default private mode. if you turn on fast mode, messages skip the extra tor hops to go quicker, which can expose your ip to a relay. fast mode is off by default and labeled where you turn it on.
+your ip is hidden behind tor on the default private mode. relay mode and fast mode skip tor to go quicker. relay mode connects straight to our own relay, which then sees your ip for that connection and writes nothing down. fast mode adds public relays, and each of them sees your ip too. both are off by default and labeled where you turn them on.
+
+## handles and people search
+
+a handle (@name) is optional. without one, nothing about you sits anywhere central. if you claim one, the handle registry on relay.kryfo.app holds the handle, the invite it points to (already public), a bio if you write one, and the key that claimed it. anyone who knows the handle can open its page and message you.
+
+people search is a second choice on top of that, off by default. only handles whose owner turned on "Show me in search" come up, next to a name they picked. turning it off takes you out of search at once. releasing the handle deletes its entry, though a server backup can hold an older copy for a while.
+
+the app reaches the registry the same way it sends messages, so over tor in private mode. the registry keeps no record of who looked anyone up or what was searched for.
+
+## the developer chat
+
+the "Marios · built Kryfo" chat at the top of the list talks to the person who builds the app. its key is built into Kryfo, so nobody else can answer in it. nothing connects and nothing is sent until you write the first message: no hello, no lookup, no app version, no logs.
+
+with your three words, Marios sees them and the face you picked, like any contact. "Write anonymously" makes a new name and keys for that chat alone: they stay on your phone, are never used anywhere else and are left out of backups. either way Marios sees what you write and when, and delivery receipts tell each side when a message arrived. anonymous does not hide your writing style, the details you share, or your ip in relay and fast modes. voice notes in an anonymous chat always go through the voice disguise.
+
+deleting the chat deletes it on your phone, and it does not come back unless you open it again from settings. Marios keeps his copy of what you sent, as any person you write to does.
 
 ## notifications
 
