@@ -133,7 +133,45 @@ void main() {
       expect(pack.playable, [for (var i = 30; i <= 47; i++) i]);
       expect(pack.offered, pack.playable);
     });
+
+    testWidgets('faint and hidden groups draw as the svg has them', (
+      tester,
+    ) async {
+      final pack = loadPack(remixFiles);
+      Future<Uint8List> frame(int id, [double? t]) async => (await tester
+          .runAsync(() => renderSticker(pack.sticker(id)!, t: t)))!;
+      // the art's black outline at full strength, in [_ink]'s units
+      const black = 244;
+      // tiny violin: the middle note at 0.37, the top one at 0.03
+      var f = await frame(36);
+      expect(_ink(f, 136, 148, 149, 168), closeTo(0.37 * black, 16));
+      expect(_ink(f, 122, 71, 159, 118), lessThan(20));
+      // vibing: the left note at 0.5
+      f = await frame(37);
+      expect(_ink(f, 79, 103, 120, 154), closeTo(0.5 * black, 16));
+      // power up: the top right bolt is hidden at rest, where only the
+      // outer glow's faint edge is, and its track brings it in
+      final s = pack.sticker(44)!;
+      for (final t in [null, 0.0, s.loopMs.toDouble()]) {
+        expect(_ink(await frame(44, t), 371, 134, 394, 194), lessThan(120));
+      }
+      expect(_ink(await frame(44, 100), 371, 134, 394, 194), greaterThan(200));
+    });
   });
+}
+
+// the darkest a box gets: alpha less green in premultiplied rgba, so a faint
+// part reads faint over the white outline and over nothing alike
+int _ink(Uint8List px, int x0, int y0, int x1, int y1) {
+  var most = 0;
+  for (var y = y0; y < y1; y++) {
+    for (var x = x0; x < x1; x++) {
+      final i = (y * 512 + x) * 4;
+      final v = px[i + 3] - px[i + 1];
+      if (v > most) most = v;
+    }
+  }
+  return most;
 }
 
 void _pixelTests(PackFiles f) {

@@ -95,14 +95,15 @@ Float64List evaluateSticker(Sticker s, double t, [Float64List? out]) {
   return v;
 }
 
+/// a node's transform at rest: nothing to walk. alpha is left out, as a
+/// part the svg hides rests at 0
 bool nodeAtRest(Float64List v, int n) {
   final o = n * 6;
   return v[o] == 0 &&
       v[o + 1] == 0 &&
       v[o + 2] == 0 &&
       v[o + 3] == 1 &&
-      v[o + 4] == 1 &&
-      v[o + 5] == 1;
+      v[o + 4] == 1;
 }
 
 /// a node's transform in sticker space, (a b c d e f) into out:
@@ -165,7 +166,7 @@ void paintSticker(ui.Canvas c, Sticker s, Float64List? v) {
       case opPush:
         final n = arg & 0xFFF;
         final rest = v == null || nodeAtRest(v, n);
-        final a = v == null ? 1.0 : v[n * 6 + 5];
+        final a = v == null ? s.restAlpha[n] : v[n * 6 + 5];
         if ((rest && s.hiddenAtRest(n)) || a <= 0) {
           i = s.jump[i];
           continue;

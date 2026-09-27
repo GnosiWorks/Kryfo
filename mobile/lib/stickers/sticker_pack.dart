@@ -83,6 +83,9 @@ class Sticker {
   final Int32List nodeParent;
   final Float64List pivotX, pivotY, frameCos, frameSin, frameScale;
   final Uint8List nodeFlags;
+  // each node's alpha in the still: where its alpha track starts, 0 for a
+  // part the svg hides
+  final Float64List restAlpha;
   final Uint16List ops;
   // for each save, push or layer: the index of its pop
   final Int32List jump;
@@ -104,6 +107,7 @@ class Sticker {
     required this.frameSin,
     required this.frameScale,
     required this.nodeFlags,
+    required this.restAlpha,
     required this.ops,
     required this.jump,
     required this.depth,
@@ -351,6 +355,10 @@ class StickerPack {
       }
       tracks.add(StickerTrack(node, prop, times, values, eases));
     }
+    final rest = Float64List(nn)..fillRange(0, nn, 1);
+    for (final k in tracks) {
+      if (k.prop == propAlpha) rest[k.node] = k.values[0];
+    }
     return Sticker._(
       id: id,
       since: since,
@@ -366,6 +374,7 @@ class StickerPack {
       frameSin: fs,
       frameScale: fk,
       nodeFlags: flags,
+      restAlpha: rest,
       ops: ops,
       jump: jump,
       depth: depth,

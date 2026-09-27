@@ -4,6 +4,9 @@
 #   title WORDS                               the name the picker shows
 #   sticker NN name loop=MS emoji=E since=N   no loop: a still
 #
+# a node on a group the svg hides (opacity 0) rests at alpha 0: its alpha
+# track starts and ends at 0.
+#
 # while no sticker in a pack moves, the picker offers its stills; once
 # one moves, only the moving ones.
 
@@ -379,7 +382,8 @@ sticker 44 power-up loop=2000 emoji=⚡ since=1
   # powering up: the seal and the inner glow buzz from side to side, the
   # outer glow throbs, the spikes of hair flick, and the bolts round it
   # flicker out and back in turn. the bolts snap to nothing in place of a
-  # fade: each has its own outline
+  # fade: each has its own outline. the top right one is hidden in the svg,
+  # so it snaps out just before the loop ends and comes in after it starts
   node seal   top[1]           @216,420
   node glow   props_back[1]    @450.7,270
   node aura   props_back[0]    @474.7,270  pivot=258,267
@@ -394,7 +398,8 @@ sticker 44 power-up loop=2000 emoji=⚡ since=1
   shiver seal 1.6 100 0 2000 prop=x
   shiver glow 1.6 100 0 2000 prop=x
   scale aura  0:1 125:0.975:sineout 250:1:sinein 375:1.025:sineout 500:1:sinein 625:0.975:sineout 750:1:sinein 875:1.025:sineout 1000:1:sinein 1125:0.975:sineout 1250:1:sinein 1375:1.025:sineout 1500:1:sinein 1625:0.975:sineout 1750:1:sinein 1875:1.025:sineout 2000:1:sinein
-  scale bolt1 0:1 15:0:in 52:0:linear 67:1:out 200:1:linear 215:0:in 252:0:linear 267:1:out 400:1:linear 415:0:in 452:0:linear 467:1:out 600:1:linear 615:0:in 652:0:linear 667:1:out 800:1:linear 815:0:in 852:0:linear 867:1:out 1000:1:linear 1015:0:in 1052:0:linear 1067:1:out 1200:1:linear 1215:0:in 1252:0:linear 1267:1:out 1400:1:linear 1415:0:in 1452:0:linear 1467:1:out 1600:1:linear 1615:0:in 1652:0:linear 1667:1:out 1800:1:linear 1815:0:in 1852:0:linear 1867:1:out 2000:1:linear !
+  alpha bolt1 0:0 52:1:hold 1991:0:hold 2000:0:linear
+  scale bolt1 0:1 52:0:hold 67:1:out 200:1:linear 215:0:in 252:0:linear 267:1:out 400:1:linear 415:0:in 452:0:linear 467:1:out 600:1:linear 615:0:in 652:0:linear 667:1:out 800:1:linear 815:0:in 852:0:linear 867:1:out 1000:1:linear 1015:0:in 1052:0:linear 1067:1:out 1200:1:linear 1215:0:in 1252:0:linear 1267:1:out 1400:1:linear 1415:0:in 1452:0:linear 1467:1:out 1600:1:linear 1615:0:in 1652:0:linear 1667:1:out 1800:1:linear 1815:0:in 1852:0:linear 1867:1:out 1975:1:linear 1990:0:in 1991:1:hold 2000:1:linear !
   scale bolt0 0:1 67:1:linear 82:0:in 118:0:linear 133:1:out 267:1:linear 282:0:in 318:0:linear 333:1:out 467:1:linear 482:0:in 518:0:linear 533:1:out 667:1:linear 682:0:in 718:0:linear 733:1:out 867:1:linear 882:0:in 918:0:linear 933:1:out 1067:1:linear 1082:0:in 1118:0:linear 1133:1:out 1267:1:linear 1282:0:in 1318:0:linear 1333:1:out 1467:1:linear 1482:0:in 1518:0:linear 1533:1:out 1667:1:linear 1682:0:in 1718:0:linear 1733:1:out 1867:1:linear 1882:0:in 1918:0:linear 1933:1:out 2000:1:linear !
   scale bolt3 0:1 67:1:linear 82:0:in 118:0:linear 133:1:out 267:1:linear 282:0:in 318:0:linear 333:1:out 467:1:linear 482:0:in 518:0:linear 533:1:out 667:1:linear 682:0:in 718:0:linear 733:1:out 867:1:linear 882:0:in 918:0:linear 933:1:out 1067:1:linear 1082:0:in 1118:0:linear 1133:1:out 1267:1:linear 1282:0:in 1318:0:linear 1333:1:out 1467:1:linear 1482:0:in 1518:0:linear 1533:1:out 1667:1:linear 1682:0:in 1718:0:linear 1733:1:out 1867:1:linear 1882:0:in 1918:0:linear 1933:1:out 2000:1:linear !
   scale bolt2 0:1 133:1:linear 148:0:in 185:0:linear 200:1:out 333:1:linear 348:0:in 385:0:linear 400:1:out 533:1:linear 548:0:in 585:0:linear 600:1:out 733:1:linear 748:0:in 785:0:linear 800:1:out 933:1:linear 948:0:in 985:0:linear 1000:1:out 1133:1:linear 1148:0:in 1185:0:linear 1200:1:out 1333:1:linear 1348:0:in 1385:0:linear 1400:1:out 1533:1:linear 1548:0:in 1585:0:linear 1600:1:out 1733:1:linear 1748:0:in 1785:0:linear 1800:1:out 1933:1:linear 1948:0:in 1985:0:linear 2000:1:out !

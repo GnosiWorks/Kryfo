@@ -22,11 +22,18 @@
 #
 # run by hand when the art or anim.txt changes, like pack_geo.py. numpy is
 # for the outline blur and the pngs; the app never runs any of this.
+#
+# a group's opacity goes into what it draws, as a layer when its draws can
+# overlap, so the still and its outline are the svg's. a group the svg hides
+# (opacity 0) under a node cannot go in there, as no track could bring it
+# back: that node's alpha rests at 0, and its alpha track starts and ends at
+# 0 and shows it in between.
 import hashlib
 import math
 import re
 import struct
 import sys
+import tempfile
 import xml.etree.ElementTree as ET
 import zlib
 from pathlib import Path
@@ -52,6 +59,7 @@ SKIPPED = ('defs', 'clipPath', 'linearGradient', 'radialGradient', 'stop',
            'feColorMatrix', 'feFuncR', 'feFuncG', 'feFuncB')
 REFUSED_ATTRS = ('style', 'class', 'vector-effect', 'stroke-dashoffset',
                  'mask', 'marker-start', 'marker-mid', 'marker-end')
+GROUP_ATTRS = ('id', 'transform', 'clip-path', 'filter', 'opacity')
 
 # ops, top 3 bits of a u16 word
 OP_SAVE, OP_PUSH, OP_POP, OP_CLIP, OP_DRAW, OP_LAYER = range(6)
@@ -567,6 +575,7 @@ class El:
         self.clip = None
         self.tint = None  # a colour filter's id
         self.made = False  # made by this tool (lids)
+        self.opacity = 1.0  # a group's own, over everything under it
 
     def where(self):
         path = []
@@ -670,11 +679,20 @@ class Svg:
                 if not (v.startswith('url(#') and v.endswith(')')) or v[5:-1] not in self.tints:
                     fail(f'{el.where()}: filter {v}')
                 el.tint = v[5:-1]
+            if el.tag == 'g':
+                # a group's fill, stroke and the like would reach its
+                # children in svg; this tool does not pass them down
+                for k in e.attrib:
+                    if k not in GROUP_ATTRS:
+                        fail(f'{el.where()}: a group with {k}')
+                el.opacity = min(1.0, max(0.0, float(e.get('opacity', '1'))))
             for c in e:
                 if strip(c.tag) in DRAWN:
                     el.kids.append(build(c, el))
             return el
         self.fokia = build(fok[0], None)
+        if self.fokia.opacity != 1:
+            fail(f'{self.name}: #fokia has an opacity, which would fade its outline too')
         if len(self.fokia.kids) != 1 or self.fokia.kids[0].tag != 'g':
             fail(f'{self.name}: #fokia should hold one transformed group')
         self.top = self.fokia.kids[0]
@@ -902,6 +920,7 @@ class Node:
         self.frame = 0.0
         self.k = 1.0
         self.travel = 0.0  # a lid's way down
+        self.rest = 1.0  # alpha at rest: 0 on a group the svg hides
 
     def matrix(self, vals):
         x, y, r, sx, sy = vals[0], vals[1], vals[2], vals[3], vals[4]
@@ -1381,6 +1400,17 @@ def compile_sticker(anim, st, svg, palette, blur, report):
             if sa & sc_ and not (sa <= sc_ or sc_ <= sa):
                 fail(f'{a.line}: nodes overlap without nesting')
 
+    # a group the svg hides cannot fold its opacity into its paints, as no
+    # track could show it again: its node's alpha rests at 0 instead
+    holds = {}
+    for n in nodes:
+        g = n.els[0]
+        if len(n.els) == 1 and g.tag == 'g' and g.opacity == 0 and id(g) not in holds:
+            holds[id(g)] = n
+            n.rest = 0.0
+            if (n, 5) not in st.tracks:
+                fail(f'{n.line}: {owner_name(n)} is hidden in the svg: an alpha track from 0 shows it')
+
     opens, closes = {}, {}
     for n in nodes:
         opens.setdefault(id(n.els[0]), []).append(n)
@@ -1404,6 +1434,8 @@ def compile_sticker(anim, st, svg, palette, blur, report):
     nodestack = []
     tints = []  # colour filters around what is drawn, outermost first
     push_at = {}  # op index of each PUSH -> node, for the layer decision
+    fades = []  # group opacities folded into the paints under them
+    dims = []  # group opacities a layer applies: only the outline sees them
 
     def ink(c):
         # the inner filter works first, on its own group
@@ -1424,6 +1456,17 @@ def compile_sticker(anim, st, svg, palette, blur, report):
 
     def emit(el, ctm):
         m = mul(ctm, el.local)
+        g = 1.0 if id(el) in holds else el.opacity
+        if g <= 0:
+            return
+        # a group's opacity: a layer when what it holds could overlap, as
+        # svg composites a group before it fades it, else in the paints
+        layer = g < 1 and draw_count(el) > 1
+        if layer:
+            out.op(OP_LAYER, round(g * 255))
+            dims.append(g)
+        elif g < 1:
+            fades.append(g)
         if el.clip:
             ce, rule = svg.clips[el.clip]
             s, _ = similarity(m, el.where())
@@ -1442,6 +1485,11 @@ def compile_sticker(anim, st, svg, palette, blur, report):
         if el.clip:
             out.op(OP_POP)
             clipstack.pop()
+        if layer:
+            out.op(OP_POP)
+            dims.pop()
+        elif g < 1:
+            fades.pop()
 
     def grad_paint(ref, local_subs, m, where):
         if ref not in svg.grads:
@@ -1478,6 +1526,9 @@ def compile_sticker(anim, st, svg, palette, blur, report):
             o = 1.0
         owner = nodestack[-1] if nodestack else None
         hidden = any(n.hidden for n in nodestack)
+        clear = any(n.rest == 0 for n in nodestack)
+        k = math.prod(fades)
+        cut = k * math.prod(dims)
 
         def paint_of(c, alpha, style, width=0, cap=0, join=0):
             if isinstance(c, tuple):
@@ -1485,12 +1536,12 @@ def compile_sticker(anim, st, svg, palette, blur, report):
                 return out.paint((style | 2, sh, round(alpha * 255), width, cap, join))
             return out.paint((style, out.colour_ix(ink(c)), round(alpha * 255), width, cap, join))
         if fill is not None:
-            pi = paint_of(fill, o * fo, 0)
+            pi = paint_of(fill, o * fo * k, 0)
             out.op(OP_DRAW, out.path(subs, evenodd))
             out.ops.append(pi)
-            out.draws.append(dict(subs=subs, stroke=False, evenodd=evenodd, alpha=o * fo,
+            out.draws.append(dict(subs=subs, stroke=False, evenodd=evenodd, alpha=o * fo * cut,
                                   clips=list(clipstack), owner=owner, hidden=hidden,
-                                  nodes=list(nodestack), where=where))
+                                  clear=clear, nodes=list(nodestack), where=where))
         if stroke is not None:
             cap = {'butt': 0, 'round': 1, 'square': 2}[a.get('stroke-linecap', 'butt')]
             join = {'miter': 0, 'round': 1, 'bevel': 2}[a.get('stroke-linejoin', 'miter')]
@@ -1501,16 +1552,20 @@ def compile_sticker(anim, st, svg, palette, blur, report):
                 pat = [float(x) for x in re.split(r'[\s,]+', a['stroke-dasharray'].strip())]
                 ssubs = xform(dash_subs(local, pat), m)
             width = sw * s
-            pi = paint_of(stroke, o * so, 1, round(width * Q), cap, join)
+            pi = paint_of(stroke, o * so * k, 1, round(width * Q), cap, join)
             out.op(OP_DRAW, out.path(ssubs, False))
             out.ops.append(pi)
             out.draws.append(dict(subs=ssubs, stroke=True, width=width, cap=cap, join=join,
-                                  alpha=o * so, clips=list(clipstack), owner=owner,
-                                  hidden=hidden, nodes=list(nodestack), where=where))
+                                  alpha=o * so * cut, clips=list(clipstack), owner=owner,
+                                  hidden=hidden, clear=clear, nodes=list(nodestack), where=where))
         if layer:
             out.op(OP_POP)
 
     emit_kids(svg.fokia, ID)
+    pushed = {n for n, _ in push_at.values()}
+    for n in nodes:
+        if n not in pushed:
+            fail(f'{n.line}: {owner_name(n)} is inside a group the svg hides')
     # which pushes need a layer to fade as one: more than one draw that overlap
     for at, (n, first) in push_at.items():
         mine = [d for d in out.draws[first:] if n in d['nodes']]
@@ -1526,6 +1581,15 @@ def compile_sticker(anim, st, svg, palette, blur, report):
     check_ops(ops, nodes)
     run_clears(st, out, nodes, tracks, report)
     return pack_blob(st, out, nodes, ops, tracks), out
+
+
+def draw_count(el):
+    # how many draws a layer makes: a fill, a stroke, or both
+    if el.tag == 'g':
+        return sum(draw_count(k) for k in el.kids) if el.opacity > 0 else 0
+    a = el.a
+    stroke = a.get('stroke', 'none') != 'none' and float(a.get('stroke-width', '1')) > 0
+    return (a.get('fill', '#000000') != 'none') + stroke
 
 
 def draw_box(d):
@@ -1566,7 +1630,7 @@ def finish_tracks(st, report):
     if st.tracks and not (2000 <= L <= 3000):
         fail(f'{st.line}: loop {L} ms is outside 2000..3000')
     for (n, prop), keys in st.tracks.items():
-        rest = REST[prop]
+        rest = n.rest if prop == 5 else REST[prop]
         if keys[0][0] > 0:
             keys = [(0.0, keys[0][1], 0)] + keys
         if abs(keys[0][1] - rest) > 1e-9:
@@ -2073,7 +2137,9 @@ def loop_subs(beziers):
 
 def halo(st, svg, out, nodes, tracks, how, report):
     ras = Raster()
-    draws = [d for d in out.draws if not d['hidden']]
+    # a part the svg hides is not in its outline at rest
+    draws = [d for d in out.draws if not d['hidden'] and not d['clear']]
+    clear = [d for d in out.draws if not d['hidden'] and d['clear']]
     times = sample_times(st.loop, tracks)
     moving = {tk[0] for tk in tracks}
     # a node moves if it or anything above it has tracks
@@ -2137,18 +2203,10 @@ def halo(st, svg, out, nodes, tracks, how, report):
             lines.append(f'  bridge {area:6.1f} px2 -> {" + ".join(parts)}')
     ops = []
     pieces = []
-    for o in owners:
-        f = F[o]
-        if f is None and not extra[o].any():
-            continue
-        g = f if f is not None else np.zeros((N, N))
-        if extra[o].any():
-            # the bridge grown by 2 px (two sigmas of a 1 px blur), smooth
-            bf = blur(extra[o].astype(np.float32), 'grow')
-            g = np.maximum(g, LEVEL * bf / 0.02275)
-        piece = np.minimum(A, g)
+
+    def emit_piece(o, piece):
         if piece.max() < LEVEL:
-            continue
+            return
         rims = []
         for level, alpha in RIM:
             subs = []
@@ -2159,7 +2217,7 @@ def halo(st, svg, out, nodes, tracks, how, report):
             if subs:
                 rims.append((subs, alpha))
         if not rims:
-            continue
+            return
         chain = [] if o is None else ancestors(o)[::-1] + [o]
         for n in chain:
             ops.append((OP_PUSH << 13) | n.index)
@@ -2171,6 +2229,23 @@ def halo(st, svg, out, nodes, tracks, how, report):
         for _ in chain:
             ops.append(OP_POP << 13)
         pieces.append((owner_name(o), sum(len(s[1]) for subs, _ in rims for s in subs)))
+    for o in owners:
+        f = F[o]
+        if f is None and not extra[o].any():
+            continue
+        g = f if f is not None else np.zeros((N, N))
+        if extra[o].any():
+            # the bridge grown by 2 px (two sigmas of a 1 px blur), smooth
+            bf = blur(extra[o].astype(np.float32), 'grow')
+            g = np.maximum(g, LEVEL * bf / 0.02275)
+        emit_piece(o, np.minimum(A, g))
+    # a hidden part's outline, traced as if it showed: it comes and goes
+    # with the part, under its alpha
+    shown = {}
+    for d in clear:
+        shown.setdefault(owner_of(d, moving), []).append(d)
+    for o, ds in shown.items():
+        emit_piece(o, blur(ras.alpha(ds), how))
     report.append('  halo: ' + ', '.join(f'{n} {c}' for n, c in pieces))
     report.extend(lines)
     return ops
@@ -2421,7 +2496,7 @@ def read_pack(data):
 
 class Still:
     # what the still frame needs from a blob: paths, shaders, paints,
-    # hidden nodes and the ops
+    # hidden nodes, the ops and each node's alpha at rest
     def __init__(self, b):
         o = 0
 
@@ -2458,6 +2533,13 @@ class Still:
         self.hidden = [rd('HhhhHB')[5] & 1 for _ in range(rd('H')[0])]
         (nops,) = rd('H')
         self.ops = rd(f'{nops}H')
+        # where a node's alpha track starts; 1 without one
+        self.rest = [1.0] * len(self.hidden)
+        for _ in range(rd('H')[0]):
+            n, prop, nk = rd('HBB')
+            keys = [rd('HhB') for _ in range(nk)]
+            if prop == 5:
+                self.rest[n] = dqvalue(5, keys[0][1])
         self.jump = {}
         stack = []
         i = 0
@@ -2590,24 +2672,36 @@ def png_shade(sh, pal, r0, c0, h, w):
 
 def paint_still(st, pal):
     # sticker_player.dart's paintSticker with v null: nodes at rest, the
-    # hidden ones skipped. premultiplied rgba, 0..1
+    # hidden ones and those whose alpha rests at 0 skipped. premultiplied
+    # rgba, 0..1
     img = np.zeros((BOX, BOX, 4))
     clip = None
+    alpha = 1.0
     stack = []
     ops = st.ops
     i = 0
     while i < len(ops):
         code, arg = ops[i] >> 13, ops[i] & 0x1FFF
-        if code == OP_PUSH and st.hidden[arg & 0xFFF]:
-            i = st.jump[i] + 1
-            continue
-        if code in (OP_SAVE, OP_PUSH):
-            stack.append((clip, None))
+        if code == OP_PUSH:
+            n = arg & 0xFFF
+            if st.hidden[n] or st.rest[n] <= 0:
+                i = st.jump[i] + 1
+                continue
+        if code == OP_SAVE:
+            stack.append((clip, None, alpha))
+        elif code == OP_PUSH:
+            a = st.rest[arg & 0xFFF]
+            if a < 1 and arg & PUSH_LAYER:
+                stack.append((clip, (img, a), alpha))
+                img = np.zeros_like(img)
+            else:
+                stack.append((clip, None, alpha))
+                alpha *= a
         elif code == OP_LAYER:
-            stack.append((clip, (img, (arg & 0xFF) / 255)))
+            stack.append((clip, (img, (arg & 0xFF) / 255), alpha))
             img = np.zeros_like(img)
         elif code == OP_POP:
-            clip, layer = stack.pop()
+            clip, layer, alpha = stack.pop()
             if layer is not None:
                 under, a = layer
                 under *= 1 - img[..., 3:] * a
@@ -2624,7 +2718,9 @@ def paint_still(st, pal):
         elif code == OP_DRAW:
             i += 1
             subs, eo = st.paths[arg]
-            style, ci, alpha, w, cap, join = st.paints[ops[i]]
+            style, ci, pa, w, cap, join = st.paints[ops[i]]
+            if alpha < 1:
+                pa = round(pa * alpha)
             if style & 1:
                 hw = w / Q / 2
                 lines, smooth = flat_px(subs)
@@ -2637,9 +2733,9 @@ def paint_still(st, pal):
                 if clip is not None:
                     f = f * clip[r0:r0 + h, c0:c0 + w_]
                 if style & 2:
-                    src = png_shade(st.shaders[ci], pal, r0, c0, h, w_) * (alpha / 255)
+                    src = png_shade(st.shaders[ci], pal, r0, c0, h, w_) * (pa / 255)
                 else:
-                    src = np.append(rgb_of(pal[ci]), 1.0) * (alpha / 255)
+                    src = np.append(rgb_of(pal[ci]), 1.0) * (pa / 255)
                     src = np.broadcast_to(src, (h, w_, 4))
                 win = img[r0:r0 + h, c0:c0 + w_]
                 win *= 1 - (f * src[..., 3])[..., None]
@@ -2733,7 +2829,68 @@ def selftest():
     ring = [ellipse_sub(100, 100, 40, 40, 1.0), ellipse_sub(100, 100, 20, 20, 1.0)]
     area = png_cover(fill_px(ring), True)[2].sum()
     assert abs(area / (math.pi * 1200) - 1) < 1e-3, area
+    selftest_opacity()
     print('selftest ok')
+
+
+OPACITY_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs>
+<filter id="cut" color-interpolation-filters="sRGB">
+<feGaussianBlur in="SourceAlpha" stdDeviation="5.5" result="b"/>
+<feComponentTransfer in="b" result="d"><feFuncA type="linear" slope="30" intercept="-0.6"/></feComponentTransfer>
+<feFlood flood-color="#FFFFFF" result="w"/>
+<feComposite in="w" in2="d" operator="in" result="border"/>
+<feMerge><feMergeNode in="border"/><feMergeNode in="SourceGraphic"/></feMerge>
+</filter></defs><g id="fokia" filter="url(#cut)"><g>
+<g id="one" opacity="0.5"><rect x="40" y="40" width="60" height="60" fill="#000000"/></g>
+<g id="two" opacity="0.5"><rect x="140" y="40" width="60" height="60" fill="#000000"/>
+<rect x="170" y="70" width="60" height="60" fill="#000000"/></g>
+<g id="gone" opacity="0"><rect x="40" y="300" width="60" height="60" fill="#000000"/></g>
+<g id="bolt" opacity="0"><rect x="300" y="300" width="60" height="60" fill="#000000"/></g>
+</g></g></svg>'''
+
+
+def selftest_opacity():
+    # group opacity, through the compiler and the still painter: a group
+    # with one draw fades its paint, one whose draws overlap fades as a
+    # layer, a hidden one draws nothing, and a hidden one a node moves
+    # rests at alpha 0 with its outline, which its track brings in
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp = Path(tmp)
+        (tmp / 'fixture-90-test.svg').write_text(OPACITY_SVG)
+
+        def run(lines):
+            (tmp / 'anim.txt').write_text('sticker 90 test loop=2000 emoji=x since=1\n' + lines)
+            anim = Anim(tmp / 'anim.txt')
+            palette = {}
+            blob, _ = compile_sticker(anim, anim.stickers[90], Svg(tmp / 'fixture-90-test.svg'),
+                                      palette, 'box3', [])
+            pal = [0xFF000000 | rgb for rgb, _ in sorted(palette.items(), key=lambda kv: kv[1])]
+            return Still(blob), pal
+        st, pal = run('  node bolt bolt\n  alpha bolt 0:0 500:1:hold 1500:0:hold 2000:0:linear\n')
+        img = paint_still(st, pal)
+
+        def grey(x, y):
+            # straight colour over the white outline
+            return float(img[y, x, :3].mean() / max(img[y, x, 3], 1e-9))
+        assert abs(grey(70, 70) - 0.5) < 0.01, grey(70, 70)
+        assert abs(grey(185, 85) - 0.5) < 0.01, grey(185, 85)
+        assert (OP_LAYER << 13 | 128) in st.ops
+        for x, y in ((70, 330), (330, 330), (330, 296)):
+            assert img[y, x, 3] == 0, (x, y, img[y, x])
+        # the node's alpha at 1: the part and its outline are back
+        n = st.rest.index(0.0)
+        st.rest[n] = 1.0
+        img = paint_still(st, pal)
+        assert img[330, 330, 3] > 0.99 and grey(330, 330) < 0.01
+        assert img[296, 330, 3] > 0.99 and grey(330, 296) > 0.99
+        for bad, why in (('  node bolt bolt\n  alpha bolt 0:1 500:0 2000:1\n', 'start at rest'),
+                         ('  node bolt bolt\n  x bolt 0:0 500:4 2000:0\n', 'hidden in the svg')):
+            try:
+                run(bad)
+            except Fail as e:
+                assert why in str(e), e
+            else:
+                raise AssertionError(f'no fail: {why}')
 
 
 def main(argv):
