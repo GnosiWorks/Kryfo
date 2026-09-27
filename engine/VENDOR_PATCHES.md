@@ -1,4 +1,4 @@
-# hand patches in engine/vendor
+# patched dependencies
 
 three files under `vendor/github.com/alexballas/go-libtor/` differ from
 upstream. `go mod vendor` silently drops them, and the 32-bit engine then
@@ -36,3 +36,40 @@ on a 32-bit phone, settings > transport: tor leaves "starting" and reaches
 100%.
 
 reported upstream to alexballas/go-libtor.
+
+## fiatjaf.com/nostr: a fork, not a hand patch
+
+the relay library lives in `third_party/nostr` and go.mod points at it with
+a `replace`, so `go mod vendor` copies it into vendor/ like any other module
+and this one survives a re-vendor. it holds upstream's files for the two
+packages the engine imports, tests left out, and upstream's go.mod. only
+`relay.go` differs, in two dozen lines, the new ones marked `kryfo:`:
+
+- subscription ids are counted per connection. upstream numbers every REQ
+  in the process from one counter, which lets a relay line up a phone's
+  sockets, burner rooms included, by where the counter has got to.
+- `RelayOptions.PingInterval` and `PongTimeout`. zero keeps upstream's 19s
+  and 800ms. the relay runners pass 90s and 20s in private mode (lanes.go):
+  over tor a pong often takes longer than 800ms, and three late ones close
+  the socket.
+
+vendor/fiatjaf.com/nostr is a copy of it and has to stay one:
+
+    diff -r third_party/nostr vendor/fiatjaf.com/nostr    # only go.mod
+
+the change against upstream:
+
+    go mod download fiatjaf.com/nostr@v0.0.0-20260508234157-a4c590d923ee
+    diff -u "$(go env GOMODCACHE)/fiatjaf.com/nostr@v0.0.0-20260508234157-a4c590d923ee/relay.go" \
+        third_party/nostr/relay.go
+
+to move to a newer upstream: save that diff as a patch, copy the new
+version's go.mod and the non-test files of its root and `nip45/hyperloglog`
+over `third_party/nostr`, apply the patch, put the new version in go.mod's
+require and in the first line of vendor/modules.txt, and copy
+`third_party/nostr` into `vendor/fiatjaf.com/nostr` without its go.mod. if
+the new go.mod moves any dependency it is a full update: `go mod vendor`,
+then the go-libtor patches above again.
+
+the engine's embedded module list names the replacement,
+`=> ./third_party/nostr`, the same on every machine.

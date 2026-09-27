@@ -93,7 +93,7 @@ func HaloPairCodePublish(cCode, cPayload *C.char) *C.char {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 40*time.Second)
 	defer cancel()
-	ok := nostrPublishMulti(ctx, out)
+	ok := nostrPublishMulti(ctx, pairLane(pk), out)
 	if ok == 0 {
 		return C.CString("error: no relays accepted")
 	}
@@ -116,7 +116,7 @@ func pairCodeQuery(ctx context.Context, pk string) []nostr.Event {
 		wg.Add(1)
 		go func(u string) {
 			defer wg.Done()
-			client, err := torNostrClient()
+			client, err := torNostrClientFor(pairLane(pk))
 			if err != nil {
 				return
 			}

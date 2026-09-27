@@ -211,14 +211,15 @@ func trunc(s string, n int) string {
 	return s
 }
 
-// every one-shot request in the engine goes through one of two cached
-// clients, so a socks port that moves takes all of them down together. this
-// holds each client across a bounce, which is how the app has them: warm,
-// from before.
+// every one-shot request in the engine goes through a cached client, so a
+// socks port that moves takes all of them down together. this holds each
+// client across a bounce, which is how the app has them: warm, from before.
 //
-//	torNostrClient()  relays, HaloTorGet, HaloTorPost (the badge service),
-//	                  handle check/claim/release, pair codes
-//	torOnlyHTTP()     HaloTorGetStrict (link previews)
+//	torNostrClient()      the everyday lane: its relays, HaloTorGet,
+//	                      HaloTorPost (the badge service), handle
+//	                      check/claim/release
+//	torNostrClientFor()   the other lanes: each room's relays, pair codes
+//	torOnlyHTTP()         HaloTorGetStrict (link previews)
 //
 // moat is deliberately absent: it does not use tor, because tor is what is
 // broken when you are asking for bridges. the onion dial in bridge.go builds
