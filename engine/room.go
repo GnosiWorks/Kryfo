@@ -42,7 +42,7 @@ func peerArr(pubHex string) ([32]byte, error) {
 
 // publish one wrap the way HaloNostrSend does, remembering the id so our
 // own subscription does not hand it back to us.
-func publishWrap(gw nostr2.Event) (int, error) {
+func publishWrap(lane string, gw nostr2.Event) (int, error) {
 	var ev nostr.Event
 	if err := easyjson.Unmarshal([]byte(gw.String()), &ev); err != nil {
 		return 0, fmt.Errorf("wrap convert: %v", err)
@@ -55,7 +55,7 @@ func publishWrap(gw nostr2.Event) (int, error) {
 	nostrMu.Unlock()
 	ctx, cancel := context.WithTimeout(context.Background(), 40*time.Second)
 	defer cancel()
-	ok := nostrPublishMulti(ctx, ev)
+	ok := nostrPublishMulti(ctx, lane, ev)
 	if ok == 0 {
 		return 0, fmt.Errorf("no relays accepted")
 	}
@@ -105,7 +105,7 @@ func HaloRoomSend(cPriv, cPeer, cMsg *C.char) *C.char {
 	if err != nil {
 		return C.CString(fmt.Sprintf("error: wrap: %v", err))
 	}
-	n, err := publishWrap(gw)
+	n, err := publishWrap(roomLane(hex.EncodeToString(me.pub[:])), gw)
 	if err != nil {
 		return C.CString("error: " + err.Error())
 	}
@@ -131,7 +131,7 @@ func HaloRoomSendFirstContact(cPriv, cPeer, cFcPk, cMsg *C.char) *C.char {
 	if err != nil {
 		return C.CString(fmt.Sprintf("error: wrap: %v", err))
 	}
-	n, err := publishWrap(gw)
+	n, err := publishWrap(roomLane(hex.EncodeToString(me.pub[:])), gw)
 	if err != nil {
 		return C.CString("error: " + err.Error())
 	}
@@ -175,8 +175,9 @@ func HaloRoomSubscribe(cPriv, cPeer *C.char) *C.char {
 		return C.CString(fmt.Sprintf("error: derive: %v", err))
 	}
 	key := roomSubKey(me, peerHex)
+	lane := roomLane(hex.EncodeToString(me.pub[:]))
 	startSub(key, func(ctx context.Context) {
-		nostrSubscribeRunnerFn(ctx, key, rcvPk, func(gw nostr2.Event) (string, error) {
+		nostrSubscribeRunnerFn(ctx, lane, key, rcvPk, func(gw nostr2.Event) (string, error) {
 			return nip17UnwrapAs(me, peer, gw)
 		})
 	})
@@ -199,8 +200,9 @@ func HaloRoomSubscribeFirstContact(cPriv *C.char) *C.char {
 		return C.CString(fmt.Sprintf("error: derive: %v", err))
 	}
 	key := "roomfc:" + hex.EncodeToString(me.pub[:])
+	lane := roomLane(hex.EncodeToString(me.pub[:]))
 	startSub(key, func(ctx context.Context) {
-		nostrSubscribeRunnerFn(ctx, key, fcPk, func(gw nostr2.Event) (string, error) {
+		nostrSubscribeRunnerFn(ctx, lane, key, fcPk, func(gw nostr2.Event) (string, error) {
 			content, _, err := nip17UnwrapFirstContactWith(fcSk, gw)
 			return content, err
 		})
@@ -225,6 +227,7 @@ func HaloRoomUnsubscribe(cPub *C.char) *C.char {
 		}
 	}
 	nostrMu.Unlock()
+	dropLane(roomLane(pub))
 	log.Printf("room: dropped %d subscriptions", n)
 	return C.CString("ok")
 }

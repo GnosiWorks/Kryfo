@@ -501,9 +501,11 @@ func nostrHkdf(secret, salt, info []byte, length int) []byte {
 	return out
 }
 
-// the client torNostrClient hands out, dialling through tor's socks proxy
+// the clients torNostrClientFor hands out, one per lane, each dialling
+// through tor's socks proxy under its lane's name. keyed by lane, or by ""
+// for the one direct client every lane shares outside private mode.
 var (
-	cachedNostrClient   *http.Client
+	cachedNostrClients  = map[string]*http.Client{}
 	cachedNostrClientMu sync.Mutex
 )
 
@@ -511,7 +513,7 @@ var (
 // socks address it was built on, and a bounce can move it.
 func nostrResetClient() {
 	cachedNostrClientMu.Lock()
-	cachedNostrClient = nil
+	cachedNostrClients = map[string]*http.Client{}
 	cachedNostrClientMu.Unlock()
 	// the preview client dials the tor it was built on. after a restart
 	// that tor is gone, and a client kept from before would dial a dead
@@ -536,22 +538,30 @@ func relayDialCtx(parent context.Context, u string) (context.Context, context.Ca
 	return context.WithTimeout(parent, d)
 }
 
+// the everyday lane's client, for everything that speaks for the main identity
+func torNostrClient() (*http.Client, error) { return torNostrClientFor(laneEveryday) }
+
 // nothing in here talks to tor: the socks address is pinned or remembered,
 // and bine builds a plain socks5 dialer from it. so the mutex is held for
 // microseconds, and a resume or a reconnect that resets the client never
 // waits on a relay runner (see control_events.go).
-func torNostrClient() (*http.Client, error) {
+func torNostrClientFor(lane string) (*http.Client, error) {
 	cachedNostrClientMu.Lock()
 	defer cachedNostrClientMu.Unlock()
-	if cachedNostrClient != nil {
-		return cachedNostrClient, nil
+	key := lane
+	if !modeNeedsTor() {
+		key = ""
+	}
+	if c := cachedNostrClients[key]; c != nil {
+		return c, nil
 	}
 	// balanced and fast do not go through tor at all, so there is nothing to
 	// wait for and no dialer to build.
 	if !modeNeedsTor() {
-		cachedNostrClient = directNostrClient()
+		c := directNostrClient()
+		cachedNostrClients[key] = c
 		log.Printf("nostr: direct client (%s mode, not via tor)", currentMode())
-		return cachedNostrClient, nil
+		return c, nil
 	}
 	mu.Lock()
 	t := torNode
@@ -559,11 +569,11 @@ func torNostrClient() (*http.Client, error) {
 	if t == nil {
 		return nil, fmt.Errorf("tor not started")
 	}
-	d, err := torDialer(context.Background(), t)
+	d, err := torDialerAs(context.Background(), t, laneName(lane))
 	if err != nil {
 		return nil, fmt.Errorf("tor dialer: %v", err)
 	}
-	cachedNostrClient = &http.Client{
+	c := &http.Client{
 		Transport: &http.Transport{
 			DialContext:           d.DialContext,
 			TLSHandshakeTimeout:   10 * time.Second,
@@ -571,11 +581,12 @@ func torNostrClient() (*http.Client, error) {
 		},
 		Timeout: 60 * time.Second,
 	}
-	log.Printf("nostr: client built over tor's socks listener")
-	return cachedNostrClient, nil
+	cachedNostrClients[key] = c
+	log.Printf("nostr: %s client built over tor's socks listener", laneKind(lane))
+	return c, nil
 }
 
-func nostrPublishMulti(ctx context.Context, ev nostr.Event) (ok int) {
+func nostrPublishMulti(ctx context.Context, lane string, ev nostr.Event) (ok int) {
 	nostrMu.Lock()
 	all := append([]string(nil), nostrRelays...)
 	nostrMu.Unlock()
@@ -611,7 +622,7 @@ func nostrPublishMulti(ctx context.Context, ev nostr.Event) (ok int) {
 					bgCancel()
 				}
 			}()
-			client, err := torNostrClient()
+			client, err := torNostrClientFor(lane)
 			if err != nil {
 				log.Printf("nostr: tor not ready, skipping publish to %s: %v", u, err)
 				result <- false
@@ -678,12 +689,13 @@ func nostrSubscribeRunnerMode(ctx context.Context, peerXPubHex string, peerArr [
 			return content, err
 		}
 	}
-	nostrSubscribeRunnerFn(ctx, tag, rcvPk, unwrap)
+	nostrSubscribeRunnerFn(ctx, laneEveryday, tag, rcvPk, unwrap)
 }
 
 // the general runner: one receive address, one way to open what lands on
-// it, one tag the inbox line carries so dart knows who it was for.
-func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwrap func(nostr2.Event) (string, error)) {
+// it, one tag the inbox line carries so dart knows who it was for, and the
+// lane whose circuits it may use.
+func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string, unwrap func(nostr2.Event) (string, error)) {
 	nostrMu.Lock()
 	urls := append([]string(nil), nostrRelays...)
 	nostrMu.Unlock()
@@ -835,7 +847,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 					sleepOrKick(15 * time.Minute)
 					continue
 				}
-				client, err := torNostrClient()
+				client, err := torNostrClientFor(lane)
 				if err != nil {
 					wait := 10 * time.Second
 					log.Printf("nostr: tor not ready, retry subscribe to %s in %s: %v", u, wait, err)
@@ -855,7 +867,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 					sleepOrKick(wait)
 					continue
 				}
-				r := nostr.NewRelay(ctx, u, nostr.RelayOptions{})
+				r := nostr.NewRelay(ctx, u, subscribeRelayOptions())
 				dialAt := time.Now()
 				noteRelayDial(u)
 				dctx, dcancel := relayDialCtx(ctx, u)
@@ -1143,7 +1155,7 @@ func HaloNostrSend(cPeerXPubHex, cMsg *C.char) *C.char {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 40*time.Second)
 	defer cancel()
-	ok := nostrPublishMulti(ctx, ev)
+	ok := nostrPublishMulti(ctx, laneEveryday, ev)
 	if ok == 0 {
 		return C.CString("error: no relays accepted")
 	}
@@ -1265,7 +1277,7 @@ func HaloNostrSendFirstContact(cPeerXPubHex, cFcPk, cMsg *C.char) *C.char {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 40*time.Second)
 	defer cancel()
-	ok := nostrPublishMulti(ctx, ev)
+	ok := nostrPublishMulti(ctx, laneEveryday, ev)
 	if ok == 0 {
 		return C.CString("error: no relays accepted")
 	}

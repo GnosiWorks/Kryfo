@@ -1,4 +1,4 @@
-# fiatjaf.com/nostr v0.0.0-20260508234157-a4c590d923ee
+# fiatjaf.com/nostr v0.0.0-20260508234157-a4c590d923ee => ./third_party/nostr
 ## explicit; go 1.25
 fiatjaf.com/nostr
 fiatjaf.com/nostr/nip45/hyperloglog
@@ -217,3 +217,4 @@ golang.org/x/net/proxy
 ## explicit; go 1.25.0
 golang.org/x/sys/cpu
 golang.org/x/sys/unix
+# fiatjaf.com/nostr => ./third_party/nostr

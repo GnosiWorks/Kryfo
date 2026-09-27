@@ -21,7 +21,7 @@ require (
 	github.com/bytedance/sonic v1.13.1 // indirect
 	github.com/bytedance/sonic/loader v0.2.4 // indirect
 	github.com/cloudwego/base64x v0.1.5 // indirect
-	github.com/coder/websocket v1.8.13 // indirect
+	github.com/coder/websocket v1.8.13
 	github.com/dchest/siphash v1.2.3
 	github.com/decred/dcrd/crypto/blake256 v1.1.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.0 // indirect
@@ -42,6 +42,9 @@ require (
 	gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/goptlib v1.5.0
 	golang.org/x/arch v0.15.0 // indirect
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394 // indirect
-	golang.org/x/net v0.52.0 // indirect
+	golang.org/x/net v0.52.0
 	golang.org/x/sys v0.43.0 // indirect
 )
+
+// per-connection subscription ids and a settable ping, see VENDOR_PATCHES.md
+replace fiatjaf.com/nostr => ./third_party/nostr

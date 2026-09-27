@@ -13,6 +13,7 @@ import (
 
 	"github.com/cretz/bine/control"
 	"github.com/cretz/bine/tor"
+	"golang.org/x/net/proxy"
 )
 
 // bine starts tor with "--SocksPort auto", so every DisableNetwork bounce
@@ -101,13 +102,24 @@ func dropSocksAddr() {
 // a dialer through tor that never touches the control port and never
 // changes tor's configuration. it is built in microseconds.
 func torDialer(ctx context.Context, t *tor.Tor) (*tor.Dialer, error) {
+	return torDialerAs(ctx, t, "")
+}
+
+// the same under a socks name. tor isolates by socks credentials by default,
+// so streams under one name never share a circuit with streams under another
+// or with none.
+func torDialerAs(ctx context.Context, t *tor.Tor, name string) (*tor.Dialer, error) {
 	a, err := socksAddr(t)
 	if err != nil {
 		return nil, err
 	}
-	return t.Dialer(ctx, &tor.DialConf{
+	conf := &tor.DialConf{
 		SkipEnableNetwork: true,
 		ProxyNetwork:      "tcp",
 		ProxyAddress:      a,
-	})
+	}
+	if name != "" {
+		conf.ProxyAuth = &proxy.Auth{User: name, Password: name}
+	}
+	return t.Dialer(ctx, conf)
 }
