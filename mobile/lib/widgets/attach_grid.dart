@@ -23,7 +23,9 @@ class AttachItem {
 
 class AttachGrid extends StatefulWidget {
   final List<AttachItem> items;
-  const AttachGrid({super.key, required this.items});
+  // one quiet line under the tiles, what the camera promises
+  final String? note;
+  const AttachGrid({super.key, required this.items, this.note});
   @override
   State<AttachGrid> createState() => _AttachGridState();
 }
@@ -68,7 +70,9 @@ class _AttachGridState extends State<AttachGrid>
             LayoutBuilder(
               builder: (_, box) {
                 final w = box.maxWidth / 3;
+                // a short last row sits in the middle, not at one side
                 return Wrap(
+                  alignment: WrapAlignment.center,
                   children: [
                     for (final (i, it) in items.indexed)
                       SizedBox(
@@ -79,6 +83,34 @@ class _AttachGridState extends State<AttachGrid>
                 );
               },
             ),
+            if (widget.note case final note?)
+              _pop(
+                items.length,
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 2),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.shield_outlined,
+                        size: 13,
+                        color: HaloColors.amber,
+                      ),
+                      const SizedBox(width: 7),
+                      Flexible(
+                        child: Text(
+                          note,
+                          textAlign: TextAlign.center,
+                          style: HaloType.sans(
+                            size: 11.5,
+                            color: HaloColors.text3,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
           ],
         ),
       ),

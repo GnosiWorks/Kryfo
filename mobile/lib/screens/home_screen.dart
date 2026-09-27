@@ -6,7 +6,6 @@ import 'transport_screen.dart';
 import '../widgets/press_scale.dart';
 import 'modes_screen.dart' show showFastGateSheet;
 import '../widgets/stagger_in.dart';
-import '../widgets/breathing_ring.dart';
 import 'requests_screen.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart' show kDebugMode;
@@ -20,7 +19,7 @@ import 'qr_screen.dart';
 import 'lock_file_screen.dart';
 import 'open_locked_screen.dart';
 import '../tools/tools_bridge.dart';
-import '../lock_guard.dart' show entranceDone, lockGuard;
+import '../lock_guard.dart' show lockGuard;
 import '../lock_state.dart';
 import '../widgets/nav_bar.dart';
 import 'package:flutter/services.dart';
@@ -36,6 +35,10 @@ import '../widgets/motion.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/shift_in_place.dart';
+import '../widgets/burn_fade.dart' show FadeFold;
+import '../widgets/row_motion.dart';
+import '../widgets/count_badge.dart';
+import '../widgets/chat_parts.dart' show GrowSwap;
 import '../widgets/confirm_sheet.dart';
 import '../widgets/hidden_mark.dart';
 import '../notif_permission.dart';
@@ -378,24 +381,36 @@ class _ChatsTab extends StatelessWidget {
                   Navigator.of(context).push(haloRoute(const SavedScreen())),
             ),
           ),
-          if (pendingCount > 0)
-            StaggerIn(
-              index: 2,
-              child: _RequestsPin(
-                count: pendingCount,
-                onTap: () => Navigator.of(
-                  context,
-                ).push(haloRoute(const RequestsScreen())),
-              ),
-            ),
-          if (hasArchived)
-            _ArchivedPin(
-              count: contacts.where((c) => c.archived).length,
-              onTap: () {
-                HapticFeedback.selectionClick();
-                Navigator.of(context).push(_archivedRoute());
-              },
-            ),
+          // the two pins open and fold with what they count, so the list
+          // under them slides rather than jumps
+          GrowSwap(
+            alignment: Alignment.topCenter,
+            child: pendingCount > 0
+                ? StaggerIn(
+                    key: const ValueKey('requests'),
+                    index: 2,
+                    child: _RequestsPin(
+                      count: pendingCount,
+                      onTap: () => Navigator.of(
+                        context,
+                      ).push(haloRoute(const RequestsScreen())),
+                    ),
+                  )
+                : const SizedBox(key: ValueKey('no-requests'), width: 1),
+          ),
+          GrowSwap(
+            alignment: Alignment.topCenter,
+            child: hasArchived
+                ? _ArchivedPin(
+                    key: const ValueKey('archived'),
+                    count: contacts.where((c) => c.archived).length,
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      Navigator.of(context).push(_archivedRoute());
+                    },
+                  )
+                : const SizedBox(key: ValueKey('no-archived'), width: 1),
+          ),
           Expanded(
             child: visible.isEmpty && groups.isEmpty
                 ? _EmptyState(onAdd: onAddContact)
@@ -762,7 +777,7 @@ class _OfflineCardState extends State<_OfflineCard> {
             children: [
               Row(
                 children: [
-                  BreathDot(color: HaloColors.rose, size: 7),
+                  BreathDot(color: HaloColors.rose, size: 7, breaths: 3),
                   const SizedBox(width: 9),
                   Text(
                     l10n.homeKryfoIsOffline,
@@ -879,7 +894,7 @@ class _KeepsStoppingCardState extends State<_KeepsStoppingCard> {
             children: [
               Row(
                 children: [
-                  BreathDot(color: HaloColors.amber, size: 7),
+                  BreathDot(color: HaloColors.amber, size: 7, breaths: 3),
                   const SizedBox(width: 9),
                   Text(
                     l10n.homeYourPhoneKeepsStopping,
@@ -996,7 +1011,7 @@ class _NotificationsBlockedHintState extends State<_NotificationsBlockedHint>
         children: [
           Row(
             children: [
-              BreathDot(color: HaloColors.amber, size: 7),
+              BreathDot(color: HaloColors.amber, size: 7, breaths: 3),
               const SizedBox(width: 9),
               Text(
                 l10n.homeNotificationsAreOff,
@@ -1092,7 +1107,7 @@ class _RelayDownHint extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  BreathDot(color: HaloColors.amber, size: 7),
+                  BreathDot(color: HaloColors.amber, size: 7, breaths: 3),
                   const SizedBox(width: 9),
                   Text(
                     l10n.homeOurRelayIsQuiet,
@@ -1195,7 +1210,7 @@ class _BridgeStuckHint extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  BreathDot(color: HaloColors.rose, size: 7),
+                  BreathDot(color: HaloColors.rose, size: 7, breaths: 3),
                   const SizedBox(width: 9),
                   Text(
                     l10n.homeNotConnecting,
@@ -1282,7 +1297,7 @@ class _BridgeHint extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  BreathDot(color: HaloColors.violet, size: 7),
+                  BreathDot(color: HaloColors.violet, size: 7, breaths: 3),
                   const SizedBox(width: 9),
                   Text(
                     l10n.homeStillTrying,
@@ -1435,7 +1450,7 @@ class _OfflineStrip extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              BreathDot(color: tint, size: 7),
+              BreathDot(color: tint, size: 7, breaths: 3),
               const SizedBox(width: 10),
               Text(
                 head,
@@ -1504,7 +1519,95 @@ class _EmptyState extends StatefulWidget {
   State<_EmptyState> createState() => _EmptyStateState();
 }
 
-class _EmptyStateState extends State<_EmptyState> {
+class _EmptyStateState extends State<_EmptyState>
+    with SingleTickerProviderStateMixin {
+  // the ring breathes out twice as the page arrives, then rests: nothing
+  // on an empty home keeps moving while it waits
+  late final AnimationController _ring = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 2600),
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_ring.isAnimating || _ring.isCompleted) return;
+    if (motionStill(context)) {
+      _ring.value = 1;
+    } else {
+      _ring.forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _ring.dispose();
+    super.dispose();
+  }
+
+  Widget _mark() {
+    const core = 56.0, room = 92.0;
+    return SizedBox.square(
+      dimension: room,
+      child: AnimatedBuilder(
+        animation: _ring,
+        builder: (_, _) {
+          final t = _ring.value;
+          // the face pops on the house spring over the first 300 ms
+          final pop = kHouseCurve.transform((t * 2600 / 300).clamp(0.0, 1.0));
+          return Stack(
+            alignment: Alignment.center,
+            children: [
+              for (var k = 0; k < 2; k++)
+                () {
+                  final p = (t * 2 - k).clamp(0.0, 1.0);
+                  final e = Curves.easeOut.transform(p);
+                  final d = core + (room - core) * e;
+                  return Container(
+                    width: d,
+                    height: d,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: HaloColors.amber.withValues(
+                        alpha: p <= 0 || p >= 1 ? 0 : 0.12 * (1 - p),
+                      ),
+                    ),
+                  );
+                }(),
+              Transform.scale(
+                scale: 0.85 + 0.15 * pop,
+                child: Container(
+                  width: core,
+                  height: core,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: HaloColors.amberSoft,
+                    border: Border.all(
+                      color: HaloColors.amber.withValues(alpha: 0.3),
+                      width: 0.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: HaloColors.amber.withValues(alpha: 0.16),
+                        blurRadius: 26,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    Icons.person_add_alt_1_outlined,
+                    color: HaloColors.amber,
+                    size: 26,
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -1512,27 +1615,9 @@ class _EmptyStateState extends State<_EmptyState> {
         padding: const EdgeInsets.symmetric(horizontal: 40),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          children: [
-            BreathingRing(
-              child: Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: HaloColors.amberSoft,
-                  border: Border.all(
-                    color: HaloColors.amber.withValues(alpha: 0.3),
-                    width: 0.5,
-                  ),
-                ),
-                child: Icon(
-                  Icons.person_add_alt_1_outlined,
-                  color: HaloColors.amber,
-                  size: 26,
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
+          children: staggerAllIn(context, [
+            _mark(),
+            const SizedBox(height: 10),
             Text(
               l10n.homeNoKryfosYet,
               textAlign: TextAlign.center,
@@ -1554,25 +1639,44 @@ class _EmptyStateState extends State<_EmptyState> {
               onTap: widget.onAdd,
               child: Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 18,
-                  vertical: 10,
+                  horizontal: 20,
+                  vertical: 12,
                 ),
                 decoration: BoxDecoration(
                   color: HaloColors.amber,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: HaloColors.amber.withValues(alpha: 0.25),
+                      blurRadius: 16,
+                      spreadRadius: -4,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
                 ),
-                child: Text(
-                  l10n.homeAddSomeone,
-                  style: HaloType.sans(
-                    size: 13,
-                    weight: FontWeight.w500,
-                    color: HaloColors.onAmber,
-                    height: 1,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.add_rounded,
+                      size: 16,
+                      color: HaloColors.onAmber,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      l10n.homeAddSomeone,
+                      style: HaloType.sans(
+                        size: 13.5,
+                        weight: FontWeight.w600,
+                        color: HaloColors.onAmber,
+                        height: 1,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-          ],
+          ]),
         ),
       ),
     );
@@ -1582,7 +1686,7 @@ class _EmptyStateState extends State<_EmptyState> {
 class _ArchivedPin extends StatelessWidget {
   final VoidCallback onTap;
   final int count;
-  const _ArchivedPin({required this.onTap, required this.count});
+  const _ArchivedPin({super.key, required this.onTap, required this.count});
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -1642,7 +1746,20 @@ class _ArchivedPin extends StatelessWidget {
   }
 }
 
-class _ContactList extends StatelessWidget {
+// one row of the list: a group or a chat, by the key it keeps
+class _Item {
+  final String key;
+  final GroupSummary? g;
+  final ContactPreview? c;
+  _Item.group(GroupSummary this.g) : key = 'g-${g.groupId}', c = null;
+  _Item.chat(ContactPreview this.c) : key = 'c-${c.haloId}', g = null;
+}
+
+// the chat list: groups under their heading, chats under theirs. a row that
+// is new grows in, one that goes folds away, and one that moves glides to
+// its new place (ShiftInPlace). the first build, and anything that changes
+// under the lock, just is.
+class _ContactList extends StatefulWidget {
   final List<ContactPreview> contacts;
   final List<GroupSummary> groups;
   final void Function(String kryfo) onTap;
@@ -1659,136 +1776,219 @@ class _ContactList extends StatelessWidget {
     required this.onNewRoom,
     this.expiredRoomName,
   });
+
+  @override
+  State<_ContactList> createState() => _ContactListState();
+}
+
+class _ContactListState extends State<_ContactList> {
+  late final RowSet<_Item> _groups = RowSet(keyOf: _key, onGone: _gone);
+  late final RowSet<_Item> _chats = RowSet(keyOf: _key, onGone: _gone);
+  // pulled down past the top, the list opens search
+  bool _opened = false;
+
+  static String _key(_Item i) => i.key;
+
+  void _gone() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _groups.start([for (final g in widget.groups) _Item.group(g)]);
+    _chats.start([for (final c in widget.contacts) _Item.chat(c)]);
+  }
+
+  @override
+  void didUpdateWidget(_ContactList old) {
+    super.didUpdateWidget(old);
+    final quiet = lockGuard.isLocked();
+    _groups.update([
+      for (final g in widget.groups) _Item.group(g),
+    ], quiet: quiet);
+    _chats.update([
+      for (final c in widget.contacts) _Item.chat(c),
+    ], quiet: quiet);
+  }
+
+  @override
+  void dispose() {
+    _groups.dispose();
+    _chats.dispose();
+    super.dispose();
+  }
+
+  Widget _row(RowSet<_Item> set, _Item i, int index) {
+    final g = i.g;
+    final c = i.c;
+    final leaving = set.leaving(i);
+    final Widget row = g != null
+        ? _GroupRow(g: g, onTap: () => widget.onOpenGroup(g.groupId))
+        : _SwipeRow(c: c!, onTap: () => widget.onTap(c.haloId));
+    // keyed, so a row that moves up on a new message glides there
+    return ShiftInPlace(
+      key: ValueKey(i.key),
+      index: index,
+      child: IgnorePointer(
+        ignoring: leaving,
+        child: FadeFold(
+          leaving: leaving,
+          child: GrowIn(
+            active: set.fresh(i),
+            child: _Enter(index: 1 + index, child: row),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final rest = contacts;
-    // pulled down past the top, the list opens search
-    var opened = false;
+    final groups = _groups.rows;
+    final chats = _chats.rows;
+    // the rows built this frame have read whether they are new
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _groups.built();
+      _chats.built();
+    });
     return NotificationListener<ScrollUpdateNotification>(
       onNotification: (n) {
-        if (!opened &&
+        if (!_opened &&
             n.dragDetails != null &&
             n.metrics.axis == Axis.vertical &&
             n.metrics.pixels < -72) {
-          opened = true;
+          _opened = true;
           HapticFeedback.lightImpact();
           Navigator.of(context).push(searchRoute());
         }
-        if (n.metrics.pixels >= 0) opened = false;
+        if (n.metrics.pixels >= 0) _opened = false;
         return false;
       },
       child: ListView(
-        padding: EdgeInsets.zero,
+        padding: const EdgeInsets.only(bottom: 16),
         children: [
-          // groups section (header + rows + new-group tile). always show the
-          // tile so user can create a group even with no existing groups.
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 6, 20, 6),
-            child: Row(
-              children: [
-                Text(
-                  l10n.homeGroups,
-                  style: HaloType.mono(
-                    size: 10,
-                    color: HaloColors.text3,
-                    letter: 0.14,
-                  ),
-                ),
-                const Spacer(),
-                GestureDetector(
-                  onTap: onNewRoom,
-                  behavior: HitTestBehavior.opaque,
-                  child: Padding(
-                    padding: const EdgeInsetsDirectional.only(end: 14),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.timer_outlined,
-                          size: 13,
-                          color: HaloColors.violet,
-                        ),
-                        const SizedBox(width: 3),
-                        Text(
-                          l10n.homeRoom,
-                          style: HaloType.mono(
-                            size: 10,
-                            color: HaloColors.violet,
-                            letter: 0.14,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                GestureDetector(
-                  onTap: onNewGroup,
-                  behavior: HitTestBehavior.opaque,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.add_rounded,
-                        size: 14,
-                        color: HaloColors.amber,
-                      ),
-                      const SizedBox(width: 3),
-                      Text(
-                        l10n.homeNew,
-                        style: HaloType.mono(
-                          size: 10,
-                          color: HaloColors.amber,
-                          letter: 0.14,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+          // the groups heading is always there: it is where a group or a
+          // room is made, even with none yet
+          _SectionHead(
+            label: l10n.homeGroups,
+            actions: [
+              _HeadAction(
+                icon: Icons.timer_outlined,
+                label: l10n.homeRoom,
+                color: HaloColors.violet,
+                onTap: widget.onNewRoom,
+              ),
+              _HeadAction(
+                icon: Icons.add_rounded,
+                label: l10n.homeNew,
+                color: HaloColors.amber,
+                onTap: widget.onNewGroup,
+              ),
+            ],
           ),
           // a room that just ended: one quiet line, gone in a few seconds
-          if (expiredRoomName != null)
+          if (widget.expiredRoomName != null)
             _Enter(
               index: 0,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
                 child: Text(
-                  l10n.homeRoomExpired(expiredRoomName!),
+                  l10n.homeRoomExpired(widget.expiredRoomName!),
                   style: HaloType.mono(size: 10, color: HaloColors.violet),
                 ),
               ),
             ),
-          // keyed, so a row that moves up on a new message glides there
-          ...groups.asMap().entries.map(
-            (e) => ShiftInPlace(
-              key: ValueKey('g-${e.value.groupId}'),
-              index: e.key,
-              child: _Enter(
-                index: 1 + e.key,
-                child: _GroupRow(
-                  g: e.value,
-                  onTap: () => onOpenGroup(e.value.groupId),
-                ),
+          for (final (n, g) in groups.indexed) _row(_groups, g, n),
+          if (chats.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            _SectionHead(label: l10n.searchChats),
+            for (final (n, c) in chats.indexed)
+              _row(_chats, c, groups.length + n),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// the small mono heading over a section of the list, with its actions at
+// the end
+class _SectionHead extends StatelessWidget {
+  final String label;
+  final List<Widget> actions;
+  const _SectionHead({required this.label, this.actions = const []});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsetsDirectional.fromSTEB(20, 8, 12, 6),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: HaloType.mono(
+                size: 10,
+                color: HaloColors.text3,
+                weight: FontWeight.w500,
+                letter: 0.14,
               ),
             ),
           ),
-          if (rest.isNotEmpty) ...[
-            ...rest.asMap().entries.map(
-              (e) => ShiftInPlace(
-                key: ValueKey('c-${e.value.haloId}'),
-                index: groups.length + e.key,
-                child: _Enter(
-                  index: 1 + groups.length + e.key,
-                  child: _SwipeRow(
-                    c: e.value,
-                    onTap: () => onTap(e.value.haloId),
-                  ),
+          for (final a in actions) ...[const SizedBox(width: 6), a],
+        ],
+      ),
+    );
+  }
+}
+
+// a small tinted pill in a section heading: make a room, make a group
+class _HeadAction extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+  const _HeadAction({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return PressScale(
+      label: label,
+      onTap: onTap,
+      scale: 0.92,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 0.5),
+        ),
+        child: ExcludeSemantics(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 13, color: color),
+              const SizedBox(width: 4),
+              Text(
+                label,
+                style: HaloType.mono(
+                  size: 10,
+                  color: color,
+                  weight: FontWeight.w500,
+                  letter: 0.06,
                 ),
               ),
-            ),
-          ],
-        ],
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -1848,13 +2048,15 @@ class _EnterState extends State<_Enter> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     if (!_animate) return widget.child;
     final curved = CurvedAnimation(parent: _c, curve: Curves.easeOutCubic);
+    // a fade alone when the phone asks for no movement
+    final rise = motionStill(context) ? 0.0 : 12.0;
     return AnimatedBuilder(
       animation: curved,
       child: widget.child,
       builder: (_, child) => Opacity(
         opacity: curved.value,
         child: Transform.translate(
-          offset: Offset(0, 12 * (1 - curved.value)),
+          offset: Offset(0, rise * (1 - curved.value)),
           child: child,
         ),
       ),
@@ -1868,141 +2070,113 @@ class _GroupRow extends StatelessWidget {
   const _GroupRow({required this.g, required this.onTap});
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      splashColor: HaloColors.amber.withValues(alpha: 0.10),
-      highlightColor: HaloColors.amber.withValues(alpha: 0.05),
-      child: Ink(
-        decoration: g.unread > 0
-            ? BoxDecoration(
-                color: HaloColors.amber.withValues(alpha: 0.06),
-                border: BorderDirectional(
-                  start: BorderSide(color: HaloColors.amber, width: 2),
-                ),
-              )
-            : null,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          child: Row(
-            children: [
-              // group avatar: a square tile with the first letter of the name
-              // in italic serif, so groups differ from round contact avatars
-              Hero(
-                tag: 'group-${g.groupId}',
-                child: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: g.isRoom
-                        ? HaloColors.violet.withValues(alpha: 0.14)
-                        : HaloColors.amberSoft,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: (g.isRoom ? HaloColors.violet : HaloColors.amber)
-                          .withValues(alpha: 0.35),
-                      width: 0.6,
+    // its own ink surface: the tint and the splash are drawn with the row,
+    // so they fade and slide with it. on the page's surface they were drawn
+    // once, under a row still invisible at the start of its entrance, and
+    // the tint never showed
+    return Material(
+      type: MaterialType.transparency,
+      child: InkWell(
+        onTap: onTap,
+        splashColor: HaloColors.amber.withValues(alpha: 0.10),
+        highlightColor: HaloColors.amber.withValues(alpha: 0.05),
+        child: Ink(
+          decoration: g.unread > 0
+              ? BoxDecoration(
+                  color: HaloColors.amber.withValues(alpha: 0.06),
+                  border: BorderDirectional(
+                    start: BorderSide(color: HaloColors.amber, width: 2),
+                  ),
+                )
+              : null,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Row(
+              children: [
+                // group avatar: a square tile with the first letter of the name
+                // in italic serif, so groups differ from round contact avatars
+                Hero(
+                  tag: 'group-${g.groupId}',
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: g.isRoom
+                          ? HaloColors.violet.withValues(alpha: 0.14)
+                          : HaloColors.amberSoft,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: (g.isRoom ? HaloColors.violet : HaloColors.amber)
+                            .withValues(alpha: 0.35),
+                        width: 0.6,
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      g.name.isEmpty
+                          ? '·'
+                          : g.name.characters.first.toUpperCase(),
+                      style: HaloType.serif(
+                        size: 18,
+                        italic: true,
+                        color: g.isRoom ? HaloColors.violet : HaloColors.amber,
+                      ),
                     ),
                   ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    g.name.isEmpty
-                        ? '·'
-                        : g.name.characters.first.toUpperCase(),
-                    style: HaloType.serif(
-                      size: 18,
-                      italic: true,
-                      color: g.isRoom ? HaloColors.violet : HaloColors.amber,
-                    ),
-                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            g.name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: HaloType.sans(
-                              size: 14,
-                              weight: g.unread > 0
-                                  ? FontWeight.w600
-                                  : FontWeight.w500,
-                              color: HaloColors.text,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              g.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: HaloType.sans(
+                                size: 14,
+                                weight: g.unread > 0
+                                    ? FontWeight.w600
+                                    : FontWeight.w500,
+                                color: HaloColors.text,
+                              ),
                             ),
                           ),
-                        ),
-                        HiddenMark(on: g.hidden),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    if (g.isRoom)
-                      RoomCountdown(expiresAt: g.expiresAt!, size: 10)
-                    else if (g.mentioned)
-                      // your three words came up in there
-                      Text(
-                        l10n.homeMentionedYou,
-                        style: HaloType.mono(
-                          size: 10,
-                          color: HaloColors.amber,
-                          weight: FontWeight.w600,
-                          letter: 0.06,
-                        ),
-                      )
-                    else
-                      Text(
-                        l10n.homeMembers(g.memberCount),
-                        style: HaloType.mono(size: 10, color: HaloColors.text3),
+                          HiddenMark(on: g.hidden),
+                        ],
                       ),
-                  ],
+                      const SizedBox(height: 2),
+                      if (g.isRoom)
+                        RoomCountdown(expiresAt: g.expiresAt!, size: 10)
+                      else if (g.mentioned)
+                        // your three words came up in there
+                        Text(
+                          l10n.homeMentionedYou,
+                          style: HaloType.mono(
+                            size: 10,
+                            color: HaloColors.amber,
+                            weight: FontWeight.w600,
+                            letter: 0.06,
+                          ),
+                        )
+                      else
+                        Text(
+                          l10n.homeMembers(g.memberCount),
+                          style: HaloType.mono(
+                            size: 10,
+                            color: HaloColors.text3,
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-              if (g.unread > 0) ...[
-                const SizedBox(width: 8),
-                _UnreadBadge(g.unread),
+                // pops in, rolls to each new count, pops away once read
+                CountBadge(count: g.unread, lead: 8),
               ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// unread count. pops when the number changes so a message arriving while you
-// are looking at the list is not a silent swap.
-class _UnreadBadge extends StatelessWidget {
-  final int count;
-  const _UnreadBadge(this.count);
-
-  @override
-  Widget build(BuildContext context) {
-    return TweenAnimationBuilder<double>(
-      key: ValueKey(count),
-      // no pop for a badge made under the lock: nothing moves at the reveal
-      tween: Tween(begin: entranceDone ? 1.0 : 0.55, end: 1),
-      duration: const Duration(milliseconds: 260),
-      curve: Curves.easeOutBack,
-      builder: (_, t, child) => Transform.scale(scale: t, child: child),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-        constraints: const BoxConstraints(minWidth: 18),
-        decoration: BoxDecoration(
-          color: HaloColors.amber,
-          borderRadius: BorderRadius.circular(9),
-        ),
-        child: Text(
-          count > 99 ? '99+' : '$count',
-          textAlign: TextAlign.center,
-          style: HaloType.sans(
-            size: 10,
-            weight: FontWeight.w600,
-            color: HaloColors.onAmber,
+            ),
           ),
         ),
       ),
@@ -2204,160 +2378,165 @@ class _Row extends StatelessWidget {
   const _Row({required this.c, required this.onTap, this.onLongPress});
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      onLongPress: onLongPress,
-      splashColor: HaloColors.amber.withValues(alpha: 0.10),
-      highlightColor: HaloColors.amber.withValues(alpha: 0.05),
-      // Ink, not Container: an unread row tints itself amber, and a Container
-      // paints that tint over the splash so the tap looks dead.
-      child: Ink(
-        decoration: c.unread > 0
-            ? BoxDecoration(
-                color: HaloColors.amber.withValues(alpha: 0.06),
-                border: BorderDirectional(
-                  start: BorderSide(color: HaloColors.amber, width: 2),
-                ),
-              )
-            : null,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
-        child: Row(
-          children: [
-            Opacity(
-              opacity: c.blocked ? 0.4 : 1,
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Hero(
-                    tag: 'face-${c.avatarSeed}',
-                    child: KryfoAvatar(
-                      seed: c.avatarSeed,
-                      size: 44,
-                      choice: c.avatar,
-                    ),
+    // its own ink surface, like the group row's
+    return Material(
+      type: MaterialType.transparency,
+      child: InkWell(
+        onTap: onTap,
+        onLongPress: onLongPress,
+        splashColor: HaloColors.amber.withValues(alpha: 0.10),
+        highlightColor: HaloColors.amber.withValues(alpha: 0.05),
+        // Ink, not Container: an unread row tints itself amber, and a Container
+        // paints that tint over the splash so the tap looks dead.
+        child: Ink(
+          decoration: c.unread > 0
+              ? BoxDecoration(
+                  color: HaloColors.amber.withValues(alpha: 0.06),
+                  border: BorderDirectional(
+                    start: BorderSide(color: HaloColors.amber, width: 2),
                   ),
-                  if (c.verified)
-                    PositionedDirectional(
-                      end: -1,
-                      bottom: -1,
-                      child: _verifiedTick(onAmber: false),
+                )
+              : null,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+          child: Row(
+            children: [
+              Opacity(
+                opacity: c.blocked ? 0.4 : 1,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Hero(
+                      tag: 'face-${c.avatarSeed}',
+                      child: KryfoAvatar(
+                        seed: c.avatarSeed,
+                        size: 44,
+                        choice: c.avatar,
+                      ),
                     ),
-                ],
+                    if (c.verified)
+                      PositionedDirectional(
+                        end: -1,
+                        bottom: -1,
+                        child: _verifiedTick(onAmber: false),
+                      ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Flexible(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Flexible(
-                              child: Text(
-                                c.nickname ?? c.haloId,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: HaloType.sans(
-                                  size: 14,
-                                  weight: c.unread > 0
-                                      ? FontWeight.w600
-                                      : FontWeight.w500,
-                                  color: c.blocked
-                                      ? HaloColors.text3
-                                      : HaloColors.text,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Flexible(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  c.nickname ?? c.haloId,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: HaloType.sans(
+                                    size: 14,
+                                    weight: c.unread > 0
+                                        ? FontWeight.w600
+                                        : FontWeight.w500,
+                                    color: c.blocked
+                                        ? HaloColors.text3
+                                        : HaloColors.text,
+                                  ),
                                 ),
                               ),
-                            ),
-                            if (c.supporterBadge != null) ...[
-                              const SizedBox(width: 6),
-                              _supporterPill(),
+                              if (c.supporterBadge != null) ...[
+                                const SizedBox(width: 6),
+                                _supporterPill(),
+                              ],
+                              HiddenMark(on: c.hidden),
                             ],
-                            HiddenMark(on: c.hidden),
-                          ],
-                        ),
-                      ),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (c.pinned) ...[
-                            Icon(
-                              Icons.push_pin,
-                              size: 11,
-                              color: HaloColors.text3,
-                            ),
-                            const SizedBox(width: 4),
-                          ],
-                          if (c.muted) ...[
-                            Icon(
-                              Icons.notifications_off_outlined,
-                              size: 12,
-                              color: HaloColors.text3,
-                            ),
-                            const SizedBox(width: 4),
-                          ],
-                          // a message still in the outbox says so where the
-                          // time would be, so the row is honest about it
-                          if (!c.blocked &&
-                              appState.queuedFor(c.haloId) > 0 &&
-                              (!appState.online || !appState.torReady))
-                            Text(
-                              l10n.homeQueued,
-                              style: HaloType.mono(
-                                size: 10,
-                                color: HaloColors.text2,
-                                letter: 0.08,
-                              ),
-                            )
-                          else
-                            Text(
-                              (c.blocked ? l10n.homeBlocked : _relTime(c.when)),
-                              style: HaloType.serif(
-                                size: 11.5,
-                                italic: true,
-                                color: c.unread > 0
-                                    ? HaloColors.amber
-                                    : HaloColors.text3,
-                              ),
-                            ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          // a room link is an invitation, not a line of
-                          // two hundred characters
-                          (c.preview ?? '').contains('kryfo://room?')
-                              ? l10n.homeRoomInvite
-                              : (c.preview ?? ''),
-                          style: HaloType.sans(
-                            size: 12,
-                            color: c.unread > 0
-                                ? HaloColors.text2
-                                : HaloColors.text2,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                      if (c.unread > 0) ...[
-                        const SizedBox(width: 8),
-                        _UnreadBadge(c.unread),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (c.pinned) ...[
+                              Icon(
+                                Icons.push_pin,
+                                size: 11,
+                                color: HaloColors.text3,
+                              ),
+                              const SizedBox(width: 4),
+                            ],
+                            if (c.muted) ...[
+                              Icon(
+                                Icons.notifications_off_outlined,
+                                size: 12,
+                                color: HaloColors.text3,
+                              ),
+                              const SizedBox(width: 4),
+                            ],
+                            // a message still in the outbox says so where the
+                            // time would be, so the row is honest about it
+                            if (!c.blocked &&
+                                appState.queuedFor(c.haloId) > 0 &&
+                                (!appState.online || !appState.torReady))
+                              Text(
+                                l10n.homeQueued,
+                                style: HaloType.mono(
+                                  size: 10,
+                                  color: HaloColors.text2,
+                                  letter: 0.08,
+                                ),
+                              )
+                            else
+                              Text(
+                                (c.blocked
+                                    ? l10n.homeBlocked
+                                    : _relTime(c.when)),
+                                style: HaloType.mono(
+                                  size: 10.5,
+                                  color: c.unread > 0
+                                      ? HaloColors.amber
+                                      : HaloColors.text3,
+                                  weight: c.unread > 0
+                                      ? FontWeight.w600
+                                      : FontWeight.w400,
+                                ),
+                              ),
+                          ],
+                        ),
                       ],
-                    ],
-                  ),
-                ],
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            // a room link is an invitation, not a line of
+                            // two hundred characters
+                            (c.preview ?? '').contains('kryfo://room?')
+                                ? l10n.homeRoomInvite
+                                : (c.preview ?? ''),
+                            style: HaloType.sans(
+                              size: 12,
+                              color: c.unread > 0
+                                  ? HaloColors.text2
+                                  : HaloColors.text2,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        CountBadge(count: c.unread, lead: 8),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -2498,9 +2677,9 @@ class _RequestsPin extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return PressScale(
       onTap: onTap,
-      behavior: HitTestBehavior.opaque,
+      scale: 0.98,
       child: Container(
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -2549,20 +2728,11 @@ class _RequestsPin extends StatelessWidget {
                 ],
               ),
             ),
-            Container(
+            CountBadge(
+              count: count,
+              fontSize: 11.5,
+              minWidth: 24,
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: HaloColors.amber,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                '$count',
-                style: HaloType.sans(
-                  size: 12,
-                  weight: FontWeight.w700,
-                  color: HaloColors.onAmber,
-                ),
-              ),
             ),
           ],
         ),

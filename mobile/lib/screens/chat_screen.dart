@@ -2,6 +2,7 @@
 // chat screen: bubbles, composer, live receive over tor.
 
 import '../lock_state.dart';
+import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -69,13 +70,15 @@ import '../stickers/sticker_sheet.dart'
     show StickerButton, StickerPick, showStickerSheet;
 import '../stickers/sticker_view.dart' show StickerBudget;
 import '../stickers/sticker_wire.dart' show StickerWire;
-import '../widgets/stagger_in.dart';
 import '../widgets/motion.dart';
 import '../widgets/burn_fade.dart';
 import '../seen_timers.dart';
 import '../dlog.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/menu_backdrop.dart';
+import '../widgets/chat_parts.dart';
+import '../widgets/message_menu.dart';
+import '../widgets/attach_grid.dart';
 import '../widgets/link_stub.dart';
 import '../widgets/preview_strip.dart';
 import 'camera_screen.dart';
@@ -1122,37 +1125,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _scrollToEnd();
   }
 
-  Widget _newMessagesDivider() {
-    final line = Container(
-      height: 0.5,
-      color: HaloColors.amber.withValues(alpha: 0.35),
-    );
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Row(
-        children: [
-          Expanded(child: line),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Text(
-              l10n.chatNewMessages,
-              style: HaloType.mono(
-                size: 9.5,
-                color: HaloColors.amber,
-                letter: 1.5,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Container(
-              height: 0.5,
-              color: HaloColors.amber.withValues(alpha: 0.35),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _newMessagesDivider() => UnreadDivider(l10n.chatNewMessages);
 
   // ---- search ----------------------------------------------------------
 
@@ -1265,7 +1238,19 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final offset = box.localToGlobal(Offset.zero);
     final bubbleSize = box.size;
     const pickerH = 54.0;
-    const menuH = 200.0;
+    // the card's height from its rows, so it is placed where it fits
+    final out = target.direction == 'out';
+    final media = target.mediaPath != null || target.filePath != null;
+    final rows =
+        3 +
+        (target.text.isNotEmpty && target.sticker == null ? 1 : 0) +
+        (target.sticker == null ? 1 : 0) +
+        (target.filePath != null && target.fileName != 'voice.wav' ? 1 : 0) +
+        (out && !media && target.sticker == null ? 1 : 0) -
+        (out ? 0 : 1);
+    final rowH =
+        20 + math.max(17.0, MediaQuery.textScalerOf(context).scale(13.5) * 1.3);
+    final menuH = rows * rowH + 16;
     final screenH = MediaQuery.of(context).size.height;
     final safeTop = MediaQuery.of(context).padding.top + 8;
     final safeBottom = screenH - MediaQuery.of(context).padding.bottom - 12;
@@ -1287,6 +1272,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
     // pin the bar to the message's side so it never runs off the edge
     final alignRight = target.direction == 'out';
+    final still = motionStill(context);
 
     if (mounted) setState(() => _liftedUid = target.msgUid);
     late OverlayEntry entry;
@@ -1313,21 +1299,27 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 child: const MenuBackdrop(),
               ),
             ),
-            PositionedDirectional(
-              start: offset.dx,
+            // the offset is from the left edge, in either direction
+            Positioned(
+              left: offset.dx,
               top: offset.dy,
               width: bubbleSize.width,
               child: IgnorePointer(
                 child: TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0.0, end: 1.0),
-                  duration: const Duration(milliseconds: 220),
-                  curve: Curves.easeOut,
+                  tween: Tween(begin: 0.0, end: still ? 0.0 : 1.0),
+                  duration: kHouseTime,
+                  curve: kHouseCurve,
                   child: Material(
                     type: MaterialType.transparency,
                     child: _Bubble(msg: target),
                   ),
-                  builder: (_, t, child) =>
-                      Transform.scale(scale: 1.0 + 0.04 * t, child: child),
+                  builder: (_, t, child) => Transform.scale(
+                    scale: 1.0 + 0.04 * t,
+                    alignment: alignRight
+                        ? AlignmentDirectional.centerEnd
+                        : AlignmentDirectional.centerStart,
+                    child: child,
+                  ),
                 ),
               ),
             ),
@@ -1369,323 +1361,111 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               end: alignRight ? 12 : null,
               child: MenuPop(
                 fromRight: alignRight,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: target.direction == 'out'
-                      ? CrossAxisAlignment.end
-                      : CrossAxisAlignment.start,
-                  children: [
-                    Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(999),
-                        onTap: () {
-                          dismiss();
-                          HapticFeedback.selectionClick();
-                          _toggleSaved(target);
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: HaloColors.surface3,
-                            border: Border.all(
-                              color: HaloColors.line,
-                              width: 0.5,
-                            ),
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                target.saved
-                                    ? Icons.bookmark
-                                    : Icons.bookmark_border,
-                                size: 16,
-                                color: target.saved
-                                    ? HaloColors.amber
-                                    : HaloColors.text2,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                target.saved
-                                    ? l10n.chatUnsave
-                                    : l10n.commonSave,
-                                style: HaloType.sans(
-                                  size: 13,
-                                  color: HaloColors.text,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                child: MessageMenuCard(
+                  actions: [
+                    MenuAction(
+                      icon: target.pinned
+                          ? Icons.push_pin
+                          : Icons.push_pin_outlined,
+                      label: target.pinned ? l10n.chatUnpin : l10n.chatPin,
+                      onTap: () {
+                        dismiss();
+                        _togglePin(target);
+                      },
+                    ),
+                    MenuAction(
+                      icon: target.saved
+                          ? Icons.bookmark
+                          : Icons.bookmark_outline,
+                      label: target.saved ? l10n.chatUnsave : l10n.commonSave,
+                      tint: target.saved ? HaloColors.amber : null,
+                      onTap: () {
+                        dismiss();
+                        _toggleSaved(target);
+                      },
+                    ),
+                    MenuAction(
+                      icon: Icons.copy_rounded,
+                      label: l10n.commonCopy,
+                      onTap: target.text.isEmpty || target.sticker != null
+                          ? null
+                          : () {
+                              dismiss();
+                              Clipboard.setData(
+                                ClipboardData(text: target.text),
+                              );
+                              showHaloToast(context, l10n.commonCopied);
+                            },
                     ),
                     // a sticker is not forwarded, copied or edited
-                    if (target.sticker == null) ...[
-                      const SizedBox(height: 8),
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(999),
-                          onTap: () {
-                            dismiss();
-                            HapticFeedback.selectionClick();
-                            _forwardMessage(target);
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: HaloColors.surface3,
-                              border: Border.all(
-                                color: HaloColors.line,
-                                width: 0.5,
-                              ),
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: Text(
-                              l10n.chatForward,
-                              style: HaloType.sans(
-                                size: 13,
-                                color: HaloColors.text,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                    // a tap opens a file, so sharing it lives here
-                    if (target.filePath != null &&
-                        target.fileName != 'voice.wav') ...[
-                      const SizedBox(height: 6),
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(999),
-                          onTap: () {
-                            dismiss();
-                            HapticFeedback.selectionClick();
-                            lockState.hold(
-                              () => SharePlus.instance.share(
-                                ShareParams(files: [XFile(target.filePath!)]),
-                              ),
-                            );
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: HaloColors.surface3,
-                              border: Border.all(
-                                color: HaloColors.line,
-                                width: 0.5,
-                              ),
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: Text(
-                              l10n.commonShare,
-                              style: HaloType.sans(
-                                size: 13,
-                                color: HaloColors.text,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                    if (target.text.isNotEmpty && target.sticker == null) ...[
-                      const SizedBox(height: 6),
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(999),
-                          onTap: () {
-                            dismiss();
-                            HapticFeedback.selectionClick();
-                            Clipboard.setData(ClipboardData(text: target.text));
-                            showHaloToast(context, l10n.commonCopied);
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: HaloColors.surface3,
-                              border: Border.all(
-                                color: HaloColors.line,
-                                width: 0.5,
-                              ),
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: Text(
-                              l10n.commonCopy,
-                              style: HaloType.sans(
-                                size: 13,
-                                color: HaloColors.text,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 6),
-                    Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(999),
-                        onTap: () {
-                          dismiss();
-                          HapticFeedback.selectionClick();
-                          _togglePin(target);
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: HaloColors.surface3,
-                            border: Border.all(
-                              color: HaloColors.line,
-                              width: 0.5,
-                            ),
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Text(
-                            target.pinned ? l10n.chatUnpin : l10n.chatPin,
-                            style: HaloType.sans(
-                              size: 13,
-                              color: HaloColors.text,
-                            ),
-                          ),
-                        ),
-                      ),
+                    MenuAction(
+                      icon: Icons.forward_rounded,
+                      label: l10n.chatForward,
+                      onTap: target.sticker != null
+                          ? null
+                          : () {
+                              dismiss();
+                              _forwardMessage(target);
+                            },
                     ),
-                    if (target.direction == 'out') ...[
-                      const SizedBox(height: 6),
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(999),
-                          onTap: () {
-                            dismiss();
-                            HapticFeedback.selectionClick();
-                            // a photo or file still on its way stops here
-                            // and the other side drops what it has
-                            if (target.sending &&
-                                (target.mediaPath != null ||
-                                    target.filePath != null)) {
-                              _stopSending(target);
-                            } else {
-                              _unsendMessage(target);
-                            }
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: HaloColors.surface3,
-                              border: Border.all(
-                                color: HaloColors.line,
-                                width: 0.5,
-                              ),
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.delete_outline,
-                                  size: 14,
-                                  color: HaloColors.rose,
+                    // a tap opens a file, so sharing it lives here
+                    MenuAction(
+                      icon: Icons.ios_share_rounded,
+                      label: l10n.commonShare,
+                      onTap:
+                          target.filePath == null ||
+                              target.fileName == 'voice.wav'
+                          ? null
+                          : () {
+                              dismiss();
+                              lockState.hold(
+                                () => SharePlus.instance.share(
+                                  ShareParams(files: [XFile(target.filePath!)]),
                                 ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  target.sending &&
-                                          (target.mediaPath != null ||
-                                              target.filePath != null)
-                                      ? l10n.chatStopSending
-                                      : l10n.chatUnsend,
-                                  style: HaloType.sans(
-                                    size: 12,
-                                    weight: FontWeight.w500,
-                                    color: HaloColors.rose,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      // words can be edited; a photo, a file or a voice note
-                      // is what it is
-                      if (target.mediaPath == null &&
-                          target.filePath == null &&
-                          target.sticker == null) ...[
-                        const SizedBox(height: 6),
-                        Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(999),
-                            onTap: () {
+                              );
+                            },
+                    ),
+                    // words can be edited; a photo, a file or a voice note
+                    // is what it is
+                    MenuAction(
+                      icon: Icons.edit_outlined,
+                      label: l10n.commonEdit,
+                      tint: HaloColors.amber,
+                      onTap:
+                          target.direction != 'out' ||
+                              target.mediaPath != null ||
+                              target.filePath != null ||
+                              target.sticker != null
+                          ? null
+                          : () {
                               dismiss();
                               _editMessage(target);
                             },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: HaloColors.surface3,
-                                border: Border.all(
-                                  color: HaloColors.line,
-                                  width: 0.5,
-                                ),
-                                borderRadius: BorderRadius.circular(999),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.5),
-                                    blurRadius: 20,
-                                    offset: const Offset(0, 6),
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.edit_outlined,
-                                    size: 14,
-                                    color: HaloColors.amber,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    l10n.commonEdit,
-                                    style: HaloType.sans(
-                                      size: 12,
-                                      weight: FontWeight.w500,
-                                      color: HaloColors.amber,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
+                    ),
+                    MenuAction(
+                      icon: Icons.delete_outline,
+                      danger: true,
+                      label:
+                          target.sending &&
+                              (target.mediaPath != null ||
+                                  target.filePath != null)
+                          ? l10n.chatStopSending
+                          : l10n.chatUnsend,
+                      onTap: target.direction != 'out'
+                          ? null
+                          : () {
+                              dismiss();
+                              // a photo or file still on its way stops here
+                              // and the other side drops what it has
+                              if (target.sending &&
+                                  (target.mediaPath != null ||
+                                      target.filePath != null)) {
+                                _stopSending(target);
+                              } else {
+                                _unsendMessage(target);
+                              }
+                            },
+                    ),
                   ],
                 ),
               ),
@@ -2700,101 +2480,46 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 
+  // the same tiles as the group chat's, so attaching looks one way
   void _showAttachSheet() {
     HapticFeedback.selectionClick();
     showHaloSheet<void>(
       context,
-      builder: (sheetCtx) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SheetHandle(),
-              const SizedBox(height: 6),
-              ListTile(
-                leading: Icon(
-                  Icons.photo_camera_outlined,
-                  color: HaloColors.amber,
-                  size: 22,
-                ),
-                title: Text(
-                  l10n.chatCamera,
-                  style: HaloType.sans(size: 15, color: HaloColors.text),
-                ),
-                subtitle: Text(
-                  l10n.chatNoExifNeverSaved,
-                  style: HaloType.mono(size: 10, color: HaloColors.text3),
-                ),
-                onTap: () {
-                  Navigator.of(sheetCtx).pop();
-                  _openCamera();
-                },
-              ),
-              ListTile(
-                leading: Icon(
-                  Icons.photo_library_outlined,
-                  color: HaloColors.amber,
-                  size: 22,
-                ),
-                title: Text(
-                  l10n.chatGallery,
-                  style: HaloType.sans(size: 15, color: HaloColors.text),
-                ),
-                onTap: () {
-                  Navigator.of(sheetCtx).pop();
-                  _pickAndSendMultiple();
-                },
-              ),
-              ListTile(
-                leading: Icon(
-                  Icons.videocam_outlined,
-                  color: HaloColors.amber,
-                  size: 22,
-                ),
-                title: Text(
-                  l10n.chatVideo,
-                  style: HaloType.sans(size: 15, color: HaloColors.text),
-                ),
-                onTap: () {
-                  Navigator.of(sheetCtx).pop();
-                  _pickAndSendVideo();
-                },
-              ),
-              ListTile(
-                leading: Icon(
-                  Icons.gif_box_outlined,
-                  color: HaloColors.amber,
-                  size: 22,
-                ),
-                title: Text(
-                  l10n.chatGifFromPhone,
-                  style: HaloType.sans(size: 15, color: HaloColors.text),
-                ),
-                onTap: () {
-                  Navigator.of(sheetCtx).pop();
-                  _pickAndSendGif();
-                },
-              ),
-              ListTile(
-                leading: Icon(
-                  Icons.attach_file,
-                  color: HaloColors.amber,
-                  size: 22,
-                ),
-                title: Text(
-                  l10n.chatFile2,
-                  style: HaloType.sans(size: 15, color: HaloColors.text),
-                ),
-                onTap: () {
-                  Navigator.of(sheetCtx).pop();
-                  _pickAndSendFile();
-                },
-              ),
-              const SizedBox(height: 8),
-            ],
+      builder: (sheetCtx) => AttachGrid(
+        note: l10n.chatNoExifNeverSaved,
+        items: [
+          AttachItem(
+            icon: (c) => Icon(Icons.photo_camera_outlined, color: c),
+            tint: HaloColors.amber,
+            label: l10n.chatCamera,
+            onTap: _openCamera,
           ),
-        );
-      },
+          AttachItem(
+            icon: (c) => Icon(Icons.photo_library_outlined, color: c),
+            tint: HaloColors.violet,
+            label: l10n.chatGallery,
+            onTap: _pickAndSendMultiple,
+          ),
+          AttachItem(
+            icon: (c) => Icon(Icons.videocam_outlined, color: c),
+            tint: HaloColors.rose,
+            label: l10n.chatVideo,
+            onTap: _pickAndSendVideo,
+          ),
+          AttachItem(
+            icon: (c) => Icon(Icons.gif_box_outlined, color: c),
+            tint: HaloColors.violet,
+            label: l10n.chatGifFromPhone,
+            onTap: _pickAndSendGif,
+          ),
+          AttachItem(
+            icon: (c) => Icon(Icons.attach_file, color: c),
+            tint: HaloColors.amber,
+            label: l10n.chatFile2,
+            onTap: _pickAndSendFile,
+          ),
+        ],
+      ),
     );
   }
 
@@ -3797,7 +3522,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       : 1.0,
                   duration: const Duration(milliseconds: 300),
                   child: _Bubble(
-                    key: isMatch ? _matchKeys[i] : null,
+                    key: isMatch ? _matchKeys[ix] : null,
                     msg: m,
                     stickers: _stickers,
                     stickerOrder: i,
@@ -3917,262 +3642,94 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final action = await showHaloSheet<String>(
       context,
       scroll: true,
-      builder: (ctx) => SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: staggerAll([
-              const SheetHandle(),
+      builder: (ctx) {
+        void pick(String a) => Navigator.pop(ctx, a);
+        return SingleChildScrollView(
+          child: MenuSheet(
+            groups: [
               // the person themselves: name, verification, vouches, media
-              InkWell(
-                onTap: () => Navigator.pop(ctx, 'contact'),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 16,
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.person_outline,
-                        size: 18,
-                        color: HaloColors.amber,
-                      ),
-                      const SizedBox(width: 14),
-                      Text(
-                        l10n.chatViewContact,
-                        style: HaloType.sans(size: 14, color: HaloColors.text),
-                      ),
-                    ],
-                  ),
+              [
+                MenuSheetRow(
+                  icon: Icons.person_outline,
+                  label: l10n.chatViewContact,
+                  onTap: () => pick('contact'),
                 ),
-              ),
-              _IntroduceRow(
-                enabled: _accepted,
-                onTap: () => Navigator.pop(ctx, 'introduce'),
-              ),
-              InkWell(
-                onTap: () => Navigator.pop(ctx, 'photos'),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 16,
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.photo_library_outlined,
-                        size: 18,
-                        color: HaloColors.text2,
-                      ),
-                      const SizedBox(width: 14),
-                      Text(
-                        l10n.chatSharedPhotos,
-                        style: HaloType.sans(size: 14, color: HaloColors.text),
-                      ),
-                    ],
-                  ),
+                // greyed with a reason while the contact is still a
+                // request: you cannot vouch for someone you have not
+                // accepted yourself
+                MenuSheetRow(
+                  icon: Icons.people_outline,
+                  label: l10n.chatIntroduceTo,
+                  sub: _accepted ? null : l10n.chatAcceptThemFirst,
+                  onTap: _accepted ? () => pick('introduce') : null,
                 ),
-              ),
-              InkWell(
-                onTap: () => Navigator.pop(ctx, 'mute'),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 16,
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        _muted
-                            ? Icons.notifications_active_outlined
-                            : Icons.notifications_off_outlined,
-                        size: 18,
-                        color: HaloColors.text2,
-                      ),
-                      const SizedBox(width: 14),
-                      Text(
-                        _muted
-                            ? l10n.chatUnmuteNotifications
-                            : l10n.chatMuteNotifications,
-                        style: HaloType.sans(size: 14, color: HaloColors.text),
-                      ),
-                    ],
-                  ),
+                MenuSheetRow(
+                  icon: Icons.photo_library_outlined,
+                  label: l10n.chatSharedPhotos,
+                  onTap: () => pick('photos'),
                 ),
-              ),
-              InkWell(
-                onTap: () => Navigator.pop(ctx, 'archive'),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 16,
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.archive_outlined,
-                        size: 18,
-                        color: HaloColors.text2,
-                      ),
-                      const SizedBox(width: 14),
-                      Text(
-                        l10n.chatArchiveChat,
-                        style: HaloType.sans(size: 14, color: HaloColors.text),
-                      ),
-                    ],
-                  ),
+              ],
+              [
+                MenuSheetRow(
+                  icon: _muted
+                      ? Icons.notifications_active_outlined
+                      : Icons.notifications_off_outlined,
+                  label: _muted
+                      ? l10n.chatUnmuteNotifications
+                      : l10n.chatMuteNotifications,
+                  onTap: () => pick('mute'),
                 ),
-              ),
-              // hidden chats open: out of the everyday list, or back in it
-              if (hideable)
-                InkWell(
-                  onTap: () => Navigator.pop(ctx, 'hide'),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 16,
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          hidden
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
-                          size: 18,
-                          color: HaloColors.violet,
-                        ),
-                        const SizedBox(width: 14),
-                        // long in some languages: it wraps at a big font
-                        Expanded(
-                          child: Text(
-                            hidden ? l10n.chatShowInList : l10n.chatHide,
-                            style: HaloType.sans(
-                              size: 14,
-                              color: HaloColors.text,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                MenuSheetRow(
+                  icon: pinned ? Icons.push_pin : Icons.push_pin_outlined,
+                  label: pinned ? l10n.chatUnpin : l10n.chatPinToTop,
+                  onTap: () => pick('pin'),
                 ),
-              InkWell(
-                onTap: () => Navigator.pop(ctx, 'atmosphere'),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 16,
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.palette_outlined,
-                        size: 18,
-                        color: HaloColors.text2,
-                      ),
-                      const SizedBox(width: 14),
-                      Text(
-                        l10n.chatWallpaper,
-                        style: HaloType.sans(size: 14, color: HaloColors.text),
-                      ),
-                    ],
-                  ),
+                MenuSheetRow(
+                  icon: Icons.archive_outlined,
+                  label: l10n.chatArchiveChat,
+                  onTap: () => pick('archive'),
                 ),
-              ),
-              InkWell(
-                onTap: () => Navigator.pop(ctx, 'clear'),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 16,
+                // hidden chats open: out of the everyday list, or back in it
+                if (hideable)
+                  MenuSheetRow(
+                    icon: hidden
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                    label: hidden ? l10n.chatShowInList : l10n.chatHide,
+                    tint: HaloColors.violet,
+                    onTap: () => pick('hide'),
                   ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.delete_sweep_outlined,
-                        size: 18,
-                        color: HaloColors.text2,
-                      ),
-                      const SizedBox(width: 14),
-                      Text(
-                        l10n.chatClearConversation,
-                        style: HaloType.sans(size: 14, color: HaloColors.text),
-                      ),
-                    ],
-                  ),
+              ],
+              [
+                MenuSheetRow(
+                  icon: Icons.palette_outlined,
+                  label: l10n.chatWallpaper,
+                  onTap: () => pick('atmosphere'),
                 ),
-              ),
-              InkWell(
-                onTap: () => Navigator.pop(ctx, 'note'),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 16,
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.sticky_note_2_outlined,
-                        size: 18,
-                        color: HaloColors.text2,
-                      ),
-                      const SizedBox(width: 14),
-                      Text(
-                        l10n.chatNoteOnThisContact,
-                        style: HaloType.sans(size: 14, color: HaloColors.text),
-                      ),
-                    ],
-                  ),
+                MenuSheetRow(
+                  icon: Icons.sticky_note_2_outlined,
+                  label: l10n.chatNoteOnThisContact,
+                  onTap: () => pick('note'),
                 ),
-              ),
-              InkWell(
-                onTap: () => Navigator.pop(ctx, 'pin'),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 16,
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        pinned ? Icons.push_pin : Icons.push_pin_outlined,
-                        size: 18,
-                        color: HaloColors.text2,
-                      ),
-                      const SizedBox(width: 14),
-                      Text(
-                        pinned ? l10n.chatUnpin : l10n.chatPinToTop,
-                        style: HaloType.sans(size: 14, color: HaloColors.text),
-                      ),
-                    ],
-                  ),
+              ],
+              [
+                MenuSheetRow(
+                  icon: Icons.delete_sweep_outlined,
+                  label: l10n.chatClearConversation,
+                  danger: true,
+                  onTap: () => pick('clear'),
                 ),
-              ),
-              InkWell(
-                onTap: () => Navigator.pop(ctx, 'block'),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 16,
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.block, size: 18, color: HaloColors.rose),
-                      const SizedBox(width: 14),
-                      Text(
-                        l10n.chatBlockContact,
-                        style: HaloType.sans(size: 14, color: HaloColors.rose),
-                      ),
-                    ],
-                  ),
+                MenuSheetRow(
+                  icon: Icons.block,
+                  label: l10n.chatBlockContact,
+                  danger: true,
+                  onTap: () => pick('block'),
                 ),
-              ),
-              const SizedBox(height: 8),
-            ]),
+              ],
+            ],
           ),
-        ),
-      ),
+        );
+      },
     );
     if (!mounted) return;
     if (action == 'contact') {
@@ -4771,18 +4328,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _dayMsOf[anchor] = dayMs;
     return Padding(
       key: key,
-      padding: const EdgeInsets.symmetric(vertical: 14),
-      child: Center(
-        child: Text(
-          _dayLabel(when),
-          style: HaloType.serif(
-            size: 12.5,
-            italic: true,
-            color: HaloColors.text3,
-            weight: FontWeight.w300,
-          ),
-        ),
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Center(child: DayChip(_dayLabel(when))),
     );
   }
 
@@ -4916,95 +4463,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       left: 0,
                       right: 0,
                       bottom: 12,
-                      child: IgnorePointer(
-                        ignoring: !_showScrollDown,
-                        child: AnimatedScale(
-                          scale: _showScrollDown ? 1.0 : 0.6,
-                          duration: const Duration(milliseconds: 200),
-                          curve: Curves.easeOutBack,
-                          child: AnimatedOpacity(
-                            opacity: _showScrollDown ? 1.0 : 0.0,
-                            duration: const Duration(milliseconds: 180),
-                            child: Center(
-                              child: Stack(
-                                clipBehavior: Clip.none,
-                                alignment: Alignment.center,
-                                children: [
-                                  Semantics(
-                                    label: l10n.chatJumpToTheNewest,
-                                    button: true,
-                                    child: GestureDetector(
-                                      onTap: _scrollToBottom,
-                                      child: Container(
-                                        width: 38,
-                                        height: 38,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: HaloColors.surface2,
-                                          border: Border.all(
-                                            color: HaloColors.amber.withValues(
-                                              alpha: 0.5,
-                                            ),
-                                            width: 0.5,
-                                          ),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: HaloColors.amber
-                                                  .withValues(alpha: 0.18),
-                                              blurRadius: 14,
-                                              spreadRadius: -2,
-                                            ),
-                                          ],
-                                        ),
-                                        alignment: Alignment.center,
-                                        child: Icon(
-                                          Icons.keyboard_arrow_down_rounded,
-                                          color: HaloColors.amber,
-                                          size: 22,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  if (_messages.length - _seenCount > 0)
-                                    PositionedDirectional(
-                                      top: -3,
-                                      end: -3,
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 5,
-                                          vertical: 1,
-                                        ),
-                                        constraints: const BoxConstraints(
-                                          minWidth: 17,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: HaloColors.amber,
-                                          borderRadius: BorderRadius.circular(
-                                            9,
-                                          ),
-                                          border: Border.all(
-                                            color: HaloColors.surface,
-                                            width: 1.5,
-                                          ),
-                                        ),
-                                        alignment: Alignment.center,
-                                        child: Text(
-                                          '${_messages.length - _seenCount}',
-                                          style:
-                                              HaloType.mono(
-                                                size: 9,
-                                                color: HaloColors.onAmber,
-                                              ).copyWith(
-                                                fontWeight: FontWeight.w700,
-                                                height: 1.2,
-                                              ),
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
+                      child: Center(
+                        child: JumpDownButton(
+                          shown: _showScrollDown,
+                          count: _messages.length - _seenCount,
+                          label: l10n.chatJumpToTheNewest,
+                          onTap: _scrollToBottom,
                         ),
                       ),
                     ),
@@ -5023,32 +4487,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                 valueListenable: _stickyLabel,
                                 builder: (_, label, _) => label == null
                                     ? const SizedBox.shrink()
-                                    : Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: 5,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: HaloColors.surface2.withValues(
-                                            alpha: 0.92,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            20,
-                                          ),
-                                          border: Border.all(
-                                            color: HaloColors.line,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          label,
-                                          style: HaloType.serif(
-                                            size: 12,
-                                            italic: true,
-                                            color: HaloColors.text2,
-                                            weight: FontWeight.w300,
-                                          ),
-                                        ),
-                                      ),
+                                    : DayChip(label),
                               ),
                             ),
                           ),
@@ -5109,7 +4548,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 margin: const EdgeInsets.fromLTRB(14, 0, 14, 8),
               ),
             AnimatedSwitcher(
-              duration: const Duration(milliseconds: 220),
+              duration: motionStill(context)
+                  ? Duration.zero
+                  : const Duration(milliseconds: 220),
               switchInCurve: Curves.easeOut,
               switchOutCurve: Curves.easeIn,
               transitionBuilder: (child, anim) => SizeTransition(
@@ -5136,7 +4577,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               },
             ),
             AnimatedSwitcher(
-              duration: const Duration(milliseconds: 260),
+              duration: motionStill(context)
+                  ? Duration.zero
+                  : const Duration(milliseconds: 260),
               switchInCurve: Curves.easeOut,
               switchOutCurve: Curves.easeIn,
               transitionBuilder: (child, anim) => SizeTransition(
@@ -5246,7 +4689,9 @@ class _ScaleTapState extends State<_ScaleTap> {
       onTap: widget.onTap,
       child: AnimatedScale(
         scale: _down ? 0.96 : 1.0,
-        duration: const Duration(milliseconds: 90),
+        duration: motionStill(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 90),
         curve: Curves.easeOut,
         child: widget.child,
       ),
@@ -5396,53 +4841,6 @@ class _IntroBanner extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// greyed with a reason while the contact is still a request: you cannot
-// vouch for someone you have not accepted yourself
-class _IntroduceRow extends StatelessWidget {
-  final bool enabled;
-  final VoidCallback onTap;
-  const _IntroduceRow({required this.enabled, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: enabled ? onTap : null,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        child: Row(
-          children: [
-            Icon(
-              Icons.people_outline,
-              size: 18,
-              color: enabled ? HaloColors.amber : HaloColors.text3,
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.chatIntroduceTo,
-                    style: HaloType.sans(
-                      size: 14,
-                      color: enabled ? HaloColors.text : HaloColors.text3,
-                    ),
-                  ),
-                  if (!enabled)
-                    Text(
-                      l10n.chatAcceptThemFirst,
-                      style: HaloType.mono(size: 9.5, color: HaloColors.text3),
-                    ),
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -5822,7 +5220,7 @@ class _SearchHeadState extends State<SearchHead> {
       builder: (context, t, child) => Opacity(
         opacity: t,
         child: Transform.translate(
-          offset: Offset(0, -10 * (1 - t)),
+          offset: Offset(0, motionStill(context) ? 0 : -10 * (1 - t)),
           child: child,
         ),
       ),
@@ -5904,7 +5302,9 @@ class _SearchHeadState extends State<SearchHead> {
               ],
             ),
             AnimatedSwitcher(
-              duration: const Duration(milliseconds: 180),
+              duration: motionStill(context)
+                  ? Duration.zero
+                  : const Duration(milliseconds: 180),
               transitionBuilder: (child, anim) => SizeTransition(
                 sizeFactor: anim,
                 axisAlignment: -1,
@@ -6104,11 +5504,17 @@ class _Bubble extends StatelessWidget {
       if (hit > start) {
         spans.add(TextSpan(text: text.substring(start, hit)));
       }
+      // the hit marked like a highlighter: amber on its own tint in their
+      // bubble, amber on ink in ours, where amber text alone would vanish
+      final onAmber = isOut && !image;
       spans.add(
         TextSpan(
           text: text.substring(hit, hit + q.length),
           style: TextStyle(
-            color: (isOut && !image) ? HaloColors.onAmber : HaloColors.amber,
+            color: HaloColors.amber,
+            backgroundColor: onAmber
+                ? HaloColors.onAmber
+                : HaloColors.amber.withValues(alpha: 0.22),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -6192,7 +5598,7 @@ class _Bubble extends StatelessWidget {
     return AnimatedOpacity(
       duration: Duration(milliseconds: isExpiring ? 440 : 250),
       curve: Curves.easeOut,
-      opacity: dimmed ? 0.28 : 1.0,
+      opacity: dimmed ? 0.4 : 1.0,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: (failedShown || parked) && onRetry != null
@@ -6211,7 +5617,7 @@ class _Bubble extends StatelessWidget {
                 ? CrossAxisAlignment.end
                 : CrossAxisAlignment.start,
             children: [
-              _bubbleEntrance(
+              BubbleEntrance(
                 isOut: isOut,
                 active: isOut ? justSent : justArrived,
                 child: Stack(
@@ -6522,91 +5928,102 @@ class _Bubble extends StatelessWidget {
                                         bySender: linkBySender,
                                       ),
                                     ],
-                                    if (showMeta && !frameless) ...[
-                                      const SizedBox(height: 4),
-                                      Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          if (msg.secure) ...[
-                                            Icon(
-                                              Icons.shield_rounded,
-                                              size: 10,
-                                              color: metaColor,
-                                            ),
-                                            const SizedBox(width: 4),
-                                          ],
-                                          Text(
-                                            _fmtTime(msg.when),
-                                            style: TextStyle(
-                                              fontFamily: HaloType.monoFamily,
-                                              fontFamilyFallback:
-                                                  HaloType.monoFallbackNow,
-                                              fontSize: 9,
-                                              color: metaColor,
-                                              letterSpacing: track(0.4),
-                                            ),
-                                          ),
-                                          if (msg.edited) ...[
-                                            const SizedBox(width: 5),
-                                            Text(
-                                              l10n.chatEdited,
-                                              style: TextStyle(
-                                                fontFamily: HaloType.monoFamily,
-                                                fontFamilyFallback:
-                                                    HaloType.monoFallbackNow,
-                                                fontSize: 9,
-                                                color: metaColor,
-                                                fontStyle: slant(),
-                                                letterSpacing: track(0.4),
+                                    // the time and tick grow in as the
+                                    // sending pill under the bubble folds
+                                    GrowSwap(
+                                      child: !(showMeta && !frameless)
+                                          ? const SizedBox.shrink(
+                                              key: ValueKey('no-meta'),
+                                            )
+                                          : Padding(
+                                              key: const ValueKey('meta'),
+                                              padding: const EdgeInsets.only(
+                                                top: 4,
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  if (msg.secure) ...[
+                                                    Icon(
+                                                      Icons.shield_rounded,
+                                                      size: 10,
+                                                      color: metaColor,
+                                                    ),
+                                                    const SizedBox(width: 4),
+                                                  ],
+                                                  Text(
+                                                    _fmtTime(msg.when),
+                                                    style: TextStyle(
+                                                      fontFamily:
+                                                          HaloType.monoFamily,
+                                                      fontFamilyFallback:
+                                                          HaloType
+                                                              .monoFallbackNow,
+                                                      fontSize: 9,
+                                                      color: metaColor,
+                                                      letterSpacing: track(0.4),
+                                                    ),
+                                                  ),
+                                                  if (msg.edited) ...[
+                                                    const SizedBox(width: 5),
+                                                    Text(
+                                                      l10n.chatEdited,
+                                                      style: TextStyle(
+                                                        fontFamily:
+                                                            HaloType.monoFamily,
+                                                        fontFamilyFallback:
+                                                            HaloType
+                                                                .monoFallbackNow,
+                                                        fontSize: 9,
+                                                        color: metaColor,
+                                                        fontStyle: slant(),
+                                                        letterSpacing: track(
+                                                          0.4,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                  const SizedBox(width: 3),
+                                                  SentTick(
+                                                    delivered: msg.delivered,
+                                                    deliveredLabel:
+                                                        l10n.chatDelivered,
+                                                    color: metaColor,
+                                                    labelStyle: TextStyle(
+                                                      fontFamily:
+                                                          HaloType.monoFamily,
+                                                      fontFamilyFallback:
+                                                          HaloType
+                                                              .monoFallbackNow,
+                                                      fontSize: 8.5,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color: metaColor,
+                                                      letterSpacing: track(0.3),
+                                                    ),
+                                                  ),
+                                                  if (msg.burnAt != null) ...[
+                                                    const SizedBox(width: 6),
+                                                    Icon(
+                                                      Icons
+                                                          .local_fire_department_outlined,
+                                                      size: 11,
+                                                      color: metaColor,
+                                                    ),
+                                                    const SizedBox(width: 2),
+                                                    Text(
+                                                      _fmtBurn(msg.burnAt!),
+                                                      style: HaloType.mono(
+                                                        size: 9.5,
+                                                        color: metaColor,
+                                                        weight: FontWeight.w600,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ],
                                               ),
                                             ),
-                                          ],
-                                          const SizedBox(width: 3),
-                                          Text(
-                                            '✓',
-                                            style: TextStyle(
-                                              fontSize: 11,
-                                              color: metaColor,
-                                              fontWeight: FontWeight.w700,
-                                              height: 1,
-                                            ),
-                                          ),
-                                          if (msg.delivered) ...[
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              l10n.chatDelivered,
-                                              style: TextStyle(
-                                                fontFamily: HaloType.monoFamily,
-                                                fontFamilyFallback:
-                                                    HaloType.monoFallbackNow,
-                                                fontSize: 8.5,
-                                                fontWeight: FontWeight.w600,
-                                                color: metaColor,
-                                                letterSpacing: track(0.3),
-                                              ),
-                                            ),
-                                          ],
-                                          if (msg.burnAt != null) ...[
-                                            const SizedBox(width: 6),
-                                            Icon(
-                                              Icons
-                                                  .local_fire_department_outlined,
-                                              size: 11,
-                                              color: metaColor,
-                                            ),
-                                            const SizedBox(width: 2),
-                                            Text(
-                                              _fmtBurn(msg.burnAt!),
-                                              style: HaloType.mono(
-                                                size: 9.5,
-                                                color: metaColor,
-                                                weight: FontWeight.w600,
-                                              ),
-                                            ),
-                                          ],
-                                        ],
-                                      ),
-                                    ],
+                                    ),
                                     if (!isOut &&
                                         msg.edited &&
                                         msg.mediaPath == null) ...[
@@ -6720,7 +6137,7 @@ class _Bubble extends StatelessWidget {
                             builder: (context, t, child) => Opacity(
                               opacity: (1 - t) * 0.92,
                               child: Transform.scale(
-                                scale: 1 + t * 0.16,
+                                scale: motionStill(context) ? 1 : 1 + t * 0.16,
                                 child: Container(
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadiusDirectional.only(
@@ -6765,23 +6182,30 @@ class _Bubble extends StatelessWidget {
                     ),
                   ),
                 ),
-              if (showPill) ...[
-                const SizedBox(height: 4),
-                Padding(
-                  padding: const EdgeInsetsDirectional.only(end: 4),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (msg.msgUid != null &&
-                          (msg.mediaPath != null || msg.filePath != null)) ...[
-                        SendProgressLabel(msgUid: msg.msgUid!),
-                        const SizedBox(width: 6),
-                      ],
-                      SendPill(mode: _pmFrom(appState.sendMode)),
-                    ],
-                  ),
+              if (isOut)
+                GrowSwap(
+                  child: !showPill
+                      ? const SizedBox.shrink(key: ValueKey('no-pill'))
+                      : Padding(
+                          key: const ValueKey('pill'),
+                          padding: const EdgeInsetsDirectional.only(
+                            top: 4,
+                            end: 4,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (msg.msgUid != null &&
+                                  (msg.mediaPath != null ||
+                                      msg.filePath != null)) ...[
+                                SendProgressLabel(msgUid: msg.msgUid!),
+                                const SizedBox(width: 6),
+                              ],
+                              SendPill(mode: _pmFrom(appState.sendMode)),
+                            ],
+                          ),
+                        ),
                 ),
-              ],
             ],
           ),
         ),
@@ -6818,7 +6242,7 @@ class _Bubble extends StatelessWidget {
     return AnimatedOpacity(
       duration: Duration(milliseconds: isExpiring ? 440 : 250),
       curve: Curves.easeOut,
-      opacity: dimmed ? 0.28 : 1.0,
+      opacity: dimmed ? 0.4 : 1.0,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onLongPress: onLongPress == null ? null : () => onLongPress!(context),
@@ -6899,7 +6323,7 @@ class _Bubble extends StatelessWidget {
                           builder: (context, t, child) => Opacity(
                             opacity: (1 - t) * 0.92,
                             child: Transform.scale(
-                              scale: 1 + t * 0.16,
+                              scale: motionStill(context) ? 1 : 1 + t * 0.16,
                               child: Container(
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(28),
@@ -6936,109 +6360,17 @@ class _Bubble extends StatelessWidget {
     for (final emoji in m.reactions.values) {
       counts[emoji] = (counts[emoji] ?? 0) + 1;
     }
-    return counts.entries.map<Widget>((e) {
-      final emoji = e.key;
-      final count = e.value;
-      return _ReactionPop(
-        key: ValueKey(emoji),
-        popKey: '${m.msgUid}:$emoji',
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-          decoration: BoxDecoration(
-            // the colour of the chat background, so it reads as a tab cut
-            // below the bubble, not a smudge on top
-            color: HaloColors.ink,
-            borderRadius: BorderRadius.circular(11),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(emoji, style: const TextStyle(fontSize: 13, height: 1.2)),
-              if (count > 1) ...[
-                const SizedBox(width: 3),
-                Text(
-                  '$count',
-                  style: HaloType.mono(
-                    size: 10,
-                    color: HaloColors.text2,
-                    weight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ],
-          ),
+    final mine = m.reactions[''];
+    return [
+      for (final e in counts.entries)
+        ReactionChip(
+          key: ValueKey(e.key),
+          emoji: e.key,
+          count: e.value,
+          mine: e.key == mine,
+          popKey: '${m.msgUid}:${e.key}',
         ),
-      );
-    }).toList();
-  }
-}
-
-// a reaction chip springing onto the bubble when added. keyed by emoji so
-// existing chips keep their state and only a new one animates.
-class _ReactionPop extends StatefulWidget {
-  final Widget child;
-  final String popKey;
-  const _ReactionPop({super.key, required this.child, required this.popKey});
-
-  // chips that already played their pop, so a rebuild does not spring every
-  // reaction in again
-  static final Set<String> _popped = {};
-
-  @override
-  State<_ReactionPop> createState() => _ReactionPopState();
-}
-
-class _ReactionPopState extends State<_ReactionPop>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _c = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 280),
-  );
-
-  @override
-  void initState() {
-    super.initState();
-    if (_ReactionPop._popped.contains(widget.popKey)) {
-      _c.value = 1.0; // already played: render settled
-    } else {
-      _ReactionPop._popped.add(widget.popKey);
-      _c.forward();
-    }
-  }
-
-  @override
-  void dispose() {
-    _c.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: CurvedAnimation(
-        parent: _c,
-        curve: const Interval(0, 0.5, curve: Curves.easeOut),
-      ),
-      child: ScaleTransition(
-        scale: TweenSequence<double>([
-          TweenSequenceItem(
-            tween: Tween(
-              begin: 0.0,
-              end: 1.18,
-            ).chain(CurveTween(curve: Curves.easeOut)),
-            weight: 62,
-          ),
-          TweenSequenceItem(
-            tween: Tween(
-              begin: 1.18,
-              end: 1.0,
-            ).chain(CurveTween(curve: Curves.easeInOut)),
-            weight: 38,
-          ),
-        ]).animate(_c),
-        child: widget.child,
-      ),
-    );
+    ];
   }
 }
 
@@ -7209,73 +6541,64 @@ class _EmojiPickerBubbleState extends State<_EmojiPickerBubble>
 
   @override
   Widget build(BuildContext context) {
-    // same growth as the menu under it, so the two read as one thing
-    final scale = Tween<double>(
-      begin: 0.8,
-      end: 1.0,
-    ).chain(CurveTween(curve: Curves.easeOutBack)).animate(_ctrl);
+    // the bar grows with the menu (MenuPop); the emojis follow each other in
+    final still = motionStill(context);
     return Material(
       color: Colors.transparent,
-      child: ScaleTransition(
-        scale: scale,
-        alignment: Alignment.bottomCenter,
-        child: FadeTransition(
-          opacity: _ctrl,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-            decoration: BoxDecoration(
-              color: HaloColors.surface3,
-              border: Border.all(color: HaloColors.line, width: 0.5),
-              borderRadius: BorderRadius.circular(30),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.5),
-                  blurRadius: 28,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ...widget.emojis.asMap().entries.map((entry) {
-                  final i = entry.key;
-                  final e = entry.value;
-                  final n = widget.emojis.length;
-                  final start = (i / n) * 0.55;
-                  final pop = CurvedAnimation(
-                    parent: _ctrl,
-                    curve: Interval(
-                      start,
-                      (start + 0.45).clamp(0.0, 1.0),
-                      curve: Curves.easeOutBack,
-                    ),
-                  );
-                  return ScaleTransition(
-                    scale: pop,
-                    child: _EmojiTap(
-                      emoji: e,
-                      selected: e == widget.selected,
-                      onTap: () => widget.onPick(e),
-                    ),
-                  );
-                }),
-                Container(
-                  width: 0.5,
-                  height: 28,
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  color: HaloColors.line2,
-                ),
-                Semantics(
-                  label: l10n.chatReply,
-                  button: true,
-                  child: _ActionTap(
-                    icon: Icons.reply_rounded,
-                    onTap: widget.onReply,
+      child: FadeTransition(
+        opacity: _ctrl,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+          decoration: BoxDecoration(
+            color: HaloColors.surface3,
+            border: Border.all(color: HaloColors.line, width: 0.5),
+            borderRadius: BorderRadius.circular(30),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.5),
+                blurRadius: 28,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ...widget.emojis.asMap().entries.map((entry) {
+                final i = entry.key;
+                final e = entry.value;
+                final n = widget.emojis.length;
+                final start = (i / n) * 0.55;
+                final pop = CurvedAnimation(
+                  parent: _ctrl,
+                  curve: Interval(
+                    start,
+                    (start + 0.45).clamp(0.0, 1.0),
+                    curve: Curves.easeOutBack,
                   ),
+                );
+                final tap = _EmojiTap(
+                  emoji: e,
+                  selected: e == widget.selected,
+                  onTap: () => widget.onPick(e),
+                );
+                return still ? tap : ScaleTransition(scale: pop, child: tap);
+              }),
+              Container(
+                width: 0.5,
+                height: 28,
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                color: HaloColors.line2,
+              ),
+              Semantics(
+                label: l10n.chatReply,
+                button: true,
+                child: _ActionTap(
+                  icon: Icons.reply_rounded,
+                  onTap: widget.onReply,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -7335,7 +6658,7 @@ class _EmptyConversation extends StatelessWidget {
         builder: (context, t, child) => Opacity(
           opacity: t.clamp(0.0, 1.0),
           child: Transform.translate(
-            offset: Offset(0, (1 - t) * 12),
+            offset: Offset(0, motionStill(context) ? 0 : (1 - t) * 12),
             child: child,
           ),
         ),
@@ -7806,7 +7129,9 @@ class _Composer extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           AnimatedSwitcher(
-            duration: const Duration(milliseconds: 220),
+            duration: motionStill(context)
+                ? Duration.zero
+                : const Duration(milliseconds: 220),
             switchInCurve: Curves.easeOut,
             switchOutCurve: Curves.easeIn,
             transitionBuilder: (child, anim) => SizeTransition(
@@ -8268,75 +7593,6 @@ class _ImageCaptionScreenState extends State<_ImageCaptionScreen> {
       ),
     );
   }
-}
-
-// one-shot lift + fade for a freshly-sent bubble. inactive -> returns the
-// child untouched, so old/scrolled bubbles never re-animate.
-Widget _sendOffEntrance({required bool active, required Widget child}) {
-  if (!active) return child;
-  return TweenAnimationBuilder<double>(
-    tween: Tween(begin: 0.0, end: 1.0),
-    duration: const Duration(milliseconds: 280),
-    curve: Curves.easeOutCubic,
-    child: child,
-    builder: (_, t, c) => Opacity(
-      opacity: t,
-      child: Transform.translate(
-        offset: Offset((1 - t) * 14, (1 - t) * 30),
-        child: Transform.scale(
-          scale: 0.82 + 0.18 * t,
-          alignment: Alignment.bottomCenter,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              boxShadow: [
-                BoxShadow(
-                  color: HaloColors.amber.withValues(alpha: 0.45 * (1 - t)),
-                  blurRadius: 18 * (1 - t) + 2,
-                  spreadRadius: 1,
-                ),
-              ],
-            ),
-            child: c,
-          ),
-        ),
-      ),
-    ),
-  );
-}
-
-// the receiving side: a softer arrival that slides in from the left and
-// settles, distinct from the sender's amber send-off.
-Widget _arriveEntrance({required bool active, required Widget child}) {
-  if (!active) return child;
-  return TweenAnimationBuilder<double>(
-    tween: Tween(begin: 0.0, end: 1.0),
-    duration: const Duration(milliseconds: 280),
-    curve: Curves.easeOutCubic,
-    child: child,
-    builder: (_, t, c) => Opacity(
-      opacity: t,
-      child: Transform.translate(
-        offset: Offset((1 - t) * -14, (1 - t) * 6),
-        child: Transform.scale(
-          scale: 0.96 + 0.04 * t,
-          alignment: AlignmentDirectional.centerStart,
-          child: c,
-        ),
-      ),
-    ),
-  );
-}
-
-Widget _bubbleEntrance({
-  required bool isOut,
-  required bool active,
-  required Widget child,
-}) {
-  if (!active) return child;
-  return isOut
-      ? _sendOffEntrance(active: true, child: child)
-      : _arriveEntrance(active: true, child: child);
 }
 
 // the saved mode string as the pill's enum. private is full tor, 3 hops.

@@ -3,6 +3,7 @@
 // gestures as the 1:1 chat.
 
 import 'dart:async';
+import 'dart:math' as math;
 import '../lock_state.dart';
 import 'dart:convert';
 import 'dart:io';
@@ -60,7 +61,9 @@ import '../widgets/burn_fade.dart';
 import '../seen_timers.dart';
 import 'group_info_screen.dart';
 import '../widgets/motion.dart'
-    show haloRoute, SendPill, PrivacyMode, TorStatus;
+    show haloRoute, SendPill, PrivacyMode, TorStatus, motionStill;
+import '../widgets/chat_parts.dart';
+import '../widgets/message_menu.dart';
 import '../rooms.dart';
 import '../widgets/notice_banner.dart';
 import '../widgets/room_countdown.dart';
@@ -331,92 +334,19 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   // jump to newest, same control as 1:1
   Widget _scrollDownButton() {
-    final unread = _messages.length - _seenCount;
     return Positioned(
       left: 0,
       right: 0,
       bottom: 12,
-      child: IgnorePointer(
-        ignoring: !_showScrollDown,
-        child: AnimatedScale(
-          scale: _showScrollDown ? 1.0 : 0.6,
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOutBack,
-          child: AnimatedOpacity(
-            opacity: _showScrollDown ? 1.0 : 0.0,
-            duration: const Duration(milliseconds: 180),
-            child: Center(
-              child: Stack(
-                clipBehavior: Clip.none,
-                alignment: Alignment.center,
-                children: [
-                  Semantics(
-                    label: l10n.groupChatJumpToTheNewest,
-                    button: true,
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() => _seenCount = _messages.length);
-                        _scrollToEnd();
-                      },
-                      child: Container(
-                        width: 38,
-                        height: 38,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: HaloColors.surface2,
-                          border: Border.all(
-                            color: HaloColors.amber.withValues(alpha: 0.5),
-                            width: 0.5,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: HaloColors.amber.withValues(alpha: 0.18),
-                              blurRadius: 14,
-                              spreadRadius: -2,
-                            ),
-                          ],
-                        ),
-                        alignment: Alignment.center,
-                        child: Icon(
-                          Icons.keyboard_arrow_down_rounded,
-                          color: HaloColors.amber,
-                          size: 22,
-                        ),
-                      ),
-                    ),
-                  ),
-                  if (unread > 0)
-                    PositionedDirectional(
-                      top: -3,
-                      end: -3,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 5,
-                          vertical: 1,
-                        ),
-                        constraints: const BoxConstraints(minWidth: 17),
-                        decoration: BoxDecoration(
-                          color: HaloColors.amber,
-                          borderRadius: BorderRadius.circular(9),
-                          border: Border.all(
-                            color: HaloColors.surface,
-                            width: 1.5,
-                          ),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          '$unread',
-                          style: HaloType.mono(
-                            size: 9,
-                            color: HaloColors.onAmber,
-                          ).copyWith(fontWeight: FontWeight.w700, height: 1.2),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
+      child: Center(
+        child: JumpDownButton(
+          shown: _showScrollDown,
+          count: _messages.length - _seenCount,
+          label: l10n.groupChatJumpToTheNewest,
+          onTap: () {
+            setState(() => _seenCount = _messages.length);
+            _scrollToEnd();
+          },
         ),
       ),
     );
@@ -987,10 +917,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         if (showDate) _dateDivider(m.when, m.msgUid ?? 'r${m.rowid}'),
         RepaintBoundary(
           key: (m.msgUid != null && m.msgUid == _jumpUid) ? _jumpKey : null,
-          child: _groupBubbleEntrance(
+          child: BubbleEntrance(
             isOut: m.direction == 'out',
             // a sticker pops or flies in on its own
             active: animateIn && m.sticker == null,
+            // the row is the width of the list: a glow would light all of it
+            glow: false,
             child: SwipeToReply(
               onReply: () => setState(() => _replyTo = m),
               // the lifted copy in the overlay is the one that animates;
@@ -1402,6 +1334,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     showHaloSheet<void>(
       context,
       builder: (sheetCtx) => AttachGrid(
+        note: l10n.chatNoExifNeverSaved,
         items: [
           AttachItem(
             icon: (c) => Icon(Icons.photo_camera_outlined, color: c),
@@ -1967,7 +1900,16 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     // anchor the menu just below the bubble, but if that would run off the
     // bottom, put it above. never off-screen.
     final belowTop = pos.dy + size.height + 8;
-    final showAbove = belowTop > screenH - 220;
+    // the bar and the card under it, from how many rows the card has
+    final words = target.text.isNotEmpty && target.sticker == null;
+    final rows =
+        2 +
+        (words ? 2 : 0) +
+        (target.filePath != null && target.fileName != 'voice.wav' ? 1 : 0) +
+        (isOut ? (words ? 2 : 1) : 0);
+    final rowH =
+        20 + math.max(17.0, MediaQuery.textScalerOf(context).scale(13.5) * 1.3);
+    final showAbove = belowTop > screenH - (72 + rows * rowH + 16);
     final overlay = Overlay.of(context);
     HapticFeedback.selectionClick();
     if (mounted) setState(() => _liftedUid = target.msgUid);
@@ -2000,13 +1942,14 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 child: const MenuBackdrop(),
               ),
             ),
-            PositionedDirectional(
-              start: rowPos.dx,
+            // the position is from the left edge, in either direction
+            Positioned(
+              left: rowPos.dx,
               top: rowPos.dy,
               width: rowW,
               child: IgnorePointer(
                 child: TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0.0, end: 1.0),
+                  tween: Tween(begin: 0.0, end: motionStill(context) ? 0 : 1),
                   duration: const Duration(milliseconds: 220),
                   curve: Curves.easeOut,
                   child: Material(
@@ -2137,18 +2080,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     _dayMsOf[anchor] = dayMs;
     return Padding(
       key: key,
-      padding: const EdgeInsets.symmetric(vertical: 14),
-      child: Center(
-        child: Text(
-          _dayLabel(when),
-          style: HaloType.serif(
-            size: 12.5,
-            italic: true,
-            color: HaloColors.text,
-            weight: FontWeight.w400,
-          ),
-        ),
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Center(child: DayChip(_dayLabel(when))),
     );
   }
 
@@ -2912,31 +2845,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                                       valueListenable: _stickyLabel,
                                       builder: (_, label, _) => label == null
                                           ? const SizedBox.shrink()
-                                          : Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 12,
-                                                    vertical: 5,
-                                                  ),
-                                              decoration: BoxDecoration(
-                                                color: HaloColors.surface2
-                                                    .withValues(alpha: 0.92),
-                                                borderRadius:
-                                                    BorderRadius.circular(20),
-                                                border: Border.all(
-                                                  color: HaloColors.line,
-                                                ),
-                                              ),
-                                              child: Text(
-                                                label,
-                                                style: HaloType.serif(
-                                                  size: 12,
-                                                  italic: true,
-                                                  color: HaloColors.text,
-                                                  weight: FontWeight.w400,
-                                                ),
-                                              ),
-                                            ),
+                                          : DayChip(label),
                                     ),
                                   ),
                                 ),
@@ -2947,11 +2856,16 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                       ),
                     ),
             ),
-            if (_replyTo != null)
-              _ReplyQuoteBar(
-                target: _replyTo!,
-                onCancel: () => setState(() => _replyTo = null),
-              ),
+            // grows in over the composer and folds away, as in the 1:1 chat
+            GrowSwap(
+              alignment: Alignment.topCenter,
+              child: _replyTo != null
+                  ? _ReplyQuoteBar(
+                      target: _replyTo!,
+                      onCancel: () => setState(() => _replyTo = null),
+                    )
+                  : const SizedBox.shrink(),
+            ),
             IncomingMediaBanner(
               chatKey: widget.groupId,
               onCancel: (uid) {
@@ -3515,64 +3429,6 @@ Color _authorColor(String id) {
   return palette[h % palette.length];
 }
 
-// entrance motion matching the 1:1 chat: an outgoing bubble lifts + fades up
-// with an amber glow, an incoming one slides in from the left. one-shot.
-Widget _groupBubbleEntrance({
-  required bool isOut,
-  required bool active,
-  required Widget child,
-}) {
-  if (!active) return child;
-  if (isOut) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: const Duration(milliseconds: 280),
-      curve: Curves.easeOutCubic,
-      child: child,
-      builder: (_, t, c) => Opacity(
-        opacity: t,
-        child: Transform.translate(
-          offset: Offset((1 - t) * 14, (1 - t) * 30),
-          child: Transform.scale(
-            scale: 0.82 + 0.18 * t,
-            alignment: Alignment.bottomCenter,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(14),
-                boxShadow: [
-                  BoxShadow(
-                    color: HaloColors.amber.withValues(alpha: 0.45 * (1 - t)),
-                    blurRadius: 18 * (1 - t) + 2,
-                    spreadRadius: 1,
-                  ),
-                ],
-              ),
-              child: c,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-  return TweenAnimationBuilder<double>(
-    tween: Tween(begin: 0.0, end: 1.0),
-    duration: const Duration(milliseconds: 280),
-    curve: Curves.easeOutCubic,
-    child: child,
-    builder: (_, t, c) => Opacity(
-      opacity: t,
-      child: Transform.translate(
-        offset: Offset((1 - t) * -14, (1 - t) * 6),
-        child: Transform.scale(
-          scale: 0.96 + 0.04 * t,
-          alignment: AlignmentDirectional.centerStart,
-          child: c,
-        ),
-      ),
-    ),
-  );
-}
-
 // the names that come up when you type @. sits above the field, at most
 // five, ours first. a tap drops the three words in and keeps typing.
 class _MentionPicker extends StatelessWidget {
@@ -3596,82 +3452,86 @@ class _MentionPicker extends StatelessWidget {
                 (m) => m.id,
                 (m) => m.name,
               ).take(5).toList();
+        final picker = hits.isEmpty
+            ? const SizedBox(width: double.infinity)
+            : Padding(
+                padding: const EdgeInsetsDirectional.fromSTEB(4, 0, 0, 8),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: HaloColors.surface2,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: HaloColors.line, width: 0.5),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final m in hits)
+                        InkWell(
+                          borderRadius: BorderRadius.circular(14),
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            final r = insertMention(
+                              v.text,
+                              v.selection.baseOffset,
+                              m.id,
+                            );
+                            controller.value = TextEditingValue(
+                              text: r.text,
+                              selection: TextSelection.collapsed(
+                                offset: r.cursor,
+                              ),
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            child: Row(
+                              children: [
+                                KryfoAvatar(
+                                  seed: m.id,
+                                  size: 26,
+                                  choice: m.avatar,
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    m.name ?? m.id,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: HaloType.sans(
+                                      size: 13.5,
+                                      color: HaloColors.text,
+                                    ),
+                                  ),
+                                ),
+                                if (m.name != null) ...[
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    m.id,
+                                    style: HaloType.mono(
+                                      size: 10,
+                                      color: HaloColors.text3,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              );
+        // an AnimatedSize given no time trips over its own layout: still, it
+        // is left out
+        if (motionStill(context)) return picker;
         return AnimatedSize(
           duration: const Duration(milliseconds: 180),
           curve: Curves.easeOutCubic,
           alignment: Alignment.bottomCenter,
-          child: hits.isEmpty
-              ? const SizedBox(width: double.infinity)
-              : Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(4, 0, 0, 8),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: HaloColors.surface2,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: HaloColors.line, width: 0.5),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        for (final m in hits)
-                          InkWell(
-                            borderRadius: BorderRadius.circular(14),
-                            onTap: () {
-                              HapticFeedback.selectionClick();
-                              final r = insertMention(
-                                v.text,
-                                v.selection.baseOffset,
-                                m.id,
-                              );
-                              controller.value = TextEditingValue(
-                                text: r.text,
-                                selection: TextSelection.collapsed(
-                                  offset: r.cursor,
-                                ),
-                              );
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                              child: Row(
-                                children: [
-                                  KryfoAvatar(
-                                    seed: m.id,
-                                    size: 26,
-                                    choice: m.avatar,
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: Text(
-                                      m.name ?? m.id,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: HaloType.sans(
-                                        size: 13.5,
-                                        color: HaloColors.text,
-                                      ),
-                                    ),
-                                  ),
-                                  if (m.name != null) ...[
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      m.id,
-                                      style: HaloType.mono(
-                                        size: 10,
-                                        color: HaloColors.text3,
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
+          child: picker,
         );
       },
     );
@@ -4267,30 +4127,68 @@ class _GroupBubble extends StatelessWidget {
                                           // only where the row time shows. a
                                           // photo bubble is transparent, so it
                                           // takes a readable colour.
-                                          if (isOut &&
-                                              !m.pending &&
-                                              !m.looksFailed &&
-                                              !(frameless &&
-                                                  m.text.isEmpty)) ...[
-                                            const SizedBox(width: 3),
-                                            Text(
-                                              '✓',
-                                              style: TextStyle(
-                                                fontFamily: HaloType.monoFamily,
-                                                fontFamilyFallback:
-                                                    HaloType.monoFallbackNow,
-                                                fontSize: 11,
-                                                color: m.mediaPath != null
-                                                    ? HaloColors.text2
-                                                    : HaloColors.onAmber
-                                                          .withValues(
-                                                            alpha: 0.7,
+                                          // it pops in when the send ends
+                                          // with the chat open
+                                          if (isOut)
+                                            AnimatedSwitcher(
+                                              duration: motionStill(context)
+                                                  ? Duration.zero
+                                                  : const Duration(
+                                                      milliseconds: 260,
+                                                    ),
+                                              transitionBuilder: (c, a) =>
+                                                  FadeTransition(
+                                                    opacity: a,
+                                                    child: ScaleTransition(
+                                                      scale: Tween(
+                                                        begin: 0.4,
+                                                        end: 1.0,
+                                                      ).animate(a),
+                                                      child: c,
+                                                    ),
+                                                  ),
+                                              child:
+                                                  !m.pending &&
+                                                      !m.looksFailed &&
+                                                      !(frameless &&
+                                                          m.text.isEmpty)
+                                                  ? Padding(
+                                                      key: const ValueKey(
+                                                        'tick',
+                                                      ),
+                                                      padding:
+                                                          const EdgeInsetsDirectional.only(
+                                                            start: 3,
                                                           ),
-                                                fontWeight: FontWeight.w700,
-                                                height: 1,
-                                              ),
+                                                      child: Text(
+                                                        '✓',
+                                                        style: TextStyle(
+                                                          fontFamily: HaloType
+                                                              .monoFamily,
+                                                          fontFamilyFallback:
+                                                              HaloType
+                                                                  .monoFallbackNow,
+                                                          fontSize: 11,
+                                                          color:
+                                                              m.mediaPath !=
+                                                                  null
+                                                              ? HaloColors.text2
+                                                              : HaloColors
+                                                                    .onAmber
+                                                                    .withValues(
+                                                                      alpha:
+                                                                          0.7,
+                                                                    ),
+                                                          fontWeight:
+                                                              FontWeight.w700,
+                                                          height: 1,
+                                                        ),
+                                                      ),
+                                                    )
+                                                  : const SizedBox.shrink(
+                                                      key: ValueKey('no-tick'),
+                                                    ),
                                             ),
-                                          ],
                                           if (m.looksFailed) ...[
                                             const SizedBox(width: 6),
                                             Text(
@@ -4335,7 +4233,9 @@ class _GroupBubble extends StatelessWidget {
                               builder: (context, t, child) => Opacity(
                                 opacity: (1 - t) * 0.92,
                                 child: Transform.scale(
-                                  scale: 1 + t * 0.16,
+                                  scale: motionStill(context)
+                                      ? 1
+                                      : 1 + t * 0.16,
                                   child: Container(
                                     decoration: BoxDecoration(
                                       borderRadius:
@@ -4363,23 +4263,31 @@ class _GroupBubble extends StatelessWidget {
                     ],
                   ),
                   if (m.reactions.isNotEmpty) const SizedBox(height: 10),
-                  if (isOut && m.pending) ...[
-                    const SizedBox(height: 4),
-                    Padding(
-                      padding: const EdgeInsetsDirectional.only(end: 4),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (m.msgUid != null &&
-                              (m.mediaPath != null || m.filePath != null)) ...[
-                            SendProgressLabel(msgUid: m.msgUid!),
-                            const SizedBox(width: 6),
-                          ],
-                          SendPill(mode: _groupSendMode()),
-                        ],
-                      ),
+                  // the sending pill folds away as the tick comes in
+                  if (isOut)
+                    GrowSwap(
+                      child: !m.pending
+                          ? const SizedBox.shrink(key: ValueKey('no-pill'))
+                          : Padding(
+                              key: const ValueKey('pill'),
+                              padding: const EdgeInsetsDirectional.only(
+                                top: 4,
+                                end: 4,
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (m.msgUid != null &&
+                                      (m.mediaPath != null ||
+                                          m.filePath != null)) ...[
+                                    SendProgressLabel(msgUid: m.msgUid!),
+                                    const SizedBox(width: 6),
+                                  ],
+                                  SendPill(mode: _groupSendMode()),
+                                ],
+                              ),
+                            ),
                     ),
-                  ],
                 ],
               ),
             ),
@@ -4499,33 +4407,16 @@ class _GroupBubble extends StatelessWidget {
       counts[emoji] = (counts[emoji] ?? 0) + 1;
     }
     final selfEmoji = m.reactions[''];
-    return counts.entries.map<Widget>((e) {
-      final isSelf = e.key == selfEmoji;
-      // solid ink pill, no border: reads as a tab under the bubble
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-        decoration: BoxDecoration(
-          color: HaloColors.ink,
-          borderRadius: BorderRadius.circular(11),
+    return [
+      for (final e in counts.entries)
+        ReactionChip(
+          key: ValueKey(e.key),
+          emoji: e.key,
+          count: e.value,
+          mine: e.key == selfEmoji,
+          popKey: '${m.msgUid}:${e.key}',
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(e.key, style: const TextStyle(fontSize: 13, height: 1.2)),
-            if (e.value > 1) ...[
-              const SizedBox(width: 3),
-              Text(
-                '${e.value}',
-                style: HaloType.mono(
-                  size: 9.5,
-                  color: isSelf ? HaloColors.amber : HaloColors.text2,
-                ),
-              ),
-            ],
-          ],
-        ),
-      );
-    }).toList();
+    ];
   }
 
   String _fmtTime(DateTime t) => hourMinute(t);
@@ -4604,12 +4495,13 @@ class _EmojiPickerBubbleState extends State<_EmojiPickerBubble>
       end: 1.0,
     ).chain(CurveTween(curve: Curves.easeOutBack)).animate(_ctrl);
     final fade = Tween<double>(begin: 0, end: 1).animate(_ctrl);
+    final still = motionStill(context);
     return AnimatedBuilder(
       animation: _ctrl,
       builder: (_, _) => Opacity(
         opacity: fade.value,
         child: Transform.scale(
-          scale: scale.value,
+          scale: still ? 1 : scale.value,
           alignment: widget.isOut
               ? AlignmentDirectional.bottomEnd
               : AlignmentDirectional.bottomStart,
@@ -4670,81 +4562,52 @@ class _EmojiPickerBubbleState extends State<_EmojiPickerBubble>
   }
 
   Widget _menuRow() {
-    final items = <Widget>[];
-    void add(IconData icon, String label, VoidCallback? tap, {Color? tint}) {
-      if (tap == null) return;
-      items.add(
-        Material(
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(10),
-            onTap: tap,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(icon, size: 15, color: tint ?? HaloColors.text2),
-                  const SizedBox(width: 8),
-                  Text(
-                    label,
-                    style: HaloType.sans(
-                      size: 13,
-                      color: tint ?? HaloColors.text,
-                    ),
-                  ),
-                ],
-              ),
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: MessageMenuCard(
+        actions: [
+          MenuAction(
+            icon: widget.pinned ? Icons.push_pin : Icons.push_pin_outlined,
+            label: widget.pinned ? l10n.groupChatUnpin : l10n.groupChatPin,
+            onTap: widget.onPin,
+          ),
+          MenuAction(
+            icon: widget.saved ? Icons.bookmark : Icons.bookmark_outline,
+            label: widget.saved ? l10n.groupChatUnsave : l10n.commonSave,
+            tint: widget.saved ? HaloColors.amber : null,
+            onTap: widget.onSave,
+          ),
+          MenuAction(
+            icon: Icons.copy_rounded,
+            label: l10n.commonCopy,
+            onTap: widget.onCopy,
+          ),
+          MenuAction(
+            icon: Icons.forward_rounded,
+            label: l10n.groupChatForward,
+            onTap: widget.onForward,
+          ),
+          MenuAction(
+            icon: Icons.ios_share_rounded,
+            label: l10n.commonShare,
+            onTap: widget.onShare,
+          ),
+          if (widget.isOut) ...[
+            MenuAction(
+              icon: Icons.edit_outlined,
+              label: l10n.commonEdit,
+              tint: HaloColors.amber,
+              onTap: widget.onEdit,
             ),
-          ),
-        ),
-      );
-    }
-
-    add(
-      Icons.push_pin_outlined,
-      widget.pinned ? l10n.groupChatUnpin : l10n.groupChatPin,
-      widget.onPin,
-    );
-    add(
-      widget.saved ? Icons.bookmark : Icons.bookmark_outline,
-      widget.saved ? l10n.groupChatUnsave : l10n.commonSave,
-      widget.onSave,
-    );
-    add(Icons.copy_rounded, l10n.commonCopy, widget.onCopy);
-    add(Icons.forward_rounded, l10n.groupChatForward, widget.onForward);
-    add(Icons.ios_share_rounded, l10n.commonShare, widget.onShare);
-    if (widget.isOut) {
-      add(
-        Icons.edit_outlined,
-        l10n.commonEdit,
-        widget.onEdit,
-        tint: HaloColors.amber,
-      );
-      add(
-        Icons.delete_outline,
-        l10n.groupChatUnsend,
-        widget.onUnsend,
-        tint: HaloColors.rose,
-      );
-    }
-    if (items.isEmpty) return const SizedBox.shrink();
-    return Container(
-      margin: const EdgeInsets.only(top: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-      decoration: BoxDecoration(
-        color: HaloColors.surface2,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: HaloColors.line, width: 0.5),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.5),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
+            MenuAction(
+              icon: Icons.delete_outline,
+              label: l10n.groupChatUnsend,
+              danger: true,
+              onTap: widget.onUnsend,
+            ),
+          ],
         ],
       ),
-      child: Column(mainAxisSize: MainAxisSize.min, children: items),
     );
   }
 }

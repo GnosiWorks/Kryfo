@@ -5,6 +5,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
+import 'motion.dart' show kHouseCurve, kHouseTime, motionStill;
+
 class ShiftInPlace extends StatefulWidget {
   final Widget child;
   final Duration duration;
@@ -15,7 +17,7 @@ class ShiftInPlace extends StatefulWidget {
     super.key,
     required this.index,
     required this.child,
-    this.duration = const Duration(milliseconds: 280),
+    this.duration = kHouseTime,
   });
 
   @override
@@ -61,7 +63,8 @@ class _ShiftInPlaceState extends State<ShiftInPlace>
           : vp.getOffsetToReveal(box, 0).offset;
       final last = _lastY;
       _lastY = y;
-      if (last == null) return;
+      // it just is in its new place when the phone asks for no movement
+      if (last == null || motionStill(context)) return;
       // where it was, minus where it is. carry any slide still in flight
       final moved = last - y;
       if (moved.abs() < 1 || moved.abs() > 1200) return;
@@ -76,7 +79,8 @@ class _ShiftInPlaceState extends State<ShiftInPlace>
       animation: _c,
       child: widget.child,
       builder: (_, child) {
-        final t = Curves.easeOutCubic.transform(_c.value);
+        // the house spring: a touch past its place, then home
+        final t = kHouseCurve.transform(_c.value);
         return Transform.translate(
           offset: Offset(0, _delta * (1 - t)),
           child: child,

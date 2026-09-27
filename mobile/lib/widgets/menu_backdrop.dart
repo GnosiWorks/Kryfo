@@ -72,6 +72,10 @@ class _MenuPopState extends State<MenuPop> with SingleTickerProviderStateMixin {
       child: widget.child,
       builder: (_, child) {
         final v = _c.value.clamp(0.0, 1.0);
+        // no growing when the phone asks for no movement: a fade alone
+        if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) {
+          return Opacity(opacity: v, child: child);
+        }
         final t = Curves.easeOutBack.transform(v);
         return Opacity(
           opacity: v,

@@ -15,6 +15,9 @@ import 'package:flutter/services.dart';
 import 'chat_screen.dart' show MediaGalleryScreen, atmoFromName;
 import 'wallpaper_sheet.dart';
 import '../widgets/stagger_in.dart';
+import '../widgets/halo_rows.dart';
+import '../widgets/page_head.dart';
+import '../widgets/press_scale.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/hidden_mark.dart';
@@ -30,6 +33,7 @@ class GroupInfoScreen extends StatefulWidget {
 }
 
 class _GroupInfoScreenState extends State<GroupInfoScreen> {
+  final _scroll = ScrollController();
   String _name = '';
   bool _isAdmin = false;
   // room fields, null for a plain group
@@ -42,6 +46,12 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   void initState() {
     super.initState();
     _load();
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -196,373 +206,364 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
     final myId = appState.sessionId;
     return Scaffold(
       backgroundColor: HaloColors.surface,
-      body: SafeArea(
-        child: Column(
+      appBar: AppBar(
+        backgroundColor: HaloColors.surface,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        automaticallyImplyLeading: false,
+        titleSpacing: 4,
+        title: Row(
           children: [
-            // header
-            Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(4, 6, 12, 6),
-              child: Row(
-                children: [
-                  IconButton(
-                    tooltip: l10n.commonBack,
-                    icon: Icon(
-                      Icons.chevron_left,
-                      color: HaloColors.text,
-                      size: 26,
-                    ),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                  Expanded(
-                    child: Text(
-                      l10n.groupInfoGroupInfo,
-                      style: HaloType.serif(
-                        size: 18,
-                        italic: true,
-                        color: HaloColors.text,
-                      ),
-                    ),
-                  ),
-                ],
+            IconButton(
+              tooltip: l10n.commonBack,
+              icon: Icon(Icons.chevron_left, color: HaloColors.text, size: 26),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            Expanded(
+              child: Text(
+                l10n.groupInfoGroupInfo,
+                style: HaloType.serif(
+                  size: 18,
+                  italic: true,
+                  color: HaloColors.text,
+                ),
               ),
             ),
-            const SizedBox(height: 8),
-            // big group identity
-            Center(
+          ],
+        ),
+        bottom: HeadLine(controller: _scroll),
+      ),
+      body: ListView(
+        controller: _scroll,
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 28),
+        children: staggerAllIn(context, [
+          // big group identity
+          ParallaxHead(
+            controller: _scroll,
+            child: Center(
               child: Column(
                 children: [
-                  Container(
-                    width: 72,
-                    height: 72,
-                    decoration: BoxDecoration(
-                      color: HaloColors.amberSoft,
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(
-                        color: HaloColors.amber.withValues(alpha: 0.45),
-                        width: 0.8,
-                      ),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      _name.isEmpty
-                          ? '·'
-                          : _name.characters.first.toUpperCase(),
-                      style: HaloType.serif(
-                        size: 36,
-                        italic: true,
-                        color: HaloColors.amber,
-                      ),
-                    ),
+                  // the same tile flies here from the chat's header
+                  Hero(
+                    tag: 'group-${widget.groupId}',
+                    flightShuttleBuilder: (_, _, _, _, _) =>
+                        FittedBox(child: _tile(_name)),
+                    child: _tile(_name),
                   ),
                   const SizedBox(height: 14),
                   GestureDetector(
                     onTap: _isAdmin && !_isRoom ? _rename : null,
+                    behavior: HitTestBehavior.opaque,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          _name,
-                          style: HaloType.serif(
-                            size: 22,
-                            italic: true,
-                            color: HaloColors.text,
+                        Flexible(
+                          child: Text(
+                            _name,
+                            maxLines: 2,
+                            textAlign: TextAlign.center,
+                            overflow: TextOverflow.ellipsis,
+                            style: HaloType.serif(
+                              size: 24,
+                              weight: FontWeight.w300,
+                              color: HaloColors.text,
+                            ),
                           ),
                         ),
                         if (_isAdmin && !_isRoom) ...[
-                          const SizedBox(width: 6),
+                          const SizedBox(width: 8),
                           Icon(
                             Icons.edit_outlined,
-                            size: 16,
+                            size: 15,
                             color: HaloColors.text3,
                           ),
                         ],
                       ],
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    l10n.groupInfo1Member(_members.length),
-                    style: HaloType.mono(
-                      size: 11,
-                      color: HaloColors.text3,
-                      letter: 0.1,
-                    ),
-                  ),
-                  if (_isAdmin) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      l10n.groupInfoAdmin,
-                      style: HaloType.mono(
-                        size: 10,
-                        color: HaloColors.amber,
-                        letter: 0.4,
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        l10n.groupInfo1Member(_members.length),
+                        style: HaloType.mono(
+                          size: 11,
+                          color: HaloColors.text3,
+                          letter: 0.1,
+                        ),
                       ),
-                    ),
-                  ],
+                      if (_isAdmin) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: HaloColors.amberSoft,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            l10n.groupInfoAdmin,
+                            style: HaloType.mono(
+                              size: 9.5,
+                              color: HaloColors.amber,
+                              weight: FontWeight.w600,
+                              letter: 0.1,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
-            // members header + add button
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-              child: Row(
-                children: [
+          ),
+          const SizedBox(height: 22),
+          HaloGroup(
+            children: [
+              HaloRow(
+                icon: Icons.photo_library_outlined,
+                label: l10n.groupInfoSharedMedia,
+                onTap: _openSharedMedia,
+              ),
+              HaloRow(
+                icon: Icons.palette_outlined,
+                label: l10n.groupInfoWallpaper,
+                onTap: _pickAtmosphere,
+              ),
+              // hidden chats open: out of the everyday list, or back in it
+              if (lockState.inVault && !_isRoom)
+                HaloRow(
+                  icon: session.isHidden(widget.groupId)
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
+                  label: session.isHidden(widget.groupId)
+                      ? l10n.chatShowInList
+                      : l10n.groupHide,
+                  onTap: _moveHidden,
+                ),
+            ],
+          ),
+          PageSection(
+            l10n.groupInfoMembers2,
+            actions: [
+              if (_isRoom)
+                _Pill(
+                  icon: Icons.qr_code_2_outlined,
+                  label: l10n.groupInfoInvite,
+                  color: HaloColors.violet,
+                  onTap: () async {
+                    final link = await appState.roomLinkFor(widget.groupId);
+                    if (link != null && context.mounted) {
+                      await showRoomLinkSheet(context, link);
+                    }
+                  },
+                ),
+              if (_isAdmin && !_isRoom)
+                _Pill(
+                  icon: Icons.add_rounded,
+                  label: l10n.commonAdd,
+                  color: HaloColors.amber,
+                  onTap: _addMembers,
+                ),
+            ],
+          ),
+          _MembersCard(
+            members: _members,
+            isMe: (m) => m == myId || (_isRoom && m == _roomPub),
+            canRemove: _isAdmin,
+            onRemove: _confirmRemove,
+          ),
+          const SizedBox(height: 14),
+          // what cannot be taken back, apart and in rose
+          HaloGroup(
+            rose: true,
+            children: [
+              HaloRow(
+                icon: Icons.delete_sweep_outlined,
+                label: l10n.groupInfoClearConversation,
+                rose: true,
+                onTap: _confirmClear,
+              ),
+              HaloRow(
+                icon: Icons.logout_rounded,
+                label: _isRoom
+                    ? l10n.groupInfoLeaveRoom2
+                    : l10n.groupInfoLeaveGroup2,
+                rose: true,
+                onTap: _confirmLeave,
+              ),
+            ],
+          ),
+        ]),
+      ),
+    );
+  }
+
+  // the group's face: its first letter on an amber tile, square where a
+  // person's is round
+  Widget _tile(String name) => Container(
+    width: 72,
+    height: 72,
+    decoration: BoxDecoration(
+      color: HaloColors.amberSoft,
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(
+        color: HaloColors.amber.withValues(alpha: 0.45),
+        width: 0.8,
+      ),
+    ),
+    alignment: Alignment.center,
+    child: Text(
+      name.isEmpty ? '·' : name.characters.first.toUpperCase(),
+      style: HaloType.serif(size: 36, italic: true, color: HaloColors.amber),
+    ),
+  );
+}
+
+// a small tinted pill at the end of a section heading
+class _Pill extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+  const _Pill({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return PressScale(
+      label: label,
+      onTap: onTap,
+      scale: 0.92,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 0.5),
+        ),
+        child: ExcludeSemantics(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 13, color: color),
+              const SizedBox(width: 4),
+              Text(
+                label,
+                style: HaloType.mono(
+                  size: 10,
+                  color: color,
+                  weight: FontWeight.w500,
+                  letter: 0.06,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// everyone in the group, on one card: a face, the three words, and for the
+// admin a way to take someone out
+class _MembersCard extends StatelessWidget {
+  final List<String> members;
+  final bool Function(String id) isMe;
+  final bool canRemove;
+  final void Function(String id) onRemove;
+  const _MembersCard({
+    required this.members,
+    required this.isMe,
+    required this.canRemove,
+    required this.onRemove,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: HaloColors.surface2,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: HaloColors.line, width: 0.5),
+      ),
+      child: Column(
+        children: [
+          for (var i = 0; i < members.length; i++) ...[
+            if (i > 0)
+              Padding(
+                padding: const EdgeInsetsDirectional.only(start: 60),
+                child: Container(height: 0.5, color: HaloColors.line),
+              ),
+            _member(members[i]),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _member(String m) {
+    final me = isMe(m);
+    final room = looksLikeRoomKey(m);
+    return Padding(
+      padding: const EdgeInsetsDirectional.fromSTEB(12, 10, 4, 10),
+      child: Row(
+        children: [
+          KryfoAvatar(seed: m, size: 36),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  room ? roomTag(m) : m,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: room
+                      ? HaloType.mono(size: 13, color: HaloColors.text)
+                      : HaloType.sans(
+                          size: 14,
+                          weight: FontWeight.w500,
+                          color: HaloColors.text,
+                        ),
+                ),
+                if (me)
                   Text(
-                    l10n.groupInfoMembers2,
+                    l10n.groupInfoYou,
                     style: HaloType.mono(
                       size: 10,
-                      color: HaloColors.text3,
-                      letter: 0.14,
+                      color: HaloColors.amber,
+                      letter: 0.3,
                     ),
                   ),
-                  const Spacer(),
-                  if (_isRoom)
-                    GestureDetector(
-                      onTap: () async {
-                        final link = await appState.roomLinkFor(widget.groupId);
-                        if (link != null && context.mounted) {
-                          await showRoomLinkSheet(context, link);
-                        }
-                      },
-                      behavior: HitTestBehavior.opaque,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.qr_code_2_outlined,
-                            size: 14,
-                            color: HaloColors.violet,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            l10n.groupInfoInvite,
-                            style: HaloType.mono(
-                              size: 10,
-                              color: HaloColors.violet,
-                              letter: 0.14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  if (_isAdmin && !_isRoom)
-                    GestureDetector(
-                      onTap: _addMembers,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.add_rounded,
-                            size: 14,
-                            color: HaloColors.amber,
-                          ),
-                          const SizedBox(width: 3),
-                          Text(
-                            l10n.commonAdd,
-                            style: HaloType.mono(
-                              size: 10,
-                              color: HaloColors.amber,
-                              letter: 0.14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
+              ],
             ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: _members.length,
-                itemBuilder: (_, i) {
-                  final m = _members[i];
-                  final isMe = m == myId || (_isRoom && m == _roomPub);
-                  return StaggerIn(
-                    index: i,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      child: Row(
-                        children: [
-                          KryfoAvatar(seed: m, size: 36),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  looksLikeRoomKey(m) ? roomTag(m) : m,
-                                  style: looksLikeRoomKey(m)
-                                      ? HaloType.mono(
-                                          size: 13,
-                                          color: HaloColors.text,
-                                        )
-                                      : HaloType.sans(
-                                          size: 14,
-                                          weight: FontWeight.w500,
-                                          color: HaloColors.text,
-                                        ),
-                                ),
-                                if (isMe)
-                                  Text(
-                                    l10n.groupInfoYou,
-                                    style: HaloType.mono(
-                                      size: 10,
-                                      color: HaloColors.amber,
-                                      letter: 0.3,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                          if (_isAdmin && !isMe)
-                            IconButton(
-                              tooltip: l10n.groupInfoRemoveFromGroup,
-                              icon: Icon(
-                                Icons.remove_circle_outline,
-                                size: 18,
-                                color: HaloColors.text3,
-                              ),
-                              onPressed: () => _confirmRemove(m),
-                            ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
+          ),
+          if (canRemove && !me)
+            IconButton(
+              tooltip: l10n.groupInfoRemoveFromGroup,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints.tightFor(width: 40, height: 40),
+              icon: Icon(
+                Icons.remove_circle_outline,
+                size: 18,
+                color: HaloColors.text3,
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-              child: GestureDetector(
-                onTap: _pickAtmosphere,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  decoration: BoxDecoration(
-                    color: HaloColors.surface2,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    l10n.groupInfoWallpaper,
-                    style: HaloType.sans(
-                      size: 14,
-                      weight: FontWeight.w500,
-                      color: HaloColors.text2,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-              child: GestureDetector(
-                onTap: _openSharedMedia,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  decoration: BoxDecoration(
-                    color: HaloColors.surface2,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    l10n.groupInfoSharedMedia,
-                    style: HaloType.sans(
-                      size: 14,
-                      weight: FontWeight.w500,
-                      color: HaloColors.text2,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-              child: GestureDetector(
-                onTap: _confirmClear,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  decoration: BoxDecoration(
-                    color: HaloColors.surface2,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    l10n.groupInfoClearConversation,
-                    style: HaloType.sans(
-                      size: 14,
-                      weight: FontWeight.w500,
-                      color: HaloColors.text2,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            // hidden chats open: out of the everyday list, or back in it
-            if (lockState.inVault && !_isRoom)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                child: GestureDetector(
-                  onTap: _moveHidden,
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    decoration: BoxDecoration(
-                      color: HaloColors.surface2,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      session.isHidden(widget.groupId)
-                          ? l10n.chatShowInList
-                          : l10n.groupHide,
-                      style: HaloType.sans(
-                        size: 14,
-                        weight: FontWeight.w500,
-                        color: HaloColors.text2,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            // leave (everyone)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-              child: GestureDetector(
-                onTap: _confirmLeave,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  decoration: BoxDecoration(
-                    color: HaloColors.surface2,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: HaloColors.rose.withValues(alpha: 0.4),
-                      width: 0.6,
-                    ),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    _isRoom
-                        ? l10n.groupInfoLeaveRoom2
-                        : l10n.groupInfoLeaveGroup2,
-                    style: HaloType.sans(
-                      size: 14,
-                      weight: FontWeight.w500,
-                      color: HaloColors.rose,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+              onPressed: () => onRemove(m),
+            )
+          else
+            const SizedBox(height: 40),
+        ],
       ),
     );
   }

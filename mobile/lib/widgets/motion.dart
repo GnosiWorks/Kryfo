@@ -44,6 +44,27 @@ SpringSimulation houseSpring(double from, double to, [double velocity = 0]) =>
       tolerance: const Tolerance(distance: 0.005, velocity: 0.05),
     );
 
+/// how long the house spring takes as a curve. the tail past it is under a
+/// percent, so the snap to rest cannot be seen
+const kHouseTime = Duration(milliseconds: 300);
+
+/// the house spring as a curve, for implicit animations and tweens run over
+/// [kHouseTime]: the same small overshoot and settle, no controller needed
+class HouseCurve extends Curve {
+  const HouseCurve();
+  static final _spring = SpringSimulation(kHouseSpring, 0, 1, 0);
+
+  @override
+  double transformInternal(double t) =>
+      _spring.x(t * kHouseTime.inMicroseconds / 1e6);
+}
+
+const kHouseCurve = HouseCurve();
+
+/// true when the phone asks for no movement: fades at most, or nothing
+bool motionStill(BuildContext context) =>
+    MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+
 enum TorStatus { off, starting, bootstrapped, publishing, reachable }
 
 enum PrivacyMode { fast, normal, private }
@@ -994,7 +1015,15 @@ class _TypingDotsState extends State<TypingDots>
 class BreathDot extends StatefulWidget {
   final Color color;
   final double size;
-  const BreathDot({super.key, this.color = kGreen, this.size = 5});
+  // how many breaths before it rests, full. null breathes for as long as
+  // it is on screen
+  final int? breaths;
+  const BreathDot({
+    super.key,
+    this.color = kGreen,
+    this.size = 5,
+    this.breaths,
+  });
   @override
   State<BreathDot> createState() => _BreathDotState();
 }
@@ -1008,7 +1037,7 @@ class _BreathDotState extends State<BreathDot>
     _ctl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2400),
-    )..repeat();
+    )..repeat(count: widget.breaths);
   }
 
   @override
@@ -1030,7 +1059,9 @@ class _BreathDotState extends State<BreathDot>
     return AnimatedBuilder(
       animation: _ctl,
       builder: (ctx, _) {
-        final op = 0.5 + 0.5 * math.sin(_ctl.value * 2 * math.pi);
+        final op = !_ctl.isAnimating && widget.breaths != null
+            ? 1.0
+            : 0.5 + 0.5 * math.sin(_ctl.value * 2 * math.pi);
         return Container(
           width: widget.size,
           height: widget.size,

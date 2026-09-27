@@ -10,8 +10,10 @@ import '../stickers/sticker_bubble.dart' show StickerLine;
 import '../stickers/sticker_wire.dart';
 import '../theme.dart';
 import 'decode_px.dart';
+import 'count_badge.dart';
 import 'halo_sheet.dart';
 import 'kryfo_avatar.dart';
+import 'motion.dart' show kHouseCurve, kHouseTime, motionStill;
 import 'sheet_handle.dart';
 import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
@@ -31,6 +33,7 @@ class PinHeaderButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final on = count > 0;
+    final still = motionStill(context);
     return IconButton(
       tooltip: on
           ? l10n.pinsPinnedMessages(whole(count))
@@ -46,42 +49,43 @@ class PinHeaderButton extends StatelessWidget {
               alignment: AlignmentDirectional.centerStart,
               child: Transform.rotate(
                 angle: 0.5,
-                child: Icon(
-                  on ? Icons.push_pin : Icons.push_pin_outlined,
-                  color: on ? HaloColors.amber : HaloColors.text2,
-                  size: 19,
+                // the first pin drops in; the last one lifts away
+                child: AnimatedSwitcher(
+                  duration: still ? Duration.zero : kHouseTime,
+                  switchInCurve: kHouseCurve,
+                  transitionBuilder: (child, a) => FadeTransition(
+                    opacity: a,
+                    child: ScaleTransition(
+                      scale: Tween(begin: 1.35, end: 1.0).animate(a),
+                      child: child,
+                    ),
+                  ),
+                  child: Icon(
+                    on ? Icons.push_pin : Icons.push_pin_outlined,
+                    key: ValueKey(on),
+                    color: on ? HaloColors.amber : HaloColors.text2,
+                    size: 19,
+                  ),
                 ),
               ),
             ),
             // the count is in the tooltip; read out alone it is just "1"
-            if (on)
-              PositionedDirectional(
-                end: -2,
-                top: -1,
-                child: Container(
-                  constraints: const BoxConstraints(minWidth: 14),
+            PositionedDirectional(
+              end: -2,
+              top: -1,
+              child: ExcludeSemantics(
+                child: CountBadge(
+                  count: count,
+                  fontSize: 8.5,
+                  minWidth: 14,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 3.5,
                     vertical: 0.5,
                   ),
-                  decoration: BoxDecoration(
-                    color: HaloColors.amber,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: ExcludeSemantics(
-                    child: Text(
-                      count > 99 ? '99' : '$count',
-                      textAlign: TextAlign.center,
-                      style: HaloType.mono(
-                        size: 8.5,
-                        weight: FontWeight.w600,
-                        color: HaloColors.onAmber,
-                        letter: 0,
-                      ),
-                    ),
-                  ),
+                  format: (n) => n > 99 ? '99' : '$n',
                 ),
               ),
+            ),
           ],
         ),
       ),

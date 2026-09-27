@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme.dart';
+import 'motion.dart' show kHouseCurve, kHouseTime, motionStill;
 
 class SwipeToReply extends StatefulWidget {
   final Widget child;
@@ -27,10 +28,7 @@ class _SwipeToReplyState extends State<SwipeToReply>
   @override
   void initState() {
     super.initState();
-    _spring = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 240),
-    );
+    _spring = AnimationController(vsync: this, duration: kHouseTime);
   }
 
   @override
@@ -39,9 +37,15 @@ class _SwipeToReplyState extends State<SwipeToReply>
     super.dispose();
   }
 
+  // back to its place on the house spring, a touch past it and home; at
+  // once when the phone asks for no movement
   void _settle() {
+    if (motionStill(context)) {
+      setState(() => _dx = 0);
+      return;
+    }
     _back = Tween(begin: _dx, end: 0.0).animate(
-      CurvedAnimation(parent: _spring, curve: Curves.easeOutCubic),
+      CurvedAnimation(parent: _spring, curve: kHouseCurve),
     )..addListener(() => setState(() => _dx = _back.value));
     _spring
       ..reset()
@@ -80,13 +84,19 @@ class _SwipeToReplyState extends State<SwipeToReply>
             bottom: 0,
             child: Center(
               child: Opacity(
-                opacity: progress,
+                opacity: progress.clamp(0.0, 1.0),
                 child: Transform.scale(
-                  scale: 0.6 + 0.4 * progress,
-                  child: Icon(
-                    Icons.reply_rounded,
-                    size: 20,
-                    color: HaloColors.amber,
+                  scale: 0.6 + 0.4 * progress.clamp(0.0, 1.0),
+                  // armed, the arrow gives a small nod so the thumb knows
+                  child: AnimatedScale(
+                    scale: _armed && !motionStill(context) ? 1.18 : 1,
+                    duration: const Duration(milliseconds: 160),
+                    curve: Curves.easeOutBack,
+                    child: Icon(
+                      Icons.reply_rounded,
+                      size: 20,
+                      color: HaloColors.amber,
+                    ),
                   ),
                 ),
               ),

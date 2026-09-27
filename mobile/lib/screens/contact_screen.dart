@@ -15,7 +15,10 @@ import '../widgets/halo_buttons.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/hidden_mark.dart';
 import '../widgets/kryfo_avatar.dart';
-import '../widgets/motion.dart' show haloRoute;
+import '../widgets/motion.dart'
+    show haloRoute, kHouseCurve, kHouseTime, motionStill;
+import '../widgets/halo_rows.dart';
+import '../widgets/page_head.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/press_scale.dart';
@@ -44,6 +47,7 @@ class ContactScreen extends StatefulWidget {
 }
 
 class _ContactScreenState extends State<ContactScreen> {
+  final _scroll = ScrollController();
   Map<String, Object?>? _c;
   List<String> _voucherNames = const [];
   int? _since;
@@ -55,6 +59,12 @@ class _ContactScreenState extends State<ContactScreen> {
   void initState() {
     super.initState();
     _load();
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -200,12 +210,18 @@ class _ContactScreenState extends State<ContactScreen> {
         ? HaloColors.amber
         : HaloColors.text2;
     final note = c?['note'] as String?;
+    final still = motionStill(context);
     return Scaffold(
       backgroundColor: HaloColors.surface,
       appBar: AppBar(
         backgroundColor: HaloColors.surface,
         elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
         iconTheme: IconThemeData(color: HaloColors.text2),
+        // the name comes up here once the big one has scrolled away
+        title: HeadTitle(controller: _scroll, title: _name, from: 170),
+        bottom: HeadLine(controller: _scroll),
       ),
       bottomNavigationBar: SafeArea(
         top: false,
@@ -245,82 +261,87 @@ class _ContactScreenState extends State<ContactScreen> {
         ),
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-        children: staggerAll([
-          Center(
-            child: Column(
-              children: [
-                TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0.9, end: 1),
-                  duration: const Duration(milliseconds: 280),
-                  curve: Curves.easeOutBack,
-                  builder: (_, v, child) =>
-                      Transform.scale(scale: v, child: child),
-                  child: Hero(
-                    tag: 'face-${widget.avatarSeed}',
-                    child: KryfoAvatar(
-                      seed: widget.avatarSeed,
-                      size: 96,
-                      choice: widget.face ?? (c?['avatar'] as num?)?.toInt(),
+        controller: _scroll,
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+        children: staggerAllIn(context, [
+          ParallaxHead(
+            controller: _scroll,
+            child: Center(
+              child: Column(
+                children: [
+                  TweenAnimationBuilder<double>(
+                    tween: Tween(begin: still ? 1 : 0.9, end: 1),
+                    duration: kHouseTime,
+                    curve: kHouseCurve,
+                    builder: (_, v, child) =>
+                        Transform.scale(scale: v, child: child),
+                    child: Hero(
+                      tag: 'face-${widget.avatarSeed}',
+                      child: KryfoAvatar(
+                        seed: widget.avatarSeed,
+                        size: 96,
+                        choice: widget.face ?? (c?['avatar'] as num?)?.toInt(),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                GestureDetector(
-                  onTap: _rename,
-                  behavior: HitTestBehavior.opaque,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Flexible(
-                        child: Text(
-                          _name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: HaloType.serif(
-                            size: 26,
-                            color: HaloColors.text,
+                  const SizedBox(height: 16),
+                  GestureDetector(
+                    onTap: _rename,
+                    behavior: HitTestBehavior.opaque,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            _name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: HaloType.serif(
+                              size: 26,
+                              weight: FontWeight.w300,
+                              color: HaloColors.text,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Icon(
-                        Icons.edit_outlined,
-                        size: 15,
-                        color: HaloColors.text3,
-                      ),
-                    ],
-                  ),
-                ),
-                if (c?['nickname'] != null) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    widget.haloId,
-                    style: HaloType.mono(size: 12.5, color: HaloColors.amber),
-                  ),
-                ],
-                const SizedBox(height: 10),
-                Text(
-                  status,
-                  style: HaloType.mono(
-                    size: 11,
-                    color: statusColor,
-                    letter: 0.04,
-                  ),
-                ),
-                if (note != null && note.isNotEmpty) ...[
-                  const SizedBox(height: 10),
-                  Text(
-                    note,
-                    textAlign: TextAlign.center,
-                    style: HaloType.serif(
-                      size: 14,
-                      italic: true,
-                      color: HaloColors.text2,
+                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.edit_outlined,
+                          size: 15,
+                          color: HaloColors.text3,
+                        ),
+                      ],
                     ),
                   ),
+                  if (c?['nickname'] != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      widget.haloId,
+                      style: HaloType.mono(size: 12.5, color: HaloColors.amber),
+                    ),
+                  ],
+                  const SizedBox(height: 10),
+                  Text(
+                    status,
+                    style: HaloType.mono(
+                      size: 11,
+                      color: statusColor,
+                      letter: 0.04,
+                    ),
+                  ),
+                  if (note != null && note.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    Text(
+                      note,
+                      textAlign: TextAlign.center,
+                      style: HaloType.serif(
+                        size: 14,
+                        italic: true,
+                        color: HaloColors.text2,
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
           const SizedBox(height: 22),
@@ -330,15 +351,20 @@ class _ContactScreenState extends State<ContactScreen> {
             since: _since,
             onVouches: () => showVouchersSheet(context, widget.haloId),
           ),
-          const SizedBox(height: 22),
-          if (_voucherNames.isNotEmpty)
-            _Row(
-              icon: Icons.people_outline,
-              label: l10n.contactVouches,
-              sub: status,
-              onTap: () => showVouchersSheet(context, widget.haloId),
+          if (_voucherNames.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            HaloGroup(
+              children: [
+                HaloRow(
+                  icon: Icons.people_outline,
+                  label: l10n.contactVouches,
+                  hint: status,
+                  onTap: () => showVouchersSheet(context, widget.haloId),
+                ),
+              ],
             ),
-          _MediaRow(
+          ],
+          _MediaSection(
             paths: _media,
             count: _mediaCount,
             onOpen: _media.isEmpty
@@ -354,103 +380,115 @@ class _ContactScreenState extends State<ContactScreen> {
                   ),
           ),
           const SizedBox(height: 18),
-          _Row(
-            icon: muted
-                ? Icons.notifications_off_outlined
-                : Icons.notifications_none,
-            label: muted ? l10n.contactUnmute : l10n.contactMute,
-            onTap: () async {
-              HapticFeedback.selectionClick();
-              if (muted) {
-                await appState.unmute(widget.haloId);
-              } else {
-                await appState.mute(widget.haloId);
-              }
-              _load();
-            },
+          // the chat itself: how loud it is, where it sits in the list
+          HaloGroup(
+            children: [
+              HaloRow(
+                icon: muted
+                    ? Icons.notifications_off_outlined
+                    : Icons.notifications_none,
+                label: muted ? l10n.contactUnmute : l10n.contactMute,
+                onTap: () async {
+                  HapticFeedback.selectionClick();
+                  if (muted) {
+                    await appState.unmute(widget.haloId);
+                  } else {
+                    await appState.mute(widget.haloId);
+                  }
+                  _load();
+                },
+              ),
+              HaloRow(
+                icon: pinned ? Icons.push_pin : Icons.push_pin_outlined,
+                label: pinned ? l10n.contactUnpin : l10n.contactPinToTop,
+                onTap: () async {
+                  HapticFeedback.selectionClick();
+                  await session.setContactPinned(widget.haloId, !pinned);
+                  await appState.refreshContacts();
+                  _load();
+                },
+              ),
+              HaloRow(
+                icon: Icons.archive_outlined,
+                label: l10n.contactArchive,
+                hint: l10n.contactOutOfTheList,
+                onTap: () async {
+                  await appState.archive(widget.haloId);
+                  if (!context.mounted) return;
+                  Navigator.of(context).popUntil((r) => r.isFirst);
+                },
+              ),
+              // hidden chats open: out of the everyday list, or back in it.
+              // its rows move, so the chat is left as an archived one is
+              if (lockState.inVault && accepted && !blocked)
+                HaloRow(
+                  icon: hidden
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
+                  label: hidden ? l10n.chatShowInList : l10n.chatHide,
+                  onTap: () async {
+                    final moved = await moveHiddenChat(
+                      context,
+                      widget.haloId,
+                      group: false,
+                      hide: !hidden,
+                    );
+                    if (!moved || !context.mounted) return;
+                    Navigator.of(context).popUntil((r) => r.isFirst);
+                  },
+                ),
+            ],
           ),
-          _Row(
-            icon: pinned ? Icons.push_pin : Icons.push_pin_outlined,
-            label: pinned ? l10n.contactUnpin : l10n.contactPinToTop,
-            onTap: () async {
-              HapticFeedback.selectionClick();
-              await session.setContactPinned(widget.haloId, !pinned);
-              await appState.refreshContacts();
-              _load();
-            },
-          ),
-          _Row(
-            icon: Icons.archive_outlined,
-            label: l10n.contactArchive,
-            sub: l10n.contactOutOfTheList,
-            onTap: () async {
-              await appState.archive(widget.haloId);
-              if (!context.mounted) return;
-              Navigator.of(context).popUntil((r) => r.isFirst);
-            },
-          ),
-          // hidden chats open: out of the everyday list, or back in it.
-          // its rows move, so the chat is left as an archived one is
-          if (lockState.inVault && accepted && !blocked)
-            _Row(
-              icon: hidden
-                  ? Icons.visibility_outlined
-                  : Icons.visibility_off_outlined,
-              label: hidden ? l10n.chatShowInList : l10n.chatHide,
-              onTap: () async {
-                final moved = await moveHiddenChat(
-                  context,
-                  widget.haloId,
-                  group: false,
-                  hide: !hidden,
-                );
-                if (!moved || !context.mounted) return;
-                Navigator.of(context).popUntil((r) => r.isFirst);
-              },
-            ),
-          _Row(
-            icon: Icons.block,
-            label: blocked ? l10n.commonUnblock : l10n.commonBlock,
-            rose: !blocked,
-            onTap: () async {
-              if (blocked) {
-                await appState.unblock(widget.haloId);
-                _load();
-                return;
-              }
-              final ok = await showConfirmSheet(
-                context,
-                title: l10n.contactBlock(_name),
-                line: l10n.contactTheirMessagesStopArriving,
-                yes: l10n.commonBlock,
-              );
-              if (!ok) return;
-              await appState.block(widget.haloId);
-              if (!context.mounted) return;
-              HapticFeedback.mediumImpact();
-              Navigator.of(context).popUntil((r) => r.isFirst);
-            },
-          ),
-          _Row(
-            icon: Icons.delete_outline,
-            label: l10n.contactDeleteChat,
-            sub: l10n.contactMessagesAndContactGone,
+          const SizedBox(height: 12),
+          // what cannot be taken back, apart and in rose
+          HaloGroup(
             rose: true,
-            onTap: () async {
-              final ok = await showConfirmSheet(
-                context,
-                title: l10n.contactDeleteThisChat,
-                line: l10n.contactEveryMessageAndThe,
-                yes: l10n.commonDelete,
-              );
-              if (!ok) return;
-              await appState.deleteConversation(widget.haloId);
-              await appState.refreshContacts();
-              if (!context.mounted) return;
-              HapticFeedback.mediumImpact();
-              showHaloToast(context, l10n.contactDeleted);
-              Navigator.of(context).popUntil((r) => r.isFirst);
-            },
+            children: [
+              HaloRow(
+                icon: Icons.block,
+                label: blocked ? l10n.commonUnblock : l10n.commonBlock,
+                rose: !blocked,
+                onTap: () async {
+                  if (blocked) {
+                    await appState.unblock(widget.haloId);
+                    _load();
+                    return;
+                  }
+                  final ok = await showConfirmSheet(
+                    context,
+                    title: l10n.contactBlock(_name),
+                    line: l10n.contactTheirMessagesStopArriving,
+                    yes: l10n.commonBlock,
+                  );
+                  if (!ok) return;
+                  await appState.block(widget.haloId);
+                  if (!context.mounted) return;
+                  HapticFeedback.mediumImpact();
+                  Navigator.of(context).popUntil((r) => r.isFirst);
+                },
+              ),
+              HaloRow(
+                icon: Icons.delete_outline,
+                label: l10n.contactDeleteChat,
+                hint: l10n.contactMessagesAndContactGone,
+                rose: true,
+                onTap: () async {
+                  final ok = await showConfirmSheet(
+                    context,
+                    title: l10n.contactDeleteThisChat,
+                    line: l10n.contactEveryMessageAndThe,
+                    yes: l10n.commonDelete,
+                  );
+                  if (!ok) return;
+                  await appState.deleteConversation(widget.haloId);
+                  await appState.refreshContacts();
+                  if (!context.mounted) return;
+                  HapticFeedback.mediumImpact();
+                  showHaloToast(context, l10n.contactDeleted);
+                  Navigator.of(context).popUntil((r) => r.isFirst);
+                },
+              ),
+            ],
           ),
         ]),
       ),
@@ -568,125 +606,116 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-class _Row extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String? sub;
-  final bool rose;
-  final VoidCallback onTap;
-  const _Row({
-    required this.icon,
-    required this.label,
-    this.sub,
-    this.rose = false,
-    required this.onTap,
-  });
+// what the two of you shared: its count over the first four, the last of
+// them saying how many more. a tap on any opens them all
+class _MediaSection extends StatelessWidget {
+  final List<String> paths;
+  final int count;
+  final VoidCallback? onOpen;
+  const _MediaSection({required this.paths, required this.count, this.onOpen});
+
   @override
   Widget build(BuildContext context) {
-    final color = rose ? HaloColors.rose : HaloColors.text;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 13),
-        child: Row(
+    if (count == 0) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 18),
+        child: HaloGroup(
           children: [
-            Icon(icon, size: 19, color: HaloColors.amber),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            HaloRow(
+              icon: Icons.photo_library_outlined,
+              label: l10n.contactNothingSharedYet,
+            ),
+          ],
+        ),
+      );
+    }
+    final shown = paths.take(4).toList();
+    final more = count - 3;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        PageSection(l10n.contactSharedMedia(whole(count))),
+        PressScale(
+          onTap: onOpen,
+          scale: 0.98,
+          label: l10n.contactSharedMedia(whole(count)),
+          child: LayoutBuilder(
+            builder: (context, box) {
+              const gap = 6.0;
+              final side = (box.maxWidth - gap * 3) / 4;
+              return Row(
                 children: [
-                  Text(label, style: HaloType.sans(size: 14.5, color: color)),
-                  if (sub != null) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      sub!,
-                      style: HaloType.sans(size: 12, color: HaloColors.text2),
+                  for (var i = 0; i < 4; i++) ...[
+                    if (i > 0) const SizedBox(width: gap),
+                    SizedBox.square(
+                      dimension: side,
+                      child: i >= shown.length
+                          ? const SizedBox.shrink()
+                          : _Tile(
+                              path: shown[i],
+                              side: side,
+                              more: i == 3 && count > 4 ? more : 0,
+                            ),
                     ),
                   ],
                 ],
-              ),
-            ),
-            Icon(Icons.chevron_right, size: 18, color: HaloColors.text3),
-          ],
+              );
+            },
+          ),
         ),
-      ),
+      ],
     );
   }
 }
 
-// the last six things you shared, as a strip. tap for all of them.
-class _MediaRow extends StatelessWidget {
-  final List<String> paths;
-  final int count;
-  final VoidCallback? onOpen;
-  const _MediaRow({required this.paths, required this.count, this.onOpen});
+class _Tile extends StatelessWidget {
+  final String path;
+  final double side;
+  // shown over the last tile: how many more there are
+  final int more;
+  const _Tile({required this.path, required this.side, this.more = 0});
+
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onOpen,
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 13),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.photo_library_outlined,
-                  size: 19,
-                  color: HaloColors.amber,
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Text(
-                    count == 0
-                        ? l10n.contactNothingSharedYet
-                        : l10n.contactSharedMedia(whole(count)),
-                    style: HaloType.sans(
-                      size: 14.5,
-                      color: count == 0 ? HaloColors.text2 : HaloColors.text,
-                    ),
+    final still = motionStill(context);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(10),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          ColoredBox(color: HaloColors.surface2),
+          Image.file(
+            File(path),
+            fit: BoxFit.cover,
+            cacheWidth: (side * MediaQuery.devicePixelRatioOf(context)).round(),
+            // a photo fades in as it decodes rather than blinking on
+            frameBuilder: (_, child, frame, sync) => sync || still
+                ? child
+                : AnimatedOpacity(
+                    opacity: frame == null ? 0 : 1,
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeOut,
+                    child: child,
+                  ),
+            // a black square would read as a broken app, not a photo whose
+            // file is gone
+            errorBuilder: (_, _, _) => _MissingTile(size: side),
+          ),
+          if (more > 0)
+            ColoredBox(
+              color: HaloColors.ink.withValues(alpha: 0.62),
+              child: Center(
+                child: Text(
+                  '+${whole(more)}',
+                  style: HaloType.mono(
+                    size: 15,
+                    color: HaloColors.amber,
+                    weight: FontWeight.w600,
                   ),
                 ),
-                if (count > 0)
-                  Icon(Icons.chevron_right, size: 18, color: HaloColors.text3),
-              ],
-            ),
-            if (paths.isNotEmpty) ...[
-              const SizedBox(height: 10),
-              SizedBox(
-                height: 56,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: [
-                    for (final p in paths.take(6))
-                      Padding(
-                        padding: const EdgeInsetsDirectional.only(end: 6),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.file(
-                            File(p),
-                            width: 56,
-                            height: 56,
-                            fit: BoxFit.cover,
-                            cacheWidth: 112,
-                            // a black square would read as a broken app, not
-                            // a photo whose file is gone
-                            errorBuilder: (_, _, _) =>
-                                const _MissingTile(size: 56),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
               ),
-            ],
-          ],
-        ),
+            ),
+        ],
       ),
     );
   }
