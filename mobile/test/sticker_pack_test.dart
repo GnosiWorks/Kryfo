@@ -193,9 +193,9 @@ void _packTests(
       for (final k in s.tracks) {
         expect(k.times.first, 0, reason: 'sticker $id');
         expect(k.times.last, lessThanOrEqualTo(s.loopMs));
-        // alpha rests at 1, or at 0 on a part the svg hides
+        // alpha rests at 1, or at the opacity of a group the art fades
         final r = k.prop == propAlpha ? s.restAlpha[k.node] : rest[k.prop];
-        expect(r, anyOf(0, 1), reason: 'sticker $id');
+        expect(r, inInclusiveRange(0, 1), reason: 'sticker $id');
         expect(k.values.first, r, reason: 'sticker $id');
         expect(k.values.last, r, reason: 'sticker $id');
         for (var i = 1; i < k.times.length; i++) {

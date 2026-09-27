@@ -24,10 +24,11 @@
 # for the outline blur and the pngs; the app never runs any of this.
 #
 # a group's opacity goes into what it draws, as a layer when its draws can
-# overlap, so the still and its outline are the svg's. a group the svg hides
-# (opacity 0) under a node cannot go in there, as no track could bring it
-# back: that node's alpha rests at 0, and its alpha track starts and ends at
-# 0 and shows it in between.
+# overlap, so the still and its outline are the svg's. a node on a group that
+# sets an opacity takes it as its alpha at rest instead: its alpha track
+# starts and ends there and may go above it. the outline of such a part
+# hangs from a copy of its node whose alpha follows the svg's die-cut, so it
+# stays whole while the part is faint and goes when the part is nearly gone.
 import hashlib
 import math
 import re
@@ -920,7 +921,8 @@ class Node:
         self.frame = 0.0
         self.k = 1.0
         self.travel = 0.0  # a lid's way down
-        self.rest = 1.0  # alpha at rest: 0 on a group the svg hides
+        self.rest = 1.0  # alpha at rest: its group's opacity
+        self.held = False  # on a group that sets an opacity: a part the art fades
 
     def matrix(self, vals):
         x, y, r, sx, sy = vals[0], vals[1], vals[2], vals[3], vals[4]
@@ -1400,16 +1402,21 @@ def compile_sticker(anim, st, svg, palette, blur, report):
             if sa & sc_ and not (sa <= sc_ or sc_ <= sa):
                 fail(f'{a.line}: nodes overlap without nesting')
 
-    # a group the svg hides cannot fold its opacity into its paints, as no
-    # track could show it again: its node's alpha rests at 0 instead
+    # a node on a group that sets an opacity takes it as its alpha at rest,
+    # so its alpha track can go above it as well as below
     holds = {}
     for n in nodes:
         g = n.els[0]
-        if len(n.els) == 1 and g.tag == 'g' and g.opacity == 0 and id(g) not in holds:
+        if len(n.els) == 1 and g.tag == 'g' and 'opacity' in g.a and id(g) not in holds:
             holds[id(g)] = n
-            n.rest = 0.0
-            if (n, 5) not in st.tracks:
+            n.held = True
+            n.rest = g.opacity
+            if (n, 5) in st.tracks or n.rest == 1:
+                continue
+            if n.rest == 0:
                 fail(f'{n.line}: {owner_name(n)} is hidden in the svg: an alpha track from 0 shows it')
+            # the player reads a node's alpha at rest from its track
+            st.tracks[(n, 5)] = [(0.0, n.rest, 0)]
 
     opens, closes = {}, {}
     for n in nodes:
@@ -1526,9 +1533,10 @@ def compile_sticker(anim, st, svg, palette, blur, report):
             o = 1.0
         owner = nodestack[-1] if nodestack else None
         hidden = any(n.hidden for n in nodestack)
-        clear = any(n.rest == 0 for n in nodestack)
         k = math.prod(fades)
         cut = k * math.prod(dims)
+        # the outline sees the svg at rest; bare is the part at full alpha
+        rest = math.prod(n.rest for n in nodestack if n.held)
 
         def paint_of(c, alpha, style, width=0, cap=0, join=0):
             if isinstance(c, tuple):
@@ -1539,9 +1547,9 @@ def compile_sticker(anim, st, svg, palette, blur, report):
             pi = paint_of(fill, o * fo * k, 0)
             out.op(OP_DRAW, out.path(subs, evenodd))
             out.ops.append(pi)
-            out.draws.append(dict(subs=subs, stroke=False, evenodd=evenodd, alpha=o * fo * cut,
-                                  clips=list(clipstack), owner=owner, hidden=hidden,
-                                  clear=clear, nodes=list(nodestack), where=where))
+            out.draws.append(dict(subs=subs, stroke=False, evenodd=evenodd, alpha=o * fo * cut * rest,
+                                  bare=o * fo * cut, clips=list(clipstack), owner=owner,
+                                  hidden=hidden, nodes=list(nodestack), where=where))
         if stroke is not None:
             cap = {'butt': 0, 'round': 1, 'square': 2}[a.get('stroke-linecap', 'butt')]
             join = {'miter': 0, 'round': 1, 'bevel': 2}[a.get('stroke-linejoin', 'miter')]
@@ -1556,8 +1564,9 @@ def compile_sticker(anim, st, svg, palette, blur, report):
             out.op(OP_DRAW, out.path(ssubs, False))
             out.ops.append(pi)
             out.draws.append(dict(subs=ssubs, stroke=True, width=width, cap=cap, join=join,
-                                  alpha=o * so * cut, clips=list(clipstack), owner=owner,
-                                  hidden=hidden, clear=clear, nodes=list(nodestack), where=where))
+                                  alpha=o * so * cut * rest, bare=o * so * cut,
+                                  clips=list(clipstack), owner=owner, hidden=hidden,
+                                  nodes=list(nodestack), where=where))
         if layer:
             out.op(OP_POP)
 
@@ -1890,7 +1899,8 @@ class Raster:
             d['cov'] = c
         return d['cov']
 
-    def alpha(self, draws):
+    def alpha(self, draws, k=None):
+        # k: each draw's alpha in place of its own at rest
         a = np.zeros((N, N), dtype=np.float32)
         for d in draws:
             c = self.draw_cover(d)
@@ -1898,7 +1908,7 @@ class Raster:
                 continue
             r0, c0, f = c
             win = a[r0:r0 + f.shape[0], c0:c0 + f.shape[1]]
-            win += f * d['alpha'] * (1 - win)
+            win += f * (d['alpha'] if k is None else k(d)) * (1 - win)
         return a
 
 
@@ -2137,9 +2147,21 @@ def loop_subs(beziers):
 
 def halo(st, svg, out, nodes, tracks, how, report):
     ras = Raster()
-    # a part the svg hides is not in its outline at rest
-    draws = [d for d in out.draws if not d['hidden'] and not d['clear']]
-    clear = [d for d in out.draws if not d['hidden'] and d['clear']]
+    live = [d for d in out.draws if not d['hidden']]
+    fades = {n: fk for n, prop, _, fk in tracks if prop == 5}
+    own = {}
+
+    def field(n):
+        # a part the art fades, alone and at full alpha
+        if n not in own:
+            own[n] = blur(ras.alpha([d for d in live if n in d['nodes']], lambda d: d['bare']), how)
+        return own[n]
+    # a faded part whose outline does not show at rest (the svg's die-cut
+    # leaves it out) is not in the outline at rest: it traces its own
+    hid = {n for n in nodes if n.held and n.rest < 1
+           and (n.rest == 0 or n.rest * field(n).max() < RIM[0][0])}
+    draws = [d for d in live if not any(n in hid for n in d['nodes'])]
+    clear = [d for d in live if any(n in hid for n in d['nodes'])]
     times = sample_times(st.loop, tracks)
     moving = {tk[0] for tk in tracks}
     # a node moves if it or anything above it has tracks
@@ -2204,7 +2226,38 @@ def halo(st, svg, out, nodes, tracks, how, report):
     ops = []
     pieces = []
 
-    def emit_piece(o, piece):
+    def outline_node(o, at):
+        # what an outline hangs from: its part, or for a part the art fades
+        # a copy of it whose alpha is the share of the outline traced at
+        # alpha `at` that the svg's die-cut keeps at the part's alpha
+        if o is None or not o.held or o not in fades:
+            return o
+        f = field(o)
+        b = np.sort(f[f > 0].ravel())
+
+        def area(x):
+            return 0 if x <= 0 else len(b) - np.searchsorted(b, LEVEL / x)
+        full = area(at)
+        ts = np.arange(st.loop + 1)
+        a = np.array([track_at(fades[o], t) for t in ts])
+        g = np.array([min(1.0, area(x) / full) if full else 0.0 for x in a])
+        if np.abs(g - a).max() < 1e-3:
+            return o
+        if g.max() == 0:
+            return None
+        t = Node(f'{owner_name(o)} outline', o.els, o.pivot_in, o.line)
+        t.index = len(nodes)
+        nodes.append(t)
+        t.parent, t.pivot, t.frame, t.k = o.parent, o.pivot, o.frame, o.k
+        for m, prop, qk, fk in list(tracks):
+            if m is o and prop < 5:
+                tracks.append((t, prop, qk, fk))
+        if g.min() < 1:
+            qk = [(k, qvalue(5, v), 0) for k, v in simplify(ts, g, 0.004)]
+            tracks.append((t, 5, qk, [(k, dqvalue(5, v), e) for k, v, e in qk]))
+        return t
+
+    def emit_piece(o, piece, at=1.0):
         if piece.max() < LEVEL:
             return
         rims = []
@@ -2218,7 +2271,10 @@ def halo(st, svg, out, nodes, tracks, how, report):
                 rims.append((subs, alpha))
         if not rims:
             return
-        chain = [] if o is None else ancestors(o)[::-1] + [o]
+        top = outline_node(o, at)
+        if o is not None and top is None:
+            return
+        chain = [] if o is None else ancestors(o)[::-1] + [top]
         for n in chain:
             ops.append((OP_PUSH << 13) | n.index)
         white = out.colour_ix(0xFFFFFF)
@@ -2238,17 +2294,40 @@ def halo(st, svg, out, nodes, tracks, how, report):
             # the bridge grown by 2 px (two sigmas of a 1 px blur), smooth
             bf = blur(extra[o].astype(np.float32), 'grow')
             g = np.maximum(g, LEVEL * bf / 0.02275)
-        emit_piece(o, np.minimum(A, g))
-    # a hidden part's outline, traced as if it showed: it comes and goes
-    # with the part, under its alpha
+        emit_piece(o, np.minimum(A, g), o.rest if o is not None and o.held else 1.0)
+    # a hidden part's outline, traced as if it showed at its brightest: it
+    # comes and goes with the part
     shown = {}
     for d in clear:
         shown.setdefault(owner_of(d, moving), []).append(d)
     for o, ds in shown.items():
-        emit_piece(o, blur(ras.alpha(ds), how))
+        peak = {}
+        for d in ds:
+            h = next(n for n in reversed(d['nodes']) if n in hid)
+            peak[id(d)] = max(v for _, v, _ in fades[h]) if h in fades else h.rest
+        emit_piece(o, blur(ras.alpha(ds, lambda d: d['bare'] * peak[id(d)]), how),
+                   max(peak.values()))
     report.append('  halo: ' + ', '.join(f'{n} {c}' for n, c in pieces))
     report.extend(lines)
     return ops
+
+
+def simplify(ts, vs, eps):
+    # the fewest points whose straight lines stay within eps of vs
+    keep = {0, len(ts) - 1}
+    todo = [(0, len(ts) - 1)]
+    while todo:
+        i, j = todo.pop()
+        if j <= i + 1:
+            continue
+        line = vs[i] + (vs[j] - vs[i]) * (ts[i + 1:j] - ts[i]) / (ts[j] - ts[i])
+        err = np.abs(vs[i + 1:j] - line)
+        k = int(np.argmax(err))
+        if err[k] > eps:
+            m = i + 1 + k
+            keep.add(m)
+            todo += [(i, m), (m, j)]
+    return [(int(ts[k]), float(vs[k])) for k in sorted(keep)]
 
 
 def owner_name(o):
@@ -2535,9 +2614,11 @@ class Still:
         self.ops = rd(f'{nops}H')
         # where a node's alpha track starts; 1 without one
         self.rest = [1.0] * len(self.hidden)
+        self.tracks = {}
         for _ in range(rd('H')[0]):
             n, prop, nk = rd('HBB')
             keys = [rd('HhB') for _ in range(nk)]
+            self.tracks[(n, prop)] = [(t, dqvalue(prop, v), e) for t, v, e in keys]
             if prop == 5:
                 self.rest[n] = dqvalue(5, keys[0][1])
         self.jump = {}
@@ -2846,14 +2927,16 @@ OPACITY_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><
 <rect x="170" y="70" width="60" height="60" fill="#000000"/></g>
 <g id="gone" opacity="0"><rect x="40" y="300" width="60" height="60" fill="#000000"/></g>
 <g id="bolt" opacity="0"><rect x="300" y="300" width="60" height="60" fill="#000000"/></g>
+<g id="fade" opacity="0.5"><rect x="300" y="40" width="60" height="60" fill="#000000"/></g>
 </g></g></svg>'''
 
 
 def selftest_opacity():
     # group opacity, through the compiler and the still painter: a group
     # with one draw fades its paint, one whose draws overlap fades as a
-    # layer, a hidden one draws nothing, and a hidden one a node moves
-    # rests at alpha 0 with its outline, which its track brings in
+    # layer, a hidden one draws nothing, a hidden one a node moves rests at
+    # alpha 0 with its outline, which its track brings in, and a faint one a
+    # node fades keeps the svg's opaque outline on a node of its own
     with tempfile.TemporaryDirectory() as tmp:
         tmp = Path(tmp)
         (tmp / 'fixture-90-test.svg').write_text(OPACITY_SVG)
@@ -2866,7 +2949,8 @@ def selftest_opacity():
                                       palette, 'box3', [])
             pal = [0xFF000000 | rgb for rgb, _ in sorted(palette.items(), key=lambda kv: kv[1])]
             return Still(blob), pal
-        st, pal = run('  node bolt bolt\n  alpha bolt 0:0 500:1:hold 1500:0:hold 2000:0:linear\n')
+        st, pal = run('  node bolt bolt\n  alpha bolt 0:0 500:1:hold 1500:0:hold 2000:0:linear\n'
+                      '  node fade fade\n  alpha fade 0:0.5 500:0:linear 1500:1:linear 2000:0.5:linear\n')
         img = paint_still(st, pal)
 
         def grey(x, y):
@@ -2877,6 +2961,14 @@ def selftest_opacity():
         assert (OP_LAYER << 13 | 128) in st.ops
         for x, y in ((70, 330), (330, 330), (330, 296)):
             assert img[y, x, 3] == 0, (x, y, img[y, x])
+        # the faded one: half its ink at rest over an opaque outline, which
+        # hangs from a copy of its node that is gone when the part is and
+        # whole again above the die-cut's reach
+        assert abs(grey(330, 70) - 0.5) < 0.01 and img[36, 330, 3] > 0.99 and grey(330, 36) > 0.99
+        assert len(st.hidden) == 3, 'the bolt needs no outline node: it only snaps'
+        gate = st.tracks[(2, 5)]
+        assert gate[0][1] == 1 and gate[-1][1] == 1, gate
+        assert track_at(gate, 500) == 0 and track_at(gate, 1500) == 1, gate
         # the node's alpha at 1: the part and its outline are back
         n = st.rest.index(0.0)
         st.rest[n] = 1.0

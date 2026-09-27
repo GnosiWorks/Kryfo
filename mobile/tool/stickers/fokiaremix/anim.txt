@@ -4,8 +4,8 @@
 #   title WORDS                               the name the picker shows
 #   sticker NN name loop=MS emoji=E since=N   no loop: a still
 #
-# a node on a group the svg hides (opacity 0) rests at alpha 0: its alpha
-# track starts and ends at 0.
+# a node on a group with an opacity rests at that alpha: its alpha track
+# starts and ends there.
 #
 # while no sticker in a pack moves, the picker offers its stills; once
 # one moves, only the moving ones.
@@ -241,14 +241,16 @@ sticker 35 sipping-tea loop=3000 emoji=🍵 since=1
 sticker 36 tiny-violin loop=3000 emoji=🎻 since=1
   # plays: the bow slides along itself with the paw, three strokes a loop,
   # the arm swings and shortens to follow, the head rocks with each stroke.
-  # the notes float up one after another; each shrinks away at the top and
-  # comes back from behind the head
+  # the notes float up one after another, strong at the bottom and fading as
+  # they rise, and drift left and back together; each is gone near the top
+  # and grows back from behind the head
   node bow   flipper_right[0:2]  @129.8,332.6
   node paw   flipper_right[5]    @265.7,271.7
   node arm   flipper_right[2:5]  @344,300      pivot=shoulder_r
   node note0 props_back[0]       @-6,14  pivot=148.6,199.1
   node note1 props_back[1]       @-6,14  pivot=135.3,142.4
   node note2 props_back[2]       @-6,14  pivot=121.9,85.8
+  node notes props_back
   x     bow   0:0 370:47.528:sineout 420:47.528:linear 904:-12.332:sine 1000:0:sinein 1370:47.528:sineout 1420:47.528:linear 1904:-12.332:sine 2000:0:sinein 2370:47.528:sineout 2420:47.528:linear 2904:-12.332:sine 3000:0:sinein !
   y     bow   0:0 370:-21.112:sineout 420:-21.112:linear 904:5.478:sine 1000:0:sinein 1370:-21.112:sineout 1420:-21.112:linear 1904:5.478:sine 2000:0:sinein 2370:-21.112:sineout 2420:-21.112:linear 2904:5.478:sine 3000:0:sinein !
   x     paw   0:0 370:47.528:sineout 420:47.528:linear 904:-12.332:sine 1000:0:sinein 1370:47.528:sineout 1420:47.528:linear 1904:-12.332:sine 2000:0:sinein 2370:47.528:sineout 2420:47.528:linear 2904:-12.332:sine 3000:0:sinein !
@@ -259,17 +261,22 @@ sticker 36 tiny-violin loop=3000 emoji=🎻 since=1
   x     note0 0:0 2600:-34.58:linear 2601:5.307:hold 3000:0:linear !
   y     note0 0:0 2600:-147.42:linear 2601:22.623:hold 3000:0:linear !
   scale note0 0:1 2000:1:linear 2600:0:in 2601:0.3:hold 3000:1:out !
+  alpha note0 0:0.7 1000:0.37:linear 2000:0.03:linear 2088:0:linear 2601:0.832:hold 3000:0.7:linear
   x     note1 0:0 1600:-21.28:linear 1601:18.607:hold 3000:0:linear !
   y     note1 0:0 1600:-90.72:linear 1601:79.323:hold 3000:0:linear !
   scale note1 0:1 1000:1:linear 1600:0:in 1601:0.3:hold 2000:1:out 3000:1:linear !
+  alpha note1 0:0.37 1000:0.03:linear 1088:0:linear 1601:0.832:hold 2000:0.7:linear 3000:0.37:linear
   x     note2 0:0 600:-7.98:linear 601:31.907:hold 3000:0:linear !
   y     note2 0:0 600:-34.02:linear 601:136.023:hold 3000:0:linear !
   scale note2 0:1 600:0:in 601:0.3:hold 1000:1:out 3000:1:linear !
+  alpha note2 0:0.03 88:0:linear 601:0.832:hold 1000:0.7:linear 2000:0.37:linear 3000:0.03:linear
+  x     notes 0:0 1500:-18.2:sine 3000:0:sine !
 
 sticker 37 vibing loop=2000 emoji=🎧 since=1
   # grooves to the music: the body sways from the feet and dips on every
   # beat, the head rocks further, the paws lift in turn. the notes float up
-  # one side then the other; each shrinks away and comes back from below
+  # one side then the other, swaying, and fade as they rise; each pops back
+  # in at the bottom as it fades out at the top
   node pawl  flipper_left    @168,300  pivot=shoulder_l
   node pawr  flipper_right   @344,300  pivot=shoulder_r
   node note0 props_back[0]   @-6,14    pivot=81.2,125.1
@@ -280,10 +287,12 @@ sticker 37 vibing loop=2000 emoji=🎧 since=1
   shiver head -6.5 1000 0 2000 pivot=256,280 !
   y     pawr  0:0 250:-18 500:0 1000:0 1250:-18 1500:0 2000:0 !
   y     pawl  0:0 500:0 750:-18 1000:0 1500:0 1750:-18 2000:0 !
-  y     note1 0:0 750:-112:linear 751:22:hold 850:22:linear 1000:0:linear 1750:-112:linear 1751:22:hold 1850:22:linear 2000:0:linear !
-  scale note1 0:1 450:1 750:0:in 850:0:linear 1000:1:out 1450:1 1750:0:in 1850:0:linear 2000:1:out !
-  y     note0 0:0 250:-37:linear 251:97:hold 350:97:linear 1000:0:linear 1250:-37:linear 1251:97:hold 1350:97:linear 2000:0:linear !
-  scale note0 0:1 250:0:in 350:0:linear 500:1:out 1000:1:linear 1250:0:in 1350:0:linear 1500:1:out 2000:1:linear !
+  y     note1 0:0 960:-143.04:linear 961:5.811:hold 1000:0:linear 1960:-143.04:linear 1961:5.811:hold 2000:0:linear !
+  alpha note1 0:1 100:0.9:sinein 900:0.1:linear 960:0:linear 961:1:hold 1000:1:linear 1100:0.9:sinein 1900:0.1:linear 1960:0:linear 1961:1:hold 2000:1:linear
+  shiver note1 -6.7 1000 0 2000 prop=x
+  y     note0 0:0 453:-67.497:linear 454:81.354:hold 1000:0:linear 1453:-67.497:linear 1454:81.354:hold 2000:0:linear !
+  alpha note0 0:0.5 393:0.1:linear 453:0:linear 454:1:hold 493:1:linear 593:0.9:sinein 1000:0.5:linear 1393:0.1:linear 1453:0:linear 1454:1:hold 1493:1:linear 1593:0.9:sinein 2000:0.5:linear
+  shiver note0 -6.7 1000 0 2000 prop=x
   clear note0 head 3
   clear note1 head 4
   clear pawl head 4

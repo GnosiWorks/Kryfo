@@ -96,7 +96,7 @@ Float64List evaluateSticker(Sticker s, double t, [Float64List? out]) {
 }
 
 /// a node's transform at rest: nothing to walk. alpha is left out, as a
-/// part the svg hides rests at 0
+/// part the art fades rests at its own
 bool nodeAtRest(Float64List v, int n) {
   final o = n * 6;
   return v[o] == 0 &&

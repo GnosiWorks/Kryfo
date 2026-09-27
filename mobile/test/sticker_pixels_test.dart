@@ -157,7 +157,45 @@ void main() {
       }
       expect(_ink(await frame(44, 100), 371, 134, 394, 194), greaterThan(200));
     });
+
+    testWidgets('notes fade as they rise and keep the svg\'s outline', (
+      tester,
+    ) async {
+      final pack = loadPack(remixFiles);
+      Future<Uint8List> frame(int id, [double? t]) async => (await tester
+          .runAsync(() => renderSticker(pack.sticker(id)!, t: t)))!;
+      const black = 244;
+      // tiny violin halfway: the note coming up is strong, the one near the
+      // top faint
+      final f = await frame(36, 1500);
+      expect(_ink(f, 114, 170, 144, 202), closeTo(0.535 * black, 16));
+      expect(_ink(f, 100, 118, 132, 152), closeTo(0.2 * black, 16));
+      // vibing: the right note near the bottom, then near the top
+      expect(
+        _ink(await frame(37, 100), 385, 165, 418, 198),
+        closeTo(0.9 * black, 16),
+      );
+      expect(
+        _ink(await frame(37, 700), 425, 95, 458, 132),
+        closeTo(0.3 * black, 16),
+      );
+      // the left note at rest is half ink over an opaque white outline, as
+      // the svg's die-cut draws it, not an outline faded with the note
+      expect(_white(await frame(37), 79, 103, 120, 154), greaterThan(300));
+    });
   });
+}
+
+// opaque white pixels in a box: the outline showing in full
+int _white(Uint8List px, int x0, int y0, int x1, int y1) {
+  var n = 0;
+  for (var y = y0; y < y1; y++) {
+    for (var x = x0; x < x1; x++) {
+      final i = (y * 512 + x) * 4;
+      if (px[i + 3] == 255 && px[i + 1] >= 250) n++;
+    }
+  }
+  return n;
 }
 
 // the darkest a box gets: alpha less green in premultiplied rgba, so a faint

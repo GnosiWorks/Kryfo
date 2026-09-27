@@ -83,8 +83,8 @@ class Sticker {
   final Int32List nodeParent;
   final Float64List pivotX, pivotY, frameCos, frameSin, frameScale;
   final Uint8List nodeFlags;
-  // each node's alpha in the still: where its alpha track starts, 0 for a
-  // part the svg hides
+  // each node's alpha in the still: where its alpha track starts, the
+  // opacity of a group the art fades, else 1
   final Float64List restAlpha;
   final Uint16List ops;
   // for each save, push or layer: the index of its pop
