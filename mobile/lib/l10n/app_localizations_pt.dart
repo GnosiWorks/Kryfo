@@ -1024,6 +1024,21 @@ class AppLocalizationsPt extends AppLocalizations {
   String get backupCreateBackup => 'Criar backup';
 
   @override
+  String get backupHiddenNotIn => 'As conversas ocultas não estão nele.';
+
+  @override
+  String get backupHiddenIncluded =>
+      'Suas conversas ocultas também estão nele.';
+
+  @override
+  String get backupMoveHiddenStay =>
+      'As conversas ocultas ficam neste celular e são apagadas com ele.';
+
+  @override
+  String get backupHiddenGone =>
+      'Suas conversas ocultas se fecharam quando o Kryfo bloqueou. Abra-as com o PIN delas e faça o backup por lá.';
+
+  @override
   String get blockedBlocked => 'Bloqueados';
 
   @override
@@ -6430,6 +6445,21 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get restoreAttachments => 'anexos';
+
+  @override
+  String get restoreHiddenChats => 'conversas ocultas';
+
+  @override
+  String get restoreHiddenFollow =>
+      'Suas conversas ocultas, com um novo PIN das conversas ocultas que você escolhe no final.';
+
+  @override
+  String get restoreChooseHiddenPin =>
+      'Este backup guarda conversas ocultas. Escolha um PIN das conversas ocultas para elas.';
+
+  @override
+  String get restoreHiddenLockFirst =>
+      'As conversas ocultas precisam do bloqueio do app, então o Kryfo ganha primeiro um PIN próprio.';
 
   @override
   String get shieldBlock => 'Bloquear';

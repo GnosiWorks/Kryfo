@@ -1061,6 +1061,26 @@ class HaloDb {
     await d?.close();
   }
 
+  // the file copied to [to] whole: a read holds the lock that keeps every
+  // writer out until the copy is done
+  Future<void> copyTo(String to) async {
+    final db = await open();
+    await checkpoint();
+    await db.transaction((t) async {
+      await t.rawQuery('SELECT COUNT(*) FROM sqlite_master');
+      await File(await container.dbPath()).copy(to);
+    });
+  }
+
+  // a wrapped container copied for a backup, and the key it opens with,
+  // which the backup carries inside its own encryption
+  Future<String> copyWithKey(String to) async {
+    final key = _given;
+    if (key == null) throw StateError('${container.dbFile} has no key here');
+    await copyTo(to);
+    return key.substring(2, key.length - 1);
+  }
+
   // a wrapped container attached to another database's connection under
   // its own key, so rows move between the two a statement at a time. the
   // key stays in here
@@ -10674,6 +10694,15 @@ class AppState extends ChangeNotifier {
     _xPubToHaloId[xPub] = haloId;
     _io.listen(xPub);
   }
+
+  // a backup reads the databases while no hide, show or close runs, so its
+  // copies agree and a vault shut on the way shuts after it, never half
+  // way through. the vault is the session's open one, or with made the one
+  // a setup just made; null when there is none at hand
+  Future<T> backupStill<T>(
+    Future<T> Function(HaloDb? vault) work, {
+    bool made = false,
+  }) => _serial(() => work(made ? _madeVault : _session.vault));
 
   // the export that moved this identity writes the mark; the moved screen
   // clears it when the person says they are not moving after all

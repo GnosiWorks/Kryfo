@@ -1281,6 +1281,22 @@
   "@backupCreateBackup": {
     "description": "screens/backup_screen.dart"
   },
+  "backupHiddenNotIn": "Hidden chats are not in it.",
+  "@backupHiddenNotIn": {
+    "description": "screens/backup_screen.dart: under every backup made outside the hidden chats, whether or not there are any"
+  },
+  "backupHiddenIncluded": "Your hidden chats are in it too.",
+  "@backupHiddenIncluded": {
+    "description": "screens/backup_screen.dart: a backup made with the hidden chats open, or from their setup"
+  },
+  "backupMoveHiddenStay": "Hidden chats stay on this phone and are wiped with it.",
+  "@backupMoveHiddenStay": {
+    "description": "screens/backup_screen.dart: under every move made outside the hidden chats, whether or not there are any"
+  },
+  "backupHiddenGone": "Your hidden chats closed when Kryfo locked. Open them with their PIN and back up from there.",
+  "@backupHiddenGone": {
+    "description": "screens/backup_screen.dart: a backup that was to hold the hidden chats, which closed with the lock first"
+  },
   "blockedBlocked": "Blocked",
   "@blockedBlocked": {
     "description": "screens/blocked_screen.dart"
@@ -8114,6 +8130,22 @@
   "restoreAttachments": "attachments",
   "@restoreAttachments": {
     "description": "screens/restore_screen.dart"
+  },
+  "restoreHiddenChats": "hidden chats",
+  "@restoreHiddenChats": {
+    "description": "screens/restore_screen.dart: what comes back, a label beside the number of hidden chats (lowercase like contacts and messages)"
+  },
+  "restoreHiddenFollow": "Your hidden chats, under a new hidden chats PIN you choose at the end.",
+  "@restoreHiddenFollow": {
+    "description": "screens/restore_screen.dart: what follows a restore of a backup that holds hidden chats"
+  },
+  "restoreChooseHiddenPin": "This backup holds hidden chats. Choose a hidden chats PIN for them.",
+  "@restoreChooseHiddenPin": {
+    "description": "screens/pin_flow_screen.dart: after a restore of a backup that holds hidden chats"
+  },
+  "restoreHiddenLockFirst": "Hidden chats need the app lock, so Kryfo gets a PIN of its own first.",
+  "@restoreHiddenLockFirst": {
+    "description": "screens/pin_flow_screen.dart: after a restore of a backup that holds hidden chats, when there is no app lock yet"
   },
   "shieldBlock": "Block",
   "@shieldBlock": {

@@ -1006,6 +1006,21 @@ class AppLocalizationsVi extends AppLocalizations {
   String get backupCreateBackup => 'Tạo bản sao lưu';
 
   @override
+  String get backupHiddenNotIn => 'Trò chuyện ẩn không có trong tệp này.';
+
+  @override
+  String get backupHiddenIncluded =>
+      'Trò chuyện ẩn của bạn cũng có trong tệp này.';
+
+  @override
+  String get backupMoveHiddenStay =>
+      'Trò chuyện ẩn ở lại trên điện thoại này và bị xóa cùng với nó.';
+
+  @override
+  String get backupHiddenGone =>
+      'Trò chuyện ẩn của bạn đã đóng khi Kryfo khóa. Hãy mở chúng bằng mã PIN của chúng rồi sao lưu từ đó.';
+
+  @override
   String get blockedBlocked => 'Đã chặn';
 
   @override
@@ -6368,6 +6383,21 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get restoreAttachments => 'tệp đính kèm';
+
+  @override
+  String get restoreHiddenChats => 'trò chuyện ẩn';
+
+  @override
+  String get restoreHiddenFollow =>
+      'Trò chuyện ẩn của bạn, với mã PIN trò chuyện ẩn mới mà bạn chọn ở cuối.';
+
+  @override
+  String get restoreChooseHiddenPin =>
+      'Bản sao lưu này có trò chuyện ẩn. Hãy chọn mã PIN trò chuyện ẩn cho chúng.';
+
+  @override
+  String get restoreHiddenLockFirst =>
+      'Trò chuyện ẩn cần khóa ứng dụng, nên trước tiên Kryfo sẽ có mã PIN riêng.';
 
   @override
   String get shieldBlock => 'Chặn';

@@ -1057,6 +1057,20 @@ class AppLocalizationsAr extends AppLocalizations {
   String get backupCreateBackup => 'إنشاء نسخة احتياطية';
 
   @override
+  String get backupHiddenNotIn => 'المحادثات المخفية ليست فيه.';
+
+  @override
+  String get backupHiddenIncluded => 'ومحادثاتك المخفية فيه أيضًا.';
+
+  @override
+  String get backupMoveHiddenStay =>
+      'تبقى المحادثات المخفية على هذا الهاتف وتُمسح معه.';
+
+  @override
+  String get backupHiddenGone =>
+      'أُغلقت محادثاتك المخفية حين قُفل Kryfo. افتحها برمز PIN الخاص بها وأنشئ النسخة الاحتياطية من هناك.';
+
+  @override
   String get blockedBlocked => 'المحظورون';
 
   @override
@@ -6492,6 +6506,21 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get restoreAttachments => 'المرفقات';
+
+  @override
+  String get restoreHiddenChats => 'المحادثات المخفية';
+
+  @override
+  String get restoreHiddenFollow =>
+      'محادثاتك المخفية، برمز PIN جديد للمحادثات المخفية تختاره في النهاية.';
+
+  @override
+  String get restoreChooseHiddenPin =>
+      'تضم هذه النسخة الاحتياطية محادثات مخفية. اختر لها رمز PIN للمحادثات المخفية.';
+
+  @override
+  String get restoreHiddenLockFirst =>
+      'المحادثات المخفية تحتاج إلى قفل التطبيق، لذلك يحصل Kryfo أولًا على رمز PIN خاص به.';
 
   @override
   String get shieldBlock => 'حظر';

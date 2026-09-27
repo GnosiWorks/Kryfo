@@ -20,7 +20,9 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import '../backup_stream.dart' show isBackupV2;
 import '../widgets/halo_sheet.dart';
+import '../widgets/motion.dart' show haloRoute;
 import '../widgets/sheet_handle.dart';
+import 'pin_flow_screen.dart';
 import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
 import '../l10n/numbers.dart';
@@ -217,6 +219,14 @@ class _RestoreScreenState extends State<RestoreScreen> {
       if (sameIdentity && mine != null) await keepHandleIfDropped(mine);
       if (!mounted) return;
       HapticFeedback.mediumImpact();
+      // hidden chats came back: they open with a PIN chosen now, and the
+      // app lock first if there is none
+      if (restoredHidden) {
+        await Navigator.of(context).push<bool>(
+          haloRoute(const PinFlowScreen(flow: PinFlow.vault, restoring: true)),
+        );
+        if (!mounted) return;
+      }
       if (widget.onRestored != null) {
         widget.onRestored!();
         return;
@@ -300,6 +310,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
                 _item(l10n.restoreYourOnionAddressSo),
                 _item(l10n.restoreAnythingSentToYou),
                 _item(l10n.restoreYourSupporterBadgeIf),
+                if (s.hiddenChats != null) _item(l10n.restoreHiddenFollow),
                 const SizedBox(height: 16),
                 _head(l10n.restoreWhatDoesnT),
                 _item(l10n.restoreTheOldPhoneStops, strong: true),
@@ -380,6 +391,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
   @override
   Widget build(BuildContext context) {
     final s = _summary;
+    final still = MediaQuery.of(context).disableAnimations;
     return Scaffold(
       backgroundColor: HaloColors.surface,
       appBar: AppBar(
@@ -394,7 +406,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(22, 4, 22, 32),
-          children: staggerAll([
+          children: staggerAllIn(context, [
             Text(
               l10n.restoreFromABackupFile,
               style: HaloType.serif(size: 26, color: HaloColors.text),
@@ -455,7 +467,9 @@ class _RestoreScreenState extends State<RestoreScreen> {
             ),
             const SizedBox(height: 14),
             AnimatedSize(
-              duration: const Duration(milliseconds: 220),
+              duration: still
+                  ? Duration.zero
+                  : const Duration(milliseconds: 220),
               curve: Curves.easeOutCubic,
               alignment: Alignment.topCenter,
               child: !_hasFile
@@ -502,7 +516,9 @@ class _RestoreScreenState extends State<RestoreScreen> {
                     ),
             ),
             AnimatedSize(
-              duration: const Duration(milliseconds: 220),
+              duration: still
+                  ? Duration.zero
+                  : const Duration(milliseconds: 220),
               curve: Curves.easeOutCubic,
               alignment: Alignment.topCenter,
               child: _error == null
@@ -516,7 +532,9 @@ class _RestoreScreenState extends State<RestoreScreen> {
                     ),
             ),
             AnimatedSize(
-              duration: const Duration(milliseconds: 240),
+              duration: still
+                  ? Duration.zero
+                  : const Duration(milliseconds: 240),
               curve: Curves.easeOutCubic,
               alignment: Alignment.topCenter,
               child: s == null
@@ -643,6 +661,8 @@ class _SummaryCard extends StatelessWidget {
           _line(l10n.restoreMade, date),
           _line(l10n.restoreContacts, '${summary.contacts}'),
           _line(l10n.restoreMessages, '${summary.messages}'),
+          if (summary.hiddenChats case final n?)
+            _line(l10n.restoreHiddenChats, '$n'),
           if (summary.files > 0)
             _line(
               l10n.restoreAttachments,
@@ -689,7 +709,9 @@ class _Primary extends StatelessWidget {
     return PressScale(
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
+        duration: MediaQuery.of(context).disableAnimations
+            ? Duration.zero
+            : const Duration(milliseconds: 160),
         height: 48,
         alignment: Alignment.center,
         decoration: BoxDecoration(

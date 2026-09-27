@@ -981,6 +981,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backupCreateBackup => '创建备份';
 
   @override
+  String get backupHiddenNotIn => '隐藏聊天不在其中。';
+
+  @override
+  String get backupHiddenIncluded => '你的隐藏聊天也在其中。';
+
+  @override
+  String get backupMoveHiddenStay => '隐藏聊天留在这部手机上，并随它一起抹掉。';
+
+  @override
+  String get backupHiddenGone => 'Kryfo 锁定时，你的隐藏聊天已关闭。用隐藏聊天 PIN 打开它们，再从那里备份。';
+
+  @override
   String get blockedBlocked => '已屏蔽';
 
   @override
@@ -6138,6 +6150,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get restoreAttachments => '附件';
 
   @override
+  String get restoreHiddenChats => '隐藏聊天';
+
+  @override
+  String get restoreHiddenFollow => '你的隐藏聊天，用你最后选择的新隐藏聊天 PIN 保护。';
+
+  @override
+  String get restoreChooseHiddenPin => '这份备份包含隐藏聊天。为它们选择一个隐藏聊天 PIN。';
+
+  @override
+  String get restoreHiddenLockFirst => '隐藏聊天需要应用锁，所以先给 Kryfo 设一个自己的 PIN。';
+
+  @override
   String get shieldBlock => '屏蔽';
 
   @override
@@ -7851,6 +7875,18 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get backupCreateBackup => '建立備份';
+
+  @override
+  String get backupHiddenNotIn => '隱藏聊天不在其中。';
+
+  @override
+  String get backupHiddenIncluded => '你的隱藏聊天也在其中。';
+
+  @override
+  String get backupMoveHiddenStay => '隱藏聊天留在這支手機上，並隨它一起清除。';
+
+  @override
+  String get backupHiddenGone => 'Kryfo 鎖定時，你的隱藏聊天已關閉。用隱藏聊天 PIN 開啟它們，再從那裡備份。';
 
   @override
   String get blockedBlocked => '已封鎖';
@@ -13008,6 +13044,18 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get restoreAttachments => '附件';
+
+  @override
+  String get restoreHiddenChats => '隱藏聊天';
+
+  @override
+  String get restoreHiddenFollow => '你的隱藏聊天，用你最後選擇的新隱藏聊天 PIN 保護。';
+
+  @override
+  String get restoreChooseHiddenPin => '這份備份包含隱藏聊天。為它們選擇一組隱藏聊天 PIN。';
+
+  @override
+  String get restoreHiddenLockFirst => '隱藏聊天需要應用程式鎖，所以先給 Kryfo 設一組自己的 PIN。';
 
   @override
   String get shieldBlock => '封鎖';

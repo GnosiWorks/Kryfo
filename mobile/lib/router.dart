@@ -695,3 +695,39 @@ class VaultRouter {
   // the open vault's own half of its key pair, kept in the vault
   static Future<String?> sealKeyIn(RouterStore vault) => vault.meta('priv');
 }
+
+// a copy of the everyday database made to carry nothing of hidden chats: the
+// list, the vault's key and what came sealed go, and everyone the list names
+// leaves the signal store, so where the copy lands their messages never
+// open. freed pages are zeroed. who the list named
+Future<Set<String>> scrubHidden(Database db) async {
+  final router = VaultRouter(SqlRouterStore(() async => db), const _NoSeal());
+  await router.load();
+  final people = router.ids;
+  await db.rawQuery('PRAGMA secure_delete = 1');
+  await db.transaction((t) async {
+    await t.delete('hidden_chats');
+    await t.delete('vault_meta');
+    await t.delete('vault_inbox');
+    final ids = people.toList();
+    for (var i = 0; i < ids.length; i += 400) {
+      final part = ids.sublist(i, i + 400 > ids.length ? ids.length : i + 400);
+      final marks = List.filled(part.length, '?').join(', ');
+      for (final table in const ['sessions', 'peer_identities']) {
+        await t.delete(table, where: 'address IN ($marks)', whereArgs: part);
+      }
+    }
+  });
+  return people;
+}
+
+// a scrub reads the list and seals nothing
+class _NoSeal implements VaultSeal {
+  const _NoSeal();
+  @override
+  String? seal(String pub, String b64) => null;
+  @override
+  List<String?> openMany(String priv, List<String> b64s) => [
+    for (final _ in b64s) null,
+  ];
+}

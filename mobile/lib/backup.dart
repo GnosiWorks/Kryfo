@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // full backup of identity, db, prefs and media, encrypted with a user
 // passphrase by the engine (scrypt and aes-gcm). a v1 backup is one text
-// blob; v2 is the streamed file below.
+// blob; v2 is the streamed file below. one made with the hidden chats open
+// carries them too, under vault/ names, with their key in the manifest.
 
 import 'dart:async';
 import 'dart:convert';
@@ -9,14 +10,17 @@ import 'dart:ffi';
 import 'dart:io';
 import 'dart:isolate';
 import 'package:ffi/ffi.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'container.dart';
+import 'lock_state.dart' show LockState, lockState;
 import 'main.dart'
     show
+        HaloDb,
         TwoArgFn,
         TwoArgFnDart,
         appState,
@@ -25,6 +29,7 @@ import 'main.dart'
         sessionQuiet,
         engine,
         shredFile;
+import 'router.dart' show scrubHidden;
 import 'dlog.dart';
 import 'dart:typed_data';
 import 'backup_stream.dart';
@@ -84,6 +89,9 @@ class BackupSummary {
   final String haloId;
   final int contacts;
   final int messages;
+  // how many chats and groups it holds hidden, null when it holds none that
+  // come back here
+  final int? hiddenChats;
   const BackupSummary({
     required this.when,
     required this.version,
@@ -93,6 +101,7 @@ class BackupSummary {
     this.bytes = 0,
     this.files = 0,
     this.moved,
+    this.hiddenChats,
   });
 }
 
@@ -198,6 +207,15 @@ Future<void> restoreBackupBlob(String blob, String passphrase) async {
   final dbBytes = base64Decode(payload['db'] as String);
   final dbPath = p.join(docsDir.path, 'halo.db');
   await File(dbPath).writeAsBytes(dbBytes, flush: true);
+  // hidden chats of the account just replaced go with it
+  if (!sessionQuiet) {
+    await landHidden(
+      docsDir.path,
+      null,
+      const {},
+      clearEntry: lockState.clearVault,
+    );
+  }
 
   final onionKeyB64 = payload['onionKey'] as String?;
   if (onionKeyB64 != null) {
@@ -245,6 +263,48 @@ Future<void> restoreBackupBlob(String blob, String passphrase) async {
 // layout. the cryptography is the engine's (HaloBackupKey, HaloSealChunk,
 // HaloOpenChunk); it is reached from a worker isolate, which opens the
 // library itself, so scrypt and a year of photos never block the screen.
+
+// a file that carries hidden chats says 3, so an older Kryfo says it is from
+// a newer one instead of leaving them behind
+const kBackupVersion = 2;
+const kBackupVersionHidden = 3;
+
+// the hidden chats' files in a backup: their database and their folders
+const kHiddenDir = 'vault';
+const kHiddenDb = '$kHiddenDir/halo_v.db';
+
+// the rest of a name under vault/, null for a name of the everyday side
+String? hiddenPart(String name) => name.startsWith('$kHiddenDir/')
+    ? name.substring(kHiddenDir.length + 1)
+    : null;
+
+// the key of the hidden chats a manifest carries, null when it carries none
+String? hiddenKeyOf(Map<String, dynamic> m) {
+  final v = m['vault'];
+  if (v == null) return null;
+  final k = v is Map ? v['key'] : null;
+  if (k is! String || !RegExp(r'^[0-9a-fA-F]{64}$').hasMatch(k)) {
+    throw const BackupDamaged('hidden chats key');
+  }
+  return k;
+}
+
+// a backup made in this session carries the hidden chats: they are open
+bool get sessionBackupHasHidden => session.vault != null;
+
+// what a backup holds: the hidden chats of its identity when they are open
+// or a setup just hid them ([made]). one from a setup never moves, and a
+// decoy never does
+({bool hidden, bool made, bool move}) backupShape({
+  required bool quiet,
+  required bool open,
+  required bool setup,
+  required bool move,
+}) => (
+  hidden: open || setup,
+  made: setup && !open,
+  move: move && !setup && !quiet,
+);
 
 typedef _KeyFn = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Uint8>);
 typedef _KeyFnDart = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Uint8>);
@@ -345,6 +405,33 @@ Future<List<BackupFileEntry>> _filesToCarry(Directory docs) async {
   return out;
 }
 
+// a container's photos, voice notes, files and wallpapers as they are on
+// disk, under the names a backup gives them: [under] then media/.. or
+// wallpapers/..
+Future<void> _addFolders(
+  List<BackupFileEntry> files,
+  Map<String, String> sources,
+  String docs,
+  String suffix, {
+  String under = '',
+}) async {
+  for (final folder in ['media', 'wallpapers']) {
+    final d = Directory(p.join(docs, '$folder$suffix'));
+    if (!await d.exists()) continue;
+    final found = <String, File>{};
+    await for (final e in d.list(recursive: true, followLinks: false)) {
+      if (e is! File) continue;
+      found['$under$folder/${p.relative(e.path, from: d.path)}'] = e;
+    }
+    for (final name in found.keys.toList()..sort()) {
+      if (!safeBackupName(name)) continue;
+      final f = found[name]!;
+      files.add(BackupFileEntry(name, await f.length()));
+      sources[name] = f.path;
+    }
+  }
+}
+
 // what belongs to the identity but lives in secure storage, outside the
 // database: the public handle and its line, which first-contact address is
 // the live one, and where each contact takes first contact. without them a
@@ -412,28 +499,93 @@ Future<void> _applyIdentitySecure(Object? carried) async {
   }
 }
 
-/// writes a v2 backup to [outPath]. everything the phone holds: identity,
-/// database, onion key, prefs, and every photo, voice note and file.
-/// [onProgress] is told bytes done of bytes total.
-Future<void> createBackupFile(
-  String passphrase,
-  String outPath, {
-  bool move = false,
-  void Function(int done, int total)? onProgress,
-}) async {
-  if (passphrase.length < 6) throw BackupError('passphrase too short');
-  if (sessionQuiet) {
-    return _createQuietBackup(passphrase, outPath, onProgress: onProgress);
+// what a backup reads besides the folders: the identity, and the databases
+// while the vault holds still. the app's own, or stand-ins in the tests
+class BackupSide {
+  const BackupSide();
+
+  ({String ed, String x, String id}) identity() =>
+      (ed: engine.myEdPrivkey(), x: engine.myXPrivkey(), id: appState.myId);
+
+  Future<T> still<T>(
+    Future<T> Function(HaloDb? vault) work, {
+    required bool made,
+  }) => appState.backupStill(work, made: made);
+
+  Future<void> copyEveryday(String to) => live.copyTo(to);
+
+  // the hidden chats' database copied whole. its key
+  Future<String> copyHidden(HaloDb vault, String to) => vault.copyWithKey(to);
+
+  // the copy of halo.db made to carry nothing of hidden chats. who the list
+  // named
+  Future<Set<String>> scrub(String copy, String key) async {
+    final db = await openDatabase(copy, password: key, singleInstance: false);
+    try {
+      final people = await scrubHidden(db);
+      // every change in the file itself before it is read as bytes
+      await db.rawQuery('PRAGMA wal_checkpoint(TRUNCATE)');
+      return people;
+    } finally {
+      await db.close();
+    }
   }
-  final docs = await getApplicationDocumentsDirectory();
-  final edPriv = engine.myEdPrivkey();
-  final xPriv = engine.myXPrivkey();
-  if (edPriv.isEmpty || xPriv.isEmpty) throw BackupError('identity not loaded');
-  final dbPassphrase = await _secureStorage.read(key: _kDbPassphrase);
-  if (dbPassphrase == null) throw BackupError('db passphrase missing');
-  // fold the write-ahead log in first, or the last minutes are not in
-  // the file that gets copied
-  await live.checkpoint();
+}
+
+// the hidden chats a backup carries, taken while their vault holds still:
+// their database copied whole under its own key, their folders where they
+// lie, all under vault/. the key
+Future<String> _carryHidden(
+  BackupSide side,
+  HaloDb vault,
+  String stage,
+  String docs,
+  List<BackupFileEntry> files,
+  Map<String, String> sources,
+) async {
+  final to = p.join(stage, kHiddenDb);
+  await Directory(p.dirname(to)).create(recursive: true);
+  final key = await side.copyHidden(vault, to);
+  files.add(BackupFileEntry(kHiddenDb, await File(to).length()));
+  sources[kHiddenDb] = to;
+  await _addFolders(
+    files,
+    sources,
+    docs,
+    vault.container.suffix,
+    under: '$kHiddenDir/',
+  );
+  return key;
+}
+
+// a backup put together before a byte of it is written: its manifest, and
+// where each file it lists is read from
+class BackupDraft {
+  BackupDraft(this.manifest, this.sources);
+  final Map<String, dynamic> manifest;
+  final Map<String, String> sources;
+}
+
+/// the everyday identity's backup, put together in [stage]: halo.db copied
+/// whole and every photo, voice note and file where it lies. with [hidden]
+/// the hidden chats come too, copied in the same still moment with their
+/// key: the open ones, or with [made] the ones a setup just hid. without,
+/// the copy of halo.db carries nothing of them
+Future<BackupDraft> draftBackup(
+  String stage, {
+  BackupSide side = const BackupSide(),
+  bool move = false,
+  bool hidden = false,
+  bool made = false,
+}) async {
+  if (made && (move || !hidden)) {
+    throw ArgumentError('a setup backup holds its hidden chats, never moves');
+  }
+  final docs = (await getApplicationDocumentsDirectory()).path;
+  final id = side.identity();
+  if (id.ed.isEmpty || id.x.isEmpty) throw BackupError('identity not loaded');
+  final dbKey = await _secureStorage.read(key: _kDbPassphrase);
+  if (dbKey == null) throw BackupError('db passphrase missing');
   final prefs = await SharedPreferences.getInstance();
   final prefsMap = <String, dynamic>{};
   for (final k in ['onboarding.complete']) {
@@ -443,27 +595,114 @@ Future<void> createBackupFile(
   final onboardingDone = await const FlutterSecureStorage().read(
     key: 'onboarding_done',
   );
-  final files = await _filesToCarry(docs);
-  if (!files.any((f) => f.name == 'halo.db')) {
-    throw BackupError('db file not found');
+  final secure = await _readIdentitySecure();
+  final dbCopy = p.join(stage, 'halo.db');
+  final folders = <BackupFileEntry>[];
+  final sources = <String, String>{};
+  final key = await side.still((vault) async {
+    // a vault shut before this ran is not in the file, and the file is not
+    // made: a backup that should hold hidden chats never comes out without
+    if (hidden && vault == null) throw BackupError(l10n.backupHiddenGone);
+    await side.copyEveryday(dbCopy);
+    await _addFolders(folders, sources, docs, '');
+    if (!hidden) return null;
+    return _carryHidden(side, vault!, stage, docs, folders, sources);
+  }, made: made);
+  if (!hidden) {
+    final people = await side.scrub(dbCopy, dbKey);
+    final fc = secure['peer_fc'];
+    if (fc != null && people.isNotEmpty) {
+      try {
+        final m = Map<String, Object?>.from(jsonDecode(fc) as Map)
+          ..removeWhere((k, _) => people.contains(k));
+        secure['peer_fc'] = jsonEncode(m);
+      } catch (_) {
+        secure.remove('peer_fc');
+      }
+    }
   }
+  final files = <BackupFileEntry>[];
+  Future<void> add(String name, String from) async {
+    final f = File(from);
+    if (!await f.exists()) return;
+    files.add(BackupFileEntry(name, await f.length()));
+    sources[name] = from;
+  }
+
+  await add('halo.db', dbCopy);
+  if (files.isEmpty) throw BackupError('db file not found');
+  await add('onion.key', p.join(docs, 'onion.key'));
+  files.addAll(folders);
   final manifest = <String, dynamic>{
-    'v': 2,
+    'v': hidden ? kBackupVersionHidden : kBackupVersion,
     'ts': DateTime.now().millisecondsSinceEpoch,
-    'haloId': appState.myId,
+    'haloId': id.id,
     // whether the phone that made this retired itself. a copy to keep
     // says false, and the restore then warns that two phones on one
     // identity lose messages on both
     'moved': move,
-    'edPriv': edPriv,
-    'xPriv': xPriv,
-    'dbPassphrase': dbPassphrase,
+    'edPriv': id.ed,
+    'xPriv': id.x,
+    'dbPassphrase': dbKey,
     'prefs': prefsMap,
-    'secure': await _readIdentitySecure(),
+    'secure': secure,
     'onboardingDone': onboardingDone,
     'chunk': kBackupChunk,
     'files': [for (final f in files) f.toJson()],
+    if (hidden) 'vault': {'key': key},
   };
+  return BackupDraft(manifest, sources);
+}
+
+/// writes a v2 backup to [outPath]. everything the phone holds: identity,
+/// database, onion key, prefs, and every photo, voice note and file; with
+/// the hidden chats open, or [withHiddenChats] from their setup, those too.
+/// [onProgress] is told bytes done of bytes total.
+Future<void> createBackupFile(
+  String passphrase,
+  String outPath, {
+  bool move = false,
+  bool withHiddenChats = false,
+  void Function(int done, int total)? onProgress,
+}) async {
+  if (passphrase.length < 6) throw BackupError('passphrase too short');
+  final stage = Directory(
+    p.join((await getApplicationSupportDirectory()).path, 'backup_stage'),
+  );
+  if (await stage.exists()) await stage.delete(recursive: true);
+  await stage.create(recursive: true);
+  try {
+    final shape = backupShape(
+      quiet: sessionQuiet,
+      open: sessionBackupHasHidden,
+      setup: withHiddenChats,
+      move: move,
+    );
+    final draft = sessionQuiet
+        ? await _draftQuiet(stage.path, hidden: shape.hidden, made: shape.made)
+        : await draftBackup(
+            stage.path,
+            move: shape.move,
+            hidden: shape.hidden,
+            made: shape.made,
+          );
+    await _export(passphrase, outPath, draft, onProgress);
+  } finally {
+    try {
+      await shredFile(p.join(stage.path, 'onion.key'));
+    } catch (_) {}
+    try {
+      await stage.delete(recursive: true);
+    } catch (_) {}
+  }
+}
+
+Future<void> _export(
+  String passphrase,
+  String outPath,
+  BackupDraft draft,
+  void Function(int done, int total)? onProgress,
+) async {
   final salt = Uint8List(16);
   final rnd = Random.secure();
   for (var i = 0; i < 16; i++) {
@@ -482,8 +721,9 @@ Future<void> createBackupFile(
         passphrase: passphrase,
         salt: salt,
         path: outPath,
-        root: docs.path,
-        manifest: manifest,
+        root: '',
+        manifest: draft.manifest,
+        sources: draft.sources,
         tell: port.sendPort,
       ),
     );
@@ -495,15 +735,32 @@ Future<void> createBackupFile(
 }
 
 // a backup in a decoy session holds only the decoy, under the names an
-// everyday install uses, so it restores anywhere as its own account. never a
-// move, and nothing of the everyday container is read
-Future<void> _createQuietBackup(
-  String passphrase,
-  String outPath, {
-  void Function(int done, int total)? onProgress,
+// everyday install uses, so it restores anywhere as its own account, with
+// its hidden chats as an everyday backup holds them. never a move, and
+// nothing of the everyday container is read
+Future<BackupDraft> _draftQuiet(
+  String stage, {
+  BackupSide side = const BackupSide(),
+  bool hidden = false,
+  bool made = false,
 }) async {
   final c = session.container;
   final docs = await getApplicationDocumentsDirectory();
+  final hiddenFiles = <BackupFileEntry>[];
+  final sources = <String, String>{};
+  final key = !hidden
+      ? null
+      : await side.still((vault) async {
+          if (vault == null) throw BackupError(l10n.backupHiddenGone);
+          return _carryHidden(
+            side,
+            vault,
+            stage,
+            docs.path,
+            hiddenFiles,
+            sources,
+          );
+        }, made: made);
   final raw = await session.primary.open();
   final saved = await session.primary.loadIdentity();
   final onion = await raw.query(
@@ -517,79 +774,52 @@ Future<void> _createQuietBackup(
     throw BackupError('identity not loaded');
   }
   await session.primary.checkpoint();
-  final stage = Directory(
-    p.join((await getApplicationSupportDirectory()).path, 'backup_stage'),
-  );
-  if (await stage.exists()) await stage.delete(recursive: true);
-  await stage.create(recursive: true);
-  try {
-    await File(await c.dbPath()).copy(p.join(stage.path, 'halo.db'));
-    await File(
-      p.join(stage.path, 'onion.key'),
-    ).writeAsBytes(_hex(onion.first['v'] as String), flush: true);
-    for (final folder in ['media', 'wallpapers']) {
-      final from = Directory(p.join(docs.path, '$folder${c.suffix}'));
-      if (!await from.exists()) continue;
-      await for (final e in from.list(recursive: true, followLinks: false)) {
-        if (e is! File) continue;
-        final rel = p.relative(e.path, from: from.path);
-        final to = File(p.join(stage.path, folder, rel));
-        await to.parent.create(recursive: true);
-        await e.copy(to.path);
-      }
+  await File(await c.dbPath()).copy(p.join(stage, 'halo.db'));
+  await File(
+    p.join(stage, 'onion.key'),
+  ).writeAsBytes(_hex(onion.first['v'] as String), flush: true);
+  for (final folder in ['media', 'wallpapers']) {
+    final from = Directory(p.join(docs.path, '$folder${c.suffix}'));
+    if (!await from.exists()) continue;
+    await for (final e in from.list(recursive: true, followLinks: false)) {
+      if (e is! File) continue;
+      final rel = p.relative(e.path, from: from.path);
+      final to = File(p.join(stage, folder, rel));
+      await to.parent.create(recursive: true);
+      await e.copy(to.path);
     }
-    final files = await _filesToCarry(stage);
-    final manifest = <String, dynamic>{
-      'v': 2,
-      'ts': DateTime.now().millisecondsSinceEpoch,
-      'haloId': appState.sessionId,
-      'moved': false,
-      'edPriv': saved['ed_priv'],
-      'xPriv': saved['x_priv'],
-      'dbPassphrase': dbKey,
-      'prefs': <String, dynamic>{},
-      'secure': <String, String>{},
-      'onboardingDone': '1',
-      'chunk': kBackupChunk,
-      'files': [for (final f in files) f.toJson()],
-    };
-    final salt = Uint8List(16);
-    final rnd = Random.secure();
-    for (var i = 0; i < 16; i++) {
-      salt[i] = rnd.nextInt(256);
-    }
-    final port = ReceivePort();
-    final sub = port.listen((m) {
-      if (m is List && m.length == 2) {
-        onProgress?.call(m[0] as int, m[1] as int);
-      }
-    });
-    try {
-      final err = await _runJob(
-        _exportJob,
-        _Job(
-          passphrase: passphrase,
-          salt: salt,
-          path: outPath,
-          root: stage.path,
-          manifest: manifest,
-          tell: port.sendPort,
-        ),
-      );
-      if (err is String && err.isNotEmpty) throw BackupError(err);
-    } finally {
-      await sub.cancel();
-      port.close();
-    }
-  } finally {
-    try {
-      await shredFile(p.join(stage.path, 'onion.key'));
-    } catch (_) {}
-    try {
-      await stage.delete(recursive: true);
-    } catch (_) {}
   }
+  final files = [...await _filesToCarry(Directory(stage)), ...hiddenFiles];
+  final manifest = <String, dynamic>{
+    'v': hidden ? kBackupVersionHidden : kBackupVersion,
+    'ts': DateTime.now().millisecondsSinceEpoch,
+    'haloId': appState.sessionId,
+    'moved': false,
+    'edPriv': saved['ed_priv'],
+    'xPriv': saved['x_priv'],
+    'dbPassphrase': dbKey,
+    'prefs': <String, dynamic>{},
+    'secure': <String, String>{},
+    'onboardingDone': '1',
+    'chunk': kBackupChunk,
+    'files': [for (final f in files) f.toJson()],
+    if (hidden) 'vault': {'key': key},
+  };
+  return BackupDraft(manifest, {
+    for (final f in files) f.name: p.join(stage, f.name),
+    ...sources,
+  });
 }
+
+/// a draft for a decoy session, put together in [stage], as a backup there
+/// makes it
+@visibleForTesting
+Future<BackupDraft> draftQuietBackup(
+  String stage, {
+  BackupSide side = const BackupSide(),
+  bool hidden = false,
+  bool made = false,
+}) => _draftQuiet(stage, side: side, hidden: hidden, made: made);
 
 Uint8List _hex(String s) => Uint8List.fromList([
   for (var i = 0; i + 1 < s.length; i += 2)
@@ -606,6 +836,11 @@ class _Job {
   final String path;
   final String root;
   final Map<String, dynamic>? manifest;
+  // where each file of a backup being written is read from
+  final Map<String, String>? sources;
+  // the hidden chats' side: where a restore leaves their files, or where a
+  // peek puts their database
+  final String? hidden;
   final SendPort? tell;
   const _Job({
     required this.passphrase,
@@ -613,6 +848,8 @@ class _Job {
     required this.path,
     required this.root,
     this.manifest,
+    this.sources,
+    this.hidden,
     this.tell,
   });
 }
@@ -625,6 +862,7 @@ Future<Object?> _exportJob(_Job j) async {
   final key = _backupKey(lib, j.passphrase, j.salt);
   if (key == null) return l10n.backupCouldNotMakeThe;
   final cipher = _EngineCipher(lib, key, kBackupChunk);
+  final sources = j.sources!;
   try {
     await writeBackup(
       outPath: j.path,
@@ -632,6 +870,7 @@ Future<Object?> _exportJob(_Job j) async {
       cipher: cipher,
       manifest: j.manifest!,
       root: j.root,
+      source: (n) => sources[n]!,
       onProgress: (a, b) => j.tell?.send([a, b]),
     );
   } finally {
@@ -640,8 +879,9 @@ Future<Object?> _exportJob(_Job j) async {
   return '';
 }
 
-// reads the manifest and streams halo.db to j.root (the peek path), so the
-// caller can count what is inside without touching the phone's own files
+// reads the manifest and streams halo.db to j.root (the peek path), and the
+// hidden chats' database to j.hidden, so the caller can count what is inside
+// without touching the phone's own files
 Future<Object?> _inspectJob(_Job j) async {
   final lib = _engineLib();
   final key = _backupKey(lib, j.passphrase, j.salt);
@@ -650,16 +890,21 @@ Future<Object?> _inspectJob(_Job j) async {
   try {
     final m = await readBackupManifest(j.path, cipher);
     if (m['v'] is! int) throw const BackupDamaged('no version');
-    if ((m['v'] as int) > 2) {
+    if ((m['v'] as int) > kBackupVersionHidden) {
       throw const RestoreError(RestoreFailure.newerVersion);
     }
     if (m['dbPassphrase'] is! String || m['edPriv'] is! String) {
       throw const BackupDamaged('manifest secrets');
     }
+    final hidden = hiddenKeyOf(m) == null ? null : j.hidden;
     await extractBackup(
       j.path,
       cipher,
-      want: (n) => n == 'halo.db' ? j.root : null,
+      want: (n) => n == 'halo.db'
+          ? j.root
+          : n == kHiddenDb
+          ? hidden
+          : null,
     );
     return m;
   } finally {
@@ -667,38 +912,67 @@ Future<Object?> _inspectJob(_Job j) async {
   }
 }
 
-// streams every file into a staging folder under j.root and only then
-// moves them into place. the file is proved whole, end record and all,
-// before a single byte of the phone's own data is touched, so a backup cut
-// short halfway leaves the phone exactly as it was.
 Future<Object?> _restoreJob(_Job j) async {
   final lib = _engineLib();
   final key = _backupKey(lib, j.passphrase, j.salt);
   if (key == null) throw const BackupLocked();
   final cipher = _EngineCipher(lib, key, kBackupChunk);
-  final stage = Directory(p.join(j.root, 'restore_stage'));
   try {
-    if (await stage.exists()) await stage.delete(recursive: true);
-    await stage.create(recursive: true);
-    final m = await readBackupManifest(j.path, cipher);
-    if ((m['v'] as int? ?? 99) > 2) {
-      throw const RestoreError(RestoreFailure.newerVersion);
-    }
-    await extractBackup(
+    return await unpackBackup(
       j.path,
       cipher,
-      want: (n) => p.join(stage.path, n),
+      root: j.root,
+      hidden: j.hidden,
       onProgress: (a, b) => j.tell?.send([a, b]),
+    );
+  } finally {
+    cipher.dispose();
+  }
+}
+
+/// streams every file into a staging folder under [root] and only then
+/// moves them into place. the file is proved whole, end record and all,
+/// before a single byte of the phone's own data is touched, so a backup cut
+/// short halfway leaves the phone exactly as it was. the hidden chats'
+/// files wait in [hidden] for landHidden, or without it are left out
+Future<Map<String, dynamic>> unpackBackup(
+  String path,
+  ChunkCipher cipher, {
+  required String root,
+  String? hidden,
+  void Function(int done, int total)? onProgress,
+}) async {
+  final stage = Directory(p.join(root, 'restore_stage'));
+  final keep = hidden == null ? null : Directory(hidden);
+  try {
+    for (final d in [stage, ?keep]) {
+      if (await d.exists()) await d.delete(recursive: true);
+      await d.create(recursive: true);
+    }
+    final m = await readBackupManifest(path, cipher);
+    if ((m['v'] as int? ?? 99) > kBackupVersionHidden) {
+      throw const RestoreError(RestoreFailure.newerVersion);
+    }
+    hiddenKeyOf(m);
+    await extractBackup(
+      path,
+      cipher,
+      want: (n) {
+        final h = hiddenPart(n);
+        if (h == null) return p.join(stage.path, n);
+        return keep == null ? null : p.join(keep.path, h);
+      },
+      onProgress: onProgress,
     );
     // whole. now, and only now, the phone's own files go
     for (final folder in ['media', 'wallpapers']) {
-      final d = Directory(p.join(j.root, folder));
+      final d = Directory(p.join(root, folder));
       if (await d.exists()) await d.delete(recursive: true);
     }
     // a rollback journal left by the open database would be replayed
     // over the restored one on the next open
     for (final side in ['halo.db-journal', 'halo.db-wal', 'halo.db-shm']) {
-      final f = File(p.join(j.root, side));
+      final f = File(p.join(root, side));
       if (await f.exists()) await f.delete();
     }
     final files = [
@@ -706,15 +980,86 @@ Future<Object?> _restoreJob(_Job j) async {
         BackupFileEntry.fromJson(f as Map<String, dynamic>),
     ];
     for (final f in files) {
-      final dest = File(p.join(j.root, f.name));
+      if (hiddenPart(f.name) != null) continue;
+      final dest = File(p.join(root, f.name));
       await dest.parent.create(recursive: true);
       await File(p.join(stage.path, f.name)).rename(dest.path);
     }
     return m;
+  } catch (_) {
+    try {
+      if (keep != null && await keep.exists()) {
+        await keep.delete(recursive: true);
+      }
+    } catch (_) {}
+    rethrow;
   } finally {
-    cipher.dispose();
     try {
       if (await stage.exists()) await stage.delete(recursive: true);
+    } catch (_) {}
+  }
+}
+
+// the key of hidden chats just restored, until the person chooses their PIN
+String? _restoredKey;
+
+/// a restore brought hidden chats: they wait for a hidden chats PIN
+bool get restoredHidden => _restoredKey != null;
+
+/// the hidden chats a restore brought, under the PIN the person chose. false
+/// when that PIN is in use
+Future<bool> sealRestoredHidden(LockState lock, String pin) async {
+  final key = _restoredKey;
+  if (key == null) throw StateError('no hidden chats to seal');
+  if (!await lock.setupVaultPin(pin, key)) return false;
+  _restoredKey = null;
+  return true;
+}
+
+@visibleForTesting
+void forgetRestoredHidden() => _restoredKey = null;
+
+/// what a restore does to hidden chats here: they belonged to the account
+/// being replaced, so their entry goes first and then their files. hidden
+/// chats in the backup take their place in [into], the vault of the
+/// identity restored, waiting in [from] until then, and are held for the
+/// new hidden chats PIN the person chooses at the end
+Future<void> landHidden(
+  String docs,
+  String? from,
+  Map<String, dynamic> manifest, {
+  required Future<void> Function() clearEntry,
+  HaloContainer into = HaloContainer.vault,
+}) async {
+  _restoredKey = null;
+  try {
+    await clearEntry();
+    await into.wipeFiles();
+    final key = hiddenKeyOf(manifest);
+    if (key == null || from == null) return;
+    if (!await File(p.join(from, 'halo_v.db')).exists()) return;
+    final c = into;
+    for (final f in manifest['files'] as List) {
+      final rest = hiddenPart((f as Map<String, dynamic>)['name'] as String);
+      if (rest == null) continue;
+      final String dest;
+      if (rest == 'halo_v.db') {
+        dest = await c.dbPath();
+      } else {
+        final cut = rest.indexOf('/');
+        final folder = cut <= 0 ? '' : rest.substring(0, cut);
+        if (folder != 'media' && folder != 'wallpapers') continue;
+        dest = p.join(docs, '$folder${c.suffix}', rest.substring(cut + 1));
+      }
+      await File(dest).parent.create(recursive: true);
+      await File(p.join(from, rest)).rename(dest);
+    }
+    _restoredKey = key;
+  } finally {
+    try {
+      if (from != null && await Directory(from).exists()) {
+        await Directory(from).delete(recursive: true);
+      }
     } catch (_) {}
   }
 }
@@ -741,6 +1086,8 @@ Future<void> _landInDecoy(
   }
   for (final f in manifest['files'] as List) {
     final name = (f as Map<String, dynamic>)['name'] as String;
+    // hidden chats landed in the decoy's vault already
+    if (hiddenPart(name) != null) continue;
     final src = File(p.join(from, name));
     final String dest;
     if (name == 'halo.db') {
@@ -776,6 +1123,20 @@ RestoreError _classify(Object e) {
   return const RestoreError(RestoreFailure.damaged);
 }
 
+// how many chats and groups a hidden chats database holds
+Future<int> _countHidden(String path, String key) async {
+  final db = await openDatabase(path, password: "x'$key'", readOnly: true);
+  try {
+    final c = await db.rawQuery(
+      'SELECT COUNT(*) c FROM contacts WHERE accepted = 1',
+    );
+    final g = await db.rawQuery('SELECT COUNT(*) c FROM groups');
+    return ((c.first['c'] as int?) ?? 0) + ((g.first['c'] as int?) ?? 0);
+  } finally {
+    await db.close();
+  }
+}
+
 /// looks inside a v2 file: who it is, how much it holds, touching nothing.
 /// the database is streamed to a private temp file just long enough to be
 /// counted, then shredded.
@@ -786,20 +1147,29 @@ Future<BackupSummary> inspectBackupFile(String path, String passphrase) async {
   final salt = await backupSalt(path);
   final dir = await getApplicationSupportDirectory();
   final peek = p.join(dir.path, 'restore_peek.db');
+  final peekHidden = p.join(dir.path, 'restore_peek_v.db');
   Map<String, dynamic> manifest;
   try {
     manifest =
         await _runJob(
               _inspectJob,
-              _Job(passphrase: passphrase, salt: salt, path: path, root: peek),
+              _Job(
+                passphrase: passphrase,
+                salt: salt,
+                path: path,
+                root: peek,
+                hidden: peekHidden,
+              ),
             )
             as Map<String, dynamic>;
   } catch (e) {
     await shredFile(peek);
+    await shredFile(peekHidden);
     throw _classify(e);
   }
   var contacts = 0;
   var messages = 0;
+  int? hiddenChats;
   var haloId = manifest['haloId'] as String? ?? '';
   try {
     final db = await openDatabase(
@@ -819,14 +1189,19 @@ Future<BackupSummary> inspectBackupFile(String path, String passphrase) async {
     } finally {
       await db.close();
     }
+    final key = hiddenKeyOf(manifest);
+    if (key != null) hiddenChats = await _countHidden(peekHidden, key);
   } catch (_) {
     throw const RestoreError(RestoreFailure.damaged);
   } finally {
     await shredFile(peek);
+    await shredFile(peekHidden);
   }
   final files = [
     for (final f in manifest['files'] as List)
-      BackupFileEntry.fromJson(f as Map<String, dynamic>),
+      if (BackupFileEntry.fromJson(f as Map<String, dynamic>) case final e
+          when e.name != kHiddenDb)
+        e,
   ];
   final ts = manifest['ts'];
   return BackupSummary(
@@ -839,12 +1214,14 @@ Future<BackupSummary> inspectBackupFile(String path, String passphrase) async {
     // the database and the onion key are not attachments
     files: files.where((f) => f.name.contains('/')).length,
     moved: manifest['moved'] as bool?,
+    hiddenChats: hiddenChats,
   );
 }
 
 /// brings a v2 file in. the files land under docs exactly where they came
-/// from, then the secrets and prefs go where the app reads them. the app
-/// is expected to exit afterwards and boot from what was written.
+/// from, then the secrets and prefs go where the app reads them. hidden
+/// chats in it wait for their new PIN (restoredHidden). the app is expected
+/// to exit afterwards and boot from what was written.
 Future<void> restoreBackupFile(
   String path,
   String passphrase, {
@@ -862,6 +1239,7 @@ Future<void> restoreBackupFile(
       ? p.join((await getApplicationSupportDirectory()).path, 'restore_d')
       : docs.path;
   if (quiet) await Directory(root).create(recursive: true);
+  final hidden = p.join(docs.path, 'restore_hidden');
   final port = ReceivePort();
   final sub = port.listen((m) {
     if (m is List && m.length == 2) {
@@ -878,6 +1256,7 @@ Future<void> restoreBackupFile(
                 salt: salt,
                 path: path,
                 root: root,
+                hidden: hidden,
                 tell: port.sendPort,
               ),
             )
@@ -888,6 +1267,14 @@ Future<void> restoreBackupFile(
     await sub.cancel();
     port.close();
   }
+  // the lock clears the vault entry of the session's own identity
+  await landHidden(
+    docs.path,
+    hidden,
+    manifest,
+    clearEntry: lockState.clearVault,
+    into: quiet ? HaloContainer.decoyVault : HaloContainer.vault,
+  );
   if (quiet) return _landInDecoy(root, docs.path, manifest);
   await _secureStorage.write(
     key: _kDbPassphrase,

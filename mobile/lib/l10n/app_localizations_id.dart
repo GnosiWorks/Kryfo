@@ -1007,6 +1007,21 @@ class AppLocalizationsId extends AppLocalizations {
   String get backupCreateBackup => 'Buat cadangan';
 
   @override
+  String get backupHiddenNotIn => 'Obrolan tersembunyi tidak ada di dalamnya.';
+
+  @override
+  String get backupHiddenIncluded =>
+      'Obrolan tersembunyimu juga ada di dalamnya.';
+
+  @override
+  String get backupMoveHiddenStay =>
+      'Obrolan tersembunyi tetap di ponsel ini dan terhapus bersamanya.';
+
+  @override
+  String get backupHiddenGone =>
+      'Obrolan tersembunyimu tertutup saat Kryfo terkunci. Buka dengan PIN-nya dan buat cadangan dari sana.';
+
+  @override
   String get blockedBlocked => 'Diblokir';
 
   @override
@@ -6382,6 +6397,21 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get restoreAttachments => 'lampiran';
+
+  @override
+  String get restoreHiddenChats => 'obrolan tersembunyi';
+
+  @override
+  String get restoreHiddenFollow =>
+      'Obrolan tersembunyimu, dengan PIN obrolan tersembunyi baru yang kamu pilih di akhir.';
+
+  @override
+  String get restoreChooseHiddenPin =>
+      'Cadangan ini memuat obrolan tersembunyi. Pilih PIN obrolan tersembunyi untuknya.';
+
+  @override
+  String get restoreHiddenLockFirst =>
+      'Obrolan tersembunyi butuh kunci aplikasi, jadi Kryfo mendapat PIN sendiri lebih dulu.';
 
   @override
   String get shieldBlock => 'Blokir';

@@ -1019,6 +1019,20 @@ class AppLocalizationsFa extends AppLocalizations {
   String get backupCreateBackup => 'ساختن نسخه‌ی پشتیبان';
 
   @override
+  String get backupHiddenNotIn => 'گفت‌وگوهای پنهان در آن نیستند.';
+
+  @override
+  String get backupHiddenIncluded => 'گفت‌وگوهای پنهان شما هم در آن هستند.';
+
+  @override
+  String get backupMoveHiddenStay =>
+      'گفت‌وگوهای پنهان روی همین گوشی می‌مانند و همراه آن پاک می‌شوند.';
+
+  @override
+  String get backupHiddenGone =>
+      'گفت‌وگوهای پنهان شما وقتی Kryfo قفل شد بسته شدند. آن‌ها را با PIN خودشان باز کنید و از همان‌جا نسخه‌ی پشتیبان بگیرید.';
+
+  @override
   String get blockedBlocked => 'مسدودشده‌ها';
 
   @override
@@ -6395,6 +6409,21 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get restoreAttachments => 'پیوست‌ها';
+
+  @override
+  String get restoreHiddenChats => 'گفت‌وگوهای پنهان';
+
+  @override
+  String get restoreHiddenFollow =>
+      'گفت‌وگوهای پنهان شما، با یک PIN تازه‌ی گفت‌وگوهای پنهان که در پایان انتخاب می‌کنید.';
+
+  @override
+  String get restoreChooseHiddenPin =>
+      'این نسخه‌ی پشتیبان گفت‌وگوهای پنهان دارد. برایشان یک PIN گفت‌وگوهای پنهان انتخاب کنید.';
+
+  @override
+  String get restoreHiddenLockFirst =>
+      'گفت‌وگوهای پنهان به قفل برنامه نیاز دارند، پس اول Kryfo یک PIN مخصوص خودش می‌گیرد.';
 
   @override
   String get shieldBlock => 'مسدود کردن';

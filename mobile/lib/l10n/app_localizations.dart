@@ -1581,6 +1581,30 @@ abstract class AppLocalizations {
   /// **'Create backup'**
   String get backupCreateBackup;
 
+  /// screens/backup_screen.dart: under every backup made outside the hidden chats, whether or not there are any
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden chats are not in it.'**
+  String get backupHiddenNotIn;
+
+  /// screens/backup_screen.dart: a backup made with the hidden chats open, or from their setup
+  ///
+  /// In en, this message translates to:
+  /// **'Your hidden chats are in it too.'**
+  String get backupHiddenIncluded;
+
+  /// screens/backup_screen.dart: under every move made outside the hidden chats, whether or not there are any
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden chats stay on this phone and are wiped with it.'**
+  String get backupMoveHiddenStay;
+
+  /// screens/backup_screen.dart: a backup that was to hold the hidden chats, which closed with the lock first
+  ///
+  /// In en, this message translates to:
+  /// **'Your hidden chats closed when Kryfo locked. Open them with their PIN and back up from there.'**
+  String get backupHiddenGone;
+
   /// screens/blocked_screen.dart
   ///
   /// In en, this message translates to:
@@ -10214,6 +10238,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'attachments'**
   String get restoreAttachments;
+
+  /// screens/restore_screen.dart: what comes back, a label beside the number of hidden chats (lowercase like contacts and messages)
+  ///
+  /// In en, this message translates to:
+  /// **'hidden chats'**
+  String get restoreHiddenChats;
+
+  /// screens/restore_screen.dart: what follows a restore of a backup that holds hidden chats
+  ///
+  /// In en, this message translates to:
+  /// **'Your hidden chats, under a new hidden chats PIN you choose at the end.'**
+  String get restoreHiddenFollow;
+
+  /// screens/pin_flow_screen.dart: after a restore of a backup that holds hidden chats
+  ///
+  /// In en, this message translates to:
+  /// **'This backup holds hidden chats. Choose a hidden chats PIN for them.'**
+  String get restoreChooseHiddenPin;
+
+  /// screens/pin_flow_screen.dart: after a restore of a backup that holds hidden chats, when there is no app lock yet
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden chats need the app lock, so Kryfo gets a PIN of its own first.'**
+  String get restoreHiddenLockFirst;
 
   /// screens/shield_sheet.dart
   ///

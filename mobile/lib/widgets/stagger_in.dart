@@ -54,3 +54,7 @@ List<Widget> staggerAll(List<Widget> children, {int from = 0}) => [
     else
       StaggerIn(index: from + i, child: children[i]),
 ];
+
+// the same, all at once when motion is reduced
+List<Widget> staggerAllIn(BuildContext context, List<Widget> children) =>
+    MediaQuery.of(context).disableAnimations ? children : staggerAll(children);

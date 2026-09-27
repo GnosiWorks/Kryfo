@@ -1022,6 +1022,20 @@ class AppLocalizationsTr extends AppLocalizations {
   String get backupCreateBackup => 'Yedek oluştur';
 
   @override
+  String get backupHiddenNotIn => 'Gizli sohbetler bu dosyada yok.';
+
+  @override
+  String get backupHiddenIncluded => 'Gizli sohbetlerin de bu dosyada.';
+
+  @override
+  String get backupMoveHiddenStay =>
+      'Gizli sohbetler bu telefonda kalır ve onunla birlikte silinir.';
+
+  @override
+  String get backupHiddenGone =>
+      'Kryfo kilitlenince gizli sohbetlerin kapandı. Onları kendi PIN’leriyle aç ve yedeği oradan al.';
+
+  @override
   String get blockedBlocked => 'Engellenenler';
 
   @override
@@ -6408,6 +6422,21 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get restoreAttachments => 'ekler';
+
+  @override
+  String get restoreHiddenChats => 'gizli sohbetler';
+
+  @override
+  String get restoreHiddenFollow =>
+      'Gizli sohbetlerin, sonda seçeceğin yeni bir gizli sohbet PIN’iyle.';
+
+  @override
+  String get restoreChooseHiddenPin =>
+      'Bu yedekte gizli sohbetler var. Onlar için bir gizli sohbet PIN’i seç.';
+
+  @override
+  String get restoreHiddenLockFirst =>
+      'Gizli sohbetler uygulama kilidine ihtiyaç duyar, bu yüzden önce Kryfo’ya kendi PIN’i verilir.';
 
   @override
   String get shieldBlock => 'Engelle';

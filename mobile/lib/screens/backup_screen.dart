@@ -17,7 +17,10 @@ import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
 
 class BackupScreen extends StatefulWidget {
-  const BackupScreen({super.key});
+  // from the hidden chats setup: a copy to keep that holds the chats just
+  // hidden, never a move
+  final bool withHiddenChats;
+  const BackupScreen({super.key, this.withHiddenChats = false});
   @override
   State<BackupScreen> createState() => _BackupScreenState();
 }
@@ -28,6 +31,16 @@ class _BackupScreenState extends State<BackupScreen> {
     super.initState();
     appState.forceSecure(true);
   }
+
+  // the file holds the hidden chats: they are open, or were just set up. a
+  // decoy's never does. a session change closes this screen, so it is read
+  // once
+  late final bool _hidden = backupShape(
+    quiet: sessionQuiet,
+    open: sessionBackupHasHidden,
+    setup: widget.withHiddenChats,
+    move: false,
+  ).hidden;
 
   final _p1 = TextEditingController();
   final _p2 = TextEditingController();
@@ -58,26 +71,29 @@ class _BackupScreenState extends State<BackupScreen> {
       final ts = DateTime.now().millisecondsSinceEpoch ~/ 1000;
       final name = 'kryfo-backup-$ts.kryfo';
       final path = p.join(tempDir.path, name);
+      final move = _move && !widget.withHiddenChats;
       await createBackupFile(
         pw,
         path,
-        move: _move,
+        move: move,
+        withHiddenChats: widget.withHiddenChats,
         onProgress: (a, b) {
           if (mounted && b > 0) setState(() => _progress = a / b);
         },
       );
-      var shared = false;
+      var out = (handed: false, shared: false);
       try {
-        shared = await _handOver(path, name);
+        out = await _handOver(path, name);
       } finally {
         // a shared file is read by the other app after share() returns,
         // so that one is left for the boot sweep. every other way out
         // shreds the copy here
-        if (!shared) await shredFile(path);
+        if (!out.shared) await shredFile(path);
       }
-      if (_move) {
+      if (move && out.handed) {
         // the file is out of our hands: from here this phone is retired,
-        // and the next screen says so
+        // and the next screen says so. one never handed over, the screen
+        // gone under a lock, retires nothing
         await appState.markMoved();
       }
       if (mounted) Navigator.of(context).pop();
@@ -92,11 +108,15 @@ class _BackupScreenState extends State<BackupScreen> {
   }
 
   // the system save dialog first, the share sheet when that is refused.
-  // neither reads the file into memory. true when the share sheet took it:
-  // that app reads the file after we return, so the copy is left for the
-  // boot sweep.
-  Future<bool> _handOver(String path, String name) async {
-    if (!mounted) return false;
+  // neither reads the file into memory. shared when the share sheet took
+  // it: that app reads the file after we return, so the copy is left for
+  // the boot sweep.
+  Future<({bool handed, bool shared})> _handOver(
+    String path,
+    String name,
+  ) async {
+    const none = (handed: false, shared: false);
+    if (!mounted) return none;
     var saved = false;
     try {
       saved = await lockState.hold(
@@ -110,15 +130,16 @@ class _BackupScreenState extends State<BackupScreen> {
     } catch (_) {
       saved = false;
     }
-    if (!mounted) return false;
     if (saved) {
-      showHaloToast(context, l10n.backupBackupSavedKeepThe);
-      return false;
+      if (mounted) showHaloToast(context, l10n.backupBackupSavedKeepThe);
+      return (handed: true, shared: false);
     }
-    return _share(path);
+    if (!mounted) return none;
+    await _share(path);
+    return (handed: true, shared: true);
   }
 
-  Future<bool> _share(String path) async {
+  Future<void> _share(String path) async {
     await lockState.hold(
       () => SharePlus.instance.share(
         ShareParams(
@@ -128,7 +149,6 @@ class _BackupScreenState extends State<BackupScreen> {
         ),
       ),
     );
-    return true;
   }
 
   @override
@@ -158,30 +178,28 @@ class _BackupScreenState extends State<BackupScreen> {
         child: FitColumn(
           padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: staggerAll([
-            _Choice(
-              on: !_move,
-              title: l10n.backupBackUp,
-              line: l10n.backupACopyToKeep,
-              onTap: () => setState(() => _move = false),
-            ),
-            const SizedBox(height: 8),
-            _Choice(
-              on: _move,
-              title: l10n.backupMoveToAnotherDevice,
-              line: l10n.backupTheFileTakesThis,
-              onTap: () => setState(() => _move = true),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              _move
-                  ? l10n.backupOneEncryptedFileYour
-                  : l10n.backupOneEncryptedFileYourIdentityYour,
-              style: HaloType.sans(
-                size: 13.5,
-                color: HaloColors.text2,
-                height: 1.5,
+          children: staggerAllIn(context, [
+            // a setup's backup holds the chats it just hid: never a move
+            if (!widget.withHiddenChats) ...[
+              _Choice(
+                on: !_move,
+                title: l10n.backupBackUp,
+                line: l10n.backupACopyToKeep,
+                onTap: () => setState(() => _move = false),
               ),
+              const SizedBox(height: 8),
+              _Choice(
+                on: _move,
+                title: l10n.backupMoveToAnotherDevice,
+                line: l10n.backupTheFileTakesThis,
+                onTap: () => setState(() => _move = true),
+              ),
+              const SizedBox(height: 16),
+            ],
+            _About(
+              move: _move && !widget.withHiddenChats,
+              canMove: !widget.withHiddenChats,
+              hidden: _hidden,
             ),
             const SizedBox(height: 24),
             _PinField(label: l10n.backupPassphrase, controller: _p1),
@@ -273,7 +291,9 @@ class _Choice extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: MediaQuery.of(context).disableAnimations
+            ? Duration.zero
+            : const Duration(milliseconds: 200),
         padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
         decoration: BoxDecoration(
           color: on ? HaloColors.amberSoft : HaloColors.surface2,
@@ -307,5 +327,84 @@ class _Choice extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+// what the file holds, for a copy and for a move. both are laid out and the
+// other one fades in over it, so nothing below moves when the choice
+// changes. outside the hidden chats the last line reads the same whether
+// there are any or not
+class _About extends StatelessWidget {
+  const _About({
+    required this.move,
+    required this.canMove,
+    required this.hidden,
+  });
+  final bool move;
+  // no move to choose: the copy alone, with no room kept for the other
+  final bool canMove;
+  final bool hidden;
+
+  @override
+  Widget build(BuildContext context) {
+    final still = MediaQuery.of(context).disableAnimations;
+    Widget page(bool forMove) {
+      final on = forMove == move;
+      return ExcludeSemantics(
+        excluding: !on,
+        child: AnimatedOpacity(
+          opacity: on ? 1 : 0,
+          duration: still ? Duration.zero : const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                forMove
+                    ? l10n.backupOneEncryptedFileYour
+                    : l10n.backupOneEncryptedFileYourIdentityYour,
+                style: HaloType.sans(
+                  size: 13.5,
+                  color: HaloColors.text2,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsetsDirectional.only(top: 2, end: 8),
+                    child: Icon(
+                      Icons.visibility_off_outlined,
+                      size: 16,
+                      color: HaloColors.violet,
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      hidden
+                          ? l10n.backupHiddenIncluded
+                          : forMove
+                          ? l10n.backupMoveHiddenStay
+                          : l10n.backupHiddenNotIn,
+                      style: HaloType.sans(
+                        size: 13.5,
+                        color: HaloColors.text,
+                        height: 1.45,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (!canMove) return page(false);
+    return Stack(children: [page(false), page(true)]);
   }
 }

@@ -1023,6 +1023,20 @@ class AppLocalizationsFr extends AppLocalizations {
   String get backupCreateBackup => 'Créer la sauvegarde';
 
   @override
+  String get backupHiddenNotIn => 'Les discussions masquées n’y sont pas.';
+
+  @override
+  String get backupHiddenIncluded => 'Vos discussions masquées y sont aussi.';
+
+  @override
+  String get backupMoveHiddenStay =>
+      'Les discussions masquées restent sur ce téléphone et sont effacées avec lui.';
+
+  @override
+  String get backupHiddenGone =>
+      'Vos discussions masquées se sont fermées quand Kryfo s’est verrouillé. Ouvrez-les avec leur code et faites la sauvegarde depuis là.';
+
+  @override
   String get blockedBlocked => 'Bloqués';
 
   @override
@@ -6447,6 +6461,21 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get restoreAttachments => 'pièces jointes';
+
+  @override
+  String get restoreHiddenChats => 'discussions masquées';
+
+  @override
+  String get restoreHiddenFollow =>
+      'Vos discussions masquées, sous un nouveau code des discussions masquées que vous choisissez à la fin.';
+
+  @override
+  String get restoreChooseHiddenPin =>
+      'Cette sauvegarde contient des discussions masquées. Choisissez un code des discussions masquées pour elles.';
+
+  @override
+  String get restoreHiddenLockFirst =>
+      'Les discussions masquées ont besoin du verrouillage, alors Kryfo reçoit d’abord son propre code PIN.';
 
   @override
   String get shieldBlock => 'Bloquer';

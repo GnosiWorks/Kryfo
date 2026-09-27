@@ -2,13 +2,15 @@
 // setting up an extra pin step by step: what it does, the current pin, the
 // new pin twice. the words change above the pad; the pad stays where it is.
 // hidden chats go on from there: the forget page, the vault made, the chats
-// to hide, a backup that holds them.
+// to hide, a backup that holds them. after a restore that brought hidden
+// chats it asks for their new pin, and the app pin first if there is none.
 import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart' hide LockState;
 import 'package:flutter/services.dart';
 
+import '../backup.dart' show sealRestoredHidden;
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
 import '../lock_state.dart';
@@ -24,7 +26,19 @@ import 'hide_picker.dart';
 
 enum PinFlow { wipe, decoy, vault }
 
-enum _Step { intro, check, choose, confirm, forget, making, pick, backup, done }
+enum _Step {
+  intro,
+  check,
+  appChoose,
+  appConfirm,
+  choose,
+  confirm,
+  forget,
+  making,
+  pick,
+  backup,
+  done,
+}
 
 // what App lock and its flows reach of the app: the app's own, or stand-ins
 // in the tests
@@ -64,8 +78,14 @@ class PinsHost {
         ),
   ];
 
-  Future<void> backup(BuildContext context) =>
-      Navigator.of(context).push(haloRoute(const BackupScreen()));
+  // the backup offered once the chats are hidden holds them
+  Future<void> backup(BuildContext context) => Navigator.of(
+    context,
+  ).push(haloRoute(const BackupScreen(withHiddenChats: true)));
+
+  // hidden chats a restore brought, sealed under the pin just chosen
+  Future<bool> sealRestored(LockState lock, String pin) =>
+      sealRestoredHidden(lock, pin);
 }
 
 class PinFlowScreen extends StatefulWidget {
@@ -73,12 +93,16 @@ class PinFlowScreen extends StatefulWidget {
     super.key,
     required this.flow,
     this.skipIntro = false,
+    this.restoring = false,
     this.lock,
     this.host = const PinsHost(),
   });
   final PinFlow flow;
   // a change of an existing pin: they have read it all once already
   final bool skipIntro;
+  // hidden chats a restore brought: their new pin, with no way back out,
+  // since their key waits only in memory
+  final bool restoring;
   // the app's own lock when null
   final LockState? lock;
   final PinsHost host;
@@ -106,6 +130,12 @@ class _PinFlowScreenState extends State<PinFlowScreen>
   bool get _vault => widget.flow == PinFlow.vault;
   // a new pin for the hidden chats already there, from inside them
   bool get _changing => _vault && widget.skipIntro;
+  // hidden chats a restore brought, waiting for their pin
+  bool get _restoring => _vault && widget.restoring;
+  // no app lock yet: its pin comes first
+  late final bool _needsLock = _restoring && !_lock.enabled;
+  // the flow that made a new vault, whose key goes however it ends
+  bool get _setup => _vault && !widget.skipIntro && !widget.restoring;
   Color get _tint => _wipe
       ? HaloColors.rose
       : _vault
@@ -131,7 +161,7 @@ class _PinFlowScreenState extends State<PinFlowScreen>
   void dispose() {
     _shake.dispose();
     // the new vault's key goes however the flow ends
-    if (_vault && !widget.skipIntro) unawaited(widget.host.vaultSetupDone());
+    if (_setup) unawaited(widget.host.vaultSetupDone());
     super.dispose();
   }
 
@@ -142,9 +172,7 @@ class _PinFlowScreenState extends State<PinFlowScreen>
       _pin = '';
       _error = null;
     });
-    if (s == _Step.done && _vault && !widget.skipIntro) {
-      unawaited(widget.host.vaultSetupDone());
-    }
+    if (s == _Step.done && _setup) unawaited(widget.host.vaultSetupDone());
   }
 
   Future<void> _fail(String why) async {
@@ -155,10 +183,10 @@ class _PinFlowScreenState extends State<PinFlowScreen>
   }
 
   // the new pin did not take: back to choosing it, saying why
-  Future<void> _again(String why) async {
+  Future<void> _again(String why, {_Step to = _Step.choose}) async {
     await _fail(why);
     if (!mounted) return;
-    _go(_Step.choose, forward: false);
+    _go(to, forward: false);
     setState(() => _error = why);
   }
 
@@ -199,6 +227,25 @@ class _PinFlowScreenState extends State<PinFlowScreen>
           if (_changing) _old = _pin;
           HapticFeedback.selectionClick();
           _go(_Step.choose);
+        case _Step.appChoose:
+          _first = _pin;
+          HapticFeedback.selectionClick();
+          _go(_Step.appConfirm);
+        case _Step.appConfirm:
+          if (_pin != _first) {
+            await _again(
+              l10n.panicSetupThoseWereDifferentFrom,
+              to: _Step.appChoose,
+            );
+            return;
+          }
+          if (!await _lock.setupPin(_pin)) {
+            await _again(l10n.pinPickDifferent, to: _Step.appChoose);
+            return;
+          }
+          _first = '';
+          HapticFeedback.mediumImpact();
+          _go(_Step.choose);
         case _Step.choose:
           _first = _pin;
           HapticFeedback.selectionClick();
@@ -232,7 +279,10 @@ class _PinFlowScreenState extends State<PinFlowScreen>
           break;
       }
     } catch (e) {
-      await _again(l10n.flowNotSet);
+      await _again(
+        l10n.flowNotSet,
+        to: _step == _Step.appConfirm ? _Step.appChoose : _Step.choose,
+      );
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -260,13 +310,16 @@ class _PinFlowScreenState extends State<PinFlowScreen>
     _go(_Step.forget);
   }
 
-  // any old vault goes and the new one is made. a pin already in use shows
-  // only here, once the old one is gone: back to choosing another
+  // any old vault goes and the new one is made, or the one a restore
+  // brought is sealed. a pin already in use shows only here, once the old
+  // one is gone: back to choosing another
   Future<void> _make() async {
     _go(_Step.making);
     setState(() => _busy = true);
     try {
-      final ok = await widget.host.createVault(_first);
+      final ok = _restoring
+          ? await widget.host.sealRestored(_lock, _first)
+          : await widget.host.createVault(_first);
       if (!mounted) return;
       if (!ok) {
         await _rechoose(l10n.pinPickDifferent);
@@ -274,7 +327,7 @@ class _PinFlowScreenState extends State<PinFlowScreen>
       }
       _first = '';
       HapticFeedback.lightImpact();
-      _go(_Step.pick);
+      _go(_restoring ? _Step.done : _Step.pick);
     } catch (e) {
       if (mounted) await _rechoose(l10n.flowNotSet);
     } finally {
@@ -296,12 +349,13 @@ class _PinFlowScreenState extends State<PinFlowScreen>
     // a new page comes in from the side reading goes towards
     final from = (_forward ? 1.0 : -1.0) * (rtl ? -1 : 1);
     return PopScope(
-      canPop: !_busy,
+      canPop: !_busy && !_restoring,
       child: Scaffold(
         backgroundColor: HaloColors.ink,
         appBar: AppBar(
           backgroundColor: HaloColors.ink,
           elevation: 0,
+          automaticallyImplyLeading: !_restoring,
           // the page scrolls under it on a small screen: no tint comes in
           scrolledUnderElevation: 0,
           iconTheme: IconThemeData(color: HaloColors.text2),
@@ -361,6 +415,12 @@ class _PinFlowScreenState extends State<PinFlowScreen>
         (Icons.fingerprint, l10n.flowDecoyFinger),
         (Icons.dialpad_outlined, l10n.flowDecoyDigits),
         (Icons.notifications_off_outlined, l10n.flowDecoyShade),
+        (Icons.gavel_outlined, l10n.flowLaw),
+      ],
+      PinFlow.vault when _restoring => [
+        (Icons.visibility_off_outlined, l10n.restoreChooseHiddenPin),
+        if (_needsLock)
+          (Icons.lock_outline_rounded, l10n.restoreHiddenLockFirst),
         (Icons.gavel_outlined, l10n.flowLaw),
       ],
       PinFlow.vault => [
@@ -427,7 +487,13 @@ class _PinFlowScreenState extends State<PinFlowScreen>
         const SizedBox(height: 12),
         _button(l10n.commonContinue, () {
           HapticFeedback.selectionClick();
-          _go(_Step.check);
+          _go(
+            !_restoring
+                ? _Step.check
+                : _needsLock
+                ? _Step.appChoose
+                : _Step.choose,
+          );
         }),
       ],
     );
@@ -436,7 +502,8 @@ class _PinFlowScreenState extends State<PinFlowScreen>
   Widget _pad() {
     final title = switch (_step) {
       _Step.check => l10n.flowEnterYourPin,
-      _Step.confirm => l10n.panicSetupOnceMore,
+      _Step.appChoose => l10n.lockSetupSetAPin,
+      _Step.confirm || _Step.appConfirm => l10n.panicSetupOnceMore,
       _ => switch (widget.flow) {
         PinFlow.wipe => l10n.flowWipeChoose,
         PinFlow.decoy => l10n.flowDecoyChoose,
@@ -446,16 +513,24 @@ class _PinFlowScreenState extends State<PinFlowScreen>
     final line = switch (_step) {
       _Step.check =>
         _changing ? l10n.flowEnterHiddenPinLine : l10n.flowEnterYourPinLine,
-      _Step.confirm => l10n.panicSetupTheSameFourDigits,
+      // six digits suggested, so the two pins look alike
+      _Step.appChoose => l10n.flowVaultDigits,
+      _Step.confirm || _Step.appConfirm => l10n.panicSetupTheSameFourDigits,
       _ => switch (widget.flow) {
         PinFlow.wipe => l10n.pinsWipeLine,
         PinFlow.decoy => l10n.flowDecoyDigits,
         PinFlow.vault => l10n.flowVaultChooseLine,
       },
     };
-    // making a decoy takes a few seconds: the line says so. hidden chats are
-    // made on a page of their own
-    final making = _busy && _step == _Step.confirm && !_vault;
+    // making a decoy or the first pin takes a few seconds: the line says
+    // so. hidden chats are made on a page of their own
+    final making =
+        _busy &&
+        ((_step == _Step.confirm && !_vault) || _step == _Step.appConfirm);
+    final app =
+        _step == _Step.check ||
+        _step == _Step.appChoose ||
+        _step == _Step.appConfirm;
     return FitColumn(
       children: [
         const Spacer(flex: 2),
@@ -485,7 +560,7 @@ class _PinFlowScreenState extends State<PinFlowScreen>
         const SizedBox(height: 32),
         PinDots(
           filled: _pin.length,
-          color: _step == _Step.check ? HaloColors.amber : _tint,
+          color: app ? HaloColors.amber : _tint,
           wrong: _error != null,
           shake: _shake,
           min: _min,

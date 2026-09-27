@@ -74,13 +74,15 @@ Uint8List _be32(int v) => Uint8List.fromList([
 ]);
 
 /// [manifest] must carry 'files' as BackupFileEntry json, read from
-/// [root]/name in that order. 'chunk' is filled in when absent.
+/// [root]/name, or from where [source] says, in that order. 'chunk' is
+/// filled in when absent.
 Future<void> writeBackup({
   required String outPath,
   required Uint8List salt,
   required ChunkCipher cipher,
   required Map<String, dynamic> manifest,
   required String root,
+  String Function(String name)? source,
   void Function(int done, int total)? onProgress,
 }) async {
   if (salt.length != 16) throw ArgumentError('salt must be 16 bytes');
@@ -110,7 +112,7 @@ Future<void> writeBackup({
     await put(recManifest, utf8.encode(jsonEncode(manifest)));
     final buf = Uint8List(chunk);
     for (final f in files) {
-      final raf = await File('$root/${f.name}').open();
+      final raf = await File(source?.call(f.name) ?? '$root/${f.name}').open();
       try {
         var left = f.size;
         while (left > 0) {

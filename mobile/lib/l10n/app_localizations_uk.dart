@@ -1043,6 +1043,20 @@ class AppLocalizationsUk extends AppLocalizations {
   String get backupCreateBackup => 'Створити копію';
 
   @override
+  String get backupHiddenNotIn => 'Прихованих чатів у ньому немає.';
+
+  @override
+  String get backupHiddenIncluded => 'Приховані чати в ньому теж є.';
+
+  @override
+  String get backupMoveHiddenStay =>
+      'Приховані чати лишаються на цьому телефоні й стираються разом із ним.';
+
+  @override
+  String get backupHiddenGone =>
+      'Приховані чати закрилися, коли Kryfo заблокувався. Відкрий їх PIN-кодом прихованих чатів і зроби копію звідти.';
+
+  @override
   String get blockedBlocked => 'Заблоковані';
 
   @override
@@ -6495,6 +6509,21 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get restoreAttachments => 'вкладення';
+
+  @override
+  String get restoreHiddenChats => 'приховані чати';
+
+  @override
+  String get restoreHiddenFollow =>
+      'Приховані чати, під новим PIN-кодом прихованих чатів, який ти вибереш наприкінці.';
+
+  @override
+  String get restoreChooseHiddenPin =>
+      'У цій копії є приховані чати. Вибери для них PIN-код прихованих чатів.';
+
+  @override
+  String get restoreHiddenLockFirst =>
+      'Прихованим чатам потрібне блокування, тому спершу Kryfo отримає власний PIN-код.';
 
   @override
   String get shieldBlock => 'Заблокувати';

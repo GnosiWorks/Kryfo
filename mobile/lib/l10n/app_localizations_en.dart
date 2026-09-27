@@ -1018,6 +1018,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backupCreateBackup => 'Create backup';
 
   @override
+  String get backupHiddenNotIn => 'Hidden chats are not in it.';
+
+  @override
+  String get backupHiddenIncluded => 'Your hidden chats are in it too.';
+
+  @override
+  String get backupMoveHiddenStay =>
+      'Hidden chats stay on this phone and are wiped with it.';
+
+  @override
+  String get backupHiddenGone =>
+      'Your hidden chats closed when Kryfo locked. Open them with their PIN and back up from there.';
+
+  @override
   String get blockedBlocked => 'Blocked';
 
   @override
@@ -6375,6 +6389,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get restoreAttachments => 'attachments';
+
+  @override
+  String get restoreHiddenChats => 'hidden chats';
+
+  @override
+  String get restoreHiddenFollow =>
+      'Your hidden chats, under a new hidden chats PIN you choose at the end.';
+
+  @override
+  String get restoreChooseHiddenPin =>
+      'This backup holds hidden chats. Choose a hidden chats PIN for them.';
+
+  @override
+  String get restoreHiddenLockFirst =>
+      'Hidden chats need the app lock, so Kryfo gets a PIN of its own first.';
 
   @override
   String get shieldBlock => 'Block';
