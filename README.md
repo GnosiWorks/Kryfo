@@ -6,6 +6,7 @@ services, or wait on nostr relays when the other side is offline.
 
 pre-alpha and not audited yet. THREAT_MODEL.md says what it protects against
 and what it doesn't.
+found a security problem? SECURITY.md says how to tell me privately.
 
 ## features
 
