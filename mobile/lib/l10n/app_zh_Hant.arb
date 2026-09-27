@@ -1904,5 +1904,6 @@
   "stickerRemoveRecent": "從最近使用中移除",
   "stickerCouldNotLoad": "無法載入貼圖",
   "stickerLabel": "貼圖",
-  "stickerNewer": "來自較新版的 Kryfo"
+  "stickerNewer": "來自較新版的 Kryfo",
+  "devLinkMismatch": "此連結自稱是 Marios，但其金鑰不相符。未新增。"
 }

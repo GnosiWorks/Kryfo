@@ -1904,5 +1904,6 @@
   "stickerRemoveRecent": "从最近使用中移除",
   "stickerCouldNotLoad": "无法加载贴纸",
   "stickerLabel": "贴纸",
-  "stickerNewer": "来自更新版本的 Kryfo"
+  "stickerNewer": "来自更新版本的 Kryfo",
+  "devLinkMismatch": "此链接自称是 Marios，但其密钥不匹配。未添加。"
 }

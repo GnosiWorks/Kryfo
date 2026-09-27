@@ -1904,5 +1904,6 @@
   "stickerRemoveRecent": "حذف از اخیر",
   "stickerCouldNotLoad": "استیکرها بارگیری نشدند",
   "stickerLabel": "استیکر",
-  "stickerNewer": "از نسخه‌ی جدیدتر Kryfo"
+  "stickerNewer": "از نسخه‌ی جدیدتر Kryfo",
+  "devLinkMismatch": "این پیوند خود را Marios معرفی می‌کند، اما کلیدش مطابقت ندارد. چیزی افزوده نشد."
 }

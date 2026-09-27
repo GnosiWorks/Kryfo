@@ -1904,5 +1904,6 @@
   "stickerRemoveRecent": "Hapus dari terbaru",
   "stickerCouldNotLoad": "Stiker tidak dapat dimuat",
   "stickerLabel": "Stiker",
-  "stickerNewer": "Dari Kryfo versi lebih baru"
+  "stickerNewer": "Dari Kryfo versi lebih baru",
+  "devLinkMismatch": "Tautan ini mengaku sebagai Marios, tapi kuncinya tidak cocok. Tidak ada yang ditambahkan."
 }

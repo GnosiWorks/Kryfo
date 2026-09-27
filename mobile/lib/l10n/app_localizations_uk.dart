@@ -7308,4 +7308,8 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get stickerNewer => 'З новішої версії Kryfo';
+
+  @override
+  String get devLinkMismatch =>
+      'Це посилання видає себе за Marios, але його ключ не збігається. Нічого не додано.';
 }

@@ -11552,6 +11552,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'From a newer Kryfo'**
   String get stickerNewer;
+
+  /// a scanned or pasted card with the developer's three words and another key (main.dart, handleHaloUriAdded). "Marios" stays in Latin letters
+  ///
+  /// In en, this message translates to:
+  /// **'This link says it is Marios, but its key does not match. It was not added.'**
+  String get devLinkMismatch;
 }
 
 class _AppLocalizationsDelegate

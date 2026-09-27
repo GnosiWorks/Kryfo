@@ -1904,5 +1904,6 @@
   "stickerRemoveRecent": "Xóa khỏi gần đây",
   "stickerCouldNotLoad": "Không thể tải nhãn dán",
   "stickerLabel": "Nhãn dán",
-  "stickerNewer": "Từ một bản Kryfo mới hơn"
+  "stickerNewer": "Từ một bản Kryfo mới hơn",
+  "devLinkMismatch": "Liên kết này tự nhận là Marios, nhưng khóa không khớp. Không có gì được thêm."
 }

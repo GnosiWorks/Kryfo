@@ -301,6 +301,8 @@ void _dropToast(OverlayEntry e) {
 Future<void> Function(Future<void> Function() act)? haloWhenOpen;
 
 void showHaloToast(BuildContext context, String message) {
+  // nothing to say, nothing shown: a link that opened a chat says it so
+  if (message.isEmpty) return;
   final later = haloWhenOpen;
   if (later == null) {
     _showHaloToast(context, message);

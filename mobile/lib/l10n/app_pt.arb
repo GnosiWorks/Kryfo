@@ -1904,5 +1904,6 @@
   "stickerRemoveRecent": "Remover dos recentes",
   "stickerCouldNotLoad": "Não foi possível carregar as figurinhas",
   "stickerLabel": "Figurinha",
-  "stickerNewer": "De um Kryfo mais novo"
+  "stickerNewer": "De um Kryfo mais novo",
+  "devLinkMismatch": "Este link diz que é o Marios, mas a chave dele não corresponde. Não foi adicionado."
 }

@@ -1904,5 +1904,6 @@
   "stickerRemoveRecent": "Прибрати з нещодавніх",
   "stickerCouldNotLoad": "Не вдалося завантажити стікери",
   "stickerLabel": "Стікер",
-  "stickerNewer": "З новішої версії Kryfo"
+  "stickerNewer": "З новішої версії Kryfo",
+  "devLinkMismatch": "Це посилання видає себе за Marios, але його ключ не збігається. Нічого не додано."
 }

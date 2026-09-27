@@ -7196,4 +7196,8 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get stickerNewer => 'از نسخه‌ی جدیدتر Kryfo';
+
+  @override
+  String get devLinkMismatch =>
+      'این پیوند خود را Marios معرفی می‌کند، اما کلیدش مطابقت ندارد. چیزی افزوده نشد.';
 }

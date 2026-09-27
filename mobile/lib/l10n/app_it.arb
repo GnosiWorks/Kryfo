@@ -1904,5 +1904,6 @@
   "stickerRemoveRecent": "Rimuovi dai recenti",
   "stickerCouldNotLoad": "Impossibile caricare gli sticker",
   "stickerLabel": "Sticker",
-  "stickerNewer": "Da un Kryfo più recente"
+  "stickerNewer": "Da un Kryfo più recente",
+  "devLinkMismatch": "Questo link dice di essere Marios, ma la sua chiave non corrisponde. Non è stato aggiunto."
 }

@@ -9106,5 +9106,9 @@
   "stickerNewer": "From a newer Kryfo",
   "@stickerNewer": {
     "description": "under a sticker this version does not have (stickers/sticker_bubble.dart)"
+  },
+  "devLinkMismatch": "This link says it is Marios, but its key does not match. It was not added.",
+  "@devLinkMismatch": {
+    "description": "a scanned or pasted card with the developer's three words and another key (main.dart, handleHaloUriAdded). \"Marios\" stays in Latin letters"
   }
 }

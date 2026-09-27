@@ -1904,5 +1904,6 @@
   "stickerRemoveRecent": "Aus „Zuletzt“ entfernen",
   "stickerCouldNotLoad": "Sticker konnten nicht geladen werden",
   "stickerLabel": "Sticker",
-  "stickerNewer": "Aus einem neueren Kryfo"
+  "stickerNewer": "Aus einem neueren Kryfo",
+  "devLinkMismatch": "Dieser Link gibt sich als Marios aus, aber sein Schlüssel stimmt nicht überein. Er wurde nicht hinzugefügt."
 }

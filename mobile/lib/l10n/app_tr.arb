@@ -1904,5 +1904,6 @@
   "stickerRemoveRecent": "Son kullanılanlardan kaldır",
   "stickerCouldNotLoad": "Çıkartmalar yüklenemedi",
   "stickerLabel": "Çıkartma",
-  "stickerNewer": "Daha yeni bir Kryfo’dan"
+  "stickerNewer": "Daha yeni bir Kryfo’dan",
+  "devLinkMismatch": "Bu bağlantı Marios olduğunu söylüyor ama anahtarı eşleşmiyor. Eklenmedi."
 }

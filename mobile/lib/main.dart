@@ -66,6 +66,7 @@ import 'session.dart';
 import 'router.dart';
 import 'vault_life.dart';
 import 'devchat/dev_chat.dart';
+import 'devchat/dev_gate.dart';
 import 'devchat/dev_key.dart';
 import 'stickers/sticker_pack.dart' show StickerLibrary;
 import 'stickers/sticker_wire.dart' show StickerWire, stickerText;
@@ -324,14 +325,31 @@ class HaloEngine {
   }
 
   // offloaded to a background isolate so a slow relay never freezes the ui.
+  // the 1:1 doors ask the dev gate first: a pinned key's lane is the dev
+  // chat's alone
   Future<String> nostrSend(String peerXPubHex, String b64Cipher) =>
-      _sendOnIsolate((nostr: true, a: peerXPubHex, b: b64Cipher)).timeout(
-        const Duration(seconds: 60),
-        onTimeout: () => 'error: relay timeout',
+      devGate.nostrSend(
+        peerXPubHex,
+        b64Cipher,
+        out: () =>
+            _sendOnIsolate((nostr: true, a: peerXPubHex, b: b64Cipher)).timeout(
+              const Duration(seconds: 60),
+              onTimeout: () => 'error: relay timeout',
+            ),
+        room: (priv) => roomSend(priv, peerXPubHex, b64Cipher),
       );
 
   void nostrSubscribeBg(String peerXPubHex) {
-    _subscribeOnIsolate(peerXPubHex).ignore();
+    devGate
+        .listen(
+          peerXPubHex,
+          out: () => _subscribeOnIsolate(peerXPubHex),
+          room: (priv) async {
+            roomSubscribeBg(priv, peerXPubHex);
+            return 'ok';
+          },
+        )
+        .ignore();
   }
 
   // bridge lines in, a summary out. tor only reads its config at startup, so
@@ -442,12 +460,20 @@ class HaloEngine {
     String peerXPubHex,
     String fcPk,
     String b64Cipher,
-  ) => _fcSendOnIsolate(peerXPubHex, fcPk, b64Cipher).timeout(
-    const Duration(seconds: 60),
-    onTimeout: () => 'error: relay timeout',
+  ) => devGate.sendFirstContact(
+    peerXPubHex,
+    fcPk,
+    b64Cipher,
+    out: () => _fcSendOnIsolate(peerXPubHex, fcPk, b64Cipher).timeout(
+      const Duration(seconds: 60),
+      onTimeout: () => 'error: relay timeout',
+    ),
+    room: (priv) => roomSendFirstContact(priv, peerXPubHex, fcPk, b64Cipher),
   );
 
+  // it cannot wait on the dev chat, so it never names a pinned key
   String nostrSubscribe(String peerXPubHex) {
+    if (devGate.names(xPub: peerXPubHex)) return kDevRefused;
     final ptr = peerXPubHex.toNativeUtf8();
     try {
       return _nostrSubscribe(ptr).toDartString();
@@ -630,11 +656,13 @@ class HaloEngine {
   }
 
   // offloaded to a background isolate so a slow tor dial never freezes the ui.
-  Future<String> sendTo(String addr, String msg) =>
-      _sendOnIsolate((nostr: false, a: addr, b: msg)).timeout(
-        const Duration(seconds: 15),
-        onTimeout: () => 'error: onion timeout',
-      );
+  Future<String> sendTo(String addr, String msg) => devGate.sendTo(
+    addr,
+    out: () => _sendOnIsolate((nostr: false, a: addr, b: msg)).timeout(
+      const Duration(seconds: 15),
+      onTimeout: () => 'error: onion timeout',
+    ),
+  );
 
   // burner rooms. every call hands the room's own private key back to the
   // engine, which never keeps it: the key lives in the room row and dies
@@ -658,10 +686,17 @@ class HaloEngine {
     }
   }
 
+  // a pinned key is reached this way only as the anonymous dev chat's name
   Future<String> roomSend(String priv, String peerPub, String msg) =>
-      _roomFfiOnIsolate('HaloRoomSend', [priv, peerPub, msg]).timeout(
-        const Duration(seconds: 60),
-        onTimeout: () => 'error: relay timeout',
+      devGate.roomSend(
+        priv,
+        peerPub,
+        msg,
+        out: () =>
+            _roomFfiOnIsolate('HaloRoomSend', [priv, peerPub, msg]).timeout(
+              const Duration(seconds: 60),
+              onTimeout: () => 'error: relay timeout',
+            ),
       );
 
   Future<String> roomSendFirstContact(
@@ -669,14 +704,30 @@ class HaloEngine {
     String peerPub,
     String fcPk,
     String msg,
-  ) => _roomFfiOnIsolate('HaloRoomSendFirstContact', [priv, peerPub, fcPk, msg])
-      .timeout(
-        const Duration(seconds: 60),
-        onTimeout: () => 'error: relay timeout',
-      );
+  ) => devGate.roomSendFirstContact(
+    priv,
+    peerPub,
+    fcPk,
+    msg,
+    out: () =>
+        _roomFfiOnIsolate('HaloRoomSendFirstContact', [
+          priv,
+          peerPub,
+          fcPk,
+          msg,
+        ]).timeout(
+          const Duration(seconds: 60),
+          onTimeout: () => 'error: relay timeout',
+        ),
+  );
 
-  void roomSubscribeBg(String priv, String peerPub) =>
-      _roomFfiOnIsolate('HaloRoomSubscribe', [priv, peerPub]).ignore();
+  void roomSubscribeBg(String priv, String peerPub) => devGate
+      .roomListen(
+        priv,
+        peerPub,
+        out: () => _roomFfiOnIsolate('HaloRoomSubscribe', [priv, peerPub]),
+      )
+      .ignore();
   void roomSubscribeFcBg(String priv) =>
       _roomFfiOnIsolate('HaloRoomSubscribeFirstContact', [priv]).ignore();
   void roomUnsubscribeBg(String pub) =>
@@ -1791,6 +1842,8 @@ class HaloDb {
   }
 
   Future<void> setPeerBundle(String haloId, String bundleB64) async {
+    // the dev chat's bundle is the pinned one, and his is no one else's
+    if (isDevId(haloId) || devKeyByBundle(bundleB64) != null) return;
     final db = await open();
     await db.update(
       'contacts',
@@ -1818,6 +1871,9 @@ class HaloDb {
     String onion,
     String xpub,
   ) async {
+    // only the dev chat's own code writes its row, and no one else gets
+    // the developer's words or key
+    if (devCardClaim(id: haloId, xPub: xpub)) return;
     final db = await open();
     final existing = await db.query(
       'contacts',
@@ -1857,6 +1913,8 @@ class HaloDb {
   // flag that a known peer's identity key changed (reinstall or mitm).
   // the chat surfaces this so the user verifies before trusting.
   Future<void> setKeyChanged(String haloId, bool changed) async {
+    // the dev chat never warns: a key that is not the pinned one is dropped
+    if (isDevId(haloId)) return;
     final db = await open();
     await db.update(
       'contacts',
@@ -2041,6 +2099,9 @@ class HaloDb {
   }
 
   Future<void> setContactXPub(String haloId, String xpub) async {
+    // the dev chat's row keeps the key it was made with, and no one else
+    // gets his
+    if (devCardClaim(id: haloId, xPub: xpub)) return;
     final db = await open();
     await db.update(
       'contacts',
@@ -2338,6 +2399,9 @@ class HaloDb {
     String xpub, {
     int accepted = 1,
   }) async {
+    // only the dev chat's own code writes its row, and no one else gets
+    // the developer's words or key
+    if (devCardClaim(id: haloId, xPub: xpub)) return;
     final db = await open();
     final now = DateTime.now().millisecondsSinceEpoch;
     final existing = await db.query(
@@ -4236,7 +4300,8 @@ Future<String?> signalDecrypt(
     // known peer's identity key no longer matches: reinstall or mitm. only
     // flagged on a targeted decrypt, so a trial against the wrong contact
     // never sets it.
-    if (flagKeyChange) {
+    // the dev chat never warns: a key that is not the pinned one is dropped
+    if (flagKeyChange && !isDevChat(peerId)) {
       await live.setKeyChanged(peerId, true);
       appState.keyChanged();
     }
@@ -4301,6 +4366,33 @@ Future<(String, bool)> handleHaloUriAdded(String raw) async {
   }
   final parsed = parseHaloUri(raw);
   if (parsed == null) return (l10n.appInvalidUri, false);
+  // a card naming the developer is taken on his keys alone: his own opens
+  // his chat and adds nothing, one with his words and another key is
+  // refused, and a dev chat id is never a card's
+  switch (devCardOf(
+    id: parsed['id']!,
+    bundle: parsed['bundle'],
+    xPub: parsed['xpub'],
+  )) {
+    case DevCard.none:
+      break;
+    case DevCard.refused:
+      return (l10n.appInvalidUri, false);
+    case DevCard.mismatch:
+      return (l10n.devLinkMismatch, false);
+    case DevCard.dev:
+      String? chat;
+      try {
+        chat = (await session.devChat.load())?.chatId;
+      } catch (e) {
+        dlog('dev link: $e');
+      }
+      chat ??= currentDevKey?.chatId;
+      if (chat == null) return (l10n.appInvalidUri, false);
+      openDevChat(chat);
+      // nothing to say: the chat opening is the answer
+      return ('', true);
+  }
   if (parsed['v'] == '2' || parsed['v'] == '3') {
     final already = await session.getContact(parsed['id']!) != null;
     // a quiet session keeps the contact on this phone and nothing more: the
@@ -4627,6 +4719,18 @@ void openRoomSoon(String groupId) {
   );
 }
 
+// a link naming the developer's own key opens his chat, a beat later, as a
+// room link does. tests watch it here
+@visibleForTesting
+void Function(String chatId) openDevChat = _openChatSoon;
+
+void _openChatSoon(String chatId) {
+  Future.delayed(
+    const Duration(milliseconds: 450),
+    () => openChatForHalo(chatId),
+  );
+}
+
 // what a link opened from outside the app came to, so an expired or full
 // room does not look like nothing happening
 void _sayLinkResult(String result) {
@@ -4773,6 +4877,13 @@ class AppIo {
         dlog('back-pair: HaloID mismatch');
         return null;
       }
+      // nobody starts a chat as the developer: his three words are only 33
+      // bits and his keys are pinned. no session is kept under them
+      if (devCardClaim(id: h, xPub: env.senderXPub)) {
+        await signalSession.sessionStore.deleteSession(tempAddr);
+        dlog('back-pair: claims the developer, dropped');
+        return null;
+      }
       // move session from temp to real HaloID
       final record = await signalSession.sessionStore.loadSession(tempAddr);
       final realAddr = SignalProtocolAddress(h, 1);
@@ -4876,7 +4987,11 @@ class AppState extends ChangeNotifier {
        _host = host,
        _router =
            router ??
-           VaultRouter(SqlRouterStore(() => live.open()), const EngineSeal());
+           VaultRouter(SqlRouterStore(() => live.open()), const EngineSeal()) {
+    // the wire asks the everyday container's dev chat, never a decoy's or
+    // a vault's: only the everyday identity goes online
+    devGate.chat = () => live.devChat.load();
+  }
 
   // signal, the engine and android, as the receive side reaches them
   final AppIo _io;
@@ -5640,17 +5755,25 @@ class AppState extends ChangeNotifier {
     // one.
     engine.setTransportMode(m);
     _nostrInitOnIsolate(relaysFor(m));
-    // the everyday rows and the hidden chats' keys, never the screen's list
-    for (final r in await live.contacts()) {
-      await subscribePeer(r['halo_id'] as String);
-    }
-    for (final x in _router.listenFor.keys) {
-      _io.listen(x);
-    }
+    await resubscribe();
     // the first-contact runner keeps the relay list it started with; it
     // has to follow the switch or strangers' openers go unread
     if (_fcLoaded) engine.subscribeFirstContactBg(_fcCounter);
     dlog('mode: $m, relays rebuilt');
+  }
+
+  // the everyday rows and the hidden chats' keys, never the screen's list,
+  // on the relays of a new mode. the dev chat's lane is its own
+  @visibleForTesting
+  Future<void> resubscribe() async {
+    for (final r in await live.contacts()) {
+      final id = r['halo_id'] as String;
+      if (isDevChat(id)) continue;
+      await subscribePeer(id);
+    }
+    for (final x in _router.listenFor.keys) {
+      _io.listen(x);
+    }
   }
 
   static const _platformChannel = MethodChannel('halo/platform');
@@ -6296,6 +6419,8 @@ class AppState extends ChangeNotifier {
   String? peerFcFor(String haloId) => _peerFc[haloId];
 
   Future<void> rememberPeerFc(String haloId, String fcPk) async {
+    // the dev chat's address is pinned, and no one else is given his
+    if (devCardClaim(id: haloId, fc: fcPk)) return;
     _peerFc[haloId] = fcPk;
     await const FlutterSecureStorage().write(
       key: 'peer_fc',
@@ -6696,7 +6821,7 @@ class AppState extends ChangeNotifier {
     if (isGroup && env.roster != null) {
       final adminId = await db.groupAdminId(env.groupId!);
       if (adminId != null && senderHaloId == adminId) {
-        await db.syncGroupMembers(env.groupId!, env.roster!);
+        await db.syncGroupMembers(env.groupId!, _noDev(env.roster!));
         await _subscribeRoomMembers(env.groupId!);
         // contact stubs for self-healed members so we can encrypt to them:
         // ids alone are not enough, we need their keys
@@ -6705,7 +6830,11 @@ class AppState extends ChangeNotifier {
             final h = p['h'];
             final o = p['o'];
             final x = p['x'];
-            if (h != null && o != null && x != null && h != myId) {
+            if (h != null &&
+                o != null &&
+                x != null &&
+                h != myId &&
+                !devCardClaim(id: h, xPub: x)) {
               await db.upsertContactStub(h, o, x);
             }
           }
@@ -7271,6 +7400,11 @@ class AppState extends ChangeNotifier {
     }
     final h = card.haloId;
     if (h == myId || h == senderHaloId) return;
+    // the developer is his pinned card alone, never someone's say-so
+    if (devCardClaim(id: h, xPub: card.xPub, fc: card.fc)) {
+      dlog('intro: names the developer, dropped');
+      return;
+    }
     final everyday = identical(db, live);
     // a card for someone the router keeps is not the everyday side's to
     // file: no row, no vouch, nothing in requests
@@ -7304,6 +7438,13 @@ class AppState extends ChangeNotifier {
     await refreshContacts();
   }
 
+  // a member list from the wire, less any id that would stand for the
+  // developer. this phone's own stays: on his phone it is his words
+  List<String> _noDev(List<String> ids) => [
+    for (final h in ids)
+      if (h == myId || !devIdClaim(h)) h,
+  ];
+
   Future<void> _applyGroupControl(
     String senderHaloId,
     UnwrappedMessage env,
@@ -7336,14 +7477,14 @@ class AppState extends ChangeNotifier {
           await db.createGroup(
             groupId,
             gc.name!,
-            gc.members!,
+            _noDev(gc.members!),
             isAdmin: false,
             adminId: senderHaloId,
           );
         } else {
           // already in the group: reconcile the member list so a re-add or
           // membership change syncs instead of leaving a stale count.
-          await db.syncGroupMembers(groupId, gc.members!);
+          await db.syncGroupMembers(groupId, _noDev(gc.members!));
           await db.renameGroup(groupId, gc.name!);
         }
         // auto-create contact stubs for unknown participants so we can
@@ -7353,7 +7494,11 @@ class AppState extends ChangeNotifier {
             final h = p['h'];
             final o = p['o'];
             final x = p['x'];
-            if (h != null && o != null && x != null && h != myId) {
+            if (h != null &&
+                o != null &&
+                x != null &&
+                h != myId &&
+                !devCardClaim(id: h, xPub: x)) {
               await db.upsertContactStub(h, o, x);
             }
           }
@@ -7363,7 +7508,7 @@ class AppState extends ChangeNotifier {
         break;
       case 'add':
         if (gc.members == null) return;
-        for (final h in gc.members!) {
+        for (final h in _noDev(gc.members!)) {
           await db.addGroupMember(groupId, h);
         }
         if (gc.participants != null) {
@@ -7371,7 +7516,11 @@ class AppState extends ChangeNotifier {
             final h = p['h'];
             final o = p['o'];
             final x = p['x'];
-            if (h != null && o != null && x != null && h != myId) {
+            if (h != null &&
+                o != null &&
+                x != null &&
+                h != myId &&
+                !devCardClaim(id: h, xPub: x)) {
               await db.upsertContactStub(h, o, x);
             }
           }
@@ -8608,6 +8757,9 @@ class AppState extends ChangeNotifier {
       if (opened == null) return null;
       final h = opened.haloId;
       final env = opened.env;
+      // the developer never starts a chat this way, and no one else may
+      // claim to be him
+      if (devCardClaim(id: h, xPub: env.senderXPub)) return null;
       await _afterClose();
       if (_moveDone != null) await _afterMove(h, null);
       final to = _routeOf(h, null);
@@ -8678,7 +8830,8 @@ class AppState extends ChangeNotifier {
     final tried = <String>{?skip};
     Future<({String id, String plain})?> under(Iterable<String> ids) async {
       for (final id in ids) {
-        if (!tried.add(id)) continue;
+        // never the dev chat: only its own lanes carry the developer
+        if (isDevId(id) || !tried.add(id)) continue;
         final p = await _io.decrypt(id, cipher);
         if (p != null) return (id: id, plain: p);
       }
@@ -8706,9 +8859,15 @@ class AppState extends ChangeNotifier {
       '_pending_back_pair_',
     };
     for (final addr in await _io.sessionAddresses()) {
-      if (skip.contains(addr)) continue;
+      // a deleted dev chat stays deleted, whatever session is left
+      if (skip.contains(addr) || isDevId(addr)) continue;
       final p = await _io.decrypt(addr, cipher);
-      if (p != null) return (id: addr, plain: p);
+      if (p == null) continue;
+      // and a peer let go does not come back as the developer
+      if (devCardClaim(id: addr, xPub: unwrapMessage(p).senderXPub)) {
+        return null;
+      }
+      return (id: addr, plain: p);
     }
     return null;
   }
@@ -9703,6 +9862,8 @@ class AppState extends ChangeNotifier {
   // signal session needed, which is the point, since ours to them is broken.
   // want=true asks them to reset their session with us and send theirs back.
   Future<void> _sendBundleCtl(String memberId, {required bool want}) async {
+    // the dev chat's bundle is pinned: nothing goes to him in the clear
+    if (isDevId(memberId)) return;
     final key = '$memberId:$want';
     final now = DateTime.now().millisecondsSinceEpoch;
     if (now - (_bundleCtlSentAt[key] ?? 0) < 60000) {
@@ -9739,6 +9900,12 @@ class AppState extends ChangeNotifier {
       final bundle = j['bundle'] as String?;
       final want = j['want'] == true;
       if (from == null || bundle == null) return;
+      // the pinned bundle is the dev chat's only one, and no one else may
+      // speak for the developer
+      if (devIdClaim(from)) {
+        dlog('bundle ctl: claims the developer, dropped');
+        return;
+      }
       final to = await _reach(from);
       if (to == null) return;
       if (to.xpub != peerXPub) {
@@ -9915,6 +10082,8 @@ class AppState extends ChangeNotifier {
   // one contact's card, ready to hand to another. the row is the source:
   // v2 pairings keep the xpub in the signal store, so fall back to that.
   Future<IntroFrame?> _introCardFor(String haloId, String note) async {
+    // the dev chat is never handed on
+    if (isDevId(haloId)) return null;
     final c = await live.getContact(haloId);
     if (c == null || (c['accepted'] as int? ?? 0) != 1) return null;
     var x = (c['xpub'] as String?) ?? '';
@@ -10128,6 +10297,8 @@ class AppState extends ChangeNotifier {
     }
     final who = env.senderHaloId;
     if (who == null || !looksLikeRoomKey(who) || who == roomPub) return;
+    // a room key that is a pinned key is no one's to join with
+    if (devIdClaim(who)) return;
     final groupId = g['group_id'] as String;
     final members = await live.getGroupMembers(groupId);
     final cap = g['member_cap'] as int?;

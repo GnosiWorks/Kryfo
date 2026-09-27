@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import 'devchat/dev_key.dart' show isDevChat;
 import 'message_envelope.dart';
 
 // the stranger gate as plain decisions, no db or engine, so the rules can be
@@ -8,7 +9,9 @@ import 'message_envelope.dart';
 
 // who to listen for at boot. accepted contacts, people a friend vouched for,
 // and plain strangers sitting in requests: all three can write to us on a
-// pair address, so all three need a subscription. blocked rows never do.
+// pair address, so all three need a subscription. blocked rows never do,
+// and neither does the dev chat: its lane is its own, and an anonymous
+// one must never be listened for as the everyday identity
 List<Map<String, Object?>> bootSubscribeRows({
   required List<Map<String, Object?>> accepted,
   required List<Map<String, Object?>> vouchedPending,
@@ -19,7 +22,7 @@ List<Map<String, Object?>> bootSubscribeRows({
   for (final r in [...accepted, ...vouchedPending, ...pendingRequests]) {
     final id = r['halo_id'] as String?;
     if (id == null || !seen.add(id)) continue;
-    if ((r['blocked'] as int? ?? 0) == 1) continue;
+    if ((r['blocked'] as int? ?? 0) == 1 || isDevChat(id)) continue;
     out.add(r);
   }
   return out;
