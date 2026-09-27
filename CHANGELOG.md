@@ -4,7 +4,12 @@
 
 ### Added
 - hidden chats: chosen chats and groups stay out of the chat list, search and notifications until you enter the hidden chats pin. set it up in app lock, advanced protection.
-- stickers: the Fokia pack, 29 animated stickers, in chats, groups and rooms. a sticker travels as its name and the app draws it, so it costs a few bytes and no picture leaves the phone. older versions show its emoji.
+- stickers: the Fokia and Fokia Remix packs, 47 animated stickers, in chats, groups and rooms. a sticker travels as its name and the app draws it, so it costs a few bytes and no picture leaves the phone. older versions show its emoji.
+
+### Changed
+- your own chats, each room and each pair code go over their own tor circuits, and relays no longer see one running count across them.
+- private mode checks its relay connections every 90 seconds instead of every 19, and a slow reply over tor no longer drops the connection.
+- chat stickers play three times and rest; a tap plays them again. open chats stop their timers while they are out of sight, and the drifting chat backgrounds hold still with reduced motion.
 
 ## [0.4.1] - 2026-09-25
 
