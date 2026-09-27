@@ -9,8 +9,11 @@ import '../supporter.dart';
 import '../badge_client.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../widgets/copied_mark.dart';
+import '../widgets/ease_size.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/motion.dart' show haloRoute;
+import '../widgets/qr_wipe.dart';
 import '../address_text.dart';
 import '../main.dart' show appState, session;
 import 'modes_screen.dart';
@@ -96,6 +99,8 @@ class _DonateScreenState extends State<DonateScreen> {
 
   final _customCtl = TextEditingController();
   String _coin = 'btc';
+  // bumped on each copy, so the button shows a tick for a moment
+  int _copies = 0;
 
   SupporterTier _tierFor(int amt) {
     if (amt >= 100) return SupporterTier.guardian;
@@ -124,6 +129,9 @@ class _DonateScreenState extends State<DonateScreen> {
       appBar: AppBar(
         backgroundColor: HaloColors.ink,
         elevation: 0,
+        // the page slides under a plain bar, never a tinted one
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
         iconTheme: IconThemeData(color: HaloColors.text2),
         title: Text(
           l10n.donateSupport,
@@ -246,20 +254,21 @@ class _DonateScreenState extends State<DonateScreen> {
     Color fg,
   ) {
     final sel = _amount == amt && _customCtl.text.isEmpty;
+    final still = MediaQuery.disableAnimationsOf(context);
     return Expanded(
       // the chosen tier grows a touch and gets its amber ring, like a face
-      // picked on the introduce sheet
+      // picked on the introduce sheet. its orb pops as it is picked
       child: PressScale(
         onTap: () {
           HapticFeedback.selectionClick();
           _pickTier(amt);
         },
         child: AnimatedScale(
-          scale: sel ? 1.05 : 1.0,
+          scale: sel && !still ? 1.05 : 1.0,
           duration: const Duration(milliseconds: 280),
           curve: Curves.easeOutBack,
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 220),
+            duration: still ? Duration.zero : const Duration(milliseconds: 220),
             curve: Curves.easeOut,
             padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 6),
             decoration: BoxDecoration(
@@ -269,41 +278,56 @@ class _DonateScreenState extends State<DonateScreen> {
                 color: sel ? HaloColors.amber : HaloColors.line,
                 width: sel ? 1.4 : 1,
               ),
-              boxShadow: sel
-                  ? [
-                      BoxShadow(
-                        color: HaloColors.amber.withValues(alpha: 0.25),
-                        blurRadius: 14,
-                      ),
-                    ]
-                  : null,
+              boxShadow: [
+                BoxShadow(
+                  color: HaloColors.amber.withValues(alpha: sel ? 0.25 : 0),
+                  blurRadius: 14,
+                ),
+              ],
             ),
             child: Column(
               children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(colors: grad),
+                AnimatedScale(
+                  scale: sel || still ? 1 : 0.86,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOutBack,
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(colors: grad),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      glyph,
+                      style: TextStyle(fontSize: 13, color: fg),
+                    ),
                   ),
-                  alignment: Alignment.center,
-                  child: Text(glyph, style: TextStyle(fontSize: 13, color: fg)),
                 ),
-                const SizedBox(height: 7),
-                Text(
-                  dollars(amt),
-                  style: HaloType.serif(
-                    size: 17,
+                const SizedBox(height: 8),
+                AnimatedDefaultTextStyle(
+                  duration: still
+                      ? Duration.zero
+                      : const Duration(milliseconds: 220),
+                  style: HaloType.mono(
+                    size: 16,
+                    weight: FontWeight.w600,
                     color: sel ? HaloColors.amber : HaloColors.text,
+                    letter: 0,
                   ),
+                  child: Text(dollars(amt)),
                 ),
-                Text(
-                  name,
+                const SizedBox(height: 2),
+                AnimatedDefaultTextStyle(
+                  duration: still
+                      ? Duration.zero
+                      : const Duration(milliseconds: 220),
                   style: HaloType.mono(
                     size: 8,
                     color: sel ? HaloColors.amber : HaloColors.text2,
                   ),
+                  child: Text(name),
                 ),
               ],
             ),
@@ -333,11 +357,27 @@ class _DonateScreenState extends State<DonateScreen> {
           ],
         ),
         const SizedBox(height: 10),
-        AnimatedSwitcher(
-          duration: const Duration(milliseconds: 240),
-          switchInCurve: Curves.easeOutCubic,
-          switchOutCurve: Curves.easeIn,
-          child: KeyedSubtree(key: ValueKey(_coin), child: _addressBox()),
+        // coins have addresses of different lengths: the box eases to its
+        // new height instead of the page jumping
+        EaseSize(
+          child: AnimatedSwitcher(
+            duration: MediaQuery.disableAnimationsOf(context)
+                ? Duration.zero
+                : const Duration(milliseconds: 240),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeIn,
+            layoutBuilder: (top, gone) => Stack(
+              alignment: Alignment.topCenter,
+              children: [
+                // the one going keeps its own height, clipped as the box
+                // eases to the new one
+                for (final g in gone)
+                  Positioned(top: 0, left: 0, right: 0, child: g),
+                ?top,
+              ],
+            ),
+            child: KeyedSubtree(key: ValueKey(_coin), child: _addressBox()),
+          ),
         ),
       ],
     );
@@ -345,6 +385,7 @@ class _DonateScreenState extends State<DonateScreen> {
 
   Widget _coinCard(_Coin c) {
     final sel = _coin == c.key;
+    final still = MediaQuery.disableAnimationsOf(context);
     return Expanded(
       child: PressScale(
         onTap: () {
@@ -352,11 +393,16 @@ class _DonateScreenState extends State<DonateScreen> {
           setState(() => _coin = c.key);
         },
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
+          duration: still ? Duration.zero : const Duration(milliseconds: 200),
           curve: Curves.easeOut,
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: HaloColors.surface,
+            color: sel
+                ? Color.alphaBlend(
+                    c.tint.withValues(alpha: 0.08),
+                    HaloColors.surface,
+                  )
+                : HaloColors.surface,
             borderRadius: BorderRadius.circular(11),
             border: Border.all(color: sel ? HaloColors.amber : HaloColors.line),
           ),
@@ -464,20 +510,10 @@ class _DonateScreenState extends State<DonateScreen> {
             onTap: () {
               HapticFeedback.mediumImpact();
               copySensitive(addr);
+              setState(() => _copies++);
               showHaloToast(context, l10n.donateAddressCopiedClearsIn);
             },
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 11),
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: HaloColors.amber,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                l10n.donateCopyAddress,
-                style: HaloType.mono(size: 12, color: HaloColors.onAmber),
-              ),
-            ),
+            child: _CopyButton(label: l10n.donateCopyAddress, copies: _copies),
           ),
           const SizedBox(height: 10),
           Container(
@@ -608,8 +644,21 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
     _pulse = AnimationController(
       duration: const Duration(milliseconds: 1600),
       vsync: this,
-    )..repeat(reverse: true);
+    );
     _start();
+  }
+
+  // the dots pulse only while something is being waited for: the service
+  // answering, or the chain. every other page rests
+  void _breathe() {
+    final waiting = _phase == _Phase.loading || _phase == _Phase.invoice;
+    final still = MediaQuery.disableAnimationsOf(context);
+    if (waiting && !still) {
+      if (!_pulse.isAnimating) _pulse.repeat(reverse: true);
+    } else if (_pulse.isAnimating || _pulse.value != 1) {
+      _pulse.stop();
+      _pulse.value = 1;
+    }
   }
 
   @override
@@ -727,11 +776,15 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
 
   @override
   Widget build(BuildContext context) {
+    _breathe();
     return Scaffold(
       backgroundColor: HaloColors.ink,
       appBar: AppBar(
         backgroundColor: HaloColors.ink,
         elevation: 0,
+        // the page slides under a plain bar, never a tinted one
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
         iconTheme: IconThemeData(color: HaloColors.text2),
         title: Text(
           l10n.donateBitcoin,
@@ -1138,25 +1191,7 @@ class _StaticAddress extends StatelessWidget {
             ).copyWith(height: 1.6),
           ),
           const SizedBox(height: 10),
-          PressScale(
-            onTap: () {
-              HapticFeedback.mediumImpact();
-              copySensitive(address);
-              showHaloToast(context, l10n.donateAddressCopiedClearsIn);
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 11),
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: HaloColors.amber,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                l10n.donateCopyAddress,
-                style: HaloType.mono(size: 12, color: HaloColors.onAmber),
-              ),
-            ),
-          ),
+          _StaticCopy(address: address),
         ],
       ),
     );
@@ -1182,12 +1217,24 @@ class _ConfirmedViewState extends State<_ConfirmedView>
     _c = AnimationController(
       duration: const Duration(milliseconds: 900),
       vsync: this,
-    )..forward();
+    );
     _c.addStatusListener((s) {
       if (s == AnimationStatus.completed && mounted) {
         setState(() => _showBadge = true);
       }
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_c.isAnimating || _c.isCompleted) return;
+    // with less movement the check is simply there
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _c.value = 1;
+    } else {
+      _c.forward();
+    }
   }
 
   @override
@@ -1341,25 +1388,12 @@ class _CheckPainter extends CustomPainter {
   bool shouldRepaint(_CheckPainter old) => old.t != t;
 }
 
-// a qr on the light card, settling in the way the my kryfo one does: the
-// frame first, then the code fades and eases up into it
-class _QrCard extends StatefulWidget {
+// a qr on the light card. the code assembles corner to corner once the
+// card is there, the way the my kryfo one does
+class _QrCard extends StatelessWidget {
   final String data;
   final double size;
   const _QrCard({required this.data, required this.size});
-  @override
-  State<_QrCard> createState() => _QrCardState();
-}
-
-class _QrCardState extends State<_QrCard> {
-  bool _shown = false;
-  @override
-  void initState() {
-    super.initState();
-    Future.delayed(const Duration(milliseconds: 160), () {
-      if (mounted) setState(() => _shown = true);
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -1369,30 +1403,80 @@ class _QrCardState extends State<_QrCard> {
         color: HaloColors.text,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: AnimatedOpacity(
-        opacity: _shown ? 1 : 0,
-        duration: const Duration(milliseconds: 260),
-        curve: Curves.easeOut,
-        child: AnimatedScale(
-          scale: _shown ? 1 : 0.94,
-          duration: const Duration(milliseconds: 280),
-          curve: Curves.easeOutBack,
-          child: QrImageView(
-            data: widget.data,
-            version: QrVersions.auto,
-            size: widget.size,
-            backgroundColor: HaloColors.text,
-            eyeStyle: QrEyeStyle(
-              eyeShape: QrEyeShape.square,
-              color: HaloColors.ink,
-            ),
-            dataModuleStyle: QrDataModuleStyle(
-              dataModuleShape: QrDataModuleShape.square,
-              color: HaloColors.ink,
-            ),
+      child: QrWipe(
+        child: QrImageView(
+          data: data,
+          version: QrVersions.auto,
+          size: size,
+          backgroundColor: HaloColors.text,
+          eyeStyle: QrEyeStyle(
+            eyeShape: QrEyeShape.square,
+            color: HaloColors.ink,
+          ),
+          dataModuleStyle: QrDataModuleStyle(
+            dataModuleShape: QrDataModuleShape.square,
+            color: HaloColors.ink,
           ),
         ),
       ),
+    );
+  }
+}
+
+// the amber copy button: its glyph turns into a tick for a moment after
+// each copy
+class _CopyButton extends StatelessWidget {
+  final String label;
+  final int copies;
+  const _CopyButton({required this.label, required this.copies});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 9),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: HaloColors.amber,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CopiedMark(
+            copies: copies,
+            color: HaloColors.onAmber,
+            done: HaloColors.onAmber,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: HaloType.mono(size: 12, color: HaloColors.onAmber),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StaticCopy extends StatefulWidget {
+  final String address;
+  const _StaticCopy({required this.address});
+  @override
+  State<_StaticCopy> createState() => _StaticCopyState();
+}
+
+class _StaticCopyState extends State<_StaticCopy> {
+  int _copies = 0;
+  @override
+  Widget build(BuildContext context) {
+    return PressScale(
+      onTap: () {
+        HapticFeedback.mediumImpact();
+        copySensitive(widget.address);
+        setState(() => _copies++);
+        showHaloToast(context, l10n.donateAddressCopiedClearsIn);
+      },
+      child: _CopyButton(label: l10n.donateCopyAddress, copies: _copies),
     );
   }
 }

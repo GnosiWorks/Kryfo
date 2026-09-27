@@ -24,7 +24,20 @@ class _OnionLoaderState extends State<OnionLoader>
   late final AnimationController _c = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 3200),
-  )..repeat();
+  );
+
+  // it draws itself only while it is up. with less movement it is simply
+  // there, whole
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) {
+      _c.stop();
+      _c.value = 1;
+    } else if (!_c.isAnimating) {
+      _c.repeat();
+    }
+  }
 
   @override
   void dispose() {

@@ -65,7 +65,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get backupThisFileIsDamaged => 'Bu dosya hasarlı ve okunamıyor';
 
   @override
-  String get backupCouldNotMakeThe => 'anahtar oluşturulamadı';
+  String get backupCouldNotMakeThe => 'Anahtar oluşturulamadı';
 
   @override
   String get contactCardMessageMeOn => 'Bana şuradan yaz';
@@ -960,10 +960,10 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get backupPassphraseMustBeAt =>
-      'parola ifadesi en az 6 karakter olmalı';
+      'Parola ifadesi en az 6 karakter olmalı';
 
   @override
-  String get backupPassphrasesDonTMatch => 'parola ifadeleri eşleşmiyor';
+  String get backupPassphrasesDonTMatch => 'Parola ifadeleri eşleşmiyor';
 
   @override
   String get backupBackupSavedKeepThe =>
@@ -1009,11 +1009,11 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String backupWriting(Object progress) {
-    return 'yazılıyor… $progress';
+    return 'Yazılıyor… $progress';
   }
 
   @override
-  String get backupCreating => 'oluşturuluyor…';
+  String get backupCreating => 'Oluşturuluyor…';
 
   @override
   String get backupMakeTheFileAnd => 'Dosyayı oluştur ve taşı';
@@ -1165,7 +1165,7 @@ class AppLocalizationsTr extends AppLocalizations {
       'Doğrudan tor projesinden iste. Botlar stoku tüketemesin diye bir bulmaca çözersin.';
 
   @override
-  String get bridgesTypeWhatYouSee => 'gördüğünü yaz. küçük harf de olur.';
+  String get bridgesTypeWhatYouSee => 'Gördüğünü yaz. Küçük harf de olur.';
 
   @override
   String get bridgesThisOneRequestDoes =>
@@ -2175,7 +2175,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get donateWeCanTVerify =>
-      'bu zinciri, senin hakkında dışarıdaki bir servise sormadan doğrulayamayız, o yüzden doğrulamıyoruz. istersen gönder. rozet açmaz.';
+      'Bu zinciri, senin hakkında dışarıdaki bir servise sormadan doğrulayamayız, o yüzden doğrulamıyoruz. İstersen gönder. Rozet açmaz.';
 
   @override
   String get donateBitcoinBadgesNeedOnion =>
@@ -3646,7 +3646,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get myKryfoHandleCopied => 'Kullanıcı adı kopyalandı';
 
   @override
-  String get myKryfoTheyReHereWith => 'o şu an yanımda';
+  String get myKryfoTheyReHereWith => 'O şu an yanımda';
 
   @override
   String get myKryfoPointYourPhonesAt =>
@@ -3659,7 +3659,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get myKryfoTheyReadYouA => 'Sana bir kod okuyor';
 
   @override
-  String get myKryfoTheyReSomewhereElse => 'başka bir yerde';
+  String get myKryfoTheyReSomewhereElse => 'Başka bir yerde';
 
   @override
   String get myKryfoSendThemALink =>
@@ -4194,7 +4194,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get profileKryfoId => 'Kryfo kimliği';
 
   @override
-  String get profileOnionAddress => 'onion adresi';
+  String get profileOnionAddress => 'Onion adresi';
 
   @override
   String get profileSupporterBadge => 'Destekçi rozeti';
@@ -4211,7 +4211,7 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get profileShowMyBadge => 'rozetimi göster';
+  String get profileShowMyBadge => 'Rozetimi göster';
 
   @override
   String get profileOnMyOwnScreens => 'Kendi ekranlarımda';
@@ -4220,10 +4220,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get profileLetContactsSeeIt => 'Kişiler görebilsin';
 
   @override
-  String get profileOffByDefault => 'varsayılan: kapalı';
+  String get profileOffByDefault => 'Varsayılan: kapalı';
 
   @override
-  String get profileShareConnect => 'paylaş ve bağlan';
+  String get profileShareConnect => 'Paylaş ve bağlan';
 
   @override
   String get profileMyKryfoCode => 'Kryfo kodum';
@@ -4746,7 +4746,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get savedPhoto2 => 'Fotoğraf';
 
   @override
-  String get scanThatSNotA => 'bu bir Kryfo QR kodu değil · tutmaya devam et';
+  String get scanThatSNotA => 'Bu bir Kryfo QR kodu değil · tutmaya devam et';
 
   @override
   String get scanScanAKryfoQr => 'Kryfo QR kodu tara';
@@ -4795,7 +4795,7 @@ class AppLocalizationsTr extends AppLocalizations {
       'Her sohbet, iki anahtardan türetilen kendi adresini alır. Aktarıcı bir çift insan değil, birbiriyle ilgisiz bırakma noktaları görür.';
 
   @override
-  String get seenWhatYouSay => 'ne söylediğin';
+  String get seenWhatYouSay => 'Ne söylediğin';
 
   @override
   String get seenEndToEndEncrypted =>
@@ -4836,7 +4836,7 @@ class AppLocalizationsTr extends AppLocalizations {
       'Uygulamayla gelen kurallarla telefonunda çalışır. Ağ yok, liste indirme yok. Yalnızca bir yabancıdan gelen ilk mesajı okur ve bir kişinin sana gönderdiği hiçbir şeyi göremez.';
 
   @override
-  String get seenBurnerRooms => 'geçici odalar';
+  String get seenBurnerRooms => 'Geçici odalar';
 
   @override
   String get seenRoomKeys => 'oda anahtarı';
@@ -4846,7 +4846,7 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bir odaya ona özel üretilmiş bir anahtarla katılırsın, böylece içerideki insanlar başka yerde işe yarayacak hiçbir şey öğrenmez. Geç katılanlar geçmişi almaz. Süre dolduğunda anahtarlar, mesajlar ve medya yok edilir.';
 
   @override
-  String get seenLinkPreviews => 'bağlantı önizlemeleri';
+  String get seenLinkPreviews => 'Bağlantı önizlemeleri';
 
   @override
   String get seenOverTor => 'tor üzerinden';
@@ -4897,7 +4897,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String settingsTypeWipeToConfirm(Object word) {
-    return 'onaylamak için “$word” yaz';
+    return 'Onaylamak için “$word” yaz';
   }
 
   @override
@@ -5480,7 +5480,7 @@ class AppLocalizationsTr extends AppLocalizations {
       'Varsayılan olarak her mesaj tor üzerinden, yani bir aktarıcı zinciri boyunca gider. Kimse, ne biz ne de ağın, kiminle konuştuğunu ya da nerede olduğunu göremez.';
 
   @override
-  String get whyKryfoEndToEndEncrypted => 'uçtan uca şifreli';
+  String get whyKryfoEndToEndEncrypted => 'Uçtan uca şifreli';
 
   @override
   String get whyKryfoMessagesAreSealedWith =>
@@ -5494,7 +5494,7 @@ class AppLocalizationsTr extends AppLocalizations {
       'Hesap yok, telefon numarası yok, sohbetlerini saklayan merkezi bir sunucu yok. Sohbetlerin bu telefonda, depolamada şifreli olarak durur.';
 
   @override
-  String get whyKryfoNothingLeaks => 'hiçbir şey sızmaz';
+  String get whyKryfoNothingLeaks => 'Hiçbir şey sızmaz';
 
   @override
   String get whyKryfoNoReadReceiptsOr =>
@@ -5505,7 +5505,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get whyKryfoCompareASafetyNumber =>
-      'güvenlik numarasını yüz yüze ya da güvendiğin bir kanaldan karşılaştır, böylece kimsenin kişini taklit etmediğini bilirsin.';
+      'Güvenlik numarasını yüz yüze ya da güvendiğin bir kanaldan karşılaştır, böylece kimsenin kişini taklit etmediğini bilirsin.';
 
   @override
   String get whyKryfoTheHonestPart => 'Dürüst kısım';
@@ -6379,7 +6379,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get cameraRetake => 'Yeniden çek';
 
   @override
-  String get seenIntroductions => 'tanıştırmalar';
+  String get seenIntroductions => 'Tanıştırmalar';
 
   @override
   String get donateAddress => 'adres';
@@ -6448,7 +6448,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get shieldIgnore => 'Yok say';
 
   @override
-  String get profileIdentity => 'kimlik';
+  String get profileIdentity => 'Kimlik';
 
   @override
   String get avatarPickerShape => 'Şekil';

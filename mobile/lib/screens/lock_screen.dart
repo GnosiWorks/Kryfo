@@ -54,17 +54,21 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
     end: 1.0,
   ).animate(CurvedAnimation(parent: _breath, curve: Curves.easeInOut));
 
+  bool _breathed = false;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // it breathes, unless the phone asks for less movement
-    if (MediaQuery.of(context).disableAnimations) {
+    // one breath in as the pad comes up, then it rests: a pad left up must
+    // not keep drawing. still with less movement
+    if (MediaQuery.disableAnimationsOf(context)) {
       _breath
         ..stop()
         ..value = 1;
-    } else if (!_breath.isAnimating) {
-      _breath.repeat(reverse: true);
+    } else if (!_breathed) {
+      _breath.forward(from: 0);
     }
+    _breathed = true;
   }
 
   @override

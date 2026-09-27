@@ -65,7 +65,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get backupThisFileIsDamaged => 'Tệp này bị hỏng và không thể đọc được';
 
   @override
-  String get backupCouldNotMakeThe => 'không tạo được khóa';
+  String get backupCouldNotMakeThe => 'Không tạo được khóa';
 
   @override
   String get contactCardMessageMeOn => 'Nhắn tôi trên';
@@ -944,10 +944,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get commonSave => 'Lưu';
 
   @override
-  String get backupPassphraseMustBeAt => 'cụm mật khẩu phải có ít nhất 6 ký tự';
+  String get backupPassphraseMustBeAt => 'Cụm mật khẩu phải có ít nhất 6 ký tự';
 
   @override
-  String get backupPassphrasesDonTMatch => 'cụm mật khẩu không khớp';
+  String get backupPassphrasesDonTMatch => 'Cụm mật khẩu không khớp';
 
   @override
   String get backupBackupSavedKeepThe =>
@@ -993,11 +993,11 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String backupWriting(Object progress) {
-    return 'đang ghi… $progress';
+    return 'Đang ghi… $progress';
   }
 
   @override
-  String get backupCreating => 'đang tạo…';
+  String get backupCreating => 'Đang tạo…';
 
   @override
   String get backupMakeTheFileAnd => 'Tạo tệp và chuyển đi';
@@ -1148,7 +1148,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get bridgesTypeWhatYouSee =>
-      'nhập những gì bạn thấy. chữ thường cũng được.';
+      'Nhập những gì bạn thấy. Chữ thường cũng được.';
 
   @override
   String get bridgesThisOneRequestDoes =>
@@ -2163,7 +2163,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get donateWeCanTVerify =>
-      'chúng tôi không thể xác minh chuỗi này mà không hỏi một dịch vụ bên ngoài về bạn, nên chúng tôi không làm. cứ gửi nếu bạn muốn. việc này sẽ không mở khóa huy hiệu.';
+      'Chúng tôi không thể xác minh chuỗi này mà không hỏi một dịch vụ bên ngoài về bạn, nên chúng tôi không làm. Cứ gửi nếu bạn muốn. Việc này sẽ không mở khóa huy hiệu.';
 
   @override
   String get donateBitcoinBadgesNeedOnion =>
@@ -3617,7 +3617,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get myKryfoHandleCopied => 'Đã sao chép tên người dùng';
 
   @override
-  String get myKryfoTheyReHereWith => 'họ đang ở cạnh tôi';
+  String get myKryfoTheyReHereWith => 'Họ đang ở cạnh tôi';
 
   @override
   String get myKryfoPointYourPhonesAt =>
@@ -3630,7 +3630,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get myKryfoTheyReadYouA => 'Họ đọc mã cho bạn';
 
   @override
-  String get myKryfoTheyReSomewhereElse => 'họ đang ở nơi khác';
+  String get myKryfoTheyReSomewhereElse => 'Họ đang ở nơi khác';
 
   @override
   String get myKryfoSendThemALink =>
@@ -4163,7 +4163,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get profileKryfoId => 'ID Kryfo';
 
   @override
-  String get profileOnionAddress => 'địa chỉ onion';
+  String get profileOnionAddress => 'Địa chỉ onion';
 
   @override
   String get profileSupporterBadge => 'Huy hiệu người ủng hộ';
@@ -4180,7 +4180,7 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get profileShowMyBadge => 'hiện huy hiệu của tôi';
+  String get profileShowMyBadge => 'Hiện huy hiệu của tôi';
 
   @override
   String get profileOnMyOwnScreens => 'Trên màn hình của tôi';
@@ -4189,10 +4189,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get profileLetContactsSeeIt => 'Cho các liên hệ thấy';
 
   @override
-  String get profileOffByDefault => 'mặc định tắt';
+  String get profileOffByDefault => 'Mặc định tắt';
 
   @override
-  String get profileShareConnect => 'chia sẻ & kết nối';
+  String get profileShareConnect => 'Chia sẻ & kết nối';
 
   @override
   String get profileMyKryfoCode => 'Mã Kryfo của tôi';
@@ -4719,7 +4719,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get scanThatSNotA =>
-      'đó không phải mã QR Kryfo · tiếp tục hướng máy ảnh';
+      'Đó không phải mã QR Kryfo · tiếp tục hướng máy ảnh';
 
   @override
   String get scanScanAKryfoQr => 'Quét mã QR Kryfo';
@@ -4768,7 +4768,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Mỗi cuộc trò chuyện có địa chỉ riêng, được suy ra từ khóa của cả hai bên. Relay chỉ thấy những điểm thả không liên quan đến nhau, không thấy một cặp người.';
 
   @override
-  String get seenWhatYouSay => 'những gì bạn nói';
+  String get seenWhatYouSay => 'Những gì bạn nói';
 
   @override
   String get seenEndToEndEncrypted =>
@@ -4809,7 +4809,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Chạy trên điện thoại của bạn với các quy tắc có sẵn trong ứng dụng. Không dùng mạng, không tải danh sách. Nó chỉ đọc tin nhắn đầu tiên từ người lạ và không thể thấy bất cứ thứ gì một liên hệ gửi cho bạn.';
 
   @override
-  String get seenBurnerRooms => 'phòng tạm';
+  String get seenBurnerRooms => 'Phòng tạm';
 
   @override
   String get seenRoomKeys => 'khóa phòng';
@@ -4819,7 +4819,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Bạn vào phòng bằng một khóa tạo riêng cho phòng đó, nên những người bên trong không biết được gì dùng được ở nơi khác. Người vào muộn không thấy lịch sử. Khi hết hạn, khóa, tin nhắn và tệp đa phương tiện đều bị hủy.';
 
   @override
-  String get seenLinkPreviews => 'xem trước liên kết';
+  String get seenLinkPreviews => 'Xem trước liên kết';
 
   @override
   String get seenOverTor => 'qua tor';
@@ -4870,7 +4870,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String settingsTypeWipeToConfirm(Object word) {
-    return 'nhập “$word” để xác nhận';
+    return 'Nhập “$word” để xác nhận';
   }
 
   @override
@@ -5452,7 +5452,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Theo mặc định, mọi tin nhắn đi qua tor - một chuỗi các relay. Không ai, kể cả chúng tôi hay bên vận hành mạng của bạn, có thể thấy bạn nói chuyện với ai hay bạn đang ở đâu.';
 
   @override
-  String get whyKryfoEndToEndEncrypted => 'được mã hóa đầu cuối';
+  String get whyKryfoEndToEndEncrypted => 'Được mã hóa đầu cuối';
 
   @override
   String get whyKryfoMessagesAreSealedWith =>
@@ -5467,7 +5467,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không tài khoản, không số điện thoại, không máy chủ trung tâm lưu các cuộc trò chuyện của bạn. Chúng nằm trên điện thoại này, được mã hóa khi lưu trữ.';
 
   @override
-  String get whyKryfoNothingLeaks => 'không gì bị lộ';
+  String get whyKryfoNothingLeaks => 'Không gì bị lộ';
 
   @override
   String get whyKryfoNoReadReceiptsOr =>
@@ -5478,7 +5478,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get whyKryfoCompareASafetyNumber =>
-      'so sánh số an toàn trực tiếp hoặc qua một kênh bạn tin tưởng, để biết chắc không ai đang mạo danh liên hệ của bạn.';
+      'So sánh số an toàn trực tiếp hoặc qua một kênh bạn tin tưởng, để biết chắc không ai đang mạo danh liên hệ của bạn.';
 
   @override
   String get whyKryfoTheHonestPart => 'Phần nói thật';
@@ -6340,7 +6340,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get cameraRetake => 'Chụp lại';
 
   @override
-  String get seenIntroductions => 'lời giới thiệu';
+  String get seenIntroductions => 'Lời giới thiệu';
 
   @override
   String get donateAddress => 'địa chỉ';
@@ -6409,7 +6409,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get shieldIgnore => 'Bỏ qua';
 
   @override
-  String get profileIdentity => 'danh tính';
+  String get profileIdentity => 'Danh tính';
 
   @override
   String get avatarPickerShape => 'Hình dạng';

@@ -93,7 +93,9 @@ class PinDots extends StatelessWidget {
       }),
     );
     final s = shake;
-    if (s == null) return row;
+    // with less movement the rose dots say it. the shake's clock still
+    // runs, so the timing stays the same
+    if (s == null || still) return row;
     return AnimatedBuilder(
       animation: s,
       child: row,

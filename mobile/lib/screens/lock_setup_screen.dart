@@ -63,7 +63,9 @@ class _LockSetupScreenState extends State<LockSetupScreen>
     if (_pin != _first) {
       HapticFeedback.heavyImpact();
       setState(() => _mismatch = true);
-      await _shake.forward(from: 0);
+      if (!MediaQuery.disableAnimationsOf(context)) {
+        await _shake.forward(from: 0);
+      }
       if (!mounted) return;
       setState(() {
         _first = '';
@@ -175,19 +177,29 @@ class _LockSetupScreenState extends State<LockSetupScreen>
         child: FitColumn(
           children: [
             const Spacer(flex: 2),
+            // the confirm step comes in from the side reading goes towards,
+            // as the pin flow's pages do
             AnimatedSwitcher(
-              duration: const Duration(milliseconds: 220),
+              duration: MediaQuery.disableAnimationsOf(context)
+                  ? Duration.zero
+                  : const Duration(milliseconds: 240),
               switchInCurve: Curves.easeOutCubic,
-              transitionBuilder: (c, a) => FadeTransition(
-                opacity: a,
-                child: SlideTransition(
-                  position: Tween(
-                    begin: const Offset(0, 0.2),
-                    end: Offset.zero,
-                  ).animate(a),
-                  child: c,
-                ),
-              ),
+              switchOutCurve: Curves.easeInCubic,
+              transitionBuilder: (c, a) {
+                final rtl = Directionality.of(context) == TextDirection.rtl;
+                final entering = c.key == ValueKey(title);
+                final from = (_confirming ? 1.0 : -1.0) * (rtl ? -1 : 1);
+                return FadeTransition(
+                  opacity: a,
+                  child: SlideTransition(
+                    position: Tween(
+                      begin: Offset((entering ? 0.18 : -0.18) * from, 0),
+                      end: Offset.zero,
+                    ).animate(a),
+                    child: c,
+                  ),
+                );
+              },
               child: Text(
                 title,
                 key: ValueKey(title),

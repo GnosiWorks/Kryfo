@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme.dart';
+import 'halo_switch.dart';
 
 class HaloSection extends StatelessWidget {
   final String label;
@@ -61,6 +62,8 @@ class HaloRow extends StatelessWidget {
   final VoidCallback? onTap;
   final IconData? icon;
   final bool rose;
+  // an on or off setting: a switch stands in for the value and the chevron
+  final bool? toggled;
   const HaloRow({
     super.key,
     required this.label,
@@ -69,13 +72,15 @@ class HaloRow extends StatelessWidget {
     this.onTap,
     this.icon,
     this.rose = false,
+    this.toggled,
   });
 
   @override
   Widget build(BuildContext context) {
     // once the 14pt label renders past ~19 two columns stop fitting on a
     // phone, so a long value goes under the label instead of wrapping
-    final v = value ?? '';
+    final on = toggled;
+    final v = on != null ? '' : value ?? '';
     final stacked =
         v.length > 16 || MediaQuery.of(context).textScaler.scale(14) > 19;
     final fg = rose ? HaloColors.rose : HaloColors.text;
@@ -83,10 +88,10 @@ class HaloRow extends StatelessWidget {
         ? HaloColors.rose.withValues(alpha: 0.12)
         : HaloColors.amberSoft;
     final ink = rose ? HaloColors.rose : HaloColors.amber;
-    return InkWell(
+    final row = InkWell(
       onTap: onTap,
       splashColor: ink.withValues(alpha: 0.08),
-      highlightColor: ink.withValues(alpha: 0.05),
+      highlightColor: ink.withValues(alpha: 0.08),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
         child: Row(
@@ -116,9 +121,10 @@ class HaloRow extends StatelessWidget {
                       ),
                       child: Text(
                         hint!,
-                        style: HaloType.mono(
-                          size: 10.5,
-                          color: HaloColors.text3,
+                        style: HaloType.sans(
+                          size: 12.5,
+                          color: HaloColors.text2,
+                          height: 1.35,
                         ),
                       ),
                     ),
@@ -140,7 +146,15 @@ class HaloRow extends StatelessWidget {
               const SizedBox(width: 8),
               Text(v, style: HaloType.sans(size: 13, color: HaloColors.text2)),
             ],
-            if (onTap != null) ...[
+            if (on != null) ...[
+              const SizedBox(width: 10),
+              ExcludeSemantics(
+                child: HaloSwitch(
+                  value: on,
+                  onChanged: onTap == null ? null : (_) => onTap!(),
+                ),
+              ),
+            ] else if (onTap != null) ...[
               const SizedBox(width: 6),
               Icon(
                 Icons.chevron_right,
@@ -152,5 +166,7 @@ class HaloRow extends StatelessWidget {
         ),
       ),
     );
+    if (on == null) return row;
+    return Semantics(toggled: on, child: row);
   }
 }

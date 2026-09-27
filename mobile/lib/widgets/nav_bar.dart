@@ -89,12 +89,14 @@ class _NavTabState extends State<_NavTab> with SingleTickerProviderStateMixin {
     super.didUpdateWidget(old);
     if (widget.on == old.on) return;
     final still = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
-    if (!widget.on) {
-      _c.value = 0;
-    } else if (still) {
-      _c.value = 1;
-    } else {
+    if (still) {
+      _c.value = widget.on ? 1 : 0;
+    } else if (widget.on) {
       _c.forward(from: 0);
+    } else {
+      // the pill it leaves shrinks back while the new one pops, so the
+      // two overlap instead of one blinking out
+      _c.animateBack(0, duration: const Duration(milliseconds: 160));
     }
   }
 
@@ -108,7 +110,6 @@ class _NavTabState extends State<_NavTab> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     final on = widget.on;
     final label = _labels[widget.tab]!;
-    final ink = on ? HaloColors.amber : HaloColors.warm;
     final scale = MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.3);
     return Semantics(
       container: true,
@@ -127,28 +128,34 @@ class _NavTabState extends State<_NavTab> with SingleTickerProviderStateMixin {
         onLongPress: widget.onLongPress,
         child: ConstrainedBox(
           constraints: const BoxConstraints(minHeight: 46),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                width: 58,
-                height: 29,
-                child: AnimatedBuilder(
-                  animation: _c,
-                  builder: (_, _) {
-                    final pop = Curves.easeOutBack.transform(_c.value);
-                    final v = _c.value;
-                    final hop = v <= 0 || v >= 0.8
-                        ? 0.0
-                        : -3.0 * (1 - ((v - 0.4) / 0.4).abs());
-                    return Stack(
+          child: AnimatedBuilder(
+            animation: _c,
+            builder: (_, _) {
+              final v = _c.value.clamp(0.0, 1.0);
+              // in: the pill pops with a hop. out: it shrinks and fades
+              final pill = on
+                  ? 0.4 + 0.6 * Curves.easeOutBack.transform(v)
+                  : 0.8 + 0.2 * v;
+              final hop = !on || v <= 0 || v >= 0.8
+                  ? 0.0
+                  : -3.0 * (1 - ((v - 0.4) / 0.4).abs());
+              // the ink follows the pill, so colour never jumps ahead of it
+              final ink = Color.lerp(HaloColors.warm, HaloColors.amber, v)!;
+              final word = Color.lerp(HaloColors.warm, HaloColors.text, v)!;
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 58,
+                    height: 29,
+                    child: Stack(
                       alignment: Alignment.center,
                       children: [
-                        if (on)
+                        if (v > 0)
                           Opacity(
-                            opacity: v.clamp(0.0, 1.0),
+                            opacity: v,
                             child: Transform.scale(
-                              scale: 0.4 + 0.6 * pop,
+                              scale: pill,
                               child: Container(
                                 decoration: BoxDecoration(
                                   color: HaloColors.amber.withValues(
@@ -160,7 +167,7 @@ class _NavTabState extends State<_NavTab> with SingleTickerProviderStateMixin {
                             ),
                           ),
                         Transform.translate(
-                          offset: Offset(0, on ? hop : 0),
+                          offset: Offset(0, hop),
                           child: StrokeIcon(
                             [_icons[widget.tab]!],
                             size: 21,
@@ -168,30 +175,30 @@ class _NavTabState extends State<_NavTab> with SingleTickerProviderStateMixin {
                           ),
                         ),
                       ],
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 4),
-              // a gap to the next tab's word, even when a long one shrinks
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 3),
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    textScaler: scale,
-                    style: HaloType.sans(
-                      size: 11,
-                      weight: on ? FontWeight.w600 : FontWeight.w400,
-                      color: on ? HaloColors.text : HaloColors.warm,
-                      height: 1.2,
                     ),
                   ),
-                ),
-              ),
-            ],
+                  const SizedBox(height: 4),
+                  // a gap to the next tab's word, even when a long one shrinks
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 3),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        label,
+                        maxLines: 1,
+                        textScaler: scale,
+                        style: HaloType.sans(
+                          size: 11,
+                          weight: on ? FontWeight.w600 : FontWeight.w400,
+                          color: word,
+                          height: 1.2,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),

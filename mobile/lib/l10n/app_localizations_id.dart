@@ -65,7 +65,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get backupThisFileIsDamaged => 'File ini rusak dan tidak bisa dibaca';
 
   @override
-  String get backupCouldNotMakeThe => 'gagal membuat kunci';
+  String get backupCouldNotMakeThe => 'Gagal membuat kunci';
 
   @override
   String get contactCardMessageMeOn => 'Kirimi aku pesan di';
@@ -945,10 +945,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get commonSave => 'Simpan';
 
   @override
-  String get backupPassphraseMustBeAt => 'frasa sandi minimal 6 karakter';
+  String get backupPassphraseMustBeAt => 'Frasa sandi minimal 6 karakter';
 
   @override
-  String get backupPassphrasesDonTMatch => 'frasa sandi tidak cocok';
+  String get backupPassphrasesDonTMatch => 'Frasa sandi tidak cocok';
 
   @override
   String get backupBackupSavedKeepThe =>
@@ -994,11 +994,11 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String backupWriting(Object progress) {
-    return 'menulis… $progress';
+    return 'Menulis… $progress';
   }
 
   @override
-  String get backupCreating => 'membuat…';
+  String get backupCreating => 'Membuat…';
 
   @override
   String get backupMakeTheFileAnd => 'Buat file dan pindah';
@@ -1150,7 +1150,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get bridgesTypeWhatYouSee =>
-      'ketik yang kamu lihat. huruf kecil tidak masalah.';
+      'Ketik yang kamu lihat. Huruf kecil tidak masalah.';
 
   @override
   String get bridgesThisOneRequestDoes =>
@@ -2169,7 +2169,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get donateWeCanTVerify =>
-      'kami tidak bisa memverifikasi blockchain ini tanpa bertanya tentang kamu ke layanan luar, jadi kami tidak melakukannya. kirim saja kalau mau. ini tidak akan membuka lencana.';
+      'Kami tidak bisa memverifikasi blockchain ini tanpa bertanya tentang kamu ke layanan luar, jadi kami tidak melakukannya. Kirim saja kalau mau. Ini tidak akan membuka lencana.';
 
   @override
   String get donateBitcoinBadgesNeedOnion => 'Lencana bitcoin butuh mode onion';
@@ -3622,7 +3622,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get myKryfoHandleCopied => 'Nama pengguna disalin';
 
   @override
-  String get myKryfoTheyReHereWith => 'dia ada di sini bersamaku';
+  String get myKryfoTheyReHereWith => 'Dia ada di sini bersamaku';
 
   @override
   String get myKryfoPointYourPhonesAt =>
@@ -3635,7 +3635,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get myKryfoTheyReadYouA => 'Dia membacakan kode';
 
   @override
-  String get myKryfoTheyReSomewhereElse => 'dia ada di tempat lain';
+  String get myKryfoTheyReSomewhereElse => 'Dia ada di tempat lain';
 
   @override
   String get myKryfoSendThemALink =>
@@ -4170,7 +4170,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get profileKryfoId => 'ID Kryfo';
 
   @override
-  String get profileOnionAddress => 'alamat onion';
+  String get profileOnionAddress => 'Alamat onion';
 
   @override
   String get profileSupporterBadge => 'Lencana pendukung';
@@ -4187,7 +4187,7 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get profileShowMyBadge => 'tampilkan lencanaku';
+  String get profileShowMyBadge => 'Tampilkan lencanaku';
 
   @override
   String get profileOnMyOwnScreens => 'Di layarku sendiri';
@@ -4196,10 +4196,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get profileLetContactsSeeIt => 'Biarkan kontak melihatnya';
 
   @override
-  String get profileOffByDefault => 'mati secara bawaan';
+  String get profileOffByDefault => 'Mati secara bawaan';
 
   @override
-  String get profileShareConnect => 'bagikan & terhubung';
+  String get profileShareConnect => 'Bagikan & terhubung';
 
   @override
   String get profileMyKryfoCode => 'Kode Kryfo-ku';
@@ -4725,7 +4725,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get savedPhoto2 => 'Foto';
 
   @override
-  String get scanThatSNotA => 'itu bukan QR Kryfo · terus arahkan';
+  String get scanThatSNotA => 'Itu bukan QR Kryfo · terus arahkan';
 
   @override
   String get scanScanAKryfoQr => 'Pindai QR Kryfo';
@@ -4774,7 +4774,7 @@ class AppLocalizationsId extends AppLocalizations {
       'Setiap obrolan punya alamatnya sendiri, diturunkan dari kedua kunci. Relay hanya melihat kotak titipan yang tidak saling terkait, bukan sepasang orang.';
 
   @override
-  String get seenWhatYouSay => 'isi pesanmu';
+  String get seenWhatYouSay => 'Isi pesanmu';
 
   @override
   String get seenEndToEndEncrypted =>
@@ -4815,7 +4815,7 @@ class AppLocalizationsId extends AppLocalizations {
       'Berjalan di ponselmu dengan aturan bawaan aplikasi. Tanpa jaringan, tanpa mengunduh daftar. Perisai ini hanya membaca pesan pertama dari orang asing dan tidak bisa melihat apa pun yang dikirim kontakmu.';
 
   @override
-  String get seenBurnerRooms => 'ruang sekali pakai';
+  String get seenBurnerRooms => 'Ruang sekali pakai';
 
   @override
   String get seenRoomKeys => 'kunci ruang';
@@ -4825,7 +4825,7 @@ class AppLocalizationsId extends AppLocalizations {
       'Kamu bergabung ke ruang dengan kunci yang dibuat khusus untuknya, jadi orang di dalamnya tidak mendapat apa pun yang berguna di tempat lain. Yang bergabung belakangan tidak mendapat riwayat. Saat kedaluwarsa, kunci, pesan, dan medianya dimusnahkan.';
 
   @override
-  String get seenLinkPreviews => 'pratinjau tautan';
+  String get seenLinkPreviews => 'Pratinjau tautan';
 
   @override
   String get seenOverTor => 'lewat tor';
@@ -4877,7 +4877,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String settingsTypeWipeToConfirm(Object word) {
-    return 'ketik “$word” untuk konfirmasi';
+    return 'Ketik “$word” untuk konfirmasi';
   }
 
   @override
@@ -5460,7 +5460,7 @@ class AppLocalizationsId extends AppLocalizations {
       'Secara bawaan setiap pesan berjalan lewat tor - rangkaian relay. Tidak ada yang bisa melihat dengan siapa kamu bicara atau di mana kamu berada, baik kami maupun jaringanmu.';
 
   @override
-  String get whyKryfoEndToEndEncrypted => 'terenkripsi ujung ke ujung';
+  String get whyKryfoEndToEndEncrypted => 'Terenkripsi ujung ke ujung';
 
   @override
   String get whyKryfoMessagesAreSealedWith =>
@@ -5475,7 +5475,7 @@ class AppLocalizationsId extends AppLocalizations {
       'Tanpa akun, tanpa nomor telepon, tanpa server pusat yang menyimpan obrolanmu. Semuanya tinggal di ponsel ini, terenkripsi saat tersimpan.';
 
   @override
-  String get whyKryfoNothingLeaks => 'tidak ada yang bocor';
+  String get whyKryfoNothingLeaks => 'Tidak ada yang bocor';
 
   @override
   String get whyKryfoNoReadReceiptsOr =>
@@ -5486,7 +5486,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get whyKryfoCompareASafetyNumber =>
-      'bandingkan nomor keamanan secara tatap muka atau lewat saluran yang kamu percaya, agar kamu tahu tidak ada yang menyamar sebagai kontakmu.';
+      'Bandingkan nomor keamanan secara tatap muka atau lewat saluran yang kamu percaya, agar kamu tahu tidak ada yang menyamar sebagai kontakmu.';
 
   @override
   String get whyKryfoTheHonestPart => 'Bagian jujurnya';
@@ -6354,7 +6354,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get cameraRetake => 'Ulangi';
 
   @override
-  String get seenIntroductions => 'perkenalan';
+  String get seenIntroductions => 'Perkenalan';
 
   @override
   String get donateAddress => 'alamat';
@@ -6423,7 +6423,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get shieldIgnore => 'Abaikan';
 
   @override
-  String get profileIdentity => 'identitas';
+  String get profileIdentity => 'Identitas';
 
   @override
   String get avatarPickerShape => 'Bentuk';

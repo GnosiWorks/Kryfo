@@ -8,7 +8,7 @@ import '../lock_state.dart';
 import '../intro_prefs.dart';
 import '../scam_prefs.dart';
 import '../miui_autostart.dart';
-import '../widgets/motion.dart' show haloRoute;
+import '../widgets/motion.dart' show haloRoute, houseSpring;
 import 'why_kryfo_screen.dart';
 import 'transport_screen.dart';
 import 'bridges_screen.dart';
@@ -32,44 +32,207 @@ import '../l10n/l10n.dart';
 import '../widgets/language_sheet.dart';
 import '../wipe_word.dart';
 
-Widget _postureLine(String label, bool on, String onText, String offText) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 6),
-    child: Row(
-      children: [
-        AnimatedSwitcher(
-          duration: const Duration(milliseconds: 240),
-          switchInCurve: Curves.easeOutBack,
-          transitionBuilder: (child, anim) =>
-              ScaleTransition(scale: anim, child: child),
-          child: Icon(
-            on ? Icons.check_circle : Icons.radio_button_unchecked,
-            key: ValueKey(on),
-            size: 16,
-            color: on ? HaloColors.amber : HaloColors.text3,
-          ),
-        ),
-        const SizedBox(width: 10),
-        // the label wraps and the state keeps its place: in a long language
-        // at a big font size the two do not fit one line
-        Expanded(
-          child: Text(
-            label,
-            style: HaloType.sans(size: 13, color: HaloColors.text),
-          ),
-        ),
-        const SizedBox(width: 8),
-        AnimatedDefaultTextStyle(
-          duration: const Duration(milliseconds: 240),
-          style: HaloType.mono(
-            size: 10,
-            color: on ? HaloColors.amber : HaloColors.text3,
-          ),
-          child: Text(on ? onText : offText),
-        ),
-      ],
-    ),
+// one protection: a ring that fills on the house spring and ticks, and its
+// state, which rises in when it changes. turning on washes the line amber
+// once, so a change made elsewhere is noticed here
+class ProtectionLine extends StatefulWidget {
+  final String label;
+  final bool on;
+  final String state;
+  const ProtectionLine(this.label, this.on, this.state, {super.key});
+  @override
+  State<ProtectionLine> createState() => _ProtectionLineState();
+}
+
+class _ProtectionLineState extends State<ProtectionLine>
+    with TickerProviderStateMixin {
+  late final AnimationController _mark = AnimationController.unbounded(
+    vsync: this,
+    value: widget.on ? 1 : 0,
   );
+  late final AnimationController _wash = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 700),
+  );
+
+  @override
+  void didUpdateWidget(ProtectionLine old) {
+    super.didUpdateWidget(old);
+    if (old.on == widget.on) return;
+    final to = widget.on ? 1.0 : 0.0;
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _mark.value = to;
+      return;
+    }
+    // the spring stops within a hair of its end: the end itself after
+    _mark.animateWith(houseSpring(_mark.value, to, _mark.velocity)).then((_) {
+      if (mounted) _mark.value = to;
+    });
+    if (widget.on) _wash.forward(from: 0);
+  }
+
+  @override
+  void dispose() {
+    _mark.dispose();
+    _wash.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final on = widget.on;
+    final still = MediaQuery.disableAnimationsOf(context);
+    return AnimatedBuilder(
+      animation: _wash,
+      builder: (_, child) {
+        final w = _wash.isAnimating
+            ? Curves.easeOut.transform(_wash.value)
+            : 1.0;
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            color: HaloColors.amber.withValues(alpha: 0.12 * (1 - w)),
+          ),
+          child: child,
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+        child: Row(
+          children: [
+            AnimatedBuilder(
+              animation: _mark,
+              builder: (_, _) => CustomPaint(
+                size: const Size.square(18),
+                painter: _MarkPainter(
+                  _mark.value,
+                  HaloColors.amber,
+                  HaloColors.text3,
+                  HaloColors.onAmber,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            // the label wraps and the state keeps its place: in a long
+            // language at a big font size the two do not fit one line
+            Expanded(
+              child: Text(
+                widget.label,
+                style: HaloType.sans(size: 13, color: HaloColors.text),
+              ),
+            ),
+            const SizedBox(width: 8),
+            AnimatedSwitcher(
+              duration: still
+                  ? Duration.zero
+                  : const Duration(milliseconds: 220),
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeInCubic,
+              transitionBuilder: (c, a) => FadeTransition(
+                opacity: a,
+                child: SlideTransition(
+                  position: Tween(
+                    begin: const Offset(0, 0.35),
+                    end: Offset.zero,
+                  ).animate(a),
+                  child: c,
+                ),
+              ),
+              layoutBuilder: (top, gone) => Stack(
+                alignment: AlignmentDirectional.centerEnd,
+                children: [...gone, ?top],
+              ),
+              child: Text(
+                widget.state,
+                key: ValueKey(widget.state),
+                style: HaloType.mono(
+                  size: 10,
+                  color: on ? HaloColors.amber : HaloColors.text3,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// a ring, then a filled round with a tick drawn across it as [t] goes to 1
+class _MarkPainter extends CustomPainter {
+  final double t;
+  final Color amber, ring, tick;
+  _MarkPainter(this.t, this.amber, this.ring, this.tick);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = size.center(Offset.zero);
+    final r = size.width / 2 - 1;
+    final k = t.clamp(0.0, 1.0);
+    canvas.drawCircle(
+      c,
+      r,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.4
+        ..color = Color.lerp(ring, amber, k)!,
+    );
+    if (t <= 0.01) return;
+    canvas.drawCircle(c, r * t.clamp(0.0, 1.15), Paint()..color = amber);
+    final d = (t - 0.35) / 0.65;
+    if (d <= 0) return;
+    final p = Path()
+      ..moveTo(size.width * 0.28, size.height * 0.52)
+      ..lineTo(size.width * 0.44, size.height * 0.67)
+      ..lineTo(size.width * 0.73, size.height * 0.36);
+    final m = p.computeMetrics().first;
+    canvas.drawPath(
+      m.extractPath(0, m.length * d.clamp(0.0, 1.0)),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.8
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round
+        ..color = tick,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_MarkPainter o) =>
+      o.t != t || o.amber != amber || o.ring != ring || o.tick != tick;
+}
+
+// how many of the lines are on, one segment each, filling as they turn on
+class ProtectionMeter extends StatelessWidget {
+  final List<bool> on;
+  const ProtectionMeter(this.on, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final still = MediaQuery.disableAnimationsOf(context);
+    return ExcludeSemantics(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final (i, lit) in on.indexed) ...[
+            if (i > 0) const SizedBox(width: 3),
+            AnimatedContainer(
+              duration: still
+                  ? Duration.zero
+                  : const Duration(milliseconds: 240),
+              curve: Curves.easeOutCubic,
+              width: lit ? 16 : 10,
+              height: 4,
+              decoration: BoxDecoration(
+                color: lit ? HaloColors.amber : HaloColors.line2,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 }
 
 class SettingsScreen extends StatefulWidget {
@@ -130,8 +293,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       backgroundColor: HaloColors.surface,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: HaloColors.surface,
         elevation: 0,
+        // the list slides under a plain bar, never a tinted one
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
         leading: BackButton(color: HaloColors.text2),
         title: Text(
           l10n.commonSettings,
@@ -150,9 +316,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
               // relay and fast modes never use tor, so "connecting" there
               // would be a promise nothing is trying to keep
               final onTor = appState.sendMode == 'private';
+              final torOn = onTor && tor;
+              final shots =
+                  appState.blockScreenshotsApplied ||
+                  appState.screenSecureByLock;
+              final lock = lockState.enabled;
               return Container(
                 margin: const EdgeInsets.only(bottom: 24),
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+                padding: const EdgeInsets.fromLTRB(12, 14, 12, 8),
                 decoration: BoxDecoration(
                   color: HaloColors.surface2,
                   borderRadius: BorderRadius.circular(16),
@@ -161,43 +332,53 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      l10n.settingsYourProtections,
-                      style: HaloType.mono(size: 11, color: HaloColors.amber),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              l10n.settingsYourProtections,
+                              style: HaloType.mono(
+                                size: 11,
+                                color: HaloColors.amber,
+                              ),
+                            ),
+                          ),
+                          ProtectionMeter([torOn, shots, lock]),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 10),
-                    _postureLine(
+                    const SizedBox(height: 8),
+                    ProtectionLine(
                       l10n.settingsTorRouting,
-                      onTor && tor,
-                      l10n.settingsConnected,
-                      onTor
+                      torOn,
+                      torOn
+                          ? l10n.settingsConnected
+                          : onTor
                           ? l10n.settingsConnecting
                           : appState.sendMode == 'fast'
                           ? l10n.settingsOffFastMode
                           : l10n.settingsOffMode,
                     ),
-                    _postureLine(
+                    ProtectionLine(
                       l10n.settingsScreenshots,
-                      appState.blockScreenshotsApplied ||
-                          appState.screenSecureByLock,
-                      l10n.settingsBlocked2,
-                      l10n.settingsAllowed,
+                      shots,
+                      shots ? l10n.settingsBlocked2 : l10n.settingsAllowed,
                     ),
-                    _postureLine(
+                    ProtectionLine(
                       l10n.settingsAppLock,
-                      lockState.enabled,
-                      l10n.settingsOn,
-                      l10n.settingsOff,
+                      lock,
+                      lock ? l10n.settingsOn : l10n.settingsOff,
                     ),
                     // only when android is blocking them: a line that says
                     // so outlives the home banner, which can be dismissed
                     FutureBuilder<bool>(
                       future: notificationsEnabled(),
                       builder: (_, snap) => snap.data == false
-                          ? _postureLine(
+                          ? ProtectionLine(
                               l10n.settingsNotifications,
                               false,
-                              '',
                               l10n.settingsBlockedByAndroid,
                             )
                           : const SizedBox.shrink(),
@@ -298,7 +479,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 icon: Icons.people_outline,
                 label: l10n.settingsAcceptIntroductions,
                 hint: l10n.settingsFriendsCanIntroduceYou,
-                value: _acceptIntros ? l10n.commonOn : l10n.commonOff,
+                toggled: _acceptIntros,
                 onTap: () async {
                   setState(() => _acceptIntros = !_acceptIntros);
                   await saveAcceptIntros(_acceptIntros, session.container);
@@ -308,7 +489,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 icon: Icons.shield_outlined,
                 label: l10n.settingsScamShield,
                 hint: l10n.settingsChecksStrangersOnYour,
-                value: _shieldOn ? l10n.commonOn : l10n.commonOff,
+                toggled: _shieldOn,
                 onTap: () async {
                   setState(() => _shieldOn = !_shieldOn);
                   await saveScamShieldOn(_shieldOn, session.container);
@@ -333,15 +514,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     : appState.blockScreenshotsPending
                     ? l10n.settingsWholeAppHiddenFrom
                     : l10n.settingsWholeAppHiddenFromRecentsAnd,
-                value: appState.screenSecureByLock
-                    ? l10n.commonOn
-                    : appState.blockScreenshots
-                    ? (appState.blockScreenshotsPending
-                          ? l10n.settingsOnNextStart
-                          : l10n.commonOn)
-                    : (appState.blockScreenshotsPending
-                          ? l10n.settingsOffNextStart
-                          : l10n.commonOff),
+                // the hint says when a change waits for the next start
+                toggled:
+                    appState.screenSecureByLock || appState.blockScreenshots,
                 onTap: appState.screenSecureByLock
                     ? null
                     : () async {
@@ -355,7 +530,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 icon: Icons.light_mode_outlined,
                 label: l10n.settingsLightTheme,
                 hint: l10n.settingsSameProtectionBrighter,
-                value: HaloColors.isLight ? l10n.commonOn : l10n.commonOff,
+                toggled: HaloColors.isLight,
                 onTap: () async {
                   await appState.setLight(!HaloColors.isLight);
                   if (mounted) setState(() {});
@@ -409,7 +584,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 icon: Icons.record_voice_over,
                 label: l10n.settingsDisguiseVoice,
                 hint: l10n.settingsShiftsYourPitchBefore,
-                value: _disguise ? l10n.commonOn : l10n.commonOff,
+                toggled: _disguise,
                 onTap: () async {
                   setState(() => _disguise = !_disguise);
                   await appState.saveDisguisePref(_disguise);

@@ -66,7 +66,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'This file is damaged and cannot be read';
 
   @override
-  String get backupCouldNotMakeThe => 'could not make the key';
+  String get backupCouldNotMakeThe => 'Could not make the key';
 
   @override
   String get contactCardMessageMeOn => 'Message me on';
@@ -956,10 +956,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupPassphraseMustBeAt =>
-      'passphrase must be at least 6 characters';
+      'Passphrase must be at least 6 characters';
 
   @override
-  String get backupPassphrasesDonTMatch => 'passphrases don\'t match';
+  String get backupPassphrasesDonTMatch => 'Passphrases don\'t match';
 
   @override
   String get backupBackupSavedKeepThe =>
@@ -1005,11 +1005,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String backupWriting(Object progress) {
-    return 'writing… $progress';
+    return 'Writing… $progress';
   }
 
   @override
-  String get backupCreating => 'creating…';
+  String get backupCreating => 'Creating…';
 
   @override
   String get backupMakeTheFileAnd => 'Make the file and move';
@@ -1159,7 +1159,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Ask the tor project directly. You solve a puzzle so bots cannot drain the supply.';
 
   @override
-  String get bridgesTypeWhatYouSee => 'type what you see. lowercase is fine.';
+  String get bridgesTypeWhatYouSee => 'Type what you see. Lowercase is fine.';
 
   @override
   String get bridgesThisOneRequestDoes =>
@@ -2168,7 +2168,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get donateWeCanTVerify =>
-      'we can\'t verify this chain without asking an outside service about you, so we don\'t. send it if you like. it won\'t unlock a badge.';
+      'We can\'t verify this chain without asking an outside service about you, so we don\'t. Send it if you like. It won\'t unlock a badge.';
 
   @override
   String get donateBitcoinBadgesNeedOnion => 'Bitcoin badges need onion mode';
@@ -3620,7 +3620,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get myKryfoHandleCopied => 'Handle copied';
 
   @override
-  String get myKryfoTheyReHereWith => 'they\'re here with me';
+  String get myKryfoTheyReHereWith => 'They\'re here with me';
 
   @override
   String get myKryfoPointYourPhonesAt =>
@@ -3633,7 +3633,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get myKryfoTheyReadYouA => 'They read you a code';
 
   @override
-  String get myKryfoTheyReSomewhereElse => 'they\'re somewhere else';
+  String get myKryfoTheyReSomewhereElse => 'They\'re somewhere else';
 
   @override
   String get myKryfoSendThemALink =>
@@ -4167,7 +4167,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileKryfoId => 'Kryfo id';
 
   @override
-  String get profileOnionAddress => 'onion address';
+  String get profileOnionAddress => 'Onion address';
 
   @override
   String get profileSupporterBadge => 'Supporter badge';
@@ -4184,7 +4184,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get profileShowMyBadge => 'show my badge';
+  String get profileShowMyBadge => 'Show my badge';
 
   @override
   String get profileOnMyOwnScreens => 'On my own screens';
@@ -4193,10 +4193,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileLetContactsSeeIt => 'Let contacts see it';
 
   @override
-  String get profileOffByDefault => 'off by default';
+  String get profileOffByDefault => 'Off by default';
 
   @override
-  String get profileShareConnect => 'share & connect';
+  String get profileShareConnect => 'Share & connect';
 
   @override
   String get profileMyKryfoCode => 'My Kryfo code';
@@ -4718,7 +4718,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get savedPhoto2 => 'Photo';
 
   @override
-  String get scanThatSNotA => 'that\'s not a Kryfo qr · keep pointing';
+  String get scanThatSNotA => 'That\'s not a Kryfo QR · keep pointing';
 
   @override
   String get scanScanAKryfoQr => 'Scan a Kryfo qr';
@@ -4767,7 +4767,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Each conversation gets its own address, derived from both keys. A relay sees unrelated drop boxes, not a pair of people.';
 
   @override
-  String get seenWhatYouSay => 'what you say';
+  String get seenWhatYouSay => 'What you say';
 
   @override
   String get seenEndToEndEncrypted =>
@@ -4808,7 +4808,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Runs on your phone with rules that ship in the app. No network, no list downloads. It only reads the first message from a stranger and cannot see anything a contact sends you.';
 
   @override
-  String get seenBurnerRooms => 'burner rooms';
+  String get seenBurnerRooms => 'Burner rooms';
 
   @override
   String get seenRoomKeys => 'room keys';
@@ -4818,7 +4818,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'You join a room under a key made for it, so the people inside learn nothing that works elsewhere. Late joiners get no history. At expiry the keys, the messages and the media are destroyed.';
 
   @override
-  String get seenLinkPreviews => 'link previews';
+  String get seenLinkPreviews => 'Link previews';
 
   @override
   String get seenOverTor => 'over tor';
@@ -4869,7 +4869,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String settingsTypeWipeToConfirm(Object word) {
-    return 'type \'$word\' to confirm';
+    return 'Type \'$word\' to confirm';
   }
 
   @override
@@ -5449,7 +5449,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'By default every message travels through tor - a chain of relays. No one, not us and not your network, can see who you talk to or where you are.';
 
   @override
-  String get whyKryfoEndToEndEncrypted => 'end-to-end encrypted';
+  String get whyKryfoEndToEndEncrypted => 'End-to-end encrypted';
 
   @override
   String get whyKryfoMessagesAreSealedWith =>
@@ -5463,7 +5463,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'No account, no phone number, no central server storing your chats. They live on this phone, encrypted at rest.';
 
   @override
-  String get whyKryfoNothingLeaks => 'nothing leaks';
+  String get whyKryfoNothingLeaks => 'Nothing leaks';
 
   @override
   String get whyKryfoNoReadReceiptsOr =>
@@ -5474,7 +5474,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get whyKryfoCompareASafetyNumber =>
-      'compare a safety number in person or over a channel you trust, so you know no one is impersonating your contact.';
+      'Compare a safety number in person or over a channel you trust, so you know no one is impersonating your contact.';
 
   @override
   String get whyKryfoTheHonestPart => 'The honest part';
@@ -6346,7 +6346,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cameraRetake => 'Retake';
 
   @override
-  String get seenIntroductions => 'introductions';
+  String get seenIntroductions => 'Introductions';
 
   @override
   String get donateAddress => 'address';
@@ -6415,7 +6415,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shieldIgnore => 'Ignore';
 
   @override
-  String get profileIdentity => 'identity';
+  String get profileIdentity => 'Identity';
 
   @override
   String get avatarPickerShape => 'Shape';

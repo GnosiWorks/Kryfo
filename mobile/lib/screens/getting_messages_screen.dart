@@ -14,6 +14,7 @@ import '../seen_timers.dart';
 import '../theme.dart';
 import '../widgets/motion.dart';
 import '../widgets/press_scale.dart';
+import '../widgets/ease_size.dart';
 import '../widgets/halo_switch.dart';
 import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
@@ -80,10 +81,11 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
   Widget build(BuildContext context) {
     final mode = appState.deliveryMode;
     final s = appState.torStatus;
+    final connecting = s == TorStatus.starting || s == TorStatus.bootstrapped;
     final status = deliveryStatus(
       mode: mode,
       connected: s == TorStatus.reachable || s == TorStatus.publishing,
-      connecting: s == TorStatus.starting || s == TorStatus.bootstrapped,
+      connecting: connecting,
       lastCheckMs: appState.lastCheckAt,
       lastWakeMs: appState.lastWakeAt,
       nowMs: DateTime.now().millisecondsSinceEpoch,
@@ -211,14 +213,19 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
                 padding: const EdgeInsets.fromLTRB(22, 14, 22, 0),
                 child: Row(
                   children: [
-                    if (status.live)
-                      BreathDot(color: HaloColors.green, size: 6)
+                    // it breathes only while tor is on its way, and holds
+                    // still once live
+                    if (!status.live && connecting)
+                      BreathDot(color: HaloColors.amber, size: 6)
                     else
-                      Container(
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
                         width: 6,
                         height: 6,
                         decoration: BoxDecoration(
-                          color: HaloColors.amber,
+                          color: status.live
+                              ? HaloColors.green
+                              : HaloColors.amber,
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -240,18 +247,36 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
                   ],
                 ),
               ),
-              if (mode == DeliveryMode.checkins)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(22, 12, 22, 0),
-                  child: Text(
-                    l10n.gettingMessagesWhenThePhoneSits,
-                    style: HaloType.sans(
-                      size: 12.5,
-                      height: 1.5,
-                      color: HaloColors.warm,
-                    ),
-                  ),
-                ),
+              // the check-ins note grows in and folds away, so the page
+              // never jumps under a finger
+              EaseSize(
+                duration: const Duration(milliseconds: 240),
+                child: mode == DeliveryMode.checkins
+                    ? TweenAnimationBuilder<double>(
+                        tween: Tween(
+                          begin: MediaQuery.disableAnimationsOf(context)
+                              ? 1
+                              : 0,
+                          end: 1,
+                        ),
+                        duration: const Duration(milliseconds: 260),
+                        curve: const Interval(0.3, 1, curve: Curves.easeOut),
+                        builder: (_, v, child) =>
+                            Opacity(opacity: v, child: child),
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(22, 12, 22, 0),
+                          child: Text(
+                            l10n.gettingMessagesWhenThePhoneSits,
+                            style: HaloType.sans(
+                              size: 12.5,
+                              height: 1.5,
+                              color: HaloColors.warm,
+                            ),
+                          ),
+                        ),
+                      )
+                    : const SizedBox(width: double.infinity),
+              ),
             ]),
           ),
         ),

@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../theme.dart';
+import '../widgets/press_scale.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/stroke_icon.dart';
 import '../l10n/l10n.dart';
@@ -195,15 +197,19 @@ class _BreathingDotState extends State<_BreathingDot>
     duration: const Duration(milliseconds: 1200),
   );
 
+  bool _breathed = false;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final still = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    final still = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     if (still) {
       _c.stop();
       _c.value = 0;
-    } else if (!_c.isAnimating) {
-      _c.repeat(reverse: true);
+    } else if (!_breathed) {
+      // two breaths as the tab opens, then it rests lit
+      _breathed = true;
+      _c.repeat(reverse: true, count: 4);
     }
   }
 
@@ -367,9 +373,10 @@ class _CardButton extends StatelessWidget {
       button: true,
       enabled: onTap != null,
       label: label,
+      onTap: onTap,
       excludeSemantics: true,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
+      child: PressScale(
+        scale: 0.96,
         onTap: onTap,
         child: Container(
           height: 42,
@@ -405,7 +412,7 @@ class _CardButton extends StatelessWidget {
   }
 }
 
-class _ToolRow extends StatelessWidget {
+class _ToolRow extends StatefulWidget {
   final List<String> icon;
   final Color tint;
   final Color tile;
@@ -424,44 +431,87 @@ class _ToolRow extends StatelessWidget {
   });
 
   @override
+  State<_ToolRow> createState() => _ToolRowState();
+}
+
+// pressed, the row takes its tool's colour, the tile dips and the chevron
+// leans the way the tool opens. let go, the tile springs back
+class _ToolRowState extends State<_ToolRow> {
+  bool _down = false;
+
+  void _set(bool v) {
+    if (widget.onTap != null && _down != v) setState(() => _down = v);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final w = widget;
+    final still = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final down = _down && !still;
+    final rtl = Directionality.of(context) == TextDirection.rtl;
     final side = BorderSide(color: HaloColors.line2, width: 0.5);
     return Semantics(
       button: true,
-      enabled: onTap != null,
-      label: '$title. $sub',
+      enabled: w.onTap != null,
+      label: '${w.title}. ${w.sub}',
+      onTap: w.onTap,
       excludeSemantics: true,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapDown: (_) => _set(true),
+        onTapUp: (_) => _set(false),
+        onTapCancel: () => _set(false),
+        onTap: w.onTap == null
+            ? null
+            : () {
+                HapticFeedback.selectionClick();
+                w.onTap!();
+              },
+        child: AnimatedContainer(
+          duration: Duration(milliseconds: _down ? 60 : 260),
+          curve: Curves.easeOut,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
           decoration: BoxDecoration(
-            border: Border(top: side, bottom: last ? side : BorderSide.none),
+            color: w.tint.withValues(alpha: _down ? 0.07 : 0),
+            border: Border(top: side, bottom: w.last ? side : BorderSide.none),
           ),
           child: Row(
             children: [
-              Container(
-                width: 46,
-                height: 46,
-                decoration: BoxDecoration(
-                  // the tile lifts towards its own tint at the top left, so
-                  // it reads as a thing to press
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Color.alphaBlend(tint.withValues(alpha: 0.10), tile),
-                      tile,
-                    ],
+              AnimatedScale(
+                scale: down ? 0.92 : 1,
+                duration: Duration(milliseconds: down ? 90 : 320),
+                curve: down ? Curves.easeOut : Curves.easeOutBack,
+                child: Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    // the tile lifts towards its own tint at the top left, so
+                    // it reads as a thing to press
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color.alphaBlend(
+                          w.tint.withValues(alpha: 0.10),
+                          w.tile,
+                        ),
+                        w.tile,
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: w.tint.withValues(alpha: 0.22),
+                      width: 0.8,
+                    ),
                   ),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: tint.withValues(alpha: 0.22),
-                    width: 0.8,
+                  alignment: Alignment.center,
+                  child: StrokeIcon(
+                    w.icon,
+                    size: 22,
+                    color: w.tint,
+                    stroke: 1.9,
                   ),
                 ),
-                alignment: Alignment.center,
-                child: StrokeIcon(icon, size: 22, color: tint, stroke: 1.9),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -469,7 +519,7 @@ class _ToolRow extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      title,
+                      w.title,
                       style: HaloType.sans(
                         size: 15,
                         weight: FontWeight.w600,
@@ -478,27 +528,32 @@ class _ToolRow extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      sub,
+                      w.sub,
                       style: HaloType.sans(size: 12.5, color: HaloColors.warm),
                     ),
                   ],
                 ),
               ),
-              Container(
-                width: 26,
-                height: 26,
-                decoration: BoxDecoration(
-                  color: HaloColors.surface2,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: HaloColors.line2, width: 0.5),
-                ),
-                alignment: Alignment.center,
-                child: StrokeIcon(
-                  _chevron,
-                  size: 14,
-                  color: HaloColors.text,
-                  stroke: 1.9,
-                  pointing: true,
+              AnimatedSlide(
+                offset: Offset(down ? (rtl ? -0.12 : 0.12) : 0, 0),
+                duration: Duration(milliseconds: down ? 90 : 320),
+                curve: down ? Curves.easeOut : Curves.easeOutBack,
+                child: Container(
+                  width: 26,
+                  height: 26,
+                  decoration: BoxDecoration(
+                    color: HaloColors.surface2,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: HaloColors.line2, width: 0.5),
+                  ),
+                  alignment: Alignment.center,
+                  child: StrokeIcon(
+                    _chevron,
+                    size: 14,
+                    color: HaloColors.text,
+                    stroke: 1.9,
+                    pointing: true,
+                  ),
                 ),
               ),
             ],

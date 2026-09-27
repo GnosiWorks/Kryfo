@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import '../theme.dart';
 import '../main.dart' hide live;
 import '../widgets/halo_sheet.dart';
+import '../widgets/press_scale.dart';
+import '../widgets/ease_size.dart';
 import '../widgets/sheet_handle.dart';
 import 'package:flutter/services.dart';
 import '../widgets/stagger_in.dart';
@@ -142,25 +144,26 @@ class _Head extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Text(
-                l10n.modesSpeed,
-                style: HaloType.serif(size: 30, weight: FontWeight.w400),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                l10n.modesPrivacy,
-                style: HaloType.serif(
-                  size: 30,
-                  weight: FontWeight.w300,
-                  italic: true,
-                  color: HaloColors.amber,
+          // one line of text, so a long language wraps instead of running
+          // off the side
+          Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: '${l10n.modesSpeed} ',
+                  style: HaloType.serif(size: 30, weight: FontWeight.w400),
                 ),
-              ),
-            ],
+                TextSpan(
+                  text: l10n.modesPrivacy,
+                  style: HaloType.serif(
+                    size: 30,
+                    weight: FontWeight.w300,
+                    italic: true,
+                    color: HaloColors.amber,
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 8),
           Text(
@@ -203,147 +206,181 @@ class _ModeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final still = MediaQuery.disableAnimationsOf(context);
+    final d = still ? Duration.zero : const Duration(milliseconds: 220);
     return Padding(
       padding: const EdgeInsets.fromLTRB(14, 6, 14, 4),
-      child: GestureDetector(
-        onTap: soon ? null : onTap,
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: active
-                ? HaloColors.amber.withValues(alpha: 0.10)
-                : HaloColors.surface,
-            border: Border.all(
-              color: active ? HaloColors.amber : HaloColors.line,
-              width: active ? 1 : 0.5,
+      child: Semantics(
+        selected: active,
+        child: PressScale(
+          scale: 0.98,
+          onTap: soon ? null : onTap,
+          child: AnimatedContainer(
+            duration: d,
+            curve: Curves.easeOutCubic,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: active
+                  ? HaloColors.amber.withValues(alpha: 0.10)
+                  : HaloColors.surface,
+              border: Border.all(
+                color: active ? HaloColors.amber : HaloColors.line,
+                width: active ? 1 : 0.5,
+              ),
+              borderRadius: BorderRadius.circular(14),
             ),
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Text(
-                    name,
-                    style: HaloType.serif(size: 18, weight: FontWeight.w400),
-                  ),
-                  if (soon) ...[
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: HaloColors.surface3,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        l10n.modesSoon,
-                        style: HaloType.mono(
-                          size: 9,
-                          color: HaloColors.amber,
-                          letter: 0.6,
-                        ),
-                      ),
-                    ),
-                  ],
-                  if (active && accent != null) ...[
-                    const SizedBox(width: 6),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
                     Text(
-                      accent!,
-                      style: HaloType.serif(
-                        size: 18,
-                        weight: FontWeight.w400,
-                        italic: true,
-                        color: HaloColors.amber,
+                      name,
+                      style: HaloType.serif(size: 18, weight: FontWeight.w400),
+                    ),
+                    if (soon) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: HaloColors.surface3,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          l10n.modesSoon,
+                          style: HaloType.mono(
+                            size: 9,
+                            color: HaloColors.amber,
+                            letter: 0.6,
+                          ),
+                        ),
                       ),
+                    ],
+                    if (accent != null) ...[
+                      const SizedBox(width: 6),
+                      AnimatedOpacity(
+                        opacity: active ? 1 : 0,
+                        duration: d,
+                        child: Text(
+                          accent!,
+                          style: HaloType.serif(
+                            size: 18,
+                            weight: FontWeight.w400,
+                            italic: true,
+                            color: HaloColors.amber,
+                          ),
+                        ),
+                      ),
+                    ],
+                    const Spacer(),
+                    // the pill pops onto the card that was picked
+                    AnimatedSwitcher(
+                      duration: still
+                          ? Duration.zero
+                          : const Duration(milliseconds: 260),
+                      switchInCurve: Curves.easeOutBack,
+                      switchOutCurve: Curves.easeInCubic,
+                      transitionBuilder: (c, a) => FadeTransition(
+                        opacity: a,
+                        child: ScaleTransition(scale: a, child: c),
+                      ),
+                      child: active
+                          ? Container(
+                              key: const ValueKey('on'),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: HaloColors.amber,
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: Text(
+                                l10n.modesActive,
+                                style: HaloType.mono(
+                                  size: 10,
+                                  weight: FontWeight.w500,
+                                  color: HaloColors.onAmber,
+                                ),
+                              ),
+                            )
+                          : const SizedBox(key: ValueKey('off')),
                     ),
                   ],
-                  const Spacer(),
-                  if (active)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: HaloColors.amber,
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        l10n.modesActive,
-                        style: HaloType.mono(
-                          size: 10,
-                          weight: FontWeight.w500,
-                          color: HaloColors.onAmber,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                desc,
-                style: HaloType.sans(
-                  size: 11,
-                  color: HaloColors.text2,
-                  height: 1.5,
                 ),
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  _Meta(k: l10n.modesSpeed2, v: speed),
-                  const SizedBox(width: 14),
-                  _Meta(k: l10n.modesHops, v: hops),
-                  const SizedBox(width: 14),
-                  _Meta(
-                    k: l10n.modesIp,
-                    v:
-                        ipText ??
-                        (ipVisible ? l10n.modesVisible : l10n.modesHidden),
-                    red: ipVisible,
-                    warn: ipWarn,
+                const SizedBox(height: 8),
+                Text(
+                  desc,
+                  style: HaloType.sans(
+                    size: 11,
+                    color: HaloColors.text2,
+                    height: 1.5,
                   ),
-                ],
-              ),
-              if (warning != null && active) ...[
+                ),
                 const SizedBox(height: 10),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 7,
-                  ),
-                  decoration: BoxDecoration(
-                    color: HaloColors.rose.withValues(alpha: 0.10),
-                    border: Border.all(
-                      color: HaloColors.rose.withValues(alpha: 0.3),
-                      width: 0.5,
+                // wraps rather than overflowing in a long language
+                Wrap(
+                  spacing: 14,
+                  runSpacing: 4,
+                  children: [
+                    _Meta(k: l10n.modesSpeed2, v: speed),
+                    _Meta(k: l10n.modesHops, v: hops, mono: true),
+                    _Meta(
+                      k: l10n.modesIp,
+                      v:
+                          ipText ??
+                          (ipVisible ? l10n.modesVisible : l10n.modesHidden),
+                      red: ipVisible,
+                      warn: ipWarn,
                     ),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: RichText(
-                    text: TextSpan(
-                      style: HaloType.sans(
-                        size: 10,
-                        color: HaloColors.rose,
-                        height: 1.4,
-                      ),
-                      children: markedSpans(
-                        l10n.modesHeadsUp(warning!),
-                        HaloType.sans(
-                          size: 10,
-                          weight: FontWeight.w500,
-                          color: HaloColors.rose,
-                        ),
-                      ),
-                    ),
-                  ),
+                  ],
+                ),
+                // the cost shows on the card that pays it, grown in rather
+                // than dropped
+                EaseSize(
+                  duration: const Duration(milliseconds: 220),
+                  child: warning != null && active
+                      ? Padding(
+                          padding: const EdgeInsets.only(top: 10),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 7,
+                            ),
+                            decoration: BoxDecoration(
+                              color: HaloColors.rose.withValues(alpha: 0.10),
+                              border: Border.all(
+                                color: HaloColors.rose.withValues(alpha: 0.3),
+                                width: 0.5,
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: RichText(
+                              text: TextSpan(
+                                style: HaloType.sans(
+                                  size: 10,
+                                  color: HaloColors.rose,
+                                  height: 1.4,
+                                ),
+                                children: markedSpans(
+                                  l10n.modesHeadsUp(warning!),
+                                  HaloType.sans(
+                                    size: 10,
+                                    weight: FontWeight.w500,
+                                    color: HaloColors.rose,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        )
+                      : const SizedBox(width: double.infinity),
                 ),
               ],
-            ],
+            ),
           ),
         ),
       ),
@@ -356,21 +393,25 @@ class _Meta extends StatelessWidget {
   final String v;
   final bool red;
   final bool warn;
+  // a number: set in the mono the app uses for counts
+  final bool mono;
   const _Meta({
     required this.k,
     required this.v,
     this.red = false,
     this.warn = false,
+    this.mono = false,
   });
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Text(k, style: HaloType.mono(size: 10, color: HaloColors.text3)),
         const SizedBox(width: 4),
         Text(
           v,
-          style: HaloType.sans(
+          style: (mono ? HaloType.mono : HaloType.sans)(
             size: 10,
             weight: FontWeight.w500,
             color: red
@@ -435,9 +476,9 @@ class _FastGateSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 18),
-            GestureDetector(
+            PressScale(
+              scale: 0.97,
               onTap: () => Navigator.pop(context, true),
-              behavior: HitTestBehavior.opaque,
               child: Container(
                 height: 46,
                 alignment: Alignment.center,
@@ -456,9 +497,8 @@ class _FastGateSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 6),
-            GestureDetector(
+            PressScale(
               onTap: () => Navigator.pop(context, false),
-              behavior: HitTestBehavior.opaque,
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 child: Center(
