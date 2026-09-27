@@ -8271,6 +8271,10 @@
   "@wallpaperPatterns": {
     "description": "screens/wallpaper_sheet.dart"
   },
+  "wallpaperMoods": "moods",
+  "@wallpaperMoods": {
+    "description": "screens/wallpaper_sheet.dart"
+  },
   "confirmSheetKeep": "Keep",
   "@confirmSheetKeep": {
     "description": "widgets/confirm_sheet.dart"

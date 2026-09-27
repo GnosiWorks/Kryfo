@@ -24,6 +24,7 @@ import 'shield_sheet.dart';
 import '../vouch_text.dart';
 import '../widgets/intro_chip.dart';
 import '../widgets/media_bubbles.dart' show VoiceBubble;
+import '../widgets/voice_parts.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/hidden_mark.dart';
 import '../widgets/pins.dart';
@@ -101,6 +102,7 @@ import '../l10n/dates.dart';
 import '../l10n/marked.dart';
 import '../l10n/numbers.dart';
 import '../widgets/video_viewer.dart';
+import '../widgets/photo_viewer.dart';
 import '../widgets/written_field.dart';
 import '../bidi_safe.dart';
 import '../lock_guard.dart' show lockGuard, onScreen;
@@ -285,44 +287,15 @@ Widget _fileCard(_Msg msg, bool isOut) {
   );
 }
 
-void _openFullImage(BuildContext context, String path, {bool secure = false}) {
-  // drop the composer's focus first, else popping the viewer brings the
-  // keyboard back up over the chat
-  FocusManager.instance.primaryFocus?.unfocus();
-  // the flag is per window, so the photo is protected and the chat around
-  // it is not. a screen that already forced it (a room, a marked chat)
-  // keeps it: the flag is one bool
-  final wasForced = appState.secureForced;
-  if (secure && !wasForced) appState.forceSecure(true);
-  Navigator.of(context)
-      .push(
-        MaterialPageRoute(
-          fullscreenDialog: true,
-          builder: (ctx) => GestureDetector(
-            onTap: () => Navigator.of(ctx).pop(),
-            child: Scaffold(
-              backgroundColor: Colors.black,
-              body: SafeArea(
-                child: Center(
-                  child: InteractiveViewer(
-                    minScale: 1,
-                    maxScale: 4,
-                    child: Image.file(
-                      File(path),
-                      cacheWidth: screenPx(ctx, times: 2),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      )
-      .then((_) {
-        if (secure && !wasForced) appState.forceSecure(false);
-        FocusManager.instance.primaryFocus?.unfocus();
-      });
-}
+// out of the bubble it was tapped in, or a tile of the shared photos. a
+// marked photo stays protected wherever it is opened from
+void _openFullImage(
+  BuildContext context,
+  String path, {
+  bool secure = false,
+  Object? tag,
+  double radius = 0,
+}) => openPhoto(context, path, tag: tag, radius: radius, secure: secure);
 
 // the time and tick on a photo or a video with no caption: a small dark pill
 // in the corner, since there is no bubble under it to carry them
@@ -5821,6 +5794,8 @@ class _Bubble extends StatelessWidget {
                                     context,
                                     msg.mediaPath!,
                                     secure: msg.secure,
+                                    tag: photoHeroTag(msg.mediaPath!, 'chat'),
+                                    radius: 14,
                                   ),
                                   child: ClipRRect(
                                     borderRadius: msg.text.isNotEmpty
@@ -5841,38 +5816,46 @@ class _Bubble extends StatelessWidget {
                                           // decodes, so pin a width
                                           child: RememberedHeight(
                                             id: msg.mediaPath!,
-                                            child: SizedBox(
-                                              width:
-                                                  MediaQuery.of(
+                                            child: Hero(
+                                              tag: photoHeroTag(
+                                                msg.mediaPath!,
+                                                'chat',
+                                              ),
+                                              child: SizedBox(
+                                                width:
+                                                    MediaQuery.of(
+                                                      context,
+                                                    ).size.width *
+                                                    0.78,
+                                                child: Image.file(
+                                                  File(msg.mediaPath!),
+                                                  gaplessPlayback: true,
+                                                  fit: BoxFit.cover,
+                                                  cacheWidth: screenPx(
                                                     context,
-                                                  ).size.width *
-                                                  0.78,
-                                              child: Image.file(
-                                                File(msg.mediaPath!),
-                                                gaplessPlayback: true,
-                                                fit: BoxFit.cover,
-                                                cacheWidth: screenPx(
-                                                  context,
-                                                  times: 0.78,
-                                                ),
-                                                errorBuilder: (_, e, _) {
-                                                  dlog(
-                                                    'Image failed: '
-                                                    '${msg.mediaPath} / $e',
-                                                  );
-                                                  return Container(
-                                                    height: 120,
-                                                    alignment: Alignment.center,
-                                                    color: Colors.black26,
-                                                    child: Text(
-                                                      l10n.chatPhotoUnavailable,
-                                                      style: HaloType.mono(
-                                                        size: 11,
-                                                        color: HaloColors.text2,
+                                                    times: 0.78,
+                                                  ),
+                                                  errorBuilder: (_, e, _) {
+                                                    dlog(
+                                                      'Image failed: '
+                                                      '${msg.mediaPath} / $e',
+                                                    );
+                                                    return Container(
+                                                      height: 120,
+                                                      alignment:
+                                                          Alignment.center,
+                                                      color: Colors.black26,
+                                                      child: Text(
+                                                        l10n.chatPhotoUnavailable,
+                                                        style: HaloType.mono(
+                                                          size: 11,
+                                                          color:
+                                                              HaloColors.text2,
+                                                        ),
                                                       ),
-                                                    ),
-                                                  );
-                                                },
+                                                    );
+                                                  },
+                                                ),
                                               ),
                                             ),
                                           ),
@@ -6783,7 +6766,11 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
   Timer? _ticker;
   int _ms = 0;
   bool _willCancel = false;
+  // how far the finger went toward the start side
   double _dragDx = 0;
+  // the mic's level while it records, newest last
+  final List<double> _levels = [];
+  StreamSubscription<Amplitude>? _level;
   bool _busy = false;
   bool _live = false;
   String? _path;
@@ -6796,6 +6783,7 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
   void dispose() {
     _recUnguard?.call();
     _ticker?.cancel();
+    _level?.cancel();
     _overlay?.remove();
     _rec.dispose();
     super.dispose();
@@ -6839,6 +6827,13 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
       _ms = 0;
       _willCancel = false;
       _dragDx = 0;
+      _levels.clear();
+      _level = _rec
+          .onAmplitudeChanged(const Duration(milliseconds: 100))
+          .listen((a) {
+            _levels.add(micLevel(a.current));
+            if (_levels.length > 40) _levels.removeAt(0);
+          }, onError: (_) {});
       HapticFeedback.mediumImpact();
       _ticker = Timer.periodic(const Duration(milliseconds: 100), (_) {
         _ms += 100;
@@ -6859,6 +6854,8 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
       dlog('voice: could not start: $e');
       _ticker?.cancel();
       _ticker = null;
+      _level?.cancel();
+      _level = null;
       _overlay?.remove();
       _overlay = null;
       final p = _path;
@@ -6878,6 +6875,8 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
     if (_ticker == null && _overlay == null) return;
     _ticker?.cancel();
     _ticker = null;
+    _level?.cancel();
+    _level = null;
     _overlay?.remove();
     _overlay = null;
     final path = await _rec.stop();
@@ -6913,134 +6912,22 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
   }
 
   Widget _bar() {
-    final cancel = _willCancel;
-    // fade the slide hint out as the finger approaches the cancel threshold.
-    final slideProgress = (_dragDx / -90).clamp(0.0, 1.0);
     return Positioned(
       left: 0,
       right: 0,
       bottom: _keyboardInset,
-      child: TweenAnimationBuilder<double>(
-        tween: Tween(begin: 0.0, end: 1.0),
-        duration: const Duration(milliseconds: 180),
-        curve: Curves.easeOutCubic,
-        builder: (_, t, child) => Opacity(
-          opacity: t,
-          child: Transform.translate(
-            offset: Offset(0, (1 - t) * 44),
-            child: child,
-          ),
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: Container(
-            padding: EdgeInsets.fromLTRB(18, 16, 18, 16 + _bottomInset),
-            decoration: BoxDecoration(
-              color: HaloColors.surface,
-              border: Border(
-                top: BorderSide(
-                  color: cancel ? HaloColors.rose : HaloColors.line,
-                  width: 0.8,
-                ),
-              ),
-            ),
-            child: Row(
-              children: [
-                // pulsing record dot
-                TweenAnimationBuilder<double>(
-                  key: const ValueKey('rec-dot'),
-                  tween: Tween(begin: 0.4, end: 1.0),
-                  duration: const Duration(milliseconds: 650),
-                  curve: Curves.easeInOut,
-                  builder: (_, v, _) => Opacity(
-                    opacity: cancel ? 1.0 : v,
-                    child: Container(
-                      width: 11,
-                      height: 11,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: HaloColors.rose,
-                      ),
-                    ),
-                  ),
-                  onEnd: () => _overlay?.markNeedsBuild(),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  _time,
-                  style: HaloType.mono(size: 14, color: HaloColors.text),
-                ),
-                Expanded(
-                  child: cancel
-                      ? Center(
-                          child: Text(
-                            l10n.chatReleaseToCancel,
-                            style: HaloType.mono(
-                              size: 12,
-                              color: HaloColors.rose,
-                            ),
-                          ),
-                        )
-                      : Transform.translate(
-                          offset: Offset(_dragDx * 0.5, 0),
-                          child: Opacity(
-                            opacity: (1 - slideProgress * 0.7),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: widget.disguise
-                                  ? [
-                                      Icon(
-                                        Icons.theater_comedy_outlined,
-                                        size: 14,
-                                        color: HaloColors.amber,
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        l10n.chatVoiceHiddenSlideTo,
-                                        style: HaloType.mono(
-                                          size: 11,
-                                          color: HaloColors.amber,
-                                        ),
-                                      ),
-                                    ]
-                                  : [
-                                      Icon(
-                                        Icons.chevron_left,
-                                        size: 16,
-                                        color: HaloColors.text3,
-                                      ),
-                                      Text(
-                                        l10n.chatSlideToCancel,
-                                        style: HaloType.mono(
-                                          size: 11,
-                                          color: HaloColors.text3,
-                                        ),
-                                      ),
-                                    ],
-                            ),
-                          ),
-                        ),
-                ),
-                Semantics(
-                  label: l10n.commonClose,
-                  button: true,
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: _abort,
-                    child: Padding(
-                      padding: const EdgeInsetsDirectional.only(start: 8),
-                      child: Icon(
-                        Icons.close_rounded,
-                        size: 20,
-                        color: HaloColors.text2,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+      child: VoiceRecordBar(
+        time: _time,
+        cancel: _willCancel,
+        drag: -_dragDx,
+        disguise: widget.disguise,
+        levels: List.of(_levels),
+        releaseLabel: l10n.chatReleaseToCancel,
+        slideLabel: l10n.chatSlideToCancel,
+        hiddenLabel: l10n.chatVoiceHiddenSlideTo,
+        closeLabel: l10n.commonClose,
+        onClose: _abort,
+        bottom: _bottomInset,
       ),
     );
   }
@@ -7054,8 +6941,12 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
         _start();
       },
       onLongPressMoveUpdate: (d) {
-        _dragDx = d.offsetFromOrigin.dx.clamp(-160.0, 0.0);
-        final wc = d.offsetFromOrigin.dx < -90;
+        // toward the start side cancels: left, or right in a right-to-left
+        // language, where the mic sits on the left
+        final rtl = Directionality.of(context) == TextDirection.rtl;
+        final along = d.offsetFromOrigin.dx * (rtl ? -1 : 1);
+        _dragDx = along.clamp(-160.0, 0.0);
+        final wc = along < -VoiceRecordBar.cancelAt;
         if (wc != _willCancel) {
           _willCancel = wc;
           if (wc) HapticFeedback.mediumImpact();
@@ -7288,27 +7179,10 @@ class _Composer extends StatelessWidget {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Semantics(
+                              DisguiseToggle(
+                                on: disguise,
                                 label: l10n.chatDisguiseVoice,
-                                button: true,
-                                child: GestureDetector(
-                                  onTap: onToggleDisguise,
-                                  behavior: HitTestBehavior.opaque,
-                                  child: Padding(
-                                    padding: const EdgeInsetsDirectional.only(
-                                      end: 12,
-                                    ),
-                                    child: Icon(
-                                      disguise
-                                          ? Icons.record_voice_over
-                                          : Icons.voice_over_off,
-                                      size: 20,
-                                      color: disguise
-                                          ? HaloColors.amber
-                                          : HaloColors.text3,
-                                    ),
-                                  ),
-                                ),
+                                onTap: onToggleDisguise,
                               ),
                               _HoldToTalkMic(
                                 disguise: disguise,
@@ -7441,25 +7315,37 @@ class MediaGalleryScreen extends StatelessWidget {
               itemCount: paths.length,
               itemBuilder: (context, i) {
                 final path = paths[i];
-                return GestureDetector(
+                final tag = photoHeroTag(path, 'gallery');
+                return PressScale(
+                  scale: 0.96,
+                  haptic: false,
                   onTap: () => _openFullImage(
                     context,
                     path,
                     secure: securePaths.contains(path),
+                    tag: tag,
                   ),
-                  child: Image.file(
-                    File(path),
-                    fit: BoxFit.cover,
-                    cacheWidth: 360,
-                    filterQuality: FilterQuality.low,
-                    // a photo whose file is gone says so, not a black square
-                    errorBuilder: (_, _, _) => Container(
-                      color: HaloColors.surface2,
-                      alignment: Alignment.center,
-                      child: Icon(
-                        Icons.image_not_supported_outlined,
-                        size: 22,
-                        color: HaloColors.text3,
+                  child: Hero(
+                    tag: tag,
+                    child: Image.file(
+                      File(path),
+                      fit: BoxFit.cover,
+                      cacheWidth: 360,
+                      filterQuality: FilterQuality.low,
+                      // each tile fades up once its photo is decoded
+                      frameBuilder: (_, child, frame, sync) => PhotoTileFade(
+                        shown: sync || frame != null,
+                        child: child,
+                      ),
+                      // a photo whose file is gone says so, not a black square
+                      errorBuilder: (_, _, _) => Container(
+                        color: HaloColors.surface2,
+                        alignment: Alignment.center,
+                        child: Icon(
+                          Icons.image_not_supported_outlined,
+                          size: 22,
+                          color: HaloColors.text3,
+                        ),
                       ),
                     ),
                   ),

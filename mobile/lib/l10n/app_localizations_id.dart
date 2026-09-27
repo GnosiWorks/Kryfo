@@ -6507,6 +6507,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get wallpaperPatterns => 'pola';
 
   @override
+  String get wallpaperMoods => 'nuansa';
+
+  @override
   String get confirmSheetKeep => 'Biarkan';
 
   @override

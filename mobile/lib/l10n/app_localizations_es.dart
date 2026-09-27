@@ -6560,6 +6560,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get wallpaperPatterns => 'patrones';
 
   @override
+  String get wallpaperMoods => 'ambientes';
+
+  @override
   String get confirmSheetKeep => 'Conservar';
 
   @override

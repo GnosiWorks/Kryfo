@@ -6616,6 +6616,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get wallpaperPatterns => 'أنماط';
 
   @override
+  String get wallpaperMoods => 'أمزجة';
+
+  @override
   String get confirmSheetKeep => 'إبقاء';
 
   @override

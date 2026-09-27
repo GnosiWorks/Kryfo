@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import '../atmosphere.dart';
 import '../theme.dart';
 import '../widgets/stagger_in.dart';
+import '../widgets/motion.dart' show kHouseCurve, kHouseTime;
 import '../widgets/halo_sheet.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/sheet_handle.dart';
@@ -83,7 +84,7 @@ class _PickerState extends State<_Picker> {
                 style: HaloType.sans(size: 12, color: HaloColors.text2),
               ),
               const SizedBox(height: 16),
-              _Head('moods'),
+              _Head(l10n.wallpaperMoods),
               const SizedBox(height: 10),
               _Swatches(
                 items: [Atmo.none, ...moods],
@@ -203,16 +204,6 @@ class _Swatches extends StatelessWidget {
     required this.from,
   });
 
-  Color _fill(Atmo a) {
-    if (a == Atmo.none) return HaloColors.surface3;
-    if (atmoIsPattern(a)) return HaloColors.surface2;
-    final mood = moodOf(a);
-    if (mood != null) {
-      return Color.lerp(HaloColors.surface2, mood.base, 0.55)!;
-    }
-    return atmoAccent(a).withValues(alpha: 0.18);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Wrap(
@@ -222,62 +213,179 @@ class _Swatches extends StatelessWidget {
         for (final (i, a) in items.indexed)
           StaggerIn(
             index: from + i,
-            child: GestureDetector(
-              onTap: () => onPick(a),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+            child: _Swatch(atmo: a, on: a == current, onTap: () => onPick(a)),
+          ),
+      ],
+    );
+  }
+}
+
+// one atmosphere as a small round of itself: its gradient, its mood's tint
+// or its pattern. the one in use wears an amber ring a gap away and a tick
+// that pop in on the house spring; with less movement they only fade
+class _Swatch extends StatelessWidget {
+  final Atmo atmo;
+  final bool on;
+  final VoidCallback onTap;
+  const _Swatch({required this.atmo, required this.on, required this.onTap});
+
+  static const _size = 46.0;
+
+  Decoration _face() {
+    final a = atmo;
+    if (a == Atmo.none) {
+      return BoxDecoration(shape: BoxShape.circle, color: HaloColors.surface3);
+    }
+    if (atmoIsPattern(a)) {
+      return BoxDecoration(shape: BoxShape.circle, color: HaloColors.surface2);
+    }
+    final mood = moodOf(a);
+    if (mood != null) {
+      final tint = Color.lerp(HaloColors.surface2, mood.base, 0.55)!;
+      // lit from the top corner, the way the room's light falls
+      return BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(
+          center: const Alignment(-0.5, -0.6),
+          radius: 1.1,
+          colors: [Color.lerp(tint, HaloColors.text, 0.12)!, tint],
+        ),
+      );
+    }
+    final accent = atmoAccent(a);
+    final deep = Color.lerp(accent, HaloColors.ink, 0.55)!;
+    return BoxDecoration(
+      shape: BoxShape.circle,
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          accent.withValues(alpha: 0.55),
+          Color.lerp(accent, deep, 0.5)!.withValues(alpha: 0.35),
+          deep.withValues(alpha: 0.5),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final still = MediaQuery.of(context).disableAnimations;
+    final spring = still ? Duration.zero : kHouseTime;
+    return Semantics(
+      button: true,
+      selected: on,
+      label: atmoLabel(atmo),
+      excludeSemantics: true,
+      onTap: onTap,
+      child: PressScale(
+        scale: 0.92,
+        // the sheet clicks for the pick itself
+        haptic: false,
+        onTap: onTap,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox.square(
+              dimension: _size + 8,
+              child: Stack(
+                alignment: Alignment.center,
+                clipBehavior: Clip.none,
                 children: [
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    curve: Curves.easeOutBack,
-                    width: 46,
-                    height: 46,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _fill(a),
-                      border: Border.all(
-                        color: a == current
-                            ? HaloColors.amber
-                            : HaloColors.line,
-                        width: a == current ? 1.5 : 0.5,
+                  // the ring, a gap away from the round
+                  AnimatedOpacity(
+                    opacity: on ? 1 : 0,
+                    duration: const Duration(milliseconds: 160),
+                    child: AnimatedScale(
+                      scale: on || still ? 1 : 0.86,
+                      duration: spring,
+                      curve: kHouseCurve,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: HaloColors.amber,
+                            width: 1.5,
+                          ),
+                        ),
                       ),
+                    ),
+                  ),
+                  Container(
+                    width: _size,
+                    height: _size,
+                    decoration: _face(),
+                    foregroundDecoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: HaloColors.line, width: 0.5),
                     ),
                     clipBehavior: Clip.antiAlias,
                     alignment: Alignment.center,
-                    child: a == Atmo.none
+                    child: atmo == Atmo.none
                         ? Icon(
                             Icons.not_interested,
                             size: 16,
                             color: HaloColors.text3,
                           )
-                        : atmoIsPattern(a)
+                        : atmoIsPattern(atmo)
                         ? CustomPaint(
-                            size: const Size(46, 46),
-                            painter: PatternPainter(a, scale: 0.55),
+                            size: const Size(_size, _size),
+                            painter: PatternPainter(atmo, scale: 0.55),
                           )
                         : null,
                   ),
-                  const SizedBox(height: 6),
-                  SizedBox(
-                    width: 62,
-                    child: Text(
-                      atmoLabel(a),
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: HaloType.mono(
-                        size: 9.5,
-                        color: a == current
-                            ? HaloColors.amber
-                            : HaloColors.text3,
+                  // the tick, at the round's lower end
+                  PositionedDirectional(
+                    end: 0,
+                    bottom: 0,
+                    child: AnimatedOpacity(
+                      opacity: on ? 1 : 0,
+                      duration: const Duration(milliseconds: 160),
+                      child: AnimatedScale(
+                        scale: on || still ? 1 : 0.3,
+                        duration: spring,
+                        curve: kHouseCurve,
+                        child: Container(
+                          width: 17,
+                          height: 17,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: HaloColors.amber,
+                            border: Border.all(
+                              color: HaloColors.surface2,
+                              width: 1.5,
+                            ),
+                          ),
+                          alignment: Alignment.center,
+                          child: Icon(
+                            Icons.check_rounded,
+                            size: 11,
+                            color: HaloColors.onAmber,
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-      ],
+            const SizedBox(height: 4),
+            SizedBox(
+              width: 62,
+              child: Text(
+                atmoLabel(atmo),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: HaloType.mono(
+                  size: 9.5,
+                  color: on ? HaloColors.amber : HaloColors.text3,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

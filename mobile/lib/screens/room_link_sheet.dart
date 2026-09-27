@@ -15,6 +15,10 @@ import '../lock_state.dart';
 import '../main.dart' show appState, session;
 import '../widgets/motion.dart';
 import '../widgets/kryfo_avatar.dart';
+import '../widgets/copied_mark.dart';
+import '../widgets/press_scale.dart';
+import '../widgets/qr_wipe.dart';
+import '../widgets/stagger_in.dart';
 import 'chat_screen.dart';
 import '../l10n/l10n.dart';
 import '../l10n/marked.dart';
@@ -34,25 +38,15 @@ class _RoomLinkSheet extends StatefulWidget {
   State<_RoomLinkSheet> createState() => _RoomLinkSheetState();
 }
 
-class _RoomLinkSheetState extends State<_RoomLinkSheet>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _in;
+class _RoomLinkSheetState extends State<_RoomLinkSheet> {
+  // bumped on each copy, for the tick on the button
+  int _copies = 0;
 
   @override
   void initState() {
     super.initState();
-    _in = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    )..forward();
     // debug builds only: lets a second device join off logcat while testing
     dlog('room link: ${widget.link.encode()}');
-  }
-
-  @override
-  void dispose() {
-    _in.dispose();
-    super.dispose();
   }
 
   // to someone already in kryfo: their chat opens with the link in the box.
@@ -96,35 +90,41 @@ class _RoomLinkSheetState extends State<_RoomLinkSheet>
                 ),
               )
             else
-              for (final c in contacts)
-                InkWell(
-                  onTap: () => Navigator.pop(ctx, c.haloId),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 11,
-                    ),
-                    child: Row(
-                      children: [
-                        KryfoAvatar(
-                          seed: c.avatarSeed,
-                          size: 32,
-                          choice: c.avatar,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            c.nickname ?? c.haloId,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: HaloType.sans(
-                              size: 14,
-                              weight: FontWeight.w500,
-                              color: HaloColors.text,
+              for (final (i, c) in contacts.indexed)
+                StaggerIn(
+                  index: i,
+                  child: PressScale(
+                    scale: 0.98,
+                    label: c.nickname ?? c.haloId,
+                    onTap: () => Navigator.pop(ctx, c.haloId),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 11,
+                      ),
+                      child: Row(
+                        children: [
+                          KryfoAvatar(
+                            seed: c.avatarSeed,
+                            size: 32,
+                            choice: c.avatar,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              c.nickname ?? c.haloId,
+                              semanticsLabel: '',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: HaloType.sans(
+                                size: 14,
+                                weight: FontWeight.w500,
+                                color: HaloColors.text,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -187,9 +187,9 @@ class _RoomLinkSheetState extends State<_RoomLinkSheet>
                     ],
                   ),
             const SizedBox(height: 18),
+            // the code assembles corner to corner once the sheet is up
             Center(
-              child: ScaleTransition(
-                scale: CurvedAnimation(parent: _in, curve: Curves.easeOutBack),
+              child: QrWipe(
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -225,21 +225,24 @@ class _RoomLinkSheetState extends State<_RoomLinkSheet>
             ),
             const SizedBox(height: 16),
             _CopyButton(
+              copies: _copies,
               onTap: () {
                 copySensitive(uri);
                 HapticFeedback.selectionClick();
+                setState(() => _copies++);
                 showHaloToast(context, l10n.roomLinkRoomLinkCopied);
               },
             ),
             const SizedBox(height: 4),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            // wraps rather than overflows in a long language
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 18,
               children: [
                 _Quiet(
                   label: l10n.roomLinkSendToAContact,
                   onTap: () => _toContact(uri),
                 ),
-                const SizedBox(width: 18),
                 _Quiet(
                   label: l10n.commonShare,
                   onTap: () => lockState.hold(
@@ -260,13 +263,16 @@ class _Quiet extends StatelessWidget {
   final VoidCallback onTap;
   const _Quiet({required this.label, required this.onTap});
   @override
-  Widget build(BuildContext context) => GestureDetector(
-    behavior: HitTestBehavior.opaque,
+  Widget build(BuildContext context) => PressScale(
+    label: label,
+    scale: 0.94,
+    haptic: false,
     onTap: onTap,
     child: Padding(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
       child: Text(
         label,
+        semanticsLabel: '',
         style: HaloType.sans(
           size: 13,
           weight: FontWeight.w600,
@@ -277,40 +283,46 @@ class _Quiet extends StatelessWidget {
   );
 }
 
-class _CopyButton extends StatefulWidget {
+// the one violet button: a tick takes the copy glyph's place for a moment
+// after each copy
+class _CopyButton extends StatelessWidget {
+  final int copies;
   final VoidCallback onTap;
-  const _CopyButton({required this.onTap});
-  @override
-  State<_CopyButton> createState() => _CopyButtonState();
-}
-
-class _CopyButtonState extends State<_CopyButton> {
-  bool _down = false;
+  const _CopyButton({required this.copies, required this.onTap});
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _down = true),
-      onTapUp: (_) => setState(() => _down = false),
-      onTapCancel: () => setState(() => _down = false),
-      onTap: widget.onTap,
-      child: AnimatedScale(
-        scale: _down ? 0.97 : 1,
-        duration: const Duration(milliseconds: 110),
-        child: Container(
-          height: 46,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: HaloColors.violet,
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Text(
-            l10n.roomLinkCopyRoomLink,
-            style: HaloType.sans(
-              size: 14,
-              weight: FontWeight.w600,
+    return PressScale(
+      label: l10n.roomLinkCopyRoomLink,
+      scale: 0.97,
+      haptic: false,
+      onTap: onTap,
+      child: Container(
+        height: 46,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: HaloColors.violet,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CopiedMark(
+              copies: copies,
+              size: 15,
               color: HaloColors.ink,
+              done: HaloColors.ink,
             ),
-          ),
+            const SizedBox(width: 6),
+            Text(
+              l10n.roomLinkCopyRoomLink,
+              semanticsLabel: '',
+              style: HaloType.sans(
+                size: 14,
+                weight: FontWeight.w600,
+                color: HaloColors.ink,
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -8,7 +8,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/foundation.dart' show kDebugMode, mapEquals;
 import 'package:path_provider/path_provider.dart';
 
 import '../dlog.dart';
@@ -23,11 +23,12 @@ import '../search.dart';
 import '../text_fold.dart';
 import '../theme.dart';
 import '../widgets/decode_px.dart';
+import '../widgets/ease_size.dart';
 import '../widgets/halo_bar.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/kryfo_avatar.dart';
-import '../widgets/motion.dart' show haloRoute;
+import '../widgets/motion.dart' show haloRoute, kHouseCurve, kHouseTime;
 import '../widgets/poll_card.dart' show pollGlyph;
 import '../widgets/press_scale.dart';
 import '../widgets/stroke_icon.dart';
@@ -413,7 +414,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 ],
               ),
             ),
-            _Filters(kind: _kind, onPick: _pick),
+            SearchFilters(kind: _kind, onPick: _pick),
             const _FillLine(),
             Expanded(
               child: AnimatedSwitcher(
@@ -546,12 +547,40 @@ class _Field extends StatelessWidget {
   }
 }
 
-class _Filters extends StatelessWidget {
+// the kinds to look in. the amber pill slides from the kind that was on to
+// the one picked, on the house spring; with less movement it is simply there
+class SearchFilters extends StatefulWidget {
   final SearchKind kind;
   final ValueChanged<SearchKind> onPick;
-  const _Filters({required this.kind, required this.onPick});
+  const SearchFilters({super.key, required this.kind, required this.onPick});
+  @override
+  State<SearchFilters> createState() => _SearchFiltersState();
+}
+
+class _SearchFiltersState extends State<SearchFilters> {
+  final _row = GlobalKey();
+  final _keys = {for (final k in SearchKind.values) k: GlobalKey()};
+  // where each chip sits in the row, once laid out
+  Map<SearchKind, Rect> _at = const {};
+
+  void _measure() {
+    if (!mounted) return;
+    final row = _row.currentContext?.findRenderObject() as RenderBox?;
+    if (row == null || !row.hasSize) return;
+    final at = <SearchKind, Rect>{};
+    for (final e in _keys.entries) {
+      final box = e.value.currentContext?.findRenderObject() as RenderBox?;
+      if (box == null || !box.hasSize) continue;
+      at[e.key] = box.localToGlobal(Offset.zero, ancestor: row) & box.size;
+    }
+    if (!mapEquals(at, _at)) setState(() => _at = at);
+  }
+
   @override
   Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) => _measure());
+    final still = MediaQuery.of(context).disableAnimations;
+    final kind = widget.kind;
     final items = [
       (SearchKind.all, l10n.searchFilterAll),
       (SearchKind.photos, l10n.searchFilterPhotos),
@@ -559,50 +588,88 @@ class _Filters extends StatelessWidget {
       (SearchKind.files, l10n.searchFilterFiles),
       (SearchKind.links, l10n.searchFilterLinks),
     ];
+    final pill = _at[kind];
     return SizedBox(
       height: 46,
-      child: ListView(
+      child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        children: [
-          for (final (k, label) in items) ...[
-            Semantics(
-              button: true,
-              selected: k == kind,
-              label: label,
-              excludeSemantics: true,
-              onTap: () => onPick(k),
-              child: PressScale(
-                scale: 0.94,
-                haptic: false,
-                onTap: () => onPick(k),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
-                  curve: Curves.easeOutCubic,
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: k == kind ? HaloColors.amber : HaloColors.surface2,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: k == kind ? HaloColors.amber : HaloColors.line,
-                      width: 0.6,
-                    ),
-                  ),
-                  child: Text(
-                    label,
-                    style: HaloType.sans(
-                      size: 13,
-                      weight: k == kind ? FontWeight.w600 : FontWeight.w400,
-                      color: k == kind ? HaloColors.onAmber : HaloColors.text2,
+        child: Stack(
+          key: _row,
+          children: [
+            if (pill != null)
+              TweenAnimationBuilder<Rect?>(
+                tween: RectTween(end: pill),
+                duration: still ? Duration.zero : kHouseTime,
+                curve: kHouseCurve,
+                builder: (_, r, _) => Positioned.fromRect(
+                  rect: r ?? pill,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: HaloColors.amber,
+                      borderRadius: BorderRadius.circular(20),
                     ),
                   ),
                 ),
               ),
+            Row(
+              children: [
+                for (final (k, label) in items) ...[
+                  Semantics(
+                    button: true,
+                    selected: k == kind,
+                    label: label,
+                    excludeSemantics: true,
+                    onTap: () => widget.onPick(k),
+                    child: PressScale(
+                      key: _keys[k],
+                      scale: 0.94,
+                      haptic: false,
+                      onTap: () => widget.onPick(k),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        curve: Curves.easeOutCubic,
+                        height: 34,
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          // the pill behind is the picked one's fill, once
+                          // it knows where the chips are
+                          color: k == kind
+                              ? (pill == null
+                                    ? HaloColors.amber
+                                    : HaloColors.amber.withValues(alpha: 0))
+                              : HaloColors.surface2,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: k == kind
+                                ? HaloColors.amber
+                                : HaloColors.line,
+                            width: 0.6,
+                          ),
+                        ),
+                        child: AnimatedDefaultTextStyle(
+                          duration: const Duration(milliseconds: 180),
+                          style: HaloType.sans(
+                            size: 13,
+                            weight: k == kind
+                                ? FontWeight.w600
+                                : FontWeight.w400,
+                            color: k == kind
+                                ? HaloColors.onAmber
+                                : HaloColors.text2,
+                          ),
+                          child: Text(label),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+              ],
             ),
-            const SizedBox(width: 8),
           ],
-        ],
+        ),
       ),
     );
   }
@@ -618,7 +685,7 @@ class _FillLine extends StatelessWidget {
       builder: (_, p, _) {
         final filling = p.to > 0 && p.at < p.to;
         final share = p.to == 0 ? 1.0 : p.at / p.to;
-        return AnimatedSize(
+        return EaseSize(
           duration: const Duration(milliseconds: 220),
           child: !filling
               ? const SizedBox(width: double.infinity)
@@ -673,6 +740,7 @@ class _Centre extends StatelessWidget {
   const _Centre({required this.glyph, required this.title, required this.line});
   @override
   Widget build(BuildContext context) {
+    final still = MediaQuery.of(context).disableAnimations;
     return Align(
       alignment: const Alignment(0, -0.35),
       child: Padding(
@@ -680,19 +748,29 @@ class _Centre extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 64,
-              height: 64,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: HaloColors.amberSoft,
+            // the glyph pops in on the house spring, once
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: 1),
+              duration: still ? Duration.zero : kHouseTime,
+              curve: kHouseCurve,
+              builder: (_, v, child) => Transform.scale(
+                scale: still ? 1 : 0.6 + 0.4 * v,
+                child: child,
               ),
-              child: StrokeIcon(
-                glyph,
-                size: 28,
-                color: HaloColors.amber,
-                stroke: 1.6,
+              child: Container(
+                width: 64,
+                height: 64,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: HaloColors.amberSoft,
+                ),
+                child: StrokeIcon(
+                  glyph,
+                  size: 28,
+                  color: HaloColors.amber,
+                  stroke: 1.6,
+                ),
               ),
             ),
             const SizedBox(height: 18),
@@ -878,10 +956,8 @@ class _People extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _Label(l10n.searchPeople),
-        AnimatedSize(
-          duration: Duration(milliseconds: still ? 0 : 240),
-          curve: Curves.easeOutCubic,
-          alignment: Alignment.topCenter,
+        EaseSize(
+          duration: const Duration(milliseconds: 240),
           child: AnimatedSwitcher(
             duration: Duration(milliseconds: still ? 0 : 200),
             child: inner,
@@ -1205,10 +1281,8 @@ class _PersonSheetState extends State<_PersonSheet>
                 ),
               ),
             ),
-            AnimatedSize(
+            EaseSize(
               duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOutCubic,
-              alignment: Alignment.topCenter,
               child: _adding
                   ? const Padding(
                       padding: EdgeInsets.fromLTRB(40, 12, 40, 0),
@@ -1341,7 +1415,6 @@ class _ChatBlockState extends State<_ChatBlock> {
   @override
   Widget build(BuildContext context) {
     final c = widget.chat;
-    final still = MediaQuery.of(context).disableAnimations;
     final photos = widget.kind == SearchKind.photos;
     final cap = photos ? 9 : 3;
     final shown = _all ? c.hits : c.hits.take(cap).toList();
@@ -1355,10 +1428,8 @@ class _ChatBlockState extends State<_ChatBlock> {
           border: Border.all(color: HaloColors.line, width: 0.5),
         ),
         clipBehavior: Clip.antiAlias,
-        child: AnimatedSize(
-          duration: Duration(milliseconds: still ? 0 : 240),
-          curve: Curves.easeOutCubic,
-          alignment: Alignment.topCenter,
+        child: EaseSize(
+          duration: const Duration(milliseconds: 240),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [

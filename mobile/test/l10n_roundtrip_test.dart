@@ -3287,6 +3287,7 @@ void main() {
     expect(l.settingsAbout, "About");
     expect(l.wallpaperGradients, "gradients");
     expect(l.wallpaperPatterns, "patterns");
+    expect(l.wallpaperMoods, "moods");
     expect(l.confirmSheetKeep, "Keep");
     expect(l.confirmSheetSave, "Save");
     expect(l.confirmSheetCancel, "Cancel");

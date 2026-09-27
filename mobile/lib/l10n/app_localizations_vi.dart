@@ -6493,6 +6493,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get wallpaperPatterns => 'họa tiết';
 
   @override
+  String get wallpaperMoods => 'tâm trạng';
+
+  @override
   String get confirmSheetKeep => 'Giữ';
 
   @override

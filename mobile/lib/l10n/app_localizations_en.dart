@@ -6499,6 +6499,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wallpaperPatterns => 'patterns';
 
   @override
+  String get wallpaperMoods => 'moods';
+
+  @override
   String get confirmSheetKeep => 'Keep';
 
   @override

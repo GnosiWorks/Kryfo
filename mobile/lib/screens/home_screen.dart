@@ -41,6 +41,7 @@ import '../widgets/count_badge.dart';
 import '../widgets/chat_parts.dart' show GrowSwap;
 import '../widgets/confirm_sheet.dart';
 import '../widgets/hidden_mark.dart';
+import '../widgets/swipe_actions.dart';
 import '../notif_permission.dart';
 import '../seen_timers.dart';
 import '../delivery_mode.dart';
@@ -2223,44 +2224,25 @@ class _SwipeRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Dismissible(
-      key: ValueKey('swipe_${c.haloId}'),
-      background: Container(
-        color: HaloColors.surface2,
-        alignment: AlignmentDirectional.centerStart,
-        padding: const EdgeInsetsDirectional.only(start: 24),
-        child: Icon(
-          c.muted
-              ? Icons.notifications_active_outlined
-              : Icons.notifications_off_outlined,
-          size: 20,
-          color: HaloColors.text2,
-        ),
+    return SwipeActions(
+      rowKey: ValueKey('swipe_${c.haloId}'),
+      start: SwipeAction(
+        icon: c.muted
+            ? Icons.notifications_active_outlined
+            : Icons.notifications_off_outlined,
+        label: c.muted ? l10n.homeUnmute : l10n.homeMute,
+        color: HaloColors.text2,
+        ink: HaloColors.surface,
+        onDone: () =>
+            c.muted ? appState.unmute(c.haloId) : appState.mute(c.haloId),
       ),
-      secondaryBackground: Container(
-        color: HaloColors.surface2,
-        alignment: AlignmentDirectional.centerEnd,
-        padding: const EdgeInsetsDirectional.only(end: 24),
-        child: Semantics(
-          label: l10n.homeArchivedChats,
-          button: true,
-          child: Icon(
-            Icons.archive_outlined,
-            size: 20,
-            color: HaloColors.amber,
-          ),
-        ),
+      end: SwipeAction(
+        icon: Icons.archive_outlined,
+        label: l10n.homeArchive,
+        color: HaloColors.amber,
+        ink: HaloColors.onAmber,
+        onDone: () => appState.archive(c.haloId),
       ),
-      confirmDismiss: (dir) async {
-        if (dir == DismissDirection.endToStart) {
-          await appState.archive(c.haloId);
-        } else if (c.muted) {
-          await appState.unmute(c.haloId);
-        } else {
-          await appState.mute(c.haloId);
-        }
-        return false;
-      },
       child: _Row(c: c, onTap: onTap, onLongPress: () => _chatMenu(context, c)),
     );
   }

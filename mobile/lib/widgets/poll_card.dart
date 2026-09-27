@@ -9,11 +9,13 @@ import '../l10n/numbers.dart';
 import '../polls.dart';
 import '../theme.dart';
 import 'confirm_sheet.dart';
+import 'ease_size.dart';
 import 'halo_bar.dart';
 import 'halo_sheet.dart';
 import 'kryfo_avatar.dart';
 import 'press_scale.dart';
 import 'sheet_handle.dart';
+import 'stagger_in.dart';
 import 'stroke_icon.dart';
 
 const pollGlyph = ['M6 19v-6', 'M12 19V5', 'M18 19v-9'];
@@ -251,10 +253,7 @@ class _PollCardState extends State<PollCard> {
             ),
           ],
           const SizedBox(height: 10),
-          AnimatedSize(
-            duration: Duration(milliseconds: still ? 0 : 260),
-            curve: Curves.easeOutCubic,
-            alignment: Alignment.topCenter,
+          EaseSize(
             child: AnimatedSwitcher(
               duration: Duration(milliseconds: still ? 0 : 240),
               switchInCurve: Curves.easeOutCubic,
@@ -284,9 +283,8 @@ class _PollCardState extends State<PollCard> {
               ),
             ),
           ),
-          AnimatedSize(
-            duration: Duration(milliseconds: still ? 0 : 200),
-            curve: Curves.easeOutCubic,
+          EaseSize(
+            duration: const Duration(milliseconds: 200),
             child: !results && _draft.isNotEmpty
                 ? Padding(
                     padding: const EdgeInsets.only(top: 6),
@@ -333,30 +331,15 @@ class _PollCardState extends State<PollCard> {
                           const SizedBox(width: 6),
                         ],
                         Flexible(
-                          child: AnimatedSwitcher(
-                            duration: Duration(milliseconds: still ? 0 : 200),
-                            transitionBuilder: (c, a) => FadeTransition(
-                              opacity: a,
-                              child: SlideTransition(
-                                position: Tween(
-                                  begin: const Offset(0, 0.35),
-                                  end: Offset.zero,
-                                ).animate(a),
-                                child: c,
-                              ),
-                            ),
-                            child: Text(
-                              l10n.pollVotes(voters),
-                              key: ValueKey(voters),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: HaloType.mono(
-                                size: 10,
-                                color: voters > 0
-                                    ? HaloColors.amber
-                                    : HaloColors.text2,
-                                letter: 0.3,
-                              ),
+                          child: RollText(
+                            text: l10n.pollVotes(voters),
+                            value: voters.toDouble(),
+                            style: HaloType.mono(
+                              size: 10,
+                              color: voters > 0
+                                  ? HaloColors.amber
+                                  : HaloColors.text2,
+                              letter: 0.3,
                             ),
                           ),
                         ),
@@ -506,7 +489,6 @@ class _ResultRow extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) {
-    final still = MediaQuery.of(context).disableAnimations;
     final pct = percent(share);
     return Semantics(
       button: true,
@@ -547,18 +529,15 @@ class _ResultRow extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  AnimatedSwitcher(
-                    duration: Duration(milliseconds: still ? 0 : 220),
-                    child: Text(
-                      pct,
-                      key: ValueKey(pct),
-                      style: HaloType.mono(
-                        size: 11,
-                        color: mine || leader
-                            ? HaloColors.amber
-                            : HaloColors.text2,
-                        letter: 0.2,
-                      ),
+                  RollText(
+                    text: pct,
+                    value: share,
+                    style: HaloType.mono(
+                      size: 11,
+                      color: mine || leader
+                          ? HaloColors.amber
+                          : HaloColors.text2,
+                      letter: 0.2,
                     ),
                   ),
                 ],
@@ -710,97 +689,164 @@ class _VotersSheet extends StatelessWidget {
             ),
             const SizedBox(height: 14),
             for (var i = 0; i < poll.options.length; i++) ...[
-              Container(
-                padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-                decoration: BoxDecoration(
-                  color: HaloColors.surface3,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: HaloColors.line, width: 0.5),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            poll.options[i],
-                            textDirection: writtenDir(poll.options[i]),
-                            textAlign: startOf(context),
-                            style: HaloType.sans(
-                              size: 14,
-                              weight: FontWeight.w600,
-                              color: HaloColors.text,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          '${whole(tally.counts[i])} · ${percent(tally.share(i))}',
-                          style: HaloType.mono(
-                            size: 10.5,
-                            color: HaloColors.amber,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    HaloBar(
-                      value: tally.share(i),
-                      height: 4,
-                      grow: true,
-                      track: HaloColors.ink.withValues(alpha: 0.35),
-                    ),
-                    const SizedBox(height: 10),
-                    if (tally.who[i].isEmpty)
-                      Text(
-                        l10n.pollNobody,
-                        style: HaloType.sans(
-                          size: 12.5,
-                          color: HaloColors.text2,
-                        ),
-                      )
-                    else
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 6,
+              StaggerIn(
+                index: i,
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                  decoration: BoxDecoration(
+                    color: HaloColors.surface3,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: HaloColors.line, width: 0.5),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
                         children: [
-                          for (final id in tally.who[i])
-                            Container(
-                              padding: const EdgeInsetsDirectional.fromSTEB(
-                                3,
-                                3,
-                                10,
-                                3,
-                              ),
-                              decoration: BoxDecoration(
-                                color: HaloColors.surface2,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  KryfoAvatar(seed: id, size: 22),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    id == me ? l10n.pollYou : nameOf(id),
-                                    style: HaloType.sans(
-                                      size: 12.5,
-                                      color: HaloColors.text,
-                                    ),
-                                  ),
-                                ],
+                          Expanded(
+                            child: Text(
+                              poll.options[i],
+                              textDirection: writtenDir(poll.options[i]),
+                              textAlign: startOf(context),
+                              style: HaloType.sans(
+                                size: 14,
+                                weight: FontWeight.w600,
+                                color: HaloColors.text,
                               ),
                             ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${whole(tally.counts[i])} · ${percent(tally.share(i))}',
+                            style: HaloType.mono(
+                              size: 10.5,
+                              color: HaloColors.amber,
+                            ),
+                          ),
                         ],
                       ),
-                  ],
+                      const SizedBox(height: 8),
+                      HaloBar(
+                        value: tally.share(i),
+                        height: 4,
+                        grow: true,
+                        track: HaloColors.ink.withValues(alpha: 0.35),
+                      ),
+                      const SizedBox(height: 10),
+                      if (tally.who[i].isEmpty)
+                        Text(
+                          l10n.pollNobody,
+                          style: HaloType.sans(
+                            size: 12.5,
+                            color: HaloColors.text2,
+                          ),
+                        )
+                      else
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: [
+                            for (final id in tally.who[i])
+                              Container(
+                                padding: const EdgeInsetsDirectional.fromSTEB(
+                                  3,
+                                  3,
+                                  10,
+                                  3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: HaloColors.surface2,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    KryfoAvatar(seed: id, size: 22),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      id == me ? l10n.pollYou : nameOf(id),
+                                      style: HaloType.sans(
+                                        size: 12.5,
+                                        color: HaloColors.text,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: 8),
             ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// words holding a number that roll to their next value instead of
+/// swapping: up as the number grows, down as it shrinks. a plain fade with
+/// less movement
+class RollText extends StatefulWidget {
+  final String text;
+  // what the words count, to tell up from down
+  final double value;
+  final TextStyle style;
+  const RollText({
+    super.key,
+    required this.text,
+    required this.value,
+    required this.style,
+  });
+
+  @override
+  State<RollText> createState() => _RollTextState();
+}
+
+class _RollTextState extends State<RollText> {
+  bool _up = true;
+
+  @override
+  void didUpdateWidget(RollText old) {
+    super.didUpdateWidget(old);
+    if (old.value != widget.value) _up = widget.value > old.value;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final still = MediaQuery.of(context).disableAnimations;
+    final text = widget.text;
+    return AnimatedSwitcher(
+      duration: Duration(milliseconds: still ? 120 : 220),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      layoutBuilder: (current, previous) => Stack(
+        alignment: AlignmentDirectional.centerStart,
+        children: [...previous, ?current],
+      ),
+      transitionBuilder: (child, a) {
+        if (still) return FadeTransition(opacity: a, child: child);
+        final incoming = child.key == ValueKey(text);
+        return ClipRect(
+          child: SlideTransition(
+            position: Tween(
+              begin: Offset(0, (incoming == _up) ? 0.9 : -0.9),
+              end: Offset.zero,
+            ).animate(a),
+            child: FadeTransition(opacity: a, child: child),
+          ),
+        );
+      },
+      child: Text(
+        text,
+        key: ValueKey(text),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: widget.style,
       ),
     );
   }

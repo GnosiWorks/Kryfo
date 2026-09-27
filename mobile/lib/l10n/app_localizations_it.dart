@@ -6571,6 +6571,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get wallpaperPatterns => 'motivi';
 
   @override
+  String get wallpaperMoods => 'umori';
+
+  @override
   String get confirmSheetKeep => 'Tieni';
 
   @override

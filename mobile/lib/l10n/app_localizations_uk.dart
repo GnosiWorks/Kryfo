@@ -6619,6 +6619,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get wallpaperPatterns => 'візерунки';
 
   @override
+  String get wallpaperMoods => 'настрої';
+
+  @override
   String get confirmSheetKeep => 'Залишити';
 
   @override

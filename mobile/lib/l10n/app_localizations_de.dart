@@ -6576,6 +6576,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get wallpaperPatterns => 'Muster';
 
   @override
+  String get wallpaperMoods => 'Stimmungen';
+
+  @override
   String get confirmSheetKeep => 'Behalten';
 
   @override

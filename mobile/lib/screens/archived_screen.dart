@@ -3,15 +3,85 @@ import 'package:flutter/material.dart';
 import '../theme.dart';
 import '../widgets/kryfo_avatar.dart';
 import '../main.dart' show appState;
+import '../lock_guard.dart' show lockGuard;
+import '../widgets/burn_fade.dart' show FadeFold;
 import '../widgets/hidden_mark.dart';
+import '../widgets/motion.dart' show motionStill;
+import '../widgets/press_scale.dart';
+import '../widgets/row_motion.dart';
+import '../widgets/shift_in_place.dart';
 import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
+import 'home_screen.dart' show ContactPreview;
 
 // archived chats: hidden from the main list, still receive normally. rows
 // read dimmer on purpose and wake to full colour on press.
 class ArchivedScreen extends StatelessWidget {
   const ArchivedScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: HaloColors.surface,
+      body: SafeArea(
+        child: AnimatedBuilder(
+          animation: appState,
+          builder: (_, _) => ArchivedList(
+            archived: appState.contacts.where((c) => c.archived).toList(),
+            onUnarchive: appState.unarchive,
+            // under the lock nothing is being watched
+            quiet: lockGuard.isLocked(),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// the page under its bar: a chat taken back out folds away where it was,
+// one archived while here grows in, and the count rolls to its new word
+class ArchivedList extends StatefulWidget {
+  final List<ContactPreview> archived;
+  final ValueChanged<String> onUnarchive;
+  // take a change as it is, with no motion
+  final bool quiet;
+  const ArchivedList({
+    super.key,
+    required this.archived,
+    required this.onUnarchive,
+    this.quiet = false,
+  });
+
+  @override
+  State<ArchivedList> createState() => _ArchivedListState();
+}
+
+class _ArchivedListState extends State<ArchivedList> {
+  late final RowSet<ContactPreview> _rows = RowSet(
+    keyOf: (c) => c.haloId,
+    onGone: () {
+      if (mounted) setState(() {});
+    },
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _rows.start(widget.archived);
+  }
+
+  @override
+  void didUpdateWidget(ArchivedList old) {
+    super.didUpdateWidget(old);
+    _rows.update(widget.archived, quiet: widget.quiet);
+  }
+
+  @override
+  void dispose() {
+    _rows.dispose();
+    super.dispose();
+  }
 
   // the count spelled out keeps the top of the screen calm
   String _countWord(int n) {
@@ -33,133 +103,168 @@ class ArchivedScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: HaloColors.surface,
-      body: SafeArea(
-        child: AnimatedBuilder(
-          animation: appState,
-          builder: (_, _) {
-            final archived = appState.contacts
-                .where((c) => c.archived)
-                .toList();
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(4, 6, 8, 2),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        tooltip: l10n.commonBack,
-                        icon: Icon(
-                          Icons.chevron_left,
-                          color: HaloColors.text2,
-                          size: 26,
-                        ),
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
-                      Text(
-                        l10n.archivedArchived,
-                        style: HaloType.serif(size: 22, color: HaloColors.text),
-                      ),
-                    ],
-                  ),
+    final archived = widget.archived;
+    final rows = _rows.rows;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _rows.built());
+    final still = motionStill(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsetsDirectional.fromSTEB(4, 6, 8, 2),
+          child: Row(
+            children: [
+              IconButton(
+                tooltip: l10n.commonBack,
+                icon: Icon(
+                  Icons.chevron_left,
+                  color: HaloColors.text2,
+                  size: 26,
                 ),
-                if (archived.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsetsDirectional.fromSTEB(
-                      22,
-                      2,
-                      26,
-                      14,
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+              Text(
+                l10n.archivedArchived,
+                style: HaloType.serif(size: 22, color: HaloColors.text),
+              ),
+            ],
+          ),
+        ),
+        if (archived.isNotEmpty)
+          Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(22, 2, 26, 14),
+            // the count rolls down as chats are taken back out
+            child: AnimatedSwitcher(
+              duration: Duration(milliseconds: still ? 120 : 240),
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeInCubic,
+              layoutBuilder: (current, previous) => Stack(
+                alignment: AlignmentDirectional.topStart,
+                children: [...previous, ?current],
+              ),
+              transitionBuilder: (child, a) => FadeTransition(
+                opacity: a,
+                child: still
+                    ? child
+                    : SlideTransition(
+                        position: Tween(
+                          begin: Offset(
+                            0,
+                            child.key == ValueKey(archived.length) ? -0.5 : 0.5,
+                          ),
+                          end: Offset.zero,
+                        ).animate(a),
+                        child: child,
+                      ),
+              ),
+              child: RichText(
+                key: ValueKey(archived.length),
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: '${_countWord(archived.length)}  ',
+                      style: HaloType.serif(
+                        size: 15,
+                        italic: true,
+                        color: HaloColors.amber,
+                      ),
                     ),
-                    child: RichText(
-                      text: TextSpan(
-                        children: [
-                          TextSpan(
-                            text: '${_countWord(archived.length)}  ',
-                            style: HaloType.serif(
-                              size: 15,
-                              italic: true,
-                              color: HaloColors.amber,
-                            ),
-                          ),
-                          TextSpan(
-                            // exactly one, not the plural "one": in russian
-                            // that also means 21, 31...
-                            text: archived.length == 1
-                                ? l10n.archivedChatRestingHereIt
-                                : l10n.archivedChatsRestingHere,
-                            style: HaloType.sans(
-                              size: 12.5,
-                              color: HaloColors.text3,
-                              height: 1.45,
-                            ),
-                          ),
-                        ],
+                    TextSpan(
+                      // exactly one, not the plural "one": in russian
+                      // that also means 21, 31...
+                      text: archived.length == 1
+                          ? l10n.archivedChatRestingHereIt
+                          : l10n.archivedChatsRestingHere,
+                      style: HaloType.sans(
+                        size: 12.5,
+                        color: HaloColors.text3,
+                        height: 1.45,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        Expanded(
+          child: rows.isEmpty
+              ? Center(
+                  child: StaggerIn(
+                    index: 0,
+                    child: Text(
+                      l10n.archivedNothingArchived,
+                      style: HaloType.serif(
+                        size: 18,
+                        italic: true,
+                        color: HaloColors.text2,
                       ),
                     ),
                   ),
-                Expanded(
-                  child: archived.isEmpty
-                      ? Center(
-                          child: StaggerIn(
-                            index: 0,
-                            child: Text(
-                              l10n.archivedNothingArchived,
-                              style: HaloType.serif(
-                                size: 18,
-                                italic: true,
-                                color: HaloColors.text2,
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.only(top: 2, bottom: 8),
+                  itemCount: rows.length,
+                  itemBuilder: (_, i) {
+                    final c = rows[i];
+                    final leaving = _rows.leaving(c);
+                    return ShiftInPlace(
+                      key: ValueKey(c.haloId),
+                      index: i,
+                      child: IgnorePointer(
+                        ignoring: leaving,
+                        child: FadeFold(
+                          leaving: leaving,
+                          child: GrowIn(
+                            active: _rows.fresh(c),
+                            child: StaggerIn(
+                              index: i,
+                              child: _ArchivedRow(
+                                contact: c,
+                                number: i + 1,
+                                onUnarchive: widget.onUnarchive,
                               ),
                             ),
                           ),
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.only(top: 2, bottom: 8),
-                          itemCount: archived.length,
-                          itemBuilder: (_, i) => StaggerIn(
-                            index: i,
-                            child: _ArchivedRow(
-                              contact: archived[i],
-                              number: i + 1,
-                            ),
-                          ),
                         ),
+                      ),
+                    );
+                  },
                 ),
-                if (archived.isNotEmpty)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.fromLTRB(24, 14, 24, 10),
-                    decoration: BoxDecoration(
-                      border: Border(
-                        top: BorderSide(color: HaloColors.line, width: 0.5),
-                      ),
-                    ),
-                    child: Text(
-                      l10n.archivedArchivedChatsAreStill,
-                      textAlign: TextAlign.center,
-                      style: HaloType.mono(
-                        size: 10,
-                        color: HaloColors.text3,
-                        letter: 0.02,
-                      ),
-                    ),
-                  ),
-              ],
-            );
-          },
         ),
-      ),
+        if (archived.isNotEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(24, 14, 24, 10),
+            decoration: BoxDecoration(
+              border: Border(
+                top: BorderSide(color: HaloColors.line, width: 0.5),
+              ),
+            ),
+            child: Text(
+              l10n.archivedArchivedChatsAreStill,
+              textAlign: TextAlign.center,
+              style: HaloType.mono(
+                size: 10,
+                color: HaloColors.text3,
+                letter: 0.02,
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
 
 // dim by default, full colour while pressed
 class _ArchivedRow extends StatefulWidget {
-  final dynamic contact;
+  final ContactPreview contact;
   final int number;
-  const _ArchivedRow({required this.contact, required this.number});
+  final ValueChanged<String> onUnarchive;
+  const _ArchivedRow({
+    required this.contact,
+    required this.number,
+    required this.onUnarchive,
+  });
   @override
   State<_ArchivedRow> createState() => _ArchivedRowState();
 }
@@ -188,7 +293,7 @@ class _ArchivedRowState extends State<_ArchivedRow> {
                 twoDigits(widget.number),
                 style: HaloType.mono(
                   size: 10,
-                  color: _awake ? HaloColors.text3 : HaloColors.line2,
+                  color: _awake ? HaloColors.text2 : HaloColors.text3,
                   letter: -0.02,
                 ),
               ),
@@ -263,18 +368,23 @@ class _ArchivedRowState extends State<_ArchivedRow> {
               ),
             ),
             const SizedBox(width: 8),
-            TextButton(
-              onPressed: () => appState.unarchive(c.haloId),
-              style: TextButton.styleFrom(
-                minimumSize: const Size(0, 32),
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-              ),
-              child: Text(
-                l10n.archivedUnarchive,
-                style: HaloType.mono(
-                  size: 9,
-                  color: HaloColors.amber,
-                  letter: 0.08,
+            PressScale(
+              label: l10n.archivedUnarchive,
+              scale: 0.9,
+              onTap: () => widget.onUnarchive(c.haloId),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 10,
+                ),
+                child: Text(
+                  l10n.archivedUnarchive,
+                  semanticsLabel: '',
+                  style: HaloType.mono(
+                    size: 9,
+                    color: HaloColors.amber,
+                    letter: 0.08,
+                  ),
                 ),
               ),
             ),

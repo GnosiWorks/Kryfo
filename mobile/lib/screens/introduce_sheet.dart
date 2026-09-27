@@ -13,6 +13,10 @@ import '../widgets/kryfo_avatar.dart';
 import '../widgets/notice_banner.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';
+import '../widgets/ease_size.dart';
+import '../widgets/motion.dart' show kHouseCurve, kHouseTime;
+import '../widgets/press_scale.dart';
+import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
 
 const _noteMax = 40;
@@ -161,7 +165,7 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
                       itemCount: others.length,
                       itemBuilder: (_, i) {
                         final c = others[i];
-                        return _FadeRight(
+                        return StaggerIn(
                           index: i,
                           child: _PickRow(
                             contact: c,
@@ -217,10 +221,8 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
             ),
             // the one warning there is. no approval step behind it, on
             // purpose: the introducer could forward an invite by hand anyway.
-            AnimatedSize(
+            EaseSize(
               duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOutCubic,
-              alignment: Alignment.topCenter,
               child: _picked == null
                   ? const SizedBox(width: double.infinity, height: 0)
                   : Padding(
@@ -296,87 +298,105 @@ class _PickRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final name = contact.nickname;
-    return InkWell(
+    final still = MediaQuery.of(context).disableAnimations;
+    return Semantics(
+      button: true,
+      selected: picked,
+      label: name ?? contact.haloId,
+      excludeSemantics: true,
       onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        child: Row(
-          children: [
-            AnimatedScale(
-              scale: picked ? 1.1 : 1.0,
-              duration: const Duration(milliseconds: 280),
-              curve: Curves.easeOutBack,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                curve: Curves.easeOut,
-                padding: const EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: picked ? HaloColors.amber : Colors.transparent,
-                    width: 1.6,
+      child: PressScale(
+        scale: 0.98,
+        // the sheet clicks for the pick itself
+        haptic: false,
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          child: Row(
+            children: [
+              AnimatedScale(
+                scale: picked && !still ? 1.1 : 1.0,
+                duration: still ? Duration.zero : kHouseTime,
+                curve: kHouseCurve,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOut,
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: picked ? HaloColors.amber : Colors.transparent,
+                      width: 1.6,
+                    ),
                   ),
-                ),
-                child: KryfoAvatar(
-                  seed: contact.avatarSeed,
-                  size: 38,
-                  choice: contact.avatar,
+                  child: KryfoAvatar(
+                    seed: contact.avatarSeed,
+                    size: 38,
+                    choice: contact.avatar,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name ?? contact.haloId,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: name == null
-                        ? HaloType.mono(
-                            size: 12,
-                            weight: FontWeight.w500,
-                            color: HaloColors.text,
-                          )
-                        : HaloType.sans(
-                            size: 14,
-                            weight: FontWeight.w500,
-                            color: HaloColors.text,
-                          ),
-                  ),
-                  if (name != null)
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
-                      contact.haloId,
+                      name ?? contact.haloId,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: HaloType.mono(size: 10, color: HaloColors.text3),
+                      style: name == null
+                          ? HaloType.mono(
+                              size: 12,
+                              weight: FontWeight.w500,
+                              color: HaloColors.text,
+                            )
+                          : HaloType.sans(
+                              size: 14,
+                              weight: FontWeight.w500,
+                              color: HaloColors.text,
+                            ),
                     ),
-                ],
-              ),
-            ),
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 160),
-              width: 22,
-              height: 22,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: picked ? HaloColors.amber : Colors.transparent,
-                border: Border.all(
-                  color: picked ? HaloColors.amber : HaloColors.line2,
-                  width: 1.4,
+                    if (name != null)
+                      Text(
+                        contact.haloId,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: HaloType.mono(size: 10, color: HaloColors.text3),
+                      ),
+                  ],
                 ),
               ),
-              alignment: Alignment.center,
-              child: picked
-                  ? Icon(
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 160),
+                width: 22,
+                height: 22,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: picked ? HaloColors.amber : Colors.transparent,
+                  border: Border.all(
+                    color: picked ? HaloColors.amber : HaloColors.line2,
+                    width: 1.4,
+                  ),
+                ),
+                alignment: Alignment.center,
+                child: AnimatedScale(
+                  scale: picked || still ? 1 : 0.3,
+                  duration: still ? Duration.zero : kHouseTime,
+                  curve: kHouseCurve,
+                  child: AnimatedOpacity(
+                    opacity: picked ? 1 : 0,
+                    duration: const Duration(milliseconds: 140),
+                    child: Icon(
                       Icons.check_rounded,
                       size: 14,
                       color: HaloColors.onAmber,
-                    )
-                  : null,
-            ),
-          ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -399,31 +419,28 @@ class _GoButton extends StatefulWidget {
 }
 
 class _GoButtonState extends State<_GoButton> {
-  bool _down = false;
   @override
   Widget build(BuildContext context) {
     final on = widget.enabled;
-    return GestureDetector(
-      onTapDown: on ? (_) => setState(() => _down = true) : null,
-      onTapUp: on ? (_) => setState(() => _down = false) : null,
-      onTapCancel: on ? () => setState(() => _down = false) : null,
+    return PressScale(
+      scale: 0.97,
+      // the send itself gives the impact
+      haptic: false,
+      label: l10n.introduceIntroduce,
       onTap: on ? widget.onTap : null,
-      child: AnimatedScale(
-        scale: _down ? 0.97 : 1,
-        duration: const Duration(milliseconds: 110),
-        curve: Curves.easeOut,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          height: 48,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: on || widget.sending
-                ? HaloColors.amber
-                : HaloColors.surface3,
-            borderRadius: BorderRadius.circular(14),
-          ),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        height: 48,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: on || widget.sending ? HaloColors.amber : HaloColors.surface3,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 160),
           child: widget.sending
               ? SizedBox(
+                  key: const ValueKey('sending'),
                   width: 18,
                   height: 18,
                   child: CircularProgressIndicator(
@@ -433,6 +450,8 @@ class _GoButtonState extends State<_GoButton> {
                 )
               : Text(
                   l10n.introduceIntroduce,
+                  key: const ValueKey('go'),
+                  semanticsLabel: '',
                   style: HaloType.sans(
                     size: 15,
                     weight: FontWeight.w600,
@@ -440,42 +459,6 @@ class _GoButtonState extends State<_GoButton> {
                   ),
                 ),
         ),
-      ),
-    );
-  }
-}
-
-// staggered slide in from the right, one row after the other.
-class _FadeRight extends StatefulWidget {
-  final int index;
-  final Widget child;
-  const _FadeRight({required this.index, required this.child});
-  @override
-  State<_FadeRight> createState() => _FadeRightState();
-}
-
-class _FadeRightState extends State<_FadeRight> {
-  double _t = 0;
-  @override
-  void initState() {
-    super.initState();
-    final delay = 80 + (widget.index * 40).clamp(0, 360);
-    Future.delayed(Duration(milliseconds: delay), () {
-      if (mounted) setState(() => _t = 1);
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedOpacity(
-      opacity: _t,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeOut,
-      child: AnimatedSlide(
-        offset: Offset((1 - _t) * 0.06, 0),
-        duration: const Duration(milliseconds: 280),
-        curve: Curves.easeOutCubic,
-        child: widget.child,
       ),
     );
   }
