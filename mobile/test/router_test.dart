@@ -220,6 +220,9 @@ class _Mem implements HaloDb {
   final seen = <String>{};
   final held = <String>[];
   final vouches = <String, Set<String>>{};
+  // when each vouch and reaction was stamped
+  final vouchedAt = <String, int?>{};
+  final reactedAt = <String, int?>{};
   final delivered = <String>{};
   // called after each message is kept
   void Function()? onSave;
@@ -422,9 +425,15 @@ class _Mem implements HaloDb {
   Future<void> clearUnread(String peerId) async =>
       _hit('clearUnread', peerId, null);
   @override
-  Future<void> addVouch(String haloId, String voucherId, String? note) async {
+  Future<void> addVouch(
+    String haloId,
+    String voucherId,
+    String? note, {
+    int? at,
+  }) async {
     _hit('addVouch', haloId, null);
     vouches.putIfAbsent(haloId, () => {}).add(voucherId);
+    vouchedAt['$haloId $voucherId'] = at;
   }
 
   @override
@@ -444,7 +453,10 @@ class _Mem implements HaloDb {
       ));
   @override
   Future<Map<String, Map<String, Object?>>> lastMessages() async =>
-      _hit('lastMessages', null, const {});
+      _hit('lastMessages', null, {
+        for (final m in msgs)
+          if (m['group_id'] == null) m['peer_id'] as String: m,
+      });
   @override
   Future<int> countMessagesFrom(String peerId) async => _hit(
     'countMessagesFrom',
@@ -517,19 +529,23 @@ class _Mem implements HaloDb {
     bool secure = false,
     String? poll,
     String? sticker,
+    int? sentAt,
   }) async {
     _hit('saveMessage', msgUid ?? peerId, null);
     msgs.add({
       'peer_id': peerId,
       'direction': direction,
       'plaintext': plaintext,
+      'sent_at': sentAt ?? DateTime.now().millisecondsSinceEpoch,
       'burn_at': burnAt,
       'msg_uid': msgUid,
       'group_id': groupId,
       'media_path': mediaPath,
       'file_path': filePath,
       'poll': poll,
+      'sticker': sticker,
       'pinned': 0,
+      'pinned_at': null,
       'edited': 0,
     });
     onSave?.call();
@@ -575,9 +591,15 @@ class _Mem implements HaloDb {
   }
 
   @override
-  Future<void> addReaction(String msgUid, String reactor, String emoji) async {
+  Future<void> addReaction(
+    String msgUid,
+    String reactor,
+    String emoji, {
+    int? at,
+  }) async {
     _hit('addReaction', msgUid, null);
     reactions.putIfAbsent(msgUid, () => {})[reactor] = emoji;
+    reactedAt['$msgUid $reactor'] = at;
   }
 
   @override
@@ -587,9 +609,14 @@ class _Mem implements HaloDb {
   }
 
   @override
-  Future<void> setPinned(String msgUid, bool pinned) async {
+  Future<void> setPinned(String msgUid, bool pinned, {int? at}) async {
     _hit('setPinned', msgUid, null);
-    msg(msgUid)?['pinned'] = pinned ? 1 : 0;
+    final m = msg(msgUid);
+    if (m == null) return;
+    m['pinned'] = pinned ? 1 : 0;
+    m['pinned_at'] = pinned
+        ? at ?? DateTime.now().millisecondsSinceEpoch
+        : null;
   }
 
   @override
@@ -1355,6 +1382,124 @@ void main() {
       expect(w.vault.msg('t'), isNull);
       // the clock ran from when it came, not from now
       expect(w.vault.msg('u')!['burn_at'], at + 3600 * 1000);
+      expect(w.store.inbox, isEmpty);
+    });
+
+    test('every kind opened from the seal keeps the time it came', () async {
+      final w = await _World.make();
+      final h = _as(_h);
+      // sealed five minutes before the vault opens, a second apart
+      final t0 = DateTime.now().millisecondsSinceEpoch - 5 * 60000;
+      int at(int i) => t0 + i * 1000;
+      final b64 = base64Encode(List<int>.generate(20, (i) => i));
+      final parts = [
+        b64.substring(0, 12),
+        b64.substring(12, 24),
+        b64.substring(24),
+      ];
+      final frames = [
+        await wrapMessage('first', msgUid: 'a', sender: h),
+        for (final i in [0, 1, 2])
+          await wrapMessage(
+            '',
+            msgUid: 'p',
+            mediaId: 'p',
+            chunkIndex: i,
+            chunkTotal: 3,
+            imageB64: parts[i],
+            sender: h,
+          ),
+        await wrapMessage(
+          '',
+          reaction: const ReactionFrame(targetUid: 'a', emoji: 'ok'),
+          sender: h,
+        ),
+        await wrapMessage(
+          '',
+          edit: const EditFrame(targetUid: 'a', newText: 'first, edited'),
+          sender: h,
+        ),
+        await wrapMessage(
+          '',
+          pin: const PinFrame(targetUid: 'a', pinned: true),
+          sender: h,
+        ),
+        await wrapMessage('x', msgUid: 's', sticker: 'fokia:17:1', sender: h),
+        await wrapMessage('all of us', msgUid: 'g', groupId: _g2, sender: h),
+        await wrapMessage(
+          'lunch?',
+          msgUid: 'q',
+          groupId: _g2,
+          poll: const PollSpec(options: ['yes', 'no']).toWire(),
+          sender: h,
+        ),
+        await wrapMessage(
+          '',
+          groupId: _g2,
+          vote: const VoteFrame(pollUid: 'q', choices: [0], seq: 5),
+          sender: h,
+        ),
+        await wrapMessage(
+          '',
+          groupId: _g2,
+          groupControl: const GroupControl(type: 'rename', name: 'G2 now'),
+          sender: h,
+        ),
+        await wrapMessage(
+          '',
+          intro: const IntroFrame(
+            haloId: 'someone-new-here',
+            onion: 'o-n',
+            xPub: 'x-n',
+          ),
+          sender: h,
+        ),
+      ];
+      for (var i = 0; i < frames.length; i++) {
+        await w.router.seal(Unsealed(_h, frames[i], false, at(i)));
+      }
+      // an everyday arrival meanwhile is stamped as it comes
+      final before = DateTime.now().millisecondsSinceEpoch;
+      await w.onion(
+        _v,
+        await wrapMessage('meanwhile', msgUid: 'v', sender: _as(_v)),
+      );
+      expect(
+        w.live.msg('v')!['sent_at'],
+        inInclusiveRange(before, DateTime.now().millisecondsSinceEpoch),
+      );
+
+      await w.open();
+      await w.app.drainSealed(w.vault, 'priv-A');
+      expect(w.store.inbox, isEmpty);
+      // in order, each at its frame's time, a file at its last slice's
+      expect(w.vault.msgs.map((m) => m['msg_uid']), ['a', 'p', 's', 'g', 'q']);
+      expect(w.vault.msgs.map((m) => m['sent_at']), [
+        at(0),
+        at(3),
+        at(7),
+        at(8),
+        at(9),
+      ]);
+      final a = w.vault.msg('a')!;
+      expect(a['plaintext'], 'first, edited');
+      expect(a['pinned_at'], at(6));
+      expect(w.vault.reactedAt['a $_h'], at(4));
+      expect(w.vault.msg('s')!['sticker'], isNotNull);
+      expect(w.vault.groupRows[_g2]!['name'], 'G2 now');
+      expect(w.vault.vouchedAt['someone-new-here $_h'], at(12));
+      // home: the hidden chat at its last message, under the everyday one
+      // that came after it
+      expect(w.app.contacts.map((c) => c.haloId), [_v, _h]);
+      final row = w.app.contacts.last;
+      expect(row.when!.millisecondsSinceEpoch, at(7));
+      // with the vault open, an arrival is stamped as it comes
+      final open = DateTime.now().millisecondsSinceEpoch;
+      await w.onion(_h, await wrapMessage('now', msgUid: 'n', sender: h));
+      expect(
+        w.vault.msg('n')!['sent_at'],
+        inInclusiveRange(open, DateTime.now().millisecondsSinceEpoch),
+      );
       expect(w.store.inbox, isEmpty);
     });
 

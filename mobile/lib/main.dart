@@ -1893,7 +1893,12 @@ class HaloDb {
 
   // who vouched for whom. a row only ever lands when the voucher is a
   // contact we accepted, which is what makes the count mean anything.
-  Future<void> addVouch(String haloId, String voucherId, String? note) async {
+  Future<void> addVouch(
+    String haloId,
+    String voucherId,
+    String? note, {
+    int? at,
+  }) async {
     final db = await open();
     final v = await db.query(
       'contacts',
@@ -1911,7 +1916,7 @@ class HaloDb {
       'halo_id': haloId,
       'voucher_id': voucherId,
       'note': n.isEmpty ? null : (n.length > 40 ? n.substring(0, 40) : n),
-      'created_at': DateTime.now().millisecondsSinceEpoch,
+      'created_at': at ?? DateTime.now().millisecondsSinceEpoch,
     }, conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
@@ -2395,6 +2400,8 @@ class HaloDb {
     bool secure = false,
     String? poll,
     String? sticker,
+    // when it came, if not now: an arrival opened from the seal
+    int? sentAt,
   }) async {
     final db = await open();
     final id = await db.insert('messages', {
@@ -2403,7 +2410,7 @@ class HaloDb {
       // your own words too (a pasted caption, a forward): no direction
       // controls reach the screen from here (bidi_safe.dart)
       'plaintext': unmarked(plaintext),
-      'sent_at': DateTime.now().millisecondsSinceEpoch,
+      'sent_at': sentAt ?? DateTime.now().millisecondsSinceEpoch,
       'burn_at': burnAt,
       'burn_secs': burnSecs,
       'msg_uid': msgUid,
@@ -2826,13 +2833,15 @@ class HaloDb {
     return (r.first['peer_id'] as String, r.first['group_id'] as String?);
   }
 
-  Future<void> setPinned(String msgUid, bool pinned) async {
+  Future<void> setPinned(String msgUid, bool pinned, {int? at}) async {
     final db = await open();
     await db.update(
       'messages',
       {
         'pinned': pinned ? 1 : 0,
-        'pinned_at': pinned ? DateTime.now().millisecondsSinceEpoch : null,
+        'pinned_at': pinned
+            ? at ?? DateTime.now().millisecondsSinceEpoch
+            : null,
       },
       where: 'msg_uid = ?',
       whereArgs: [msgUid],
@@ -3420,13 +3429,18 @@ class HaloDb {
 
   // add or replace a reaction. reactor is '' for self, peer's kryfo id
   // for theirs. one reaction per (msgUid, reactor): re-reacting replaces.
-  Future<void> addReaction(String msgUid, String reactor, String emoji) async {
+  Future<void> addReaction(
+    String msgUid,
+    String reactor,
+    String emoji, {
+    int? at,
+  }) async {
     final db = await open();
     await db.insert('reactions', {
       'msg_uid': msgUid,
       'reactor': reactor,
       'emoji': emoji,
-      'reacted_at': DateTime.now().millisecondsSinceEpoch,
+      'reacted_at': at ?? DateTime.now().millisecondsSinceEpoch,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
@@ -6494,8 +6508,9 @@ class AppState extends ChangeNotifier {
       if (to == RouteTo.vault && v == null) return RouteTo.dropped;
       db = to == RouteTo.vault ? v! : live;
     }
-    // opened from the seal: its tick already went, and the lists are read
-    // again once the batch is in
+    // opened from the seal: its tick already went, the lists are read again
+    // once the batch is in, and what it writes carries the time it came.
+    // the clocks that wait on it (a vote's hour, a slice's week) start now
     final unsealing = arrivedAt != null;
     _bumpChatRev(senderHaloId);
     if (env.groupId != null) _bumpChatRev('group:${env.groupId}');
@@ -6531,7 +6546,7 @@ class AppState extends ChangeNotifier {
     }
     // 1.5) introduction: a friend hands us someone's card
     if (env.intro != null) {
-      await _applyIntro(senderHaloId, env.intro!, db);
+      await _applyIntro(senderHaloId, env.intro!, db, at: arrivedAt);
       return to;
     }
     // they are missing slices of something we sent them
@@ -6567,7 +6582,7 @@ class AppState extends ChangeNotifier {
           return to;
         }
       }
-      await db.setPinned(env.pin!.targetUid, env.pin!.pinned);
+      await db.setPinned(env.pin!.targetUid, env.pin!.pinned, at: arrivedAt);
       notifyListeners();
       return to;
     }
@@ -6602,7 +6617,7 @@ class AppState extends ChangeNotifier {
       if (r.emoji.isEmpty) {
         await db.removeReaction(r.targetUid, senderHaloId);
       } else {
-        await db.addReaction(r.targetUid, senderHaloId, r.emoji);
+        await db.addReaction(r.targetUid, senderHaloId, r.emoji, at: arrivedAt);
       }
       return to;
     }
@@ -6916,6 +6931,7 @@ class AppState extends ChangeNotifier {
       // its creator does that
       poll: isGroup ? _arrivingPoll(env.poll) : null,
       sticker: sticker?.value,
+      sentAt: arrivedAt,
     );
     // remember the face they picked. cheap, and it arrives with every
     // message so it stays current if they change it.
@@ -7219,8 +7235,9 @@ class AppState extends ChangeNotifier {
   Future<void> _applyIntro(
     String senderHaloId,
     IntroFrame card,
-    HaloDb db,
-  ) async {
+    HaloDb db, {
+    int? at,
+  }) async {
     if (!await db.isAccepted(senderHaloId)) return;
     if (!await loadAcceptIntros()) {
       dlog('intro: dropped, introductions are off');
@@ -7240,7 +7257,7 @@ class AppState extends ChangeNotifier {
     await db.upsertContactStub(h, card.onion, card.xPub);
     // the note is the introducer's one line about them. it lives on the
     // vouch, so two introducers can each say their piece.
-    await db.addVouch(h, senderHaloId, card.note);
+    await db.addVouch(h, senderHaloId, card.note, at: at);
     if (card.avatar != null) await db.setContactAvatar(h, card.avatar);
     // the first-contact addresses are kept for the phone, so only the
     // everyday side's go there

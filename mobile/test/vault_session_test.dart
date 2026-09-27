@@ -640,6 +640,7 @@ class _Db implements HaloDb {
     bool secure = false,
     String? poll,
     String? sticker,
+    int? sentAt,
   }) async {
     _hit('saveMessage', msgUid ?? peerId, null);
     r.say(
@@ -651,7 +652,7 @@ class _Db implements HaloDb {
       media: mediaPath,
       burnAt: burnAt,
       sent: sent,
-      at: DateTime.now().millisecondsSinceEpoch,
+      at: sentAt ?? DateTime.now().millisecondsSinceEpoch,
     );
     r.onSave?.call();
   }
