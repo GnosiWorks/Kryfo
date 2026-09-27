@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // what the network is actually doing: state the app knows and otherwise
 // never shows
-import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -14,6 +13,7 @@ import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
 import '../delivery_mode.dart';
+import '../seen_timers.dart';
 import '../l10n/numbers.dart';
 
 class TransportScreen extends StatelessWidget {
@@ -283,19 +283,25 @@ class _AliveState extends State<_Alive> {
   int? _uptimeMs;
   Map<String, dynamic>? _exit;
   Map<String, dynamic> _mem = const {};
-  // re-read while the screen is open, or the numbers go stale
-  Timer? _tick;
+  // re-read while the screen is in view, or the numbers go stale
+  final _timers = SeenTimers();
 
   @override
   void initState() {
     super.initState();
     _load();
-    _tick = Timer.periodic(const Duration(seconds: 5), (_) => _load());
+    _timers.every(const Duration(seconds: 5), _load);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _timers.watch(context);
   }
 
   @override
   void dispose() {
-    _tick?.cancel();
+    _timers.dispose();
     super.dispose();
   }
 

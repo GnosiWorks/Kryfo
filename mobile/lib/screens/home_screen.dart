@@ -38,6 +38,7 @@ import '../widgets/sheet_handle.dart';
 import '../widgets/shift_in_place.dart';
 import '../widgets/confirm_sheet.dart';
 import '../notif_permission.dart';
+import '../seen_timers.dart';
 import '../delivery_mode.dart';
 import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
@@ -692,20 +693,27 @@ class _OfflineCard extends StatefulWidget {
 }
 
 class _OfflineCardState extends State<_OfflineCard> {
-  Timer? _tick;
+  // its "for how long" moves on while the card is seen
+  final _timers = SeenTimers();
   bool _busy = false;
 
   @override
   void initState() {
     super.initState();
-    _tick = Timer.periodic(const Duration(seconds: 20), (_) {
+    _timers.every(const Duration(seconds: 20), () {
       if (mounted) setState(() {});
     });
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _timers.watch(context);
+  }
+
+  @override
   void dispose() {
-    _tick?.cancel();
+    _timers.dispose();
     super.dispose();
   }
 

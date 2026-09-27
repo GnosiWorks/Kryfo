@@ -10,6 +10,7 @@ import '../lock_state.dart';
 import '../main.dart' show appState, session;
 import '../miui_autostart.dart';
 import '../notifications.dart';
+import '../seen_timers.dart';
 import '../theme.dart';
 import '../widgets/motion.dart';
 import '../widgets/press_scale.dart';
@@ -25,7 +26,7 @@ class GettingMessagesScreen extends StatefulWidget {
 }
 
 class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
-  Timer? _tick;
+  final _timers = SeenTimers();
   bool _busy = false;
   // what a notification shows on the lock screen: how messages arrive and
   // what they say when they do are the same question
@@ -41,13 +42,19 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
         })
         .catchError((_) {});
     appState.addListener(_changed);
-    // "4 min ago" has to become "5 min ago" on its own
-    _tick = Timer.periodic(const Duration(seconds: 20), (_) => _changed());
+    // "4 min ago" has to become "5 min ago" on its own, while it is seen
+    _timers.every(const Duration(seconds: 20), _changed);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _timers.watch(context);
   }
 
   @override
   void dispose() {
-    _tick?.cancel();
+    _timers.dispose();
     appState.removeListener(_changed);
     super.dispose();
   }
