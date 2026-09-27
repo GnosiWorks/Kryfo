@@ -76,8 +76,17 @@ class DevKey {
   }
 }
 
-// the pinned keys. empty until the real card is pinned
-const kDevKeys = <DevKey>[];
+// the pinned keys, from the dev phone's own v3 link. relay only: no onion
+const kDevKeys = <DevKey>[
+  DevKey(
+    keyId: 'm1',
+    threeWords: 'scare-raven-rare',
+    xPub: '2f3bddfadec1e445a44e0b7608b5fcaca5b84f00b1ba0341c233fc840ca87d3a',
+    bundle:
+        'eyJyZWdpc3RyYXRpb25JZCI6NDI1MiwiZGV2aWNlSWQiOjEsInByZUtleUlkIjo5OTk5OTksInByZUtleVB1YmxpYyI6IkJjeWlOL1NxRkQ5eGJ0QTBPaEVzSXpYaHB3eEE1TVRPNDJnNks0SWIxOVU2Iiwic2lnbmVkUHJlS2V5SWQiOjEsInNpZ25lZFByZUtleVB1YmxpYyI6IkJiNFoyUGNlMzdzb1VkYXlMQ1YrWHdmY2FsY3RIVEIvWkx1ay9rSjkrQXRYIiwic2lnbmVkUHJlS2V5U2lnbmF0dXJlIjoic2RnWE1wNmFDZThkOTh1NmVPajRVM3pNRklodzd3ZDNlMGo2NXpSNisxdW5xUlI4QnVTVTg4cFE2WUx1RCtaZVYwanhvdUdMbkVpc0R5MmNLM2ZIQVE9PSIsImlkZW50aXR5S2V5IjoiQlM4NzNmcmV3ZVJGcEU0TGRnaTEvS3lsdUU4QXNib0RRY0l6L0lRTXFIMDYifQ==',
+    fc: '099b6ff70339a7a2df2e362ffa3ad97c4db962d4814e44236359e4e33e2a6dfb',
+  ),
+];
 
 // the keys this build trusts. a debug or profile build made with
 // --dart-define=KRYFO_DEV_CARD=<a v3 link> trusts that card instead, so a
