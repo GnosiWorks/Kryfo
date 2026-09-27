@@ -1030,7 +1030,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get backupHiddenGone =>
-      'گفت‌وگوهای پنهان شما وقتی Kryfo قفل شد بسته شدند. آن‌ها را با PIN خودشان باز کنید و از همان‌جا نسخه‌ی پشتیبان بگیرید.';
+      'گفت‌وگوهای پنهان شما وقتی Kryfo قفل شد بسته شدند. آن‌ها را با PIN گفت‌وگوهای پنهان باز کنید و از همان‌جا نسخه‌ی پشتیبان بگیرید.';
 
   @override
   String get blockedBlocked => 'مسدودشده‌ها';
@@ -7150,7 +7150,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get flowVaultDoneLine =>
-      'برای دیدنشان، PIN گفت‌وگوهای پنهان را در صفحه‌ی قفل وارد کنید. به برنامه‌ی دیگری بروید تا دوباره دور از چشم شوند.';
+      'برای دیدنشان، PIN گفت‌وگوهای پنهان را در صفحه‌ی قفل وارد کنید. با رفتن به برنامه‌ای دیگر، دوباره دور از چشم می‌شوند.';
 
   @override
   String get flowVaultChanged => 'PIN گفت‌وگوهای پنهان تغییر کرد';

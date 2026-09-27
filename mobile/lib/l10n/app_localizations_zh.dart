@@ -6153,7 +6153,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get restoreHiddenChats => '隐藏聊天';
 
   @override
-  String get restoreHiddenFollow => '你的隐藏聊天，用你最后选择的新隐藏聊天 PIN 保护。';
+  String get restoreHiddenFollow => '你的隐藏聊天，最后你会为它们选一个新的隐藏聊天 PIN。';
 
   @override
   String get restoreChooseHiddenPin => '这份备份包含隐藏聊天。为它们选择一个隐藏聊天 PIN。';
@@ -13049,7 +13049,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get restoreHiddenChats => '隱藏聊天';
 
   @override
-  String get restoreHiddenFollow => '你的隱藏聊天，用你最後選擇的新隱藏聊天 PIN 保護。';
+  String get restoreHiddenFollow => '你的隱藏聊天，最後你會為它們選一組新的隱藏聊天 PIN。';
 
   @override
   String get restoreChooseHiddenPin => '這份備份包含隱藏聊天。為它們選擇一組隱藏聊天 PIN。';

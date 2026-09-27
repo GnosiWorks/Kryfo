@@ -42,7 +42,9 @@ Widget _primary(String label, VoidCallback? onTap, {bool rose = false}) {
     behavior: HitTestBehavior.opaque,
     child: AnimatedContainer(
       duration: const Duration(milliseconds: 160),
-      height: 46,
+      // taller rather than cut off when a long label wraps at a big font
+      constraints: const BoxConstraints(minHeight: 46),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: !on
@@ -54,6 +56,7 @@ Widget _primary(String label, VoidCallback? onTap, {bool rose = false}) {
       ),
       child: Text(
         label,
+        textAlign: TextAlign.center,
         style: HaloType.sans(
           size: 14,
           weight: FontWeight.w600,
@@ -87,7 +90,8 @@ Widget _outline(String label, VoidCallback onTap) => GestureDetector(
   onTap: onTap,
   behavior: HitTestBehavior.opaque,
   child: Container(
-    height: 46,
+    constraints: const BoxConstraints(minHeight: 46),
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
     alignment: Alignment.center,
     decoration: BoxDecoration(
       borderRadius: BorderRadius.circular(13),
@@ -95,6 +99,7 @@ Widget _outline(String label, VoidCallback onTap) => GestureDetector(
     ),
     child: Text(
       label,
+      textAlign: TextAlign.center,
       style: HaloType.sans(
         size: 14,
         weight: FontWeight.w600,

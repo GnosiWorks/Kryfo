@@ -6519,7 +6519,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get restoreHiddenFollow =>
-      'Скрытые чаты, под новым PIN-кодом скрытых чатов, который ты выберешь в конце.';
+      'Скрытые чаты, с новым PIN-кодом скрытых чатов, который ты выберешь в конце.';
 
   @override
   String get restoreChooseHiddenPin =>
@@ -7072,7 +7072,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get pinsTurnOffWithDecoy =>
-      'Все PIN-коды удаляются, приманка, её Kryfo и все скрытые чаты вместе с ними. Любой, у кого в руках твой телефон, откроет Kryfo от твоего имени.';
+      'Все PIN-коды удаляются, а вместе с ними приманка, её Kryfo и все скрытые чаты. Любой, у кого в руках твой телефон, откроет Kryfo от твоего имени.';
 
   @override
   String get pinsHowThisWorks => 'Как это работает';
@@ -7195,7 +7195,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get flowVaultDigits =>
-      'Сделай и свой PIN-код из шести цифр или длиннее: любой, кто смотрит, может посчитать точки.';
+      'Сделай и свой PIN-код не короче шести цифр: любой, кто смотрит, может посчитать точки.';
 
   @override
   String get flowVaultReplace =>
@@ -7221,11 +7221,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get flowVaultForgetOk => 'Понятно';
 
   @override
-  String get flowVaultPickTitle => 'Выбери чаты, которые скрыть';
+  String get flowVaultPickTitle => 'Выбери, какие чаты скрыть';
 
   @override
   String get flowVaultPickLine =>
-      'Они сейчас уйдут из списка чатов. PIN-код скрытых чатов снова покажет их.';
+      'Они сейчас уйдут из списка чатов. PIN-код скрытых чатов снова их покажет.';
 
   @override
   String flowVaultPickButton(int count) {
@@ -7266,7 +7266,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get flowVaultDoneLine =>
-      'Введи PIN-код скрытых чатов на экране блокировки, чтобы их увидеть. Переключись на другое приложение, и они снова скрыты.';
+      'Введи PIN-код скрытых чатов на экране блокировки, чтобы их увидеть. Переключись на другое приложение, и они снова будут скрыты.';
 
   @override
   String get flowVaultChanged => 'PIN-код скрытых чатов изменён';

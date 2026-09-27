@@ -1034,7 +1034,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get backupHiddenGone =>
-      'Vos discussions masquées se sont fermées quand Kryfo s’est verrouillé. Ouvrez-les avec leur code et faites la sauvegarde depuis là.';
+      'Vos discussions masquées se sont fermées quand Kryfo s’est verrouillé. Ouvrez-les avec leur code et faites la sauvegarde à partir de là.';
 
   @override
   String get blockedBlocked => 'Bloqués';
@@ -4168,7 +4168,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get pinsThePinGoesAnd =>
-      'Le code PIN disparaît, et le code d’effacement et toutes les discussions masquées avec lui. Quiconque tient votre téléphone ouvre Kryfo comme si c’était vous.';
+      'Le code PIN disparaît, et avec lui le code d’effacement et toutes les discussions masquées. Quiconque tient votre téléphone ouvre Kryfo comme si c’était vous.';
 
   @override
   String get pinsUnlockWithFingerprint => 'Déverrouiller par empreinte';
@@ -6467,7 +6467,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get restoreHiddenFollow =>
-      'Vos discussions masquées, sous un nouveau code des discussions masquées que vous choisissez à la fin.';
+      'Vos discussions masquées, avec un nouveau code des discussions masquées que vous choisirez à la fin.';
 
   @override
   String get restoreChooseHiddenPin =>
@@ -7011,7 +7011,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get pinsTurnOffWithDecoy =>
-      'Tous les codes disparaissent, le leurre et son Kryfo et toutes les discussions masquées avec eux. Quiconque tient votre téléphone ouvre Kryfo comme si c’était vous.';
+      'Tous les codes disparaissent, et avec eux le leurre, son Kryfo et toutes les discussions masquées. Quiconque tient votre téléphone ouvre Kryfo comme si c’était vous.';
 
   @override
   String get pinsHowThisWorks => 'Comment ça marche';
@@ -7091,7 +7091,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get pinsHiddenLine =>
-      'Les discussions choisies restent hors de vue jusqu’à ce que vous saisissiez votre code des discussions masquées : ni dans la liste, ni dans la recherche, aucune notification.';
+      'Les discussions choisies restent hors de vue jusqu’à ce que vous saisissiez votre code des discussions masquées : absentes de la liste et de la recherche, sans notification.';
 
   @override
   String get pinsSetUp => 'Configurer';
@@ -7125,7 +7125,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get flowVault2 =>
-      'Tant qu’elles sont hors de vue, elles n’envoient aucune notification et n’affichent aucun badge. Leurs messages continuent d’arriver et attendent, scellés, votre code des discussions masquées.';
+      'Tant qu’elles sont hors de vue, elles n’envoient aucune notification et n’affichent aucune pastille. Leurs messages continuent d’arriver et attendent, scellés, votre code des discussions masquées.';
 
   @override
   String get flowVaultFinger =>
@@ -7176,7 +7176,7 @@ class AppLocalizationsFr extends AppLocalizations {
       count,
       locale: localeName,
       other: 'Masquer $countString discussions',
-      one: 'Masquer 1 discussion',
+      one: 'Masquer $countString discussion',
       zero: 'Ne rien masquer pour l’instant',
     );
     return '$_temp0';
@@ -7215,7 +7215,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get howVault =>
-      'Votre code des discussions masquées ouvre Kryfo avec vos discussions masquées, votre code PIN et votre empreinte sans elles. Configurer à nouveau les discussions masquées remplace celles que ce téléphone contient. Oubliez le code des discussions masquées, et elles sont perdues pour de bon.';
+      'Votre code des discussions masquées ouvre Kryfo avec vos discussions masquées, votre code PIN et votre empreinte sans elles. Configurer à nouveau les discussions masquées remplace celles que ce téléphone contient. Si vous oubliez le code des discussions masquées, elles sont perdues pour de bon.';
 
   @override
   String get chatHide => 'Masquer la discussion';

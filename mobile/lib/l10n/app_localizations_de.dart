@@ -1033,7 +1033,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get backupHiddenGone =>
-      'Deine versteckten Chats wurden geschlossen, als Kryfo sich gesperrt hat. Öffne sie mit ihrer PIN und mach das Backup von dort.';
+      'Deine versteckten Chats haben sich geschlossen, als Kryfo gesperrt wurde. Öffne sie mit ihrer PIN und mach das Backup von dort aus.';
 
   @override
   String get blockedBlocked => 'Blockiert';
@@ -4177,7 +4177,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get pinsThePinGoesAnd =>
-      'Die PIN wird entfernt, und die Lösch-PIN und alle versteckten Chats mit ihr. Wer dein Handy in der Hand hat, öffnet Kryfo als du.';
+      'Die PIN wird entfernt, und mit ihr die Lösch-PIN und alle versteckten Chats. Wer dein Handy in der Hand hat, öffnet Kryfo als du.';
 
   @override
   String get pinsUnlockWithFingerprint => 'Mit Fingerabdruck entsperren';
@@ -6468,7 +6468,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get restoreAttachments => 'Anhänge';
 
   @override
-  String get restoreHiddenChats => 'Versteckte Chats';
+  String get restoreHiddenChats => 'versteckte Chats';
 
   @override
   String get restoreHiddenFollow =>
@@ -6476,7 +6476,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get restoreChooseHiddenPin =>
-      'Dieses Backup enthält versteckte Chats. Wähle eine PIN, die sie öffnet.';
+      'Dieses Backup enthält versteckte Chats. Wähle eine PIN für versteckte Chats.';
 
   @override
   String get restoreHiddenLockFirst =>
@@ -7019,7 +7019,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get pinsTurnOffWithDecoy =>
-      'Alle PINs werden entfernt, die Tarn-PIN und ihr Kryfo und alle versteckten Chats mit ihnen. Wer dein Handy in der Hand hat, öffnet Kryfo als du.';
+      'Alle PINs werden entfernt, und mit ihnen die Tarn-PIN, ihr Kryfo und alle versteckten Chats. Wer dein Handy in der Hand hat, öffnet Kryfo als du.';
 
   @override
   String get pinsHowThisWorks => 'So funktioniert es';
@@ -7173,7 +7173,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get flowVaultPickLine =>
-      'Sie verlassen jetzt deine Chatliste. Deine PIN für versteckte Chats holt sie zurück.';
+      'Sie verlassen jetzt deine Chatliste. Deine PIN für versteckte Chats zeigt sie wieder.';
 
   @override
   String flowVaultPickButton(int count) {
@@ -7185,7 +7185,7 @@ class AppLocalizationsDe extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString Chats verstecken',
-      one: '1 Chat verstecken',
+      one: '$countString Chat verstecken',
       zero: 'Noch nichts verstecken',
     );
     return '$_temp0';
@@ -7199,7 +7199,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get flowVaultBackupLine =>
-      'Ein Backup von jetzt enthält auch deine versteckten Chats, unter einer eigenen Passphrase. Wenn du die PIN für versteckte Chats vergisst, ist es der einzige Weg zurück zu ihnen.';
+      'Ein Backup, das du jetzt machst, enthält auch deine versteckten Chats, unter einer eigenen Passphrase. Wenn du die PIN für versteckte Chats vergisst, ist es der einzige Weg zurück zu ihnen.';
 
   @override
   String get flowVaultBackupNow => 'Backup machen';

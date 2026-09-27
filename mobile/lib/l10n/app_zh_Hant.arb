@@ -1687,7 +1687,7 @@
   "restoreMessages": "訊息",
   "restoreAttachments": "附件",
   "restoreHiddenChats": "隱藏聊天",
-  "restoreHiddenFollow": "你的隱藏聊天，用你最後選擇的新隱藏聊天 PIN 保護。",
+  "restoreHiddenFollow": "你的隱藏聊天，最後你會為它們選一組新的隱藏聊天 PIN。",
   "restoreChooseHiddenPin": "這份備份包含隱藏聊天。為它們選擇一組隱藏聊天 PIN。",
   "restoreHiddenLockFirst": "隱藏聊天需要應用程式鎖，所以先給 Kryfo 設一組自己的 PIN。",
   "shieldBlock": "封鎖",

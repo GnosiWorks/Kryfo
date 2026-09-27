@@ -1018,7 +1018,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get backupHiddenGone =>
-      'Trò chuyện ẩn của bạn đã đóng khi Kryfo khóa. Hãy mở chúng bằng mã PIN của chúng rồi sao lưu từ đó.';
+      'Trò chuyện ẩn của bạn đã đóng khi Kryfo khóa. Hãy mở chúng bằng mã PIN trò chuyện ẩn rồi sao lưu từ đó.';
 
   @override
   String get blockedBlocked => 'Đã chặn';
@@ -6389,7 +6389,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get restoreHiddenFollow =>
-      'Trò chuyện ẩn của bạn, với mã PIN trò chuyện ẩn mới mà bạn chọn ở cuối.';
+      'Trò chuyện ẩn của bạn, với mã PIN trò chuyện ẩn mới mà bạn sẽ chọn ở bước cuối.';
 
   @override
   String get restoreChooseHiddenPin =>
@@ -7047,7 +7047,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get flowVaultDigits =>
-      'Hãy cho cả mã PIN của bạn sáu chữ số trở lên, vì ai đang nhìn cũng có thể đếm các dấu chấm.';
+      'Mã PIN của bạn cũng nên có từ sáu chữ số trở lên, vì ai đang nhìn cũng có thể đếm các dấu chấm.';
 
   @override
   String get flowVaultReplace =>
@@ -7077,7 +7077,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get flowVaultPickLine =>
-      'Chúng sẽ rời khỏi danh sách trò chuyện ngay bây giờ. Mã PIN trò chuyện ẩn sẽ đưa chúng trở lại.';
+      'Chúng sẽ rời khỏi danh sách trò chuyện ngay bây giờ. Mã PIN trò chuyện ẩn sẽ cho chúng hiện lại.';
 
   @override
   String flowVaultPickButton(int count) {

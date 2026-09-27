@@ -6515,7 +6515,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get restoreHiddenFollow =>
-      'Приховані чати, під новим PIN-кодом прихованих чатів, який ти вибереш наприкінці.';
+      'Приховані чати, з новим PIN-кодом прихованих чатів, який ти вибереш наприкінці.';
 
   @override
   String get restoreChooseHiddenPin =>
@@ -7067,7 +7067,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get pinsTurnOffWithDecoy =>
-      'Усі PIN-коди зникнуть, приманка, її Kryfo та всі приховані чати разом із ними. Будь-хто з твоїм телефоном у руках відкриє Kryfo від твого імені.';
+      'Усі PIN-коди зникнуть, а разом із ними приманка, її Kryfo та всі приховані чати. Будь-хто з твоїм телефоном у руках відкриє Kryfo від твого імені.';
 
   @override
   String get pinsHowThisWorks => 'Як це працює';
@@ -7190,7 +7190,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get flowVaultDigits =>
-      'Зроби й свій PIN-код із шести цифр або довшим: будь-хто, хто дивиться, може порахувати крапки.';
+      'Зроби й свій PIN-код не коротшим за шість цифр: будь-хто, хто дивиться, може порахувати крапки.';
 
   @override
   String get flowVaultReplace =>
@@ -7217,7 +7217,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get flowVaultForgetOk => 'Зрозуміло';
 
   @override
-  String get flowVaultPickTitle => 'Вибери чати, які приховати';
+  String get flowVaultPickTitle => 'Вибери, які чати приховати';
 
   @override
   String get flowVaultPickLine =>
@@ -7262,7 +7262,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get flowVaultDoneLine =>
-      'Введи PIN-код прихованих чатів на екрані блокування, щоб їх побачити. Перемкнися на інший застосунок, і вони знову приховані.';
+      'Введи PIN-код прихованих чатів на екрані блокування, щоб їх побачити. Перемкнися на інший застосунок, і вони знову будуть приховані.';
 
   @override
   String get flowVaultChanged => 'PIN-код прихованих чатів змінено';

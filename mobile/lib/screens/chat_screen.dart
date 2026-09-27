@@ -4043,11 +4043,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                           color: HaloColors.violet,
                         ),
                         const SizedBox(width: 14),
-                        Text(
-                          hidden ? l10n.chatShowInList : l10n.chatHide,
-                          style: HaloType.sans(
-                            size: 14,
-                            color: HaloColors.text,
+                        // long in some languages: it wraps at a big font
+                        Expanded(
+                          child: Text(
+                            hidden ? l10n.chatShowInList : l10n.chatHide,
+                            style: HaloType.sans(
+                              size: 14,
+                              color: HaloColors.text,
+                            ),
                           ),
                         ),
                       ],

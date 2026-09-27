@@ -1036,7 +1036,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get backupHiddenGone =>
-      'Suas conversas ocultas se fecharam quando o Kryfo bloqueou. Abra-as com o PIN delas e faça o backup por lá.';
+      'Suas conversas ocultas se fecharam quando o Kryfo foi bloqueado. Abra-as com o PIN delas e faça o backup por lá.';
 
   @override
   String get blockedBlocked => 'Bloqueados';
@@ -4158,7 +4158,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get pinsThePinGoesAnd =>
-      'O PIN sai, e o PIN de apagamento e qualquer conversa oculta junto. Qualquer pessoa com seu celular abre o Kryfo como se fosse você.';
+      'O PIN sai, e junto com ele o PIN de apagamento e qualquer conversa oculta. Qualquer pessoa com seu celular abre o Kryfo como se fosse você.';
 
   @override
   String get pinsUnlockWithFingerprint => 'Desbloquear com a digital';
@@ -6451,7 +6451,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get restoreHiddenFollow =>
-      'Suas conversas ocultas, com um novo PIN das conversas ocultas que você escolhe no final.';
+      'Suas conversas ocultas, com um novo PIN das conversas ocultas que você vai escolher no final.';
 
   @override
   String get restoreChooseHiddenPin =>
@@ -6995,7 +6995,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get pinsTurnOffWithDecoy =>
-      'Todos os PINs saem, e o disfarce, o Kryfo dele e qualquer conversa oculta junto. Qualquer pessoa com seu celular abre o Kryfo como se fosse você.';
+      'Todos os PINs saem, e junto com eles o disfarce, o Kryfo dele e qualquer conversa oculta. Qualquer pessoa com seu celular abre o Kryfo como se fosse você.';
 
   @override
   String get pinsHowThisWorks => 'Como funciona';
@@ -7160,7 +7160,7 @@ class AppLocalizationsPt extends AppLocalizations {
       count,
       locale: localeName,
       other: 'Ocultar $countString conversas',
-      one: 'Ocultar 1 conversa',
+      one: 'Ocultar $countString conversa',
       zero: 'Não ocultar nada por enquanto',
     );
     return '$_temp0';

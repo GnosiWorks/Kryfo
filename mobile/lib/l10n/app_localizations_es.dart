@@ -4164,7 +4164,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get pinsThePinGoesAnd =>
-      'El PIN desaparece, y el PIN de borrado y cualquier chat oculto con él. Cualquiera que tenga tu teléfono abrirá Kryfo como si fuera tú.';
+      'El PIN desaparece, y con él el PIN de borrado y cualquier chat oculto. Cualquiera que tenga tu teléfono abrirá Kryfo como si fuera tú.';
 
   @override
   String get pinsUnlockWithFingerprint => 'Desbloquear con huella';
@@ -6456,7 +6456,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get restoreHiddenFollow =>
-      'Tus chats ocultos, con un nuevo PIN de chats ocultos que eliges al final.';
+      'Tus chats ocultos, con un nuevo PIN de chats ocultos que elegirás al final.';
 
   @override
   String get restoreChooseHiddenPin =>
@@ -6998,7 +6998,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get pinsTurnOffWithDecoy =>
-      'Todos los PIN desaparecen, el señuelo y su Kryfo y cualquier chat oculto con ellos. Cualquiera que tenga tu teléfono abrirá Kryfo como si fuera tú.';
+      'Todos los PIN desaparecen, y con ellos el señuelo, su Kryfo y cualquier chat oculto. Cualquiera que tenga tu teléfono abrirá Kryfo como si fuera tú.';
 
   @override
   String get pinsHowThisWorks => 'Cómo funciona';
@@ -7161,7 +7161,7 @@ class AppLocalizationsEs extends AppLocalizations {
       count,
       locale: localeName,
       other: 'Ocultar $countString chats',
-      one: 'Ocultar 1 chat',
+      one: 'Ocultar $countString chat',
       zero: 'No ocultar nada por ahora',
     );
     return '$_temp0';

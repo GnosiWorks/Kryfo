@@ -1033,7 +1033,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get backupHiddenGone =>
-      'Kryfo kilitlenince gizli sohbetlerin kapandı. Onları kendi PIN’leriyle aç ve yedeği oradan al.';
+      'Kryfo kilitlenince gizli sohbetlerin kapandı. Onları gizli sohbet PIN’inle aç ve yedeği oradan al.';
 
   @override
   String get blockedBlocked => 'Engellenenler';
@@ -7098,7 +7098,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get flowVaultReplace =>
-      'Bu, bu telefonda zaten olan tüm gizli sohbetlerin yerini alır.';
+      'Bu işlem, bu telefonda zaten olan tüm gizli sohbetlerin yerini alır.';
 
   @override
   String get flowVaultChoose => 'Bir gizli sohbet PIN’i seç';
@@ -7124,7 +7124,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get flowVaultPickLine =>
-      'Şimdi sohbet listenden çıkarlar. Gizli sohbet PIN’in onları geri getirir.';
+      'Şimdi sohbet listenden çıkarlar. Gizli sohbet PIN’in onları yeniden gösterir.';
 
   @override
   String flowVaultPickButton(int count) {
@@ -7136,7 +7136,7 @@ class AppLocalizationsTr extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString sohbeti gizle',
-      one: '1 sohbeti gizle',
+      one: '$countString sohbeti gizle',
       zero: 'Şimdilik hiçbir şey gizleme',
     );
     return '$_temp0';

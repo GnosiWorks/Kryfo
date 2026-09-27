@@ -1060,7 +1060,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get backupHiddenNotIn => 'المحادثات المخفية ليست فيه.';
 
   @override
-  String get backupHiddenIncluded => 'ومحادثاتك المخفية فيه أيضًا.';
+  String get backupHiddenIncluded => 'محادثاتك المخفية فيه أيضًا.';
 
   @override
   String get backupMoveHiddenStay =>
@@ -1068,7 +1068,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get backupHiddenGone =>
-      'أُغلقت محادثاتك المخفية حين قُفل Kryfo. افتحها برمز PIN الخاص بها وأنشئ النسخة الاحتياطية من هناك.';
+      'أُغلقت محادثاتك المخفية حين قُفل Kryfo. افتحها برمز PIN للمحادثات المخفية وأنشئ النسخة الاحتياطية من هناك.';
 
   @override
   String get blockedBlocked => 'المحظورون';
@@ -7174,7 +7174,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get flowVault1 =>
-      'اختر محادثات ومجموعات لإخفائها. رمز PIN الخاص بك يفتح Kryfo من دونها. ورمز PIN للمحادثات المخفية يفتح كل شيء، ومعه المحادثات المخفية.';
+      'اختر محادثات ومجموعات لإخفائها. رمز PIN الخاص بك يفتح Kryfo من دونها. ورمز PIN للمحادثات المخفية يفتح كل شيء، بما فيه المحادثات المخفية.';
 
   @override
   String get flowVault2 =>
@@ -7201,11 +7201,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get flowEnterHiddenPinLine => 'الرمز الذي يفتح محادثاتك المخفية.';
 
   @override
-  String get flowVaultForgetTitle => 'تذكّر هذا الرمز';
+  String get flowVaultForgetTitle => 'تذكّر رمز PIN هذا';
 
   @override
   String get flowVaultForget =>
-      'إن نسيت هذا الرمز، تضيع محادثاتك المخفية إلى الأبد. لا أحد يستطيع استعادتها، ولا حتى نحن.';
+      'إن نسيت رمز PIN هذا، تضيع محادثاتك المخفية إلى الأبد. لا أحد يستطيع استعادتها، ولا حتى نحن.';
 
   @override
   String get flowVaultForgetOk => 'فهمت';

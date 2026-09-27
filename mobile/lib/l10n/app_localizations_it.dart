@@ -6467,7 +6467,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get restoreHiddenFollow =>
-      'Le tue chat nascoste, con un nuovo PIN delle chat nascoste che scegli alla fine.';
+      'Le tue chat nascoste, con un nuovo PIN delle chat nascoste che sceglierai alla fine.';
 
   @override
   String get restoreChooseHiddenPin =>
@@ -7010,7 +7010,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get pinsTurnOffWithDecoy =>
-      'Tutti i PIN vengono rimossi, l\'esca, il suo Kryfo e tutte le chat nascoste con loro. Chiunque abbia in mano il tuo telefono apre Kryfo al posto tuo.';
+      'Tutti i PIN vengono rimossi, e con loro l\'esca, il suo Kryfo e tutte le chat nascoste. Chiunque abbia in mano il tuo telefono apre Kryfo al posto tuo.';
 
   @override
   String get pinsHowThisWorks => 'Come funziona';
@@ -7174,7 +7174,7 @@ class AppLocalizationsIt extends AppLocalizations {
       count,
       locale: localeName,
       other: 'Nascondi $countString chat',
-      one: 'Nascondi 1 chat',
+      one: 'Nascondi $countString chat',
       zero: 'Non nascondere niente per ora',
     );
     return '$_temp0';

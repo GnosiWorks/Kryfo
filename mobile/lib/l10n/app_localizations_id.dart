@@ -1019,7 +1019,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get backupHiddenGone =>
-      'Obrolan tersembunyimu tertutup saat Kryfo terkunci. Buka dengan PIN-nya dan buat cadangan dari sana.';
+      'Obrolan tersembunyimu tertutup saat Kryfo terkunci. Buka dengan PIN obrolan tersembunyi, lalu buat cadangan dari sana.';
 
   @override
   String get blockedBlocked => 'Diblokir';
@@ -4137,7 +4137,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get pinsNeedsAPinFirst => 'Perlu PIN dulu';
 
   @override
-  String get pinsSet => 'Sudah dibuat';
+  String get pinsSet => 'Aktif';
 
   @override
   String get pinsChangeWipePin => 'Ganti PIN penghapus';
@@ -6403,7 +6403,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get restoreHiddenFollow =>
-      'Obrolan tersembunyimu, dengan PIN obrolan tersembunyi baru yang kamu pilih di akhir.';
+      'Obrolan tersembunyimu, dengan PIN obrolan tersembunyi baru yang akan kamu pilih di akhir.';
 
   @override
   String get restoreChooseHiddenPin =>
@@ -7064,7 +7064,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get flowVaultDigits =>
-      'Beri PIN-mu juga enam angka atau lebih, karena siapa pun yang melihat bisa menghitung titiknya.';
+      'Buat PIN-mu juga enam angka atau lebih, karena siapa pun yang melihat bisa menghitung titiknya.';
 
   @override
   String get flowVaultReplace =>
@@ -7085,13 +7085,13 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get flowVaultForget =>
-      'Kalau kamu lupa PIN ini, obrolan tersembunyimu hilang untuk selamanya. Tidak ada yang bisa mengembalikannya, bahkan kami.';
+      'Kalau kamu lupa PIN ini, obrolan tersembunyimu hilang untuk selamanya. Tidak ada yang bisa memulihkannya, bahkan kami.';
 
   @override
   String get flowVaultForgetOk => 'Aku mengerti';
 
   @override
-  String get flowVaultPickTitle => 'Pilih obrolan untuk disembunyikan';
+  String get flowVaultPickTitle => 'Sembunyikan obrolan mana?';
 
   @override
   String get flowVaultPickLine =>
@@ -7107,7 +7107,7 @@ class AppLocalizationsId extends AppLocalizations {
       count,
       locale: localeName,
       other: 'Sembunyikan $countString obrolan',
-      zero: 'Jangan sembunyikan apa pun dulu',
+      zero: 'Lewati dulu',
     );
     return '$_temp0';
   }

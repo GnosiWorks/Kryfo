@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Added
+- hidden chats: chosen chats and groups stay out of the chat list, search and notifications until you enter the hidden chats pin. set it up in app lock, advanced protection.
 - stickers: the Fokia pack, 29 animated stickers, in chats, groups and rooms. a sticker travels as its name and the app draws it, so it costs a few bytes and no picture leaves the phone. older versions show its emoji.
 
 ## [0.4.1] - 2026-09-25

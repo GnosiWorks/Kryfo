@@ -223,8 +223,10 @@ class _CountButton extends StatelessWidget {
         child: AnimatedContainer(
           duration: d,
           curve: Curves.easeOutCubic,
-          height: 50,
+          // taller rather than cut off when the words wrap at a big font
+          constraints: const BoxConstraints(minHeight: 50),
           width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: some ? HaloColors.amber : HaloColors.surface2,
@@ -253,6 +255,7 @@ class _CountButton extends StatelessWidget {
               child: Text(
                 l10n.flowVaultPickButton(count),
                 key: ValueKey(count),
+                textAlign: TextAlign.center,
                 style: HaloType.sans(
                   size: 15,
                   weight: FontWeight.w600,
