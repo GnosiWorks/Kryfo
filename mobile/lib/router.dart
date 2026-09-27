@@ -108,6 +108,30 @@ String groupCard(List<RouterCard> members) => jsonEncode({
   'm': [for (final c in members) c.toJson()],
 });
 
+// a move its list entry says is under way, for a start-up to put right.
+// the files are folder/leaf names, and they belong in the vault's folders
+class PendingMove {
+  const PendingMove(this.chatId, this.group, this.files, {required this.hid});
+
+  final String chatId;
+  final bool group;
+  final List<String> files;
+  // a hide past its commit point: everyday rows of the chat go
+  final bool hid;
+}
+
+// the flags a list entry carries while a move is under way: a hide past its
+// commit, and an unhide before it
+const _kHid = 'mv';
+const _kBack = 'bk';
+
+// a card as a hide's commit writes it: flagged with the files still to go
+// into the vault's folders
+String hidingCard(String card, List<String> files) {
+  final j = jsonDecode(card);
+  return jsonEncode({if (j is Map) ...j, _kHid: files});
+}
+
 // an arrival as it was sealed
 class Unsealed {
   const Unsealed(this.from, this.wire, this.backPair, this.at);
@@ -135,6 +159,63 @@ abstract class RouterStore {
   // oldest first
   Future<List<Map<String, Object?>>> inboxOldest(int limit);
   Future<void> inboxDelete(int id);
+  // everything sealed, when the vault it was sealed to goes
+  Future<void> inboxClear();
+}
+
+// the list and a vault's own marks, written inside a transaction the caller
+// holds, so a chat's rows and its entry move together. schema is the
+// database's name on the connection: main, or an attached vault
+class RouterRows {
+  const RouterRows._();
+
+  static Future<void> put(
+    DatabaseExecutor t,
+    String chatId,
+    String kind,
+    String card,
+    int at,
+  ) async {
+    await t.rawInsert(
+      'INSERT OR REPLACE INTO main.hidden_chats (chat_id, kind, card, at) '
+      'VALUES (?, ?, ?, ?)',
+      [chatId, kind, card, at],
+    );
+  }
+
+  static Future<void> delete(DatabaseExecutor t, String chatId) async {
+    await t.rawDelete('DELETE FROM main.hidden_chats WHERE chat_id = ?', [
+      chatId,
+    ]);
+  }
+
+  static Future<String?> meta(
+    DatabaseExecutor t,
+    String k, {
+    String schema = 'main',
+  }) async {
+    final r = await t.rawQuery(
+      'SELECT v FROM $schema.vault_meta WHERE k = ? LIMIT 1',
+      [k],
+    );
+    return r.isEmpty ? null : r.first['v'] as String?;
+  }
+
+  static Future<void> putMeta(
+    DatabaseExecutor t,
+    String k,
+    String? v, {
+    String schema = 'main',
+  }) async {
+    if (v == null) {
+      await t.rawDelete('DELETE FROM $schema.vault_meta WHERE k = ?', [k]);
+      return;
+    }
+    await t.rawInsert(
+      'INSERT OR REPLACE INTO $schema.vault_meta (k, v) VALUES (?, ?)',
+      [k, v],
+    );
+  }
 }
 
 class SqlRouterStore implements RouterStore {
@@ -252,6 +333,11 @@ class SqlRouterStore implements RouterStore {
       whereArgs: [id],
     );
   }
+
+  @override
+  Future<void> inboxClear() async {
+    await (await _open()).delete('vault_inbox');
+  }
 }
 
 // the engine's sealing (engine/vault.go), behind a seam. base64 in and out.
@@ -276,6 +362,7 @@ class VaultRouter {
   // people and groups of a vault that went
   final Set<String> _gonePeople = {};
   final Set<String> _goneGroups = {};
+  final List<PendingMove> _pending = [];
   String? _pub;
   bool _loaded = false;
   // rows may be waiting. while they do, a new arrival for the vault queues
@@ -292,13 +379,23 @@ class VaultRouter {
     final groups = <String, List<RouterCard>>{};
     final gonePeople = <String>{};
     final goneGroups = <String>{};
+    final pending = <PendingMove>[];
     for (final r in await _store.hidden()) {
       final id = r['chat_id'] as String;
-      Object? card;
-      try {
-        card = jsonDecode(r['card'] as String? ?? '{}');
-      } catch (_) {
-        card = const {};
+      final card = _json(r['card']);
+      if ((r['kind'] == kHiddenPeer || r['kind'] == kHiddenGroup) &&
+          card is Map) {
+        final hid = card[_kHid];
+        final back = card[_kBack];
+        final files = hid is List ? hid : back;
+        if (files is List) {
+          pending.add(
+            PendingMove(id, r['kind'] == kHiddenGroup, [
+              for (final f in files)
+                if (f is String) f,
+            ], hid: hid is List),
+          );
+        }
       }
       switch (r['kind']) {
         case kHiddenPeer:
@@ -338,9 +435,151 @@ class VaultRouter {
     _goneGroups
       ..clear()
       ..addAll(goneGroups);
+    _pending
+      ..clear()
+      ..addAll(pending);
     _pub = pub;
     _maybeSealed = _maybeSealed || waiting;
     _loaded = true;
+  }
+
+  static Object? _json(Object? s) {
+    try {
+      return jsonDecode(s as String? ?? '{}');
+    } catch (_) {
+      return const {};
+    }
+  }
+
+  // moves a crash or a fault cut short, as the list says
+  List<PendingMove> get pending => List.unmodifiable(_pending);
+
+  // the chat is hidden: its vault holds it
+  bool hides(String chatId) =>
+      _peers.containsKey(chatId) || _groups.containsKey(chatId);
+
+  // every hidden chat, with whether it is a group
+  List<(String, bool)> get hiddenChats => [
+    for (final id in _peers.keys) (id, false),
+    for (final id in _groups.keys) (id, true),
+  ];
+
+  // a new vault's key, written before any chat is listed
+  Future<void> start(String pub) async {
+    await _store.putMeta('pub', pub);
+    await load();
+  }
+
+  // an unhide is moving the chat's files out: until its commit, a start-up
+  // puts them back
+  Future<void> markBack(String chatId, List<String> files) =>
+      _flag(chatId, _kBack, files);
+
+  // a move done: the entry carries only what receiving needs
+  Future<void> settle(String chatId) => _flag(chatId, null, null);
+
+  Future<void> _flag(String chatId, String? key, List<String>? files) async {
+    for (final r in await _store.hidden()) {
+      if (r['chat_id'] != chatId) continue;
+      final card = _json(r['card']);
+      if (card is! Map) break;
+      final next = {...card}
+        ..remove(_kHid)
+        ..remove(_kBack);
+      if (key != null) next[key] = files;
+      await _store.putHidden(
+        chatId,
+        r['kind'] as String,
+        jsonEncode(next),
+        r['at'] as int,
+      );
+      break;
+    }
+    await load();
+  }
+
+  // the cards of the chats a vault holds, read again from its rows: new
+  // ones listed, changed ones rewritten. a move under way keeps its entry
+  Future<void> recard(Map<String, (String, String)> cards) async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final have = {
+      for (final r in await _store.hidden()) r['chat_id'] as String: r,
+    };
+    for (final MapEntry(key: id, value: (kind, card)) in cards.entries) {
+      final r = have[id];
+      final old = r == null ? null : _json(r['card']);
+      if (old is Map && (old.containsKey(_kHid) || old.containsKey(_kBack))) {
+        continue;
+      }
+      if (r != null && r['kind'] == kind && r['card'] == card) continue;
+      final at = r != null && r['kind'] == kind ? r['at'] as int : now;
+      await _store.putHidden(id, kind, card, at);
+    }
+    // someone an older vault's drop list names who is in this vault's
+    // groups now: what they send goes to this vault
+    for (final (kind, card) in cards.values) {
+      final m = kind == kHiddenGroup ? _json(card) : null;
+      if (m is! Map || m['m'] is! List) continue;
+      for (final x in m['m'] as List) {
+        final id = RouterCard.fromJson(x)?.id;
+        final r = have[id];
+        if (r == null || r['kind'] != kHiddenGone) continue;
+        final g = _json(r['card']);
+        if (g is Map && g['g'] == 1) continue;
+        await _store.deleteHidden(id!);
+        have.remove(id);
+      }
+    }
+    await load();
+  }
+
+  // the vault went, replaced or with the lock. everyone it held stays on
+  // the list only so what they send is dropped, and its key and what came
+  // sealed go
+  Future<void> forget() async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final people = <String>{};
+    for (final r in await _store.hidden()) {
+      final id = r['chat_id'] as String;
+      switch (r['kind']) {
+        case kHiddenPeer:
+          people.add(id);
+        case kHiddenGroup:
+          final card = _json(r['card']);
+          final m = card is Map ? card['m'] : null;
+          if (m is List) {
+            for (final x in m) {
+              final c = RouterCard.fromJson(x);
+              if (c != null) people.add(c.id);
+            }
+          }
+          await _store.putHidden(id, kHiddenGone, jsonEncode({'g': 1}), now);
+      }
+    }
+    for (final id in people) {
+      await _store.putHidden(id, kHiddenGone, '{}', now);
+    }
+    await _store.putMeta('pub', null);
+    await _store.inboxClear();
+    _maybeSealed = false;
+    await load();
+  }
+
+  // entries for chats no vault holds any more
+  Future<void> unlist(Iterable<String> ids) async {
+    for (final id in ids) {
+      await _store.deleteHidden(id);
+    }
+    await load();
+  }
+
+  // the hidden chats came back and their pin went: nothing is hidden, and
+  // the key and anything sealed go. an older vault's drop list stays
+  Future<void> retire() async {
+    await _store.putMeta('pub', null);
+    await _store.inboxClear();
+    _maybeSealed = false;
+    await load();
   }
 
   // group frames go by the group, 1:1 frames by the sender. a hidden

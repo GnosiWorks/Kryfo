@@ -91,6 +91,9 @@ class _Store implements RouterStore {
   Future<void> inboxDelete(int id) async {
     inbox.removeWhere((r) => r['id'] == id);
   }
+
+  @override
+  Future<void> inboxClear() async => inbox.clear();
 }
 
 // a stand-in for age: the bytes turned over under the pair's name, so
