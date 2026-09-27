@@ -131,6 +131,26 @@ void main() {
     expect(_boxes(t).single.time, -1);
   });
 
+  testWidgets('a chat sticker rests after its loops, a tap plays it again', (
+    t,
+  ) async {
+    await t.pumpWidget(
+      _host(StickerBubble(wire: wave, emoji: hi.emoji, isOut: false)),
+    );
+    // an old message waits out its phase, then plays its loops
+    await _frames(t, ((kStickerChatLoops + 1) * hi.loopMs / 16).ceil() + 10);
+    expect(_boxes(t).single.time, -1);
+    expect(t.binding.hasScheduledFrame, false);
+    final rested = StickerView.frames;
+    await _frames(t, 60);
+    expect(StickerView.frames, rested);
+
+    await t.tap(find.byType(StickerBubble));
+    await _frames(t, 10);
+    expect(StickerView.frames, greaterThan(rested + 5));
+    expect(_boxes(t).single.time, greaterThan(0));
+  });
+
   testWidgets('reduced motion: an arrival fades in, with no pop', (t) async {
     await t.pumpWidget(
       _host(

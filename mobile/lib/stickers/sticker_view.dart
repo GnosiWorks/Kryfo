@@ -58,6 +58,8 @@ class StickerView extends StatefulWidget {
     this.budget,
     this.order = 0,
     this.play = true,
+    this.loops,
+    this.replay = 0,
     this.label,
   });
 
@@ -76,6 +78,11 @@ class StickerView extends StatefulWidget {
   final int order;
   // false: always the still frame (tab icons, thumbnails)
   final bool play;
+  // after this many loops it rests on the still and nothing runs, so a chat
+  // left open does not draw all night. null: it loops (the picker)
+  final int? loops;
+  // a new value plays it again from the start (a tap)
+  final int replay;
   final String? label;
 
   // frames drawn by all stickers, for the tests
@@ -97,16 +104,20 @@ class _StickerViewState extends State<StickerView>
   bool _reduce = false;
   bool _slot = false;
   bool _parked = false;
+  // its loops are played: resting until a replay
+  bool _done = false;
+  late int _delay = widget.delay;
   RenderSticker? _box;
 
-  bool get _wants => widget.play && widget.sticker.animated && !_reduce;
+  bool get _wants =>
+      widget.play && widget.sticker.animated && !_reduce && !_done;
 
   @override
   void initState() {
     super.initState();
     if (widget.start > 0 && widget.play && widget.sticker.animated) {
       _carry = Duration(microseconds: (widget.start * 1000).round());
-      _clock.value = loopTime(widget.sticker, widget.start, widget.delay);
+      _clock.value = loopTime(widget.sticker, widget.start, _delay);
     }
   }
 
@@ -136,7 +147,17 @@ class _StickerViewState extends State<StickerView>
       _stop();
       _carry = Duration.zero;
       _last = const Duration(days: -1);
+      _done = false;
+      _delay = widget.delay;
       _clock.value = -1;
+      _box?.markNeedsPaint();
+    } else if (old.replay != widget.replay) {
+      // again from the rest pose, at once
+      _stop();
+      _carry = Duration.zero;
+      _last = const Duration(days: -1);
+      _done = false;
+      _delay = 0;
       _box?.markNeedsPaint();
     }
   }
@@ -209,12 +230,18 @@ class _StickerViewState extends State<StickerView>
     final gap = Duration(microseconds: 900000 ~/ widget.fps);
     if (total - _last < gap) return;
     _last = total;
+    final ms = total.inMicroseconds / 1000;
+    final n = widget.loops;
+    final loop = widget.sticker.loopMs;
+    if (n != null && loop > 0 && ms - _delay >= n * loop) {
+      // every loop ends at rest, so the still takes over without a jump
+      _done = true;
+      _stop();
+      _clock.value = -1;
+      return;
+    }
     StickerView.frames++;
-    _clock.value = loopTime(
-      widget.sticker,
-      total.inMicroseconds / 1000,
-      widget.delay,
-    );
+    _clock.value = loopTime(widget.sticker, ms, _delay);
   }
 
   @override

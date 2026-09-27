@@ -3,6 +3,7 @@
 // pill at the bottom end. one this version does not have is a tile with its
 // emoji, and the row keeps its value, so it draws the day the pack has it.
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../dlog.dart';
 import '../l10n/l10n.dart';
@@ -19,6 +20,8 @@ import 'sticker_wire.dart';
 const kStickerBubble = 168.0;
 const kStickerTile = 120.0;
 const kStickerThumb = 28.0;
+// a sticker in a chat plays this many loops, then rests until tapped
+const kStickerChatLoops = 3;
 
 // the arrival's scale, found by tests next to PressScale's own
 const kStickerPopKey = ValueKey('sticker-pop');
@@ -86,6 +89,8 @@ class _StickerBubbleState extends State<StickerBubble>
   bool _shown = true;
   bool _playing = true;
   bool _begun = false;
+  // a tap plays a resting sticker again
+  int _replay = 0;
   // a new one starts at once, an old one after its phase
   late final bool _now;
   double _start = 0;
@@ -148,6 +153,11 @@ class _StickerBubbleState extends State<StickerBubble>
     super.dispose();
   }
 
+  void _again() {
+    HapticFeedback.selectionClick();
+    setState(() => _replay++);
+  }
+
   int _phase(Sticker s) {
     if (_now || s.loopMs <= 0) return 0;
     return (widget.seed.hashCode & 0x7fffffff) % s.loopMs;
@@ -171,6 +181,8 @@ class _StickerBubbleState extends State<StickerBubble>
                   delay: _phase(s),
                   start: _start,
                   play: _playing,
+                  loops: kStickerChatLoops,
+                  replay: _replay,
                   label: stickerSaid(widget.emoji),
                 ),
         ),
@@ -224,7 +236,7 @@ class _StickerBubbleState extends State<StickerBubble>
             scale: _pop,
             child: PressScale(
               scale: 0.94,
-              onTap: widget.onTap ?? () {},
+              onTap: widget.onTap ?? _again,
               child: StickerPackBuilder(
                 builder: (pack, failed) {
                   final s = stickerFor(pack, widget.wire);

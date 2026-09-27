@@ -71,6 +71,39 @@ void main() {
     expect(t.binding.hasScheduledFrame, false);
   });
 
+  testWidgets('after its loops it rests and nothing runs', (t) async {
+    final loop = hi.loopMs;
+    await t.pumpWidget(_plain(StickerView(sticker: hi, size: 120, loops: 2)));
+    await _frames(t, 10);
+    expect(_boxes(t).single.time, greaterThanOrEqualTo(0));
+    // two loops and a little
+    await _frames(t, (2 * loop / 17).ceil() + 5);
+    expect(_boxes(t).single.time, -1);
+    expect(t.binding.hasScheduledFrame, false);
+    final rested = StickerView.frames;
+    await _frames(t, 60);
+    expect(StickerView.frames, rested);
+
+    // a replay: from the rest pose at once, then rests again
+    await t.pumpWidget(
+      _plain(StickerView(sticker: hi, size: 120, loops: 2, replay: 1)),
+    );
+    await _frames(t, 10);
+    expect(StickerView.frames, greaterThan(rested + 5));
+    expect(_boxes(t).single.time, greaterThan(0));
+    await _frames(t, (2 * loop / 17).ceil() + 5);
+    expect(_boxes(t).single.time, -1);
+    expect(t.binding.hasScheduledFrame, false);
+  });
+
+  testWidgets('no loop count: it keeps playing (the picker)', (t) async {
+    await t.pumpWidget(_plain(StickerView(sticker: hi, size: 120)));
+    await _frames(t, (3 * hi.loopMs / 17).ceil() + 5);
+    final before = StickerView.frames;
+    await _frames(t, 20);
+    expect(StickerView.frames, greaterThan(before + 10));
+  });
+
   testWidgets('under TickerMode off nothing ticks', (t) async {
     await t.pumpWidget(
       _plain(
