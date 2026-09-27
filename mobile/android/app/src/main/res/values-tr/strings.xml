@@ -2,7 +2,7 @@
 <!-- written by tool/arb_android.py from lib/l10n/app_tr.arb -->
 <resources>
     <string name="service_title">Kryfo açık</string>
-    <string name="service_text">mesajlar gelsin diye şifreli hattın açık kalıyor</string>
-    <string name="channel_name">bağlı kalma</string>
-    <string name="channel_description">Kryfo kapalıyken şifreli mesajlar gelsin diye onu bağlı tutar. bunu kapatmak teslimatı durdurur.</string>
+    <string name="service_text">Mesajlar gelsin diye şifreli hattın açık kalıyor</string>
+    <string name="channel_name">Bağlı kalma</string>
+    <string name="channel_description">Kryfo kapalıyken şifreli mesajlar gelsin diye onu bağlı tutar. Bunu kapatmak teslimatı durdurur.</string>
 </resources>

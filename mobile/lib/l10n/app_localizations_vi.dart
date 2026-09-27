@@ -9,31 +9,31 @@ class AppLocalizationsVi extends AppLocalizations {
   AppLocalizationsVi([String locale = 'vi']) : super(locale);
 
   @override
-  String get atmosphereNone => 'không có';
+  String get atmosphereNone => 'Không có';
 
   @override
-  String get atmosphereEmber => 'than hồng';
+  String get atmosphereEmber => 'Than hồng';
 
   @override
-  String get atmosphereDusk => 'hoàng hôn';
+  String get atmosphereDusk => 'Hoàng hôn';
 
   @override
-  String get atmosphereMoss => 'rêu';
+  String get atmosphereMoss => 'Rêu';
 
   @override
-  String get atmosphereRose => 'hồng';
+  String get atmosphereRose => 'Hồng';
 
   @override
-  String get atmosphereDots => 'chấm bi';
+  String get atmosphereDots => 'Chấm bi';
 
   @override
-  String get atmosphereGrid => 'lưới';
+  String get atmosphereGrid => 'Lưới';
 
   @override
-  String get atmosphereWaves => 'sóng';
+  String get atmosphereWaves => 'Sóng';
 
   @override
-  String get atmosphereRain => 'mưa';
+  String get atmosphereRain => 'Mưa';
 
   @override
   String get atmosphereLateNight => 'Đêm khuya';
@@ -42,13 +42,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get atmosphereWarmAfternoon => 'Chiều ấm';
 
   @override
-  String get atmosphereSnow => 'tuyết';
+  String get atmosphereSnow => 'Tuyết';
 
   @override
-  String get atmosphereDesert => 'sa mạc';
+  String get atmosphereDesert => 'Sa mạc';
 
   @override
-  String get atmospherePaper => 'giấy';
+  String get atmospherePaper => 'Giấy';
 
   @override
   String get backupThatPassphraseDoesNot =>
@@ -80,7 +80,7 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get contactStatusBlocked => 'đã chặn';
+  String get contactStatusBlocked => 'Đã chặn';
 
   @override
   String get contactStatusKeysVerifiedInPerson => 'Đã xác minh khóa trực tiếp';
@@ -243,7 +243,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get lockStateUnlockKryfo => 'Mở khóa Kryfo';
 
   @override
-  String get appInvalidUri => 'uri không hợp lệ';
+  String get appInvalidUri => 'Uri không hợp lệ';
 
   @override
   String appBundleError(Object e) {
@@ -373,13 +373,13 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không lưu được một tệp đính kèm trên điện thoại này';
 
   @override
-  String get appGroup2 => 'nhóm';
+  String get appGroup2 => 'Nhóm';
 
   @override
   String get appVoiceMessage => 'Tin nhắn thoại';
 
   @override
-  String get appPhoto => 'ảnh';
+  String get appPhoto => 'Ảnh';
 
   @override
   String get appNewRequest => 'Yêu cầu mới';
@@ -395,18 +395,18 @@ class AppLocalizationsVi extends AppLocalizations {
   String get appOpeningYourChats => 'Đang mở các cuộc trò chuyện';
 
   @override
-  String get appStartingTor => 'đang khởi động Tor';
+  String get appStartingTor => 'Đang khởi động Tor';
 
   @override
   String get appTimedMessagesAreNot =>
       'Tin nhắn tự hủy không được xóa. Hãy khởi động lại Kryfo';
 
   @override
-  String get appVoiceMessage2 => 'tin nhắn thoại';
+  String get appVoiceMessage2 => 'Tin nhắn thoại';
 
   @override
   String appYou(Object body) {
-    return 'bạn: $body';
+    return 'Bạn: $body';
   }
 
   @override
@@ -416,7 +416,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get appYouAreAlreadyIn => 'Bạn đã ở trong phòng này rồi';
 
   @override
-  String get appCouldNotMakeA => 'không tạo được khóa phòng';
+  String get appCouldNotMakeA => 'Không tạo được khóa phòng';
 
   @override
   String appJoinedButYourHello(Object linkName) {
@@ -434,7 +434,7 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get appBooting => 'đang khởi động...';
+  String get appBooting => 'Đang khởi động...';
 
   @override
   String get appSettingUpYourIdentity => 'Đang thiết lập danh tính của bạn...';
@@ -475,7 +475,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get appStartingTor30s => 'Đang khởi động tor (~30s)...';
 
   @override
-  String get appScanOrImportA => 'hãy quét hoặc nhập một peer trước';
+  String get appScanOrImportA => 'Hãy quét hoặc nhập một peer trước';
 
   @override
   String get appEncryptingSending30s => 'Đang mã hóa + gửi (~30s)...';
@@ -502,7 +502,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get appPairingCode => 'Mã ghép nối';
 
   @override
-  String get appOrPaste => '- hoặc dán -';
+  String get appOrPaste => '- Hoặc dán -';
 
   @override
   String get commonCancel => 'Hủy';
@@ -523,7 +523,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get appStartListening => 'Bắt đầu nghe';
 
   @override
-  String get appListening => 'đang nghe';
+  String get appListening => 'Đang nghe';
 
   @override
   String get appShowMyQr => 'Hiện QR của tôi';
@@ -532,7 +532,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get appImportPeer => 'Nhập peer';
 
   @override
-  String get appPeer => 'peer:';
+  String get appPeer => 'Peer:';
 
   @override
   String get appMessageWillBeEncrypted => 'Tin nhắn (sẽ được mã hóa)';
@@ -542,7 +542,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String appStatus(Object status) {
-    return 'trạng thái: $status';
+    return 'Trạng thái: $status';
   }
 
   @override
@@ -606,7 +606,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get appViaRelay => 'Qua relay';
 
   @override
-  String get appOffline => 'ngoại tuyến';
+  String get appOffline => 'Ngoại tuyến';
 
   @override
   String get appFast => 'Nhanh';
@@ -618,7 +618,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get appTorReady => 'Tor sẵn sàng';
 
   @override
-  String get appConnecting2 => 'đang kết nối';
+  String get appConnecting2 => 'Đang kết nối';
 
   @override
   String mediaProgressSendingKeepTheApp(Object v) {
@@ -714,17 +714,17 @@ class AppLocalizationsVi extends AppLocalizations {
       'Tin nhắn mới từ các liên hệ của bạn, được mã hóa';
 
   @override
-  String get notificationsNewMessage => 'tin nhắn mới';
+  String get notificationsNewMessage => 'Tin nhắn mới';
 
   @override
   String get notificationsNewEncryptedMessagesFromYourContacts =>
-      'tin nhắn mới từ các liên hệ của bạn, được mã hóa';
+      'Tin nhắn mới từ các liên hệ của bạn, được mã hóa';
 
   @override
   String get notificationsNewMessage2 => 'Tin nhắn mới';
 
   @override
-  String get notificationsEncrypted => 'được mã hóa';
+  String get notificationsEncrypted => 'Được mã hóa';
 
   @override
   String get rooms24h => '24 giờ';
@@ -808,7 +808,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get roomsAMinute => 'một phút';
 
   @override
-  String get roomsExpired => 'đã hết hạn';
+  String get roomsExpired => 'Đã hết hạn';
 
   @override
   String roomsDH(Object inDays, Object h) {
@@ -840,7 +840,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String scamShieldSameFaceAsYour(Object shown) {
-    return 'cùng khuôn mặt với liên hệ $shown của bạn';
+    return 'Cùng khuôn mặt với liên hệ $shown của bạn';
   }
 
   @override
@@ -877,37 +877,37 @@ class AppLocalizationsVi extends AppLocalizations {
   String get archivedArchived => 'Đã lưu trữ';
 
   @override
-  String get archivedCount0 => 'không';
+  String get archivedCount0 => 'Không';
 
   @override
-  String get archivedCount1 => 'một';
+  String get archivedCount1 => 'Một';
 
   @override
-  String get archivedCount2 => 'hai';
+  String get archivedCount2 => 'Hai';
 
   @override
-  String get archivedCount3 => 'ba';
+  String get archivedCount3 => 'Ba';
 
   @override
-  String get archivedCount4 => 'bốn';
+  String get archivedCount4 => 'Bốn';
 
   @override
-  String get archivedCount5 => 'năm';
+  String get archivedCount5 => 'Năm';
 
   @override
-  String get archivedCount6 => 'sáu';
+  String get archivedCount6 => 'Sáu';
 
   @override
-  String get archivedCount7 => 'bảy';
+  String get archivedCount7 => 'Bảy';
 
   @override
-  String get archivedCount8 => 'tám';
+  String get archivedCount8 => 'Tám';
 
   @override
-  String get archivedCount9 => 'chín';
+  String get archivedCount9 => 'Chín';
 
   @override
-  String get archivedCount10 => 'mười';
+  String get archivedCount10 => 'Mười';
 
   @override
   String get archivedChatRestingHereIt =>
@@ -932,10 +932,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Những người mà bạn nhắn tin cũng thấy khuôn mặt này';
 
   @override
-  String get avatarPickerBackToYourInitial => 'dùng lại chữ cái đầu';
+  String get avatarPickerBackToYourInitial => 'Dùng lại chữ cái đầu';
 
   @override
-  String get avatarPickerThatOneIsYours => 'bạn đang dùng cái này';
+  String get avatarPickerThatOneIsYours => 'Bạn đang dùng cái này';
 
   @override
   String get avatarPickerPickAFace => 'Chọn khuôn mặt';
@@ -1213,7 +1213,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get cameraRec => 'Quay';
 
   @override
-  String get cameraSwitchCamera => 'đổi máy ảnh';
+  String get cameraSwitchCamera => 'Đổi máy ảnh';
 
   @override
   String cameraClipSMb(Object secs, Object mb) {
@@ -1255,11 +1255,11 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get chatYouAreOfflineThis =>
-      'bạn đang ngoại tuyến · tin này sẽ tự gửi khi bạn kết nối lại';
+      'Bạn đang ngoại tuyến · tin này sẽ tự gửi khi bạn kết nối lại';
 
   @override
   String get chatStillConnectingToTor =>
-      'vẫn đang kết nối với tor · tin sẽ tự gửi đi';
+      'Vẫn đang kết nối với Tor · tin sẽ tự gửi đi';
 
   @override
   String chatS(Object seconds) {
@@ -1510,16 +1510,16 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatMessageUnavailable => 'Tin nhắn không khả dụng';
 
   @override
-  String get chatYou2 => 'bạn';
+  String get chatYou2 => 'Bạn';
 
   @override
-  String get chatThem => 'họ';
+  String get chatThem => 'Họ';
 
   @override
-  String get chatVoiceMessage => 'tin nhắn thoại';
+  String get chatVoiceMessage => 'Tin nhắn thoại';
 
   @override
-  String get chatQuotedPhoto => 'ảnh';
+  String get chatQuotedPhoto => 'Ảnh';
 
   @override
   String get chatViewContact => 'Xem liên hệ';
@@ -1614,10 +1614,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatNoContactsToForward => 'Không có liên hệ nào để chuyển tiếp';
 
   @override
-  String get chatToday => 'hôm nay';
+  String get chatToday => 'Hôm nay';
 
   @override
-  String get chatYesterday => 'hôm qua';
+  String get chatYesterday => 'Hôm qua';
 
   @override
   String get chatThisMessageCanT => 'Không thể hiển thị tin nhắn này';
@@ -2253,13 +2253,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String donateVerifiedOnChainYou(String tier) {
     String _temp0 = intl.Intl.selectLogic(tier, {
       'supporter':
-          'đã xác minh trên chuỗi - giờ bạn là người ủng hộ. Không ai có thể lấy đi điều đó.',
+          'Đã xác minh trên chuỗi - giờ bạn là người ủng hộ. Không ai có thể lấy đi điều đó.',
       'patron':
-          'đã xác minh trên chuỗi - giờ bạn là nhà bảo trợ. Không ai có thể lấy đi điều đó.',
+          'Đã xác minh trên chuỗi - giờ bạn là nhà bảo trợ. Không ai có thể lấy đi điều đó.',
       'guardian':
-          'đã xác minh trên chuỗi - giờ bạn là người bảo hộ. Không ai có thể lấy đi điều đó.',
+          'Đã xác minh trên chuỗi - giờ bạn là người bảo hộ. Không ai có thể lấy đi điều đó.',
       'other':
-          'đã xác minh trên chuỗi - giờ bạn là người ủng hộ. Không ai có thể lấy đi điều đó.',
+          'Đã xác minh trên chuỗi - giờ bạn là người ủng hộ. Không ai có thể lấy đi điều đó.',
     });
     return '$_temp0';
   }
@@ -2322,13 +2322,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get groupChatBlockedEverywhere => 'Đã chặn ở mọi nơi';
 
   @override
-  String get groupChatYou => 'bạn';
+  String get groupChatYou => 'Bạn';
 
   @override
-  String get groupChatVoiceMessage => 'tin nhắn thoại';
+  String get groupChatVoiceMessage => 'Tin nhắn thoại';
 
   @override
-  String get groupChatQuotedPhoto => 'ảnh';
+  String get groupChatQuotedPhoto => 'Ảnh';
 
   @override
   String get groupChatMessageUnavailable => 'Tin nhắn không khả dụng';
@@ -2339,7 +2339,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get groupChatCouldnTReachIt =>
-      'không truy cập được · gửi không kèm xem trước';
+      'Không truy cập được · gửi không kèm xem trước';
 
   @override
   String get groupChatNoTitleCameBack =>
@@ -2347,7 +2347,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get groupChatCouldnTFetchIt =>
-      'không tải được · gửi không kèm xem trước';
+      'Không tải được · gửi không kèm xem trước';
 
   @override
   String get groupChatCamera => 'Máy ảnh';
@@ -2406,10 +2406,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Tin nhắn mới sẽ biến mất sau khoảng thời gian này';
 
   @override
-  String get groupChatToday => 'hôm nay';
+  String get groupChatToday => 'Hôm nay';
 
   @override
-  String get groupChatYesterday => 'hôm qua';
+  String get groupChatYesterday => 'Hôm qua';
 
   @override
   String get groupChatYou2 => 'Bạn';
@@ -2577,7 +2577,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get groupChatEdited => 'Đã sửa';
 
   @override
-  String get groupChatTapToRetry => '! chạm để thử lại';
+  String get groupChatTapToRetry => '! Chạm để thử lại';
 
   @override
   String get groupChat0s => '0 giây';
@@ -2595,7 +2595,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get groupChatForward => 'Chuyển tiếp';
 
   @override
-  String get groupInfoGroup => 'nhóm';
+  String get groupInfoGroup => 'Nhóm';
 
   @override
   String get groupInfoRenameGroup => 'Đổi tên nhóm';
@@ -3094,13 +3094,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get homeQueued => 'Đang chờ gửi';
 
   @override
-  String get homeBlocked => 'đã chặn';
+  String get homeBlocked => 'Đã chặn';
 
   @override
   String get homeRoomInvite => 'Lời mời vào phòng';
 
   @override
-  String get homeNow => 'vừa xong';
+  String get homeNow => 'Vừa xong';
 
   @override
   String homeM(Object inMinutes) {
@@ -3113,7 +3113,7 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get homeYesterday => 'hôm qua';
+  String get homeYesterday => 'Hôm qua';
 
   @override
   String homeD(Object inDays) {
@@ -3452,7 +3452,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Định tuyến onion đầy đủ, ba chặng. Mỗi tin nhắn mất từ hai đến năm giây. Không ai thấy bạn nói chuyện với ai.';
 
   @override
-  String get modesSlower => 'chậm hơn';
+  String get modesSlower => 'Chậm hơn';
 
   @override
   String get modesRelay => 'Relay';
@@ -3462,7 +3462,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Một kết nối được mã hóa kín tới relay riêng của Kryfo, như một vpn không có gì để ghi nhật ký. Tin gửi đi đến nơi trong khoảng một giây, và chế độ này hoạt động cả ở nơi tor bị chặn.';
 
   @override
-  String get modesQuick => 'nhanh';
+  String get modesQuick => 'Nhanh';
 
   @override
   String get modesRelayOnly => 'Chỉ relay';
@@ -3475,7 +3475,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Kết nối thông thường tới mọi relay. Gần như tức thì, và kém riêng tư nhất trong ba chế độ.';
 
   @override
-  String get modesInstant => 'tức thì';
+  String get modesInstant => 'Tức thì';
 
   @override
   String get modesEveryRelayYouUse =>
@@ -3510,7 +3510,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get modesVisible => 'Bị lộ';
 
   @override
-  String get modesHidden => 'ẩn';
+  String get modesHidden => 'Ẩn';
 
   @override
   String modesHeadsUp(Object warning) {
@@ -4171,10 +4171,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String profileYouAreAThank(String tier) {
     String _temp0 = intl.Intl.selectLogic(tier, {
-      'supporter': 'Bạn là người ủng hộ. cảm ơn bạn.',
-      'patron': 'Bạn là nhà bảo trợ. cảm ơn bạn.',
-      'guardian': 'Bạn là người bảo hộ. cảm ơn bạn.',
-      'other': 'Bạn là người ủng hộ. cảm ơn bạn.',
+      'supporter': 'Bạn là người ủng hộ. Cảm ơn bạn.',
+      'patron': 'Bạn là nhà bảo trợ. Cảm ơn bạn.',
+      'guardian': 'Bạn là người bảo hộ. Cảm ơn bạn.',
+      'other': 'Bạn là người ủng hộ. Cảm ơn bạn.',
     });
     return '$_temp0';
   }
@@ -4654,7 +4654,7 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get roomCreateOffAnyoneWithThe => 'tắt. Bất kỳ ai có liên kết';
+  String get roomCreateOffAnyoneWithThe => 'Tắt. Bất kỳ ai có liên kết';
 
   @override
   String roomCreateThisRoomAndEverything(Object expiryWords) {
@@ -4662,7 +4662,7 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get roomCreateCreating => 'đang tạo...';
+  String get roomCreateCreating => 'Đang tạo...';
 
   @override
   String get roomCreateCreateRoom => 'Tạo phòng';
@@ -4743,22 +4743,22 @@ class AppLocalizationsVi extends AppLocalizations {
       'Nói thật về mấy dòng cuối: đó là lý do có khóa ứng dụng, mã PIN xóa sạch và bộ nhớ được mã hóa, và không công cụ nào cứu được bạn khỏi người đang cầm điện thoại đã mở khóa của bạn. Mô hình mối đe dọa đầy đủ nằm trong THREAT_MODEL.md trong kho mã, viết theo LINDDUN. Mã nguồn mở, nên bạn không phải tin suông bất cứ điều gì ở đây.';
 
   @override
-  String get seenHidden => 'ẩn';
+  String get seenHidden => 'Ẩn';
 
   @override
-  String get seenNever => 'không bao giờ';
+  String get seenNever => 'Không bao giờ';
 
   @override
-  String get seenOnDevice => 'trên máy';
+  String get seenOnDevice => 'Trên máy';
 
   @override
-  String get seenTiming => 'thời điểm';
+  String get seenTiming => 'Thời điểm';
 
   @override
-  String get seenYours => 'của bạn';
+  String get seenYours => 'Của bạn';
 
   @override
-  String get seenUnaudited => 'chưa kiểm định';
+  String get seenUnaudited => 'Chưa kiểm định';
 
   @override
   String get seenWhoYouTalkTo => 'Bạn nói chuyện với ai';
@@ -4778,10 +4778,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get seenYourIpAddress => 'Địa chỉ IP của bạn';
 
   @override
-  String get seenOurRelay => 'relay của Kryfo';
+  String get seenOurRelay => 'Relay của Kryfo';
 
   @override
-  String get seenEveryRelay => 'mọi relay';
+  String get seenEveryRelay => 'Mọi relay';
 
   @override
   String get seenOnOnionEverythingLeaves =>
@@ -4795,7 +4795,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Kryfo không quét danh bạ của bạn. Đó chính là mục đích. Ở đây không có số điện thoại nào để bị lộ.';
 
   @override
-  String get seenIntroducer => 'người giới thiệu';
+  String get seenIntroducer => 'Người giới thiệu';
 
   @override
   String get seenWhenAContactIntroduces =>
@@ -4812,7 +4812,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get seenBurnerRooms => 'Phòng tạm';
 
   @override
-  String get seenRoomKeys => 'khóa phòng';
+  String get seenRoomKeys => 'Khóa phòng';
 
   @override
   String get seenYouJoinARoom =>
@@ -4822,7 +4822,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get seenLinkPreviews => 'Xem trước liên kết';
 
   @override
-  String get seenOverTor => 'qua tor';
+  String get seenOverTor => 'Qua Tor';
 
   @override
   String get seenAPreviewIsFetched =>
@@ -5415,8 +5415,8 @@ class AppLocalizationsVi extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'được bảo chứng bởi $countString người',
-      one: 'được bảo chứng bởi',
+      other: 'Được bảo chứng bởi $countString người',
+      one: 'Được bảo chứng bởi',
     );
     return '$_temp0';
   }
@@ -5429,7 +5429,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Chỉ dành cho bạn. Họ thấy hình nền của riêng họ.';
 
   @override
-  String get wallpaperYourPhoto => 'ảnh của bạn';
+  String get wallpaperYourPhoto => 'Ảnh của bạn';
 
   @override
   String get wallpaperFromYourPhotos => 'Từ thư viện ảnh';
@@ -5985,7 +5985,7 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get kryfoLinkTextKryfoLink => 'liên kết Kryfo';
+  String get kryfoLinkTextKryfoLink => 'Liên kết Kryfo';
 
   @override
   String kryfoLinkTextAdd2(Object who) {
@@ -6103,7 +6103,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get motionAnnouncingYourArrival => 'Đang báo bạn đã đến';
 
   @override
-  String get motionYouReAnonymous => 'bạn đang ẩn danh';
+  String get motionYouReAnonymous => 'Bạn đang ẩn danh';
 
   @override
   String get motionTorIsStartingIn =>
@@ -6119,7 +6119,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get motionTellingTheNetworkYou =>
-      'đang báo với mạng rằng bạn trực tuyến — mà không tiết lộ bạn ở đâu.';
+      'Đang báo với mạng rằng bạn trực tuyến — mà không tiết lộ bạn ở đâu.';
 
   @override
   String get motionYourIpIsHidden =>
@@ -6140,10 +6140,10 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get motionDelivered => 'đã nhận';
+  String get motionDelivered => 'Đã nhận';
 
   @override
-  String get motionSent => 'đã gửi';
+  String get motionSent => 'Đã gửi';
 
   @override
   String get motion1Hop => '1 chặng';
@@ -6322,19 +6322,19 @@ class AppLocalizationsVi extends AppLocalizations {
   String get videoBubbleVideo => 'Video';
 
   @override
-  String get notificationsChannelName => 'tin nhắn';
+  String get notificationsChannelName => 'Tin nhắn';
 
   @override
   String get cameraClose => 'Đóng';
 
   @override
-  String get cameraFlash => 'đèn flash';
+  String get cameraFlash => 'Đèn flash';
 
   @override
-  String get cameraPhoto => 'ảnh';
+  String get cameraPhoto => 'Ảnh';
 
   @override
-  String get cameraVideo => 'video';
+  String get cameraVideo => 'Video';
 
   @override
   String get cameraRetake => 'Chụp lại';
@@ -6352,13 +6352,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get donateDone => 'Xong';
 
   @override
-  String get donateTierSupporter => 'người ủng hộ';
+  String get donateTierSupporter => 'Người ủng hộ';
 
   @override
-  String get donateTierPatron => 'nhà bảo trợ';
+  String get donateTierPatron => 'Nhà bảo trợ';
 
   @override
-  String get donateTierGuardian => 'người bảo hộ';
+  String get donateTierGuardian => 'Người bảo hộ';
 
   @override
   String get chatBlock => 'Chặn';
@@ -6490,13 +6490,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsAbout => 'Giới thiệu';
 
   @override
-  String get wallpaperGradients => 'chuyển màu';
+  String get wallpaperGradients => 'Chuyển màu';
 
   @override
-  String get wallpaperPatterns => 'họa tiết';
+  String get wallpaperPatterns => 'Họa tiết';
 
   @override
-  String get wallpaperMoods => 'tâm trạng';
+  String get wallpaperMoods => 'Tâm trạng';
 
   @override
   String get confirmSheetKeep => 'Giữ';
@@ -6560,14 +6560,14 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get androidServiceText =>
-      'đường truyền được mã hóa của bạn luôn mở để tin nhắn đến được';
+      'Đường truyền được mã hóa của bạn luôn mở để tin nhắn đến được';
 
   @override
-  String get androidChannelName => 'duy trì kết nối';
+  String get androidChannelName => 'Duy trì kết nối';
 
   @override
   String get androidChannelDescription =>
-      'giữ Kryfo kết nối để tin nhắn được mã hóa vẫn đến khi ứng dụng đang đóng. tắt mục này sẽ dừng việc nhận tin.';
+      'Giữ Kryfo kết nối để tin nhắn được mã hóa vẫn đến khi ứng dụng đang đóng. Tắt mục này sẽ dừng việc nhận tin.';
 
   @override
   String get videoViewerPlay => 'Phát';

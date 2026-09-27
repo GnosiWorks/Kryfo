@@ -11,7 +11,7 @@ void main() {
     expect(countdownLabel(const Duration(hours: 3, minutes: 7)), '3h 7m');
     expect(countdownLabel(const Duration(minutes: 42)), '42m');
     expect(countdownLabel(const Duration(minutes: 4, seconds: 9)), '4:09');
-    expect(countdownLabel(const Duration(seconds: -1)), 'expired');
+    expect(countdownLabel(const Duration(seconds: -1)), 'Expired');
   });
 
   test('tone turns amber, then rose near expiry', () {

@@ -2,6 +2,8 @@
 // the atmosphere picker for chats and groups. kept in the encrypted db and
 // never sent: the other person sees their own. taps preview live behind the
 // sheet; backing out puts the old one back.
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -64,6 +66,7 @@ class _PickerState extends State<_Picker> {
         .where((a) => a != Atmo.none && !atmoIsPattern(a) && !atmoIsMood(a))
         .toList();
     final patterns = Atmo.values.where(atmoIsPattern).toList();
+    final cell = _cellWidth(context);
     return SafeArea(
       child: SingleChildScrollView(
         child: Padding(
@@ -91,6 +94,7 @@ class _PickerState extends State<_Picker> {
                 current: _pick,
                 onPick: _choose,
                 from: 0,
+                cell: cell,
               ),
               const SizedBox(height: 16),
               _Head(l10n.wallpaperGradients),
@@ -100,6 +104,7 @@ class _PickerState extends State<_Picker> {
                 current: _pick,
                 onPick: _choose,
                 from: 7,
+                cell: cell,
               ),
               const SizedBox(height: 16),
               _Head(l10n.wallpaperPatterns),
@@ -109,6 +114,7 @@ class _PickerState extends State<_Picker> {
                 current: _pick,
                 onPick: _choose,
                 from: 11,
+                cell: cell,
               ),
               if (widget.allowPhoto) ...[
                 const SizedBox(height: 16),
@@ -192,16 +198,38 @@ class _Head extends StatelessWidget {
   );
 }
 
+// the widest word of any name, at least 62: names wrap, words never break
+double _cellWidth(BuildContext context) {
+  final scaler = MediaQuery.textScalerOf(context);
+  final dir = Directionality.of(context);
+  var w = 62.0;
+  for (final a in Atmo.values) {
+    final p = TextPainter(
+      text: TextSpan(
+        text: atmoLabel(a),
+        style: _Swatch.label(HaloColors.text3),
+      ),
+      textDirection: dir,
+      textScaler: scaler,
+    )..layout();
+    w = math.max(w, p.minIntrinsicWidth.ceilToDouble());
+    p.dispose();
+  }
+  return w;
+}
+
 class _Swatches extends StatelessWidget {
   final List<Atmo> items;
   final Atmo current;
   final ValueChanged<Atmo> onPick;
   final int from;
+  final double cell;
   const _Swatches({
     required this.items,
     required this.current,
     required this.onPick,
     required this.from,
+    required this.cell,
   });
 
   @override
@@ -213,7 +241,12 @@ class _Swatches extends StatelessWidget {
         for (final (i, a) in items.indexed)
           StaggerIn(
             index: from + i,
-            child: _Swatch(atmo: a, on: a == current, onTap: () => onPick(a)),
+            child: _Swatch(
+              atmo: a,
+              on: a == current,
+              width: cell,
+              onTap: () => onPick(a),
+            ),
           ),
       ],
     );
@@ -226,10 +259,18 @@ class _Swatches extends StatelessWidget {
 class _Swatch extends StatelessWidget {
   final Atmo atmo;
   final bool on;
+  final double width;
   final VoidCallback onTap;
-  const _Swatch({required this.atmo, required this.on, required this.onTap});
+  const _Swatch({
+    required this.atmo,
+    required this.on,
+    required this.width,
+    required this.onTap,
+  });
 
   static const _size = 46.0;
+
+  static TextStyle label(Color color) => HaloType.mono(size: 9.5, color: color);
 
   Decoration _face() {
     final a = atmo;
@@ -371,16 +412,13 @@ class _Swatch extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             SizedBox(
-              width: 62,
+              width: width,
               child: Text(
                 atmoLabel(atmo),
                 textAlign: TextAlign.center,
-                maxLines: 1,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: HaloType.mono(
-                  size: 9.5,
-                  color: on ? HaloColors.amber : HaloColors.text3,
-                ),
+                style: label(on ? HaloColors.amber : HaloColors.text3),
               ),
             ),
           ],

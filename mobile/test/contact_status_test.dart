@@ -32,7 +32,7 @@ void main() {
         blocked: true,
         accepted: true,
       ),
-      'blocked',
+      'Blocked',
     );
   });
   test('words plain and pending contacts', () {

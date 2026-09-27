@@ -7,20 +7,20 @@ import 'package:kryfo/l10n/l10n.dart';
 void main() {
   test('english keys render as app_en.arb says', () {
     final l = l10n;
-    expect(l.atmosphereNone, "none");
-    expect(l.atmosphereEmber, "ember");
-    expect(l.atmosphereDusk, "dusk");
-    expect(l.atmosphereMoss, "moss");
-    expect(l.atmosphereRose, "rose");
-    expect(l.atmosphereDots, "dots");
-    expect(l.atmosphereGrid, "grid");
-    expect(l.atmosphereWaves, "waves");
-    expect(l.atmosphereRain, "rain");
+    expect(l.atmosphereNone, "None");
+    expect(l.atmosphereEmber, "Ember");
+    expect(l.atmosphereDusk, "Dusk");
+    expect(l.atmosphereMoss, "Moss");
+    expect(l.atmosphereRose, "Rose");
+    expect(l.atmosphereDots, "Dots");
+    expect(l.atmosphereGrid, "Grid");
+    expect(l.atmosphereWaves, "Waves");
+    expect(l.atmosphereRain, "Rain");
     expect(l.atmosphereLateNight, "Late night");
     expect(l.atmosphereWarmAfternoon, "Warm afternoon");
-    expect(l.atmosphereSnow, "snow");
-    expect(l.atmosphereDesert, "desert");
-    expect(l.atmospherePaper, "paper");
+    expect(l.atmosphereSnow, "Snow");
+    expect(l.atmosphereDesert, "Desert");
+    expect(l.atmospherePaper, "Paper");
     expect(
       l.backupThatPassphraseDoesNot,
       "That passphrase does not open this file",
@@ -44,7 +44,7 @@ void main() {
       l.contactCardMessageMeOnKryfo("<haloId>"),
       "Message me on Kryfo · <haloId>",
     );
-    expect(l.contactStatusBlocked, "blocked");
+    expect(l.contactStatusBlocked, "Blocked");
     expect(l.contactStatusKeysVerifiedInPerson, "Keys verified in person");
     expect(l.contactStatusWaitingInRequests, "Waiting in requests");
     expect(l.contactStatusAddedByHand, "Added by hand");
@@ -97,7 +97,7 @@ void main() {
     expect(l.introBudgetInHours(5), "in 5 hours");
     expect(l.introBudgetInAFewMinutes, "in a few minutes");
     expect(l.lockStateUnlockKryfo, "Unlock Kryfo");
-    expect(l.appInvalidUri, "invalid uri");
+    expect(l.appInvalidUri, "Invalid uri");
     expect(l.appBundleError("<e>"), "Bundle error: <e>");
     expect(l.appAlreadySaved("<parsed>"), "Already saved: <parsed>");
     expect(
@@ -254,23 +254,23 @@ void main() {
       l.appAnAttachmentCouldNot,
       "An attachment could not be saved on this phone",
     );
-    expect(l.appGroup2, "group");
+    expect(l.appGroup2, "Group");
     expect(l.appVoiceMessage, "Voice message");
-    expect(l.appPhoto, "photo");
+    expect(l.appPhoto, "Photo");
     expect(l.appNewRequest, "New request");
     expect(l.appSomeoneYouHaveNot, "Someone you have not added wrote to you");
     expect(l.appSettingUpYourKeys, "Setting up your keys");
     expect(l.appOpeningYourChats, "Opening your chats");
-    expect(l.appStartingTor, "starting Tor");
+    expect(l.appStartingTor, "Starting Tor");
     expect(
       l.appTimedMessagesAreNot,
       "Timed messages are not clearing. Restart Kryfo",
     );
-    expect(l.appVoiceMessage2, "voice message");
-    expect(l.appYou("<body>"), "you: <body>");
+    expect(l.appVoiceMessage2, "Voice message");
+    expect(l.appYou("<body>"), "You: <body>");
     expect(l.appThisRoomHasAlready, "This room has already expired");
     expect(l.appYouAreAlreadyIn, "You are already in this room");
-    expect(l.appCouldNotMakeA, "could not make a room key");
+    expect(l.appCouldNotMakeA, "Could not make a room key");
     expect(
       l.appJoinedButYourHello("<linkName>"),
       "Joined <linkName>, but your hello was held back",
@@ -280,7 +280,7 @@ void main() {
       l.appJoinedButTheCreator("<linkName>"),
       "Joined <linkName>, but the creator could not be reached yet",
     );
-    expect(l.appBooting, "booting...");
+    expect(l.appBooting, "Booting...");
     expect(l.appSettingUpYourIdentity, "Setting up your identity...");
     expect(l.appAddSomeone, "Add someone");
     expect(
@@ -299,7 +299,7 @@ void main() {
     expect(l.appIdentityRestored, "Identity restored");
     expect(l.appIdentityCreated, "Identity created");
     expect(l.appStartingTor30s, "Starting tor (~30s)...");
-    expect(l.appScanOrImportA, "scan or import a peer first");
+    expect(l.appScanOrImportA, "Scan or import a peer first");
     expect(l.appEncryptingSending30s, "Encrypting + sending (~30s)...");
     expect(l.appTapStartListeningFirst, "Tap start listening first");
     expect(l.appYourKryfo, "Your Kryfo");
@@ -308,20 +308,20 @@ void main() {
     expect(l.appAddAKryfo, "Add a Kryfo");
     expect(l.appScanQr, "Scan qr");
     expect(l.appPairingCode, "Pairing code");
-    expect(l.appOrPaste, "- or paste -");
+    expect(l.appOrPaste, "- Or paste -");
     expect(l.commonCancel, "Cancel");
     expect(l.appImport, "Import");
     expect(l.appDev, "Dev");
     expect(l.appYourKryfo2, "Your Kryfo:");
     expect(l.appRestoredFromDisk, "Restored from disk");
     expect(l.appStartListening, "Start listening");
-    expect(l.appListening, "listening");
+    expect(l.appListening, "Listening");
     expect(l.appShowMyQr, "Show my qr");
     expect(l.appImportPeer, "Import peer");
-    expect(l.appPeer, "peer:");
+    expect(l.appPeer, "Peer:");
     expect(l.appMessageWillBeEncrypted, "Message (will be encrypted)");
     expect(l.appEncryptSend, "Encrypt + send");
-    expect(l.appStatus("<status>"), "status: <status>");
+    expect(l.appStatus("<status>"), "Status: <status>");
     expect(l.appSpeedPrivacy, "Speed & privacy →");
     expect(l.appGettingMessages, "Getting messages →");
     expect(l.appDisableAppLock, "Disable app lock?");
@@ -351,11 +351,11 @@ void main() {
       "Relay and fast modes skip tor and are quicker. They are in settings, under speed & privacy, and each says what it costs.",
     );
     expect(l.appViaRelay, "Via relay");
-    expect(l.appOffline, "offline");
+    expect(l.appOffline, "Offline");
     expect(l.appFast, "Fast");
     expect(l.appTorOff, "Tor off");
     expect(l.appTorReady, "Tor ready");
-    expect(l.appConnecting2, "connecting");
+    expect(l.appConnecting2, "Connecting");
     expect(
       l.mediaProgressSendingKeepTheApp("<v>"),
       "Sending · <v> · keep the app open",
@@ -402,13 +402,13 @@ void main() {
       l.notificationsNewEncryptedMessagesFrom,
       "New encrypted messages from your contacts",
     );
-    expect(l.notificationsNewMessage, "new message");
+    expect(l.notificationsNewMessage, "New message");
     expect(
       l.notificationsNewEncryptedMessagesFromYourContacts,
-      "new encrypted messages from your contacts",
+      "New encrypted messages from your contacts",
     );
     expect(l.notificationsNewMessage2, "New message");
-    expect(l.notificationsEncrypted, "encrypted");
+    expect(l.notificationsEncrypted, "Encrypted");
     expect(l.rooms24h, "24h");
     expect(l.roomsD("<inDays>"), "<inDays>d");
     expect(l.roomsH("<inHours>"), "<inHours>h");
@@ -432,7 +432,7 @@ void main() {
     expect(l.roomsMinutes(2), "2 minutes");
     expect(l.roomsMinutes(5), "5 minutes");
     expect(l.roomsAMinute, "a minute");
-    expect(l.roomsExpired, "expired");
+    expect(l.roomsExpired, "Expired");
     expect(l.roomsDH("<inDays>", "<h>"), "<inDays>d <h>h");
     expect(l.roomsHM("<inHours>", "<m>"), "<inHours>h <m>m");
     expect(l.roomsM("<inMinutes>"), "<inMinutes>m");
@@ -444,7 +444,7 @@ void main() {
     );
     expect(
       l.scamShieldSameFaceAsYour("<shown>"),
-      "same face as your contact <shown>",
+      "Same face as your contact <shown>",
     );
     expect(l.scamShieldContainsACryptoAddress, "Contains a crypto address");
     expect(
@@ -470,17 +470,17 @@ void main() {
     );
     expect(l.commonBack, "Back");
     expect(l.archivedArchived, "Archived");
-    expect(l.archivedCount0, "no");
-    expect(l.archivedCount1, "one");
-    expect(l.archivedCount2, "two");
-    expect(l.archivedCount3, "three");
-    expect(l.archivedCount4, "four");
-    expect(l.archivedCount5, "five");
-    expect(l.archivedCount6, "six");
-    expect(l.archivedCount7, "seven");
-    expect(l.archivedCount8, "eight");
-    expect(l.archivedCount9, "nine");
-    expect(l.archivedCount10, "ten");
+    expect(l.archivedCount0, "No");
+    expect(l.archivedCount1, "One");
+    expect(l.archivedCount2, "Two");
+    expect(l.archivedCount3, "Three");
+    expect(l.archivedCount4, "Four");
+    expect(l.archivedCount5, "Five");
+    expect(l.archivedCount6, "Six");
+    expect(l.archivedCount7, "Seven");
+    expect(l.archivedCount8, "Eight");
+    expect(l.archivedCount9, "Nine");
+    expect(l.archivedCount10, "Ten");
     expect(
       l.archivedChatRestingHereIt,
       "Chat resting here. It stays quiet until they write, then comes back to the top.",
@@ -499,8 +499,8 @@ void main() {
       l.avatarPickerThePeopleYouMessage,
       "The people you message see this too",
     );
-    expect(l.avatarPickerBackToYourInitial, "back to your initial");
-    expect(l.avatarPickerThatOneIsYours, "that one is yours");
+    expect(l.avatarPickerBackToYourInitial, "Back to your initial");
+    expect(l.avatarPickerThatOneIsYours, "That one is yours");
     expect(l.avatarPickerPickAFace, "Pick a face");
     expect(l.commonSave, "Save");
     expect(
@@ -627,7 +627,7 @@ void main() {
     expect(l.cameraNeverSavedToYour, "Never saved to your photos");
     expect(l.cameraNoExifNeverSaved, "No exif, never saved to your photos");
     expect(l.cameraRec, "Rec");
-    expect(l.cameraSwitchCamera, "switch camera");
+    expect(l.cameraSwitchCamera, "Switch camera");
     expect(l.cameraClipSMb("<secs>", "<mb>"), "Clip · <secs>s · <mb> mb");
     expect(l.cameraStopRecording, "Stop recording");
     expect(l.cameraStartRecording, "Start recording");
@@ -640,11 +640,11 @@ void main() {
     expect(l.chatFile, "FILE");
     expect(
       l.chatYouAreOfflineThis,
-      "you are offline · this sends itself when you reconnect",
+      "You are offline · this sends itself when you reconnect",
     );
     expect(
       l.chatStillConnectingToTor,
-      "still connecting to tor · it'll go out on its own",
+      "Still connecting to Tor · it'll go out on its own",
     );
     expect(l.chatS("<seconds>"), "<seconds>s");
     expect(l.chatM("<seconds>"), "<seconds>m");
@@ -735,10 +735,10 @@ void main() {
     expect(l.chatCouldnTFetchIt, "Couldn't fetch it · sending without");
     expect(l.chatNoSignalSessionRe, "No signal session - re-pair");
     expect(l.chatMessageUnavailable, "Message unavailable");
-    expect(l.chatYou2, "you");
-    expect(l.chatThem, "them");
-    expect(l.chatVoiceMessage, "voice message");
-    expect(l.chatQuotedPhoto, "photo");
+    expect(l.chatYou2, "You");
+    expect(l.chatThem, "Them");
+    expect(l.chatVoiceMessage, "Voice message");
+    expect(l.chatQuotedPhoto, "Photo");
     expect(l.chatViewContact, "View contact");
     expect(l.chatSharedPhotos, "Shared photos");
     expect(l.chatSharedPhotoCount(0, "<title>"), "0 photos · <title>");
@@ -777,8 +777,8 @@ void main() {
     expect(l.chatRemovedFromSaved, "Removed from saved");
     expect(l.chatForwardTo, "Forward to");
     expect(l.chatNoContactsToForward, "No contacts to forward to");
-    expect(l.chatToday, "today");
-    expect(l.chatYesterday, "yesterday");
+    expect(l.chatToday, "Today");
+    expect(l.chatYesterday, "Yesterday");
     expect(l.chatThisMessageCanT, "This message can't be shown");
     expect(l.chatJumpToTheNewest, "Jump to the newest");
     expect(
@@ -1118,19 +1118,19 @@ void main() {
     );
     expect(
       l.donateVerifiedOnChainYou("supporter"),
-      "verified on-chain - you're a supporter now. No one can take that off you.",
+      "Verified on-chain - you're a supporter now. No one can take that off you.",
     );
     expect(
       l.donateVerifiedOnChainYou("patron"),
-      "verified on-chain - you're a patron now. No one can take that off you.",
+      "Verified on-chain - you're a patron now. No one can take that off you.",
     );
     expect(
       l.donateVerifiedOnChainYou("guardian"),
-      "verified on-chain - you're a guardian now. No one can take that off you.",
+      "Verified on-chain - you're a guardian now. No one can take that off you.",
     );
     expect(
       l.donateVerifiedOnChainYou("other"),
-      "verified on-chain - you're a supporter now. No one can take that off you.",
+      "Verified on-chain - you're a supporter now. No one can take that off you.",
     );
     expect(l.donateWearMyBadge, "Wear my badge");
     expect(l.donateJustGladToHelp, "Just glad to help");
@@ -1167,14 +1167,14 @@ void main() {
     );
     expect(l.groupChatJumpToTheNewest, "Jump to the newest");
     expect(l.groupChatBlockedEverywhere, "Blocked everywhere");
-    expect(l.groupChatYou, "you");
-    expect(l.groupChatVoiceMessage, "voice message");
-    expect(l.groupChatQuotedPhoto, "photo");
+    expect(l.groupChatYou, "You");
+    expect(l.groupChatVoiceMessage, "Voice message");
+    expect(l.groupChatQuotedPhoto, "Photo");
     expect(l.groupChatMessageUnavailable, "Message unavailable");
     expect(l.groupChatTorIsNotUp, "Tor is not up yet · sending without");
-    expect(l.groupChatCouldnTReachIt, "couldn't reach it · sending without");
+    expect(l.groupChatCouldnTReachIt, "Couldn't reach it · sending without");
     expect(l.groupChatNoTitleCameBack, "No title came back · sending without");
-    expect(l.groupChatCouldnTFetchIt, "couldn't fetch it · sending without");
+    expect(l.groupChatCouldnTFetchIt, "Couldn't fetch it · sending without");
     expect(l.groupChatCamera, "Camera");
     expect(l.groupChatGallery, "Gallery");
     expect(l.groupChatVideo, "Video");
@@ -1199,8 +1199,8 @@ void main() {
       l.groupChatNewMessagesDisappearAfter,
       "New messages disappear after this",
     );
-    expect(l.groupChatToday, "today");
-    expect(l.groupChatYesterday, "yesterday");
+    expect(l.groupChatToday, "Today");
+    expect(l.groupChatYesterday, "Yesterday");
     expect(l.groupChatYou2, "You");
     expect(l.groupChatThisChatHasPins(0), "This chat has 0 pins already");
     expect(l.groupChatThisChatHasPins(1), "This chat has 1 pin already");
@@ -1263,13 +1263,13 @@ void main() {
     expect(l.groupChatDisguiseVoice, "Disguise voice");
     expect(l.groupChatSupporter, "Supporter");
     expect(l.groupChatEdited, "Edited");
-    expect(l.groupChatTapToRetry, "! tap to retry");
+    expect(l.groupChatTapToRetry, "! Tap to retry");
     expect(l.groupChat0s, "0s");
     expect(l.groupChatReply, "Reply");
     expect(l.groupChatPin, "Pin");
     expect(l.groupChatUnsave, "Unsave");
     expect(l.groupChatForward, "Forward");
-    expect(l.groupInfoGroup, "group");
+    expect(l.groupInfoGroup, "Group");
     expect(l.groupInfoRenameGroup, "Rename group");
     expect(l.groupInfoRename, "Rename");
     expect(l.groupInfoNoContactsToAdd, "No contacts to add");
@@ -1536,12 +1536,12 @@ void main() {
       "Every message with <c> goes, and they stop being a contact. It only clears this phone - their copy stays with them. If they message again it lands in requests.",
     );
     expect(l.homeQueued, "Queued");
-    expect(l.homeBlocked, "blocked");
+    expect(l.homeBlocked, "Blocked");
     expect(l.homeRoomInvite, "Room invite");
-    expect(l.homeNow, "now");
+    expect(l.homeNow, "Now");
     expect(l.homeM("<inMinutes>"), "<inMinutes>m");
     expect(l.homeH("<inHours>"), "<inHours>h");
-    expect(l.homeYesterday, "yesterday");
+    expect(l.homeYesterday, "Yesterday");
     expect(l.homeD("<inDays>"), "<inDays>d");
     expect(l.homeNoteToSelf, "Note to self");
     expect(l.homeOnlyOnThisPhone, "Only on this phone");
@@ -1780,20 +1780,20 @@ void main() {
       l.modesFullOnionRoutingThree,
       "Full onion routing, three hops. A message takes two to five seconds. Nobody sees who you talk to.",
     );
-    expect(l.modesSlower, "slower");
+    expect(l.modesSlower, "Slower");
     expect(l.modesRelay, "Relay");
     expect(
       l.modesOneSealedConnectionTo,
       "One sealed connection to Kryfo's own relay, like a vpn with nothing to log. Sends land in about a second, and it works where tor is blocked.",
     );
-    expect(l.modesQuick, "quick");
+    expect(l.modesQuick, "Quick");
     expect(l.modesRelayOnly, "Relay only");
     expect(l.modesFast, "Fast");
     expect(
       l.modesPlainConnectionsToEvery,
       "Plain connections to every relay. Near instant, and the least private of the three.",
     );
-    expect(l.modesInstant, "instant");
+    expect(l.modesInstant, "Instant");
     expect(
       l.modesEveryRelayYouUse,
       "Every relay you use knows the address you connect from, not only ours. Messages are still sealed, but the fact that you sent one is not. Off by default, and off again after a reinstall.",
@@ -1807,7 +1807,7 @@ void main() {
     expect(l.modesHops, "HOPS");
     expect(l.modesIp, "IP");
     expect(l.modesVisible, "Visible");
-    expect(l.modesHidden, "hidden");
+    expect(l.modesHidden, "Hidden");
     expect(l.modesHeadsUp("<warning>"), "*Heads up:* <warning>");
     expect(
       l.modesOnionIsTheDefault,
@@ -2424,12 +2424,12 @@ void main() {
     expect(l.roomCreateNoOnePastThe(1), "No one past the first 1");
     expect(l.roomCreateNoOnePastThe(2), "No one past the first 2");
     expect(l.roomCreateNoOnePastThe(5), "No one past the first 5");
-    expect(l.roomCreateOffAnyoneWithThe, "off. Anyone with the link");
+    expect(l.roomCreateOffAnyoneWithThe, "Off. Anyone with the link");
     expect(
       l.roomCreateThisRoomAndEverything("<expiryWords>"),
       "This room and everything in it disappears in <expiryWords>",
     );
-    expect(l.roomCreateCreating, "creating...");
+    expect(l.roomCreateCreating, "Creating...");
     expect(l.roomCreateCreateRoom, "Create room");
     expect(l.roomLinkSendTheRoomTo, "Send the room to");
     expect(
@@ -2471,12 +2471,12 @@ void main() {
       l.seenHonestAboutTheLast,
       "Honest about the last rows: that is what the app lock, the wipe PIN and encrypted storage are for, and no tool saves you from someone holding your open phone. The full threat model lives in THREAT_MODEL.md in the repo, written against LINDDUN. The code is open, so none of this has to be taken on trust.",
     );
-    expect(l.seenHidden, "hidden");
-    expect(l.seenNever, "never");
-    expect(l.seenOnDevice, "on device");
-    expect(l.seenTiming, "timing");
-    expect(l.seenYours, "yours");
-    expect(l.seenUnaudited, "unaudited");
+    expect(l.seenHidden, "Hidden");
+    expect(l.seenNever, "Never");
+    expect(l.seenOnDevice, "On device");
+    expect(l.seenTiming, "Timing");
+    expect(l.seenYours, "Yours");
+    expect(l.seenUnaudited, "Unaudited");
     expect(l.seenWhoYouTalkTo, "Who you talk to");
     expect(
       l.seenEachConversationGetsIts,
@@ -2488,8 +2488,8 @@ void main() {
       "End to end encrypted with the signal double ratchet, then sealed again inside a gift wrap. We could not read it if we tried.",
     );
     expect(l.seenYourIpAddress, "Your ip address");
-    expect(l.seenOurRelay, "our relay");
-    expect(l.seenEveryRelay, "every relay");
+    expect(l.seenOurRelay, "Our relay");
+    expect(l.seenEveryRelay, "Every relay");
     expect(
       l.seenOnOnionEverythingLeaves,
       "On onion everything leaves through tor and the relay sees an exit node, never you. On relay mode the connection goes straight to our own relay: nothing forwards your address and nothing is written down, but that one connection is ours to see. On fast every public relay learns that you connected, though not to whom or what you said.",
@@ -2499,7 +2499,7 @@ void main() {
       l.seenKryfoDoesNotScan,
       "Kryfo does not scan your contacts. That is the point. No phone number exists here to leak.",
     );
-    expect(l.seenIntroducer, "introducer");
+    expect(l.seenIntroducer, "Introducer");
     expect(
       l.seenWhenAContactIntroduces,
       "When a contact introduces you to someone, that contact learns the two of you are now connected. Nobody else does. The relay sees ciphertext, and no server ever sees the graph.",
@@ -2510,13 +2510,13 @@ void main() {
       "Runs on your phone with rules that ship in the app. No network, no list downloads. It only reads the first message from a stranger and cannot see anything a contact sends you.",
     );
     expect(l.seenBurnerRooms, "Burner rooms");
-    expect(l.seenRoomKeys, "room keys");
+    expect(l.seenRoomKeys, "Room keys");
     expect(
       l.seenYouJoinARoom,
       "You join a room under a key made for it, so the people inside learn nothing that works elsewhere. Late joiners get no history. At expiry the keys, the messages and the media are destroyed.",
     );
     expect(l.seenLinkPreviews, "Link previews");
-    expect(l.seenOverTor, "over tor");
+    expect(l.seenOverTor, "Over Tor");
     expect(
       l.seenAPreviewIsFetched,
       "A preview is fetched by the sender, over tor, and travels inside the encrypted message. The receiving phone makes no request. The website learns that someone using tor asked for a page, and nothing else. No image is ever loaded, and a stranger's link stays plain text.",
@@ -2765,13 +2765,13 @@ void main() {
     expect(l.transportM2("<mins>"), "<mins>m");
     expect(l.transportHM2("<mins>", "<mins2>"), "<mins>h <mins2>m");
     expect(l.transportTo("<t>", "<t2>"), "<t> to <t2>");
-    expect(l.vouchersVouchedBy(0), "vouched by 0");
-    expect(l.vouchersVouchedBy(1), "vouched by");
-    expect(l.vouchersVouchedBy(2), "vouched by 2");
-    expect(l.vouchersVouchedBy(5), "vouched by 5");
+    expect(l.vouchersVouchedBy(0), "Vouched by 0");
+    expect(l.vouchersVouchedBy(1), "Vouched by");
+    expect(l.vouchersVouchedBy(2), "Vouched by 2");
+    expect(l.vouchersVouchedBy(5), "Vouched by 5");
     expect(l.wallpaperAtmosphere, "Atmosphere");
     expect(l.wallpaperJustForYouThey, "Just for you. They see their own.");
-    expect(l.wallpaperYourPhoto, "your photo");
+    expect(l.wallpaperYourPhoto, "Your photo");
     expect(l.wallpaperFromYourPhotos, "From your photos");
     expect(l.wallpaperKeepIt, "Keep it");
     expect(l.whyKryfoWhyKryfo, "Why Kryfo");
@@ -3101,7 +3101,7 @@ void main() {
     expect(l.motionFindingAPrivatePath, "Finding a private path");
     expect(l.motionCarvingThePath, "Carving the path");
     expect(l.motionAnnouncingYourArrival, "Announcing your arrival");
-    expect(l.motionYouReAnonymous, "you're anonymous");
+    expect(l.motionYouReAnonymous, "You're anonymous");
     expect(
       l.motionTorIsStartingIn,
       "Tor is starting in the background. This graph lights up as the connection forms.",
@@ -3116,7 +3116,7 @@ void main() {
     );
     expect(
       l.motionTellingTheNetworkYou,
-      "telling the network you're online, without revealing where.",
+      "Telling the network you're online, without revealing where.",
     );
     expect(
       l.motionYourIpIsHidden,
@@ -3126,8 +3126,8 @@ void main() {
     expect(l.motionOpen, "open");
     expect(l.motionLive, "live");
     expect(l.motionCircuit("<circuit>"), "Circuit · *<circuit>*");
-    expect(l.motionDelivered, "delivered");
-    expect(l.motionSent, "sent");
+    expect(l.motionDelivered, "Delivered");
+    expect(l.motionSent, "Sent");
     expect(l.motion1Hop, "1 hop");
     expect(l.motion3Hops, "3 hops");
     expect(
@@ -3235,19 +3235,19 @@ void main() {
     expect(l.videoBubbleMb("<b>"), "<b> MB");
     expect(l.videoBubbleKb("<b>"), "<b> KB");
     expect(l.videoBubbleVideo, "Video");
-    expect(l.notificationsChannelName, "messages");
+    expect(l.notificationsChannelName, "Messages");
     expect(l.cameraClose, "Close");
-    expect(l.cameraFlash, "flash");
-    expect(l.cameraPhoto, "photo");
-    expect(l.cameraVideo, "video");
+    expect(l.cameraFlash, "Flash");
+    expect(l.cameraPhoto, "Photo");
+    expect(l.cameraVideo, "Video");
     expect(l.cameraRetake, "Retake");
     expect(l.seenIntroductions, "Introductions");
     expect(l.donateAddress, "Address");
     expect(l.donateCopy, "Copy");
     expect(l.donateDone, "Done");
-    expect(l.donateTierSupporter, "supporter");
-    expect(l.donateTierPatron, "patron");
-    expect(l.donateTierGuardian, "guardian");
+    expect(l.donateTierSupporter, "Supporter");
+    expect(l.donateTierPatron, "Patron");
+    expect(l.donateTierGuardian, "Guardian");
     expect(l.chatBlock, "Block");
     expect(l.chatDecline, "Decline");
     expect(l.chatAccept, "Accept");
@@ -3286,9 +3286,9 @@ void main() {
     expect(l.settingsBackup, "Backup");
     expect(l.settingsVoice, "Voice");
     expect(l.settingsAbout, "About");
-    expect(l.wallpaperGradients, "gradients");
-    expect(l.wallpaperPatterns, "patterns");
-    expect(l.wallpaperMoods, "moods");
+    expect(l.wallpaperGradients, "Gradients");
+    expect(l.wallpaperPatterns, "Patterns");
+    expect(l.wallpaperMoods, "Moods");
     expect(l.confirmSheetKeep, "Keep");
     expect(l.confirmSheetSave, "Save");
     expect(l.confirmSheetCancel, "Cancel");
@@ -3323,12 +3323,12 @@ void main() {
     expect(l.androidServiceTitle, "Kryfo is on");
     expect(
       l.androidServiceText,
-      "your encrypted line stays open so messages arrive",
+      "Your encrypted line stays open so messages arrive",
     );
-    expect(l.androidChannelName, "staying connected");
+    expect(l.androidChannelName, "Staying connected");
     expect(
       l.androidChannelDescription,
-      "keeps Kryfo connected so encrypted messages arrive while it is closed. turning this off stops delivery.",
+      "Keeps Kryfo connected so encrypted messages arrive while it is closed. Turning this off stops delivery.",
     );
     expect(l.videoViewerPlay, "Play");
     expect(l.videoViewerPause, "Pause");

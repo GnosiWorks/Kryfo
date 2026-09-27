@@ -9,7 +9,7 @@ class AppLocalizationsDe extends AppLocalizations {
   AppLocalizationsDe([String locale = 'de']) : super(locale);
 
   @override
-  String get atmosphereNone => 'keine';
+  String get atmosphereNone => 'Keine';
 
   @override
   String get atmosphereEmber => 'Glut';
@@ -81,7 +81,7 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get contactStatusBlocked => 'blockiert';
+  String get contactStatusBlocked => 'Blockiert';
 
   @override
   String get contactStatusKeysVerifiedInPerson =>
@@ -249,7 +249,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get lockStateUnlockKryfo => 'Kryfo entsperren';
 
   @override
-  String get appInvalidUri => 'ungültige URI';
+  String get appInvalidUri => 'Ungültige URI';
 
   @override
   String appBundleError(Object e) {
@@ -405,7 +405,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get appOpeningYourChats => 'Chats werden geöffnet';
 
   @override
-  String get appStartingTor => 'tor startet';
+  String get appStartingTor => 'Tor startet';
 
   @override
   String get appTimedMessagesAreNot =>
@@ -416,7 +416,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String appYou(Object body) {
-    return 'du: $body';
+    return 'Du: $body';
   }
 
   @override
@@ -426,7 +426,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get appYouAreAlreadyIn => 'Du bist schon in diesem Raum';
 
   @override
-  String get appCouldNotMakeA => 'konnte keinen Raumschlüssel erstellen';
+  String get appCouldNotMakeA => 'Konnte keinen Raumschlüssel erstellen';
 
   @override
   String appJoinedButYourHello(Object linkName) {
@@ -444,7 +444,7 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get appBooting => 'startet...';
+  String get appBooting => 'Startet...';
 
   @override
   String get appSettingUpYourIdentity => 'Deine Identität wird eingerichtet...';
@@ -485,7 +485,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get appStartingTor30s => 'Tor startet (~30s)...';
 
   @override
-  String get appScanOrImportA => 'scanne oder importiere zuerst einen Peer';
+  String get appScanOrImportA => 'Scanne oder importiere zuerst einen Peer';
 
   @override
   String get appEncryptingSending30s => 'Verschlüsseln + Senden (~30s)...';
@@ -512,7 +512,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get appPairingCode => 'Kopplungscode';
 
   @override
-  String get appOrPaste => '- oder einfügen -';
+  String get appOrPaste => '- Oder einfügen -';
 
   @override
   String get commonCancel => 'Abbrechen';
@@ -533,7 +533,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get appStartListening => 'Zuhören starten';
 
   @override
-  String get appListening => 'hört zu';
+  String get appListening => 'Hört zu';
 
   @override
   String get appShowMyQr => 'Meinen QR zeigen';
@@ -615,7 +615,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get appViaRelay => 'Über Relais';
 
   @override
-  String get appOffline => 'offline';
+  String get appOffline => 'Offline';
 
   @override
   String get appFast => 'Schnell';
@@ -627,7 +627,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get appTorReady => 'Tor bereit';
 
   @override
-  String get appConnecting2 => 'verbinde';
+  String get appConnecting2 => 'Verbinde';
 
   @override
   String mediaProgressSendingKeepTheApp(Object v) {
@@ -724,17 +724,17 @@ class AppLocalizationsDe extends AppLocalizations {
       'Neue verschlüsselte Nachrichten von deinen Kontakten';
 
   @override
-  String get notificationsNewMessage => 'neue Nachricht';
+  String get notificationsNewMessage => 'Neue Nachricht';
 
   @override
   String get notificationsNewEncryptedMessagesFromYourContacts =>
-      'neue verschlüsselte Nachrichten von deinen Kontakten';
+      'Neue verschlüsselte Nachrichten von deinen Kontakten';
 
   @override
   String get notificationsNewMessage2 => 'Neue Nachricht';
 
   @override
-  String get notificationsEncrypted => 'verschlüsselt';
+  String get notificationsEncrypted => 'Verschlüsselt';
 
   @override
   String get rooms24h => '24 h';
@@ -822,7 +822,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get roomsAMinute => 'einer Minute';
 
   @override
-  String get roomsExpired => 'abgelaufen';
+  String get roomsExpired => 'Abgelaufen';
 
   @override
   String roomsDH(Object inDays, Object h) {
@@ -854,7 +854,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String scamShieldSameFaceAsYour(Object shown) {
-    return 'gleiches Gesicht wie dein Kontakt $shown';
+    return 'Gleiches Gesicht wie dein Kontakt $shown';
   }
 
   @override
@@ -892,37 +892,37 @@ class AppLocalizationsDe extends AppLocalizations {
   String get archivedArchived => 'Archiv';
 
   @override
-  String get archivedCount0 => 'keine';
+  String get archivedCount0 => 'Keine';
 
   @override
-  String get archivedCount1 => 'ein';
+  String get archivedCount1 => 'Ein';
 
   @override
-  String get archivedCount2 => 'zwei';
+  String get archivedCount2 => 'Zwei';
 
   @override
-  String get archivedCount3 => 'drei';
+  String get archivedCount3 => 'Drei';
 
   @override
-  String get archivedCount4 => 'vier';
+  String get archivedCount4 => 'Vier';
 
   @override
-  String get archivedCount5 => 'fünf';
+  String get archivedCount5 => 'Fünf';
 
   @override
-  String get archivedCount6 => 'sechs';
+  String get archivedCount6 => 'Sechs';
 
   @override
-  String get archivedCount7 => 'sieben';
+  String get archivedCount7 => 'Sieben';
 
   @override
-  String get archivedCount8 => 'acht';
+  String get archivedCount8 => 'Acht';
 
   @override
-  String get archivedCount9 => 'neun';
+  String get archivedCount9 => 'Neun';
 
   @override
-  String get archivedCount10 => 'zehn';
+  String get archivedCount10 => 'Zehn';
 
   @override
   String get archivedChatRestingHereIt =>
@@ -947,10 +947,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Die Leute, denen du schreibst, sehen das auch';
 
   @override
-  String get avatarPickerBackToYourInitial => 'zurück zu deiner Initiale';
+  String get avatarPickerBackToYourInitial => 'Zurück zu deiner Initiale';
 
   @override
-  String get avatarPickerThatOneIsYours => 'das ist deins';
+  String get avatarPickerThatOneIsYours => 'Das ist deins';
 
   @override
   String get avatarPickerPickAFace => 'Wähle ein Gesicht';
@@ -1273,11 +1273,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get chatYouAreOfflineThis =>
-      'du bist offline · wird von selbst gesendet, sobald du wieder verbunden bist';
+      'Du bist offline · wird von selbst gesendet, sobald du wieder verbunden bist';
 
   @override
   String get chatStillConnectingToTor =>
-      'verbinde noch mit tor · wird von selbst gesendet';
+      'Verbinde noch mit Tor · wird von selbst gesendet';
 
   @override
   String chatS(Object seconds) {
@@ -1527,7 +1527,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chatMessageUnavailable => 'Nachricht nicht verfügbar';
 
   @override
-  String get chatYou2 => 'du';
+  String get chatYou2 => 'Du';
 
   @override
   String get chatThem => 'Gegenüber';
@@ -1632,10 +1632,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chatNoContactsToForward => 'Keine Kontakte zum Weiterleiten';
 
   @override
-  String get chatToday => 'heute';
+  String get chatToday => 'Heute';
 
   @override
-  String get chatYesterday => 'gestern';
+  String get chatYesterday => 'Gestern';
 
   @override
   String get chatThisMessageCanT =>
@@ -2283,13 +2283,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String donateVerifiedOnChainYou(String tier) {
     String _temp0 = intl.Intl.selectLogic(tier, {
       'supporter':
-          'on-chain verifiziert - du unterstützt Kryfo jetzt als Unterstützer. Das kann dir niemand mehr nehmen.',
+          'On-chain verifiziert - du unterstützt Kryfo jetzt als Unterstützer. Das kann dir niemand mehr nehmen.',
       'patron':
-          'on-chain verifiziert - du unterstützt Kryfo jetzt als Förderer. Das kann dir niemand mehr nehmen.',
+          'On-chain verifiziert - du unterstützt Kryfo jetzt als Förderer. Das kann dir niemand mehr nehmen.',
       'guardian':
-          'on-chain verifiziert - du unterstützt Kryfo jetzt als Hüter. Das kann dir niemand mehr nehmen.',
+          'On-chain verifiziert - du unterstützt Kryfo jetzt als Hüter. Das kann dir niemand mehr nehmen.',
       'other':
-          'on-chain verifiziert - du unterstützt Kryfo jetzt als Unterstützer. Das kann dir niemand mehr nehmen.',
+          'On-chain verifiziert - du unterstützt Kryfo jetzt als Unterstützer. Das kann dir niemand mehr nehmen.',
     });
     return '$_temp0';
   }
@@ -2353,7 +2353,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get groupChatBlockedEverywhere => 'Überall blockiert';
 
   @override
-  String get groupChatYou => 'du';
+  String get groupChatYou => 'Du';
 
   @override
   String get groupChatVoiceMessage => 'Sprachnachricht';
@@ -2370,14 +2370,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get groupChatCouldnTReachIt =>
-      'nicht erreichbar · sende ohne Vorschau';
+      'Nicht erreichbar · sende ohne Vorschau';
 
   @override
   String get groupChatNoTitleCameBack =>
       'Kein Titel erhalten · sende ohne Vorschau';
 
   @override
-  String get groupChatCouldnTFetchIt => 'nicht abrufbar · sende ohne Vorschau';
+  String get groupChatCouldnTFetchIt => 'Nicht abrufbar · sende ohne Vorschau';
 
   @override
   String get groupChatCamera => 'Kamera';
@@ -2437,10 +2437,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Neue Nachrichten verschwinden nach dieser Zeit';
 
   @override
-  String get groupChatToday => 'heute';
+  String get groupChatToday => 'Heute';
 
   @override
-  String get groupChatYesterday => 'gestern';
+  String get groupChatYesterday => 'Gestern';
 
   @override
   String get groupChatYou2 => 'Du';
@@ -2610,7 +2610,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get groupChatEdited => 'Bearbeitet';
 
   @override
-  String get groupChatTapToRetry => '! nochmal tippen';
+  String get groupChatTapToRetry => '! Nochmal tippen';
 
   @override
   String get groupChat0s => '0 s';
@@ -3140,13 +3140,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get homeQueued => 'Eingereiht';
 
   @override
-  String get homeBlocked => 'blockiert';
+  String get homeBlocked => 'Blockiert';
 
   @override
   String get homeRoomInvite => 'Raum-Einladung';
 
   @override
-  String get homeNow => 'jetzt';
+  String get homeNow => 'Jetzt';
 
   @override
   String homeM(Object inMinutes) {
@@ -3159,7 +3159,7 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get homeYesterday => 'gestern';
+  String get homeYesterday => 'Gestern';
 
   @override
   String homeD(Object inDays) {
@@ -3505,7 +3505,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Volles Onion-Routing, drei Stationen. Eine Nachricht braucht zwei bis fünf Sekunden. Niemand sieht, mit wem du sprichst.';
 
   @override
-  String get modesSlower => 'langsamer';
+  String get modesSlower => 'Langsamer';
 
   @override
   String get modesRelay => 'Relais';
@@ -3515,7 +3515,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Eine versiegelte Verbindung zu Kryfos eigenem Relais, wie ein VPN, das nichts zu protokollieren hat. Nachrichten kommen in etwa einer Sekunde an, und es funktioniert, wo tor blockiert ist.';
 
   @override
-  String get modesQuick => 'zügig';
+  String get modesQuick => 'Zügig';
 
   @override
   String get modesRelayOnly => 'Nur Relais';
@@ -3528,7 +3528,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Einfache Verbindungen zu jedem Relais. Fast sofort, und der am wenigsten private der drei Modi.';
 
   @override
-  String get modesInstant => 'sofort';
+  String get modesInstant => 'Sofort';
 
   @override
   String get modesEveryRelayYouUse =>
@@ -3562,7 +3562,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get modesVisible => 'Sichtbar';
 
   @override
-  String get modesHidden => 'verborgen';
+  String get modesHidden => 'Verborgen';
 
   @override
   String modesHeadsUp(Object warning) {
@@ -4230,10 +4230,10 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String profileYouAreAThank(String tier) {
     String _temp0 = intl.Intl.selectLogic(tier, {
-      'supporter': 'Du unterstützt Kryfo als Unterstützer. danke.',
-      'patron': 'Du unterstützt Kryfo als Förderer. danke.',
-      'guardian': 'Du unterstützt Kryfo als Hüter. danke.',
-      'other': 'Du unterstützt Kryfo als Unterstützer. danke.',
+      'supporter': 'Du unterstützt Kryfo als Unterstützer. Danke.',
+      'patron': 'Du unterstützt Kryfo als Förderer. Danke.',
+      'guardian': 'Du unterstützt Kryfo als Hüter. Danke.',
+      'other': 'Du unterstützt Kryfo als Unterstützer. Danke.',
     });
     return '$_temp0';
   }
@@ -4716,7 +4716,7 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get roomCreateOffAnyoneWithThe => 'aus. Alle mit dem Link';
+  String get roomCreateOffAnyoneWithThe => 'Aus. Alle mit dem Link';
 
   @override
   String roomCreateThisRoomAndEverything(Object expiryWords) {
@@ -4724,7 +4724,7 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get roomCreateCreating => 'erstelle...';
+  String get roomCreateCreating => 'Erstelle...';
 
   @override
   String get roomCreateCreateRoom => 'Raum erstellen';
@@ -4804,22 +4804,22 @@ class AppLocalizationsDe extends AppLocalizations {
       'Ehrlich zu den letzten Zeilen: Dafür gibt es die App-Sperre, die Lösch-PIN und den verschlüsselten Speicher, und kein Werkzeug schützt dich vor jemandem, der dein entsperrtes Handy in der Hand hält. Das vollständige Bedrohungsmodell steht in THREAT_MODEL.md im Repo, geschrieben nach LINDDUN. Der Code ist offen, also muss man nichts davon einfach glauben.';
 
   @override
-  String get seenHidden => 'verborgen';
+  String get seenHidden => 'Verborgen';
 
   @override
-  String get seenNever => 'nie';
+  String get seenNever => 'Nie';
 
   @override
-  String get seenOnDevice => 'auf dem Gerät';
+  String get seenOnDevice => 'Auf dem Gerät';
 
   @override
   String get seenTiming => 'Zeitpunkt';
 
   @override
-  String get seenYours => 'deins';
+  String get seenYours => 'Deins';
 
   @override
-  String get seenUnaudited => 'nicht auditiert';
+  String get seenUnaudited => 'Nicht auditiert';
 
   @override
   String get seenWhoYouTalkTo => 'Mit wem du sprichst';
@@ -4839,10 +4839,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get seenYourIpAddress => 'Deine IP-Adresse';
 
   @override
-  String get seenOurRelay => 'unser Relais';
+  String get seenOurRelay => 'Unser Relais';
 
   @override
-  String get seenEveryRelay => 'jedes Relais';
+  String get seenEveryRelay => 'Jedes Relais';
 
   @override
   String get seenOnOnionEverythingLeaves =>
@@ -4856,7 +4856,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Kryfo durchsucht deine Kontakte nicht. Genau darum geht es. Hier gibt es keine Telefonnummer, die durchsickern könnte.';
 
   @override
-  String get seenIntroducer => 'wer vorstellt';
+  String get seenIntroducer => 'Wer vorstellt';
 
   @override
   String get seenWhenAContactIntroduces =>
@@ -4883,7 +4883,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get seenLinkPreviews => 'Link-Vorschauen';
 
   @override
-  String get seenOverTor => 'über tor';
+  String get seenOverTor => 'Über Tor';
 
   @override
   String get seenAPreviewIsFetched =>
@@ -5479,8 +5479,8 @@ class AppLocalizationsDe extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'empfohlen von $countString',
-      one: 'empfohlen von',
+      other: 'Empfohlen von $countString',
+      one: 'Empfohlen von',
     );
     return '$_temp0';
   }
@@ -5493,7 +5493,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Nur für dich. Die anderen sehen ihren eigenen.';
 
   @override
-  String get wallpaperYourPhoto => 'dein Foto';
+  String get wallpaperYourPhoto => 'Dein Foto';
 
   @override
   String get wallpaperFromYourPhotos => 'Aus deinen Fotos';
@@ -6183,7 +6183,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get motionAnnouncingYourArrival => 'Kündige deine Ankunft an';
 
   @override
-  String get motionYouReAnonymous => 'du bist anonym';
+  String get motionYouReAnonymous => 'Du bist anonym';
 
   @override
   String get motionTorIsStartingIn =>
@@ -6199,7 +6199,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get motionTellingTheNetworkYou =>
-      'sage dem Netzwerk, dass du online bist, ohne zu verraten, wo.';
+      'Sage dem Netzwerk, dass du online bist, ohne zu verraten, wo.';
 
   @override
   String get motionYourIpIsHidden =>
@@ -6220,10 +6220,10 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get motionDelivered => 'zugestellt';
+  String get motionDelivered => 'Zugestellt';
 
   @override
-  String get motionSent => 'gesendet';
+  String get motionSent => 'Gesendet';
 
   @override
   String get motion1Hop => '1 Station';
@@ -6644,14 +6644,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get androidServiceText =>
-      'deine verschlüsselte Leitung bleibt offen, damit Nachrichten ankommen';
+      'Deine verschlüsselte Leitung bleibt offen, damit Nachrichten ankommen';
 
   @override
-  String get androidChannelName => 'verbunden bleiben';
+  String get androidChannelName => 'Verbunden bleiben';
 
   @override
   String get androidChannelDescription =>
-      'hält Kryfo verbunden, damit verschlüsselte Nachrichten ankommen, während es geschlossen ist. wenn du das ausschaltest, stoppt die Zustellung.';
+      'Hält Kryfo verbunden, damit verschlüsselte Nachrichten ankommen, während es geschlossen ist. Wenn du das ausschaltest, stoppt die Zustellung.';
 
   @override
   String get videoViewerPlay => 'Abspielen';

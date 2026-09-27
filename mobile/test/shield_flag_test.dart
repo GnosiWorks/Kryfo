@@ -36,7 +36,7 @@ void main() {
     expect(f.headline, 'This name matches alicf');
     expect(f.lines, [
       'Name matches your contact alicf',
-      'same face as your contact alicf',
+      'Same face as your contact alicf',
     ]);
   });
   test('a missing row is neither clean nor flagged', () {

@@ -403,7 +403,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get appOpeningYourChats => 'باز کردن گفت‌وگوهای شما';
 
   @override
-  String get appStartingTor => 'راه‌اندازی tor';
+  String get appStartingTor => 'راه‌اندازی Tor';
 
   @override
   String get appTimedMessagesAreNot =>
@@ -1274,7 +1274,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get chatStillConnectingToTor =>
-      'هنوز در حال اتصال به tor · خودش فرستاده می‌شود';
+      'هنوز در حال اتصال به Tor · خودش فرستاده می‌شود';
 
   @override
   String chatS(Object seconds) {
@@ -4838,7 +4838,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get seenLinkPreviews => 'پیش‌نمایش پیوند';
 
   @override
-  String get seenOverTor => 'از راه tor';
+  String get seenOverTor => 'از راه Tor';
 
   @override
   String get seenAPreviewIsFetched =>

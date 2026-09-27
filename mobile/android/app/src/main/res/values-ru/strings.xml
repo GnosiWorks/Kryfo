@@ -2,7 +2,7 @@
 <!-- written by tool/arb_android.py from lib/l10n/app_ru.arb -->
 <resources>
     <string name="service_title">Kryfo включён</string>
-    <string name="service_text">твоё зашифрованное соединение остаётся открытым, чтобы сообщения доходили</string>
-    <string name="channel_name">постоянная связь</string>
-    <string name="channel_description">держит Kryfo на связи, чтобы зашифрованные сообщения приходили, пока он закрыт. если выключить, доставка прекратится.</string>
+    <string name="service_text">Твоё зашифрованное соединение остаётся открытым, чтобы сообщения доходили</string>
+    <string name="channel_name">Постоянная связь</string>
+    <string name="channel_description">Держит Kryfo на связи, чтобы зашифрованные сообщения приходили, пока он закрыт. Если выключить, доставка прекратится.</string>
 </resources>

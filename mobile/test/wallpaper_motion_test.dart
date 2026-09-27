@@ -122,6 +122,6 @@ void main() {
     addTearDown(() => setL10nLocale(const Locale('en')));
     await open(t);
     expect(find.text('Stimmungen'), findsOneWidget);
-    expect(find.text('moods'), findsNothing);
+    expect(find.text('Moods'), findsNothing);
   });
 }

@@ -241,7 +241,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get lockStateUnlockKryfo => '解锁 Kryfo';
 
   @override
-  String get appInvalidUri => 'uri 无效';
+  String get appInvalidUri => 'Uri 无效';
 
   @override
   String appBundleError(Object e) {
@@ -391,7 +391,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appOpeningYourChats => '正在打开你的聊天';
 
   @override
-  String get appStartingTor => '正在启动 tor';
+  String get appStartingTor => '正在启动 Tor';
 
   @override
   String get appTimedMessagesAreNot => '限时消息没有按时清除。请重启 Kryfo';
@@ -480,7 +480,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appYourKryfo => '你的 Kryfo';
 
   @override
-  String get appUriCopied => 'uri 已复制';
+  String get appUriCopied => 'Uri 已复制';
 
   @override
   String get appCopyUri => '复制 uri';
@@ -1223,7 +1223,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatYouAreOfflineThis => '你已离线 · 重新连上后会自动发出';
 
   @override
-  String get chatStillConnectingToTor => '仍在连接 tor · 连上后会自动发出';
+  String get chatStillConnectingToTor => '仍在连接 Tor · 连上后会自动发出';
 
   @override
   String chatS(Object seconds) {
@@ -4633,7 +4633,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get seenLinkPreviews => '链接预览';
 
   @override
-  String get seenOverTor => '经由 tor';
+  String get seenOverTor => '经由 Tor';
 
   @override
   String get seenAPreviewIsFetched =>
@@ -8125,7 +8125,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatYouAreOfflineThis => '你目前離線 · 重新連線後會自動傳送';
 
   @override
-  String get chatStillConnectingToTor => '仍在連線到 tor · 之後會自動送出';
+  String get chatStillConnectingToTor => '仍在連線到 Tor · 之後會自動送出';
 
   @override
   String chatS(Object seconds) {
@@ -11535,7 +11535,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get seenLinkPreviews => '連結預覽';
 
   @override
-  String get seenOverTor => '經由 tor';
+  String get seenOverTor => '經由 Tor';
 
   @override
   String get seenAPreviewIsFetched =>

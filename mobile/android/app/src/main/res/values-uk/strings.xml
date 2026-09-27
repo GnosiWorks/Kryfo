@@ -2,7 +2,7 @@
 <!-- written by tool/arb_android.py from lib/l10n/app_uk.arb -->
 <resources>
     <string name="service_title">Kryfo увімкнено</string>
-    <string name="service_text">твоя зашифрована лінія лишається відкритою, щоб повідомлення надходили</string>
-    <string name="channel_name">на зв’язку</string>
-    <string name="channel_description">тримає Kryfo на зв’язку, щоб зашифровані повідомлення надходили, навіть коли він закритий. якщо це вимкнути, доставка зупиниться.</string>
+    <string name="service_text">Твоя зашифрована лінія лишається відкритою, щоб повідомлення надходили</string>
+    <string name="channel_name">На зв’язку</string>
+    <string name="channel_description">Тримає Kryfo на зв’язку, щоб зашифровані повідомлення надходили, навіть коли він закритий. Якщо це вимкнути, доставка зупиниться.</string>
 </resources>

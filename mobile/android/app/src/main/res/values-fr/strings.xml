@@ -2,7 +2,7 @@
 <!-- written by tool/arb_android.py from lib/l10n/app_fr.arb -->
 <resources>
     <string name="service_title">Kryfo est actif</string>
-    <string name="service_text">votre ligne chiffrée reste ouverte pour que les messages arrivent</string>
-    <string name="channel_name">connexion maintenue</string>
-    <string name="channel_description">garde Kryfo connecté pour que les messages chiffrés arrivent quand il est fermé. le désactiver coupe la distribution.</string>
+    <string name="service_text">Votre ligne chiffrée reste ouverte pour que les messages arrivent</string>
+    <string name="channel_name">Connexion maintenue</string>
+    <string name="channel_description">Garde Kryfo connecté pour que les messages chiffrés arrivent quand il est fermé. Le désactiver coupe la distribution.</string>
 </resources>

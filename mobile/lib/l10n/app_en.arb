@@ -1,38 +1,38 @@
 {
   "@@locale": "en",
-  "atmosphereNone": "none",
+  "atmosphereNone": "None",
   "@atmosphereNone": {
     "description": "atmosphere.dart"
   },
-  "atmosphereEmber": "ember",
+  "atmosphereEmber": "Ember",
   "@atmosphereEmber": {
     "description": "atmosphere.dart"
   },
-  "atmosphereDusk": "dusk",
+  "atmosphereDusk": "Dusk",
   "@atmosphereDusk": {
     "description": "atmosphere.dart"
   },
-  "atmosphereMoss": "moss",
+  "atmosphereMoss": "Moss",
   "@atmosphereMoss": {
     "description": "atmosphere.dart"
   },
-  "atmosphereRose": "rose",
+  "atmosphereRose": "Rose",
   "@atmosphereRose": {
     "description": "atmosphere.dart"
   },
-  "atmosphereDots": "dots",
+  "atmosphereDots": "Dots",
   "@atmosphereDots": {
     "description": "atmosphere.dart"
   },
-  "atmosphereGrid": "grid",
+  "atmosphereGrid": "Grid",
   "@atmosphereGrid": {
     "description": "atmosphere.dart"
   },
-  "atmosphereWaves": "waves",
+  "atmosphereWaves": "Waves",
   "@atmosphereWaves": {
     "description": "atmosphere.dart"
   },
-  "atmosphereRain": "rain",
+  "atmosphereRain": "Rain",
   "@atmosphereRain": {
     "description": "atmosphere.dart"
   },
@@ -44,15 +44,15 @@
   "@atmosphereWarmAfternoon": {
     "description": "atmosphere.dart"
   },
-  "atmosphereSnow": "snow",
+  "atmosphereSnow": "Snow",
   "@atmosphereSnow": {
     "description": "atmosphere.dart"
   },
-  "atmosphereDesert": "desert",
+  "atmosphereDesert": "Desert",
   "@atmosphereDesert": {
     "description": "atmosphere.dart"
   },
-  "atmospherePaper": "paper",
+  "atmospherePaper": "Paper",
   "@atmospherePaper": {
     "description": "atmosphere.dart"
   },
@@ -93,7 +93,7 @@
       }
     }
   },
-  "contactStatusBlocked": "blocked",
+  "contactStatusBlocked": "Blocked",
   "@contactStatusBlocked": {
     "description": "contact_status.dart"
   },
@@ -284,7 +284,7 @@
   "@lockStateUnlockKryfo": {
     "description": "lock_state.dart"
   },
-  "appInvalidUri": "invalid uri",
+  "appInvalidUri": "Invalid uri",
   "@appInvalidUri": {
     "description": "main.dart"
   },
@@ -449,7 +449,7 @@
   "@appAnAttachmentCouldNot": {
     "description": "main.dart"
   },
-  "appGroup2": "group",
+  "appGroup2": "Group",
   "@appGroup2": {
     "description": "main.dart"
   },
@@ -457,7 +457,7 @@
   "@appVoiceMessage": {
     "description": "main.dart"
   },
-  "appPhoto": "photo",
+  "appPhoto": "Photo",
   "@appPhoto": {
     "description": "main.dart"
   },
@@ -477,7 +477,7 @@
   "@appOpeningYourChats": {
     "description": "main.dart"
   },
-  "appStartingTor": "starting Tor",
+  "appStartingTor": "Starting Tor",
   "@appStartingTor": {
     "description": "main.dart"
   },
@@ -485,11 +485,11 @@
   "@appTimedMessagesAreNot": {
     "description": "main.dart"
   },
-  "appVoiceMessage2": "voice message",
+  "appVoiceMessage2": "Voice message",
   "@appVoiceMessage2": {
     "description": "main.dart"
   },
-  "appYou": "you: {body}",
+  "appYou": "You: {body}",
   "@appYou": {
     "description": "main.dart",
     "placeholders": {
@@ -506,7 +506,7 @@
   "@appYouAreAlreadyIn": {
     "description": "main.dart"
   },
-  "appCouldNotMakeA": "could not make a room key",
+  "appCouldNotMakeA": "Could not make a room key",
   "@appCouldNotMakeA": {
     "description": "main.dart"
   },
@@ -537,7 +537,7 @@
       }
     }
   },
-  "appBooting": "booting...",
+  "appBooting": "Booting...",
   "@appBooting": {
     "description": "main.dart"
   },
@@ -589,7 +589,7 @@
   "@appStartingTor30s": {
     "description": "main.dart"
   },
-  "appScanOrImportA": "scan or import a peer first",
+  "appScanOrImportA": "Scan or import a peer first",
   "@appScanOrImportA": {
     "description": "main.dart"
   },
@@ -625,7 +625,7 @@
   "@appPairingCode": {
     "description": "main.dart"
   },
-  "appOrPaste": "- or paste -",
+  "appOrPaste": "- Or paste -",
   "@appOrPaste": {
     "description": "main.dart"
   },
@@ -653,7 +653,7 @@
   "@appStartListening": {
     "description": "main.dart"
   },
-  "appListening": "listening",
+  "appListening": "Listening",
   "@appListening": {
     "description": "main.dart"
   },
@@ -665,7 +665,7 @@
   "@appImportPeer": {
     "description": "main.dart"
   },
-  "appPeer": "peer:",
+  "appPeer": "Peer:",
   "@appPeer": {
     "description": "main.dart"
   },
@@ -677,7 +677,7 @@
   "@appEncryptSend": {
     "description": "main.dart"
   },
-  "appStatus": "status: {status}",
+  "appStatus": "Status: {status}",
   "@appStatus": {
     "description": "main.dart",
     "placeholders": {
@@ -759,7 +759,7 @@
   "@appViaRelay": {
     "description": "main.dart"
   },
-  "appOffline": "offline",
+  "appOffline": "Offline",
   "@appOffline": {
     "description": "main.dart"
   },
@@ -775,7 +775,7 @@
   "@appTorReady": {
     "description": "main.dart"
   },
-  "appConnecting2": "connecting",
+  "appConnecting2": "Connecting",
   "@appConnecting2": {
     "description": "main.dart"
   },
@@ -917,11 +917,11 @@
   "@notificationsNewEncryptedMessagesFrom": {
     "description": "notifications.dart"
   },
-  "notificationsNewMessage": "new message",
+  "notificationsNewMessage": "New message",
   "@notificationsNewMessage": {
     "description": "notifications.dart"
   },
-  "notificationsNewEncryptedMessagesFromYourContacts": "new encrypted messages from your contacts",
+  "notificationsNewEncryptedMessagesFromYourContacts": "New encrypted messages from your contacts",
   "@notificationsNewEncryptedMessagesFromYourContacts": {
     "description": "notifications.dart"
   },
@@ -929,7 +929,7 @@
   "@notificationsNewMessage2": {
     "description": "notifications.dart"
   },
-  "notificationsEncrypted": "encrypted",
+  "notificationsEncrypted": "Encrypted",
   "@notificationsEncrypted": {
     "description": "notifications.dart"
   },
@@ -1011,7 +1011,7 @@
   "@roomsAMinute": {
     "description": "rooms.dart"
   },
-  "roomsExpired": "expired",
+  "roomsExpired": "Expired",
   "@roomsExpired": {
     "description": "rooms.dart"
   },
@@ -1070,7 +1070,7 @@
       }
     }
   },
-  "scamShieldSameFaceAsYour": "same face as your contact {shown}",
+  "scamShieldSameFaceAsYour": "Same face as your contact {shown}",
   "@scamShieldSameFaceAsYour": {
     "description": "scam_shield.dart",
     "placeholders": {
@@ -1120,47 +1120,47 @@
   "@archivedArchived": {
     "description": "screens/archived_screen.dart"
   },
-  "archivedCount0": "no",
+  "archivedCount0": "No",
   "@archivedCount0": {
     "description": "screens/archived_screen.dart: the number of archived chats, spelled out"
   },
-  "archivedCount1": "one",
+  "archivedCount1": "One",
   "@archivedCount1": {
     "description": "screens/archived_screen.dart: the number of archived chats, spelled out"
   },
-  "archivedCount2": "two",
+  "archivedCount2": "Two",
   "@archivedCount2": {
     "description": "screens/archived_screen.dart: the number of archived chats, spelled out"
   },
-  "archivedCount3": "three",
+  "archivedCount3": "Three",
   "@archivedCount3": {
     "description": "screens/archived_screen.dart: the number of archived chats, spelled out"
   },
-  "archivedCount4": "four",
+  "archivedCount4": "Four",
   "@archivedCount4": {
     "description": "screens/archived_screen.dart: the number of archived chats, spelled out"
   },
-  "archivedCount5": "five",
+  "archivedCount5": "Five",
   "@archivedCount5": {
     "description": "screens/archived_screen.dart: the number of archived chats, spelled out"
   },
-  "archivedCount6": "six",
+  "archivedCount6": "Six",
   "@archivedCount6": {
     "description": "screens/archived_screen.dart: the number of archived chats, spelled out"
   },
-  "archivedCount7": "seven",
+  "archivedCount7": "Seven",
   "@archivedCount7": {
     "description": "screens/archived_screen.dart: the number of archived chats, spelled out"
   },
-  "archivedCount8": "eight",
+  "archivedCount8": "Eight",
   "@archivedCount8": {
     "description": "screens/archived_screen.dart: the number of archived chats, spelled out"
   },
-  "archivedCount9": "nine",
+  "archivedCount9": "Nine",
   "@archivedCount9": {
     "description": "screens/archived_screen.dart: the number of archived chats, spelled out"
   },
-  "archivedCount10": "ten",
+  "archivedCount10": "Ten",
   "@archivedCount10": {
     "description": "screens/archived_screen.dart: the number of archived chats, spelled out"
   },
@@ -1188,11 +1188,11 @@
   "@avatarPickerThePeopleYouMessage": {
     "description": "screens/avatar_picker_screen.dart"
   },
-  "avatarPickerBackToYourInitial": "back to your initial",
+  "avatarPickerBackToYourInitial": "Back to your initial",
   "@avatarPickerBackToYourInitial": {
     "description": "screens/avatar_picker_screen.dart"
   },
-  "avatarPickerThatOneIsYours": "that one is yours",
+  "avatarPickerThatOneIsYours": "That one is yours",
   "@avatarPickerThatOneIsYours": {
     "description": "screens/avatar_picker_screen.dart"
   },
@@ -1533,7 +1533,7 @@
   "@cameraRec": {
     "description": "screens/camera_screen.dart"
   },
-  "cameraSwitchCamera": "switch camera",
+  "cameraSwitchCamera": "Switch camera",
   "@cameraSwitchCamera": {
     "description": "screens/camera_screen.dart"
   },
@@ -1600,11 +1600,11 @@
   "@chatFile": {
     "description": "screens/chat_screen.dart"
   },
-  "chatYouAreOfflineThis": "you are offline · this sends itself when you reconnect",
+  "chatYouAreOfflineThis": "You are offline · this sends itself when you reconnect",
   "@chatYouAreOfflineThis": {
     "description": "screens/chat_screen.dart"
   },
-  "chatStillConnectingToTor": "still connecting to tor · it'll go out on its own",
+  "chatStillConnectingToTor": "Still connecting to Tor · it'll go out on its own",
   "@chatStillConnectingToTor": {
     "description": "screens/chat_screen.dart"
   },
@@ -1944,19 +1944,19 @@
   "@chatMessageUnavailable": {
     "description": "screens/chat_screen.dart"
   },
-  "chatYou2": "you",
+  "chatYou2": "You",
   "@chatYou2": {
     "description": "screens/chat_screen.dart"
   },
-  "chatThem": "them",
+  "chatThem": "Them",
   "@chatThem": {
     "description": "screens/chat_screen.dart"
   },
-  "chatVoiceMessage": "voice message",
+  "chatVoiceMessage": "Voice message",
   "@chatVoiceMessage": {
     "description": "screens/chat_screen.dart"
   },
-  "chatQuotedPhoto": "photo",
+  "chatQuotedPhoto": "Photo",
   "@chatQuotedPhoto": {
     "description": "screens/chat_screen.dart: in the quote above a reply, when the message replied to is a photo with no caption"
   },
@@ -2073,11 +2073,11 @@
   "@chatNoContactsToForward": {
     "description": "screens/chat_screen.dart"
   },
-  "chatToday": "today",
+  "chatToday": "Today",
   "@chatToday": {
     "description": "screens/chat_screen.dart"
   },
-  "chatYesterday": "yesterday",
+  "chatYesterday": "Yesterday",
   "@chatYesterday": {
     "description": "screens/chat_screen.dart"
   },
@@ -2872,7 +2872,7 @@
   "@donateThankYouForKeeping": {
     "description": "screens/donate_screen.dart"
   },
-  "donateVerifiedOnChainYou": "{tier, select, supporter{verified on-chain - you're a supporter now. No one can take that off you.} patron{verified on-chain - you're a patron now. No one can take that off you.} guardian{verified on-chain - you're a guardian now. No one can take that off you.} other{verified on-chain - you're a supporter now. No one can take that off you.}}",
+  "donateVerifiedOnChainYou": "{tier, select, supporter{Verified on-chain - you're a supporter now. No one can take that off you.} patron{Verified on-chain - you're a patron now. No one can take that off you.} guardian{Verified on-chain - you're a guardian now. No one can take that off you.} other{Verified on-chain - you're a supporter now. No one can take that off you.}}",
   "@donateVerifiedOnChainYou": {
     "description": "screens/donate_screen.dart. tier is the supporter tier",
     "placeholders": {
@@ -2949,15 +2949,15 @@
   "@groupChatBlockedEverywhere": {
     "description": "screens/group_chat_screen.dart"
   },
-  "groupChatYou": "you",
+  "groupChatYou": "You",
   "@groupChatYou": {
     "description": "screens/group_chat_screen.dart"
   },
-  "groupChatVoiceMessage": "voice message",
+  "groupChatVoiceMessage": "Voice message",
   "@groupChatVoiceMessage": {
     "description": "screens/group_chat_screen.dart"
   },
-  "groupChatQuotedPhoto": "photo",
+  "groupChatQuotedPhoto": "Photo",
   "@groupChatQuotedPhoto": {
     "description": "screens/group_chat_screen.dart: in the quote above a reply, when the message replied to is a photo with no caption"
   },
@@ -2969,7 +2969,7 @@
   "@groupChatTorIsNotUp": {
     "description": "screens/group_chat_screen.dart"
   },
-  "groupChatCouldnTReachIt": "couldn't reach it · sending without",
+  "groupChatCouldnTReachIt": "Couldn't reach it · sending without",
   "@groupChatCouldnTReachIt": {
     "description": "screens/group_chat_screen.dart"
   },
@@ -2977,7 +2977,7 @@
   "@groupChatNoTitleCameBack": {
     "description": "screens/group_chat_screen.dart"
   },
-  "groupChatCouldnTFetchIt": "couldn't fetch it · sending without",
+  "groupChatCouldnTFetchIt": "Couldn't fetch it · sending without",
   "@groupChatCouldnTFetchIt": {
     "description": "screens/group_chat_screen.dart"
   },
@@ -3053,11 +3053,11 @@
   "@groupChatNewMessagesDisappearAfter": {
     "description": "screens/group_chat_screen.dart"
   },
-  "groupChatToday": "today",
+  "groupChatToday": "Today",
   "@groupChatToday": {
     "description": "screens/group_chat_screen.dart"
   },
-  "groupChatYesterday": "yesterday",
+  "groupChatYesterday": "Yesterday",
   "@groupChatYesterday": {
     "description": "screens/group_chat_screen.dart"
   },
@@ -3269,7 +3269,7 @@
   "@groupChatEdited": {
     "description": "screens/group_chat_screen.dart"
   },
-  "groupChatTapToRetry": "! tap to retry",
+  "groupChatTapToRetry": "! Tap to retry",
   "@groupChatTapToRetry": {
     "description": "screens/group_chat_screen.dart"
   },
@@ -3293,7 +3293,7 @@
   "@groupChatForward": {
     "description": "screens/group_chat_screen.dart"
   },
-  "groupInfoGroup": "group",
+  "groupInfoGroup": "Group",
   "@groupInfoGroup": {
     "description": "screens/group_info_screen.dart"
   },
@@ -3870,7 +3870,7 @@
   "@homeQueued": {
     "description": "screens/home_screen.dart"
   },
-  "homeBlocked": "blocked",
+  "homeBlocked": "Blocked",
   "@homeBlocked": {
     "description": "screens/home_screen.dart"
   },
@@ -3878,7 +3878,7 @@
   "@homeRoomInvite": {
     "description": "screens/home_screen.dart"
   },
-  "homeNow": "now",
+  "homeNow": "Now",
   "@homeNow": {
     "description": "screens/home_screen.dart"
   },
@@ -3900,7 +3900,7 @@
       }
     }
   },
-  "homeYesterday": "yesterday",
+  "homeYesterday": "Yesterday",
   "@homeYesterday": {
     "description": "screens/home_screen.dart"
   },
@@ -4341,7 +4341,7 @@
   "@modesFullOnionRoutingThree": {
     "description": "screens/modes_screen.dart"
   },
-  "modesSlower": "slower",
+  "modesSlower": "Slower",
   "@modesSlower": {
     "description": "screens/modes_screen.dart"
   },
@@ -4353,7 +4353,7 @@
   "@modesOneSealedConnectionTo": {
     "description": "screens/modes_screen.dart"
   },
-  "modesQuick": "quick",
+  "modesQuick": "Quick",
   "@modesQuick": {
     "description": "screens/modes_screen.dart"
   },
@@ -4369,7 +4369,7 @@
   "@modesPlainConnectionsToEvery": {
     "description": "screens/modes_screen.dart"
   },
-  "modesInstant": "instant",
+  "modesInstant": "Instant",
   "@modesInstant": {
     "description": "screens/modes_screen.dart"
   },
@@ -4413,7 +4413,7 @@
   "@modesVisible": {
     "description": "screens/modes_screen.dart"
   },
-  "modesHidden": "hidden",
+  "modesHidden": "Hidden",
   "@modesHidden": {
     "description": "screens/modes_screen.dart"
   },
@@ -5852,7 +5852,7 @@
       }
     }
   },
-  "roomCreateOffAnyoneWithThe": "off. Anyone with the link",
+  "roomCreateOffAnyoneWithThe": "Off. Anyone with the link",
   "@roomCreateOffAnyoneWithThe": {
     "description": "screens/room_create_sheet.dart"
   },
@@ -5865,7 +5865,7 @@
       }
     }
   },
-  "roomCreateCreating": "creating...",
+  "roomCreateCreating": "Creating...",
   "@roomCreateCreating": {
     "description": "screens/room_create_sheet.dart"
   },
@@ -5966,27 +5966,27 @@
   "@seenHonestAboutTheLast": {
     "description": "screens/seen_screen.dart"
   },
-  "seenHidden": "hidden",
+  "seenHidden": "Hidden",
   "@seenHidden": {
     "description": "screens/seen_screen.dart"
   },
-  "seenNever": "never",
+  "seenNever": "Never",
   "@seenNever": {
     "description": "screens/seen_screen.dart"
   },
-  "seenOnDevice": "on device",
+  "seenOnDevice": "On device",
   "@seenOnDevice": {
     "description": "screens/seen_screen.dart"
   },
-  "seenTiming": "timing",
+  "seenTiming": "Timing",
   "@seenTiming": {
     "description": "screens/seen_screen.dart"
   },
-  "seenYours": "yours",
+  "seenYours": "Yours",
   "@seenYours": {
     "description": "screens/seen_screen.dart"
   },
-  "seenUnaudited": "unaudited",
+  "seenUnaudited": "Unaudited",
   "@seenUnaudited": {
     "description": "screens/seen_screen.dart"
   },
@@ -6010,11 +6010,11 @@
   "@seenYourIpAddress": {
     "description": "screens/seen_screen.dart"
   },
-  "seenOurRelay": "our relay",
+  "seenOurRelay": "Our relay",
   "@seenOurRelay": {
     "description": "screens/seen_screen.dart"
   },
-  "seenEveryRelay": "every relay",
+  "seenEveryRelay": "Every relay",
   "@seenEveryRelay": {
     "description": "screens/seen_screen.dart"
   },
@@ -6030,7 +6030,7 @@
   "@seenKryfoDoesNotScan": {
     "description": "screens/seen_screen.dart"
   },
-  "seenIntroducer": "introducer",
+  "seenIntroducer": "Introducer",
   "@seenIntroducer": {
     "description": "screens/seen_screen.dart"
   },
@@ -6050,7 +6050,7 @@
   "@seenBurnerRooms": {
     "description": "screens/seen_screen.dart"
   },
-  "seenRoomKeys": "room keys",
+  "seenRoomKeys": "Room keys",
   "@seenRoomKeys": {
     "description": "screens/seen_screen.dart"
   },
@@ -6062,7 +6062,7 @@
   "@seenLinkPreviews": {
     "description": "screens/seen_screen.dart"
   },
-  "seenOverTor": "over tor",
+  "seenOverTor": "Over Tor",
   "@seenOverTor": {
     "description": "screens/seen_screen.dart"
   },
@@ -6846,7 +6846,7 @@
       }
     }
   },
-  "vouchersVouchedBy": "{count, plural, one{vouched by} other{vouched by {count}}}",
+  "vouchersVouchedBy": "{count, plural, one{Vouched by} other{Vouched by {count}}}",
   "@vouchersVouchedBy": {
     "description": "screens/vouchers_sheet.dart",
     "placeholders": {
@@ -6864,7 +6864,7 @@
   "@wallpaperJustForYouThey": {
     "description": "screens/wallpaper_sheet.dart"
   },
-  "wallpaperYourPhoto": "your photo",
+  "wallpaperYourPhoto": "Your photo",
   "@wallpaperYourPhoto": {
     "description": "screens/wallpaper_sheet.dart"
   },
@@ -7750,7 +7750,7 @@
   "@motionAnnouncingYourArrival": {
     "description": "widgets/motion.dart"
   },
-  "motionYouReAnonymous": "you're anonymous",
+  "motionYouReAnonymous": "You're anonymous",
   "@motionYouReAnonymous": {
     "description": "widgets/motion.dart"
   },
@@ -7766,7 +7766,7 @@
   "@motionBouncingThroughRelaysSo": {
     "description": "widgets/motion.dart"
   },
-  "motionTellingTheNetworkYou": "telling the network you're online, without revealing where.",
+  "motionTellingTheNetworkYou": "Telling the network you're online, without revealing where.",
   "@motionTellingTheNetworkYou": {
     "description": "widgets/motion.dart"
   },
@@ -7795,11 +7795,11 @@
       }
     }
   },
-  "motionDelivered": "delivered",
+  "motionDelivered": "Delivered",
   "@motionDelivered": {
     "description": "widgets/motion.dart"
   },
-  "motionSent": "sent",
+  "motionSent": "Sent",
   "@motionSent": {
     "description": "widgets/motion.dart"
   },
@@ -8047,7 +8047,7 @@
   "@videoBubbleVideo": {
     "description": "widgets/video_bubble.dart"
   },
-  "notificationsChannelName": "messages",
+  "notificationsChannelName": "Messages",
   "@notificationsChannelName": {
     "description": "notifications.dart"
   },
@@ -8055,15 +8055,15 @@
   "@cameraClose": {
     "description": "screens/camera_screen.dart"
   },
-  "cameraFlash": "flash",
+  "cameraFlash": "Flash",
   "@cameraFlash": {
     "description": "screens/camera_screen.dart"
   },
-  "cameraPhoto": "photo",
+  "cameraPhoto": "Photo",
   "@cameraPhoto": {
     "description": "screens/camera_screen.dart"
   },
-  "cameraVideo": "video",
+  "cameraVideo": "Video",
   "@cameraVideo": {
     "description": "screens/camera_screen.dart"
   },
@@ -8087,15 +8087,15 @@
   "@donateDone": {
     "description": "screens/donate_screen.dart"
   },
-  "donateTierSupporter": "supporter",
+  "donateTierSupporter": "Supporter",
   "@donateTierSupporter": {
     "description": "screens/donate_screen.dart"
   },
-  "donateTierPatron": "patron",
+  "donateTierPatron": "Patron",
   "@donateTierPatron": {
     "description": "screens/donate_screen.dart"
   },
-  "donateTierGuardian": "guardian",
+  "donateTierGuardian": "Guardian",
   "@donateTierGuardian": {
     "description": "screens/donate_screen.dart"
   },
@@ -8267,15 +8267,15 @@
   "@settingsAbout": {
     "description": "screens/settings_screen.dart"
   },
-  "wallpaperGradients": "gradients",
+  "wallpaperGradients": "Gradients",
   "@wallpaperGradients": {
     "description": "screens/wallpaper_sheet.dart"
   },
-  "wallpaperPatterns": "patterns",
+  "wallpaperPatterns": "Patterns",
   "@wallpaperPatterns": {
     "description": "screens/wallpaper_sheet.dart"
   },
-  "wallpaperMoods": "moods",
+  "wallpaperMoods": "Moods",
   "@wallpaperMoods": {
     "description": "screens/wallpaper_sheet.dart"
   },
@@ -8349,15 +8349,15 @@
   "@androidServiceTitle": {
     "description": "android: the title of the notification that stays while Kryfo keeps its connection open. Kryfo is lowercase on purpose."
   },
-  "androidServiceText": "your encrypted line stays open so messages arrive",
+  "androidServiceText": "Your encrypted line stays open so messages arrive",
   "@androidServiceText": {
     "description": "android: the text of that notification"
   },
-  "androidChannelName": "staying connected",
+  "androidChannelName": "Staying connected",
   "@androidChannelName": {
     "description": "android: the name of that notification's channel in the phone's settings"
   },
-  "androidChannelDescription": "keeps Kryfo connected so encrypted messages arrive while it is closed. turning this off stops delivery.",
+  "androidChannelDescription": "Keeps Kryfo connected so encrypted messages arrive while it is closed. Turning this off stops delivery.",
   "@androidChannelDescription": {
     "description": "android: the channel's description in the phone's settings"
   },

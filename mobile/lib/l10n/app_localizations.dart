@@ -126,55 +126,55 @@ abstract class AppLocalizations {
   /// atmosphere.dart
   ///
   /// In en, this message translates to:
-  /// **'none'**
+  /// **'None'**
   String get atmosphereNone;
 
   /// atmosphere.dart
   ///
   /// In en, this message translates to:
-  /// **'ember'**
+  /// **'Ember'**
   String get atmosphereEmber;
 
   /// atmosphere.dart
   ///
   /// In en, this message translates to:
-  /// **'dusk'**
+  /// **'Dusk'**
   String get atmosphereDusk;
 
   /// atmosphere.dart
   ///
   /// In en, this message translates to:
-  /// **'moss'**
+  /// **'Moss'**
   String get atmosphereMoss;
 
   /// atmosphere.dart
   ///
   /// In en, this message translates to:
-  /// **'rose'**
+  /// **'Rose'**
   String get atmosphereRose;
 
   /// atmosphere.dart
   ///
   /// In en, this message translates to:
-  /// **'dots'**
+  /// **'Dots'**
   String get atmosphereDots;
 
   /// atmosphere.dart
   ///
   /// In en, this message translates to:
-  /// **'grid'**
+  /// **'Grid'**
   String get atmosphereGrid;
 
   /// atmosphere.dart
   ///
   /// In en, this message translates to:
-  /// **'waves'**
+  /// **'Waves'**
   String get atmosphereWaves;
 
   /// atmosphere.dart
   ///
   /// In en, this message translates to:
-  /// **'rain'**
+  /// **'Rain'**
   String get atmosphereRain;
 
   /// atmosphere.dart
@@ -192,19 +192,19 @@ abstract class AppLocalizations {
   /// atmosphere.dart
   ///
   /// In en, this message translates to:
-  /// **'snow'**
+  /// **'Snow'**
   String get atmosphereSnow;
 
   /// atmosphere.dart
   ///
   /// In en, this message translates to:
-  /// **'desert'**
+  /// **'Desert'**
   String get atmosphereDesert;
 
   /// atmosphere.dart
   ///
   /// In en, this message translates to:
-  /// **'paper'**
+  /// **'Paper'**
   String get atmospherePaper;
 
   /// backup.dart
@@ -258,7 +258,7 @@ abstract class AppLocalizations {
   /// contact_status.dart
   ///
   /// In en, this message translates to:
-  /// **'blocked'**
+  /// **'Blocked'**
   String get contactStatusBlocked;
 
   /// contact_status.dart
@@ -450,7 +450,7 @@ abstract class AppLocalizations {
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **'invalid uri'**
+  /// **'Invalid uri'**
   String get appInvalidUri;
 
   /// main.dart
@@ -558,7 +558,7 @@ abstract class AppLocalizations {
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **'group'**
+  /// **'Group'**
   String get appGroup2;
 
   /// main.dart
@@ -570,7 +570,7 @@ abstract class AppLocalizations {
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **'photo'**
+  /// **'Photo'**
   String get appPhoto;
 
   /// main.dart
@@ -600,7 +600,7 @@ abstract class AppLocalizations {
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **'starting Tor'**
+  /// **'Starting Tor'**
   String get appStartingTor;
 
   /// main.dart
@@ -612,13 +612,13 @@ abstract class AppLocalizations {
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **'voice message'**
+  /// **'Voice message'**
   String get appVoiceMessage2;
 
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **'you: {body}'**
+  /// **'You: {body}'**
   String appYou(Object body);
 
   /// main.dart
@@ -636,7 +636,7 @@ abstract class AppLocalizations {
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **'could not make a room key'**
+  /// **'Could not make a room key'**
   String get appCouldNotMakeA;
 
   /// main.dart
@@ -660,7 +660,7 @@ abstract class AppLocalizations {
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **'booting...'**
+  /// **'Booting...'**
   String get appBooting;
 
   /// main.dart
@@ -738,7 +738,7 @@ abstract class AppLocalizations {
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **'scan or import a peer first'**
+  /// **'Scan or import a peer first'**
   String get appScanOrImportA;
 
   /// main.dart
@@ -792,7 +792,7 @@ abstract class AppLocalizations {
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **'- or paste -'**
+  /// **'- Or paste -'**
   String get appOrPaste;
 
   /// main.dart, media_progress.dart, screens/chat_screen.dart, screens/group_chat_screen.dart, screens/settings_screen.dart
@@ -834,7 +834,7 @@ abstract class AppLocalizations {
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **'listening'**
+  /// **'Listening'**
   String get appListening;
 
   /// main.dart
@@ -852,7 +852,7 @@ abstract class AppLocalizations {
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **'peer:'**
+  /// **'Peer:'**
   String get appPeer;
 
   /// main.dart
@@ -870,7 +870,7 @@ abstract class AppLocalizations {
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **'status: {status}'**
+  /// **'Status: {status}'**
   String appStatus(Object status);
 
   /// main.dart
@@ -978,7 +978,7 @@ abstract class AppLocalizations {
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **'offline'**
+  /// **'Offline'**
   String get appOffline;
 
   /// main.dart
@@ -1002,7 +1002,7 @@ abstract class AppLocalizations {
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **'connecting'**
+  /// **'Connecting'**
   String get appConnecting2;
 
   /// media_progress.dart. the placeholder is a percentage, already written the language's way (42%, 42 %, %42)
@@ -1158,13 +1158,13 @@ abstract class AppLocalizations {
   /// notifications.dart
   ///
   /// In en, this message translates to:
-  /// **'new message'**
+  /// **'New message'**
   String get notificationsNewMessage;
 
   /// notifications.dart
   ///
   /// In en, this message translates to:
-  /// **'new encrypted messages from your contacts'**
+  /// **'New encrypted messages from your contacts'**
   String get notificationsNewEncryptedMessagesFromYourContacts;
 
   /// notifications.dart
@@ -1176,7 +1176,7 @@ abstract class AppLocalizations {
   /// notifications.dart
   ///
   /// In en, this message translates to:
-  /// **'encrypted'**
+  /// **'Encrypted'**
   String get notificationsEncrypted;
 
   /// rooms.dart
@@ -1248,7 +1248,7 @@ abstract class AppLocalizations {
   /// rooms.dart
   ///
   /// In en, this message translates to:
-  /// **'expired'**
+  /// **'Expired'**
   String get roomsExpired;
 
   /// rooms.dart
@@ -1290,7 +1290,7 @@ abstract class AppLocalizations {
   /// scam_shield.dart
   ///
   /// In en, this message translates to:
-  /// **'same face as your contact {shown}'**
+  /// **'Same face as your contact {shown}'**
   String scamShieldSameFaceAsYour(Object shown);
 
   /// scam_shield.dart
@@ -1350,67 +1350,67 @@ abstract class AppLocalizations {
   /// screens/archived_screen.dart: the number of archived chats, spelled out
   ///
   /// In en, this message translates to:
-  /// **'no'**
+  /// **'No'**
   String get archivedCount0;
 
   /// screens/archived_screen.dart: the number of archived chats, spelled out
   ///
   /// In en, this message translates to:
-  /// **'one'**
+  /// **'One'**
   String get archivedCount1;
 
   /// screens/archived_screen.dart: the number of archived chats, spelled out
   ///
   /// In en, this message translates to:
-  /// **'two'**
+  /// **'Two'**
   String get archivedCount2;
 
   /// screens/archived_screen.dart: the number of archived chats, spelled out
   ///
   /// In en, this message translates to:
-  /// **'three'**
+  /// **'Three'**
   String get archivedCount3;
 
   /// screens/archived_screen.dart: the number of archived chats, spelled out
   ///
   /// In en, this message translates to:
-  /// **'four'**
+  /// **'Four'**
   String get archivedCount4;
 
   /// screens/archived_screen.dart: the number of archived chats, spelled out
   ///
   /// In en, this message translates to:
-  /// **'five'**
+  /// **'Five'**
   String get archivedCount5;
 
   /// screens/archived_screen.dart: the number of archived chats, spelled out
   ///
   /// In en, this message translates to:
-  /// **'six'**
+  /// **'Six'**
   String get archivedCount6;
 
   /// screens/archived_screen.dart: the number of archived chats, spelled out
   ///
   /// In en, this message translates to:
-  /// **'seven'**
+  /// **'Seven'**
   String get archivedCount7;
 
   /// screens/archived_screen.dart: the number of archived chats, spelled out
   ///
   /// In en, this message translates to:
-  /// **'eight'**
+  /// **'Eight'**
   String get archivedCount8;
 
   /// screens/archived_screen.dart: the number of archived chats, spelled out
   ///
   /// In en, this message translates to:
-  /// **'nine'**
+  /// **'Nine'**
   String get archivedCount9;
 
   /// screens/archived_screen.dart: the number of archived chats, spelled out
   ///
   /// In en, this message translates to:
-  /// **'ten'**
+  /// **'Ten'**
   String get archivedCount10;
 
   /// screens/archived_screen.dart: under the count when exactly one chat is archived
@@ -1452,13 +1452,13 @@ abstract class AppLocalizations {
   /// screens/avatar_picker_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'back to your initial'**
+  /// **'Back to your initial'**
   String get avatarPickerBackToYourInitial;
 
   /// screens/avatar_picker_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'that one is yours'**
+  /// **'That one is yours'**
   String get avatarPickerThatOneIsYours;
 
   /// screens/avatar_picker_screen.dart
@@ -1938,7 +1938,7 @@ abstract class AppLocalizations {
   /// screens/camera_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'switch camera'**
+  /// **'Switch camera'**
   String get cameraSwitchCamera;
 
   /// screens/camera_screen.dart
@@ -2004,13 +2004,13 @@ abstract class AppLocalizations {
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'you are offline · this sends itself when you reconnect'**
+  /// **'You are offline · this sends itself when you reconnect'**
   String get chatYouAreOfflineThis;
 
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'still connecting to tor · it\'ll go out on its own'**
+  /// **'Still connecting to Tor · it\'ll go out on its own'**
   String get chatStillConnectingToTor;
 
   /// screens/chat_screen.dart
@@ -2406,25 +2406,25 @@ abstract class AppLocalizations {
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'you'**
+  /// **'You'**
   String get chatYou2;
 
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'them'**
+  /// **'Them'**
   String get chatThem;
 
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'voice message'**
+  /// **'Voice message'**
   String get chatVoiceMessage;
 
   /// screens/chat_screen.dart: in the quote above a reply, when the message replied to is a photo with no caption
   ///
   /// In en, this message translates to:
-  /// **'photo'**
+  /// **'Photo'**
   String get chatQuotedPhoto;
 
   /// screens/chat_screen.dart
@@ -2586,13 +2586,13 @@ abstract class AppLocalizations {
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'today'**
+  /// **'Today'**
   String get chatToday;
 
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'yesterday'**
+  /// **'Yesterday'**
   String get chatYesterday;
 
   /// screens/chat_screen.dart
@@ -3630,7 +3630,7 @@ abstract class AppLocalizations {
   /// screens/donate_screen.dart. tier is the supporter tier
   ///
   /// In en, this message translates to:
-  /// **'{tier, select, supporter{verified on-chain - you\'re a supporter now. No one can take that off you.} patron{verified on-chain - you\'re a patron now. No one can take that off you.} guardian{verified on-chain - you\'re a guardian now. No one can take that off you.} other{verified on-chain - you\'re a supporter now. No one can take that off you.}}'**
+  /// **'{tier, select, supporter{Verified on-chain - you\'re a supporter now. No one can take that off you.} patron{Verified on-chain - you\'re a patron now. No one can take that off you.} guardian{Verified on-chain - you\'re a guardian now. No one can take that off you.} other{Verified on-chain - you\'re a supporter now. No one can take that off you.}}'**
   String donateVerifiedOnChainYou(String tier);
 
   /// screens/donate_screen.dart
@@ -3738,19 +3738,19 @@ abstract class AppLocalizations {
   /// screens/group_chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'you'**
+  /// **'You'**
   String get groupChatYou;
 
   /// screens/group_chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'voice message'**
+  /// **'Voice message'**
   String get groupChatVoiceMessage;
 
   /// screens/group_chat_screen.dart: in the quote above a reply, when the message replied to is a photo with no caption
   ///
   /// In en, this message translates to:
-  /// **'photo'**
+  /// **'Photo'**
   String get groupChatQuotedPhoto;
 
   /// screens/group_chat_screen.dart
@@ -3768,7 +3768,7 @@ abstract class AppLocalizations {
   /// screens/group_chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'couldn\'t reach it · sending without'**
+  /// **'Couldn\'t reach it · sending without'**
   String get groupChatCouldnTReachIt;
 
   /// screens/group_chat_screen.dart
@@ -3780,7 +3780,7 @@ abstract class AppLocalizations {
   /// screens/group_chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'couldn\'t fetch it · sending without'**
+  /// **'Couldn\'t fetch it · sending without'**
   String get groupChatCouldnTFetchIt;
 
   /// screens/group_chat_screen.dart
@@ -3894,13 +3894,13 @@ abstract class AppLocalizations {
   /// screens/group_chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'today'**
+  /// **'Today'**
   String get groupChatToday;
 
   /// screens/group_chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'yesterday'**
+  /// **'Yesterday'**
   String get groupChatYesterday;
 
   /// screens/group_chat_screen.dart
@@ -4134,7 +4134,7 @@ abstract class AppLocalizations {
   /// screens/group_chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'! tap to retry'**
+  /// **'! Tap to retry'**
   String get groupChatTapToRetry;
 
   /// screens/group_chat_screen.dart
@@ -4170,7 +4170,7 @@ abstract class AppLocalizations {
   /// screens/group_info_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'group'**
+  /// **'Group'**
   String get groupInfoGroup;
 
   /// screens/group_info_screen.dart
@@ -4872,7 +4872,7 @@ abstract class AppLocalizations {
   /// screens/home_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'blocked'**
+  /// **'Blocked'**
   String get homeBlocked;
 
   /// screens/home_screen.dart
@@ -4884,7 +4884,7 @@ abstract class AppLocalizations {
   /// screens/home_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'now'**
+  /// **'Now'**
   String get homeNow;
 
   /// screens/home_screen.dart
@@ -4902,7 +4902,7 @@ abstract class AppLocalizations {
   /// screens/home_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'yesterday'**
+  /// **'Yesterday'**
   String get homeYesterday;
 
   /// screens/home_screen.dart
@@ -5436,7 +5436,7 @@ abstract class AppLocalizations {
   /// screens/modes_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'slower'**
+  /// **'Slower'**
   String get modesSlower;
 
   /// screens/modes_screen.dart
@@ -5454,7 +5454,7 @@ abstract class AppLocalizations {
   /// screens/modes_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'quick'**
+  /// **'Quick'**
   String get modesQuick;
 
   /// screens/modes_screen.dart
@@ -5478,7 +5478,7 @@ abstract class AppLocalizations {
   /// screens/modes_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'instant'**
+  /// **'Instant'**
   String get modesInstant;
 
   /// screens/modes_screen.dart
@@ -5544,7 +5544,7 @@ abstract class AppLocalizations {
   /// screens/modes_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'hidden'**
+  /// **'Hidden'**
   String get modesHidden;
 
   /// screens/modes_screen.dart
@@ -7500,7 +7500,7 @@ abstract class AppLocalizations {
   /// screens/room_create_sheet.dart
   ///
   /// In en, this message translates to:
-  /// **'off. Anyone with the link'**
+  /// **'Off. Anyone with the link'**
   String get roomCreateOffAnyoneWithThe;
 
   /// screens/room_create_sheet.dart
@@ -7512,7 +7512,7 @@ abstract class AppLocalizations {
   /// screens/room_create_sheet.dart
   ///
   /// In en, this message translates to:
-  /// **'creating...'**
+  /// **'Creating...'**
   String get roomCreateCreating;
 
   /// screens/room_create_sheet.dart
@@ -7656,37 +7656,37 @@ abstract class AppLocalizations {
   /// screens/seen_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'hidden'**
+  /// **'Hidden'**
   String get seenHidden;
 
   /// screens/seen_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'never'**
+  /// **'Never'**
   String get seenNever;
 
   /// screens/seen_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'on device'**
+  /// **'On device'**
   String get seenOnDevice;
 
   /// screens/seen_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'timing'**
+  /// **'Timing'**
   String get seenTiming;
 
   /// screens/seen_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'yours'**
+  /// **'Yours'**
   String get seenYours;
 
   /// screens/seen_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'unaudited'**
+  /// **'Unaudited'**
   String get seenUnaudited;
 
   /// screens/seen_screen.dart
@@ -7722,13 +7722,13 @@ abstract class AppLocalizations {
   /// screens/seen_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'our relay'**
+  /// **'Our relay'**
   String get seenOurRelay;
 
   /// screens/seen_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'every relay'**
+  /// **'Every relay'**
   String get seenEveryRelay;
 
   /// screens/seen_screen.dart
@@ -7752,7 +7752,7 @@ abstract class AppLocalizations {
   /// screens/seen_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'introducer'**
+  /// **'Introducer'**
   String get seenIntroducer;
 
   /// screens/seen_screen.dart
@@ -7782,7 +7782,7 @@ abstract class AppLocalizations {
   /// screens/seen_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'room keys'**
+  /// **'Room keys'**
   String get seenRoomKeys;
 
   /// screens/seen_screen.dart
@@ -7800,7 +7800,7 @@ abstract class AppLocalizations {
   /// screens/seen_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'over tor'**
+  /// **'Over Tor'**
   String get seenOverTor;
 
   /// screens/seen_screen.dart
@@ -8772,7 +8772,7 @@ abstract class AppLocalizations {
   /// screens/vouchers_sheet.dart
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, one{vouched by} other{vouched by {count}}}'**
+  /// **'{count, plural, one{Vouched by} other{Vouched by {count}}}'**
   String vouchersVouchedBy(int count);
 
   /// screens/wallpaper_sheet.dart
@@ -8790,7 +8790,7 @@ abstract class AppLocalizations {
   /// screens/wallpaper_sheet.dart
   ///
   /// In en, this message translates to:
-  /// **'your photo'**
+  /// **'Your photo'**
   String get wallpaperYourPhoto;
 
   /// screens/wallpaper_sheet.dart
@@ -9780,7 +9780,7 @@ abstract class AppLocalizations {
   /// widgets/motion.dart
   ///
   /// In en, this message translates to:
-  /// **'you\'re anonymous'**
+  /// **'You\'re anonymous'**
   String get motionYouReAnonymous;
 
   /// widgets/motion.dart
@@ -9804,7 +9804,7 @@ abstract class AppLocalizations {
   /// widgets/motion.dart
   ///
   /// In en, this message translates to:
-  /// **'telling the network you\'re online, without revealing where.'**
+  /// **'Telling the network you\'re online, without revealing where.'**
   String get motionTellingTheNetworkYou;
 
   /// widgets/motion.dart
@@ -9840,13 +9840,13 @@ abstract class AppLocalizations {
   /// widgets/motion.dart
   ///
   /// In en, this message translates to:
-  /// **'delivered'**
+  /// **'Delivered'**
   String get motionDelivered;
 
   /// widgets/motion.dart
   ///
   /// In en, this message translates to:
-  /// **'sent'**
+  /// **'Sent'**
   String get motionSent;
 
   /// widgets/motion.dart
@@ -10116,7 +10116,7 @@ abstract class AppLocalizations {
   /// notifications.dart
   ///
   /// In en, this message translates to:
-  /// **'messages'**
+  /// **'Messages'**
   String get notificationsChannelName;
 
   /// screens/camera_screen.dart
@@ -10128,19 +10128,19 @@ abstract class AppLocalizations {
   /// screens/camera_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'flash'**
+  /// **'Flash'**
   String get cameraFlash;
 
   /// screens/camera_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'photo'**
+  /// **'Photo'**
   String get cameraPhoto;
 
   /// screens/camera_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'video'**
+  /// **'Video'**
   String get cameraVideo;
 
   /// screens/camera_screen.dart
@@ -10176,19 +10176,19 @@ abstract class AppLocalizations {
   /// screens/donate_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'supporter'**
+  /// **'Supporter'**
   String get donateTierSupporter;
 
   /// screens/donate_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'patron'**
+  /// **'Patron'**
   String get donateTierPatron;
 
   /// screens/donate_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'guardian'**
+  /// **'Guardian'**
   String get donateTierGuardian;
 
   /// screens/chat_screen.dart
@@ -10446,19 +10446,19 @@ abstract class AppLocalizations {
   /// screens/wallpaper_sheet.dart
   ///
   /// In en, this message translates to:
-  /// **'gradients'**
+  /// **'Gradients'**
   String get wallpaperGradients;
 
   /// screens/wallpaper_sheet.dart
   ///
   /// In en, this message translates to:
-  /// **'patterns'**
+  /// **'Patterns'**
   String get wallpaperPatterns;
 
   /// screens/wallpaper_sheet.dart
   ///
   /// In en, this message translates to:
-  /// **'moods'**
+  /// **'Moods'**
   String get wallpaperMoods;
 
   /// widgets/confirm_sheet.dart
@@ -10530,19 +10530,19 @@ abstract class AppLocalizations {
   /// android: the text of that notification
   ///
   /// In en, this message translates to:
-  /// **'your encrypted line stays open so messages arrive'**
+  /// **'Your encrypted line stays open so messages arrive'**
   String get androidServiceText;
 
   /// android: the name of that notification's channel in the phone's settings
   ///
   /// In en, this message translates to:
-  /// **'staying connected'**
+  /// **'Staying connected'**
   String get androidChannelName;
 
   /// android: the channel's description in the phone's settings
   ///
   /// In en, this message translates to:
-  /// **'keeps Kryfo connected so encrypted messages arrive while it is closed. turning this off stops delivery.'**
+  /// **'Keeps Kryfo connected so encrypted messages arrive while it is closed. Turning this off stops delivery.'**
   String get androidChannelDescription;
 
   /// widgets/video_viewer.dart: the play button on a video, and what a screen reader says for it

@@ -2,7 +2,7 @@
 <!-- written by tool/arb_android.py from lib/l10n/app_it.arb -->
 <resources>
     <string name="service_title">Kryfo è attivo</string>
-    <string name="service_text">la tua linea cifrata resta aperta perché arrivino i messaggi</string>
-    <string name="channel_name">connessione attiva</string>
-    <string name="channel_description">tiene Kryfo connesso perché i messaggi cifrati arrivino mentre è chiuso. se lo disattivi, la consegna si ferma.</string>
+    <string name="service_text">La tua linea cifrata resta aperta perché arrivino i messaggi</string>
+    <string name="channel_name">Connessione attiva</string>
+    <string name="channel_description">Tiene Kryfo connesso perché i messaggi cifrati arrivino mentre è chiuso. Se lo disattivi, la consegna si ferma.</string>
 </resources>
