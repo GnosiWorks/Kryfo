@@ -7,10 +7,12 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('migrated columns exist in every CREATE TABLE', () {
-    // the router keeps its own tables, created the same way
+    // the router and the developer chat keep their own tables, created the
+    // same way
     final src = [
       'lib/main.dart',
       'lib/router.dart',
+      'lib/devchat/dev_chat.dart',
     ].map((f) => File(f).readAsStringSync()).join('\n');
     final alters = <(String, String)>[];
     for (final m in RegExp(
