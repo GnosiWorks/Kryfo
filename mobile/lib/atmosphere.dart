@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the atmosphere behind a conversation. local only, never sent. every one
 // keeps message text at full contrast.
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
@@ -289,56 +290,107 @@ class _GrainPainter extends CustomPainter {
 class AtmosphereWash extends StatefulWidget {
   final Atmo atmo;
   const AtmosphereWash(this.atmo, {super.key});
+
+  // steps the drifts have drawn, for the tests
+  @visibleForTesting
+  static int frames = 0;
+
   @override
   State<AtmosphereWash> createState() => _AtmosphereWashState();
 }
 
+// steps a second a drift needs to read as smooth: rain falls fastest, snow
+// and the warm glow barely move. every one divides 60 and 120 hz evenly
+int driftFps(AtmoDrift d) => switch (d) {
+  AtmoDrift.rain => 30,
+  AtmoDrift.snow || AtmoDrift.glow => 20,
+  AtmoDrift.none => 0,
+};
+
+// the longest step taken at once: a longer gap was time off screen, and
+// the drift goes on from where it was instead of jumping
+const _maxStep = 0.1;
+// how far ahead of a step the ticker is woken, so the step lands on the
+// frame it is due on and not one later
+const _wakeEarly = Duration(milliseconds: 8);
+
 class _AtmosphereWashState extends State<AtmosphereWash>
     with WidgetsBindingObserver, SingleTickerProviderStateMixin {
   final _phase = ValueNotifier<double>(0);
-  // on the frame clock, since a coarse timer stutters on the snow
+  // steps on the frame clock, since a coarse timer stutters on the snow.
+  // between steps no frame is asked for: a timer wakes it for the next one.
+  // a covering page and the lock pane mute it, and then nothing wakes
   Ticker? _tick;
-  Duration _last = Duration.zero;
+  Timer? _rest;
+  Duration? _last;
+  bool _front = true;
+  // reduced motion: the drift stands still where it is
+  bool _still = false;
+
+  AtmoDrift get _drift => moodOf(widget.atmo)?.drift ?? AtmoDrift.none;
+  bool get _runs => _drift != AtmoDrift.none && _front && !_still;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _start();
+    final s = WidgetsBinding.instance.lifecycleState;
+    _front = s == null || s == AppLifecycleState.resumed;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _still = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    _sync();
   }
 
   @override
   void didUpdateWidget(AtmosphereWash old) {
     super.didUpdateWidget(old);
-    if (old.atmo != widget.atmo) _start();
-  }
-
-  void _start() {
-    _tick?.dispose();
-    _tick = null;
-    final mood = moodOf(widget.atmo);
-    if (mood == null || mood.drift == AtmoDrift.none) return;
-    _last = Duration.zero;
-    _tick = createTicker((elapsed) {
-      final dt = (elapsed - _last).inMicroseconds / 1e6;
-      _last = elapsed;
-      _phase.value = (_phase.value + dt / 60) % 1.0;
-    })..start();
+    if (old.atmo != widget.atmo) _sync();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      _start();
-    } else {
-      _tick?.dispose();
-      _tick = null;
+    _front = state == AppLifecycleState.resumed;
+    _sync();
+  }
+
+  void _sync() {
+    final t = _tick;
+    if (!_runs) {
+      _rest?.cancel();
+      _rest = null;
+      if (t != null && t.isActive) t.stop();
+      return;
     }
+    if (_rest != null || (t != null && t.isActive)) return;
+    (_tick ??= createTicker(_step)).start();
+  }
+
+  void _step(Duration elapsed) {
+    final now = SchedulerBinding.instance.currentFrameTimeStamp;
+    final last = _last;
+    _last = now;
+    // the first step counts from the frame it was started in
+    final gap = last == null ? elapsed : now - last;
+    final dt = math.min(gap.inMicroseconds / 1e6, _maxStep);
+    _phase.value = (_phase.value + dt / 60) % 1.0;
+    AtmosphereWash.frames++;
+    _tick!.stop();
+    final fps = driftFps(_drift);
+    if (fps == 0) return;
+    _rest = Timer(Duration(microseconds: 1000000 ~/ fps) - _wakeEarly, () {
+      _rest = null;
+      if (mounted && _runs) _tick!.start();
+    });
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _rest?.cancel();
     _tick?.dispose();
     _phase.dispose();
     super.dispose();
