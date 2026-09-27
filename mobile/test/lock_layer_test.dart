@@ -71,6 +71,9 @@ class _App {
   int padTaps = 0;
   int keys = 0;
   bool quiet = false;
+  // the app's own lock-up: a vault session shuts here
+  int ups = 0;
+  VoidCallback? onUp;
   final scroll = ScrollController();
   final homeFocus = FocusNode();
   late BuildContext home;
@@ -92,6 +95,10 @@ class _App {
         guard: guard,
         quiet: () => quiet,
         pad: (_) => _Pad(this),
+        lockingUp: () {
+          ups++;
+          onUp?.call();
+        },
       ),
       home: Builder(
         builder: (c) {
@@ -203,9 +210,7 @@ void main() {
     haloWhenOpen = null;
   });
 
-  testWidgets('the locked screen shows only the pad', (
-    tester,
-  ) async {
+  testWidgets('the locked screen shows only the pad', (tester) async {
     final a = _App(tester);
     // the pad drawn by itself, in a bare app: what the locked screen must be
     await tester.pumpWidget(
@@ -274,9 +279,7 @@ void main() {
     await same('a session switch');
   });
 
-  testWidgets('input never reaches the app while locked', (
-    tester,
-  ) async {
+  testWidgets('input never reaches the app while locked', (tester) async {
     final a = _App(tester);
     await a.pump();
     // the app takes all three while open
@@ -317,9 +320,7 @@ void main() {
     expect(a.scroll.offset, greaterThan(0));
   });
 
-  testWidgets('a held finger lets go on lock', (
-    tester,
-  ) async {
+  testWidgets('a held finger lets go on lock', (tester) async {
     final a = _App(tester);
     await a.pump();
     final g = await tester.startGesture(const Offset(200, 400));
@@ -330,9 +331,7 @@ void main() {
     expect(a.taps, 0);
   });
 
-  testWidgets('the screen reader sees only the lock', (
-    tester,
-  ) async {
+  testWidgets('the screen reader sees only the lock', (tester) async {
     final handle = tester.ensureSemantics();
     final a = _App(tester);
     await a.pump();
@@ -392,9 +391,7 @@ void main() {
     expect(told.last, isFalse);
   });
 
-  testWidgets('locking mid-fade brings a fresh pad', (
-    tester,
-  ) async {
+  testWidgets('locking mid-fade brings a fresh pad', (tester) async {
     final a = _App(tester);
     await a.pump();
     await a.lockUp();
@@ -422,9 +419,7 @@ void main() {
     expect(find.text('secret home'), findsOneWidget);
   });
 
-  testWidgets('only ink shows before the lock is read', (
-    tester,
-  ) async {
+  testWidgets('only ink shows before the lock is read', (tester) async {
     final a = _App(tester);
     a.lock.loaded = false;
     a.lock.locked = true;
@@ -437,9 +432,7 @@ void main() {
     expect(a.pads, 1);
   });
 
-  testWidgets('a toast from before the lock is dropped', (
-    tester,
-  ) async {
+  testWidgets('a toast from before the lock is dropped', (tester) async {
     final a = _App(tester);
     await a.pump();
     showHaloToast(a.home, 'before');
@@ -464,9 +457,7 @@ void main() {
     await tester.pumpAndSettle(const Duration(seconds: 5));
   });
 
-  testWidgets('media outside the tree stops on lock', (
-    tester,
-  ) async {
+  testWidgets('media outside the tree stops on lock', (tester) async {
     final a = _App(tester);
     await a.pump();
     var playing = true;
@@ -501,9 +492,7 @@ void main() {
     expect(find.text('secret home'), findsNothing);
   });
 
-  testWidgets('a decoy unlock drops what waited', (
-    tester,
-  ) async {
+  testWidgets('a decoy unlock drops what waited', (tester) async {
     final a = _App(tester);
     await a.pump();
     await a.lockUp();
@@ -518,6 +507,64 @@ void main() {
     await a.guard.afterUnlock(() async => opened = true, key: 'chat:y');
     await a.unlock();
     expect(opened, isTrue);
+  });
+
+  testWidgets('a vault unlock lets what waited happen', (tester) async {
+    final a = _App(tester);
+    await a.pump();
+    await a.lockUp();
+    var opened = false;
+    await a.guard.afterUnlock(() async => opened = true, key: 'chat:h');
+    // the vault session is the everyday identity's: not quiet
+    a.quiet = false;
+    await a.unlock();
+    expect(opened, isTrue);
+  });
+
+  testWidgets('the lock going up tells the app once', (tester) async {
+    final a = _App(tester);
+    await a.pump();
+    // shutting the vault tells the lock about it while it goes up
+    a.onUp = () => a.lock.set();
+    await a.lockUp();
+    expect(a.ups, 1);
+    expect(a.pads, 1);
+    expect(find.byType(_Pad), findsOneWidget);
+    await a.unlock();
+    expect(a.ups, 1);
+    a.onUp = null;
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    expect(a.ups, 2);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    expect(find.byType(_Pad), findsOneWidget);
+  });
+
+  testWidgets('left while the pin was checked, it locks again', (tester) async {
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    final a = _App(tester);
+    await a.pump();
+    await a.lockUp();
+    expect(a.ups, 1);
+    var opened = false;
+    await a.guard.afterUnlock(() async => opened = true, key: 'chat:h');
+    // the app goes while the check runs: already locked, nothing changes
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    // then the check lets it in, with nobody in front
+    a.lock.set(locked: false);
+    await tester.pump();
+    expect(a.lock.locked, isTrue);
+    expect(a.ups, 2, reason: 'what the unlock opened is shut again');
+    expect(opened, isFalse);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    expect(find.byType(_Pad), findsOneWidget);
+    expect(find.text('secret home'), findsNothing);
+    // back in front, the next unlock is an unlock
+    await a.unlock();
+    expect(opened, isTrue);
+    expect(find.text('secret home'), findsOneWidget);
   });
 
   testWidgets('a session switch keeps the pad, drops screens', (tester) async {

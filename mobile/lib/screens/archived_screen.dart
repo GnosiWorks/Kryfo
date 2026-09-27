@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme.dart';
 import '../widgets/kryfo_avatar.dart';
 import '../main.dart' show appState;
+import '../widgets/hidden_mark.dart';
 import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
@@ -232,15 +233,22 @@ class _ArchivedRowState extends State<_ArchivedRow> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    c.nickname ?? c.haloId,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: HaloType.sans(
-                      size: 15,
-                      weight: FontWeight.w500,
-                      color: _awake ? HaloColors.text : HaloColors.text2,
-                    ),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          c.nickname ?? c.haloId,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: HaloType.sans(
+                            size: 15,
+                            weight: FontWeight.w500,
+                            color: _awake ? HaloColors.text : HaloColors.text2,
+                          ),
+                        ),
+                      ),
+                      HiddenMark(on: c.hidden),
+                    ],
                   ),
                   if (c.preview != null && c.preview!.isNotEmpty) ...[
                     const SizedBox(height: 2),

@@ -7099,6 +7099,21 @@ class AppLocalizationsVi extends AppLocalizations {
       'Mã PIN trò chuyện ẩn mở Kryfo cùng trò chuyện ẩn của bạn; mã PIN và vân tay của bạn mở mà không có chúng. Thiết lập lại trò chuyện ẩn sẽ thay thế những trò chuyện ẩn mà điện thoại này đang có. Quên mã PIN trò chuyện ẩn là chúng mất vĩnh viễn.';
 
   @override
+  String get chatHide => 'Ẩn trò chuyện';
+
+  @override
+  String get groupHide => 'Ẩn nhóm';
+
+  @override
+  String get chatHidden => 'Đã ẩn';
+
+  @override
+  String get chatHiddenToast => 'Đã ẩn khỏi danh sách trò chuyện';
+
+  @override
+  String get chatShowInList => 'Hiện trong danh sách trò chuyện';
+
+  @override
   String get stickerOpen => 'Nhãn dán';
 
   @override

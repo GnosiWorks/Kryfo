@@ -7242,6 +7242,21 @@ class AppLocalizationsAr extends AppLocalizations {
       'رمز PIN للمحادثات المخفية يفتح Kryfo مع محادثاتك المخفية، ورمز PIN الخاص بك وبصمتك يفتحانه من دونها. إعداد المحادثات المخفية من جديد يستبدل ما على هذا الهاتف منها. وإن نسيت رمز PIN للمحادثات المخفية، تضيع إلى الأبد.';
 
   @override
+  String get chatHide => 'إخفاء المحادثة';
+
+  @override
+  String get groupHide => 'إخفاء المجموعة';
+
+  @override
+  String get chatHidden => 'مخفية';
+
+  @override
+  String get chatHiddenToast => 'أُخفيت من قائمة محادثاتك';
+
+  @override
+  String get chatShowInList => 'إظهار في قائمة المحادثات';
+
+  @override
   String get stickerOpen => 'الملصقات';
 
   @override

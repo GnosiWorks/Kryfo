@@ -11439,6 +11439,36 @@ abstract class AppLocalizations {
   /// **'Your hidden chats PIN opens Kryfo with your hidden chats, your PIN and your fingerprint without them. Setting hidden chats up again replaces the ones this phone holds. Forget the hidden chats PIN and they are gone for good.'**
   String get howVault;
 
+  /// chat menu, home long-press menu and contact page, only while hidden chats are open: moves the chat out of the everyday chat list
+  ///
+  /// In en, this message translates to:
+  /// **'Hide chat'**
+  String get chatHide;
+
+  /// group info, only while hidden chats are open: moves the group out of the everyday chat list
+  ///
+  /// In en, this message translates to:
+  /// **'Hide group'**
+  String get groupHide;
+
+  /// screen reader label of the small eye-off mark on a hidden chat's row, only while hidden chats are open
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden'**
+  String get chatHidden;
+
+  /// toast after a chat or group was hidden from inside the hidden chats
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden from your chat list'**
+  String get chatHiddenToast;
+
+  /// chat menu, contact page and group info, only while hidden chats are open: brings a hidden chat back to the everyday chat list
+  ///
+  /// In en, this message translates to:
+  /// **'Show in chat list'**
+  String get chatShowInList;
+
   /// screens/chat_screen.dart, screens/group_chat_screen.dart, stickers/sticker_sheet.dart
   ///
   /// In en, this message translates to:

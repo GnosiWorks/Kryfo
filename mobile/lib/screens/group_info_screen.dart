@@ -3,6 +3,7 @@
 
 import 'dart:io';
 import 'package:flutter/material.dart';
+import '../lock_state.dart' show lockState;
 import '../main.dart' show appState, session;
 import '../atmosphere.dart' show Atmo, atmoFromName;
 import '../theme.dart';
@@ -16,6 +17,7 @@ import 'wallpaper_sheet.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/halo_sheet.dart';
+import '../widgets/hidden_mark.dart';
 import '../widgets/confirm_sheet.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
@@ -151,6 +153,18 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
       if (!mounted) return;
       showHaloToast(context, l10n.groupInfoConversationCleared);
     }
+  }
+
+  // its rows move, so the group is left as a left one is
+  Future<void> _moveHidden() async {
+    final moved = await moveHiddenChat(
+      context,
+      widget.groupId,
+      group: true,
+      hide: !session.isHidden(widget.groupId),
+    );
+    if (!moved || !mounted) return;
+    Navigator.of(context).popUntil((r) => r.isFirst);
   }
 
   Future<void> _confirmLeave() async {
@@ -490,6 +504,33 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                 ),
               ),
             ),
+            // hidden chats open: out of the everyday list, or back in it
+            if (lockState.inVault && !_isRoom)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: GestureDetector(
+                  onTap: _moveHidden,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    decoration: BoxDecoration(
+                      color: HaloColors.surface2,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      session.isHidden(widget.groupId)
+                          ? l10n.chatShowInList
+                          : l10n.groupHide,
+                      style: HaloType.sans(
+                        size: 14,
+                        weight: FontWeight.w500,
+                        color: HaloColors.text2,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             // leave (everyone)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),

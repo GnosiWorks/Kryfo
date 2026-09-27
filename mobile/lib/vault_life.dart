@@ -129,6 +129,9 @@ abstract class VaultHost {
   // a new vault under the key: the whole schema and its sealing identity
   // inside. the public half
   Future<String> makeVault(String keyHex);
+  // the vault under the key its pin handed back, open. throws when there is
+  // none or the key does not open it
+  Future<HaloDb> openVault(String keyHex);
   ChatMover mover(HaloDb live, HaloDb? vault);
   // the notifications of chats that just went out of sight
   Future<void> clearShade(Iterable<String> payloads);
@@ -162,6 +165,22 @@ class LiveVaultHost implements VaultHost {
       await d.close();
     }
     return keys.pub;
+  }
+
+  @override
+  Future<HaloDb> openVault(String keyHex) async {
+    // opening a file that is not there would make one
+    if (!await File(await HaloContainer.vault.dbPath()).exists()) {
+      throw StateError('no vault here');
+    }
+    final d = HaloDb.withKey(HaloContainer.vault, keyHex);
+    try {
+      await d.open();
+    } catch (_) {
+      await d.close();
+      rethrow;
+    }
+    return d;
   }
 
   @override

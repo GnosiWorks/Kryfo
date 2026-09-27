@@ -9026,6 +9026,26 @@
   "@howVault": {
     "description": "How this works sheet"
   },
+  "chatHide": "Hide chat",
+  "@chatHide": {
+    "description": "chat menu, home long-press menu and contact page, only while hidden chats are open: moves the chat out of the everyday chat list"
+  },
+  "groupHide": "Hide group",
+  "@groupHide": {
+    "description": "group info, only while hidden chats are open: moves the group out of the everyday chat list"
+  },
+  "chatHidden": "Hidden",
+  "@chatHidden": {
+    "description": "screen reader label of the small eye-off mark on a hidden chat's row, only while hidden chats are open"
+  },
+  "chatHiddenToast": "Hidden from your chat list",
+  "@chatHiddenToast": {
+    "description": "toast after a chat or group was hidden from inside the hidden chats"
+  },
+  "chatShowInList": "Show in chat list",
+  "@chatShowInList": {
+    "description": "chat menu, contact page and group info, only while hidden chats are open: brings a hidden chat back to the everyday chat list"
+  },
   "stickerOpen": "Stickers",
   "@stickerOpen": {
     "description": "screens/chat_screen.dart, screens/group_chat_screen.dart, stickers/sticker_sheet.dart"

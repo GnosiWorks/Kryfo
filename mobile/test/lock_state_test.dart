@@ -349,6 +349,37 @@ void main() {
     }
   });
 
+  test(
+    'a vault that takes most of the wait still shows at the deadline',
+    () async {
+      const reveal = Duration(milliseconds: 150);
+      final lock = await make(reveal: reveal);
+      // opening the vault and reading its lists, under the lock
+      final underLock = <bool>[];
+      lock.onOutcome = (r, {vaultKey}) async {
+        if (vaultKey != null) {
+          await Future<void>.delayed(const Duration(milliseconds: 120));
+        }
+        underLock.add(lock.locked);
+      };
+      final shown = <String, int>{};
+      for (final pin in ['1234', '246810', '5555', '0000', '9999']) {
+        store.log.clear();
+        final t = Stopwatch()..start();
+        await lock.verifyPin(pin);
+        shown[pin] = t.elapsedMilliseconds;
+        expect(store.log, ['w halo.lock.state'], reason: pin);
+        lock.lock();
+      }
+      expect(underLock, everyElement(isTrue));
+      for (final e in shown.entries) {
+        expect(e.value, greaterThanOrEqualTo(148), reason: e.key);
+      }
+      final ms = shown.values.toList()..sort();
+      expect(ms.last - ms.first, lessThan(60), reason: '$shown');
+    },
+  );
+
   test('a decoy unlock sets quiet, everyday clears it', () async {
     final lock = await make();
     await lock.verifyPin('5555');

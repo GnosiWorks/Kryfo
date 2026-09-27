@@ -7189,6 +7189,21 @@ class AppLocalizationsFr extends AppLocalizations {
       'Votre code des discussions masquées ouvre Kryfo avec vos discussions masquées, votre code PIN et votre empreinte sans elles. Configurer à nouveau les discussions masquées remplace celles que ce téléphone contient. Oubliez le code des discussions masquées, et elles sont perdues pour de bon.';
 
   @override
+  String get chatHide => 'Masquer la discussion';
+
+  @override
+  String get groupHide => 'Masquer le groupe';
+
+  @override
+  String get chatHidden => 'Masquée';
+
+  @override
+  String get chatHiddenToast => 'Masquée de votre liste de discussions';
+
+  @override
+  String get chatShowInList => 'Afficher dans la liste des discussions';
+
+  @override
   String get stickerOpen => 'Stickers';
 
   @override

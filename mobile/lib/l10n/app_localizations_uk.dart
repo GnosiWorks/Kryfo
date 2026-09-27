@@ -7247,6 +7247,21 @@ class AppLocalizationsUk extends AppLocalizations {
       'PIN-код прихованих чатів відкриває Kryfo з прихованими чатами, а твій PIN-код і відбиток відкривають його без них. Якщо налаштувати приховані чати заново, вони замінять ті, що є на цьому телефоні. Забудеш PIN-код прихованих чатів, і вони зникнуть назавжди.';
 
   @override
+  String get chatHide => 'Приховати чат';
+
+  @override
+  String get groupHide => 'Приховати групу';
+
+  @override
+  String get chatHidden => 'Приховано';
+
+  @override
+  String get chatHiddenToast => 'Приховано зі списку чатів';
+
+  @override
+  String get chatShowInList => 'Показати в списку чатів';
+
+  @override
   String get stickerOpen => 'Стікери';
 
   @override

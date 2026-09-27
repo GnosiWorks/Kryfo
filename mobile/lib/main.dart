@@ -4649,6 +4649,8 @@ class GroupPreview {
   final int unread;
   final bool mentioned; // someone wrote your three words since you last read
   final int? expiresAt; // a burner room's end, null for a group
+  // one of the open vault's: only its session shows it
+  final bool hidden;
   const GroupPreview({
     required this.groupId,
     required this.name,
@@ -4658,6 +4660,7 @@ class GroupPreview {
     this.unread = 0,
     this.mentioned = false,
     this.expiresAt,
+    this.hidden = false,
   });
 }
 
@@ -4750,6 +4753,9 @@ class AppIo {
     required String body,
     String? payload,
   }) => showMessageNotification(title: title, body: body, payload: payload);
+
+  // what this process showed for a chat leaves the shade
+  Future<void> unnotify(String payload) => clearNotificationsFor(payload);
 }
 
 // the engine's sealing for the router
@@ -4778,6 +4784,27 @@ class EngineSeal implements VaultSeal {
 class _HeldIn extends CapHeld {
   const _HeldIn(this.into);
   final HaloDb into;
+}
+
+// one container's unsent rows: how many, how many wait on someone who has
+// not added us back, how many for each person, and who has
+class _Queue {
+  const _Queue(this.n, this.parked, this.perPeer, this.paired);
+  static const none = _Queue(0, 0, {}, {});
+
+  final int n;
+  final int parked;
+  final Map<String, int> perPeer;
+  final Map<String, bool> paired;
+
+  bool same(_Queue o) {
+    if (n != o.n || parked != o.parked) return false;
+    if (perPeer.length != o.perPeer.length) return false;
+    for (final e in perPeer.entries) {
+      if (o.perPeer[e.key] != e.value) return false;
+    }
+    return true;
+  }
 }
 
 class AppState extends ChangeNotifier {
@@ -4823,15 +4850,15 @@ class AppState extends ChangeNotifier {
 
   // how many messages are sitting unsent, and for whom. the offline strip
   // reads this so it can say "2 waiting" instead of just "offline".
-  int _queued = 0;
-  final Map<String, int> _queuedPerPeer = <String, int>{};
+  _Queue _q = _Queue.none;
+  // the open vault's, kept apart so they go the moment it closes
+  _Queue _vq = _Queue.none;
   // counted off the everyday outbox, so a quiet session shows none of it
-  int get queued => sessionQuiet ? 0 : _queued;
-  int _parked = 0;
+  int get queued => sessionQuiet ? 0 : _q.n + _vq.n;
   // of those, how many wait on a peer who has not added us back yet
-  int get parkedQueued => sessionQuiet ? 0 : _parked;
+  int get parkedQueued => sessionQuiet ? 0 : _q.parked + _vq.parked;
   int queuedFor(String haloId) =>
-      sessionQuiet ? 0 : _queuedPerPeer[haloId] ?? 0;
+      sessionQuiet ? 0 : (_q.perPeer[haloId] ?? 0) + (_vq.perPeer[haloId] ?? 0);
   Timer? _outboxTimer;
   bool _outboxWasReady = false;
 
@@ -4859,44 +4886,55 @@ class AppState extends ChangeNotifier {
     if (_asking || !torReady) return;
     _asking = true;
     try {
-      final now = DateTime.now().millisecondsSinceEpoch;
-      for (final w in await live.mediaWants()) {
-        final mid = w['media_id'] as String;
-        final peer = w['peer_id'] as String;
-        final total = (w['total'] as num).toInt();
-        if (await live.messageExists(mid)) {
-          await live.dropMediaWant(mid);
-          continue;
-        }
-        final have = await live.heldSlices(mid);
-        final ask = shouldAskNow(
-          now: now,
-          lastSliceAt: (w['last_at'] as num).toInt(),
-          askedAt: (w['asked_at'] as num).toInt(),
-          asks: (w['asks'] as num).toInt(),
-          canResend: (w['can_resend'] as num).toInt() == 1,
-          have: have.length,
-          total: total,
-        );
-        if (!ask) continue;
-        if (await live.isBlocked(peer)) continue;
-        final missing = missingSlices(have, total);
-        if (missing.isEmpty) continue;
-        dlog('NEED $mid: asking for ${missing.length} of $total');
+      // the open vault's files too: while it is shut its wants wait in it
+      for (final d in [live, ?_openVault]) {
         try {
-          final wrapped = await wrapMessage(
-            '',
-            need: NeedFrame(mid, missing),
-            sender: _mySender(),
-          );
-          await _sendOneEnvelope(peer, wrapped);
-          await live.markMediaAsked(mid);
+          await _askForMissingIn(d);
         } catch (e) {
-          dlog('NEED $mid: ask failed: $e');
+          if (identical(d, live)) rethrow;
         }
       }
     } finally {
       _asking = false;
+    }
+  }
+
+  Future<void> _askForMissingIn(HaloDb d) async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    for (final w in await d.mediaWants()) {
+      final mid = w['media_id'] as String;
+      final peer = w['peer_id'] as String;
+      final total = (w['total'] as num).toInt();
+      if (await d.messageExists(mid)) {
+        await d.dropMediaWant(mid);
+        continue;
+      }
+      final have = await d.heldSlices(mid);
+      final ask = shouldAskNow(
+        now: now,
+        lastSliceAt: (w['last_at'] as num).toInt(),
+        askedAt: (w['asked_at'] as num).toInt(),
+        asks: (w['asks'] as num).toInt(),
+        canResend: (w['can_resend'] as num).toInt() == 1,
+        have: have.length,
+        total: total,
+      );
+      if (!ask) continue;
+      if (await d.isBlocked(peer)) continue;
+      final missing = missingSlices(have, total);
+      if (missing.isEmpty) continue;
+      dlog('NEED $mid: asking for ${missing.length} of $total');
+      try {
+        final wrapped = await wrapMessage(
+          '',
+          need: NeedFrame(mid, missing),
+          sender: _mySender(),
+        );
+        await _sendOneEnvelope(peer, wrapped);
+        await d.markMediaAsked(mid);
+      } catch (e) {
+        dlog('NEED $mid: ask failed: $e');
+      }
     }
   }
 
@@ -4957,28 +4995,27 @@ class AppState extends ChangeNotifier {
     // count first, wire or no wire: the strip and the rows say what is
     // waiting whether or not anything can move yet
     final rows = await live.unsentOutbox();
-    final perPeer = <String, int>{};
-    final paired = <String, bool>{};
-    var parked = 0;
-    for (final r in rows) {
-      final to = r['peer_id'] as String?;
-      if (to != null) perPeer[to] = (perPeer[to] ?? 0) + 1;
-      // a row for someone who has not added us back is waiting on them,
-      // not on the wire. the strip says which.
-      final g = r['group_id'] as String?;
-      if (to != null && (g == null || g.isEmpty)) {
-        paired[to] ??= await live.isBackPaired(to);
-        if (!paired[to]!) parked++;
+    final q = await _queueOf(rows, live);
+    // the open vault's rows go while it is open. shut, they wait in it for
+    // the next open
+    final v = _openVault;
+    var vRows = const <Map<String, Object?>>[];
+    var vq = _Queue.none;
+    if (v != null) {
+      try {
+        vRows = await v.unsentOutbox();
+        vq = await _queueOf(vRows, v);
+      } catch (e) {
+        vRows = const [];
       }
     }
-    if (rows.length != _queued ||
-        parked != _parked ||
-        !_sameCounts(perPeer, _queuedPerPeer)) {
-      _queued = rows.length;
-      _parked = parked;
-      _queuedPerPeer
-        ..clear()
-        ..addAll(perPeer);
+    if (!identical(_openVault, v)) {
+      vRows = const [];
+      vq = _Queue.none;
+    }
+    if (!q.same(_q) || !vq.same(_vq)) {
+      _q = q;
+      _vq = vq;
       notifyListeners();
     }
     // torReady already knows the mode: outside onion there is nothing to
@@ -4991,7 +5028,7 @@ class AppState extends ChangeNotifier {
     _outboxWasReady = true;
     unawaited(_drainEdits());
     unawaited(_drainPins());
-    if (rows.isEmpty) {
+    if (rows.isEmpty && vRows.isEmpty) {
       if (_outboxTries.isNotEmpty) {
         _outboxTries.clear();
         _outboxNextAt.clear();
@@ -4999,10 +5036,16 @@ class AppState extends ChangeNotifier {
       return;
     }
     // anything that landed since the last sweep stops costing us bookkeeping.
-    final waiting = {for (final r in rows) r['msg_uid'] as String?};
+    final waiting = {
+      for (final r in [...rows, ...vRows]) r['msg_uid'] as String?,
+    };
     _outboxTries.removeWhere((k, _) => !waiting.contains(k));
     _outboxNextAt.removeWhere((k, _) => !waiting.contains(k));
-    for (final r in rows) {
+    for (final (r, d, paired) in [
+      for (final r in rows) (r, live, q.paired),
+      if (v != null)
+        for (final r in vRows) (r, v, vq.paired),
+    ]) {
       final uid = r['msg_uid'] as String?;
       if (uid == null || _outboxInflight.contains(uid)) continue;
       // a send fired seconds ago still has its own future running; leave it be.
@@ -5025,44 +5068,83 @@ class AppState extends ChangeNotifier {
       _outboxNextAt[uid] = now + gap;
       _outboxTries[uid] = tries + 1;
       _outboxInflight.add(uid);
-      unawaited(_drainOne(r).whenComplete(() => _outboxInflight.remove(uid)));
+      unawaited(
+        _drainOne(r, d).whenComplete(() => _outboxInflight.remove(uid)),
+      );
     }
+  }
+
+  // what one container's unsent rows come to
+  Future<_Queue> _queueOf(List<Map<String, Object?>> rows, HaloDb d) async {
+    final perPeer = <String, int>{};
+    final paired = <String, bool>{};
+    var parked = 0;
+    for (final r in rows) {
+      final to = r['peer_id'] as String?;
+      if (to != null) perPeer[to] = (perPeer[to] ?? 0) + 1;
+      // a row for someone who has not added us back is waiting on them,
+      // not on the wire. the strip says which.
+      final g = r['group_id'] as String?;
+      if (to != null && (g == null || g.isEmpty)) {
+        paired[to] ??= await d.isBackPaired(to);
+        if (!paired[to]!) parked++;
+      }
+    }
+    return _Queue(rows.length, parked, perPeer, paired);
   }
 
   // one attempt per edit per pass, oldest first. the chat sends an edit
   // the moment it is made; this is for the ones that did not get through.
   final Set<String> _editsInflight = {};
   Future<void> _drainEdits() async {
-    final rows = await live.unsentEdits();
-    for (final r in rows) {
-      final uid = r['msg_uid'] as String;
-      final age = DateTime.now().millisecondsSinceEpoch - (r['at'] as int);
-      if (age < 45000 || _editsInflight.contains(uid)) continue;
-      _editsInflight.add(uid);
-      unawaited(
-        sendEdit(
-          r['peer_id'] as String,
-          uid,
-          r['new_text'] as String,
-        ).whenComplete(() => _editsInflight.remove(uid)),
-      );
+    for (final d in [live, ?_openVault]) {
+      final List<Map<String, Object?>> rows;
+      try {
+        rows = await d.unsentEdits();
+      } catch (e) {
+        // the vault closed part way: its edits wait for the next open
+        continue;
+      }
+      for (final r in rows) {
+        final uid = r['msg_uid'] as String;
+        final age = DateTime.now().millisecondsSinceEpoch - (r['at'] as int);
+        if (age < 45000 || _editsInflight.contains(uid)) continue;
+        _editsInflight.add(uid);
+        unawaited(
+          sendEdit(
+            r['peer_id'] as String,
+            uid,
+            r['new_text'] as String,
+            on: d,
+          ).whenComplete(() => _editsInflight.remove(uid)),
+        );
+      }
     }
   }
 
   final Set<String> _pinsInflight = {};
   Future<void> _drainPins() async {
-    for (final r in await live.unsentPins()) {
-      final uid = r['msg_uid'] as String;
-      final age = DateTime.now().millisecondsSinceEpoch - (r['at'] as int);
-      if (age < 45000 || _pinsInflight.contains(uid)) continue;
-      _pinsInflight.add(uid);
-      unawaited(
-        _sendPin(
-          r['peer_id'] as String,
-          uid,
-          (r['pinned'] as int) == 1,
-        ).whenComplete(() => _pinsInflight.remove(uid)),
-      );
+    for (final d in [live, ?_openVault]) {
+      final List<Map<String, Object?>> rows;
+      try {
+        rows = await d.unsentPins();
+      } catch (e) {
+        continue;
+      }
+      for (final r in rows) {
+        final uid = r['msg_uid'] as String;
+        final age = DateTime.now().millisecondsSinceEpoch - (r['at'] as int);
+        if (age < 45000 || _pinsInflight.contains(uid)) continue;
+        _pinsInflight.add(uid);
+        unawaited(
+          _sendPin(
+            r['peer_id'] as String,
+            uid,
+            (r['pinned'] as int) == 1,
+            on: d,
+          ).whenComplete(() => _pinsInflight.remove(uid)),
+        );
+      }
     }
   }
 
@@ -5080,7 +5162,12 @@ class AppState extends ChangeNotifier {
     );
   }
 
-  Future<bool> _sendPin(String peer, String uid, bool pinned) async {
+  Future<bool> _sendPin(
+    String peer,
+    String uid,
+    bool pinned, {
+    HaloDb? on,
+  }) async {
     try {
       final wrapped = await wrapMessage(
         '',
@@ -5088,7 +5175,7 @@ class AppState extends ChangeNotifier {
         sender: _mySender(),
       );
       final ok = await _sendOneEnvelope(peer, wrapped);
-      if (ok) await live.dropPin(uid, pinned);
+      if (ok) await (on ?? _ownerOf(peer)).dropPin(uid, pinned);
       return ok;
     } catch (e) {
       dlog('pin: $uid still stuck ($e)');
@@ -5098,7 +5185,13 @@ class AppState extends ChangeNotifier {
 
   // the edit frame, through the same routes a message takes. true when a
   // route that reaches them took it; the queued row goes with it.
-  Future<bool> sendEdit(String peer, String uid, String newText) async {
+  // on is the container its queued row is in, the chat's when not given
+  Future<bool> sendEdit(
+    String peer,
+    String uid,
+    String newText, {
+    HaloDb? on,
+  }) async {
     try {
       final wrapped = await wrapMessage(
         '',
@@ -5106,7 +5199,7 @@ class AppState extends ChangeNotifier {
         sender: _mySender(),
       );
       final ok = await _sendOneEnvelope(peer, wrapped);
-      if (ok) await live.dropEdit(uid);
+      if (ok) await (on ?? _ownerOf(peer)).dropEdit(uid);
       return ok;
     } catch (e) {
       dlog('edit: $uid still stuck ($e)');
@@ -5114,15 +5207,8 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  static bool _sameCounts(Map<String, int> a, Map<String, int> b) {
-    if (a.length != b.length) return false;
-    for (final e in a.entries) {
-      if (b[e.key] != e.value) return false;
-    }
-    return true;
-  }
-
-  Future<void> _drainOne(Map<String, Object?> r) async {
+  // d is the container the row is in
+  Future<void> _drainOne(Map<String, Object?> r, HaloDb d) async {
     final uid = r['msg_uid'] as String;
     final peer = r['peer_id'] as String;
     final groupId = r['group_id'] as String?;
@@ -5138,6 +5224,7 @@ class AppState extends ChangeNotifier {
           uid,
           mediaPath ?? filePath!,
           isFile: mediaPath == null,
+          on: d,
         );
       } else {
         await _drainGroupMedia(
@@ -5146,6 +5233,7 @@ class AppState extends ChangeNotifier {
           uid,
           mediaPath ?? filePath!,
           isFile: mediaPath == null,
+          on: d,
         );
       }
       return;
@@ -5155,7 +5243,7 @@ class AppState extends ChangeNotifier {
       // now, or the far side drops the retry.
       var row = r;
       if (groupId == null &&
-          redeliveryNeedsPow(r, backPaired: await live.isBackPaired(peer))) {
+          redeliveryNeedsPow(r, backPaired: await d.isBackPaired(peer))) {
         powBusy.value = DateTime.now();
         final int nonce;
         try {
@@ -5163,7 +5251,7 @@ class AppState extends ChangeNotifier {
         } finally {
           powBusy.value = null;
         }
-        await live.setPowNonce(uid, nonce);
+        await d.setPowNonce(uid, nonce);
         row = {...r, 'pow_nonce': nonce};
       }
       final wrapped = await wrapRedelivery(
@@ -5172,13 +5260,13 @@ class AppState extends ChangeNotifier {
         badge: await sharedBadge(),
       );
       if (groupId != null) {
-        final members = await live.getGroupMembers(groupId);
+        final members = await d.getGroupMembers(groupId);
         final results = await Future.wait([
           for (final m in members)
             if (m != myId) _sendGroupEnvelope(groupId, m, wrapped),
         ]);
         if (results.any((ok) => ok)) {
-          await live.markSent(uid);
+          await d.markSent(uid);
           notifyListeners();
         }
         return;
@@ -5186,8 +5274,8 @@ class AppState extends ChangeNotifier {
       final ok = await _sendOneEnvelope(peer, wrapped);
       if (ok) {
         dlog('OUTBOX: redelivered $uid');
-        await live.markSent(uid);
-        await _lightBurn(r, uid);
+        await d.markSent(uid);
+        await _lightBurn(r, uid, d);
         // an open chat reloads and drops the waiting line
         _bumpChatRev(peer);
         notifyListeners();
@@ -5199,10 +5287,10 @@ class AppState extends ChangeNotifier {
 
   // a timed message's clock starts when it is actually sent, and the
   // outbox is sometimes the one that sends it
-  Future<void> _lightBurn(Map<String, Object?> r, String uid) async {
+  Future<void> _lightBurn(Map<String, Object?> r, String uid, HaloDb d) async {
     final secs = (r['burn_secs'] as num?)?.toInt();
     if (secs == null || r['burn_at'] != null) return;
-    await live.setMsgBurnAt(
+    await d.setMsgBurnAt(
       uid,
       DateTime.now().millisecondsSinceEpoch + secs * 1000,
     );
@@ -5214,6 +5302,7 @@ class AppState extends ChangeNotifier {
     String uid,
     String path, {
     required bool isFile,
+    required HaloDb on,
   }) async {
     final f = File(path);
     if (!await f.exists()) return;
@@ -5235,8 +5324,8 @@ class AppState extends ChangeNotifier {
     }
     if (res == 'ok') {
       dlog('OUTBOX: group media redelivered $uid');
-      await live.markSent(uid);
-      await _lightBurn(r, uid);
+      await on.markSent(uid);
+      await _lightBurn(r, uid, on);
       notifyListeners();
     } else {
       dlog('OUTBOX: group media $uid still stuck ($res)');
@@ -5283,8 +5372,8 @@ class AppState extends ChangeNotifier {
     }
     if (res == 'ok') {
       dlog('OUTBOX: media redelivered $uid');
-      await live.markSent(uid);
-      await _lightBurn(r, uid);
+      await d.markSent(uid);
+      await _lightBurn(r, uid, d);
       _bumpChatRev(peer);
       notifyListeners();
     } else if (res != 'busy') {
@@ -5299,6 +5388,8 @@ class AppState extends ChangeNotifier {
   // is the default; 'normal' is an old name for it, migrated on load.
   String _sendMode = 'private';
   String get sendMode => _sendMode;
+  @visibleForTesting
+  set sendModeForTest(String m) => _sendMode = m;
 
   // the open session's own, like everything a screen sets for an identity
   Future<void> saveGhostPref(bool on, int secs) async {
@@ -5824,7 +5915,7 @@ class AppState extends ChangeNotifier {
         t.cancel();
         return;
       }
-      final busy = _queued > 0 || mediaInflight.isNotEmpty || _checking;
+      final busy = _q.n > 0 || mediaInflight.isNotEmpty || _checking;
       if (waited < 90 || (busy && waited < 600)) return;
       t.cancel();
       unawaited(_torSleep());
@@ -5925,7 +6016,7 @@ class AppState extends ChangeNotifier {
       // let receipts and slice requests that answer it get out.
       await Future.delayed(const Duration(seconds: 3));
       await askForMissingSlices();
-      for (var i = 0; i < 10 && _queued > 0; i++) {
+      for (var i = 0; i < 10 && _q.n > 0; i++) {
         await Future.delayed(const Duration(seconds: 1));
       }
       how = 'ok$tail';
@@ -6219,18 +6310,36 @@ class AppState extends ChangeNotifier {
   }
 
   // the first fill of the search index for a history from before it: a
-  // batch, a breath, the next, so the app never waits on it
-  Future<void> _fillSearch() async {
+  // batch, a breath, the next, so the app never waits on it. each container
+  // fills its own index, the vault's only while it is open
+  ({int at, int to}) _liveFill = (at: 0, to: 0);
+  ({int at, int to}) _vaultFill = (at: 0, to: 0);
+
+  Future<void> _fillSearch([HaloDb? vault]) async {
+    final d = vault ?? live;
     try {
-      while (!haloWiping) {
-        final p = await live.fillSearchIndex();
-        searchFill.value = p;
+      while (!haloWiping && (vault == null || identical(_openVault, vault))) {
+        final p = await d.fillSearchIndex();
+        if (vault == null) {
+          _liveFill = p;
+        } else if (identical(_openVault, vault)) {
+          _vaultFill = p;
+        }
+        _showFill();
         if (p.at >= p.to) break;
         await Future.delayed(const Duration(milliseconds: 60));
       }
     } catch (e) {
-      dlog('search fill stopped: $e');
+      if (vault == null || identical(_openVault, vault)) {
+        dlog('search fill stopped: $e');
+      }
     }
+  }
+
+  // the search screen's line: the vault's part only while it is open
+  void _showFill() {
+    final v = _openVault == null ? (at: 0, to: 0) : _vaultFill;
+    searchFill.value = (at: _liveFill.at + v.at, to: _liveFill.to + v.to);
   }
 
   String? _arrivingPoll(Object? raw) {
@@ -6256,6 +6365,13 @@ class AppState extends ChangeNotifier {
   HaloDb? get _openVault {
     final s = _session;
     return identical(s.primary, live) ? s.vault : null;
+  }
+
+  // where a chat's rows are for receiving and sending: the open vault's own
+  // chats there, every other one in the everyday container
+  HaloDb _ownerOf(String chatId) {
+    final v = _openVault;
+    return v != null && _session.isHidden(chatId) ? v : live;
   }
 
   // where an arrival for this chat goes. while the vault is open, a chat it
@@ -6295,6 +6411,7 @@ class AppState extends ChangeNotifier {
         arrivedAt: arrivedAt,
       );
     }
+    await _afterClose();
     // a chat being moved: what arrives for it waits for the list
     if (_moveDone != null) await _afterMove(senderHaloId, env.groupId);
     final keys = [senderHaloId, ?env.groupId];
@@ -6852,6 +6969,12 @@ class AppState extends ChangeNotifier {
           currentChatPeer == senderHaloId || await db.isMuted(senderHaloId);
     }
     if (!suppress) {
+      // a hidden chat rings only while its vault is open, and what it shows
+      // goes from the shade when the vault closes
+      if (to == RouteTo.vault) {
+        if (!identical(_openVault, db)) return to;
+        _vaultShade.add(notifPayload);
+      }
       await _io.notify(
         title: notifTitle,
         body: notifBody,
@@ -7534,6 +7657,8 @@ class AppState extends ChangeNotifier {
     if (identical(_openVault, v)) {
       _session = Session(_session.primary);
       lockState.inVault = false;
+      _forgetVaultSide();
+      _vaultShade.clear();
     }
     if (identical(_madeVault, v)) _madeVault = null;
     await v.close();
@@ -7611,7 +7736,9 @@ class AppState extends ChangeNotifier {
       final v = _openVault;
       if (v != null) {
         try {
-          _session = await Session.withVault(_session.primary, v);
+          final rebuilt = await Session.withVault(live, v);
+          // a lock that shut the vault meanwhile keeps it shut
+          if (identical(_openVault, v)) _session = rebuilt;
         } catch (e) {
           dlog('vault: session not rebuilt (${e.runtimeType})');
         }
@@ -7769,6 +7896,13 @@ class AppState extends ChangeNotifier {
   // an unlock's outcome, under the lock screen before it lifts: the screens
   // get the session the pin opened, and every screen of the other one goes
   Future<void> sessionFor(PinResult r, {String? vaultKey}) async {
+    // a vault left open by a lock that never reached the screen shuts first
+    _shutVault();
+    // and what home shows after one shut is read again before anything
+    await _listsBack;
+    if (r == PinResult.vault && vaultKey != null) {
+      return _openVaultSession(vaultKey);
+    }
     final decoy = r == PinResult.decoy;
     final want = decoy ? _decoyDb : live;
     if (want == null) return;
@@ -7807,21 +7941,187 @@ class AppState extends ChangeNotifier {
     // call into android here would hold the main thread, and dart with it,
     // and the decoy would show later than the everyday app does
     unawaited(
-      Future.delayed(
-        lockState.revealAfter + const Duration(milliseconds: 300),
-        () async {
-          if (decoy) {
-            try {
-              await notifPlugin.cancelAll();
-            } catch (_) {}
-          }
-          await refreshContacts();
-          await refreshGroups();
-          // what came sealed while the vault was shut, once it shows
-          await _unseal();
-        },
-      ),
+      Future.delayed(_afterReveal, () async {
+        if (decoy) {
+          try {
+            await notifPlugin.cancelAll();
+          } catch (_) {}
+        }
+        await refreshContacts();
+        await refreshGroups();
+      }),
     );
+  }
+
+  // once the lock is gone and its fade is over
+  Duration get _afterReveal =>
+      revealGap ?? lockState.revealAfter + const Duration(milliseconds: 300);
+  @visibleForTesting
+  Duration? revealGap;
+
+  // the vault's pin: the everyday app with its hidden chats. its key is
+  // wrapped, so nothing of it could be read ahead: it opens here, under the
+  // lock, and its lists are read before the same deadline as any other
+  // outcome. it throws when the vault will not open, and the lock then
+  // opens the everyday session
+  Future<void> _openVaultSession(String key) async {
+    final v = await _host.openVault(key);
+    final Session s;
+    final (List<ContactPreview>, int) home;
+    final List<GroupPreview> gs;
+    try {
+      // a move a crash cut short is put right before ownership is read
+      await settleVault(v);
+      s = await Session.withVault(live, v);
+      home = await _contactsOf(s);
+      gs = await _groupsOf(s);
+    } catch (e) {
+      try {
+        await v.close();
+      } catch (_) {}
+      rethrow;
+    }
+    lockState.inDecoy = false;
+    // from the decoy: its lists wait for its next unlock, as if read ahead
+    if (sessionQuiet) {
+      _otherShown = _Shown(contacts, pendingCount, groups, _quietAvatar);
+    }
+    _session = s;
+    _quiet = null;
+    contacts = home.$1;
+    pendingCount = home.$2;
+    groups = gs;
+    _vaultFill = (at: 0, to: 0);
+    lockState.inVault = true;
+    expiredRoomName = null;
+    renewRootNavigator();
+    sessionRev++;
+    notifyListeners();
+    await WidgetsBinding.instance.endOfFrame.timeout(
+      const Duration(milliseconds: 250),
+      onTimeout: () {},
+    );
+    unawaited(Future.delayed(_afterReveal, () => _vaultShown(v)));
+  }
+
+  // after the reveal, off the clock
+  Future<void> _vaultShown(HaloDb v) async {
+    if (!identical(_openVault, v)) return;
+    try {
+      // its timers that ran out while it was shut go now
+      await v.purgeExpired();
+      await refreshContacts();
+      await refreshGroups();
+      // the list names every chat it holds, whatever the last close left
+      await refreshHiddenCards();
+      // what came sealed while it was shut
+      await _unseal();
+      unawaited(_fillSearch(v));
+      // what was typed in it and never went, and files half arrived
+      unawaited(drainOutbox());
+      unawaited(askForMissingSlices());
+    } catch (e) {
+      if (identical(_openVault, v)) {
+        dlog('vault: after open (${e.runtimeType})');
+      }
+    }
+  }
+
+  // payloads of what hidden chats showed in the shade while their vault was
+  // open, taken down when it shuts
+  final Set<String> _vaultShade = {};
+  // set while a vault that just shut is given back: arrivals wait for the
+  // list it leaves, so none lands on the everyday side
+  Completer<void>? _closeDone;
+  // home's lists read again once a vault shut, before any unlock shows them
+  Future<void> _listsBack = Future<void>.value();
+
+  // the lock is going up: a vault session shuts at once, and the key of a
+  // vault made by a setup that did not finish goes
+  void lockingUp() {
+    unawaited(
+      vaultSetupDone().catchError((Object e) {
+        dlog('vault: setup key (${e.runtimeType})');
+      }),
+    );
+    _shutVault();
+  }
+
+  // the everyday session is back before anything reads again. the vault's
+  // handle stays with its close until what it took in has landed and the
+  // list names everyone in it
+  void _shutVault() {
+    final v = _openVault;
+    if (v == null) return;
+    final was = _session;
+    final done = Completer<void>();
+    _closeDone = done;
+    _session = Session(was.primary);
+    lockState.inVault = false;
+    _forgetVaultSide();
+    // its chats off home now; the rest is read again below
+    contacts = [
+      for (final c in contacts)
+        if (!was.isHidden(c.haloId)) c,
+    ];
+    groups = [
+      for (final g in groups)
+        if (!was.isHidden(g.groupId)) g,
+    ];
+    expiredRoomName = null;
+    renewRootNavigator();
+    sessionRev++;
+    notifyListeners();
+    _listsBack = () async {
+      try {
+        await refreshContacts();
+        await refreshGroups();
+      } catch (e) {
+        dlog('lists after the vault: $e');
+      }
+    }();
+    unawaited(_closeVault(v, done));
+  }
+
+  // what the session kept of the vault beside its handle
+  void _forgetVaultSide() {
+    _sealKey = null;
+    _sealKeyOf = null;
+    _vq = _Queue.none;
+    _vaultFill = (at: 0, to: 0);
+    _showFill();
+  }
+
+  Future<void> _closeVault(HaloDb v, Completer<void> done) async {
+    try {
+      await _serial(() async {
+        // what is being filed into it, or opened from the seal, lands first
+        final until = DateTime.now().add(const Duration(seconds: 10));
+        while ((_unsealing || _arriving.isNotEmpty) &&
+            DateTime.now().isBefore(until)) {
+          await Future<void>.delayed(const Duration(milliseconds: 10));
+        }
+        try {
+          await _attached(v, _recard);
+        } catch (e) {
+          dlog('vault: cards left as they were (${e.runtimeType})');
+        }
+        await v.close();
+      });
+    } catch (e) {
+      dlog('vault: close (${e.runtimeType})');
+    } finally {
+      if (identical(_closeDone, done)) _closeDone = null;
+      done.complete();
+    }
+    // what its chats showed in the shade goes with it
+    final shown = [..._vaultShade];
+    _vaultShade.clear();
+    for (final p in shown) {
+      try {
+        await _io.unnotify(p);
+      } catch (_) {}
+    }
   }
 
   String myOnion = '';
@@ -8054,6 +8354,7 @@ class AppState extends ChangeNotifier {
       if (opened == null) return null;
       final h = opened.haloId;
       final env = opened.env;
+      await _afterClose();
       if (_moveDone != null) await _afterMove(h, null);
       final to = _routeOf(h, null);
       // persist contact + nostr sub. a stranger who back-paired to us lands
@@ -8097,6 +8398,13 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  // a vault that just shut: nothing is opened or filed until the list it
+  // leaves names everyone it took in while it was open
+  Future<void> _afterClose() async {
+    final closing = _closeDone;
+    if (closing != null) await closing.future;
+  }
+
   // the ids the router keeps and the people the open vault holds: tried
   // like contacts, never filed as everyday requests
   Set<String> _keptIds() => {
@@ -8112,6 +8420,7 @@ class AppState extends ChangeNotifier {
     String cipher, {
     String? skip,
   }) async {
+    await _afterClose();
     final tried = <String>{?skip};
     Future<({String id, String plain})?> under(Iterable<String> ids) async {
       for (final id in ids) {
@@ -8136,6 +8445,7 @@ class AppState extends ChangeNotifier {
   // can't rebuild: try any sessioned address that is not an everyday
   // contact or kept by the router, to re-file it as a fresh request
   Future<({String id, String plain})?> _openParked(String cipher) async {
+    await _afterClose();
     final skip = {
       for (final r in await live.contacts()) r['halo_id'] as String,
       ..._keptIds(),
@@ -8693,8 +9003,19 @@ class AppState extends ChangeNotifier {
     Timer.periodic(const Duration(seconds: 5), (_) async {
       if (haloWiping) return;
       try {
-        final gone = await live.purgeExpired();
-        if (++sweeps % 12 == 0) await live.purgeStrayVotes();
+        var gone = await live.purgeExpired();
+        final stray = ++sweeps % 12 == 0;
+        if (stray) await live.purgeStrayVotes();
+        // the open vault's too. shut, its timers wait for the next open
+        final v = _openVault;
+        if (v != null) {
+          try {
+            gone += await v.purgeExpired();
+            if (stray) await v.purgeStrayVotes();
+          } catch (e) {
+            if (identical(_openVault, v)) rethrow;
+          }
+        }
         sweepFails = 0;
         // a row whose newest message just burned needs a new preview
         if (gone > 0) {
@@ -8907,7 +9228,10 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> refreshContacts() async {
-    final (list, pending) = await _contactsOf(session);
+    final s = session;
+    final (list, pending) = await _contactsOf(s);
+    // a session swapped while this read keeps what it was given
+    if (!identical(s, _session)) return;
     contacts = list;
     pendingCount = pending;
     notifyListeners();
@@ -8966,6 +9290,7 @@ class AppState extends ChangeNotifier {
           unread: (r['unread'] as int? ?? 0),
           pinned: (r['pinned'] as int? ?? 0) == 1,
           supporterBadge: r['supporter_badge'] as String?,
+          hidden: s.isHidden(haloId),
         ),
       );
     }
@@ -8980,7 +9305,10 @@ class AppState extends ChangeNotifier {
   // ---- groups ----
 
   Future<void> refreshGroups() async {
-    groups = await _groupsOf(session);
+    final s = session;
+    final list = await _groupsOf(s);
+    if (!identical(s, _session)) return;
+    groups = list;
     notifyListeners();
   }
 
@@ -9002,6 +9330,7 @@ class AppState extends ChangeNotifier {
           unread: (r['unread'] as int? ?? 0),
           mentioned: (r['mentioned'] as int? ?? 0) == 1,
           expiresAt: r['expires_at'] as int?,
+          hidden: s.isHidden(gid),
         ),
       );
     }
@@ -9645,7 +9974,7 @@ class AppState extends ChangeNotifier {
       groupControl: gc,
       sender: _mySender(),
     );
-    final members = await live.getGroupMembers(groupId);
+    final members = await _ownerOf(groupId).getGroupMembers(groupId);
     await Future.wait([
       for (final memberId in members)
         if (memberId != myId) _sendGroupEnvelope(groupId, memberId, wrapped),
@@ -9798,8 +10127,9 @@ class AppState extends ChangeNotifier {
       return 'error: read';
     }
     if (total > 1) mediaProgressStart(msgUid, chatKey: groupId);
-    final members = await live.getGroupMembers(groupId);
-    final adminId = await live.groupAdminId(groupId);
+    final d = _ownerOf(groupId);
+    final members = await d.getGroupMembers(groupId);
+    final adminId = await d.groupAdminId(groupId);
     final amAdmin = adminId == myId;
     final rosterParts = amAdmin ? await _buildParticipants(members) : null;
     Future<bool> sendChunk(int i) async {
@@ -10314,11 +10644,13 @@ class AppState extends ChangeNotifier {
     // the row xpub is set by v1 pairing and is there before any session
     // exists; v2 bundle pairing leaves it empty and puts the key in the
     // signal store instead. try both, backfill the row when we learn it.
-    var xPub = await live.contactXPub(haloId);
+    // a hidden chat's row is in the open vault
+    final d = _ownerOf(haloId);
+    var xPub = await d.contactXPub(haloId);
     if (xPub == null || xPub.isEmpty) {
       xPub = await signalSession.peerXPubHex(haloId);
       if (xPub != null && xPub.isNotEmpty) {
-        await live.setContactXPub(haloId, xPub);
+        await d.setContactXPub(haloId, xPub);
       }
     }
     if (xPub == null || xPub.isEmpty) return;
@@ -10538,6 +10870,7 @@ class _RootShellState extends State<RootShell> {
               unread: g.unread,
               mentioned: g.mentioned,
               expiresAt: g.expiresAt,
+              hidden: g.hidden,
             ),
           )
           .toList(),
@@ -11470,6 +11803,7 @@ class _LockGateState extends State<_LockGate> {
     guard: lockGuard,
     quiet: () => sessionQuiet,
     pad: (_) => const LockScreen(),
+    lockingUp: appState.lockingUp,
     inFront: appState.appInFront,
     localesChanged: systemLocalesChanged,
     revealed: () {

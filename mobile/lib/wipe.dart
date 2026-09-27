@@ -7,6 +7,7 @@
 // the fallback where that call refuses.
 
 import 'dart:io';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path_provider/path_provider.dart';
@@ -18,6 +19,10 @@ import 'dlog.dart';
 // everything still running checks this before touching the database. the
 // timers outlive the widget tree and cannot all be cancelled from here.
 bool haloWiping = false;
+
+// how the wipe ends the process, so a test can watch what it leaves
+@visibleForTesting
+void Function(int code) wipeExit = exit;
 
 Future<void> wipeHalo() async {
   haloWiping = true;
@@ -81,5 +86,5 @@ Future<void> wipeHalo() async {
   // fallback: preference clears reach disk with a delay, so wait for them
   // before exit
   await Future.delayed(const Duration(milliseconds: 600));
-  exit(0);
+  wipeExit(0);
 }

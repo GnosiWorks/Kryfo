@@ -24,6 +24,7 @@ import '../vouch_text.dart';
 import '../widgets/intro_chip.dart';
 import '../widgets/media_bubbles.dart' show VoiceBubble;
 import '../widgets/confirm_sheet.dart';
+import '../widgets/hidden_mark.dart';
 import '../widgets/pins.dart';
 import '../widgets/remembered_height.dart';
 import '../widgets/row_anchor.dart';
@@ -3872,6 +3873,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Future<void> _chatActions() async {
     final contact = await session.getContact(widget.peerHaloId);
     final pinned = (contact?['pinned'] as int? ?? 0) == 1;
+    // requests and blocked people stay where they are
+    final hidden = session.isHidden(widget.peerHaloId);
+    final hideable = lockState.inVault && _accepted && !_blocked;
     if (!mounted) return;
     final action = await showHaloSheet<String>(
       context,
@@ -3983,6 +3987,36 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   ),
                 ),
               ),
+              // hidden chats open: out of the everyday list, or back in it
+              if (hideable)
+                InkWell(
+                  onTap: () => Navigator.pop(ctx, 'hide'),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 16,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          hidden
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                          size: 18,
+                          color: HaloColors.violet,
+                        ),
+                        const SizedBox(width: 14),
+                        Text(
+                          hidden ? l10n.chatShowInList : l10n.chatHide,
+                          style: HaloType.sans(
+                            size: 14,
+                            color: HaloColors.text,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               InkWell(
                 onTap: () => Navigator.pop(ctx, 'atmosphere'),
                 child: Padding(
@@ -4114,6 +4148,15 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     } else if (action == 'archive') {
       await appState.archive(widget.peerHaloId);
       if (mounted) Navigator.of(context).pop();
+    } else if (action == 'hide') {
+      // its rows move, so the chat is left as an archived one is
+      final moved = await moveHiddenChat(
+        context,
+        widget.peerHaloId,
+        group: false,
+        hide: !hidden,
+      );
+      if (moved && mounted) Navigator.of(context).pop();
     } else if (action == 'block') {
       await _blockContact();
     } else if (action == 'clear') {

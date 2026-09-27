@@ -7173,6 +7173,21 @@ class AppLocalizationsEs extends AppLocalizations {
       'Tu PIN de chats ocultos abre Kryfo con tus chats ocultos; tu PIN y tu huella, sin ellos. Configurar de nuevo los chats ocultos sustituye los que tiene este teléfono. Si olvidas el PIN de chats ocultos, se pierden para siempre.';
 
   @override
+  String get chatHide => 'Ocultar chat';
+
+  @override
+  String get groupHide => 'Ocultar grupo';
+
+  @override
+  String get chatHidden => 'Oculto';
+
+  @override
+  String get chatHiddenToast => 'Ocultado de tu lista de chats';
+
+  @override
+  String get chatShowInList => 'Mostrar en la lista de chats';
+
+  @override
   String get stickerOpen => 'Stickers';
 
   @override

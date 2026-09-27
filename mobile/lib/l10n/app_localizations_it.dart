@@ -7186,6 +7186,21 @@ class AppLocalizationsIt extends AppLocalizations {
       'Il tuo PIN delle chat nascoste apre Kryfo con le chat nascoste; il tuo PIN e la tua impronta, senza. Configurare di nuovo le chat nascoste sostituisce quelle che questo telefono ha. Se dimentichi il PIN delle chat nascoste, sono perse per sempre.';
 
   @override
+  String get chatHide => 'Nascondi chat';
+
+  @override
+  String get groupHide => 'Nascondi gruppo';
+
+  @override
+  String get chatHidden => 'Nascosta';
+
+  @override
+  String get chatHiddenToast => 'Nascosta dal tuo elenco delle chat';
+
+  @override
+  String get chatShowInList => 'Mostra nell\'elenco delle chat';
+
+  @override
   String get stickerOpen => 'Sticker';
 
   @override

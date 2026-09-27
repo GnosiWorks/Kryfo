@@ -6838,6 +6838,21 @@ class AppLocalizationsZh extends AppLocalizations {
       '隐藏聊天 PIN 打开的 Kryfo 带着隐藏聊天，你的 PIN 码和指纹打开的则没有。重新设置隐藏聊天，会替换这部手机上已有的。忘了隐藏聊天 PIN，它们就永远没了。';
 
   @override
+  String get chatHide => '隐藏此聊天';
+
+  @override
+  String get groupHide => '隐藏此群组';
+
+  @override
+  String get chatHidden => '已隐藏';
+
+  @override
+  String get chatHiddenToast => '已从聊天列表中隐藏';
+
+  @override
+  String get chatShowInList => '在聊天列表中显示';
+
+  @override
   String get stickerOpen => '贴纸';
 
   @override
@@ -13693,6 +13708,21 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get howVault =>
       '隱藏聊天 PIN 開啟的 Kryfo 帶著隱藏聊天，你的 PIN 碼和指紋開啟的則沒有。重新設定隱藏聊天，會取代這支手機上已有的。忘了隱藏聊天 PIN，它們就永遠沒了。';
+
+  @override
+  String get chatHide => '隱藏此聊天';
+
+  @override
+  String get groupHide => '隱藏此群組';
+
+  @override
+  String get chatHidden => '已隱藏';
+
+  @override
+  String get chatHiddenToast => '已從聊天列表中隱藏';
+
+  @override
+  String get chatShowInList => '在聊天列表中顯示';
 
   @override
   String get stickerOpen => '貼圖';

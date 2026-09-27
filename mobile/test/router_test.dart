@@ -197,6 +197,9 @@ class _Io implements AppIo {
     required String body,
     String? payload,
   }) async => rang.add(payload ?? title);
+
+  @override
+  Future<void> unnotify(String payload) async {}
 }
 
 // a database in memory: the rows the receive side reads and writes, and a

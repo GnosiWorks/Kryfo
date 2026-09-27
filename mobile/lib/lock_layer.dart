@@ -107,6 +107,8 @@ class _LockLayerState extends State<LockLayer>
   }
 
   void _goUp() {
+    // first, so a change the lock-up itself tells about finds it up
+    _hidden = true;
     for (final p in List.of(_down)) {
       GestureBinding.instance.cancelPointer(p);
     }
@@ -117,7 +119,6 @@ class _LockLayerState extends State<LockLayer>
     _fade.stop();
     _fade.value = 1;
     _fading = false;
-    _hidden = true;
     // the screen reader's tree and focus change now, not at the next
     // frame after the app comes back
     SchedulerBinding.instance.scheduleForcedFrame();
@@ -212,6 +213,7 @@ class LockGate extends StatefulWidget {
     required this.guard,
     required this.quiet,
     required this.pad,
+    this.lockingUp,
     this.inFront,
     this.localesChanged,
     this.revealed,
@@ -228,6 +230,8 @@ class LockGate extends StatefulWidget {
   // the session on screen is a decoy's
   final bool Function() quiet;
   final WidgetBuilder pad;
+  // the lock is going up: the app puts away what only an unlock showed
+  final VoidCallback? lockingUp;
   final ValueChanged<bool>? inFront;
   final VoidCallback? localesChanged;
   // the app is shown: before what waited for it happens
@@ -285,8 +289,17 @@ class _LockGateState extends State<LockGate> with WidgetsBindingObserver {
     onLockUp: () {
       widget.guard.locking();
       haloClearToasts();
+      widget.lockingUp?.call();
     },
     onLifted: () {
+      // the app was left while the pin was checked: it locks again before
+      // anything that waited runs
+      final life = WidgetsBinding.instance.lifecycleState;
+      if (life == AppLifecycleState.paused ||
+          life == AppLifecycleState.hidden) {
+        widget.leaving();
+        return;
+      }
       widget.revealed?.call();
       // what waited happens in an everyday session and is dropped in a decoy
       widget.quiet() ? widget.guard.dropHeld() : widget.guard.lifted();

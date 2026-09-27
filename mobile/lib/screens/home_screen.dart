@@ -37,6 +37,7 @@ import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/shift_in_place.dart';
 import '../widgets/confirm_sheet.dart';
+import '../widgets/hidden_mark.dart';
 import '../notif_permission.dart';
 import '../delivery_mode.dart';
 import '../l10n/l10n.dart';
@@ -453,6 +454,8 @@ class ContactPreview {
   final int unread;
   final bool pinned;
   final String? supporterBadge;
+  // one of the open vault's: only its session shows it
+  final bool hidden;
   ContactPreview({
     required this.haloId,
     this.nickname,
@@ -467,6 +470,7 @@ class ContactPreview {
     this.unread = 0,
     this.pinned = false,
     this.supporterBadge,
+    this.hidden = false,
   });
 }
 
@@ -479,6 +483,7 @@ class GroupSummary {
   final int unread;
   final bool mentioned;
   final int? expiresAt; // set for a burner room
+  final bool hidden;
   const GroupSummary({
     required this.groupId,
     required this.name,
@@ -486,6 +491,7 @@ class GroupSummary {
     this.unread = 0,
     this.mentioned = false,
     this.expiresAt,
+    this.hidden = false,
   });
   bool get isRoom => expiresAt != null;
 }
@@ -1907,15 +1913,24 @@ class _GroupRow extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      g.name,
-                      style: HaloType.sans(
-                        size: 14,
-                        weight: g.unread > 0
-                            ? FontWeight.w600
-                            : FontWeight.w500,
-                        color: HaloColors.text,
-                      ),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            g.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: HaloType.sans(
+                              size: 14,
+                              weight: g.unread > 0
+                                  ? FontWeight.w600
+                                  : FontWeight.w500,
+                              color: HaloColors.text,
+                            ),
+                          ),
+                        ),
+                        HiddenMark(on: g.hidden),
+                      ],
                     ),
                     const SizedBox(height: 2),
                     if (g.isRoom)
@@ -2111,6 +2126,31 @@ void _chatMenu(BuildContext context, ContactPreview c) {
               appState.archive(c.haloId);
             },
           ),
+          // hidden chats open: a chat goes out of the everyday list, or
+          // comes back to it, and its row says which
+          if (lockState.inVault && !c.blocked)
+            ListTile(
+              leading: Icon(
+                c.hidden
+                    ? Icons.visibility_outlined
+                    : Icons.visibility_off_outlined,
+                color: HaloColors.violet,
+                size: 22,
+              ),
+              title: Text(
+                c.hidden ? l10n.chatShowInList : l10n.chatHide,
+                style: HaloType.sans(size: 15, color: HaloColors.text),
+              ),
+              onTap: () {
+                Navigator.pop(sheetCtx);
+                moveHiddenChat(
+                  context,
+                  c.haloId,
+                  group: false,
+                  hide: !c.hidden,
+                );
+              },
+            ),
           ListTile(
             leading: Icon(
               Icons.delete_outline_rounded,
@@ -2229,6 +2269,7 @@ class _Row extends StatelessWidget {
                               const SizedBox(width: 6),
                               _supporterPill(),
                             ],
+                            HiddenMark(on: c.hidden),
                           ],
                         ),
                       ),

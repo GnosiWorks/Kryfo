@@ -7117,6 +7117,21 @@ class AppLocalizationsId extends AppLocalizations {
       'PIN obrolan tersembunyi membuka Kryfo beserta obrolan tersembunyimu; PIN-mu dan sidik jarimu membukanya tanpa obrolan itu. Mengatur obrolan tersembunyi lagi menggantikan yang ada di ponsel ini. Kalau PIN obrolan tersembunyi terlupa, obrolan itu hilang untuk selamanya.';
 
   @override
+  String get chatHide => 'Sembunyikan obrolan';
+
+  @override
+  String get groupHide => 'Sembunyikan grup';
+
+  @override
+  String get chatHidden => 'Tersembunyi';
+
+  @override
+  String get chatHiddenToast => 'Disembunyikan dari daftar obrolanmu';
+
+  @override
+  String get chatShowInList => 'Tampilkan di daftar obrolan';
+
+  @override
   String get stickerOpen => 'Stiker';
 
   @override

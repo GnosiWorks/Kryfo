@@ -7171,6 +7171,21 @@ class AppLocalizationsPt extends AppLocalizations {
       'Seu PIN das conversas ocultas abre o Kryfo com as conversas ocultas; seu PIN e sua digital, sem elas. Configurar as conversas ocultas de novo substitui as que este celular tem. Esqueça o PIN das conversas ocultas e elas somem para sempre.';
 
   @override
+  String get chatHide => 'Ocultar conversa';
+
+  @override
+  String get groupHide => 'Ocultar grupo';
+
+  @override
+  String get chatHidden => 'Oculta';
+
+  @override
+  String get chatHiddenToast => 'Oculta da sua lista de conversas';
+
+  @override
+  String get chatShowInList => 'Mostrar na lista de conversas';
+
+  @override
   String get stickerOpen => 'Figurinhas';
 
   @override

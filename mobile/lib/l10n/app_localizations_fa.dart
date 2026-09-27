@@ -7135,6 +7135,21 @@ class AppLocalizationsFa extends AppLocalizations {
       'PIN گفت‌وگوهای پنهان، Kryfo را همراه گفت‌وگوهای پنهان شما باز می‌کند؛ PIN شما و اثر انگشتتان بدون آن‌ها. راه‌اندازی دوباره‌ی گفت‌وگوهای پنهان جای آن‌هایی را که این گوشی دارد می‌گیرد. اگر PIN گفت‌وگوهای پنهان را فراموش کنید، برای همیشه از دست می‌روند.';
 
   @override
+  String get chatHide => 'پنهان کردن گفت‌وگو';
+
+  @override
+  String get groupHide => 'پنهان کردن گروه';
+
+  @override
+  String get chatHidden => 'پنهان';
+
+  @override
+  String get chatHiddenToast => 'از فهرست گفت‌وگوهای شما پنهان شد';
+
+  @override
+  String get chatShowInList => 'نمایش در فهرست گفت‌وگوها';
+
+  @override
   String get stickerOpen => 'استیکرها';
 
   @override

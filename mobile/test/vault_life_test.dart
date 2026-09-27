@@ -316,6 +316,9 @@ class _Host implements VaultHost {
   }
 
   @override
+  Future<HaloDb> openVault(String keyHex) async => w.vaultDb;
+
+  @override
   ChatMover mover(HaloDb live, HaloDb? vault) => _Mover(w);
 
   @override

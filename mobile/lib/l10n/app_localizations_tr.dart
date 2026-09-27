@@ -7148,6 +7148,21 @@ class AppLocalizationsTr extends AppLocalizations {
       'Gizli sohbet PIN’in Kryfo’yu gizli sohbetlerinle açar; PIN’in ve parmak izin ise onlar olmadan. Gizli sohbetleri yeniden kurmak, bu telefondakilerin yerini alır. Gizli sohbet PIN’ini unutursan sonsuza dek giderler.';
 
   @override
+  String get chatHide => 'Sohbeti gizle';
+
+  @override
+  String get groupHide => 'Grubu gizle';
+
+  @override
+  String get chatHidden => 'Gizli';
+
+  @override
+  String get chatHiddenToast => 'Sohbet listenden gizlendi';
+
+  @override
+  String get chatShowInList => 'Sohbet listesinde göster';
+
+  @override
   String get stickerOpen => 'Çıkartmalar';
 
   @override

@@ -8,10 +8,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../contact_status.dart';
+import '../lock_state.dart' show lockState;
 import '../main.dart' show appState, session;
 import '../theme.dart';
 import '../widgets/halo_buttons.dart';
 import '../widgets/halo_sheet.dart';
+import '../widgets/hidden_mark.dart';
 import '../widgets/kryfo_avatar.dart';
 import '../widgets/motion.dart' show haloRoute;
 import '../widgets/sheet_handle.dart';
@@ -183,6 +185,7 @@ class _ContactScreenState extends State<ContactScreen> {
     final muted = _flag('muted');
     final pinned = _flag('pinned');
     final accepted = c == null || (c['accepted'] as int? ?? 1) == 1;
+    final hidden = session.isHidden(widget.haloId);
     final status = contactStatusLine(
       verified: verified,
       voucherNames: _voucherNames,
@@ -386,6 +389,25 @@ class _ContactScreenState extends State<ContactScreen> {
               Navigator.of(context).popUntil((r) => r.isFirst);
             },
           ),
+          // hidden chats open: out of the everyday list, or back in it.
+          // its rows move, so the chat is left as an archived one is
+          if (lockState.inVault && accepted && !blocked)
+            _Row(
+              icon: hidden
+                  ? Icons.visibility_outlined
+                  : Icons.visibility_off_outlined,
+              label: hidden ? l10n.chatShowInList : l10n.chatHide,
+              onTap: () async {
+                final moved = await moveHiddenChat(
+                  context,
+                  widget.haloId,
+                  group: false,
+                  hide: !hidden,
+                );
+                if (!moved || !context.mounted) return;
+                Navigator.of(context).popUntil((r) => r.isFirst);
+              },
+            ),
           _Row(
             icon: Icons.block,
             label: blocked ? l10n.commonUnblock : l10n.commonBlock,
