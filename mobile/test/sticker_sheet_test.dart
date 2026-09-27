@@ -238,6 +238,71 @@ void main() {
     expect(h.picked?.ref, const StickerRef('fokia', 1));
   });
 
+  testWidgets('the grid rests after its loops, fresh on the next opening', (
+    t,
+  ) async {
+    final h = _Harness(t, pack);
+    await h.pump();
+    await h.open();
+    bool playing() =>
+        t.allRenderObjects.whereType<RenderSticker>().any((b) => b.time >= 0);
+    expect(playing(), true);
+    // every cell on screen takes its turn in the budget, plays its loops
+    // and rests; a round is at most a phase and the loops of the longest
+    final longest = pack.playable
+        .map((id) => pack.sticker(id)!.loopMs)
+        .reduce((a, b) => a > b ? a : b);
+    final round = (kStickerPickLoops + 1) * longest;
+    for (var ms = 0; ms < 20 * round && playing(); ms += 100) {
+      await t.pump(const Duration(milliseconds: 100));
+    }
+    expect(playing(), false);
+    final rested = StickerView.frames;
+    await h.frames(100);
+    expect(StickerView.frames, rested);
+    expect(t.binding.hasScheduledFrame, false);
+
+    // closed and opened again: they play again
+    await t.binding.handlePopRoute();
+    await h.frames(25);
+    expect(h.closed, true);
+    await h.open();
+    expect(playing(), true);
+  });
+
+  testWidgets('the big one rests after its loops; a tap plays it again', (
+    t,
+  ) async {
+    final h = _Harness(t, pack);
+    await h.pump();
+    await h.open();
+    final g = await t.startGesture(t.getCenter(h.cell('👋')));
+    await t.pump(const Duration(milliseconds: 360));
+    await g.up();
+    await h.frames(15);
+    RenderSticker big() => t.allRenderObjects
+        .whereType<RenderSticker>()
+        .firstWhere((b) => b.size.width >= 200);
+    expect(big().time, greaterThanOrEqualTo(0));
+    final loop = pack.sticker(1)!.loopMs;
+    await h.frames((kStickerPickLoops + 1) * loop ~/ 20 + 10);
+    expect(big().time, -1);
+    final rested = StickerView.frames;
+    await h.frames(50);
+    expect(StickerView.frames, rested);
+
+    await t.tapAt(
+      t.getCenter(
+        find.byWidgetPredicate((w) => w is StickerView && w.size >= 200),
+      ),
+    );
+    await h.frames(10);
+    expect(StickerView.frames, greaterThan(rested + 5));
+    expect(big().time, greaterThan(0));
+    // still open: the tap played it, it did not close the preview
+    expect(find.text('Send'), findsOneWidget);
+  });
+
   test('recents: newest first, no twice, at most twenty', () async {
     final r = StickerRecents(HaloContainer.everyday);
     for (var i = 1; i <= 25; i++) {

@@ -38,6 +38,9 @@ final _clockGlyph = [svgCircle(12, 12, 8), 'M12 8v4l2.6 2.2'];
 
 const _holdFor = Duration(milliseconds: 320);
 const _gridSlots = 6;
+// a sticker in the picker plays this many loops, as in a chat, then rests
+// on its still. every opening of the sheet plays them fresh
+const kStickerPickLoops = 3;
 const _gap = 6.0;
 const _side = 12.0;
 const _headerHeight = 40.0;
@@ -752,6 +755,7 @@ class _CellState extends State<_Cell> {
                 fps: 30,
                 budget: widget.budget,
                 order: widget.order,
+                loops: kStickerPickLoops,
                 delay: s.loopMs == 0
                     ? 0
                     : (widget.order % 1000) * 370 % s.loopMs,
@@ -797,6 +801,8 @@ class _StickerPreviewState extends State<_StickerPreview>
   late Rect _from = widget.from;
   late bool _settled = !widget.held;
   bool _closing = false;
+  // a tap on the big one plays it again once it rests
+  int _replay = 0;
 
   // 0 at the cell, 1 in the middle; the spring overshoots a little
   late final AnimationController _grow = AnimationController.unbounded(
@@ -846,6 +852,11 @@ class _StickerPreviewState extends State<_StickerPreview>
       _shown = s;
       _from = widget.rectOf() ?? _from;
     });
+  }
+
+  void _again() {
+    HapticFeedback.selectionClick();
+    setState(() => _replay++);
   }
 
   void settle() {
@@ -929,11 +940,16 @@ class _StickerPreviewState extends State<_StickerPreview>
                 child: c,
               ),
             ),
-            child: StickerView(
+            child: GestureDetector(
               key: ValueKey(_shown.key),
-              sticker: _shown.sticker,
-              size: side,
-              label: l10n.stickerA11y(_shown.sticker.emoji),
+              onTap: _settled && !_closing ? _again : null,
+              child: StickerView(
+                sticker: _shown.sticker,
+                size: side,
+                loops: kStickerPickLoops,
+                replay: _replay,
+                label: l10n.stickerA11y(_shown.sticker.emoji),
+              ),
             ),
           ),
         ),
