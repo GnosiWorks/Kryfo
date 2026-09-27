@@ -36,7 +36,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import '../stickers/sticker_bubble.dart';
 import '../stickers/sticker_flight.dart';
-import '../stickers/sticker_pack.dart' show Sticker, StickerPack;
+import '../stickers/sticker_pack.dart' show Sticker, StickerLibrary;
 import '../stickers/sticker_sheet.dart'
     show StickerButton, StickerPick, showStickerSheet;
 import '../stickers/sticker_view.dart' show StickerBudget;
@@ -211,7 +211,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     claimChat('group:${widget.groupId}');
     WidgetsBinding.instance.addObserver(this);
     // read once, before the first sticker row asks for it
-    StickerPack.load().ignore();
+    StickerLibrary.load().ignore();
     lockState.addListener(_lockLifted);
     // a room is never in the app switcher and never screenshotted. the flag
     // is set the moment we know it is a room and cleared on the way out.
@@ -1294,15 +1294,16 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     // the sheet hands focus back to the composer; the keyboard stays down
     FocusManager.instance.primaryFocus?.unfocus();
     if (pick == null || !mounted) return;
-    StickerPack pack;
+    StickerLibrary lib;
     try {
-      pack = StickerPack.ready ?? await StickerPack.load();
+      lib = StickerLibrary.ready ?? await StickerLibrary.load();
     } catch (e) {
       dlog('sticker pack: $e');
       return;
     }
-    final s = pack.name == pick.ref.pack ? pack.sticker(pick.ref.id) : null;
-    if (s == null || !mounted) return;
+    final pack = lib.pack(pick.ref.pack);
+    final s = pack?.sticker(pick.ref.id);
+    if (pack == null || s == null || !mounted) return;
     await _sendSticker(s, StickerWire.of(pack, s), pick);
   }
 

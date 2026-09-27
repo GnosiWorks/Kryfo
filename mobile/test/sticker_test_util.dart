@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// what the sticker tests share: the pack read from disk, a frame rendered to
+// what the sticker tests share: the packs read from disk, a frame rendered to
 // rgba, and a png reader for the reference renders (rgba8, what they are).
 import 'dart:io';
 import 'dart:typed_data';
@@ -8,25 +8,47 @@ import 'dart:ui' as ui;
 import 'package:kryfo/stickers/sticker_pack.dart';
 import 'package:kryfo/stickers/sticker_player.dart';
 
-const packFile = 'assets/stickers/fokia.kst';
-const artDir = 'tool/stickers/fokia';
-// rendered by tool/pack_stickers.py --png, not committed
-const pngDir = 'build/stickers/png';
+/// where a pack's file, art and reference renders are
+class PackFiles {
+  const PackFiles(this.name);
+  final String name;
+  String get file => 'assets/stickers/$name.kst';
+  String get art => 'tool/stickers/$name';
+  // rendered by tool/pack_stickers.py --png, not committed
+  String get png => 'build/stickers/png/$name';
+  // how to build this pack by hand
+  String get tool =>
+      'tool/pack_stickers.py${name == 'fokia' ? '' : ' --pack $name'}';
+}
 
-StickerPack loadPack() =>
-    StickerPack.parse(ByteData.sublistView(File(packFile).readAsBytesSync()));
+const fokiaFiles = PackFiles('fokia');
+const remixFiles = PackFiles('fokiaremix');
+
+StickerPack loadPack([PackFiles f = fokiaFiles]) =>
+    StickerPack.parse(ByteData.sublistView(File(f.file).readAsBytesSync()));
+
+/// every pack the app ships, from disk, in the app's order, made the one
+/// the widgets draw from
+StickerLibrary useLibrary() {
+  final lib = StickerLibrary([
+    for (final a in kStickerAssets)
+      StickerPack.parse(ByteData.sublistView(File(a).readAsBytesSync())),
+  ]);
+  StickerLibrary.use(lib);
+  return lib;
+}
 
 /// the reference png of a sticker, named after its svg
-File pngFor(int id) {
+File pngFor(int id, [PackFiles f = fokiaFiles]) {
   final nn = id.toString().padLeft(2, '0');
-  final svg = Directory('$artDir/svg').listSync().whereType<File>().firstWhere(
-    (f) => f.uri.pathSegments.last.startsWith('fokia-$nn-'),
+  final svg = Directory('${f.art}/svg').listSync().whereType<File>().firstWhere(
+    (x) => x.uri.pathSegments.last.split('-')[1] == nn,
   );
   final name = svg.uri.pathSegments.last.replaceFirst(
     RegExp(r'\.svg$'),
     '.png',
   );
-  return File('$pngDir/$name');
+  return File('${f.png}/$name');
 }
 
 /// a frame at [side] px, premultiplied rgba. t null: the still picture;

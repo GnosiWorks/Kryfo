@@ -1,0 +1,457 @@
+# fokia remix animation, read by tool/pack_stickers.py --pack fokiaremix.
+# the format is fokia's own: see tool/stickers/fokia/anim.txt.
+#
+#   title WORDS                               the name the picker shows
+#   sticker NN name loop=MS emoji=E since=N   no loop: a still
+#
+# a node on a group with an opacity rests at that alpha: its alpha track
+# starts and ends there.
+#
+# while no sticker in a pack moves, the picker offers its stills; once
+# one moves, only the moving ones.
+
+title Fokia Remix
+
+pivot root 256,440
+pivot neck 256,276
+pivot shoulder_l 168,300
+pivot shoulder_r 344,300
+
+sticker 30 writing-fire loop=2000 emoji=✍️ since=1
+  # writes in a hurry: the sticker bobs, the paw scribbles with its pen and
+  # lines, the eyes follow it, the flames flicker, the smoke bobs and drifts,
+  # sparks rise and pop back
+  node pen   flipper_right[0:2]  @325.756,329.245
+  node paw   flipper_right[5]    @329.8,323.2
+  node lines props[9:12]         @365.756,305.245
+  node pupl  eyes[1][0:2]        @232.8,208
+  node pupr  eyes[4][0:2]        @290.8,208
+  node big   props[0:2]          @355.649,356     pivot=392.5,356
+  node small props[2:4]          @336,358         pivot=356.3,358
+  node smoke props[8]            @399.608,243.608
+  node emb0  props[5]            @350.2,277.5
+  node emb1  props[6]            @388.5,240
+  node emb2  props[7]            @398.2,202.5
+  node emb3  props[4]            @412.3,165
+  y     root  0:0 40:0 270:-5.85 500:0 540:0 770:-5.85 1000:0 1040:0 1270:-5.85 1500:0 1540:0 1770:-5.85 2000:0
+  x     paw   0:0 88:-31.5 213:8.1 338:-31.5 463:8.1 588:-31.5 713:8.1 838:-31.5 963:8.1 1088:-31.5 1213:8.1 1338:-31.5 1463:8.1 1588:-31.5 1713:8.1 1838:-31.5 1963:8.1 2000:0 !
+  y     paw   0:0 100:9.6 160:0 220:9.6 280:0 340:9.6 400:0 460:9.6 520:0 580:9.6 640:0 700:9.6 760:0 820:9.6 880:0 940:9.6 1000:0 1060:9.6 1120:0 1180:9.6 1240:0 1300:9.6 1360:0 1420:9.6 1480:0 1540:9.6 1600:0 1660:9.6 1720:0 1780:9.6 1840:0 1900:9.6 2000:0
+  x     pen   0:0 88:-31.5 213:8.1 338:-31.5 463:8.1 588:-31.5 713:8.1 838:-31.5 963:8.1 1088:-31.5 1213:8.1 1338:-31.5 1463:8.1 1588:-31.5 1713:8.1 1838:-31.5 1963:8.1 2000:0 !
+  y     pen   0:0 100:9.6 160:0 220:9.6 280:0 340:9.6 400:0 460:9.6 520:0 580:9.6 640:0 700:9.6 760:0 820:9.6 880:0 940:9.6 1000:0 1060:9.6 1120:0 1180:9.6 1240:0 1300:9.6 1360:0 1420:9.6 1480:0 1540:9.6 1600:0 1660:9.6 1720:0 1780:9.6 1840:0 1900:9.6 2000:0
+  x     lines 0:0 88:-31.5 213:8.1 338:-31.5 463:8.1 588:-31.5 713:8.1 838:-31.5 963:8.1 1088:-31.5 1213:8.1 1338:-31.5 1463:8.1 1588:-31.5 1713:8.1 1838:-31.5 1963:8.1 2000:0 !
+  y     lines 0:0 100:9.6 160:0 220:9.6 280:0 340:9.6 400:0 460:9.6 520:0 580:9.6 640:0 700:9.6 760:0 820:9.6 880:0 940:9.6 1000:0 1060:9.6 1120:0 1180:9.6 1240:0 1300:9.6 1360:0 1420:9.6 1480:0 1540:9.6 1600:0 1660:9.6 1720:0 1780:9.6 1840:0 1900:9.6 2000:0
+  x     pupl  0:0 88:-4.8 213:1 338:-4.8 463:1 588:-4.8 713:1 838:-4.8 963:1 1088:-4.8 1213:1 1338:-4.8 1463:1 1588:-4.8 1713:1 1838:-4.8 1963:1 2000:0
+  x     pupr  0:0 88:-4.8 213:1 338:-4.8 463:1 588:-4.8 713:1 838:-4.8 963:1 1088:-4.8 1213:1 1338:-4.8 1463:1 1588:-4.8 1713:1 1838:-4.8 1963:1 2000:0
+  sx    big   0:1 100:0.85 215:1.035 350:0.85 465:1.035 600:0.85 715:1.035 850:0.85 965:1.035 1100:0.85 1215:1.035 1350:0.85 1465:1.035 1600:0.85 1715:1.035 1850:0.85 1965:1.035 2000:1
+  sy    big   0:1 167:1.28 300:0.85 480:1.16 667:0.86 800:1.29 940:0.97 1000:1 1167:1.28 1300:0.85 1480:1.16 1667:0.86 1800:1.29 1940:0.97 2000:1
+  sy    small 0:1 167:1.28 300:0.85 480:1.16 667:0.86 800:1.29 940:0.97 1000:1 1167:1.28 1300:0.85 1480:1.16 1667:0.86 1800:1.29 1940:0.97 2000:1
+  y     smoke 0:0 167:-27.8 300:13.3 433:-17.8 560:-13.3 667:13.3 800:-28.9 933:3.3 1000:0 1167:-27.8 1300:13.3 1433:-17.8 1560:-13.3 1667:13.3 1800:-28.9 1933:3.3 2000:0 !
+  x     smoke 0:0 950:-15.6 2000:0 !
+  drop  emb0 -28 0 280 back=130 !
+  drop  emb0 -28 500 780 back=130 !
+  drop  emb0 -28 1000 1280 back=130 !
+  drop  emb0 -28 1500 1780 back=130 !
+  drop  emb1 -28 25 305 back=130 !
+  drop  emb1 -28 525 805 back=130 !
+  drop  emb1 -28 1025 1305 back=130 !
+  drop  emb1 -28 1525 1805 back=130 !
+  drop  emb2 -28 50 330 back=130 !
+  drop  emb2 -28 550 830 back=130 !
+  drop  emb2 -28 1050 1330 back=130 !
+  drop  emb2 -28 1550 1830 back=130 !
+  drop  emb3 -28 75 355 back=130 !
+  drop  emb3 -28 575 855 back=130 !
+  drop  emb3 -28 1075 1355 back=130 !
+  drop  emb3 -28 1575 1855 back=130 !
+
+sticker 31 victory-dance loop=2000 emoji=🙌 since=1
+  # dances: sways from far below the feet, drops on every beat, one paw
+  # reaches up while the other comes down, the big and small stars swap sizes
+  # on the beat. the arms stretch from the shoulder to stay on the paws
+  node dance root                              pivot=256,638.4
+  node pawl  flipper_left[3]    @118,178
+  node pawr  flipper_right[3]   @394,134
+  node arml  flipper_left[0:3]  @168,300    pivot=shoulder_l
+  node armr  flipper_right[0:3] @344,300    pivot=shoulder_r
+  node star0 props_back[0]      @70,92      pivot=70,110
+  node star1 props_back[1]      @450,132    pivot=450,150
+  node star2 props_back[2]      @430,42     pivot=430,60
+  node star3 props_back[3]      @90,232     pivot=90,250
+  rot   dance 0:0 100:1.353:linear 200:2.108:linear 300:2.191:linear 400:1.593:linear 500:0.373:linear 600:-1.349:linear 700:-3.405:linear 800:-5.593:linear 900:-7.7:linear 1000:-9.519:linear 1100:-10.873:linear 1200:-11.627:linear 1300:-11.71:linear 1400:-11.112:linear 1500:-9.892:linear 1600:-8.17:linear 1700:-6.115:linear 1800:-3.926:linear 1900:-1.819:linear 2000:0:linear !
+  y     dance 0:0 267:13.1:sinein 500:0:sineout 767:12.2:sinein 1000:0:sineout 1267:13.1:sinein 1500:0:sineout 1767:12.2:sinein 2000:0:sineout !
+  y     pawl  0:0 520:-43.5 1000:0 1520:-43.5 2000:0 !
+  sy    arml  0:1 520:1.34 1000:1 1520:1.34 2000:1
+  y     pawr  0:0 520:43.5 1000:0 1520:43.5 2000:0 !
+  sy    armr  0:1 520:0.747 1000:1 1520:0.747 2000:1 !
+  scale star0 0:1 267:0.55:sinein 500:1:sineout 767:0.64:sinein 1000:1:sineout 1267:0.55:sinein 1500:1:sineout 1767:0.64:sinein 2000:1:sineout !
+  scale star2 0:1 267:0.55:sinein 500:1:sineout 767:0.64:sinein 1000:1:sineout 1267:0.55:sinein 1500:1:sineout 1767:0.64:sinein 2000:1:sineout !
+  scale star1 0:1 267:1.75:sinein 500:1:sineout 767:1.75:sinein 1000:1:sineout 1267:1.75:sinein 1500:1:sineout 1767:1.75:sinein 2000:1:sineout !
+  scale star3 0:1 267:1.75:sinein 500:1:sineout 767:1.75:sinein 1000:1:sineout 1267:1.75:sinein 1500:1:sineout 1767:1.75:sinein 2000:1:sineout !
+
+sticker 32 side-eye loop=2600 emoji=😒 since=1
+  # the side-eye holds, then the head comes upright and the eyes look ahead
+  # with level lids and brows, and back again
+  node pupl  eyes[1][0:2]  @207,200
+  node pupr  eyes[4][0:2]  @265,200
+  node lidl  eyes[1][2:4]  @196,150   pivot=225,191.5
+  node lidr  eyes[4][2:4]  @258,150   pivot=287,185.7
+  node browl brows[0]      @205,146   pivot=225,145
+  node browr brows[1]      @307,128   pivot=287,125
+  rot   head  0:0 1120:0 1560:-6 2200:-6 2570:0 2600:0  pivot=256,280 !
+  x     pupl  0:0 1120:0 1560:19.5 2200:19.5 2570:0 2600:0 !
+  y     pupl  0:0 1120:0 1560:2.5 2200:2.5 2570:0 2600:0
+  x     pupr  0:0 1120:0 1560:19.5 2200:19.5 2570:0 2600:0 !
+  y     pupr  0:0 1120:0 1560:2.5 2200:2.5 2570:0 2600:0
+  y     lidl  0:0 1120:0 1560:-12 2200:-12 2570:0 2600:0
+  rot   lidl  0:0 1120:0 1560:-5.6 2200:-5.6 2570:0 2600:0
+  y     lidr  0:0 1120:0 1560:-7 2200:-7 2570:0 2600:0
+  rot   lidr  0:0 1120:0 1560:5.7 2200:5.7 2570:0 2600:0
+  y     browl 0:0 1120:0 1560:-5.5 2200:-5.5 2570:0 2600:0
+  y     browr 0:0 1120:0 1560:11.7 2200:11.7 2570:0 2600:0
+
+sticker 33 slow-clap loop=2400 emoji=👏 since=1
+  # claps slowly, twice: the paws slide in to meet in front and back out. each
+  # arm swings up from the shoulder and stretches to stay under its paw
+  node pawl  flipper_left[3]     @154,300
+  node pawr  flipper_right[3]    @358,300
+  node arml  flipper_left[0:3]   @168,300  pivot=shoulder_l
+  node armr  flipper_right[0:3]  @344,300  pivot=shoulder_r
+  x     pawl  0:0 600:84 1200:0 1800:84 2400:0 !
+  x     pawr  0:0 600:-84 1200:0 1800:-84 2400:0 !
+  rot   arml  0:0 600:-70 1200:0 1800:-70 2400:0 !
+  rot   armr  0:0 600:70 1200:0 1800:70 2400:0 !
+  sy    arml  0:1 600:1.5 1200:1 1800:1.5 2400:1 !
+  sy    armr  0:1 600:1.5 1200:1 1800:1.5 2400:1 !
+  x     arml  0:0 600:20 1200:0 1800:20 2400:0 !
+  x     armr  0:0 600:-20 1200:0 1800:-20 2400:0 !
+
+sticker 34 mind-blown loop=2800 emoji=🤯 since=1
+  # the blast clears: the puffs swell and drift apart and the rays fly off. a
+  # calm, then the head shakes and swells and it blows again: the puffs grow
+  # out of the top of the head and the rays shoot out. none of them fades:
+  # each has its own outline, so they shrink away and grow back
+  node char  root                   pivot=256,280
+  node puff0 props_fx[0]   @217.1,63.5
+  node puff1 props_fx[1]   @256,44.1
+  node puff2 props_fx[2]   @294.9,63.5
+  node puff3 props_fx[3]   @236.6,83
+  node puff4 props_fx[4]   @278,81.7
+  node puff5 props_fx[5]   @197.7,86.8
+  node puff6 props_fx[6]   @315.6,85.6
+  node ray0  props_fx[7]  @150.2,67  pivot=137.4,64.8
+  node ray1  props_fx[8]  @164.9,40.4  pivot=153.9,33.5
+  node ray2  props_fx[9]  @192.8,19.5  pivot=185.2,9.0
+  node ray3  props_fx[10]  @230,7.4  pivot=226.8,-5.2
+  node ray4  props_fx[11]  @271,5.9  pivot=272.8,-6.9
+  node ray5  props_fx[12]  @309.7,15.2  pivot=316.2,3.9
+  node ray6  props_fx[13]  @340.7,33.9  pivot=350.9,25.9
+  node ray7  props_fx[14]  @359.3,59.4  pivot=371.8,55.8
+  shiver char 2.2 200 1133 2333 prop=x
+  scale char  0:1 1900:1 2290:1.08 2470:1 !
+  x     puff0 0:0 850:-42.79:linear 851:24.118:hold 2330:24.118 2800:0:linear !
+  y     puff0 0:0 850:-7.15:linear 851:4.03:hold 2330:4.03 2800:0:linear !
+  scale puff0 0:1 450:1.582:linear 850:0:in 2329:0 2330:0.38:hold 2800:1:linear !
+  x     puff1 0:0 850:0:linear 851:0:hold 2330:0 2800:0:linear !
+  y     puff1 0:0 850:-28.49:linear 851:16.058:hold 2330:16.058 2800:0:linear !
+  scale puff1 0:1 450:1.582:linear 850:0:in 2329:0 2330:0.38:hold 2800:1:linear !
+  x     puff2 0:0 850:42.79:linear 851:-24.118:hold 2330:-24.118 2800:0:linear !
+  y     puff2 0:0 850:-7.15:linear 851:4.03:hold 2330:4.03 2800:0:linear !
+  scale puff2 0:1 450:1.582:linear 850:0:in 2329:0 2330:0.38:hold 2800:1:linear !
+  x     puff3 0:0 850:-21.34:linear 851:12.028:hold 2330:12.028 2800:0:linear !
+  y     puff3 0:0 850:14.3:linear 851:-8.06:hold 2330:-8.06 2800:0:linear !
+  scale puff3 0:1 450:1.582:linear 850:0:in 2329:0 2330:0.38:hold 2800:1:linear !
+  x     puff4 0:0 850:24.2:linear 851:-13.64:hold 2330:-13.64 2800:0:linear !
+  y     puff4 0:0 850:12.87:linear 851:-7.254:hold 2330:-7.254 2800:0:linear !
+  scale puff4 0:1 450:1.582:linear 850:0:in 2329:0 2330:0.38:hold 2800:1:linear !
+  x     puff5 0:0 850:-64.13:linear 851:36.146:hold 2330:36.146 2800:0:linear !
+  y     puff5 0:0 850:18.48:linear 851:-10.416:hold 2330:-10.416 2800:0:linear !
+  scale puff5 0:1 450:1.582:linear 850:0:in 2329:0 2330:0.38:hold 2800:1:linear !
+  x     puff6 0:0 850:65.56:linear 851:-36.952:hold 2330:-36.952 2800:0:linear !
+  y     puff6 0:0 850:17.16:linear 851:-9.672:hold 2330:-9.672 2800:0:linear !
+  scale puff6 0:1 450:1.582:linear 850:0:in 2329:0 2330:0.38:hold 2800:1:linear !
+  x     ray0  0:0 420:-57.124:linear 421:38.411:hold 2330:38.411 2800:0:sinein !
+  y     ray0  0:0 420:-10.041:linear 421:6.752:hold 2330:6.752 2800:0:sinein !
+  scale ray0  0:1 200:1 420:0:in 2329:0 2330:0.4:hold 2500:1:out !
+  x     ray1  0:0 420:-49.134:linear 421:33.038:hold 2330:33.038 2800:0:sinein !
+  y     ray1  0:0 420:-30.82:linear 421:20.724:hold 2330:20.724 2800:0:sinein !
+  scale ray1  0:1 200:1 420:0:in 2329:0 2330:0.4:hold 2500:1:out !
+  x     ray2  0:0 420:-34.154:linear 421:22.965:hold 2330:22.965 2800:0:sinein !
+  y     ray2  0:0 420:-46.878:linear 421:31.521:hold 2330:31.521 2800:0:sinein !
+  scale ray2  0:1 200:1 420:0:in 2329:0 2330:0.4:hold 2500:1:out !
+  x     ray3  0:0 420:-14.067:linear 421:9.459:hold 2330:9.459 2800:0:sinein !
+  y     ray3  0:0 420:-56.268:linear 421:37.836:hold 2330:37.836 2800:0:sinein !
+  scale ray3  0:1 200:1 420:0:in 2329:0 2330:0.4:hold 2500:1:out !
+  x     ray4  0:0 420:8.046:linear 421:-5.41:hold 2330:-5.41 2800:0:sinein !
+  y     ray4  0:0 420:-57.439:linear 421:38.623:hold 2330:38.623 2800:0:sinein !
+  scale ray4  0:1 200:1 420:0:in 2329:0 2330:0.4:hold 2500:1:out !
+  x     ray5  0:0 420:29.016:linear 421:-19.511:hold 2330:-19.511 2800:0:sinein !
+  y     ray5  0:0 420:-50.22:linear 421:33.769:hold 2330:33.769 2800:0:sinein !
+  scale ray5  0:1 200:1 420:0:in 2329:0 2330:0.4:hold 2500:1:out !
+  x     ray6  0:0 420:45.722:linear 421:-30.744:hold 2330:-30.744 2800:0:sinein !
+  y     ray6  0:0 420:-35.686:linear 421:23.996:hold 2330:23.996 2800:0:sinein !
+  scale ray6  0:1 200:1 420:0:in 2329:0 2330:0.4:hold 2500:1:out !
+  x     ray7  0:0 420:55.735:linear 421:-37.477:hold 2330:-37.477 2800:0:sinein !
+  y     ray7  0:0 420:-16.052:linear 421:10.793:hold 2330:10.793 2800:0:sinein !
+  scale ray7  0:1 200:1 420:0:in 2329:0 2330:0.4:hold 2500:1:out !
+  clear ray0 char 1.5
+  clear ray7 char 1.5
+
+sticker 35 sipping-tea loop=3000 emoji=🍵 since=1
+  # lifts the cup to the mouth; the eyes drift down, the lids close and the
+  # brows level for a long sip, then back down. the steam curls all along.
+  # the arm swings and shortens to stay under the paw
+  node cup   flipper_right[0]      @174,318
+  node paw   flipper_right[4]      @242,346
+  node arm   flipper_right[1:4]    @344,300  pivot=shoulder_r
+  node wisp0 flipper_right[0][4]   @192,304  pivot=192,304
+  node wisp1 flipper_right[0][5]   @208,299  pivot=208,299
+  node pupl  eyes[1][0:2]          @239,199
+  node pupr  eyes[4][0:2]          @297,199
+  node lidl  eyes[1][2]            @196,150  pivot=225,150
+  node lidr  eyes[4][2]            @258,150  pivot=287,150
+  node lashl eyes[1][3]            @196,188.2  pivot=225,190
+  node lashr eyes[4][3]            @258,191.8  pivot=287,190
+  node browl brows[0]              @205,146
+  node browr brows[1]              @307,128
+  x     cup   0:0 450:0 900:50 1640:50 2100:0 3000:0 !
+  y     cup   0:0 450:0 900:-66 1640:-66 2100:0 3000:0 !
+  x     paw   0:0 450:0 900:50 1640:50 2100:0 3000:0 !
+  y     paw   0:0 450:0 900:-66 1640:-66 2100:0 3000:0 !
+  rot   arm   0:0 450:0 900:50 1640:50 2100:0 3000:0 !
+  sx    arm   0:1 450:1 900:0.55 1640:0.55 2100:1 3000:1 !
+  rot   wisp0 0:0 250:6:sineout 500:0:sinein 750:-6:sineout 1000:0:sinein 1250:6:sineout 1500:0:sinein 1750:-6:sineout 2000:0:sinein 2250:6:sineout 2500:0:sinein 2750:-6:sineout 3000:0:sinein
+  y     wisp0 0:0 500:-3 1000:0 1500:-3 2000:0 2500:-3 3000:0
+  rot   wisp1 0:0 250:6:sineout 500:0:sinein 750:-6:sineout 1000:0:sinein 1250:6:sineout 1500:0:sinein 1750:-6:sineout 2000:0:sinein 2250:6:sineout 2500:0:sinein 2750:-6:sineout 3000:0:sinein
+  y     wisp1 0:0 500:-3 1000:0 1500:-3 2000:0 2500:-3 3000:0
+  x     pupl  0:0 450:0 900:-12 1640:-12 2100:0 3000:0 !
+  y     pupl  0:0 450:0 900:7 1640:7 2100:0 3000:0 !
+  x     pupr  0:0 450:0 900:-14 1640:-14 2100:0 3000:0 !
+  y     pupr  0:0 450:0 900:8 1640:8 2100:0 3000:0 !
+  sy    lidl  0:1 450:1 900:1.45 1640:1.45 2100:1 3000:1 !
+  rot   lidl  0:0 450:0 900:-5.1 1640:-5.1 2100:0 3000:0
+  sy    lidr  0:1 450:1 900:1.45 1640:1.45 2100:1 3000:1 !
+  rot   lidr  0:0 450:0 900:5.1 1640:5.1 2100:0 3000:0
+  y     lashl 0:0 450:0 900:18 1640:18 2100:0 3000:0 !
+  rot   lashl 0:0 450:0 900:-3.55 1640:-3.55 2100:0 3000:0
+  y     lashr 0:0 450:0 900:18 1640:18 2100:0 3000:0 !
+  rot   lashr 0:0 450:0 900:3.55 1640:3.55 2100:0 3000:0
+  y     browl 0:0 450:0 900:-5.5 1640:-5.5 2100:0 3000:0
+  y     browr 0:0 450:0 900:15.5 1640:15.5 2100:0 3000:0 !
+
+sticker 36 tiny-violin loop=3000 emoji=🎻 since=1
+  # plays: the bow slides along itself with the paw, three strokes a loop,
+  # the arm swings and shortens to follow, the head rocks with each stroke.
+  # the notes float up one after another, strong at the bottom and fading as
+  # they rise, and drift left and back together; each is gone near the top
+  # and grows back from behind the head
+  node bow   flipper_right[0:2]  @129.8,332.6
+  node paw   flipper_right[5]    @265.7,271.7
+  node arm   flipper_right[2:5]  @344,300      pivot=shoulder_r
+  node note0 props_back[0]       @-6,14  pivot=148.6,199.1
+  node note1 props_back[1]       @-6,14  pivot=135.3,142.4
+  node note2 props_back[2]       @-6,14  pivot=121.9,85.8
+  node notes props_back
+  x     bow   0:0 370:47.528:sineout 420:47.528:linear 904:-12.332:sine 1000:0:sinein 1370:47.528:sineout 1420:47.528:linear 1904:-12.332:sine 2000:0:sinein 2370:47.528:sineout 2420:47.528:linear 2904:-12.332:sine 3000:0:sinein !
+  y     bow   0:0 370:-21.112:sineout 420:-21.112:linear 904:5.478:sine 1000:0:sinein 1370:-21.112:sineout 1420:-21.112:linear 1904:5.478:sine 2000:0:sinein 2370:-21.112:sineout 2420:-21.112:linear 2904:5.478:sine 3000:0:sinein !
+  x     paw   0:0 370:47.528:sineout 420:47.528:linear 904:-12.332:sine 1000:0:sinein 1370:47.528:sineout 1420:47.528:linear 1904:-12.332:sine 2000:0:sinein 2370:47.528:sineout 2420:47.528:linear 2904:-12.332:sine 3000:0:sinein !
+  y     paw   0:0 370:-21.112:sineout 420:-21.112:linear 904:5.478:sine 1000:0:sinein 1370:-21.112:sineout 1420:-21.112:linear 1904:5.478:sine 2000:0:sinein 2370:-21.112:sineout 2420:-21.112:linear 2904:5.478:sine 3000:0:sinein !
+  rot   arm   0:0 370:38:sineout 420:38:linear 904:-9.859:sine 1000:0:sinein 1370:38:sineout 1420:38:linear 1904:-9.859:sine 2000:0:sinein 2370:38:sineout 2420:38:linear 2904:-9.859:sine 3000:0:sinein !
+  scale arm   0:1 370:0.85:sineout 420:0.85:linear 904:1.039:sine 1000:1:sinein 1370:0.85:sineout 1420:0.85:linear 1904:1.039:sine 2000:1:sinein 2370:0.85:sineout 2420:0.85:linear 2904:1.039:sine 3000:1:sinein
+  rot   head  0:0 370:3:sineout 420:3:linear 904:-0.778:sine 1000:0:sinein 1370:3:sineout 1420:3:linear 1904:-0.778:sine 2000:0:sinein 2370:3:sineout 2420:3:linear 2904:-0.778:sine 3000:0:sinein  pivot=neck
+  x     note0 0:0 2600:-34.58:linear 2601:5.307:hold 3000:0:linear !
+  y     note0 0:0 2600:-147.42:linear 2601:22.623:hold 3000:0:linear !
+  scale note0 0:1 2000:1:linear 2600:0:in 2601:0.3:hold 3000:1:out !
+  alpha note0 0:0.7 1000:0.37:linear 2000:0.03:linear 2088:0:linear 2601:0.832:hold 3000:0.7:linear
+  x     note1 0:0 1600:-21.28:linear 1601:18.607:hold 3000:0:linear !
+  y     note1 0:0 1600:-90.72:linear 1601:79.323:hold 3000:0:linear !
+  scale note1 0:1 1000:1:linear 1600:0:in 1601:0.3:hold 2000:1:out 3000:1:linear !
+  alpha note1 0:0.37 1000:0.03:linear 1088:0:linear 1601:0.832:hold 2000:0.7:linear 3000:0.37:linear
+  x     note2 0:0 600:-7.98:linear 601:31.907:hold 3000:0:linear !
+  y     note2 0:0 600:-34.02:linear 601:136.023:hold 3000:0:linear !
+  scale note2 0:1 600:0:in 601:0.3:hold 1000:1:out 3000:1:linear !
+  alpha note2 0:0.03 88:0:linear 601:0.832:hold 1000:0.7:linear 2000:0.37:linear 3000:0.03:linear
+  x     notes 0:0 1500:-18.2:sine 3000:0:sine !
+
+sticker 37 vibing loop=2000 emoji=🎧 since=1
+  # grooves to the music: the body sways from the feet and dips on every
+  # beat, the head rocks further, the paws lift in turn. the notes float up
+  # one side then the other, swaying, and fade as they rise; each pops back
+  # in at the bottom as it fades out at the top
+  node pawl  flipper_left    @168,300  pivot=shoulder_l
+  node pawr  flipper_right   @344,300  pivot=shoulder_r
+  node note0 props_back[0]   @-6,14    pivot=81.2,125.1
+  node note1 props_back[1]   @-6,14    pivot=431.2,200.1
+  shiver root -3.5 1000 0 2000 pivot=root !
+  shiver root -3.9 1000 0 2000 prop=x
+  y     root  0:0 250:2.8 500:0 750:2.8 1000:0 1250:2.8 1500:0 1750:2.8 2000:0
+  shiver head -6.5 1000 0 2000 pivot=256,280 !
+  y     pawr  0:0 250:-18 500:0 1000:0 1250:-18 1500:0 2000:0 !
+  y     pawl  0:0 500:0 750:-18 1000:0 1500:0 1750:-18 2000:0 !
+  y     note1 0:0 960:-143.04:linear 961:5.811:hold 1000:0:linear 1960:-143.04:linear 1961:5.811:hold 2000:0:linear !
+  alpha note1 0:1 100:0.9:sinein 900:0.1:linear 960:0:linear 961:1:hold 1000:1:linear 1100:0.9:sinein 1900:0.1:linear 1960:0:linear 1961:1:hold 2000:1:linear
+  shiver note1 -6.7 1000 0 2000 prop=x
+  y     note0 0:0 453:-67.497:linear 454:81.354:hold 1000:0:linear 1453:-67.497:linear 1454:81.354:hold 2000:0:linear !
+  alpha note0 0:0.5 393:0.1:linear 453:0:linear 454:1:hold 493:1:linear 593:0.9:sinein 1000:0.5:linear 1393:0.1:linear 1453:0:linear 1454:1:hold 1493:1:linear 1593:0.9:sinein 2000:0.5:linear
+  shiver note0 -6.7 1000 0 2000 prop=x
+  clear note0 head 3
+  clear note1 head 4
+  clear pawl head 4
+  clear pawr head 4
+
+sticker 38 eyebrow-raise loop=2400 emoji=🤨 since=1
+  # a close-up that pulls back to a plain face and pushes in again: close
+  # up, one brow goes up and one lid comes down
+  node zoom  root          pivot=256,200
+  node lidl  eyes[1][2:4]  @196,150
+  node browl brows[0]      @205,146
+  node browr brows[1]      @307,128
+  scale zoom  0:1 367:1 667:0.757 1233:0.757 1533:1 2400:1 !
+  y     lidl  0:0 420:0 600:-36 1300:-36 1460:0 2400:0 !
+  y     browl 0:0 420:0 600:-2 1300:-2 1460:0 2400:0
+  y     browr 0:0 420:0 600:16 1300:16 1460:0 2400:0 !
+
+sticker 39 um-actually loop=2400 emoji=🤓 since=1
+  # the raised finger bobs twice, again and again, and a glint sweeps across
+  # both lenses
+  node paw   flipper_right[3]  @404,196
+  node glarel head[14][0]      @245.625,150
+  node glarer head[16][0]      @307.625,150
+  y     paw    0:0 133:-9.8 300:-3.4 467:-9.8 600:0 733:-9.8 900:-3.4 1067:-9.8 1200:0 1333:-9.8 1500:-3.4 1667:-9.8 1800:0 1933:-9.8 2100:-3.4 2267:-9.8 2400:0
+  x     glarel 0:0 161:8:sineout 1180:8:linear 1181:-52:hold 1733:-52:linear 2400:0:linear !
+  x     glarer 0:0 161:8:sineout 1180:8:linear 1181:-52:hold 1733:-52:linear 2400:0:linear !
+  clear paw head 8
+
+sticker 40 mic-drop loop=2800 emoji=🎤 since=1
+  # holds the mic out and lets go: it tumbles to the floor and bounces once
+  # while the head tips back, then shrinks away on the floor and pops back
+  # into the paw
+  node mic   props[0]  @416,214  pivot=424,202
+  y     mic   0:0 867:0 933:0.889:linear 1000:6.556:linear 1067:21.556:linear 1133:49.222:linear 1200:88.444:linear 1267:135.444:linear 1333:180.889:linear 1400:214.222:linear 1450:224.222:linear 1540:217.778:linear 1620:210.889:linear 1700:216.667:linear 1800:224.444:linear 2350:224.444:linear 2500:224.444:linear 2501:0:hold 2800:0:linear !
+  x     mic   0:0 867:0 1000:1.889:linear 1133:5.444:linear 1267:7.778:linear 1400:8.333:linear 2350:8.333:linear 2500:8.333:linear 2501:0:hold 2800:0:linear !
+  rot   mic   0:0 867:0 933:4.4:linear 1000:11.8:linear 1067:21.6:linear 1133:32.8:linear 1200:45:linear 1267:53.6:linear 1333:60.8:linear 1400:65:linear 1450:66:linear 2350:66:linear 2500:66:linear 2501:0:hold 2800:0:linear !
+  scale mic   0:1 2350:1 2500:0:in 2501:0.3:hold 2780:1:back 2800:1:linear !
+  rot   head  0:0 900:0 1400:-4:sine 2300:-4 2700:0:sine 2800:0  pivot=neck !
+  clear mic head 25
+
+sticker 41 keep-yapping loop=2400 emoji=🗣️ since=1
+  # the hand talks and talks: it snaps open and shut three times a second
+  # and the lines by it burst out with every snap. they swell from their
+  # inner ends in place of a fade: each has its own outline
+  node upper flipper_right[4]  @428,214  pivot=402,226
+  node lower flipper_right[3]  @424,238  pivot=402,226
+  node line0 props[0]          @446,200  pivot=446,200
+  node line1 props[1]          @456,184  pivot=456,184
+  node line2 props[2]          @466,168  pivot=466,168
+  rot   upper 0:0 12:-2.8:linear 138:-19.2:sineout 288:2.8:sinein 438:-19.2:sineout 588:2.8:sinein 738:-19.2:sineout 888:2.8:sinein 1038:-19.2:sineout 1188:2.8:sinein 1338:-19.2:sineout 1488:2.8:sinein 1638:-19.2:sineout 1788:2.8:sinein 1938:-19.2:sineout 2088:2.8:sinein 2238:-19.2:sineout 2388:2.8:sinein 2400:0:linear !
+  rot   lower 0:0 12:2.8:linear 138:19.2:sineout 288:-2.8:sinein 438:19.2:sineout 588:-2.8:sinein 738:19.2:sineout 888:-2.8:sinein 1038:19.2:sineout 1188:-2.8:sinein 1338:19.2:sineout 1488:-2.8:sinein 1638:19.2:sineout 1788:-2.8:sinein 1938:19.2:sineout 2088:-2.8:sinein 2238:19.2:sineout 2388:-2.8:sinein 2400:0:linear !
+  scale line0 0:1 12:1:linear 138:1.25:sineout 288:1:sinein 438:1.25:sineout 588:1:sinein 738:1.25:sineout 888:1:sinein 1038:1.25:sineout 1188:1:sinein 1338:1.25:sineout 1488:1:sinein 1638:1.25:sineout 1788:1:sinein 1938:1.25:sineout 2088:1:sinein 2238:1.25:sineout 2388:1:sinein 2400:1:linear
+  scale line1 0:1 12:1:linear 138:1.25:sineout 288:1:sinein 438:1.25:sineout 588:1:sinein 738:1.25:sineout 888:1:sinein 1038:1.25:sineout 1188:1:sinein 1338:1.25:sineout 1488:1:sinein 1638:1.25:sineout 1788:1:sinein 1938:1.25:sineout 2088:1:sinein 2238:1.25:sineout 2388:1:sinein 2400:1:linear
+  scale line2 0:1 12:1:linear 138:1.25:sineout 288:1:sinein 438:1.25:sineout 588:1:sinein 738:1.25:sineout 888:1:sinein 1038:1.25:sineout 1188:1:sinein 1338:1.25:sineout 1488:1:sinein 1638:1.25:sineout 1788:1:sinein 1938:1.25:sineout 2088:1:sinein 2238:1.25:sineout 2388:1:sinein 2400:1:linear
+  clear upper line1 0.5
+
+sticker 42 laser-eyes loop=2000 emoji=👁️ since=1
+  # full power: the whole sticker buzzes, the beams flicker short and long
+  # from the eyes, the glow round the eyes throbs with them and the sparks
+  # crackle about
+  node buzz  top
+  node beaml props[0:2]  @215.297,190  pivot=225,190
+  node beamr props[4:6]  @277.297,190  pivot=287,190
+  node glowl props[2:4]  @225,190      pivot=225,190
+  node glowr props[6:8]  @287,190      pivot=287,190
+  node spark0 props[8]  @408.2,255.4
+  node spark1 props[9]  @360.5,333.8
+  node spark2 props[10]  @274.6,376.6
+  node spark3 props[11]  @174.7,366.6
+  node spark4 props[12]  @92.2,302.4
+  x     buzz  0:0 67:4.9:inout 133:0.2 200:3.9 267:1.9 333:1.9 400:3.9 467:0.3 533:4.9 600:0 667:4.2 733:1.4 800:2.4 867:3.4 933:0.6 1000:4.9 1067:-0.1 1133:4.6 1200:0.9 1267:2.9 1333:2.9 1400:0.9 1467:4.6 1533:-0.1 1600:4.9 1667:0.6 1733:3.4 1800:2.4 1867:1.4 1933:4.3 2000:0:inout
+  y     buzz  0:0 67:-3.298:inout 133:-0.135 200:-2.625 267:-1.279 333:-1.279 400:-2.625 467:-0.202 533:-3.298 600:0 667:-2.827 733:-0.942 800:-1.615 867:-2.288 933:-0.404 1000:-3.298 1067:0.067 1133:-3.096 1200:-0.606 1267:-1.952 1333:-1.952 1400:-0.606 1467:-3.096 1533:0.067 1600:-3.298 1667:-0.404 1733:-2.288 1800:-1.615 1867:-0.942 1933:-2.894 2000:0:inout
+  scale beaml 0:1 67:1.03:inout 133:0.98 200:0.77 267:1.02 333:1.02 400:0.8 467:0.98 533:1.03 600:1 667:0.92 733:1.01 800:1 867:0.96 933:1.02 1000:1.01 1067:0.8 1133:1.01 1200:1.04 1267:0.87 1333:0.88 1400:1.05 1467:1.01 1533:0.82 1600:1.01 1667:1.02 1733:0.95 1800:1 1867:1.01 1933:0.94 2000:1:inout !
+  scale beamr 0:1 67:1.03:inout 133:0.98 200:0.77 267:1.02 333:1.02 400:0.8 467:0.98 533:1.03 600:1 667:0.92 733:1.01 800:1 867:0.96 933:1.02 1000:1.01 1067:0.8 1133:1.01 1200:1.04 1267:0.87 1333:0.88 1400:1.05 1467:1.01 1533:0.82 1600:1.01 1667:1.02 1733:0.95 1800:1 1867:1.01 1933:0.94 2000:1:inout !
+  scale glowl 0:1 67:1.015:inout 133:0.994 200:0.931 267:1.01 333:1.01 400:0.94 467:0.994 533:1.015 600:1 667:0.976 733:1.005 800:1 867:0.988 933:1.01 1000:1.005 1067:0.94 1133:1.005 1200:1.02 1267:0.961 1333:0.964 1400:1.025 1467:1.005 1533:0.946 1600:1.005 1667:1.01 1733:0.985 1800:1 1867:1.005 1933:0.982 2000:1:inout
+  scale glowr 0:1 67:1.015:inout 133:0.994 200:0.931 267:1.01 333:1.01 400:0.94 467:0.994 533:1.015 600:1 667:0.976 733:1.005 800:1 867:0.988 933:1.01 1000:1.005 1067:0.94 1133:1.005 1200:1.02 1267:0.961 1333:0.964 1400:1.025 1467:1.005 1533:0.946 1600:1.005 1667:1.01 1733:0.985 1800:1 1867:1.005 1933:0.982 2000:1:inout
+  x     spark0 0:0 67:1:inout 133:-2 200:-1.7 267:1.9 333:4.9 400:-4 467:4.8 533:4.7 600:-2.6 667:-1.7 733:-1.6 800:2.7 867:4 933:2.9 1000:-4.8 1067:-4.9 1133:-0.7 1200:2.2 1267:0.8 1333:-2.7 1400:-4.9 1467:0.6 1533:-3.4 1600:4.1 1667:0.5 1733:-0.5 1800:4.7 1867:0.6 1933:3.1 2000:0:inout
+  y     spark0 0:0 67:-0.4:inout 133:-0.7 200:-1.1 267:3.2 333:-3.6 400:3.3 467:2.3 533:1.3 600:-4 667:-1.9 733:4.1 800:1.1 867:-0.8 933:-4.7 1000:3.8 1067:-3.5 1133:-0.2 1200:-0.9 1267:-2.8 1333:-3.3 1400:-3.9 1467:-2.3 1533:3.2 1600:-2.6 1667:0.9 1733:1 1800:3.8 1867:1.5 1933:-1.7 2000:0:inout
+  x     spark1 0:0 67:-4.9:inout 133:0.2 200:-2.3 267:4.7 333:-0.1 400:1.5 467:1 533:-0.3 600:0.4 667:-1 733:2.4 800:-3.8 867:-2.4 933:2.3 1000:2.7 1067:-5 1133:0.5 1200:0.2 1267:-2.4 1333:2.5 1400:4.2 1467:3.5 1533:-1.8 1600:-2.8 1667:-4.2 1733:1.2 1800:4.9 1867:4.4 1933:4 2000:0:inout
+  y     spark1 0:0 67:-1.9:inout 133:-1.2 200:3.3 267:2.7 333:-4.3 400:-1.7 467:-3.2 533:-4.7 600:3.2 667:5 733:-1.1 800:0.4 867:1.8 933:-3.7 1000:-2.3 1067:4.3 1133:-2.3 1200:-0.1 1267:1.8 1333:1.7 1400:-1.4 1467:-3.4 1533:-4.2 1600:1.6 1667:-1.8 1733:-3.8 1800:4 1867:-3.5 1933:2.3 2000:0:inout
+  x     spark2 0:0 67:5:inout 133:-2.7 200:4.2 267:4.2 333:-3.2 400:2.6 467:0.3 533:-0.1 600:-1.9 667:0.7 733:-0.4 800:1.9 867:-0.9 933:-0.5 1000:-4.5 1067:2.7 1133:-0.3 1200:1.5 1267:4.8 1333:-3.8 1400:3.9 1467:-0.1 1533:-2.7 1600:-2 1667:0.9 1733:4.4 1800:-1.7 1867:2.6 1933:-3.4 2000:0:inout
+  y     spark2 0:0 67:-0.8:inout 133:2.3 200:-0.3 267:3.6 333:-4.9 400:-3.6 467:-3.5 533:3.4 600:-1 667:1.9 733:-2.2 800:-1.1 867:0.6 933:2.7 1000:2.3 1067:1 1133:1.9 1200:-1.4 1267:-3.9 1333:-2.2 1400:-2 1467:1.9 1533:0.8 1600:-0.8 1667:4.7 1733:-3.2 1800:-0.7 1867:-3.6 1933:2.4 2000:0:inout
+  x     spark3 0:0 67:-2.7:inout 133:-4.8 200:-1.7 267:0.6 333:-3.3 400:-1.2 467:-5 533:3.5 600:1.3 667:-3.5 733:0 800:0.2 867:2.4 933:-3.5 1000:0.8 1067:0.8 1133:0.5 1200:-3.3 1267:1.5 1333:1 1400:3.4 1467:-1.7 1533:3.9 1600:-2.4 1667:4.4 1733:1.5 1800:3.8 1867:-4 1933:0.4 2000:0:inout
+  y     spark3 0:0 67:-4.2:inout 133:-2.5 200:3.7 267:-2.5 333:1.8 400:4.2 467:0.5 533:3.8 600:-3 667:2 733:-2.6 800:-4.5 867:3 933:1.2 1000:-1.6 1067:-2.5 1133:-4.7 1200:2.5 1267:4.9 1333:4.9 1400:4.3 1467:4.8 1533:-3.4 1600:4.8 1667:-2 1733:0.1 1800:0.1 1867:-3.3 1933:-4.2 2000:0:inout
+  x     spark4 0:0 67:-0.7:inout 133:-1.6 200:-0.6 267:3 333:-2.9 400:2.1 467:3.7 533:-4.9 600:0.1 667:-4.1 733:-0.9 800:4.1 867:-4.3 933:1.6 1000:1.6 1067:1.9 1133:-4.8 1200:0.5 1267:4.1 1333:-4.2 1400:1 1467:-3.6 1533:3.7 1600:1.5 1667:-1.1 1733:2.9 1800:-1.4 1867:-3.9 1933:-3.2 2000:0:inout
+  y     spark4 0:0 67:-4.8:inout 133:-0.6 200:-1.8 267:0.4 333:1.2 400:-4 467:-1.6 533:-3.6 600:0.7 667:-3.3 733:-4.6 800:-4.3 867:-1.6 933:-1.4 1000:2 1067:-4.3 1133:0.6 1200:-1.9 1267:-3.7 1333:3.7 1400:-1.9 1467:-0.2 1533:1.7 1600:1.6 1667:-1.6 1733:0.6 1800:2.2 1867:4.9 1933:-1.1 2000:0:inout
+
+sticker 43 larp-department loop=2400 emoji=🎭 since=1
+  # marches on the spot with the keyboard up: four hops, and over the loop
+  # the whole seal leans back from the feet and comes upright again
+  node seal  root  pivot=216,450
+  y     seal  0:0 300:-8:sine 600:0:sinein 900:-8:sineout 1200:0:sinein 1500:-8:sineout 1800:0:sinein 2100:-8:sineout 2400:0:sine
+  rot   seal  0:0 1200:-8 2400:0 !
+
+sticker 44 power-up loop=2000 emoji=⚡ since=1
+  # powering up: the seal and the inner glow buzz from side to side, the
+  # outer glow throbs, the spikes of hair flick, and the bolts round it
+  # flicker out and back in turn. the bolts snap to nothing in place of a
+  # fade: each has its own outline. the top right one is hidden in the svg,
+  # so it snaps out just before the loop ends and comes in after it starts
+  node seal   top[1]           @216,420
+  node glow   props_back[1]    @450.7,270
+  node aura   props_back[0]    @474.7,270  pivot=258,267
+  node bolt0  props_back[2]    @0,0        pivot=92.1,149
+  node bolt1  props_back[3]    @0,0        pivot=424.2,146.4
+  node bolt2  props_back[4]    @0,0        pivot=90.6,349.7
+  node bolt3  props_back[5]    @0,0        pivot=437.9,353.6
+  node spike0 head[13]         @226,84     pivot=221,86
+  node spike1 head[14]         @246,84     pivot=247,86
+  node spike2 head[15]         @266,84     pivot=272,86
+  node spike3 head[16]         @284,84     pivot=290.6,86
+  shiver seal 1.6 100 0 2000 prop=x
+  shiver glow 1.6 100 0 2000 prop=x
+  scale aura  0:1 125:0.975:sineout 250:1:sinein 375:1.025:sineout 500:1:sinein 625:0.975:sineout 750:1:sinein 875:1.025:sineout 1000:1:sinein 1125:0.975:sineout 1250:1:sinein 1375:1.025:sineout 1500:1:sinein 1625:0.975:sineout 1750:1:sinein 1875:1.025:sineout 2000:1:sinein
+  alpha bolt1 0:0 52:1:hold 1991:0:hold 2000:0:linear
+  scale bolt1 0:1 52:0:hold 67:1:out 200:1:linear 215:0:in 252:0:linear 267:1:out 400:1:linear 415:0:in 452:0:linear 467:1:out 600:1:linear 615:0:in 652:0:linear 667:1:out 800:1:linear 815:0:in 852:0:linear 867:1:out 1000:1:linear 1015:0:in 1052:0:linear 1067:1:out 1200:1:linear 1215:0:in 1252:0:linear 1267:1:out 1400:1:linear 1415:0:in 1452:0:linear 1467:1:out 1600:1:linear 1615:0:in 1652:0:linear 1667:1:out 1800:1:linear 1815:0:in 1852:0:linear 1867:1:out 1975:1:linear 1990:0:in 1991:1:hold 2000:1:linear !
+  scale bolt0 0:1 67:1:linear 82:0:in 118:0:linear 133:1:out 267:1:linear 282:0:in 318:0:linear 333:1:out 467:1:linear 482:0:in 518:0:linear 533:1:out 667:1:linear 682:0:in 718:0:linear 733:1:out 867:1:linear 882:0:in 918:0:linear 933:1:out 1067:1:linear 1082:0:in 1118:0:linear 1133:1:out 1267:1:linear 1282:0:in 1318:0:linear 1333:1:out 1467:1:linear 1482:0:in 1518:0:linear 1533:1:out 1667:1:linear 1682:0:in 1718:0:linear 1733:1:out 1867:1:linear 1882:0:in 1918:0:linear 1933:1:out 2000:1:linear !
+  scale bolt3 0:1 67:1:linear 82:0:in 118:0:linear 133:1:out 267:1:linear 282:0:in 318:0:linear 333:1:out 467:1:linear 482:0:in 518:0:linear 533:1:out 667:1:linear 682:0:in 718:0:linear 733:1:out 867:1:linear 882:0:in 918:0:linear 933:1:out 1067:1:linear 1082:0:in 1118:0:linear 1133:1:out 1267:1:linear 1282:0:in 1318:0:linear 1333:1:out 1467:1:linear 1482:0:in 1518:0:linear 1533:1:out 1667:1:linear 1682:0:in 1718:0:linear 1733:1:out 1867:1:linear 1882:0:in 1918:0:linear 1933:1:out 2000:1:linear !
+  scale bolt2 0:1 133:1:linear 148:0:in 185:0:linear 200:1:out 333:1:linear 348:0:in 385:0:linear 400:1:out 533:1:linear 548:0:in 585:0:linear 600:1:out 733:1:linear 748:0:in 785:0:linear 800:1:out 933:1:linear 948:0:in 985:0:linear 1000:1:out 1133:1:linear 1148:0:in 1185:0:linear 1200:1:out 1333:1:linear 1348:0:in 1385:0:linear 1400:1:out 1533:1:linear 1548:0:in 1585:0:linear 1600:1:out 1733:1:linear 1748:0:in 1785:0:linear 1800:1:out 1933:1:linear 1948:0:in 1985:0:linear 2000:1:out !
+  rot   spike0 0:0 50:-1.9 100:0 217:7.8 333:0 383:-1.9 433:0 550:7.8 667:0 717:-1.9 767:0 884:7.8 1000:0 1050:-1.9 1100:0 1217:7.8 1333:0 1383:-1.9 1433:0 1550:7.8 1667:0 1717:-1.9 1767:0 1884:7.8 2000:0
+  rot   spike1 0:0 50:-1.9 100:0 217:7.8 333:0 383:-1.9 433:0 550:7.8 667:0 717:-1.9 767:0 884:7.8 1000:0 1050:-1.9 1100:0 1217:7.8 1333:0 1383:-1.9 1433:0 1550:7.8 1667:0 1717:-1.9 1767:0 1884:7.8 2000:0
+  rot   spike2 0:0 50:-1.9 100:0 217:7.8 333:0 383:-1.9 433:0 550:7.8 667:0 717:-1.9 767:0 884:7.8 1000:0 1050:-1.9 1100:0 1217:7.8 1333:0 1383:-1.9 1433:0 1550:7.8 1667:0 1717:-1.9 1767:0 1884:7.8 2000:0
+  rot   spike3 0:0 50:-1.9 100:0 217:7.8 333:0 383:-1.9 433:0 550:7.8 667:0 717:-1.9 767:0 884:7.8 1000:0 1050:-1.9 1100:0 1217:7.8 1333:0 1383:-1.9 1433:0 1550:7.8 1667:0 1717:-1.9 1767:0 1884:7.8 2000:0
+  clear bolt0 seal 7
+  clear bolt2 seal 12
+
+sticker 45 shh loop=2400 emoji=🤫 since=1
+  # hush: the close-up pulls back and slowly pushes in again, and the eyes
+  # dart left and right, twice
+  node zoom  root          pivot=256,220
+  node pupl  eyes[1][0:2]  @227,196
+  node pupr  eyes[4][0:2]  @285,196
+  scale zoom  0:1 200:1 600:0.891 1800:1 !
+  x     pupl  0:0 300:-9.8:sineout 600:0:sinein 900:9.8:sineout 1200:0:sinein 1500:-9.8:sineout 1800:0:sinein 2100:9.8:sineout 2400:0:sinein
+  x     pupr  0:0 300:-9.8:sineout 600:0:sinein 900:9.8:sineout 1200:0:sinein 1500:-9.8:sineout 1800:0:sinein 2100:9.8:sineout 2400:0:sinein
+
+sticker 46 please loop=2600 emoji=🙏 since=1
+  # begs in the old photo: the camera creeps in on the seal and back out,
+  # and the clasped paws shake as it pleads
+  node zoom  root              pivot=256,238
+  node pawl  flipper_left[3]   @241.2,300
+  node pawr  flipper_right[3]  @273.2,300
+  scale zoom  0:1 1300:1.03 2600:1
+  shiver pawl 3 260 0 2600 prop=x
+  shiver pawr 3 260 0 2600 prop=x
+
+sticker 47 no-limit-larp loop=2400 emoji=👑 since=1
+  # the king bobs to his own beat and the cape swings narrow and wide under
+  # him; the fist slides up the blade and back down, the arm stretching
+  # from the shoulder to stay on it
+  node king  top[1]                @216,420   pivot=256,440
+  node cape  props_back            @176,250   pivot=256,452
+  node fist  flipper_right[13:18]  @400,204
+  node guard flipper_right[8:10]   @370,190
+  node arm   flipper_right[10:13]  @344,300   pivot=shoulder_r
+  y     king  0:0 300:-3.9 600:0 900:-3.9 1200:0 1500:-3.9 1800:0 2100:-3.9 2400:0
+  y     cape  0:0 300:-3.9 600:0 900:-3.9 1200:0 1500:-3.9 1800:0 2100:-3.9 2400:0
+  sx    cape  0:1 300:0.905:sine 600:1:sine 900:1.095:sine 1200:1:sine 1500:0.905:sine 1800:1:sine 2100:1.095:sine 2400:1:sine !
+  sy    cape  0:1 300:0.66:sine 600:1:sine 900:0.88:sine 1200:1:sine 1500:0.66:sine 1800:1:sine 2100:0.88:sine 2400:1:sine !
+  y     fist  0:0 767:0 1200:-40:sine 1480:-40:linear 2150:0:sine 2400:0:linear !
+  y     guard 0:0 767:0 1200:-40:sine 1480:-40:linear 2150:0:sine 2400:0:linear !
+  sy    arm   0:1 767:1 1200:1.417:sine 1480:1.417:linear 2150:1:sine 2400:1:linear !

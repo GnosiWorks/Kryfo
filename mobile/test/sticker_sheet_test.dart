@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the sticker picker: what it offers, what a tap and a long press do, the
-// tab pill, back, and recents that stay with their identity.
+// tab pill, a tab per pack, back, and recents that stay with their
+// identity.
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -16,9 +17,9 @@ import 'package:kryfo/widgets/halo_sheet.dart';
 import 'sticker_test_util.dart';
 
 class _Harness {
-  _Harness(this.t, this.pack);
+  _Harness(this.t, this.lib);
   final WidgetTester t;
-  final StickerPack pack;
+  final StickerLibrary lib;
   late BuildContext home;
   StickerPick? picked;
   bool closed = false;
@@ -51,7 +52,7 @@ class _Harness {
       scroll: true,
       builder: (_) => StickerSheet(
         recents: StickerRecents(HaloContainer.everyday),
-        pack: pack,
+        library: lib,
       ),
     ).then((r) {
       picked = r;
@@ -70,12 +71,12 @@ class _Harness {
 }
 
 void main() {
-  final pack = loadPack();
+  final lib = useLibrary();
 
   setUp(() => FlutterSecureStorage.setMockInitialValues({}));
 
   testWidgets('it offers the pack, and no recent tab yet', (t) async {
-    final h = _Harness(t, pack);
+    final h = _Harness(t, lib);
     await h.pump();
     await h.open();
     for (final e in ['👋', '😂', '👍', '❤️']) {
@@ -93,7 +94,7 @@ void main() {
   });
 
   testWidgets('a tap picks it and puts it first in recent', (t) async {
-    final h = _Harness(t, pack);
+    final h = _Harness(t, lib);
     await h.pump();
     await h.open();
     final cell = t.getRect(h.cell('😂'));
@@ -117,9 +118,77 @@ void main() {
     expect(now, const [StickerRef('fokia', 1), StickerRef('fokia', 2)]);
   });
 
+  testWidgets('a tab per pack, fokia first, and the remix on offer', (t) async {
+    final h = _Harness(t, lib);
+    await h.pump();
+    await h.open();
+    final fokia = find.bySemanticsLabel('Fokia');
+    final remix = find.bySemanticsLabel('Fokia Remix');
+    expect(fokia, findsWidgets);
+    expect(remix, findsWidgets);
+    expect(find.bySemanticsLabel('Recent'), findsNothing);
+    // the tabs, in order: fokia at the start, the remix one step on
+    expect(
+      t.getRect(remix.first).left - t.getRect(fokia.first).left,
+      closeTo(44, 0.5),
+    );
+    Rect pill() => t.getRect(
+      find.byWidgetPredicate(
+        (w) =>
+            w is Container &&
+            w.decoration is BoxDecoration &&
+            (w.decoration! as BoxDecoration).color == HaloColors.amberSoft,
+      ),
+    );
+    final before = pill();
+    await t.tap(remix.first);
+    await h.frames(25);
+    expect(pill().left - before.left, closeTo(44, 0.5));
+    // the grid went down to the remix stickers, all of them moving
+    expect(h.cell('🎻'), findsOneWidget);
+    await t.tap(h.cell('🎻'));
+    await h.frames(20);
+    expect(h.picked?.ref, const StickerRef('fokiaremix', 36));
+
+    // recent mixes the two packs, newest first
+    await h.open();
+    await t.tap(h.cell('👋'));
+    await h.frames(20);
+    expect(await StickerRecents(HaloContainer.everyday).load(), const [
+      StickerRef('fokia', 1),
+      StickerRef('fokiaremix', 36),
+    ]);
+    await h.open();
+    final sheet = t.state<StickerSheetState>(find.byType(StickerSheet));
+    expect(sheet.recent, const [
+      StickerRef('fokia', 1),
+      StickerRef('fokiaremix', 36),
+    ]);
+    expect(h.cell('🎻'), findsWidgets);
+    expect(find.bySemanticsLabel('Recent'), findsWidgets);
+    expect(
+      t.getRect(remix.first).left - t.getRect(fokia.first).left,
+      closeTo(44, 0.5),
+    );
+  });
+
+  testWidgets('recent keeps only what the packs can draw', (t) async {
+    FlutterSecureStorage.setMockInitialValues({
+      'sticker_recents': 'fokiaremix:30,otter:3,fokiaremix:9,fokia:2',
+    });
+    final h = _Harness(t, lib);
+    await h.pump();
+    await h.open();
+    final sheet = t.state<StickerSheetState>(find.byType(StickerSheet));
+    expect(sheet.recent, const [
+      StickerRef('fokiaremix', 30),
+      StickerRef('fokia', 2),
+    ]);
+  });
+
   testWidgets('the tab pill slides to the tab tapped', (t) async {
     FlutterSecureStorage.setMockInitialValues({'sticker_recents': 'fokia:4'});
-    final h = _Harness(t, pack);
+    final h = _Harness(t, lib);
     await h.pump();
     await h.open();
     Rect pill() => t.getRect(
@@ -144,7 +213,7 @@ void main() {
     t,
   ) async {
     FlutterSecureStorage.setMockInitialValues({'sticker_recents': 'fokia:17'});
-    final h = _Harness(t, pack);
+    final h = _Harness(t, lib);
     await h.pump();
     await h.open();
     final big = find.byWidgetPredicate(
@@ -182,7 +251,7 @@ void main() {
     FlutterSecureStorage.setMockInitialValues({
       'sticker_recents': 'fokia:2,fokia:1',
     });
-    final h = _Harness(t, pack);
+    final h = _Harness(t, lib);
     await h.pump();
     await h.open();
     final g = await t.startGesture(t.getCenter(h.cell('😂').first));
@@ -200,7 +269,7 @@ void main() {
   });
 
   testWidgets('back closes the preview before the sheet', (t) async {
-    final h = _Harness(t, pack);
+    final h = _Harness(t, lib);
     await h.pump();
     await h.open();
     final g = await t.startGesture(t.getCenter(h.cell('👋')));
@@ -219,7 +288,7 @@ void main() {
   });
 
   testWidgets('reduced motion: it all works, without the pops', (t) async {
-    final h = _Harness(t, pack);
+    final h = _Harness(t, lib);
     await h.pump(reduce: true);
     await h.open();
     // nothing plays in the grid
@@ -241,7 +310,8 @@ void main() {
   testWidgets('the grid rests after its loops, fresh on the next opening', (
     t,
   ) async {
-    final h = _Harness(t, pack);
+    final pack = lib.pack('fokia')!;
+    final h = _Harness(t, lib);
     await h.pump();
     await h.open();
     bool playing() =>
@@ -273,7 +343,8 @@ void main() {
   testWidgets('the big one rests after its loops; a tap plays it again', (
     t,
   ) async {
-    final h = _Harness(t, pack);
+    final pack = lib.pack('fokia')!;
+    final h = _Harness(t, lib);
     await h.pump();
     await h.open();
     final g = await t.startGesture(t.getCenter(h.cell('👋')));
