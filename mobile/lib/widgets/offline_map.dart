@@ -36,19 +36,47 @@ class _OfflineMapState extends State<OfflineMap>
   _Scene? _scene;
   Size? _sceneSize;
 
+  // the pin rings a few times once it has landed, then rests
+  bool _rung = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.reveal.addStatusListener(_landed);
+  }
+
+  @override
+  void didUpdateWidget(OfflineMap old) {
+    super.didUpdateWidget(old);
+    if (old.reveal == widget.reveal) return;
+    old.reveal.removeStatusListener(_landed);
+    widget.reveal.addStatusListener(_landed);
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final still = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
-    if (still) {
+    if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) {
       _pulse.stop();
-    } else if (!_pulse.isAnimating) {
-      _pulse.repeat();
+    } else if (widget.reveal.isCompleted) {
+      _ring();
     }
+  }
+
+  void _landed(AnimationStatus s) {
+    if (s.isCompleted) _ring();
+  }
+
+  void _ring() {
+    if (_rung || !mounted) return;
+    if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) return;
+    _rung = true;
+    _pulse.repeat(count: 3);
   }
 
   @override
   void dispose() {
+    widget.reveal.removeStatusListener(_landed);
     _pulse.dispose();
     super.dispose();
   }

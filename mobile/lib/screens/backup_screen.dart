@@ -12,6 +12,8 @@ import '../backup.dart';
 import '../main.dart' hide live;
 import '../theme.dart';
 import '../widgets/fit_column.dart';
+import '../widgets/motion.dart' show houseSpring;
+import '../widgets/press_scale.dart';
 import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
@@ -166,6 +168,9 @@ class _BackupScreenState extends State<BackupScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        // the page slides under a plain bar, never a tinted one
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
         leading: BackButton(color: HaloColors.text2),
         title: Text(
           l10n.backupBackUpKryfo,
@@ -212,9 +217,11 @@ class _BackupScreenState extends State<BackupScreen> {
                 style: HaloType.sans(size: 12, color: HaloColors.rose),
               ),
             const Spacer(),
-            GestureDetector(
+            PressScale(
+              scale: 0.97,
               onTap: _busy ? null : _create,
-              child: Container(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 decoration: BoxDecoration(
@@ -262,11 +269,11 @@ class _PinField extends StatelessWidget {
         labelText: label,
         labelStyle: HaloType.sans(size: 12, color: HaloColors.text2),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(color: HaloColors.line, width: 0.5),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(color: HaloColors.amber, width: 0.8),
         ),
       ),
@@ -274,6 +281,8 @@ class _PinField extends StatelessWidget {
   }
 }
 
+// one of the two ways: the whole card takes the tap, and the picked one
+// fills its ring on the house spring
 class _Choice extends StatelessWidget {
   final bool on;
   final String title;
@@ -287,45 +296,140 @@ class _Choice extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: MediaQuery.of(context).disableAnimations
-            ? Duration.zero
-            : const Duration(milliseconds: 200),
-        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-        decoration: BoxDecoration(
-          color: on ? HaloColors.amberSoft : HaloColors.surface2,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: on ? HaloColors.amber : HaloColors.line,
-            width: on ? 1 : 0.5,
+    final still = MediaQuery.disableAnimationsOf(context);
+    return Semantics(
+      selected: on,
+      inMutuallyExclusiveGroup: true,
+      child: PressScale(
+        scale: 0.98,
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: still ? Duration.zero : const Duration(milliseconds: 200),
+          width: double.infinity,
+          padding: const EdgeInsetsDirectional.fromSTEB(14, 12, 12, 12),
+          decoration: BoxDecoration(
+            color: on ? HaloColors.amberSoft : HaloColors.surface2,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: on ? HaloColors.amber : HaloColors.line,
+              width: on ? 1 : 0.5,
+            ),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: HaloType.sans(
+                        size: 14.5,
+                        weight: FontWeight.w600,
+                        color: HaloColors.text,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      line,
+                      style: HaloType.sans(
+                        size: 12.5,
+                        color: HaloColors.text2,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Padding(
+                padding: const EdgeInsets.only(top: 1),
+                child: _Ring(on: on),
+              ),
+            ],
           ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: HaloType.sans(
-                size: 14.5,
-                weight: FontWeight.w600,
-                color: HaloColors.text,
-              ),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              line,
-              style: HaloType.sans(
-                size: 12.5,
-                color: HaloColors.text2,
-                height: 1.4,
-              ),
-            ),
-          ],
-        ),
       ),
+    );
+  }
+}
+
+// a ring that fills on the house spring, with a little overshoot
+class _Ring extends StatefulWidget {
+  const _Ring({required this.on});
+  final bool on;
+
+  @override
+  State<_Ring> createState() => _RingState();
+}
+
+class _RingState extends State<_Ring> with SingleTickerProviderStateMixin {
+  late final AnimationController _fill = AnimationController.unbounded(
+    vsync: this,
+    value: widget.on ? 1 : 0,
+  );
+
+  @override
+  void didUpdateWidget(_Ring old) {
+    super.didUpdateWidget(old);
+    if (old.on == widget.on) return;
+    final to = widget.on ? 1.0 : 0.0;
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _fill.value = to;
+    } else {
+      // the spring stops within a hair of its end: the end itself after
+      _fill.animateWith(houseSpring(_fill.value, to, _fill.velocity)).then((_) {
+        if (mounted) _fill.value = to;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _fill.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _fill,
+      builder: (_, _) {
+        final v = _fill.value;
+        return SizedBox.square(
+          dimension: 20,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Color.lerp(
+                      HaloColors.line2,
+                      HaloColors.amber,
+                      v.clamp(0.0, 1.0),
+                    )!,
+                    width: 1.4,
+                  ),
+                ),
+              ),
+              Transform.scale(
+                scale: v.clamp(0.0, 1.25),
+                child: Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: HaloColors.amber,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

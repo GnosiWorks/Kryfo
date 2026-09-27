@@ -13,10 +13,14 @@ import '../dlog.dart';
 import '../handle_lookup.dart' show handleFromInput;
 import '../main.dart' show appState, handleHaloUri, handleHaloUriAdded;
 import '../theme.dart';
+import '../widgets/copied_mark.dart';
+import '../widgets/ease_size.dart';
 import '../widgets/halo_buttons.dart';
 import '../widgets/kryfo_avatar.dart';
 import '../widgets/motion.dart' show haloRoute;
 import '../widgets/pair_code_panel.dart';
+import '../widgets/press_scale.dart';
+import '../widgets/qr_wipe.dart';
 import 'pair_code_screen.dart';
 import '../widgets/stagger_in.dart';
 import 'handle_screen.dart';
@@ -34,6 +38,9 @@ class MyKryfoScreen extends StatefulWidget {
 class _MyKryfoScreenState extends State<MyKryfoScreen> {
   String? _uri;
   _Way _open = _Way.none;
+  // bumped on each copy, so what was copied shows a tick for a moment
+  int _linkCopies = 0;
+  int _handleCopies = 0;
 
   @override
   void initState() {
@@ -112,6 +119,7 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
     if (_uri == null) return;
     HapticFeedback.mediumImpact();
     copySensitive(_uri!);
+    setState(() => _linkCopies++);
     showHaloToast(context, l10n.myKryfoInviteCopiedClearsIn);
   }
 
@@ -137,6 +145,9 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
       appBar: AppBar(
         backgroundColor: HaloColors.surface,
         elevation: 0,
+        // the page slides under a plain bar, never a tinted one
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
         iconTheme: IconThemeData(color: HaloColors.text2),
         title: Text(
           l10n.myKryfoAddSomeone,
@@ -210,6 +221,7 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
               open: _open == _Way.away,
               onToggle: () => _toggle(_Way.away),
               uri: _uri,
+              copies: _linkCopies,
               onCopy: _copyLink,
               onShare: _shareLink,
               onCard: () async {
@@ -263,6 +275,7 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
             // ---- the handle: a public front door, if you want one
             _HandleRow(
               handle: handle,
+              copies: _handleCopies,
               onTap: () {
                 HapticFeedback.selectionClick();
                 Navigator.of(context).push(haloRoute(const HandleScreen()));
@@ -272,6 +285,7 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
                   : () {
                       HapticFeedback.selectionClick();
                       copySensitive('@$handle');
+                      setState(() => _handleCopies++);
                       showHaloToast(context, l10n.myKryfoHandleCopied);
                     },
             ),
@@ -305,8 +319,9 @@ class _WayCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final still = MediaQuery.disableAnimationsOf(context);
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 220),
+      duration: still ? Duration.zero : const Duration(milliseconds: 220),
       curve: Curves.easeOutCubic,
       decoration: BoxDecoration(
         color: HaloColors.surface2,
@@ -324,6 +339,7 @@ class _WayCard extends StatelessWidget {
           InkWell(
             onTap: onToggle,
             borderRadius: BorderRadius.circular(16),
+            highlightColor: HaloColors.amber.withValues(alpha: 0.06),
             child: Padding(
               padding: const EdgeInsetsDirectional.fromSTEB(18, 16, 14, 16),
               child: Row(
@@ -356,7 +372,9 @@ class _WayCard extends StatelessWidget {
                   ),
                   AnimatedRotation(
                     turns: open ? 0.5 : 0,
-                    duration: const Duration(milliseconds: 220),
+                    duration: still
+                        ? Duration.zero
+                        : const Duration(milliseconds: 220),
                     curve: Curves.easeOutBack,
                     child: Icon(
                       Icons.expand_more_rounded,
@@ -368,14 +386,14 @@ class _WayCard extends StatelessWidget {
               ),
             ),
           ),
-          AnimatedSize(
-            duration: const Duration(milliseconds: 260),
-            curve: Curves.easeOutCubic,
-            alignment: Alignment.topCenter,
+          EaseSize(
             child: open
-                ? AnimatedOpacity(
-                    opacity: 1,
-                    duration: const Duration(milliseconds: 200),
+                // the body fades up as the card opens round it
+                ? TweenAnimationBuilder<double>(
+                    tween: Tween(begin: still ? 1 : 0, end: 1),
+                    duration: const Duration(milliseconds: 240),
+                    curve: const Interval(0.25, 1, curve: Curves.easeOut),
+                    builder: (_, v, child) => Opacity(opacity: v, child: child),
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(18, 0, 18, 20),
                       child: body,
@@ -439,6 +457,7 @@ class _Way2Card extends StatelessWidget {
   final bool open;
   final VoidCallback onToggle;
   final String? uri;
+  final int copies;
   final VoidCallback onCopy;
   final VoidCallback onShare;
   final VoidCallback onCard;
@@ -447,6 +466,7 @@ class _Way2Card extends StatelessWidget {
     required this.open,
     required this.onToggle,
     required this.uri,
+    required this.copies,
     required this.onCopy,
     required this.onShare,
     required this.onCard,
@@ -465,7 +485,9 @@ class _Way2Card extends StatelessWidget {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          GestureDetector(
+          PressScale(
+            scale: 0.98,
+            haptic: false,
             onTap: ready ? onCopy : null,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -487,7 +509,7 @@ class _Way2Card extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  Icon(Icons.copy_outlined, size: 14, color: HaloColors.amber),
+                  CopiedMark(copies: copies, color: HaloColors.amber),
                 ],
               ),
             ),
@@ -619,28 +641,15 @@ class _Way3Card extends StatelessWidget {
   }
 }
 
-// the qr fades up once its frame has settled, so it reads as placed, not
-// dumped
-class _QrFrame extends StatefulWidget {
+// the qr assembles corner to corner once its frame has settled, so it reads
+// as placed, not dumped
+class _QrFrame extends StatelessWidget {
   final String? uri;
   const _QrFrame({required this.uri});
-  @override
-  State<_QrFrame> createState() => _QrFrameState();
-}
-
-class _QrFrameState extends State<_QrFrame> {
-  bool _shown = false;
-  @override
-  void initState() {
-    super.initState();
-    Future.delayed(const Duration(milliseconds: 180), () {
-      if (mounted) setState(() => _shown = true);
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
-    final side = MediaQuery.of(context).size.width - 22 * 2 - 18 * 2;
+    final side = MediaQuery.sizeOf(context).width - 22 * 2 - 18 * 2;
     return Container(
       width: side,
       height: side,
@@ -649,52 +658,51 @@ class _QrFrameState extends State<_QrFrame> {
         color: HaloColors.text,
         borderRadius: BorderRadius.circular(18),
       ),
-      child: AnimatedOpacity(
-        opacity: _shown && widget.uri != null ? 1 : 0,
-        duration: const Duration(milliseconds: 260),
-        curve: Curves.easeOut,
-        child: AnimatedScale(
-          scale: _shown ? 1 : 0.94,
-          duration: const Duration(milliseconds: 280),
-          curve: Curves.easeOutBack,
-          child: widget.uri == null
-              ? Center(
-                  child: Text(
-                    l10n.myKryfoYourAddressAppearsOnce,
-                    textAlign: TextAlign.center,
-                    style: HaloType.sans(size: 12, color: HaloColors.ink),
-                  ),
-                )
-              : QrImageView(
-                  data: widget.uri!,
-                  version: QrVersions.auto,
-                  backgroundColor: HaloColors.text,
-                  eyeStyle: QrEyeStyle(
-                    eyeShape: QrEyeShape.square,
-                    color: HaloColors.ink,
-                  ),
-                  dataModuleStyle: QrDataModuleStyle(
-                    dataModuleShape: QrDataModuleShape.square,
-                    color: HaloColors.ink,
-                  ),
+      child: uri == null
+          ? Center(
+              child: Text(
+                l10n.myKryfoYourAddressAppearsOnce,
+                textAlign: TextAlign.center,
+                style: HaloType.sans(size: 12, color: HaloColors.ink),
+              ),
+            )
+          : QrWipe(
+              child: QrImageView(
+                data: uri!,
+                version: QrVersions.auto,
+                backgroundColor: HaloColors.text,
+                eyeStyle: QrEyeStyle(
+                  eyeShape: QrEyeShape.square,
+                  color: HaloColors.ink,
                 ),
-        ),
-      ),
+                dataModuleStyle: QrDataModuleStyle(
+                  dataModuleShape: QrDataModuleShape.square,
+                  color: HaloColors.ink,
+                ),
+              ),
+            ),
     );
   }
 }
 
 class _HandleRow extends StatelessWidget {
   final String? handle;
+  final int copies;
   final VoidCallback onTap;
   final VoidCallback? onCopy;
-  const _HandleRow({required this.handle, required this.onTap, this.onCopy});
+  const _HandleRow({
+    required this.handle,
+    required this.copies,
+    required this.onTap,
+    this.onCopy,
+  });
   @override
   Widget build(BuildContext context) {
     final claimed = handle != null;
-    return InkWell(
+    return PressScale(
+      scale: 0.98,
+      haptic: false,
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsetsDirectional.fromSTEB(18, 16, 14, 16),
         decoration: BoxDecoration(
@@ -736,8 +744,8 @@ class _HandleRow extends StatelessWidget {
               IconButton(
                 tooltip: l10n.commonCopy,
                 onPressed: onCopy,
-                icon: Icon(
-                  Icons.copy_outlined,
+                icon: CopiedMark(
+                  copies: copies,
                   size: 18,
                   color: HaloColors.text2,
                 ),
@@ -765,9 +773,10 @@ class _Ghost extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final on = onTap != null;
-    return InkWell(
+    return PressScale(
+      scale: 0.97,
+      haptic: false,
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
         decoration: BoxDecoration(

@@ -66,7 +66,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Этот файл повреждён, прочитать его нельзя';
 
   @override
-  String get backupCouldNotMakeThe => 'не удалось создать ключ';
+  String get backupCouldNotMakeThe => 'Не удалось создать ключ';
 
   @override
   String get contactCardMessageMeOn => 'Пиши мне в';
@@ -982,10 +982,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get backupPassphraseMustBeAt =>
-      'парольная фраза должна быть не короче 6 символов';
+      'Парольная фраза должна быть не короче 6 символов';
 
   @override
-  String get backupPassphrasesDonTMatch => 'парольные фразы не совпадают';
+  String get backupPassphrasesDonTMatch => 'Парольные фразы не совпадают';
 
   @override
   String get backupBackupSavedKeepThe =>
@@ -1031,11 +1031,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String backupWriting(Object progress) {
-    return 'запись… $progress';
+    return 'Запись… $progress';
   }
 
   @override
-  String get backupCreating => 'создание…';
+  String get backupCreating => 'Создание…';
 
   @override
   String get backupMakeTheFileAnd => 'Создать файл и перенести';
@@ -1189,7 +1189,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Запроси мосты прямо у проекта tor. Нужно решить головоломку, чтобы боты не выгребли весь запас.';
 
   @override
-  String get bridgesTypeWhatYouSee => 'введи то, что видишь. можно строчными.';
+  String get bridgesTypeWhatYouSee => 'Введи то, что видишь. Можно строчными.';
 
   @override
   String get bridgesThisOneRequestDoes =>
@@ -2224,7 +2224,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get donateWeCanTVerify =>
-      'мы не можем проверить эту сеть, не спрашивая о тебе сторонний сервис, поэтому не проверяем. отправляй, если хочешь. значок это не откроет.';
+      'Мы не можем проверить эту сеть, не спрашивая о тебе сторонний сервис, поэтому не проверяем. Отправляй, если хочешь. Значок это не откроет.';
 
   @override
   String get donateBitcoinBadgesNeedOnion =>
@@ -3711,7 +3711,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get myKryfoHandleCopied => 'Имя пользователя скопировано';
 
   @override
-  String get myKryfoTheyReHereWith => 'мы рядом';
+  String get myKryfoTheyReHereWith => 'Мы рядом';
 
   @override
   String get myKryfoPointYourPhonesAt =>
@@ -3724,7 +3724,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get myKryfoTheyReadYouA => 'Мне продиктовали код';
 
   @override
-  String get myKryfoTheyReSomewhereElse => 'мы не рядом';
+  String get myKryfoTheyReSomewhereElse => 'Мы не рядом';
 
   @override
   String get myKryfoSendThemALink =>
@@ -4259,7 +4259,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get profileKryfoId => 'Kryfo ID';
 
   @override
-  String get profileOnionAddress => 'onion-адрес';
+  String get profileOnionAddress => 'Onion-адрес';
 
   @override
   String get profileSupporterBadge => 'Значок сторонника';
@@ -4276,7 +4276,7 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get profileShowMyBadge => 'показывать мой значок';
+  String get profileShowMyBadge => 'Показывать мой значок';
 
   @override
   String get profileOnMyOwnScreens => 'На моих экранах';
@@ -4285,10 +4285,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get profileLetContactsSeeIt => 'Показывать контактам';
 
   @override
-  String get profileOffByDefault => 'по умолчанию выключено';
+  String get profileOffByDefault => 'По умолчанию выключено';
 
   @override
-  String get profileShareConnect => 'поделиться и связаться';
+  String get profileShareConnect => 'Поделиться и связаться';
 
   @override
   String get profileMyKryfoCode => 'Мой код Kryfo';
@@ -4815,7 +4815,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get savedPhoto2 => 'Фото';
 
   @override
-  String get scanThatSNotA => 'это не QR Kryfo · продолжай наводить';
+  String get scanThatSNotA => 'Это не QR Kryfo · продолжай наводить';
 
   @override
   String get scanScanAKryfoQr => 'Сканировать QR Kryfo';
@@ -4864,7 +4864,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'У каждого разговора свой адрес, выведенный из обоих ключей. Ретранслятор видит не связанные между собой тайники, а не пару людей.';
 
   @override
-  String get seenWhatYouSay => 'что ты говоришь';
+  String get seenWhatYouSay => 'Что ты говоришь';
 
   @override
   String get seenEndToEndEncrypted =>
@@ -4905,7 +4905,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Работает на твоём телефоне по правилам, встроенным в приложение. Без сети, без загрузки списков. Читает только первое сообщение от незнакомца и не может видеть ничего, что тебе присылают контакты.';
 
   @override
-  String get seenBurnerRooms => 'одноразовые комнаты';
+  String get seenBurnerRooms => 'Одноразовые комнаты';
 
   @override
   String get seenRoomKeys => 'ключи комнаты';
@@ -4915,7 +4915,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Ты входишь в комнату под ключом, созданным для неё, так что люди внутри не узнают ничего, что пригодилось бы где-то ещё. Кто пришёл позже, не получает историю. Когда срок истекает, ключи, сообщения и медиа уничтожаются.';
 
   @override
-  String get seenLinkPreviews => 'превью ссылок';
+  String get seenLinkPreviews => 'Превью ссылок';
 
   @override
   String get seenOverTor => 'через tor';
@@ -4966,7 +4966,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String settingsTypeWipeToConfirm(Object word) {
-    return 'введи «$word» для подтверждения';
+    return 'Введи «$word» для подтверждения';
   }
 
   @override
@@ -5557,7 +5557,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'По умолчанию каждое сообщение идёт через tor — цепочку ретрансляторов. Никто — ни мы, ни твоя сеть — не может видеть, с кем ты общаешься и где находишься.';
 
   @override
-  String get whyKryfoEndToEndEncrypted => 'сквозное шифрование';
+  String get whyKryfoEndToEndEncrypted => 'Сквозное шифрование';
 
   @override
   String get whyKryfoMessagesAreSealedWith =>
@@ -5571,7 +5571,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Ни аккаунта, ни номера телефона, ни центрального сервера, хранящего твои чаты. Они живут на этом телефоне, в зашифрованном виде.';
 
   @override
-  String get whyKryfoNothingLeaks => 'ничего не утекает';
+  String get whyKryfoNothingLeaks => 'Ничего не утекает';
 
   @override
   String get whyKryfoNoReadReceiptsOr =>
@@ -5582,7 +5582,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get whyKryfoCompareASafetyNumber =>
-      'сверь код безопасности лично или по каналу, которому доверяешь, — так ты будешь знать, что никто не выдаёт себя за твой контакт.';
+      'Сверь код безопасности лично или по каналу, которому доверяешь, — так ты будешь знать, что никто не выдаёт себя за твой контакт.';
 
   @override
   String get whyKryfoTheHonestPart => 'Если честно';
@@ -6470,7 +6470,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get cameraRetake => 'Переснять';
 
   @override
-  String get seenIntroductions => 'знакомства';
+  String get seenIntroductions => 'Знакомства';
 
   @override
   String get donateAddress => 'адрес';
@@ -6539,7 +6539,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get shieldIgnore => 'Игнорировать';
 
   @override
-  String get profileIdentity => 'профиль';
+  String get profileIdentity => 'Профиль';
 
   @override
   String get avatarPickerShape => 'Форма';

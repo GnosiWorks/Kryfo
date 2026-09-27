@@ -39,6 +39,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final _ctrl = PageController();
 
   void _next() {
+    // with less movement the next step is simply there
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _ctrl.jumpToPage((_ctrl.page ?? 0).round() + 1);
+      return;
+    }
     _ctrl.nextPage(
       duration: const Duration(milliseconds: 280),
       curve: Curves.easeOutCubic,
@@ -93,7 +98,22 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
     _ctl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2400),
-    )..repeat();
+    );
+  }
+
+  bool _glowed = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // two slow glows as the page opens, then it rests: nothing loops while
+    // someone reads
+    if (_glowed || MediaQuery.disableAnimationsOf(context)) return;
+    _glowed = true;
+    // a whole number of glows ends where it began
+    _ctl.repeat(count: 2).whenComplete(() {
+      if (mounted) _ctl.value = 0;
+    });
   }
 
   @override
@@ -177,7 +197,8 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
         const SizedBox(height: 13),
         _bullet(l10n.onboardingTheFirstConnectionTakes),
         const Spacer(),
-        GestureDetector(
+        PressScale(
+          scale: 0.97,
           onTap: widget.onContinue,
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 14),
@@ -198,13 +219,16 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
         ),
         const SizedBox(height: 12),
         Center(
-          child: GestureDetector(
+          child: PressScale(
             onTap: () {
               Navigator.of(context).push(haloRoute(const RestoreScreen()));
             },
-            child: Text(
-              l10n.onboardingHaveABackupRestore,
-              style: HaloType.sans(size: 12, color: HaloColors.text2),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              child: Text(
+                l10n.onboardingHaveABackupRestore,
+                style: HaloType.sans(size: 12, color: HaloColors.text2),
+              ),
             ),
           ),
         ),
@@ -278,16 +302,39 @@ class _IdentityScreenState extends State<_IdentityScreen>
     _shimmer = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2400),
-    )..repeat();
+    );
     _breath = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 4000),
-    )..repeat();
+    );
     _reveal = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 3000),
     );
-    _reveal.forward();
+  }
+
+  bool _shown = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_shown) return;
+    _shown = true;
+    _play();
+  }
+
+  // the name writes itself in, the shine and the ring play twice, then
+  // rest. with less movement it is simply there
+  void _play() {
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _reveal.value = 1;
+      return;
+    }
+    _reveal.forward(from: 0);
+    _shimmer.repeat(count: 2);
+    _breath.repeat(count: 2).whenComplete(() {
+      if (mounted) _breath.value = 0;
+    });
   }
 
   @override
@@ -300,11 +347,9 @@ class _IdentityScreenState extends State<_IdentityScreen>
 
   Future<void> _regenerate() async {
     await widget.appState.regenerateIdentity();
-    setState(() {
-      _revealKey++;
-      _reveal.reset();
-      _reveal.forward();
-    });
+    if (!mounted) return;
+    setState(() => _revealKey++);
+    _play();
   }
 
   List<String> get _words {
@@ -383,7 +428,8 @@ class _IdentityScreenState extends State<_IdentityScreen>
                 spacing: 10,
                 runSpacing: 10,
                 children: [
-                  GestureDetector(
+                  PressScale(
+                    scale: 0.96,
                     onTap: _regenerate,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
@@ -401,7 +447,8 @@ class _IdentityScreenState extends State<_IdentityScreen>
                       ),
                     ),
                   ),
-                  GestureDetector(
+                  PressScale(
+                    scale: 0.96,
                     onTap: widget.onContinue,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
@@ -517,31 +564,32 @@ class _IdentityScreenState extends State<_IdentityScreen>
                 ],
               ),
             ),
-            Positioned.fill(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(14),
-                child: IgnorePointer(
-                  child: ShaderMask(
-                    blendMode: BlendMode.dstATop,
-                    shaderCallback: (rect) {
-                      final w = rect.width;
-                      final t = _shimmer.value;
-                      final x = -w + (w * 3) * t;
-                      return LinearGradient(
-                        begin: Alignment(x / w * 2 - 1, 0),
-                        end: Alignment((x + w) / w * 2 - 1, 0),
-                        colors: [
-                          Colors.transparent,
-                          HaloColors.amber.withValues(alpha: 0.18),
-                          Colors.transparent,
-                        ],
-                      ).createShader(rect);
-                    },
-                    child: Container(color: Colors.white),
+            if (_shimmer.isAnimating)
+              Positioned.fill(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: IgnorePointer(
+                    child: ShaderMask(
+                      blendMode: BlendMode.dstATop,
+                      shaderCallback: (rect) {
+                        final w = rect.width;
+                        final t = _shimmer.value;
+                        final x = -w + (w * 3) * t;
+                        return LinearGradient(
+                          begin: Alignment(x / w * 2 - 1, 0),
+                          end: Alignment((x + w) / w * 2 - 1, 0),
+                          colors: [
+                            Colors.transparent,
+                            HaloColors.amber.withValues(alpha: 0.18),
+                            Colors.transparent,
+                          ],
+                        ).createShader(rect);
+                      },
+                      child: Container(color: Colors.white),
+                    ),
                   ),
                 ),
               ),
-            ),
           ],
         );
       },
@@ -703,9 +751,8 @@ class _PickFaceScreenState extends State<_PickFaceScreen> {
           ),
           Row(
             children: [
-              GestureDetector(
+              PressScale(
                 onTap: widget.onContinue,
-                behavior: HitTestBehavior.opaque,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 4,
@@ -718,7 +765,8 @@ class _PickFaceScreenState extends State<_PickFaceScreen> {
                 ),
               ),
               const Spacer(),
-              GestureDetector(
+              PressScale(
+                scale: 0.96,
                 onTap: _saveAndGo,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
@@ -824,10 +872,8 @@ class _TransportScreenState extends State<_TransportScreen> {
         ),
         const SizedBox(height: 10),
         Center(
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
+          child: PressScale(
             onTap: () async {
-              HapticFeedback.selectionClick();
               // skip means onion. make it so rather than assume it.
               await appState.setSendMode('private');
               if (mounted) widget.onContinue();
@@ -1113,9 +1159,8 @@ class _AddSomeoneScreen extends StatelessWidget {
         ),
         const SizedBox(height: 18),
         Center(
-          child: GestureDetector(
+          child: PressScale(
             onTap: onComplete,
-            behavior: HitTestBehavior.opaque,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
               child: Text(
@@ -1294,7 +1339,14 @@ class _Path extends StatelessWidget {
                 ],
               ),
             ),
-            Text('→', style: HaloType.sans(size: 18, color: HaloColors.text3)),
+            // points the way reading goes
+            Transform.flip(
+              flipX: Directionality.of(context) == TextDirection.rtl,
+              child: Text(
+                '→',
+                style: HaloType.sans(size: 18, color: HaloColors.text3),
+              ),
+            ),
           ],
         ),
       ),

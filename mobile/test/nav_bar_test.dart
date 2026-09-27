@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/theme.dart';
 import 'package:kryfo/widgets/nav_bar.dart';
 
 Widget host({
@@ -44,9 +45,7 @@ void main() {
     }
   });
 
-  testWidgets('tap picks, long press on me opens dev', (
-    t,
-  ) async {
+  testWidgets('tap picks, long press on me opens dev', (t) async {
     final picked = <HaloTab>[];
     var dev = 0;
     await t.pumpWidget(
@@ -65,9 +64,7 @@ void main() {
     expect(dev, 1);
   });
 
-  testWidgets('one button per tab, open one selected', (
-    t,
-  ) async {
+  testWidgets('one button per tab, open one selected', (t) async {
     final h = t.ensureSemantics();
     await t.pumpWidget(host(active: HaloTab.tools));
     expect(
@@ -118,5 +115,51 @@ void main() {
     await t.pumpWidget(host(active: HaloTab.me, still: true));
     await t.pump();
     expect(t.hasRunningAnimations, false);
+  });
+
+  // the pills drawn, as their opacities: the one leaving and the one coming
+  List<double> pills(WidgetTester t) => [
+    for (final o in t.widgetList<Opacity>(
+      find.descendant(
+        of: find.byType(HaloNavBar),
+        matching: find.byType(Opacity),
+      ),
+    ))
+      o.opacity,
+  ];
+
+  testWidgets('the old pill shrinks away while the new one pops', (t) async {
+    await t.pumpWidget(host(active: HaloTab.chats));
+    expect(pills(t), [1.0]);
+    await t.pumpWidget(host(active: HaloTab.support));
+    await t.pump(const Duration(milliseconds: 80));
+    final mid = pills(t);
+    expect(mid.length, 2, reason: 'both drawn mid-switch');
+    for (final o in mid) {
+      expect(o, inExclusiveRange(0, 1));
+    }
+    await t.pump(const Duration(milliseconds: 240));
+    expect(t.hasRunningAnimations, isFalse);
+    expect(pills(t), [1.0]);
+  });
+
+  testWidgets('the ink follows the pill instead of jumping', (t) async {
+    Color word(String s) => t.widget<Text>(find.text(s)).style!.color!;
+    await t.pumpWidget(host(active: HaloTab.chats));
+    await t.pumpWidget(host(active: HaloTab.me));
+    await t.pump(const Duration(milliseconds: 70));
+    final mid = word('Me');
+    expect(mid, isNot(HaloColors.warm));
+    expect(mid, isNot(HaloColors.text));
+    await t.pump(const Duration(milliseconds: 300));
+    expect(word('Me'), HaloColors.text);
+    expect(word('Chats'), HaloColors.warm);
+  });
+
+  testWidgets('reduced motion: the switch is instant', (t) async {
+    await t.pumpWidget(host(active: HaloTab.chats, still: true));
+    await t.pumpWidget(host(active: HaloTab.tools, still: true));
+    expect(pills(t), [1.0]);
+    expect(t.hasRunningAnimations, isFalse);
   });
 }

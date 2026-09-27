@@ -4003,7 +4003,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get profileKryfoId => 'Kryfo ID';
 
   @override
-  String get profileOnionAddress => 'onion 地址';
+  String get profileOnionAddress => 'Onion 地址';
 
   @override
   String get profileSupporterBadge => '支持者徽章';
@@ -10900,7 +10900,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get profileKryfoId => 'Kryfo ID';
 
   @override
-  String get profileOnionAddress => 'onion 位址';
+  String get profileOnionAddress => 'Onion 位址';
 
   @override
   String get profileSupporterBadge => '支持者徽章';

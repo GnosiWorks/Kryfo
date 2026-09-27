@@ -72,7 +72,7 @@
   "@backupThisFileIsDamaged": {
     "description": "backup.dart"
   },
-  "backupCouldNotMakeThe": "could not make the key",
+  "backupCouldNotMakeThe": "Could not make the key",
   "@backupCouldNotMakeThe": {
     "description": "backup.dart"
   },
@@ -1204,11 +1204,11 @@
   "@commonSave": {
     "description": "screens/avatar_picker_screen.dart, screens/chat_screen.dart, screens/contact_screen.dart, screens/group_chat_screen.dart, screens/notes_screen.dart"
   },
-  "backupPassphraseMustBeAt": "passphrase must be at least 6 characters",
+  "backupPassphraseMustBeAt": "Passphrase must be at least 6 characters",
   "@backupPassphraseMustBeAt": {
     "description": "screens/backup_screen.dart"
   },
-  "backupPassphrasesDonTMatch": "passphrases don't match",
+  "backupPassphrasesDonTMatch": "Passphrases don't match",
   "@backupPassphrasesDonTMatch": {
     "description": "screens/backup_screen.dart"
   },
@@ -1260,7 +1260,7 @@
   "@backupConfirmPassphrase": {
     "description": "screens/backup_screen.dart"
   },
-  "backupWriting": "writing… {progress}",
+  "backupWriting": "Writing… {progress}",
   "@backupWriting": {
     "description": "screens/backup_screen.dart. the placeholder is a percentage, already written the language's way (42%, 42 %, %42)",
     "placeholders": {
@@ -1269,7 +1269,7 @@
       }
     }
   },
-  "backupCreating": "creating…",
+  "backupCreating": "Creating…",
   "@backupCreating": {
     "description": "screens/backup_screen.dart"
   },
@@ -1453,7 +1453,7 @@
   "@bridgesAskTheTorProject": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesTypeWhatYouSee": "type what you see. lowercase is fine.",
+  "bridgesTypeWhatYouSee": "Type what you see. Lowercase is fine.",
   "@bridgesTypeWhatYouSee": {
     "description": "screens/bridges_screen.dart"
   },
@@ -2761,7 +2761,7 @@
   "@donateBitcoinIsVerifiedBy": {
     "description": "screens/donate_screen.dart"
   },
-  "donateWeCanTVerify": "we can't verify this chain without asking an outside service about you, so we don't. send it if you like. it won't unlock a badge.",
+  "donateWeCanTVerify": "We can't verify this chain without asking an outside service about you, so we don't. Send it if you like. It won't unlock a badge.",
   "@donateWeCanTVerify": {
     "description": "screens/donate_screen.dart"
   },
@@ -4556,7 +4556,7 @@
   "@myKryfoHandleCopied": {
     "description": "screens/my_kryfo_screen.dart"
   },
-  "myKryfoTheyReHereWith": "they're here with me",
+  "myKryfoTheyReHereWith": "They're here with me",
   "@myKryfoTheyReHereWith": {
     "description": "screens/my_kryfo_screen.dart"
   },
@@ -4572,7 +4572,7 @@
   "@myKryfoTheyReadYouA": {
     "description": "screens/my_kryfo_screen.dart"
   },
-  "myKryfoTheyReSomewhereElse": "they're somewhere else",
+  "myKryfoTheyReSomewhereElse": "They're somewhere else",
   "@myKryfoTheyReSomewhereElse": {
     "description": "screens/my_kryfo_screen.dart"
   },
@@ -5230,7 +5230,7 @@
   "@profileKryfoId": {
     "description": "screens/profile_screen.dart"
   },
-  "profileOnionAddress": "onion address",
+  "profileOnionAddress": "Onion address",
   "@profileOnionAddress": {
     "description": "screens/profile_screen.dart"
   },
@@ -5247,7 +5247,7 @@
       }
     }
   },
-  "profileShowMyBadge": "show my badge",
+  "profileShowMyBadge": "Show my badge",
   "@profileShowMyBadge": {
     "description": "screens/profile_screen.dart"
   },
@@ -5259,11 +5259,11 @@
   "@profileLetContactsSeeIt": {
     "description": "screens/profile_screen.dart"
   },
-  "profileOffByDefault": "off by default",
+  "profileOffByDefault": "Off by default",
   "@profileOffByDefault": {
     "description": "screens/profile_screen.dart"
   },
-  "profileShareConnect": "share & connect",
+  "profileShareConnect": "Share & connect",
   "@profileShareConnect": {
     "description": "screens/profile_screen.dart"
   },
@@ -5938,7 +5938,7 @@
   "@savedPhoto2": {
     "description": "screens/saved_screen.dart"
   },
-  "scanThatSNotA": "that's not a Kryfo qr · keep pointing",
+  "scanThatSNotA": "That's not a Kryfo QR · keep pointing",
   "@scanThatSNotA": {
     "description": "screens/scan_screen.dart"
   },
@@ -5998,7 +5998,7 @@
   "@seenEachConversationGetsIts": {
     "description": "screens/seen_screen.dart"
   },
-  "seenWhatYouSay": "what you say",
+  "seenWhatYouSay": "What you say",
   "@seenWhatYouSay": {
     "description": "screens/seen_screen.dart"
   },
@@ -6046,7 +6046,7 @@
   "@seenRunsOnYourPhone": {
     "description": "screens/seen_screen.dart"
   },
-  "seenBurnerRooms": "burner rooms",
+  "seenBurnerRooms": "Burner rooms",
   "@seenBurnerRooms": {
     "description": "screens/seen_screen.dart"
   },
@@ -6058,7 +6058,7 @@
   "@seenYouJoinARoom": {
     "description": "screens/seen_screen.dart"
   },
-  "seenLinkPreviews": "link previews",
+  "seenLinkPreviews": "Link previews",
   "@seenLinkPreviews": {
     "description": "screens/seen_screen.dart"
   },
@@ -6118,7 +6118,7 @@
   "@commonContinue": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsTypeWipeToConfirm": "type '{word}' to confirm",
+  "settingsTypeWipeToConfirm": "Type '{word}' to confirm",
   "@settingsTypeWipeToConfirm": {
     "description": "screens/settings_screen.dart",
     "placeholders": {
@@ -6892,7 +6892,7 @@
   "@whyKryfoByDefaultEveryMessage": {
     "description": "screens/why_kryfo_screen.dart"
   },
-  "whyKryfoEndToEndEncrypted": "end-to-end encrypted",
+  "whyKryfoEndToEndEncrypted": "End-to-end encrypted",
   "@whyKryfoEndToEndEncrypted": {
     "description": "screens/why_kryfo_screen.dart"
   },
@@ -6908,7 +6908,7 @@
   "@whyKryfoNoAccountNoPhone": {
     "description": "screens/why_kryfo_screen.dart"
   },
-  "whyKryfoNothingLeaks": "nothing leaks",
+  "whyKryfoNothingLeaks": "Nothing leaks",
   "@whyKryfoNothingLeaks": {
     "description": "screens/why_kryfo_screen.dart"
   },
@@ -6920,7 +6920,7 @@
   "@whyKryfoVerifyItIsReally": {
     "description": "screens/why_kryfo_screen.dart"
   },
-  "whyKryfoCompareASafetyNumber": "compare a safety number in person or over a channel you trust, so you know no one is impersonating your contact.",
+  "whyKryfoCompareASafetyNumber": "Compare a safety number in person or over a channel you trust, so you know no one is impersonating your contact.",
   "@whyKryfoCompareASafetyNumber": {
     "description": "screens/why_kryfo_screen.dart"
   },
@@ -8071,7 +8071,7 @@
   "@cameraRetake": {
     "description": "screens/camera_screen.dart"
   },
-  "seenIntroductions": "introductions",
+  "seenIntroductions": "Introductions",
   "@seenIntroductions": {
     "description": "screens/seen_screen.dart"
   },
@@ -8159,7 +8159,7 @@
   "@shieldIgnore": {
     "description": "screens/shield_sheet.dart"
   },
-  "profileIdentity": "identity",
+  "profileIdentity": "Identity",
   "@profileIdentity": {
     "description": "screens/profile_screen.dart"
   },

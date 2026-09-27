@@ -66,7 +66,7 @@ class AppLocalizationsIt extends AppLocalizations {
       'Questo file è danneggiato e non si può leggere';
 
   @override
-  String get backupCouldNotMakeThe => 'impossibile creare la chiave';
+  String get backupCouldNotMakeThe => 'Impossibile creare la chiave';
 
   @override
   String get contactCardMessageMeOn => 'Scrivimi su';
@@ -960,10 +960,10 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get backupPassphraseMustBeAt =>
-      'la passphrase deve avere almeno 6 caratteri';
+      'La passphrase deve avere almeno 6 caratteri';
 
   @override
-  String get backupPassphrasesDonTMatch => 'le passphrase non coincidono';
+  String get backupPassphrasesDonTMatch => 'Le passphrase non coincidono';
 
   @override
   String get backupBackupSavedKeepThe =>
@@ -1009,11 +1009,11 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String backupWriting(Object progress) {
-    return 'scrittura… $progress';
+    return 'Scrittura… $progress';
   }
 
   @override
-  String get backupCreating => 'creazione…';
+  String get backupCreating => 'Creazione…';
 
   @override
   String get backupMakeTheFileAnd => 'Crea il file e trasferisci';
@@ -1165,7 +1165,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get bridgesTypeWhatYouSee =>
-      'scrivi quello che vedi. vanno bene le minuscole.';
+      'Scrivi quello che vedi. Vanno bene le minuscole.';
 
   @override
   String get bridgesThisOneRequestDoes =>
@@ -2194,7 +2194,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get donateWeCanTVerify =>
-      'non possiamo verificare questa blockchain senza chiedere di te a un servizio esterno, quindi non lo facciamo. invia pure se vuoi. non sblocca nessun badge.';
+      'Non possiamo verificare questa blockchain senza chiedere di te a un servizio esterno, quindi non lo facciamo. Invia pure se vuoi. Non sblocca nessun badge.';
 
   @override
   String get donateBitcoinBadgesNeedOnion =>
@@ -3663,7 +3663,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get myKryfoHandleCopied => 'Nome utente copiato';
 
   @override
-  String get myKryfoTheyReHereWith => 'è qui con me';
+  String get myKryfoTheyReHereWith => 'È qui con me';
 
   @override
   String get myKryfoPointYourPhonesAt =>
@@ -3676,7 +3676,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get myKryfoTheyReadYouA => 'Ti legge un codice';
 
   @override
-  String get myKryfoTheyReSomewhereElse => 'è da un\'altra parte';
+  String get myKryfoTheyReSomewhereElse => 'È da un\'altra parte';
 
   @override
   String get myKryfoSendThemALink =>
@@ -4212,7 +4212,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get profileKryfoId => 'id Kryfo';
 
   @override
-  String get profileOnionAddress => 'indirizzo onion';
+  String get profileOnionAddress => 'Indirizzo onion';
 
   @override
   String get profileSupporterBadge => 'Badge sostenitore';
@@ -4229,7 +4229,7 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String get profileShowMyBadge => 'mostra il mio badge';
+  String get profileShowMyBadge => 'Mostra il mio badge';
 
   @override
   String get profileOnMyOwnScreens => 'Sulle mie schermate';
@@ -4238,10 +4238,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get profileLetContactsSeeIt => 'Fallo vedere ai contatti';
 
   @override
-  String get profileOffByDefault => 'disattivato di default';
+  String get profileOffByDefault => 'Disattivato di default';
 
   @override
-  String get profileShareConnect => 'condividi e connetti';
+  String get profileShareConnect => 'Condividi e connetti';
 
   @override
   String get profileMyKryfoCode => 'Il mio codice Kryfo';
@@ -4770,7 +4770,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get scanThatSNotA =>
-      'questo non è un qr di Kryfo · continua a inquadrare';
+      'Questo non è un QR di Kryfo · continua a inquadrare';
 
   @override
   String get scanScanAKryfoQr => 'Scansiona un qr Kryfo';
@@ -4819,7 +4819,7 @@ class AppLocalizationsIt extends AppLocalizations {
       'Ogni conversazione ha un proprio indirizzo, derivato da entrambe le chiavi. Un relay vede depositi scollegati tra loro, non una coppia di persone.';
 
   @override
-  String get seenWhatYouSay => 'cosa dici';
+  String get seenWhatYouSay => 'Cosa dici';
 
   @override
   String get seenEndToEndEncrypted =>
@@ -4860,7 +4860,7 @@ class AppLocalizationsIt extends AppLocalizations {
       'Funziona sul tuo telefono con regole incluse nell\'app. Niente rete, niente download di elenchi. Legge solo il primo messaggio di uno sconosciuto e non può vedere niente di ciò che ti manda un contatto.';
 
   @override
-  String get seenBurnerRooms => 'stanze effimere';
+  String get seenBurnerRooms => 'Stanze effimere';
 
   @override
   String get seenRoomKeys => 'chiavi stanza';
@@ -4870,7 +4870,7 @@ class AppLocalizationsIt extends AppLocalizations {
       'Entri in una stanza con una chiave creata apposta, quindi chi è dentro non scopre niente che funzioni altrove. Chi arriva dopo non riceve la cronologia. Alla scadenza le chiavi, i messaggi e i media vengono distrutti.';
 
   @override
-  String get seenLinkPreviews => 'anteprime dei link';
+  String get seenLinkPreviews => 'Anteprime dei link';
 
   @override
   String get seenOverTor => 'via tor';
@@ -4922,7 +4922,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String settingsTypeWipeToConfirm(Object word) {
-    return 'scrivi «$word» per confermare';
+    return 'Scrivi «$word» per confermare';
   }
 
   @override
@@ -5509,7 +5509,7 @@ class AppLocalizationsIt extends AppLocalizations {
       'Di default ogni messaggio viaggia attraverso tor - una catena di relay. Nessuno, né noi né la tua rete, può vedere con chi parli o dove ti trovi.';
 
   @override
-  String get whyKryfoEndToEndEncrypted => 'cifrato end-to-end';
+  String get whyKryfoEndToEndEncrypted => 'Cifrato end-to-end';
 
   @override
   String get whyKryfoMessagesAreSealedWith =>
@@ -5524,7 +5524,7 @@ class AppLocalizationsIt extends AppLocalizations {
       'Nessun account, nessun numero di telefono, nessun server centrale che conserva le tue chat. Vivono su questo telefono, cifrate a riposo.';
 
   @override
-  String get whyKryfoNothingLeaks => 'non trapela niente';
+  String get whyKryfoNothingLeaks => 'Non trapela niente';
 
   @override
   String get whyKryfoNoReadReceiptsOr =>
@@ -5535,7 +5535,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get whyKryfoCompareASafetyNumber =>
-      'confronta un numero di sicurezza di persona o su un canale di cui ti fidi, così sai che nessuno si sta spacciando per il tuo contatto.';
+      'Confronta un numero di sicurezza di persona o su un canale di cui ti fidi, così sai che nessuno si sta spacciando per il tuo contatto.';
 
   @override
   String get whyKryfoTheHonestPart => 'La parte onesta';
@@ -6418,7 +6418,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get cameraRetake => 'Rifai';
 
   @override
-  String get seenIntroductions => 'presentazioni';
+  String get seenIntroductions => 'Presentazioni';
 
   @override
   String get donateAddress => 'indirizzo';
@@ -6487,7 +6487,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get shieldIgnore => 'Ignora';
 
   @override
-  String get profileIdentity => 'identità';
+  String get profileIdentity => 'Identità';
 
   @override
   String get avatarPickerShape => 'Forma';

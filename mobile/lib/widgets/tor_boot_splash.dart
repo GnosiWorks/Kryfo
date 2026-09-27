@@ -20,7 +20,21 @@ class _TorBootSplashState extends State<TorBootSplash>
   late final AnimationController _c = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 3000),
-  )..repeat();
+  );
+  bool _still = false;
+
+  // the hops light in turn while tor starts, the only time this screen is
+  // up. still with less movement
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _still = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    if (_still) {
+      _c.stop();
+    } else if (!_c.isAnimating) {
+      _c.repeat();
+    }
+  }
 
   @override
   void dispose() {
@@ -29,6 +43,7 @@ class _TorBootSplashState extends State<TorBootSplash>
   }
 
   double _hop(double phase) {
+    if (_still) return 0.7;
     final d = (_c.value - phase) % 1.0;
     if (d < 0.15) return 0.25 + (d / 0.15) * 0.75;
     if (d < 0.35) return 1.0 - ((d - 0.15) / 0.20) * 0.75;
@@ -68,7 +83,9 @@ class _TorBootSplashState extends State<TorBootSplash>
                 return Column(
                   children: [
                     AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 220),
+                      duration: _still
+                          ? Duration.zero
+                          : const Duration(milliseconds: 220),
                       child: Text(
                         appState.bootPhase,
                         key: ValueKey(appState.bootPhase),

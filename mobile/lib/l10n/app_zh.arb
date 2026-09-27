@@ -1093,7 +1093,7 @@
   "profileProfile": "个人资料",
   "profileChangeYourFace": "更换你的脸",
   "profileKryfoId": "Kryfo ID",
-  "profileOnionAddress": "onion 地址",
+  "profileOnionAddress": "Onion 地址",
   "profileSupporterBadge": "支持者徽章",
   "profileYouAreAThank": "{tier, select, supporter{你是支持者。谢谢你。} patron{你是赞助人。谢谢你。} guardian{你是守护者。谢谢你。} other{你是支持者。谢谢你。}}",
   "profileShowMyBadge": "显示我的徽章",

@@ -234,7 +234,7 @@ abstract class AppLocalizations {
   /// backup.dart
   ///
   /// In en, this message translates to:
-  /// **'could not make the key'**
+  /// **'Could not make the key'**
   String get backupCouldNotMakeThe;
 
   /// contact_card.dart
@@ -1476,13 +1476,13 @@ abstract class AppLocalizations {
   /// screens/backup_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'passphrase must be at least 6 characters'**
+  /// **'Passphrase must be at least 6 characters'**
   String get backupPassphraseMustBeAt;
 
   /// screens/backup_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'passphrases don\'t match'**
+  /// **'Passphrases don\'t match'**
   String get backupPassphrasesDonTMatch;
 
   /// screens/backup_screen.dart
@@ -1560,13 +1560,13 @@ abstract class AppLocalizations {
   /// screens/backup_screen.dart. the placeholder is a percentage, already written the language's way (42%, 42 %, %42)
   ///
   /// In en, this message translates to:
-  /// **'writing… {progress}'**
+  /// **'Writing… {progress}'**
   String backupWriting(Object progress);
 
   /// screens/backup_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'creating…'**
+  /// **'Creating…'**
   String get backupCreating;
 
   /// screens/backup_screen.dart
@@ -1818,7 +1818,7 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'type what you see. lowercase is fine.'**
+  /// **'Type what you see. Lowercase is fine.'**
   String get bridgesTypeWhatYouSee;
 
   /// screens/bridges_screen.dart
@@ -3486,7 +3486,7 @@ abstract class AppLocalizations {
   /// screens/donate_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'we can\'t verify this chain without asking an outside service about you, so we don\'t. send it if you like. it won\'t unlock a badge.'**
+  /// **'We can\'t verify this chain without asking an outside service about you, so we don\'t. Send it if you like. It won\'t unlock a badge.'**
   String get donateWeCanTVerify;
 
   /// screens/donate_screen.dart
@@ -5724,7 +5724,7 @@ abstract class AppLocalizations {
   /// screens/my_kryfo_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'they\'re here with me'**
+  /// **'They\'re here with me'**
   String get myKryfoTheyReHereWith;
 
   /// screens/my_kryfo_screen.dart
@@ -5748,7 +5748,7 @@ abstract class AppLocalizations {
   /// screens/my_kryfo_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'they\'re somewhere else'**
+  /// **'They\'re somewhere else'**
   String get myKryfoTheyReSomewhereElse;
 
   /// screens/my_kryfo_screen.dart
@@ -6684,7 +6684,7 @@ abstract class AppLocalizations {
   /// screens/profile_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'onion address'**
+  /// **'Onion address'**
   String get profileOnionAddress;
 
   /// screens/profile_screen.dart
@@ -6702,7 +6702,7 @@ abstract class AppLocalizations {
   /// screens/profile_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'show my badge'**
+  /// **'Show my badge'**
   String get profileShowMyBadge;
 
   /// screens/profile_screen.dart
@@ -6720,13 +6720,13 @@ abstract class AppLocalizations {
   /// screens/profile_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'off by default'**
+  /// **'Off by default'**
   String get profileOffByDefault;
 
   /// screens/profile_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'share & connect'**
+  /// **'Share & connect'**
   String get profileShareConnect;
 
   /// screens/profile_screen.dart
@@ -7614,7 +7614,7 @@ abstract class AppLocalizations {
   /// screens/scan_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'that\'s not a Kryfo qr · keep pointing'**
+  /// **'That\'s not a Kryfo QR · keep pointing'**
   String get scanThatSNotA;
 
   /// screens/scan_screen.dart
@@ -7704,7 +7704,7 @@ abstract class AppLocalizations {
   /// screens/seen_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'what you say'**
+  /// **'What you say'**
   String get seenWhatYouSay;
 
   /// screens/seen_screen.dart
@@ -7776,7 +7776,7 @@ abstract class AppLocalizations {
   /// screens/seen_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'burner rooms'**
+  /// **'Burner rooms'**
   String get seenBurnerRooms;
 
   /// screens/seen_screen.dart
@@ -7794,7 +7794,7 @@ abstract class AppLocalizations {
   /// screens/seen_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'link previews'**
+  /// **'Link previews'**
   String get seenLinkPreviews;
 
   /// screens/seen_screen.dart
@@ -7884,7 +7884,7 @@ abstract class AppLocalizations {
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'type \'{word}\' to confirm'**
+  /// **'Type \'{word}\' to confirm'**
   String settingsTypeWipeToConfirm(Object word);
 
   /// screens/settings_screen.dart
@@ -8832,7 +8832,7 @@ abstract class AppLocalizations {
   /// screens/why_kryfo_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'end-to-end encrypted'**
+  /// **'End-to-end encrypted'**
   String get whyKryfoEndToEndEncrypted;
 
   /// screens/why_kryfo_screen.dart
@@ -8856,7 +8856,7 @@ abstract class AppLocalizations {
   /// screens/why_kryfo_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'nothing leaks'**
+  /// **'Nothing leaks'**
   String get whyKryfoNothingLeaks;
 
   /// screens/why_kryfo_screen.dart
@@ -8874,7 +8874,7 @@ abstract class AppLocalizations {
   /// screens/why_kryfo_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'compare a safety number in person or over a channel you trust, so you know no one is impersonating your contact.'**
+  /// **'Compare a safety number in person or over a channel you trust, so you know no one is impersonating your contact.'**
   String get whyKryfoCompareASafetyNumber;
 
   /// screens/why_kryfo_screen.dart
@@ -10152,7 +10152,7 @@ abstract class AppLocalizations {
   /// screens/seen_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'introductions'**
+  /// **'Introductions'**
   String get seenIntroductions;
 
   /// screens/donate_screen.dart
@@ -10284,7 +10284,7 @@ abstract class AppLocalizations {
   /// screens/profile_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'identity'**
+  /// **'Identity'**
   String get profileIdentity;
 
   /// screens/avatar_picker_screen.dart

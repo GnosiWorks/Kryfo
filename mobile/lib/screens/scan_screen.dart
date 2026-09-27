@@ -8,6 +8,7 @@ import 'package:flutter_zxing/flutter_zxing.dart';
 import '../theme.dart';
 import '../l10n/l10n.dart';
 import '../lock_guard.dart' show lockGuard;
+import '../widgets/motion.dart' show houseSpring;
 
 class ScanScreen extends StatefulWidget {
   const ScanScreen({super.key});
@@ -16,8 +17,7 @@ class ScanScreen extends StatefulWidget {
   State<ScanScreen> createState() => _ScanScreenState();
 }
 
-class _ScanScreenState extends State<ScanScreen>
-    with SingleTickerProviderStateMixin {
+class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   // zxing-cpp under the hood. the controller arrives via onControllerCreated
   // and is only used for the torch.
   CameraController? _cam;
@@ -46,7 +46,19 @@ class _ScanScreenState extends State<ScanScreen>
     _scanAnim = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1800),
-    )..repeat(reverse: true);
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // the line sweeps only while the camera looks, and never with less
+    // movement: the corners already say where to aim
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _scanAnim.stop();
+    } else if (!_scanAnim.isAnimating && !_detectedSuccess) {
+      _scanAnim.repeat(reverse: true);
+    }
   }
 
   void _onScan(Code code) {
@@ -67,6 +79,7 @@ class _ScanScreenState extends State<ScanScreen>
       return;
     }
     _handled = true;
+    _scanAnim.stop();
     setState(() => _detectedSuccess = true);
     // short success pulse before popping
     Future.delayed(const Duration(milliseconds: 380), () {
@@ -116,7 +129,7 @@ class _ScanScreenState extends State<ScanScreen>
           ),
           // viewfinder frame (corner brackets + animated scan line)
           Center(
-            child: _Viewfinder(
+            child: ScanFrame(
               size: boxSize,
               success: _detectedSuccess,
               scanAnim: _scanAnim,
@@ -250,16 +263,83 @@ class _MaskPainter extends CustomPainter {
       oldDelegate.boxSize != boxSize;
 }
 
+// the viewfinder frame, closing in on the house spring as the scanner opens
+class ScanFrame extends StatefulWidget {
+  final double size;
+  final bool success;
+  final Animation<double> scanAnim;
+  const ScanFrame({
+    super.key,
+    required this.size,
+    required this.success,
+    required this.scanAnim,
+  });
+
+  @override
+  State<ScanFrame> createState() => _ScanFrameState();
+}
+
+class _ScanFrameState extends State<ScanFrame>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _in = AnimationController.unbounded(
+    vsync: this,
+  );
+  bool _opened = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_opened) return;
+    _opened = true;
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _in.value = 1;
+      return;
+    }
+    // the spring stops within a hair of its end: the end itself after
+    _in.animateWith(houseSpring(0, 1)).then((_) {
+      if (mounted) _in.value = 1;
+    });
+  }
+
+  @override
+  void dispose() {
+    _in.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _in,
+      builder: (_, child) {
+        final v = _in.value;
+        return Opacity(
+          opacity: v.clamp(0.0, 1.0),
+          child: Transform.scale(scale: 1.14 - 0.14 * v, child: child),
+        );
+      },
+      child: _Viewfinder(
+        size: widget.size,
+        success: widget.success,
+        scanAnim: widget.scanAnim,
+        still: MediaQuery.disableAnimationsOf(context),
+      ),
+    );
+  }
+}
+
 // the viewfinder frame: amber corner brackets + a moving horizontal
 // scan line + a brief success flash when a kryfo qr is detected.
 class _Viewfinder extends StatelessWidget {
   final double size;
   final bool success;
   final Animation<double> scanAnim;
+  final bool still;
   const _Viewfinder({
     required this.size,
     required this.success,
     required this.scanAnim,
+    required this.still,
   });
 
   @override
@@ -270,29 +350,14 @@ class _Viewfinder extends StatelessWidget {
       height: size,
       child: Stack(
         children: [
-          // corner brackets - 4 L-shapes
-          PositionedDirectional(
-            start: 0,
-            top: 0,
-            child: _corner(accent, true, true),
-          ),
-          PositionedDirectional(
-            end: 0,
-            top: 0,
-            child: _corner(accent, false, true),
-          ),
-          PositionedDirectional(
-            start: 0,
-            bottom: 0,
-            child: _corner(accent, true, false),
-          ),
-          PositionedDirectional(
-            end: 0,
-            bottom: 0,
-            child: _corner(accent, false, false),
-          ),
+          // corner brackets - 4 L-shapes. placed by side, not by reading
+          // direction: each one is drawn for the corner it sits in
+          Positioned(left: 0, top: 0, child: _corner(accent, true, true)),
+          Positioned(right: 0, top: 0, child: _corner(accent, false, true)),
+          Positioned(left: 0, bottom: 0, child: _corner(accent, true, false)),
+          Positioned(right: 0, bottom: 0, child: _corner(accent, false, false)),
           // scan line (hidden once success)
-          if (!success)
+          if (!success && !still)
             AnimatedBuilder(
               animation: scanAnim,
               builder: (_, _) {
@@ -335,7 +400,7 @@ class _Viewfinder extends StatelessWidget {
               ),
               alignment: Alignment.center,
               child: AnimatedScale(
-                scale: success ? 1.0 : 0.4,
+                scale: success || still ? 1.0 : 0.4,
                 duration: const Duration(milliseconds: 260),
                 curve: Curves.easeOutBack,
                 child: Container(
@@ -394,5 +459,5 @@ class _CornerPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_CornerPainter old) => false;
+  bool shouldRepaint(_CornerPainter old) => old.color != color;
 }

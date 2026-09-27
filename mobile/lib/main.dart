@@ -11124,12 +11124,77 @@ Future<void> showAddContact(BuildContext context) async {
   final action = await showHaloSheet<String>(
     context,
     scroll: true,
-    builder: (sheetCtx) => Padding(
+    builder: (sheetCtx) => _AddSheet(ctrl: ctrl, done: sheetCtx),
+  );
+  if (action == null || !context.mounted) return;
+  if (action == 'mine') {
+    await Navigator.of(context).push(haloRoute(const MyKryfoScreen()));
+    return;
+  }
+
+  String uri;
+  if (action == 'scan') {
+    final result = await Navigator.of(
+      context,
+    ).push<String>(haloRoute<String>(const ScanScreen()));
+    if (result == null) return;
+    uri = result;
+  } else {
+    uri = ctrl.text.trim();
+    if (uri.isEmpty) return;
+  }
+
+  final status = await handleHaloUri(uri);
+  await appState.refreshContacts();
+  if (!context.mounted) return;
+  showHaloToast(context, status);
+}
+
+// the add someone sheet. the field lights up while it is typed in, and
+// "add them" fills once there is something to add
+class _AddSheet extends StatefulWidget {
+  final TextEditingController ctrl;
+  // the sheet's own context, which the choice pops
+  final BuildContext done;
+  const _AddSheet({required this.ctrl, required this.done});
+  @override
+  State<_AddSheet> createState() => _AddSheetState();
+}
+
+class _AddSheetState extends State<_AddSheet> {
+  final _focus = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _focus.addListener(_repaint);
+    widget.ctrl.addListener(_repaint);
+  }
+
+  void _repaint() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    widget.ctrl.removeListener(_repaint);
+    _focus.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sheetCtx = widget.done;
+    final still = MediaQuery.disableAnimationsOf(context);
+    final d = still ? Duration.zero : const Duration(milliseconds: 200);
+    final typed = widget.ctrl.text.trim().isNotEmpty;
+    final lit = _focus.hasFocus;
+    return Padding(
       padding: EdgeInsets.fromLTRB(
         22,
         0,
         22,
-        24 + MediaQuery.of(sheetCtx).viewInsets.bottom,
+        24 + MediaQuery.of(context).viewInsets.bottom,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -11181,16 +11246,24 @@ Future<void> showAddContact(BuildContext context) async {
             ),
           ),
           const SizedBox(height: 14),
-          Container(
+          AnimatedContainer(
+            duration: d,
+            curve: Curves.easeOutCubic,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
             decoration: BoxDecoration(
               color: HaloColors.surface3,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: HaloColors.line, width: 0.5),
+              border: Border.all(
+                color: lit
+                    ? HaloColors.amber.withValues(alpha: 0.7)
+                    : HaloColors.line,
+                width: lit ? 1 : 0.5,
+              ),
             ),
             child: TextField(
               textDirection: TextDirection.ltr,
-              controller: ctrl,
+              controller: widget.ctrl,
+              focusNode: _focus,
               minLines: 1,
               maxLines: 3,
               style: HaloType.mono(size: 12, color: HaloColors.text),
@@ -11204,20 +11277,24 @@ Future<void> showAddContact(BuildContext context) async {
           const SizedBox(height: 10),
           _Pressable(
             onTap: () => Navigator.pop(sheetCtx, 'paste'),
-            child: Container(
+            child: AnimatedContainer(
+              duration: d,
+              curve: Curves.easeOutCubic,
               height: 46,
               decoration: BoxDecoration(
+                color: typed ? HaloColors.amber : Colors.transparent,
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: HaloColors.amber, width: 1),
               ),
               child: Center(
-                child: Text(
-                  l10n.appAddThem,
+                child: AnimatedDefaultTextStyle(
+                  duration: d,
                   style: HaloType.sans(
                     size: 13.5,
                     weight: FontWeight.w600,
-                    color: HaloColors.amber,
+                    color: typed ? HaloColors.onAmber : HaloColors.amber,
                   ),
+                  child: Text(l10n.appAddThem),
                 ),
               ),
             ),
@@ -11294,30 +11371,8 @@ Future<void> showAddContact(BuildContext context) async {
           const SizedBox(height: 4),
         ],
       ),
-    ),
-  );
-  if (action == null || !context.mounted) return;
-  if (action == 'mine') {
-    await Navigator.of(context).push(haloRoute(const MyKryfoScreen()));
-    return;
+    );
   }
-
-  String uri;
-  if (action == 'scan') {
-    final result = await Navigator.of(
-      context,
-    ).push<String>(haloRoute<String>(const ScanScreen()));
-    if (result == null) return;
-    uri = result;
-  } else {
-    uri = ctrl.text.trim();
-    if (uri.isEmpty) return;
-  }
-
-  final status = await handleHaloUri(uri);
-  await appState.refreshContacts();
-  if (!context.mounted) return;
-  showHaloToast(context, status);
 }
 
 class _Pressable extends StatefulWidget {
@@ -11336,16 +11391,21 @@ class _PressableState extends State<_Pressable> {
 
   @override
   Widget build(BuildContext context) {
+    // with less movement the press is felt, not seen
+    final still = MediaQuery.disableAnimationsOf(context);
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTapDown: (_) => _set(0.96),
       onTapUp: (_) => _set(1),
       onTapCancel: () => _set(1),
-      onTap: widget.onTap,
+      onTap: () {
+        HapticFeedback.selectionClick();
+        widget.onTap();
+      },
       child: AnimatedScale(
-        scale: _scale,
-        duration: const Duration(milliseconds: 90),
-        curve: Curves.easeOut,
+        scale: still ? 1 : _scale,
+        duration: Duration(milliseconds: _scale < 1 ? 90 : 240),
+        curve: _scale < 1 ? Curves.easeOut : Curves.easeOutBack,
         child: widget.child,
       ),
     );

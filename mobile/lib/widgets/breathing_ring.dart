@@ -21,10 +21,30 @@ class BreathingRing extends StatefulWidget {
 
 class _BreathingRingState extends State<BreathingRing>
     with SingleTickerProviderStateMixin {
+  // 1 is a ring grown out and gone: where it rests
   late final AnimationController _pulse = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 2600),
-  )..repeat();
+    value: 1,
+  );
+  bool _breathed = false;
+
+  // three breaths as it comes in, then it rests: an open empty page must not
+  // keep drawing. still with less movement
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) {
+      _pulse.stop();
+      _pulse.value = 1;
+    } else if (!_breathed) {
+      _breathed = true;
+      _pulse.value = 0;
+      _pulse.repeat(count: 3).whenComplete(() {
+        if (mounted) _pulse.value = 1;
+      });
+    }
+  }
 
   @override
   void dispose() {
