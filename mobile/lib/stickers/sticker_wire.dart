@@ -43,13 +43,11 @@ class StickerWire {
   String toString() => value;
 }
 
-/// the text a received sticker's row keeps. a sticker in our pack: our own
-/// emoji for it, never the sender's words. one we do not have: the sender's
-/// 'm' only if it is exactly one emoji, else nothing.
-String stickerText(StickerWire w, String sent, StickerPack? pack) {
-  final s = pack != null && pack.name == w.ref.pack
-      ? pack.sticker(w.ref.id)
-      : null;
+/// the text a received sticker's row keeps. a sticker in one of our packs:
+/// our own emoji for it, never the sender's words. one we do not have: the
+/// sender's 'm' only if it is exactly one emoji, else nothing.
+String stickerText(StickerWire w, String sent, StickerLibrary? lib) {
+  final s = lib?.sticker(w.ref);
   if (s != null) return s.emoji;
   return isOneEmoji(sent) ? sent : '';
 }

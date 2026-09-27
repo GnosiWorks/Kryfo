@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // a sticker in a chat: its size and pill, the pop and the reduced-motion
-// fade, the tile for one this version lacks, the flight from the sheet, and
-// "Sticker" wherever a sticker is quoted.
+// fade, the tile for one this version lacks, the flight from the sheet,
+// "Sticker" wherever a sticker is quoted, and each pack's stickers drawn
+// from that pack.
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/stickers/sticker_bubble.dart';
 import 'package:kryfo/stickers/sticker_flight.dart';
+import 'package:kryfo/stickers/sticker_pack.dart';
 import 'package:kryfo/stickers/sticker_view.dart';
 import 'package:kryfo/stickers/sticker_wire.dart';
 import 'package:kryfo/theme.dart';
@@ -45,9 +47,13 @@ double _scale(WidgetTester t) =>
     t.widget<ScaleTransition>(find.byKey(kStickerPopKey)).scale.value;
 
 void main() {
-  final pack = loadPack();
+  final lib = useLibrary();
+  final pack = lib.pack('fokia')!;
   final hi = pack.sticker(1)!;
   final wave = StickerWire.of(pack, hi);
+  final remix = lib.pack('fokiaremix')!;
+  final violin = remix.sticker(36)!;
+  final tiny = StickerWire.of(remix, violin);
 
   testWidgets('168 across, no bubble, the pill at the bottom end', (t) async {
     await t.pumpWidget(
@@ -343,6 +349,52 @@ void main() {
     final thumb = _boxes(t).single;
     expect(thumb.size, const Size.square(kStickerThumb));
     expect(thumb.time, -1);
+  });
+
+  testWidgets('a remix sticker draws from its own pack', (t) async {
+    expect(tiny.value, 'fokiaremix:36:1');
+    await t.pumpWidget(
+      _host(StickerBubble(wire: tiny, emoji: violin.emoji, isOut: false)),
+    );
+    expect(identical(_boxes(t).single.sticker, violin), true);
+    expect(find.byType(StickerPlaceholder), findsNothing);
+
+    // its quote and a reply's thumbnail too
+    await t.pumpWidget(
+      _host(StickerQuoteCard(author: 'You', text: 'Sticker', sticker: tiny)),
+    );
+    expect(identical(_boxes(t).single.sticker, violin), true);
+    expect(_boxes(t).single.size, const Size.square(kStickerThumb));
+  });
+
+  testWidgets('an app with only fokia shows a remix sticker as the tile', (
+    t,
+  ) async {
+    StickerLibrary.use(StickerLibrary([loadPack()]));
+    addTearDown(useLibrary);
+    await t.pumpWidget(
+      _host(
+        StickerBubble(
+          wire: tiny,
+          emoji: '🎻',
+          isOut: false,
+          stamp: const StickerStamp(time: '09:30'),
+        ),
+      ),
+    );
+    expect(_boxes(t), isEmpty);
+    expect(t.getSize(find.byType(StickerPlaceholder)), const Size.square(120));
+    expect(find.text('🎻'), findsOneWidget);
+    expect(find.text('Sticker'), findsOneWidget);
+    expect(find.text('From a newer Kryfo'), findsOneWidget);
+    expect(find.text('09:30'), findsOneWidget);
+
+    // a quote of it: the sticker glyph, no still
+    await t.pumpWidget(
+      _host(StickerQuoteCard(author: 'You', text: 'Sticker', sticker: tiny)),
+    );
+    expect(_boxes(t), isEmpty);
+    expect(find.text('Sticker'), findsOneWidget);
   });
 
   testWidgets('a pinned sticker is listed as "Sticker"', (t) async {

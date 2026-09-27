@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the sticker picker: a house sheet with a tab per set (recent, then the
+// the sticker picker: a house sheet with a tab per set (recent, then each
 // pack), a grid that plays a few at a time, and a long press that shows one
 // big, sliding from sticker to sticker while the finger stays down.
 import 'dart:async';
@@ -96,10 +96,10 @@ Future<StickerPick?> showStickerSheet(
 }
 
 class StickerSheet extends StatefulWidget {
-  const StickerSheet({super.key, required this.recents, this.pack});
+  const StickerSheet({super.key, required this.recents, this.library});
   final StickerRecents recents;
-  // for tests: a pack already in hand
-  final StickerPack? pack;
+  // for tests: packs already in hand
+  final StickerLibrary? library;
 
   @override
   State<StickerSheet> createState() => StickerSheetState();
@@ -107,7 +107,7 @@ class StickerSheet extends StatefulWidget {
 
 class StickerSheetState extends State<StickerSheet>
     with TickerProviderStateMixin {
-  StickerPack? _pack;
+  StickerLibrary? _lib;
   List<StickerRef> _recent = const [];
   bool _ready = false;
   bool _failed = false;
@@ -118,7 +118,8 @@ class StickerSheetState extends State<StickerSheet>
   ScrollController? _scroll;
   bool _jumping = false;
   int _tab = 0;
-  double _recentExtent = 0;
+  // where each section starts in the grid, one per tab
+  List<double> _starts = const [];
 
   late final AnimationController _in = AnimationController(
     vsync: this,
@@ -165,7 +166,7 @@ class StickerSheetState extends State<StickerSheet>
   Future<void> _load() async {
     setState(() => _failed = false);
     try {
-      final pack = widget.pack ?? await StickerPack.load();
+      final lib = widget.library ?? await StickerLibrary.load();
       var recent = <StickerRef>[];
       try {
         recent = await widget.recents.load();
@@ -174,8 +175,8 @@ class StickerSheetState extends State<StickerSheet>
       }
       if (!mounted) return;
       setState(() {
-        _pack = pack;
-        _recent = _known(pack, recent);
+        _lib = lib;
+        _recent = _known(lib, recent);
         _ready = true;
         _tab = 0;
       });
@@ -194,13 +195,32 @@ class StickerSheetState extends State<StickerSheet>
     }
   }
 
-  // recents this pack can draw and offers
-  List<StickerRef> _known(StickerPack pack, List<StickerRef> list) {
-    final offered = pack.playable.toSet();
+  // recents from any pack that can draw them and offers them
+  List<StickerRef> _known(StickerLibrary lib, List<StickerRef> list) => [
+    for (final r in list)
+      if ((lib.pack(r.pack)?.offered.contains(r.id) ?? false) &&
+          lib.sticker(r) != null)
+        r,
+  ];
+
+  // the grid's sections in order, the same as the tabs: recent, then each
+  // pack with something to offer
+  List<_Section> _sections() {
+    final lib = _lib;
+    if (lib == null) return const [];
     return [
-      for (final r in list)
-        if (r.pack == pack.name && offered.contains(r.id)) r,
-    ];
+      if (_recent.isNotEmpty)
+        _Section(null, [
+          for (final r in _recent)
+            if (lib.sticker(r) case final s?) ('r:${r.key}', r, s),
+        ]),
+      for (final p in lib.packs)
+        _Section(p, [
+          for (final id in p.offered)
+            if (p.sticker(id) case final s?)
+              ('p:${p.name}:$id', StickerRef(p.name, id), s),
+        ]),
+    ]..removeWhere((s) => s.items.isEmpty);
   }
 
   @override
@@ -215,8 +235,6 @@ class StickerSheetState extends State<StickerSheet>
   }
 
   // ---- tabs
-
-  int get _packTab => _recent.isEmpty ? 0 : 1;
 
   void _moveTab(int i) {
     if (i == _tab) return;
@@ -236,10 +254,8 @@ class StickerSheetState extends State<StickerSheet>
     HapticFeedback.selectionClick();
     _moveTab(i);
     final sc = _scroll;
-    if (sc == null || !sc.hasClients) return;
-    final to = i == _packTab && _recent.isNotEmpty
-        ? math.min(_recentExtent, sc.position.maxScrollExtent)
-        : 0.0;
+    if (sc == null || !sc.hasClients || i >= _starts.length) return;
+    final to = math.min(_starts[i], sc.position.maxScrollExtent);
     _jumping = true;
     try {
       if (_reduce) {
@@ -258,9 +274,16 @@ class StickerSheetState extends State<StickerSheet>
 
   void _scrolled() {
     final sc = _scroll;
-    if (_jumping || sc == null || !sc.hasClients || _recent.isEmpty) return;
-    final edge = math.min(_recentExtent, sc.position.maxScrollExtent) - 1;
-    _moveTab(sc.offset >= edge && edge > 0 ? _packTab : 0);
+    if (_jumping || sc == null || !sc.hasClients || _starts.length < 2) return;
+    // the last section whose start has scrolled up to the top; one that
+    // cannot get there counts once the end is reached
+    final max = sc.position.maxScrollExtent;
+    var tab = 0;
+    for (var i = 1; i < _starts.length; i++) {
+      final edge = math.min(_starts[i], max) - 1;
+      if (edge > 0 && sc.offset >= edge) tab = i;
+    }
+    _moveTab(tab);
   }
 
   // ---- picking
@@ -270,7 +293,7 @@ class StickerSheetState extends State<StickerSheet>
     HapticFeedback.lightImpact();
     final drawn = _drawn(
       cell == null ? _previewKey.currentContext : _keys[cell]?.currentContext,
-      ref.id,
+      _lib?.sticker(ref),
     );
     final pick = StickerPick(
       ref,
@@ -290,11 +313,12 @@ class StickerSheetState extends State<StickerSheet>
   }
 
   // the sticker as drawn under [c], found in its render tree
-  RenderSticker? _drawn(BuildContext? c, int id) {
+  RenderSticker? _drawn(BuildContext? c, Sticker? s) {
+    if (s == null) return null;
     RenderSticker? found;
     void visit(RenderObject o) {
       if (found != null) return;
-      if (o is RenderSticker && o.sticker.id == id) {
+      if (o is RenderSticker && identical(o.sticker, s)) {
         found = o;
         return;
       }
@@ -313,11 +337,13 @@ class StickerSheetState extends State<StickerSheet>
     _previewKey.currentState?.close();
     try {
       final now = await widget.recents.remove(ref);
-      if (mounted && _pack != null) {
-        setState(() => _recent = _known(_pack!, now));
-        if (_recent.isEmpty) {
-          _tab = 0;
-          _pill.value = 0;
+      if (mounted && _lib != null) {
+        final had = _recent.isNotEmpty;
+        setState(() => _recent = _known(_lib!, now));
+        // the recent tab went: the rest move up one
+        if (had && _recent.isEmpty) {
+          _tab = math.max(0, _tab - 1);
+          _pill.value = _tab.toDouble();
         }
       }
     } catch (e) {
@@ -388,13 +414,10 @@ class StickerSheetState extends State<StickerSheet>
   }
 
   _Shown? _shownFor(String key) {
-    final pack = _pack;
-    if (pack == null) return null;
-    final recent = key.startsWith('r:');
-    final id = int.tryParse(key.substring(2));
-    final s = id == null ? null : pack.sticker(id);
+    final ref = StickerRef.parse(key.substring(2));
+    final s = ref == null ? null : _lib?.sticker(ref);
     if (s == null) return null;
-    return _Shown(key, StickerRef(pack.name, id!), s, recent);
+    return _Shown(key, ref!, s, key.startsWith('r:'));
   }
 
   // ---- building
@@ -417,11 +440,12 @@ class StickerSheetState extends State<StickerSheet>
             _scroll?.removeListener(_scrolled);
             _scroll = controller..addListener(_scrolled);
           }
+          final sections = _ready ? _sections() : const <_Section>[];
           return Column(
             children: [
               const SheetHandle(),
-              if (_ready) _tabs(),
-              Expanded(child: _body(controller)),
+              if (_ready) _tabs(sections),
+              Expanded(child: _body(controller, sections)),
             ],
           );
         },
@@ -429,9 +453,7 @@ class StickerSheetState extends State<StickerSheet>
     );
   }
 
-  Widget _tabs() {
-    final pack = _pack!;
-    final first = pack.playable.isEmpty ? null : pack.sticker(pack.playable[0]);
+  Widget _tabs(List<_Section> sections) {
     const size = 36.0, step = 44.0;
     Widget tab(int i, String label, Widget icon) => Semantics(
       button: true,
@@ -472,23 +494,28 @@ class StickerSheetState extends State<StickerSheet>
             top: 0,
             child: Row(
               children: [
-                if (_recent.isNotEmpty)
-                  tab(
-                    0,
-                    l10n.stickerRecent,
-                    StrokeIcon(
-                      _clockGlyph,
-                      size: 21,
-                      color: _tab == 0 ? HaloColors.amber : HaloColors.text2,
+                for (final (i, sec) in sections.indexed)
+                  if (sec.pack case final p?)
+                    // a pack is its first sticker's still
+                    tab(
+                      i,
+                      p.title,
+                      StickerView(
+                        sticker: sec.items[0].$3,
+                        size: 28,
+                        play: false,
+                      ),
+                    )
+                  else
+                    tab(
+                      i,
+                      l10n.stickerRecent,
+                      StrokeIcon(
+                        _clockGlyph,
+                        size: 21,
+                        color: _tab == i ? HaloColors.amber : HaloColors.text2,
+                      ),
                     ),
-                  ),
-                tab(
-                  _packTab,
-                  _packName(pack),
-                  first == null
-                      ? const SizedBox.shrink()
-                      : StickerView(sticker: first, size: 28, play: false),
-                ),
               ],
             ),
           ),
@@ -503,10 +530,7 @@ class StickerSheetState extends State<StickerSheet>
     );
   }
 
-  String _packName(StickerPack p) =>
-      p.name.isEmpty ? p.name : p.name[0].toUpperCase() + p.name.substring(1);
-
-  Widget _body(ScrollController controller) {
+  Widget _body(ScrollController controller, List<_Section> sections) {
     if (_failed) {
       return ListView(
         controller: controller,
@@ -545,18 +569,21 @@ class StickerSheetState extends State<StickerSheet>
       // the pack loads in a few ms: an empty sheet, then the grid pops in
       return ListView(controller: controller);
     }
-    final pack = _pack!;
     return LayoutBuilder(
       builder: (context, box) {
         final cols = box.maxWidth < 400 ? 4 : 5;
         final cell = (box.maxWidth - 2 * _side - (cols - 1) * _gap) / cols;
-        final rows = (_recent.length + cols - 1) ~/ cols;
-        _recentExtent = _recent.isEmpty
-            ? 0
-            : _headerHeight + rows * cell + math.max(0, rows - 1) * _gap;
-        final ids = pack.playable;
+        // each section is its header and its rows: where the tabs scroll to
+        final starts = <double>[];
+        var at = 0.0;
+        for (final sec in sections) {
+          starts.add(at);
+          final rows = (sec.items.length + cols - 1) ~/ cols;
+          at += _headerHeight + rows * cell + math.max(0, rows - 1) * _gap;
+        }
+        _starts = starts;
         var n = 0;
-        Widget grid(List<(String, Sticker)> items, int section) {
+        Widget grid(List<(String, StickerRef, Sticker)> items, int section) {
           return SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: _side),
             sliver: SliverGrid(
@@ -566,32 +593,22 @@ class StickerSheetState extends State<StickerSheet>
                 crossAxisSpacing: _gap,
               ),
               delegate: SliverChildListDelegate([
-                for (final (i, (key, s)) in items.indexed)
-                  _pop(n++, _cell(key, s, section * 1000 + i, cell)),
+                for (final (i, (key, ref, s)) in items.indexed)
+                  _pop(n++, _cell(key, ref, s, section * 1000 + i, cell)),
               ]),
             ),
           );
         }
 
-        final recentItems = [
-          for (final r in _recent)
-            if (pack.sticker(r.id) case final s?) ('r:${r.id}', s),
-        ];
-        final packItems = [
-          for (final id in ids)
-            if (pack.sticker(id) case final s?) ('p:$id', s),
-        ];
         return TickerMode(
           enabled: _routeDone && _previewEntry == null,
           child: CustomScrollView(
             controller: controller,
             slivers: [
-              if (recentItems.isNotEmpty) ...[
-                _header(l10n.stickerRecent),
-                grid(recentItems, 0),
+              for (final (i, sec) in sections.indexed) ...[
+                _header(sec.pack?.title ?? l10n.stickerRecent),
+                grid(sec.items, i),
               ],
-              _header(_packName(pack)),
-              grid(packItems, 1),
               SliverToBoxAdapter(
                 child: SizedBox(
                   height: 16 + MediaQuery.paddingOf(context).bottom,
@@ -624,9 +641,9 @@ class StickerSheetState extends State<StickerSheet>
     ),
   );
 
-  Widget _cell(String key, Sticker s, int order, double cell) {
+  Widget _cell(String key, StickerRef ref, Sticker s, int order, double cell) {
     final gk = _keys.putIfAbsent(key, GlobalKey.new);
-    final shown = _Shown(key, StickerRef(_pack!.name, s.id), s, key[0] == 'r');
+    final shown = _Shown(key, ref, s, key[0] == 'r');
     return _Cell(
       key: gk,
       sticker: s,
@@ -660,6 +677,14 @@ class StickerSheetState extends State<StickerSheet>
       child: child,
     );
   }
+}
+
+// one run of the grid under its header: recent (no pack), or a pack. an
+// item is its cell's key, the sticker's ref and the sticker
+class _Section {
+  const _Section(this.pack, this.items);
+  final StickerPack? pack;
+  final List<(String, StickerRef, Sticker)> items;
 }
 
 // what the preview shows: which cell, which sticker

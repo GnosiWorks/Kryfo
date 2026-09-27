@@ -1,31 +1,40 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-or-later
-# compiles the fokia svgs and their motion into the one pack the app draws.
+# compiles a pack's svgs and their motion into one file the app draws.
 #
-#   tool/stickers/fokia/svg/*.svg   the art, 512 x 512, one layered file each
-#   tool/stickers/fokia/anim.txt    the motion
-#   assets/stickers/fokia.kst       the output, committed
-#   build/stickers/png/*.png        each still frame, for the pixel test (--png)
+#   tool/stickers/NAME/svg/*.svg    the art, 512 x 512, one layered file each
+#   tool/stickers/NAME/anim.txt     the motion
+#   assets/stickers/NAME.kst        the output, committed
+#   build/stickers/png/NAME/*.png   each still frame, for the pixel test (--png)
 #
 # usage:
 #   pack_stickers.py              build fokia.kst
+#   --pack NAME                   work on tool/stickers/NAME instead (default fokia)
 #   pack_stickers.py --list 17    every layer's children: index, tag, colour, first point
 #   pack_stickers.py --report     sizes, halo pieces, bridges, clearances
 #   pack_stickers.py --check      rebuild in memory, compare with the committed file
 #   pack_stickers.py --selftest   arcs, dashes, bbox, contours, coverage on known shapes
 #   pack_stickers.py --only 01,02 build a subset while iterating (never committed)
 #   pack_stickers.py --png [DIR]  build in memory and paint each still frame into
-#                                 DIR (build/stickers/png): 512 x 512 rgba, straight
-#                                 alpha, the same bytes every run
+#                                 DIR (build/stickers/png/NAME): 512 x 512 rgba,
+#                                 straight alpha, the same bytes every run
 #   --blur gauss|box3             how the die-cut blur is made (box3 is svg's own)
 #
 # run by hand when the art or anim.txt changes, like pack_geo.py. numpy is
 # for the outline blur and the pngs; the app never runs any of this.
+#
+# a group's opacity goes into what it draws, as a layer when its draws can
+# overlap, so the still and its outline are the svg's. a node on a group that
+# sets an opacity takes it as its alpha at rest instead: its alpha track
+# starts and ends there and may go above it. the outline of such a part
+# hangs from a copy of its node whose alpha follows the svg's die-cut, so it
+# stays whole while the part is faint and goes when the part is nearly gone.
 import hashlib
 import math
 import re
 import struct
 import sys
+import tempfile
 import xml.etree.ElementTree as ET
 import zlib
 from pathlib import Path
@@ -33,10 +42,12 @@ from pathlib import Path
 import numpy as np
 
 HERE = Path(__file__).resolve().parent
-PACK = HERE / 'stickers' / 'fokia'
-OUT = HERE.parent / 'assets' / 'stickers' / 'fokia.kst'
+PNG_ROOT = HERE.parent / 'build' / 'stickers' / 'png'
 
+# 1: no title, the app shows the name with a capital. 2: a title after the
+# name. a pack without a title line stays 1, so its file does not change
 VERSION = 1
+VERSION_TITLE = 2
 PACK_VERSION = 1
 UNIT = 5  # coordinates in 1/32 px
 Q = 1 << UNIT
@@ -45,9 +56,11 @@ DRAWN = ('g', 'path', 'ellipse', 'circle', 'rect', 'polygon')
 SHAPES = ('path', 'ellipse', 'circle', 'rect', 'polygon')
 SKIPPED = ('defs', 'clipPath', 'linearGradient', 'radialGradient', 'stop',
            'filter', 'feGaussianBlur', 'feComponentTransfer', 'feFuncA',
-           'feFlood', 'feComposite', 'feMerge', 'feMergeNode')
+           'feFlood', 'feComposite', 'feMerge', 'feMergeNode',
+           'feColorMatrix', 'feFuncR', 'feFuncG', 'feFuncB')
 REFUSED_ATTRS = ('style', 'class', 'vector-effect', 'stroke-dashoffset',
                  'mask', 'marker-start', 'marker-mid', 'marker-end')
+GROUP_ATTRS = ('id', 'transform', 'clip-path', 'filter', 'opacity')
 
 # ops, top 3 bits of a u16 word
 OP_SAVE, OP_PUSH, OP_POP, OP_CLIP, OP_DRAW, OP_LAYER = range(6)
@@ -75,6 +88,20 @@ class Fail(Exception):
 
 def fail(msg):
     raise Fail(msg)
+
+
+class Pack:
+    # tool/stickers/NAME -> assets/stickers/NAME.kst. the name goes on the
+    # wire, so it has the wire's shape
+    def __init__(self, name):
+        if not re.fullmatch(r'[a-z][a-z0-9]{0,15}', name):
+            fail(f'pack {name!r}: a to z and digits, 16 at most, a letter first')
+        self.name = name
+        self.dir = HERE / 'stickers' / name
+        self.out = HERE.parent / 'assets' / 'stickers' / f'{name}.kst'
+        self.png = PNG_ROOT / name
+        if not (self.dir / 'anim.txt').is_file():
+            fail(f'no pack {name}: {self.dir / "anim.txt"} is missing')
 
 
 # ---- matrices: (a b c d e f), x' = a x + c y + e, y' = b x + d y + f
@@ -547,7 +574,9 @@ class El:
         self.id = None
         self.local = ID
         self.clip = None
+        self.tint = None  # a colour filter's id
         self.made = False  # made by this tool (lids)
+        self.opacity = 1.0  # a group's own, over everything under it
 
     def where(self):
         path = []
@@ -584,6 +613,8 @@ class Svg:
         self.path = path
         self.name = path.name
         self.ids, self.dups, self.grads, self.clips = {}, [], {}, {}
+        self.tints = {}
+        diecuts = set()
         root = ET.parse(path).getroot()
 
         def strip(t):
@@ -607,19 +638,22 @@ class Svg:
                 fail(f'{self.name}: element {t}')
             if t == 'filter':
                 prims = [strip(c.tag) for c in e]
-                if prims != ['feGaussianBlur', 'feComponentTransfer', 'feFlood', 'feComposite', 'feMerge']:
-                    fail(f'{self.name}: filter {prims}')
-                blur = e[0]
-                if abs(float(blur.get('stdDeviation')) - SIGMA) > 1e-9:
-                    fail(f'{self.name}: blur {blur.get("stdDeviation")}')
-                fa = e[1][0]
-                if (fa.get('slope'), fa.get('intercept')) != ('30', '-0.6'):
-                    fail(f'{self.name}: die-cut transfer changed')
+                if prims == ['feGaussianBlur', 'feComponentTransfer', 'feFlood', 'feComposite', 'feMerge']:
+                    blur = e[0]
+                    if abs(float(blur.get('stdDeviation')) - SIGMA) > 1e-9:
+                        fail(f'{self.name}: blur {blur.get("stdDeviation")}')
+                    fa = e[1][0]
+                    if (fa.get('slope'), fa.get('intercept')) != ('30', '-0.6'):
+                        fail(f'{self.name}: die-cut transfer changed')
+                    diecuts.add(e.get('id'))
+                else:
+                    self.tints[e.get('id')] = self.parse_tint(e)
         vb = root.get('viewBox', '').split()
         if vb != ['0', '0', '512', '512']:
             fail(f'{self.name}: viewBox {vb}')
+        # the character's group: #fokia in every pack, the remix too
         fok = [e for e in root.iter() if e.get('id') == 'fokia']
-        if len(fok) != 1 or not fok[0].get('filter'):
+        if len(fok) != 1 or fok[0].get('filter', '')[5:-1] not in diecuts:
             fail(f'{self.name}: no #fokia group with the die-cut')
 
         def build(e, parent):
@@ -641,11 +675,25 @@ class Svg:
                 if not (v.startswith('url(#') and v.endswith(')')) or v[5:-1] not in self.clips:
                     fail(f'{self.name}: clip-path {v}')
                 el.clip = v[5:-1]
+            if 'filter' in e.attrib and e is not fok[0]:
+                v = e.get('filter')
+                if not (v.startswith('url(#') and v.endswith(')')) or v[5:-1] not in self.tints:
+                    fail(f'{el.where()}: filter {v}')
+                el.tint = v[5:-1]
+            if el.tag == 'g':
+                # a group's fill, stroke and the like would reach its
+                # children in svg; this tool does not pass them down
+                for k in e.attrib:
+                    if k not in GROUP_ATTRS:
+                        fail(f'{el.where()}: a group with {k}')
+                el.opacity = min(1.0, max(0.0, float(e.get('opacity', '1'))))
             for c in e:
                 if strip(c.tag) in DRAWN:
                     el.kids.append(build(c, el))
             return el
         self.fokia = build(fok[0], None)
+        if self.fokia.opacity != 1:
+            fail(f'{self.name}: #fokia has an opacity, which would fade its outline too')
         if len(self.fokia.kids) != 1 or self.fokia.kids[0].tag != 'g':
             fail(f'{self.name}: #fokia should hold one transformed group')
         self.top = self.fokia.kids[0]
@@ -687,6 +735,58 @@ class Svg:
             c = colour(s.get('stop-color', '#000000'), self.name)
             stops.append((o, c, float(s.get('stop-opacity', '1'))))
         return (kind, geo, units, stops)
+
+    def parse_tint(self, e):
+        # a filter that only changes colour (a saturate, linear curves on r g
+        # b) acts on each pixel alone, so it is baked into the colours under
+        # it. anything else would need the filter at runtime: refused
+        def strip(x):
+            return x.split('}')[-1]
+        fid = e.get('id')
+        if e.get('color-interpolation-filters') != 'sRGB':
+            fail(f'{self.name}: filter {fid} is not in srgb')
+        for k in ('x', 'y', 'width', 'height', 'filterUnits', 'primitiveUnits'):
+            if k in e.attrib:
+                fail(f'{self.name}: filter {fid} has a region')
+        steps = []
+        for p in e:
+            t = strip(p.tag)
+            if any(k in p.attrib for k in ('in', 'in2', 'result')):
+                fail(f'{self.name}: filter {fid}: {t} is not a plain chain')
+            if t == 'feColorMatrix' and p.get('type') == 'saturate':
+                steps.append(('saturate', float(p.get('values', '1'))))
+            elif t == 'feComponentTransfer':
+                curves = {}
+                for f in p:
+                    ft = strip(f.tag)
+                    if ft not in ('feFuncR', 'feFuncG', 'feFuncB') or f.get('type') != 'linear':
+                        fail(f'{self.name}: filter {fid}: {ft} {f.get("type")}')
+                    curves['RGB'.index(ft[-1])] = (float(f.get('slope', '1')),
+                                                   float(f.get('intercept', '0')))
+                steps.append(('linear', curves))
+            else:
+                fail(f'{self.name}: filter {fid}: {t} {p.get("type", "")}')
+        if not steps:
+            fail(f'{self.name}: filter {fid} is empty')
+        return steps
+
+
+def tinted(rgb, steps):
+    # one colour through a colour filter, as svg does it on srgb values:
+    # every primitive's result clamped to 0..1
+    c = [((rgb >> 16) & 255) / 255, ((rgb >> 8) & 255) / 255, (rgb & 255) / 255]
+    for kind, v in steps:
+        if kind == 'saturate':
+            s = v
+            r, g, b = c
+            c = [(0.213 + 0.787 * s) * r + (0.715 - 0.715 * s) * g + (0.072 - 0.072 * s) * b,
+                 (0.213 - 0.213 * s) * r + (0.715 + 0.285 * s) * g + (0.072 - 0.072 * s) * b,
+                 (0.213 - 0.213 * s) * r + (0.715 - 0.715 * s) * g + (0.072 + 0.928 * s) * b]
+        else:
+            c = [v[i][0] * c[i] + v[i][1] if i in v else c[i] for i in range(3)]
+        c = [min(1.0, max(0.0, x)) for x in c]
+    r, g, b = (round(x * 255) for x in c)
+    return (r << 16) | (g << 8) | b
 
 
 def fingerprint(els):
@@ -821,6 +921,8 @@ class Node:
         self.frame = 0.0
         self.k = 1.0
         self.travel = 0.0  # a lid's way down
+        self.rest = 1.0  # alpha at rest: its group's opacity
+        self.held = False  # on a group that sets an opacity: a part the art fades
 
     def matrix(self, vals):
         x, y, r, sx, sy = vals[0], vals[1], vals[2], vals[3], vals[4]
@@ -859,6 +961,8 @@ class Anim:
     def __init__(self, path):
         self.pivots = {}
         self.stickers = {}
+        # the name the picker shows; none: the pack name with a capital
+        self.title = None
         cur = None
         for no, raw in enumerate(path.read_text(encoding='utf-8').splitlines(), 1):
             line = raw.strip()
@@ -866,7 +970,13 @@ class Anim:
                 continue
             where = f'anim.txt:{no}'
             words = line.split()
-            if words[0] == 'pivot' and not raw[0].isspace():
+            if words[0] == 'title' and not raw[0].isspace():
+                if self.title is not None or len(words) < 2:
+                    fail(f'{where}: one title, with words')
+                self.title = ' '.join(words[1:])
+                if len(self.title.encode('utf-8')) > 64:
+                    fail(f'{where}: a title of 64 bytes at most')
+            elif words[0] == 'pivot' and not raw[0].isspace():
                 self.pivots[words[1]] = parse_pair(words[2], where)
             elif words[0] == 'sticker':
                 kv = dict(w.split('=', 1) for w in words[3:])
@@ -1292,6 +1402,22 @@ def compile_sticker(anim, st, svg, palette, blur, report):
             if sa & sc_ and not (sa <= sc_ or sc_ <= sa):
                 fail(f'{a.line}: nodes overlap without nesting')
 
+    # a node on a group that sets an opacity takes it as its alpha at rest,
+    # so its alpha track can go above it as well as below
+    holds = {}
+    for n in nodes:
+        g = n.els[0]
+        if len(n.els) == 1 and g.tag == 'g' and 'opacity' in g.a and id(g) not in holds:
+            holds[id(g)] = n
+            n.held = True
+            n.rest = g.opacity
+            if (n, 5) in st.tracks or n.rest == 1:
+                continue
+            if n.rest == 0:
+                fail(f'{n.line}: {owner_name(n)} is hidden in the svg: an alpha track from 0 shows it')
+            # the player reads a node's alpha at rest from its track
+            st.tracks[(n, 5)] = [(0.0, n.rest, 0)]
+
     opens, closes = {}, {}
     for n in nodes:
         opens.setdefault(id(n.els[0]), []).append(n)
@@ -1313,7 +1439,16 @@ def compile_sticker(anim, st, svg, palette, blur, report):
     out.ops = art_ops
     clipstack = []
     nodestack = []
+    tints = []  # colour filters around what is drawn, outermost first
     push_at = {}  # op index of each PUSH -> node, for the layer decision
+    fades = []  # group opacities folded into the paints under them
+    dims = []  # group opacities a layer applies: only the outline sees them
+
+    def ink(c):
+        # the inner filter works first, on its own group
+        for steps in reversed(tints):
+            c = tinted(c, steps)
+        return c
 
     def emit_kids(el, m):
         for k in el.kids:
@@ -1328,6 +1463,17 @@ def compile_sticker(anim, st, svg, palette, blur, report):
 
     def emit(el, ctm):
         m = mul(ctm, el.local)
+        g = 1.0 if id(el) in holds else el.opacity
+        if g <= 0:
+            return
+        # a group's opacity: a layer when what it holds could overlap, as
+        # svg composites a group before it fades it, else in the paints
+        layer = g < 1 and draw_count(el) > 1
+        if layer:
+            out.op(OP_LAYER, round(g * 255))
+            dims.append(g)
+        elif g < 1:
+            fades.append(g)
         if el.clip:
             ce, rule = svg.clips[el.clip]
             s, _ = similarity(m, el.where())
@@ -1335,13 +1481,22 @@ def compile_sticker(anim, st, svg, palette, blur, report):
             out.op(OP_SAVE)
             out.op(OP_CLIP, out.path(csubs, rule == 'evenodd'))
             clipstack.append((csubs, rule == 'evenodd'))
+        if el.tint:
+            tints.append(svg.tints[el.tint])
         if el.tag == 'g':
             emit_kids(el, m)
         else:
             draw(el, m)
+        if el.tint:
+            tints.pop()
         if el.clip:
             out.op(OP_POP)
             clipstack.pop()
+        if layer:
+            out.op(OP_POP)
+            dims.pop()
+        elif g < 1:
+            fades.pop()
 
     def grad_paint(ref, local_subs, m, where):
         if ref not in svg.grads:
@@ -1354,7 +1509,7 @@ def compile_sticker(anim, st, svg, palette, blur, report):
             gm = mul(m, (x1 - x0, 0.0, 0.0, y1 - y0, x0, y0))
         else:
             gm = m
-        st_ = tuple((min(255, round(o * 255)), out.colour_ix(c), round(a * 255)) for o, c, a in stops)
+        st_ = tuple((min(255, round(o * 255)), out.colour_ix(ink(c)), round(a * 255)) for o, c, a in stops)
         return out.shader((kind, tuple(round(g, 6) for g in geo), tuple(round(g, 5) for g in gm), st_))
 
     def draw(el, m):
@@ -1378,19 +1533,23 @@ def compile_sticker(anim, st, svg, palette, blur, report):
             o = 1.0
         owner = nodestack[-1] if nodestack else None
         hidden = any(n.hidden for n in nodestack)
+        k = math.prod(fades)
+        cut = k * math.prod(dims)
+        # the outline sees the svg at rest; bare is the part at full alpha
+        rest = math.prod(n.rest for n in nodestack if n.held)
 
         def paint_of(c, alpha, style, width=0, cap=0, join=0):
             if isinstance(c, tuple):
                 sh = grad_paint(c[1], local, m, where)
                 return out.paint((style | 2, sh, round(alpha * 255), width, cap, join))
-            return out.paint((style, out.colour_ix(c), round(alpha * 255), width, cap, join))
+            return out.paint((style, out.colour_ix(ink(c)), round(alpha * 255), width, cap, join))
         if fill is not None:
-            pi = paint_of(fill, o * fo, 0)
+            pi = paint_of(fill, o * fo * k, 0)
             out.op(OP_DRAW, out.path(subs, evenodd))
             out.ops.append(pi)
-            out.draws.append(dict(subs=subs, stroke=False, evenodd=evenodd, alpha=o * fo,
-                                  clips=list(clipstack), owner=owner, hidden=hidden,
-                                  nodes=list(nodestack), where=where))
+            out.draws.append(dict(subs=subs, stroke=False, evenodd=evenodd, alpha=o * fo * cut * rest,
+                                  bare=o * fo * cut, clips=list(clipstack), owner=owner,
+                                  hidden=hidden, nodes=list(nodestack), where=where))
         if stroke is not None:
             cap = {'butt': 0, 'round': 1, 'square': 2}[a.get('stroke-linecap', 'butt')]
             join = {'miter': 0, 'round': 1, 'bevel': 2}[a.get('stroke-linejoin', 'miter')]
@@ -1401,16 +1560,21 @@ def compile_sticker(anim, st, svg, palette, blur, report):
                 pat = [float(x) for x in re.split(r'[\s,]+', a['stroke-dasharray'].strip())]
                 ssubs = xform(dash_subs(local, pat), m)
             width = sw * s
-            pi = paint_of(stroke, o * so, 1, round(width * Q), cap, join)
+            pi = paint_of(stroke, o * so * k, 1, round(width * Q), cap, join)
             out.op(OP_DRAW, out.path(ssubs, False))
             out.ops.append(pi)
             out.draws.append(dict(subs=ssubs, stroke=True, width=width, cap=cap, join=join,
-                                  alpha=o * so, clips=list(clipstack), owner=owner,
-                                  hidden=hidden, nodes=list(nodestack), where=where))
+                                  alpha=o * so * cut * rest, bare=o * so * cut,
+                                  clips=list(clipstack), owner=owner, hidden=hidden,
+                                  nodes=list(nodestack), where=where))
         if layer:
             out.op(OP_POP)
 
     emit_kids(svg.fokia, ID)
+    pushed = {n for n, _ in push_at.values()}
+    for n in nodes:
+        if n not in pushed:
+            fail(f'{n.line}: {owner_name(n)} is inside a group the svg hides')
     # which pushes need a layer to fade as one: more than one draw that overlap
     for at, (n, first) in push_at.items():
         mine = [d for d in out.draws[first:] if n in d['nodes']]
@@ -1426,6 +1590,15 @@ def compile_sticker(anim, st, svg, palette, blur, report):
     check_ops(ops, nodes)
     run_clears(st, out, nodes, tracks, report)
     return pack_blob(st, out, nodes, ops, tracks), out
+
+
+def draw_count(el):
+    # how many draws a layer makes: a fill, a stroke, or both
+    if el.tag == 'g':
+        return sum(draw_count(k) for k in el.kids) if el.opacity > 0 else 0
+    a = el.a
+    stroke = a.get('stroke', 'none') != 'none' and float(a.get('stroke-width', '1')) > 0
+    return (a.get('fill', '#000000') != 'none') + stroke
 
 
 def draw_box(d):
@@ -1466,7 +1639,7 @@ def finish_tracks(st, report):
     if st.tracks and not (2000 <= L <= 3000):
         fail(f'{st.line}: loop {L} ms is outside 2000..3000')
     for (n, prop), keys in st.tracks.items():
-        rest = REST[prop]
+        rest = n.rest if prop == 5 else REST[prop]
         if keys[0][0] > 0:
             keys = [(0.0, keys[0][1], 0)] + keys
         if abs(keys[0][1] - rest) > 1e-9:
@@ -1726,7 +1899,8 @@ class Raster:
             d['cov'] = c
         return d['cov']
 
-    def alpha(self, draws):
+    def alpha(self, draws, k=None):
+        # k: each draw's alpha in place of its own at rest
         a = np.zeros((N, N), dtype=np.float32)
         for d in draws:
             c = self.draw_cover(d)
@@ -1734,7 +1908,7 @@ class Raster:
                 continue
             r0, c0, f = c
             win = a[r0:r0 + f.shape[0], c0:c0 + f.shape[1]]
-            win += f * d['alpha'] * (1 - win)
+            win += f * (d['alpha'] if k is None else k(d)) * (1 - win)
         return a
 
 
@@ -1973,7 +2147,21 @@ def loop_subs(beziers):
 
 def halo(st, svg, out, nodes, tracks, how, report):
     ras = Raster()
-    draws = [d for d in out.draws if not d['hidden']]
+    live = [d for d in out.draws if not d['hidden']]
+    fades = {n: fk for n, prop, _, fk in tracks if prop == 5}
+    own = {}
+
+    def field(n):
+        # a part the art fades, alone and at full alpha
+        if n not in own:
+            own[n] = blur(ras.alpha([d for d in live if n in d['nodes']], lambda d: d['bare']), how)
+        return own[n]
+    # a faded part whose outline does not show at rest (the svg's die-cut
+    # leaves it out) is not in the outline at rest: it traces its own
+    hid = {n for n in nodes if n.held and n.rest < 1
+           and (n.rest == 0 or n.rest * field(n).max() < RIM[0][0])}
+    draws = [d for d in live if not any(n in hid for n in d['nodes'])]
+    clear = [d for d in live if any(n in hid for n in d['nodes'])]
     times = sample_times(st.loop, tracks)
     moving = {tk[0] for tk in tracks}
     # a node moves if it or anything above it has tracks
@@ -2037,18 +2225,41 @@ def halo(st, svg, out, nodes, tracks, how, report):
             lines.append(f'  bridge {area:6.1f} px2 -> {" + ".join(parts)}')
     ops = []
     pieces = []
-    for o in owners:
-        f = F[o]
-        if f is None and not extra[o].any():
-            continue
-        g = f if f is not None else np.zeros((N, N))
-        if extra[o].any():
-            # the bridge grown by 2 px (two sigmas of a 1 px blur), smooth
-            bf = blur(extra[o].astype(np.float32), 'grow')
-            g = np.maximum(g, LEVEL * bf / 0.02275)
-        piece = np.minimum(A, g)
+
+    def outline_node(o, at):
+        # what an outline hangs from: its part, or for a part the art fades
+        # a copy of it whose alpha is the share of the outline traced at
+        # alpha `at` that the svg's die-cut keeps at the part's alpha
+        if o is None or not o.held or o not in fades:
+            return o
+        f = field(o)
+        b = np.sort(f[f > 0].ravel())
+
+        def area(x):
+            return 0 if x <= 0 else len(b) - np.searchsorted(b, LEVEL / x)
+        full = area(at)
+        ts = np.arange(st.loop + 1)
+        a = np.array([track_at(fades[o], t) for t in ts])
+        g = np.array([min(1.0, area(x) / full) if full else 0.0 for x in a])
+        if np.abs(g - a).max() < 1e-3:
+            return o
+        if g.max() == 0:
+            return None
+        t = Node(f'{owner_name(o)} outline', o.els, o.pivot_in, o.line)
+        t.index = len(nodes)
+        nodes.append(t)
+        t.parent, t.pivot, t.frame, t.k = o.parent, o.pivot, o.frame, o.k
+        for m, prop, qk, fk in list(tracks):
+            if m is o and prop < 5:
+                tracks.append((t, prop, qk, fk))
+        if g.min() < 1:
+            qk = [(k, qvalue(5, v), 0) for k, v in simplify(ts, g, 0.004)]
+            tracks.append((t, 5, qk, [(k, dqvalue(5, v), e) for k, v, e in qk]))
+        return t
+
+    def emit_piece(o, piece, at=1.0):
         if piece.max() < LEVEL:
-            continue
+            return
         rims = []
         for level, alpha in RIM:
             subs = []
@@ -2059,8 +2270,11 @@ def halo(st, svg, out, nodes, tracks, how, report):
             if subs:
                 rims.append((subs, alpha))
         if not rims:
-            continue
-        chain = [] if o is None else ancestors(o)[::-1] + [o]
+            return
+        top = outline_node(o, at)
+        if o is not None and top is None:
+            return
+        chain = [] if o is None else ancestors(o)[::-1] + [top]
         for n in chain:
             ops.append((OP_PUSH << 13) | n.index)
         white = out.colour_ix(0xFFFFFF)
@@ -2071,9 +2285,49 @@ def halo(st, svg, out, nodes, tracks, how, report):
         for _ in chain:
             ops.append(OP_POP << 13)
         pieces.append((owner_name(o), sum(len(s[1]) for subs, _ in rims for s in subs)))
+    for o in owners:
+        f = F[o]
+        if f is None and not extra[o].any():
+            continue
+        g = f if f is not None else np.zeros((N, N))
+        if extra[o].any():
+            # the bridge grown by 2 px (two sigmas of a 1 px blur), smooth
+            bf = blur(extra[o].astype(np.float32), 'grow')
+            g = np.maximum(g, LEVEL * bf / 0.02275)
+        emit_piece(o, np.minimum(A, g), o.rest if o is not None and o.held else 1.0)
+    # a hidden part's outline, traced as if it showed at its brightest: it
+    # comes and goes with the part
+    shown = {}
+    for d in clear:
+        shown.setdefault(owner_of(d, moving), []).append(d)
+    for o, ds in shown.items():
+        peak = {}
+        for d in ds:
+            h = next(n for n in reversed(d['nodes']) if n in hid)
+            peak[id(d)] = max(v for _, v, _ in fades[h]) if h in fades else h.rest
+        emit_piece(o, blur(ras.alpha(ds, lambda d: d['bare'] * peak[id(d)]), how),
+                   max(peak.values()))
     report.append('  halo: ' + ', '.join(f'{n} {c}' for n, c in pieces))
     report.extend(lines)
     return ops
+
+
+def simplify(ts, vs, eps):
+    # the fewest points whose straight lines stay within eps of vs
+    keep = {0, len(ts) - 1}
+    todo = [(0, len(ts) - 1)]
+    while todo:
+        i, j = todo.pop()
+        if j <= i + 1:
+            continue
+        line = vs[i] + (vs[j] - vs[i]) * (ts[i + 1:j] - ts[i]) / (ts[j] - ts[i])
+        err = np.abs(vs[i + 1:j] - line)
+        k = int(np.argmax(err))
+        if err[k] > eps:
+            m = i + 1 + k
+            keep.add(m)
+            todo += [(i, m), (m, j)]
+    return [(int(ts[k]), float(vs[k])) for k in sorted(keep)]
 
 
 def owner_name(o):
@@ -2214,25 +2468,35 @@ def pack_blob(st, out, nodes, ops, tracks):
     return bytes(b)
 
 
-def source_hash():
+def source_hash(pack):
     h = hashlib.sha256()
-    for f in sorted((PACK / 'svg').glob('*.svg'), key=lambda p: p.name):
+    for f in sorted((pack.dir / 'svg').glob('*.svg'), key=lambda p: p.name):
         h.update(f.read_bytes())
-    h.update((PACK / 'anim.txt').read_bytes())
+    h.update((pack.dir / 'anim.txt').read_bytes())
     return h.digest()[:16]
 
 
-def svg_file(num):
-    got = sorted((PACK / 'svg').glob(f'fokia-{num:02d}-*.svg'))
+def svg_num(f):
+    # files are CHARACTER-NN-name.svg; the number is the sticker's id
+    parts = f.stem.split('-')
+    if len(parts) < 3 or not re.fullmatch(r'\d{2,4}', parts[1]):
+        fail(f'{f.name}: not name-NN-what.svg')
+    return int(parts[1])
+
+
+def svg_file(pack, num):
+    got = [f for f in sorted((pack.dir / 'svg').glob('*.svg')) if svg_num(f) == num]
     if len(got) != 1:
         fail(f'sticker {num}: {len(got)} svg files')
     return got[0]
 
 
-def build(only=None, blur_how='box3', verbose=False):
-    anim = Anim(PACK / 'anim.txt')
-    files = sorted((PACK / 'svg').glob('*.svg'))
-    nums = sorted(int(f.name.split('-')[1]) for f in files)
+def build(pack, only=None, blur_how='box3', verbose=False):
+    anim = Anim(pack.dir / 'anim.txt')
+    files = sorted((pack.dir / 'svg').glob('*.svg'))
+    nums = sorted(svg_num(f) for f in files)
+    if len(set(nums)) != len(nums):
+        fail(f'{pack.name}: two svg files with one number')
     if sorted(anim.stickers) != nums:
         fail(f'anim.txt lists {sorted(anim.stickers)}, the svg folder has {nums}')
     palette = {}
@@ -2243,7 +2507,7 @@ def build(only=None, blur_how='box3', verbose=False):
         if only and num not in only:
             continue
         st = anim.stickers[num]
-        svg = Svg(svg_file(num))
+        svg = Svg(svg_file(pack, num))
         if st.name not in svg.name:
             fail(f'{st.line}: {st.name} is not {svg.name}')
         rep = []
@@ -2263,10 +2527,13 @@ def build(only=None, blur_how='box3', verbose=False):
     if len(palette) > 255:
         fail('palette over 255 colours')
     head = bytearray(b'KSTK')
-    name = b'fokia'
-    head += struct.pack('<BBH', VERSION, UNIT, PACK_VERSION)
-    head += source_hash()
+    name = pack.name.encode('ascii')
+    title = anim.title.encode('utf-8') if anim.title is not None else None
+    head += struct.pack('<BBH', VERSION if title is None else VERSION_TITLE, UNIT, PACK_VERSION)
+    head += source_hash(pack)
     head += struct.pack('<B', len(name)) + name
+    if title is not None:
+        head += struct.pack('<B', len(title)) + title
     pal = sorted(palette.items(), key=lambda kv: kv[1])
     head += struct.pack('<B', len(pal))
     for rgb, _ in pal:
@@ -2284,7 +2551,6 @@ def build(only=None, blur_how='box3', verbose=False):
 # ---- --png: each still frame from the built pack, painted the way
 # sticker_player.dart paints it, for the pixel test
 
-PNG_DIR = HERE.parent / 'build' / 'stickers' / 'png'
 SUB = 16     # sample rows a pixel row; along a row coverage is exact
 TOL = 0.02   # flattening, px
 BOX = 512
@@ -2294,6 +2560,8 @@ def read_pack(data):
     # the palette and every blob, as sticker_pack.dart reads them
     o = 24
     o += 1 + data[o]
+    if data[4] == VERSION_TITLE:
+        o += 1 + data[o]
     npal = data[o]
     pal = struct.unpack_from(f'<{npal}I', data, o + 1)
     o += 1 + 4 * npal
@@ -2307,7 +2575,7 @@ def read_pack(data):
 
 class Still:
     # what the still frame needs from a blob: paths, shaders, paints,
-    # hidden nodes and the ops
+    # hidden nodes, the ops and each node's alpha at rest
     def __init__(self, b):
         o = 0
 
@@ -2344,6 +2612,15 @@ class Still:
         self.hidden = [rd('HhhhHB')[5] & 1 for _ in range(rd('H')[0])]
         (nops,) = rd('H')
         self.ops = rd(f'{nops}H')
+        # where a node's alpha track starts; 1 without one
+        self.rest = [1.0] * len(self.hidden)
+        self.tracks = {}
+        for _ in range(rd('H')[0]):
+            n, prop, nk = rd('HBB')
+            keys = [rd('HhB') for _ in range(nk)]
+            self.tracks[(n, prop)] = [(t, dqvalue(prop, v), e) for t, v, e in keys]
+            if prop == 5:
+                self.rest[n] = dqvalue(5, keys[0][1])
         self.jump = {}
         stack = []
         i = 0
@@ -2476,24 +2753,36 @@ def png_shade(sh, pal, r0, c0, h, w):
 
 def paint_still(st, pal):
     # sticker_player.dart's paintSticker with v null: nodes at rest, the
-    # hidden ones skipped. premultiplied rgba, 0..1
+    # hidden ones and those whose alpha rests at 0 skipped. premultiplied
+    # rgba, 0..1
     img = np.zeros((BOX, BOX, 4))
     clip = None
+    alpha = 1.0
     stack = []
     ops = st.ops
     i = 0
     while i < len(ops):
         code, arg = ops[i] >> 13, ops[i] & 0x1FFF
-        if code == OP_PUSH and st.hidden[arg & 0xFFF]:
-            i = st.jump[i] + 1
-            continue
-        if code in (OP_SAVE, OP_PUSH):
-            stack.append((clip, None))
+        if code == OP_PUSH:
+            n = arg & 0xFFF
+            if st.hidden[n] or st.rest[n] <= 0:
+                i = st.jump[i] + 1
+                continue
+        if code == OP_SAVE:
+            stack.append((clip, None, alpha))
+        elif code == OP_PUSH:
+            a = st.rest[arg & 0xFFF]
+            if a < 1 and arg & PUSH_LAYER:
+                stack.append((clip, (img, a), alpha))
+                img = np.zeros_like(img)
+            else:
+                stack.append((clip, None, alpha))
+                alpha *= a
         elif code == OP_LAYER:
-            stack.append((clip, (img, (arg & 0xFF) / 255)))
+            stack.append((clip, (img, (arg & 0xFF) / 255), alpha))
             img = np.zeros_like(img)
         elif code == OP_POP:
-            clip, layer = stack.pop()
+            clip, layer, alpha = stack.pop()
             if layer is not None:
                 under, a = layer
                 under *= 1 - img[..., 3:] * a
@@ -2510,7 +2799,9 @@ def paint_still(st, pal):
         elif code == OP_DRAW:
             i += 1
             subs, eo = st.paths[arg]
-            style, ci, alpha, w, cap, join = st.paints[ops[i]]
+            style, ci, pa, w, cap, join = st.paints[ops[i]]
+            if alpha < 1:
+                pa = round(pa * alpha)
             if style & 1:
                 hw = w / Q / 2
                 lines, smooth = flat_px(subs)
@@ -2523,9 +2814,9 @@ def paint_still(st, pal):
                 if clip is not None:
                     f = f * clip[r0:r0 + h, c0:c0 + w_]
                 if style & 2:
-                    src = png_shade(st.shaders[ci], pal, r0, c0, h, w_) * (alpha / 255)
+                    src = png_shade(st.shaders[ci], pal, r0, c0, h, w_) * (pa / 255)
                 else:
-                    src = np.append(rgb_of(pal[ci]), 1.0) * (alpha / 255)
+                    src = np.append(rgb_of(pal[ci]), 1.0) * (pa / 255)
                     src = np.broadcast_to(src, (h, w_, 4))
                 win = img[r0:r0 + h, c0:c0 + w_]
                 win *= 1 - (f * src[..., 3])[..., None]
@@ -2552,23 +2843,23 @@ def png_bytes(img):
             + chunk(b'IDAT', zlib.compress(raw.tobytes(), 9)) + chunk(b'IEND', b''))
 
 
-def write_pngs(data, where):
+def write_pngs(pack, data, where):
     pal, blobs = read_pack(data)
     where.mkdir(parents=True, exist_ok=True)
     for num, b in blobs:
-        (where / (svg_file(num).stem + '.png')).write_bytes(png_bytes(paint_still(Still(b), pal)))
+        (where / (svg_file(pack, num).stem + '.png')).write_bytes(png_bytes(paint_still(Still(b), pal)))
     print(f'wrote {len(blobs)} pngs to {where}')
 
 
 # ---- --list and --selftest
 
-def list_sticker(num):
-    svg = Svg(svg_file(num))
+def list_sticker(pack, num):
+    svg = Svg(svg_file(pack, num))
 
     def show(el, ind, idx):
         a = el.a
         bits = []
-        for k in ('id', 'fill', 'stroke', 'stroke-width', 'opacity', 'transform', 'clip-path'):
+        for k in ('id', 'fill', 'stroke', 'stroke-width', 'opacity', 'transform', 'clip-path', 'filter'):
             if k in a:
                 bits.append(f'{k}={a[k]}')
         fp = fingerprint([el])
@@ -2619,7 +2910,79 @@ def selftest():
     ring = [ellipse_sub(100, 100, 40, 40, 1.0), ellipse_sub(100, 100, 20, 20, 1.0)]
     area = png_cover(fill_px(ring), True)[2].sum()
     assert abs(area / (math.pi * 1200) - 1) < 1e-3, area
+    selftest_opacity()
     print('selftest ok')
+
+
+OPACITY_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs>
+<filter id="cut" color-interpolation-filters="sRGB">
+<feGaussianBlur in="SourceAlpha" stdDeviation="5.5" result="b"/>
+<feComponentTransfer in="b" result="d"><feFuncA type="linear" slope="30" intercept="-0.6"/></feComponentTransfer>
+<feFlood flood-color="#FFFFFF" result="w"/>
+<feComposite in="w" in2="d" operator="in" result="border"/>
+<feMerge><feMergeNode in="border"/><feMergeNode in="SourceGraphic"/></feMerge>
+</filter></defs><g id="fokia" filter="url(#cut)"><g>
+<g id="one" opacity="0.5"><rect x="40" y="40" width="60" height="60" fill="#000000"/></g>
+<g id="two" opacity="0.5"><rect x="140" y="40" width="60" height="60" fill="#000000"/>
+<rect x="170" y="70" width="60" height="60" fill="#000000"/></g>
+<g id="gone" opacity="0"><rect x="40" y="300" width="60" height="60" fill="#000000"/></g>
+<g id="bolt" opacity="0"><rect x="300" y="300" width="60" height="60" fill="#000000"/></g>
+<g id="fade" opacity="0.5"><rect x="300" y="40" width="60" height="60" fill="#000000"/></g>
+</g></g></svg>'''
+
+
+def selftest_opacity():
+    # group opacity, through the compiler and the still painter: a group
+    # with one draw fades its paint, one whose draws overlap fades as a
+    # layer, a hidden one draws nothing, a hidden one a node moves rests at
+    # alpha 0 with its outline, which its track brings in, and a faint one a
+    # node fades keeps the svg's opaque outline on a node of its own
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp = Path(tmp)
+        (tmp / 'fixture-90-test.svg').write_text(OPACITY_SVG)
+
+        def run(lines):
+            (tmp / 'anim.txt').write_text('sticker 90 test loop=2000 emoji=x since=1\n' + lines)
+            anim = Anim(tmp / 'anim.txt')
+            palette = {}
+            blob, _ = compile_sticker(anim, anim.stickers[90], Svg(tmp / 'fixture-90-test.svg'),
+                                      palette, 'box3', [])
+            pal = [0xFF000000 | rgb for rgb, _ in sorted(palette.items(), key=lambda kv: kv[1])]
+            return Still(blob), pal
+        st, pal = run('  node bolt bolt\n  alpha bolt 0:0 500:1:hold 1500:0:hold 2000:0:linear\n'
+                      '  node fade fade\n  alpha fade 0:0.5 500:0:linear 1500:1:linear 2000:0.5:linear\n')
+        img = paint_still(st, pal)
+
+        def grey(x, y):
+            # straight colour over the white outline
+            return float(img[y, x, :3].mean() / max(img[y, x, 3], 1e-9))
+        assert abs(grey(70, 70) - 0.5) < 0.01, grey(70, 70)
+        assert abs(grey(185, 85) - 0.5) < 0.01, grey(185, 85)
+        assert (OP_LAYER << 13 | 128) in st.ops
+        for x, y in ((70, 330), (330, 330), (330, 296)):
+            assert img[y, x, 3] == 0, (x, y, img[y, x])
+        # the faded one: half its ink at rest over an opaque outline, which
+        # hangs from a copy of its node that is gone when the part is and
+        # whole again above the die-cut's reach
+        assert abs(grey(330, 70) - 0.5) < 0.01 and img[36, 330, 3] > 0.99 and grey(330, 36) > 0.99
+        assert len(st.hidden) == 3, 'the bolt needs no outline node: it only snaps'
+        gate = st.tracks[(2, 5)]
+        assert gate[0][1] == 1 and gate[-1][1] == 1, gate
+        assert track_at(gate, 500) == 0 and track_at(gate, 1500) == 1, gate
+        # the node's alpha at 1: the part and its outline are back
+        n = st.rest.index(0.0)
+        st.rest[n] = 1.0
+        img = paint_still(st, pal)
+        assert img[330, 330, 3] > 0.99 and grey(330, 330) < 0.01
+        assert img[296, 330, 3] > 0.99 and grey(330, 296) > 0.99
+        for bad, why in (('  node bolt bolt\n  alpha bolt 0:1 500:0 2000:1\n', 'start at rest'),
+                         ('  node bolt bolt\n  x bolt 0:0 500:4 2000:0\n', 'hidden in the svg')):
+            try:
+                run(bad)
+            except Fail as e:
+                assert why in str(e), e
+            else:
+                raise AssertionError(f'no fail: {why}')
 
 
 def main(argv):
@@ -2629,37 +2992,45 @@ def main(argv):
         how = argv[argv.index('--blur') + 1]
         if how not in ('gauss', 'box3'):
             fail('--blur gauss|box3')
-    if '--only' in argv:
-        only = {int(x) for x in argv[argv.index('--only') + 1].split(',')}
-    if '--list' in argv:
-        list_sticker(int(argv[argv.index('--list') + 1]))
-        return 0
     if '--selftest' in argv:
         selftest()
         return 0
-    data, report, sizes = build(only, how, verbose='--report' in argv)
+    name = 'fokia'
+    if '--pack' in argv:
+        k = argv.index('--pack') + 1
+        if k >= len(argv):
+            fail('--pack NAME')
+        name = argv[k]
+    pack = Pack(name)
+    run = 'tool/pack_stickers.py' + ('' if name == 'fokia' else f' --pack {name}')
+    if '--only' in argv:
+        only = {int(x) for x in argv[argv.index('--only') + 1].split(',')}
+    if '--list' in argv:
+        list_sticker(pack, int(argv[argv.index('--list') + 1]))
+        return 0
+    data, report, sizes = build(pack, only, how, verbose='--report' in argv)
     if '--png' in argv:
         k = argv.index('--png') + 1
-        where = Path(argv[k]) if k < len(argv) and not argv[k].startswith('--') else PNG_DIR
-        write_pngs(data, where)
+        where = Path(argv[k]) if k < len(argv) and not argv[k].startswith('--') else pack.png
+        write_pngs(pack, data, where)
         return 0
     if '--check' in argv:
-        old = OUT.read_bytes() if OUT.exists() else b''
+        old = pack.out.read_bytes() if pack.out.exists() else b''
         if old != data:
-            print('fokia.kst is stale: run tool/pack_stickers.py')
+            print(f'{pack.out.name} is stale: run {run}')
             return 1
-        print('fokia.kst is up to date')
+        print(f'{pack.out.name} is up to date')
         return 0
     if only:
         print('\n'.join(report))
         print(f'{len(data)} bytes, not written (--only)')
         return 0
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_bytes(data)
+    pack.out.parent.mkdir(parents=True, exist_ok=True)
+    pack.out.write_bytes(data)
     if '--report' not in argv:
         print('\n'.join(r for r in report if not r.startswith('  ')))
     big = max(sizes.items(), key=lambda kv: kv[1])
-    print(f'wrote {OUT.name}: {len(data)} bytes, {len(sizes)} stickers, '
+    print(f'wrote {pack.out.name}: {len(data)} bytes, {len(sizes)} stickers, '
           f'biggest {big[0]:02d} at {big[1]} bytes')
     return 0
 

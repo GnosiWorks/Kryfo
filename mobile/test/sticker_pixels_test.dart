@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// every sticker's still frame, drawn by the app's own painter, against the
-// png tool/pack_stickers.py --png paints from the svgs. no golden files: the
-// pngs are built, not committed. skia's anti-aliasing is not exact area
-// coverage, so the share within 24 is taken after a 3x3 box filter on both;
-// the mean and the eroded mask stay raw.
+// every sticker's still frame in each pack, drawn by the app's own painter,
+// against the png tool/pack_stickers.py --png paints from the svgs. no golden
+// files: the pngs are built, not committed. skia's anti-aliasing is not
+// exact area coverage, so the share within 24 is taken after a 3x3 box
+// filter on both; the mean and the eroded mask stay raw.
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -119,20 +119,112 @@ Int32List _box3(Uint8List px) {
 }
 
 void main() {
-  final pack = loadPack();
+  group('fokia', () {
+    _pixelTests(fokiaFiles);
+    test('the picker offers every sticker', () {
+      expect(loadPack().playable, [for (var i = 1; i <= 29; i++) i]);
+      expect(kStickerBox, 512);
+    });
+  });
+  group('fokia remix', () {
+    _pixelTests(remixFiles);
+    test('the picker offers every sticker', () {
+      final pack = loadPack(remixFiles);
+      expect(pack.playable, [for (var i = 30; i <= 47; i++) i]);
+      expect(pack.offered, pack.playable);
+    });
+
+    testWidgets('faint and hidden groups draw as the svg has them', (
+      tester,
+    ) async {
+      final pack = loadPack(remixFiles);
+      Future<Uint8List> frame(int id, [double? t]) async => (await tester
+          .runAsync(() => renderSticker(pack.sticker(id)!, t: t)))!;
+      // the art's black outline at full strength, in [_ink]'s units
+      const black = 244;
+      // tiny violin: the middle note at 0.37, the top one at 0.03
+      var f = await frame(36);
+      expect(_ink(f, 136, 148, 149, 168), closeTo(0.37 * black, 16));
+      expect(_ink(f, 122, 71, 159, 118), lessThan(20));
+      // vibing: the left note at 0.5
+      f = await frame(37);
+      expect(_ink(f, 79, 103, 120, 154), closeTo(0.5 * black, 16));
+      // power up: the top right bolt is hidden at rest, where only the
+      // outer glow's faint edge is, and its track brings it in
+      final s = pack.sticker(44)!;
+      for (final t in [null, 0.0, s.loopMs.toDouble()]) {
+        expect(_ink(await frame(44, t), 371, 134, 394, 194), lessThan(120));
+      }
+      expect(_ink(await frame(44, 100), 371, 134, 394, 194), greaterThan(200));
+    });
+
+    testWidgets('notes fade as they rise and keep the svg\'s outline', (
+      tester,
+    ) async {
+      final pack = loadPack(remixFiles);
+      Future<Uint8List> frame(int id, [double? t]) async => (await tester
+          .runAsync(() => renderSticker(pack.sticker(id)!, t: t)))!;
+      const black = 244;
+      // tiny violin halfway: the note coming up is strong, the one near the
+      // top faint
+      final f = await frame(36, 1500);
+      expect(_ink(f, 114, 170, 144, 202), closeTo(0.535 * black, 16));
+      expect(_ink(f, 100, 118, 132, 152), closeTo(0.2 * black, 16));
+      // vibing: the right note near the bottom, then near the top
+      expect(
+        _ink(await frame(37, 100), 385, 165, 418, 198),
+        closeTo(0.9 * black, 16),
+      );
+      expect(
+        _ink(await frame(37, 700), 425, 95, 458, 132),
+        closeTo(0.3 * black, 16),
+      );
+      // the left note at rest is half ink over an opaque white outline, as
+      // the svg's die-cut draws it, not an outline faded with the note
+      expect(_white(await frame(37), 79, 103, 120, 154), greaterThan(300));
+    });
+  });
+}
+
+// opaque white pixels in a box: the outline showing in full
+int _white(Uint8List px, int x0, int y0, int x1, int y1) {
+  var n = 0;
+  for (var y = y0; y < y1; y++) {
+    for (var x = x0; x < x1; x++) {
+      final i = (y * 512 + x) * 4;
+      if (px[i + 3] == 255 && px[i + 1] >= 250) n++;
+    }
+  }
+  return n;
+}
+
+// the darkest a box gets: alpha less green in premultiplied rgba, so a faint
+// part reads faint over the white outline and over nothing alike
+int _ink(Uint8List px, int x0, int y0, int x1, int y1) {
+  var most = 0;
+  for (var y = y0; y < y1; y++) {
+    for (var x = x0; x < x1; x++) {
+      final i = (y * 512 + x) * 4;
+      final v = px[i + 3] - px[i + 1];
+      if (v > most) most = v;
+    }
+  }
+  return most;
+}
+
+void _pixelTests(PackFiles f) {
+  final pack = loadPack(f);
 
   testWidgets('every still matches its png', (tester) async {
-    if (!Directory(pngDir).existsSync()) {
-      markTestSkipped(
-        'render the reference pngs first: tool/pack_stickers.py --png',
-      );
+    if (!Directory(f.png).existsSync()) {
+      markTestSkipped('render the reference pngs first: ${f.tool} --png');
       return;
     }
     final lines = <String>[];
     final bad = <String>[];
     for (final id in pack.ids) {
       final s = pack.sticker(id)!;
-      final ref = decodePng(pngFor(id).readAsBytesSync());
+      final ref = decodePng(pngFor(id, f).readAsBytesSync());
       expect(ref.width, 512);
       final ours = (await tester.runAsync(() => renderSticker(s)))!;
       final d = compare(ours, ref.premultiplied(), ref.px);
@@ -167,10 +259,5 @@ void main() {
       expect(zero, still, reason: 'sticker $id at 0 ms');
       expect(end, still, reason: 'sticker $id at the end of its loop');
     }
-  });
-
-  test('the picker offers every sticker', () {
-    expect(pack.playable, [for (var i = 1; i <= 29; i++) i]);
-    expect(kStickerBox, 512);
   });
 }

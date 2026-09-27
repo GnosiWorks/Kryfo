@@ -188,25 +188,78 @@ void main() {
   });
 
   test('a known sticker shows our own emoji', () {
-    final pack = loadPack();
+    final lib = useLibrary();
     final w = StickerWire.parse('fokia:17:1')!;
-    expect(stickerText(w, '🔒', pack), '🔒');
-    expect(stickerText(w, 'tap this link', pack), '🔒');
-    expect(stickerText(w, '🔥', pack), '🔒');
-    expect(stickerText(w, '', pack), '🔒');
+    expect(stickerText(w, '🔒', lib), '🔒');
+    expect(stickerText(w, 'tap this link', lib), '🔒');
+    expect(stickerText(w, '🔥', lib), '🔒');
+    expect(stickerText(w, '', lib), '🔒');
   });
 
   test('an unknown sticker keeps one emoji or nothing', () {
-    final pack = loadPack();
+    final lib = useLibrary();
     final newer = StickerWire.parse('fokia:300:2')!;
-    expect(stickerText(newer, '🦊', pack), '🦊');
-    expect(stickerText(newer, 'tap this link', pack), '');
-    expect(stickerText(newer, '🦊🦊', pack), '');
-    expect(stickerText(newer, '', pack), '');
-    // another pack, and a pack that did not load
-    expect(stickerText(StickerWire.parse('other:17:1')!, '🦊', pack), '🦊');
+    expect(stickerText(newer, '🦊', lib), '🦊');
+    expect(stickerText(newer, 'tap this link', lib), '');
+    expect(stickerText(newer, '🦊🦊', lib), '');
+    expect(stickerText(newer, '', lib), '');
+    // another pack, and packs that did not load
+    expect(stickerText(StickerWire.parse('other:17:1')!, '🦊', lib), '🦊');
     expect(stickerText(newer, '🦊', null), '🦊');
     expect(stickerText(StickerWire.parse('fokia:17:1')!, 'x', null), '');
+  });
+
+  group('fokia remix', () {
+    test('a remix sticker goes out under its own pack name', () {
+      final lib = useLibrary();
+      final remix = lib.pack('fokiaremix')!;
+      final w = StickerWire.of(remix, remix.sticker(36)!);
+      expect(w.value, 'fokiaremix:36:1');
+      expect(w.ref, const StickerRef('fokiaremix', 36));
+      expect(StickerWire.parse(w.value), w);
+      for (final id in remix.ids) {
+        final v = StickerWire.of(remix, remix.sticker(id)!).value;
+        expect(v, 'fokiaremix:$id:1');
+        expect(StickerWire.parse(v)?.value, v, reason: 'sticker $id');
+      }
+    });
+
+    test('each pack reads its own stickers', () {
+      final lib = useLibrary();
+      final violin = StickerWire.parse('fokiaremix:36:1')!;
+      expect(stickerText(violin, '🎻', lib), '🎻');
+      expect(stickerText(violin, 'tap this link', lib), '🎻');
+      expect(stickerText(violin, '🦊', lib), '🎻');
+      // the same number in the other pack is another sticker, or none
+      expect(
+        stickerText(StickerWire.parse('fokiaremix:17:1')!, '🦊', lib),
+        '🦊',
+      );
+      expect(stickerText(StickerWire.parse('fokia:36:1')!, '🦊', lib), '🦊');
+      expect(stickerText(StickerWire.parse('fokia:17:1')!, '🦊', lib), '🔒');
+    });
+
+    test('an app with only fokia keeps its one emoji', () {
+      final older = StickerLibrary([loadPack()]);
+      final violin = StickerWire.parse('fokiaremix:36:1')!;
+      expect(stickerText(violin, '🎻', older), '🎻');
+      expect(stickerText(violin, 'tap this link', older), '');
+      expect(stickerText(StickerWire.parse('fokia:17:1')!, '🦊', older), '🔒');
+    });
+
+    test('the envelope carries it, and 0.4.1 reads the emoji', () async {
+      final wrapped = await wrapMessage(
+        '🎻',
+        msgUid: 'u1',
+        sender: _sender,
+        sticker: 'fokiaremix:36:1',
+      );
+      final env = unwrapMessage(wrapped);
+      expect(env.message, '🎻');
+      expect(env.sticker, 'fokiaremix:36:1');
+      expect(_body(wrapped)['st'], 'fokiaremix:36:1');
+      expect(_unwrap041(wrapped).message, '🎻');
+    });
   });
 
   test('one emoji and nothing else', () {

@@ -65,7 +65,7 @@ import 'search_bench.dart';
 import 'session.dart';
 import 'router.dart';
 import 'vault_life.dart';
-import 'stickers/sticker_pack.dart' show StickerPack;
+import 'stickers/sticker_pack.dart' show StickerLibrary;
 import 'stickers/sticker_wire.dart' show StickerWire, stickerText;
 import 'widgets/motion.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
@@ -6386,11 +6386,11 @@ class AppState extends ChangeNotifier {
         : PollSpec(options: p.options, multi: p.multi).toRow();
   }
 
-  // the pack an arriving sticker is read against. null if it cannot load:
-  // the sticker is then read as one this version does not have
-  Future<StickerPack?> _stickerPack() async {
+  // the packs an arriving sticker is read against. null if none loads: the
+  // sticker is then read as one this version does not have
+  Future<StickerLibrary?> _stickers() async {
     try {
-      return await StickerPack.load();
+      return await StickerLibrary.load();
     } catch (e) {
       dlog('stickers: $e');
       return null;
@@ -6850,7 +6850,7 @@ class AppState extends ChangeNotifier {
     // a known sticker's text is our own emoji for it, never the sender's
     final text = sticker == null
         ? bodyText
-        : stickerText(sticker, env.message, await _stickerPack());
+        : stickerText(sticker, env.message, await _stickers());
     // what the sender said, as far as this phone shows it
     final said = sticker == null ? env.message : text;
     // dedup: the db check alone races when two copies arrive at once, so an
@@ -7545,6 +7545,17 @@ class AppState extends ChangeNotifier {
     await listContainer(HaloContainer.decoy, false);
     await d.close();
     await HaloContainer.decoy.wipeFiles();
+    // its vault goes with it: its entry went with the decoy's pins
+    await _host.wipeVault(HaloContainer.decoyVault);
+  }
+
+  // tests stand a fake in for the decoy container and its identity
+  @visibleForTesting
+  Future<void> useDecoyForTest(HaloDb d, QuietIdentity id) async {
+    _decoyDb = d;
+    _decoyId = id;
+    _otherShown = await _shownOf(Session(d));
+    decoyReady = true;
   }
 
   // ---- the vault: made, filled, emptied, gone ----
@@ -7574,38 +7585,56 @@ class AppState extends ChangeNotifier {
     for (final id in {...groups}) ChatRef(id, group: true),
   ];
 
+  // the everyday identity's vault: what arrives for its chats is routed by
+  // the list. the decoy's takes nothing in, and nothing lists it
+  static bool _everyday(HaloDb vault) => vault.container == HaloContainer.vault;
+
+  // the database a vault extends
+  HaloDb _primaryOf(HaloDb vault) {
+    if (_everyday(vault)) return live;
+    final d = _decoyDb;
+    if (d == null) throw StateError('no decoy here');
+    return d;
+  }
+
+  // the vault of the identity on screen: the decoy's in a decoy session
+  HaloContainer get _ownVault =>
+      sessionQuiet ? HaloContainer.decoyVault : HaloContainer.vault;
+
   // setup, once the pin is confirmed: the old vault goes first and the new
   // pin entry is written last. false when the pin is in use. the new vault
-  // stays at hand for hideChats until vaultSetupDone
+  // stays at hand for hideChats until vaultSetupDone. in a decoy session it
+  // is the decoy's, and the everyday one is never touched. there a pin in
+  // use is taken and kept nowhere, as every pin set in the decoy is: the
+  // flow goes on as with any other, and what it hides no pin opens
   Future<bool> createVault(String pin) => _serial(() async {
-    if (sessionQuiet || _openVault != null) {
-      throw StateError('no vault setup from here');
-    }
+    if (_session.vault != null) throw StateError('no vault setup from here');
     if (!_host.lockOn) throw StateError('no app lock');
-    await _destroy();
+    final c = _ownVault;
+    await _destroy(c);
     final key = newVaultKey();
     try {
-      final pub = await _host.makeVault(key);
-      await _router.start(pub);
-      if (await _host.putEntry(pin, key)) {
-        _madeVault = HaloDb.withKey(HaloContainer.vault, key);
+      final pub = await _host.makeVault(c, key);
+      if (c == HaloContainer.vault) await _router.start(pub);
+      if (await _host.putEntry(c, pin, key)) {
+        _madeVault = HaloDb.withKey(c, key);
         return true;
       }
     } catch (e) {
       // the type only: an open error may quote the key
       dlog('vault: not made (${e.runtimeType})');
-      await _unmake();
+      await _unmake(c);
       rethrow;
     }
-    await _unmake();
+    await _unmake(c);
     return false;
   });
 
   // a vault no pin opens, with nothing listed: its key and files go
-  Future<void> _unmake() async {
+  Future<void> _unmake(HaloContainer c) async {
     try {
-      await _router.retire();
-      await _host.wipeVault();
+      if (c == HaloContainer.vault) await _router.retire();
+      await _host.wipeVault(c);
     } catch (e) {
       dlog('vault: left for the next setup (${e.runtimeType})');
     }
@@ -7622,18 +7651,21 @@ class AppState extends ChangeNotifier {
   }
 
   // replace, or the lock turned off: the entry first, then the list (its
-  // people stay as a drop list), the files last. never from inside the vault
-  Future<void> destroyVault() => _serial(_destroy);
+  // people stay as a drop list), the files last. never from inside a vault,
+  // and only the identity on screen's
+  Future<void> destroyVault() => _serial(() => _destroy(_ownVault));
 
-  Future<void> _destroy() async {
-    if (_openVault != null) throw StateError('the vault is open');
-    await _host.clearEntry();
+  Future<void> _destroy(HaloContainer c) async {
+    if (_session.vault != null) throw StateError('the vault is open');
+    await _host.clearEntry(c);
     await _dropMade();
-    // what a move cut short left in the everyday folders goes with it
-    await _repairMoves();
-    await _router.forget();
-    await _forgetPeers(_router.ids);
-    await _host.wipeVault();
+    if (c == HaloContainer.vault) {
+      // what a move cut short left in the everyday folders goes with it
+      await _repairMoves();
+      await _router.forget();
+      await _forgetPeers(_router.ids);
+    }
+    await _host.wipeVault(c);
   }
 
   // chats and groups into the vault, from the setup picker or from inside
@@ -7642,17 +7674,20 @@ class AppState extends ChangeNotifier {
     Iterable<String> people = const [],
     Iterable<String> groups = const [],
   }) => _serial(() async {
-    final v = _openVault ?? _madeVault;
+    final v = _session.vault ?? _madeVault;
     if (v == null) throw StateError('no vault at hand');
     final chats = _refs(people, groups);
     if (chats.isEmpty) return 0;
-    final went = await _move(v, chats, (m) => _hide(m, chats), out: false);
-    // what could still name them outside the vault
-    await _forgetPeers(_router.ids);
-    if (went.isNotEmpty) {
-      await _host.clearShade([
-        for (final c in went) c.group ? 'group:${c.id}' : c.id,
-      ]);
+    final went = await _move(v, chats, (m) => _hide(m, v, chats), out: false);
+    // what could still name them outside the vault, and what they showed.
+    // the decoy keeps no one outside and never shows anything
+    if (_everyday(v)) {
+      await _forgetPeers(_router.ids);
+      if (went.isNotEmpty) {
+        await _host.clearShade([
+          for (final c in went) c.group ? 'group:${c.id}' : c.id,
+        ]);
+      }
     }
     await refreshContacts();
     await refreshGroups();
@@ -7665,11 +7700,11 @@ class AppState extends ChangeNotifier {
     Iterable<String> people = const [],
     Iterable<String> groups = const [],
   }) => _serial(() async {
-    final v = _openVault ?? _madeVault;
+    final v = _session.vault ?? _madeVault;
     if (v == null) throw StateError('no vault at hand');
     final chats = _refs(people, groups);
     if (chats.isEmpty) return 0;
-    final n = await _move(v, chats, (m) => _unhide(m, chats), out: true);
+    final n = await _move(v, chats, (m) => _unhide(m, v, chats), out: true);
     await refreshContacts();
     await refreshGroups();
     return n;
@@ -7679,19 +7714,33 @@ class AppState extends ChangeNotifier {
   // back first, then the pin entry goes, then its key and files. a crash
   // part way leaves the rest hidden behind the same pin
   Future<void> removeVault() => _serial(() async {
-    final v = _openVault ?? _madeVault;
+    final v = _session.vault ?? _madeVault;
     if (v == null) throw StateError('no vault at hand');
-    // the list names every chat the vault holds, so each comes back alike
-    await _attached(v, _recard);
-    final all = [
-      for (final (id, g) in _router.hiddenChats) ChatRef(id, group: g),
-    ];
-    await _move(v, all, (m) => _unhide(m, all), out: true);
-    // what is still listed the vault no longer holds: deleted inside it
-    await _router.unlist([for (final (id, _) in _router.hiddenChats) id]);
-    await _host.clearEntry();
-    await _router.retire();
-    if (identical(_openVault, v)) {
+    final everyday = _everyday(v);
+    // every chat it holds, so each comes back alike: as the list names them
+    // on the everyday side, as its own rows do on the decoy's
+    final List<ChatRef> all;
+    if (everyday) {
+      await _attached(v, _recard);
+      all = [for (final (id, g) in _router.hiddenChats) ChatRef(id, group: g)];
+    } else {
+      all = await _attached(
+        v,
+        (m) async => [
+          for (final MapEntry(key: id, value: (kind, _))
+              in (await m.vaultCards()).entries)
+            ChatRef(id, group: kind == kHiddenGroup),
+        ],
+      );
+    }
+    await _move(v, all, (m) => _unhide(m, v, all), out: true);
+    if (everyday) {
+      // what is still listed the vault no longer holds: deleted inside it
+      await _router.unlist([for (final (id, _) in _router.hiddenChats) id]);
+    }
+    await _host.clearEntry(v.container);
+    if (everyday) await _router.retire();
+    if (identical(_session.vault, v)) {
       _session = Session(_session.primary);
       lockState.inVault = false;
       _forgetVaultSide();
@@ -7699,7 +7748,7 @@ class AppState extends ChangeNotifier {
     }
     if (identical(_madeVault, v)) _madeVault = null;
     await v.close();
-    await _host.wipeVault();
+    await _host.wipeVault(v.container);
     await refreshContacts();
     await refreshGroups();
   });
@@ -7707,7 +7756,7 @@ class AppState extends ChangeNotifier {
   // for a vault just opened, before its session is built: its side of a
   // move a crash cut short is put right
   Future<void> settleVault(HaloDb vault) =>
-      _serial(() => _attached(vault, _settle));
+      _serial(() => _attached(vault, (m) => _settle(m, vault)));
 
   // what receiving needs of the hidden chats, read again from the open
   // vault's rows
@@ -7723,7 +7772,7 @@ class AppState extends ChangeNotifier {
     HaloDb vault,
     Future<T> Function(ChatMover m) work,
   ) async {
-    final m = _host.mover(live, vault);
+    final m = _host.mover(_primaryOf(vault), vault);
     await m.attach();
     try {
       return await work(m);
@@ -7733,35 +7782,41 @@ class AppState extends ChangeNotifier {
   }
 
   // what arrives for the moving chats waits, and a fault puts right what it
-  // can before it is passed on
+  // can before it is passed on. nothing arrives for the decoy's
   Future<T> _move<T>(
     HaloDb vault,
     List<ChatRef> chats,
     Future<T> Function(ChatMover m) work, {
     required bool out,
   }) async {
-    final m = _host.mover(live, vault);
+    final everyday = _everyday(vault);
+    final primary = _primaryOf(vault);
+    final m = _host.mover(primary, vault);
     await m.attach();
-    final done = Completer<void>();
-    _moveDone = done;
+    final done = everyday ? Completer<void>() : null;
+    if (done != null) _moveDone = done;
     try {
-      for (final c in chats) {
-        _moving.add(c.id);
-        if (c.group) _moving.addAll(await m.peopleIn(c, inVault: out));
+      if (everyday) {
+        for (final c in chats) {
+          _moving.add(c.id);
+          if (c.group) _moving.addAll(await m.peopleIn(c, inVault: out));
+        }
+        // what is being filed for them lands first, and no unseal runs
+        // while rows move
+        while (_unsealing || _arriving.keys.any(_moving.contains)) {
+          await Future<void>.delayed(const Duration(milliseconds: 10));
+        }
       }
-      // what is being filed for them lands first, and no unseal runs
-      // while rows move
-      while (_unsealing || _arriving.keys.any(_moving.contains)) {
-        await Future<void>.delayed(const Duration(milliseconds: 10));
-      }
-      await _settle(m);
+      await _settle(m, vault);
       return await work(m);
     } catch (e) {
       dlog('vault: move cut short (${e.runtimeType})');
       try {
-        await _router.load();
-        await _repairMoves(m);
-        await _settle(m);
+        if (everyday) {
+          await _router.load();
+          await _repairMoves(m);
+        }
+        await _settle(m, vault);
       } catch (_) {
         // the next start and the next open put it right
       }
@@ -7770,19 +7825,20 @@ class AppState extends ChangeNotifier {
       try {
         await m.detach();
       } catch (_) {}
-      final v = _openVault;
-      if (v != null) {
+      if (identical(_session.vault, vault)) {
         try {
-          final rebuilt = await Session.withVault(live, v);
+          final rebuilt = await Session.withVault(primary, vault);
           // a lock that shut the vault meanwhile keeps it shut
-          if (identical(_openVault, v)) _session = rebuilt;
+          if (identical(_session.vault, vault)) _session = rebuilt;
         } catch (e) {
           dlog('vault: session not rebuilt (${e.runtimeType})');
         }
       }
-      _moving.clear();
-      _moveDone = null;
-      done.complete();
+      if (done != null) {
+        _moving.clear();
+        _moveDone = null;
+        done.complete();
+      }
     }
   }
 
@@ -7798,48 +7854,69 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  Future<List<ChatRef>> _hide(ChatMover m, List<ChatRef> chats) async {
+  Future<List<ChatRef>> _hide(
+    ChatMover m,
+    HaloDb vault,
+    List<ChatRef> chats,
+  ) async {
+    final everyday = _everyday(vault);
+    final from = _primaryOf(vault).container;
     var marks = await m.marks();
     final went = <ChatRef>[];
     for (final c in chats) {
       if (!await m.hideable(c)) continue;
       marks = marks.hiding(c);
       await m.copyIn(c, marks);
-      // the commit point: from here what arrives for it goes to the vault
-      final files = await m.commitIn(c, DateTime.now().millisecondsSinceEpoch);
-      await _router.load();
-      await _placeFiles(files, live.container, HaloContainer.vault);
-      await _router.settle(c.id);
+      if (everyday) {
+        // the commit point: from here what arrives for it goes to the vault
+        final files = await m.commitIn(
+          c,
+          DateTime.now().millisecondsSinceEpoch,
+        );
+        await _router.load();
+        await _placeFiles(files, from, vault.container);
+        await _router.settle(c.id);
+      } else {
+        // no list: the commit point is the chat leaving the decoy's
+        // database, and the vault's next open puts right what a crash
+        // leaves after it
+        final files = await m.vaultFiles(c);
+        await m.dropLive(c);
+        await _placeFiles(files, from, vault.container);
+      }
       marks = marks.done(c);
       await m.putMarks(marks);
       _bumpChatRev(c.group ? 'group:${c.id}' : c.id);
       went.add(c);
     }
-    await _recard(m);
+    if (everyday) await _recard(m);
     return went;
   }
 
-  Future<int> _unhide(ChatMover m, List<ChatRef> chats) async {
+  Future<int> _unhide(ChatMover m, HaloDb vault, List<ChatRef> chats) async {
+    final everyday = _everyday(vault);
+    final to = _primaryOf(vault).container;
     var marks = await m.marks();
     var n = 0;
     for (final c in chats) {
-      if (!_router.hides(c.id) || !await m.held(c)) continue;
+      if (everyday && !_router.hides(c.id)) continue;
+      if (!await m.held(c)) continue;
       marks = marks.showing(c);
       await m.putMarks(marks);
       // the files go first, flagged on the list entry, so a start-up before
-      // the commit puts them back
+      // the commit puts them back. the decoy's next open does it there
       final files = await m.vaultFiles(c);
-      await _router.markBack(c.id, files);
-      await _placeFiles(files, HaloContainer.vault, live.container);
-      // the commit point: from here it is an everyday chat again
+      if (everyday) await _router.markBack(c.id, files);
+      await _placeFiles(files, vault.container, to);
+      // the commit point: from here it shows without the vault again
       await m.commitOut(c);
-      await _router.load();
+      if (everyday) await _router.load();
       marks = marks.done(c);
       await m.dropVault(c, marks);
       _bumpChatRev(c.group ? 'group:${c.id}' : c.id);
       n++;
     }
-    await _recard(m);
+    if (everyday) await _recard(m);
     return n;
   }
 
@@ -7847,26 +7924,43 @@ class AppState extends ChangeNotifier {
   Future<void> _recard(ChatMover m) async =>
       _router.recard(await m.vaultCards());
 
-  // the vault's side of a move cut short: a hide that never reached its list
-  // entry, or an unhide past it, left a copy in the vault, which goes
-  Future<void> _settle(ChatMover m) async {
-    await _router.load();
+  // the vault's side of a move cut short: a hide that never reached its
+  // commit, or an unhide past it, left a copy in the vault, which goes. the
+  // list says which on the everyday side; on the decoy's, whether its
+  // database still holds the chat, and the files follow the rows
+  Future<void> _settle(ChatMover m, HaloDb vault) async {
+    final everyday = _everyday(vault);
+    final primary = _primaryOf(vault);
+    if (everyday) await _router.load();
     var left = await m.marks();
     if (left.isEmpty) return;
     for (final c in [...left.inbound, ...left.outbound]) {
       left = left.done(c);
-      if (_router.hides(c.id)) {
+      final hidden = everyday ? _router.hides(c.id) : !await _holds(primary, c);
+      if (hidden) {
+        if (!everyday) {
+          await _placeFiles(
+            await m.vaultFiles(c),
+            primary.container,
+            vault.container,
+          );
+        }
         await m.putMarks(left);
         continue;
       }
       await _placeFiles(
         await m.vaultFiles(c),
-        HaloContainer.vault,
-        live.container,
+        vault.container,
+        primary.container,
       );
       await m.dropVault(c, left);
     }
   }
+
+  // the database holds the chat as one: an added person, or the group
+  static Future<bool> _holds(HaloDb d, ChatRef c) async => c.group
+      ? await d.groupExists(c.id)
+      : (await d.getContact(c.id))?['accepted'] == 1;
 
   // a move cut short, as its list entry's flags say: the chat's everyday
   // rows go and its files into the vault's folders
@@ -7937,8 +8031,12 @@ class AppState extends ChangeNotifier {
     _shutVault();
     // and what home shows after one shut is read again before anything
     await _listsBack;
-    if (r == PinResult.vault && vaultKey != null) {
-      return _openVaultSession(vaultKey);
+    if (vaultKey != null && r == PinResult.vault) {
+      return _openVaultSession(HaloContainer.vault, vaultKey);
+    }
+    // the decoy's own vault comes with the decoy's outcome
+    if (vaultKey != null && r == PinResult.decoy) {
+      return _openVaultSession(HaloContainer.decoyVault, vaultKey);
     }
     final decoy = r == PinResult.decoy;
     final want = decoy ? _decoyDb : live;
@@ -7996,20 +8094,23 @@ class AppState extends ChangeNotifier {
   @visibleForTesting
   Duration? revealGap;
 
-  // the vault's pin: the everyday app with its hidden chats. its key is
-  // wrapped, so nothing of it could be read ahead: it opens here, under the
-  // lock, and its lists are read before the same deadline as any other
-  // outcome. it throws when the vault will not open, and the lock then
-  // opens the everyday session
-  Future<void> _openVaultSession(String key) async {
-    final v = await _host.openVault(key);
+  // a vault's pin: its identity's app with its hidden chats, the everyday
+  // one's or the decoy's. its key is wrapped, so nothing of it could be read
+  // ahead: it opens here, under the lock, and its lists are read before the
+  // same deadline as any other outcome. it throws when the vault will not
+  // open, and the lock then opens the session the vault extends
+  Future<void> _openVaultSession(HaloContainer c, String key) async {
+    final decoy = c == HaloContainer.decoyVault;
+    final primary = decoy ? _decoyDb : live;
+    if (primary == null) throw StateError('no decoy here');
+    final v = await _host.openVault(c, key);
     final Session s;
     final (List<ContactPreview>, int) home;
     final List<GroupPreview> gs;
     try {
       // a move a crash cut short is put right before ownership is read
       await settleVault(v);
-      s = await Session.withVault(live, v);
+      s = await Session.withVault(primary, v);
       home = await _contactsOf(s);
       gs = await _groupsOf(s);
     } catch (e) {
@@ -8018,13 +8119,23 @@ class AppState extends ChangeNotifier {
       } catch (_) {}
       rethrow;
     }
-    lockState.inDecoy = false;
-    // from the decoy: its lists wait for its next unlock, as if read ahead
-    if (sessionQuiet) {
+    if (decoy) {
+      // from the everyday side: its lists wait as if read ahead, and the
+      // decoy's face is the one read ahead for it, as at a decoy unlock
+      if (!sessionQuiet) {
+        final ahead = _otherShown;
+        _otherShown = _Shown(contacts, pendingCount, groups, _quietAvatar);
+        if (ahead != null) _quietAvatar = ahead.avatar;
+        _quietSince = DateTime.now().millisecondsSinceEpoch;
+        _quietJobs = _jobRuns;
+      }
+    } else if (sessionQuiet) {
+      // from the decoy: its lists wait for its next unlock, as if read ahead
       _otherShown = _Shown(contacts, pendingCount, groups, _quietAvatar);
     }
+    lockState.inDecoy = decoy;
     _session = s;
-    _quiet = null;
+    _quiet = decoy ? _decoyId : null;
     contacts = home.$1;
     pendingCount = home.$2;
     groups = gs;
@@ -8038,7 +8149,31 @@ class AppState extends ChangeNotifier {
       const Duration(milliseconds: 250),
       onTimeout: () {},
     );
-    unawaited(Future.delayed(_afterReveal, () => _vaultShown(v)));
+    unawaited(
+      Future.delayed(
+        _afterReveal,
+        () => decoy ? _decoyVaultShown(v) : _vaultShown(v),
+      ),
+    );
+  }
+
+  // the decoy's, after the reveal and off the clock: the shade goes as at
+  // any decoy unlock, and so do its timers that ran out while it was shut.
+  // nothing is sealed to it and nothing in it sends
+  Future<void> _decoyVaultShown(HaloDb v) async {
+    if (!identical(_session.vault, v)) return;
+    try {
+      await notifPlugin.cancelAll();
+    } catch (_) {}
+    try {
+      await v.purgeExpired();
+      await refreshContacts();
+      await refreshGroups();
+    } catch (e) {
+      if (identical(_session.vault, v)) {
+        dlog('vault: after open (${e.runtimeType})');
+      }
+    }
   }
 
   // after the reveal, off the clock
@@ -8084,15 +8219,16 @@ class AppState extends ChangeNotifier {
     _shutVault();
   }
 
-  // the everyday session is back before anything reads again. the vault's
-  // handle stays with its close until what it took in has landed and the
-  // list names everyone in it
+  // the session the vault extends is back before anything reads again. the
+  // everyday vault's handle stays with its close until what it took in has
+  // landed and the list names everyone in it. the decoy's takes nothing in
   void _shutVault() {
-    final v = _openVault;
-    if (v == null) return;
     final was = _session;
+    final v = was.vault;
+    if (v == null) return;
+    final everyday = _everyday(v);
     final done = Completer<void>();
-    _closeDone = done;
+    if (everyday) _closeDone = done;
     _session = Session(was.primary);
     lockState.inVault = false;
     _forgetVaultSide();
@@ -8117,7 +8253,16 @@ class AppState extends ChangeNotifier {
         dlog('lists after the vault: $e');
       }
     }();
-    unawaited(_closeVault(v, done));
+    unawaited(everyday ? _closeVault(v, done) : _closeDecoyVault(v));
+  }
+
+  // once a move under way is done, and its key goes with the handle
+  Future<void> _closeDecoyVault(HaloDb v) async {
+    try {
+      await _serial(v.close);
+    } catch (e) {
+      dlog('vault: close (${e.runtimeType})');
+    }
   }
 
   // what the session kept of the vault beside its handle

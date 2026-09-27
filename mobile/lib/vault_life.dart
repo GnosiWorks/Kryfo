@@ -14,7 +14,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import 'container.dart';
-import 'lock_state.dart' show lockState;
+import 'lock_state.dart' show LockState, lockState;
 import 'main.dart' show HaloDb, engine, shredFile;
 import 'notifications.dart' show clearNotificationsFor, notifPlugin;
 import 'router.dart';
@@ -80,8 +80,9 @@ class MoveMarks {
   }
 }
 
-// the rows of chats, between the everyday database and a vault attached to
-// it. each step that writes is one transaction
+// the rows of chats, between the database a vault extends (the everyday one
+// or the decoy's) and the vault attached to it. each step that writes is one
+// transaction
 abstract class ChatMover {
   Future<void> attach();
   Future<void> detach();
@@ -89,7 +90,7 @@ abstract class ChatMover {
   Future<MoveMarks> marks();
   Future<void> putMarks(MoveMarks m);
 
-  // the everyday side holds it as a chat that may be hidden: an accepted
+  // the side it extends holds it as a chat that may be hidden: an accepted
   // contact, or a group that is not a room. and the vault does not
   Future<bool> hideable(ChatRef c);
   // the vault holds it as a chat: a group, or a person it holds more than
@@ -106,74 +107,95 @@ abstract class ChatMover {
   Future<List<String>> commitIn(ChatRef c, int at);
   // the files the vault's rows of a chat point at
   Future<List<String>> vaultFiles(ChatRef c);
-  // an unhide's commit: the chat's rows back in the everyday database with
-  // their search words, and its list entry out
+  // an unhide's commit: the chat's rows back in the side it extends with
+  // their search words, and its list entry out where there is one
   Future<void> commitOut(ChatRef c);
   // the chat out of the vault, and the marks
   Future<void> dropVault(ChatRef c, MoveMarks marks);
-  // the chat out of the everyday database
+  // the chat out of the side it extends. for the decoy's vault, which has
+  // no list, this is a hide's commit
   Future<void> dropLive(ChatRef c);
   // every chat the vault holds, as its list kind and card
   Future<Map<String, (String, String)>> vaultCards();
 }
 
 // the pin entry, a new vault's file, the shade and the disk, behind a seam
-// so the vault's life runs on stand-ins
+// so the vault's life runs on stand-ins. vault is the everyday identity's
+// or the decoy's
 abstract class VaultHost {
   // a pin can open a vault only with the app lock on
   bool get lockOn;
   // the vault's pin entry, its key sealed inside. false when the pin is in
   // use
-  Future<bool> putEntry(String pin, String keyHex);
-  Future<void> clearEntry();
-  // a new vault under the key: the whole schema and its sealing identity
-  // inside. the public half
-  Future<String> makeVault(String keyHex);
+  Future<bool> putEntry(HaloContainer vault, String pin, String keyHex);
+  Future<void> clearEntry(HaloContainer vault);
+  // a new vault under the key: the whole schema, and for the everyday one
+  // its sealing identity inside. the public half, '' when nothing is ever
+  // sealed to it
+  Future<String> makeVault(HaloContainer vault, String keyHex);
   // the vault under the key its pin handed back, open. throws when there is
   // none or the key does not open it
-  Future<HaloDb> openVault(String keyHex);
-  ChatMover mover(HaloDb live, HaloDb? vault);
+  Future<HaloDb> openVault(HaloContainer vault, String keyHex);
+  ChatMover mover(HaloDb primary, HaloDb? vault);
   // the notifications of chats that just went out of sight
   Future<void> clearShade(Iterable<String> payloads);
   Future<void> moveFile(String from, String to);
   Future<void> shred(String path);
   // the vault's files: its database and folders
-  Future<void> wipeVault();
+  Future<void> wipeVault(HaloContainer vault);
 }
 
 class LiveVaultHost implements VaultHost {
-  const LiveVaultHost();
+  const LiveVaultHost({LockState? lock}) : _lock = lock;
+
+  final LockState? _lock;
+  LockState get _l => _lock ?? lockState;
 
   @override
-  bool get lockOn => lockState.enabled;
+  bool get lockOn => _l.enabled;
 
-  @override
-  Future<bool> putEntry(String pin, String keyHex) =>
-      lockState.setupVaultPin(pin, keyHex);
-
-  @override
-  Future<void> clearEntry() => lockState.clearVault();
-
-  @override
-  Future<String> makeVault(String keyHex) async {
-    final keys = engine.vaultKeys();
-    final d = HaloDb.withKey(HaloContainer.vault, keyHex);
-    try {
-      await d.open();
-      await SqlRouterStore(d.open).putMeta('priv', keys.priv);
-    } finally {
-      await d.close();
-    }
-    return keys.pub;
+  // the lock works on the entry of the session's own identity: another
+  // identity's vault is never written from here
+  void _own(HaloContainer vault) {
+    final own = _l.inDecoy ? HaloContainer.decoyVault : HaloContainer.vault;
+    if (vault != own) throw StateError('not this session\'s vault');
   }
 
   @override
-  Future<HaloDb> openVault(String keyHex) async {
+  Future<bool> putEntry(HaloContainer vault, String pin, String keyHex) {
+    _own(vault);
+    return _l.setupVaultPin(pin, keyHex);
+  }
+
+  @override
+  Future<void> clearEntry(HaloContainer vault) {
+    _own(vault);
+    return _l.clearVault();
+  }
+
+  @override
+  Future<String> makeVault(HaloContainer vault, String keyHex) async {
+    // nothing arrives for the decoy, so nothing is ever sealed to its vault
+    final keys = vault == HaloContainer.vault ? engine.vaultKeys() : null;
+    final d = HaloDb.withKey(vault, keyHex);
+    try {
+      await d.open();
+      if (keys != null) {
+        await SqlRouterStore(d.open).putMeta('priv', keys.priv);
+      }
+    } finally {
+      await d.close();
+    }
+    return keys?.pub ?? '';
+  }
+
+  @override
+  Future<HaloDb> openVault(HaloContainer vault, String keyHex) async {
     // opening a file that is not there would make one
-    if (!await File(await HaloContainer.vault.dbPath()).exists()) {
+    if (!await File(await vault.dbPath()).exists()) {
       throw StateError('no vault here');
     }
-    final d = HaloDb.withKey(HaloContainer.vault, keyHex);
+    final d = HaloDb.withKey(vault, keyHex);
     try {
       await d.open();
     } catch (_) {
@@ -184,7 +206,8 @@ class LiveVaultHost implements VaultHost {
   }
 
   @override
-  ChatMover mover(HaloDb live, HaloDb? vault) => SqlChatMover(live, vault);
+  ChatMover mover(HaloDb primary, HaloDb? vault) =>
+      SqlChatMover(primary, vault);
 
   @override
   Future<void> clearShade(Iterable<String> payloads) async {
@@ -213,7 +236,7 @@ class LiveVaultHost implements VaultHost {
   Future<void> shred(String path) => shredFile(path);
 
   @override
-  Future<void> wipeVault() => HaloContainer.vault.wipeFiles();
+  Future<void> wipeVault(HaloContainer vault) => vault.wipeFiles();
 }
 
 // 32 bytes from the platform's csprng, as the 64 hex a wrapped key is
