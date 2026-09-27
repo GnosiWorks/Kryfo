@@ -4163,7 +4163,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get pinsThePinGoesAnd =>
-      'Die PIN wird entfernt, und die Lösch-PIN mit ihr. Wer dein Handy in der Hand hat, öffnet Kryfo als du.';
+      'Die PIN wird entfernt, und die Lösch-PIN und alle versteckten Chats mit ihr. Wer dein Handy in der Hand hat, öffnet Kryfo als du.';
 
   @override
   String get pinsUnlockWithFingerprint => 'Mit Fingerabdruck entsperren';
@@ -6990,7 +6990,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get pinsTurnOffWithDecoy =>
-      'Alle PINs werden entfernt, die Tarn-PIN und ihr Kryfo mit ihnen. Wer dein Handy in der Hand hat, öffnet Kryfo als du.';
+      'Alle PINs werden entfernt, die Tarn-PIN und ihr Kryfo und alle versteckten Chats mit ihnen. Wer dein Handy in der Hand hat, öffnet Kryfo als du.';
 
   @override
   String get pinsHowThisWorks => 'So funktioniert es';
@@ -7065,6 +7065,136 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get flowNotSet =>
       'Konnte nicht festgelegt werden. Versuch es noch einmal.';
+
+  @override
+  String get pinsHiddenChats => 'Versteckte Chats';
+
+  @override
+  String get pinsHiddenLine =>
+      'Ausgewählte Chats bleiben außer Sicht, bis du deine PIN für versteckte Chats eingibst: nicht in der Liste, nicht in der Suche, keine Benachrichtigungen.';
+
+  @override
+  String get pinsSetUp => 'Einrichten';
+
+  @override
+  String get pinsChangeHiddenPin => 'PIN für versteckte Chats ändern';
+
+  @override
+  String get pinsHideMoreChats => 'Weitere Chats verstecken';
+
+  @override
+  String get pinsRemoveHiddenChats => 'Versteckte Chats entfernen';
+
+  @override
+  String get pinsRemoveHiddenTitle => 'Versteckte Chats entfernen?';
+
+  @override
+  String get pinsRemoveHiddenLine =>
+      'Sie kommen zurück in deine Chatliste, und die PIN für versteckte Chats öffnet nichts mehr.';
+
+  @override
+  String get pinsTurnOffHiddenFirst =>
+      'Versteckte Chats brauchen die App-Sperre. Entferne sie zuerst, dann kommen sie zurück in deine Chatliste.';
+
+  @override
+  String get flowVaultTitle => 'Versteckte Chats';
+
+  @override
+  String get flowVault1 =>
+      'Wähle Chats und Gruppen zum Verstecken. Deine PIN öffnet Kryfo ohne sie. Eine PIN für versteckte Chats öffnet alles, auch die versteckten Chats.';
+
+  @override
+  String get flowVault2 =>
+      'Solange sie außer Sicht sind, melden sie sich nie und zeigen keinen Zähler. Ihre Nachrichten kommen weiter an und warten versiegelt auf deine PIN für versteckte Chats.';
+
+  @override
+  String get flowVaultFinger =>
+      'Dein Fingerabdruck öffnet Kryfo ohne versteckte Chats.';
+
+  @override
+  String get flowVaultDigits =>
+      'Gib auch deiner PIN sechs Ziffern oder mehr, denn wer zusieht, kann die Punkte zählen.';
+
+  @override
+  String get flowVaultReplace =>
+      'Das ersetzt alle versteckten Chats, die dieses Handy schon hat.';
+
+  @override
+  String get flowVaultChoose => 'Wähle eine PIN für versteckte Chats';
+
+  @override
+  String get flowVaultChooseLine => 'Sechs Ziffern oder mehr.';
+
+  @override
+  String get flowEnterHiddenPinLine =>
+      'Die, mit der sich deine versteckten Chats öffnen.';
+
+  @override
+  String get flowVaultForgetTitle => 'Merk dir diese PIN';
+
+  @override
+  String get flowVaultForget =>
+      'Wenn du diese PIN vergisst, sind deine versteckten Chats für immer weg. Niemand kann sie zurückholen, auch wir nicht.';
+
+  @override
+  String get flowVaultForgetOk => 'Verstanden';
+
+  @override
+  String get flowVaultPickTitle => 'Chats zum Verstecken wählen';
+
+  @override
+  String get flowVaultPickLine =>
+      'Sie verlassen jetzt deine Chatliste. Deine PIN für versteckte Chats holt sie zurück.';
+
+  @override
+  String flowVaultPickButton(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString Chats verstecken',
+      one: '1 Chat verstecken',
+      zero: 'Noch nichts verstecken',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get flowVaultPickEmpty => 'Noch keine Chats zum Verstecken.';
+
+  @override
+  String get flowVaultBackupTitle => 'Jetzt ein Backup machen?';
+
+  @override
+  String get flowVaultBackupLine =>
+      'Ein Backup von jetzt enthält auch deine versteckten Chats, unter einer eigenen Passphrase. Wenn du die PIN für versteckte Chats vergisst, ist es der einzige Weg zurück zu ihnen.';
+
+  @override
+  String get flowVaultBackupNow => 'Backup machen';
+
+  @override
+  String get flowVaultNotNow => 'Nicht jetzt';
+
+  @override
+  String get flowVaultDone => 'Versteckte Chats eingerichtet';
+
+  @override
+  String get flowVaultDoneLine =>
+      'Gib deine PIN für versteckte Chats auf dem Sperrbildschirm ein, um sie zu sehen. Wechsle weg, und sie sind wieder außer Sicht.';
+
+  @override
+  String get flowVaultChanged => 'PIN für versteckte Chats geändert';
+
+  @override
+  String get flowVaultChangedLine =>
+      'Deine versteckten Chats öffnen sich mit der neuen. Die alte öffnet jetzt nichts mehr.';
+
+  @override
+  String get howVault =>
+      'Deine PIN für versteckte Chats öffnet Kryfo mit deinen versteckten Chats, deine PIN und dein Fingerabdruck ohne sie. Richtest du versteckte Chats neu ein, ersetzt das die, die dieses Handy hat. Vergisst du die PIN für versteckte Chats, sind sie für immer weg.';
 
   @override
   String get stickerOpen => 'Sticker';

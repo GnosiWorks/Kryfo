@@ -4153,7 +4153,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get pinsThePinGoesAnd =>
-      'Il PIN viene rimosso, e con lui il PIN di cancellazione. Chiunque abbia in mano il tuo telefono apre Kryfo al posto tuo.';
+      'Il PIN viene rimosso, e con lui il PIN di cancellazione e tutte le chat nascoste. Chiunque abbia in mano il tuo telefono apre Kryfo al posto tuo.';
 
   @override
   String get pinsUnlockWithFingerprint => 'Sblocca con l\'impronta';
@@ -6981,7 +6981,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get pinsTurnOffWithDecoy =>
-      'Tutti i PIN vengono rimossi, l\'esca e il suo Kryfo con loro. Chiunque abbia in mano il tuo telefono apre Kryfo al posto tuo.';
+      'Tutti i PIN vengono rimossi, l\'esca, il suo Kryfo e tutte le chat nascoste con loro. Chiunque abbia in mano il tuo telefono apre Kryfo al posto tuo.';
 
   @override
   String get pinsHowThisWorks => 'Come funziona';
@@ -7055,6 +7055,135 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get flowNotSet => 'Non è stato possibile impostarlo. Riprova.';
+
+  @override
+  String get pinsHiddenChats => 'Chat nascoste';
+
+  @override
+  String get pinsHiddenLine =>
+      'Le chat scelte restano fuori vista finché non inserisci il PIN delle chat nascoste: non nell\'elenco, non nella ricerca, nessuna notifica.';
+
+  @override
+  String get pinsSetUp => 'Configura';
+
+  @override
+  String get pinsChangeHiddenPin => 'Cambia PIN delle chat nascoste';
+
+  @override
+  String get pinsHideMoreChats => 'Nascondi altre chat';
+
+  @override
+  String get pinsRemoveHiddenChats => 'Rimuovi chat nascoste';
+
+  @override
+  String get pinsRemoveHiddenTitle => 'Rimuovere le chat nascoste?';
+
+  @override
+  String get pinsRemoveHiddenLine =>
+      'Tornano nel tuo elenco delle chat, e il PIN delle chat nascoste non apre più nulla.';
+
+  @override
+  String get pinsTurnOffHiddenFirst =>
+      'Le chat nascoste hanno bisogno del blocco app. Rimuovile prima, e torneranno nel tuo elenco delle chat.';
+
+  @override
+  String get flowVaultTitle => 'Chat nascoste';
+
+  @override
+  String get flowVault1 =>
+      'Scegli chat e gruppi da nascondere. Il tuo PIN apre Kryfo senza di loro. Un PIN delle chat nascoste apre tutto, chat nascoste comprese.';
+
+  @override
+  String get flowVault2 =>
+      'Finché sono fuori vista, non mandano mai notifiche né mostrano contatori. I loro messaggi continuano ad arrivare e aspettano, sigillati, il tuo PIN delle chat nascoste.';
+
+  @override
+  String get flowVaultFinger =>
+      'La tua impronta apre Kryfo senza le chat nascoste.';
+
+  @override
+  String get flowVaultDigits =>
+      'Dai anche al tuo PIN sei cifre o più, perché chi guarda può contare i puntini.';
+
+  @override
+  String get flowVaultReplace =>
+      'Questo sostituisce tutte le chat nascoste che questo telefono ha già.';
+
+  @override
+  String get flowVaultChoose => 'Scegli un PIN delle chat nascoste';
+
+  @override
+  String get flowVaultChooseLine => 'Sei cifre o più.';
+
+  @override
+  String get flowEnterHiddenPinLine => 'Quello che apre le tue chat nascoste.';
+
+  @override
+  String get flowVaultForgetTitle => 'Ricorda questo PIN';
+
+  @override
+  String get flowVaultForget =>
+      'Se dimentichi questo PIN, le tue chat nascoste sono perse per sempre. Nessuno può recuperarle, nemmeno noi.';
+
+  @override
+  String get flowVaultForgetOk => 'Ho capito';
+
+  @override
+  String get flowVaultPickTitle => 'Scegli le chat da nascondere';
+
+  @override
+  String get flowVaultPickLine =>
+      'Lasciano ora il tuo elenco delle chat. Il tuo PIN delle chat nascoste le riporta in vista.';
+
+  @override
+  String flowVaultPickButton(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Nascondi $countString chat',
+      one: 'Nascondi 1 chat',
+      zero: 'Non nascondere niente per ora',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get flowVaultPickEmpty => 'Ancora nessuna chat da nascondere.';
+
+  @override
+  String get flowVaultBackupTitle => 'Fare un backup adesso?';
+
+  @override
+  String get flowVaultBackupLine =>
+      'Un backup fatto adesso contiene anche le tue chat nascoste, con una passphrase tutta sua. Se dimentichi il PIN delle chat nascoste, è l\'unico modo per ritrovarle.';
+
+  @override
+  String get flowVaultBackupNow => 'Fai un backup';
+
+  @override
+  String get flowVaultNotNow => 'Non ora';
+
+  @override
+  String get flowVaultDone => 'Chat nascoste configurate';
+
+  @override
+  String get flowVaultDoneLine =>
+      'Digita il tuo PIN delle chat nascoste nella schermata di blocco per vederle. Passa a un\'altra app e tornano fuori vista.';
+
+  @override
+  String get flowVaultChanged => 'PIN delle chat nascoste cambiato';
+
+  @override
+  String get flowVaultChangedLine =>
+      'Le tue chat nascoste si aprono con il nuovo. Il vecchio ora non apre più nulla.';
+
+  @override
+  String get howVault =>
+      'Il tuo PIN delle chat nascoste apre Kryfo con le chat nascoste; il tuo PIN e la tua impronta, senza. Configurare di nuovo le chat nascoste sostituisce quelle che questo telefono ha. Se dimentichi il PIN delle chat nascoste, sono perse per sempre.';
 
   @override
   String get stickerOpen => 'Sticker';

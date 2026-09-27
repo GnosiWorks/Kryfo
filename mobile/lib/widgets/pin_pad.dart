@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the pin pad and its dots, shared by the lock screen and the setup screens
-// so they feel like one thing. a pin is 4 to 12 digits and goes in with the
-// enter key, never on its own, so when it goes in says nothing of its length.
+// so they feel like one thing. a pin is 4 to 12 digits, a hidden chats pin 6
+// to 12, and goes in with the enter key, never on its own, so when it goes in
+// says nothing of its length.
 
 import 'dart:math' as math;
 
@@ -15,24 +16,32 @@ import '../theme.dart';
 const kPinMin = 4;
 const kPinMax = 12;
 
+/// the shortest hidden chats pin
+const kVaultPinMin = 6;
+
 class PinDots extends StatelessWidget {
   final int filled;
   final Color color;
   final bool wrong;
   // 0..1 while a wrong pin shakes, null when still
   final Animation<double>? shake;
+  // the places shown before any digit: as many as the shortest pin takes
+  final int min;
   const PinDots({
     super.key,
     required this.filled,
     required this.color,
     this.wrong = false,
     this.shake,
+    this.min = kPinMin,
   });
 
   @override
   Widget build(BuildContext context) {
-    // four places to start with, then one more for each digit past four
-    final places = math.max(kPinMin, filled).clamp(kPinMin, kPinMax);
+    final still = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    // the shortest pin's places to start with, then one more for each digit
+    // past it
+    final places = math.max(min, filled).clamp(min, kPinMax);
     final gap = places > 8 ? 5.0 : 11.0;
     final row = Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -56,7 +65,9 @@ class PinDots extends StatelessWidget {
                 ),
                 AnimatedScale(
                   scale: on ? 1 : 0,
-                  duration: const Duration(milliseconds: 220),
+                  duration: still
+                      ? Duration.zero
+                      : const Duration(milliseconds: 220),
                   curve: on ? Curves.easeOutBack : Curves.easeIn,
                   child: Container(
                     width: 14,
@@ -114,6 +125,7 @@ class PinPad extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final still = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     Widget row(List<Widget> keys) => Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(mainAxisAlignment: MainAxisAlignment.center, children: keys),
@@ -132,7 +144,9 @@ class PinPad extends StatelessWidget {
           else
             AnimatedOpacity(
               opacity: canEnter ? 1 : 0.35,
-              duration: const Duration(milliseconds: 160),
+              duration: still
+                  ? Duration.zero
+                  : const Duration(milliseconds: 160),
               child: _Key(
                 icon: Icons.check_rounded,
                 semantic: l10n.commonDone,
@@ -173,6 +187,7 @@ class _KeyState extends State<_Key> {
   @override
   Widget build(BuildContext context) {
     final bare = widget.icon != null;
+    final still = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     return SizedBox(
       width: 92,
       height: 72,
@@ -192,10 +207,12 @@ class _KeyState extends State<_Key> {
                 },
           child: AnimatedScale(
             scale: _down ? 0.88 : 1,
-            duration: const Duration(milliseconds: 110),
+            duration: still ? Duration.zero : const Duration(milliseconds: 110),
             curve: Curves.easeOut,
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 140),
+              duration: still
+                  ? Duration.zero
+                  : const Duration(milliseconds: 140),
               width: 68,
               height: 68,
               alignment: Alignment.center,

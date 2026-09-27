@@ -4110,7 +4110,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get pinsThePinGoesAnd =>
-      'PIN dihapus, begitu juga PIN penghapus. Siapa pun yang memegang ponselmu langsung masuk ke Kryfo sebagai dirimu.';
+      'PIN dihapus, begitu juga PIN penghapus dan obrolan tersembunyi yang ada. Siapa pun yang memegang ponselmu langsung masuk ke Kryfo sebagai dirimu.';
 
   @override
   String get pinsUnlockWithFingerprint => 'Buka kunci dengan sidik jari';
@@ -6912,7 +6912,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get pinsTurnOffWithDecoy =>
-      'Semua PIN hilang, termasuk umpan dan Kryfo-nya. Siapa pun yang memegang ponselmu langsung masuk ke Kryfo sebagai dirimu.';
+      'Semua PIN hilang, termasuk umpan, Kryfo-nya, dan obrolan tersembunyi yang ada. Siapa pun yang memegang ponselmu langsung masuk ke Kryfo sebagai dirimu.';
 
   @override
   String get pinsHowThisWorks => 'Cara kerjanya';
@@ -6986,6 +6986,135 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get flowNotSet => 'Gagal dibuat. Coba lagi.';
+
+  @override
+  String get pinsHiddenChats => 'Obrolan tersembunyi';
+
+  @override
+  String get pinsHiddenLine =>
+      'Obrolan pilihanmu tetap tersembunyi sampai kamu memasukkan PIN obrolan tersembunyi: tidak ada di daftar, tidak ada di pencarian, tanpa notifikasi.';
+
+  @override
+  String get pinsSetUp => 'Atur';
+
+  @override
+  String get pinsChangeHiddenPin => 'Ganti PIN obrolan tersembunyi';
+
+  @override
+  String get pinsHideMoreChats => 'Sembunyikan obrolan lain';
+
+  @override
+  String get pinsRemoveHiddenChats => 'Matikan obrolan tersembunyi';
+
+  @override
+  String get pinsRemoveHiddenTitle => 'Matikan obrolan tersembunyi?';
+
+  @override
+  String get pinsRemoveHiddenLine =>
+      'Obrolan itu kembali ke daftar obrolanmu, dan PIN obrolan tersembunyi tidak membuka apa pun lagi.';
+
+  @override
+  String get pinsTurnOffHiddenFirst =>
+      'Obrolan tersembunyi butuh kunci aplikasi. Matikan dulu, dan obrolan itu kembali ke daftar obrolanmu.';
+
+  @override
+  String get flowVaultTitle => 'Obrolan tersembunyi';
+
+  @override
+  String get flowVault1 =>
+      'Pilih obrolan dan grup yang mau disembunyikan. PIN-mu membuka Kryfo tanpa semua itu. PIN obrolan tersembunyi membuka semuanya, termasuk obrolan tersembunyi.';
+
+  @override
+  String get flowVault2 =>
+      'Selama tersembunyi, obrolan itu tidak pernah memberi notifikasi atau menampilkan angka. Pesannya tetap masuk dan menunggu, tersegel, sampai kamu memasukkan PIN obrolan tersembunyi.';
+
+  @override
+  String get flowVaultFinger =>
+      'Sidik jarimu membuka Kryfo tanpa obrolan tersembunyi.';
+
+  @override
+  String get flowVaultDigits =>
+      'Beri PIN-mu juga enam angka atau lebih, karena siapa pun yang melihat bisa menghitung titiknya.';
+
+  @override
+  String get flowVaultReplace =>
+      'Ini menggantikan obrolan tersembunyi yang sudah ada di ponsel ini.';
+
+  @override
+  String get flowVaultChoose => 'Pilih PIN obrolan tersembunyi';
+
+  @override
+  String get flowVaultChooseLine => 'Enam angka atau lebih.';
+
+  @override
+  String get flowEnterHiddenPinLine =>
+      'PIN yang membuka obrolan tersembunyimu.';
+
+  @override
+  String get flowVaultForgetTitle => 'Ingat PIN ini';
+
+  @override
+  String get flowVaultForget =>
+      'Kalau kamu lupa PIN ini, obrolan tersembunyimu hilang untuk selamanya. Tidak ada yang bisa mengembalikannya, bahkan kami.';
+
+  @override
+  String get flowVaultForgetOk => 'Aku mengerti';
+
+  @override
+  String get flowVaultPickTitle => 'Pilih obrolan untuk disembunyikan';
+
+  @override
+  String get flowVaultPickLine =>
+      'Obrolan itu keluar dari daftar obrolanmu sekarang. PIN obrolan tersembunyi menampilkannya lagi.';
+
+  @override
+  String flowVaultPickButton(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Sembunyikan $countString obrolan',
+      zero: 'Jangan sembunyikan apa pun dulu',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get flowVaultPickEmpty => 'Belum ada obrolan untuk disembunyikan.';
+
+  @override
+  String get flowVaultBackupTitle => 'Buat cadangan sekarang?';
+
+  @override
+  String get flowVaultBackupLine =>
+      'Cadangan yang dibuat sekarang juga memuat obrolan tersembunyimu, dengan frasa sandi sendiri. Kalau kamu lupa PIN obrolan tersembunyi, hanya itu jalan untuk mendapatkannya kembali.';
+
+  @override
+  String get flowVaultBackupNow => 'Buat cadangan';
+
+  @override
+  String get flowVaultNotNow => 'Nanti saja';
+
+  @override
+  String get flowVaultDone => 'Obrolan tersembunyi siap';
+
+  @override
+  String get flowVaultDoneLine =>
+      'Ketik PIN obrolan tersembunyi di layar kunci untuk melihatnya. Beralih ke aplikasi lain, dan obrolan itu tersembunyi lagi.';
+
+  @override
+  String get flowVaultChanged => 'PIN obrolan tersembunyi diganti';
+
+  @override
+  String get flowVaultChangedLine =>
+      'Obrolan tersembunyimu sekarang terbuka dengan yang baru. Yang lama tidak membuka apa pun lagi.';
+
+  @override
+  String get howVault =>
+      'PIN obrolan tersembunyi membuka Kryfo beserta obrolan tersembunyimu; PIN-mu dan sidik jarimu membukanya tanpa obrolan itu. Mengatur obrolan tersembunyi lagi menggantikan yang ada di ponsel ini. Kalau PIN obrolan tersembunyi terlupa, obrolan itu hilang untuk selamanya.';
 
   @override
   String get stickerOpen => 'Stiker';

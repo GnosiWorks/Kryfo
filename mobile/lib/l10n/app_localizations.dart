@@ -6576,7 +6576,7 @@ abstract class AppLocalizations {
   /// screens/pins_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'The PIN goes, and the wipe PIN with it. Anyone holding your phone opens Kryfo as you.'**
+  /// **'The PIN goes, and the wipe PIN and any hidden chats with it. Anyone holding your phone opens Kryfo as you.'**
   String get pinsThePinGoesAnd;
 
   /// screens/pins_screen.dart
@@ -11106,7 +11106,7 @@ abstract class AppLocalizations {
   /// confirm sheet line when turning the app lock off while a decoy PIN is set
   ///
   /// In en, this message translates to:
-  /// **'Every PIN goes, the decoy and its Kryfo with them. Anyone holding your phone opens Kryfo as you.'**
+  /// **'Every PIN goes, the decoy and its Kryfo and any hidden chats with them. Anyone holding your phone opens Kryfo as you.'**
   String get pinsTurnOffWithDecoy;
 
   /// App lock: opens a sheet explaining the extra PINs
@@ -11234,6 +11234,210 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not set it. Try again.'**
   String get flowNotSet;
+
+  /// App lock, Advanced protection: the hidden chats row, its name
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden chats'**
+  String get pinsHiddenChats;
+
+  /// App lock, Advanced protection: the hidden chats row, its line
+  ///
+  /// In en, this message translates to:
+  /// **'Chosen chats stay out of sight until you enter your hidden chats PIN: not in the list, not in search, no notifications.'**
+  String get pinsHiddenLine;
+
+  /// App lock, Advanced protection: the hidden chats row, its state outside the hidden chats (always the same)
+  ///
+  /// In en, this message translates to:
+  /// **'Set up'**
+  String get pinsSetUp;
+
+  /// the hidden chats sheet, inside the hidden chats
+  ///
+  /// In en, this message translates to:
+  /// **'Change hidden chats PIN'**
+  String get pinsChangeHiddenPin;
+
+  /// the hidden chats sheet, inside the hidden chats
+  ///
+  /// In en, this message translates to:
+  /// **'Hide more chats'**
+  String get pinsHideMoreChats;
+
+  /// the hidden chats sheet: brings every hidden chat back to the chat list
+  ///
+  /// In en, this message translates to:
+  /// **'Remove hidden chats'**
+  String get pinsRemoveHiddenChats;
+
+  /// confirming Remove hidden chats
+  ///
+  /// In en, this message translates to:
+  /// **'Remove hidden chats?'**
+  String get pinsRemoveHiddenTitle;
+
+  /// confirming Remove hidden chats
+  ///
+  /// In en, this message translates to:
+  /// **'They come back to your chat list, and the hidden chats PIN stops opening anything.'**
+  String get pinsRemoveHiddenLine;
+
+  /// Turn off the app lock, tapped inside the hidden chats
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden chats need the app lock. Remove them first, and they come back to your chat list.'**
+  String get pinsTurnOffHiddenFirst;
+
+  /// the hidden chats setup flow: title of the first page
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden chats'**
+  String get flowVaultTitle;
+
+  /// the hidden chats setup flow: what it does
+  ///
+  /// In en, this message translates to:
+  /// **'Pick chats and groups to hide. Your PIN opens Kryfo without them. A hidden chats PIN opens everything, hidden chats included.'**
+  String get flowVault1;
+
+  /// the hidden chats setup flow: what happens while they are out of sight
+  ///
+  /// In en, this message translates to:
+  /// **'While out of sight, they never notify or show a badge. Their messages keep arriving and wait, sealed, for your hidden chats PIN.'**
+  String get flowVault2;
+
+  /// the hidden chats setup flow: the fingerprint line
+  ///
+  /// In en, this message translates to:
+  /// **'Your fingerprint opens Kryfo without hidden chats.'**
+  String get flowVaultFinger;
+
+  /// the hidden chats setup flow: a six digit app PIN suggested, so the two look alike
+  ///
+  /// In en, this message translates to:
+  /// **'Give your PIN six digits or more too, because anyone watching can count the dots.'**
+  String get flowVaultDigits;
+
+  /// the hidden chats setup flow: shown on every setup, whether or not there are hidden chats
+  ///
+  /// In en, this message translates to:
+  /// **'This replaces any hidden chats this phone already holds.'**
+  String get flowVaultReplace;
+
+  /// the hidden chats setup flow: above the pad
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a hidden chats PIN'**
+  String get flowVaultChoose;
+
+  /// the hidden chats setup flow: under Choose a hidden chats PIN
+  ///
+  /// In en, this message translates to:
+  /// **'Six digits or more.'**
+  String get flowVaultChooseLine;
+
+  /// changing the hidden chats PIN: under Enter your PIN
+  ///
+  /// In en, this message translates to:
+  /// **'The one that opens your hidden chats.'**
+  String get flowEnterHiddenPinLine;
+
+  /// the hidden chats setup flow: the forget page
+  ///
+  /// In en, this message translates to:
+  /// **'Remember this PIN'**
+  String get flowVaultForgetTitle;
+
+  /// the hidden chats setup flow: the forget page, large
+  ///
+  /// In en, this message translates to:
+  /// **'If you forget this PIN, your hidden chats are gone for good. Nobody can get them back, not even us.'**
+  String get flowVaultForget;
+
+  /// the hidden chats setup flow: the forget page, its one button
+  ///
+  /// In en, this message translates to:
+  /// **'I understand'**
+  String get flowVaultForgetOk;
+
+  /// choosing chats to hide (screens/hide_picker.dart)
+  ///
+  /// In en, this message translates to:
+  /// **'Choose chats to hide'**
+  String get flowVaultPickTitle;
+
+  /// choosing chats to hide, during setup
+  ///
+  /// In en, this message translates to:
+  /// **'They leave your chat list now. Your hidden chats PIN brings them back into view.'**
+  String get flowVaultPickLine;
+
+  /// choosing chats to hide: the button with the count. 0 moves nothing
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Hide nothing yet} =1{Hide 1 chat} other{Hide {count} chats}}'**
+  String flowVaultPickButton(int count);
+
+  /// choosing chats to hide, with no chat to choose
+  ///
+  /// In en, this message translates to:
+  /// **'No chats to hide yet.'**
+  String get flowVaultPickEmpty;
+
+  /// the hidden chats setup flow: the backup offer, after the chats are picked
+  ///
+  /// In en, this message translates to:
+  /// **'Make a backup now?'**
+  String get flowVaultBackupTitle;
+
+  /// the hidden chats setup flow: the backup offer
+  ///
+  /// In en, this message translates to:
+  /// **'A backup made now holds your hidden chats too, under a passphrase of its own. If you forget the hidden chats PIN, it is the only way back to them.'**
+  String get flowVaultBackupLine;
+
+  /// the hidden chats setup flow: the backup offer, opens the backup screen
+  ///
+  /// In en, this message translates to:
+  /// **'Make a backup'**
+  String get flowVaultBackupNow;
+
+  /// the hidden chats setup flow: the backup offer, skips it
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get flowVaultNotNow;
+
+  /// the hidden chats setup flow: the last page
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden chats set up'**
+  String get flowVaultDone;
+
+  /// the hidden chats setup flow: the last page
+  ///
+  /// In en, this message translates to:
+  /// **'Type your hidden chats PIN on the lock screen to see them. Switch away and they are out of sight again.'**
+  String get flowVaultDoneLine;
+
+  /// changing the hidden chats PIN: the last page
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden chats PIN changed'**
+  String get flowVaultChanged;
+
+  /// changing the hidden chats PIN: the last page
+  ///
+  /// In en, this message translates to:
+  /// **'Your hidden chats open with the new one. The old one opens nothing now.'**
+  String get flowVaultChangedLine;
+
+  /// How this works sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Your hidden chats PIN opens Kryfo with your hidden chats, your PIN and your fingerprint without them. Setting hidden chats up again replaces the ones this phone holds. Forget the hidden chats PIN and they are gone for good.'**
+  String get howVault;
 
   /// screens/chat_screen.dart, screens/group_chat_screen.dart, stickers/sticker_sheet.dart
   ///

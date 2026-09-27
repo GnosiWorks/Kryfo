@@ -4150,7 +4150,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get pinsThePinGoesAnd =>
-      'El PIN desaparece, y el PIN de borrado con él. Cualquiera que tenga tu teléfono abrirá Kryfo como si fuera tú.';
+      'El PIN desaparece, y el PIN de borrado y cualquier chat oculto con él. Cualquiera que tenga tu teléfono abrirá Kryfo como si fuera tú.';
 
   @override
   String get pinsUnlockWithFingerprint => 'Desbloquear con huella';
@@ -6969,7 +6969,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get pinsTurnOffWithDecoy =>
-      'Todos los PIN desaparecen, el señuelo y su Kryfo con ellos. Cualquiera que tenga tu teléfono abrirá Kryfo como si fuera tú.';
+      'Todos los PIN desaparecen, el señuelo y su Kryfo y cualquier chat oculto con ellos. Cualquiera que tenga tu teléfono abrirá Kryfo como si fuera tú.';
 
   @override
   String get pinsHowThisWorks => 'Cómo funciona';
@@ -7043,6 +7043,134 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get flowNotSet => 'No se pudo poner. Inténtalo de nuevo.';
+
+  @override
+  String get pinsHiddenChats => 'Chats ocultos';
+
+  @override
+  String get pinsHiddenLine =>
+      'Los chats que elijas quedan fuera de la vista hasta que escribas tu PIN de chats ocultos: ni en la lista, ni en la búsqueda, sin notificaciones.';
+
+  @override
+  String get pinsSetUp => 'Configurar';
+
+  @override
+  String get pinsChangeHiddenPin => 'Cambiar PIN de chats ocultos';
+
+  @override
+  String get pinsHideMoreChats => 'Ocultar más chats';
+
+  @override
+  String get pinsRemoveHiddenChats => 'Quitar chats ocultos';
+
+  @override
+  String get pinsRemoveHiddenTitle => '¿Quitar los chats ocultos?';
+
+  @override
+  String get pinsRemoveHiddenLine =>
+      'Vuelven a tu lista de chats, y el PIN de chats ocultos deja de abrir nada.';
+
+  @override
+  String get pinsTurnOffHiddenFirst =>
+      'Los chats ocultos necesitan el bloqueo de la app. Quítalos primero y volverán a tu lista de chats.';
+
+  @override
+  String get flowVaultTitle => 'Chats ocultos';
+
+  @override
+  String get flowVault1 =>
+      'Elige chats y grupos para ocultar. Tu PIN abre Kryfo sin ellos. Un PIN de chats ocultos lo abre todo, chats ocultos incluidos.';
+
+  @override
+  String get flowVault2 =>
+      'Mientras están fuera de la vista, nunca avisan ni muestran un contador. Sus mensajes siguen llegando y esperan, sellados, a tu PIN de chats ocultos.';
+
+  @override
+  String get flowVaultFinger => 'Tu huella abre Kryfo sin los chats ocultos.';
+
+  @override
+  String get flowVaultDigits =>
+      'Dale también a tu PIN seis dígitos o más, porque quien mire puede contar los puntos.';
+
+  @override
+  String get flowVaultReplace =>
+      'Esto sustituye cualquier chat oculto que ya tenga este teléfono.';
+
+  @override
+  String get flowVaultChoose => 'Elige un PIN de chats ocultos';
+
+  @override
+  String get flowVaultChooseLine => 'Seis dígitos o más.';
+
+  @override
+  String get flowEnterHiddenPinLine => 'El que abre tus chats ocultos.';
+
+  @override
+  String get flowVaultForgetTitle => 'Recuerda este PIN';
+
+  @override
+  String get flowVaultForget =>
+      'Si olvidas este PIN, tus chats ocultos se pierden para siempre. Nadie puede recuperarlos, ni siquiera nosotros.';
+
+  @override
+  String get flowVaultForgetOk => 'Entendido';
+
+  @override
+  String get flowVaultPickTitle => 'Elige chats para ocultar';
+
+  @override
+  String get flowVaultPickLine =>
+      'Salen de tu lista de chats ahora. Tu PIN de chats ocultos los vuelve a mostrar.';
+
+  @override
+  String flowVaultPickButton(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Ocultar $countString chats',
+      one: 'Ocultar 1 chat',
+      zero: 'No ocultar nada por ahora',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get flowVaultPickEmpty => 'Aún no hay chats para ocultar.';
+
+  @override
+  String get flowVaultBackupTitle => '¿Hacer una copia de seguridad ahora?';
+
+  @override
+  String get flowVaultBackupLine =>
+      'Una copia hecha ahora también guarda tus chats ocultos, bajo su propia frase de contraseña. Si olvidas el PIN de chats ocultos, es la única forma de recuperarlos.';
+
+  @override
+  String get flowVaultBackupNow => 'Hacer una copia';
+
+  @override
+  String get flowVaultNotNow => 'Ahora no';
+
+  @override
+  String get flowVaultDone => 'Chats ocultos listos';
+
+  @override
+  String get flowVaultDoneLine =>
+      'Escribe tu PIN de chats ocultos en la pantalla de bloqueo para verlos. Cambia a otra app y vuelven a quedar fuera de la vista.';
+
+  @override
+  String get flowVaultChanged => 'PIN de chats ocultos cambiado';
+
+  @override
+  String get flowVaultChangedLine =>
+      'Tus chats ocultos se abren con el nuevo. El antiguo ya no abre nada.';
+
+  @override
+  String get howVault =>
+      'Tu PIN de chats ocultos abre Kryfo con tus chats ocultos; tu PIN y tu huella, sin ellos. Configurar de nuevo los chats ocultos sustituye los que tiene este teléfono. Si olvidas el PIN de chats ocultos, se pierden para siempre.';
 
   @override
   String get stickerOpen => 'Stickers';

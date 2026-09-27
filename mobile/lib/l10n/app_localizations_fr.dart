@@ -4154,7 +4154,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get pinsThePinGoesAnd =>
-      'Le code PIN disparaît, et le code d’effacement avec lui. Quiconque tient votre téléphone ouvre Kryfo comme si c’était vous.';
+      'Le code PIN disparaît, et le code d’effacement et toutes les discussions masquées avec lui. Quiconque tient votre téléphone ouvre Kryfo comme si c’était vous.';
 
   @override
   String get pinsUnlockWithFingerprint => 'Déverrouiller par empreinte';
@@ -6982,7 +6982,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get pinsTurnOffWithDecoy =>
-      'Tous les codes disparaissent, le leurre et son Kryfo avec eux. Quiconque tient votre téléphone ouvre Kryfo comme si c’était vous.';
+      'Tous les codes disparaissent, le leurre et son Kryfo et toutes les discussions masquées avec eux. Quiconque tient votre téléphone ouvre Kryfo comme si c’était vous.';
 
   @override
   String get pinsHowThisWorks => 'Comment ça marche';
@@ -7056,6 +7056,137 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get flowNotSet => 'Impossible de le définir. Réessayez.';
+
+  @override
+  String get pinsHiddenChats => 'Discussions masquées';
+
+  @override
+  String get pinsHiddenLine =>
+      'Les discussions choisies restent hors de vue jusqu’à ce que vous saisissiez votre code des discussions masquées : ni dans la liste, ni dans la recherche, aucune notification.';
+
+  @override
+  String get pinsSetUp => 'Configurer';
+
+  @override
+  String get pinsChangeHiddenPin => 'Changer le code des discussions masquées';
+
+  @override
+  String get pinsHideMoreChats => 'Masquer d’autres discussions';
+
+  @override
+  String get pinsRemoveHiddenChats => 'Retirer les discussions masquées';
+
+  @override
+  String get pinsRemoveHiddenTitle => 'Retirer les discussions masquées ?';
+
+  @override
+  String get pinsRemoveHiddenLine =>
+      'Elles reviennent dans votre liste de discussions, et le code des discussions masquées n’ouvre plus rien.';
+
+  @override
+  String get pinsTurnOffHiddenFirst =>
+      'Les discussions masquées ont besoin du verrouillage. Retirez-les d’abord, et elles reviennent dans votre liste de discussions.';
+
+  @override
+  String get flowVaultTitle => 'Discussions masquées';
+
+  @override
+  String get flowVault1 =>
+      'Choisissez des discussions et des groupes à masquer. Votre code PIN ouvre Kryfo sans eux. Un code des discussions masquées ouvre tout, discussions masquées comprises.';
+
+  @override
+  String get flowVault2 =>
+      'Tant qu’elles sont hors de vue, elles n’envoient aucune notification et n’affichent aucun badge. Leurs messages continuent d’arriver et attendent, scellés, votre code des discussions masquées.';
+
+  @override
+  String get flowVaultFinger =>
+      'Votre empreinte ouvre Kryfo sans les discussions masquées.';
+
+  @override
+  String get flowVaultDigits =>
+      'Donnez aussi six chiffres ou plus à votre code PIN, car quiconque regarde peut compter les points.';
+
+  @override
+  String get flowVaultReplace =>
+      'Ceci remplace toutes les discussions masquées que ce téléphone contient déjà.';
+
+  @override
+  String get flowVaultChoose => 'Choisissez un code des discussions masquées';
+
+  @override
+  String get flowVaultChooseLine => 'Six chiffres ou plus.';
+
+  @override
+  String get flowEnterHiddenPinLine =>
+      'Celui qui ouvre vos discussions masquées.';
+
+  @override
+  String get flowVaultForgetTitle => 'Retenez ce code';
+
+  @override
+  String get flowVaultForget =>
+      'Si vous oubliez ce code, vos discussions masquées sont perdues pour de bon. Personne ne peut les récupérer, pas même nous.';
+
+  @override
+  String get flowVaultForgetOk => 'J’ai compris';
+
+  @override
+  String get flowVaultPickTitle => 'Choisissez les discussions à masquer';
+
+  @override
+  String get flowVaultPickLine =>
+      'Elles quittent votre liste de discussions maintenant. Votre code des discussions masquées les fait réapparaître.';
+
+  @override
+  String flowVaultPickButton(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Masquer $countString discussions',
+      one: 'Masquer 1 discussion',
+      zero: 'Ne rien masquer pour l’instant',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get flowVaultPickEmpty =>
+      'Aucune discussion à masquer pour l’instant.';
+
+  @override
+  String get flowVaultBackupTitle => 'Faire une sauvegarde maintenant ?';
+
+  @override
+  String get flowVaultBackupLine =>
+      'Une sauvegarde faite maintenant contient aussi vos discussions masquées, sous sa propre phrase secrète. Si vous oubliez le code des discussions masquées, c’est le seul moyen de les retrouver.';
+
+  @override
+  String get flowVaultBackupNow => 'Faire une sauvegarde';
+
+  @override
+  String get flowVaultNotNow => 'Pas maintenant';
+
+  @override
+  String get flowVaultDone => 'Discussions masquées configurées';
+
+  @override
+  String get flowVaultDoneLine =>
+      'Tapez votre code des discussions masquées sur l’écran de verrouillage pour les voir. Passez à une autre app, et elles sont de nouveau hors de vue.';
+
+  @override
+  String get flowVaultChanged => 'Code des discussions masquées changé';
+
+  @override
+  String get flowVaultChangedLine =>
+      'Vos discussions masquées s’ouvrent avec le nouveau. L’ancien n’ouvre plus rien.';
+
+  @override
+  String get howVault =>
+      'Votre code des discussions masquées ouvre Kryfo avec vos discussions masquées, votre code PIN et votre empreinte sans elles. Configurer à nouveau les discussions masquées remplace celles que ce téléphone contient. Oubliez le code des discussions masquées, et elles sont perdues pour de bon.';
 
   @override
   String get stickerOpen => 'Stickers';

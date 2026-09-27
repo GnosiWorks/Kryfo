@@ -4,7 +4,7 @@
 
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide LockState;
 import 'package:flutter/services.dart';
 import '../lock_state.dart';
 import '../wipe.dart';
@@ -15,7 +15,9 @@ import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
 
 class LockScreen extends StatefulWidget {
-  const LockScreen({super.key});
+  const LockScreen({super.key, this.lock});
+  // the app's own lock when null
+  final LockState? lock;
   @override
   State<LockScreen> createState() => _LockScreenState();
 }
@@ -24,9 +26,10 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
   String _pin = '';
   bool _busy = false;
   bool _wrong = false;
+  LockState get _lock => widget.lock ?? lockState;
   // counts the hold down once a second while the pad is held
   Timer? _holdTick;
-  bool get _held => lockState.throttleLeft > Duration.zero;
+  bool get _held => _lock.throttleLeft > Duration.zero;
   void _watchHold() {
     _holdTick?.cancel();
     if (!_held) return;
@@ -68,7 +71,7 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _watchHold();
-    lockState.addListener(_onLock);
+    _lock.addListener(_onLock);
     WidgetsBinding.instance.addPostFrameCallback((_) => _fingerWhenInFront());
   }
 
@@ -78,22 +81,22 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
   void _fingerWhenInFront() {
     if (!mounted || !_fingerReady) return;
     if (WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
-      lockState.tryBiometric();
+      _lock.tryBiometric();
       return;
     }
     _toFront ??= AppLifecycleListener(
       onResume: () {
         _toFront?.dispose();
         _toFront = null;
-        if (mounted && _fingerReady) lockState.tryBiometric();
+        if (mounted && _fingerReady) _lock.tryBiometric();
       },
     );
   }
 
   // fingerprint is on, but a finger added since (or an update) put it to
   // sleep until the PIN is typed once
-  bool get _fingerOn => lockState.biometric && lockState.bioSupported;
-  bool get _fingerReady => _fingerOn && !lockState.bioStale;
+  bool get _fingerOn => _lock.biometric && _lock.bioSupported;
+  bool get _fingerReady => _fingerOn && !_lock.bioStale;
 
   void _onLock() {
     if (mounted) setState(() {});
@@ -101,7 +104,7 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
 
   @override
   void dispose() {
-    lockState.removeListener(_onLock);
+    _lock.removeListener(_onLock);
     _shake.dispose();
     _toFront?.dispose();
     _breath.dispose();
@@ -121,7 +124,7 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
       final typed = _pin;
       // the digits leave the screen's hands as soon as they are handed on
       setState(() => _pin = '*' * typed.length);
-      final result = await lockState.verifyPin(typed);
+      final result = await _lock.verifyPin(typed);
       if (result == PinResult.panic) {
         // silent wipe: the screen stays as if processing, then kryfo exits,
         // which looks like a crash
@@ -148,7 +151,7 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
   Widget _fingerButton() {
     return GestureDetector(
       key: const ValueKey('ready'),
-      onTap: () => lockState.tryBiometric(),
+      onTap: () => _lock.tryBiometric(),
       behavior: HitTestBehavior.opaque,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
@@ -221,7 +224,7 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
           ),
           SafeArea(
             child: AnimatedBuilder(
-              animation: lockState,
+              animation: _lock,
               builder: (_, _) => FitColumn(
                 children: [
                   const Spacer(flex: 3),
@@ -241,7 +244,7 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
                     child: Text(
                       _held
                           ? l10n.lockTooManyTriesS(
-                              whole(lockState.throttleLeft.inSeconds + 1),
+                              whole(_lock.throttleLeft.inSeconds + 1),
                             )
                           : _wrong
                           ? l10n.lockNotIt

@@ -4127,7 +4127,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get pinsThePinGoesAnd =>
-      'PIN حذف می‌شود، و PIN پاک‌سازی هم با آن. هر کس گوشی شما را در دست داشته باشد، Kryfo را به‌عنوان شما باز می‌کند.';
+      'PIN حذف می‌شود، و PIN پاک‌سازی و هر گفت‌وگوی پنهانی هم با آن. هر کس گوشی شما را در دست داشته باشد، Kryfo را به‌عنوان شما باز می‌کند.';
 
   @override
   String get pinsUnlockWithFingerprint => 'باز کردن قفل با اثر انگشت';
@@ -6929,7 +6929,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get pinsTurnOffWithDecoy =>
-      'همه‌ی PINها حذف می‌شوند، PIN فریب و Kryfo آن هم با آن‌ها. هر کس گوشی شما را در دست داشته باشد، Kryfo را به‌عنوان شما باز می‌کند.';
+      'همه‌ی PINها حذف می‌شوند، PIN فریب و Kryfo آن و هر گفت‌وگوی پنهانی هم با آن‌ها. هر کس گوشی شما را در دست داشته باشد، Kryfo را به‌عنوان شما باز می‌کند.';
 
   @override
   String get pinsHowThisWorks => 'این چطور کار می‌کند';
@@ -7003,6 +7003,136 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get flowNotSet => 'تعیین نشد. دوباره امتحان کنید.';
+
+  @override
+  String get pinsHiddenChats => 'گفت‌وگوهای پنهان';
+
+  @override
+  String get pinsHiddenLine =>
+      'گفت‌وگوهای انتخاب‌شده تا وقتی PIN گفت‌وگوهای پنهان را وارد نکنید، دور از چشم می‌مانند: نه در فهرست، نه در جست‌وجو، بدون اعلان.';
+
+  @override
+  String get pinsSetUp => 'راه‌اندازی';
+
+  @override
+  String get pinsChangeHiddenPin => 'تغییر PIN گفت‌وگوهای پنهان';
+
+  @override
+  String get pinsHideMoreChats => 'پنهان کردن گفت‌وگوهای بیشتر';
+
+  @override
+  String get pinsRemoveHiddenChats => 'خاموش کردن گفت‌وگوهای پنهان';
+
+  @override
+  String get pinsRemoveHiddenTitle => 'گفت‌وگوهای پنهان خاموش شود؟';
+
+  @override
+  String get pinsRemoveHiddenLine =>
+      'به فهرست گفت‌وگوهای شما برمی‌گردند و PIN گفت‌وگوهای پنهان دیگر چیزی را باز نمی‌کند.';
+
+  @override
+  String get pinsTurnOffHiddenFirst =>
+      'گفت‌وگوهای پنهان به قفل برنامه نیاز دارند. اول آن‌ها را خاموش کنید تا به فهرست گفت‌وگوهای شما برگردند.';
+
+  @override
+  String get flowVaultTitle => 'گفت‌وگوهای پنهان';
+
+  @override
+  String get flowVault1 =>
+      'گفت‌وگوها و گروه‌هایی را که می‌خواهید پنهان شوند انتخاب کنید. PIN شما Kryfo را بدون آن‌ها باز می‌کند. PIN گفت‌وگوهای پنهان همه‌چیز را باز می‌کند، گفت‌وگوهای پنهان را هم.';
+
+  @override
+  String get flowVault2 =>
+      'تا وقتی دور از چشم‌اند، هیچ اعلان یا شمارنده‌ای نشان نمی‌دهند. پیام‌هایشان همچنان می‌رسند و مهروموم‌شده منتظر PIN گفت‌وگوهای پنهان می‌مانند.';
+
+  @override
+  String get flowVaultFinger =>
+      'اثر انگشت شما Kryfo را بدون گفت‌وگوهای پنهان باز می‌کند.';
+
+  @override
+  String get flowVaultDigits =>
+      'PIN خود را هم شش رقمی یا بیشتر کنید، چون هر کسی که نگاه می‌کند می‌تواند نقطه‌ها را بشمارد.';
+
+  @override
+  String get flowVaultReplace =>
+      'این کار جای هر گفت‌وگوی پنهانی را که این گوشی از قبل دارد می‌گیرد.';
+
+  @override
+  String get flowVaultChoose => 'یک PIN گفت‌وگوهای پنهان انتخاب کنید';
+
+  @override
+  String get flowVaultChooseLine => 'شش رقم یا بیشتر.';
+
+  @override
+  String get flowEnterHiddenPinLine =>
+      'همان که گفت‌وگوهای پنهان شما را باز می‌کند.';
+
+  @override
+  String get flowVaultForgetTitle => 'این PIN را به خاطر بسپارید';
+
+  @override
+  String get flowVaultForget =>
+      'اگر این PIN را فراموش کنید، گفت‌وگوهای پنهان شما برای همیشه از دست می‌روند. هیچ‌کس نمی‌تواند آن‌ها را برگرداند، حتی ما.';
+
+  @override
+  String get flowVaultForgetOk => 'متوجه شدم';
+
+  @override
+  String get flowVaultPickTitle => 'گفت‌وگوهایی را برای پنهان کردن انتخاب کنید';
+
+  @override
+  String get flowVaultPickLine =>
+      'همین حالا از فهرست گفت‌وگوهای شما بیرون می‌روند. PIN گفت‌وگوهای پنهان آن‌ها را دوباره نشان می‌دهد.';
+
+  @override
+  String flowVaultPickButton(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'پنهان کردن ⁨$countString⁩ گفت‌وگو',
+      one: 'پنهان کردن ⁨$countString⁩ گفت‌وگو',
+      zero: 'فعلاً چیزی پنهان نشود',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get flowVaultPickEmpty => 'هنوز گفت‌وگویی برای پنهان کردن نیست.';
+
+  @override
+  String get flowVaultBackupTitle => 'نسخه‌ی پشتیبان همین حالا گرفته شود؟';
+
+  @override
+  String get flowVaultBackupLine =>
+      'نسخه‌ی پشتیبانی که حالا گرفته شود، گفت‌وگوهای پنهان شما را هم با عبارت عبور خودش در بر دارد. اگر PIN گفت‌وگوهای پنهان را فراموش کنید، تنها راه بازگشت به آن‌هاست.';
+
+  @override
+  String get flowVaultBackupNow => 'گرفتن نسخه‌ی پشتیبان';
+
+  @override
+  String get flowVaultNotNow => 'فعلاً نه';
+
+  @override
+  String get flowVaultDone => 'گفت‌وگوهای پنهان راه‌اندازی شد';
+
+  @override
+  String get flowVaultDoneLine =>
+      'برای دیدنشان، PIN گفت‌وگوهای پنهان را در صفحه‌ی قفل وارد کنید. به برنامه‌ی دیگری بروید تا دوباره دور از چشم شوند.';
+
+  @override
+  String get flowVaultChanged => 'PIN گفت‌وگوهای پنهان تغییر کرد';
+
+  @override
+  String get flowVaultChangedLine =>
+      'گفت‌وگوهای پنهان شما حالا با PIN تازه باز می‌شوند. PIN قبلی دیگر چیزی را باز نمی‌کند.';
+
+  @override
+  String get howVault =>
+      'PIN گفت‌وگوهای پنهان، Kryfo را همراه گفت‌وگوهای پنهان شما باز می‌کند؛ PIN شما و اثر انگشتتان بدون آن‌ها. راه‌اندازی دوباره‌ی گفت‌وگوهای پنهان جای آن‌هایی را که این گوشی دارد می‌گیرد. اگر PIN گفت‌وگوهای پنهان را فراموش کنید، برای همیشه از دست می‌روند.';
 
   @override
   String get stickerOpen => 'استیکرها';

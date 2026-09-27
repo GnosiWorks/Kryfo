@@ -4135,7 +4135,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get pinsThePinGoesAnd =>
-      'PIN kaldırılır, silme PIN’i de onunla birlikte. Telefonun kimin elindeyse Kryfo’yu senmiş gibi açar.';
+      'PIN kaldırılır, silme PIN’i ve varsa gizli sohbetler de onunla birlikte. Telefonun kimin elindeyse Kryfo’yu senmiş gibi açar.';
 
   @override
   String get pinsUnlockWithFingerprint => 'Parmak iziyle kilidi aç';
@@ -6943,7 +6943,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get pinsTurnOffWithDecoy =>
-      'Bütün PIN’ler kaldırılır, yem ve onun Kryfo’su da onlarla birlikte. Telefonun kimin elindeyse Kryfo’yu senmiş gibi açar.';
+      'Bütün PIN’ler kaldırılır, yem, onun Kryfo’su ve varsa gizli sohbetler de onlarla birlikte. Telefonun kimin elindeyse Kryfo’yu senmiş gibi açar.';
 
   @override
   String get pinsHowThisWorks => 'Nasıl çalışır';
@@ -7017,6 +7017,135 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get flowNotSet => 'Belirlenemedi. Tekrar dene.';
+
+  @override
+  String get pinsHiddenChats => 'Gizli sohbetler';
+
+  @override
+  String get pinsHiddenLine =>
+      'Seçtiğin sohbetler, gizli sohbet PIN’ini girene kadar gözden uzak kalır: listede yok, aramada yok, bildirim yok.';
+
+  @override
+  String get pinsSetUp => 'Kur';
+
+  @override
+  String get pinsChangeHiddenPin => 'Gizli sohbet PIN’ini değiştir';
+
+  @override
+  String get pinsHideMoreChats => 'Daha fazla sohbet gizle';
+
+  @override
+  String get pinsRemoveHiddenChats => 'Gizli sohbetleri kaldır';
+
+  @override
+  String get pinsRemoveHiddenTitle => 'Gizli sohbetler kaldırılsın mı?';
+
+  @override
+  String get pinsRemoveHiddenLine =>
+      'Sohbet listene geri dönerler ve gizli sohbet PIN’i artık hiçbir şey açmaz.';
+
+  @override
+  String get pinsTurnOffHiddenFirst =>
+      'Gizli sohbetler uygulama kilidine ihtiyaç duyar. Önce onları kaldır, sohbet listene geri dönerler.';
+
+  @override
+  String get flowVaultTitle => 'Gizli sohbetler';
+
+  @override
+  String get flowVault1 =>
+      'Gizlenecek sohbetleri ve grupları seç. PIN’in Kryfo’yu onlar olmadan açar. Gizli sohbet PIN’i ise gizli sohbetler dahil her şeyi açar.';
+
+  @override
+  String get flowVault2 =>
+      'Gözden uzakken asla bildirim göndermez, sayaç da göstermezler. Mesajları gelmeye devam eder ve mühürlü olarak gizli sohbet PIN’ini bekler.';
+
+  @override
+  String get flowVaultFinger =>
+      'Parmak izin Kryfo’yu gizli sohbetler olmadan açar.';
+
+  @override
+  String get flowVaultDigits =>
+      'PIN’ine de altı ya da daha fazla rakam ver, çünkü izleyen biri noktaları sayabilir.';
+
+  @override
+  String get flowVaultReplace =>
+      'Bu, bu telefonda zaten olan tüm gizli sohbetlerin yerini alır.';
+
+  @override
+  String get flowVaultChoose => 'Bir gizli sohbet PIN’i seç';
+
+  @override
+  String get flowVaultChooseLine => 'Altı rakam ya da daha fazlası.';
+
+  @override
+  String get flowEnterHiddenPinLine => 'Gizli sohbetlerini açan PIN.';
+
+  @override
+  String get flowVaultForgetTitle => 'Bu PIN’i unutma';
+
+  @override
+  String get flowVaultForget =>
+      'Bu PIN’i unutursan gizli sohbetlerin sonsuza dek gider. Kimse onları geri getiremez, biz bile.';
+
+  @override
+  String get flowVaultForgetOk => 'Anladım';
+
+  @override
+  String get flowVaultPickTitle => 'Gizlenecek sohbetleri seç';
+
+  @override
+  String get flowVaultPickLine =>
+      'Şimdi sohbet listenden çıkarlar. Gizli sohbet PIN’in onları geri getirir.';
+
+  @override
+  String flowVaultPickButton(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString sohbeti gizle',
+      one: '1 sohbeti gizle',
+      zero: 'Şimdilik hiçbir şey gizleme',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get flowVaultPickEmpty => 'Henüz gizlenecek sohbet yok.';
+
+  @override
+  String get flowVaultBackupTitle => 'Şimdi yedek alınsın mı?';
+
+  @override
+  String get flowVaultBackupLine =>
+      'Şimdi alınan bir yedek, kendi parola ifadesiyle gizli sohbetlerini de içerir. Gizli sohbet PIN’ini unutursan onlara dönmenin tek yolu budur.';
+
+  @override
+  String get flowVaultBackupNow => 'Yedek al';
+
+  @override
+  String get flowVaultNotNow => 'Şimdi değil';
+
+  @override
+  String get flowVaultDone => 'Gizli sohbetler kuruldu';
+
+  @override
+  String get flowVaultDoneLine =>
+      'Görmek için gizli sohbet PIN’ini kilit ekranında gir. Başka bir uygulamaya geçince yine gözden uzak olurlar.';
+
+  @override
+  String get flowVaultChanged => 'Gizli sohbet PIN’i değişti';
+
+  @override
+  String get flowVaultChangedLine =>
+      'Gizli sohbetlerin artık yenisiyle açılır. Eskisi artık hiçbir şey açmaz.';
+
+  @override
+  String get howVault =>
+      'Gizli sohbet PIN’in Kryfo’yu gizli sohbetlerinle açar; PIN’in ve parmak izin ise onlar olmadan. Gizli sohbetleri yeniden kurmak, bu telefondakilerin yerini alır. Gizli sohbet PIN’ini unutursan sonsuza dek giderler.';
 
   @override
   String get stickerOpen => 'Çıkartmalar';

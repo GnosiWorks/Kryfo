@@ -3947,7 +3947,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pinsThePinGoesAnd =>
-      'PIN 码会被移除，抹掉 PIN 也一起移除。任何拿着你手机的人都能以你的身份打开 Kryfo。';
+      'PIN 码会被移除，抹掉 PIN 和所有隐藏聊天也一起移除。任何拿着你手机的人都能以你的身份打开 Kryfo。';
 
   @override
   String get pinsUnlockWithFingerprint => '用指纹解锁';
@@ -6651,7 +6651,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pinsTurnOffWithDecoy =>
-      '所有 PIN 都会被移除，伪装 PIN 和它的 Kryfo 也一样。任何拿着你手机的人都能以你的身份打开 Kryfo。';
+      '所有 PIN 都会被移除，伪装 PIN 和它的 Kryfo 以及所有隐藏聊天也一样。任何拿着你手机的人都能以你的身份打开 Kryfo。';
 
   @override
   String get pinsHowThisWorks => '工作原理';
@@ -6719,6 +6719,123 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get flowNotSet => '没能设置成功，请再试一次。';
+
+  @override
+  String get pinsHiddenChats => '隐藏聊天';
+
+  @override
+  String get pinsHiddenLine => '选中的聊天会一直藏起来，直到你输入隐藏聊天 PIN：不在列表里，不在搜索里，也没有通知。';
+
+  @override
+  String get pinsSetUp => '设置';
+
+  @override
+  String get pinsChangeHiddenPin => '更改隐藏聊天 PIN';
+
+  @override
+  String get pinsHideMoreChats => '隐藏更多聊天';
+
+  @override
+  String get pinsRemoveHiddenChats => '取消隐藏聊天';
+
+  @override
+  String get pinsRemoveHiddenTitle => '要取消隐藏聊天吗？';
+
+  @override
+  String get pinsRemoveHiddenLine => '它们会回到你的聊天列表，隐藏聊天 PIN 也不再能打开任何东西。';
+
+  @override
+  String get pinsTurnOffHiddenFirst => '隐藏聊天需要应用锁。先取消隐藏聊天，它们会回到你的聊天列表。';
+
+  @override
+  String get flowVaultTitle => '隐藏聊天';
+
+  @override
+  String get flowVault1 =>
+      '选择要隐藏的聊天和群组。你的 PIN 码打开的 Kryfo 里没有它们。隐藏聊天 PIN 会打开全部内容，包括隐藏聊天。';
+
+  @override
+  String get flowVault2 => '藏起来的时候，它们从不发通知，也不显示角标。它们的消息照样到达，封存起来，等你输入隐藏聊天 PIN。';
+
+  @override
+  String get flowVaultFinger => '你的指纹打开的 Kryfo 里没有隐藏聊天。';
+
+  @override
+  String get flowVaultDigits => '你的 PIN 码也最好用六位或更多，因为旁边看着的人能数出圆点。';
+
+  @override
+  String get flowVaultReplace => '这会替换这部手机上已有的任何隐藏聊天。';
+
+  @override
+  String get flowVaultChoose => '选择一个隐藏聊天 PIN';
+
+  @override
+  String get flowVaultChooseLine => '六位或更多。';
+
+  @override
+  String get flowEnterHiddenPinLine => '就是打开隐藏聊天的那个。';
+
+  @override
+  String get flowVaultForgetTitle => '记住这个 PIN';
+
+  @override
+  String get flowVaultForget => '如果你忘了这个 PIN，你的隐藏聊天就永远没了。谁也找不回来，我们也不行。';
+
+  @override
+  String get flowVaultForgetOk => '我明白了';
+
+  @override
+  String get flowVaultPickTitle => '选择要隐藏的聊天';
+
+  @override
+  String get flowVaultPickLine => '它们现在会离开你的聊天列表。输入隐藏聊天 PIN 就能再看到它们。';
+
+  @override
+  String flowVaultPickButton(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '隐藏 $countString 个聊天',
+      zero: '暂不隐藏',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get flowVaultPickEmpty => '还没有可以隐藏的聊天。';
+
+  @override
+  String get flowVaultBackupTitle => '现在备份吗？';
+
+  @override
+  String get flowVaultBackupLine =>
+      '现在做的备份也包含你的隐藏聊天，用它自己的密码短语保护。如果你忘了隐藏聊天 PIN，这是找回它们的唯一办法。';
+
+  @override
+  String get flowVaultBackupNow => '备份';
+
+  @override
+  String get flowVaultNotNow => '暂不';
+
+  @override
+  String get flowVaultDone => '隐藏聊天已设置';
+
+  @override
+  String get flowVaultDoneLine => '在锁屏上输入隐藏聊天 PIN 就能看到它们。切到别的应用，它们就又藏起来了。';
+
+  @override
+  String get flowVaultChanged => '隐藏聊天 PIN 已更改';
+
+  @override
+  String get flowVaultChangedLine => '你的隐藏聊天现在用新的打开。旧的什么也打不开了。';
+
+  @override
+  String get howVault =>
+      '隐藏聊天 PIN 打开的 Kryfo 带着隐藏聊天，你的 PIN 码和指纹打开的则没有。重新设置隐藏聊天，会替换这部手机上已有的。忘了隐藏聊天 PIN，它们就永远没了。';
 
   @override
   String get stickerOpen => '贴纸';
@@ -10688,7 +10805,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get pinsThePinGoesAnd =>
-      'PIN 碼會被移除，清除 PIN 也會一起移除。任何拿著你手機的人，都能以你的身分開啟 Kryfo。';
+      'PIN 碼會被移除，清除 PIN 和所有隱藏聊天也會一起移除。任何拿著你手機的人，都能以你的身分開啟 Kryfo。';
 
   @override
   String get pinsUnlockWithFingerprint => '用指紋解鎖';
@@ -13391,7 +13508,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get pinsTurnOffWithDecoy =>
-      '所有 PIN 都會被移除，偽裝 PIN 和它的 Kryfo 也一樣。任何拿著你手機的人，都能以你的身分開啟 Kryfo。';
+      '所有 PIN 都會被移除，偽裝 PIN 和它的 Kryfo 以及所有隱藏聊天也一樣。任何拿著你手機的人，都能以你的身分開啟 Kryfo。';
 
   @override
   String get pinsHowThisWorks => '運作方式';
@@ -13459,6 +13576,123 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get flowNotSet => '沒能設定成功，請再試一次。';
+
+  @override
+  String get pinsHiddenChats => '隱藏聊天';
+
+  @override
+  String get pinsHiddenLine => '選中的聊天會一直藏起來，直到你輸入隱藏聊天 PIN：不在列表裡，不在搜尋裡，也沒有通知。';
+
+  @override
+  String get pinsSetUp => '設定';
+
+  @override
+  String get pinsChangeHiddenPin => '變更隱藏聊天 PIN';
+
+  @override
+  String get pinsHideMoreChats => '隱藏更多聊天';
+
+  @override
+  String get pinsRemoveHiddenChats => '取消隱藏聊天';
+
+  @override
+  String get pinsRemoveHiddenTitle => '要取消隱藏聊天嗎？';
+
+  @override
+  String get pinsRemoveHiddenLine => '它們會回到你的聊天列表，隱藏聊天 PIN 也不再能開啟任何東西。';
+
+  @override
+  String get pinsTurnOffHiddenFirst => '隱藏聊天需要應用程式鎖。先取消隱藏聊天，它們會回到你的聊天列表。';
+
+  @override
+  String get flowVaultTitle => '隱藏聊天';
+
+  @override
+  String get flowVault1 =>
+      '選擇要隱藏的聊天和群組。你的 PIN 碼開啟的 Kryfo 裡沒有它們。隱藏聊天 PIN 會開啟全部內容，包括隱藏聊天。';
+
+  @override
+  String get flowVault2 => '藏起來的時候，它們從不發通知，也不顯示標記。它們的訊息照樣送達，封存起來，等你輸入隱藏聊天 PIN。';
+
+  @override
+  String get flowVaultFinger => '你的指紋開啟的 Kryfo 裡沒有隱藏聊天。';
+
+  @override
+  String get flowVaultDigits => '你的 PIN 碼也最好用六位數或更多，因為旁邊看著的人數得出圓點。';
+
+  @override
+  String get flowVaultReplace => '這會取代這支手機上已有的任何隱藏聊天。';
+
+  @override
+  String get flowVaultChoose => '選擇一組隱藏聊天 PIN';
+
+  @override
+  String get flowVaultChooseLine => '六位數或更多。';
+
+  @override
+  String get flowEnterHiddenPinLine => '就是開啟隱藏聊天的那一組。';
+
+  @override
+  String get flowVaultForgetTitle => '記住這組 PIN';
+
+  @override
+  String get flowVaultForget => '如果你忘了這組 PIN，你的隱藏聊天就永遠沒了。誰也找不回來，我們也不行。';
+
+  @override
+  String get flowVaultForgetOk => '我明白了';
+
+  @override
+  String get flowVaultPickTitle => '選擇要隱藏的聊天';
+
+  @override
+  String get flowVaultPickLine => '它們現在會離開你的聊天列表。輸入隱藏聊天 PIN 就能再看到它們。';
+
+  @override
+  String flowVaultPickButton(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '隱藏 $countString 個聊天',
+      zero: '暫不隱藏',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get flowVaultPickEmpty => '還沒有可以隱藏的聊天。';
+
+  @override
+  String get flowVaultBackupTitle => '現在備份嗎？';
+
+  @override
+  String get flowVaultBackupLine =>
+      '現在做的備份也包含你的隱藏聊天，用它自己的密碼短語保護。如果你忘了隱藏聊天 PIN，這是找回它們的唯一辦法。';
+
+  @override
+  String get flowVaultBackupNow => '備份';
+
+  @override
+  String get flowVaultNotNow => '以後再說';
+
+  @override
+  String get flowVaultDone => '已設定隱藏聊天';
+
+  @override
+  String get flowVaultDoneLine => '在鎖定畫面輸入隱藏聊天 PIN 就能看到它們。切換到別的應用程式，它們就又藏起來了。';
+
+  @override
+  String get flowVaultChanged => '已變更隱藏聊天 PIN';
+
+  @override
+  String get flowVaultChangedLine => '你的隱藏聊天現在用新的開啟。舊的什麼也打不開了。';
+
+  @override
+  String get howVault =>
+      '隱藏聊天 PIN 開啟的 Kryfo 帶著隱藏聊天，你的 PIN 碼和指紋開啟的則沒有。重新設定隱藏聊天，會取代這支手機上已有的。忘了隱藏聊天 PIN，它們就永遠沒了。';
 
   @override
   String get stickerOpen => '貼圖';

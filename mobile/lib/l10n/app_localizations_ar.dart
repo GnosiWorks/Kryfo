@@ -4200,7 +4200,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get pinsThePinGoesAnd =>
-      'يُزال رمز PIN، ومعه رمز PIN للمسح. وكل من يمسك هاتفك يفتح Kryfo باسمك.';
+      'يُزال رمز PIN، ومعه رمز PIN للمسح وأي محادثات مخفية. وكل من يمسك هاتفك يفتح Kryfo باسمك.';
 
   @override
   String get pinsUnlockWithFingerprint => 'فتح القفل بالبصمة';
@@ -7036,7 +7036,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get pinsTurnOffWithDecoy =>
-      'تُزال كل رموز PIN، ومعها رمز التمويه وما يفتحه من Kryfo. وكل من يمسك هاتفك يفتح Kryfo باسمك.';
+      'تُزال كل رموز PIN، ومعها رمز التمويه وما يفتحه من Kryfo وأي محادثات مخفية. وكل من يمسك هاتفك يفتح Kryfo باسمك.';
 
   @override
   String get pinsHowThisWorks => 'كيف يعمل هذا';
@@ -7109,6 +7109,137 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get flowNotSet => 'تعذّر التعيين. حاول مرة أخرى.';
+
+  @override
+  String get pinsHiddenChats => 'المحادثات المخفية';
+
+  @override
+  String get pinsHiddenLine =>
+      'تبقى المحادثات التي تختارها بعيدة عن الأنظار حتى تُدخل رمز PIN للمحادثات المخفية: لا في القائمة، ولا في البحث، ولا إشعارات.';
+
+  @override
+  String get pinsSetUp => 'إعداد';
+
+  @override
+  String get pinsChangeHiddenPin => 'تغيير رمز PIN للمحادثات المخفية';
+
+  @override
+  String get pinsHideMoreChats => 'إخفاء محادثات أخرى';
+
+  @override
+  String get pinsRemoveHiddenChats => 'إلغاء المحادثات المخفية';
+
+  @override
+  String get pinsRemoveHiddenTitle => 'إلغاء المحادثات المخفية؟';
+
+  @override
+  String get pinsRemoveHiddenLine =>
+      'تعود إلى قائمة محادثاتك، ولا يعود رمز PIN للمحادثات المخفية يفتح شيئًا.';
+
+  @override
+  String get pinsTurnOffHiddenFirst =>
+      'المحادثات المخفية تحتاج إلى قفل التطبيق. ألغِها أولًا، فتعود إلى قائمة محادثاتك.';
+
+  @override
+  String get flowVaultTitle => 'المحادثات المخفية';
+
+  @override
+  String get flowVault1 =>
+      'اختر محادثات ومجموعات لإخفائها. رمز PIN الخاص بك يفتح Kryfo من دونها. ورمز PIN للمحادثات المخفية يفتح كل شيء، ومعه المحادثات المخفية.';
+
+  @override
+  String get flowVault2 =>
+      'ما دامت بعيدة عن الأنظار، لا تُظهر أي إشعار ولا عدّاد. وتواصل رسائلها الوصول وتنتظر، مختومة، رمز PIN للمحادثات المخفية.';
+
+  @override
+  String get flowVaultFinger => 'بصمتك تفتح Kryfo من دون المحادثات المخفية.';
+
+  @override
+  String get flowVaultDigits =>
+      'اجعل رمز PIN الخاص بك أيضًا من ستة أرقام أو أكثر، لأن أي شخص يراقب يمكنه عدّ النقاط.';
+
+  @override
+  String get flowVaultReplace =>
+      'هذا يستبدل أي محادثات مخفية موجودة على هذا الهاتف.';
+
+  @override
+  String get flowVaultChoose => 'اختر رمز PIN للمحادثات المخفية';
+
+  @override
+  String get flowVaultChooseLine => 'ستة أرقام أو أكثر.';
+
+  @override
+  String get flowEnterHiddenPinLine => 'الرمز الذي يفتح محادثاتك المخفية.';
+
+  @override
+  String get flowVaultForgetTitle => 'تذكّر هذا الرمز';
+
+  @override
+  String get flowVaultForget =>
+      'إن نسيت هذا الرمز، تضيع محادثاتك المخفية إلى الأبد. لا أحد يستطيع استعادتها، ولا حتى نحن.';
+
+  @override
+  String get flowVaultForgetOk => 'فهمت';
+
+  @override
+  String get flowVaultPickTitle => 'اختر محادثات لإخفائها';
+
+  @override
+  String get flowVaultPickLine =>
+      'ستغادر قائمة محادثاتك الآن. ورمز PIN للمحادثات المخفية يعيدها إلى الظهور.';
+
+  @override
+  String flowVaultPickButton(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'إخفاء ⁨$countString⁩ محادثة',
+      many: 'إخفاء ⁨$countString⁩ محادثة',
+      few: 'إخفاء ⁨$countString⁩ محادثات',
+      two: 'إخفاء محادثتين',
+      one: 'إخفاء محادثة واحدة',
+      zero: 'لا تُخفِ شيئًا الآن',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get flowVaultPickEmpty => 'لا توجد محادثات لإخفائها بعد.';
+
+  @override
+  String get flowVaultBackupTitle => 'إنشاء نسخة احتياطية الآن؟';
+
+  @override
+  String get flowVaultBackupLine =>
+      'النسخة الاحتياطية التي تُنشأ الآن تضم محادثاتك المخفية أيضًا، بعبارة مرور خاصة بها. إن نسيت رمز PIN للمحادثات المخفية، فهي الطريق الوحيد إليها.';
+
+  @override
+  String get flowVaultBackupNow => 'إنشاء نسخة احتياطية';
+
+  @override
+  String get flowVaultNotNow => 'ليس الآن';
+
+  @override
+  String get flowVaultDone => 'تم إعداد المحادثات المخفية';
+
+  @override
+  String get flowVaultDoneLine =>
+      'أدخل رمز PIN للمحادثات المخفية على شاشة القفل لتراها. انتقل إلى تطبيق آخر فتعود بعيدة عن الأنظار.';
+
+  @override
+  String get flowVaultChanged => 'تم تغيير رمز PIN للمحادثات المخفية';
+
+  @override
+  String get flowVaultChangedLine =>
+      'تُفتح محادثاتك المخفية الآن بالرمز الجديد. والرمز القديم لم يعد يفتح شيئًا.';
+
+  @override
+  String get howVault =>
+      'رمز PIN للمحادثات المخفية يفتح Kryfo مع محادثاتك المخفية، ورمز PIN الخاص بك وبصمتك يفتحانه من دونها. إعداد المحادثات المخفية من جديد يستبدل ما على هذا الهاتف منها. وإن نسيت رمز PIN للمحادثات المخفية، تضيع إلى الأبد.';
 
   @override
   String get stickerOpen => 'الملصقات';

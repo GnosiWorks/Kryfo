@@ -4103,7 +4103,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get pinsThePinGoesAnd =>
-      'Mã PIN sẽ bị gỡ, kéo theo cả mã PIN xóa sạch. Bất kỳ ai cầm điện thoại của bạn đều mở được Kryfo với tư cách là bạn.';
+      'Mã PIN sẽ bị gỡ, kéo theo cả mã PIN xóa sạch và mọi trò chuyện ẩn. Bất kỳ ai cầm điện thoại của bạn đều mở được Kryfo với tư cách là bạn.';
 
   @override
   String get pinsUnlockWithFingerprint => 'Mở khóa bằng vân tay';
@@ -6895,7 +6895,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get pinsTurnOffWithDecoy =>
-      'Mọi mã PIN đều bị gỡ, kể cả mã ngụy trang và Kryfo của nó. Bất kỳ ai cầm điện thoại của bạn đều mở được Kryfo với tư cách là bạn.';
+      'Mọi mã PIN đều bị gỡ, kể cả mã ngụy trang, Kryfo của nó và mọi trò chuyện ẩn. Bất kỳ ai cầm điện thoại của bạn đều mở được Kryfo với tư cách là bạn.';
 
   @override
   String get pinsHowThisWorks => 'Cách hoạt động';
@@ -6969,6 +6969,134 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get flowNotSet => 'Không đặt được. Hãy thử lại.';
+
+  @override
+  String get pinsHiddenChats => 'Trò chuyện ẩn';
+
+  @override
+  String get pinsHiddenLine =>
+      'Các cuộc trò chuyện bạn chọn sẽ khuất khỏi tầm mắt cho đến khi bạn nhập mã PIN trò chuyện ẩn: không có trong danh sách, không có trong tìm kiếm, không có thông báo.';
+
+  @override
+  String get pinsSetUp => 'Thiết lập';
+
+  @override
+  String get pinsChangeHiddenPin => 'Đổi mã PIN trò chuyện ẩn';
+
+  @override
+  String get pinsHideMoreChats => 'Ẩn thêm cuộc trò chuyện';
+
+  @override
+  String get pinsRemoveHiddenChats => 'Bỏ trò chuyện ẩn';
+
+  @override
+  String get pinsRemoveHiddenTitle => 'Bỏ trò chuyện ẩn?';
+
+  @override
+  String get pinsRemoveHiddenLine =>
+      'Chúng sẽ quay lại danh sách trò chuyện của bạn, và mã PIN trò chuyện ẩn sẽ không mở gì nữa.';
+
+  @override
+  String get pinsTurnOffHiddenFirst =>
+      'Trò chuyện ẩn cần khóa ứng dụng. Hãy bỏ chúng trước, chúng sẽ quay lại danh sách trò chuyện của bạn.';
+
+  @override
+  String get flowVaultTitle => 'Trò chuyện ẩn';
+
+  @override
+  String get flowVault1 =>
+      'Chọn các cuộc trò chuyện và nhóm cần ẩn. Mã PIN của bạn mở Kryfo mà không có chúng. Mã PIN trò chuyện ẩn mở tất cả, kể cả trò chuyện ẩn.';
+
+  @override
+  String get flowVault2 =>
+      'Khi đang bị ẩn, chúng không bao giờ gửi thông báo hay hiện số đếm. Tin nhắn của chúng vẫn đến và chờ, được niêm phong, cho đến khi bạn nhập mã PIN trò chuyện ẩn.';
+
+  @override
+  String get flowVaultFinger =>
+      'Vân tay của bạn mở Kryfo mà không có trò chuyện ẩn.';
+
+  @override
+  String get flowVaultDigits =>
+      'Hãy cho cả mã PIN của bạn sáu chữ số trở lên, vì ai đang nhìn cũng có thể đếm các dấu chấm.';
+
+  @override
+  String get flowVaultReplace =>
+      'Việc này thay thế mọi trò chuyện ẩn mà điện thoại này đang có.';
+
+  @override
+  String get flowVaultChoose => 'Chọn mã PIN trò chuyện ẩn';
+
+  @override
+  String get flowVaultChooseLine => 'Sáu chữ số trở lên.';
+
+  @override
+  String get flowEnterHiddenPinLine => 'Mã dùng để mở trò chuyện ẩn của bạn.';
+
+  @override
+  String get flowVaultForgetTitle => 'Hãy nhớ mã PIN này';
+
+  @override
+  String get flowVaultForget =>
+      'Nếu bạn quên mã PIN này, trò chuyện ẩn của bạn sẽ mất vĩnh viễn. Không ai lấy lại được, kể cả chúng tôi.';
+
+  @override
+  String get flowVaultForgetOk => 'Tôi hiểu';
+
+  @override
+  String get flowVaultPickTitle => 'Chọn cuộc trò chuyện cần ẩn';
+
+  @override
+  String get flowVaultPickLine =>
+      'Chúng sẽ rời khỏi danh sách trò chuyện ngay bây giờ. Mã PIN trò chuyện ẩn sẽ đưa chúng trở lại.';
+
+  @override
+  String flowVaultPickButton(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Ẩn $countString cuộc trò chuyện',
+      zero: 'Chưa ẩn gì cả',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get flowVaultPickEmpty => 'Chưa có cuộc trò chuyện nào để ẩn.';
+
+  @override
+  String get flowVaultBackupTitle => 'Tạo bản sao lưu ngay bây giờ?';
+
+  @override
+  String get flowVaultBackupLine =>
+      'Bản sao lưu tạo lúc này cũng chứa trò chuyện ẩn của bạn, với cụm mật khẩu riêng. Nếu bạn quên mã PIN trò chuyện ẩn, đó là cách duy nhất để lấy lại chúng.';
+
+  @override
+  String get flowVaultBackupNow => 'Tạo bản sao lưu';
+
+  @override
+  String get flowVaultNotNow => 'Để sau';
+
+  @override
+  String get flowVaultDone => 'Đã thiết lập trò chuyện ẩn';
+
+  @override
+  String get flowVaultDoneLine =>
+      'Nhập mã PIN trò chuyện ẩn ở màn hình khóa để xem chúng. Chuyển sang ứng dụng khác là chúng lại khuất đi.';
+
+  @override
+  String get flowVaultChanged => 'Đã đổi mã PIN trò chuyện ẩn';
+
+  @override
+  String get flowVaultChangedLine =>
+      'Trò chuyện ẩn của bạn giờ mở bằng mã mới. Mã cũ không còn mở được gì.';
+
+  @override
+  String get howVault =>
+      'Mã PIN trò chuyện ẩn mở Kryfo cùng trò chuyện ẩn của bạn; mã PIN và vân tay của bạn mở mà không có chúng. Thiết lập lại trò chuyện ẩn sẽ thay thế những trò chuyện ẩn mà điện thoại này đang có. Quên mã PIN trò chuyện ẩn là chúng mất vĩnh viễn.';
 
   @override
   String get stickerOpen => 'Nhãn dán';

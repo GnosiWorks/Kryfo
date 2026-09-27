@@ -1,25 +1,30 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the pins on one page, each with its outcome spelled out. in a decoy
 // session the page works on the decoy's own pins and shows what a fresh
-// install would.
-import 'package:flutter/material.dart';
+// install would. hidden chats read "Set up" everywhere but inside them, so
+// the page never says whether there are any.
+import 'package:flutter/material.dart' hide LockState;
 import 'package:flutter/services.dart';
 
+import '../dlog.dart';
 import '../lock_state.dart';
-import '../main.dart' show appState;
 import '../theme.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/motion.dart' show haloRoute;
 import '../widgets/press_scale.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/stagger_in.dart';
+import 'hide_picker.dart';
 import 'lock_setup_screen.dart';
 import 'pin_flow_screen.dart';
 import '../widgets/confirm_sheet.dart';
 import '../l10n/l10n.dart';
 
 class PinsScreen extends StatefulWidget {
-  const PinsScreen({super.key});
+  const PinsScreen({super.key, this.lock, this.host = const PinsHost()});
+  // the app's own lock when null
+  final LockState? lock;
+  final PinsHost host;
   @override
   State<PinsScreen> createState() => _PinsScreenState();
 }
@@ -28,12 +33,26 @@ class _PinsScreenState extends State<PinsScreen> {
   // closed until asked for: most people only ever need the first card
   bool _open = false;
 
+  LockState get _lock => widget.lock ?? lockState;
+  PinsHost get _host => widget.host;
+
   // the decoy row, as this session should show it
-  bool get _decoyOn =>
-      lockState.inDecoy ? lockState.decoyPinOn : appState.hasDecoy;
+  bool get _decoyOn => _lock.inDecoy ? _lock.decoyPinOn : _host.hasDecoy;
 
   Future<void> _turnOff() async {
-    final decoy = !lockState.inDecoy && appState.hasDecoy;
+    // hidden chats need the lock: they come back to the chat list first
+    if (_lock.inVault) {
+      final remove = await showConfirmSheet(
+        context,
+        title: l10n.pinsTurnOffTheApp,
+        line: l10n.pinsTurnOffHiddenFirst,
+        yes: l10n.pinsRemoveHiddenChats,
+        rose: false,
+      );
+      if (remove) await _removeHidden();
+      return;
+    }
+    final decoy = !_lock.inDecoy && _host.hasDecoy;
     final ok = await showConfirmSheet(
       context,
       title: l10n.pinsTurnOffTheApp,
@@ -41,20 +60,33 @@ class _PinsScreenState extends State<PinsScreen> {
       yes: l10n.pinsTurnOff,
     );
     if (!ok) return;
-    if (decoy) await appState.removeDecoy();
-    await lockState.disablePanicPin();
-    await lockState.disable();
+    if (decoy) await _host.removeDecoy();
+    // any hidden chats go with the lock, and the line above reads the same
+    // whether there are any. a turn off in the decoy deletes nothing
+    if (!_lock.inDecoy) {
+      try {
+        await _host.destroyVault();
+      } catch (e) {
+        // its entry went first: no pin opens what is left, and the next
+        // setup clears it
+        dlog('lock: hidden chats not all gone (${e.runtimeType})');
+      }
+    }
+    await _lock.disablePanicPin();
+    await _lock.disable();
   }
 
   Future<void> _flow(PinFlow f, {bool change = false}) async {
     HapticFeedback.selectionClick();
-    await Navigator.of(
-      context,
-    ).push(haloRoute(PinFlowScreen(flow: f, skipIntro: change)));
+    await Navigator.of(context).push(
+      haloRoute(
+        PinFlowScreen(flow: f, skipIntro: change, lock: _lock, host: _host),
+      ),
+    );
   }
 
   Future<void> _wipeRow() async {
-    if (!lockState.panicEnabled) return _flow(PinFlow.wipe);
+    if (!_lock.panicEnabled) return _flow(PinFlow.wipe);
     final r = await showChangeOrRemoveSheet(
       context,
       title: l10n.pinsWipePin,
@@ -70,7 +102,7 @@ class _PinsScreenState extends State<PinsScreen> {
       line: l10n.pinsTheLockScreenKeeps,
       yes: l10n.commonRemove,
     );
-    if (ok) await lockState.disablePanicPin();
+    if (ok) await _lock.disablePanicPin();
   }
 
   Future<void> _decoyRow() async {
@@ -91,9 +123,51 @@ class _PinsScreenState extends State<PinsScreen> {
       yes: l10n.commonRemove,
     );
     if (!ok) return;
-    lockState.inDecoy
-        ? await lockState.clearInnerDecoyPin()
-        : await appState.removeDecoy();
+    _lock.inDecoy
+        ? await _lock.clearInnerDecoyPin()
+        : await _host.removeDecoy();
+  }
+
+  // outside the vault the row always leads to setup, which replaces any
+  // hidden chats there are. inside it, the hidden chats' own choices
+  Future<void> _hiddenRow() async {
+    if (!_lock.inVault) return _flow(PinFlow.vault);
+    final r = await showChangeOrRemoveSheet(
+      context,
+      title: l10n.pinsHiddenChats,
+      line: l10n.pinsHiddenLine,
+      change: l10n.pinsChangeHiddenPin,
+      more: l10n.pinsHideMoreChats,
+      remove: l10n.pinsRemoveHiddenChats,
+    );
+    if (!mounted || r == null) return;
+    if (r == 'change') return _flow(PinFlow.vault, change: true);
+    if (r == 'more') {
+      HapticFeedback.selectionClick();
+      await Navigator.of(context).push(
+        haloRoute(
+          HidePickerScreen(
+            chats: _host.hideable(),
+            onHide: (people, groups) =>
+                _host.hideChats(people: people, groups: groups),
+          ),
+        ),
+      );
+      return;
+    }
+    final ok = await showConfirmSheet(
+      context,
+      title: l10n.pinsRemoveHiddenTitle,
+      line: l10n.pinsRemoveHiddenLine,
+      yes: l10n.pinsRemoveHiddenChats,
+    );
+    if (ok) await _removeHidden();
+  }
+
+  // every hidden chat back in the chat list, and the pin opens nothing
+  Future<void> _removeHidden() async {
+    HapticFeedback.mediumImpact();
+    await _host.removeVault();
   }
 
   @override
@@ -110,11 +184,12 @@ class _PinsScreenState extends State<PinsScreen> {
         ),
       ),
       body: AnimatedBuilder(
-        animation: Listenable.merge([lockState, appState]),
+        animation: Listenable.merge([_lock, _host.changes]),
         builder: (context, _) {
-          final on = lockState.lockOn;
-          final wipe = lockState.panicEnabled;
+          final on = _lock.lockOn;
+          final wipe = _lock.panicEnabled;
           final decoy = _decoyOn;
+          final vault = _lock.inVault;
           return ListView(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
             children: staggerAll([
@@ -132,13 +207,13 @@ class _PinsScreenState extends State<PinsScreen> {
                 },
                 secondary: on ? l10n.pinsTurnOff : null,
                 onSecondary: on ? _turnOff : null,
-                extra: on && lockState.bioSupported
+                extra: on && _lock.bioSupported
                     ? _Toggle(
                         label: l10n.pinsUnlockWithFingerprint,
-                        on: lockState.biometric,
+                        on: _lock.biometric,
                         onTap: () {
                           HapticFeedback.selectionClick();
-                          lockState.setBiometric(!lockState.biometric);
+                          _lock.setBiometric(!_lock.biometric);
                         },
                       )
                     : null,
@@ -178,6 +253,21 @@ class _PinsScreenState extends State<PinsScreen> {
                         ? HaloColors.amber
                         : HaloColors.text3,
                     onTap: on ? _decoyRow : null,
+                  ),
+                  _ExtraRow(
+                    icon: Icons.visibility_off_outlined,
+                    tint: HaloColors.violet,
+                    name: l10n.pinsHiddenChats,
+                    line: l10n.pinsHiddenLine,
+                    state: !on
+                        ? l10n.pinsNeedsAPinFirst
+                        : vault
+                        ? l10n.pinsSet
+                        : l10n.pinsSetUp,
+                    stateColor: on && vault
+                        ? HaloColors.violet
+                        : HaloColors.text3,
+                    onTap: on ? _hiddenRow : null,
                   ),
                   _HowRow(onTap: () => _showHow(context)),
                 ],
@@ -424,6 +514,7 @@ void _showHow(BuildContext context) {
                 l10n.howWipe,
               ),
               (Icons.theater_comedy_outlined, HaloColors.amber, l10n.howDecoy),
+              (Icons.visibility_off_outlined, HaloColors.violet, l10n.howVault),
               (Icons.fingerprint, HaloColors.amber, l10n.flowDecoyFinger),
               (Icons.dialpad_outlined, HaloColors.amber, l10n.flowDecoyDigits),
               (Icons.gavel_outlined, HaloColors.text2, l10n.flowLaw),

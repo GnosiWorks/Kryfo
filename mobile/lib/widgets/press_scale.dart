@@ -57,7 +57,9 @@ class _PressScaleState extends State<PressScale> {
             },
       child: AnimatedScale(
         scale: _down ? widget.scale : 1,
-        duration: const Duration(milliseconds: 120),
+        duration: MediaQuery.maybeDisableAnimationsOf(context) ?? false
+            ? Duration.zero
+            : const Duration(milliseconds: 120),
         curve: Curves.easeOut,
         child: widget.child,
       ),

@@ -4108,7 +4108,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pinsThePinGoesAnd =>
-      'The PIN goes, and the wipe PIN with it. Anyone holding your phone opens Kryfo as you.';
+      'The PIN goes, and the wipe PIN and any hidden chats with it. Anyone holding your phone opens Kryfo as you.';
 
   @override
   String get pinsUnlockWithFingerprint => 'Unlock with fingerprint';
@@ -6906,7 +6906,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pinsTurnOffWithDecoy =>
-      'Every PIN goes, the decoy and its Kryfo with them. Anyone holding your phone opens Kryfo as you.';
+      'Every PIN goes, the decoy and its Kryfo and any hidden chats with them. Anyone holding your phone opens Kryfo as you.';
 
   @override
   String get pinsHowThisWorks => 'How this works';
@@ -6980,6 +6980,135 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get flowNotSet => 'Could not set it. Try again.';
+
+  @override
+  String get pinsHiddenChats => 'Hidden chats';
+
+  @override
+  String get pinsHiddenLine =>
+      'Chosen chats stay out of sight until you enter your hidden chats PIN: not in the list, not in search, no notifications.';
+
+  @override
+  String get pinsSetUp => 'Set up';
+
+  @override
+  String get pinsChangeHiddenPin => 'Change hidden chats PIN';
+
+  @override
+  String get pinsHideMoreChats => 'Hide more chats';
+
+  @override
+  String get pinsRemoveHiddenChats => 'Remove hidden chats';
+
+  @override
+  String get pinsRemoveHiddenTitle => 'Remove hidden chats?';
+
+  @override
+  String get pinsRemoveHiddenLine =>
+      'They come back to your chat list, and the hidden chats PIN stops opening anything.';
+
+  @override
+  String get pinsTurnOffHiddenFirst =>
+      'Hidden chats need the app lock. Remove them first, and they come back to your chat list.';
+
+  @override
+  String get flowVaultTitle => 'Hidden chats';
+
+  @override
+  String get flowVault1 =>
+      'Pick chats and groups to hide. Your PIN opens Kryfo without them. A hidden chats PIN opens everything, hidden chats included.';
+
+  @override
+  String get flowVault2 =>
+      'While out of sight, they never notify or show a badge. Their messages keep arriving and wait, sealed, for your hidden chats PIN.';
+
+  @override
+  String get flowVaultFinger =>
+      'Your fingerprint opens Kryfo without hidden chats.';
+
+  @override
+  String get flowVaultDigits =>
+      'Give your PIN six digits or more too, because anyone watching can count the dots.';
+
+  @override
+  String get flowVaultReplace =>
+      'This replaces any hidden chats this phone already holds.';
+
+  @override
+  String get flowVaultChoose => 'Choose a hidden chats PIN';
+
+  @override
+  String get flowVaultChooseLine => 'Six digits or more.';
+
+  @override
+  String get flowEnterHiddenPinLine => 'The one that opens your hidden chats.';
+
+  @override
+  String get flowVaultForgetTitle => 'Remember this PIN';
+
+  @override
+  String get flowVaultForget =>
+      'If you forget this PIN, your hidden chats are gone for good. Nobody can get them back, not even us.';
+
+  @override
+  String get flowVaultForgetOk => 'I understand';
+
+  @override
+  String get flowVaultPickTitle => 'Choose chats to hide';
+
+  @override
+  String get flowVaultPickLine =>
+      'They leave your chat list now. Your hidden chats PIN brings them back into view.';
+
+  @override
+  String flowVaultPickButton(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Hide $countString chats',
+      one: 'Hide 1 chat',
+      zero: 'Hide nothing yet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get flowVaultPickEmpty => 'No chats to hide yet.';
+
+  @override
+  String get flowVaultBackupTitle => 'Make a backup now?';
+
+  @override
+  String get flowVaultBackupLine =>
+      'A backup made now holds your hidden chats too, under a passphrase of its own. If you forget the hidden chats PIN, it is the only way back to them.';
+
+  @override
+  String get flowVaultBackupNow => 'Make a backup';
+
+  @override
+  String get flowVaultNotNow => 'Not now';
+
+  @override
+  String get flowVaultDone => 'Hidden chats set up';
+
+  @override
+  String get flowVaultDoneLine =>
+      'Type your hidden chats PIN on the lock screen to see them. Switch away and they are out of sight again.';
+
+  @override
+  String get flowVaultChanged => 'Hidden chats PIN changed';
+
+  @override
+  String get flowVaultChangedLine =>
+      'Your hidden chats open with the new one. The old one opens nothing now.';
+
+  @override
+  String get howVault =>
+      'Your hidden chats PIN opens Kryfo with your hidden chats, your PIN and your fingerprint without them. Setting hidden chats up again replaces the ones this phone holds. Forget the hidden chats PIN and they are gone for good.';
 
   @override
   String get stickerOpen => 'Stickers';

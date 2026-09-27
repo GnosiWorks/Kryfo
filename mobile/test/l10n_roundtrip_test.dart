@@ -2150,7 +2150,7 @@ void main() {
     expect(l.pinsTurnOffTheApp, "Turn off the app lock?");
     expect(
       l.pinsThePinGoesAnd,
-      "The PIN goes, and the wipe PIN with it. Anyone holding your phone opens Kryfo as you.",
+      "The PIN goes, and the wipe PIN and any hidden chats with it. Anyone holding your phone opens Kryfo as you.",
     );
     expect(l.pinsUnlockWithFingerprint, "Unlock with fingerprint");
     expect(l.pinsWipePin, "Wipe PIN");

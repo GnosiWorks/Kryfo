@@ -83,14 +83,36 @@ Widget _quiet(String label, VoidCallback onTap, {Color? color}) =>
       ),
     );
 
-// something already set: change it, or take it away. 'change', 'remove',
-// or null when dismissed
+Widget _outline(String label, VoidCallback onTap) => GestureDetector(
+  onTap: onTap,
+  behavior: HitTestBehavior.opaque,
+  child: Container(
+    height: 46,
+    alignment: Alignment.center,
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(13),
+      border: Border.all(color: HaloColors.line2),
+    ),
+    child: Text(
+      label,
+      style: HaloType.sans(
+        size: 14,
+        weight: FontWeight.w600,
+        color: HaloColors.text,
+      ),
+    ),
+  ),
+);
+
+// something already set: change it, do [more] with it when given, or take
+// it away. 'change', 'more', 'remove', or null when dismissed
 Future<String?> showChangeOrRemoveSheet(
   BuildContext context, {
   required String title,
   required String line,
   required String change,
   required String remove,
+  String? more,
 }) => showHaloSheet<String>(
   context,
   builder: (ctx) => _frame(ctx, [
@@ -99,6 +121,10 @@ Future<String?> showChangeOrRemoveSheet(
     _line(line),
     const SizedBox(height: 16),
     _primary(change, () => Navigator.pop(ctx, 'change')),
+    if (more != null) ...[
+      const SizedBox(height: 8),
+      _outline(more, () => Navigator.pop(ctx, 'more')),
+    ],
     const SizedBox(height: 6),
     _quiet(remove, () => Navigator.pop(ctx, 'remove'), color: HaloColors.rose),
   ]),

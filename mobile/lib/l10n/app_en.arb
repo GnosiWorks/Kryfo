@@ -5153,7 +5153,7 @@
   "@pinsTurnOffTheApp": {
     "description": "screens/pins_screen.dart"
   },
-  "pinsThePinGoesAnd": "The PIN goes, and the wipe PIN with it. Anyone holding your phone opens Kryfo as you.",
+  "pinsThePinGoesAnd": "The PIN goes, and the wipe PIN and any hidden chats with it. Anyone holding your phone opens Kryfo as you.",
   "@pinsThePinGoesAnd": {
     "description": "screens/pins_screen.dart"
   },
@@ -8796,7 +8796,7 @@
   "@pinsTheDecoyGoes": {
     "description": "confirm sheet line when removing the decoy PIN"
   },
-  "pinsTurnOffWithDecoy": "Every PIN goes, the decoy and its Kryfo with them. Anyone holding your phone opens Kryfo as you.",
+  "pinsTurnOffWithDecoy": "Every PIN goes, the decoy and its Kryfo and any hidden chats with them. Anyone holding your phone opens Kryfo as you.",
   "@pinsTurnOffWithDecoy": {
     "description": "confirm sheet line when turning the app lock off while a decoy PIN is set"
   },
@@ -8883,6 +8883,148 @@
   "flowNotSet": "Could not set it. Try again.",
   "@flowNotSet": {
     "description": "setting an extra PIN failed for a reason other than a clash"
+  },
+  "pinsHiddenChats": "Hidden chats",
+  "@pinsHiddenChats": {
+    "description": "App lock, Advanced protection: the hidden chats row, its name"
+  },
+  "pinsHiddenLine": "Chosen chats stay out of sight until you enter your hidden chats PIN: not in the list, not in search, no notifications.",
+  "@pinsHiddenLine": {
+    "description": "App lock, Advanced protection: the hidden chats row, its line"
+  },
+  "pinsSetUp": "Set up",
+  "@pinsSetUp": {
+    "description": "App lock, Advanced protection: the hidden chats row, its state outside the hidden chats (always the same)"
+  },
+  "pinsChangeHiddenPin": "Change hidden chats PIN",
+  "@pinsChangeHiddenPin": {
+    "description": "the hidden chats sheet, inside the hidden chats"
+  },
+  "pinsHideMoreChats": "Hide more chats",
+  "@pinsHideMoreChats": {
+    "description": "the hidden chats sheet, inside the hidden chats"
+  },
+  "pinsRemoveHiddenChats": "Remove hidden chats",
+  "@pinsRemoveHiddenChats": {
+    "description": "the hidden chats sheet: brings every hidden chat back to the chat list"
+  },
+  "pinsRemoveHiddenTitle": "Remove hidden chats?",
+  "@pinsRemoveHiddenTitle": {
+    "description": "confirming Remove hidden chats"
+  },
+  "pinsRemoveHiddenLine": "They come back to your chat list, and the hidden chats PIN stops opening anything.",
+  "@pinsRemoveHiddenLine": {
+    "description": "confirming Remove hidden chats"
+  },
+  "pinsTurnOffHiddenFirst": "Hidden chats need the app lock. Remove them first, and they come back to your chat list.",
+  "@pinsTurnOffHiddenFirst": {
+    "description": "Turn off the app lock, tapped inside the hidden chats"
+  },
+  "flowVaultTitle": "Hidden chats",
+  "@flowVaultTitle": {
+    "description": "the hidden chats setup flow: title of the first page"
+  },
+  "flowVault1": "Pick chats and groups to hide. Your PIN opens Kryfo without them. A hidden chats PIN opens everything, hidden chats included.",
+  "@flowVault1": {
+    "description": "the hidden chats setup flow: what it does"
+  },
+  "flowVault2": "While out of sight, they never notify or show a badge. Their messages keep arriving and wait, sealed, for your hidden chats PIN.",
+  "@flowVault2": {
+    "description": "the hidden chats setup flow: what happens while they are out of sight"
+  },
+  "flowVaultFinger": "Your fingerprint opens Kryfo without hidden chats.",
+  "@flowVaultFinger": {
+    "description": "the hidden chats setup flow: the fingerprint line"
+  },
+  "flowVaultDigits": "Give your PIN six digits or more too, because anyone watching can count the dots.",
+  "@flowVaultDigits": {
+    "description": "the hidden chats setup flow: a six digit app PIN suggested, so the two look alike"
+  },
+  "flowVaultReplace": "This replaces any hidden chats this phone already holds.",
+  "@flowVaultReplace": {
+    "description": "the hidden chats setup flow: shown on every setup, whether or not there are hidden chats"
+  },
+  "flowVaultChoose": "Choose a hidden chats PIN",
+  "@flowVaultChoose": {
+    "description": "the hidden chats setup flow: above the pad"
+  },
+  "flowVaultChooseLine": "Six digits or more.",
+  "@flowVaultChooseLine": {
+    "description": "the hidden chats setup flow: under Choose a hidden chats PIN"
+  },
+  "flowEnterHiddenPinLine": "The one that opens your hidden chats.",
+  "@flowEnterHiddenPinLine": {
+    "description": "changing the hidden chats PIN: under Enter your PIN"
+  },
+  "flowVaultForgetTitle": "Remember this PIN",
+  "@flowVaultForgetTitle": {
+    "description": "the hidden chats setup flow: the forget page"
+  },
+  "flowVaultForget": "If you forget this PIN, your hidden chats are gone for good. Nobody can get them back, not even us.",
+  "@flowVaultForget": {
+    "description": "the hidden chats setup flow: the forget page, large"
+  },
+  "flowVaultForgetOk": "I understand",
+  "@flowVaultForgetOk": {
+    "description": "the hidden chats setup flow: the forget page, its one button"
+  },
+  "flowVaultPickTitle": "Choose chats to hide",
+  "@flowVaultPickTitle": {
+    "description": "choosing chats to hide (screens/hide_picker.dart)"
+  },
+  "flowVaultPickLine": "They leave your chat list now. Your hidden chats PIN brings them back into view.",
+  "@flowVaultPickLine": {
+    "description": "choosing chats to hide, during setup"
+  },
+  "flowVaultPickButton": "{count, plural, =0{Hide nothing yet} =1{Hide 1 chat} other{Hide {count} chats}}",
+  "@flowVaultPickButton": {
+    "description": "choosing chats to hide: the button with the count. 0 moves nothing",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "flowVaultPickEmpty": "No chats to hide yet.",
+  "@flowVaultPickEmpty": {
+    "description": "choosing chats to hide, with no chat to choose"
+  },
+  "flowVaultBackupTitle": "Make a backup now?",
+  "@flowVaultBackupTitle": {
+    "description": "the hidden chats setup flow: the backup offer, after the chats are picked"
+  },
+  "flowVaultBackupLine": "A backup made now holds your hidden chats too, under a passphrase of its own. If you forget the hidden chats PIN, it is the only way back to them.",
+  "@flowVaultBackupLine": {
+    "description": "the hidden chats setup flow: the backup offer"
+  },
+  "flowVaultBackupNow": "Make a backup",
+  "@flowVaultBackupNow": {
+    "description": "the hidden chats setup flow: the backup offer, opens the backup screen"
+  },
+  "flowVaultNotNow": "Not now",
+  "@flowVaultNotNow": {
+    "description": "the hidden chats setup flow: the backup offer, skips it"
+  },
+  "flowVaultDone": "Hidden chats set up",
+  "@flowVaultDone": {
+    "description": "the hidden chats setup flow: the last page"
+  },
+  "flowVaultDoneLine": "Type your hidden chats PIN on the lock screen to see them. Switch away and they are out of sight again.",
+  "@flowVaultDoneLine": {
+    "description": "the hidden chats setup flow: the last page"
+  },
+  "flowVaultChanged": "Hidden chats PIN changed",
+  "@flowVaultChanged": {
+    "description": "changing the hidden chats PIN: the last page"
+  },
+  "flowVaultChangedLine": "Your hidden chats open with the new one. The old one opens nothing now.",
+  "@flowVaultChangedLine": {
+    "description": "changing the hidden chats PIN: the last page"
+  },
+  "howVault": "Your hidden chats PIN opens Kryfo with your hidden chats, your PIN and your fingerprint without them. Setting hidden chats up again replaces the ones this phone holds. Forget the hidden chats PIN and they are gone for good.",
+  "@howVault": {
+    "description": "How this works sheet"
   },
   "stickerOpen": "Stickers",
   "@stickerOpen": {

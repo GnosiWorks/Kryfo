@@ -4200,7 +4200,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get pinsThePinGoesAnd =>
-      'PIN-код удаляется, а вместе с ним и PIN для стирания. Любой, у кого в руках твой телефон, откроет Kryfo от твоего имени.';
+      'PIN-код удаляется, а вместе с ним PIN для стирания и все скрытые чаты. Любой, у кого в руках твой телефон, откроет Kryfo от твоего имени.';
 
   @override
   String get pinsUnlockWithFingerprint => 'Разблокировка отпечатком';
@@ -7043,7 +7043,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get pinsTurnOffWithDecoy =>
-      'Все PIN-коды удаляются, приманка и её Kryfo вместе с ними. Любой, у кого в руках твой телефон, откроет Kryfo от твоего имени.';
+      'Все PIN-коды удаляются, приманка, её Kryfo и все скрытые чаты вместе с ними. Любой, у кого в руках твой телефон, откроет Kryfo от твоего имени.';
 
   @override
   String get pinsHowThisWorks => 'Как это работает';
@@ -7118,6 +7118,137 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get flowNotSet => 'Не получилось задать. Попробуй ещё раз.';
+
+  @override
+  String get pinsHiddenChats => 'Скрытые чаты';
+
+  @override
+  String get pinsHiddenLine =>
+      'Выбранные чаты убраны с глаз, пока ты не введёшь PIN-код скрытых чатов: их нет ни в списке, ни в поиске, и уведомлений тоже нет.';
+
+  @override
+  String get pinsSetUp => 'Настроить';
+
+  @override
+  String get pinsChangeHiddenPin => 'Сменить PIN-код скрытых чатов';
+
+  @override
+  String get pinsHideMoreChats => 'Скрыть ещё чаты';
+
+  @override
+  String get pinsRemoveHiddenChats => 'Отключить скрытые чаты';
+
+  @override
+  String get pinsRemoveHiddenTitle => 'Отключить скрытые чаты?';
+
+  @override
+  String get pinsRemoveHiddenLine =>
+      'Они вернутся в список чатов, а PIN-код скрытых чатов больше ничего не будет открывать.';
+
+  @override
+  String get pinsTurnOffHiddenFirst =>
+      'Скрытым чатам нужна блокировка. Сначала отключи их, и они вернутся в список чатов.';
+
+  @override
+  String get flowVaultTitle => 'Скрытые чаты';
+
+  @override
+  String get flowVault1 =>
+      'Выбери чаты и группы, которые нужно скрыть. Твой PIN-код открывает Kryfo без них. PIN-код скрытых чатов открывает всё, вместе со скрытыми чатами.';
+
+  @override
+  String get flowVault2 =>
+      'Пока они скрыты, от них нет уведомлений и счётчиков. Их сообщения продолжают приходить и ждут, запечатанные, твоего PIN-кода скрытых чатов.';
+
+  @override
+  String get flowVaultFinger =>
+      'Твой отпечаток открывает Kryfo без скрытых чатов.';
+
+  @override
+  String get flowVaultDigits =>
+      'Сделай и свой PIN-код из шести цифр или длиннее: любой, кто смотрит, может посчитать точки.';
+
+  @override
+  String get flowVaultReplace =>
+      'Это заменит все скрытые чаты, которые уже есть на этом телефоне.';
+
+  @override
+  String get flowVaultChoose => 'Выбери PIN-код скрытых чатов';
+
+  @override
+  String get flowVaultChooseLine => 'Шесть цифр или больше.';
+
+  @override
+  String get flowEnterHiddenPinLine => 'Тот, которым открываются скрытые чаты.';
+
+  @override
+  String get flowVaultForgetTitle => 'Запомни этот PIN-код';
+
+  @override
+  String get flowVaultForget =>
+      'Если ты забудешь этот PIN-код, скрытые чаты пропадут навсегда. Никто не сможет их вернуть, даже мы.';
+
+  @override
+  String get flowVaultForgetOk => 'Понятно';
+
+  @override
+  String get flowVaultPickTitle => 'Выбери чаты, которые скрыть';
+
+  @override
+  String get flowVaultPickLine =>
+      'Они сейчас уйдут из списка чатов. PIN-код скрытых чатов снова покажет их.';
+
+  @override
+  String flowVaultPickButton(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Скрыть $countString чата',
+      many: 'Скрыть $countString чатов',
+      few: 'Скрыть $countString чата',
+      one: 'Скрыть $countString чат',
+      zero: 'Пока ничего не скрывать',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get flowVaultPickEmpty => 'Пока нет чатов, которые можно скрыть.';
+
+  @override
+  String get flowVaultBackupTitle => 'Сделать резервную копию сейчас?';
+
+  @override
+  String get flowVaultBackupLine =>
+      'Резервная копия, сделанная сейчас, сохранит и скрытые чаты, под своей парольной фразой. Если ты забудешь PIN-код скрытых чатов, это единственный путь к ним.';
+
+  @override
+  String get flowVaultBackupNow => 'Сделать копию';
+
+  @override
+  String get flowVaultNotNow => 'Не сейчас';
+
+  @override
+  String get flowVaultDone => 'Скрытые чаты настроены';
+
+  @override
+  String get flowVaultDoneLine =>
+      'Введи PIN-код скрытых чатов на экране блокировки, чтобы их увидеть. Переключись на другое приложение, и они снова скрыты.';
+
+  @override
+  String get flowVaultChanged => 'PIN-код скрытых чатов изменён';
+
+  @override
+  String get flowVaultChangedLine =>
+      'Скрытые чаты теперь открываются новым. Старый больше ничего не открывает.';
+
+  @override
+  String get howVault =>
+      'PIN-код скрытых чатов открывает Kryfo со скрытыми чатами, а твой PIN-код и отпечаток открывают его без них. Если настроить скрытые чаты заново, они заменят те, что есть на этом телефоне. Забудешь PIN-код скрытых чатов, и они пропадут навсегда.';
 
   @override
   String get stickerOpen => 'Стикеры';

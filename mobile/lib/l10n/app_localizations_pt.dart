@@ -4143,7 +4143,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get pinsThePinGoesAnd =>
-      'O PIN sai, e o PIN de apagamento junto. Qualquer pessoa com seu celular abre o Kryfo como se fosse você.';
+      'O PIN sai, e o PIN de apagamento e qualquer conversa oculta junto. Qualquer pessoa com seu celular abre o Kryfo como se fosse você.';
 
   @override
   String get pinsUnlockWithFingerprint => 'Desbloquear com a digital';
@@ -6965,7 +6965,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get pinsTurnOffWithDecoy =>
-      'Todos os PINs saem, e o disfarce e o Kryfo dele junto. Qualquer pessoa com seu celular abre o Kryfo como se fosse você.';
+      'Todos os PINs saem, e o disfarce, o Kryfo dele e qualquer conversa oculta junto. Qualquer pessoa com seu celular abre o Kryfo como se fosse você.';
 
   @override
   String get pinsHowThisWorks => 'Como funciona';
@@ -7040,6 +7040,135 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get flowNotSet => 'Não deu para definir. Tente de novo.';
+
+  @override
+  String get pinsHiddenChats => 'Conversas ocultas';
+
+  @override
+  String get pinsHiddenLine =>
+      'As conversas escolhidas ficam fora de vista até você digitar o PIN das conversas ocultas: nem na lista, nem na busca, sem notificações.';
+
+  @override
+  String get pinsSetUp => 'Configurar';
+
+  @override
+  String get pinsChangeHiddenPin => 'Mudar PIN das conversas ocultas';
+
+  @override
+  String get pinsHideMoreChats => 'Ocultar mais conversas';
+
+  @override
+  String get pinsRemoveHiddenChats => 'Remover conversas ocultas';
+
+  @override
+  String get pinsRemoveHiddenTitle => 'Remover as conversas ocultas?';
+
+  @override
+  String get pinsRemoveHiddenLine =>
+      'Elas voltam para a sua lista de conversas, e o PIN das conversas ocultas deixa de abrir qualquer coisa.';
+
+  @override
+  String get pinsTurnOffHiddenFirst =>
+      'As conversas ocultas precisam do bloqueio do app. Remova-as primeiro, e elas voltam para a sua lista de conversas.';
+
+  @override
+  String get flowVaultTitle => 'Conversas ocultas';
+
+  @override
+  String get flowVault1 =>
+      'Escolha conversas e grupos para ocultar. Seu PIN abre o Kryfo sem eles. Um PIN das conversas ocultas abre tudo, conversas ocultas incluídas.';
+
+  @override
+  String get flowVault2 =>
+      'Enquanto estão fora de vista, elas nunca notificam nem mostram contador. As mensagens continuam chegando e esperam, seladas, pelo seu PIN das conversas ocultas.';
+
+  @override
+  String get flowVaultFinger =>
+      'Sua digital abre o Kryfo sem as conversas ocultas.';
+
+  @override
+  String get flowVaultDigits =>
+      'Dê também seis dígitos ou mais ao seu PIN, porque quem estiver olhando pode contar os pontos.';
+
+  @override
+  String get flowVaultReplace =>
+      'Isto substitui qualquer conversa oculta que este celular já tenha.';
+
+  @override
+  String get flowVaultChoose => 'Escolha um PIN das conversas ocultas';
+
+  @override
+  String get flowVaultChooseLine => 'Seis dígitos ou mais.';
+
+  @override
+  String get flowEnterHiddenPinLine => 'O que abre suas conversas ocultas.';
+
+  @override
+  String get flowVaultForgetTitle => 'Guarde este PIN';
+
+  @override
+  String get flowVaultForget =>
+      'Se você esquecer este PIN, suas conversas ocultas somem para sempre. Ninguém consegue recuperá-las, nem mesmo nós.';
+
+  @override
+  String get flowVaultForgetOk => 'Entendi';
+
+  @override
+  String get flowVaultPickTitle => 'Escolha conversas para ocultar';
+
+  @override
+  String get flowVaultPickLine =>
+      'Elas saem da sua lista de conversas agora. Seu PIN das conversas ocultas as traz de volta.';
+
+  @override
+  String flowVaultPickButton(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Ocultar $countString conversas',
+      one: 'Ocultar 1 conversa',
+      zero: 'Não ocultar nada por enquanto',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get flowVaultPickEmpty => 'Ainda não há conversas para ocultar.';
+
+  @override
+  String get flowVaultBackupTitle => 'Fazer um backup agora?';
+
+  @override
+  String get flowVaultBackupLine =>
+      'Um backup feito agora guarda também suas conversas ocultas, com uma frase-senha própria. Se você esquecer o PIN das conversas ocultas, ele é o único caminho de volta até elas.';
+
+  @override
+  String get flowVaultBackupNow => 'Fazer um backup';
+
+  @override
+  String get flowVaultNotNow => 'Agora não';
+
+  @override
+  String get flowVaultDone => 'Conversas ocultas configuradas';
+
+  @override
+  String get flowVaultDoneLine =>
+      'Digite seu PIN das conversas ocultas na tela de bloqueio para vê-las. Troque de app e elas ficam fora de vista de novo.';
+
+  @override
+  String get flowVaultChanged => 'PIN das conversas ocultas alterado';
+
+  @override
+  String get flowVaultChangedLine =>
+      'Suas conversas ocultas abrem com o novo. O antigo não abre mais nada.';
+
+  @override
+  String get howVault =>
+      'Seu PIN das conversas ocultas abre o Kryfo com as conversas ocultas; seu PIN e sua digital, sem elas. Configurar as conversas ocultas de novo substitui as que este celular tem. Esqueça o PIN das conversas ocultas e elas somem para sempre.';
 
   @override
   String get stickerOpen => 'Figurinhas';
