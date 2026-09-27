@@ -1905,6 +1905,7 @@
   "stickerCouldNotLoad": "Sticker konnten nicht geladen werden",
   "stickerLabel": "Sticker",
   "stickerNewer": "Aus einem neueren Kryfo",
+  "devLinkMismatch": "Dieser Link gibt sich als Marios aus, aber sein Schlüssel stimmt nicht überein. Er wurde nicht hinzugefügt.",
   "devName": "Marios",
   "devRowTitle": "Marios · hat Kryfo gebaut",
   "devWelcome": "Hi, ich bin Marios, ich baue Kryfo. Schreib mir alles: Fehler, Ideen, Fragen. Ich lese alles.",

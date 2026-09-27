@@ -1905,6 +1905,7 @@
   "stickerCouldNotLoad": "Çıkartmalar yüklenemedi",
   "stickerLabel": "Çıkartma",
   "stickerNewer": "Daha yeni bir Kryfo’dan",
+  "devLinkMismatch": "Bu bağlantı Marios olduğunu söylüyor ama anahtarı eşleşmiyor. Eklenmedi.",
   "devName": "Marios",
   "devRowTitle": "Marios · Kryfo’yu yaptı",
   "devWelcome": "Merhaba, ben Marios, Kryfo’yu ben yapıyorum. Bana her şeyi yaz: hatalar, fikirler, sorular. Hepsini okurum.",

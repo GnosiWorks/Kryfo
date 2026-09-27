@@ -1905,6 +1905,7 @@
   "stickerCouldNotLoad": "Không thể tải nhãn dán",
   "stickerLabel": "Nhãn dán",
   "stickerNewer": "Từ một bản Kryfo mới hơn",
+  "devLinkMismatch": "Liên kết này tự nhận là Marios, nhưng khóa không khớp. Không có gì được thêm.",
   "devName": "Marios",
   "devRowTitle": "Marios · người làm ra Kryfo",
   "devWelcome": "Chào bạn, tôi là Marios, tôi làm ra Kryfo. Cứ nói với tôi bất cứ điều gì: lỗi, ý tưởng, câu hỏi. Tôi đọc hết.",

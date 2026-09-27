@@ -1905,6 +1905,7 @@
   "stickerCouldNotLoad": "استیکرها بارگیری نشدند",
   "stickerLabel": "استیکر",
   "stickerNewer": "از نسخه‌ی جدیدتر Kryfo",
+  "devLinkMismatch": "این پیوند خود را Marios معرفی می‌کند، اما کلیدش مطابقت ندارد. چیزی افزوده نشد.",
   "devName": "Marios",
   "devRowTitle": "Marios · سازنده‌ی Kryfo",
   "devWelcome": "سلام، من Marios هستم و Kryfo را می‌سازم. هر چیزی بگویید: باگ، ایده، سؤال. همه را می‌خوانم.",

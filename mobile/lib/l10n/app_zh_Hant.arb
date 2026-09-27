@@ -1905,6 +1905,7 @@
   "stickerCouldNotLoad": "無法載入貼圖",
   "stickerLabel": "貼圖",
   "stickerNewer": "來自較新版的 Kryfo",
+  "devLinkMismatch": "此連結自稱是 Marios，但其金鑰不相符。未新增。",
   "devName": "Marios",
   "devRowTitle": "Marios · Kryfo 的開發者",
   "devWelcome": "你好，我是 Marios，Kryfo 是我做的。什麼都可以跟我說：錯誤、想法、問題。每一則我都會看。",

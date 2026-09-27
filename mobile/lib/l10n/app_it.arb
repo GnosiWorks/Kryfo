@@ -1905,6 +1905,7 @@
   "stickerCouldNotLoad": "Impossibile caricare gli sticker",
   "stickerLabel": "Sticker",
   "stickerNewer": "Da un Kryfo più recente",
+  "devLinkMismatch": "Questo link dice di essere Marios, ma la sua chiave non corrisponde. Non è stato aggiunto.",
   "devName": "Marios",
   "devRowTitle": "Marios · ha creato Kryfo",
   "devWelcome": "Ciao, sono Marios, sviluppo Kryfo. Scrivimi di tutto: bug, idee, domande. Leggo tutto.",

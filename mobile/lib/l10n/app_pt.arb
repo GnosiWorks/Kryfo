@@ -1905,6 +1905,7 @@
   "stickerCouldNotLoad": "Não foi possível carregar as figurinhas",
   "stickerLabel": "Figurinha",
   "stickerNewer": "De um Kryfo mais novo",
+  "devLinkMismatch": "Este link diz que é o Marios, mas a chave dele não corresponde. Não foi adicionado.",
   "devName": "Marios",
   "devRowTitle": "Marios · criou o Kryfo",
   "devWelcome": "Oi, eu sou o Marios e faço o Kryfo. Me conte qualquer coisa: bugs, ideias, dúvidas. Eu leio tudo.",

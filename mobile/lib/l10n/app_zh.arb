@@ -1905,6 +1905,7 @@
   "stickerCouldNotLoad": "无法加载贴纸",
   "stickerLabel": "贴纸",
   "stickerNewer": "来自更新版本的 Kryfo",
+  "devLinkMismatch": "此链接自称是 Marios，但其密钥不匹配。未添加。",
   "devName": "Marios",
   "devRowTitle": "Marios · Kryfo 的开发者",
   "devWelcome": "你好，我是 Marios，Kryfo 是我做的。什么都可以跟我说：Bug、想法、问题。每一条我都会看。",

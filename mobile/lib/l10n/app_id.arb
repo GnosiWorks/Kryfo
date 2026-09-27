@@ -1905,6 +1905,7 @@
   "stickerCouldNotLoad": "Stiker tidak dapat dimuat",
   "stickerLabel": "Stiker",
   "stickerNewer": "Dari Kryfo versi lebih baru",
+  "devLinkMismatch": "Tautan ini mengaku sebagai Marios, tapi kuncinya tidak cocok. Tidak ada yang ditambahkan.",
   "devName": "Marios",
   "devRowTitle": "Marios · pembuat Kryfo",
   "devWelcome": "Hai, aku Marios, aku yang membuat Kryfo. Ceritakan apa saja: bug, ide, pertanyaan. Aku membaca semuanya.",

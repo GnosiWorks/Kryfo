@@ -7163,6 +7163,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get stickerNewer => 'Từ một bản Kryfo mới hơn';
 
   @override
+  String get devLinkMismatch =>
+      'Liên kết này tự nhận là Marios, nhưng khóa không khớp. Không có gì được thêm.';
+
+  @override
   String get devName => 'Marios';
 
   @override

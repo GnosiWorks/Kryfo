@@ -7314,6 +7314,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get stickerNewer => 'Из более новой версии Kryfo';
 
   @override
+  String get devLinkMismatch =>
+      'Эта ссылка выдаёт себя за Marios, но её ключ не совпадает. Ничего не добавлено.';
+
+  @override
   String get devName => 'Marios';
 
   @override

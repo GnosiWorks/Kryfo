@@ -7211,6 +7211,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get stickerNewer => 'Daha yeni bir Kryfo’dan';
 
   @override
+  String get devLinkMismatch =>
+      'Bu bağlantı Marios olduğunu söylüyor ama anahtarı eşleşmiyor. Eklenmedi.';
+
+  @override
   String get devName => 'Marios';
 
   @override

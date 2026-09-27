@@ -7174,6 +7174,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stickerNewer => 'From a newer Kryfo';
 
   @override
+  String get devLinkMismatch =>
+      'This link says it is Marios, but its key does not match. It was not added.';
+
+  @override
   String get devName => 'Marios';
 
   @override

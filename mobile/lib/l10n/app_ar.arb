@@ -1905,6 +1905,7 @@
   "stickerCouldNotLoad": "تعذّر تحميل الملصقات",
   "stickerLabel": "ملصق",
   "stickerNewer": "من إصدار أحدث من Kryfo",
+  "devLinkMismatch": "يدّعي هذا الرابط أنه Marios، لكن مفتاحه غير مطابق. لم تتم إضافة شيء.",
   "devName": "Marios",
   "devRowTitle": "Marios · صانع Kryfo",
   "devWelcome": "مرحبًا، أنا Marios، أبني Kryfo. أخبرني بأي شيء: أخطاء، أفكار، أسئلة. أقرأ كل شيء.",

@@ -7248,6 +7248,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get stickerNewer => 'Da un Kryfo più recente';
 
   @override
+  String get devLinkMismatch =>
+      'Questo link dice di essere Marios, ma la sua chiave non corrisponde. Non è stato aggiunto.';
+
+  @override
   String get devName => 'Marios';
 
   @override

@@ -5,6 +5,8 @@ import 'dart:typed_data';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
+import 'devchat/dev_key.dart';
+
 class HaloIdentityKeyStore implements IdentityKeyStore {
   final Database _db;
   final IdentityKeyPair _idPair;
@@ -24,6 +26,8 @@ class HaloIdentityKeyStore implements IdentityKeyStore {
   ) async {
     if (identityKey == null) return false;
     final addr = address.getName();
+    // the dev chat keeps no key but the pinned one
+    if (isDevChat(addr) && !_pinned(addr, identityKey)) return false;
     final existing = await _db.query(
       'peer_identities',
       where: 'address = ?',
@@ -48,6 +52,11 @@ class HaloIdentityKeyStore implements IdentityKeyStore {
     Direction direction,
   ) async {
     if (identityKey == null) return false;
+    // the dev chat trusts the pinned key and nothing else: no first use,
+    // no warning, and nothing written
+    if (isDevChat(address.getName())) {
+      return _pinned(address.getName(), identityKey);
+    }
     final rows = await _db.query(
       'peer_identities',
       where: 'address = ?',
@@ -94,6 +103,13 @@ class HaloIdentityKeyStore implements IdentityKeyStore {
       where: 'address = ?',
       whereArgs: [address.getName()],
     );
+  }
+
+  // the key an address dev:<id> is pinned to, while that key still works
+  bool _pinned(String addr, IdentityKey key) {
+    final k = devKeyById(addr.substring(4));
+    if (k == null || k.status == DevKeyStatus.retired) return false;
+    return _eq(key.serialize(), pinnedIdentity(k));
   }
 
   bool _eq(List<int> a, List<int> b) {

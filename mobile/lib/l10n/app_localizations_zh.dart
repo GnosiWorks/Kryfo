@@ -6897,6 +6897,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get stickerNewer => '来自更新版本的 Kryfo';
 
   @override
+  String get devLinkMismatch => '此链接自称是 Marios，但其密钥不匹配。未添加。';
+
+  @override
   String get devName => 'Marios';
 
   @override
@@ -13832,6 +13835,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get stickerNewer => '來自較新版的 Kryfo';
+
+  @override
+  String get devLinkMismatch => '此連結自稱是 Marios，但其金鑰不相符。未新增。';
 
   @override
   String get devName => 'Marios';

@@ -31,6 +31,14 @@ void main() {
       );
       expect(rows.length, 1);
     });
+    test('never listens for the dev chat, started or not', () {
+      final rows = bootSubscribeRows(
+        accepted: [_row('friend'), _row('dev:m1')],
+        vouchedPending: [],
+        pendingRequests: [_row('dev:m2', accepted: 0)],
+      );
+      expect(rows.map((r) => r['halo_id']), ['friend']);
+    });
     test('never listens for a blocked row', () {
       final rows = bootSubscribeRows(
         accepted: [],

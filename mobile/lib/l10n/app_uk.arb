@@ -1905,6 +1905,7 @@
   "stickerCouldNotLoad": "Не вдалося завантажити стікери",
   "stickerLabel": "Стікер",
   "stickerNewer": "З новішої версії Kryfo",
+  "devLinkMismatch": "Це посилання видає себе за Marios, але його ключ не збігається. Нічого не додано.",
   "devName": "Marios",
   "devRowTitle": "Marios · створив Kryfo",
   "devWelcome": "Привіт, я Marios, я роблю Kryfo. Пиши мені про що завгодно: помилки, ідеї, питання. Я читаю все.",

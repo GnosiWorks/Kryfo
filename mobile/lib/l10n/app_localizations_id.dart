@@ -7180,6 +7180,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get stickerNewer => 'Dari Kryfo versi lebih baru';
 
   @override
+  String get devLinkMismatch =>
+      'Tautan ini mengaku sebagai Marios, tapi kuncinya tidak cocok. Tidak ada yang ditambahkan.';
+
+  @override
   String get devName => 'Marios';
 
   @override
