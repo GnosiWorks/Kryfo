@@ -5526,9 +5526,14 @@ class AppState extends ChangeNotifier {
   // how many times the fifteen-minute job knocked, and when it last did
   int _jobRuns = 0;
   int _lastJobAt = 0;
+  // since when the relay poll has ticked with no sleep in between
+  int _awakeSince = 0;
 
   void _beat() {
     final now = DateTime.now().millisecondsSinceEpoch;
+    if (_awakeSince == 0 || now - _lastListenAt > kPollStallMs) {
+      _awakeSince = now;
+    }
     if (_lastListenAt > 0 && now - _lastListenAt > 5 * 60 * 1000) {
       _gaps.add('$_lastListenAt-$now');
       while (_gaps.length > 24) {
@@ -5963,7 +5968,8 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  Future<int> drainNow() async {
+  // [serviceUp]: the job found the listener service already running
+  Future<int> drainNow({bool serviceUp = false}) async {
     // the job can knock before a cold boot has read the mode. wait for that,
     // or the first check-in after a kill does nothing
     for (var i = 0; i < 80 && _docsPath.isEmpty; i++) {
@@ -5971,6 +5977,17 @@ class AppState extends ChangeNotifier {
     }
     if (_deliveryMode != DeliveryMode.always && (_torHeld || !_inFront)) {
       return checkIn();
+    }
+    if (jobMayRest(
+      mode: _deliveryMode,
+      serviceUp: serviceUp,
+      torReady: torReady,
+      nowMs: DateTime.now().millisecondsSinceEpoch,
+      lastPollMs: _lastListenAt,
+      awakeSinceMs: _awakeSince,
+    )) {
+      dlog('drainNow: listening all along, nothing to do');
+      return 0;
     }
     final before = _lastDrainAt;
     try {
@@ -10390,7 +10407,8 @@ void main() async {
     if (call.method != 'drain') return null;
     dlog('job: drain asked');
     appState.noteJobRun();
-    return appState.drainNow();
+    final args = call.arguments;
+    return appState.drainNow(serviceUp: args is Map && args['up'] == true);
   });
   // the language, before anything says a word: the first frame, or a
   // notification from a process the job started

@@ -176,6 +176,35 @@ RestartVerdict judgeRestart({
   );
 }
 
+// ---- the fifteen-minute job in always-on ----
+// its kick is for relay sockets that died while the phone slept, and its
+// wait keeps the phone awake while they come back. a process that has been
+// awake and polling long enough for the engine's own relay probes to have
+// run has already found and redialed a dead socket, so with the listener
+// service up the job leaves at once. after any sleep it knocks and waits.
+
+// a relay poll tick this late after the one before: the phone slept
+const kPollStallMs = 10 * 1000;
+// awake this long: the probe on our own relay (every 75 s, given up on
+// after 30 s) has run since the last sleep
+const kJobAwakeMs = 2 * 60 * 1000;
+
+bool jobMayRest({
+  required DeliveryMode mode,
+  required bool serviceUp,
+  required bool torReady,
+  required int nowMs,
+  required int lastPollMs,
+  required int awakeSinceMs,
+}) =>
+    mode == DeliveryMode.always &&
+    serviceUp &&
+    torReady &&
+    lastPollMs > 0 &&
+    nowMs - lastPollMs < kPollStallMs &&
+    awakeSinceMs > 0 &&
+    nowMs - awakeSinceMs >= kJobAwakeMs;
+
 // the last check-in, stored as {how, secs, why} and worded here. plain text
 // from an older build is shown as it is.
 Map<String, dynamic>? _json(String stored) {

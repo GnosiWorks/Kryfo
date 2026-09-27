@@ -152,4 +152,49 @@ void main() {
       expect(v.kills, [now]);
     });
   });
+
+  group('the fifteen-minute job in always-on', () {
+    const now = 100 * hour;
+    bool rest({
+      DeliveryMode mode = DeliveryMode.always,
+      bool up = true,
+      bool ready = true,
+      int poll = now - 400,
+      int awake = now - 10 * min,
+    }) => jobMayRest(
+      mode: mode,
+      serviceUp: up,
+      torReady: ready,
+      nowMs: now,
+      lastPollMs: poll,
+      awakeSinceMs: awake,
+    );
+
+    test('the service up and listening all along: it leaves at once', () {
+      expect(rest(), true);
+      expect(rest(awake: now - kJobAwakeMs), true);
+    });
+    test('the service was down: it knocks and waits as always', () {
+      expect(rest(up: false), false);
+    });
+    test('the route is not up: it knocks and waits', () {
+      expect(rest(ready: false), false);
+    });
+    test('the phone just slept: its sockets are unproven, it knocks', () {
+      // woke a moment ago, the poll has barely run since
+      expect(rest(awake: now - 3000), false);
+      expect(rest(awake: now - kJobAwakeMs + 1), false);
+      // the poll has not ticked since the sleep yet
+      expect(rest(poll: now - 15 * min), false);
+      expect(rest(poll: now - kPollStallMs), false);
+    });
+    test('never before the first poll', () {
+      expect(rest(poll: 0), false);
+      expect(rest(awake: 0), false);
+    });
+    test('check-ins and the helper keep their own way', () {
+      expect(rest(mode: DeliveryMode.checkins), false);
+      expect(rest(mode: DeliveryMode.helper), false);
+    });
+  });
 }
