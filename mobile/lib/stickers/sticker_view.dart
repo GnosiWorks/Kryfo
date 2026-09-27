@@ -2,9 +2,12 @@
 // a sticker on screen. one ticker for each sticker that plays. it stops
 // when the sticker scrolls off, under the app lock and under a covering
 // route (both mute it through TickerMode), and a phone set to remove
-// animations gets the still frame and no ticker at all.
-import 'dart:typed_data';
+// animations gets the still frame and no ticker at all. only time it was
+// seen playing moves it on, and below the display's rate it asks for no
+// frame between the ones it draws.
+import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
@@ -93,14 +96,27 @@ class StickerView extends StatefulWidget {
   State<StickerView> createState() => _StickerViewState();
 }
 
+// the longest gap between two frames that counts as played: a longer one
+// was the app away or a stall, and nobody saw it move
+const _maxGap = Duration(milliseconds: 100);
+
 class _StickerViewState extends State<StickerView>
     with SingleTickerProviderStateMixin {
   // ms into the loop; -1 draws the still
   final _clock = ValueNotifier<double>(-1);
   Ticker? _ticker;
-  // time banked while stopped offscreen, so it picks up where it was
-  Duration _carry = Duration.zero;
+  // time it was seen playing: kept while stopped offscreen or muted, so it
+  // picks up where it was, and what its loops are counted in
+  Duration _played = Duration.zero;
+  // _played at the last frame drawn
   Duration _last = const Duration(days: -1);
+  // the frame the played time was last counted at; null after a stop or a
+  // mute, so the time away is not counted
+  Duration? _stamp;
+  // between frames drawn below the display's rate no frame is asked for:
+  // this wakes the ticker just before the next one is due
+  Timer? _rest;
+  ValueListenable<TickerModeData>? _mode;
   bool _reduce = false;
   bool _slot = false;
   bool _parked = false;
@@ -116,7 +132,7 @@ class _StickerViewState extends State<StickerView>
   void initState() {
     super.initState();
     if (widget.start > 0 && widget.play && widget.sticker.animated) {
-      _carry = Duration(microseconds: (widget.start * 1000).round());
+      _played = Duration(microseconds: (widget.start * 1000).round());
       _clock.value = loopTime(widget.sticker, widget.start, _delay);
     }
   }
@@ -124,6 +140,7 @@ class _StickerViewState extends State<StickerView>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _watchMode();
     final r = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     if (r != _reduce) {
       _reduce = r;
@@ -137,6 +154,23 @@ class _StickerViewState extends State<StickerView>
   }
 
   @override
+  void activate() {
+    super.activate();
+    _watchMode();
+  }
+
+  // a muted ticker keeps its clock running: the time under a covering page
+  // or the lock is not played time
+  void _watchMode() {
+    final m = TickerMode.getValuesNotifier(context);
+    if (identical(m, _mode)) return;
+    _mode?.removeListener(_modeChanged);
+    _mode = m..addListener(_modeChanged);
+  }
+
+  void _modeChanged() => _stamp = null;
+
+  @override
   void didUpdateWidget(StickerView old) {
     super.didUpdateWidget(old);
     if (old.sticker != widget.sticker ||
@@ -145,7 +179,7 @@ class _StickerViewState extends State<StickerView>
       old.budget?._giveBack(this);
       _slot = false;
       _stop();
-      _carry = Duration.zero;
+      _played = Duration.zero;
       _last = const Duration(days: -1);
       _done = false;
       _delay = widget.delay;
@@ -154,7 +188,7 @@ class _StickerViewState extends State<StickerView>
     } else if (old.replay != widget.replay) {
       // again from the rest pose, at once
       _stop();
-      _carry = Duration.zero;
+      _played = Duration.zero;
       _last = const Duration(days: -1);
       _done = false;
       _delay = 0;
@@ -165,12 +199,17 @@ class _StickerViewState extends State<StickerView>
   @override
   void dispose() {
     widget.budget?._giveBack(this);
+    _rest?.cancel();
+    _mode?.removeListener(_modeChanged);
     _ticker?.dispose();
     _clock.dispose();
     super.dispose();
   }
 
   void _stop() {
+    _rest?.cancel();
+    _rest = null;
+    _stamp = null;
     final t = _ticker;
     if (t != null && t.isActive) t.stop();
     if (_slot) {
@@ -179,18 +218,20 @@ class _StickerViewState extends State<StickerView>
     }
   }
 
+  bool get _running => (_ticker?.isActive ?? false) || _rest != null;
+
   // the box was painted: a parked or waiting sticker asks to play
   void _painted(RenderSticker box) {
     _box = box;
     if (!_wants) return;
-    if (_parked || _ticker == null || !_ticker!.isActive) {
+    if (_parked || !_running) {
       SchedulerBinding.instance.addPostFrameCallback((_) => _resume());
     }
   }
 
   void _resume() {
     if (!mounted || !_wants) return;
-    if (_ticker?.isActive ?? false) return;
+    if (_running) return;
     final b = widget.budget;
     if (b != null && !_slot) {
       _slot = b._ask(this);
@@ -211,26 +252,32 @@ class _StickerViewState extends State<StickerView>
 
   void _start() {
     _parked = false;
+    if (_rest != null) return;
     final t = _ticker ??= createTicker(_tick);
     if (!t.isActive) t.start();
   }
 
-  void _tick(Duration elapsed) {
+  void _tick(Duration _) {
+    final now = SchedulerBinding.instance.currentFrameTimeStamp;
     final box = _box;
     if (box != null && !box.onScreen) {
       // scrolled off: nothing draws it, so nothing runs. the next paint
       // (it scrolled back) starts it again from here
-      _carry += elapsed;
       _parked = true;
       _stop();
       box.markNeedsPaint();
       return;
     }
-    final total = _carry + elapsed;
-    final gap = Duration(microseconds: 900000 ~/ widget.fps);
-    if (total - _last < gap) return;
-    _last = total;
-    final ms = total.inMicroseconds / 1000;
+    final seen = _stamp;
+    _stamp = now;
+    if (seen != null) {
+      final gap = now - seen;
+      _played += gap > _maxGap ? _maxGap : gap;
+    }
+    final period = 1000000 / widget.fps;
+    if ((_played - _last).inMicroseconds < period * 0.9) return;
+    _last = _played;
+    final ms = _played.inMicroseconds / 1000;
     final n = widget.loops;
     final loop = widget.sticker.loopMs;
     if (n != null && loop > 0 && ms - _delay >= n * loop) {
@@ -242,6 +289,23 @@ class _StickerViewState extends State<StickerView>
     }
     StickerView.frames++;
     _clock.value = loopTime(widget.sticker, ms, _delay);
+    _restUntilNext(period);
+  }
+
+  // at the display's own rate it keeps ticking. slower, it stops until
+  // half a display frame before the next one, which then lands on its vsync
+  void _restUntilNext(double period) {
+    final hz = View.maybeOf(context)?.display.refreshRate ?? 60;
+    final frame = 1000000 / (hz > 0 ? hz : 60);
+    if (period < frame * 1.5) return;
+    _ticker!.stop();
+    _rest = Timer(Duration(microseconds: (period - frame / 2).round()), () {
+      _rest = null;
+      final t = _ticker;
+      if (mounted && _wants && !_parked && t != null && !t.isActive) {
+        t.start();
+      }
+    });
   }
 
   @override

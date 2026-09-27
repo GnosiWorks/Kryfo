@@ -72,6 +72,7 @@ import '../stickers/sticker_wire.dart' show StickerWire;
 import '../widgets/stagger_in.dart';
 import '../widgets/motion.dart';
 import '../widgets/burn_fade.dart';
+import '../seen_timers.dart';
 import '../dlog.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/menu_backdrop.dart';
@@ -437,7 +438,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   bool _secureNext = false;
   bool _disguise = false;
   int _burnSeconds = _lastBurnSeconds; // restored from last use this session.
-  Timer? _burnTick;
+  // the burn, the inbox poll and the auto retry run only while the chat is
+  // in view, and catch up the moment it is back
+  final _timers = SeenTimers();
+  late final SeenJob _burn;
   int _lastBurnSec = 0;
   final _scrollCtrl = ScrollController();
   static const _pageSize = 60;
@@ -607,7 +611,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   String _status = '';
   bool _loading = false;
   bool _reloadPending = false;
-  Timer? _pollTimer;
   bool _sending = false;
   // stickers being sealed. the composer does not wait for them, a retry does
   int _stickerSends = 0;
@@ -798,53 +801,89 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       if (mounted) _suppressSticky = false;
     });
     _loadMessages();
-    _burnTick = Timer.periodic(const Duration(milliseconds: 100), (_) {
-      if (!mounted) return;
-      final now = DateTime.now().millisecondsSinceEpoch;
-      // one pass, and no list unless something burnt: this runs ten times
-      // a second while the chat is open
-      List<_Msg>? expired;
-      var anyGhost = false;
-      for (final m in _messages) {
-        if (m.burnAt == null) continue;
-        anyGhost = true;
-        if (m.burnAt! <= now && !m.removing && !m.sending && !m.failed) {
-          (expired ??= []).add(m);
-        }
+    _burn = _timers.until(_burnWait, _burnTick);
+    _timers.every(const Duration(seconds: 30), _autoRetryTick);
+    _timers.every(const Duration(seconds: 1), () {
+      if (mounted) _checkInbox();
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _timers.watch(context);
+  }
+
+  // when the burn looks again: the next deadline, or the countdown's next
+  // second. nothing while no message here counts down
+  Duration? _burnWait() {
+    var ghosts = false;
+    int? soonest;
+    for (final m in _messages) {
+      final at = m.burnAt;
+      if (at == null) continue;
+      ghosts = true;
+      if (m.removing || m.sending || m.failed) continue;
+      if (soonest == null || at < soonest) soonest = at;
+    }
+    return burnWait(
+      DateTime.now().millisecondsSinceEpoch,
+      ghosts: ghosts,
+      soonest: soonest,
+    );
+  }
+
+  void _burnTick(bool back) {
+    if (!mounted) return;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    // one pass, and no list unless something burnt
+    List<_Msg>? expired;
+    var anyGhost = false;
+    for (final m in _messages) {
+      if (m.burnAt == null) continue;
+      anyGhost = true;
+      if (m.burnAt! <= now && !m.removing && !m.sending && !m.failed) {
+        (expired ??= []).add(m);
       }
-      if (!anyGhost) return;
-      if (expired != null) {
+    }
+    if (!anyGhost) return;
+    if (expired != null) {
+      for (final m in expired) {
+        m.removing = true;
+        m.burnedAway = true;
+      }
+      if (back) {
+        // it burned while the chat was out of view: gone, as it would be
+        // by now, with no burn played for it
+        _messages.removeWhere(expired.contains);
         for (final m in expired) {
-          m.removing = true;
-          m.burnedAway = true;
+          unawaited(_forgetBurnt(m));
+        }
+      } else {
+        for (final m in expired) {
           // the bubble burned on its own; its row folds (LeaveFold) before
           // it is pulled, else the messages around it jump
           Future.delayed(kLeaveGone, () async {
             if (mounted) setState(() => _messages.remove(m));
-            if (m.msgUid != null) await session.deleteMessage(m.msgUid!);
-            // the home row was previewing what just burned
-            unawaited(appState.refreshContacts());
+            await _forgetBurnt(m);
           });
         }
         HapticFeedback.lightImpact();
       }
-      // _BurnFade dissolves itself, so the timer only has to repaint when
-      // something just expired or the countdown text changes second.
-      final sec = now ~/ 1000;
-      if (expired != null || sec != _lastBurnSec) {
-        _lastBurnSec = sec;
-        setState(() {});
-      }
-    });
+    }
+    // _BurnFade dissolves itself, so the tick only has to repaint when
+    // something just expired or the countdown text changes second.
+    final sec = now ~/ 1000;
+    if (expired != null || sec != _lastBurnSec) {
+      _lastBurnSec = sec;
+      setState(() {});
+    }
+  }
 
-    _autoRetryTimer = Timer.periodic(
-      const Duration(seconds: 30),
-      (_) => _autoRetryTick(),
-    );
-    _pollTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (!mounted) return;
-      _checkInbox();
-    });
+  Future<void> _forgetBurnt(_Msg m) async {
+    if (m.msgUid != null) await session.deleteMessage(m.msgUid!);
+    // the home row was previewing what just burned
+    unawaited(appState.refreshContacts());
   }
 
   int _lastRev = -1;
@@ -933,7 +972,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
   }
 
-  Timer? _autoRetryTimer;
   // online, a failed send goes again on its own: half a minute apart, six
   // goes, then it is shown as failed. the reconnect retry below covers the
   // offline case; this covers a route that was simply slow or flaky.
@@ -3820,9 +3858,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     for (final land in List.of(_flights)) {
       land();
     }
-    _pollTimer?.cancel();
-    _autoRetryTimer?.cancel();
-    _burnTick?.cancel();
+    _timers.dispose();
     releaseChat(widget.peerHaloId);
     lockState.removeListener(_lockLifted);
     appState.removeListener(_onAppStateChanged);
@@ -4748,6 +4784,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    // a message that just started counting down gets its burn on time
+    _burn.poke();
     final searchActive = _searching && _query.isNotEmpty;
     return Scaffold(
       backgroundColor: HaloColors.surface,

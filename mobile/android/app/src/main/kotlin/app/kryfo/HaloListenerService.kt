@@ -17,6 +17,12 @@ class HaloListenerService : Service() {
         const val CHANNEL_ID = "halo_listener_v2"
         const val NOTIFICATION_ID = 1
 
+        // up in this process: the periodic job leaves it alone then, since
+        // starting it again only posts its notification anew
+        @Volatile
+        var running = false
+            private set
+
         // the channel keeps the words it was made with. a service that is
         // not running (check-ins) never gets to say them again, so a
         // language switch renames it from here too; [onlyIfThere] leaves a
@@ -83,11 +89,18 @@ class HaloListenerService : Service() {
         // service that stops before startForeground takes the process down,
         // so it leaves only after that call and asks not to come back.
         if (!KryfoState.hasData(this)) {
+            running = false
             stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
             return START_NOT_STICKY
         }
+        running = true
         return START_STICKY
+    }
+
+    override fun onDestroy() {
+        running = false
+        super.onDestroy()
     }
 
     override fun onBind(intent: Intent?): IBinder? = null

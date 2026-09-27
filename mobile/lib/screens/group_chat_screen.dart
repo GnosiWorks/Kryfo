@@ -57,6 +57,7 @@ import '../image_strip.dart';
 import '../mp4_strip.dart';
 import '../widgets/kryfo_avatar.dart';
 import '../widgets/burn_fade.dart';
+import '../seen_timers.dart';
 import 'group_info_screen.dart';
 import '../widgets/motion.dart'
     show haloRoute, SendPill, PrivacyMode, TorStatus;
@@ -189,7 +190,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   bool _ghost = false;
   bool _disguise = false;
   int _burnSeconds = 300; // 5 min default, same as 1:1
-  Timer? _burnTick;
+  // the burn and the auto retry run only while the group is in view, and
+  // catch up the moment it is back
+  final _timers = SeenTimers();
+  late final SeenJob _burn;
   int _lastBurnSec = 0;
   bool _loading = false;
   bool _reloadQueued = false;
@@ -250,29 +254,63 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       if (mounted) setState(() => _disguise = d);
     });
     appState.addListener(_onAppStateChanged);
-    _autoRetryTimer = Timer.periodic(
-      const Duration(seconds: 30),
-      (_) => _autoRetryTick(),
+    _timers.every(const Duration(seconds: 30), _autoRetryTick);
+    _burn = _timers.until(_burnWait, _burnTick);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _timers.watch(context);
+  }
+
+  // when the burn looks again: the next deadline, or the countdown's next
+  // second. nothing while no message here counts down
+  Duration? _burnWait() {
+    var ghosts = false;
+    int? soonest;
+    for (final m in _messages) {
+      final at = m.burnAt;
+      if (at == null) continue;
+      ghosts = true;
+      if (m.removing || m.sending || m.failed) continue;
+      if (soonest == null || at < soonest) soonest = at;
+    }
+    return burnWait(
+      DateTime.now().millisecondsSinceEpoch,
+      ghosts: ghosts,
+      soonest: soonest,
     );
-    _burnTick = Timer.periodic(const Duration(milliseconds: 100), (_) {
-      if (!mounted) return;
-      final now = DateTime.now().millisecondsSinceEpoch;
-      // one pass, and no list unless something actually burnt. most groups
-      // carry no ghosts at all, and this runs ten times a second for as long
-      // as the chat is open.
-      List<_GMsg>? expired;
-      var anyGhost = false;
-      for (final m in _messages) {
-        if (m.burnAt == null) continue;
-        anyGhost = true;
-        if (m.burnAt! <= now && !m.removing && !m.sending && !m.failed) {
-          (expired ??= []).add(m);
-        }
+  }
+
+  void _burnTick(bool back) {
+    if (!mounted) return;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    // one pass, and no list unless something actually burnt. most groups
+    // carry no ghosts at all
+    List<_GMsg>? expired;
+    var anyGhost = false;
+    for (final m in _messages) {
+      if (m.burnAt == null) continue;
+      anyGhost = true;
+      if (m.burnAt! <= now && !m.removing && !m.sending && !m.failed) {
+        (expired ??= []).add(m);
       }
-      if (!anyGhost) return;
-      if (expired != null) {
+    }
+    if (!anyGhost) return;
+    if (expired != null) {
+      for (final m in expired) {
+        m.removing = true;
+      }
+      if (back) {
+        // it burned while the group was out of view: gone, as it would be
+        // by now, with no burn played for it
+        _messages.removeWhere(expired.contains);
         for (final m in expired) {
-          m.removing = true;
+          if (m.msgUid != null) session.deleteMessage(m.msgUid!);
+        }
+      } else {
+        for (final m in expired) {
           // it burns, then its row folds (LeaveFold); pulled sooner, the
           // animation is cut off and the messages around it jump
           Future.delayed(kLeaveGone, () {
@@ -282,14 +320,13 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         }
         HapticFeedback.lightImpact();
       }
-      // repaint when something expired or the countdown changes second, not
-      // every 100ms
-      final sec = now ~/ 1000;
-      if (expired != null || sec != _lastBurnSec) {
-        _lastBurnSec = sec;
-        setState(() {});
-      }
-    });
+    }
+    // repaint when something expired or the countdown changes second
+    final sec = now ~/ 1000;
+    if (expired != null || sec != _lastBurnSec) {
+      _lastBurnSec = sec;
+      setState(() {});
+    }
   }
 
   // jump to newest, same control as 1:1
@@ -1160,7 +1197,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     }
   }
 
-  Timer? _autoRetryTimer;
   // online, a failed send goes again on its own: half a minute apart, six
   // goes, then it is shown as failed with the tap
   void _autoRetryTick() {
@@ -2727,8 +2763,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     lockState.removeListener(_lockLifted);
     releaseChat('group:${widget.groupId}');
     appState.removeListener(_onAppStateChanged);
-    _burnTick?.cancel();
-    _autoRetryTimer?.cancel();
+    _timers.dispose();
     _msgCtrl.dispose();
     _scrollCtrl.dispose();
     super.dispose();
@@ -2736,6 +2771,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   @override
   Widget build(BuildContext context) {
+    // a message that just started counting down gets its burn on time
+    _burn.poke();
     return Scaffold(
       backgroundColor: HaloColors.surface,
       body: SafeArea(

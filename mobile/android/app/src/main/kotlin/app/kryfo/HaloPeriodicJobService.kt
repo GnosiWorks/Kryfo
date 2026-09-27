@@ -34,9 +34,11 @@ class HaloPeriodicJobService : JobService() {
         Log.i("halo-engine", "periodic job: start")
         // bring the listener back if something took it. not allowed from
         // the background on newer androids, and that is fine: the engine
-        // in this process does the actual work either way.
+        // in this process does the actual work either way. one that is up
+        // is left alone: starting it again only posts its notification anew
         val staysOn = DeliveryPrefs.staysOn(this)
-        if (staysOn) {
+        val up = staysOn && HaloListenerService.running
+        if (staysOn && !up) {
             try {
                 val intent = Intent(this, HaloListenerService::class.java)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(intent)
@@ -61,22 +63,25 @@ class HaloPeriodicJobService : JobService() {
         // window, so it gets longer than a knock on sockets that are already
         // there. android allows a job ten minutes.
         main.postDelayed(finish, if (staysOn) 60_000 else 170_000)
-        ask(engine, params, finish, if (staysOn) 0 else 15)
+        ask(engine, params, finish, if (staysOn) 0 else 15, up)
         return true
     }
 
     // in a process the job itself just started, dart may not have its
     // handler up yet. always-on does not care: the boot that is under way
     // connects anyway. a check-in does, because nothing else will fetch.
+    // [up] tells dart the listener was already running: if it has been
+    // listening all along, there is nothing for the job to do
     private fun ask(
         engine: io.flutter.embedding.engine.FlutterEngine,
         params: JobParameters?,
         finish: Runnable,
-        retries: Int
+        retries: Int,
+        up: Boolean
     ) {
         try {
             MethodChannel(engine.dartExecutor.binaryMessenger, "halo/job")
-                .invokeMethod("drain", null, object : MethodChannel.Result {
+                .invokeMethod("drain", mapOf("up" to up), object : MethodChannel.Result {
                     override fun success(result: Any?) {
                         Log.i("halo-engine", "periodic job: drained $result")
                         main.removeCallbacks(finish)
@@ -89,7 +94,7 @@ class HaloPeriodicJobService : JobService() {
                     }
                     override fun notImplemented() {
                         if (retries > 0 && !done) {
-                            main.postDelayed({ ask(engine, params, finish, retries - 1) }, 2_000)
+                            main.postDelayed({ ask(engine, params, finish, retries - 1, up) }, 2_000)
                             return
                         }
                         Log.i("halo-engine", "periodic job: dart not listening yet")

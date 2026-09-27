@@ -83,8 +83,10 @@ class MainActivity : FlutterFragmentActivity() {
         // keeps its descriptor; the name is gone.
         clearOpenCopies()
         // dart asks for notifications (askNotifications) once the lock is
-        // down, so android's dialog never opens over the pin pad
-        startListenerService()
+        // down, so android's dialog never opens over the pin pad. one that
+        // is up is left alone: starting it again only posts its
+        // notification anew. a mode or language change still restarts it
+        if (!HaloListenerService.running) startListenerService()
         schedulePeriodicJob()
     }
 
