@@ -13,6 +13,9 @@ import '../widgets/shift_in_place.dart';
 import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
+import '../devchat/dev_chat.dart' show DevRow;
+import '../widgets/dev_avatar.dart';
+import 'dev_about_sheet.dart';
 import 'home_screen.dart' show ContactPreview;
 
 // archived chats: hidden from the main list, still receive normally. rows
@@ -29,7 +32,10 @@ class ArchivedScreen extends StatelessWidget {
           animation: appState,
           builder: (_, _) => ArchivedList(
             archived: appState.contacts.where((c) => c.archived).toList(),
+            dev: appState.devRow?.archived == true ? appState.devRow : null,
             onUnarchive: appState.unarchive,
+            onUnarchiveDev: () => setDevArchived(false),
+            onOpenDev: (id) => openDevChat(context, id),
             // under the lock nothing is being watched
             quiet: lockGuard.isLocked(),
           ),
@@ -44,12 +50,20 @@ class ArchivedScreen extends StatelessWidget {
 class ArchivedList extends StatefulWidget {
   final List<ContactPreview> archived;
   final ValueChanged<String> onUnarchive;
+  // the developer chat, when it is archived: a row like the others that
+  // opens its chat
+  final DevRow? dev;
+  final VoidCallback? onUnarchiveDev;
+  final ValueChanged<String>? onOpenDev;
   // take a change as it is, with no motion
   final bool quiet;
   const ArchivedList({
     super.key,
     required this.archived,
     required this.onUnarchive,
+    this.dev,
+    this.onUnarchiveDev,
+    this.onOpenDev,
     this.quiet = false,
   });
 
@@ -57,24 +71,34 @@ class ArchivedList extends StatefulWidget {
   State<ArchivedList> createState() => _ArchivedListState();
 }
 
+// an archived chat, or the developer chat among them
+typedef _Archived = ({ContactPreview? c, DevRow? d});
+
 class _ArchivedListState extends State<ArchivedList> {
-  late final RowSet<ContactPreview> _rows = RowSet(
-    keyOf: (c) => c.haloId,
+  late final RowSet<_Archived> _rows = RowSet(
+    keyOf: (r) => r.c?.haloId ?? 'dev',
     onGone: () {
       if (mounted) setState(() {});
     },
   );
 
+  List<_Archived> _all() {
+    final all = <_Archived>[for (final c in widget.archived) (c: c, d: null)];
+    final d = widget.dev;
+    if (d != null) all.insert(devSlot(d, widget.archived), (c: null, d: d));
+    return all;
+  }
+
   @override
   void initState() {
     super.initState();
-    _rows.start(widget.archived);
+    _rows.start(_all());
   }
 
   @override
   void didUpdateWidget(ArchivedList old) {
     super.didUpdateWidget(old);
-    _rows.update(widget.archived, quiet: widget.quiet);
+    _rows.update(_all(), quiet: widget.quiet);
   }
 
   @override
@@ -103,7 +127,8 @@ class _ArchivedListState extends State<ArchivedList> {
 
   @override
   Widget build(BuildContext context) {
-    final archived = widget.archived;
+    // the developer chat counts as one of them
+    final count = widget.archived.length + (widget.dev == null ? 0 : 1);
     final rows = _rows.rows;
     WidgetsBinding.instance.addPostFrameCallback((_) => _rows.built());
     final still = motionStill(context);
@@ -130,7 +155,7 @@ class _ArchivedListState extends State<ArchivedList> {
             ],
           ),
         ),
-        if (archived.isNotEmpty)
+        if (count > 0)
           Padding(
             padding: const EdgeInsetsDirectional.fromSTEB(22, 2, 26, 14),
             // the count rolls down as chats are taken back out
@@ -150,7 +175,7 @@ class _ArchivedListState extends State<ArchivedList> {
                         position: Tween(
                           begin: Offset(
                             0,
-                            child.key == ValueKey(archived.length) ? -0.5 : 0.5,
+                            child.key == ValueKey(count) ? -0.5 : 0.5,
                           ),
                           end: Offset.zero,
                         ).animate(a),
@@ -158,11 +183,11 @@ class _ArchivedListState extends State<ArchivedList> {
                       ),
               ),
               child: RichText(
-                key: ValueKey(archived.length),
+                key: ValueKey(count),
                 text: TextSpan(
                   children: [
                     TextSpan(
-                      text: '${_countWord(archived.length)}  ',
+                      text: '${_countWord(count)}  ',
                       style: HaloType.serif(
                         size: 15,
                         italic: true,
@@ -172,7 +197,7 @@ class _ArchivedListState extends State<ArchivedList> {
                     TextSpan(
                       // exactly one, not the plural "one": in russian
                       // that also means 21, 31...
-                      text: archived.length == 1
+                      text: count == 1
                           ? l10n.archivedChatRestingHereIt
                           : l10n.archivedChatsRestingHere,
                       style: HaloType.sans(
@@ -205,24 +230,35 @@ class _ArchivedListState extends State<ArchivedList> {
                   padding: const EdgeInsets.only(top: 2, bottom: 8),
                   itemCount: rows.length,
                   itemBuilder: (_, i) {
-                    final c = rows[i];
-                    final leaving = _rows.leaving(c);
+                    final r = rows[i];
+                    final c = r.c;
+                    final d = r.d;
+                    final leaving = _rows.leaving(r);
                     return ShiftInPlace(
-                      key: ValueKey(c.haloId),
+                      key: ValueKey(c?.haloId ?? 'dev'),
                       index: i,
                       child: IgnorePointer(
                         ignoring: leaving,
                         child: FadeFold(
                           leaving: leaving,
                           child: GrowIn(
-                            active: _rows.fresh(c),
+                            active: _rows.fresh(r),
                             child: StaggerIn(
                               index: i,
-                              child: _ArchivedRow(
-                                contact: c,
-                                number: i + 1,
-                                onUnarchive: widget.onUnarchive,
-                              ),
+                              child: c != null
+                                  ? _ArchivedRow(
+                                      contact: c,
+                                      number: i + 1,
+                                      onUnarchive: widget.onUnarchive,
+                                    )
+                                  : _ArchivedDevRow(
+                                      d: d!,
+                                      number: i + 1,
+                                      onOpen: () =>
+                                          widget.onOpenDev?.call(d.chatId),
+                                      onUnarchive: () =>
+                                          widget.onUnarchiveDev?.call(),
+                                    ),
                             ),
                           ),
                         ),
@@ -231,7 +267,7 @@ class _ArchivedListState extends State<ArchivedList> {
                   },
                 ),
         ),
-        if (archived.isNotEmpty)
+        if (count > 0)
           Container(
             width: double.infinity,
             padding: const EdgeInsets.fromLTRB(24, 14, 24, 10),
@@ -254,6 +290,31 @@ class _ArchivedListState extends State<ArchivedList> {
     );
   }
 }
+
+// a face at rest reads warm grey; pressed it has its colour back
+const _awakeFilter = ColorFilter.mode(Colors.transparent, BlendMode.multiply);
+const _asleepFilter = ColorFilter.matrix([
+  0.5,
+  0.35,
+  0.15,
+  0,
+  -10,
+  0.5,
+  0.35,
+  0.15,
+  0,
+  -10,
+  0.5,
+  0.35,
+  0.15,
+  0,
+  -10,
+  0,
+  0,
+  0,
+  1,
+  0,
+]);
 
 // dim by default, full colour while pressed
 class _ArchivedRow extends StatefulWidget {
@@ -303,33 +364,7 @@ class _ArchivedRowState extends State<_ArchivedRow> {
               duration: const Duration(milliseconds: 200),
               opacity: dim,
               child: ColorFiltered(
-                colorFilter: _awake
-                    ? const ColorFilter.mode(
-                        Colors.transparent,
-                        BlendMode.multiply,
-                      )
-                    : const ColorFilter.matrix([
-                        0.5,
-                        0.35,
-                        0.15,
-                        0,
-                        -10,
-                        0.5,
-                        0.35,
-                        0.15,
-                        0,
-                        -10,
-                        0.5,
-                        0.35,
-                        0.15,
-                        0,
-                        -10,
-                        0,
-                        0,
-                        0,
-                        1,
-                        0,
-                      ]),
+                colorFilter: _awake ? _awakeFilter : _asleepFilter,
                 child: KryfoAvatar(seed: c.avatarSeed, size: 44),
               ),
             ),
@@ -389,6 +424,117 @@ class _ArchivedRowState extends State<_ArchivedRow> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// the developer chat, archived: dimmed like the rest until pressed, and a
+// tap opens it as from home. taken back out, it is pinned as it was
+class _ArchivedDevRow extends StatefulWidget {
+  final DevRow d;
+  final int number;
+  final VoidCallback onOpen;
+  final VoidCallback onUnarchive;
+  const _ArchivedDevRow({
+    required this.d,
+    required this.number,
+    required this.onOpen,
+    required this.onUnarchive,
+  });
+  @override
+  State<_ArchivedDevRow> createState() => _ArchivedDevRowState();
+}
+
+class _ArchivedDevRowState extends State<_ArchivedDevRow> {
+  bool _awake = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final d = widget.d;
+    return Semantics(
+      button: true,
+      child: GestureDetector(
+        onTapDown: (_) => setState(() => _awake = true),
+        onTapCancel: () => setState(() => _awake = false),
+        onTapUp: (_) => setState(() => _awake = false),
+        onTap: widget.onOpen,
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          color: _awake ? HaloColors.surface : Colors.transparent,
+          padding: const EdgeInsets.fromLTRB(22, 13, 22, 13),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 16,
+                child: Text(
+                  twoDigits(widget.number),
+                  style: HaloType.mono(
+                    size: 10,
+                    color: _awake ? HaloColors.text2 : HaloColors.text3,
+                    letter: -0.02,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 13),
+              AnimatedOpacity(
+                duration: const Duration(milliseconds: 200),
+                opacity: _awake ? 1.0 : 0.6,
+                child: ColorFiltered(
+                  colorFilter: _awake ? _awakeFilter : _asleepFilter,
+                  child: const DevAvatar(),
+                ),
+              ),
+              const SizedBox(width: 13),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.devRowTitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: HaloType.sans(
+                        size: 15,
+                        weight: FontWeight.w500,
+                        color: _awake ? HaloColors.text : HaloColors.text2,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      d.preview ?? l10n.devWelcome,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: HaloType.sans(size: 13, color: HaloColors.text3),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              PressScale(
+                label: l10n.archivedUnarchive,
+                scale: 0.9,
+                onTap: widget.onUnarchive,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 10,
+                  ),
+                  child: Text(
+                    l10n.archivedUnarchive,
+                    semanticsLabel: '',
+                    style: HaloType.mono(
+                      size: 9,
+                      color: HaloColors.amber,
+                      letter: 0.08,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

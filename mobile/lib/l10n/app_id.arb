@@ -1904,5 +1904,19 @@
   "stickerRemoveRecent": "Hapus dari terbaru",
   "stickerCouldNotLoad": "Stiker tidak dapat dimuat",
   "stickerLabel": "Stiker",
-  "stickerNewer": "Dari Kryfo versi lebih baru"
+  "stickerNewer": "Dari Kryfo versi lebih baru",
+  "devName": "Marios",
+  "devRowTitle": "Marios · pembuat Kryfo",
+  "devWelcome": "Hai, aku Marios, aku yang membuat Kryfo. Ceritakan apa saja: bug, ide, pertanyaan. Aku membaca semuanya.",
+  "devPinned": "Tertanam di Kryfo",
+  "devAnonymous": "Anonim",
+  "devAboutLine": "Kunci Marios tertanam di Kryfo. Setiap pesan di obrolan ini dicocokkan dengan kunci itu, jadi tidak ada orang lain yang bisa menulis atas namanya.",
+  "devKeyLabel": "Kuncinya",
+  "devDeleteLine": "Semua pesan terhapus, dan obrolan ini tidak akan kembali.",
+  "devDeleteLineAnon": "Semua pesan dan nama yang dibuat untuk obrolan ini terhapus, dan obrolan ini tidak akan kembali.",
+  "settingsWriteToMarios": "Kirim pesan ke Marios",
+  "settingsWriteToMariosHint": "Bug, ide, pertanyaan",
+  "seenDevChat": "Obrolan dengan Marios",
+  "seenDevChatCell": "Jika kamu menulis",
+  "seenDevChatLine": "Tidak ada apa-apa sampai kamu menulis. Setelah itu, apa yang kamu kirim, dan tiga katamu, kecuali kamu menulis secara anonim."
 }

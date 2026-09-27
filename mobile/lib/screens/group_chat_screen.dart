@@ -23,6 +23,9 @@ import '../widgets/decode_px.dart';
 import '../atmosphere.dart';
 import 'shield_sheet.dart';
 import '../notifications.dart' show clearNotificationsFor;
+import '../devchat/dev_key.dart' show isDevChat;
+import 'dev_about_sheet.dart'
+    show DevForwardTile, devChatRoute, devForwardTarget, devSlot;
 import 'chat_screen.dart'
     show
         disguiseWav,
@@ -2391,6 +2394,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   Future<void> _forwardGroupMessage(_GMsg m) async {
     final targets = appState.contacts.where((c) => !c.blocked).toList();
+    // the developer chat, once it has started
+    final dev = devForwardTarget;
+    final devAt = dev == null ? -1 : devSlot(dev, targets);
     final haloId = await showHaloSheet<String>(
       context,
       builder: (ctx) => SafeArea(
@@ -2410,7 +2416,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 ),
               ),
             ),
-            if (targets.isEmpty)
+            if (targets.isEmpty && dev == null)
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
                 child: Text(
@@ -2426,7 +2432,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 physics: const NeverScrollableScrollPhysics(),
                 padding: const EdgeInsets.only(bottom: 8),
                 children: [
-                  for (final c in targets)
+                  for (final (i, c) in targets.indexed) ...[
+                    if (i == devAt)
+                      DevForwardTile(
+                        onTap: () => Navigator.pop(ctx, dev!.chatId),
+                      ),
                     InkWell(
                       onTap: () => Navigator.pop(ctx, c.haloId),
                       child: Padding(
@@ -2451,6 +2461,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                         ),
                       ),
                     ),
+                  ],
+                  if (devAt == targets.length)
+                    DevForwardTile(
+                      onTap: () => Navigator.pop(ctx, dev!.chatId),
+                    ),
                 ],
               ),
           ],
@@ -2458,6 +2473,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       ),
     );
     if (haloId == null || !mounted) return;
+    if (isDevChat(haloId)) {
+      Navigator.of(context).push(devChatRoute(haloId, initialText: m.text));
+      return;
+    }
     final row = await session.getContact(haloId);
     if (row == null || !mounted) return;
     Navigator.of(context).push(

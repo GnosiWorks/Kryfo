@@ -1904,5 +1904,19 @@
   "stickerRemoveRecent": "Aus „Zuletzt“ entfernen",
   "stickerCouldNotLoad": "Sticker konnten nicht geladen werden",
   "stickerLabel": "Sticker",
-  "stickerNewer": "Aus einem neueren Kryfo"
+  "stickerNewer": "Aus einem neueren Kryfo",
+  "devName": "Marios",
+  "devRowTitle": "Marios · hat Kryfo gebaut",
+  "devWelcome": "Hi, ich bin Marios, ich baue Kryfo. Schreib mir alles: Fehler, Ideen, Fragen. Ich lese alles.",
+  "devPinned": "Fest in Kryfo eingebaut",
+  "devAnonymous": "Anonym",
+  "devAboutLine": "Der Schlüssel von Marios ist fest in Kryfo eingebaut. Jede Nachricht in diesem Chat wird damit geprüft, also kann niemand sonst als er schreiben.",
+  "devKeyLabel": "Sein Schlüssel",
+  "devDeleteLine": "Jede Nachricht wird gelöscht, und der Chat kommt nicht wieder.",
+  "devDeleteLineAnon": "Jede Nachricht und der Name, der nur für diesen Chat gemacht wurde, werden gelöscht, und der Chat kommt nicht wieder.",
+  "settingsWriteToMarios": "Marios schreiben",
+  "settingsWriteToMariosHint": "Fehler, Ideen, Fragen",
+  "seenDevChat": "Der Chat mit Marios",
+  "seenDevChatCell": "Wenn du schreibst",
+  "seenDevChatLine": "Nichts, bis du schreibst. Dann das, was du sendest, und deine drei Wörter, außer du schreibst anonym."
 }

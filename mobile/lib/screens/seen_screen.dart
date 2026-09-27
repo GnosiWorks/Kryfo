@@ -10,6 +10,7 @@ import '../theme.dart';
 import '../widgets/ease_size.dart';
 import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
+import 'dev_about_sheet.dart' show devChatOffered;
 
 class SeenScreen extends StatefulWidget {
   const SeenScreen({super.key});
@@ -93,6 +94,7 @@ _Cell get _never => _Cell(l10n.seenNever, _Tone.good);
 _Cell get _onDevice => _Cell(l10n.seenOnDevice, _Tone.good);
 _Cell get _yours => _Cell(l10n.seenYours, _Tone.bad);
 _Cell get _unaudited => _Cell(l10n.seenUnaudited, _Tone.bad);
+_Cell get _ifYouWrite => _Cell(l10n.seenDevChatCell, _Tone.warn);
 
 List<_Row> get _rows => [
   _Row(l10n.seenWhoYouTalkTo, [
@@ -135,6 +137,13 @@ List<_Row> get _rows => [
     _Cell(l10n.seenOverTor, _Tone.good),
     _Cell(l10n.seenOverTor, _Tone.good),
   ], l10n.seenAPreviewIsFetched),
+  // the chat with the developer, wherever the app offers it
+  if (devChatOffered)
+    _Row(l10n.seenDevChat, [
+      _ifYouWrite,
+      _ifYouWrite,
+      _ifYouWrite,
+    ], l10n.seenDevChatLine),
   _Row(l10n.seenASeizedUnlockedPhone, [
     _yours,
     _yours,

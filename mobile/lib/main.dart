@@ -35,6 +35,7 @@ import 'screens/room_create_sheet.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'screens/group_chat_screen.dart';
 import 'screens/chat_screen.dart';
+import 'screens/dev_about_sheet.dart' show devChatRoute;
 import 'screens/pair_code_screen.dart';
 import 'screens/scan_screen.dart';
 import 'screens/modes_screen.dart';
@@ -4643,6 +4644,13 @@ Future<void> _openChatFor(String? haloId) async {
   if (haloId == null || haloId.isEmpty) return;
   final nav = rootNavKey.currentState;
   if (nav == null) return;
+  // the developer chat has its own door, and only while it is there
+  if (isDevChat(haloId)) {
+    if (haloId == currentChatPeer) return;
+    if ((await session.devChat.load())?.chatId != haloId) return;
+    nav.push(devChatRoute(haloId));
+    return;
+  }
   final rows = await session.contacts();
   final matches = rows.where((r) => r['halo_id'] == haloId).toList();
   if (matches.isEmpty) return;
@@ -11162,6 +11170,7 @@ class _RootShellState extends State<RootShell> {
       key: ValueKey(appState.sessionRev),
       haloId: appState.sessionId,
       contacts: appState.contacts,
+      devRow: appState.devRow,
       pendingCount: appState.pendingCount,
       groups: appState.groups
           .map(

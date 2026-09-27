@@ -6895,6 +6895,50 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get stickerNewer => '来自更新版本的 Kryfo';
+
+  @override
+  String get devName => 'Marios';
+
+  @override
+  String get devRowTitle => 'Marios · Kryfo 的开发者';
+
+  @override
+  String get devWelcome =>
+      '你好，我是 Marios，Kryfo 是我做的。什么都可以跟我说：Bug、想法、问题。每一条我都会看。';
+
+  @override
+  String get devPinned => '内置于 Kryfo';
+
+  @override
+  String get devAnonymous => '匿名';
+
+  @override
+  String get devAboutLine =>
+      'Marios 的密钥内置在 Kryfo 里。这个聊天里的每一条消息都会用它核对，所以别人没法冒充他发消息。';
+
+  @override
+  String get devKeyLabel => '他的密钥';
+
+  @override
+  String get devDeleteLine => '每一条消息都会删除，这个聊天也不会再回来。';
+
+  @override
+  String get devDeleteLineAnon => '每一条消息和为这个聊天生成的名字都会删除，这个聊天也不会再回来。';
+
+  @override
+  String get settingsWriteToMarios => '给 Marios 发消息';
+
+  @override
+  String get settingsWriteToMariosHint => 'Bug、想法、问题';
+
+  @override
+  String get seenDevChat => '与 Marios 的聊天';
+
+  @override
+  String get seenDevChatCell => '你发消息时';
+
+  @override
+  String get seenDevChatLine => '你发消息之前，什么都看不到。之后能看到你发送的内容，以及你的三个词，除非你匿名发送。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -13788,4 +13832,47 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get stickerNewer => '來自較新版的 Kryfo';
+
+  @override
+  String get devName => 'Marios';
+
+  @override
+  String get devRowTitle => 'Marios · Kryfo 的開發者';
+
+  @override
+  String get devWelcome => '你好，我是 Marios，Kryfo 是我做的。什麼都可以跟我說：錯誤、想法、問題。每一則我都會看。';
+
+  @override
+  String get devPinned => '內建於 Kryfo';
+
+  @override
+  String get devAnonymous => '匿名';
+
+  @override
+  String get devAboutLine =>
+      'Marios 的金鑰內建在 Kryfo 裡。這個聊天裡的每則訊息都會用它核對，所以別人無法冒充他傳訊息。';
+
+  @override
+  String get devKeyLabel => '他的金鑰';
+
+  @override
+  String get devDeleteLine => '每則訊息都會刪除，這個聊天也不會再回來。';
+
+  @override
+  String get devDeleteLineAnon => '每則訊息和為這個聊天產生的名字都會刪除，這個聊天也不會再回來。';
+
+  @override
+  String get settingsWriteToMarios => '傳訊息給 Marios';
+
+  @override
+  String get settingsWriteToMariosHint => '錯誤、想法、問題';
+
+  @override
+  String get seenDevChat => '與 Marios 的聊天';
+
+  @override
+  String get seenDevChatCell => '你傳訊息時';
+
+  @override
+  String get seenDevChatLine => '你傳訊息之前，什麼都看不到。之後能看到你傳送的內容，以及你的三個詞，除非你匿名傳送。';
 }

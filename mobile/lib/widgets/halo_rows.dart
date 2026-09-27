@@ -61,6 +61,8 @@ class HaloRow extends StatelessWidget {
   final String? hint;
   final VoidCallback? onTap;
   final IconData? icon;
+  // drawn in the tile in place of the icon
+  final Widget? mark;
   final bool rose;
   // an on or off setting: a switch stands in for the value and the chevron
   final bool? toggled;
@@ -71,6 +73,7 @@ class HaloRow extends StatelessWidget {
     this.hint,
     this.onTap,
     this.icon,
+    this.mark,
     this.rose = false,
     this.toggled,
   });
@@ -104,7 +107,9 @@ class HaloRow extends StatelessWidget {
                 borderRadius: BorderRadius.circular(9),
               ),
               alignment: Alignment.center,
-              child: Icon(icon ?? Icons.circle_outlined, size: 17, color: ink),
+              child:
+                  mark ??
+                  Icon(icon ?? Icons.circle_outlined, size: 17, color: ink),
             ),
             const SizedBox(width: 12),
             Expanded(

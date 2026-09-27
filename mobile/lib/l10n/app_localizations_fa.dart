@@ -7196,4 +7196,51 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get stickerNewer => 'از نسخه‌ی جدیدتر Kryfo';
+
+  @override
+  String get devName => 'Marios';
+
+  @override
+  String get devRowTitle => 'Marios · سازنده‌ی Kryfo';
+
+  @override
+  String get devWelcome =>
+      'سلام، من Marios هستم و Kryfo را می‌سازم. هر چیزی بگویید: باگ، ایده، سؤال. همه را می‌خوانم.';
+
+  @override
+  String get devPinned => 'در Kryfo تعبیه‌شده';
+
+  @override
+  String get devAnonymous => 'ناشناس';
+
+  @override
+  String get devAboutLine =>
+      'کلید Marios درون Kryfo تعبیه شده است. هر پیام این گفت‌وگو با آن سنجیده می‌شود، پس هیچ‌کس دیگری نمی‌تواند به جای او بنویسد.';
+
+  @override
+  String get devKeyLabel => 'کلید او';
+
+  @override
+  String get devDeleteLine =>
+      'همه‌ی پیام‌ها حذف می‌شوند و این گفت‌وگو دیگر برنمی‌گردد.';
+
+  @override
+  String get devDeleteLineAnon =>
+      'همه‌ی پیام‌ها و نامی که برای این گفت‌وگو ساخته شد حذف می‌شوند و این گفت‌وگو دیگر برنمی‌گردد.';
+
+  @override
+  String get settingsWriteToMarios => 'پیام به Marios';
+
+  @override
+  String get settingsWriteToMariosHint => 'باگ، ایده، سؤال';
+
+  @override
+  String get seenDevChat => 'گفت‌وگو با Marios';
+
+  @override
+  String get seenDevChatCell => 'اگر بنویسید';
+
+  @override
+  String get seenDevChatLine =>
+      'تا وقتی ننویسید، هیچ. بعد آنچه می‌فرستید، و سه واژه‌ی شما، مگر اینکه ناشناس بنویسید.';
 }

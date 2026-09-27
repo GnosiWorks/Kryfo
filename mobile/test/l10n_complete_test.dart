@@ -60,6 +60,8 @@ const _names = {
   'natural',
   'earth',
   'geonames',
+  // the developer's name, in Latin letters everywhere
+  'marios',
 };
 // read and kept: the word is the same in that language
 // (test/l10n_same_as_english.json, key lists per language)

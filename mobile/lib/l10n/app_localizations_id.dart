@@ -7178,4 +7178,51 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get stickerNewer => 'Dari Kryfo versi lebih baru';
+
+  @override
+  String get devName => 'Marios';
+
+  @override
+  String get devRowTitle => 'Marios · pembuat Kryfo';
+
+  @override
+  String get devWelcome =>
+      'Hai, aku Marios, aku yang membuat Kryfo. Ceritakan apa saja: bug, ide, pertanyaan. Aku membaca semuanya.';
+
+  @override
+  String get devPinned => 'Tertanam di Kryfo';
+
+  @override
+  String get devAnonymous => 'Anonim';
+
+  @override
+  String get devAboutLine =>
+      'Kunci Marios tertanam di Kryfo. Setiap pesan di obrolan ini dicocokkan dengan kunci itu, jadi tidak ada orang lain yang bisa menulis atas namanya.';
+
+  @override
+  String get devKeyLabel => 'Kuncinya';
+
+  @override
+  String get devDeleteLine =>
+      'Semua pesan terhapus, dan obrolan ini tidak akan kembali.';
+
+  @override
+  String get devDeleteLineAnon =>
+      'Semua pesan dan nama yang dibuat untuk obrolan ini terhapus, dan obrolan ini tidak akan kembali.';
+
+  @override
+  String get settingsWriteToMarios => 'Kirim pesan ke Marios';
+
+  @override
+  String get settingsWriteToMariosHint => 'Bug, ide, pertanyaan';
+
+  @override
+  String get seenDevChat => 'Obrolan dengan Marios';
+
+  @override
+  String get seenDevChatCell => 'Jika kamu menulis';
+
+  @override
+  String get seenDevChatLine =>
+      'Tidak ada apa-apa sampai kamu menulis. Setelah itu, apa yang kamu kirim, dan tiga katamu, kecuali kamu menulis secara anonim.';
 }

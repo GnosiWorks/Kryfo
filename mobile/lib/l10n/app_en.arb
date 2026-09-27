@@ -9106,5 +9106,61 @@
   "stickerNewer": "From a newer Kryfo",
   "@stickerNewer": {
     "description": "under a sticker this version does not have (stickers/sticker_bubble.dart)"
+  },
+  "devName": "Marios",
+  "@devName": {
+    "description": "screens/search_screen.dart: the developer's name. Latin letters in every language"
+  },
+  "devRowTitle": "Marios · built Kryfo",
+  "@devRowTitle": {
+    "description": "screens/home_screen.dart, screens/archived_screen.dart, screens/search_screen.dart, screens/dev_about_sheet.dart: the developer chat's title on home, in search and on its sheet: his name, then what he did. Marios stays in Latin letters, the middle dot keeps its spaces"
+  },
+  "devWelcome": "Hi, I'm Marios, I build Kryfo. Tell me anything: bugs, ideas, questions. I read everything.",
+  "@devWelcome": {
+    "description": "screens/home_screen.dart, screens/archived_screen.dart: the first line of the developer chat, in his words. also the row's preview until a message says more"
+  },
+  "devPinned": "Pinned in Kryfo",
+  "@devPinned": {
+    "description": "screens/dev_about_sheet.dart, screens/search_screen.dart, widgets/dev_avatar.dart: under the developer chat's title: his key is built into the app. not the pin that keeps a chat at the top"
+  },
+  "devAnonymous": "Anonymous",
+  "@devAnonymous": {
+    "description": "screens/dev_about_sheet.dart: a small chip: this chat with the developer was started under a name made for it"
+  },
+  "devAboutLine": "Marios's key is built into Kryfo. Every message in this chat is checked against it, so nobody else can write as him.",
+  "@devAboutLine": {
+    "description": "screens/dev_about_sheet.dart: the developer chat's sheet: why nobody else can write as him"
+  },
+  "devKeyLabel": "His key",
+  "@devKeyLabel": {
+    "description": "screens/dev_about_sheet.dart: over the developer's key on his sheet, printed as sixteen groups of four"
+  },
+  "devDeleteLine": "Every message goes, and the chat will not come back.",
+  "@devDeleteLine": {
+    "description": "screens/dev_about_sheet.dart: asked before the developer chat is deleted"
+  },
+  "devDeleteLineAnon": "Every message and the name made for this chat go, and the chat will not come back.",
+  "@devDeleteLineAnon": {
+    "description": "screens/dev_about_sheet.dart: asked before a developer chat started anonymously is deleted"
+  },
+  "settingsWriteToMarios": "Write to Marios",
+  "@settingsWriteToMarios": {
+    "description": "screens/settings_screen.dart: opens the chat with the developer, and brings it back after a delete"
+  },
+  "settingsWriteToMariosHint": "Bugs, ideas, questions",
+  "@settingsWriteToMariosHint": {
+    "description": "screens/settings_screen.dart: under Write to Marios"
+  },
+  "seenDevChat": "The Marios chat",
+  "@seenDevChat": {
+    "description": "screens/seen_screen.dart: a row of the table: the chat with the developer"
+  },
+  "seenDevChatCell": "If you write",
+  "@seenDevChatCell": {
+    "description": "screens/seen_screen.dart: a table cell, two short lines at most: he sees something only once you write"
+  },
+  "seenDevChatLine": "Nothing until you write. Then what you send, and your three words unless you write anonymously.",
+  "@seenDevChatLine": {
+    "description": "screens/seen_screen.dart: why, under The Marios chat"
   }
 }

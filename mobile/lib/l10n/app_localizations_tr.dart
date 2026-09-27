@@ -7209,4 +7209,50 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get stickerNewer => 'Daha yeni bir Kryfo’dan';
+
+  @override
+  String get devName => 'Marios';
+
+  @override
+  String get devRowTitle => 'Marios · Kryfo’yu yaptı';
+
+  @override
+  String get devWelcome =>
+      'Merhaba, ben Marios, Kryfo’yu ben yapıyorum. Bana her şeyi yaz: hatalar, fikirler, sorular. Hepsini okurum.';
+
+  @override
+  String get devPinned => 'Kryfo’ya gömülü';
+
+  @override
+  String get devAnonymous => 'Anonim';
+
+  @override
+  String get devAboutLine =>
+      'Marios’un anahtarı Kryfo’ya gömülü. Bu sohbetteki her mesaj onunla kontrol edilir, yani başka kimse onun adına yazamaz.';
+
+  @override
+  String get devKeyLabel => 'Anahtarı';
+
+  @override
+  String get devDeleteLine => 'Her mesaj gider ve sohbet geri gelmez.';
+
+  @override
+  String get devDeleteLineAnon =>
+      'Her mesaj ve bu sohbet için oluşturulan ad gider, sohbet de geri gelmez.';
+
+  @override
+  String get settingsWriteToMarios => 'Marios’a yaz';
+
+  @override
+  String get settingsWriteToMariosHint => 'Hatalar, fikirler, sorular';
+
+  @override
+  String get seenDevChat => 'Marios sohbeti';
+
+  @override
+  String get seenDevChatCell => 'Yazarsan';
+
+  @override
+  String get seenDevChatLine =>
+      'Sen yazana kadar hiçbir şey. Sonra gönderdiklerin ve anonim yazmadıkça üç kelimen.';
 }

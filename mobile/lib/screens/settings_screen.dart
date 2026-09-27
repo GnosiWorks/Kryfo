@@ -26,6 +26,8 @@ import '../notifications.dart';
 import '../delivery_mode.dart';
 import 'getting_messages_screen.dart';
 import '../widgets/halo_rows.dart';
+import '../widgets/dev_avatar.dart' show DevRing;
+import 'dev_about_sheet.dart' show devChatOffered, writeToMarios;
 import '../widgets/stagger_in.dart';
 import '../widgets/confirm_sheet.dart';
 import '../l10n/l10n.dart';
@@ -631,6 +633,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 label: l10n.settingsVersion,
                 value: l10n.settings030Alpha,
               ),
+              // the chat with the developer: the way back after a delete.
+              // none on his own phone, none with no key pinned
+              if (devChatOffered)
+                HaloRow(
+                  mark: const DevRing(size: 20),
+                  label: l10n.settingsWriteToMarios,
+                  hint: l10n.settingsWriteToMariosHint,
+                  onTap: () => writeToMarios(context),
+                ),
               HaloRow(
                 icon: Icons.flag_outlined,
                 label: l10n.settingsReportAnIssue,

@@ -2954,6 +2954,20 @@ final _calls = <_Call>[
   ('chatHidden', [], (l) => l.chatHidden),
   ('chatHiddenToast', [], (l) => l.chatHiddenToast),
   ('chatShowInList', [], (l) => l.chatShowInList),
+  ('devName', ["Marios"], (l) => l.devName),
+  ('devRowTitle', ["Marios", "Kryfo"], (l) => l.devRowTitle),
+  ('devWelcome', ["Marios", "Kryfo"], (l) => l.devWelcome),
+  ('devPinned', ["Kryfo"], (l) => l.devPinned),
+  ('devAnonymous', [], (l) => l.devAnonymous),
+  ('devAboutLine', ["Marios", "Kryfo"], (l) => l.devAboutLine),
+  ('devKeyLabel', [], (l) => l.devKeyLabel),
+  ('devDeleteLine', [], (l) => l.devDeleteLine),
+  ('devDeleteLineAnon', [], (l) => l.devDeleteLineAnon),
+  ('settingsWriteToMarios', ["Marios"], (l) => l.settingsWriteToMarios),
+  ('settingsWriteToMariosHint', [], (l) => l.settingsWriteToMariosHint),
+  ('seenDevChat', ["Marios"], (l) => l.seenDevChat),
+  ('seenDevChatCell', [], (l) => l.seenDevChatCell),
+  ('seenDevChatLine', [], (l) => l.seenDevChatLine),
 ];
 
 void main() {

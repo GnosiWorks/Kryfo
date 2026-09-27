@@ -11552,6 +11552,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'From a newer Kryfo'**
   String get stickerNewer;
+
+  /// screens/search_screen.dart: the developer's name. Latin letters in every language
+  ///
+  /// In en, this message translates to:
+  /// **'Marios'**
+  String get devName;
+
+  /// screens/home_screen.dart, screens/archived_screen.dart, screens/search_screen.dart, screens/dev_about_sheet.dart: the developer chat's title on home, in search and on its sheet: his name, then what he did. Marios stays in Latin letters, the middle dot keeps its spaces
+  ///
+  /// In en, this message translates to:
+  /// **'Marios · built Kryfo'**
+  String get devRowTitle;
+
+  /// screens/home_screen.dart, screens/archived_screen.dart: the first line of the developer chat, in his words. also the row's preview until a message says more
+  ///
+  /// In en, this message translates to:
+  /// **'Hi, I\'m Marios, I build Kryfo. Tell me anything: bugs, ideas, questions. I read everything.'**
+  String get devWelcome;
+
+  /// screens/dev_about_sheet.dart, screens/search_screen.dart, widgets/dev_avatar.dart: under the developer chat's title: his key is built into the app. not the pin that keeps a chat at the top
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned in Kryfo'**
+  String get devPinned;
+
+  /// screens/dev_about_sheet.dart: a small chip: this chat with the developer was started under a name made for it
+  ///
+  /// In en, this message translates to:
+  /// **'Anonymous'**
+  String get devAnonymous;
+
+  /// screens/dev_about_sheet.dart: the developer chat's sheet: why nobody else can write as him
+  ///
+  /// In en, this message translates to:
+  /// **'Marios\'s key is built into Kryfo. Every message in this chat is checked against it, so nobody else can write as him.'**
+  String get devAboutLine;
+
+  /// screens/dev_about_sheet.dart: over the developer's key on his sheet, printed as sixteen groups of four
+  ///
+  /// In en, this message translates to:
+  /// **'His key'**
+  String get devKeyLabel;
+
+  /// screens/dev_about_sheet.dart: asked before the developer chat is deleted
+  ///
+  /// In en, this message translates to:
+  /// **'Every message goes, and the chat will not come back.'**
+  String get devDeleteLine;
+
+  /// screens/dev_about_sheet.dart: asked before a developer chat started anonymously is deleted
+  ///
+  /// In en, this message translates to:
+  /// **'Every message and the name made for this chat go, and the chat will not come back.'**
+  String get devDeleteLineAnon;
+
+  /// screens/settings_screen.dart: opens the chat with the developer, and brings it back after a delete
+  ///
+  /// In en, this message translates to:
+  /// **'Write to Marios'**
+  String get settingsWriteToMarios;
+
+  /// screens/settings_screen.dart: under Write to Marios
+  ///
+  /// In en, this message translates to:
+  /// **'Bugs, ideas, questions'**
+  String get settingsWriteToMariosHint;
+
+  /// screens/seen_screen.dart: a row of the table: the chat with the developer
+  ///
+  /// In en, this message translates to:
+  /// **'The Marios chat'**
+  String get seenDevChat;
+
+  /// screens/seen_screen.dart: a table cell, two short lines at most: he sees something only once you write
+  ///
+  /// In en, this message translates to:
+  /// **'If you write'**
+  String get seenDevChatCell;
+
+  /// screens/seen_screen.dart: why, under The Marios chat
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing until you write. Then what you send, and your three words unless you write anonymously.'**
+  String get seenDevChatLine;
 }
 
 class _AppLocalizationsDelegate

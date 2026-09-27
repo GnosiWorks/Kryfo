@@ -7233,4 +7233,51 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get stickerNewer => 'De um Kryfo mais novo';
+
+  @override
+  String get devName => 'Marios';
+
+  @override
+  String get devRowTitle => 'Marios · criou o Kryfo';
+
+  @override
+  String get devWelcome =>
+      'Oi, eu sou o Marios e faço o Kryfo. Me conte qualquer coisa: bugs, ideias, dúvidas. Eu leio tudo.';
+
+  @override
+  String get devPinned => 'Embutido no Kryfo';
+
+  @override
+  String get devAnonymous => 'Anônimo';
+
+  @override
+  String get devAboutLine =>
+      'A chave do Marios vem embutida no Kryfo. Cada mensagem desta conversa é conferida com ela, então ninguém mais consegue escrever como ele.';
+
+  @override
+  String get devKeyLabel => 'A chave dele';
+
+  @override
+  String get devDeleteLine =>
+      'Todas as mensagens somem, e a conversa não volta mais.';
+
+  @override
+  String get devDeleteLineAnon =>
+      'Todas as mensagens e o nome criado para esta conversa somem, e a conversa não volta mais.';
+
+  @override
+  String get settingsWriteToMarios => 'Escrever para o Marios';
+
+  @override
+  String get settingsWriteToMariosHint => 'Bugs, ideias, perguntas';
+
+  @override
+  String get seenDevChat => 'A conversa com o Marios';
+
+  @override
+  String get seenDevChatCell => 'Se você escrever';
+
+  @override
+  String get seenDevChatLine =>
+      'Nada até você escrever. Depois, o que você envia, e suas três palavras, a menos que você escreva anonimamente.';
 }

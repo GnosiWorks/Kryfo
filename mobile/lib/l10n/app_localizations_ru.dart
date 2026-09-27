@@ -7312,4 +7312,51 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get stickerNewer => 'Из более новой версии Kryfo';
+
+  @override
+  String get devName => 'Marios';
+
+  @override
+  String get devRowTitle => 'Marios · создал Kryfo';
+
+  @override
+  String get devWelcome =>
+      'Привет, я Marios, я делаю Kryfo. Пиши мне о чём угодно: ошибки, идеи, вопросы. Я читаю всё.';
+
+  @override
+  String get devPinned => 'Встроен в Kryfo';
+
+  @override
+  String get devAnonymous => 'Анонимно';
+
+  @override
+  String get devAboutLine =>
+      'Ключ Marios встроен в Kryfo. Каждое сообщение в этом чате проверяется по нему, поэтому никто другой не может писать от его имени.';
+
+  @override
+  String get devKeyLabel => 'Его ключ';
+
+  @override
+  String get devDeleteLine =>
+      'Все сообщения удаляются, и чат больше не вернётся.';
+
+  @override
+  String get devDeleteLineAnon =>
+      'Все сообщения и имя, созданное для этого чата, удаляются, и чат больше не вернётся.';
+
+  @override
+  String get settingsWriteToMarios => 'Написать Marios';
+
+  @override
+  String get settingsWriteToMariosHint => 'Ошибки, идеи, вопросы';
+
+  @override
+  String get seenDevChat => 'Чат с Marios';
+
+  @override
+  String get seenDevChatCell => 'Если напишешь';
+
+  @override
+  String get seenDevChatLine =>
+      'Ничего, пока ты не напишешь. Потом то, что ты отправляешь, и твои три слова, если только ты не пишешь анонимно.';
 }

@@ -36,6 +36,9 @@ import 'chat_screen.dart';
 import 'group_chat_screen.dart';
 import '../widgets/written_field.dart';
 import '../bidi_safe.dart';
+import '../devchat/dev_key.dart' show isDevChat;
+import '../widgets/dev_avatar.dart';
+import 'dev_about_sheet.dart';
 
 /// the search field on home flies into the one here
 const kSearchHero = 'home-search';
@@ -210,6 +213,7 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   String _nameOfPeer(String id) {
+    if (isDevChat(id)) return l10n.devRowTitle;
     for (final c in appState.contacts) {
       if (c.haloId == id) {
         final n = c.nickname;
@@ -256,6 +260,16 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
           );
         }
+      }
+      // the developer chat is found by his name, in every language
+      final dev = appState.devRow;
+      if (dev != null &&
+          !dev.archived &&
+          (fold(l10n.devName).contains(needle) ||
+              fold(l10n.devRowTitle).contains(needle))) {
+        names.add(
+          _Name(peer: dev.chatId, name: l10n.devRowTitle, sub: l10n.devPinned),
+        );
       }
       for (final c in appState.contacts) {
         if (c.blocked || c.archived) continue;
@@ -324,6 +338,11 @@ class _SearchScreenState extends State<SearchScreen> {
       return;
     }
     if (peer == null) return;
+    if (isDevChat(peer)) {
+      if (appState.devRow?.chatId != peer) return;
+      await Navigator.of(context).push(devChatRoute(peer, jumpToUid: uid));
+      return;
+    }
     final rows = await session.contacts();
     final row = rows.where((r) => r['halo_id'] == peer).firstOrNull;
     if (row == null || !mounted) return;
@@ -1341,6 +1360,7 @@ Widget _face(
       ),
     );
   }
+  if (peer != null && isDevChat(peer)) return DevAvatar(size: s, tick: s >= 36);
   return KryfoAvatar(seed: peer ?? '', size: s, choice: avatar);
 }
 

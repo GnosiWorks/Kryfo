@@ -1904,5 +1904,19 @@
   "stickerRemoveRecent": "Убрать из недавних",
   "stickerCouldNotLoad": "Не удалось загрузить стикеры",
   "stickerLabel": "Стикер",
-  "stickerNewer": "Из более новой версии Kryfo"
+  "stickerNewer": "Из более новой версии Kryfo",
+  "devName": "Marios",
+  "devRowTitle": "Marios · создал Kryfo",
+  "devWelcome": "Привет, я Marios, я делаю Kryfo. Пиши мне о чём угодно: ошибки, идеи, вопросы. Я читаю всё.",
+  "devPinned": "Встроен в Kryfo",
+  "devAnonymous": "Анонимно",
+  "devAboutLine": "Ключ Marios встроен в Kryfo. Каждое сообщение в этом чате проверяется по нему, поэтому никто другой не может писать от его имени.",
+  "devKeyLabel": "Его ключ",
+  "devDeleteLine": "Все сообщения удаляются, и чат больше не вернётся.",
+  "devDeleteLineAnon": "Все сообщения и имя, созданное для этого чата, удаляются, и чат больше не вернётся.",
+  "settingsWriteToMarios": "Написать Marios",
+  "settingsWriteToMariosHint": "Ошибки, идеи, вопросы",
+  "seenDevChat": "Чат с Marios",
+  "seenDevChatCell": "Если напишешь",
+  "seenDevChatLine": "Ничего, пока ты не напишешь. Потом то, что ты отправляешь, и твои три слова, если только ты не пишешь анонимно."
 }

@@ -1904,5 +1904,19 @@
   "stickerRemoveRecent": "Quitar de recientes",
   "stickerCouldNotLoad": "No se pudieron cargar los stickers",
   "stickerLabel": "Sticker",
-  "stickerNewer": "De un Kryfo más nuevo"
+  "stickerNewer": "De un Kryfo más nuevo",
+  "devName": "Marios",
+  "devRowTitle": "Marios · creó Kryfo",
+  "devWelcome": "Hola, soy Marios, hago Kryfo. Cuéntame lo que sea: errores, ideas, preguntas. Lo leo todo.",
+  "devPinned": "Integrado en Kryfo",
+  "devAnonymous": "Anónimo",
+  "devAboutLine": "La clave de Marios viene integrada en Kryfo. Cada mensaje de este chat se comprueba con ella, así que nadie más puede escribir como él.",
+  "devKeyLabel": "Su clave",
+  "devDeleteLine": "Se van todos los mensajes, y el chat no volverá.",
+  "devDeleteLineAnon": "Se van todos los mensajes y el nombre creado para este chat, y el chat no volverá.",
+  "settingsWriteToMarios": "Escribir a Marios",
+  "settingsWriteToMariosHint": "Errores, ideas, preguntas",
+  "seenDevChat": "El chat con Marios",
+  "seenDevChatCell": "Si escribes",
+  "seenDevChatLine": "Nada hasta que escribas. Después, lo que envías, y tus tres palabras, salvo que escribas de forma anónima."
 }

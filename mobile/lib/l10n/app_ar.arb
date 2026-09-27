@@ -1904,5 +1904,19 @@
   "stickerRemoveRecent": "إزالة من الأخيرة",
   "stickerCouldNotLoad": "تعذّر تحميل الملصقات",
   "stickerLabel": "ملصق",
-  "stickerNewer": "من إصدار أحدث من Kryfo"
+  "stickerNewer": "من إصدار أحدث من Kryfo",
+  "devName": "Marios",
+  "devRowTitle": "Marios · صانع Kryfo",
+  "devWelcome": "مرحبًا، أنا Marios، أبني Kryfo. أخبرني بأي شيء: أخطاء، أفكار، أسئلة. أقرأ كل شيء.",
+  "devPinned": "مدمج في Kryfo",
+  "devAnonymous": "مجهول الهوية",
+  "devAboutLine": "مفتاح Marios مدمج في Kryfo. كل رسالة في هذه المحادثة تُطابَق معه، فلا يستطيع أحد غيره أن يكتب باسمه.",
+  "devKeyLabel": "مفتاحه",
+  "devDeleteLine": "تُحذف كل رسالة، ولن تعود هذه المحادثة.",
+  "devDeleteLineAnon": "تُحذف كل رسالة والاسم الذي صُنع لهذه المحادثة، ولن تعود هذه المحادثة.",
+  "settingsWriteToMarios": "مراسلة Marios",
+  "settingsWriteToMariosHint": "أخطاء، أفكار، أسئلة",
+  "seenDevChat": "المحادثة مع Marios",
+  "seenDevChatCell": "إن كتبت",
+  "seenDevChatLine": "لا شيء حتى تكتب. بعدها ما ترسله، وكلماتك الثلاث ما لم تكتب بهوية مجهولة."
 }

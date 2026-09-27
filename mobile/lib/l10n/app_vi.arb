@@ -1904,5 +1904,19 @@
   "stickerRemoveRecent": "Xóa khỏi gần đây",
   "stickerCouldNotLoad": "Không thể tải nhãn dán",
   "stickerLabel": "Nhãn dán",
-  "stickerNewer": "Từ một bản Kryfo mới hơn"
+  "stickerNewer": "Từ một bản Kryfo mới hơn",
+  "devName": "Marios",
+  "devRowTitle": "Marios · người làm ra Kryfo",
+  "devWelcome": "Chào bạn, tôi là Marios, tôi làm ra Kryfo. Cứ nói với tôi bất cứ điều gì: lỗi, ý tưởng, câu hỏi. Tôi đọc hết.",
+  "devPinned": "Gắn sẵn trong Kryfo",
+  "devAnonymous": "Ẩn danh",
+  "devAboutLine": "Khóa của Marios được gắn sẵn trong Kryfo. Mọi tin nhắn trong cuộc trò chuyện này đều được đối chiếu với khóa đó, nên không ai khác có thể viết dưới tên anh ấy.",
+  "devKeyLabel": "Khóa của anh ấy",
+  "devDeleteLine": "Mọi tin nhắn sẽ bị xóa, và cuộc trò chuyện sẽ không quay lại.",
+  "devDeleteLineAnon": "Mọi tin nhắn và cái tên được tạo cho cuộc trò chuyện này sẽ bị xóa, và cuộc trò chuyện sẽ không quay lại.",
+  "settingsWriteToMarios": "Nhắn cho Marios",
+  "settingsWriteToMariosHint": "Lỗi, ý tưởng, câu hỏi",
+  "seenDevChat": "Cuộc trò chuyện với Marios",
+  "seenDevChatCell": "Khi bạn viết",
+  "seenDevChatLine": "Không gì cả cho đến khi bạn viết. Sau đó là những gì bạn gửi, và ba từ của bạn, trừ khi bạn viết ẩn danh."
 }

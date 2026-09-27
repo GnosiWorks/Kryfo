@@ -1904,5 +1904,19 @@
   "stickerRemoveRecent": "从最近使用中移除",
   "stickerCouldNotLoad": "无法加载贴纸",
   "stickerLabel": "贴纸",
-  "stickerNewer": "来自更新版本的 Kryfo"
+  "stickerNewer": "来自更新版本的 Kryfo",
+  "devName": "Marios",
+  "devRowTitle": "Marios · Kryfo 的开发者",
+  "devWelcome": "你好，我是 Marios，Kryfo 是我做的。什么都可以跟我说：Bug、想法、问题。每一条我都会看。",
+  "devPinned": "内置于 Kryfo",
+  "devAnonymous": "匿名",
+  "devAboutLine": "Marios 的密钥内置在 Kryfo 里。这个聊天里的每一条消息都会用它核对，所以别人没法冒充他发消息。",
+  "devKeyLabel": "他的密钥",
+  "devDeleteLine": "每一条消息都会删除，这个聊天也不会再回来。",
+  "devDeleteLineAnon": "每一条消息和为这个聊天生成的名字都会删除，这个聊天也不会再回来。",
+  "settingsWriteToMarios": "给 Marios 发消息",
+  "settingsWriteToMariosHint": "Bug、想法、问题",
+  "seenDevChat": "与 Marios 的聊天",
+  "seenDevChatCell": "你发消息时",
+  "seenDevChatLine": "你发消息之前，什么都看不到。之后能看到你发送的内容，以及你的三个词，除非你匿名发送。"
 }

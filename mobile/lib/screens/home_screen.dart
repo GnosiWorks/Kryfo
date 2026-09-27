@@ -48,6 +48,9 @@ import '../delivery_mode.dart';
 import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
 import '../l10n/numbers.dart';
+import '../devchat/dev_chat.dart' show DevRow;
+import '../widgets/dev_avatar.dart';
+import 'dev_about_sheet.dart';
 import 'search_screen.dart';
 
 bool _miuiPromptChecked = false;
@@ -65,6 +68,8 @@ class HomeScreen extends StatefulWidget {
   final VoidCallback onOpenSettingsDirect;
   final void Function(String kryfo) onOpenChat;
   final void Function(String groupId) onOpenGroup;
+  // the developer chat's row, beside the contacts. none to show: null
+  final DevRow? devRow;
 
   const HomeScreen({
     super.key,
@@ -80,6 +85,7 @@ class HomeScreen extends StatefulWidget {
     this.pendingCount = 0,
     required this.onOpenChat,
     required this.onOpenGroup,
+    this.devRow,
   });
 
   @override
@@ -198,6 +204,8 @@ class _HomeScreenState extends State<HomeScreen> {
           onOpenSettingsDirect: widget.onOpenSettingsDirect,
           onOpenChat: widget.onOpenChat,
           onOpenGroup: widget.onOpenGroup,
+          devRow: widget.devRow,
+          onOpenDevChat: (id) => openDevChat(context, id),
         );
       case HaloTab.tools:
         return ToolsScreen(
@@ -363,6 +371,8 @@ class _ChatsTab extends StatelessWidget {
   final VoidCallback onOpenSettingsDirect;
   final void Function(String kryfo) onOpenChat;
   final void Function(String groupId) onOpenGroup;
+  final DevRow? devRow;
+  final void Function(String chatId) onOpenDevChat;
 
   const _ChatsTab({
     required this.haloId,
@@ -376,13 +386,21 @@ class _ChatsTab extends StatelessWidget {
     this.pendingCount = 0,
     required this.onOpenChat,
     required this.onOpenGroup,
+    this.devRow,
+    required this.onOpenDevChat,
   });
 
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
     final visible = contacts.where((c) => !c.archived).toList();
-    final hasArchived = contacts.any((c) => c.archived);
+    // an archived developer chat counts with the rest in the archive
+    final dev = devRow;
+    final devShown = dev != null && !dev.archived ? dev : null;
+    final archived =
+        contacts.where((c) => c.archived).length +
+        (dev != null && dev.archived ? 1 : 0);
+    final hasArchived = archived > 0;
     if (!_miuiPromptChecked) {
       _miuiPromptChecked = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -449,7 +467,7 @@ class _ChatsTab extends StatelessWidget {
             child: hasArchived
                 ? _ArchivedPin(
                     key: const ValueKey('archived'),
-                    count: contacts.where((c) => c.archived).length,
+                    count: archived,
                     onTap: () {
                       HapticFeedback.selectionClick();
                       Navigator.of(context).push(_archivedRoute());
@@ -459,11 +477,17 @@ class _ChatsTab extends StatelessWidget {
           ),
           Expanded(
             child: visible.isEmpty && groups.isEmpty
-                ? _EmptyState(onAdd: onAddContact)
+                ? _EmptyWithDev(
+                    dev: devShown,
+                    onOpenDev: onOpenDevChat,
+                    onAdd: onAddContact,
+                  )
                 : _ContactList(
                     contacts: visible,
                     groups: groups,
+                    dev: devShown,
                     onTap: onOpenChat,
+                    onOpenDev: onOpenDevChat,
                     onOpenGroup: onOpenGroup,
                     onNewGroup: onNewGroup,
                     onNewRoom: onNewRoom,
@@ -1558,6 +1582,45 @@ class _OfflineStrip extends StatelessWidget {
 
 // ───────── empty state ─────────
 
+// no chats yet: the developer chat's row on top, and under it the page
+// still asks to add someone. short phones and big fonts scroll it
+class _EmptyWithDev extends StatelessWidget {
+  final DevRow? dev;
+  final void Function(String chatId) onOpenDev;
+  final VoidCallback onAdd;
+  const _EmptyWithDev({
+    required this.dev,
+    required this.onOpenDev,
+    required this.onAdd,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final d = dev;
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(
+          // it folds away on a delete or an archive, and grows back
+          child: GrowSwap(
+            alignment: Alignment.topCenter,
+            child: d == null
+                ? const SizedBox(key: ValueKey('no-dev'), width: 1)
+                : _Enter(
+                    key: const ValueKey('dev'),
+                    index: 0,
+                    child: _DevSwipeRow(d: d, onTap: () => onOpenDev(d.chatId)),
+                  ),
+          ),
+        ),
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: _EmptyState(onAdd: onAdd),
+        ),
+      ],
+    );
+  }
+}
+
 class _EmptyState extends StatefulWidget {
   final VoidCallback onAdd;
   const _EmptyState({required this.onAdd});
@@ -1792,13 +1855,20 @@ class _ArchivedPin extends StatelessWidget {
   }
 }
 
-// one row of the list: a group or a chat, by the key it keeps
+// one row of the list: a group, a chat or the developer chat, by the key
+// it keeps. the developer chat has a key for each place it can sit, so it
+// folds out of one and grows into the other when it is pinned or unpinned
 class _Item {
   final String key;
   final GroupSummary? g;
   final ContactPreview? c;
-  _Item.group(GroupSummary this.g) : key = 'g-${g.groupId}', c = null;
-  _Item.chat(ContactPreview this.c) : key = 'c-${c.haloId}', g = null;
+  final DevRow? d;
+  _Item.group(GroupSummary this.g) : key = 'g-${g.groupId}', c = null, d = null;
+  _Item.chat(ContactPreview this.c) : key = 'c-${c.haloId}', g = null, d = null;
+  _Item.dev(DevRow this.d, {required bool top})
+    : key = top ? 'dev-top' : 'dev-chat',
+      g = null,
+      c = null;
 }
 
 // the chat list: groups under their heading, chats under theirs. a row that
@@ -1808,7 +1878,10 @@ class _Item {
 class _ContactList extends StatefulWidget {
   final List<ContactPreview> contacts;
   final List<GroupSummary> groups;
+  // pinned, it sits above everything. unpinned, among the chats by time
+  final DevRow? dev;
   final void Function(String kryfo) onTap;
+  final void Function(String chatId) onOpenDev;
   final void Function(String groupId) onOpenGroup;
   final VoidCallback onNewGroup;
   final VoidCallback onNewRoom;
@@ -1816,7 +1889,9 @@ class _ContactList extends StatefulWidget {
   const _ContactList({
     required this.contacts,
     required this.groups,
+    this.dev,
     required this.onTap,
+    required this.onOpenDev,
     required this.onOpenGroup,
     required this.onNewGroup,
     required this.onNewRoom,
@@ -1828,6 +1903,7 @@ class _ContactList extends StatefulWidget {
 }
 
 class _ContactListState extends State<_ContactList> {
+  late final RowSet<_Item> _top = RowSet(keyOf: _key, onGone: _gone);
   late final RowSet<_Item> _groups = RowSet(keyOf: _key, onGone: _gone);
   late final RowSet<_Item> _chats = RowSet(keyOf: _key, onGone: _gone);
   // pulled down past the top, the list opens search
@@ -1839,27 +1915,41 @@ class _ContactListState extends State<_ContactList> {
     if (mounted) setState(() {});
   }
 
+  List<_Item> _topItems() => [
+    if (widget.dev case final d? when d.pinned) _Item.dev(d, top: true),
+  ];
+
+  List<_Item> _chatItems() {
+    final items = [for (final c in widget.contacts) _Item.chat(c)];
+    final d = widget.dev;
+    if (d != null && !d.pinned) {
+      items.insert(devSlot(d, widget.contacts), _Item.dev(d, top: false));
+    }
+    return items;
+  }
+
   @override
   void initState() {
     super.initState();
+    _top.start(_topItems());
     _groups.start([for (final g in widget.groups) _Item.group(g)]);
-    _chats.start([for (final c in widget.contacts) _Item.chat(c)]);
+    _chats.start(_chatItems());
   }
 
   @override
   void didUpdateWidget(_ContactList old) {
     super.didUpdateWidget(old);
     final quiet = lockGuard.isLocked();
+    _top.update(_topItems(), quiet: quiet);
     _groups.update([
       for (final g in widget.groups) _Item.group(g),
     ], quiet: quiet);
-    _chats.update([
-      for (final c in widget.contacts) _Item.chat(c),
-    ], quiet: quiet);
+    _chats.update(_chatItems(), quiet: quiet);
   }
 
   @override
   void dispose() {
+    _top.dispose();
     _groups.dispose();
     _chats.dispose();
     super.dispose();
@@ -1868,9 +1958,16 @@ class _ContactListState extends State<_ContactList> {
   Widget _row(RowSet<_Item> set, _Item i, int index) {
     final g = i.g;
     final c = i.c;
+    final d = i.d;
     final leaving = set.leaving(i);
     final Widget row = g != null
         ? _GroupRow(g: g, onTap: () => widget.onOpenGroup(g.groupId))
+        : d != null
+        // one ring flies at a time, the one staying
+        ? HeroMode(
+            enabled: !leaving,
+            child: _DevSwipeRow(d: d, onTap: () => widget.onOpenDev(d.chatId)),
+          )
         : _SwipeRow(c: c!, onTap: () => widget.onTap(c.haloId));
     // keyed, so a row that moves up on a new message glides there
     return ShiftInPlace(
@@ -1882,7 +1979,10 @@ class _ContactListState extends State<_ContactList> {
           leaving: leaving,
           child: GrowIn(
             active: set.fresh(i),
-            child: _Enter(index: 1 + index, child: row),
+            child: _Enter(
+              index: d != null && set == _top ? 0 : 1 + index,
+              child: row,
+            ),
           ),
         ),
       ),
@@ -1891,10 +1991,12 @@ class _ContactListState extends State<_ContactList> {
 
   @override
   Widget build(BuildContext context) {
+    final top = _top.rows;
     final groups = _groups.rows;
     final chats = _chats.rows;
     // the rows built this frame have read whether they are new
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _top.built();
       _groups.built();
       _chats.built();
     });
@@ -1914,6 +2016,8 @@ class _ContactListState extends State<_ContactList> {
       child: ListView(
         padding: const EdgeInsets.only(bottom: 16),
         children: [
+          // the developer chat, pinned: above everything, the groups too
+          for (final (n, d) in top.indexed) _row(_top, d, n),
           // the groups heading is always there: it is where a group or a
           // room is made, even with none yet
           _SectionHead(
@@ -2054,7 +2158,7 @@ void homeRevealed() {
 class _Enter extends StatefulWidget {
   final int index;
   final Widget child;
-  const _Enter({required this.index, required this.child});
+  const _Enter({super.key, required this.index, required this.child});
   @override
   State<_Enter> createState() => _EnterState();
 }
@@ -2396,6 +2500,243 @@ Future<void> _confirmDelete(BuildContext context, ContactPreview c) async {
   if (!ok) return;
   HapticFeedback.heavyImpact();
   await appState.deleteConversation(c.haloId);
+}
+
+// the developer chat's row: the same swipes as any chat, and a menu of its
+// own. no nickname and no block
+class _DevSwipeRow extends StatelessWidget {
+  final DevRow d;
+  final VoidCallback onTap;
+  const _DevSwipeRow({required this.d, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return SwipeActions(
+      rowKey: const ValueKey('swipe_dev'),
+      start: SwipeAction(
+        icon: d.muted
+            ? Icons.notifications_active_outlined
+            : Icons.notifications_off_outlined,
+        label: d.muted ? l10n.homeUnmute : l10n.homeMute,
+        color: HaloColors.text2,
+        ink: HaloColors.surface,
+        onDone: () => setDevMuted(!d.muted),
+      ),
+      end: SwipeAction(
+        icon: Icons.archive_outlined,
+        label: l10n.homeArchive,
+        color: HaloColors.amber,
+        ink: HaloColors.onAmber,
+        onDone: () => setDevArchived(true),
+      ),
+      child: _DevRowTile(
+        d: d,
+        onTap: onTap,
+        onLongPress: () => _devMenu(context, d),
+      ),
+    );
+  }
+}
+
+void _devMenu(BuildContext context, DevRow d) {
+  HapticFeedback.mediumImpact();
+  Widget item({
+    required IconData icon,
+    required Color tint,
+    required String label,
+    Color? ink,
+    required VoidCallback onTap,
+  }) => ListTile(
+    leading: Icon(icon, color: tint, size: 22),
+    title: Text(
+      label,
+      style: HaloType.sans(size: 15, color: ink ?? HaloColors.text),
+    ),
+    onTap: onTap,
+  );
+  showHaloSheet<void>(
+    context,
+    builder: (sheetCtx) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SheetHandle(),
+          const SizedBox(height: 14),
+          item(
+            icon: d.muted
+                ? Icons.notifications_active_outlined
+                : Icons.notifications_off_outlined,
+            tint: HaloColors.text2,
+            label: d.muted ? l10n.homeUnmute : l10n.homeMute,
+            onTap: () {
+              Navigator.pop(sheetCtx);
+              setDevMuted(!d.muted);
+            },
+          ),
+          item(
+            icon: Icons.archive_outlined,
+            tint: HaloColors.amber,
+            label: l10n.homeArchive,
+            onTap: () {
+              Navigator.pop(sheetCtx);
+              setDevArchived(true);
+            },
+          ),
+          item(
+            icon: d.pinned ? Icons.push_pin_outlined : Icons.push_pin,
+            tint: HaloColors.amber,
+            label: d.pinned ? l10n.contactUnpin : l10n.contactPinToTop,
+            onTap: () {
+              Navigator.pop(sheetCtx);
+              setDevPinned(!d.pinned);
+            },
+          ),
+          item(
+            icon: Icons.delete_outline_rounded,
+            tint: HaloColors.rose,
+            ink: HaloColors.rose,
+            label: l10n.homeDeleteChat,
+            onTap: () {
+              Navigator.pop(sheetCtx);
+              deleteDevChat(context, d);
+            },
+          ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    ),
+  );
+}
+
+// the ring for a face, the tick of a key built into the app, one title in
+// every language, and the welcome until a message says more. a fresh row
+// has no time and no count: nothing has arrived
+class _DevRowTile extends StatelessWidget {
+  final DevRow d;
+  final VoidCallback onTap;
+  final VoidCallback onLongPress;
+  const _DevRowTile({
+    required this.d,
+    required this.onTap,
+    required this.onLongPress,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final unread = d.unread > 0;
+    final queued =
+        appState.queuedFor(d.chatId) > 0 &&
+        (!appState.online || !appState.torReady);
+    return Material(
+      type: MaterialType.transparency,
+      child: InkWell(
+        onTap: onTap,
+        onLongPress: onLongPress,
+        splashColor: HaloColors.amber.withValues(alpha: 0.10),
+        highlightColor: HaloColors.amber.withValues(alpha: 0.05),
+        child: Ink(
+          decoration: unread
+              ? BoxDecoration(
+                  color: HaloColors.amber.withValues(alpha: 0.06),
+                  border: BorderDirectional(
+                    start: BorderSide(color: HaloColors.amber, width: 2),
+                  ),
+                )
+              : null,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+          child: Row(
+            children: [
+              Hero(tag: kDevFaceHero, child: const DevAvatar(pop: true)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            l10n.devRowTitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: HaloType.sans(
+                              size: 14,
+                              weight: unread
+                                  ? FontWeight.w600
+                                  : FontWeight.w500,
+                              color: HaloColors.text,
+                            ),
+                          ),
+                        ),
+                        if (d.pinned) ...[
+                          const SizedBox(width: 6),
+                          Icon(
+                            Icons.push_pin,
+                            size: 11,
+                            color: HaloColors.text3,
+                          ),
+                        ],
+                        if (d.muted) ...[
+                          const SizedBox(width: 4),
+                          Icon(
+                            Icons.notifications_off_outlined,
+                            size: 12,
+                            color: HaloColors.text3,
+                          ),
+                        ],
+                        if (queued) ...[
+                          const SizedBox(width: 4),
+                          Text(
+                            l10n.homeQueued,
+                            style: HaloType.mono(
+                              size: 10,
+                              color: HaloColors.text2,
+                              letter: 0.08,
+                            ),
+                          ),
+                        ] else if (d.when != null) ...[
+                          const SizedBox(width: 4),
+                          Text(
+                            _relTime(d.when),
+                            style: HaloType.mono(
+                              size: 10.5,
+                              color: unread
+                                  ? HaloColors.amber
+                                  : HaloColors.text3,
+                              weight: unread
+                                  ? FontWeight.w600
+                                  : FontWeight.w400,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            d.preview ?? l10n.devWelcome,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: HaloType.sans(
+                              size: 12,
+                              color: HaloColors.text2,
+                            ),
+                          ),
+                        ),
+                        CountBadge(count: d.unread, lead: 8),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _Row extends StatelessWidget {

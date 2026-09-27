@@ -1904,5 +1904,19 @@
   "stickerRemoveRecent": "Son kullanılanlardan kaldır",
   "stickerCouldNotLoad": "Çıkartmalar yüklenemedi",
   "stickerLabel": "Çıkartma",
-  "stickerNewer": "Daha yeni bir Kryfo’dan"
+  "stickerNewer": "Daha yeni bir Kryfo’dan",
+  "devName": "Marios",
+  "devRowTitle": "Marios · Kryfo’yu yaptı",
+  "devWelcome": "Merhaba, ben Marios, Kryfo’yu ben yapıyorum. Bana her şeyi yaz: hatalar, fikirler, sorular. Hepsini okurum.",
+  "devPinned": "Kryfo’ya gömülü",
+  "devAnonymous": "Anonim",
+  "devAboutLine": "Marios’un anahtarı Kryfo’ya gömülü. Bu sohbetteki her mesaj onunla kontrol edilir, yani başka kimse onun adına yazamaz.",
+  "devKeyLabel": "Anahtarı",
+  "devDeleteLine": "Her mesaj gider ve sohbet geri gelmez.",
+  "devDeleteLineAnon": "Her mesaj ve bu sohbet için oluşturulan ad gider, sohbet de geri gelmez.",
+  "settingsWriteToMarios": "Marios’a yaz",
+  "settingsWriteToMariosHint": "Hatalar, fikirler, sorular",
+  "seenDevChat": "Marios sohbeti",
+  "seenDevChatCell": "Yazarsan",
+  "seenDevChatLine": "Sen yazana kadar hiçbir şey. Sonra gönderdiklerin ve anonim yazmadıkça üç kelimen."
 }

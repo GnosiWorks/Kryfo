@@ -7161,4 +7161,51 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get stickerNewer => 'Từ một bản Kryfo mới hơn';
+
+  @override
+  String get devName => 'Marios';
+
+  @override
+  String get devRowTitle => 'Marios · người làm ra Kryfo';
+
+  @override
+  String get devWelcome =>
+      'Chào bạn, tôi là Marios, tôi làm ra Kryfo. Cứ nói với tôi bất cứ điều gì: lỗi, ý tưởng, câu hỏi. Tôi đọc hết.';
+
+  @override
+  String get devPinned => 'Gắn sẵn trong Kryfo';
+
+  @override
+  String get devAnonymous => 'Ẩn danh';
+
+  @override
+  String get devAboutLine =>
+      'Khóa của Marios được gắn sẵn trong Kryfo. Mọi tin nhắn trong cuộc trò chuyện này đều được đối chiếu với khóa đó, nên không ai khác có thể viết dưới tên anh ấy.';
+
+  @override
+  String get devKeyLabel => 'Khóa của anh ấy';
+
+  @override
+  String get devDeleteLine =>
+      'Mọi tin nhắn sẽ bị xóa, và cuộc trò chuyện sẽ không quay lại.';
+
+  @override
+  String get devDeleteLineAnon =>
+      'Mọi tin nhắn và cái tên được tạo cho cuộc trò chuyện này sẽ bị xóa, và cuộc trò chuyện sẽ không quay lại.';
+
+  @override
+  String get settingsWriteToMarios => 'Nhắn cho Marios';
+
+  @override
+  String get settingsWriteToMariosHint => 'Lỗi, ý tưởng, câu hỏi';
+
+  @override
+  String get seenDevChat => 'Cuộc trò chuyện với Marios';
+
+  @override
+  String get seenDevChatCell => 'Khi bạn viết';
+
+  @override
+  String get seenDevChatLine =>
+      'Không gì cả cho đến khi bạn viết. Sau đó là những gì bạn gửi, và ba từ của bạn, trừ khi bạn viết ẩn danh.';
 }
