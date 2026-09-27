@@ -8,6 +8,8 @@
 import 'dart:io';
 
 import 'container.dart';
+import 'devchat/dev_chat.dart' show DevChat;
+import 'devchat/dev_key.dart' show isDevChat;
 import 'main.dart' show HaloDb;
 import 'polls.dart' show PollSpec, PollVote;
 import 'search.dart' show SearchKind;
@@ -27,9 +29,10 @@ class Session {
     final there = keysOnly
         ? (await primary.heldChats()).people.keys.toSet()
         : const <String>{};
+    // the developer chat is never the vault's, whatever its rows say
     return Session._(primary, vault, {
       for (final e in held.people.entries)
-        if (e.value || !there.contains(e.key)) e.key,
+        if (!isDevChat(e.key) && (e.value || !there.contains(e.key))) e.key,
     }, held.groups);
   }
 
@@ -43,6 +46,10 @@ class Session {
 
   // settings are the primary's. a chat's folders are its owner's (folderOf)
   HaloContainer get container => primary.container;
+
+  // the developer chat is the primary's alone: never hidden, and a vault's
+  // own row is never read
+  DevChat get devChat => primary.devChat;
 
   // a chat only this session shows
   bool isHidden(String chatId) => identical(_ofChat(chatId), vault);

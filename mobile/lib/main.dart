@@ -65,6 +65,8 @@ import 'search_bench.dart';
 import 'session.dart';
 import 'router.dart';
 import 'vault_life.dart';
+import 'devchat/dev_chat.dart';
+import 'devchat/dev_key.dart';
 import 'stickers/sticker_pack.dart' show StickerLibrary;
 import 'stickers/sticker_wire.dart' show StickerWire, stickerText;
 import 'widgets/motion.dart';
@@ -1100,7 +1102,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 53,
+      version: 54,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -1237,8 +1239,14 @@ class HaloDb {
         await _pollTables(db);
         await searchTables(db, fresh: true);
         await routerTables(db);
+        await _devChatTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 54) {
+          // the developer chat's row: an upgrade shows it once, as a fresh
+          // install does
+          await _devChatTables(db);
+        }
         if (oldV < 53) {
           // the hidden chats' list, their sealing key and what came sealed
           await routerTables(db);
@@ -2065,6 +2073,9 @@ class HaloDb {
       groups: {for (final r in groups) r['group_id'] as String},
     );
   }
+
+  // the developer chat's row: its flags, its start and its delete
+  DevChat get devChat => DevChat(open, shred: shredFile);
 
   Future<void> deleteConversation(String haloId) async {
     final d = await open();
@@ -3948,6 +3959,16 @@ Future<void> _pollTables(Database db) async {
   );
 }
 
+// wrapped: one throw in a migration and the app never opens again. without
+// the table there is simply no developer row
+Future<void> _devChatTables(Database db) async {
+  try {
+    await devChatTables(db);
+  } catch (e) {
+    dlog('devchat table: $e');
+  }
+}
+
 // a direct-onion message past a stranger's two has no relay to wait on. it
 // waits here instead, still sealed, and opens when the person is accepted.
 Future<void> _heldTable(Database db) async {
@@ -4497,8 +4518,11 @@ Future<String> buildHaloUriV3(String id, String onion, int fcCounter) async {
   if (fc.isEmpty || fc.startsWith('error')) {
     return buildHaloUriV2(id, onion);
   }
-  return 'kryfo://share?id=$id&onion=$onion&v=3&bundle=$bundle&fc=$fc';
+  return haloUriV3(id, onion, bundle, fc);
 }
+
+String haloUriV3(String id, String onion, String bundle, String fc) =>
+    'kryfo://share?id=$id&onion=$onion&v=3&bundle=$bundle&fc=$fc';
 
 Map<String, String>? parseHaloUri(String raw) {
   raw = raw.trim();
@@ -4553,13 +4577,15 @@ class QuietIdentity {
   final String invite;
 }
 
-// what home shows of a session: its chats, requests, groups and avatar
+// what home shows of a session: its chats, requests, groups, avatar and
+// the developer chat's row
 class _Shown {
-  const _Shown(this.contacts, this.pending, this.groups, this.avatar);
+  const _Shown(this.contacts, this.pending, this.groups, this.avatar, this.dev);
   final List<ContactPreview> contacts;
   final int pending;
   final List<GroupPreview> groups;
   final int? avatar;
+  final DevRow? dev;
 }
 
 // the everyday container's database. what arrives lands here whichever
@@ -7416,11 +7442,17 @@ class AppState extends ChangeNotifier {
   _Shown? _otherShown;
 
   Future<_Shown> _shownOf(Session s) async {
-    final (list, pending) = await _contactsOf(s);
+    final (list, pending, dev) = await _contactsOf(s);
     final a = await const FlutterSecureStorage().read(
       key: s.container.key('my_avatar'),
     );
-    return _Shown(list, pending, await _groupsOf(s), int.tryParse(a ?? ''));
+    return _Shown(
+      list,
+      pending,
+      await _groupsOf(s),
+      int.tryParse(a ?? ''),
+      dev,
+    );
   }
 
   Future<void> _openContainers() async {
@@ -7881,7 +7913,8 @@ class AppState extends ChangeNotifier {
     var marks = await m.marks();
     final went = <ChatRef>[];
     for (final c in chats) {
-      if (!await m.hideable(c)) continue;
+      // the developer chat is never hidden
+      if (isDevChat(c.id) || !await m.hideable(c)) continue;
       marks = marks.hiding(c);
       await m.copyIn(c, marks);
       if (everyday) {
@@ -8062,7 +8095,13 @@ class AppState extends ChangeNotifier {
     if (identical(_session.primary, want)) return;
     // no reads here: what home shows of the other session was read ahead,
     // and swapping it in costs the same whichever way it goes
-    final leaving = _Shown(contacts, pendingCount, groups, _quietAvatar);
+    final leaving = _Shown(
+      contacts,
+      pendingCount,
+      groups,
+      _quietAvatar,
+      devRow,
+    );
     final coming = _otherShown;
     _otherShown = leaving;
     _session = Session(want);
@@ -8070,6 +8109,7 @@ class AppState extends ChangeNotifier {
     if (coming != null) {
       contacts = coming.contacts;
       pendingCount = coming.pending;
+      devRow = coming.dev;
       groups = coming.groups;
       if (decoy) _quietAvatar = coming.avatar;
     }
@@ -8122,7 +8162,7 @@ class AppState extends ChangeNotifier {
     if (primary == null) throw StateError('no decoy here');
     final v = await _host.openVault(c, key);
     final Session s;
-    final (List<ContactPreview>, int) home;
+    final (List<ContactPreview>, int, DevRow?) home;
     final List<GroupPreview> gs;
     try {
       // a move a crash cut short is put right before ownership is read
@@ -8141,20 +8181,33 @@ class AppState extends ChangeNotifier {
       // decoy's face is the one read ahead for it, as at a decoy unlock
       if (!sessionQuiet) {
         final ahead = _otherShown;
-        _otherShown = _Shown(contacts, pendingCount, groups, _quietAvatar);
+        _otherShown = _Shown(
+          contacts,
+          pendingCount,
+          groups,
+          _quietAvatar,
+          devRow,
+        );
         if (ahead != null) _quietAvatar = ahead.avatar;
         _quietSince = DateTime.now().millisecondsSinceEpoch;
         _quietJobs = _jobRuns;
       }
     } else if (sessionQuiet) {
       // from the decoy: its lists wait for its next unlock, as if read ahead
-      _otherShown = _Shown(contacts, pendingCount, groups, _quietAvatar);
+      _otherShown = _Shown(
+        contacts,
+        pendingCount,
+        groups,
+        _quietAvatar,
+        devRow,
+      );
     }
     lockState.inDecoy = decoy;
     _session = s;
     _quiet = decoy ? _decoyId : null;
     contacts = home.$1;
     pendingCount = home.$2;
+    devRow = home.$3;
     groups = gs;
     _vaultFill = (at: 0, to: 0);
     lockState.inVault = true;
@@ -8507,6 +8560,8 @@ class AppState extends ChangeNotifier {
   bool get online => _online;
   List<ContactPreview> contacts = [];
   int pendingCount = 0;
+  // the developer chat, beside the contacts and never among them
+  DevRow? devRow;
   final Map<String, String> _xPubToHaloId = {};
   // peers waiting on a bundle swap, and when a bundle control last went to
   // each. both forget anything older than an hour so they cannot grow with
@@ -9428,52 +9483,61 @@ class AppState extends ChangeNotifier {
 
   Future<void> refreshContacts() async {
     final s = session;
-    final (list, pending) = await _contactsOf(s);
+    final (list, pending, dev) = await _contactsOf(s);
     // a session swapped while this read keeps what it was given
     if (!identical(s, _session)) return;
     contacts = list;
     pendingCount = pending;
+    devRow = dev;
     notifyListeners();
   }
 
-  Future<(List<ContactPreview>, int)> _contactsOf(Session s) async {
+  // how a row says its last message, and when it was sent
+  (String?, DateTime?) _lastLine(Map<String, Object?>? last) {
+    if (last == null) return (null, null);
+    final dir = last['direction'] as String?;
+    final text = (last['plaintext'] as String?) ?? '';
+    final media = last['media_path'] as String?;
+    final fileName = last['file_name'] as String?;
+    String body;
+    // a sticker's text is its emoji; the row says what it is
+    if (last['sticker'] != null) {
+      body = l10n.stickerLabel;
+    } else if (text.isNotEmpty) {
+      body = text;
+    } else if (fileName == 'voice.wav') {
+      body = l10n.appVoiceMessage2;
+    } else if (fileName != null) {
+      body = fileName;
+    } else if (media != null) {
+      body = l10n.appPhoto;
+    } else {
+      body = '';
+    }
+    final sentAt = last['sent_at'] as int?;
+    return (
+      body.isEmpty ? null : (dir == 'out' ? l10n.appYou(body) : body),
+      sentAt == null ? null : DateTime.fromMillisecondsSinceEpoch(sentAt),
+    );
+  }
+
+  Future<(List<ContactPreview>, int, DevRow?)> _contactsOf(Session s) async {
     final rows = await s.contacts();
     final lasts = await s.lastMessages();
     final list = <ContactPreview>[];
+    final devRows = <String, Map<String, Object?>>{};
     for (final r in rows) {
       final haloId = r['halo_id'] as String;
-      final last = lasts[haloId];
-      String? preview;
-      // default to the contact's last_seen; a real message overrides it.
-      DateTime when = DateTime.fromMillisecondsSinceEpoch(
-        r['last_seen'] as int,
-      );
-      if (last != null) {
-        final dir = last['direction'] as String?;
-        final text = (last['plaintext'] as String?) ?? '';
-        final media = last['media_path'] as String?;
-        final fileName = last['file_name'] as String?;
-        String body;
-        // a sticker's text is its emoji; the row says what it is
-        if (last['sticker'] != null) {
-          body = l10n.stickerLabel;
-        } else if (text.isNotEmpty) {
-          body = text;
-        } else if (fileName == 'voice.wav') {
-          body = l10n.appVoiceMessage2;
-        } else if (fileName != null) {
-          body = fileName;
-        } else if (media != null) {
-          body = l10n.appPhoto;
-        } else {
-          body = '';
-        }
-        if (body.isNotEmpty) preview = dir == 'out' ? l10n.appYou(body) : body;
-        final sentAt = last['sent_at'] as int?;
-        if (sentAt != null) {
-          when = DateTime.fromMillisecondsSinceEpoch(sentAt);
-        }
+      // the developer chat has a row of its own: kept out of this list, it
+      // stays out of every picker, count and loop that reads it
+      if (isDevChat(haloId)) {
+        devRows[haloId] = r;
+        continue;
       }
+      final (preview, sent) = _lastLine(lasts[haloId]);
+      // default to the contact's last_seen; a real message overrides it.
+      final when =
+          sent ?? DateTime.fromMillisecondsSinceEpoch(r['last_seen'] as int);
       list.add(
         ContactPreview(
           haloId: haloId,
@@ -9498,7 +9562,36 @@ class AppState extends ChangeNotifier {
       if (a.pinned != b.pinned) return a.pinned ? -1 : 1;
       return (b.when ?? DateTime(0)).compareTo(a.when ?? DateTime(0));
     });
-    return (list, await s.pendingRequestCount());
+    return (
+      list,
+      await s.pendingRequestCount(),
+      await _devRowOf(s, devRows, lasts),
+    );
+  }
+
+  // the session's own row, never a vault's. a row that will not read is no
+  // row: home still shows everything else
+  Future<DevRow?> _devRowOf(
+    Session s,
+    Map<String, Map<String, Object?>> rows,
+    Map<String, Map<String, Object?>> lasts,
+  ) async {
+    try {
+      final r = await s.devChat.load();
+      final id = r?.chatId;
+      final (preview, sent) = _lastLine(id == null ? null : lasts[id]);
+      return devRowOf(
+        r,
+        contact: id == null ? null : rows[id],
+        preview: preview,
+        when: sent,
+        // the developer's own phone has none. its decoy does
+        devMode: !s.container.quiet && devModeOf(myXPub),
+      );
+    } catch (e) {
+      dlog('dev row: $e');
+      return null;
+    }
   }
 
   // ---- groups ----
