@@ -152,6 +152,8 @@ const appPin = '1234';
 const wipePin = '9999';
 const decoyPin = '5555';
 const vaultPin = '246810';
+// the decoy's own hidden chats PIN
+const decoyVaultPin = '112233';
 final vaultKey = '1f' * 32;
 
 String _containerOf(int index, int kind) => switch (kind) {

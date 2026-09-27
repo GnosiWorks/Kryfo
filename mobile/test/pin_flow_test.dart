@@ -137,6 +137,80 @@ void main() {
       h.dispose();
     });
 
+    testWidgets('a decoy reads the same with or without hidden chats of its '
+        'own', (t) async {
+      phone(t);
+      final h = t.ensureSemantics();
+      final seen = <(String, List<int>)>[];
+      for (final own in [false, true]) {
+        final lock = await makeLock({
+          ...withVault,
+          PinSlot.decoy: (decoyPin, PinKind.decoy),
+          if (own) PinSlot.decoyVault: (decoyVaultPin, PinKind.vault),
+        }, inDecoy: true);
+        final shot = GlobalKey();
+        await _pins(
+          t,
+          lock,
+          FakeHost(lock: lock.state, everyday: someChats()),
+          shot: shot,
+        );
+        expect(find.text(l10n.pinsSetUp), findsOneWidget);
+        expect(find.text(l10n.pinsSet), findsNothing);
+        seen.add((semanticsTree(t), await pixels(t, shot)));
+        await t.pumpWidget(const SizedBox());
+      }
+      expect(seen[1].$1, seen[0].$1);
+      expect(seen[1].$2, seen[0].$2);
+      h.dispose();
+    });
+
+    testWidgets('inside the decoy\'s own it reads Set, and a change takes '
+        'only its PIN', (t) async {
+      phone(t);
+      final lock = await makeLock(
+        {
+          ...withVault,
+          PinSlot.decoy: (decoyPin, PinKind.decoy),
+          PinSlot.decoyVault: (decoyVaultPin, PinKind.vault),
+        },
+        inDecoy: true,
+        inVault: true,
+      );
+      final host = FakeHost(
+        lock: lock.state,
+        everyday: someChats(),
+        hidden: [const HideChoice(id: 'h', name: 'Hana')],
+      );
+      await _pins(t, lock, host);
+      expect(find.text(l10n.pinsSet), findsOneWidget);
+      await t.tap(find.text(l10n.pinsHiddenChats));
+      await t.pumpAndSettle();
+      expect(find.text(l10n.pinsHideMoreChats), findsOneWidget);
+      expect(find.text(l10n.pinsRemoveHiddenChats), findsOneWidget);
+      await t.tap(find.text(l10n.pinsChangeHiddenPin));
+      await t.pumpAndSettle();
+      // the everyday vault's pin and the decoy's own do not change it
+      for (final other in [vaultPin, decoyPin]) {
+        await typePin(t, other);
+        await enter(t);
+        await t.pumpAndSettle();
+        expect(find.text(l10n.lockNotIt), findsOneWidget);
+      }
+      await typePin(t, decoyVaultPin);
+      await enter(t);
+      await t.pumpAndSettle();
+      for (var i = 0; i < 2; i++) {
+        await typePin(t, '864200');
+        await enter(t);
+        await t.pumpAndSettle();
+      }
+      expect(find.text(l10n.flowVaultChanged), findsOneWidget);
+      expect(host.moves, isEmpty);
+      expect(lock.entries['${PinSlot.decoyVault}']['p'], '864200');
+      expect(lock.entries['${PinSlot.vault}']['p'], vaultPin);
+    });
+
     testWidgets('with the lock off it needs a PIN first and leads nowhere', (
       t,
     ) async {
@@ -257,6 +331,56 @@ void main() {
       expect(host.calls, isEmpty);
       expect(lock.entries.containsKey('${PinSlot.vault}'), isTrue);
     });
+
+    testWidgets('in the decoy a pause keeps its own hidden chats', (t) async {
+      phone(t);
+      final lock = await makeLock({
+        ...withVault,
+        PinSlot.decoy: (decoyPin, PinKind.decoy),
+        PinSlot.decoyVault: (decoyVaultPin, PinKind.vault),
+      }, inDecoy: true);
+      final host = FakeHost(lock: lock.state);
+      await _pins(t, lock, host);
+      await t.tap(find.text(l10n.pinsTurnOff));
+      await t.pumpAndSettle();
+      await t.tap(find.text(l10n.pinsTurnOff).last);
+      await t.pumpAndSettle();
+      expect(host.calls, isEmpty);
+      expect(lock.state.lockOn, isFalse);
+      expect(lock.entries['${PinSlot.decoyVault}']['p'], decoyVaultPin);
+      expect(lock.entries['${PinSlot.vault}']['p'], vaultPin);
+    });
+
+    testWidgets('inside the decoy\'s own it waits for its chats to go', (
+      t,
+    ) async {
+      phone(t);
+      final lock = await makeLock(
+        {
+          ...withVault,
+          PinSlot.decoy: (decoyPin, PinKind.decoy),
+          PinSlot.decoyVault: (decoyVaultPin, PinKind.vault),
+        },
+        inDecoy: true,
+        inVault: true,
+      );
+      final host = FakeHost(
+        lock: lock.state,
+        hidden: [const HideChoice(id: 'h', name: 'Hana')],
+      );
+      await _pins(t, lock, host);
+      await t.tap(find.text(l10n.pinsTurnOff));
+      await t.pumpAndSettle();
+      expect(find.text(l10n.pinsTurnOffHiddenFirst), findsOneWidget);
+      await t.tap(find.text(l10n.pinsRemoveHiddenChats));
+      await t.pumpAndSettle();
+      expect(host.calls, ['removeVault']);
+      expect(host.everyday.map((c) => c.id), ['h']);
+      expect(lock.state.lockOn, isTrue);
+      expect(lock.entries.containsKey('${PinSlot.decoyVault}'), isFalse);
+      expect(lock.entries['${PinSlot.vault}']['p'], vaultPin);
+      expect(find.text(l10n.pinsSetUp), findsOneWidget);
+    });
   });
 
   testWidgets('the lock screen is the same for every set of pins', (t) async {
@@ -272,6 +396,11 @@ void main() {
         ...withVault,
         PinSlot.wipe: (wipePin, PinKind.wipe),
         PinSlot.decoy: (decoyPin, PinKind.decoy),
+      },
+      {
+        ...withVault,
+        PinSlot.decoy: (decoyPin, PinKind.decoy),
+        PinSlot.decoyVault: (decoyVaultPin, PinKind.vault),
       },
     ]) {
       final lock = await makeLock(pins);
@@ -390,6 +519,58 @@ void main() {
         expect(lock.entries['${PinSlot.vault}']['p'], vaultPin);
         await t.pumpWidget(const SizedBox());
       }
+    });
+
+    testWidgets('in the decoy a PIN in use goes the same way as any other', (
+      t,
+    ) async {
+      phone(t);
+      final pages = <List<Set<String>>>[];
+      final tables = <Map<String, dynamic>>[];
+      for (final pin in ['135790', vaultPin]) {
+        final lock = await makeLock({
+          ...withVault,
+          PinSlot.decoy: (decoyPin, PinKind.decoy),
+        }, inDecoy: true);
+        final host = FakeHost(lock: lock.state, everyday: someChats());
+        await _flow(t, lock, host);
+        final seen = [_words(t)];
+        Future<void> next() async {
+          await t.pumpAndSettle();
+          seen.add(_words(t));
+        }
+
+        await press(t, find.text(l10n.commonContinue));
+        await next();
+        // the decoy's own pin lets them in there
+        await typePin(t, decoyPin);
+        await enter(t);
+        await next();
+        for (var i = 0; i < 2; i++) {
+          await typePin(t, pin);
+          await enter(t);
+          await next();
+        }
+        await press(t, find.text(l10n.flowVaultForgetOk));
+        await next();
+        await t.tap(find.text('Hana'));
+        await t.pumpAndSettle();
+        await t.tap(find.text(l10n.flowVaultPickButton(1)));
+        await next();
+        await press(t, find.text(l10n.flowVaultNotNow));
+        await next();
+        expect(find.text(l10n.flowVaultDone), findsOneWidget);
+        expect(host.calls, ['createVault', 'hideChats', 'vaultSetupDone']);
+        expect(host.hidden.map((c) => c.id), ['hidden-wreck-tone']);
+        pages.add(seen);
+        tables.add(lock.entries);
+        await t.pumpWidget(const SizedBox());
+      }
+      expect(pages[1], pages[0]);
+      // a free pin is the decoy's own now; one in use is kept nowhere
+      expect(tables[0]['${PinSlot.decoyVault}']['p'], '135790');
+      expect(tables[1].containsKey('${PinSlot.decoyVault}'), isFalse);
+      expect(tables[1]['${PinSlot.vault}']['p'], vaultPin);
     });
 
     testWidgets('the whole way: forget page, picked chats, backup, done', (

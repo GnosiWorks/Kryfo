@@ -19,6 +19,8 @@ import 'package:kryfo/main.dart'
         AppIo,
         AppState,
         HaloDb,
+        QuietIdentity,
+        appState,
         searchFill,
         session,
         sessionQuiet,
@@ -26,6 +28,7 @@ import 'package:kryfo/main.dart'
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
 import 'package:kryfo/router.dart';
+import 'package:kryfo/screens/pin_flow_screen.dart' show PinsHost;
 import 'package:kryfo/search.dart' show SearchKind;
 import 'package:kryfo/session.dart';
 import 'package:kryfo/vault_life.dart';
@@ -52,6 +55,20 @@ const _r = 'request-from-afar';
 const _g1 = 'g1visible001';
 const _g2 = 'g2hidden0001';
 const _n = 'newcomer-in-g2';
+
+// the decoy: D a chat, DG a group, and in the decoy's own vault DH
+const _d1 = 'decoy-plain-one';
+const _dg = 'dgdecoygrp01';
+const _dh = 'decoy-hidden-one';
+const _dvPin = '135790';
+final _dvKey = '2e' * 32;
+const _quietId = QuietIdentity(
+  id: 'decoy-own-words',
+  edPub: 'ed-decoy',
+  xPub: 'x-decoy',
+  onion: 'o-decoy',
+  invite: 'kryfo://share?id=decoy-own-words',
+);
 
 // ---- the list, as the router keeps it in the everyday database ----
 
@@ -320,8 +337,16 @@ class _Db implements HaloDb {
   final calls = <String>[];
   // what a read of the home list waits for, when a test holds it
   Completer<void>? holdContacts;
+  // the everyday side, where a decoy must never reach: every call is kept
+  // and refused
+  bool untouchable = false;
+  final touched = <String>[];
 
   T _hit<T>(String name, Object? arg, T answer) {
+    if (untouchable) {
+      touched.add(name);
+      throw StateError('${_container.dbFile} was reached');
+    }
     if (closed) throw StateError('${_container.dbFile} has no key here');
     calls.add(arg == null ? name : '$name:$arg');
     return answer;
@@ -332,6 +357,7 @@ class _Db implements HaloDb {
 
   @override
   Future<void> close() async {
+    if (untouchable) touched.add('close');
     calls.add('close');
     closed = true;
   }
@@ -666,8 +692,30 @@ class _Db implements HaloDb {
   ) async => _hit('pollRow', uid, null);
 
   @override
-  dynamic noSuchMethod(Invocation i) =>
-      throw UnimplementedError('the stand-in was asked for ${i.memberName}');
+  dynamic noSuchMethod(Invocation i) {
+    if (untouchable) touched.add('${i.memberName}');
+    throw UnimplementedError('the stand-in was asked for ${i.memberName}');
+  }
+}
+
+// ---- the everyday side's list, signal and the engine, never to be reached
+
+class _Untouched implements RouterStore {
+  final calls = <String>[];
+  @override
+  dynamic noSuchMethod(Invocation i) {
+    calls.add('${i.memberName}');
+    throw StateError('the list was reached: ${i.memberName}');
+  }
+}
+
+class _Spy implements AppIo {
+  final calls = <String>[];
+  @override
+  dynamic noSuchMethod(Invocation i) {
+    calls.add('${i.memberName}');
+    throw StateError('the identity was reached: ${i.memberName}');
+  }
 }
 
 // ---- the vault's life, as the session reaches it ----
@@ -677,18 +725,62 @@ class _Host implements VaultHost {
   final _World w;
   // a vault that will not open
   bool broken = false;
+  // the everyday vault may not be reached at all
+  bool untouched = false;
+  final touched = <String>[];
+  // every call, with the vault it was for
+  final asked = <(String, HaloContainer)>[];
+
+  void _ask(String what, HaloContainer c) {
+    asked.add((what, c));
+    if (untouched && c != HaloContainer.decoyVault) {
+      touched.add('$what ${c.dbFile}');
+      throw StateError('$what reached ${c.dbFile}');
+    }
+  }
+
+  // the entries go through the lock when a test runs one, as the app's do
+  LiveVaultHost? get _entries {
+    final l = w.lock;
+    return l == null ? null : LiveVaultHost(lock: l);
+  }
 
   @override
   bool get lockOn => true;
   @override
-  Future<bool> putEntry(String pin, String keyHex) async => true;
-  @override
-  Future<void> clearEntry() async {}
-  @override
-  Future<String> makeVault(String keyHex) async => 'pub-A';
+  Future<bool> putEntry(HaloContainer c, String pin, String keyHex) async {
+    _ask('putEntry', c);
+    return await _entries?.putEntry(c, pin, keyHex) ?? true;
+  }
 
   @override
-  Future<HaloDb> openVault(String keyHex) async {
+  Future<void> clearEntry(HaloContainer c) async {
+    _ask('clearEntry', c);
+    await _entries?.clearEntry(c);
+  }
+
+  @override
+  Future<String> makeVault(HaloContainer c, String keyHex) async {
+    _ask('makeVault', c);
+    if (c != HaloContainer.decoyVault) return 'pub-A';
+    w.dvKey = keyHex;
+    w.dvRows = _Rows();
+    File(await c.dbPath())
+      ..createSync(recursive: true)
+      ..writeAsStringSync('made $keyHex');
+    return '';
+  }
+
+  @override
+  Future<HaloDb> openVault(HaloContainer c, String keyHex) async {
+    _ask('openVault', c);
+    if (c == HaloContainer.decoyVault) {
+      if (keyHex != w.dvKey) throw StateError('will not open');
+      final d = _Db(c, w.dvRows);
+      w.handles.add(d);
+      w.log.add('open dv');
+      return d;
+    }
     if (broken || keyHex != vaultKey) throw StateError('will not open');
     final d = _Db(HaloContainer.vault, w.vaultRows);
     w.handles.add(d);
@@ -697,24 +789,42 @@ class _Host implements VaultHost {
   }
 
   @override
-  ChatMover mover(HaloDb live, HaloDb? vault) => _Mover(w);
+  ChatMover mover(HaloDb primary, HaloDb? vault) {
+    final decoy = vault?.container == HaloContainer.decoyVault;
+    if (!decoy) _ask('mover', HaloContainer.vault);
+    // a vault moves rows only against the side it extends
+    if (!identical(primary, decoy ? w.decoy : w.live)) {
+      throw StateError('moved against the other side');
+    }
+    return _Mover(w, decoy: decoy);
+  }
+
   @override
-  Future<void> clearShade(Iterable<String> payloads) async {}
+  Future<void> clearShade(Iterable<String> payloads) async =>
+      _ask('clearShade', HaloContainer.vault);
   @override
   Future<void> moveFile(String from, String to) async {}
   @override
   Future<void> shred(String path) async {}
   @override
-  Future<void> wipeVault() async {}
+  Future<void> wipeVault(HaloContainer c) async {
+    _ask('wipeVault', c);
+    if (c != HaloContainer.decoyVault) return;
+    await c.wipeFiles();
+    w.dvKey = null;
+    w.dvRows = _Rows();
+  }
 }
 
-// rows of chats between the two containers, a chat whole at a time
+// rows of chats between the two containers, a chat whole at a time: the
+// everyday side and its vault, or the decoy and its own
 class _Mover implements ChatMover {
-  _Mover(this.w);
+  _Mover(this.w, {this.decoy = false});
   final _World w;
+  final bool decoy;
 
-  _Rows get _l => w.liveRows;
-  _Rows get _v => w.vaultRows;
+  _Rows get _l => decoy ? w.decoyRows : w.liveRows;
+  _Rows get _v => decoy ? w.dvRows : w.vaultRows;
 
   bool _named(_Rows s, String id) =>
       s.members.values.any((m) => m.contains(id));
@@ -775,9 +885,9 @@ class _Mover implements ChatMover {
       : peerCard(_cardOf(_v.people[c.id]!));
 
   @override
-  Future<void> attach() async => w.log.add('attach');
+  Future<void> attach() async => w.log.add(decoy ? 'attach dv' : 'attach');
   @override
-  Future<void> detach() async => w.log.add('detach');
+  Future<void> detach() async => w.log.add(decoy ? 'detach dv' : 'detach');
   @override
   Future<MoveMarks> marks() async => MoveMarks.decode(_v.meta['moves']);
   @override
@@ -809,6 +919,8 @@ class _Mover implements ChatMover {
 
   @override
   Future<List<String>> commitIn(ChatRef c, int at) async {
+    // a list entry would say the decoy has a vault
+    if (decoy) throw StateError('the decoy has no list');
     _drop(_l, c);
     w.store.rows[c.id] = {
       'chat_id': c.id,
@@ -824,7 +936,7 @@ class _Mover implements ChatMover {
   @override
   Future<void> commitOut(ChatRef c) async {
     _copy(c, _v, _l);
-    w.store.rows.remove(c.id);
+    if (!decoy) w.store.rows.remove(c.id);
   }
 
   @override
@@ -871,8 +983,79 @@ class _World {
   late AppState app;
   Completer<void>? holdMove;
   var _n = 0;
+  // the decoy, and its own vault: the rows and key of halo_dv.db
+  final decoyRows = _Rows();
+  var dvRows = _Rows();
+  String? dvKey;
+  late final decoy = _Db(HaloContainer.decoy, decoyRows);
+  // the lock the app runs, when a test runs one
+  LockState? lock;
+  final spy = _Spy();
+  final untouchedList = _Untouched();
 
   _Db get handle => handles.last;
+
+  // a decoy with a chat D and a group DG, and its own vault holding DH
+  Future<void> withDecoy() async {
+    decoyRows
+      ..person(_d1)
+      ..group(_dg, [_quietId.id])
+      ..say('d0', _d1, 'decoy hello')
+      ..say('dg0', _quietId.id, 'decoy group', group: _dg, out: true);
+    dvKey = _dvKey;
+    dvRows
+      ..person(_dh)
+      ..say('dh0', _dh, 'the quiet hidden one', saved: 1);
+    File(await HaloContainer.decoyVault.dbPath())
+      ..createSync(recursive: true)
+      ..writeAsStringSync('made $_dvKey');
+    await app.useDecoyForTest(decoy, _quietId);
+  }
+
+  // a phone with a decoy whose everyday side refuses to be reached: its
+  // database, its vault, the list, signal and the engine
+  static Future<_World> untouched() async {
+    final w = await make();
+    w.live.untouchable = true;
+    w.host.untouched = true;
+    w.app =
+        AppState(
+            io: w.spy,
+            router: VaultRouter(w.untouchedList, _Seal()),
+            host: w.host,
+          )
+          ..myId = 'me'
+          ..revealGap = Duration.zero;
+    await w.withDecoy();
+    return w;
+  }
+
+  // the lock the app runs: its outcomes open the app's sessions, and it
+  // knows what they opened, as the app's own lock does
+  void wire(LockState l) {
+    l.onOutcome = app.sessionFor;
+    lock = l;
+    void sync() {
+      l.inDecoy = lockState.inDecoy;
+      l.inVault = lockState.inVault;
+    }
+
+    lockState.addListener(sync);
+    addTearDown(() => lockState.removeListener(sync));
+  }
+
+  // a pin typed on the lock screen, and the lock going up after
+  Future<PinResult> type(String pin) async {
+    final r = await lock!.verifyPin(pin);
+    await _settle();
+    return r;
+  }
+
+  Future<void> lockUpAll() async {
+    lock!.lock();
+    app.lockingUp();
+    await _settle();
+  }
 
   static Future<_World> make() async {
     final w = _World();
@@ -954,7 +1137,8 @@ class _World {
 Future<void> _settle() =>
     Future<void>.delayed(const Duration(milliseconds: 30));
 
-// the lock with an app, wipe, decoy and hidden chats PIN
+// the lock with an app, wipe, decoy and hidden chats PIN, and the decoy's
+// own hidden chats PIN
 ({LockState lock, _CountingStore store, _CountingEngine engine}) _lock({
   Duration reveal = Duration.zero,
 }) {
@@ -963,7 +1147,11 @@ Future<void> _settle() =>
     'p': pin,
     'k': kind,
     'c': c.id,
-    'w': kind == PinKind.vault ? vaultKey : '',
+    'w': kind != PinKind.vault
+        ? ''
+        : c == HaloContainer.decoyVault
+        ? _dvKey
+        : vaultKey,
   };
   store.m['halo.lock.enabled'] = 'true';
   store.m['halo.lock.table'] = jsonEncode({
@@ -974,6 +1162,11 @@ Future<void> _settle() =>
       '${PinSlot.wipe}': entry(wipePin, PinKind.wipe, HaloContainer.everyday),
       '${PinSlot.decoy}': entry(decoyPin, PinKind.decoy, HaloContainer.decoy),
       '${PinSlot.vault}': entry(vaultPin, PinKind.vault, HaloContainer.vault),
+      '${PinSlot.decoyVault}': entry(
+        _dvPin,
+        PinKind.vault,
+        HaloContainer.decoyVault,
+      ),
     },
   });
   final engine = _CountingEngine();
@@ -1049,9 +1242,10 @@ void main() {
 
   group('opening', () {
     test(
-      'every outcome shows at the one deadline, the vault included',
+      'every outcome shows at the one deadline, both vaults included',
       () async {
         final w = await _World.make();
+        await w.withDecoy();
         const reveal = Duration(milliseconds: 600);
         w.app.revealGap = reveal + const Duration(milliseconds: 100);
         final (:lock, :store, :engine) = _lock(reveal: reveal);
@@ -1063,7 +1257,14 @@ void main() {
           built[r] = lock.locked;
         };
         final shown = <String, int>{};
-        for (final pin in [appPin, vaultPin, decoyPin, '0000', wipePin]) {
+        for (final pin in [
+          appPin,
+          vaultPin,
+          decoyPin,
+          _dvPin,
+          '0000',
+          wipePin,
+        ]) {
           store.writes = 0;
           store.reads = 0;
           engine.checks = 0;
@@ -1078,6 +1279,18 @@ void main() {
             expect(r, PinResult.vault);
             expect(session.isHidden(_h), isTrue);
             expect(w.homeIds, containsAll([_h, _g2]));
+          }
+          if (pin == decoyPin) {
+            expect(r, PinResult.decoy);
+            expect(session.primary, same(w.decoy));
+            expect(session.vault, isNull);
+          }
+          // the decoy's own vault, opened over the decoy
+          if (pin == _dvPin) {
+            expect(r, PinResult.decoy);
+            expect(session.primary, same(w.decoy));
+            expect(session.vault?.container, HaloContainer.decoyVault);
+            expect(w.homeIds, {_d1, _dg, _dh});
           }
           lock.lock();
           w.app.lockingUp();
@@ -1420,6 +1633,258 @@ void main() {
     });
   });
 
+  group('the decoy\'s vault', () {
+    Map<String, dynamic> entries(_CountingStore store) =>
+        (jsonDecode(store.m['halo.lock.table']!) as Map)['e']
+            as Map<String, dynamic>;
+
+    test('opens over the decoy, quiet, and never reaches the everyday side '
+        'or its identity', () async {
+      final w = await _World.untouched();
+      final lock = _lock().lock;
+      await lock.load();
+      w.wire(lock);
+      expect(await w.type(decoyPin), PinResult.decoy);
+      expect(w.homeIds, {_d1, _dg});
+      await w.lockUpAll();
+      expect(await w.type(_dvPin), PinResult.decoy);
+      // quiet, as at any decoy unlock: nothing notifies, and what waited for
+      // the lock is dropped
+      expect(lock.quiet, isTrue);
+      expect(sessionQuiet, isTrue);
+      expect(lockState.inDecoy, isTrue);
+      expect(lockState.inVault, isTrue);
+      expect(session.primary, same(w.decoy));
+      expect(session.isHidden(_dh), isTrue);
+      expect(session.isHidden(_d1), isFalse);
+      expect(w.homeIds, {_d1, _dg, _dh});
+      expect(w.app.contacts.firstWhere((c) => c.haloId == _dh).hidden, isTrue);
+      expect(
+        await session.searchMessages('quiet hidden', SearchKind.all),
+        hasLength(1),
+      );
+      // who it shows is the decoy's own
+      expect(w.app.sessionId, _quietId.id);
+      expect(w.app.sessionOnion, _quietId.onion);
+      expect(w.app.sessionXPub, _quietId.xPub);
+      expect(w.app.sessionEdPub, _quietId.edPub);
+      expect(await w.app.sessionInvite(), _quietId.invite);
+      // hidden and shown again from inside it
+      expect(await w.app.hideChats(people: [_d1]), 1);
+      expect(session.isHidden(_d1), isTrue);
+      expect(w.dvRows.uids, contains('d0'));
+      expect(w.decoyRows.uids, isNot(contains('d0')));
+      expect(await w.app.unhideChats(people: [_d1]), 1);
+      expect(session.isHidden(_d1), isFalse);
+      expect(w.decoyRows.uids, contains('d0'));
+      await w.lockUpAll();
+      // a new one set up from the decoy replaces it
+      expect(await w.type(decoyPin), PinResult.decoy);
+      expect(await w.app.createVault('112233'), isTrue);
+      expect(await w.app.hideChats(groups: [_dg]), 1);
+      await w.app.vaultSetupDone();
+      expect(w.homeIds, {_d1});
+      await w.lockUpAll();
+      expect(await w.type(_dvPin), PinResult.invalid);
+      expect(await w.type('112233'), PinResult.decoy);
+      expect(w.homeIds, {_d1, _dg});
+      expect(session.isHidden(_dg), isTrue);
+      // its chats come back and it goes, from inside it
+      await w.app.removeVault();
+      expect(session.vault, isNull);
+      expect(lockState.inVault, isFalse);
+      expect(w.homeIds, {_d1, _dg});
+      expect(
+        File(await HaloContainer.decoyVault.dbPath()).existsSync(),
+        isFalse,
+      );
+      await w.lockUpAll();
+      expect(await w.type('112233'), PinResult.invalid);
+      // not one call reached the everyday side
+      expect(w.live.touched, isEmpty);
+      expect(w.untouchedList.calls, isEmpty);
+      expect(w.spy.calls, isEmpty);
+      expect(w.host.touched, isEmpty);
+      expect(
+        {for (final (_, c) in w.host.asked) c},
+        {HaloContainer.decoyVault},
+      );
+    });
+
+    test('a setup in the decoy leaves the everyday vault whole', () async {
+      final w = await _World.make();
+      await w.withDecoy();
+      final (:lock, :store, engine: _) = _lock();
+      await lock.load();
+      w.wire(lock);
+      final dir = p.join(docs.path, 'docs');
+      File(p.join(dir, 'halo_v.db'))
+        ..createSync(recursive: true)
+        ..writeAsStringSync('the everyday vault');
+      File(p.join(dir, 'media_v', 'c.jpg'))
+        ..createSync(recursive: true)
+        ..writeAsStringSync('c');
+      final entry = jsonEncode(entries(store)['${PinSlot.vault}']);
+      final list = jsonEncode(w.store.rows);
+      final uids = w.vaultRows.uids;
+      expect(await w.type(decoyPin), PinResult.decoy);
+      expect(await w.app.createVault('112233'), isTrue);
+      expect(await w.app.hideChats(people: [_d1]), 1);
+      await w.app.vaultSetupDone();
+      await w.lockUpAll();
+      // its entry, file, folder, list, key, sealed rows and chats as they were
+      expect(jsonEncode(entries(store)['${PinSlot.vault}']), entry);
+      expect(
+        File(p.join(dir, 'halo_v.db')).readAsStringSync(),
+        'the everyday vault',
+      );
+      expect(File(p.join(dir, 'media_v', 'c.jpg')).existsSync(), isTrue);
+      expect(jsonEncode(w.store.rows), list);
+      expect(w.store.metas['pub'], 'pub-A');
+      expect(w.store.inbox, isEmpty);
+      expect(w.vaultRows.uids, uids);
+      expect(w.live.calls, isEmpty);
+      expect(
+        {for (final (_, c) in w.host.asked) c},
+        {HaloContainer.decoyVault},
+      );
+      // the decoy's own was replaced
+      expect(
+        File(p.join(dir, 'halo_dv.db')).readAsStringSync(),
+        isNot('made $_dvKey'),
+      );
+      expect(await w.type(_dvPin), PinResult.invalid);
+      expect(await w.type('112233'), PinResult.decoy);
+      expect(session.isHidden(_d1), isTrue);
+      expect(w.homeIds, {_d1, _dg});
+      await w.lockUpAll();
+      // and the everyday one opens with all it held
+      expect(await w.type(vaultPin), PinResult.vault);
+      expect(session.primary, same(w.live));
+      expect(w.homeIds, {_v, _g1, _h, _g2});
+      expect(session.isHidden(_h), isTrue);
+      expect(
+        await session.searchMessages('bridge', SearchKind.all),
+        hasLength(1),
+      );
+    });
+
+    test('a PIN in use is taken and kept nowhere, and the setup goes as '
+        'with any other', () async {
+      final steps = <List<(String, HaloContainer)>>[];
+      for (final pin in ['112233', vaultPin]) {
+        final w = await _World.make();
+        await w.withDecoy();
+        final (:lock, :store, engine: _) = _lock();
+        await lock.load();
+        w.wire(lock);
+        expect(await w.type(decoyPin), PinResult.decoy);
+        final before = entries(store);
+        final state = store.m['halo.lock.state'];
+        w.host.asked.clear();
+        expect(await w.app.createVault(pin), isTrue);
+        // the picked chat leaves the decoy's list whichever pin it was
+        expect(await w.app.hideChats(people: [_d1]), 1);
+        await w.app.vaultSetupDone();
+        expect(w.homeIds, {_dg});
+        steps.add([...w.host.asked]);
+        // no miss counted either way
+        expect(store.m['halo.lock.state'], state);
+        final after = entries(store);
+        if (pin != vaultPin) {
+          expect(after['${PinSlot.decoyVault}']['p'], pin);
+          continue;
+        }
+        // the old one's entry went and nothing took its place
+        expect(after.containsKey('${PinSlot.decoyVault}'), isFalse);
+        for (final k in before.keys) {
+          if (k == '${PinSlot.decoyVault}') continue;
+          expect(jsonEncode(after[k]), jsonEncode(before[k]), reason: k);
+        }
+        await w.lockUpAll();
+        // the pin opens what it always opened, and the decoy's old one
+        // nothing
+        expect(await w.type(vaultPin), PinResult.vault);
+        expect(session.isHidden(_h), isTrue);
+        expect(w.homeIds, {_v, _g1, _h, _g2});
+        await w.lockUpAll();
+        expect(await w.type(_dvPin), PinResult.invalid);
+      }
+      // the same steps in the same order, whichever pin it was
+      expect(steps[1], steps[0]);
+    });
+
+    test('the lock shuts it at once, and the next decoy unlock shows '
+        'nothing of it', () async {
+      final w = await _World.make();
+      await w.withDecoy();
+      final lock = _lock().lock;
+      await lock.load();
+      w.wire(lock);
+      expect(await w.type(_dvPin), PinResult.decoy);
+      final opened = w.handle;
+      expect(opened.container, HaloContainer.decoyVault);
+      final rev = w.app.sessionRev;
+      w.app.lockingUp();
+      // at once: the decoy alone, and nothing of its vault on home
+      expect(session.vault, isNull);
+      expect(session.primary, same(w.decoy));
+      expect(sessionQuiet, isTrue);
+      expect(lockState.inVault, isFalse);
+      expect(w.homeIds, {_d1, _dg});
+      expect(w.app.sessionRev, rev + 1);
+      await _settle();
+      // then its handle, and its key with it
+      expect(opened.calls.last, 'close');
+      expect(opened.closed, isTrue);
+      expect(() => opened.contacts(), throwsStateError);
+      // the decoy's pin: its own chats only
+      lock.lock();
+      expect(await w.type(decoyPin), PinResult.decoy);
+      expect(w.homeIds, {_d1, _dg});
+      expect(
+        await session.searchMessages('quiet hidden', SearchKind.all),
+        isEmpty,
+      );
+      expect([
+        for (final m in await session.savedMessages()) m['msg_uid'],
+      ], isNot(contains('dh0')));
+      expect(await session.getContact(_dh), isNull);
+      // its rows wait for its next open
+      expect(w.dvRows.uids, contains('dh0'));
+      expect(w.live.calls, isEmpty);
+    });
+
+    test('one that will not open gives the decoy, never the everyday '
+        'app', () async {
+      final w = await _World.untouched();
+      w.dvKey = null;
+      final lock = _lock().lock;
+      await lock.load();
+      w.wire(lock);
+      expect(await w.type(_dvPin), PinResult.decoy);
+      expect(session.primary, same(w.decoy));
+      expect(session.vault, isNull);
+      expect(sessionQuiet, isTrue);
+      expect(lockState.inDecoy, isTrue);
+      expect(lockState.inVault, isFalse);
+      expect(w.homeIds, {_d1, _dg});
+      expect(w.live.touched, isEmpty);
+      expect(w.spy.calls, isEmpty);
+    });
+
+    test('its setup offers the decoy\'s own chats', () async {
+      final w = await _World.untouched();
+      // the app's own state, as App lock's flows reach it
+      await appState.useDecoyForTest(w.decoy, _quietId);
+      appState.revealGap = Duration.zero;
+      await appState.sessionFor(PinResult.decoy);
+      await _settle();
+      expect({for (final c in const PinsHost().hideable()) c.id}, {_d1, _dg});
+      expect(w.live.touched, isEmpty);
+    });
+  });
+
   group('the mark on a hidden row', () {
     Widget row(bool on, {bool rtl = false, bool still = false}) => MediaQuery(
       data: MediaQueryData(disableAnimations: still),
@@ -1557,7 +2022,13 @@ void main() {
       await wipeHalo();
     }
 
-    for (final from in ['the pin screen', 'everyday', 'decoy', 'vault']) {
+    for (final from in [
+      'the pin screen',
+      'everyday',
+      'decoy',
+      'vault',
+      'decoy vault',
+    ]) {
       test('wipes every container from $from', () async {
         await fill();
         final w = await _World.make();
@@ -1577,6 +2048,12 @@ void main() {
           case 'vault':
             expect(await lock.verifyPin(vaultPin), PinResult.vault);
             expect(session.isHidden(_h), isTrue);
+          case 'decoy vault':
+            await w.withDecoy();
+            expect(await lock.verifyPin(_dvPin), PinResult.decoy);
+            expect(session.isHidden(_dh), isTrue);
+            lock.inDecoy = true;
+            lock.inVault = true;
         }
         if (from != 'the pin screen') {
           lock.lock();
@@ -1587,18 +2064,27 @@ void main() {
       });
     }
 
-    test('wipes every container from inside the open vault', () async {
-      await fill();
-      final w = await _World.make();
-      final lock = _lock().lock;
-      await lock.load();
-      lock.onOutcome = w.app.sessionFor;
-      expect(await lock.verifyPin(vaultPin), PinResult.vault);
-      lock.inVault = true;
-      // the Enter your PIN step of a flow takes it as the lock screen does
-      expect(await lock.confirmPin(wipePin), PinResult.panic);
-      await wipeHalo();
-      await expectAllGone(exited);
-    });
+    for (final decoy in [false, true]) {
+      test('wipes every container from inside the open '
+          '${decoy ? 'decoy\'s vault' : 'vault'}', () async {
+        await fill();
+        final w = await _World.make();
+        if (decoy) await w.withDecoy();
+        final lock = _lock().lock;
+        await lock.load();
+        lock.onOutcome = w.app.sessionFor;
+        expect(
+          await lock.verifyPin(decoy ? _dvPin : vaultPin),
+          decoy ? PinResult.decoy : PinResult.vault,
+        );
+        expect(session.vault, isNotNull);
+        lock.inDecoy = decoy;
+        lock.inVault = true;
+        // the Enter your PIN step of a flow takes it as the lock screen does
+        expect(await lock.confirmPin(wipePin), PinResult.panic);
+        await wipeHalo();
+        await expectAllGone(exited);
+      });
+    }
   });
 }

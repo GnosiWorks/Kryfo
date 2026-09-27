@@ -290,7 +290,7 @@ class _Host implements VaultHost {
   bool get lockOn => lock;
 
   @override
-  Future<bool> putEntry(String pin, String keyHex) async {
+  Future<bool> putEntry(HaloContainer c, String pin, String keyHex) async {
     w.step('entry');
     if (clash) return false;
     entry = keyHex;
@@ -299,14 +299,14 @@ class _Host implements VaultHost {
   }
 
   @override
-  Future<void> clearEntry() async {
+  Future<void> clearEntry(HaloContainer c) async {
     w.step('clear entry');
     entry = null;
     log.add('clear');
   }
 
   @override
-  Future<String> makeVault(String keyHex) async {
+  Future<String> makeVault(HaloContainer c, String keyHex) async {
     w.step('make');
     made++;
     w.vault = _Tables()..meta['priv'] = 'priv-$made';
@@ -316,10 +316,10 @@ class _Host implements VaultHost {
   }
 
   @override
-  Future<HaloDb> openVault(String keyHex) async => w.vaultDb;
+  Future<HaloDb> openVault(HaloContainer c, String keyHex) async => w.vaultDb;
 
   @override
-  ChatMover mover(HaloDb live, HaloDb? vault) => _Mover(w);
+  ChatMover mover(HaloDb primary, HaloDb? vault) => _Mover(w);
 
   @override
   Future<void> clearShade(Iterable<String> payloads) async {
@@ -341,9 +341,9 @@ class _Host implements VaultHost {
   }
 
   @override
-  Future<void> wipeVault() async {
+  Future<void> wipeVault(HaloContainer c) async {
     w.step('wipe');
-    await HaloContainer.vault.wipeFiles();
+    await c.wipeFiles();
     w.vault = _Tables();
     log.add('wipe');
   }

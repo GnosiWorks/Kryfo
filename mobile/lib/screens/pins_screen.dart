@@ -62,7 +62,8 @@ class _PinsScreenState extends State<PinsScreen> {
     if (!ok) return;
     if (decoy) await _host.removeDecoy();
     // any hidden chats go with the lock, and the line above reads the same
-    // whether there are any. a turn off in the decoy deletes nothing
+    // whether there are any. a turn off in the decoy only pauses the lock:
+    // it deletes nothing, the decoy's own hidden chats included
     if (!_lock.inDecoy) {
       try {
         await _host.destroyVault();
