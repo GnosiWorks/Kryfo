@@ -103,6 +103,17 @@ class DevTestDb implements HaloDb {
   }
 
   @override
+  Future<String?> contactXPub(String haloId) async {
+    final r = await mem.query(
+      'contacts',
+      columns: ['xpub'],
+      where: 'halo_id = ?',
+      whereArgs: [haloId],
+    );
+    return r.isEmpty ? null : r.first['xpub'] as String?;
+  }
+
+  @override
   dynamic noSuchMethod(Invocation i) =>
       throw UnimplementedError('${i.memberName}');
 }

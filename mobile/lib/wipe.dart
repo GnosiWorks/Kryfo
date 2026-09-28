@@ -25,7 +25,9 @@ bool haloWiping = false;
 @visibleForTesting
 void Function(int code) wipeExit = exit;
 
-Future<void> wipeHalo() async {
+// [releaseHandle] gives the handle back on the way, for a wipe chosen in
+// settings. a wipe from the lock screen makes no network call at all
+Future<void> wipeHalo({bool releaseHandle = false}) async {
   haloWiping = true;
   // a beat for anything mid-query to finish before the files vanish
   await Future.delayed(const Duration(milliseconds: 120));
@@ -33,10 +35,12 @@ Future<void> wipeHalo() async {
   // the engine's memory. the request runs beside the erase and gets a few
   // seconds at most: nothing here waits on the network
   String? h;
-  try {
-    h = await secureStore.read(key: 'my_handle');
-  } catch (e) {
-    dlog('wipe: handle not read (${e.runtimeType})');
+  if (releaseHandle) {
+    try {
+      h = await secureStore.read(key: 'my_handle');
+    } catch (e) {
+      dlog('wipe: handle not read (${e.runtimeType})');
+    }
   }
   final release = h == null || h.isEmpty ? null : _release(h);
   final cap = Future<void>.delayed(const Duration(seconds: 4));

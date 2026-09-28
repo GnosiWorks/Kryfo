@@ -16,7 +16,8 @@ import 'package:kryfo/container.dart';
 import 'package:kryfo/devchat/dev_chat.dart';
 import 'package:kryfo/devchat/dev_key.dart';
 import 'package:kryfo/l10n/l10n.dart';
-import 'package:kryfo/main.dart' show appState, useDatabasesForTest;
+import 'package:kryfo/main.dart'
+    show HaloEngine, appState, useDatabasesForTest, useEngineForTest;
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/screens/home_screen.dart';
 import 'package:kryfo/screens/settings_screen.dart';
@@ -227,6 +228,19 @@ String _state(String id) =>
     _mem.rows('support_chats').firstWhere((r) => r['halo_id'] == id)['state']
         as String;
 
+// the engine as a block and an unblock reach it: listening, and no more
+class _Engine implements HaloEngine {
+  final calls = <String>[];
+  @override
+  void nostrSubscribeBg(String peerXPubHex) => calls.add('listen $peerXPubHex');
+  @override
+  void nostrUnsubscribeBg(String peerXPubHex) =>
+      calls.add('unlisten $peerXPubHex');
+  @override
+  dynamic noSuchMethod(Invocation i) =>
+      throw UnimplementedError('engine: ${i.memberName}');
+}
+
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({
@@ -235,6 +249,7 @@ void main() {
     });
     FlutterSecureStorage.setMockInitialValues({});
     appState.sendModeForTest = 'balanced';
+    useEngineForTest(_Engine());
     _key = devCard('m1');
     useDevKeysForTest([_key]);
     supportChatPageForTest = (id) =>

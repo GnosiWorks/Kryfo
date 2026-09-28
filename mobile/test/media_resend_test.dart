@@ -191,4 +191,45 @@ void main() {
       expect(slice.canResend, false);
     });
   });
+
+  group('unfinished files past the cap', () {
+    Map<String, ({int bytes, int at})> held(Map<String, (int, int)> m) => {
+      for (final MapEntry(key: id, value: (b, at)) in m.entries)
+        id: (bytes: b, at: at),
+    };
+
+    test('under the cap nothing goes', () {
+      expect(unfinishedPastCap(held({'a': (10, 1)}), bytes: 10), isEmpty);
+      expect(unfinishedPastCap(held({}), bytes: 0), isEmpty);
+    });
+
+    test('whole files go, the one quiet longest first, until the rest fit', () {
+      final h = held({'new': (40, 30), 'old': (40, 10), 'mid': (40, 20)});
+      expect(unfinishedPastCap(h, bytes: 80), ['old']);
+      expect(unfinishedPastCap(h, bytes: 50), ['old', 'mid']);
+      expect(unfinishedPastCap(h, bytes: 10), ['old', 'mid', 'new']);
+    });
+
+    test('a file past the cap on its own goes before any other', () {
+      final h = held({'old': (40, 10), 'huge': (200, 30)});
+      expect(unfinishedPastCap(h, bytes: 100), ['huge']);
+    });
+
+    test('the file count has a cap too', () {
+      final h = held({'a': (1, 1), 'b': (1, 2), 'c': (1, 3)});
+      expect(unfinishedPastCap(h, files: 2), ['a']);
+    });
+
+    test('a file being put together stays', () {
+      final h = held({'old': (40, 10), 'new': (40, 30)});
+      expect(unfinishedPastCap(h, bytes: 40, keep: {'old'}), ['new']);
+      expect(unfinishedPastCap(h, bytes: 0, keep: {'old', 'new'}), isEmpty);
+    });
+
+    test('a slice weighs its text and its row', () {
+      expect(sliceWeight(0), kSliceRowBytes);
+      expect(sliceWeight(100), 100 + kSliceRowBytes);
+      expect(kUnfinishedBytes, 200 << 20);
+    });
+  });
 }

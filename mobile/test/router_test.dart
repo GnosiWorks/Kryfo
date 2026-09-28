@@ -85,6 +85,10 @@ class _Store implements RouterStore {
   @override
   Future<int> inboxCount() async => inbox.length;
   @override
+  Future<List<(int, int)>> inboxSizes() async => [
+    for (final r in inbox) (r['id'] as int, (r['sealed'] as List<int>).length),
+  ];
+  @override
   Future<List<Map<String, Object?>>> inboxOldest(int limit) async =>
       inbox.take(limit).toList();
   @override
@@ -812,6 +816,13 @@ class _Mem implements HaloDb {
       _hit('mediaChunkSender', mediaId, chunkFrom[mediaId]);
 
   @override
+  Future<Set<String>> trimUnfinishedMedia({
+    Set<String> keep = const {},
+    int bytes = 0,
+    int files = 0,
+  }) async => _hit('trimUnfinishedMedia', null, <String>{});
+
+  @override
   Future<int> filesInFlightFrom(String from, {String? except}) async => _hit(
     'filesInFlightFrom',
     from,
@@ -997,6 +1008,91 @@ void main() {
       expect(ok.single.$2!.backPair, isTrue);
       expect(ok.single.$2!.at, 7);
     });
+  });
+
+  group('what waits sealed', () {
+    Future<VaultRouter> capped(
+      _World w, {
+      int n = 3,
+      int bytes = 1 << 20,
+    }) async {
+      final r = VaultRouter(
+        w.store,
+        w.seal,
+        maxSealed: n,
+        maxSealedBytes: bytes,
+      );
+      await r.load();
+      return r;
+    }
+
+    test('keeps at most the cap, the oldest going first', () async {
+      final w = await _World.make();
+      final r = await capped(w);
+      for (var i = 0; i < 5; i++) {
+        expect(await r.seal(Unsealed(_h, 'w$i', false, i), uid: 'u$i'), isTrue);
+      }
+      expect([for (final x in w.store.inbox) x['uid']], ['u2', 'u3', 'u4']);
+    });
+
+    test('keeps at most five thousand as the app has it', () async {
+      final w = await _World.make();
+      for (var i = 0; i <= kMaxSealed; i++) {
+        await w.router.seal(Unsealed(_h, 'x', false, i), uid: 'u$i');
+      }
+      expect(w.store.inbox.length, kMaxSealed);
+      expect(w.store.inbox.first['uid'], 'u1');
+      expect(w.store.inbox.last['uid'], 'u$kMaxSealed');
+    });
+
+    test('holds the bytes to the cap, the oldest going first', () async {
+      final w = await _World.make();
+      final r = await capped(w, n: 100, bytes: 1000);
+      final big = 'b' * 300;
+      for (var i = 0; i < 5; i++) {
+        await r.seal(Unsealed(_h, big, false, i), uid: 'u$i');
+      }
+      final sizes = [
+        for (final x in w.store.inbox) (x['sealed'] as List<int>).length,
+      ];
+      expect(sizes.fold(0, (a, b) => a + b), lessThanOrEqualTo(1000));
+      expect(w.store.inbox.last['uid'], 'u4');
+      expect(w.store.inbox.first['uid'], isNot('u0'));
+    });
+
+    test('one arrival past the cap on its own is not kept, and takes '
+        'nothing with it', () async {
+      final w = await _World.make();
+      final r = await capped(w, bytes: 100);
+      expect(await r.seal(Unsealed(_h, 'x', false, 1), uid: 'u0'), isTrue);
+      expect(await r.seal(Unsealed(_h, 'b' * 300, false, 2)), isFalse);
+      expect([for (final x in w.store.inbox) x['uid']], ['u0']);
+    });
+
+    test('opens in order after a trim', () async {
+      final w = await _World.make();
+      final r = await capped(w, n: 2);
+      for (var i = 0; i < 4; i++) {
+        await r.seal(Unsealed(_h, 'w$i', false, i), uid: 'u$i');
+      }
+      final got = await r.openOldest('priv-A');
+      expect([for (final (_, u) in got) u!.wire], ['w2', 'w3']);
+    });
+  });
+
+  test('no one the vault blocked is listened for', () async {
+    final w = await _World.make();
+    await w.store.putHidden(
+      'blocked-hidden-one',
+      kHiddenPeer,
+      peerCard(
+        const RouterCard('blocked-hidden-one', 'o-b', 'x-b', blocked: true),
+      ),
+      1,
+    );
+    await w.router.load();
+    expect(w.router.listenFor, {'x-$_h': _h});
+    expect(w.router.keeps('blocked-hidden-one'), isTrue);
   });
 
   group('while the vault is shut', () {

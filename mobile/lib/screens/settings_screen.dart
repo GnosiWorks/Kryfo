@@ -266,7 +266,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       rose: true,
       save: l10n.settingsWipeKryfo2,
     ));
-    if (isWipeWord(typed, l10n.settingsWipeWord)) await wipeHalo();
+    if (isWipeWord(typed, l10n.settingsWipeWord)) {
+      await wipeHalo(releaseHandle: true);
+    }
   }
 
   bool _disguise = false;

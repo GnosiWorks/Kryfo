@@ -10,7 +10,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/l10n/l10n.dart';
-import 'package:kryfo/main.dart' show HaloDb, useDatabasesForTest;
+import 'package:kryfo/main.dart'
+    show HaloDb, HaloEngine, useDatabasesForTest, useEngineForTest;
 import 'package:kryfo/screens/blocked_screen.dart';
 import 'package:kryfo/screens/notes_screen.dart';
 import 'package:kryfo/screens/requests_screen.dart';
@@ -67,6 +68,13 @@ class _Db implements HaloDb {
   }
 
   @override
+  Future<bool> isBlocked(String haloId) async =>
+      people.any((p) => p['halo_id'] == haloId && p['blocked'] == 1);
+
+  @override
+  Future<String?> contactXPub(String haloId) async => 'x-$haloId';
+
+  @override
   Future<void> saveMessage(
     String peerId,
     String direction,
@@ -98,6 +106,19 @@ class _Db implements HaloDb {
   @override
   dynamic noSuchMethod(Invocation i) =>
       throw UnimplementedError('the stand-in was asked for ${i.memberName}');
+}
+
+// the engine as a block and an unblock reach it: listening, and no more
+class _Engine implements HaloEngine {
+  final calls = <String>[];
+  @override
+  void nostrSubscribeBg(String peerXPubHex) => calls.add('listen $peerXPubHex');
+  @override
+  void nostrUnsubscribeBg(String peerXPubHex) =>
+      calls.add('unlisten $peerXPubHex');
+  @override
+  dynamic noSuchMethod(Invocation i) =>
+      throw UnimplementedError('engine: ${i.memberName}');
 }
 
 Map<String, Object?> _person(String id, {bool blocked = false}) => {
@@ -176,6 +197,7 @@ void main() {
     FlutterSecureStorage.setMockInitialValues({});
     db = _Db();
     useDatabasesForTest(db, Session(db));
+    useEngineForTest(_Engine());
   });
 
   group('requests', () {
