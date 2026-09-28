@@ -13,11 +13,15 @@ features:
 * end to end encryption (signal protocol)
 * all traffic through an embedded tor client
 * direct onion delivery, relay fallback when a peer is offline
-* groups with photos, files, voice messages, replies, reactions, pins
+* groups with photos, files, voice messages, replies, reactions, pins and polls
+* animated stickers that travel as a name, so no picture leaves the phone
+* search across all your chats, kept in the encrypted database
 * timed messages that burn after a set time
 * encrypted local database and encrypted backups
-* app lock with pin or biometrics
+* app lock with pin or biometrics, a decoy pin that opens an empty kryfo, and hidden chats behind a pin of their own
 * panic wipe that removes everything, including media on disk
+* a chat with the person who builds kryfo, anonymous if you like
+* 15 languages
 * no analytics, no telemetry, no ads
 
 funding: no ads, no investors. it runs on what backers give. backing is
