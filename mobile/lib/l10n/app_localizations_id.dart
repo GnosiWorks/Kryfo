@@ -7215,7 +7215,7 @@ class AppLocalizationsId extends AppLocalizations {
       'Semua pesan dan nama yang dibuat untuk obrolan ini terhapus, dan obrolan ini tidak akan kembali.';
 
   @override
-  String get supportTitle => 'Support';
+  String get supportTitle => 'Inbox';
 
   @override
   String supportWaiting(int count) {
@@ -7259,7 +7259,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get supportMarkAllDone => 'Mark all waiting as done';
 
   @override
-  String get supportMenu => 'Support options';
+  String get supportMenu => 'Inbox options';
 
   @override
   String get supportDeleteLine =>
@@ -7296,7 +7296,7 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get supportChannelName => 'Support';
+  String get supportChannelName => 'Inbox';
 
   @override
   String get supportChannelLine => 'Chats people start from the Marios row';

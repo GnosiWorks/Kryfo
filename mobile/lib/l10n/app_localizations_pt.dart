@@ -7270,7 +7270,7 @@ class AppLocalizationsPt extends AppLocalizations {
       'Todas as mensagens e o nome criado para esta conversa somem, e a conversa não volta mais.';
 
   @override
-  String get supportTitle => 'Support';
+  String get supportTitle => 'Inbox';
 
   @override
   String supportWaiting(int count) {
@@ -7314,7 +7314,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get supportMarkAllDone => 'Mark all waiting as done';
 
   @override
-  String get supportMenu => 'Support options';
+  String get supportMenu => 'Inbox options';
 
   @override
   String get supportDeleteLine =>
@@ -7351,7 +7351,7 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get supportChannelName => 'Support';
+  String get supportChannelName => 'Inbox';
 
   @override
   String get supportChannelLine => 'Chats people start from the Marios row';

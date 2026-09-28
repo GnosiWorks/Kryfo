@@ -7198,7 +7198,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Mọi tin nhắn và cái tên được tạo cho cuộc trò chuyện này sẽ bị xóa, và cuộc trò chuyện sẽ không quay lại.';
 
   @override
-  String get supportTitle => 'Support';
+  String get supportTitle => 'Inbox';
 
   @override
   String supportWaiting(int count) {
@@ -7242,7 +7242,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get supportMarkAllDone => 'Mark all waiting as done';
 
   @override
-  String get supportMenu => 'Support options';
+  String get supportMenu => 'Inbox options';
 
   @override
   String get supportDeleteLine =>
@@ -7279,7 +7279,7 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get supportChannelName => 'Support';
+  String get supportChannelName => 'Inbox';
 
   @override
   String get supportChannelLine => 'Chats people start from the Marios row';

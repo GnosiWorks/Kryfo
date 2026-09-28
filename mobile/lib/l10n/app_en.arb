@@ -9147,7 +9147,7 @@
   "@devDeleteLineAnon": {
     "description": "screens/dev_about_sheet.dart: asked before a developer chat started anonymously is deleted"
   },
-  "supportTitle": "Support",
+  "supportTitle": "Inbox",
   "@supportTitle": {
     "description": "screens/support_screen.dart: the inbox of chats people start from the Marios row, its home pin and its notification's title. Only the developer's own phone shows it, in English."
   },
@@ -9193,7 +9193,7 @@
   "@supportMarkAllDone": {
     "description": "screens/support_screen.dart: the inbox menu. Only the developer's own phone shows it, in English."
   },
-  "supportMenu": "Support options",
+  "supportMenu": "Inbox options",
   "@supportMenu": {
     "description": "screens/support_screen.dart: the label of the inbox menu button, for screen readers. Only the developer's own phone shows it, in English."
   },
@@ -9221,7 +9221,7 @@
       }
     }
   },
-  "supportChannelName": "Support",
+  "supportChannelName": "Inbox",
   "@supportChannelName": {
     "description": "notifications.dart: the name of the notification channel in android's settings. Only the developer's own phone shows it, in English."
   },

@@ -11616,7 +11616,7 @@ abstract class AppLocalizations {
   /// screens/support_screen.dart: the inbox of chats people start from the Marios row, its home pin and its notification's title. Only the developer's own phone shows it, in English.
   ///
   /// In en, this message translates to:
-  /// **'Support'**
+  /// **'Inbox'**
   String get supportTitle;
 
   /// screens/home_screen.dart: under Support on its home pin: chats with no answer yet. Only the developer's own phone shows it, in English.
@@ -11676,7 +11676,7 @@ abstract class AppLocalizations {
   /// screens/support_screen.dart: the label of the inbox menu button, for screen readers. Only the developer's own phone shows it, in English.
   ///
   /// In en, this message translates to:
-  /// **'Support options'**
+  /// **'Inbox options'**
   String get supportMenu;
 
   /// screens/support_screen.dart: asked before a support chat is deleted. Only the developer's own phone shows it, in English.
@@ -11700,7 +11700,7 @@ abstract class AppLocalizations {
   /// notifications.dart: the name of the notification channel in android's settings. Only the developer's own phone shows it, in English.
   ///
   /// In en, this message translates to:
-  /// **'Support'**
+  /// **'Inbox'**
   String get supportChannelName;
 
   /// notifications.dart: the channel's line in android's settings. Only the developer's own phone shows it, in English.

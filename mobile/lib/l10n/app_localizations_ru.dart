@@ -7349,7 +7349,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Все сообщения и имя, созданное для этого чата, удаляются, и чат больше не вернётся.';
 
   @override
-  String get supportTitle => 'Support';
+  String get supportTitle => 'Inbox';
 
   @override
   String supportWaiting(int count) {
@@ -7393,7 +7393,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get supportMarkAllDone => 'Mark all waiting as done';
 
   @override
-  String get supportMenu => 'Support options';
+  String get supportMenu => 'Inbox options';
 
   @override
   String get supportDeleteLine =>
@@ -7430,7 +7430,7 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get supportChannelName => 'Support';
+  String get supportChannelName => 'Inbox';
 
   @override
   String get supportChannelLine => 'Chats people start from the Marios row';

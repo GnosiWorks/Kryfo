@@ -6929,7 +6929,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get devDeleteLineAnon => '每一条消息和为这个聊天生成的名字都会删除，这个聊天也不会再回来。';
 
   @override
-  String get supportTitle => 'Support';
+  String get supportTitle => 'Inbox';
 
   @override
   String supportWaiting(int count) {
@@ -6973,7 +6973,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get supportMarkAllDone => 'Mark all waiting as done';
 
   @override
-  String get supportMenu => 'Support options';
+  String get supportMenu => 'Inbox options';
 
   @override
   String get supportDeleteLine =>
@@ -7010,7 +7010,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get supportChannelName => 'Support';
+  String get supportChannelName => 'Inbox';
 
   @override
   String get supportChannelLine => 'Chats people start from the Marios row';

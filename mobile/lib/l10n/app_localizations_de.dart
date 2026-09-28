@@ -7295,7 +7295,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Jede Nachricht und der Name, der nur für diesen Chat gemacht wurde, werden gelöscht, und der Chat kommt nicht wieder.';
 
   @override
-  String get supportTitle => 'Support';
+  String get supportTitle => 'Inbox';
 
   @override
   String supportWaiting(int count) {
@@ -7339,7 +7339,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get supportMarkAllDone => 'Mark all waiting as done';
 
   @override
-  String get supportMenu => 'Support options';
+  String get supportMenu => 'Inbox options';
 
   @override
   String get supportDeleteLine =>
@@ -7376,7 +7376,7 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get supportChannelName => 'Support';
+  String get supportChannelName => 'Inbox';
 
   @override
   String get supportChannelLine => 'Chats people start from the Marios row';
