@@ -1,0 +1,7 @@
+[Unit]
+Description=Kryfo service check
+After=network-online.target docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/kryfo-watch/kryfo-watch.sh

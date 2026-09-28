@@ -41,6 +41,12 @@ this needs a release, the hostname is in the app.
 4. the old box keeps serving `/handle/*` until the last release that calls it
    is gone.
 
+## watching them
+
+`server/watch/` checks every service from outside every two minutes and
+restarts a relay or registry (or its bridge) that stopped answering. it keeps
+nothing but its last result.
+
 ## before a new service ships
 
 - which box (not the relay's)
