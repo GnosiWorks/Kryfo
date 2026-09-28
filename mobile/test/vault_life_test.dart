@@ -1408,9 +1408,10 @@ void main() {
       'lib/main.dart',
       'lib/router.dart',
     ].map((f) => File(f).readAsStringSync()).join('\n');
+    // a prefixed name is another set of the signal store's tables
     final tables = {
       for (final m in RegExp(
-        r'CREATE (?:VIRTUAL )?TABLE(?: IF NOT EXISTS)? (\w+)',
+        r'CREATE (?:VIRTUAL )?TABLE(?: IF NOT EXISTS)? (?:\$\{prefix\})?(\w+)',
       ).allMatches(src))
         m.group(1)!,
     };

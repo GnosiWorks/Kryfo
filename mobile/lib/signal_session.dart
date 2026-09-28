@@ -2,6 +2,8 @@
 // libsignal session bootstrap. derives identity from existing X25519 keys,
 // generates signed prekey + one-time prekeys on first run.
 
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
@@ -22,32 +24,12 @@ class SignalSession {
     required Database database,
     required Uint8List xPubBytes,
     required Uint8List xPrivBytes,
+    String prefix = '',
   }) async {
     if (_ready) return;
+    await _open(database, xPubBytes, xPrivBytes, prefix);
 
-    // clamp priv per RFC 7748: libsignal expects an already-clamped scalar
-    final clamped = Uint8List.fromList(xPrivBytes);
-    clamped[0] &= 0xF8;
-    clamped[31] &= 0x7F;
-    clamped[31] |= 0x40;
-    final pub = Curve.decodePoint(Uint8List.fromList([0x05, ...xPubBytes]), 0);
-    final priv = Curve.decodePrivatePoint(clamped);
-    // do NOT zero `clamped` here: decodePrivatePoint keeps a reference to this
-    // buffer, and wiping it corrupts every signature this identity makes
-    identityKeyPair = IdentityKeyPair(IdentityKey(pub), priv);
-
-    registrationId = await _loadOrGenRegId(database);
-
-    identityStore = HaloIdentityKeyStore(
-      database,
-      identityKeyPair,
-      registrationId,
-    );
-    preKeyStore = HaloPreKeyStore(database);
-    sessionStore = HaloSessionStore(database);
-    signedPreKeyStore = HaloSignedPreKeyStore(database);
-
-    final spkRows = await database.query('signed_prekeys', limit: 1);
+    final spkRows = await database.query('${prefix}signed_prekeys', limit: 1);
     SignedPreKeyRecord? spk;
     if (spkRows.isNotEmpty) {
       spk = SignedPreKeyRecord.fromSerialized(
@@ -81,7 +63,7 @@ class SignalSession {
 
     // keep prekeys 0-9 topped up by the ids present, not by count: once one
     // is consumed a count misses the gap, and a first message finds no key
-    final pkRows = await database.query('prekeys', columns: ['id']);
+    final pkRows = await database.query('${prefix}prekeys', columns: ['id']);
     final have = pkRows.map((r) => r['id'] as int).toSet();
     final missing = [
       for (var i = 0; i < 10; i++)
@@ -107,6 +89,64 @@ class SignalSession {
     dlog('signal: bootstrapped (regId=$registrationId)');
   }
 
+  // an identity that only ever opens sessions: its key pair and a
+  // registration id of its own. nobody starts one with it, so it hands out
+  // no prekeys and makes none
+  Future<void> bootstrapInitiator({
+    required Database database,
+    required Uint8List xPubBytes,
+    required Uint8List xPrivBytes,
+    required String prefix,
+  }) async {
+    if (_ready) return;
+    await _open(database, xPubBytes, xPrivBytes, prefix);
+    _ready = true;
+  }
+
+  Future<void> _open(
+    Database database,
+    Uint8List xPubBytes,
+    Uint8List xPrivBytes,
+    String prefix,
+  ) async {
+    // clamp priv per RFC 7748: libsignal expects an already-clamped scalar
+    final clamped = Uint8List.fromList(xPrivBytes);
+    clamped[0] &= 0xF8;
+    clamped[31] &= 0x7F;
+    clamped[31] |= 0x40;
+    final pub = Curve.decodePoint(Uint8List.fromList([0x05, ...xPubBytes]), 0);
+    final priv = Curve.decodePrivatePoint(clamped);
+    // do NOT zero `clamped` here: decodePrivatePoint keeps a reference to this
+    // buffer, and wiping it corrupts every signature this identity makes
+    identityKeyPair = IdentityKeyPair(IdentityKey(pub), priv);
+
+    registrationId = await _loadOrGenRegId(database, prefix);
+
+    identityStore = HaloIdentityKeyStore(
+      database,
+      identityKeyPair,
+      registrationId,
+      prefix: prefix,
+    );
+    preKeyStore = HaloPreKeyStore(database, prefix: prefix);
+    sessionStore = HaloSessionStore(database, prefix: prefix);
+    signedPreKeyStore = HaloSignedPreKeyStore(database, prefix: prefix);
+  }
+
+  // [plain] sealed to [peer] in this store, as the wire carries it: the
+  // message type byte, then the message, in base64
+  Future<String> encryptTo(String peer, String plain) async {
+    final cipher = SessionCipher(
+      sessionStore,
+      preKeyStore,
+      signedPreKeyStore,
+      identityStore,
+      SignalProtocolAddress(peer, 1),
+    );
+    final msg = await cipher.encrypt(Uint8List.fromList(utf8.encode(plain)));
+    return base64Encode([msg.getType(), ...msg.serialize()]);
+  }
+
   // a new invite prekey under the same id. every bundle handed out before
   // this names a key that no longer exists, so the openers built on them
   // fail at the door: that is what "reset my invite link" has to mean.
@@ -117,16 +157,16 @@ class SignalSession {
     dlog('signal: rotated the invite prekey');
   }
 
-  Future<int> _loadOrGenRegId(Database d) async {
+  Future<int> _loadOrGenRegId(Database d, String prefix) async {
     final rows = await d.query(
-      'signal_meta',
+      '${prefix}signal_meta',
       where: 'k = ?',
       whereArgs: ['regId'],
       limit: 1,
     );
     if (rows.isNotEmpty) return int.parse(rows.first['v'] as String);
     final id = generateRegistrationId(false);
-    await d.insert('signal_meta', {'k': 'regId', 'v': id.toString()});
+    await d.insert('${prefix}signal_meta', {'k': 'regId', 'v': id.toString()});
     return id;
   }
 

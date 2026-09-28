@@ -10,6 +10,7 @@ import 'dart:convert';
 
 import '../dlog.dart';
 import 'dev_chat.dart';
+import 'dev_frame.dart' show devTokens;
 import 'dev_key.dart';
 
 // what a refused call answers, in the engine's own error form
@@ -241,8 +242,9 @@ class DevGate {
   }
 }
 
-// the one gate. the app points it at the everyday container's dev chat
-final devGate = DevGate();
+// the one gate. the app points it at the everyday container's dev chat;
+// the ciphers it lets out for an anonymous chat are the seal's own
+final devGate = DevGate(minted: devTokens.has);
 
 // ---- who the wire says is him ----
 

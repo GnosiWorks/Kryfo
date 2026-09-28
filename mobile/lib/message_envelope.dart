@@ -55,6 +55,7 @@ class UnwrappedMessage {
   final VoteFrame? vote; // 'vt' - a vote on a poll
   final PollCloseFrame? pollClose; // 'pc' - the creator closed a poll
   final String? sticker; // 'st' - pack:id:since, drawn from our own pack
+  final int? supportMarker; // 'sp' - written in a chat with the developer
   // 'm' as it was sent, before the direction controls came out: the
   // proof of work was done over these characters
   final String? powText;
@@ -99,6 +100,7 @@ class UnwrappedMessage {
     this.vote,
     this.pollClose,
     this.sticker,
+    this.supportMarker,
   });
 }
 
@@ -272,9 +274,11 @@ Future<String> wrapMessage(
   VoteFrame? vote,
   PollCloseFrame? pollClose,
   String? sticker,
+  int? supportMarker,
 }) async {
   final body = <String, dynamic>{'m': plain};
   if (sticker != null) body['st'] = sticker;
+  if (supportMarker != null) body['sp'] = supportMarker;
   if (poll != null) body['pl'] = poll;
   if (vote != null) {
     body['vt'] = {'u': vote.pollUid, 'c': vote.choices, 's': vote.seq};
@@ -498,6 +502,10 @@ UnwrappedMessage unwrapMessage(String wrapped) {
       pollClose: pollClose,
       // the raw value: one with direction controls in it is no sticker
       sticker: StickerWire.parse(sent['st'])?.value,
+      supportMarker: switch (json['sp']) {
+        final num n => n.toInt(),
+        _ => null,
+      },
     );
   } catch (e) {
     dlog(

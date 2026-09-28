@@ -2,9 +2,11 @@
 // backup, move and restore with hidden chats. an everyday backup carries
 // nothing of them, one made with them open or from their setup carries them
 // whole with their key, a restore brings them back behind a new hidden chats
-// PIN, and the backup screen reads the same with and without them. the
-// databases are stand-ins kept as json in real files in a scratch folder,
-// the cipher one for the engine's
+// PIN, and the backup screen reads the same with and without them. no
+// backup and no move carries the name an anonymous dev chat was made with:
+// the chat goes along and lands without it. the databases are stand-ins
+// kept as json in real files in a scratch folder, the cipher one for the
+// engine's
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -17,6 +19,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/backup.dart';
 import 'package:kryfo/backup_stream.dart';
 import 'package:kryfo/container.dart';
+import 'package:kryfo/devchat/dev_chat.dart';
+import 'package:kryfo/devchat/dev_gate.dart';
+import 'package:kryfo/devchat/dev_key.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/main.dart'
@@ -25,6 +30,7 @@ import 'package:kryfo/router.dart';
 import 'package:kryfo/screens/backup_screen.dart';
 import 'package:kryfo/screens/pin_flow_screen.dart';
 import 'package:kryfo/session.dart';
+import 'package:kryfo/signal_stores.dart' show kDevSignalPrefix, kSignalTables;
 import 'package:kryfo/vault_life.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -40,6 +46,52 @@ const _g2 = 'g2hidden0001';
 const _dbPass = 'everyday-passphrase';
 
 typedef _Tables = Map<String, List<Map<String, Object?>>>;
+
+// the name an anonymous dev chat was made with
+const _anonId = 'made-for-marios';
+const _anonEd = 'anon-ed-private-key';
+const _anonX = 'anon-x-private-key';
+
+// an anonymous dev chat as a container keeps it: its row with the made
+// name, and that name's own signal store
+_Tables _devAnon() => {
+  'devchat': [
+    {
+      'k': 1,
+      'state': 'anon',
+      'key_id': 'm1',
+      'anon_id': _anonId,
+      'anon_ed_priv': _anonEd,
+      'anon_x_priv': _anonX,
+      'created_at': 1,
+      'started_at': 2,
+    },
+  ],
+  'dev_signal_meta': [
+    {'k': 'regId', 'v': '77'},
+  ],
+  'dev_sessions': [
+    {'address': 'dev:m1', 'device_id': 1, 'record': 's-dev'},
+  ],
+  'dev_peer_identities': [
+    {'address': 'dev:m1', 'identity_key': 'k-dev'},
+  ],
+  'dev_prekeys': [],
+  'dev_signed_prekeys': [],
+};
+
+// what is left in a database of the made name: its keys on the row, its
+// store, or any trace of it anywhere
+List<String> _madeName(_Tables t) => [
+  for (final r in t['devchat'] ?? const <Map<String, Object?>>[])
+    for (final c in const ['anon_id', 'anon_ed_priv', 'anon_x_priv'])
+      if (r[c] != null) c,
+  for (final n in kSignalTables)
+    if ((t['$kDevSignalPrefix$n'] ?? const []).isNotEmpty)
+      '$kDevSignalPrefix$n',
+  for (final v in [_anonId, _anonEd, _anonX])
+    if (jsonEncode(t).contains(v)) v,
+];
 
 // the everyday database of a phone with hidden chats: V visible, H hidden
 // and still a key in a visible group, M only in the hidden group, X on the
@@ -81,6 +133,15 @@ _Tables _everyday() => {
   'peer_identities': [
     for (final id in [_v, _h, _m, _x]) {'address': id, 'identity_key': 'k-$id'},
   ],
+  ..._devAnon(),
+};
+
+// the decoy: a chat of its own, and its own anonymous dev chat
+_Tables _decoy() => {
+  'messages': [
+    {'msg_uid': 'd0', 'peer_id': 'decoy-only-one', 'plaintext': 'decoy'},
+  ],
+  ..._devAnon(),
 };
 
 // the vault: H's chat with a photo and a file, and the group G2
@@ -196,6 +257,13 @@ class _MemDb implements Database, Transaction {
     List<Object?>? arguments,
   ]) async {
     if (sql.startsWith('PRAGMA')) return const [];
+    if (sql ==
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?") {
+      final name = arguments!.single as String;
+      return [
+        if (t.containsKey(name)) {'name': name},
+      ];
+    }
     final count = RegExp(r'^SELECT COUNT\(\*\) c FROM (\w+)$').firstMatch(sql);
     if (count != null) {
       return [
@@ -215,6 +283,23 @@ class _MemDb implements Database, Transaction {
     final before = rows.length;
     rows.removeWhere((r) => _match(r, where, whereArgs));
     return before - rows.length;
+  }
+
+  @override
+  Future<int> update(
+    String table,
+    Map<String, Object?> values, {
+    String? where,
+    List<Object?>? whereArgs,
+    ConflictAlgorithm? conflictAlgorithm,
+  }) async {
+    var n = 0;
+    for (final r in _of(table)) {
+      if (!_match(r, where, whereArgs)) continue;
+      r.addAll(values);
+      n++;
+    }
+    return n;
   }
 
   @override
@@ -426,6 +511,25 @@ class _Side extends BackupSide {
     await db.save();
     return people;
   }
+
+  // the keys the copies were opened with to take the made name out
+  final devScrubbed = <String>[];
+
+  @override
+  Future<void> scrubDev(String copy, String key) async {
+    devScrubbed.add(key);
+    final db = await _MemDb.load(copy);
+    await db.transaction(scrubDevAnon);
+    await db.save();
+  }
+}
+
+// a side that forgets the made name
+class _Forgets extends _Side {
+  _Forgets(super.app);
+
+  @override
+  Future<void> scrubDev(String copy, String key) async {}
 }
 
 // the engine's cipher bound to each record's place, as backup_stream_test
@@ -895,11 +999,76 @@ void main() {
     });
   });
 
+  group('the dev chat\'s made name', () {
+    test('an everyday backup and a move leave it behind, and the chat goes '
+        'along', () async {
+      for (final move in [false, true]) {
+        await _phone(docs);
+        side.devScrubbed.clear();
+        final d = await draftBackup(stage, side: side, move: move);
+        expect(side.devScrubbed, [_dbPass], reason: '$move');
+        final carried = await _read(d.sources['halo.db']!);
+        expect(_madeName(carried), isEmpty, reason: '$move');
+        final r = DevChatRow.of(carried['devchat']!.single);
+        expect(r.state, DevState.anon);
+        expect(r.keyId, 'm1');
+        expect(r.startedAt, 2);
+        // the phone keeps it, and all else goes as it was
+        final own = await _read(p.join(docs, 'halo.db'));
+        expect(_madeName(own), hasLength(9));
+        expect(_uids(carried), {'v0'});
+        expect(carried['sessions']!.length, 1);
+      }
+    });
+
+    test('a backup with hidden chats open leaves it behind too, and the '
+        'vault file never held it', () async {
+      await _phone(docs);
+      await openVault();
+      final d = await draftBackup(stage, side: side, hidden: true);
+      expect(side.devScrubbed, [_dbPass]);
+      final carried = await _read(d.sources['halo.db']!);
+      expect(_madeName(carried), isEmpty);
+      expect(carried['hidden_chats']!.length, 3);
+      expect(_madeName(await _read(d.sources[kHiddenDb]!)), isEmpty);
+    });
+
+    test('a restore lands the chat without it: it reads, and sends and '
+        'hears nothing', () async {
+      await _phone(docs);
+      final out = await _write(await draftBackup(stage, side: side), root.path);
+      final docs2 = p.join(root.path, 'docs2');
+      Directory(docs2).createSync();
+      docsAt(docs2);
+      await unpackBackup(out, _Cipher(), root: docs2);
+      final landed = await _read(p.join(docs2, 'halo.db'));
+      expect(_madeName(landed), isEmpty);
+      final r = DevChatRow.of(landed['devchat']!.single);
+      expect(r.nameless, isTrue);
+      final k = DevKey(
+        keyId: 'm1',
+        threeWords: 'scare-raven-rare',
+        xPub: '0f' * 32,
+        bundle: 'b',
+        fc: '1e' * 32,
+      );
+      expect(DevGate.relayWay(r, k, 'c', (_) => true), DevWay.refused);
+      expect(DevGate.listenWay(r, k), DevWay.refused);
+    });
+
+    // the checks above would catch the scrub gone
+    test('a draft that forgets it is caught', () async {
+      await _phone(docs);
+      final d = await draftBackup(stage, side: _Forgets(kryfo));
+      expect(_madeName(await _read(d.sources['halo.db']!)), hasLength(9));
+    });
+  });
+
   group('the decoy backup', () {
     // a decoy beside a phone with hidden chats, and hidden chats of its own
     Future<_Db> decoyPhone() async {
       await _phone(docs);
-      await _put(p.join(docs, 'halo_d.db'), 'the decoy database');
+      await _put(p.join(docs, 'halo_d.db'), jsonEncode(_decoy()));
       await _put(p.join(docs, 'media_d', 'd1.jpg'), 'decoy photo');
       await _put(p.join(docs, 'halo_dv.db'), 'the decoy vault');
       await _put(p.join(docs, 'media_dv', 'dv.jpg'), 'decoy hidden photo');
@@ -944,10 +1113,12 @@ void main() {
       expect(d.manifest['edPriv'], 'decoy-ed');
       expect(d.manifest['dbPassphrase'], "x'${'2e' * 32}'");
       expect(_names(d.manifest), ['halo.db', 'onion.key', 'media/d1.jpg']);
-      expect(
-        await File(d.sources['halo.db']!).readAsString(),
-        'the decoy database',
-      );
+      // the decoy's own chats, without the name its dev chat was made with
+      final carried = await _read(d.sources['halo.db']!);
+      expect(_uids(carried), {'d0'});
+      expect(_madeName(carried), isEmpty);
+      expect(side.devScrubbed, ["x'${'2e' * 32}'"]);
+      expect(_madeName(await _read(p.join(docs, 'halo_d.db'))), isNotEmpty);
       expect(await File(d.sources['onion.key']!).readAsBytes(), [10, 11, 12]);
     });
 
