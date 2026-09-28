@@ -210,8 +210,9 @@ func HaloCatchupState() *C.char {
 }
 
 // how long one relay may spend catching up before the check-in stops waiting
-// for it. paging back is up to catchupMaxPages requests at up to 45s each, so
-// one slow relay could otherwise hold tor awake for the whole window.
+// for it. paging back is up to catchupMaxPages requests, each as long as
+// events keep coming, so one slow relay could otherwise hold tor awake for
+// the whole window.
 //
 // past this the relay's backfill is cancelled and it stops counting as active.
 // its live subscription stays up, and the next connect asks again from the
@@ -418,11 +419,16 @@ func catchupOf(u string) (int, bool, bool, bool) {
 	return r.Ms, r.Dropped, r.Long, ok
 }
 
+// how long a page may go without a single event before it is given up. a
+// hundred media slices over a slow circuit take longer than any fixed wait,
+// yet each one comes within this; a dead circuit sends nothing at all.
+var pageQuiet = 20 * time.Second
+
 // one page of stored events, closed again as soon as the relay says that
-// was all. a relay that never says so costs the page its 45 seconds and the
-// catch-up its anchor, and the next connect asks again.
+// was all. a page cut short, by a quiet circuit, the relay or the caller,
+// returns what it got with the error, newest first, so the walk keeps it.
 func relayPage(ctx context.Context, r *nostr.Relay, rcvPk string, since, until nostr.Timestamp, limit int) ([]nostr.Event, error) {
-	pctx, cancel := context.WithTimeout(ctx, 45*time.Second)
+	pctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	sub, err := r.Subscribe(pctx, nostr.Filter{
 		Kinds: []nostr.Kind{1059},
@@ -435,21 +441,54 @@ func relayPage(ctx context.Context, r *nostr.Relay, rcvPk string, since, until n
 		return nil, err
 	}
 	defer sub.Unsub()
+	quiet := time.NewTimer(pageQuiet)
+	defer quiet.Stop()
 	var out []nostr.Event
 	for {
 		select {
 		case ev, alive := <-sub.Events:
 			if !alive {
-				return nil, errors.New("relay closed the page")
+				return out, errors.New("relay closed the page")
 			}
 			out = append(out, ev)
+			quiet.Reset(pageQuiet)
 		case <-sub.EndOfStoredEvents:
 			return out, nil
-		case <-pctx.Done():
-			return nil, pctx.Err()
+		case <-quiet.C:
+			return out, errors.New("page went quiet")
+		case <-ctx.Done():
+			return out, ctx.Err()
 		}
 	}
 }
+
+// the cap cut a connection's first answer. stored events come newest first,
+// so everything from the top down to the oldest that came is in, and the
+// next connection's walk may step over it. when a gap lies between this and
+// the place already kept, the kept place stays.
+func keepFirstAnswer(key string, oldest nostr.Timestamp, now time.Time) {
+	if oldest <= 0 {
+		return
+	}
+	top := nostr.Timestamp(now.Add(anchorSlack).Unix())
+	catchupMu.Lock()
+	defer catchupMu.Unlock()
+	m := catchupMarks[key]
+	switch {
+	case !m.Started():
+		m = catchup.Mark{Top: top, Cursor: oldest}
+	case oldest <= m.Top:
+		m = catchup.Mark{Top: top, Cursor: min(m.Cursor, oldest)}
+	default:
+		return
+	}
+	catchupMarks[key] = m
+}
+
+// a connection whose walk is under way asks for no more than this at first:
+// the walk has the rest, and a slow circuit spends its window on new ground
+// rather than on the newest hundred again
+const catchupResumeLimit = 5
 
 // relay health. a relay that will not answer still costs a full tor circuit
 // on every attempt, and with one subscribe goroutine per relay per contact
@@ -597,6 +636,9 @@ func nostrResetClient() {
 	torOnlyClient = nil
 	torOnlyMu.Unlock()
 	dropSocksAddr()
+	// kept sockets and door streams dialled the old way go with it
+	pubCloseAll("")
+	doorCloseAll()
 }
 
 // how long a relay's websocket may take to open. the relay library gives
@@ -703,18 +745,7 @@ func nostrPublishMulti(ctx context.Context, lane string, ev nostr.Event) (ok int
 				result <- false
 				return
 			}
-			r := nostr.NewRelay(bg, u, nostr.RelayOptions{})
-			dctx, dcancel := relayDialCtx(bg, u)
-			err = r.ConnectWithClient(dctx, client)
-			dcancel()
-			if err != nil {
-				log.Printf("nostr: connect %s: %v", u, err)
-				relayFailed(u)
-				result <- false
-				return
-			}
-			defer r.Close()
-			if err := r.Publish(bg, ev); err != nil {
+			if err := publishTo(bg, lane, u, client, ev); err != nil {
 				log.Printf("nostr: publish %s: %v", u, err)
 				relayFailed(u)
 				result <- false
@@ -965,6 +996,9 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 					time.Now().Round(0).Sub(lastAlive) < 5*time.Minute {
 					limit = 20
 				}
+				if catchupMarkOf(ck).Started() && limit > catchupResumeLimit {
+					limit = catchupResumeLimit
+				}
 				f := nostr.Filter{
 					Kinds: []nostr.Kind{1059},
 					Tags:  nostr.TagMap{"p": []string{rcvPk}},
@@ -1040,8 +1074,15 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 					log.Printf("nostr: %s dropped %d check-ins running, giving it %s this time",
 						u, catchupDropsBeforeLong, catchupLongCap)
 				}
+				// the oldest of the first answer so far, while it is coming
+				var firstOldest atomic.Int64
+				var firstOpen atomic.Bool
+				firstOpen.Store(true)
 				capT = time.AfterFunc(thisCap, func() {
 					settleOnce.Do(func() {
+						if firstOpen.Load() {
+							keepFirstAnswer(ck, nostr.Timestamp(firstOldest.Load()), time.Now())
+						}
 						atomic.AddInt32(&catchupActive, -1)
 						noteCatchupDone(ck, true)
 						ccancel()
@@ -1069,6 +1110,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 								stored++
 								if oldest == 0 || ev.CreatedAt < oldest {
 									oldest = ev.CreatedAt
+									firstOldest.Store(int64(oldest))
 								}
 							}
 							if _, opened := take(ev); opened {
@@ -1092,6 +1134,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 						idle.Reset(quietFor(deaf))
 					case <-eose:
 						eose = nil
+						firstOpen.Store(false)
 						if stored < limit || oldest == 0 {
 							atomic.StoreInt32(&caughtUp, 1)
 							saveLast(atomic.LoadInt64(&pending))
@@ -1229,26 +1272,26 @@ func HaloNostrInit(cRelaysCSV *C.char) *C.char {
 
 //export HaloNostrSend
 func HaloNostrSend(cPeerXPubHex, cMsg *C.char) *C.char {
-	log.Printf("nostr: HaloNostrSend ENTRY")
-	peerHex := C.GoString(cPeerXPubHex)
-	msg := C.GoString(cMsg)
+	return C.CString(nostrSend(C.GoString(cPeerXPubHex), C.GoString(cMsg)))
+}
 
+func nostrSend(peerHex, msg string) string {
 	peerBytes, err := hex.DecodeString(peerHex)
 	if err != nil || len(peerBytes) != 32 {
-		return C.CString("error: bad peer pubkey")
+		return "error: bad peer pubkey"
 	}
 	var peerArr [32]byte
 	copy(peerArr[:], peerBytes)
 
 	gw, err := nip17Wrap(peerArr, msg)
 	if err != nil {
-		return C.CString(fmt.Sprintf("error: wrap: %v", err))
+		return fmt.Sprintf("error: wrap: %v", err)
 	}
 	// the wrap is built with the nip59 lib's event type; cross into the relay
 	// lib as plain json. id and sig survive verbatim, both speak nip-01.
 	var ev nostr.Event
 	if err := easyjson.Unmarshal([]byte(gw.String()), &ev); err != nil {
-		return C.CString(fmt.Sprintf("error: wrap convert: %v", err))
+		return fmt.Sprintf("error: wrap convert: %v", err)
 	}
 	nostrMu.Lock()
 	nostrSentIDs[ev.ID.Hex()] = true
@@ -1261,7 +1304,7 @@ func HaloNostrSend(cPeerXPubHex, cMsg *C.char) *C.char {
 	defer cancel()
 	ok := nostrPublishMulti(ctx, laneEveryday, ev)
 	if ok == 0 {
-		return C.CString("error: no relays accepted")
+		return "error: no relays accepted"
 	}
 	// log the drop-box we published to. if a peer isn't receiving, compare this
 	// against the "at addr" in their subscribe line: a mismatch means the two
@@ -1272,7 +1315,7 @@ func HaloNostrSend(cPeerXPubHex, cMsg *C.char) *C.char {
 	} else {
 		log.Printf("nostr: sent event %s to %d relays", ev.ID.Hex()[:12], ok)
 	}
-	return C.CString("ok")
+	return "ok"
 }
 
 //export HaloNostrSubscribe

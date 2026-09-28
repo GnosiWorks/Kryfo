@@ -43,6 +43,7 @@ type siConn struct {
 	published map[string]bool // p tags of events it published
 	pings     []time.Time
 	kill      context.CancelFunc
+	mute      bool // takes events and never answers, like a dead circuit
 }
 
 // one req, when it came and what it asked for
@@ -62,6 +63,10 @@ type relayStandIn struct {
 	resent    int // stored events sent in answer to a req
 	resentB   int
 	keep      bool // keeps what is published, as a real relay does
+	// before the websocket upgrade is answered: the tls round trip a ws://
+	// stand-in does not have
+	upgradeDelay time.Duration
+	accepted     int // events taken
 }
 
 func newRelayStandIn(t *testing.T, pongDelay time.Duration) *relayStandIn {
@@ -86,7 +91,11 @@ func (s *relayStandIn) handle(w http.ResponseWriter, r *http.Request) {
 		published: map[string]bool{}, kill: cancel}
 	s.mu.Lock()
 	s.conns = append(s.conns, c)
+	up := s.upgradeDelay
 	s.mu.Unlock()
+	if up > 0 {
+		time.Sleep(up)
+	}
 	defer func() {
 		s.mu.Lock()
 		c.closed = time.Now()
@@ -106,6 +115,8 @@ func (s *relayStandIn) handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer conn.CloseNow()
+	// a media wrap is past the library's 32 KB default, as it is on real relays
+	conn.SetReadLimit(1 << 20)
 	for {
 		_, data, err := conn.Read(ctx)
 		if err != nil {
@@ -156,12 +167,17 @@ func (s *relayStandIn) handle(w http.ResponseWriter, r *http.Request) {
 			}
 		case *nostr.EventEnvelope:
 			s.mu.Lock()
+			if c.mute {
+				s.mu.Unlock()
+				continue
+			}
 			for p := range e.Event.Tags.FindAll("p") {
 				c.published[p[1]] = true
 			}
 			if s.keep {
 				s.events = append(s.events, e.Event)
 			}
+			s.accepted++
 			s.mu.Unlock()
 			b, _ := nostr.OKEnvelope{EventID: e.Event.ID, OK: true}.MarshalJSON()
 			if conn.Write(ctx, ws.MessageText, b) != nil {
@@ -197,6 +213,15 @@ func (s *relayStandIn) dropAll() {
 	}
 }
 
+// every open connection goes silent: the socket stays, nothing comes back
+func (s *relayStandIn) muteAll() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for _, c := range s.conns {
+		c.mute = true
+	}
+}
+
 // waits for cond, polling, and fails the test when it does not come
 func waitFor(t *testing.T, what string, limit time.Duration, cond func() bool) {
 	t.Helper()
@@ -218,6 +243,37 @@ type socksStandIn struct {
 	mu      sync.Mutex
 	byLocal map[string]string // the stream's own address towards the target -> name
 	streams int
+	byName  map[string]int // streams opened under each name
+
+	// tor's costs, off unless a test sets them before dialling: the wait for
+	// the exit's connected cell, a one-way delay on every byte, and a
+	// circuit's bandwidth, shared by every stream under one name
+	connectDelay time.Duration
+	lag          time.Duration
+	rate         int // bytes per second each way, 0 for none
+	gates        map[string]*rateGate
+	// hosts that are not dialled as named: an onion, pointed at a local port
+	route map[string]string
+	// the client side of every stream, so a test can cut them all
+	clients map[net.Conn]bool
+}
+
+// one direction of a circuit: bytes queue behind each other at its rate
+type rateGate struct {
+	mu   sync.Mutex
+	bps  int
+	next time.Time
+}
+
+// when n bytes that reached the gate at t are through it
+func (g *rateGate) take(n int, t time.Time) time.Time {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	if g.next.Before(t) {
+		g.next = t
+	}
+	g.next = g.next.Add(time.Duration(int64(n) * int64(time.Second) / int64(g.bps)))
+	return g.next
 }
 
 func newSocksStandIn(t *testing.T) *socksStandIn {
@@ -225,7 +281,8 @@ func newSocksStandIn(t *testing.T) *socksStandIn {
 	if err != nil {
 		t.Fatal(err)
 	}
-	s := &socksStandIn{ln: ln, byLocal: map[string]string{}}
+	s := &socksStandIn{ln: ln, byLocal: map[string]string{}, byName: map[string]int{},
+		gates: map[string]*rateGate{}, route: map[string]string{}, clients: map[net.Conn]bool{}}
 	t.Cleanup(func() { ln.Close() })
 	go func() {
 		for {
@@ -242,7 +299,15 @@ func newSocksStandIn(t *testing.T) *socksStandIn {
 func (s *socksStandIn) port() int { return s.ln.Addr().(*net.TCPAddr).Port }
 
 func (s *socksStandIn) serve(c net.Conn) {
-	defer c.Close()
+	s.mu.Lock()
+	s.clients[c] = true
+	s.mu.Unlock()
+	defer func() {
+		s.mu.Lock()
+		delete(s.clients, c)
+		s.mu.Unlock()
+		c.Close()
+	}()
 	br := bufio.NewReader(c)
 	read := func(n int) []byte {
 		b := make([]byte, n)
@@ -292,7 +357,22 @@ func (s *socksStandIn) serve(c net.Conn) {
 	if p == nil {
 		return
 	}
-	out, err := net.Dial("tcp", net.JoinHostPort(host, strconv.Itoa(int(binary.BigEndian.Uint16(p)))))
+	target := net.JoinHostPort(host, strconv.Itoa(int(binary.BigEndian.Uint16(p))))
+	s.mu.Lock()
+	if to, ok := s.route[host]; ok {
+		target = to
+	}
+	delay, lag, rate := s.connectDelay, s.lag, s.rate
+	var up, down *rateGate
+	if rate > 0 {
+		up, down = s.gates[name+" up"], s.gates[name+" down"]
+		if up == nil {
+			up, down = &rateGate{bps: rate}, &rateGate{bps: rate}
+			s.gates[name+" up"], s.gates[name+" down"] = up, down
+		}
+	}
+	s.mu.Unlock()
+	out, err := net.Dial("tcp", target)
 	if err != nil {
 		c.Write([]byte{5, 5, 0, 1, 0, 0, 0, 0, 0, 0})
 		return
@@ -301,12 +381,58 @@ func (s *socksStandIn) serve(c net.Conn) {
 	s.mu.Lock()
 	s.byLocal[out.LocalAddr().String()] = name
 	s.streams++
+	s.byName[name]++
 	s.mu.Unlock()
+	if delay > 0 {
+		time.Sleep(delay)
+	}
 	c.Write([]byte{5, 0, 0, 1, 0, 0, 0, 0, 0, 0})
 	done := make(chan struct{}, 2)
-	go func() { io.Copy(out, br); done <- struct{}{} }()
-	go func() { io.Copy(c, out); done <- struct{}{} }()
+	if lag == 0 && rate == 0 {
+		go func() { io.Copy(out, br); done <- struct{}{} }()
+		go func() { io.Copy(c, out); done <- struct{}{} }()
+	} else {
+		go func() { lagCopy(out, br, lag, up); done <- struct{}{} }()
+		go func() { lagCopy(c, out, lag, down); done <- struct{}{} }()
+	}
 	<-done
+}
+
+// copies src to dst with every byte held back by lag, after queueing at the
+// gate when there is one
+func lagCopy(dst io.Writer, src io.Reader, lag time.Duration, gate *rateGate) {
+	type chunk struct {
+		b  []byte
+		at time.Time
+	}
+	ch := make(chan chunk, 1<<14)
+	go func() {
+		defer close(ch)
+		for {
+			b := make([]byte, 16<<10)
+			n, err := src.Read(b)
+			if n > 0 {
+				t := time.Now()
+				if gate != nil {
+					t = gate.take(n, t)
+				}
+				ch <- chunk{b[:n], t.Add(lag)}
+			}
+			if err != nil {
+				return
+			}
+		}
+	}()
+	for c := range ch {
+		if d := time.Until(c.at); d > 0 {
+			time.Sleep(d)
+		}
+		if _, err := dst.Write(c.b); err != nil {
+			for range ch {
+			}
+			return
+		}
+	}
 }
 
 // the socks name a relay connection came in under, and whether it came
@@ -322,6 +448,24 @@ func (s *socksStandIn) count() int {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.streams
+}
+
+// tor leaves the network: every stream ends at once, and whatever was still
+// queued on a circuit is gone with it
+func (s *socksStandIn) cut() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for c := range s.clients {
+		c.Close()
+	}
+	s.gates = map[string]*rateGate{}
+}
+
+// streams opened under one socks name
+func (s *socksStandIn) countAs(name string) int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.byName[name]
 }
 
 // the engine's relay state pointed at the stand-ins, put back afterwards.
