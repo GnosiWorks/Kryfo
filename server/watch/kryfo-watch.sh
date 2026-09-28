@@ -16,6 +16,8 @@ MIN_FREE_GB=${MIN_FREE_GB:-2}
 CERT_DAYS=${CERT_DAYS:-21}
 HEAL_GAP=${HEAL_GAP:-900}
 ALERT_CMD=${ALERT_CMD:-}
+# an ntfy topic url. the topic is the only secret: make it long and random
+NTFY_URL=${NTFY_URL:-}
 DRY=${DRY:-0}
 mkdir -p "$STATE"
 now=$(date +%s)
@@ -57,7 +59,11 @@ mark() {
 	echo "$state" >"$STATE/$name.state"
 	[ -z "$was" ] && [ "$state" = up ] && return
 	echo "watch: $name is $state"
-	[ -n "$ALERT_CMD" ] && [ "$DRY" != 1 ] && $ALERT_CMD "kryfo $name is $state" || true
+	[ "$DRY" = 1 ] && return
+	# the service and what happened, nothing else
+	[ -n "$NTFY_URL" ] && curl -sS -m 15 -o /dev/null -d "$name $state" "$NTFY_URL"
+	[ -n "$ALERT_CMD" ] && $ALERT_CMD "$name $state"
+	return 0
 }
 
 # the site
