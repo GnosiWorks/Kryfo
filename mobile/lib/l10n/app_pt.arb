@@ -1935,5 +1935,7 @@
   "devNamelessLine": "O nome criado para esta conversa fica no celular onde foi criado, então aqui ela só pode ser lida.",
   "devStartNewLine": "Todas as mensagens daqui somem, e uma conversa nova se abre.",
   "devVoiceDisguised": "Sua voz vai disfarçada nesta conversa",
-  "devChatOptions": "Opções da conversa"
+  "devChatOptions": "Opções da conversa",
+  "appLinkOtherKey": "Este link diz que é {id}, mas a chave dele não corresponde. Não foi adicionado.",
+  "scamShieldSaysItIs": "Diz que é {shown}, mas a chave não corresponde"
 }

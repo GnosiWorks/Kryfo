@@ -1935,5 +1935,7 @@
   "devNamelessLine": "Nama yang dibuat untuk obrolan ini tetap di ponsel tempat nama itu dibuat, jadi di sini obrolan ini hanya bisa dibaca.",
   "devStartNewLine": "Semua pesan di sini terhapus, dan obrolan baru terbuka.",
   "devVoiceDisguised": "Suaramu disamarkan di obrolan ini",
-  "devChatOptions": "Opsi obrolan"
+  "devChatOptions": "Opsi obrolan",
+  "appLinkOtherKey": "Tautan ini mengaku sebagai {id}, tapi kuncinya tidak cocok. Tidak ada yang ditambahkan.",
+  "scamShieldSaysItIs": "Mengaku sebagai {shown}, tapi kuncinya tidak cocok"
 }

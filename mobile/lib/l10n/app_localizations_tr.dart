@@ -7406,4 +7406,14 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get devChatOptions => 'Sohbet seçenekleri';
+
+  @override
+  String appLinkOtherKey(Object id) {
+    return 'Bu bağlantı $id olduğunu söylüyor ama anahtarı eşleşmiyor. Eklenmedi.';
+  }
+
+  @override
+  String scamShieldSaysItIs(Object shown) {
+    return '$shown olduğunu söylüyor ama anahtarı eşleşmiyor';
+  }
 }

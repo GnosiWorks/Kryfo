@@ -4326,6 +4326,81 @@ bool _isPreKeyWire(String wireB64) {
   }
 }
 
+// the identity a store holds for an address: the one it trusts, else the
+// one its session was built with
+Future<List<int>?> _storedIdentity(
+  SignalSession ss,
+  SignalProtocolAddress addr,
+) async {
+  final known = await ss.identityStore.getIdentity(addr);
+  if (known != null) return known.serialize();
+  if (!await ss.sessionStore.containsSession(addr)) return null;
+  final record = await ss.sessionStore.loadSession(addr);
+  return record.sessionState.getRemoteIdentityKey()?.serialize();
+}
+
+// the identity key a card's prekey bundle carries, null when it does not
+// read
+List<int>? _bundleIdentity(String bundleB64) {
+  try {
+    final j = jsonDecode(utf8.decode(base64Decode(bundleB64))) as Map;
+    return base64Decode(j['identityKey'] as String);
+  } catch (_) {
+    return null;
+  }
+}
+
+// an x key as signal writes it, null when it is not one
+List<int>? _xIdentity(String xHex) {
+  if (xHex.length != 64) return null;
+  final out = <int>[0x05];
+  for (var i = 0; i < 64; i += 2) {
+    final b = int.tryParse(xHex.substring(i, i + 2), radix: 16);
+    if (b == null) return null;
+    out.add(b);
+  }
+  return out;
+}
+
+// the key a row holds for someone. a key that does not read still binds
+// the row: it matches nothing
+List<int>? _rowIdentity(Map<String, Object?>? row) {
+  if (row == null) return null;
+  final x = row['xpub'] as String?;
+  if (x != null && x.isNotEmpty) {
+    return _xIdentity(x.toLowerCase()) ?? utf8.encode('x $x');
+  }
+  final bundle = row['peer_bundle'] as String?;
+  if (bundle != null && bundle.isNotEmpty) {
+    return _bundleIdentity(bundle) ?? utf8.encode('b $bundle');
+  }
+  return null;
+}
+
+// the identity a name is bound to here: the key it was first seen with,
+// from the signal store [ss] and then from the row [row] reads. null for a
+// name with no key yet
+Future<List<int>?> _boundIdentity(
+  String id, {
+  SignalSession? ss,
+  Future<Map<String, Object?>?> Function(String id)? row,
+}) async {
+  if (ss != null) {
+    try {
+      final k = await _storedIdentity(ss, SignalProtocolAddress(id, 1));
+      if (k != null) return k;
+    } catch (e) {
+      dlog('bound identity: store not read ($e)');
+    }
+  }
+  return row == null ? null : _rowIdentity(await row(id));
+}
+
+/// where someone lands who writes under a name bound here to another key:
+/// an id of their own, from their key, that is never three words
+String unboundIdOf(List<int> identityKey) =>
+    sha256.convert(identityKey).toString().substring(0, 16);
+
 Future<String?> signalDecrypt(
   String peerId,
   String wireB64, {
@@ -4349,14 +4424,14 @@ Future<String?> signalDecrypt(
     Uint8List plain;
     if (type == CiphertextMessage.prekeyType) {
       final pkm = PreKeySignalMessage(body);
-      // trial decrypt: a prekey with a different identity than the one on
-      // file is a wiped peer with new keys, so refuse and let it arrive via
-      // back-pair as a new person. targeted decrypts (flagKeyChange) skip
-      // this and keep deliver-and-warn for mitm.
+      // trial decrypt: a prekey opens only under the name its identity is
+      // bound to. another identity, or a name with none yet, arrives as a
+      // first contact and is checked there. targeted decrypts
+      // (flagKeyChange) skip this and keep deliver-and-warn for mitm.
       if (!flagKeyChange && peerId != '_pending_back_pair_') {
-        final known = await ss.identityStore.getIdentity(addr);
-        if (known != null &&
-            !_eqBytes(known.serialize(), pkm.getIdentityKey().serialize())) {
+        final known = await _storedIdentity(ss, addr);
+        if (known == null ||
+            !_eqBytes(known, pkm.getIdentityKey().serialize())) {
           return null;
         }
       }
@@ -4431,7 +4506,13 @@ Future<(String, bool)> handleHaloUriAdded(String raw) async {
   if (h != null) {
     // a quiet session never reaches the registry
     if (sessionQuiet) return (l10n.handleRegistryFailed, false);
-    final r = await resolveHandle(h, _torGetJsonOnIsolate);
+    // the invite has to be the claimer's own: its id is the words of the
+    // key the handle was claimed with
+    final r = await resolveHandle(
+      h,
+      _torGetJsonOnIsolate,
+      idOf: engine.idFromEdPub,
+    );
     // the lookup answers in fixed english words; the person reads their own
     if (r.startsWith('error:')) {
       return (
@@ -4488,6 +4569,19 @@ Future<(String, bool)> handleHaloUriAdded(String raw) async {
       openDevChatLater(chat);
       // nothing to say: the chat opening is the answer
       return ('', true);
+  }
+  // a name stays with the key first seen for it: a card that names someone
+  // here with another key changes nothing
+  final cardKey = parsed['bundle'] != null
+      ? _bundleIdentity(parsed['bundle']!)
+      : _rowIdentity({'xpub': parsed['xpub']});
+  final bound = await _boundIdentity(
+    parsed['id']!,
+    ss: sessionQuiet ? null : signalSession,
+    row: session.getContact,
+  );
+  if (cardKey != null && bound != null && !_eqBytes(bound, cardKey)) {
+    return (l10n.appLinkOtherKey(parsed['id']!), false);
   }
   if (parsed['v'] == '2' || parsed['v'] == '3') {
     final already = await session.getContact(parsed['id']!) != null;
@@ -4618,43 +4712,49 @@ Future<void> sweepCaptures() async {
 
 String _safeLeaf(String s) => s.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
 
-// where a received file lands: media/f_<uid>_<name>, in the folder of the
-// container the message goes to
-Future<File> receivedFileFor(
-  String uid,
-  String name, [
-  HaloContainer c = HaloContainer.everyday,
-]) async {
-  final mediaDir = await c.mediaDir();
-  return File('${mediaDir.path}/f_${uid}_${_safeLeaf(name)}');
+final _leafRandom = Random.secure();
+
+// a name for an arriving file that nothing on the wire chose: never a
+// message id, and never the shape of the names our own files get
+String _freshLeaf() {
+  final b = [for (var i = 0; i < 16; i++) _leafRandom.nextInt(256)];
+  return 'in_${b.map((x) => x.toRadixString(16).padLeft(2, '0')).join()}';
 }
 
-// where a received picture lands: media/<uid>.jpg
-Future<File> receivedImageFor(
+// where a received file lands: media/in_<random>_<name>, in the folder of
+// the container the message goes to. the sender's name stays at the end so
+// the file keeps its type
+Future<File> receivedFileFor(
   String name, [
   HaloContainer c = HaloContainer.everyday,
 ]) async {
   final mediaDir = await c.mediaDir();
-  return File('${mediaDir.path}/${_safeLeaf(name)}.jpg');
+  return File('${mediaDir.path}/${_freshLeaf()}_${_safeLeaf(name)}');
+}
+
+// where a received picture lands: media/in_<random>.jpg
+Future<File> receivedImageFor([
+  HaloContainer c = HaloContainer.everyday,
+]) async {
+  final mediaDir = await c.mediaDir();
+  return File('${mediaDir.path}/${_freshLeaf()}.jpg');
 }
 
 Future<String> saveFileBytes(
   List<int> bytes,
-  String uid,
   String name, [
   HaloContainer c = HaloContainer.everyday,
 ]) async {
-  final file = await receivedFileFor(uid, name, c);
+  final file = await receivedFileFor(name, c);
   await file.writeAsBytes(bytes);
   return file.path;
 }
 
 Future<String> saveMediaBytes(
-  List<int> bytes,
-  String name, [
+  List<int> bytes, [
   HaloContainer c = HaloContainer.everyday,
 ]) async {
-  final file = await receivedImageFor(name, c);
+  final file = await receivedImageFor(c);
   await file.writeAsBytes(bytes);
   return file.path;
 }
@@ -4964,7 +5064,9 @@ class AppIo {
 
   // a first message from someone with no session yet: opened under a
   // placeholder, the sender's claim checked against their key, and the
-  // session moved to them. null when any of it fails
+  // session moved to them. a name bound here to another key keeps it: the
+  // sender then gets an id of their own (unboundIdOf). null when any of it
+  // fails
   Future<({String haloId, String plain, UnwrappedMessage env})?>
   openFirstContact(String cipher) async {
     const tempPeer = '_pending_back_pair_';
@@ -5000,12 +5102,43 @@ class AppIo {
         dlog('back-pair: claims the developer, dropped');
         return null;
       }
-      // move session from temp to real HaloID
       final record = await signalSession.sessionStore.loadSession(tempAddr);
-      final realAddr = SignalProtocolAddress(h, 1);
+      final key = record.sessionState.getRemoteIdentityKey()?.serialize();
+      // the x key it gives for itself is the one its session runs on
+      final x = env.senderXPub;
+      if (key == null ||
+          (x != null &&
+              x.isNotEmpty &&
+              !_eqBytes(_xIdentity(x.toLowerCase()) ?? const [], key))) {
+        await signalSession.sessionStore.deleteSession(tempAddr);
+        dlog('back-pair: key mismatch');
+        return null;
+      }
+      // a name stays with the key first seen for it
+      var at = h;
+      final bound = await _boundIdentity(
+        h,
+        ss: signalSession,
+        row: live.getContact,
+      );
+      if (bound != null && !_eqBytes(bound, key)) {
+        at = unboundIdOf(key);
+        final held = await _boundIdentity(
+          at,
+          ss: signalSession,
+          row: live.getContact,
+        );
+        if (held != null && !_eqBytes(held, key)) {
+          await signalSession.sessionStore.deleteSession(tempAddr);
+          return null;
+        }
+        dlog('back-pair: a name bound to another key, filed on its own');
+      }
+      // move session from temp to where it is filed
+      final realAddr = SignalProtocolAddress(at, 1);
       await signalSession.sessionStore.storeSession(realAddr, record);
       await signalSession.sessionStore.deleteSession(tempAddr);
-      return (haloId: h, plain: plain, env: env);
+      return (haloId: at, plain: plain, env: env);
     } catch (e) {
       dlog('back-pair error: $e');
       try {
@@ -5045,6 +5178,35 @@ class AppIo {
 
   // what this process showed for a chat leaves the shade
   Future<void> unnotify(String payload) => clearNotificationsFor(payload);
+}
+
+// a first contact's session moved off a name a hidden chat binds to
+// another key, onto the sender's own id. a name with a trusted key was
+// settled when it opened, and stays. null when it cannot be moved
+Future<String?> _refileFirstContact(String h) async {
+  final addr = SignalProtocolAddress(h, 1);
+  try {
+    if (await signalSession.identityStore.getIdentity(addr) != null) return h;
+    final record = await signalSession.sessionStore.loadSession(addr);
+    final key = record.sessionState.getRemoteIdentityKey()?.serialize();
+    await signalSession.sessionStore.deleteSession(addr);
+    if (key == null) return null;
+    final at = unboundIdOf(key);
+    final held = await _boundIdentity(
+      at,
+      ss: signalSession,
+      row: live.getContact,
+    );
+    if (held != null && !_eqBytes(held, key)) return null;
+    await signalSession.sessionStore.storeSession(
+      SignalProtocolAddress(at, 1),
+      record,
+    );
+    return at;
+  } catch (e) {
+    dlog('back-pair: not refiled ($e)');
+    return null;
+  }
 }
 
 // the engine's sealing for the router
@@ -6037,24 +6199,84 @@ class AppState extends ChangeNotifier {
   // would show
   int _quietSince = 0;
   int _quietJobs = 0;
-  int _since(int at) => sessionQuiet && at < _quietSince ? 0 : at;
+  // a decoy with no opening time noted shows nothing from before
+  bool _beforeQuiet(int at) =>
+      sessionQuiet && (_quietSince <= 0 || at < _quietSince);
+  int _since(int at) => _beforeQuiet(at) ? 0 : at;
   int get lastListenAt => _since(_lastListenAt);
-  int get lastDrainAt => _since(_lastDrainAt);
+  // a decoy never receives a message
+  int get lastDrainAt => sessionQuiet ? 0 : _lastDrainAt;
   int get lastJobAt => _since(_lastJobAt);
   int get lastCheckAt => _since(_lastCheckAt);
   int get lastWakeAt => _since(_lastWakeAt);
   int get lastCheckTriedAt => _since(_lastCheckTriedAt);
-  int get jobRuns => sessionQuiet ? max(0, _jobRuns - _quietJobs) : _jobRuns;
+  int get jobRuns => !sessionQuiet
+      ? _jobRuns
+      : _quietSince <= 0
+      ? 0
+      : max(0, _jobRuns - _quietJobs);
   String get lastCheckHow =>
       _since(_lastCheckTriedAt) == 0 && sessionQuiet ? '' : _lastCheckHow;
-  String get lastCheckRelays =>
-      _since(_lastCheckTriedAt) == 0 && sessionQuiet ? '' : _lastCheckRelays;
+  // the catch-up counts the identity's subscriptions and events: a decoy
+  // has neither
+  String get lastCheckRelays => sessionQuiet ? '' : _lastCheckRelays;
   List<String> get gaps => sessionQuiet
       ? [
           for (final g in _gaps)
-            if ((int.tryParse(g.split('-').first) ?? 0) >= _quietSince) g,
+            if (!_beforeQuiet(int.tryParse(g.split('-').first) ?? 0)) g,
         ]
       : _gaps;
+
+  // when an arrival was last sealed for the hidden chats, in this process
+  int _lastSealAt = 0;
+
+  // with hidden chats shut, a relay time at or before the newest sealed
+  // arrival may be that arrival
+  bool _maySealedAt(int atMs) =>
+      _openVault == null &&
+      _lastSealAt > 0 &&
+      _lastSealAt >= _lastDrainAt &&
+      atMs <= _lastSealAt + 1000;
+
+  /// what the transport screen shows of the engine's traffic [tx]: in a
+  /// decoy its own, which is nothing, as on a new install. with hidden
+  /// chats shut nothing of theirs counts: not their subscriptions, and not
+  /// an arrival sealed for them, which shows the last one the app showed
+  ({int subs, int secsSinceRecv, int secsSinceSend}) shownTraffic(
+    Map<String, dynamic> tx,
+  ) {
+    if (sessionQuiet) return (subs: 0, secsSinceRecv: -1, secsSinceSend: -1);
+    final subs = tx['sub_count'] as int? ?? 0;
+    final rx = tx['secs_since_recv'] as int? ?? -1;
+    final sx = tx['secs_since_send'] as int? ?? -1;
+    if (_openVault != null) {
+      return (subs: subs, secsSinceRecv: rx, secsSinceSend: sx);
+    }
+    final hidden = _router.listenFor.keys.toSet();
+    final listed = tx['subs'];
+    final hiddenSubs = listed is List
+        ? listed.where(hidden.contains).length
+        : hidden.length;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final shownRx = rx >= 0 && _maySealedAt(now - rx * 1000)
+        ? (_lastDrainAt <= 0 ? -1 : max(0, (now - _lastDrainAt) ~/ 1000))
+        : rx;
+    return (
+      subs: max(0, subs - hiddenSubs),
+      secsSinceRecv: shownRx,
+      secsSinceSend: sx,
+    );
+  }
+
+  /// when the newest relay event reached this phone, in unix seconds from
+  /// the engine's [mem], as the transport screen shows it: never in a
+  /// decoy, and never an arrival sealed for hidden chats that are shut
+  int shownRelayIn(Map<String, dynamic> mem) {
+    if (sessionQuiet) return 0;
+    final at = (mem['lastEvRecv'] as num?)?.toInt() ?? 0;
+    if (at > 0 && _maySealedAt(at * 1000)) return _lastDrainAt ~/ 1000;
+    return at;
+  }
 
   // the nudge. nothing vendor-specific is read: while kryfo is supposed to
   // be staying connected it writes the time every few minutes, and a start
@@ -6978,6 +7200,13 @@ class AppState extends ChangeNotifier {
       dlog('dropping group msg for unknown group ${env.groupId}');
       return to;
     }
+    // a group's messages, polls and slices come from its members, here and
+    // when a sealed one is opened
+    if (isGroup &&
+        !(await db.getGroupMembers(env.groupId!)).contains(senderHaloId)) {
+      dlog('group msg: dropped, the sender is not a member');
+      return to;
+    }
     // badge rides real chat rows only. present = set, absent = clear so
     // turning it off propagates. control frames and preview patches never
     // get here with a fresh row, so they can't wipe it.
@@ -6989,8 +7218,11 @@ class AppState extends ChangeNotifier {
     // admin so a member can't rewrite membership by spoofing a roster.
     if (isGroup && env.roster != null && !support.on) {
       final adminId = await db.groupAdminId(env.groupId!);
-      if (adminId != null && senderHaloId == adminId) {
-        await db.syncGroupMembers(env.groupId!, _noDev(env.roster!));
+      final roster = _noDev(env.roster!);
+      if (adminId != null &&
+          senderHaloId == adminId &&
+          await _fitsCap(env.groupId!, roster.toSet().length, db)) {
+        await db.syncGroupMembers(env.groupId!, roster);
         await _subscribeRoomMembers(env.groupId!);
         // contact stubs for self-healed members so we can encrypt to them:
         // ids alone are not enough, we need their keys
@@ -7070,13 +7302,23 @@ class AppState extends ChangeNotifier {
     String? filePath;
     var unsaved = false;
     final fileName = env.fileName;
-    final fileUid =
-        env.msgUid ?? DateTime.now().millisecondsSinceEpoch.toString();
+    // dedup comes before anything is written, so a uid this phone holds or
+    // is filing right now never touches a file. the db check alone races
+    // when two copies arrive at once, so an in-memory set of uids in flight
+    // backs it: the first in claims the uid, a twin takes the known path
+    final uid = env.msgUid;
+    String? claimed;
     if (env.mediaId != null && env.chunkTotal != null && env.chunkTotal! > 1) {
       final mid = env.mediaId!;
       final total = env.chunkTotal!;
       final progressKey = isGroup ? env.groupId! : senderHaloId;
       final slice = (env.imageB64 ?? env.fileB64) ?? '';
+      // a sliced file is filed under its own id
+      if (uid != null && uid != mid) {
+        dlog('recv: slice of another message id, dropped');
+        return to;
+      }
+      if (_inflightUids.contains(mid)) return to;
       // a slice of a file already put together: the sender went round
       // again. buffering it would start a copy that never finishes. one
       // receipt per pass, on the first slice, so the sender can stop.
@@ -7120,11 +7362,13 @@ class AppState extends ChangeNotifier {
       // all pieces in. each goes from the database to the file on its own,
       // so the whole file is never in memory at once. a preview thumbnail
       // from an older client is never drawn, never kept.
+      if (!_inflightUids.add(mid)) return to;
+      claimed = mid;
       if (!env.pvImg) {
         try {
           final out = fileName != null
-              ? await receivedFileFor(fileUid, fileName, db.container)
-              : await receivedImageFor(fileUid, db.container);
+              ? await receivedFileFor(fileName, db.container)
+              : await receivedImageFor(db.container);
           final path = await saveSlices(
             out,
             total,
@@ -7143,21 +7387,46 @@ class AppState extends ChangeNotifier {
       await db.dropMediaChunks(mid);
       unawaited(db.dropMediaWant(mid));
       incomingMediaDone(progressKey);
-      if (env.pvImg) return to;
+      if (env.pvImg) {
+        _inflightUids.remove(mid);
+        return to;
+      }
       // the slice in this envelope is on disk now; nothing below should
       // save it again
       imgB64 = null;
       fileB64v = null;
     } else if (await burnedWhileSealed()) {
       return to;
+    } else if (uid != null) {
+      final known = _inflightUids.contains(uid) || await db.messageExists(uid);
+      // a preview-only frame from an older client carries nothing we draw:
+      // a sender never gets to put a title or an image on this screen
+      final previewOnly =
+          env.preview != null &&
+          env.message.isEmpty &&
+          env.imageB64 == null &&
+          env.fileB64 == null;
+      if (previewOnly) return to;
+      if (known) {
+        // already have it, but a re-send means our receipt never landed. ack
+        // again so the sender's tick flips and the outbox stops redelivering.
+        if (!isGroup &&
+            !unsealing &&
+            env.deliveredUid == null &&
+            env.reaction == null &&
+            env.edit == null &&
+            senderHaloId != myId) {
+          unawaited(_sendDeliveryReceipt(senderHaloId, uid));
+        }
+        notifyListeners();
+        return to;
+      }
+      _inflightUids.add(uid);
+      claimed = uid;
     }
     if (imgB64 != null && imgB64.isNotEmpty) {
       try {
-        mediaPath = await saveMediaBytes(
-          base64Decode(imgB64),
-          fileUid,
-          db.container,
-        );
+        mediaPath = await saveMediaBytes(base64Decode(imgB64), db.container);
       } catch (e) {
         dlog('recv: image not saved: $e');
         unsaved = true;
@@ -7167,7 +7436,6 @@ class AppState extends ChangeNotifier {
       try {
         filePath = await saveFileBytes(
           base64Decode(fileB64v),
-          fileUid,
           fileName ?? 'file',
           db.container,
         );
@@ -7197,36 +7465,6 @@ class AppState extends ChangeNotifier {
         : stickerText(sticker, env.message, await _stickers());
     // what the sender said, as far as this phone shows it
     final said = sticker == null ? env.message : text;
-    // dedup: the db check alone races when two copies arrive at once, so an
-    // in-memory set of uids in flight backs it. the first in claims the uid;
-    // a twin takes the known path instead of inserting.
-    final uid = env.msgUid;
-    if (uid != null) {
-      final known = _inflightUids.contains(uid) || await db.messageExists(uid);
-      // a preview-only frame from an older client carries nothing we draw:
-      // a sender never gets to put a title or an image on this screen
-      final previewOnly =
-          env.preview != null &&
-          env.message.isEmpty &&
-          env.imageB64 == null &&
-          env.fileB64 == null;
-      if (previewOnly) return to;
-      if (known) {
-        // already have it, but a re-send means our receipt never landed. ack
-        // again so the sender's tick flips and the outbox stops redelivering.
-        if (!isGroup &&
-            !unsealing &&
-            env.deliveredUid == null &&
-            env.reaction == null &&
-            env.edit == null &&
-            senderHaloId != myId) {
-          unawaited(_sendDeliveryReceipt(senderHaloId, uid));
-        }
-        notifyListeners();
-        return to;
-      }
-      _inflightUids.add(uid);
-    }
     // a stranger doesn't get to set disappearing rules in the inbox: burned
     // rows refund the 2-message cap and can vanish before the request is even
     // seen. burn only counts once they're accepted.
@@ -7275,7 +7513,7 @@ class AppState extends ChangeNotifier {
       );
     }
     // saved now, messageExists covers dedup from here
-    if (uid != null) _inflightUids.remove(uid);
+    if (claimed != null) _inflightUids.remove(claimed);
     // send a delivery receipt back for 1:1 messages we just stored, so the
     // sender's tick means "on your phone" not "a relay took it". groups skip
     // this (N acks per message is noise); receipts themselves carry no uid of
@@ -7435,6 +7673,7 @@ class AppState extends ChangeNotifier {
     String wire,
     bool fromBackPair,
   ) async {
+    _lastSealAt = DateTime.now().millisecondsSinceEpoch;
     final uid = env.msgUid;
     final total = env.chunkTotal;
     final sliced = env.mediaId != null && total != null && total > 1;
@@ -7678,6 +7917,13 @@ class AppState extends ChangeNotifier {
       if (h == myId || !devIdClaim(h)) h,
   ];
 
+  // whether a group or room of [n] people fits its cap
+  Future<bool> _fitsCap(String groupId, int n, HaloDb db) async {
+    if (n > kGroupMemberCap) return false;
+    final cap = (await db.getGroup(groupId))?['member_cap'] as int?;
+    return cap == null || n <= cap;
+  }
+
   Future<void> _applyGroupControl(
     String senderHaloId,
     UnwrappedMessage env,
@@ -7686,6 +7932,10 @@ class AppState extends ChangeNotifier {
     final gc = env.groupControl!;
     final groupId = env.groupId;
     if (groupId == null) return;
+    // a group here already takes its controls from its admin alone; a
+    // room's admin is its creator's key. leave speaks only for its sender
+    final exists = await db.groupExists(groupId);
+    final fromAdmin = exists && senderHaloId == await db.groupAdminId(groupId);
     switch (gc.type) {
       case 'join':
         // only ever valid off a room drop box, handled there
@@ -7694,11 +7944,8 @@ class AppState extends ChangeNotifier {
         // someone added us to a new group. they are the admin; we are
         // a regular member. group.is_admin stays 0.
         if (gc.members == null || gc.name == null) return;
-        // a room roster is only the creator's to send
+        if (exists && !fromAdmin) return;
         final isRoom = await _roomOf(groupId, db) != null;
-        if (isRoom && senderHaloId != await db.groupAdminId(groupId)) {
-          return;
-        }
         // a group from someone we never let in is a stranger's message
         // with a roster attached. rooms are ours: we opened the link.
         if (!isRoom &&
@@ -7706,18 +7953,20 @@ class AppState extends ChangeNotifier {
             !await db.isVouched(senderHaloId)) {
           return;
         }
-        if (!await db.groupExists(groupId)) {
+        final members = _noDev(gc.members!);
+        if (!await _fitsCap(groupId, members.toSet().length, db)) return;
+        if (!exists) {
           await db.createGroup(
             groupId,
             gc.name!,
-            _noDev(gc.members!),
+            members,
             isAdmin: false,
             adminId: senderHaloId,
           );
         } else {
           // already in the group: reconcile the member list so a re-add or
           // membership change syncs instead of leaving a stale count.
-          await db.syncGroupMembers(groupId, _noDev(gc.members!));
+          await db.syncGroupMembers(groupId, members);
           await db.renameGroup(groupId, gc.name!);
         }
         // auto-create contact stubs for unknown participants so we can
@@ -7740,8 +7989,14 @@ class AppState extends ChangeNotifier {
         await refreshGroups();
         break;
       case 'add':
-        if (gc.members == null) return;
-        for (final h in _noDev(gc.members!)) {
+        if (gc.members == null || !fromAdmin) return;
+        final have = await db.getGroupMembers(groupId);
+        final adds = {
+          for (final h in _noDev(gc.members!))
+            if (!have.contains(h)) h,
+        };
+        if (!await _fitsCap(groupId, have.length + adds.length, db)) return;
+        for (final h in adds) {
           await db.addGroupMember(groupId, h);
         }
         if (gc.participants != null) {
@@ -7762,7 +8017,7 @@ class AppState extends ChangeNotifier {
         await refreshGroups();
         break;
       case 'remove':
-        if (gc.members == null) return;
+        if (gc.members == null || !fromAdmin) return;
         for (final h in gc.members!) {
           await db.removeGroupMember(groupId, h);
           // removed person drops the whole group locally so it leaves
@@ -7772,7 +8027,7 @@ class AppState extends ChangeNotifier {
         await refreshGroups();
         break;
       case 'rename':
-        if (gc.name == null) return;
+        if (gc.name == null || !fromAdmin) return;
         await db.renameGroup(groupId, gc.name!);
         await refreshGroups();
         break;
@@ -9012,24 +9267,34 @@ class AppState extends ChangeNotifier {
     try {
       final opened = await _io.openFirstContact(cipher);
       if (opened == null) return null;
-      final h = opened.haloId;
+      var h = opened.haloId;
       final env = opened.env;
       // the developer never starts a chat this way, and no one else may
       // claim to be him
       if (devCardClaim(id: h, xPub: env.senderXPub)) return null;
       await _afterClose();
       if (_moveDone != null) await _afterMove(h, null);
+      // a hidden chat's name stays with its key as well
+      if (h == env.senderHaloId && await _hiddenKeyDiffers(h, env)) {
+        final at = await _refileFirstContact(h);
+        if (at == null) return null;
+        h = at;
+      }
       final to = _routeOf(h, null);
       // persist contact + nostr sub. a stranger who back-paired to us lands
       // unaccepted: their message waits in requests until we accept. while
       // the vault is shut its people are filed when it opens
       if (to == RouteTo.everyday || to == RouteTo.vault) {
-        await (to == RouteTo.vault ? _openVault! : live).upsertContact(
+        final db = to == RouteTo.vault ? _openVault! : live;
+        await db.upsertContact(
           h,
           env.senderOnion ?? '',
           env.senderXPub ?? '',
           accepted: 0,
         );
+        // filed on its own: the request says the name it gave
+        final said = env.senderHaloId;
+        if (said != null && said != h) await _noteOtherKey(db, h, said);
       }
       if (to != RouteTo.dropped &&
           env.senderXPub != null &&
@@ -9059,6 +9324,25 @@ class AppState extends ChangeNotifier {
       dlog('back-pair error: $e');
       return null;
     }
+  }
+
+  // whether a hidden chat holds [id] with a key other than the one this
+  // first contact gives
+  Future<bool> _hiddenKeyDiffers(String id, UnwrappedMessage env) async {
+    final card = _router.cardOf(id);
+    final held = card != null
+        ? _rowIdentity({'xpub': card.xpub})
+        : _rowIdentity(await _openVault?.getContact(id));
+    if (held == null) return false;
+    final given = _rowIdentity({'xpub': env.senderXPub ?? ''});
+    return given == null || !_eqBytes(held, given);
+  }
+
+  // a request filed on its own id says which name it gave, once
+  Future<void> _noteOtherKey(HaloDb db, String id, String said) async {
+    final hit = ShieldHit('other_key', said).toJson();
+    await db.setShield(id, jsonEncode(hit), [hit]);
+    _shieldRev++;
   }
 
   // a vault that just shut: nothing is opened or filed until the list it

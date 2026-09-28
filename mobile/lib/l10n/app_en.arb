@@ -9316,5 +9316,23 @@
   "devChatOptions": "Chat options",
   "@devChatOptions": {
     "description": "widgets/dev_note.dart: the menu button in the developer chat's header"
+  },
+  "appLinkOtherKey": "This link says it is {id}, but its key does not match. It was not added.",
+  "@appLinkOtherKey": {
+    "description": "a scanned or pasted card, or the one behind a handle, that names someone already here with another key (main.dart, handleHaloUriAdded)",
+    "placeholders": {
+      "id": {
+        "type": "Object"
+      }
+    }
+  },
+  "scamShieldSaysItIs": "Says it is {shown}, but its key does not match",
+  "@scamShieldSaysItIs": {
+    "description": "scam_shield.dart: the line on a request from someone who gave the name of a person already here, with another key",
+    "placeholders": {
+      "shown": {
+        "type": "Object"
+      }
+    }
   }
 }

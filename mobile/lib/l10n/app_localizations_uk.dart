@@ -7506,4 +7506,14 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get devChatOptions => 'Налаштування чату';
+
+  @override
+  String appLinkOtherKey(Object id) {
+    return 'Це посилання видає себе за $id, але його ключ не збігається. Нічого не додано.';
+  }
+
+  @override
+  String scamShieldSaysItIs(Object shown) {
+    return 'Представляється як $shown, але ключ не збігається';
+  }
 }

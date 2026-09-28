@@ -7081,6 +7081,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get devChatOptions => '聊天选项';
+
+  @override
+  String appLinkOtherKey(Object id) {
+    return '此链接自称是 $id，但其密钥不匹配。未添加。';
+  }
+
+  @override
+  String scamShieldSaysItIs(Object shown) {
+    return '自称是 $shown，但密钥不匹配';
+  }
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -14068,4 +14078,14 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get devChatOptions => '聊天選項';
+
+  @override
+  String appLinkOtherKey(Object id) {
+    return '此連結自稱是 $id，但其金鑰不相符。未新增。';
+  }
+
+  @override
+  String scamShieldSaysItIs(Object shown) {
+    return '自稱是 $shown，但金鑰不相符';
+  }
 }

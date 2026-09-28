@@ -7450,4 +7450,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get devChatOptions => 'Options de la discussion';
+
+  @override
+  String appLinkOtherKey(Object id) {
+    return 'Ce lien se présente comme $id, mais sa clé ne correspond pas. Il n’a pas été ajouté.';
+  }
+
+  @override
+  String scamShieldSaysItIs(Object shown) {
+    return 'Se présente comme $shown, mais sa clé ne correspond pas';
+  }
 }

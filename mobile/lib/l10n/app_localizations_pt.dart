@@ -7431,4 +7431,14 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get devChatOptions => 'Opções da conversa';
+
+  @override
+  String appLinkOtherKey(Object id) {
+    return 'Este link diz que é $id, mas a chave dele não corresponde. Não foi adicionado.';
+  }
+
+  @override
+  String scamShieldSaysItIs(Object shown) {
+    return 'Diz que é $shown, mas a chave não corresponde';
+  }
 }

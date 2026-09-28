@@ -7510,4 +7510,14 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get devChatOptions => 'Настройки чата';
+
+  @override
+  String appLinkOtherKey(Object id) {
+    return 'Эта ссылка выдаёт себя за $id, но её ключ не совпадает. Ничего не добавлено.';
+  }
+
+  @override
+  String scamShieldSaysItIs(Object shown) {
+    return 'Представляется как $shown, но ключ не совпадает';
+  }
 }

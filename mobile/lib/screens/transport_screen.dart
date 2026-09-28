@@ -42,9 +42,11 @@ class TransportScreen extends StatelessWidget {
           final contacts = appState.contacts.length;
           final tx = engine.transportState();
           final relays = (tx['relays'] as List?) ?? const [];
-          final subs = tx['sub_count'] as int? ?? 0;
-          final rx = tx['secs_since_recv'] as int? ?? -1;
-          final sx = tx['secs_since_send'] as int? ?? -1;
+          // the session's own traffic: a decoy's is none
+          final shown = appState.shownTraffic(tx);
+          final subs = shown.subs;
+          final rx = shown.secsSinceRecv;
+          final sx = shown.secsSinceSend;
           final uploads = tx['hsdir_uploads'] as int? ?? 0;
           final pubFor = tx['publishing_secs'] as int? ?? -1;
 
@@ -513,7 +515,7 @@ class _AliveState extends State<_Alive> {
   // set this against when the message was sent and the quiet stretches
   // above, and a late one shows as a long gap ending at this time
   String _travel() {
-    final recv = (_mem['lastEvRecv'] as num?)?.toInt() ?? 0;
+    final recv = appState.shownRelayIn(_mem);
     if (recv <= 0) return l10n.transportNothingYetThisProcess;
     final when = DateTime.fromMillisecondsSinceEpoch(recv * 1000);
     return '${hourMinute(when)} · ${_ago(recv * 1000)}';

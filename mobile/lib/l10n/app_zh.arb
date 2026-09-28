@@ -1935,5 +1935,7 @@
   "devNamelessLine": "为这个聊天生成的名字只留在生成它的手机上，所以这里只能阅读。",
   "devStartNewLine": "这里的每一条消息都会删除，并打开一个新的聊天。",
   "devVoiceDisguised": "在这个聊天里，你的语音会变声",
-  "devChatOptions": "聊天选项"
+  "devChatOptions": "聊天选项",
+  "appLinkOtherKey": "此链接自称是 {id}，但其密钥不匹配。未添加。",
+  "scamShieldSaysItIs": "自称是 {shown}，但密钥不匹配"
 }

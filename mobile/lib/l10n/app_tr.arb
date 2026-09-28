@@ -1935,5 +1935,7 @@
   "devNamelessLine": "Bu sohbet için oluşturulan ad, oluşturulduğu telefonda kalır; bu yüzden sohbet burada yalnızca okunabilir.",
   "devStartNewLine": "Buradaki her mesaj gider ve yeni bir sohbet açılır.",
   "devVoiceDisguised": "Bu sohbette sesin gizleniyor",
-  "devChatOptions": "Sohbet seçenekleri"
+  "devChatOptions": "Sohbet seçenekleri",
+  "appLinkOtherKey": "Bu bağlantı {id} olduğunu söylüyor ama anahtarı eşleşmiyor. Eklenmedi.",
+  "scamShieldSaysItIs": "{shown} olduğunu söylüyor ama anahtarı eşleşmiyor"
 }
