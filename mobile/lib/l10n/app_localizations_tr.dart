@@ -2770,6 +2770,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get handleAlreadyTaken => 'Zaten alınmış';
 
   @override
+  String get handleNameRule => '3 ile 20 karakter: a-z, 0-9 veya _';
+
+  @override
   String get handleWhatAHandleDoes => 'Kullanıcı adı ne işe yarar';
 
   @override
@@ -4055,6 +4058,22 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get pairCodeAddThem => 'Ekle';
+
+  @override
+  String get pairCodeUsedTwice => 'Bu kod iki kez kullanıldı. Yenisini iste.';
+
+  @override
+  String get pairCodeIsThisThem => 'Bu o kişi mi?';
+
+  @override
+  String get pairCodeCheckMatches =>
+      'Karşındakinin ekranıyla aynı mı, kontrol et';
+
+  @override
+  String get pairCodeNotThem => 'O kişi değil';
+
+  @override
+  String get pairCodeNotAdded => 'Eklenmedi. Yeni bir kod iste.';
 
   @override
   String get panicSetupThoseWereDifferentFrom =>
@@ -6231,6 +6250,9 @@ class AppLocalizationsTr extends AppLocalizations {
       'Karşındaki Kryfo’yu açar, ekleme ekranında eşleştirme kodunu seçer ve bu altı rakamı yazar. Sonraki kişi için yenisini oluştur.';
 
   @override
+  String get pairCodePanelYourWords => 'Üç kelimen';
+
+  @override
   String pinsPinnedMessages(Object count) {
     return 'Sabitlenen mesajlar · $count';
   }
@@ -6874,6 +6896,10 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get handleRegistryFailed =>
       'Kayıt defterine ulaşılamadı. Bir dakika sonra yeniden dene.';
+
+  @override
+  String get handleCheckClock =>
+      'Telefonun tarih ve saatini kontrol et, sonra yeniden dene.';
 
   @override
   String get searchPeople => 'Kişiler';

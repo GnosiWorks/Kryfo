@@ -34,7 +34,11 @@ func (o owner) sign(msg string) string {
 	return hex.EncodeToString(ed25519.Sign(o.priv, []byte(msg)))
 }
 
-const invite = "kryfo://share?id=a-b-c&onion=x.onion&v=3&bundle=zz&fc=ff"
+// an invite as the app builds it for this owner: its id is the words the
+// owner's key makes
+func (o owner) invite() string {
+	return "kryfo://share?id=" + wordsOf(o.hexPub()) + "&onion=x.onion&v=3&bundle=zz&fc=ff"
+}
 
 // the real server on a scratch store, so connection counting works
 func service(t *testing.T, lim *limiter) (*httptest.Server, *store) {
@@ -62,12 +66,17 @@ func post(t *testing.T, c *http.Client, base, path string, body map[string]strin
 	return out
 }
 
+// a claim as the app sends it
+func claimBody(h, bio string, o owner, ts int64) map[string]string {
+	return map[string]string{
+		"handle": h, "invite": o.invite(), "bio": bio, "ts": fmt.Sprint(ts), "v": "2",
+		"pubkey": o.hexPub(), "sig": o.sign(claimMsgV2(h, o.invite(), ts)),
+	}
+}
+
 func claim(t *testing.T, c *http.Client, base, h string, o owner) {
 	t.Helper()
-	out := post(t, c, base, "/handle/claim", map[string]string{
-		"handle": h, "invite": invite, "bio": "bio of " + h,
-		"pubkey": o.hexPub(), "sig": o.sign("kryfo-handle-v1:" + h),
-	})
+	out := post(t, c, base, "/handle/claim", claimBody(h, "bio of "+h, o, time.Now().Unix()))
 	if out["ok"] != true {
 		t.Fatalf("claim %s: %v", h, out)
 	}

@@ -3,7 +3,7 @@
 
 // the handle registry over real embedded tor. handleBase is clearnet through
 // a tor exit, not the onion, so this drives the exact path the app uses: the
-// same torNostrClient() the engine builds, the same requests.
+// same handleHTTP() the engine builds, the same requests.
 //
 //   go test -tags torconf -run TestRegistryOverTor -timeout 20m -v .
 //
@@ -46,7 +46,7 @@ func TestRegistryOverTor(t *testing.T) {
 		time.Since(started).Round(time.Second))
 
 	c0 := time.Now()
-	client, err := torNostrClient()
+	client, err := handleHTTP()
 	if err != nil {
 		t.Fatalf("no client after %s: %v", time.Since(c0).Round(time.Second), err)
 	}
@@ -215,10 +215,11 @@ func trunc(s string, n int) string {
 // socks port that moves takes all of them down together. this holds each
 // client across a bounce, which is how the app has them: warm, from before.
 //
-//	torNostrClient()      the everyday lane: its relays, HaloTorGetJSON,
-//	                      HaloTorPost (the badge service), handle
-//	                      check/claim/release
-//	torNostrClientFor()   the other lanes: each room's relays, pair codes
+//	torNostrClient()      the everyday lane: its relays
+//	torNostrClientFor()   the other lanes: each room's relays, pair codes,
+//	                      and the services lane: HaloTorGetJSON,
+//	                      HaloTorPost (search, the badge service), handle
+//	                      check/claim/release (handleHTTP)
 //	torOnlyHTTP()         HaloTorGetStrict (link previews)
 //
 // moat is deliberately absent: it does not use tor, because tor is what is

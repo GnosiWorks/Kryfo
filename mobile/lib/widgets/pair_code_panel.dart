@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // six digits you read out loud. the code points at your invite for five
-// minutes, works once, then the address is gone. shared by the invite page
-// and the pairing screen.
+// minutes, works once, then the address is gone. your three words sit under
+// it, for the other phone to match before it adds you. shared by the invite
+// page and the pairing screen.
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -9,6 +10,7 @@ import 'package:flutter/services.dart';
 import '../main.dart' show appState, engine, sessionQuiet;
 import '../theme.dart';
 import 'motion.dart' show BreathDot;
+import 'pair_join.dart' show PairWordsTag;
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
 
@@ -171,7 +173,9 @@ class _PairCodePanelState extends State<PairCodePanel> {
             ),
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
+        PairWordsTag(words: appState.sessionId),
+        const SizedBox(height: 12),
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [

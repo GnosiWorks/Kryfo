@@ -2757,6 +2757,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get handleAlreadyTaken => 'Đã có người dùng';
 
   @override
+  String get handleNameRule => 'Từ 3 đến 20 ký tự: a-z, 0-9 hoặc _';
+
+  @override
   String get handleWhatAHandleDoes => 'Tên người dùng để làm gì';
 
   @override
@@ -4023,6 +4026,23 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get pairCodeAddThem => 'Thêm họ';
+
+  @override
+  String get pairCodeUsedTwice =>
+      'Mã này đã được dùng hai lần. Hãy xin mã mới.';
+
+  @override
+  String get pairCodeIsThisThem => 'Có phải người này không?';
+
+  @override
+  String get pairCodeCheckMatches =>
+      'Kiểm tra xem có khớp với màn hình của họ không';
+
+  @override
+  String get pairCodeNotThem => 'Không phải họ';
+
+  @override
+  String get pairCodeNotAdded => 'Chưa thêm. Hãy xin họ mã mới.';
 
   @override
   String get panicSetupThoseWereDifferentFrom =>
@@ -6191,6 +6211,9 @@ class AppLocalizationsVi extends AppLocalizations {
       'Họ mở Kryfo, chạm Thêm, chọn Mã ghép nối rồi nhập sáu chữ số này. Hãy tạo mã mới cho người tiếp theo.';
 
   @override
+  String get pairCodePanelYourWords => 'Ba từ của bạn';
+
+  @override
   String pinsPinnedMessages(Object count) {
     return 'Tin nhắn đã ghim · $count';
   }
@@ -6830,6 +6853,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get handleRegistryFailed =>
       'Không liên lạc được với nơi đăng ký. Hãy thử lại sau một phút.';
+
+  @override
+  String get handleCheckClock =>
+      'Hãy kiểm tra ngày giờ trên điện thoại rồi thử lại.';
 
   @override
   String get searchPeople => 'Mọi người';

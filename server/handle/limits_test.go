@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestNewNamesArePaced(t *testing.T) {
@@ -17,7 +18,7 @@ func TestNewNamesArePaced(t *testing.T) {
 	claim(t, c, srv.URL, "wren", o)
 	claim(t, c, srv.URL, "kite", o)
 	out := post(t, c, srv.URL, "/handle/claim", map[string]string{
-		"handle": "lark", "invite": invite, "pubkey": o.hexPub(),
+		"handle": "lark", "invite": o.invite(), "pubkey": o.hexPub(),
 		"sig": o.sign("kryfo-handle-v1:lark"),
 	})
 	if out["ok"] != false || out["error"] != "slow down" {
@@ -36,7 +37,7 @@ func TestRegistryCeiling(t *testing.T) {
 	o := newOwner(t)
 	claim(t, c, srv.URL, "wren", o)
 	out := post(t, c, srv.URL, "/handle/claim", map[string]string{
-		"handle": "kite", "invite": invite, "pubkey": o.hexPub(),
+		"handle": "kite", "invite": o.invite(), "pubkey": o.hexPub(),
 		"sig": o.sign("kryfo-handle-v1:kite"),
 	})
 	if out["error"] != "the registry is full" {
@@ -63,10 +64,7 @@ func TestUnchangedRepointWritesNothing(t *testing.T) {
 		t.Fatal("an unchanged repoint rewrote the registry")
 	}
 	// a changed bio is written
-	out := post(t, c, srv.URL, "/handle/claim", map[string]string{
-		"handle": "wren", "invite": invite, "bio": "new", "pubkey": o.hexPub(),
-		"sig": o.sign("kryfo-handle-v1:wren"),
-	})
+	out := post(t, c, srv.URL, "/handle/claim", claimBody("wren", "new", o, time.Now().Unix()))
 	if out["ok"] != true {
 		t.Fatal(out)
 	}
@@ -83,7 +81,7 @@ func TestWritesAreLimited(t *testing.T) {
 	claim(t, c, srv.URL, "wren", o)
 	for _, path := range []string{"/handle/claim", "/handle/release", "/handle/listing"} {
 		out := post(t, c, srv.URL, path, map[string]string{
-			"handle": "wren", "invite": invite, "pubkey": o.hexPub(),
+			"handle": "wren", "invite": o.invite(), "pubkey": o.hexPub(),
 			"sig": o.sign("kryfo-handle-v1:wren"),
 		})
 		if out["error"] != "slow down" {

@@ -4443,6 +4443,12 @@ abstract class AppLocalizations {
   /// **'Already taken'**
   String get handleAlreadyTaken;
 
+  /// screens/handle_screen.dart: under the handle field when the typed name cannot be a handle
+  ///
+  /// In en, this message translates to:
+  /// **'3 to 20 characters: a-z, 0-9 or _'**
+  String get handleNameRule;
+
   /// screens/handle_screen.dart
   ///
   /// In en, this message translates to:
@@ -6434,6 +6440,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add them'**
   String get pairCodeAddThem;
+
+  /// widgets/pair_join.dart: the code's address holds more than one invite, so nothing is added
+  ///
+  /// In en, this message translates to:
+  /// **'This code was used twice. Ask for a new one.'**
+  String get pairCodeUsedTwice;
+
+  /// widgets/pair_join.dart: title over the face and three words a code led to, before anything is added
+  ///
+  /// In en, this message translates to:
+  /// **'Is this them?'**
+  String get pairCodeIsThisThem;
+
+  /// widgets/pair_join.dart: under the face and three words: compare them with what the other person's phone shows
+  ///
+  /// In en, this message translates to:
+  /// **'Check this matches their screen'**
+  String get pairCodeCheckMatches;
+
+  /// widgets/pair_join.dart: button, the face and words do not match the other phone; nothing is added
+  ///
+  /// In en, this message translates to:
+  /// **'Not them'**
+  String get pairCodeNotThem;
+
+  /// widgets/pair_join.dart: status line after Not them
+  ///
+  /// In en, this message translates to:
+  /// **'Not added. Ask them for a new code.'**
+  String get pairCodeNotAdded;
 
   /// screens/panic_setup_screen.dart
   ///
@@ -9927,6 +9963,12 @@ abstract class AppLocalizations {
   /// **'They open Kryfo, tap add, choose pairing code and type these six digits. Make a new one for the next person.'**
   String get pairCodePanelTheyOpenKryfoTap;
 
+  /// widgets/pair_join.dart: label over the sharer's own three words under the six digit code
+  ///
+  /// In en, this message translates to:
+  /// **'Your three words'**
+  String get pairCodePanelYourWords;
+
   /// widgets/pins.dart
   ///
   /// In en, this message translates to:
@@ -10988,6 +11030,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t reach the registry. Try again in a minute.'**
   String get handleRegistryFailed;
+
+  /// screens/handle_screen.dart: the registry refused a change because the phone's clock is too far off
+  ///
+  /// In en, this message translates to:
+  /// **'Check the phone\'s date and time, then try again.'**
+  String get handleCheckClock;
 
   /// section of search results: public handles of people who asked to be found
   ///

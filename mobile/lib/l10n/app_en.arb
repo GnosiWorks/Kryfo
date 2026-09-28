@@ -3498,6 +3498,10 @@
   "@handleAlreadyTaken": {
     "description": "screens/handle_screen.dart"
   },
+  "handleNameRule": "3 to 20 characters: a-z, 0-9 or _",
+  "@handleNameRule": {
+    "description": "screens/handle_screen.dart: under the handle field when the typed name cannot be a handle"
+  },
   "handleWhatAHandleDoes": "What a handle does",
   "@handleWhatAHandleDoes": {
     "description": "screens/handle_screen.dart"
@@ -5042,6 +5046,26 @@
   "pairCodeAddThem": "Add them",
   "@pairCodeAddThem": {
     "description": "screens/pair_code_screen.dart"
+  },
+  "pairCodeUsedTwice": "This code was used twice. Ask for a new one.",
+  "@pairCodeUsedTwice": {
+    "description": "widgets/pair_join.dart: the code's address holds more than one invite, so nothing is added"
+  },
+  "pairCodeIsThisThem": "Is this them?",
+  "@pairCodeIsThisThem": {
+    "description": "widgets/pair_join.dart: title over the face and three words a code led to, before anything is added"
+  },
+  "pairCodeCheckMatches": "Check this matches their screen",
+  "@pairCodeCheckMatches": {
+    "description": "widgets/pair_join.dart: under the face and three words: compare them with what the other person's phone shows"
+  },
+  "pairCodeNotThem": "Not them",
+  "@pairCodeNotThem": {
+    "description": "widgets/pair_join.dart: button, the face and words do not match the other phone; nothing is added"
+  },
+  "pairCodeNotAdded": "Not added. Ask them for a new code.",
+  "@pairCodeNotAdded": {
+    "description": "widgets/pair_join.dart: status line after Not them"
   },
   "panicSetupThoseWereDifferentFrom": "Those were different. From the top.",
   "@panicSetupThoseWereDifferentFrom": {
@@ -7863,6 +7887,10 @@
   "@pairCodePanelTheyOpenKryfoTap": {
     "description": "widgets/pair_code_panel.dart"
   },
+  "pairCodePanelYourWords": "Your three words",
+  "@pairCodePanelYourWords": {
+    "description": "widgets/pair_join.dart: label over the sharer's own three words under the six digit code"
+  },
   "pinsPinnedMessages": "Pinned messages · {count}",
   "@pinsPinnedMessages": {
     "description": "widgets/pins.dart",
@@ -8704,6 +8732,10 @@
   "handleRegistryFailed": "Couldn't reach the registry. Try again in a minute.",
   "@handleRegistryFailed": {
     "description": "toast when the registry did not answer"
+  },
+  "handleCheckClock": "Check the phone's date and time, then try again.",
+  "@handleCheckClock": {
+    "description": "screens/handle_screen.dart: the registry refused a change because the phone's clock is too far off"
   },
   "searchPeople": "People",
   "@searchPeople": {

@@ -61,6 +61,7 @@ type relayStandIn struct {
 	events    []nostr.Event
 	resent    int // stored events sent in answer to a req
 	resentB   int
+	keep      bool // keeps what is published, as a real relay does
 }
 
 func newRelayStandIn(t *testing.T, pongDelay time.Duration) *relayStandIn {
@@ -157,6 +158,9 @@ func (s *relayStandIn) handle(w http.ResponseWriter, r *http.Request) {
 			s.mu.Lock()
 			for p := range e.Event.Tags.FindAll("p") {
 				c.published[p[1]] = true
+			}
+			if s.keep {
+				s.events = append(s.events, e.Event)
 			}
 			s.mu.Unlock()
 			b, _ := nostr.OKEnvelope{EventID: e.Event.ID, OK: true}.MarshalJSON()

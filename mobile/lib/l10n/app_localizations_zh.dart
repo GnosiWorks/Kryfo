@@ -2657,6 +2657,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get handleAlreadyTaken => '已被占用';
 
   @override
+  String get handleNameRule => '3 到 20 个字符：a-z、0-9 或 _';
+
+  @override
   String get handleWhatAHandleDoes => '用户名有什么用';
 
   @override
@@ -3869,6 +3872,21 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pairCodeAddThem => '添加对方';
+
+  @override
+  String get pairCodeUsedTwice => '这个码被用了两次。请对方重新生成一个。';
+
+  @override
+  String get pairCodeIsThisThem => '是这个人吗？';
+
+  @override
+  String get pairCodeCheckMatches => '核对一下，是否和对方屏幕上的一致';
+
+  @override
+  String get pairCodeNotThem => '不是这个人';
+
+  @override
+  String get pairCodeNotAdded => '未添加。请对方重新生成一个码。';
 
   @override
   String get panicSetupThoseWereDifferentFrom => '两次不一样。从头再来。';
@@ -5961,6 +5979,9 @@ class AppLocalizationsZh extends AppLocalizations {
       '对方打开 Kryfo，点“添加”，选择“配对码”，输入这六位数字。下一个人需要你再生成一个新的。';
 
   @override
+  String get pairCodePanelYourWords => '你的三个词';
+
+  @override
   String pinsPinnedMessages(Object count) {
     return '置顶消息 · $count';
   }
@@ -6585,6 +6606,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get handleRegistryFailed => '联系不上登记处。请一分钟后再试。';
+
+  @override
+  String get handleCheckClock => '请检查手机的日期和时间，然后再试一次。';
 
   @override
   String get searchPeople => '人';
@@ -9747,6 +9771,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get handleAlreadyTaken => '已被使用';
 
   @override
+  String get handleNameRule => '3 到 20 個字元：a-z、0-9 或 _';
+
+  @override
   String get handleWhatAHandleDoes => '使用者名稱的用途';
 
   @override
@@ -10959,6 +10986,21 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get pairCodeAddThem => '新增對方';
+
+  @override
+  String get pairCodeUsedTwice => '這組碼被用了兩次。請對方再產生一組新的。';
+
+  @override
+  String get pairCodeIsThisThem => '是這個人嗎？';
+
+  @override
+  String get pairCodeCheckMatches => '核對一下，是否和對方螢幕上的一致';
+
+  @override
+  String get pairCodeNotThem => '不是這個人';
+
+  @override
+  String get pairCodeNotAdded => '未新增。請對方再產生一組新的碼。';
 
   @override
   String get panicSetupThoseWereDifferentFrom => '兩次不一樣。從頭再來。';
@@ -13050,6 +13092,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '對方開啟 Kryfo，點「新增」，選擇「配對碼」，再輸入這六位數字。下一個人請再產生一組新的。';
 
   @override
+  String get pairCodePanelYourWords => '你的三個詞';
+
+  @override
   String pinsPinnedMessages(Object count) {
     return '置頂訊息 · $count';
   }
@@ -13674,6 +13719,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get handleRegistryFailed => '聯絡不上註冊處。請一分鐘後再試。';
+
+  @override
+  String get handleCheckClock => '請檢查手機的日期和時間，然後再試一次。';
 
   @override
   String get searchPeople => '人';

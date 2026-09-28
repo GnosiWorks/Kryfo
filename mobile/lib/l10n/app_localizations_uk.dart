@@ -2820,6 +2820,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get handleAlreadyTaken => 'Уже зайняте';
 
   @override
+  String get handleNameRule => 'Від 3 до 20 символів: a-z, 0-9 або _';
+
+  @override
   String get handleWhatAHandleDoes => 'Що дає ім’я користувача';
 
   @override
@@ -4108,6 +4111,21 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get pairCodeAddThem => 'Додати';
+
+  @override
+  String get pairCodeUsedTwice => 'Цей код використали двічі. Попроси новий.';
+
+  @override
+  String get pairCodeIsThisThem => 'Це та людина?';
+
+  @override
+  String get pairCodeCheckMatches => 'Звір з екраном співрозмовника';
+
+  @override
+  String get pairCodeNotThem => 'Не та людина';
+
+  @override
+  String get pairCodeNotAdded => 'Не додано. Попроси новий код.';
 
   @override
   String get panicSetupThoseWereDifferentFrom => 'Коди не збіглися. Спочатку.';
@@ -6316,6 +6334,9 @@ class AppLocalizationsUk extends AppLocalizations {
       'Хай відкриють Kryfo, натиснуть «Додати», оберуть «Код з’єднання» і введуть ці шість цифр. Для наступної людини створи новий.';
 
   @override
+  String get pairCodePanelYourWords => 'Твої три слова';
+
+  @override
   String pinsPinnedMessages(Object count) {
     return 'Закріплені повідомлення · $count';
   }
@@ -6967,6 +6988,10 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get handleRegistryFailed => 'Реєстр не відповів. Спробуй за хвилину.';
+
+  @override
+  String get handleCheckClock =>
+      'Перевір дату й час на телефоні та спробуй ще раз.';
 
   @override
   String get searchPeople => 'Люди';

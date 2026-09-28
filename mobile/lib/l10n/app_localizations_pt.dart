@@ -2788,6 +2788,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get handleAlreadyTaken => 'Já está em uso';
 
   @override
+  String get handleNameRule => 'De 3 a 20 caracteres: a-z, 0-9 ou _';
+
+  @override
   String get handleWhatAHandleDoes => 'O que é um nome de usuário';
 
   @override
@@ -4065,6 +4068,22 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get pairCodeAddThem => 'Adicionar';
+
+  @override
+  String get pairCodeUsedTwice =>
+      'Este código foi usado duas vezes. Peça um novo.';
+
+  @override
+  String get pairCodeIsThisThem => 'É essa pessoa?';
+
+  @override
+  String get pairCodeCheckMatches => 'Confira se bate com a tela da pessoa';
+
+  @override
+  String get pairCodeNotThem => 'Não é essa pessoa';
+
+  @override
+  String get pairCodeNotAdded => 'Nada foi adicionado. Peça um código novo.';
 
   @override
   String get panicSetupThoseWereDifferentFrom => 'Eram diferentes. Do começo.';
@@ -6253,6 +6272,9 @@ class AppLocalizationsPt extends AppLocalizations {
       'A pessoa abre o Kryfo, toca em adicionar, escolhe código de pareamento e digita estes seis dígitos. Crie um novo para a próxima pessoa.';
 
   @override
+  String get pairCodePanelYourWords => 'Suas três palavras';
+
+  @override
   String pinsPinnedMessages(Object count) {
     return 'Mensagens fixadas · $count';
   }
@@ -6896,6 +6918,10 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get handleRegistryFailed =>
       'Não foi possível falar com o registro. Tente de novo em um minuto.';
+
+  @override
+  String get handleCheckClock =>
+      'Confira a data e a hora do celular e tente de novo.';
 
   @override
   String get searchPeople => 'Pessoas';

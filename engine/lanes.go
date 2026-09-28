@@ -2,7 +2,8 @@
 package main
 
 // relay traffic comes in lanes that must never be linked to each other: the
-// everyday identity, each burner room, each pair code. tor keeps streams with
+// everyday identity, each burner room, each pair code, and the calls to our
+// own services. tor keeps streams with
 // different socks credentials on different circuits, so every lane dials
 // under its own name and gets its own exit and its own way to an onion.
 // outside private mode there is no circuit to keep apart and nothing changes.
@@ -18,8 +19,12 @@ import (
 )
 
 // everything that speaks for the main identity: its contacts, hidden chats
-// included, its first-contact address, its sends, handles and badges.
+// included, its first-contact address and its sends.
 const laneEveryday = "everyday"
+
+// the handle registry, people search and the badge service: a circuit of
+// their own, apart from the one that carries the contacts' addresses.
+const laneServices = "services"
 
 // a room is a name that exists only inside the room.
 func roomLane(pubHex string) string { return "room:" + pubHex }
