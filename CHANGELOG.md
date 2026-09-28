@@ -10,6 +10,7 @@
 - your own chats, each room and each pair code go over their own tor circuits, and relays no longer see one running count across them.
 - private mode checks its relay connections every 90 seconds instead of every 19, and a slow reply over tor no longer drops the connection.
 - the relay takes only what the app sends and paces each connection, the handle registry paces reads, writes and new names, and the badge service paces receipt checks.
+- the tor dot on the chat list and in chats stops pulsing once tor is usable, and pulses only a few times while it starts.
 - chat stickers play three times and rest; a tap plays them again. open chats stop their timers while they are out of sight, and the drifting chat backgrounds hold still with reduced motion.
 
 ## [0.4.1] - 2026-09-25
