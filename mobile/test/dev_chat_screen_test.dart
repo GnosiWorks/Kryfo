@@ -1229,7 +1229,7 @@ void main() {
       expect(find.text(l10n.devNamelessLine), findsNothing);
       expect(find.text(l10n.devWelcome), findsOneWidget);
       expect(find.byType(DevNote), findsOneWidget);
-      expect(find.text(l10n.devNoteWords), findsOneWidget);
+      expect(_pill, findsOneWidget);
       // nothing asked of the engine or started on the way
       expect(_engine.calls, isEmpty);
       expect(_begun, isEmpty);
