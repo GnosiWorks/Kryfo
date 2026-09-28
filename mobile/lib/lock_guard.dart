@@ -6,6 +6,7 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 
+import 'dlog.dart';
 import 'lock_state.dart';
 
 class LockGuard {
@@ -83,7 +84,9 @@ class LockGuard {
       scheduleMicrotask(() {
         try {
           close();
-        } catch (_) {}
+        } catch (e) {
+          dlog('lock: a close threw (${e.runtimeType})');
+        }
       });
       return () {};
     }
@@ -116,7 +119,10 @@ class LockGuard {
       _closers.remove(close);
       try {
         close();
-      } catch (_) {}
+      } catch (e) {
+        // one that throws must not keep the rest running under the lock
+        dlog('lock: a close threw (${e.runtimeType})');
+      }
     }
   }
 }

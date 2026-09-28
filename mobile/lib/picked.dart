@@ -15,7 +15,9 @@ Future<void> shredPicked(FilePickerResult res) async {
   }
   try {
     await FilePicker.clearTemporaryFiles();
-  } catch (_) {}
+  } catch (_) {
+    // the boot sweep empties the picker's folder too
+  }
 }
 
 Future<void> shredPickedImages(List<XFile> files) async {

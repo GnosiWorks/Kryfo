@@ -51,7 +51,9 @@ String searchBody(Map<String, Object?> r) {
     try {
       final t = (jsonDecode(pv) as Map)['title'];
       if (t is String) parts.add(t);
-    } catch (_) {}
+    } catch (_) {
+      // a preview that does not parse adds nothing
+    }
   }
   return indexText(parts.where((x) => x.trim().isNotEmpty).join('\n'));
 }

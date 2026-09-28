@@ -221,7 +221,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
     claimChat('group:${widget.groupId}');
     WidgetsBinding.instance.addObserver(this);
-    // read once, before the first sticker row asks for it
+    // read once, before the first sticker row asks for it. a failure here is
+    // the row's to show when it loads again
     StickerLibrary.load().ignore();
     lockState.addListener(_lockLifted);
     // a room is never in the app switcher and never screenshotted. the flag
@@ -1682,7 +1683,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       if (ok == null || left != 0) {
         try {
           await dest.delete();
-        } catch (_) {}
+        } catch (_) {
+          // not sent either way, and the original is still where it was
+        }
         if (mounted) {
           showHaloToast(context, l10n.groupChatCouldNotCleanThatVideo);
         }
@@ -1696,7 +1699,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     else if (await stripPictureFileOffUi(dest.path) == null) {
       try {
         await dest.delete();
-      } catch (_) {}
+      } catch (_) {
+        // not sent either way, and the original is still where it was
+      }
       if (mounted) {
         showHaloToast(context, l10n.groupChatCouldNotCleanThatPictureSend);
       }

@@ -30,6 +30,7 @@ import 'pin_flow_screen.dart';
 import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
 import '../l10n/numbers.dart';
+import '../dlog.dart';
 
 class RestoreScreen extends StatefulWidget {
   // called after a restore instead of the 'reopen kryfo' notice, so
@@ -181,7 +182,10 @@ class _RestoreScreenState extends State<RestoreScreen> {
         r = await engine
             .handleRelease(mine)
             .timeout(const Duration(seconds: 40), onTimeout: () => r);
-      } catch (_) {}
+      } catch (e) {
+        // read as not released: the sheet below says so
+        dlog('restore: handle release (${e.runtimeType})');
+      }
       if (!mounted) return;
       setState(() {
         _busy = false;

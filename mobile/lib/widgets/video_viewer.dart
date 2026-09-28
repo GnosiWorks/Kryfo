@@ -17,6 +17,7 @@ import '../theme.dart';
 import '../l10n/l10n.dart';
 import 'video_bubble.dart' show openReceivedFile;
 import '../lock_guard.dart' show LockGuard, lockGuard;
+import '../dlog.dart';
 
 const _channel = MethodChannel('kryfo/video');
 
@@ -149,7 +150,9 @@ class _VideoViewerState extends State<_VideoViewer>
       m = await _channel.invokeMapMethod<String, dynamic>('open', {
         'path': widget.path,
       });
-    } catch (_) {}
+    } catch (e) {
+      dlog('video: not opened (${e.runtimeType})');
+    }
     if (!mounted) {
       final id = (m?['id'] as num?)?.toInt();
       if (id != null) _channel.invokeMethod('close', {'id': id});

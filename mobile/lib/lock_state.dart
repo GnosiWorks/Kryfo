@@ -656,7 +656,10 @@ class LockState extends ChangeNotifier {
     if (_biometric) {
       try {
         _bioStale = await _bio.state().timeout(most) != 'ok';
-      } catch (_) {}
+      } catch (e) {
+        // a hint for the screen only: the unlock asks the keystore again
+        dlog('lock: finger state unread (${e.runtimeType})');
+      }
     }
     // read and told in one step, after the probe: until then the app stays
     // under its cover, and the lock screen knows about the fingerprint

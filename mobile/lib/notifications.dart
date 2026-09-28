@@ -141,7 +141,9 @@ Future<void> showSupportSummary({
 Future<void> clearSupportSummary() async {
   try {
     await notifPlugin.cancel(id: _supportSummaryId);
-  } catch (_) {}
+  } catch (_) {
+    // one left up is replaced by the next summary, or swiped away
+  }
 }
 
 // an answered support chat rings per message, like any contact, on the

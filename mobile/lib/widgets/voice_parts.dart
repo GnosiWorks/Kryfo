@@ -101,6 +101,7 @@ Future<List<double>?> voicePeaks(String path) {
     _waves[path] = p;
     return p;
   });
+  // the caller gets any error from done; the chain only keeps the order
   _reading = done.then((_) {}, onError: (_) {});
   return done;
 }

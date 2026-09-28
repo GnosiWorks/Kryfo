@@ -88,6 +88,7 @@ Future<void> _decoded(ImageProvider image, BuildContext context) {
   final wait = Timer(const Duration(milliseconds: 300), () {
     if (!done.isCompleted) done.complete();
   });
+  // a wait only: the viewer's own image reports a failure to decode
   precacheImage(image, context, onError: (_, _) {}).whenComplete(() {
     wait.cancel();
     if (!done.isCompleted) done.complete();

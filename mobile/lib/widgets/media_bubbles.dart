@@ -21,6 +21,7 @@ import 'photo_viewer.dart';
 import 'voice_parts.dart';
 import 'written_field.dart';
 import '../bidi_safe.dart';
+import '../dlog.dart';
 import '../lock_guard.dart' show lockGuard;
 
 String _humanSize(int bytes) {
@@ -111,7 +112,9 @@ Widget _plainFileCard(String? filePath, String? fileName, bool isOut) {
   int? sz;
   try {
     if (filePath != null) sz = File(filePath).lengthSync();
-  } catch (_) {}
+  } catch (_) {
+    // gone or unreadable: the card shows no size
+  }
   final ext = (fileName ?? '').contains('.')
       ? fileName!.split('.').last.toUpperCase()
       : l10n.mediaBubblesFile;
@@ -244,7 +247,7 @@ class VoiceBubbleState extends State<VoiceBubble> {
     if (_peaks == null) {
       voicePeaks(widget.path).then((p) {
         if (mounted && p != null) setState(() => _peaks = p);
-      }, onError: (_) {});
+      }, onError: (Object e) => dlog('voice wave: ${e.runtimeType}'));
     }
     final cached = _durCache[widget.path];
     if (cached != null) {
@@ -262,6 +265,7 @@ class VoiceBubbleState extends State<VoiceBubble> {
           if (mounted) setState(() => _dur = d);
         }
       } catch (_) {
+        // no length known: the bubble shows none
       } finally {
         await probe.dispose();
       }
@@ -528,6 +532,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
     _willCancel = false;
     _dragDx = 0;
     _levels.clear();
+    // the level meter only: an error on it leaves the recording going
     _level = _rec.onAmplitudeChanged(const Duration(milliseconds: 100)).listen((
       a,
     ) {
