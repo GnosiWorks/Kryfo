@@ -1351,7 +1351,7 @@
   "settingsWhatWeCanSee": "我们能看到什么",
   "settingsTheHonestList": "诚实的清单",
   "settingsVersion": "版本",
-  "settings030Alpha": "0.4.1 · alpha 版",
+  "settings030Alpha": "0.4.2 · alpha 版",
   "settingsReportAnIssue": "报告问题",
   "settingsBugOrSecurityFlaw": "Bug 或安全漏洞",
   "settingsOpenSource": "开源",
@@ -1823,5 +1823,7 @@
   "peopleFingerprintLine": "请核对是否与对方应用里显示的一致。",
   "peopleAdding": "正在添加…",
   "handleNobodyHasClaimed": "没有人认领 {handle}",
-  "handleThatHandleIsTaken": "这个用户名已被占用"
+  "handleThatHandleIsTaken": "这个用户名已被占用",
+  "appLinkOtherKey": "此链接自称是 {id}，但其密钥不匹配。未添加。",
+  "scamShieldSaysItIs": "自称是 {shown}，但密钥不匹配"
 }

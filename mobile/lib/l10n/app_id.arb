@@ -1351,7 +1351,7 @@
   "settingsWhatWeCanSee": "Apa yang bisa kami lihat",
   "settingsTheHonestList": "Daftar yang jujur",
   "settingsVersion": "Versi",
-  "settings030Alpha": "0.4.1 · alfa",
+  "settings030Alpha": "0.4.2 · alfa",
   "settingsReportAnIssue": "Laporkan masalah",
   "settingsBugOrSecurityFlaw": "Bug atau celah keamanan",
   "settingsOpenSource": "Sumber terbuka",
@@ -1823,5 +1823,7 @@
   "peopleFingerprintLine": "Periksa apakah cocok dengan yang mereka lihat di aplikasinya.",
   "peopleAdding": "Menambahkan…",
   "handleNobodyHasClaimed": "Belum ada yang mengklaim {handle}",
-  "handleThatHandleIsTaken": "Nama pengguna itu sudah dipakai"
+  "handleThatHandleIsTaken": "Nama pengguna itu sudah dipakai",
+  "appLinkOtherKey": "Tautan ini mengaku sebagai {id}, tapi kuncinya tidak cocok. Tidak ada yang ditambahkan.",
+  "scamShieldSaysItIs": "Mengaku sebagai {shown}, tapi kuncinya tidak cocok"
 }

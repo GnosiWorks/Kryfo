@@ -5109,7 +5109,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsVersion => 'Version';
 
   @override
-  String get settings030Alpha => '0.4.1 · alpha';
+  String get settings030Alpha => '0.4.2 · alpha';
 
   @override
   String get settingsReportAnIssue => 'Signaler un problème';
@@ -6956,4 +6956,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get handleThatHandleIsTaken => 'Ce pseudo est déjà pris';
+
+  @override
+  String appLinkOtherKey(Object id) {
+    return 'Ce lien se présente comme $id, mais sa clé ne correspond pas. Il n’a pas été ajouté.';
+  }
+
+  @override
+  String scamShieldSaysItIs(Object shown) {
+    return 'Se présente comme $shown, mais sa clé ne correspond pas';
+  }
 }

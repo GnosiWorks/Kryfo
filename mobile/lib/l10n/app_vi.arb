@@ -1351,7 +1351,7 @@
   "settingsWhatWeCanSee": "Chúng tôi thấy được gì",
   "settingsTheHonestList": "Danh sách thật thà",
   "settingsVersion": "Phiên bản",
-  "settings030Alpha": "0.4.1 · alpha",
+  "settings030Alpha": "0.4.2 · alpha",
   "settingsReportAnIssue": "Báo lỗi",
   "settingsBugOrSecurityFlaw": "Lỗi hoặc lỗ hổng bảo mật",
   "settingsOpenSource": "Mã nguồn mở",
@@ -1823,5 +1823,7 @@
   "peopleFingerprintLine": "Hãy kiểm tra nó khớp với những gì người kia thấy trong ứng dụng.",
   "peopleAdding": "Đang thêm…",
   "handleNobodyHasClaimed": "Chưa ai đăng ký {handle}",
-  "handleThatHandleIsTaken": "Tên người dùng này đã có người dùng"
+  "handleThatHandleIsTaken": "Tên người dùng này đã có người dùng",
+  "appLinkOtherKey": "Liên kết này tự nhận là {id}, nhưng khóa không khớp. Không có gì được thêm.",
+  "scamShieldSaysItIs": "Tự nhận là {shown}, nhưng khóa không khớp"
 }

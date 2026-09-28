@@ -5102,7 +5102,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsVersion => 'Versión';
 
   @override
-  String get settings030Alpha => '0.4.1 · alfa';
+  String get settings030Alpha => '0.4.2 · alfa';
 
   @override
   String get settingsReportAnIssue => 'Informar de un problema';
@@ -6944,4 +6944,14 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get handleThatHandleIsTaken => 'Ese nombre de usuario ya está en uso';
+
+  @override
+  String appLinkOtherKey(Object id) {
+    return 'Este enlace dice ser $id, pero su clave no coincide. No se ha añadido.';
+  }
+
+  @override
+  String scamShieldSaysItIs(Object shown) {
+    return 'Dice ser $shown, pero su clave no coincide';
+  }
 }

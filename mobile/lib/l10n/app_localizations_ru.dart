@@ -5154,7 +5154,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsVersion => 'Версия';
 
   @override
-  String get settings030Alpha => '0.4.1 · альфа';
+  String get settings030Alpha => '0.4.2 · альфа';
 
   @override
   String get settingsReportAnIssue => 'Сообщить о проблеме';
@@ -7018,4 +7018,14 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get handleThatHandleIsTaken => 'Это имя пользователя уже занято';
+
+  @override
+  String appLinkOtherKey(Object id) {
+    return 'Эта ссылка выдаёт себя за $id, но её ключ не совпадает. Ничего не добавлено.';
+  }
+
+  @override
+  String scamShieldSaysItIs(Object shown) {
+    return 'Представляется как $shown, но ключ не совпадает';
+  }
 }

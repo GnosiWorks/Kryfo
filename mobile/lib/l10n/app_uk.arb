@@ -1351,7 +1351,7 @@
   "settingsWhatWeCanSee": "Що ми можемо бачити",
   "settingsTheHonestList": "Чесний список",
   "settingsVersion": "Версія",
-  "settings030Alpha": "0.4.1 · альфа",
+  "settings030Alpha": "0.4.2 · альфа",
   "settingsReportAnIssue": "Повідомити про проблему",
   "settingsBugOrSecurityFlaw": "Помилка чи вразливість",
   "settingsOpenSource": "Відкритий код",
@@ -1823,5 +1823,7 @@
   "peopleFingerprintLine": "Перевір, що він збігається з тим, що бачить співрозмовник у своєму застосунку.",
   "peopleAdding": "Додаю…",
   "handleNobodyHasClaimed": "Ніхто не зайняв {handle}",
-  "handleThatHandleIsTaken": "Це ім’я користувача вже зайняте"
+  "handleThatHandleIsTaken": "Це ім’я користувача вже зайняте",
+  "appLinkOtherKey": "Це посилання видає себе за {id}, але його ключ не збігається. Нічого не додано.",
+  "scamShieldSaysItIs": "Представляється як {shown}, але ключ не збігається"
 }

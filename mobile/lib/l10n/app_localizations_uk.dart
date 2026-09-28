@@ -5143,7 +5143,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settingsVersion => 'Версія';
 
   @override
-  String get settings030Alpha => '0.4.1 · альфа';
+  String get settings030Alpha => '0.4.2 · альфа';
 
   @override
   String get settingsReportAnIssue => 'Повідомити про проблему';
@@ -7013,4 +7013,14 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get handleThatHandleIsTaken => 'Це ім’я користувача вже зайняте';
+
+  @override
+  String appLinkOtherKey(Object id) {
+    return 'Це посилання видає себе за $id, але його ключ не збігається. Нічого не додано.';
+  }
+
+  @override
+  String scamShieldSaysItIs(Object shown) {
+    return 'Представляється як $shown, але ключ не збігається';
+  }
 }

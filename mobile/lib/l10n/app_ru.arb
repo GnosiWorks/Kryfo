@@ -1351,7 +1351,7 @@
   "settingsWhatWeCanSee": "Что мы можем видеть",
   "settingsTheHonestList": "Честный список",
   "settingsVersion": "Версия",
-  "settings030Alpha": "0.4.1 · альфа",
+  "settings030Alpha": "0.4.2 · альфа",
   "settingsReportAnIssue": "Сообщить о проблеме",
   "settingsBugOrSecurityFlaw": "Ошибка или уязвимость",
   "settingsOpenSource": "Открытый код",
@@ -1823,5 +1823,7 @@
   "peopleFingerprintLine": "Сверь его с тем, что видно у собеседника в приложении.",
   "peopleAdding": "Добавляю…",
   "handleNobodyHasClaimed": "Никто не занял {handle}",
-  "handleThatHandleIsTaken": "Это имя пользователя уже занято"
+  "handleThatHandleIsTaken": "Это имя пользователя уже занято",
+  "appLinkOtherKey": "Эта ссылка выдаёт себя за {id}, но её ключ не совпадает. Ничего не добавлено.",
+  "scamShieldSaysItIs": "Представляется как {shown}, но ключ не совпадает"
 }

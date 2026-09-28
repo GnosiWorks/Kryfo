@@ -5057,7 +5057,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsVersion => 'Phiên bản';
 
   @override
-  String get settings030Alpha => '0.4.1 · alpha';
+  String get settings030Alpha => '0.4.2 · alpha';
 
   @override
   String get settingsReportAnIssue => 'Báo lỗi';
@@ -6874,4 +6874,14 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get handleThatHandleIsTaken => 'Tên người dùng này đã có người dùng';
+
+  @override
+  String appLinkOtherKey(Object id) {
+    return 'Liên kết này tự nhận là $id, nhưng khóa không khớp. Không có gì được thêm.';
+  }
+
+  @override
+  String scamShieldSaysItIs(Object shown) {
+    return 'Tự nhận là $shown, nhưng khóa không khớp';
+  }
 }

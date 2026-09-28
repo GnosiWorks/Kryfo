@@ -5074,7 +5074,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get settingsVersion => 'نسخه';
 
   @override
-  String get settings030Alpha => '0.4.1 · آلفا';
+  String get settings030Alpha => '0.4.2 · آلفا';
 
   @override
   String get settingsReportAnIssue => 'گزارش مشکل';
@@ -6905,4 +6905,14 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get handleThatHandleIsTaken => 'این نام کاربری قبلاً گرفته شده';
+
+  @override
+  String appLinkOtherKey(Object id) {
+    return 'این پیوند خود را ⁨$id⁩ معرفی می‌کند، اما کلیدش مطابقت ندارد. چیزی افزوده نشد.';
+  }
+
+  @override
+  String scamShieldSaysItIs(Object shown) {
+    return 'خود را ⁨$shown⁩ معرفی می‌کند، اما کلیدش مطابقت ندارد';
+  }
 }

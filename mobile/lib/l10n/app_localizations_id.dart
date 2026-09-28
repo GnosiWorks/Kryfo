@@ -5065,7 +5065,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get settingsVersion => 'Versi';
 
   @override
-  String get settings030Alpha => '0.4.1 · alfa';
+  String get settings030Alpha => '0.4.2 · alfa';
 
   @override
   String get settingsReportAnIssue => 'Laporkan masalah';
@@ -6888,4 +6888,14 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get handleThatHandleIsTaken => 'Nama pengguna itu sudah dipakai';
+
+  @override
+  String appLinkOtherKey(Object id) {
+    return 'Tautan ini mengaku sebagai $id, tapi kuncinya tidak cocok. Tidak ada yang ditambahkan.';
+  }
+
+  @override
+  String scamShieldSaysItIs(Object shown) {
+    return 'Mengaku sebagai $shown, tapi kuncinya tidak cocok';
+  }
 }

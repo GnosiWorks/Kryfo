@@ -1351,7 +1351,7 @@
   "settingsWhatWeCanSee": "Was wir sehen können",
   "settingsTheHonestList": "Die ehrliche Liste",
   "settingsVersion": "Version",
-  "settings030Alpha": "0.4.1 · Alpha",
+  "settings030Alpha": "0.4.2 · Alpha",
   "settingsReportAnIssue": "Problem melden",
   "settingsBugOrSecurityFlaw": "Fehler oder Sicherheitslücke",
   "settingsOpenSource": "Open Source",
@@ -1823,5 +1823,7 @@
   "peopleFingerprintLine": "Prüf, ob er mit dem in ihrer App übereinstimmt.",
   "peopleAdding": "Wird hinzugefügt…",
   "handleNobodyHasClaimed": "Niemand hat {handle} gesichert",
-  "handleThatHandleIsTaken": "Dieser Benutzername ist schon vergeben"
+  "handleThatHandleIsTaken": "Dieser Benutzername ist schon vergeben",
+  "appLinkOtherKey": "Dieser Link gibt sich als {id} aus, aber sein Schlüssel stimmt nicht überein. Er wurde nicht hinzugefügt.",
+  "scamShieldSaysItIs": "Gibt sich als {shown} aus, aber der Schlüssel stimmt nicht überein"
 }

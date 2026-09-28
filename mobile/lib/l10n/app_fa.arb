@@ -1351,7 +1351,7 @@
   "settingsWhatWeCanSee": "آنچه ما می‌بینیم",
   "settingsTheHonestList": "فهرست صادقانه",
   "settingsVersion": "نسخه",
-  "settings030Alpha": "0.4.1 · آلفا",
+  "settings030Alpha": "0.4.2 · آلفا",
   "settingsReportAnIssue": "گزارش مشکل",
   "settingsBugOrSecurityFlaw": "باگ یا نقص امنیتی",
   "settingsOpenSource": "متن‌باز",
@@ -1823,5 +1823,7 @@
   "peopleFingerprintLine": "بررسی کنید با آنچه طرف مقابل در برنامه‌اش می‌بیند یکی باشد.",
   "peopleAdding": "در حال افزودن…",
   "handleNobodyHasClaimed": "هیچ‌کس ⁦{handle}⁩ را ثبت نکرده است",
-  "handleThatHandleIsTaken": "این نام کاربری قبلاً گرفته شده"
+  "handleThatHandleIsTaken": "این نام کاربری قبلاً گرفته شده",
+  "appLinkOtherKey": "این پیوند خود را ⁨{id}⁩ معرفی می‌کند، اما کلیدش مطابقت ندارد. چیزی افزوده نشد.",
+  "scamShieldSaysItIs": "خود را ⁨{shown}⁩ معرفی می‌کند، اما کلیدش مطابقت ندارد"
 }

@@ -1351,7 +1351,7 @@
   "settingsWhatWeCanSee": "Ce que nous pouvons voir",
   "settingsTheHonestList": "La liste honnête",
   "settingsVersion": "Version",
-  "settings030Alpha": "0.4.1 · alpha",
+  "settings030Alpha": "0.4.2 · alpha",
   "settingsReportAnIssue": "Signaler un problème",
   "settingsBugOrSecurityFlaw": "Bug ou faille de sécurité",
   "settingsOpenSource": "Code source ouvert",
@@ -1823,5 +1823,7 @@
   "peopleFingerprintLine": "Vérifiez qu’elle correspond à ce qu’ils voient dans leur appli.",
   "peopleAdding": "Ajout…",
   "handleNobodyHasClaimed": "Personne n’a réservé {handle}",
-  "handleThatHandleIsTaken": "Ce pseudo est déjà pris"
+  "handleThatHandleIsTaken": "Ce pseudo est déjà pris",
+  "appLinkOtherKey": "Ce lien se présente comme {id}, mais sa clé ne correspond pas. Il n’a pas été ajouté.",
+  "scamShieldSaysItIs": "Se présente comme {shown}, mais sa clé ne correspond pas"
 }

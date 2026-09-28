@@ -5135,7 +5135,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsVersion => 'الإصدار';
 
   @override
-  String get settings030Alpha => '0.4.1 · ألفا';
+  String get settings030Alpha => '0.4.2 · ألفا';
 
   @override
   String get settingsReportAnIssue => 'الإبلاغ عن مشكلة';
@@ -7011,4 +7011,14 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get handleThatHandleIsTaken => 'اسم المستخدم هذا محجوز بالفعل';
+
+  @override
+  String appLinkOtherKey(Object id) {
+    return 'يدّعي هذا الرابط أنه ⁨$id⁩، لكن مفتاحه غير مطابق. لم تتم إضافة شيء.';
+  }
+
+  @override
+  String scamShieldSaysItIs(Object shown) {
+    return 'يقول إنه ⁨$shown⁩، لكن مفتاحه غير مطابق';
+  }
 }

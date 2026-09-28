@@ -8232,7 +8232,7 @@ abstract class AppLocalizations {
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'0.4.1 · alpha'**
+  /// **'0.4.2 · alpha'**
   String get settings030Alpha;
 
   /// screens/settings_screen.dart
@@ -11066,6 +11066,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'That handle is taken'**
   String get handleThatHandleIsTaken;
+
+  /// a scanned or pasted card, or the one behind a handle, that names someone already here with another key (main.dart, handleHaloUriAdded)
+  ///
+  /// In en, this message translates to:
+  /// **'This link says it is {id}, but its key does not match. It was not added.'**
+  String appLinkOtherKey(Object id);
+
+  /// scam_shield.dart: the line on a request from someone who gave the name of a person already here, with another key
+  ///
+  /// In en, this message translates to:
+  /// **'Says it is {shown}, but its key does not match'**
+  String scamShieldSaysItIs(Object shown);
 }
 
 class _AppLocalizationsDelegate

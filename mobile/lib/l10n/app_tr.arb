@@ -1351,7 +1351,7 @@
   "settingsWhatWeCanSee": "Neleri görebiliyoruz",
   "settingsTheHonestList": "Dürüst liste",
   "settingsVersion": "Sürüm",
-  "settings030Alpha": "0.4.1 · alfa",
+  "settings030Alpha": "0.4.2 · alfa",
   "settingsReportAnIssue": "Sorun bildir",
   "settingsBugOrSecurityFlaw": "Hata ya da güvenlik açığı",
   "settingsOpenSource": "Açık kaynak",
@@ -1823,5 +1823,7 @@
   "peopleFingerprintLine": "Karşı tarafın uygulamasında gördüğüyle aynı olduğunu kontrol et.",
   "peopleAdding": "Ekleniyor…",
   "handleNobodyHasClaimed": "{handle} adını kimse almamış",
-  "handleThatHandleIsTaken": "Bu kullanıcı adı zaten alınmış"
+  "handleThatHandleIsTaken": "Bu kullanıcı adı zaten alınmış",
+  "appLinkOtherKey": "Bu bağlantı {id} olduğunu söylüyor ama anahtarı eşleşmiyor. Eklenmedi.",
+  "scamShieldSaysItIs": "{shown} olduğunu söylüyor ama anahtarı eşleşmiyor"
 }

@@ -1351,7 +1351,7 @@
   "settingsWhatWeCanSee": "我們看得到什麼",
   "settingsTheHonestList": "誠實清單",
   "settingsVersion": "版本",
-  "settings030Alpha": "0.4.1 · alpha 版",
+  "settings030Alpha": "0.4.2 · alpha 版",
   "settingsReportAnIssue": "回報問題",
   "settingsBugOrSecurityFlaw": "錯誤或安全漏洞",
   "settingsOpenSource": "開放原始碼",
@@ -1823,5 +1823,7 @@
   "peopleFingerprintLine": "請核對是否與對方應用程式裡顯示的一致。",
   "peopleAdding": "正在新增…",
   "handleNobodyHasClaimed": "沒有人認領 {handle}",
-  "handleThatHandleIsTaken": "這個使用者名稱已被使用"
+  "handleThatHandleIsTaken": "這個使用者名稱已被使用",
+  "appLinkOtherKey": "此連結自稱是 {id}，但其金鑰不相符。未新增。",
+  "scamShieldSaysItIs": "自稱是 {shown}，但金鑰不相符"
 }

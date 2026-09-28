@@ -5085,7 +5085,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsVersion => 'Sürüm';
 
   @override
-  String get settings030Alpha => '0.4.1 · alfa';
+  String get settings030Alpha => '0.4.2 · alfa';
 
   @override
   String get settingsReportAnIssue => 'Sorun bildir';
@@ -6920,4 +6920,14 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get handleThatHandleIsTaken => 'Bu kullanıcı adı zaten alınmış';
+
+  @override
+  String appLinkOtherKey(Object id) {
+    return 'Bu bağlantı $id olduğunu söylüyor ama anahtarı eşleşmiyor. Eklenmedi.';
+  }
+
+  @override
+  String scamShieldSaysItIs(Object shown) {
+    return '$shown olduğunu söylüyor ama anahtarı eşleşmiyor';
+  }
 }

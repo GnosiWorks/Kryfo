@@ -39,6 +39,18 @@ void main() {
       'same face as your contact alicf',
     ]);
   });
+  test('a request filed on its own id says the name it gave', () {
+    const hit = ShieldHit('other_key', 'amber-river-stone');
+    final row = {
+      'headline': jsonEncode(hit.toJson()),
+      'lines': jsonEncode([hit.toJson()]),
+      'dismissed': 0,
+    };
+    final f = ShieldFlag.fromRow(row)!;
+    const said = 'Says it is amber-river-stone, but its key does not match';
+    expect(f.headline, said);
+    expect(f.lines, [said]);
+  });
   test('nothing recorded is neither', () {
     expect(ShieldFlag.cleanRow(null), isFalse);
     expect(ShieldFlag.fromRow(null), isNull);
