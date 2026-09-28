@@ -701,7 +701,8 @@ class _FillLine extends StatelessWidget {
   Widget build(BuildContext context) {
     return ValueListenableBuilder<({int at, int to})>(
       valueListenable: searchFill,
-      builder: (_, p, _) {
+      builder: (_, fill, _) {
+        final p = shownSearchFill(fill);
         final filling = p.to > 0 && p.at < p.to;
         final share = p.to == 0 ? 1.0 : p.at / p.to;
         return EaseSize(

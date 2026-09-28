@@ -7,9 +7,10 @@
 // the fallback where that call refuses.
 
 import 'dart:io';
+import 'secure_store.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/services.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import 'main.dart' show engine;
@@ -28,21 +29,22 @@ Future<void> wipeHalo() async {
   haloWiping = true;
   // a beat for anything mid-query to finish before the files vanish
   await Future.delayed(const Duration(milliseconds: 120));
-  // give the handle back while the key that proves it is ours still exists.
-  // best effort with a short cap: a wipe must not wait on the network.
+  // the handle goes back while the key that proves it is ours is still in
+  // the engine's memory. the request runs beside the erase and gets a few
+  // seconds at most: nothing here waits on the network
+  String? h;
   try {
-    final h = await const FlutterSecureStorage().read(key: 'my_handle');
-    if (h != null && h.isNotEmpty) {
-      await Future.any([
-        engine.handleRelease(h),
-        Future.delayed(const Duration(seconds: 4)),
-      ]);
-    }
+    h = await secureStore.read(key: 'my_handle');
   } catch (e) {
-    dlog('wipe: handle not released (${e.runtimeType})');
+    dlog('wipe: handle not read (${e.runtimeType})');
   }
-  // the engine stops its relay listeners and takes tor off the network
-  // first, so nothing it runs writes into the folders emptied below
+  final release = h == null || h.isEmpty ? null : _release(h);
+  final cap = Future<void>.delayed(const Duration(seconds: 4));
+  // keys, prefs and folders first. tor's own folder stays while tor runs
+  await _erase(keep: const {'tor'});
+  if (release != null) await Future.any([release, cap]);
+  // the engine stops its relay listeners and takes tor off the network, and
+  // what it wrote meanwhile goes with the rest
   try {
     await Future.any([
       engine.wipeHold(),
@@ -51,40 +53,7 @@ Future<void> wipeHalo() async {
   } catch (e) {
     dlog('wipe: engine not held (${e.runtimeType})');
   }
-  try {
-    // identity markers go first. if anything below fails the next launch
-    // still starts at onboarding instead of an empty home screen.
-    await const FlutterSecureStorage().deleteAll();
-    await const FlutterSecureStorage(
-      aOptions: AndroidOptions(encryptedSharedPreferences: true),
-    ).deleteAll();
-    final prefs0 = await SharedPreferences.getInstance();
-    await prefs0.clear();
-    // empty every app storage dir, so the wal/shm sidecars and media/ go
-    // with halo.db
-    final dirs = <Directory>[
-      await getApplicationDocumentsDirectory(),
-      await getApplicationSupportDirectory(),
-      await getTemporaryDirectory(),
-    ];
-    for (final d in dirs) {
-      if (!await d.exists()) continue;
-      await for (final entry in d.list()) {
-        try {
-          await entry.delete(recursive: true);
-        } catch (e) {
-          // one that will not go must not keep the rest. the native call
-          // below is the real erase
-          dlog('wipe: an entry stayed (${e.runtimeType})');
-        }
-      }
-    }
-    dlog('wipe: files gone');
-  } catch (e) {
-    // never rethrow: the keys are already gone, and a half-wiped app left
-    // running is worse than one that exits
-    dlog('wipe error: $e');
-  }
+  await _erase();
   // the call that finishes the job kills this process before it can
   // answer, so a reply at all means it did not happen.
   var native = false;
@@ -103,4 +72,53 @@ Future<void> wipeHalo() async {
   // before exit
   await Future.delayed(const Duration(milliseconds: 600));
   wipeExit(0);
+}
+
+Future<void> _release(String h) async {
+  try {
+    await engine.handleRelease(h);
+  } catch (e) {
+    dlog('wipe: handle not released (${e.runtimeType})');
+  }
+}
+
+// secure storage, prefs and every app folder, but for the documents
+// folder's entries named in [keep]
+Future<void> _erase({Set<String> keep = const {}}) async {
+  try {
+    // identity markers go first. if anything below fails the next launch
+    // still starts at onboarding instead of an empty home screen.
+    await secureStore.deleteAll();
+    await secureStoreEsp.deleteAll();
+    final prefs0 = await SharedPreferences.getInstance();
+    await prefs0.clear();
+    // empty every app storage dir, so the wal/shm sidecars and media/ go
+    // with halo.db
+    final docs = await getApplicationDocumentsDirectory();
+    final dirs = <Directory>[
+      docs,
+      await getApplicationSupportDirectory(),
+      await getTemporaryDirectory(),
+    ];
+    for (final d in dirs) {
+      if (!await d.exists()) continue;
+      await for (final entry in d.list()) {
+        if (d.path == docs.path && keep.contains(p.basename(entry.path))) {
+          continue;
+        }
+        try {
+          await entry.delete(recursive: true);
+        } catch (e) {
+          // one that will not go must not keep the rest. the native call
+          // below is the real erase
+          dlog('wipe: an entry stayed (${e.runtimeType})');
+        }
+      }
+    }
+    dlog('wipe: files gone');
+  } catch (e) {
+    // never rethrow: the keys are already gone, and a half-wiped app left
+    // running is worse than one that exits
+    dlog('wipe error: $e');
+  }
 }

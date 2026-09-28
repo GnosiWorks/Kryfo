@@ -1945,5 +1945,6 @@
   "devVoiceDisguised": "Giọng của bạn được đổi trong cuộc trò chuyện này",
   "devChatOptions": "Tùy chọn trò chuyện",
   "appLinkOtherKey": "Liên kết này tự nhận là {id}, nhưng khóa không khớp. Không có gì được thêm.",
-  "scamShieldSaysItIs": "Tự nhận là {shown}, nhưng khóa không khớp"
+  "scamShieldSaysItIs": "Tự nhận là {shown}, nhưng khóa không khớp",
+  "requestsSomeoneNew": "Người mới"
 }

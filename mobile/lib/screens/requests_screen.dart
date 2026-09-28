@@ -20,6 +20,7 @@ import '../widgets/notice_banner.dart';
 import '../widgets/confirm_sheet.dart';
 import 'chat_screen.dart';
 import 'shield_sheet.dart';
+import '../scam_shield.dart' show requestTitle;
 import '../widgets/motion.dart' show haloRoute;
 import '../l10n/l10n.dart';
 
@@ -377,12 +378,18 @@ class _RequestCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    haloId,
-                    style: HaloType.mono(
-                      size: 12,
-                      color: HaloColors.text,
-                      weight: FontWeight.w500,
-                    ),
+                    requestTitle(haloId),
+                    style: requestTitle(haloId) == haloId
+                        ? HaloType.mono(
+                            size: 12,
+                            color: HaloColors.text,
+                            weight: FontWeight.w500,
+                          )
+                        : HaloType.sans(
+                            size: 14,
+                            color: HaloColors.text,
+                            weight: FontWeight.w600,
+                          ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),

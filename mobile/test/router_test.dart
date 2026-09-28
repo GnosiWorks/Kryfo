@@ -131,6 +131,12 @@ class _Seal implements VaultSeal {
 }
 
 class _Io implements AppIo {
+  // sessions let go of, and addresses no longer listened on
+  final dropped = <String>[];
+  @override
+  Future<void> dropSession(String peer) async => dropped.add(peer);
+  @override
+  void unlisten(String xPub) => dropped.add(xPub);
   // what a cipher opens to, and under whom
   final opens = <String, (String, String)>{};
   final tries = <String>[];
@@ -217,6 +223,8 @@ class _Mem implements HaloDb {
   final votes = <String, Map<String, (List<int>, int)>>{};
   final chunks = <String, Map<int, String>>{};
   final chunkBurn = <String, int>{};
+  // who sent each file's slices
+  final chunkFrom = <String, String>{};
   final seen = <String>{};
   final held = <String>[];
   final vouches = <String, Set<String>>{};
@@ -501,7 +509,7 @@ class _Mem implements HaloDb {
   }
 
   @override
-  Future<void> markDelivered(String msgUid) async {
+  Future<void> markDelivered(String msgUid, {required String from}) async {
     _hit('markDelivered', msgUid, null);
     delivered.add(msgUid);
   }
@@ -769,9 +777,11 @@ class _Mem implements HaloDb {
     int idx,
     String slice,
     int total,
-    int? burn,
-  ) async {
+    int? burn, {
+    required String from,
+  }) async {
     _hit('putMediaChunk', mediaId, null);
+    chunkFrom[mediaId] = from;
     (chunks[mediaId] ??= {})[idx] = slice;
     if (burn != null) chunkBurn[mediaId] = burn;
     return chunks[mediaId]!.length;
@@ -784,14 +794,29 @@ class _Mem implements HaloDb {
   Future<String?> mediaChunkSlice(String mediaId, int idx) async =>
       _hit('mediaChunkSlice', mediaId, chunks[mediaId]?[idx]);
   @override
-  Future<int> dropMediaChunks(String mediaId) async {
+  Future<int> dropMediaChunks(String mediaId, {String? from}) async {
+    if (from != null && chunkFrom[mediaId] != from) {
+      return _hit('dropMediaChunks', mediaId, 0);
+    }
     chunkBurn.remove(mediaId);
+    chunkFrom.remove(mediaId);
     return _hit(
       'dropMediaChunks',
       mediaId,
       chunks.remove(mediaId)?.length ?? 0,
     );
   }
+
+  @override
+  Future<String?> mediaChunkSender(String mediaId) async =>
+      _hit('mediaChunkSender', mediaId, chunkFrom[mediaId]);
+
+  @override
+  Future<int> filesInFlightFrom(String from, {String? except}) async => _hit(
+    'filesInFlightFrom',
+    from,
+    chunkFrom.entries.where((e) => e.value == from && e.key != except).length,
+  );
 
   @override
   Future<void> noteMediaWant(

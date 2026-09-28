@@ -96,6 +96,35 @@ func validBridgeLine(s string) bool {
 	return strings.Contains(strings.Join(f[3:], " "), "cert=")
 }
 
+// host:port the way the socks handshake gives it, so a bridge line and a
+// target compare whatever brackets or case they were written with
+func bridgeAddrKey(addr string) string {
+	host, port, err := net.SplitHostPort(strings.TrimSpace(addr))
+	if err != nil {
+		return ""
+	}
+	if ip := net.ParseIP(host); ip != nil {
+		host = ip.String()
+	}
+	return strings.ToLower(net.JoinHostPort(host, port))
+}
+
+// whether target is the address of a bridge in use: the listener dials
+// the bridges tor was given and nothing else
+func bridgeTarget(target string) bool {
+	want := bridgeAddrKey(target)
+	if want == "" || !bridgesEnabled() {
+		return false
+	}
+	for _, ln := range bridgeLines() {
+		f := strings.Fields(ln)
+		if len(f) > 1 && bridgeAddrKey(f[1]) == want {
+			return true
+		}
+	}
+	return false
+}
+
 func bridgesEnabled() bool {
 	bridgeMu.RLock()
 	defer bridgeMu.RUnlock()
@@ -205,6 +234,11 @@ func servePTConn(conn net.Conn, factory base.ClientFactory) {
 	req, err := socks5.Handshake(conn)
 	if err != nil {
 		log.Printf("bridges: socks handshake: %v", err)
+		return
+	}
+	if !bridgeTarget(req.Target) {
+		log.Printf("bridges: a target that is no bridge in use, refused")
+		_ = req.Reply(socks5.ReplyConnectionNotAllowed)
 		return
 	}
 

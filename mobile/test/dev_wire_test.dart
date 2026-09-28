@@ -168,7 +168,7 @@ class _Phone extends DevTestDb {
   @override
   Future<void> markSeenLong(String hash) async => seen.add(hash);
   @override
-  Future<void> markDelivered(String msgUid) async {}
+  Future<void> markDelivered(String msgUid, {required String from}) async {}
   // what the outbox took as sent
   final marked = <String>[];
   @override
@@ -187,6 +187,9 @@ class _Phone extends DevTestDb {
   Future<void> bumpUnread(String peerId) async {}
   @override
   Future<void> clearUnread(String peerId) async {}
+  @override
+  Future<int> filesInFlightFrom(String from, {String? except}) async => 0;
+
   @override
   Future<int> countMessagesFrom(String peerId) async => mem
       .rows('messages')

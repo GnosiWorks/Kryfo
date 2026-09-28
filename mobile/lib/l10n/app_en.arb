@@ -9366,5 +9366,9 @@
         "type": "Object"
       }
     }
+  },
+  "requestsSomeoneNew": "Someone new",
+  "@requestsSomeoneNew": {
+    "description": "screens/requests_screen.dart: the name on a request from someone filed on an id of their own, because the name they gave is bound here to another key. the shield line under it says which name they gave"
   }
 }

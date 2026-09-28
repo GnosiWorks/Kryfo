@@ -7532,4 +7532,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String scamShieldSaysItIs(Object shown) {
     return 'يقول إنه ⁨$shown⁩، لكن مفتاحه غير مطابق';
   }
+
+  @override
+  String get requestsSomeoneNew => 'شخص جديد';
 }

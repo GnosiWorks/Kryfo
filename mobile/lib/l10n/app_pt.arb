@@ -1945,5 +1945,6 @@
   "devVoiceDisguised": "Sua voz vai disfarçada nesta conversa",
   "devChatOptions": "Opções da conversa",
   "appLinkOtherKey": "Este link diz que é {id}, mas a chave dele não corresponde. Não foi adicionado.",
-  "scamShieldSaysItIs": "Diz que é {shown}, mas a chave não corresponde"
+  "scamShieldSaysItIs": "Diz que é {shown}, mas a chave não corresponde",
+  "requestsSomeoneNew": "Alguém novo"
 }

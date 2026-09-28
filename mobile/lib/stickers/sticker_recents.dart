@@ -3,6 +3,7 @@
 // with none of the everyday identity's. on this phone only, never sent
 // anywhere.
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../secure_store.dart';
 
 import '../container.dart';
 import 'sticker_pack.dart';
@@ -12,7 +13,7 @@ const kStickerRecentMax = 20;
 
 class StickerRecents {
   StickerRecents(this.container, {FlutterSecureStorage? storage})
-    : _storage = storage ?? const FlutterSecureStorage();
+    : _storage = storage ?? secureStore;
 
   final HaloContainer container;
   final FlutterSecureStorage _storage;

@@ -784,12 +784,11 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 	lastOnDisk := int64(-1)
 	var lastMu sync.Mutex
 	if savedDataDir != "" {
-		short := rcvPk
-		if len(short) > 16 {
-			short = short[:16]
+		seenPath, lastPath = addressFiles(rcvPk)
+		// a subscription on an address let go of before keeps files again
+		for _, p := range []string{seenPath, seenPath + ".tmp", lastPath} {
+			goneFiles.Delete(p)
 		}
-		seenPath = savedDataDir + "/nostr_seen_" + short
-		lastPath = savedDataDir + "/nostr_last_" + short
 		if b, err := os.ReadFile(lastPath); err == nil {
 			if v, perr := strconv.ParseInt(strings.TrimSpace(string(b)), 10, 64); perr == nil {
 				lastOnDisk = v
@@ -816,6 +815,11 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 			lastSaved = ts
 		}
 		if lastPath == "" || lastSaved == lastOnDisk || engineHeld.Load() {
+			return
+		}
+		seenFileMu.Lock()
+		defer seenFileMu.Unlock()
+		if fileGone(lastPath) {
 			return
 		}
 		if os.WriteFile(lastPath, []byte(strconv.FormatInt(lastSaved, 10)), 0600) == nil {
@@ -1298,6 +1302,34 @@ func HaloNostrSubscribe(cPeerXPubHex *C.char) *C.char {
 	go nostrSubscribeRunner(ctx, peerHex, peerArr, rcvPk)
 	log.Printf("nostr: subscribed for peer %s... at addr %s...", peerHex[:12], rcvPk[:12])
 	return C.CString("ok")
+}
+
+// stop listening for a peer, and take what its receive address kept on
+// disk with it
+//
+//export HaloNostrUnsubscribe
+func HaloNostrUnsubscribe(cPeerXPubHex *C.char) *C.char {
+	if err := nostrUnsubscribe(C.GoString(cPeerXPubHex)); err != nil {
+		return C.CString("error: " + err.Error())
+	}
+	return C.CString("ok")
+}
+
+func nostrUnsubscribe(peerHex string) error {
+	peer, err := peerArr(peerHex)
+	if err != nil {
+		return err
+	}
+	nostrMu.Lock()
+	if cancel, exists := nostrSubs[peerHex]; exists {
+		cancel()
+		delete(nostrSubs, peerHex)
+	}
+	nostrMu.Unlock()
+	if _, rcvPk, err := nip17RcvAddress(peer); err == nil {
+		dropAddressFiles(rcvPk)
+	}
+	return nil
 }
 
 // the public half of our first-contact address. goes in the invite so a

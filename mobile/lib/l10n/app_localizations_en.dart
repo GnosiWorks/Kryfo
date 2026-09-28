@@ -7406,4 +7406,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String scamShieldSaysItIs(Object shown) {
     return 'Says it is $shown, but its key does not match';
   }
+
+  @override
+  String get requestsSomeoneNew => 'Someone new';
 }

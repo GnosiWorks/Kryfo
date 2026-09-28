@@ -147,6 +147,14 @@ class ArrivalIo implements AppIo {
 
   @override
   Future<List<String>> sessionAddresses() async => sessions;
+  // sessions let go of
+  final dropped = <String>[];
+  @override
+  Future<void> dropSession(String peer) async {
+    dropped.add(peer);
+    sessions.remove(peer);
+  }
+
   @override
   Future<({String haloId, String plain, UnwrappedMessage env})?>
   openFirstContact(String cipher) async => firstContact;
@@ -156,6 +164,9 @@ class ArrivalIo implements AppIo {
   Future<String> encrypt(String peer, String plain) async => 'to $peer $plain';
   @override
   void listen(String xPub) => listened.add(xPub);
+  final unheard = <String>[];
+  @override
+  void unlisten(String xPub) => unheard.add(xPub);
   @override
   String edPub() => 'ed-me';
   @override
@@ -204,6 +215,8 @@ class ArrivalRows implements HaloDb {
   final votes = <String, Map<String, (List<int>, int)>>{};
   final chunks = <String, Map<int, String>>{};
   final chunkBurn = <String, int>{};
+  // who sent each file's slices
+  final chunkFrom = <String, String>{};
   final seen = <String>{};
   final held = <String>[];
   final vouches = <String, Set<String>>{};
@@ -396,6 +409,13 @@ class ArrivalRows implements HaloDb {
   Future<void> setContactAvatar(String haloId, int? av) async =>
       _hit('setContactAvatar', haloId, null);
   @override
+  Future<void> forgetRequest(String haloId) async {
+    _hit('forgetRequest', haloId, null);
+    if (people[haloId]?['accepted'] == 0) people.remove(haloId);
+    shields.remove(haloId);
+  }
+
+  @override
   Future<void> unparkIfArchived(String haloId) async {
     _hit('unparkIfArchived', haloId, null);
     final p = people[haloId];
@@ -502,9 +522,9 @@ class ArrivalRows implements HaloDb {
   }
 
   @override
-  Future<void> markDelivered(String msgUid) async {
+  Future<void> markDelivered(String msgUid, {required String from}) async {
     _hit('markDelivered', msgUid, null);
-    delivered.add(msgUid);
+    delivered.add('$msgUid from $from');
   }
 
   @override
@@ -778,9 +798,11 @@ class ArrivalRows implements HaloDb {
     int idx,
     String slice,
     int total,
-    int? burn,
-  ) async {
+    int? burn, {
+    required String from,
+  }) async {
     _hit('putMediaChunk', mediaId, null);
+    chunkFrom[mediaId] = from;
     (chunks[mediaId] ??= {})[idx] = slice;
     if (burn != null) chunkBurn[mediaId] = burn;
     return chunks[mediaId]!.length;
@@ -793,14 +815,29 @@ class ArrivalRows implements HaloDb {
   Future<String?> mediaChunkSlice(String mediaId, int idx) async =>
       _hit('mediaChunkSlice', mediaId, chunks[mediaId]?[idx]);
   @override
-  Future<int> dropMediaChunks(String mediaId) async {
+  Future<int> dropMediaChunks(String mediaId, {String? from}) async {
+    if (from != null && chunkFrom[mediaId] != from) {
+      return _hit('dropMediaChunks', mediaId, 0);
+    }
     chunkBurn.remove(mediaId);
+    chunkFrom.remove(mediaId);
     return _hit(
       'dropMediaChunks',
       mediaId,
       chunks.remove(mediaId)?.length ?? 0,
     );
   }
+
+  @override
+  Future<String?> mediaChunkSender(String mediaId) async =>
+      _hit('mediaChunkSender', mediaId, chunkFrom[mediaId]);
+
+  @override
+  Future<int> filesInFlightFrom(String from, {String? except}) async => _hit(
+    'filesInFlightFrom',
+    from,
+    chunkFrom.entries.where((e) => e.value == from && e.key != except).length,
+  );
 
   @override
   Future<void> noteMediaWant(

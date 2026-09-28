@@ -160,6 +160,12 @@ class _Seal implements VaultSeal {
 // ---- signal, the engine and android ----
 
 class _Io implements AppIo {
+  // sessions let go of, and addresses no longer listened on
+  final dropped = <String>[];
+  @override
+  Future<void> dropSession(String peer) async => dropped.add(peer);
+  @override
+  void unlisten(String xPub) => dropped.add(xPub);
   final opens = <String, (String, String)>{};
   final sent = <(String, String)>[];
   final rang = <String>[];
@@ -599,6 +605,9 @@ class _Db implements HaloDb {
   Future<void> setContactXPub(String haloId, String xpub) async =>
       _hit('setContactXPub', haloId, null);
   @override
+  Future<int> filesInFlightFrom(String from, {String? except}) async => 0;
+
+  @override
   Future<int> countMessagesFrom(String peerId) async => _hit(
     'countMessagesFrom',
     peerId,
@@ -627,7 +636,7 @@ class _Db implements HaloDb {
   }
 
   @override
-  Future<void> markDelivered(String msgUid) async =>
+  Future<void> markDelivered(String msgUid, {required String from}) async =>
       _hit('markDelivered', msgUid, null);
 
   // ---- messages ----

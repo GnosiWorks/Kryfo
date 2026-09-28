@@ -7398,4 +7398,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String scamShieldSaysItIs(Object shown) {
     return 'Tự nhận là $shown, nhưng khóa không khớp';
   }
+
+  @override
+  String get requestsSomeoneNew => 'Người mới';
 }

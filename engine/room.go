@@ -15,6 +15,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -209,6 +210,42 @@ func HaloRoomSubscribeFirstContact(cPriv *C.char) *C.char {
 	})
 	log.Printf("room: watching drop box %s...", fcPk[:12])
 	return C.CString("ok")
+}
+
+// what a room's addresses kept on disk, gone with the room: every member's
+// address and the drop box. the room's own key and its members' come in,
+// since a room that ended while the app was shut was never subscribed
+//
+//export HaloRoomForget
+func HaloRoomForget(cPriv, cPeers *C.char) *C.char {
+	var peers []string
+	if err := json.Unmarshal([]byte(C.GoString(cPeers)), &peers); err != nil {
+		return C.CString("error: bad members")
+	}
+	if err := roomForget(C.GoString(cPriv), peers); err != nil {
+		return C.CString("error: " + err.Error())
+	}
+	return C.CString("ok")
+}
+
+func roomForget(privHex string, peers []string) error {
+	me, err := roomKey(privHex)
+	if err != nil {
+		return err
+	}
+	for _, h := range peers {
+		peer, err := peerArr(h)
+		if err != nil || peer == me.pub {
+			continue
+		}
+		if _, rcvPk, err := nip17RcvAddressAs(me, peer); err == nil {
+			dropAddressFiles(rcvPk)
+		}
+	}
+	if _, fcPk, err := fcKeysFrom(me.priv, 0); err == nil {
+		dropAddressFiles(fcPk)
+	}
+	return nil
 }
 
 // stop every subscription a room key holds. called on expiry and on leave;

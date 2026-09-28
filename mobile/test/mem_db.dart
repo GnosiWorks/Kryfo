@@ -190,7 +190,7 @@ class MemDb implements Database, Transaction {
     return a == b;
   }
 
-  // a AND b AND ...: col = ?, col != ?, col LIKE ?, col IN (?, ...),
+  // a AND b AND ...: col = ?, col != ?, col < ?, col LIKE ?, col IN (?, ...),
   // col IS [NOT] NULL
   bool Function(Map<String, Object?>) _where(
     _Table t,
@@ -204,7 +204,7 @@ class MemDb implements Database, Transaction {
     for (final clause in where.split(' AND ')) {
       final c = clause.trim();
       final m = RegExp(
-        r'^(\w+) (=|!=|LIKE|IN|IS NULL|IS NOT NULL)(.*)$',
+        r'^(\w+) (=|!=|<|LIKE|IN|IS NULL|IS NOT NULL)(.*)$',
       ).firstMatch(c);
       if (m == null) throw UnimplementedError('where: $c');
       final col = m.group(1)!;
@@ -218,6 +218,12 @@ class MemDb implements Database, Transaction {
           tests.add((r) {
             final x = _get(t, r, col);
             return x != null && v != null && !_same(x, v);
+          });
+        case '<':
+          final v = args![at++];
+          tests.add((r) {
+            final x = _get(t, r, col);
+            return x is num && v is num && x < v;
           });
         case 'LIKE':
           final p = (args![at++] as String).toLowerCase();
@@ -444,6 +450,29 @@ class MemDb implements Database, Transaction {
     final n = before - t.rows.length;
     _note('delete:$table');
     return n;
+  }
+
+  // DELETE FROM t WHERE col IN (SELECT col2 FROM t2 WHERE <where>), the
+  // one shape of it the app uses
+  @override
+  Future<int> rawDelete(String sql, [List<Object?>? arguments]) async {
+    final m = RegExp(
+      r'^DELETE FROM (\w+) WHERE (\w+) IN \(SELECT (\w+) FROM (\w+) WHERE (.*)\)$',
+    ).firstMatch(sql);
+    if (m == null) throw UnimplementedError(sql);
+    final inner = await query(
+      m.group(4)!,
+      columns: [m.group(3)!],
+      where: m.group(5),
+      whereArgs: arguments,
+    );
+    final vs = [for (final r in inner) r[m.group(3)!]];
+    final t = _t(m.group(1)!);
+    _known(t, m.group(1)!, [m.group(2)!]);
+    final before = t.rows.length;
+    t.rows.removeWhere((r) => vs.any((v) => _same(_get(t, r, m.group(2)!), v)));
+    _note('delete:${m.group(1)}');
+    return before - t.rows.length;
   }
 
   @override

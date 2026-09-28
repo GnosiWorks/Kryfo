@@ -75,6 +75,7 @@ import '../main.dart'
         appState,
         currentChatPeer,
         claimChat,
+        newMsgUid,
         releaseChat,
         shredFile,
         torStrictGetOnIsolate,
@@ -1354,7 +1355,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // a row without a uid gets a local one. the peer doesn't know it, so the
     // reaction stays local.
     if (target.msgUid == null && !welcome) {
-      final uid = _newMsgUid();
+      final uid = newMsgUid();
       target.msgUid = uid;
       await session.assignUidIfMissing(
         widget.peerHaloId,
@@ -1846,25 +1847,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 
-  // 12-char base36 id from a high-precision timestamp + random salt.
-  // collision-resistant enough for our scale.
-  String _newMsgUid() {
-    final t = DateTime.now().microsecondsSinceEpoch.toRadixString(36);
-    final r =
-        (DateTime.now().microsecondsSinceEpoch ^
-                identityHashCode(this) ^
-                _msgUidCounter++)
-            .abs()
-            .toRadixString(36);
-    return '${t.padLeft(8, '0').substring(0, 8)}${r.substring(0, 4).padLeft(4, '0')}';
-  }
-
-  int _msgUidCounter = 0;
-
   // open an edit sheet for own message m. saves locally + tells the peer.
   Future<void> _editMessage(_Msg m) async {
     if (m.msgUid == null) {
-      final uid = _newMsgUid();
+      final uid = newMsgUid();
       m.msgUid = uid;
       await session.assignUidIfMissing(
         widget.peerHaloId,
@@ -1964,7 +1950,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   // tap a different emoji to replace.
   Future<void> _toggleReaction(_Msg m, String emoji) async {
     if (m.msgUid == null) {
-      final uid = _newMsgUid();
+      final uid = newMsgUid();
       m.msgUid = uid;
       await session.assignUidIfMissing(
         widget.peerHaloId,
@@ -2556,7 +2542,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       msg.failed = false;
       msg.sending = true;
     });
-    final msgUid = msg.msgUid ?? _newMsgUid();
+    final msgUid = msg.msgUid ?? newMsgUid();
     msg.msgUid = msgUid;
     _sendChunkedMedia(
       path: path,
@@ -2582,7 +2568,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       msg.failed = false;
       msg.sending = true;
     });
-    final msgUid = msg.msgUid ?? _newMsgUid();
+    final msgUid = msg.msgUid ?? newMsgUid();
     msg.msgUid = msgUid;
     _sendChunkedMedia(
       path: path,
@@ -2740,7 +2726,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // swept at the next start
     src.delete().ignore();
     if (disguise) bytes = disguiseWav(bytes);
-    final msgUid = _newMsgUid();
+    final msgUid = newMsgUid();
     final mediaDir = await session.mediaDirOf(widget.peerHaloId);
     final dest = File('${mediaDir.path}/vn_$msgUid.wav');
     await dest.writeAsBytes(bytes);
@@ -2958,7 +2944,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // after the confirm, so a cancelled send does not spend one of the two
     // slots a stranger gets
     if (_requestPending) setState(() => _sentCount++);
-    final msgUid = _newMsgUid();
+    final msgUid = newMsgUid();
     final mediaDir = await session.mediaDirOf(widget.peerHaloId);
     final safe = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
     final dest = File('${mediaDir.path}/f_${msgUid}_$safe');
@@ -3161,7 +3147,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (_requestLocked) return;
     if (_isDev && !await _ensureDevStarted()) return;
     if (_requestPending) setState(() => _sentCount++);
-    final msgUid = _newMsgUid();
+    final msgUid = newMsgUid();
     final mediaDir = await session.mediaDirOf(widget.peerHaloId);
     final mediaFile = File('${mediaDir.path}/$msgUid.jpg');
     await mediaFile.writeAsBytes(bytes);
@@ -3324,7 +3310,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (_requestLocked) return;
     if (_isDev && !await _ensureDevStarted()) return;
     final typed = sticker == null;
-    final msgUid = _newMsgUid();
+    final msgUid = newMsgUid();
     final replyToUid = _replyTo?.msgUid;
     // a pending preview only belongs to a message that still holds its link
     final url = typed ? firstUrl(text) : null;

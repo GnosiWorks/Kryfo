@@ -1945,5 +1945,6 @@
   "devVoiceDisguised": "Votre voix est déguisée dans cette discussion",
   "devChatOptions": "Options de la discussion",
   "appLinkOtherKey": "Ce lien se présente comme {id}, mais sa clé ne correspond pas. Il n’a pas été ajouté.",
-  "scamShieldSaysItIs": "Se présente comme {shown}, mais sa clé ne correspond pas"
+  "scamShieldSaysItIs": "Se présente comme {shown}, mais sa clé ne correspond pas",
+  "requestsSomeoneNew": "Quelqu’un de nouveau"
 }

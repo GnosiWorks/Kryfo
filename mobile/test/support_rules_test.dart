@@ -247,6 +247,12 @@ class _Phone extends HaloDb {
 
 // signal and the engine as the receive side reaches them
 class _Io implements AppIo {
+  // sessions let go of, and addresses no longer listened on
+  final dropped = <String>[];
+  @override
+  Future<void> dropSession(String peer) async => dropped.add(peer);
+  @override
+  void unlisten(String xPub) => dropped.add(xPub);
   final opens = <String, (String, String)>{};
   ({String haloId, String plain, UnwrappedMessage env})? firstContact;
   final listened = <String>[];

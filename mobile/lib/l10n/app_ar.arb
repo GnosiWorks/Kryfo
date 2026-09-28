@@ -1945,5 +1945,6 @@
   "devVoiceDisguised": "صوتك مموّه في هذه المحادثة",
   "devChatOptions": "خيارات المحادثة",
   "appLinkOtherKey": "يدّعي هذا الرابط أنه ⁨{id}⁩، لكن مفتاحه غير مطابق. لم تتم إضافة شيء.",
-  "scamShieldSaysItIs": "يقول إنه ⁨{shown}⁩، لكن مفتاحه غير مطابق"
+  "scamShieldSaysItIs": "يقول إنه ⁨{shown}⁩، لكن مفتاحه غير مطابق",
+  "requestsSomeoneNew": "شخص جديد"
 }
