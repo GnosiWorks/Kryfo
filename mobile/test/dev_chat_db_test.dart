@@ -4,7 +4,10 @@
 // deleted for good: every row of it goes, its files are shredded, and no
 // migration, key list or restart brings it back. only the settings row
 // does. home keeps it beside the contacts, a decoy shows its own, and a
-// vault never holds it. the database is a stand-in with the app's own
+// vault never holds it. an anonymous chat's own signal store sits in the
+// dev_ tables of v55, goes with a delete, and stays behind with its made
+// name when a copy of the database leaves the phone: the copy reads, and
+// sends and hears nothing. the database is a stand-in with the app's own
 // tables (mem_db.dart), so nothing here needs sqlite
 import 'dart:io';
 
@@ -13,10 +16,14 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/devchat/dev_chat.dart';
+import 'package:kryfo/devchat/dev_gate.dart';
 import 'package:kryfo/devchat/dev_key.dart';
+import 'package:kryfo/devchat/dev_lane.dart';
 import 'package:kryfo/main.dart' show AppState, HaloDb, useDatabasesForTest;
 import 'package:kryfo/session.dart';
+import 'package:kryfo/signal_stores.dart' show kDevSignalPrefix, kSignalTables;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite_sqlcipher/sqflite.dart' show DatabaseExecutor;
 
 import 'mem_db.dart';
 
@@ -165,6 +172,26 @@ Future<List<String>> _fill(MemDb db, String id, Directory dir) async {
   );
   return [photo.path, doc.path, wall.path];
 }
+
+// an anonymous chat's own store: its registration, his session and key
+Future<void> _fillAnonStore(MemDb db) async {
+  await db.insert('dev_signal_meta', {'k': 'regId', 'v': '77'});
+  await db.insert('dev_sessions', {
+    'address': _dev,
+    'device_id': 1,
+    'record': Uint8List.fromList([7, 7, 7]),
+  });
+  await db.insert('dev_peer_identities', {
+    'address': _dev,
+    'identity_key': Uint8List.fromList([5, 7]),
+  });
+}
+
+Map<String, int> _anonStore(MemDb db) => {
+  for (final t in kSignalTables)
+    if (db.rows('$kDevSignalPrefix$t').isNotEmpty)
+      t: db.rows('$kDevSignalPrefix$t').length,
+};
 
 // every row anywhere that names [id], table by table
 Map<String, int> _named(MemDb db, String id) {
@@ -489,6 +516,7 @@ void main() {
         final keep = await _fill(db, _other, dir);
         expect(await chat.begin(_m1, anon: anon ? _anon : null), isTrue);
         final files = await _fill(db, _dev, dir);
+        if (anon) await _fillAnonStore(db);
         final theirs = {
           for (final t in [
             'contacts',
@@ -513,8 +541,10 @@ void main() {
             ],
         };
         expect(_named(db, _dev), hasLength(greaterThan(10)));
+        expect(_anonStore(db), anon ? hasLength(3) : isEmpty);
         await chat.delete();
         expect(_named(db, _dev), isEmpty);
+        expect(_anonStore(db), isEmpty);
         for (final e in theirs.entries) {
           expect(db.rows(e.key), e.value, reason: e.key);
         }
@@ -813,7 +843,7 @@ void main() {
   // read off the source: the schema and the hide loop
   test('v54 seeds it on create and on upgrade, and the hide loop skips it', () {
     final src = File('lib/main.dart').readAsStringSync();
-    expect(src, contains('version: 54,'));
+    expect(src, contains('version: 55,'));
     final create = src.indexOf('onCreate: (db, _) async {');
     final upgrade = src.indexOf('onUpgrade: (db, oldV, newV) async {');
     expect(create, isNonNegative);
@@ -833,4 +863,216 @@ void main() {
       contains('if (isDevChat(c.id) || !await m.hideable(c)) continue;'),
     );
   });
+
+  test('v55 makes the anonymous store on create and on upgrade, the same '
+      'tables as the everyday one', () {
+    final src = File('lib/main.dart').readAsStringSync();
+    final create = src.indexOf('onCreate: (db, _) async {');
+    final upgrade = src.indexOf('onUpgrade: (db, oldV, newV) async {');
+    expect(
+      src.substring(create, upgrade),
+      contains('await _devSignalTables(db);'),
+    );
+    expect(
+      RegExp(
+        r'if \(oldV < 55\) \{[^}]*await _devSignalTables\(db\);',
+      ).hasMatch(src.substring(upgrade)),
+      isTrue,
+    );
+    // wrapped: a throw in a migration and the app never opens again
+    final wrap = src.indexOf('Future<void> _devSignalTables(Database db)');
+    final body = src.substring(wrap, src.indexOf('\n}\n', wrap));
+    expect(body, contains('try {'));
+    expect(body, contains('_signalTables(db, prefix: kDevSignalPrefix)'));
+    final tables = src.substring(
+      src.indexOf('Future<void> _signalTables('),
+      src.indexOf('Future<void> _devSignalTables('),
+    );
+    for (final t in kSignalTables) {
+      expect(tables, contains('CREATE TABLE IF NOT EXISTS \${prefix}$t ('));
+    }
+    // and the stand-in database has both sets, alike
+    final db = MemDb();
+    for (final t in kSignalTables) {
+      expect(db.has(t), isTrue);
+      expect(db.has('$kDevSignalPrefix$t'), isTrue);
+    }
+  });
+
+  test('without the anonymous store, which a migration could not make, a '
+      'delete still deletes', () async {
+    final db = MemDb(
+      except: {for (final t in kSignalTables) '$kDevSignalPrefix$t'},
+    );
+    await devChatTables(db, now: 1);
+    final chat = chatOf(db);
+    expect(await chat.begin(_m1), isTrue);
+    await _fill(db, _dev, dir);
+    await chat.delete();
+    expect((await chat.load())!.state, DevState.gone);
+    expect(_named(db, _dev), isEmpty);
+  });
+
+  group('what leaves the phone', () {
+    // a copy of a database with an anonymous chat running, and everything
+    // else a chat leaves
+    Future<MemDb> copy() async {
+      final db = await _fresh();
+      await _contact(db, _other);
+      await _fill(db, _other, dir);
+      expect(await chatOf(db).begin(_m1, anon: _anon), isTrue);
+      await _fill(db, _dev, dir);
+      await _fillAnonStore(db);
+      return db;
+    }
+
+    Map<String, String> rest(MemDb db) => {
+      for (final t in [
+        'contacts',
+        'messages',
+        'reactions',
+        'poll_votes',
+        'pins_out',
+        'edits_out',
+        'media_wants',
+        'media_chunks',
+        'held_onion',
+        'msg_fts',
+        'shield',
+        'vouches',
+        'group_members',
+        ...kSignalTables,
+      ])
+        t: '${db.rows(t)}',
+    };
+
+    test(
+      'the made name and its store stay behind, all else goes along',
+      () async {
+        final db = await copy();
+        final was = rest(db);
+        await db.transaction(scrubDevAnon);
+        expect(_anonStore(db), isEmpty);
+        final r = (await chatOf(db).load())!;
+        expect(r.anonId, isNull);
+        expect(r.anonEdPriv, isNull);
+        expect(r.anonXPriv, isNull);
+        // the chat itself goes along as it was
+        expect(r.state, DevState.anon);
+        expect(r.keyId, 'm1');
+        expect(r.startedAt, isNotNull);
+        expect(rest(db), was);
+        // nothing of the made name is anywhere in the copy
+        final all = [for (final t in _tablesOf(db)) '${db.rows(t)}'].join();
+        for (final secret in [_anon.edPriv, _anon.xPriv, _anon.id]) {
+          expect(all, isNot(contains(secret)));
+        }
+      },
+    );
+
+    test(
+      'where it lands the chat reads, and sends and hears nothing',
+      () async {
+        final db = await copy();
+        await db.transaction(scrubDevAnon);
+        final chat = chatOf(db);
+        final r = (await chat.load())!;
+        expect(r.nameless, isTrue);
+        final row = devRowOf(r)!;
+        expect(row.started, isTrue);
+        expect(row.anonymous, isTrue);
+        // the wire refuses it every way, and it has no store
+        for (final way in [
+          DevGate.relayWay(r, _m1, 'c', (_) => true),
+          DevGate.firstContactWay(r, _m1, _m1, 'c', (_) => true),
+          DevGate.listenWay(r, _m1),
+        ]) {
+          expect(way, DevWay.refused);
+        }
+        expect(DevGate.roomOk(r, _m1, ''), isFalse);
+        final lane = DevLane(chat: chat.load, open: () async => db);
+        expect(await lane.seat(_dev), isNull);
+        await expectLater(
+          lane.encrypt(_dev, 'halo/1:{"m":"hi"}'),
+          throwsStateError,
+        );
+        // it can be deleted, and a new one started with a new name
+        await chat.delete();
+        expect((await chat.load())!.state, DevState.gone);
+        await chat.writeToMarios();
+        expect(
+          await chat.begin(
+            _m1,
+            anon: const DevAnon(id: 'another', edPriv: 'e2', xPriv: 'x2'),
+          ),
+          isTrue,
+        );
+        expect((await chat.load())!.nameless, isFalse);
+      },
+    );
+
+    test('with three words there is nothing of it to leave behind', () async {
+      final db = await _fresh();
+      expect(await chatOf(db).begin(_m1), isTrue);
+      await _fill(db, _dev, dir);
+      final was = {for (final t in _tablesOf(db)) t: '${db.rows(t)}'};
+      await db.transaction(scrubDevAnon);
+      expect({for (final t in _tablesOf(db)) t: '${db.rows(t)}'}, was);
+      expect((await chatOf(db).load())!.state, DevState.everyday);
+    });
+
+    test('a table that is not there holds nothing, one that will not clear '
+        'fails the copy', () async {
+      final old = MemDb(
+        except: {
+          'devchat',
+          for (final t in kSignalTables) '$kDevSignalPrefix$t',
+        },
+      );
+      await old.transaction(scrubDevAnon);
+      final db = await copy();
+      db.failOn = 'delete:dev_sessions';
+      await expectLater(db.transaction(scrubDevAnon), throwsStateError);
+      // the copy is left as it was, and does not go
+      expect(_anonStore(db), hasLength(3));
+      expect((await chatOf(db).load())!.anonXPriv, _anon.xPriv);
+    });
+
+    // the checks above would catch the scrub gone half way
+    test('a scrub that forgets a part is caught', () async {
+      for (final half in [
+        (DatabaseExecutor t) async {
+          for (final n in kSignalTables) {
+            await t.delete('$kDevSignalPrefix$n');
+          }
+        },
+        (DatabaseExecutor t) async {
+          await t.update('devchat', {'anon_x_priv': null});
+        },
+      ]) {
+        final db = await copy();
+        await db.transaction(half);
+        final r = (await chatOf(db).load())!;
+        final left = [
+          ..._anonStore(db).keys,
+          if (r.anonId != null) 'anon_id',
+          if (r.anonEdPriv != null) 'anon_ed_priv',
+          if (r.anonXPriv != null) 'anon_x_priv',
+        ];
+        expect(left, isNotEmpty);
+      }
+    });
+  });
 }
+
+Iterable<String> _tablesOf(MemDb db) => [
+  for (final t in [
+    'devchat',
+    'contacts',
+    'messages',
+    'reactions',
+    ...kSignalTables,
+    for (final n in kSignalTables) '$kDevSignalPrefix$n',
+  ])
+    if (db.has(t)) t,
+];

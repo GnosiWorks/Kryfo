@@ -8,6 +8,7 @@ import 'dart:math';
 
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
+import '../signal_stores.dart' show kDevSignalPrefix, kSignalTables;
 import 'dev_key.dart';
 
 enum DevState {
@@ -56,6 +57,34 @@ Future<void> devChatTables(DatabaseExecutor db, {int? now}) async {
   }, conflictAlgorithm: ConflictAlgorithm.ignore);
 }
 
+// a table a migration made, or could not make: its wrapper lets the app
+// open without it
+Future<bool> _there(DatabaseExecutor db, String table) async =>
+    (await db.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",
+      [table],
+    )).isNotEmpty;
+
+// a copy of a container's database that leaves the phone, in a backup or a
+// move: the name an anonymous chat was made with and its store stay here,
+// so the copy never ties that name to the everyday one. the chat itself
+// goes along and reads where it lands (DevChatRow.nameless). a table that
+// is not there holds nothing; one that is there and will not clear fails
+// the copy
+Future<void> scrubDevAnon(DatabaseExecutor db) async {
+  for (final name in kSignalTables) {
+    final table = '$kDevSignalPrefix$name';
+    if (await _there(db, table)) await db.delete(table);
+  }
+  if (await _there(db, 'devchat')) {
+    await db.update('devchat', {
+      'anon_id': null,
+      'anon_ed_priv': null,
+      'anon_x_priv': null,
+    });
+  }
+}
+
 // the row as the table keeps it
 class DevChatRow {
   const DevChatRow({
@@ -100,6 +129,10 @@ class DevChatRow {
   final int? startedAt;
 
   bool get started => state == DevState.everyday || state == DevState.anon;
+
+  // an anonymous chat restored from a backup or a move: the name it was
+  // made with stayed behind, so it reads but sends and hears nothing
+  bool get nameless => state == DevState.anon && (anonXPriv ?? '').isEmpty;
 
   // the key the chat talks to
   DevKey? get key => switch (state) {
@@ -460,6 +493,11 @@ class DevChat {
       ('peer_identities', 'address'),
     ]) {
       await t.delete(table, where: '$col LIKE ?', whereArgs: [_kDev]);
+    }
+    // the anonymous chat's own store, all of it
+    for (final name in kSignalTables) {
+      final table = '$kDevSignalPrefix$name';
+      if (await _there(t, table)) await t.delete(table);
     }
     // the delete marked its polls as just gone: nothing of them stays
     await _inChunks(t, 'polls_gone', 'uid', polls);

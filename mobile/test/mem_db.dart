@@ -6,6 +6,7 @@
 // INSERT OR IGNORE / REPLACE and rollback behave as sqlite's do
 import 'dart:io';
 
+import 'package:kryfo/signal_stores.dart' show kDevSignalPrefix;
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class _Col {
@@ -32,9 +33,11 @@ class _Table {
     ];
 }
 
+// a name under a prefix is the signal store's: both sets of its tables
 final _create = RegExp(
-  r'CREATE (VIRTUAL )?TABLE (IF NOT EXISTS )?(\w+)\s*(USING fts5)?\s*\(',
+  r'CREATE (VIRTUAL )?TABLE (IF NOT EXISTS )?((?:\$\{prefix\})?\w+)\s*(USING fts5)?\s*\(',
 );
+const _prefixed = r'${prefix}';
 
 // the text between the parenthesis at [open] and the one that closes it
 String _inner(String s, int open) {
@@ -115,13 +118,20 @@ Map<String, _Table> _appSchema() {
   ]) {
     final src = File(f).readAsStringSync();
     for (final m in _create.allMatches(src)) {
-      final name = m.group(3)!;
+      final named = m.group(3)!;
       final fts = m.group(4) != null;
-      final t = _parse(name, fts ? '' : _inner(src, m.end - 1), fts: fts);
-      final have = tables[name];
-      // a table made in two places has the columns of both
-      if (have != null) t.cols.addAll(have.cols);
-      tables[name] = t;
+      final body = fts ? '' : _inner(src, m.end - 1);
+      final base = named.startsWith(_prefixed)
+          ? named.substring(_prefixed.length)
+          : null;
+      for (final name
+          in base == null ? [named] : [base, '$kDevSignalPrefix$base']) {
+        final t = _parse(name, body, fts: fts);
+        final have = tables[name];
+        // a table made in two places has the columns of both
+        if (have != null) t.cols.addAll(have.cols);
+        tables[name] = t;
+      }
     }
   }
   return tables;
@@ -275,6 +285,13 @@ class MemDb implements Database, Transaction {
     if (sql == 'PRAGMA secure_delete') {
       return [
         {'secure_delete': _secure},
+      ];
+    }
+    if (sql ==
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?") {
+      final name = arguments!.single as String;
+      return [
+        if (_tables.containsKey(name)) {'name': name},
       ];
     }
     throw UnimplementedError(sql);

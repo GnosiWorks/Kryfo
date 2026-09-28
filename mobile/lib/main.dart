@@ -67,15 +67,17 @@ import 'session.dart';
 import 'router.dart';
 import 'vault_life.dart';
 import 'devchat/dev_chat.dart';
+import 'devchat/dev_frame.dart' show devInFrame;
 import 'devchat/dev_gate.dart';
 import 'devchat/dev_key.dart';
+import 'devchat/dev_lane.dart';
 import 'stickers/sticker_pack.dart' show StickerLibrary;
 import 'stickers/sticker_wire.dart' show StickerWire, stickerText;
 import 'widgets/motion.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:app_links/app_links.dart';
 import 'signal_session.dart';
-import 'signal_stores.dart' show invitePreKeyId;
+import 'signal_stores.dart' show invitePreKeyId, kDevSignalPrefix;
 import 'dart:isolate';
 import 'dlog.dart';
 import 'stranger_gate.dart';
@@ -1154,7 +1156,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 54,
+      version: 55,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -1292,8 +1294,13 @@ class HaloDb {
         await searchTables(db, fresh: true);
         await routerTables(db);
         await _devChatTables(db);
+        await _devSignalTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 55) {
+          // the anonymous dev chat's own signal store
+          await _devSignalTables(db);
+        }
         if (oldV < 54) {
           // the developer chat's row: an upgrade shows it once, as a fresh
           // install does
@@ -4116,22 +4123,33 @@ Future<void> _vouchTable(Database db) async {
   );
 }
 
-Future<void> _signalTables(Database db) async {
+// one store's tables. under a prefix, another store in the same database
+Future<void> _signalTables(Database db, {String prefix = ''}) async {
   await db.execute(
-    'CREATE TABLE IF NOT EXISTS prekeys (id INTEGER PRIMARY KEY, record BLOB NOT NULL)',
+    'CREATE TABLE IF NOT EXISTS ${prefix}prekeys (id INTEGER PRIMARY KEY, record BLOB NOT NULL)',
   );
   await db.execute(
-    'CREATE TABLE IF NOT EXISTS signed_prekeys (id INTEGER PRIMARY KEY, record BLOB NOT NULL, created_at INTEGER NOT NULL)',
+    'CREATE TABLE IF NOT EXISTS ${prefix}signed_prekeys (id INTEGER PRIMARY KEY, record BLOB NOT NULL, created_at INTEGER NOT NULL)',
   );
   await db.execute(
-    'CREATE TABLE IF NOT EXISTS sessions (address TEXT NOT NULL, device_id INTEGER NOT NULL, record BLOB NOT NULL, PRIMARY KEY (address, device_id))',
+    'CREATE TABLE IF NOT EXISTS ${prefix}sessions (address TEXT NOT NULL, device_id INTEGER NOT NULL, record BLOB NOT NULL, PRIMARY KEY (address, device_id))',
   );
   await db.execute(
-    'CREATE TABLE IF NOT EXISTS peer_identities (address TEXT PRIMARY KEY, identity_key BLOB NOT NULL)',
+    'CREATE TABLE IF NOT EXISTS ${prefix}peer_identities (address TEXT PRIMARY KEY, identity_key BLOB NOT NULL)',
   );
   await db.execute(
-    'CREATE TABLE IF NOT EXISTS signal_meta (k TEXT PRIMARY KEY, v TEXT NOT NULL)',
+    'CREATE TABLE IF NOT EXISTS ${prefix}signal_meta (k TEXT PRIMARY KEY, v TEXT NOT NULL)',
   );
+}
+
+// wrapped like the dev chat's row: without them an anonymous start fails
+// closed, and the app still opens
+Future<void> _devSignalTables(Database db) async {
+  try {
+    await _signalTables(db, prefix: kDevSignalPrefix);
+  } catch (e) {
+    dlog('dev signal tables: $e');
+  }
 }
 
 Future<String> makePreKeyBundleB64([SignalSession? of]) async {
@@ -4154,7 +4172,22 @@ Future<String> makePreKeyBundleB64([SignalSession? of]) async {
   return base64Encode(utf8.encode(jsonEncode(bundle)));
 }
 
-Future<void> processPeerBundle(String haloId, String bundleB64) async {
+// the store a peer's messages go through: the everyday one, and for the
+// dev chat the one it was started with. null for a dev chat that has none
+// (not started, deleted, restored without its made name) and for any other
+// id shaped like one: nothing falls back to the everyday store for it
+Future<SignalSession?> signalFor(String peer) async =>
+    isDevId(peer) ? (await devLane.seat(peer))?.store : signalSession;
+
+// a session with [haloId] built from their card, in [into] or the store
+// signalFor names
+Future<void> processPeerBundle(
+  String haloId,
+  String bundleB64, {
+  SignalSession? into,
+}) async {
+  final ss = into ?? await signalFor(haloId);
+  if (ss == null) throw StateError('no signal store for this chat');
   final j =
       jsonDecode(utf8.decode(base64Decode(bundleB64))) as Map<String, dynamic>;
   final preKeyBundle = PreKeyBundle(
@@ -4169,10 +4202,10 @@ Future<void> processPeerBundle(String haloId, String bundleB64) async {
   );
   final addr = SignalProtocolAddress(haloId, 1);
   final builder = SessionBuilder(
-    signalSession.sessionStore,
-    signalSession.preKeyStore,
-    signalSession.signedPreKeyStore,
-    signalSession.identityStore,
+    ss.sessionStore,
+    ss.preKeyStore,
+    ss.signedPreKeyStore,
+    ss.identityStore,
     addr,
   );
   await builder.processPreKeyBundle(preKeyBundle);
@@ -4198,21 +4231,18 @@ Future<String> signalEncryptSerial(String peerId, String plaintext) {
 }
 
 // no session yet with this peer: the next message is an opener
-Future<bool> hasSessionWith(String peerId) => signalSession.sessionStore
-    .containsSession(SignalProtocolAddress(peerId, 1));
+Future<bool> hasSessionWith(String peerId) async {
+  final ss = await signalFor(peerId);
+  return ss != null &&
+      await ss.sessionStore.containsSession(SignalProtocolAddress(peerId, 1));
+}
 
+// the one place a frame is sealed for a peer. every frame for the dev chat
+// goes through its own seal instead: the allowlist, its store, the token
+// the wire asks for
 Future<String> signalEncrypt(String peerId, String plaintext) async {
-  final addr = SignalProtocolAddress(peerId, 1);
-  final cipher = SessionCipher(
-    signalSession.sessionStore,
-    signalSession.preKeyStore,
-    signalSession.signedPreKeyStore,
-    signalSession.identityStore,
-    addr,
-  );
-  final msg = await cipher.encrypt(Uint8List.fromList(utf8.encode(plaintext)));
-  final wire = Uint8List.fromList([msg.getType(), ...msg.serialize()]);
-  return base64Encode(wire);
+  if (isDevId(peerId)) return devLane.encrypt(peerId, plaintext);
+  return signalSession.encryptTo(peerId, plaintext);
 }
 
 bool _eqBytes(List<int> a, List<int> b) {
@@ -4237,6 +4267,8 @@ Future<String?> signalDecrypt(
   String wireB64, {
   bool flagKeyChange = false,
 }) async {
+  final ss = await signalFor(peerId);
+  if (ss == null) return null;
   try {
     final wire = base64Decode(wireB64);
     if (wire.isEmpty) return null;
@@ -4244,10 +4276,10 @@ Future<String?> signalDecrypt(
     final body = Uint8List.fromList(wire.sublist(1));
     final addr = SignalProtocolAddress(peerId, 1);
     final cipher = SessionCipher(
-      signalSession.sessionStore,
-      signalSession.preKeyStore,
-      signalSession.signedPreKeyStore,
-      signalSession.identityStore,
+      ss.sessionStore,
+      ss.preKeyStore,
+      ss.signedPreKeyStore,
+      ss.identityStore,
       addr,
     );
     Uint8List plain;
@@ -4258,13 +4290,13 @@ Future<String?> signalDecrypt(
       // back-pair as a new person. targeted decrypts (flagKeyChange) skip
       // this and keep deliver-and-warn for mitm.
       if (!flagKeyChange && peerId != '_pending_back_pair_') {
-        final known = await signalSession.identityStore.getIdentity(addr);
+        final known = await ss.identityStore.getIdentity(addr);
         if (known != null &&
             !_eqBytes(known.serialize(), pkm.getIdentityKey().serialize())) {
           return null;
         }
       }
-      if (await signalSession.sessionStore.containsSession(addr)) {
+      if (await ss.sessionStore.containsSession(addr)) {
         // session exists: use it. rebuilding from the prekey record bad-macs
         // when the slot was refilled with a fresh key.
         try {
@@ -4276,8 +4308,7 @@ Future<String?> signalDecrypt(
       } else {
         final pkId = pkm.getPreKeyId();
         final havePk =
-            !pkId.isPresent ||
-            await signalSession.preKeyStore.containsPreKey(pkId.value);
+            !pkId.isPresent || await ss.preKeyStore.containsPreKey(pkId.value);
         if (!havePk) {
           dlog('signalDecrypt: prekey gone, no session for $peerId');
           return null;
@@ -4311,7 +4342,7 @@ Future<String?> signalDecrypt(
     // one-time prekey already used. with a session, an earlier copy set it
     // up and this is a duplicate; without one it cannot be read.
     final addr = SignalProtocolAddress(peerId, 1);
-    if (await signalSession.sessionStore.containsSession(addr)) {
+    if (await ss.sessionStore.containsSession(addr)) {
       return null;
     }
     return null;
@@ -4997,8 +5028,11 @@ class AppState extends ChangeNotifier {
            router ??
            VaultRouter(SqlRouterStore(() => live.open()), const EngineSeal()) {
     // the wire asks the everyday container's dev chat, never a decoy's or
-    // a vault's: only the everyday identity goes online
+    // a vault's: only the everyday identity goes online. its seal and its
+    // store read the same row
     devGate.chat = () => live.devChat.load();
+    devLane.chat = () => live.devChat.load();
+    devLane.open = () => live.open();
   }
 
   // signal, the engine and android, as the receive side reaches them
@@ -6611,6 +6645,18 @@ class AppState extends ChangeNotifier {
     HaloDb? into,
     int? arrivedAt,
   }) async {
+    // the dev chat takes a frame only while it runs, and only what his
+    // chat may carry, said by his pinned key. the rest is dropped unseen
+    if (isDevId(senderHaloId)) {
+      final seat = await devLane.seat(senderHaloId);
+      final kept = seat == null ? null : devInFrame(senderHaloId, wire);
+      if (kept == null) {
+        dlog('dev chat: a frame not taken');
+        return RouteTo.dropped;
+      }
+      wire = kept;
+      env = unwrapMessage(kept);
+    }
     if (into != null) {
       return _fileArrival(
         senderHaloId,
@@ -6820,7 +6866,7 @@ class AppState extends ChangeNotifier {
     // badge rides real chat rows only. present = set, absent = clear so
     // turning it off propagates. control frames and preview patches never
     // get here with a fresh row, so they can't wipe it.
-    if (env.preview == null && env.msgUid != null) {
+    if (env.preview == null && env.msgUid != null && !isDevId(senderHaloId)) {
       await db.setContactBadge(senderHaloId, env.supporterBadge);
     }
     // roster self-heal: if the admin rode their full member list on this
@@ -9852,12 +9898,17 @@ class AppState extends ChangeNotifier {
   // prekey bundle. false if we never kept a bundle: the caller then surfaces
   // the original failure.
   Future<bool> _healSession(String memberId) async {
-    final bundle = (await _reach(memberId))?.bundle;
+    // the dev chat heals from the pinned card alone, in its own store
+    final bundle = isDevId(memberId)
+        ? (await devLane.seat(memberId))?.key.bundle
+        : (await _reach(memberId))?.bundle;
     if (bundle == null || bundle.isEmpty) return false;
+    final ss = await signalFor(memberId);
+    if (ss == null) return false;
     try {
       final addr = SignalProtocolAddress(memberId, 1);
-      await signalSession.sessionStore.deleteSession(addr);
-      await processPeerBundle(memberId, bundle);
+      await ss.sessionStore.deleteSession(addr);
+      await processPeerBundle(memberId, bundle, into: ss);
       dlog('healed session for $memberId');
       return true;
     } catch (e) {

@@ -30,6 +30,7 @@ import 'main.dart'
         engine,
         shredFile;
 import 'router.dart' show scrubHidden;
+import 'devchat/dev_chat.dart' show scrubDevAnon;
 import 'dlog.dart';
 import 'dart:typed_data';
 import 'backup_stream.dart';
@@ -530,6 +531,19 @@ class BackupSide {
       await db.close();
     }
   }
+
+  // every copy of a container's database that leaves the phone: the name
+  // an anonymous dev chat was made with stays behind. freed pages zeroed
+  Future<void> scrubDev(String copy, String key) async {
+    final db = await openDatabase(copy, password: key, singleInstance: false);
+    try {
+      await db.rawQuery('PRAGMA secure_delete = 1');
+      await db.transaction(scrubDevAnon);
+      await db.rawQuery('PRAGMA wal_checkpoint(TRUNCATE)');
+    } finally {
+      await db.close();
+    }
+  }
 }
 
 // the hidden chats a backup carries, taken while their vault holds still:
@@ -608,6 +622,8 @@ Future<BackupDraft> draftBackup(
     if (!hidden) return null;
     return _carryHidden(side, vault!, stage, docs, folders, sources);
   }, made: made);
+  // no backup and no move carries an anonymous dev chat's made name
+  await side.scrubDev(dbCopy, dbKey);
   if (!hidden) {
     final people = await side.scrub(dbCopy, dbKey);
     final fc = secure['peer_fc'];
@@ -775,6 +791,7 @@ Future<BackupDraft> _draftQuiet(
   }
   await session.primary.checkpoint();
   await File(await c.dbPath()).copy(p.join(stage, 'halo.db'));
+  await side.scrubDev(p.join(stage, 'halo.db'), dbKey);
   await File(
     p.join(stage, 'onion.key'),
   ).writeAsBytes(_hex(onion.first['v'] as String), flush: true);

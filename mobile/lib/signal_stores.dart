@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// four libsignal stores backed by sqlcipher.
+// four libsignal stores backed by sqlcipher. a prefix names another set of
+// the same tables in the same database: the dev chat's made name keeps its
+// own there, so nothing of it touches the everyday store
 
 import 'dart:typed_data';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
@@ -7,11 +9,29 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import 'devchat/dev_key.dart';
 
+// the tables of one store, without their prefix
+const kSignalTables = [
+  'prekeys',
+  'signed_prekeys',
+  'sessions',
+  'peer_identities',
+  'signal_meta',
+];
+
+// the anonymous dev chat's store
+const kDevSignalPrefix = 'dev_';
+
 class HaloIdentityKeyStore implements IdentityKeyStore {
   final Database _db;
   final IdentityKeyPair _idPair;
   final int _regId;
-  HaloIdentityKeyStore(this._db, this._idPair, this._regId);
+  final String _t;
+  HaloIdentityKeyStore(
+    this._db,
+    this._idPair,
+    this._regId, {
+    String prefix = '',
+  }) : _t = '${prefix}peer_identities';
 
   @override
   Future<IdentityKeyPair> getIdentityKeyPair() async => _idPair;
@@ -29,7 +49,7 @@ class HaloIdentityKeyStore implements IdentityKeyStore {
     // the dev chat keeps no key but the pinned one
     if (isDevChat(addr) && !_pinned(addr, identityKey)) return false;
     final existing = await _db.query(
-      'peer_identities',
+      _t,
       where: 'address = ?',
       whereArgs: [addr],
       limit: 1,
@@ -38,7 +58,7 @@ class HaloIdentityKeyStore implements IdentityKeyStore {
     final changed =
         existing.isNotEmpty &&
         !_eq(existing.first['identity_key'] as Uint8List, newBytes);
-    await _db.insert('peer_identities', {
+    await _db.insert(_t, {
       'address': addr,
       'identity_key': newBytes,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
@@ -58,7 +78,7 @@ class HaloIdentityKeyStore implements IdentityKeyStore {
       return _pinned(address.getName(), identityKey);
     }
     final rows = await _db.query(
-      'peer_identities',
+      _t,
       where: 'address = ?',
       whereArgs: [address.getName()],
       limit: 1,
@@ -85,7 +105,7 @@ class HaloIdentityKeyStore implements IdentityKeyStore {
   @override
   Future<IdentityKey?> getIdentity(SignalProtocolAddress address) async {
     final rows = await _db.query(
-      'peer_identities',
+      _t,
       where: 'address = ?',
       whereArgs: [address.getName()],
       limit: 1,
@@ -98,11 +118,7 @@ class HaloIdentityKeyStore implements IdentityKeyStore {
   // drop a peer's stored identity so a changed key is trusted on first use
   // again. only called after the user accepts the new safety number.
   Future<void> removePeerIdentity(SignalProtocolAddress address) async {
-    await _db.delete(
-      'peer_identities',
-      where: 'address = ?',
-      whereArgs: [address.getName()],
-    );
+    await _db.delete(_t, where: 'address = ?', whereArgs: [address.getName()]);
   }
 
   // the key an address dev:<id> is pinned to, while that key still works
@@ -128,12 +144,13 @@ const invitePreKeyId = 999999;
 
 class HaloPreKeyStore implements PreKeyStore {
   final Database _db;
-  HaloPreKeyStore(this._db);
+  final String _t;
+  HaloPreKeyStore(this._db, {String prefix = ''}) : _t = '${prefix}prekeys';
 
   @override
   Future<PreKeyRecord> loadPreKey(int id) async {
     final rows = await _db.query(
-      'prekeys',
+      _t,
       where: 'id = ?',
       whereArgs: [id],
       limit: 1,
@@ -144,7 +161,7 @@ class HaloPreKeyStore implements PreKeyStore {
 
   @override
   Future<void> storePreKey(int id, PreKeyRecord record) async {
-    await _db.insert('prekeys', {
+    await _db.insert(_t, {
       'id': id,
       'record': record.serialize(),
     }, conflictAlgorithm: ConflictAlgorithm.replace);
@@ -153,7 +170,7 @@ class HaloPreKeyStore implements PreKeyStore {
   @override
   Future<bool> containsPreKey(int id) async {
     final rows = await _db.query(
-      'prekeys',
+      _t,
       where: 'id = ?',
       whereArgs: [id],
       limit: 1,
@@ -164,18 +181,19 @@ class HaloPreKeyStore implements PreKeyStore {
   @override
   Future<void> removePreKey(int id) async {
     if (id == invitePreKeyId) return;
-    await _db.delete('prekeys', where: 'id = ?', whereArgs: [id]);
+    await _db.delete(_t, where: 'id = ?', whereArgs: [id]);
   }
 }
 
 class HaloSessionStore implements SessionStore {
   final Database _db;
-  HaloSessionStore(this._db);
+  final String _t;
+  HaloSessionStore(this._db, {String prefix = ''}) : _t = '${prefix}sessions';
 
   @override
   Future<SessionRecord> loadSession(SignalProtocolAddress address) async {
     final rows = await _db.query(
-      'sessions',
+      _t,
       where: 'address = ? AND device_id = ?',
       whereArgs: [address.getName(), address.getDeviceId()],
       limit: 1,
@@ -187,14 +205,14 @@ class HaloSessionStore implements SessionStore {
   // every address we hold a session with, contact or not, so the drain loop
   // can decrypt a deleted peer's next message and file it as a request
   Future<List<String>> allSessionAddresses() async {
-    final rows = await _db.query('sessions', columns: ['address']);
+    final rows = await _db.query(_t, columns: ['address']);
     return rows.map((r) => r['address'] as String).toSet().toList();
   }
 
   @override
   Future<List<int>> getSubDeviceSessions(String name) async {
     final rows = await _db.query(
-      'sessions',
+      _t,
       columns: ['device_id'],
       where: 'address = ?',
       whereArgs: [name],
@@ -207,7 +225,7 @@ class HaloSessionStore implements SessionStore {
     SignalProtocolAddress address,
     SessionRecord record,
   ) async {
-    await _db.insert('sessions', {
+    await _db.insert(_t, {
       'address': address.getName(),
       'device_id': address.getDeviceId(),
       'record': record.serialize(),
@@ -217,7 +235,7 @@ class HaloSessionStore implements SessionStore {
   @override
   Future<bool> containsSession(SignalProtocolAddress address) async {
     final rows = await _db.query(
-      'sessions',
+      _t,
       where: 'address = ? AND device_id = ?',
       whereArgs: [address.getName(), address.getDeviceId()],
       limit: 1,
@@ -228,7 +246,7 @@ class HaloSessionStore implements SessionStore {
   @override
   Future<void> deleteSession(SignalProtocolAddress address) async {
     await _db.delete(
-      'sessions',
+      _t,
       where: 'address = ? AND device_id = ?',
       whereArgs: [address.getName(), address.getDeviceId()],
     );
@@ -236,18 +254,20 @@ class HaloSessionStore implements SessionStore {
 
   @override
   Future<void> deleteAllSessions(String name) async {
-    await _db.delete('sessions', where: 'address = ?', whereArgs: [name]);
+    await _db.delete(_t, where: 'address = ?', whereArgs: [name]);
   }
 }
 
 class HaloSignedPreKeyStore implements SignedPreKeyStore {
   final Database _db;
-  HaloSignedPreKeyStore(this._db);
+  final String _t;
+  HaloSignedPreKeyStore(this._db, {String prefix = ''})
+    : _t = '${prefix}signed_prekeys';
 
   @override
   Future<SignedPreKeyRecord> loadSignedPreKey(int id) async {
     final rows = await _db.query(
-      'signed_prekeys',
+      _t,
       where: 'id = ?',
       whereArgs: [id],
       limit: 1,
@@ -258,7 +278,7 @@ class HaloSignedPreKeyStore implements SignedPreKeyStore {
 
   @override
   Future<List<SignedPreKeyRecord>> loadSignedPreKeys() async {
-    final rows = await _db.query('signed_prekeys');
+    final rows = await _db.query(_t);
     return rows
         .map((r) => SignedPreKeyRecord.fromSerialized(r['record'] as Uint8List))
         .toList();
@@ -266,7 +286,7 @@ class HaloSignedPreKeyStore implements SignedPreKeyStore {
 
   @override
   Future<void> storeSignedPreKey(int id, SignedPreKeyRecord record) async {
-    await _db.insert('signed_prekeys', {
+    await _db.insert(_t, {
       'id': id,
       'record': record.serialize(),
       'created_at': DateTime.now().millisecondsSinceEpoch,
@@ -276,7 +296,7 @@ class HaloSignedPreKeyStore implements SignedPreKeyStore {
   @override
   Future<bool> containsSignedPreKey(int id) async {
     final rows = await _db.query(
-      'signed_prekeys',
+      _t,
       where: 'id = ?',
       whereArgs: [id],
       limit: 1,
@@ -286,6 +306,6 @@ class HaloSignedPreKeyStore implements SignedPreKeyStore {
 
   @override
   Future<void> removeSignedPreKey(int id) async {
-    await _db.delete('signed_prekeys', where: 'id = ?', whereArgs: [id]);
+    await _db.delete(_t, where: 'id = ?', whereArgs: [id]);
   }
 }

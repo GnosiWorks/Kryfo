@@ -4,8 +4,10 @@
 // writes nothing when another comes; no id, card, member or sender from
 // the wire becomes him or a dev chat, whatever it claims; the trial loops,
 // the boot and the mode switch never reach the dev chat on the everyday
-// lane; a link with his words opens his chat only with his key. everyone
-// else is received, filed and listened for as before. the databases,
+// lane; a link with his words opens his chat only with his key; what comes
+// from him lands only while his chat runs, only as his chat may carry it,
+// and only said by his pinned key. everyone else is received, filed and
+// listened for as before. the databases,
 // signal and the engine are stand-ins, as in the router's tests; the store
 // runs real libsignal over a database kept in maps
 import 'dart:convert';
@@ -1510,6 +1512,164 @@ void main() {
       await rows.setPeerBundle(_dev, 'other-bundle');
       await rows.setKeyChanged(_dev, true);
       expect(row(_dev), made);
+    });
+  });
+
+  group('what the dev chat takes from him', () {
+    // an everyday dev chat opens in the app's own store
+    setUpAll(() async {
+      if (signalSession.ready) return;
+      final pair = Curve.generateKeyPair();
+      await signalSession.bootstrap(
+        database: MemDb(),
+        xPubBytes: pair.publicKey.serialize().sublist(1),
+        xPrivBytes: pair.privateKey.serialize(),
+      );
+    });
+
+    // his chat started with three words, his key mapped to it
+    Future<_World> running({bool begin = true}) async {
+      final w = await _World.make();
+      w.started();
+      if (begin) expect(await w.live.devChat.begin(_m1), isTrue);
+      await w.app.subscribePeer(_dev);
+      return w;
+    }
+
+    Future<void> his(_World w, String plain) async {
+      final c = 'his${w._n++}';
+      w.io.opens[c] = (_dev, plain);
+      await w.app.receiveRelay([(peer: _m1.xPub, cipher: c)]);
+      await _settle();
+    }
+
+    SenderInfo marios({String? h, String? x}) => SenderInfo(
+      haloId: h ?? _words,
+      edPub: 'ed-his',
+      onion: 'his.onion',
+      xPub: x ?? _m1.xPub,
+      avatar: 9,
+    );
+
+    test('his message lands, without his face or his tier', () async {
+      final w = await running();
+      await his(
+        w,
+        await wrapMessage(
+          'hi, marios here',
+          msgUid: 'mm1',
+          sender: marios(),
+          supporterBadge: 'gold',
+        ),
+      );
+      expect(w.live.msg('mm1')!['plaintext'], 'hi, marios here');
+      expect(
+        w.live.calls.where(
+          (c) =>
+              c.startsWith('setContactAvatar') ||
+              c.startsWith('setContactBadge'),
+        ),
+        isEmpty,
+      );
+      // his reaction names nobody and still lands
+      await his(
+        w,
+        await wrapMessage(
+          '',
+          reaction: const ReactionFrame(targetUid: 'mm1', emoji: 'y'),
+        ),
+      );
+      expect(w.live.calls, contains('addReaction:mm1'));
+    });
+
+    test('a group, an introduction or a poll from him is dropped '
+        'unseen', () async {
+      final w = await running();
+      Map<String, String> p(String h) => {'h': h, 'o': '', 'x': 'x-$h'};
+      final frames = [
+        await wrapMessage(
+          '',
+          groupId: 'g1',
+          groupControl: GroupControl(
+            type: 'create',
+            name: 'his group',
+            members: [_words, _me],
+            participants: [p(_words)],
+          ),
+          sender: marios(),
+        ),
+        await wrapMessage(
+          'in the group',
+          msgUid: 'gm1',
+          groupId: 'g1',
+          roster: [_words, _me, 'river-soft-one'],
+          rosterParticipants: [p('river-soft-one')],
+          sender: marios(),
+        ),
+        await wrapMessage(
+          '',
+          intro: const IntroFrame(
+            haloId: 'new-friend-here',
+            onion: '',
+            xPub: 'x-nf',
+          ),
+          sender: marios(),
+        ),
+        await wrapMessage(
+          'lunch?',
+          msgUid: 'pl1',
+          poll: const PollSpec(options: ['yes', 'no']).toWire(),
+          sender: marios(),
+        ),
+        await wrapMessage(
+          '',
+          vote: const VoteFrame(pollUid: 'pl0', choices: [0], seq: 1),
+          sender: marios(),
+        ),
+        await wrapMessage(
+          '',
+          pollClose: const PollCloseFrame(pollUid: 'pl0'),
+          sender: marios(),
+        ),
+      ];
+      for (final f in frames) {
+        await his(w, f);
+      }
+      expect(w.live.rowWrites, isEmpty);
+      expect(w.live.msgs, isEmpty);
+      // taken off the relay all the same, and never tried again
+      expect(w.live.seen, hasLength(frames.length));
+      expect(w.io.sent, isEmpty);
+    });
+
+    test('a frame that says it is someone else is dropped', () async {
+      final w = await running();
+      for (final s in [
+        marios(h: 'amber-fox-run'),
+        marios(h: _me),
+        marios(x: 'x-$_v'),
+      ]) {
+        await his(
+          w,
+          await wrapMessage('it is me', msgUid: 'f${w._n}', sender: s),
+        );
+      }
+      expect(w.live.rowWrites, isEmpty);
+      expect(w.live.seen, hasLength(3));
+    });
+
+    test('before his chat starts and after a delete nothing lands', () async {
+      final fresh = await running(begin: false);
+      await his(
+        fresh,
+        await wrapMessage('early', msgUid: 'e1', sender: marios()),
+      );
+      expect(fresh.live.rowWrites, isEmpty);
+      final w = await running();
+      await w.live.devChat.delete();
+      await his(w, await wrapMessage('late', msgUid: 'l1', sender: marios()));
+      expect(w.live.rowWrites, isEmpty);
+      expect(w.io.sent, isEmpty);
     });
   });
 }
