@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"unicode/utf8"
 )
 
 // ParseIdentities parses a file with one or more private key encodings, one per
@@ -16,14 +17,15 @@ import (
 //
 // This is the same syntax as the private key files accepted by the CLI, except
 // the CLI also accepts SSH private keys, which are not recommended for the
-// average application.
+// average application, and plugins, which involve invoking external programs.
 //
-// Currently, all returned values are of type *X25519Identity, but different
-// types might be returned in the future.
+// Currently, all returned values are of type *[X25519Identity] or
+// *[HybridIdentity], but different types might be returned in the future.
 func ParseIdentities(f io.Reader) ([]Identity, error) {
 	const privateKeySizeLimit = 1 << 24 // 16 MiB
 	var ids []Identity
-	scanner := bufio.NewScanner(io.LimitReader(f, privateKeySizeLimit))
+	lr := &io.LimitedReader{R: f, N: privateKeySizeLimit + 1}
+	scanner := bufio.NewScanner(lr)
 	var n int
 	for scanner.Scan() {
 		n++
@@ -31,19 +33,38 @@ func ParseIdentities(f io.Reader) ([]Identity, error) {
 		if strings.HasPrefix(line, "#") || line == "" {
 			continue
 		}
-		i, err := ParseX25519Identity(line)
+		if !utf8.ValidString(line) {
+			return nil, fmt.Errorf("identities file is not valid UTF-8")
+		}
+		i, err := parseIdentity(line)
 		if err != nil {
 			return nil, fmt.Errorf("error at line %d: %v", n, err)
 		}
 		ids = append(ids, i)
 	}
 	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf("failed to read secret keys file: %v", err)
+		return nil, fmt.Errorf("failed to read identities file: %v", err)
+	}
+	if lr.N == 0 {
+		return nil, fmt.Errorf("identities file is too long")
 	}
 	if len(ids) == 0 {
-		return nil, fmt.Errorf("no secret keys found")
+		return nil, fmt.Errorf("no identities found")
 	}
 	return ids, nil
+}
+
+func parseIdentity(arg string) (Identity, error) {
+	switch {
+	case strings.HasPrefix(arg, "AGE-SECRET-KEY-1"):
+		return ParseX25519Identity(arg)
+	case strings.HasPrefix(arg, "AGE-SECRET-KEY-PQ-1"):
+		return ParseHybridIdentity(arg)
+	default:
+		// Don't include arg in the error: it may contain private key material,
+		// and callers print these errors.
+		return nil, fmt.Errorf("unknown identity type")
+	}
 }
 
 // ParseRecipients parses a file with one or more public key encodings, one per
@@ -51,14 +72,16 @@ func ParseIdentities(f io.Reader) ([]Identity, error) {
 //
 // This is the same syntax as the recipients files accepted by the CLI, except
 // the CLI also accepts SSH recipients, which are not recommended for the
-// average application.
+// average application, tagged recipients, which have different privacy
+// properties, and plugins, which involve invoking external programs.
 //
-// Currently, all returned values are of type *X25519Recipient, but different
-// types might be returned in the future.
+// Currently, all returned values are of type *[X25519Recipient] or
+// *[HybridRecipient] but different types might be returned in the future.
 func ParseRecipients(f io.Reader) ([]Recipient, error) {
 	const recipientFileSizeLimit = 1 << 24 // 16 MiB
 	var recs []Recipient
-	scanner := bufio.NewScanner(io.LimitReader(f, recipientFileSizeLimit))
+	lr := &io.LimitedReader{R: f, N: recipientFileSizeLimit + 1}
+	scanner := bufio.NewScanner(lr)
 	var n int
 	for scanner.Scan() {
 		n++
@@ -66,19 +89,36 @@ func ParseRecipients(f io.Reader) ([]Recipient, error) {
 		if strings.HasPrefix(line, "#") || line == "" {
 			continue
 		}
-		r, err := ParseX25519Recipient(line)
+		if !utf8.ValidString(line) {
+			return nil, fmt.Errorf("recipients file is not valid UTF-8")
+		}
+		r, err := parseRecipient(line)
 		if err != nil {
-			// Hide the error since it might unintentionally leak the contents
-			// of confidential files.
-			return nil, fmt.Errorf("malformed recipient at line %d", n)
+			return nil, fmt.Errorf("error at line %d: %v", n, err)
 		}
 		recs = append(recs, r)
 	}
 	if err := scanner.Err(); err != nil {
 		return nil, fmt.Errorf("failed to read recipients file: %v", err)
 	}
+	if lr.N == 0 {
+		return nil, fmt.Errorf("recipients file is too long")
+	}
 	if len(recs) == 0 {
 		return nil, fmt.Errorf("no recipients found")
 	}
 	return recs, nil
+}
+
+func parseRecipient(arg string) (Recipient, error) {
+	switch {
+	case strings.HasPrefix(arg, "age1pq1"):
+		return ParseHybridRecipient(arg)
+	case strings.HasPrefix(arg, "age1"):
+		return ParseX25519Recipient(arg)
+	default:
+		// It might be a private key from an identities file accidentally used
+		// as a recipients file, so don't include arg in the error.
+		return nil, fmt.Errorf("unknown recipient type")
+	}
 }

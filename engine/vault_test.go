@@ -101,6 +101,24 @@ func TestVaultWrongKeyRefused(t *testing.T) {
 	}
 }
 
+// sealed on age 1.2.1 with a key made for this test: what a vault holds
+// today must keep opening
+const (
+	vaultKeyBefore    = "AGE-SECRET-KEY-1PFR8RKNU4KXC4XH2DAPQ23UNLRMJSR3RXTRRPURCRELEGPS2PSGQRNTPQF"
+	vaultSealedBefore = "YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBWYXBKeXVFc2phejhSYS9NRnpwc21Sa1d2YXVBbEQvMnR4dWU0Ym9UTG53Ckc5KzNXdlo1T3REQ2t0UnhVY1dPQmdINUhiSTJBTkVQODJseVFOVjZ2dHcKLS0tIC9XTHdCWnRxenFSbUlSL1hlNDRHTXlZN1dTR2N1aHd1OUo4UURWNlpTQ0kKV8LzY7ahkW8AzUbaZY6SUPpiIOPAXNNzqPD+4TckLsqOZas+PA7ub1OMG2uRwEGyhoXSPCCvNz0="
+)
+
+func TestVaultOpensSealedBefore(t *testing.T) {
+	opened, err := vaultOpenB64(vaultKeyBefore, vaultSealedBefore)
+	if err != nil || opened != b64("sealed before the update") {
+		t.Fatalf("%v %q", err, opened)
+	}
+	other := mustKeys(t)
+	if _, err := vaultOpenB64(other.Priv, vaultSealedBefore); !errors.Is(err, errVaultOpen) {
+		t.Fatalf("another key: %v", err)
+	}
+}
+
 func TestVaultOpenMany(t *testing.T) {
 	a, b := mustKeys(t), mustKeys(t)
 	seal := func(k vaultKeys, s string) string {

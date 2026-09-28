@@ -4,7 +4,7 @@ go 1.25.14
 
 require (
 	fiatjaf.com/nostr v0.0.0-20260508234157-a4c590d923ee
-	filippo.io/age v1.2.1
+	filippo.io/age v1.3.2
 	github.com/alexballas/go-libtor v1.0.7
 	github.com/cretz/bine v0.2.0
 	github.com/mailru/easyjson v0.9.0
@@ -14,7 +14,8 @@ require (
 )
 
 require (
-	filippo.io/edwards25519 v1.1.0 // indirect
+	filippo.io/edwards25519 v1.2.0 // indirect
+	filippo.io/hpke v0.4.0 // indirect
 	github.com/ImVexed/fasturl v0.0.0-20230304231329-4e41488060f3 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.4 // indirect
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.1.0 // indirect
