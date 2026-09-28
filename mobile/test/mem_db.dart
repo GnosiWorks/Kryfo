@@ -294,6 +294,18 @@ class MemDb implements Database, Transaction {
         {'secure_delete': _secure},
       ];
     }
+    // SELECT COUNT(*) name FROM t [WHERE ...]
+    final count = RegExp(
+      r'^SELECT COUNT\(\*\) (\w+) FROM (\w+)(?: WHERE (.*))?$',
+    ).firstMatch(sql);
+    if (count != null) {
+      final table = count.group(2)!;
+      final t = _t(table);
+      final ok = _where(t, table, count.group(3), arguments);
+      return [
+        {count.group(1)!: t.rows.where(ok).length},
+      ];
+    }
     if (sql ==
         "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?") {
       final name = arguments!.single as String;
@@ -321,14 +333,31 @@ class MemDb implements Database, Transaction {
       throw UnimplementedError('query: $table');
     }
     final t = _t(table);
-    if (columns != null) _known(t, table, columns);
+    // a column, or length(col) AS name: its text's length, as sqlite gives it
+    final picks = <(String, Object? Function(Map<String, Object?>))>[];
+    for (final c in columns ?? const <String>[]) {
+      final len = RegExp(r'^length\((\w+)\) AS (\w+)$').firstMatch(c);
+      final col = len?.group(1) ?? c;
+      _known(t, table, [col]);
+      picks.add((
+        len?.group(2) ?? c,
+        len == null
+            ? (r) => _get(t, r, col)
+            : (r) => switch (_get(t, r, col)) {
+                final String s => s.length,
+                final List<int> b => b.length,
+                null => null,
+                final v => '$v'.length,
+              },
+      ));
+    }
     final ok = _where(t, table, where, whereArgs);
     var out = [
       for (final r in t.rows)
         if (ok(r))
           columns == null
               ? {...r}
-              : {for (final c in columns) c: _get(t, r, c)},
+              : {for (final (name, get) in picks) name: get(r)},
     ];
     if (orderBy != null) {
       final m = RegExp(r'^(\w+)(?: (ASC|DESC))?$').firstMatch(orderBy);
@@ -450,6 +479,24 @@ class MemDb implements Database, Transaction {
     final n = before - t.rows.length;
     _note('delete:$table');
     return n;
+  }
+
+  // INSERT [OR REPLACE] INTO t (cols) VALUES (?, ...)
+  @override
+  Future<int> rawInsert(String sql, [List<Object?>? arguments]) {
+    final m = RegExp(
+      r'^INSERT (OR REPLACE )?INTO (\w+) \(([\w, ]+)\) VALUES \([?, ]+\)$',
+    ).firstMatch(sql);
+    if (m == null) throw UnimplementedError(sql);
+    final cols = [for (final c in m.group(3)!.split(',')) c.trim()];
+    if (arguments == null || arguments.length != cols.length) {
+      throw StateError('insert: $sql takes ${cols.length} arguments');
+    }
+    return insert(
+      m.group(2)!,
+      {for (final (i, c) in cols.indexed) c: arguments[i]},
+      conflictAlgorithm: m.group(1) == null ? null : ConflictAlgorithm.replace,
+    );
   }
 
   // DELETE FROM t WHERE col IN (SELECT col2 FROM t2 WHERE <where>), the

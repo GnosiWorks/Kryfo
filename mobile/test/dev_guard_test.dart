@@ -821,6 +821,13 @@ class _Mem implements HaloDb {
       _hit('mediaChunkSender', mediaId, chunkFrom[mediaId]);
 
   @override
+  Future<Set<String>> trimUnfinishedMedia({
+    Set<String> keep = const {},
+    int bytes = 0,
+    int files = 0,
+  }) async => _hit('trimUnfinishedMedia', null, <String>{});
+
+  @override
   Future<int> filesInFlightFrom(String from, {String? except}) async => _hit(
     'filesInFlightFrom',
     from,

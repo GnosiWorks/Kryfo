@@ -129,6 +129,10 @@ class _Store implements RouterStore {
   @override
   Future<int> inboxCount() async => inbox.length;
   @override
+  Future<List<(int, int)>> inboxSizes() async => [
+    for (final r in inbox) (r['id'] as int, (r['sealed'] as List<int>).length),
+  ];
+  @override
   Future<List<Map<String, Object?>>> inboxOldest(int limit) async =>
       inbox.take(limit).toList();
   @override

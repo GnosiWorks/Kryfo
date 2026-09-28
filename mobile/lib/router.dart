@@ -28,6 +28,11 @@ const kHiddenGroup = 'group';
 // dropped. a group's card says so with g
 const kHiddenGone = 'gone';
 
+// what may wait sealed while the vault is shut, in arrivals and in bytes.
+// past either the oldest go first
+const kMaxSealed = 5000;
+const kMaxSealedBytes = 100 << 20;
+
 // the three tables, in every container. the vault's are unused but for
 // vault_meta, which holds its own key
 Future<void> routerTables(Database db) async {
@@ -156,6 +161,8 @@ abstract class RouterStore {
   Future<bool> inboxHas(String uid, int? part);
   Future<int> inboxParts(String uid);
   Future<int> inboxCount();
+  // every row's id and size, oldest first, without what it holds
+  Future<List<(int, int)>> inboxSizes();
   // oldest first
   Future<List<Map<String, Object?>>> inboxOldest(int limit);
   Future<void> inboxDelete(int id);
@@ -322,6 +329,14 @@ class SqlRouterStore implements RouterStore {
   }
 
   @override
+  Future<List<(int, int)>> inboxSizes() async => [
+    for (final r in await (await _open()).rawQuery(
+      'SELECT id, length(sealed) n FROM vault_inbox ORDER BY id ASC',
+    ))
+      ((r['id'] as num).toInt(), (r['n'] as num? ?? 0).toInt()),
+  ];
+
+  @override
   Future<List<Map<String, Object?>>> inboxOldest(int limit) async =>
       (await _open()).query('vault_inbox', orderBy: 'id ASC', limit: limit);
 
@@ -348,10 +363,17 @@ abstract class VaultSeal {
 }
 
 class VaultRouter {
-  VaultRouter(this._store, this._sealer);
+  VaultRouter(
+    this._store,
+    this._sealer, {
+    this.maxSealed = kMaxSealed,
+    this.maxSealedBytes = kMaxSealedBytes,
+  });
 
   final RouterStore _store;
   final VaultSeal _sealer;
+  final int maxSealed;
+  final int maxSealedBytes;
 
   // hidden people: their 1:1 frames go to the vault
   final Map<String, RouterCard> _peers = {};
@@ -621,13 +643,14 @@ class VaultRouter {
   // no tick for someone the vault blocked
   bool blocks(String id) => cardOf(id)?.blocked ?? false;
 
-  // the keys to listen on, each to its person
+  // the keys to listen on, each to its person. no one the vault blocked
   Map<String, String> get listenFor => {
     for (final c in [..._members.values, ..._peers.values])
-      if (c.xpub.isNotEmpty) c.xpub: c.id,
+      if (c.xpub.isNotEmpty && !c.blocked) c.xpub: c.id,
   };
 
-  // an arrival sealed to the vault. false when there is nothing to seal to
+  // an arrival sealed to the vault. false when there is nothing to seal to,
+  // or when it alone is past the cap
   Future<bool> seal(Unsealed a, {String? uid, int? part}) async {
     final pub = _pub;
     if (pub == null) return false;
@@ -644,6 +667,30 @@ class VaultRouter {
     await _store.inboxAdd(uid, part, base64Decode(sealed), a.at);
     _sealGen++;
     _maybeSealed = true;
+    return _trim();
+  }
+
+  // what waits sealed held to the cap, the oldest going first. false when
+  // the newest is past it on its own: it goes, and takes nothing with it
+  Future<bool> _trim() async {
+    final rows = await _store.inboxSizes();
+    if (rows.isEmpty) return false;
+    final (newest, size) = rows.last;
+    if (size > maxSealedBytes) {
+      await _store.inboxDelete(newest);
+      return false;
+    }
+    var n = rows.length;
+    var bytes = 0;
+    for (final (_, size) in rows) {
+      bytes += size;
+    }
+    for (final (id, size) in rows) {
+      if (n <= maxSealed && bytes <= maxSealedBytes) break;
+      await _store.inboxDelete(id);
+      n--;
+      bytes -= size;
+    }
     return true;
   }
 

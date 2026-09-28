@@ -97,3 +97,48 @@ Set<int> answerable(List<int> asked, int total) => {
   for (final i in asked)
     if (i >= 0 && i < total) i,
 };
+
+// what unfinished files may hold on this phone at once, all senders
+// together. a slice's row weighs its text and a little more, so many small
+// slices count as well as a few big ones
+const kUnfinishedBytes = 200 << 20;
+const kUnfinishedFiles = 500;
+const kSliceRowBytes = 256;
+
+int sliceWeight(int chars) => chars + kSliceRowBytes;
+
+/// the unfinished files that go so the rest fit in [bytes] and [files]:
+/// whole files, one past [bytes] on its own before any other, then the one
+/// whose last slice came longest ago. [held] is each file's weight and the
+/// time of its last slice. a file in [keep] is being put together and stays
+List<String> unfinishedPastCap(
+  Map<String, ({int bytes, int at})> held, {
+  int bytes = kUnfinishedBytes,
+  int files = kUnfinishedFiles,
+  Set<String> keep = const {},
+}) {
+  var weight = 0;
+  for (final f in held.values) {
+    weight += f.bytes;
+  }
+  var count = held.length;
+  if (weight <= bytes && count <= files) return const [];
+  bool alone(String id) => held[id]!.bytes > bytes;
+  final order =
+      [
+        for (final id in held.keys)
+          if (!keep.contains(id)) id,
+      ]..sort((a, b) {
+        if (alone(a) != alone(b)) return alone(a) ? -1 : 1;
+        final c = held[a]!.at.compareTo(held[b]!.at);
+        return c != 0 ? c : a.compareTo(b);
+      });
+  final out = <String>[];
+  for (final id in order) {
+    if (weight <= bytes && count <= files) break;
+    out.add(id);
+    weight -= held[id]!.bytes;
+    count--;
+  }
+  return out;
+}

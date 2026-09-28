@@ -3,6 +3,9 @@
 // get into requests, from its first slice. a slice has its place inside
 // its file, a file has one sender, and a recall drops only that sender's
 // slices. a stranger's unfinished file is kept a day, a contact's a week.
+// what waits unfinished has a ceiling, all senders together: past it whole
+// files go, the one whose last slice came longest ago first, and a finished
+// message is never touched.
 // the arrivals run against stand-ins, the database rules against rows kept
 // in maps
 import 'dart:convert';
@@ -13,7 +16,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/main.dart' show AppState, HaloDb, useDatabasesForTest;
-import 'package:kryfo/media_resend.dart' show kMaxSlices;
+import 'package:kryfo/media_resend.dart'
+    show kMaxSlices, kUnfinishedBytes, kUnfinishedFiles, sliceWeight;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
@@ -147,6 +151,54 @@ void main() {
     expect(w.live.chunks.length, 5);
   });
 
+  group('past the cap on unfinished files', () {
+    // what one slice from [_World.slice] weighs
+    final one = sliceWeight(base64Encode(List.filled(300, 0)).length);
+
+    test('the file quiet longest goes, and a finished message stays', () async {
+      final w = await _World.make();
+      w.live.unfinishedBytes = 3 * one;
+      await w.slice(_c, 'done', total: 2);
+      await w.slice(_c, 'done', index: 1, total: 2);
+      expect(w.live.msg('done'), isNotNull);
+      for (var m = 0; m < 4; m++) {
+        await w.slice(_c, 'f$m');
+      }
+      expect(w.live.chunks.keys, ['f1', 'f2', 'f3']);
+      expect(w.live.msg('done'), isNotNull);
+    });
+
+    test('a file still coming in stays over one that went quiet', () async {
+      final w = await _World.make();
+      w.live.unfinishedBytes = 3 * one;
+      await w.slice(_c, 'f0');
+      await w.slice(_c, 'f1');
+      await w.slice(_c, 'f0', index: 1);
+      await w.slice(_c, 'f2');
+      expect(w.live.chunks.keys.toSet(), {'f0', 'f2'});
+    });
+
+    test('a file past it on its own does not stay', () async {
+      final w = await _World.make();
+      w.live.unfinishedBytes = one - 1;
+      await w.slice(_c, 'f0');
+      expect(w.live.chunks, isEmpty);
+    });
+
+    test('from every sender together', () async {
+      final w = await _World.make();
+      w.live.unfinishedBytes = 2 * one;
+      await w.slice(_c, 'a');
+      await w.slice(_s, 'b');
+      await w.slice(_v, 'c', group: _g);
+      expect(w.live.chunks.keys, ['b', 'c']);
+    });
+
+    test('is two hundred megabytes', () {
+      expect(kUnfinishedBytes, 200 * 1024 * 1024);
+    });
+  });
+
   group('a slice', () {
     test('outside its file is dropped', () async {
       final w = await _World.make();
@@ -215,15 +267,104 @@ void main() {
       return db;
     }
 
-    Future<void> chunk(_Rows db, String mid, int idx, String from, int at) =>
-        db.mem.insert('media_chunks', {
+    Future<void> chunk(
+      _Rows db,
+      String mid,
+      int idx,
+      String from,
+      int at, {
+      int size = 1,
+    }) => db.mem.insert('media_chunks', {
+      'media_id': mid,
+      'idx': idx,
+      'slice': 'x' * size,
+      'total': 9,
+      'at': at,
+      'sender': from,
+    });
+
+    test('past the cap whole unfinished files go, the one quiet longest '
+        'first, and nothing else is touched', () async {
+      final db = await rows();
+      await chunk(db, 'old', 0, _c, 1, size: 100);
+      await chunk(db, 'old', 1, _c, 2, size: 100);
+      await chunk(db, 'busy', 0, _c, 1, size: 100);
+      await chunk(db, 'busy', 1, _c, 9, size: 100);
+      await chunk(db, 'mid', 0, _s, 5, size: 100);
+      for (final mid in ['old', 'busy']) {
+        await db.mem.insert('media_wants', {
           'media_id': mid,
-          'idx': idx,
-          'slice': 'x',
+          'peer_id': _c,
           'total': 9,
-          'at': at,
-          'sender': from,
+          'can_resend': 1,
+          'last_at': 1,
         });
+      }
+      db.mem.log.clear();
+      final w = sliceWeight(100);
+      expect(await db.trimUnfinishedMedia(bytes: 3 * w), {'old'});
+      final left = {
+        for (final r in db.mem.rows('media_chunks')) r['media_id'] as String,
+      };
+      expect(left, {'busy', 'mid'});
+      expect(
+        [for (final r in db.mem.rows('media_wants')) r['media_id']],
+        ['busy'],
+      );
+      expect(db.mem.log.toSet(), {'delete:media_chunks', 'delete:media_wants'});
+      expect(await db.trimUnfinishedMedia(bytes: 3 * w), isEmpty);
+      expect(await db.trimUnfinishedMedia(bytes: 3 * w, files: 1), {'mid'});
+    });
+
+    test('a file being put together stays past the cap', () async {
+      final db = await rows();
+      await chunk(db, 'a', 0, _c, 1, size: 100);
+      await chunk(db, 'b', 0, _c, 2, size: 100);
+      expect(await db.trimUnfinishedMedia(bytes: 0, keep: {'a'}), {'b'});
+      expect(db.mem.rows('media_chunks').single['media_id'], 'a');
+    });
+
+    test('keeps its count as slices come and go', () async {
+      final db = await rows();
+      final w = sliceWeight(10);
+      // counted once, then kept up
+      expect(await db.trimUnfinishedMedia(bytes: 0), isEmpty);
+      await db.putMediaChunk('a', 0, 'x' * 10, 9, null, from: _c);
+      // a slice sent again weighs once
+      await db.putMediaChunk('a', 0, 'x' * 10, 9, null, from: _c);
+      await db.putMediaChunk('b', 0, 'x' * 10, 9, null, from: _c);
+      expect(await db.trimUnfinishedMedia(bytes: 2 * w), isEmpty);
+      await db.dropMediaChunks('a');
+      await db.putMediaChunk('c', 0, 'x' * 10, 9, null, from: _c);
+      expect(await db.trimUnfinishedMedia(bytes: 2 * w), isEmpty);
+      await db.putMediaChunk('d', 0, 'x' * 10, 9, null, from: _c);
+      expect(await db.trimUnfinishedMedia(bytes: 2 * w), {'b'});
+      final left = {
+        for (final r in db.mem.rows('media_chunks')) r['media_id'] as String,
+      };
+      expect(left, {'c', 'd'});
+    });
+
+    test('a sweep holds what is left to the cap', () async {
+      final db = await rows();
+      final now = DateTime(2026, 9, 28, 12);
+      final at = now.millisecondsSinceEpoch;
+      for (var m = 0; m <= kUnfinishedFiles; m++) {
+        await chunk(
+          db,
+          'f${m.toString().padLeft(3, '0')}',
+          0,
+          _c,
+          at - 999 + m,
+        );
+      }
+      await db.sweepMediaChunks(now: now);
+      final left = {
+        for (final r in db.mem.rows('media_chunks')) r['media_id'] as String,
+      };
+      expect(left, hasLength(kUnfinishedFiles));
+      expect(left, isNot(contains('f000')));
+    });
 
     test('counts one sender\'s files in flight', () async {
       final db = await rows();

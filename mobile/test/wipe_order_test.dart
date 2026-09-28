@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// a wipe erases this phone's keys, prefs and files first. the handle's
-// release runs beside it and is given a few seconds at most: an answer
-// that never comes holds nothing back. tor's own folder goes once the
-// engine has let go of it. the engine and android's erase are stand-ins,
-// the folders real ones in a scratch folder
+// a wipe erases this phone's keys, prefs and files first. a wipe chosen in
+// settings gives the handle back beside it, a few seconds at most: an
+// answer that never comes holds nothing back. a wipe from the lock screen
+// makes no network call. tor's own folder goes once the engine has let go
+// of it. the engine and android's erase are stand-ins, the folders real
+// ones in a scratch folder
 import 'dart:async';
 import 'dart:io';
 
@@ -90,13 +91,13 @@ void main() {
     root.deleteSync(recursive: true);
   });
 
-  test('keys and files go while the release is still out, tor\'s folder '
-      'after the engine lets go, and a release that never answers holds the '
-      'end a few seconds at most', () async {
+  test('from settings: keys and files go while the release is still out, '
+      'tor\'s folder after the engine lets go, and a release that never '
+      'answers holds the end a few seconds at most', () async {
     final engine = _Engine();
     useEngineForTest(engine);
     final clock = Stopwatch()..start();
-    final done = wipeHalo();
+    final done = wipeHalo(releaseHandle: true);
     // the erase, with the release unanswered
     while (left('docs').length > 2 && clock.elapsed.inSeconds < 3) {
       await Future<void>.delayed(const Duration(milliseconds: 20));
@@ -113,5 +114,37 @@ void main() {
     expect(engine.calls, ['release wren', 'hold']);
     expect(left('docs'), isEmpty);
     expect(exited, 0);
+  });
+
+  test('from the lock screen: everything goes and the handle is never '
+      'released', () async {
+    final engine = _Engine();
+    useEngineForTest(engine);
+    final clock = Stopwatch()..start();
+    await wipeHalo();
+    expect(engine.calls, ['hold']);
+    expect(left('docs'), isEmpty);
+    expect(left('support'), isEmpty);
+    expect(left('tmp'), isEmpty);
+    expect(await const FlutterSecureStorage().readAll(), isEmpty);
+    expect((await SharedPreferences.getInstance()).getKeys(), isEmpty);
+    expect(exited, 0);
+    // nothing waited on an answer
+    expect(clock.elapsed.inSeconds, lessThan(3));
+  });
+
+  test('only the settings wipe gives the handle back', () {
+    final giving = <String>[];
+    final bare = <String>[];
+    for (final f in Directory('lib').listSync(recursive: true)) {
+      if (f is! File || !f.path.endsWith('.dart')) continue;
+      final src = f.readAsStringSync();
+      if (src.contains('wipeHalo(releaseHandle: true)')) {
+        giving.add(p.basename(f.path));
+      }
+      if (src.contains('wipeHalo()')) bare.add(p.basename(f.path));
+    }
+    expect(giving, ['settings_screen.dart']);
+    expect(bare, containsAll(['lock_screen.dart', 'pin_flow_screen.dart']));
   });
 }

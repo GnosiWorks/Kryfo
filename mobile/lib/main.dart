@@ -1077,6 +1077,7 @@ class HaloDb {
     final d = _db;
     _db = null;
     _given = null;
+    _unfinished = null;
     await d?.close();
   }
 
@@ -3535,20 +3536,34 @@ class HaloDb {
     required String from,
   }) async {
     final db = await open();
+    final now = DateTime.now().millisecondsSinceEpoch;
+    // a slice sent again replaces the one held, and weighs only once
+    final held = _unfinished;
+    final was = held == null
+        ? const <Map<String, Object?>>[]
+        : await db.query(
+            'media_chunks',
+            columns: ['length(slice) AS n'],
+            where: 'media_id = ? AND idx = ?',
+            whereArgs: [mediaId, idx],
+            limit: 1,
+          );
     await db.rawInsert(
       'INSERT OR REPLACE INTO media_chunks '
       '(media_id, idx, slice, total, burn, at, sender) '
       'VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [
-        mediaId,
-        idx,
-        slice,
-        total,
-        burn,
-        DateTime.now().millisecondsSinceEpoch,
-        from,
-      ],
+      [mediaId, idx, slice, total, burn, now, from],
     );
+    if (held != null && identical(held, _unfinished)) {
+      final old = was.isEmpty
+          ? 0
+          : sliceWeight((was.first['n'] as num? ?? 0).toInt());
+      final f = held[mediaId];
+      held[mediaId] = (
+        bytes: (f?.bytes ?? 0) + sliceWeight(slice.length) - old,
+        at: now,
+      );
+    }
     final r = await db.rawQuery(
       'SELECT COUNT(*) c FROM media_chunks WHERE media_id = ?',
       [mediaId],
@@ -3587,11 +3602,94 @@ class HaloDb {
   // a file's slices, or with [from] only the ones that sender sent
   Future<int> dropMediaChunks(String mediaId, {String? from}) async {
     final db = await open();
-    return db.delete(
+    final n = await db.delete(
       'media_chunks',
       where: from == null ? 'media_id = ?' : 'media_id = ? AND sender = ?',
       whereArgs: [mediaId, ?from],
     );
+    if (n > 0 && _unfinished != null) await _reweigh(mediaId);
+    return n;
+  }
+
+  // the unfinished files here, each with what its slices weigh and when its
+  // last slice came. read whole the first time it is needed, then kept up
+  // as slices come and go
+  Map<String, ({int bytes, int at})>? _unfinished;
+
+  Future<Map<String, ({int bytes, int at})>> _unfinishedFiles() async {
+    final have = _unfinished;
+    if (have != null) return have;
+    final db = await open();
+    final rows = await db.query(
+      'media_chunks',
+      columns: ['media_id', 'length(slice) AS n', 'at'],
+    );
+    final out = <String, ({int bytes, int at})>{};
+    for (final r in rows) {
+      final id = r['media_id'] as String;
+      final at = (r['at'] as num).toInt();
+      final f = out[id];
+      out[id] = (
+        bytes: (f?.bytes ?? 0) + sliceWeight((r['n'] as num? ?? 0).toInt()),
+        at: f == null || at > f.at ? at : f.at,
+      );
+    }
+    return _unfinished = out;
+  }
+
+  // one file's entry read again from what is left of it
+  Future<void> _reweigh(String mediaId) async {
+    final db = await open();
+    final rows = await db.query(
+      'media_chunks',
+      columns: ['length(slice) AS n', 'at'],
+      where: 'media_id = ?',
+      whereArgs: [mediaId],
+    );
+    final held = _unfinished;
+    if (held == null) return;
+    if (rows.isEmpty) {
+      held.remove(mediaId);
+      return;
+    }
+    var bytes = 0;
+    var at = 0;
+    for (final r in rows) {
+      bytes += sliceWeight((r['n'] as num? ?? 0).toInt());
+      final t = (r['at'] as num).toInt();
+      if (t > at) at = t;
+    }
+    held[mediaId] = (bytes: bytes, at: at);
+  }
+
+  // unfinished files past the cap go, whole, the one whose last slice came
+  // longest ago first. a file in [keep] is being put together and stays;
+  // finished messages are never touched. the files that went
+  Future<Set<String>> trimUnfinishedMedia({
+    Set<String> keep = const {},
+    int bytes = kUnfinishedBytes,
+    int files = kUnfinishedFiles,
+  }) async {
+    final held = await _unfinishedFiles();
+    final drop = unfinishedPastCap(
+      held,
+      bytes: bytes,
+      files: files,
+      keep: keep,
+    );
+    if (drop.isEmpty) return const <String>{};
+    final db = await open();
+    final gone = <String>{};
+    for (final id in drop) {
+      // one that began to be put together meanwhile stays
+      if (keep.contains(id)) continue;
+      await db.delete('media_chunks', where: 'media_id = ?', whereArgs: [id]);
+      await dropMediaWant(id);
+      _unfinished?.remove(id);
+      gone.add(id);
+    }
+    dlog('unfinished files past the cap: ${gone.length} dropped');
+    return gone;
   }
 
   // who sent the slices held for a file, null for none or for slices kept
@@ -3711,6 +3809,9 @@ class HaloDb {
     }
     if (n > 0) dlog('swept $n stale media chunks');
     await db.delete('media_wants', where: 'last_at < ?', whereArgs: [cutoff]);
+    // counted again from what is left, and held to the cap
+    _unfinished = null;
+    await trimUnfinishedMedia();
   }
 
   // an accepted contact, or a member of a group here
@@ -7392,6 +7493,13 @@ class AppState extends ChangeNotifier {
         await db.noteMediaWant(mid, senderHaloId, total, env.canResend);
       }
       if (have < total) {
+        // what waits unfinished has a ceiling: past it the file whose last
+        // slice came longest ago goes, this one too if it alone is past it
+        final gone = await db.trimUnfinishedMedia(keep: _inflightUids);
+        if (gone.contains(mid)) {
+          incomingMediaDone(progressKey);
+          return to;
+        }
         // still waiting on more pieces: surface how far along we are. a
         // voice note is seconds of audio; the banner is for the long ones.
         if (!env.voice) incomingMediaUpdate(progressKey, have, total);
@@ -10251,10 +10359,29 @@ class AppState extends ChangeNotifier {
     await refreshContacts();
   }
 
+  // a block stops listening on their relay address, and that address's
+  // files go with it
   Future<void> block(String haloId) async {
     await session.setBlocked(haloId, true);
     await session.dropHeld(haloId);
+    if (!sessionQuiet) await _unlistenPeer(haloId);
     await refreshContacts();
+  }
+
+  Future<void> _unlistenPeer(String haloId) async {
+    final keys = {
+      for (final e in _xPubToHaloId.entries)
+        if (e.value == haloId) e.key,
+    };
+    final x = await _ownerOf(haloId).contactXPub(haloId);
+    if (x != null && x.isNotEmpty) keys.add(x);
+    for (final k in keys) {
+      // a key someone else here is heard on stays
+      final heard = _xPubToHaloId[k];
+      if (heard != null && heard != haloId) continue;
+      _xPubToHaloId.remove(k);
+      _io.unlisten(k);
+    }
   }
 
   // a support chat is taken on by its first reply, and stays in support.
@@ -10297,8 +10424,10 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  // an unblock listens for them again
   Future<void> unblock(String haloId) async {
     await session.setBlocked(haloId, false);
+    if (!sessionQuiet) await subscribePeer(haloId);
     await refreshContacts();
   }
 
@@ -12060,8 +12189,9 @@ class AppState extends ChangeNotifier {
     // the row xpub is set by v1 pairing and is there before any session
     // exists; v2 bundle pairing leaves it empty and puts the key in the
     // signal store instead. try both, backfill the row when we learn it.
-    // a hidden chat's row is in the open vault
+    // a hidden chat's row is in the open vault. no one blocked is heard
     final d = _ownerOf(haloId);
+    if (await d.isBlocked(haloId)) return;
     var xPub = await d.contactXPub(haloId);
     if (xPub == null || xPub.isEmpty) {
       xPub = await signalSession.peerXPubHex(haloId);

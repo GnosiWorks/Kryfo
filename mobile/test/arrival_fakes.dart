@@ -7,6 +7,7 @@ import 'dart:typed_data';
 
 import 'package:kryfo/container.dart';
 import 'package:kryfo/main.dart' show AppIo, HaloDb;
+import 'package:kryfo/media_resend.dart';
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
 import 'package:kryfo/router.dart';
@@ -71,6 +72,10 @@ class ArrivalStore implements RouterStore {
   }.length;
   @override
   Future<int> inboxCount() async => inbox.length;
+  @override
+  Future<List<(int, int)>> inboxSizes() async => [
+    for (final r in inbox) (r['id'] as int, (r['sealed'] as List<int>).length),
+  ];
   @override
   Future<List<Map<String, Object?>>> inboxOldest(int limit) async =>
       inbox.take(limit).toList();
@@ -215,8 +220,10 @@ class ArrivalRows implements HaloDb {
   final votes = <String, Map<String, (List<int>, int)>>{};
   final chunks = <String, Map<int, String>>{};
   final chunkBurn = <String, int>{};
-  // who sent each file's slices
+  // who sent each file's slices, and when its last one came
   final chunkFrom = <String, String>{};
+  final chunkAt = <String, int>{};
+  var _clock = 0;
   final seen = <String>{};
   final held = <String>[];
   final vouches = <String, Set<String>>{};
@@ -803,6 +810,7 @@ class ArrivalRows implements HaloDb {
   }) async {
     _hit('putMediaChunk', mediaId, null);
     chunkFrom[mediaId] = from;
+    chunkAt[mediaId] = ++_clock;
     (chunks[mediaId] ??= {})[idx] = slice;
     if (burn != null) chunkBurn[mediaId] = burn;
     return chunks[mediaId]!.length;
@@ -821,6 +829,7 @@ class ArrivalRows implements HaloDb {
     }
     chunkBurn.remove(mediaId);
     chunkFrom.remove(mediaId);
+    chunkAt.remove(mediaId);
     return _hit(
       'dropMediaChunks',
       mediaId,
@@ -831,6 +840,39 @@ class ArrivalRows implements HaloDb {
   @override
   Future<String?> mediaChunkSender(String mediaId) async =>
       _hit('mediaChunkSender', mediaId, chunkFrom[mediaId]);
+
+  // the app's cap, unless a test sets a smaller one
+  int unfinishedBytes = kUnfinishedBytes;
+  int unfinishedFiles = kUnfinishedFiles;
+
+  @override
+  Future<Set<String>> trimUnfinishedMedia({
+    Set<String> keep = const {},
+    int bytes = kUnfinishedBytes,
+    int files = kUnfinishedFiles,
+  }) async {
+    final drop = unfinishedPastCap(
+      {
+        for (final MapEntry(key: id, value: slices) in chunks.entries)
+          id: (
+            bytes: slices.values.fold(0, (n, s) => n + sliceWeight(s.length)),
+            at: chunkAt[id] ?? 0,
+          ),
+      },
+      bytes: unfinishedBytes,
+      files: unfinishedFiles,
+      keep: keep,
+    );
+    for (final id in drop) {
+      chunks.remove(id);
+      chunkBurn.remove(id);
+      chunkFrom.remove(id);
+      chunkAt.remove(id);
+    }
+    return _hit('trimUnfinishedMedia', drop.isEmpty ? null : drop.join(','), {
+      ...drop,
+    });
+  }
 
   @override
   Future<int> filesInFlightFrom(String from, {String? except}) async => _hit(
