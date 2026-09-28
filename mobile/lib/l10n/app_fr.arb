@@ -1934,6 +1934,8 @@
   "devNewKey": "Marios a une nouvelle clé",
   "devStartNewChat": "Commencer une nouvelle discussion",
   "devKeyRetired": "Cette clé a été retirée. Plus rien ne peut être envoyé ni reçu ici.",
+  "devNamelessLine": "Le nom créé pour cette discussion reste sur le téléphone où il a été créé. Ici, la discussion peut seulement être lue.",
+  "devStartNewLine": "Tous les messages d’ici disparaissent, et une nouvelle discussion s’ouvre.",
   "devVoiceDisguised": "Votre voix est déguisée dans cette discussion",
   "devChatOptions": "Options de la discussion"
 }

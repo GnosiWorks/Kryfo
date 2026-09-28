@@ -1934,6 +1934,8 @@
   "devNewKey": "Marios 有了新密钥",
   "devStartNewChat": "开始新的聊天",
   "devKeyRetired": "这个密钥已停用。这里不能再发送或接收任何内容。",
+  "devNamelessLine": "为这个聊天生成的名字只留在生成它的手机上，所以这里只能阅读。",
+  "devStartNewLine": "这里的每一条消息都会删除，并打开一个新的聊天。",
   "devVoiceDisguised": "在这个聊天里，你的语音会变声",
   "devChatOptions": "聊天选项"
 }

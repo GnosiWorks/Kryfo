@@ -11715,7 +11715,7 @@ abstract class AppLocalizations {
   /// **'Marios has a new key'**
   String get devNewKey;
 
-  /// the developer chat after he has a new key: a chat on the new key
+  /// screens/chat_screen.dart, screens/dev_about_sheet.dart: the button under the line of an anonymous developer chat that can only be read, and the yes of the sheet it opens: that chat goes and a fresh one opens. later also for a chat on a key he has replaced
   ///
   /// In en, this message translates to:
   /// **'Start a new chat'**
@@ -11726,6 +11726,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This key was retired. Nothing more can be sent or received here.'**
   String get devKeyRetired;
+
+  /// screens/chat_screen.dart: in place of the composer of an anonymous developer chat restored from a backup or a move. the name it was made with never leaves the phone it was made on, so the chat reads and cannot send
+  ///
+  /// In en, this message translates to:
+  /// **'The name made for this chat stays on the phone it was made on, so here it can only be read.'**
+  String get devNamelessLine;
+
+  /// screens/dev_about_sheet.dart: under Delete this chat? before that chat goes and a fresh one takes its place
+  ///
+  /// In en, this message translates to:
+  /// **'Every message here goes, and a fresh chat opens.'**
+  String get devStartNewLine;
 
   /// screens/chat_screen.dart: the voice disguise toggle of an anonymous developer chat, always on, and what a tap on it says
   ///

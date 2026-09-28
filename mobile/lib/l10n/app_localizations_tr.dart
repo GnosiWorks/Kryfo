@@ -7310,6 +7310,14 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bu anahtar kullanımdan kaldırıldı. Burada artık hiçbir şey gönderilemez veya alınamaz.';
 
   @override
+  String get devNamelessLine =>
+      'Bu sohbet için oluşturulan ad, oluşturulduğu telefonda kalır; bu yüzden sohbet burada yalnızca okunabilir.';
+
+  @override
+  String get devStartNewLine =>
+      'Buradaki her mesaj gider ve yeni bir sohbet açılır.';
+
+  @override
   String get devVoiceDisguised => 'Bu sohbette sesin gizleniyor';
 
   @override

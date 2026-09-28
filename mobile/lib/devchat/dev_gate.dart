@@ -10,7 +10,7 @@ import 'dart:convert';
 
 import '../dlog.dart';
 import 'dev_chat.dart';
-import 'dev_frame.dart' show devTokens;
+import 'dev_frame.dart' show DevSelf, devTokens;
 import 'dev_key.dart';
 
 // what a refused call answers, in the engine's own error form
@@ -81,14 +81,15 @@ class DevGate {
 
   // ---- the table, one call at a time ----
 
-  // the pair lane (nostrSend)
+  // the pair lane (nostrSend). only what the dev chat's own seal made goes
+  // to him, with three words too: nothing built elsewhere reaches his keys
   static DevWay relayWay(
     DevChatRow? r,
     DevKey k,
     String cipher,
     bool Function(String) minted,
   ) => switch (_on(r, k)) {
-    DevState.everyday => DevWay.pass,
+    DevState.everyday => minted(cipher) ? DevWay.pass : DevWay.refused,
     DevState.anon => _asAnon(r!, minted(cipher)),
     _ => DevWay.refused,
   };
@@ -338,4 +339,38 @@ DevCard devCardOf({required String id, String? bundle, String? xPub}) {
         : DevCard.mismatch;
   }
   return byWords == null ? DevCard.none : DevCard.mismatch;
+}
+
+// ---- which poll lines are his ----
+
+// the pinned key a poll line's tag names as its sender: his key's pair
+// lane, or a room tag with his key as the member. null for any other line
+DevKey? devKeyOfTag(String tag) {
+  if (tag.startsWith('room:')) {
+    final parts = tag.split(':');
+    return parts.length == 3 ? devKeyByXPub(parts[2]) : null;
+  }
+  return devKeyByXPub(tag);
+}
+
+// whether the running dev chat takes a line so tagged: a chat with three
+// words on his key's pair lane, an anonymous one on the room tag of the
+// name made for it. nothing before the first send, after a delete, from a
+// retired key, or for a chat restored without its made name
+bool devLaneTakes(DevChatRow? r, String tag) {
+  final k = devKeyOfTag(tag);
+  if (k == null || r == null || !r.started || r.keyId != k.keyId) {
+    return false;
+  }
+  if (k.status == DevKeyStatus.retired) return false;
+  final t = tag.toLowerCase();
+  switch (r.state) {
+    case DevState.everyday:
+      return t == k.xPub;
+    case DevState.anon:
+      final self = DevSelf.ofKeys(r.anonId, r.anonEdPriv, r.anonXPriv);
+      return self != null && t == 'room:${self.xPub}:${k.xPub}';
+    case DevState.fresh || DevState.gone:
+      return false;
+  }
 }

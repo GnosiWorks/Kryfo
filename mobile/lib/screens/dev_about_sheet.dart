@@ -87,12 +87,35 @@ Future<bool> deleteDevChat(BuildContext context, DevRow d) async {
   );
   if (!ok) return false;
   HapticFeedback.heavyImpact();
-  await session.devChat.delete();
+  await _gone(d.chatId);
+  return true;
+}
+
+// the rows, and what the wire still held for it
+Future<void> _gone(String chatId) async {
+  await appState.devDelete();
   // a chat made again later starts with the three words
   forgetDevChoices();
-  unawaited(clearNotificationsFor(d.chatId));
+  unawaited(clearNotificationsFor(chatId));
   await appState.refreshContacts();
-  return true;
+}
+
+// a chat restored without the name it was made with only reads: asked once,
+// it goes and a fresh one takes its place, on this tap. the chat to open,
+// or null when kept
+Future<String?> startNewDevChat(BuildContext context, String chatId) async {
+  final ok = await showConfirmSheet(
+    context,
+    title: l10n.homeDeleteThisChat,
+    line: l10n.devStartNewLine,
+    yes: l10n.devStartNewChat,
+  );
+  if (!ok) return null;
+  HapticFeedback.heavyImpact();
+  await _gone(chatId);
+  final id = await session.devChat.writeToMarios();
+  await appState.refreshContacts();
+  return id;
 }
 
 // the settings row: the chat as it is, or after a delete a fresh one, made
@@ -105,10 +128,14 @@ Future<void> writeToMarios(BuildContext context) async {
 }
 
 // a forward lands only in a chat that has started, so it never skips what
-// the chat says before the first send. a retired key takes nothing
+// the chat says before the first send. a retired key takes nothing, and
+// nor does a chat that only reads
 DevRow? get devForwardTarget {
   final d = appState.devRow;
-  if (d == null || !d.started || d.status == DevKeyStatus.retired) {
+  if (d == null ||
+      !d.started ||
+      d.nameless ||
+      d.status == DevKeyStatus.retired) {
     return null;
   }
   return d;

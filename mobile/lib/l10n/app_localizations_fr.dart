@@ -7353,6 +7353,14 @@ class AppLocalizationsFr extends AppLocalizations {
       'Cette clé a été retirée. Plus rien ne peut être envoyé ni reçu ici.';
 
   @override
+  String get devNamelessLine =>
+      'Le nom créé pour cette discussion reste sur le téléphone où il a été créé. Ici, la discussion peut seulement être lue.';
+
+  @override
+  String get devStartNewLine =>
+      'Tous les messages d’ici disparaissent, et une nouvelle discussion s’ouvre.';
+
+  @override
   String get devVoiceDisguised =>
       'Votre voix est déguisée dans cette discussion';
 

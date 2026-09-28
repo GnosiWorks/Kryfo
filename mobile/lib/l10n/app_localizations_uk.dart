@@ -7410,6 +7410,14 @@ class AppLocalizationsUk extends AppLocalizations {
       'Цей ключ відкликано. Тут уже нічого не можна надіслати чи отримати.';
 
   @override
+  String get devNamelessLine =>
+      'Ім’я, створене для цього чату, залишається на телефоні, де його створили, тож тут чат можна лише читати.';
+
+  @override
+  String get devStartNewLine =>
+      'Усі повідомлення тут зникнуть, і відкриється новий чат.';
+
+  @override
   String get devVoiceDisguised => 'Твій голос у цьому чаті змінено';
 
   @override

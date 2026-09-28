@@ -72,16 +72,22 @@ Future<bool> _there(DatabaseExecutor db, String table) async =>
 // is not there holds nothing; one that is there and will not clear fails
 // the copy
 Future<void> scrubDevAnon(DatabaseExecutor db) async {
-  for (final name in kSignalTables) {
-    final table = '$kDevSignalPrefix$name';
-    if (await _there(db, table)) await db.delete(table);
-  }
+  await clearDevStore(db);
   if (await _there(db, 'devchat')) {
     await db.update('devchat', {
       'anon_id': null,
       'anon_ed_priv': null,
       'anon_x_priv': null,
     });
+  }
+}
+
+// the anonymous chat's own store, emptied: a start makes it anew, and a
+// delete or a copy leaves nothing of it behind
+Future<void> clearDevStore(DatabaseExecutor db) async {
+  for (final name in kSignalTables) {
+    final table = '$kDevSignalPrefix$name';
+    if (await _there(db, table)) await db.delete(table);
   }
 }
 
@@ -172,6 +178,7 @@ class DevRow {
     this.archived = false,
     this.started = false,
     this.anonymous = false,
+    this.nameless = false,
     this.status = DevKeyStatus.current,
   });
 
@@ -187,6 +194,8 @@ class DevRow {
   final bool archived;
   final bool started;
   final bool anonymous;
+  // anonymous, restored without its made name: it reads, it never sends
+  final bool nameless;
   // retired also when its key has left the list: it reads, it never sends
   final DevKeyStatus status;
 }
@@ -236,6 +245,7 @@ DevRow? devRowOf(
         archived: flag('archived', r.archived),
         started: true,
         anonymous: r.state == DevState.anon,
+        nameless: r.nameless,
         status: r.key?.status ?? DevKeyStatus.retired,
       );
   }
@@ -495,10 +505,7 @@ class DevChat {
       await t.delete(table, where: '$col LIKE ?', whereArgs: [_kDev]);
     }
     // the anonymous chat's own store, all of it
-    for (final name in kSignalTables) {
-      final table = '$kDevSignalPrefix$name';
-      if (await _there(t, table)) await t.delete(table);
-    }
+    await clearDevStore(t);
     // the delete marked its polls as just gone: nothing of them stays
     await _inChunks(t, 'polls_gone', 'uid', polls);
     await t.insert('devchat', {

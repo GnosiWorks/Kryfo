@@ -93,11 +93,13 @@ void main() {
 
     test('everyday: the pinned lanes pass as they are', () {
       final r = _row(DevState.everyday);
-      expect(DevGate.relayWay(r, _m1, 'anything', _tok), DevWay.pass);
-      expect(
-        DevGate.firstContactWay(r, _m1, _m1, 'anything', _tok),
-        DevWay.pass,
-      );
+      expect(DevGate.relayWay(r, _m1, 'minted', _tok), DevWay.pass);
+      expect(DevGate.firstContactWay(r, _m1, _m1, 'minted', _tok), DevWay.pass);
+      // only what the chat's own seal made, with three words too
+      for (final c in ['anything', '{"halo_ctl":"bundle"}']) {
+        expect(DevGate.relayWay(r, _m1, c, _tok), DevWay.refused);
+        expect(DevGate.firstContactWay(r, _m1, _m1, c, _tok), DevWay.refused);
+      }
       expect(DevGate.listenWay(r, _m1), DevWay.pass);
       // relay only: no onion is pinned, so none is reached
       expect(DevGate.onionWay(r, _m1), DevWay.refused);
@@ -141,13 +143,13 @@ void main() {
 
     test('a chat reaches its own key only, and a retired key no one', () {
       final onM2 = _row(DevState.everyday, keyId: 'm2');
-      expect(DevGate.relayWay(onM2, _m1, 'x', _tok), DevWay.refused);
-      expect(DevGate.relayWay(onM2, _m2, 'x', _tok), DevWay.pass);
+      expect(DevGate.relayWay(onM2, _m1, 'minted', _tok), DevWay.refused);
+      expect(DevGate.relayWay(onM2, _m2, 'minted', _tok), DevWay.pass);
       final previous = _key('m1', 0x11, status: DevKeyStatus.previous);
       final retired = _key('m1', 0x11, status: DevKeyStatus.retired);
       final r = _row(DevState.everyday);
-      expect(DevGate.relayWay(r, previous, 'x', _tok), DevWay.pass);
-      expect(DevGate.relayWay(r, retired, 'x', _tok), DevWay.refused);
+      expect(DevGate.relayWay(r, previous, 'minted', _tok), DevWay.pass);
+      expect(DevGate.relayWay(r, retired, 'minted', _tok), DevWay.refused);
       expect(DevGate.listenWay(r, retired), DevWay.refused);
       expect(
         DevGate.roomOk(_row(DevState.anon), retired, 'anon-priv'),
@@ -247,18 +249,21 @@ void main() {
     });
 
     test('everyday: out as asked', () async {
-      final gate = DevGate(chat: () async => _row(DevState.everyday));
+      final gate = DevGate(
+        chat: () async => _row(DevState.everyday),
+        minted: _tok,
+      );
       final o = _Out();
       await gate.nostrSend(
         _m1.xPub.toUpperCase(),
-        'c',
+        'minted',
         out: o.out,
         room: o.room,
       );
       await gate.sendFirstContact(
         _m1.xPub,
         _m1.fc,
-        'c',
+        'minted',
         out: o.out,
         room: o.room,
       );
@@ -269,13 +274,34 @@ void main() {
         await gate.sendFirstContact(
           _other,
           _m1.fc,
-          'c',
+          'minted',
           out: o.out,
           room: o.room,
         ),
         kDevRefused,
       );
-      expect(await gate.roomSend('p', _m1.xPub, 'c', out: o.out), kDevRefused);
+      expect(
+        await gate.roomSend('p', _m1.xPub, 'minted', out: o.out),
+        kDevRefused,
+      );
+      // and nothing the chat's own seal did not make: a clear bundle ask
+      // or any cipher from somewhere else
+      for (final c in ['c', '{"halo_ctl":"bundle"}']) {
+        expect(
+          await gate.nostrSend(_m1.xPub, c, out: o.out, room: o.room),
+          kDevRefused,
+        );
+        expect(
+          await gate.sendFirstContact(
+            _m1.xPub,
+            _m1.fc,
+            c,
+            out: o.out,
+            room: o.room,
+          ),
+          kDevRefused,
+        );
+      }
       expect(o.calls, hasLength(3));
     });
 

@@ -9217,11 +9217,19 @@
   },
   "devStartNewChat": "Start a new chat",
   "@devStartNewChat": {
-    "description": "the developer chat after he has a new key: a chat on the new key"
+    "description": "screens/chat_screen.dart, screens/dev_about_sheet.dart: the button under the line of an anonymous developer chat that can only be read, and the yes of the sheet it opens: that chat goes and a fresh one opens. later also for a chat on a key he has replaced"
   },
   "devKeyRetired": "This key was retired. Nothing more can be sent or received here.",
   "@devKeyRetired": {
     "description": "screens/chat_screen.dart: in place of the composer of a developer chat whose key was retired"
+  },
+  "devNamelessLine": "The name made for this chat stays on the phone it was made on, so here it can only be read.",
+  "@devNamelessLine": {
+    "description": "screens/chat_screen.dart: in place of the composer of an anonymous developer chat restored from a backup or a move. the name it was made with never leaves the phone it was made on, so the chat reads and cannot send"
+  },
+  "devStartNewLine": "Every message here goes, and a fresh chat opens.",
+  "@devStartNewLine": {
+    "description": "screens/dev_about_sheet.dart: under Delete this chat? before that chat goes and a fresh one takes its place"
   },
   "devVoiceDisguised": "Your voice is disguised in this chat",
   "@devVoiceDisguised": {

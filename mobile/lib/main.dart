@@ -36,7 +36,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'screens/group_chat_screen.dart';
 import 'screens/chat_screen.dart';
 import 'screens/dev_about_sheet.dart' show devChatRoute;
-import 'devchat/dev_start.dart' show DevStart;
+import 'devchat/dev_start.dart' show DevKeyCheckFailed, DevStart;
 import 'screens/pair_code_screen.dart';
 import 'screens/scan_screen.dart';
 import 'screens/modes_screen.dart';
@@ -68,7 +68,7 @@ import 'session.dart';
 import 'router.dart';
 import 'vault_life.dart';
 import 'devchat/dev_chat.dart';
-import 'devchat/dev_frame.dart' show devInFrame;
+import 'devchat/dev_frame.dart' show DevSelf, devInFrame;
 import 'devchat/dev_gate.dart';
 import 'devchat/dev_key.dart';
 import 'devchat/dev_lane.dart';
@@ -5811,7 +5811,8 @@ class AppState extends ChangeNotifier {
   }
 
   // the everyday rows and the hidden chats' keys, never the screen's list,
-  // on the relays of a new mode. the dev chat's lane is its own
+  // on the relays of a new mode. the dev chat's lane is its own, and only
+  // once it has started
   @visibleForTesting
   Future<void> resubscribe() async {
     for (final r in await live.contacts()) {
@@ -5822,6 +5823,7 @@ class AppState extends ChangeNotifier {
     for (final x in _router.listenFor.keys) {
       _io.listen(x);
     }
+    await subscribeDevLane();
   }
 
   static const _platformChannel = MethodChannel('halo/platform');
@@ -6464,7 +6466,15 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  String? peerFcFor(String haloId) => _peerFc[haloId];
+  // the dev chat's is his pinned one, never a remembered one: the gate says
+  // whether it is reached
+  String? peerFcFor(String haloId) {
+    if (!isDevId(haloId)) return _peerFc[haloId];
+    for (final k in devKeys) {
+      if (k.chatId == haloId) return k.fc;
+    }
+    return null;
+  }
 
   Future<void> rememberPeerFc(String haloId, String fcPk) async {
     // the dev chat's address is pinned, and no one else is given his
@@ -7226,7 +7236,8 @@ class AppState extends ChangeNotifier {
       suppress =
           currentChatPeer == senderHaloId || await db.isMuted(senderHaloId);
     } else {
-      notifTitle = senderHaloId;
+      // his chat rings under his name, never its id
+      notifTitle = isDevChat(senderHaloId) ? l10n.devName : senderHaloId;
       notifBody = sticker != null
           ? l10n.stickerLabel
           : env.message.isNotEmpty
@@ -9093,6 +9104,12 @@ class AppState extends ChangeNotifier {
         arrived();
         continue;
       }
+      // his lanes are the dev chat's alone, and only while it runs on them
+      if (devKeyOfTag(m.peer) != null) {
+        if (await _receiveDev(m.peer, m.cipher, h)) notifyListeners();
+        arrived();
+        continue;
+      }
       // a room frame: opened by the room key already, never signal
       if (m.peer.startsWith('room:') || m.peer.startsWith('roomfc:')) {
         try {
@@ -9518,6 +9535,12 @@ class AppState extends ChangeNotifier {
       } catch (e) {
         dlog('rooms: boot subscribe failed: $e');
       }
+      // the dev chat's lane, only once it has started
+      try {
+        await subscribeDevLane();
+      } catch (e) {
+        dlog('dev lane: boot subscribe failed: $e');
+      }
       unawaited(sweepCaptures());
       await subscribeKnown();
     });
@@ -9815,30 +9838,255 @@ class AppState extends ChangeNotifier {
 
   // ---- the dev chat's first send ----
 
+  // one start at a time: a second screen of the same chat waits for the
+  // first and finds it started
+  Future<void> _devStarting = Future.value();
+
   // asked by every way a message leaves the dev chat, before anything of it
   // is saved: fresh becomes everyday, or anon under a name made for this
-  // chat alone. it makes the chat's rows and sends nothing: the message
-  // goes out the usual way after it. a chat already started stays as it is
-  Future<DevStart> devBegin({required bool anon}) async {
+  // chat alone. his card is checked and his session built first, then the
+  // chat's rows, then its lane is listened to; the message goes out the
+  // usual way after it. a key that does not check out throws
+  // DevKeyCheckFailed, any other failure throws too, and neither leaves
+  // anything of the start behind. a chat already started stays as it is
+  Future<DevStart> devBegin({required bool anon}) {
+    final out = _devStarting.then((_) => _devBegin(anon: anon));
+    _devStarting = out.then((_) {}, onError: (_) {});
+    return out;
+  }
+
+  Future<DevStart> _devBegin({required bool anon}) async {
     final s = session;
+    final quiet = s.container.quiet;
+    // the developer does not write to himself
+    if (!quiet && devModeOf(myXPub)) return DevStart.none;
     final r = await s.devChat.load();
     if (r == null || r.state == DevState.gone) return DevStart.none;
     if (r.started) return DevStart.ok;
     final key = currentDevKey;
     if (key == null) return DevStart.none;
-    DevAnon? name;
-    if (anon) {
-      // pure: touches no engine state and logs nothing
-      final q = engine.quietIdentity();
-      final id = q?['id'], ed = q?['ed_priv'], x = q?['x_priv'];
-      if (id is! String || ed is! String || x is! String) {
-        return DevStart.none;
+    // his card as pinned, checked the same way in every container
+    if (!devCardChecks(key)) throw const DevKeyCheckFailed();
+    final made = anon ? _devMadeName() : null;
+    if (quiet) {
+      // a decoy keeps its chat on this phone: no store, no lane, nothing
+      // listened to, and what is written there stays parked
+      if (!await s.devChat.begin(key, anon: made?.$1)) {
+        throw StateError('dev chat: the row did not start');
       }
-      name = DevAnon(id: id, edPriv: ed, xPriv: x);
+    } else if (made == null) {
+      await _devBeginEveryday(s, key);
+    } else {
+      await _devBeginAnon(s, key, made.$1, made.$2);
     }
-    final ok = await s.devChat.begin(key, anon: name);
     await refreshContacts();
-    return ok ? DevStart.ok : DevStart.none;
+    if (!quiet) await subscribeDevLane();
+    return DevStart.ok;
+  }
+
+  // three words: his session in the everyday store, then the chat's rows
+  Future<void> _devBeginEveryday(Session s, DevKey key) async {
+    final ss = signalSession;
+    if (!ss.ready) throw StateError('dev chat: the store is not ready');
+    await _devSession(ss, key);
+    try {
+      if (!await s.devChat.begin(key)) {
+        throw StateError('dev chat: the row did not start');
+      }
+    } catch (_) {
+      await _dropDevSession(ss, key.chatId);
+      rethrow;
+    }
+  }
+
+  // anonymous: a store of its own under the made name, in the everyday
+  // database beside the chat's row. emptied before, and again if the start
+  // fails, so no half made name stays
+  Future<void> _devBeginAnon(
+    Session s,
+    DevKey key,
+    DevAnon name,
+    DevSelf self,
+  ) async {
+    final db = await live.open();
+    await clearDevStore(db);
+    try {
+      final ss = SignalSession();
+      final priv = _hexDecode(name.xPriv);
+      try {
+        await ss.bootstrapInitiator(
+          database: db,
+          xPubBytes: _hexDecode(self.xPub),
+          xPrivBytes: priv,
+          prefix: kDevSignalPrefix,
+        );
+      } finally {
+        // the store keeps a copy of its own
+        _zeroBytes(priv);
+      }
+      await _devSession(ss, key);
+      if (!await s.devChat.begin(key, anon: name)) {
+        throw StateError('dev chat: the row did not start');
+      }
+    } catch (_) {
+      await clearDevStore(db);
+      rethrow;
+    }
+  }
+
+  // his card into [ss], then the key it holds for him read back: the
+  // pinned one, byte for byte. a card libsignal refuses, or any other key,
+  // is a key that did not check out, and no session of it stays
+  Future<void> _devSession(SignalSession ss, DevKey key) async {
+    final addr = SignalProtocolAddress(key.chatId, 1);
+    var ok = false;
+    try {
+      await processPeerBundle(key.chatId, key.bundle, into: ss);
+      final held = await ss.identityStore.getIdentity(addr);
+      ok =
+          held != null &&
+          _eqBytes(held.serialize(), pinnedIdentity(key)) &&
+          await ss.sessionStore.containsSession(addr);
+    } on UntrustedIdentityException {
+      ok = false;
+    } on InvalidKeyException {
+      ok = false;
+    } catch (_) {
+      await _dropDevSession(ss, key.chatId);
+      rethrow;
+    }
+    if (!ok) {
+      await _dropDevSession(ss, key.chatId);
+      throw const DevKeyCheckFailed();
+    }
+  }
+
+  Future<void> _dropDevSession(SignalSession ss, String id) async {
+    final addr = SignalProtocolAddress(id, 1);
+    try {
+      await ss.sessionStore.deleteSession(addr);
+      await ss.identityStore.removePeerIdentity(addr);
+    } catch (e) {
+      dlog('dev chat: the session did not clear ($e)');
+    }
+  }
+
+  // the name an anonymous chat writes under: made by the engine for this
+  // chat alone, read back from its own keys, and sharing nothing with the
+  // everyday identity or the session's
+  (DevAnon, DevSelf) _devMadeName() {
+    // pure: touches no engine state and logs nothing
+    final q = engine.quietIdentity();
+    final id = q?['id'], ed = q?['ed_priv'], x = q?['x_priv'];
+    final edPub = q?['ed_pub'], xPub = q?['x_pub'];
+    if (id is! String ||
+        ed is! String ||
+        x is! String ||
+        edPub is! String ||
+        xPub is! String) {
+      throw StateError('dev chat: no name was made');
+    }
+    final self = DevSelf.ofKeys(id, ed, x);
+    if (self == null ||
+        self.edPub != edPub.toLowerCase() ||
+        self.xPub != xPub.toLowerCase()) {
+      throw StateError('dev chat: the made name does not read');
+    }
+    final mine = {
+      myId,
+      sessionId,
+      for (final k in [_io.edPub(), _io.xPub(), sessionEdPub, sessionXPub])
+        k.toLowerCase(),
+    }..remove('');
+    if (mine.contains(self.id) ||
+        mine.contains(self.edPub) ||
+        mine.contains(self.xPub)) {
+      throw StateError('dev chat: the made name is not new');
+    }
+    return (DevAnon(id: id, edPriv: ed, xPriv: x), self);
+  }
+
+  // ---- the dev chat on the wire ----
+
+  // its own lane, once it has started and while it can hear: his key's
+  // pair lane with three words, the made name's room lane when anonymous
+  // (the gate turns the listen into the room export). the everyday
+  // container's chat only, never before its first send or after a delete
+  @visibleForTesting
+  Future<void> subscribeDevLane() async {
+    final DevChatRow? r;
+    try {
+      r = await live.devChat.load();
+    } catch (e) {
+      dlog('dev lane: the chat did not read ($e)');
+      return;
+    }
+    final k = r?.key;
+    if (r == null ||
+        !r.started ||
+        r.nameless ||
+        k == null ||
+        k.status == DevKeyStatus.retired) {
+      return;
+    }
+    _io.listen(k.xPub);
+  }
+
+  // a line on one of his lanes. taken only by the everyday chat running on
+  // that lane, opened in its own store; anything else, and anything outside
+  // signal, is dropped and marked seen. true when it shows
+  Future<bool> _receiveDev(String tag, String cipher, String h) async {
+    final DevChatRow? r;
+    try {
+      r = await live.devChat.load();
+    } catch (e) {
+      // left on the relay: it comes again
+      dlog('dev lane: the chat did not read ($e)');
+      return false;
+    }
+    final id = r?.chatId;
+    if (id == null || !devLaneTakes(r, tag) || cipher.startsWith('{')) {
+      dlog('dev lane: a line not taken');
+      await live.markSeen(h);
+      return false;
+    }
+    final plain = await _io.decrypt(id, cipher, flagKeyChange: true);
+    if (plain == null) {
+      _strikeUndecryptable(h, 'dev lane');
+      return false;
+    }
+    final RouteTo went;
+    try {
+      went = await _applyIncomingPayload(id, unwrapMessage(plain), wire: plain);
+    } on CapHeld {
+      return false;
+    }
+    await live.markSeen(h);
+    return _shown(went);
+  }
+
+  // deleted means gone: every row of it in the session's container. for
+  // the everyday chat the wire lets go too: the seal forgets its store and
+  // ciphers, the made name's room lane is dropped and his key maps to no
+  // chat. his pair lane stays open until the app restarts, and what comes
+  // on it is dropped. a decoy's delete leaves the everyday chat running
+  Future<void> devDelete() async {
+    final s = session;
+    if (s.container.quiet) {
+      await s.devChat.delete();
+      return;
+    }
+    DevChatRow? was;
+    try {
+      was = await live.devChat.load();
+    } catch (e) {
+      dlog('dev delete: the chat did not read ($e)');
+    }
+    await s.devChat.delete();
+    devLane.forget();
+    _xPubToHaloId.removeWhere((_, id) => isDevId(id));
+    final self = DevSelf.ofKeys(was?.anonId, was?.anonEdPriv, was?.anonXPriv);
+    if (self != null) engine.roomUnsubscribeBg(self.xPub);
   }
 
   // ---- groups ----
@@ -10105,6 +10353,14 @@ class AppState extends ChangeNotifier {
 
       // back-paired: onion-only, already fast and leaks the least.
       if (backPaired || onion.isEmpty) {
+        // no onion and not added back yet: their first-contact address is
+        // the one relay route that reaches them, as the chat's own send has
+        final fc = backPaired ? null : peerFcFor(memberId);
+        if (fc != null && fc.isNotEmpty) {
+          final f = await Future(() => _io.firstContactSend(xpub, fc, cipher));
+          if (f == 'ok') return true;
+          dlog('send: first-contact failed ($f)');
+        }
         final n = await Future(() => _io.relaySend(xpub, cipher));
         // the pair address is a drop box they read only once they add us
         // back. stored there is parked, not delivered.
@@ -11197,6 +11453,8 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> subscribePeer(String haloId) async {
+    // the dev chat listens on its own lane, and only once it runs
+    if (isDevId(haloId)) return subscribeDevLane();
     // the row xpub is set by v1 pairing and is there before any session
     // exists; v2 bundle pairing leaves it empty and puts the key in the
     // signal store instead. try both, backfill the row when we learn it.

@@ -7414,6 +7414,14 @@ class AppLocalizationsRu extends AppLocalizations {
       'Этот ключ отозван. Здесь уже ничего нельзя отправить или получить.';
 
   @override
+  String get devNamelessLine =>
+      'Имя, созданное для этого чата, остаётся на телефоне, где его создали, поэтому здесь чат можно только читать.';
+
+  @override
+  String get devStartNewLine =>
+      'Все сообщения здесь удаляются, и открывается новый чат.';
+
+  @override
   String get devVoiceDisguised => 'Твой голос в этом чате изменён';
 
   @override

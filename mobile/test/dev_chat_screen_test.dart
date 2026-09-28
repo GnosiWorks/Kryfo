@@ -6,7 +6,9 @@
 // once, before anything of it is saved, and the choice is fixed from then
 // on. nothing reaches the engine before the user writes. his header has no
 // nickname, no contact page, no block and no hide, and an anonymous chat's
-// voice is always disguised. less movement and right to left are kept
+// voice is always disguised. an anonymous chat restored without the name it
+// was made with reads, and a new chat takes its place once asked. less
+// movement and right to left are kept
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -240,6 +242,15 @@ Future<void> _started({bool anon = false, int out = 0}) async {
 }
 
 const _madeName = DevAnon(id: 'made-for-this', edPriv: 'e', xPriv: 'x');
+
+// an anonymous chat as a backup or a move brings it: two messages of it,
+// and not the name it was made with
+Future<void> _restored() async {
+  await _world();
+  await _started(anon: true, out: 2);
+  await scrubDevAnon(_mem);
+  await appState.refreshContacts();
+}
 
 // the start as the app would make it, watched: with what name, how many
 // rows the chat had and what the engine had been asked when it was asked
@@ -499,6 +510,9 @@ Set<String> _ours() => {
   l10n.devWhoChoiceStays,
   l10n.devKeyCheckFailed,
   l10n.devLockLine,
+  l10n.devNamelessLine,
+  l10n.devStartNewChat,
+  l10n.devStartNewLine,
 };
 
 final _bad = <String>[];
@@ -1171,9 +1185,64 @@ void main() {
         _fits(t, '$code, lock', skip: {l10n.devPinned});
         expect(find.text(l10n.devLockLine), findsOneWidget);
         await _close(t);
+
+        // the chat that only reads, and the sheet that starts a new one
+        await _restored();
+        await _open(t, locale: locale, scale: scale, size: small, ratio: 3);
+        expect(find.text(l10n.devNamelessLine), findsOneWidget);
+        _fits(t, '$code, nameless', skip: {l10n.devPinned});
+        await t.tap(find.text(l10n.devStartNewChat));
+        await _beat(t, 900);
+        _fits(t, '$code, start new', skip: {l10n.devPinned});
+        await _close(t);
         expect(_bad, isEmpty);
       });
     }
+  });
+
+  group('a chat restored without its made name', () {
+    testWidgets('it reads, says why in place of the composer, and a new '
+        'chat takes its place once asked', (t) async {
+      await _restored();
+      await _open(t);
+      expect(find.text('note 0'), findsOneWidget);
+      expect(find.text(l10n.devNamelessLine), findsOneWidget);
+      expect(find.byIcon(Icons.arrow_upward), findsNothing);
+      expect(find.byType(TextField), findsNothing);
+      expect(find.byType(DevNote), findsNothing);
+      // asked first: keep leaves all of it
+      await t.tap(find.text(l10n.devStartNewChat));
+      await _beat(t, 900);
+      expect(find.text(l10n.devStartNewLine), findsOneWidget);
+      await t.tap(find.text(l10n.confirmSheetKeep));
+      await _beat(t, 900);
+      expect(_row()!.state, DevState.anon);
+      expect(_sent(), hasLength(2));
+      expect(find.text(l10n.devNamelessLine), findsOneWidget);
+      // yes: it goes, and a fresh chat opens in its place
+      await t.tap(find.text(l10n.devStartNewChat));
+      await _beat(t, 900);
+      await t.tap(find.text(l10n.devStartNewChat).last);
+      await _beat(t, 1200);
+      expect(_row()!.state, DevState.fresh);
+      expect(_mem.rows('messages'), isEmpty);
+      expect(_hasDevContact, isFalse);
+      expect(find.text('note 0'), findsNothing);
+      expect(find.text(l10n.devNamelessLine), findsNothing);
+      expect(find.text(l10n.devWelcome), findsOneWidget);
+      expect(find.byType(DevNote), findsOneWidget);
+      expect(find.text(l10n.devNoteWords), findsOneWidget);
+      // nothing asked of the engine or started on the way
+      expect(_engine.calls, isEmpty);
+      expect(_begun, isEmpty);
+      await _close(t);
+    });
+
+    testWidgets('it takes no forward', (t) async {
+      await _restored();
+      expect(appState.devRow!.nameless, isTrue);
+      expect(devForwardTarget, isNull);
+    });
   });
 
   group('the start', () {

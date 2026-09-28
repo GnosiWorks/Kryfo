@@ -6987,6 +6987,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get devKeyRetired => '这个密钥已停用。这里不能再发送或接收任何内容。';
 
   @override
+  String get devNamelessLine => '为这个聊天生成的名字只留在生成它的手机上，所以这里只能阅读。';
+
+  @override
+  String get devStartNewLine => '这里的每一条消息都会删除，并打开一个新的聊天。';
+
+  @override
   String get devVoiceDisguised => '在这个聊天里，你的语音会变声';
 
   @override
@@ -13973,6 +13979,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get devKeyRetired => '這個金鑰已停用。這裡不能再傳送或接收任何內容。';
+
+  @override
+  String get devNamelessLine => '為這個聊天產生的名字只留在產生它的手機上，所以這裡只能閱讀。';
+
+  @override
+  String get devStartNewLine => '這裡的每則訊息都會刪除，並開啟一個新的聊天。';
 
   @override
   String get devVoiceDisguised => '在這個聊天裡，你的語音會變聲';

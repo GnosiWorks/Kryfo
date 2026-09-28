@@ -7348,6 +7348,14 @@ class AppLocalizationsIt extends AppLocalizations {
       'Questa chiave è stata ritirata. Qui non si può più inviare né ricevere nulla.';
 
   @override
+  String get devNamelessLine =>
+      'Il nome creato per questa chat resta sul telefono dove è stato creato, quindi qui la chat si può solo leggere.';
+
+  @override
+  String get devStartNewLine =>
+      'Tutti i messaggi qui vengono eliminati, e si apre una nuova chat.';
+
+  @override
   String get devVoiceDisguised => 'La tua voce è camuffata in questa chat';
 
   @override

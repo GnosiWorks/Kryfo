@@ -7401,6 +7401,13 @@ class AppLocalizationsAr extends AppLocalizations {
       'أُوقف هذا المفتاح. لا يمكن إرسال أي شيء أو استلامه هنا بعد الآن.';
 
   @override
+  String get devNamelessLine =>
+      'يبقى الاسم الذي صُنع لهذه المحادثة على الهاتف الذي صُنع عليه، لذا يمكن هنا قراءتها فقط.';
+
+  @override
+  String get devStartNewLine => 'تُحذف كل رسالة هنا، وتُفتح محادثة جديدة.';
+
+  @override
   String get devVoiceDisguised => 'صوتك مموّه في هذه المحادثة';
 
   @override
