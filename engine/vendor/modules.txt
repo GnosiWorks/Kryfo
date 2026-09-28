@@ -82,7 +82,7 @@ github.com/cretz/bine/torutil
 github.com/cretz/bine/torutil/ed25519
 github.com/cretz/bine/torutil/ed25519/internal/edwards25519
 # github.com/dchest/siphash v1.2.3
-## explicit; go 1.13
+## explicit; go 1.16
 github.com/dchest/siphash
 # github.com/decred/dcrd/crypto/blake256 v1.1.0
 ## explicit; go 1.17
@@ -161,31 +161,21 @@ github.com/twitchyliquid64/golang-asm/unsafeheader
 github.com/tyler-smith/go-bip39
 github.com/tyler-smith/go-bip39/wordlists
 # gitlab.com/yawning/edwards25519-extra v0.0.0-20231005122941-2149dcafc266
-## explicit; go 1.20
+## explicit; go 1.16
 gitlab.com/yawning/edwards25519-extra/elligator2
-gitlab.com/yawning/edwards25519-extra/h2c
 gitlab.com/yawning/edwards25519-extra/internal/montgomery
-gitlab.com/yawning/edwards25519-extra/vrf
 # gitlab.com/yawning/obfs4.git v0.0.0-20231012084234-c3e2d44b1033
 ## explicit; go 1.20
 gitlab.com/yawning/obfs4.git/common/csrand
 gitlab.com/yawning/obfs4.git/common/drbg
-gitlab.com/yawning/obfs4.git/common/log
 gitlab.com/yawning/obfs4.git/common/ntor
 gitlab.com/yawning/obfs4.git/common/probdist
 gitlab.com/yawning/obfs4.git/common/replayfilter
 gitlab.com/yawning/obfs4.git/common/socks5
-gitlab.com/yawning/obfs4.git/common/uniformdh
 gitlab.com/yawning/obfs4.git/internal/x25519ell2
-gitlab.com/yawning/obfs4.git/obfs4proxy
-gitlab.com/yawning/obfs4.git/transports
 gitlab.com/yawning/obfs4.git/transports/base
-gitlab.com/yawning/obfs4.git/transports/meeklite
-gitlab.com/yawning/obfs4.git/transports/obfs2
-gitlab.com/yawning/obfs4.git/transports/obfs3
 gitlab.com/yawning/obfs4.git/transports/obfs4
 gitlab.com/yawning/obfs4.git/transports/obfs4/framing
-gitlab.com/yawning/obfs4.git/transports/scramblesuit
 # gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/goptlib v1.5.0
 ## explicit; go 1.11
 gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/goptlib
