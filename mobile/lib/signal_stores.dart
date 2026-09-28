@@ -199,7 +199,7 @@ class HaloSessionStore implements SessionStore {
       limit: 1,
     );
     if (rows.isEmpty) return SessionRecord();
-    return SessionRecord.fromSerialized(rows.first['record'] as Uint8List);
+    return _ownRecord(rows.first['record'] as Uint8List);
   }
 
   // every address we hold a session with, contact or not, so the drain loop
@@ -228,7 +228,7 @@ class HaloSessionStore implements SessionStore {
     await _db.insert(_t, {
       'address': address.getName(),
       'device_id': address.getDeviceId(),
-      'record': record.serialize(),
+      'record': _onceEach(record).serialize(),
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
@@ -256,6 +256,55 @@ class HaloSessionStore implements SessionStore {
   Future<void> deleteAllSessions(String name) async {
     await _db.delete(_t, where: 'address = ?', whereArgs: [name]);
   }
+}
+
+// states are handed out as copies, so a try that does not open a message
+// leaves the stored record as it was
+base class _CopiedState extends SessionState {
+  _CopiedState(super.structure) : super.fromStructure();
+
+  // a state on the structure itself, for writing the record
+  SessionState bare() => SessionState.fromStructure(super.structure);
+
+  @override
+  get structure => SessionRecord.fromSerialized(
+    SessionRecord.fromSessionState(
+      SessionState.fromStructure(super.structure),
+    ).serialize(),
+  ).sessionState.structure;
+}
+
+SessionRecord _ownRecord(Uint8List bytes) {
+  final read = SessionRecord.fromSerialized(bytes);
+  final archived = [
+    for (final s in read.previousSessionStates) _CopiedState(s.structure),
+  ];
+  read
+    ..state = _CopiedState(read.sessionState.structure)
+    ..removePreviousSessionStates();
+  read.previousSessionStates.addAll(archived);
+  return read;
+}
+
+// [record] with each session once, the newest copy of it kept. an archived
+// state that opens a message is promoted without leaving the archive, and
+// what stays there is its state from before
+SessionRecord _onceEach(SessionRecord record) {
+  SessionState plain(SessionState s) =>
+      s is _CopiedState ? s.bare() : SessionState.fromStructure(s.structure);
+  final out = SessionRecord.fromSessionState(plain(record.sessionState));
+  final seen = {_sessionKey(record.sessionState)};
+  for (final s in record.previousSessionStates) {
+    final k = _sessionKey(s);
+    if (k.isNotEmpty && !seen.add(k)) continue;
+    out.previousSessionStates.add(plain(s));
+  }
+  return out;
+}
+
+String _sessionKey(SessionState s) {
+  final base = s.aliceBaseKey;
+  return base.isEmpty ? '' : '${s.getSessionVersion()}:${base.join(',')}';
 }
 
 class HaloSignedPreKeyStore implements SignedPreKeyStore {
