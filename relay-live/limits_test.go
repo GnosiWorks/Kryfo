@@ -105,10 +105,18 @@ func TestWrapsGoInAndComeBackByAddress(t *testing.T) {
 	if why != "" || len(got) != 1 {
 		t.Fatalf("got %d, closed %q", len(got), why)
 	}
-	// the app's liveness probe: an id that matches nothing
-	got, why = ask(t, r, nostr.Filter{IDs: []string{strings.Repeat("0", 64)}, Limit: 1})
+	// the app's liveness probe: its own address, nothing stored, nothing
+	// older than now
+	now := nostr.Now()
+	got, why = ask(t, r, nostr.Filter{Kinds: []int{wrapKind}, Tags: nostr.TagMap{"p": {to}},
+		Since: &now, LimitZero: true})
 	if why != "" || len(got) != 0 {
 		t.Fatalf("probe: got %d, closed %q", len(got), why)
+	}
+	// older builds probe with an id that matches nothing
+	got, why = ask(t, r, nostr.Filter{IDs: []string{strings.Repeat("0", 64)}, Limit: 1})
+	if why != "" || len(got) != 0 {
+		t.Fatalf("older probe: got %d, closed %q", len(got), why)
 	}
 	// the pair code's wrap carries an expiration beside its address
 	exp := wrap(t, to, func(e *nostr.Event) {
@@ -134,6 +142,24 @@ func TestOnlyWrapsToOneAddress(t *testing.T) {
 		if err := publish(t, r, wrap(t, to, mod)); err == nil {
 			t.Errorf("%s was taken", name)
 		}
+	}
+}
+
+// a phone whose clock runs fast still delivers, up to the slack and no
+// further
+func TestClockSlack(t *testing.T) {
+	url, _ := testRelay(t)
+	r := connect(t, url)
+	to := addr()
+	slack := nostr.Timestamp(futureSlack / time.Second)
+	if err := publish(t, r, wrap(t, to, func(e *nostr.Event) { e.CreatedAt = nostr.Now() + slack - 60 })); err != nil {
+		t.Fatalf("a wrap inside the slack was refused: %v", err)
+	}
+	if err := publish(t, r, wrap(t, to, func(e *nostr.Event) { e.CreatedAt = nostr.Now() + slack + 60 })); err == nil {
+		t.Fatal("a wrap past the slack was taken")
+	}
+	if futureSlack > 2*time.Hour {
+		t.Fatalf("the slack is %s, a wrap should not sit further ahead than 2h", futureSlack)
 	}
 }
 

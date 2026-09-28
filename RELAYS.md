@@ -9,8 +9,8 @@ khatru and sqlite, listening on `127.0.0.1:3334` behind nginx at
 (`retention.go`).
 
 `limits.go` keeps it to what the app does: gift wraps with one address,
-messages up to 256 kB, reads by address or by id only (a filter without an
-address would dump everyone's post box). events and reads are paced per
+messages up to 256 kB, stamped at most 2 hours ahead, reads by address or by
+id only (a filter without an address would dump everyone's post box). events and reads are paced per
 connection, sockets are capped for everyone together (`RELAY_MAX_CONNS`,
 20000), and wraps stop being taken below 2 GB of free disk. nothing is
 counted per ip: behind tor every caller looks the same. there is no delete on delivery:
