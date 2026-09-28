@@ -8,6 +8,7 @@ import 'dlog.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'l10n/l10n.dart';
 import 'container.dart';
+import 'devchat/support.dart' show kSupportPayload, supportSummaryLine;
 import 'lock_guard.dart' show lockGuard;
 import 'lock_state.dart' show quietNow;
 
@@ -65,6 +66,112 @@ Future<void> nameNotificationChannel() async {
       playSound: true,
       enableVibration: true,
     ),
+  );
+}
+
+// the developer's own phone: people writing from the Marios row, on a
+// channel of their own. made the first time it is needed, so no other
+// phone has it. a sound, no heads-up
+const _supportChannel = 'halo_support';
+bool _supportMade = false;
+
+Future<void> _makeSupportChannel() async {
+  if (_supportMade) return;
+  final android = notifPlugin
+      .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin
+      >();
+  await android?.createNotificationChannel(
+    AndroidNotificationChannel(
+      _supportChannel,
+      l10n.supportChannelName,
+      description: l10n.supportChannelLine,
+      importance: Importance.defaultImportance,
+      playSound: true,
+    ),
+  );
+  _supportMade = true;
+}
+
+AndroidNotificationDetails _supportDetails({
+  required bool alert,
+  String? ticker,
+  StyleInformation? style,
+}) => AndroidNotificationDetails(
+  _supportChannel,
+  l10n.supportChannelName,
+  channelDescription: l10n.supportChannelLine,
+  importance: Importance.defaultImportance,
+  priority: Priority.defaultPriority,
+  category: AndroidNotificationCategory.message,
+  icon: 'ic_halo_notification',
+  color: const Color(0xFFF59E0B),
+  visibility: NotificationVisibility.private,
+  // an update says the new count without a sound; a ring is its own post
+  onlyAlertOnce: !alert,
+  silent: !alert,
+  autoCancel: true,
+  ticker: ticker,
+  styleInformation: style,
+  when: DateTime.now().millisecondsSinceEpoch,
+);
+
+// the one support summary, always under this id so it updates in place
+const _supportSummaryId = 0x5e7;
+
+// counts only: a stranger's words never reach the shade or the lock screen
+Future<void> showSupportSummary({
+  required int chats,
+  required int messages,
+  required bool alert,
+}) async {
+  if (await quietNow()) return;
+  await _makeSupportChannel();
+  await notifPlugin.show(
+    id: _supportSummaryId,
+    title: l10n.supportTitle,
+    body: supportSummaryLine(chats, messages),
+    notificationDetails: NotificationDetails(
+      android: _supportDetails(alert: alert),
+    ),
+    payload: kSupportPayload,
+  );
+}
+
+Future<void> clearSupportSummary() async {
+  try {
+    await notifPlugin.cancel(id: _supportSummaryId);
+  } catch (_) {}
+}
+
+// an answered support chat rings per message, like any contact, on the
+// support channel. opening the chat takes it down
+Future<void> showSupportMessage({
+  required String chatId,
+  required String title,
+  required String body,
+}) async {
+  if (await quietNow()) return;
+  await _makeSupportChannel();
+  final hidden = await loadHideNotifContent();
+  if (hidden) {
+    title = 'Kryfo';
+    body = l10n.notificationsNewMessage;
+  }
+  final id = DateTime.now().microsecondsSinceEpoch & 0x7fffffff;
+  (_shownFor[chatId] ??= []).add(id);
+  await notifPlugin.show(
+    id: id,
+    title: title,
+    body: body,
+    notificationDetails: NotificationDetails(
+      android: _supportDetails(
+        alert: true,
+        ticker: hidden ? l10n.notificationsNewMessage2 : '$title: $body',
+        style: BigTextStyleInformation(body, contentTitle: title),
+      ),
+    ),
+    payload: '$kSupportPayload$chatId',
   );
 }
 

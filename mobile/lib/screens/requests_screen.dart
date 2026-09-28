@@ -66,7 +66,8 @@ class _RequestsScreenState extends State<RequestsScreen> {
   }
 
   Future<void> _load() async {
-    final rows = await session.pendingRequests();
+    // support chats have their own inbox
+    final rows = await session.requestsInbox();
     final previews = <String, String>{};
     final introducers = <String, _Introducer>{};
     final flags = <String, ShieldFlag>{};

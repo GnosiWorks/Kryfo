@@ -10,6 +10,7 @@ import 'dart:io';
 import 'container.dart';
 import 'devchat/dev_chat.dart' show DevChat;
 import 'devchat/dev_key.dart' show isDevChat;
+import 'devchat/support.dart' show SupportChats;
 import 'main.dart' show HaloDb;
 import 'polls.dart' show PollSpec, PollVote;
 import 'search.dart' show SearchKind;
@@ -50,6 +51,10 @@ class Session {
   // the developer chat is the primary's alone: never hidden, and a vault's
   // own row is never read
   DevChat get devChat => primary.devChat;
+
+  // the support inbox is the primary's: only the everyday container of the
+  // developer's own phone ever files one
+  SupportChats get support => primary.support;
 
   // a chat only this session shows
   bool isHidden(String chatId) => identical(_ofChat(chatId), vault);
@@ -467,7 +472,18 @@ class Session {
 
   Future<int> pendingRequestCount() async {
     if (vault == null) return primary.pendingRequestCount();
-    return (await pendingRequests()).length;
+    return (await requestsInbox()).length;
+  }
+
+  // the requests as their screen lists them: no support chats
+  Future<List<Map<String, Object?>>> requestsInbox() async {
+    final v = vault;
+    if (v == null) return primary.requestsInbox();
+    return _merge(
+      _own(primary, await primary.requestsInbox(), _personRow),
+      _own(v, await v.requestsInbox(), _personRow),
+      'last_seen',
+    );
   }
 
   Future<List<Map<String, Object?>>> pendingRequests() async {

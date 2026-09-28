@@ -379,6 +379,8 @@ class _Mem implements HaloDb {
   @override
   Future<int> pendingRequestCount() async => (await pendingRequests()).length;
   @override
+  Future<List<Map<String, Object?>>> requestsInbox() => pendingRequests();
+  @override
   Future<bool> isAccepted(String haloId) async =>
       _hit('isAccepted', haloId, people[haloId]?['accepted'] == 1);
   @override

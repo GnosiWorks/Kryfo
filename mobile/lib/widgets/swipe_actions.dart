@@ -28,14 +28,15 @@ class SwipeAction {
 
 class SwipeActions extends StatefulWidget {
   final Key rowKey;
-  // from the start side toward the end, and back
-  final SwipeAction start;
+  // from the start side toward the end, and back. with no start action the
+  // row only takes the swipe back
+  final SwipeAction? start;
   final SwipeAction end;
   final Widget child;
   const SwipeActions({
     super.key,
     required this.rowKey,
-    required this.start,
+    this.start,
     required this.end,
     required this.child,
   });
@@ -58,8 +59,13 @@ class _SwipeActionsState extends State<SwipeActions> {
 
   @override
   Widget build(BuildContext context) {
+    final start = widget.start;
+    final end = _Behind(action: widget.end, atStart: false, pull: _pull);
     return Dismissible(
       key: widget.rowKey,
+      direction: start == null
+          ? DismissDirection.endToStart
+          : DismissDirection.horizontal,
       dismissThresholds: const {
         DismissDirection.startToEnd: SwipeActions.threshold,
         DismissDirection.endToStart: SwipeActions.threshold,
@@ -68,15 +74,13 @@ class _SwipeActionsState extends State<SwipeActions> {
         if (d.reached && !d.previousReached) HapticFeedback.selectionClick();
         _pull.value = (d.progress, d.reached);
       },
-      background: _Behind(action: widget.start, atStart: true, pull: _pull),
-      secondaryBackground: _Behind(
-        action: widget.end,
-        atStart: false,
-        pull: _pull,
-      ),
+      background: start == null
+          ? end
+          : _Behind(action: start, atStart: true, pull: _pull),
+      secondaryBackground: start == null ? null : end,
       confirmDismiss: (dir) async {
-        await (dir == DismissDirection.endToStart ? widget.end : widget.start)
-            .onDone();
+        await (dir == DismissDirection.endToStart ? widget.end : start)
+            ?.onDone();
         return false;
       },
       child: widget.child,

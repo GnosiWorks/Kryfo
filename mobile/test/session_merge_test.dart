@@ -66,6 +66,9 @@ class _Db implements HaloDb {
   Future<int> pendingRequestCount() async =>
       _hit('pendingRequestCount', requests.length);
   @override
+  Future<List<Map<String, Object?>>> requestsInbox() async =>
+      _hit('requestsInbox', requests);
+  @override
   Future<List<Map<String, Object?>>> parkedRequests() async =>
       _hit('parkedRequests', parked);
   @override

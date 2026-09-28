@@ -19,6 +19,7 @@ import 'package:kryfo/devchat/dev_chat.dart';
 import 'package:kryfo/devchat/dev_gate.dart';
 import 'package:kryfo/devchat/dev_key.dart';
 import 'package:kryfo/devchat/dev_lane.dart';
+import 'package:kryfo/devchat/support.dart' show SupportChats;
 import 'package:kryfo/main.dart' show AppState, HaloDb, useDatabasesForTest;
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_stores.dart' show kDevSignalPrefix, kSignalTables;
@@ -249,6 +250,9 @@ class _Db implements HaloDb {
 
   @override
   DevChat get devChat => DevChat(() async => mem, shred: (_) async {});
+
+  @override
+  SupportChats get support => SupportChats(() async => mem);
 
   @override
   Future<List<Map<String, Object?>>> contacts() =>
@@ -843,7 +847,8 @@ void main() {
   // read off the source: the schema and the hide loop
   test('v54 seeds it on create and on upgrade, and the hide loop skips it', () {
     final src = File('lib/main.dart').readAsStringSync();
-    expect(src, contains('version: 55,'));
+    final version = RegExp(r'version: (\d+),').firstMatch(src)!.group(1)!;
+    expect(int.parse(version), greaterThanOrEqualTo(55));
     final create = src.indexOf('onCreate: (db, _) async {');
     final upgrade = src.indexOf('onUpgrade: (db, oldV, newV) async {');
     expect(create, isNonNegative);

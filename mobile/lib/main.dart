@@ -71,6 +71,8 @@ import 'devchat/dev_frame.dart' show devInFrame;
 import 'devchat/dev_gate.dart';
 import 'devchat/dev_key.dart';
 import 'devchat/dev_lane.dart';
+import 'devchat/support.dart';
+import 'screens/support_screen.dart' show openSupportTap;
 import 'stickers/sticker_pack.dart' show StickerLibrary;
 import 'stickers/sticker_wire.dart' show StickerWire, stickerText;
 import 'widgets/motion.dart';
@@ -1156,7 +1158,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 55,
+      version: 56,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -1295,8 +1297,13 @@ class HaloDb {
         await routerTables(db);
         await _devChatTables(db);
         await _devSignalTables(db);
+        await _supportTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 56) {
+          // the developer's own phone: its support inbox
+          await _supportTables(db);
+        }
         if (oldV < 55) {
           // the anonymous dev chat's own signal store
           await _devSignalTables(db);
@@ -2146,6 +2153,9 @@ class HaloDb {
   // the developer chat's row: its flags, its start and its delete
   DevChat get devChat => DevChat(open, shred: shredFile);
 
+  // the developer's own phone: the chats people start from the Marios row
+  SupportChats get support => SupportChats(open);
+
   Future<void> deleteConversation(String haloId) async {
     final d = await open();
     await d.transaction((t) async {
@@ -2352,12 +2362,22 @@ class HaloDb {
     );
   }
 
+  // the requests inbox: support chats wait in their own, though the
+  // receive side still tries them as requests
+  Future<List<Map<String, Object?>>> requestsInbox() async {
+    final rows = await pendingRequests();
+    if (rows.isEmpty) return rows;
+    return withoutSupport(rows, await support.ids());
+  }
+
   Future<int> pendingRequestCount() async {
     final db = await open();
     final r = await db.rawQuery(
       'SELECT COUNT(*) c FROM contacts WHERE accepted = 0 AND blocked = 0 AND IFNULL(archived, 0) = 0',
     );
-    return (r.first['c'] as int?) ?? 0;
+    final n = (r.first['c'] as int?) ?? 0;
+    if (n == 0 || (await support.ids()).isEmpty) return n;
+    return (await requestsInbox()).length;
   }
 
   Future<void> acceptRequest(String haloId) async {
@@ -4041,6 +4061,16 @@ Future<void> _devChatTables(Database db) async {
   }
 }
 
+// wrapped like the dev chat's: without the table there is no support
+// inbox, and the app still opens
+Future<void> _supportTables(Database db) async {
+  try {
+    await supportTables(db);
+  } catch (e) {
+    dlog('support table: $e');
+  }
+}
+
 // a direct-onion message past a stranger's two has no relay to wait on. it
 // waits here instead, still sealed, and opens when the person is accepted.
 Future<void> _heldTable(Database db) async {
@@ -4779,6 +4809,10 @@ Future<void> _openChatFor(String? haloId) async {
   if (haloId == null || haloId.isEmpty) return;
   final nav = rootNavKey.currentState;
   if (nav == null) return;
+  // the developer's own phone: its support inbox, or one of its chats
+  if (haloId.startsWith(kSupportPayload)) {
+    return openSupportTap(nav, haloId.substring(kSupportPayload.length));
+  }
   // the developer chat has its own door, and only while it is there
   if (isDevChat(haloId)) {
     if (haloId == currentChatPeer) return;
@@ -5022,8 +5056,10 @@ class AppState extends ChangeNotifier {
     AppIo io = const AppIo(),
     VaultRouter? router,
     VaultHost host = const LiveVaultHost(),
+    SupportBell bell = const SupportBell(),
   }) : _io = io,
        _host = host,
+       _bell = bell,
        _router =
            router ??
            VaultRouter(SqlRouterStore(() => live.open()), const EngineSeal()) {
@@ -6506,8 +6542,9 @@ class AppState extends ChangeNotifier {
   Future<void> checkHandle() => _repointHandle();
 
   Future<void> resetInviteAddress() async {
-    // the everyday invite's key and address: never from a quiet session
-    if (sessionQuiet) return;
+    // the everyday invite's key and address: never from a quiet session,
+    // and never on the developer's own phone, whose card every install pins
+    if (sessionQuiet || _devIdentity) return;
     // the key first: moving only the relay address leaves every old link
     // able to open a session and dial the onion directly
     await signalSession.rotateInvitePreKey();
@@ -6744,6 +6781,13 @@ class AppState extends ChangeNotifier {
       }
     }
     if (await db.isBlocked(senderHaloId)) return to;
+    // the developer's own phone: a chat started from the Marios row goes to
+    // support by its marker, and is never a way into his groups or contacts
+    final support = await _supportOf(senderHaloId, env, db);
+    if (support.on && supportRefuses(env)) {
+      dlog('support: a group or an introduction, dropped');
+      return to;
+    }
     // 1) group control
     if (env.groupControl != null) {
       await _applyGroupControl(senderHaloId, env, db);
@@ -6872,7 +6916,7 @@ class AppState extends ChangeNotifier {
     // roster self-heal: if the admin rode their full member list on this
     // message and our copy drifted, reconcile. only trust it from the real
     // admin so a member can't rewrite membership by spoofing a roster.
-    if (isGroup && env.roster != null) {
+    if (isGroup && env.roster != null && !support.on) {
       final adminId = await db.groupAdminId(env.groupId!);
       if (adminId != null && senderHaloId == adminId) {
         await db.syncGroupMembers(env.groupId!, _noDev(env.roster!));
@@ -6917,7 +6961,12 @@ class AppState extends ChangeNotifier {
       // 2-message cap: a stranger gets 2 into requests, then the chat is locked
       // until we accept them. past the cap there is no receipt.
       final have = vouched ? 0 : await db.countMessagesFrom(senderHaloId);
-      if (strangerCapHolds(accepted: false, vouched: vouched, have: have)) {
+      if (strangerCapHolds(
+        accepted: false,
+        vouched: vouched,
+        have: have,
+        cap: support.on ? kSupportCap : 2,
+      )) {
         dlog('stranger lock: holding from $senderHaloId (cap hit)');
         throw _HeldIn(db);
       }
@@ -7230,6 +7279,21 @@ class AppState extends ChangeNotifier {
       suppress =
           currentChatPeer == senderHaloId || await db.isMuted(senderHaloId);
     }
+    // support rings on its own channel: a waiting chat only as a count, an
+    // answered one per message
+    if (support.on && !isGroup) {
+      if (!suppress) {
+        await _ringSupport(
+          senderHaloId,
+          db,
+          support.fresh,
+          answered: senderAccepted,
+          title: notifTitle,
+          body: notifBody,
+        );
+      }
+      return to;
+    }
     if (!suppress) {
       // a hidden chat rings only while its vault is open, and what it shows
       // goes from the shade when the vault closes
@@ -7244,6 +7308,49 @@ class AppState extends ChangeNotifier {
       );
     }
     return to;
+  }
+
+  // his own phone, everyday container only: what the support marker files.
+  // a failure leaves the chat where any stranger's goes, in requests
+  Future<({bool on, bool fresh})> _supportOf(
+    String sender,
+    UnwrappedMessage env,
+    HaloDb db,
+  ) async {
+    if (!_devIdentity || !identical(db, live)) return (on: false, fresh: false);
+    try {
+      return await fileSupport(
+        db.support,
+        sender,
+        env,
+        accepted: () => db.isAccepted(sender),
+      );
+    } catch (e) {
+      dlog('support: not filed (${e.runtimeType})');
+      return (on: false, fresh: false);
+    }
+  }
+
+  Future<void> _ringSupport(
+    String id,
+    HaloDb db,
+    bool fresh, {
+    required bool answered,
+    required String title,
+    required String body,
+  }) async {
+    try {
+      if (answered) {
+        await _bell.chat(chatId: id, title: title, body: body);
+      } else if (currentChatPeer != kSupportPayload) {
+        // the inbox on screen says it already. a chat is new with its
+        // first message kept, whatever came before it and was not
+        final first = fresh || await db.countMessagesFrom(id) == 1;
+        await ringSupport(db.support, _bell, chat: id, fresh: first);
+      }
+    } catch (e) {
+      dlog('support: not rung (${e.runtimeType})');
+    }
   }
 
   // an arrival for a hidden chat while the vault is shut: sealed to the
@@ -8581,7 +8688,6 @@ class AppState extends ChangeNotifier {
 
   String myOnion = '';
   List<GroupPreview> groups = [];
-  String myXPub = '';
   bool restored = false;
   bool ready = false;
   bool _booting = false;
@@ -8765,6 +8871,27 @@ class AppState extends ChangeNotifier {
   int pendingCount = 0;
   // the developer chat, beside the contacts and never among them
   DevRow? devRow;
+
+  // ---- the developer's own phone ----
+
+  // the everyday identity's key, and whether it is a pinned one that still
+  // works: read once, as the identity loads. only the private key makes it
+  String _myXPub = '';
+  bool _devIdentity = false;
+  String get myXPub => _myXPub;
+  set myXPub(String x) {
+    _myXPub = x;
+    _devIdentity = devModeOf(x);
+  }
+
+  // developer mode: his own phone, never in a decoy session
+  bool get devMode => _devIdentity && !sessionQuiet;
+
+  // support chats with no answer yet, for the home pin
+  int supportWaiting = 0;
+
+  // the support inbox and its notifications
+  final SupportBell _bell;
   final Map<String, String> _xPubToHaloId = {};
   // peers waiting on a bundle swap, and when a bundle control last went to
   // each. both forget anything older than an hour so they cannot grow with
@@ -9656,6 +9783,22 @@ class AppState extends ChangeNotifier {
     await refreshContacts();
   }
 
+  // a support chat is taken on by its first reply, and stays in support.
+  // true when this reply accepted it
+  Future<bool> answerSupport(String haloId) async {
+    if (!devMode ||
+        await session.isAccepted(haloId) ||
+        !await session.support.has(haloId)) {
+      return false;
+    }
+    await session.acceptRequest(haloId);
+    await afterAccept(haloId);
+    return true;
+  }
+
+  // the support inbox is on screen: its summary has nothing left to say
+  Future<void> supportSeen() => _bell.clear();
+
   // what every accept does, from the chat or the requests list: listen for
   // them, tell them they are in, and open what the onion lane held back
   Future<void> afterAccept(String haloId) async {
@@ -9697,13 +9840,18 @@ class AppState extends ChangeNotifier {
   Future<void> refreshContacts() async {
     final s = session;
     final (list, pending, dev) = await _contactsOf(s);
+    final waiting = _devModeIn(s) ? await s.support.waiting() : null;
     // a session swapped while this read keeps what it was given
     if (!identical(s, _session)) return;
     contacts = list;
     pendingCount = pending;
     devRow = dev;
+    if (waiting != null) supportWaiting = waiting;
     notifyListeners();
   }
+
+  // developer mode as a session has it: his own phone, never its decoy
+  bool _devModeIn(Session s) => _devIdentity && !s.container.quiet;
 
   // how a row says its last message, and when it was sent
   (String?, DateTime?) _lastLine(Map<String, Object?>? last) {
@@ -9737,10 +9885,14 @@ class AppState extends ChangeNotifier {
   Future<(List<ContactPreview>, int, DevRow?)> _contactsOf(Session s) async {
     final rows = await s.contacts();
     final lasts = await s.lastMessages();
+    // an answered support chat stays in support: out of this list, the
+    // pickers and the introductions
+    final apart = _devModeIn(s) ? await s.support.ids() : const <String>{};
     final list = <ContactPreview>[];
     final devRows = <String, Map<String, Object?>>{};
     for (final r in rows) {
       final haloId = r['halo_id'] as String;
+      if (apart.contains(haloId)) continue;
       // the developer chat has a row of its own: kept out of this list, it
       // stays out of every picker, count and loop that reads it
       if (isDevChat(haloId)) {
@@ -9799,7 +9951,7 @@ class AppState extends ChangeNotifier {
         preview: preview,
         when: sent,
         // the developer's own phone has none. its decoy does
-        devMode: !s.container.quiet && devModeOf(myXPub),
+        devMode: _devModeIn(s),
       );
     } catch (e) {
       dlog('dev row: $e');
@@ -11394,6 +11546,7 @@ class _RootShellState extends State<RootShell> {
       contacts: appState.contacts,
       devRow: appState.devRow,
       pendingCount: appState.pendingCount,
+      support: appState.devMode ? appState.supportWaiting : null,
       groups: appState.groups
           .map(
             (g) => GroupSummary(

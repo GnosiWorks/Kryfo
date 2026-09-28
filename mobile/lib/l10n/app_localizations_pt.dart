@@ -7270,6 +7270,97 @@ class AppLocalizationsPt extends AppLocalizations {
       'Todas as mensagens e o nome criado para esta conversa somem, e a conversa não volta mais.';
 
   @override
+  String get supportTitle => 'Support';
+
+  @override
+  String supportWaiting(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString waiting',
+      one: '1 waiting',
+      zero: 'No one waiting',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get supportSectionWaiting => 'Waiting';
+
+  @override
+  String get supportSectionAnswered => 'Answered';
+
+  @override
+  String get supportSectionDone => 'Done';
+
+  @override
+  String get supportEmpty => 'No one has written yet';
+
+  @override
+  String get supportEmptyLine =>
+      'Chats people start from the Marios row land here, not in requests.';
+
+  @override
+  String get supportMarkDone => 'Done';
+
+  @override
+  String get supportReopen => 'Reopen';
+
+  @override
+  String get supportMarkAllDone => 'Mark all waiting as done';
+
+  @override
+  String get supportMenu => 'Support options';
+
+  @override
+  String get supportDeleteLine =>
+      'Every message in this chat goes from this phone. If they write again, it comes back here.';
+
+  @override
+  String supportNotifNewChats(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString new chats',
+      one: '1 new chat',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String supportNotifNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString new messages',
+      one: '1 new message',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get supportChannelName => 'Support';
+
+  @override
+  String get supportChannelLine => 'Chats people start from the Marios row';
+
+  @override
+  String get supportResetPinned =>
+      'This identity is pinned in Kryfo. A new link would cut off every chat with it.';
+
+  @override
   String get settingsWriteToMarios => 'Escrever para o Marios';
 
   @override

@@ -40,6 +40,8 @@ class _Db implements HaloDb {
   @override
   Future<int> pendingRequestCount() async => requests.length;
   @override
+  Future<List<Map<String, Object?>>> requestsInbox() async => [...requests];
+  @override
   Future<Map<String, Object?>?> shieldFor(String haloId) async => null;
   @override
   Future<List<Map<String, Object?>>> vouchesFor(String haloId) async => [];
