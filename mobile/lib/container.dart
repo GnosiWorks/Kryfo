@@ -10,6 +10,8 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'dlog.dart';
+
 enum Binding {
   // the engine keeps this identity online
   live,
@@ -137,6 +139,19 @@ class HaloContainer {
   // received and sent photos, voice notes and files
   Future<Directory> mediaDir() => folder('media');
 
+  // anything of it on disk: its database, a sidecar or a folder
+  Future<bool> _onDisk() async {
+    final path = await dbPath();
+    for (final f in [path, '$path-wal', '$path-shm', '$path-journal']) {
+      if (await File(f).exists()) return true;
+    }
+    final docs = (await getApplicationDocumentsDirectory()).path;
+    for (final name in ['media', 'wallpapers']) {
+      if (await Directory(p.join(docs, '$name$suffix')).exists()) return true;
+    }
+    return false;
+  }
+
   // a fresh key in the form the database expects: 64 hex characters for
   // the passphrase, or x'<64 hex>' for a raw key
   String newKey() {
@@ -157,7 +172,12 @@ class HaloContainer {
     for (final f in [path, '$path-wal', '$path-shm', '$path-journal']) {
       try {
         await File(f).delete();
-      } catch (_) {}
+      } on PathNotFoundException {
+        // not there: nothing to drop
+      } catch (e) {
+        // the boot sweep takes it once nothing could open it
+        dlog('container: a file stayed (${e.runtimeType})');
+      }
     }
     for (final name in ['media', 'wallpapers']) {
       final d = Directory(
@@ -165,7 +185,10 @@ class HaloContainer {
       );
       try {
         if (await d.exists()) await d.delete(recursive: true);
-      } catch (_) {}
+      } catch (e) {
+        // the boot sweep takes it once nothing could open it
+        dlog('container: a folder stayed (${e.runtimeType})');
+      }
     }
     if (wrapped) return;
     await _registry.delete(key: keyName!);
@@ -201,13 +224,22 @@ Future<void> listContainer(HaloContainer c, bool on) async {
 }
 
 // a container on disk that no list names was being made or taken away
-// when the app stopped: it goes. a wrapped one is never listed, so the
-// sweep leaves it alone
-Future<void> sweepContainers(Set<String> listed) async {
+// when the app stopped: whatever of it is left goes. a wrapped one is never
+// listed and its pin entry looks like any other, so its files go only when
+// nothing could open them: no pin table at all, or for the decoy's, no decoy
+Future<void> sweepContainers(
+  Set<String> listed, {
+  required bool pinTable,
+}) async {
   for (final c in HaloContainer.all) {
-    if (c == HaloContainer.everyday || c.wrapped) continue;
-    if (listed.contains(c.id)) continue;
-    if (await File(await c.dbPath()).exists()) await c.wipeFiles();
+    if (c == HaloContainer.everyday) continue;
+    final mayOpen = c.wrapped
+        ? pinTable &&
+              (c.extendsId == HaloContainer.everyday.id ||
+                  listed.contains(c.extendsId))
+        : listed.contains(c.id);
+    if (mayOpen) continue;
+    if (await c._onDisk()) await c.wipeFiles();
   }
 }
 

@@ -710,6 +710,17 @@ void main() {
     expect(await quietNow(store), isTrue);
   });
 
+  test('a pin table is kept until the lock is turned off', () async {
+    // what the boot sweep asks before it takes a vault's files
+    expect(await pinTableKept(store), isTrue);
+    final lock = await make();
+    await lock.disable();
+    expect(await pinTableKept(store), isFalse);
+    // unreadable counts as kept: a vault may be there
+    store.failReads = true;
+    expect(await pinTableKept(store), isTrue);
+  });
+
   test('a vault pin hands its key to the session, under the lock', () async {
     final lock = await make();
     final seen = <(PinResult, String?, bool)>[];

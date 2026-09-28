@@ -16,7 +16,8 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'container.dart';
 import 'lock_state.dart' show LockState, lockState;
 import 'main.dart' show HaloDb, engine, shredFile;
-import 'notifications.dart' show clearNotificationsFor, notifPlugin;
+import 'notifications.dart'
+    show cancelWithRetry, clearNotificationsFor, notifPlugin;
 import 'router.dart';
 import 'search.dart' show searchBody;
 
@@ -215,9 +216,7 @@ class LiveVaultHost implements VaultHost {
       await clearNotificationsFor(p);
     }
     // what the receiving job showed cannot be told apart by chat here
-    try {
-      await notifPlugin.cancelAll();
-    } catch (_) {}
+    await cancelWithRetry(notifPlugin.cancelAll, 'hidden shade');
   }
 
   @override
