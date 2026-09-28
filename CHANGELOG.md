@@ -3,15 +3,25 @@
 ## [Unreleased]
 
 ### Added
+- decoy pin: a second pin opens an empty kryfo, as if just installed. set it up in app lock, advanced protection.
+- a chat with Marios, who builds Kryfo, pinned at the top of the list. nothing is sent until you write, and you can write anonymously, from a name made for that chat alone. his key is built into the app.
+- pair codes show the other person's three words and face to check against their screen before adding them.
 - hidden chats: chosen chats and groups stay out of the chat list, search and notifications until you enter the hidden chats pin. set it up in app lock, advanced protection.
 - stickers: the Fokia and Fokia Remix packs, 47 animated stickers, in chats, groups and rooms. a sticker travels as its name and the app draws it, so it costs a few bytes and no picture leaves the phone. older versions show its emoji.
 
 ### Changed
+- the app lock is drawn above every screen, sheet and dialog, and players, the recorder and the camera stop when it comes up.
+- arabic and persian text uses fuller fonts, so every mark and joiner shows.
+- handle, search and badge requests go over a tor circuit of their own, and your handle is only sent again when your invite changes.
+- lists, sheets and transitions across the app were polished, and every language uses sentence case.
 - your own chats, each room and each pair code go over their own tor circuits, and relays no longer see one running count across them.
 - private mode checks its relay connections every 90 seconds instead of every 19, and a slow reply over tor no longer drops the connection.
 - the relay takes only what the app sends and paces each connection, the handle registry paces reads, writes and new names, and the badge service paces receipt checks.
 - the tor dot on the chat list and in chats stops pulsing once tor is usable, and pulses only a few times while it starts.
 - chat stickers play three times and rest; a tap plays them again. open chats stop their timers while they are out of sight, and the drifting chat backgrounds hold still with reduced motion.
+
+### Security
+- security improvements throughout. update when you can.
 
 ## [0.4.1] - 2026-09-25
 
