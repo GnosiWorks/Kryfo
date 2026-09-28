@@ -4,6 +4,7 @@ package agefile
 import (
 	"bytes"
 	"crypto/rand"
+	"encoding/base64"
 	"io"
 	"strings"
 	"testing"
@@ -79,6 +80,34 @@ func TestAgeOpensOurFiles(t *testing.T) {
 	got, _ := io.ReadAll(r)
 	if string(got) != "from kryfo" {
 		t.Fatalf("%q", got)
+	}
+}
+
+// locked by Lock on age 1.2.1: files people already have must keep opening
+const lockedBefore = "YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IHNjcnlwdCAvQ3lwNEt1eGhrejB1SXJGd3crN1JBIDE4ClRtOU95cXNKcFlJMGs0aE5LdDU2WHY1U1Nzck4vUVhHY0ZDUGU4QlFHRlEKLS0tIC94YWxMRVNhUi9Nd0QrcjhuWTUyeUtnSDdmblFkVksxOFlUalJCZTZpNWMKXZwaRz4OSnsCCTAvAD8ig66TdXGec+/SVM0uUGp5Cbz9hR+2DogDqIH8rsDbgVDkJT2lzZN+pZc="
+
+const lockedBeforeArmored = `-----BEGIN AGE ENCRYPTED FILE-----
+YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IHNjcnlwdCAvQ3lwNEt1eGhrejB1SXJG
+d3crN1JBIDE4ClRtOU95cXNKcFlJMGs0aE5LdDU2WHY1U1Nzck4vUVhHY0ZDUGU4
+QlFHRlEKLS0tIC94YWxMRVNhUi9Nd0QrcjhuWTUyeUtnSDdmblFkVksxOFlUalJC
+ZTZpNWMKXZwaRz4OSnsCCTAvAD8ig66TdXGec+/SVM0uUGp5Cbz9hR+2DogDqIH8
+rsDbgVDkJT2lzZN+pZc=
+-----END AGE ENCRYPTED FILE-----
+`
+
+func TestOpensFilesLockedBefore(t *testing.T) {
+	raw, err := base64.StdEncoding.DecodeString(lockedBefore)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for name, locked := range map[string][]byte{"binary": raw, "armored": []byte(lockedBeforeArmored)} {
+		got, err := openBytes(locked, "four plain words here")
+		if err != nil || string(got) != "locked before the update" {
+			t.Fatalf("%s: %v %q", name, err, got)
+		}
+		if _, err := openBytes(locked, "four plain words there"); err != ErrWrongPassword {
+			t.Fatalf("%s: wrong password gave %v", name, err)
+		}
 	}
 }
 

@@ -13,9 +13,7 @@
  * too late, because those headers are protected from re- inclusion.
  */
 #ifndef _GNU_SOURCE
-#ifndef _GNU_SOURCE
 #define _GNU_SOURCE /* make sure dladdr is declared */
-#endif
 #endif
 
 #include "dso_local.h"

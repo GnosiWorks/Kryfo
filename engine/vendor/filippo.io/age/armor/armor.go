@@ -31,13 +31,24 @@ type armoredWriter struct {
 	dst             io.Writer
 }
 
-func (a *armoredWriter) Write(p []byte) (int, error) {
-	if !a.started {
-		if _, err := io.WriteString(a.dst, Header+"\n"); err != nil {
-			return 0, err
-		}
+func (a *armoredWriter) writeHeader() error {
+	if a.started {
+		return nil
+	}
+	if _, err := io.WriteString(a.dst, Header+"\n"); err != nil {
+		return err
 	}
 	a.started = true
+	return nil
+}
+
+func (a *armoredWriter) Write(p []byte) (int, error) {
+	if a.closed {
+		return 0, errors.New("ArmoredWriter already closed")
+	}
+	if err := a.writeHeader(); err != nil {
+		return 0, err
+	}
 	return a.encoder.Write(p)
 }
 
@@ -46,6 +57,9 @@ func (a *armoredWriter) Close() error {
 		return errors.New("ArmoredWriter already closed")
 	}
 	a.closed = true
+	if err := a.writeHeader(); err != nil {
+		return err
+	}
 	if err := a.encoder.Close(); err != nil {
 		return err
 	}
@@ -140,8 +154,15 @@ func (r *armoredReader) Read(p []byte) (int, error) {
 	if string(line) == Footer {
 		return 0, r.setErr(drainTrailing())
 	}
+	if len(line) == 0 {
+		return 0, r.setErr(errors.New("empty line in armored data"))
+	}
 	if len(line) > format.ColumnsPerLine {
 		return 0, r.setErr(errors.New("column limit exceeded"))
+	}
+	// Reject newline characters ignored by base64.Decode.
+	if bytes.ContainsAny(line, "\n\r") {
+		return 0, r.setErr(errors.New("unexpected newline character"))
 	}
 	r.unread = r.buf[:]
 	n, err := base64.StdEncoding.Strict().Decode(r.unread, line)

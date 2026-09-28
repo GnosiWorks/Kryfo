@@ -2,22 +2,34 @@
 ## explicit; go 1.25
 fiatjaf.com/nostr
 fiatjaf.com/nostr/nip45/hyperloglog
-# filippo.io/age v1.2.1
-## explicit; go 1.19
+# filippo.io/age v1.3.2
+## explicit; go 1.25.0
 filippo.io/age
 filippo.io/age/armor
 filippo.io/age/internal/bech32
 filippo.io/age/internal/format
 filippo.io/age/internal/stream
-# filippo.io/edwards25519 v1.1.0
-## explicit; go 1.20
+# filippo.io/edwards25519 v1.2.0
+## explicit; go 1.24.0
 filippo.io/edwards25519
 filippo.io/edwards25519/field
+# filippo.io/hpke v0.4.0
+## explicit; go 1.24.0
+filippo.io/hpke
+filippo.io/hpke/crypto
+filippo.io/hpke/crypto/ecdh
+filippo.io/hpke/internal/byteorder
 # github.com/ImVexed/fasturl v0.0.0-20230304231329-4e41488060f3
 ## explicit; go 1.14
 github.com/ImVexed/fasturl
-# github.com/alexballas/go-libtor v1.0.7
-## explicit; go 1.13
+# github.com/alexballas/bine v0.0.0-20260617175114-f63422fc9667
+## explicit; go 1.25.0
+github.com/alexballas/bine/process
+github.com/alexballas/bine/torutil
+github.com/alexballas/bine/torutil/ed25519
+github.com/alexballas/bine/torutil/ed25519/internal/edwards25519
+# github.com/alexballas/go-libtor v1.0.8
+## explicit; go 1.25.0
 github.com/alexballas/go-libtor
 github.com/alexballas/go-libtor/libtor
 # github.com/btcsuite/btcd/btcec/v2 v2.3.4
@@ -66,8 +78,8 @@ github.com/cloudwego/base64x/internal/native
 github.com/cloudwego/base64x/internal/native/avx2
 github.com/cloudwego/base64x/internal/native/sse
 github.com/cloudwego/base64x/internal/rt
-# github.com/coder/websocket v1.8.13
-## explicit; go 1.19
+# github.com/coder/websocket v1.8.15
+## explicit; go 1.23
 github.com/coder/websocket
 github.com/coder/websocket/internal/bpool
 github.com/coder/websocket/internal/errd
@@ -82,7 +94,7 @@ github.com/cretz/bine/torutil
 github.com/cretz/bine/torutil/ed25519
 github.com/cretz/bine/torutil/ed25519/internal/edwards25519
 # github.com/dchest/siphash v1.2.3
-## explicit; go 1.13
+## explicit; go 1.16
 github.com/dchest/siphash
 # github.com/decred/dcrd/crypto/blake256 v1.1.0
 ## explicit; go 1.17
@@ -101,7 +113,7 @@ github.com/json-iterator/go
 # github.com/klauspost/cpuid/v2 v2.2.10
 ## explicit; go 1.22
 github.com/klauspost/cpuid/v2
-# github.com/mailru/easyjson v0.9.0
+# github.com/mailru/easyjson v0.9.2
 ## explicit; go 1.20
 github.com/mailru/easyjson
 github.com/mailru/easyjson/buffer
@@ -161,38 +173,28 @@ github.com/twitchyliquid64/golang-asm/unsafeheader
 github.com/tyler-smith/go-bip39
 github.com/tyler-smith/go-bip39/wordlists
 # gitlab.com/yawning/edwards25519-extra v0.0.0-20231005122941-2149dcafc266
-## explicit; go 1.20
+## explicit; go 1.16
 gitlab.com/yawning/edwards25519-extra/elligator2
-gitlab.com/yawning/edwards25519-extra/h2c
 gitlab.com/yawning/edwards25519-extra/internal/montgomery
-gitlab.com/yawning/edwards25519-extra/vrf
 # gitlab.com/yawning/obfs4.git v0.0.0-20231012084234-c3e2d44b1033
 ## explicit; go 1.20
 gitlab.com/yawning/obfs4.git/common/csrand
 gitlab.com/yawning/obfs4.git/common/drbg
-gitlab.com/yawning/obfs4.git/common/log
 gitlab.com/yawning/obfs4.git/common/ntor
 gitlab.com/yawning/obfs4.git/common/probdist
 gitlab.com/yawning/obfs4.git/common/replayfilter
 gitlab.com/yawning/obfs4.git/common/socks5
-gitlab.com/yawning/obfs4.git/common/uniformdh
 gitlab.com/yawning/obfs4.git/internal/x25519ell2
-gitlab.com/yawning/obfs4.git/obfs4proxy
-gitlab.com/yawning/obfs4.git/transports
 gitlab.com/yawning/obfs4.git/transports/base
-gitlab.com/yawning/obfs4.git/transports/meeklite
-gitlab.com/yawning/obfs4.git/transports/obfs2
-gitlab.com/yawning/obfs4.git/transports/obfs3
 gitlab.com/yawning/obfs4.git/transports/obfs4
 gitlab.com/yawning/obfs4.git/transports/obfs4/framing
-gitlab.com/yawning/obfs4.git/transports/scramblesuit
-# gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/goptlib v1.5.0
+# gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/goptlib v1.6.0
 ## explicit; go 1.11
 gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/goptlib
 # golang.org/x/arch v0.15.0
 ## explicit; go 1.23.0
 golang.org/x/arch/x86/x86asm
-# golang.org/x/crypto v0.50.0
+# golang.org/x/crypto v0.55.0
 ## explicit; go 1.25.0
 golang.org/x/crypto/chacha20
 golang.org/x/crypto/chacha20poly1305
@@ -209,11 +211,11 @@ golang.org/x/crypto/sha3
 # golang.org/x/exp v0.0.0-20250305212735-054e65f0b394
 ## explicit; go 1.23.0
 golang.org/x/exp/constraints
-# golang.org/x/net v0.52.0
+# golang.org/x/net v0.58.0
 ## explicit; go 1.25.0
 golang.org/x/net/internal/socks
 golang.org/x/net/proxy
-# golang.org/x/sys v0.43.0
+# golang.org/x/sys v0.47.0
 ## explicit; go 1.25.0
 golang.org/x/sys/cpu
 golang.org/x/sys/unix

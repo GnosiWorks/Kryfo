@@ -2883,20 +2883,20 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   // media folder, so no byte array crosses the plugin channel. withData
   // keeps three copies in memory and gives null bytes on 32-bit phones.
   Future<void> _pickAndSendFile() async {
-    final FilePickerResult? res;
+    final PlatformFile? res;
     try {
-      res = await lockState.hold(() => FilePicker.pickFiles());
+      res = await lockState.hold(() => FilePicker.pickFile());
     } catch (e) {
       // the picker could not copy what was chosen: a provider that will
       // not hand the file over, a gone download. say so instead of nothing.
       if (mounted) showHaloToast(context, l10n.chatCouldNotReadThat);
       return;
     }
-    if (res == null || res.files.isEmpty) return;
-    final path = res.files.first.path;
-    final name = res.files.first.name;
+    if (res == null) return;
+    final path = res.path;
+    final name = res.name;
     if (path != null) await _sendFileFrom(path, name);
-    await shredPicked(res);
+    await shredPicked([res]);
   }
 
   // the in-app camera: a stripped photo goes through the caption screen like
@@ -3104,10 +3104,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _pickAndSendGif() async {
-    final FilePickerResult? res;
+    final PlatformFile? res;
     try {
       res = await lockState.hold(
-        () => FilePicker.pickFiles(
+        () => FilePicker.pickFile(
           type: FileType.custom,
           allowedExtensions: ['gif'],
         ),
@@ -3116,11 +3116,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       if (mounted) showHaloToast(context, l10n.chatCouldNotReadThat);
       return;
     }
-    if (res == null || res.files.isEmpty) return;
+    if (res == null) return;
     // read from the picker's copy: one copy of the bytes, not three
-    final path = res.files.first.path;
+    final path = res.path;
     final data = path == null ? null : await File(path).readAsBytes();
-    await shredPicked(res);
+    await shredPicked([res]);
     if (data == null) return;
     // a gif must not be re-encoded, that kills the animation, so it skips the
     // resize path. capped to keep send time and memory sane over tor.

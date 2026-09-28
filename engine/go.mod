@@ -4,25 +4,27 @@ go 1.25.14
 
 require (
 	fiatjaf.com/nostr v0.0.0-20260508234157-a4c590d923ee
-	filippo.io/age v1.2.1
-	github.com/alexballas/go-libtor v1.0.7
+	filippo.io/age v1.3.2
+	github.com/alexballas/go-libtor v1.0.8
 	github.com/cretz/bine v0.2.0
-	github.com/mailru/easyjson v0.9.0
+	github.com/mailru/easyjson v0.9.2
 	github.com/nbd-wtf/go-nostr v0.52.3
 	github.com/tyler-smith/go-bip39 v1.1.0
-	golang.org/x/crypto v0.50.0
+	golang.org/x/crypto v0.55.0
 )
 
 require (
-	filippo.io/edwards25519 v1.1.0
+	filippo.io/edwards25519 v1.2.0 // indirect
+	filippo.io/hpke v0.4.0 // indirect
 	github.com/ImVexed/fasturl v0.0.0-20230304231329-4e41488060f3 // indirect
+	github.com/alexballas/bine v0.0.0-20260617175114-f63422fc9667 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.4 // indirect
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.1.0 // indirect
 	github.com/bytedance/sonic v1.13.1 // indirect
 	github.com/bytedance/sonic/loader v0.2.4 // indirect
 	github.com/cloudwego/base64x v0.1.5 // indirect
-	github.com/coder/websocket v1.8.13
-	github.com/dchest/siphash v1.2.3
+	github.com/coder/websocket v1.8.15
+	github.com/dchest/siphash v1.2.3 // indirect
 	github.com/decred/dcrd/crypto/blake256 v1.1.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
@@ -37,13 +39,13 @@ require (
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
-	gitlab.com/yawning/edwards25519-extra v0.0.0-20231005122941-2149dcafc266
+	gitlab.com/yawning/edwards25519-extra v0.0.0-20231005122941-2149dcafc266 // indirect
 	gitlab.com/yawning/obfs4.git v0.0.0-20231012084234-c3e2d44b1033
-	gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/goptlib v1.5.0
+	gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/goptlib v1.6.0
 	golang.org/x/arch v0.15.0 // indirect
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394 // indirect
-	golang.org/x/net v0.52.0
-	golang.org/x/sys v0.43.0 // indirect
+	golang.org/x/net v0.58.0
+	golang.org/x/sys v0.47.0 // indirect
 )
 
 // per-connection subscription ids and a settable ping, see VENDOR_PATCHES.md

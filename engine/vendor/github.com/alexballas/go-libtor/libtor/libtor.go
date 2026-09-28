@@ -28,7 +28,7 @@ import (
 	"net"
 	"os"
 
-	"github.com/cretz/bine/process"
+	"github.com/alexballas/bine/process"
 )
 
 // ProviderVersion returns the Tor provider name and version exposed from the

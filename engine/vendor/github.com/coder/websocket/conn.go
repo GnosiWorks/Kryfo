@@ -1,5 +1,4 @@
 //go:build !js
-// +build !js
 
 package websocket
 
@@ -52,9 +51,8 @@ type Conn struct {
 	br             *bufio.Reader
 	bw             *bufio.Writer
 
-	readTimeout     chan context.Context
-	writeTimeout    chan context.Context
-	timeoutLoopDone chan struct{}
+	readTimeoutStop  atomic.Pointer[func() bool]
+	writeTimeoutStop atomic.Pointer[func() bool]
 
 	// Read state.
 	readMu         *mu
@@ -114,10 +112,6 @@ func newConn(cfg connConfig) *Conn {
 		br: cfg.br,
 		bw: cfg.bw,
 
-		readTimeout:     make(chan context.Context),
-		writeTimeout:    make(chan context.Context),
-		timeoutLoopDone: make(chan struct{}),
-
 		closed:         make(chan struct{}),
 		activePings:    make(map[string]chan<- struct{}),
 		onPingReceived: cfg.onPingReceived,
@@ -144,8 +138,6 @@ func newConn(cfg connConfig) *Conn {
 	runtime.SetFinalizer(c, func(c *Conn) {
 		c.close()
 	})
-
-	go c.timeoutLoop()
 
 	return c
 }
@@ -176,27 +168,44 @@ func (c *Conn) close() error {
 	return err
 }
 
-func (c *Conn) timeoutLoop() {
-	defer close(c.timeoutLoopDone)
+func (c *Conn) setupWriteTimeout(ctx context.Context) bool {
+	if ctx.Done() == nil {
+		return false
+	}
 
-	readCtx := context.Background()
-	writeCtx := context.Background()
+	stop := context.AfterFunc(ctx, func() {
+		c.clearWriteTimeout()
+		c.close()
+	})
+	swapTimeoutStop(&c.writeTimeoutStop, &stop)
+	return true
+}
 
-	for {
-		select {
-		case <-c.closed:
-			return
+func (c *Conn) clearWriteTimeout() {
+	swapTimeoutStop(&c.writeTimeoutStop, nil)
+}
 
-		case writeCtx = <-c.writeTimeout:
-		case readCtx = <-c.readTimeout:
+func (c *Conn) setupReadTimeout(ctx context.Context) bool {
+	if ctx.Done() == nil {
+		return false
+	}
 
-		case <-readCtx.Done():
-			c.close()
-			return
-		case <-writeCtx.Done():
-			c.close()
-			return
-		}
+	stop := context.AfterFunc(ctx, func() {
+		c.clearReadTimeout()
+		c.close()
+	})
+	swapTimeoutStop(&c.readTimeoutStop, &stop)
+	return true
+}
+
+func (c *Conn) clearReadTimeout() {
+	swapTimeoutStop(&c.readTimeoutStop, nil)
+}
+
+func swapTimeoutStop(p *atomic.Pointer[func() bool], newStop *func() bool) {
+	oldStop := p.Swap(newStop)
+	if oldStop != nil {
+		(*oldStop)()
 	}
 }
 

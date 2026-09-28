@@ -1484,10 +1484,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   Future<void> _pickGroupGif() async {
-    final FilePickerResult? res;
+    final PlatformFile? res;
     try {
       res = await lockState.hold(
-        () => FilePicker.pickFiles(
+        () => FilePicker.pickFile(
           type: FileType.custom,
           allowedExtensions: ['gif'],
         ),
@@ -1496,10 +1496,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       if (mounted) showHaloToast(context, l10n.groupChatCouldNotReadThat);
       return;
     }
-    if (res == null || res.files.isEmpty) return;
-    final path = res.files.first.path;
+    if (res == null) return;
+    final path = res.path;
     final data = path == null ? null : await File(path).readAsBytes();
-    await shredPicked(res);
+    await shredPicked([res]);
     if (data == null) return;
     if (data.length > 8 * 1024 * 1024) {
       if (mounted) showHaloToast(context, l10n.groupChatGifTooBig8);
@@ -1616,20 +1616,20 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // the picker's own copy is copied into the media folder; no byte array
   // crosses the plugin channel. see the 1:1 chat for why.
   Future<void> _pickGroupFile() async {
-    final FilePickerResult? res;
+    final PlatformFile? res;
     try {
-      res = await lockState.hold(() => FilePicker.pickFiles());
+      res = await lockState.hold(() => FilePicker.pickFile());
     } catch (e) {
       // the picker could not copy what was chosen: a provider that will
       // not hand the file over, a gone download. say so instead of nothing.
       if (mounted) showHaloToast(context, l10n.groupChatCouldNotReadThat);
       return;
     }
-    if (res == null || res.files.isEmpty) return;
-    final path = res.files.first.path;
-    final name = res.files.first.name;
+    if (res == null) return;
+    final path = res.path;
+    final name = res.name;
     if (path != null) await _sendGroupFileFrom(path, name);
-    await shredPicked(res);
+    await shredPicked([res]);
   }
 
   // the in-app camera: a stripped photo goes through the caption screen; a

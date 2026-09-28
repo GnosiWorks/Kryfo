@@ -61,9 +61,9 @@ class _RestoreScreenState extends State<RestoreScreen> {
       _error = null;
       _summary = null;
     });
-    final result = await lockState.hold(() => FilePicker.pickFiles());
-    if (result == null || result.files.single.path == null) return;
-    final path = result.files.single.path!;
+    final result = await lockState.hold(() => FilePicker.pickFile());
+    if (result == null || result.path == null) return;
+    final path = result.path!;
     String? blob;
     String? own;
     try {
@@ -91,7 +91,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
       }
       return;
     } finally {
-      await shredPicked(result);
+      await shredPicked([result]);
     }
     if (!mounted) return;
     HapticFeedback.selectionClick();

@@ -15,6 +15,8 @@ import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
+import 'package:android_file_picker/android_file_picker.dart';
+import 'package:file_picker/file_picker.dart' show FilePickerPlatform;
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -608,6 +610,8 @@ void main() {
       }
       return null;
     });
+    // the android side of the file picker, as on a phone, over its channel
+    FilePickerPlatform.instance = FilePickerAndroid();
     _mock('miguelruivo.flutter.plugins.filepicker', (c) async {
       if (c.method != 'any') return null;
       final bytes = 'what went wrong, step by step'.codeUnits;

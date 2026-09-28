@@ -6,7 +6,7 @@ package libtor
 // the way of the repo root.
 
 import (
-	"github.com/cretz/bine/process"
+	"github.com/alexballas/bine/process"
 
 	"github.com/alexballas/go-libtor/libtor"
 )

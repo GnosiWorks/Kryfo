@@ -7,9 +7,9 @@ import 'main.dart' show shredFile;
 
 // only a path inside the app's own cache is ours to destroy. a picker that
 // hands back the real file, as the desktop ones do, gets left alone
-Future<void> shredPicked(FilePickerResult res) async {
+Future<void> shredPicked(Iterable<PlatformFile> files) async {
   final cache = (await getTemporaryDirectory()).path;
-  for (final f in res.files) {
+  for (final f in files) {
     final path = f.path;
     if (path != null && path.startsWith(cache)) await shredFile(path);
   }

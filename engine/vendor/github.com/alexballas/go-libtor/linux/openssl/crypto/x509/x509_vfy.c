@@ -1,5 +1,5 @@
 /*
- * Copyright 1995-2025 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 1995-2026 The OpenSSL Project Authors. All Rights Reserved.
  *
  * Licensed under the Apache License 2.0 (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
@@ -1090,6 +1090,16 @@ static int check_revocation(X509_STORE_CTX *ctx)
 
             /* the issuer certificate is the next in the chain */
             ctx->current_issuer = sk_X509_value(ctx->chain, i + 1);
+            if (ctx->current_issuer == NULL) {
+                /*
+                 * No issuer exists at i+1 — this is the partial-chain
+                 * trust anchor. OCSP requires an issuer to build the
+                 * CertID, so skip OCSP checking for this certificate.
+                 */
+                if ((ctx->param->flags & X509_V_FLAG_PARTIAL_CHAIN) != 0)
+                    continue;
+                return verify_cb_ocsp(ctx, X509_V_ERR_OCSP_VERIFY_FAILED);
+            }
 
             ok = check_cert_ocsp_resp(ctx);
 
@@ -1188,11 +1198,12 @@ static int check_cert_ocsp_resp(X509_STORE_CTX *ctx)
 
     if (OCSP_response_status(resp) != OCSP_RESPONSE_STATUS_SUCCESSFUL) {
         OCSP_BASICRESP_free(bs);
+        bs = NULL;
         ret = X509_V_ERR_OCSP_RESP_INVALID;
         goto end;
     }
 
-    if (OCSP_basic_verify(bs, ctx->chain, ctx->store, OCSP_TRUSTOTHER) <= 0) {
+    if (OCSP_basic_verify(bs, ctx->chain, ctx->store, 0) <= 0) {
         ret = X509_V_ERR_OCSP_SIGNATURE_FAILURE;
         goto end;
     }
@@ -1321,6 +1332,7 @@ static int check_cert_crl(X509_STORE_CTX *ctx)
                 goto done;
         }
 
+        ctx->current_crl = NULL;
         X509_CRL_free(crl);
         X509_CRL_free(dcrl);
         crl = NULL;
@@ -1505,6 +1517,8 @@ static int check_delta_base(X509_CRL *delta, X509_CRL *base)
     if (ASN1_INTEGER_cmp(delta->base_crl_number, base->crl_number) > 0)
         return 0;
     /* Delta CRL number must exceed full CRL number */
+    if (delta->crl_number == NULL)
+        return 0;
     return ASN1_INTEGER_cmp(delta->crl_number, base->crl_number) > 0;
 }
 
@@ -3221,7 +3235,7 @@ static int dane_match_cert(X509_STORE_CTX *ctx, X509 *cert, int depth)
                     break;
                 }
 
-                OPENSSL_free(dane->mcert);
+                X509_free(dane->mcert);
                 dane->mcert = cert;
                 dane->mdpth = depth;
                 dane->mtlsa = t;
