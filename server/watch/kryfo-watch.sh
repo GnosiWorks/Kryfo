@@ -18,6 +18,9 @@ HEAL_GAP=${HEAL_GAP:-900}
 ALERT_CMD=${ALERT_CMD:-}
 # an ntfy topic url. the topic is the only secret: make it long and random
 NTFY_URL=${NTFY_URL:-}
+# extra curl options for ntfy, e.g. -4: ntfy.sh counts a whole ipv6 /64 as
+# one sender, and a hosting provider's /64 can be over its limit already
+NTFY_OPTS=${NTFY_OPTS:-}
 DRY=${DRY:-0}
 mkdir -p "$STATE"
 now=$(date +%s)
@@ -61,7 +64,8 @@ mark() {
 	echo "watch: $name is $state"
 	[ "$DRY" = 1 ] && return
 	# the service and what happened, nothing else
-	[ -n "$NTFY_URL" ] && curl -sS -m 15 -o /dev/null -d "$name $state" "$NTFY_URL"
+	# shellcheck disable=SC2086
+	[ -n "$NTFY_URL" ] && { curl -fsS -m 15 $NTFY_OPTS -o /dev/null -d "$name $state" "$NTFY_URL" || echo "watch: the alert did not go out"; }
 	[ -n "$ALERT_CMD" ] && $ALERT_CMD "$name $state"
 	return 0
 }
