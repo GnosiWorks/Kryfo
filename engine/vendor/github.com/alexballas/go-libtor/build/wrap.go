@@ -1,5 +1,4 @@
 //go:build none
-// +build none
 
 package main
 
@@ -15,6 +14,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -54,10 +54,6 @@ func main() {
 	switch runtime.GOOS {
 	case "linux", "android":
 		tgt = "linux"
-	case "darwin":
-		tgt = "darwin"
-	case "windows":
-		tgt = "windows"
 	default:
 		panic(fmt.Errorf("Sorry but your os : %s is not yet supported.", runtime.GOOS))
 	}
@@ -186,10 +182,7 @@ func parseVersionParts(raw string) ([]int, error) {
 }
 
 func compareVersionParts(a, b []int) int {
-	limit := len(a)
-	if len(b) > limit {
-		limit = len(b)
-	}
+	limit := max(len(b), len(a))
 	for i := 0; i < limit; i++ {
 		var ai, bi int
 		if i < len(a) {
@@ -223,12 +216,7 @@ func uniqueStrings(items []string) []string {
 }
 
 func containsString(items []string, want string) bool {
-	for _, item := range items {
-		if item == want {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(items, want)
 }
 
 func extractLibeventObjects(out string) []string {
@@ -473,9 +461,7 @@ extern "C" {
 
 // targetFilters maps a build target to the builds tags to apply to it
 var targetFilters = map[string]string{
-	"linux":   "linux || android",
-	"darwin":  "(darwin && (amd64 || arm64)) || (ios && (amd64 || arm64))",
-	"windows": "windows && (amd64 || 386)",
+	"linux": "linux || android",
 }
 
 func openSSLConfigureTarget() (string, error) {
@@ -490,20 +476,6 @@ func openSSLConfigureTarget() (string, error) {
 			return "linux-aarch64", nil
 		case "arm":
 			return "linux-armv4", nil
-		}
-	case "darwin":
-		switch runtime.GOARCH {
-		case "amd64":
-			return "darwin64-x86_64-cc", nil
-		case "arm64":
-			return "darwin64-arm64-cc", nil
-		}
-	case "windows":
-		switch runtime.GOARCH {
-		case "amd64":
-			return "mingw64", nil
-		case "386":
-			return "mingw", nil
 		}
 	}
 	return "", fmt.Errorf("unsupported OpenSSL configure target for %s/%s", runtime.GOOS, runtime.GOARCH)
@@ -828,7 +800,7 @@ func wrapLibevent(tgt string, lock *lockJson) (string, string, error) {
 	// Inject the configuration headers and ensure everything builds
 	os.MkdirAll(filepath.Join("libevent_config", "event2"), 0755)
 
-	for _, arch := range []string{"", ".linux64", ".linux32", ".android64", ".android32", ".macos64", ".ios64", ".windows32", ".windows64"} {
+	for _, arch := range []string{"", ".linux64", ".linux32", ".android64", ".android32"} {
 		blob, _ := ioutil.ReadFile(filepath.Join("config", "libevent", fmt.Sprintf("event-config%s.h", arch)))
 		tmpl, err := template.New("").Parse(string(blob))
 		if err != nil {
@@ -856,7 +828,6 @@ package libtor
 #cgo CFLAGS: -I${SRCDIR}/../{{.Target}}/libevent/compat
 #cgo CFLAGS: -I${SRCDIR}/../{{.Target}}/libevent/include
 #cgo CFLAGS: -I${SRCDIR}/../{{.Target}}/libevent/include/event2
-#cgo windows LDFLAGS: -lbcrypt
 */
 import "C"
 `
@@ -999,8 +970,7 @@ func wrapOpenSSL(tgt string, lock *lockJson) (string, string, error) {
 		source := filepath.Join(tgtf, dep+".c")
 		if _, err := os.Stat(source); err == nil {
 			continue
-		}
-		if !os.IsNotExist(err) {
+		} else if !os.IsNotExist(err) {
 			return "", "", err
 		}
 		if _, err := os.Stat(filepath.Join(tgtf, dep+".c.in")); err == nil {
@@ -1106,7 +1076,7 @@ func wrapOpenSSL(tgt string, lock *lockJson) (string, string, error) {
 	os.MkdirAll(filepath.Join("openssl_config", "crypto"), 0755)
 	os.MkdirAll(filepath.Join("openssl_config", "openssl"), 0755)
 
-	for _, arch := range []string{"", ".linux", ".darwin", ".windows"} {
+	for _, arch := range []string{"", ".linux"} {
 		blob, _ := ioutil.ReadFile(filepath.Join("config", "openssl", fmt.Sprintf("dso_conf%s.h", arch)))
 		ioutil.WriteFile(filepath.Join("openssl_config", "crypto", fmt.Sprintf("dso_conf%s.h", arch)), blob, 0644)
 	}
@@ -1115,7 +1085,7 @@ func wrapOpenSSL(tgt string, lock *lockJson) (string, string, error) {
 		blob, _ := ioutil.ReadFile(filepath.Join("config", "openssl", fmt.Sprintf("bn_conf%s.h", arch)))
 		ioutil.WriteFile(filepath.Join("openssl_config", "crypto", fmt.Sprintf("bn_conf%s.h", arch)), blob, 0644)
 	}
-	for _, arch := range []string{"", ".x64", ".x86", ".macos64", ".ios64", ".windows32", ".windows64"} {
+	for _, arch := range []string{"", ".x64", ".x86"} {
 		blob, _ := ioutil.ReadFile(filepath.Join("config", "openssl", fmt.Sprintf("buildinf%s.h", arch)))
 		tmpl, err := template.New("").Parse(string(blob))
 		if err != nil {
@@ -1147,7 +1117,7 @@ func wrapOpenSSL(tgt string, lock *lockJson) (string, string, error) {
 			return "", "", err
 		}
 	} else {
-		for _, arch := range []string{"", ".x64", ".x86", ".macos64", ".ios64", ".windows32", ".windows64"} {
+		for _, arch := range []string{"", ".x64", ".x86"} {
 			blob, _ := ioutil.ReadFile(filepath.Join("config", "openssl", fmt.Sprintf("opensslconf%s.h", arch)))
 			ioutil.WriteFile(filepath.Join("openssl_config", "openssl", fmt.Sprintf("opensslconf%s.h", arch)), blob, 0644)
 		}
@@ -1409,7 +1379,7 @@ func wrapTor(tgt string, lock *lockJson) (string, string, error) {
 	// Inject the configuration headers and ensure everything builds
 	os.MkdirAll(filepath.Join("tor_config"), 0755)
 
-	for _, arch := range []string{"", ".linux64", ".linux32", ".android64", ".android32", ".macos64", ".ios64", ".windows64", ".windows32"} {
+	for _, arch := range []string{"", ".linux64", ".linux32", ".android64", ".android32"} {
 		blob, _ := ioutil.ReadFile(filepath.Join("config", "tor", fmt.Sprintf("orconfig%s.h", arch)))
 		tmpl, err := template.New("").Parse(string(blob))
 		if err != nil {
@@ -1453,7 +1423,6 @@ package libtor
 #cgo CFLAGS: -include ${SRCDIR}/../tor_config/gotor_extra.h
 
 #cgo LDFLAGS: -lm
-#cgo windows LDFLAGS: -lshlwapi
 */
 import "C"
 `

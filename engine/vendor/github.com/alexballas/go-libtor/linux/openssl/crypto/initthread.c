@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2025 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 2019-2026 The OpenSSL Project Authors. All Rights Reserved.
  *
  * Licensed under the Apache License 2.0 (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
@@ -82,6 +82,16 @@ static GLOBAL_TEVENT_REGISTER *get_global_tevent_register(void)
     return glob_tevent_reg;
 }
 #endif
+
+int CRYPTO_THREAD_init_local(CRYPTO_THREAD_LOCAL *key, void (*cleanup)(void *))
+{
+
+#ifndef FIPS_MODULE
+    if (!ossl_init_thread())
+        return 0;
+#endif
+    return ossl_thread_init_local(key, cleanup);
+}
 
 #ifndef FIPS_MODULE
 /*
@@ -237,24 +247,18 @@ static void init_thread_destructor(void *hands)
 }
 
 static CRYPTO_ONCE ossl_init_thread_runonce = CRYPTO_ONCE_STATIC_INIT;
-static CRYPTO_THREAD_ID recursion_guard = (CRYPTO_THREAD_ID)-1;
 
 DEFINE_RUN_ONCE_STATIC(ossl_init_thread_once)
 {
-    recursion_guard = CRYPTO_THREAD_get_current_id();
-    if (!CRYPTO_THREAD_init_local(&destructor_key.value,
+    if (!ossl_thread_init_local(&destructor_key.value,
             init_thread_destructor))
         return 0;
 
-    recursion_guard = (CRYPTO_THREAD_ID)0;
     return 1;
 }
 
 int ossl_init_thread(void)
 {
-    if (CRYPTO_THREAD_compare_id(recursion_guard,
-            CRYPTO_THREAD_get_current_id()))
-        return 1;
     if (!RUN_ONCE(&ossl_init_thread_runonce, ossl_init_thread_once))
         return 0;
     return 1;

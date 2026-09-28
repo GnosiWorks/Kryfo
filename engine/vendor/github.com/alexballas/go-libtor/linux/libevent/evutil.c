@@ -2237,6 +2237,7 @@ evutil_inet_pton_scope(int af, const char *src, void *dst, unsigned *indexp)
 	int r;
 	unsigned if_index;
 	char *check, *cp, *tmp_src;
+	const char *scope;
 
 	*indexp = 0; /* Reasonable default */
 
@@ -2244,16 +2245,16 @@ evutil_inet_pton_scope(int af, const char *src, void *dst, unsigned *indexp)
 	if (af != AF_INET6)
 		return evutil_inet_pton(af, src, dst);
 
-	cp = strchr(src, '%');
+	scope = strchr(src, '%');
 
 	/* Bail out if no zone ID */
-	if (cp == NULL)
+	if (scope == NULL)
 		return evutil_inet_pton(af, src, dst);
 
-	if_index = if_nametoindex(cp + 1);
+	if_index = if_nametoindex(scope + 1);
 	if (if_index == 0) {
 		/* Could be numeric */
-		if_index = strtoul(cp + 1, &check, 10);
+		if_index = strtoul(scope + 1, &check, 10);
 		if (check[0] != '\0')
 			return 0;
 	}

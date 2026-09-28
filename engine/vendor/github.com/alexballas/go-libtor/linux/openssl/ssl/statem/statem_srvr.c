@@ -1,5 +1,5 @@
 /*
- * Copyright 1995-2025 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 1995-2026 The OpenSSL Project Authors. All Rights Reserved.
  * Copyright (c) 2002, Oracle and/or its affiliates. All rights reserved
  * Copyright 2005 Nokia. All rights reserved.
  *
@@ -524,8 +524,8 @@ OCSP_RESPONSE *ossl_get_ocsp_response(SSL_CONNECTION *s, int chainidx)
              * happening because of test cases.
              */
             ERR_set_mark();
-            if (((bs = OCSP_response_get1_basic(resp)) != NULL)
-                && ((sr = OCSP_resp_get0(bs, 0)) != NULL)) {
+            bs = OCSP_response_get1_basic(resp);
+            if (bs != NULL && (sr = OCSP_resp_get0(bs, 0)) != NULL) {
                 /* use the first single response to get the algorithm used */
                 cid = (OCSP_CERTID *)OCSP_SINGLERESP_get0_id(sr);
 
@@ -581,6 +581,8 @@ OCSP_RESPONSE *ossl_get_ocsp_response(SSL_CONNECTION *s, int chainidx)
                  */
                 if (i == num)
                     resp = NULL;
+            } else {
+                OCSP_BASICRESP_free(bs);
             }
 
             /*
@@ -2167,6 +2169,19 @@ static int tls_early_post_process_client_hello(SSL_CONNECTION *s)
             s->hit = 1;
             s->peer_ciphers = ciphers;
             s->session->verify_result = X509_V_OK;
+
+            /*
+             * Per RFC 4851, Section 3.2.2:
+             * If the ClientHello contains both a Session ID and a PAC-Opaque in
+             * the SessionTicket extension, and the server resumes the session
+             * using the PAC-Opaque, it should echo the same Session ID in the
+             * ServerHello.
+             */
+            if (clienthello->session_id_len > 0) {
+                memcpy(s->session->session_id, clienthello->session_id,
+                    clienthello->session_id_len);
+                s->session->session_id_length = clienthello->session_id_len;
+            }
 
             ciphers = NULL;
 

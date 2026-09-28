@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 2024-2026 The OpenSSL Project Authors. All Rights Reserved.
  *
  * Licensed under the Apache License 2.0 (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
@@ -281,7 +281,7 @@ int ossl_ml_dsa_key_equal(const ML_DSA_KEY *key1, const ML_DSA_KEY *key2,
         if (!key_checked
             && (selection & OSSL_KEYMGMT_SELECT_PRIVATE_KEY) != 0) {
             if (key1->priv_encoding != NULL && key2->priv_encoding != NULL) {
-                if (memcmp(key1->priv_encoding, key2->priv_encoding,
+                if (CRYPTO_memcmp(key1->priv_encoding, key2->priv_encoding,
                         key1->params->sk_len)
                     != 0)
                     return 0;
@@ -496,7 +496,7 @@ int ossl_ml_dsa_generate_key(ML_DSA_KEY *out)
                 "explicit %s private key does not match seed",
                 out->params->alg);
         }
-        OPENSSL_free(sk);
+        OPENSSL_secure_clear_free(sk, out->params->sk_len);
     }
     return ret;
 }

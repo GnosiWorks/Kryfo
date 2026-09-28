@@ -5,19 +5,3 @@
 #if defined(ARCH_LINUX32) || defined(ARCH_ANDROID32)
   #include "openssl/opensslconf.x86.h"
 #endif
-
-#ifdef ARCH_MACOS64
-  #include "openssl/opensslconf.macos64.h"
-#endif
-
-#ifdef ARCH_IOS64
-  #include "openssl/opensslconf.ios64.h"
-#endif
-
-#if defined(ARCH_WINDOWS64)
-  #include "openssl/opensslconf.windows64.h"
-#endif
-
-#if defined(ARCH_WINDOWS32)
-  #include "openssl/opensslconf.windows32.h"
-#endif

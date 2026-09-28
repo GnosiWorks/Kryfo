@@ -28,7 +28,6 @@ import (
 	"time"
 	"unsafe"
 
-	libtor "github.com/alexballas/go-libtor"
 	"github.com/cretz/bine/control"
 	"github.com/cretz/bine/tor"
 	"github.com/tyler-smith/go-bip39"
@@ -354,7 +353,7 @@ func startListener(dataDir string) string {
 	choosePinnedSocks()
 	start := func() (*tor.Tor, error) {
 		return tor.Start(nil, &tor.StartConf{
-			ProcessCreator: libtor.Creator,
+			ProcessCreator: libtorCreator{},
 			DataDir:        torDataDir,
 			DebugWriter:    newTorDebugWriter(),
 			ExtraArgs:      torArgs(),

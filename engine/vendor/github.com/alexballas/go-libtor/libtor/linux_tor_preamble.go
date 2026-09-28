@@ -24,6 +24,5 @@ package libtor
 #cgo CFLAGS: -include ${SRCDIR}/../tor_config/gotor_extra.h
 
 #cgo LDFLAGS: -lm
-#cgo windows LDFLAGS: -lshlwapi
 */
 import "C"

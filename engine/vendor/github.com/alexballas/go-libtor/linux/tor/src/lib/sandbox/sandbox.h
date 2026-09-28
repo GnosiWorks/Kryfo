@@ -20,11 +20,13 @@
 #endif
 
 #ifndef HAVE_SYS_SECCOMP
+#ifndef SYS_SECCOMP
 /**
  * Used by SIGSYS signal handler to check if the signal was issued due to a
  * seccomp2 filter violation.
  */
 #define SYS_SECCOMP 1
+#endif /* !defined(SYS_SECCOMP) */
 #endif /* !defined(HAVE_SYS_SECCOMP) */
 
 #if defined(HAVE_SECCOMP_H) && defined(__linux__)

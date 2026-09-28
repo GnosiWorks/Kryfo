@@ -22,8 +22,14 @@ filippo.io/hpke/internal/byteorder
 # github.com/ImVexed/fasturl v0.0.0-20230304231329-4e41488060f3
 ## explicit; go 1.14
 github.com/ImVexed/fasturl
-# github.com/alexballas/go-libtor v1.0.7
-## explicit; go 1.13
+# github.com/alexballas/bine v0.0.0-20260617175114-f63422fc9667
+## explicit; go 1.25.0
+github.com/alexballas/bine/process
+github.com/alexballas/bine/torutil
+github.com/alexballas/bine/torutil/ed25519
+github.com/alexballas/bine/torutil/ed25519/internal/edwards25519
+# github.com/alexballas/go-libtor v1.0.8
+## explicit; go 1.25.0
 github.com/alexballas/go-libtor
 github.com/alexballas/go-libtor/libtor
 # github.com/btcsuite/btcd/btcec/v2 v2.3.4

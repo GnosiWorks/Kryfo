@@ -1,10 +1,10 @@
 #!/bin/bash
-# READ BEFORE TOUCHING ./vendor: three headers under
-# vendor/github.com/alexballas/go-libtor are patched by hand, see
-# VENDOR_PATCHES.md. upstream ships 64-bit ones for every target, and without
-# the patch the 32-bit engine builds but tor never bootstraps.
-# `go mod vendor` wipes those patches, do not run it. go's cache does not see
-# the headers change either, so after any edit to them: HALO_FULL=1 ./build.sh
+# READ BEFORE TOUCHING ./vendor: headers under
+# vendor/github.com/alexballas/go-libtor are patched, see VENDOR_PATCHES.md.
+# upstream ships 64-bit ones for every target, and without the patch the
+# 32-bit engine builds but tor never bootstraps. rebuild vendor/ with
+# ./vendor.sh, never a bare `go mod vendor`. go's cache does not see the
+# headers change either, so after any edit to them: HALO_FULL=1 ./build.sh
 #
 # builds libhalo.so for android, offline: deps come from ./vendor and the c
 # objects are cached in ./.gocache. the ndk is ANDROID_NDK_HOME,

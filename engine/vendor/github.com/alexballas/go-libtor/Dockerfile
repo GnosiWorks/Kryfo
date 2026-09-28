@@ -1,4 +1,4 @@
-FROM golang:1.17.3-bullseye
+FROM golang:1.25-bookworm
 
 RUN apt update
 RUN apt install -y autoconf automake make libssl-dev libevent-dev zlib1g-dev libtool
