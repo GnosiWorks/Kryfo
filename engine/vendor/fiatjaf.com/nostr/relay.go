@@ -339,11 +339,21 @@ func (r *Relay) closeConnection(code ws.StatusCode, reason string) {
 }
 
 func (r *Relay) handleMessage(message string) {
+	// kryfo: whatever a frame holds, handling it ends at most this
+	// connection, and the caller dials again
+	defer func() {
+		if rec := recover(); rec != nil {
+			InfoLogger.Printf("{%s} closing after a frame it did not take\n", r.URL)
+			_ = r.close(closeCause{code: ws.StatusProtocolError, reason: "unexpected frame"})
+		}
+	}()
+
 	// if this is an "EVENT" we will have this preparser logic that should speed things up a little
 	// as we skip handling duplicate events
 	subid := extractSubID(message)
 	sub, ok := r.Subscriptions.Load(subIdToSerial(subid))
-	if ok {
+	// kryfo: only a frame that reaches past its id goes through the pre-check
+	if ok && 10+len(subid) <= len(message) {
 		if sub.checkDuplicate != nil {
 			if sub.checkDuplicate(extractEventID(message[10+len(subid):]), r.URL) {
 				return

@@ -1,7 +1,8 @@
 # hand patches in engine/vendor
 
-`engine/vendor/` is committed, and three files in it are not what upstream
-ships. `go mod vendor` regenerates the tree and silently drops them. that
+`engine/vendor/` is committed, and six files in it are not what upstream
+ships: three headers of go-libtor and three go files of the relay library.
+`go mod vendor` regenerates the tree and silently drops them. that
 command has been run by accident in this repo before; the result builds
 without a warning and the 32-bit engine never connects (tor at 0%, the app
 at "connecting" forever, nothing in any log). do not run it. if the vendor
@@ -9,7 +10,7 @@ tree ever has to be rebuilt, re-apply the patches below and build with
 `HALO_FULL=1 ./build.sh`, because go's build cache does not track these
 headers either.
 
-all three live under `vendor/github.com/alexballas/go-libtor/`.
+the headers live under `vendor/github.com/alexballas/go-libtor/`.
 
 ## openssl: the bignum word size
 
@@ -47,3 +48,27 @@ over adb is described in the commit that added these patches (2026-09-13).
 
 upstream report: alexballas/go-libtor, generated-on-64-bit headers break
 32-bit targets.
+
+## fiatjaf.com/nostr: frame checks
+
+three files under `vendor/fiatjaf.com/nostr/`, the new lines marked
+`kryfo:`:
+
+- `helpers.go`: `extractSubID`, `extractEventID`, `extractEventPubKey` and
+  `extractDTag` return nothing for a frame too short to hold what they look
+  for.
+- `envelopes.go`: the OK envelope takes an event id of exactly 64 hex
+  characters and nothing else.
+- `relay.go`: `handleMessage` runs its duplicate pre-check only on a frame
+  that reaches past its subscription id, and whatever a frame holds,
+  handling it ends at most its own connection. the caller dials again.
+
+these are go files, so go's cache sees them and a plain build picks them
+up. `TestConnectionStaysUpWhateverTheFrames` in `relay_guard_test.go`
+covers them. the change against upstream:
+
+    go mod download fiatjaf.com/nostr@v0.0.0-20260508234157-a4c590d923ee
+    up="$(go env GOMODCACHE)/fiatjaf.com/nostr@v0.0.0-20260508234157-a4c590d923ee"
+    for f in helpers.go envelopes.go relay.go; do
+        diff -u "$up/$f" "vendor/fiatjaf.com/nostr/$f"
+    done
