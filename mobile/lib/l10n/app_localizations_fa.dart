@@ -2773,6 +2773,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get handleAlreadyTaken => 'قبلاً گرفته شده';
 
   @override
+  String get handleNameRule => '۳ تا ۲۰ نویسه: حروف کوچک لاتین، رقم یا _';
+
+  @override
   String get handleWhatAHandleDoes => 'نام کاربری چه می‌کند';
 
   @override
@@ -4048,6 +4051,22 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get pairCodeAddThem => 'افزودن';
+
+  @override
+  String get pairCodeUsedTwice =>
+      'این کد دو بار استفاده شده. یک کد تازه بخواهید.';
+
+  @override
+  String get pairCodeIsThisThem => 'همین شخص است؟';
+
+  @override
+  String get pairCodeCheckMatches => 'بررسی کنید که با صفحه‌ی او یکی باشد';
+
+  @override
+  String get pairCodeNotThem => 'این شخص نیست';
+
+  @override
+  String get pairCodeNotAdded => 'افزوده نشد. یک کد تازه بخواهید.';
 
   @override
   String get panicSetupThoseWereDifferentFrom => 'یکی نبودند. از اول.';
@@ -6217,6 +6236,9 @@ class AppLocalizationsFa extends AppLocalizations {
       'او Kryfo را باز می‌کند، «افزودن» را می‌زند، «کد جفت‌سازی» را انتخاب می‌کند و این شش رقم را تایپ می‌کند. برای نفر بعدی یک کد تازه بسازید.';
 
   @override
+  String get pairCodePanelYourWords => 'سه واژه‌ی شما';
+
+  @override
   String pinsPinnedMessages(Object count) {
     return 'پیام‌های سنجاق‌شده · ⁨$count⁩';
   }
@@ -6860,6 +6882,10 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get handleRegistryFailed =>
       'دفتر ثبت پاسخ نداد. یک دقیقهٔ دیگر دوباره امتحان کنید.';
+
+  @override
+  String get handleCheckClock =>
+      'تاریخ و ساعت گوشی را بررسی کنید و دوباره امتحان کنید.';
 
   @override
   String get searchPeople => 'افراد';

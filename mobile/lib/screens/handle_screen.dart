@@ -7,6 +7,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../handle_repoint.dart' show handleRefusalLine;
 import '../main.dart' show appState, engine, sessionQuiet;
 import '../theme.dart';
 import '../widgets/confirm_sheet.dart';
@@ -62,6 +63,11 @@ class _HandleScreenState extends State<HandleScreen> {
       setState(() => _state = '');
       return;
     }
+    // a name the registry would refuse is never asked about
+    if (!_shape.hasMatch(h)) {
+      setState(() => _state = 'shape');
+      return;
+    }
     setState(() => _state = 'checking');
     // wait for typing to stop before asking the registry
     _debounce = Timer(const Duration(milliseconds: 500), () async {
@@ -86,12 +92,12 @@ class _HandleScreenState extends State<HandleScreen> {
     if (!mounted) return;
     setState(() => _busy = false);
     if (r == 'ok') {
-      await appState.setMyHandle(h, bio: _bio.text.trim());
+      await appState.setMyHandle(h, bio: _bio.text.trim(), invite: uri);
       if (!mounted) return;
       setState(() => _claimed = h);
       showHaloToast(context, l10n.handleYouAre(h));
     } else {
-      showHaloToast(context, _refused(r, h));
+      showHaloToast(context, handleRefusalLine(r, h));
     }
   }
 
@@ -124,20 +130,12 @@ class _HandleScreenState extends State<HandleScreen> {
       });
       showHaloToast(context, l10n.handleHandleDeletedThePage);
     } else {
-      showHaloToast(context, _refused(r, h));
+      showHaloToast(context, handleRefusalLine(r, h));
     }
   }
 
   static const _unreached = 'error: bad answer from the registry';
-
-  // the engine and the registry answer in fixed english words
-  String _refused(String r, String h) {
-    if (r.contains('is taken') || r.contains('not available')) {
-      return l10n.handleThatHandleIsTaken;
-    }
-    if (r.contains('not yours')) return l10n.handleIsNotYoursOn(h);
-    return l10n.handleRegistryFailed;
-  }
+  static final _shape = RegExp(r'^[a-z0-9_]{3,20}$');
 
   @override
   Widget build(BuildContext context) {
@@ -478,13 +476,18 @@ class _Availability extends StatelessWidget {
     } else if (state == 'taken') {
       txt = l10n.handleAlreadyTaken;
       c = HaloColors.rose;
+    } else if (state == 'shape') {
+      txt = l10n.handleNameRule;
+      c = HaloColors.amber;
     } else {
-      txt = state.replaceFirst('error: ', '');
+      // a fixed line, whatever the engine or the registry said
+      txt = l10n.handleRegistryFailed;
       c = HaloColors.amber;
     }
-    // each answer rises in over the last as the name is typed
-    return SizedBox(
-      height: 16,
+    // each answer rises in over the last as the name is typed; a longer
+    // one makes room for itself
+    final line = ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 16),
       child: RiseSwap(
         child: Text(
           txt,
@@ -492,6 +495,14 @@ class _Availability extends StatelessWidget {
           style: HaloType.mono(size: 11, color: c),
         ),
       ),
+    );
+    // with less movement the room is simply there
+    if (motionStill(context)) return line;
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOutCubic,
+      alignment: AlignmentDirectional.topStart,
+      child: line,
     );
   }
 }

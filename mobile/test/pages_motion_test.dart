@@ -93,10 +93,11 @@ void main() {
       expect(find.text(l10n.handleChecking), findsOneWidget);
       await t.pump(const Duration(milliseconds: 500));
       await t.pump(const Duration(milliseconds: 60));
-      // the quiet session answers as an unreachable registry does, and
-      // the new words cross the old ones
+      // the quiet session answers as an unreachable registry does, in the
+      // app's own fixed line, and the new words cross the old ones
       expect(find.text(l10n.handleChecking), findsOneWidget);
-      expect(find.text('bad answer from the registry'), findsOneWidget);
+      expect(find.text(l10n.handleRegistryFailed), findsOneWidget);
+      expect(find.text('bad answer from the registry'), findsNothing);
       await rest(t);
       expect(find.text(l10n.handleChecking), findsNothing);
       expect(t.hasRunningAnimations, isFalse);
@@ -139,8 +140,25 @@ void main() {
       await t.pump(const Duration(milliseconds: 600));
       await t.pump();
       expect(find.text(l10n.handleChecking), findsNothing);
-      expect(find.text('bad answer from the registry'), findsOneWidget);
+      expect(find.text(l10n.handleRegistryFailed), findsOneWidget);
       await t.pump(const Duration(milliseconds: 200));
+      expect(t.hasRunningAnimations, isFalse);
+      await drain(t);
+    });
+
+    testWidgets('a name that cannot be a handle shows the rule, unasked', (
+      t,
+    ) async {
+      phone(t);
+      await t.pumpWidget(framed(const HandleScreen()));
+      await rest(t);
+      await t.enterText(find.byType(TextField).first, 'a!');
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 600));
+      expect(find.text(l10n.handleNameRule), findsOneWidget);
+      expect(find.text(l10n.handleChecking), findsNothing);
+      expect(find.text(l10n.handleRegistryFailed), findsNothing);
+      await rest(t);
       expect(t.hasRunningAnimations, isFalse);
       await drain(t);
     });

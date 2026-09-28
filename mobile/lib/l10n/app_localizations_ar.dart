@@ -2834,6 +2834,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get handleAlreadyTaken => 'محجوز بالفعل';
 
   @override
+  String get handleNameRule =>
+      'من ٣ إلى ٢٠ حرفًا: أحرف لاتينية صغيرة أو أرقام أو _';
+
+  @override
   String get handleWhatAHandleDoes => 'ما فائدة اسم المستخدم';
 
   @override
@@ -4121,6 +4125,21 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get pairCodeAddThem => 'أضِفه';
+
+  @override
+  String get pairCodeUsedTwice => 'استُخدم هذا الرمز مرتين. اطلب رمزًا جديدًا.';
+
+  @override
+  String get pairCodeIsThisThem => 'هل هذا هو الشخص؟';
+
+  @override
+  String get pairCodeCheckMatches => 'تحقّق من أنه يطابق ما على شاشته';
+
+  @override
+  String get pairCodeNotThem => 'ليس هذا الشخص';
+
+  @override
+  String get pairCodeNotAdded => 'لم تتم الإضافة. اطلب رمزًا جديدًا.';
 
   @override
   String get panicSetupThoseWereDifferentFrom => 'لم يتطابقا. من البداية.';
@@ -6314,6 +6333,9 @@ class AppLocalizationsAr extends AppLocalizations {
       'يفتح Kryfo، ويضغط «إضافة»، ويختار «رمز الاقتران» ثم يكتب هذه الأرقام الستة. أنشئ رمزًا جديدًا للشخص التالي.';
 
   @override
+  String get pairCodePanelYourWords => 'كلماتك الثلاث';
+
+  @override
   String pinsPinnedMessages(Object count) {
     return 'الرسائل المثبّتة · ⁨$count⁩';
   }
@@ -6970,6 +6992,9 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get handleRegistryFailed =>
       'تعذّر الوصول إلى السجل. حاول مجددًا بعد دقيقة.';
+
+  @override
+  String get handleCheckClock => 'تحقّق من تاريخ الهاتف ووقته، ثم حاول مجددًا.';
 
   @override
   String get searchPeople => 'أشخاص';

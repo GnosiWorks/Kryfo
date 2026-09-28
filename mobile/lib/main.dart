@@ -88,6 +88,7 @@ import 'stranger_gate.dart';
 import 'fast_gate.dart';
 import 'mentions.dart';
 import 'handle_lookup.dart';
+import 'handle_repoint.dart';
 import 'widgets/sheet_handle.dart';
 import 'widgets/halo_sheet.dart';
 import 'bidi_safe.dart';
@@ -5701,24 +5702,37 @@ class AppState extends ChangeNotifier {
     return r;
   }
 
-  // the published invite is static; a phone that claimed under a key since
-  // spent republishes with the kept one, once per run, and only once the
-  // onion and the first-contact counter are loaded, or the page gets an
-  // invite nobody can reach.
+  // the published invite is static; a phone whose invite changed since the
+  // registry last took it claims again, once per run, only once the onion
+  // and the first-contact counter are loaded, and at a random moment rather
+  // than with the rest of start's traffic.
   bool _fcLoaded = false;
   bool _repointed = false;
   void _maybeRepoint() {
     if (_repointed || _myHandle == null) return;
     if (myOnion.isEmpty || !_fcLoaded) return;
     _repointed = true;
-    unawaited(_repointHandle());
+    Timer(repointDelay(Random.secure()), () => unawaited(_repointHandle()));
   }
 
-  Future<void> setMyHandle(String? h, {String bio = ''}) async {
+  late final _handleRepoint = HandleRepoint(
+    invite: () => buildHaloUriV3(myId, myOnion, _fcCounter),
+    claim: (h, invite, bio) => engine.handleClaim(h, invite, bio),
+    lookup: (url) => engine.torGetJson(url),
+    myKey: () => engine.myEdPubkey(),
+    read: (k) => const FlutterSecureStorage().read(key: k),
+    write: (k, v) => v == null
+        ? const FlutterSecureStorage().delete(key: k)
+        : const FlutterSecureStorage().write(key: k, value: v),
+  );
+
+  // [invite] is the one the registry just took for [h]
+  Future<void> setMyHandle(String? h, {String bio = '', String? invite}) async {
     _myHandle = h;
     _handleForeign = false;
     final st = const FlutterSecureStorage();
     if (h == null) {
+      await _handleRepoint.forget();
       await st.delete(key: 'my_handle');
       await st.delete(key: 'my_handle_bio');
       // a released handle is gone from search with the rest of it
@@ -5730,6 +5744,7 @@ class AppState extends ChangeNotifier {
       await st.write(key: 'my_handle', value: h);
       // kept so a republish carries the same bio rather than a blank one
       await st.write(key: 'my_handle_bio', value: bio);
+      if (invite != null) await _handleRepoint.claimed(h, invite);
     }
     notifyListeners();
   }
@@ -6512,27 +6527,42 @@ class AppState extends ChangeNotifier {
   bool _handleForeign = false;
   bool get handleForeign => !sessionQuiet && _handleForeign;
 
+  void _setHandleForeign(bool foreign) {
+    if (foreign == _handleForeign) return;
+    _handleForeign = foreign;
+    notifyListeners();
+  }
+
+  // nothing is sent while the invite is the one the registry last took
   Future<void> _repointHandle() async {
     final h = _myHandle;
     if (h == null || myOnion.isEmpty) return;
     try {
-      final uri = await buildHaloUriV3(myId, myOnion, _fcCounter);
-      final bio =
-          await const FlutterSecureStorage().read(key: 'my_handle_bio') ?? '';
-      final r = await engine.handleClaim(h, uri, bio);
-      final foreign = r.contains('taken');
-      if (foreign != _handleForeign) {
-        _handleForeign = foreign;
-        notifyListeners();
-      }
+      final r = await _handleRepoint.repoint(h);
+      if (r != null) _setHandleForeign(r.contains('taken'));
     } catch (_) {
       // offline, or the registry is down. the handle stays claimed and
       // stale rather than lost, and the next claim fixes it.
     }
   }
 
-  // asked by the handle screen when it opens on a claimed handle
-  Future<void> checkHandle() => _repointHandle();
+  // asked by the handle screen when it opens on a claimed handle: a read of
+  // whose it is, and a claim only when the registry holds something else
+  Future<void> checkHandle() async {
+    final h = _myHandle;
+    if (h == null || myOnion.isEmpty) return;
+    try {
+      switch (await _handleRepoint.check(h)) {
+        case HandleAtRegistry.foreign:
+          _setHandleForeign(true);
+        case HandleAtRegistry.mine:
+          _setHandleForeign(false);
+        default:
+      }
+    } catch (_) {
+      // no answer: the card keeps what it showed
+    }
+  }
 
   Future<void> resetInviteAddress() async {
     // the everyday invite's key and address: never from a quiet session,

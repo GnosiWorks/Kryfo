@@ -2829,6 +2829,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get handleAlreadyTaken => 'Уже занято';
 
   @override
+  String get handleNameRule => 'От 3 до 20 символов: a-z, 0-9 или _';
+
+  @override
   String get handleWhatAHandleDoes => 'Зачем нужно имя пользователя';
 
   @override
@@ -4120,6 +4123,22 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get pairCodeAddThem => 'Добавить';
+
+  @override
+  String get pairCodeUsedTwice =>
+      'Этот код использовали дважды. Попроси новый.';
+
+  @override
+  String get pairCodeIsThisThem => 'Это тот человек?';
+
+  @override
+  String get pairCodeCheckMatches => 'Сверь с экраном собеседника';
+
+  @override
+  String get pairCodeNotThem => 'Не тот человек';
+
+  @override
+  String get pairCodeNotAdded => 'Не добавлено. Попроси новый код.';
 
   @override
   String get panicSetupThoseWereDifferentFrom => 'Не совпало. Давай сначала.';
@@ -6321,6 +6340,9 @@ class AppLocalizationsRu extends AppLocalizations {
       'Собеседник открывает Kryfo, нажимает «Добавить», выбирает «Код связи» и вводит эти шесть цифр. Для следующего человека создай новый.';
 
   @override
+  String get pairCodePanelYourWords => 'Твои три слова';
+
+  @override
   String pinsPinnedMessages(Object count) {
     return 'Закреплённые сообщения · $count';
   }
@@ -6972,6 +6994,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get handleRegistryFailed =>
       'Реестр не ответил. Попробуй через минуту.';
+
+  @override
+  String get handleCheckClock =>
+      'Проверь дату и время на телефоне и попробуй ещё раз.';
 
   @override
   String get searchPeople => 'Люди';

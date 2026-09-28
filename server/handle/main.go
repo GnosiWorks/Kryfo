@@ -5,8 +5,12 @@ package main
 // it holds a handle, its invite, a short bio and the identity key that
 // claimed it. nothing about who looked anyone up: no access log, no
 // analytics, no cookie, no referrer.
-// ownership is an ed25519 signature over the handle with the identity key in
-// the invite, so only whoever claimed a handle can repoint or release it.
+// ownership is an ed25519 signature by the identity key the invite's three
+// words come from, so only whoever claimed a handle can repoint or release
+// it, and nobody can point a handle at someone else's invite. a claim signs
+// the handle, the invite and the time; a release signs the handle and the
+// time under its own prefix. neither is taken once it is old, and neither
+// stands in for the other.
 
 import (
 	"context"
@@ -45,7 +49,7 @@ var reserved = map[string]bool{
 }
 
 // limits for everyone together: behind tor there is no caller to tell
-// apart. the app repoints its handle on every start, so writes are sized
+// apart. older apps repoint their handle on every start, so writes are sized
 // for that. a key costs nothing to make, so new names get a slower pace and
 // a ceiling on top. reads are the check, the json lookup and the page.
 var (
@@ -61,6 +65,9 @@ type entry struct {
 	Bio       string `json:"bio"`
 	Pubkey    string `json:"pubkey"`
 	ClaimedAt int64  `json:"claimed_at"`
+	// the time on its last v2 claim. a handle that has one takes only v2
+	// from then on, and nothing signed before it
+	SignedAt int64 `json:"signed_at,omitempty"`
 	// in search only when the owner opts in, under a name they chose.
 	// ListedAt is the time on their last signed change, so an older one
 	// cannot be replayed
@@ -73,10 +80,14 @@ type store struct {
 	mu   sync.RWMutex
 	path string
 	m    map[string]entry
+	// handles released in the last while, with the time on the release, so
+	// a claim signed before it cannot bring the handle back. in memory only:
+	// past the clock window no such claim is taken anyway
+	gone map[string]int64
 }
 
 func openStore(path string) *store {
-	s := &store{path: path, m: map[string]entry{}}
+	s := &store{path: path, m: map[string]entry{}, gone: map[string]int64{}}
 	b, err := os.ReadFile(path)
 	if err == nil {
 		_ = json.Unmarshal(b, &s.m)
@@ -104,11 +115,26 @@ func (s *store) put(e entry) error {
 	return s.flush()
 }
 
-func (s *store) del(h string) error {
+// takes a handle out, remembering the time on the release
+func (s *store) del(h string, ts int64) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	delete(s.m, h)
+	old := time.Now().Unix() - 2*signSkew
+	for k, t := range s.gone {
+		if t < old {
+			delete(s.gone, k)
+		}
+	}
+	s.gone[h] = ts
 	return s.flush()
+}
+
+// the time on the handle's release in the last while, or 0
+func (s *store) goneAt(h string) int64 {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.gone[h]
 }
 
 // caller holds the lock. written to a temp file and renamed so a crash
@@ -125,16 +151,85 @@ func (s *store) flush() error {
 	return os.Rename(tmp, s.path)
 }
 
+// older apps sign the handle alone, for a claim and a release alike. taken
+// while those apps are about; off, and only v2 is taken
+var acceptV1 = true
+
+// seconds a signed change may be off the registry's clock, either way
+const signSkew = 10 * 60
+
 func verify(handle, pubHex, sigHex string) bool {
+	return verifyMsg(pubHex, sigHex, "kryfo-handle-v1:"+handle)
+}
+
+// what the app signs to claim or repoint a handle (engine/handle.go,
+// handleClaimMsg): the invite goes in as its hash
+func claimMsgV2(h, invite string, ts int64) string {
+	sum := sha256.Sum256([]byte(invite))
+	return fmt.Sprintf("kryfo-handle-claim-v2:%s:%s:%d", h, hex.EncodeToString(sum[:]), ts)
+}
+
+// and to release one (engine/handle.go, handleReleaseMsg)
+func releaseMsgV2(h string, ts int64) string {
+	return fmt.Sprintf("kryfo-handle-release-v2:%s:%d", h, ts)
+}
+
+// the signature on a claim or a release. v2 carries its time, which must be
+// near the registry's clock; v1 carries none and gives ts 0. a non-empty why
+// is the refusal.
+func checkSig(raw map[string]string, h string, msgV2 func(int64) string) (ts int64, v2 bool, why string) {
+	switch raw["v"] {
+	case "2":
+		if _, err := fmt.Sscan(raw["ts"], &ts); err != nil {
+			return 0, true, "bad request"
+		}
+		now := time.Now().Unix()
+		if ts < now-signSkew || ts > now+signSkew {
+			return 0, true, "check the phone's clock"
+		}
+		if !verifyMsg(raw["pubkey"], raw["sig"], msgV2(ts)) {
+			return 0, true, "signature does not match"
+		}
+		return ts, true, ""
+	case "", "1":
+		if !acceptV1 {
+			return 0, false, "update the app"
+		}
+		if !verify(h, raw["pubkey"], raw["sig"]) {
+			return 0, false, "signature does not match"
+		}
+		return 0, false, ""
+	}
+	return 0, false, "bad request"
+}
+
+// the three words a key is known by, the way the app derives them
+// (engine/bridge.go, idFromPubkey). words.txt is the bip-39 english list
+//
+//go:embed words.txt
+var wordsTxt string
+
+var wordList = strings.Fields(wordsTxt)
+
+func wordsOf(pubHex string) string {
 	pub, err := hex.DecodeString(pubHex)
-	if err != nil || len(pub) != ed25519.PublicKeySize {
+	if err != nil || len(pub) != ed25519.PublicKeySize || len(wordList) != 2048 {
+		return ""
+	}
+	h := sha256.Sum256(pub)
+	bits := uint64(h[0])<<32 | uint64(h[1])<<24 | uint64(h[2])<<16 | uint64(h[3])<<8 | uint64(h[4])
+	return wordList[(bits>>22)&0x7FF] + "-" + wordList[(bits>>11)&0x7FF] + "-" + wordList[bits&0x7FF]
+}
+
+// whether the invite names the key that signs for it: its id is the three
+// words that key makes
+func inviteIsKeys(invite, pubHex string) bool {
+	u, err := url.Parse(invite)
+	if err != nil {
 		return false
 	}
-	sig, err := hex.DecodeString(sigHex)
-	if err != nil || len(sig) != ed25519.SignatureSize {
-		return false
-	}
-	return ed25519.Verify(pub, []byte("kryfo-handle-v1:"+handle), sig)
+	w := wordsOf(pubHex)
+	return w != "" && u.Query().Get("id") == w
 }
 
 func writeJSON(w http.ResponseWriter, code int, v any) {
@@ -243,6 +338,10 @@ func main() {
 		log.Fatal(err)
 	}
 	st := openStore(filepath.Join(dir, "handles.json"))
+	// once no app in use signs v1 any more
+	if os.Getenv("HANDLE_REFUSE_V1") == "1" {
+		acceptV1 = false
+	}
 
 	log.Printf("handles: listening on %s, store in %s", addr, dir)
 	log.Fatal(newServer(addr, st, newLimiter(2, 20)).ListenAndServe())
@@ -305,20 +404,17 @@ func routes(st *store, lim *limiter) http.Handler {
 			refuse(w, "post only")
 			return
 		}
-		var in entry
-		var sig string
 		var raw map[string]string
 		if json.NewDecoder(http.MaxBytesReader(w, r.Body, 64<<10)).Decode(&raw) != nil {
 			refuse(w, "bad request")
 			return
 		}
-		in = entry{
+		in := entry{
 			Handle: strings.ToLower(strings.TrimSpace(raw["handle"])),
 			Invite: raw["invite"],
 			Bio:    raw["bio"],
 			Pubkey: raw["pubkey"],
 		}
-		sig = raw["sig"]
 		if !handleOK.MatchString(in.Handle) || reserved[in.Handle] {
 			refuse(w, "that handle is not available")
 			return
@@ -334,8 +430,15 @@ func routes(st *store, lim *limiter) http.Handler {
 			refuseCode(w, http.StatusTooManyRequests, "slow down")
 			return
 		}
-		if !verify(in.Handle, in.Pubkey, sig) {
-			refuse(w, "signature does not match")
+		ts, v2, why := checkSig(raw, in.Handle, func(ts int64) string {
+			return claimMsgV2(in.Handle, in.Invite, ts)
+		})
+		if why != "" {
+			refuse(w, why)
+			return
+		}
+		if !inviteIsKeys(in.Invite, in.Pubkey) {
+			refuse(w, "the invite is not yours")
 			return
 		}
 		// re-claiming your own handle repoints it, which is how someone
@@ -346,16 +449,29 @@ func routes(st *store, lim *limiter) http.Handler {
 				refuse(w, "that handle is taken")
 				return
 			}
-			// the app repoints on every start: nothing changed, nothing
-			// written
-			if old.Invite == in.Invite && old.Bio == in.Bio {
+			if old.SignedAt > 0 && !v2 {
+				refuse(w, "update the app")
+				return
+			}
+			if v2 && ts < old.SignedAt {
+				refuse(w, "an older change")
+				return
+			}
+			// nothing changed, nothing written. the first v2 claim of a
+			// handle is written all the same, so it takes only v2 after
+			if old.Invite == in.Invite && old.Bio == in.Bio && (!v2 || old.SignedAt > 0) {
 				writeJSON(w, http.StatusOK, map[string]any{"ok": true})
 				return
 			}
 			// and that must not take someone out of search, or put them
 			// back into it
 			in.Listed, in.Name, in.ListedAt = old.Listed, old.Name, old.ListedAt
+			in.SignedAt = old.SignedAt
 		} else {
+			if gone := st.goneAt(in.Handle); gone > 0 && (!v2 || ts <= gone) {
+				refuse(w, "an older change")
+				return
+			}
 			if st.count() >= maxHandles {
 				refuseCode(w, http.StatusServiceUnavailable, "the registry is full")
 				return
@@ -364,6 +480,9 @@ func routes(st *store, lim *limiter) http.Handler {
 				refuseCode(w, http.StatusTooManyRequests, "slow down")
 				return
 			}
+		}
+		if v2 {
+			in.SignedAt = ts
 		}
 		in.ClaimedAt = time.Now().Unix()
 		if err := st.put(in); err != nil {
@@ -393,11 +512,25 @@ func routes(st *store, lim *limiter) http.Handler {
 			writeJSON(w, http.StatusOK, map[string]any{"ok": true})
 			return
 		}
-		if e.Pubkey != raw["pubkey"] || !verify(h, raw["pubkey"], raw["sig"]) {
+		ts, v2, why := checkSig(raw, h, func(ts int64) string { return releaseMsgV2(h, ts) })
+		switch {
+		case why == "signature does not match" || e.Pubkey != raw["pubkey"]:
 			refuse(w, "not yours to release")
 			return
+		case why != "":
+			refuse(w, why)
+			return
+		case e.SignedAt > 0 && !v2:
+			refuse(w, "update the app")
+			return
+		case v2 && ts < e.SignedAt:
+			refuse(w, "an older change")
+			return
 		}
-		if err := st.del(h); err != nil {
+		if !v2 {
+			ts = time.Now().Unix()
+		}
+		if err := st.del(h, ts); err != nil {
 			refuse(w, "could not save")
 			return
 		}

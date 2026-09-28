@@ -2761,6 +2761,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get handleAlreadyTaken => 'Sudah dipakai';
 
   @override
+  String get handleNameRule => '3 sampai 20 karakter: a-z, 0-9 atau _';
+
+  @override
   String get handleWhatAHandleDoes => 'Guna nama pengguna';
 
   @override
@@ -4031,6 +4034,21 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get pairCodeAddThem => 'Tambahkan';
+
+  @override
+  String get pairCodeUsedTwice => 'Kode ini dipakai dua kali. Minta kode baru.';
+
+  @override
+  String get pairCodeIsThisThem => 'Benar dia orangnya?';
+
+  @override
+  String get pairCodeCheckMatches => 'Cocokkan dengan layar orang itu';
+
+  @override
+  String get pairCodeNotThem => 'Bukan dia';
+
+  @override
+  String get pairCodeNotAdded => 'Tidak ditambahkan. Minta kode baru.';
 
   @override
   String get panicSetupThoseWereDifferentFrom =>
@@ -6203,6 +6221,9 @@ class AppLocalizationsId extends AppLocalizations {
       'Dia membuka Kryfo, mengetuk tambah, memilih kode penautan, lalu mengetik enam angka ini. Buat yang baru untuk orang berikutnya.';
 
   @override
+  String get pairCodePanelYourWords => 'Tiga katamu';
+
+  @override
   String pinsPinnedMessages(Object count) {
     return 'Pesan tersemat · $count';
   }
@@ -6843,6 +6864,10 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get handleRegistryFailed =>
       'Tidak bisa menghubungi registri. Coba lagi semenit lagi.';
+
+  @override
+  String get handleCheckClock =>
+      'Periksa tanggal dan jam di ponsel, lalu coba lagi.';
 
   @override
   String get searchPeople => 'Orang';
