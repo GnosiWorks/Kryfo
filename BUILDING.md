@@ -20,8 +20,9 @@ builds arm64-v8a, armeabi-v7a and x86_64 into the app's jniLibs. it finds the
 ndk from ANDROID_NDK_HOME or $ANDROID_HOME/ndk. deps are vendored, so it runs
 offline.
 
-don't run `go mod vendor` in engine/. three vendored headers are patched for
-32-bit phones (engine/VENDOR_PATCHES.md) and it drops the patches. after
+vendor/ is rebuilt with `./vendor.sh` in engine/, never a bare
+`go mod vendor`. six vendored headers are patched for 32-bit phones
+(engine/VENDOR_PATCHES.md) and go mod vendor drops the patches. after
 touching them, build with `HALO_FULL=1 ./build.sh`, go's cache doesn't see
 them.
 

@@ -10,7 +10,6 @@ import (
 	"os"
 	"runtime"
 	"strings"
-	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -67,6 +66,9 @@ func TestTorCycles(t *testing.T) {
 		t.Skipf("tor only bootstrapped to %d%% here, nothing to cycle", pct)
 	}
 	t.Logf("cold start: 100%% in %dms", took.Milliseconds())
+	mu.Lock()
+	firstTor := torNode
+	mu.Unlock()
 	var first, last, goFirst, goAfter int
 	cycles := 12
 	for i := 0; i < cycles; i++ {
@@ -84,7 +86,7 @@ func TestTorCycles(t *testing.T) {
 		if got := startListener(dir); !strings.HasPrefix(got, "error: tor is stopped") {
 			t.Fatalf("cycle %d: a start while asleep was not refused: %s", i, got)
 		}
-		restartTor()
+		reconnectTor()
 		time.Sleep(3 * time.Second)
 		if bootPct() >= 100 {
 			t.Fatalf("cycle %d: tor reports 100%% while off the network", i)
@@ -113,8 +115,11 @@ func TestTorCycles(t *testing.T) {
 	if first > 0 && last > first*2 {
 		t.Fatalf("memory doubled over %d cycles: %d MB -> %d MB", cycles, first/1024, last/1024)
 	}
-	if n := atomic.LoadInt32(&torMains); n != 1 {
-		t.Fatalf("tor main loops alive at the end: %d, want 1", n)
+	mu.Lock()
+	sameTor := torNode == firstTor
+	mu.Unlock()
+	if !sameTor {
+		t.Fatalf("a second tor was started over %d cycles", cycles)
 	}
 	if goAfter > goFirst+3 {
 		t.Fatalf("a goroutine per wake: %d -> %d over %d cycles", goFirst, goAfter, cycles)
