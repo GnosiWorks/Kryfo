@@ -7346,7 +7346,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get devUseMyWords => 'استفاده از سه واژه‌ی خودم';
 
   @override
-  String get devWhoSeesWhat => 'چه کسی چه می‌بیند';
+  String get devWhoSeesWhat => 'این چطور کار می‌کند';
 
   @override
   String get devWhoWords =>

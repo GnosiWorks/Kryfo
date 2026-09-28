@@ -11760,7 +11760,7 @@ abstract class AppLocalizations {
   /// widgets/dev_note.dart: the (i) of the note and the title of its sheet
   ///
   /// In en, this message translates to:
-  /// **'Who sees what'**
+  /// **'How this works'**
   String get devWhoSeesWhat;
 
   /// widgets/dev_note.dart: the sheet Who sees what, writing with the three words

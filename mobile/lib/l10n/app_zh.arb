@@ -1922,7 +1922,7 @@
   "seenDevChatLine": "你发消息之前，什么都看不到。之后能看到你发送的内容，以及你的三个词，除非你匿名发送。",
   "devWriteAnonymously": "匿名发送",
   "devUseMyWords": "用我的三个词",
-  "devWhoSeesWhat": "谁能看到什么",
+  "devWhoSeesWhat": "工作原理",
   "devWhoWords": "用你的三个词，这就是一个普通的聊天：Marios 可以回复你，你的脸和支持者徽章留在你这里。",
   "devWhoAnon": "匿名发送时，Kryfo 会专门为这个聊天生成新的名字和密钥。它们只留在这部手机上，绝不会在别处使用。",
   "devWhoNothingYet": "在你发出第一条消息之前，什么都不会离开你的手机。",

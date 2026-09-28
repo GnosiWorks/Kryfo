@@ -7452,7 +7452,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get devUseMyWords => 'استخدم كلماتي الثلاث';
 
   @override
-  String get devWhoSeesWhat => 'من يرى ماذا';
+  String get devWhoSeesWhat => 'كيف يعمل هذا';
 
   @override
   String get devWhoWords =>

@@ -7400,7 +7400,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get devUseMyWords => 'Utiliser mes trois mots';
 
   @override
-  String get devWhoSeesWhat => 'Qui voit quoi';
+  String get devWhoSeesWhat => 'Comment ça marche';
 
   @override
   String get devWhoWords =>

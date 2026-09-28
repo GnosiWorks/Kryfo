@@ -7041,7 +7041,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get devUseMyWords => '用我的三个词';
 
   @override
-  String get devWhoSeesWhat => '谁能看到什么';
+  String get devWhoSeesWhat => '工作原理';
 
   @override
   String get devWhoWords => '用你的三个词，这就是一个普通的聊天：Marios 可以回复你，你的脸和支持者徽章留在你这里。';
@@ -14028,7 +14028,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get devUseMyWords => '用我的三個詞';
 
   @override
-  String get devWhoSeesWhat => '誰能看到什麼';
+  String get devWhoSeesWhat => '運作方式';
 
   @override
   String get devWhoWords => '用你的三個詞，這就是一個普通的聊天：Marios 可以回覆你，你的臉和支持者徽章留在你這裡。';

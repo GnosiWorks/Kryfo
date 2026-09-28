@@ -7311,7 +7311,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get devUseMyWords => 'Dùng ba từ của tôi';
 
   @override
-  String get devWhoSeesWhat => 'Ai thấy gì';
+  String get devWhoSeesWhat => 'Cách hoạt động';
 
   @override
   String get devWhoWords =>

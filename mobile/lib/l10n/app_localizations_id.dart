@@ -7328,7 +7328,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get devUseMyWords => 'Pakai tiga kataku';
 
   @override
-  String get devWhoSeesWhat => 'Siapa melihat apa';
+  String get devWhoSeesWhat => 'Cara kerjanya';
 
   @override
   String get devWhoWords =>

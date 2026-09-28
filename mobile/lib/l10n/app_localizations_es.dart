@@ -7384,7 +7384,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get devUseMyWords => 'Usar mis tres palabras';
 
   @override
-  String get devWhoSeesWhat => 'Quién ve qué';
+  String get devWhoSeesWhat => 'Cómo funciona';
 
   @override
   String get devWhoWords =>

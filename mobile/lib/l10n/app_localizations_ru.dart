@@ -7462,7 +7462,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get devUseMyWords => 'Использовать мои три слова';
 
   @override
-  String get devWhoSeesWhat => 'Кто что видит';
+  String get devWhoSeesWhat => 'Как это работает';
 
   @override
   String get devWhoWords =>

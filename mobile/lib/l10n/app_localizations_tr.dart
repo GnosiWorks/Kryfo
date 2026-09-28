@@ -7358,7 +7358,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get devUseMyWords => 'Üç kelimemi kullan';
 
   @override
-  String get devWhoSeesWhat => 'Kim neyi görür';
+  String get devWhoSeesWhat => 'Nasıl çalışır';
 
   @override
   String get devWhoWords =>

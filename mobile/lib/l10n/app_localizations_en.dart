@@ -7322,7 +7322,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get devUseMyWords => 'Use my three words';
 
   @override
-  String get devWhoSeesWhat => 'Who sees what';
+  String get devWhoSeesWhat => 'How this works';
 
   @override
   String get devWhoWords =>

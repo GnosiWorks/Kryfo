@@ -7458,7 +7458,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get devUseMyWords => 'Використати мої три слова';
 
   @override
-  String get devWhoSeesWhat => 'Хто що бачить';
+  String get devWhoSeesWhat => 'Як це працює';
 
   @override
   String get devWhoWords =>
