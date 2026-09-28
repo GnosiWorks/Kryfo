@@ -13,10 +13,11 @@ import '../message_envelope.dart' show UnwrappedMessage;
 import '../notifications.dart'
     show clearSupportSummary, showSupportMessage, showSupportSummary;
 import 'dev_key.dart' show isDevChat;
+import 'dev_start.dart' show kDevCap;
 
 // what a support chat may send before he answers, as the person's side
 // holds it too
-const kSupportCap = 5;
+const kSupportCap = kDevCap;
 
 // a waiting chat rings at most this often. the rest update the count
 const kSupportGap = Duration(minutes: 30);
