@@ -39,6 +39,43 @@ var seenFileMu sync.Mutex
 // set while the app wipes itself: nothing is written into the data dir
 var engineHeld atomic.Bool
 
+// the files of receive addresses that were let go of: nothing still
+// finishing on one writes it again, until a subscription on the address
+// starts anew
+var goneFiles sync.Map
+
+func fileGone(path string) bool {
+	_, ok := goneFiles.Load(path)
+	return ok
+}
+
+// where a receive address keeps the ids it has seen and how far it got
+func addressFiles(rcvPk string) (seenPath, lastPath string) {
+	if savedDataDir == "" {
+		return "", ""
+	}
+	short := rcvPk
+	if len(short) > 16 {
+		short = short[:16]
+	}
+	return savedDataDir + "/nostr_seen_" + short, savedDataDir + "/nostr_last_" + short
+}
+
+// the files of a receive address, off the disk and never written again by
+// what is still finishing on them
+func dropAddressFiles(rcvPk string) {
+	seenPath, lastPath := addressFiles(rcvPk)
+	if seenPath == "" {
+		return
+	}
+	seenFileMu.Lock()
+	defer seenFileMu.Unlock()
+	for _, p := range []string{seenPath, seenPath + ".tmp", lastPath} {
+		goneFiles.Store(p, struct{}{})
+		os.Remove(p)
+	}
+}
+
 // a fixed number of ids, the oldest dropped first
 type idRing struct {
 	ids  map[nostr.ID]struct{}
@@ -171,6 +208,9 @@ func (s *seenIDs) write(lines []string) {
 	}
 	seenFileMu.Lock()
 	defer seenFileMu.Unlock()
+	if fileGone(s.path) {
+		return
+	}
 	f, err := os.OpenFile(s.path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
 		return
@@ -190,7 +230,7 @@ func (s *seenIDs) write(lines []string) {
 // file rather than this runner's memory, which may not hold what another
 // runner on the same file wrote. seenFileMu must be held.
 func (s *seenIDs) compactLocked() {
-	if engineHeld.Load() {
+	if engineHeld.Load() || fileGone(s.path) {
 		return
 	}
 	b, err := os.ReadFile(s.path)
