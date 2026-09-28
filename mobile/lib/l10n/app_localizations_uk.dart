@@ -7361,14 +7361,7 @@ class AppLocalizationsUk extends AppLocalizations {
       'Нічого, доки ти не напишеш. Потім те, що ти надсилаєш, і твої три слова, якщо тільки ти не пишеш анонімно.';
 
   @override
-  String get devNoteWords => 'Marios побачить твої три слова';
-
-  @override
   String get devWriteAnonymously => 'Написати анонімно';
-
-  @override
-  String get devNoteAnon =>
-      'Marios побачить нове ім’я, створене лише для цього чату';
 
   @override
   String get devUseMyWords => 'Використати мої три слова';
@@ -7378,7 +7371,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get devWhoWords =>
-      'З твоїми трьома словами Marios може відповісти тобі, як будь-який контакт. Він бачить твої три слова, але не твоє обличчя і не значок прихильника.';
+      'З твоїми трьома словами це звичайний чат: Marios може відповісти тобі, а твоє обличчя і значок прихильника залишаються в тебе.';
 
   @override
   String get devWhoAnon =>

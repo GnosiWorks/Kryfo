@@ -7261,14 +7261,7 @@ class AppLocalizationsTr extends AppLocalizations {
       'Sen yazana kadar hiçbir şey. Sonra gönderdiklerin ve anonim yazmadıkça üç kelimen.';
 
   @override
-  String get devNoteWords => 'Marios üç kelimeni görecek';
-
-  @override
   String get devWriteAnonymously => 'Anonim yaz';
-
-  @override
-  String get devNoteAnon =>
-      'Marios bu sohbete özel oluşturulan yeni bir ad görecek';
 
   @override
   String get devUseMyWords => 'Üç kelimemi kullan';
@@ -7278,7 +7271,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get devWhoWords =>
-      'Üç kelimenle Marios sana herhangi bir kişi gibi yanıt verebilir. Üç kelimeni görür, yüzünü ya da destekçi rozetini görmez.';
+      'Üç kelimenle bu, diğerleri gibi bir sohbet: Marios sana yanıt verebilir, yüzün ve destekçi rozetin sende kalır.';
 
   @override
   String get devWhoAnon =>

@@ -488,8 +488,6 @@ Set<String> _ours() => {
   l10n.devWelcome,
   l10n.devPinned,
   l10n.devAnonymous,
-  l10n.devNoteWords,
-  l10n.devNoteAnon,
   l10n.devWriteAnonymously,
   l10n.devUseMyWords,
   l10n.devWhoSeesWhat,
@@ -632,9 +630,15 @@ void main() {
       // his first line, from the app itself: nothing stored, nothing asked
       expect(find.text(l10n.devWelcome), findsOneWidget);
       expect(_mem.rows('messages'), isEmpty);
-      // the note, with the three words, and its pill
-      expect(find.text(l10n.devNoteWords), findsOneWidget);
+      // the note offers the pill and warns about nothing
       expect(_pill, findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(DevNote),
+          matching: find.textContaining('Marios'),
+        ),
+        findsNothing,
+      );
       // his header: the ring that flew in, one title, the key built in
       expect(find.text(l10n.devRowTitle), findsOneWidget);
       expect(find.text(l10n.devPinned), findsOneWidget);
@@ -704,11 +708,9 @@ void main() {
       await _world();
       await _open(t);
       await _chooseAnon(t);
-      // filled, checked, and the line says the new name
+      // filled, checked, and the way back beside it
       expect(find.text(l10n.devAnonymous), findsOneWidget);
       expect(find.byIcon(Icons.check_rounded), findsOneWidget);
-      expect(find.text(l10n.devNoteAnon), findsOneWidget);
-      expect(find.text(l10n.devNoteWords), findsNothing);
       expect(find.text(l10n.devUseMyWords), findsOneWidget);
       // the header says nothing of it before anything is sent
       expect(find.text(l10n.devPinned), findsOneWidget);
@@ -722,7 +724,7 @@ void main() {
       await _beat(t);
       await t.tap(find.text('open'));
       await _beat(t);
-      expect(find.text(l10n.devNoteAnon), findsOneWidget);
+      expect(find.text(l10n.devAnonymous), findsOneWidget);
       // who sees what
       await t.tap(find.byTooltip(l10n.devWhoSeesWhat));
       await _beat(t, 900);
@@ -1071,8 +1073,8 @@ void main() {
       await t.tap(_pill);
       await t.pump();
       await t.pump();
-      expect(find.text(l10n.devNoteAnon), findsOneWidget);
-      expect(find.text(l10n.devNoteWords), findsNothing);
+      expect(find.text(l10n.devAnonymous), findsOneWidget);
+      expect(find.text(l10n.devUseMyWords), findsOneWidget);
       await _type(t, 'quietly');
       await t.tap(find.byIcon(Icons.arrow_upward));
       await t.pump();
@@ -1110,20 +1112,16 @@ void main() {
         );
         // his line on the incoming side, which is the right in this script
         expect(t.getCenter(find.text(l10n.devWelcome)).dx, greaterThan(mid));
-        // the pill at the end of the line, the left
+        // the pill at the start of the line, the right, the (i) at its end
         expect(
           t.getCenter(_pill).dx,
-          lessThan(t.getCenter(find.text(l10n.devNoteWords)).dx),
+          greaterThan(t.getCenter(find.byTooltip(l10n.devWhoSeesWhat)).dx),
         );
-        for (final s in [
-          l10n.devNoteWords,
-          l10n.devNoteAnon,
-          l10n.devWelcome,
-        ]) {
+        for (final s in [l10n.devWelcome, l10n.devRowTitle]) {
           expect(s, contains('Marios'));
         }
         await _chooseAnon(t);
-        expect(find.text(l10n.devNoteAnon), findsOneWidget);
+        expect(find.text(l10n.devAnonymous), findsOneWidget);
         expect(t.takeException(), isNull);
         await _close(t);
       });

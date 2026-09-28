@@ -6944,13 +6944,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get seenDevChatLine => '你发消息之前，什么都看不到。之后能看到你发送的内容，以及你的三个词，除非你匿名发送。';
 
   @override
-  String get devNoteWords => 'Marios 会看到你的三个词';
-
-  @override
   String get devWriteAnonymously => '匿名发送';
-
-  @override
-  String get devNoteAnon => 'Marios 会看到一个专为这个聊天生成的新名字';
 
   @override
   String get devUseMyWords => '用我的三个词';
@@ -6959,8 +6953,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get devWhoSeesWhat => '谁能看到什么';
 
   @override
-  String get devWhoWords =>
-      '用你的三个词，Marios 能像任何联系人一样回复你。他能看到你的三个词，但看不到你的脸和支持者徽章。';
+  String get devWhoWords => '用你的三个词，这就是一个普通的聊天：Marios 可以回复你，你的脸和支持者徽章留在你这里。';
 
   @override
   String get devWhoAnon => '匿名时，Kryfo 会只为这个聊天生成新的名字和密钥。它们只留在这部手机上，绝不会在别处使用。';
@@ -13932,13 +13925,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get seenDevChatLine => '你傳訊息之前，什麼都看不到。之後能看到你傳送的內容，以及你的三個詞，除非你匿名傳送。';
 
   @override
-  String get devNoteWords => 'Marios 會看到你的三個詞';
-
-  @override
   String get devWriteAnonymously => '匿名傳送';
-
-  @override
-  String get devNoteAnon => 'Marios 會看到一個專為這個聊天產生的新名字';
 
   @override
   String get devUseMyWords => '用我的三個詞';
@@ -13947,8 +13934,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get devWhoSeesWhat => '誰能看到什麼';
 
   @override
-  String get devWhoWords =>
-      '用你的三個詞，Marios 能像任何聯絡人一樣回覆你。他能看到你的三個詞，但看不到你的臉和支持者徽章。';
+  String get devWhoWords => '用你的三個詞，這就是一個普通的聊天：Marios 可以回覆你，你的臉和支持者徽章留在你這裡。';
 
   @override
   String get devWhoAnon => '匿名時，Kryfo 會只為這個聊天產生新的名字和金鑰。它們只留在這支手機上，絕不會在別處使用。';

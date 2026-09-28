@@ -7286,14 +7286,7 @@ class AppLocalizationsPt extends AppLocalizations {
       'Nada até você escrever. Depois, o que você envia, e suas três palavras, a menos que você escreva anonimamente.';
 
   @override
-  String get devNoteWords => 'O Marios vai ver suas três palavras';
-
-  @override
   String get devWriteAnonymously => 'Escrever anonimamente';
-
-  @override
-  String get devNoteAnon =>
-      'O Marios vai ver um nome novo, criado só para esta conversa';
 
   @override
   String get devUseMyWords => 'Usar minhas três palavras';
@@ -7303,7 +7296,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get devWhoWords =>
-      'Com suas três palavras, o Marios pode responder como qualquer contato. Ele vê suas três palavras, não seu rosto nem seu selo de apoiador.';
+      'Com suas três palavras, é uma conversa como qualquer outra: o Marios pode responder, e seu rosto e seu selo de apoiador ficam com você.';
 
   @override
   String get devWhoAnon =>

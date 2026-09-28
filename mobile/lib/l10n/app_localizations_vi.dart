@@ -7214,14 +7214,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không gì cả cho đến khi bạn viết. Sau đó là những gì bạn gửi, và ba từ của bạn, trừ khi bạn viết ẩn danh.';
 
   @override
-  String get devNoteWords => 'Marios sẽ thấy ba từ của bạn';
-
-  @override
   String get devWriteAnonymously => 'Viết ẩn danh';
-
-  @override
-  String get devNoteAnon =>
-      'Marios sẽ thấy một cái tên mới, tạo riêng cho cuộc trò chuyện này';
 
   @override
   String get devUseMyWords => 'Dùng ba từ của tôi';
@@ -7231,7 +7224,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get devWhoWords =>
-      'Với ba từ của bạn, Marios có thể trả lời như với mọi liên hệ khác. Anh ấy thấy ba từ của bạn, không thấy khuôn mặt hay huy hiệu người ủng hộ của bạn.';
+      'Với ba từ của bạn, đây là một cuộc trò chuyện như mọi cuộc khác: Marios có thể trả lời, còn khuôn mặt và huy hiệu người ủng hộ của bạn vẫn ở lại với bạn.';
 
   @override
   String get devWhoAnon =>

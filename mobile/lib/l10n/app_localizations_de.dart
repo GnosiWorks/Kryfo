@@ -7311,14 +7311,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Nichts, bis du schreibst. Dann das, was du sendest, und deine drei Wörter, außer du schreibst anonym.';
 
   @override
-  String get devNoteWords => 'Marios sieht deine drei Wörter';
-
-  @override
   String get devWriteAnonymously => 'Anonym schreiben';
-
-  @override
-  String get devNoteAnon =>
-      'Marios sieht einen neuen Namen, nur für diesen Chat gemacht';
 
   @override
   String get devUseMyWords => 'Meine drei Wörter nutzen';
@@ -7328,7 +7321,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get devWhoWords =>
-      'Mit deinen drei Wörtern kann Marios dir antworten wie jeder Kontakt. Er sieht deine drei Wörter, nicht dein Gesicht und nicht dein Unterstützer-Abzeichen.';
+      'Mit deinen drei Wörtern ist es ein Chat wie jeder andere: Marios kann dir antworten, und dein Gesicht und dein Unterstützer-Abzeichen bleiben bei dir.';
 
   @override
   String get devWhoAnon =>

@@ -7355,13 +7355,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'لا شيء حتى تكتب. بعدها ما ترسله، وكلماتك الثلاث ما لم تكتب بهوية مجهولة.';
 
   @override
-  String get devNoteWords => 'سيرى Marios كلماتك الثلاث';
-
-  @override
   String get devWriteAnonymously => 'اكتب بهوية مجهولة';
-
-  @override
-  String get devNoteAnon => 'سيرى Marios اسمًا جديدًا صُنع لهذه المحادثة فقط';
 
   @override
   String get devUseMyWords => 'استخدم كلماتي الثلاث';
@@ -7371,7 +7365,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get devWhoWords =>
-      'بكلماتك الثلاث يستطيع Marios أن يرد عليك مثل أي جهة اتصال. يرى كلماتك الثلاث، لا وجهك ولا شارة الداعم.';
+      'بكلماتك الثلاث، هذه محادثة مثل أي محادثة أخرى: يستطيع Marios أن يرد عليك، ويبقى وجهك وشارة الداعم معك.';
 
   @override
   String get devWhoAnon =>

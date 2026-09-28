@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the developer chat's own parts: its header, the note above the composer
-// that says what Marios will see before anything is sent, the pill that
-// writes anonymously instead, and the sheet that says who sees what
+// with the pill that writes anonymously, and the sheet that says who sees
+// what
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -16,7 +16,7 @@ import 'stagger_in.dart';
 
 // the three words, or a name made for this chat
 IconData devNameGlyph(bool anon) =>
-    anon ? Icons.masks_outlined : Icons.visibility_outlined;
+    anon ? Icons.masks_outlined : Icons.person_outline_rounded;
 
 // above the composer until the first message: what Marios will see, one
 // tap to write anonymously instead, and one to go back. it rises with the
@@ -81,7 +81,7 @@ class _DevNoteState extends State<DevNote> with SingleTickerProviderStateMixin {
     final anon = widget.anon;
     final card = Container(
       margin: const EdgeInsets.fromLTRB(14, 4, 14, 8),
-      padding: const EdgeInsetsDirectional.fromSTEB(13, 10, 6, 10),
+      padding: const EdgeInsetsDirectional.fromSTEB(13, 8, 6, 8),
       decoration: BoxDecoration(
         color: HaloColors.amber.withValues(alpha: 0.07),
         border: Border.all(
@@ -90,98 +90,67 @@ class _DevNoteState extends State<DevNote> with SingleTickerProviderStateMixin {
         ),
         borderRadius: BorderRadius.circular(14),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
+      // no line about who sees what: the choice is offered, not warned
+      // about. the (i) holds the details for whoever asks
+      child: Row(
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 1),
-                child: AnimatedSwitcher(
-                  duration: swap,
-                  transitionBuilder: (child, a) =>
-                      FadeTransition(opacity: a, child: child),
-                  child: Icon(
-                    devNameGlyph(anon),
-                    key: ValueKey(anon),
-                    size: 17,
-                    color: HaloColors.amber,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 9),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 1),
-                  // said to a screen reader as it changes
-                  child: Semantics(
-                    liveRegion: true,
-                    child: AnimatedSwitcher(
-                      duration: swap,
-                      layoutBuilder: (current, previous) => Stack(
-                        alignment: AlignmentDirectional.topStart,
-                        children: [...previous, ?current],
-                      ),
-                      transitionBuilder: (child, a) =>
-                          FadeTransition(opacity: a, child: child),
-                      child: Text(
-                        anon ? l10n.devNoteAnon : l10n.devNoteWords,
-                        key: ValueKey(anon),
-                        style: HaloType.sans(
-                          size: 13,
-                          color: HaloColors.text,
-                          height: 1.4,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              IconButton(
-                tooltip: l10n.devWhoSeesWhat,
-                onPressed: widget.onWho,
-                visualDensity: VisualDensity.compact,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 36, minHeight: 32),
-                icon: Icon(
-                  Icons.info_outline_rounded,
-                  size: 18,
-                  color: HaloColors.amber,
-                ),
-              ),
-            ],
+          AnimatedSwitcher(
+            duration: swap,
+            transitionBuilder: (child, a) =>
+                FadeTransition(opacity: a, child: child),
+            child: Icon(
+              devNameGlyph(anon),
+              key: ValueKey(anon),
+              size: 17,
+              color: HaloColors.amber,
+            ),
           ),
-          const SizedBox(height: 6),
-          Padding(
-            padding: const EdgeInsetsDirectional.only(start: 26, end: 7),
-            // the way back at the start, the pill at the end. when both do
-            // not fit on one line the pill goes above it
-            child: OverflowBar(
-              alignment: MainAxisAlignment.spaceBetween,
-              spacing: 8,
-              overflowSpacing: 4,
-              overflowDirection: VerticalDirection.up,
-              overflowAlignment: OverflowBarAlignment.start,
-              children: [
-                AnimatedSwitcher(
-                  duration: swap,
-                  layoutBuilder: (current, previous) => Stack(
-                    alignment: AlignmentDirectional.centerStart,
-                    children: [...previous, ?current],
+          const SizedBox(width: 10),
+          Expanded(
+            // said to a screen reader as it changes
+            child: Semantics(
+              liveRegion: true,
+              // the pill first, the way back after it. when both do not fit
+              // on one line the way back goes under it
+              child: OverflowBar(
+                spacing: 12,
+                overflowSpacing: 2,
+                overflowAlignment: OverflowBarAlignment.start,
+                children: [
+                  _Pill(
+                    on: anon,
+                    busy: widget.busy,
+                    onTap: () => _choose(!anon),
                   ),
-                  transitionBuilder: (child, a) =>
-                      FadeTransition(opacity: a, child: child),
-                  child: anon
-                      ? _Back(
-                          key: const ValueKey('back'),
-                          onTap: widget.busy ? null : () => _choose(false),
-                        )
-                      : const SizedBox(key: ValueKey('none'), height: 1),
-                ),
-                _Pill(on: anon, busy: widget.busy, onTap: () => _choose(!anon)),
-              ],
+                  AnimatedSwitcher(
+                    duration: swap,
+                    layoutBuilder: (current, previous) => Stack(
+                      alignment: AlignmentDirectional.centerStart,
+                      children: [...previous, ?current],
+                    ),
+                    transitionBuilder: (child, a) =>
+                        FadeTransition(opacity: a, child: child),
+                    child: anon
+                        ? _Back(
+                            key: const ValueKey('back'),
+                            onTap: widget.busy ? null : () => _choose(false),
+                          )
+                        : const SizedBox(key: ValueKey('none'), height: 1),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          IconButton(
+            tooltip: l10n.devWhoSeesWhat,
+            onPressed: widget.onWho,
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 36, minHeight: 32),
+            icon: Icon(
+              Icons.info_outline_rounded,
+              size: 18,
+              color: HaloColors.amber,
             ),
           ),
         ],

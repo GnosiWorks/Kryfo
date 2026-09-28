@@ -7249,14 +7249,7 @@ class AppLocalizationsFa extends AppLocalizations {
       'تا وقتی ننویسید، هیچ. بعد آنچه می‌فرستید، و سه واژه‌ی شما، مگر اینکه ناشناس بنویسید.';
 
   @override
-  String get devNoteWords => 'Marios سه واژه‌ی شما را می‌بیند';
-
-  @override
   String get devWriteAnonymously => 'ناشناس بنویسید';
-
-  @override
-  String get devNoteAnon =>
-      'Marios نام تازه‌ای می‌بیند که فقط برای این گفت‌وگو ساخته شده';
 
   @override
   String get devUseMyWords => 'استفاده از سه واژه‌ی خودم';
@@ -7266,7 +7259,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get devWhoWords =>
-      'با سه واژه‌ی شما، Marios می‌تواند مثل هر مخاطب دیگری پاسخ دهد. او سه واژه‌ی شما را می‌بیند، نه چهره یا نشان هوادار شما را.';
+      'با سه واژه‌ی شما، این گفت‌وگویی مثل بقیه است: Marios می‌تواند پاسخ دهد و چهره و نشان هوادار شما پیش خودتان می‌ماند.';
 
   @override
   String get devWhoAnon =>

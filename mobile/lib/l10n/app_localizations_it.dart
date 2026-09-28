@@ -7299,14 +7299,7 @@ class AppLocalizationsIt extends AppLocalizations {
       'Niente finché non scrivi. Poi quello che invii, e le tue tre parole, a meno che tu non scriva in forma anonima.';
 
   @override
-  String get devNoteWords => 'Marios vedrà le tue tre parole';
-
-  @override
   String get devWriteAnonymously => 'Scrivi in forma anonima';
-
-  @override
-  String get devNoteAnon =>
-      'Marios vedrà un nome nuovo, creato solo per questa chat';
 
   @override
   String get devUseMyWords => 'Usa le mie tre parole';
@@ -7316,7 +7309,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get devWhoWords =>
-      'Con le tue tre parole, Marios può risponderti come qualsiasi contatto. Vede le tue tre parole, non il tuo volto né il tuo badge sostenitore.';
+      'Con le tue tre parole è una chat come le altre: Marios può risponderti, e il tuo volto e il tuo badge sostenitore restano con te.';
 
   @override
   String get devWhoAnon =>

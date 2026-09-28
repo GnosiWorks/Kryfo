@@ -7231,14 +7231,7 @@ class AppLocalizationsId extends AppLocalizations {
       'Tidak ada apa-apa sampai kamu menulis. Setelah itu, apa yang kamu kirim, dan tiga katamu, kecuali kamu menulis secara anonim.';
 
   @override
-  String get devNoteWords => 'Marios akan melihat tiga katamu';
-
-  @override
   String get devWriteAnonymously => 'Tulis secara anonim';
-
-  @override
-  String get devNoteAnon =>
-      'Marios akan melihat nama baru yang dibuat khusus untuk obrolan ini';
 
   @override
   String get devUseMyWords => 'Pakai tiga kataku';
@@ -7248,7 +7241,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get devWhoWords =>
-      'Dengan tiga katamu, Marios bisa membalas seperti kontak mana pun. Dia melihat tiga katamu, bukan wajahmu atau lencana pendukungmu.';
+      'Dengan tiga katamu, ini obrolan seperti yang lain: Marios bisa membalas, dan wajah serta lencana pendukungmu tetap bersamamu.';
 
   @override
   String get devWhoAnon =>

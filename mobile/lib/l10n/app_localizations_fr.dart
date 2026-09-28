@@ -7303,14 +7303,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Rien tant que vous n’écrivez pas. Ensuite, ce que vous envoyez, et vos trois mots, sauf si vous écrivez anonymement.';
 
   @override
-  String get devNoteWords => 'Marios verra vos trois mots';
-
-  @override
   String get devWriteAnonymously => 'Écrire anonymement';
-
-  @override
-  String get devNoteAnon =>
-      'Marios verra un nouveau nom, créé rien que pour cette discussion';
 
   @override
   String get devUseMyWords => 'Utiliser mes trois mots';
@@ -7320,7 +7313,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get devWhoWords =>
-      'Avec vos trois mots, Marios peut vous répondre comme n’importe quel contact. Il voit vos trois mots, pas votre visage ni votre badge de soutien.';
+      'Avec vos trois mots, c’est une discussion comme les autres : Marios peut vous répondre, et votre visage et votre badge de soutien restent chez vous.';
 
   @override
   String get devWhoAnon =>

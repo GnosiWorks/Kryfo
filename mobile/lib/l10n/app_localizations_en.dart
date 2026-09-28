@@ -7225,14 +7225,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Nothing until you write. Then what you send, and your three words unless you write anonymously.';
 
   @override
-  String get devNoteWords => 'Marios will see your three words';
-
-  @override
   String get devWriteAnonymously => 'Write anonymously';
-
-  @override
-  String get devNoteAnon =>
-      'Marios will see a new name, made just for this chat';
 
   @override
   String get devUseMyWords => 'Use my three words';
@@ -7242,7 +7235,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get devWhoWords =>
-      'With your three words, Marios can write back like any contact. He sees your three words, not your face or your supporter badge.';
+      'With your three words, it is a chat like any other: Marios can write back, and your face and supporter badge stay with you.';
 
   @override
   String get devWhoAnon =>

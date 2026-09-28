@@ -9167,17 +9167,9 @@
   "@seenDevChatLine": {
     "description": "screens/seen_screen.dart: why, under The Marios chat"
   },
-  "devNoteWords": "Marios will see your three words",
-  "@devNoteWords": {
-    "description": "widgets/dev_note.dart: the note above the composer of the developer chat before its first message: who he will see it from. Marios stays in Latin letters"
-  },
   "devWriteAnonymously": "Write anonymously",
   "@devWriteAnonymously": {
     "description": "widgets/dev_note.dart: a small pill in that note. one tap writes the chat under a name made for it instead of the three words"
-  },
-  "devNoteAnon": "Marios will see a new name, made just for this chat",
-  "@devNoteAnon": {
-    "description": "widgets/dev_note.dart: the note's line once the pill is on"
   },
   "devUseMyWords": "Use my three words",
   "@devUseMyWords": {
@@ -9187,7 +9179,7 @@
   "@devWhoSeesWhat": {
     "description": "widgets/dev_note.dart: the (i) of the note and the title of its sheet"
   },
-  "devWhoWords": "With your three words, Marios can write back like any contact. He sees your three words, not your face or your supporter badge.",
+  "devWhoWords": "With your three words, it is a chat like any other: Marios can write back, and your face and supporter badge stay with you.",
   "@devWhoWords": {
     "description": "widgets/dev_note.dart: the sheet Who sees what, writing with the three words"
   },

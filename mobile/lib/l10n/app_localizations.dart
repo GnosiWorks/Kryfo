@@ -11643,23 +11643,11 @@ abstract class AppLocalizations {
   /// **'Nothing until you write. Then what you send, and your three words unless you write anonymously.'**
   String get seenDevChatLine;
 
-  /// widgets/dev_note.dart: the note above the composer of the developer chat before its first message: who he will see it from. Marios stays in Latin letters
-  ///
-  /// In en, this message translates to:
-  /// **'Marios will see your three words'**
-  String get devNoteWords;
-
   /// widgets/dev_note.dart: a small pill in that note. one tap writes the chat under a name made for it instead of the three words
   ///
   /// In en, this message translates to:
   /// **'Write anonymously'**
   String get devWriteAnonymously;
-
-  /// widgets/dev_note.dart: the note's line once the pill is on
-  ///
-  /// In en, this message translates to:
-  /// **'Marios will see a new name, made just for this chat'**
-  String get devNoteAnon;
 
   /// widgets/dev_note.dart: a small link in the note once the pill is on: back to the person's own three words
   ///
@@ -11676,7 +11664,7 @@ abstract class AppLocalizations {
   /// widgets/dev_note.dart: the sheet Who sees what, writing with the three words
   ///
   /// In en, this message translates to:
-  /// **'With your three words, Marios can write back like any contact. He sees your three words, not your face or your supporter badge.'**
+  /// **'With your three words, it is a chat like any other: Marios can write back, and your face and supporter badge stay with you.'**
   String get devWhoWords;
 
   /// widgets/dev_note.dart: the sheet Who sees what, writing anonymously
