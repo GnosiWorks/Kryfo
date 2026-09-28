@@ -7256,7 +7256,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get devAboutLine =>
-      'A chave do Marios vem embutida no Kryfo. Cada mensagem desta conversa é conferida com ela, então ninguém mais consegue escrever como ele.';
+      'A chave do Marios vem embutida no Kryfo. Cada mensagem dele é conferida com ela, então ninguém mais consegue escrever como ele.';
 
   @override
   String get devKeyLabel => 'A chave dele';
@@ -7387,18 +7387,19 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get devWhoWords =>
-      'Com suas três palavras, é uma conversa como qualquer outra: o Marios pode responder, e seu rosto e seu selo de apoiador ficam com você.';
+      'Com suas três palavras, é uma conversa como qualquer outra: o Marios pode te responder, e seu rosto e seu selo de apoiador ficam com você.';
 
   @override
   String get devWhoAnon =>
-      'Anonimamente, o Kryfo cria um nome e chaves novos só para esta conversa. Eles ficam neste celular e nunca são usados em outro lugar.';
+      'Se você escrever anonimamente, o Kryfo cria um nome e chaves novos só para esta conversa. Eles ficam neste celular e nunca são usados em outro lugar.';
 
   @override
   String get devWhoNothingYet =>
       'Nada sai do seu celular até você enviar sua primeira mensagem.';
 
   @override
-  String get devWhoChoiceStays => 'Sua escolha fica com esta conversa.';
+  String get devWhoChoiceStays =>
+      'Sua escolha fica valendo para esta conversa.';
 
   @override
   String get devKeyCheckFailed =>
@@ -7406,7 +7407,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get devLockLine =>
-      'O Marios vai ler estas. Você pode escrever mais assim que ele responder.';
+      'O Marios vai ler essas mensagens. Você pode escrever mais assim que ele responder.';
 
   @override
   String get devNewKey => 'O Marios tem uma chave nova';
@@ -7416,7 +7417,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get devKeyRetired =>
-      'Esta chave foi aposentada. Nada mais pode ser enviado ou recebido aqui.';
+      'Esta chave foi desativada. Nada mais pode ser enviado ou recebido aqui.';
 
   @override
   String get devNamelessLine =>

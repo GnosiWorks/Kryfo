@@ -11592,7 +11592,7 @@ abstract class AppLocalizations {
   /// screens/dev_about_sheet.dart: the developer chat's sheet: why nobody else can write as him
   ///
   /// In en, this message translates to:
-  /// **'Marios\'s key is built into Kryfo. Every message in this chat is checked against it, so nobody else can write as him.'**
+  /// **'Marios\'s key is built into Kryfo. Every message from him is checked against it, so nobody else can write as him.'**
   String get devAboutLine;
 
   /// screens/dev_about_sheet.dart: over the developer's key on his sheet, printed as sixteen groups of four

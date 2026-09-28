@@ -7195,7 +7195,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get devAboutLine =>
-      'Marios\'s key is built into Kryfo. Every message in this chat is checked against it, so nobody else can write as him.';
+      'Marios\'s key is built into Kryfo. Every message from him is checked against it, so nobody else can write as him.';
 
   @override
   String get devKeyLabel => 'His key';

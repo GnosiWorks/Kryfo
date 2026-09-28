@@ -9131,7 +9131,7 @@
   "@devAnonymous": {
     "description": "screens/dev_about_sheet.dart: a small chip: this chat with the developer was started under a name made for it"
   },
-  "devAboutLine": "Marios's key is built into Kryfo. Every message in this chat is checked against it, so nobody else can write as him.",
+  "devAboutLine": "Marios's key is built into Kryfo. Every message from him is checked against it, so nobody else can write as him.",
   "@devAboutLine": {
     "description": "screens/dev_about_sheet.dart: the developer chat's sheet: why nobody else can write as him"
   },

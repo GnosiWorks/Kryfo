@@ -7315,7 +7315,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get devLinkMismatch =>
-      'Эта ссылка выдаёт себя за Marios, но её ключ не совпадает. Ничего не добавлено.';
+      'В этой ссылке указан Marios, но её ключ не совпадает. Ничего не добавлено.';
 
   @override
   String get devName => 'Marios';
@@ -7335,7 +7335,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get devAboutLine =>
-      'Ключ Marios встроен в Kryfo. Каждое сообщение в этом чате проверяется по нему, поэтому никто другой не может писать от его имени.';
+      'Ключ Marios встроен в Kryfo. Каждое его сообщение проверяется по этому ключу, поэтому никто другой не может писать от его имени.';
 
   @override
   String get devKeyLabel => 'Его ключ';
@@ -7470,14 +7470,14 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get devWhoAnon =>
-      'Анонимно Kryfo создаёт новое имя и ключи только для этого чата. Они остаются на этом телефоне и больше нигде не используются.';
+      'Если писать анонимно, Kryfo создаёт новое имя и ключи только для этого чата. Они остаются на этом телефоне и больше нигде не используются.';
 
   @override
   String get devWhoNothingYet =>
-      'Ничто не покидает твой телефон, пока ты не отправишь первое сообщение.';
+      'Ничего не уходит с твоего телефона, пока ты не отправишь первое сообщение.';
 
   @override
-  String get devWhoChoiceStays => 'Твой выбор остаётся за этим чатом.';
+  String get devWhoChoiceStays => 'Твой выбор сохранится для этого чата.';
 
   @override
   String get devKeyCheckFailed =>
@@ -7495,7 +7495,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get devKeyRetired =>
-      'Этот ключ отозван. Здесь уже ничего нельзя отправить или получить.';
+      'Этот ключ больше не используется. Здесь уже ничего нельзя отправить или получить.';
 
   @override
   String get devNamelessLine =>

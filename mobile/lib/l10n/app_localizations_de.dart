@@ -7261,7 +7261,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get devLinkMismatch =>
-      'Dieser Link gibt sich als Marios aus, aber sein Schlüssel stimmt nicht überein. Er wurde nicht hinzugefügt.';
+      'Dieser Link sagt, er sei Marios, aber sein Schlüssel passt nicht. Er wurde nicht hinzugefügt.';
 
   @override
   String get devName => 'Marios';
@@ -7271,7 +7271,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get devWelcome =>
-      'Hi, ich bin Marios, ich baue Kryfo. Schreib mir alles: Fehler, Ideen, Fragen. Ich lese alles.';
+      'Hi, ich bin Marios, ich baue Kryfo. Schreib mir, was du willst: Fehler, Ideen, Fragen. Ich lese alles.';
 
   @override
   String get devPinned => 'Fest in Kryfo eingebaut';
@@ -7281,7 +7281,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get devAboutLine =>
-      'Der Schlüssel von Marios ist fest in Kryfo eingebaut. Jede Nachricht in diesem Chat wird damit geprüft, also kann niemand sonst als er schreiben.';
+      'Der Schlüssel von Marios ist fest in Kryfo eingebaut. Jede Nachricht von ihm wird damit geprüft, so kann niemand sonst in seinem Namen schreiben.';
 
   @override
   String get devKeyLabel => 'Sein Schlüssel';
@@ -7416,14 +7416,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get devWhoAnon =>
-      'Anonym macht Kryfo einen neuen Namen und neue Schlüssel nur für diesen Chat. Sie bleiben auf diesem Handy und werden nirgends sonst benutzt.';
+      'Wenn du anonym schreibst, macht Kryfo einen neuen Namen und neue Schlüssel nur für diesen Chat. Sie bleiben auf diesem Handy und werden nirgends sonst benutzt.';
 
   @override
   String get devWhoNothingYet =>
       'Nichts verlässt dein Handy, bevor du deine erste Nachricht sendest.';
 
   @override
-  String get devWhoChoiceStays => 'Deine Wahl bleibt bei diesem Chat.';
+  String get devWhoChoiceStays => 'Deine Wahl bleibt für diesen Chat bestehen.';
 
   @override
   String get devKeyCheckFailed =>

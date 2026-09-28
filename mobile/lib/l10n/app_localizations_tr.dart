@@ -7222,7 +7222,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get devWelcome =>
-      'Merhaba, ben Marios, Kryfo’yu ben yapıyorum. Bana her şeyi yaz: hatalar, fikirler, sorular. Hepsini okurum.';
+      'Merhaba, ben Marios, Kryfo’yu ben yapıyorum. Bana ne istersen yaz: hatalar, fikirler, sorular. Hepsini okurum.';
 
   @override
   String get devPinned => 'Kryfo’ya gömülü';
@@ -7232,10 +7232,10 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get devAboutLine =>
-      'Marios’un anahtarı Kryfo’ya gömülü. Bu sohbetteki her mesaj onunla kontrol edilir, yani başka kimse onun adına yazamaz.';
+      'Marios’un anahtarı Kryfo’ya gömülü. Ondan gelen her mesaj bu anahtarla kontrol edilir, yani başka kimse onun adına yazamaz.';
 
   @override
-  String get devKeyLabel => 'Anahtarı';
+  String get devKeyLabel => 'Onun anahtarı';
 
   @override
   String get devDeleteLine => 'Her mesaj gider ve sohbet geri gelmez.';

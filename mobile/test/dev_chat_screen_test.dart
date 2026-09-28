@@ -1141,7 +1141,20 @@ void main() {
       });
     }
 
-    for (final code in ['de', 'ru', 'fr', 'es', 'pt', 'vi', 'fa', 'ar']) {
+    for (final code in [
+      'de',
+      'ru',
+      'uk',
+      'fr',
+      'es',
+      'pt',
+      'it',
+      'tr',
+      'vi',
+      'id',
+      'fa',
+      'ar',
+    ]) {
       testWidgets('$code at the biggest font on a small phone: the note, its '
           'sheet and the chat\'s lines fit', (t) async {
         const small = Size(1080, 2220);
