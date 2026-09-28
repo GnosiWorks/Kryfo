@@ -619,10 +619,10 @@ packages:
     dependency: "direct main"
     description:
       name: libsignal_protocol_dart
-      sha256: "2b18de43016474ab85d21553a88f59d6f4fea8c2eddf35be7e24ab5f8969a81d"
+      sha256: "3ed4455f09c7299934a6b9ca0028daff87940d446142056e1ec25997de0e41bf"
       url: "https://pub.dev"
     source: hosted
-    version: "0.7.4"
+    version: "0.8.2"
   lints:
     dependency: transitive
     description:
@@ -891,10 +891,10 @@ packages:
     dependency: transitive
     description:
       name: protobuf
-      sha256: de9c9eb2c33f8e933a42932fe1dc504800ca45ebc3d673e6ed7f39754ee4053e
+      sha256: "13b6717366aa7ec3792dd62c19c7d33a785708224365f2db23c5ca01f1c1a0f2"
       url: "https://pub.dev"
     source: hosted
-    version: "4.2.0"
+    version: "6.1.0"
   pub_semver:
     dependency: transitive
     description:
