@@ -58,7 +58,7 @@ Future<AgeError?> ageLock(int inFd, int outFd, String pass) => Isolate.run(() {
       ),
     );
   } finally {
-    malloc.free(p);
+    freeSecret(p);
   }
 });
 
@@ -71,7 +71,7 @@ Future<AgeError?> ageOpenBegin(int inFd, String pass) => Isolate.run(() {
       ),
     );
   } finally {
-    malloc.free(p);
+    freeSecret(p);
   }
 });
 

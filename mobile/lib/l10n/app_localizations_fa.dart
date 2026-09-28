@@ -7430,4 +7430,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String scamShieldSaysItIs(Object shown) {
     return 'خود را ⁨$shown⁩ معرفی می‌کند، اما کلیدش مطابقت ندارد';
   }
+
+  @override
+  String get requestsSomeoneNew => 'فردی تازه';
 }

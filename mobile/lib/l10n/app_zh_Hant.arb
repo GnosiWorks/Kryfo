@@ -1945,5 +1945,6 @@
   "devVoiceDisguised": "在這個聊天裡，你的語音會變聲",
   "devChatOptions": "聊天選項",
   "appLinkOtherKey": "此連結自稱是 {id}，但其金鑰不相符。未新增。",
-  "scamShieldSaysItIs": "自稱是 {shown}，但金鑰不相符"
+  "scamShieldSaysItIs": "自稱是 {shown}，但金鑰不相符",
+  "requestsSomeoneNew": "陌生人"
 }

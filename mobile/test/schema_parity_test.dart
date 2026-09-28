@@ -22,15 +22,18 @@ void main() {
       alters.add((m.group(1)!, m.group(2)!));
     }
     // the loop form: for (final col in ['a INTEGER', ...]) ALTER TABLE t ADD COLUMN $col
+    var loops = 0;
     for (final m in RegExp(
-      r"for \(final col in \[(.*?)\]\) \{\s*try \{\s*await db\.execute\('ALTER TABLE (\w+) ADD COLUMN \$col'\)",
+      r"for \(final col in (?:const )?\[(.*?)\]\) \{\s*await addColumn\(\s*db,\s*'ALTER TABLE (\w+) ADD COLUMN \$col',?\s*\)",
       dotAll: true,
     ).allMatches(src)) {
+      loops++;
       for (final c in RegExp(r"'(\w+)").allMatches(m.group(1)!)) {
         alters.add((m.group(2)!, c.group(1)!));
       }
     }
     expect(alters, isNotEmpty);
+    expect(loops, greaterThan(0));
     final creates = <String, List<String>>{};
     for (final m in RegExp(
       r"CREATE TABLE(?: IF NOT EXISTS)? (\w+)\s*\((.*?)\)\s*'''",

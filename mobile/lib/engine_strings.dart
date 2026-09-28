@@ -56,3 +56,18 @@ String engineTakeSecret(Pointer<Utf8> p) {
     _free(p);
   }
 }
+
+/// the bytes of a native string set to zero, up to its end
+void zeroNative(Pointer<Utf8> p) {
+  if (p == nullptr) return;
+  final n = p.length;
+  p.cast<Uint8>().asTypedList(n).fillRange(0, n, 0);
+}
+
+/// frees a native string made here that held a key, a pin, a passphrase or
+/// plaintext for the engine, its bytes zeroed first
+void freeSecret(Pointer<Utf8> p) {
+  if (p == nullptr) return;
+  zeroNative(p);
+  malloc.free(p);
+}

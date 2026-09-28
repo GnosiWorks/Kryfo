@@ -7115,6 +7115,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String scamShieldSaysItIs(Object shown) {
     return '自称是 $shown，但密钥不匹配';
   }
+
+  @override
+  String get requestsSomeoneNew => '陌生人';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -14136,4 +14139,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String scamShieldSaysItIs(Object shown) {
     return '自稱是 $shown，但金鑰不相符';
   }
+
+  @override
+  String get requestsSomeoneNew => '陌生人';
 }

@@ -7546,4 +7546,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String scamShieldSaysItIs(Object shown) {
     return 'Представляется как $shown, но ключ не совпадает';
   }
+
+  @override
+  String get requestsSomeoneNew => 'Кто-то новый';
 }

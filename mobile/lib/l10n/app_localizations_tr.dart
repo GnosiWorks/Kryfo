@@ -7442,4 +7442,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String scamShieldSaysItIs(Object shown) {
     return '$shown olduğunu söylüyor ama anahtarı eşleşmiyor';
   }
+
+  @override
+  String get requestsSomeoneNew => 'Yeni biri';
 }

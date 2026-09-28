@@ -4,10 +4,10 @@
 // point that is not published anywhere, reached through obfs4, which makes
 // the traffic look like nothing in particular.
 import 'dart:convert';
+import '../secure_store.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../main.dart' hide live;
 import '../seen_timers.dart';
 import '../theme.dart';
@@ -188,13 +188,13 @@ class _BridgesScreenState extends State<BridgesScreen> {
   String _source = 'moat';
 
   Future<void> _loadSource() async {
-    final v = await const FlutterSecureStorage().read(key: 'bridge_source');
+    final v = await secureStore.read(key: 'bridge_source');
     if (mounted && v != null) setState(() => _source = v);
   }
 
   Future<void> _setSource(String v) async {
     setState(() => _source = v);
-    await const FlutterSecureStorage().write(key: 'bridge_source', value: v);
+    await secureStore.write(key: 'bridge_source', value: v);
   }
 
   @override

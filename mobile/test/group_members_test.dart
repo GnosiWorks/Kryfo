@@ -133,7 +133,11 @@ Future<void> _inRoom(AppState app, String from, GroupControl gc) async {
   await _settle();
 }
 
-List<String> _keys(int n) => [for (var i = 0; i < n; i++) 'k$i'];
+// [n] ids in the shape of three words
+List<String> _keys(int n) => [
+  for (var i = 0; i < n; i++)
+    'member-${String.fromCharCodes([for (final c in i.toRadixString(26).codeUnits) c < 97 ? c + 49 : c + 10])}-here',
+];
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

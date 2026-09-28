@@ -7411,4 +7411,7 @@ class AppLocalizationsId extends AppLocalizations {
   String scamShieldSaysItIs(Object shown) {
     return 'Mengaku sebagai $shown, tapi kuncinya tidak cocok';
   }
+
+  @override
+  String get requestsSomeoneNew => 'Orang baru';
 }

@@ -90,11 +90,16 @@ class _Engine implements HaloEngine {
       throw UnimplementedError('engine: ${i.memberName}');
 }
 
+// the addresses let go of
+final unheard = <String>[];
+
 // signal as it is; the network and android stand in
 class _Io extends AppIo {
   const _Io();
   @override
   void listen(String xPub) {}
+  @override
+  void unlisten(String xPub) => unheard.add(xPub);
   @override
   Future<String> relaySend(String xPub, String cipher) async => 'ok';
   @override
@@ -409,5 +414,55 @@ void main() {
     ]);
     await _settle();
     expect(store.inbox, hasLength(1));
+  });
+
+  group('a first contact without its proof of work', () {
+    const newcomer = 'fresh-face-here';
+
+    Future<_Phone> opener() async {
+      final other = await _phone();
+      final ed = _rndHex(32);
+      _idOf[ed] = newcomer;
+      await app.receiveOnion([await _opener(other, newcomer, ed, 'no proof')]);
+      await _settle();
+      return other;
+    }
+
+    test('leaves no session and no request behind', () async {
+      unheard.clear();
+      final other = await opener();
+      expect(unheard, [other.xPub]);
+      expect(await hasSessionWith(newcomer), isFalse);
+      expect(live.people[newcomer], isNull);
+      expect(live.msgs.where((m) => m['peer_id'] == newcomer), isEmpty);
+    });
+
+    test('and what comes after it on the same session is not kept', () async {
+      final other = await opener();
+      for (final text in ['second', 'third']) {
+        final plain = await wrapMessage(
+          text,
+          msgUid: 'u${_rnd.nextInt(1 << 30)}',
+          sender: SenderInfo(
+            haloId: newcomer,
+            edPub: 'ed',
+            onion: 'o-new',
+            xPub: other.xPub,
+          ),
+        );
+        await app.receiveOnion([await other.ss.encryptTo(_me, plain)]);
+        await _settle();
+      }
+      expect(live.msgs.where((m) => m['peer_id'] == newcomer), isEmpty);
+      expect(await hasSessionWith(newcomer), isFalse);
+    });
+
+    test('leaves a request row it did not make', () async {
+      // a row with no key yet, as an introduction leaves one
+      live.person(newcomer, accepted: 0, onion: 'o-was');
+      await opener();
+      expect(live.people[newcomer], containsPair('accepted', 0));
+      expect(await hasSessionWith(newcomer), isFalse);
+    });
   });
 }

@@ -1945,5 +1945,6 @@
   "devVoiceDisguised": "Suaramu disamarkan di obrolan ini",
   "devChatOptions": "Opsi obrolan",
   "appLinkOtherKey": "Tautan ini mengaku sebagai {id}, tapi kuncinya tidak cocok. Tidak ada yang ditambahkan.",
-  "scamShieldSaysItIs": "Mengaku sebagai {shown}, tapi kuncinya tidak cocok"
+  "scamShieldSaysItIs": "Mengaku sebagai {shown}, tapi kuncinya tidak cocok",
+  "requestsSomeoneNew": "Orang baru"
 }

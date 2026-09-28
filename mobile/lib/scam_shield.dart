@@ -45,6 +45,16 @@ class ShieldHit {
   int get hashCode => Object.hash(code, who);
 }
 
+// the id a sender is filed on when the name it gave is bound here to
+// another key (unboundIdOf in main.dart): 16 hex, never three words
+final _ownId = RegExp(r'^[0-9a-f]{16}$');
+
+/// what a request is called: its three words, or for a sender filed on an
+/// id of its own a short name. the shield line under it says which name it
+/// gave
+String requestTitle(String id) =>
+    _ownId.hasMatch(id) ? l10n.requestsSomeoneNew : id;
+
 String shieldHeadline(ShieldHit lead) => switch (lead.code) {
   'name_match' => l10n.scamShieldThisNameMatches(lead.who ?? ''),
   // a name bound here to another key: its sender was filed on its own id

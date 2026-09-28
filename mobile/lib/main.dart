@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import 'dart:async';
+import 'secure_store.dart';
 import 'widgets/boot_failed.dart';
 import 'widgets/tor_boot_splash.dart';
 import 'dart:convert';
@@ -13,7 +14,6 @@ import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Curve;
 import 'package:flutter/services.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'notifications.dart';
@@ -308,7 +308,7 @@ class HaloEngine {
       return engineTakeSecret(_decryptBackup(p1, p2));
     } finally {
       calloc.free(p1);
-      calloc.free(p2);
+      freeSecret(p2);
     }
   }
 
@@ -512,9 +512,9 @@ class HaloEngine {
     try {
       return _quietJson(_quietDescribe(a, b, c));
     } finally {
-      calloc.free(a);
-      calloc.free(b);
-      calloc.free(c);
+      freeSecret(a);
+      freeSecret(b);
+      freeSecret(c);
     }
   }
 
@@ -523,7 +523,7 @@ class HaloEngine {
     try {
       return engineTake(_quietFc(a, counter));
     } finally {
-      calloc.free(a);
+      freeSecret(a);
     }
   }
 
@@ -570,7 +570,7 @@ class HaloEngine {
       if (list.length != b64s.length) throw StateError('vault open: count');
       return list;
     } finally {
-      malloc.free(a);
+      freeSecret(a);
       malloc.free(b);
     }
   }
@@ -591,8 +591,8 @@ class HaloEngine {
     try {
       return engineTake(_restoreIdentity(c1, c2));
     } finally {
-      calloc.free(c1);
-      calloc.free(c2);
+      freeSecret(c1);
+      freeSecret(c2);
     }
   }
 
@@ -645,7 +645,7 @@ class HaloEngine {
     try {
       return engineTake(fn(p));
     } finally {
-      malloc.free(p);
+      freeSecret(p);
     }
   }
 
@@ -700,6 +700,19 @@ class HaloEngine {
     _roomFfiOnIsolate('HaloRoomUnsubscribe', [pub]),
     'room unlisten',
   );
+
+  // what a room's addresses kept on disk, gone with the room: its key and
+  // its members' keys name every address it had
+  void roomForgetBg(String priv, List<String> members) => _background(
+    _roomFfiOnIsolate('HaloRoomForget', [priv, jsonEncode(members)]),
+    'room forget',
+  );
+
+  // no more listening for a peer, and its address's files gone
+  void nostrUnsubscribeBg(String peerXPubHex) => _background(
+    _roomFfiOnIsolate('HaloNostrUnsubscribe', [peerXPubHex]),
+    'unlisten',
+  );
 }
 
 // a call nobody waits on: what it threw still shows in a debug log
@@ -743,8 +756,9 @@ Future<String> _roomFfiOnIsolate(String name, List<String> args) {
           );
       }
     } finally {
+      // a room's private key, and what is sent under it
       for (final p in ptrs) {
-        malloc.free(p);
+        freeSecret(p);
       }
     }
   });
@@ -1019,14 +1033,14 @@ class HaloDb {
   // whose database this is: its file, and where its key sits
   final HaloContainer container;
 
-  static const _storage = FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
-  );
+  static const _storage = secureStoreEsp;
 
   Database? _db;
   String? _given;
 
-  // 32 bytes from the platform csprng
+  // 32 bytes from the platform csprng, made once, before its database
+  // file. a read that fails throws, and boot shows it: a new key is made
+  // only while no file exists that the old one opens
   Future<String> _passphrase() async {
     final given = _given;
     if (given != null) return given;
@@ -1034,6 +1048,9 @@ class HaloDb {
     if (name == null) throw StateError('${container.dbFile} has no key here');
     var pw = await _storage.read(key: name);
     if (pw != null) return pw;
+    if (await File(await container.dbPath()).exists()) {
+      throw StateError('${container.dbFile} has no key here');
+    }
     pw = container.newKey();
     await _storage.write(key: name, value: pw);
     return pw;
@@ -1102,7 +1119,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 56,
+      version: 57,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -1226,6 +1243,7 @@ class HaloDb {
             total INTEGER NOT NULL,
             burn INTEGER,
             at INTEGER NOT NULL,
+            sender TEXT,
             PRIMARY KEY (media_id, idx)
           )
         ''');
@@ -1244,6 +1262,13 @@ class HaloDb {
         await _supportTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 57) {
+          // who sent each slice of an unfinished file
+          await addColumn(
+            db,
+            'ALTER TABLE media_chunks ADD COLUMN sender TEXT',
+          );
+        }
         if (oldV < 56) {
           // the developer's own phone: its support inbox
           await _supportTables(db);
@@ -1263,11 +1288,7 @@ class HaloDb {
         }
         if (oldV < 52) {
           // stickers: the wire value on the row
-          try {
-            await db.execute('ALTER TABLE messages ADD COLUMN sticker TEXT');
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
+          await addColumn(db, 'ALTER TABLE messages ADD COLUMN sticker TEXT');
         }
         if (oldV < 51) {
           // search: the index starts empty and fills from the oldest
@@ -1276,11 +1297,7 @@ class HaloDb {
         }
         if (oldV < 50) {
           // polls: the options on the row, the votes beside it
-          try {
-            await db.execute('ALTER TABLE messages ADD COLUMN poll TEXT');
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
+          await addColumn(db, 'ALTER TABLE messages ADD COLUMN poll TEXT');
           await _pollTables(db);
         }
         if (oldV < 49) {
@@ -1290,13 +1307,10 @@ class HaloDb {
           // when a message was pinned, so the list of pins can run newest
           // first. pins from before have none and sort by their own time.
           await _pinsTable(db);
-          try {
-            await db.execute(
-              'ALTER TABLE messages ADD COLUMN pinned_at INTEGER',
-            );
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
+          await addColumn(
+            db,
+            'ALTER TABLE messages ADD COLUMN pinned_at INTEGER',
+          );
         }
         if (oldV < 47) {
           // the reader-side title cache is unused
@@ -1317,13 +1331,10 @@ class HaloDb {
         if (oldV < 44) {
           // the burn window a queued message was sent with, since burn_at is
           // only set on delivery
-          try {
-            await db.execute(
-              'ALTER TABLE messages ADD COLUMN burn_secs INTEGER',
-            );
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
+          await addColumn(
+            db,
+            'ALTER TABLE messages ADD COLUMN burn_secs INTEGER',
+          );
         }
         if (oldV < 43) {
           // the link title cache rides the same helper as the shield table
@@ -1333,29 +1344,22 @@ class HaloDb {
         if (oldV < 42) {
           // a group where someone wrote your three words after an @, so the
           // home row can say so. cleared with the unread count.
-          try {
-            await db.execute(
-              'ALTER TABLE groups ADD COLUMN mentioned INTEGER NOT NULL DEFAULT 0',
-            );
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
+          await addColumn(
+            db,
+            'ALTER TABLE groups ADD COLUMN mentioned INTEGER NOT NULL DEFAULT 0',
+          );
         }
         if (oldV < 41) {
           // the proof-of-work a stranger's first message was sent with, so
           // an opener the outbox retries is not dropped on the far side
-          try {
-            await db.execute(
-              'ALTER TABLE messages ADD COLUMN pow_nonce INTEGER',
-            );
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
+          await addColumn(
+            db,
+            'ALTER TABLE messages ADD COLUMN pow_nonce INTEGER',
+          );
         }
         if (oldV < 40) {
           // burner rooms live in the groups table with their own key and a
-          // clock. each ALTER on its own and wrapped: one throw here and
-          // the app never opens again.
+          // clock
           for (final col in const [
             'room_priv TEXT',
             'room_pub TEXT',
@@ -1365,11 +1369,7 @@ class HaloDb {
             'member_cap INTEGER',
             'room_seen INTEGER NOT NULL DEFAULT 0',
           ]) {
-            try {
-              await db.execute('ALTER TABLE groups ADD COLUMN $col');
-            } catch (_) {
-              // already present: a migration must be safe to re-run
-            }
+            await addColumn(db, 'ALTER TABLE groups ADD COLUMN $col');
           }
         }
         if (oldV < 39) {
@@ -1395,40 +1395,28 @@ class HaloDb {
         }
         if (oldV < 37) {
           // who introduced this contact, so their request skips the stranger
-          // gate. wrapped: a duplicate column throw here hangs the app on boot.
-          try {
-            await db.execute('ALTER TABLE contacts ADD COLUMN vouched_by TEXT');
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
-          try {
-            await db.execute(
-              'ALTER TABLE contacts ADD COLUMN vouched_at INTEGER',
-            );
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
+          // gate
+          await addColumn(
+            db,
+            'ALTER TABLE contacts ADD COLUMN vouched_by TEXT',
+          );
+          await addColumn(
+            db,
+            'ALTER TABLE contacts ADD COLUMN vouched_at INTEGER',
+          );
         }
         if (oldV < 36) {
           // the face a contact picked, so we draw theirs and not a
           // default derived from their id.
-          try {
-            await db.execute('ALTER TABLE contacts ADD COLUMN avatar INTEGER');
-          } catch (_) {
-            // already present: migrations must be safe to re-run
-          }
+          await addColumn(db, 'ALTER TABLE contacts ADD COLUMN avatar INTEGER');
         }
         if (oldV < 35) {
           // the sender can ask that a message not be screenshotted. we
-          // keep the flag so it still holds after a restart. wrapped: a
-          // throw here hangs the app on boot.
-          try {
-            await db.execute(
-              'ALTER TABLE messages ADD COLUMN secure INTEGER NOT NULL DEFAULT 0',
-            );
-          } catch (e) {
-            dlog('migrate v35: column already present ($e)');
-          }
+          // keep the flag so it still holds after a restart
+          await addColumn(
+            db,
+            'ALTER TABLE messages ADD COLUMN secure INTEGER NOT NULL DEFAULT 0',
+          );
         }
         if (oldV < 34) {
           // partial media on disk, so a restart does not lose it
@@ -1440,27 +1428,22 @@ class HaloDb {
               total INTEGER NOT NULL,
               burn INTEGER,
               at INTEGER NOT NULL,
+              sender TEXT,
               PRIMARY KEY (media_id, idx)
             )
           ''');
         }
         if (oldV < 33) {
-          try {
-            await db.execute(
-              'ALTER TABLE messages ADD COLUMN delivered INTEGER NOT NULL DEFAULT 0',
-            );
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
+          await addColumn(
+            db,
+            'ALTER TABLE messages ADD COLUMN delivered INTEGER NOT NULL DEFAULT 0',
+          );
         }
         if (oldV < 32) {
-          try {
-            await db.execute(
-              'ALTER TABLE contacts ADD COLUMN supporter_badge TEXT',
-            );
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
+          await addColumn(
+            db,
+            'ALTER TABLE contacts ADD COLUMN supporter_badge TEXT',
+          );
         }
         if (oldV < 31) {
           // duplicate msg_uids break every uid-keyed widget key. keep the
@@ -1473,29 +1456,19 @@ class HaloDb {
           ''');
         }
         if (oldV < 30) {
-          try {
-            await db.execute(
-              'ALTER TABLE contacts ADD COLUMN peer_bundle TEXT',
-            );
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
+          await addColumn(
+            db,
+            'ALTER TABLE contacts ADD COLUMN peer_bundle TEXT',
+          );
         }
         if (oldV < 29) {
-          try {
-            await db.execute('ALTER TABLE groups ADD COLUMN atmosphere TEXT');
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
+          await addColumn(db, 'ALTER TABLE groups ADD COLUMN atmosphere TEXT');
         }
         if (oldV < 28) {
-          try {
-            await db.execute(
-              'ALTER TABLE groups ADD COLUMN unread INTEGER NOT NULL DEFAULT 0',
-            );
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
+          await addColumn(
+            db,
+            'ALTER TABLE groups ADD COLUMN unread INTEGER NOT NULL DEFAULT 0',
+          );
         }
         if (oldV < 27) {
           await db.execute('''
@@ -1508,104 +1481,61 @@ class HaloDb {
         if (oldV < 26) {
           // message requests: existing contacts stay accepted (default 1),
           // only new unknown senders arrive unaccepted.
-          try {
-            await db.execute(
-              'ALTER TABLE contacts ADD COLUMN accepted INTEGER NOT NULL DEFAULT 1',
-            );
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
+          await addColumn(
+            db,
+            'ALTER TABLE contacts ADD COLUMN accepted INTEGER NOT NULL DEFAULT 1',
+          );
         }
         if (oldV < 25) {
-          try {
-            await db.execute('ALTER TABLE groups ADD COLUMN admin_id TEXT');
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
+          await addColumn(db, 'ALTER TABLE groups ADD COLUMN admin_id TEXT');
         }
         if (oldV < 24) {
-          try {
-            await db.execute('ALTER TABLE groups ADD COLUMN description TEXT');
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
+          await addColumn(db, 'ALTER TABLE groups ADD COLUMN description TEXT');
         }
         if (oldV < 23) {
-          try {
-            await db.execute('ALTER TABLE messages ADD COLUMN preview TEXT');
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
+          await addColumn(db, 'ALTER TABLE messages ADD COLUMN preview TEXT');
         }
         if (oldV < 22) {
-          try {
-            await db.execute(
-              'ALTER TABLE messages ADD COLUMN voice_disguised INTEGER NOT NULL DEFAULT 0',
-            );
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
-          try {
-            await db.execute(
-              'ALTER TABLE messages ADD COLUMN saved INTEGER NOT NULL DEFAULT 0',
-            );
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
+          await addColumn(
+            db,
+            'ALTER TABLE messages ADD COLUMN voice_disguised INTEGER NOT NULL DEFAULT 0',
+          );
+          await addColumn(
+            db,
+            'ALTER TABLE messages ADD COLUMN saved INTEGER NOT NULL DEFAULT 0',
+          );
         }
         if (oldV < 21) {
-          try {
-            await db.execute('ALTER TABLE messages ADD COLUMN file_path TEXT');
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
-          try {
-            await db.execute('ALTER TABLE messages ADD COLUMN file_name TEXT');
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
+          await addColumn(db, 'ALTER TABLE messages ADD COLUMN file_path TEXT');
+          await addColumn(db, 'ALTER TABLE messages ADD COLUMN file_name TEXT');
         }
         if (oldV < 20) {
-          try {
-            await db.execute(
-              'ALTER TABLE contacts ADD COLUMN key_changed INTEGER NOT NULL DEFAULT 0',
-            );
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
+          await addColumn(
+            db,
+            'ALTER TABLE contacts ADD COLUMN key_changed INTEGER NOT NULL DEFAULT 0',
+          );
         }
         if (oldV < 19) {
-          try {
-            await db.execute(
-              'ALTER TABLE messages ADD COLUMN sent INTEGER NOT NULL DEFAULT 1',
-            );
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
+          await addColumn(
+            db,
+            'ALTER TABLE messages ADD COLUMN sent INTEGER NOT NULL DEFAULT 1',
+          );
         }
         if (oldV < 2) await _signalTables(db);
         if (oldV < 3) {
-          try {
-            await db.execute('ALTER TABLE messages ADD COLUMN burn_at INTEGER');
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
+          await addColumn(
+            db,
+            'ALTER TABLE messages ADD COLUMN burn_at INTEGER',
+          );
         }
         if (oldV < 4) {
-          try {
-            await db.execute(
-              'ALTER TABLE contacts ADD COLUMN back_paired INTEGER NOT NULL DEFAULT 0',
-            );
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
+          await addColumn(
+            db,
+            'ALTER TABLE contacts ADD COLUMN back_paired INTEGER NOT NULL DEFAULT 0',
+          );
         }
         if (oldV < 5) {
-          try {
-            await db.execute('ALTER TABLE messages ADD COLUMN msg_uid TEXT');
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
+          await addColumn(db, 'ALTER TABLE messages ADD COLUMN msg_uid TEXT');
           await db.execute(
             'CREATE INDEX IF NOT EXISTS idx_messages_msg_uid ON messages(msg_uid)',
           );
@@ -1620,116 +1550,74 @@ class HaloDb {
           ''');
         }
         if (oldV < 6) {
-          try {
-            await db.execute('ALTER TABLE messages ADD COLUMN reply_to TEXT');
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
+          await addColumn(db, 'ALTER TABLE messages ADD COLUMN reply_to TEXT');
         }
         if (oldV < 8) {
-          try {
-            await db.execute('ALTER TABLE contacts ADD COLUMN nickname TEXT');
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
+          await addColumn(db, 'ALTER TABLE contacts ADD COLUMN nickname TEXT');
         }
         if (oldV < 9) {
-          try {
-            await db.execute(
-              'ALTER TABLE messages ADD COLUMN edited INTEGER NOT NULL DEFAULT 0',
-            );
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
+          await addColumn(
+            db,
+            'ALTER TABLE messages ADD COLUMN edited INTEGER NOT NULL DEFAULT 0',
+          );
         }
         if (oldV < 10) {
-          try {
-            await db.execute(
-              'ALTER TABLE contacts ADD COLUMN blocked INTEGER NOT NULL DEFAULT 0',
-            );
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
+          await addColumn(
+            db,
+            'ALTER TABLE contacts ADD COLUMN blocked INTEGER NOT NULL DEFAULT 0',
+          );
         }
         if (oldV < 11) {
-          try {
-            await db.execute(
-              'ALTER TABLE contacts ADD COLUMN muted INTEGER NOT NULL DEFAULT 0',
-            );
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
+          await addColumn(
+            db,
+            'ALTER TABLE contacts ADD COLUMN muted INTEGER NOT NULL DEFAULT 0',
+          );
         }
         if (oldV < 12) {
-          try {
-            await db.execute(
-              'ALTER TABLE contacts ADD COLUMN archived INTEGER NOT NULL DEFAULT 0',
-            );
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
+          await addColumn(
+            db,
+            'ALTER TABLE contacts ADD COLUMN archived INTEGER NOT NULL DEFAULT 0',
+          );
         }
         if (oldV < 13) {
-          try {
-            await db.execute(
-              'ALTER TABLE messages ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0',
-            );
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
+          await addColumn(
+            db,
+            'ALTER TABLE messages ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0',
+          );
         }
         if (oldV < 14) {
-          try {
-            await db.execute(
-              'ALTER TABLE contacts ADD COLUMN verified INTEGER NOT NULL DEFAULT 0',
-            );
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
+          await addColumn(
+            db,
+            'ALTER TABLE contacts ADD COLUMN verified INTEGER NOT NULL DEFAULT 0',
+          );
         }
         if (oldV < 16) {
-          try {
-            await db.execute(
-              'ALTER TABLE contacts ADD COLUMN unread INTEGER NOT NULL DEFAULT 0',
-            );
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
+          await addColumn(
+            db,
+            'ALTER TABLE contacts ADD COLUMN unread INTEGER NOT NULL DEFAULT 0',
+          );
         }
         if (oldV < 17) {
-          try {
-            await db.execute('ALTER TABLE contacts ADD COLUMN atmosphere TEXT');
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
+          await addColumn(
+            db,
+            'ALTER TABLE contacts ADD COLUMN atmosphere TEXT',
+          );
         }
         if (oldV < 18) {
-          try {
-            await db.execute('ALTER TABLE contacts ADD COLUMN note TEXT');
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
-          try {
-            await db.execute(
-              'ALTER TABLE contacts ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0',
-            );
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
+          await addColumn(db, 'ALTER TABLE contacts ADD COLUMN note TEXT');
+          await addColumn(
+            db,
+            'ALTER TABLE contacts ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0',
+          );
         }
         if (oldV < 15) {
-          try {
-            await db.execute('ALTER TABLE messages ADD COLUMN media_path TEXT');
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
+          await addColumn(
+            db,
+            'ALTER TABLE messages ADD COLUMN media_path TEXT',
+          );
         }
         if (oldV < 7) {
-          try {
-            await db.execute('ALTER TABLE messages ADD COLUMN group_id TEXT');
-          } catch (_) {
-            // already present: a migration must be safe to re-run
-          }
+          await addColumn(db, 'ALTER TABLE messages ADD COLUMN group_id TEXT');
           await db.execute(
             'CREATE INDEX IF NOT EXISTS idx_messages_group_id ON messages(group_id)',
           );
@@ -2114,10 +2002,10 @@ class HaloDb {
 
   Future<void> deleteConversation(String haloId) async {
     final d = await open();
-    await d.transaction((t) async {
+    final files = await d.transaction((t) async {
       final rows = await t.query(
         'messages',
-        columns: ['msg_uid'],
+        columns: ['msg_uid', ..._kFileCols],
         where: 'peer_id = ?',
         whereArgs: [haloId],
       );
@@ -2136,7 +2024,20 @@ class HaloDb {
         where: 'halo_id = ?',
         whereArgs: [haloId],
       );
+      return rows;
     });
+    await _scrubMedia(files);
+  }
+
+  // a request that never became one: its row and its shield line
+  Future<void> forgetRequest(String haloId) async {
+    final db = await open();
+    await db.delete(
+      'contacts',
+      where: 'halo_id = ? AND accepted = ?',
+      whereArgs: [haloId, 0],
+    );
+    await db.delete('shield', where: 'halo_id = ?', whereArgs: [haloId]);
   }
 
   // they wrote after we deleted them: bring the row back as a request.
@@ -2350,10 +2251,10 @@ class HaloDb {
   // not a block: they can reach us again later.
   Future<void> declineRequest(String haloId) async {
     final d = await open();
-    await d.transaction((t) async {
+    final files = await d.transaction((t) async {
       final rows = await t.query(
         'messages',
-        columns: ['msg_uid'],
+        columns: ['msg_uid', ..._kFileCols],
         where: 'peer_id = ?',
         whereArgs: [haloId],
       );
@@ -2374,7 +2275,9 @@ class HaloDb {
         where: 'halo_id = ?',
         whereArgs: [haloId],
       );
+      return rows;
     });
+    await _scrubMedia(files);
   }
 
   Future<void> upsertContact(
@@ -2959,6 +2862,10 @@ class HaloDb {
     );
   }
 
+  // every column that names a file of a message: a photo, or a voice note,
+  // a video or any other file
+  static const _kFileCols = ['media_path', 'file_path'];
+
   // the files go too, not just the rows. zeros first, then unlink, so a raw
   // read of the flash finds nothing either.
   Future<void> _scrubMedia(List<Map<String, Object?>> rows) async {
@@ -2970,11 +2877,37 @@ class HaloDb {
     }
   }
 
+  /// the files in this container's media folder that no message names,
+  /// last written before [before]: what a delete left behind. a file is
+  /// matched by its name in the folder, so rows written under another
+  /// path to the same folder still hold theirs. folders are left alone
+  Future<List<File>> unnamedMedia({required DateTime before}) async {
+    final db = await open();
+    final named = <String>{};
+    for (final col in _kFileCols) {
+      for (final r in await db.query(
+        'messages',
+        columns: [col],
+        where: '$col IS NOT NULL',
+      )) {
+        final v = r[col];
+        if (v is String && v.isNotEmpty) named.add(p.basename(v));
+      }
+    }
+    final dir = await container.mediaDir();
+    final out = <File>[];
+    await for (final e in dir.list(followLinks: false)) {
+      if (e is! File || named.contains(p.basename(e.path))) continue;
+      if ((await e.lastModified()).isBefore(before)) out.add(e);
+    }
+    return out;
+  }
+
   Future<void> deleteMessage(String msgUid) async {
     final db = await open();
     final media = await db.query(
       'messages',
-      columns: ['media_path'],
+      columns: _kFileCols,
       where: 'msg_uid = ?',
       whereArgs: [msgUid],
     );
@@ -3101,7 +3034,7 @@ class HaloDb {
     final db = await open();
     final media = await db.query(
       'messages',
-      columns: ['media_path'],
+      columns: _kFileCols,
       where: 'peer_id = ?',
       whereArgs: [peerId],
     );
@@ -3118,7 +3051,7 @@ class HaloDb {
     final db = await open();
     final media = await db.query(
       'messages',
-      columns: ['media_path'],
+      columns: _kFileCols,
       where: 'group_id = ?',
       whereArgs: [groupId],
     );
@@ -3543,7 +3476,7 @@ class HaloDb {
     final now = DateTime.now().millisecondsSinceEpoch;
     final media = await db.query(
       'messages',
-      columns: ['media_path'],
+      columns: _kFileCols,
       where: 'burn_at IS NOT NULL AND burn_at < ?',
       whereArgs: [now],
     );
@@ -3591,19 +3524,30 @@ class HaloDb {
 
   // --- chunked media, buffered on disk so a restart doesn't lose a transfer ---
 
-  // store one slice, return how many of this media's slices we now hold.
+  // store one slice from [from], return how many of this media's slices we
+  // now hold.
   Future<int> putMediaChunk(
     String mediaId,
     int idx,
     String slice,
     int total,
-    int? burn,
-  ) async {
+    int? burn, {
+    required String from,
+  }) async {
     final db = await open();
     await db.rawInsert(
       'INSERT OR REPLACE INTO media_chunks '
-      '(media_id, idx, slice, total, burn, at) VALUES (?, ?, ?, ?, ?, ?)',
-      [mediaId, idx, slice, total, burn, DateTime.now().millisecondsSinceEpoch],
+      '(media_id, idx, slice, total, burn, at, sender) '
+      'VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [
+        mediaId,
+        idx,
+        slice,
+        total,
+        burn,
+        DateTime.now().millisecondsSinceEpoch,
+        from,
+      ],
     );
     final r = await db.rawQuery(
       'SELECT COUNT(*) c FROM media_chunks WHERE media_id = ?',
@@ -3640,13 +3584,41 @@ class HaloDb {
     return r.isEmpty ? null : r.first['slice'] as String?;
   }
 
-  Future<int> dropMediaChunks(String mediaId) async {
+  // a file's slices, or with [from] only the ones that sender sent
+  Future<int> dropMediaChunks(String mediaId, {String? from}) async {
     final db = await open();
     return db.delete(
       'media_chunks',
-      where: 'media_id = ?',
-      whereArgs: [mediaId],
+      where: from == null ? 'media_id = ?' : 'media_id = ? AND sender = ?',
+      whereArgs: [mediaId, ?from],
     );
+  }
+
+  // who sent the slices held for a file, null for none or for slices kept
+  // before senders were noted
+  Future<String?> mediaChunkSender(String mediaId) async {
+    final db = await open();
+    final r = await db.query(
+      'media_chunks',
+      columns: ['sender'],
+      where: 'media_id = ? AND sender IS NOT NULL',
+      whereArgs: [mediaId],
+      limit: 1,
+    );
+    return r.isEmpty ? null : r.first['sender'] as String?;
+  }
+
+  // how many unfinished files [from] has here, [except] not counted
+  Future<int> filesInFlightFrom(String from, {String? except}) async {
+    final db = await open();
+    final r = await db.query(
+      'media_chunks',
+      distinct: true,
+      columns: ['media_id'],
+      where: 'sender = ?',
+      whereArgs: [from],
+    );
+    return r.where((x) => x['media_id'] != except).length;
   }
 
   // a slice of an unfinished file just came in. can_resend only ever goes
@@ -3710,18 +3682,56 @@ class HaloDb {
   }
 
   // a transfer nobody ever finished shouldn't sit in the db forever.
-  Future<void> sweepMediaChunks() async {
+  // a week for a file from someone here, a day for one from a stranger:
+  // someone not accepted and in no group
+  Future<void> sweepMediaChunks({DateTime? now}) async {
     final db = await open();
-    final cutoff =
-        DateTime.now().millisecondsSinceEpoch -
-        const Duration(days: 7).inMilliseconds;
-    final n = await db.delete(
+    final at = (now ?? DateTime.now()).millisecondsSinceEpoch;
+    final cutoff = at - const Duration(days: 7).inMilliseconds;
+    final strangers = at - const Duration(days: 1).inMilliseconds;
+    var n = await db.delete(
       'media_chunks',
       where: 'at < ?',
       whereArgs: [cutoff],
     );
+    final old = await db.query(
+      'media_chunks',
+      distinct: true,
+      columns: ['media_id', 'sender'],
+      where: 'at < ? AND sender IS NOT NULL',
+      whereArgs: [strangers],
+    );
+    final known = <String, bool>{};
+    for (final r in old) {
+      final mid = r['media_id'] as String;
+      final from = r['sender'] as String;
+      if (known[from] ??= await _heldHere(from)) continue;
+      n += await dropMediaChunks(mid, from: from);
+      await dropMediaWant(mid);
+    }
     if (n > 0) dlog('swept $n stale media chunks');
     await db.delete('media_wants', where: 'last_at < ?', whereArgs: [cutoff]);
+  }
+
+  // an accepted contact, or a member of a group here
+  Future<bool> _heldHere(String id) async {
+    final db = await open();
+    final c = await db.query(
+      'contacts',
+      columns: ['halo_id'],
+      where: 'halo_id = ? AND accepted = ?',
+      whereArgs: [id, 1],
+      limit: 1,
+    );
+    if (c.isNotEmpty) return true;
+    final g = await db.query(
+      'group_members',
+      columns: ['group_id'],
+      where: 'halo_id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    return g.isNotEmpty;
   }
 
   Future<bool> isDelivered(String msgUid) async =>
@@ -3745,14 +3755,31 @@ class HaloDb {
     );
   }
 
-  Future<void> markDelivered(String msgUid) async {
+  // a receipt from [from]: it ticks only a message of ours that went to
+  // them, or one in a group they are a member of
+  Future<void> markDelivered(String msgUid, {required String from}) async {
     final db = await open();
-    await db.update(
+    final rows = await db.query(
       'messages',
-      {'sent': 1, 'delivered': 1},
-      where: 'msg_uid = ?',
-      whereArgs: [msgUid],
+      columns: ['peer_id', 'group_id'],
+      where: 'msg_uid = ? AND direction = ?',
+      whereArgs: [msgUid, 'out'],
     );
+    for (final r in rows) {
+      final g = r['group_id'] as String?;
+      final ok = g == null || g.isEmpty
+          ? r['peer_id'] == from
+          : (await getGroupMembers(g)).contains(from);
+      if (!ok) continue;
+      await db.update(
+        'messages',
+        {'sent': 1, 'delivered': 1},
+        where: g == null || g.isEmpty
+            ? 'msg_uid = ? AND direction = ? AND peer_id = ?'
+            : 'msg_uid = ? AND direction = ? AND group_id = ?',
+        whereArgs: [msgUid, 'out', g == null || g.isEmpty ? from : g],
+      );
+    }
   }
 
   Future<void> markSent(String msgUid) async {
@@ -4005,6 +4032,22 @@ Future<void> _pollTables(Database db) async {
     'INSERT OR REPLACE INTO polls_gone (uid, at) VALUES '
     "(old.msg_uid, CAST(strftime('%s','now') AS INTEGER) * 1000); END",
   );
+}
+
+/// an ALTER TABLE .. ADD COLUMN in an upgrade. two of sqlite's errors mean
+/// there is nothing to do: the column is there (an upgrade cut short ran it
+/// already), or the table is not there yet (an older step below makes it
+/// whole). any other failure stops the upgrade, and the old version runs it
+/// again on the next start
+Future<void> addColumn(DatabaseExecutor db, String sql) async {
+  try {
+    await db.execute(sql);
+  } catch (e) {
+    final m = '$e';
+    if (!m.contains('duplicate column name') && !m.contains('no such table')) {
+      rethrow;
+    }
+  }
 }
 
 // wrapped: one throw in a migration and the app never opens again. without
@@ -4318,6 +4361,17 @@ Future<List<int>?> _boundIdentity(
   }
   return row == null ? null : _rowIdentity(await row(id));
 }
+
+/// whether [h], from the wire, has the shape of an id that stands for
+/// someone: three words, or the id of one filed on their own key
+/// ([unboundIdOf]). in a room, a room key
+bool wireIdShaped(String h, {required bool room}) => room
+    ? _roomKeyShape.hasMatch(h)
+    : _wordsShape.hasMatch(h) || _ownIdShape.hasMatch(h);
+
+final _wordsShape = RegExp(r'^[a-z]{1,16}-[a-z]{1,16}-[a-z]{1,16}$');
+final _ownIdShape = RegExp(r'^[0-9a-f]{16}$');
+final _roomKeyShape = RegExp(r'^[0-9a-f]{1,64}$');
 
 /// where someone lands who writes under a name bound here to another key:
 /// an id of their own, from their key, that is never three words
@@ -4932,16 +4986,17 @@ void renewRootNavigator() {
   navRevision.value++;
 }
 
-int _msgUidCounter = 0;
-// stable cross-device message id. used by reactions + replies + group
-// fan-out so every recipient sees the same uid. base36 timestamp + random.
-String newMsgUid() {
-  final t = DateTime.now().microsecondsSinceEpoch.toRadixString(36);
-  final r = (DateTime.now().microsecondsSinceEpoch ^ _msgUidCounter++)
-      .abs()
-      .toRadixString(36);
-  return '${t.padLeft(8, '0').substring(0, 8)}${r.substring(0, 4).padLeft(4, '0')}';
-}
+final _msgUidRandom = Random.secure();
+const _msgUidChars = '0123456789abcdefghijklmnopqrstuvwxyz';
+
+// stable cross-device message id, also a group's and a room's id. used by
+// reactions, replies and group fan-out so every recipient sees the same
+// uid. 14 base36 characters from the platform csprng: over 72 bits, with
+// nothing of the clock in it
+String newMsgUid() => String.fromCharCodes([
+  for (var i = 0; i < 14; i++)
+    _msgUidChars.codeUnitAt(_msgUidRandom.nextInt(_msgUidChars.length)),
+]);
 
 class GroupPreview {
   final String groupId;
@@ -4971,6 +5026,11 @@ class GroupPreview {
 /// screen's line while older messages are still being added
 final searchFill = ValueNotifier<({int at, int to})>((at: 0, to: 0));
 
+/// the fill [p] as the open session shows it: the index filling is the
+/// everyday side's and the vault's, and a decoy has neither
+({int at, int to}) shownSearchFill(({int at, int to}) p) =>
+    sessionQuiet ? (at: 0, to: 0) : p;
+
 // what receiving and reaching someone ask of signal, the engine and
 // android, in one place so the paths through them can run on stand-ins
 class AppIo {
@@ -4984,6 +5044,9 @@ class AppIo {
 
   Future<List<String>> sessionAddresses() =>
       signalSession.sessionStore.allSessionAddresses();
+
+  Future<void> dropSession(String peer) =>
+      signalSession.sessionStore.deleteSession(SignalProtocolAddress(peer, 1));
 
   // a first message from someone with no session yet: opened under a
   // placeholder, the sender's claim checked against their key, and the
@@ -5080,6 +5143,8 @@ class AppIo {
 
   void listen(String xPub) => engine.nostrSubscribeBg(xPub);
 
+  void unlisten(String xPub) => engine.nostrUnsubscribeBg(xPub);
+
   String edPub() => engine.myEdPubkey();
 
   String xPub() => engine.myXPubkey();
@@ -5158,6 +5223,11 @@ class EngineSeal implements VaultSeal {
 class _HeldIn extends CapHeld {
   const _HeldIn(this.into);
   final HaloDb into;
+}
+
+// a first contact without its proof of work: nothing of it is kept
+class _NoProof implements Exception {
+  const _NoProof();
 }
 
 // one container's unsent rows: how many, how many wait on someone who has
@@ -5776,14 +5846,14 @@ class AppState extends ChangeNotifier {
 
   // the open session's own, like everything a screen sets for an identity
   Future<void> saveGhostPref(bool on, int secs) async {
-    const s = FlutterSecureStorage();
+    const s = secureStore;
     final c = session.container;
     await s.write(key: c.key('ghost_on'), value: on ? '1' : '0');
     await s.write(key: c.key('ghost_secs'), value: '$secs');
   }
 
   Future<(bool, int)> loadGhostPref() async {
-    const s = FlutterSecureStorage();
+    const s = secureStore;
     final c = session.container;
     final on = (await s.read(key: c.key('ghost_on'))) == '1';
     final secs =
@@ -5792,12 +5862,12 @@ class AppState extends ChangeNotifier {
   }
 
   Future<bool> loadDisguisePref() async {
-    const s = FlutterSecureStorage();
+    const s = secureStore;
     return (await s.read(key: session.container.key('disguise_on'))) == '1';
   }
 
   Future<void> saveDisguisePref(bool on) async {
-    const s = FlutterSecureStorage();
+    const s = secureStore;
     await s.write(
       key: session.container.key('disguise_on'),
       value: on ? '1' : '0',
@@ -5817,14 +5887,14 @@ class AppState extends ChangeNotifier {
   int? get myAvatar => sessionQuiet ? _quietAvatar : _myAvatar;
 
   Future<void> loadMyAvatar() async {
-    final v = await const FlutterSecureStorage().read(key: 'my_avatar');
+    final v = await secureStore.read(key: 'my_avatar');
     _myAvatar = v == null ? null : int.tryParse(v);
     notifyListeners();
   }
 
   Future<void> setMyAvatar(int? v) async {
     sessionQuiet ? _quietAvatar = v : _myAvatar = v;
-    final st = const FlutterSecureStorage();
+    final st = secureStore;
     final k = session.container.key('my_avatar');
     if (v == null) {
       await st.delete(key: k);
@@ -5835,7 +5905,7 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> loadMyHandle() async {
-    const st = FlutterSecureStorage();
+    const st = secureStore;
     _myHandle = await st.read(key: 'my_handle');
     _handleListed = (await st.read(key: 'my_handle_listed')) == '1';
     _handleName = await st.read(key: 'my_handle_name') ?? '';
@@ -5857,7 +5927,7 @@ class AppState extends ChangeNotifier {
     if (r != 'ok') return r;
     _handleListed = on;
     _handleName = n;
-    const st = FlutterSecureStorage();
+    const st = secureStore;
     await st.write(key: 'my_handle_listed', value: on ? '1' : '0');
     await st.write(key: 'my_handle_name', value: n);
     notifyListeners();
@@ -5882,17 +5952,17 @@ class AppState extends ChangeNotifier {
     claim: (h, invite, bio) => engine.handleClaim(h, invite, bio),
     lookup: (url) => engine.torGetJson(url),
     myKey: () => engine.myEdPubkey(),
-    read: (k) => const FlutterSecureStorage().read(key: k),
+    read: (k) => secureStore.read(key: k),
     write: (k, v) => v == null
-        ? const FlutterSecureStorage().delete(key: k)
-        : const FlutterSecureStorage().write(key: k, value: v),
+        ? secureStore.delete(key: k)
+        : secureStore.write(key: k, value: v),
   );
 
   // [invite] is the one the registry just took for [h]
   Future<void> setMyHandle(String? h, {String bio = '', String? invite}) async {
     _myHandle = h;
     _handleForeign = false;
-    final st = const FlutterSecureStorage();
+    final st = secureStore;
     if (h == null) {
       await _handleRepoint.forget();
       await st.delete(key: 'my_handle');
@@ -5912,17 +5982,13 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> loadSendMode() async {
-    final stored =
-        await const FlutterSecureStorage().read(key: 'send_mode') ?? 'private';
+    final stored = await secureStore.read(key: 'send_mode') ?? 'private';
     // fast is off after every reinstall: its marker lives in app data, which
     // an uninstall wipes, while the preference can come back from a backup
     final marker = await _fastMarker;
     _sendMode = sendModeAtBoot(stored, fastMarker: await marker.exists());
     if (_sendMode != stored) {
-      await const FlutterSecureStorage().write(
-        key: 'send_mode',
-        value: _sendMode,
-      );
+      await secureStore.write(key: 'send_mode', value: _sendMode);
     }
     notifyListeners();
   }
@@ -5963,7 +6029,7 @@ class AppState extends ChangeNotifier {
     final changed = _sendMode != m;
     _sendMode = m;
     notifyListeners();
-    await const FlutterSecureStorage().write(key: 'send_mode', value: m);
+    await secureStore.write(key: 'send_mode', value: m);
     if (m == 'fast') {
       try {
         await (await _fastMarker).writeAsString('1');
@@ -6619,8 +6685,7 @@ class AppState extends ChangeNotifier {
       lockState.addListener(_lockMoved);
     }
     _blockScreenshots =
-        (await const FlutterSecureStorage().read(key: 'block_screenshots')) ==
-        'true';
+        (await secureStore.read(key: 'block_screenshots')) == 'true';
     _blockScreenshotsApplied = _blockScreenshots;
     await _applyScreenSecure();
     notifyListeners();
@@ -6629,17 +6694,12 @@ class AppState extends ChangeNotifier {
   Future<void> setBlockScreenshots(bool v) async {
     _blockScreenshots = v;
     notifyListeners();
-    await const FlutterSecureStorage().write(
-      key: 'block_screenshots',
-      value: v.toString(),
-    );
+    await secureStore.write(key: 'block_screenshots', value: v.toString());
   }
 
   Future<void> loadThemePref() async {
     try {
-      final v =
-          (await const FlutterSecureStorage().read(key: 'theme_light')) ==
-          'true';
+      final v = (await secureStore.read(key: 'theme_light')) == 'true';
       HaloColors.setLight(v);
     } catch (e) {
       dlog('theme pref: $e');
@@ -6650,10 +6710,7 @@ class AppState extends ChangeNotifier {
     HaloColors.setLight(v);
     themeRevision.value++;
     notifyListeners();
-    await const FlutterSecureStorage().write(
-      key: 'theme_light',
-      value: v.toString(),
-    );
+    await secureStore.write(key: 'theme_light', value: v.toString());
   }
 
   // bridges are off by default: they are slower and most people are not
@@ -6664,7 +6721,7 @@ class AppState extends ChangeNotifier {
   String get bridgeLines => _bridgeLines;
 
   Future<void> _loadBridges() async {
-    const st = FlutterSecureStorage();
+    const st = secureStore;
     _bridgeLines = await st.read(key: 'bridge_lines') ?? '';
     _bridgesOn = (await st.read(key: 'bridges_on')) == '1';
     _bridgeHintOff = (await st.read(key: 'bridge_hint_off')) == '1';
@@ -6679,7 +6736,7 @@ class AppState extends ChangeNotifier {
   Future<String> applyBridges(String lines, bool on) async {
     _bridgeLines = lines;
     _bridgesOn = on;
-    const st = FlutterSecureStorage();
+    const st = secureStore;
     await st.write(key: 'bridge_lines', value: lines);
     await st.write(key: 'bridges_on', value: on ? '1' : '0');
     final r = engine.setBridges(lines, on);
@@ -6696,10 +6753,23 @@ class AppState extends ChangeNotifier {
   // a stranger's first-contact address, kept only until they back-pair.
   // after that the normal per-conversation addresses take over.
   final Map<String, String> _peerFc = <String, String>{};
+  // the stored map did not read: it is left as it is, never written over
+  // with the part this process knows
+  bool _peerFcUnread = false;
+  // the same for the invite address's counter
+  bool _fcUnread = false;
 
   Future<void> _loadFirstContact() async {
-    const st = FlutterSecureStorage();
-    _fcCounter = int.tryParse(await st.read(key: 'fc_counter') ?? '') ?? 0;
+    const st = secureStore;
+    // a counter that does not read leaves the invite address unheard until
+    // the next start, rather than moved
+    try {
+      _fcCounter = int.tryParse(await st.read(key: 'fc_counter') ?? '') ?? 0;
+    } catch (e) {
+      _fcUnread = true;
+      dlog('first contact: counter unreadable (${e.runtimeType})');
+      return;
+    }
     try {
       final raw = await st.read(key: 'peer_fc');
       if (raw != null && raw.isNotEmpty) {
@@ -6708,7 +6778,8 @@ class AppState extends ChangeNotifier {
         });
       }
     } catch (e) {
-      dlog('peer fc map unreadable, starting empty: $e');
+      _peerFcUnread = true;
+      dlog('peer fc map unreadable, kept as it is: ${e.runtimeType}');
     }
     engine.subscribeFirstContactBg(_fcCounter);
     _fcLoaded = true;
@@ -6730,18 +6801,13 @@ class AppState extends ChangeNotifier {
     // the dev chat's address is pinned, and no one else is given his
     if (devCardClaim(id: haloId, fc: fcPk)) return;
     _peerFc[haloId] = fcPk;
-    await const FlutterSecureStorage().write(
-      key: 'peer_fc',
-      value: jsonEncode(_peerFc),
-    );
+    if (_peerFcUnread) return;
+    await secureStore.write(key: 'peer_fc', value: jsonEncode(_peerFc));
   }
 
   Future<void> forgetPeerFc(String haloId) async {
-    if (_peerFc.remove(haloId) == null) return;
-    await const FlutterSecureStorage().write(
-      key: 'peer_fc',
-      value: jsonEncode(_peerFc),
-    );
+    if (_peerFc.remove(haloId) == null || _peerFcUnread) return;
+    await secureStore.write(key: 'peer_fc', value: jsonEncode(_peerFc));
   }
 
   // true once the registry says the handle this phone believes in is held
@@ -6789,15 +6855,13 @@ class AppState extends ChangeNotifier {
   Future<void> resetInviteAddress() async {
     // the everyday invite's key and address: never from a quiet session,
     // and never on the developer's own phone, whose card every install pins
-    if (sessionQuiet || _devIdentity) return;
+    // a counter that did not read is never moved past
+    if (sessionQuiet || _devIdentity || _fcUnread) return;
     // the key first: moving only the relay address leaves every old link
     // able to open a session and dial the onion directly
     await signalSession.rotateInvitePreKey();
     _fcCounter++;
-    await const FlutterSecureStorage().write(
-      key: 'fc_counter',
-      value: '$_fcCounter',
-    );
+    await secureStore.write(key: 'fc_counter', value: '$_fcCounter');
     engine.subscribeFirstContactBg(_fcCounter);
     await _repointHandle();
     notifyListeners();
@@ -6971,6 +7035,10 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  // a file that travels as slices, one of them in this frame
+  static bool _sliced(UnwrappedMessage env) =>
+      env.mediaId != null && env.chunkTotal != null && env.chunkTotal! > 1;
+
   Future<RouteTo> _fileArrival(
     String senderHaloId,
     UnwrappedMessage env, {
@@ -7009,7 +7077,7 @@ class AppState extends ChangeNotifier {
     // back-paired alone: that flag lifts the sender-side cap, and a stranger
     // could then write past the two the other side will keep.
     if (env.deliveredUid != null) {
-      await db.markDelivered(env.deliveredUid!);
+      await db.markDelivered(env.deliveredUid!, from: senderHaloId);
       _bumpChatRev(senderHaloId);
       notifyListeners();
       return to;
@@ -7135,8 +7203,9 @@ class AppState extends ChangeNotifier {
       }
       await db.deleteMessage(env.unsend!);
       // a recall mid-transfer would otherwise leave a half-filled buffer and
-      // a progress bar that never completes. drop both.
-      if (await db.dropMediaChunks(env.unsend!) > 0) {
+      // a progress bar that never completes. drop both: the slices its
+      // sender sent, never another sender's
+      if (await db.dropMediaChunks(env.unsend!, from: senderHaloId) > 0) {
         incomingMediaDone(env.groupId != null ? env.groupId! : senderHaloId);
       }
       // refresh so it vanishes live if the peer's looking at the chat now,
@@ -7170,7 +7239,8 @@ class AppState extends ChangeNotifier {
     // admin so a member can't rewrite membership by spoofing a roster.
     if (isGroup && env.roster != null && !support.on) {
       final adminId = await db.groupAdminId(env.groupId!);
-      final roster = _noDev(env.roster!);
+      final isRoom = await _roomOf(env.groupId!, db) != null;
+      final roster = _members(env.roster!, room: isRoom);
       if (adminId != null &&
           senderHaloId == adminId &&
           await _fitsCap(env.groupId!, roster.toSet().length, db)) {
@@ -7187,6 +7257,7 @@ class AppState extends ChangeNotifier {
                 o != null &&
                 x != null &&
                 h != myId &&
+                wireIdShaped(h, room: isRoom) &&
                 !devCardClaim(id: h, xPub: x)) {
               await db.upsertContactStub(h, o, x);
             }
@@ -7211,11 +7282,18 @@ class AppState extends ChangeNotifier {
         dlog(
           'pow: dropping first-contact from $senderHaloId (nonce=${env.powNonce} bits=${env.powBitsUsed})',
         );
-        return to;
+        throw const _NoProof();
       }
       // 2-message cap: a stranger gets 2 into requests, then the chat is locked
-      // until we accept them. past the cap there is no receipt.
-      final have = vouched ? 0 : await db.countMessagesFrom(senderHaloId);
+      // until we accept them. past the cap there is no receipt. a file still
+      // in slices counts as one of the two, and its own slices come in
+      final have = vouched
+          ? 0
+          : await db.countMessagesFrom(senderHaloId) +
+                await db.filesInFlightFrom(
+                  senderHaloId,
+                  except: _sliced(env) ? env.mediaId : null,
+                );
       if (strangerCapHolds(
         accepted: false,
         vouched: vouched,
@@ -7260,14 +7338,27 @@ class AppState extends ChangeNotifier {
     // backs it: the first in claims the uid, a twin takes the known path
     final uid = env.msgUid;
     String? claimed;
-    if (env.mediaId != null && env.chunkTotal != null && env.chunkTotal! > 1) {
+    if (_sliced(env)) {
       final mid = env.mediaId!;
       final total = env.chunkTotal!;
+      final index = env.chunkIndex ?? 0;
       final progressKey = isGroup ? env.groupId! : senderHaloId;
       final slice = (env.imageB64 ?? env.fileB64) ?? '';
       // a sliced file is filed under its own id
       if (uid != null && uid != mid) {
         dlog('recv: slice of another message id, dropped');
+        return to;
+      }
+      // a slice has a place in its file, and a file has a bounded number
+      // of them
+      if (total > kMaxSlices || index < 0 || index >= total) {
+        dlog('recv: slice out of range, dropped');
+        return to;
+      }
+      // a file's slices come from one sender
+      final owner = await db.mediaChunkSender(mid);
+      if (owner != null && owner != senderHaloId) {
+        dlog('recv: slice of a file another sender is sending, dropped');
         return to;
       }
       if (_inflightUids.contains(mid)) return to;
@@ -7288,12 +7379,13 @@ class AppState extends ChangeNotifier {
       // restart resumes instead of starting over
       final have = await db.putMediaChunk(
         mid,
-        env.chunkIndex ?? 0,
+        index,
         slice,
         total,
         (env.burnSeconds != null && env.burnSeconds! > 0)
             ? env.burnSeconds
             : null,
+        from: senderHaloId,
       );
       chunkBurn = await db.mediaChunkBurn(mid) ?? chunkBurn;
       if (have < total && !isGroup && senderHaloId != myId) {
@@ -7707,6 +7799,8 @@ class AppState extends ChangeNotifier {
               );
             } on CapHeld {
               // past a stranger's two: not kept, as on the relay lane
+            } on _NoProof {
+              await _io.dropSession(u.from);
             } catch (e) {
               if (!identical(_openVault, vault)) return;
               dlog('unseal: one not applied ($e)');
@@ -7824,6 +7918,10 @@ class AppState extends ChangeNotifier {
     }
     final h = card.haloId;
     if (h == myId || h == senderHaloId) return;
+    if (!wireIdShaped(h, room: false)) {
+      dlog('intro: not an id, dropped');
+      return;
+    }
     // the developer is his pinned card alone, never someone's say-so
     if (devCardClaim(id: h, xPub: card.xPub, fc: card.fc)) {
       dlog('intro: names the developer, dropped');
@@ -7869,6 +7967,13 @@ class AppState extends ChangeNotifier {
       if (h == myId || !devIdClaim(h)) h,
   ];
 
+  // a member list from the wire, only of ids with the shape of a member:
+  // a person's in a group, a key in a room
+  List<String> _members(List<String> ids, {required bool room}) => [
+    for (final h in _noDev(ids))
+      if (h == myId || wireIdShaped(h, room: room)) h,
+  ];
+
   // whether a group or room of [n] people fits its cap
   Future<bool> _fitsCap(String groupId, int n, HaloDb db) async {
     if (n > kGroupMemberCap) return false;
@@ -7905,7 +8010,7 @@ class AppState extends ChangeNotifier {
             !await db.isVouched(senderHaloId)) {
           return;
         }
-        final members = _noDev(gc.members!);
+        final members = _members(gc.members!, room: isRoom);
         if (!await _fitsCap(groupId, members.toSet().length, db)) return;
         if (!exists) {
           await db.createGroup(
@@ -7932,6 +8037,7 @@ class AppState extends ChangeNotifier {
                 o != null &&
                 x != null &&
                 h != myId &&
+                wireIdShaped(h, room: isRoom) &&
                 !devCardClaim(id: h, xPub: x)) {
               await db.upsertContactStub(h, o, x);
             }
@@ -7942,9 +8048,10 @@ class AppState extends ChangeNotifier {
         break;
       case 'add':
         if (gc.members == null || !fromAdmin) return;
+        final isRoom = await _roomOf(groupId, db) != null;
         final have = await db.getGroupMembers(groupId);
         final adds = {
-          for (final h in _noDev(gc.members!))
+          for (final h in _members(gc.members!, room: isRoom))
             if (!have.contains(h)) h,
         };
         if (!await _fitsCap(groupId, have.length + adds.length, db)) return;
@@ -7960,6 +8067,7 @@ class AppState extends ChangeNotifier {
                 o != null &&
                 x != null &&
                 h != myId &&
+                wireIdShaped(h, room: isRoom) &&
                 !devCardClaim(id: h, xPub: x)) {
               await db.upsertContactStub(h, o, x);
             }
@@ -8032,9 +8140,7 @@ class AppState extends ChangeNotifier {
 
   Future<_Shown> _shownOf(Session s) async {
     final (list, pending, dev) = await _contactsOf(s);
-    final a = await const FlutterSecureStorage().read(
-      key: s.container.key('my_avatar'),
-    );
+    final a = await secureStore.read(key: s.container.key('my_avatar'));
     return _Shown(
       list,
       pending,
@@ -8647,12 +8753,14 @@ class AppState extends ChangeNotifier {
   // about reaching someone: first-contact keys and the listen cache
   Future<void> _forgetPeers(Set<String> ids) async {
     if (ids.isEmpty) return;
-    const st = FlutterSecureStorage();
+    const st = secureStore;
     var fc = false;
     for (final id in ids) {
       if (_peerFc.remove(id) != null) fc = true;
     }
-    if (fc) await st.write(key: 'peer_fc', value: jsonEncode(_peerFc));
+    if (fc && !_peerFcUnread) {
+      await st.write(key: 'peer_fc', value: jsonEncode(_peerFc));
+    }
     try {
       final raw = await st.read(key: 'xpub_cache');
       if (raw == null || raw.isEmpty) return;
@@ -9141,10 +9249,7 @@ class AppState extends ChangeNotifier {
 
   Future<void> dismissBridgeHint() async {
     _bridgeHintOff = true;
-    await const FlutterSecureStorage().write(
-      key: 'bridge_hint_off',
-      value: '1',
-    );
+    await secureStore.write(key: 'bridge_hint_off', value: '1');
     notifyListeners();
   }
 
@@ -9236,8 +9341,12 @@ class AppState extends ChangeNotifier {
       // persist contact + nostr sub. a stranger who back-paired to us lands
       // unaccepted: their message waits in requests until we accept. while
       // the vault is shut its people are filed when it opens
+      HaloDb? filed;
+      var fresh = false;
       if (to == RouteTo.everyday || to == RouteTo.vault) {
         final db = to == RouteTo.vault ? _openVault! : live;
+        filed = db;
+        fresh = await db.getContact(h) == null;
         await db.upsertContact(
           h,
           env.senderOnion ?? '',
@@ -9248,11 +9357,11 @@ class AppState extends ChangeNotifier {
         final said = env.senderHaloId;
         if (said != null && said != h) await _noteOtherKey(db, h, said);
       }
-      if (to != RouteTo.dropped &&
-          env.senderXPub != null &&
-          env.senderXPub!.isNotEmpty) {
-        _xPubToHaloId[env.senderXPub!] = h;
-        _io.listen(env.senderXPub!);
+      final x = env.senderXPub;
+      final heardAs = x == null ? null : _xPubToHaloId[x];
+      if (to != RouteTo.dropped && x != null && x.isNotEmpty) {
+        _xPubToHaloId[x] = h;
+        _io.listen(x);
       }
       var went = to;
       try {
@@ -9264,6 +9373,23 @@ class AppState extends ChangeNotifier {
         );
       } on CapHeld {
         // the row exists now; the relay replays this after accept
+      } on _NoProof {
+        // the session it opened goes, so nothing later from it opens
+        // without the proof, and a row it made goes with it
+        await _io.dropSession(h);
+        if (fresh) {
+          await filed?.forgetRequest(h);
+          // the address it was heard on goes too, unless someone here has it
+          if (x != null && x.isNotEmpty && _xPubToHaloId[x] == h) {
+            if (heardAs == null) {
+              _xPubToHaloId.remove(x);
+              _io.unlisten(x);
+            } else {
+              _xPubToHaloId[x] = heardAs;
+            }
+          }
+        }
+        return (h, RouteTo.dropped);
       }
       if (_shown(went)) {
         await refreshContacts();
@@ -9484,6 +9610,8 @@ class AppState extends ChangeNotifier {
             );
           } on CapHeld {
             await live.holdCipher(addr, cipher);
+          } on _NoProof {
+            // dropped, as a cold stranger's opener is
           }
           await refreshContacts();
           notifyListeners();
@@ -9631,10 +9759,7 @@ class AppState extends ChangeNotifier {
 
   Future<void> _saveXPubCache(Map<String, String> cache) async {
     try {
-      await const FlutterSecureStorage().write(
-        key: 'xpub_cache',
-        value: jsonEncode(cache),
-      );
+      await secureStore.write(key: 'xpub_cache', value: jsonEncode(cache));
     } catch (e) {
       dlog('xpub cache write: $e');
     }
@@ -9691,6 +9816,23 @@ class AppState extends ChangeNotifier {
     await boot();
   }
 
+  // which files go is settled here; the zeros are written after, in the
+  // background: nothing names these files, so nothing can reach them
+  Future<void> _sweepUnnamedMedia(DateTime before) async {
+    try {
+      final gone = await live.unnamedMedia(before: before);
+      if (gone.isEmpty) return;
+      dlog('media: ${gone.length} files no message names');
+      unawaited(() async {
+        for (final f in gone) {
+          await shredFile(f.path);
+        }
+      }());
+    } catch (e) {
+      dlog('media: not swept (${e.runtimeType})');
+    }
+  }
+
   // what the splash says while boot runs. the keys and the database come
   // first and take the longest on a new phone; tor starts once the home
   // is ready to paint
@@ -9699,6 +9841,7 @@ class AppState extends ChangeNotifier {
   Future<void> _boot() async {
     dlog('LAUNCH boot');
     final bsw = Stopwatch()..start();
+    final bootAt = DateTime.now();
     // both _OnboardingGate and _RootShell call boot() on cold start, before
     // ready flips, and must not race through generateIdentity and db open
     if (ready || _booting) return;
@@ -9716,10 +9859,19 @@ class AppState extends ChangeNotifier {
     // arrival for one would land in the everyday container
     await _router.load();
     // and a move a crash cut short put right, as its list entry says
+    var settled = true;
     try {
       await repairVaultMoves();
     } catch (e) {
+      settled = false;
       dlog('vault: repair left for the next start (${e.runtimeType})');
+    }
+    // files no message names any more go, before anything here can move
+    // or write one. with a move still open the rows may be on the other
+    // side. a file from the last minutes may be one another start of the
+    // app is still filing
+    if (settled) {
+      await _sweepUnnamedMedia(bootAt.subtract(const Duration(minutes: 10)));
     }
     if (saved != null) {
       myId = engine.restoreIdentity(saved['ed_priv']!, saved['x_priv']!);
@@ -9774,8 +9926,7 @@ class AppState extends ChangeNotifier {
     // paint the home as soon as contacts/groups are ready; notifications,
     // nostr subscriptions keep warming up in the background.
     onboardingComplete =
-        (await const FlutterSecureStorage().read(key: 'onboarding_done')) ==
-        'true';
+        (await secureStore.read(key: 'onboarding_done')) == 'true';
     _movedAway =
         (await SharedPreferences.getInstance()).getInt('moved.at') != null;
     // let the onion linger a beat before the home appears
@@ -10007,9 +10158,7 @@ class AppState extends ChangeNotifier {
         _polling = false;
       }
     });
-    final stored = await const FlutterSecureStorage().read(
-      key: 'onboarding_done',
-    );
+    final stored = await secureStore.read(key: 'onboarding_done');
     onboardingComplete = stored == 'true';
     ready = true;
     notifyListeners();
@@ -11165,9 +11314,13 @@ class AppState extends ChangeNotifier {
     final g = await d.getGroup(groupId);
     if (g == null) return;
     final pub = g['room_pub'] as String?;
+    final priv = g['room_priv'] as String?;
     if (pub != null && !d.container.quiet) {
       engine.roomUnsubscribeBg(pub);
       _roomSubs.remove(pub);
+      if (priv != null) {
+        engine.roomForgetBg(priv, await d.getGroupMembers(groupId));
+      }
     }
     for (final path in await d.groupFilePaths(groupId)) {
       await shredFile(path);
@@ -11960,10 +12113,7 @@ class AppState extends ChangeNotifier {
 
   Future<void> markOnboardingComplete() async {
     onboardingComplete = true;
-    await const FlutterSecureStorage().write(
-      key: 'onboarding_done',
-      value: 'true',
-    );
+    await secureStore.write(key: 'onboarding_done', value: 'true');
     notifyListeners();
   }
 }

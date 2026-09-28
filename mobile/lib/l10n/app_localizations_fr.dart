@@ -7487,4 +7487,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String scamShieldSaysItIs(Object shown) {
     return 'Se présente comme $shown, mais sa clé ne correspond pas';
   }
+
+  @override
+  String get requestsSomeoneNew => 'Quelqu’un de nouveau';
 }

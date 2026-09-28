@@ -1945,5 +1945,6 @@
   "devVoiceDisguised": "صدای شما در این گفت‌وگو تغییر داده می‌شود",
   "devChatOptions": "گزینه‌های گفت‌وگو",
   "appLinkOtherKey": "این پیوند خود را ⁨{id}⁩ معرفی می‌کند، اما کلیدش مطابقت ندارد. چیزی افزوده نشد.",
-  "scamShieldSaysItIs": "خود را ⁨{shown}⁩ معرفی می‌کند، اما کلیدش مطابقت ندارد"
+  "scamShieldSaysItIs": "خود را ⁨{shown}⁩ معرفی می‌کند، اما کلیدش مطابقت ندارد",
+  "requestsSomeoneNew": "فردی تازه"
 }

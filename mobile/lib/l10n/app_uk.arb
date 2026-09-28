@@ -1945,5 +1945,6 @@
   "devVoiceDisguised": "Твій голос у цьому чаті змінено",
   "devChatOptions": "Налаштування чату",
   "appLinkOtherKey": "Це посилання видає себе за {id}, але його ключ не збігається. Нічого не додано.",
-  "scamShieldSaysItIs": "Представляється як {shown}, але ключ не збігається"
+  "scamShieldSaysItIs": "Представляється як {shown}, але ключ не збігається",
+  "requestsSomeoneNew": "Хтось новий"
 }

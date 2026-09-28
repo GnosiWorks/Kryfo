@@ -5,13 +5,13 @@
 // carries them too, under vault/ names, with their key in the manifest.
 
 import 'dart:async';
+import 'secure_store.dart';
 import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
 import 'dart:isolate';
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -39,9 +39,7 @@ import 'dart:math';
 import 'l10n/l10n.dart';
 
 const _kDbPassphrase = 'halo.db.passphrase';
-const _secureStorage = FlutterSecureStorage(
-  aOptions: AndroidOptions(encryptedSharedPreferences: true),
-);
+const _secureStorage = secureStoreEsp;
 
 // where a backup or a restore stages. the first four sit in the app support
 // folder, the last two in the documents folder
@@ -169,7 +167,7 @@ Future<String> _decryptOnIsolate(String blob, String passphrase) {
       return engineTakeSecret(fn(p1, p2));
     } finally {
       calloc.free(p1);
-      calloc.free(p2);
+      freeSecret(p2);
     }
   });
 }
@@ -276,25 +274,12 @@ Future<void> restoreBackupBlob(String blob, String passphrase) async {
     ).writeAsBytes(onionBytes, flush: true);
   }
 
-  final prefs = await SharedPreferences.getInstance();
-  final prefsMap = payload['prefs'] as Map<String, dynamic>? ?? {};
-  for (final entry in prefsMap.entries) {
-    final v = entry.value;
-    if (v is String) {
-      await prefs.setString(entry.key, v);
-    } else if (v is int) {
-      await prefs.setInt(entry.key, v);
-    } else if (v is bool) {
-      await prefs.setBool(entry.key, v);
-    } else if (v is double) {
-      await prefs.setDouble(entry.key, v);
-    }
-  }
+  await restorePrefs(payload['prefs']);
 
   // a v1 backup carries none of these; what is here is the old identity's
   await _applyIdentitySecure(payload['secure']);
 
-  final defaultStorage = const FlutterSecureStorage();
+  final defaultStorage = secureStore;
   final onboardingDone = payload['onboardingDone'] as String?;
   if (onboardingDone != null) {
     await defaultStorage.write(key: 'onboarding_done', value: onboardingDone);
@@ -328,6 +313,43 @@ const kHiddenDb = '$kHiddenDir/halo_v.db';
 String? hiddenPart(String name) => name.startsWith('$kHiddenDir/')
     ? name.substring(kHiddenDir.length + 1)
     : null;
+
+/// whether a restore puts [name] back: the database, the onion key and the
+/// files under media/ and wallpapers/, and under vault/ the hidden chats'
+/// database and folders. anything else in a file is left where it is
+bool restorableName(String name) {
+  if (!safeBackupName(name)) return false;
+  final rest = hiddenPart(name);
+  final n = rest ?? name;
+  if (n == (rest == null ? 'halo.db' : 'halo_v.db')) return true;
+  if (rest == null && n == 'onion.key') return true;
+  for (final folder in const ['media/', 'wallpapers/']) {
+    if (n.startsWith(folder) && n.length > folder.length) return true;
+  }
+  return false;
+}
+
+/// the prefs a restore takes from a file: the ones a backup ever carried
+/// that still mean something here
+const kRestorablePrefs = {'onboarding.complete'};
+
+@visibleForTesting
+Future<void> restorePrefs(Object? carried) async {
+  if (carried is! Map) return;
+  final prefs = await SharedPreferences.getInstance();
+  for (final k in kRestorablePrefs) {
+    final v = carried[k];
+    if (v is String) {
+      await prefs.setString(k, v);
+    } else if (v is int) {
+      await prefs.setInt(k, v);
+    } else if (v is bool) {
+      await prefs.setBool(k, v);
+    } else if (v is double) {
+      await prefs.setDouble(k, v);
+    }
+  }
+}
 
 // the key of the hidden chats a manifest carries, null when it carries none
 String? hiddenKeyOf(Map<String, dynamic> m) {
@@ -385,7 +407,7 @@ String? _backupKey(DynamicLibrary lib, String passphrase, Uint8List salt) {
     final r = engineTakeSecret(fn(p1, ps));
     return r.startsWith('error:') ? null : r;
   } finally {
-    calloc.free(p1);
+    freeSecret(p1);
     calloc.free(ps);
   }
 }
@@ -410,7 +432,7 @@ class _EngineCipher implements ChunkCipher {
     if (plain.length + 16 > _cap) throw ArgumentError('record too big');
     _in.asTypedList(_cap).setAll(0, plain);
     final n = _seal(_key, index, type, _in, plain.length, _out);
-    if (n < 0) throw const BackupDamaged('seal failed');
+    if (n < 0 || n > _cap) throw const BackupDamaged('seal failed');
     return Uint8List.fromList(_out.asTypedList(n));
   }
 
@@ -419,7 +441,8 @@ class _EngineCipher implements ChunkCipher {
     if (sealed.length > _cap) return null;
     _in.asTypedList(_cap).setAll(0, sealed);
     final n = _open(_key, index, type, _in, sealed.length, _out);
-    if (n < 0) return null;
+    // never more than the buffer holds, whatever the engine says
+    if (n < 0 || n > _cap) return null;
     return Uint8List.fromList(_out.asTypedList(n));
   }
 
@@ -527,7 +550,7 @@ const kIdentitySecureKeys = [
 
 /// puts a handle back when a restore of the same identity removed it
 Future<void> keepHandleIfDropped(String handle) async {
-  const st = FlutterSecureStorage();
+  const st = secureStore;
   final now = await st.read(key: 'my_handle');
   if (now == null || now.isEmpty) {
     await st.write(key: 'my_handle', value: handle);
@@ -535,7 +558,7 @@ Future<void> keepHandleIfDropped(String handle) async {
 }
 
 Future<Map<String, String>> _readIdentitySecure() async {
-  const st = FlutterSecureStorage();
+  const st = secureStore;
   final out = <String, String>{};
   for (final k in kIdentitySecureKeys) {
     final v = await st.read(key: k);
@@ -545,7 +568,7 @@ Future<Map<String, String>> _readIdentitySecure() async {
 }
 
 Future<void> _applyIdentitySecure(Object? carried) async {
-  const st = FlutterSecureStorage();
+  const st = secureStore;
   final plan = identitySecurePlan(carried);
   for (final e in plan.write.entries) {
     await st.write(key: e.key, value: e.value);
@@ -661,9 +684,7 @@ Future<BackupDraft> draftBackup(
     final v = prefs.get(k);
     if (v != null) prefsMap[k] = v;
   }
-  final onboardingDone = await const FlutterSecureStorage().read(
-    key: 'onboarding_done',
-  );
+  final onboardingDone = await secureStore.read(key: 'onboarding_done');
   final secure = await _readIdentitySecure();
   final dbCopy = p.join(stage, 'halo.db');
   final folders = <BackupFileEntry>[];
@@ -1035,6 +1056,7 @@ Future<Map<String, dynamic>> unpackBackup(
       path,
       cipher,
       want: (n) {
+        if (!restorableName(n)) return null;
         final h = hiddenPart(n);
         if (h == null) return p.join(stage.path, n);
         return keep == null ? null : p.join(keep.path, h);
@@ -1057,7 +1079,7 @@ Future<Map<String, dynamic>> unpackBackup(
         BackupFileEntry.fromJson(f as Map<String, dynamic>),
     ];
     for (final f in files) {
-      if (hiddenPart(f.name) != null) continue;
+      if (hiddenPart(f.name) != null || !restorableName(f.name)) continue;
       final dest = File(p.join(root, f.name));
       await dest.parent.create(recursive: true);
       await File(p.join(stage.path, f.name)).rename(dest.path);
@@ -1174,7 +1196,7 @@ Future<void> _landInDecoy(
   for (final f in manifest['files'] as List) {
     final name = (f as Map<String, dynamic>)['name'] as String;
     // hidden chats landed in the decoy's vault already
-    if (hiddenPart(name) != null) continue;
+    if (hiddenPart(name) != null || !restorableName(name)) continue;
     final src = File(p.join(from, name));
     final String dest;
     if (name == 'halo.db') {
@@ -1379,29 +1401,14 @@ Future<void> restoreBackupFile(
     key: _kDbPassphrase,
     value: manifest['dbPassphrase'] as String,
   );
-  final prefs = await SharedPreferences.getInstance();
-  final prefsMap = manifest['prefs'] as Map<String, dynamic>? ?? {};
-  for (final entry in prefsMap.entries) {
-    final v = entry.value;
-    if (v is String) {
-      await prefs.setString(entry.key, v);
-    } else if (v is int) {
-      await prefs.setInt(entry.key, v);
-    } else if (v is bool) {
-      await prefs.setBool(entry.key, v);
-    } else if (v is double) {
-      await prefs.setDouble(entry.key, v);
-    }
-  }
+  await restorePrefs(manifest['prefs']);
   // this device is where the identity lives now, whatever it was before
+  final prefs = await SharedPreferences.getInstance();
   await prefs.remove('moved.at');
   await _applyIdentitySecure(manifest['secure']);
   final onboardingDone = manifest['onboardingDone'] as String?;
   if (onboardingDone != null) {
-    await const FlutterSecureStorage().write(
-      key: 'onboarding_done',
-      value: onboardingDone,
-    );
+    await secureStore.write(key: 'onboarding_done', value: onboardingDone);
   }
   engine.restoreIdentity(
     manifest['edPriv'] as String,

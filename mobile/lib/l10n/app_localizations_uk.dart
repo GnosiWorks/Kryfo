@@ -7541,4 +7541,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String scamShieldSaysItIs(Object shown) {
     return 'Представляється як $shown, але ключ не збігається';
   }
+
+  @override
+  String get requestsSomeoneNew => 'Хтось новий';
 }

@@ -1945,5 +1945,6 @@
   "devVoiceDisguised": "Bu sohbette sesin gizleniyor",
   "devChatOptions": "Sohbet seçenekleri",
   "appLinkOtherKey": "Bu bağlantı {id} olduğunu söylüyor ama anahtarı eşleşmiyor. Eklenmedi.",
-  "scamShieldSaysItIs": "{shown} olduğunu söylüyor ama anahtarı eşleşmiyor"
+  "scamShieldSaysItIs": "{shown} olduğunu söylüyor ama anahtarı eşleşmiyor",
+  "requestsSomeoneNew": "Yeni biri"
 }

@@ -11900,6 +11900,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Says it is {shown}, but its key does not match'**
   String scamShieldSaysItIs(Object shown);
+
+  /// screens/requests_screen.dart: the name on a request from someone filed on an id of their own, because the name they gave is bound here to another key. the shield line under it says which name they gave
+  ///
+  /// In en, this message translates to:
+  /// **'Someone new'**
+  String get requestsSomeoneNew;
 }
 
 class _AppLocalizationsDelegate

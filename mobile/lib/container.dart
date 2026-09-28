@@ -3,9 +3,9 @@
 // media folders and its own slice of settings
 
 import 'dart:io';
+import 'secure_store.dart';
 import 'dart:math';
 
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -204,9 +204,7 @@ class HaloContainer {
 // which containers besides the everyday one exist. listed before a
 // container's pin entry is written, and struck after it is cleared, so a
 // crash in between leaves a listed container and never an unlisted one
-const _registry = FlutterSecureStorage(
-  aOptions: AndroidOptions(resetOnError: false),
-);
+const _registry = secureStore;
 const _kListed = 'halo.containers';
 
 Future<Set<String>> listedContainers() async {

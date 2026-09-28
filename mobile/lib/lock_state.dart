@@ -4,6 +4,7 @@
 // and every outcome shows at the same moment after the tap.
 
 import 'dart:async';
+import 'secure_store.dart';
 import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
@@ -13,7 +14,6 @@ import 'dart:math';
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
 
 import 'container.dart';
@@ -84,14 +84,8 @@ abstract class LockStore {
 }
 
 class SecureLockStore implements LockStore {
-  // resetOnError off: on a read error the plugin deletes every key, the
-  // database passphrase with them
-  static const _s = FlutterSecureStorage(
-    aOptions: AndroidOptions(
-      encryptedSharedPreferences: true,
-      resetOnError: false,
-    ),
-  );
+  // a read that fails leaves every key where it is (secure_store.dart)
+  static const _s = secureStoreEsp;
   @override
   Future<String?> read(String key) => _s.read(key: key);
   @override
