@@ -11,7 +11,9 @@ package main
 import (
 	"context"
 	"crypto/ed25519"
+	"crypto/sha256"
 	"embed"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -507,11 +509,19 @@ func page(handle, bio, invite, fp string) string {
 }
 
 // no script-src at all, so nothing on this page can execute, not even a
-// javascript: url in an href. the fonts and the one inline <style> below are
-// the only things allowed, and both are ours.
-const csp = "default-src 'none'; style-src 'self' 'unsafe-inline'; " +
+// javascript: url in an href. the fonts and the one <style> block below are
+// the only things allowed: the block by its hash, so no other style can get
+// onto a page, not even through a bio.
+var csp = "default-src 'none'; style-src '" + styleHash(head) + "'; " +
 	"font-src 'self'; base-uri 'none'; form-action 'none'; " +
 	"frame-ancestors 'none'"
+
+func styleHash(h string) string {
+	i := strings.Index(h, "<style>") + len("<style>")
+	j := strings.Index(h, "</style>")
+	sum := sha256.Sum256([]byte(h[i:j]))
+	return "sha256-" + base64.StdEncoding.EncodeToString(sum[:])
+}
 
 func writeHTMLHeaders(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
