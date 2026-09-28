@@ -7376,4 +7376,14 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get devChatOptions => 'Opsi obrolan';
+
+  @override
+  String appLinkOtherKey(Object id) {
+    return 'Tautan ini mengaku sebagai $id, tapi kuncinya tidak cocok. Tidak ada yang ditambahkan.';
+  }
+
+  @override
+  String scamShieldSaysItIs(Object shown) {
+    return 'Mengaku sebagai $shown, tapi kuncinya tidak cocok';
+  }
 }

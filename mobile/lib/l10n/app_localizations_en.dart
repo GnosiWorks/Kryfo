@@ -7370,4 +7370,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get devChatOptions => 'Chat options';
+
+  @override
+  String appLinkOtherKey(Object id) {
+    return 'This link says it is $id, but its key does not match. It was not added.';
+  }
+
+  @override
+  String scamShieldSaysItIs(Object shown) {
+    return 'Says it is $shown, but its key does not match';
+  }
 }

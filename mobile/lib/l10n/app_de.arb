@@ -1935,5 +1935,7 @@
   "devNamelessLine": "Der Name, der für diesen Chat gemacht wurde, bleibt auf dem Handy, auf dem er entstand. Hier kann der Chat nur gelesen werden.",
   "devStartNewLine": "Jede Nachricht hier wird gelöscht, und ein neuer Chat öffnet sich.",
   "devVoiceDisguised": "Deine Stimme wird in diesem Chat verfremdet",
-  "devChatOptions": "Chat-Optionen"
+  "devChatOptions": "Chat-Optionen",
+  "appLinkOtherKey": "Dieser Link gibt sich als {id} aus, aber sein Schlüssel stimmt nicht überein. Er wurde nicht hinzugefügt.",
+  "scamShieldSaysItIs": "Gibt sich als {shown} aus, aber der Schlüssel stimmt nicht überein"
 }

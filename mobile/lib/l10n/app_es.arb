@@ -1935,5 +1935,7 @@
   "devNamelessLine": "El nombre creado para este chat se queda en el teléfono donde se creó, así que aquí el chat solo se puede leer.",
   "devStartNewLine": "Se van todos los mensajes de aquí, y se abre un chat nuevo.",
   "devVoiceDisguised": "Tu voz va disfrazada en este chat",
-  "devChatOptions": "Opciones del chat"
+  "devChatOptions": "Opciones del chat",
+  "appLinkOtherKey": "Este enlace dice ser {id}, pero su clave no coincide. No se ha añadido.",
+  "scamShieldSaysItIs": "Dice ser {shown}, pero su clave no coincide"
 }

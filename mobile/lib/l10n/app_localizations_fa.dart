@@ -7394,4 +7394,14 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get devChatOptions => 'گزینه‌های گفت‌وگو';
+
+  @override
+  String appLinkOtherKey(Object id) {
+    return 'این پیوند خود را ⁨$id⁩ معرفی می‌کند، اما کلیدش مطابقت ندارد. چیزی افزوده نشد.';
+  }
+
+  @override
+  String scamShieldSaysItIs(Object shown) {
+    return 'خود را ⁨$shown⁩ معرفی می‌کند، اما کلیدش مطابقت ندارد';
+  }
 }

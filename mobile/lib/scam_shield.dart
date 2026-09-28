@@ -29,6 +29,7 @@ class ShieldHit {
     'lookalike_url' => l10n.scamShieldLinksToALookalike,
     'long_opener' => l10n.scamShieldALongOpenerFrom,
     'secret_ask' => l10n.scamShieldAsksForACode,
+    'other_key' => l10n.scamShieldSaysItIs(who ?? ''),
     _ => l10n.scamShieldLooksLikeAScam,
   };
 
@@ -44,9 +45,12 @@ class ShieldHit {
   int get hashCode => Object.hash(code, who);
 }
 
-String shieldHeadline(ShieldHit lead) => lead.code == 'name_match'
-    ? l10n.scamShieldThisNameMatches(lead.who ?? '')
-    : l10n.scamShieldLooksLikeAScam;
+String shieldHeadline(ShieldHit lead) => switch (lead.code) {
+  'name_match' => l10n.scamShieldThisNameMatches(lead.who ?? ''),
+  // a name bound here to another key: its sender was filed on its own id
+  'other_key' => l10n.scamShieldSaysItIs(lead.who ?? ''),
+  _ => l10n.scamShieldLooksLikeAScam,
+};
 
 class ShieldResult {
   final List<ShieldHit> hits;

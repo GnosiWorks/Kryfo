@@ -1935,5 +1935,7 @@
   "devNamelessLine": "為這個聊天產生的名字只留在產生它的手機上，所以這裡只能閱讀。",
   "devStartNewLine": "這裡的每則訊息都會刪除，並開啟一個新的聊天。",
   "devVoiceDisguised": "在這個聊天裡，你的語音會變聲",
-  "devChatOptions": "聊天選項"
+  "devChatOptions": "聊天選項",
+  "appLinkOtherKey": "此連結自稱是 {id}，但其金鑰不相符。未新增。",
+  "scamShieldSaysItIs": "自稱是 {shown}，但金鑰不相符"
 }

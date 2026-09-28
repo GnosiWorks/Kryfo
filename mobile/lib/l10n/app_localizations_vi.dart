@@ -7361,4 +7361,14 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get devChatOptions => 'Tùy chọn trò chuyện';
+
+  @override
+  String appLinkOtherKey(Object id) {
+    return 'Liên kết này tự nhận là $id, nhưng khóa không khớp. Không có gì được thêm.';
+  }
+
+  @override
+  String scamShieldSaysItIs(Object shown) {
+    return 'Tự nhận là $shown, nhưng khóa không khớp';
+  }
 }

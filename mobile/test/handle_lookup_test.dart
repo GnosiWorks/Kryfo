@@ -35,6 +35,23 @@ void main() {
       );
       expect(inviteFromRegistryJson('not json', 'wren'), isNull);
     });
+    test('with the key check, takes only the claimer\'s own invite', () {
+      // the words of the key the handle was claimed with
+      String idOf(String pub) => pub == 'ab' ? 'x' : 'other-words';
+      expect(inviteFromRegistryJson(good, 'wren', idOf: idOf), isNotNull);
+      expect(
+        inviteFromRegistryJson(good, 'wren', idOf: (_) => 'other-words'),
+        isNull,
+      );
+      expect(
+        inviteFromRegistryJson(
+          '{"names":{"wren":7},"invite":"kryfo://share?id=x"}',
+          'wren',
+          idOf: idOf,
+        ),
+        isNull,
+      );
+    });
   });
 
   group('resolveHandle', () {
@@ -49,6 +66,14 @@ void main() {
     });
     test('turns a 404 into a plain line', () async {
       final r = await resolveHandle('wren', (u) async => 'error: status 404');
+      expect(r, 'error: nobody has claimed @wren');
+    });
+    test('an invite that is not the claimer\'s reads as unclaimed', () async {
+      final r = await resolveHandle(
+        'wren',
+        (u) async => '{"names":{"wren":"ab"},"invite":"kryfo://share?id=x"}',
+        idOf: (_) => 'other-words',
+      );
       expect(r, 'error: nobody has claimed @wren');
     });
     test('turns a dead route into a plain line', () async {
