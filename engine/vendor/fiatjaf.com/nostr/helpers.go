@@ -128,6 +128,10 @@ func extractSubID(jsonStr string) string {
 
 	// find the ending quote
 	end := strings.Index(jsonStr[start:], `"`)
+	// kryfo: a frame without one has no subscription id
+	if end == -1 {
+		return ""
+	}
 
 	// get the contents
 	return jsonStr[start : start+end]
@@ -142,6 +146,10 @@ func extractEventID(jsonStr string) ID {
 
 	// move to the next quote
 	offset := strings.IndexByte(jsonStr[start+4:], '"')
+	// kryfo: a frame too short to hold the id has none
+	if offset == -1 || start+4+offset+1+64 > len(jsonStr) {
+		return [32]byte{}
+	}
 	start += 4 + offset + 1
 
 	// get 64 characters of the id
@@ -159,6 +167,10 @@ func extractEventPubKey(jsonStr string) PubKey {
 
 	// move to the next quote
 	offset := strings.IndexByte(jsonStr[start+8:], '"')
+	// kryfo: a frame too short to hold the key has none
+	if offset == -1 || start+8+offset+1+64 > len(jsonStr) {
+		return PubKey{}
+	}
 	start += 8 + offset + 1
 
 	// get 64 characters of the pubkey
@@ -176,6 +188,10 @@ func extractDTag(jsonStr string) string {
 
 	// move to the next quote
 	offset := strings.IndexByte(jsonStr[start+4:], '"')
+	// kryfo: no quote, no tag
+	if offset == -1 {
+		return ""
+	}
 	start += 4 + offset + 1
 
 	// find the ending quote

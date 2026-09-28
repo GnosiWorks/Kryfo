@@ -9,7 +9,8 @@ import (
 )
 
 // Verify checks if the event signature is valid for the given event.
-// It won't look at the ID field, instead it will recompute the id from the entire event body.
+// It recomputes the id from the entire event body and checks the signature against that.
+// kryfo: the ID field has to be that id too: an event is handled under its own id only.
 // Returns true if the signature is valid, false otherwise.
 func (evt Event) VerifySignature() bool {
 	// read and check pubkey
@@ -32,7 +33,12 @@ func (evt Event) VerifySignature() bool {
 	sig := schnorr.NewSignature(&r, &s)
 
 	// check signature
+	// kryfo: the same hash checks the ID field
+	claimed := evt.ID
 	evt.SetID()
+	if evt.ID != claimed {
+		return false
+	}
 	return sig.Verify(evt.ID[:], pubkey)
 }
 

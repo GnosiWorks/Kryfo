@@ -365,6 +365,10 @@ func (v *OKEnvelope) FromJSON(data string) error {
 	if len(arr) < 4 {
 		return fmt.Errorf("failed to decode OK envelope: missing fields")
 	}
+	// kryfo: an id is 64 hex characters, and only that is decoded
+	if len(arr[1].Str) != 64 {
+		return fmt.Errorf("failed to decode OK envelope: bad event id")
+	}
 	if err := xhex.Decode(v.EventID[:], []byte(arr[1].Str)); err != nil {
 		return err
 	}

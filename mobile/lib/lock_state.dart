@@ -18,6 +18,7 @@ import 'package:local_auth/local_auth.dart';
 
 import 'container.dart';
 import 'dlog.dart';
+import 'engine_strings.dart';
 import 'l10n/l10n.dart';
 import 'lock_guard.dart' show lockGuard;
 import 'notifications.dart';
@@ -203,7 +204,9 @@ class FfiPinEngine implements PinEngine {
       ? DynamicLibrary.open('libhalo.so')
       : DynamicLibrary.process();
 
-  static String _take(Pointer<Utf8> p) => p.toDartString();
+  // pin results can carry the vault key, so every one is zeroed on the way
+  // back
+  static String _take(Pointer<Utf8> p) => engineTakeSecret(p);
 
   // the pin's bytes are overwritten before they are freed
   static void _wipeFree(Pointer<Utf8> p) {

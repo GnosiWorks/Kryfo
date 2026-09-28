@@ -944,7 +944,7 @@ func handleConn(conn net.Conn) {
 		log.Printf("halo: inbox full or repeat, dropped %d bytes", len(line))
 		return
 	}
-	conn.Write([]byte("ack\n"))
+	conn.Write([]byte(doorAck))
 	log.Printf("halo: received %d bytes", len(line))
 }
 
@@ -1006,13 +1006,28 @@ func HaloSendTo(cAddr *C.char, cMsg *C.char) *C.char {
 	}
 
 	conn.SetReadDeadline(time.Now().Add(15 * time.Second))
-	if _, err := bufio.NewReader(conn).ReadString('\n'); err != nil {
+	if err := readAck(conn); err != nil {
 		return C.CString(fmt.Sprintf("error: no ack: %v", err))
 	}
 
 	log.Printf("halo: sent %d bytes to %s", len(msg), addr)
 	return C.CString("ok")
 }
+
+// the door answers "ack\n" and nothing else. only that many bytes are read,
+// and anything other than exactly that is no ack
+func readAck(r io.Reader) error {
+	b := make([]byte, len(doorAck))
+	if _, err := io.ReadFull(r, b); err != nil {
+		return err
+	}
+	if string(b) != doorAck {
+		return fmt.Errorf("not an ack")
+	}
+	return nil
+}
+
+const doorAck = "ack\n"
 
 func main() {}
 
@@ -1030,43 +1045,9 @@ func HaloIdFromEdPub(cHexPub *C.char) *C.char {
 	return C.CString(idFromPubkey(pub))
 }
 
-// encrypts a UTF-8 plaintext payload (typically a JSON blob containing
-// the user's identity keys + db + prefs) with a passphrase using scrypt
-// (32768 / 8 / 1) + AES-256-GCM. returns "halo-backup:v1:" + base64
-// (salt || nonce || ciphertext+tag). returns "error: ..." on failure.
-//
-//export HaloEncryptBackup
-func HaloEncryptBackup(cPlain, cPassphrase *C.char) *C.char {
-	plain := []byte(C.GoString(cPlain))
-	passphrase := C.GoString(cPassphrase)
-
-	salt := make([]byte, 16)
-	if _, err := io.ReadFull(rand.Reader, salt); err != nil {
-		return C.CString("error: rand: " + err.Error())
-	}
-	key, err := scrypt.Key([]byte(passphrase), salt, 32768, 8, 1, 32)
-	if err != nil {
-		return C.CString("error: scrypt: " + err.Error())
-	}
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return C.CString("error: aes: " + err.Error())
-	}
-	gcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return C.CString("error: gcm: " + err.Error())
-	}
-	nonce := make([]byte, gcm.NonceSize())
-	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
-		return C.CString("error: nonce: " + err.Error())
-	}
-	ct := gcm.Seal(nil, nonce, plain, nil)
-	blob := append(append(salt, nonce...), ct...)
-	return C.CString("halo-backup:v1:" + base64.StdEncoding.EncodeToString(blob))
-}
-
-// inverse of HaloEncryptBackup. returns plaintext on success or
-// "error: wrong passphrase or corrupt" on auth failure.
+// opens a v1 backup: "halo-backup:v1:" + base64(salt || nonce ||
+// ciphertext+tag), scrypt (32768 / 8 / 1) and AES-256-GCM. returns the
+// plaintext, or "error: wrong passphrase or corrupt" on auth failure.
 //
 //export HaloDecryptBackup
 func HaloDecryptBackup(cBlob, cPassphrase *C.char) *C.char {

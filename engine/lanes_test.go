@@ -38,7 +38,11 @@ func TestSubscriptionIDsPerConnection(t *testing.T) {
 		})
 	}
 	// a kick makes every live socket ask its relay a question first, which
-	// is a second request on the same connection
+	// is a second request on the same connection. the spread is cut short
+	// here, what it does is tested on its own
+	oldSpread := kickSpread
+	kickSpread = time.Second
+	defer func() { kickSpread = oldSpread }()
 	kickRelays()
 	for _, r := range []*relayStandIn{a, b} {
 		waitFor(t, "every socket asked", 15*time.Second, func() bool {
@@ -112,7 +116,11 @@ func TestLanesDialUnderTheirOwnSocksName(t *testing.T) {
 
 	// one send of each kind, as the exports make them
 	friend := newXid(t)
-	ev := wrapTo(t, myXid(), friend.pub, "hi")
+	me, err := myXid()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ev := wrapTo(t, me, friend.pub, "hi")
 	everydaySent := ev.Tags.Find("p")[1]
 	if nostrPublishMulti(ctx, laneEveryday, ev) == 0 {
 		t.Fatal("everyday send not accepted")

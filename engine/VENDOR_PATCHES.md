@@ -42,16 +42,23 @@ reported upstream to alexballas/go-libtor.
 the relay library lives in `third_party/nostr` and go.mod points at it with
 a `replace`, so `go mod vendor` copies it into vendor/ like any other module
 and this one survives a re-vendor. it holds upstream's files for the two
-packages the engine imports, tests left out, and upstream's go.mod. only
-`relay.go` differs, in two dozen lines, the new ones marked `kryfo:`:
+packages the engine imports, tests left out, and upstream's go.mod. five
+files differ, the new lines marked `kryfo:`:
 
-- subscription ids are counted per connection. upstream numbers every REQ
-  in the process from one counter, which lets a relay line up a phone's
-  sockets, burner rooms included, by where the counter has got to.
-- `RelayOptions.PingInterval` and `PongTimeout`. zero keeps upstream's 19s
-  and 800ms. the relay runners pass 90s and 20s in private mode (lanes.go):
-  over tor a pong often takes longer than 800ms, and three late ones close
-  the socket.
+- `relay.go`: subscription ids are counted per connection. upstream numbers
+  every REQ in the process from one counter, which lets a relay line up a
+  phone's sockets, burner rooms included, by where the counter has got to.
+- `relay.go`: `RelayOptions.PingInterval` and `PongTimeout`. zero keeps
+  upstream's 19s and 800ms. the relay runners pass 90s and 20s in private
+  mode (lanes.go): over tor a pong often takes longer than 800ms, and three
+  late ones close the socket.
+- `relay.go`: `handleMessage` ends at most its own connection, whatever
+  the frame, and the caller dials again.
+- `helpers.go`, `envelopes.go`, `relay.go`: length checks in the frame
+  pre-parsers and the OK envelope.
+- `signature.go`, `signature_libsecp256k1.go`: `VerifySignature` also
+  requires the event's id field to be the id its body hashes to. the hash
+  is computed once, as before.
 
 vendor/fiatjaf.com/nostr is a copy of it and has to stay one:
 
@@ -60,8 +67,10 @@ vendor/fiatjaf.com/nostr is a copy of it and has to stay one:
 the change against upstream:
 
     go mod download fiatjaf.com/nostr@v0.0.0-20260508234157-a4c590d923ee
-    diff -u "$(go env GOMODCACHE)/fiatjaf.com/nostr@v0.0.0-20260508234157-a4c590d923ee/relay.go" \
-        third_party/nostr/relay.go
+    up="$(go env GOMODCACHE)/fiatjaf.com/nostr@v0.0.0-20260508234157-a4c590d923ee"
+    for f in relay.go helpers.go envelopes.go signature.go signature_libsecp256k1.go; do
+        diff -u "$up/$f" "third_party/nostr/$f"
+    done
 
 to move to a newer upstream: save that diff as a patch, copy the new
 version's go.mod and the non-test files of its root and `nip45/hyperloglog`

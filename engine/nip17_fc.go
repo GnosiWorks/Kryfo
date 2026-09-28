@@ -41,7 +41,11 @@ func fcKeysFrom(priv [32]byte, counter int) (sk, pk string, err error) {
 }
 
 func nip17FirstContactKeys(counter int) (sk, pk string, err error) {
-	return fcKeysFrom(myXPriv, counter)
+	me, err := myXid()
+	if err != nil {
+		return "", "", err
+	}
+	return fcKeysFrom(me.priv, counter)
 }
 
 // wrap an introduction for a stranger's first-contact address. the seal is
@@ -49,7 +53,11 @@ func nip17FirstContactKeys(counter int) (sk, pk string, err error) {
 // are the same verification as every other message applies. only the outer
 // wrap is addressed differently.
 func nip17WrapFirstContact(peer [32]byte, fcPk, msg string) (nostr2.Event, error) {
-	return nip17WrapFirstContactAs(myXid(), peer, fcPk, msg)
+	me, err := myXid()
+	if err != nil {
+		return nostr2.Event{}, err
+	}
+	return nip17WrapFirstContactAs(me, peer, fcPk, msg)
 }
 
 func nip17WrapFirstContactAs(me xid, peer [32]byte, fcPk, msg string) (nostr2.Event, error) {

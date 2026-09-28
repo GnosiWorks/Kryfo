@@ -31,8 +31,13 @@ import (
 	"github.com/btcsuite/btcd/btcec/v2/schnorr"
 )
 
+// kryfo: the ID field has to be the id the event hashes to, as in signature.go
 func (evt Event) VerifySignature() bool {
+	claimed := evt.ID
 	evt.SetID()
+	if evt.ID != claimed {
+		return false
+	}
 
 	var xonly C.secp256k1_xonly_pubkey
 	if C.secp256k1_xonly_pubkey_parse(globalSecp256k1Context, &xonly, (*C.uchar)(unsafe.Pointer(&evt.PubKey[0]))) != 1 {

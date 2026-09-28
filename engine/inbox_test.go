@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"strings"
 	"testing"
+	"time"
 )
 
 func wire(first byte, n int) string {
@@ -35,9 +36,7 @@ func TestInboxShape(t *testing.T) {
 }
 
 func TestInboxPutCaps(t *testing.T) {
-	mu.Lock()
-	inboxDrained()
-	mu.Unlock()
+	drainForTest()
 	line := wire(3, 64)
 	if !inboxPut(line) {
 		t.Fatal("first copy should be taken")
@@ -53,16 +52,12 @@ func TestInboxPutCaps(t *testing.T) {
 	if inboxPut(wire(2, 64)) {
 		t.Fatal("past the line cap nothing is taken")
 	}
-	mu.Lock()
-	inboxDrained()
-	mu.Unlock()
+	drainForTest()
 	if !inboxPut(line) {
 		t.Fatal("after a drain the same line is welcome again")
 	}
 	// the byte cap: a few big lines fill it before the line cap does
-	mu.Lock()
-	inboxDrained()
-	mu.Unlock()
+	drainForTest()
 	big := strings.Repeat("A", inboxMaxLine-4) + "AAA="
 	var took int
 	for i := 0; i < inboxMaxLines; i++ {
@@ -75,7 +70,43 @@ func TestInboxPutCaps(t *testing.T) {
 	if took*inboxMaxLine < inboxMaxBytes-inboxMaxLine || took*inboxMaxLine > inboxMaxBytes {
 		t.Fatalf("byte cap should stop near %d bytes, took %d lines", inboxMaxBytes, took)
 	}
+	drainForTest()
+}
+
+// a drain as these tests need it: the inbox and the budget both start over
+func drainForTest() {
 	mu.Lock()
 	inboxDrained()
+	inboxTokens, inboxFilled = inboxBurst, time.Time{}
 	mu.Unlock()
+}
+
+// the door takes a full inbox at once, then no more than its steady rate,
+// whatever dart drains in between
+func TestInboxBudget(t *testing.T) {
+	drainForTest()
+	defer drainForTest()
+	now := time.Now()
+	mu.Lock()
+	defer mu.Unlock()
+	for i := 0; i < inboxBurst; i++ {
+		if !inboxBudgetTake(now) {
+			t.Fatalf("line %d of a burst should be taken", i)
+		}
+	}
+	if inboxBudgetTake(now) {
+		t.Fatal("past the burst nothing is taken at once")
+	}
+	inboxDrained()
+	if inboxBudgetTake(now) {
+		t.Fatal("a drain does not refill the budget")
+	}
+	later := now.Add(10 * time.Second)
+	took := 0
+	for inboxBudgetTake(later) {
+		took++
+	}
+	if took != 10*inboxPerSec {
+		t.Fatalf("ten seconds later %d lines were taken, want %d", took, 10*inboxPerSec)
+	}
 }

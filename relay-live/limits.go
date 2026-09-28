@@ -30,9 +30,9 @@ const (
 	// one live subscription per socket, catch-up pages one after another
 	reqsPerSec, reqBurst = 2, 100
 	maxIDs, maxAddrs     = 20, 10
-	// wide, so a phone whose clock runs fast still delivers. it only keeps a
-	// wrap from outliving the sweep
-	futureSlack = 48 * time.Hour
+	// how far ahead of this box a wrap may be stamped. not tighter, so a
+	// phone whose clock runs fast still delivers
+	futureSlack = 2 * time.Hour
 	// below this much free space the relay stops taking wraps, so a flood
 	// cannot fill the disk the other services write to
 	minFreeBytes = 2 << 30
@@ -176,7 +176,8 @@ func (l *limits) filter(ctx context.Context, f nostr.Filter) (bool, string) {
 	return false, ""
 }
 
-// by id alone (the app's liveness probe), or wraps to named addresses
+// by id alone (the liveness probe of older builds), or wraps to named
+// addresses
 func filterOK(f nostr.Filter) bool {
 	if f.Search != "" || len(f.Authors) > 0 {
 		return false
