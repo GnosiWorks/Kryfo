@@ -43,8 +43,8 @@ put you in danger, read all of it.
   either. if a forensic copy is the fear, the wipe pin is the tool, and not
   having the data on the phone at all is better still.
 - someone who already knows you. a person who knows your three words or
-  handle sees different ones in the decoy, and messages stop reaching you in
-  front of them while it is open.
+  handle sees different ones in the decoy, and nothing that arrives for you
+  shows while it is open.
 - backups kept outside the app. a backup made inside the hidden chats
   carries them, and its size can tell.
 - the law. in some countries refusing to unlock a phone, or hiding data from
