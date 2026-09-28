@@ -7259,4 +7259,59 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get seenDevChatLine =>
       'Sen yazana kadar hiçbir şey. Sonra gönderdiklerin ve anonim yazmadıkça üç kelimen.';
+
+  @override
+  String get devNoteWords => 'Marios üç kelimeni görecek';
+
+  @override
+  String get devWriteAnonymously => 'Anonim yaz';
+
+  @override
+  String get devNoteAnon =>
+      'Marios bu sohbete özel oluşturulan yeni bir ad görecek';
+
+  @override
+  String get devUseMyWords => 'Üç kelimemi kullan';
+
+  @override
+  String get devWhoSeesWhat => 'Kim neyi görür';
+
+  @override
+  String get devWhoWords =>
+      'Üç kelimenle Marios sana herhangi bir kişi gibi yanıt verebilir. Üç kelimeni görür, yüzünü ya da destekçi rozetini görmez.';
+
+  @override
+  String get devWhoAnon =>
+      'Anonim yazarsan Kryfo yalnızca bu sohbet için yeni bir ad ve anahtarlar oluşturur. Bunlar bu telefonda kalır ve başka hiçbir yerde kullanılmaz.';
+
+  @override
+  String get devWhoNothingYet =>
+      'İlk mesajını gönderene kadar telefonundan hiçbir şey çıkmaz.';
+
+  @override
+  String get devWhoChoiceStays => 'Seçimin bu sohbette kalır.';
+
+  @override
+  String get devKeyCheckFailed =>
+      'Marios’un anahtarı kontrol edilemedi. Hiçbir şey gönderilmedi.';
+
+  @override
+  String get devLockLine =>
+      'Marios bunları okuyacak. O yanıt verince daha fazla yazabilirsin.';
+
+  @override
+  String get devNewKey => 'Marios’un yeni bir anahtarı var';
+
+  @override
+  String get devStartNewChat => 'Yeni bir sohbet başlat';
+
+  @override
+  String get devKeyRetired =>
+      'Bu anahtar kullanımdan kaldırıldı. Burada artık hiçbir şey gönderilemez veya alınamaz.';
+
+  @override
+  String get devVoiceDisguised => 'Bu sohbette sesin gizleniyor';
+
+  @override
+  String get devChatOptions => 'Sohbet seçenekleri';
 }

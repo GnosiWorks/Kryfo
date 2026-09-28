@@ -1919,5 +1919,21 @@
   "settingsWriteToMariosHint": "Lỗi, ý tưởng, câu hỏi",
   "seenDevChat": "Cuộc trò chuyện với Marios",
   "seenDevChatCell": "Khi bạn viết",
-  "seenDevChatLine": "Không gì cả cho đến khi bạn viết. Sau đó là những gì bạn gửi, và ba từ của bạn, trừ khi bạn viết ẩn danh."
+  "seenDevChatLine": "Không gì cả cho đến khi bạn viết. Sau đó là những gì bạn gửi, và ba từ của bạn, trừ khi bạn viết ẩn danh.",
+  "devNoteWords": "Marios sẽ thấy ba từ của bạn",
+  "devWriteAnonymously": "Viết ẩn danh",
+  "devNoteAnon": "Marios sẽ thấy một cái tên mới, tạo riêng cho cuộc trò chuyện này",
+  "devUseMyWords": "Dùng ba từ của tôi",
+  "devWhoSeesWhat": "Ai thấy gì",
+  "devWhoWords": "Với ba từ của bạn, Marios có thể trả lời như với mọi liên hệ khác. Anh ấy thấy ba từ của bạn, không thấy khuôn mặt hay huy hiệu người ủng hộ của bạn.",
+  "devWhoAnon": "Khi ẩn danh, Kryfo tạo một cái tên và các khóa mới chỉ cho cuộc trò chuyện này. Chúng ở lại trên điện thoại này và không bao giờ được dùng ở nơi khác.",
+  "devWhoNothingYet": "Không có gì rời khỏi điện thoại của bạn cho đến khi bạn gửi tin nhắn đầu tiên.",
+  "devWhoChoiceStays": "Lựa chọn của bạn gắn liền với cuộc trò chuyện này.",
+  "devKeyCheckFailed": "Không thể kiểm tra khóa của Marios. Chưa có gì được gửi.",
+  "devLockLine": "Marios sẽ đọc những tin này. Bạn có thể viết thêm khi anh ấy trả lời.",
+  "devNewKey": "Marios có khóa mới",
+  "devStartNewChat": "Bắt đầu cuộc trò chuyện mới",
+  "devKeyRetired": "Khóa này đã ngừng dùng. Không thể gửi hay nhận thêm gì ở đây.",
+  "devVoiceDisguised": "Giọng của bạn được đổi trong cuộc trò chuyện này",
+  "devChatOptions": "Tùy chọn trò chuyện"
 }

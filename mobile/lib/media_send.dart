@@ -14,6 +14,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 
+import 'devchat/dev_start.dart' show devKeyFailed, kDevKeyFailed;
 import 'dlog.dart';
 import 'main.dart' show appState, engine, signalEncryptSerial;
 import 'media_progress.dart';
@@ -237,7 +238,7 @@ Future<String> _sendChunkedMediaInner({
         );
         cipher = await signalEncryptSerial(peerId, wrapped);
       } catch (e) {
-        failure = 'error: encrypt';
+        failure = devKeyFailed(e) ? kDevKeyFailed : 'error: encrypt';
         return;
       }
       var sent = false;

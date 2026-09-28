@@ -7223,4 +7223,59 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get seenDevChatLine =>
       'Nothing until you write. Then what you send, and your three words unless you write anonymously.';
+
+  @override
+  String get devNoteWords => 'Marios will see your three words';
+
+  @override
+  String get devWriteAnonymously => 'Write anonymously';
+
+  @override
+  String get devNoteAnon =>
+      'Marios will see a new name, made just for this chat';
+
+  @override
+  String get devUseMyWords => 'Use my three words';
+
+  @override
+  String get devWhoSeesWhat => 'Who sees what';
+
+  @override
+  String get devWhoWords =>
+      'With your three words, Marios can write back like any contact. He sees your three words, not your face or your supporter badge.';
+
+  @override
+  String get devWhoAnon =>
+      'Anonymously, Kryfo makes a new name and keys for this chat only. They stay on this phone and are never used anywhere else.';
+
+  @override
+  String get devWhoNothingYet =>
+      'Nothing leaves your phone until you send your first message.';
+
+  @override
+  String get devWhoChoiceStays => 'Your choice stays with this chat.';
+
+  @override
+  String get devKeyCheckFailed =>
+      'Could not check Marios\'s key. Nothing was sent.';
+
+  @override
+  String get devLockLine =>
+      'Marios will read these. You can write more once he replies.';
+
+  @override
+  String get devNewKey => 'Marios has a new key';
+
+  @override
+  String get devStartNewChat => 'Start a new chat';
+
+  @override
+  String get devKeyRetired =>
+      'This key was retired. Nothing more can be sent or received here.';
+
+  @override
+  String get devVoiceDisguised => 'Your voice is disguised in this chat';
+
+  @override
+  String get devChatOptions => 'Chat options';
 }

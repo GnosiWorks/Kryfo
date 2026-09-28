@@ -6,10 +6,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../devchat/dev_key.dart' show isDevChat;
 import '../stickers/sticker_bubble.dart' show StickerLine;
 import '../stickers/sticker_wire.dart';
 import '../theme.dart';
 import 'decode_px.dart';
+import 'dev_avatar.dart' show DevAvatar;
 import 'count_badge.dart';
 import 'halo_sheet.dart';
 import 'kryfo_avatar.dart';
@@ -293,11 +295,15 @@ class _PinCard extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        KryfoAvatar(
-                          seed: e.authorSeed,
-                          size: 20,
-                          choice: e.face,
-                        ),
+                        // no face is drawn from the developer's id
+                        if (isDevChat(e.authorSeed))
+                          const DevAvatar(size: 20, tick: false)
+                        else
+                          KryfoAvatar(
+                            seed: e.authorSeed,
+                            size: 20,
+                            choice: e.face,
+                          ),
                         const SizedBox(width: 8),
                         Flexible(
                           child: Text(

@@ -7309,4 +7309,59 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get seenDevChatLine =>
       'Nichts, bis du schreibst. Dann das, was du sendest, und deine drei Wörter, außer du schreibst anonym.';
+
+  @override
+  String get devNoteWords => 'Marios sieht deine drei Wörter';
+
+  @override
+  String get devWriteAnonymously => 'Anonym schreiben';
+
+  @override
+  String get devNoteAnon =>
+      'Marios sieht einen neuen Namen, nur für diesen Chat gemacht';
+
+  @override
+  String get devUseMyWords => 'Meine drei Wörter nutzen';
+
+  @override
+  String get devWhoSeesWhat => 'Wer sieht was';
+
+  @override
+  String get devWhoWords =>
+      'Mit deinen drei Wörtern kann Marios dir antworten wie jeder Kontakt. Er sieht deine drei Wörter, nicht dein Gesicht und nicht dein Unterstützer-Abzeichen.';
+
+  @override
+  String get devWhoAnon =>
+      'Anonym macht Kryfo einen neuen Namen und neue Schlüssel nur für diesen Chat. Sie bleiben auf diesem Handy und werden nirgends sonst benutzt.';
+
+  @override
+  String get devWhoNothingYet =>
+      'Nichts verlässt dein Handy, bevor du deine erste Nachricht sendest.';
+
+  @override
+  String get devWhoChoiceStays => 'Deine Wahl bleibt bei diesem Chat.';
+
+  @override
+  String get devKeyCheckFailed =>
+      'Der Schlüssel von Marios konnte nicht geprüft werden. Nichts wurde gesendet.';
+
+  @override
+  String get devLockLine =>
+      'Marios wird sie lesen. Du kannst mehr schreiben, sobald er antwortet.';
+
+  @override
+  String get devNewKey => 'Marios hat einen neuen Schlüssel';
+
+  @override
+  String get devStartNewChat => 'Neuen Chat beginnen';
+
+  @override
+  String get devKeyRetired =>
+      'Dieser Schlüssel wurde stillgelegt. Hier kann nichts mehr gesendet oder empfangen werden.';
+
+  @override
+  String get devVoiceDisguised => 'Deine Stimme wird in diesem Chat verfremdet';
+
+  @override
+  String get devChatOptions => 'Chat-Optionen';
 }

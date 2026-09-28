@@ -36,6 +36,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'screens/group_chat_screen.dart';
 import 'screens/chat_screen.dart';
 import 'screens/dev_about_sheet.dart' show devChatRoute;
+import 'devchat/dev_start.dart' show DevStart;
 import 'screens/pair_code_screen.dart';
 import 'screens/scan_screen.dart';
 import 'screens/modes_screen.dart';
@@ -4682,7 +4683,12 @@ Map<String, String>? parseHaloUri(String raw) {
 
 // shared singletons + state
 
-final engine = HaloEngine();
+HaloEngine _engine = HaloEngine();
+HaloEngine get engine => _engine;
+
+// tests stand a spy in for the engine, which needs the native library
+@visibleForTesting
+void useEngineForTest(HaloEngine e) => _engine = e;
 
 // the decoy's identity, read from its own database when a decoy session
 // opens. made at setup and registered nowhere
@@ -9805,6 +9811,34 @@ class AppState extends ChangeNotifier {
       dlog('dev row: $e');
       return null;
     }
+  }
+
+  // ---- the dev chat's first send ----
+
+  // asked by every way a message leaves the dev chat, before anything of it
+  // is saved: fresh becomes everyday, or anon under a name made for this
+  // chat alone. it makes the chat's rows and sends nothing: the message
+  // goes out the usual way after it. a chat already started stays as it is
+  Future<DevStart> devBegin({required bool anon}) async {
+    final s = session;
+    final r = await s.devChat.load();
+    if (r == null || r.state == DevState.gone) return DevStart.none;
+    if (r.started) return DevStart.ok;
+    final key = currentDevKey;
+    if (key == null) return DevStart.none;
+    DevAnon? name;
+    if (anon) {
+      // pure: touches no engine state and logs nothing
+      final q = engine.quietIdentity();
+      final id = q?['id'], ed = q?['ed_priv'], x = q?['x_priv'];
+      if (id is! String || ed is! String || x is! String) {
+        return DevStart.none;
+      }
+      name = DevAnon(id: id, edPriv: ed, xPriv: x);
+    }
+    final ok = await s.devChat.begin(key, anon: name);
+    await refreshContacts();
+    return ok ? DevStart.ok : DevStart.none;
   }
 
   // ---- groups ----

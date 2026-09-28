@@ -7247,4 +7247,59 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get seenDevChatLine =>
       'تا وقتی ننویسید، هیچ. بعد آنچه می‌فرستید، و سه واژه‌ی شما، مگر اینکه ناشناس بنویسید.';
+
+  @override
+  String get devNoteWords => 'Marios سه واژه‌ی شما را می‌بیند';
+
+  @override
+  String get devWriteAnonymously => 'ناشناس بنویسید';
+
+  @override
+  String get devNoteAnon =>
+      'Marios نام تازه‌ای می‌بیند که فقط برای این گفت‌وگو ساخته شده';
+
+  @override
+  String get devUseMyWords => 'استفاده از سه واژه‌ی خودم';
+
+  @override
+  String get devWhoSeesWhat => 'چه کسی چه می‌بیند';
+
+  @override
+  String get devWhoWords =>
+      'با سه واژه‌ی شما، Marios می‌تواند مثل هر مخاطب دیگری پاسخ دهد. او سه واژه‌ی شما را می‌بیند، نه چهره یا نشان هوادار شما را.';
+
+  @override
+  String get devWhoAnon =>
+      'در حالت ناشناس، Kryfo نام و کلیدهای تازه‌ای فقط برای این گفت‌وگو می‌سازد. این‌ها روی همین گوشی می‌مانند و هرگز جای دیگری به کار نمی‌روند.';
+
+  @override
+  String get devWhoNothingYet =>
+      'تا وقتی نخستین پیامتان را نفرستید، هیچ چیزی از گوشی شما بیرون نمی‌رود.';
+
+  @override
+  String get devWhoChoiceStays => 'انتخاب شما با این گفت‌وگو می‌ماند.';
+
+  @override
+  String get devKeyCheckFailed =>
+      'بررسی کلید Marios ممکن نشد. چیزی فرستاده نشد.';
+
+  @override
+  String get devLockLine =>
+      'Marios این‌ها را می‌خواند. وقتی پاسخ داد، می‌توانید بیشتر بنویسید.';
+
+  @override
+  String get devNewKey => 'Marios کلید تازه‌ای دارد';
+
+  @override
+  String get devStartNewChat => 'شروع گفت‌وگوی تازه';
+
+  @override
+  String get devKeyRetired =>
+      'این کلید کنار گذاشته شده است. دیگر این‌جا چیزی فرستاده یا دریافت نمی‌شود.';
+
+  @override
+  String get devVoiceDisguised => 'صدای شما در این گفت‌وگو تغییر داده می‌شود';
+
+  @override
+  String get devChatOptions => 'گزینه‌های گفت‌وگو';
 }

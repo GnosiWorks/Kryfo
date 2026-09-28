@@ -1919,5 +1919,21 @@
   "settingsWriteToMariosHint": "Bug, idee, domande",
   "seenDevChat": "La chat con Marios",
   "seenDevChatCell": "Se scrivi",
-  "seenDevChatLine": "Niente finché non scrivi. Poi quello che invii, e le tue tre parole, a meno che tu non scriva in forma anonima."
+  "seenDevChatLine": "Niente finché non scrivi. Poi quello che invii, e le tue tre parole, a meno che tu non scriva in forma anonima.",
+  "devNoteWords": "Marios vedrà le tue tre parole",
+  "devWriteAnonymously": "Scrivi in forma anonima",
+  "devNoteAnon": "Marios vedrà un nome nuovo, creato solo per questa chat",
+  "devUseMyWords": "Usa le mie tre parole",
+  "devWhoSeesWhat": "Chi vede cosa",
+  "devWhoWords": "Con le tue tre parole, Marios può risponderti come qualsiasi contatto. Vede le tue tre parole, non il tuo volto né il tuo badge sostenitore.",
+  "devWhoAnon": "In forma anonima, Kryfo crea un nome e delle chiavi nuovi solo per questa chat. Restano su questo telefono e non vengono mai usati altrove.",
+  "devWhoNothingYet": "Niente lascia il tuo telefono finché non invii il primo messaggio.",
+  "devWhoChoiceStays": "La tua scelta resta legata a questa chat.",
+  "devKeyCheckFailed": "Impossibile verificare la chiave di Marios. Non è stato inviato nulla.",
+  "devLockLine": "Marios li leggerà. Potrai scrivere ancora appena ti risponde.",
+  "devNewKey": "Marios ha una nuova chiave",
+  "devStartNewChat": "Inizia una nuova chat",
+  "devKeyRetired": "Questa chiave è stata ritirata. Qui non si può più inviare né ricevere nulla.",
+  "devVoiceDisguised": "La tua voce è camuffata in questa chat",
+  "devChatOptions": "Opzioni della chat"
 }

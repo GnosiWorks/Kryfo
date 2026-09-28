@@ -11642,6 +11642,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Nothing until you write. Then what you send, and your three words unless you write anonymously.'**
   String get seenDevChatLine;
+
+  /// widgets/dev_note.dart: the note above the composer of the developer chat before its first message: who he will see it from. Marios stays in Latin letters
+  ///
+  /// In en, this message translates to:
+  /// **'Marios will see your three words'**
+  String get devNoteWords;
+
+  /// widgets/dev_note.dart: a small pill in that note. one tap writes the chat under a name made for it instead of the three words
+  ///
+  /// In en, this message translates to:
+  /// **'Write anonymously'**
+  String get devWriteAnonymously;
+
+  /// widgets/dev_note.dart: the note's line once the pill is on
+  ///
+  /// In en, this message translates to:
+  /// **'Marios will see a new name, made just for this chat'**
+  String get devNoteAnon;
+
+  /// widgets/dev_note.dart: a small link in the note once the pill is on: back to the person's own three words
+  ///
+  /// In en, this message translates to:
+  /// **'Use my three words'**
+  String get devUseMyWords;
+
+  /// widgets/dev_note.dart: the (i) of the note and the title of its sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Who sees what'**
+  String get devWhoSeesWhat;
+
+  /// widgets/dev_note.dart: the sheet Who sees what, writing with the three words
+  ///
+  /// In en, this message translates to:
+  /// **'With your three words, Marios can write back like any contact. He sees your three words, not your face or your supporter badge.'**
+  String get devWhoWords;
+
+  /// widgets/dev_note.dart: the sheet Who sees what, writing anonymously
+  ///
+  /// In en, this message translates to:
+  /// **'Anonymously, Kryfo makes a new name and keys for this chat only. They stay on this phone and are never used anywhere else.'**
+  String get devWhoAnon;
+
+  /// widgets/dev_note.dart: the sheet Who sees what
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing leaves your phone until you send your first message.'**
+  String get devWhoNothingYet;
+
+  /// widgets/dev_note.dart: the last line of the sheet Who sees what: after the first message the choice is fixed
+  ///
+  /// In en, this message translates to:
+  /// **'Your choice stays with this chat.'**
+  String get devWhoChoiceStays;
+
+  /// screens/chat_screen.dart: above the composer of the developer chat when his pinned key did not check out
+  ///
+  /// In en, this message translates to:
+  /// **'Could not check Marios\'s key. Nothing was sent.'**
+  String get devKeyCheckFailed;
+
+  /// screens/chat_screen.dart: in place of the composer of the developer chat once the messages allowed before he answers are sent
+  ///
+  /// In en, this message translates to:
+  /// **'Marios will read these. You can write more once he replies.'**
+  String get devLockLine;
+
+  /// screens/chat_screen.dart: a quiet line at the top of the developer chat once a newer key of his is built into the app
+  ///
+  /// In en, this message translates to:
+  /// **'Marios has a new key'**
+  String get devNewKey;
+
+  /// the developer chat after he has a new key: a chat on the new key
+  ///
+  /// In en, this message translates to:
+  /// **'Start a new chat'**
+  String get devStartNewChat;
+
+  /// screens/chat_screen.dart: in place of the composer of a developer chat whose key was retired
+  ///
+  /// In en, this message translates to:
+  /// **'This key was retired. Nothing more can be sent or received here.'**
+  String get devKeyRetired;
+
+  /// screens/chat_screen.dart: the voice disguise toggle of an anonymous developer chat, always on, and what a tap on it says
+  ///
+  /// In en, this message translates to:
+  /// **'Your voice is disguised in this chat'**
+  String get devVoiceDisguised;
+
+  /// widgets/dev_note.dart: the menu button in the developer chat's header
+  ///
+  /// In en, this message translates to:
+  /// **'Chat options'**
+  String get devChatOptions;
 }
 
 class _AppLocalizationsDelegate

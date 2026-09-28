@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 
 import '../devchat/dev_chat.dart' show DevRow, devModeOf;
 import '../devchat/dev_key.dart';
+import '../devchat/dev_start.dart' show forgetDevChoices;
 import '../l10n/l10n.dart';
 import '../main.dart' show appState, session, sessionQuiet;
 import '../notifications.dart' show clearNotificationsFor;
@@ -87,6 +88,8 @@ Future<bool> deleteDevChat(BuildContext context, DevRow d) async {
   if (!ok) return false;
   HapticFeedback.heavyImpact();
   await session.devChat.delete();
+  // a chat made again later starts with the three words
+  forgetDevChoices();
   unawaited(clearNotificationsFor(d.chatId));
   await appState.refreshContacts();
   return true;

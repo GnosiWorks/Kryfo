@@ -1919,5 +1919,21 @@
   "settingsWriteToMariosHint": "Hatalar, fikirler, sorular",
   "seenDevChat": "Marios sohbeti",
   "seenDevChatCell": "Yazarsan",
-  "seenDevChatLine": "Sen yazana kadar hiçbir şey. Sonra gönderdiklerin ve anonim yazmadıkça üç kelimen."
+  "seenDevChatLine": "Sen yazana kadar hiçbir şey. Sonra gönderdiklerin ve anonim yazmadıkça üç kelimen.",
+  "devNoteWords": "Marios üç kelimeni görecek",
+  "devWriteAnonymously": "Anonim yaz",
+  "devNoteAnon": "Marios bu sohbete özel oluşturulan yeni bir ad görecek",
+  "devUseMyWords": "Üç kelimemi kullan",
+  "devWhoSeesWhat": "Kim neyi görür",
+  "devWhoWords": "Üç kelimenle Marios sana herhangi bir kişi gibi yanıt verebilir. Üç kelimeni görür, yüzünü ya da destekçi rozetini görmez.",
+  "devWhoAnon": "Anonim yazarsan Kryfo yalnızca bu sohbet için yeni bir ad ve anahtarlar oluşturur. Bunlar bu telefonda kalır ve başka hiçbir yerde kullanılmaz.",
+  "devWhoNothingYet": "İlk mesajını gönderene kadar telefonundan hiçbir şey çıkmaz.",
+  "devWhoChoiceStays": "Seçimin bu sohbette kalır.",
+  "devKeyCheckFailed": "Marios’un anahtarı kontrol edilemedi. Hiçbir şey gönderilmedi.",
+  "devLockLine": "Marios bunları okuyacak. O yanıt verince daha fazla yazabilirsin.",
+  "devNewKey": "Marios’un yeni bir anahtarı var",
+  "devStartNewChat": "Yeni bir sohbet başlat",
+  "devKeyRetired": "Bu anahtar kullanımdan kaldırıldı. Burada artık hiçbir şey gönderilemez veya alınamaz.",
+  "devVoiceDisguised": "Bu sohbette sesin gizleniyor",
+  "devChatOptions": "Sohbet seçenekleri"
 }

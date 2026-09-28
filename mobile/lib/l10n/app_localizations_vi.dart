@@ -7212,4 +7212,61 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get seenDevChatLine =>
       'Không gì cả cho đến khi bạn viết. Sau đó là những gì bạn gửi, và ba từ của bạn, trừ khi bạn viết ẩn danh.';
+
+  @override
+  String get devNoteWords => 'Marios sẽ thấy ba từ của bạn';
+
+  @override
+  String get devWriteAnonymously => 'Viết ẩn danh';
+
+  @override
+  String get devNoteAnon =>
+      'Marios sẽ thấy một cái tên mới, tạo riêng cho cuộc trò chuyện này';
+
+  @override
+  String get devUseMyWords => 'Dùng ba từ của tôi';
+
+  @override
+  String get devWhoSeesWhat => 'Ai thấy gì';
+
+  @override
+  String get devWhoWords =>
+      'Với ba từ của bạn, Marios có thể trả lời như với mọi liên hệ khác. Anh ấy thấy ba từ của bạn, không thấy khuôn mặt hay huy hiệu người ủng hộ của bạn.';
+
+  @override
+  String get devWhoAnon =>
+      'Khi ẩn danh, Kryfo tạo một cái tên và các khóa mới chỉ cho cuộc trò chuyện này. Chúng ở lại trên điện thoại này và không bao giờ được dùng ở nơi khác.';
+
+  @override
+  String get devWhoNothingYet =>
+      'Không có gì rời khỏi điện thoại của bạn cho đến khi bạn gửi tin nhắn đầu tiên.';
+
+  @override
+  String get devWhoChoiceStays =>
+      'Lựa chọn của bạn gắn liền với cuộc trò chuyện này.';
+
+  @override
+  String get devKeyCheckFailed =>
+      'Không thể kiểm tra khóa của Marios. Chưa có gì được gửi.';
+
+  @override
+  String get devLockLine =>
+      'Marios sẽ đọc những tin này. Bạn có thể viết thêm khi anh ấy trả lời.';
+
+  @override
+  String get devNewKey => 'Marios có khóa mới';
+
+  @override
+  String get devStartNewChat => 'Bắt đầu cuộc trò chuyện mới';
+
+  @override
+  String get devKeyRetired =>
+      'Khóa này đã ngừng dùng. Không thể gửi hay nhận thêm gì ở đây.';
+
+  @override
+  String get devVoiceDisguised =>
+      'Giọng của bạn được đổi trong cuộc trò chuyện này';
+
+  @override
+  String get devChatOptions => 'Tùy chọn trò chuyện';
 }

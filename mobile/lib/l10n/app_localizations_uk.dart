@@ -7359,4 +7359,59 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get seenDevChatLine =>
       'Нічого, доки ти не напишеш. Потім те, що ти надсилаєш, і твої три слова, якщо тільки ти не пишеш анонімно.';
+
+  @override
+  String get devNoteWords => 'Marios побачить твої три слова';
+
+  @override
+  String get devWriteAnonymously => 'Написати анонімно';
+
+  @override
+  String get devNoteAnon =>
+      'Marios побачить нове ім’я, створене лише для цього чату';
+
+  @override
+  String get devUseMyWords => 'Використати мої три слова';
+
+  @override
+  String get devWhoSeesWhat => 'Хто що бачить';
+
+  @override
+  String get devWhoWords =>
+      'З твоїми трьома словами Marios може відповісти тобі, як будь-який контакт. Він бачить твої три слова, але не твоє обличчя і не значок прихильника.';
+
+  @override
+  String get devWhoAnon =>
+      'Анонімно Kryfo створює нове ім’я та ключі лише для цього чату. Вони залишаються на цьому телефоні й ніде більше не використовуються.';
+
+  @override
+  String get devWhoNothingYet =>
+      'Ніщо не залишає твій телефон, доки ти не надішлеш перше повідомлення.';
+
+  @override
+  String get devWhoChoiceStays => 'Твій вибір залишається за цим чатом.';
+
+  @override
+  String get devKeyCheckFailed =>
+      'Не вдалося перевірити ключ Marios. Нічого не надіслано.';
+
+  @override
+  String get devLockLine =>
+      'Marios їх прочитає. Ти зможеш написати ще, щойно він відповість.';
+
+  @override
+  String get devNewKey => 'У Marios новий ключ';
+
+  @override
+  String get devStartNewChat => 'Почати новий чат';
+
+  @override
+  String get devKeyRetired =>
+      'Цей ключ відкликано. Тут уже нічого не можна надіслати чи отримати.';
+
+  @override
+  String get devVoiceDisguised => 'Твій голос у цьому чаті змінено';
+
+  @override
+  String get devChatOptions => 'Налаштування чату';
 }

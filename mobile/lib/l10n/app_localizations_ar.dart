@@ -7353,4 +7353,56 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get seenDevChatLine =>
       'لا شيء حتى تكتب. بعدها ما ترسله، وكلماتك الثلاث ما لم تكتب بهوية مجهولة.';
+
+  @override
+  String get devNoteWords => 'سيرى Marios كلماتك الثلاث';
+
+  @override
+  String get devWriteAnonymously => 'اكتب بهوية مجهولة';
+
+  @override
+  String get devNoteAnon => 'سيرى Marios اسمًا جديدًا صُنع لهذه المحادثة فقط';
+
+  @override
+  String get devUseMyWords => 'استخدم كلماتي الثلاث';
+
+  @override
+  String get devWhoSeesWhat => 'من يرى ماذا';
+
+  @override
+  String get devWhoWords =>
+      'بكلماتك الثلاث يستطيع Marios أن يرد عليك مثل أي جهة اتصال. يرى كلماتك الثلاث، لا وجهك ولا شارة الداعم.';
+
+  @override
+  String get devWhoAnon =>
+      'بهوية مجهولة يصنع Kryfo اسمًا ومفاتيح جديدة لهذه المحادثة وحدها. تبقى على هذا الهاتف ولا تُستخدم في أي مكان آخر أبدًا.';
+
+  @override
+  String get devWhoNothingYet => 'لا يخرج شيء من هاتفك حتى ترسل رسالتك الأولى.';
+
+  @override
+  String get devWhoChoiceStays => 'يبقى اختيارك مع هذه المحادثة.';
+
+  @override
+  String get devKeyCheckFailed => 'تعذّر التحقق من مفتاح Marios. لم يُرسل شيء.';
+
+  @override
+  String get devLockLine =>
+      'سيقرأ Marios هذه الرسائل. يمكنك أن تكتب المزيد بعد أن يرد.';
+
+  @override
+  String get devNewKey => 'لدى Marios مفتاح جديد';
+
+  @override
+  String get devStartNewChat => 'ابدأ محادثة جديدة';
+
+  @override
+  String get devKeyRetired =>
+      'أُوقف هذا المفتاح. لا يمكن إرسال أي شيء أو استلامه هنا بعد الآن.';
+
+  @override
+  String get devVoiceDisguised => 'صوتك مموّه في هذه المحادثة';
+
+  @override
+  String get devChatOptions => 'خيارات المحادثة';
 }

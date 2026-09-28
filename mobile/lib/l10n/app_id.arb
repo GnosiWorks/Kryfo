@@ -1919,5 +1919,21 @@
   "settingsWriteToMariosHint": "Bug, ide, pertanyaan",
   "seenDevChat": "Obrolan dengan Marios",
   "seenDevChatCell": "Jika kamu menulis",
-  "seenDevChatLine": "Tidak ada apa-apa sampai kamu menulis. Setelah itu, apa yang kamu kirim, dan tiga katamu, kecuali kamu menulis secara anonim."
+  "seenDevChatLine": "Tidak ada apa-apa sampai kamu menulis. Setelah itu, apa yang kamu kirim, dan tiga katamu, kecuali kamu menulis secara anonim.",
+  "devNoteWords": "Marios akan melihat tiga katamu",
+  "devWriteAnonymously": "Tulis secara anonim",
+  "devNoteAnon": "Marios akan melihat nama baru yang dibuat khusus untuk obrolan ini",
+  "devUseMyWords": "Pakai tiga kataku",
+  "devWhoSeesWhat": "Siapa melihat apa",
+  "devWhoWords": "Dengan tiga katamu, Marios bisa membalas seperti kontak mana pun. Dia melihat tiga katamu, bukan wajahmu atau lencana pendukungmu.",
+  "devWhoAnon": "Secara anonim, Kryfo membuat nama dan kunci baru khusus untuk obrolan ini. Semuanya tetap di ponsel ini dan tidak pernah dipakai di tempat lain.",
+  "devWhoNothingYet": "Tidak ada yang keluar dari ponselmu sampai kamu mengirim pesan pertamamu.",
+  "devWhoChoiceStays": "Pilihanmu melekat pada obrolan ini.",
+  "devKeyCheckFailed": "Tidak bisa memeriksa kunci Marios. Tidak ada yang terkirim.",
+  "devLockLine": "Marios akan membaca pesan-pesan ini. Kamu bisa menulis lagi setelah dia membalas.",
+  "devNewKey": "Marios punya kunci baru",
+  "devStartNewChat": "Mulai obrolan baru",
+  "devKeyRetired": "Kunci ini sudah dipensiunkan. Tidak ada lagi yang bisa dikirim atau diterima di sini.",
+  "devVoiceDisguised": "Suaramu disamarkan di obrolan ini",
+  "devChatOptions": "Opsi obrolan"
 }

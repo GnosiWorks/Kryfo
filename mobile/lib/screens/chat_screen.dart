@@ -47,9 +47,21 @@ import '../mp4_strip.dart';
 import '../widgets/pow_note.dart';
 import '../widgets/decode_px.dart';
 import '../notifications.dart' show clearNotificationsFor;
-import '../devchat/dev_key.dart' show isDevChat;
+import '../devchat/dev_chat.dart' show DevChatRow, DevRow, DevState;
+import '../devchat/dev_key.dart' show DevKeyStatus, isDevChat;
+import '../devchat/dev_start.dart';
+import '../widgets/dev_note.dart';
 import 'dev_about_sheet.dart'
-    show DevForwardTile, devChatRoute, devForwardTarget, devSlot;
+    show
+        DevForwardTile,
+        deleteDevChat,
+        devChatRoute,
+        devForwardTarget,
+        devSlot,
+        setDevArchived,
+        setDevMuted,
+        setDevPinned,
+        showDevAboutSheet;
 import '../widgets/kryfo_avatar.dart';
 import '../main.dart'
     show
@@ -178,11 +190,15 @@ class _Msg {
   Map<String, String>? preview; // link preview card, decoded from stored json
   // a sticker: drawn from our pack; text is its emoji
   final StickerWire? sticker;
+  // the developer chat's first line, from the app itself: never stored,
+  // sent or counted, and nothing can be done to it but copy it
+  final bool welcome;
   _Msg(
     this.direction,
     this.text,
     this.when, {
     this.sticker,
+    this.welcome = false,
     this.burnAt,
     this.burnSecs,
     this.msgUid,
@@ -434,7 +450,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (_loadingOlder || !_hasMore) return;
     _loadingOlder = true;
     try {
-      final oldest = _messages.isEmpty ? null : _messages.first.rowid;
+      final real = _messages.where((m) => !m.welcome);
+      final oldest = real.isEmpty ? null : real.first.rowid;
       final rows = await session.messagesPage(
         widget.peerHaloId,
         beforeRowid: oldest,
@@ -486,6 +503,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         for (final en in entries) {
           m.reactions[en.key] = en.value;
         }
+      }
+      // the whole thread is in: his first line goes before it
+      if (!_hasMore && !_messages.any((m) => m.welcome)) {
+        final w = _welcomeBefore([...older, ..._messages]);
+        if (w != null) older.insert(0, w);
       }
       if (!mounted || older.isEmpty) return;
       setState(() {
@@ -644,7 +666,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   // sender-side lock: messaging a stranger who hasn't accepted, past the cap.
   // once they engage (reply/back-pair) or we accept them, it clears.
   bool get _requestPending => !_peerEngaged && _recvCount == 0;
-  bool get _requestLocked => _requestPending && _sentCount >= 2 && !_vouched;
+  bool get _requestLocked =>
+      _requestPending && _sentCount >= (_isDev ? kDevCap : 2) && !_vouched;
   // receiver-side: a stranger has messaged us and we haven't accepted yet.
   bool get _incomingRequest => !_accepted && _recvCount > 0;
   // friends vouched for this peer. no sender-side cap then: the other end
@@ -664,9 +687,90 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   _Msg? _replyFlash;
   String? _note;
 
+  // the developer chat: his header and first line, the note before the
+  // first send, and the one start every kind of message asks for
+  late final bool _isDev = isDevChat(widget.peerHaloId);
+  DevOpening? _devOpening;
+  // its row in this session's database, for when the chat was made
+  DevChatRow? _devChat;
+  // the pinned key did not check out: nothing was sent
+  bool _devKeyFailed = false;
+
+  // the dev chat as home shows it, while it is this one
+  DevRow? get _devShown {
+    final d = appState.devRow;
+    return d != null && d.chatId == widget.peerHaloId ? d : null;
+  }
+
+  // written anonymously, or about to be: a voice goes out disguised
+  bool get _devAnon => _devOpening?.anon ?? false;
+  bool get _voiceDisguise => _disguise || _devAnon;
+
+  // why nothing more goes out of his chat, said in place of the composer:
+  // a retired key. null while it can send. a chat that cannot send for
+  // another reason says its own line here
+  String? get _devStop =>
+      _devShown?.status == DevKeyStatus.retired ? l10n.devKeyRetired : null;
+
+  void _onDevOpening() {
+    if (mounted) setState(() {});
+  }
+
+  // what the database and home say now: started here or on another screen
+  void _syncDev() {
+    final o = _devOpening;
+    if (o == null) return;
+    final r = _devChat;
+    if (r != null && r.started) {
+      o.sync(started: true, anon: r.state == DevState.anon);
+    }
+    final d = _devShown;
+    if (d != null && d.started) o.sync(started: true, anon: d.anonymous);
+  }
+
+  // at the top of every way a message leaves, before anything of it is
+  // saved: the first one starts the chat with the name chosen in the note,
+  // and a key that does not check out stops it there
+  Future<bool> _ensureDevStarted() async {
+    final o = _devOpening;
+    if (o == null) return true;
+    // a first send tried again says it again if it fails again
+    if (!o.started && _devKeyFailed) setState(() => _devKeyFailed = false);
+    final r = await o.ensure();
+    if (!mounted) return false;
+    switch (r) {
+      case DevStart.ok:
+        return true;
+      case DevStart.keyFailed:
+        HapticFeedback.heavyImpact();
+        setState(() => _devKeyFailed = true);
+        return false;
+      case DevStart.none:
+        return false;
+    }
+  }
+
+  void _chooseDevName(bool anon) => _devOpening?.choose(anon: anon);
+
+  // said instead of switched: an anonymous chat never carries a voice as
+  // it is
+  void _sayVoiceDisguised() {
+    HapticFeedback.selectionClick();
+    showHaloToast(context, l10n.devVoiceDisguised);
+  }
+
   @override
   void initState() {
     super.initState();
+    if (_isDev) {
+      final d = _devShown;
+      _devOpening = DevOpening(
+        memo: '${session.container.id}|${widget.peerHaloId}',
+        started: d?.started ?? false,
+        anon: d?.anonymous ?? false,
+        begin: devBeginOf(appState.devBegin),
+      )..addListener(_onDevOpening);
+    }
 
     _applySecureContent();
     WidgetsBinding.instance.addObserver(this);
@@ -719,8 +823,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         });
       }
     });
-    _loadVouches();
-    _loadShield();
+    // no one vouches for him and the shield never reads him
+    if (!_isDev) {
+      _loadVouches();
+      _loadShield();
+    }
     session.getAtmosphere(widget.peerHaloId).then((a) {
       if (!mounted) return;
       setState(() {
@@ -879,8 +986,17 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       unawaited(_refreshDelivered());
     }
     _refreshRequestState();
-    if (!_accepted && _flag == null) _loadShield();
+    if (!_accepted && _flag == null && !_isDev) _loadShield();
+    if (_isDev) {
+      _syncDev();
+      // his key's status and the chat's flags, as the header and menu show
+      final d = _devShown;
+      final seen = (d?.status, d?.muted, d?.pinned, d?.archived);
+      if (seen != _devSeen) setState(() => _devSeen = seen);
+    }
   }
+
+  Object? _devSeen;
 
   // who vouched, as we know them. only accepted contacts come back, so a
   // voucher we deleted since simply stops being named.
@@ -1131,8 +1247,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (query.isNotEmpty) {
       final lower = query.toLowerCase();
       for (var i = 0; i < _messages.length; i++) {
-        // a sticker has no words; its emoji is not what was said
+        // a sticker has no words; its emoji is not what was said. his
+        // first line is the app's, not the chat's
         if (_messages[i].sticker == null &&
+            !_messages[i].welcome &&
             _messages[i].text.toLowerCase().contains(lower)) {
           matches.add(i);
         }
@@ -1196,9 +1314,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _Msg target,
   ) async {
     HapticFeedback.selectionClick();
+    // his first line is the app's own: it is copied and nothing else
+    final welcome = target.welcome;
     // a row without a uid gets a local one. the peer doesn't know it, so the
     // reaction stays local.
-    if (target.msgUid == null) {
+    if (target.msgUid == null && !welcome) {
       final uid = _newMsgUid();
       target.msgUid = uid;
       await session.assignUidIfMissing(
@@ -1217,13 +1337,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // the card's height from its rows, so it is placed where it fits
     final out = target.direction == 'out';
     final media = target.mediaPath != null || target.filePath != null;
-    final rows =
-        3 +
-        (target.text.isNotEmpty && target.sticker == null ? 1 : 0) +
-        (target.sticker == null ? 1 : 0) +
-        (target.filePath != null && target.fileName != 'voice.wav' ? 1 : 0) +
-        (out && !media && target.sticker == null ? 1 : 0) -
-        (out ? 0 : 1);
+    final rows = welcome
+        ? 1
+        : 3 +
+              (target.text.isNotEmpty && target.sticker == null ? 1 : 0) +
+              (target.sticker == null ? 1 : 0) +
+              (target.filePath != null && target.fileName != 'voice.wav'
+                  ? 1
+                  : 0) +
+              (out && !media && target.sticker == null ? 1 : 0) -
+              (out ? 0 : 1);
     final rowH =
         20 + math.max(17.0, MediaQuery.textScalerOf(context).scale(13.5) * 1.3);
     final menuH = rows * rowH + 16;
@@ -1250,7 +1373,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final alignRight = target.direction == 'out';
     final still = motionStill(context);
 
-    if (mounted) setState(() => _liftedUid = target.msgUid);
+    if (mounted) setState(() => _liftedUid = _rowKey(target));
     late OverlayEntry entry;
     VoidCallback? unguard;
     // not entry.mounted: an entry closed before its first frame is not
@@ -1300,36 +1423,37 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               ),
             ),
 
-            PositionedDirectional(
-              top: reactTop,
-              start: alignRight ? null : 12,
-              end: alignRight ? 12 : null,
-              child: MenuPop(
-                fromRight: alignRight,
-                child: _EmojiPickerBubble(
-                  emojis: const ['❤️', '👍', '😂', '😮', '😢', '🔥'],
-                  selected: target.reactions[''],
-                  onPick: (e) {
-                    dismiss();
-                    final added = target.reactions[''] != e;
-                    _toggleReaction(target, e);
-                    if (added) _flashReaction(target);
-                  },
-                  onReply: () {
-                    dismiss();
-                    setState(() {
-                      _replyTo = target;
-                      _replyFlash = target;
-                    });
-                    Future.delayed(const Duration(milliseconds: 700), () {
-                      if (mounted && identical(_replyFlash, target)) {
-                        setState(() => _replyFlash = null);
-                      }
-                    });
-                  },
+            if (!welcome)
+              PositionedDirectional(
+                top: reactTop,
+                start: alignRight ? null : 12,
+                end: alignRight ? 12 : null,
+                child: MenuPop(
+                  fromRight: alignRight,
+                  child: _EmojiPickerBubble(
+                    emojis: const ['❤️', '👍', '😂', '😮', '😢', '🔥'],
+                    selected: target.reactions[''],
+                    onPick: (e) {
+                      dismiss();
+                      final added = target.reactions[''] != e;
+                      _toggleReaction(target, e);
+                      if (added) _flashReaction(target);
+                    },
+                    onReply: () {
+                      dismiss();
+                      setState(() {
+                        _replyTo = target;
+                        _replyFlash = target;
+                      });
+                      Future.delayed(const Duration(milliseconds: 700), () {
+                        if (mounted && identical(_replyFlash, target)) {
+                          setState(() => _replyFlash = null);
+                        }
+                      });
+                    },
+                  ),
                 ),
               ),
-            ),
             PositionedDirectional(
               top: menuTop,
               bottom: menuBottom,
@@ -1339,27 +1463,30 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 fromRight: alignRight,
                 child: MessageMenuCard(
                   actions: [
-                    MenuAction(
-                      icon: target.pinned
-                          ? Icons.push_pin
-                          : Icons.push_pin_outlined,
-                      label: target.pinned ? l10n.chatUnpin : l10n.chatPin,
-                      onTap: () {
-                        dismiss();
-                        _togglePin(target);
-                      },
-                    ),
-                    MenuAction(
-                      icon: target.saved
-                          ? Icons.bookmark
-                          : Icons.bookmark_outline,
-                      label: target.saved ? l10n.chatUnsave : l10n.commonSave,
-                      tint: target.saved ? HaloColors.amber : null,
-                      onTap: () {
-                        dismiss();
-                        _toggleSaved(target);
-                      },
-                    ),
+                    // his first line: copy, and nothing else
+                    if (!welcome)
+                      MenuAction(
+                        icon: target.pinned
+                            ? Icons.push_pin
+                            : Icons.push_pin_outlined,
+                        label: target.pinned ? l10n.chatUnpin : l10n.chatPin,
+                        onTap: () {
+                          dismiss();
+                          _togglePin(target);
+                        },
+                      ),
+                    if (!welcome)
+                      MenuAction(
+                        icon: target.saved
+                            ? Icons.bookmark
+                            : Icons.bookmark_outline,
+                        label: target.saved ? l10n.chatUnsave : l10n.commonSave,
+                        tint: target.saved ? HaloColors.amber : null,
+                        onTap: () {
+                          dismiss();
+                          _toggleSaved(target);
+                        },
+                      ),
                     MenuAction(
                       icon: Icons.copy_rounded,
                       label: l10n.commonCopy,
@@ -1374,16 +1501,17 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                             },
                     ),
                     // a sticker is not forwarded, copied or edited
-                    MenuAction(
-                      icon: Icons.forward_rounded,
-                      label: l10n.chatForward,
-                      onTap: target.sticker != null
-                          ? null
-                          : () {
-                              dismiss();
-                              _forwardMessage(target);
-                            },
-                    ),
+                    if (!welcome)
+                      MenuAction(
+                        icon: Icons.forward_rounded,
+                        label: l10n.chatForward,
+                        onTap: target.sticker != null
+                            ? null
+                            : () {
+                                dismiss();
+                                _forwardMessage(target);
+                              },
+                      ),
                     // a tap opens a file, so sharing it lives here
                     MenuAction(
                       icon: Icons.ios_share_rounded,
@@ -1460,7 +1588,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Future<List<PinEntry>> _loadPins() async {
     final rows = await session.pinnedIn(peerId: widget.peerHaloId);
     final nick = _nickname;
-    final them = (nick != null && nick.isNotEmpty) ? nick : widget.peerHaloId;
+    final them = _isDev
+        ? l10n.devName
+        : (nick != null && nick.isNotEmpty)
+        ? nick
+        : widget.peerHaloId;
     return [
       for (final r in rows)
         PinEntry(
@@ -1840,6 +1972,21 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   final Set<String> _seenUids = <String>{};
 
+  // Marios's first line, from the app itself, before everything else in
+  // the chat: dated when the chat was made, never stored, fetched or sent
+  _Msg? _welcomeBefore(List<_Msg> rows) {
+    if (!_isDev) return null;
+    final made = _devChat?.createdAt ?? 0;
+    var when = made > 0
+        ? DateTime.fromMillisecondsSinceEpoch(made)
+        : DateTime.now();
+    final first = rows.isEmpty ? null : rows.first.when;
+    if (first != null && !when.isBefore(first)) {
+      when = first.subtract(const Duration(milliseconds: 1));
+    }
+    return _Msg('in', l10n.devWelcome, when, welcome: true);
+  }
+
   Future<void> _loadMessages() async {
     if (_loading) {
       _reloadPending = true;
@@ -1859,6 +2006,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Future<void> _loadMessagesInner() async {
     await session.purgeExpiredBurns();
+    if (_isDev) {
+      _devChat = await session.devChat.load();
+      _syncDev();
+    }
     session.isBackPaired(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _backPaired = v);
     });
@@ -1924,6 +2075,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       }
     }
     if (!mounted) return;
+    if (!_hasMore) {
+      final w = _welcomeBefore(loaded);
+      if (w != null) {
+        // it arrives once, as the chat first opens with nothing sent yet
+        w.fresh = !_loaded && !(_devOpening?.started ?? true);
+        loaded.insert(0, w);
+      }
+    }
     final newSeen = <String>{};
     for (final m in loaded) {
       if (m.msgUid != null) newSeen.add(m.msgUid!);
@@ -1944,6 +2103,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       _firstUnreadIndex = -1;
       for (var i = 0; i < loaded.length; i++) {
         if (loaded[i].direction != 'out' &&
+            !loaded[i].welcome &&
             loaded[i].when.millisecondsSinceEpoch > _unreadAfterMs) {
           _firstUnreadIndex = i;
           break;
@@ -2093,6 +2253,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Future<void> _retry(_Msg msg) async {
     if (_sending || _stickerSends > 0) return;
+    if (_isDev && !await _ensureDevStarted()) return;
     // a quiet session sends nothing: it goes on waiting
     if (sessionQuiet) {
       setState(() {
@@ -2138,9 +2299,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       setState(() {
         msg.sending = false;
         msg.failed = true;
+        if (devKeyFailed(e)) _devKeyFailed = true;
       });
       return;
     }
+    if (_devKeyFailed && mounted) setState(() => _devKeyFailed = false);
     // before the peer back-pairs, direct onion first so their drain runs the
     // back-pair flow: they don't follow our xpub on nostr yet. on failure,
     // fall back to nostr store-and-forward.
@@ -2345,6 +2508,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Future<void> _retryImage(_Msg msg) async {
     final path = msg.mediaPath;
     if (path == null) return;
+    if (_isDev && !await _ensureDevStarted()) return;
     if (await _alreadyGoing(msg)) return;
     final file = File(path);
     if (!await file.exists()) {
@@ -2370,6 +2534,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Future<void> _retryMedia(_Msg msg) async {
     final path = msg.filePath;
     if (path == null || msg.fileName == null) return;
+    if (_isDev && !await _ensureDevStarted()) return;
     if (await _alreadyGoing(msg)) return;
     final file = File(path);
     if (!await file.exists()) {
@@ -2522,12 +2687,19 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       return;
     }
     if (!await src.exists()) return;
+    if (_isDev && !await _ensureDevStarted()) {
+      await shredFile(srcPath);
+      return;
+    }
+    // read after the start: an anonymous chat is disguised whatever the
+    // toggle says
+    final disguise = _voiceDisguise;
     if (_requestPending) setState(() => _sentCount++);
     var bytes = await src.readAsBytes();
     // the recorder's own file is the voice before any disguise, so it goes
     // now. the copy kept with the message is below.
     src.delete().ignore();
-    if (_disguise) bytes = disguiseWav(bytes);
+    if (disguise) bytes = disguiseWav(bytes);
     final msgUid = _newMsgUid();
     final mediaDir = await session.mediaDirOf(widget.peerHaloId);
     final dest = File('${mediaDir.path}/vn_$msgUid.wav');
@@ -2541,7 +2713,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       msgUid: msgUid,
       filePath: filePath,
       fileName: 'voice.wav',
-      voiceDisguised: _disguise,
+      voiceDisguised: disguise,
       burnSecs: _ghost ? _burnSeconds : null,
       burnAt: null,
     );
@@ -2559,7 +2731,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       msgUid: msgUid,
       filePath: filePath,
       fileName: 'voice.wav',
-      voiceDisguised: _disguise,
+      voiceDisguised: disguise,
       burnAt: msg.burnAt,
       burnSecs: msg.burnSecs,
       sent: 0,
@@ -2569,7 +2741,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       msgUid: msgUid,
       fileName: 'voice.wav',
       voice: true,
-      voiceDisguised: _disguise,
+      voiceDisguised: disguise,
       burnSeconds: _ghost ? _burnSeconds : null,
     ).then((result) => _finishMediaSend(msg, result));
   }
@@ -2777,6 +2949,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       }
       return;
     }
+    if (_isDev && !await _ensureDevStarted()) {
+      await shredFile(dest.path);
+      if (mounted && _requestPending) setState(() => _sentCount--);
+      return;
+    }
     final filePath = dest.path;
     final msg = _Msg(
       'out',
@@ -2883,7 +3060,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         m.parked = result == 'parked';
         m.failed = result != 'ok' && result != 'parked';
       }
-      if (result != 'ok' && result != 'parked') _status = result;
+      // his key did not check out: the line says it, not the raw error
+      if (result == kDevKeyFailed) {
+        _devKeyFailed = true;
+      } else if (result != 'ok' && result != 'parked') {
+        _status = result;
+      } else if (result == 'ok') {
+        _devKeyFailed = false;
+      }
     });
   }
 
@@ -2929,6 +3113,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // two of anything before they accept, photos included: the far side
     // holds a third
     if (_requestLocked) return;
+    if (_isDev && !await _ensureDevStarted()) return;
     if (_requestPending) setState(() => _sentCount++);
     final msgUid = _newMsgUid();
     final mediaDir = await session.mediaDirOf(widget.peerHaloId);
@@ -3075,7 +3260,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Future<void> _send() async {
     final text = _msgCtrl.text.trim();
-    if (text.isEmpty || _sending) return;
+    if (text.isEmpty || _sending || (_devOpening?.busy ?? false)) return;
     await _sendBody(text);
   }
 
@@ -3090,6 +3275,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // a stranger gets 2 messages, then the chat locks until they accept. the
     // input bar shows it; this guards the send itself.
     if (_requestLocked) return;
+    if (_isDev && !await _ensureDevStarted()) return;
     final typed = sticker == null;
     final msgUid = _newMsgUid();
     final replyToUid = _replyTo?.msgUid;
@@ -3224,7 +3410,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         msg.sending = false;
         msg.failed = true;
         sealing(false);
-        _status = l10n.chatNoSignalSessionRe;
+        if (devKeyFailed(e)) {
+          _devKeyFailed = true;
+        } else {
+          _status = l10n.chatNoSignalSessionRe;
+        }
       });
       return;
     }
@@ -3232,6 +3422,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     setState(() {
       sealing(false);
       _status = '';
+      _devKeyFailed = false;
       if (_requestPending) _sentCount++;
     });
     // before the peer back-pairs, direct onion first so their drain runs the
@@ -3402,7 +3593,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     super.deactivate();
   }
 
-  static String _rowKey(_Msg m) => m.msgUid ?? 'r${m.rowid}';
+  static String _rowKey(_Msg m) =>
+      m.welcome ? 'welcome' : (m.msgUid ?? 'r${m.rowid}');
 
   // where a row went when the list under it changed, so its state follows
   // the message and not the slot
@@ -3467,6 +3659,57 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         (m.when.difference(o.when).inSeconds).abs() < 120;
     final firstInGroup = !sameRun(prevMsg) || ix == _firstUnreadIndex;
     final lastInGroup = !sameRun(nextMsg);
+    final bubble = SizedBox(
+      width: double.infinity,
+      child: AnimatedOpacity(
+        opacity: _rowKey(m) == _liftedUid ? 0.0 : 1.0,
+        duration: const Duration(milliseconds: 300),
+        child: _Bubble(
+          key: isMatch ? _matchKeys[ix] : null,
+          msg: m,
+          stickers: _stickers,
+          stickerOrder: i,
+          landing: m.msgUid == null ? null : _landings[m.msgUid],
+          quotedSticker: quotedSticker,
+          linkTitle: m.preview?['title'],
+          linkBySender: m.preview?['by'] == 'sender',
+          firstInGroup: firstInGroup,
+          lastInGroup: lastInGroup,
+          revealed: m.msgUid != null && m.msgUid == _revealedUid,
+          onReveal: m.msgUid == null
+              ? null
+              : () => setState(
+                  () =>
+                      _revealedUid = _revealedUid == m.msgUid ? null : m.msgUid,
+                ),
+          onRetry: (m) {
+            m.autoRetries = 0;
+            m.gaveUp = false;
+            _retryAny(m);
+          },
+          onLongPress: (ctx) => _showEmojiPickerAt(ctx, m),
+          secure: m.secure,
+          quotedText: quoted,
+          onQuoteTap: m.replyTo == null
+              ? null
+              : () {
+                  for (final x in _messages) {
+                    if (x.msgUid != null && x.msgUid == m.replyTo) {
+                      _scrollToMessage(x);
+                      break;
+                    }
+                  }
+                },
+          quotedAuthor: quotedAuthor,
+          query: searchActive ? _query : '',
+          isCurrentMatch: isCurrent,
+          dimmed: dimmed,
+          ripple:
+              m.msgUid != null &&
+              (m.msgUid == _rippleUid || identical(m, _replyFlash)),
+        ),
+      ),
+    );
     return RepaintBoundary(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -3477,74 +3720,24 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             leaving: m.removing,
             // a timed bubble has burned already; any other burns now
             after: m.burnedAway ? Duration.zero : kBurnDissolve,
-            child: SwipeToReply(
-              onReply: () {
-                HapticFeedback.selectionClick();
-                setState(() {
-                  _replyTo = m;
-                  _replyFlash = m;
-                });
-                Future.delayed(const Duration(milliseconds: 700), () {
-                  if (mounted && identical(_replyFlash, m)) {
-                    setState(() => _replyFlash = null);
-                  }
-                });
-              },
-              child: SizedBox(
-                width: double.infinity,
-                child: AnimatedOpacity(
-                  opacity: (m.msgUid != null && m.msgUid == _liftedUid)
-                      ? 0.0
-                      : 1.0,
-                  duration: const Duration(milliseconds: 300),
-                  child: _Bubble(
-                    key: isMatch ? _matchKeys[ix] : null,
-                    msg: m,
-                    stickers: _stickers,
-                    stickerOrder: i,
-                    landing: m.msgUid == null ? null : _landings[m.msgUid],
-                    quotedSticker: quotedSticker,
-                    linkTitle: m.preview?['title'],
-                    linkBySender: m.preview?['by'] == 'sender',
-                    firstInGroup: firstInGroup,
-                    lastInGroup: lastInGroup,
-                    revealed: m.msgUid != null && m.msgUid == _revealedUid,
-                    onReveal: m.msgUid == null
-                        ? null
-                        : () => setState(
-                            () => _revealedUid = _revealedUid == m.msgUid
-                                ? null
-                                : m.msgUid,
-                          ),
-                    onRetry: (m) {
-                      m.autoRetries = 0;
-                      m.gaveUp = false;
-                      _retryAny(m);
+            // his first line takes no reply
+            child: m.welcome
+                ? bubble
+                : SwipeToReply(
+                    onReply: () {
+                      HapticFeedback.selectionClick();
+                      setState(() {
+                        _replyTo = m;
+                        _replyFlash = m;
+                      });
+                      Future.delayed(const Duration(milliseconds: 700), () {
+                        if (mounted && identical(_replyFlash, m)) {
+                          setState(() => _replyFlash = null);
+                        }
+                      });
                     },
-                    onLongPress: (ctx) => _showEmojiPickerAt(ctx, m),
-                    secure: m.secure,
-                    quotedText: quoted,
-                    onQuoteTap: m.replyTo == null
-                        ? null
-                        : () {
-                            for (final x in _messages) {
-                              if (x.msgUid != null && x.msgUid == m.replyTo) {
-                                _scrollToMessage(x);
-                                break;
-                              }
-                            }
-                          },
-                    quotedAuthor: quotedAuthor,
-                    query: searchActive ? _query : '',
-                    isCurrentMatch: isCurrent,
-                    dimmed: dimmed,
-                    ripple:
-                        m.msgUid != null &&
-                        (m.msgUid == _rippleUid || identical(m, _replyFlash)),
+                    child: bubble,
                   ),
-                ),
-              ),
-            ),
           ),
         ],
       ),
@@ -3564,6 +3757,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     releaseChat(widget.peerHaloId);
     lockState.removeListener(_lockLifted);
     appState.removeListener(_onAppStateChanged);
+    _devOpening
+      ?..removeListener(_onDevOpening)
+      ..dispose();
     _lastReadPerPeer[widget.peerHaloId] = _messages.isNotEmpty
         ? _messages.last.when.millisecondsSinceEpoch
         : 0;
@@ -3602,13 +3798,96 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         MediaGalleryScreen(
           paths: paths.reversed.toList(),
           securePaths: securePaths,
-          title: _nickname ?? widget.peerHaloId,
+          title: _isDev ? l10n.devName : _nickname ?? widget.peerHaloId,
         ),
       ),
     );
   }
 
+  // his chat's menu: its photos and what his sheet does. no contact page,
+  // introduction, note, wallpaper, clear, block or hide
+  Future<void> _devActions() async {
+    final d = _devShown;
+    if (d == null) return;
+    final action = await showHaloSheet<String>(
+      context,
+      scroll: true,
+      builder: (ctx) {
+        void pick(String a) => Navigator.pop(ctx, a);
+        return SingleChildScrollView(
+          child: MenuSheet(
+            groups: [
+              [
+                MenuSheetRow(
+                  icon: Icons.photo_library_outlined,
+                  label: l10n.chatSharedPhotos,
+                  onTap: () => pick('photos'),
+                ),
+              ],
+              [
+                MenuSheetRow(
+                  icon: d.muted
+                      ? Icons.notifications_active_outlined
+                      : Icons.notifications_off_outlined,
+                  label: d.muted
+                      ? l10n.chatUnmuteNotifications
+                      : l10n.chatMuteNotifications,
+                  onTap: () => pick('mute'),
+                ),
+                MenuSheetRow(
+                  icon: d.pinned ? Icons.push_pin : Icons.push_pin_outlined,
+                  label: d.pinned ? l10n.chatUnpin : l10n.chatPinToTop,
+                  onTap: () => pick('pin'),
+                ),
+                MenuSheetRow(
+                  icon: d.archived
+                      ? Icons.unarchive_outlined
+                      : Icons.archive_outlined,
+                  label: d.archived
+                      ? l10n.archivedUnarchive
+                      : l10n.chatArchiveChat,
+                  onTap: () => pick('archive'),
+                ),
+              ],
+              [
+                MenuSheetRow(
+                  icon: Icons.delete_outline,
+                  label: l10n.contactDeleteChat,
+                  danger: true,
+                  onTap: () => pick('delete'),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+    if (!mounted || action == null) return;
+    final nav = Navigator.of(context);
+    switch (action) {
+      case 'photos':
+        await _openMediaGallery();
+      case 'mute':
+        await setDevMuted(!d.muted);
+      case 'pin':
+        await setDevPinned(!d.pinned);
+        if (mounted) {
+          showHaloToast(
+            context,
+            d.pinned ? l10n.chatUnpinned : l10n.chatPinnedToTop,
+          );
+        }
+      case 'archive':
+        await setDevArchived(!d.archived);
+        // out of the list: back to it, as an archived chat is left
+        if (!d.archived) nav.popUntil((r) => r.isFirst);
+      case 'delete':
+        if (await deleteDevChat(context, d)) nav.popUntil((r) => r.isFirst);
+    }
+  }
+
   Future<void> _chatActions() async {
+    if (_isDev) return _devActions();
     final contact = await session.getContact(widget.peerHaloId);
     final pinned = (contact?['pinned'] as int? ?? 0) == 1;
     // requests and blocked people stay where they are
@@ -3750,6 +4029,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   // the page for this person. the head taps land here, and the chat's own
   // state reloads on the way back since a nickname or block may have changed
   Future<void> _openContact() async {
+    if (_isDev) return showDevAboutSheet(context);
     await Navigator.of(context).push(
       haloRoute(
         ContactScreen(
@@ -4136,8 +4416,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Future<void> _forwardMessage(_Msg m) async {
     final targets = appState.contacts.where((c) => !c.blocked).toList();
-    // the developer chat, once it has started
-    final dev = devForwardTarget;
+    // the developer chat, once it has started, and not from itself
+    final dev = _isDev ? null : devForwardTarget;
     final devAt = dev == null ? -1 : devSlot(dev, targets);
     final haloId = await showHaloSheet<String>(
       context,
@@ -4325,6 +4605,57 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 
+  // above the composer in his chat: the line when his key did not check
+  // out, and until the first message the note that says what he will see.
+  // the note folds away as that message goes out
+  List<Widget> _devAboveComposer(BuildContext context) {
+    final still = motionStill(context);
+    final o = _devOpening;
+    final note =
+        o != null &&
+        !o.started &&
+        _devStop == null &&
+        !_requestLocked &&
+        !appState.movedAway;
+    Widget swap(Duration d, Widget child) => AnimatedSwitcher(
+      duration: still ? Duration.zero : d,
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      transitionBuilder: (child, anim) => SizeTransition(
+        sizeFactor: anim,
+        axisAlignment: -1,
+        child: FadeTransition(opacity: anim, child: child),
+      ),
+      child: child,
+    );
+    return [
+      swap(
+        const Duration(milliseconds: 220),
+        _devKeyFailed
+            ? NoticeBanner(
+                key: const ValueKey('dev-key'),
+                glyph: NoticeGlyph.shield,
+                text: l10n.devKeyCheckFailed,
+                color: HaloColors.rose,
+                margin: const EdgeInsets.fromLTRB(14, 4, 14, 6),
+              )
+            : const SizedBox(key: ValueKey('dev-key-none'), width: 0),
+      ),
+      swap(
+        const Duration(milliseconds: 240),
+        note
+            ? DevNote(
+                key: const ValueKey('dev-note'),
+                anon: o.anon,
+                busy: o.busy,
+                onChoose: _chooseDevName,
+                onWho: () => showDevWhoSheet(context),
+              )
+            : const SizedBox(key: ValueKey('dev-note-none'), width: 0),
+      ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     // a message that just started counting down gets its burn on time
@@ -4345,6 +4676,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     onNext: () => _gotoMatch(1),
                     onClose: _closeSearch,
                   )
+                : _isDev
+                ? DevChatHead(
+                    anon: (_devOpening?.started ?? false) && _devAnon,
+                    onBack: () => Navigator.pop(context),
+                    onAbout: () => showDevAboutSheet(context),
+                    onSearch: _openSearch,
+                    onMore: _devActions,
+                    pinnedCount: _pinCount,
+                    onPinned: _showPinnedSheet,
+                  )
                 : _ChatHead(
                     haloId: widget.peerHaloId,
                     nickname: _nickname,
@@ -4361,7 +4702,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     pinnedCount: _pinCount,
                     onPinned: _showPinnedSheet,
                   ),
-            if (_flag != null && !_accepted)
+            // his chat is no request: its lock line says the rest
+            if ((_flag != null && !_accepted) || _isDev)
               const SizedBox.shrink()
             else if (_vouched && !_accepted && _recvCount == 0)
               _IntroBanner(
@@ -4372,7 +4714,15 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               )
             else if (_requestPending && _sentCount > 0)
               const _RequestBanner(),
-            if (_keyChanged)
+            // his key moved on: this chat still reads and writes
+            if (_devShown?.status == DevKeyStatus.previous)
+              NoticeBanner(
+                glyph: NoticeGlyph.shield,
+                text: l10n.devNewKey,
+                color: HaloColors.amber,
+                margin: const EdgeInsets.fromLTRB(14, 10, 14, 2),
+              ),
+            if (_keyChanged && !_isDev)
               _KeyChangedBanner(
                 peerName: _nickname ?? widget.peerHaloId,
                 onVerify: _openKeyVerification,
@@ -4539,6 +4889,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 color: HaloColors.text2,
                 margin: const EdgeInsets.fromLTRB(14, 0, 14, 8),
               ),
+            if (_isDev) ..._devAboveComposer(context),
             AnimatedSwitcher(
               duration: motionStill(context)
                   ? Duration.zero
@@ -4583,6 +4934,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 key: ValueKey(
                   _blocked
                       ? 'bar_blocked'
+                      : _devStop != null
+                      ? 'bar_dev_stop'
                       : _incomingRequest
                       ? 'bar_request'
                       : _requestLocked
@@ -4591,6 +4944,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 ),
                 child: _blocked
                     ? _BlockedBar(onUnblock: _unblockContact)
+                    : _devStop != null
+                    ? _RequestLockBar(
+                        line: _devStop,
+                        icon: Icons.key_off_outlined,
+                      )
                     : _incomingRequest
                     ? _AcceptRequestBar(
                         introducer: _vouched ? vouchNames(_voucherNames) : null,
@@ -4599,7 +4957,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                         onBlock: _blockRequestPeer,
                       )
                     : _requestLocked
-                    ? const _RequestLockBar()
+                    ? _RequestLockBar(line: _isDev ? l10n.devLockLine : null)
                     : Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -4645,8 +5003,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                             controller: _msgCtrl,
                             sending: _sending,
                             onSend: _send,
-                            disguise: _disguise,
-                            onToggleDisguise: _toggleDisguise,
+                            disguise: _voiceDisguise,
+                            disguiseLocked: _devAnon,
+                            onToggleDisguise: _devAnon
+                                ? _sayVoiceDisguised
+                                : _toggleDisguise,
                             onVoiceComplete: _onVoiceComplete,
                           ),
                         ],
@@ -4880,9 +5241,12 @@ class _RequestBanner extends StatelessWidget {
   }
 }
 
-// replaces the composer once we've hit the 2-message request cap.
+// replaces the composer once we've hit the 2-message request cap. the
+// developer chat says it its own way, and a retired key the same way
 class _RequestLockBar extends StatelessWidget {
-  const _RequestLockBar();
+  const _RequestLockBar({this.line, this.icon = Icons.lock_outline});
+  final String? line;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
@@ -4895,11 +5259,11 @@ class _RequestLockBar extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.lock_outline, size: 15, color: HaloColors.amber),
+              Icon(icon, size: 15, color: HaloColors.amber),
               const SizedBox(width: 9),
               Expanded(
                 child: Text(
-                  l10n.chatWaitingForThemTo,
+                  line ?? l10n.chatWaitingForThemTo,
                   style: HaloType.sans(size: 13, color: HaloColors.text2),
                 ),
               ),
@@ -6995,6 +7359,8 @@ class _Composer extends StatelessWidget {
   final VoidCallback onStickers;
   final VoidCallback onCamera;
   final bool disguise;
+  // on for good in this chat: the anonymous dev chat
+  final bool disguiseLocked;
   final VoidCallback onToggleDisguise;
   final void Function(String path, int ms, bool cancelled) onVoiceComplete;
 
@@ -7012,6 +7378,7 @@ class _Composer extends StatelessWidget {
     required this.onStickers,
     required this.onCamera,
     required this.disguise,
+    this.disguiseLocked = false,
     required this.onToggleDisguise,
     required this.onVoiceComplete,
   });
@@ -7200,7 +7567,10 @@ class _Composer extends StatelessWidget {
                             children: [
                               DisguiseToggle(
                                 on: disguise,
-                                label: l10n.chatDisguiseVoice,
+                                locked: disguiseLocked,
+                                label: disguiseLocked
+                                    ? l10n.devVoiceDisguised
+                                    : l10n.chatDisguiseVoice,
                                 onTap: onToggleDisguise,
                               ),
                               _HoldToTalkMic(
