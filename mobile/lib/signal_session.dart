@@ -179,7 +179,7 @@ class SignalSession {
       final pub = raw.length == 33 ? raw.sublist(1) : raw;
       return pub.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
     } catch (e) {
-      dlog('peerXPubHex error: \$e');
+      dlog('peerXPubHex: ${e.runtimeType}');
       return null;
     }
   }
