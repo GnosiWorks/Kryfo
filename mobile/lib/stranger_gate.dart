@@ -36,12 +36,14 @@ bool proofOfEngagement(UnwrappedMessage env) =>
     env.deliveredUid == null && env.need == null;
 
 // the receiver's side of the cap: an unaccepted, unvouched sender already has
-// two messages in requests, so this one is not stored.
+// two messages in requests, so this one is not stored. a chat with the
+// developer gets [cap] instead, the same on both sides
 bool strangerCapHolds({
   required bool accepted,
   required bool vouched,
   required int have,
-}) => !accepted && !vouched && have >= 2;
+  int cap = 2,
+}) => !accepted && !vouched && have >= cap;
 
 // thrown when the cap holds a message back. the poll loop must not mark the
 // event seen then: it stays on the relay, and the replay after accept brings

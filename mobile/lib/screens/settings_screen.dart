@@ -603,24 +603,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onTap: () =>
                     Navigator.push(context, haloRoute(const WhyKryfoScreen())),
               ),
-              HaloRow(
-                icon: Icons.autorenew,
-                label: l10n.settingsResetMyInviteLink,
-                hint: l10n.settingsOldLinksAndCodes,
-                onTap: () async {
-                  final ok = await showConfirmSheet(
-                    context,
-                    title: l10n.settingsResetInviteLink,
-                    line: l10n.settingsAnyoneWithAnOld,
-                    yes: l10n.settingsReset,
-                  );
-                  if (!ok) return;
-                  await appState.resetInviteAddress();
-                  if (context.mounted) {
-                    showHaloToast(context, l10n.settingsInviteResetShareThe);
-                  }
-                },
-              ),
+              // the developer's own phone: every install pins its card, and
+              // a new link would cut every chat with it
+              if (appState.devMode)
+                HaloRow(
+                  icon: Icons.lock_outline,
+                  label: l10n.settingsResetMyInviteLink,
+                  hint: l10n.supportResetPinned,
+                )
+              else
+                HaloRow(
+                  icon: Icons.autorenew,
+                  label: l10n.settingsResetMyInviteLink,
+                  hint: l10n.settingsOldLinksAndCodes,
+                  onTap: () async {
+                    final ok = await showConfirmSheet(
+                      context,
+                      title: l10n.settingsResetInviteLink,
+                      line: l10n.settingsAnyoneWithAnOld,
+                      yes: l10n.settingsReset,
+                    );
+                    if (!ok) return;
+                    await appState.resetInviteAddress();
+                    if (context.mounted) {
+                      showHaloToast(context, l10n.settingsInviteResetShareThe);
+                    }
+                  },
+                ),
               HaloRow(
                 icon: Icons.visibility_outlined,
                 label: l10n.settingsWhatWeCanSee,

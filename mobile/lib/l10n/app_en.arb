@@ -9147,6 +9147,92 @@
   "@devDeleteLineAnon": {
     "description": "screens/dev_about_sheet.dart: asked before a developer chat started anonymously is deleted"
   },
+  "supportTitle": "Support",
+  "@supportTitle": {
+    "description": "screens/support_screen.dart: the inbox of chats people start from the Marios row, its home pin and its notification's title. Only the developer's own phone shows it, in English."
+  },
+  "supportWaiting": "{count, plural, =0{No one waiting} one{1 waiting} other{{count} waiting}}",
+  "@supportWaiting": {
+    "description": "screens/home_screen.dart: under Support on its home pin: chats with no answer yet. Only the developer's own phone shows it, in English.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "supportSectionWaiting": "Waiting",
+  "@supportSectionWaiting": {
+    "description": "screens/support_screen.dart: a section: chats with no answer yet. Only the developer's own phone shows it, in English."
+  },
+  "supportSectionAnswered": "Answered",
+  "@supportSectionAnswered": {
+    "description": "screens/support_screen.dart: a section: chats he answered. Only the developer's own phone shows it, in English."
+  },
+  "supportSectionDone": "Done",
+  "@supportSectionDone": {
+    "description": "screens/support_screen.dart: the folded section of chats put away. Only the developer's own phone shows it, in English."
+  },
+  "supportEmpty": "No one has written yet",
+  "@supportEmpty": {
+    "description": "screens/support_screen.dart: the empty inbox. Only the developer's own phone shows it, in English."
+  },
+  "supportEmptyLine": "Chats people start from the Marios row land here, not in requests.",
+  "@supportEmptyLine": {
+    "description": "screens/support_screen.dart: under No one has written yet. Only the developer's own phone shows it, in English."
+  },
+  "supportMarkDone": "Done",
+  "@supportMarkDone": {
+    "description": "screens/support_screen.dart: a swipe and a menu row: puts a chat away. Only the developer's own phone shows it, in English."
+  },
+  "supportReopen": "Reopen",
+  "@supportReopen": {
+    "description": "screens/support_screen.dart: a swipe and a menu row: brings a chat put away back. Only the developer's own phone shows it, in English."
+  },
+  "supportMarkAllDone": "Mark all waiting as done",
+  "@supportMarkAllDone": {
+    "description": "screens/support_screen.dart: the inbox menu. Only the developer's own phone shows it, in English."
+  },
+  "supportMenu": "Support options",
+  "@supportMenu": {
+    "description": "screens/support_screen.dart: the label of the inbox menu button, for screen readers. Only the developer's own phone shows it, in English."
+  },
+  "supportDeleteLine": "Every message in this chat goes from this phone. If they write again, it comes back here.",
+  "@supportDeleteLine": {
+    "description": "screens/support_screen.dart: asked before a support chat is deleted. Only the developer's own phone shows it, in English."
+  },
+  "supportNotifNewChats": "{count, plural, one{1 new chat} other{{count} new chats}}",
+  "@supportNotifNewChats": {
+    "description": "notifications.dart: the support summary, before the message count. Only the developer's own phone shows it, in English.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "supportNotifNewMessages": "{count, plural, one{1 new message} other{{count} new messages}}",
+  "@supportNotifNewMessages": {
+    "description": "notifications.dart: the support summary, after the chat count. Only the developer's own phone shows it, in English.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "supportChannelName": "Support",
+  "@supportChannelName": {
+    "description": "notifications.dart: the name of the notification channel in android's settings. Only the developer's own phone shows it, in English."
+  },
+  "supportChannelLine": "Chats people start from the Marios row",
+  "@supportChannelLine": {
+    "description": "notifications.dart: the channel's line in android's settings. Only the developer's own phone shows it, in English."
+  },
+  "supportResetPinned": "This identity is pinned in Kryfo. A new link would cut off every chat with it.",
+  "@supportResetPinned": {
+    "description": "screens/settings_screen.dart: under Reset my invite link, which is off on the developer's own phone. Only the developer's own phone shows it, in English."
+  },
   "settingsWriteToMarios": "Write to Marios",
   "@settingsWriteToMarios": {
     "description": "screens/settings_screen.dart: opens the chat with the developer, and brings it back after a delete"

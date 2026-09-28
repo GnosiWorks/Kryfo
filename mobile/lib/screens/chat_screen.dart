@@ -137,6 +137,9 @@ class ChatScreen extends StatefulWidget {
   final int? avatarChoice;
   final String? initialText;
   final String? jumpToUid;
+  // a support chat on the developer's own phone: the composer instead of
+  // accept and decline, and the first reply takes it on
+  final bool support;
 
   const ChatScreen({
     super.key,
@@ -147,6 +150,7 @@ class ChatScreen extends StatefulWidget {
     this.avatarChoice,
     this.initialText,
     this.jumpToUid,
+    this.support = false,
   });
 
   @override
@@ -673,7 +677,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   bool get _requestLocked =>
       _requestPending && _sentCount >= (_isDev ? kDevCap : 2) && !_vouched;
   // receiver-side: a stranger has messaged us and we haven't accepted yet.
-  bool get _incomingRequest => !_accepted && _recvCount > 0;
+  bool get _incomingRequest => !_accepted && _recvCount > 0 && !widget.support;
   // friends vouched for this peer. no sender-side cap then: the other end
   // skips its gate for us, so locking ourselves would be the only lock left.
   List<String> _voucherNames = const [];
@@ -2728,6 +2732,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     });
     _scrollToEnd();
     HapticFeedback.lightImpact();
+    await _answerSupport();
     await session.saveMessage(
       widget.peerHaloId,
       'out',
@@ -2977,6 +2982,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     });
     _scrollToEnd();
     HapticFeedback.lightImpact();
+    await _answerSupport();
     await session.saveMessage(
       widget.peerHaloId,
       'out',
@@ -3144,6 +3150,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     });
     _scrollToEnd();
     HapticFeedback.lightImpact();
+    await _answerSupport();
     await session.saveMessage(
       widget.peerHaloId,
       'out',
@@ -3323,6 +3330,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // the sheet already fired it for a sticker
     if (typed) HapticFeedback.lightImpact();
 
+    await _answerSupport();
     try {
       await session.saveMessage(
         widget.peerHaloId,
@@ -3896,7 +3904,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final pinned = (contact?['pinned'] as int? ?? 0) == 1;
     // requests and blocked people stay where they are
     final hidden = session.isHidden(widget.peerHaloId);
-    final hideable = lockState.inVault && _accepted && !_blocked;
+    final hideable =
+        lockState.inVault && _accepted && !_blocked && !widget.support;
     if (!mounted) return;
     final action = await showHaloSheet<String>(
       context,
@@ -4379,6 +4388,20 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Future<void> _unblockContact() async {
     await appState.unblock(widget.peerHaloId);
     if (mounted) setState(() => _blocked = false);
+  }
+
+  // a support chat's first reply takes it on: accepted, listened for, told
+  // it is in, and still in the support inbox
+  Future<void> _answerSupport() async {
+    if (!widget.support || !await appState.answerSupport(widget.peerHaloId)) {
+      return;
+    }
+    if (mounted) {
+      setState(() {
+        _accepted = true;
+        _flag = null;
+      });
+    }
   }
 
   Future<void> _acceptRequestPeer() async {

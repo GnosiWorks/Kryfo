@@ -11613,6 +11613,108 @@ abstract class AppLocalizations {
   /// **'Every message and the name made for this chat go, and the chat will not come back.'**
   String get devDeleteLineAnon;
 
+  /// screens/support_screen.dart: the inbox of chats people start from the Marios row, its home pin and its notification's title. Only the developer's own phone shows it, in English.
+  ///
+  /// In en, this message translates to:
+  /// **'Support'**
+  String get supportTitle;
+
+  /// screens/home_screen.dart: under Support on its home pin: chats with no answer yet. Only the developer's own phone shows it, in English.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No one waiting} one{1 waiting} other{{count} waiting}}'**
+  String supportWaiting(int count);
+
+  /// screens/support_screen.dart: a section: chats with no answer yet. Only the developer's own phone shows it, in English.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting'**
+  String get supportSectionWaiting;
+
+  /// screens/support_screen.dart: a section: chats he answered. Only the developer's own phone shows it, in English.
+  ///
+  /// In en, this message translates to:
+  /// **'Answered'**
+  String get supportSectionAnswered;
+
+  /// screens/support_screen.dart: the folded section of chats put away. Only the developer's own phone shows it, in English.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get supportSectionDone;
+
+  /// screens/support_screen.dart: the empty inbox. Only the developer's own phone shows it, in English.
+  ///
+  /// In en, this message translates to:
+  /// **'No one has written yet'**
+  String get supportEmpty;
+
+  /// screens/support_screen.dart: under No one has written yet. Only the developer's own phone shows it, in English.
+  ///
+  /// In en, this message translates to:
+  /// **'Chats people start from the Marios row land here, not in requests.'**
+  String get supportEmptyLine;
+
+  /// screens/support_screen.dart: a swipe and a menu row: puts a chat away. Only the developer's own phone shows it, in English.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get supportMarkDone;
+
+  /// screens/support_screen.dart: a swipe and a menu row: brings a chat put away back. Only the developer's own phone shows it, in English.
+  ///
+  /// In en, this message translates to:
+  /// **'Reopen'**
+  String get supportReopen;
+
+  /// screens/support_screen.dart: the inbox menu. Only the developer's own phone shows it, in English.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all waiting as done'**
+  String get supportMarkAllDone;
+
+  /// screens/support_screen.dart: the label of the inbox menu button, for screen readers. Only the developer's own phone shows it, in English.
+  ///
+  /// In en, this message translates to:
+  /// **'Support options'**
+  String get supportMenu;
+
+  /// screens/support_screen.dart: asked before a support chat is deleted. Only the developer's own phone shows it, in English.
+  ///
+  /// In en, this message translates to:
+  /// **'Every message in this chat goes from this phone. If they write again, it comes back here.'**
+  String get supportDeleteLine;
+
+  /// notifications.dart: the support summary, before the message count. Only the developer's own phone shows it, in English.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 new chat} other{{count} new chats}}'**
+  String supportNotifNewChats(int count);
+
+  /// notifications.dart: the support summary, after the chat count. Only the developer's own phone shows it, in English.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 new message} other{{count} new messages}}'**
+  String supportNotifNewMessages(int count);
+
+  /// notifications.dart: the name of the notification channel in android's settings. Only the developer's own phone shows it, in English.
+  ///
+  /// In en, this message translates to:
+  /// **'Support'**
+  String get supportChannelName;
+
+  /// notifications.dart: the channel's line in android's settings. Only the developer's own phone shows it, in English.
+  ///
+  /// In en, this message translates to:
+  /// **'Chats people start from the Marios row'**
+  String get supportChannelLine;
+
+  /// screens/settings_screen.dart: under Reset my invite link, which is off on the developer's own phone. Only the developer's own phone shows it, in English.
+  ///
+  /// In en, this message translates to:
+  /// **'This identity is pinned in Kryfo. A new link would cut off every chat with it.'**
+  String get supportResetPinned;
+
   /// screens/settings_screen.dart: opens the chat with the developer, and brings it back after a delete
   ///
   /// In en, this message translates to:

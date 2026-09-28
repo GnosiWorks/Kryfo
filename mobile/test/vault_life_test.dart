@@ -721,6 +721,8 @@ class _Db implements HaloDb {
 
   @override
   Future<int> pendingRequestCount() async => (await pendingRequests()).length;
+  @override
+  Future<List<Map<String, Object?>>> requestsInbox() => pendingRequests();
 
   @override
   Future<List<Map<String, Object?>>> loadGroups() async => [

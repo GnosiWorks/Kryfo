@@ -10,6 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/devchat/dev_chat.dart';
 import 'package:kryfo/devchat/dev_key.dart';
+import 'package:kryfo/devchat/support.dart' show SupportChats;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
     show HaloDb, appState, haloUriV3, useDatabasesForTest;
@@ -48,6 +49,9 @@ class DevTestDb implements HaloDb {
 
   @override
   DevChat get devChat => DevChat(() async => mem, shred: (_) async {});
+
+  @override
+  SupportChats get support => SupportChats(() async => mem);
 
   @override
   Future<List<Map<String, Object?>>> contacts() =>

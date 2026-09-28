@@ -52,6 +52,7 @@ import '../devchat/dev_chat.dart' show DevRow;
 import '../widgets/dev_avatar.dart';
 import 'dev_about_sheet.dart';
 import 'search_screen.dart';
+import 'support_screen.dart' show SupportPin, supportRoute;
 
 bool _miuiPromptChecked = false;
 
@@ -70,6 +71,9 @@ class HomeScreen extends StatefulWidget {
   final void Function(String groupId) onOpenGroup;
   // the developer chat's row, beside the contacts. none to show: null
   final DevRow? devRow;
+  // his own phone: the support chats waiting for an answer. null elsewhere,
+  // and no pin
+  final int? support;
 
   const HomeScreen({
     super.key,
@@ -86,6 +90,7 @@ class HomeScreen extends StatefulWidget {
     required this.onOpenChat,
     required this.onOpenGroup,
     this.devRow,
+    this.support,
   });
 
   @override
@@ -206,6 +211,7 @@ class _HomeScreenState extends State<HomeScreen> {
           onOpenGroup: widget.onOpenGroup,
           devRow: widget.devRow,
           onOpenDevChat: (id) => openDevChat(context, id),
+          support: widget.support,
         );
       case HaloTab.tools:
         return ToolsScreen(
@@ -373,6 +379,7 @@ class _ChatsTab extends StatelessWidget {
   final void Function(String groupId) onOpenGroup;
   final DevRow? devRow;
   final void Function(String chatId) onOpenDevChat;
+  final int? support;
 
   const _ChatsTab({
     required this.haloId,
@@ -388,6 +395,7 @@ class _ChatsTab extends StatelessWidget {
     required this.onOpenGroup,
     this.devRow,
     required this.onOpenDevChat,
+    this.support,
   });
 
   @override
@@ -462,6 +470,14 @@ class _ChatsTab extends StatelessWidget {
                   )
                 : const SizedBox(key: ValueKey('no-requests'), width: 1),
           ),
+          if (support != null)
+            StaggerIn(
+              index: 2,
+              child: SupportPin(
+                waiting: support!,
+                onTap: () => Navigator.of(context).push(supportRoute()),
+              ),
+            ),
           GrowSwap(
             alignment: Alignment.topCenter,
             child: hasArchived
