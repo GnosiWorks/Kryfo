@@ -5,6 +5,8 @@
 
 import 'package:flutter/foundation.dart';
 
+import 'dev_lane.dart' show DevRefusal, DevSealRefused;
+
 // how a first send's start came out
 enum DevStart {
   // started, now or before: the message goes on
@@ -25,7 +27,9 @@ class DevKeyCheckFailed implements Exception {
 
 // a start or a seal that stopped at the key check, whoever threw it. the
 // chat says its line for these, and only for these
-bool devKeyFailed(Object e) => e is DevKeyCheckFailed;
+bool devKeyFailed(Object e) =>
+    e is DevKeyCheckFailed ||
+    (e is DevSealRefused && e.why == DevRefusal.keyCheck);
 
 // what a media send answers when its seal stopped at the key check
 const kDevKeyFailed = 'error: dev key';

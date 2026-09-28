@@ -22,11 +22,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/devchat/dev_chat.dart';
 import 'package:kryfo/devchat/dev_key.dart';
+import 'package:kryfo/devchat/dev_lane.dart' show DevRefusal, DevSealRefused;
 import 'package:kryfo/devchat/dev_start.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/main.dart'
     show HaloEngine, appState, useDatabasesForTest, useEngineForTest;
+import 'package:kryfo/screens/chat_screen.dart' show grindPowForTest;
 import 'package:kryfo/screens/contact_screen.dart' show ContactScreen;
 import 'package:kryfo/screens/dev_about_sheet.dart';
 import 'package:kryfo/session.dart';
@@ -202,6 +204,9 @@ late Directory _tmp;
 // keeps what is sent in it, so nothing past the seal needs the engine
 Future<void> _world({HaloContainer container = HaloContainer.everyday}) async {
   forgetDevChoices();
+  // an opener grinds its proof of work in an isolate, which a widget test's
+  // clock never waits for
+  grindPowForTest = (_) => 0;
   _mem = MemDb(except: {'devchat'});
   await devChatTables(_mem, now: _made);
   final db = _ChatDb(_mem, container);
@@ -1213,6 +1218,10 @@ void main() {
     test('a key that did not check out is told from any other failure', () {
       expect(devKeyFailed(const DevKeyCheckFailed()), isTrue);
       expect(devKeyFailed(StateError('no store')), isFalse);
+      // the lane's own refusal at the key check counts, its others do not
+      expect(devKeyFailed(DevSealRefused(DevRefusal.keyCheck)), isTrue);
+      expect(devKeyFailed(DevSealRefused(DevRefusal.noStore)), isFalse);
+      expect(devKeyFailed(DevSealRefused(DevRefusal.frame)), isFalse);
       // a photo, a file or a voice note stopped at the seal says so too
       final media = File('lib/media_send.dart').readAsStringSync();
       expect(media, contains('devKeyFailed(e) ? kDevKeyFailed'));

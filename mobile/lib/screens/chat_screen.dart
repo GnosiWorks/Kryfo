@@ -419,6 +419,10 @@ String _fmtBurn(int burnAtMs) {
 // isolate entrypoint for compute(): grinds first-contact pow
 int _grindPowTask(String seed) => grindPow(seed, powBits);
 
+// stands in for the isolate in widget tests, whose clock never waits on one
+@visibleForTesting
+int Function(String seed)? grindPowForTest;
+
 int _lastBurnSeconds = 300;
 bool _lastGhost = false;
 
@@ -3370,7 +3374,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         powBusy.value = DateTime.now();
         final int n;
         try {
-          n = await compute(_grindPowTask, text);
+          n = grindPowForTest?.call(text) ?? await compute(_grindPowTask, text);
         } finally {
           powBusy.value = null;
         }
