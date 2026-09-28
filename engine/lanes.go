@@ -69,6 +69,7 @@ func dropLane(lane string) {
 	cachedNostrClientMu.Lock()
 	delete(cachedNostrClients, lane)
 	cachedNostrClientMu.Unlock()
+	pubCloseAll(lane)
 }
 
 // over tor a pong often takes longer than the library's 800ms, and three late
@@ -81,8 +82,8 @@ var (
 	torPongTimeout  = 20 * time.Second
 )
 
-// for the long-lived subscription sockets. one-shot sockets close long before
-// a ping would matter.
+// for the long-lived sockets: subscriptions, and the publish sockets a burst
+// keeps. one-shot sockets close long before a ping would matter.
 func subscribeRelayOptions() nostr.RelayOptions {
 	if !modeNeedsTor() {
 		return nostr.RelayOptions{}

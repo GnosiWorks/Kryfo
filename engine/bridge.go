@@ -922,29 +922,45 @@ func handleConn(conn net.Conn) {
 		return
 	}
 	defer func() { <-inboxSlots }()
-	// a line is one write: ten seconds is generous over tor. the reader
-	// stops just past the largest line the door accepts.
-	conn.SetReadDeadline(time.Now().Add(10 * time.Second))
-	r := bufio.NewReader(io.LimitReader(conn, inboxMaxLine+2))
-	line, err := r.ReadString('\n')
-	if err != nil && err != io.EOF {
-		log.Printf("halo: read err: %v", err)
-		return
+	// a line is one write: ten seconds is generous over tor. a sender with
+	// more lines for us keeps the stream, up to doorLife and
+	// doorLinesPerStream, each within doorNextLine of the last.
+	opened := time.Now()
+	deadline := func(d time.Duration) time.Time {
+		if end := opened.Add(doorLife); opened.Add(d).After(end) || time.Now().Add(d).After(end) {
+			return end
+		}
+		return time.Now().Add(d)
 	}
-	line = strings.TrimSpace(line)
-	// junk never reaches dart's trial decrypts, and a full or repeated
-	// inbox takes nothing more. no ack either way: an honest sender
-	// retries through its backoff, a flood learns nothing.
-	if !inboxShapeOK(line) {
-		log.Printf("halo: dropped %d bytes that are not a message", len(line))
-		return
+	conn.SetReadDeadline(deadline(10 * time.Second))
+	r := bufio.NewReaderSize(conn, 64<<10)
+	for n := 0; n < doorLinesPerStream; n++ {
+		line, err := readDoorLine(r)
+		if err != nil {
+			if err != io.EOF {
+				log.Printf("halo: read err: %v", err)
+			}
+			return
+		}
+		line = strings.TrimSpace(line)
+		// junk never reaches dart's trial decrypts, and a full or repeated
+		// inbox takes nothing more. no ack either way: an honest sender
+		// retries through its backoff, a flood learns nothing.
+		if !inboxShapeOK(line) {
+			log.Printf("halo: dropped %d bytes that are not a message", len(line))
+			return
+		}
+		if !inboxPut(line) {
+			log.Printf("halo: inbox full or repeat, dropped %d bytes", len(line))
+			return
+		}
+		conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+		if _, err := conn.Write([]byte(doorAck)); err != nil {
+			return
+		}
+		log.Printf("halo: received %d bytes", len(line))
+		conn.SetReadDeadline(deadline(doorNextLine))
 	}
-	if !inboxPut(line) {
-		log.Printf("halo: inbox full or repeat, dropped %d bytes", len(line))
-		return
-	}
-	conn.Write([]byte(doorAck))
-	log.Printf("halo: received %d bytes", len(line))
 }
 
 //export HaloGetStatus
@@ -982,33 +998,9 @@ func HaloSendTo(cAddr *C.char, cMsg *C.char) *C.char {
 	if t == nil {
 		return C.CString("error: tor not started")
 	}
-
-	log.Printf("halo: dialing %s...", addr)
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
-	defer cancel()
-
-	dialer, err := torDialer(ctx, t)
-	if err != nil {
-		return C.CString(fmt.Sprintf("error: dialer: %v", err))
+	if err := sendTo(t, addr, msg); err != nil {
+		return C.CString("error: " + err.Error())
 	}
-
-	conn, err := dialer.DialContext(ctx, "tcp", addr+":80")
-	if err != nil {
-		return C.CString(fmt.Sprintf("error: dial: %v", err))
-	}
-	defer conn.Close()
-
-	conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
-	_, err = conn.Write([]byte(msg + "\n"))
-	if err != nil {
-		return C.CString(fmt.Sprintf("error: write: %v", err))
-	}
-
-	conn.SetReadDeadline(time.Now().Add(15 * time.Second))
-	if err := readAck(conn); err != nil {
-		return C.CString(fmt.Sprintf("error: no ack: %v", err))
-	}
-
 	log.Printf("halo: sent %d bytes to %s", len(msg), addr)
 	return C.CString("ok")
 }
