@@ -1,0 +1,3 @@
+Entrega de mensajes más fiable cuando un repetidor envía datos inesperados.
+
+Manejo más cuidadoso de contactos y grupos.

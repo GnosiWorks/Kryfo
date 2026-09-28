@@ -1,0 +1,3 @@
+Pengiriman pesan lebih andal saat relay mengirim data yang tak terduga.
+
+Penanganan kontak dan grup yang lebih cermat.

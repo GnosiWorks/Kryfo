@@ -1,0 +1,3 @@
+Entrega de mensagens mais confiável quando um retransmissor envia dados inesperados.
+
+Tratamento mais cuidadoso de contatos e grupos.

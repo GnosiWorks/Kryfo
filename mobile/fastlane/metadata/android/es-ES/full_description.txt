@@ -13,11 +13,15 @@ funciones:
 * cifrado de extremo a extremo (protocolo signal)
 * todo el tráfico pasa por un cliente tor integrado
 * entrega directa por onion y, si el otro no tiene conexión, por repetidor
-* grupos con fotos, archivos, mensajes de voz, respuestas, reacciones y fijados
+* grupos con fotos, archivos, mensajes de voz, respuestas, reacciones, fijados y encuestas
+* stickers animados que viajan como un nombre, así ninguna imagen sale del teléfono
+* búsqueda en todos tus chats, con el índice guardado en la base de datos cifrada
 * mensajes temporales: desaparecen pasado un tiempo fijado
 * base de datos local cifrada y copias de seguridad cifradas
-* bloqueo de la app con PIN o biometría
+* bloqueo de la app con PIN o biometría, un PIN señuelo que abre un Kryfo vacío y chats ocultos tras un PIN propio
 * borrado de emergencia que lo elimina todo, incluidos los archivos multimedia
+* un chat con quien crea Kryfo, de forma anónima si quieres
+* 15 idiomas
 * sin analíticas, sin telemetría, sin anuncios
 
 financiación: sin anuncios ni inversores. vive de lo que aportan quienes lo

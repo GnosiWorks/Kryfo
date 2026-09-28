@@ -1,0 +1,3 @@
+More reliable message delivery when a relay sends unexpected data.
+
+More careful handling of contacts and groups.

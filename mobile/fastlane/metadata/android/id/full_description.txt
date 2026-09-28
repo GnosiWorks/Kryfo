@@ -14,11 +14,15 @@ fitur:
 * enkripsi ujung ke ujung (protokol Signal)
 * semua lalu lintas lewat klien tor bawaan
 * pengiriman onion langsung, relay sebagai jalur pengganti saat kontak offline
-* grup dengan foto, file, pesan suara, balasan, reaksi, sematan
+* grup dengan foto, file, pesan suara, balasan, reaksi, sematan, dan polling
+* stiker animasi yang dikirim sebagai nama, jadi tidak ada gambar yang meninggalkan ponsel
+* pencarian di semua obrolanmu, indeksnya disimpan di database terenkripsi
 * pesan berwaktu: pesan yang hilang setelah waktu yang ditentukan
 * database lokal terenkripsi dan cadangan terenkripsi
-* kunci aplikasi dengan PIN atau biometrik
+* kunci aplikasi dengan PIN atau biometrik, PIN umpan yang membuka Kryfo kosong, dan obrolan tersembunyi di balik PIN tersendiri
 * hapus total darurat yang menghapus semuanya, termasuk media yang tersimpan di perangkat
+* obrolan dengan orang yang membuat Kryfo, secara anonim kalau kamu mau
+* 15 bahasa
 * tanpa analitik, tanpa telemetri, tanpa iklan
 
 pendanaan: tanpa iklan, tanpa investor. Kryfo hidup dari pemberian para

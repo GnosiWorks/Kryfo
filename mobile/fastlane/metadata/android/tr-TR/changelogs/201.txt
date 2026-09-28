@@ -1,0 +1,3 @@
+Bir aktarıcı beklenmedik veri gönderdiğinde daha güvenilir mesaj teslimi.
+
+Kişiler ve gruplar artık daha dikkatli işleniyor.

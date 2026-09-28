@@ -1,0 +1,3 @@
+Nouveau : un code leurre qui ouvre un Kryfo vide, des discussions masquées derrière leur propre code, des stickers animés, et une discussion avec Marios, qui crée Kryfo, anonymement si vous le souhaitez. Les codes d’appairage montrent maintenant qui vous ajoutez, à comparer avec son écran.
+
+Des améliorations de sécurité partout. Mettez à jour dès que possible.

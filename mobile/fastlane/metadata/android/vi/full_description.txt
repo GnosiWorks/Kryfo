@@ -14,11 +14,15 @@ tính năng:
 * mã hóa đầu cuối (giao thức signal)
 * mọi lưu lượng đi qua một tor client tích hợp sẵn
 * gửi trực tiếp qua onion, dùng relay dự phòng khi người kia ngoại tuyến
-* nhóm với ảnh, tệp, tin nhắn thoại, trả lời, bày tỏ cảm xúc, ghim
+* nhóm với ảnh, tệp, tin nhắn thoại, trả lời, bày tỏ cảm xúc, ghim và bình chọn
+* nhãn dán động được gửi đi dưới dạng một cái tên, nên không có hình ảnh nào rời khỏi điện thoại
+* tìm kiếm trong mọi cuộc trò chuyện, chỉ mục nằm trong cơ sở dữ liệu được mã hóa
 * tin nhắn tự hủy: tự biến mất sau một khoảng thời gian định sẵn
 * cơ sở dữ liệu trên máy được mã hóa và bản sao lưu được mã hóa
-* khóa ứng dụng bằng mã PIN hoặc sinh trắc học
+* khóa ứng dụng bằng mã PIN hoặc sinh trắc học, mã PIN ngụy trang mở ra một Kryfo trống, và các cuộc trò chuyện ẩn sau một mã PIN riêng
 * xóa sạch khẩn cấp, gỡ bỏ mọi thứ, kể cả tệp đa phương tiện trong bộ nhớ
+* một cuộc trò chuyện với người làm ra Kryfo, ẩn danh nếu bạn muốn
+* 15 ngôn ngữ
 * không phân tích, không đo lường từ xa, không quảng cáo
 
 kinh phí: không quảng cáo, không nhà đầu tư. Kryfo sống nhờ những gì người

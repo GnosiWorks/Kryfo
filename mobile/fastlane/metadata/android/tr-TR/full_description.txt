@@ -13,11 +13,15 @@ rehber asla yüklenmez.
 * uçtan uca şifreleme (signal protokolü)
 * tüm trafik gömülü bir tor istemcisinden geçer
 * doğrudan onion teslimi, karşı taraf çevrimdışıysa aktarıcı üzerinden
-* fotoğraf, dosya, sesli mesaj, yanıt, tepki ve sabitlemeli gruplar
+* fotoğraf, dosya, sesli mesaj, yanıt, tepki, sabitleme ve anketli gruplar
+* ad olarak gönderilen animasyonlu çıkartmalar, böylece hiçbir resim telefondan çıkmaz
+* tüm sohbetlerinde arama, dizini şifreli veritabanında tutulur
 * süreli mesajlar: belirlenen süreden sonra silinen mesajlar
 * şifreli yerel veritabanı ve şifreli yedekler
-* PIN ya da biyometriyle uygulama kilidi
+* PIN ya da biyometriyle uygulama kilidi, boş bir Kryfo açan yem PIN’i ve kendi PIN’i olan gizli sohbetler
 * diskteki medya dahil her şeyi kaldıran panik silme
+* Kryfo’yu yapan kişiyle bir sohbet, istersen anonim
+* 15 dil
 * analiz yok, telemetri yok, reklam yok
 
 finansman: reklam yok, yatırımcı yok. bağışçıların verdikleriyle ayakta

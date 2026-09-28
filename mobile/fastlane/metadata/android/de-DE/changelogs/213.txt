@@ -1,0 +1,3 @@
+Neu: eine Tarn-PIN, die ein leeres Kryfo öffnet, versteckte Chats hinter einer eigenen PIN, animierte Sticker und ein Chat mit Marios, der Kryfo baut, auf Wunsch anonym. Kopplungscodes zeigen jetzt, wen du hinzufügst, zum Vergleich mit dem Bildschirm der Person.
+
+Sicherheitsverbesserungen überall. Aktualisiere, wenn du kannst.

@@ -1,0 +1,3 @@
+Baru: PIN umpan yang membuka Kryfo kosong, obrolan tersembunyi di balik PIN tersendiri, stiker animasi, dan obrolan dengan Marios, pembuat Kryfo, secara anonim kalau kamu mau. Kode penautan kini menunjukkan siapa yang kamu tambahkan, untuk dicocokkan dengan layar orang itu.
+
+Peningkatan keamanan di seluruh aplikasi. Perbarui kalau sempat.

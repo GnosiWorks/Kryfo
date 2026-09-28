@@ -1,0 +1,3 @@
+Gửi tin nhắn ổn định hơn khi một relay gửi dữ liệu bất thường.
+
+Xử lý liên hệ và nhóm cẩn thận hơn.

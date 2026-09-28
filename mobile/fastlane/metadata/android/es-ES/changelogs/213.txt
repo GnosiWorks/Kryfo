@@ -1,0 +1,3 @@
+Nuevo: un PIN señuelo que abre un Kryfo vacío, chats ocultos tras un PIN propio, stickers animados y un chat con Marios, que crea Kryfo, de forma anónima si quieres. Los códigos de emparejamiento ahora muestran a quién añades, para comprobarlo con su pantalla.
+
+Mejoras de seguridad en toda la app. Actualiza cuando puedas.

@@ -1,0 +1,3 @@
+Distribution des messages plus fiable quand un relais envoie des données inattendues.
+
+Gestion plus soigneuse des contacts et des groupes.

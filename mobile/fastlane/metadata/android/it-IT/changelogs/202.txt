@@ -1,0 +1,3 @@
+Consegna dei messaggi più affidabile quando un relay invia dati inattesi.
+
+Gestione più attenta di contatti e gruppi.

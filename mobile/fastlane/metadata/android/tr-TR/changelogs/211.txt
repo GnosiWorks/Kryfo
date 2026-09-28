@@ -1,0 +1,3 @@
+Yeni: boş bir Kryfo açan yem PIN’i, kendi PIN’i olan gizli sohbetler, animasyonlu çıkartmalar ve Kryfo’yu yapan Marios ile bir sohbet, istersen anonim. Eşleştirme kodları artık kimi eklediğini gösteriyor, karşındakinin ekranıyla karşılaştırabilmen için.
+
+Her yerde güvenlik iyileştirmeleri. Fırsat bulunca güncelle.

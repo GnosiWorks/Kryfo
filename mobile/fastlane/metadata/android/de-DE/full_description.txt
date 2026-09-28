@@ -13,11 +13,15 @@ Funktionen:
 * Ende-zu-Ende-Verschlüsselung (Signal-Protokoll)
 * aller Datenverkehr über einen eingebauten tor-Client
 * direkte Onion-Zustellung, Relais als Ausweichweg, wenn ein Kontakt offline ist
-* Gruppen mit Fotos, Dateien, Sprachnachrichten, Antworten, Reaktionen und angehefteten Nachrichten
+* Gruppen mit Fotos, Dateien, Sprachnachrichten, Antworten, Reaktionen, angehefteten Nachrichten und Umfragen
+* animierte Sticker, die nur als Name verschickt werden, sodass kein Bild das Handy verlässt
+* Suche in allen deinen Chats, der Index liegt in der verschlüsselten Datenbank
 * befristete Nachrichten: sie verschwinden nach einer festgelegten Zeit
 * verschlüsselte lokale Datenbank und verschlüsselte Backups
-* App-Sperre mit PIN oder Biometrie
+* App-Sperre mit PIN oder Biometrie, eine Tarn-PIN, die ein leeres Kryfo öffnet, und versteckte Chats hinter einer eigenen PIN
 * Panik-Löschen, das alles entfernt, auch Medien im Speicher
+* ein Chat mit dem Menschen, der Kryfo baut, auf Wunsch anonym
+* 15 Sprachen
 * keine Analyse, keine Telemetrie, keine Werbung
 
 Finanzierung: keine Werbung, keine Investoren. es läuft mit dem, was Leute

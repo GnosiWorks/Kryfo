@@ -13,11 +13,15 @@ recursos:
 * criptografia de ponta a ponta (protocolo Signal)
 * todo o tráfego por um cliente tor embutido
 * entrega direta por onion, com retransmissores como reserva quando o contato está offline
-* grupos com fotos, arquivos, mensagens de voz, respostas, reações e mensagens fixadas
+* grupos com fotos, arquivos, mensagens de voz, respostas, reações, mensagens fixadas e enquetes
+* figurinhas animadas que viajam como um nome, então nenhuma imagem sai do aparelho
+* pesquisa em todas as suas conversas, com o índice guardado no banco de dados criptografado
 * mensagens temporárias, que somem depois de um tempo definido
 * banco de dados local criptografado e backups criptografados
-* bloqueio do app com PIN ou biometria
+* bloqueio do app com PIN ou biometria, um PIN de disfarce que abre um Kryfo vazio e conversas ocultas atrás de um PIN próprio
 * apagamento de pânico que remove tudo, inclusive a mídia gravada no aparelho
+* uma conversa com quem cria o Kryfo, anonimamente se você quiser
+* 15 idiomas
 * sem análise de uso, sem telemetria, sem anúncios
 
 apoio: sem anúncios, sem investidores. o Kryfo se mantém com as doações de quem

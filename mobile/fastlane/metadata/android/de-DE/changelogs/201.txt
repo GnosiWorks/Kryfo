@@ -1,0 +1,3 @@
+Zuverlässigere Zustellung, wenn ein Relais unerwartete Daten schickt.
+
+Sorgfältigerer Umgang mit Kontakten und Gruppen.
