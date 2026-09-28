@@ -284,6 +284,11 @@ extern char* HaloNostrKick(void);
 // out what grows. json, bytes.
 //
 extern char* HaloMemStats(void);
+
+// what the relays delivered since the last poll, as a json array of
+// {"t": tag, "c": content}, or "" when there is nothing. the events in it
+// are remembered as seen from here on.
+//
 extern char* HaloNostrPoll(void);
 
 // fetch a url over the tor http client and return the html body (capped).

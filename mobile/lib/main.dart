@@ -28,6 +28,7 @@ import 'media_send.dart';
 import 'media_resend.dart';
 import 'delivery_mode.dart';
 import 'offline_gate.dart';
+import 'relay_poll.dart';
 import 'helper_push.dart';
 import 'screens/getting_messages_screen.dart';
 import 'screens/home_screen.dart';
@@ -499,15 +500,9 @@ class HaloEngine {
     }
   }
 
-  List<({String peer, String cipher})> nostrPoll() {
-    final raw = _nostrPoll().toDartString();
-    if (raw.isEmpty) return const [];
-    return raw.split('\n').map((line) {
-      final idx = line.indexOf('|');
-      if (idx < 0) return (peer: '', cipher: line);
-      return (peer: line.substring(0, idx), cipher: line.substring(idx + 1));
-    }).toList();
-  }
+  // what the relays delivered, one entry per event (relay_poll.dart)
+  List<({String peer, String cipher})> nostrPoll() =>
+      parseRelayPoll(_nostrPoll().toDartString());
 
   String restoreIdentity(String edPriv, String xPriv) {
     final c1 = edPriv.toNativeUtf8();

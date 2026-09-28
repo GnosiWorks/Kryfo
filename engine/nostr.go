@@ -13,7 +13,7 @@
 //   - dart calls HaloNostrSubscribe(peerXPubHex) when contact is added
 //   - engine derives the same ephemeral pubkey and subscribes for events authored by it
 //   - on event arrival, engine appends "peerXPubHex|content" to nostrInbox queue
-//   - dart polls HaloNostrPoll() and routes to libsignal.decrypt(peer, ciphertext)
+//   - dart polls HaloNostrPoll(), one {t, c} per event, and routes to libsignal.decrypt(peer, ciphertext)
 //
 // privacy mitigations:
 //   - relays only ever see disposable per-conversation pubkeys, not identity
@@ -29,6 +29,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -51,11 +52,14 @@ import (
 )
 
 var (
-	nostrMu      sync.Mutex
-	nostrRelays  []string
-	nostrSubs    = map[string]context.CancelFunc{}
-	nostrInbox   []string
-	nostrSentIDs = map[string]bool{}
+	nostrMu     sync.Mutex
+	nostrRelays []string
+	nostrSubs   = map[string]context.CancelFunc{}
+	// "tag|content" per event, and what each one still owes once the poll
+	// has handed it over
+	nostrInbox     []string
+	nostrInboxDone []inboxDone
+	nostrSentIDs   = map[string]bool{}
 )
 
 // a kick makes every relay runner drop its socket and reconnect now, with
@@ -723,6 +727,69 @@ func nostrSubscribeRunnerMode(ctx context.Context, peerXPubHex string, peerArr [
 	nostrSubscribeRunnerFn(ctx, tag, rcvPk, unwrap)
 }
 
+// how far past this phone's clock an event may move the since anchor: a
+// sender's clock can run a little fast
+const anchorSlack = 5 * time.Minute
+
+func anchorStamp(ts nostr.Timestamp, now time.Time) nostr.Timestamp {
+	if max := nostr.Timestamp(now.Add(anchorSlack).Unix()); ts > max {
+		return max
+	}
+	return ts
+}
+
+// an anchor read back is never later than now
+func anchorNow(v int64, now time.Time) int64 {
+	if n := now.Unix(); v > n {
+		return n
+	}
+	return v
+}
+
+// one seen-file operation at a time: a runner that is replaced can still be
+// finishing on the same file as the one replacing it, and the poll appends
+// to it from its own thread
+var seenFileMu sync.Mutex
+
+func appendSeen(path string, ids []string) {
+	if path == "" || len(ids) == 0 {
+		return
+	}
+	seenFileMu.Lock()
+	defer seenFileMu.Unlock()
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+	if err != nil {
+		return
+	}
+	f.WriteString(strings.Join(ids, "\n") + "\n")
+	f.Close()
+}
+
+// what an inbox line still owes once the app has taken it: its id goes into
+// the seen file of the address it came in on
+type inboxDone struct {
+	path string
+	id   string
+}
+
+// remembers every event of a batch the poll handed over, one write per file
+func markHandedOver(done []inboxDone) {
+	by := map[string][]string{}
+	var order []string
+	for _, d := range done {
+		if d.path == "" {
+			continue
+		}
+		if _, ok := by[d.path]; !ok {
+			order = append(order, d.path)
+		}
+		by[d.path] = append(by[d.path], d.id)
+	}
+	for _, path := range order {
+		appendSeen(path, by[path])
+	}
+}
+
 // the general runner: one receive address, one way to open what lands on
 // it, one tag the inbox line carries so dart knows who it was for.
 func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwrap func(nostr2.Event) (string, error)) {
@@ -739,6 +806,8 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 	seenPath := ""
 	lastPath := ""
 	var lastSaved int64
+	// what the file holds, -1 while there is none
+	lastOnDisk := int64(-1)
 	if savedDataDir != "" {
 		tag := rcvPk
 		if len(tag) > 16 {
@@ -746,6 +815,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 		}
 		seenPath = savedDataDir + "/nostr_seen_" + tag
 		lastPath = savedDataDir + "/nostr_last_" + tag
+		seenFileMu.Lock()
 		if b, err := os.ReadFile(seenPath); err == nil {
 			lines := strings.Split(string(b), "\n")
 			// keep the file from growing forever - old ids age out of the
@@ -760,22 +830,13 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 				}
 			}
 		}
+		seenFileMu.Unlock()
 		if b, err := os.ReadFile(lastPath); err == nil {
 			if v, perr := strconv.ParseInt(strings.TrimSpace(string(b)), 10, 64); perr == nil {
-				lastSaved = v
+				lastOnDisk = v
+				lastSaved = anchorNow(v, time.Now())
 			}
 		}
-	}
-	saveSeen := func(id string) {
-		if seenPath == "" {
-			return
-		}
-		f, err := os.OpenFile(seenPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
-		if err != nil {
-			return
-		}
-		f.WriteString(id + "\n")
-		f.Close()
 	}
 	// every relay runner snapshots the anchor when it starts and nothing
 	// hands it back. so the one relay that sees a new event moves its own
@@ -784,64 +845,76 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 	loadLast := func() int64 {
 		seenMu.Lock()
 		defer seenMu.Unlock()
-		return lastSaved
+		return anchorNow(lastSaved, time.Now())
 	}
 
+	// the anchor only moves forward. the file follows it whenever the two
+	// differ, which also puts back one that was later than now
 	saveLast := func(ts int64) {
 		seenMu.Lock()
-		stale := ts <= lastSaved
-		if !stale {
+		defer seenMu.Unlock()
+		if ts > lastSaved {
 			lastSaved = ts
 		}
-		seenMu.Unlock()
-		if stale || lastPath == "" {
+		if lastPath == "" || lastSaved == lastOnDisk {
 			return
 		}
-		os.WriteFile(lastPath, []byte(strconv.FormatInt(ts, 10)), 0600)
+		if os.WriteFile(lastPath, []byte(strconv.FormatInt(lastSaved, 10)), 0600) == nil {
+			lastOnDisk = lastSaved
+		}
 	}
 
-	// true when the event had not been seen before, which is what the
-	// catch-up counts to know it is still finding things
-	dispatch := func(ev nostr.Event) bool {
+	// fresh: the id was new here, which is what the catch-up counts to know
+	// it is still finding things. opened: it unwrapped and went to the inbox,
+	// and only that may move the anchor. an event that opened goes into the
+	// seen file once the poll has handed it over, so a batch that never
+	// reached the app is fetched again.
+	take := func(ev nostr.Event) (fresh, opened bool) {
 		id := ev.ID.Hex()
 		nostrMu.Lock()
 		mine := nostrSentIDs[id]
 		nostrMu.Unlock()
 		if mine {
-			return false
+			return false, false
 		}
 		seenMu.Lock()
 		dup := seen[id]
 		seen[id] = true
 		seenMu.Unlock()
 		if dup {
-			return false
+			return false, false
 		}
 		lastEvMu.Lock()
 		lastEvAt = int64(ev.CreatedAt)
 		lastEvRecv = time.Now().Unix()
 		lastEvMu.Unlock()
-		saveSeen(id)
 		var gw nostr2.Event
 		if err := easyjson.Unmarshal([]byte(ev.String()), &gw); err != nil {
 			log.Printf("nostr: wrap parse failed: %v", err)
-			return true
+			appendSeen(seenPath, []string{id})
+			return true, false
 		}
 		content, err := unwrap(gw)
 		if err != nil {
 			log.Printf("nostr: unwrap dropped one: %v", err)
-			return true
+			appendSeen(seenPath, []string{id})
+			return true, false
 		}
 		noteRecv()
 		nostrMu.Lock()
 		nostrInbox = append(nostrInbox, tag+"|"+content)
+		nostrInboxDone = append(nostrInboxDone, inboxDone{path: seenPath, id: id})
 		nostrMu.Unlock()
 		short := tag
 		if len(short) > 12 {
 			short = short[:12]
 		}
 		log.Printf("nostr: received event %s for %s...", id[:12], short)
-		return true
+		return true, true
+	}
+	dispatch := func(ev nostr.Event) bool {
+		fresh, _ := take(ev)
+		return fresh
 	}
 
 	for i, url := range urls {
@@ -851,7 +924,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 			// this subscription's catch-up record, apart from every other
 			// contact's on the same relay
 			ck := catchupKey(u, rcvPk)
-			last := nostr.Timestamp(lastSaved)
+			last := nostr.Timestamp(loadLast())
 			retry := 10 * time.Second
 			rejoin := 5 * time.Second
 			deaf := 4 * time.Minute
@@ -1029,15 +1102,19 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 									oldest = ev.CreatedAt
 								}
 							}
-							if ev.CreatedAt > last {
-								last = ev.CreatedAt
+							// only an event that opened moves the anchor, and
+							// never far past now
+							if _, opened := take(ev); opened {
+								ts := anchorStamp(ev.CreatedAt, time.Now())
+								if ts > last {
+									last = ts
+								}
+								if atomic.LoadInt32(&caughtUp) == 1 {
+									saveLast(int64(last))
+								} else if int64(ts) > atomic.LoadInt64(&pending) {
+									atomic.StoreInt64(&pending, int64(ts))
+								}
 							}
-							if atomic.LoadInt32(&caughtUp) == 1 {
-								saveLast(int64(last))
-							} else if int64(ev.CreatedAt) > atomic.LoadInt64(&pending) {
-								atomic.StoreInt64(&pending, int64(ev.CreatedAt))
-							}
-							dispatch(ev)
 						}
 						if !idle.Stop() {
 							select {
@@ -1361,16 +1438,55 @@ func HaloMemStats() *C.char {
 	))
 }
 
+// what the relays delivered since the last poll, as a json array of
+// {"t": tag, "c": content}, or "" when there is nothing. the events in it
+// are remembered as seen from here on.
+//
 //export HaloNostrPoll
 func HaloNostrPoll() *C.char {
+	return C.CString(nostrPoll())
+}
+
+func nostrPoll() string {
 	nostrMu.Lock()
-	defer nostrMu.Unlock()
-	if len(nostrInbox) == 0 {
-		return C.CString("")
+	lines, done := nostrInbox, nostrInboxDone
+	nostrInbox, nostrInboxDone = nil, nil
+	nostrMu.Unlock()
+	out := pollJSON(lines)
+	markHandedOver(done)
+	return out
+}
+
+type pollEntry struct {
+	T string `json:"t"`
+	C string `json:"c"`
+}
+
+// content with a line break or a nul is dropped: nothing the app sends
+// carries one (signal is base64, frames are encoded json). each entry stands
+// alone, so the others always arrive.
+func pollJSON(lines []string) string {
+	out := make([]pollEntry, 0, len(lines))
+	for _, l := range lines {
+		i := strings.IndexByte(l, '|')
+		if i < 0 {
+			continue
+		}
+		c := l[i+1:]
+		if strings.ContainsAny(c, "\n\r\x00") {
+			log.Printf("nostr: dropped a delivery that holds a line break")
+			continue
+		}
+		out = append(out, pollEntry{T: l[:i], C: c})
 	}
-	out := strings.Join(nostrInbox, "\n")
-	nostrInbox = nostrInbox[:0]
-	return C.CString(out)
+	if len(out) == 0 {
+		return ""
+	}
+	b, err := json.Marshal(out)
+	if err != nil {
+		return ""
+	}
+	return string(b)
 }
 
 // fetch a url over the tor http client and return the html body (capped).
