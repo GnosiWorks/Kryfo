@@ -7,6 +7,7 @@ package main
 import (
 	"crypto/sha256"
 	"encoding/base64"
+	"time"
 )
 
 const (
@@ -18,12 +19,39 @@ const (
 	inboxMaxLine = 128 * 1024
 )
 
+// lines taken over time, for everyone together. two a second, with room for
+// a full inbox at once, is far above what people send; past it the door
+// stops acking and senders go through the relays.
+const (
+	inboxPerSec = 2
+	inboxBurst  = inboxMaxLines
+)
+
 var (
 	inboxSlots = make(chan struct{}, inboxMaxConns)
 	// both guarded by mu, both reset when dart drains
 	inboxBytes  int
 	inboxRecent = map[[32]byte]struct{}{}
+	// guarded by mu, and not reset by a drain
+	inboxTokens float64 = inboxBurst
+	inboxFilled time.Time
 )
+
+// one line out of the budget. mu must be held
+func inboxBudgetTake(now time.Time) bool {
+	if !inboxFilled.IsZero() {
+		inboxTokens += now.Sub(inboxFilled).Seconds() * inboxPerSec
+		if inboxTokens > inboxBurst {
+			inboxTokens = inboxBurst
+		}
+	}
+	inboxFilled = now
+	if inboxTokens < 1 {
+		return false
+	}
+	inboxTokens--
+	return true
+}
 
 // what a line has to look like before it may cost a trial decrypt: standard
 // base64 that opens to a signal message, first byte whisper (2) or prekey
@@ -49,6 +77,9 @@ func inboxPut(line string) bool {
 		return false
 	}
 	if len(inbox) >= inboxMaxLines || inboxBytes+len(line) > inboxMaxBytes {
+		return false
+	}
+	if !inboxBudgetTake(time.Now()) {
 		return false
 	}
 	inbox = append(inbox, line)

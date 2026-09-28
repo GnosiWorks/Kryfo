@@ -5,6 +5,8 @@ import 'dart:isolate';
 
 import 'package:ffi/ffi.dart';
 
+import '../engine_strings.dart';
+
 typedef _LockC = Pointer<Utf8> Function(Int32, Int32, Pointer<Utf8>);
 typedef _LockD = Pointer<Utf8> Function(int, int, Pointer<Utf8>);
 typedef _BeginC = Pointer<Utf8> Function(Int32, Pointer<Utf8>);
@@ -51,9 +53,9 @@ Future<AgeError?> ageLock(int inFd, int outFd, String pass) => Isolate.run(() {
   final p = pass.toNativeUtf8();
   try {
     return ageErrorOf(
-      _lib()
-          .lookupFunction<_LockC, _LockD>('HaloAgeLock')(inFd, outFd, p)
-          .toDartString(),
+      engineTake(
+        _lib().lookupFunction<_LockC, _LockD>('HaloAgeLock')(inFd, outFd, p),
+      ),
     );
   } finally {
     malloc.free(p);
@@ -64,9 +66,9 @@ Future<AgeError?> ageOpenBegin(int inFd, String pass) => Isolate.run(() {
   final p = pass.toNativeUtf8();
   try {
     return ageErrorOf(
-      _lib()
-          .lookupFunction<_BeginC, _BeginD>('HaloAgeOpenBegin')(inFd, p)
-          .toDartString(),
+      engineTake(
+        _lib().lookupFunction<_BeginC, _BeginD>('HaloAgeOpenBegin')(inFd, p),
+      ),
     );
   } finally {
     malloc.free(p);
@@ -75,9 +77,9 @@ Future<AgeError?> ageOpenBegin(int inFd, String pass) => Isolate.run(() {
 
 Future<AgeError?> ageOpenFinish(int outFd) => Isolate.run(
   () => ageErrorOf(
-    _lib()
-        .lookupFunction<_FinishC, _FinishD>('HaloAgeOpenFinish')(outFd)
-        .toDartString(),
+    engineTake(
+      _lib().lookupFunction<_FinishC, _FinishD>('HaloAgeOpenFinish')(outFd),
+    ),
   ),
 );
 
@@ -89,6 +91,6 @@ void ageCancel() => _lib().lookupFunction<_VoidC, _VoidD>('HaloAgeCancel')();
 int ageProgress() =>
     _lib().lookupFunction<_ProgressC, _ProgressD>('HaloAgeProgress')();
 
-String suggestPassphrase() => _lib()
-    .lookupFunction<_WordsC, _WordsD>('HaloSuggestPassphrase')()
-    .toDartString();
+String suggestPassphrase() => engineTakeSecret(
+  _lib().lookupFunction<_WordsC, _WordsD>('HaloSuggestPassphrase')(),
+);

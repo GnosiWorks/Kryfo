@@ -41,6 +41,16 @@ Future<void> wipeHalo() async {
   } catch (e) {
     dlog('wipe: handle not released (${e.runtimeType})');
   }
+  // the engine stops its relay listeners and takes tor off the network
+  // first, so nothing it runs writes into the folders emptied below
+  try {
+    await Future.any([
+      engine.wipeHold(),
+      Future.delayed(const Duration(seconds: 3), () => 'late'),
+    ]);
+  } catch (e) {
+    dlog('wipe: engine not held (${e.runtimeType})');
+  }
   try {
     // identity markers go first. if anything below fails the next launch
     // still starts at onboarding instead of an empty home screen.

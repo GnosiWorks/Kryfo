@@ -11,13 +11,14 @@ import "C"
 import (
 	"context"
 	"crypto/sha256"
-	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"log"
 	"math"
+	mrand "math/rand/v2"
 	"net/http"
 	"os"
 	"runtime"
@@ -35,11 +36,14 @@ import (
 )
 
 var (
-	nostrMu      sync.Mutex
-	nostrRelays  []string
-	nostrSubs    = map[string]context.CancelFunc{}
-	nostrInbox   []string
-	nostrSentIDs = map[string]bool{}
+	nostrMu     sync.Mutex
+	nostrRelays []string
+	nostrSubs   = map[string]context.CancelFunc{}
+	// "tag|content" per event, and what each one still owes once the poll
+	// has handed it over
+	nostrInbox     []string
+	nostrInboxDone []inboxDone
+	nostrSentIDs   = map[string]bool{}
 )
 
 // a kick makes every relay runner drop its socket and reconnect now, with
@@ -84,29 +88,100 @@ func sleepOrKick(d time.Duration) bool {
 	}
 }
 
-// a req that cannot match anything. the relay answers eose and nothing
-// else, which is the cheapest proof that this circuit still carries data,
-// and unlike cycling the subscription it does not refetch a single stored
-// event. the library dispatches a fake eose after 7s when a relay stays
-// silent, which would make every probe pass, so that is disabled here:
-// only the relay's own eose counts.
-func relayResponds(ctx context.Context, r *nostr.Relay) bool {
+// a req shaped like any other this socket sends: its own address, nothing
+// older than now and no stored events. the relay answers eose, which is the
+// cheapest proof that this circuit still carries data, and unlike cycling
+// the subscription it does not refetch a single stored event. the library
+// dispatches a fake eose after 7s when a relay stays silent, which would
+// make every probe pass, so that is disabled here: only the relay's own
+// eose counts, or its refusal, which is an answer too.
+func relayResponds(ctx context.Context, r *nostr.Relay, rcvPk string) bool {
 	pctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
-	sub, err := r.Subscribe(pctx, nostr.Filter{
-		IDs:   []nostr.ID{{}},
-		Limit: 1,
-	}, nostr.SubscriptionOptions{MaxWaitForEOSE: time.Duration(math.MaxInt64)})
+	sub, err := r.Subscribe(pctx, probeFilter(rcvPk, time.Now()),
+		nostr.SubscriptionOptions{MaxWaitForEOSE: time.Duration(math.MaxInt64)})
 	if err != nil {
 		return false
 	}
 	defer sub.Unsub()
-	select {
-	case <-sub.EndOfStoredEvents:
-		return true
-	case <-pctx.Done():
-		return false
+	for {
+		select {
+		case <-sub.Events:
+			// the subscription that asked for it has it too
+		case <-sub.ClosedReason:
+			return true
+		case <-sub.EndOfStoredEvents:
+			return true
+		case <-pctx.Done():
+			return false
+		}
 	}
+}
+
+func probeFilter(rcvPk string, now time.Time) nostr.Filter {
+	return nostr.Filter{
+		Kinds:     []nostr.Kind{1059},
+		Tags:      nostr.TagMap{"p": []string{rcvPk}},
+		Since:     nostr.Timestamp(now.Unix()),
+		LimitZero: true,
+	}
+}
+
+// how long a socket waits before it answers a kick, drawn per socket, so the
+// sockets of different lanes do not all ask their relays in one instant
+var kickSpread = 15 * time.Second
+
+func kickDelay() time.Duration {
+	if kickSpread <= 0 {
+		return 0
+	}
+	return time.Duration(mrand.Int64N(int64(kickSpread)))
+}
+
+// the quiet timer, spread a quarter either way, so sockets that opened
+// together do not probe together
+func quietFor(deaf time.Duration) time.Duration {
+	return deaf*3/4 + time.Duration(mrand.Int64N(int64(deaf/2)+1))
+}
+
+// a connection that dies within this of opening counts as dropped young
+const youngConn = time.Minute
+
+// the wait before redialling a relay that keeps dropping young connections:
+// the usual pause for the first, doubling from there to a ceiling. our own
+// relay's ceiling is low, as with failed dials.
+func youngDropWait(rejoin time.Duration, drops int, own bool) time.Duration {
+	ceiling := 5 * time.Minute
+	if own {
+		ceiling = ownRelayCeiling
+	}
+	d := rejoin
+	for i := 1; i < drops && d < ceiling; i++ {
+		d *= 2
+	}
+	if d > ceiling {
+		d = ceiling
+	}
+	return d
+}
+
+// how far past this phone's clock an event may move the since anchor: a
+// sender's clock can run a little fast
+const anchorSlack = 5 * time.Minute
+
+func anchorStamp(ts nostr.Timestamp, now time.Time) nostr.Timestamp {
+	if max := nostr.Timestamp(now.Add(anchorSlack).Unix()); ts > max {
+		return max
+	}
+	return ts
+}
+
+// an anchor read back is never later than now
+func anchorNow(v int64, now time.Time) int64 {
+	if n := now.Unix(); v > n {
+		return n
+	}
+	return v
 }
 
 // a page is a hundred because that is what our relay hands out. two hundred
@@ -700,115 +775,100 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 	urls := append([]string(nil), nostrRelays...)
 	nostrMu.Unlock()
 
-	seen := map[string]bool{}
-	var seenMu sync.Mutex
-
 	// remember ids and the high-water timestamp on disk so a relaunch picks
 	// up where it left off rather than refetch the whole window.
 	seenPath := ""
 	lastPath := ""
 	var lastSaved int64
+	// what the file holds, -1 while there is none
+	lastOnDisk := int64(-1)
+	var lastMu sync.Mutex
 	if savedDataDir != "" {
-		tag := rcvPk
-		if len(tag) > 16 {
-			tag = tag[:16]
+		short := rcvPk
+		if len(short) > 16 {
+			short = short[:16]
 		}
-		seenPath = savedDataDir + "/nostr_seen_" + tag
-		lastPath = savedDataDir + "/nostr_last_" + tag
-		if b, err := os.ReadFile(seenPath); err == nil {
-			lines := strings.Split(string(b), "\n")
-			// keep the file from growing forever; old ids age out of the
-			// relay window anyway
-			if len(lines) > 4000 {
-				lines = lines[len(lines)-2000:]
-				os.WriteFile(seenPath, []byte(strings.Join(lines, "\n")), 0600)
-			}
-			for _, line := range lines {
-				if line != "" {
-					seen[line] = true
-				}
-			}
-		}
+		seenPath = savedDataDir + "/nostr_seen_" + short
+		lastPath = savedDataDir + "/nostr_last_" + short
 		if b, err := os.ReadFile(lastPath); err == nil {
 			if v, perr := strconv.ParseInt(strings.TrimSpace(string(b)), 10, 64); perr == nil {
-				lastSaved = v
+				lastOnDisk = v
+				lastSaved = anchorNow(v, time.Now())
 			}
 		}
 	}
-	saveSeen := func(id string) {
-		if seenPath == "" {
-			return
-		}
-		f, err := os.OpenFile(seenPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
-		if err != nil {
-			return
-		}
-		f.WriteString(id + "\n")
-		f.Close()
-	}
+	seen := loadSeen(seenPath)
 	// runners share the anchor and read it back, or a relay that never sees
 	// a new event stays pinned to the launch window for the whole process.
 	loadLast := func() int64 {
-		seenMu.Lock()
-		defer seenMu.Unlock()
-		return lastSaved
+		lastMu.Lock()
+		defer lastMu.Unlock()
+		return anchorNow(lastSaved, time.Now())
 	}
 
+	// the anchor only moves forward. the file follows it whenever the two
+	// differ, which also puts back one that was later than now and leaves a
+	// file once an address has been caught up
 	saveLast := func(ts int64) {
-		seenMu.Lock()
-		stale := ts <= lastSaved
-		if !stale {
+		lastMu.Lock()
+		defer lastMu.Unlock()
+		if ts > lastSaved {
 			lastSaved = ts
 		}
-		seenMu.Unlock()
-		if stale || lastPath == "" {
+		if lastPath == "" || lastSaved == lastOnDisk || engineHeld.Load() {
 			return
 		}
-		os.WriteFile(lastPath, []byte(strconv.FormatInt(ts, 10)), 0600)
+		if os.WriteFile(lastPath, []byte(strconv.FormatInt(lastSaved, 10)), 0600) == nil {
+			lastOnDisk = lastSaved
+		}
 	}
 
-	// true when the event had not been seen before, which is what the
-	// catch-up counts to know it is still finding things
-	dispatch := func(ev nostr.Event) bool {
+	// fresh: the id was new here, which is what the catch-up counts to know
+	// it is still finding things. opened: it unwrapped and went to the inbox,
+	// and only that may move the anchor. the relay library has already
+	// checked that the id is the event's own.
+	take := func(ev nostr.Event) (fresh, opened bool) {
 		id := ev.ID.Hex()
 		nostrMu.Lock()
 		mine := nostrSentIDs[id]
 		nostrMu.Unlock()
 		if mine {
-			return false
+			return false, false
 		}
-		seenMu.Lock()
-		dup := seen[id]
-		seen[id] = true
-		seenMu.Unlock()
-		if dup {
-			return false
+		if !seen.claim(ev.ID) {
+			return false, false
+		}
+		var gw nostr2.Event
+		if err := easyjson.Unmarshal([]byte(ev.String()), &gw); err != nil {
+			log.Printf("nostr: wrap parse failed: %v", err)
+			seen.notOpened(ev.ID)
+			return true, false
+		}
+		content, err := unwrap(gw)
+		if err != nil {
+			log.Printf("nostr: unwrap dropped one: %v", err)
+			seen.notOpened(ev.ID)
+			return true, false
 		}
 		lastEvMu.Lock()
 		lastEvAt = int64(ev.CreatedAt)
 		lastEvRecv = time.Now().Unix()
 		lastEvMu.Unlock()
-		saveSeen(id)
-		var gw nostr2.Event
-		if err := easyjson.Unmarshal([]byte(ev.String()), &gw); err != nil {
-			log.Printf("nostr: wrap parse failed: %v", err)
-			return true
-		}
-		content, err := unwrap(gw)
-		if err != nil {
-			log.Printf("nostr: unwrap dropped one: %v", err)
-			return true
-		}
 		noteRecv()
 		nostrMu.Lock()
 		nostrInbox = append(nostrInbox, tag+"|"+content)
+		nostrInboxDone = append(nostrInboxDone, inboxDone{set: seen, id: ev.ID})
 		nostrMu.Unlock()
 		short := tag
 		if len(short) > 12 {
 			short = short[:12]
 		}
 		log.Printf("nostr: received event %s for %s...", id[:12], short)
-		return true
+		return true, true
+	}
+	dispatch := func(ev nostr.Event) bool {
+		fresh, _ := take(ev)
+		return fresh
 	}
 
 	for i, url := range urls {
@@ -818,11 +878,13 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 			// this subscription's catch-up record, apart from every other
 			// contact's on the same relay
 			ck := catchupKey(u, rcvPk)
-			last := nostr.Timestamp(lastSaved)
+			last := nostr.Timestamp(loadLast())
 			retry := 10 * time.Second
 			rejoin := 5 * time.Second
 			deaf := 4 * time.Minute
 			kicked := false
+			// connections in a row the relay closed within youngConn
+			youngDrops := 0
 			// the last moment this runner knew its subscription was alive: a
 			// successful subscribe, an event, a probe answered. the gap from
 			// there decides how much the next subscribe asks for. wall clock
@@ -879,6 +941,9 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 					sleepOrKick(relayRetryAfter(u, retry, own))
 					continue
 				}
+				// wall clock, like lastAlive: a connection that lived through a
+				// night asleep lived
+				connected := time.Now().Round(0)
 				noteRelayConnect(u, ck, int(time.Since(dialAt).Milliseconds()))
 				// a relay answered. this is the one fact the watchdog trusts.
 				noteRelayConnected()
@@ -930,7 +995,18 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 				// error, no channel close. quiet too long gets a probe, and a
 				// reconnect if nothing answers; the since window refetches
 				// whatever we missed.
-				idle := time.NewTimer(deaf)
+				idle := time.NewTimer(quietFor(deaf))
+				// a kick is answered after this socket's own delay
+				var kickT *time.Timer
+				var kickC <-chan time.Time
+				stopKick := func() {
+					if kickT != nil {
+						kickT.Stop()
+					}
+					kickT, kickC = nil, nil
+				}
+				// the relay closed it, rather than a probe going unanswered
+				dropped := false
 				// stored events come newest first and stop at the relay's cap.
 				// until the relay says that was all, count them and remember
 				// the oldest: a full answer means there may be more behind it.
@@ -978,7 +1054,9 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 					case ev, alive := <-sub.Events:
 						if !alive {
 							idle.Stop()
+							stopKick()
 							r.Close()
+							dropped = true
 							goto reconnect
 						}
 						markAlive()
@@ -989,15 +1067,17 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 									oldest = ev.CreatedAt
 								}
 							}
-							if ev.CreatedAt > last {
-								last = ev.CreatedAt
+							if _, opened := take(ev); opened {
+								ts := anchorStamp(ev.CreatedAt, time.Now())
+								if ts > last {
+									last = ts
+								}
+								if atomic.LoadInt32(&caughtUp) == 1 {
+									saveLast(int64(last))
+								} else if int64(ts) > atomic.LoadInt64(&pending) {
+									atomic.StoreInt64(&pending, int64(ts))
+								}
 							}
-							if atomic.LoadInt32(&caughtUp) == 1 {
-								saveLast(int64(last))
-							} else if int64(ev.CreatedAt) > atomic.LoadInt64(&pending) {
-								atomic.StoreInt64(&pending, int64(ev.CreatedAt))
-							}
-							dispatch(ev)
 						}
 						if !idle.Stop() {
 							select {
@@ -1005,7 +1085,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 							default:
 							}
 						}
-						idle.Reset(deaf)
+						idle.Reset(quietFor(deaf))
 					case <-eose:
 						eose = nil
 						if stored < limit || oldest == 0 {
@@ -1039,29 +1119,38 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 						// quiet is what a conversation looks like nearly all of the
 						// time, and cycling the sub re-runs the since window, which
 						// after a media send is a hundred base64 chunks. ask a
-						// question nothing can answer instead: a req matching no
-						// event costs a frame and an eose, and a real eose proves
-						// the circuit still carries data.
-						if relayResponds(ctx, r) {
+						// question that fetches nothing instead: it costs a frame
+						// and an eose, and a real eose proves the circuit still
+						// carries data.
+						if relayResponds(ctx, r, rcvPk) {
 							markAlive()
-							idle.Reset(deaf)
+							idle.Reset(quietFor(deaf))
 							continue
 						}
 						log.Printf("nostr: %s did not answer a probe, cycling the sub", u)
+						stopKick()
 						r.Close()
 						goto reconnect
 					case <-kickChan():
 						// the job knocks every fifteen minutes so sockets that
 						// died while the phone was asleep come back inside its
-						// short window. a socket that is still answering does
-						// not need reviving, and dropping it costs a full since
-						// window on every contact and every relay, so ask
-						// before tearing down.
+						// short window. each socket answers after its own
+						// delay, see kickSpread.
 						//
 						// a runner with no live subscription never gets here:
 						// it is asleep in sleepOrKick and still reconnects at
 						// once, which is the case the kick exists for.
-						if relayResponds(ctx, r) {
+						if kickC == nil {
+							kickT = time.NewTimer(kickDelay())
+							kickC = kickT.C
+						}
+					case <-kickC:
+						kickT, kickC = nil, nil
+						// a socket that is still answering does not need
+						// reviving, and dropping it costs a full since window
+						// on every contact and every relay, so ask before
+						// tearing down.
+						if relayResponds(ctx, r, rcvPk) {
 							markAlive()
 							log.Printf("nostr: %s kicked but still answering, keeping the sub", u)
 							if !idle.Stop() {
@@ -1070,7 +1159,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 								default:
 								}
 							}
-							idle.Reset(deaf)
+							idle.Reset(quietFor(deaf))
 							continue
 						}
 						log.Printf("nostr: %s kicked, reconnecting now", u)
@@ -1080,6 +1169,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 						goto reconnect
 					case <-ctx.Done():
 						idle.Stop()
+						stopKick()
 						ccancel()
 						settled()
 						r.Close()
@@ -1089,9 +1179,19 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 			reconnect:
 				ccancel()
 				settled()
-				if kicked {
+				// a relay that answers and then closes is not redialled at
+				// the same pace for ever. a connection that lived resets it
+				if lived := time.Since(connected); lived >= youngConn {
+					youngDrops = 0
+				} else if dropped {
+					youngDrops++
+				}
+				switch {
+				case kicked:
 					kicked = false
-				} else {
+				case youngDrops > 0:
+					sleepOrKick(youngDropWait(rejoin, youngDrops, own))
+				default:
 					sleepOrKick(rejoin)
 				}
 			}
@@ -1314,55 +1414,55 @@ func HaloMemStats() *C.char {
 	))
 }
 
+// what the relays delivered since the last poll, as a json array of
+// {"t": tag, "c": content}, or "" when there is nothing. the events in it
+// are remembered as seen from here on.
+//
 //export HaloNostrPoll
 func HaloNostrPoll() *C.char {
-	nostrMu.Lock()
-	defer nostrMu.Unlock()
-	if len(nostrInbox) == 0 {
-		return C.CString("")
-	}
-	out := strings.Join(nostrInbox, "\n")
-	nostrInbox = nostrInbox[:0]
-	return C.CString(out)
+	return C.CString(nostrPoll())
 }
 
-// fetch a url over the tor http client and return the html body (capped).
-// used for sender-side link previews so the receiver never has to fetch and
-// leak their ip. best-effort: returns "error: ..." on any failure, caller skips.
-//
-//export HaloTorGet
-func HaloTorGet(cUrl *C.char) *C.char {
-	url := C.GoString(cUrl)
-	if url == "" {
-		return C.CString("error: empty url")
+func nostrPoll() string {
+	nostrMu.Lock()
+	lines, done := nostrInbox, nostrInboxDone
+	nostrInbox, nostrInboxDone = nil, nil
+	nostrMu.Unlock()
+	out := pollJSON(lines)
+	markHandedOver(done)
+	return out
+}
+
+type pollEntry struct {
+	T string `json:"t"`
+	C string `json:"c"`
+}
+
+// content with a line break or a nul is dropped: nothing the app sends
+// carries one (signal is base64, frames are encoded json). each entry stands
+// alone, so the others always arrive.
+func pollJSON(lines []string) string {
+	out := make([]pollEntry, 0, len(lines))
+	for _, l := range lines {
+		i := strings.IndexByte(l, '|')
+		if i < 0 {
+			continue
+		}
+		c := l[i+1:]
+		if strings.ContainsAny(c, "\n\r\x00") {
+			log.Printf("nostr: dropped a delivery that holds a line break")
+			continue
+		}
+		out = append(out, pollEntry{T: l[:i], C: c})
 	}
-	client, err := torNostrClient()
+	if len(out) == 0 {
+		return ""
+	}
+	b, err := json.Marshal(out)
 	if err != nil {
-		return C.CString(fmt.Sprintf("error: tor client: %v", err))
+		return ""
 	}
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return C.CString(fmt.Sprintf("error: req: %v", err))
-	}
-	// no user agent: the request should not say which app made it
-	req.Header.Set("User-Agent", "")
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
-	defer cancel()
-	resp, err := client.Do(req.WithContext(ctx))
-	if err != nil {
-		return C.CString(fmt.Sprintf("error: get: %v", err))
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		return C.CString(fmt.Sprintf("error: status %d", resp.StatusCode))
-	}
-	// cap at 256kb: the og tags live in <head>, no need for the whole page.
-	limited := io.LimitReader(resp.Body, 256*1024)
-	body, err := io.ReadAll(limited)
-	if err != nil {
-		return C.CString(fmt.Sprintf("error: read: %v", err))
-	}
-	return C.CString(string(body))
+	return string(b)
 }
 
 // a client that only ever dials through tor, whatever the send mode. the
@@ -1485,7 +1585,7 @@ func HaloTorPost(cUrl *C.char, cBody *C.char) *C.char {
 }
 
 // GET over tor that keeps the body for any 2xx: the badge service answers
-// 202 while a payment is still pending, which HaloTorGet would reject.
+// 202 while a payment is still pending.
 //
 //export HaloTorGetJSON
 func HaloTorGetJSON(cUrl *C.char) *C.char {
@@ -1516,43 +1616,4 @@ func HaloTorGetJSON(cUrl *C.char) *C.char {
 		return C.CString(fmt.Sprintf("error: status %d", resp.StatusCode))
 	}
 	return C.CString(string(out))
-}
-
-// like HaloTorGet but returns the body base64-encoded, for binary content
-// (link-preview images). fetched over tor so the receiver never loads the
-// image from the origin and leaks their ip. capped larger than html.
-//
-//export HaloTorGetB64
-func HaloTorGetB64(cUrl *C.char) *C.char {
-	url := C.GoString(cUrl)
-	if url == "" {
-		return C.CString("error: empty url")
-	}
-	client, err := torNostrClient()
-	if err != nil {
-		return C.CString(fmt.Sprintf("error: tor client: %v", err))
-	}
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return C.CString(fmt.Sprintf("error: req: %v", err))
-	}
-	// no user agent: the request should not say which app made it
-	req.Header.Set("User-Agent", "")
-	ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
-	defer cancel()
-	resp, err := client.Do(req.WithContext(ctx))
-	if err != nil {
-		return C.CString(fmt.Sprintf("error: get: %v", err))
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		return C.CString(fmt.Sprintf("error: status %d", resp.StatusCode))
-	}
-	// cap at 1mb: preview thumbnails, not full-res.
-	limited := io.LimitReader(resp.Body, 1024*1024)
-	body, err := io.ReadAll(limited)
-	if err != nil {
-		return C.CString(fmt.Sprintf("error: read: %v", err))
-	}
-	return C.CString("ok:" + base64.StdEncoding.EncodeToString(body))
 }

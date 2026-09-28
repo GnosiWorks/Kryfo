@@ -90,6 +90,8 @@ import 'handle_lookup.dart';
 import 'widgets/sheet_handle.dart';
 import 'widgets/halo_sheet.dart';
 import 'bidi_safe.dart';
+import 'engine_strings.dart';
+import 'relay_poll.dart';
 import 'l10n/l10n.dart';
 import 'l10n/numbers.dart';
 import 'l10n/app_locale.dart';
@@ -152,10 +154,7 @@ class HaloEngine {
   late final CStrFnDart _bridgeState;
   late final CStrFnDart _restartTor;
   late final OneArgFnDart _setMode;
-  late final OneArgFnDart _torGet;
-  late final OneArgFnDart _torGetB64;
   late final OneArgFnDart _idFromEdPub;
-  late final TwoArgFnDart _encryptBackup;
   late final TwoArgFnDart _decryptBackup;
 
   HaloEngine() {
@@ -200,13 +199,8 @@ class HaloEngine {
     _setMode = _lib.lookupFunction<OneArgFn, OneArgFnDart>(
       'HaloSetTransportMode',
     );
-    _torGet = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloTorGet');
-    _torGetB64 = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloTorGetB64');
     _idFromEdPub = _lib.lookupFunction<OneArgFn, OneArgFnDart>(
       'HaloIdFromEdPub',
-    );
-    _encryptBackup = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>(
-      'HaloEncryptBackup',
     );
     _decryptBackup = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>(
       'HaloDecryptBackup',
@@ -217,33 +211,36 @@ class HaloEngine {
     _setDebug(kDebugMode ? 1 : 0);
   }
 
-  String version() => _version().toDartString();
-  String generateIdentity() => _genIdentity().toDartString();
-  String myId() => _myId().toDartString();
-  String myEdPubkey() => _myEdPub().toDartString();
-  String myXPubkey() => _myXPub().toDartString();
-  String myEdPrivkey() => _myEdPriv().toDartString();
-  String myXPrivkey() => _myXPriv().toDartString();
+  // every string back from the engine is copied and freed through
+  // engineTake (engine_strings.dart), the ones that can hold a key or
+  // plaintext through engineTakeSecret
+  String version() => engineTake(_version());
+  String generateIdentity() => engineTake(_genIdentity());
+  String myId() => engineTake(_myId());
+  String myEdPubkey() => engineTake(_myEdPub());
+  String myXPubkey() => engineTake(_myXPub());
+  String myEdPrivkey() => engineTakeSecret(_myEdPriv());
+  String myXPrivkey() => engineTakeSecret(_myXPriv());
   String startListener(String dataDir) {
     final ptr = dataDir.toNativeUtf8();
     try {
-      return _start(ptr).toDartString();
+      return engineTake(_start(ptr));
     } finally {
       malloc.free(ptr);
     }
   }
 
   List<String> drainInbox() {
-    final raw = _drainInbox().toDartString();
+    final raw = engineTake(_drainInbox());
     if (raw.isEmpty) return const [];
     return raw.split('\n');
   }
 
-  // polled every second by the watchdog, so the string is freed
+  // polled every second by the watchdog
   String getStatus() => _take(_getStatus());
 
   // every relay socket dropped and reopened now, since window and all
-  String nostrKick() => _nostrKick().toDartString();
+  String nostrKick() => engineTake(_nostrKick());
 
   // looked up on first use so older engines still load
   late final CStrFnDart _catchupState = _lib.lookupFunction<CStrFn, CStrFnDart>(
@@ -253,7 +250,7 @@ class HaloEngine {
   /// (connections still fetching what they missed, connections begun so far)
   (int, int) catchupState() {
     try {
-      final p = _catchupState().toDartString().split(' ');
+      final p = engineTake(_catchupState()).split(' ');
       return (int.parse(p[0]), int.parse(p[1]));
     } catch (_) {
       return (0, 0);
@@ -265,26 +262,20 @@ class HaloEngine {
   late final CStrFnDart _lastReconnect = _lib
       .lookupFunction<CStrFn, CStrFnDart>('HaloLastReconnect');
 
-  // C.CString mallocs on the go side, so the string is ours to free. the
-  // transport screen reads it on every refresh.
-  // todo: most other CStr bindings here do not free either
+  // the transport screen reads it on every refresh
   String lastReconnect() {
-    Pointer<Utf8>? p;
     try {
-      p = _lastReconnect();
-      if (p == nullptr) return '';
-      return p.toDartString();
+      return engineTake(_lastReconnect());
     } catch (_) {
+      // an older engine without the call: nothing to show
       return '';
-    } finally {
-      if (p != null && p != nullptr) malloc.free(p);
     }
   }
 
   // what the go side holds, json
   Map<String, dynamic> memStats() {
     try {
-      return jsonDecode(_memStats().toDartString()) as Map<String, dynamic>;
+      return jsonDecode(engineTake(_memStats())) as Map<String, dynamic>;
     } catch (_) {
       return const {};
     }
@@ -293,7 +284,7 @@ class HaloEngine {
   String nostrInit(String relaysCSV) {
     final ptr = relaysCSV.toNativeUtf8();
     try {
-      return _nostrInit(ptr).toDartString();
+      return engineTake(_nostrInit(ptr));
     } finally {
       malloc.free(ptr);
     }
@@ -302,20 +293,9 @@ class HaloEngine {
   String idFromEdPub(String hexPub) {
     final ptr = hexPub.toNativeUtf8();
     try {
-      return _idFromEdPub(ptr).toDartString();
+      return engineTake(_idFromEdPub(ptr));
     } finally {
       calloc.free(ptr);
-    }
-  }
-
-  String encryptBackup(String plain, String passphrase) {
-    final p1 = plain.toNativeUtf8();
-    final p2 = passphrase.toNativeUtf8();
-    try {
-      return _encryptBackup(p1, p2).toDartString();
-    } finally {
-      calloc.free(p1);
-      calloc.free(p2);
     }
   }
 
@@ -323,7 +303,7 @@ class HaloEngine {
     final p1 = blob.toNativeUtf8();
     final p2 = passphrase.toNativeUtf8();
     try {
-      return _decryptBackup(p1, p2).toDartString();
+      return engineTakeSecret(_decryptBackup(p1, p2));
     } finally {
       calloc.free(p1);
       calloc.free(p2);
@@ -365,7 +345,7 @@ class HaloEngine {
     final a = lines.toNativeUtf8();
     final b = (on ? '1' : '0').toNativeUtf8();
     try {
-      return _setBridges(a, b).toDartString();
+      return engineTake(_setBridges(a, b));
     } finally {
       malloc.free(a);
       malloc.free(b);
@@ -373,7 +353,7 @@ class HaloEngine {
   }
 
   // "on|count|port"
-  String bridgeState() => _bridgeState().toDartString();
+  String bridgeState() => engineTake(_bridgeState());
 
   void restartTor() => _take(_restartTor());
 
@@ -389,15 +369,7 @@ class HaloEngine {
     }
   }
 
-  // read a C.CString from the go side and free it, since C.CString mallocs
-  static String _take(Pointer<Utf8> p) {
-    if (p == nullptr) return '';
-    try {
-      return p.toDartString();
-    } finally {
-      malloc.free(p);
-    }
-  }
+  static String _take(Pointer<Utf8> p) => engineTake(p);
 
   // the registry is a request over tor, so it runs off the ui thread
   Future<String> handleCheck(String h) => _ffiOnIsolate('HaloHandleCheck', [h]);
@@ -416,7 +388,7 @@ class HaloEngine {
   String setTransportMode(String mode) {
     final p = mode.toNativeUtf8();
     try {
-      return _setMode(p).toDartString();
+      return engineTake(_setMode(p));
     } finally {
       malloc.free(p);
     }
@@ -439,13 +411,13 @@ class HaloEngine {
   // everything the transport knows, in one read. no inference on this side.
   Map<String, dynamic> transportState() {
     try {
-      return jsonDecode(_txState().toDartString()) as Map<String, dynamic>;
+      return jsonDecode(engineTake(_txState())) as Map<String, dynamic>;
     } catch (_) {
       return const {};
     }
   }
 
-  String firstContactPk(int counter) => _fcPk(counter).toDartString();
+  String firstContactPk(int counter) => engineTake(_fcPk(counter));
 
   // put an invite where a six digit code points, and look for one there.
   Future<String> pairCodePublish(String code, String payload) =>
@@ -485,7 +457,7 @@ class HaloEngine {
     if (devGate.names(xPub: peerXPubHex)) return kDevRefused;
     final ptr = peerXPubHex.toNativeUtf8();
     try {
-      return _nostrSubscribe(ptr).toDartString();
+      return engineTake(_nostrSubscribe(ptr));
     } finally {
       malloc.free(ptr);
     }
@@ -509,34 +481,14 @@ class HaloEngine {
     what: 'tor',
   );
 
-  String torGet(String url) {
-    final ptr = url.toNativeUtf8();
-    try {
-      return _torGet(ptr).toDartString();
-    } finally {
-      malloc.free(ptr);
-    }
-  }
+  // what the relays delivered, one entry per event (relay_poll.dart). room
+  // frames in it are plaintext, so it is zeroed on the way back
+  List<({String peer, String cipher})> nostrPoll() =>
+      parseRelayPoll(engineTakeSecret(_nostrPoll()));
 
-  // fetch binary (preview image) over tor, returns 'ok:<base64>' or 'error:..'.
-  String torGetB64(String url) {
-    final ptr = url.toNativeUtf8();
-    try {
-      return _torGetB64(ptr).toDartString();
-    } finally {
-      malloc.free(ptr);
-    }
-  }
-
-  List<({String peer, String cipher})> nostrPoll() {
-    final raw = _nostrPoll().toDartString();
-    if (raw.isEmpty) return const [];
-    return raw.split('\n').map((line) {
-      final idx = line.indexOf('|');
-      if (idx < 0) return (peer: '', cipher: line);
-      return (peer: line.substring(0, idx), cipher: line.substring(idx + 1));
-    }).toList();
-  }
+  // the wipe stops every relay listener and takes tor off the network before
+  // it deletes, so nothing is written back into the folders it empties
+  Future<String> wipeHold() => _torCtlOnIsolate('HaloWipeHold');
 
   // the decoy's identity: pure engine calls that touch no engine state and
   // log nothing (engine/quiet.go)
@@ -567,7 +519,7 @@ class HaloEngine {
   String quietFirstContactPk(String xPriv, int counter) {
     final a = xPriv.toNativeUtf8();
     try {
-      return _quietFc(a, counter).toDartString();
+      return engineTake(_quietFc(a, counter));
     } finally {
       calloc.free(a);
     }
@@ -586,7 +538,7 @@ class HaloEngine {
   // a new vault's sealing pair: the public half for the everyday side, the
   // private half kept in the vault
   ({String pub, String priv}) vaultKeys() {
-    final out = _take(_vaultKeys());
+    final out = engineTakeSecret(_vaultKeys());
     // the engine's errors never carry a key
     if (out.isEmpty || out.startsWith('error')) throw StateError(out);
     final j = jsonDecode(out) as Map<String, dynamic>;
@@ -609,7 +561,7 @@ class HaloEngine {
   List<String?> vaultOpenMany(String priv, List<String> b64s) {
     final a = priv.toNativeUtf8(), b = jsonEncode(b64s).toNativeUtf8();
     try {
-      final out = _take(_vaultOpenMany(a, b));
+      final out = engineTakeSecret(_vaultOpenMany(a, b));
       // the engine's errors never carry a key
       if (out.startsWith('error')) throw StateError(out);
       final list = [for (final s in jsonDecode(out) as List) s as String?];
@@ -622,7 +574,7 @@ class HaloEngine {
   }
 
   Map<String, dynamic>? _quietJson(Pointer<Utf8> p) {
-    final s = p.toDartString();
+    final s = engineTakeSecret(p);
     if (s.startsWith('error')) return null;
     try {
       return jsonDecode(s) as Map<String, dynamic>;
@@ -635,7 +587,7 @@ class HaloEngine {
     final c1 = edPriv.toNativeUtf8();
     final c2 = xPriv.toNativeUtf8();
     try {
-      return _restoreIdentity(c1, c2).toDartString();
+      return engineTake(_restoreIdentity(c1, c2));
     } finally {
       calloc.free(c1);
       calloc.free(c2);
@@ -646,7 +598,7 @@ class HaloEngine {
     final cPub = peerPub.toNativeUtf8();
     final cPlain = plain.toNativeUtf8();
     try {
-      return _encryptFor(cPub, cPlain).toDartString();
+      return engineTake(_encryptFor(cPub, cPlain));
     } finally {
       calloc.free(cPub);
       calloc.free(cPlain);
@@ -657,7 +609,7 @@ class HaloEngine {
     final cPub = peerPub.toNativeUtf8();
     final cB64 = b64.toNativeUtf8();
     try {
-      return _decryptFrom(cPub, cB64).toDartString();
+      return engineTakeSecret(_decryptFrom(cPub, cB64));
     } finally {
       calloc.free(cPub);
       calloc.free(cB64);
@@ -677,9 +629,9 @@ class HaloEngine {
   // engine, which never keeps it: the key lives in the room row and dies
   // with it.
   ({String priv, String pub})? roomKeygen() {
-    final r = _lib
-        .lookupFunction<CStrFn, CStrFnDart>('HaloRoomKeygen')()
-        .toDartString();
+    final r = engineTakeSecret(
+      _lib.lookupFunction<CStrFn, CStrFnDart>('HaloRoomKeygen')(),
+    );
     final i = r.indexOf(':');
     if (r.startsWith('error') || i < 0) return null;
     return (priv: r.substring(0, i), pub: r.substring(i + 1));
@@ -689,7 +641,7 @@ class HaloEngine {
     final fn = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloRoomFcPk');
     final p = priv.toNativeUtf8();
     try {
-      return fn(p).toDartString();
+      return engineTake(fn(p));
     } finally {
       malloc.free(p);
     }
@@ -763,30 +715,30 @@ Future<String> _roomFfiOnIsolate(String name, List<String> args) {
     try {
       switch (ptrs.length) {
         case 1:
-          return lib
-              .lookupFunction<OneArgFn, OneArgFnDart>(name)(ptrs[0])
-              .toDartString();
+          return engineTake(
+            lib.lookupFunction<OneArgFn, OneArgFnDart>(name)(ptrs[0]),
+          );
         case 2:
-          return lib
-              .lookupFunction<TwoArgFn, TwoArgFnDart>(name)(ptrs[0], ptrs[1])
-              .toDartString();
+          return engineTake(
+            lib.lookupFunction<TwoArgFn, TwoArgFnDart>(name)(ptrs[0], ptrs[1]),
+          );
         case 3:
-          return lib
-              .lookupFunction<ThreeArgFn, ThreeArgFnDart>(name)(
-                ptrs[0],
-                ptrs[1],
-                ptrs[2],
-              )
-              .toDartString();
+          return engineTake(
+            lib.lookupFunction<ThreeArgFn, ThreeArgFnDart>(name)(
+              ptrs[0],
+              ptrs[1],
+              ptrs[2],
+            ),
+          );
         default:
-          return lib
-              .lookupFunction<FourArgFn, FourArgFnDart>(name)(
-                ptrs[0],
-                ptrs[1],
-                ptrs[2],
-                ptrs[3],
-              )
-              .toDartString();
+          return engineTake(
+            lib.lookupFunction<FourArgFn, FourArgFnDart>(name)(
+              ptrs[0],
+              ptrs[1],
+              ptrs[2],
+              ptrs[3],
+            ),
+          );
       }
     } finally {
       for (final p in ptrs) {
@@ -808,7 +760,7 @@ Future<String> _fcSendOnIsolate(String peerXPub, String fcPk, String msg) {
     final b = fcPk.toNativeUtf8();
     final c = msg.toNativeUtf8();
     try {
-      return fn(a, b, c).toDartString();
+      return engineTake(fn(a, b, c));
     } finally {
       malloc.free(a);
       malloc.free(b);
@@ -824,13 +776,13 @@ Future<String> _moatOnIsolate(String? challenge, String? answer) {
         : DynamicLibrary.process();
     if (challenge == null) {
       final fn = lib.lookupFunction<CStrFn, CStrFnDart>('HaloMoatFetch');
-      return fn().toDartString();
+      return engineTake(fn());
     }
     final fn = lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloMoatSolve');
     final a = challenge.toNativeUtf8();
     final b = (answer ?? '').toNativeUtf8();
     try {
-      return fn(a, b).toDartString();
+      return engineTake(fn(a, b));
     } finally {
       malloc.free(a);
       malloc.free(b);
@@ -848,7 +800,7 @@ Future<String> _torGetJsonOnIsolate(String url) {
     final fn = lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloTorGetJSON');
     final u = url.toNativeUtf8();
     try {
-      return fn(u).toDartString();
+      return engineTake(fn(u));
     } finally {
       malloc.free(u);
     }
@@ -866,14 +818,14 @@ Future<String> _pairCodeOnIsolate(String code, String? payload) {
         final fn = lib.lookupFunction<OneArgFn, OneArgFnDart>(
           'HaloPairCodeFetch',
         );
-        return fn(c).toDartString();
+        return engineTake(fn(c));
       }
       final fn = lib.lookupFunction<TwoArgFn, TwoArgFnDart>(
         'HaloPairCodePublish',
       );
       final pl = payload.toNativeUtf8();
       try {
-        return fn(c, pl).toDartString();
+        return engineTake(fn(c, pl));
       } finally {
         malloc.free(pl);
       }
@@ -891,7 +843,7 @@ Future<String> _fcSubscribeOnIsolate(int counter) {
     final fn = lib.lookupFunction<CounterFn, CounterFnDart>(
       'HaloNostrSubscribeFirstContact',
     );
-    return fn(counter).toDartString();
+    return engineTake(fn(counter));
   });
 }
 
@@ -906,7 +858,7 @@ Future<String> _nostrInitOnIsolate(String relaysCSV) {
     final fn = lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloNostrInit');
     final p = relaysCSV.toNativeUtf8();
     try {
-      return fn(p).toDartString();
+      return engineTake(fn(p));
     } finally {
       malloc.free(p);
     }
@@ -919,7 +871,7 @@ Future<String> _torCtlOnIsolate(String symbol) {
     final lib = Platform.isAndroid
         ? DynamicLibrary.open('libhalo.so')
         : DynamicLibrary.process();
-    return lib.lookupFunction<CStrFn, CStrFnDart>(symbol)().toDartString();
+    return engineTake(lib.lookupFunction<CStrFn, CStrFnDart>(symbol)());
   }).timeout(const Duration(seconds: 70), onTimeout: () => 'error: timeout');
 }
 
@@ -935,7 +887,7 @@ Future<String> _startListenerOnIsolate(String dataDir) {
         >('HaloStartListener');
     final p = dataDir.toNativeUtf8();
     try {
-      return fn(p).toDartString();
+      return engineTake(fn(p));
     } finally {
       malloc.free(p);
     }
@@ -958,21 +910,21 @@ Future<String> _ffiOnIsolate(
     try {
       switch (ps.length) {
         case 1:
-          return lib
-              .lookupFunction<OneArgFn, OneArgFnDart>(symbol)(ps[0])
-              .toDartString();
+          return engineTake(
+            lib.lookupFunction<OneArgFn, OneArgFnDart>(symbol)(ps[0]),
+          );
         case 2:
-          return lib
-              .lookupFunction<TwoArgFn, TwoArgFnDart>(symbol)(ps[0], ps[1])
-              .toDartString();
+          return engineTake(
+            lib.lookupFunction<TwoArgFn, TwoArgFnDart>(symbol)(ps[0], ps[1]),
+          );
         default:
-          return lib
-              .lookupFunction<ThreeArgFn, ThreeArgFnDart>(symbol)(
-                ps[0],
-                ps[1],
-                ps[2],
-              )
-              .toDartString();
+          return engineTake(
+            lib.lookupFunction<ThreeArgFn, ThreeArgFnDart>(symbol)(
+              ps[0],
+              ps[1],
+              ps[2],
+            ),
+          );
       }
     } finally {
       for (final p in ps) {
@@ -993,7 +945,7 @@ Future<String> _sendOnIsolate(({bool nostr, String a, String b}) args) {
     final p1 = args.a.toNativeUtf8();
     final p2 = args.b.toNativeUtf8();
     try {
-      return fn(p1, p2).toDartString();
+      return engineTake(fn(p1, p2));
     } finally {
       malloc.free(p1);
       malloc.free(p2);
@@ -1009,7 +961,7 @@ Future<String> _subscribeOnIsolate(String xPub) {
     final fn = lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloNostrSubscribe');
     final p = xPub.toNativeUtf8();
     try {
-      return fn(p).toDartString();
+      return engineTake(fn(p));
     } finally {
       malloc.free(p);
     }
@@ -1040,37 +992,7 @@ Future<String> torStrictGetOnIsolate(String url) {
     final fn = lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloTorGetStrict');
     final p = url.toNativeUtf8();
     try {
-      return fn(p).toDartString();
-    } finally {
-      malloc.free(p);
-    }
-  });
-}
-
-Future<String> torGetOnIsolate(String url) {
-  return Isolate.run(() {
-    final lib = Platform.isAndroid
-        ? DynamicLibrary.open('libhalo.so')
-        : DynamicLibrary.process();
-    final fn = lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloTorGet');
-    final p = url.toNativeUtf8();
-    try {
-      return fn(p).toDartString();
-    } finally {
-      malloc.free(p);
-    }
-  });
-}
-
-Future<String> torGetB64OnIsolate(String url) {
-  return Isolate.run(() {
-    final lib = Platform.isAndroid
-        ? DynamicLibrary.open('libhalo.so')
-        : DynamicLibrary.process();
-    final fn = lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloTorGetB64');
-    final p = url.toNativeUtf8();
-    try {
-      return fn(p).toDartString();
+      return engineTake(fn(p));
     } finally {
       malloc.free(p);
     }

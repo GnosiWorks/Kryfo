@@ -32,6 +32,7 @@ import 'main.dart'
 import 'router.dart' show scrubHidden;
 import 'devchat/dev_chat.dart' show scrubDevAnon;
 import 'dlog.dart';
+import 'engine_strings.dart';
 import 'dart:typed_data';
 import 'backup_stream.dart';
 import 'dart:math';
@@ -117,7 +118,7 @@ Future<String> _decryptOnIsolate(String blob, String passphrase) {
     final p1 = blob.toNativeUtf8();
     final p2 = passphrase.toNativeUtf8();
     try {
-      return fn(p1, p2).toDartString();
+      return engineTakeSecret(fn(p1, p2));
     } finally {
       calloc.free(p1);
       calloc.free(p2);
@@ -332,7 +333,7 @@ String? _backupKey(DynamicLibrary lib, String passphrase, Uint8List salt) {
   final ps = calloc<Uint8>(16);
   try {
     ps.asTypedList(16).setAll(0, salt);
-    final r = fn(p1, ps).toDartString();
+    final r = engineTakeSecret(fn(p1, ps));
     return r.startsWith('error:') ? null : r;
   } finally {
     calloc.free(p1);
@@ -373,7 +374,12 @@ class _EngineCipher implements ChunkCipher {
     return Uint8List.fromList(_out.asTypedList(n));
   }
 
+  // the key and the last records are zeroed before the memory goes back
   void dispose() {
+    final k = _key.length;
+    _key.cast<Uint8>().asTypedList(k).fillRange(0, k, 0);
+    _in.asTypedList(_cap).fillRange(0, _cap, 0);
+    _out.asTypedList(_cap).fillRange(0, _cap, 0);
     calloc.free(_key);
     calloc.free(_in);
     calloc.free(_out);

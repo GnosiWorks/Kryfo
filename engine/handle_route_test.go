@@ -215,7 +215,7 @@ func trunc(s string, n int) string {
 // socks port that moves takes all of them down together. this holds each
 // client across a bounce, which is how the app has them: warm, from before.
 //
-//	torNostrClient()      the everyday lane: its relays, HaloTorGet,
+//	torNostrClient()      the everyday lane: its relays, HaloTorGetJSON,
 //	                      HaloTorPost (the badge service), handle
 //	                      check/claim/release
 //	torNostrClientFor()   the other lanes: each room's relays, pair codes
@@ -268,7 +268,7 @@ func TestOneShotsSurviveBounce(t *testing.T) {
 		name string
 		run  func() error
 	}{
-		{"HaloTorGet / handle check", func() error {
+		{"handle check", func() error {
 			return ping(shared, "GET", handleBase+"/handle/check?h=probeaudit", "")
 		}},
 		{"HaloTorPost / badge invoice / handle claim", func() error {

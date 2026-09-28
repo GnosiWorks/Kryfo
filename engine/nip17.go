@@ -9,6 +9,7 @@ package main
 
 import (
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"time"
 
@@ -29,7 +30,17 @@ type xid struct {
 	priv, pub [32]byte
 }
 
-func myXid() xid { return xid{priv: myXPriv, pub: myXPub} }
+var errNoIdentity = errors.New("no identity loaded")
+
+// the main identity. nothing is derived from it before one is loaded
+func myXid() (xid, error) {
+	mu.Lock()
+	defer mu.Unlock()
+	if myXPriv == ([32]byte{}) {
+		return xid{}, errNoIdentity
+	}
+	return xid{priv: myXPriv, pub: myXPub}, nil
+}
 
 func xidFromPrivHex(h string) (xid, error) {
 	b, err := hex.DecodeString(h)
@@ -46,7 +57,11 @@ func xidFromPrivHex(h string) (xid, error) {
 // both peers can compute both roles from their shared secret; nobody else
 // can compute either, and nothing links two conversations.
 func nip17DeriveRole(peer [32]byte, info, ownerXPubHex string) (sk, pk string, err error) {
-	return nip17DeriveRoleAs(myXid(), peer, info, ownerXPubHex)
+	me, err := myXid()
+	if err != nil {
+		return "", "", err
+	}
+	return nip17DeriveRoleAs(me, peer, info, ownerXPubHex)
 }
 
 func nip17DeriveRoleAs(me xid, peer [32]byte, info, ownerXPubHex string) (sk, pk string, err error) {
@@ -67,7 +82,11 @@ func nip17DeriveRoleAs(me xid, peer [32]byte, info, ownerXPubHex string) (sk, pk
 
 // my receive address for this peer. the subscription filters on its pubkey.
 func nip17RcvAddress(peer [32]byte) (sk, pk string, err error) {
-	return nip17RcvAddressAs(myXid(), peer)
+	me, err := myXid()
+	if err != nil {
+		return "", "", err
+	}
+	return nip17RcvAddressAs(me, peer)
 }
 
 func nip17RcvAddressAs(me xid, peer [32]byte) (sk, pk string, err error) {
@@ -78,7 +97,11 @@ func nip17RcvAddressAs(me xid, peer [32]byte) (sk, pk string, err error) {
 // key) -> gift wrap (fresh throwaway key + jittered timestamp, done inside
 // nip59). returns the wrap ready to publish.
 func nip17Wrap(peer [32]byte, msg string) (nostr2.Event, error) {
-	return nip17WrapAs(myXid(), peer, msg)
+	me, err := myXid()
+	if err != nil {
+		return nostr2.Event{}, err
+	}
+	return nip17WrapAs(me, peer, msg)
 }
 
 func nip17WrapAs(me xid, peer [32]byte, msg string) (nostr2.Event, error) {
@@ -113,7 +136,11 @@ func nip17WrapAs(me xid, peer [32]byte, msg string) (nostr2.Event, error) {
 // unwrap a gift wrap from this peer. anything not sealed by the peer's
 // derived sender key is dropped.
 func nip17Unwrap(peer [32]byte, gw nostr2.Event) (string, error) {
-	return nip17UnwrapAs(myXid(), peer, gw)
+	me, err := myXid()
+	if err != nil {
+		return "", err
+	}
+	return nip17UnwrapAs(me, peer, gw)
 }
 
 func nip17UnwrapAs(me xid, peer [32]byte, gw nostr2.Event) (string, error) {

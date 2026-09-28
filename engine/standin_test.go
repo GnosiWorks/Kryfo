@@ -38,10 +38,17 @@ type siConn struct {
 	opened    time.Time
 	closed    time.Time
 	subIDs    []string
+	reqs      []siReq
 	addrs     map[string]bool // p tags asked for
 	published map[string]bool // p tags of events it published
 	pings     []time.Time
 	kill      context.CancelFunc
+}
+
+// one req, when it came and what it asked for
+type siReq struct {
+	at     time.Time
+	filter nostr.Filter
 }
 
 type relayStandIn struct {
@@ -49,6 +56,7 @@ type relayStandIn struct {
 
 	mu        sync.Mutex
 	pongDelay time.Duration
+	reqDelay  time.Duration // before stored events are sent
 	conns     []*siConn
 	events    []nostr.Event
 	resent    int // stored events sent in answer to a req
@@ -111,16 +119,21 @@ func (s *relayStandIn) handle(w http.ResponseWriter, r *http.Request) {
 			f := e.Filters[0]
 			s.mu.Lock()
 			c.subIDs = append(c.subIDs, e.SubscriptionID)
+			c.reqs = append(c.reqs, siReq{at: time.Now(), filter: f})
 			for _, p := range f.Tags["p"] {
 				c.addrs[p] = true
 			}
 			var match []nostr.Event
 			for _, ev := range s.events {
-				if f.Matches(ev) {
+				if f.Matches(ev) && !f.LimitZero {
 					match = append(match, ev)
 				}
 			}
+			delay := s.reqDelay
 			s.mu.Unlock()
+			if delay > 0 {
+				time.Sleep(delay)
+			}
 			sort.Slice(match, func(i, j int) bool { return match[i].CreatedAt > match[j].CreatedAt })
 			if f.Limit > 0 && len(match) > f.Limit {
 				match = match[:f.Limit]
@@ -162,6 +175,7 @@ func (s *relayStandIn) snapshot() []siConn {
 	for _, c := range s.conns {
 		cp := *c
 		cp.subIDs = append([]string(nil), c.subIDs...)
+		cp.reqs = append([]siReq(nil), c.reqs...)
 		cp.pings = append([]time.Time(nil), c.pings...)
 		out = append(out, cp)
 	}
