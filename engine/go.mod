@@ -7,7 +7,7 @@ require (
 	filippo.io/age v1.3.2
 	github.com/alexballas/go-libtor v1.0.7
 	github.com/cretz/bine v0.2.0
-	github.com/mailru/easyjson v0.9.0
+	github.com/mailru/easyjson v0.9.2
 	github.com/nbd-wtf/go-nostr v0.52.3
 	github.com/tyler-smith/go-bip39 v1.1.0
 	golang.org/x/crypto v0.55.0
