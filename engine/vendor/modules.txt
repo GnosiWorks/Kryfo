@@ -182,7 +182,7 @@ gitlab.com/yawning/obfs4.git/internal/x25519ell2
 gitlab.com/yawning/obfs4.git/transports/base
 gitlab.com/yawning/obfs4.git/transports/obfs4
 gitlab.com/yawning/obfs4.git/transports/obfs4/framing
-# gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/goptlib v1.5.0
+# gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/goptlib v1.6.0
 ## explicit; go 1.11
 gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/goptlib
 # golang.org/x/arch v0.15.0

@@ -90,8 +90,8 @@ gitlab.com/yawning/edwards25519-extra v0.0.0-20231005122941-2149dcafc266 h1:Ivjs
 gitlab.com/yawning/edwards25519-extra v0.0.0-20231005122941-2149dcafc266/go.mod h1:K/3SQWdJL6udzwInHk1gaYaECYxMp9dDayniPq6gCSo=
 gitlab.com/yawning/obfs4.git v0.0.0-20231012084234-c3e2d44b1033 h1:UmuE3KA7vwWLvf+BJWPiecxixrsh913zf2EwnY6aGK8=
 gitlab.com/yawning/obfs4.git v0.0.0-20231012084234-c3e2d44b1033/go.mod h1:hWtv4VopVASgdVvnSbGB1EAC3zO+rHiauEnuNID9wT4=
-gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/goptlib v1.5.0 h1:rzdY78Ox2T+VlXcxGxELF+6VyUXlZBhmRqZu5etLm+c=
-gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/goptlib v1.5.0/go.mod h1:70bhd4JKW/+1HLfm+TMrgHJsUHG4coelMWwiVEJ2gAg=
+gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/goptlib v1.6.0 h1:KD9m+mRBwtEdqe94Sv72uiedMWeRdIr4sXbrRyzRiIo=
+gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/goptlib v1.6.0/go.mod h1:70bhd4JKW/+1HLfm+TMrgHJsUHG4coelMWwiVEJ2gAg=
 golang.org/x/arch v0.15.0 h1:QtOrQd0bTUnhNVNndMpLHNWrDmYzZ2KDqSrEymqInZw=
 golang.org/x/arch v0.15.0/go.mod h1:JmwW7aLIoRUKgaTzhkiEFxvcEiQGyOg9BMonBJUS7EE=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=

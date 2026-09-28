@@ -40,7 +40,7 @@ require (
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	gitlab.com/yawning/edwards25519-extra v0.0.0-20231005122941-2149dcafc266 // indirect
 	gitlab.com/yawning/obfs4.git v0.0.0-20231012084234-c3e2d44b1033
-	gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/goptlib v1.5.0
+	gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/goptlib v1.6.0
 	golang.org/x/arch v0.15.0 // indirect
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394 // indirect
 	golang.org/x/net v0.58.0
