@@ -6897,7 +6897,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get stickerNewer => '来自更新版本的 Kryfo';
 
   @override
-  String get devLinkMismatch => '此链接自称是 Marios，但其密钥不匹配。未添加。';
+  String get devLinkMismatch => '这个链接自称是 Marios，但它的密钥不匹配，所以没有添加。';
 
   @override
   String get devName => 'Marios';
@@ -6917,7 +6917,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get devAboutLine =>
-      'Marios 的密钥内置在 Kryfo 里。这个聊天里的每一条消息都会用它核对，所以别人没法冒充他发消息。';
+      'Marios 的密钥内置在 Kryfo 里。他发来的每一条消息都会用它核对，所以别人没法冒充他发消息。';
 
   @override
   String get devKeyLabel => '他的密钥';
@@ -7041,13 +7041,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get devUseMyWords => '用我的三个词';
 
   @override
-  String get devWhoSeesWhat => '谁能看到什么';
+  String get devWhoSeesWhat => '工作原理';
 
   @override
   String get devWhoWords => '用你的三个词，这就是一个普通的聊天：Marios 可以回复你，你的脸和支持者徽章留在你这里。';
 
   @override
-  String get devWhoAnon => '匿名时，Kryfo 会只为这个聊天生成新的名字和密钥。它们只留在这部手机上，绝不会在别处使用。';
+  String get devWhoAnon => '匿名发送时，Kryfo 会专门为这个聊天生成新的名字和密钥。它们只留在这部手机上，绝不会在别处使用。';
 
   @override
   String get devWhoNothingYet => '在你发出第一条消息之前，什么都不会离开你的手机。';
@@ -13976,7 +13976,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get stickerNewer => '來自較新版的 Kryfo';
 
   @override
-  String get devLinkMismatch => '此連結自稱是 Marios，但其金鑰不相符。未新增。';
+  String get devLinkMismatch => '這個連結自稱是 Marios，但它的金鑰不相符，所以沒有新增。';
 
   @override
   String get devName => 'Marios';
@@ -13995,7 +13995,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get devAboutLine =>
-      'Marios 的金鑰內建在 Kryfo 裡。這個聊天裡的每則訊息都會用它核對，所以別人無法冒充他傳訊息。';
+      'Marios 的金鑰內建在 Kryfo 裡。他傳來的每則訊息都會用它核對，所以別人無法冒充他傳訊息。';
 
   @override
   String get devKeyLabel => '他的金鑰';
@@ -14028,13 +14028,13 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get devUseMyWords => '用我的三個詞';
 
   @override
-  String get devWhoSeesWhat => '誰能看到什麼';
+  String get devWhoSeesWhat => '運作方式';
 
   @override
   String get devWhoWords => '用你的三個詞，這就是一個普通的聊天：Marios 可以回覆你，你的臉和支持者徽章留在你這裡。';
 
   @override
-  String get devWhoAnon => '匿名時，Kryfo 會只為這個聊天產生新的名字和金鑰。它們只留在這支手機上，絕不會在別處使用。';
+  String get devWhoAnon => '匿名傳送時，Kryfo 會專門為這個聊天產生新的名字和金鑰。它們只留在這支手機上，絕不會在別處使用。';
 
   @override
   String get devWhoNothingYet => '在你傳出第一則訊息之前，什麼都不會離開你的手機。';

@@ -7273,7 +7273,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get devAboutLine =>
-      'La clé de Marios est intégrée à Kryfo. Chaque message de cette discussion est vérifié avec elle, donc personne d’autre ne peut écrire en son nom.';
+      'La clé de Marios est intégrée à Kryfo. Chaque message de sa part est vérifié avec elle, donc personne d’autre ne peut écrire en son nom.';
 
   @override
   String get devKeyLabel => 'Sa clé';
@@ -7400,7 +7400,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get devUseMyWords => 'Utiliser mes trois mots';
 
   @override
-  String get devWhoSeesWhat => 'Qui voit quoi';
+  String get devWhoSeesWhat => 'Comment ça marche';
 
   @override
   String get devWhoWords =>
@@ -7408,11 +7408,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get devWhoAnon =>
-      'Anonymement, Kryfo crée un nouveau nom et de nouvelles clés pour cette discussion seulement. Ils restent sur ce téléphone et ne servent jamais ailleurs.';
+      'Si vous écrivez anonymement, Kryfo crée un nouveau nom et de nouvelles clés pour cette seule discussion. Ils restent sur ce téléphone et ne servent jamais ailleurs.';
 
   @override
   String get devWhoNothingYet =>
-      'Rien ne quitte votre téléphone avant que vous envoyiez votre premier message.';
+      'Rien ne quitte votre téléphone tant que vous n’avez pas envoyé votre premier message.';
 
   @override
   String get devWhoChoiceStays =>
@@ -7438,7 +7438,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get devNamelessLine =>
-      'Le nom créé pour cette discussion reste sur le téléphone où il a été créé. Ici, la discussion peut seulement être lue.';
+      'Le nom créé pour cette discussion reste sur le téléphone où il a été créé. Ici, la discussion ne peut qu’être lue.';
 
   @override
   String get devStartNewLine =>

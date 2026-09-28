@@ -250,7 +250,20 @@ void main() {
     setL10nLocale(const Locale('en'));
   });
 
-  for (final code in ['de', 'ru', 'uk', 'fr', 'vi', 'fa', 'ar']) {
+  for (final code in [
+    'de',
+    'ru',
+    'uk',
+    'fr',
+    'es',
+    'pt',
+    'it',
+    'tr',
+    'vi',
+    'id',
+    'fa',
+    'ar',
+  ]) {
     testWidgets('$code: the row, its sheet and its rows fit', (t) async {
       await _walk(t, Locale(code), 1);
       await _walk(t, Locale(code), _biggest);

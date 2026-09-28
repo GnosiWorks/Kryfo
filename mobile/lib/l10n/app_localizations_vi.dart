@@ -7184,7 +7184,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get devAboutLine =>
-      'Khóa của Marios được gắn sẵn trong Kryfo. Mọi tin nhắn trong cuộc trò chuyện này đều được đối chiếu với khóa đó, nên không ai khác có thể viết dưới tên anh ấy.';
+      'Khóa của Marios được gắn sẵn trong Kryfo. Mọi tin nhắn từ anh ấy đều được đối chiếu với khóa đó, nên không ai khác có thể viết dưới tên anh ấy.';
 
   @override
   String get devKeyLabel => 'Khóa của anh ấy';
@@ -7311,7 +7311,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get devUseMyWords => 'Dùng ba từ của tôi';
 
   @override
-  String get devWhoSeesWhat => 'Ai thấy gì';
+  String get devWhoSeesWhat => 'Cách hoạt động';
 
   @override
   String get devWhoWords =>
@@ -7319,7 +7319,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get devWhoAnon =>
-      'Khi ẩn danh, Kryfo tạo một cái tên và các khóa mới chỉ cho cuộc trò chuyện này. Chúng ở lại trên điện thoại này và không bao giờ được dùng ở nơi khác.';
+      'Khi viết ẩn danh, Kryfo tạo một cái tên và các khóa mới chỉ cho cuộc trò chuyện này. Chúng ở lại trên điện thoại này và không bao giờ được dùng ở nơi khác.';
 
   @override
   String get devWhoNothingYet =>
@@ -7331,7 +7331,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get devKeyCheckFailed =>
-      'Không thể kiểm tra khóa của Marios. Chưa có gì được gửi.';
+      'Không thể kiểm tra khóa của Marios. Không có gì được gửi đi.';
 
   @override
   String get devLockLine =>

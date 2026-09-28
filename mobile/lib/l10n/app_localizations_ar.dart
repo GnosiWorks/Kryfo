@@ -7306,7 +7306,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get devLinkMismatch =>
-      'يدّعي هذا الرابط أنه Marios، لكن مفتاحه غير مطابق. لم تتم إضافة شيء.';
+      'يقول هذا الرابط إنه Marios، لكن مفتاحه غير مطابق. لم تتم إضافة شيء.';
 
   @override
   String get devName => 'Marios';
@@ -7316,7 +7316,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get devWelcome =>
-      'مرحبًا، أنا Marios، أبني Kryfo. أخبرني بأي شيء: أخطاء، أفكار، أسئلة. أقرأ كل شيء.';
+      'مرحبًا، أنا Marios، أطوّر Kryfo. أخبرني بأي شيء: أخطاء، أفكار، أسئلة. أقرأ كل شيء.';
 
   @override
   String get devPinned => 'مدمج في Kryfo';
@@ -7326,7 +7326,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get devAboutLine =>
-      'مفتاح Marios مدمج في Kryfo. كل رسالة في هذه المحادثة تُطابَق معه، فلا يستطيع أحد غيره أن يكتب باسمه.';
+      'مفتاح Marios مدمج في Kryfo. كل رسالة تصل منه تُطابَق مع هذا المفتاح، فلا يستطيع أحد غيره أن يكتب باسمه.';
 
   @override
   String get devKeyLabel => 'مفتاحه';
@@ -7452,7 +7452,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get devUseMyWords => 'استخدم كلماتي الثلاث';
 
   @override
-  String get devWhoSeesWhat => 'من يرى ماذا';
+  String get devWhoSeesWhat => 'كيف يعمل هذا';
 
   @override
   String get devWhoWords =>
@@ -7460,7 +7460,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get devWhoAnon =>
-      'بهوية مجهولة يصنع Kryfo اسمًا ومفاتيح جديدة لهذه المحادثة وحدها. تبقى على هذا الهاتف ولا تُستخدم في أي مكان آخر أبدًا.';
+      'إن كتبت بهوية مجهولة، يصنع Kryfo اسمًا ومفاتيح جديدة لهذه المحادثة وحدها. تبقى على هذا الهاتف ولا تُستخدم في أي مكان آخر أبدًا.';
 
   @override
   String get devWhoNothingYet => 'لا يخرج شيء من هاتفك حتى ترسل رسالتك الأولى.';

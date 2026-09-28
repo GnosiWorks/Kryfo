@@ -7311,7 +7311,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get devLinkMismatch =>
-      'Це посилання видає себе за Marios, але його ключ не збігається. Нічого не додано.';
+      'У цьому посиланні вказано Marios, але його ключ не збігається. Нічого не додано.';
 
   @override
   String get devName => 'Marios';
@@ -7331,7 +7331,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get devAboutLine =>
-      'Ключ Marios вбудовано в Kryfo. Кожне повідомлення в цьому чаті перевіряється за ним, тож ніхто інший не може писати від його імені.';
+      'Ключ Marios вбудовано в Kryfo. Кожне його повідомлення перевіряється за цим ключем, тож ніхто інший не може писати від його імені.';
 
   @override
   String get devKeyLabel => 'Його ключ';
@@ -7458,22 +7458,22 @@ class AppLocalizationsUk extends AppLocalizations {
   String get devUseMyWords => 'Використати мої три слова';
 
   @override
-  String get devWhoSeesWhat => 'Хто що бачить';
+  String get devWhoSeesWhat => 'Як це працює';
 
   @override
   String get devWhoWords =>
-      'З твоїми трьома словами це звичайний чат: Marios може відповісти тобі, а твоє обличчя і значок прихильника залишаються в тебе.';
+      'З твоїми трьома словами це звичайний чат: Marios може відповісти тобі, а твоє обличчя й значок прихильника залишаються в тебе.';
 
   @override
   String get devWhoAnon =>
-      'Анонімно Kryfo створює нове ім’я та ключі лише для цього чату. Вони залишаються на цьому телефоні й ніде більше не використовуються.';
+      'Якщо писати анонімно, Kryfo створює нове ім’я та ключі лише для цього чату. Вони залишаються на цьому телефоні й ніде більше не використовуються.';
 
   @override
   String get devWhoNothingYet =>
       'Ніщо не залишає твій телефон, доки ти не надішлеш перше повідомлення.';
 
   @override
-  String get devWhoChoiceStays => 'Твій вибір залишається за цим чатом.';
+  String get devWhoChoiceStays => 'Твій вибір збережеться для цього чату.';
 
   @override
   String get devKeyCheckFailed =>
@@ -7491,7 +7491,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get devKeyRetired =>
-      'Цей ключ відкликано. Тут уже нічого не можна надіслати чи отримати.';
+      'Цей ключ більше не використовується. Тут уже нічого не можна надіслати чи отримати.';
 
   @override
   String get devNamelessLine =>

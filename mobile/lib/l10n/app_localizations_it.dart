@@ -7269,7 +7269,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get devAboutLine =>
-      'La chiave di Marios è integrata in Kryfo. Ogni messaggio di questa chat viene controllato con essa, quindi nessun altro può scrivere al posto suo.';
+      'La chiave di Marios è integrata in Kryfo. Ogni suo messaggio viene controllato con essa, quindi nessun altro può scrivere al posto suo.';
 
   @override
   String get devKeyLabel => 'La sua chiave';
@@ -7396,7 +7396,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get devUseMyWords => 'Usa le mie tre parole';
 
   @override
-  String get devWhoSeesWhat => 'Chi vede cosa';
+  String get devWhoSeesWhat => 'Come funziona';
 
   @override
   String get devWhoWords =>
@@ -7404,7 +7404,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get devWhoAnon =>
-      'In forma anonima, Kryfo crea un nome e delle chiavi nuovi solo per questa chat. Restano su questo telefono e non vengono mai usati altrove.';
+      'Se scrivi in forma anonima, Kryfo crea un nuovo nome e nuove chiavi solo per questa chat. Restano su questo telefono e non vengono mai usati altrove.';
 
   @override
   String get devWhoNothingYet =>

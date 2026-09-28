@@ -7247,7 +7247,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get devWelcome =>
-      'Hola, soy Marios, hago Kryfo. Cuéntame lo que sea: errores, ideas, preguntas. Lo leo todo.';
+      'Hola, soy Marios, desarrollo Kryfo. Cuéntame lo que quieras: errores, ideas, preguntas. Lo leo todo.';
 
   @override
   String get devPinned => 'Integrado en Kryfo';
@@ -7257,7 +7257,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get devAboutLine =>
-      'La clave de Marios viene integrada en Kryfo. Cada mensaje de este chat se comprueba con ella, así que nadie más puede escribir como él.';
+      'La clave de Marios viene integrada en Kryfo. Cada mensaje suyo se comprueba con ella, así que nadie más puede escribir como él.';
 
   @override
   String get devKeyLabel => 'Su clave';
@@ -7384,7 +7384,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get devUseMyWords => 'Usar mis tres palabras';
 
   @override
-  String get devWhoSeesWhat => 'Quién ve qué';
+  String get devWhoSeesWhat => 'Cómo funciona';
 
   @override
   String get devWhoWords =>
@@ -7392,14 +7392,14 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get devWhoAnon =>
-      'De forma anónima, Kryfo crea un nombre y claves nuevos solo para este chat. Se quedan en este teléfono y nunca se usan en ningún otro sitio.';
+      'Si escribes de forma anónima, Kryfo crea un nombre y claves nuevos solo para este chat. Se quedan en este teléfono y nunca se usan en ningún otro sitio.';
 
   @override
   String get devWhoNothingYet =>
       'Nada sale de tu teléfono hasta que envíes tu primer mensaje.';
 
   @override
-  String get devWhoChoiceStays => 'Tu elección se queda con este chat.';
+  String get devWhoChoiceStays => 'Tu elección se mantiene en este chat.';
 
   @override
   String get devKeyCheckFailed =>

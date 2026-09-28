@@ -7201,7 +7201,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get devAboutLine =>
-      'Kunci Marios tertanam di Kryfo. Setiap pesan di obrolan ini dicocokkan dengan kunci itu, jadi tidak ada orang lain yang bisa menulis atas namanya.';
+      'Kunci Marios tertanam di Kryfo. Setiap pesan darinya dicocokkan dengan kunci itu, jadi tidak ada orang lain yang bisa menulis atas namanya.';
 
   @override
   String get devKeyLabel => 'Kuncinya';
@@ -7328,7 +7328,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get devUseMyWords => 'Pakai tiga kataku';
 
   @override
-  String get devWhoSeesWhat => 'Siapa melihat apa';
+  String get devWhoSeesWhat => 'Cara kerjanya';
 
   @override
   String get devWhoWords =>
@@ -7336,7 +7336,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get devWhoAnon =>
-      'Secara anonim, Kryfo membuat nama dan kunci baru khusus untuk obrolan ini. Semuanya tetap di ponsel ini dan tidak pernah dipakai di tempat lain.';
+      'Jika kamu menulis secara anonim, Kryfo membuat nama dan kunci baru khusus untuk obrolan ini. Semuanya tetap di ponsel ini dan tidak pernah dipakai di tempat lain.';
 
   @override
   String get devWhoNothingYet =>
@@ -7361,7 +7361,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get devKeyRetired =>
-      'Kunci ini sudah dipensiunkan. Tidak ada lagi yang bisa dikirim atau diterima di sini.';
+      'Kunci ini sudah tidak dipakai lagi. Tidak ada lagi yang bisa dikirim atau diterima di sini.';
 
   @override
   String get devNamelessLine =>

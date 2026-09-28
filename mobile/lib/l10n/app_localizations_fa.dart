@@ -7209,7 +7209,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get devWelcome =>
-      'سلام، من Marios هستم و Kryfo را می‌سازم. هر چیزی بگویید: باگ، ایده، سؤال. همه را می‌خوانم.';
+      'سلام، من Marios هستم و Kryfo را می‌سازم. هر چه می‌خواهید بگویید: باگ، ایده، سؤال. همه را می‌خوانم.';
 
   @override
   String get devPinned => 'در Kryfo تعبیه‌شده';
@@ -7219,7 +7219,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get devAboutLine =>
-      'کلید Marios درون Kryfo تعبیه شده است. هر پیام این گفت‌وگو با آن سنجیده می‌شود، پس هیچ‌کس دیگری نمی‌تواند به جای او بنویسد.';
+      'کلید Marios درون Kryfo تعبیه شده است. هر پیامی که از او می‌رسد با آن سنجیده می‌شود، پس هیچ‌کس دیگری نمی‌تواند به جای او بنویسد.';
 
   @override
   String get devKeyLabel => 'کلید او';
@@ -7346,7 +7346,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get devUseMyWords => 'استفاده از سه واژه‌ی خودم';
 
   @override
-  String get devWhoSeesWhat => 'چه کسی چه می‌بیند';
+  String get devWhoSeesWhat => 'این چطور کار می‌کند';
 
   @override
   String get devWhoWords =>
@@ -7354,7 +7354,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get devWhoAnon =>
-      'در حالت ناشناس، Kryfo نام و کلیدهای تازه‌ای فقط برای این گفت‌وگو می‌سازد. این‌ها روی همین گوشی می‌مانند و هرگز جای دیگری به کار نمی‌روند.';
+      'اگر ناشناس بنویسید، Kryfo نام و کلیدهای تازه‌ای فقط برای این گفت‌وگو می‌سازد. این‌ها روی همین گوشی می‌مانند و هرگز جای دیگری به کار نمی‌روند.';
 
   @override
   String get devWhoNothingYet =>
