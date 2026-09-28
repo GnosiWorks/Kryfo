@@ -7,10 +7,11 @@
 // counts at once. nothing ever falls back to the everyday store for an
 // anonymous chat
 
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart'
-    show SignalProtocolAddress;
+    show Curve, SignalProtocolAddress;
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import '../dlog.dart';
@@ -190,6 +191,25 @@ class DevLane {
     _anonXPub = null;
     _anonIn = null;
     tokens.clear();
+  }
+}
+
+/// his card as it is pinned: its identity is his pinned key, and that key
+/// signs the card's signed prekey. checked before a first send keeps
+/// anything, in every container
+bool devCardChecks(DevKey k) {
+  try {
+    final j = jsonDecode(utf8.decode(base64Decode(k.bundle)));
+    if (j is! Map) return false;
+    final id = base64Decode(j['identityKey'] as String);
+    if (!_same(id, pinnedIdentity(k))) return false;
+    return Curve.verifySignature(
+      Curve.decodePoint(id, 0),
+      base64Decode(j['signedPreKeyPublic'] as String),
+      base64Decode(j['signedPreKeySignature'] as String),
+    );
+  } catch (_) {
+    return false;
   }
 }
 

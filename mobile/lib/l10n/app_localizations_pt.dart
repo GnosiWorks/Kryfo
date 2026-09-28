@@ -7419,6 +7419,14 @@ class AppLocalizationsPt extends AppLocalizations {
       'Esta chave foi aposentada. Nada mais pode ser enviado ou recebido aqui.';
 
   @override
+  String get devNamelessLine =>
+      'O nome criado para esta conversa fica no celular onde foi criado, então aqui ela só pode ser lida.';
+
+  @override
+  String get devStartNewLine =>
+      'Todas as mensagens daqui somem, e uma conversa nova se abre.';
+
+  @override
   String get devVoiceDisguised => 'Sua voz vai disfarçada nesta conversa';
 
   @override

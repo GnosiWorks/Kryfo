@@ -1932,6 +1932,8 @@
   "devNewKey": "Marios tiene una clave nueva",
   "devStartNewChat": "Empezar un chat nuevo",
   "devKeyRetired": "Esta clave se retiró. Aquí ya no se puede enviar ni recibir nada.",
+  "devNamelessLine": "El nombre creado para este chat se queda en el teléfono donde se creó, así que aquí el chat solo se puede leer.",
+  "devStartNewLine": "Se van todos los mensajes de aquí, y se abre un chat nuevo.",
   "devVoiceDisguised": "Tu voz va disfrazada en este chat",
   "devChatOptions": "Opciones del chat"
 }

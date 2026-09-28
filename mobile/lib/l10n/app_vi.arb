@@ -1932,6 +1932,8 @@
   "devNewKey": "Marios có khóa mới",
   "devStartNewChat": "Bắt đầu cuộc trò chuyện mới",
   "devKeyRetired": "Khóa này đã ngừng dùng. Không thể gửi hay nhận thêm gì ở đây.",
+  "devNamelessLine": "Cái tên được tạo cho cuộc trò chuyện này ở lại trên điện thoại đã tạo ra nó, nên ở đây chỉ có thể đọc cuộc trò chuyện này.",
+  "devStartNewLine": "Mọi tin nhắn ở đây sẽ bị xóa, và một cuộc trò chuyện mới sẽ mở ra.",
   "devVoiceDisguised": "Giọng của bạn được đổi trong cuộc trò chuyện này",
   "devChatOptions": "Tùy chọn trò chuyện"
 }

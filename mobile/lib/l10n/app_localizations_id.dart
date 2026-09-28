@@ -7364,6 +7364,14 @@ class AppLocalizationsId extends AppLocalizations {
       'Kunci ini sudah dipensiunkan. Tidak ada lagi yang bisa dikirim atau diterima di sini.';
 
   @override
+  String get devNamelessLine =>
+      'Nama yang dibuat untuk obrolan ini tetap di ponsel tempat nama itu dibuat, jadi di sini obrolan ini hanya bisa dibaca.';
+
+  @override
+  String get devStartNewLine =>
+      'Semua pesan di sini terhapus, dan obrolan baru terbuka.';
+
+  @override
   String get devVoiceDisguised => 'Suaramu disamarkan di obrolan ini';
 
   @override

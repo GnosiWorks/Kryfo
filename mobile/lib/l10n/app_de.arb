@@ -1932,6 +1932,8 @@
   "devNewKey": "Marios hat einen neuen Schlüssel",
   "devStartNewChat": "Neuen Chat beginnen",
   "devKeyRetired": "Dieser Schlüssel wurde stillgelegt. Hier kann nichts mehr gesendet oder empfangen werden.",
+  "devNamelessLine": "Der Name, der für diesen Chat gemacht wurde, bleibt auf dem Handy, auf dem er entstand. Hier kann der Chat nur gelesen werden.",
+  "devStartNewLine": "Jede Nachricht hier wird gelöscht, und ein neuer Chat öffnet sich.",
   "devVoiceDisguised": "Deine Stimme wird in diesem Chat verfremdet",
   "devChatOptions": "Chat-Optionen"
 }

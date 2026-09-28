@@ -1932,6 +1932,8 @@
   "devNewKey": "Marios punya kunci baru",
   "devStartNewChat": "Mulai obrolan baru",
   "devKeyRetired": "Kunci ini sudah dipensiunkan. Tidak ada lagi yang bisa dikirim atau diterima di sini.",
+  "devNamelessLine": "Nama yang dibuat untuk obrolan ini tetap di ponsel tempat nama itu dibuat, jadi di sini obrolan ini hanya bisa dibaca.",
+  "devStartNewLine": "Semua pesan di sini terhapus, dan obrolan baru terbuka.",
   "devVoiceDisguised": "Suaramu disamarkan di obrolan ini",
   "devChatOptions": "Opsi obrolan"
 }

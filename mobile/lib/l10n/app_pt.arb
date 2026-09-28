@@ -1932,6 +1932,8 @@
   "devNewKey": "O Marios tem uma chave nova",
   "devStartNewChat": "Começar uma nova conversa",
   "devKeyRetired": "Esta chave foi aposentada. Nada mais pode ser enviado ou recebido aqui.",
+  "devNamelessLine": "O nome criado para esta conversa fica no celular onde foi criado, então aqui ela só pode ser lida.",
+  "devStartNewLine": "Todas as mensagens daqui somem, e uma conversa nova se abre.",
   "devVoiceDisguised": "Sua voz vai disfarçada nesta conversa",
   "devChatOptions": "Opções da conversa"
 }

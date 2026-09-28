@@ -7382,6 +7382,14 @@ class AppLocalizationsFa extends AppLocalizations {
       'این کلید کنار گذاشته شده است. دیگر این‌جا چیزی فرستاده یا دریافت نمی‌شود.';
 
   @override
+  String get devNamelessLine =>
+      'نامی که برای این گفت‌وگو ساخته شد روی همان گوشی‌ای می‌ماند که در آن ساخته شده، پس این‌جا این گفت‌وگو فقط خواندنی است.';
+
+  @override
+  String get devStartNewLine =>
+      'همه‌ی پیام‌های این‌جا حذف می‌شوند و گفت‌وگوی تازه‌ای باز می‌شود.';
+
+  @override
   String get devVoiceDisguised => 'صدای شما در این گفت‌وگو تغییر داده می‌شود';
 
   @override

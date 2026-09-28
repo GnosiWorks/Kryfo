@@ -7444,6 +7444,14 @@ class AppLocalizationsDe extends AppLocalizations {
       'Dieser Schlüssel wurde stillgelegt. Hier kann nichts mehr gesendet oder empfangen werden.';
 
   @override
+  String get devNamelessLine =>
+      'Der Name, der für diesen Chat gemacht wurde, bleibt auf dem Handy, auf dem er entstand. Hier kann der Chat nur gelesen werden.';
+
+  @override
+  String get devStartNewLine =>
+      'Jede Nachricht hier wird gelöscht, und ein neuer Chat öffnet sich.';
+
+  @override
   String get devVoiceDisguised => 'Deine Stimme wird in diesem Chat verfremdet';
 
   @override

@@ -61,7 +61,8 @@ import 'dev_about_sheet.dart'
         setDevArchived,
         setDevMuted,
         setDevPinned,
-        showDevAboutSheet;
+        showDevAboutSheet,
+        startNewDevChat;
 import '../widgets/kryfo_avatar.dart';
 import '../main.dart'
     show
@@ -714,11 +715,30 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   bool get _devAnon => _devOpening?.anon ?? false;
   bool get _voiceDisguise => _disguise || _devAnon;
 
+  // anonymous and restored without the name it was made with: it reads,
+  // and a new chat can take its place
+  bool get _devNameless =>
+      (_devShown?.nameless ?? false) || (_devChat?.nameless ?? false);
+
   // why nothing more goes out of his chat, said in place of the composer:
-  // a retired key. null while it can send. a chat that cannot send for
-  // another reason says its own line here
-  String? get _devStop =>
-      _devShown?.status == DevKeyStatus.retired ? l10n.devKeyRetired : null;
+  // a retired key, or a made name that stayed where it was made. null while
+  // it can send
+  String? get _devStop => _devRetired
+      ? l10n.devKeyRetired
+      : _devNameless
+      ? l10n.devNamelessLine
+      : null;
+
+  bool get _devRetired => _devShown?.status == DevKeyStatus.retired;
+
+  // the nameless chat goes, once asked, and a fresh one opens in its place
+  Future<void> _startNewDevChat() async {
+    HapticFeedback.selectionClick();
+    final nav = Navigator.of(context);
+    final id = await startNewDevChat(context, widget.peerHaloId);
+    if (id == null || !mounted) return;
+    nav.pushReplacement(devChatRoute(id));
+  }
 
   void _onDevOpening() {
     if (mounted) setState(() {});
@@ -4974,7 +4994,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     : _devStop != null
                     ? _RequestLockBar(
                         line: _devStop,
-                        icon: Icons.key_off_outlined,
+                        icon: _devNameless && !_devRetired
+                            ? Icons.person_off_outlined
+                            : Icons.key_off_outlined,
+                        action: _devNameless && !_devRetired
+                            ? l10n.devStartNewChat
+                            : null,
+                        onAction: _startNewDevChat,
                       )
                     : _incomingRequest
                     ? _AcceptRequestBar(
@@ -5269,11 +5295,20 @@ class _RequestBanner extends StatelessWidget {
 }
 
 // replaces the composer once we've hit the 2-message request cap. the
-// developer chat says it its own way, and a retired key the same way
+// developer chat says it its own way, a retired key the same way, and a
+// chat that only reads with its one way on
 class _RequestLockBar extends StatelessWidget {
-  const _RequestLockBar({this.line, this.icon = Icons.lock_outline});
+  const _RequestLockBar({
+    this.line,
+    this.icon = Icons.lock_outline,
+    this.action,
+    this.onAction,
+  });
   final String? line;
   final IconData icon;
+  // one way on, under the line
+  final String? action;
+  final VoidCallback? onAction;
 
   @override
   Widget build(BuildContext context) {
@@ -5296,6 +5331,32 @@ class _RequestLockBar extends StatelessWidget {
               ),
             ],
           ),
+          if (action != null && onAction != null) ...[
+            const SizedBox(height: 12),
+            _ScaleTap(
+              onTap: onAction!,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 11,
+                  horizontal: 18,
+                ),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: HaloColors.amber,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  action!,
+                  textAlign: TextAlign.center,
+                  style: HaloType.sans(
+                    size: 13,
+                    color: HaloColors.onAmber,
+                  ).copyWith(fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

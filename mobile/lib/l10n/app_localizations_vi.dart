@@ -7348,6 +7348,14 @@ class AppLocalizationsVi extends AppLocalizations {
       'Khóa này đã ngừng dùng. Không thể gửi hay nhận thêm gì ở đây.';
 
   @override
+  String get devNamelessLine =>
+      'Cái tên được tạo cho cuộc trò chuyện này ở lại trên điện thoại đã tạo ra nó, nên ở đây chỉ có thể đọc cuộc trò chuyện này.';
+
+  @override
+  String get devStartNewLine =>
+      'Mọi tin nhắn ở đây sẽ bị xóa, và một cuộc trò chuyện mới sẽ mở ra.';
+
+  @override
   String get devVoiceDisguised =>
       'Giọng của bạn được đổi trong cuộc trò chuyện này';
 

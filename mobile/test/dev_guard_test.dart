@@ -1366,7 +1366,9 @@ void main() {
       await w.app.rememberPeerFc(_dev, other);
       await w.app.rememberPeerFc('amber-fox-run', _m1.fc);
       await w.app.rememberPeerFc(_words, other);
-      expect(w.app.peerFcFor(_dev), isNull);
+      // the dev chat's is his pinned one, never one remembered for it
+      expect(w.app.peerFcFor(_dev), _m1.fc);
+      expect(w.app.peerFcFor('dev:m9'), isNull);
       expect(w.app.peerFcFor('amber-fox-run'), isNull);
       expect(w.app.peerFcFor(_words), isNull);
       await w.app.rememberPeerFc('amber-fox-run', other);

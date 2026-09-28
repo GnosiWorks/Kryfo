@@ -7358,6 +7358,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'This key was retired. Nothing more can be sent or received here.';
 
   @override
+  String get devNamelessLine =>
+      'The name made for this chat stays on the phone it was made on, so here it can only be read.';
+
+  @override
+  String get devStartNewLine =>
+      'Every message here goes, and a fresh chat opens.';
+
+  @override
   String get devVoiceDisguised => 'Your voice is disguised in this chat';
 
   @override
