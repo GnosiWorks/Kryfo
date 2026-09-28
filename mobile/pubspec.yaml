@@ -41,7 +41,7 @@ dependencies:
   sqflite_sqlcipher: ^3.4.0
   qr_flutter: ^4.1.0
   ffi: ^2.2.0
-  flutter_local_notifications: ^21.0.0
+  flutter_local_notifications: ^22.3.1
   file_picker: ^11.0.2
   path_provider: ^2.1.5
   path: ^1.9.1
