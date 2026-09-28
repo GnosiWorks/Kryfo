@@ -201,9 +201,28 @@ Future<void> clearNotificationsFor(String payload) async {
   final ids = _shownFor.remove(payload);
   if (ids == null) return;
   for (final id in ids) {
+    await cancelWithRetry(() => notifPlugin.cancel(id: id), 'shade');
+  }
+}
+
+// how long a cancel that failed waits for its one more try
+const kCancelRetryAfter = Duration(milliseconds: 300);
+
+// a cancel that failed gets one more try a beat later, and a second failure
+// is only logged. nothing on screen changes either way
+Future<void> cancelWithRetry(
+  Future<void> Function() cancel,
+  String where,
+) async {
+  try {
+    await cancel();
+  } catch (_) {
+    await Future<void>.delayed(kCancelRetryAfter);
     try {
-      await notifPlugin.cancel(id: id);
-    } catch (_) {}
+      await cancel();
+    } catch (e) {
+      dlog('$where: not cancelled (${e.runtimeType})');
+    }
   }
 }
 

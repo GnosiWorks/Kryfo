@@ -8,6 +8,7 @@ import 'dart:math';
 
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
+import '../dlog.dart';
 import '../signal_stores.dart' show kDevSignalPrefix, kSignalTables;
 import 'dev_key.dart';
 
@@ -440,7 +441,10 @@ class DevChat {
     // the zeroed pages into the file itself
     try {
       await db.execute('PRAGMA wal_checkpoint(TRUNCATE)');
-    } catch (_) {}
+    } catch (e) {
+      // the rows are gone already, and sqlite's next fold takes the pages
+      dlog('dev chat: log not folded (${e.runtimeType})');
+    }
   }
 
   Future<List<String>> _wipe(Transaction t) async {

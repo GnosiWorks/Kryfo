@@ -47,6 +47,18 @@ class PinKind {
   static const vault = 4;
 }
 
+// whether a pin table is kept. without one no pin opens anything, a vault
+// included. read from storage, so it holds before the lock has loaded. an
+// unreadable store counts as one: a vault may be there
+Future<bool> pinTableKept([LockStore? store]) async {
+  try {
+    return await (store ?? SecureLockStore()).read(LockState._kTable) != null;
+  } catch (e) {
+    dlog('lock: table unread (${e.runtimeType})');
+    return true;
+  }
+}
+
 // the everyday container's id inside the sealed records
 final everydayContainer = HaloContainer.everyday.id;
 

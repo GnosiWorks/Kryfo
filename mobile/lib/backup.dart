@@ -42,6 +42,54 @@ const _secureStorage = FlutterSecureStorage(
   aOptions: AndroidOptions(encryptedSharedPreferences: true),
 );
 
+// where a backup or a restore stages. the first four sit in the app support
+// folder, the last two in the documents folder
+const _kBackupStage = 'backup_stage';
+const _kRestoreQuiet = 'restore_d';
+const _kPeek = 'restore_peek.db';
+const _kPeekHidden = 'restore_peek_v.db';
+const _kRestoreStage = 'restore_stage';
+const _kRestoreHidden = 'restore_hidden';
+
+// what a backup or a restore cut short leaves behind: the folders it staged
+// in and the copies a look inside made. swept once a start, and every backup
+// and restore waits for it
+Future<void>? _leftoversSwept;
+Future<void> sweepBackupLeftovers() => _leftoversSwept ??= _sweepLeftovers();
+
+@visibleForTesting
+void forgetLeftoverSweep() => _leftoversSwept = null;
+
+Future<void> _sweepLeftovers() async {
+  try {
+    final support = (await getApplicationSupportDirectory()).path;
+    final docs = (await getApplicationDocumentsDirectory()).path;
+    // the one secret a stage holds in the clear, as a backup's own end does
+    await shredFile(p.join(support, _kBackupStage, 'onion.key'));
+    for (final e in <FileSystemEntity>[
+      Directory(p.join(support, _kBackupStage)),
+      Directory(p.join(support, _kRestoreQuiet)),
+      File(p.join(support, _kPeek)),
+      File(p.join(support, _kPeekHidden)),
+      Directory(p.join(docs, _kRestoreStage)),
+      Directory(p.join(docs, _kRestoreHidden)),
+    ]) {
+      try {
+        if (!await e.exists()) continue;
+        if (e is File) {
+          await shredFile(e.path);
+        } else {
+          await e.delete(recursive: true);
+        }
+      } catch (err) {
+        dlog('backup: a leftover stayed (${err.runtimeType})');
+      }
+    }
+  } catch (e) {
+    dlog('backup: leftovers not swept (${e.runtimeType})');
+  }
+}
+
 class BackupError implements Exception {
   final String message;
   BackupError(this.message);
@@ -154,11 +202,12 @@ Future<Map<String, dynamic>> _openPayload(
 // decrypt, look, say what is inside, touch nothing. the database bytes go
 // to a private temp file just long enough to be counted, then are shredded.
 Future<BackupSummary> inspectBackup(String blob, String passphrase) async {
+  await sweepBackupLeftovers();
   final payload = await _openPayload(blob, passphrase);
   final ts = payload['ts'];
   final when = ts is int ? DateTime.fromMillisecondsSinceEpoch(ts) : null;
   final dir = await getApplicationSupportDirectory();
-  final peek = File(p.join(dir.path, 'restore_peek.db'));
+  final peek = File(p.join(dir.path, _kPeek));
   var contacts = 0;
   var messages = 0;
   var haloId = '';
@@ -682,8 +731,9 @@ Future<void> createBackupFile(
   void Function(int done, int total)? onProgress,
 }) async {
   if (passphrase.length < 6) throw BackupError('passphrase too short');
+  await sweepBackupLeftovers();
   final stage = Directory(
-    p.join((await getApplicationSupportDirectory()).path, 'backup_stage'),
+    p.join((await getApplicationSupportDirectory()).path, _kBackupStage),
   );
   if (await stage.exists()) await stage.delete(recursive: true);
   await stage.create(recursive: true);
@@ -711,7 +761,9 @@ Future<void> createBackupFile(
     }
     try {
       await stage.delete(recursive: true);
-    } catch (_) {}
+    } catch (_) {
+      // the next start sweeps what is left
+    }
   }
 }
 
@@ -961,7 +1013,7 @@ Future<Map<String, dynamic>> unpackBackup(
   String? hidden,
   void Function(int done, int total)? onProgress,
 }) async {
-  final stage = Directory(p.join(root, 'restore_stage'));
+  final stage = Directory(p.join(root, _kRestoreStage));
   final keep = hidden == null ? null : Directory(hidden);
   try {
     for (final d in [stage, ?keep]) {
@@ -1010,12 +1062,16 @@ Future<Map<String, dynamic>> unpackBackup(
       if (keep != null && await keep.exists()) {
         await keep.delete(recursive: true);
       }
-    } catch (_) {}
+    } catch (_) {
+      // the next start sweeps what is left
+    }
     rethrow;
   } finally {
     try {
       if (await stage.exists()) await stage.delete(recursive: true);
-    } catch (_) {}
+    } catch (_) {
+      // the next start sweeps what is left
+    }
   }
 }
 
@@ -1079,7 +1135,9 @@ Future<void> landHidden(
       if (from != null && await Directory(from).exists()) {
         await Directory(from).delete(recursive: true);
       }
-    } catch (_) {}
+    } catch (_) {
+      // the next start sweeps what is left
+    }
   }
 }
 
@@ -1134,7 +1192,9 @@ Future<void> _landInDecoy(
   );
   try {
     await Directory(from).delete(recursive: true);
-  } catch (_) {}
+  } catch (_) {
+    // the next start sweeps what is left
+  }
   dlog('backup: restored into the decoy');
 }
 
@@ -1175,10 +1235,11 @@ Future<BackupSummary> inspectBackupFile(String path, String passphrase) async {
   if (!await isBackupV2(path)) {
     throw const RestoreError(RestoreFailure.notABackup);
   }
+  await sweepBackupLeftovers();
   final salt = await backupSalt(path);
   final dir = await getApplicationSupportDirectory();
-  final peek = p.join(dir.path, 'restore_peek.db');
-  final peekHidden = p.join(dir.path, 'restore_peek_v.db');
+  final peek = p.join(dir.path, _kPeek);
+  final peekHidden = p.join(dir.path, _kPeekHidden);
   Map<String, dynamic> manifest;
   try {
     manifest =
@@ -1261,16 +1322,17 @@ Future<void> restoreBackupFile(
   if (!await isBackupV2(path)) {
     throw const RestoreError(RestoreFailure.notABackup);
   }
+  await sweepBackupLeftovers();
   final salt = await backupSalt(path);
   final docs = await getApplicationDocumentsDirectory();
   // in a decoy session everything lands in the decoy's container, and the
   // everyday one is not touched
   final quiet = sessionQuiet;
   final root = quiet
-      ? p.join((await getApplicationSupportDirectory()).path, 'restore_d')
+      ? p.join((await getApplicationSupportDirectory()).path, _kRestoreQuiet)
       : docs.path;
   if (quiet) await Directory(root).create(recursive: true);
-  final hidden = p.join(docs.path, 'restore_hidden');
+  final hidden = p.join(docs.path, _kRestoreHidden);
   final port = ReceivePort();
   final sub = port.listen((m) {
     if (m is List && m.length == 2) {

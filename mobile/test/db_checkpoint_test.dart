@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // a backup copies halo.db as bytes after folding the log into it. a fold
-// that failed makes no copy: the backup would miss the latest messages and
-// still say it was made. sqlite here is a stand-in on its channel
+// that failed, or one another reader kept busy, makes no copy: the backup
+// would miss the latest messages and still say it was made. sqlite here is a
+// stand-in on its channel
 import 'dart:io';
 
 import 'package:flutter/services.dart';
@@ -19,12 +20,16 @@ void main() {
   late Directory docs;
   late List<String> said;
   var foldFails = false;
+  // how many folds in a row answer busy
+  var busyFor = 0;
+  int folds() => said.where((s) => s.contains('wal_checkpoint')).length;
 
   setUp(() {
     docs = Directory.systemTemp.createTempSync('db_checkpoint');
     File(p.join(docs.path, 'halo.db')).writeAsStringSync('the database');
     said = [];
     foldFails = false;
+    busyFor = 0;
     FlutterSecureStorage.setMockInitialValues({'halo.db.passphrase': 'pw'});
     m.setMockMethodCallHandler(paths, (_) async => docs.path);
     m.setMockMethodCallHandler(sqlite, (call) async {
@@ -35,6 +40,19 @@ void main() {
         case 'openDatabase':
           return 1;
         case 'query':
+          if (sql.contains('wal_checkpoint')) {
+            if (foldFails) {
+              throw PlatformException(code: 'sqlite_error', message: 'disk');
+            }
+            final busy = busyFor > 0 ? 1 : 0;
+            if (busyFor > 0) busyFor--;
+            return {
+              'columns': ['busy', 'log', 'checkpointed'],
+              'rows': [
+                [busy, 3, busy == 1 ? 0 : 3],
+              ],
+            };
+          }
           if (sql.contains('user_version')) {
             return {
               'columns': ['user_version'],
@@ -70,7 +88,7 @@ void main() {
     final to = p.join(docs.path, 'copy.db');
     await db.copyTo(to);
     expect(File(to).readAsStringSync(), 'the database');
-    expect(said, contains('execute PRAGMA wal_checkpoint(TRUNCATE)'));
+    expect(folds(), 1);
   });
 
   test('a fold that failed makes no copy', () async {
@@ -82,4 +100,27 @@ void main() {
     expect(File(to).existsSync(), isFalse);
     await expectLater(db.checkpoint(), throwsA(isA<DatabaseException>()));
   });
+
+  test('a fold kept busy makes no copy', () async {
+    final db = HaloDb();
+    await db.open();
+    busyFor = 1000;
+    final to = p.join(docs.path, 'copy.db');
+    await expectLater(db.copyTo(to), throwsA(isA<StateError>()));
+    expect(File(to).existsSync(), isFalse);
+    expect(folds(), 5);
+  });
+
+  test(
+    'a fold busy for a moment is tried again and the copy follows',
+    () async {
+      final db = HaloDb();
+      await db.open();
+      busyFor = 2;
+      final to = p.join(docs.path, 'copy.db');
+      await db.copyTo(to);
+      expect(File(to).readAsStringSync(), 'the database');
+      expect(folds(), 3);
+    },
+  );
 }

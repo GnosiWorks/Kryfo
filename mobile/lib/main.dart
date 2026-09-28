@@ -17,6 +17,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'notifications.dart';
+import 'backup.dart' show sweepBackupLeftovers;
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
@@ -1118,9 +1119,17 @@ class HaloDb {
   // folds the write-ahead log into the file before it is copied. a
   // backup reads halo.db as bytes, and without this the last minutes of
   // messages could still be sitting in the sidecar. a failure is passed on:
-  // a copy made without it would miss them and still look whole
+  // a copy made without it would miss them and still look whole. a reader
+  // holding the log says busy, and is waited out a few times before that
   Future<void> checkpoint() async {
-    await _db?.execute('PRAGMA wal_checkpoint(TRUNCATE)');
+    final db = _db;
+    if (db == null) return;
+    for (var i = 1; ; i++) {
+      final r = await db.rawQuery('PRAGMA wal_checkpoint(TRUNCATE)');
+      if (r.isEmpty || r.first['busy'] != 1) return;
+      if (i == 5) throw StateError('the log stayed busy');
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+    }
   }
 
   // before its files go
@@ -7831,7 +7840,7 @@ class AppState extends ChangeNotifier {
   Future<void> _openContainers() async {
     try {
       final listed = await listedContainers();
-      await sweepContainers(listed);
+      await sweepContainers(listed, pinTable: await pinTableKept());
       if (listed.contains(HaloContainer.decoy.id)) {
         final d = HaloDb(HaloContainer.decoy);
         final q = await _quietOf(d);
@@ -8247,7 +8256,10 @@ class AppState extends ChangeNotifier {
     } finally {
       try {
         await m.detach();
-      } catch (_) {}
+      } catch (e) {
+        // attached to this connection until the next start opens a new one
+        dlog('vault: not detached (${e.runtimeType})');
+      }
       if (identical(_session.vault, vault)) {
         try {
           final rebuilt = await Session.withVault(primary, vault);
@@ -8508,11 +8520,7 @@ class AppState extends ChangeNotifier {
     // and the decoy would show later than the everyday app does
     unawaited(
       Future.delayed(_afterReveal, () async {
-        if (decoy) {
-          try {
-            await notifPlugin.cancelAll();
-          } catch (_) {}
-        }
+        if (decoy) await cancelWithRetry(notifPlugin.cancelAll, 'decoy shade');
         await refreshContacts();
         await refreshGroups();
       }),
@@ -8608,9 +8616,7 @@ class AppState extends ChangeNotifier {
   // nothing is sealed to it and nothing in it sends
   Future<void> _decoyVaultShown(HaloDb v) async {
     if (!identical(_session.vault, v)) return;
-    try {
-      await notifPlugin.cancelAll();
-    } catch (_) {}
+    await cancelWithRetry(notifPlugin.cancelAll, 'decoy shade');
     try {
       await v.purgeExpired();
       await refreshContacts();
@@ -8746,9 +8752,7 @@ class AppState extends ChangeNotifier {
     final shown = [..._vaultShade];
     _vaultShade.clear();
     for (final p in shown) {
-      try {
-        await _io.unnotify(p);
-      } catch (_) {}
+      await cancelWithRetry(() => _io.unnotify(p), 'vault shade');
     }
   }
 
@@ -11741,6 +11745,8 @@ void main() async {
   lockState.onOutcome = appState.sessionFor;
   lockState.sessionsReady = appState.containersReady;
   unawaited(_sweepPlaintextLeftovers());
+  // what a backup or a restore cut short left, before either can run again
+  unawaited(sweepBackupLeftovers());
   // not awaited: this is a platform call, and with no activity attached it
   // never answers
   unawaited(
@@ -13166,15 +13172,29 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
 // cleared on the native side, on every resume.
 Future<void> _sweepPlaintextLeftovers() async {
   try {
-    final dir = await getTemporaryDirectory();
-    await for (final e in dir.list()) {
-      final name = e.uri.pathSegments.isEmpty ? '' : e.uri.pathSegments.last;
-      if (e is File && name.startsWith('vn_') && name.endsWith('.wav')) {
-        await e.delete();
-      }
-    }
+    await sweepVoiceLeftovers(await getTemporaryDirectory());
   } catch (e) {
     dlog('sweep: voice leftovers (${e.runtimeType})');
+  }
+}
+
+// every raw recording in [dir]: one that will not go is logged and the
+// rest still go. [drop] stands in for the delete in tests
+@visibleForTesting
+Future<void> sweepVoiceLeftovers(
+  Directory dir, {
+  Future<void> Function(File f)? drop,
+}) async {
+  await for (final e in dir.list()) {
+    final name = e.uri.pathSegments.isEmpty ? '' : e.uri.pathSegments.last;
+    if (e is! File || !name.startsWith('vn_') || !name.endsWith('.wav')) {
+      continue;
+    }
+    try {
+      await (drop ?? (f) => f.delete())(e);
+    } catch (err) {
+      dlog('sweep: a voice leftover stayed (${err.runtimeType})');
+    }
   }
 }
 

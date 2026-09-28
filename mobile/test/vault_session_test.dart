@@ -26,6 +26,7 @@ import 'package:kryfo/main.dart'
         sessionQuiet,
         useDatabasesForTest;
 import 'package:kryfo/message_envelope.dart';
+import 'package:kryfo/notifications.dart' show kCancelRetryAfter;
 import 'package:kryfo/polls.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/screens/pin_flow_screen.dart' show PinsHost;
@@ -163,6 +164,8 @@ class _Io implements AppIo {
   final sent = <(String, String)>[];
   final rang = <String>[];
   final unrang = <String>[];
+  // how many shade clears in a row fail
+  var unnotifyFails = 0;
 
   @override
   Future<String?> decrypt(
@@ -217,7 +220,13 @@ class _Io implements AppIo {
   }) async => rang.add(payload ?? title);
 
   @override
-  Future<void> unnotify(String payload) async => unrang.add(payload);
+  Future<void> unnotify(String payload) async {
+    if (unnotifyFails > 0) {
+      unnotifyFails--;
+      throw StateError('shade');
+    }
+    unrang.add(payload);
+  }
 
   // what was sent to someone, by their key or their onion
   List<String> to(String id) => [
@@ -1542,6 +1551,19 @@ void main() {
         expect(w.io.unrang, isNot(contains(_v)));
       },
     );
+
+    test('a hidden chat the shade would not let go of is tried once more, '
+        'a beat later', () async {
+      final w = await _World.make();
+      await w.open();
+      await w.onion(_h, await wrapMessage('hi', msgUid: 'o1', sender: _as(_h)));
+      expect(w.io.rang, [_h]);
+      w.io.unnotifyFails = 1;
+      await w.lockUp();
+      expect(w.io.unrang, isEmpty);
+      await Future<void>.delayed(kCancelRetryAfter * 2);
+      expect(w.io.unrang, [_h]);
+    });
 
     test('one arriving as the lock goes up is kept and never rings', () async {
       final w = await _World.make();
