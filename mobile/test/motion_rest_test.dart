@@ -6,6 +6,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/main.dart' show TorHalo, appState;
+import 'package:kryfo/widgets/motion.dart' show TorStatus;
 import 'package:kryfo/tools/geo.dart';
 import 'package:kryfo/widgets/breathing_ring.dart';
 import 'package:kryfo/widgets/copied_mark.dart';
@@ -237,6 +239,50 @@ void main() {
       await t.pumpWidget(host(ring, still: true));
       await t.pump();
       expect(t.hasRunningAnimations, isFalse);
+    });
+  });
+
+  group('the tor dot', () {
+    Future<void> dot(WidgetTester t, TorStatus s, {bool still = false}) async {
+      appState.setTorStatusForTest(s);
+      addTearDown(() => appState.setTorStatusForTest(TorStatus.off));
+      await t.pumpWidget(host(const TorHalo(), still: still));
+    }
+
+    testWidgets('usable but never confirmed reachable: it rests', (t) async {
+      for (final s in [TorStatus.bootstrapped, TorStatus.publishing]) {
+        await dot(t, s);
+        await t.pump(const Duration(milliseconds: 100));
+        expect(t.binding.hasScheduledFrame, isFalse, reason: '$s');
+      }
+    });
+
+    testWidgets('starting: a few pulses, then still', (t) async {
+      await dot(t, TorStatus.starting);
+      await t.pump(const Duration(milliseconds: 100));
+      expect(t.binding.hasScheduledFrame, isTrue);
+      await t.pump(const Duration(seconds: 13));
+      await t.pump();
+      expect(t.binding.hasScheduledFrame, isFalse);
+    });
+
+    testWidgets('a new start pulses again', (t) async {
+      await dot(t, TorStatus.starting);
+      await t.pump(const Duration(seconds: 13));
+      appState.setTorStatusForTest(TorStatus.publishing);
+      await t.pump();
+      appState.setTorStatusForTest(TorStatus.starting);
+      await t.pump(const Duration(milliseconds: 100));
+      expect(t.binding.hasScheduledFrame, isTrue);
+      await t.pump(const Duration(seconds: 13));
+      await t.pump();
+      expect(t.binding.hasScheduledFrame, isFalse);
+    });
+
+    testWidgets('reduced motion: it never pulses', (t) async {
+      await dot(t, TorStatus.starting, still: true);
+      await t.pump(const Duration(milliseconds: 100));
+      expect(t.binding.hasScheduledFrame, isFalse);
     });
   });
 }

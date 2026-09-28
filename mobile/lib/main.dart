@@ -8728,6 +8728,12 @@ class AppState extends ChangeNotifier {
   TorStatus _torStatus = TorStatus.off;
   int _bootstrapPct = 0;
   TorStatus get torStatus => _torStatus;
+  @visibleForTesting
+  void setTorStatusForTest(TorStatus s) {
+    _torStatus = s;
+    notifyListeners();
+  }
+
   // whether the route carries traffic, from the engine's relay verdict, and
   // how many times it has been torn down on purpose. see engine/route.go.
   bool _routeOK = true;
@@ -12861,12 +12867,9 @@ class TorHalo extends StatefulWidget {
 class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
   late final AnimationController _c;
 
-  bool get _isConnecting {
-    final s = appState.torStatus;
-    return s == TorStatus.starting ||
-        s == TorStatus.bootstrapped ||
-        s == TorStatus.publishing;
-  }
+  // pulses only while tor is still coming up. once it is usable the chip
+  // says so and rests, even when the onion is never confirmed reachable
+  bool get _isConnecting => appState.torStatus == TorStatus.starting;
 
   @override
   void initState() {
@@ -12876,15 +12879,28 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
       duration: const Duration(milliseconds: 1500),
     );
     appState.addListener(_sync);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     _sync();
   }
 
+  // a few pulses each time tor starts, then still: where tor is blocked it
+  // can sit in starting for minutes, and nothing here may run that long
+  bool _pulsed = false;
+
   void _sync() {
-    if (_isConnecting && !_c.isAnimating) {
-      _c.repeat();
-    } else if (!_isConnecting && _c.isAnimating) {
-      _c.stop();
+    if (!_isConnecting) {
+      _pulsed = false;
+      if (_c.isAnimating) _c.stop();
+      return;
     }
+    if (_pulsed || _c.isAnimating) return;
+    _pulsed = true;
+    if (mounted && motionStill(context)) return;
+    _c.repeat(count: 8);
   }
 
   @override
@@ -12985,7 +13001,7 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
           final s = appState.torStatus;
           final off = s == TorStatus.off;
           final secured = s == TorStatus.reachable;
-          final connecting = !off && !secured;
+          final connecting = _isConnecting;
           final usable =
               s == TorStatus.bootstrapped || s == TorStatus.publishing;
           const torGreen = Color(0xFF34D399);
