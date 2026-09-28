@@ -346,16 +346,17 @@ class HaloEngine {
       );
 
   void nostrSubscribeBg(String peerXPubHex) {
-    devGate
-        .listen(
-          peerXPubHex,
-          out: () => _subscribeOnIsolate(peerXPubHex),
-          room: (priv) async {
-            roomSubscribeBg(priv, peerXPubHex);
-            return 'ok';
-          },
-        )
-        .ignore();
+    _background(
+      devGate.listen(
+        peerXPubHex,
+        out: () => _subscribeOnIsolate(peerXPubHex),
+        room: (priv) async {
+          roomSubscribeBg(priv, peerXPubHex);
+          return 'ok';
+        },
+      ),
+      'relay listen',
+    );
   }
 
   // bridge lines in, a summary out. tor only reads its config at startup, so
@@ -383,7 +384,9 @@ class HaloEngine {
   void networkChanged() {
     try {
       _take(_networkChanged());
-    } catch (_) {}
+    } catch (_) {
+      // an older engine without the call: tor keeps its own schedule
+    }
   }
 
   // read a C.CString from the go side and free it, since C.CString mallocs
@@ -458,7 +461,7 @@ class HaloEngine {
 
   // unlike every other subscription this needs no contacts
   void subscribeFirstContactBg(int counter) {
-    _fcSubscribeOnIsolate(counter).ignore();
+    _background(_fcSubscribeOnIsolate(counter), 'first contact listen');
   }
 
   // introduce ourselves to someone who has never heard of us.
@@ -727,18 +730,27 @@ class HaloEngine {
         ),
   );
 
-  void roomSubscribeBg(String priv, String peerPub) => devGate
-      .roomListen(
-        priv,
-        peerPub,
-        out: () => _roomFfiOnIsolate('HaloRoomSubscribe', [priv, peerPub]),
-      )
-      .ignore();
-  void roomSubscribeFcBg(String priv) =>
-      _roomFfiOnIsolate('HaloRoomSubscribeFirstContact', [priv]).ignore();
-  void roomUnsubscribeBg(String pub) =>
-      _roomFfiOnIsolate('HaloRoomUnsubscribe', [pub]).ignore();
+  void roomSubscribeBg(String priv, String peerPub) => _background(
+    devGate.roomListen(
+      priv,
+      peerPub,
+      out: () => _roomFfiOnIsolate('HaloRoomSubscribe', [priv, peerPub]),
+    ),
+    'room listen',
+  );
+  void roomSubscribeFcBg(String priv) => _background(
+    _roomFfiOnIsolate('HaloRoomSubscribeFirstContact', [priv]),
+    'room first contact',
+  );
+  void roomUnsubscribeBg(String pub) => _background(
+    _roomFfiOnIsolate('HaloRoomUnsubscribe', [pub]),
+    'room unlisten',
+  );
 }
+
+// a call nobody waits on: what it threw still shows in a debug log
+void _background(Future<Object?> call, String where) =>
+    unawaited(call.then((_) {}, onError: (Object e) => dlog('$where: $e')));
 
 // one to four string args in, a string out, on its own isolate like every
 // other relay call.
@@ -1105,11 +1117,10 @@ class HaloDb {
 
   // folds the write-ahead log into the file before it is copied. a
   // backup reads halo.db as bytes, and without this the last minutes of
-  // messages could still be sitting in the sidecar
+  // messages could still be sitting in the sidecar. a failure is passed on:
+  // a copy made without it would miss them and still look whole
   Future<void> checkpoint() async {
-    try {
-      await _db?.execute('PRAGMA wal_checkpoint(TRUNCATE)');
-    } catch (_) {}
+    await _db?.execute('PRAGMA wal_checkpoint(TRUNCATE)');
   }
 
   // before its files go
@@ -1378,7 +1389,9 @@ class HaloDb {
             await db.execute(
               'ALTER TABLE messages ADD COLUMN burn_secs INTEGER',
             );
-          } catch (_) {}
+          } catch (_) {
+            // already present: a migration must be safe to re-run
+          }
         }
         if (oldV < 43) {
           // the link title cache rides the same helper as the shield table
@@ -1392,7 +1405,9 @@ class HaloDb {
             await db.execute(
               'ALTER TABLE groups ADD COLUMN mentioned INTEGER NOT NULL DEFAULT 0',
             );
-          } catch (_) {}
+          } catch (_) {
+            // already present: a migration must be safe to re-run
+          }
         }
         if (oldV < 41) {
           // the proof-of-work a stranger's first message was sent with, so
@@ -1401,7 +1416,9 @@ class HaloDb {
             await db.execute(
               'ALTER TABLE messages ADD COLUMN pow_nonce INTEGER',
             );
-          } catch (_) {}
+          } catch (_) {
+            // already present: a migration must be safe to re-run
+          }
         }
         if (oldV < 40) {
           // burner rooms live in the groups table with their own key and a
@@ -1418,7 +1435,9 @@ class HaloDb {
           ]) {
             try {
               await db.execute('ALTER TABLE groups ADD COLUMN $col');
-            } catch (_) {}
+            } catch (_) {
+              // already present: a migration must be safe to re-run
+            }
           }
         }
         if (oldV < 39) {
@@ -1447,12 +1466,16 @@ class HaloDb {
           // gate. wrapped: a duplicate column throw here hangs the app on boot.
           try {
             await db.execute('ALTER TABLE contacts ADD COLUMN vouched_by TEXT');
-          } catch (_) {}
+          } catch (_) {
+            // already present: a migration must be safe to re-run
+          }
           try {
             await db.execute(
               'ALTER TABLE contacts ADD COLUMN vouched_at INTEGER',
             );
-          } catch (_) {}
+          } catch (_) {
+            // already present: a migration must be safe to re-run
+          }
         }
         if (oldV < 36) {
           // the face a contact picked, so we draw theirs and not a
@@ -4257,6 +4280,7 @@ final Map<String, Future<void>> _encryptChain = {};
 Future<String> signalEncryptSerial(String peerId, String plaintext) {
   final prev = _encryptChain[peerId] ?? Future.value();
   final out = prev.then((_) => signalEncrypt(peerId, plaintext));
+  // the caller gets any error from out; the chain only keeps the order
   _encryptChain[peerId] = out.then((_) {}, onError: (_) {});
   return out;
 }
@@ -4647,10 +4671,14 @@ Future<String> saveSlices(
   } catch (e) {
     try {
       await sink.close();
-    } catch (_) {}
+    } catch (_) {
+      // the sink broke with the write: the error passed on is the first
+    }
     try {
       await file.delete();
-    } catch (_) {}
+    } catch (e) {
+      dlog('slices: half file left (${e.runtimeType})');
+    }
     rethrow;
   }
   return file.path;
@@ -4973,7 +5001,9 @@ class AppIo {
       dlog('back-pair error: $e');
       try {
         await signalSession.sessionStore.deleteSession(tempAddr);
-      } catch (_) {}
+      } catch (_) {
+        // the next first contact clears the placeholder before it starts
+      }
       return null;
     }
   }
@@ -5928,7 +5958,9 @@ class AppState extends ChangeNotifier {
       await prefs.setStringList('hb.gaps', _gaps);
       await prefs.setInt('hb.jobs', _jobRuns);
       await prefs.setInt('hb.jobAt', _lastJobAt);
-    } catch (_) {}
+    } catch (_) {
+      // a record only: a miss reads as an older time
+    }
   }
 
   // debug only: what is being held, every ten minutes, so a night's growth
@@ -5957,7 +5989,9 @@ class AppState extends ChangeNotifier {
         ..addAll(prefs.getStringList('hb.gaps') ?? const []);
       _jobRuns = prefs.getInt('hb.jobs') ?? 0;
       _lastJobAt = prefs.getInt('hb.jobAt') ?? 0;
-    } catch (_) {}
+    } catch (_) {
+      // unread, it starts from nothing, as on a first run
+    }
   }
 
   // wipes the night's record so a new test starts clean
@@ -6060,7 +6094,9 @@ class AppState extends ChangeNotifier {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt(kHeartbeatKey, DateTime.now().millisecondsSinceEpoch);
-    } catch (_) {}
+    } catch (_) {
+      // the next beat writes it again
+    }
   }
 
   /// the card was offered. never again, whatever the answer.
@@ -6069,7 +6105,9 @@ class AppState extends ChangeNotifier {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(kNudgeShownKey, true);
-    } catch (_) {}
+    } catch (_) {
+      // at worst the card is offered once more
+    }
     notifyListeners();
   }
 
@@ -6081,7 +6119,9 @@ class AppState extends ChangeNotifier {
       _lastCheckHow = prefs.getString(kLastCheckHowKey) ?? '';
       _lastCheckRelays = prefs.getString(kLastCheckRelaysKey) ?? '';
       _lastCheckTriedAt = prefs.getInt(kLastCheckTriedKey) ?? 0;
-    } catch (_) {}
+    } catch (_) {
+      // shown on screen only: unread, it starts empty
+    }
   }
 
   // the 15-minute job runs in its own isolate and writes these to prefs,
@@ -6091,7 +6131,9 @@ class AppState extends ChangeNotifier {
     // SharedPreferences keeps an in-memory cache per isolate, filled once
     try {
       await (await SharedPreferences.getInstance()).reload();
-    } catch (_) {}
+    } catch (_) {
+      // the screen shows what this process already had
+    }
     await loadHeartbeat();
     await _loadDeliveryTimes();
     notifyListeners();
@@ -6300,7 +6342,9 @@ class AppState extends ChangeNotifier {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setInt(kLastCheckKey, _lastCheckAt);
         if (why == 'push') await prefs.setInt(kLastWakeKey, _lastWakeAt);
-      } catch (_) {}
+      } catch (_) {
+        // shown on screen only: a miss shows an older time
+      }
       dlog(
         'checkin($why): done in ${DateTime.now().difference(started).inSeconds}s',
       );
@@ -6318,7 +6362,9 @@ class AppState extends ChangeNotifier {
         await prefs.setString(kLastCheckHowKey, _lastCheckHow);
         await prefs.setString(kLastCheckRelaysKey, _lastCheckRelays);
         await prefs.setInt(kLastCheckTriedKey, _lastCheckTriedAt);
-      } catch (_) {}
+      } catch (_) {
+        // shown on screen only: a miss shows an older time
+      }
       // only put it back to sleep if it was asleep: a check-in that ran
       // while the person had the app open leaves tor alone
       if (wasHeld && !_inFront && _deliveryMode != DeliveryMode.always) {
@@ -7949,6 +7995,7 @@ class AppState extends ChangeNotifier {
 
   Future<T> _serial<T>(Future<T> Function() work) {
     final r = _vaultWork.then((_) => work());
+    // the caller gets any error from r; the chain only keeps the order
     _vaultWork = r.then((_) {}, onError: (_) {});
     return r;
   }
@@ -8500,7 +8547,9 @@ class AppState extends ChangeNotifier {
     } catch (e) {
       try {
         await v.close();
-      } catch (_) {}
+      } catch (_) {
+        // its key went with the close; the open error is the one passed on
+      }
       rethrow;
     }
     if (decoy) {
@@ -9614,6 +9663,7 @@ class AppState extends ChangeNotifier {
     // the first call into android's notification service after a start is
     // slow, a tenth of a second or more. every start pays it here, so
     // nothing later pays it where it could be timed
+    // a warm-up only: an id that was never shown, and no answer wanted
     unawaited(notifPlugin.cancel(id: 0x7ffffffe).catchError((_) {}));
 
     unawaited(_fillSearch());
@@ -10009,6 +10059,7 @@ class AppState extends ChangeNotifier {
   // anything of the start behind. a chat already started stays as it is
   Future<DevStart> devBegin({required bool anon}) {
     final out = _devStarting.then((_) => _devBegin(anon: anon));
+    // the caller gets any error from out; the chain only keeps the order
     _devStarting = out.then((_) {}, onError: (_) {});
     return out;
   }
@@ -13122,7 +13173,9 @@ Future<void> _sweepPlaintextLeftovers() async {
         await e.delete();
       }
     }
-  } catch (_) {}
+  } catch (e) {
+    dlog('sweep: voice leftovers (${e.runtimeType})');
+  }
 }
 
 // the database exists: this phone has been set up at some point. a plain file

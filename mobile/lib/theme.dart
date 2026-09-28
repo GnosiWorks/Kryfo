@@ -5,6 +5,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dlog.dart';
 import 'l10n/l10n.dart';
 
 class _Palette {
@@ -266,7 +267,9 @@ Future<void> copySensitive(String value) async {
           'halo/platform',
         ).invokeMethod<bool>('copySensitive', {'text': value}) ??
         false;
-  } catch (_) {}
+  } catch (_) {
+    // no such call here: the plain clipboard below
+  }
   if (!done) await Clipboard.setData(ClipboardData(text: value));
   _clipTimer?.cancel();
   _clipTimer = Timer(const Duration(seconds: 60), () async {
@@ -275,7 +278,9 @@ Future<void> copySensitive(String value) async {
       if (now?.text == value) {
         await Clipboard.setData(const ClipboardData(text: ''));
       }
-    } catch (_) {}
+    } catch (e) {
+      dlog('clipboard: not cleared (${e.runtimeType})');
+    }
   });
 }
 

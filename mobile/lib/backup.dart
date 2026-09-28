@@ -706,7 +706,9 @@ Future<void> createBackupFile(
   } finally {
     try {
       await shredFile(p.join(stage.path, 'onion.key'));
-    } catch (_) {}
+    } catch (_) {
+      // shredFile logs its own failure; the delete below still runs
+    }
     try {
       await stage.delete(recursive: true);
     } catch (_) {}
@@ -1092,10 +1094,14 @@ Future<void> _landInDecoy(
   final c = HaloContainer.decoy;
   await session.primary.close();
   final dbPath = await c.dbPath();
+  // one that will not go stops the restore: a log of the old database left
+  // beside the restored one would be played over it on the next open
   for (final f in [dbPath, '$dbPath-wal', '$dbPath-shm', '$dbPath-journal']) {
     try {
       await File(f).delete();
-    } catch (_) {}
+    } on PathNotFoundException {
+      // not there: nothing to drop
+    }
   }
   for (final folder in ['media', 'wallpapers']) {
     final d = Directory(p.join(docs, '$folder${c.suffix}'));
@@ -1131,6 +1137,14 @@ Future<void> _landInDecoy(
   } catch (_) {}
   dlog('backup: restored into the decoy');
 }
+
+/// the end of a restore in a decoy session, as restoreBackupFile runs it
+@visibleForTesting
+Future<void> landQuietRestore(
+  String from,
+  String docs,
+  Map<String, dynamic> manifest,
+) => _landInDecoy(from, docs, manifest);
 
 RestoreError _classify(Object e) {
   if (e is RestoreError) return e;

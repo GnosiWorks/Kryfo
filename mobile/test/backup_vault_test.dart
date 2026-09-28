@@ -1206,6 +1206,38 @@ void main() {
         throwsA(isA<BackupError>()),
       );
     });
+
+    // a log of the old database left beside the restored one would be
+    // played over it on the next open
+    test('a restore into it lands where nothing of the old one is left, '
+        'and stops at a file that will not go', () async {
+      final decoy = await decoyPhone();
+      useDatabasesForTest(live, Session(decoy));
+      final from = p.join(root.path, 'restore_d');
+      final manifest = <String, dynamic>{
+        'files': [
+          {'name': 'halo.db', 'size': 8},
+        ],
+        'dbPassphrase': "x'${'4d' * 32}'",
+      };
+      await _put(p.join(from, 'halo.db'), 'restored');
+      await landQuietRestore(from, docs, manifest);
+      expect(await File(p.join(docs, 'halo_d.db')).readAsString(), 'restored');
+      expect(
+        await const FlutterSecureStorage().read(key: 'halo.d.key'),
+        "x'${'4d' * 32}'",
+      );
+
+      await _put(p.join(from, 'halo.db'), 'restored again');
+      // a folder where the log is: it cannot be deleted as a file
+      await _put(p.join(docs, 'halo_d.db-wal', 'x'), 'held');
+      await expectLater(
+        landQuietRestore(from, docs, manifest),
+        throwsA(isA<FileSystemException>()),
+      );
+      // nothing of the backup landed
+      expect(File(p.join(from, 'halo.db')).existsSync(), isTrue);
+    });
   });
 
   group('the backup screen', () {

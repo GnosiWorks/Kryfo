@@ -38,7 +38,9 @@ Future<void> wipeHalo() async {
         Future.delayed(const Duration(seconds: 4)),
       ]);
     }
-  } catch (_) {}
+  } catch (e) {
+    dlog('wipe: handle not released (${e.runtimeType})');
+  }
   try {
     // identity markers go first. if anything below fails the next launch
     // still starts at onboarding instead of an empty home screen.
@@ -60,7 +62,11 @@ Future<void> wipeHalo() async {
       await for (final entry in d.list()) {
         try {
           await entry.delete(recursive: true);
-        } catch (_) {}
+        } catch (e) {
+          // one that will not go must not keep the rest. the native call
+          // below is the real erase
+          dlog('wipe: an entry stayed (${e.runtimeType})');
+        }
       }
     }
     dlog('wipe: files gone');

@@ -18,6 +18,7 @@ import '../widgets/ease_size.dart';
 import '../widgets/halo_switch.dart';
 import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
+import '../dlog.dart';
 
 class GettingMessagesScreen extends StatefulWidget {
   const GettingMessagesScreen({super.key});
@@ -41,7 +42,9 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
         .then((v) {
           if (mounted) setState(() => _hidePreview = v);
         })
-        .catchError((_) {});
+        .catchError((Object e) {
+          dlog('getting messages: preview setting (${e.runtimeType})');
+        });
     appState.addListener(_changed);
     // "4 min ago" has to become "5 min ago" on its own, while it is seen
     _timers.every(const Duration(seconds: 20), _changed);

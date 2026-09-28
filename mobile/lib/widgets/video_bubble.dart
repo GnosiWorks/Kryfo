@@ -78,7 +78,9 @@ class _VideoBubbleState extends State<VideoBubble> {
   Future<void> _load() async {
     try {
       _bytes = await File(widget.path).length();
-    } catch (_) {}
+    } catch (_) {
+      // gone or unreadable: the bubble shows no size
+    }
     final i = await videoInfoFor(widget.path);
     if (!mounted) return;
     setState(() {

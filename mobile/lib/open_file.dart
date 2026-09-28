@@ -2,6 +2,7 @@
 // opening a received file with another app, and what a video bubble needs
 // to draw itself. both are the phone's own machinery behind one channel.
 import 'package:flutter/services.dart';
+import 'dlog.dart';
 import 'l10n/numbers.dart';
 
 const _channel = MethodChannel('halo/platform');
@@ -66,7 +67,9 @@ Future<VideoInfo?> videoInfoFor(String path) {
           (m['h'] as num?)?.toInt() ?? 9,
         );
       }
-    } catch (_) {}
+    } catch (e) {
+      dlog('video info: ${e.runtimeType}');
+    }
     if (_infos.length >= 40) _infos.remove(_infos.keys.first);
     _infos[path] = out;
     _asking.remove(path);

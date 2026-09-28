@@ -255,7 +255,9 @@ Widget _fileCard(_Msg msg, bool isOut) {
   int? sz;
   try {
     if (msg.filePath != null) sz = File(msg.filePath!).lengthSync();
-  } catch (_) {}
+  } catch (_) {
+    // gone or unreadable: the card shows no size
+  }
   final ext = (msg.fileName ?? '').contains('.')
       ? msg.fileName!.split('.').last.toUpperCase()
       : l10n.chatFile;
@@ -497,7 +499,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           try {
             final dd = jsonDecode(pvRaw) as Map<String, dynamic>;
             m.preview = dd.map((k, v) => MapEntry(k, v.toString()));
-          } catch (_) {}
+          } catch (_) {
+            // a preview that does not parse is not shown
+          }
         }
         if (uid != null) {
           uids.add(uid);
@@ -802,7 +806,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
     _applySecureContent();
     WidgetsBinding.instance.addObserver(this);
-    // read once, before the first sticker row asks for it
+    // read once, before the first sticker row asks for it. a failure here is
+    // the row's to show when it loads again
     StickerLibrary.load().ignore();
     _reconcileSending();
     appState.loadGhostPref().then((p) {
@@ -1224,7 +1229,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         try {
           final d = jsonDecode(pvRaw) as Map<String, dynamic>;
           m.preview = d.map((k, v) => MapEntry(k, v.toString()));
-        } catch (_) {}
+        } catch (_) {
+          // a preview that does not parse is not shown
+        }
       }
       if (m.direction != 'out' && uid != null) m.fresh = true;
       fresh.add(m);
@@ -2088,7 +2095,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         try {
           final d = jsonDecode(pvRaw) as Map<String, dynamic>;
           loaded.last.preview = d.map((k, v) => MapEntry(k, v.toString()));
-        } catch (_) {}
+        } catch (_) {
+          // a preview that does not parse is not shown
+        }
       }
       loaded.last.rowid = (r['rowid'] as int?) ?? 0;
       if (uid != null) uids.add(uid);
@@ -2702,6 +2711,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (path.isEmpty) return;
     if (cancelled) {
       // the raw recording, undisguised. nothing else will ever delete it.
+      // one that will not go is swept at the next start
       File(path).delete().ignore();
       return;
     }
@@ -2711,6 +2721,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Future<void> _sendVoice(String srcPath, int ms) async {
     final src = File(srcPath);
     if (_requestLocked) {
+      // one that will not go is swept at the next start
       src.delete().ignore();
       return;
     }
@@ -2725,7 +2736,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (_requestPending) setState(() => _sentCount++);
     var bytes = await src.readAsBytes();
     // the recorder's own file is the voice before any disguise, so it goes
-    // now. the copy kept with the message is below.
+    // now. the copy kept with the message is below. one that will not go is
+    // swept at the next start
     src.delete().ignore();
     if (disguise) bytes = disguiseWav(bytes);
     final msgUid = _newMsgUid();
@@ -2960,7 +2972,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       if (ok == null || left != 0) {
         try {
           await dest.delete();
-        } catch (_) {}
+        } catch (_) {
+          // not sent either way, and the original is still where it was
+        }
         if (mounted) showHaloToast(context, l10n.chatCouldNotCleanThat);
         return;
       }
@@ -2972,7 +2986,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     else if (await stripPictureFileOffUi(dest.path) == null) {
       try {
         await dest.delete();
-      } catch (_) {}
+      } catch (_) {
+        // not sent either way, and the original is still where it was
+      }
       if (mounted) {
         showHaloToast(context, l10n.chatCouldNotCleanThatPictureSend);
       }
@@ -4219,7 +4235,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (old == null) return;
     try {
       await shredFile(old);
-    } catch (_) {}
+    } catch (_) {
+      // shredFile logs its own failure
+    }
   }
 
   // a picture from the gallery, shrunk by the picker, copied into the
@@ -4237,7 +4255,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final bytes = await x.readAsBytes();
     try {
       await shredFile(x.path);
-    } catch (_) {}
+    } catch (_) {
+      // shredFile logs its own failure
+    }
     final folder = await session.folderOf(widget.peerHaloId, 'wallpapers');
     final file = File('${folder.path}/${widget.peerHaloId}.jpg');
     await file.writeAsBytes(bytes, flush: true);
@@ -7299,6 +7319,7 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
       _willCancel = false;
       _dragDx = 0;
       _levels.clear();
+      // the level meter only: an error on it leaves the recording going
       _level = _rec
           .onAmplitudeChanged(const Duration(milliseconds: 100))
           .listen((a) {
@@ -7331,6 +7352,7 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
       _overlay = null;
       final p = _path;
       _path = null;
+      // shredFile logs its own failure
       if (p != null) shredFile(p).ignore();
       if (mounted) showHaloToast(context, l10n.chatTheMicWouldNot);
     } finally {
