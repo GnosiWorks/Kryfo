@@ -12,7 +12,8 @@ import (
 )
 
 // Page asks one relay for up to limit events with since <= created_at <=
-// until, newest first, and returns when the relay says that was all.
+// until, newest first, and returns when the relay says that was all. A page
+// cut short returns its error with the events it did get.
 type Page func(ctx context.Context, since, until nostr.Timestamp, limit int) ([]nostr.Event, error)
 
 type Result struct {
@@ -89,12 +90,38 @@ func walk(ctx context.Context, fetch Page, since, oldest nostr.Timestamp,
 			res.Complete = true
 			return res
 		}
-		evs, err := fetch(ctx, since, until, limit)
+		// above the part already walked, a page stops at its top, so the
+		// walked part is not fetched again on the way down to it
+		pageSince := since
+		above := skip.Started() && until > skip.Top
+		if above && skip.Top > pageSince {
+			pageSince = skip.Top
+		}
+		evs, err := fetch(ctx, pageSince, until, limit)
 		if err != nil {
+			// a page cut short still brought what it brought, newest first,
+			// so everything down to its oldest is in, and the next attempt
+			// carries on from there instead of asking for the same page
+			low := until
+			for _, ev := range evs {
+				res.Fetched++
+				if deliver(ev) {
+					res.Fresh++
+				}
+				if ev.CreatedAt < low {
+					low = ev.CreatedAt
+				}
+			}
+			res.Until = low
 			return res
 		}
 		res.Pages++
 		if len(evs) == 0 {
+			if above {
+				until = skip.Cursor
+				res.Until = until
+				continue
+			}
 			res.Complete = true
 			return res
 		}

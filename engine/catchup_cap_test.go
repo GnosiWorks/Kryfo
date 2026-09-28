@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"fiatjaf.com/nostr"
 	"github.com/halo/engine/catchup"
 )
 
@@ -241,5 +242,40 @@ func TestCatchupIsPerContact(t *testing.T) {
 	}
 	if _, long := catchupCapFor(b); !long {
 		t.Fatal("b did not get its long turn")
+	}
+}
+
+// a first answer cut by the cap keeps its place: the next walk steps over
+// what came, and a place from before is joined, not thrown away
+func TestCutFirstAnswerKeepsItsPlace(t *testing.T) {
+	now := time.Unix(2_000_000, 0)
+	top := nostr.Timestamp(now.Add(anchorSlack).Unix())
+	k := "wss://cut.example addr"
+	setCatchupMark(k, catchup.Mark{})
+	defer setCatchupMark(k, catchup.Mark{})
+
+	keepFirstAnswer(k, 0, now)
+	if catchupMarkOf(k).Started() {
+		t.Fatal("an answer with nothing in it kept a place")
+	}
+	keepFirstAnswer(k, 1_500_000, now)
+	if m := catchupMarkOf(k); m.Top != top || m.Cursor != 1_500_000 {
+		t.Fatalf("first cut: %+v", m)
+	}
+	// the next one got less far: the place stays as deep as it was
+	keepFirstAnswer(k, 1_800_000, now)
+	if m := catchupMarkOf(k); m.Cursor != 1_500_000 {
+		t.Fatalf("a shallower cut moved the place up: %+v", m)
+	}
+	// one that got deeper moves it down
+	keepFirstAnswer(k, 1_200_000, now)
+	if m := catchupMarkOf(k); m.Cursor != 1_200_000 {
+		t.Fatalf("a deeper cut did not move the place: %+v", m)
+	}
+	// a walk's place with a gap above it is left alone
+	setCatchupMark(k, catchup.Mark{Top: 1_000_000, Cursor: 900_000})
+	keepFirstAnswer(k, 1_100_000, now)
+	if m := catchupMarkOf(k); m.Top != 1_000_000 || m.Cursor != 900_000 {
+		t.Fatalf("a cut with a gap replaced the walk's place: %+v", m)
 	}
 }

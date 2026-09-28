@@ -211,3 +211,95 @@ func TestNewEventsAboveMarkFetched(t *testing.T) {
 		t.Fatalf("want all 140, got %d", len(got))
 	}
 }
+
+// a relay whose answers are cut after cut events, the way a slow circuit
+// cuts a page of media wraps at the check-in's cap
+type cutRelay struct {
+	*fakeRelay
+	cut int
+}
+
+func (r *cutRelay) page(ctx context.Context, since, until nostr.Timestamp, limit int) ([]nostr.Event, error) {
+	evs, err := r.fakeRelay.page(ctx, since, until, limit)
+	if err != nil || len(evs) <= r.cut {
+		return evs, err
+	}
+	return evs[:r.cut], context.DeadlineExceeded
+}
+
+// every page is cut before it ends, and still each check-in gets further
+// than the last, until the whole backlog is in
+func TestCutPagesStillGetDeeper(t *testing.T) {
+	const total = 200
+	r := &cutRelay{fakeRelay: &fakeRelay{events: mk(total, 1_000_000, 13), cap: 100}, cut: 30}
+	got := map[nostr.ID]bool{}
+	deliver := func(e nostr.Event) bool {
+		if got[e.ID] {
+			return false
+		}
+		got[e.ID] = true
+		return true
+	}
+	first, _ := r.fakeRelay.page(context.Background(), 0, 1<<40, 20)
+	oldest := first[len(first)-1].CreatedAt
+	for _, e := range first {
+		got[e.ID] = true
+	}
+	var m Mark
+	var res Result
+	deepest := oldest
+	for i := 0; i < 20; i++ {
+		res, m = Continue(context.Background(), r.page, 0, oldest, 100, 200, deliver, m)
+		if res.Complete {
+			break
+		}
+		if res.Until >= deepest {
+			t.Fatalf("check-in %d did not get deeper than %d", i+1, deepest)
+		}
+		deepest = res.Until
+	}
+	if !res.Complete || len(got) != total {
+		t.Fatalf("complete=%v, %d of %d", res.Complete, len(got), total)
+	}
+}
+
+// with a mark, the pages above it stop at its top: the walked part is not
+// fetched again on the way down
+func TestAboveMarkDoesNotRefetchTheWalkedPart(t *testing.T) {
+	evs := mk(300, 1_000_000, 10)
+	r := &fakeRelay{events: evs, cap: 100}
+	// the top 250 are walked already: everything from the 50th up
+	m := Mark{Top: evs[299].CreatedAt, Cursor: evs[50].CreatedAt}
+	// ten new ones above it
+	newer := mk(10, evs[299].CreatedAt+100, 5)
+	for i := range newer {
+		newer[i].ID[3] = 0xBB
+	}
+	r.events = append(r.events, newer...)
+	fetched := 0
+	count := func(ctx context.Context, since, until nostr.Timestamp, limit int) ([]nostr.Event, error) {
+		out, err := r.page(ctx, since, until, limit)
+		fetched += len(out)
+		return out, err
+	}
+	got := map[nostr.ID]bool{}
+	res, _ := Continue(context.Background(), count, 0, newer[9].CreatedAt+1, 100, 200,
+		func(e nostr.Event) bool { got[e.ID] = true; return true }, m)
+	if !res.Complete {
+		t.Fatalf("%+v", res)
+	}
+	for _, e := range newer {
+		if !got[e.ID] {
+			t.Fatal("a new event above the mark was missed")
+		}
+	}
+	for _, e := range evs[:50] {
+		if !got[e.ID] {
+			t.Fatal("an event below the mark was missed")
+		}
+	}
+	// the new ten, the two boundary seconds and the fifty below
+	if fetched > 10+2+51 {
+		t.Fatalf("fetched %d events, the walked part came again", fetched)
+	}
+}
