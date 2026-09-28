@@ -1919,5 +1919,21 @@
   "settingsWriteToMariosHint": "錯誤、想法、問題",
   "seenDevChat": "與 Marios 的聊天",
   "seenDevChatCell": "你傳訊息時",
-  "seenDevChatLine": "你傳訊息之前，什麼都看不到。之後能看到你傳送的內容，以及你的三個詞，除非你匿名傳送。"
+  "seenDevChatLine": "你傳訊息之前，什麼都看不到。之後能看到你傳送的內容，以及你的三個詞，除非你匿名傳送。",
+  "devNoteWords": "Marios 會看到你的三個詞",
+  "devWriteAnonymously": "匿名傳送",
+  "devNoteAnon": "Marios 會看到一個專為這個聊天產生的新名字",
+  "devUseMyWords": "用我的三個詞",
+  "devWhoSeesWhat": "誰能看到什麼",
+  "devWhoWords": "用你的三個詞，Marios 能像任何聯絡人一樣回覆你。他能看到你的三個詞，但看不到你的臉和支持者徽章。",
+  "devWhoAnon": "匿名時，Kryfo 會只為這個聊天產生新的名字和金鑰。它們只留在這支手機上，絕不會在別處使用。",
+  "devWhoNothingYet": "在你傳出第一則訊息之前，什麼都不會離開你的手機。",
+  "devWhoChoiceStays": "你的選擇會一直跟著這個聊天。",
+  "devKeyCheckFailed": "無法核對 Marios 的金鑰。什麼都沒有傳送。",
+  "devLockLine": "Marios 會讀到這些訊息。等他回覆後，你就能繼續寫。",
+  "devNewKey": "Marios 有了新金鑰",
+  "devStartNewChat": "開始新的聊天",
+  "devKeyRetired": "這個金鑰已停用。這裡不能再傳送或接收任何內容。",
+  "devVoiceDisguised": "在這個聊天裡，你的語音會變聲",
+  "devChatOptions": "聊天選項"
 }

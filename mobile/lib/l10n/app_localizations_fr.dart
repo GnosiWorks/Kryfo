@@ -7301,4 +7301,61 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get seenDevChatLine =>
       'Rien tant que vous n’écrivez pas. Ensuite, ce que vous envoyez, et vos trois mots, sauf si vous écrivez anonymement.';
+
+  @override
+  String get devNoteWords => 'Marios verra vos trois mots';
+
+  @override
+  String get devWriteAnonymously => 'Écrire anonymement';
+
+  @override
+  String get devNoteAnon =>
+      'Marios verra un nouveau nom, créé rien que pour cette discussion';
+
+  @override
+  String get devUseMyWords => 'Utiliser mes trois mots';
+
+  @override
+  String get devWhoSeesWhat => 'Qui voit quoi';
+
+  @override
+  String get devWhoWords =>
+      'Avec vos trois mots, Marios peut vous répondre comme n’importe quel contact. Il voit vos trois mots, pas votre visage ni votre badge de soutien.';
+
+  @override
+  String get devWhoAnon =>
+      'Anonymement, Kryfo crée un nouveau nom et de nouvelles clés pour cette discussion seulement. Ils restent sur ce téléphone et ne servent jamais ailleurs.';
+
+  @override
+  String get devWhoNothingYet =>
+      'Rien ne quitte votre téléphone avant que vous envoyiez votre premier message.';
+
+  @override
+  String get devWhoChoiceStays =>
+      'Votre choix reste attaché à cette discussion.';
+
+  @override
+  String get devKeyCheckFailed =>
+      'Impossible de vérifier la clé de Marios. Rien n’a été envoyé.';
+
+  @override
+  String get devLockLine =>
+      'Marios les lira. Vous pourrez écrire davantage dès qu’il aura répondu.';
+
+  @override
+  String get devNewKey => 'Marios a une nouvelle clé';
+
+  @override
+  String get devStartNewChat => 'Commencer une nouvelle discussion';
+
+  @override
+  String get devKeyRetired =>
+      'Cette clé a été retirée. Plus rien ne peut être envoyé ni reçu ici.';
+
+  @override
+  String get devVoiceDisguised =>
+      'Votre voix est déguisée dans cette discussion';
+
+  @override
+  String get devChatOptions => 'Options de la discussion';
 }

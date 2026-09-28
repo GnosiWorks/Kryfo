@@ -6942,6 +6942,55 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get seenDevChatLine => '你发消息之前，什么都看不到。之后能看到你发送的内容，以及你的三个词，除非你匿名发送。';
+
+  @override
+  String get devNoteWords => 'Marios 会看到你的三个词';
+
+  @override
+  String get devWriteAnonymously => '匿名发送';
+
+  @override
+  String get devNoteAnon => 'Marios 会看到一个专为这个聊天生成的新名字';
+
+  @override
+  String get devUseMyWords => '用我的三个词';
+
+  @override
+  String get devWhoSeesWhat => '谁能看到什么';
+
+  @override
+  String get devWhoWords =>
+      '用你的三个词，Marios 能像任何联系人一样回复你。他能看到你的三个词，但看不到你的脸和支持者徽章。';
+
+  @override
+  String get devWhoAnon => '匿名时，Kryfo 会只为这个聊天生成新的名字和密钥。它们只留在这部手机上，绝不会在别处使用。';
+
+  @override
+  String get devWhoNothingYet => '在你发出第一条消息之前，什么都不会离开你的手机。';
+
+  @override
+  String get devWhoChoiceStays => '你的选择会一直跟着这个聊天。';
+
+  @override
+  String get devKeyCheckFailed => '无法核对 Marios 的密钥。什么都没有发送。';
+
+  @override
+  String get devLockLine => 'Marios 会读到这些消息。等他回复后，你就能继续写。';
+
+  @override
+  String get devNewKey => 'Marios 有了新密钥';
+
+  @override
+  String get devStartNewChat => '开始新的聊天';
+
+  @override
+  String get devKeyRetired => '这个密钥已停用。这里不能再发送或接收任何内容。';
+
+  @override
+  String get devVoiceDisguised => '在这个聊天里，你的语音会变声';
+
+  @override
+  String get devChatOptions => '聊天选项';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -13881,4 +13930,53 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get seenDevChatLine => '你傳訊息之前，什麼都看不到。之後能看到你傳送的內容，以及你的三個詞，除非你匿名傳送。';
+
+  @override
+  String get devNoteWords => 'Marios 會看到你的三個詞';
+
+  @override
+  String get devWriteAnonymously => '匿名傳送';
+
+  @override
+  String get devNoteAnon => 'Marios 會看到一個專為這個聊天產生的新名字';
+
+  @override
+  String get devUseMyWords => '用我的三個詞';
+
+  @override
+  String get devWhoSeesWhat => '誰能看到什麼';
+
+  @override
+  String get devWhoWords =>
+      '用你的三個詞，Marios 能像任何聯絡人一樣回覆你。他能看到你的三個詞，但看不到你的臉和支持者徽章。';
+
+  @override
+  String get devWhoAnon => '匿名時，Kryfo 會只為這個聊天產生新的名字和金鑰。它們只留在這支手機上，絕不會在別處使用。';
+
+  @override
+  String get devWhoNothingYet => '在你傳出第一則訊息之前，什麼都不會離開你的手機。';
+
+  @override
+  String get devWhoChoiceStays => '你的選擇會一直跟著這個聊天。';
+
+  @override
+  String get devKeyCheckFailed => '無法核對 Marios 的金鑰。什麼都沒有傳送。';
+
+  @override
+  String get devLockLine => 'Marios 會讀到這些訊息。等他回覆後，你就能繼續寫。';
+
+  @override
+  String get devNewKey => 'Marios 有了新金鑰';
+
+  @override
+  String get devStartNewChat => '開始新的聊天';
+
+  @override
+  String get devKeyRetired => '這個金鑰已停用。這裡不能再傳送或接收任何內容。';
+
+  @override
+  String get devVoiceDisguised => '在這個聊天裡，你的語音會變聲';
+
+  @override
+  String get devChatOptions => '聊天選項';
 }

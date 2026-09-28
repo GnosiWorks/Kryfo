@@ -7229,4 +7229,59 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get seenDevChatLine =>
       'Tidak ada apa-apa sampai kamu menulis. Setelah itu, apa yang kamu kirim, dan tiga katamu, kecuali kamu menulis secara anonim.';
+
+  @override
+  String get devNoteWords => 'Marios akan melihat tiga katamu';
+
+  @override
+  String get devWriteAnonymously => 'Tulis secara anonim';
+
+  @override
+  String get devNoteAnon =>
+      'Marios akan melihat nama baru yang dibuat khusus untuk obrolan ini';
+
+  @override
+  String get devUseMyWords => 'Pakai tiga kataku';
+
+  @override
+  String get devWhoSeesWhat => 'Siapa melihat apa';
+
+  @override
+  String get devWhoWords =>
+      'Dengan tiga katamu, Marios bisa membalas seperti kontak mana pun. Dia melihat tiga katamu, bukan wajahmu atau lencana pendukungmu.';
+
+  @override
+  String get devWhoAnon =>
+      'Secara anonim, Kryfo membuat nama dan kunci baru khusus untuk obrolan ini. Semuanya tetap di ponsel ini dan tidak pernah dipakai di tempat lain.';
+
+  @override
+  String get devWhoNothingYet =>
+      'Tidak ada yang keluar dari ponselmu sampai kamu mengirim pesan pertamamu.';
+
+  @override
+  String get devWhoChoiceStays => 'Pilihanmu melekat pada obrolan ini.';
+
+  @override
+  String get devKeyCheckFailed =>
+      'Tidak bisa memeriksa kunci Marios. Tidak ada yang terkirim.';
+
+  @override
+  String get devLockLine =>
+      'Marios akan membaca pesan-pesan ini. Kamu bisa menulis lagi setelah dia membalas.';
+
+  @override
+  String get devNewKey => 'Marios punya kunci baru';
+
+  @override
+  String get devStartNewChat => 'Mulai obrolan baru';
+
+  @override
+  String get devKeyRetired =>
+      'Kunci ini sudah dipensiunkan. Tidak ada lagi yang bisa dikirim atau diterima di sini.';
+
+  @override
+  String get devVoiceDisguised => 'Suaramu disamarkan di obrolan ini';
+
+  @override
+  String get devChatOptions => 'Opsi obrolan';
 }

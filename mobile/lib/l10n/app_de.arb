@@ -1919,5 +1919,21 @@
   "settingsWriteToMariosHint": "Fehler, Ideen, Fragen",
   "seenDevChat": "Der Chat mit Marios",
   "seenDevChatCell": "Wenn du schreibst",
-  "seenDevChatLine": "Nichts, bis du schreibst. Dann das, was du sendest, und deine drei Wörter, außer du schreibst anonym."
+  "seenDevChatLine": "Nichts, bis du schreibst. Dann das, was du sendest, und deine drei Wörter, außer du schreibst anonym.",
+  "devNoteWords": "Marios sieht deine drei Wörter",
+  "devWriteAnonymously": "Anonym schreiben",
+  "devNoteAnon": "Marios sieht einen neuen Namen, nur für diesen Chat gemacht",
+  "devUseMyWords": "Meine drei Wörter nutzen",
+  "devWhoSeesWhat": "Wer sieht was",
+  "devWhoWords": "Mit deinen drei Wörtern kann Marios dir antworten wie jeder Kontakt. Er sieht deine drei Wörter, nicht dein Gesicht und nicht dein Unterstützer-Abzeichen.",
+  "devWhoAnon": "Anonym macht Kryfo einen neuen Namen und neue Schlüssel nur für diesen Chat. Sie bleiben auf diesem Handy und werden nirgends sonst benutzt.",
+  "devWhoNothingYet": "Nichts verlässt dein Handy, bevor du deine erste Nachricht sendest.",
+  "devWhoChoiceStays": "Deine Wahl bleibt bei diesem Chat.",
+  "devKeyCheckFailed": "Der Schlüssel von Marios konnte nicht geprüft werden. Nichts wurde gesendet.",
+  "devLockLine": "Marios wird sie lesen. Du kannst mehr schreiben, sobald er antwortet.",
+  "devNewKey": "Marios hat einen neuen Schlüssel",
+  "devStartNewChat": "Neuen Chat beginnen",
+  "devKeyRetired": "Dieser Schlüssel wurde stillgelegt. Hier kann nichts mehr gesendet oder empfangen werden.",
+  "devVoiceDisguised": "Deine Stimme wird in diesem Chat verfremdet",
+  "devChatOptions": "Chat-Optionen"
 }

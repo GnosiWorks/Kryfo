@@ -7363,4 +7363,59 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get seenDevChatLine =>
       'Ничего, пока ты не напишешь. Потом то, что ты отправляешь, и твои три слова, если только ты не пишешь анонимно.';
+
+  @override
+  String get devNoteWords => 'Marios увидит твои три слова';
+
+  @override
+  String get devWriteAnonymously => 'Написать анонимно';
+
+  @override
+  String get devNoteAnon =>
+      'Marios увидит новое имя, созданное только для этого чата';
+
+  @override
+  String get devUseMyWords => 'Использовать мои три слова';
+
+  @override
+  String get devWhoSeesWhat => 'Кто что видит';
+
+  @override
+  String get devWhoWords =>
+      'С твоими тремя словами Marios может ответить тебе, как любой контакт. Он видит твои три слова, но не твоё лицо и не значок сторонника.';
+
+  @override
+  String get devWhoAnon =>
+      'Анонимно Kryfo создаёт новое имя и ключи только для этого чата. Они остаются на этом телефоне и больше нигде не используются.';
+
+  @override
+  String get devWhoNothingYet =>
+      'Ничто не покидает твой телефон, пока ты не отправишь первое сообщение.';
+
+  @override
+  String get devWhoChoiceStays => 'Твой выбор остаётся за этим чатом.';
+
+  @override
+  String get devKeyCheckFailed =>
+      'Не удалось проверить ключ Marios. Ничего не отправлено.';
+
+  @override
+  String get devLockLine =>
+      'Marios их прочитает. Ты сможешь написать ещё, когда он ответит.';
+
+  @override
+  String get devNewKey => 'У Marios новый ключ';
+
+  @override
+  String get devStartNewChat => 'Начать новый чат';
+
+  @override
+  String get devKeyRetired =>
+      'Этот ключ отозван. Здесь уже ничего нельзя отправить или получить.';
+
+  @override
+  String get devVoiceDisguised => 'Твой голос в этом чате изменён';
+
+  @override
+  String get devChatOptions => 'Настройки чата';
 }

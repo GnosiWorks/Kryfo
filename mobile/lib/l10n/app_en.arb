@@ -9166,5 +9166,69 @@
   "seenDevChatLine": "Nothing until you write. Then what you send, and your three words unless you write anonymously.",
   "@seenDevChatLine": {
     "description": "screens/seen_screen.dart: why, under The Marios chat"
+  },
+  "devNoteWords": "Marios will see your three words",
+  "@devNoteWords": {
+    "description": "widgets/dev_note.dart: the note above the composer of the developer chat before its first message: who he will see it from. Marios stays in Latin letters"
+  },
+  "devWriteAnonymously": "Write anonymously",
+  "@devWriteAnonymously": {
+    "description": "widgets/dev_note.dart: a small pill in that note. one tap writes the chat under a name made for it instead of the three words"
+  },
+  "devNoteAnon": "Marios will see a new name, made just for this chat",
+  "@devNoteAnon": {
+    "description": "widgets/dev_note.dart: the note's line once the pill is on"
+  },
+  "devUseMyWords": "Use my three words",
+  "@devUseMyWords": {
+    "description": "widgets/dev_note.dart: a small link in the note once the pill is on: back to the person's own three words"
+  },
+  "devWhoSeesWhat": "Who sees what",
+  "@devWhoSeesWhat": {
+    "description": "widgets/dev_note.dart: the (i) of the note and the title of its sheet"
+  },
+  "devWhoWords": "With your three words, Marios can write back like any contact. He sees your three words, not your face or your supporter badge.",
+  "@devWhoWords": {
+    "description": "widgets/dev_note.dart: the sheet Who sees what, writing with the three words"
+  },
+  "devWhoAnon": "Anonymously, Kryfo makes a new name and keys for this chat only. They stay on this phone and are never used anywhere else.",
+  "@devWhoAnon": {
+    "description": "widgets/dev_note.dart: the sheet Who sees what, writing anonymously"
+  },
+  "devWhoNothingYet": "Nothing leaves your phone until you send your first message.",
+  "@devWhoNothingYet": {
+    "description": "widgets/dev_note.dart: the sheet Who sees what"
+  },
+  "devWhoChoiceStays": "Your choice stays with this chat.",
+  "@devWhoChoiceStays": {
+    "description": "widgets/dev_note.dart: the last line of the sheet Who sees what: after the first message the choice is fixed"
+  },
+  "devKeyCheckFailed": "Could not check Marios's key. Nothing was sent.",
+  "@devKeyCheckFailed": {
+    "description": "screens/chat_screen.dart: above the composer of the developer chat when his pinned key did not check out"
+  },
+  "devLockLine": "Marios will read these. You can write more once he replies.",
+  "@devLockLine": {
+    "description": "screens/chat_screen.dart: in place of the composer of the developer chat once the messages allowed before he answers are sent"
+  },
+  "devNewKey": "Marios has a new key",
+  "@devNewKey": {
+    "description": "screens/chat_screen.dart: a quiet line at the top of the developer chat once a newer key of his is built into the app"
+  },
+  "devStartNewChat": "Start a new chat",
+  "@devStartNewChat": {
+    "description": "the developer chat after he has a new key: a chat on the new key"
+  },
+  "devKeyRetired": "This key was retired. Nothing more can be sent or received here.",
+  "@devKeyRetired": {
+    "description": "screens/chat_screen.dart: in place of the composer of a developer chat whose key was retired"
+  },
+  "devVoiceDisguised": "Your voice is disguised in this chat",
+  "@devVoiceDisguised": {
+    "description": "screens/chat_screen.dart: the voice disguise toggle of an anonymous developer chat, always on, and what a tap on it says"
+  },
+  "devChatOptions": "Chat options",
+  "@devChatOptions": {
+    "description": "widgets/dev_note.dart: the menu button in the developer chat's header"
   }
 }

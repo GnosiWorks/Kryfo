@@ -532,6 +532,14 @@ class LockState extends ChangeNotifier {
   bool _enabled = false;
   bool _loaded = false;
   bool get loaded => _loaded;
+
+  // tests stand in a lock that was read and is open, without the pin engine
+  @visibleForTesting
+  void openForTest() {
+    _loaded = true;
+    _locked = false;
+  }
+
   // a keystore that would not answer. the lock stays shut and load tries
   // again rather than opening the app to whoever holds the phone
   bool _unreadable = false;

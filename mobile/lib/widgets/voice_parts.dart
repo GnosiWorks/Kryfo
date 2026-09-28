@@ -559,21 +559,25 @@ class VoiceRecordBar extends StatelessWidget {
 }
 
 /// the mask beside the mic: on, the next note goes out in a disguised
-/// voice. it turns over with a small pop when switched
+/// voice. it turns over with a small pop when switched. locked, it is on
+/// for good in this chat and carries a small lock
 class DisguiseToggle extends StatelessWidget {
   final bool on;
   final String label;
   final VoidCallback onTap;
+  final bool locked;
   const DisguiseToggle({
     super.key,
     required this.on,
     required this.label,
     required this.onTap,
+    this.locked = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final still = motionStill(context);
+    final on = this.on || locked;
     return Semantics(
       label: label,
       button: true,
@@ -634,6 +638,33 @@ class DisguiseToggle extends StatelessWidget {
                     color: on ? HaloColors.amber : HaloColors.text3,
                   ),
                 ),
+                if (locked)
+                  PositionedDirectional(
+                    end: -5,
+                    bottom: -4,
+                    // the lock pops on as the chat turns anonymous
+                    child: TweenAnimationBuilder<double>(
+                      tween: Tween(begin: still ? 1 : 0.3, end: 1),
+                      duration: still ? Duration.zero : kHouseTime,
+                      curve: Curves.easeOutBack,
+                      builder: (_, s, child) =>
+                          Transform.scale(scale: s, child: child),
+                      child: Container(
+                        width: 12,
+                        height: 12,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: HaloColors.surface,
+                        ),
+                        child: Icon(
+                          Icons.lock_rounded,
+                          size: 8.5,
+                          color: HaloColors.amber,
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
