@@ -87,6 +87,18 @@ func (b *bucket) take(now time.Time) bool {
 
 var invoices = newBucket(perHour)
 
+// receipt checks, for everyone together. each one is a call to btcpay, and
+// a waiting phone asks a few times a minute at most.
+var receipts = newRate(envInt("BADGE_RECEIPTS_PER_SEC", 5), 60)
+
+func newRate(perSec, burst int) *bucket {
+	return &bucket{tokens: float64(burst), max: float64(burst), perSec: float64(perSec), last: time.Now()}
+}
+
+// calls to btcpay in flight. a flood waits here instead of opening
+// connections to it without end
+var upstream = make(chan struct{}, 8)
+
 func envInt(k string, d int) int {
 	if n, err := strconv.Atoi(os.Getenv(k)); err == nil && n > 0 {
 		return n
@@ -247,6 +259,10 @@ func handleReceipt(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "bad id", 400)
 		return
 	}
+	if !receipts.take(time.Now()) {
+		http.Error(w, "busy, try again later", http.StatusTooManyRequests)
+		return
+	}
 	resp, err := btcpay("GET", "/api/v1/stores/"+storeID+"/invoices/"+id, nil)
 	if err != nil {
 		http.Error(w, "upstream", 502)
@@ -326,6 +342,12 @@ func btcpay(method, path string, body []byte) ([]byte, error) {
 	}
 	req.Header.Set("Authorization", "token "+apiKey)
 	req.Header.Set("Content-Type", "application/json")
+	select {
+	case upstream <- struct{}{}:
+		defer func() { <-upstream }()
+	case <-time.After(5 * time.Second):
+		return nil, fmt.Errorf("btcpay busy")
+	}
 	cl := &http.Client{Timeout: 20 * time.Second}
 	resp, err := cl.Do(req)
 	if err != nil {

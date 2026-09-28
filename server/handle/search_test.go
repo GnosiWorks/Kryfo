@@ -40,6 +40,7 @@ const invite = "kryfo://share?id=a-b-c&onion=x.onion&v=3&bundle=zz&fc=ff"
 func service(t *testing.T, lim *limiter) (*httptest.Server, *store) {
 	t.Helper()
 	st := openStore(filepath.Join(t.TempDir(), "handles.json"))
+	readLim, writeLim, newNameLim = newLimiter(1000, 1000), newLimiter(1000, 1000), newLimiter(1000, 1000)
 	srv := httptest.NewUnstartedServer(nil)
 	real := newServer("", st, lim)
 	srv.Config = real

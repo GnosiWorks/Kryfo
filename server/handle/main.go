@@ -42,6 +42,17 @@ var reserved = map[string]bool{
 	"well": true, "static": true, "assets": true, "about": true,
 }
 
+// limits for everyone together: behind tor there is no caller to tell
+// apart. the app repoints its handle on every start, so writes are sized
+// for that. a key costs nothing to make, so new names get a slower pace and
+// a ceiling on top. reads are the check, the json lookup and the page.
+var (
+	readLim    = newLimiter(50, 200)
+	writeLim   = newLimiter(5, 50)
+	newNameLim = newLimiter(0.2, 20)
+	maxHandles = 100000
+)
+
 type entry struct {
 	Handle    string `json:"handle"`
 	Invite    string `json:"invite"`
@@ -76,6 +87,12 @@ func (s *store) get(h string) (entry, bool) {
 	defer s.mu.RUnlock()
 	e, ok := s.m[h]
 	return e, ok
+}
+
+func (s *store) count() int {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return len(s.m)
 }
 
 func (s *store) put(e entry) error {
@@ -249,6 +266,11 @@ func routes(st *store, lim *limiter) http.Handler {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/handle/check", func(w http.ResponseWriter, r *http.Request) {
+		// plain text: an answer without "free" would read as taken
+		if !readLim.allow() {
+			http.Error(w, "slow down", http.StatusTooManyRequests)
+			return
+		}
 		var raw string
 		switch {
 		case r.Method == http.MethodPost && r.URL.RawQuery == "":
@@ -306,20 +328,40 @@ func routes(st *store, lim *limiter) http.Handler {
 		if len(in.Bio) > 200 {
 			in.Bio = in.Bio[:200]
 		}
+		if !writeLim.allow() {
+			refuseCode(w, http.StatusTooManyRequests, "slow down")
+			return
+		}
 		if !verify(in.Handle, in.Pubkey, sig) {
 			refuse(w, "signature does not match")
 			return
 		}
 		// re-claiming your own handle repoints it, which is how someone
 		// updates an invite after a reinstall. anyone else is refused.
-		if old, ok := st.get(in.Handle); ok {
+		old, ok := st.get(in.Handle)
+		if ok {
 			if old.Pubkey != in.Pubkey {
 				refuse(w, "that handle is taken")
 				return
 			}
-			// the app repoints on every start; that must not take someone
-			// out of search, or put them back into it
+			// the app repoints on every start: nothing changed, nothing
+			// written
+			if old.Invite == in.Invite && old.Bio == in.Bio {
+				writeJSON(w, http.StatusOK, map[string]any{"ok": true})
+				return
+			}
+			// and that must not take someone out of search, or put them
+			// back into it
 			in.Listed, in.Name, in.ListedAt = old.Listed, old.Name, old.ListedAt
+		} else {
+			if st.count() >= maxHandles {
+				refuseCode(w, http.StatusServiceUnavailable, "the registry is full")
+				return
+			}
+			if !newNameLim.allow() {
+				refuseCode(w, http.StatusTooManyRequests, "slow down")
+				return
+			}
 		}
 		in.ClaimedAt = time.Now().Unix()
 		if err := st.put(in); err != nil {
@@ -337,6 +379,10 @@ func routes(st *store, lim *limiter) http.Handler {
 		var raw map[string]string
 		if json.NewDecoder(http.MaxBytesReader(w, r.Body, 8<<10)).Decode(&raw) != nil {
 			refuse(w, "bad request")
+			return
+		}
+		if !writeLim.allow() {
+			refuseCode(w, http.StatusTooManyRequests, "slow down")
 			return
 		}
 		h := strings.ToLower(strings.TrimSpace(raw["handle"]))
@@ -370,6 +416,10 @@ func routes(st *store, lim *limiter) http.Handler {
 
 	// nip-05 shaped, so other nostr clients can resolve a kryfo handle too
 	mux.HandleFunc("/.well-known/kryfo.json", func(w http.ResponseWriter, r *http.Request) {
+		if !readLim.allow() {
+			refuseCode(w, http.StatusTooManyRequests, "slow down")
+			return
+		}
 		h := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("name")))
 		e, ok := st.get(h)
 		if !ok {
@@ -389,6 +439,12 @@ func routes(st *store, lim *limiter) http.Handler {
 			writeHTMLHeaders(w)
 			w.WriteHeader(http.StatusNotFound)
 			fmt.Fprint(w, page("not found", "", "", ""))
+			return
+		}
+		if !readLim.allow() {
+			writeHTMLHeaders(w)
+			w.WriteHeader(http.StatusTooManyRequests)
+			fmt.Fprint(w, busyPage)
 			return
 		}
 		h := strings.ToLower(strings.TrimPrefix(r.URL.Path, "/@"))
@@ -423,6 +479,12 @@ func fingerprint(pub string) string {
 	}
 	return p[0:4] + " " + p[4:8]
 }
+
+var busyPage = `<!doctype html><meta charset=utf-8>` + head + `
+<div class=wrap><div class=card>
+<div class=name>busy</div>
+<p class=bio>too many people are looking right now. try again in a minute.</p>
+</div></div>`
 
 func page(handle, bio, invite, fp string) string {
 	if invite == "" {
@@ -569,6 +631,10 @@ func listingHandler(st *store) http.HandlerFunc {
 		var raw map[string]string
 		if json.NewDecoder(http.MaxBytesReader(w, r.Body, 8<<10)).Decode(&raw) != nil {
 			refuse(w, "bad request")
+			return
+		}
+		if !writeLim.allow() {
+			refuseCode(w, http.StatusTooManyRequests, "slow down")
 			return
 		}
 		h := strings.ToLower(strings.TrimSpace(raw["handle"]))

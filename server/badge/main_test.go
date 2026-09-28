@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 )
@@ -46,6 +47,7 @@ func setup(t *testing.T, f *fakeBTCPay) {
 	_, p, _ := ed25519.GenerateKey(nil)
 	priv = p
 	invoices = newBucket(30)
+	receipts = newRate(5, 60)
 }
 
 func receipt(t *testing.T, id string) (int, map[string]any) {
@@ -162,5 +164,58 @@ func TestInvoiceHidesCheckoutLink(t *testing.T) {
 	_ = json.Unmarshal(w.Body.Bytes(), &m)
 	if m["address"] != "bc1qexample" || m["uri"] != "bitcoin:bc1qexample?amount=0.00021" || m["tier"] != "patron" {
 		t.Fatalf("the app needs id, tier, address, btc, uri: %v", m)
+	}
+}
+
+func TestReceiptsAreLimited(t *testing.T) {
+	setup(t, &fakeBTCPay{status: "New"})
+	receipts = newRate(1, 3)
+	for i := 0; i < 3; i++ {
+		if code, _ := receipt(t, "INV00001"); code != http.StatusAccepted {
+			t.Fatalf("check %d: %d, want 202", i, code)
+		}
+	}
+	if code, _ := receipt(t, "INV00001"); code != http.StatusTooManyRequests {
+		t.Fatalf("over the burst: %d, want 429", code)
+	}
+	// a malformed id is refused before it costs a token
+	receipts = newRate(1, 1)
+	if code, _ := receipt(t, "../x"); code != 400 {
+		t.Fatalf("bad id: %d", code)
+	}
+	if code, _ := receipt(t, "INV00001"); code != http.StatusAccepted {
+		t.Fatalf("after a bad id: %d, want 202", code)
+	}
+}
+
+func TestUpstreamCallsAreCapped(t *testing.T) {
+	release := make(chan struct{})
+	var inFlight, most int
+	var mu sync.Mutex
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+		inFlight++
+		if inFlight > most {
+			most = inFlight
+		}
+		mu.Unlock()
+		<-release
+		mu.Lock()
+		inFlight--
+		mu.Unlock()
+		fmt.Fprint(w, `{}`)
+	}))
+	defer srv.Close()
+	btcpayURL, apiKey, storeID = srv.URL, "k", "s"
+	var wg sync.WaitGroup
+	for i := 0; i < 3*cap(upstream); i++ {
+		wg.Add(1)
+		go func() { defer wg.Done(); _, _ = btcpay("GET", "/x", nil) }()
+	}
+	time.Sleep(300 * time.Millisecond)
+	close(release)
+	wg.Wait()
+	if most > cap(upstream) {
+		t.Fatalf("%d calls to btcpay at once, cap is %d", most, cap(upstream))
 	}
 }
