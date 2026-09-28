@@ -5,17 +5,18 @@ package main
 // sides derive the same keypair from the code alone: the person sharing
 // publishes their invite encrypted to it, the person joining reads it.
 //
-// a million codes and no rate limit on a public relay means a watcher can
-// enumerate them, but all they get is an invite, which is not a secret. the
-// request inbox and proof of work are what gate a stranger. the window is
-// short because an address nobody is listening to is not worth publishing to.
+// the joiner takes an invite only when the code's address holds exactly one,
+// across every relay, and the app then shows its three words to be matched
+// against the sharer's screen before anything is added. the window is short
+// because an address nobody is listening to is not worth publishing to.
 
 import (
 	"context"
 	"encoding/hex"
 	"fmt"
 	"log"
-	"sync"
+	"math"
+	"strconv"
 	"time"
 
 	"fiatjaf.com/nostr"
@@ -55,164 +56,245 @@ func pairCodeKeys(code string) (sk, pk string, err error) {
 //
 //export HaloPairCodePublish
 func HaloPairCodePublish(cCode, cPayload *C.char) *C.char {
-	code := C.GoString(cCode)
-	payload := C.GoString(cPayload)
+	return C.CString(pairCodePublish(C.GoString(cCode), C.GoString(cPayload)))
+}
 
-	sk, pk, err := pairCodeKeys(code)
+// how long an invite stays at a code: the expiration the sharer stamps on it
+const pairCodeLife = 10 * time.Minute
+
+func pairCodePublish(code, payload string) string {
+	out, pk, err := pairCodeEvent(code, payload, time.Now())
 	if err != nil {
-		return C.CString("error: " + err.Error())
+		return "error: " + err.Error()
 	}
-
-	ck, err := nip44.GenerateConversationKey(pk, sk)
-	if err != nil {
-		return C.CString(fmt.Sprintf("error: key: %v", err))
-	}
-	ct, err := nip44.Encrypt(payload, ck)
-	if err != nil {
-		return C.CString(fmt.Sprintf("error: encrypt: %v", err))
-	}
-
-	exp := fmt.Sprintf("%d", time.Now().Add(10*time.Minute).Unix())
-	ev := nostr2.Event{
-		Kind:      1059,
-		CreatedAt: nostr2.Now(),
-		Content:   ct,
-		Tags: nostr2.Tags{
-			{"p", pk},
-			{"expiration", exp},
-		},
-	}
-	if err := ev.Sign(sk); err != nil {
-		return C.CString(fmt.Sprintf("error: sign: %v", err))
-	}
-
-	var out nostr.Event
-	if err := easyjson.Unmarshal([]byte(ev.String()), &out); err != nil {
-		return C.CString(fmt.Sprintf("error: convert: %v", err))
-	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), 40*time.Second)
 	defer cancel()
 	ok := nostrPublishMulti(ctx, pairLane(pk), out)
 	if ok == 0 {
-		return C.CString("error: no relays accepted")
+		return "error: no relays accepted"
 	}
 	log.Printf("paircode: published to %d relays, addr %s...", ok, pk[:12])
-	return C.CString("ok")
+	return "ok"
 }
 
-// ask every relay at once and take whatever comes back first. a one-shot
-// lookup, not a subscription: the caller polls while the screen is open.
+// the event that puts payload at the code's address, made at now, and the
+// address itself
+func pairCodeEvent(code, payload string, now time.Time) (nostr.Event, string, error) {
+	var out nostr.Event
+	sk, pk, err := pairCodeKeys(code)
+	if err != nil {
+		return out, "", err
+	}
+	ck, err := nip44.GenerateConversationKey(pk, sk)
+	if err != nil {
+		return out, "", fmt.Errorf("key: %v", err)
+	}
+	ct, err := nip44.Encrypt(payload, ck)
+	if err != nil {
+		return out, "", fmt.Errorf("encrypt: %v", err)
+	}
+	ev := nostr2.Event{
+		Kind:      1059,
+		CreatedAt: nostr2.Timestamp(now.Unix()),
+		Content:   ct,
+		Tags: nostr2.Tags{
+			{"p", pk},
+			{"expiration", fmt.Sprintf("%d", now.Add(pairCodeLife).Unix())},
+		},
+	}
+	if err := ev.Sign(sk); err != nil {
+		return out, "", fmt.Errorf("sign: %v", err)
+	}
+	if err := easyjson.Unmarshal([]byte(ev.String()), &out); err != nil {
+		return out, "", fmt.Errorf("convert: %v", err)
+	}
+	return out, pk, nil
+}
+
+// how long the joiner keeps listening once the first event turns up at a
+// code, for the relays that have not answered yet
+var pairCollectWindow = 3 * time.Second
+
+// what one relay sent: an event, or nil once it has sent everything it holds
+// (or could not be asked)
+type pairAnswer struct{ ev *nostr.Event }
+
+// ask every relay at once and keep everything they hold at the address. a
+// one-shot lookup, not a subscription: the caller polls while the screen is
+// open. it ends once every relay has answered, a few seconds after the first
+// event, or at the deadline, whichever comes first.
 func pairCodeQuery(ctx context.Context, pk string) []nostr.Event {
 	nostrMu.Lock()
 	urls := append([]string(nil), nostrRelays...)
 	nostrMu.Unlock()
+	if len(urls) == 0 {
+		return nil
+	}
 
-	out := make(chan nostr.Event, 16)
-	done := make(chan struct{})
-	var wg sync.WaitGroup
+	qctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	out := make(chan pairAnswer)
+	since := nostr.Timestamp(time.Now().Add(-pairCodeLife - time.Minute).Unix())
 
 	for _, u := range urls {
-		wg.Add(1)
 		go func(u string) {
-			defer wg.Done()
+			// every relay reports done exactly once, after its events
+			done := func() {
+				select {
+				case out <- pairAnswer{}:
+				case <-qctx.Done():
+				}
+			}
 			client, err := torNostrClientFor(pairLane(pk))
 			if err != nil {
+				done()
 				return
 			}
-			r := nostr.NewRelay(ctx, u, nostr.RelayOptions{})
-			dctx, dcancel := relayDialCtx(ctx, u)
+			r := nostr.NewRelay(qctx, u, nostr.RelayOptions{})
+			dctx, dcancel := relayDialCtx(qctx, u)
 			err = r.ConnectWithClient(dctx, client)
 			dcancel()
 			if err != nil {
+				done()
 				return
 			}
 			defer r.Close()
-			sub, err := r.Subscribe(ctx, nostr.Filter{
+			sub, err := r.Subscribe(qctx, nostr.Filter{
 				Kinds: []nostr.Kind{1059},
 				Tags:  nostr.TagMap{"p": []string{pk}},
-				Limit: 5,
-			}, nostr.SubscriptionOptions{})
+				Since: since,
+				Limit: 20,
+			}, nostr.SubscriptionOptions{
+				// the end of stored events comes from the relay or not at
+				// all: a made-up one would cut its answer short
+				MaxWaitForEOSE: time.Duration(math.MaxInt64),
+			})
 			if err != nil {
+				done()
 				return
 			}
+			eosed := false
 			for {
 				select {
 				case ev, alive := <-sub.Events:
 					if !alive {
+						if !eosed {
+							done()
+						}
 						return
 					}
+					// never dropped: a second invite is exactly what this is for
 					select {
-					case out <- ev:
-					default:
+					case out <- pairAnswer{&ev}:
+					case <-qctx.Done():
+						return
 					}
-				case <-done:
-					return
-				case <-ctx.Done():
+				case <-sub.EndOfStoredEvents:
+					// stored events all come before this. the socket stays
+					// open, so an invite that lands while others answer
+					// still counts
+					if !eosed {
+						eosed = true
+						done()
+					}
+				case <-qctx.Done():
 					return
 				}
 			}
 		}(u)
 	}
 
-	go func() { wg.Wait(); close(out) }()
-
 	var got []nostr.Event
-	deadline := time.After(12 * time.Second)
+	pending := len(urls)
+	deadline := time.NewTimer(12 * time.Second)
+	defer deadline.Stop()
+	var window <-chan time.Time
 	for {
 		select {
-		case ev, alive := <-out:
-			if !alive {
-				close(done)
-				return got
+		case a := <-out:
+			if a.ev == nil {
+				pending--
+				if pending == 0 {
+					return got
+				}
+				continue
 			}
-			got = append(got, ev)
-			// one is enough; the code only ever points at one invite
-			close(done)
+			got = append(got, *a.ev)
+			if window == nil {
+				window = time.After(pairCollectWindow)
+			}
+		case <-window:
 			return got
-		case <-deadline:
-			close(done)
+		case <-deadline.C:
 			return got
 		case <-ctx.Done():
-			close(done)
 			return got
 		}
 	}
 }
 
-// look for an invite at the address the code names. returns the payload, or
+// an event still inside its life at a code: not past the expiration the
+// sharer stamped on it, and not older than any invite can be
+func pairCodeLive(ev nostr.Event, now time.Time) bool {
+	if ev.CreatedAt.Time().Before(now.Add(-pairCodeLife - time.Minute)) {
+		return false
+	}
+	if tg := ev.Tags.Find("expiration"); len(tg) > 1 {
+		if exp, err := strconv.ParseInt(tg[1], 10, 64); err == nil && exp < now.Unix() {
+			return false
+		}
+	}
+	return true
+}
+
+// look for an invite at the address the code names. returns the payload,
 // "empty" when nothing is there yet, since the other person may not have
-// pressed share.
+// pressed share, or "twice" when the address holds more than one invite: a
+// code that points at two people points at nobody.
 //
 //export HaloPairCodeFetch
 func HaloPairCodeFetch(cCode *C.char) *C.char {
-	code := C.GoString(cCode)
+	return C.CString(pairCodeFetch(C.GoString(cCode)))
+}
 
+func pairCodeFetch(code string) string {
 	sk, pk, err := pairCodeKeys(code)
 	if err != nil {
-		return C.CString("error: " + err.Error())
+		return "error: " + err.Error()
+	}
+	ck, err := nip44.GenerateConversationKey(pk, sk)
+	if err != nil {
+		return fmt.Sprintf("error: key: %v", err)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	evs := pairCodeQuery(ctx, pk)
-	if len(evs) == 0 {
-		return C.CString("empty")
-	}
-
-	ck, err := nip44.GenerateConversationKey(pk, sk)
-	if err != nil {
-		return C.CString(fmt.Sprintf("error: key: %v", err))
-	}
-	// newest first; an old code reused by someone else would otherwise win
-	for i := len(evs) - 1; i >= 0; i-- {
-		pt, err := nip44.Decrypt(evs[i].Content, ck)
+	now := time.Now()
+	var first string
+	invites := map[string]bool{}
+	for _, ev := range pairCodeQuery(ctx, pk) {
+		if !pairCodeLive(ev, now) {
+			continue
+		}
+		pt, err := nip44.Decrypt(ev.Content, ck)
 		if err != nil {
 			continue
 		}
-		log.Printf("paircode: found an invite at %s...", pk[:12])
-		return C.CString(pt)
+		if !invites[pt] {
+			invites[pt] = true
+			if first == "" {
+				first = pt
+			}
+		}
 	}
-	return C.CString("empty")
+	switch len(invites) {
+	case 0:
+		return "empty"
+	case 1:
+		log.Printf("paircode: found an invite at %s...", pk[:12])
+		return first
+	}
+	log.Printf("paircode: %d invites at %s..., none taken", len(invites), pk[:12])
+	return "twice"
 }
