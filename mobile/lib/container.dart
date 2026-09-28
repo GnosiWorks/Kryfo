@@ -250,6 +250,7 @@ const containerKeys = {
   'my_handle_bio',
   'my_handle_listed',
   'my_handle_name',
+  'my_handle_claimed',
   'my_avatar',
   'ghost_on',
   'ghost_secs',

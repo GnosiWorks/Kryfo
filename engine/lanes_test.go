@@ -3,15 +3,46 @@ package main
 
 import (
 	"context"
+	"crypto/ed25519"
 	"encoding/hex"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 )
+
+// an https service of ours as tor reaches it: answers yes to everything and
+// remembers where each request came from
+type serviceStandIn struct {
+	srv *httptest.Server
+	mu  sync.Mutex
+	rem []string
+}
+
+func newServiceStandIn(t *testing.T) *serviceStandIn {
+	s := &serviceStandIn{}
+	s.srv = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		s.mu.Lock()
+		s.rem = append(s.rem, r.RemoteAddr)
+		s.mu.Unlock()
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{"ok":true,"free":true,"results":[]}`))
+	}))
+	t.Cleanup(s.srv.Close)
+	return s
+}
+
+func (s *serviceStandIn) remotes() []string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return append([]string(nil), s.rem...)
+}
 
 // the ids a connection sends start at 1 on every connection, so no relay can
 // line up two connections by where a shared counter had got to.
@@ -91,8 +122,9 @@ func TestSubscriptionIDsPerConnection(t *testing.T) {
 }
 
 // every lane dials under its own socks name: the main identity's listening
-// and sending share one, each room has its own, a pair code has its own, and
-// nothing reaches a relay without one.
+// and sending share one, each room has its own, a pair code has its own, the
+// registry, search and badge calls share one of their own, and nothing
+// reaches a relay or a service without one.
 func TestLanesDialUnderTheirOwnSocksName(t *testing.T) {
 	socks := newSocksStandIn(t)
 	a := newRelayStandIn(t, 0)
@@ -202,6 +234,54 @@ func TestLanesDialUnderTheirOwnSocksName(t *testing.T) {
 		if strings.Contains(n, "room") || strings.Contains(n, "pair") || strings.Contains(n, "everyday") {
 			t.Errorf("%s's socks name says what it is: %q", lane, n)
 		}
+	}
+
+	// the registry, people search and the badge service, as the app calls them
+	svc := newServiceStandIn(t)
+	oldBase := handleBase
+	handleBase = svc.srv.URL
+	defer func() { handleBase = oldBase }()
+	_, edPriv, _ := ed25519.GenerateKey(nil)
+	mu.Lock()
+	oldEd := myEdPriv
+	myEdPriv = edPriv
+	mu.Unlock()
+	defer func() {
+		mu.Lock()
+		myEdPriv = oldEd
+		mu.Unlock()
+	}()
+	for what, r := range map[string]string{
+		"check":   handleCheck("wren"),
+		"claim":   handleClaim("wren", "kryfo://share?id=a-b-c", ""),
+		"release": handleRelease("wren"),
+		"search":  torPost(svc.srv.URL+"/handle/search", `{"q":"wren"}`),
+		"badge":   torGetJSON(svc.srv.URL + "/receipt?id=1"),
+	} {
+		if strings.HasPrefix(r, "error") {
+			t.Fatalf("%s: %s", what, r)
+		}
+	}
+	remotes := svc.remotes()
+	if len(remotes) == 0 {
+		t.Fatal("no call reached the service")
+	}
+	var svcName string
+	for _, rem := range remotes {
+		n, ok := socks.nameOf(rem)
+		if !ok {
+			t.Fatal("a service call went out without going through socks")
+		}
+		if n == "" {
+			t.Fatal("a service call went through socks without a name")
+		}
+		if svcName != "" && n != svcName {
+			t.Error("the service calls dialled under more than one name")
+		}
+		svcName = n
+	}
+	if lane, ok := laneOfName[svcName]; ok {
+		t.Fatalf("the service calls share a socks name with %s", lane)
 	}
 
 	// a room that is gone takes its name with it

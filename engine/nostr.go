@@ -1553,35 +1553,39 @@ func HaloTorGetStrict(cUrl *C.char) *C.char {
 //
 //export HaloTorPost
 func HaloTorPost(cUrl *C.char, cBody *C.char) *C.char {
-	url := C.GoString(cUrl)
-	body := C.GoString(cBody)
+	return C.CString(torPost(C.GoString(cUrl), C.GoString(cBody)))
+}
+
+// the app's only callers are people search and the badge service, so the
+// services lane carries it
+func torPost(url, body string) string {
 	if url == "" {
-		return C.CString("error: empty url")
+		return "error: empty url"
 	}
-	client, err := torNostrClient()
+	client, err := torNostrClientFor(laneServices)
 	if err != nil {
-		return C.CString(fmt.Sprintf("error: tor client: %v", err))
+		return fmt.Sprintf("error: tor client: %v", err)
 	}
 	req, err := http.NewRequest("POST", url, strings.NewReader(body))
 	if err != nil {
-		return C.CString(fmt.Sprintf("error: req: %v", err))
+		return fmt.Sprintf("error: req: %v", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
 	defer cancel()
 	resp, err := client.Do(req.WithContext(ctx))
 	if err != nil {
-		return C.CString(fmt.Sprintf("error: post: %v", err))
+		return fmt.Sprintf("error: post: %v", err)
 	}
 	defer resp.Body.Close()
 	out, err := io.ReadAll(io.LimitReader(resp.Body, 256*1024))
 	if err != nil {
-		return C.CString(fmt.Sprintf("error: read: %v", err))
+		return fmt.Sprintf("error: read: %v", err)
 	}
 	if resp.StatusCode >= 300 {
-		return C.CString(fmt.Sprintf("error: status %d: %s", resp.StatusCode, string(out)))
+		return fmt.Sprintf("error: status %d: %s", resp.StatusCode, string(out))
 	}
-	return C.CString(string(out))
+	return string(out)
 }
 
 // GET over tor that keeps the body for any 2xx: the badge service answers
@@ -1589,31 +1593,35 @@ func HaloTorPost(cUrl *C.char, cBody *C.char) *C.char {
 //
 //export HaloTorGetJSON
 func HaloTorGetJSON(cUrl *C.char) *C.char {
-	url := C.GoString(cUrl)
+	return C.CString(torGetJSON(C.GoString(cUrl)))
+}
+
+// handle lookups and badge receipts: the services lane, as above
+func torGetJSON(url string) string {
 	if url == "" {
-		return C.CString("error: empty url")
+		return "error: empty url"
 	}
-	client, err := torNostrClient()
+	client, err := torNostrClientFor(laneServices)
 	if err != nil {
-		return C.CString(fmt.Sprintf("error: tor client: %v", err))
+		return fmt.Sprintf("error: tor client: %v", err)
 	}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return C.CString(fmt.Sprintf("error: req: %v", err))
+		return fmt.Sprintf("error: req: %v", err)
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
 	defer cancel()
 	resp, err := client.Do(req.WithContext(ctx))
 	if err != nil {
-		return C.CString(fmt.Sprintf("error: get: %v", err))
+		return fmt.Sprintf("error: get: %v", err)
 	}
 	defer resp.Body.Close()
 	out, err := io.ReadAll(io.LimitReader(resp.Body, 256*1024))
 	if err != nil {
-		return C.CString(fmt.Sprintf("error: read: %v", err))
+		return fmt.Sprintf("error: read: %v", err)
 	}
 	if resp.StatusCode >= 300 {
-		return C.CString(fmt.Sprintf("error: status %d", resp.StatusCode))
+		return fmt.Sprintf("error: status %d", resp.StatusCode)
 	}
-	return C.CString(string(out))
+	return string(out)
 }
