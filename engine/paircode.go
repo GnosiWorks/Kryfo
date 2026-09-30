@@ -5,10 +5,11 @@ package main
 // sides derive the same keypair from the code alone: the person sharing
 // publishes their invite encrypted to it, the person joining reads it.
 //
-// the joiner takes an invite only when the code's address holds exactly one,
-// across every relay, and the app then shows its three words to be matched
-// against the sharer's screen before anything is added. the window is short
-// because an address nobody is listening to is not worth publishing to.
+// the joiner takes an invite only when the code's address holds exactly one
+// event across the relays that answer, and the app then shows its three
+// words to be matched against the sharer's screen before anything is added.
+// the window is short because an address nobody is listening to is not worth
+// publishing to.
 
 import (
 	"context"
@@ -93,6 +94,12 @@ func pairCodeEvent(code, payload string, now time.Time) (nostr.Event, string, er
 	if err != nil {
 		return out, "", fmt.Errorf("encrypt: %v", err)
 	}
+	// signed with a key made for this event alone, which only the sharer's
+	// phone ever holds
+	author := nostr2.GeneratePrivateKey()
+	if author == "" {
+		return out, "", fmt.Errorf("sign: no key")
+	}
 	ev := nostr2.Event{
 		Kind:      1059,
 		CreatedAt: nostr2.Timestamp(now.Unix()),
@@ -102,7 +109,7 @@ func pairCodeEvent(code, payload string, now time.Time) (nostr.Event, string, er
 			{"expiration", fmt.Sprintf("%d", now.Add(pairCodeLife).Unix())},
 		},
 	}
-	if err := ev.Sign(sk); err != nil {
+	if err := ev.Sign(author); err != nil {
 		return out, "", fmt.Errorf("sign: %v", err)
 	}
 	if err := easyjson.Unmarshal([]byte(ev.String()), &out); err != nil {
@@ -115,20 +122,29 @@ func pairCodeEvent(code, payload string, now time.Time) (nostr.Event, string, er
 // code, for the relays that have not answered yet
 var pairCollectWindow = 3 * time.Second
 
-// what one relay sent: an event, or nil once it has sent everything it holds
-// (or could not be asked)
-type pairAnswer struct{ ev *nostr.Event }
+// how many events one relay is asked for at a code. a relay sends the
+// newest first and stops here, so an answer this long may have left older
+// ones out, and the code is refused
+const pairQueryLimit = 100
+
+// what one relay sent, and which one by its place in the list: an event, or
+// nil once it has sent everything it holds (or could not be asked)
+type pairAnswer struct {
+	from int
+	ev   *nostr.Event
+}
 
 // ask every relay at once and keep everything they hold at the address. a
 // one-shot lookup, not a subscription: the caller polls while the screen is
 // open. it ends once every relay has answered, a few seconds after the first
-// event, or at the deadline, whichever comes first.
-func pairCodeQuery(ctx context.Context, pk string) []nostr.Event {
+// event, or at the deadline, whichever comes first. full is true, and it ends
+// at once, when one relay's answer reaches pairQueryLimit.
+func pairCodeQuery(ctx context.Context, pk string) (got []nostr.Event, full bool) {
 	nostrMu.Lock()
 	urls := append([]string(nil), nostrRelays...)
 	nostrMu.Unlock()
 	if len(urls) == 0 {
-		return nil
+		return nil, false
 	}
 
 	qctx, cancel := context.WithCancel(ctx)
@@ -136,12 +152,12 @@ func pairCodeQuery(ctx context.Context, pk string) []nostr.Event {
 	out := make(chan pairAnswer)
 	since := nostr.Timestamp(time.Now().Add(-pairCodeLife - time.Minute).Unix())
 
-	for _, u := range urls {
-		go func(u string) {
+	for i, u := range urls {
+		go func(i int, u string) {
 			// every relay reports done exactly once, after its events
 			done := func() {
 				select {
-				case out <- pairAnswer{}:
+				case out <- pairAnswer{from: i}:
 				case <-qctx.Done():
 				}
 			}
@@ -163,7 +179,7 @@ func pairCodeQuery(ctx context.Context, pk string) []nostr.Event {
 				Kinds: []nostr.Kind{1059},
 				Tags:  nostr.TagMap{"p": []string{pk}},
 				Since: since,
-				Limit: 20,
+				Limit: pairQueryLimit,
 			}, nostr.SubscriptionOptions{
 				// the end of stored events comes from the relay or not at
 				// all: a made-up one would cut its answer short
@@ -185,7 +201,7 @@ func pairCodeQuery(ctx context.Context, pk string) []nostr.Event {
 					}
 					// never dropped: a second invite is exactly what this is for
 					select {
-					case out <- pairAnswer{&ev}:
+					case out <- pairAnswer{i, &ev}:
 					case <-qctx.Done():
 						return
 					}
@@ -201,10 +217,10 @@ func pairCodeQuery(ctx context.Context, pk string) []nostr.Event {
 					return
 				}
 			}
-		}(u)
+		}(i, u)
 	}
 
-	var got []nostr.Event
+	sent := make([]int, len(urls))
 	pending := len(urls)
 	deadline := time.NewTimer(12 * time.Second)
 	defer deadline.Stop()
@@ -215,20 +231,23 @@ func pairCodeQuery(ctx context.Context, pk string) []nostr.Event {
 			if a.ev == nil {
 				pending--
 				if pending == 0 {
-					return got
+					return got, false
 				}
 				continue
 			}
 			got = append(got, *a.ev)
+			if sent[a.from]++; sent[a.from] >= pairQueryLimit {
+				return got, true
+			}
 			if window == nil {
 				window = time.After(pairCollectWindow)
 			}
 		case <-window:
-			return got
+			return got, false
 		case <-deadline.C:
-			return got
+			return got, false
 		case <-ctx.Done():
-			return got
+			return got, false
 		}
 	}
 }
@@ -249,8 +268,10 @@ func pairCodeLive(ev nostr.Event, now time.Time) bool {
 
 // look for an invite at the address the code names. returns the payload,
 // "empty" when nothing is there yet, since the other person may not have
-// pressed share, or "twice" when the address holds more than one invite: a
-// code that points at two people points at nobody.
+// pressed share, or "twice" when the relays that answer hold more than one
+// event there, or one answer is as long as a relay sends: a share is one
+// event, copied to each relay, and a code that points at two people points
+// at nobody.
 //
 //export HaloPairCodeFetch
 func HaloPairCodeFetch(cCode *C.char) *C.char {
@@ -270,31 +291,34 @@ func pairCodeFetch(code string) string {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
+	evs, full := pairCodeQuery(ctx, pk)
+	if full {
+		log.Printf("paircode: a full answer at %s..., none taken", pk[:12])
+		return "twice"
+	}
 	now := time.Now()
-	var first string
-	invites := map[string]bool{}
-	for _, ev := range pairCodeQuery(ctx, pk) {
+	// counted by id, not by what it says: the same invite in a second event
+	// is a second event
+	ids := map[nostr.ID]bool{}
+	var one nostr.Event
+	for _, ev := range evs {
 		if !pairCodeLive(ev, now) {
 			continue
 		}
-		pt, err := nip44.Decrypt(ev.Content, ck)
-		if err != nil {
-			continue
-		}
-		if !invites[pt] {
-			invites[pt] = true
-			if first == "" {
-				first = pt
-			}
-		}
+		ids[ev.ID] = true
+		one = ev
 	}
-	switch len(invites) {
+	switch len(ids) {
 	case 0:
 		return "empty"
 	case 1:
+		pt, err := nip44.Decrypt(one.Content, ck)
+		if err != nil {
+			return "empty"
+		}
 		log.Printf("paircode: found an invite at %s...", pk[:12])
-		return first
+		return pt
 	}
-	log.Printf("paircode: %d invites at %s..., none taken", len(invites), pk[:12])
+	log.Printf("paircode: %d events at %s..., none taken", len(ids), pk[:12])
 	return "twice"
 }
