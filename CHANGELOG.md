@@ -23,6 +23,12 @@
 ### Security
 - security improvements throughout. update when you can.
 
+## [0.4.2] - 2026-09-28
+
+### Fixed
+- more reliable message delivery when a relay sends unexpected data.
+- more careful handling of contacts and groups.
+
 ## [0.4.1] - 2026-09-25
 
 ### Security
