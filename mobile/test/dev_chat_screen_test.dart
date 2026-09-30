@@ -32,6 +32,8 @@ import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/main.dart'
     show HaloEngine, appState, useDatabasesForTest, useEngineForTest;
+import 'package:kryfo/media_progress.dart'
+    show IncomingMediaBanner, mediaProgressEnd, mediaProgressStart;
 import 'package:kryfo/screens/chat_screen.dart' show grindPowForTest;
 import 'package:kryfo/screens/contact_screen.dart' show ContactScreen;
 import 'package:kryfo/screens/dev_about_sheet.dart';
@@ -1349,6 +1351,69 @@ void main() {
       q.sync(started: true, anon: true);
       expect(q.started, isTrue);
       expect(q.anon, isTrue);
+    });
+  });
+
+  // the developer chat has the same id in every container: what one keeps
+  // between visits is never another's
+  group('each container keeps its own', () {
+    String composer(WidgetTester t) =>
+        t.widget<TextField>(find.byType(TextField).last).controller!.text;
+
+    Future<void> leave(WidgetTester t, {bool clear = false}) async {
+      if (clear) await _type(t, '');
+      await t.tap(find.byTooltip(l10n.commonBack));
+      await _beat(t);
+      await devClose(t);
+    }
+
+    testWidgets('draft', (t) async {
+      const everyday = 'a draft with my name in it';
+      const decoy = 'the decoy\'s own draft';
+      await _world();
+      await _open(t);
+      await _type(t, everyday);
+      await leave(t);
+      await _world(container: HaloContainer.decoy);
+      await _open(t);
+      expect(find.text(everyday), findsNothing);
+      expect(composer(t), isNot(everyday));
+      await _type(t, decoy);
+      await leave(t);
+      await _world();
+      await _open(t);
+      expect(composer(t), everyday);
+      expect(find.text(decoy), findsNothing);
+      await leave(t, clear: true);
+      await _world(container: HaloContainer.decoy);
+      await _open(t);
+      expect(composer(t), decoy);
+      await leave(t, clear: true);
+      expect(_engine.calls, isEmpty);
+    });
+
+    testWidgets('send in progress', (t) async {
+      Finder strip() => find.descendant(
+        of: find.byType(IncomingMediaBanner),
+        matching: find.byType(CircularProgressIndicator),
+      );
+      mediaProgressStart(
+        'u-everyday',
+        chatKey: HaloContainer.everyday.chatKey(_dev),
+      );
+      addTearDown(() => mediaProgressEnd('u-everyday'));
+      await _world(container: HaloContainer.decoy);
+      await _open(t);
+      expect(strip(), findsNothing);
+      await leave(t);
+      await _world();
+      await _open(t);
+      expect(strip(), findsOneWidget);
+      mediaProgressEnd('u-everyday');
+      await _beat(t);
+      expect(strip(), findsNothing);
+      await leave(t);
+      expect(_engine.calls, isEmpty);
     });
   });
 }

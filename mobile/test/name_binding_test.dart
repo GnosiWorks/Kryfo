@@ -376,6 +376,29 @@ void main() {
     expect(await _reads(amber.ss, next), 'still for amber');
   });
 
+  test('a card whose key does not read is refused and changes '
+      'nothing', () async {
+    for (final x in ['', 'zz', 'ab' * 31]) {
+      expect(await handleHaloUriAdded(buildHaloUri(_amber, 'o-other', x)), (
+        l10n.appInvalidUri,
+        false,
+      ));
+      expect(await handleHaloUriAdded(buildHaloUri('new-name-here', 'o', x)), (
+        l10n.appInvalidUri,
+        false,
+      ));
+    }
+    expect(live.people[_amber], containsPair('onion', 'o-amber'));
+    expect(live.people[_amber], containsPair('xpub', amber.xPub));
+    expect(live.people.containsKey('new-name-here'), isFalse);
+    expect(live.rowWrites, isEmpty);
+    // the same card with her own key still reads
+    expect(
+      await handleHaloUriAdded(buildHaloUri(_amber, 'o-amber', amber.xPub)),
+      (l10n.appPeerImportedV1(_amber), false),
+    );
+  });
+
   test('a card with the key already here reads as saved', () async {
     final link = haloUriV3(
       _amber,

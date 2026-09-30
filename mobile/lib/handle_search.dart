@@ -82,6 +82,10 @@ List<PublicHandle> parsePeople(String body) {
 /// what went wrong, so the screen can say it plainly
 enum PeopleError { none, offline, busy, unreachable }
 
+/// the answer where nothing is sent: it reads as the registry not reached,
+/// the line adding by handle gives there too
+const kRegistryNotReached = 'error: registry not reached';
+
 /// [post] is passed in so tests can hand in a canned answer. the query goes
 /// in the body, never in the url: a url can end up in a proxy's log
 Future<({List<PublicHandle> people, PeopleError error})> searchPeople(

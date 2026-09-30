@@ -49,6 +49,7 @@ import '../main.dart'
     show
         appState,
         session,
+        sessionQuiet,
         claimChat,
         releaseChat,
         newMsgUid,
@@ -98,6 +99,8 @@ import '../widgets/written_field.dart';
 import '../bidi_safe.dart';
 import '../lock_guard.dart' show lockGuard, onScreen;
 
+// unsent drafts per group, keyed by session.chatKey: each container keeps
+// its own
 final Map<String, String> _draftPerGroup = {};
 
 // our nickname for a member, or nothing so the id shows. a room member is a
@@ -214,10 +217,14 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // their own bubbles, nothing above the thread.
   final Map<String, ShieldFlag> _shieldFlags = {};
   int _seenShieldRev = -1;
+  // this group in the session that opened it, for what is kept between
+  // visits
+  late final String _memo;
 
   @override
   void initState() {
     super.initState();
+    _memo = session.chatKey(widget.groupId);
 
     claimChat('group:${widget.groupId}');
     WidgetsBinding.instance.addObserver(this);
@@ -245,15 +252,15 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     // opened under the lock: marked read once it lifts
     lockGuard.isLocked() ? _underLock = true : _markRead();
     // restore a draft left behind last time this group was open.
-    _msgCtrl.text = _draftPerGroup[widget.groupId] ?? '';
+    _msgCtrl.text = _draftPerGroup[_memo] ?? '';
     // save it live on every keystroke so it survives leaving regardless of
     // when dispose runs.
     _msgCtrl.addListener(() {
       final t = _msgCtrl.text;
       if (t.trim().isEmpty) {
-        _draftPerGroup.remove(widget.groupId);
+        _draftPerGroup.remove(_memo);
       } else {
-        _draftPerGroup[widget.groupId] = t;
+        _draftPerGroup[_memo] = t;
       }
     });
     _scrollCtrl.addListener(_updateSticky);
@@ -1051,7 +1058,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   Future<void> _addPreview() async {
     final url = firstUrl(_msgCtrl.text);
-    if (url == null || _previewBusy) return;
+    // a quiet session fetches nothing: what is typed there stays here
+    if (url == null || _previewBusy || sessionQuiet) return;
     setState(() => _previewBusy = true);
     try {
       final html = await torStrictGetOnIsolate(url);
@@ -2723,9 +2731,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     // persist the draft one more time on the way out.
     final draft = _msgCtrl.text;
     if (draft.trim().isEmpty) {
-      _draftPerGroup.remove(widget.groupId);
+      _draftPerGroup.remove(_memo);
     } else {
-      _draftPerGroup[widget.groupId] = draft;
+      _draftPerGroup[_memo] = draft;
     }
     _menuClose?.call();
     _searchCtrl.dispose();
@@ -2908,7 +2916,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                   : const SizedBox.shrink(),
             ),
             IncomingMediaBanner(
-              chatKey: widget.groupId,
+              chatKey: _memo,
               onCancel: (uid) {
                 final m = _liveMsg(uid);
                 if (m != null) _stopGroupSending(m);
@@ -2917,7 +2925,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             ValueListenableBuilder<TextEditingValue>(
               valueListenable: _msgCtrl,
               builder: (_, v, _) => PreviewStrip(
-                url: !_isRoom && _torUp ? firstUrl(v.text) : null,
+                url: !_isRoom && !sessionQuiet && _torUp
+                    ? firstUrl(v.text)
+                    : null,
                 pending: _pendingPreview,
                 busy: _previewBusy,
                 onAdd: _addPreview,

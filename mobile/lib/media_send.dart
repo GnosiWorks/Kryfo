@@ -76,6 +76,8 @@ Future<String> sendChunkedMediaTo({
   required SenderInfo sender,
   // the receiver named the slices it lacks: send those and no others
   Set<int>? only,
+  // the chat's key for the progress strip, its container's and its own
+  required String progressKey,
 }) async {
   if (!mediaInflight.add(msgUid)) return 'busy';
   try {
@@ -95,6 +97,7 @@ Future<String> sendChunkedMediaTo({
       secure: secure,
       sender: sender,
       only: only,
+      progressKey: progressKey,
     );
   } finally {
     mediaInflight.remove(msgUid);
@@ -120,6 +123,7 @@ Future<String> _sendChunkedMediaInner({
   bool secure = false,
   required SenderInfo sender,
   Set<int>? only,
+  required String progressKey,
 }) async {
   var torWait = 0;
   while (!appState.torReady && torWait < 300000) {
@@ -136,7 +140,7 @@ Future<String> _sendChunkedMediaInner({
   // a voice note is a couple of seconds of audio. the strip is for photos
   // and files, where the wait is long enough to wonder about.
   final showProgress = total > 1 && !voice && only == null;
-  if (showProgress) mediaProgressStart(msgUid, chatKey: peerId);
+  if (showProgress) mediaProgressStart(msgUid, chatKey: progressKey);
   int? pow;
   if (needPow) {
     powBusy.value = DateTime.now();

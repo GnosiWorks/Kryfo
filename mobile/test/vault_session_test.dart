@@ -1599,6 +1599,21 @@ void main() {
   });
 
   group('inside the vault', () {
+    test('a chat is kept in memory under the container that holds it, '
+        'the decoy\'s apart', () async {
+      final w = await _World.make();
+      await w.withDecoy();
+      await w.open();
+      expect(session.chatKey(_h), HaloContainer.vault.chatKey(_h));
+      expect(session.chatKey(_g2), HaloContainer.vault.chatKey(_g2));
+      expect(session.chatKey(_v), HaloContainer.everyday.chatKey(_v));
+      await w.lockUp();
+      await w.app.sessionFor(PinResult.decoy);
+      await _settle();
+      expect(session.chatKey(_v), HaloContainer.decoy.chatKey(_v));
+      expect(session.chatKey(_h), HaloContainer.decoy.chatKey(_h));
+    });
+
     test('hiding a chat moves it and rebuilds the session', () async {
       final w = await _World.make();
       await w.open();

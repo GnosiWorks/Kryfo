@@ -59,6 +59,10 @@ class Session {
   // a chat only this session shows
   bool isHidden(String chatId) => identical(_ofChat(chatId), vault);
 
+  // what a chat's draft, read mark and progress are kept under: the
+  // container that holds it and its id
+  String chatKey(String chatId) => _ofChat(chatId).container.chatKey(chatId);
+
   // the people whose chats the vault holds: receiving tries them too, and
   // never files them as everyday requests
   Set<String> get hiddenPeople => vault == null ? const {} : _people;

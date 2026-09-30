@@ -186,8 +186,10 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   // debug builds only: a canned answer from app_flutter/people_fixture.json.
-  // a release build has only the tor request.
+  // a release build has only the tor request. a quiet session never reaches
+  // the registry: it answers as adding by handle does there
   Future<String> _peoplePost(String url, String body) async {
+    if (sessionQuiet) return kRegistryNotReached;
     if (kDebugMode) {
       final dir = await getApplicationDocumentsDirectory();
       final f = File('${dir.path}/people_fixture.json');
