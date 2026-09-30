@@ -1,5 +1,9 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:kryfo/container.dart';
 import 'package:kryfo/intro_budget.dart';
 
 // the budget is what caps introductions, so the window math is pinned here
@@ -63,6 +67,27 @@ void main() {
     final back = await IntroBudget.load();
     // the stale one was pruned on save
     expect(back.sent, [now - _day]);
+  });
+
+  test('each container keeps its own count', () async {
+    final now = 100 * _day;
+    final spent = jsonEncode([for (var i = 0; i < 5; i++) now - i * _day]);
+    SharedPreferences.setMockInitialValues({'kryfo.intro.sent': spent});
+    expect((await IntroBudget.load()).leftAt(now), 0);
+    final decoy = await IntroBudget.load(HaloContainer.decoy);
+    expect(decoy.leftAt(now), 5);
+    await decoy.recordAt(now).save(now, HaloContainer.decoy);
+    expect((await IntroBudget.load(HaloContainer.decoy)).leftAt(now), 4);
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString('kryfo.intro.sent'), spent);
+    expect(prefs.getString('d.kryfo.intro.sent'), jsonEncode([now]));
+    // the sheet counts for the session it is open in
+    for (final f in Directory('lib').listSync(recursive: true)) {
+      if (f is! File || !f.path.endsWith('.dart')) continue;
+      final src = f.readAsStringSync();
+      expect(src, isNot(contains('IntroBudget.load()')), reason: f.path);
+      expect(src, isNot(contains('.save(_now)')), reason: f.path);
+    }
   });
 
   test('garbage in prefs reads as empty', () async {

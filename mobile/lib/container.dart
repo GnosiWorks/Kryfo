@@ -70,6 +70,10 @@ class HaloContainer {
     throw ArgumentError('setting $k is on neither list');
   }
 
+  // what a chat's state in memory is kept under: two containers can hold a
+  // chat of the same id, and each keeps its own
+  String chatKey(String chatId) => '$id|$chatId';
+
   static const everyday = HaloContainer._(
     id: '00000000000000000000000000000001',
     binding: Binding.live,

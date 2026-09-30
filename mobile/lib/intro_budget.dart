@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// introductions one phone may send: 5 per rolling 7 days. the math takes a
-// clock so it can be tested.
+// introductions one identity may send: 5 per rolling 7 days. the math
+// takes a clock so it can be tested. each container keeps its own count
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'container.dart';
 import 'l10n/l10n.dart';
 
 const introBudgetMax = 5;
@@ -32,9 +33,11 @@ class IntroBudget {
 
   IntroBudget recordAt(int now) => IntroBudget([...liveAt(now), now]);
 
-  static Future<IntroBudget> load() async {
+  static Future<IntroBudget> load([
+    HaloContainer c = HaloContainer.everyday,
+  ]) async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_sentKey);
+    final raw = prefs.getString(c.key(_sentKey));
     if (raw == null || raw.isEmpty) return IntroBudget(const []);
     try {
       final list = (jsonDecode(raw) as List).map((e) => (e as num).toInt());
@@ -44,9 +47,9 @@ class IntroBudget {
     }
   }
 
-  Future<void> save(int now) async {
+  Future<void> save(int now, [HaloContainer c = HaloContainer.everyday]) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_sentKey, jsonEncode(liveAt(now)));
+    await prefs.setString(c.key(_sentKey), jsonEncode(liveAt(now)));
   }
 }
 

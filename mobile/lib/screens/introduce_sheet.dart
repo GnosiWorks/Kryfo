@@ -5,7 +5,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../intro_budget.dart';
-import '../main.dart' show appState;
+import '../container.dart';
+import '../main.dart' show appState, session;
 import '../screens/home_screen.dart' show ContactPreview;
 import '../theme.dart';
 import '../vouch_text.dart';
@@ -49,11 +50,14 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
   String? _picked;
   IntroBudget? _budget;
   bool _sending = false;
+  // the identity whose count this is
+  late final HaloContainer _counted;
 
   @override
   void initState() {
     super.initState();
-    IntroBudget.load().then((b) {
+    _counted = session.container;
+    IntroBudget.load(_counted).then((b) {
       if (mounted) setState(() => _budget = b);
     });
   }
@@ -94,7 +98,7 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
     final any = r.toFirst || r.toSecond;
     if (any) {
       final b = _budget!.recordAt(_now);
-      await b.save(_now);
+      await b.save(_now, _counted);
       if (!mounted) return;
       _budget = b;
     }

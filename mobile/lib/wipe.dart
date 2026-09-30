@@ -13,7 +13,7 @@ import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
-import 'main.dart' show engine;
+import 'main.dart' show engine, session, sessionQuiet;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dlog.dart';
 
@@ -26,8 +26,13 @@ bool haloWiping = false;
 void Function(int code) wipeExit = exit;
 
 // [releaseHandle] gives the handle back on the way, for a wipe chosen in
-// settings. a wipe from the lock screen makes no network call at all
+// settings. a wipe from the lock screen or from a quiet session makes no
+// network call at all
 Future<void> wipeHalo({bool releaseHandle = false}) async {
+  // read before anything goes: a quiet session has no handle and reaches
+  // nobody on the everyday identity's behalf
+  final release = releaseHandle && !sessionQuiet;
+  final handleKey = session.container.key('my_handle');
   haloWiping = true;
   // a beat for anything mid-query to finish before the files vanish
   await Future.delayed(const Duration(milliseconds: 120));
@@ -35,18 +40,18 @@ Future<void> wipeHalo({bool releaseHandle = false}) async {
   // the engine's memory. the request runs beside the erase and gets a few
   // seconds at most: nothing here waits on the network
   String? h;
-  if (releaseHandle) {
+  if (release) {
     try {
-      h = await secureStore.read(key: 'my_handle');
+      h = await secureStore.read(key: handleKey);
     } catch (e) {
       dlog('wipe: handle not read (${e.runtimeType})');
     }
   }
-  final release = h == null || h.isEmpty ? null : _release(h);
+  final released = h == null || h.isEmpty ? null : _release(h);
   final cap = Future<void>.delayed(const Duration(seconds: 4));
   // keys, prefs and folders first. tor's own folder stays while tor runs
   await _erase(keep: const {'tor'});
-  if (release != null) await Future.any([release, cap]);
+  if (released != null) await Future.any([released, cap]);
   // the engine stops its relay listeners and takes tor off the network, and
   // what it wrote meanwhile goes with the rest
   try {

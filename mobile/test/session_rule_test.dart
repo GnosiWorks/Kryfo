@@ -90,7 +90,8 @@ String? _mainImport(String src) {
   return m?.group(0);
 }
 
-// engine calls that reach the network for the person using the screen
+// engine calls that reach the network for the person using the screen,
+// and fetches of what was typed there: people search and link previews
 const _wire = [
   'engine.sendTo(',
   'engine.nostrSend(',
@@ -101,6 +102,8 @@ const _wire = [
   'engine.handleCheck(',
   'engine.handleRelease(',
   'engine.handleListing(',
+  'engine.torPost(',
+  'torStrictGetOnIsolate(',
   'appState.sendEdit(',
 ];
 

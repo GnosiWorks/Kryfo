@@ -3,7 +3,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../main.dart' show appState, session;
+import '../main.dart' show appState, session, sessionQuiet;
 import '../lock_state.dart';
 import '../intro_prefs.dart';
 import '../scam_prefs.dart';
@@ -267,7 +267,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       save: l10n.settingsWipeKryfo2,
     ));
     if (isWipeWord(typed, l10n.settingsWipeWord)) {
-      await wipeHalo(releaseHandle: true);
+      // a quiet session holds no handle, and gives none back
+      await wipeHalo(releaseHandle: !sessionQuiet);
     }
   }
 

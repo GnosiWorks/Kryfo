@@ -100,4 +100,13 @@ void main() {
       );
     },
   );
+
+  // a quiet session answers without sending, and says what adding by
+  // handle says there
+  test('the answer where nothing is sent reads as the registry not '
+      'reached', () async {
+    final r = await searchPeople('@wren', (_, _) async => kRegistryNotReached);
+    expect(r.error, PeopleError.unreachable);
+    expect(r.people, isEmpty);
+  });
 }

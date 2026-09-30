@@ -124,9 +124,10 @@ import '../widgets/written_field.dart';
 import '../bidi_safe.dart';
 import '../lock_guard.dart' show lockGuard, onScreen;
 
-// unsent drafts per peer, so text survives leaving a chat
+// unsent drafts per chat, so text survives leaving it. keyed by
+// session.chatKey: each container keeps its own
 final Map<String, String> _draftPerPeer = {};
-// newest message ms seen when the chat was last left, per peer.
+// newest message ms seen when the chat was last left, keyed the same way
 final Map<String, int> _lastReadPerPeer = {};
 
 class ChatScreen extends StatefulWidget {
@@ -705,6 +706,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   // first send, and the one start every kind of message asks for
   late final bool _isDev = isDevChat(widget.peerHaloId);
   DevOpening? _devOpening;
+  // this chat in the session that opened it, for what is kept between visits
+  late final String _memo;
   // its row in this session's database, for when the chat was made
   DevChatRow? _devChat;
   // the pinned key did not check out: nothing was sent
@@ -795,6 +798,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    _memo = session.chatKey(widget.peerHaloId);
     if (_isDev) {
       final d = _devShown;
       _devOpening = DevOpening(
@@ -831,21 +835,20 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // opened under the lock: marked read once it lifts
     lockGuard.isLocked() ? _underLock = true : _markRead();
     _unreadAfterMs =
-        _lastReadPerPeer[widget.peerHaloId] ??
-        DateTime.now().millisecondsSinceEpoch;
+        _lastReadPerPeer[_memo] ?? DateTime.now().millisecondsSinceEpoch;
     if (widget.initialText != null) {
       _msgCtrl.text = widget.initialText!;
     } else {
-      _msgCtrl.text = _draftPerPeer[widget.peerHaloId] ?? '';
+      _msgCtrl.text = _draftPerPeer[_memo] ?? '';
     }
     // save the draft live on every keystroke so it survives leaving the chat
     // regardless of when dispose runs.
     _msgCtrl.addListener(() {
       final t = _msgCtrl.text;
       if (t.trim().isEmpty) {
-        _draftPerPeer.remove(widget.peerHaloId);
+        _draftPerPeer.remove(_memo);
       } else {
-        _draftPerPeer[widget.peerHaloId] = t;
+        _draftPerPeer[_memo] = t;
       }
     });
     session.getContact(widget.peerHaloId).then((c) {
@@ -3060,6 +3063,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         xPub: appState.sessionXPub,
         avatar: appState.myAvatar,
       ),
+      progressKey: _memo,
     );
   }
 
@@ -3261,7 +3265,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Future<void> _addPreview() async {
     final url = firstUrl(_msgCtrl.text);
-    if (url == null || _previewBusy) return;
+    // a quiet session fetches nothing: what is typed there stays here
+    if (url == null || _previewBusy || sessionQuiet) return;
     setState(() => _previewBusy = true);
     try {
       final html = await torStrictGetOnIsolate(url);
@@ -3794,14 +3799,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _devOpening
       ?..removeListener(_onDevOpening)
       ..dispose();
-    _lastReadPerPeer[widget.peerHaloId] = _messages.isNotEmpty
+    _lastReadPerPeer[_memo] = _messages.isNotEmpty
         ? _messages.last.when.millisecondsSinceEpoch
         : 0;
     final draft = _msgCtrl.text;
     if (draft.trim().isEmpty) {
-      _draftPerPeer.remove(widget.peerHaloId);
+      _draftPerPeer.remove(_memo);
     } else {
-      _draftPerPeer[widget.peerHaloId] = draft;
+      _draftPerPeer[_memo] = draft;
     }
     _msgCtrl.dispose();
     _searchCtrl.dispose();
@@ -4962,7 +4967,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   : const SizedBox.shrink(),
             ),
             IncomingMediaBanner(
-              chatKey: widget.peerHaloId,
+              chatKey: _memo,
               onCancel: (uid) {
                 for (final m in _messages) {
                   if (m.msgUid == uid) {
@@ -5024,9 +5029,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                             valueListenable: _msgCtrl,
                             // offered only while tor is up: the fetch goes
                             // over tor or not at all, so without it there is
-                            // nothing to offer
+                            // nothing to offer. never in a quiet session
                             builder: (_, v, _) => PreviewStrip(
-                              url: _accepted && _torUp
+                              url: _accepted && !sessionQuiet && _torUp
                                   ? firstUrl(v.text)
                                   : null,
                               pending: _pendingPreview,

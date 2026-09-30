@@ -4649,16 +4649,18 @@ Future<(String, bool)> handleHaloUriAdded(String raw) async {
       return ('', true);
   }
   // a name stays with the key first seen for it: a card that names someone
-  // here with another key changes nothing
+  // here with another key changes nothing, and a card has to carry a key
+  // that reads to be checked at all
   final cardKey = parsed['bundle'] != null
       ? _bundleIdentity(parsed['bundle']!)
-      : _rowIdentity({'xpub': parsed['xpub']});
+      : _xIdentity(parsed['xpub']!.toLowerCase());
+  if (cardKey == null) return (l10n.appInvalidUri, false);
   final bound = await _boundIdentity(
     parsed['id']!,
     ss: sessionQuiet ? null : signalSession,
     row: session.getContact,
   );
-  if (cardKey != null && bound != null && !_eqBytes(bound, cardKey)) {
+  if (bound != null && !_eqBytes(bound, cardKey)) {
     return (l10n.appLinkOtherKey(parsed['id']!), false);
   }
   if (parsed['v'] == '2' || parsed['v'] == '3') {
@@ -5060,18 +5062,34 @@ Future<void> _openChatFor(String? haloId) async {
 }
 
 // the chat or group whose screen is open ('group:<id>' for a group), as the
-// screens report it
+// screens report it, and the container of the session it is open in
 String? _chatOnScreen;
+HaloContainer? _chatOnScreenIn;
 
 // the chat being read: the one on screen, and only while the lock is down.
 // a message for it is marked read and its notification suppressed, so under
 // the lock there is none
 String? get currentChatPeer => lockGuard.isLocked() ? null : _chatOnScreen;
 
-void claimChat(String id) => _chatOnScreen = id;
+void claimChat(String id) {
+  _chatOnScreen = id;
+  _chatOnScreenIn = session.container;
+}
 
 void releaseChat(String id) {
-  if (_chatOnScreen == id) _chatOnScreen = null;
+  if (_chatOnScreen != id) return;
+  _chatOnScreen = null;
+  _chatOnScreenIn = null;
+}
+
+// whether [id] is being read where the rows of [c] show: the chat on
+// screen, in a session that holds [c]. the same id in another container is
+// another chat
+bool readingIn(String id, HaloContainer c) {
+  final open = _chatOnScreenIn;
+  return currentChatPeer == id &&
+      open != null &&
+      (c == open || c.extended == open);
 }
 
 // the root navigator. each session gets its own: switching sessions under
@@ -5919,6 +5937,7 @@ class AppState extends ChangeNotifier {
       secure: ((r['secure'] as int?) ?? 0) == 1,
       sender: _mySender(),
       only: only,
+      progressKey: d.container.chatKey(peer),
     );
     if (only != null) {
       dlog('NEED $uid: resend ended $res');
@@ -7307,7 +7326,7 @@ class AppState extends ChangeNotifier {
       // a progress bar that never completes. drop both: the slices its
       // sender sent, never another sender's
       if (await db.dropMediaChunks(env.unsend!, from: senderHaloId) > 0) {
-        incomingMediaDone(env.groupId != null ? env.groupId! : senderHaloId);
+        incomingMediaDone(db.container.chatKey(env.groupId ?? senderHaloId));
       }
       // refresh so it vanishes live if the peer's looking at the chat now,
       // not only after they leave and come back.
@@ -7443,7 +7462,10 @@ class AppState extends ChangeNotifier {
       final mid = env.mediaId!;
       final total = env.chunkTotal!;
       final index = env.chunkIndex ?? 0;
-      final progressKey = isGroup ? env.groupId! : senderHaloId;
+      // the container's own: the same chat id can be another container's
+      final progressKey = db.container.chatKey(
+        isGroup ? env.groupId! : senderHaloId,
+      );
       final slice = (env.imageB64 ?? env.fileB64) ?? '';
       // a sliced file is filed under its own id
       if (uid != null && uid != mid) {
@@ -7676,14 +7698,19 @@ class AppState extends ChangeNotifier {
     // notification context: for groups, title = group name and body
     // prefixes the sender. payload uses "group:<id>" so tap-to-open can
     // route to the right screen.
-    if (!isGroup && currentChatPeer != senderHaloId) {
+    // the chat is being read only where its rows are shown: the same id
+    // open in another container is another chat
+    final reading = readingIn(
+      isGroup ? 'group:${env.groupId}' : senderHaloId,
+      db.container,
+    );
+    if (!isGroup && !reading) {
       await db.bumpUnread(senderHaloId);
-    } else if (!isGroup && currentChatPeer == senderHaloId) {
+    } else if (!isGroup) {
       // already reading this chat: clear any stale badge
       await db.clearUnread(senderHaloId);
-    } else if (isGroup && env.groupId != null) {
-      final openGroup = 'group:${env.groupId}';
-      if (currentChatPeer != openGroup) {
+    } else if (env.groupId != null) {
+      if (!reading) {
         await db.bumpGroupUnread(env.groupId!);
         if (mentionsMe(said, myId)) {
           await db.setGroupMentioned(env.groupId!);
@@ -7720,15 +7747,14 @@ class AppState extends ChangeNotifier {
           : senderHaloId;
       notifBody = '$who: $gBody';
       notifPayload = 'group:${env.groupId}';
-      suppress = currentChatPeer == notifPayload;
+      suppress = reading;
     } else if (!senderAccepted) {
       // a stranger chose these words; they do not go on a lock screen
       // where anyone nearby reads them. that a request arrived is enough.
       notifTitle = l10n.appNewRequest;
       notifBody = l10n.appSomeoneYouHaveNot;
       notifPayload = senderHaloId;
-      suppress =
-          currentChatPeer == senderHaloId || await db.isMuted(senderHaloId);
+      suppress = reading || await db.isMuted(senderHaloId);
     } else {
       // his chat rings under his name, never its id
       notifTitle = isDevChat(senderHaloId) ? l10n.devName : senderHaloId;
@@ -7738,8 +7764,7 @@ class AppState extends ChangeNotifier {
           ? env.message
           : (fileName ?? (mediaPath != null ? l10n.appPhoto : env.message));
       notifPayload = senderHaloId;
-      suppress =
-          currentChatPeer == senderHaloId || await db.isMuted(senderHaloId);
+      suppress = reading || await db.isMuted(senderHaloId);
     }
     // support rings on its own channel: a waiting chat only as a count, an
     // answered one per message
@@ -7804,7 +7829,7 @@ class AppState extends ChangeNotifier {
     try {
       if (answered) {
         await _bell.chat(chatId: id, title: title, body: body);
-      } else if (currentChatPeer != kSupportPayload) {
+      } else if (!readingIn(kSupportPayload, db.container)) {
         // the inbox on screen says it already. a chat is new with its
         // first message kept, whatever came before it and was not
         final first = fresh || await db.countMessagesFrom(id) == 1;
@@ -11669,8 +11694,10 @@ class AppState extends ChangeNotifier {
     } catch (e) {
       return 'error: read';
     }
-    if (total > 1) mediaProgressStart(msgUid, chatKey: groupId);
     final d = _ownerOf(groupId);
+    if (total > 1) {
+      mediaProgressStart(msgUid, chatKey: d.container.chatKey(groupId));
+    }
     final members = await d.getGroupMembers(groupId);
     final adminId = await d.groupAdminId(groupId);
     final amAdmin = adminId == myId;

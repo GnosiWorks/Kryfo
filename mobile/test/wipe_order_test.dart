@@ -2,16 +2,19 @@
 // a wipe erases this phone's keys, prefs and files first. a wipe chosen in
 // settings gives the handle back beside it, a few seconds at most: an
 // answer that never comes holds nothing back. a wipe from the lock screen
-// makes no network call. tor's own folder goes once the engine has let go
-// of it. the engine and android's erase are stand-ins, the folders real
-// ones in a scratch folder
+// or from a quiet session's settings makes no network call. tor's own
+// folder goes once the engine has let go of it. the engine and android's
+// erase are stand-ins, the folders real ones in a scratch folder
 import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kryfo/main.dart' show HaloEngine, useEngineForTest;
+import 'package:kryfo/container.dart';
+import 'package:kryfo/main.dart'
+    show HaloDb, HaloEngine, useDatabasesForTest, useEngineForTest;
+import 'package:kryfo/session.dart';
 import 'package:kryfo/wipe.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -133,18 +136,43 @@ void main() {
     expect(clock.elapsed.inSeconds, lessThan(3));
   });
 
-  test('only the settings wipe gives the handle back', () {
+  test('from a quiet session\'s settings: everything goes and no handle is '
+      'read or given back', () async {
+    final engine = _Engine();
+    useEngineForTest(engine);
+    useDatabasesForTest(HaloDb(), Session(HaloDb(HaloContainer.decoy)));
+    addTearDown(() => useDatabasesForTest(HaloDb(), Session(HaloDb())));
+    FlutterSecureStorage.setMockInitialValues({
+      'halo.db.passphrase': 'k',
+      'my_handle': 'wren',
+      'd.my_handle': 'finch',
+    });
+    final clock = Stopwatch()..start();
+    await wipeHalo(releaseHandle: true);
+    expect(engine.calls, ['hold']);
+    expect(left('docs'), isEmpty);
+    expect(await const FlutterSecureStorage().readAll(), isEmpty);
+    expect(exited, 0);
+    expect(clock.elapsed.inSeconds, lessThan(3));
+  });
+
+  test('only the settings wipe gives the handle back, and not from a quiet '
+      'session', () {
     final giving = <String>[];
     final bare = <String>[];
     for (final f in Directory('lib').listSync(recursive: true)) {
       if (f is! File || !f.path.endsWith('.dart')) continue;
       final src = f.readAsStringSync();
-      if (src.contains('wipeHalo(releaseHandle: true)')) {
+      if (src.contains('wipeHalo(releaseHandle:')) {
         giving.add(p.basename(f.path));
       }
       if (src.contains('wipeHalo()')) bare.add(p.basename(f.path));
     }
     expect(giving, ['settings_screen.dart']);
+    expect(
+      File('lib/screens/settings_screen.dart').readAsStringSync(),
+      contains('wipeHalo(releaseHandle: !sessionQuiet)'),
+    );
     expect(bare, containsAll(['lock_screen.dart', 'pin_flow_screen.dart']));
   });
 }
