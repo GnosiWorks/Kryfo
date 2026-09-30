@@ -9,6 +9,7 @@ package main
 import (
 	"context"
 	"encoding/hex"
+	"errors"
 	"net/http"
 	"os"
 	"strconv"
@@ -36,7 +37,18 @@ const (
 	// below this much free space the relay stops taking wraps, so a flood
 	// cannot fill the disk the other services write to
 	minFreeBytes = 2 << 30
+	// free space is read again after this much is taken, not only on the
+	// poll, so the floor holds however fast wraps come in
+	diskRecheck = 32 << 20
+	// what a stored wrap costs beyond its content and tags: id, key,
+	// signature and the index entries
+	rowOverhead = 512
 )
+
+// bytes of wraps taken per minute for everyone together, with four minutes
+// of it as a burst. a media slice is about 40 kB, so this is far above what
+// people send; it sets how fast the disk can fill at all
+var storedPerMin = envInt("RELAY_MAX_MB_PER_MIN", 240) << 20
 
 type bucket struct {
 	tokens, max, perSec float64
@@ -47,16 +59,18 @@ func newBucket(perSec, burst float64) *bucket {
 	return &bucket{tokens: burst, max: burst, perSec: perSec, last: time.Now()}
 }
 
-func (b *bucket) take(now time.Time) bool {
+func (b *bucket) take(now time.Time) bool { return b.takeN(now, 1) }
+
+func (b *bucket) takeN(now time.Time, n float64) bool {
 	b.tokens += now.Sub(b.last).Seconds() * b.perSec
 	if b.tokens > b.max {
 		b.tokens = b.max
 	}
 	b.last = now
-	if b.tokens < 1 {
+	if b.tokens < n {
 		return false
 	}
-	b.tokens--
+	b.tokens -= n
 	return true
 }
 
@@ -66,7 +80,12 @@ type limits struct {
 	mu       sync.Mutex
 	conns    map[*khatru.WebSocket]*budget
 	maxConns int
-	diskLow  atomic.Bool
+	// bytes stored, for everyone together. guarded by mu
+	stored  *bucket
+	dataDir string
+	diskLow atomic.Bool
+	// bytes taken since free space was last read
+	written atomic.Int64
 }
 
 // sockets for everyone together. a phone holds one per contact address,
@@ -80,19 +99,46 @@ func envInt(k string, d int) int {
 	return d
 }
 
+// call it after the store is attached: it wraps the store's queries
 func applyLimits(relay *khatru.Relay, dataDir string) *limits {
-	l := &limits{conns: map[*khatru.WebSocket]*budget{}, maxConns: maxConns}
+	l := &limits{
+		conns:    map[*khatru.WebSocket]*budget{},
+		maxConns: maxConns,
+		stored:   newBucket(float64(storedPerMin)/60, float64(storedPerMin)*4),
+		dataDir:  dataDir,
+	}
 	relay.MaxMessageSize = maxMessage
 	relay.RejectConnection = append(relay.RejectConnection, l.full)
 	relay.OnConnect = append(relay.OnConnect, l.connect)
 	relay.OnDisconnect = append(relay.OnDisconnect, l.disconnect)
 	relay.RejectEvent = append(relay.RejectEvent, l.event)
+	relay.OverwriteFilter = append(relay.OverwriteFilter, l.limitZero)
 	relay.RejectFilter = append(relay.RejectFilter, l.filter)
 	relay.RejectCountFilter = append(relay.RejectCountFilter, l.filter)
+	for i, q := range relay.QueryEvents {
+		relay.QueryEvents[i] = noDeletionLookups(q)
+	}
 	if dataDir != "" {
 		go l.watchDisk(dataDir)
 	}
 	return l
+}
+
+type queryFunc = func(context.Context, nostr.Filter) (chan *nostr.Event, error)
+
+var errNoDeletion = errors.New("this relay deletes nothing on request")
+
+// khatru looks up a kind 5's targets before any reject hook runs. this relay
+// keeps wraps until they expire, so those lookups never reach the store and
+// the event then meets l.event like any other. khatru's expiry checks have
+// no connection and pass.
+func noDeletionLookups(q queryFunc) queryFunc {
+	return func(ctx context.Context, f nostr.Filter) (chan *nostr.Event, error) {
+		if khatru.IsInternalCall(ctx) && khatru.GetConnection(ctx) != nil {
+			return nil, errNoDeletion
+		}
+		return q(ctx, f)
+	}
 }
 
 func (l *limits) full(*http.Request) bool {
@@ -134,7 +180,11 @@ func (l *limits) take(ctx context.Context, events bool) bool {
 	return b.reqs.take(time.Now())
 }
 
+// every event costs one from the connection, taken or refused
 func (l *limits) event(ctx context.Context, ev *nostr.Event) (bool, string) {
+	if !l.take(ctx, true) {
+		return true, "rate-limited: slow down"
+	}
 	if ev.Kind != wrapKind {
 		return true, "blocked: this relay only keeps gift wraps"
 	}
@@ -160,10 +210,46 @@ func (l *limits) event(ctx context.Context, ev *nostr.Event) (bool, string) {
 	if l.diskLow.Load() {
 		return true, "error: the relay is full, try later"
 	}
-	if !l.take(ctx, true) {
-		return true, "rate-limited: slow down"
+	size := storedSize(ev)
+	l.mu.Lock()
+	ok := l.stored.takeN(time.Now(), float64(size))
+	l.mu.Unlock()
+	if !ok {
+		return true, "rate-limited: the relay is busy, try later"
 	}
+	l.noteWritten(size)
 	return false, ""
+}
+
+func storedSize(ev *nostr.Event) int {
+	n := rowOverhead + len(ev.Content)
+	for _, t := range ev.Tags {
+		for _, s := range t {
+			n += len(s) + 4
+		}
+	}
+	return n
+}
+
+func (l *limits) noteWritten(n int) {
+	if l.dataDir == "" || l.written.Add(int64(n)) < diskRecheck {
+		return
+	}
+	l.written.Store(0)
+	l.diskLow.Store(freeBytes(l.dataDir) < minFreeBytes)
+}
+
+// khatru answers a limit 0 req with a live subscription and never runs
+// RejectFilter for it, so the same check runs here. a refused one drops its
+// limit 0 and meets RejectFilter like any other req.
+func (l *limits) limitZero(ctx context.Context, f *nostr.Filter) {
+	if !f.LimitZero {
+		return
+	}
+	if filterOK(*f) && l.take(ctx, false) {
+		return
+	}
+	f.LimitZero = false
 }
 
 func (l *limits) filter(ctx context.Context, f nostr.Filter) (bool, string) {
@@ -218,6 +304,7 @@ func isKey(s string) bool {
 
 func (l *limits) watchDisk(dir string) {
 	for {
+		l.written.Store(0)
 		l.diskLow.Store(freeBytes(dir) < minFreeBytes)
 		time.Sleep(30 * time.Second)
 	}

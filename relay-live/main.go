@@ -16,8 +16,8 @@ func main() {
 	relay.Info.Description = "private relay for halo messenger"
 	relay.Info.Software = "khatru"
 
-	db := sqlite3.SQLite3Backend{DatabaseURL: "./data/halo.sqlite"}
-	if err := db.Init(); err != nil {
+	db, err := openStore("./data/halo.sqlite")
+	if err != nil {
 		panic(err)
 	}
 
@@ -32,8 +32,14 @@ func main() {
 	if v := os.Getenv("RELAY_ADDR"); v != "" {
 		addr = v
 	}
-	startSweeper(&db)
+	startSweeper(db)
 
 	fmt.Println("halo relay listening on", addr)
 	log.Fatal(http.ListenAndServe(addr, relay))
+}
+
+// the store as the relay runs it, its page size left at the backend's own
+func openStore(path string) (*sqlite3.SQLite3Backend, error) {
+	db := &sqlite3.SQLite3Backend{DatabaseURL: path}
+	return db, db.Init()
 }

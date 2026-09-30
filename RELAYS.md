@@ -10,12 +10,16 @@ khatru and sqlite, listening on `127.0.0.1:3334` behind nginx at
 
 `limits.go` keeps it to what the app does: gift wraps with one address,
 messages up to 256 kB, stamped at most 2 hours ahead, reads by address or by
-id only (a filter without an address would dump everyone's post box). events and reads are paced per
-connection, sockets are capped for everyone together (`RELAY_MAX_CONNS`,
-20000), and wraps stop being taken below 2 GB of free disk. nothing is
-counted per ip: behind tor every caller looks the same. there is no delete on delivery:
-watching deliveries means wrapping khatru's query channel, and that can stall
-every subscription.
+id only (a filter without an address would dump everyone's post box), limit 0
+reads included. every event and every read is paced per connection, refused
+or not. sockets (`RELAY_MAX_CONNS`, 20000) and stored bytes
+(`RELAY_MAX_MB_PER_MIN`, 240 MB a minute, four minutes of it at once) are
+capped for everyone together, and wraps stop being taken below 2 GB of free
+disk, read every 30 s and again after every 32 MB taken. nothing is counted
+per ip: behind tor every caller looks the same. kind 5 deletion requests are
+refused before they reach the store: wraps go when they expire. there is no
+delete on delivery: watching deliveries means wrapping khatru's query
+channel, and that can stall every subscription.
 
 it needs cgo (`go-sqlite3`). with `CGO_ENABLED=0` it builds and then panics at
 start.

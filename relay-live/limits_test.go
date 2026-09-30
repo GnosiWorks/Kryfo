@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http/httptest"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -15,17 +16,38 @@ import (
 // a real relay with the limits on, over a real websocket
 func testRelay(t *testing.T) (string, *limits) {
 	t.Helper()
+	url, l, _ := testRelayCounted(t)
+	return url, l
+}
+
+// the same, and a count of the queries that reached the store
+func testRelayCounted(t *testing.T) (string, *limits, *atomic.Int64) {
+	t.Helper()
 	relay := khatru.NewRelay()
 	db := &slicestore.SliceStore{}
 	if err := db.Init(); err != nil {
 		t.Fatal(err)
 	}
+	var queries atomic.Int64
 	relay.StoreEvent = append(relay.StoreEvent, db.SaveEvent)
-	relay.QueryEvents = append(relay.QueryEvents, db.QueryEvents)
+	relay.QueryEvents = append(relay.QueryEvents, func(ctx context.Context, f nostr.Filter) (chan *nostr.Event, error) {
+		queries.Add(1)
+		return db.QueryEvents(ctx, f)
+	})
+	relay.DeleteEvent = append(relay.DeleteEvent, db.DeleteEvent)
 	l := applyLimits(relay, "")
 	srv := httptest.NewServer(relay)
 	t.Cleanup(srv.Close)
-	return "ws" + strings.TrimPrefix(srv.URL, "http"), l
+	return "ws" + strings.TrimPrefix(srv.URL, "http"), l, &queries
+}
+
+// every open connection's event budget, with no refill
+func setEventBudget(l *limits, n float64) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	for _, b := range l.conns {
+		b.events = newBucket(0, n)
+	}
 }
 
 func connect(t *testing.T, url string) *nostr.Relay {
@@ -183,6 +205,11 @@ func TestScrapesAreRefused(t *testing.T) {
 		"another tag":        {Kinds: []int{wrapKind}, Tags: nostr.TagMap{"e": {to}}},
 		"too many addresses": {Kinds: []int{wrapKind}, Tags: nostr.TagMap{"p": many}},
 		"search":             {Kinds: []int{wrapKind}, Tags: nostr.TagMap{"p": {to}}, Search: "x"},
+		// limit 0 asks only for what comes next, and is checked the same way
+		"everything, limit 0":         {LimitZero: true},
+		"every wrap, limit 0":         {Kinds: []int{wrapKind}, LimitZero: true},
+		"by author, limit 0":          {Kinds: []int{wrapKind}, Authors: []string{to}, LimitZero: true},
+		"too many addresses, limit 0": {Kinds: []int{wrapKind}, Tags: nostr.TagMap{"p": many}, LimitZero: true},
 	} {
 		got, why := ask(t, r, f)
 		if why == "" || len(got) != 0 {
@@ -226,6 +253,147 @@ func TestReqsArePacedPerConnection(t *testing.T) {
 	}
 	if _, why := ask(t, connect(t, url), f); why != "" {
 		t.Fatalf("second connection: %q", why)
+	}
+	// the app's limit 0 probe spends from the same budget
+	r = connect(t, url)
+	now := nostr.Now()
+	probe := nostr.Filter{Kinds: []int{wrapKind}, Tags: nostr.TagMap{"p": {addr()}}, Since: &now, LimitZero: true}
+	refused = 0
+	for i := 0; i < reqBurst+10; i++ {
+		if _, why := ask(t, r, probe); why != "" {
+			refused++
+		}
+	}
+	if refused == 0 {
+		t.Fatal("no limit 0 req was refused past the burst")
+	}
+}
+
+// a limit 0 req for an address hears new wraps to that address and no other
+func TestLimitZeroHearsItsOwnAddress(t *testing.T) {
+	url, _ := testRelay(t)
+	r := connect(t, url)
+	to, other := addr(), addr()
+	now := nostr.Now()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	sub, err := r.Subscribe(ctx, nostr.Filters{{Kinds: []int{wrapKind}, Tags: nostr.TagMap{"p": {to}}, Since: &now, LimitZero: true}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer sub.Unsub()
+	select {
+	case <-sub.EndOfStoredEvents:
+	case why := <-sub.ClosedReason:
+		t.Fatalf("closed %q", why)
+	case <-ctx.Done():
+		t.Fatal("no eose")
+	}
+	w := connect(t, url)
+	if err := publish(t, w, wrap(t, other, func(e *nostr.Event) { e.CreatedAt = nostr.Now() })); err != nil {
+		t.Fatal(err)
+	}
+	mine := wrap(t, to, func(e *nostr.Event) { e.CreatedAt = nostr.Now() })
+	if err := publish(t, w, mine); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case ev := <-sub.Events:
+		if ev.ID != mine.ID {
+			t.Fatalf("heard a wrap to another address")
+		}
+	case <-ctx.Done():
+		t.Fatal("the wrap to its address never came")
+	}
+}
+
+// a kind 5 is refused before any lookup, costs one from the connection like
+// any event, and removes nothing
+func TestKindFiveIsPacedAndLooksNothingUp(t *testing.T) {
+	url, l, queries := testRelayCounted(t)
+	r := connect(t, url)
+	sk := nostr.GeneratePrivateKey()
+	pk, _ := nostr.GetPublicKey(sk)
+	to := addr()
+	kept := nostr.Event{Kind: wrapKind, CreatedAt: nostr.Now() - 3600, Content: "sealed", Tags: nostr.Tags{{"p", to}}}
+	if err := kept.Sign(sk); err != nil {
+		t.Fatal(err)
+	}
+	if err := publish(t, r, kept); err != nil {
+		t.Fatal(err)
+	}
+	tags := nostr.Tags{{"e", kept.ID}, {"a", "1059:" + pk + ":"}}
+	for i := 0; i < 200; i++ {
+		tags = append(tags, nostr.Tag{"e", addr()}, nostr.Tag{"a", "1059:" + addr() + ":"})
+	}
+	del := nostr.Event{Kind: 5, CreatedAt: nostr.Now(), Tags: tags}
+	if err := del.Sign(sk); err != nil {
+		t.Fatal(err)
+	}
+	setEventBudget(l, 2)
+	queries.Store(0)
+	for i, want := range []string{"gift wraps", "gift wraps", "rate-limited"} {
+		err := publish(t, r, del)
+		if err == nil || !strings.Contains(err.Error(), want) {
+			t.Fatalf("kind 5 #%d: %v, want %q", i+1, err, want)
+		}
+	}
+	if n := queries.Load(); n != 0 {
+		t.Fatalf("%d store lookups for kind 5", n)
+	}
+	if err := publish(t, r, wrap(t, to, nil)); err == nil || !strings.Contains(err.Error(), "rate-limited") {
+		t.Fatalf("a wrap after the budget ran out: %v", err)
+	}
+	got, why := ask(t, connect(t, url), nostr.Filter{Kinds: []int{wrapKind}, Tags: nostr.TagMap{"p": {to}}})
+	if why != "" || len(got) != 1 || got[0].ID != kept.ID {
+		t.Fatalf("got %d, closed %q", len(got), why)
+	}
+}
+
+// stored bytes have one ceiling for everyone, and reads go on under it
+func TestStoredBytesHaveOneCeiling(t *testing.T) {
+	url, l := testRelay(t)
+	r := connect(t, url)
+	to := addr()
+	first := wrap(t, to, nil)
+	size := storedSize(&first)
+	l.mu.Lock()
+	l.stored = newBucket(0, float64(3*size))
+	l.mu.Unlock()
+	for i, w := range []nostr.Event{first, wrap(t, to, nil), wrap(t, to, nil)} {
+		if err := publish(t, r, w); err != nil {
+			t.Fatalf("wrap %d: %v", i+1, err)
+		}
+	}
+	if err := publish(t, r, wrap(t, to, nil)); err == nil || !strings.Contains(err.Error(), "busy") {
+		t.Fatalf("a wrap past the ceiling: %v", err)
+	}
+	if err := publish(t, connect(t, url), wrap(t, to, nil)); err == nil {
+		t.Fatal("a second connection stored past the ceiling")
+	}
+	got, why := ask(t, r, nostr.Filter{Kinds: []int{wrapKind}, Tags: nostr.TagMap{"p": {to}}})
+	if why != "" || len(got) != 3 {
+		t.Fatalf("got %d, closed %q", len(got), why)
+	}
+}
+
+// free space is read again once enough is written, not only on the poll
+func TestFreeSpaceIsReadAgainAfterWrites(t *testing.T) {
+	l := &limits{dataDir: t.TempDir()}
+	if freeBytes(l.dataDir) < minFreeBytes {
+		t.Skip("this disk is below the floor itself")
+	}
+	l.diskLow.Store(true)
+	l.noteWritten(diskRecheck - 1)
+	if !l.diskLow.Load() {
+		t.Fatal("read again before the recheck size")
+	}
+	l.noteWritten(1)
+	if l.diskLow.Load() {
+		t.Fatal("not read again after the recheck size")
+	}
+	if l.written.Load() != 0 {
+		t.Fatal("the count did not start over")
 	}
 }
 
