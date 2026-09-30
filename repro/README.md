@@ -30,7 +30,9 @@ offline. `--fetch` only fills the cache. go needs nothing, engine/vendor
 has every module. the image itself still needs the network the first time.
 
 the cache holds downloads only, no build output, so it can't change a byte.
-f-droid builds with the network and never sees `cache/`.
+checked on c53cdbae: the offline build (container network none) and the
+normal one gave the same three apks, byte for byte. f-droid builds with the
+network and never sees `cache/`.
 
     ./verify.sh --ref vX.Y.Z out/app-arm64-v8a-release.apk \
         out/app-armeabi-v7a-release.apk out/app-x86_64-release.apk
