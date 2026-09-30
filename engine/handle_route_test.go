@@ -215,8 +215,9 @@ func trunc(s string, n int) string {
 // socks port that moves takes all of them down together. this holds each
 // client across a bounce, which is how the app has them: warm, from before.
 //
-//	torNostrClient()      the everyday lane: its relays
-//	torNostrClientFor()   the other lanes: each room's relays, pair codes,
+//	torNostrClient()      the everyday lane: the main identity's sends
+//	torNostrClientFor()   the other lanes: the contacts' and first-contact
+//	                      subscriptions, each room's relays, pair codes,
 //	                      and the services lane: HaloTorGetJSON,
 //	                      HaloTorPost (search, the badge service), handle
 //	                      check/claim/release (handleHTTP)
@@ -243,8 +244,8 @@ func TestOneShotsSurviveBounce(t *testing.T) {
 	for i := 0; i < 90 && !torReadyNow(); i++ {
 		time.Sleep(time.Second)
 	}
-	// let the start settle: startListener pre-warms a client and the watchdogs
-	// can fire one reconnect of their own right after.
+	// let the start settle: startListener pre-warms its clients and the
+	// watchdogs can fire one reconnect of their own right after.
 	time.Sleep(5 * time.Second)
 	if socksPin() == 0 {
 		t.Skip("no pinned socks port this run - nothing to prove here")

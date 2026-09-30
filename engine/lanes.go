@@ -2,15 +2,19 @@
 package main
 
 // relay traffic comes in lanes that must never be linked to each other: the
-// everyday identity, each burner room, each pair code, and the calls to our
-// own services. tor keeps streams with
-// different socks credentials on different circuits, so every lane dials
-// under its own name and gets its own exit and its own way to an onion.
-// outside private mode there is no circuit to keep apart and nothing changes.
+// main identity's sends, its contacts' addresses in a few lanes, its
+// first-contact address, each burner room, each pair code, and the calls to
+// our own services. tor keeps streams with different socks credentials on
+// different circuits, so every lane dials under its own name and gets its own
+// exit and its own way to an onion. outside private mode there is no circuit
+// to keep apart and nothing changes.
 
 import (
 	"crypto/rand"
+	"crypto/sha256"
+	"encoding/binary"
 	"encoding/hex"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -18,12 +22,44 @@ import (
 	"fiatjaf.com/nostr"
 )
 
-// everything that speaks for the main identity: its contacts, hidden chats
-// included, its first-contact address and its sends.
+// the main identity's sends, on a circuit none of its receive addresses use
 const laneEveryday = "everyday"
 
+// the contacts' receive addresses, hidden chats included, are spread over
+// this many lanes by a hash of the address. one circuit carrying them all
+// gets rate limited by relays that count sockets per exit, and when it dies
+// every address goes deaf and reconnects in the same second.
+const receiveLaneCount = 4
+
+func receiveLaneAt(i int) string { return laneEveryday + ":" + strconv.Itoa(i) }
+
+// one of n lanes by the first four bytes of the address's sha256, so an
+// address lands on the same lane every time
+func hashLane(rcvPk string, n int) string {
+	h := sha256.Sum256([]byte(rcvPk))
+	return receiveLaneAt(int(binary.BigEndian.Uint32(h[:4]) % uint32(n)))
+}
+
+// the lane a contact's receive address listens on. a var so the measurement
+// test can map them another way.
+var receiveLane = func(rcvPk string) string { return hashLane(rcvPk, receiveLaneCount) }
+
+// the first-contact address is in the invite, so it never shares a circuit
+// with a contact's address or a send
+const laneFirstContact = "firstcontact"
+
+// the main identity's lanes: its sends, its first-contact address and the
+// contacts'
+func mainLanes() []string {
+	l := []string{laneEveryday, laneFirstContact}
+	for i := 0; i < receiveLaneCount; i++ {
+		l = append(l, receiveLaneAt(i))
+	}
+	return l
+}
+
 // the handle registry, people search and the badge service: a circuit of
-// their own, apart from the one that carries the contacts' addresses.
+// their own, apart from the ones that carry the contacts' addresses.
 const laneServices = "services"
 
 // a room is a name that exists only inside the room.
@@ -61,7 +97,8 @@ func laneName(lane string) string {
 	return n
 }
 
-// a room that is gone takes its lane with it
+// a lane that is done with takes its socks name with it: a room that is
+// gone, a first-contact address that was replaced
 func dropLane(lane string) {
 	laneMu.Lock()
 	delete(laneNames, lane)
