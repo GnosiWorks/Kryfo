@@ -2,6 +2,7 @@
 package main
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -24,7 +25,7 @@ func pairEventAt(t *testing.T, code, payload string, at time.Time) nostr.Event {
 }
 
 // one invite at the code, on every relay, is the invite the joiner gets.
-// the same invite put there again is still one invite.
+// the same invite put there again in an event of its own is a second event.
 func TestPairCodeOneInvite(t *testing.T) {
 	a := newRelayStandIn(t, 0)
 	b := newRelayStandIn(t, 0)
@@ -49,8 +50,8 @@ func TestPairCodeOneInvite(t *testing.T) {
 	}
 
 	a.store(pairEventAt(t, code, invite, time.Now().Add(time.Second)))
-	if got := pairCodeFetch(code); got != invite {
-		t.Fatalf("the same invite twice gave %q", got)
+	if got := pairCodeFetch(code); got != "twice" {
+		t.Fatalf("the same invite in two events gave %q", got)
 	}
 	if got := pairCodeFetch("111111"); got != "empty" {
 		t.Fatalf("a code nobody shared gave %q", got)
@@ -122,5 +123,130 @@ func TestPairCodeCountsOnlyLiveInvites(t *testing.T) {
 	r.store(pairEventAt(t, code, "kryfo://share?id=the-sharer", now))
 	if got := pairCodeFetch(code); got != "kryfo://share?id=the-sharer" {
 		t.Fatalf("the joiner got %q", got)
+	}
+}
+
+// a share is one event: the same one on every relay is taken, and every relay
+// is asked for as many events as a full answer holds
+func TestPairCodeOneEventOnManyRelays(t *testing.T) {
+	relays := make([]*relayStandIn, 4)
+	for i := range relays {
+		relays[i] = newRelayStandIn(t, 0)
+		relays[i].keep = true
+	}
+	useStandIns(t, modeBalanced, nil, relays...)
+
+	const code = "482913"
+	const invite = "kryfo://share?id=the-sharer"
+	if r := pairCodePublish(code, invite); r != "ok" {
+		t.Fatalf("share: %s", r)
+	}
+	waitFor(t, "the invite on every relay", 10*time.Second, func() bool {
+		for _, r := range relays {
+			if keptEvents(r) != 1 {
+				return false
+			}
+		}
+		return true
+	})
+	// one relay sends it twice over: still the one event
+	relays[1].mu.Lock()
+	relays[1].events = append(relays[1].events, relays[1].events[0])
+	relays[1].mu.Unlock()
+
+	if got := pairCodeFetch(code); got != invite {
+		t.Fatalf("the joiner got %q", got)
+	}
+	for i, r := range relays {
+		asked := false
+		for _, c := range r.snapshot() {
+			for _, q := range c.reqs {
+				if q.filter.Tags["p"] != nil {
+					asked = true
+					if q.filter.Limit != pairQueryLimit {
+						t.Errorf("relay %d was asked for %d events", i, q.filter.Limit)
+					}
+				}
+			}
+		}
+		if !asked {
+			t.Errorf("relay %d was not asked", i)
+		}
+	}
+}
+
+// newer events at the code's address do not stand in for the sharer's: the
+// code is refused however many there are, on one relay or on all of them
+func TestPairCodeRefusesNewerEvents(t *testing.T) {
+	const code = "482913"
+	sharer := "kryfo://share?id=the-sharer"
+	other := "kryfo://share?id=the-sharer&onion=elsewhere"
+	at := time.Now().Add(-2 * time.Minute)
+
+	for _, n := range []int{1, 20, pairQueryLimit - 1, pairQueryLimit + 5} {
+		t.Run(fmt.Sprintf("%d newer on every relay", n), func(t *testing.T) {
+			a := newRelayStandIn(t, 0)
+			b := newRelayStandIn(t, 0)
+			useStandIns(t, modeBalanced, nil, a, b)
+			first := pairEventAt(t, code, sharer, at)
+			a.store(first)
+			b.store(first)
+			for i := 0; i < n; i++ {
+				ev := pairEventAt(t, code, other, at.Add(time.Duration(i+1)*time.Second))
+				a.store(ev)
+				b.store(ev)
+			}
+			if got := pairCodeFetch(code); got != "twice" {
+				t.Fatalf("the joiner got %q", got)
+			}
+		})
+	}
+}
+
+// an answer as long as the limit is refused even when every event in it is
+// the same one: what the relay left out is not known
+func TestPairCodeRefusesAFullAnswer(t *testing.T) {
+	const code = "482913"
+	r := newRelayStandIn(t, 0)
+	useStandIns(t, modeBalanced, nil, r)
+	ev := pairEventAt(t, code, "kryfo://share?id=the-sharer", time.Now())
+	for i := 0; i < pairQueryLimit; i++ {
+		r.store(ev)
+	}
+	if got := pairCodeFetch(code); got != "twice" {
+		t.Fatalf("a full answer gave %q", got)
+	}
+
+	r.mu.Lock()
+	r.events = r.events[:pairQueryLimit-1]
+	r.mu.Unlock()
+	if got := pairCodeFetch(code); got != "kryfo://share?id=the-sharer" {
+		t.Fatalf("an answer one short of full gave %q", got)
+	}
+}
+
+// each event at a code is signed by a key of its own, never the code's
+func TestPairCodeEventHasItsOwnAuthor(t *testing.T) {
+	const code = "482913"
+	now := time.Now()
+	a, pk, err := pairCodeEvent(code, "x", now)
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, _, err := pairCodeEvent(code, "x", now)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if a.PubKey.Hex() == pk || b.PubKey.Hex() == pk {
+		t.Fatal("an event is signed with the code's key")
+	}
+	if a.PubKey == b.PubKey {
+		t.Fatal("two events share an author")
+	}
+	if !a.VerifySignature() || !b.VerifySignature() {
+		t.Fatal("an event does not verify")
+	}
+	if tg := a.Tags.Find("p"); len(tg) < 2 || tg[1] != pk {
+		t.Fatalf("the event is not at the code's address: %v", tg)
 	}
 }
