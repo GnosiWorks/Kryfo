@@ -5120,7 +5120,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get settingsNotIndependentlyAuditedPre =>
-      'Sem auditoria independente. Pré-alfa - bom para testes, ainda não para uso de alto risco.';
+      'Sem auditoria independente. Alfa: bom para testes, ainda não para uso de alto risco.';
 
   @override
   String get settingsDangerZone => 'Zona de perigo';
@@ -5534,7 +5534,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get whyKryfoKryfoIsPreAlpha =>
-      'O Kryfo está em pré-alfa e não passou por auditoria. A criptografia é real, mas nenhum especialista de fora a verificou ainda, então trate como um trabalho em andamento, não como algo a que você já possa confiar a sua vida.';
+      'O Kryfo está em alfa e não passou por auditoria. A criptografia é real, mas nenhum especialista de fora a verificou ainda, então trate como um trabalho em andamento, não como algo a que você já possa confiar a sua vida.';
 
   @override
   String get cleanerLocation => 'Localização';

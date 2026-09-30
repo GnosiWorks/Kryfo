@@ -5161,7 +5161,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settingsNotIndependentlyAuditedPre =>
-      'لم يخضع لتدقيق مستقل. إصدار ما قبل ألفا - صالح للتجربة، لا للاستخدام في المواقف عالية المخاطر بعد.';
+      'لم يخضع لتدقيق مستقل. إصدار ألفا: صالح للتجربة، لا للاستخدام في المواقف عالية المخاطر بعد.';
 
   @override
   String get settingsDangerZone => 'منطقة الخطر';
@@ -5587,7 +5587,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get whyKryfoKryfoIsPreAlpha =>
-      'ما زال Kryfo في مرحلة ما قبل ألفا ولم يخضع لتدقيق. التشفير حقيقي لكن لم يفحصه أي خبير خارجي بعد، فتعامل معه كعمل قيد التطوير، لا كشيء تأتمنه على حياتك بعد.';
+      'ما زال Kryfo في مرحلة ألفا ولم يخضع لتدقيق. التشفير حقيقي لكن لم يفحصه أي خبير خارجي بعد، فتعامل معه كعمل قيد التطوير، لا كشيء تأتمنه على حياتك بعد.';
 
   @override
   String get cleanerLocation => 'الموقع';

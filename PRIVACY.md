@@ -56,7 +56,7 @@ Kryfo is an open-source project maintained by an independent developer. the code
 
 ## changes
 
-Kryfo is pre-alpha and open source. this policy may change as the app does. the current version always lives in the repository.
+Kryfo is in alpha and open source. this policy may change as the app does. the current version always lives in the repository.
 
 ## contact
 

@@ -2633,7 +2633,7 @@ void main() {
     );
     expect(
       l.settingsNotIndependentlyAuditedPre,
-      "Not independently audited. Pre-alpha - good for testing, not yet for high-stakes use.",
+      "Not independently audited. Alpha: good for testing, not yet for high-stakes use.",
     );
     expect(l.settingsDangerZone, "Danger zone");
     expect(l.settingsWipeKryfoFromThis, "Wipe Kryfo from this phone");
@@ -2801,7 +2801,7 @@ void main() {
     expect(l.whyKryfoTheHonestPart, "The honest part");
     expect(
       l.whyKryfoKryfoIsPreAlpha,
-      "Kryfo is pre-alpha and has not been audited. The crypto is real but no outside expert has checked it yet, so treat it as a work in progress, not something to trust with your life yet.",
+      "Kryfo is in alpha and has not been audited. The crypto is real but no outside expert has checked it yet, so treat it as a work in progress, not something to trust with your life yet.",
     );
     expect(l.cleanerLocation, "Location");
     expect(l.cleanerAlreadyBlankedByAndroid, "already blanked by Android");

@@ -5082,7 +5082,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get settingsNotIndependentlyAuditedPre =>
-      'Chưa được kiểm định độc lập. Bản tiền alpha - phù hợp để thử nghiệm, chưa dành cho mục đích hệ trọng.';
+      'Chưa được kiểm định độc lập. Bản alpha: phù hợp để thử nghiệm, chưa dành cho mục đích hệ trọng.';
 
   @override
   String get settingsDangerZone => 'Vùng nguy hiểm';
@@ -5495,7 +5495,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get whyKryfoKryfoIsPreAlpha =>
-      'Kryfo đang ở giai đoạn tiền alpha và chưa được kiểm định. Mật mã là thật nhưng chưa chuyên gia bên ngoài nào kiểm tra, nên hãy coi đây là sản phẩm đang hoàn thiện, chưa phải thứ để giao phó tính mạng của bạn.';
+      'Kryfo đang ở giai đoạn alpha và chưa được kiểm định. Mật mã là thật nhưng chưa chuyên gia bên ngoài nào kiểm tra, nên hãy coi đây là sản phẩm đang hoàn thiện, chưa phải thứ để giao phó tính mạng của bạn.';
 
   @override
   String get cleanerLocation => 'Vị trí';

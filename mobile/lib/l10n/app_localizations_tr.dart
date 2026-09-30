@@ -5108,7 +5108,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get settingsNotIndependentlyAuditedPre =>
-      'Bağımsız bir denetimden geçmedi. Alfa öncesi - test için iyi, ama henüz yüksek riskli kullanım için değil.';
+      'Bağımsız bir denetimden geçmedi. Alfa: test için iyi, ama henüz yüksek riskli kullanım için değil.';
 
   @override
   String get settingsDangerZone => 'Tehlikeli bölge';
@@ -5521,7 +5521,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get whyKryfoKryfoIsPreAlpha =>
-      'Kryfo alfa öncesi aşamada ve denetlenmedi. Kriptografi gerçek ama henüz dışarıdan hiçbir uzman kontrol etmedi; bu yüzden onu yapım aşamasında bir iş olarak gör, henüz hayatını emanet edeceğin bir şey olarak değil.';
+      'Kryfo alfa aşamasında ve denetlenmedi. Kriptografi gerçek ama henüz dışarıdan hiçbir uzman kontrol etmedi; bu yüzden onu yapım aşamasında bir iş olarak gör, henüz hayatını emanet edeceğin bir şey olarak değil.';
 
   @override
   String get cleanerLocation => 'Konum';

@@ -4,7 +4,7 @@ Kryfo is free, open-source software provided as-is. by using it you agree to wha
 
 ## no warranty
 
-Kryfo is pre-alpha and has not been independently audited. it may have bugs, may lose messages, and may fail in ways that matter. it is provided without warranty of any kind. do not rely on it for anything where failure would seriously harm you. the software is licensed under the GNU General Public License v3, which governs the code and includes its own disclaimer of warranty and liability.
+Kryfo is in alpha and has not been independently audited. it may have bugs, may lose messages, and may fail in ways that matter. it is provided without warranty of any kind. do not rely on it for anything where failure would seriously harm you. the software is licensed under the GNU General Public License v3, which governs the code and includes its own disclaimer of warranty and liability.
 
 ## your keys, your responsibility
 

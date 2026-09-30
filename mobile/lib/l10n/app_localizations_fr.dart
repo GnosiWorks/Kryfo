@@ -5135,7 +5135,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settingsNotIndependentlyAuditedPre =>
-      'Pas d’audit indépendant. Pré-alpha - bon pour tester, pas encore pour un usage à fort enjeu.';
+      'Pas d’audit indépendant. Alpha : bon pour tester, pas encore pour un usage à fort enjeu.';
 
   @override
   String get settingsDangerZone => 'Zone de danger';
@@ -5551,7 +5551,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get whyKryfoKryfoIsPreAlpha =>
-      'Kryfo est en pré-alpha et n’a pas été audité. La cryptographie est réelle, mais aucun expert extérieur ne l’a encore vérifiée, alors considérez-le comme un travail en cours, pas encore comme quelque chose à qui confier votre vie.';
+      'Kryfo est en alpha et n’a pas été audité. La cryptographie est réelle, mais aucun expert extérieur ne l’a encore vérifiée, alors considérez-le comme un travail en cours, pas encore comme quelque chose à qui confier votre vie.';
 
   @override
   String get cleanerLocation => 'Position';

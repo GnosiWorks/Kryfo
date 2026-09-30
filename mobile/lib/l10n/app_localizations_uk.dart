@@ -5165,7 +5165,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get settingsNotIndependentlyAuditedPre =>
-      'Незалежного аудиту не було. Пре-альфа - добре для тестування, але ще не для випадків, коли на кону багато.';
+      'Незалежного аудиту не було. Альфа-версія — добре для тестування, але ще не для випадків, коли на кону багато.';
 
   @override
   String get settingsDangerZone => 'Небезпечна зона';
@@ -5587,7 +5587,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get whyKryfoKryfoIsPreAlpha =>
-      'Kryfo - пре-альфа, і аудиту ще не було. Криптографія справжня, але жоден сторонній експерт її ще не перевіряв, тож вважай це роботою в процесі, а не тим, чому вже можна довірити своє життя.';
+      'Kryfo — альфа-версія, і аудиту ще не було. Криптографія справжня, але жоден сторонній експерт її ще не перевіряв, тож вважай це роботою в процесі, а не тим, чому вже можна довірити своє життя.';
 
   @override
   String get cleanerLocation => 'Місцезнаходження';

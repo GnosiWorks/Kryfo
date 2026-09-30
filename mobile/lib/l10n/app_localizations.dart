@@ -8238,7 +8238,7 @@ abstract class AppLocalizations {
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'0.4.1 · alpha'**
+  /// **'0.5.0 · alpha'**
   String get settings030Alpha;
 
   /// screens/settings_screen.dart
@@ -8274,7 +8274,7 @@ abstract class AppLocalizations {
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Not independently audited. Pre-alpha - good for testing, not yet for high-stakes use.'**
+  /// **'Not independently audited. Alpha: good for testing, not yet for high-stakes use.'**
   String get settingsNotIndependentlyAuditedPre;
 
   /// screens/settings_screen.dart
@@ -8904,7 +8904,7 @@ abstract class AppLocalizations {
   /// screens/why_kryfo_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Kryfo is pre-alpha and has not been audited. The crypto is real but no outside expert has checked it yet, so treat it as a work in progress, not something to trust with your life yet.'**
+  /// **'Kryfo is in alpha and has not been audited. The crypto is real but no outside expert has checked it yet, so treat it as a work in progress, not something to trust with your life yet.'**
   String get whyKryfoKryfoIsPreAlpha;
 
   /// tools/cleaner.dart

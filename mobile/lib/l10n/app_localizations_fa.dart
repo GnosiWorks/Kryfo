@@ -5098,7 +5098,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get settingsNotIndependentlyAuditedPre =>
-      'به‌طور مستقل ممیزی نشده. پیش‌آلفا - برای آزمایش خوب است، هنوز نه برای استفاده‌های پرمخاطره.';
+      'به‌طور مستقل ممیزی نشده. آلفا: برای آزمایش خوب است، هنوز نه برای استفاده‌های پرمخاطره.';
 
   @override
   String get settingsDangerZone => 'منطقه‌ی خطر';
@@ -5510,7 +5510,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get whyKryfoKryfoIsPreAlpha =>
-      'Kryfo پیش‌آلفاست و ممیزی نشده. رمزنگاری واقعی است، اما هنوز هیچ متخصص بیرونی آن را بررسی نکرده، پس با آن مثل کاری در حال پیشرفت رفتار کنید، نه چیزی که فعلاً بشود جانتان را به آن سپرد.';
+      'Kryfo در مرحلهٔ آلفا است و ممیزی نشده. رمزنگاری واقعی است، اما هنوز هیچ متخصص بیرونی آن را بررسی نکرده، پس با آن مثل کاری در حال پیشرفت رفتار کنید، نه چیزی که فعلاً بشود جانتان را به آن سپرد.';
 
   @override
   String get cleanerLocation => 'مکان';

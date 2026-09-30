@@ -4883,7 +4883,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsNotIndependentlyAuditedPre =>
-      '未经独立审计。Pre-alpha 版——适合测试，还不适合高风险用途。';
+      '未经独立审计。Alpha 版——适合测试，还不适合高风险用途。';
 
   @override
   String get settingsDangerZone => '危险区';
@@ -5285,7 +5285,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get whyKryfoKryfoIsPreAlpha =>
-      'Kryfo 还处于 pre-alpha 阶段，没有经过审计。加密是真的，但还没有外部专家检查过，所以请把它当作一个仍在开发中的作品，暂时还不能托付身家性命。';
+      'Kryfo 还处于 alpha 阶段，没有经过审计。加密是真的，但还没有外部专家检查过，所以请把它当作一个仍在开发中的作品，暂时还不能托付身家性命。';
 
   @override
   String get cleanerLocation => '位置';
@@ -11999,7 +11999,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsNotIndependentlyAuditedPre =>
-      '尚未經過獨立稽核。目前是 pre-alpha 版：適合測試，還不適合高風險用途。';
+      '尚未經過獨立稽核。目前是 alpha 版：適合測試，還不適合高風險用途。';
 
   @override
   String get settingsDangerZone => '危險區域';
@@ -12401,7 +12401,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get whyKryfoKryfoIsPreAlpha =>
-      'Kryfo 還在 pre-alpha 階段，也還沒經過稽核。加密技術是真的，但還沒有外部專家檢查過，所以請把它當作開發中的作品，暫時還不能把性命託付給它。';
+      'Kryfo 還在 alpha 階段，也還沒經過稽核。加密技術是真的，但還沒有外部專家檢查過，所以請把它當作開發中的作品，暫時還不能把性命託付給它。';
 
   @override
   String get cleanerLocation => '位置';

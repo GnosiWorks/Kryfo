@@ -6393,7 +6393,7 @@
   "@settingsTheOfflineMapIn": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsNotIndependentlyAuditedPre": "Not independently audited. Pre-alpha - good for testing, not yet for high-stakes use.",
+  "settingsNotIndependentlyAuditedPre": "Not independently audited. Alpha: good for testing, not yet for high-stakes use.",
   "@settingsNotIndependentlyAuditedPre": {
     "description": "screens/settings_screen.dart"
   },
@@ -6940,7 +6940,7 @@
   "@whyKryfoTheHonestPart": {
     "description": "screens/why_kryfo_screen.dart"
   },
-  "whyKryfoKryfoIsPreAlpha": "Kryfo is pre-alpha and has not been audited. The crypto is real but no outside expert has checked it yet, so treat it as a work in progress, not something to trust with your life yet.",
+  "whyKryfoKryfoIsPreAlpha": "Kryfo is in alpha and has not been audited. The crypto is real but no outside expert has checked it yet, so treat it as a work in progress, not something to trust with your life yet.",
   "@whyKryfoKryfoIsPreAlpha": {
     "description": "screens/why_kryfo_screen.dart"
   },

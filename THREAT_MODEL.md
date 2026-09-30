@@ -62,6 +62,6 @@ FORWARD_SECRECY.md says what a key taken from a phone can open later.
 
 ## status
 
-pre-alpha, unaudited, one person. do not rely on it where being wrong would
+alpha, unaudited, one person. do not rely on it where being wrong would
 hurt you. security issues: report privately, not in a public issue.
 SECURITY.md says how.

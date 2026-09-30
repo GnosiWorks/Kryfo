@@ -5088,7 +5088,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get settingsNotIndependentlyAuditedPre =>
-      'Belum diaudit secara independen. Pra-alfa - cocok untuk uji coba, belum untuk penggunaan berisiko tinggi.';
+      'Belum diaudit secara independen. Alfa: cocok untuk uji coba, belum untuk penggunaan berisiko tinggi.';
 
   @override
   String get settingsDangerZone => 'Zona bahaya';
@@ -5500,7 +5500,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get whyKryfoKryfoIsPreAlpha =>
-      'Kryfo masih pra-alfa dan belum diaudit. Kriptografinya sungguhan, tapi belum ada pakar luar yang memeriksanya, jadi anggap ini masih dalam pengerjaan, belum sesuatu yang bisa kamu percayakan nyawamu.';
+      'Kryfo masih alfa dan belum diaudit. Kriptografinya sungguhan, tapi belum ada pakar luar yang memeriksanya, jadi anggap ini masih dalam pengerjaan, belum sesuatu yang bisa kamu percayakan nyawamu.';
 
   @override
   String get cleanerLocation => 'Lokasi';
