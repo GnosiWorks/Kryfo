@@ -3,12 +3,15 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"crypto/ed25519"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/http/httptrace"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -40,7 +43,7 @@ func (o owner) invite() string {
 	return "kryfo://share?id=" + wordsOf(o.hexPub()) + "&onion=x.onion&v=3&bundle=zz&fc=ff"
 }
 
-// the real server on a scratch store, so connection counting works
+// the real server on a scratch store
 func service(t *testing.T, lim *limiter) (*httptest.Server, *store) {
 	t.Helper()
 	st := openStore(filepath.Join(t.TempDir(), "handles.json"))
@@ -259,21 +262,42 @@ func TestSearchTwentyBestFirst(t *testing.T) {
 	}
 }
 
-func TestPerConnectionSearchLimit(t *testing.T) {
-	srv, _ := service(t, newLimiter(1000, 1000))
-	// one client, keep-alive: every request on the same connection
+// the proxy in front can carry everyone's searches on one kept connection,
+// so nothing is counted per connection, only for the service
+func TestOneConnectionCarriesManySearches(t *testing.T) {
+	srv, _ := service(t, newLimiter(0.001, 40))
 	c := srv.Client()
-	for i := 0; i < perConnSearches; i++ {
-		if a := search(t, c, srv.URL, "wren"); a.code != 200 {
-			t.Fatalf("search %d: %d", i+1, a.code)
+	dials := 0
+	ctx := httptrace.WithClientTrace(context.Background(), &httptrace.ClientTrace{
+		GotConn: func(i httptrace.GotConnInfo) {
+			if !i.Reused {
+				dials++
+			}
+		},
+	})
+	ask := func() (int, bool) {
+		b, _ := json.Marshal(map[string]string{"q": "wren"})
+		req, _ := http.NewRequestWithContext(ctx, http.MethodPost, srv.URL+"/handle/search", bytes.NewReader(b))
+		req.Header.Set("Content-Type", "application/json")
+		resp, err := c.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		io.Copy(io.Discard, resp.Body)
+		resp.Body.Close()
+		return resp.StatusCode, resp.Close
+	}
+	for i := 0; i < 40; i++ {
+		code, closed := ask()
+		if code != 200 || closed {
+			t.Fatalf("search %d on one connection: %d, closed %v", i+1, code, closed)
 		}
 	}
-	if a := search(t, c, srv.URL, "wren"); a.code != http.StatusTooManyRequests {
-		t.Fatalf("search %d on one connection: %d, wanted 429", perConnSearches+1, a.code)
+	if dials != 1 {
+		t.Fatalf("%d connections, wanted one", dials)
 	}
-	// the server closed it; a new connection starts again
-	if a := search(t, c, srv.URL, "wren"); a.code != 200 {
-		t.Fatalf("a fresh connection: %d", a.code)
+	if code, _ := ask(); code != http.StatusTooManyRequests {
+		t.Fatalf("past the service's burst: %d, wanted 429", code)
 	}
 }
 

@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package main
 
-import "testing"
+import (
+	"encoding/base64"
+	"encoding/json"
+	"strings"
+	"testing"
+)
 
 // the invite goes into an href on the public page, and html escaping does
 // nothing about the scheme.
@@ -45,14 +50,55 @@ func TestInviteAcceptsAppShapes(t *testing.T) {
 	}
 }
 
-// 8000 is the existing ceiling and a v3 bundle is not small; keep both ends.
-func TestInviteLength(t *testing.T) {
-	base := `kryfo://share?id=a&onion=b.onion&v=3&bundle=`
-	if !inviteOK(base + str(7000)) {
-		t.Error("a real-sized v3 bundle was refused")
+// an invite is url text: printable ascii with no quote or backslash, which
+// covers every character the app puts in one
+func TestInviteTakesOnlyURLCharacters(t *testing.T) {
+	base := `kryfo://share?id=a-b-c&onion=b.onion&v=3&bundle=`
+	if !inviteOK(base + `AZaz09+/=-._~%20:@!$'()*,` + "&fc=ff") {
+		t.Error("url characters were refused")
 	}
-	if inviteOK(base + str(9000)) {
-		t.Error("something past the 8000 ceiling was accepted")
+	for _, c := range []string{`"`, `\`, " ", "\t", "\x7f", "\u00e9", "\u2028", "\xff"} {
+		if inviteOK(base + "zz" + c + "zz") {
+			t.Errorf("took %q", c)
+		}
+	}
+}
+
+// the longest invite the app builds: v3, eight-letter words, a five digit
+// registration id and the bundle as makePreKeyBundleB64 (mobile/lib/main.dart)
+// writes it
+func longestInvite() string {
+	key := base64.StdEncoding.EncodeToString(make([]byte, 33))
+	bundle, _ := json.Marshal(struct {
+		RegistrationID        int    `json:"registrationId"`
+		DeviceID              int    `json:"deviceId"`
+		PreKeyID              int    `json:"preKeyId"`
+		PreKeyPublic          string `json:"preKeyPublic"`
+		SignedPreKeyID        int    `json:"signedPreKeyId"`
+		SignedPreKeyPublic    string `json:"signedPreKeyPublic"`
+		SignedPreKeySignature string `json:"signedPreKeySignature"`
+		IdentityKey           string `json:"identityKey"`
+	}{16380, 1, 999999, key, 1, key, base64.StdEncoding.EncodeToString(make([]byte, 64)), key})
+	return "kryfo://share?id=absolute-abstract-category&onion=" + strings.Repeat("a", 56) +
+		".onion&v=3&bundle=" + base64.StdEncoding.EncodeToString(bundle) +
+		"&fc=" + strings.Repeat("f", 64)
+}
+
+// every invite the app builds fits, and not much more
+func TestInviteLength(t *testing.T) {
+	inv := longestInvite()
+	if len(inv) != 700 {
+		t.Fatalf("the longest app invite is %d bytes, the ceiling was sized for 700", len(inv))
+	}
+	if !inviteOK(inv) {
+		t.Error("the longest app invite was refused")
+	}
+	base := `kryfo://share?id=a&onion=b.onion&v=3&bundle=`
+	if !inviteOK(base + str(maxInvite-len(base))) {
+		t.Error("an invite at the ceiling was refused")
+	}
+	if inviteOK(base + str(maxInvite-len(base)+1)) {
+		t.Error("an invite past the ceiling was taken")
 	}
 }
 
