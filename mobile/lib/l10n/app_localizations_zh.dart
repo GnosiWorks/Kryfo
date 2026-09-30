@@ -4863,7 +4863,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsVersion => '版本';
 
   @override
-  String get settings030Alpha => '0.4.1 · alpha 版';
+  String get settings030Alpha => '0.5.0 · alpha 版';
 
   @override
   String get settingsReportAnIssue => '报告问题';
@@ -11979,7 +11979,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsVersion => '版本';
 
   @override
-  String get settings030Alpha => '0.4.1 · alpha 版';
+  String get settings030Alpha => '0.5.0 · alpha 版';
 
   @override
   String get settingsReportAnIssue => '回報問題';

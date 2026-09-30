@@ -5145,7 +5145,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settingsVersion => 'Версія';
 
   @override
-  String get settings030Alpha => '0.4.1 · альфа';
+  String get settings030Alpha => '0.5.0 · альфа';
 
   @override
   String get settingsReportAnIssue => 'Повідомити про проблему';
