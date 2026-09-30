@@ -35,6 +35,11 @@ outside it, and leaves the three apks in repro/out/. it refuses a dirty tree.
 it has to be the container: libapp.so and two plugin libraries embed the
 build path.
 
+it retries twice when a fetch fails on the network and stops at once on
+anything else. `./release.sh --offline` fetches the commit's pub and gradle
+dependencies into repro/cache first and then builds with no network, same
+bytes. see repro/README.md.
+
 ## verify
 
     ./verify.sh --ref HEAD out/app-arm64-v8a-release.apk \

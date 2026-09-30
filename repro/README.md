@@ -13,6 +13,25 @@ three apks in the pinned container at f-droid's build path, signs them
 outside the container with apksigner, and leaves them in `out/`. the keystore
 never goes into the container. `--unsigned` stops before signing.
 
+a step that fails on the network (a fetch error, a mirror answering 404) is
+run again twice, after 60s and then 120s, from a fresh clone. any other
+failure stops at once. the logs are in `out/`.
+
+    ./release.sh --offline
+
+the same build with the container's network cut. first, with the network,
+the fetch step runs the apk build once in a throwaway clone and keeps what
+it downloaded in `cache/` (about 2 GB, gitignored, replaced for a new
+commit): the pub packages, flutter's own tool packages included, and
+gradle's dependency cache plus its distribution. then the release build
+gets a copy of both at the paths a normal build uses and runs with
+`--network none`, pub `--offline`, `flutter build --no-pub` and gradle
+offline. `--fetch` only fills the cache. go needs nothing, engine/vendor
+has every module. the image itself still needs the network the first time.
+
+the cache holds downloads only, no build output, so it can't change a byte.
+f-droid builds with the network and never sees `cache/`.
+
     ./verify.sh --ref vX.Y.Z out/app-arm64-v8a-release.apk \
         out/app-armeabi-v7a-release.apk out/app-x86_64-release.apk
 
