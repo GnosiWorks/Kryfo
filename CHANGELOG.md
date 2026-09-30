@@ -15,6 +15,7 @@
 - handle, search and badge requests go over a tor circuit of their own, and your handle is only sent again when your invite changes.
 - lists, sheets and transitions across the app were polished, and every language uses sentence case.
 - your own chats, each room and each pair code go over their own tor circuits, and relays no longer see one running count across them.
+- your contacts' addresses are spread over four tor circuits instead of one, and your first-contact address has a circuit of its own.
 - private mode checks its relay connections every 90 seconds instead of every 19, and a slow reply over tor no longer drops the connection.
 - the relay takes only what the app sends and paces each connection, the handle registry paces reads, writes and new names, and the badge service paces receipt checks.
 - the tor dot on the chat list and in chats stops pulsing once tor is usable, and pulses only a few times while it starts.

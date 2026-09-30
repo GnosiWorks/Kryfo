@@ -562,7 +562,7 @@ func TestProbeLooksLikeTheSocketsOwnRequest(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	l := startLanes(t, ctx, 3, 1)
-	subs := len(l.everyday) + 2
+	subs := l.subs()
 	waitFor(t, "every subscription connected", 15*time.Second, func() bool {
 		n := 0
 		for _, c := range relay.snapshot() {

@@ -64,8 +64,8 @@ func TestSleepWakeThenModeSwitch(t *testing.T) {
 	}
 
 	// the app's shape: an identity, the relay list, and runners for a few
-	// peers. every runner loops through torNostrClient. set directly: cgo is
-	// not allowed in a test file.
+	// peers. every runner loops through torNostrClientFor. set directly: cgo
+	// is not allowed in a test file.
 	mu.Lock()
 	if _, err := rand.Read(myXPriv[:]); err != nil {
 		mu.Unlock()

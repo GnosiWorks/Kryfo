@@ -53,7 +53,7 @@ func TestSubscriptionIDsPerConnection(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	l := startLanes(t, ctx, 3, 1)
-	subs := len(l.everyday) + 2
+	subs := l.subs()
 	listening := func(conns []siConn) int {
 		n := 0
 		for _, c := range conns {
@@ -121,10 +121,11 @@ func TestSubscriptionIDsPerConnection(t *testing.T) {
 	}
 }
 
-// every lane dials under its own socks name: the main identity's listening
-// and sending share one, each room has its own, a pair code has its own, the
-// registry, search and badge calls share one of their own, and nothing
-// reaches a relay or a service without one.
+// every lane dials under its own socks name: the main identity's contacts
+// listen on a few lanes by a hash of the address, its first-contact address
+// on one of its own and its sends go on another, each room has its own, a
+// pair code has its own, the registry, search and badge calls share one of
+// their own, and nothing reaches a relay or a service without one.
 func TestLanesDialUnderTheirOwnSocksName(t *testing.T) {
 	socks := newSocksStandIn(t)
 	a := newRelayStandIn(t, 0)
@@ -133,7 +134,7 @@ func TestLanesDialUnderTheirOwnSocksName(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	l := startLanes(t, ctx, 2, 2)
-	subs := len(l.everyday) + 4
+	subs := l.subs()
 	for _, r := range []*relayStandIn{a, b} {
 		waitFor(t, "every subscription connected", 15*time.Second, func() bool {
 			n := 0
@@ -187,10 +188,15 @@ func TestLanesDialUnderTheirOwnSocksName(t *testing.T) {
 	})
 
 	lanes := map[string][]string{
-		"everyday": append(append([]string(nil), l.everyday...), everydaySent),
-		"room 1":   append(append([]string(nil), l.rooms[0]...), roomSent),
-		"room 2":   l.rooms[1],
-		"pair":     {pairPk},
+		"sends":         {everydaySent},
+		"first contact": {l.fc},
+		"room 1":        append(append([]string(nil), l.rooms[0]...), roomSent),
+		"room 2":        l.rooms[1],
+		"pair":          {pairPk},
+	}
+	for _, a := range l.contacts {
+		k := "contacts on " + receiveLane(a)
+		lanes[k] = append(lanes[k], a)
 	}
 	nameOfLane := map[string]string{}
 	laneOfName := map[string]string{}
@@ -231,7 +237,8 @@ func TestLanesDialUnderTheirOwnSocksName(t *testing.T) {
 		t.Fatalf("%d of %d connections belong to a lane", seen, total)
 	}
 	for lane, n := range nameOfLane {
-		if strings.Contains(n, "room") || strings.Contains(n, "pair") || strings.Contains(n, "everyday") {
+		if strings.Contains(n, "room") || strings.Contains(n, "pair") || strings.Contains(n, "everyday") ||
+			strings.Contains(n, "first") {
 			t.Errorf("%s's socks name says what it is: %q", lane, n)
 		}
 	}
@@ -290,6 +297,158 @@ func TestLanesDialUnderTheirOwnSocksName(t *testing.T) {
 	dropLane(gone)
 	if laneName(gone) == was {
 		t.Error("a room that was dropped kept its socks name")
+	}
+}
+
+// a contact's address keeps its lane, and the addresses fill all of them
+func TestReceiveLanesByHash(t *testing.T) {
+	// the first four bytes of sha256, big-endian, mod 4, as measured
+	for a, want := range map[string]string{
+		fmt.Sprintf("%064x", 1): "everyday:0",
+		fmt.Sprintf("%064x", 0): "everyday:1",
+		strings.Repeat("a", 64): "everyday:2",
+		fmt.Sprintf("%064x", 3): "everyday:3",
+	} {
+		if got := receiveLane(a); got != want {
+			t.Errorf("...%s on %s, want %s", a[56:], got, want)
+		}
+	}
+	seen := map[string]int{}
+	for i := 0; i < 400; i++ {
+		a := fmt.Sprintf("%064x", i)
+		l := receiveLane(a)
+		if receiveLane(a) != l {
+			t.Fatal("an address moved lanes")
+		}
+		if l == laneEveryday || l == laneFirstContact || laneKind(l) != laneEveryday {
+			t.Fatalf("a contact's address on lane %q", l)
+		}
+		seen[l]++
+	}
+	if len(seen) != receiveLaneCount {
+		t.Fatalf("%d lanes in use, want %d: %v", len(seen), receiveLaneCount, seen)
+	}
+	for l, n := range seen {
+		if n < 50 {
+			t.Errorf("lane %s has %d of 400 addresses", l, n)
+		}
+	}
+}
+
+// contacts until every receive lane has one and one lane has two
+func contactsOnEveryLane(t *testing.T) map[string][]xid {
+	t.Helper()
+	byLane := map[string][]xid{}
+	two := false
+	for i := 0; len(byLane) < receiveLaneCount || !two; i++ {
+		if i == 1000 {
+			t.Fatalf("a thousand contacts on %d receive lanes", len(byLane))
+		}
+		p := newXid(t)
+		l := receiveLane(mustRcv(t, p))
+		if n := len(byLane[l]); n == 2 || (n == 1 && two) {
+			continue
+		}
+		byLane[l] = append(byLane[l], p)
+		two = two || len(byLane[l]) == 2
+	}
+	return byLane
+}
+
+// the main identity on all its lanes at once: the addresses of one receive
+// lane share its socks name, and no other receive lane, the first-contact
+// address or a send dials under it. the first-contact address and the sends
+// each have a name nothing else uses.
+func TestReceiveLanesDialApart(t *testing.T) {
+	socks := newSocksStandIn(t)
+	r := newRelayStandIn(t, 0)
+	useStandIns(t, modePrivate, socks, r)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	groups := map[string][]string{}
+	for lane, peers := range contactsOnEveryLane(t) {
+		for _, p := range peers {
+			rcv := mustRcv(t, p)
+			groups[lane] = append(groups[lane], rcv)
+			go nostrSubscribeRunner(ctx, hex.EncodeToString(p.pub[:]), p.pub, rcv)
+		}
+	}
+	_, fcPk, err := nip17FirstContactKeys(0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var zero [32]byte
+	go nostrSubscribeRunnerMode(ctx, "firstcontact", zero, fcPk, true, 0)
+	groups[laneFirstContact] = []string{fcPk}
+	subs := 0
+	for _, addrs := range groups {
+		subs += len(addrs)
+	}
+	waitFor(t, "every subscription connected", 15*time.Second, func() bool {
+		n := 0
+		for _, c := range r.snapshot() {
+			if len(c.subIDs) > 0 {
+				n++
+			}
+		}
+		return n == subs
+	})
+
+	// through the app's own send paths, so their lane choice is what is checked
+	peer := newXid(t)
+	peerHex := hex.EncodeToString(peer.pub[:])
+	if res := nostrSend(peerHex, "hi"); res != "ok" {
+		t.Fatalf("send: %s", res)
+	}
+	_, sent, err := nip17DeriveRole(peer.pub, nip17RcvInfo, peerHex)
+	if err != nil {
+		t.Fatal(err)
+	}
+	stranger := newXid(t)
+	_, strangerFc, err := fcKeysFrom(stranger.priv, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res := nostrSendFirstContact(hex.EncodeToString(stranger.pub[:]), strangerFc, "hi"); res != "ok" {
+		t.Fatalf("first-contact send: %s", res)
+	}
+	waitFor(t, "the sends on the relay", 15*time.Second, func() bool {
+		c := r.snapshot()
+		return len(connsOn(c, []string{sent})) > 0 && len(connsOn(c, []string{strangerFc})) > 0
+	})
+	groups[laneEveryday] = []string{sent, strangerFc}
+
+	conns := r.snapshot()
+	laneOf := map[string]string{}
+	seen := 0
+	for lane, addrs := range groups {
+		for _, a := range addrs {
+			on := connsOn(conns, []string{a})
+			if len(on) == 0 {
+				t.Fatalf("an address of %s never reached the relay", lane)
+			}
+			for _, c := range on {
+				seen++
+				n, ok := socks.nameOf(c.remote)
+				if !ok || n == "" {
+					t.Fatalf("%s reached the relay without a socks name", lane)
+				}
+				if n != laneName(lane) {
+					t.Errorf("%s dialled under a name that is not its own", lane)
+				}
+				if other, ok := laneOf[n]; ok && other != lane {
+					t.Fatalf("%s and %s dialled under one socks name and can share a circuit", lane, other)
+				}
+				laneOf[n] = lane
+			}
+		}
+	}
+	if want := receiveLaneCount + 2; len(laneOf) != want {
+		t.Fatalf("%d socks names for the main identity, want %d: %v", len(laneOf), want, laneOf)
+	}
+	if seen != len(conns) {
+		t.Fatalf("%d of %d connections belong to the main identity's lanes", seen, len(conns))
 	}
 }
 
@@ -397,14 +556,18 @@ func TestDirectModesUnchanged(t *testing.T) {
 			socks := newSocksStandIn(t)
 			r := newRelayStandIn(t, 0)
 			useStandIns(t, m, socks, r)
-			c1, err1 := torNostrClientFor(laneEveryday)
-			c2, err2 := torNostrClientFor(roomLane("ab"))
-			c3, err3 := torNostrClientFor(pairLane("cd"))
-			if err1 != nil || err2 != nil || err3 != nil {
-				t.Fatal(err1, err2, err3)
+			c1, err := torNostrClientFor(laneEveryday)
+			if err != nil {
+				t.Fatal(err)
 			}
-			if c1 != c2 || c1 != c3 {
-				t.Fatal("lanes got their own clients without tor")
+			for _, lane := range append(mainLanes(), roomLane("ab"), pairLane("cd"), laneServices) {
+				c, err := torNostrClientFor(lane)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if c != c1 {
+					t.Fatalf("%s got its own client without tor", laneKind(lane))
+				}
 			}
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
@@ -416,7 +579,7 @@ func TestDirectModesUnchanged(t *testing.T) {
 						n++
 					}
 				}
-				return n == len(l.everyday)+2
+				return n == l.subs()
 			})
 			if n := socks.count(); n != 0 {
 				t.Fatalf("%d streams went through socks in %s mode", n, m)
@@ -466,7 +629,7 @@ func TestMeasureKeepalive(t *testing.T) {
 			l := startLanes(t, ctx, 3, 1)
 			time.Sleep(window)
 			cancel()
-			subs := len(l.everyday) + 3
+			subs := l.subs() + 1
 			for name, r := range map[string]*relayStandIn{"pong at once": quick, "pong after 1.2s": slow} {
 				conns := r.snapshot()
 				var gaps []time.Duration
@@ -493,5 +656,51 @@ func TestMeasureKeepalive(t *testing.T) {
 					reqs, resent, resentB/1024)
 			}
 		})
+	}
+}
+
+// a new first-contact address, after a reset of the invite, listens under a
+// socks name the old one never used
+func TestNewFirstContactAddressGetsANewCircuit(t *testing.T) {
+	socks := newSocksStandIn(t)
+	r := newRelayStandIn(t, 0)
+	useStandIns(t, modePrivate, socks, r)
+	t.Cleanup(func() {
+		nostrMu.Lock()
+		if cancel, ok := nostrSubs["firstcontact"]; ok {
+			cancel()
+			delete(nostrSubs, "firstcontact")
+		}
+		nostrMu.Unlock()
+	})
+
+	nameFor := func(counter int) string {
+		t.Helper()
+		if err := subscribeFirstContact(counter); err != nil {
+			t.Fatal(err)
+		}
+		_, fcPk, err := nip17FirstContactKeys(counter)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var name string
+		waitFor(t, "the first-contact address on the relay", 15*time.Second, func() bool {
+			for _, c := range connsOn(r.snapshot(), []string{fcPk}) {
+				if n, ok := socks.nameOf(c.remote); ok && n != "" {
+					name = n
+					return true
+				}
+			}
+			return false
+		})
+		return name
+	}
+	before := nameFor(0)
+	after := nameFor(1)
+	if before == after {
+		t.Fatal("the new first-contact address dialled under the old one's socks name")
+	}
+	if after != laneName(laneFirstContact) {
+		t.Error("the new first-contact address is not on the first-contact lane")
 	}
 }

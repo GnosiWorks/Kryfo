@@ -529,12 +529,22 @@ func newXid(t *testing.T) xid {
 
 // the app's lanes as the app starts them: contacts and the first-contact
 // address for the main identity, and per room its members and drop box.
-// returns the addresses each lane listens on.
+// returns the addresses they listen on.
 type lanesUp struct {
-	everyday []string
+	contacts []string
+	fc       string
 	peers    []xid
 	rooms    [][]string
 	roomKeys []xid
+}
+
+// subscriptions started, one per address
+func (l lanesUp) subs() int {
+	n := len(l.contacts) + 1
+	for _, r := range l.rooms {
+		n += len(r)
+	}
+	return n
 }
 
 func startLanes(t *testing.T, ctx context.Context, contacts, rooms int) lanesUp {
@@ -546,7 +556,7 @@ func startLanes(t *testing.T, ctx context.Context, contacts, rooms int) lanesUp 
 		if err != nil {
 			t.Fatal(err)
 		}
-		l.everyday = append(l.everyday, rcv)
+		l.contacts = append(l.contacts, rcv)
 		l.peers = append(l.peers, p)
 		go nostrSubscribeRunner(ctx, hex.EncodeToString(p.pub[:]), p.pub, rcv)
 	}
@@ -554,7 +564,7 @@ func startLanes(t *testing.T, ctx context.Context, contacts, rooms int) lanesUp 
 	if err != nil {
 		t.Fatal(err)
 	}
-	l.everyday = append(l.everyday, fcPk)
+	l.fc = fcPk
 	var zero [32]byte
 	go nostrSubscribeRunnerMode(ctx, "firstcontact", zero, fcPk, true, 0)
 	for i := 0; i < rooms; i++ {

@@ -655,7 +655,7 @@ func relayDialCtx(parent context.Context, u string) (context.Context, context.Ca
 	return context.WithTimeout(parent, d)
 }
 
-// the everyday lane's client, for everything that speaks for the main identity
+// the everyday lane's client, for the main identity's sends
 func torNostrClient() (*http.Client, error) { return torNostrClientFor(laneEveryday) }
 
 // nothing in here talks to tor: the socks address is pinned or remembered,
@@ -786,16 +786,18 @@ func nostrSubscribeRunner(ctx context.Context, peerXPubHex string, peerArr [32]b
 }
 
 func nostrSubscribeRunnerMode(ctx context.Context, peerXPubHex string, peerArr [32]byte, rcvPk string, fc bool, fcCounter int) {
+	lane := receiveLane(rcvPk)
 	tag := peerXPubHex
 	unwrap := func(gw nostr2.Event) (string, error) { return nip17Unwrap(peerArr, gw) }
 	if fc {
+		lane = laneFirstContact
 		tag = "firstcontact"
 		unwrap = func(gw nostr2.Event) (string, error) {
 			content, _, err := nip17UnwrapFirstContact(fcCounter, gw)
 			return content, err
 		}
 	}
-	nostrSubscribeRunnerFn(ctx, laneEveryday, tag, rcvPk, unwrap)
+	nostrSubscribeRunnerFn(ctx, lane, tag, rcvPk, unwrap)
 }
 
 // the general runner: one receive address, one way to open what lands on
@@ -1393,24 +1395,37 @@ func HaloFirstContactPk(counter C.int) *C.char {
 //
 //export HaloNostrSubscribeFirstContact
 func HaloNostrSubscribeFirstContact(counter C.int) *C.char {
-	_, fcPk, err := nip17FirstContactKeys(int(counter))
-	if err != nil {
+	if err := subscribeFirstContact(int(counter)); err != nil {
 		return C.CString(fmt.Sprintf("error: derive: %v", err))
+	}
+	return C.CString("ok")
+}
+
+func subscribeFirstContact(counter int) error {
+	_, fcPk, err := nip17FirstContactKeys(counter)
+	if err != nil {
+		return err
 	}
 
 	nostrMu.Lock()
-	if cancel, exists := nostrSubs["firstcontact"]; exists {
-		cancel()
+	old, replaced := nostrSubs["firstcontact"]
+	if replaced {
+		old()
 		delete(nostrSubs, "firstcontact")
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	nostrSubs["firstcontact"] = cancel
 	nostrMu.Unlock()
+	// the address that replaces it listens on a new circuit, so a relay
+	// cannot tie the two together
+	if replaced {
+		dropLane(laneFirstContact)
+	}
 
 	var zero [32]byte
-	go nostrSubscribeRunnerMode(ctx, "firstcontact", zero, fcPk, true, int(counter))
+	go nostrSubscribeRunnerMode(ctx, "firstcontact", zero, fcPk, true, counter)
 	log.Printf("nostr: watching first-contact addr %s...", fcPk[:12])
-	return C.CString("ok")
+	return nil
 }
 
 // introduce ourselves to someone who has never heard of us. the seal is
@@ -1419,29 +1434,29 @@ func HaloNostrSubscribeFirstContact(counter C.int) *C.char {
 //
 //export HaloNostrSendFirstContact
 func HaloNostrSendFirstContact(cPeerXPubHex, cFcPk, cMsg *C.char) *C.char {
-	peerHex := C.GoString(cPeerXPubHex)
-	fcPk := C.GoString(cFcPk)
-	msg := C.GoString(cMsg)
+	return C.CString(nostrSendFirstContact(C.GoString(cPeerXPubHex), C.GoString(cFcPk), C.GoString(cMsg)))
+}
 
+func nostrSendFirstContact(peerHex, fcPk, msg string) string {
 	peerBytes, err := hex.DecodeString(peerHex)
 	if err != nil || len(peerBytes) != 32 {
-		return C.CString("error: bad peer pubkey")
+		return "error: bad peer pubkey"
 	}
 	if len(fcPk) != 64 {
-		return C.CString("error: bad first-contact pubkey")
+		return "error: bad first-contact pubkey"
 	}
 	var peerArr [32]byte
 	copy(peerArr[:], peerBytes)
 
 	gw, err := nip17WrapFirstContact(peerArr, fcPk, msg)
 	if err != nil {
-		return C.CString(fmt.Sprintf("error: wrap: %v", err))
+		return fmt.Sprintf("error: wrap: %v", err)
 	}
 	// the wrap comes from the nip59 lib's event type; cross into the relay
 	// lib as plain json, same as the normal send path.
 	var ev nostr.Event
 	if err := easyjson.Unmarshal([]byte(gw.String()), &ev); err != nil {
-		return C.CString(fmt.Sprintf("error: wrap convert: %v", err))
+		return fmt.Sprintf("error: wrap convert: %v", err)
 	}
 	nostrMu.Lock()
 	nostrSentIDs[ev.ID.Hex()] = true
@@ -1454,10 +1469,10 @@ func HaloNostrSendFirstContact(cPeerXPubHex, cFcPk, cMsg *C.char) *C.char {
 	defer cancel()
 	ok := nostrPublishMulti(ctx, laneEveryday, ev)
 	if ok == 0 {
-		return C.CString("error: no relays accepted")
+		return "error: no relays accepted"
 	}
 	log.Printf("nostr: sent first-contact %s to %d relays, addr %s...", ev.ID.Hex()[:12], ok, fcPk[:12])
-	return C.CString("ok")
+	return "ok"
 }
 
 // drop every relay socket and reconnect now. returns "ok".

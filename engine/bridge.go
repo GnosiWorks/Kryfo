@@ -565,11 +565,13 @@ func watchPublishedOn(t *tor.Tor, hsCh chan control.Event, hsSubbed bool, onionI
 		torStatus = "reachable"
 		notePublished()
 		go func() {
-			if _, err := torNostrClient(); err != nil {
-				log.Printf("halo: nostr client pre-warm failed: %v", err)
-			} else {
-				log.Println("halo: nostr client pre-warmed")
+			for _, lane := range mainLanes() {
+				if _, err := torNostrClientFor(lane); err != nil {
+					log.Printf("halo: nostr client pre-warm failed: %v", err)
+					return
+				}
 			}
+			log.Println("halo: nostr clients pre-warmed")
 		}()
 	}
 	statusMu.Unlock()
@@ -745,10 +747,10 @@ func reconnectOn(t *tor.Tor, addr string) string {
 	bootstrapPct = 0
 	statusMu.Unlock()
 	setStatus("starting")
-	// dropped in the background: torNostrClient holds that same mutex for up
-	// to half a minute while it builds a dialer, with relay runners queued
-	// behind it. nothing is lost by being late; this only shakes off a dialer
-	// that wedged.
+	// dropped in the background: torNostrClientFor holds that same mutex
+	// while it builds a dialer, and without a pinned socks port that waits on
+	// the control port. nothing is lost by being late; this only shakes off a
+	// dialer that wedged.
 	go nostrResetClient()
 
 	// the network goes down first, and the config changes while it is down.
@@ -786,7 +788,7 @@ func reconnectOn(t *tor.Tor, addr string) string {
 	atomic.StoreInt32(&bounceOff, 0)
 	// and again now the network is back, which is the one that matters.
 	// tor reopens its socks listener on the way back, and anything rebuilt
-	// during the bounce (relay runners loop through torNostrClient()
+	// during the bounce (relay runners loop through torNostrClientFor()
 	// throughout) holds a client bound to the old port. the relays heal
 	// through relaysAllDead(), a one-shot request does not.
 	nostrResetClient()

@@ -82,7 +82,7 @@ func handleKey() ed25519.PrivateKey {
 	return myEdPriv
 }
 
-// the registry's own lane, apart from the circuit that carries the contacts
+// the registry's own lane, apart from the circuits that carry the contacts
 func handleHTTP() (*http.Client, error) { return torNostrClientFor(laneServices) }
 
 // is this handle free? returns "free", "taken", or an error string.
