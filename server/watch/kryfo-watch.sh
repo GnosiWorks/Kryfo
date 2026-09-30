@@ -5,14 +5,17 @@
 # run by kryfo-watch.timer. DRY=1 checks and restarts nothing.
 set -u
 
-ENV=/etc/kryfo-watch.env
+ENV=${WATCH_ENV:-/etc/kryfo-watch.env}
 [ -r "$ENV" ] && . "$ENV"
 STATE=${STATE:-/var/lib/kryfo-watch}
 SITE=${SITE:-https://kryfo.app/}
 RELAY=${RELAY:-https://relay.kryfo.app/}
 BADGE=${BADGE:-http://127.0.0.1:8899/pubkey}
 BADGE_UNIT=${BADGE_UNIT:-}
-MIN_FREE_GB=${MIN_FREE_GB:-2}
+# the relay stops taking wraps below 2 GiB free where its database lives
+# (relay-live/limits.go), so warn above that
+MIN_FREE_GB=${MIN_FREE_GB:-3}
+RELAY_DATA=${RELAY_DATA:-/opt/halo-relay/data}
 CERT_DAYS=${CERT_DAYS:-21}
 HEAL_GAP=${HEAL_GAP:-900}
 ALERT_CMD=${ALERT_CMD:-}
@@ -30,9 +33,20 @@ get() { curl -sS -m 20 -o /dev/null -w '%{http_code}' "$@" 2>/dev/null; }
 
 relay_ok() { curl -sS -m 20 -H 'Accept: application/nostr+json' "$1" 2>/dev/null | grep -q '"software"'; }
 
-handles_ok() {
-	curl -sS -m 20 -X POST -H 'Content-Type: application/json' \
-		-d '{"h":"zzqq_watch_probe"}' "$1" 2>/dev/null | grep -q '"free":true'
+# up, busy or down. any answer that is the registry's own is up: free or
+# taken alike, since anyone can claim the name asked about. busy is its
+# "slow down", when readers have used up the rate they share: it is
+# running, and a restart would not help. anything else, a proxy's page
+# included, is down
+handles_state() {
+	local out
+	out=$(curl -sS -m 20 -X POST -H 'Content-Type: application/json' \
+		-d '{"h":"zzqq_watch_probe"}' -w '\n%{http_code}' "$1" 2>/dev/null)
+	case "${out##*$'\n'}" in
+	200) grep -Eq '"free":(true|false)' <<<"$out" && echo up && return ;;
+	429) grep -q '^slow down' <<<"$out" && echo busy && return ;;
+	esac
+	echo down
 }
 
 # restarts at most once per HEAL_GAP, so a service that cannot start is not
@@ -86,11 +100,13 @@ else
 fi
 
 # the handle registry, the same way
-if handles_ok "${RELAY}handle/check"; then
+seen=$(handles_state "${RELAY}handle/check")
+if [ "$seen" != down ]; then
 	mark handles up
+	[ "$seen" = busy ] && echo "watch: handles busy"
 else
 	mark handles down
-	if handles_ok http://127.0.0.1:3336/handle/check; then
+	if [ "$(handles_state http://127.0.0.1:3336/handle/check)" != down ]; then
 		heal handles-bridge kryfo-handles-bridge
 	else
 		heal handles kryfo-handles kryfo-handles-bridge
@@ -105,9 +121,15 @@ else
 	[ -n "$BADGE_UNIT" ] && heal badge "$BADGE_UNIT"
 fi
 
-# room on the disk the relay, the registry and the site write to
-free=$(df -P --block-size=1G / | awk 'NR==2 {print $4}')
-if [ "${free:-0}" -ge "$MIN_FREE_GB" ]; then mark disk up; else mark disk low; fi
+# room where the relay's database lives, in bytes: df's own units round up
+free=$(df -P -B1 "$RELAY_DATA" 2>/dev/null | awk 'NR==2 {print $4}')
+if ! [[ "$free" =~ ^[0-9]+$ ]]; then
+	mark disk unreadable
+elif [ "$free" -ge $((MIN_FREE_GB << 30)) ]; then
+	mark disk up
+else
+	mark disk low
+fi
 
 # certificates, three weeks ahead
 for host in kryfo.app relay.kryfo.app; do

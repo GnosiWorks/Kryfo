@@ -13,17 +13,17 @@ package main
 // stands in for the other.
 
 import (
-	"context"
 	"crypto/ed25519"
 	"crypto/sha256"
 	"embed"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"html"
 	"log"
-	"net"
+	"maps"
 	"net/http"
 	"net/url"
 	"os"
@@ -32,12 +32,14 @@ import (
 	"sort"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 	"unicode"
 )
 
 var handleOK = regexp.MustCompile(`^[a-z0-9_]{3,20}$`)
+
+// bytes an invite may take, a little over the longest the app builds
+const maxInvite = 1024
 
 // names that would let someone pose as us, or that collide with paths we
 // might want later.
@@ -84,15 +86,30 @@ type store struct {
 	// a claim signed before it cannot bring the handle back. in memory only:
 	// past the clock window no such claim is taken anyway
 	gone map[string]int64
+	// one more with every change
+	gen uint64
+
+	// one file write at a time, and the last change it holds
+	wmu   sync.Mutex
+	saved uint64
 }
 
-func openStore(path string) *store {
+// the store as the file holds it. only a file that is not there yet starts
+// empty: one that cannot be read or parsed stops the registry, or the next
+// write would replace every handle with what is left in memory
+func loadStore(path string) (*store, error) {
 	s := &store{path: path, m: map[string]entry{}, gone: map[string]int64{}}
 	b, err := os.ReadFile(path)
-	if err == nil {
-		_ = json.Unmarshal(b, &s.m)
+	if errors.Is(err, os.ErrNotExist) {
+		return s, nil
 	}
-	return s
+	if err != nil {
+		return nil, err
+	}
+	if err := json.Unmarshal(b, &s.m); err != nil {
+		return nil, fmt.Errorf("%s: %w", path, err)
+	}
+	return s, nil
 }
 
 func (s *store) get(h string) (entry, bool) {
@@ -102,53 +119,142 @@ func (s *store) get(h string) (entry, bool) {
 	return e, ok
 }
 
-func (s *store) count() int {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	return len(s.m)
+// one handle as a change sees it, under the store's write lock
+type tx struct {
+	s       *store
+	h       string
+	changed bool
 }
 
-func (s *store) put(e entry) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.m[e.Handle] = e
-	return s.flush()
-}
-
-// takes a handle out, remembering the time on the release
-func (s *store) del(h string, ts int64) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	delete(s.m, h)
-	old := time.Now().Unix() - 2*signSkew
-	for k, t := range s.gone {
-		if t < old {
-			delete(s.gone, k)
-		}
-	}
-	s.gone[h] = ts
-	return s.flush()
+func (t *tx) get() (entry, bool) {
+	e, ok := t.s.m[t.h]
+	return e, ok
 }
 
 // the time on the handle's release in the last while, or 0
-func (s *store) goneAt(h string) int64 {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	return s.gone[h]
+func (t *tx) goneAt() int64 { return t.s.gone[t.h] }
+
+func (t *tx) count() int { return len(t.s.m) }
+
+func (t *tx) put(e entry) {
+	e.Handle = t.h
+	t.s.m[t.h] = e
+	t.changed = true
 }
 
-// caller holds the lock. written to a temp file and renamed so a crash
-// mid-write cannot leave a half-parsed registry behind.
-func (s *store) flush() error {
-	b, err := json.MarshalIndent(s.m, "", "  ")
+// takes the handle out, remembering the time on the release
+func (t *tx) del(ts int64) {
+	delete(t.s.m, t.h)
+	old := time.Now().Unix() - 2*signSkew
+	for k, v := range t.s.gone {
+		if v < old {
+			delete(t.s.gone, k)
+		}
+	}
+	t.s.gone[t.h] = ts
+	t.changed = true
+}
+
+// reads, checks and changes one handle under one lock, so nothing else
+// changes it in between. the file is written after, outside that lock.
+func (s *store) update(h string, f func(t *tx) error) error {
+	s.mu.Lock()
+	t := &tx{s: s, h: h}
+	err := f(t)
+	if t.changed {
+		s.gen++
+	}
+	gen := s.gen
+	s.mu.Unlock()
+	if err != nil && !t.changed {
+		return err
+	}
+	// an ok waits for the file even when nothing changed here: a retry after
+	// a failed write finds its change in memory, not yet on disk
+	if serr := s.save(gen); err == nil {
+		err = serr
+	}
+	return err
+}
+
+// returns once the file holds change gen. reads go on while it is written,
+// and changes made meanwhile go out together in the next write.
+func (s *store) save(gen uint64) error {
+	s.wmu.Lock()
+	defer s.wmu.Unlock()
+	if s.saved >= gen {
+		return nil
+	}
+	s.mu.RLock()
+	snap := maps.Clone(s.m)
+	at := s.gen
+	s.mu.RUnlock()
+	if err := writeStore(s.path, snap); err != nil {
+		return err
+	}
+	s.saved = at
+	return nil
+}
+
+// written to a temp file, synced and renamed, so a crash mid-write cannot
+// leave a half-parsed registry behind, then the folder is synced so the
+// rename itself outlives a crash. no html escaping: an invite's & is one
+// byte on disk, not six.
+func writeStore(path string, m map[string]entry) error {
+	tmp := path + ".tmp"
+	f, err := os.OpenFile(tmp, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o600)
 	if err != nil {
 		return err
 	}
-	tmp := s.path + ".tmp"
-	if err := os.WriteFile(tmp, b, 0o600); err != nil {
+	enc := json.NewEncoder(f)
+	enc.SetEscapeHTML(false)
+	enc.SetIndent("", "  ")
+	if err := enc.Encode(m); err != nil {
+		f.Close()
 		return err
 	}
-	return os.Rename(tmp, s.path)
+	if err := f.Sync(); err != nil {
+		f.Close()
+		return err
+	}
+	if err := f.Close(); err != nil {
+		return err
+	}
+	if err := os.Rename(tmp, path); err != nil {
+		return err
+	}
+	d, err := os.Open(filepath.Dir(path))
+	if err != nil {
+		return err
+	}
+	if err := d.Sync(); err != nil {
+		d.Close()
+		return err
+	}
+	return d.Close()
+}
+
+// an answer other than ok, with its status
+type refusal struct {
+	code int
+	msg  string
+}
+
+func (r refusal) Error() string { return r.msg }
+
+// answers an update that did not go through: its refusal, or could not
+// save. false when it did go through
+func refused(w http.ResponseWriter, err error) bool {
+	var r refusal
+	switch {
+	case err == nil:
+		return false
+	case errors.As(err, &r):
+		refuseCode(w, r.code, r.msg)
+	default:
+		refuse(w, "could not save")
+	}
+	return true
 }
 
 // older apps sign the handle alone, for a claim and a release alike. taken
@@ -246,9 +352,19 @@ func writeJSON(w http.ResponseWriter, code int, v any) {
 //	kryfo://share?id=..&onion=..&xpub=..            v1
 //	kryfo://share?id=..&onion=..&v=2&bundle=..      v2
 //	kryfo://share?id=..&onion=..&v=3&bundle=..&fc=..  v3
+//
+// the longest the app builds is a v3 invite of 700 bytes (the longest words,
+// a five digit registration id), so each handle stays small on disk.
 func inviteOK(s string) bool {
-	if s == "" || len(s) > 8000 {
+	if s == "" || len(s) > maxInvite {
 		return false
+	}
+	// a url is printable ascii, and with no quote or backslash in it the
+	// file holds it at its own length
+	for i := 0; i < len(s); i++ {
+		if c := s[i]; c <= ' ' || c > '~' || c == '"' || c == '\\' {
+			return false
+		}
 	}
 	u, err := url.Parse(s)
 	if err != nil || u.Scheme != "kryfo" || u.Host != "share" {
@@ -337,7 +453,10 @@ func main() {
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		log.Fatal(err)
 	}
-	st := openStore(filepath.Join(dir, "handles.json"))
+	st, err := loadStore(filepath.Join(dir, "handles.json"))
+	if err != nil {
+		log.Fatalf("handles: %v", err)
+	}
 	// once no app in use signs v1 any more
 	if os.Getenv("HANDLE_REFUSE_V1") == "1" {
 		acceptV1 = false
@@ -347,16 +466,11 @@ func main() {
 	log.Fatal(newServer(addr, st, newLimiter(2, 20)).ListenAndServe())
 }
 
-// a counter on every connection so search can be limited per connection.
-// no address is kept, only the count.
 func newServer(addr string, st *store, lim *limiter) *http.Server {
 	return &http.Server{
 		Addr:              addr,
 		Handler:           routes(st, lim),
 		ReadHeaderTimeout: 10 * time.Second,
-		ConnContext: func(ctx context.Context, _ net.Conn) context.Context {
-			return context.WithValue(ctx, connKey{}, new(atomic.Int32))
-		},
 		// deliberately no ErrorLog: a request that fails should not leave a
 		// line behind with an address in it.
 		ErrorLog: log.New(discard{}, "", 0),
@@ -443,50 +557,46 @@ func routes(st *store, lim *limiter) http.Handler {
 		}
 		// re-claiming your own handle repoints it, which is how someone
 		// updates an invite after a reinstall. anyone else is refused.
-		old, ok := st.get(in.Handle)
-		if ok {
-			if old.Pubkey != in.Pubkey {
-				refuse(w, "that handle is taken")
-				return
+		err := st.update(in.Handle, func(t *tx) error {
+			old, ok := t.get()
+			if ok {
+				if old.Pubkey != in.Pubkey {
+					return refusal{http.StatusOK, "that handle is taken"}
+				}
+				if old.SignedAt > 0 && !v2 {
+					return refusal{http.StatusOK, "update the app"}
+				}
+				if v2 && ts < old.SignedAt {
+					return refusal{http.StatusOK, "an older change"}
+				}
+				// nothing changed, nothing written. the first v2 claim of a
+				// handle is written all the same, so it takes only v2 after
+				if old.Invite == in.Invite && old.Bio == in.Bio && (!v2 || old.SignedAt > 0) {
+					return nil
+				}
+				// and that must not take someone out of search, or put them
+				// back into it
+				in.Listed, in.Name, in.ListedAt = old.Listed, old.Name, old.ListedAt
+				in.SignedAt = old.SignedAt
+			} else {
+				if gone := t.goneAt(); gone > 0 && (!v2 || ts <= gone) {
+					return refusal{http.StatusOK, "an older change"}
+				}
+				if t.count() >= maxHandles {
+					return refusal{http.StatusServiceUnavailable, "the registry is full"}
+				}
+				if !newNameLim.allow() {
+					return refusal{http.StatusTooManyRequests, "slow down"}
+				}
 			}
-			if old.SignedAt > 0 && !v2 {
-				refuse(w, "update the app")
-				return
+			if v2 {
+				in.SignedAt = ts
 			}
-			if v2 && ts < old.SignedAt {
-				refuse(w, "an older change")
-				return
-			}
-			// nothing changed, nothing written. the first v2 claim of a
-			// handle is written all the same, so it takes only v2 after
-			if old.Invite == in.Invite && old.Bio == in.Bio && (!v2 || old.SignedAt > 0) {
-				writeJSON(w, http.StatusOK, map[string]any{"ok": true})
-				return
-			}
-			// and that must not take someone out of search, or put them
-			// back into it
-			in.Listed, in.Name, in.ListedAt = old.Listed, old.Name, old.ListedAt
-			in.SignedAt = old.SignedAt
-		} else {
-			if gone := st.goneAt(in.Handle); gone > 0 && (!v2 || ts <= gone) {
-				refuse(w, "an older change")
-				return
-			}
-			if st.count() >= maxHandles {
-				refuseCode(w, http.StatusServiceUnavailable, "the registry is full")
-				return
-			}
-			if !newNameLim.allow() {
-				refuseCode(w, http.StatusTooManyRequests, "slow down")
-				return
-			}
-		}
-		if v2 {
-			in.SignedAt = ts
-		}
-		in.ClaimedAt = time.Now().Unix()
-		if err := st.put(in); err != nil {
-			refuse(w, "could not save")
+			in.ClaimedAt = time.Now().Unix()
+			t.put(in)
+			return nil
+		})
+		if refused(w, err) {
 			return
 		}
 		writeJSON(w, http.StatusOK, map[string]any{"ok": true})
@@ -507,31 +617,28 @@ func routes(st *store, lim *limiter) http.Handler {
 			return
 		}
 		h := strings.ToLower(strings.TrimSpace(raw["handle"]))
-		e, ok := st.get(h)
-		if !ok {
-			writeJSON(w, http.StatusOK, map[string]any{"ok": true})
-			return
-		}
 		ts, v2, why := checkSig(raw, h, func(ts int64) string { return releaseMsgV2(h, ts) })
-		switch {
-		case why == "signature does not match" || e.Pubkey != raw["pubkey"]:
-			refuse(w, "not yours to release")
-			return
-		case why != "":
-			refuse(w, why)
-			return
-		case e.SignedAt > 0 && !v2:
-			refuse(w, "update the app")
-			return
-		case v2 && ts < e.SignedAt:
-			refuse(w, "an older change")
-			return
-		}
 		if !v2 {
 			ts = time.Now().Unix()
 		}
-		if err := st.del(h, ts); err != nil {
-			refuse(w, "could not save")
+		err := st.update(h, func(t *tx) error {
+			e, ok := t.get()
+			switch {
+			case !ok:
+				return nil
+			case why == "signature does not match" || e.Pubkey != raw["pubkey"]:
+				return refusal{http.StatusOK, "not yours to release"}
+			case why != "":
+				return refusal{http.StatusOK, why}
+			case e.SignedAt > 0 && !v2:
+				return refusal{http.StatusOK, "update the app"}
+			case v2 && ts < e.SignedAt:
+				return refusal{http.StatusOK, "an older change"}
+			}
+			t.del(ts)
+			return nil
+		})
+		if refused(w, err) {
 			return
 		}
 		writeJSON(w, http.StatusOK, map[string]any{"ok": true})
@@ -698,19 +805,17 @@ body{margin:0;min-height:100vh;background:#0D0B09;color:#F5F1EA;
 //
 // only owners who opted in can be found, by handle or given name. a query is
 // never written down: no log line here, the error log is discarded and the
-// answer is marked not to be stored. scraping is slowed by a three-character
-// minimum, no wildcards, twenty answers and caps per connection and for the
-// service. requests come over tor, so there is no address to limit by.
+// answer is marked not to be stored. going through the whole list is slowed
+// by a three-character minimum, no wildcards, twenty answers and a cap for
+// the whole service. no caller is told apart: the only peer here is the
+// proxy in front, and no address is kept.
 
 const (
-	searchMax       = 20
-	perConnSearches = 30
-	nameMax         = 40
-	bioInSearch     = 120
-	listingSkew     = 10 * 60 // seconds a listing change may be off the clock
+	searchMax   = 20
+	nameMax     = 40
+	bioInSearch = 120
+	listingSkew = 10 * 60 // seconds a listing change may be off the clock
 )
-
-type connKey struct{}
 
 // the message an owner signs to go into search or out of it. the time
 // makes each change once only, the name is signed with it so nobody else
@@ -781,44 +886,40 @@ func listingHandler(st *store) http.HandlerFunc {
 			return
 		}
 		h := strings.ToLower(strings.TrimSpace(raw["handle"]))
-		e, ok := st.get(h)
-		if !ok {
-			refuse(w, "no such handle")
-			return
-		}
 		var ts int64
-		if _, err := fmt.Sscan(raw["ts"], &ts); err != nil {
-			refuse(w, "bad request")
-			return
-		}
+		_, tsErr := fmt.Sscan(raw["ts"], &ts)
 		now := time.Now().Unix()
-		if ts < now-listingSkew || ts > now+listingSkew {
-			refuse(w, "check the phone's clock")
-			return
-		}
-		if ts <= e.ListedAt {
-			refuse(w, "an older change")
-			return
-		}
 		listed := raw["listed"] == "1"
-		if raw["listed"] != "1" && raw["listed"] != "0" {
-			refuse(w, "bad request")
-			return
-		}
 		name := raw["name"]
-		if e.Pubkey != raw["pubkey"] ||
-			!verifyMsg(raw["pubkey"], raw["sig"], listingMsg(h, listed, ts, name)) {
-			refuse(w, "not yours to change")
-			return
-		}
-		e.Listed = listed
-		e.ListedAt = ts
-		e.Name = ""
-		if listed {
-			e.Name = cleanName(name)
-		}
-		if err := st.put(e); err != nil {
-			refuse(w, "could not save")
+		signed := verifyMsg(raw["pubkey"], raw["sig"], listingMsg(h, listed, ts, name))
+		// the rest of the entry as it is now, so a repoint or a release that
+		// lands meanwhile is kept
+		err := st.update(h, func(t *tx) error {
+			e, ok := t.get()
+			switch {
+			case !ok:
+				return refusal{http.StatusOK, "no such handle"}
+			case tsErr != nil:
+				return refusal{http.StatusOK, "bad request"}
+			case ts < now-listingSkew || ts > now+listingSkew:
+				return refusal{http.StatusOK, "check the phone's clock"}
+			case ts <= e.ListedAt:
+				return refusal{http.StatusOK, "an older change"}
+			case raw["listed"] != "1" && raw["listed"] != "0":
+				return refusal{http.StatusOK, "bad request"}
+			case e.Pubkey != raw["pubkey"] || !signed:
+				return refusal{http.StatusOK, "not yours to change"}
+			}
+			e.Listed = listed
+			e.ListedAt = ts
+			e.Name = ""
+			if listed {
+				e.Name = cleanName(name)
+			}
+			t.put(e)
+			return nil
+		})
+		if refused(w, err) {
 			return
 		}
 		writeJSON(w, http.StatusOK, map[string]any{"ok": true})
@@ -955,12 +1056,6 @@ func searchHandler(st *store, lim *limiter) http.HandlerFunc {
 		q, ok := searchQuery(body.Q)
 		if !ok {
 			refuseCode(w, http.StatusBadRequest, "at least three letters or digits, nothing else")
-			return
-		}
-		if c, _ := r.Context().Value(connKey{}).(*atomic.Int32); c != nil &&
-			c.Add(1) > perConnSearches {
-			w.Header().Set("Connection", "close")
-			refuseCode(w, http.StatusTooManyRequests, "slow down")
 			return
 		}
 		if !lim.allow() {
