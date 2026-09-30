@@ -24,17 +24,41 @@ extern const char *_GoStringPtr(_GoString_ s);
 
 
 
-
-
-
-
-#line 11 "room.go"
+#line 4 "ffi_free.go"
 
 #include <stdlib.h>
 
 #line 1 "cgo-generated-wrapper"
 
 
+
+
+
+#line 7 "pin_export.go"
+
+#include <string.h>
+
+#line 1 "cgo-generated-wrapper"
+
+#line 8 "quiet.go"
+
+#include <stdlib.h>
+
+#line 1 "cgo-generated-wrapper"
+
+#line 9 "room.go"
+
+#include <stdlib.h>
+
+#line 1 "cgo-generated-wrapper"
+
+
+
+#line 9 "vault.go"
+
+#include <stdlib.h>
+
+#line 1 "cgo-generated-wrapper"
 
 
 /* End of preamble from import "C" comments.  */
@@ -131,7 +155,7 @@ extern char* HaloMyEdPubkey(void);
 extern char* HaloMyXPubkey(void);
 
 // exports private keys so the dart side can persist them encrypted.
-// only call this once after generation; do NOT log or transmit.
+// only call this once after generation; never log or transmit.
 //
 extern char* HaloMyEdPrivkey(void);
 extern char* HaloMyXPrivkey(void);
@@ -141,16 +165,10 @@ extern char* HaloDecryptFrom(char* cPeerPub, char* cB64);
 extern char* HaloStartListener(char* cDataDir);
 extern char* HaloLastReconnect(void);
 
-// puts tor to sleep and keeps it there. it does NOT shut tor down.
-//
-// the first version did, and a test that ran real start/stop cycles in one
-// process (tor_cycle_test.go) killed it: tor 0.4.9.5 survives one shutdown
-// per process and aborts the whole app on the second, "Error destroying a
-// mutex", or hangs in it. a day of check-ins is ninety-six of them. so tor
-// stays up and is told to leave the network: DisableNetwork=1 closes every
-// connection and circuit and stops it building more, which is what tor
-// browser and orbot do for the same reason. waking is the same setting
-// turned back, and the consensus it kept makes that quick.
+// puts tor to sleep and keeps it there. it does not shut tor down: tor
+// survives one shutdown per process, and a day of check-ins is ninety-six of
+// them. DisableNetwork=1 closes every connection and circuit instead, and
+// waking is the same setting turned back, quick with the consensus it kept.
 //
 // "ok" when tor went quiet or was not running, "error: ..." when it would
 // not take the setting. on an error tor is left exactly as it was.
@@ -173,15 +191,9 @@ extern char* HaloSendTo(char* cAddr, char* cMsg);
 //
 extern char* HaloIdFromEdPub(char* cHexPub);
 
-// encrypts a UTF-8 plaintext payload (typically a JSON blob containing
-// the user's identity keys + db + prefs) with a passphrase using scrypt
-// (32768 / 8 / 1) + AES-256-GCM. returns "halo-backup:v1:" + base64
-// (salt || nonce || ciphertext+tag). returns "error: ..." on failure.
-//
-extern char* HaloEncryptBackup(char* cPlain, char* cPassphrase);
-
-// inverse of HaloEncryptBackup. returns plaintext on success or
-// "error: wrong passphrase or corrupt" on auth failure.
+// opens a v1 backup: "halo-backup:v1:" + base64(salt || nonce ||
+// ciphertext+tag), scrypt (32768 / 8 / 1) and AES-256-GCM. returns the
+// plaintext, or "error: wrong passphrase or corrupt" on auth failure.
 //
 extern char* HaloDecryptBackup(char* cBlob, char* cPassphrase);
 
@@ -207,9 +219,6 @@ extern int HaloOpenChunk(char* cKey, unsigned long long index, unsigned char typ
 //
 extern char* HaloSetBridges(char* cLines, int on);
 
-// what the ui needs: whether bridges are on, how many are configured, and
-// whether the local transport is actually up.
-//
 // hand tor the new bridge config and bounce its network so it takes. tor is
 // never restarted for this: see reconnectTor for why it cannot be.
 //
@@ -220,24 +229,34 @@ extern char* HaloRestartTor(void);
 extern char* HaloNetworkChanged(void);
 extern char* HaloBridgeState(void);
 
+// every string the engine returns is malloc'd here by C.CString. dart copies
+// it and hands it back through this, so the allocator that made it frees it.
 //
+extern void HaloFree(char* p);
+
+// the app is about to delete its files: every relay subscription stops, tor
+// leaves the network and the engine writes nothing more into the data dir,
+// so nothing the wipe removes comes back before the process ends. "ok", or
+// "error: ..." when tor would not take the setting.
+//
+extern char* HaloWipeHold(void);
+
 // is this handle free? returns "free", "taken", or an error string.
+//
 extern char* HaloHandleCheck(char* cHandle);
 
+// claim a handle for an invite, or point a held one at a new invite. signed
+// with the identity key, over the handle, the invite and the time.
 //
-// claim a handle for an invite. the signature is over the handle alone, made
-// with the identity key, so the registry can check the claimer is the person
-// the invite describes.
 extern char* HaloHandleClaim(char* cHandle, char* cInvite, char* cBio);
 
+// give it back, signed with the same key over the handle and the time.
 //
-// give it back. the same signature proves it was yours to release.
 extern char* HaloHandleRelease(char* cHandle);
 
-// in search or out of it: "1" puts the handle in the registry's search
-// under name, "0" takes it out. a handle and being findable are separate:
-// claiming one never lists it. signed with the identity key, with the time,
-// so the registry takes each change once and in order.
+// "1" lists the handle in the registry's search under name, "0" takes it
+// out. claiming a handle never lists it. signed with the time so the
+// registry takes each change once and in order.
 //
 extern char* HaloHandleListing(char* cHandle, char* cListed, char* cName);
 
@@ -258,6 +277,11 @@ extern char* HaloCatchupState(void);
 extern char* HaloNostrInit(char* cRelaysCSV);
 extern char* HaloNostrSend(char* cPeerXPubHex, char* cMsg);
 extern char* HaloNostrSubscribe(char* cPeerXPubHex);
+
+// stop listening for a peer, and take what its receive address kept on
+// disk with it
+//
+extern char* HaloNostrUnsubscribe(char* cPeerXPubHex);
 
 // the public half of our first-contact address. goes in the invite so a
 // stranger can reach us before either side knows the other's key.
@@ -284,13 +308,12 @@ extern char* HaloNostrKick(void);
 // out what grows. json, bytes.
 //
 extern char* HaloMemStats(void);
-extern char* HaloNostrPoll(void);
 
-// fetch a url over the tor http client and return the html body (capped).
-// used for sender-side link previews so the receiver never has to fetch and
-// leak their ip. best-effort: returns "error: ..." on any failure, caller skips.
+// what the relays delivered since the last poll, as a json array of
+// {"t": tag, "c": content}, or "" when there is nothing. the events in it
+// are remembered as seen from here on.
 //
-extern char* HaloTorGet(char* cUrl);
+extern char* HaloNostrPoll(void);
 
 // GET a page over tor and nothing else, for the sender-side link preview.
 // capped at 128kb, html only, no user agent, "error: ..." on any failure
@@ -304,16 +327,10 @@ extern char* HaloTorGetStrict(char* cUrl);
 //
 extern char* HaloTorPost(char* cUrl, char* cBody);
 
-// GET over tor that keeps the body for ANY 2xx - the badge service answers
-// 202 while a payment is still pending, which HaloTorGet would reject.
+// GET over tor that keeps the body for any 2xx: the badge service answers
+// 202 while a payment is still pending.
 //
 extern char* HaloTorGetJSON(char* cUrl);
-
-// like HaloTorGet but returns the body base64-encoded, for binary content
-// (link-preview images). fetched over tor so the receiver never loads the
-// image from the origin and leaks their ip. capped larger than html.
-//
-extern char* HaloTorGetB64(char* cUrl);
 
 // put an invite at the address the code names. encrypted to the derived key,
 // so it is readable by whoever has the code and nobody else, and stamped to
@@ -321,11 +338,52 @@ extern char* HaloTorGetB64(char* cUrl);
 //
 extern char* HaloPairCodePublish(char* cCode, char* cPayload);
 
-// look for an invite at the address the code names. returns the payload, or
-// "empty" when nothing is there yet - the caller polls, because the other
-// person may not have pressed share.
+// look for an invite at the address the code names. returns the payload,
+// "empty" when nothing is there yet, since the other person may not have
+// pressed share, or "twice" when the address holds more than one invite: a
+// code that points at two people points at nobody.
 //
 extern char* HaloPairCodeFetch(char* cCode);
+
+// {"n": cost, "ms": what one check took here}
+//
+extern char* HaloPinCalibrate(void);
+extern char* HaloPinNewTable(int logN);
+
+// {"i", "k", "c", "la", "lw", "u"}. u is the key the matched entry wraps, hex,
+// or ""
+//
+extern char* HaloPinCheck(char* cPin, char* cTable, char* cLegacy);
+
+// {"t": the new table}, or "error: collision" when the pin already opens
+// another entry. wrapPlain is a 32-byte key in hex, sealed into the entry, or
+// "" for none
+//
+extern char* HaloPinSetup(char* cPin, char* cTable, char* cLegacy, int index, int kind, char* cContainer, char* cWrapPlain);
+
+// a new pin for entry index, keeping what it opens and the key it wraps.
+// {"t": the new table}, or "error: wrong pin" when the old pin does not open
+// that entry, "error: collision" when the new one opens another
+//
+extern char* HaloPinRewrap(char* cOld, char* cNew, char* cTable, char* cLegacy, int index);
+
+// the table as v2, the same pins opening the same entries. a v2 table comes
+// back as it is
+//
+extern char* HaloPinUpgrade(char* cTable);
+extern char* HaloPinClear(char* cTable, int index);
+
+// a new identity for the decoy, as json, or a line starting with "error:"
+//
+extern char* HaloQuietIdentity(void);
+
+// what an identity kept in a decoy's database shows, from its private keys
+//
+extern char* HaloQuietDescribe(char* cEd, char* cX, char* cOnion);
+
+// the first-contact address an invite of this identity carries
+//
+extern char* HaloQuietFirstContactPk(char* cX, int counter);
 
 // a fresh x25519 keypair for one room. "priv:pub", both hex. dart keeps it
 // in the room row and hands the private half back on every call.
@@ -351,6 +409,12 @@ extern char* HaloRoomSubscribe(char* cPriv, char* cPeer);
 //
 extern char* HaloRoomSubscribeFirstContact(char* cPriv);
 
+// what a room's addresses kept on disk, gone with the room: every member's
+// address and the drop box. the room's own key and its members' come in,
+// since a room that ended while the app was shut was never subscribed
+//
+extern char* HaloRoomForget(char* cPriv, char* cPeers);
+
 // stop every subscription a room key holds. called on expiry and on leave;
 // after this nothing addressed to the room can arrive.
 //
@@ -362,6 +426,23 @@ extern char* HaloRoomUnsubscribe(char* cPub);
 extern char* HaloSetTransportMode(char* cMode);
 extern char* HaloTransportMode(void);
 extern char* HaloTransportState(void);
+
+// {"pub": "age1...", "priv": "AGE-SECRET-KEY-1..."}
+//
+extern char* HaloVaultKeys(void);
+
+// the bytes in b64 sealed to pub, as base64
+//
+extern char* HaloVaultSeal(char* cPub, char* cB64);
+
+// what HaloVaultSeal sealed, as base64
+//
+extern char* HaloVaultOpen(char* cPriv, char* cB64);
+
+// a json list of sealed base64 items, opened in one call: a list of base64,
+// null where one will not open
+//
+extern char* HaloVaultOpenMany(char* cPriv, char* cJSON);
 
 #ifdef __cplusplus
 }
