@@ -62,7 +62,7 @@ void main() {
     expect(RoomLink.parse('kryfo://room?id=r1&pub=short&fc=$_fc&exp=1'), null);
     expect(RoomLink.parse('kryfo://room?id=r1&pub=$_pub&fc=$_fc'), null);
     final noName = RoomLink.parse('kryfo://room?id=r1&pub=$_pub&fc=$_fc&exp=5');
-    expect(noName!.name, 'room');
+    expect(noName!.name, 'Room');
     expect(noName.cap, null);
   });
 

@@ -168,7 +168,7 @@ class RoomLink {
       final name = unmarked(u.queryParameters['n'] ?? '').trim();
       return RoomLink(
         roomId: id,
-        name: name.isEmpty ? 'room' : name,
+        name: name.isEmpty ? l10n.homeRoom : name,
         expiresAt: exp,
         creatorPub: pub,
         fcPk: fc,

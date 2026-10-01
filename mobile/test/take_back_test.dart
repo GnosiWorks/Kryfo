@@ -160,7 +160,7 @@ void main() {
       expect(io.rang, [_bob]);
       await from(_bob, await unsaid(_bob, 'u1'));
       expect(live.msg('u1'), isNull);
-      expect(io.unrang, ['u1']);
+      expect(io.unrangMessages, ['u1']);
     });
 
     test('taken back before it came, it never lands', () async {

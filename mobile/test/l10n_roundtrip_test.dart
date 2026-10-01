@@ -1279,6 +1279,10 @@ void main() {
       l.groupInfoTheyWillStopReceiving,
       "They will stop receiving messages from this group.",
     );
+    expect(l.appGroupHoldsUpTo(0), "A group holds up to 0 people");
+    expect(l.appGroupHoldsUpTo(1), "A group holds up to 1 person");
+    expect(l.appGroupHoldsUpTo(2), "A group holds up to 2 people");
+    expect(l.appGroupHoldsUpTo(5), "A group holds up to 5 people");
     expect(l.commonRemove, "Remove");
     expect(l.groupInfoClearThisConversation, "Clear this conversation?");
     expect(
@@ -1294,8 +1298,20 @@ void main() {
       "Everything in it is wiped from this phone now, and the key you used here is gone for good.",
     );
     expect(
-      l.groupInfoYouWillStopReceiving,
-      "You will stop receiving messages and other members will see you leave.",
+      l.groupChatYouWereRemovedFrom("<name>"),
+      "You were removed from <name>",
+    );
+    expect(
+      l.groupInfoLeaveGroupLine,
+      "You will stop receiving its messages, and everything in it is wiped from this phone.",
+    );
+    expect(
+      l.groupInfoLeaveGroupAdmin,
+      "You will stop receiving its messages, and everything in it is wiped from this phone. You are its admin, so once you leave no one can change who is in it or rename it.",
+    );
+    expect(
+      l.groupInfoLeaveRoomMaker,
+      "Everything in it is wiped from this phone now, and the key you used here is gone for good. You made this room, so its link stops letting anyone in.",
     );
     expect(l.groupInfoLeave, "Leave");
     expect(l.groupInfoGroupInfo, "Group info");
@@ -1559,6 +1575,10 @@ void main() {
     expect(
       l.introduceGotItButCouldNotBe("<c>", "<b>"),
       "<c> got it, but <b> could not be reached",
+    );
+    expect(
+      l.introduceIntroduced("<b>", "<c>"),
+      "<b> and <c> now have each other's card",
     );
     expect(
       l.introduceCouldNotReachEither,
@@ -2424,7 +2444,10 @@ void main() {
     expect(l.roomCreateNoOnePastThe(1), "No one past the first 1");
     expect(l.roomCreateNoOnePastThe(2), "No one past the first 2");
     expect(l.roomCreateNoOnePastThe(5), "No one past the first 5");
-    expect(l.roomCreateOffAnyoneWithThe, "Off. Anyone with the link");
+    expect(l.roomCreateOffUpTo(0), "Off. Anyone with the link, up to 0");
+    expect(l.roomCreateOffUpTo(1), "Off. Anyone with the link, up to 1");
+    expect(l.roomCreateOffUpTo(2), "Off. Anyone with the link, up to 2");
+    expect(l.roomCreateOffUpTo(5), "Off. Anyone with the link, up to 5");
     expect(
       l.roomCreateThisRoomAndEverything("<expiryWords>"),
       "This room and everything in it disappears in <expiryWords>",

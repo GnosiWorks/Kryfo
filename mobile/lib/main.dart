@@ -37,6 +37,7 @@ import 'screens/new_group_screen.dart';
 import 'screens/room_create_sheet.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'screens/group_chat_screen.dart';
+import 'screens/requests_screen.dart' show RequestsScreen;
 import 'screens/chat_screen.dart';
 import 'screens/dev_about_sheet.dart' show devChatRoute;
 import 'devchat/dev_start.dart' show DevKeyCheckFailed, DevStart;
@@ -3128,6 +3129,17 @@ class HaloDb {
     await _scrubMedia(media);
   }
 
+  // what a group left by an older version kept, and the paths of its files
+  Future<List<String>> dropGroupLeftovers() async {
+    final db = await open();
+    final rows = await db.transaction(dropGroupLeftoversIn);
+    return [
+      for (final r in rows)
+        for (final k in _kFileCols)
+          if ((r[k] as String?)?.isNotEmpty == true) r[k] as String,
+    ];
+  }
+
   Future<void> holdCipher(String peerId, String cipher) async {
     final db = await open();
     // a stranger past the cap gets a small shelf, not a disk
@@ -4193,8 +4205,11 @@ Future<List<Map<String, Object?>>> runSearchQuery(
 }) async {
   final where = <String>[
     'm.peer_id NOT IN (SELECT halo_id FROM contacts WHERE blocked = 1)',
-    "(m.group_id IS NOT NULL OR m.direction = 'out' OR m.peer_id IN "
-        '(SELECT halo_id FROM contacts WHERE accepted = 1))',
+    // a group's rows only while the group is here: one left before its
+    // rows went with it opens nothing
+    "(m.group_id IN (SELECT group_id FROM groups) OR (m.group_id IS NULL "
+        "AND (m.direction = 'out' OR m.peer_id IN "
+        '(SELECT halo_id FROM contacts WHERE accepted = 1))))',
   ];
   final args = <Object?>[];
   final kw = kindWhere(kind);
@@ -4222,6 +4237,26 @@ Future<List<Map<String, Object?>>> runSearchQuery(
     'ORDER BY $order LIMIT ?',
     args,
   );
+}
+
+// the rows of groups no longer here, which a leave in an older version
+// kept: nothing opens them, yet their files sat in the outbox. gives back
+// the file columns of what went, for shredding
+Future<List<Map<String, Object?>>> dropGroupLeftoversIn(
+  DatabaseExecutor db,
+) async {
+  const gone =
+      "group_id IS NOT NULL AND group_id != '' "
+      'AND group_id NOT IN (SELECT group_id FROM groups)';
+  final files = await db.rawQuery(
+    'SELECT media_path, file_path FROM messages WHERE $gone',
+  );
+  await db.rawDelete(
+    'DELETE FROM reactions WHERE msg_uid IN '
+    '(SELECT msg_uid FROM messages WHERE $gone AND msg_uid IS NOT NULL)',
+  );
+  await db.rawDelete('DELETE FROM messages WHERE $gone');
+  return files;
 }
 
 /// the same, queued on a batch: one trip for many rows
@@ -5193,6 +5228,52 @@ void _sayLinkResult(String result) {
 Future<void> openChatForHalo(String? haloId) =>
     lockGuard.afterUnlock(() => _openChatFor(haloId), key: 'chat:$haloId');
 
+// a group asked to hold more than the cap. its message is read when shown,
+// in the language of that moment
+class GroupFull implements Exception {
+  const GroupFull();
+  String get message => l10n.appGroupHoldsUpTo(AppState.kGroupMemberCap);
+}
+
+// what a tapped notification opens in the session on screen: a group or
+// room, the requests for someone not yet let in, or an accepted chat
+sealed class NotifTarget {
+  const NotifTarget();
+}
+
+class NotifGroup extends NotifTarget {
+  const NotifGroup(this.groupId);
+  final String groupId;
+}
+
+class NotifRequests extends NotifTarget {
+  const NotifRequests();
+}
+
+class NotifChat extends NotifTarget {
+  const NotifChat(this.row);
+  final Map<String, Object?> row;
+}
+
+// null when the chat is gone, is not this session's, or is the one open
+@visibleForTesting
+Future<NotifTarget?> notifTargetFor(String payload) async {
+  if (payload == currentChatPeer) return null;
+  if (payload.startsWith('group:')) {
+    final id = payload.substring('group:'.length);
+    if (id.isEmpty || !await session.groupExists(id)) return null;
+    return NotifGroup(id);
+  }
+  final rows = await session.contacts();
+  final row = rows.where((r) => r['halo_id'] == payload).firstOrNull;
+  if (row != null) return NotifChat(row);
+  // a request is read and answered on its own screen, where the shield is
+  final c = await session.getContact(payload);
+  if (c == null || (c['blocked'] as int? ?? 0) == 1) return null;
+  if ((c['accepted'] as int? ?? 0) != 1) return const NotifRequests();
+  return null;
+}
+
 Future<void> _openChatFor(String? haloId) async {
   if (haloId == null || haloId.isEmpty) return;
   final nav = rootNavKey.currentState;
@@ -5208,11 +5289,19 @@ Future<void> _openChatFor(String? haloId) async {
     nav.push(devChatRoute(haloId));
     return;
   }
-  final rows = await session.contacts();
-  final matches = rows.where((r) => r['halo_id'] == haloId).toList();
-  if (matches.isEmpty) return;
-  final row = matches.first;
-  if (haloId == currentChatPeer) return;
+  final target = await notifTargetFor(haloId);
+  if (target == null) return;
+  final Map<String, Object?> row;
+  switch (target) {
+    case NotifGroup(:final groupId):
+      nav.push(haloRoute(GroupChatScreen(groupId: groupId)));
+      return;
+    case NotifRequests():
+      nav.push(haloRoute(const RequestsScreen()));
+      return;
+    case NotifChat(row: final r):
+      row = r;
+  }
   nav.push(
     haloRoute(
       ChatScreen(
@@ -6514,7 +6603,12 @@ class AppState extends ChangeNotifier {
     // before the relay list is rebuilt or the first connection uses the old
     // one.
     engine.setTransportMode(m);
-    _nostrInitOnIsolate(relaysFor(m));
+    // every runner started below copies the list as it starts
+    try {
+      await _nostrInitOnIsolate(relaysFor(m));
+    } catch (e) {
+      dlog('mode: relays not rebuilt ($e)');
+    }
     await resubscribe();
     // the first-contact runner keeps the relay list it started with; it
     // has to follow the switch or strangers' openers go unread
@@ -6527,6 +6621,14 @@ class AppState extends ChangeNotifier {
   // once it has started
   @visibleForTesting
   Future<void> resubscribe() async {
+    // rooms first and on their own, as at boot: a runner keeps the relays it
+    // started with, and a contact that hangs must not leave a room on the
+    // old ones
+    try {
+      await _listenToRooms();
+    } catch (e) {
+      dlog('rooms: not listened to again ($e)');
+    }
     for (final r in await live.contacts()) {
       final id = r['halo_id'] as String;
       if (isDevChat(id)) continue;
@@ -8578,11 +8680,23 @@ class AppState extends ChangeNotifier {
         break;
       case 'remove':
         if (gc.members == null || !fromAdmin) return;
+        // in a room this phone is its room key, never the kryfo id
+        final room = await _roomOf(groupId, db);
+        final me = room?.pub ?? myId;
         for (final h in gc.members!) {
-          await db.removeGroupMember(groupId, h);
-          // removed person drops the whole group locally so it leaves
-          // their list and they stop multicasting into it.
-          if (h == myId) await db.deleteGroup(groupId);
+          if (h != me) await db.removeGroupMember(groupId, h);
+        }
+        // taken out: the group goes from here with everything in it, as a
+        // leave does, and an open screen says why it closed
+        if (gc.members!.contains(me)) {
+          final name = (await db.getGroup(groupId))?['name'] as String?;
+          if (room != null) {
+            await _destroyRoom(groupId, on: db);
+          } else {
+            await _dropGroup(groupId, db);
+          }
+          if (name != null) _removedFrom[groupId] = name;
+          _bumpChatRev('group:$groupId');
         }
         await refreshGroups();
         break;
@@ -8630,6 +8744,8 @@ class AppState extends ChangeNotifier {
   QuietIdentity? _decoyId;
   final Completer<void> _containersOpen = Completer<void>();
   Future<void> get containersReady => _containersOpen.future;
+  @visibleForTesting
+  void containersOpenedForTest() => _containersOpen.complete();
   // for the everyday session's own App lock screen
   bool get hasDecoy => !sessionQuiet && _decoyDb != null;
   // bumped when the screens change session: home starts over
@@ -8658,6 +8774,7 @@ class AppState extends ChangeNotifier {
         final d = HaloDb(HaloContainer.decoy);
         final q = await _quietOf(d);
         if (q != null) {
+          await _dropGroupLeftovers(d);
           _decoyDb = d;
           _decoyId = q;
           _otherShown = await _shownOf(Session(d));
@@ -9364,6 +9481,7 @@ class AppState extends ChangeNotifier {
     try {
       // a move a crash cut short is put right before ownership is read
       await settleVault(v);
+      await _dropGroupLeftovers(v);
       s = await Session.withVault(primary, v);
       home = await _contactsOf(s);
       gs = await _groupsOf(s);
@@ -10327,6 +10445,22 @@ class AppState extends ChangeNotifier {
     await boot();
   }
 
+  // the rows go now, their files in the background as above
+  Future<void> _dropGroupLeftovers(HaloDb d) async {
+    try {
+      final files = await d.dropGroupLeftovers();
+      if (files.isEmpty) return;
+      dlog('groups: ${files.length} files of groups no longer here');
+      unawaited(() async {
+        for (final f in files) {
+          await shredFile(f);
+        }
+      }());
+    } catch (e) {
+      dlog('groups: leftovers not swept (${e.runtimeType})');
+    }
+  }
+
   // which files go is settled here; the zeros are written after, in the
   // background: nothing names these files, so nothing can reach them
   Future<void> _sweepUnnamedMedia(DateTime before) async {
@@ -10382,6 +10516,7 @@ class AppState extends ChangeNotifier {
     // side. a file from the last minutes may be one another start of the
     // app is still filing
     if (settled) {
+      await _dropGroupLeftovers(live);
       await _sweepUnnamedMedia(bootAt.subtract(const Duration(minutes: 10)));
     }
     if (saved != null) {
@@ -11567,7 +11702,8 @@ class AppState extends ChangeNotifier {
   Future<IntroFrame?> _introCardFor(String haloId, String note) async {
     // the dev chat is never handed on
     if (isDevId(haloId)) return null;
-    final c = await live.getContact(haloId);
+    // a hidden chat's row is in the open vault
+    final c = await _ownerOf(haloId).getContact(haloId);
     if (c == null || (c['accepted'] as int? ?? 0) != 1) return null;
     var x = (c['xpub'] as String?) ?? '';
     if (x.isEmpty) x = await signalSession.peerXPubHex(haloId) ?? '';
@@ -11669,7 +11805,7 @@ class AppState extends ChangeNotifier {
     final groupId = newMsgUid();
     await session.createRoom(
       groupId: groupId,
-      name: name.trim().isEmpty ? 'room' : name.trim(),
+      name: name.trim().isEmpty ? l10n.homeRoom : name.trim(),
       priv: k.priv,
       pub: k.pub,
       expiresAt: DateTime.now().add(expiry).millisecondsSinceEpoch,
@@ -11682,8 +11818,8 @@ class AppState extends ChangeNotifier {
     if (!sessionQuiet) {
       engine.roomSubscribeFcBg(k.priv);
       _roomSubs[k.pub] = {};
-      _armRoomTimer();
     }
+    _armRoomTimer();
     await refreshGroups();
     return groupId;
   }
@@ -11725,6 +11861,7 @@ class AppState extends ChangeNotifier {
     );
     // a quiet session keeps the room on this phone: the hello never leaves
     if (sessionQuiet) {
+      _armRoomTimer();
       await refreshGroups();
       return l10n.appJoinedButTheCreator(link.name);
     }
@@ -11784,9 +11921,14 @@ class AppState extends ChangeNotifier {
     if (devIdClaim(who)) return;
     final groupId = g['group_id'] as String;
     final members = await live.getGroupMembers(groupId);
-    final cap = g['member_cap'] as int?;
+    // no room is bigger than a group: a longer roster is one no member
+    // would take
+    final cap = min(
+      (g['member_cap'] as int?) ?? kGroupMemberCap,
+      kGroupMemberCap,
+    );
     if (!members.contains(who)) {
-      if (cap != null && members.length >= cap) {
+      if (members.length >= cap) {
         dlog('room: full, ignoring join');
         return;
       }
@@ -11863,6 +12005,8 @@ class AppState extends ChangeNotifier {
     }
     await d.deleteGroupMessages(groupId);
     await d.deleteGroup(groupId);
+    // what it put in the shade goes with it
+    await _io.unnotify('group:$groupId');
     // the line in the list is only for a room of the session on screen: an
     // everyday room ending while the decoy is open says nothing there
     if (expired && identical(d, session.primary)) {
@@ -11886,10 +12030,23 @@ class AppState extends ChangeNotifier {
     await _destroyRoom(groupId);
   }
 
-  Future<void> _sweepRooms() async {
+  // every container a room can be made in: the everyday one, and the
+  // decoy's, whose rooms end on time too
+  List<HaloDb> get _roomHomes {
+    final out = <HaloDb>[live];
+    for (final d in [_decoyDb, session.primary]) {
+      if (d != null && !out.any((o) => identical(o, d))) out.add(d);
+    }
+    return out;
+  }
+
+  @visibleForTesting
+  Future<void> sweepRooms() async {
     final now = DateTime.now().millisecondsSinceEpoch;
-    for (final g in await live.expiredRooms(now)) {
-      await _destroyRoom(g['group_id'] as String, expired: true);
+    for (final d in _roomHomes) {
+      for (final g in await d.expiredRooms(now)) {
+        await _destroyRoom(g['group_id'] as String, expired: true, on: d);
+      }
     }
   }
 
@@ -11897,24 +12054,54 @@ class AppState extends ChangeNotifier {
   // own, this only has to notice the end.
   void _armRoomTimer() {
     _roomTimer ??= Timer.periodic(const Duration(seconds: 30), (_) {
-      if (!haloWiping) unawaited(_sweepRooms());
+      if (!haloWiping) unawaited(sweepRooms());
     });
   }
 
   // on boot: drop what ended while we were away, then listen to what lives
   Future<void> _subscribeRooms() async {
-    await _sweepRooms();
+    await sweepRooms();
+    final rooms = await _listenToRooms();
+    if (rooms > 0) _armRoomTimer();
+    dlog('rooms: listening to $rooms');
+    unawaited(_armForOtherRooms());
+  }
+
+  // the decoy opens on its own at boot, maybe only after the line above:
+  // its rooms are counted once it has, so they end on time too
+  Future<void> _armForOtherRooms() async {
+    await containersReady;
+    try {
+      for (final d in _roomHomes.skip(1)) {
+        if ((await d.rooms()).isNotEmpty) {
+          _armRoomTimer();
+          return;
+        }
+      }
+    } catch (e) {
+      dlog('rooms: other containers not counted ($e)');
+    }
+  }
+
+  @visibleForTesting
+  Future<void> subscribeRoomsAtBoot() => _subscribeRooms();
+
+  @visibleForTesting
+  bool get roomTimerArmed => _roomTimer != null;
+
+  // every everyday room's lanes, each runner started again, so all of
+  // them dial the relays of the mode now in use
+  Future<int> _listenToRooms() async {
     final rooms = await live.rooms();
     for (final g in rooms) {
       final gid = g['group_id'] as String;
       final priv = g['room_priv'] as String;
       final pub = g['room_pub'] as String;
-      _roomSubs.putIfAbsent(pub, () => {});
+      _roomSubs[pub] = {};
       if ((g['is_admin'] as int? ?? 0) == 1) engine.roomSubscribeFcBg(priv);
       await _subscribeRoomMembers(gid);
     }
-    if (rooms.isNotEmpty) _armRoomTimer();
-    dlog('rooms: listening to ${rooms.length}');
+    return rooms.length;
   }
 
   Future<void> _sendControlToGroup(String groupId, GroupControl gc) async {
@@ -12365,9 +12552,7 @@ class AppState extends ChangeNotifier {
   ) async {
     final groupId = newMsgUid();
     final full = [sessionId, ...memberHaloIds];
-    if (full.length > kGroupMemberCap) {
-      throw StateError('a group can hold up to $kGroupMemberCap people.');
-    }
+    if (full.length > kGroupMemberCap) throw const GroupFull();
     await session.createGroup(
       groupId,
       name,
@@ -12404,7 +12589,7 @@ class AppState extends ChangeNotifier {
     if ((group['is_admin'] as int? ?? 0) != 1) return;
     final existingMembers = await session.getGroupMembers(groupId);
     if (existingMembers.length + newHaloIds.length > kGroupMemberCap) {
-      throw StateError('a group can hold up to $kGroupMemberCap people.');
+      throw const GroupFull();
     }
     for (final h in newHaloIds) {
       await session.addGroupMember(groupId, h);
@@ -12494,7 +12679,7 @@ class AppState extends ChangeNotifier {
   }
 
   // anyone can leave. tells the remaining members so they can drop us from
-  // their copies. caller deletes the group locally.
+  // their copies, then the group goes from here with all it held
   Future<void> leaveGroupAndAnnounce(String groupId) async {
     if (await _roomOf(groupId, session.primary) != null) {
       return leaveRoom(groupId);
@@ -12502,9 +12687,26 @@ class AppState extends ChangeNotifier {
     final gc = GroupControl(type: 'leave');
     // a quiet session keeps it on this phone: nothing leaves
     if (!sessionQuiet) await _sendControlToGroup(groupId, gc);
+    await session.clearGroupConversation(groupId);
     await session.deleteGroup(groupId);
+    await _io.unnotify('group:$groupId');
+    _bumpChatRev('group:$groupId');
     await refreshGroups();
   }
+
+  // a group this phone was taken out of: its messages, files and row, and
+  // what it left in the shade
+  Future<void> _dropGroup(String groupId, HaloDb db) async {
+    await db.clearGroupConversation(groupId);
+    await db.deleteGroup(groupId);
+    await _io.unnotify('group:$groupId');
+  }
+
+  // groups this phone was taken out of, by name, until the open screen of
+  // one says so
+  final Map<String, String> _removedFrom = {};
+
+  String? takeRemovedFrom(String groupId) => _removedFrom.remove(groupId);
 
   // the engine's own identity, which only the everyday container holds
   Future<void> regenerateIdentity() async {

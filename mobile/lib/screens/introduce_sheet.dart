@@ -37,6 +37,14 @@ Future<void> showIntroduceSheet(
   if (toast != null && context.mounted) showHaloToast(context, toast);
 }
 
+// what an introduction of [b] and [c] says once it is sent
+String introduceOutcome(({bool toFirst, bool toSecond}) r, String b, String c) {
+  if (r.toFirst && r.toSecond) return l10n.introduceIntroduced(b, c);
+  if (r.toFirst) return l10n.introduceGotItButCould(b, c);
+  if (r.toSecond) return l10n.introduceGotItButCouldNotBe(c, b);
+  return l10n.introduceCouldNotReachEither;
+}
+
 class _IntroduceSheet extends StatefulWidget {
   final String peerId;
   final String peerName;
@@ -104,17 +112,12 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
     }
     final b = widget.peerName;
     final c = _nameOf(other);
-    if (r.toFirst && r.toSecond) {
-      Navigator.of(context).pop('introduced');
-    } else if (any) {
-      Navigator.of(context).pop(
-        r.toFirst
-            ? l10n.introduceGotItButCould(b, c)
-            : l10n.introduceGotItButCouldNotBe(c, b),
-      );
+    final said = introduceOutcome(r, b, c);
+    if (any) {
+      Navigator.of(context).pop(said);
     } else {
       setState(() => _sending = false);
-      showHaloToast(context, l10n.introduceCouldNotReachEither);
+      showHaloToast(context, said);
     }
   }
 

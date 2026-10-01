@@ -3,7 +3,7 @@
 // sheet, one button. the link comes right after.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../main.dart' show appState;
+import '../main.dart' show appState, AppState;
 import '../rooms.dart';
 import '../theme.dart';
 import '../widgets/notice_banner.dart';
@@ -162,7 +162,9 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
                         Text(
                           _capOn
                               ? l10n.roomCreateNoOnePastThe(_cap)
-                              : l10n.roomCreateOffAnyoneWithThe,
+                              : l10n.roomCreateOffUpTo(
+                                  AppState.kGroupMemberCap,
+                                ),
                           style: HaloType.mono(
                             size: 9.5,
                             color: HaloColors.text3,

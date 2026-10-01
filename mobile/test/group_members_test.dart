@@ -96,14 +96,37 @@ const _creator = 'cc';
 const _m1 = 'ee';
 const _room = 'room00000001';
 
+// the room lanes the app opens and drops, and what it sends into a room
 class _Engine implements HaloEngine {
+  final listens = <String>[];
+  final dropBoxes = <String>[];
+  final unlistened = <String>[];
+  final roomSent = <String>[];
+
   @override
-  void roomSubscribeBg(String priv, String peerPub) {}
+  void roomSubscribeBg(String priv, String peerPub) => listens.add(peerPub);
+  @override
+  void roomSubscribeFcBg(String priv) => dropBoxes.add(priv);
+  @override
+  void roomUnsubscribeBg(String pub) => unlistened.add(pub);
+  @override
+  void roomForgetBg(String priv, List<String> members) {}
+  @override
+  Future<String> roomSend(String priv, String peerPub, String msg) async {
+    roomSent.add(peerPub);
+    return 'ok';
+  }
+
   @override
   dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
 }
 
-Future<(ArrivalRows, AppState)> _roomWorld({int? cap = 4}) async {
+late _Engine _engine;
+
+Future<(ArrivalRows, AppState)> _roomWorld({
+  int? cap = 4,
+  ArrivalIo? io,
+}) async {
   final live = ArrivalRows(HaloContainer.everyday);
   live.group(_room, [_roomPub, _creator, _m1], admin: _creator);
   live.groupRows[_room]!.addAll({
@@ -115,10 +138,46 @@ Future<(ArrivalRows, AppState)> _roomWorld({int? cap = 4}) async {
   });
   final router = VaultRouter(ArrivalStore(), ArrivalSeal());
   await router.load();
-  useEngineForTest(_Engine());
+  useEngineForTest(_engine = _Engine());
+  final app = AppState(io: io ?? ArrivalIo(), router: router)..myId = 'me';
+  useDatabasesForTest(live, Session(live));
+  return (live, app);
+}
+
+// a room this phone made, its own key [_mine], with [n] keys besides
+final _mine = 'a1' * 32;
+String _hexKey(int i) => i.toRadixString(16).padLeft(64, 'b');
+
+Future<(ArrivalRows, AppState)> _myRoom(int n, {int? cap}) async {
+  final live = ArrivalRows(HaloContainer.everyday);
+  live.group(_room, [_mine, for (var i = 0; i < n; i++) _hexKey(i)]);
+  live.groupRows[_room]!.addAll({
+    'is_admin': 1,
+    'admin_id': _mine,
+    'room_priv': 'priv',
+    'room_pub': _mine,
+    'expires_at': DateTime.now().millisecondsSinceEpoch + 3600000,
+    'creator_pub': _mine,
+    'member_cap': cap,
+  });
+  final router = VaultRouter(ArrivalStore(), ArrivalSeal());
+  await router.load();
+  useEngineForTest(_engine = _Engine());
   final app = AppState(io: ArrivalIo(), router: router)..myId = 'me';
   useDatabasesForTest(live, Session(live));
   return (live, app);
+}
+
+// someone off the link knocking on the drop box of the room above
+Future<void> _knock(AppState app, String who) async {
+  final plain = await wrapMessage(
+    '',
+    groupId: _room,
+    groupControl: const GroupControl(type: 'join'),
+    sender: SenderInfo(haloId: who, edPub: '', onion: '', xPub: ''),
+  );
+  await app.receiveRelay([(peer: 'roomfc:$_mine', cipher: plain)]);
+  await _settle();
 }
 
 // a frame off the room's lane from the member key [from]
@@ -449,5 +508,154 @@ void main() {
       );
       expect(live.members[_room], hasLength(4));
     });
+  });
+
+  group('taken out, or leaving', () {
+    Future<void> said(_World w, String uid) async => w.from(
+      _v,
+      await wrapMessage('hi', groupId: _g, msgUid: uid, sender: asSender(_v)),
+    );
+
+    test('the admin taking me out takes the group and all it held, and the '
+        'open screen hears it once', () async {
+      final w = await _World.make();
+      await said(w, 'h1');
+      expect(w.live.msg('h1'), isNotNull);
+      await w.control(_a, const GroupControl(type: 'remove', members: ['me']));
+      expect(w.live.groupRows.containsKey(_g), isFalse);
+      expect(w.live.msgs.where((m) => m['group_id'] == _g), isEmpty);
+      expect(w.io.unrang, contains('group:$_g'));
+      expect(w.app.takeRemovedFrom(_g), _g);
+      expect(w.app.takeRemovedFrom(_g), isNull);
+    });
+
+    test('someone else taken out leaves nothing to say here', () async {
+      final w = await _World.make();
+      await w.control(_a, const GroupControl(type: 'remove', members: [_v]));
+      expect(w.app.takeRemovedFrom(_g), isNull);
+      expect(w.io.unrang, isEmpty);
+    });
+
+    test(
+      'leaving takes the group and all it held, and tells the rest',
+      () async {
+        final w = await _World.make();
+        await said(w, 'h2');
+        w.io.sent.clear();
+        await w.app.leaveGroupAndAnnounce(_g);
+        expect(w.live.groupRows.containsKey(_g), isFalse);
+        expect(w.live.msgs.where((m) => m['group_id'] == _g), isEmpty);
+        expect(w.io.unrang, contains('group:$_g'));
+        expect(w.io.sent, hasLength(2));
+        // leaving is not being taken out
+        expect(w.app.takeRemovedFrom(_g), isNull);
+      },
+    );
+
+    test('the creator taking my room key out ends the room here', () async {
+      final io = ArrivalIo();
+      final (live, app) = await _roomWorld(io: io);
+      await _inRoom(
+        app,
+        _creator,
+        const GroupControl(type: 'remove', members: [_roomPub]),
+      );
+      expect(live.groupRows.containsKey(_room), isFalse);
+      expect(_engine.unlistened, [_roomPub]);
+      expect(io.unrang, contains('group:$_room'));
+      expect(app.takeRemovedFrom(_room), _room);
+    });
+
+    test('the creator taking another key out keeps the room', () async {
+      final (live, app) = await _roomWorld();
+      await _inRoom(
+        app,
+        _creator,
+        const GroupControl(type: 'remove', members: [_m1]),
+      );
+      expect(live.members[_room], [_roomPub, _creator]);
+      expect(app.takeRemovedFrom(_room), isNull);
+    });
+  });
+
+  group('a burner room\'s life', () {
+    test(
+      'a room past its end goes from the decoy too, and from its shade',
+      () async {
+        final io = ArrivalIo();
+        final (live, app) = await _roomWorld(io: io);
+        final decoy = ArrivalRows(HaloContainer.decoy);
+        decoy.group('decoyroom001', ['dd']);
+        decoy.groupRows['decoyroom001']!.addAll({
+          'room_priv': 'p2',
+          'room_pub': 'dd',
+          'expires_at': DateTime.now().millisecondsSinceEpoch - 1000,
+        });
+        useDatabasesForTest(live, Session(decoy));
+        await app.sweepRooms();
+        expect(decoy.groupRows, isEmpty);
+        expect(io.unrang, ['group:decoyroom001']);
+        // the everyday room has time left; a quiet room never was listened to
+        expect(live.groupRows.containsKey(_room), isTrue);
+        expect(_engine.unlistened, isEmpty);
+      },
+    );
+
+    test(
+      'a decoy opening after the rooms were counted still ends its rooms',
+      () async {
+        final live = ArrivalRows(HaloContainer.everyday);
+        final router = VaultRouter(ArrivalStore(), ArrivalSeal());
+        await router.load();
+        useEngineForTest(_engine = _Engine());
+        final app = AppState(io: ArrivalIo(), router: router)..myId = 'me';
+        useDatabasesForTest(live, Session(live));
+        await app.subscribeRoomsAtBoot();
+        expect(app.roomTimerArmed, isFalse);
+        final decoy = ArrivalRows(HaloContainer.decoy);
+        decoy.group('decoyroom001', ['dd']);
+        decoy.groupRows['decoyroom001']!.addAll({
+          'room_priv': 'p2',
+          'room_pub': 'dd',
+          'expires_at': DateTime.now().millisecondsSinceEpoch + 3600000,
+        });
+        useDatabasesForTest(live, Session(decoy));
+        app.containersOpenedForTest();
+        await pumpEventQueue();
+        expect(app.roomTimerArmed, isTrue);
+      },
+    );
+
+    test('a new mode lands its relays before any runner starts again', () {
+      final src = File('lib/main.dart').readAsStringSync();
+      final mode = src.substring(src.indexOf('Future<void> setSendMode('));
+      final init = mode.indexOf('await _nostrInitOnIsolate(relaysFor(m));');
+      expect(init, isNonNegative);
+      expect(init, lessThan(mode.indexOf('await resubscribe();')));
+    });
+
+    test('a new mode listens to every room again', () async {
+      final (_, app) = await _myRoom(2);
+      await app.resubscribe();
+      await app.resubscribe();
+      expect(_engine.listens, [_hexKey(0), _hexKey(1), _hexKey(0), _hexKey(1)]);
+      expect(_engine.dropBoxes, ['priv', 'priv']);
+    });
+
+    test(
+      'a room with no cap of its own takes no one past a group\'s cap',
+      () async {
+        final (live, app) = await _myRoom(AppState.kGroupMemberCap - 2);
+        final last = _hexKey(900);
+        await _knock(app, last);
+        expect(live.members[_room], hasLength(AppState.kGroupMemberCap));
+        expect(_engine.roomSent, isNotEmpty);
+        _engine.roomSent.clear();
+        await _knock(app, _hexKey(901));
+        expect(live.members[_room], hasLength(AppState.kGroupMemberCap));
+        expect(live.members[_room], isNot(contains(_hexKey(901))));
+        expect(_engine.roomSent, isEmpty);
+      },
+    );
   });
 }

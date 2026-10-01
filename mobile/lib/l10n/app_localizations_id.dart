@@ -2623,6 +2623,20 @@ class AppLocalizationsId extends AppLocalizations {
       'Dia tidak akan lagi menerima pesan dari grup ini.';
 
   @override
+  String appGroupHoldsUpTo(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Satu grup paling banyak $countString orang',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get commonRemove => 'Hapus';
 
   @override
@@ -2649,8 +2663,21 @@ class AppLocalizationsId extends AppLocalizations {
       'Semua isinya langsung dihapus total dari ponsel ini, dan kunci yang kamu pakai di sini hilang selamanya.';
 
   @override
-  String get groupInfoYouWillStopReceiving =>
-      'Kamu tidak akan lagi menerima pesan, dan anggota lain akan melihat kamu keluar.';
+  String groupChatYouWereRemovedFrom(Object name) {
+    return 'Kamu dikeluarkan dari $name';
+  }
+
+  @override
+  String get groupInfoLeaveGroupLine =>
+      'Kamu tidak akan lagi menerima pesannya, dan semua isinya dihapus dari ponsel ini.';
+
+  @override
+  String get groupInfoLeaveGroupAdmin =>
+      'Kamu tidak akan lagi menerima pesannya, dan semua isinya dihapus dari ponsel ini. Kamu adminnya, jadi setelah kamu keluar tidak ada yang bisa mengubah anggota atau mengganti namanya.';
+
+  @override
+  String get groupInfoLeaveRoomMaker =>
+      'Semua isinya langsung dihapus total dari ponsel ini, dan kunci yang kamu pakai di sini hilang selamanya. Kamu yang membuat ruang ini, jadi tautannya tidak bisa lagi dipakai untuk masuk.';
 
   @override
   String get groupInfoLeave => 'Keluar';
@@ -3164,6 +3191,11 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String introduceGotItButCouldNotBe(Object c, Object b) {
     return '$c sudah menerimanya, tapi $b tidak bisa dihubungi';
+  }
+
+  @override
+  String introduceIntroduced(Object b, Object c) {
+    return '$b dan $c sekarang punya kartu satu sama lain';
   }
 
   @override
@@ -4678,8 +4710,18 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get roomCreateOffAnyoneWithThe =>
-      'Mati. Siapa pun yang punya tautannya';
+  String roomCreateOffUpTo(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Mati. Siapa pun yang punya tautannya, paling banyak $countString',
+    );
+    return '$_temp0';
+  }
 
   @override
   String roomCreateThisRoomAndEverything(Object expiryWords) {

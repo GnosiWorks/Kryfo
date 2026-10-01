@@ -2679,6 +2679,23 @@ class AppLocalizationsUk extends AppLocalizations {
       'Цей учасник більше не отримуватиме повідомлень із цієї групи.';
 
   @override
+  String appGroupHoldsUpTo(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'У групі може бути не більше $countString учасника',
+      many: 'У групі може бути не більше $countString учасників',
+      few: 'У групі може бути не більше $countString учасників',
+      one: 'У групі може бути не більше $countString учасника',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get commonRemove => 'Прибрати';
 
   @override
@@ -2705,8 +2722,21 @@ class AppLocalizationsUk extends AppLocalizations {
       'Усе, що в ній є, одразу буде стерто з цього телефону, а твій ключ від неї зникне назавжди.';
 
   @override
-  String get groupInfoYouWillStopReceiving =>
-      'Ти перестанеш отримувати повідомлення, а інші учасники побачать твій вихід.';
+  String groupChatYouWereRemovedFrom(Object name) {
+    return 'Тебе видалили з «$name»';
+  }
+
+  @override
+  String get groupInfoLeaveGroupLine =>
+      'Ти перестанеш отримувати її повідомлення, а все, що в ній є, буде стерто з цього телефону.';
+
+  @override
+  String get groupInfoLeaveGroupAdmin =>
+      'Ти перестанеш отримувати її повідомлення, а все, що в ній є, буде стерто з цього телефону. Ти її адмін, тож після твого виходу ніхто не зможе змінювати склад групи чи перейменувати її.';
+
+  @override
+  String get groupInfoLeaveRoomMaker =>
+      'Усе, що в ній є, одразу буде стерто з цього телефону, а твій ключ від неї зникне назавжди. Це твоя кімната, тож за її посиланням більше ніхто не ввійде.';
 
   @override
   String get groupInfoLeave => 'Вийти';
@@ -3240,6 +3270,11 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String introduceGotItButCouldNotBe(Object c, Object b) {
     return '$c - доставлено, $b - не вдалося зв’язатися';
+  }
+
+  @override
+  String introduceIntroduced(Object b, Object c) {
+    return '$b і $c отримали картки одне одного';
   }
 
   @override
@@ -4758,7 +4793,18 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get roomCreateOffAnyoneWithThe => 'Вимкнено. Будь-хто з посиланням';
+  String roomCreateOffUpTo(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Вимкнено. Будь-хто з посиланням, максимум $countString',
+    );
+    return '$_temp0';
+  }
 
   @override
   String roomCreateThisRoomAndEverything(Object expiryWords) {
