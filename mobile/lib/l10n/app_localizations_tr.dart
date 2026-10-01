@@ -7489,4 +7489,26 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get requestsSomeoneNew => 'Yeni biri';
+
+  @override
+  String get appYourOwnInvite =>
+      'Bu senin kendi davetin. Bağlanmak için başka biriyle paylaş.';
+
+  @override
+  String appTheyAreBlocked(Object id) {
+    return '$id engellendi. Yeniden eklemek için Ayarlar’daki “Engellenenler”den engelini kaldır.';
+  }
+
+  @override
+  String get devLinkGone =>
+      'Marios ile sohbeti sildin. Yenisini başlatmak için Ayarlar’da “Marios’a yaz”a dokun.';
+
+  @override
+  String get pairCodeCouldNotReach =>
+      'Bağlanılamadı. Bağlantını kontrol edip yeniden dene.';
+
+  @override
+  String lockTooManyTriesFor(Object left) {
+    return 'Çok fazla deneme · $left';
+  }
 }

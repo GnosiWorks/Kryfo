@@ -1951,5 +1951,10 @@
   "devChatOptions": "Opções da conversa",
   "appLinkOtherKey": "Este link diz que é {id}, mas a chave dele não corresponde. Não foi adicionado.",
   "scamShieldSaysItIs": "Diz que é {shown}, mas a chave não corresponde",
-  "requestsSomeoneNew": "Alguém novo"
+  "requestsSomeoneNew": "Alguém novo",
+  "appYourOwnInvite": "Este é o seu próprio convite. Compartilhe com outra pessoa para se conectar.",
+  "appTheyAreBlocked": "Você bloqueou {id}. Desbloqueie em “Bloqueados”, nas Configurações, para adicionar de novo.",
+  "devLinkGone": "Você apagou a conversa com o Marios. Para começar uma nova, toque em “Escrever para o Marios” nas Configurações.",
+  "pairCodeCouldNotReach": "Não foi possível conectar. Verifique sua conexão e tente de novo.",
+  "lockTooManyTriesFor": "Tentativas demais · {left}"
 }

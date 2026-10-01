@@ -703,6 +703,24 @@ void main() {
       expect(_names(back).where((n) => hiddenPart(n) != null), isEmpty);
     });
 
+    test('carries the supporter badge and the face picked', () async {
+      await _phone(docs, hidden: false);
+      SharedPreferences.setMockInitialValues({
+        'supporter_tier': 'supporter',
+        'supporter_receipt_payload': 'payload',
+        'supporter_receipt_sig': 'sig',
+        'd.supporter_tier': 'decoy',
+      });
+      await const FlutterSecureStorage().write(key: 'my_avatar', value: '17');
+      final m = (await draftBackup(stage, side: side)).manifest;
+      expect(m['prefs'], {
+        'supporter_tier': 'supporter',
+        'supporter_receipt_payload': 'payload',
+        'supporter_receipt_sig': 'sig',
+      });
+      expect((m['secure'] as Map)['my_avatar'], '17');
+    });
+
     test('reads the same with no hidden chats at all', () async {
       await _phone(docs, hidden: false);
       final d = await draftBackup(stage, side: side);
@@ -1114,6 +1132,8 @@ void main() {
       });
       expect(d.manifest['v'], 2);
       expect(d.manifest['moved'], isFalse);
+      // set up, as boot reads it, wherever the file is restored
+      expect(d.manifest['onboardingDone'], 'true');
       expect(d.manifest['edPriv'], 'decoy-ed');
       expect(d.manifest['dbPassphrase'], "x'${'2e' * 32}'");
       expect(_names(d.manifest), ['halo.db', 'onion.key', 'media/d1.jpg']);

@@ -148,6 +148,20 @@ void main() {
     expect(q.added, isEmpty);
   });
 
+  testWidgets('no network is said as that, not as an empty code, and '
+      'not in the engine\'s words', (t) async {
+    phone(t);
+    final p = _Pair(['error: unreachable']);
+    await t.pumpWidget(app(p.widget()));
+    await _look(t);
+    await t.pumpAndSettle();
+    expect(p.looked, hasLength(1));
+    expect(find.text(l10n.pairCodeCouldNotReach), findsOneWidget);
+    expect(find.text(l10n.pairCodeNothingAtThatCode), findsNothing);
+    expect(find.textContaining('unreachable'), findsNothing);
+    expect(p.added, isEmpty);
+  });
+
   testWidgets('the card springs in and settles within 300 ms', (t) async {
     phone(t);
     final p = _Pair([_invite]);

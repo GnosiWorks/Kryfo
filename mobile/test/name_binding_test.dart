@@ -20,6 +20,7 @@ import 'package:kryfo/main.dart'
     show
         AppIo,
         AppState,
+        appState,
         HaloEngine,
         buildHaloUri,
         haloUriV3,
@@ -398,6 +399,60 @@ void main() {
       await handleHaloUriAdded(buildHaloUri(_amber, 'o-amber', amber.xPub)),
       (l10n.appPeerImportedV1(_amber), false),
     );
+  });
+
+  group('adding by link', () {
+    setUp(() => appState.myId = _me);
+    tearDown(() => appState.myId = '');
+
+    test('my own card adds no one', () async {
+      final mine = haloUriV3(
+        _me,
+        'o-me',
+        Uri.encodeQueryComponent(await makePreKeyBundleB64()),
+        'ab' * 32,
+      );
+      expect(await handleHaloUriAdded(mine), (l10n.appYourOwnInvite, false));
+      expect(live.people.containsKey(_me), isFalse);
+      expect(live.rowWrites, isEmpty);
+    });
+
+    test('someone blocked stays blocked and is told so', () async {
+      const blocked = 'blocked-before-asked';
+      final them = await _phone();
+      live.person(blocked, accepted: 0);
+      live.people[blocked]!['blocked'] = 1;
+      final card = haloUriV3(
+        blocked,
+        'o-them',
+        Uri.encodeQueryComponent(await makePreKeyBundleB64(them.ss)),
+        'ab' * 32,
+      );
+      expect(await handleHaloUriAdded(card), (
+        l10n.appTheyAreBlocked(blocked),
+        false,
+      ));
+      expect(live.people[blocked], containsPair('accepted', 0));
+      expect(live.people[blocked], containsPair('blocked', 1));
+      expect(live.rowWrites, isEmpty);
+    });
+
+    test('someone added is in the chat list at once', () async {
+      const fresh = 'fresh-from-search';
+      final them = await _phone();
+      final card = haloUriV3(
+        fresh,
+        'o-fresh',
+        Uri.encodeQueryComponent(await makePreKeyBundleB64(them.ss)),
+        'ab' * 32,
+      );
+      expect(appState.contacts.where((c) => c.haloId == fresh), isEmpty);
+      expect(await handleHaloUriAdded(card), (
+        l10n.appAddedYouCanMessage(fresh),
+        true,
+      ));
+      expect(appState.contacts.where((c) => c.haloId == fresh), hasLength(1));
+    });
   });
 
   test('a card with the key already here reads as saved', () async {

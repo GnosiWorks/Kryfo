@@ -1951,5 +1951,10 @@
   "devChatOptions": "خيارات المحادثة",
   "appLinkOtherKey": "يدّعي هذا الرابط أنه ⁨{id}⁩، لكن مفتاحه غير مطابق. لم تتم إضافة شيء.",
   "scamShieldSaysItIs": "يقول إنه ⁨{shown}⁩، لكن مفتاحه غير مطابق",
-  "requestsSomeoneNew": "شخص جديد"
+  "requestsSomeoneNew": "شخص جديد",
+  "appYourOwnInvite": "هذه دعوتك أنت. شاركها مع شخص آخر للتواصل.",
+  "appTheyAreBlocked": "لقد حظرت ⁨{id}⁩. ألغِ الحظر من «المحظورون» في الإعدادات لتضيفه من جديد.",
+  "devLinkGone": "لقد حذفت المحادثة مع Marios. لبدء محادثة جديدة، اضغط «مراسلة Marios» في الإعدادات.",
+  "pairCodeCouldNotReach": "تعذّر الاتصال. تحقّق من اتصالك وحاول مجددًا.",
+  "lockTooManyTriesFor": "محاولات كثيرة جدًا · ⁨{left}⁩"
 }

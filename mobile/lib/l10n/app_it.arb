@@ -1951,5 +1951,10 @@
   "devChatOptions": "Opzioni della chat",
   "appLinkOtherKey": "Questo link dice di essere {id}, ma la sua chiave non corrisponde. Non è stato aggiunto.",
   "scamShieldSaysItIs": "Dice di essere {shown}, ma la sua chiave non corrisponde",
-  "requestsSomeoneNew": "Qualcuno di nuovo"
+  "requestsSomeoneNew": "Qualcuno di nuovo",
+  "appYourOwnInvite": "È il tuo invito. Condividilo con qualcun altro per collegarvi.",
+  "appTheyAreBlocked": "Hai bloccato {id}. Sbloccalo da «Bloccati» nelle Impostazioni per aggiungerlo di nuovo.",
+  "devLinkGone": "Hai eliminato la chat con Marios. Per iniziarne una nuova, tocca «Scrivi a Marios» nelle Impostazioni.",
+  "pairCodeCouldNotReach": "Impossibile connettersi. Controlla la connessione e riprova.",
+  "lockTooManyTriesFor": "Troppi tentativi · {left}"
 }

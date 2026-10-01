@@ -9415,5 +9415,35 @@
   "requestsSomeoneNew": "Someone new",
   "@requestsSomeoneNew": {
     "description": "screens/requests_screen.dart: the name on a request from someone filed on an id of their own, because the name they gave is bound here to another key. the shield line under it says which name they gave"
+  },
+  "appYourOwnInvite": "This is your own invite. Share it with someone else to connect.",
+  "@appYourOwnInvite": {
+    "description": "main.dart: a link, card or handle that is your own was added"
+  },
+  "appTheyAreBlocked": "You blocked {id}. Unblock them under Blocked in Settings to add them again.",
+  "@appTheyAreBlocked": {
+    "description": "main.dart: adding someone who is blocked; the Blocked page in Settings lets them back",
+    "placeholders": {
+      "id": {
+        "type": "Object"
+      }
+    }
+  },
+  "devLinkGone": "You deleted the chat with Marios. To start a new one, tap Write to Marios in Settings.",
+  "@devLinkGone": {
+    "description": "main.dart: the developer's card opened after his chat was deleted; only the settings row starts a new one"
+  },
+  "pairCodeCouldNotReach": "Couldn't get through. Check your connection and try again.",
+  "@pairCodeCouldNotReach": {
+    "description": "widgets/pair_code_panel.dart, widgets/pair_join.dart: no network answered, so nothing is known about the code"
+  },
+  "lockTooManyTriesFor": "Too many tries · {left}",
+  "@lockTooManyTriesFor": {
+    "description": "lock_state.dart: the pad is held past a minute and a half; left is minutes:seconds or hours:minutes:seconds",
+    "placeholders": {
+      "left": {
+        "type": "Object"
+      }
+    }
   }
 }

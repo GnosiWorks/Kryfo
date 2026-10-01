@@ -7526,4 +7526,26 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get requestsSomeoneNew => 'Qualcuno di nuovo';
+
+  @override
+  String get appYourOwnInvite =>
+      'È il tuo invito. Condividilo con qualcun altro per collegarvi.';
+
+  @override
+  String appTheyAreBlocked(Object id) {
+    return 'Hai bloccato $id. Sbloccalo da «Bloccati» nelle Impostazioni per aggiungerlo di nuovo.';
+  }
+
+  @override
+  String get devLinkGone =>
+      'Hai eliminato la chat con Marios. Per iniziarne una nuova, tocca «Scrivi a Marios» nelle Impostazioni.';
+
+  @override
+  String get pairCodeCouldNotReach =>
+      'Impossibile connettersi. Controlla la connessione e riprova.';
+
+  @override
+  String lockTooManyTriesFor(Object left) {
+    return 'Troppi tentativi · $left';
+  }
 }

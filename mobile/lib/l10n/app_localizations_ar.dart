@@ -7583,4 +7583,25 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get requestsSomeoneNew => 'شخص جديد';
+
+  @override
+  String get appYourOwnInvite => 'هذه دعوتك أنت. شاركها مع شخص آخر للتواصل.';
+
+  @override
+  String appTheyAreBlocked(Object id) {
+    return 'لقد حظرت ⁨$id⁩. ألغِ الحظر من «المحظورون» في الإعدادات لتضيفه من جديد.';
+  }
+
+  @override
+  String get devLinkGone =>
+      'لقد حذفت المحادثة مع Marios. لبدء محادثة جديدة، اضغط «مراسلة Marios» في الإعدادات.';
+
+  @override
+  String get pairCodeCouldNotReach =>
+      'تعذّر الاتصال. تحقّق من اتصالك وحاول مجددًا.';
+
+  @override
+  String lockTooManyTriesFor(Object left) {
+    return 'محاولات كثيرة جدًا · ⁨$left⁩';
+  }
 }

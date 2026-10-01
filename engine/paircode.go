@@ -128,23 +128,26 @@ var pairCollectWindow = 3 * time.Second
 const pairQueryLimit = 100
 
 // what one relay sent, and which one by its place in the list: an event, or
-// nil once it has sent everything it holds (or could not be asked)
+// nil once it has sent everything it holds (or could not be asked). heard
+// is true when that end came from the relay itself
 type pairAnswer struct {
-	from int
-	ev   *nostr.Event
+	from  int
+	ev    *nostr.Event
+	heard bool
 }
 
 // ask every relay at once and keep everything they hold at the address. a
 // one-shot lookup, not a subscription: the caller polls while the screen is
 // open. it ends once every relay has answered, a few seconds after the first
 // event, or at the deadline, whichever comes first. full is true, and it ends
-// at once, when one relay's answer reaches pairQueryLimit.
-func pairCodeQuery(ctx context.Context, pk string) (got []nostr.Event, full bool) {
+// at once, when one relay's answer reaches pairQueryLimit. heard is false
+// when no relay answered at all, which is no answer about the code.
+func pairCodeQuery(ctx context.Context, pk string) (got []nostr.Event, full, heard bool) {
 	nostrMu.Lock()
 	urls := append([]string(nil), nostrRelays...)
 	nostrMu.Unlock()
 	if len(urls) == 0 {
-		return nil, false
+		return nil, false, false
 	}
 
 	qctx, cancel := context.WithCancel(ctx)
@@ -155,15 +158,15 @@ func pairCodeQuery(ctx context.Context, pk string) (got []nostr.Event, full bool
 	for i, u := range urls {
 		go func(i int, u string) {
 			// every relay reports done exactly once, after its events
-			done := func() {
+			done := func(heard bool) {
 				select {
-				case out <- pairAnswer{from: i}:
+				case out <- pairAnswer{from: i, heard: heard}:
 				case <-qctx.Done():
 				}
 			}
 			client, err := torNostrClientFor(pairLane(pk))
 			if err != nil {
-				done()
+				done(false)
 				return
 			}
 			r := nostr.NewRelay(qctx, u, nostr.RelayOptions{})
@@ -171,7 +174,7 @@ func pairCodeQuery(ctx context.Context, pk string) (got []nostr.Event, full bool
 			err = r.ConnectWithClient(dctx, client)
 			dcancel()
 			if err != nil {
-				done()
+				done(false)
 				return
 			}
 			defer r.Close()
@@ -186,7 +189,7 @@ func pairCodeQuery(ctx context.Context, pk string) (got []nostr.Event, full bool
 				MaxWaitForEOSE: time.Duration(math.MaxInt64),
 			})
 			if err != nil {
-				done()
+				done(false)
 				return
 			}
 			eosed := false
@@ -195,13 +198,13 @@ func pairCodeQuery(ctx context.Context, pk string) (got []nostr.Event, full bool
 				case ev, alive := <-sub.Events:
 					if !alive {
 						if !eosed {
-							done()
+							done(false)
 						}
 						return
 					}
 					// never dropped: a second invite is exactly what this is for
 					select {
-					case out <- pairAnswer{i, &ev}:
+					case out <- pairAnswer{from: i, ev: &ev, heard: true}:
 					case <-qctx.Done():
 						return
 					}
@@ -211,7 +214,7 @@ func pairCodeQuery(ctx context.Context, pk string) (got []nostr.Event, full bool
 					// still counts
 					if !eosed {
 						eosed = true
-						done()
+						done(true)
 					}
 				case <-qctx.Done():
 					return
@@ -228,26 +231,27 @@ func pairCodeQuery(ctx context.Context, pk string) (got []nostr.Event, full bool
 	for {
 		select {
 		case a := <-out:
+			heard = heard || a.heard
 			if a.ev == nil {
 				pending--
 				if pending == 0 {
-					return got, false
+					return got, false, heard
 				}
 				continue
 			}
 			got = append(got, *a.ev)
 			if sent[a.from]++; sent[a.from] >= pairQueryLimit {
-				return got, true
+				return got, true, heard
 			}
 			if window == nil {
 				window = time.After(pairCollectWindow)
 			}
 		case <-window:
-			return got, false
+			return got, false, heard
 		case <-deadline.C:
-			return got, false
+			return got, false, heard
 		case <-ctx.Done():
-			return got, false
+			return got, false, heard
 		}
 	}
 }
@@ -268,10 +272,10 @@ func pairCodeLive(ev nostr.Event, now time.Time) bool {
 
 // look for an invite at the address the code names. returns the payload,
 // "empty" when nothing is there yet, since the other person may not have
-// pressed share, or "twice" when the relays that answer hold more than one
-// event there, or one answer is as long as a relay sends: a share is one
-// event, copied to each relay, and a code that points at two people points
-// at nobody.
+// pressed share, "error: unreachable" when no relay answered, or "twice"
+// when the relays that answer hold more than one event there, or one answer
+// is as long as a relay sends: a share is one event, copied to each relay,
+// and a code that points at two people points at nobody.
 //
 //export HaloPairCodeFetch
 func HaloPairCodeFetch(cCode *C.char) *C.char {
@@ -291,7 +295,10 @@ func pairCodeFetch(code string) string {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	evs, full := pairCodeQuery(ctx, pk)
+	evs, full, heard := pairCodeQuery(ctx, pk)
+	if !heard {
+		return "error: unreachable"
+	}
 	if full {
 		log.Printf("paircode: a full answer at %s..., none taken", pk[:12])
 		return "twice"

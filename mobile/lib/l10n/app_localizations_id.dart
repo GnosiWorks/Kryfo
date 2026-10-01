@@ -7456,4 +7456,26 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get requestsSomeoneNew => 'Orang baru';
+
+  @override
+  String get appYourOwnInvite =>
+      'Ini undanganmu sendiri. Bagikan ke orang lain untuk terhubung.';
+
+  @override
+  String appTheyAreBlocked(Object id) {
+    return 'Kamu memblokir $id. Buka blokirnya di “Diblokir” pada Pengaturan untuk menambahkannya lagi.';
+  }
+
+  @override
+  String get devLinkGone =>
+      'Kamu sudah menghapus chat dengan Marios. Untuk memulai yang baru, ketuk “Kirim pesan ke Marios” di Pengaturan.';
+
+  @override
+  String get pairCodeCouldNotReach =>
+      'Tidak bisa terhubung. Periksa koneksimu lalu coba lagi.';
+
+  @override
+  String lockTooManyTriesFor(Object left) {
+    return 'Terlalu banyak percobaan · $left';
+  }
 }

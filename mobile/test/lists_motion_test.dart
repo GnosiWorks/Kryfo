@@ -72,6 +72,12 @@ class _Db implements HaloDb {
       people.any((p) => p['halo_id'] == haloId && p['blocked'] == 1);
 
   @override
+  Future<Set<String>> blockedIds() async => {
+    for (final p in people)
+      if (p['blocked'] == 1) p['halo_id'] as String,
+  };
+
+  @override
   Future<String?> contactXPub(String haloId) async => 'x-$haloId';
 
   @override

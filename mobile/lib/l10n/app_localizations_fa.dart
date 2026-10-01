@@ -7477,4 +7477,26 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get requestsSomeoneNew => 'فردی تازه';
+
+  @override
+  String get appYourOwnInvite =>
+      'این دعوت خودتان است. برای ارتباط، آن را با کس دیگری هم‌رسانی کنید.';
+
+  @override
+  String appTheyAreBlocked(Object id) {
+    return '⁨$id⁩ را مسدود کرده‌اید. برای افزودن دوباره، از «مسدودشده‌ها» در تنظیمات رفع مسدودیت کنید.';
+  }
+
+  @override
+  String get devLinkGone =>
+      'گفتگو با Marios را حذف کرده‌اید. برای شروع گفتگوی تازه، در تنظیمات روی «پیام به Marios» بزنید.';
+
+  @override
+  String get pairCodeCouldNotReach =>
+      'اتصال برقرار نشد. اتصال خود را بررسی کنید و دوباره امتحان کنید.';
+
+  @override
+  String lockTooManyTriesFor(Object left) {
+    return 'تلاش بیش از حد · ⁨$left⁩';
+  }
 }

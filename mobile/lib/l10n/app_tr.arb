@@ -1951,5 +1951,10 @@
   "devChatOptions": "Sohbet seçenekleri",
   "appLinkOtherKey": "Bu bağlantı {id} olduğunu söylüyor ama anahtarı eşleşmiyor. Eklenmedi.",
   "scamShieldSaysItIs": "{shown} olduğunu söylüyor ama anahtarı eşleşmiyor",
-  "requestsSomeoneNew": "Yeni biri"
+  "requestsSomeoneNew": "Yeni biri",
+  "appYourOwnInvite": "Bu senin kendi davetin. Bağlanmak için başka biriyle paylaş.",
+  "appTheyAreBlocked": "{id} engellendi. Yeniden eklemek için Ayarlar’daki “Engellenenler”den engelini kaldır.",
+  "devLinkGone": "Marios ile sohbeti sildin. Yenisini başlatmak için Ayarlar’da “Marios’a yaz”a dokun.",
+  "pairCodeCouldNotReach": "Bağlanılamadı. Bağlantını kontrol edip yeniden dene.",
+  "lockTooManyTriesFor": "Çok fazla deneme · {left}"
 }

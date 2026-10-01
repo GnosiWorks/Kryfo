@@ -5,6 +5,7 @@
 // the phone's folders, a decoy restore included, and of the prefs only the
 // ones a backup carries are taken. the files are real ones in a scratch
 // folder, the cipher a stand-in
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
@@ -13,7 +14,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/backup.dart';
 import 'package:kryfo/backup_stream.dart';
 import 'package:kryfo/container.dart';
-import 'package:kryfo/main.dart' show HaloDb, useDatabasesForTest;
+import 'package:kryfo/main.dart'
+    show HaloDb, HaloEngine, useDatabasesForTest, useEngineForTest;
 import 'package:kryfo/session.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -39,6 +41,34 @@ class _Decoy implements HaloDb {
   @override
   dynamic noSuchMethod(Invocation i) =>
       throw UnimplementedError('the stand-in was asked for ${i.memberName}');
+}
+
+class _Everyday implements HaloDb {
+  @override
+  HaloContainer get container => HaloContainer.everyday;
+  @override
+  dynamic noSuchMethod(Invocation i) =>
+      throw UnimplementedError('the stand-in was asked for ${i.memberName}');
+}
+
+class _Engine implements HaloEngine {
+  final restored = <String>[];
+  @override
+  String restoreIdentity(String ed, String x) {
+    restored.add(ed);
+    return 'ok';
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation i) =>
+      throw StateError('the engine was asked for ${i.memberName}');
+}
+
+// any engine call fails the test: the decoy's account is only its own files
+class _NoEngine implements HaloEngine {
+  @override
+  dynamic noSuchMethod(Invocation i) =>
+      throw StateError('the engine was asked for ${i.memberName}');
 }
 
 // what a file might carry beside what a backup is made of
@@ -136,6 +166,108 @@ void main() {
       'onion_d.key',
       'wallpapers_d/w/b.jpg',
     ]);
+  });
+
+  test('an old text file restored in a decoy lands in the decoy and leaves '
+      'the everyday account as it was', () async {
+    final docs = p.join(root.path, 'docs');
+    File(p.join(docs, 'halo.db'))
+      ..createSync(recursive: true)
+      ..writeAsStringSync('everyday');
+    File(p.join(docs, 'onion.key')).writeAsStringSync('everyday onion');
+    FlutterSecureStorage.setMockInitialValues({
+      'halo.db.passphrase': 'everyday key',
+      'onboarding_done': 'true',
+      'my_handle': 'mine',
+    });
+    final decoy = _Decoy();
+    useDatabasesForTest(decoy, Session(decoy));
+    useEngineForTest(_NoEngine());
+    String b64(String s) => base64Encode(utf8.encode(s));
+    await landV1Payload({
+      'v': 1,
+      'db': b64('old file'),
+      'dbPassphrase': "x'${'4e' * 32}'",
+      'onionKey': b64('old onion'),
+      'edPriv': 'ed',
+      'xPriv': 'x',
+      'onboardingDone': 'true',
+      'secure': {'my_handle': 'someone'},
+    });
+    expect(File(p.join(docs, 'halo.db')).readAsStringSync(), 'everyday');
+    expect(
+      File(p.join(docs, 'onion.key')).readAsStringSync(),
+      'everyday onion',
+    );
+    expect(File(p.join(docs, 'halo_d.db')).readAsStringSync(), 'old file');
+    expect(File(p.join(docs, 'onion_d.key')).readAsStringSync(), 'old onion');
+    const store = FlutterSecureStorage();
+    expect(await store.read(key: 'halo.db.passphrase'), 'everyday key');
+    expect(await store.read(key: 'halo.d.key'), "x'${'4e' * 32}'");
+    expect(await store.read(key: 'my_handle'), 'mine');
+    // nothing staged is left behind
+    expect(Directory(p.join(docs, 'restore_d')).existsSync(), isFalse);
+  });
+
+  test('an old text file restored in the everyday app takes the phone off '
+      'the moved screen', () async {
+    SharedPreferences.setMockInitialValues({'moved.at': 5});
+    final day = _Everyday();
+    useDatabasesForTest(day, Session(day));
+    final e = _Engine();
+    useEngineForTest(e);
+    Directory(p.join(root.path, 'docs')).createSync(recursive: true);
+    await landV1Payload({
+      'v': 1,
+      'db': base64Encode(utf8.encode('old file')),
+      'dbPassphrase': "x'${'4e' * 32}'",
+      'edPriv': 'ed',
+      'xPriv': 'x',
+    });
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.containsKey('moved.at'), isFalse);
+    expect(e.restored, ['ed']);
+    expect(
+      File(p.join(root.path, 'docs', 'halo.db')).readAsStringSync(),
+      'old file',
+    );
+  });
+
+  test('a file that says setup was done restores as done, whatever word '
+      'an older decoy backup used', () async {
+    FlutterSecureStorage.setMockInitialValues({});
+    final day = _Everyday();
+    useDatabasesForTest(day, Session(day));
+    useEngineForTest(_Engine());
+    Directory(p.join(root.path, 'docs')).createSync(recursive: true);
+    await landV1Payload({
+      'v': 1,
+      'db': base64Encode(utf8.encode('old file')),
+      'dbPassphrase': "x'${'4e' * 32}'",
+      'edPriv': 'ed',
+      'xPriv': 'x',
+      'onboardingDone': '1',
+    });
+    const store = FlutterSecureStorage();
+    expect(await store.read(key: 'onboarding_done'), 'true');
+    expect(onboardingAfterRestore('true'), 'true');
+    expect(onboardingAfterRestore(null), isNull);
+    expect(onboardingAfterRestore(''), isNull);
+  });
+
+  test('the face and the supporter badge go with the identity', () async {
+    expect(kIdentitySecureKeys, contains('my_avatar'));
+    final plan = identitySecurePlan({'my_avatar': '17'});
+    expect(plan.write, {'my_avatar': '17'});
+    await restorePrefs({
+      'supporter_tier': 'supporter',
+      'supporter_receipt_payload': 'payload',
+      'supporter_receipt_sig': 'sig',
+    });
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString('supporter_tier'), 'supporter');
+    expect(prefs.getString('supporter_receipt_payload'), 'payload');
+    expect(prefs.getString('supporter_receipt_sig'), 'sig');
   });
 
   test('of the prefs a file carries only the known ones are taken', () async {

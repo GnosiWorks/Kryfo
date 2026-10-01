@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// set or change the pin: four digits, then the same four again
-import 'package:flutter/material.dart';
+// set or change the pin: four digits, then the same four again. a change
+// asks for the pin there is first, as the advanced flows do, with the same
+// misses and the same wipe pin
+import 'package:flutter/material.dart' hide LockState;
 import 'package:flutter/services.dart';
 
 import '../lock_state.dart';
@@ -9,10 +11,15 @@ import '../theme.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/pin_pad.dart';
 import '../widgets/sheet_handle.dart';
+import '../wipe.dart';
 import '../l10n/l10n.dart';
 
 class LockSetupScreen extends StatefulWidget {
-  const LockSetupScreen({super.key});
+  const LockSetupScreen({super.key, this.lock, this.check = false});
+  // the app's own lock when null
+  final LockState? lock;
+  // a pin is set: it is entered before a new one is chosen
+  final bool check;
   @override
   State<LockSetupScreen> createState() => _LockSetupScreenState();
 }
@@ -21,8 +28,15 @@ class _LockSetupScreenState extends State<LockSetupScreen>
     with SingleTickerProviderStateMixin {
   String _first = '';
   String _pin = '';
+  late bool _checking = widget.check;
   bool _confirming = false;
   bool _mismatch = false;
+  // why the pin entered to check was not taken
+  String? _notIt;
+  // the title comes in from where reading goes, or back from where it was
+  bool _forward = true;
+
+  LockState get _lock => widget.lock ?? lockState;
   late final AnimationController _shake = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 280),
@@ -43,11 +57,47 @@ class _LockSetupScreenState extends State<LockSetupScreen>
     setState(() {
       _pin += d;
       _mismatch = false;
+      _notIt = null;
+    });
+  }
+
+  // the pin there is, before a new one. a miss counts as on the lock
+  // screen, and the wipe pin wipes
+  Future<void> _check() async {
+    setState(() => _hold = true);
+    final r = await _lock.confirmPin(_pin);
+    if (!mounted) return;
+    if (r == PinResult.panic) {
+      await wipeHalo();
+      return;
+    }
+    if (r != PinResult.normal) {
+      HapticFeedback.heavyImpact();
+      setState(() {
+        _hold = false;
+        _mismatch = true;
+        _notIt = r == PinResult.throttled
+            ? tooManyTriesLine(_lock.throttleLeft)
+            : l10n.lockNotIt;
+      });
+      if (!MediaQuery.disableAnimationsOf(context)) {
+        await _shake.forward(from: 0);
+      }
+      if (mounted) setState(() => _pin = '');
+      return;
+    }
+    HapticFeedback.selectionClick();
+    setState(() {
+      _hold = false;
+      _checking = false;
+      _forward = true;
+      _pin = '';
     });
   }
 
   Future<void> _submit() async {
     if (_hold || _pin.length < kPinMin) return;
+    if (_checking) return _check();
     if (!_confirming) {
       setState(() => _hold = true);
       await Future.delayed(const Duration(milliseconds: 220));
@@ -56,6 +106,7 @@ class _LockSetupScreenState extends State<LockSetupScreen>
         _first = _pin;
         _pin = '';
         _confirming = true;
+        _forward = true;
         _hold = false;
       });
       return;
@@ -71,10 +122,11 @@ class _LockSetupScreenState extends State<LockSetupScreen>
         _first = '';
         _pin = '';
         _confirming = false;
+        _forward = false;
       });
       return;
     }
-    final ok = await lockState.setupPin(_pin);
+    final ok = await _lock.setupPin(_pin);
     if (!ok) {
       HapticFeedback.heavyImpact();
       if (!mounted) return;
@@ -83,11 +135,12 @@ class _LockSetupScreenState extends State<LockSetupScreen>
         _first = '';
         _pin = '';
         _confirming = false;
+        _forward = false;
       });
       return;
     }
     HapticFeedback.mediumImpact();
-    if (mounted && lockState.bioSupported && !lockState.biometric) {
+    if (mounted && _lock.bioSupported && !_lock.biometricShown) {
       final useBio = await showHaloSheet<bool>(
         context,
         builder: (ctx) => SafeArea(
@@ -148,7 +201,7 @@ class _LockSetupScreenState extends State<LockSetupScreen>
           ),
         ),
       );
-      if (useBio == true) await lockState.setBiometric(true);
+      if (useBio == true) await _lock.setBiometric(true);
     }
     if (mounted) Navigator.of(context).pop();
   }
@@ -160,8 +213,14 @@ class _LockSetupScreenState extends State<LockSetupScreen>
 
   @override
   Widget build(BuildContext context) {
-    final title = _confirming ? l10n.lockSetupOnceMore : l10n.lockSetupSetAPin;
-    final hint = _mismatch
+    final title = _checking
+        ? l10n.flowEnterYourPin
+        : _confirming
+        ? l10n.lockSetupOnceMore
+        : l10n.lockSetupSetAPin;
+    final hint = _checking
+        ? _notIt ?? l10n.flowEnterYourPinLine
+        : _mismatch
         ? l10n.lockSetupThoseWereDifferentFrom
         : _confirming
         ? l10n.lockSetupTheSameFourDigits
@@ -188,7 +247,7 @@ class _LockSetupScreenState extends State<LockSetupScreen>
               transitionBuilder: (c, a) {
                 final rtl = Directionality.of(context) == TextDirection.rtl;
                 final entering = c.key == ValueKey(title);
-                final from = (_confirming ? 1.0 : -1.0) * (rtl ? -1 : 1);
+                final from = (_forward ? 1.0 : -1.0) * (rtl ? -1 : 1);
                 return FadeTransition(
                   opacity: a,
                   child: SlideTransition(

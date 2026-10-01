@@ -1951,5 +1951,10 @@
   "devChatOptions": "Options de la discussion",
   "appLinkOtherKey": "Ce lien se présente comme {id}, mais sa clé ne correspond pas. Il n’a pas été ajouté.",
   "scamShieldSaysItIs": "Se présente comme {shown}, mais sa clé ne correspond pas",
-  "requestsSomeoneNew": "Quelqu’un de nouveau"
+  "requestsSomeoneNew": "Quelqu’un de nouveau",
+  "appYourOwnInvite": "C’est votre propre invitation. Partagez-la avec quelqu’un d’autre pour vous connecter.",
+  "appTheyAreBlocked": "Vous avez bloqué {id}. Débloquez cette personne dans « Bloqués », dans les Paramètres, pour l’ajouter à nouveau.",
+  "devLinkGone": "Vous avez supprimé la discussion avec Marios. Pour en commencer une nouvelle, touchez « Écrire à Marios » dans les Paramètres.",
+  "pairCodeCouldNotReach": "Impossible de se connecter. Vérifiez votre connexion et réessayez.",
+  "lockTooManyTriesFor": "Trop d’essais · {left}"
 }

@@ -7453,4 +7453,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get requestsSomeoneNew => 'Someone new';
+
+  @override
+  String get appYourOwnInvite =>
+      'This is your own invite. Share it with someone else to connect.';
+
+  @override
+  String appTheyAreBlocked(Object id) {
+    return 'You blocked $id. Unblock them under Blocked in Settings to add them again.';
+  }
+
+  @override
+  String get devLinkGone =>
+      'You deleted the chat with Marios. To start a new one, tap Write to Marios in Settings.';
+
+  @override
+  String get pairCodeCouldNotReach =>
+      'Couldn\'t get through. Check your connection and try again.';
+
+  @override
+  String lockTooManyTriesFor(Object left) {
+    return 'Too many tries · $left';
+  }
 }

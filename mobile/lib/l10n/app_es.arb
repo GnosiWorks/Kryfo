@@ -1951,5 +1951,10 @@
   "devChatOptions": "Opciones del chat",
   "appLinkOtherKey": "Este enlace dice ser {id}, pero su clave no coincide. No se ha añadido.",
   "scamShieldSaysItIs": "Dice ser {shown}, pero su clave no coincide",
-  "requestsSomeoneNew": "Alguien nuevo"
+  "requestsSomeoneNew": "Alguien nuevo",
+  "appYourOwnInvite": "Es tu propia invitación. Compártela con otra persona para conectar.",
+  "appTheyAreBlocked": "Bloqueaste a {id}. Desbloquéalo en «Bloqueados», en Ajustes, para añadirlo de nuevo.",
+  "devLinkGone": "Borraste el chat con Marios. Para empezar uno nuevo, toca «Escribir a Marios» en Ajustes.",
+  "pairCodeCouldNotReach": "No se pudo conectar. Revisa tu conexión e inténtalo de nuevo.",
+  "lockTooManyTriesFor": "Demasiados intentos · {left}"
 }

@@ -11936,6 +11936,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Someone new'**
   String get requestsSomeoneNew;
+
+  /// main.dart: a link, card or handle that is your own was added
+  ///
+  /// In en, this message translates to:
+  /// **'This is your own invite. Share it with someone else to connect.'**
+  String get appYourOwnInvite;
+
+  /// main.dart: adding someone who is blocked; the Blocked page in Settings lets them back
+  ///
+  /// In en, this message translates to:
+  /// **'You blocked {id}. Unblock them under Blocked in Settings to add them again.'**
+  String appTheyAreBlocked(Object id);
+
+  /// main.dart: the developer's card opened after his chat was deleted; only the settings row starts a new one
+  ///
+  /// In en, this message translates to:
+  /// **'You deleted the chat with Marios. To start a new one, tap Write to Marios in Settings.'**
+  String get devLinkGone;
+
+  /// widgets/pair_code_panel.dart, widgets/pair_join.dart: no network answered, so nothing is known about the code
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t get through. Check your connection and try again.'**
+  String get pairCodeCouldNotReach;
+
+  /// lock_state.dart: the pad is held past a minute and a half; left is minutes:seconds or hours:minutes:seconds
+  ///
+  /// In en, this message translates to:
+  /// **'Too many tries · {left}'**
+  String lockTooManyTriesFor(Object left);
 }
 
 class _AppLocalizationsDelegate

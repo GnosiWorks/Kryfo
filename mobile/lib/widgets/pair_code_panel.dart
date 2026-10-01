@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// six digits you read out loud. the code points at your invite for five
+// six digits you read out loud. the code points at your invite for ten
 // minutes, works once, then the address is gone. your three words sit under
 // it, for the other phone to match before it adds you. shared by the invite
 // page and the pairing screen.
@@ -13,6 +13,9 @@ import 'motion.dart' show BreathDot;
 import 'pair_join.dart' show PairWordsTag;
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
+
+// as long as the engine stamps an invite at a code to live
+const kPairCodeLife = Duration(minutes: 10);
 
 class PairCodePanel extends StatefulWidget {
   // compact drops the explanatory lines, for use under a qr
@@ -65,14 +68,14 @@ class _PairCodePanelState extends State<PairCodePanel> {
     if (res.startsWith('error')) {
       setState(() {
         _busy = false;
-        _status = res.replaceFirst('error: ', '');
+        _status = l10n.pairCodeCouldNotReach;
       });
       return;
     }
     setState(() {
       _busy = false;
       _code = code;
-      _left = 300;
+      _left = kPairCodeLife.inSeconds;
       _status = '';
     });
     _tick?.cancel();

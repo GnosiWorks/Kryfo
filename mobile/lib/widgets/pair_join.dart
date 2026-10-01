@@ -28,7 +28,8 @@ String? pairInviteWords(String invite) {
 }
 
 class PairJoin extends StatefulWidget {
-  // the engine's answer for a code: an invite, "empty", "twice" or an error
+  // the engine's answer for a code: an invite, "empty", "twice" or an error,
+  // "error: unreachable" when no relay answered
   final Future<String> Function(String code) fetch;
   // the app's own add path; its answer is the line to show afterwards
   final Future<String> Function(String invite) add;
@@ -105,8 +106,10 @@ class _PairJoinState extends State<PairJoin> {
         });
         return;
       }
+      // no relay answered: that is not an empty code, and the engine's
+      // words are not the person's
       if (res.startsWith('error')) {
-        _say(res.replaceFirst('error: ', ''));
+        _say(l10n.pairCodeCouldNotReach);
         return;
       }
       if (attempt < 2) {

@@ -7444,4 +7444,26 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get requestsSomeoneNew => 'Người mới';
+
+  @override
+  String get appYourOwnInvite =>
+      'Đây là lời mời của chính bạn. Hãy chia sẻ cho người khác để kết nối.';
+
+  @override
+  String appTheyAreBlocked(Object id) {
+    return 'Bạn đã chặn $id. Hãy bỏ chặn trong mục “Đã chặn” ở Cài đặt để thêm lại.';
+  }
+
+  @override
+  String get devLinkGone =>
+      'Bạn đã xóa cuộc trò chuyện với Marios. Để bắt đầu cuộc mới, hãy chạm “Nhắn cho Marios” trong Cài đặt.';
+
+  @override
+  String get pairCodeCouldNotReach =>
+      'Không kết nối được. Hãy kiểm tra kết nối rồi thử lại.';
+
+  @override
+  String lockTooManyTriesFor(Object left) {
+    return 'Quá nhiều lần thử · $left';
+  }
 }

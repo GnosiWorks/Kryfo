@@ -12,7 +12,6 @@ import 'package:flutter/services.dart';
 
 import '../backup.dart' show sealRestoredHidden;
 import '../l10n/l10n.dart';
-import '../l10n/numbers.dart';
 import '../lock_state.dart';
 import '../main.dart' show appState, session;
 import '../theme.dart';
@@ -217,9 +216,7 @@ class _PinFlowScreenState extends State<PinFlowScreen>
           if (r != PinResult.normal) {
             await _fail(
               r == PinResult.throttled
-                  ? l10n.lockTooManyTriesS(
-                      whole(_lock.throttleLeft.inSeconds + 1),
-                    )
+                  ? tooManyTriesLine(_lock.throttleLeft)
                   : l10n.lockNotIt,
             );
             return;

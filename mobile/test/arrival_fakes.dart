@@ -205,7 +205,13 @@ class ArrivalIo implements AppIo {
     required String body,
     String? payload,
     String? msgUid,
-  }) async => rang.add(payload ?? title);
+  }) async {
+    rang.add(payload ?? title);
+    shown.add((title, body));
+  }
+
+  // what each notification said
+  final shown = <(String, String)>[];
 
   // messages whose notification was taken down
   final unrangMessages = <String>[];
