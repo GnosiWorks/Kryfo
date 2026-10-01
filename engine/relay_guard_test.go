@@ -18,9 +18,11 @@ import (
 	"net/http/httptest"
 	"os"
 	"reflect"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -467,6 +469,10 @@ func TestSeenFileIsCutOnLoad(t *testing.T) {
 
 // one connection that brings more events than the cap leaves a bounded file
 func TestSeenFileBoundedWithinOneConnection(t *testing.T) {
+	if raceOn {
+		// under -race the walk over these events outlasts the catch-up cap
+		t.Skip("the walk cannot finish inside the cap under -race")
+	}
 	relay := newRelayStandIn(t, 0)
 	useStandIns(t, modeFast, nil, relay)
 	freshInbox(t)
@@ -487,25 +493,76 @@ func TestSeenFileBoundedWithinOneConnection(t *testing.T) {
 		relay.store(ev)
 	}
 	seenPath := savedDataDir + "/nostr_seen_" + rcv[:16]
+	ck := catchupKey(relay.url(), rcv)
+	// the file between writes: a write that takes it past the cap cuts it
+	// back before anything else may touch it, so a line appended just
+	// before that is never counted on its own
+	var mostMu sync.Mutex
 	var most int
+	var last string
+	look := func() string {
+		seenFileMu.Lock()
+		b, _ := os.ReadFile(seenPath)
+		seenFileMu.Unlock()
+		mostMu.Lock()
+		if l := strings.Count(string(b), "\n"); l > most {
+			most = l
+		}
+		mostMu.Unlock()
+		return string(b)
+	}
+	// looked at between as many writes as it can, until the runner is done
+	stopLooking := make(chan struct{})
+	looked := make(chan struct{})
+	go func() {
+		defer close(looked)
+		for {
+			select {
+			case <-stopLooking:
+				return
+			default:
+			}
+			look()
+			runtime.Gosched()
+		}
+	}()
+	stopLook := sync.OnceFunc(func() {
+		close(stopLooking)
+		<-looked
+	})
+	t.Cleanup(stopLook)
+	// the file has not changed for half a second
+	settled := func(what string) {
+		t.Helper()
+		same := 0
+		waitFor(t, what, 10*time.Second, func() bool {
+			if b := look(); b != last {
+				last, same = b, 0
+			} else {
+				same++
+			}
+			return same >= 10
+		})
+	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), peer.pub, rcv)
-	end := time.Now().Add(30 * time.Second)
-	for time.Now().Before(end) {
-		b, _ := os.ReadFile(seenPath)
-		l := strings.Count(string(b), "\n")
-		if l > most {
-			most = l
+	waitFor(t, "the walk to its end", 40*time.Second, func() bool {
+		look()
+		catchupMu.Lock()
+		run, done := catchupLast[ck]
+		catchupMu.Unlock()
+		if done && run.Dropped {
+			t.Fatal("the walk was cut before it reached the end")
 		}
-		relay.mu.Lock()
-		sent := relay.resent
-		relay.mu.Unlock()
-		if sent >= n && l > 0 {
-			break
-		}
-		time.Sleep(20 * time.Millisecond)
-	}
+		return done
+	})
+	settled("the runner done with every event")
+	cancel()
+	settled("the runner stopped")
+	stopLook()
+	// whatever is still under way writes nothing more into the data dir
+	dropAddressFiles(rcv)
 	if most == 0 {
 		t.Fatal("nothing was remembered")
 	}

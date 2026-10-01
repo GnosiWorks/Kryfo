@@ -56,6 +56,20 @@ type Subscription struct {
 	// this keeps track of the events we've received before the EOSE that we must dispatch before
 	// closing the EndOfStoredEvents channel
 	storedwg sync.WaitGroup
+
+	// kryfo: events read and not handed over yet, in the order they were
+	// read, and whether a goroutine is handing them over. both under mu
+	queue    []queuedEvent
+	draining bool
+	// kryfo: the subscription ended. under mu, and Events is closed only
+	// while nothing drains, so nothing sends on it once it is closed
+	ending bool
+}
+
+// kryfo: stored is whether it came before the EOSE
+type queuedEvent struct {
+	evt    Event
+	stored bool
 }
 
 // All SubscriptionOptions fields are optional
@@ -78,18 +92,56 @@ type SubscriptionOptions struct {
 // GetID returns the subscription ID.
 func (sub *Subscription) GetID() string { return sub.id }
 
+// kryfo: events are queued in the order they were read and handed over by
+// one goroutine at a time. upstream starts a goroutine per event, and a later
+// one can overtake an earlier one, so what a page cut short kept need not be
+// the newest of what the relay sent.
 func (sub *Subscription) dispatchEvent(evt Event) {
-	isStored := false
-	if !sub.eosed.Load() {
-		sub.storedwg.Add(1)
-		isStored = true
+	sub.mu.Lock()
+	defer sub.mu.Unlock()
+	if sub.ending || sub.Context.Err() != nil {
+		return
 	}
+	isStored := !sub.eosed.Load()
+	if isStored {
+		sub.storedwg.Add(1)
+	}
+	sub.queue = append(sub.queue, queuedEvent{evt: evt, stored: isStored})
+	if !sub.draining {
+		sub.draining = true
+		go sub.drain()
+	}
+}
 
-	go func() {
-		if isStored {
+// kryfo: hands the queue over until it is empty. once the subscription has
+// ended the rest is dropped, so what did come is the start of what was read,
+// and Events is closed here if the closer found this still draining.
+func (sub *Subscription) drain() {
+	for {
+		sub.mu.Lock()
+		if sub.ending || sub.Context.Err() != nil || len(sub.queue) == 0 {
+			for _, q := range sub.queue {
+				if q.stored {
+					sub.storedwg.Done()
+				}
+			}
+			sub.queue = nil
+			sub.draining = false
+			if sub.ending {
+				close(sub.Events)
+			}
+			sub.mu.Unlock()
+			return
+		}
+		q := sub.queue[0]
+		sub.queue[0] = queuedEvent{}
+		sub.queue = sub.queue[1:]
+		sub.mu.Unlock()
+
+		if q.stored {
 			if sub.live.Load() {
 				select {
-				case sub.Events <- evt:
+				case sub.Events <- q.evt:
 				case <-sub.Context.Done():
 				case <-sub.eoseTimedOut:
 				}
@@ -98,15 +150,19 @@ func (sub *Subscription) dispatchEvent(evt Event) {
 		} else {
 			if sub.live.Load() {
 				select {
-				case sub.Events <- evt:
+				case sub.Events <- q.evt:
 				case <-sub.Context.Done():
 				}
 			}
 		}
-	}()
+	}
 }
 
 func (sub *Subscription) dispatchEose() {
+	// kryfo: under mu, so a stored event is counted before the wait below
+	// begins, or it is not a stored event
+	sub.mu.Lock()
+	defer sub.mu.Unlock()
 	if sub.eosed.CompareAndSwap(false, true) {
 		sub.match = sub.Filter.MatchesIgnoringTimestampConstraints
 		go func() {
@@ -118,11 +174,14 @@ func (sub *Subscription) dispatchEose() {
 
 // handleClosed handles the CLOSED message from a relay.
 func (sub *Subscription) handleClosed(reason string) {
-	go func() {
-		sub.ClosedReason <- reason
-		sub.live.Store(false) // set this so we don't send an unnecessary CLOSE to the relay
-		sub.cancel(fmt.Errorf("CLOSED received: %s", reason))
-	}()
+	// kryfo: the first reason is kept and any later one for the same
+	// subscription is dropped, so nothing waits on a reader that never comes
+	select {
+	case sub.ClosedReason <- reason:
+	default:
+	}
+	sub.live.Store(false) // set this so we don't send an unnecessary CLOSE to the relay
+	sub.cancel(fmt.Errorf("CLOSED received: %s", reason))
 }
 
 // Unsub closes the subscription, sending "CLOSE" to relay as in NIP-01.

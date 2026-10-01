@@ -246,36 +246,57 @@ func TestCatchupIsPerContact(t *testing.T) {
 }
 
 // a first answer cut by the cap keeps its place: the next walk steps over
-// what came, and a place from before is joined, not thrown away
+// what came, and a place from before is joined, not thrown away. only our
+// relay holds anything for it.
 func TestCutFirstAnswerKeepsItsPlace(t *testing.T) {
 	now := time.Unix(2_000_000, 0)
 	top := nostr.Timestamp(now.Add(anchorSlack).Unix())
 	k := "wss://cut.example addr"
-	setCatchupMark(k, catchup.Mark{})
-	defer setCatchupMark(k, catchup.Mark{})
+	pub := "wss://public.example addr"
+	clear := func() {
+		catchupMu.Lock()
+		for _, key := range []string{k, pub} {
+			delete(catchupMarks, key)
+			delete(catchupHolds, key)
+			delete(catchupFreed, key)
+		}
+		catchupMu.Unlock()
+	}
+	clear()
+	defer clear()
+	owed := catchup.Hold{Floor: 1_400_000, Began: 1_999_000}
+	c := catchup.Conn{Key: k, Own: true, Owed: owed}
 
-	keepFirstAnswer(k, 0, now)
-	if catchupMarkOf(k).Started() {
+	keepFirstAnswer(c, 0, now)
+	if catchupMarkOf(k).Started() || catchupHoldOf(k).Held() {
 		t.Fatal("an answer with nothing in it kept a place")
 	}
-	keepFirstAnswer(k, 1_500_000, now)
+	keepFirstAnswer(c, 1_500_000, now)
 	if m := catchupMarkOf(k); m.Top != top || m.Cursor != 1_500_000 {
 		t.Fatalf("first cut: %+v", m)
 	}
+	if h := catchupHoldOf(k); h != owed {
+		t.Fatalf("the cut keeps %+v, want what the walk owes, %+v", h, owed)
+	}
 	// the next one got less far: the place stays as deep as it was
-	keepFirstAnswer(k, 1_800_000, now)
+	keepFirstAnswer(c, 1_800_000, now)
 	if m := catchupMarkOf(k); m.Cursor != 1_500_000 {
 		t.Fatalf("a shallower cut moved the place up: %+v", m)
 	}
 	// one that got deeper moves it down
-	keepFirstAnswer(k, 1_200_000, now)
+	keepFirstAnswer(c, 1_200_000, now)
 	if m := catchupMarkOf(k); m.Cursor != 1_200_000 {
 		t.Fatalf("a deeper cut did not move the place: %+v", m)
 	}
 	// a walk's place with a gap above it is left alone
 	setCatchupMark(k, catchup.Mark{Top: 1_000_000, Cursor: 900_000})
-	keepFirstAnswer(k, 1_100_000, now)
+	keepFirstAnswer(c, 1_100_000, now)
 	if m := catchupMarkOf(k); m.Top != 1_000_000 || m.Cursor != 900_000 {
 		t.Fatalf("a cut with a gap replaced the walk's place: %+v", m)
+	}
+	// a public relay keeps its place and holds nothing
+	keepFirstAnswer(catchup.Conn{Key: pub}, 1_500_000, now)
+	if !catchupMarkOf(pub).Started() || catchupHoldOf(pub).Held() {
+		t.Fatalf("a public relay's cut: place %+v, hold %+v", catchupMarkOf(pub), catchupHoldOf(pub))
 	}
 }

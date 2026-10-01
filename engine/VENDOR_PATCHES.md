@@ -58,7 +58,7 @@ the engine uses, through `libtorCreator`.
 the relay library lives in `third_party/nostr` and go.mod points at it with
 a `replace`, so `go mod vendor` copies it into vendor/ like any other module
 and this one survives a re-vendor. it holds upstream's files for the two
-packages the engine imports, tests left out, and upstream's go.mod. five
+packages the engine imports, tests left out, and upstream's go.mod. six
 files differ, the new lines marked `kryfo:`:
 
 - `relay.go`: subscription ids are counted per connection. upstream numbers
@@ -75,6 +75,17 @@ files differ, the new lines marked `kryfo:`:
 - `signature.go`, `signature_libsecp256k1.go`: `VerifySignature` also
   requires the event's id field to be the id its body hashes to. the hash
   is computed once, as before.
+- `subscription.go`: a CLOSED frame hands its reason over only while the
+  channel has room, and without a goroutine of its own. upstream starts one
+  per frame, and each waits until someone reads.
+- `subscription.go`, `relay.go`: a subscription's events are queued in the
+  order they were read and handed over by one goroutine at a time, and once
+  the subscription has ended the rest is dropped. upstream starts a
+  goroutine per event, so a later one can overtake an earlier one, and a
+  catch-up page cut short could keep an older event and lose newer ones
+  sent before it. `Events` is closed only while nothing is handing over, so
+  nothing sends on it once it is closed. `dispatchEose` takes the same lock,
+  so a stored event is counted before the wait for the EOSE begins.
 
 vendor/fiatjaf.com/nostr is a copy of it and has to stay one:
 
@@ -84,7 +95,7 @@ the change against upstream:
 
     go mod download fiatjaf.com/nostr@v0.0.0-20260508234157-a4c590d923ee
     up="$(go env GOMODCACHE)/fiatjaf.com/nostr@v0.0.0-20260508234157-a4c590d923ee"
-    for f in relay.go helpers.go envelopes.go signature.go signature_libsecp256k1.go; do
+    for f in relay.go helpers.go envelopes.go signature.go signature_libsecp256k1.go subscription.go; do
         diff -u "$up/$f" "third_party/nostr/$f"
     done
 

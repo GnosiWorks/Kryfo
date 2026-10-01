@@ -20,6 +20,7 @@ import (
 	"math"
 	mrand "math/rand/v2"
 	"net/http"
+	"net/url"
 	"os"
 	"runtime"
 	"strconv"
@@ -106,8 +107,17 @@ func relayResponds(ctx context.Context, r *nostr.Relay, rcvPk string) bool {
 	defer sub.Unsub()
 	for {
 		select {
-		case <-sub.Events:
-			// the subscription that asked for it has it too
+		case _, alive := <-sub.Events:
+			// the subscription that asked for it has it too. a closed one
+			// went with its socket, unless the relay refused it first
+			if !alive {
+				select {
+				case <-sub.ClosedReason:
+					return true
+				default:
+					return false
+				}
+			}
 		case <-sub.ClosedReason:
 			return true
 		case <-sub.EndOfStoredEvents:
@@ -267,6 +277,11 @@ var (
 	// window can page keeps its place here, so the next check-in carries on
 	// instead of re-walking the same pages and never reaching the tail.
 	catchupMarks = map[string]catchup.Mark{}
+	// what each relay's walk still owes the anchor, see catchup.Hold
+	catchupHolds = map[string]catchup.Hold{}
+	catchupFreed = map[string]catchup.Freed{}
+	// the three above, see catchup.Book
+	catchupBook = &catchup.Book{Marks: catchupMarks, Holds: catchupHolds, Freed: catchupFreed}
 	// the walk that is running now, folded into catchupLast when it ends
 	catchupPend = map[string]catchupRun{}
 	connectLast = map[string]int{}
@@ -364,6 +379,95 @@ func setCatchupMark(key string, m catchup.Mark) {
 	}
 }
 
+func catchupHoldOf(key string) catchup.Hold {
+	catchupMu.Lock()
+	defer catchupMu.Unlock()
+	return catchupHolds[key]
+}
+
+// our relay's clearnet name. the app puts our relay first in every list: in
+// private mode its onion, with this name right after it, and in the other
+// modes this name (relaysFor in main.dart). a var so tests can point it at a
+// stand-in.
+var ownRelayHost = "relay.kryfo.app"
+
+// the entries of a relay list that reach our relay: the first, and any on
+// its clearnet name. they are ways into one store, the only one that holds
+// the anchor, see catchup.Book.
+func ownRelays(urls []string) []string {
+	var own []string
+	for i, u := range urls {
+		if i == 0 || relayHostIs(u, ownRelayHost) {
+			own = append(own, u)
+		}
+	}
+	return own
+}
+
+func relayHostIs(u, host string) bool {
+	p, err := url.Parse(u)
+	return err == nil && strings.EqualFold(p.Host, host)
+}
+
+// our relay's entries for an address, as catch-up keys
+func ownCatchupKeys(urls []string, rcvPk string) []string {
+	var keys []string
+	for _, u := range ownRelays(urls) {
+		keys = append(keys, catchupKey(u, rcvPk))
+	}
+	return keys
+}
+
+// a connection on key, from the anchor last at now. own: our relay's keys
+// for the address
+func catchupConnect(key string, own []string, last, now nostr.Timestamp) catchup.Conn {
+	catchupMu.Lock()
+	defer catchupMu.Unlock()
+	return catchupBook.Connect(key, own, last, now)
+}
+
+// a connection's first answer came full, see catchup.Book.Owe
+func catchupOwe(c catchup.Conn) {
+	catchupMu.Lock()
+	defer catchupMu.Unlock()
+	catchupBook.Owe(c)
+}
+
+// a walk stopped short at m
+func catchupCut(c catchup.Conn, m catchup.Mark) {
+	catchupMu.Lock()
+	defer catchupMu.Unlock()
+	catchupBook.Cut(c, m)
+}
+
+// a walk reached the bottom of its window, see catchup.Book.Done
+func catchupDone(c catchup.Conn, stepped bool) {
+	catchupMu.Lock()
+	defer catchupMu.Unlock()
+	catchupBook.Done(c, stepped)
+}
+
+// the relay answered the subscription with CLOSED
+func catchupRefused(c catchup.Conn) {
+	catchupMu.Lock()
+	defer catchupMu.Unlock()
+	catchupBook.Refused(c)
+}
+
+// a runner starting on an address, see catchup.Book.Start
+func catchupStart(own []string, anchor, now nostr.Timestamp) {
+	catchupMu.Lock()
+	defer catchupMu.Unlock()
+	catchupBook.Start(own, anchor, now)
+}
+
+// the lowest anchor a walk on our relay still owes for an address
+func catchupFloor(own []string) (nostr.Timestamp, bool) {
+	catchupMu.Lock()
+	defer catchupMu.Unlock()
+	return catchupBook.Floor(own)
+}
+
 // how long this subscription gets this time round.
 func catchupCapFor(key string) (time.Duration, bool) {
 	catchupMu.Lock()
@@ -424,9 +528,36 @@ func catchupOf(u string) (int, bool, bool, bool) {
 // yet each one comes within this; a dead circuit sends nothing at all.
 var pageQuiet = 20 * time.Second
 
+// the longest content a wrap can have: a nip-44 payload holds at most this
+// much, and nothing longer opens
+const wrapContentMax = 87472
+
+// a wrap's tags are a p and an expiration, well inside this
+const wrapTagsMax = 1024
+
+// an event larger than a wrap can be keeps only its id and stamp. it still
+// counts toward its page and moves the page's oldest, so the walk goes on
+// below it, and with no content it is left unopened.
+func pageEntry(ev nostr.Event) nostr.Event {
+	tags := 0
+	for _, tag := range ev.Tags {
+		tags += len(tag)
+		for _, v := range tag {
+			tags += len(v)
+		}
+	}
+	if len(ev.Content) <= wrapContentMax && tags <= wrapTagsMax {
+		return ev
+	}
+	return nostr.Event{ID: ev.ID, PubKey: ev.PubKey, CreatedAt: ev.CreatedAt, Kind: ev.Kind}
+}
+
 // one page of stored events, closed again as soon as the relay says that
 // was all. a page cut short, by a quiet circuit, the relay or the caller,
 // returns what it got with the error, newest first, so the walk keeps it.
+// it keeps at most limit events, and of one larger than a wrap can be only
+// its id and stamp: a page that has limit ends there, and the walk carries
+// on below its oldest.
 func relayPage(ctx context.Context, r *nostr.Relay, rcvPk string, since, until nostr.Timestamp, limit int) ([]nostr.Event, error) {
 	pctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -450,7 +581,10 @@ func relayPage(ctx context.Context, r *nostr.Relay, rcvPk string, since, until n
 			if !alive {
 				return out, errors.New("relay closed the page")
 			}
-			out = append(out, ev)
+			out = append(out, pageEntry(ev))
+			if limit > 0 && len(out) >= limit {
+				return out, nil
+			}
 			quiet.Reset(pageQuiet)
 		case <-sub.EndOfStoredEvents:
 			return out, nil
@@ -462,27 +596,11 @@ func relayPage(ctx context.Context, r *nostr.Relay, rcvPk string, since, until n
 	}
 }
 
-// the cap cut a connection's first answer. stored events come newest first,
-// so everything from the top down to the oldest that came is in, and the
-// next connection's walk may step over it. when a gap lies between this and
-// the place already kept, the kept place stays.
-func keepFirstAnswer(key string, oldest nostr.Timestamp, now time.Time) {
-	if oldest <= 0 {
-		return
-	}
-	top := nostr.Timestamp(now.Add(anchorSlack).Unix())
+// the cap cut a connection's first answer, see catchup.Book.KeepFirst
+func keepFirstAnswer(c catchup.Conn, oldest nostr.Timestamp, now time.Time) {
 	catchupMu.Lock()
 	defer catchupMu.Unlock()
-	m := catchupMarks[key]
-	switch {
-	case !m.Started():
-		m = catchup.Mark{Top: top, Cursor: oldest}
-	case oldest <= m.Top:
-		m = catchup.Mark{Top: top, Cursor: min(m.Cursor, oldest)}
-	default:
-		return
-	}
-	catchupMarks[key] = m
+	catchupBook.KeepFirst(c, oldest, nostr.Timestamp(now.Add(anchorSlack).Unix()))
 }
 
 // a connection whose walk is under way asks for no more than this at first:
@@ -827,6 +945,11 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 			}
 		}
 	}
+	// the file is no later than anything our relay owed before, so it holds
+	// from there until a pass on it is clean. the list is this runner's for
+	// good, and so are our relay's entries in it
+	ownKeys := ownCatchupKeys(urls, rcvPk)
+	catchupStart(ownKeys, nostr.Timestamp(lastSaved), nostr.Timestamp(time.Now().Unix()))
 	seen := loadSeen(seenPath)
 	// runners share the anchor and read it back, or a relay that never sees
 	// a new event stays pinned to the launch window for the whole process.
@@ -838,14 +961,21 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 
 	// the anchor only moves forward. the file follows it whenever the two
 	// differ, which also puts back one that was later than now and leaves a
-	// file once an address has been caught up
+	// file once an address has been caught up. it stays at or below what our
+	// relay still owes: after a restart no walk is remembered, and its first
+	// window comes from the file. so whenever a walk is left owing,
+	// saveLast(0) takes the file down to it at once.
 	saveLast := func(ts int64) {
 		lastMu.Lock()
 		defer lastMu.Unlock()
 		if ts > lastSaved {
 			lastSaved = ts
 		}
-		if lastPath == "" || lastSaved == lastOnDisk || engineHeld.Load() {
+		disk := lastSaved
+		if f, held := catchupFloor(ownKeys); held && int64(f) < disk {
+			disk = int64(f)
+		}
+		if lastPath == "" || disk == lastOnDisk || engineHeld.Load() {
 			return
 		}
 		seenFileMu.Lock()
@@ -853,15 +983,16 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 		if fileGone(lastPath) {
 			return
 		}
-		if os.WriteFile(lastPath, []byte(strconv.FormatInt(lastSaved, 10)), 0600) == nil {
-			lastOnDisk = lastSaved
+		if os.WriteFile(lastPath, []byte(strconv.FormatInt(disk, 10)), 0600) == nil {
+			lastOnDisk = disk
 		}
 	}
 
 	// fresh: the id was new here, which is what the catch-up counts to know
 	// it is still finding things. opened: it unwrapped and went to the inbox,
-	// and only that may move the anchor. the relay library has already
-	// checked that the id is the event's own.
+	// now or on an earlier pass, and only that may move the anchor. the
+	// relay library has already checked that the id is the event's own, so
+	// an id that opened once comes with the stamp it opened with.
 	take := func(ev nostr.Event) (fresh, opened bool) {
 		id := ev.ID.Hex()
 		nostrMu.Lock()
@@ -871,7 +1002,10 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 			return false, false
 		}
 		if !seen.claim(ev.ID) {
-			return false, false
+			// the app took it before, maybe in a process before this one.
+			// it moves the anchor again, or after a restart the anchor
+			// stays at the file until the contact sends something new
+			return false, seen.handed(ev.ID)
 		}
 		var gw nostr2.Event
 		if err := easyjson.Unmarshal([]byte(ev.String()), &gw); err != nil {
@@ -964,13 +1098,18 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 					sleepOrKick(wait)
 					continue
 				}
-				r := nostr.NewRelay(ctx, u, subscribeRelayOptions())
+				// each connection has a context of its own, so the relay and
+				// everything the library starts for it end with the connection
+				// and not with the subscription. ending it closes the relay.
+				conn, connDone := context.WithCancel(ctx)
+				r := nostr.NewRelay(conn, u, subscribeRelayOptions())
 				dialAt := time.Now()
 				noteRelayDial(u)
-				dctx, dcancel := relayDialCtx(ctx, u)
+				dctx, dcancel := relayDialCtx(conn, u)
 				err = r.ConnectWithClient(dctx, client)
 				dcancel()
 				if err != nil {
+					connDone()
 					log.Printf("nostr: subscribe-connect %s: %v", u, err)
 					relayFailed(u)
 					sleepOrKick(relayRetryAfter(u, retry, own))
@@ -987,6 +1126,10 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 				// connection that dropped half way asks for the same window
 				// again and not for the little that came after.
 				last = nostr.Timestamp(loadLast())
+				// our relay, still walking its window or owing one more
+				// pass over it, takes the window from where that walk began
+				cc := catchupConnect(ck, ownKeys, last, nostr.Timestamp(connected.Unix()))
+				resumed, base := cc.Resumed, cc.Base
 				// a wrap can be a 16k base64 slice of a video, so a reconnect
 				// seconds after the last one asks for twenty, not a hundred. a
 				// cold start, or a gap long enough to have missed a
@@ -996,7 +1139,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 					time.Now().Round(0).Sub(lastAlive) < 5*time.Minute {
 					limit = 20
 				}
-				if catchupMarkOf(ck).Started() && limit > catchupResumeLimit {
+				if resumed && limit > catchupResumeLimit {
 					limit = catchupResumeLimit
 				}
 				f := nostr.Filter{
@@ -1005,11 +1148,11 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 					Limit: limit,
 				}
 				// after the first connect only ask for what we missed
-				if last > 0 {
+				if base > 0 {
 					// wraps carry timestamps jittered up to ~10h into the past,
 					// so pull the window back or a late-stamped fresh wrap gets
 					// filtered out. the dedup layers eat the refetch.
-					since := last - nostr.Timestamp(12*3600)
+					since := base - nostr.Timestamp(12*3600)
 					if since > 0 {
 						f.Since = since
 					}
@@ -1017,10 +1160,10 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 				// the library fakes an eose after 7s of silence. a hundred
 				// slices over tor take longer than that, and a fake one would
 				// end the count below before the relay was done.
-				sub, err := r.Subscribe(ctx, f, nostr.SubscriptionOptions{MaxWaitForEOSE: time.Duration(math.MaxInt64)})
+				sub, err := r.Subscribe(conn, f, nostr.SubscriptionOptions{MaxWaitForEOSE: time.Duration(math.MaxInt64)})
 				if err != nil {
 					log.Printf("nostr: subscribe %s: %v", u, err)
-					r.Close()
+					connDone()
 					relayFailed(u)
 					sleepOrKick(relayRetryAfter(u, retry, own))
 					continue
@@ -1049,7 +1192,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 				// until the relay says that was all, count them and remember
 				// the oldest: a full answer means there may be more behind it.
 				// the anchor is held back until that has been fetched too.
-				cctx, ccancel := context.WithCancel(ctx)
+				cctx, ccancel := context.WithCancel(conn)
 				// counted while this connection is still fetching what it
 				// missed, so a check-in knows when it may stop tor again
 				atomic.AddInt32(&catchupActive, 1)
@@ -1081,7 +1224,8 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 				capT = time.AfterFunc(thisCap, func() {
 					settleOnce.Do(func() {
 						if firstOpen.Load() {
-							keepFirstAnswer(ck, nostr.Timestamp(firstOldest.Load()), time.Now())
+							keepFirstAnswer(cc, nostr.Timestamp(firstOldest.Load()), time.Now())
+							saveLast(0)
 						}
 						atomic.AddInt32(&catchupActive, -1)
 						noteCatchupDone(ck, true)
@@ -1102,6 +1246,17 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 							stopKick()
 							r.Close()
 							dropped = true
+							// the request itself was answered with CLOSED: a
+							// relay that hands over nothing owes nothing
+							if eose != nil && stored == 0 {
+								select {
+								case <-sub.ClosedReason:
+									log.Printf("nostr: %s refused the subscription", u)
+									catchupRefused(cc)
+									saveLast(0)
+								default:
+								}
+							}
 							goto reconnect
 						}
 						markAlive()
@@ -1136,6 +1291,9 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 						eose = nil
 						firstOpen.Store(false)
 						if stored < limit || oldest == 0 {
+							// the whole window came in this one answer, the
+							// stretches walked before included
+							catchupDone(cc, false)
 							atomic.StoreInt32(&caughtUp, 1)
 							saveLast(atomic.LoadInt64(&pending))
 							noteCatchupPages(ck, 0, stored)
@@ -1143,16 +1301,26 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 							continue
 						}
 						log.Printf("nostr: %s answered with a full %d, paging back", u, stored)
+						// the file must not pass what the walk owes while it
+						// is under way, the other relays' saves included
+						catchupOwe(cc)
+						saveLast(0)
 						go func(from nostr.Timestamp) {
 							defer settled()
 							// carries this relay's place from last time, so a
 							// backlog deeper than one window is walked in
 							// pieces instead of re-walked from the top and
 							// never finished.
+							m := catchupMarkOf(ck)
 							res, mark := catchup.Continue(cctx, func(pc context.Context, s, t nostr.Timestamp, n int) ([]nostr.Event, error) {
 								return relayPage(pc, r, rcvPk, s, t, n)
-							}, since, from, catchupPage, catchupMaxPages, dispatch, catchupMarkOf(ck))
-							setCatchupMark(ck, mark)
+							}, since, from, catchupPage, catchupMaxPages, dispatch, m)
+							if res.Complete {
+								catchupDone(cc, m.Started())
+							} else {
+								catchupCut(cc, mark)
+								saveLast(0)
+							}
 							noteCatchupPages(ck, res.Pages, res.Fetched)
 							log.Printf("nostr: %s paged back %d pages, %d events, %d new, complete=%v, resume=%d",
 								u, res.Pages, res.Fetched, res.Fresh, res.Complete, res.Until)
@@ -1169,7 +1337,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 						// question that fetches nothing instead: it costs a frame
 						// and an eose, and a real eose proves the circuit still
 						// carries data.
-						if relayResponds(ctx, r, rcvPk) {
+						if relayResponds(conn, r, rcvPk) {
 							markAlive()
 							idle.Reset(quietFor(deaf))
 							continue
@@ -1197,7 +1365,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 						// reviving, and dropping it costs a full since window
 						// on every contact and every relay, so ask before
 						// tearing down.
-						if relayResponds(ctx, r, rcvPk) {
+						if relayResponds(conn, r, rcvPk) {
 							markAlive()
 							log.Printf("nostr: %s kicked but still answering, keeping the sub", u)
 							if !idle.Stop() {
@@ -1220,12 +1388,14 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 						ccancel()
 						settled()
 						r.Close()
+						connDone()
 						return
 					}
 				}
 			reconnect:
 				ccancel()
 				settled()
+				connDone()
 				// a relay that answers and then closes is not redialled at
 				// the same pace for ever. a connection that lived resets it
 				if lived := time.Since(connected); lived >= youngConn {
