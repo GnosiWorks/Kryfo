@@ -162,7 +162,7 @@ func TestClosedFramesLeaveNothingWaiting(t *testing.T) {
 				continue
 			}
 			b, _ := nostr.ClosedEnvelope{SubscriptionID: e.SubscriptionID, Reason: "no"}.MarshalJSON()
-			for i := 0; i < 60; i++ {
+			for i := 0; i < 200; i++ {
 				if c.Write(r.Context(), ws.MessageText, b) != nil {
 					return
 				}
@@ -200,9 +200,10 @@ func TestClosedFramesLeaveNothingWaiting(t *testing.T) {
 	goroutinesBackTo(t, "after five closed subscriptions", before+2)
 }
 
-// a relay that sends three times what a page asked for and never says it is
-// done, with one event larger than any wrap can be in front. that one counts,
-// as its id and stamp.
+// a relay that sends ten times what a page asked for and never says it is
+// done, with one event larger than any wrap can be in front. the page reads
+// pageReads times its limit, stops, and keeps the newest it asked for. the
+// large one counts, as its id and stamp.
 func TestPageKeepsNoMoreThanItAskedFor(t *testing.T) {
 	var addr [32]byte
 	if _, err := rand.Read(addr[:]); err != nil {
@@ -212,7 +213,7 @@ func TestPageKeepsNoMoreThanItAskedFor(t *testing.T) {
 	now := time.Now()
 	big := unopenedTo(t, rcv, now, strings.Repeat("A", wrapContentMax+1))
 	var evs []nostr.Event
-	for i := 0; i < 60; i++ {
+	for i := 0; i < 200; i++ {
 		evs = append(evs, unopenedTo(t, rcv, now.Add(-time.Duration(i)*time.Second), "x"))
 	}
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -267,7 +268,7 @@ func TestPageKeepsNoMoreThanItAskedFor(t *testing.T) {
 	if len(got) != 20 {
 		t.Fatalf("kept %d events, asked for 20", len(got))
 	}
-	// the first twenty sent, in the order sent
+	// the first twenty sent, the newest, in the order sent
 	for i, ev := range append([]nostr.Event{big}, evs...)[:20] {
 		if got[i].ID != ev.ID {
 			t.Fatalf("event %d of the page is not event %d as sent", i, i)

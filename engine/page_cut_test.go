@@ -322,6 +322,188 @@ func TestEventsComeInTheOrderTheyWereSent(t *testing.T) {
 	}
 }
 
+// a reader that does some work per event, as take() does, and takes either
+// channel gets the eose right after the last stored event: never a live one
+// first, which it would count as stored
+func TestALiveEventNeverComesBeforeTheEose(t *testing.T) {
+	const stored, live = 5, 3
+	u := floodRelay(t, stored, live)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	r, err := nostr.RelayConnect(ctx, u, nostr.RelayOptions{AssumeValid: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer r.Close()
+	early := 0
+	const rounds = 100
+	for round := 0; round < rounds; round++ {
+		sub, err := r.Subscribe(ctx, nostr.Filter{Kinds: []nostr.Kind{1059}},
+			nostr.SubscriptionOptions{MaxWaitForEOSE: time.Duration(math.MaxInt64)})
+		if err != nil {
+			t.Fatal(err)
+		}
+		eose := sub.EndOfStoredEvents
+		next, counted := 0, 0
+		for next < stored+live {
+			select {
+			case <-sub.Events:
+				if eose != nil {
+					counted++
+				}
+				next++
+				time.Sleep(time.Millisecond)
+			case <-eose:
+				eose = nil
+			case <-ctx.Done():
+				t.Fatalf("round %d: only %d of %d events came", round, next, stored+live)
+			}
+		}
+		if counted != stored {
+			early++
+		}
+		sub.Unsub()
+	}
+	if early > 0 {
+		t.Fatalf("%d of %d rounds counted a live event as stored", early, rounds)
+	}
+}
+
+// a relay that answers each request with stored events, its eose and at
+// once a CLOSED, so the subscription ends while most are still on their way
+func eoseThenClosedRelay(t *testing.T, stored int) string {
+	t.Helper()
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		conn, err := ws.Accept(w, r, nil)
+		if err != nil {
+			return
+		}
+		defer conn.CloseNow()
+		ctx := r.Context()
+		for {
+			_, data, err := conn.Read(ctx)
+			if err != nil {
+				return
+			}
+			env, err := nostr.ParseMessage(string(data))
+			if err != nil {
+				continue
+			}
+			e, ok := env.(*nostr.ReqEnvelope)
+			if !ok {
+				continue
+			}
+			sid := e.SubscriptionID
+			now := nostr.Now()
+			var frames [][]byte
+			for i := 0; i < stored; i++ {
+				ev := nostr.Event{Kind: 1059, CreatedAt: now - nostr.Timestamp(i), Content: strconv.Itoa(i)}
+				ev.ID[0], ev.ID[1] = byte(i>>8), byte(i)
+				b, _ := nostr.EventEnvelope{SubscriptionID: &sid, Event: ev}.MarshalJSON()
+				frames = append(frames, b)
+			}
+			b, _ := nostr.EOSEEnvelope(sid).MarshalJSON()
+			frames = append(frames, b)
+			b, _ = nostr.ClosedEnvelope{SubscriptionID: sid, Reason: "error: shutting down"}.MarshalJSON()
+			frames = append(frames, b)
+			for _, b := range frames {
+				if conn.Write(ctx, ws.MessageText, b) != nil {
+					return
+				}
+			}
+		}
+	}))
+	t.Cleanup(srv.Close)
+	return "ws" + strings.TrimPrefix(srv.URL, "http")
+}
+
+// the eose is handed over only after every stored event: a subscription
+// that ends with some still undelivered drops the eose with them, so a page
+// never takes what it got for the whole answer
+func TestAnEoseNeverFollowsADroppedStoredEvent(t *testing.T) {
+	const stored = 30
+	u := eoseThenClosedRelay(t, stored)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	r, err := nostr.RelayConnect(ctx, u, nostr.RelayOptions{AssumeValid: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer r.Close()
+	short := 0
+	const rounds = 100
+	for round := 0; round < rounds; round++ {
+		sub, err := r.Subscribe(ctx, nostr.Filter{Kinds: []nostr.Kind{1059}},
+			nostr.SubscriptionOptions{MaxWaitForEOSE: time.Duration(math.MaxInt64)})
+		if err != nil {
+			t.Fatal(err)
+		}
+		got := 0
+		for open := true; open; {
+			select {
+			case _, alive := <-sub.Events:
+				if !alive {
+					open = false
+					break
+				}
+				got++
+				time.Sleep(50 * time.Microsecond)
+			case <-sub.EndOfStoredEvents:
+				if got != stored {
+					short++
+				}
+				open = false
+			case <-ctx.Done():
+				t.Fatalf("round %d: the subscription never ended", round)
+			}
+		}
+		sub.Unsub()
+	}
+	if short > 0 {
+		t.Fatalf("%d of %d rounds handed the eose over after fewer than %d stored events", short, rounds, stored)
+	}
+}
+
+// an eose faked after MaxWaitForEOSE comes behind every stored event that
+// came before it, in order, even when the reader is not there as it fires
+func TestAFakedEoseDropsNoStoredEvent(t *testing.T) {
+	const stored = 40
+	u := floodRelay(t, stored, 0)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	r, err := nostr.RelayConnect(ctx, u, nostr.RelayOptions{AssumeValid: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer r.Close()
+	for round := 0; round < 3; round++ {
+		sub, err := r.Subscribe(ctx, nostr.Filter{Kinds: []nostr.Kind{1059}},
+			nostr.SubscriptionOptions{MaxWaitForEOSE: 50 * time.Millisecond})
+		if err != nil {
+			t.Fatal(err)
+		}
+		time.Sleep(200 * time.Millisecond)
+		next := 0
+		for done := false; !done; {
+			select {
+			case ev := <-sub.Events:
+				if ev.Content != strconv.Itoa(next) {
+					t.Fatalf("round %d: event %s came where %d was due", round, ev.Content, next)
+				}
+				next++
+			case <-sub.EndOfStoredEvents:
+				if next != stored {
+					t.Fatalf("round %d: the faked eose came after %d of %d stored events", round, next, stored)
+				}
+				done = true
+			case <-ctx.Done():
+				t.Fatalf("round %d: no eose", round)
+			}
+		}
+		sub.Unsub()
+	}
+}
+
 // subscriptions ended part way through a flood hand over the start of it,
 // in order, and close their channel; nothing is sent on it after that
 func TestAnEndedSubscriptionKeepsTheStartOfWhatCame(t *testing.T) {
