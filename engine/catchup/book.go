@@ -4,12 +4,17 @@ package catchup
 import "fiatjaf.com/nostr"
 
 // Book is where each relay's walk has got to and what it owes the anchor,
-// by one key per relay and address. Only our relay holds anything: it alone
-// has wraps no other relay has, since a sender in balanced mode publishes
-// only there and public relays may refuse media slices. Its entries, an
-// onion and its clearnet name, are ways into one store, so each takes its
-// window from the lowest floor any of them owes, and a pass on one lets the
-// others go. A Book is not safe for concurrent use.
+// by one key per relay and address. Only our relay holds anything: a sender
+// in balanced mode publishes only there and public relays may refuse media
+// slices, so most wraps only it has. That is a trade-off, not a guarantee. A
+// send counts once any relay takes it and ours is not tried again, so a wrap
+// ours refused or never got is on public relays alone, and a walk there that
+// stepped over the stretch it is stamped into does not come back for it.
+// Holding the anchor for public relays as well would let one that never
+// gets through hold it for good. Our relay's entries, an onion and its
+// clearnet name, are ways into one store, so each takes its window from the
+// lowest floor any of them owes, and a pass on one lets the others go. A
+// Book is not safe for concurrent use.
 type Book struct {
 	Marks map[string]Mark
 	Holds map[string]Hold

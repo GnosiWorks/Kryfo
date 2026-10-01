@@ -84,8 +84,15 @@ files differ, the new lines marked `kryfo:`:
   goroutine per event, so a later one can overtake an earlier one, and a
   catch-up page cut short could keep an older event and lose newer ones
   sent before it. `Events` is closed only while nothing is handing over, so
-  nothing sends on it once it is closed. `dispatchEose` takes the same lock,
-  so a stored event is counted before the wait for the EOSE begins.
+  nothing sends on it once it is closed. `dispatchEose` takes the same lock
+  and queues the EOSE behind the stored events, and the same goroutine
+  hands it over on `EndOfStoredEvents`, which is unbuffered: an event after
+  it waits until it is taken, so a reader taking either channel cannot take
+  a live event for a stored one. an EOSE faked after `MaxWaitForEOSE`
+  waits behind the stored events still queued too, where upstream drops
+  them. a subscription that ends, or gets a CLOSED, drops what is still
+  queued, the EOSE with it. a reader that wants events after the EOSE has
+  to take it.
 
 vendor/fiatjaf.com/nostr is a copy of it and has to stay one:
 

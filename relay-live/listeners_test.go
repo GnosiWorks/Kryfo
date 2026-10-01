@@ -501,3 +501,95 @@ func TestSlowPageIsClosedAtItsDeadline(t *testing.T) {
 	waitConns(t, l, 0, 3*time.Second)
 	emptyWAL(t, db, path)
 }
+
+// a wrap that comes in while a page streams goes out after the page's eose,
+// never among its stored wraps, where a reader would take it for one and
+// could judge the page by its stamp
+func TestNoLiveWrapComesBeforeItsPagesEose(t *testing.T) {
+	db, _ := testStore(t)
+	to := addr()
+	stored := fillPage(t, db, to)
+	url, _ := slowRelay(t, db, nil)
+	rd := dialSlow(t, url)
+	got := map[string]bool{startPage(t, rd, to): true}
+
+	pub := connect(t, url)
+	live := map[string]bool{}
+	for i := 0; i < 10; i++ {
+		ev := wrap(t, to, nil)
+		publishTimed(t, pub, ev)
+		live[ev.ID] = true
+	}
+
+	eose := false
+	after := 0
+	for !eose || after < len(live) {
+		env, err := readNext(rd, 10*time.Second)
+		if err != nil {
+			t.Fatalf("%d of %d stored, %d of %d live, eose %v: %v",
+				len(got), len(stored), after, len(live), eose, err)
+		}
+		switch env := env.(type) {
+		case *nostr.EventEnvelope:
+			switch id := env.Event.ID; {
+			case live[id] && !eose:
+				t.Fatalf("a live wrap came before the eose, after %d of %d stored", len(got), len(stored))
+			case live[id]:
+				after++
+			case stored[id] && !eose:
+				got[id] = true
+			default:
+				t.Fatalf("a wrap that was not asked for, or a stored one after the eose")
+			}
+		case *nostr.EOSEEnvelope:
+			if len(got) != len(stored) {
+				t.Fatalf("the eose after %d of %d stored", len(got), len(stored))
+			}
+			eose = true
+		default:
+			t.Fatalf("got %v", env)
+		}
+	}
+}
+
+// wraps held back behind a page count toward the reader's bound, and are
+// let go of with its connection: a reader that leaves in the middle of a
+// page, or falls past its bound there, leaves nothing queued
+func TestWrapsHeldForAPageGoWithItsConnection(t *testing.T) {
+	for _, bound := range []bool{false, true} {
+		db, _ := testStore(t)
+		to := addr()
+		fillPage(t, db, to)
+		var relay *khatru.Relay
+		url, l := slowRelay(t, db, func(r *khatru.Relay) {
+			if bound {
+				r.MaxQueuedSize = 256 << 10
+			}
+			relay = r
+		})
+		rd := dialSlow(t, url)
+		startPage(t, rd, to)
+		pub := connect(t, url)
+		for i := 0; i < 2; i++ {
+			publishTimed(t, pub, bigWrap(t, to, nostr.Now()-60))
+		}
+		if relay.Queued() == 0 {
+			t.Fatal("nothing held while the page streams")
+		}
+		if bound {
+			for i := 0; i < 4; i++ {
+				publishTimed(t, pub, bigWrap(t, to, nostr.Now()-60))
+			}
+		} else {
+			rd.Close()
+		}
+		waitConns(t, l, 1, 5*time.Second)
+		end := time.Now().Add(5 * time.Second)
+		for relay.Queued() != 0 {
+			if time.Now().After(end) {
+				t.Fatalf("bound %v: %d bytes still queued for a closed connection", bound, relay.Queued())
+			}
+			time.Sleep(20 * time.Millisecond)
+		}
+	}
+}

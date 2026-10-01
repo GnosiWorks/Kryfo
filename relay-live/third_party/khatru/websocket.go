@@ -41,6 +41,15 @@ type WebSocket struct {
 	queued     int64
 	draining   bool
 	closed     bool
+	// kryfo: live events held back from subscriptions whose stored events
+	// are still going out, by subscription id. under queueMutex
+	held map[string]*heldEvents
+}
+
+// kryfo: n counts the requests under one id still sending stored events
+type heldEvents struct {
+	n      int
+	events []queuedEvent
 }
 
 type queuedEvent struct {
@@ -124,11 +133,59 @@ func (ws *WebSocket) push(id string, event *nostr.Event) {
 		ws.conn.Close()
 		return
 	}
-	ws.queue = append(ws.queue, queuedEvent{id, event, size})
 	ws.queued += size
+	if h := ws.held[id]; h != nil {
+		h.events = append(h.events, queuedEvent{id, event, size})
+		return
+	}
+	ws.queue = append(ws.queue, queuedEvent{id, event, size})
+	ws.startDrain()
+}
+
+// kryfo: with queueMutex held
+func (ws *WebSocket) startDrain() {
 	if !ws.draining {
 		ws.draining = true
 		go ws.drain()
+	}
+}
+
+// kryfo: live events for the subscription id wait until release, so none
+// goes out among its stored events, where a reader would take it for one
+// and could judge the page by it
+func (ws *WebSocket) hold(id string) {
+	ws.queueMutex.Lock()
+	defer ws.queueMutex.Unlock()
+	if ws.closed {
+		return
+	}
+	if ws.held == nil {
+		ws.held = map[string]*heldEvents{}
+	}
+	h := ws.held[id]
+	if h == nil {
+		h = &heldEvents{}
+		ws.held[id] = h
+	}
+	h.n++
+}
+
+// kryfo: the request's eose is written, or it was refused: what was held
+// for it goes out now, behind it
+func (ws *WebSocket) release(id string) {
+	ws.queueMutex.Lock()
+	defer ws.queueMutex.Unlock()
+	h := ws.held[id]
+	if h == nil {
+		return
+	}
+	if h.n--; h.n > 0 {
+		return
+	}
+	delete(ws.held, id)
+	if len(h.events) > 0 {
+		ws.queue = append(ws.queue, h.events...)
+		ws.startDrain()
 	}
 }
 
@@ -143,7 +200,13 @@ func (ws *WebSocket) dropQueue() {
 	for _, q := range ws.queue {
 		n += q.size
 	}
+	for _, h := range ws.held {
+		for _, q := range h.events {
+			n += q.size
+		}
+	}
 	ws.queue = nil
+	ws.held = nil
 	ws.queued -= n
 	ws.rl.queuedTotal.Add(-n)
 }

@@ -31,6 +31,8 @@ type Subscription struct {
 	mu     sync.Mutex
 
 	// the EndOfStoredEvents channel gets closed when an EOSE comes for that subscription
+	// kryfo: it is sent on once, in order with Events, and the events after
+	// it wait until it is taken
 	EndOfStoredEvents chan struct{}
 
 	// the ClosedReason channel emits the reason when a CLOSED message is received
@@ -50,15 +52,12 @@ type Subscription struct {
 	match        func(Event) bool // this will be either Filters.Match or Filters.MatchIgnoringTimestampConstraints
 	live         atomic.Bool
 	eosed        atomic.Bool
-	eoseTimedOut chan struct{}
+	eoseTimedOut chan struct{} // kryfo: closed when the EOSE is faked, nothing waits on it
 	cancel       context.CancelCauseFunc
 
-	// this keeps track of the events we've received before the EOSE that we must dispatch before
-	// closing the EndOfStoredEvents channel
-	storedwg sync.WaitGroup
-
-	// kryfo: events read and not handed over yet, in the order they were
-	// read, and whether a goroutine is handing them over. both under mu
+	// kryfo: events and the eose read and not handed over yet, in the order
+	// they were read, and whether a goroutine is handing them over. both
+	// under mu
 	queue    []queuedEvent
 	draining bool
 	// kryfo: the subscription ended. under mu, and Events is closed only
@@ -66,10 +65,10 @@ type Subscription struct {
 	ending bool
 }
 
-// kryfo: stored is whether it came before the EOSE
+// kryfo: eose is the EOSE itself
 type queuedEvent struct {
-	evt    Event
-	stored bool
+	evt  Event
+	eose bool
 }
 
 // All SubscriptionOptions fields are optional
@@ -99,14 +98,15 @@ func (sub *Subscription) GetID() string { return sub.id }
 func (sub *Subscription) dispatchEvent(evt Event) {
 	sub.mu.Lock()
 	defer sub.mu.Unlock()
-	if sub.ending || sub.Context.Err() != nil {
+	if sub.ending || sub.Context.Err() != nil || !sub.live.Load() {
 		return
 	}
-	isStored := !sub.eosed.Load()
-	if isStored {
-		sub.storedwg.Add(1)
-	}
-	sub.queue = append(sub.queue, queuedEvent{evt: evt, stored: isStored})
+	sub.queue = append(sub.queue, queuedEvent{evt: evt})
+	sub.startDrain()
+}
+
+// kryfo: mu held
+func (sub *Subscription) startDrain() {
 	if !sub.draining {
 		sub.draining = true
 		go sub.drain()
@@ -114,17 +114,16 @@ func (sub *Subscription) dispatchEvent(evt Event) {
 }
 
 // kryfo: hands the queue over until it is empty. once the subscription has
-// ended the rest is dropped, so what did come is the start of what was read,
-// and Events is closed here if the closer found this still draining.
+// ended, or a CLOSED came, the rest is dropped, the EOSE with it, so what did
+// come is the start of what was read, and Events is closed here if the
+// closer found this still draining. the EOSE is handed over after every
+// stored event and before any later one: a reader taking either channel
+// cannot take a live event for a stored one. a faked EOSE waits behind the
+// stored events too, where upstream drops those still queued when it fires.
 func (sub *Subscription) drain() {
 	for {
 		sub.mu.Lock()
-		if sub.ending || sub.Context.Err() != nil || len(sub.queue) == 0 {
-			for _, q := range sub.queue {
-				if q.stored {
-					sub.storedwg.Done()
-				}
-			}
+		if sub.ending || sub.Context.Err() != nil || !sub.live.Load() || len(sub.queue) == 0 {
 			sub.queue = nil
 			sub.draining = false
 			if sub.ending {
@@ -138,37 +137,32 @@ func (sub *Subscription) drain() {
 		sub.queue = sub.queue[1:]
 		sub.mu.Unlock()
 
-		if q.stored {
-			if sub.live.Load() {
-				select {
-				case sub.Events <- q.evt:
-				case <-sub.Context.Done():
-				case <-sub.eoseTimedOut:
-				}
+		if q.eose {
+			select {
+			case sub.EndOfStoredEvents <- struct{}{}:
+			case <-sub.Context.Done():
 			}
-			sub.storedwg.Done()
-		} else {
-			if sub.live.Load() {
-				select {
-				case sub.Events <- q.evt:
-				case <-sub.Context.Done():
-				}
-			}
+			continue
+		}
+		select {
+		case sub.Events <- q.evt:
+		case <-sub.Context.Done():
 		}
 	}
 }
 
 func (sub *Subscription) dispatchEose() {
-	// kryfo: under mu, so a stored event is counted before the wait below
-	// begins, or it is not a stored event
+	// kryfo: under mu, so every stored event is queued before it, and
+	// handed over in order by the drain
 	sub.mu.Lock()
 	defer sub.mu.Unlock()
 	if sub.eosed.CompareAndSwap(false, true) {
 		sub.match = sub.Filter.MatchesIgnoringTimestampConstraints
-		go func() {
-			sub.storedwg.Wait()
-			sub.EndOfStoredEvents <- struct{}{}
-		}()
+		if sub.ending || sub.Context.Err() != nil || !sub.live.Load() {
+			return
+		}
+		sub.queue = append(sub.queue, queuedEvent{eose: true})
+		sub.startDrain()
 	}
 }
 

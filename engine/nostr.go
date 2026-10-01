@@ -528,6 +528,12 @@ func catchupOf(u string) (int, bool, bool, bool) {
 // yet each one comes within this; a dead circuit sends nothing at all.
 var pageQuiet = 20 * time.Second
 
+// how many times its limit a page reads at most while it waits for the
+// eose. a contact's photo is a hundred wraps, and a relay can send them
+// among a page's stored events; only one that ignores the limit pays for
+// reading this far
+const pageReads = 4
+
 // the longest content a wrap can have: a nip-44 payload holds at most this
 // much, and nothing longer opens
 const wrapContentMax = 87472
@@ -554,10 +560,13 @@ func pageEntry(ev nostr.Event) nostr.Event {
 
 // one page of stored events, closed again as soon as the relay says that
 // was all. a page cut short, by a quiet circuit, the relay or the caller,
-// returns what it got with the error, newest first, so the walk keeps it.
-// it keeps at most limit events, and of one larger than a wrap can be only
-// its id and stamp: a page that has limit ends there, and the walk carries
-// on below its oldest.
+// returns what it got with the error, in the order it came, so the walk
+// keeps it. of an event larger than a wrap can be it keeps only its id and stamp.
+// past limit it reads on to the eose, up to pageReads times the limit: a
+// live event the relay sent among the stored ones takes a place, and the
+// walk judges a full page by its limit-th newest stamp, so it needs limit
+// stored ones. it keeps only the events at that stamp or above, the walk
+// asks for the rest again.
 func relayPage(ctx context.Context, r *nostr.Relay, rcvPk string, since, until nostr.Timestamp, limit int) ([]nostr.Event, error) {
 	pctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -575,20 +584,26 @@ func relayPage(ctx context.Context, r *nostr.Relay, rcvPk string, since, until n
 	quiet := time.NewTimer(pageQuiet)
 	defer quiet.Stop()
 	var out []nostr.Event
+	read := 0
 	for {
 		select {
 		case ev, alive := <-sub.Events:
 			if !alive {
 				return out, errors.New("relay closed the page")
 			}
-			out = append(out, pageEntry(ev))
-			if limit > 0 && len(out) >= limit {
+			read++
+			out = catchup.Newest(append(out, pageEntry(ev)), limit)
+			if limit > 0 && read >= limit*pageReads {
 				return out, nil
 			}
 			quiet.Reset(pageQuiet)
 		case <-sub.EndOfStoredEvents:
 			return out, nil
 		case <-quiet.C:
+			// a relay that keeps to the limit sent all it had
+			if limit > 0 && read >= limit {
+				return out, nil
+			}
 			return out, errors.New("page went quiet")
 		case <-ctx.Done():
 			return out, ctx.Err()
@@ -1219,7 +1234,8 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 					log.Printf("nostr: %s dropped %d check-ins running, giving it %s this time",
 						u, catchupDropsBeforeLong, catchupLongCap)
 				}
-				// the oldest of the first answer so far, while it is coming
+				// where the first answer so far would be walked from, see
+				// catchup.Below, while it is coming
 				var firstOldest atomic.Int64
 				var firstOpen atomic.Bool
 				firstOpen.Store(true)
@@ -1237,6 +1253,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 				eose := sub.EndOfStoredEvents
 				stored := 0
 				var oldest nostr.Timestamp
+				first := catchup.NewAnswer(limit)
 				var caughtUp int32
 				var pending int64
 				since := f.Since
@@ -1265,9 +1282,10 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 						if ev.ID.Hex() != "" {
 							if eose != nil {
 								stored++
+								first.Add(ev.CreatedAt)
+								firstOldest.Store(int64(first.Below()))
 								if oldest == 0 || ev.CreatedAt < oldest {
 									oldest = ev.CreatedAt
-									firstOldest.Store(int64(oldest))
 								}
 							}
 							if _, opened := take(ev); opened {
@@ -1303,6 +1321,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 							continue
 						}
 						log.Printf("nostr: %s answered with a full %d, paging back", u, stored)
+						oldest = first.Below()
 						// the file must not pass what the walk owes while it
 						// is under way, the other relays' saves included
 						catchupOwe(cc)

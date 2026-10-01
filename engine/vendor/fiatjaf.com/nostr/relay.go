@@ -645,13 +645,15 @@ func (r *Relay) PrepareSubscription(ctx context.Context, filter Filter, opts Sub
 	current := r.subscriptionIDCounter.Add(1)
 	ctx, cancel := context.WithCancelCause(ctx)
 
+	// kryfo: EndOfStoredEvents is unbuffered, so the drain knows the EOSE
+	// was taken before it hands over a later event
 	sub := &Subscription{
 		Relay:             r,
 		Context:           ctx,
 		cancel:            cancel,
 		counter:           current,
 		Events:            make(chan Event),
-		EndOfStoredEvents: make(chan struct{}, 1),
+		EndOfStoredEvents: make(chan struct{}),
 		ClosedReason:      make(chan string, 1),
 		Filter:            filter,
 		match:             filter.Matches,

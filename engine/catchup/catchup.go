@@ -7,14 +7,77 @@ package catchup
 
 import (
 	"context"
+	"slices"
 
 	"fiatjaf.com/nostr"
 )
 
 // Page asks one relay for up to limit events with since <= created_at <=
 // until, newest first, and returns when the relay says that was all. A page
-// cut short returns its error with the events it did get.
+// cut short returns its error with the events it did get. More than limit
+// may come back: live events the relay sent among the stored ones, and ties
+// at the limit-th newest stamp.
 type Page func(ctx context.Context, since, until nostr.Timestamp, limit int) ([]nostr.Event, error)
+
+// Below is where a walk carries on under an answer to a request for limit
+// events: the limit-th newest stamp of a full one, the oldest of any other.
+// A live event sent among the stored ones can be stamped hours back, below
+// stored events the relay never got to, while more events can only raise
+// the limit-th newest. Ties at it are asked for again, until is inclusive.
+func Below(stamps []nostr.Timestamp, limit int) nostr.Timestamp {
+	if len(stamps) == 0 {
+		return 0
+	}
+	s := slices.Clone(stamps)
+	slices.Sort(s)
+	if limit > 0 && len(s) >= limit {
+		return s[len(s)-limit]
+	}
+	return s[0]
+}
+
+// Newest drops, in place and keeping the order, the events stamped below
+// the limit-th newest of evs. The walk carries on from that stamp, so what
+// is dropped is asked for again; everything stamped at it or above stays.
+func Newest(evs []nostr.Event, limit int) []nostr.Event {
+	if limit <= 0 || len(evs) <= limit {
+		return evs
+	}
+	stamps := make([]nostr.Timestamp, len(evs))
+	for i, ev := range evs {
+		stamps[i] = ev.CreatedAt
+	}
+	low := Below(stamps, limit)
+	kept := evs[:0]
+	for _, ev := range evs {
+		if ev.CreatedAt >= low {
+			kept = append(kept, ev)
+		}
+	}
+	clear(evs[len(kept):])
+	return kept
+}
+
+// Answer follows an answer to a request for limit events while it comes,
+// for Below of it so far. Only the limit newest stamps can decide it, so it
+// keeps no more than twice the limit.
+type Answer struct {
+	limit  int
+	stamps []nostr.Timestamp
+}
+
+func NewAnswer(limit int) *Answer { return &Answer{limit: limit} }
+
+func (a *Answer) Add(ts nostr.Timestamp) {
+	a.stamps = append(a.stamps, ts)
+	if a.limit > 0 && len(a.stamps) >= 2*a.limit {
+		slices.Sort(a.stamps)
+		a.stamps = append(a.stamps[:0], a.stamps[len(a.stamps)-a.limit:]...)
+	}
+}
+
+// Below of what has come so far
+func (a *Answer) Below() nostr.Timestamp { return Below(a.stamps, a.limit) }
 
 type Result struct {
 	Pages    int
@@ -102,18 +165,24 @@ func walk(ctx context.Context, fetch Page, since, oldest nostr.Timestamp,
 		if err != nil {
 			// a page cut short still brought what it brought, newest first,
 			// so everything down to its oldest is in, and the next attempt
-			// carries on from there instead of asking for the same page
-			low := until
+			// carries on from there instead of asking for the same page.
+			// that holds for the stored ones only: a live event the relay
+			// sent among them can be stamped below them, so a cut page with
+			// limit events is judged as a full one is. with fewer there is
+			// no telling them apart; our relay sends no live event before a
+			// page's eose
+			stamps := make([]nostr.Timestamp, 0, len(evs))
 			for _, ev := range evs {
 				res.Fetched++
 				if deliver(ev) {
 					res.Fresh++
 				}
-				if ev.CreatedAt < low {
-					low = ev.CreatedAt
-				}
+				stamps = append(stamps, ev.CreatedAt)
 			}
-			res.Until = low
+			res.Until = until
+			if len(stamps) > 0 {
+				res.Until = min(Below(stamps, limit), until)
+			}
 			return res
 		}
 		res.Pages++
@@ -127,21 +196,20 @@ func walk(ctx context.Context, fetch Page, since, oldest nostr.Timestamp,
 			return res
 		}
 		fresh := 0
-		low := until
+		stamps := make([]nostr.Timestamp, 0, len(evs))
 		for _, ev := range evs {
 			res.Fetched++
 			if deliver(ev) {
 				fresh++
 			}
-			if ev.CreatedAt < low {
-				low = ev.CreatedAt
-			}
+			stamps = append(stamps, ev.CreatedAt)
 		}
 		res.Fresh += fresh
+		low := min(Below(stamps, limit), until)
 		if low == until {
-			// nothing in this page was older than where it started: either
-			// the tail, or a second holding more events than the relay
-			// hands out. step over it. if that was the tail the next page
+			// the page did not get below where it started: either the
+			// tail, or a second holding more events than the relay hands
+			// out. step over it. if that was the tail the next page
 			// comes back empty, and an empty page is the only proof of the
 			// end that holds for every relay.
 			low = until - 1
