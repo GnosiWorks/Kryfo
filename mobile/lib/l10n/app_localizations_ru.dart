@@ -1044,6 +1044,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get backupCreateBackup => 'Создать копию';
 
   @override
+  String get backupNotMade =>
+      'Не удалось сделать резервную копию. Попробуй ещё раз.';
+
+  @override
   String get backupHiddenNotIn => 'Скрытых чатов в нём нет.';
 
   @override
@@ -1068,6 +1072,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get bridgesThatWasNotIt => 'Не то. Вот новая.';
+
+  @override
+  String get bridgesMoatFailed =>
+      'Не удалось связаться с проектом tor. Попробуй через минуту или вставь строку моста ниже.';
 
   @override
   String get bridgesGotBridgesSaveTo =>
@@ -2304,6 +2312,17 @@ class AppLocalizationsRu extends AppLocalizations {
   String get donateIPaidCheckAgain => 'Оплачено, проверить снова';
 
   @override
+  String get donateNoWallet =>
+      'На этом телефоне нет приложения, которое открывает ссылки bitcoin. Скопируй адрес.';
+
+  @override
+  String get donateChecking => 'Проверяем…';
+
+  @override
+  String get donateNotSeenYet =>
+      'Пока не видно. Платёж может появиться через несколько минут.';
+
+  @override
   String get donatePaymentConfirmed => 'Платёж подтверждён';
 
   @override
@@ -2848,6 +2867,21 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get handleDeleteThisHandle => 'Удалить имя пользователя';
+
+  @override
+  String handleDeleteTitle(Object handle) {
+    return 'Удалить @$handle?';
+  }
+
+  @override
+  String get handleDeleteLine =>
+      'Твоя публичная страница исчезнет, и имя сможет занять кто угодно. Твои чаты останутся как есть.';
+
+  @override
+  String get handleDeleteYes => 'Удалить имя пользователя';
+
+  @override
+  String get handleDeleting => 'Удаляем…';
 
   @override
   String get handleChecking => 'Проверяем…';
@@ -3797,9 +3831,6 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get myKryfoTypeTheNameThey =>
       'Введи @имя, которое тебе дали. Сработает, если человек его занял.';
-
-  @override
-  String get myKryfoWren => 'Wren';
 
   @override
   String get myKryfoTheLookupAsksFor =>
@@ -5398,6 +5429,17 @@ class AppLocalizationsRu extends AppLocalizations {
       'Отправить всё, что ждёт, сейчас';
 
   @override
+  String get transportSending => 'Отправляем…';
+
+  @override
+  String get transportNothingLeftWaiting => 'Больше ничего не ждёт';
+
+  @override
+  String transportStillWaiting(Object count) {
+    return 'Ещё ждёт: $count';
+  }
+
+  @override
   String get transportOff => 'Выкл.';
 
   @override
@@ -6736,6 +6778,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get bridgesNoneUsable =>
       'Ни одна из этих строк не подходит как мост, поэтому мосты остаются выключенными';
+
+  @override
+  String get bridgesCouldNotApply =>
+      'Не удалось применить мосты. Попробуй сохранить ещё раз.';
 
   @override
   String get languageTitle => 'Язык';

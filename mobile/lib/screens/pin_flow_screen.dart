@@ -16,9 +16,11 @@ import '../lock_state.dart';
 import '../main.dart' show appState, session;
 import '../theme.dart';
 import '../widgets/fit_column.dart';
+import '../widgets/halo_buttons.dart';
 import '../widgets/motion.dart' show haloRoute;
 import '../widgets/pin_pad.dart';
 import '../widgets/press_scale.dart';
+import '../widgets/swap.dart';
 import '../wipe.dart';
 import 'backup_screen.dart';
 import 'hide_picker.dart';
@@ -539,13 +541,18 @@ class _PinFlowScreenState extends State<PinFlowScreen>
         const SizedBox(height: 8),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32),
-          child: AnimatedSwitcher(
-            duration: _still
-                ? Duration.zero
-                : const Duration(milliseconds: 180),
+          // a refusal rises in over the hint, and the hint back over it
+          child: RiseSwap(
+            alignment: Alignment.center,
             child: Text(
               making ? l10n.newGroupCreating : _error ?? line,
-              key: ValueKey(making),
+              key: ValueKey(
+                making
+                    ? ('making', '')
+                    : _error != null
+                    ? ('error', _error!)
+                    : ('line', line),
+              ),
               textAlign: TextAlign.center,
               style: HaloType.sans(
                 size: 13,
@@ -700,29 +707,8 @@ class _PinFlowScreenState extends State<PinFlowScreen>
     );
   }
 
-  Widget _button(String label, VoidCallback onTap) => Semantics(
-    button: true,
-    child: PressScale(
-      onTap: onTap,
-      child: Container(
-        height: 50,
-        width: double.infinity,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: HaloColors.amber,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Text(
-          label,
-          style: HaloType.sans(
-            size: 15,
-            weight: FontWeight.w600,
-            color: HaloColors.onAmber,
-          ),
-        ),
-      ),
-    ),
-  );
+  Widget _button(String label, VoidCallback onTap) =>
+      HaloPrimaryButton(label: label, onTap: onTap);
 
   Widget _quiet(String label, VoidCallback onTap) => Semantics(
     button: true,

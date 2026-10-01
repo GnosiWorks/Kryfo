@@ -1581,6 +1581,12 @@ abstract class AppLocalizations {
   /// **'Create backup'**
   String get backupCreateBackup;
 
+  /// screens/backup_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'The backup could not be made. Try again.'**
+  String get backupNotMade;
+
   /// screens/backup_screen.dart: under every backup made outside the hidden chats, whether or not there are any
   ///
   /// In en, this message translates to:
@@ -1628,6 +1634,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'That was not it. Here is another.'**
   String get bridgesThatWasNotIt;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t reach the tor project. Try again in a minute, or paste a bridge line below.'**
+  String get bridgesMoatFailed;
 
   /// screens/bridges_screen.dart
   ///
@@ -3618,6 +3630,24 @@ abstract class AppLocalizations {
   /// screens/donate_screen.dart
   ///
   /// In en, this message translates to:
+  /// **'No wallet app here opens bitcoin links. Copy the address instead.'**
+  String get donateNoWallet;
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Checking…'**
+  String get donateChecking;
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Not seen yet. A payment can take a few minutes to show.'**
+  String get donateNotSeenYet;
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
   /// **'Payment confirmed'**
   String get donatePaymentConfirmed;
 
@@ -4448,6 +4478,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete this handle'**
   String get handleDeleteThisHandle;
+
+  /// screens/handle_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Delete @{handle}?'**
+  String handleDeleteTitle(Object handle);
+
+  /// screens/handle_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Your public page goes away and anyone can claim the name. Chats you already have stay as they are.'**
+  String get handleDeleteLine;
+
+  /// screens/handle_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Delete handle'**
+  String get handleDeleteYes;
+
+  /// screens/handle_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting…'**
+  String get handleDeleting;
 
   /// screens/handle_screen.dart
   ///
@@ -5846,12 +5900,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Type the @name they gave you. Works if they claimed one.'**
   String get myKryfoTypeTheNameThey;
-
-  /// screens/my_kryfo_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Wren'**
-  String get myKryfoWren;
 
   /// screens/my_kryfo_screen.dart
   ///
@@ -8586,6 +8634,24 @@ abstract class AppLocalizations {
   /// screens/transport_screen.dart
   ///
   /// In en, this message translates to:
+  /// **'Sending…'**
+  String get transportSending;
+
+  /// screens/transport_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing left waiting'**
+  String get transportNothingLeftWaiting;
+
+  /// screens/transport_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Still waiting: {count}'**
+  String transportStillWaiting(Object count);
+
+  /// screens/transport_screen.dart
+  ///
+  /// In en, this message translates to:
   /// **'Off'**
   String get transportOff;
 
@@ -10562,6 +10628,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'None of these lines is a usable bridge, so bridges stay off'**
   String get bridgesNoneUsable;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'The bridges could not be applied. Try saving again.'**
+  String get bridgesCouldNotApply;
 
   /// widgets/language_sheet.dart: the sheet title and the settings row
   ///

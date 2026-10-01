@@ -16,6 +16,7 @@ import 'package:kryfo/backup.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart' show HaloEngine, appState, useEngineForTest;
 import 'package:kryfo/screens/restore_screen.dart';
+import 'package:kryfo/theme.dart';
 
 import 'pin_flow_fakes.dart' show app, phone, press;
 
@@ -118,11 +119,21 @@ void main() {
       contacts: 2,
       messages: 9,
     );
-    restoreForTest = (_) => running.future;
+    var asks = 0;
+    restoreForTest = (_) {
+      asks++;
+      return running.future;
+    };
     await _openAndRestore(t);
 
     // writing now: neither the arrow nor the back gesture leaves
     expect(find.text(l10n.restoreRestoring), findsOneWidget);
+    // the button stays lit while it works, and a second tap starts nothing
+    final busy = t.widget<Text>(find.text(l10n.restoreRestoring));
+    expect(busy.style?.color, HaloColors.onAmber);
+    await t.tap(find.text(l10n.restoreRestoring));
+    await t.pump();
+    expect(asks, 1);
     expect(find.byType(BackButton), findsNothing);
     await t.binding.handlePopRoute();
     await t.pumpAndSettle();

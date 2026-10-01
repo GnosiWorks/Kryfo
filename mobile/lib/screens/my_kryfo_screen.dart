@@ -14,7 +14,6 @@ import '../handle_lookup.dart' show handleFromInput;
 import '../main.dart' show appState, handleHaloUri, handleHaloUriAdded;
 import '../theme.dart';
 import '../widgets/copied_mark.dart';
-import '../widgets/ease_size.dart';
 import '../widgets/halo_buttons.dart';
 import '../widgets/kryfo_avatar.dart';
 import '../widgets/motion.dart' show haloRoute;
@@ -23,6 +22,7 @@ import '../widgets/press_scale.dart';
 import '../widgets/qr_wipe.dart';
 import 'pair_code_screen.dart';
 import '../widgets/stagger_in.dart';
+import '../widgets/unfold.dart';
 import 'handle_screen.dart';
 import 'scan_screen.dart';
 import '../l10n/l10n.dart';
@@ -333,70 +333,66 @@ class _WayCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          InkWell(
-            onTap: onToggle,
-            borderRadius: BorderRadius.circular(16),
-            highlightColor: HaloColors.amber.withValues(alpha: 0.06),
-            child: Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(18, 16, 14, 16),
-              child: Row(
-                children: [
-                  Icon(icon, size: 20, color: HaloColors.amber),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: HaloType.serif(
-                            size: 19,
-                            italic: true,
-                            color: HaloColors.text,
+          // the press ink needs a material above the card's painted box
+          Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              onTap: onToggle,
+              borderRadius: BorderRadius.circular(16),
+              highlightColor: HaloColors.amber.withValues(alpha: 0.06),
+              child: Padding(
+                padding: const EdgeInsetsDirectional.fromSTEB(18, 16, 14, 16),
+                child: Row(
+                  children: [
+                    Icon(icon, size: 20, color: HaloColors.amber),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: HaloType.serif(
+                              size: 19,
+                              italic: true,
+                              color: HaloColors.text,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          line,
-                          style: HaloType.sans(
-                            size: 12.5,
-                            color: HaloColors.text2,
-                            height: 1.4,
+                          const SizedBox(height: 3),
+                          Text(
+                            line,
+                            style: HaloType.sans(
+                              size: 12.5,
+                              color: HaloColors.text2,
+                              height: 1.4,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  AnimatedRotation(
-                    turns: open ? 0.5 : 0,
-                    duration: still
-                        ? Duration.zero
-                        : const Duration(milliseconds: 220),
-                    curve: Curves.easeOutBack,
-                    child: Icon(
-                      Icons.expand_more_rounded,
-                      size: 20,
-                      color: HaloColors.text2,
+                    AnimatedRotation(
+                      turns: open ? 0.5 : 0,
+                      duration: still
+                          ? Duration.zero
+                          : const Duration(milliseconds: 220),
+                      curve: Curves.easeOutBack,
+                      child: Icon(
+                        Icons.expand_more_rounded,
+                        size: 20,
+                        color: HaloColors.text2,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
-          EaseSize(
-            child: open
-                // the body fades up as the card opens round it
-                ? TweenAnimationBuilder<double>(
-                    tween: Tween(begin: still ? 1 : 0, end: 1),
-                    duration: const Duration(milliseconds: 240),
-                    curve: const Interval(0.25, 1, curve: Curves.easeOut),
-                    builder: (_, v, child) => Opacity(opacity: v, child: child),
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(18, 0, 18, 20),
-                      child: body,
-                    ),
-                  )
-                : const SizedBox(width: double.infinity, height: 0),
+          Unfold(
+            open: open,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(18, 0, 18, 20),
+              child: body,
+            ),
           ),
         ],
       ),
@@ -587,7 +583,9 @@ class _Way3Card extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: HaloColors.line, width: 0.5),
             ),
+            // a handle is latin: the @ leads it in every language
             child: Row(
+              textDirection: TextDirection.ltr,
               children: [
                 Text(
                   '@',
@@ -607,7 +605,7 @@ class _Way3Card extends StatelessWidget {
                     decoration: InputDecoration(
                       border: InputBorder.none,
                       counterText: '',
-                      hintText: l10n.myKryfoWren,
+                      hintText: l10n.handleWren,
                       hintStyle: HaloType.mono(
                         size: 14,
                         color: HaloColors.text3,
@@ -652,7 +650,7 @@ class _QrFrame extends StatelessWidget {
       height: side,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: HaloColors.text,
+        color: HaloColors.qrPaper,
         borderRadius: BorderRadius.circular(18),
       ),
       child: uri == null
@@ -660,21 +658,21 @@ class _QrFrame extends StatelessWidget {
               child: Text(
                 l10n.myKryfoYourAddressAppearsOnce,
                 textAlign: TextAlign.center,
-                style: HaloType.sans(size: 12, color: HaloColors.ink),
+                style: HaloType.sans(size: 12, color: HaloColors.qrInk),
               ),
             )
           : QrWipe(
               child: QrImageView(
                 data: uri!,
                 version: QrVersions.auto,
-                backgroundColor: HaloColors.text,
+                backgroundColor: HaloColors.qrPaper,
                 eyeStyle: QrEyeStyle(
                   eyeShape: QrEyeShape.square,
-                  color: HaloColors.ink,
+                  color: HaloColors.qrInk,
                 ),
                 dataModuleStyle: QrDataModuleStyle(
                   dataModuleShape: QrDataModuleShape.square,
-                  color: HaloColors.ink,
+                  color: HaloColors.qrInk,
                 ),
               ),
             ),

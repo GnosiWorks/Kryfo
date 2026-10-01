@@ -1022,6 +1022,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get backupCreateBackup => 'Yedek oluştur';
 
   @override
+  String get backupNotMade => 'Yedek oluşturulamadı. Tekrar dene.';
+
+  @override
   String get backupHiddenNotIn => 'Gizli sohbetler bu dosyada yok.';
 
   @override
@@ -1046,6 +1049,10 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bridgesThatWasNotIt => 'Olmadı. İşte bir tane daha.';
+
+  @override
+  String get bridgesMoatFailed =>
+      'tor projesine ulaşılamadı. Bir dakika sonra tekrar dene ya da aşağıya bir köprü satırı yapıştır.';
 
   @override
   String get bridgesGotBridgesSaveTo =>
@@ -2254,6 +2261,17 @@ class AppLocalizationsTr extends AppLocalizations {
   String get donateIPaidCheckAgain => 'Ödedim, tekrar bak';
 
   @override
+  String get donateNoWallet =>
+      'Bu telefonda bitcoin bağlantılarını açan bir uygulama yok. Bunun yerine adresi kopyala.';
+
+  @override
+  String get donateChecking => 'Kontrol ediliyor…';
+
+  @override
+  String get donateNotSeenYet =>
+      'Henüz görünmüyor. Bir ödemenin görünmesi birkaç dakika sürebilir.';
+
+  @override
   String get donatePaymentConfirmed => 'Ödeme onaylandı';
 
   @override
@@ -2787,6 +2805,21 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get handleDeleteThisHandle => 'Bu kullanıcı adını sil';
+
+  @override
+  String handleDeleteTitle(Object handle) {
+    return '@$handle silinsin mi?';
+  }
+
+  @override
+  String get handleDeleteLine =>
+      'Herkese açık sayfan kalkar ve adı herkes alabilir. Mevcut sohbetlerin olduğu gibi kalır.';
+
+  @override
+  String get handleDeleteYes => 'Kullanıcı adını sil';
+
+  @override
+  String get handleDeleting => 'Siliniyor…';
 
   @override
   String get handleChecking => 'Kontrol ediliyor…';
@@ -3730,9 +3763,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get myKryfoTypeTheNameThey =>
       'Sana verdiği @adı yaz. Bir tane aldıysa çalışır.';
-
-  @override
-  String get myKryfoWren => 'Wren';
 
   @override
   String get myKryfoTheLookupAsksFor =>
@@ -5325,6 +5355,17 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bekleyen her şeyi şimdi gönder';
 
   @override
+  String get transportSending => 'Gönderiliyor…';
+
+  @override
+  String get transportNothingLeftWaiting => 'Bekleyen bir şey kalmadı';
+
+  @override
+  String transportStillWaiting(Object count) {
+    return 'Hâlâ bekleyen: $count';
+  }
+
+  @override
   String get transportOff => 'Kapalı';
 
   @override
@@ -6641,6 +6682,10 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get bridgesNoneUsable =>
       'Bu satırların hiçbiri kullanılabilir bir köprü değil, bu yüzden köprüler kapalı kalıyor';
+
+  @override
+  String get bridgesCouldNotApply =>
+      'Köprüler uygulanamadı. Yeniden kaydetmeyi dene.';
 
   @override
   String get languageTitle => 'Dil';

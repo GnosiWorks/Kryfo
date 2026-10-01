@@ -14,9 +14,10 @@ import '../seen_timers.dart';
 import '../theme.dart';
 import '../widgets/motion.dart';
 import '../widgets/press_scale.dart';
-import '../widgets/ease_size.dart';
 import '../widgets/halo_switch.dart';
 import '../widgets/stagger_in.dart';
+import '../widgets/swap.dart';
+import '../widgets/unfold.dart';
 import '../l10n/l10n.dart';
 import '../dlog.dart';
 
@@ -31,8 +32,9 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
   final _timers = SeenTimers();
   bool _busy = false;
   // what a notification shows on the lock screen: how messages arrive and
-  // what they say when they do are the same question
-  bool _hidePreview = true;
+  // what they say when they do are the same question. null until read, so
+  // the switch never opens on a default and slides
+  bool? _hidePreview;
 
   @override
   void initState() {
@@ -188,26 +190,38 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
                           ),
                           // a pin turns previews off. if someone turns them
                           // back on, say what that gives away.
-                          if (lockState.enabled && !_hidePreview) ...[
-                            const SizedBox(height: 6),
-                            Text(
-                              l10n.gettingMessagesShowsMessageTextIn,
-                              style: HaloType.sans(
-                                size: 12,
-                                color: HaloColors.rose,
+                          Unfold(
+                            open: lockState.enabled && _hidePreview == false,
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 6),
+                              child: Text(
+                                l10n.gettingMessagesShowsMessageTextIn,
+                                style: HaloType.sans(
+                                  size: 12,
+                                  color: HaloColors.rose,
+                                ),
                               ),
                             ),
-                          ],
+                          ),
                         ],
                       ),
                     ),
                     const SizedBox(width: 12),
-                    HaloSwitch(
-                      value: _hidePreview,
-                      onChanged: (v) {
-                        setState(() => _hidePreview = v);
-                        setHideNotifContent(v, session.container);
-                      },
+                    FadeSwap(
+                      child: _hidePreview == null
+                          ? const SizedBox(
+                              key: ValueKey('pending'),
+                              width: 46,
+                              height: 26,
+                            )
+                          : HaloSwitch(
+                              key: const ValueKey('switch'),
+                              value: _hidePreview!,
+                              onChanged: (v) {
+                                setState(() => _hidePreview = v);
+                                setHideNotifContent(v, session.container);
+                              },
+                            ),
                     ),
                   ],
                 ),
@@ -234,15 +248,20 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
                       ),
                     const SizedBox(width: 9),
                     Expanded(
+                      // a new state rises in; the minutes counting on
+                      // change in place
                       child: Semantics(
                         liveRegion: true,
-                        child: Text(
-                          status.text,
-                          style: HaloType.mono(
-                            size: 12,
-                            color: status.live
-                                ? HaloColors.green
-                                : HaloColors.text,
+                        child: RiseSwap(
+                          child: Text(
+                            status.text,
+                            key: ValueKey((status.live, connecting)),
+                            style: HaloType.mono(
+                              size: 12,
+                              color: status.live
+                                  ? HaloColors.green
+                                  : HaloColors.text,
+                            ),
                           ),
                         ),
                       ),
@@ -252,33 +271,19 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
               ),
               // the check-ins note grows in and folds away, so the page
               // never jumps under a finger
-              EaseSize(
-                duration: const Duration(milliseconds: 240),
-                child: mode == DeliveryMode.checkins
-                    ? TweenAnimationBuilder<double>(
-                        tween: Tween(
-                          begin: MediaQuery.disableAnimationsOf(context)
-                              ? 1
-                              : 0,
-                          end: 1,
-                        ),
-                        duration: const Duration(milliseconds: 260),
-                        curve: const Interval(0.3, 1, curve: Curves.easeOut),
-                        builder: (_, v, child) =>
-                            Opacity(opacity: v, child: child),
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(22, 12, 22, 0),
-                          child: Text(
-                            l10n.gettingMessagesWhenThePhoneSits,
-                            style: HaloType.sans(
-                              size: 12.5,
-                              height: 1.5,
-                              color: HaloColors.warm,
-                            ),
-                          ),
-                        ),
-                      )
-                    : const SizedBox(width: double.infinity),
+              Unfold(
+                open: mode == DeliveryMode.checkins,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(22, 12, 22, 0),
+                  child: Text(
+                    l10n.gettingMessagesWhenThePhoneSits,
+                    style: HaloType.sans(
+                      size: 12.5,
+                      height: 1.5,
+                      color: HaloColors.warm,
+                    ),
+                  ),
+                ),
               ),
             ]),
           ),

@@ -1281,6 +1281,10 @@
   "@backupCreateBackup": {
     "description": "screens/backup_screen.dart"
   },
+  "backupNotMade": "The backup could not be made. Try again.",
+  "@backupNotMade": {
+    "description": "screens/backup_screen.dart"
+  },
   "backupHiddenNotIn": "Hidden chats are not in it.",
   "@backupHiddenNotIn": {
     "description": "screens/backup_screen.dart: under every backup made outside the hidden chats, whether or not there are any"
@@ -1311,6 +1315,10 @@
   },
   "bridgesThatWasNotIt": "That was not it. Here is another.",
   "@bridgesThatWasNotIt": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesMoatFailed": "Couldn't reach the tor project. Try again in a minute, or paste a bridge line below.",
+  "@bridgesMoatFailed": {
     "description": "screens/bridges_screen.dart"
   },
   "bridgesGotBridgesSaveTo": "Got bridges · save to use them",
@@ -2864,6 +2872,18 @@
   "@donateIPaidCheckAgain": {
     "description": "screens/donate_screen.dart"
   },
+  "donateNoWallet": "No wallet app here opens bitcoin links. Copy the address instead.",
+  "@donateNoWallet": {
+    "description": "screens/donate_screen.dart"
+  },
+  "donateChecking": "Checking…",
+  "@donateChecking": {
+    "description": "screens/donate_screen.dart"
+  },
+  "donateNotSeenYet": "Not seen yet. A payment can take a few minutes to show.",
+  "@donateNotSeenYet": {
+    "description": "screens/donate_screen.dart"
+  },
   "donatePaymentConfirmed": "Payment confirmed",
   "@donatePaymentConfirmed": {
     "description": "screens/donate_screen.dart"
@@ -3511,6 +3531,27 @@
   },
   "handleDeleteThisHandle": "Delete this handle",
   "@handleDeleteThisHandle": {
+    "description": "screens/handle_screen.dart"
+  },
+  "handleDeleteTitle": "Delete @{handle}?",
+  "@handleDeleteTitle": {
+    "description": "screens/handle_screen.dart",
+    "placeholders": {
+      "handle": {
+        "type": "Object"
+      }
+    }
+  },
+  "handleDeleteLine": "Your public page goes away and anyone can claim the name. Chats you already have stay as they are.",
+  "@handleDeleteLine": {
+    "description": "screens/handle_screen.dart"
+  },
+  "handleDeleteYes": "Delete handle",
+  "@handleDeleteYes": {
+    "description": "screens/handle_screen.dart"
+  },
+  "handleDeleting": "Deleting…",
+  "@handleDeleting": {
     "description": "screens/handle_screen.dart"
   },
   "handleChecking": "Checking…",
@@ -4657,10 +4698,6 @@
   },
   "myKryfoTypeTheNameThey": "Type the @name they gave you. Works if they claimed one.",
   "@myKryfoTypeTheNameThey": {
-    "description": "screens/my_kryfo_screen.dart"
-  },
-  "myKryfoWren": "Wren",
-  "@myKryfoWren": {
     "description": "screens/my_kryfo_screen.dart"
   },
   "myKryfoTheLookupAsksFor": "The lookup sends that one name and nothing about you. Your first message to them still arrives as a request.",
@@ -6657,6 +6694,23 @@
   "@transportSendAnythingWaitingNow": {
     "description": "screens/transport_screen.dart"
   },
+  "transportSending": "Sending…",
+  "@transportSending": {
+    "description": "screens/transport_screen.dart"
+  },
+  "transportNothingLeftWaiting": "Nothing left waiting",
+  "@transportNothingLeftWaiting": {
+    "description": "screens/transport_screen.dart"
+  },
+  "transportStillWaiting": "Still waiting: {count}",
+  "@transportStillWaiting": {
+    "description": "screens/transport_screen.dart",
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
   "transportOff": "Off",
   "@transportOff": {
     "description": "screens/transport_screen.dart"
@@ -8387,6 +8441,10 @@
   "bridgesNoneUsable": "None of these lines is a usable bridge, so bridges stay off",
   "@bridgesNoneUsable": {
     "description": "screens/bridges_screen.dart: after saving, not one line was a bridge line, so bridges were not turned on"
+  },
+  "bridgesCouldNotApply": "The bridges could not be applied. Try saving again.",
+  "@bridgesCouldNotApply": {
+    "description": "screens/bridges_screen.dart"
   },
   "languageTitle": "Language",
   "@languageTitle": {

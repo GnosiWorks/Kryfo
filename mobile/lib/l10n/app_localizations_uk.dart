@@ -1043,6 +1043,10 @@ class AppLocalizationsUk extends AppLocalizations {
   String get backupCreateBackup => 'Створити копію';
 
   @override
+  String get backupNotMade =>
+      'Не вдалося створити резервну копію. Спробуй ще раз.';
+
+  @override
   String get backupHiddenNotIn => 'Прихованих чатів у ньому немає.';
 
   @override
@@ -1067,6 +1071,10 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get bridgesThatWasNotIt => 'Не те. Ось інша.';
+
+  @override
+  String get bridgesMoatFailed =>
+      'Не вдалося зв’язатися з проєктом tor. Спробуй за хвилину або встав рядок моста нижче.';
 
   @override
   String get bridgesGotBridgesSaveTo =>
@@ -2301,6 +2309,17 @@ class AppLocalizationsUk extends AppLocalizations {
   String get donateIPaidCheckAgain => 'Оплачено, перевір ще раз';
 
   @override
+  String get donateNoWallet =>
+      'На цьому телефоні немає застосунку, що відкриває посилання bitcoin. Скопіюй адресу.';
+
+  @override
+  String get donateChecking => 'Перевіряємо…';
+
+  @override
+  String get donateNotSeenYet =>
+      'Поки не видно. Платіж може з’явитися за кілька хвилин.';
+
+  @override
   String get donatePaymentConfirmed => 'Платіж підтверджено';
 
   @override
@@ -2839,6 +2858,21 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get handleDeleteThisHandle => 'Видалити ім’я користувача';
+
+  @override
+  String handleDeleteTitle(Object handle) {
+    return 'Видалити @$handle?';
+  }
+
+  @override
+  String get handleDeleteLine =>
+      'Твоя публічна сторінка зникне, і ім’я зможе зайняти будь-хто. Твої чати залишаться як є.';
+
+  @override
+  String get handleDeleteYes => 'Видалити ім’я користувача';
+
+  @override
+  String get handleDeleting => 'Видаляємо…';
 
   @override
   String get handleChecking => 'Перевіряємо…';
@@ -3786,9 +3820,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get myKryfoTypeTheNameThey =>
       'Введи @ім’я, яке тобі дали. Спрацює, якщо в людини воно є.';
-
-  @override
-  String get myKryfoWren => 'Sova';
 
   @override
   String get myKryfoTheLookupAsksFor =>
@@ -5386,6 +5417,17 @@ class AppLocalizationsUk extends AppLocalizations {
   String get transportSendAnythingWaitingNow => 'Надіслати все з черги зараз';
 
   @override
+  String get transportSending => 'Надсилаємо…';
+
+  @override
+  String get transportNothingLeftWaiting => 'Більше нічого не чекає';
+
+  @override
+  String transportStillWaiting(Object count) {
+    return 'Ще чекає: $count';
+  }
+
+  @override
   String get transportOff => 'Вимкнено';
 
   @override
@@ -6731,6 +6773,10 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get bridgesNoneUsable =>
       'Жоден із цих рядків не підходить як міст, тому мости лишаються вимкненими';
+
+  @override
+  String get bridgesCouldNotApply =>
+      'Не вдалося застосувати мости. Спробуй зберегти ще раз.';
 
   @override
   String get languageTitle => 'Мова';

@@ -981,6 +981,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backupCreateBackup => '创建备份';
 
   @override
+  String get backupNotMade => '备份没能完成。请再试一次。';
+
+  @override
   String get backupHiddenNotIn => '隐藏聊天不在其中。';
 
   @override
@@ -1003,6 +1006,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get bridgesThatWasNotIt => '不对。换一道给你。';
+
+  @override
+  String get bridgesMoatFailed => '联系不上 tor 项目。请一分钟后再试，或者在下面粘贴网桥地址。';
 
   @override
   String get bridgesGotBridgesSaveTo => '已拿到网桥 · 保存后即可使用';
@@ -2167,6 +2173,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get donateIPaidCheckAgain => '我已付款，再查一次';
 
   @override
+  String get donateNoWallet => '这部手机上没有能打开 bitcoin 链接的应用。请改为复制地址。';
+
+  @override
+  String get donateChecking => '正在检查…';
+
+  @override
+  String get donateNotSeenYet => '还没看到。付款可能要几分钟才会显示。';
+
+  @override
   String get donatePaymentConfirmed => '付款已确认';
 
   @override
@@ -2673,6 +2688,20 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get handleDeleteThisHandle => '删除这个用户名';
+
+  @override
+  String handleDeleteTitle(Object handle) {
+    return '删除 @$handle？';
+  }
+
+  @override
+  String get handleDeleteLine => '你的公开页面会消失，任何人都可以认领这个名字。已有的聊天保持不变。';
+
+  @override
+  String get handleDeleteYes => '删除用户名';
+
+  @override
+  String get handleDeleting => '正在删除…';
 
   @override
   String get handleChecking => '正在检查…';
@@ -3570,9 +3599,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get myKryfoTypeTheNameThey => '输入对方给你的 @名字。对方认领过用户名才有效。';
-
-  @override
-  String get myKryfoWren => 'Wren';
 
   @override
   String get myKryfoTheLookupAsksFor =>
@@ -5091,6 +5117,17 @@ class AppLocalizationsZh extends AppLocalizations {
   String get transportSendAnythingWaitingNow => '立即发送所有待发内容';
 
   @override
+  String get transportSending => '正在发送…';
+
+  @override
+  String get transportNothingLeftWaiting => '没有待发内容了';
+
+  @override
+  String transportStillWaiting(Object count) {
+    return '仍在等待：$count';
+  }
+
+  @override
   String get transportOff => '关';
 
   @override
@@ -6360,6 +6397,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get bridgesNoneUsable => '这些行里没有可用的网桥，所以网桥保持关闭';
+
+  @override
+  String get bridgesCouldNotApply => '网桥没能生效。请再保存一次。';
 
   @override
   String get languageTitle => '语言';
@@ -8165,6 +8205,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get backupCreateBackup => '建立備份';
 
   @override
+  String get backupNotMade => '備份沒能完成。請再試一次。';
+
+  @override
   String get backupHiddenNotIn => '隱藏聊天不在其中。';
 
   @override
@@ -8187,6 +8230,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get bridgesThatWasNotIt => '答案不對。換一題給你。';
+
+  @override
+  String get bridgesMoatFailed => '聯絡不上 tor 專案。請一分鐘後再試，或在下方貼上橋接設定。';
 
   @override
   String get bridgesGotBridgesSaveTo => '已取得橋接 · 儲存後即可使用';
@@ -9350,6 +9396,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get donateIPaidCheckAgain => '我付了，再檢查一次';
 
   @override
+  String get donateNoWallet => '這支手機上沒有能開啟 bitcoin 連結的 App。請改為複製地址。';
+
+  @override
+  String get donateChecking => '檢查中…';
+
+  @override
+  String get donateNotSeenYet => '還沒看到。付款可能要幾分鐘才會顯示。';
+
+  @override
   String get donatePaymentConfirmed => '付款已確認';
 
   @override
@@ -9858,6 +9913,20 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get handleDeleteThisHandle => '刪除這個使用者名稱';
+
+  @override
+  String handleDeleteTitle(Object handle) {
+    return '刪除 @$handle？';
+  }
+
+  @override
+  String get handleDeleteLine => '你的公開頁面會消失，任何人都可以認領這個名稱。現有的聊天維持不變。';
+
+  @override
+  String get handleDeleteYes => '刪除使用者名稱';
+
+  @override
+  String get handleDeleting => '刪除中…';
 
   @override
   String get handleChecking => '檢查中…';
@@ -10755,9 +10824,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get myKryfoTypeTheNameThey => '輸入對方給你的 @名稱。對方有認領名稱才有效。';
-
-  @override
-  String get myKryfoWren => 'Wren';
 
   @override
   String get myKryfoTheLookupAsksFor =>
@@ -12275,6 +12341,17 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get transportSendAnythingWaitingNow => '立即傳送所有等待中的內容';
 
   @override
+  String get transportSending => '傳送中…';
+
+  @override
+  String get transportNothingLeftWaiting => '沒有等待中的內容了';
+
+  @override
+  String transportStillWaiting(Object count) {
+    return '仍在等待：$count';
+  }
+
+  @override
   String get transportOff => '關閉';
 
   @override
@@ -13544,6 +13621,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get bridgesNoneUsable => '這些行裡沒有可用的橋接，所以橋接維持關閉';
+
+  @override
+  String get bridgesCouldNotApply => '橋接沒能套用。請再儲存一次。';
 
   @override
   String get languageTitle => '語言';

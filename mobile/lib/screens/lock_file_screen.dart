@@ -13,6 +13,7 @@ import '../tools/tools_bridge.dart';
 import '../widgets/ease_size.dart';
 import '../widgets/halo_switch.dart';
 import '../widgets/press_scale.dart';
+import '../widgets/secret_field.dart';
 import '../widgets/stroke_icon.dart';
 import '../widgets/swap.dart';
 import '../widgets/tool_parts.dart';
@@ -37,16 +38,6 @@ const _shareIcon = [
   'M8.2 13.2l7.6 4.1',
 ];
 const _saveIcon = ['M12 4v11', 'M7.5 10.5L12 15l4.5-4.5', 'M5 19.5h14'];
-const _eyeOn = [
-  'M2.5 12s3.5-6.5 9.5-6.5 9.5 6.5 9.5 6.5-3.5 6.5-9.5 6.5S2.5 12 2.5 12z',
-  'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',
-];
-const _eyeOff = [
-  'M3 3l18 18',
-  'M10.6 5.7A9.5 9.5 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a15 15 0 0 1-3 3.7',
-  'M6.5 7.5A15 15 0 0 0 2.5 12s3.5 6.5 9.5 6.5a9 9 0 0 0 3.6-.8',
-];
-
 String ageErrorTitle(AgeError e) => switch (e) {
   AgeError.wrongPassword => l10n.lockFileThatPasswordDoesNot,
   AgeError.corrupt => l10n.lockFileThisFileIsDamaged,
@@ -68,102 +59,6 @@ String ageErrorBody(AgeError e) => switch (e) {
   AgeError.emptyPassword => l10n.lockFileTypeOneOrLet,
   AgeError.io => l10n.lockFileTheAppThatHolds,
 };
-
-class SecretField extends StatelessWidget {
-  final String label;
-  final TextEditingController controller;
-  final bool shown;
-  final VoidCallback onToggle;
-  final TextInputAction action;
-  final VoidCallback? onSubmit;
-  const SecretField({
-    super.key,
-    required this.label,
-    required this.controller,
-    required this.shown,
-    required this.onToggle,
-    this.action = TextInputAction.next,
-    this.onSubmit,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsetsDirectional.only(start: 4, bottom: 6),
-          child: ExcludeSemantics(
-            child: Text(
-              label,
-              style: HaloType.sans(size: 12, color: HaloColors.warm),
-            ),
-          ),
-        ),
-        Container(
-          constraints: const BoxConstraints(minHeight: 48),
-          decoration: BoxDecoration(
-            color: HaloColors.surface2,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: HaloColors.line2, width: 0.5),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: MergeSemantics(
-                  child: Semantics(
-                    label: label,
-                    child: TextField(
-                      controller: controller,
-                      obscureText: !shown,
-                      // never offered to the phone's autofill service
-                      autofillHints: null,
-                      autocorrect: false,
-                      enableSuggestions: false,
-                      enableIMEPersonalizedLearning: false,
-                      keyboardType: TextInputType.visiblePassword,
-                      textInputAction: action,
-                      onSubmitted: (_) => onSubmit?.call(),
-                      cursorColor: HaloColors.amber,
-                      style: shown
-                          ? HaloType.mono(size: 14, color: HaloColors.text)
-                          : HaloType.sans(size: 14.5, color: HaloColors.text),
-                      decoration: const InputDecoration(
-                        isDense: true,
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 14,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              PressScale(
-                label: shown
-                    ? l10n.lockFileHidePassword
-                    : l10n.lockFileShowPassword,
-                onTap: onToggle,
-                child: SizedBox(
-                  width: 46,
-                  height: 48,
-                  child: Center(
-                    child: StrokeIcon(
-                      shown ? _eyeOff : _eyeOn,
-                      size: 19,
-                      color: HaloColors.warm,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
 
 class FileCard extends StatelessWidget {
   final String name;
@@ -410,6 +305,7 @@ class _LockFileScreenState extends State<LockFileScreen> {
     final out = inFd < 0 ? null : await ToolsBridge.instance.openCacheOut(name);
     if (inFd < 0 || out == null) {
       if (mounted) {
+        HapticFeedback.heavyImpact();
         setState(() {
           _working = false;
           _error = AgeError.io;
@@ -427,6 +323,8 @@ class _LockFileScreenState extends State<LockFileScreen> {
       }
     }
     if (!mounted) return;
+    // a refusal is felt, as a wrong pin is
+    if (err != null && err != AgeError.cancelled) HapticFeedback.heavyImpact();
     setState(() {
       _working = false;
       if (err == null) {
@@ -838,8 +736,11 @@ class _LockedView extends StatelessWidget {
                   style: HaloType.sans(size: 12.5, color: HaloColors.warm),
                 ),
                 const SizedBox(height: 8),
+                // a shell line reads left to right in every language
                 SelectableText(
                   '\$ age -d "$name" > "$plain"',
+                  textDirection: TextDirection.ltr,
+                  textAlign: TextAlign.left,
                   style: HaloType.mono(size: 11.5, color: HaloColors.text),
                 ),
                 const SizedBox(height: 8),

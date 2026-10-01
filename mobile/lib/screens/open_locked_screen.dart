@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../seen_timers.dart';
 import '../theme.dart';
@@ -11,6 +12,7 @@ import '../widgets/stroke_icon.dart';
 import '../widgets/swap.dart';
 import '../widgets/tool_parts.dart';
 import 'lock_file_screen.dart';
+import '../widgets/secret_field.dart';
 import '../l10n/l10n.dart';
 
 final _lockIcon = [
@@ -97,6 +99,8 @@ class _OpenLockedScreenState extends State<OpenLockedScreen> {
 
   void _fail(AgeError e) {
     if (!mounted) return;
+    // a wrong password is felt, as a wrong pin is
+    if (e != AgeError.cancelled) HapticFeedback.heavyImpact();
     setState(() {
       _stage = _Stage.form;
       _error = e == AgeError.cancelled ? null : e;

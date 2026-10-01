@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../theme.dart';
+import 'motion.dart' show motionStill;
 
 class HaloSwitch extends StatelessWidget {
   final bool value;
@@ -15,6 +16,7 @@ class HaloSwitch extends StatelessWidget {
   Widget build(BuildContext context) {
     final on = value;
     final enabled = onChanged != null;
+    final still = motionStill(context);
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: enabled
@@ -26,7 +28,7 @@ class HaloSwitch extends StatelessWidget {
       child: Opacity(
         opacity: enabled ? 1 : 0.5,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
+          duration: still ? Duration.zero : const Duration(milliseconds: 200),
           curve: Curves.easeOutCubic,
           width: 46,
           height: 26,
@@ -40,7 +42,7 @@ class HaloSwitch extends StatelessWidget {
             ),
           ),
           child: AnimatedAlign(
-            duration: const Duration(milliseconds: 240),
+            duration: still ? Duration.zero : const Duration(milliseconds: 240),
             curve: Curves.easeOutBack,
             alignment: on
                 ? AlignmentDirectional.centerEnd

@@ -22,7 +22,10 @@ class ModesScreen extends StatefulWidget {
 }
 
 class _ModesScreenState extends State<ModesScreen> {
-  String _mode = 'private';
+  // what is in use now, so the page opens on the right card
+  late String _mode = appState.sendMode == 'normal'
+      ? 'private'
+      : appState.sendMode;
 
   @override
   void initState() {

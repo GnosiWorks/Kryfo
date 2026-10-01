@@ -1022,6 +1022,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get backupCreateBackup => 'Backup erstellen';
 
   @override
+  String get backupNotMade =>
+      'Das Backup konnte nicht erstellt werden. Versuch es noch mal.';
+
+  @override
   String get backupHiddenNotIn => 'Versteckte Chats sind nicht darin.';
 
   @override
@@ -1046,6 +1050,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get bridgesThatWasNotIt => 'Das war es nicht. Hier ist ein anderes.';
+
+  @override
+  String get bridgesMoatFailed =>
+      'Das tor-Projekt war nicht erreichbar. Versuch es gleich noch mal oder füge unten eine Brückenzeile ein.';
 
   @override
   String get bridgesGotBridgesSaveTo =>
@@ -2273,6 +2281,17 @@ class AppLocalizationsDe extends AppLocalizations {
   String get donateIPaidCheckAgain => 'Bezahlt, nochmal prüfen';
 
   @override
+  String get donateNoWallet =>
+      'Keine App auf diesem Handy öffnet bitcoin-Links. Kopier stattdessen die Adresse.';
+
+  @override
+  String get donateChecking => 'Prüfe…';
+
+  @override
+  String get donateNotSeenYet =>
+      'Noch nicht zu sehen. Eine Zahlung kann ein paar Minuten brauchen.';
+
+  @override
   String get donatePaymentConfirmed => 'Zahlung bestätigt';
 
   @override
@@ -2808,6 +2827,21 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get handleDeleteThisHandle => 'Diesen Benutzernamen löschen';
+
+  @override
+  String handleDeleteTitle(Object handle) {
+    return '@$handle löschen?';
+  }
+
+  @override
+  String get handleDeleteLine =>
+      'Deine öffentliche Seite verschwindet und jeder kann den Namen übernehmen. Deine Chats bleiben, wie sie sind.';
+
+  @override
+  String get handleDeleteYes => 'Benutzernamen löschen';
+
+  @override
+  String get handleDeleting => 'Wird gelöscht…';
 
   @override
   String get handleChecking => 'Prüfe…';
@@ -3753,9 +3787,6 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get myKryfoTypeTheNameThey =>
       'Gib den @Namen ein, den du bekommen hast. Klappt, wenn die Person einen gesichert hat.';
-
-  @override
-  String get myKryfoWren => 'Amsel';
 
   @override
   String get myKryfoTheLookupAsksFor =>
@@ -5363,6 +5394,17 @@ class AppLocalizationsDe extends AppLocalizations {
   String get transportSendAnythingWaitingNow => 'Alles Wartende jetzt senden';
 
   @override
+  String get transportSending => 'Wird gesendet…';
+
+  @override
+  String get transportNothingLeftWaiting => 'Nichts wartet mehr';
+
+  @override
+  String transportStillWaiting(Object count) {
+    return 'Wartet noch: $count';
+  }
+
+  @override
   String get transportOff => 'Aus';
 
   @override
@@ -6687,6 +6729,10 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get bridgesNoneUsable =>
       'Keine dieser Zeilen ist eine brauchbare Brücke, also bleiben Brücken aus';
+
+  @override
+  String get bridgesCouldNotApply =>
+      'Die Brücken ließen sich nicht übernehmen. Speichere noch mal.';
 
   @override
   String get languageTitle => 'Sprache';
