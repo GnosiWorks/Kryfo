@@ -153,10 +153,7 @@ class _HandleScreenState extends State<HandleScreen> {
       appBar: AppBar(
         backgroundColor: HaloColors.surface,
         elevation: 0,
-        title: Text(
-          l10n.handlePublicHandle,
-          style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
-        ),
+        title: Text(l10n.handlePublicHandle, style: HaloType.pageTitle()),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 40),

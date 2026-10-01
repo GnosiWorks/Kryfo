@@ -450,6 +450,102 @@ void main() {
       await t.pumpWidget(const SizedBox());
     });
 
+    testWidgets('system back walks one step back, then leaves from the first', (
+      t,
+    ) async {
+      phone(t);
+      quiet(t);
+      await t.pumpWidget(
+        framed(OnboardingScreen(appState: appState, onComplete: () {})),
+      );
+      bool leaves() =>
+          (t.widget(find.byWidgetPredicate((w) => w is PopScope).first)
+                  as PopScope)
+              .canPop;
+      expect(leaves(), isTrue);
+      await t.ensureVisible(find.text(l10n.onboardingBegin));
+      await t.tap(find.text(l10n.onboardingBegin));
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 400));
+      expect(find.text(l10n.onboardingYourKryfoId), findsOneWidget);
+      expect(leaves(), isFalse);
+      await t.binding.handlePopRoute();
+      await t.pump();
+      // it slides back rather than jumping
+      await t.pump(const Duration(milliseconds: 140));
+      expect(find.text(l10n.onboardingYourKryfoId), findsOneWidget);
+      await t.pump(const Duration(milliseconds: 300));
+      expect(find.text(l10n.onboardingYourKryfoId), findsNothing);
+      expect(find.text(l10n.onboardingBegin), findsOneWidget);
+      expect(leaves(), isTrue);
+      await t.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('reduced motion: back is simply the step before', (t) async {
+      phone(t);
+      quiet(t);
+      await t.pumpWidget(
+        framed(
+          OnboardingScreen(appState: appState, onComplete: () {}),
+          still: true,
+        ),
+      );
+      final pages = t.widget<PageView>(find.byType(PageView)).controller!;
+      pages.jumpToPage(4);
+      await t.pump();
+      await t.binding.handlePopRoute();
+      await t.pump();
+      expect(pages.page, 3);
+      expect(t.hasRunningAnimations, isFalse);
+      await t.pumpWidget(const SizedBox());
+    });
+
+    // a small phone at twice the text size: the name and face steps scroll
+    // instead of spilling past the bottom or the side
+    for (final lang in ['en', 'de']) {
+      testWidgets('large text, $lang: the name and face steps fit', (t) async {
+        t.view.physicalSize = const Size(720, 1280);
+        t.view.devicePixelRatio = 2;
+        addTearDown(t.view.reset);
+        quiet(t);
+        setL10nLocale(Locale(lang));
+        addTearDown(() => setL10nLocale(const Locale('en')));
+        await t.pumpWidget(
+          MaterialApp(
+            locale: Locale(lang),
+            theme: buildHaloTheme(),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            builder: (ctx, child) => MediaQuery(
+              data: MediaQuery.of(ctx).copyWith(
+                disableAnimations: true,
+                textScaler: const TextScaler.linear(2),
+              ),
+              child: child!,
+            ),
+            home: OnboardingScreen(appState: appState, onComplete: () {}),
+          ),
+        );
+        final pages = t.widget<PageView>(find.byType(PageView)).controller!;
+        for (final step in [1, 2]) {
+          pages.jumpToPage(step);
+          await t.pump();
+          await t.pump(const Duration(seconds: 4));
+          expect(t.takeException(), isNull, reason: 'step $step');
+        }
+        // the face step's buttons stay reachable
+        expect(
+          find.text(l10n.onboardingContinue).hitTestable(),
+          findsOneWidget,
+        );
+        expect(
+          find.text(l10n.onboardingKeepMyInitial).hitTestable(),
+          findsOneWidget,
+        );
+        await t.pumpWidget(const SizedBox());
+      });
+    }
+
     testWidgets('right to left: the path arrows point the reading way', (
       t,
     ) async {

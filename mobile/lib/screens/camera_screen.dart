@@ -13,12 +13,20 @@ import 'package:path_provider/path_provider.dart';
 
 import '../jpeg_strip.dart';
 import '../main.dart' show shredFile, exportToPictures;
+import 'package:permission_handler/permission_handler.dart'
+    show openAppSettings;
+
 import '../theme.dart';
+import '../widgets/ease_size.dart';
+import '../widgets/halo_buttons.dart';
+import '../widgets/motion.dart' show BreathDot, motionStill;
 import '../widgets/press_scale.dart';
+import '../widgets/swap.dart';
 import '../widgets/decode_px.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
 import '../lock_guard.dart' show lockGuard;
+import 'scan_screen.dart' show cameraDenied;
 
 class CaptureResult {
   final Uint8List? photo; // stripped jpeg bytes
@@ -51,6 +59,10 @@ class _CameraScreenState extends State<CameraScreen>
   bool _busy = false;
   FlashMode _flash = FlashMode.off;
   String? _error;
+  // the error is a permission the app's settings can give back
+  bool _denied = false;
+  // only the microphone was refused, which a photo does not need
+  bool _micOff = false;
   bool _retried = false;
   // the review step
   Uint8List? _shot;
@@ -72,7 +84,9 @@ class _CameraScreenState extends State<CameraScreen>
 
   String? _clip;
   int _clipBytes = 0;
-  DateTime? _recStart;
+  // the clip's length in whole seconds, counted while it records
+  int _recSecs = 0;
+  Timer? _recTick;
 
   @override
   void initState() {
@@ -95,7 +109,11 @@ class _CameraScreenState extends State<CameraScreen>
     try {
       _cams = await availableCameras();
       if (_cams.isEmpty) {
-        setState(() => _error = l10n.cameraNoCameraOnThis);
+        setState(() {
+          _error = l10n.cameraNoCameraOnThis;
+          _denied = false;
+          _micOff = false;
+        });
         return;
       }
       // back camera first
@@ -116,7 +134,12 @@ class _CameraScreenState extends State<CameraScreen>
     final old = _cam;
     _cam = null;
     if (mounted) setState(() {});
+    // the old picture fades to dark while it still runs, then lets go
+    if (old != null && mounted && !motionStill(context)) {
+      await Future.delayed(const Duration(milliseconds: 240));
+    }
     await old?.dispose();
+    if (!mounted || lockGuard.isLocked()) return;
     // the microphone is only asked for once someone switches to video. a
     // photo needs the camera and nothing else, and a second permission
     // prompt on the way to a photo is a surprise
@@ -140,10 +163,22 @@ class _CameraScreenState extends State<CameraScreen>
         if (mounted) await _open();
         return;
       }
-      setState(() => _error = l10n.cameraCameraPermissionIsOff);
+      final denied = cameraDenied(e);
+      final mic = denied && (e as CameraException).code.startsWith('Audio');
+      setState(() {
+        _denied = denied;
+        _micOff = mic;
+        _error = !denied
+            ? l10n.cameraCameraNotAvailable
+            : mic
+            ? l10n.chatMicPermissionNeeded
+            : l10n.cameraCameraPermissionIsOff;
+      });
       return;
     }
     _error = null;
+    _denied = false;
+    _micOff = false;
     if (!mounted) {
       await c.dispose();
       return;
@@ -161,6 +196,7 @@ class _CameraScreenState extends State<CameraScreen>
       _cam = null;
       final wasRecording = _recording;
       _recording = false;
+      _recTick?.cancel();
       if (c != null) unawaited(_letGo(c, wasRecording));
     } else if (state == AppLifecycleState.resumed && _cam == null) {
       _open();
@@ -170,6 +206,7 @@ class _CameraScreenState extends State<CameraScreen>
   @override
   void dispose() {
     _unguard?.call();
+    _recTick?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     _cam?.dispose();
     // a clip that was never used is shredded on the way out
@@ -179,7 +216,8 @@ class _CameraScreenState extends State<CameraScreen>
   }
 
   Future<void> _flip() async {
-    if (_cams.length < 2 || _busy || _recording) return;
+    // nothing to flip while the last switch is still opening
+    if (_cams.length < 2 || _busy || _recording || _cam == null) return;
     HapticFeedback.selectionClick();
     _which = (_which + 1) % _cams.length;
     await _open();
@@ -268,6 +306,21 @@ class _CameraScreenState extends State<CameraScreen>
     await _open();
   }
 
+  // a refused microphone only stops video. back on photo the camera opens
+  // again without audio
+  Future<void> _toPhoto() async {
+    if (!_video) return;
+    final reopen = _micOff;
+    setState(() {
+      _video = false;
+      if (reopen) {
+        _error = null;
+        _micOff = false;
+      }
+    });
+    if (reopen) await _open();
+  }
+
   Future<void> _toggleRecord(CameraController c) async {
     if (!_recording) {
       try {
@@ -275,7 +328,11 @@ class _CameraScreenState extends State<CameraScreen>
         HapticFeedback.mediumImpact();
         setState(() {
           _recording = true;
-          _recStart = DateTime.now();
+          _recSecs = 0;
+        });
+        _recTick?.cancel();
+        _recTick = Timer.periodic(const Duration(seconds: 1), (_) {
+          if (mounted) setState(() => _recSecs++);
         });
       } catch (_) {
         if (mounted) showHaloToast(context, l10n.cameraCouldNotStartRecording);
@@ -283,6 +340,7 @@ class _CameraScreenState extends State<CameraScreen>
       return;
     }
     setState(() => _busy = true);
+    _recTick?.cancel();
     try {
       final x = await c.stopVideoRecording();
       HapticFeedback.mediumImpact();
@@ -369,14 +427,14 @@ class _CameraScreenState extends State<CameraScreen>
         child: Column(
           children: [
             Expanded(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(18),
-                child: Container(
-                  margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-                  color: HaloColors.surface,
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 240),
-                    child: reviewing ? _review() : _live(),
+              // the margin sits outside the clip, so all four corners round
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(18),
+                  child: ColoredBox(
+                    color: HaloColors.surface,
+                    child: FadeSwap(child: reviewing ? _review() : _live()),
                   ),
                 ),
               ),
@@ -393,7 +451,20 @@ class _CameraScreenState extends State<CameraScreen>
               ),
             ),
             const SizedBox(height: 14),
-            reviewing ? _reviewBar() : _shutterBar(),
+            // the bars cross with the picture above them
+            EaseSize(
+              child: FadeSwap(
+                child: reviewing
+                    ? KeyedSubtree(
+                        key: const ValueKey('review'),
+                        child: _reviewBar(),
+                      )
+                    : KeyedSubtree(
+                        key: const ValueKey('shutter'),
+                        child: _shutterBar(),
+                      ),
+              ),
+            ),
             const SizedBox(height: 18),
           ],
         ),
@@ -407,32 +478,29 @@ class _CameraScreenState extends State<CameraScreen>
       key: const ValueKey('live'),
       fit: StackFit.expand,
       children: [
-        if (_error != null)
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () {
-              _retried = true;
-              _open();
-            },
-            child: Center(
-              child: Text(
-                _error!,
-                style: HaloType.sans(size: 13, color: HaloColors.text2),
-              ),
-            ),
-          )
-        else if (c == null || !c.value.isInitialized)
-          const SizedBox.shrink()
-        else
-          FittedBox(
-            fit: BoxFit.cover,
-            clipBehavior: Clip.hardEdge,
-            child: SizedBox(
-              width: c.value.previewSize?.height ?? 1,
-              height: c.value.previewSize?.width ?? 1,
-              child: CameraPreview(c),
-            ),
-          ),
+        // a flip, a switch to video or a return to the app fades through
+        // dark instead of cutting to an empty box
+        FadeSwap(
+          child: _error != null
+              ? KeyedSubtree(key: const ValueKey('error'), child: _failed())
+              : c == null || !c.value.isInitialized
+              ? ColoredBox(
+                  key: const ValueKey('dark'),
+                  // dark in both themes, like the preview it stands in for
+                  color: Colors.black,
+                  child: const SizedBox.expand(),
+                )
+              : FittedBox(
+                  key: ObjectKey(c),
+                  fit: BoxFit.cover,
+                  clipBehavior: Clip.hardEdge,
+                  child: SizedBox(
+                    width: c.value.previewSize?.height ?? 1,
+                    height: c.value.previewSize?.width ?? 1,
+                    child: CameraPreview(c),
+                  ),
+                ),
+        ),
         // top bar over the preview
         Positioned(
           top: 8,
@@ -446,26 +514,11 @@ class _CameraScreenState extends State<CameraScreen>
                 () => Navigator.of(context).pop(),
               ),
               const Spacer(),
-              if (_recording)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: HaloColors.rose.withValues(alpha: 0.85),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    l10n.cameraRec,
-                    style: HaloType.mono(
-                      size: 10,
-                      color: HaloColors.text,
-                      weight: FontWeight.w700,
-                      letter: 0.1,
-                    ),
-                  ),
-                ),
+              FadeSwap(
+                child: _recording
+                    ? _recPill()
+                    : const SizedBox.shrink(key: ValueKey('idle')),
+              ),
               const Spacer(),
               _round(_flashIcon(), l10n.cameraFlash, _cycleFlash),
               const SizedBox(width: 8),
@@ -479,6 +532,94 @@ class _CameraScreenState extends State<CameraScreen>
         ),
       ],
     );
+  }
+
+  // a breathing dot and the running time, so a long clip is no surprise
+  Widget _recPill() {
+    final t = _recSecs;
+    return Semantics(
+      key: const ValueKey('rec'),
+      label: l10n.cameraRec,
+      child: Container(
+        padding: const EdgeInsetsDirectional.fromSTEB(9, 5, 11, 5),
+        decoration: BoxDecoration(
+          color: HaloColors.ink.withValues(alpha: 0.6),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            BreathDot(color: HaloColors.rose, size: 8),
+            const SizedBox(width: 7),
+            Text(
+              '${whole(t ~/ 60)}:${twoDigits(t % 60)}',
+              style: HaloType.mono(
+                size: 12,
+                color: HaloColors.text,
+                weight: FontWeight.w600,
+              ).copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // what went wrong, and a way out: try again, or the app's settings when
+  // a permission is off
+  Widget _failed() {
+    final again = _cams.isNotEmpty;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.no_photography_outlined,
+              size: 30,
+              color: HaloColors.amber,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              _error!,
+              textAlign: TextAlign.center,
+              style: HaloType.sans(size: 14, color: HaloColors.text),
+            ),
+            if (again) ...[
+              const SizedBox(height: 18),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 260),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (_denied) ...[
+                      HaloPrimaryButton(
+                        label: l10n.cameraOpenSettings,
+                        onTap: openAppSettings,
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                    HaloGhostButton(
+                      label: l10n.commonTryAgain,
+                      quiet: _denied,
+                      onTap: _tryAgain,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _tryAgain() {
+    _retried = true;
+    setState(() => _error = null);
+    _open();
   }
 
   IconData _flashIcon() => switch (_flash) {
@@ -514,9 +655,7 @@ class _CameraScreenState extends State<CameraScreen>
       );
     }
     final mb = decimal(_clipBytes / (1024 * 1024), 1);
-    final secs = _recStart == null
-        ? 0
-        : DateTime.now().difference(_recStart!).inSeconds;
+    final secs = _recSecs;
     return Center(
       key: const ValueKey('clip'),
       child: Column(
@@ -547,16 +686,12 @@ class _CameraScreenState extends State<CameraScreen>
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _modeTab(
-              l10n.cameraPhoto,
-              !_video,
-              () => setState(() => _video = false),
-            ),
-            const SizedBox(width: 18),
+            _modeTab(l10n.cameraPhoto, !_video, _toPhoto),
+            const SizedBox(width: 8),
             _modeTab(l10n.cameraVideo, _video, _toVideo),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 6),
         PressScale(
           label: _video
               ? (_recording
@@ -599,28 +734,66 @@ class _CameraScreenState extends State<CameraScreen>
     );
   }
 
-  Widget _modeTab(String label, bool on, VoidCallback onTap) => GestureDetector(
-    onTap: _recording
-        ? null
-        : () {
-            HapticFeedback.selectionClick();
-            if (_flash == FlashMode.torch || _flash == FlashMode.auto) {
-              _flash = FlashMode.off;
-              _cam?.setFlashMode(FlashMode.off);
-            }
-            onTap();
-          },
-    behavior: HitTestBehavior.opaque,
-    child: Text(
-      label,
-      style: HaloType.mono(
-        size: 11,
-        letter: 0.12,
-        weight: FontWeight.w600,
-        color: on ? HaloColors.amber : HaloColors.text3,
+  // a full-height target, the colour eases and a short amber line grows
+  // under the chosen one
+  Widget _modeTab(String label, bool on, VoidCallback onTap) {
+    final d = motionStill(context)
+        ? Duration.zero
+        : const Duration(milliseconds: 200);
+    // one node: the name, a button, chosen or not
+    return Semantics(
+      container: true,
+      button: true,
+      selected: on,
+      label: label,
+      child: PressScale(
+        scale: 0.94,
+        onTap: _recording
+            ? null
+            : () {
+                if (_flash == FlashMode.torch || _flash == FlashMode.auto) {
+                  _flash = FlashMode.off;
+                  _cam?.setFlashMode(FlashMode.off);
+                }
+                onTap();
+              },
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 44, minWidth: 64),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                AnimatedDefaultTextStyle(
+                  duration: d,
+                  curve: Curves.easeOutCubic,
+                  style: HaloType.mono(
+                    size: 11,
+                    letter: 0.12,
+                    weight: FontWeight.w600,
+                    color: on ? HaloColors.amber : HaloColors.text2,
+                  ),
+                  child: ExcludeSemantics(child: Text(label)),
+                ),
+                const SizedBox(height: 6),
+                AnimatedContainer(
+                  duration: d,
+                  curve: Curves.easeOutCubic,
+                  width: on ? 16 : 0,
+                  height: 2,
+                  decoration: BoxDecoration(
+                    color: HaloColors.amber,
+                    borderRadius: BorderRadius.circular(1),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
-    ),
-  );
+    );
+  }
 
   Widget _reviewBar() {
     return Padding(

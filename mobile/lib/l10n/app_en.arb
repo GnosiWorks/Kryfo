@@ -1497,8 +1497,12 @@
   "@cameraCameraNotAvailable": {
     "description": "screens/camera_screen.dart"
   },
-  "cameraCameraPermissionIsOff": "Camera permission is off · tap to try again",
+  "cameraCameraPermissionIsOff": "Camera permission is off",
   "@cameraCameraPermissionIsOff": {
+    "description": "screens/camera_screen.dart"
+  },
+  "cameraOpenSettings": "Open settings",
+  "@cameraOpenSettings": {
     "description": "screens/camera_screen.dart"
   },
   "cameraCouldNotStripThat": "Could not strip that photo, dropped it",
@@ -1525,7 +1529,7 @@
   "@cameraCouldNotSaveA": {
     "description": "screens/camera_screen.dart"
   },
-  "cameraTooLongForA": "Too long for a message · 8 mb max",
+  "cameraTooLongForA": "Too long for a message · 8 MB max",
   "@cameraTooLongForA": {
     "description": "screens/camera_screen.dart"
   },
@@ -1533,7 +1537,7 @@
   "@cameraNeverSavedToYour": {
     "description": "screens/camera_screen.dart"
   },
-  "cameraNoExifNeverSaved": "No exif, never saved to your photos",
+  "cameraNoExifNeverSaved": "No EXIF, never saved to your photos",
   "@cameraNoExifNeverSaved": {
     "description": "screens/camera_screen.dart"
   },
@@ -1545,7 +1549,7 @@
   "@cameraSwitchCamera": {
     "description": "screens/camera_screen.dart"
   },
-  "cameraClipSMb": "Clip · {secs}s · {mb} mb",
+  "cameraClipSMb": "Clip · {secs}s · {mb} MB",
   "@cameraClipSMb": {
     "description": "screens/camera_screen.dart",
     "placeholders": {
@@ -6068,7 +6072,7 @@
   "@scanThatSNotA": {
     "description": "screens/scan_screen.dart"
   },
-  "scanScanAKryfoQr": "Scan a Kryfo qr",
+  "scanScanAKryfoQr": "Scan a Kryfo QR",
   "@scanScanAKryfoQr": {
     "description": "screens/scan_screen.dart"
   },
@@ -6076,7 +6080,7 @@
   "@scanFlash": {
     "description": "screens/scan_screen.dart"
   },
-  "scanPointAtAKryfo": "Point at a Kryfo qr · nothing leaves your phone",
+  "scanPointAtAKryfo": "Point at a Kryfo QR · nothing leaves your phone",
   "@scanPointAtAKryfo": {
     "description": "screens/scan_screen.dart"
   },

@@ -196,7 +196,7 @@ class PageBar extends StatelessWidget {
                       title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: HaloType.serif(size: 22, color: HaloColors.text),
+                      style: HaloType.pageTitle(),
                     ),
                     if (sub != null) ...[const SizedBox(height: 2), sub!],
                   ],

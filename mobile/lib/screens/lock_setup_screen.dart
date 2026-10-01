@@ -8,9 +8,11 @@ import 'package:flutter/services.dart';
 import '../lock_state.dart';
 import '../widgets/fit_column.dart';
 import '../theme.dart';
+import '../widgets/halo_buttons.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/pin_pad.dart';
 import '../widgets/sheet_handle.dart';
+import '../widgets/swap.dart';
 import '../wipe.dart';
 import '../l10n/l10n.dart';
 
@@ -162,39 +164,15 @@ class _LockSetupScreenState extends State<LockSetupScreen>
                   style: HaloType.sans(size: 13, color: HaloColors.text2),
                 ),
                 const SizedBox(height: 16),
-                GestureDetector(
+                HaloPrimaryButton(
+                  label: l10n.lockSetupUseFingerprint,
                   onTap: () => Navigator.pop(ctx, true),
-                  behavior: HitTestBehavior.opaque,
-                  child: Container(
-                    height: 46,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: HaloColors.amber,
-                      borderRadius: BorderRadius.circular(13),
-                    ),
-                    child: Text(
-                      l10n.lockSetupUseFingerprint,
-                      style: HaloType.sans(
-                        size: 14,
-                        weight: FontWeight.w600,
-                        color: HaloColors.onAmber,
-                      ),
-                    ),
-                  ),
                 ),
-                const SizedBox(height: 6),
-                GestureDetector(
+                const SizedBox(height: 8),
+                HaloGhostButton(
+                  label: l10n.lockSetupPinOnly,
+                  quiet: true,
                   onTap: () => Navigator.pop(ctx, false),
-                  behavior: HitTestBehavior.opaque,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: Center(
-                      child: Text(
-                        l10n.lockSetupPinOnly,
-                        style: HaloType.sans(size: 13, color: HaloColors.text2),
-                      ),
-                    ),
-                  ),
                 ),
               ],
             ),
@@ -266,11 +244,17 @@ class _LockSetupScreenState extends State<LockSetupScreen>
               ),
             ),
             const SizedBox(height: 8),
-            Text(
-              hint,
-              style: HaloType.sans(
-                size: 13,
-                color: _mismatch ? HaloColors.rose : HaloColors.text2,
+            // the line under the title changes the way the title does
+            RiseSwap(
+              alignment: Alignment.center,
+              child: Text(
+                hint,
+                key: ValueKey('$hint$_mismatch'),
+                textAlign: TextAlign.center,
+                style: HaloType.sans(
+                  size: 13,
+                  color: _mismatch ? HaloColors.rose : HaloColors.text2,
+                ),
               ),
             ),
             const SizedBox(height: 32),

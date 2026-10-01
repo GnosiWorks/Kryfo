@@ -1152,7 +1152,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cameraCameraNotAvailable => '相机不可用';
 
   @override
-  String get cameraCameraPermissionIsOff => '相机权限已关闭 · 点击重试';
+  String get cameraCameraPermissionIsOff => '相机权限已关闭';
+
+  @override
+  String get cameraOpenSettings => '打开设置';
 
   @override
   String get cameraCouldNotStripThat => '无法清除这张照片的元数据，已丢弃';
@@ -1179,7 +1182,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cameraNeverSavedToYour => '不会保存到你的相册';
 
   @override
-  String get cameraNoExifNeverSaved => '没有 exif，也不会保存到你的相册';
+  String get cameraNoExifNeverSaved => '没有 EXIF，也不会保存到你的相册';
 
   @override
   String get cameraRec => '录制';
@@ -8385,7 +8388,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get cameraCameraNotAvailable => '無法使用相機';
 
   @override
-  String get cameraCameraPermissionIsOff => '相機權限已關閉 · 點一下再試一次';
+  String get cameraCameraPermissionIsOff => '相機權限已關閉';
+
+  @override
+  String get cameraOpenSettings => '開啟設定';
 
   @override
   String get cameraCouldNotStripThat => '無法清除那張照片的中繼資料，已捨棄';
@@ -8406,7 +8412,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get cameraCouldNotSaveA => '無法在這支手機上儲存副本';
 
   @override
-  String get cameraTooLongForA => '太長了，無法用訊息傳送 · 上限 8 mb';
+  String get cameraTooLongForA => '太長了，無法用訊息傳送 · 上限 8 MB';
 
   @override
   String get cameraNeverSavedToYour => '不會存到你的相簿';
@@ -8422,7 +8428,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String cameraClipSMb(Object secs, Object mb) {
-    return '片段 · $secs 秒 · $mb mb';
+    return '片段 · $secs 秒 · $mb MB';
   }
 
   @override

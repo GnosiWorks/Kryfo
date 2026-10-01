@@ -1183,8 +1183,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get cameraCameraNotAvailable => 'Không dùng được máy ảnh';
 
   @override
-  String get cameraCameraPermissionIsOff =>
-      'Quyền máy ảnh đang tắt · chạm để thử lại';
+  String get cameraCameraPermissionIsOff => 'Quyền máy ảnh đang tắt';
+
+  @override
+  String get cameraOpenSettings => 'Mở cài đặt';
 
   @override
   String get cameraCouldNotStripThat =>
@@ -1207,14 +1209,14 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không lưu được bản sao trên điện thoại này';
 
   @override
-  String get cameraTooLongForA => 'Quá dài cho một tin nhắn · tối đa 8 mb';
+  String get cameraTooLongForA => 'Quá dài cho một tin nhắn · tối đa 8 MB';
 
   @override
   String get cameraNeverSavedToYour => 'Không bao giờ lưu vào thư viện ảnh';
 
   @override
   String get cameraNoExifNeverSaved =>
-      'Không có exif, không bao giờ lưu vào thư viện ảnh';
+      'Không có EXIF, không bao giờ lưu vào thư viện ảnh';
 
   @override
   String get cameraRec => 'Quay';
@@ -1224,7 +1226,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String cameraClipSMb(Object secs, Object mb) {
-    return 'Đoạn quay · ${secs}s · $mb mb';
+    return 'Đoạn quay · ${secs}s · $mb MB';
   }
 
   @override

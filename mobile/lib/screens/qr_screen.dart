@@ -6,6 +6,7 @@ import '../theme.dart';
 import '../tools/qr_payload.dart';
 import '../tools/qr_png.dart';
 import '../tools/tools_bridge.dart';
+import '../widgets/ease_size.dart';
 import '../widgets/motion.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/qr_wipe.dart';
@@ -371,70 +372,76 @@ class _QrScreenState extends State<QrScreen> {
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 200),
-                        switchInCurve: Curves.easeOutCubic,
-                        layoutBuilder: (now, before) => Stack(
-                          alignment: Alignment.topCenter,
-                          children: [...before, ?now],
-                        ),
-                        child: Column(
-                          key: ValueKey(_kind.kind),
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            for (final f in _kind.fields) ...[
-                              _Input(
-                                field: f,
-                                controller: _ctl(_kind, f),
-                                shown: _showSecret,
-                                onToggle: () =>
-                                    setState(() => _showSecret = !_showSecret),
-                                onCopy: () {
-                                  final v = _ctl(_kind, f).text;
-                                  if (v.isEmpty) return;
-                                  copySensitive(v);
-                                  showHaloToast(
-                                    context,
-                                    l10n.qrCopiedItLeavesThe,
-                                  );
-                                },
-                              ),
-                              const SizedBox(height: 12),
-                            ],
-                            if (_kind.kind == QrKind.wifi)
-                              Row(
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 4,
-                                    ),
-                                    child: Text(
-                                      l10n.qrSecurity,
-                                      style: HaloType.sans(
-                                        size: 12,
-                                        color: HaloColors.warm,
-                                      ),
-                                    ),
+                      // one field or three: the form eases to its new height
+                      // so the buttons under it glide instead of jumping
+                      child: EaseSize(
+                        child: AnimatedSwitcher(
+                          duration: motionStill(context)
+                              ? Duration.zero
+                              : const Duration(milliseconds: 200),
+                          switchInCurve: Curves.easeOutCubic,
+                          layoutBuilder: (now, before) => Stack(
+                            alignment: Alignment.topCenter,
+                            children: [...before, ?now],
+                          ),
+                          child: Column(
+                            key: ValueKey(_kind.kind),
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              for (final f in _kind.fields) ...[
+                                _Input(
+                                  field: f,
+                                  controller: _ctl(_kind, f),
+                                  shown: _showSecret,
+                                  onToggle: () => setState(
+                                    () => _showSecret = !_showSecret,
                                   ),
-                                  const SizedBox(width: 4),
-                                  for (final (l, name) in [
-                                    (WifiLock.wpa2, 'WPA2'),
-                                    (WifiLock.wpa3, 'WPA3'),
-                                    (WifiLock.none, l10n.qrNone),
-                                  ])
+                                  onCopy: () {
+                                    final v = _ctl(_kind, f).text;
+                                    if (v.isEmpty) return;
+                                    copySensitive(v);
+                                    showHaloToast(
+                                      context,
+                                      l10n.qrCopiedItLeavesThe,
+                                    );
+                                  },
+                                ),
+                                const SizedBox(height: 12),
+                              ],
+                              // a long word at a large text size wraps the pills
+                              // onto a second line instead of overflowing
+                              if (_kind.kind == QrKind.wifi)
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  children: [
                                     Padding(
-                                      padding: const EdgeInsetsDirectional.only(
-                                        end: 8,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 4,
                                       ),
-                                      child: _Pill(
+                                      child: Text(
+                                        l10n.qrSecurity,
+                                        style: HaloType.sans(
+                                          size: 12,
+                                          color: HaloColors.warm,
+                                        ),
+                                      ),
+                                    ),
+                                    for (final (l, name) in [
+                                      (WifiLock.wpa2, 'WPA2'),
+                                      (WifiLock.wpa3, 'WPA3'),
+                                      (WifiLock.none, l10n.qrNone),
+                                    ])
+                                      _Pill(
                                         label: name,
                                         on: _lock == l,
                                         onTap: () => setState(() => _lock = l),
                                       ),
-                                    ),
-                                ],
-                              ),
-                          ],
+                                  ],
+                                ),
+                            ],
+                          ),
                         ),
                       ),
                     ),

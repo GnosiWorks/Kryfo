@@ -113,7 +113,7 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
                       l10n.keyVerificationSafetyNumber,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: HaloType.serif(size: 22, color: HaloColors.text),
+                      style: HaloType.pageTitle(),
                     ),
                   ),
                 ],

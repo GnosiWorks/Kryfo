@@ -1194,8 +1194,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cameraCameraNotAvailable => 'Camera not available';
 
   @override
-  String get cameraCameraPermissionIsOff =>
-      'Camera permission is off · tap to try again';
+  String get cameraCameraPermissionIsOff => 'Camera permission is off';
+
+  @override
+  String get cameraOpenSettings => 'Open settings';
 
   @override
   String get cameraCouldNotStripThat =>
@@ -1217,13 +1219,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cameraCouldNotSaveA => 'Could not save a copy on this phone';
 
   @override
-  String get cameraTooLongForA => 'Too long for a message · 8 mb max';
+  String get cameraTooLongForA => 'Too long for a message · 8 MB max';
 
   @override
   String get cameraNeverSavedToYour => 'Never saved to your photos';
 
   @override
-  String get cameraNoExifNeverSaved => 'No exif, never saved to your photos';
+  String get cameraNoExifNeverSaved => 'No EXIF, never saved to your photos';
 
   @override
   String get cameraRec => 'Rec';
@@ -1233,7 +1235,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String cameraClipSMb(Object secs, Object mb) {
-    return 'Clip · ${secs}s · $mb mb';
+    return 'Clip · ${secs}s · $mb MB';
   }
 
   @override
@@ -4831,14 +4833,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scanThatSNotA => 'That\'s not a Kryfo QR · keep pointing';
 
   @override
-  String get scanScanAKryfoQr => 'Scan a Kryfo qr';
+  String get scanScanAKryfoQr => 'Scan a Kryfo QR';
 
   @override
   String get scanFlash => 'Flash';
 
   @override
   String get scanPointAtAKryfo =>
-      'Point at a Kryfo qr · nothing leaves your phone';
+      'Point at a Kryfo QR · nothing leaves your phone';
 
   @override
   String get seenWhatWeCanSee => 'What we can see';

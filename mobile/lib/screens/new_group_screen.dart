@@ -4,7 +4,8 @@
 import 'package:flutter/material.dart';
 import '../main.dart' show appState, GroupFull;
 import '../theme.dart';
-import '../widgets/kryfo_avatar.dart';
+import '../widgets/breathing_ring.dart';
+import '../widgets/pick_row.dart';
 import 'group_chat_screen.dart';
 import '../widgets/motion.dart' show haloRoute;
 import '../widgets/stagger_in.dart';
@@ -49,6 +50,48 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
     Navigator.of(context).push(haloRoute(GroupChatScreen(groupId: groupId)));
   }
 
+  // nobody to pick yet: the same quiet ring the other empty lists use
+  Widget _empty() {
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 44),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: staggerAll([
+            BreathingRing(
+              size: 98,
+              core: 66,
+              child: Container(
+                width: 66,
+                height: 66,
+                decoration: BoxDecoration(
+                  color: HaloColors.amberSoft,
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Icon(
+                  Icons.group_add_outlined,
+                  color: HaloColors.amber,
+                  size: 28,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              l10n.newGroupAddAtLeastOne,
+              textAlign: TextAlign.center,
+              style: HaloType.serif(
+                size: 20,
+                color: HaloColors.text,
+                height: 1.3,
+              ),
+            ),
+          ]),
+        ),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _nameCtrl.dispose();
@@ -79,11 +122,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                   Expanded(
                     child: Text(
                       l10n.newGroupNewGroup,
-                      style: HaloType.serif(
-                        size: 18,
-                        italic: true,
-                        color: HaloColors.text,
-                      ),
+                      style: HaloType.pageTitle(),
                     ),
                   ),
                   GestureDetector(
@@ -169,19 +208,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
             ),
             Expanded(
               child: contacts.isEmpty
-                  ? Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 40),
-                        child: Text(
-                          l10n.newGroupAddAtLeastOne,
-                          textAlign: TextAlign.center,
-                          style: HaloType.sans(
-                            size: 13,
-                            color: HaloColors.text2,
-                          ),
-                        ),
-                      ),
-                    )
+                  ? _empty()
                   : ListView.builder(
                       itemCount: contacts.length,
                       itemBuilder: (_, i) {
@@ -189,7 +216,12 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                         final picked = _selected.contains(c.haloId);
                         return StaggerIn(
                           index: i,
-                          child: InkWell(
+                          child: PickRow(
+                            id: c.haloId,
+                            nickname: c.nickname,
+                            seed: c.avatarSeed,
+                            face: c.avatar,
+                            picked: picked,
                             onTap: () => setState(() {
                               if (picked) {
                                 _selected.remove(c.haloId);
@@ -197,53 +229,6 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                                 _selected.add(c.haloId);
                               }
                             }),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 10,
-                              ),
-                              child: Row(
-                                children: [
-                                  KryfoAvatar(seed: c.avatarSeed, size: 36),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      c.haloId,
-                                      style: HaloType.sans(
-                                        size: 14,
-                                        weight: FontWeight.w500,
-                                        color: HaloColors.text,
-                                      ),
-                                    ),
-                                  ),
-                                  AnimatedContainer(
-                                    duration: const Duration(milliseconds: 120),
-                                    width: 22,
-                                    height: 22,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: picked
-                                          ? HaloColors.amber
-                                          : Colors.transparent,
-                                      border: Border.all(
-                                        color: picked
-                                            ? HaloColors.amber
-                                            : HaloColors.line2,
-                                        width: 1.4,
-                                      ),
-                                    ),
-                                    alignment: Alignment.center,
-                                    child: picked
-                                        ? Icon(
-                                            Icons.check_rounded,
-                                            size: 14,
-                                            color: HaloColors.onAmber,
-                                          )
-                                        : null,
-                                  ),
-                                ],
-                              ),
-                            ),
                           ),
                         );
                       },

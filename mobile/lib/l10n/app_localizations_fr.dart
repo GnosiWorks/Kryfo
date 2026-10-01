@@ -1202,8 +1202,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get cameraCameraNotAvailable => 'Caméra indisponible';
 
   @override
-  String get cameraCameraPermissionIsOff =>
-      'Accès à la caméra refusé · touchez pour réessayer';
+  String get cameraCameraPermissionIsOff => 'Accès à la caméra refusé';
+
+  @override
+  String get cameraOpenSettings => 'Ouvrir les paramètres';
 
   @override
   String get cameraCouldNotStripThat =>
@@ -1234,7 +1236,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get cameraNoExifNeverSaved =>
-      'Pas d’exif, jamais enregistré dans vos photos';
+      'Pas d’EXIF, jamais enregistré dans vos photos';
 
   @override
   String get cameraRec => 'Enr';

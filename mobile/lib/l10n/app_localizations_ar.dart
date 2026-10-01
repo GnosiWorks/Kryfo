@@ -1238,8 +1238,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cameraCameraNotAvailable => 'الكاميرا غير متاحة';
 
   @override
-  String get cameraCameraPermissionIsOff =>
-      'إذن الكاميرا معطّل · اضغط لإعادة المحاولة';
+  String get cameraCameraPermissionIsOff => 'إذن الكاميرا معطّل';
+
+  @override
+  String get cameraOpenSettings => 'فتح الإعدادات';
 
   @override
   String get cameraCouldNotStripThat => 'تعذّر تنظيف تلك الصورة، فاستُبعدت';

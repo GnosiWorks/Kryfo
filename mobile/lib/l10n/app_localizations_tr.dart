@@ -1200,8 +1200,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get cameraCameraNotAvailable => 'Kamera kullanılamıyor';
 
   @override
-  String get cameraCameraPermissionIsOff =>
-      'Kamera izni kapalı · tekrar denemek için dokun';
+  String get cameraCameraPermissionIsOff => 'Kamera izni kapalı';
+
+  @override
+  String get cameraOpenSettings => 'Ayarları aç';
 
   @override
   String get cameraCouldNotStripThat => 'Bu fotoğraf temizlenemedi, atıldı';
@@ -1222,14 +1224,14 @@ class AppLocalizationsTr extends AppLocalizations {
   String get cameraCouldNotSaveA => 'Bu telefona kopya kaydedilemedi';
 
   @override
-  String get cameraTooLongForA => 'Mesaj için çok uzun · en fazla 8 mb';
+  String get cameraTooLongForA => 'Mesaj için çok uzun · en fazla 8 MB';
 
   @override
   String get cameraNeverSavedToYour => 'Fotoğraflarına asla kaydedilmez';
 
   @override
   String get cameraNoExifNeverSaved =>
-      'Exif yok, fotoğraflarına asla kaydedilmez';
+      'EXIF yok, fotoğraflarına asla kaydedilmez';
 
   @override
   String get cameraRec => 'Kayıt';
@@ -1239,7 +1241,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String cameraClipSMb(Object secs, Object mb) {
-    return 'Klip · $secs sn · $mb mb';
+    return 'Klip · $secs sn · $mb MB';
   }
 
   @override
