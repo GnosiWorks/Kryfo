@@ -2,8 +2,6 @@
 // one place for a person. the face and the three words, our name for them,
 // how far we trust them, the media we shared, and the things you can do to
 // the chat.
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -22,12 +20,15 @@ import '../widgets/page_head.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/press_scale.dart';
+import '../widgets/ease_size.dart';
+import '../widgets/shared_media.dart';
+import '../widgets/swap.dart';
+import 'home_screen.dart' show ContactPreview;
 import 'chat_screen.dart' show MediaGalleryScreen;
 import 'key_verification_screen.dart';
 import 'vouchers_sheet.dart';
 import '../widgets/confirm_sheet.dart';
 import '../l10n/l10n.dart';
-import '../l10n/numbers.dart';
 
 class ContactScreen extends StatefulWidget {
   final String haloId;
@@ -54,6 +55,15 @@ class _ContactScreenState extends State<ContactScreen> {
   List<String> _media = const [];
   Set<String> _secure = const {};
   int _mediaCount = 0;
+  // the first read is in: until then the list's own row stands in
+  bool _loaded = false;
+  // what the chat list already knows about them, for the first frame
+  late final ContactPreview? _seen = appState.contacts
+      .where((c) => c.haloId == widget.haloId)
+      .firstOrNull;
+  // a switch moves on the tap; the write follows behind it
+  bool? _mutedNow;
+  bool? _pinnedNow;
 
   @override
   void initState() {
@@ -95,11 +105,47 @@ class _ContactScreenState extends State<ContactScreen> {
       _secure = secure;
       _mediaCount = paths.length;
       _since = since;
+      _loaded = true;
     });
   }
 
-  bool _flag(String k) => (_c?[k] as int? ?? 0) == 1;
-  String get _name => (_c?['nickname'] as String?) ?? widget.haloId;
+  bool _flag(String k) {
+    final c = _c;
+    if (c != null) return (c[k] as int? ?? 0) == 1;
+    final s = _seen;
+    return switch (k) {
+      'verified' => s?.verified ?? false,
+      'blocked' => s?.blocked ?? false,
+      'muted' => s?.muted ?? false,
+      'pinned' => s?.pinned ?? false,
+      _ => false,
+    };
+  }
+
+  String? get _nickname =>
+      _c != null ? _c!['nickname'] as String? : _seen?.nickname;
+  String get _name => _nickname ?? widget.haloId;
+
+  Future<void> _setMuted(bool on) async {
+    HapticFeedback.selectionClick();
+    setState(() => _mutedNow = on);
+    if (on) {
+      await appState.mute(widget.haloId);
+    } else {
+      await appState.unmute(widget.haloId);
+    }
+    await _load();
+    if (mounted) setState(() => _mutedNow = null);
+  }
+
+  Future<void> _setPinned(bool on) async {
+    HapticFeedback.selectionClick();
+    setState(() => _pinnedNow = on);
+    await session.setContactPinned(widget.haloId, on);
+    await appState.refreshContacts();
+    await _load();
+    if (mounted) setState(() => _pinnedNow = null);
+  }
 
   Future<void> _rename() async {
     final ctrl = TextEditingController(text: _c?['nickname'] as String? ?? '');
@@ -192,8 +238,8 @@ class _ContactScreenState extends State<ContactScreen> {
     final c = _c;
     final verified = _flag('verified');
     final blocked = _flag('blocked');
-    final muted = _flag('muted');
-    final pinned = _flag('pinned');
+    final muted = _mutedNow ?? _flag('muted');
+    final pinned = _pinnedNow ?? _flag('pinned');
     final accepted = c == null || (c['accepted'] as int? ?? 1) == 1;
     final hidden = session.isHidden(widget.haloId);
     final status = contactStatusLine(
@@ -247,6 +293,7 @@ class _ContactScreenState extends State<ContactScreen> {
                           peerName: _name,
                           myXpub: appState.sessionXPub,
                           peerXpub: widget.peerXPub,
+                          initialVerified: verified,
                         ),
                       ),
                     );
@@ -310,7 +357,7 @@ class _ContactScreenState extends State<ContactScreen> {
                       ],
                     ),
                   ),
-                  if (c?['nickname'] != null) ...[
+                  if (_nickname != null) ...[
                     const SizedBox(height: 4),
                     Text(
                       widget.haloId,
@@ -343,11 +390,23 @@ class _ContactScreenState extends State<ContactScreen> {
             ),
           ),
           const SizedBox(height: 22),
-          _Stats(
-            verified: verified,
-            vouches: _voucherNames.length,
-            since: _since,
-            onVouches: () => showVouchersSheet(context, widget.haloId),
+          // the cards ease in once there is something to put on them
+          EaseSize(
+            child: FadeSwap(
+              child: _loaded
+                  ? _Stats(
+                      key: const ValueKey('stats'),
+                      verified: verified,
+                      vouches: _voucherNames.length,
+                      since: _since,
+                      onVouches: () =>
+                          showVouchersSheet(context, widget.haloId),
+                    )
+                  : const SizedBox(
+                      key: ValueKey('no-stats'),
+                      width: double.infinity,
+                    ),
+            ),
           ),
           if (_voucherNames.isNotEmpty) ...[
             const SizedBox(height: 12),
@@ -362,9 +421,10 @@ class _ContactScreenState extends State<ContactScreen> {
               ],
             ),
           ],
-          _MediaSection(
+          SharedMediaSection(
             paths: _media,
             count: _mediaCount,
+            loaded: _loaded,
             onOpen: _media.isEmpty
                 ? null
                 : () => Navigator.of(context).push(
@@ -385,26 +445,15 @@ class _ContactScreenState extends State<ContactScreen> {
                 icon: muted
                     ? Icons.notifications_off_outlined
                     : Icons.notifications_none,
-                label: muted ? l10n.contactUnmute : l10n.contactMute,
-                onTap: () async {
-                  HapticFeedback.selectionClick();
-                  if (muted) {
-                    await appState.unmute(widget.haloId);
-                  } else {
-                    await appState.mute(widget.haloId);
-                  }
-                  _load();
-                },
+                label: l10n.contactMute,
+                toggled: muted,
+                onTap: () => _setMuted(!muted),
               ),
               HaloRow(
                 icon: pinned ? Icons.push_pin : Icons.push_pin_outlined,
-                label: pinned ? l10n.contactUnpin : l10n.contactPinToTop,
-                onTap: () async {
-                  HapticFeedback.selectionClick();
-                  await session.setContactPinned(widget.haloId, !pinned);
-                  await appState.refreshContacts();
-                  _load();
-                },
+                label: l10n.contactPinToTop,
+                toggled: pinned,
+                onTap: () => _setPinned(!pinned),
               ),
               HaloRow(
                 icon: Icons.archive_outlined,
@@ -503,6 +552,7 @@ class _Stats extends StatelessWidget {
   final int? since;
   final VoidCallback onVouches;
   const _Stats({
+    super.key,
     required this.verified,
     required this.vouches,
     required this.since,
@@ -599,141 +649,6 @@ class _StatCard extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-// what the two of you shared: its count over the first four, the last of
-// them saying how many more. a tap on any opens them all
-class _MediaSection extends StatelessWidget {
-  final List<String> paths;
-  final int count;
-  final VoidCallback? onOpen;
-  const _MediaSection({required this.paths, required this.count, this.onOpen});
-
-  @override
-  Widget build(BuildContext context) {
-    if (count == 0) {
-      return Padding(
-        padding: const EdgeInsets.only(top: 18),
-        child: HaloGroup(
-          children: [
-            HaloRow(
-              icon: Icons.photo_library_outlined,
-              label: l10n.contactNothingSharedYet,
-            ),
-          ],
-        ),
-      );
-    }
-    final shown = paths.take(4).toList();
-    final more = count - 3;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        PageSection(l10n.contactSharedMedia(whole(count))),
-        PressScale(
-          onTap: onOpen,
-          scale: 0.98,
-          label: l10n.contactSharedMedia(whole(count)),
-          child: LayoutBuilder(
-            builder: (context, box) {
-              const gap = 6.0;
-              final side = (box.maxWidth - gap * 3) / 4;
-              return Row(
-                children: [
-                  for (var i = 0; i < 4; i++) ...[
-                    if (i > 0) const SizedBox(width: gap),
-                    SizedBox.square(
-                      dimension: side,
-                      child: i >= shown.length
-                          ? const SizedBox.shrink()
-                          : _Tile(
-                              path: shown[i],
-                              side: side,
-                              more: i == 3 && count > 4 ? more : 0,
-                            ),
-                    ),
-                  ],
-                ],
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _Tile extends StatelessWidget {
-  final String path;
-  final double side;
-  // shown over the last tile: how many more there are
-  final int more;
-  const _Tile({required this.path, required this.side, this.more = 0});
-
-  @override
-  Widget build(BuildContext context) {
-    final still = motionStill(context);
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(10),
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          ColoredBox(color: HaloColors.surface2),
-          Image.file(
-            File(path),
-            fit: BoxFit.cover,
-            cacheWidth: (side * MediaQuery.devicePixelRatioOf(context)).round(),
-            // a photo fades in as it decodes rather than blinking on
-            frameBuilder: (_, child, frame, sync) => sync || still
-                ? child
-                : AnimatedOpacity(
-                    opacity: frame == null ? 0 : 1,
-                    duration: const Duration(milliseconds: 200),
-                    curve: Curves.easeOut,
-                    child: child,
-                  ),
-            // a black square would read as a broken app, not a photo whose
-            // file is gone
-            errorBuilder: (_, _, _) => _MissingTile(size: side),
-          ),
-          if (more > 0)
-            ColoredBox(
-              color: HaloColors.ink.withValues(alpha: 0.62),
-              child: Center(
-                child: Text(
-                  '+${whole(more)}',
-                  style: HaloType.mono(
-                    size: 15,
-                    color: HaloColors.amber,
-                    weight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-// a photo whose file has gone, drawn so it does not look like a failed load
-class _MissingTile extends StatelessWidget {
-  final double size;
-  const _MissingTile({required this.size});
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      color: HaloColors.surface2,
-      alignment: Alignment.center,
-      child: Icon(
-        Icons.image_not_supported_outlined,
-        size: size * 0.32,
-        color: HaloColors.text3,
       ),
     );
   }

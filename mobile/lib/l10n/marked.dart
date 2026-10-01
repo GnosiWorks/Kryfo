@@ -47,12 +47,22 @@ class SlotLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (before, after) = aroundSlot(msg);
-    return Row(
-      children: [
-        if (before.isNotEmpty) Text(before, style: style),
-        slot,
-        if (after.isNotEmpty) Text(after, style: style),
-      ],
+    // one line that ends in an ellipsis when it does not fit
+    return Text.rich(
+      TextSpan(
+        children: [
+          if (before.isNotEmpty) TextSpan(text: before),
+          // the span scales its child with the text already
+          WidgetSpan(
+            alignment: PlaceholderAlignment.middle,
+            child: MediaQuery.withNoTextScaling(child: slot),
+          ),
+          if (after.isNotEmpty) TextSpan(text: after),
+        ],
+      ),
+      style: style,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
     );
   }
 }

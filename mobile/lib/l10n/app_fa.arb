@@ -652,6 +652,7 @@
   "groupChatGhostModeOnBurns": "پیام‌های زمان‌دار · پس از ⁨{fmtBurn}⁩ محو می‌شوند",
   "groupChatGroupCreatedSayHi": "گروه ساخته شد. سلام کنید.",
   "groupChatNoMessagesYet": "هنوز پیامی نیست.",
+  "groupChatEveryoneHereReads": "همه‌ی کسانی که اینجا هستند نوشته‌هایت را می‌خوانند.",
   "groupChatThisMessageCanT": "این پیام را نمی‌توان نشان داد",
   "groupChatS": "⁨{s}⁩ ثانیه",
   "groupChatM": "⁨{s}⁩ دقیقه",

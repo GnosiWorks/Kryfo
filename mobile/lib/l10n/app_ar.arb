@@ -652,6 +652,7 @@
   "groupChatGhostModeOnBurns": "الرسائل المؤقتة · تختفي بعد ⁨{fmtBurn}⁩",
   "groupChatGroupCreatedSayHi": "أُنشئت المجموعة. قل مرحبًا.",
   "groupChatNoMessagesYet": "لا رسائل بعد.",
+  "groupChatEveryoneHereReads": "كل من هنا يقرأ ما تكتبه.",
   "groupChatThisMessageCanT": "لا يمكن عرض هذه الرسالة",
   "groupChatS": "⁨{s}⁩ ث",
   "groupChatM": "⁨{s}⁩ د",

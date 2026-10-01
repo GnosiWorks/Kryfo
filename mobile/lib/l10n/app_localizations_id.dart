@@ -2501,6 +2501,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get groupChatNoMessagesYet => 'Belum ada pesan.';
 
   @override
+  String get groupChatEveryoneHereReads =>
+      'Semua orang di sini membaca apa yang kamu tulis.';
+
+  @override
   String get groupChatThisMessageCanT => 'Pesan ini tidak bisa ditampilkan';
 
   @override

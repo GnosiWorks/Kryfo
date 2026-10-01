@@ -2565,6 +2565,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get groupChatNoMessagesYet => 'لا رسائل بعد.';
 
   @override
+  String get groupChatEveryoneHereReads => 'كل من هنا يقرأ ما تكتبه.';
+
+  @override
   String get groupChatThisMessageCanT => 'لا يمكن عرض هذه الرسالة';
 
   @override

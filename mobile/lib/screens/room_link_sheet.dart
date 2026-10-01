@@ -24,9 +24,9 @@ import '../l10n/l10n.dart';
 import '../l10n/marked.dart';
 
 Future<void> showRoomLinkSheet(BuildContext context, RoomLink link) {
+  // no field in it: the sheet's own ceiling and scrolling are what it needs
   return showHaloSheet<void>(
     context,
-    scroll: true,
     builder: (_) => _RoomLinkSheet(link: link),
   );
 }

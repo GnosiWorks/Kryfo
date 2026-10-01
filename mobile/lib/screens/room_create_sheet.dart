@@ -63,9 +63,8 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
   @override
   Widget build(BuildContext context) {
     final insets = MediaQuery.of(context).viewInsets.bottom;
-    return AnimatedPadding(
-      duration: const Duration(milliseconds: 160),
-      curve: Curves.easeOut,
+    // the keyboard moves the insets every frame: the sheet rides on it
+    return Padding(
       padding: EdgeInsets.only(bottom: insets),
       child: SafeArea(
         child: Padding(

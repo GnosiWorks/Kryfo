@@ -2497,6 +2497,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get groupChatNoMessagesYet => 'Chưa có tin nhắn nào.';
 
   @override
+  String get groupChatEveryoneHereReads =>
+      'Mọi người ở đây đều đọc những gì bạn viết.';
+
+  @override
   String get groupChatThisMessageCanT => 'Không thể hiển thị tin nhắn này';
 
   @override

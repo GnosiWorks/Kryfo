@@ -652,6 +652,7 @@
   "groupChatGhostModeOnBurns": "Tin nhắn tự hủy · tự hủy sau {fmtBurn}",
   "groupChatGroupCreatedSayHi": "Đã tạo nhóm. Gửi lời chào.",
   "groupChatNoMessagesYet": "Chưa có tin nhắn nào.",
+  "groupChatEveryoneHereReads": "Mọi người ở đây đều đọc những gì bạn viết.",
   "groupChatThisMessageCanT": "Không thể hiển thị tin nhắn này",
   "groupChatS": "{s} giây",
   "groupChatM": "{s} phút",

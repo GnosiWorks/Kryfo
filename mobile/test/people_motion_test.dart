@@ -3,8 +3,8 @@
 // here, and is simply green when it was verified before; the what we can
 // see table marks the route in use with a band, never by dimming the other
 // words; introductions come in row by row and a pick pops its tick. all of
-// it rests, reading order is followed right to left, and with less
-// movement nothing cascades or pops.
+// it rests, reading order is followed right to left (the safety number
+// keeps its own), and with less movement nothing cascades or pops.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -95,7 +95,11 @@ void main() {
       expect(colourOf(t, _groups.last), HaloColors.green);
     });
 
-    testWidgets('right to left: the cascade starts on the right', (t) async {
+    // two phones in two languages are held side by side: the groups sit
+    // in one order on both
+    testWidgets('right to left: the groups keep their order, first first', (
+      t,
+    ) async {
       await t.pumpWidget(
         host(
           const Scaffold(
@@ -107,7 +111,7 @@ void main() {
       await settles(t);
       expect(
         t.getCenter(find.text(_groups[0])).dx,
-        greaterThan(t.getCenter(find.text(_groups[1])).dx),
+        lessThan(t.getCenter(find.text(_groups[1])).dx),
       );
       await t.pumpWidget(
         host(

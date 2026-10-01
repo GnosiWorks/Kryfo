@@ -652,6 +652,7 @@
   "groupChatGhostModeOnBurns": "Pesan berwaktu · hilang setelah {fmtBurn}",
   "groupChatGroupCreatedSayHi": "Grup dibuat. Sapa mereka.",
   "groupChatNoMessagesYet": "Belum ada pesan.",
+  "groupChatEveryoneHereReads": "Semua orang di sini membaca apa yang kamu tulis.",
   "groupChatThisMessageCanT": "Pesan ini tidak bisa ditampilkan",
   "groupChatS": "{s} dtk",
   "groupChatM": "{s} mnt",

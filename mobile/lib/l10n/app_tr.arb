@@ -652,6 +652,7 @@
   "groupChatGhostModeOnBurns": "Süreli mesajlar · {fmtBurn} sonra silinir",
   "groupChatGroupCreatedSayHi": "Grup kuruldu. Selam ver.",
   "groupChatNoMessagesYet": "Henüz mesaj yok.",
+  "groupChatEveryoneHereReads": "Buradaki herkes yazdıklarını okur.",
   "groupChatThisMessageCanT": "Bu mesaj gösterilemiyor",
   "groupChatS": "{s} sn",
   "groupChatM": "{s} dk",

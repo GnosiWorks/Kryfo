@@ -2561,6 +2561,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get groupChatNoMessagesYet => 'Сообщений пока нет.';
 
   @override
+  String get groupChatEveryoneHereReads =>
+      'Все здесь читают то, что ты пишешь.';
+
+  @override
   String get groupChatThisMessageCanT => 'Это сообщение нельзя показать';
 
   @override

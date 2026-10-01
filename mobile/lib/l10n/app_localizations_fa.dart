@@ -2511,6 +2511,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get groupChatNoMessagesYet => 'هنوز پیامی نیست.';
 
   @override
+  String get groupChatEveryoneHereReads =>
+      'همه‌ی کسانی که اینجا هستند نوشته‌هایت را می‌خوانند.';
+
+  @override
   String get groupChatThisMessageCanT => 'این پیام را نمی‌توان نشان داد';
 
   @override

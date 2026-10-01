@@ -29,8 +29,10 @@ void main() {
   test('a toggle and a picked burn time are kept', () {
     final toggle = _body('onToggleGhost: () {', '},');
     expect(toggle, contains('appState.saveGhostPref(_ghost, _burnSeconds)'));
-    final pick = _body('setState(() => _burnSeconds = opt.\$1);', 'Navigator');
-    expect(pick, contains('appState.saveGhostPref(_ghost, opt.\$1)'));
+    // a picked time turns timed messages on, and is kept so
+    final pick = _body('_burnSeconds = opt.\$1;', 'Navigator');
+    expect(pick, contains('_ghost = true;'));
+    expect(pick, contains('appState.saveGhostPref(true, opt.\$1)'));
   });
 
   group('a group gone from here', () {

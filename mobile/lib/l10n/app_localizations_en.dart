@@ -2496,6 +2496,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get groupChatNoMessagesYet => 'No messages yet.';
 
   @override
+  String get groupChatEveryoneHereReads =>
+      'Everyone here reads what you write.';
+
+  @override
   String get groupChatThisMessageCanT => 'This message can\'t be shown';
 
   @override

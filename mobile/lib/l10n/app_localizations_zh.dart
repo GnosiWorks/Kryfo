@@ -2403,6 +2403,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get groupChatNoMessagesYet => '还没有消息。';
 
   @override
+  String get groupChatEveryoneHereReads => '这里的每个人都能看到你写的内容。';
+
+  @override
   String get groupChatThisMessageCanT => '这条消息无法显示';
 
   @override
@@ -9591,6 +9594,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get groupChatNoMessagesYet => '還沒有訊息。';
+
+  @override
+  String get groupChatEveryoneHereReads => '這裡的每個人都能看到你寫的內容。';
 
   @override
   String get groupChatThisMessageCanT => '這則訊息無法顯示';

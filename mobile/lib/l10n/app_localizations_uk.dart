@@ -2554,6 +2554,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get groupChatNoMessagesYet => 'Ще немає повідомлень.';
 
   @override
+  String get groupChatEveryoneHereReads => 'Усі тут читають те, що ти пишеш.';
+
+  @override
   String get groupChatThisMessageCanT => 'Це повідомлення неможливо показати';
 
   @override

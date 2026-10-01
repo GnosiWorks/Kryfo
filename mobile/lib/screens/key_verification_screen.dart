@@ -38,12 +38,16 @@ class KeyVerificationScreen extends StatefulWidget {
   final String peerName;
   final String myXpub;
   final String peerXpub;
+  // what the page that opened this already knows, so it opens in the right
+  // state and only a tap here animates
+  final bool? initialVerified;
   const KeyVerificationScreen({
     super.key,
     required this.peerHaloId,
     required this.peerName,
     required this.myXpub,
     required this.peerXpub,
+    this.initialVerified,
   });
 
   @override
@@ -51,7 +55,7 @@ class KeyVerificationScreen extends StatefulWidget {
 }
 
 class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
-  bool _verified = false;
+  late bool _verified = widget.initialVerified ?? false;
   // the change came from a tap here, not from reading what was stored
   bool _tapped = false;
 
@@ -104,9 +108,13 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
                     ),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
-                  Text(
-                    l10n.keyVerificationSafetyNumber,
-                    style: HaloType.serif(size: 22, color: HaloColors.text),
+                  Expanded(
+                    child: Text(
+                      l10n.keyVerificationSafetyNumber,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: HaloType.serif(size: 22, color: HaloColors.text),
+                    ),
                   ),
                 ],
               ),
@@ -242,26 +250,31 @@ class _SafetyNumberCardState extends State<SafetyNumberCard>
               width: 0.5 + 0.5 * t,
             ),
           ),
-          child: Wrap(
-            spacing: 18,
-            runSpacing: 14,
-            alignment: WrapAlignment.center,
-            children: [
-              // each group lands a beat after the last, so the number
-              // assembles instead of popping in
-              for (var i = 0; i < groups.length; i++)
-                StaggerIn(
-                  index: i + 2,
-                  child: Text(
-                    groups[i],
-                    style: HaloType.mono(
-                      size: 18,
-                      color: groupColor(i),
-                      letter: 1.0,
+          // the same order on every phone, whatever its language: two people
+          // read it side by side
+          child: Directionality(
+            textDirection: TextDirection.ltr,
+            child: Wrap(
+              spacing: 18,
+              runSpacing: 14,
+              alignment: WrapAlignment.center,
+              children: [
+                // each group lands a beat after the last, so the number
+                // assembles instead of popping in
+                for (var i = 0; i < groups.length; i++)
+                  StaggerIn(
+                    index: i + 2,
+                    child: Text(
+                      groups[i],
+                      style: HaloType.mono(
+                        size: 18,
+                        color: groupColor(i),
+                        letter: 1.0,
+                      ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         );
       },

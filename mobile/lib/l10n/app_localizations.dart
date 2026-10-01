@@ -4038,6 +4038,12 @@ abstract class AppLocalizations {
   /// screens/group_chat_screen.dart
   ///
   /// In en, this message translates to:
+  /// **'Everyone here reads what you write.'**
+  String get groupChatEveryoneHereReads;
+
+  /// screens/group_chat_screen.dart
+  ///
+  /// In en, this message translates to:
   /// **'This message can\'t be shown'**
   String get groupChatThisMessageCanT;
 
