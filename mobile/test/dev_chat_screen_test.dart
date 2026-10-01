@@ -335,7 +335,11 @@ Future<void> _beat(WidgetTester t, [int ms = 700]) async {
 // real files are read and written on the way out: frames run between
 // them until [done] holds, then a few more for what trails it. a photo is
 // cleaned on an isolate of its own first, slow to start on a busy machine
-Future<void> _io(WidgetTester t, bool Function() done) async {
+Future<void> _io(
+  WidgetTester t,
+  bool Function() done, {
+  String why = 'the send never got that far',
+}) async {
   var left = 6;
   for (var i = 0; i < 500 && left > 0; i++) {
     if (done()) left--;
@@ -344,8 +348,19 @@ Future<void> _io(WidgetTester t, bool Function() done) async {
     );
     await t.pump(const Duration(milliseconds: 60));
   }
-  expect(done(), isTrue, reason: 'the send never got that far');
+  expect(done(), isTrue, reason: why);
 }
+
+// what a send copied or recorded and has not let go of yet
+List<File> _leftovers() => Directory(_tmp.path)
+    .listSync(recursive: true)
+    .whereType<File>()
+    .where(
+      (f) =>
+          f.path.contains('/media') ||
+          f.uri.pathSegments.last.startsWith('vn_'),
+    )
+    .toList();
 
 // the pickers' timers run out before the next test
 Future<void> _close(WidgetTester t) async {
@@ -966,21 +981,20 @@ void main() {
         // each photo asks, as each goes on its own
         final asked = _begun.length + rows;
         await send(t, () => _begun.length >= asked);
+        // a recording is shredded only once the start has said no, on real
+        // file io that a busy machine can hold up
+        await _io(
+          t,
+          () => _leftovers().isEmpty,
+          why: '$kind left a file behind',
+        );
         expect(_mem.rows('messages'), isEmpty, reason: kind);
         expect(find.text(l10n.devKeyCheckFailed), findsOneWidget);
       }
       expect(_begun, List.filled(6, false));
       expect(_row()!.state, DevState.fresh);
       // what was copied or recorded for the send went with it
-      final left = Directory(_tmp.path)
-          .listSync(recursive: true)
-          .whereType<File>()
-          .where(
-            (f) =>
-                f.path.contains('/media') ||
-                f.uri.pathSegments.last.startsWith('vn_'),
-          );
-      expect(left, isEmpty);
+      expect(_leftovers(), isEmpty);
       await _close(t);
     });
 
