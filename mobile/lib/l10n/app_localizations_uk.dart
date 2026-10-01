@@ -1216,8 +1216,10 @@ class AppLocalizationsUk extends AppLocalizations {
   String get cameraCameraNotAvailable => 'Камера недоступна';
 
   @override
-  String get cameraCameraPermissionIsOff =>
-      'Немає дозволу на камеру · натисни, щоб спробувати ще раз';
+  String get cameraCameraPermissionIsOff => 'Немає дозволу на камеру';
+
+  @override
+  String get cameraOpenSettings => 'Відкрити налаштування';
 
   @override
   String get cameraCouldNotStripThat =>
@@ -1247,7 +1249,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get cameraNoExifNeverSaved =>
-      'Без exif, ніколи не зберігається у твоїх фото';
+      'Без EXIF, ніколи не зберігається у твоїх фото';
 
   @override
   String get cameraRec => 'Запис';

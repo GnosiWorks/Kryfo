@@ -1191,8 +1191,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get cameraCameraNotAvailable => 'دوربین در دسترس نیست';
 
   @override
-  String get cameraCameraPermissionIsOff =>
-      'اجازه‌ی دوربین خاموش است · برای تلاش دوباره بزنید';
+  String get cameraCameraPermissionIsOff => 'اجازه‌ی دوربین خاموش است';
+
+  @override
+  String get cameraOpenSettings => 'باز کردن تنظیمات';
 
   @override
   String get cameraCouldNotStripThat =>

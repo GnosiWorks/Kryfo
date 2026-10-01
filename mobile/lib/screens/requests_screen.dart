@@ -253,10 +253,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
         backgroundColor: HaloColors.surface,
         elevation: 0,
         leading: BackButton(color: HaloColors.text),
-        title: Text(
-          l10n.requestsRequests,
-          style: HaloType.serif(size: 18, color: HaloColors.text),
-        ),
+        title: Text(l10n.requestsRequests, style: HaloType.pageTitle()),
       ),
       body: _loading
           ? const SizedBox.shrink()

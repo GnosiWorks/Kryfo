@@ -109,14 +109,7 @@ class _NotesScreenState extends State<NotesScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              l10n.notesNoteToSelf,
-              style: HaloType.serif(
-                size: 20,
-                color: HaloColors.text,
-                italic: true,
-              ),
-            ),
+            Text(l10n.notesNoteToSelf, style: HaloType.pageTitle()),
             Text(
               l10n.notesOnlyOnThisPhone,
               style: HaloType.mono(size: 9.5, color: HaloColors.text3),

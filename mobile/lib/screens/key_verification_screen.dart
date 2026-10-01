@@ -106,7 +106,7 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
                   ),
                   Text(
                     l10n.keyVerificationSafetyNumber,
-                    style: HaloType.serif(size: 22, color: HaloColors.text),
+                    style: HaloType.pageTitle(),
                   ),
                 ],
               ),

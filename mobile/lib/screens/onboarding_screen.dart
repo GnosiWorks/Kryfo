@@ -21,6 +21,7 @@ import '../widgets/motion.dart' show haloRoute, motionStill;
 import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
 import '../l10n/marked.dart';
+import '../l10n/numbers.dart' show twoDigits;
 import '../widgets/language_sheet.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -37,6 +38,7 @@ class OnboardingScreen extends StatefulWidget {
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final _ctrl = PageController();
+  int _page = 0;
 
   void _next() {
     // with less movement the next step is simply there
@@ -50,6 +52,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
+  // system back walks one step back; only the first step leaves the app
+  void _back() {
+    final to = (_ctrl.page ?? _page.toDouble()).round() - 1;
+    if (to < 0) return;
+    HapticFeedback.selectionClick();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _ctrl.jumpToPage(to);
+      return;
+    }
+    _ctrl.animateToPage(
+      to,
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
   @override
   void dispose() {
     _ctrl.dispose();
@@ -58,21 +76,28 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: HaloColors.ink,
-      body: SafeArea(
-        child: PageView(
-          controller: _ctrl,
-          physics: const NeverScrollableScrollPhysics(),
-          children: [
-            _WelcomeScreen(onContinue: _next),
-            _IdentityScreen(appState: widget.appState, onContinue: _next),
-            _PickFaceScreen(onContinue: _next),
-            _TransportScreen(onContinue: _next),
-            _ThreeThingsScreen(onContinue: _next),
-            _NotificationScreen(onContinue: _next),
-            _AddSomeoneScreen(onComplete: widget.onComplete),
-          ],
+    return PopScope(
+      canPop: _page == 0,
+      onPopInvokedWithResult: (done, _) {
+        if (!done) _back();
+      },
+      child: Scaffold(
+        backgroundColor: HaloColors.ink,
+        body: SafeArea(
+          child: PageView(
+            controller: _ctrl,
+            physics: const NeverScrollableScrollPhysics(),
+            onPageChanged: (i) => setState(() => _page = i),
+            children: [
+              _WelcomeScreen(onContinue: _next),
+              _IdentityScreen(appState: widget.appState, onContinue: _next),
+              _PickFaceScreen(onContinue: _next),
+              _TransportScreen(onContinue: _next),
+              _ThreeThingsScreen(onContinue: _next),
+              _NotificationScreen(onContinue: _next),
+              _AddSomeoneScreen(onComplete: widget.onComplete),
+            ],
+          ),
         ),
       ),
     );
@@ -386,133 +411,132 @@ class _IdentityScreenState extends State<_IdentityScreen>
           ],
         ),
       ),
-      child: Padding(
+      child: FitColumn(
         padding: const EdgeInsets.fromLTRB(28, 36, 28, 36),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Spacer(),
-            _sigilReveal(),
-            const SizedBox(height: 22),
-            Text(
-              l10n.onboardingYourKryfoId,
-              style: HaloType.mono(
-                size: 10,
-                color: HaloColors.amber,
-              ).copyWith(letterSpacing: track(4), fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 14),
-            _shimmerPill(words),
-            const SizedBox(height: 18),
-            _fadeAt(1500, child: _italicLine()),
-            const SizedBox(height: 14),
-            _fadeAt(
-              1800,
-              child: SizedBox(
-                width: 240,
-                child: RichText(
-                  textAlign: TextAlign.center,
-                  text: TextSpan(
-                    style: HaloType.sans(
+        children: [
+          const Spacer(),
+          _sigilReveal(),
+          const SizedBox(height: 22),
+          Text(
+            l10n.onboardingYourKryfoId,
+            style: HaloType.mono(
+              size: 10,
+              color: HaloColors.amber,
+            ).copyWith(letterSpacing: track(4), fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 14),
+          _shimmerPill(words),
+          const SizedBox(height: 18),
+          _fadeAt(1500, child: _italicLine()),
+          const SizedBox(height: 14),
+          _fadeAt(
+            1800,
+            // a plain SizedBox would let the fit pass measure this at the
+            // full width and the page would overflow instead of scroll
+            child: FitWidth(
+              width: 240,
+              child: RichText(
+                textAlign: TextAlign.center,
+                text: TextSpan(
+                  style: HaloType.sans(
+                    size: 11,
+                    color: HaloColors.text3,
+                    height: 1.55,
+                  ),
+                  children: markedSpans(
+                    l10n.onboardingGeneratedFromAKey,
+                    HaloType.sans(
                       size: 11,
-                      color: HaloColors.text3,
+                      color: HaloColors.text2,
+                      weight: FontWeight.w500,
                       height: 1.55,
-                    ),
-                    children: markedSpans(
-                      l10n.onboardingGeneratedFromAKey,
-                      HaloType.sans(
-                        size: 11,
-                        color: HaloColors.text2,
-                        weight: FontWeight.w500,
-                        height: 1.55,
-                      ),
                     ),
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 26),
-            _fadeAt(
-              2100,
-              // side by side while they fit; when they don't, the main
-              // one goes on top
-              child: Wrap(
-                alignment: WrapAlignment.center,
-                verticalDirection: VerticalDirection.up,
-                spacing: 10,
-                runSpacing: 10,
-                children: [
-                  PressScale(
-                    scale: 0.96,
-                    onTap: _regenerate,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 18,
-                        vertical: 11,
-                      ),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: HaloColors.line2, width: 0.5),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      // the label keeps the size while the arc turns
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Opacity(
-                            opacity: _busy ? 0 : 1,
-                            child: Text(
-                              l10n.onboardingTryAnother,
-                              textAlign: TextAlign.center,
-                              style: HaloType.sans(
-                                size: 12,
-                                color: HaloColors.text2,
-                              ),
+          ),
+          const SizedBox(height: 26),
+          _fadeAt(
+            2100,
+            // side by side while they fit; when they don't, the main
+            // one goes on top
+            child: Wrap(
+              alignment: WrapAlignment.center,
+              verticalDirection: VerticalDirection.up,
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                PressScale(
+                  scale: 0.96,
+                  onTap: _regenerate,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 11,
+                    ),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: HaloColors.line2, width: 0.5),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    // the label keeps the size while the arc turns
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Opacity(
+                          opacity: _busy ? 0 : 1,
+                          child: Text(
+                            l10n.onboardingTryAnother,
+                            textAlign: TextAlign.center,
+                            style: HaloType.sans(
+                              size: 12,
+                              color: HaloColors.text2,
                             ),
                           ),
-                          if (_busy)
-                            SizedBox(
-                              key: const ValueKey('regenerating'),
-                              width: 12,
-                              height: 12,
-                              child: CircularProgressIndicator(
-                                value: motionStill(context) ? 0.3 : null,
-                                strokeWidth: 1.5,
-                                color: HaloColors.text2,
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  PressScale(
-                    scale: 0.96,
-                    onTap: _continue,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 22,
-                        vertical: 11,
-                      ),
-                      decoration: BoxDecoration(
-                        color: HaloColors.amber,
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        l10n.onboardingUseThisName,
-                        textAlign: TextAlign.center,
-                        style: HaloType.sans(
-                          size: 12,
-                          color: HaloColors.onAmber,
-                          weight: FontWeight.w500,
                         ),
+                        if (_busy)
+                          SizedBox(
+                            key: const ValueKey('regenerating'),
+                            width: 12,
+                            height: 12,
+                            child: CircularProgressIndicator(
+                              value: motionStill(context) ? 0.3 : null,
+                              strokeWidth: 1.5,
+                              color: HaloColors.text2,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                PressScale(
+                  scale: 0.96,
+                  onTap: _continue,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 22,
+                      vertical: 11,
+                    ),
+                    decoration: BoxDecoration(
+                      color: HaloColors.amber,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      l10n.onboardingUseThisName,
+                      textAlign: TextAlign.center,
+                      style: HaloType.sans(
+                        size: 12,
+                        color: HaloColors.onAmber,
+                        weight: FontWeight.w500,
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            const Spacer(flex: 2),
-          ],
-        ),
+          ),
+          const Spacer(flex: 2),
+        ],
       ),
     );
   }
@@ -578,8 +602,11 @@ class _IdentityScreenState extends State<_IdentityScreen>
   Widget _shimmerPill(List<String> words) {
     return AnimatedBuilder(
       animation: _shimmer,
-      builder: (c, _) {
-        return Stack(
+      // long words at a large text size shrink the pill instead of
+      // spilling past the screen
+      builder: (c, _) => FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Stack(
           clipBehavior: Clip.hardEdge,
           children: [
             Container(
@@ -628,8 +655,8 @@ class _IdentityScreenState extends State<_IdentityScreen>
                 ),
               ),
           ],
-        );
-      },
+        ),
+      ),
     );
   }
 
@@ -744,49 +771,26 @@ class _PickFaceScreenState extends State<_PickFaceScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _Step(3),
-          const SizedBox(height: 22),
-          RichText(
-            text: TextSpan(
-              style: HaloType.serif(
-                size: 30,
-                weight: FontWeight.w300,
-                color: HaloColors.text,
-                height: 1.05,
-              ),
-              children: markedSpans(
-                l10n.onboardingPickA,
-                HaloType.serif(
-                  size: 30,
-                  weight: FontWeight.w300,
-                  italic: true,
-                  color: HaloColors.amber,
-                  height: 1.05,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            l10n.onboardingDrawnOnThisPhone,
-            style: HaloType.sans(
-              size: 13.5,
-              color: HaloColors.text2,
-              height: 1.55,
-            ),
-          ),
-          const SizedBox(height: 8),
           Expanded(
             child: AvatarChoiceEditor(
-              padding: const EdgeInsets.only(top: 12, bottom: 12),
+              padding: const EdgeInsets.only(bottom: 12),
               caption: l10n.onboardingThePeopleYouMessage,
               onChanged: (c) => setState(() {
                 _choice = c;
                 _touched = true;
               }),
+              // the heading scrolls with the choices, so a large text
+              // size still leaves room for them
+              header: _heading(),
             ),
           ),
-          Row(
+          // side by side while they fit; when they don't, the main one
+          // goes on top
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            verticalDirection: VerticalDirection.up,
+            runSpacing: 6,
             children: [
               PressScale(
                 onTap: widget.onContinue,
@@ -801,7 +805,6 @@ class _PickFaceScreenState extends State<_PickFaceScreen> {
                   ),
                 ),
               ),
-              const Spacer(),
               PressScale(
                 scale: 0.96,
                 onTap: _saveAndGo,
@@ -816,6 +819,7 @@ class _PickFaceScreenState extends State<_PickFaceScreen> {
                   ),
                   child: Text(
                     _touched ? l10n.onboardingThatOne : l10n.onboardingContinue,
+                    textAlign: TextAlign.center,
                     style: HaloType.sans(
                       size: 12,
                       color: HaloColors.onAmber,
@@ -828,6 +832,46 @@ class _PickFaceScreenState extends State<_PickFaceScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _heading() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _Step(3),
+        const SizedBox(height: 22),
+        RichText(
+          text: TextSpan(
+            style: HaloType.serif(
+              size: 30,
+              weight: FontWeight.w300,
+              color: HaloColors.text,
+              height: 1.05,
+            ),
+            children: markedSpans(
+              l10n.onboardingPickA,
+              HaloType.serif(
+                size: 30,
+                weight: FontWeight.w300,
+                italic: true,
+                color: HaloColors.amber,
+                height: 1.05,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          l10n.onboardingDrawnOnThisPhone,
+          style: HaloType.sans(
+            size: 13.5,
+            color: HaloColors.text2,
+            height: 1.55,
+          ),
+        ),
+        const SizedBox(height: 20),
+      ],
     );
   }
 }
@@ -1045,19 +1089,19 @@ class _ThreeThingsScreen extends StatelessWidget {
         const SizedBox(height: 24),
         ...staggerAll([
           _Card(
-            num: '01',
+            num: 1,
             title: l10n.onboardingYourNameIsThreeWords,
             desc: l10n.onboardingThatIsTheWhole,
           ),
           const SizedBox(height: 12),
           _Card(
-            num: '02',
+            num: 2,
             title: l10n.onboardingNobodyCanReachYou,
             desc: l10n.onboardingAStrangerWithYour,
           ),
           const SizedBox(height: 12),
           _Card(
-            num: '03',
+            num: 3,
             title: l10n.onboardingTheFirstConnectionTakesAMinute,
             desc: l10n.onboardingKryfoBuildsAPrivateRouteBefore,
           ),
@@ -1222,7 +1266,7 @@ class _Step extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      '0$n / 07',
+      '${twoDigits(n)} / ${twoDigits(7)}',
       style: HaloType.mono(
         size: 10,
         color: HaloColors.amber,
@@ -1253,7 +1297,7 @@ Widget _headline(String msg) => RichText(
 );
 
 class _Card extends StatelessWidget {
-  final String? num;
+  final int? num;
   final IconData? icon;
   final String title;
   final String desc;
@@ -1275,7 +1319,7 @@ class _Card extends StatelessWidget {
             padding: const EdgeInsets.only(top: 2),
             child: num != null
                 ? Text(
-                    num!,
+                    twoDigits(num!),
                     style: HaloType.mono(size: 10, color: HaloColors.amber)
                         .copyWith(
                           letterSpacing: track(2),

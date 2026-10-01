@@ -148,10 +148,7 @@ class _ArchivedListState extends State<ArchivedList> {
                 ),
                 onPressed: () => Navigator.of(context).pop(),
               ),
-              Text(
-                l10n.archivedArchived,
-                style: HaloType.serif(size: 22, color: HaloColors.text),
-              ),
+              Text(l10n.archivedArchived, style: HaloType.pageTitle()),
             ],
           ),
         ),

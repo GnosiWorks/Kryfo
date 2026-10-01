@@ -613,22 +613,20 @@ void main() {
     expect(l.bridgesDifferentPuzzle, "Different puzzle");
     expect(l.cameraNoCameraOnThis, "No camera on this phone");
     expect(l.cameraCameraNotAvailable, "Camera not available");
-    expect(
-      l.cameraCameraPermissionIsOff,
-      "Camera permission is off · tap to try again",
-    );
+    expect(l.cameraCameraPermissionIsOff, "Camera permission is off");
+    expect(l.cameraOpenSettings, "Open settings");
     expect(l.cameraCouldNotStripThat, "Could not strip that photo, dropped it");
     expect(l.cameraNoPhotoCameOut, "No photo came out");
     expect(l.cameraCouldNotStartRecording, "Could not start recording");
     expect(l.cameraTheRecordingWasLost, "The recording was lost");
     expect(l.cameraACopyIsIn, "A copy is in your photos");
     expect(l.cameraCouldNotSaveA, "Could not save a copy on this phone");
-    expect(l.cameraTooLongForA, "Too long for a message · 8 mb max");
+    expect(l.cameraTooLongForA, "Too long for a message · 8 MB max");
     expect(l.cameraNeverSavedToYour, "Never saved to your photos");
-    expect(l.cameraNoExifNeverSaved, "No exif, never saved to your photos");
+    expect(l.cameraNoExifNeverSaved, "No EXIF, never saved to your photos");
     expect(l.cameraRec, "Rec");
     expect(l.cameraSwitchCamera, "Switch camera");
-    expect(l.cameraClipSMb("<secs>", "<mb>"), "Clip · <secs>s · <mb> mb");
+    expect(l.cameraClipSMb("<secs>", "<mb>"), "Clip · <secs>s · <mb> MB");
     expect(l.cameraStopRecording, "Stop recording");
     expect(l.cameraStartRecording, "Start recording");
     expect(l.cameraTakeAPhoto, "Take a photo");
@@ -2479,11 +2477,11 @@ void main() {
     expect(l.savedViewInChat, "View in chat");
     expect(l.savedPhoto2, "Photo");
     expect(l.scanThatSNotA, "That's not a Kryfo QR · keep pointing");
-    expect(l.scanScanAKryfoQr, "Scan a Kryfo qr");
+    expect(l.scanScanAKryfoQr, "Scan a Kryfo QR");
     expect(l.scanFlash, "Flash");
     expect(
       l.scanPointAtAKryfo,
-      "Point at a Kryfo qr · nothing leaves your phone",
+      "Point at a Kryfo QR · nothing leaves your phone",
     );
     expect(l.seenWhatWeCanSee, "What we can see");
     expect(

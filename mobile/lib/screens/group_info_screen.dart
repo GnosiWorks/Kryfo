@@ -9,6 +9,7 @@ import '../atmosphere.dart' show Atmo, atmoFromName;
 import '../theme.dart';
 import '../widgets/kryfo_avatar.dart';
 import '../rooms.dart';
+import 'home_screen.dart' show ContactPreview;
 import 'room_link_sheet.dart';
 import '../widgets/motion.dart' show haloRoute;
 import 'package:flutter/services.dart';
@@ -17,6 +18,7 @@ import 'wallpaper_sheet.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/halo_rows.dart';
 import '../widgets/page_head.dart';
+import '../widgets/pick_row.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/halo_sheet.dart';
@@ -640,7 +642,7 @@ class _MembersCardState extends State<MembersCard> {
 }
 
 class _AddMemberSheet extends StatefulWidget {
-  final List available;
+  final List<ContactPreview> available;
   const _AddMemberSheet({required this.available});
   @override
   State<_AddMemberSheet> createState() => _AddMemberSheetState();
@@ -693,7 +695,17 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
               itemBuilder: (_, i) {
                 final c = widget.available[i];
                 final picked = _picked.contains(c.haloId);
-                return InkWell(
+                return PickRow(
+                  id: c.haloId,
+                  nickname: c.nickname,
+                  seed: c.avatarSeed,
+                  face: c.avatar,
+                  picked: picked,
+                  size: 32,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
                   onTap: () => setState(() {
                     if (picked) {
                       _picked.remove(c.haloId);
@@ -701,53 +713,6 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
                       _picked.add(c.haloId);
                     }
                   }),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 10,
-                    ),
-                    child: Row(
-                      children: [
-                        KryfoAvatar(seed: c.avatarSeed, size: 32),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            c.haloId,
-                            style: HaloType.sans(
-                              size: 14,
-                              weight: FontWeight.w500,
-                              color: HaloColors.text,
-                            ),
-                          ),
-                        ),
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 120),
-                          width: 20,
-                          height: 20,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: picked
-                                ? HaloColors.amber
-                                : Colors.transparent,
-                            border: Border.all(
-                              color: picked
-                                  ? HaloColors.amber
-                                  : HaloColors.line2,
-                              width: 1.2,
-                            ),
-                          ),
-                          alignment: Alignment.center,
-                          child: picked
-                              ? Icon(
-                                  Icons.check_rounded,
-                                  size: 12,
-                                  color: HaloColors.onAmber,
-                                )
-                              : null,
-                        ),
-                      ],
-                    ),
-                  ),
                 );
               },
             ),

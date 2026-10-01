@@ -544,6 +544,7 @@ final _calls = <_Call>[
   ('cameraNoCameraOnThis', [], (l) => l.cameraNoCameraOnThis),
   ('cameraCameraNotAvailable', [], (l) => l.cameraCameraNotAvailable),
   ('cameraCameraPermissionIsOff', [], (l) => l.cameraCameraPermissionIsOff),
+  ('cameraOpenSettings', [], (l) => l.cameraOpenSettings),
   ('cameraCouldNotStripThat', [], (l) => l.cameraCouldNotStripThat),
   ('cameraNoPhotoCameOut', [], (l) => l.cameraNoPhotoCameOut),
   ('cameraCouldNotStartRecording', [], (l) => l.cameraCouldNotStartRecording),

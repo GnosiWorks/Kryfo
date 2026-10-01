@@ -11,6 +11,7 @@ import '../wipe.dart';
 import '../widgets/fit_column.dart';
 import '../theme.dart';
 import '../widgets/pin_pad.dart';
+import '../widgets/press_scale.dart';
 import '../l10n/l10n.dart';
 
 class LockScreen extends StatefulWidget {
@@ -152,10 +153,11 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
   }
 
   Widget _fingerButton() {
-    return GestureDetector(
+    return PressScale(
       key: const ValueKey('ready'),
+      label: l10n.lockUseFingerprint,
+      scale: 0.95,
       onTap: () => _lock.tryBiometric(),
-      behavior: HitTestBehavior.opaque,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
@@ -168,9 +170,11 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
           children: [
             Icon(Icons.fingerprint, color: HaloColors.amber, size: 18),
             const SizedBox(width: 8),
-            Text(
-              l10n.lockUseFingerprint,
-              style: HaloType.sans(size: 12.5, color: HaloColors.text),
+            ExcludeSemantics(
+              child: Text(
+                l10n.lockUseFingerprint,
+                style: HaloType.sans(size: 12.5, color: HaloColors.text),
+              ),
             ),
           ],
         ),

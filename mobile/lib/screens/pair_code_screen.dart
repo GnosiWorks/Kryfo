@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 
 import '../main.dart' hide live;
 import '../theme.dart';
+import '../widgets/motion.dart' show motionStill;
+import '../widgets/press_scale.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/pair_code_panel.dart';
 import '../widgets/pair_join.dart';
@@ -36,13 +38,14 @@ class _PairCodeScreenState extends State<PairCodeScreen> {
                 children: staggerAll([
                   IconButton(
                     tooltip: l10n.commonBack,
-                    icon: Icon(Icons.arrow_back, color: HaloColors.text2),
+                    icon: Icon(
+                      Icons.chevron_left,
+                      color: HaloColors.text,
+                      size: 26,
+                    ),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
-                  Text(
-                    l10n.pairCodePairingCode,
-                    style: HaloType.serif(size: 22, italic: true),
-                  ),
+                  Text(l10n.pairCodePairingCode, style: HaloType.pageTitle()),
                 ]),
               ),
             ),
@@ -87,25 +90,43 @@ class _Tab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-        decoration: BoxDecoration(
-          color: on ? HaloColors.amber.withValues(alpha: 0.14) : null,
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(
-            color: on
-                ? HaloColors.amber.withValues(alpha: 0.4)
-                : HaloColors.line,
-          ),
-        ),
-        child: Text(
-          label,
-          style: HaloType.mono(
-            size: 11,
-            color: on ? HaloColors.amber : HaloColors.text3,
+    final d = motionStill(context)
+        ? Duration.zero
+        : const Duration(milliseconds: 180);
+    // one node: the name, a button, chosen or not
+    return Semantics(
+      container: true,
+      button: true,
+      selected: on,
+      label: label,
+      child: PressScale(
+        onTap: onTap,
+        scale: 0.96,
+        child: ExcludeSemantics(
+          child: AnimatedContainer(
+            duration: d,
+            curve: Curves.easeOutCubic,
+            constraints: const BoxConstraints(minHeight: 40),
+            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+            decoration: BoxDecoration(
+              color: HaloColors.amber.withValues(alpha: on ? 0.14 : 0),
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(
+                color: on
+                    ? HaloColors.amber.withValues(alpha: 0.4)
+                    : HaloColors.line,
+              ),
+            ),
+            child: AnimatedDefaultTextStyle(
+              duration: d,
+              curve: Curves.easeOutCubic,
+              style: HaloType.mono(
+                size: 11,
+                color: on ? HaloColors.amber : HaloColors.text2,
+              ),
+              child: Text(label),
+            ),
           ),
         ),
       ),

@@ -2,13 +2,33 @@
 // in-app qr scanner: nothing leaves the app, and a non-kryfo qr in frame
 // gets a hint
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter_zxing/flutter_zxing.dart';
+import 'package:permission_handler/permission_handler.dart'
+    show openAppSettings;
 import '../theme.dart';
 import '../l10n/l10n.dart';
 import '../lock_guard.dart' show lockGuard;
-import '../widgets/motion.dart' show houseSpring;
+import '../widgets/halo_buttons.dart';
+import '../widgets/motion.dart' show houseSpring, motionStill;
+import '../widgets/press_scale.dart';
+
+// stands in for the camera reader in tests
+@visibleForTesting
+Widget Function(
+  void Function(CameraController?, Exception?) onCreated,
+  void Function(Code) onScan,
+)?
+scanReaderForTest;
+
+// a camera error that a trip to the app's settings can fix
+bool cameraDenied(Object? e) =>
+    e is CameraException &&
+    (e.code.contains('Access') || e.code.toLowerCase().contains('permission'));
 
 class ScanScreen extends StatefulWidget {
   const ScanScreen({super.key});
@@ -17,7 +37,8 @@ class ScanScreen extends StatefulWidget {
   State<ScanScreen> createState() => _ScanScreenState();
 }
 
-class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
+class _ScanScreenState extends State<ScanScreen>
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   // zxing-cpp under the hood. the controller arrives via onControllerCreated
   // and is only used for the torch.
   CameraController? _cam;
@@ -25,7 +46,16 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   bool _torchOn = false;
   bool _detectedSuccess = false;
   String? _hint;
-  DateTime? _hintAt;
+  Timer? _hintOff;
+  // the camera would not open: what to say, and whether settings can fix it
+  String? _error;
+  bool _denied = false;
+  // a phone with no camera has nothing to try again
+  bool _again = true;
+  // left for the app's settings while the error showed
+  bool _away = false;
+  // off for a frame on a retry, so a new reader asks for the camera again
+  bool _reader = true;
   late final AnimationController _scanAnim;
 
   // the lock closes the scanner: its camera never runs under the pin pad
@@ -43,10 +73,68 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _unguard = lockGuard.closeOnLock(_closeForLock);
+    WidgetsBinding.instance.addObserver(this);
     _scanAnim = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1800),
     );
+    _checkCameras();
+  }
+
+  // the reader waits forever on a phone with no camera
+  Future<void> _checkCameras() async {
+    if (scanReaderForTest != null) return;
+    try {
+      if ((await availableCameras()).isEmpty) {
+        _fail(l10n.cameraNoCameraOnThis, denied: false, again: false);
+      }
+    } catch (_) {}
+  }
+
+  void _onCreated(CameraController? c, Exception? e) {
+    _cam = c;
+    if (c != null || e == null) return;
+    final denied = cameraDenied(e);
+    _fail(
+      denied ? l10n.cameraCameraPermissionIsOff : l10n.cameraCameraNotAvailable,
+      denied: denied,
+    );
+  }
+
+  void _fail(String why, {required bool denied, bool again = true}) {
+    if (!mounted || _handled) return;
+    _scanAnim.stop();
+    _hintOff?.cancel();
+    setState(() {
+      _error = why;
+      _denied = denied;
+      _again = again;
+      _away = false;
+      _hint = null;
+    });
+  }
+
+  // the old reader lets go of the camera a frame before the new one asks
+  void _retry() {
+    if (_error == null) return;
+    setState(() {
+      _error = null;
+      _reader = false;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() => _reader = true);
+      if (!motionStill(context)) _scanAnim.repeat(reverse: true);
+    });
+  }
+
+  // back from the app's settings: try the camera again. the permission
+  // prompt itself only makes the app inactive, so it never loops here
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (_error == null || !_denied) return;
+    if (state == AppLifecycleState.paused) _away = true;
+    if (state == AppLifecycleState.resumed && _away) _retry();
   }
 
   @override
@@ -56,7 +144,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     // movement: the corners already say where to aim
     if (MediaQuery.disableAnimationsOf(context)) {
       _scanAnim.stop();
-    } else if (!_scanAnim.isAnimating && !_detectedSuccess) {
+    } else if (!_scanAnim.isAnimating && !_detectedSuccess && _error == null) {
       _scanAnim.repeat(reverse: true);
     }
   }
@@ -66,21 +154,26 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     final raw = code.text;
     if (raw == null || raw.isEmpty) return;
     if (!raw.startsWith('kryfo://')) {
-      // brief hint and keep scanning. dedupe by time so the user isn't
-      // spammed if many non-kryfo codes are in frame.
-      final now = DateTime.now();
-      if (_hintAt == null ||
-          now.difference(_hintAt!) > const Duration(seconds: 2)) {
-        setState(() {
-          _hint = l10n.scanThatSNotA;
-          _hintAt = now;
-        });
+      // the warning stays while that code is in frame and goes a little
+      // after it leaves
+      _hintOff?.cancel();
+      _hintOff = Timer(const Duration(milliseconds: 2500), () {
+        if (mounted) setState(() => _hint = null);
+      });
+      if (_hint == null) {
+        HapticFeedback.selectionClick();
+        setState(() => _hint = l10n.scanThatSNotA);
       }
       return;
     }
     _handled = true;
     _scanAnim.stop();
-    setState(() => _detectedSuccess = true);
+    _hintOff?.cancel();
+    HapticFeedback.mediumImpact();
+    setState(() {
+      _detectedSuccess = true;
+      _hint = null;
+    });
     // short success pulse before popping
     Future.delayed(const Duration(milliseconds: 380), () {
       if (!mounted || !_inFront) return;
@@ -91,8 +184,53 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   @override
   void dispose() {
     _unguard?.call();
+    _hintOff?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     _scanAnim.dispose();
     super.dispose();
+  }
+
+  // the camera would not open: what is wrong and the way out, in place of the
+  // aiming hint
+  Widget _failCard() {
+    return Container(
+      key: const ValueKey('failed'),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.08),
+          width: 0.7,
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.no_photography_outlined,
+            color: HaloColors.amber,
+            size: 24,
+          ),
+          const SizedBox(height: 10),
+          Text(
+            _error!,
+            textAlign: TextAlign.center,
+            style: HaloType.sans(size: 13.5, color: Colors.white, height: 1.4),
+          ),
+          if (_denied || _again) const SizedBox(height: 14),
+          if (_denied) ...[
+            HaloPrimaryButton(
+              label: l10n.cameraOpenSettings,
+              onTap: openAppSettings,
+            ),
+            const SizedBox(height: 8),
+            _ChromeGhost(label: l10n.commonTryAgain, onTap: _retry),
+          ] else if (_again)
+            HaloPrimaryButton(label: l10n.commonTryAgain, onTap: _retry),
+        ],
+      ),
+    );
   }
 
   @override
@@ -103,22 +241,26 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
       backgroundColor: HaloColors.ink,
       body: Stack(
         children: [
-          ReaderWidget(
-            mayOpen: () => !lockGuard.isLocked(),
-            onScan: _onScan,
-            onControllerCreated: (controller, error) => _cam = controller,
-            showScannerOverlay: false,
-            showFlashlight: false,
-            showGallery: false,
-            showToggleCamera: false,
-            // decode almost the whole frame: the default 50% crop misses a
-            // qr that fills the screen. tryHarder/tryInverted read it on the
-            // first pass in poorer light.
-            cropPercent: 0.9,
-            tryHarder: true,
-            tryInverted: true,
-            scanDelay: const Duration(milliseconds: 500),
-          ),
+          if (!_reader)
+            const SizedBox.shrink()
+          else
+            scanReaderForTest?.call(_onCreated, _onScan) ??
+                ReaderWidget(
+                  mayOpen: () => !lockGuard.isLocked(),
+                  onScan: _onScan,
+                  onControllerCreated: _onCreated,
+                  showScannerOverlay: false,
+                  showFlashlight: false,
+                  showGallery: false,
+                  showToggleCamera: false,
+                  // decode almost the whole frame: the default 50% crop
+                  // misses a qr that fills the screen. tryHarder and
+                  // tryInverted read it on the first pass in poorer light.
+                  cropPercent: 0.9,
+                  tryHarder: true,
+                  tryInverted: true,
+                  scanDelay: const Duration(milliseconds: 500),
+                ),
           // dim mask with an even-odd cutout, so the eye goes to the
           // viewfinder
           IgnorePointer(
@@ -132,6 +274,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
             child: ScanFrame(
               size: boxSize,
               success: _detectedSuccess,
+              failed: _error != null,
               scanAnim: _scanAnim,
             ),
           ),
@@ -157,9 +300,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                     Expanded(
                       child: Text(
                         l10n.scanScanAKryfoQr,
-                        style: HaloType.serif(
-                          size: 18,
-                          italic: true,
+                        style: HaloType.pageTitle().copyWith(
                           color: Colors.white,
                         ),
                       ),
@@ -201,32 +342,38 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
                 child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 220),
-                  child: Container(
-                    key: ValueKey(_hint ?? 'default'),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.65),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: _hint != null
-                            ? HaloColors.amber.withValues(alpha: 0.6)
-                            : Colors.white.withValues(alpha: 0.08),
-                        width: 0.7,
-                      ),
-                    ),
-                    child: Text(
-                      _hint ?? l10n.scanPointAtAKryfo,
-                      textAlign: TextAlign.center,
-                      style: HaloType.sans(
-                        size: 12.5,
-                        color: _hint != null ? HaloColors.amber : Colors.white,
-                      ),
-                    ),
-                  ),
+                  duration: motionStill(context)
+                      ? Duration.zero
+                      : const Duration(milliseconds: 220),
+                  child: _error != null
+                      ? _failCard()
+                      : Container(
+                          key: ValueKey(_hint ?? 'default'),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.65),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: _hint != null
+                                  ? HaloColors.amber.withValues(alpha: 0.6)
+                                  : Colors.white.withValues(alpha: 0.08),
+                              width: 0.7,
+                            ),
+                          ),
+                          child: Text(
+                            _hint ?? l10n.scanPointAtAKryfo,
+                            textAlign: TextAlign.center,
+                            style: HaloType.sans(
+                              size: 12.5,
+                              color: _hint != null
+                                  ? HaloColors.amber
+                                  : Colors.white,
+                            ),
+                          ),
+                        ),
                 ),
               ),
             ),
@@ -267,11 +414,14 @@ class _MaskPainter extends CustomPainter {
 class ScanFrame extends StatefulWidget {
   final double size;
   final bool success;
+  // the camera would not open: dim corners, nothing sweeps
+  final bool failed;
   final Animation<double> scanAnim;
   const ScanFrame({
     super.key,
     required this.size,
     required this.success,
+    this.failed = false,
     required this.scanAnim,
   });
 
@@ -321,6 +471,7 @@ class _ScanFrameState extends State<ScanFrame>
       child: _Viewfinder(
         size: widget.size,
         success: widget.success,
+        failed: widget.failed,
         scanAnim: widget.scanAnim,
         still: MediaQuery.disableAnimationsOf(context),
       ),
@@ -333,18 +484,24 @@ class _ScanFrameState extends State<ScanFrame>
 class _Viewfinder extends StatelessWidget {
   final double size;
   final bool success;
+  final bool failed;
   final Animation<double> scanAnim;
   final bool still;
   const _Viewfinder({
     required this.size,
     required this.success,
+    required this.failed,
     required this.scanAnim,
     required this.still,
   });
 
   @override
   Widget build(BuildContext context) {
-    final accent = success ? HaloColors.green : HaloColors.amber;
+    final accent = success
+        ? HaloColors.green
+        : failed
+        ? HaloColors.line2
+        : HaloColors.amber;
     return SizedBox(
       width: size,
       height: size,
@@ -357,7 +514,7 @@ class _Viewfinder extends StatelessWidget {
           Positioned(left: 0, bottom: 0, child: _corner(accent, true, false)),
           Positioned(right: 0, bottom: 0, child: _corner(accent, false, false)),
           // scan line (hidden once success)
-          if (!success && !still)
+          if (!success && !failed && !still)
             AnimatedBuilder(
               animation: scanAnim,
               builder: (_, _) {
@@ -460,4 +617,35 @@ class _CornerPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_CornerPainter old) => old.color != color;
+}
+
+// the quiet second button on the always-dark card: white like the rest of
+// the scanner chrome, so it reads in the light theme too
+class _ChromeGhost extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+  const _ChromeGhost({required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return PressScale(
+      label: label,
+      onTap: onTap,
+      scale: 0.96,
+      child: Container(
+        height: 46,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(13),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.28)),
+        ),
+        child: ExcludeSemantics(
+          child: Text(
+            label,
+            style: HaloType.sans(size: 14, color: Colors.white),
+          ),
+        ),
+      ),
+    );
+  }
 }

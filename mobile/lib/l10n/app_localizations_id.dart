@@ -1178,8 +1178,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get cameraCameraNotAvailable => 'Kamera tidak tersedia';
 
   @override
-  String get cameraCameraPermissionIsOff =>
-      'Izin kamera mati · ketuk untuk coba lagi';
+  String get cameraCameraPermissionIsOff => 'Izin kamera mati';
+
+  @override
+  String get cameraOpenSettings => 'Buka pengaturan';
 
   @override
   String get cameraCouldNotStripThat =>
@@ -1201,14 +1203,14 @@ class AppLocalizationsId extends AppLocalizations {
   String get cameraCouldNotSaveA => 'Gagal menyimpan salinan di ponsel ini';
 
   @override
-  String get cameraTooLongForA => 'Terlalu panjang untuk pesan · maks 8 mb';
+  String get cameraTooLongForA => 'Terlalu panjang untuk pesan · maks 8 MB';
 
   @override
   String get cameraNeverSavedToYour => 'Tidak pernah disimpan ke galerimu';
 
   @override
   String get cameraNoExifNeverSaved =>
-      'Tanpa exif, tidak pernah disimpan ke galerimu';
+      'Tanpa EXIF, tidak pernah disimpan ke galerimu';
 
   @override
   String get cameraRec => 'Rekam';
@@ -1218,7 +1220,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String cameraClipSMb(Object secs, Object mb) {
-    return 'Klip · $secs dtk · $mb mb';
+    return 'Klip · $secs dtk · $mb MB';
   }
 
   @override

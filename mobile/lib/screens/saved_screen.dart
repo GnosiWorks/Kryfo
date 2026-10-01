@@ -124,10 +124,7 @@ class _SavedScreenState extends State<SavedScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: BackButton(color: HaloColors.text2),
-        title: Text(
-          l10n.savedSaved,
-          style: HaloType.serif(size: 22, color: HaloColors.text, italic: true),
-        ),
+        title: Text(l10n.savedSaved, style: HaloType.pageTitle()),
       ),
       body: SafeArea(
         child: !_loaded

@@ -179,6 +179,10 @@ class HaloType {
     letterSpacing: track(letter),
   );
 
+  // a pushed page's title, in its app bar or its own header row
+  static TextStyle pageTitle() =>
+      serif(size: 18, italic: true, color: HaloColors.text);
+
   static TextStyle sans({
     double size = 13,
     FontWeight weight = FontWeight.w400,

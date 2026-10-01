@@ -1194,8 +1194,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get cameraCameraNotAvailable => 'Kamera nicht verfügbar';
 
   @override
-  String get cameraCameraPermissionIsOff =>
-      'Kamerazugriff ist aus · tippe, um es erneut zu versuchen';
+  String get cameraCameraPermissionIsOff => 'Kamerazugriff ist aus';
+
+  @override
+  String get cameraOpenSettings => 'Einstellungen öffnen';
 
   @override
   String get cameraCouldNotStripThat =>

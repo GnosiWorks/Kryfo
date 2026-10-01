@@ -1872,8 +1872,14 @@ abstract class AppLocalizations {
   /// screens/camera_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Camera permission is off · tap to try again'**
+  /// **'Camera permission is off'**
   String get cameraCameraPermissionIsOff;
+
+  /// screens/camera_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get cameraOpenSettings;
 
   /// screens/camera_screen.dart
   ///
@@ -1914,7 +1920,7 @@ abstract class AppLocalizations {
   /// screens/camera_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Too long for a message · 8 mb max'**
+  /// **'Too long for a message · 8 MB max'**
   String get cameraTooLongForA;
 
   /// screens/camera_screen.dart
@@ -1926,7 +1932,7 @@ abstract class AppLocalizations {
   /// screens/camera_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'No exif, never saved to your photos'**
+  /// **'No EXIF, never saved to your photos'**
   String get cameraNoExifNeverSaved;
 
   /// screens/camera_screen.dart
@@ -1944,7 +1950,7 @@ abstract class AppLocalizations {
   /// screens/camera_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Clip · {secs}s · {mb} mb'**
+  /// **'Clip · {secs}s · {mb} MB'**
   String cameraClipSMb(Object secs, Object mb);
 
   /// screens/camera_screen.dart
@@ -7698,7 +7704,7 @@ abstract class AppLocalizations {
   /// screens/scan_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Scan a Kryfo qr'**
+  /// **'Scan a Kryfo QR'**
   String get scanScanAKryfoQr;
 
   /// screens/scan_screen.dart
@@ -7710,7 +7716,7 @@ abstract class AppLocalizations {
   /// screens/scan_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Point at a Kryfo qr · nothing leaves your phone'**
+  /// **'Point at a Kryfo QR · nothing leaves your phone'**
   String get scanPointAtAKryfo;
 
   /// screens/seen_screen.dart

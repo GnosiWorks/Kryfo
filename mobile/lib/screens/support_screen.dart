@@ -554,7 +554,7 @@ class _Head extends StatelessWidget {
                   l10n.supportTitle,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: HaloType.serif(size: 22, color: HaloColors.text),
+                  style: HaloType.pageTitle(),
                 ),
                 const SizedBox(height: 2),
                 Row(

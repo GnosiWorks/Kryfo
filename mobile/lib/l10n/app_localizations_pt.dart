@@ -1196,8 +1196,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get cameraCameraNotAvailable => 'Câmera indisponível';
 
   @override
-  String get cameraCameraPermissionIsOff =>
-      'Permissão da câmera desativada · toque para tentar de novo';
+  String get cameraCameraPermissionIsOff => 'Permissão da câmera desativada';
+
+  @override
+  String get cameraOpenSettings => 'Abrir configurações';
 
   @override
   String get cameraCouldNotStripThat =>
@@ -1221,13 +1223,13 @@ class AppLocalizationsPt extends AppLocalizations {
       'Não foi possível salvar uma cópia neste celular';
 
   @override
-  String get cameraTooLongForA => 'Longo demais para uma mensagem · máx. 8 mb';
+  String get cameraTooLongForA => 'Longo demais para uma mensagem · máx. 8 MB';
 
   @override
   String get cameraNeverSavedToYour => 'Nunca salvo nas suas fotos';
 
   @override
-  String get cameraNoExifNeverSaved => 'Sem exif, nunca salvo nas suas fotos';
+  String get cameraNoExifNeverSaved => 'Sem EXIF, nunca salvo nas suas fotos';
 
   @override
   String get cameraRec => 'Gravar';
@@ -1237,7 +1239,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String cameraClipSMb(Object secs, Object mb) {
-    return 'Clipe · ${secs}s · $mb mb';
+    return 'Clipe · ${secs}s · $mb MB';
   }
 
   @override

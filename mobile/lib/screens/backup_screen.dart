@@ -172,10 +172,7 @@ class _BackupScreenState extends State<BackupScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: BackButton(color: HaloColors.text2),
-        title: Text(
-          l10n.backupBackUpKryfo,
-          style: HaloType.serif(size: 22, color: HaloColors.text, italic: true),
-        ),
+        title: Text(l10n.backupBackUpKryfo, style: HaloType.pageTitle()),
       ),
       body: SafeArea(
         // fits or scrolls: on a short screen a plain column leaves the
