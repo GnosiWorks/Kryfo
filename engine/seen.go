@@ -180,6 +180,13 @@ func (s *seenIDs) claim(id nostr.ID) bool {
 	return true
 }
 
+// true when the app took the id from a poll, on this run or one before
+func (s *seenIDs) handed(id nostr.ID) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.opened.has(id)
+}
+
 // an event that did not open: remembered now, it will never be handed over
 func (s *seenIDs) notOpened(id nostr.ID) {
 	s.mu.Lock()

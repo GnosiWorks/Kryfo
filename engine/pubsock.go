@@ -106,6 +106,10 @@ func pubGet(ctx context.Context, key pubKey, client *http.Client) (s *pubSock, f
 	dctx, dcancel := relayDialCtx(context.Background(), key.url)
 	err = r.ConnectWithClient(dctx, client)
 	dcancel()
+	if err != nil {
+		// a relay that never connected still waits on its context
+		r.Close()
+	}
 	pubMu.Lock()
 	if err != nil {
 		s.err = err
@@ -221,10 +225,10 @@ func publishTo(ctx context.Context, lane, u string, client *http.Client, ev nost
 		dctx, dcancel := relayDialCtx(ctx, u)
 		err := r.ConnectWithClient(dctx, client)
 		dcancel()
+		defer r.Close()
 		if err != nil {
 			return err
 		}
-		defer r.Close()
 		return r.Publish(ctx, ev)
 	}
 	key := pubKey{lane: lane, url: u, addr: addr}

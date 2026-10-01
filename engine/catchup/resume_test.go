@@ -303,3 +303,39 @@ func TestAboveMarkDoesNotRefetchTheWalkedPart(t *testing.T) {
 		t.Fatalf("fetched %d events, the walked part came again", fetched)
 	}
 }
+
+// a page cut inside a second resumes from that second itself, so the events
+// of it the page did not bring are asked for again
+func TestACutInsideASecondResumesFromIt(t *testing.T) {
+	evs := mk(300, 0, 0)
+	for i := range evs {
+		evs[i].CreatedAt = 1_000_000 + nostr.Timestamp(i/3)
+	}
+	r := &cutRelay{fakeRelay: &fakeRelay{events: evs, cap: 100}, cut: 31}
+	got := map[nostr.ID]bool{}
+	deliver := func(e nostr.Event) bool {
+		fresh := !got[e.ID]
+		got[e.ID] = true
+		return fresh
+	}
+	var m Mark
+	var res Result
+	for i := 0; i < 50 && !res.Complete; i++ {
+		res, m = Continue(context.Background(), r.page, 0, 2_000_000, 100, 200, deliver, m)
+		if res.Complete {
+			break
+		}
+		if m.Cursor != res.Until {
+			t.Fatalf("check-in %d keeps %d, not where it stopped, %d", i+1, m.Cursor, res.Until)
+		}
+		for _, e := range evs {
+			if !got[e.ID] && e.CreatedAt > res.Until {
+				t.Fatalf("check-in %d resumes from %d, above an event stamped %d it never brought",
+					i+1, res.Until, e.CreatedAt)
+			}
+		}
+	}
+	if !res.Complete || len(got) != len(evs) {
+		t.Fatalf("complete=%v, %d of %d", res.Complete, len(got), len(evs))
+	}
+}

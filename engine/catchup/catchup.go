@@ -30,7 +30,8 @@ type Result struct {
 // Mark is how much of a relay's backlog has already been walked: everything
 // between Cursor and Top. A relay whose backlog takes longer than one
 // check-in is allowed keeps its Mark, so the next check-in spends its time on
-// ground it has not covered yet.
+// ground it has not covered yet. What reaches the relay later can be stamped
+// inside the walked part; Hold covers that.
 type Mark struct {
 	Top    nostr.Timestamp
 	Cursor nostr.Timestamp

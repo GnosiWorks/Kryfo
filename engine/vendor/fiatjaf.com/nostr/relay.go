@@ -712,8 +712,12 @@ func (r *Relay) PrepareSubscription(ctx context.Context, filter Filter, opts Sub
 		sub.Relay.Subscriptions.Delete(sub.counter)
 
 		// do this so we don't have the possibility of closing the Events channel and then trying to send to it
+		// kryfo: a queue still draining closes Events itself once it stops
 		sub.mu.Lock()
-		close(sub.Events)
+		sub.ending = true
+		if !sub.draining {
+			close(sub.Events)
+		}
 		if sub.countResult != nil {
 			close(sub.countResult)
 		}
