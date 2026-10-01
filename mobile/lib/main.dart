@@ -3754,12 +3754,34 @@ class HaloDb {
     return {for (final row in r) (row['idx'] as num).toInt()};
   }
 
-  Future<void> markMediaAsked(String mediaId) async {
+  // [at] is the time the ask was decided on, stamped before it goes. read
+  // and written in one go, so a slice landing meanwhile is not missed
+  Future<void> markMediaAsked(String mediaId, int at) async {
     final db = await open();
-    await db.rawUpdate(
-      'UPDATE media_wants SET asked_at = ?, asks = asks + 1 WHERE media_id = ?',
-      [DateTime.now().millisecondsSinceEpoch, mediaId],
-    );
+    await db.transaction((t) async {
+      final r = await t.query(
+        'media_wants',
+        columns: ['last_at', 'asked_at', 'asks'],
+        where: 'media_id = ?',
+        whereArgs: [mediaId],
+        limit: 1,
+      );
+      if (r.isEmpty) return;
+      final w = r.first;
+      await t.update(
+        'media_wants',
+        {
+          'asked_at': at,
+          'asks': asksAfterAsk(
+            lastSliceAt: (w['last_at'] as num).toInt(),
+            askedAt: (w['asked_at'] as num).toInt(),
+            asks: (w['asks'] as num).toInt(),
+          ),
+        },
+        where: 'media_id = ?',
+        whereArgs: [mediaId],
+      );
+    });
   }
 
   Future<void> dropMediaWant(String mediaId) async {
@@ -4185,7 +4207,8 @@ Future<void> _heldTable(Database db) async {
 }
 
 // a file coming in that is not whole yet: who is sending it, whether they
-// can be asked for the missing slices, and how often they have been.
+// can be asked for the missing slices, and how many asks in a row brought
+// nothing.
 Future<void> _mediaWantsTable(Database db) async {
   await db.execute('''
     CREATE TABLE IF NOT EXISTS media_wants (
@@ -5442,41 +5465,108 @@ class AppState extends ChangeNotifier {
       unawaited(drainOutbox());
     });
     _needTimer?.cancel();
-    _needTimer = Timer.periodic(const Duration(seconds: 60), (_) {
+    // the catch-up that comes with the start may not have begun yet
+    _needRouteUp();
+    _needTimer = Timer.periodic(const Duration(milliseconds: kNeedTickMs), (_) {
       if (haloWiping) return;
       unawaited(askForMissingSlices());
     });
   }
 
   Timer? _needTimer;
-  bool _asking = false;
+  // one pass at a time: a tick while an ask is still out waits for the next
+  Future<void>? _askPass;
+  // a walk may be bringing the missing slices, so asks wait for it
+  final _needHold = CatchupHold();
+  @visibleForTesting
+  CatchupHold get needHoldForTest => _needHold;
+
+  // read before the relays are asked again, so their catch-up counts
+  void _needRouteUp() => _needHold.routeUp(
+    DateTime.now().millisecondsSinceEpoch,
+    engine.catchupState().$2,
+  );
 
   // files that stopped arriving part way: ask each sender for what is
-  // missing. quiet for two minutes first, so a catch-up still bringing
-  // slices in is not mistaken for a loss.
-  Future<void> askForMissingSlices() async {
-    if (_asking || !torReady) return;
-    _asking = true;
-    try {
-      // the open vault's files too: while it is shut its wants wait in it
-      for (final d in [live, ?_openVault]) {
-        try {
-          await _askForMissingIn(d);
-        } catch (e) {
-          if (identical(d, live)) rethrow;
-        }
+  // missing. quiet for a while first, so a catch-up still bringing slices
+  // in is not mistaken for a loss. [walked]: the caller waited the catch-up
+  // and its drain out itself.
+  Future<void> askForMissingSlices({bool walked = false}) async {
+    // a tick's pass may have held back for the walk the caller waited out
+    while (walked && _askPass != null) {
+      try {
+        await _askPass;
+      } catch (_) {
+        // its own caller hears of it
       }
+    }
+    if (_askPass != null) return;
+    final pass = _askPass = _askPassNow(walked);
+    try {
+      await pass;
     } finally {
-      _asking = false;
+      if (identical(_askPass, pass)) _askPass = null;
     }
   }
 
-  Future<void> _askForMissingIn(HaloDb d) async {
-    final now = DateTime.now().millisecondsSinceEpoch;
-    for (final w in await d.mediaWants()) {
+  Future<void> _askPassNow(bool walked) async {
+    if (!torReady) {
+      _needHold.down(DateTime.now().millisecondsSinceEpoch);
+      return;
+    }
+    // the open vault's files too: while it is shut its wants wait in it
+    final wants = <(HaloDb, List<Map<String, Object?>>)>[];
+    for (final d in [live, ?_openVault]) {
+      try {
+        final ws = await d.mediaWants();
+        if (ws.isNotEmpty) wants.add((d, ws));
+      } catch (e) {
+        if (identical(d, live)) rethrow;
+      }
+    }
+    if (wants.isEmpty) return;
+    final (active, begun) = engine.catchupState();
+    final held = _needHold.look(
+      now: DateTime.now().millisecondsSinceEpoch,
+      active: active,
+      begun: begun,
+    );
+    if (active > 0) return;
+    // a check-in asks itself once its catch-up is in
+    if (!walked && (held || _checking)) return;
+    final heldAt = walked ? 0 : _needHold.heldAt;
+    for (final (d, ws) in wants) {
+      try {
+        await _askForMissingIn(d, ws, heldAt);
+      } catch (e) {
+        if (identical(d, live)) rethrow;
+      }
+    }
+  }
+
+  Future<void> _askForMissingIn(
+    HaloDb d,
+    List<Map<String, Object?>> wants,
+    int heldAt,
+  ) async {
+    for (final w in wants) {
       final mid = w['media_id'] as String;
       final peer = w['peer_id'] as String;
       final total = (w['total'] as num).toInt();
+      final lastAt = (w['last_at'] as num).toInt();
+      final askedAt = (w['asked_at'] as num).toInt();
+      final asks = (w['asks'] as num).toInt();
+      final now = DateTime.now().millisecondsSinceEpoch;
+      // the row alone says whether it is due: most ticks read nothing more
+      if (!askDue(
+        now: now,
+        lastSliceAt: lastAt,
+        askedAt: askedAt,
+        asks: asks,
+        heldAt: heldAt,
+      )) {
+        continue;
+      }
       if (await d.messageExists(mid)) {
         await d.dropMediaWant(mid);
         continue;
@@ -5484,18 +5574,22 @@ class AppState extends ChangeNotifier {
       final have = await d.heldSlices(mid);
       final ask = shouldAskNow(
         now: now,
-        lastSliceAt: (w['last_at'] as num).toInt(),
-        askedAt: (w['asked_at'] as num).toInt(),
-        asks: (w['asks'] as num).toInt(),
+        lastSliceAt: lastAt,
+        askedAt: askedAt,
+        asks: asks,
         canResend: (w['can_resend'] as num).toInt() == 1,
         have: have.length,
         total: total,
+        heldAt: heldAt,
       );
       if (!ask) continue;
       if (await d.isBlocked(peer)) continue;
       final missing = missingSlices(have, total);
       if (missing.isEmpty) continue;
       dlog('NEED $mid: asking for ${missing.length} of $total');
+      // stamped before it goes, with the time it was decided on: a send
+      // takes seconds, and the tick its backoff ends on would miss it
+      await d.markMediaAsked(mid, now);
       try {
         final wrapped = await wrapMessage(
           '',
@@ -5503,7 +5597,6 @@ class AppState extends ChangeNotifier {
           sender: _mySender(),
         );
         await _sendOneEnvelope(peer, wrapped);
-        await d.markMediaAsked(mid);
       } catch (e) {
         dlog('NEED $mid: ask failed: $e');
       }
@@ -6646,6 +6739,7 @@ class AppState extends ChangeNotifier {
         return 0;
       }
       final begunBefore = engine.catchupState().$2;
+      _needRouteUp();
       try {
         engine.nostrKick();
       } catch (e) {
@@ -6685,7 +6779,7 @@ class AppState extends ChangeNotifier {
       // what came in is drained by the one-second poll. let it finish, and
       // let receipts and slice requests that answer it get out.
       await Future.delayed(const Duration(seconds: 3));
-      await askForMissingSlices();
+      await askForMissingSlices(walked: true);
       for (var i = 0; i < 10 && _q.n > 0; i++) {
         await Future.delayed(const Duration(seconds: 1));
       }
@@ -6750,6 +6844,7 @@ class AppState extends ChangeNotifier {
       return 0;
     }
     final before = _lastDrainAt;
+    _needRouteUp();
     try {
       engine.nostrKick();
     } catch (e) {
@@ -10316,7 +10411,10 @@ class AppState extends ChangeNotifier {
       // mobile data): tor's open connections belong to the network that went.
       // the engine waits for the network to settle before it bounces, so a
       // flapping one is not bounced on every flap.
-      if (on && (!_online || kinds != lastKinds)) engine.networkChanged();
+      if (on && (!_online || kinds != lastKinds)) {
+        _needRouteUp();
+        engine.networkChanged();
+      }
       lastKinds = kinds;
       if (on != _online) {
         _online = on;

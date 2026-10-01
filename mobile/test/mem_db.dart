@@ -190,8 +190,8 @@ class MemDb implements Database, Transaction {
     return a == b;
   }
 
-  // a AND b AND ...: col = ?, col != ?, col < ?, col LIKE ?, col IN (?, ...),
-  // col IS [NOT] NULL
+  // a AND b AND ...: col = ? or a literal, col != ?, col < ?, col LIKE ?,
+  // col IN (?, ...), col IS [NOT] NULL
   bool Function(Map<String, Object?>) _where(
     _Table t,
     String table,
@@ -211,7 +211,8 @@ class MemDb implements Database, Transaction {
       _known(t, table, [col]);
       switch (m.group(2)!) {
         case '=':
-          final v = args![at++];
+          final lit = m.group(3)!.trim();
+          final v = lit == '?' ? args![at++] : _literal(lit);
           tests.add((r) => _same(_get(t, r, col), v));
         case '!=':
           final v = args![at++];
