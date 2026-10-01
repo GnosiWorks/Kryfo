@@ -8,10 +8,12 @@ import '../secure_store.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../dlog.dart';
 import '../main.dart' hide live;
 import '../seen_timers.dart';
 import '../theme.dart';
 import '../widgets/ease_size.dart';
+import '../widgets/halo_bar.dart';
 import '../widgets/motion.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/stagger_in.dart';
@@ -81,19 +83,22 @@ class _BridgesScreenState extends State<BridgesScreen> {
 
   // ask bridges.torproject.org for a fresh set. this is plain https, not tor:
   // tor being unreachable is the whole reason someone is on this screen.
-  Future<void> _request() async {
+  // a note (a wrong answer) stays up over the new puzzle
+  Future<void> _request({String? note}) async {
     setState(() {
       _asking = true;
       _captcha = null;
       _challenge = null;
-      _askError = null;
+      _askError = note;
     });
     final r = await engine.moatFetch();
     if (!mounted) return;
     if (!r.startsWith('ok|')) {
+      // a fixed line, whatever the network said
+      dlog('bridges: moat fetch: $r');
       setState(() {
         _asking = false;
-        _askError = r.replaceFirst('error: ', '');
+        _askError = l10n.bridgesMoatFailed;
       });
       return;
     }
@@ -118,14 +123,14 @@ class _BridgesScreenState extends State<BridgesScreen> {
     if (r == 'wrong') {
       // a wrong or stale captcha is a normal outcome, not a failure. fetch a
       // new one rather than making them tap again.
-      setState(() => _askError = l10n.bridgesThatWasNotIt);
-      await _request();
+      await _request(note: l10n.bridgesThatWasNotIt);
       return;
     }
     if (!r.startsWith('ok|')) {
+      dlog('bridges: moat solve: $r');
       setState(() {
         _asking = false;
-        _askError = r.replaceFirst('error: ', '');
+        _askError = l10n.bridgesMoatFailed;
       });
       return;
     }
@@ -352,12 +357,9 @@ class _BridgesScreenState extends State<BridgesScreen> {
           const SizedBox(height: 18),
 
           // the switch, and the lines it applies to
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.selectionClick();
-              setState(() => _on = !_on);
-            },
-            behavior: HitTestBehavior.opaque,
+          PressScale(
+            scale: 0.98,
+            onTap: () => setState(() => _on = !_on),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
@@ -394,12 +396,10 @@ class _BridgesScreenState extends State<BridgesScreen> {
                       ],
                     ),
                   ),
+                  // the switch clicks on its own
                   HaloSwitch(
                     value: _on,
-                    onChanged: (v) {
-                      HapticFeedback.selectionClick();
-                      setState(() => _on = v);
-                    },
+                    onChanged: (v) => setState(() => _on = v),
                   ),
                 ],
               ),
@@ -411,7 +411,9 @@ class _BridgesScreenState extends State<BridgesScreen> {
             haptic: false,
             onTap: _busy ? null : _save,
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
+              duration: motionStill(context)
+                  ? Duration.zero
+                  : const Duration(milliseconds: 180),
               padding: const EdgeInsets.symmetric(vertical: 16),
               alignment: Alignment.center,
               decoration: BoxDecoration(
@@ -531,7 +533,9 @@ class _BridgeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final tint = connected ? HaloColors.green : HaloColors.violet;
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 220),
+      duration: motionStill(context)
+          ? Duration.zero
+          : const Duration(milliseconds: 220),
       curve: Curves.easeOutCubic,
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
       decoration: BoxDecoration(
@@ -608,10 +612,12 @@ class _BridgeCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          Row(
+          // wraps rather than overflowing in a long language
+          Wrap(
+            spacing: 18,
+            runSpacing: 6,
             children: [
               _Meta(k: l10n.bridgesLooksLike, v: looksLike),
-              const SizedBox(width: 18),
               _Meta(k: l10n.bridgesSpeed, v: speed),
             ],
           ),
@@ -706,114 +712,195 @@ class _RequestBlock extends StatelessWidget {
                 : l10n.bridgesTypeWhatYouSee,
             style: HaloType.sans(size: 12.5, color: HaloColors.text2),
           ),
-          if (captcha == null) ...[
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 11),
-              decoration: BoxDecoration(
-                color: HaloColors.rose.withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: HaloColors.rose.withValues(alpha: 0.3),
+          const SizedBox(height: 12),
+          // the note, a placeholder while the puzzle is fetched, then the
+          // puzzle: each fades over the last as the block eases to its height
+          EaseSize(
+            child: FadeSwap(
+              child: KeyedSubtree(
+                key: ValueKey(
+                  captcha != null
+                      ? 'puzzle'
+                      : asking
+                      ? 'wait'
+                      : 'note',
                 ),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    Icons.visibility_outlined,
-                    size: 15,
-                    color: HaloColors.rose,
-                  ),
-                  const SizedBox(width: 9),
-                  Expanded(
-                    child: Text(
-                      l10n.bridgesThisOneRequestDoes,
-                      style: HaloType.sans(size: 12, color: HaloColors.text2),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-          if (captcha != null) ...[
-            const SizedBox(height: 14),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Image.memory(
-                base64Decode(captcha!),
-                fit: BoxFit.contain,
-                height: 90,
-                errorBuilder: (_, _, _) => Text(
-                  l10n.bridgesCouldNotDrawThe,
-                  style: HaloType.mono(size: 11, color: HaloColors.rose),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: HaloColors.ink,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: HaloColors.line),
-                    ),
-                    child: TextField(
-                      textDirection: TextDirection.ltr,
-                      controller: answer,
-                      autocorrect: false,
-                      enableSuggestions: false,
-                      textCapitalization: TextCapitalization.none,
-                      style: HaloType.mono(size: 13, color: HaloColors.text),
-                      decoration: InputDecoration(
-                        border: InputBorder.none,
-                        hintText: l10n.bridgesAnswer,
-                        hintStyle: HaloType.mono(
-                          size: 12,
-                          color: HaloColors.text3,
+                child: captcha != null
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const SizedBox(height: 2),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: Image.memory(
+                              base64Decode(captcha!),
+                              fit: BoxFit.contain,
+                              height: 90,
+                              errorBuilder: (_, _, _) => Text(
+                                l10n.bridgesCouldNotDrawThe,
+                                style: HaloType.mono(
+                                  size: 11,
+                                  color: HaloColors.rose,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: HaloColors.ink,
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(color: HaloColors.line),
+                                  ),
+                                  child: TextField(
+                                    textDirection: TextDirection.ltr,
+                                    controller: answer,
+                                    autocorrect: false,
+                                    enableSuggestions: false,
+                                    textCapitalization: TextCapitalization.none,
+                                    style: HaloType.mono(
+                                      size: 13,
+                                      color: HaloColors.text,
+                                    ),
+                                    decoration: InputDecoration(
+                                      border: InputBorder.none,
+                                      hintText: l10n.bridgesAnswer,
+                                      hintStyle: HaloType.mono(
+                                        size: 12,
+                                        color: HaloColors.text3,
+                                      ),
+                                    ),
+                                    onSubmitted: (_) => onSend(),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              PressScale(
+                                scale: 0.95,
+                                onTap: asking ? null : onSend,
+                                child: AnimatedContainer(
+                                  duration: motionStill(context)
+                                      ? Duration.zero
+                                      : const Duration(milliseconds: 180),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 13,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: asking
+                                        ? HaloColors.surface3
+                                        : HaloColors.violet,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  // the word keeps its room under the arc
+                                  child: Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      AnimatedOpacity(
+                                        opacity: asking ? 0 : 1,
+                                        duration: motionStill(context)
+                                            ? Duration.zero
+                                            : const Duration(milliseconds: 150),
+                                        child: Text(
+                                          l10n.commonSend,
+                                          style: HaloType.mono(
+                                            size: 12,
+                                            color: HaloColors.onAmber,
+                                            weight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ),
+                                      if (asking)
+                                        SizedBox(
+                                          width: 13,
+                                          height: 13,
+                                          child: CircularProgressIndicator(
+                                            value: motionStill(context)
+                                                ? 0.3
+                                                : null,
+                                            strokeWidth: 2,
+                                            color: HaloColors.violet,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      )
+                    : asking
+                    ? Container(
+                        height: 90,
+                        alignment: Alignment.center,
+                        padding: const EdgeInsets.symmetric(horizontal: 40),
+                        decoration: BoxDecoration(
+                          color: HaloColors.surface3,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: HaloBar(
+                          value: null,
+                          height: 3,
+                          color: HaloColors.violet,
+                        ),
+                      )
+                    : Container(
+                        padding: const EdgeInsets.fromLTRB(12, 10, 12, 11),
+                        decoration: BoxDecoration(
+                          color: HaloColors.rose.withValues(alpha: 0.10),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: HaloColors.rose.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              Icons.visibility_outlined,
+                              size: 15,
+                              color: HaloColors.rose,
+                            ),
+                            const SizedBox(width: 9),
+                            Expanded(
+                              child: Text(
+                                l10n.bridgesThisOneRequestDoes,
+                                style: HaloType.sans(
+                                  size: 12,
+                                  color: HaloColors.text2,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      onSubmitted: (_) => onSend(),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                PressScale(
-                  scale: 0.95,
-                  onTap: asking ? null : onSend,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 13,
-                    ),
-                    decoration: BoxDecoration(
-                      color: asking ? HaloColors.surface3 : HaloColors.violet,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      asking ? '…' : l10n.commonSend,
-                      style: HaloType.mono(
-                        size: 12,
-                        color: HaloColors.text,
-                        weight: FontWeight.w600,
+              ),
+            ),
+          ),
+          EaseSize(
+            child: error == null
+                ? const SizedBox(width: double.infinity)
+                : Padding(
+                    padding: const EdgeInsets.only(top: 10),
+                    child: RiseSwap(
+                      child: Text(
+                        error!,
+                        key: ValueKey(error),
+                        style: HaloType.mono(
+                          size: 11.5,
+                          color: HaloColors.rose,
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ],
-          if (error != null) ...[
-            const SizedBox(height: 10),
-            Text(
-              error!,
-              style: HaloType.mono(size: 11.5, color: HaloColors.rose),
-            ),
-          ],
+          ),
           const SizedBox(height: 13),
           _Ghost(
             icon: Icons.refresh_rounded,
@@ -822,7 +909,7 @@ class _RequestBlock extends StatelessWidget {
                 : captcha == null
                 ? l10n.bridgesRequestBridges
                 : l10n.bridgesDifferentPuzzle,
-            onTap: asking ? () {} : onRequest,
+            onTap: asking ? null : onRequest,
           ),
         ],
       ),
@@ -834,7 +921,7 @@ class _Ghost extends StatelessWidget {
   const _Ghost({required this.icon, required this.label, required this.onTap});
   final IconData icon;
   final String label;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) => PressScale(
@@ -911,7 +998,9 @@ String bridgesResultLine(String r) {
   }
   final all = RegExp(r'^ok: (\d+) bridges').firstMatch(r);
   if (all != null) return l10n.bridgesSaved(int.parse(all.group(1)!));
-  return r.replaceFirst('error: ', '');
+  // the engine's own words are for the log, not the screen
+  dlog('bridges: save: $r');
+  return l10n.bridgesCouldNotApply;
 }
 
 // a save that left no bridge in use, said in the warning colour

@@ -17,7 +17,9 @@ import '../theme.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/ease_size.dart';
 import '../widgets/halo_bar.dart';
+import '../widgets/halo_buttons.dart';
 import '../widgets/press_scale.dart';
+import '../widgets/secret_field.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/swap.dart';
 import 'package:path/path.dart' as p;
@@ -60,6 +62,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
   // a file of either kind is picked
   bool get _hasFile => _blob != null || _path != null;
   final _passCtrl = TextEditingController();
+  bool _shown = false;
   bool _busy = false;
   // from the handle release to the end of a restore: the screen stays, so
   // what is written is finished and the app closes on what it wrote
@@ -155,6 +158,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
       });
     } catch (_) {
       if (!mounted) return;
+      HapticFeedback.heavyImpact();
       setState(() {
         _error = l10n.restoreThisFileIsDamaged;
         _busy = false;
@@ -354,14 +358,14 @@ class _RestoreScreenState extends State<RestoreScreen> {
                   _item(l10n.restoreIfThePhoneThis, strong: true),
                 _item(l10n.restoreNotificationsNeedSettingUp),
                 const SizedBox(height: 22),
-                _Primary(
+                HaloPrimaryButton(
                   label: l10n.restoreMoveItHere,
                   onTap: () => Navigator.pop(ctx, true),
                 ),
                 const SizedBox(height: 6),
                 Center(
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
+                  child: PressScale(
+                    scale: 0.97,
                     onTap: () => Navigator.pop(ctx, false),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 10),
@@ -523,41 +527,16 @@ class _RestoreScreenState extends State<RestoreScreen> {
                         n: '2',
                         label: l10n.restoreThePassphrase,
                         done: s != null,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: HaloColors.surface2,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: HaloColors.line,
-                              width: 0.6,
-                            ),
-                          ),
-                          child: TextField(
-                            controller: _passCtrl,
-                            obscureText: true,
-                            // never offered to the phone's autofill service
-                            autofillHints: null,
-                            autocorrect: false,
-                            enableSuggestions: false,
-                            enabled: !_busy && s == null,
-                            onSubmitted: (_) => _check(),
-                            style: HaloType.mono(
-                              size: 14,
-                              color: HaloColors.text,
-                            ),
-                            decoration: InputDecoration(
-                              border: InputBorder.none,
-                              hintText: l10n.restoreTheOneTheFile,
-                              hintStyle: HaloType.mono(
-                                size: 12.5,
-                                color: HaloColors.text3,
-                              ),
-                            ),
-                          ),
+                        child: SecretField(
+                          label: l10n.restoreThePassphrase,
+                          labelAbove: false,
+                          hint: l10n.restoreTheOneTheFile,
+                          controller: _passCtrl,
+                          shown: _shown,
+                          onToggle: () => setState(() => _shown = !_shown),
+                          enabled: !_busy && s == null,
+                          action: TextInputAction.done,
+                          onSubmit: _check,
                         ),
                       ),
               ),
@@ -591,14 +570,15 @@ class _RestoreScreenState extends State<RestoreScreen> {
               ),
               const SizedBox(height: 22),
               if (s == null)
-                _Primary(
+                HaloPrimaryButton(
                   label: _busy
                       ? l10n.restoreChecking
                       : l10n.restoreCheckTheFile,
-                  onTap: _busy || !_hasFile ? null : _check,
+                  busy: _busy,
+                  onTap: _hasFile ? _check : null,
                 )
               else
-                _Primary(
+                HaloPrimaryButton(
                   label: _releasing
                       ? l10n.restoreReleasingYourHandle
                       : _busy
@@ -612,7 +592,8 @@ class _RestoreScreenState extends State<RestoreScreen> {
                       : _busy
                       ? (_path != null && _progress > 0 ? 'moving' : 'busy')
                       : 'restore',
-                  onTap: _busy ? null : _restore,
+                  busy: _busy,
+                  onTap: _restore,
                 ),
               // the move, as far as it has got
               EaseSize(
@@ -626,14 +607,14 @@ class _RestoreScreenState extends State<RestoreScreen> {
               if (s != null) ...[
                 const SizedBox(height: 6),
                 Center(
-                  child: GestureDetector(
+                  child: PressScale(
+                    scale: 0.97,
                     onTap: _busy
                         ? null
                         : () => setState(() {
                             _summary = null;
                             _passCtrl.clear();
                           }),
-                    behavior: HitTestBehavior.opaque,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       child: Text(
@@ -763,16 +744,27 @@ class _SummaryCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          _line(l10n.restoreMade, date),
-          _line(l10n.restoreContacts, '${summary.contacts}'),
-          _line(l10n.restoreMessages, '${summary.messages}'),
-          if (summary.hiddenChats case final n?)
-            _line(l10n.restoreHiddenChats, '$n'),
-          if (summary.files > 0)
-            _line(
-              l10n.restoreAttachments,
-              '${whole(summary.files)} · ${_mb(summary.bytes)}',
-            ),
+          // the labels take the room the longest needs, in any language
+          Table(
+            columnWidths: const {
+              0: IntrinsicColumnWidth(),
+              1: FlexColumnWidth(),
+            },
+            defaultVerticalAlignment: TableCellVerticalAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              _line(l10n.restoreMade, date),
+              _line(l10n.restoreContacts, whole(summary.contacts)),
+              _line(l10n.restoreMessages, whole(summary.messages)),
+              if (summary.hiddenChats case final n?)
+                _line(l10n.restoreHiddenChats, whole(n)),
+              if (summary.files > 0)
+                _line(
+                  l10n.restoreAttachments,
+                  '${whole(summary.files)} · ${_mb(summary.bytes)}',
+                ),
+            ],
+          ),
           const SizedBox(height: 8),
           Text(
             l10n.restoreMessagesSentOrReceived,
@@ -787,64 +779,24 @@ class _SummaryCard extends StatelessWidget {
     );
   }
 
-  Widget _line(String k, String v) => Padding(
-    padding: const EdgeInsets.only(bottom: 4),
-    child: Row(
-      children: [
-        SizedBox(
-          width: 84,
-          child: Text(
-            k,
-            style: HaloType.mono(size: 10.5, color: HaloColors.text3),
-          ),
-        ),
-        Expanded(
-          child: Text(
-            v,
-            style: HaloType.mono(size: 12.5, color: HaloColors.text, letter: 0),
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-class _Primary extends StatelessWidget {
-  final String label;
-  // what the label says, for when it changes: a new phase rises in
-  final String? phase;
-  final VoidCallback? onTap;
-  const _Primary({required this.label, required this.onTap, this.phase});
-  @override
-  Widget build(BuildContext context) {
-    final on = onTap != null;
-    return PressScale(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: MediaQuery.of(context).disableAnimations
-            ? Duration.zero
-            : const Duration(milliseconds: 160),
-        height: 48,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: on ? HaloColors.amber : HaloColors.surface3,
-          borderRadius: BorderRadius.circular(13),
-        ),
-        child: RiseSwap(
-          alignment: Alignment.center,
-          child: Text(
-            label,
-            key: ValueKey(phase ?? label),
-            style: HaloType.sans(
-              size: 14,
-              weight: FontWeight.w600,
-              color: on ? HaloColors.onAmber : HaloColors.text3,
-            ),
-          ),
+  TableRow _line(String k, String v) => TableRow(
+    children: [
+      Padding(
+        padding: const EdgeInsetsDirectional.only(end: 12, bottom: 4),
+        child: Text(
+          k,
+          style: HaloType.mono(size: 10.5, color: HaloColors.text2),
         ),
       ),
-    );
-  }
+      Padding(
+        padding: const EdgeInsets.only(bottom: 4),
+        child: Text(
+          v,
+          style: HaloType.mono(size: 12.5, color: HaloColors.text, letter: 0),
+        ),
+      ),
+    ],
+  );
 }
 
 String _mb(int bytes) {

@@ -1019,6 +1019,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get backupCreateBackup => 'ساختن نسخه‌ی پشتیبان';
 
   @override
+  String get backupNotMade => 'نسخه‌ی پشتیبان ساخته نشد. دوباره امتحان کنید.';
+
+  @override
   String get backupHiddenNotIn => 'گفت‌وگوهای پنهان در آن نیستند.';
 
   @override
@@ -1043,6 +1046,10 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get bridgesThatWasNotIt => 'درست نبود. این هم یکی دیگر.';
+
+  @override
+  String get bridgesMoatFailed =>
+      'دسترسی به پروژه‌ی tor ممکن نشد. یک دقیقه‌ی دیگر دوباره امتحان کنید، یا یک خط پل را پایین جای‌گذاری کنید.';
 
   @override
   String get bridgesGotBridgesSaveTo =>
@@ -2260,6 +2267,17 @@ class AppLocalizationsFa extends AppLocalizations {
   String get donateIPaidCheckAgain => 'پرداخت کردم، دوباره بررسی شود';
 
   @override
+  String get donateNoWallet =>
+      'هیچ برنامه‌ای روی این گوشی پیوندهای bitcoin را باز نمی‌کند. به‌جایش نشانی را کپی کنید.';
+
+  @override
+  String get donateChecking => 'در حال بررسی…';
+
+  @override
+  String get donateNotSeenYet =>
+      'هنوز دیده نشده. ممکن است چند دقیقه طول بکشد تا پرداخت نشان داده شود.';
+
+  @override
   String get donatePaymentConfirmed => 'پرداخت تأیید شد';
 
   @override
@@ -2797,6 +2815,21 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get handleDeleteThisHandle => 'حذف این نام کاربری';
+
+  @override
+  String handleDeleteTitle(Object handle) {
+    return '⁦@$handle⁩ حذف شود؟';
+  }
+
+  @override
+  String get handleDeleteLine =>
+      'صفحه‌ی عمومی شما حذف می‌شود و هر کسی می‌تواند این نام را بگیرد. گفت‌وگوهایی که دارید همان‌طور می‌مانند.';
+
+  @override
+  String get handleDeleteYes => 'حذف نام کاربری';
+
+  @override
+  String get handleDeleting => 'در حال حذف…';
 
   @override
   String get handleChecking => 'در حال بررسی…';
@@ -3731,9 +3764,6 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get myKryfoTypeTheNameThey =>
       'نام کاربری‌ای را که به شما داده تایپ کنید. اگر یکی ثبت کرده باشد، کار می‌کند.';
-
-  @override
-  String get myKryfoWren => 'Bolbol';
 
   @override
   String get myKryfoTheLookupAsksFor =>
@@ -5324,6 +5354,17 @@ class AppLocalizationsFa extends AppLocalizations {
   String get transportSendAnythingWaitingNow => 'ارسال فوری موارد در انتظار';
 
   @override
+  String get transportSending => 'در حال ارسال…';
+
+  @override
+  String get transportNothingLeftWaiting => 'چیزی در انتظار نمانده';
+
+  @override
+  String transportStillWaiting(Object count) {
+    return 'هنوز در انتظار: $count';
+  }
+
+  @override
   String get transportOff => 'خاموش';
 
   @override
@@ -6638,6 +6679,9 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get bridgesNoneUsable =>
       'هیچ‌کدام از این خط‌ها پل قابل‌استفاده‌ای نیست، پس پل‌ها خاموش می‌مانند';
+
+  @override
+  String get bridgesCouldNotApply => 'پل‌ها اعمال نشدند. دوباره ذخیره کنید.';
 
   @override
   String get languageTitle => 'زبان';

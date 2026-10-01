@@ -1018,6 +1018,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backupCreateBackup => 'Create backup';
 
   @override
+  String get backupNotMade => 'The backup could not be made. Try again.';
+
+  @override
   String get backupHiddenNotIn => 'Hidden chats are not in it.';
 
   @override
@@ -1042,6 +1045,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bridgesThatWasNotIt => 'That was not it. Here is another.';
+
+  @override
+  String get bridgesMoatFailed =>
+      'Couldn\'t reach the tor project. Try again in a minute, or paste a bridge line below.';
 
   @override
   String get bridgesGotBridgesSaveTo => 'Got bridges · save to use them';
@@ -2249,6 +2256,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get donateIPaidCheckAgain => 'I paid, check again';
 
   @override
+  String get donateNoWallet =>
+      'No wallet app here opens bitcoin links. Copy the address instead.';
+
+  @override
+  String get donateChecking => 'Checking…';
+
+  @override
+  String get donateNotSeenYet =>
+      'Not seen yet. A payment can take a few minutes to show.';
+
+  @override
   String get donatePaymentConfirmed => 'Payment confirmed';
 
   @override
@@ -2781,6 +2799,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get handleDeleteThisHandle => 'Delete this handle';
+
+  @override
+  String handleDeleteTitle(Object handle) {
+    return 'Delete @$handle?';
+  }
+
+  @override
+  String get handleDeleteLine =>
+      'Your public page goes away and anyone can claim the name. Chats you already have stay as they are.';
+
+  @override
+  String get handleDeleteYes => 'Delete handle';
+
+  @override
+  String get handleDeleting => 'Deleting…';
 
   @override
   String get handleChecking => 'Checking…';
@@ -3711,9 +3744,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get myKryfoTypeTheNameThey =>
       'Type the @name they gave you. Works if they claimed one.';
-
-  @override
-  String get myKryfoWren => 'Wren';
 
   @override
   String get myKryfoTheLookupAsksFor =>
@@ -5305,6 +5335,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transportSendAnythingWaitingNow => 'Send anything waiting, now';
 
   @override
+  String get transportSending => 'Sending…';
+
+  @override
+  String get transportNothingLeftWaiting => 'Nothing left waiting';
+
+  @override
+  String transportStillWaiting(Object count) {
+    return 'Still waiting: $count';
+  }
+
+  @override
   String get transportOff => 'Off';
 
   @override
@@ -6618,6 +6659,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get bridgesNoneUsable =>
       'None of these lines is a usable bridge, so bridges stay off';
+
+  @override
+  String get bridgesCouldNotApply =>
+      'The bridges could not be applied. Try saving again.';
 
   @override
   String get languageTitle => 'Language';

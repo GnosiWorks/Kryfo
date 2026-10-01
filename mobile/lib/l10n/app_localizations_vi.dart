@@ -1006,6 +1006,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get backupCreateBackup => 'Tạo bản sao lưu';
 
   @override
+  String get backupNotMade => 'Không tạo được bản sao lưu. Hãy thử lại.';
+
+  @override
   String get backupHiddenNotIn => 'Trò chuyện ẩn không có trong tệp này.';
 
   @override
@@ -1031,6 +1034,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get bridgesThatWasNotIt => 'Chưa đúng. Đây là một câu đố khác.';
+
+  @override
+  String get bridgesMoatFailed =>
+      'Không liên lạc được với dự án tor. Thử lại sau một phút, hoặc dán một dòng cầu nối bên dưới.';
 
   @override
   String get bridgesGotBridgesSaveTo => 'Đã có cầu nối · lưu lại để dùng';
@@ -2246,6 +2253,17 @@ class AppLocalizationsVi extends AppLocalizations {
   String get donateIPaidCheckAgain => 'Tôi đã trả, kiểm tra lại';
 
   @override
+  String get donateNoWallet =>
+      'Không có ứng dụng nào trên điện thoại này mở được liên kết bitcoin. Hãy sao chép địa chỉ.';
+
+  @override
+  String get donateChecking => 'Đang kiểm tra…';
+
+  @override
+  String get donateNotSeenYet =>
+      'Chưa thấy. Khoản thanh toán có thể mất vài phút mới hiện.';
+
+  @override
   String get donatePaymentConfirmed => 'Đã xác nhận thanh toán';
 
   @override
@@ -2780,6 +2798,21 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get handleDeleteThisHandle => 'Xóa tên người dùng này';
+
+  @override
+  String handleDeleteTitle(Object handle) {
+    return 'Xóa @$handle?';
+  }
+
+  @override
+  String get handleDeleteLine =>
+      'Trang công khai của bạn sẽ bị gỡ và ai cũng có thể lấy tên này. Các cuộc trò chuyện hiện có vẫn giữ nguyên.';
+
+  @override
+  String get handleDeleteYes => 'Xóa tên người dùng';
+
+  @override
+  String get handleDeleting => 'Đang xóa…';
 
   @override
   String get handleChecking => 'Đang kiểm tra…';
@@ -3707,9 +3740,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get myKryfoTypeTheNameThey =>
       'Nhập @tên họ đưa cho bạn. Dùng được nếu họ đã đăng ký một tên.';
-
-  @override
-  String get myKryfoWren => 'Wren';
 
   @override
   String get myKryfoTheLookupAsksFor =>
@@ -5310,6 +5340,17 @@ class AppLocalizationsVi extends AppLocalizations {
       'Gửi mọi thứ đang chờ, ngay bây giờ';
 
   @override
+  String get transportSending => 'Đang gửi…';
+
+  @override
+  String get transportNothingLeftWaiting => 'Không còn gì đang chờ';
+
+  @override
+  String transportStillWaiting(Object count) {
+    return 'Vẫn đang chờ: $count';
+  }
+
+  @override
   String get transportOff => 'Tắt';
 
   @override
@@ -6613,6 +6654,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get bridgesNoneUsable =>
       'Không dòng nào ở đây là cầu nối dùng được, nên cầu nối vẫn tắt';
+
+  @override
+  String get bridgesCouldNotApply =>
+      'Không áp dụng được cầu nối. Hãy thử lưu lại.';
 
   @override
   String get languageTitle => 'Ngôn ngữ';

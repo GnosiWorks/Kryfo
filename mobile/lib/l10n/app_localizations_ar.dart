@@ -1057,6 +1057,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get backupCreateBackup => 'إنشاء نسخة احتياطية';
 
   @override
+  String get backupNotMade => 'تعذّر إنشاء النسخة الاحتياطية. حاول مجددًا.';
+
+  @override
   String get backupHiddenNotIn => 'المحادثات المخفية ليست فيه.';
 
   @override
@@ -1081,6 +1084,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get bridgesThatWasNotIt => 'ليست هذه الإجابة. إليك لغزًا آخر.';
+
+  @override
+  String get bridgesMoatFailed =>
+      'تعذّر الوصول إلى مشروع tor. حاول مجددًا بعد دقيقة، أو الصق سطر جسر في الأسفل.';
 
   @override
   String get bridgesGotBridgesSaveTo => 'وصلت الجسور · احفظها لاستخدامها';
@@ -2314,6 +2321,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String get donateIPaidCheckAgain => 'دفعت، تحقّق مجددًا';
 
   @override
+  String get donateNoWallet =>
+      'لا يوجد تطبيق على هذا الهاتف يفتح روابط bitcoin. انسخ العنوان بدلًا من ذلك.';
+
+  @override
+  String get donateChecking => 'جارٍ التحقق…';
+
+  @override
+  String get donateNotSeenYet =>
+      'لم يظهر بعد. قد يستغرق ظهور الدفعة بضع دقائق.';
+
+  @override
   String get donatePaymentConfirmed => 'تأكّدت الدفعة';
 
   @override
@@ -2861,6 +2879,21 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get handleDeleteThisHandle => 'حذف اسم المستخدم هذا';
+
+  @override
+  String handleDeleteTitle(Object handle) {
+    return 'حذف ⁦@$handle⁩؟';
+  }
+
+  @override
+  String get handleDeleteLine =>
+      'ستزول صفحتك العامة ويمكن لأي شخص أن يحجز الاسم. تبقى محادثاتك الحالية كما هي.';
+
+  @override
+  String get handleDeleteYes => 'حذف اسم المستخدم';
+
+  @override
+  String get handleDeleting => 'جارٍ الحذف…';
 
   @override
   String get handleChecking => 'جارٍ التحقق…';
@@ -3814,9 +3847,6 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get myKryfoTypeTheNameThey =>
       'اكتب @الاسم الذي أعطاك إياه. يعمل إن كان قد حجز اسمًا.';
-
-  @override
-  String get myKryfoWren => 'Wren';
 
   @override
   String get myKryfoTheLookupAsksFor =>
@@ -5393,6 +5423,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String get transportSendAnythingWaitingNow => 'إرسال كل ما ينتظر، الآن';
 
   @override
+  String get transportSending => 'جارٍ الإرسال…';
+
+  @override
+  String get transportNothingLeftWaiting => 'لم يبقَ شيء في الانتظار';
+
+  @override
+  String transportStillWaiting(Object count) {
+    return 'ما زال في الانتظار: $count';
+  }
+
+  @override
   String get transportOff => 'متوقف';
 
   @override
@@ -6742,6 +6783,9 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get bridgesNoneUsable =>
       'لا يصلح أي سطر هنا جسرًا، لذا تبقى الجسور متوقفة';
+
+  @override
+  String get bridgesCouldNotApply => 'تعذّر تطبيق الجسور. حاول الحفظ مجددًا.';
 
   @override
   String get languageTitle => 'اللغة';

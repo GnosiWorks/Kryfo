@@ -12,6 +12,7 @@ import 'package:kryfo/screens/lock_screen.dart';
 import 'package:kryfo/screens/pin_flow_screen.dart';
 import 'package:kryfo/screens/pins_screen.dart';
 import 'package:kryfo/widgets/pin_pad.dart';
+import 'package:kryfo/widgets/swap.dart';
 
 import 'pin_flow_fakes.dart';
 
@@ -733,8 +734,17 @@ void main() {
   group('right to left', () {
     tearDown(() => setL10nLocale(const Locale('en')));
 
-    // where the page coming in starts, part way through the slide
+    // where the page coming in starts, part way through the slide. a line
+    // rising in on a page slides too: not the page's
     double enteringDx(WidgetTester t) {
+      final inLines = t
+          .widgetList<SlideTransition>(
+            find.descendant(
+              of: find.byType(RiseSwap),
+              matching: find.byType(SlideTransition),
+            ),
+          )
+          .toSet();
       final slides = t
           .widgetList<SlideTransition>(
             find.descendant(
@@ -742,6 +752,7 @@ void main() {
               matching: find.byType(SlideTransition),
             ),
           )
+          .where((s) => !inLines.contains(s))
           .toList();
       return slides.last.position.value.dx;
     }

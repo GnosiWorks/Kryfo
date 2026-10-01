@@ -29,6 +29,7 @@ import '../widgets/halo_rows.dart';
 import '../widgets/dev_avatar.dart' show DevRing;
 import 'dev_about_sheet.dart' show devChatOffered, writeToMarios;
 import '../widgets/stagger_in.dart';
+import '../widgets/unfold.dart';
 import '../widgets/confirm_sheet.dart';
 import '../l10n/l10n.dart';
 import '../widgets/language_sheet.dart';
@@ -272,9 +273,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  bool _disguise = false;
-  bool _acceptIntros = true;
-  bool _shieldOn = true;
+  // null until read: a switch never opens on a default and slides
+  bool? _disguise;
+  bool? _acceptIntros;
+  bool? _shieldOn;
+  // asked once a visit, not on every rebuild
+  late final Future<bool> _notifs = notificationsEnabled();
 
   @override
   void initState() {
@@ -303,7 +307,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         leading: BackButton(color: HaloColors.text2),
         title: Text(
           l10n.commonSettings,
-          style: HaloType.serif(size: 22, color: HaloColors.text, italic: true),
+          style: HaloType.serif(size: 18, color: HaloColors.text, italic: true),
         ),
       ),
       body: ListView(
@@ -378,14 +382,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     // only when android is blocking them: a line that says
                     // so outlives the home banner, which can be dismissed
                     FutureBuilder<bool>(
-                      future: notificationsEnabled(),
-                      builder: (_, snap) => snap.data == false
-                          ? ProtectionLine(
-                              l10n.settingsNotifications,
-                              false,
-                              l10n.settingsBlockedByAndroid,
-                            )
-                          : const SizedBox.shrink(),
+                      future: _notifs,
+                      builder: (_, snap) => Unfold(
+                        open: snap.data == false,
+                        child: ProtectionLine(
+                          l10n.settingsNotifications,
+                          false,
+                          l10n.settingsBlockedByAndroid,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -483,20 +488,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 icon: Icons.people_outline,
                 label: l10n.settingsAcceptIntroductions,
                 hint: l10n.settingsFriendsCanIntroduceYou,
-                toggled: _acceptIntros,
+                toggled: _acceptIntros ?? true,
+                pending: _acceptIntros == null,
                 onTap: () async {
-                  setState(() => _acceptIntros = !_acceptIntros);
-                  await saveAcceptIntros(_acceptIntros, session.container);
+                  final v = !(_acceptIntros ?? true);
+                  setState(() => _acceptIntros = v);
+                  await saveAcceptIntros(v, session.container);
                 },
               ),
               HaloRow(
                 icon: Icons.shield_outlined,
                 label: l10n.settingsScamShield,
                 hint: l10n.settingsChecksStrangersOnYour,
-                toggled: _shieldOn,
+                toggled: _shieldOn ?? true,
+                pending: _shieldOn == null,
                 onTap: () async {
-                  setState(() => _shieldOn = !_shieldOn);
-                  await saveScamShieldOn(_shieldOn, session.container);
+                  final v = !(_shieldOn ?? true);
+                  setState(() => _shieldOn = v);
+                  await saveScamShieldOn(v, session.container);
                 },
               ),
             ],
@@ -588,10 +597,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 icon: Icons.record_voice_over,
                 label: l10n.settingsDisguiseVoice,
                 hint: l10n.settingsShiftsYourPitchBefore,
-                toggled: _disguise,
+                toggled: _disguise ?? false,
+                pending: _disguise == null,
                 onTap: () async {
-                  setState(() => _disguise = !_disguise);
-                  await appState.saveDisguisePref(_disguise);
+                  final v = !(_disguise ?? false);
+                  setState(() => _disguise = v);
+                  await appState.saveDisguisePref(v);
                 },
               ),
             ],

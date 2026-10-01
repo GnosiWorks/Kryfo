@@ -11,11 +11,12 @@ import '../widgets/kryfo_avatar.dart';
 import 'settings_screen.dart';
 import 'donate_screen.dart';
 import 'my_kryfo_screen.dart';
-import '../widgets/motion.dart' show haloRoute;
+import '../widgets/ease_size.dart';
+import '../widgets/motion.dart' show haloRoute, kHouseCurve, kHouseTime;
 import '../widgets/copied_mark.dart';
 import '../widgets/halo_rows.dart';
-import '../widgets/halo_switch.dart';
 import '../widgets/press_scale.dart';
+import '../widgets/unfold.dart';
 import '../l10n/l10n.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -197,56 +198,67 @@ class _ProfileScreenState extends State<ProfileScreen>
               ),
               const SizedBox(height: 24),
 
-              if (hasBadge) ...[
-                _reveal(2, _Section(l10n.profileSupporterBadge)),
-                _reveal(
-                  2,
-                  _Card(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            _badgePill(_tier, glow: true),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                l10n.profileYouAreAThank(tierKey(_tier)),
-                                style: HaloType.sans(
-                                  size: 13,
-                                  color: HaloColors.text2,
+              // a tier read after the intro grows in rather than
+              // pushing the sections under it down at once
+              Unfold(
+                open: hasBadge,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _reveal(2, _Section(l10n.profileSupporterBadge)),
+                    _reveal(
+                      2,
+                      HaloGroup(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(14),
+                            child: Row(
+                              children: [
+                                _badgePill(_tier, glow: true),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    l10n.profileYouAreAThank(tierKey(_tier)),
+                                    style: HaloType.sans(
+                                      size: 13,
+                                      color: HaloColors.text2,
+                                    ),
+                                  ),
                                 ),
-                              ),
+                              ],
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 14),
-                        _toggleRow(
-                          l10n.profileShowMyBadge,
-                          l10n.profileOnMyOwnScreens,
-                          _showSelf,
-                          (v) async {
-                            await saveShowBadgeSelf(v, session.container);
-                            setState(() => _showSelf = v);
-                            if (v) _glow();
-                          },
-                        ),
-                        const SizedBox(height: 10),
-                        _toggleRow(
-                          l10n.profileLetContactsSeeIt,
-                          l10n.profileOffByDefault,
-                          _share,
-                          (v) async {
-                            await saveShareBadge(v, session.container);
-                            setState(() => _share = v);
-                          },
-                        ),
-                      ],
+                          ),
+                          // the switch flips at once; the save follows
+                          HaloRow(
+                            icon: Icons.verified_outlined,
+                            label: l10n.profileShowMyBadge,
+                            hint: l10n.profileOnMyOwnScreens,
+                            toggled: _showSelf,
+                            onTap: () {
+                              final v = !_showSelf;
+                              setState(() => _showSelf = v);
+                              if (v) _glow();
+                              saveShowBadgeSelf(v, session.container);
+                            },
+                          ),
+                          HaloRow(
+                            icon: Icons.people_outline,
+                            label: l10n.profileLetContactsSeeIt,
+                            hint: l10n.profileOffByDefault,
+                            toggled: _share,
+                            onTap: () {
+                              final v = !_share;
+                              setState(() => _share = v);
+                              saveShareBadge(v, session.container);
+                            },
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 24),
+                  ],
                 ),
-                const SizedBox(height: 24),
-              ],
+              ),
 
               _reveal(3, _Section(l10n.profileShareConnect)),
               // the same rows as settings: one surface, a tile per row
@@ -381,10 +393,27 @@ class _ProfileScreenState extends State<ProfileScreen>
                 style: HaloType.mono(size: 16, color: HaloColors.amber),
               ),
             ),
-            if (hasBadge && _showSelf) ...[
-              const SizedBox(width: 8),
-              _badgePill(_tier, glow: true),
-            ],
+            // the pill pops in on the house curve and out again
+            EaseSize(
+              child: AnimatedSwitcher(
+                duration: MediaQuery.disableAnimationsOf(context)
+                    ? Duration.zero
+                    : kHouseTime,
+                switchInCurve: kHouseCurve,
+                switchOutCurve: Curves.easeInCubic,
+                transitionBuilder: (c, a) => FadeTransition(
+                  opacity: a,
+                  child: ScaleTransition(scale: a, child: c),
+                ),
+                child: hasBadge && _showSelf
+                    ? Padding(
+                        key: const ValueKey('pill'),
+                        padding: const EdgeInsetsDirectional.only(start: 8),
+                        child: _badgePill(_tier, glow: true),
+                      )
+                    : const SizedBox.shrink(key: ValueKey('none')),
+              ),
+            ),
           ],
         ),
       ],
@@ -409,7 +438,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           const SizedBox(width: 4),
           Text(
             tierLabel(t),
-            style: HaloType.mono(size: 8, color: HaloColors.amber),
+            style: HaloType.mono(size: 10, color: HaloColors.amber),
           ),
         ],
       ),
@@ -434,32 +463,6 @@ class _ProfileScreenState extends State<ProfileScreen>
         );
       },
       child: pill,
-    );
-  }
-
-  Widget _toggleRow(
-    String label,
-    String sub,
-    bool value,
-    Future<void> Function(bool) onChanged,
-  ) {
-    return Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: HaloType.sans(size: 13, color: HaloColors.text),
-              ),
-              const SizedBox(height: 2),
-              Text(sub, style: HaloType.mono(size: 9, color: HaloColors.text3)),
-            ],
-          ),
-        ),
-        HaloSwitch(value: value, onChanged: (v) => onChanged(v)),
-      ],
     );
   }
 }
@@ -520,13 +523,11 @@ class _CopyRowState extends State<_CopyRow> {
 // a section's surface
 class _Card extends StatelessWidget {
   final Widget child;
-  final EdgeInsetsGeometry? padding;
-  const _Card({required this.child, this.padding});
+  const _Card({required this.child});
   @override
   Widget build(BuildContext context) {
     return Container(
       clipBehavior: Clip.antiAlias,
-      padding: padding,
       decoration: BoxDecoration(
         color: HaloColors.surface2,
         borderRadius: BorderRadius.circular(16),

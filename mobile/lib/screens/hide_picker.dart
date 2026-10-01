@@ -8,7 +8,9 @@ import '../l10n/l10n.dart';
 import '../theme.dart';
 import '../widgets/kryfo_avatar.dart';
 import '../widgets/motion.dart' show houseSpring;
+import '../widgets/ease_size.dart';
 import '../widgets/press_scale.dart';
+import '../widgets/swap.dart';
 
 // a chat the picker offers: a person's or a group's
 class HideChoice {
@@ -119,7 +121,6 @@ class _HidePickerState extends State<HidePicker> {
 
   @override
   Widget build(BuildContext context) {
-    final still = _still;
     final n = _chosen.length;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -131,26 +132,27 @@ class _HidePickerState extends State<HidePicker> {
             style: HaloType.serif(size: 28, color: HaloColors.text),
           ),
         ),
-        if (_error == null && widget.line == null)
-          const SizedBox(height: 12)
-        else
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 8, 24, 12),
-            child: AnimatedSwitcher(
-              duration: still
-                  ? Duration.zero
-                  : const Duration(milliseconds: 180),
-              child: Text(
-                _error ?? widget.line ?? '',
-                key: ValueKey(_error),
-                style: HaloType.sans(
-                  size: 13.5,
-                  color: _error != null ? HaloColors.rose : HaloColors.text2,
-                  height: 1.45,
+        // a refusal eases the list down and rises in, rather than jumping
+        EaseSize(
+          child: _error == null && widget.line == null
+              ? const SizedBox(width: double.infinity, height: 12)
+              : Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 12),
+                  child: RiseSwap(
+                    child: Text(
+                      _error ?? widget.line ?? '',
+                      key: ValueKey(_error),
+                      style: HaloType.sans(
+                        size: 13.5,
+                        color: _error != null
+                            ? HaloColors.rose
+                            : HaloColors.text2,
+                        height: 1.45,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-          ),
+        ),
         Expanded(
           child: _chats.isEmpty
               ? Center(

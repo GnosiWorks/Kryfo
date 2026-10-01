@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../theme.dart';
 import 'halo_switch.dart';
+import 'swap.dart';
 
 class HaloSection extends StatelessWidget {
   final String label;
@@ -29,14 +30,16 @@ class HaloGroup extends StatelessWidget {
     final line = rose
         ? HaloColors.rose.withValues(alpha: 0.35)
         : HaloColors.line;
-    return Container(
+    // a material, not a painted box: a row's press ink is drawn on it, and
+    // under an opaque box it would land on the page and never be seen
+    return Material(
       clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: rose
-            ? HaloColors.rose.withValues(alpha: 0.05)
-            : HaloColors.surface2,
+      color: rose
+          ? HaloColors.rose.withValues(alpha: 0.05)
+          : HaloColors.surface2,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: line, width: 0.5),
+        side: BorderSide(color: line, width: 0.5),
       ),
       child: Column(
         children: [
@@ -66,6 +69,9 @@ class HaloRow extends StatelessWidget {
   final bool rose;
   // an on or off setting: a switch stands in for the value and the chevron
   final bool? toggled;
+  // the saved value is still being read: the switch's place is kept empty
+  // and it fades in where it belongs, never sliding from a default
+  final bool pending;
   const HaloRow({
     super.key,
     required this.label,
@@ -76,6 +82,7 @@ class HaloRow extends StatelessWidget {
     this.mark,
     this.rose = false,
     this.toggled,
+    this.pending = false,
   });
 
   @override
@@ -92,7 +99,7 @@ class HaloRow extends StatelessWidget {
         : HaloColors.amberSoft;
     final ink = rose ? HaloColors.rose : HaloColors.amber;
     final row = InkWell(
-      onTap: onTap,
+      onTap: pending ? null : onTap,
       splashColor: ink.withValues(alpha: 0.08),
       highlightColor: ink.withValues(alpha: 0.08),
       child: Padding(
@@ -154,9 +161,18 @@ class HaloRow extends StatelessWidget {
             if (on != null) ...[
               const SizedBox(width: 10),
               ExcludeSemantics(
-                child: HaloSwitch(
-                  value: on,
-                  onChanged: onTap == null ? null : (_) => onTap!(),
+                child: FadeSwap(
+                  child: pending
+                      ? const SizedBox(
+                          key: ValueKey('pending'),
+                          width: 46,
+                          height: 26,
+                        )
+                      : HaloSwitch(
+                          key: const ValueKey('switch'),
+                          value: on,
+                          onChanged: onTap == null ? null : (_) => onTap!(),
+                        ),
                 ),
               ),
             ] else if (onTap != null) ...[

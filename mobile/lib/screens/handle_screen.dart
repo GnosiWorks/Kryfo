@@ -14,6 +14,7 @@ import '../widgets/confirm_sheet.dart';
 import '../widgets/copied_mark.dart';
 import '../widgets/ease_size.dart';
 import '../widgets/halo_bar.dart';
+import '../widgets/halo_buttons.dart';
 import '../widgets/halo_switch.dart';
 import '../widgets/motion.dart' show motionStill;
 import '../widgets/press_scale.dart';
@@ -116,6 +117,14 @@ class _HandleScreenState extends State<HandleScreen> {
   Future<void> _release() async {
     final h = _claimed;
     if (h == null) return;
+    // the name goes back to the registry for anyone to take: asked first
+    final sure = await showConfirmSheet(
+      context,
+      title: l10n.handleDeleteTitle(h),
+      line: l10n.handleDeleteLine,
+      yes: l10n.handleDeleteYes,
+    );
+    if (!sure || !mounted || _claimed != h) return;
     setState(() => _busy = true);
     final r = sessionQuiet ? _unreached : await engine.handleRelease(h);
     if (!mounted) return;
@@ -144,7 +153,10 @@ class _HandleScreenState extends State<HandleScreen> {
       appBar: AppBar(
         backgroundColor: HaloColors.surface,
         elevation: 0,
-        title: Text(l10n.handlePublicHandle, style: HaloType.serif(size: 18)),
+        title: Text(
+          l10n.handlePublicHandle,
+          style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
+        ),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 40),
@@ -171,7 +183,6 @@ class _HandleScreenState extends State<HandleScreen> {
 
   List<Widget> _page() {
     final free = _state == 'free';
-    final still = motionStill(context);
     if (_claimed != null && appState.handleForeign) {
       return [
         _ForeignCard(handle: _claimed!, onForget: _forget),
@@ -180,7 +191,7 @@ class _HandleScreenState extends State<HandleScreen> {
     }
     if (_claimed != null) {
       return [
-        _ClaimedCard(handle: _claimed!, onRelease: _busy ? null : _release),
+        _ClaimedCard(handle: _claimed!, busy: _busy, onRelease: _release),
         const SizedBox(height: 14),
         _ListingCard(handle: _claimed!),
         const SizedBox(height: 22),
@@ -207,34 +218,10 @@ class _HandleScreenState extends State<HandleScreen> {
       const _RiskBlock(),
       const SizedBox(height: 20),
       // fills once the name is free
-      PressScale(
-        scale: 0.97,
-        onTap: (free && !_busy) ? _claim : null,
-        child: AnimatedContainer(
-          duration: still ? Duration.zero : const Duration(milliseconds: 220),
-          curve: Curves.easeOutCubic,
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: free ? HaloColors.amber : HaloColors.surface2,
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(
-              color: free ? HaloColors.amber : HaloColors.line,
-            ),
-          ),
-          child: RiseSwap(
-            alignment: Alignment.center,
-            child: Text(
-              _busy ? l10n.handleClaiming : l10n.handleClaimThisHandle,
-              key: ValueKey(_busy),
-              style: HaloType.mono(
-                size: 12.5,
-                weight: FontWeight.w600,
-                color: free ? HaloColors.ink : HaloColors.text3,
-              ),
-            ),
-          ),
-        ),
+      HaloPrimaryButton(
+        label: _busy ? l10n.handleClaiming : l10n.handleClaimThisHandle,
+        busy: _busy,
+        onTap: free ? _claim : null,
       ),
     ];
   }
@@ -369,8 +356,13 @@ class _ListingCardState extends State<_ListingCard> {
 // the row that says it did
 class _ClaimedCard extends StatefulWidget {
   final String handle;
-  final VoidCallback? onRelease;
-  const _ClaimedCard({required this.handle, this.onRelease});
+  final bool busy;
+  final VoidCallback onRelease;
+  const _ClaimedCard({
+    required this.handle,
+    required this.busy,
+    required this.onRelease,
+  });
 
   @override
   State<_ClaimedCard> createState() => _ClaimedCardState();
@@ -383,7 +375,7 @@ class _ClaimedCardState extends State<_ClaimedCard> {
   Widget build(BuildContext context) {
     final url = 'https://relay.kryfo.app/@${widget.handle}';
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 6),
       decoration: BoxDecoration(
         color: HaloColors.surface2,
         borderRadius: BorderRadius.circular(16),
@@ -442,14 +434,27 @@ class _ClaimedCardState extends State<_ClaimedCard> {
               ),
             ),
           ),
-          const SizedBox(height: 16),
-          PressScale(
-            scale: 0.97,
-            haptic: false,
-            onTap: widget.onRelease,
-            child: Text(
-              l10n.handleDeleteThisHandle,
-              style: HaloType.mono(size: 11.5, color: HaloColors.rose),
+          const SizedBox(height: 4),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: PressScale(
+              scale: 0.97,
+              onTap: widget.busy ? null : widget.onRelease,
+              child: SizedBox(
+                height: 44,
+                child: Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: RiseSwap(
+                    child: Text(
+                      widget.busy
+                          ? l10n.handleDeleting
+                          : l10n.handleDeleteThisHandle,
+                      key: ValueKey(widget.busy),
+                      style: HaloType.mono(size: 12, color: HaloColors.rose),
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
         ],
@@ -585,7 +590,9 @@ class _FieldState extends State<_Field> {
                 : HaloColors.line,
           ),
         ),
+        // the text is latin left to right, so the @ leads it in every language
         child: Row(
+          textDirection: TextDirection.ltr,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (widget.prefix != null)

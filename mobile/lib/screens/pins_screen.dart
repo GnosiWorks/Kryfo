@@ -10,6 +10,7 @@ import '../dlog.dart';
 import '../lock_state.dart';
 import '../theme.dart';
 import '../widgets/ease_size.dart';
+import '../widgets/halo_buttons.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/halo_switch.dart';
 import '../widgets/motion.dart' show haloRoute;
@@ -17,6 +18,7 @@ import '../widgets/press_scale.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/swap.dart';
+import '../widgets/unfold.dart';
 import 'hide_picker.dart';
 import 'lock_setup_screen.dart';
 import 'pin_flow_screen.dart';
@@ -204,7 +206,6 @@ class _PinsScreenState extends State<PinsScreen> {
                 outcome: l10n.pinsOpensKryfoFourDigits,
                 primary: on ? l10n.pinsChangePin : l10n.pinsSetAPin,
                 onPrimary: () async {
-                  HapticFeedback.selectionClick();
                   // a change asks for the pin there is first, as the
                   // advanced flows do
                   await Navigator.of(
@@ -313,9 +314,11 @@ class _Advanced extends StatelessWidget {
           Semantics(
             button: true,
             expanded: open,
-            child: GestureDetector(
+            // the toggle clicks on its own
+            child: PressScale(
+              scale: 0.98,
+              haptic: false,
               onTap: onToggle,
-              behavior: HitTestBehavior.opaque,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
                 child: Row(
@@ -363,15 +366,14 @@ class _Advanced extends StatelessWidget {
               ),
             ),
           ),
-          EaseSize(
-            child: open
-                ? Column(
-                    children: [
-                      Container(height: 0.5, color: HaloColors.line),
-                      ...children,
-                    ],
-                  )
-                : const SizedBox(width: double.infinity),
+          Unfold(
+            open: open,
+            child: Column(
+              children: [
+                Container(height: 0.5, color: HaloColors.line),
+                ...children,
+              ],
+            ),
           ),
         ],
       ),
@@ -579,7 +581,6 @@ class _PinCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final can = onPrimary != null;
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
       decoration: BoxDecoration(
@@ -622,54 +623,52 @@ class _PinCard extends StatelessWidget {
               height: 1.45,
             ),
           ),
-          if (extra != null) ...[const SizedBox(height: 12), extra!],
+          // what the lock adds when it is on grows in, and folds away
+          Unfold(
+            open: extra != null,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: extra ?? const SizedBox(width: double.infinity),
+            ),
+          ),
           const SizedBox(height: 14),
           Row(
             children: [
               Expanded(
-                child: PressScale(
-                  scale: 0.97,
-                  haptic: false,
-                  onTap: onPrimary,
-                  child: Container(
-                    height: 42,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: can ? HaloColors.amber : HaloColors.surface3,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      primary,
-                      style: HaloType.sans(
-                        size: 13.5,
-                        weight: FontWeight.w600,
-                        color: can ? HaloColors.onAmber : HaloColors.text3,
-                      ),
-                    ),
-                  ),
+                child: HaloPrimaryButton(label: primary, onTap: onPrimary),
+              ),
+              EaseSize(
+                child: FadeSwap(
+                  child: secondary == null
+                      ? const SizedBox(key: ValueKey('none'), height: 46)
+                      : Padding(
+                          key: ValueKey(secondary),
+                          padding: const EdgeInsetsDirectional.only(start: 8),
+                          child: PressScale(
+                            scale: 0.97,
+                            onTap: onSecondary,
+                            child: Container(
+                              height: 46,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(13),
+                                border: Border.all(color: HaloColors.line),
+                              ),
+                              child: Text(
+                                secondary!,
+                                style: HaloType.sans(
+                                  size: 14,
+                                  color: HaloColors.rose,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                 ),
               ),
-              if (secondary != null) ...[
-                const SizedBox(width: 8),
-                PressScale(
-                  scale: 0.97,
-                  haptic: false,
-                  onTap: onSecondary,
-                  child: Container(
-                    height: 42,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: HaloColors.line),
-                    ),
-                    child: Text(
-                      secondary!,
-                      style: HaloType.sans(size: 13, color: HaloColors.rose),
-                    ),
-                  ),
-                ),
-              ],
             ],
           ),
         ],

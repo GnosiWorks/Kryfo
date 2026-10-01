@@ -15,11 +15,14 @@ import '../widgets/ease_size.dart';
 import '../widgets/fit_column.dart';
 import '../widgets/halo_bar.dart';
 import '../widgets/motion.dart' show houseSpring;
+import '../widgets/halo_buttons.dart';
 import '../widgets/press_scale.dart';
+import '../widgets/secret_field.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/swap.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
+import '../dlog.dart';
 
 class BackupScreen extends StatefulWidget {
   // from the hidden chats setup: a copy to keep that holds the chats just
@@ -55,6 +58,8 @@ class _BackupScreenState extends State<BackupScreen> {
   // that retires this phone once the file is made
   bool _move = false;
   double _progress = 0;
+  // both fields show what was typed, or neither
+  bool _shown = false;
 
   Future<void> _create() async {
     final pw = _p1.text.trim();
@@ -103,9 +108,11 @@ class _BackupScreenState extends State<BackupScreen> {
       }
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
+      dlog('backup: not made (${e.runtimeType})');
       if (mounted) {
+        HapticFeedback.heavyImpact();
         setState(() {
-          _error = e.toString();
+          _error = backupFailLine(e);
           _busy = false;
         });
       }
@@ -174,7 +181,7 @@ class _BackupScreenState extends State<BackupScreen> {
         leading: BackButton(color: HaloColors.text2),
         title: Text(
           l10n.backupBackUpKryfo,
-          style: HaloType.serif(size: 22, color: HaloColors.text, italic: true),
+          style: HaloType.serif(size: 18, color: HaloColors.text, italic: true),
         ),
       ),
       body: SafeArea(
@@ -207,9 +214,21 @@ class _BackupScreenState extends State<BackupScreen> {
               hidden: _hidden,
             ),
             const SizedBox(height: 24),
-            _PinField(label: l10n.backupPassphrase, controller: _p1),
+            SecretField(
+              label: l10n.backupPassphrase,
+              controller: _p1,
+              shown: _shown,
+              onToggle: () => setState(() => _shown = !_shown),
+            ),
             const SizedBox(height: 12),
-            _PinField(label: l10n.backupConfirmPassphrase, controller: _p2),
+            SecretField(
+              label: l10n.backupConfirmPassphrase,
+              controller: _p2,
+              shown: _shown,
+              onToggle: () => setState(() => _shown = !_shown),
+              action: TextInputAction.done,
+              onSubmit: _busy ? null : _create,
+            ),
             const SizedBox(height: 12),
             EaseSize(
               child: _error == null
@@ -223,38 +242,18 @@ class _BackupScreenState extends State<BackupScreen> {
                     ),
             ),
             const Spacer(),
-            PressScale(
-              scale: 0.97,
-              onTap: _busy ? null : _create,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                decoration: BoxDecoration(
-                  color: _busy ? HaloColors.surface3 : HaloColors.amber,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                alignment: Alignment.center,
-                child: RiseSwap(
-                  alignment: Alignment.center,
-                  child: Text(
-                    _busy
-                        ? (_progress > 0
-                              ? l10n.backupWriting(percent(_progress))
-                              : l10n.backupCreating)
-                        : (_move
-                              ? l10n.backupMakeTheFileAnd
-                              : l10n.backupCreateBackup),
-                    // the percent itself changes in place
-                    key: ValueKey((_busy, _progress > 0, _move)),
-                    style: HaloType.sans(
-                      size: 14,
-                      color: _busy ? HaloColors.text2 : HaloColors.onAmber,
-                      weight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ),
+            HaloPrimaryButton(
+              label: _busy
+                  ? (_progress > 0
+                        ? l10n.backupWriting(percent(_progress))
+                        : l10n.backupCreating)
+                  : (_move
+                        ? l10n.backupMakeTheFileAnd
+                        : l10n.backupCreateBackup),
+              // the percent itself changes in place
+              phase: '${(_busy, _progress > 0, _move)}',
+              busy: _busy,
+              onTap: _create,
             ),
             // the file, as far as it is written
             EaseSize(
@@ -267,34 +266,6 @@ class _BackupScreenState extends State<BackupScreen> {
             ),
             const SizedBox(height: 8),
           ]),
-        ),
-      ),
-    );
-  }
-}
-
-class _PinField extends StatelessWidget {
-  final String label;
-  final TextEditingController controller;
-  const _PinField({required this.label, required this.controller});
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      controller: controller,
-      obscureText: true,
-      // never offered to the phone's autofill service
-      autofillHints: null,
-      style: HaloType.mono(size: 14, color: HaloColors.text),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: HaloType.sans(size: 12, color: HaloColors.text2),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: HaloColors.line, width: 0.5),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: HaloColors.amber, width: 0.8),
         ),
       ),
     );
@@ -531,4 +502,14 @@ class _About extends StatelessWidget {
     if (!canMove) return page(false);
     return Stack(children: [page(false), page(true)]);
   }
+}
+
+// what a backup that failed says. the engine's and the system's own words
+// are for the log; only the hidden chats closing has something to do
+@visibleForTesting
+String backupFailLine(Object e) {
+  if (e is BackupError && e.message == l10n.backupHiddenGone) {
+    return e.message;
+  }
+  return l10n.backupNotMade;
 }

@@ -542,10 +542,19 @@ void main() {
     expect(l.backupCreating, "Creating…");
     expect(l.backupMakeTheFileAnd, "Make the file and move");
     expect(l.backupCreateBackup, "Create backup");
+    expect(l.backupNotMade, "The backup could not be made. Try again.");
     expect(l.blockedBlocked, "Blocked");
     expect(l.blockedNoOneIsBlocked, "No one is blocked");
     expect(l.commonUnblock, "Unblock");
     expect(l.bridgesThatWasNotIt, "That was not it. Here is another.");
+    expect(
+      l.bridgesMoatFailed,
+      "Couldn't reach the tor project. Try again in a minute, or paste a bridge line below.",
+    );
+    expect(
+      l.bridgesCouldNotApply,
+      "The bridges could not be applied. Try saving again.",
+    );
     expect(l.bridgesGotBridgesSaveTo, "Got bridges · save to use them");
     expect(l.bridgesConnected, "Connected");
     expect(l.bridgesNotThroughYetTor, "Not through yet. Tor keeps trying");
@@ -1111,6 +1120,15 @@ void main() {
     );
     expect(l.donateNewInvoice, "New invoice");
     expect(l.donateIPaidCheckAgain, "I paid, check again");
+    expect(
+      l.donateNoWallet,
+      "No wallet app here opens bitcoin links. Copy the address instead.",
+    );
+    expect(l.donateChecking, "Checking…");
+    expect(
+      l.donateNotSeenYet,
+      "Not seen yet. A payment can take a few minutes to show.",
+    );
     expect(l.donatePaymentConfirmed, "Payment confirmed");
     expect(
       l.donateThankYouForKeeping,
@@ -1349,6 +1367,13 @@ void main() {
     );
     expect(l.handleLinkCopied, "Link copied");
     expect(l.handleDeleteThisHandle, "Delete this handle");
+    expect(l.handleDeleteTitle("<x>"), "Delete @<x>?");
+    expect(
+      l.handleDeleteLine,
+      "Your public page goes away and anyone can claim the name. Chats you already have stay as they are.",
+    );
+    expect(l.handleDeleteYes, "Delete handle");
+    expect(l.handleDeleting, "Deleting…");
     expect(l.handleChecking, "Checking…");
     expect(l.handleAvailable, "✓ Available");
     expect(l.handleAlreadyTaken, "Already taken");
@@ -1917,7 +1942,6 @@ void main() {
       l.myKryfoTypeTheNameThey,
       "Type the @name they gave you. Works if they claimed one.",
     );
-    expect(l.myKryfoWren, "Wren");
     expect(
       l.myKryfoTheLookupAsksFor,
       "The lookup sends that one name and nothing about you. Your first message to them still arrives as a request.",
@@ -2727,6 +2751,9 @@ void main() {
       "With no contacts the app subscribes to no relay addresses, so no message can reach you. Scan someone to fix it.",
     );
     expect(l.transportSendAnythingWaitingNow, "Send anything waiting, now");
+    expect(l.transportSending, "Sending…");
+    expect(l.transportNothingLeftWaiting, "Nothing left waiting");
+    expect(l.transportStillWaiting("<x>"), "Still waiting: <x>");
     expect(l.transportOff, "Off");
     expect(l.transportStarting, "Starting");
     expect(l.transportBootstrapped, "Bootstrapped");

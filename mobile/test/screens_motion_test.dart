@@ -6,7 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
-import 'package:kryfo/main.dart' show appState, showAddContact;
+import 'package:kryfo/main.dart'
+    show HaloEngine, appState, showAddContact, useEngineForTest;
 import 'package:kryfo/screens/backup_screen.dart';
 import 'package:kryfo/screens/donate_screen.dart';
 import 'package:kryfo/screens/my_kryfo_screen.dart';
@@ -170,6 +171,38 @@ void main() {
       await t.pumpWidget(const SizedBox());
     });
 
+    testWidgets('a check that fails gives the button back', (t) async {
+      // wide: the test font's square glyphs would not fit the address row
+      t.view.physicalSize = const Size(2000, 3200);
+      t.view.devicePixelRatio = 2;
+      addTearDown(t.view.reset);
+      quiet(t);
+      appState.sendModeForTest = 'private';
+      final e = _BadgeEngine();
+      useEngineForTest(e);
+      await t.pumpWidget(framed(const DonateScreen()));
+      await t.pump(const Duration(seconds: 1));
+      await t.ensureVisible(find.text(l10n.donatePayWithBitcoin));
+      await t.pump(const Duration(milliseconds: 100));
+      await t.tap(find.text(l10n.donatePayWithBitcoin));
+      await t.pump(const Duration(seconds: 1));
+      // the quarter hour runs out with nothing paid
+      for (var i = 0; i < 16; i++) {
+        await t.pump(const Duration(seconds: 59));
+      }
+      await t.pump(const Duration(seconds: 1));
+      expect(find.text(l10n.donateIPaidCheckAgain), findsOneWidget);
+      e.down = true;
+      await t.tap(find.text(l10n.donateIPaidCheckAgain));
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 500));
+      e.down = false;
+      expect(find.text(l10n.donateChecking), findsNothing);
+      expect(find.text(l10n.donateIPaidCheckAgain), findsOneWidget);
+      await t.pumpWidget(const SizedBox());
+      await t.pump(const Duration(seconds: 61));
+    });
+
     testWidgets('copying the address ticks the button', (t) async {
       phone(t);
       quiet(t);
@@ -283,15 +316,16 @@ void main() {
 
   group('every way to add someone', () {
     double bodyOpacity(WidgetTester t) => t
-        .widget<Opacity>(
+        .widget<FadeTransition>(
           find
               .ancestor(
                 of: find.text(l10n.myKryfoTheLinkCarriesYour),
-                matching: find.byType(Opacity),
+                matching: find.byType(FadeTransition),
               )
               .first,
         )
-        .opacity;
+        .opacity
+        .value;
 
     testWidgets('a way opens with its body fading up, then rests', (t) async {
       phone(t);
@@ -448,4 +482,21 @@ void main() {
       await t.pumpWidget(const SizedBox());
     });
   });
+}
+
+// the badge service: an invoice, then a receipt that stays pending, or a
+// tor call that throws
+class _BadgeEngine implements HaloEngine {
+  bool down = false;
+  @override
+  Future<String> torPost(String url, String body) async =>
+      '{"id":"inv1","tier":"supporter","address":"bc1qtest","btc":"0.0002"}';
+  @override
+  Future<String> torGetJson(String url) async {
+    if (down) throw StateError('isolate');
+    return '{"status":"pending"}';
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
 }

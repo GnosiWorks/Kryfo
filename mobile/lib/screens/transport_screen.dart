@@ -5,13 +5,16 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import '../dlog.dart';
 import '../main.dart' hide live;
 import '../miui_autostart.dart' show forceShowBackgroundPrompt;
 import '../theme.dart';
+import '../widgets/halo_buttons.dart';
 import '../widgets/motion.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/swap.dart';
+import '../widgets/unfold.dart';
 import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
 import '../delivery_mode.dart';
@@ -65,8 +68,15 @@ class TransportScreen extends StatelessWidget {
 
               _Head(l10n.appTor),
               _Line(l10n.transportStatus, _torWord(tor), _torTint(tor)),
-              if (tor == TorStatus.starting)
-                _Line(l10n.transportBootstrap, '$pct%', HaloColors.amber),
+              // always in the list, so the rows under it keep their place
+              Unfold(
+                open: tor == TorStatus.starting,
+                child: _Line(
+                  l10n.transportBootstrap,
+                  '${whole(pct)}%',
+                  HaloColors.amber,
+                ),
+              ),
               _Line(
                 l10n.transportCanSend,
                 appState.torReady ? l10n.commonYes : l10n.transportNotYet,
@@ -152,8 +162,9 @@ class TransportScreen extends StatelessWidget {
                 '$contacts',
                 contacts == 0 ? HaloColors.rose : HaloColors.text2,
               ),
-              if (contacts == 0)
-                Padding(
+              Unfold(
+                open: contacts == 0,
+                child: Padding(
                   padding: const EdgeInsets.only(top: 10),
                   child: Text(
                     l10n.transportWithNoContactsThe,
@@ -163,29 +174,10 @@ class TransportScreen extends StatelessWidget {
                     ),
                   ),
                 ),
+              ),
 
               const SizedBox(height: 28),
-              PressScale(
-                scale: 0.97,
-                onTap: appState.flushOutboxNow,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: HaloColors.surface2,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: HaloColors.line),
-                  ),
-                  child: Text(
-                    l10n.transportSendAnythingWaitingNow,
-                    style: HaloType.mono(
-                      size: 12.5,
-                      color: HaloColors.amber,
-                      weight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
+              const _Flush(),
             ]),
           );
         },
@@ -243,39 +235,100 @@ class _Line extends StatelessWidget {
   final Color tint;
   final bool indent;
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 7),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Flexible(
-          child: Padding(
-            padding: EdgeInsetsDirectional.only(start: indent ? 15.6 : 0),
-            child: Text(
-              label,
-              style: HaloType.mono(size: 13, color: HaloColors.text2),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
+  Widget build(BuildContext context) {
+    // a long value, or any value at a large font, goes under its label
+    // rather than off the side, as on a settings row
+    final stacked =
+        value.length > 16 || MediaQuery.textScalerOf(context).scale(13) > 17;
+    final start = EdgeInsetsDirectional.only(start: indent ? 15.6 : 0);
+    // a value that changes state rises in; a count or a time that moves on
+    // is simply updated
+    Widget shown(AlignmentGeometry at, TextAlign align) => RiseSwap(
+      alignment: at,
+      child: Text(
+        value,
+        key: ValueKey(tint),
+        textAlign: align,
+        style: HaloType.mono(size: 13, color: tint, weight: FontWeight.w600),
+      ),
+    );
+    if (stacked) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 7),
+        child: Padding(
+          padding: start,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                label,
+                style: HaloType.mono(size: 13, color: HaloColors.text2),
+              ),
+              const SizedBox(height: 3),
+              shown(AlignmentDirectional.centerStart, TextAlign.start),
+            ],
           ),
         ),
-        const SizedBox(width: 12),
-        // a value that changes state rises in; a count or a time that
-        // moves on is simply updated
-        RiseSwap(
-          alignment: AlignmentDirectional.centerEnd,
-          child: Text(
-            value,
-            key: ValueKey(tint),
-            style: HaloType.mono(
-              size: 13,
-              color: tint,
-              weight: FontWeight.w600,
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 7),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Flexible(
+            child: Padding(
+              padding: start,
+              child: Text(
+                label,
+                style: HaloType.mono(size: 13, color: HaloColors.text2),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ),
-        ),
-      ],
-    ),
+          const SizedBox(width: 12),
+          // short by the rule above, so the label gets the rest
+          shown(AlignmentDirectional.centerEnd, TextAlign.end),
+        ],
+      ),
+    );
+  }
+}
+
+// sends what is queued now, and says how it went
+class _Flush extends StatefulWidget {
+  const _Flush();
+  @override
+  State<_Flush> createState() => _FlushState();
+}
+
+class _FlushState extends State<_Flush> {
+  bool _busy = false;
+
+  Future<void> _go() async {
+    setState(() => _busy = true);
+    try {
+      await appState.flushOutboxNow();
+    } catch (e) {
+      // what is still queued is said below either way
+      dlog('transport: flush (${e.runtimeType})');
+    }
+    if (!mounted) return;
+    setState(() => _busy = false);
+    final left = appState.queued;
+    showHaloToast(
+      context,
+      left == 0
+          ? l10n.transportNothingLeftWaiting
+          : l10n.transportStillWaiting(whole(left)),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => HaloGhostButton(
+    label: _busy ? l10n.transportSending : l10n.transportSendAnythingWaitingNow,
+    onTap: _busy ? null : _go,
   );
 }
 
@@ -383,8 +436,8 @@ class _AliveState extends State<_Alive> {
               : _ago(appState.lastDrainAt),
           HaloColors.text,
         ),
-        GestureDetector(
-          behavior: HitTestBehavior.opaque,
+        PressScale(
+          scale: 0.98,
           onTap: _exempt == false
               ? () async {
                   await forceShowBackgroundPrompt(context);
@@ -405,14 +458,27 @@ class _AliveState extends State<_Alive> {
                 : HaloColors.rose,
           ),
         ),
-        if (_uptimeMs != null)
-          _Line(l10n.transportProcessUp, _span(_uptimeMs!), HaloColors.text),
-        if (exit != null)
-          _Line(
-            l10n.transportLastStop,
-            '${exit['word']} · ${exitAt == null ? '' : _ago(exitAt)}',
-            (exit['reason'] as int?) == 2 ? HaloColors.rose : HaloColors.text2,
+        // in place from the start, so the rows under them do not shift
+        Unfold(
+          open: _uptimeMs != null,
+          child: _Line(
+            l10n.transportProcessUp,
+            _uptimeMs == null ? '' : _span(_uptimeMs!),
+            HaloColors.text,
           ),
+        ),
+        Unfold(
+          open: exit != null,
+          child: exit == null
+              ? const SizedBox(width: double.infinity)
+              : _Line(
+                  l10n.transportLastStop,
+                  '${exit['word']} · ${exitAt == null ? '' : _ago(exitAt)}',
+                  (exit['reason'] as int?) == 2
+                      ? HaloColors.rose
+                      : HaloColors.text2,
+                ),
+        ),
         _Line(
           l10n.transportMemory,
           l10n.transportEngine(_mb(rss), _mb(_mem['heapAlloc'] as num?)),

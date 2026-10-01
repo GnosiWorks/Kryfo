@@ -11,10 +11,12 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../widgets/copied_mark.dart';
 import '../widgets/ease_size.dart';
+import '../widgets/halo_buttons.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/motion.dart' show haloRoute;
 import '../widgets/qr_wipe.dart';
 import '../address_text.dart';
+import '../dlog.dart';
 import '../main.dart' show appState, session;
 import 'modes_screen.dart';
 import 'package:flutter/services.dart';
@@ -321,10 +323,14 @@ class _DonateScreenState extends State<DonateScreen> {
                       ? Duration.zero
                       : const Duration(milliseconds: 220),
                   style: HaloType.mono(
-                    size: 8,
+                    size: 10.5,
                     color: sel ? HaloColors.amber : HaloColors.text2,
                   ),
-                  child: Text(name),
+                  // one word, shrunk rather than broken mid-word
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(name, maxLines: 1, textAlign: TextAlign.center),
+                  ),
                 ),
               ],
             ),
@@ -430,7 +436,7 @@ class _DonateScreenState extends State<DonateScreen> {
                     if (c.note.isNotEmpty)
                       Text(
                         c.note,
-                        style: HaloType.mono(size: 8, color: HaloColors.text2),
+                        style: HaloType.mono(size: 10, color: HaloColors.text2),
                       ),
                   ],
                 ),
@@ -524,7 +530,10 @@ class _DonateScreenState extends State<DonateScreen> {
               _coin == 'btc'
                   ? l10n.donateBitcoinIsVerifiedBy
                   : l10n.donateWeCanTVerify,
-              style: HaloType.mono(size: 9.5, color: HaloColors.text2),
+              style: HaloType.mono(
+                size: 11,
+                color: HaloColors.text2,
+              ).copyWith(height: 1.45),
             ),
           ),
           // only bitcoin has a next step: our node watches for it. the other
@@ -633,7 +642,10 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
   Timer? _waitTick;
   int _ask = 0;
   bool _gaveUp = false;
-  bool _checking = false;
+  // the receipt ask on its way: a tap and a poll share it
+  Future<void>? _asking;
+  // the person asked: the button says it is looking
+  bool _checkingNow = false;
 
   @override
   void initState() {
@@ -731,18 +743,34 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
     _check();
   }
 
-  Future<void> _check() async {
-    final inv = _inv;
-    // one ask at a time: over a slow circuit a check can outlast the six
-    // seconds to the next
-    if (inv == null || _checking) return;
-    _checking = true;
-    final BadgeReceipt r;
+  // one ask at a time: over a slow circuit a check can outlast the six
+  // seconds to the next
+  Future<void> _check() =>
+      _asking ??= _ask1().whenComplete(() => _asking = null);
+
+  // a check the person asked for: it shows it is looking, and says so when
+  // the chain has nothing yet
+  Future<void> _checkNow() async {
+    if (_checkingNow) return;
+    setState(() => _checkingNow = true);
     try {
-      r = await fetchReceipt(inv.id);
+      await _check();
+    } catch (e) {
+      // read as not seen yet: the button comes back either way
+      dlog('donate: check (${e.runtimeType})');
     } finally {
-      _checking = false;
+      if (mounted) setState(() => _checkingNow = false);
     }
+    if (!mounted) return;
+    if (_phase != _Phase.confirmed) {
+      showHaloToast(context, l10n.donateNotSeenYet);
+    }
+  }
+
+  Future<void> _ask1() async {
+    final inv = _inv;
+    if (inv == null) return;
+    final r = await fetchReceipt(inv.id);
     if (!mounted) return;
     switch (r.state) {
       case ReceiptState.paid:
@@ -786,8 +814,11 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
         ),
       ),
       body: SafeArea(
+        // with less movement a new phase is simply there
         child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 280),
+          duration: MediaQuery.disableAnimationsOf(context)
+              ? Duration.zero
+              : const Duration(milliseconds: 280),
           switchInCurve: Curves.easeOut,
           switchOutCurve: Curves.easeIn,
           transitionBuilder: (child, anim) => FadeTransition(
@@ -991,8 +1022,20 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
               Expanded(
                 child: _fillButton(l10n.donateOpenWallet, () async {
                   final uri = Uri.parse(inv.uri);
-                  if (await canLaunchUrl(uri)) {
-                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  var opened = false;
+                  try {
+                    opened =
+                        await canLaunchUrl(uri) &&
+                        await launchUrl(
+                          uri,
+                          mode: LaunchMode.externalApplication,
+                        );
+                  } catch (e) {
+                    dlog('donate: wallet (${e.runtimeType})');
+                  }
+                  // no wallet takes the link: the address still works
+                  if (!opened && mounted) {
+                    showHaloToast(context, l10n.donateNoWallet);
                   }
                 }),
               ),
@@ -1007,7 +1050,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
             child: Text(
               l10n.donateThisScreenUpdatesItself,
               textAlign: TextAlign.center,
-              style: HaloType.mono(size: 9.5, color: HaloColors.text2),
+              style: HaloType.mono(size: 10.5, color: HaloColors.text2),
             ),
           ),
         ],
@@ -1075,7 +1118,10 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
             const SizedBox(height: 24),
             _fillButton(l10n.donateNewInvoice, _start),
             const SizedBox(height: 10),
-            _ghostButton(l10n.donateIPaidCheckAgain, _check),
+            _ghostButton(
+              _checkingNow ? l10n.donateChecking : l10n.donateIPaidCheckAgain,
+              _checkingNow ? null : _checkNow,
+            ),
           ],
         ),
       ),
@@ -1114,49 +1160,11 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
     showHaloToast(context, l10n.donateAddressCopiedClearsIn);
   }
 
-  Widget _fillButton(String label, VoidCallback onTap) {
-    return PressScale(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 13),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: HaloColors.amber,
-          borderRadius: BorderRadius.circular(9),
-        ),
-        child: Text(
-          label,
-          style: HaloType.sans(
-            size: 13,
-            weight: FontWeight.w600,
-            color: HaloColors.onAmber,
-          ),
-        ),
-      ),
-    );
-  }
+  Widget _fillButton(String label, VoidCallback onTap) =>
+      HaloPrimaryButton(label: label, onTap: onTap);
 
-  Widget _ghostButton(String label, VoidCallback onTap) {
-    return PressScale(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 13),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(9),
-          border: Border.all(color: HaloColors.amber),
-        ),
-        child: Text(
-          label,
-          style: HaloType.sans(
-            size: 13,
-            weight: FontWeight.w600,
-            color: HaloColors.amber,
-          ),
-        ),
-      ),
-    );
-  }
+  Widget _ghostButton(String label, VoidCallback? onTap) =>
+      HaloGhostButton(label: label, onTap: onTap);
 }
 
 // static copy-address block reused by the unreachable fallback.
@@ -1394,7 +1402,7 @@ class _QrCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: HaloColors.text,
+        color: HaloColors.qrPaper,
         borderRadius: BorderRadius.circular(12),
       ),
       child: QrWipe(
@@ -1402,14 +1410,14 @@ class _QrCard extends StatelessWidget {
           data: data,
           version: QrVersions.auto,
           size: size,
-          backgroundColor: HaloColors.text,
+          backgroundColor: HaloColors.qrPaper,
           eyeStyle: QrEyeStyle(
             eyeShape: QrEyeShape.square,
-            color: HaloColors.ink,
+            color: HaloColors.qrInk,
           ),
           dataModuleStyle: QrDataModuleStyle(
             dataModuleShape: QrDataModuleShape.square,
-            color: HaloColors.ink,
+            color: HaloColors.qrInk,
           ),
         ),
       ),

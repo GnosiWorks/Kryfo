@@ -1007,6 +1007,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get backupCreateBackup => 'Buat cadangan';
 
   @override
+  String get backupNotMade => 'Cadangan tidak bisa dibuat. Coba lagi.';
+
+  @override
   String get backupHiddenNotIn => 'Obrolan tersembunyi tidak ada di dalamnya.';
 
   @override
@@ -1032,6 +1035,10 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get bridgesThatWasNotIt => 'Bukan itu. Ini yang lain.';
+
+  @override
+  String get bridgesMoatFailed =>
+      'Tidak bisa menghubungi tor project. Coba lagi sebentar lagi, atau tempel baris jembatan di bawah.';
 
   @override
   String get bridgesGotBridgesSaveTo =>
@@ -2251,6 +2258,17 @@ class AppLocalizationsId extends AppLocalizations {
   String get donateIPaidCheckAgain => 'Sudah bayar, cek lagi';
 
   @override
+  String get donateNoWallet =>
+      'Tidak ada aplikasi di ponsel ini yang bisa membuka tautan bitcoin. Salin alamatnya saja.';
+
+  @override
+  String get donateChecking => 'Mengecek…';
+
+  @override
+  String get donateNotSeenYet =>
+      'Belum terlihat. Pembayaran bisa butuh beberapa menit untuk muncul.';
+
+  @override
   String get donatePaymentConfirmed => 'Pembayaran dikonfirmasi';
 
   @override
@@ -2784,6 +2802,21 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get handleDeleteThisHandle => 'Hapus nama pengguna ini';
+
+  @override
+  String handleDeleteTitle(Object handle) {
+    return 'Hapus @$handle?';
+  }
+
+  @override
+  String get handleDeleteLine =>
+      'Halaman publikmu hilang dan siapa pun bisa mengambil nama itu. Obrolan yang sudah ada tetap seperti biasa.';
+
+  @override
+  String get handleDeleteYes => 'Hapus nama pengguna';
+
+  @override
+  String get handleDeleting => 'Menghapus…';
 
   @override
   String get handleChecking => 'Mengecek…';
@@ -3712,9 +3745,6 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get myKryfoTypeTheNameThey =>
       'Ketik @nama yang dia berikan. Bisa kalau dia sudah mengklaimnya.';
-
-  @override
-  String get myKryfoWren => 'Wren';
 
   @override
   String get myKryfoTheLookupAsksFor =>
@@ -5314,6 +5344,17 @@ class AppLocalizationsId extends AppLocalizations {
       'Kirim semua yang menunggu, sekarang';
 
   @override
+  String get transportSending => 'Mengirim…';
+
+  @override
+  String get transportNothingLeftWaiting => 'Tidak ada lagi yang menunggu';
+
+  @override
+  String transportStillWaiting(Object count) {
+    return 'Masih menunggu: $count';
+  }
+
+  @override
   String get transportOff => 'Mati';
 
   @override
@@ -6622,6 +6663,10 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get bridgesNoneUsable =>
       'Tidak ada baris yang bisa dipakai sebagai jembatan, jadi jembatan tetap mati';
+
+  @override
+  String get bridgesCouldNotApply =>
+      'Jembatan tidak bisa diterapkan. Coba simpan lagi.';
 
   @override
   String get languageTitle => 'Bahasa';

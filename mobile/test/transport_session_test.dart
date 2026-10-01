@@ -50,10 +50,14 @@ class _Engine implements HaloEngine {
   dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
 }
 
-// the value on the line that [label] names
+// the value on the line that [label] names, beside it or, when long, under
+// it
 String _valueOf(WidgetTester t, String label) {
   final row = find
-      .ancestor(of: find.text(label), matching: find.byType(Row))
+      .ancestor(
+        of: find.text(label),
+        matching: find.byWidgetPredicate((w) => w is Row || w is Column),
+      )
       .first;
   return t
       .widgetList<Text>(find.descendant(of: row, matching: find.byType(Text)))
