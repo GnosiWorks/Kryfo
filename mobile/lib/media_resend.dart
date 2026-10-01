@@ -5,10 +5,22 @@
 // only asked of a sender whose slices say it can answer, so an older kryfo
 // never gets a frame it would not understand.
 
+// an older sender's parser turns down a longer list
 const kNeedMaxIndices = 200;
 const kNeedMaxAsks = 6;
-const kNeedQuietMs = 120 * 1000;
+// before an ask: no slice of the file for this long, and as long since a
+// [CatchupHold] last held asks back
+const kNeedQuietMs = 45 * 1000;
+// a route up this long with no catch-up begun on it: no relay got going
+const kNeedRouteWaitMs = 90 * 1000;
+// how often the receiver looks for files that stopped part way
+const kNeedTickMs = 15 * 1000;
 const kResendMinGapMs = 60 * 1000;
+// an answered ask is followed no sooner than this, with room for the ask's
+// own trip, so the sender does not turn the next one away
+const kNeedMinGapMs = kResendMinGapMs + 30 * 1000;
+// a tick can run a moment early against the one that stamped the ask
+const kNeedSlackMs = 5 * 1000;
 const kResendMaxRounds = 8;
 const kMaxSlices = 100000;
 
@@ -46,16 +58,105 @@ List<int> missingSlices(Set<int> have, int total, {int cap = kNeedMaxIndices}) {
   return out;
 }
 
-// 2, 5, 15, 30, 60, 60 minutes between asks
+// 2, 5, 15, 30, 60, 60 minutes between asks that brought nothing
 int needBackoffMs(int asks) {
   const minutes = [2, 5, 15, 30, 60, 60];
   final i = asks.clamp(0, minutes.length - 1);
   return minutes[i] * 60 * 1000;
 }
 
-/// whether to ask now. quiet means no slice of this file for two minutes:
-/// while slices are still coming in, from a catch-up say, nothing is missing
-/// yet, only late.
+/// whether a slice came in after the last ask, or none was made yet.
+bool askAnswered({required int lastSliceAt, required int askedAt}) =>
+    askedAt <= 0 || lastSliceAt > askedAt;
+
+/// the asks in a row that brought nothing, the one made now counted. one
+/// that brought slices starts the count again.
+int asksAfterAsk({
+  required int lastSliceAt,
+  required int askedAt,
+  required int asks,
+}) => askAnswered(lastSliceAt: lastSliceAt, askedAt: askedAt) ? 1 : asks + 1;
+
+/// what the ask timer knows of the engine's catch-up, the walk that brings
+/// what a relay held while this phone was away. asks wait while one runs,
+/// and after a route comes up until the catch-up it starts has ended, or
+/// none has begun in [kNeedRouteWaitMs]. [heldAt] is the last time it held
+/// asks back.
+class CatchupHold {
+  int heldAt = 0;
+  // the engine's count of catch-ups begun, as last seen
+  int _begun = -1;
+  bool _active = false;
+  // when a route came up whose catch-up is still to end, 0 for none
+  int _routeAt = 0;
+  // the count then: one more is the route's own catch-up
+  int _routeBegun = 0;
+
+  /// a route came up, or every relay is about to be asked again. [begun]
+  /// is the engine's count of catch-ups begun, read before.
+  void routeUp(int now, int begun) {
+    heldAt = now;
+    _routeAt = now;
+    _routeBegun = begun;
+    _begun = begun;
+  }
+
+  /// there is no route. the engine is not asked, so the count last seen
+  /// stands in for the one before the route comes back.
+  void down(int now) {
+    heldAt = now;
+    _routeAt = now;
+    _routeBegun = _begun;
+    _active = false;
+  }
+
+  /// whether asks wait now. [active] and [begun] are the engine's two
+  /// numbers.
+  bool look({required int now, required int active, required int begun}) {
+    // never counted before the route: one running is taken for its own
+    if (_routeAt > 0 && _routeBegun < 0) {
+      _routeBegun = active > 0 ? begun - 1 : begun;
+    }
+    if (_begun < 0) _begun = begun;
+    // running, just ended, or begun and ended between two looks
+    if (active > 0 || _active || begun != _begun) heldAt = now;
+    _begun = begun;
+    _active = active > 0;
+    if (_active) return true;
+    if (_routeAt > 0) {
+      if (begun <= _routeBegun && now - _routeAt < kNeedRouteWaitMs) {
+        return true;
+      }
+      _routeAt = 0;
+    }
+    return false;
+  }
+}
+
+/// the timing half of [shouldAskNow], from the want's row alone, so a tick
+/// reads no slices of a file that is not due. quiet means no slice of this
+/// file for [kNeedQuietMs], and as long since [heldAt], when a
+/// [CatchupHold] last held asks back: while slices may still be coming in,
+/// nothing is missing yet, only late.
+bool askDue({
+  required int now,
+  required int lastSliceAt,
+  required int askedAt,
+  required int asks,
+  int heldAt = 0,
+}) {
+  if (now - lastSliceAt < kNeedQuietMs) return false;
+  if (now - heldAt < kNeedQuietMs) return false;
+  if (askedAt <= 0) return true;
+  final since = now - askedAt + kNeedSlackMs;
+  if (askAnswered(lastSliceAt: lastSliceAt, askedAt: askedAt)) {
+    return since >= kNeedMinGapMs;
+  }
+  if (asks >= kNeedMaxAsks) return false;
+  return since >= needBackoffMs(asks - 1);
+}
+
+/// whether to ask now.
 bool shouldAskNow({
   required int now,
   required int lastSliceAt,
@@ -64,12 +165,16 @@ bool shouldAskNow({
   required bool canResend,
   required int have,
   required int total,
+  int heldAt = 0,
 }) {
   if (!canResend || total <= 1 || have <= 0 || have >= total) return false;
-  if (asks >= kNeedMaxAsks) return false;
-  if (now - lastSliceAt < kNeedQuietMs) return false;
-  if (askedAt > 0 && now - askedAt < needBackoffMs(asks - 1)) return false;
-  return true;
+  return askDue(
+    now: now,
+    lastSliceAt: lastSliceAt,
+    askedAt: askedAt,
+    asks: asks,
+    heldAt: heldAt,
+  );
 }
 
 /// the sender's side: whether a request may be answered at all.
