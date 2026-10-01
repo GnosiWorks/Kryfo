@@ -497,6 +497,7 @@ class DevChat {
       ('held_onion', 'peer_id'),
       ('pins_out', 'peer_id'),
       ('edits_out', 'peer_id'),
+      ('frames_out', 'peer_id'),
       ('shield', 'halo_id'),
       ('vouches', 'halo_id'),
       ('vouches', 'voucher_id'),

@@ -176,14 +176,19 @@ class ArrivalIo implements AppIo {
   String edPub() => 'ed-me';
   @override
   String xPub() => 'x-me';
+  // no route reaches anyone: every send says so
+  var down = false;
+
   @override
   Future<String> relaySend(String xPub, String cipher) async {
+    if (down) return 'error: down';
     sent.add(('relay $xPub', cipher));
     return 'ok';
   }
 
   @override
   Future<String> onionSend(String onion, String cipher) async {
+    if (down) return 'error: down';
     sent.add(('onion $onion', cipher));
     return 'ok';
   }
@@ -199,7 +204,13 @@ class ArrivalIo implements AppIo {
     required String title,
     required String body,
     String? payload,
+    String? msgUid,
   }) async => rang.add(payload ?? title);
+
+  // messages whose notification was taken down
+  final unrang = <String>[];
+  @override
+  Future<void> unnotifyMessage(String msgUid) async => unrang.add(msgUid);
 
   @override
   Future<void> unnotify(String payload) async {}
@@ -475,11 +486,19 @@ class ArrivalRows implements HaloDb {
           if (m['group_id'] == null) m['peer_id'] as String: m,
       });
   @override
-  Future<int> countMessagesFrom(String peerId) async => _hit(
-    'countMessagesFrom',
-    peerId,
-    msgs.where((m) => m['peer_id'] == peerId && m['direction'] == 'in').length,
-  );
+  Future<int> countMessagesFrom(String peerId, {bool inGroups = false}) async =>
+      _hit(
+        'countMessagesFrom',
+        peerId,
+        msgs
+            .where(
+              (m) =>
+                  m['peer_id'] == peerId &&
+                  m['direction'] == 'in' &&
+                  (inGroups || m['group_id'] == null),
+            )
+            .length,
+      );
   @override
   Future<Map<String, Object?>?> shieldFor(String haloId) async =>
       _hit('shieldFor', haloId, shields[haloId]);
@@ -878,19 +897,31 @@ class ArrivalRows implements HaloDb {
   Future<int> filesInFlightFrom(String from, {String? except}) async => _hit(
     'filesInFlightFrom',
     from,
-    chunkFrom.entries.where((e) => e.value == from && e.key != except).length,
+    chunkFrom.entries
+        .where(
+          (e) => e.value == from && e.key != except && wants[e.key] == from,
+        )
+        .length,
   );
 
+  // a file's want row, by media id: who it is asked of
+  final wants = <String, String>{};
   @override
   Future<void> noteMediaWant(
     String mediaId,
     String peerId,
     int total,
     bool canResend,
-  ) async => _hit('noteMediaWant', mediaId, null);
+  ) async {
+    _hit('noteMediaWant', mediaId, null);
+    wants[mediaId] = peerId;
+  }
+
   @override
-  Future<void> dropMediaWant(String mediaId) async =>
-      _hit('dropMediaWant', mediaId, null);
+  Future<void> dropMediaWant(String mediaId) async {
+    _hit('dropMediaWant', mediaId, null);
+    wants.remove(mediaId);
+  }
 
   @override
   dynamic noSuchMethod(Invocation i) =>

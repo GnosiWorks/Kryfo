@@ -16,7 +16,7 @@ import 'package:flutter/foundation.dart';
 
 import 'devchat/dev_start.dart' show devKeyFailed, kDevKeyFailed;
 import 'dlog.dart';
-import 'main.dart' show appState, engine, signalEncryptSerial;
+import 'main.dart' show appState, engine, signalEncrypt;
 import 'media_progress.dart';
 import 'message_envelope.dart';
 import 'signal_session.dart';
@@ -73,6 +73,8 @@ Future<String> sendChunkedMediaTo({
   bool voiceDisguised = false,
   int? burnSeconds,
   bool secure = false,
+  // the message this one answers, on every slice like the name
+  String? replyTo,
   required SenderInfo sender,
   // the receiver named the slices it lacks: send those and no others
   Set<int>? only,
@@ -95,6 +97,7 @@ Future<String> sendChunkedMediaTo({
       voiceDisguised: voiceDisguised,
       burnSeconds: burnSeconds,
       secure: secure,
+      replyTo: replyTo,
       sender: sender,
       only: only,
       progressKey: progressKey,
@@ -121,6 +124,7 @@ Future<String> _sendChunkedMediaInner({
   bool voiceDisguised = false,
   int? burnSeconds,
   bool secure = false,
+  String? replyTo,
   required SenderInfo sender,
   Set<int>? only,
   required String progressKey,
@@ -172,7 +176,7 @@ Future<String> _sendChunkedMediaInner({
   var xpub = peerXPub == null || peerXPub.isEmpty ? null : peerXPub;
   // five slices in flight. tor is latency-bound here, so the gain is close
   // to linear up to about this many streams; past it public relays start
-  // refusing. encryption stays serial per peer behind signalEncryptSerial.
+  // refusing. encryption stays serial per peer inside signalEncrypt.
   const parallel = 5;
   // once the onion fails to answer it stays skipped for the rest of this
   // send, or every slice pays the full dial timeout before the relay
@@ -234,13 +238,14 @@ Future<String> _sendChunkedMediaInner({
           chunkTotal: total > 1 ? total : null,
           burnSeconds: burnSeconds,
           secure: secure,
+          replyTo: replyTo,
           powNonce: pow,
           powBitsUsed: pow == null ? null : powBits,
           supporterBadge: await appState.sharedBadge(),
           sender: sender,
           canResend: total > 1,
         );
-        cipher = await signalEncryptSerial(peerId, wrapped);
+        cipher = await signalEncrypt(peerId, wrapped);
       } catch (e) {
         failure = devKeyFailed(e) ? kDevKeyFailed : 'error: encrypt';
         return;

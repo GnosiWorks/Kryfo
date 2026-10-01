@@ -133,6 +133,20 @@ void main() {
       expect(w.live.held, isNotEmpty);
     });
 
+    test('files they post in a group leave their own chat its two', () async {
+      final w = await _World.make();
+      const m = 'member-not-added';
+      const g = 'grp000000002';
+      w.live.person(m, onion: 'o-$m', xpub: 'x-$m', accepted: 0);
+      w.live.group(g, ['me', _c, m], admin: _c);
+      await w.slice(m, 'gf1', group: g);
+      await w.slice(m, 'gf2', group: g);
+      expect(w.live.chunks.keys, ['gf1', 'gf2']);
+      await w.text(m, 'd1');
+      expect(w.live.msg('d1'), isNotNull);
+      expect(w.live.held, isEmpty);
+    });
+
     test('with one message kept, one file comes in and no second', () async {
       final w = await _World.make();
       await w.text(_s, 't1');
@@ -372,6 +386,17 @@ void main() {
       await chunk(db, 'a', 1, _s, 1);
       await chunk(db, 'b', 0, _s, 1);
       await chunk(db, 'c', 0, _c, 1);
+      // a file in a group has no want row
+      await chunk(db, 'g', 0, _s, 1);
+      for (final (id, who) in [('a', _s), ('b', _s), ('c', _c)]) {
+        await db.mem.insert('media_wants', {
+          'media_id': id,
+          'peer_id': who,
+          'total': 9,
+          'can_resend': 1,
+          'last_at': 1,
+        });
+      }
       expect(await db.filesInFlightFrom(_s), 2);
       expect(await db.filesInFlightFrom(_s, except: 'a'), 1);
       expect(await db.mediaChunkSender('c'), _c);

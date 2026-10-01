@@ -227,7 +227,11 @@ class _Io implements AppIo {
     required String title,
     required String body,
     String? payload,
+    String? msgUid,
   }) async => rang.add(payload ?? title);
+
+  @override
+  Future<void> unnotifyMessage(String msgUid) async {}
 
   @override
   Future<void> unnotify(String payload) async {
@@ -500,7 +504,7 @@ class _Db implements HaloDb {
 
   // ---- what runs on a timer ----
   @override
-  Future<int> purgeExpired() async {
+  Future<int> purgeExpired({void Function(String msgUid)? gone}) async {
     _hit('purgeExpired', null, null);
     final now = DateTime.now().millisecondsSinceEpoch;
     final before = r.msgs.length;
@@ -612,13 +616,19 @@ class _Db implements HaloDb {
   Future<int> filesInFlightFrom(String from, {String? except}) async => 0;
 
   @override
-  Future<int> countMessagesFrom(String peerId) async => _hit(
-    'countMessagesFrom',
-    peerId,
-    r.msgs
-        .where((m) => m['peer_id'] == peerId && m['direction'] == 'in')
-        .length,
-  );
+  Future<int> countMessagesFrom(String peerId, {bool inGroups = false}) async =>
+      _hit(
+        'countMessagesFrom',
+        peerId,
+        r.msgs
+            .where(
+              (m) =>
+                  m['peer_id'] == peerId &&
+                  m['direction'] == 'in' &&
+                  (inGroups || m['group_id'] == null),
+            )
+            .length,
+      );
   @override
   Future<Map<String, Object?>?> shieldFor(String haloId) async =>
       _hit('shieldFor', haloId, null);

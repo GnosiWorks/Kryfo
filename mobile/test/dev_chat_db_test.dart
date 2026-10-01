@@ -125,6 +125,13 @@ Future<List<String>> _fill(MemDb db, String id, Directory dir) async {
     'new_text': 'edited',
     'at': 1,
   });
+  await db.insert('frames_out', {
+    'msg_uid': '$id-gone',
+    'kind': 'unsend',
+    'peer_id': id,
+    'body': '',
+    'at': 1,
+  });
   await db.insert('media_wants', {
     'media_id': '$id-slices',
     'peer_id': id,
@@ -202,6 +209,7 @@ Map<String, int> _named(MemDb db, String id) {
     'messages': ['peer_id'],
     'pins_out': ['peer_id'],
     'edits_out': ['peer_id'],
+    'frames_out': ['peer_id'],
     'media_wants': ['peer_id'],
     'held_onion': ['peer_id'],
     'shield': ['halo_id'],
@@ -529,6 +537,7 @@ void main() {
             'poll_votes',
             'pins_out',
             'edits_out',
+            'frames_out',
             'media_wants',
             'media_chunks',
             'held_onion',

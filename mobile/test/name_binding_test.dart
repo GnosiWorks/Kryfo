@@ -111,6 +111,7 @@ class _Io extends AppIo {
     required String title,
     required String body,
     String? payload,
+    String? msgUid,
   }) async {}
   @override
   Future<void> unnotify(String payload) async {}

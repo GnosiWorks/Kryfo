@@ -25,6 +25,7 @@ import 'theme.dart';
 import 'wipe.dart';
 import 'media_progress.dart';
 import 'media_send.dart';
+import 'send_order.dart';
 import 'media_resend.dart';
 import 'delivery_mode.dart';
 import 'offline_gate.dart';
@@ -1120,7 +1121,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 57,
+      version: 58,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -1252,6 +1253,7 @@ class HaloDb {
         await _shieldTable(db);
         await _editsTable(db);
         await _pinsTable(db);
+        await _framesTable(db);
         await _mediaWantsTable(db);
         await _heldTable(db);
         await _signalTables(db);
@@ -1263,6 +1265,10 @@ class HaloDb {
         await _supportTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 58) {
+          // unsends and reactions queue like edits
+          await _framesTable(db);
+        }
         if (oldV < 57) {
           // who sent each slice of an unfinished file
           await addColumn(
@@ -2007,7 +2013,7 @@ class HaloDb {
       final rows = await t.query(
         'messages',
         columns: ['msg_uid', ..._kFileCols],
-        where: 'peer_id = ?',
+        where: _kOneToOne,
         whereArgs: [haloId],
       );
       for (final r in rows) {
@@ -2016,7 +2022,7 @@ class HaloDb {
           await t.delete('reactions', where: 'msg_uid = ?', whereArgs: [uid]);
         }
       }
-      await t.delete('messages', where: 'peer_id = ?', whereArgs: [haloId]);
+      await t.delete('messages', where: _kOneToOne, whereArgs: [haloId]);
       // the row stays: it carries the xpub our nostr subscription is built
       // from. archived + unaccepted = invisible everywhere until they write.
       await t.update(
@@ -2169,11 +2175,14 @@ class HaloDb {
     return (rows.first['accepted'] as int? ?? 0) == 1;
   }
 
-  // how many messages we already hold from a sender: caps strangers
-  Future<int> countMessagesFrom(String peerId) async {
+  // how many messages we already hold from a sender in their own chat:
+  // caps strangers. [inGroups] counts what they wrote in groups as well
+  Future<int> countMessagesFrom(String peerId, {bool inGroups = false}) async {
     final db = await open();
     final r = await db.rawQuery(
-      'SELECT COUNT(*) c FROM messages WHERE peer_id = ? AND direction = ?',
+      inGroups
+          ? 'SELECT COUNT(*) c FROM messages WHERE peer_id = ? AND direction = ?'
+          : 'SELECT COUNT(*) c FROM messages WHERE $_kOneToOne AND direction = ?',
       [peerId, 'in'],
     );
     return (r.first['c'] as int?) ?? 0;
@@ -2183,7 +2192,7 @@ class HaloDb {
   Future<int> countMessagesTo(String peerId) async {
     final db = await open();
     final r = await db.rawQuery(
-      'SELECT COUNT(*) c FROM messages WHERE peer_id = ? AND direction = ?',
+      'SELECT COUNT(*) c FROM messages WHERE $_kOneToOne AND direction = ?',
       [peerId, 'out'],
     );
     return (r.first['c'] as int?) ?? 0;
@@ -2256,7 +2265,7 @@ class HaloDb {
       final rows = await t.query(
         'messages',
         columns: ['msg_uid', ..._kFileCols],
-        where: 'peer_id = ?',
+        where: _kOneToOne,
         whereArgs: [haloId],
       );
       for (final r in rows) {
@@ -2265,7 +2274,7 @@ class HaloDb {
           await t.delete('reactions', where: 'msg_uid = ?', whereArgs: [uid]);
         }
       }
-      await t.delete('messages', where: 'peer_id = ?', whereArgs: [haloId]);
+      await t.delete('messages', where: _kOneToOne, whereArgs: [haloId]);
       await t.delete('held_onion', where: 'peer_id = ?', whereArgs: [haloId]);
       // park, don't delete: the row carries the xpub the relay subscription
       // is built from. if they write again, unparkIfArchived surfaces them as
@@ -2866,6 +2875,8 @@ class HaloDb {
   // every column that names a file of a message: a photo, or a voice note,
   // a video or any other file
   static const _kFileCols = ['media_path', 'file_path'];
+  // a person's own chat: what they wrote in groups is the groups'
+  static const _kOneToOne = 'peer_id = ? AND group_id IS NULL';
 
   // the files go too, not just the rows. zeros first, then unlink, so a raw
   // read of the flash finds nothing either.
@@ -2908,13 +2919,63 @@ class HaloDb {
     final db = await open();
     final media = await db.query(
       'messages',
-      columns: _kFileCols,
+      columns: [..._kFileCols, ..._kUnreadCols],
       where: 'msg_uid = ?',
       whereArgs: [msgUid],
     );
+    await _unreadGo(db, media);
     await db.delete('reactions', where: 'msg_uid = ?', whereArgs: [msgUid]);
     await db.delete('messages', where: 'msg_uid = ?', whereArgs: [msgUid]);
     await _scrubMedia(media);
+  }
+
+  // what a row needs for _unreadGo to place it
+  static const _kUnreadCols = ['id', 'peer_id', 'group_id', 'direction'];
+
+  // rows that came in and go before they were read take their unread mark
+  // with them. the unread ones are the newest that many that came in
+  Future<void> _unreadGo(Database db, List<Map<String, Object?>> rows) async {
+    final gone = <(String, bool), Set<int>>{};
+    for (final r in rows) {
+      final id = r['id'];
+      if (r['direction'] != 'in' || id is! int) continue;
+      final g = r['group_id'] as String?;
+      final peer = r['peer_id'] as String?;
+      final chat = g != null ? (g, true) : (peer, false);
+      if (chat.$1 == null) continue;
+      (gone[(chat.$1!, chat.$2)] ??= {}).add(id);
+    }
+    for (final MapEntry(key: (chat, group), value: ids) in gone.entries) {
+      final table = group ? 'groups' : 'contacts';
+      final key = group ? 'group_id = ?' : 'halo_id = ?';
+      final c = await db.query(
+        table,
+        columns: ['unread'],
+        where: key,
+        whereArgs: [chat],
+        limit: 1,
+      );
+      final unread = c.isEmpty ? 0 : (c.first['unread'] as int? ?? 0);
+      if (unread <= 0) continue;
+      final newest = await db.query(
+        'messages',
+        columns: ['id'],
+        where: group
+            ? "group_id = ? AND direction = 'in'"
+            : "$_kOneToOne AND direction = 'in'",
+        whereArgs: [chat],
+        orderBy: 'id DESC',
+        limit: unread,
+      );
+      final n = newest.where((r) => ids.contains(r['id'])).length;
+      if (n == 0) continue;
+      await db.update(
+        table,
+        {'unread': unread - n},
+        where: key,
+        whereArgs: [chat],
+      );
+    }
   }
 
   Future<void> purgeExpiredBurns() async {
@@ -2922,10 +2983,11 @@ class HaloDb {
     final now = DateTime.now().millisecondsSinceEpoch;
     final rows = await db.query(
       'messages',
-      columns: ['msg_uid', 'media_path', 'file_path'],
+      columns: ['msg_uid', 'media_path', 'file_path', ..._kUnreadCols],
       where: 'burn_at IS NOT NULL AND burn_at < ?',
       whereArgs: [now],
     );
+    await _unreadGo(db, rows);
     for (final r in rows) {
       final uid = r['msg_uid'] as String?;
       if (uid != null) {
@@ -3036,15 +3098,15 @@ class HaloDb {
     final media = await db.query(
       'messages',
       columns: _kFileCols,
-      where: 'peer_id = ?',
+      where: _kOneToOne,
       whereArgs: [peerId],
     );
     await db.rawDelete(
       'DELETE FROM reactions WHERE msg_uid IN '
-      '(SELECT msg_uid FROM messages WHERE peer_id = ? AND msg_uid IS NOT NULL)',
+      '(SELECT msg_uid FROM messages WHERE $_kOneToOne AND msg_uid IS NOT NULL)',
       [peerId],
     );
-    await db.delete('messages', where: 'peer_id = ?', whereArgs: [peerId]);
+    await db.delete('messages', where: _kOneToOne, whereArgs: [peerId]);
     await _scrubMedia(media);
   }
 
@@ -3122,6 +3184,45 @@ class HaloDb {
       'pins_out',
       where: 'msg_uid = ? AND pinned = ?',
       whereArgs: [msgUid, pinned ? 1 : 0],
+    );
+  }
+
+  Future<void> queueFrame(
+    String msgUid,
+    String kind,
+    String peerId,
+    String body,
+  ) async {
+    final db = await open();
+    await db.transaction((t) async {
+      // a message taken back has nothing left to edit, pin or react to
+      if (kind == kFrameUnsend) {
+        for (final table in const ['edits_out', 'pins_out', 'frames_out']) {
+          await t.delete(table, where: 'msg_uid = ?', whereArgs: [msgUid]);
+        }
+      }
+      await t.insert('frames_out', {
+        'msg_uid': msgUid,
+        'kind': kind,
+        'peer_id': peerId,
+        'body': body,
+        'at': DateTime.now().millisecondsSinceEpoch,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+    });
+  }
+
+  Future<List<Map<String, Object?>>> unsentFrames() async {
+    final db = await open();
+    return db.query('frames_out', orderBy: 'at ASC', limit: 40);
+  }
+
+  // only the word that was sent: a newer one queued meanwhile stays
+  Future<void> dropFrame(String msgUid, String kind, String body) async {
+    final db = await open();
+    await db.delete(
+      'frames_out',
+      where: 'msg_uid = ? AND kind = ? AND body = ?',
+      whereArgs: [msgUid, kind, body],
     );
   }
 
@@ -3471,16 +3572,23 @@ class HaloDb {
   }
 
   // delete messages whose burn_at is past. called by the periodic
-  // sweep started in boot().
-  Future<int> purgeExpired() async {
+  // sweep started in boot(). [gone] hears each one that came in
+  Future<int> purgeExpired({void Function(String msgUid)? gone}) async {
     final db = await open();
     final now = DateTime.now().millisecondsSinceEpoch;
     final media = await db.query(
       'messages',
-      columns: _kFileCols,
+      columns: [..._kFileCols, ..._kUnreadCols, 'msg_uid'],
       where: 'burn_at IS NOT NULL AND burn_at < ?',
       whereArgs: [now],
     );
+    await _unreadGo(db, media);
+    if (gone != null) {
+      for (final r in media) {
+        final uid = r['msg_uid'] as String?;
+        if (uid != null && r['direction'] == 'in') gone(uid);
+      }
+    }
     final n = await db.delete(
       'messages',
       where: 'burn_at IS NOT NULL AND burn_at < ?',
@@ -3706,7 +3814,9 @@ class HaloDb {
     return r.isEmpty ? null : r.first['sender'] as String?;
   }
 
-  // how many unfinished files [from] has here, [except] not counted
+  // how many unfinished files [from] is sending in their own chat, [except]
+  // not counted. only those have a want row: a file they post in a group
+  // counts for the group, not against their chat
   Future<int> filesInFlightFrom(String from, {String? except}) async {
     final db = await open();
     final r = await db.query(
@@ -3716,7 +3826,18 @@ class HaloDb {
       where: 'sender = ?',
       whereArgs: [from],
     );
-    return r.where((x) => x['media_id'] != except).length;
+    final direct = {
+      for (final w in await db.query(
+        'media_wants',
+        columns: ['media_id'],
+        where: 'peer_id = ?',
+        whereArgs: [from],
+      ))
+        w['media_id'],
+    };
+    return r
+        .where((x) => x['media_id'] != except && direct.contains(x['media_id']))
+        .length;
   }
 
   // a slice of an unfinished file just came in. can_resend only ever goes
@@ -4249,6 +4370,25 @@ Future<void> _editsTable(Database db) async {
   ''');
 }
 
+const kFrameUnsend = 'unsend';
+const kFrameReaction = 'reaction';
+
+// an unsend or a reaction in a 1:1 chat that has not reached the other
+// person yet, one of each kind a message: the latest word replaces the last.
+// a reaction's body is its emoji, empty when it was taken off
+Future<void> _framesTable(Database db) async {
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS frames_out (
+      msg_uid TEXT NOT NULL,
+      kind TEXT NOT NULL,
+      peer_id TEXT NOT NULL,
+      body TEXT NOT NULL,
+      at INTEGER NOT NULL,
+      PRIMARY KEY (msg_uid, kind)
+    )
+  ''');
+}
+
 Future<void> _shieldTable(Database db) async {
   await db.execute('''
     CREATE TABLE IF NOT EXISTS shield (
@@ -4361,7 +4501,7 @@ Future<void> processPeerBundle(
     ss.identityStore,
     addr,
   );
-  await builder.processPreKeyBundle(preKeyBundle);
+  await ss.serial(haloId, () => builder.processPreKeyBundle(preKeyBundle));
 }
 
 // best-effort wipe of key or plaintext bytes from ram. dart strings are
@@ -4370,18 +4510,6 @@ void _zeroBytes(List<int> b) {
   for (var i = 0; i < b.length; i++) {
     b[i] = 0;
   }
-}
-
-// one encryption at a time per peer. the ratchet steps on every call, and
-// two calls reading the same chain state mint the same message number.
-// the chat's text path and the media workers both go through here.
-final Map<String, Future<void>> _encryptChain = {};
-Future<String> signalEncryptSerial(String peerId, String plaintext) {
-  final prev = _encryptChain[peerId] ?? Future.value();
-  final out = prev.then((_) => signalEncrypt(peerId, plaintext));
-  // the caller gets any error from out; the chain only keeps the order
-  _encryptChain[peerId] = out.then((_) {}, onError: (_) {});
-  return out;
 }
 
 // no session yet with this peer: the next message is an opener
@@ -4393,7 +4521,7 @@ Future<bool> hasSessionWith(String peerId) async {
 
 // the one place a frame is sealed for a peer. every frame for the dev chat
 // goes through its own seal instead: the allowlist, its store, the token
-// the wire asks for
+// the wire asks for. either store seals one frame at a time per peer
 Future<String> signalEncrypt(String peerId, String plaintext) async {
   if (isDevId(peerId)) return devLane.encrypt(peerId, plaintext);
   return signalSession.encryptTo(peerId, plaintext);
@@ -4522,8 +4650,11 @@ Future<String?> signalDecrypt(
       ss.identityStore,
       addr,
     );
-    Uint8List plain;
-    if (type == CiphertextMessage.prekeyType) {
+    // opens share the per-peer queue with seals: both step the same record
+    final plain = await ss.serial<Uint8List?>(peerId, () async {
+      if (type != CiphertextMessage.prekeyType) {
+        return cipher.decryptFromSignal(SignalMessage.fromSerialized(body));
+      }
       final pkm = PreKeySignalMessage(body);
       // trial decrypt: a prekey opens only under the name its identity is
       // bound to. another identity, or a name with none yet, arrives as a
@@ -4540,26 +4671,22 @@ Future<String?> signalDecrypt(
         // session exists: use it. rebuilding from the prekey record bad-macs
         // when the slot was refilled with a fresh key.
         try {
-          plain = await cipher.decryptFromSignal(pkm.getWhisperMessage());
+          return await cipher.decryptFromSignal(pkm.getWhisperMessage());
         } catch (e) {
           dlog('signalDecrypt: session path failed ($e), prekey fallback');
-          plain = await cipher.decrypt(pkm);
+          return cipher.decrypt(pkm);
         }
-      } else {
-        final pkId = pkm.getPreKeyId();
-        final havePk =
-            !pkId.isPresent || await ss.preKeyStore.containsPreKey(pkId.value);
-        if (!havePk) {
-          dlog('signalDecrypt: prekey gone, no session for $peerId');
-          return null;
-        }
-        plain = await cipher.decrypt(pkm);
       }
-    } else {
-      plain = await cipher.decryptFromSignal(
-        SignalMessage.fromSerialized(body),
-      );
-    }
+      final pkId = pkm.getPreKeyId();
+      final havePk =
+          !pkId.isPresent || await ss.preKeyStore.containsPreKey(pkId.value);
+      if (!havePk) {
+        dlog('signalDecrypt: prekey gone, no session for $peerId');
+        return null;
+      }
+      return cipher.decrypt(pkm);
+    });
+    if (plain == null) return null;
     final text = utf8.decode(plain);
     _zeroBytes(plain); // cleartext decoded out, wipe the raw buffer
     return text;
@@ -5304,10 +5431,20 @@ class AppIo {
     required String title,
     required String body,
     String? payload,
-  }) => showMessageNotification(title: title, body: body, payload: payload);
+    String? msgUid,
+  }) => showMessageNotification(
+    title: title,
+    body: body,
+    payload: payload,
+    msgUid: msgUid,
+  );
 
   // what this process showed for a chat leaves the shade
   Future<void> unnotify(String payload) => clearNotificationsFor(payload);
+
+  // one message's notification leaves the shade
+  Future<void> unnotifyMessage(String msgUid) =>
+      clearMessageNotification(msgUid);
 }
 
 // a first contact's session moved off a name a hidden chat binds to
@@ -5428,6 +5565,28 @@ class AppState extends ChangeNotifier {
   // uids being processed right now, to dedup near-simultaneous arrivals
   // (preview re-send racing a manual retry) before the db write lands.
   final Set<String> _inflightUids = <String>{};
+  // messages their sender took back, by sender and uid, with when. a
+  // catch-up hands frames over in any order, and one that lands after its
+  // unsend stays out
+  final Map<String, int> _takenBack = {};
+  static const _kTakenBackFor = Duration(days: 2);
+
+  void _noteTakenBack(String sender, String uid) {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    _takenBack.remove('$sender $uid');
+    _takenBack['$sender $uid'] = now;
+    final cut = now - _kTakenBackFor.inMilliseconds;
+    _takenBack.removeWhere((_, at) => at < cut);
+    if (_takenBack.length > 1000) _takenBack.remove(_takenBack.keys.first);
+  }
+
+  bool _wasTakenBack(String sender, String uid) {
+    final at = _takenBack['$sender $uid'];
+    return at != null &&
+        DateTime.now().millisecondsSinceEpoch - at <
+            _kTakenBackFor.inMilliseconds;
+  }
+
   // group media slices already accepted by at least one member, per msg_uid,
   // so tap-to-retry resumes instead of re-sending the whole file.
   final Map<String, Set<int>> _grpChunkDone = {};
@@ -5693,6 +5852,7 @@ class AppState extends ChangeNotifier {
     _outboxWasReady = true;
     unawaited(_drainEdits());
     unawaited(_drainPins());
+    unawaited(_drainFrames());
     if (rows.isEmpty && vRows.isEmpty) {
       if (_outboxTries.isNotEmpty) {
         _outboxTries.clear();
@@ -5844,6 +6004,89 @@ class AppState extends ChangeNotifier {
       return ok;
     } catch (e) {
       dlog('pin: $uid still stuck ($e)');
+      return false;
+    }
+  }
+
+  final Set<String> _framesInflight = {};
+  Future<void> _drainFrames() async {
+    for (final d in [live, ?_openVault]) {
+      final List<Map<String, Object?>> rows;
+      try {
+        rows = await d.unsentFrames();
+      } catch (e) {
+        continue;
+      }
+      for (final r in rows) {
+        final uid = r['msg_uid'] as String;
+        final kind = r['kind'] as String;
+        final age = DateTime.now().millisecondsSinceEpoch - (r['at'] as int);
+        if (age < 45000 || !_framesInflight.add('$kind $uid')) continue;
+        unawaited(
+          _sendFrame(
+            r['peer_id'] as String,
+            uid,
+            kind,
+            r['body'] as String,
+            on: d,
+          ).whenComplete(() => _framesInflight.remove('$kind $uid')),
+        );
+      }
+    }
+  }
+
+  // take a message back in a 1:1 chat. queued first, so one taken back
+  // offline still reaches them
+  Future<void> unsendInChat(String peer, String uid) async {
+    await session.queueUnsend(uid, peer);
+    await _frameNow(peer, uid, kFrameUnsend, '');
+  }
+
+  // a reaction in a 1:1 chat, empty to take it off. queued like a pin
+  Future<void> reactInChat(String peer, String uid, String emoji) async {
+    await session.queueReaction(uid, peer, emoji);
+    await _frameNow(peer, uid, kFrameReaction, emoji);
+  }
+
+  Future<void> _frameNow(
+    String peer,
+    String uid,
+    String kind,
+    String body,
+  ) async {
+    // a quiet session keeps it queued here: nothing leaves
+    if (sessionQuiet) return;
+    if (!_framesInflight.add('$kind $uid')) return;
+    unawaited(
+      _sendFrame(
+        peer,
+        uid,
+        kind,
+        body,
+      ).whenComplete(() => _framesInflight.remove('$kind $uid')),
+    );
+  }
+
+  Future<bool> _sendFrame(
+    String peer,
+    String uid,
+    String kind,
+    String body, {
+    HaloDb? on,
+  }) async {
+    try {
+      final wrapped = kind == kFrameUnsend
+          ? await wrapMessage('', unsend: uid, sender: _mySender())
+          : await wrapMessage(
+              '',
+              reaction: ReactionFrame(targetUid: uid, emoji: body),
+              sender: _mySender(),
+            );
+      final ok = await _sendOneEnvelope(peer, wrapped);
+      if (ok) await (on ?? _ownerOf(peer)).dropFrame(uid, kind, body);
+      return ok;
+    } catch (e) {
+      dlog('$kind: $uid still stuck ($e)');
       return false;
     }
   }
@@ -6028,6 +6271,7 @@ class AppState extends ChangeNotifier {
       voiceDisguised: ((r['voice_disguised'] as int?) ?? 0) == 1,
       burnSeconds: (r['burn_secs'] as num?)?.toInt(),
       secure: ((r['secure'] as int?) ?? 0) == 1,
+      replyTo: r['reply_to'] as String?,
       sender: _mySender(),
       only: only,
       progressKey: d.container.chatKey(peer),
@@ -7416,7 +7660,10 @@ class AppState extends ChangeNotifier {
           !await db.isTheirs(env.unsend!, senderHaloId)) {
         return to;
       }
+      _noteTakenBack(senderHaloId, env.unsend!);
       await db.deleteMessage(env.unsend!);
+      // the delete took its unread mark; its notification goes too
+      unawaited(_io.unnotifyMessage(env.unsend!));
       // a recall mid-transfer would otherwise leave a half-filled buffer and
       // a progress bar that never completes. drop both: the slices its
       // sender sent, never another sender's
@@ -7424,7 +7671,9 @@ class AppState extends ChangeNotifier {
         incomingMediaDone(db.container.chatKey(env.groupId ?? senderHaloId));
       }
       // refresh so it vanishes live if the peer's looking at the chat now,
-      // not only after they leave and come back.
+      // not only after they leave and come back. home shows the count too
+      await refreshContacts();
+      if (env.groupId != null) await refreshGroups();
       notifyListeners();
       return to;
     }
@@ -7553,6 +7802,11 @@ class AppState extends ChangeNotifier {
     // backs it: the first in claims the uid, a twin takes the known path
     final uid = env.msgUid;
     String? claimed;
+    final taken = _sliced(env) ? env.mediaId : uid;
+    if (taken != null && _wasTakenBack(senderHaloId, taken)) {
+      dlog('recv: taken back before it came, dropped');
+      return to;
+    }
     if (_sliced(env)) {
       final mid = env.mediaId!;
       final total = env.chunkTotal!;
@@ -7887,6 +8141,7 @@ class AppState extends ChangeNotifier {
         title: notifTitle,
         body: notifBody,
         payload: notifPayload,
+        msgUid: env.msgUid,
       );
     }
     return to;
@@ -8085,7 +8340,9 @@ class AppState extends ChangeNotifier {
   }) async {
     try {
       if (!await loadScamShieldOn()) return;
-      if (await db.countMessagesFrom(senderHaloId) != 1) return;
+      if (await db.countMessagesFrom(senderHaloId, inGroups: group) != 1) {
+        return;
+      }
       if (await db.shieldFor(senderHaloId) != null) return;
       final rows = await db.contacts();
       final contacts = [
@@ -9875,7 +10132,18 @@ class AppState extends ChangeNotifier {
       _noteDrain();
     }
 
-    for (final m in msgs) {
+    // one sender's messages in the order they were sent, as far as the
+    // batch tells. a lane many senders share and room frames stay put
+    final ordered = inSendOrder(
+      msgs,
+      peer: (m) => m.peer,
+      cipher: (m) => m.cipher,
+      lane: (p) =>
+          p == 'firstcontact' ||
+          p.startsWith('room:') ||
+          p.startsWith('roomfc:'),
+    );
+    for (final m in ordered) {
       // dedup: skip a message we've already handled (see direct-onion note).
       final h = sha256.convert(utf8.encode(m.cipher)).toString();
       if (await live.alreadySeen(h)) {
@@ -10295,14 +10563,15 @@ class AppState extends ChangeNotifier {
     Timer.periodic(const Duration(seconds: 5), (_) async {
       if (haloWiping) return;
       try {
-        var gone = await live.purgeExpired();
+        void unring(String uid) => unawaited(_io.unnotifyMessage(uid));
+        var gone = await live.purgeExpired(gone: unring);
         final stray = ++sweeps % 12 == 0;
         if (stray) await live.purgeStrayVotes();
         // the open vault's too. shut, its timers wait for the next open
         final v = _openVault;
         if (v != null) {
           try {
-            gone += await v.purgeExpired();
+            gone += await v.purgeExpired(gone: unring);
             if (stray) await v.purgeStrayVotes();
           } catch (e) {
             if (identical(_openVault, v)) rethrow;

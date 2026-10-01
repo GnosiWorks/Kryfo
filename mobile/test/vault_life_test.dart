@@ -50,6 +50,7 @@ const _keys = {
   'poll_votes': ['poll_uid', 'voter'],
   'pins_out': ['msg_uid'],
   'edits_out': ['msg_uid'],
+  'frames_out': ['msg_uid', 'kind'],
   'media_wants': ['media_id'],
   'media_chunks': ['media_id', 'idx'],
   'held_onion': ['id'],
@@ -456,6 +457,9 @@ class _Mover implements ChatMover {
     for (final r in s['held_onion'].where((r) => r['peer_id'] == c.id)) {
       d.put('held_onion', {...r, 'id': d.nextId()});
     }
+    for (final r in s['frames_out'].where((r) => r['peer_id'] == c.id)) {
+      d.put('frames_out', r);
+    }
     for (final r in s['shield'].where((r) => r['halo_id'] == c.id)) {
       d.put('shield', r);
     }
@@ -509,6 +513,7 @@ class _Mover implements ChatMover {
     s['media_chunks'].removeWhere((r) => mids.contains(r['media_id']));
     s['media_wants'].removeWhere((r) => r['peer_id'] == c.id);
     s['held_onion'].removeWhere((r) => r['peer_id'] == c.id);
+    s['frames_out'].removeWhere((r) => r['peer_id'] == c.id);
     s['shield'].removeWhere((r) => r['halo_id'] == c.id);
     s['vouches'].removeWhere(
       (r) => r['halo_id'] == c.id || r['voucher_id'] == c.id,
@@ -842,6 +847,13 @@ class _World {
     l.put('poll_votes', {'poll_uid': 'g2p', 'voter': _m, 'choices': '[1]'});
     l.put('pins_out', {'msg_uid': 'h0', 'peer_id': _h, 'pinned': 1});
     l.put('edits_out', {'msg_uid': 'h2', 'peer_id': _h, 'new_text': 'e'});
+    // taken back: its message is gone, the frame still goes
+    l.put('frames_out', {
+      'msg_uid': 'gone',
+      'kind': 'unsend',
+      'peer_id': _h,
+      'body': '',
+    });
     l.put('media_wants', {'media_id': 'mid1', 'peer_id': _h, 'total': 3});
     l.put('media_chunks', {'media_id': 'mid1', 'idx': 0, 'slice': 'AAAA'});
     l.put('held_onion', {'id': l.nextId(), 'peer_id': _h, 'cipher': 'c'});
@@ -1064,6 +1076,7 @@ void main() {
       for (final t in [
         'pins_out',
         'edits_out',
+        'frames_out',
         'media_wants',
         'media_chunks',
         'held_onion',

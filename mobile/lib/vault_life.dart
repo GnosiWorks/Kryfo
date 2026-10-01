@@ -270,6 +270,8 @@ const _peerRows = {
   'poll_votes': 'poll_uid IN {uids}',
   'pins_out': 'msg_uid IN {uids}',
   'edits_out': 'msg_uid IN {uids}',
+  // an unsend's message is gone, so these go by the person
+  'frames_out': 'peer_id = ?1',
   'media_chunks':
       'media_id IN (SELECT media_id FROM {s}.media_wants WHERE peer_id = ?1)',
   'media_wants': 'peer_id = ?1',

@@ -167,7 +167,7 @@ class _Phone extends HaloDb {
   @override
   Future<bool> isVouched(String haloId) async => false;
   @override
-  Future<int> countMessagesFrom(String peerId) async =>
+  Future<int> countMessagesFrom(String peerId, {bool inGroups = false}) async =>
       msgs(peerId).where((m) => m['direction'] == 'in').length;
   @override
   Future<int> countMessagesTo(String peerId) async =>
@@ -307,7 +307,11 @@ class _Io implements AppIo {
     required String title,
     required String body,
     String? payload,
+    String? msgUid,
   }) async => rang.add('$title|$body|$payload');
+
+  @override
+  Future<void> unnotifyMessage(String msgUid) async {}
 
   @override
   Future<void> unnotify(String payload) async {}

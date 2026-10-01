@@ -37,7 +37,7 @@ import '../widgets/notice_banner.dart';
 import '../widgets/swipe_to_reply.dart';
 import '../signal_session.dart';
 import '../message_envelope.dart'
-    show wrapMessage, powBusy, SenderInfo, ReactionFrame, grindPow, powBits;
+    show wrapMessage, powBusy, SenderInfo, grindPow, powBits;
 import '../theme.dart';
 import '../media_progress.dart';
 import '../media_send.dart'
@@ -70,7 +70,6 @@ import '../main.dart'
         session,
         sessionQuiet,
         signalEncrypt,
-        signalEncryptSerial,
         hasSessionWith,
         appState,
         currentChatPeer,
@@ -122,6 +121,9 @@ import '../widgets/video_viewer.dart';
 import '../widgets/photo_viewer.dart';
 import '../widgets/written_field.dart';
 import '../bidi_safe.dart';
+import '../back_on_top.dart';
+import '../forward.dart';
+import '../text_send.dart';
 import '../lock_guard.dart' show lockGuard, onScreen;
 
 // unsent drafts per chat, so text survives leaving it. keyed by
@@ -129,6 +131,9 @@ import '../lock_guard.dart' show lockGuard, onScreen;
 final Map<String, String> _draftPerPeer = {};
 // newest message ms seen when the chat was last left, keyed the same way
 final Map<String, int> _lastReadPerPeer = {};
+// texts whose send is still running, by uid. a reload keeps them sending
+// and a retry leaves them be, so none goes twice
+final Set<String> _textInflight = {};
 
 class ChatScreen extends StatefulWidget {
   final String peerHaloId;
@@ -435,7 +440,8 @@ int Function(String seed)? grindPowForTest;
 int _lastBurnSeconds = 300;
 bool _lastGhost = false;
 
-class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
+class _ChatScreenState extends State<ChatScreen>
+    with WidgetsBindingObserver, BackOnTop<ChatScreen> {
   final _msgCtrl = TextEditingController();
   int _unreadAfterMs = 0;
   int _firstUnreadIndex = -1;
@@ -836,11 +842,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     lockGuard.isLocked() ? _underLock = true : _markRead();
     _unreadAfterMs =
         _lastReadPerPeer[_memo] ?? DateTime.now().millisecondsSinceEpoch;
-    if (widget.initialText != null) {
-      _msgCtrl.text = widget.initialText!;
-    } else {
-      _msgCtrl.text = _draftPerPeer[_memo] ?? '';
-    }
+    _msgCtrl.text = composerWith(
+      _draftPerPeer[_memo] ?? '',
+      widget.initialText,
+    );
     // save the draft live on every keystroke so it survives leaving the chat
     // regardless of when dispose runs.
     _msgCtrl.addListener(() {
@@ -1539,12 +1544,19 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                               showHaloToast(context, l10n.commonCopied);
                             },
                     ),
-                    // a sticker is not forwarded, copied or edited
+                    // a sticker is not forwarded, copied or edited, and
+                    // a photo, a file or a voice note is not forwarded
                     if (!welcome)
                       MenuAction(
                         icon: Icons.forward_rounded,
                         label: l10n.chatForward,
-                        onTap: target.sticker != null
+                        onTap:
+                            !canForward(
+                              text: target.text,
+                              mediaPath: target.mediaPath,
+                              filePath: target.filePath,
+                              sticker: target.sticker != null,
+                            )
                             ? null
                             : () {
                                 dismiss();
@@ -1690,21 +1702,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _jumpToUid(uid);
   }
 
-  // the unsend frame on its own, the way a message would go. the other
-  // side drops the row, or the half-file and its banner if it never landed.
-  Future<void> _sendUnsendFrame(String uid) async {
-    if (sessionQuiet) return;
-    try {
-      final wrapped = await wrapMessage('', unsend: uid);
-      final cipher = await signalEncryptSerial(widget.peerHaloId, wrapped);
-      final useDirectOnion = !_backPaired || _peerXPub == null;
-      await (useDirectOnion
-          ? engine.sendTo(widget.peerOnion, cipher)
-          : engine.nostrSend(_peerXPub!, cipher));
-    } catch (e) {
-      dlog('unsend send failed: $e');
-    }
-  }
+  // the unsend frame on its own, queued like an edit so one made offline
+  // still goes. the other side drops the row, or the half-file and its
+  // banner if it never landed.
+  Future<void> _sendUnsendFrame(String uid) =>
+      appState.unsendInChat(widget.peerHaloId, uid);
 
   // stop a photo or file mid-send. the workers end between slices, the row
   // and the file go here, and the other side is told to drop its part.
@@ -1976,22 +1978,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     } else {
       await session.addReaction(m.msgUid!, '', emoji);
     }
-    if (sessionQuiet) return;
-    // send to peer as a reaction control envelope (empty body).
-    try {
-      final wrapped = await wrapMessage(
-        '',
-        reaction: ReactionFrame(targetUid: m.msgUid!, emoji: newEmoji),
-      );
-      final cipher = await signalEncrypt(widget.peerHaloId, wrapped);
-      final useDirectOnion = !_backPaired || _peerXPub == null;
-      final f = useDirectOnion
-          ? Future(() => engine.sendTo(widget.peerOnion, cipher))
-          : Future(() => engine.nostrSend(_peerXPub!, cipher));
-      await f;
-    } catch (e) {
-      dlog('reaction send failed: $e');
-    }
+    // queued first, sent now: if the route is down the outbox carries it
+    await appState.reactInChat(widget.peerHaloId, m.msgUid!, newEmoji);
   }
 
   final Set<String> _seenUids = <String>{};
@@ -2149,7 +2137,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       // under a minute old the send future may still be running. a file
       // still going out is never stale: its row is saved before the first
       // slice leaves, and a failed mark would make the retry send it twice.
-      if (m.msgUid != null && mediaInflight.contains(m.msgUid)) continue;
+      if (m.msgUid != null &&
+          (mediaInflight.contains(m.msgUid) ||
+              _textInflight.contains(m.msgUid))) {
+        continue;
+      }
       if (torUp &&
           m.direction == 'out' &&
           m.sending &&
@@ -2277,131 +2269,161 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     await _tryAppendNew();
   }
 
+  // a text's cipher onto the wire once a route is up, unless it was taken
+  // back while it waited
+  Future<String> _wireText(String? uid, String cipher) => wireWhenReady(
+    ready: _torReadyToSend,
+    kept: () async => uid == null || await session.messageExists(uid),
+    send: () => _routeText(cipher),
+  );
+
+  // before the peer back-pairs, direct onion first so their drain runs the
+  // back-pair flow: they don't follow our xpub on nostr yet. on failure,
+  // fall back to nostr store-and-forward.
+  Future<String> _routeText(String cipher) async {
+    // a quiet session keeps it here, unsent
+    if (sessionQuiet) return 'parked';
+    String? tor;
+    if (!_backPaired && widget.peerOnion.isNotEmpty) {
+      tor = await Future(() => engine.sendTo(widget.peerOnion, cipher));
+      if (tor == 'ok') return 'ok';
+      dlog('chat send: tor direct failed ($tor), trying nostr');
+    }
+    // the xpub may be null on a fresh back-pair or reconnect. re-fetch it
+    // from the session before giving up on the relay route.
+    var xpub = _peerXPub;
+    xpub ??= widget.peerXPub.isEmpty ? null : widget.peerXPub;
+    xpub ??= await signalSession.peerXPubHex(widget.peerHaloId);
+    if (xpub != null) {
+      _peerXPub = xpub;
+      // before they back-pair, the pair address is one they cannot
+      // derive yet. their first-contact address is the only relay
+      // route that reaches them.
+      final fcPk = appState.peerFcFor(widget.peerHaloId);
+      if (!_backPaired && fcPk != null && fcPk.isNotEmpty) {
+        final fr = await engine.sendFirstContact(xpub, fcPk, cipher);
+        if (fr == 'ok') return 'ok';
+        dlog('chat send: first-contact failed ($fr)');
+      }
+      final r = await Future(() => engine.nostrSend(xpub!, cipher));
+      // the pair address is a drop box they read only once they add us
+      // back. stored there is not delivered.
+      if (r == 'ok' && !_backPaired) return 'parked';
+      return r;
+    }
+    return tor ?? 'error: no transport';
+  }
+
+  // the verdict goes to every row drawn for this message: a reload since
+  // the send began may have put a new object in its place
+  Future<void> _finishTextSend(_Msg msg, String result) async {
+    // taken back before it went: there is no row left to finish
+    if (result == kTextTakenBack) return;
+    final uid = msg.msgUid;
+    if (result == 'ok' && uid != null) await session.markSent(uid);
+    int? burnAt;
+    if (result == 'ok' && msg.burnSecs != null && uid != null) {
+      burnAt = DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
+      await session.setMsgBurnAt(uid, burnAt);
+      msg.burnAt = burnAt;
+    }
+    if (!mounted) {
+      // left and reopened while it went: tell the screen showing it now
+      appState.chatChanged(widget.peerHaloId);
+      return;
+    }
+    final shown = {
+      msg,
+      for (final m in _messages)
+        if (uid != null && m.msgUid == uid) m,
+    };
+    setState(() {
+      for (final m in shown) {
+        m.sending = false;
+        m.parked = result == 'parked';
+        m.failed = result != 'ok' && result != 'parked';
+        if (burnAt != null) m.burnAt = burnAt;
+      }
+      if (result != 'ok' && result != 'parked') _status = result;
+    });
+  }
+
   Future<void> _retry(_Msg msg) async {
     if (_sending || _stickerSends > 0) return;
-    if (_isDev && !await _ensureDevStarted()) return;
-    // a quiet session sends nothing: it goes on waiting
-    if (sessionQuiet) {
-      setState(() {
-        msg.failed = false;
-        msg.parked = true;
-      });
-      return;
-    }
-    setState(() {
-      msg.failed = false;
-      msg.sending = true;
-      _status = '';
-    });
-    // a stranger's opener rides its nonce again, or the far side's gate
-    // drops the retry
-    final nonce = msg.msgUid == null
-        ? null
-        : await session.powNonceOf(msg.msgUid!);
-    final String cipher;
+    // still going, or it went after all: a second copy is only a duplicate
+    final uid = msg.msgUid;
+    if (uid != null && !_textInflight.add(uid)) return;
+    var handed = false;
     try {
-      final wrapped = await wrapMessage(
-        msg.text,
-        msgUid: msg.msgUid,
-        powNonce: nonce,
-        powBitsUsed: nonce == null ? null : powBits,
-        replyTo: msg.replyTo,
-        burnSeconds: msg.burnSecs,
-        preview: msg.preview,
-        secure: msg.secure,
-        supporterBadge: await appState.sharedBadge(),
-        sender: SenderInfo(
-          haloId: appState.sessionId,
-          edPub: appState.sessionEdPub,
-          onion: appState.sessionOnion,
-          xPub: appState.sessionXPub,
-        ),
-        // or a retried sticker arrives as its emoji
-        sticker: msg.sticker?.value,
-      );
-      cipher = await signalEncrypt(widget.peerHaloId, wrapped);
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        msg.sending = false;
-        msg.failed = true;
-        if (devKeyFailed(e)) _devKeyFailed = true;
-      });
-      return;
-    }
-    if (_devKeyFailed && mounted) setState(() => _devKeyFailed = false);
-    // before the peer back-pairs, direct onion first so their drain runs the
-    // back-pair flow: they don't follow our xpub on nostr yet. on failure,
-    // fall back to nostr store-and-forward.
-    final sendFuture = Future<String>(() async {
-      var torWait = 0;
-      while (!_torReadyToSend() && torWait < 300000) {
-        await Future.delayed(const Duration(milliseconds: 400));
-        torWait += 400;
-      }
-      if (!_torReadyToSend()) return 'error: tor not ready';
-      String? tor;
-      if (!_backPaired && widget.peerOnion.isNotEmpty) {
-        tor = await Future(() => engine.sendTo(widget.peerOnion, cipher));
-        if (tor == 'ok') return 'ok';
-        dlog('chat send: tor direct failed ($tor), trying nostr');
-      }
-      // the xpub may be null on a fresh back-pair or reconnect. re-fetch it
-      // from the session before giving up on the relay route.
-      var xpub = _peerXPub;
-      xpub ??= widget.peerXPub.isEmpty ? null : widget.peerXPub;
-      xpub ??= await signalSession.peerXPubHex(widget.peerHaloId);
-      if (xpub != null) {
-        _peerXPub = xpub;
-        // before they back-pair, the pair address is one they cannot
-        // derive yet. their first-contact address is the only relay
-        // route that reaches them.
-        final fcPk = appState.peerFcFor(widget.peerHaloId);
-        if (!_backPaired && fcPk != null && fcPk.isNotEmpty) {
-          final fr = await engine.sendFirstContact(xpub, fcPk, cipher);
-          if (fr == 'ok') return 'ok';
-          dlog('chat send: first-contact failed ($fr)');
-        }
-        final r = await Future(() => engine.nostrSend(xpub!, cipher));
-        // the pair address is a drop box they read only once they add us
-        // back. stored there is not delivered.
-        if (r == 'ok' && !_backPaired) return 'parked';
-        return r;
-      }
-      return tor ?? 'error: no transport';
-    });
-    sendFuture.then((result) async {
-      if (result == 'ok' && msg.msgUid != null) {
-        await session.markSent(msg.msgUid!);
-      }
-      if (result == 'ok' && msg.burnSecs != null && msg.msgUid != null) {
-        final ba = DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
-        await session.setMsgBurnAt(msg.msgUid!, ba);
-        msg.burnAt = ba;
-      }
-      if (!mounted) return;
-      if (result == 'ok') {
+      if (uid != null && await session.isSent(uid)) {
+        if (!mounted) return;
         setState(() {
           msg.sending = false;
+          msg.failed = false;
           msg.parked = false;
-          if (msg.burnSecs != null) {
-            msg.burnAt =
-                DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
-          }
         });
-      } else if (result == 'parked') {
+        return;
+      }
+      if (_isDev && !await _ensureDevStarted()) return;
+      // a quiet session sends nothing: it goes on waiting
+      if (sessionQuiet) {
         setState(() {
-          msg.sending = false;
+          msg.failed = false;
           msg.parked = true;
         });
-      } else {
+        return;
+      }
+      setState(() {
+        msg.failed = false;
+        msg.sending = true;
+        _status = '';
+      });
+      // a stranger's opener rides its nonce again, or the far side's gate
+      // drops the retry
+      final nonce = msg.msgUid == null
+          ? null
+          : await session.powNonceOf(msg.msgUid!);
+      final String cipher;
+      try {
+        final wrapped = await wrapMessage(
+          msg.text,
+          msgUid: msg.msgUid,
+          powNonce: nonce,
+          powBitsUsed: nonce == null ? null : powBits,
+          replyTo: msg.replyTo,
+          burnSeconds: msg.burnSecs,
+          preview: msg.preview,
+          secure: msg.secure,
+          supporterBadge: await appState.sharedBadge(),
+          sender: SenderInfo(
+            haloId: appState.sessionId,
+            edPub: appState.sessionEdPub,
+            onion: appState.sessionOnion,
+            xPub: appState.sessionXPub,
+          ),
+          // or a retried sticker arrives as its emoji
+          sticker: msg.sticker?.value,
+        );
+        cipher = await signalEncrypt(widget.peerHaloId, wrapped);
+      } catch (e) {
+        if (!mounted) return;
         setState(() {
           msg.sending = false;
           msg.failed = true;
-          _status = result;
+          if (devKeyFailed(e)) _devKeyFailed = true;
         });
+        return;
       }
-    });
+      if (_devKeyFailed && mounted) setState(() => _devKeyFailed = false);
+      handed = true;
+      Future<String>(() => _wireText(uid, cipher))
+          .whenComplete(() {
+            if (uid != null) _textInflight.remove(uid);
+          })
+          .then((result) => _finishTextSend(msg, result));
+    } finally {
+      if (!handed && uid != null) _textInflight.remove(uid);
+    }
   }
 
   void _pickBurnDuration() {
@@ -2553,6 +2575,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       caption: msg.text,
       burnSeconds: msg.burnSecs,
       secure: msg.secure,
+      replyTo: msg.replyTo,
     ).then((result) => _finishMediaSend(msg, result));
   }
 
@@ -2580,6 +2603,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       voice: msg.fileName == 'voice.wav',
       voiceDisguised: msg.voiceDisguised,
       burnSeconds: msg.burnSecs,
+      replyTo: msg.replyTo,
     ).then((result) => _finishMediaSend(msg, result));
   }
 
@@ -2734,12 +2758,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final dest = File('${mediaDir.path}/vn_$msgUid.wav');
     await dest.writeAsBytes(bytes);
     final filePath = dest.path;
+    final replyToUid = _replyTo?.msgUid;
     final msg = _Msg(
       'out',
       '',
       DateTime.now(),
       sending: true,
       msgUid: msgUid,
+      replyTo: replyToUid,
       filePath: filePath,
       fileName: 'voice.wav',
       voiceDisguised: disguise,
@@ -2750,6 +2776,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       _messages.add(msg);
       _normaliseMessages();
       _status = '';
+      _replyTo = null;
     });
     _scrollToEnd();
     HapticFeedback.lightImpact();
@@ -2759,6 +2786,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       'out',
       '',
       msgUid: msgUid,
+      replyTo: replyToUid,
       filePath: filePath,
       fileName: 'voice.wav',
       voiceDisguised: disguise,
@@ -2766,6 +2794,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       burnSecs: msg.burnSecs,
       sent: 0,
     );
+    // the home row moves up on what you sent too
+    unawaited(appState.refreshContacts());
     _sendChunkedMedia(
       path: filePath,
       msgUid: msgUid,
@@ -2773,6 +2803,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       voice: true,
       voiceDisguised: disguise,
       burnSeconds: _ghost ? _burnSeconds : null,
+      replyTo: replyToUid,
     ).then((result) => _finishMediaSend(msg, result));
   }
 
@@ -2989,12 +3020,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       return;
     }
     final filePath = dest.path;
+    final replyToUid = _replyTo?.msgUid;
     final msg = _Msg(
       'out',
       '',
       DateTime.now(),
       sending: true,
       msgUid: msgUid,
+      replyTo: replyToUid,
       filePath: filePath,
       fileName: name,
       burnSecs: _ghost ? _burnSeconds : null,
@@ -3004,6 +3037,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       _messages.add(msg);
       _normaliseMessages();
       _status = '';
+      _replyTo = null;
     });
     _scrollToEnd();
     HapticFeedback.lightImpact();
@@ -3013,17 +3047,20 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       'out',
       '',
       msgUid: msgUid,
+      replyTo: replyToUid,
       filePath: filePath,
       fileName: name,
       burnAt: msg.burnAt,
       burnSecs: msg.burnSecs,
       sent: 0,
     );
+    unawaited(appState.refreshContacts());
     _sendChunkedMedia(
       path: filePath,
       msgUid: msgUid,
       fileName: name,
       burnSeconds: _ghost ? _burnSeconds : null,
+      replyTo: replyToUid,
     ).then((result) => _finishMediaSend(msg, result));
   }
 
@@ -3039,6 +3076,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     bool voiceDisguised = false,
     int? burnSeconds,
     bool secure = false,
+    String? replyTo,
   }) async {
     // a quiet session keeps it here: it waits, and nothing leaves
     if (sessionQuiet) return 'parked';
@@ -3056,6 +3094,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       voiceDisguised: voiceDisguised,
       burnSeconds: burnSeconds,
       secure: secure,
+      replyTo: replyTo,
       sender: SenderInfo(
         haloId: appState.sessionId,
         edPub: appState.sessionEdPub,
@@ -3158,12 +3197,15 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final mediaPath = mediaFile.path;
     // read it once - the toggle is cleared below and the save reads it after.
     final wantSecure = _secureNext;
+    // a few photos at once: the first one answers
+    final replyToUid = _replyTo?.msgUid;
     final msg = _Msg(
       'out',
       caption,
       DateTime.now(),
       sending: true,
       msgUid: msgUid,
+      replyTo: replyToUid,
       mediaPath: mediaPath,
       burnSecs: _ghost ? _burnSeconds : null,
       burnAt: null,
@@ -3173,6 +3215,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       _messages.add(msg);
       _normaliseMessages();
       _status = '';
+      _replyTo = null;
     });
     _scrollToEnd();
     HapticFeedback.lightImpact();
@@ -3182,12 +3225,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       'out',
       caption,
       msgUid: msgUid,
+      replyTo: replyToUid,
       mediaPath: mediaPath,
       burnAt: msg.burnAt,
       burnSecs: msg.burnSecs,
       sent: 0,
       secure: wantSecure,
     );
+    unawaited(appState.refreshContacts());
     if (wantSecure && mounted) setState(() => _secureNext = false);
     unawaited(
       _sendChunkedMedia(
@@ -3196,6 +3241,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         caption: caption,
         burnSeconds: _ghost ? _burnSeconds : null,
         secure: wantSecure,
+        replyTo: replyToUid,
       ).then((r) => _finishMediaSend(msg, r)),
     );
   }
@@ -3316,229 +3362,168 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (_isDev && !await _ensureDevStarted()) return;
     final typed = sticker == null;
     final msgUid = newMsgUid();
-    final replyToUid = _replyTo?.msgUid;
-    // a pending preview only belongs to a message that still holds its link
-    final url = typed ? firstUrl(text) : null;
-    final preview = url != null && _pendingPreview?['url'] == url
-        ? _pendingPreview
-        : null;
-    final msg = _Msg(
-      'out',
-      text,
-      DateTime.now(),
-      sticker: sticker,
-      sending: true,
-      msgUid: msgUid,
-      replyTo: replyToUid,
-      burnSecs: _ghost ? _burnSeconds : null,
-      burnAt: null,
-    );
-    msg.preview = preview;
-    onRow?.call(msg);
-    // a sticker leaves the composer as it is: what was typed stays typed
-    void sealing(bool on) {
-      if (typed) {
-        _sending = on;
-      } else {
-        _stickerSends += on ? 1 : -1;
-      }
-    }
-
-    setState(() {
-      _messages.add(msg);
-      _normaliseMessages();
-      sealing(true);
-      _status = '';
-      _replyTo = null;
-      if (typed) _pendingPreview = null;
-    });
-    if (typed) _msgCtrl.clear();
-    _scrollToEnd();
-    // the sheet already fired it for a sticker
-    if (typed) HapticFeedback.lightImpact();
-
-    await _answerSupport();
+    // claimed from the start: a reload while it grinds or seals keeps it
+    // sending, and no retry sends it alongside
+    _textInflight.add(msgUid);
+    var handed = false;
     try {
-      await session.saveMessage(
-        widget.peerHaloId,
+      final replyToUid = _replyTo?.msgUid;
+      // a pending preview only belongs to a message that still holds its link
+      final url = typed ? firstUrl(text) : null;
+      final preview = url != null && _pendingPreview?['url'] == url
+          ? _pendingPreview
+          : null;
+      final msg = _Msg(
         'out',
         text,
-        burnAt: msg.burnAt,
-        burnSecs: msg.burnSecs,
+        DateTime.now(),
+        sticker: sticker,
+        sending: true,
         msgUid: msgUid,
         replyTo: replyToUid,
-        sent: 0,
-        preview: preview == null ? null : jsonEncode(preview),
-        sticker: sticker?.value,
+        burnSecs: _ghost ? _burnSeconds : null,
+        burnAt: null,
       );
-    } catch (e) {
-      // a throw must not leave _sending true: that disables the composer
-      // and the auto retry until the chat is reopened
-      dlog('send: save failed: $e');
-      if (!mounted) return;
-      setState(() {
-        msg.sending = false;
-        msg.failed = true;
-        sealing(false);
-      });
-      return;
-    }
-    // the home row moves up on what you sent too, not only on what arrived
-    unawaited(appState.refreshContacts());
-    // a quiet session keeps the row here, unsent. it is never sealed: the
-    // seal would move the everyday identity's session with this person on
-    if (sessionQuiet) {
-      if (!mounted) return;
-      setState(() {
-        msg.sending = false;
-        msg.parked = true;
-        sealing(false);
-      });
-      return;
-    }
-    // first-contact proof of work, ground off the ui thread: until they have
-    // written to us their gate sees a stranger. the seed is the raw text, as
-    // the receiver's verifyPow expects.
-    int? powNonce;
-    final String cipher;
-    try {
-      // a fresh session is an opener whatever the history: the far side
-      // may have let us go and its gate asks again
-      final fresh = !await hasSessionWith(widget.peerHaloId);
-      if (_recvCount == 0 || fresh) {
-        powBusy.value = DateTime.now();
-        final int n;
-        try {
-          n = grindPowForTest?.call(text) ?? await compute(_grindPowTask, text);
-        } finally {
-          powBusy.value = null;
-        }
-        powNonce = n;
-        // kept on the row so a retry from the outbox carries the same nonce
-        await session.setPowNonce(msgUid, n);
-      }
-      final wrapped = await wrapMessage(
-        text,
-        powNonce: powNonce,
-        powBitsUsed: powNonce == null ? null : powBits,
-        burnSeconds: _ghost ? _burnSeconds : null,
-        msgUid: msgUid,
-        replyTo: replyToUid,
-        preview: preview,
-        supporterBadge: await appState.sharedBadge(),
-        sender: SenderInfo(
-          haloId: appState.sessionId,
-          edPub: appState.sessionEdPub,
-          onion: appState.sessionOnion,
-          xPub: appState.sessionXPub,
-        ),
-        sticker: sticker?.value,
-      );
-      final prev = _encryptGate;
-      final gate = Completer<void>();
-      _encryptGate = gate.future;
-      try {
-        await prev;
-        cipher = await signalEncryptSerial(widget.peerHaloId, wrapped);
-      } finally {
-        gate.complete();
-      }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        msg.sending = false;
-        msg.failed = true;
-        sealing(false);
-        if (devKeyFailed(e)) {
-          _devKeyFailed = true;
+      msg.preview = preview;
+      onRow?.call(msg);
+      // a sticker leaves the composer as it is: what was typed stays typed
+      void sealing(bool on) {
+        if (typed) {
+          _sending = on;
         } else {
-          _status = l10n.chatNoSignalSessionRe;
+          _stickerSends += on ? 1 : -1;
         }
+      }
+
+      setState(() {
+        _messages.add(msg);
+        _normaliseMessages();
+        sealing(true);
+        _status = '';
+        _replyTo = null;
+        if (typed) _pendingPreview = null;
       });
-      return;
-    }
-    // fire and forget: a failure marks the row for retry
-    setState(() {
-      sealing(false);
-      _status = '';
-      _devKeyFailed = false;
-      if (_requestPending) _sentCount++;
-    });
-    // before the peer back-pairs, direct onion first so their drain runs the
-    // back-pair flow: they don't follow our xpub on nostr yet. on failure,
-    // fall back to nostr store-and-forward.
-    final sendFuture = Future<String>(() async {
-      var torWait = 0;
-      while (!_torReadyToSend() && torWait < 300000) {
-        await Future.delayed(const Duration(milliseconds: 400));
-        torWait += 400;
-      }
-      if (!_torReadyToSend()) return 'error: tor not ready';
-      String? tor;
-      if (!_backPaired && widget.peerOnion.isNotEmpty) {
-        tor = await Future(() => engine.sendTo(widget.peerOnion, cipher));
-        if (tor == 'ok') return 'ok';
-        dlog('chat send: tor direct failed ($tor), trying nostr');
-      }
-      // the xpub may be null on a fresh back-pair or reconnect. re-fetch it
-      // from the session before giving up on the relay route.
-      var xpub = _peerXPub;
-      xpub ??= widget.peerXPub.isEmpty ? null : widget.peerXPub;
-      xpub ??= await signalSession.peerXPubHex(widget.peerHaloId);
-      if (xpub != null) {
-        _peerXPub = xpub;
-        // before they back-pair, the pair address is one they cannot
-        // derive yet. their first-contact address is the only relay
-        // route that reaches them.
-        final fcPk = appState.peerFcFor(widget.peerHaloId);
-        if (!_backPaired && fcPk != null && fcPk.isNotEmpty) {
-          final fr = await engine.sendFirstContact(xpub, fcPk, cipher);
-          if (fr == 'ok') return 'ok';
-          dlog('chat send: first-contact failed ($fr)');
-        }
-        final r = await Future(() => engine.nostrSend(xpub!, cipher));
-        // the pair address is a drop box they read only once they add us
-        // back. stored there is not delivered.
-        if (r == 'ok' && !_backPaired) return 'parked';
-        return r;
-      }
-      return tor ?? 'error: no transport';
-    });
-    sendFuture.then((result) async {
-      if (result == 'ok' && msg.msgUid != null) {
-        await session.markSent(msg.msgUid!);
-      }
-      if (result == 'ok' && msg.burnSecs != null && msg.msgUid != null) {
-        final ba = DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
-        await session.setMsgBurnAt(msg.msgUid!, ba);
-        msg.burnAt = ba;
-      }
-      if (!mounted) return;
-      if (result == 'ok') {
-        setState(() {
-          msg.sending = false;
-          msg.parked = false;
-          if (msg.burnSecs != null) {
-            msg.burnAt =
-                DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
-          }
-        });
-        if (msg.burnAt != null) {
-          await session.setMsgBurnAt(msgUid, msg.burnAt!);
-        }
-      } else if (result == 'parked') {
-        setState(() {
-          msg.sending = false;
-          msg.parked = true;
-        });
-      } else {
+      if (typed) _msgCtrl.clear();
+      _scrollToEnd();
+      // the sheet already fired it for a sticker
+      if (typed) HapticFeedback.lightImpact();
+
+      await _answerSupport();
+      try {
+        await session.saveMessage(
+          widget.peerHaloId,
+          'out',
+          text,
+          burnAt: msg.burnAt,
+          burnSecs: msg.burnSecs,
+          msgUid: msgUid,
+          replyTo: replyToUid,
+          sent: 0,
+          preview: preview == null ? null : jsonEncode(preview),
+          sticker: sticker?.value,
+        );
+      } catch (e) {
+        // a throw must not leave _sending true: that disables the composer
+        // and the auto retry until the chat is reopened
+        dlog('send: save failed: $e');
+        if (!mounted) return;
         setState(() {
           msg.sending = false;
           msg.failed = true;
-          _status = result;
+          sealing(false);
         });
+        return;
       }
-    });
+      // the home row moves up on what you sent too, not only on what arrived
+      unawaited(appState.refreshContacts());
+      // a quiet session keeps the row here, unsent. it is never sealed: the
+      // seal would move the everyday identity's session with this person on
+      if (sessionQuiet) {
+        if (!mounted) return;
+        setState(() {
+          msg.sending = false;
+          msg.parked = true;
+          sealing(false);
+        });
+        return;
+      }
+      // first-contact proof of work, ground off the ui thread: until they have
+      // written to us their gate sees a stranger. the seed is the raw text, as
+      // the receiver's verifyPow expects.
+      int? powNonce;
+      final String cipher;
+      try {
+        // a fresh session is an opener whatever the history: the far side
+        // may have let us go and its gate asks again
+        final fresh = !await hasSessionWith(widget.peerHaloId);
+        if (_recvCount == 0 || fresh) {
+          powBusy.value = DateTime.now();
+          final int n;
+          try {
+            n =
+                grindPowForTest?.call(text) ??
+                await compute(_grindPowTask, text);
+          } finally {
+            powBusy.value = null;
+          }
+          powNonce = n;
+          // kept on the row so a retry from the outbox carries the same nonce
+          await session.setPowNonce(msgUid, n);
+        }
+        final wrapped = await wrapMessage(
+          text,
+          powNonce: powNonce,
+          powBitsUsed: powNonce == null ? null : powBits,
+          burnSeconds: _ghost ? _burnSeconds : null,
+          msgUid: msgUid,
+          replyTo: replyToUid,
+          preview: preview,
+          supporterBadge: await appState.sharedBadge(),
+          sender: SenderInfo(
+            haloId: appState.sessionId,
+            edPub: appState.sessionEdPub,
+            onion: appState.sessionOnion,
+            xPub: appState.sessionXPub,
+          ),
+          sticker: sticker?.value,
+        );
+        final prev = _encryptGate;
+        final gate = Completer<void>();
+        _encryptGate = gate.future;
+        try {
+          await prev;
+          cipher = await signalEncrypt(widget.peerHaloId, wrapped);
+        } finally {
+          gate.complete();
+        }
+      } catch (e) {
+        if (!mounted) return;
+        setState(() {
+          msg.sending = false;
+          msg.failed = true;
+          sealing(false);
+          if (devKeyFailed(e)) {
+            _devKeyFailed = true;
+          } else {
+            _status = l10n.chatNoSignalSessionRe;
+          }
+        });
+        return;
+      }
+      // fire and forget: a failure marks the row for retry
+      setState(() {
+        sealing(false);
+        _status = '';
+        _devKeyFailed = false;
+        if (_requestPending) _sentCount++;
+      });
+      handed = true;
+      Future<String>(() => _wireText(msgUid, cipher))
+          .whenComplete(() => _textInflight.remove(msgUid))
+          .then((result) => _finishTextSend(msg, result));
+    } finally {
+      if (!handed) _textInflight.remove(msgUid);
+    }
   }
 
   @override
@@ -3571,6 +3556,17 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (!_underLock) return;
     _underLock = false;
     if (!(ModalRoute.of(context)?.isCurrent ?? false)) return;
+    claimChat(widget.peerHaloId);
+    _markRead();
+  }
+
+  // a chat pushed over this one closed: this is the one being read again
+  @override
+  void backOnTop() {
+    if (lockGuard.isLocked()) {
+      _underLock = true;
+      return;
+    }
     claimChat(widget.peerHaloId);
     _markRead();
   }

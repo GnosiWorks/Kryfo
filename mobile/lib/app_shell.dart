@@ -3,6 +3,7 @@
 // what the app runs
 import 'package:flutter/material.dart';
 
+import 'back_on_top.dart';
 import 'l10n/app_localizations.dart';
 import 'lock_layer.dart';
 import 'theme.dart';
@@ -16,6 +17,8 @@ MaterialApp haloAppShell({
 }) {
   return MaterialApp(
     navigatorKey: navigatorKey,
+    // a chat under one that closes takes the screen back
+    navigatorObservers: [pageRoutes],
     // back reaches android through the lock, which keeps it while it is up
     onNavigationNotification: lockBack.navigation,
     scaffoldMessengerKey: haloMessengerKey,

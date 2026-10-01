@@ -9,6 +9,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
+import '../back_on_top.dart';
+import '../forward.dart';
 import '../picked.dart';
 import 'package:share_plus/share_plus.dart';
 import '../widgets/press_scale.dart';
@@ -118,7 +120,7 @@ class GroupChatScreen extends StatefulWidget {
 }
 
 class _GroupChatScreenState extends State<GroupChatScreen>
-    with WidgetsBindingObserver {
+    with WidgetsBindingObserver, BackOnTop<GroupChatScreen> {
   final _msgCtrl = TextEditingController();
   // the people @ can offer, refreshed with the roster
   List<MentionCandidate> _mentionable = const [];
@@ -2039,7 +2041,13 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                     dismiss();
                     _toggleSavedGroup(target);
                   },
-                  onForward: target.text.isEmpty || target.sticker != null
+                  onForward:
+                      !canForward(
+                        text: target.text,
+                        mediaPath: target.mediaPath,
+                        filePath: target.filePath,
+                        sticker: target.sticker != null,
+                      )
                       ? null
                       : () {
                           dismiss();
@@ -2661,6 +2669,17 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (!_underLock) return;
     _underLock = false;
     if (!(ModalRoute.of(context)?.isCurrent ?? false)) return;
+    claimChat('group:${widget.groupId}');
+    _markRead();
+  }
+
+  // a screen pushed over this one closed: this is the one being read again
+  @override
+  void backOnTop() {
+    if (lockGuard.isLocked()) {
+      _underLock = true;
+      return;
+    }
     claimChat('group:${widget.groupId}');
     _markRead();
   }
