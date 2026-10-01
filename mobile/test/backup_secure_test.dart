@@ -14,6 +14,7 @@ void main() {
       'my_handle_listed',
       'my_handle_name',
       'peer_fc',
+      'my_avatar',
     ]);
   });
 

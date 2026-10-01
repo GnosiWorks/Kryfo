@@ -12,7 +12,6 @@ import '../widgets/fit_column.dart';
 import '../theme.dart';
 import '../widgets/pin_pad.dart';
 import '../l10n/l10n.dart';
-import '../l10n/numbers.dart';
 
 class LockScreen extends StatefulWidget {
   const LockScreen({super.key, this.lock});
@@ -247,9 +246,7 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
                     duration: const Duration(milliseconds: 200),
                     child: Text(
                       _held
-                          ? l10n.lockTooManyTriesS(
-                              whole(_lock.throttleLeft.inSeconds + 1),
-                            )
+                          ? tooManyTriesLine(_lock.throttleLeft)
                           : _wrong
                           ? l10n.lockNotIt
                           : l10n.lockYourPin,

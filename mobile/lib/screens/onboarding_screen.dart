@@ -17,7 +17,7 @@ import '../main.dart' show appState, AppState, handleHaloUri;
 import 'scan_screen.dart';
 import 'avatar_picker_screen.dart' show AvatarChoiceEditor;
 import '../widgets/kryfo_avatar.dart';
-import '../widgets/motion.dart' show haloRoute;
+import '../widgets/motion.dart' show haloRoute, motionStill;
 import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
 import '../l10n/marked.dart';
@@ -345,11 +345,25 @@ class _IdentityScreenState extends State<_IdentityScreen>
     super.dispose();
   }
 
+  // the first key's signal setup may still be running: the button turns
+  // until the new name is ready, and taps meanwhile change nothing
+  bool _busy = false;
+
   Future<void> _regenerate() async {
-    await widget.appState.regenerateIdentity();
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      await widget.appState.regenerateIdentity();
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
     if (!mounted) return;
     setState(() => _revealKey++);
     _play();
+  }
+
+  void _continue() {
+    if (!_busy) widget.onContinue();
   }
 
   List<String> get _words {
@@ -440,16 +454,39 @@ class _IdentityScreenState extends State<_IdentityScreen>
                         border: Border.all(color: HaloColors.line2, width: 0.5),
                         borderRadius: BorderRadius.circular(999),
                       ),
-                      child: Text(
-                        l10n.onboardingTryAnother,
-                        textAlign: TextAlign.center,
-                        style: HaloType.sans(size: 12, color: HaloColors.text2),
+                      // the label keeps the size while the arc turns
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Opacity(
+                            opacity: _busy ? 0 : 1,
+                            child: Text(
+                              l10n.onboardingTryAnother,
+                              textAlign: TextAlign.center,
+                              style: HaloType.sans(
+                                size: 12,
+                                color: HaloColors.text2,
+                              ),
+                            ),
+                          ),
+                          if (_busy)
+                            SizedBox(
+                              key: const ValueKey('regenerating'),
+                              width: 12,
+                              height: 12,
+                              child: CircularProgressIndicator(
+                                value: motionStill(context) ? 0.3 : null,
+                                strokeWidth: 1.5,
+                                color: HaloColors.text2,
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                   ),
                   PressScale(
                     scale: 0.96,
-                    onTap: widget.onContinue,
+                    onTap: _continue,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 22,

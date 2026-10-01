@@ -20,6 +20,7 @@ import 'container.dart';
 import 'dlog.dart';
 import 'engine_strings.dart';
 import 'l10n/l10n.dart';
+import 'l10n/numbers.dart';
 import 'lock_guard.dart' show lockGuard;
 import 'notifications.dart';
 
@@ -530,6 +531,10 @@ class LockState extends ChangeNotifier {
   // whether the decoy has a wipe pin, or a decoy pin, of its own
   static const _kDWipe = 'halo.lock.d.wipe';
   static const _kDDecoy = 'halo.lock.d.decoy';
+  // the fingerprint switch as the decoy shows it. a finger opens the
+  // everyday app, so the decoy's switch is a setting of its own and never
+  // the real one
+  static const _kDBio = 'halo.lock.d.bio';
   // legacy sha256("salt:pin") keys, kept until migrated
   static const _kHash = 'halo.lock.pin_hash';
   static const _kSalt = 'halo.lock.pin_salt';
@@ -570,7 +575,9 @@ class LockState extends ChangeNotifier {
   bool get locked => (_enabled || _unreadable) && _locked;
   bool get biometric => _biometric;
   bool get bioSupported => _bioSupported;
-  bool get panicEnabled => _inDecoy ? _dWipe : _panicEnabled;
+  bool get panicEnabled => _inDecoy ? _dWipe && !_dWipeHidden : _panicEnabled;
+  // the fingerprint switch on the App lock screen of this session
+  bool get biometricShown => _inDecoy ? _dBio : _biometric;
 
   // a decoy session is open: the App lock screen works on the decoy's own
   // entries. a pin that clashes with one it cannot see is taken and kept
@@ -593,6 +600,11 @@ class LockState extends ChangeNotifier {
   bool _paused = false;
   bool _dWipe = false;
   bool _dDecoy = false;
+  bool _dBio = false;
+  // a turn off in the decoy shows its wipe pin gone, as a turn off does
+  // anywhere. its entry stays until the next start, or goes when a pin is
+  // set again
+  bool _dWipeHidden = false;
   // what the App lock screen shows as on
   bool get lockOn => _enabled && !_paused;
   bool get decoyPinOn => _dDecoy;
@@ -613,6 +625,7 @@ class LockState extends ChangeNotifier {
       _panicEnabled = (await _store.read(_kWipeOn)) == 'true';
       _dWipe = (await _store.read(_kDWipe)) == 'true';
       _dDecoy = (await _store.read(_kDDecoy)) == 'true';
+      _dBio = (await _store.read(_kDBio)) == 'true';
       _table = await _store.read(_kTable);
       _legacy = {
         'as': await _store.read(_kSalt) ?? '',
@@ -870,14 +883,18 @@ class LockState extends ChangeNotifier {
 
   // false when the pin is already in use: the screen says "pick a
   // different pin" and never which one it matched
-  Future<bool> setupPin(String pin) => _inDecoy
-      ? _setup(
-          pin,
-          PinSlot.decoy,
-          PinKind.decoy,
-          container: HaloContainer.decoy.id,
-        )
-      : _setup(pin, PinSlot.app, PinKind.everyday);
+  Future<bool> setupPin(String pin) async {
+    if (!_inDecoy) return _setup(pin, PinSlot.app, PinKind.everyday);
+    // the wipe pin went with the turn off, as the sheet said: a pin set
+    // again starts without it, so no pin wipes that shows as gone
+    if (_dWipeHidden) await _dropDecoyWipe();
+    return _setup(
+      pin,
+      PinSlot.decoy,
+      PinKind.decoy,
+      container: HaloContainer.decoy.id,
+    );
+  }
 
   // the decoy's pin opens the decoy container. its entry is written last
   // when a decoy is made, and cleared first when one is removed
@@ -913,8 +930,11 @@ class LockState extends ChangeNotifier {
     }
     await _store.delete(_kDWipe);
     await _store.delete(_kDDecoy);
+    await _store.delete(_kDBio);
     _dWipe = false;
     _dDecoy = false;
+    _dBio = false;
+    _dWipeHidden = false;
     notifyListeners();
   }
 
@@ -1030,6 +1050,7 @@ class LockState extends ChangeNotifier {
       if (ok) {
         await _store.write(_kDWipe, 'true');
         _dWipe = true;
+        _dWipeHidden = false;
         notifyListeners();
       }
       return ok;
@@ -1091,6 +1112,8 @@ class LockState extends ChangeNotifier {
       if (!wasOn) await setHideNotifContent(true);
       _locked = false;
     }
+    // the decoy's own pin set again after a turn off there: it locks again
+    if (_inDecoy && slot == PinSlot.decoy) _paused = false;
     notifyListeners();
     return true;
   }
@@ -1107,16 +1130,21 @@ class LockState extends ChangeNotifier {
     return false;
   }
 
+  Future<void> _dropDecoyWipe() async {
+    final t = _table;
+    if (t != null) {
+      final out = await _engine.clear(t, PinSlot.decoyWipe);
+      await _store.write(_kTable, out);
+      _table = out;
+    }
+    await _store.delete(_kDWipe);
+    _dWipe = false;
+    _dWipeHidden = false;
+  }
+
   Future<void> disablePanicPin() async {
     if (_inDecoy) {
-      final t = _table;
-      if (t != null) {
-        final out = await _engine.clear(t, PinSlot.decoyWipe);
-        await _store.write(_kTable, out);
-        _table = out;
-      }
-      await _store.delete(_kDWipe);
-      _dWipe = false;
+      await _dropDecoyWipe();
       notifyListeners();
       return;
     }
@@ -1139,6 +1167,7 @@ class LockState extends ChangeNotifier {
   Future<void> disable() async {
     if (_inDecoy) {
       _paused = true;
+      _dWipeHidden = true;
       notifyListeners();
       return;
     }
@@ -1150,6 +1179,7 @@ class LockState extends ChangeNotifier {
       _kWipeOn,
       _kDWipe,
       _kDDecoy,
+      _kDBio,
       _kHash,
       _kSalt,
       _kPanicHash,
@@ -1166,10 +1196,21 @@ class LockState extends ChangeNotifier {
     _locked = false;
     _biometric = false;
     _panicEnabled = false;
+    _dWipe = false;
+    _dDecoy = false;
+    _dBio = false;
     notifyListeners();
   }
 
   Future<bool> setBiometric(bool v) async {
+    // inside the decoy only its own switch moves: the everyday app's
+    // fingerprint key is neither made nor deleted from there
+    if (_inDecoy) {
+      await _store.write(_kDBio, v ? 'true' : 'false');
+      _dBio = v;
+      notifyListeners();
+      return true;
+    }
     if (v && !await _bio.enable()) return false;
     if (!v) await _bio.disable();
     await _store.write(_kBio, v ? 'true' : 'false');
@@ -1261,3 +1302,17 @@ class LockState extends ChangeNotifier {
 }
 
 final lockState = LockState();
+
+/// how long the pad is held, as a person reads it: seconds up to a minute
+/// and a half, then minutes and seconds, then hours, minutes and seconds,
+/// in the language's own digits
+String tooManyTriesLine(Duration left) {
+  final s = left.inSeconds + 1;
+  if (s <= 90) return l10n.lockTooManyTriesS(whole(s));
+  final h = s ~/ 3600;
+  final m = s % 3600 ~/ 60;
+  final sec = twoDigits(s % 60);
+  return l10n.lockTooManyTriesFor(
+    h > 0 ? '${whole(h)}:${twoDigits(m)}:$sec' : '${whole(m)}:$sec',
+  );
+}

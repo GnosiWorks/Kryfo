@@ -7118,6 +7118,25 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get requestsSomeoneNew => '陌生人';
+
+  @override
+  String get appYourOwnInvite => '这是你自己的邀请。分享给别人才能互相连接。';
+
+  @override
+  String appTheyAreBlocked(Object id) {
+    return '你已屏蔽 $id。请在设置的“已屏蔽”中取消屏蔽后再添加。';
+  }
+
+  @override
+  String get devLinkGone => '你已删除与 Marios 的聊天。要开始新的聊天，请在设置中点按“给 Marios 发消息”。';
+
+  @override
+  String get pairCodeCouldNotReach => '连接不上。请检查网络后重试。';
+
+  @override
+  String lockTooManyTriesFor(Object left) {
+    return '尝试次数过多 · $left';
+  }
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -14142,4 +14161,23 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get requestsSomeoneNew => '陌生人';
+
+  @override
+  String get appYourOwnInvite => '這是你自己的邀請。分享給別人才能互相連線。';
+
+  @override
+  String appTheyAreBlocked(Object id) {
+    return '你已封鎖 $id。請在設定的「已封鎖」中解除封鎖後再新增。';
+  }
+
+  @override
+  String get devLinkGone => '你已刪除與 Marios 的聊天。要開始新的聊天，請在設定中點按「傳訊息給 Marios」。';
+
+  @override
+  String get pairCodeCouldNotReach => '連線不上。請檢查網路後再試一次。';
+
+  @override
+  String lockTooManyTriesFor(Object left) {
+    return '嘗試次數過多 · $left';
+  }
 }

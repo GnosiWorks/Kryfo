@@ -25,7 +25,14 @@ import 'package:kryfo/devchat/dev_key.dart';
 import 'package:kryfo/devchat/support.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
-    show AppIo, AppState, HaloDb, claimChat, releaseChat, useDatabasesForTest;
+    show
+        AppIo,
+        AppState,
+        HaloDb,
+        claimChat,
+        kRequestRows,
+        releaseChat,
+        useDatabasesForTest;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
@@ -75,9 +82,21 @@ DevKey _key(String xPub, {DevKeyStatus status = DevKeyStatus.current}) =>
 
 // the one count the requests pin asks in sql
 class _Mem extends MemDb {
-  static const _count =
-      'SELECT COUNT(*) c FROM contacts WHERE accepted = 0 AND blocked = 0 '
-      'AND IFNULL(archived, 0) = 0';
+  static const _count = 'SELECT COUNT(*) c FROM contacts WHERE $kRequestRows';
+
+  // a request as kRequestRows has it: not accepted, not blocked, not parked,
+  // and one who wrote one to one, waits sealed, or was introduced
+  bool asked(Map<String, Object?> r) {
+    final id = r['halo_id'];
+    return r['accepted'] == 0 &&
+        r['blocked'] == 0 &&
+        (r['archived'] ?? 0) == 0 &&
+        (rows(
+              'messages',
+            ).any((m) => m['peer_id'] == id && m['group_id'] == null) ||
+            rows('held_onion').any((h) => h['peer_id'] == id) ||
+            rows('vouches').any((v) => v['halo_id'] == id));
+  }
 
   @override
   Future<List<Map<String, Object?>>> rawQuery(
@@ -86,16 +105,7 @@ class _Mem extends MemDb {
   ]) async {
     if (sql == _count) {
       return [
-        {
-          'c': rows('contacts')
-              .where(
-                (r) =>
-                    r['accepted'] == 0 &&
-                    r['blocked'] == 0 &&
-                    (r['archived'] ?? 0) == 0,
-              )
-              .length,
-        },
+        {'c': rows('contacts').where(asked).length},
       ];
     }
     return super.rawQuery(sql, arguments);
@@ -158,6 +168,9 @@ class _Phone extends HaloDb {
   Future<List<Map<String, Object?>>> pendingRequests() async => _people(
     (r) => r['accepted'] == 0 && r['blocked'] == 0 && (r['archived'] ?? 0) == 0,
   );
+  @override
+  Future<List<Map<String, Object?>>> askedRequests() async =>
+      _people(mem.asked);
   @override
   Future<List<Map<String, Object?>>> parkedRequests() async => _people(
     (r) => r['accepted'] == 0 && r['blocked'] == 0 && r['archived'] == 1,
@@ -706,6 +719,33 @@ void main() {
   });
 
   group('the lists', () {
+    test('a group member known only by key is no request, and the receive '
+        'side still tries them', () async {
+      final w = await _World.make(dev: false);
+      const member = 'member-key-only';
+      await w.phone.person(member, accepted: 0);
+      await w.phone.mem.insert('messages', {
+        'peer_id': member,
+        'direction': 'in',
+        'plaintext': 'in the group',
+        'sent_at': 1,
+        'msg_uid': 'g-1',
+        'group_id': 'grp000000001',
+      });
+      await w.stranger(_r);
+      await w.onion(_r, await w.frame('hello', marked: false));
+      await w.app.refreshContacts();
+      expect(
+        [for (final r in await w.phone.requestsInbox()) r['halo_id']],
+        [_r],
+      );
+      expect(await w.phone.pendingRequestCount(), 1);
+      expect(w.app.pendingCount, 1);
+      expect([
+        for (final r in await w.phone.pendingRequests()) r['halo_id'],
+      ], containsAll([member, _r]));
+    });
+
     test(
       'requests, their count and the contacts leave support chats out',
       () async {

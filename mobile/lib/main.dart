@@ -63,6 +63,7 @@ import 'outbox.dart';
 import 'supporter.dart';
 import 'message_envelope.dart';
 import 'polls.dart';
+import 'open_file.dart' show nameSaysVideo;
 import 'search.dart';
 import 'search_bench.dart';
 import 'session.dart';
@@ -431,7 +432,7 @@ class HaloEngine {
   Future<String> pairCodeFetch(String code) => _pairCodeOnIsolate(
     code,
     null,
-  ).timeout(const Duration(seconds: 40), onTimeout: () => 'empty');
+  ).timeout(const Duration(seconds: 40), onTimeout: () => 'error: unreachable');
 
   // unlike every other subscription this needs no contacts
   void subscribeFirstContactBg(int counter) {
@@ -2201,6 +2202,8 @@ class HaloDb {
   }
 
   // unknown senders waiting for accept/block. blocked ones stay hidden.
+  // the receive side tries and listens for all of these, a group member
+  // known only by key included
   Future<List<Map<String, Object?>>> pendingRequests() async {
     final db = await open();
     return db.query(
@@ -2208,6 +2211,12 @@ class HaloDb {
       where: 'accepted = 0 AND blocked = 0 AND IFNULL(archived, 0) = 0',
       orderBy: 'last_seen DESC',
     );
+  }
+
+  // of those, the ones who asked: what the requests inbox shows
+  Future<List<Map<String, Object?>>> askedRequests() async {
+    final db = await open();
+    return db.query('contacts', where: kRequestRows, orderBy: 'last_seen DESC');
   }
 
   // declined and parked: out of the inbox, but a second message still has
@@ -2223,7 +2232,7 @@ class HaloDb {
   // the requests inbox: support chats wait in their own, though the
   // receive side still tries them as requests
   Future<List<Map<String, Object?>>> requestsInbox() async {
-    final rows = await pendingRequests();
+    final rows = await askedRequests();
     if (rows.isEmpty) return rows;
     return withoutSupport(rows, await support.ids());
   }
@@ -2231,7 +2240,7 @@ class HaloDb {
   Future<int> pendingRequestCount() async {
     final db = await open();
     final r = await db.rawQuery(
-      'SELECT COUNT(*) c FROM contacts WHERE accepted = 0 AND blocked = 0 AND IFNULL(archived, 0) = 0',
+      'SELECT COUNT(*) c FROM contacts WHERE $kRequestRows',
     );
     final n = (r.first['c'] as int?) ?? 0;
     if (n == 0 || (await support.ids()).isEmpty) return n;
@@ -4305,6 +4314,25 @@ Future<void> _devSignalTables(Database db) async {
   }
 }
 
+/// the contacts rows the requests inbox holds: someone not accepted who
+/// wrote one to one, waits sealed, or was introduced. a group member's
+/// key-only row is none of these and asked for nothing
+@visibleForTesting
+const kRequestRows =
+    'accepted = 0 AND blocked = 0 AND IFNULL(archived, 0) = 0 AND ('
+    'EXISTS (SELECT 1 FROM messages m WHERE m.peer_id = contacts.halo_id '
+    'AND m.group_id IS NULL) OR '
+    'EXISTS (SELECT 1 FROM held_onion h WHERE h.peer_id = contacts.halo_id) OR '
+    'EXISTS (SELECT 1 FROM vouches v WHERE v.halo_id = contacts.halo_id))';
+
+/// what a notification says for a message with no text: what kind of
+/// file it is, never the name a voice note or a camera clip was saved under
+String notifMediaLine(String? fileName, String? mediaPath) {
+  if (fileName == 'voice.wav') return l10n.appVoiceMessage;
+  if (nameSaysVideo(fileName)) return l10n.chatVideo;
+  return fileName ?? (mediaPath != null ? l10n.appPhoto : '');
+}
+
 Future<String> makePreKeyBundleB64([SignalSession? of]) async {
   final ss = of ?? signalSession;
   final spk = await ss.signedPreKeyStore.loadSignedPreKey(1);
@@ -4644,6 +4672,9 @@ Future<(String, bool)> handleHaloUriAdded(String raw) async {
   }
   final parsed = parseHaloUri(raw);
   if (parsed == null) return (l10n.appInvalidUri, false);
+  // one's own invite adds no one: a row and a session with oneself would
+  // only put oneself in the chat list
+  if (parsed['id'] == appState.sessionId) return (l10n.appYourOwnInvite, false);
   // a card naming the developer is taken on his keys alone: his own opens
   // his chat and adds nothing, one with his words and another key is
   // refused, and a dev chat id is never a card's
@@ -4661,7 +4692,10 @@ Future<(String, bool)> handleHaloUriAdded(String raw) async {
     case DevCard.dev:
       String? chat;
       try {
-        chat = (await session.devChat.load())?.chatId;
+        final row = await session.devChat.load();
+        // a deleted chat comes back only from its settings row
+        if (row?.state == DevState.gone) return (l10n.devLinkGone, false);
+        chat = row?.chatId;
       } catch (e) {
         dlog('dev link: $e');
       }
@@ -4686,6 +4720,11 @@ Future<(String, bool)> handleHaloUriAdded(String raw) async {
   if (bound != null && !_eqBytes(bound, cardKey)) {
     return (l10n.appLinkOtherKey(parsed['id']!), false);
   }
+  // someone blocked stays blocked: an add would say they can be written to
+  // while nothing of theirs is heard. the blocked list lets them back
+  if (await session.isBlocked(parsed['id']!)) {
+    return (l10n.appTheyAreBlocked(parsed['id']!), false);
+  }
   if (parsed['v'] == '2' || parsed['v'] == '3') {
     final already = await session.getContact(parsed['id']!) != null;
     // a quiet session keeps the contact on this phone and nothing more: the
@@ -4700,6 +4739,7 @@ Future<(String, bool)> handleHaloUriAdded(String raw) async {
     await session.upsertContact(parsed['id']!, parsed['onion']!, '');
     await session.setPeerBundle(parsed['id']!, parsed['bundle']!);
     if (sessionQuiet) {
+      await appState.refreshContacts();
       return (
         already
             ? l10n.appAlreadySaved('${parsed['id']}')
@@ -4717,6 +4757,8 @@ Future<(String, bool)> handleHaloUriAdded(String raw) async {
       await appState.rememberPeerFc(parsed['id']!, fc);
     }
     await appState.subscribePeer(parsed['id']!);
+    // home, the pickers and the introductions show them now
+    await appState.refreshContacts();
     return (
       already
           ? l10n.appAlreadySaved('${parsed['id']}')
@@ -6974,6 +7016,9 @@ class AppState extends ChangeNotifier {
   // the same for the invite address's counter
   bool _fcUnread = false;
 
+  @visibleForTesting
+  Future<void> loadFirstContact() => _loadFirstContact();
+
   Future<void> _loadFirstContact() async {
     const st = secureStore;
     // a counter that does not read leaves the invite address unheard until
@@ -7825,6 +7870,12 @@ class AppState extends ChangeNotifier {
     final String notifBody;
     final String notifPayload;
     final bool suppress;
+    // the name given to them here, as the chat list shows it
+    final nickname =
+        (await db.getContact(senderHaloId))?['nickname'] as String?;
+    final named = nickname == null || nickname.isEmpty
+        ? senderHaloId
+        : nickname;
     if (isGroup) {
       final g = await db.getGroup(env.groupId!);
       notifTitle = (g?['name'] as String?) ?? l10n.appGroup2;
@@ -7834,12 +7885,10 @@ class AppState extends ChangeNotifier {
           ? l10n.pollPreview(env.message)
           : env.message.isNotEmpty
           ? env.message
-          : (fileName == 'voice.wav'
-                ? l10n.appVoiceMessage
-                : fileName ?? (mediaPath != null ? l10n.appPhoto : ''));
+          : notifMediaLine(fileName, mediaPath);
       final who = looksLikeRoomKey(senderHaloId)
           ? roomTag(senderHaloId)
-          : senderHaloId;
+          : named;
       notifBody = '$who: $gBody';
       notifPayload = 'group:${env.groupId}';
       suppress = reading;
@@ -7852,12 +7901,12 @@ class AppState extends ChangeNotifier {
       suppress = reading || await db.isMuted(senderHaloId);
     } else {
       // his chat rings under his name, never its id
-      notifTitle = isDevChat(senderHaloId) ? l10n.devName : senderHaloId;
+      notifTitle = isDevChat(senderHaloId) ? l10n.devName : named;
       notifBody = sticker != null
           ? l10n.stickerLabel
           : env.message.isNotEmpty
           ? env.message
-          : (fileName ?? (mediaPath != null ? l10n.appPhoto : env.message));
+          : notifMediaLine(fileName, mediaPath);
       notifPayload = senderHaloId;
       suppress = reading || await db.isMuted(senderHaloId);
     }
@@ -10178,7 +10227,7 @@ class AppState extends ChangeNotifier {
     // above needs it, so it waits until the home paints. tor + nostr also
     // start after this, and both take longer to warm than the prekeys, so
     // the session is ready well before any message can arrive.
-    _bootSignal().whenComplete(() {
+    _signalBoot = _bootSignal().whenComplete(() {
       dlog('BOOT signal (deferred) done');
       if (!_signalReady.isCompleted) _signalReady.complete();
     });
@@ -10426,6 +10475,7 @@ class AppState extends ChangeNotifier {
   // done once the signal store can take a bundle. a failed boot completes
   // it too, so a waiting link fails loudly rather than hangs
   final _signalReady = Completer<void>();
+  Future<void>? _signalBoot;
 
   Future<void> _bootSignal() async {
     try {
@@ -10554,13 +10604,24 @@ class AppState extends ChangeNotifier {
     await refreshContacts();
   }
 
+  // everyone blocked, contacts or not: a request, a group member or a
+  // support chat blocked before it was ever accepted is here too, or the
+  // block could never be undone
   Future<List<({String haloId, String? nickname})>> blockedContacts() async {
-    final rows = await session.contacts();
-    return [
-      for (final r in rows)
-        if ((r['blocked'] as int? ?? 0) == 1)
-          (haloId: r['halo_id'] as String, nickname: r['nickname'] as String?),
-    ];
+    final s = session;
+    final ids = await s.blockedIds();
+    final out = <({String haloId, String? nickname})>[];
+    for (final r in await s.contacts()) {
+      final id = r['halo_id'] as String;
+      if (ids.remove(id)) {
+        out.add((haloId: id, nickname: r['nickname'] as String?));
+      }
+    }
+    for (final id in ids.toList()..sort()) {
+      final r = await s.getContact(id);
+      out.add((haloId: id, nickname: r?['nickname'] as String?));
+    }
+    return out;
   }
 
   Future<void> refreshContacts() async {
@@ -12299,13 +12360,41 @@ class AppState extends ChangeNotifier {
   }
 
   // the engine's own identity, which only the everyday container holds
-  Future<void> regenerateIdentity() async {
+  // one new identity at a time: a second ask while one is being made gets
+  // that one, so signal never ends on a key the engine no longer holds
+  Future<void>? _regenerating;
+  Future<void> regenerateIdentity() => _regenerating ??= _regenerateIdentity()
+      .whenComplete(() => _regenerating = null);
+
+  Future<void> _regenerateIdentity() async {
     if (sessionQuiet) return;
+    // a first signal boot still running ends on the old key, then all that
+    // is made from the key is made again from the new one
+    await _signalBoot;
     myId = engine.generateIdentity();
     await live.saveIdentity(myId, engine.myEdPrivkey(), engine.myXPrivkey());
     myXPub = engine.myXPubkey();
     restored = false;
+    if (signalSession.ready) await _rekeySignal();
+    // the invite address is derived from the key too
+    if (_fcLoaded) engine.subscribeFirstContactBg(_fcCounter);
     notifyListeners();
+  }
+
+  Future<void> _rekeySignal() async {
+    try {
+      final database = await live.open();
+      final xpb = _hexDecode(engine.myXPrivkey());
+      await signalSession.rekey(
+        database: database,
+        xPubBytes: _hexDecode(engine.myXPubkey()),
+        xPrivBytes: xpb,
+      );
+      _zeroBytes(xpb);
+    } catch (e) {
+      // the next start bootstraps on the saved key
+      dlog('signal rekey failed (${e.runtimeType})');
+    }
   }
 
   Future<void> subscribePeer(String haloId) async {

@@ -322,7 +322,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               final shots =
                   appState.blockScreenshotsApplied ||
                   appState.screenSecureByLock;
-              final lock = lockState.enabled;
+              // as the App lock screen reads it: a lock turned off in a
+              // decoy session is off
+              final lock = lockState.lockOn;
               return Container(
                 margin: const EdgeInsets.only(bottom: 24),
                 padding: const EdgeInsets.fromLTRB(12, 14, 12, 8),
@@ -544,7 +546,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   icon: Icons.lock_outline,
                   label: l10n.settingsAppLock2,
                   hint: l10n.settingsYourPinAndA,
-                  value: !lockState.enabled
+                  value: !lockState.lockOn
                       ? l10n.commonOff
                       : lockState.panicEnabled
                       ? l10n.settingsPinWipePin

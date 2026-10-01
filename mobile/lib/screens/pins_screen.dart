@@ -75,8 +75,8 @@ class _PinsScreenState extends State<PinsScreen> {
         // setup clears it
         dlog('lock: hidden chats not all gone (${e.runtimeType})');
       }
+      await _lock.disablePanicPin();
     }
-    await _lock.disablePanicPin();
     await _lock.disable();
   }
 
@@ -205,19 +205,21 @@ class _PinsScreenState extends State<PinsScreen> {
                 primary: on ? l10n.pinsChangePin : l10n.pinsSetAPin,
                 onPrimary: () async {
                   HapticFeedback.selectionClick();
+                  // a change asks for the pin there is first, as the
+                  // advanced flows do
                   await Navigator.of(
                     context,
-                  ).push(haloRoute(const LockSetupScreen()));
+                  ).push(haloRoute(LockSetupScreen(lock: _lock, check: on)));
                 },
                 secondary: on ? l10n.pinsTurnOff : null,
                 onSecondary: on ? _turnOff : null,
                 extra: on && _lock.bioSupported
                     ? _Toggle(
                         label: l10n.pinsUnlockWithFingerprint,
-                        on: _lock.biometric,
+                        on: _lock.biometricShown,
                         onTap: () {
                           HapticFeedback.selectionClick();
-                          _lock.setBiometric(!_lock.biometric);
+                          _lock.setBiometric(!_lock.biometricShown);
                         },
                       )
                     : null,

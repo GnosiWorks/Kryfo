@@ -1946,5 +1946,10 @@
   "devChatOptions": "聊天选项",
   "appLinkOtherKey": "此链接自称是 {id}，但其密钥不匹配。未添加。",
   "scamShieldSaysItIs": "自称是 {shown}，但密钥不匹配",
-  "requestsSomeoneNew": "陌生人"
+  "requestsSomeoneNew": "陌生人",
+  "appYourOwnInvite": "这是你自己的邀请。分享给别人才能互相连接。",
+  "appTheyAreBlocked": "你已屏蔽 {id}。请在设置的“已屏蔽”中取消屏蔽后再添加。",
+  "devLinkGone": "你已删除与 Marios 的聊天。要开始新的聊天，请在设置中点按“给 Marios 发消息”。",
+  "pairCodeCouldNotReach": "连接不上。请检查网络后重试。",
+  "lockTooManyTriesFor": "尝试次数过多 · {left}"
 }

@@ -1477,6 +1477,18 @@ void main() {
       expect(w.live.calls, isEmpty);
     });
 
+    test('his card after his chat was deleted says where a new one '
+        'starts, and opens nothing', () async {
+      final w = await _World.make();
+      await w.live.devChat.delete();
+      expect(
+        await handleHaloUriAdded(haloUriV3(_words, '', _m1.bundle, _m1.fc)),
+        (l10n.devLinkGone, false),
+      );
+      expect(opened, isEmpty);
+      expect((await w.live.devChat.load())?.state, DevState.gone);
+    });
+
     test('the line is in every language, with his name as it is', () {
       final files = Directory(
         'lib/l10n',

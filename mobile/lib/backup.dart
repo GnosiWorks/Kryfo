@@ -244,10 +244,16 @@ Future<BackupSummary> inspectBackup(String blob, String passphrase) async {
   );
 }
 
-Future<void> restoreBackupBlob(String blob, String passphrase) async {
-  final payload = await _openPayload(blob, passphrase);
+Future<void> restoreBackupBlob(String blob, String passphrase) =>
+    _openPayload(blob, passphrase).then(landV1Payload);
 
+/// the end of a v1 restore, once the text file is open
+@visibleForTesting
+Future<void> landV1Payload(Map<String, dynamic> payload) async {
   final docsDir = await getApplicationDocumentsDirectory();
+  // in a decoy session an old file becomes the decoy's account, as a v2 one
+  // does, and the everyday one is not touched
+  if (sessionQuiet) return _landV1InDecoy(payload, docsDir.path);
 
   // db passphrase first: it must be in secure storage before the db opens
   final dbPassphrase = payload['dbPassphrase'] as String;
@@ -275,14 +281,15 @@ Future<void> restoreBackupBlob(String blob, String passphrase) async {
   }
 
   await restorePrefs(payload['prefs']);
+  // this device is where the identity lives now, whatever it was before
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.remove('moved.at');
 
   // a v1 backup carries none of these; what is here is the old identity's
   await _applyIdentitySecure(payload['secure']);
 
-  final defaultStorage = secureStore;
-  final onboardingDone = payload['onboardingDone'] as String?;
-  if (onboardingDone != null) {
-    await defaultStorage.write(key: 'onboarding_done', value: onboardingDone);
+  if (onboardingAfterRestore(payload['onboardingDone']) case final done?) {
+    await secureStore.write(key: 'onboarding_done', value: done);
   }
 
   // restoring the identity in the engine also rehydrates myId
@@ -290,6 +297,29 @@ Future<void> restoreBackupBlob(String blob, String passphrase) async {
   final xPriv = payload['xPriv'] as String;
   engine.restoreIdentity(edPriv, xPriv);
   dlog('backup: restored identity');
+}
+
+// a v1 payload staged as the files of a v2 one, then landed the same way
+Future<void> _landV1InDecoy(Map<String, dynamic> payload, String docs) async {
+  final root = Directory(
+    p.join((await getApplicationSupportDirectory()).path, _kRestoreQuiet),
+  );
+  if (await root.exists()) await root.delete(recursive: true);
+  await root.create(recursive: true);
+  final files = <Map<String, dynamic>>[];
+  Future<void> stage(String name, String b64) async {
+    final bytes = base64Decode(b64);
+    await File(p.join(root.path, name)).writeAsBytes(bytes, flush: true);
+    files.add({'name': name, 'size': bytes.length});
+  }
+
+  await stage('halo.db', payload['db'] as String);
+  final onion = payload['onionKey'];
+  if (onion is String) await stage('onion.key', onion);
+  await _landInDecoy(root.path, docs, {
+    'files': files,
+    'dbPassphrase': payload['dbPassphrase'],
+  });
 }
 
 // ───────────────────────── v2: the streamed file ─────────────────────────
@@ -331,7 +361,19 @@ bool restorableName(String name) {
 
 /// the prefs a restore takes from a file: the ones a backup ever carried
 /// that still mean something here
-const kRestorablePrefs = {'onboarding.complete'};
+const kRestorablePrefs = {
+  'onboarding.complete',
+  // the supporter badge and the receipt that proves it, as the restore
+  // sheet promises
+  'supporter_tier',
+  'supporter_receipt_payload',
+  'supporter_receipt_sig',
+};
+
+/// what a restore writes as onboarding_done: a file that says it was done
+/// says so as boot reads it, whatever word an older decoy backup used
+String? onboardingAfterRestore(Object? carried) =>
+    carried is String && carried.isNotEmpty ? 'true' : null;
 
 @visibleForTesting
 Future<void> restorePrefs(Object? carried) async {
@@ -513,9 +555,9 @@ Future<void> _addFolders(
 
 // what belongs to the identity but lives in secure storage, outside the
 // database: the public handle and its line, which first-contact address is
-// the live one, and where each contact takes first contact. without them a
-// restored phone does not know its own handle and can listen on a different
-// address than its published invite names.
+// the live one, where each contact takes first contact, and the face picked.
+// without them a restored phone does not know its own handle and can listen
+// on a different address than its published invite names.
 const kIdentitySecureKeys = [
   'my_handle',
   'my_handle_bio',
@@ -523,6 +565,7 @@ const kIdentitySecureKeys = [
   'my_handle_name',
   'fc_counter',
   'peer_fc',
+  'my_avatar',
 ];
 
 /// what a restore does to those keys: the carried ones are written, and
@@ -548,12 +591,29 @@ const kIdentitySecureKeys = [
   );
 }
 
-/// puts a handle back when a restore of the same identity removed it
-Future<void> keepHandleIfDropped(String handle) async {
+/// what the same identity coming back keeps when its own older file did
+/// not carry it: the handle, which the key still proves, and the face picked
+const kKeptForSameIdentity = ['my_handle', 'my_avatar'];
+
+/// those keys as they are before a restore. a decoy restore never touches
+/// the everyday ones, so it keeps nothing
+Future<Map<String, String>> readKeptForSameIdentity() async {
+  if (sessionQuiet) return const {};
   const st = secureStore;
-  final now = await st.read(key: 'my_handle');
-  if (now == null || now.isEmpty) {
-    await st.write(key: 'my_handle', value: handle);
+  final out = <String, String>{};
+  for (final k in kKeptForSameIdentity) {
+    final v = await st.read(key: k);
+    if (v != null && v.isNotEmpty) out[k] = v;
+  }
+  return out;
+}
+
+/// puts back what a restore of the same identity removed
+Future<void> keepIfDropped(Map<String, String> before) async {
+  const st = secureStore;
+  for (final e in before.entries) {
+    final now = await st.read(key: e.key);
+    if (now == null || now.isEmpty) await st.write(key: e.key, value: e.value);
   }
 }
 
@@ -680,7 +740,7 @@ Future<BackupDraft> draftBackup(
   if (dbKey == null) throw BackupError('db passphrase missing');
   final prefs = await SharedPreferences.getInstance();
   final prefsMap = <String, dynamic>{};
-  for (final k in ['onboarding.complete']) {
+  for (final k in kRestorablePrefs) {
     final v = prefs.get(k);
     if (v != null) prefsMap[k] = v;
   }
@@ -898,7 +958,7 @@ Future<BackupDraft> _draftQuiet(
     'dbPassphrase': dbKey,
     'prefs': <String, dynamic>{},
     'secure': <String, String>{},
-    'onboardingDone': '1',
+    'onboardingDone': 'true',
     'chunk': kBackupChunk,
     'files': [for (final f in files) f.toJson()],
     if (hidden) 'vault': {'key': key},
@@ -1406,9 +1466,8 @@ Future<void> restoreBackupFile(
   final prefs = await SharedPreferences.getInstance();
   await prefs.remove('moved.at');
   await _applyIdentitySecure(manifest['secure']);
-  final onboardingDone = manifest['onboardingDone'] as String?;
-  if (onboardingDone != null) {
-    await secureStore.write(key: 'onboarding_done', value: onboardingDone);
+  if (onboardingAfterRestore(manifest['onboardingDone']) case final done?) {
+    await secureStore.write(key: 'onboarding_done', value: done);
   }
   engine.restoreIdentity(
     manifest['edPriv'] as String,

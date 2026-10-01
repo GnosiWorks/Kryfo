@@ -7544,4 +7544,26 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get requestsSomeoneNew => 'Хтось новий';
+
+  @override
+  String get appYourOwnInvite =>
+      'Це твоє власне запрошення. Поділися ним з кимось, щоб зв’язатися.';
+
+  @override
+  String appTheyAreBlocked(Object id) {
+    return '$id у списку заблокованих. Розблокуй у налаштуваннях, у розділі «Заблоковані», щоб додати знову.';
+  }
+
+  @override
+  String get devLinkGone =>
+      'Чат із Marios видалено. Щоб почати новий, натисни «Написати Marios» у налаштуваннях.';
+
+  @override
+  String get pairCodeCouldNotReach =>
+      'Не вдалося під’єднатися. Перевір з’єднання і спробуй ще раз.';
+
+  @override
+  String lockTooManyTriesFor(Object left) {
+    return 'Забагато спроб · $left';
+  }
 }

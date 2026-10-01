@@ -1946,5 +1946,10 @@
   "devChatOptions": "Chat-Optionen",
   "appLinkOtherKey": "Dieser Link gibt sich als {id} aus, aber sein Schlüssel stimmt nicht überein. Er wurde nicht hinzugefügt.",
   "scamShieldSaysItIs": "Gibt sich als {shown} aus, aber der Schlüssel stimmt nicht überein",
-  "requestsSomeoneNew": "Jemand Neues"
+  "requestsSomeoneNew": "Jemand Neues",
+  "appYourOwnInvite": "Das ist deine eigene Einladung. Teile sie mit jemand anderem, um euch zu verbinden.",
+  "appTheyAreBlocked": "Du hast {id} blockiert. Gib die Person unter „Blockiert“ in den Einstellungen frei, um sie wieder hinzuzufügen.",
+  "devLinkGone": "Du hast den Chat mit Marios gelöscht. Für einen neuen tippe in den Einstellungen auf „Marios schreiben“.",
+  "pairCodeCouldNotReach": "Keine Verbindung. Prüf deine Verbindung und versuch es noch mal.",
+  "lockTooManyTriesFor": "Zu viele Versuche · {left}"
 }

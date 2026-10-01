@@ -250,3 +250,25 @@ func TestPairCodeEventHasItsOwnAuthor(t *testing.T) {
 		t.Fatalf("the event is not at the code's address: %v", tg)
 	}
 }
+
+// no relay answering says nothing about the code: the joiner is told it
+// was not reached, not that nothing is there. one relay answering is enough
+// for an empty code to read as empty
+func TestPairCodeUnreachableIsNotEmpty(t *testing.T) {
+	a := newRelayStandIn(t, 0)
+	useStandIns(t, modeBalanced, nil, a)
+	down, _ := refusingRelay(t)
+	other, _ := refusingRelay(t)
+	nostrMu.Lock()
+	nostrRelays = []string{down, other}
+	nostrMu.Unlock()
+	if got := pairCodeFetch("111111"); got != "error: unreachable" {
+		t.Fatalf("no relay answering gave %q", got)
+	}
+	nostrMu.Lock()
+	nostrRelays = []string{down, a.url()}
+	nostrMu.Unlock()
+	if got := pairCodeFetch("111111"); got != "empty" {
+		t.Fatalf("one relay answering gave %q", got)
+	}
+}

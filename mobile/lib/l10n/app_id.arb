@@ -1946,5 +1946,10 @@
   "devChatOptions": "Opsi obrolan",
   "appLinkOtherKey": "Tautan ini mengaku sebagai {id}, tapi kuncinya tidak cocok. Tidak ada yang ditambahkan.",
   "scamShieldSaysItIs": "Mengaku sebagai {shown}, tapi kuncinya tidak cocok",
-  "requestsSomeoneNew": "Orang baru"
+  "requestsSomeoneNew": "Orang baru",
+  "appYourOwnInvite": "Ini undanganmu sendiri. Bagikan ke orang lain untuk terhubung.",
+  "appTheyAreBlocked": "Kamu memblokir {id}. Buka blokirnya di “Diblokir” pada Pengaturan untuk menambahkannya lagi.",
+  "devLinkGone": "Kamu sudah menghapus chat dengan Marios. Untuk memulai yang baru, ketuk “Kirim pesan ke Marios” di Pengaturan.",
+  "pairCodeCouldNotReach": "Tidak bisa terhubung. Periksa koneksimu lalu coba lagi.",
+  "lockTooManyTriesFor": "Terlalu banyak percobaan · {left}"
 }

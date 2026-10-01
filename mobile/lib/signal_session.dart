@@ -89,6 +89,30 @@ class SignalSession {
     dlog('signal: bootstrapped (regId=$registrationId)');
   }
 
+  // a new identity in place of the one this store was opened with. the
+  // signed prekey is signed with the old key and the invite's prekey went
+  // out with it, so both are made again for the new one
+  Future<void> rekey({
+    required Database database,
+    required Uint8List xPubBytes,
+    required Uint8List xPrivBytes,
+    String prefix = '',
+  }) async {
+    _ready = false;
+    await database.delete('${prefix}signed_prekeys');
+    await database.delete(
+      '${prefix}prekeys',
+      where: 'id = ?',
+      whereArgs: [invitePreKeyId],
+    );
+    await bootstrap(
+      database: database,
+      xPubBytes: xPubBytes,
+      xPrivBytes: xPrivBytes,
+      prefix: prefix,
+    );
+  }
+
   // an identity that only ever opens sessions: its key pair and a
   // registration id of its own. nobody starts one with it, so it hands out
   // no prekeys and makes none

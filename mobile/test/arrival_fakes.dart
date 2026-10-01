@@ -199,7 +199,13 @@ class ArrivalIo implements AppIo {
     required String title,
     required String body,
     String? payload,
-  }) async => rang.add(payload ?? title);
+  }) async {
+    rang.add(payload ?? title);
+    shown.add((title, body));
+  }
+
+  // what each notification said
+  final shown = <(String, String)>[];
 
   @override
   Future<void> unnotify(String payload) async {}

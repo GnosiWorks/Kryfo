@@ -31,6 +31,12 @@ class _Rows extends ArrivalRows {
 
   @override
   Future<void> dropHeld(String peerId) async => calls.add('dropHeld:$peerId');
+
+  @override
+  Future<Set<String>> blockedIds() async => {
+    for (final p in people.values)
+      if (p['blocked'] == 1) p['halo_id'] as String,
+  };
 }
 
 class _World {
@@ -91,6 +97,27 @@ void main() {
       expect(w.io.listened, ['x-$_o']);
     },
   );
+
+  test('the blocked page lists everyone blocked, a stranger blocked from '
+      'a request too, and an unblock takes them off it', () async {
+    final w = await _World.make();
+    const stranger = 'stranger-asked-once';
+    const member = 'member-key-only';
+    w.live.person(stranger, accepted: 0);
+    w.live.person(member, accepted: 0);
+    w.live.people[member]!['nickname'] = 'Theo';
+    await w.app.block(_c);
+    await w.app.block(stranger);
+    await w.app.block(member);
+    final list = await w.app.blockedContacts();
+    expect([for (final b in list) b.haloId], [_c, member, stranger]);
+    expect(list[1].nickname, 'Theo');
+    await w.app.unblock(stranger);
+    expect(
+      [for (final b in await w.app.blockedContacts()) b.haloId],
+      [_c, member],
+    );
+  });
 
   test('a key someone else is heard on stays', () async {
     final w = await _World.make();
