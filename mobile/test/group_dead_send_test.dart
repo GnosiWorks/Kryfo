@@ -183,7 +183,9 @@ void main() {
     final db = await _open(t);
     db.hold = Completer<void>();
     await t.enterText(find.byType(TextField), 'one more');
+    // the send button pops in where the mic was
     await t.pump();
+    await t.pump(const Duration(milliseconds: 250));
     await t.tap(find.bySemanticsLabel(l10n.commonSend));
     await t.pump(const Duration(milliseconds: 300));
     expect(db.asked, hasLength(1));

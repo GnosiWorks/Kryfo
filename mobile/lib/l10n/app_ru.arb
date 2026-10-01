@@ -651,6 +651,7 @@
   "groupChatGhostModeOnBurns": "Исчезающие сообщения · исчезают через {fmtBurn}",
   "groupChatGroupCreatedSayHi": "Группа создана. Поздоровайся.",
   "groupChatNoMessagesYet": "Сообщений пока нет.",
+  "groupChatEveryoneHereReads": "Все здесь читают то, что ты пишешь.",
   "groupChatThisMessageCanT": "Это сообщение нельзя показать",
   "groupChatS": "{s} с",
   "groupChatM": "{s} мин",

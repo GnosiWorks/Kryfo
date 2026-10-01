@@ -651,6 +651,7 @@
   "groupChatGhostModeOnBurns": "限时消息 · {fmtBurn}后焚毁",
   "groupChatGroupCreatedSayHi": "群组已创建。打个招呼吧。",
   "groupChatNoMessagesYet": "还没有消息。",
+  "groupChatEveryoneHereReads": "这里的每个人都能看到你写的内容。",
   "groupChatThisMessageCanT": "这条消息无法显示",
   "groupChatS": "{s} 秒",
   "groupChatM": "{s} 分",

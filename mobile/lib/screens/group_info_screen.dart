@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // group info: name and member changes for the admin, leave for everyone
 
-import 'dart:io';
 import 'package:flutter/material.dart';
 import '../lock_state.dart' show lockState;
 import '../main.dart' show appState, session, GroupFull;
@@ -13,6 +12,13 @@ import 'room_link_sheet.dart';
 import '../widgets/motion.dart' show haloRoute;
 import 'package:flutter/services.dart';
 import 'chat_screen.dart' show MediaGalleryScreen, atmoFromName;
+import 'contact_screen.dart';
+import 'home_screen.dart' show ContactPreview;
+import '../widgets/contact_pick_row.dart';
+import '../widgets/ease_size.dart';
+import '../widgets/halo_buttons.dart';
+import '../widgets/shared_media.dart';
+import '../widgets/swap.dart';
 import 'wallpaper_sheet.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/halo_rows.dart';
@@ -56,12 +62,26 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
     (g) => g.groupId == widget.groupId && g.expiresAt != null,
   );
   List<String> _members = [];
-  bool _loading = true;
+  // the first read is in. until then the page draws from the chat list's
+  // row, so the tile can fly in and only the members fill in
+  bool _loaded = false;
+  int _seenCount = 0;
+  List<String> _media = const [];
+  bool _mediaLoaded = false;
+  Set<String> _secure = const {};
 
   @override
   void initState() {
     super.initState();
+    for (final g in appState.groups) {
+      if (g.groupId != widget.groupId) continue;
+      _name = g.name;
+      _isAdmin = g.isAdmin;
+      _seenCount = g.memberCount;
+      break;
+    }
     _load();
+    _loadMedia();
   }
 
   @override
@@ -79,8 +99,62 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
       _isAdmin = ((g?['is_admin'] as int?) ?? 0) == 1;
       _roomPub = g?['room_pub'] as String?;
       _members = members;
-      _loading = false;
+      _loaded = true;
     });
+  }
+
+  // apart from the members, so a long history never holds the list back.
+  // newest first; a file that went missing draws as a missing tile, so
+  // nothing is stat'ed up front
+  Future<void> _loadMedia() async {
+    final results = await Future.wait([
+      session.loadGroupMessages(widget.groupId),
+      session.blockedIds(),
+    ]);
+    final rows = results[0] as List<Map<String, Object?>>;
+    // a blocked member is out of sight here too, as in the chat
+    final blocked = results[1] as Set<String>;
+    final media = <String>[];
+    final secure = <String>{};
+    for (final r in rows.reversed) {
+      if (blocked.contains(r['peer_id'])) continue;
+      final mp = r['media_path'] as String?;
+      if (mp == null || mp.isEmpty) continue;
+      media.add(mp);
+      if ((r['secure'] as int? ?? 0) == 1) secure.add(mp);
+    }
+    if (!mounted) return;
+    setState(() {
+      _media = media;
+      _secure = secure;
+      _mediaLoaded = true;
+    });
+  }
+
+  ContactPreview? _contactOf(String id) {
+    for (final c in appState.contacts) {
+      if (c.haloId == id) return c;
+    }
+    return null;
+  }
+
+  // a member you know opens as anyone you know does
+  Future<void> _openMember(String id) async {
+    final c = _contactOf(id);
+    if (c == null) return;
+    final row = await session.getContact(id);
+    if (row == null || !mounted) return;
+    await Navigator.of(context).push(
+      haloRoute(
+        ContactScreen(
+          haloId: id,
+          avatarSeed: c.avatarSeed,
+          peerXPub: (row['xpub'] as String?) ?? '',
+          face: c.avatar,
+        ),
+      ),
+    );
+    if (mounted) setState(() {});
   }
 
   Future<void> _rename() async {
@@ -97,8 +171,10 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   }
 
   Future<void> _addMembers() async {
+    // the members are not read yet: anyone could look addable
+    if (!_loaded) return;
     final available = appState.contacts
-        .where((c) => !_members.contains(c.haloId))
+        .where((c) => !c.blocked && !_members.contains(c.haloId))
         .toList();
     if (available.isEmpty) {
       showHaloToast(context, l10n.groupInfoNoContactsToAdd);
@@ -129,7 +205,9 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   Future<void> _confirmRemove(String haloId) async {
     final ok = await showConfirmSheet(
       context,
-      title: l10n.groupInfoRemove(memberLabel(haloId)),
+      title: l10n.groupInfoRemove(
+        _contactOf(haloId)?.nickname ?? memberLabel(haloId),
+      ),
       line: l10n.groupInfoTheyWillStopReceiving,
       yes: l10n.commonRemove,
     );
@@ -150,19 +228,10 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
     await session.setGroupAtmosphere(widget.groupId, picked.name);
   }
 
-  Future<void> _openSharedMedia() async {
-    final rows = await session.loadGroupMessages(widget.groupId);
-    final paths = <String>[];
-    for (final r in rows) {
-      final mp = r['media_path'] as String?;
-      if (mp != null && mp.isNotEmpty && await File(mp).exists()) {
-        paths.add(mp);
-      }
-    }
-    if (!mounted) return;
+  void _openSharedMedia() {
     Navigator.of(context).push(
       haloRoute(
-        MediaGalleryScreen(paths: paths.reversed.toList(), title: _name),
+        MediaGalleryScreen(paths: _media, securePaths: _secure, title: _name),
       ),
     );
   }
@@ -176,6 +245,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
     );
     if (ok == true) {
       await session.clearGroupConversation(widget.groupId);
+      await _loadMedia();
       if (!mounted) return;
       showHaloToast(context, l10n.groupInfoConversationCleared);
     }
@@ -211,12 +281,6 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) {
-      return Scaffold(
-        backgroundColor: HaloColors.surface,
-        body: Center(child: CircularProgressIndicator(color: HaloColors.amber)),
-      );
-    }
     final myId = appState.sessionId;
     return Scaffold(
       backgroundColor: HaloColors.surface,
@@ -299,7 +363,9 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        l10n.groupInfo1Member(_members.length),
+                        l10n.groupInfo1Member(
+                          _loaded ? _members.length : _seenCount,
+                        ),
                         style: HaloType.mono(
                           size: 11,
                           color: HaloColors.text3,
@@ -334,14 +400,17 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 22),
+          // the section brings its own 18 on top
+          const SizedBox(height: 4),
+          SharedMediaSection(
+            paths: _media,
+            count: _media.length,
+            loaded: _mediaLoaded,
+            onOpen: _media.isEmpty ? null : _openSharedMedia,
+          ),
+          const SizedBox(height: 18),
           HaloGroup(
             children: [
-              HaloRow(
-                icon: Icons.photo_library_outlined,
-                label: l10n.groupInfoSharedMedia,
-                onTap: _openSharedMedia,
-              ),
               HaloRow(
                 icon: Icons.palette_outlined,
                 label: l10n.groupInfoWallpaper,
@@ -384,13 +453,27 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                 ),
             ],
           ),
-          MembersCard(
-            // under the lock nothing is being watched
-            quiet: lockGuard.isLocked(),
-            members: _members,
-            isMe: (m) => m == myId || (_isRoom && m == _roomPub),
-            canRemove: _isAdmin,
-            onRemove: _confirmRemove,
+          // the card comes in whole once the members are read, over a
+          // blank one the size the list said
+          EaseSize(
+            child: FadeSwap(
+              child: _loaded
+                  ? MembersCard(
+                      key: const ValueKey('members'),
+                      // under the lock nothing is being watched
+                      quiet: lockGuard.isLocked(),
+                      members: _members,
+                      isMe: (m) => m == myId || (_isRoom && m == _roomPub),
+                      canRemove: _isAdmin,
+                      onRemove: _confirmRemove,
+                      contactOf: _contactOf,
+                      onOpen: _openMember,
+                    )
+                  : _MembersWaiting(
+                      key: const ValueKey('members-waiting'),
+                      count: _seenCount,
+                    ),
+            ),
           ),
           const SizedBox(height: 14),
           // what cannot be taken back, apart and in rose
@@ -490,9 +573,9 @@ class _Pill extends StatelessWidget {
   }
 }
 
-// everyone in the group, on one card: a face, the three words, and for the
-// admin a way to take someone out. someone added grows in, someone who
-// went folds away where they were
+// everyone in the group, on one card: a face, your name for them over the
+// three words, and for the admin a way to take someone out. someone added
+// grows in, someone who went folds away where they were
 class MembersCard extends StatefulWidget {
   final List<String> members;
   final bool Function(String id) isMe;
@@ -500,6 +583,10 @@ class MembersCard extends StatefulWidget {
   final void Function(String id) onRemove;
   // take a change as it is, with no motion
   final bool quiet;
+  // the contact behind an id, when it is someone you know
+  final ContactPreview? Function(String id)? contactOf;
+  // a tap on someone you know
+  final void Function(String id)? onOpen;
   const MembersCard({
     super.key,
     required this.members,
@@ -507,6 +594,8 @@ class MembersCard extends StatefulWidget {
     required this.canRemove,
     required this.onRemove,
     this.quiet = false,
+    this.contactOf,
+    this.onOpen,
   });
 
   @override
@@ -580,23 +669,24 @@ class _MembersCardState extends State<MembersCard> {
   }
 
   Widget _member(String m) {
-    final isMe = widget.isMe;
-    final canRemove = widget.canRemove;
-    final onRemove = widget.onRemove;
-    final me = isMe(m);
+    final me = widget.isMe(m);
     final room = looksLikeRoomKey(m);
-    return Padding(
+    final c = me || room ? null : widget.contactOf?.call(m);
+    final nick = c?.nickname;
+    final name = nick != null && nick.isNotEmpty ? nick : null;
+    final open = c == null ? null : widget.onOpen;
+    final row = Padding(
       padding: const EdgeInsetsDirectional.fromSTEB(12, 10, 4, 10),
       child: Row(
         children: [
-          KryfoAvatar(seed: m, size: 36),
+          KryfoAvatar(seed: m, size: 36, choice: c?.avatar),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  memberLabel(m),
+                  name ?? memberLabel(m),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: room
@@ -607,6 +697,13 @@ class _MembersCardState extends State<MembersCard> {
                           color: HaloColors.text,
                         ),
                 ),
+                if (name != null)
+                  Text(
+                    m,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: HaloType.mono(size: 10, color: HaloColors.text3),
+                  ),
                 if (me)
                   Text(
                     l10n.groupInfoYou,
@@ -619,7 +716,7 @@ class _MembersCardState extends State<MembersCard> {
               ],
             ),
           ),
-          if (canRemove && !me)
+          if (widget.canRemove && !me)
             IconButton(
               tooltip: l10n.groupInfoRemoveFromGroup,
               padding: EdgeInsets.zero,
@@ -629,10 +726,72 @@ class _MembersCardState extends State<MembersCard> {
                 size: 18,
                 color: HaloColors.text3,
               ),
-              onPressed: () => onRemove(m),
+              onPressed: () => widget.onRemove(m),
             )
           else
             const SizedBox(height: 40),
+        ],
+      ),
+    );
+    if (open == null) return row;
+    return PressScale(
+      scale: 0.98,
+      label: name ?? m,
+      onTap: () => open(m),
+      child: row,
+    );
+  }
+}
+
+// the members card before the members are read: as many quiet rows as the
+// chat list said, so the page does not jump when they land
+class _MembersWaiting extends StatelessWidget {
+  final int count;
+  const _MembersWaiting({super.key, required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    final n = count.clamp(1, 6);
+    return Container(
+      decoration: BoxDecoration(
+        color: HaloColors.surface2,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: HaloColors.line, width: 0.5),
+      ),
+      child: Column(
+        children: [
+          for (var i = 0; i < n; i++) ...[
+            if (i > 0)
+              Padding(
+                padding: const EdgeInsetsDirectional.only(start: 60),
+                child: Container(height: 0.5, color: HaloColors.line),
+              ),
+            Padding(
+              padding: const EdgeInsetsDirectional.fromSTEB(12, 10, 4, 10),
+              child: Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: HaloColors.surface3,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Container(
+                    width: 120,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: HaloColors.surface3,
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -640,119 +799,81 @@ class _MembersCardState extends State<MembersCard> {
 }
 
 class _AddMemberSheet extends StatefulWidget {
-  final List available;
+  final List<ContactPreview> available;
   const _AddMemberSheet({required this.available});
   @override
   State<_AddMemberSheet> createState() => _AddMemberSheetState();
 }
 
+// the same picker as an introduction: names over the three words, a check
+// that pops in, and the button at the foot saying how many
 class _AddMemberSheetState extends State<_AddMemberSheet> {
   final Set<String> _picked = {};
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
+    final maxH = MediaQuery.of(context).size.height * 0.82;
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxHeight: maxH),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const SheetHandle(),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              const SizedBox(width: 20),
-              Text(
-                l10n.groupInfoAddMembers,
-                style: HaloType.serif(
-                  size: 16,
-                  italic: true,
-                  color: HaloColors.text,
-                ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 14, 20, 4),
+            child: Text(
+              l10n.groupInfoAddMembers,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: HaloType.serif(
+                size: 18,
+                italic: true,
+                color: HaloColors.text,
               ),
-              const Spacer(),
-              TextButton(
-                onPressed: _picked.isEmpty
-                    ? null
-                    : () => Navigator.pop(context, _picked),
-                child: Text(
-                  l10n.groupInfoAdd(whole(_picked.length)),
-                  style: HaloType.sans(
-                    size: 13,
-                    color: _picked.isEmpty
-                        ? HaloColors.text3
-                        : HaloColors.amber,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-            ],
+            ),
           ),
-          const SizedBox(height: 4),
           Flexible(
             child: ListView.builder(
               shrinkWrap: true,
+              padding: const EdgeInsets.symmetric(vertical: 6),
               itemCount: widget.available.length,
               itemBuilder: (_, i) {
                 final c = widget.available[i];
                 final picked = _picked.contains(c.haloId);
-                return InkWell(
-                  onTap: () => setState(() {
-                    if (picked) {
-                      _picked.remove(c.haloId);
-                    } else {
-                      _picked.add(c.haloId);
-                    }
-                  }),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 10,
-                    ),
-                    child: Row(
-                      children: [
-                        KryfoAvatar(seed: c.avatarSeed, size: 32),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            c.haloId,
-                            style: HaloType.sans(
-                              size: 14,
-                              weight: FontWeight.w500,
-                              color: HaloColors.text,
-                            ),
-                          ),
-                        ),
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 120),
-                          width: 20,
-                          height: 20,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: picked
-                                ? HaloColors.amber
-                                : Colors.transparent,
-                            border: Border.all(
-                              color: picked
-                                  ? HaloColors.amber
-                                  : HaloColors.line2,
-                              width: 1.2,
-                            ),
-                          ),
-                          alignment: Alignment.center,
-                          child: picked
-                              ? Icon(
-                                  Icons.check_rounded,
-                                  size: 12,
-                                  color: HaloColors.onAmber,
-                                )
-                              : null,
-                        ),
-                      ],
-                    ),
+                return StaggerIn(
+                  index: i,
+                  child: ContactPickRow(
+                    contact: c,
+                    picked: picked,
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      setState(() {
+                        if (picked) {
+                          _picked.remove(c.haloId);
+                        } else {
+                          _picked.add(c.haloId);
+                        }
+                      });
+                    },
                   ),
                 );
               },
             ),
           ),
-          const SizedBox(height: 12),
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+              20,
+              10,
+              20,
+              14 + MediaQuery.of(context).padding.bottom,
+            ),
+            child: HaloPrimaryButton(
+              label: l10n.groupInfoAdd(whole(_picked.length)),
+              onTap: _picked.isEmpty
+                  ? null
+                  : () => Navigator.pop(context, _picked),
+            ),
+          ),
         ],
       ),
     );

@@ -4334,6 +4334,7 @@ class _ChatScreenState extends State<ChatScreen>
           peerName: _nickname ?? widget.peerHaloId,
           myXpub: appState.sessionXPub,
           peerXpub: widget.peerXPub,
+          initialVerified: _verified,
         ),
       ),
     );

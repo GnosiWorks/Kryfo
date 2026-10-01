@@ -651,6 +651,7 @@
   "groupChatGhostModeOnBurns": "限時訊息 · {fmtBurn}後焚毀",
   "groupChatGroupCreatedSayHi": "群組已建立。打聲招呼吧。",
   "groupChatNoMessagesYet": "還沒有訊息。",
+  "groupChatEveryoneHereReads": "這裡的每個人都能看到你寫的內容。",
   "groupChatThisMessageCanT": "這則訊息無法顯示",
   "groupChatS": "{s} 秒",
   "groupChatM": "{s} 分鐘",

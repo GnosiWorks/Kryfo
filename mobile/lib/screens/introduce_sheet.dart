@@ -10,12 +10,11 @@ import '../main.dart' show appState, session;
 import '../screens/home_screen.dart' show ContactPreview;
 import '../theme.dart';
 import '../vouch_text.dart';
-import '../widgets/kryfo_avatar.dart';
+import '../widgets/contact_pick_row.dart';
 import '../widgets/notice_banner.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/ease_size.dart';
-import '../widgets/motion.dart' show kHouseCurve, kHouseTime;
 import '../widgets/press_scale.dart';
 import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
@@ -126,9 +125,8 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
     final others = _others;
     final maxH = MediaQuery.of(context).size.height * 0.82;
     final insets = MediaQuery.of(context).viewInsets.bottom;
-    return AnimatedPadding(
-      duration: const Duration(milliseconds: 160),
-      curve: Curves.easeOut,
+    // the keyboard moves the insets every frame: the sheet rides on it
+    return Padding(
       padding: EdgeInsets.only(bottom: insets),
       child: ConstrainedBox(
         constraints: BoxConstraints(maxHeight: maxH),
@@ -174,7 +172,7 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
                         final c = others[i];
                         return StaggerIn(
                           index: i,
-                          child: _PickRow(
+                          child: ContactPickRow(
                             contact: c,
                             picked: _picked == c.haloId,
                             onTap: () {
@@ -285,125 +283,6 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
         style: HaloType.mono(
           size: 10,
           color: refill == null ? HaloColors.text3 : HaloColors.amber,
-        ),
-      ),
-    );
-  }
-}
-
-// one contact to pick. the face grows and gets an amber ring when chosen.
-class _PickRow extends StatelessWidget {
-  final ContactPreview contact;
-  final bool picked;
-  final VoidCallback onTap;
-  const _PickRow({
-    required this.contact,
-    required this.picked,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final name = contact.nickname;
-    final still = MediaQuery.of(context).disableAnimations;
-    return Semantics(
-      button: true,
-      selected: picked,
-      label: name ?? contact.haloId,
-      excludeSemantics: true,
-      onTap: onTap,
-      child: PressScale(
-        scale: 0.98,
-        // the sheet clicks for the pick itself
-        haptic: false,
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-          child: Row(
-            children: [
-              AnimatedScale(
-                scale: picked && !still ? 1.1 : 1.0,
-                duration: still ? Duration.zero : kHouseTime,
-                curve: kHouseCurve,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
-                  curve: Curves.easeOut,
-                  padding: const EdgeInsets.all(2),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: picked ? HaloColors.amber : Colors.transparent,
-                      width: 1.6,
-                    ),
-                  ),
-                  child: KryfoAvatar(
-                    seed: contact.avatarSeed,
-                    size: 38,
-                    choice: contact.avatar,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      name ?? contact.haloId,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: name == null
-                          ? HaloType.mono(
-                              size: 12,
-                              weight: FontWeight.w500,
-                              color: HaloColors.text,
-                            )
-                          : HaloType.sans(
-                              size: 14,
-                              weight: FontWeight.w500,
-                              color: HaloColors.text,
-                            ),
-                    ),
-                    if (name != null)
-                      Text(
-                        contact.haloId,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: HaloType.mono(size: 10, color: HaloColors.text3),
-                      ),
-                  ],
-                ),
-              ),
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 160),
-                width: 22,
-                height: 22,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: picked ? HaloColors.amber : Colors.transparent,
-                  border: Border.all(
-                    color: picked ? HaloColors.amber : HaloColors.line2,
-                    width: 1.4,
-                  ),
-                ),
-                alignment: Alignment.center,
-                child: AnimatedScale(
-                  scale: picked || still ? 1 : 0.3,
-                  duration: still ? Duration.zero : kHouseTime,
-                  curve: kHouseCurve,
-                  child: AnimatedOpacity(
-                    opacity: picked ? 1 : 0,
-                    duration: const Duration(milliseconds: 140),
-                    child: Icon(
-                      Icons.check_rounded,
-                      size: 14,
-                      color: HaloColors.onAmber,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );

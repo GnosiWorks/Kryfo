@@ -2504,6 +2504,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get groupChatNoMessagesYet => 'Henüz mesaj yok.';
 
   @override
+  String get groupChatEveryoneHereReads => 'Buradaki herkes yazdıklarını okur.';
+
+  @override
   String get groupChatThisMessageCanT => 'Bu mesaj gösterilemiyor';
 
   @override

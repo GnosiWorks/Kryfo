@@ -3161,6 +3161,10 @@
   "@groupChatNoMessagesYet": {
     "description": "screens/group_chat_screen.dart"
   },
+  "groupChatEveryoneHereReads": "Everyone here reads what you write.",
+  "@groupChatEveryoneHereReads": {
+    "description": "screens/group_chat_screen.dart"
+  },
   "groupChatThisMessageCanT": "This message can't be shown",
   "@groupChatThisMessageCanT": {
     "description": "screens/group_chat_screen.dart"

@@ -651,6 +651,7 @@
   "groupChatGhostModeOnBurns": "Messaggi a tempo · spariscono dopo {fmtBurn}",
   "groupChatGroupCreatedSayHi": "Gruppo creato. Saluta.",
   "groupChatNoMessagesYet": "Ancora nessun messaggio.",
+  "groupChatEveryoneHereReads": "Tutti qui leggono quello che scrivi.",
   "groupChatThisMessageCanT": "Questo messaggio non si può mostrare",
   "groupChatS": "{s} s",
   "groupChatM": "{s} min",
