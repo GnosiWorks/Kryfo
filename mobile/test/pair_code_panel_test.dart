@@ -14,6 +14,7 @@ import 'package:kryfo/main.dart'
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart' show signalSession;
 import 'package:kryfo/widgets/pair_code_panel.dart';
+import 'package:kryfo/widgets/pair_join.dart' show pairUnreached;
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 
 import 'arrival_fakes.dart';
@@ -84,10 +85,10 @@ void main() {
 
   testWidgets('a share no relay took says so plainly', (t) async {
     phone(t);
-    e.answer = 'error: no relays accepted';
+    e.answer = pairUnreached;
     await share(t);
     await t.pumpAndSettle();
-    expect(find.text(l10n.pairCodeCouldNotReach), findsOneWidget);
-    expect(find.textContaining('relays accepted'), findsNothing);
+    expect(find.text(l10n.pairCodeUnreached), findsOneWidget);
+    expect(find.textContaining('unreached'), findsNothing);
   });
 }

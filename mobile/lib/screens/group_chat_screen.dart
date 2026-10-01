@@ -619,7 +619,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             if (m.msgUid != null) m.msgUid!: (m.autoRetries, m.gaveUp),
         };
         final before = List<_GMsg>.of(_messages);
-        final torUp = _canCarry;
         _messages
           ..clear()
           ..addAll(
@@ -657,7 +656,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
               m.poll = PollSpec.parse(r['poll']);
               m.votes = votes[uid] ?? const {};
               m.rowid = (r['rowid'] as int?) ?? 0;
-              _placeLoadedSend(m, torUp);
+              _placeLoadedSend(m);
               final c = carry[m.msgUid];
               if (c != null) {
                 m.autoRetries = c.$1;
@@ -762,11 +761,21 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     await _loadShieldFlags();
   }
 
+  // whether the route was up at the last change, so a send left 'sending'
+  // while it was down is looked at again once it comes up. a look that a
+  // send in flight held back stays due until that send ends
+  bool _wasReady = appState.torReady;
+  bool _deadLookDue = false;
+
   void _onAppStateChanged() {
     // a verdict landed after its message did: refresh the marks alone
     if (appState.shieldRev != _seenShieldRev && !_loading) {
       unawaited(_loadShieldFlags());
     }
+    final ready = appState.torReady;
+    if (ready && !_wasReady) _deadLookDue = true;
+    _wasReady = ready;
+    if (_lookAtDeadSends()) return;
     // only react to our own group's traffic, or every 1:1 message reloads
     // this screen and churns every photo bubble
     final rev = appState.chatRevOf('group:${widget.groupId}');
@@ -782,6 +791,29 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     }
     _tryAppendNew();
   }
+
+  // reloads when the route came up over a dead 'sending' row, so the
+  // reload marks it failed and retryable. true when it reloaded
+  bool _lookAtDeadSends() {
+    if (!_deadLookDue || _sending) return false;
+    _deadLookDue = false;
+    if (!appState.torReady || !_messages.any(_deadSend)) return false;
+    _seenRev = appState.chatRevOf('group:${widget.groupId}');
+    if (_loading) {
+      _reloadQueued = true;
+    } else {
+      _load();
+    }
+    return true;
+  }
+
+  // only a stale sending out-message is dead: a live send (<60s old) keeps
+  // its pill, or a working media send flips to failed mid-flight. the same
+  // rule as a 1:1 chat
+  bool _deadSend(_GMsg m) =>
+      m.direction == 'out' &&
+      m.sending &&
+      appState.sendLooksDead(m.when, msgUid: m.msgUid);
 
   // append-fast-path: pull only rows newer than our max rowid and add the
   // brand-new ones, instead of rebuilding the whole list on every multicast
@@ -882,7 +914,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       m.votes = votes[uid] ?? const {};
       m.rowid = (r['rowid'] as int?) ?? 0;
       if (dir == 'in') m.fresh = true;
-      _placeLoadedSend(m, _canCarry);
+      _placeLoadedSend(m);
       fresh.add(m);
     }
     final nowHave = _messages.map((m) => m.msgUid).toSet();
@@ -1181,7 +1213,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           live.failed = !ok; // no member acknowledged -> tap-to-retry
         });
         // catch up any change deferred while this send was in flight.
-        if (!_messages.any((x) => x.sending)) _tryAppendNew();
+        if (!_lookAtDeadSends() && !_messages.any((x) => x.sending)) {
+          _tryAppendNew();
+        }
       }
     }
   }
@@ -1869,24 +1903,13 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         await _finishGroupMediaSend(m, r);
       });
 
-  bool get _canCarry =>
-      appState.sendMode != 'private' ||
-      appState.torStatus == TorStatus.reachable;
-
-  // only a stale sending out-message is dead: a live send (<60s old) keeps
-  // its pill, or a working media send flips to failed mid-flight. while tor
-  // warms up the send is queued, not dead; outside onion there is no warmup
-  static bool _deadSend(_GMsg m, bool canCarry) =>
-      canCarry &&
-      m.when.isBefore(DateTime.now().subtract(const Duration(seconds: 60)));
-
-  void _placeLoadedSend(_GMsg m, bool canCarry) {
+  void _placeLoadedSend(_GMsg m) {
     final uid = m.msgUid;
     if (uid == null || m.direction != 'out') return;
     final seen = _watch.loaded(
       uid,
       sending: m.sending,
-      dead: _deadSend(m, canCarry),
+      dead: _deadSend(m),
       inflight: mediaInflight.contains(uid),
     );
     if (seen == SendSeen.failed) {
@@ -1923,7 +1946,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           uid,
           sending: live.sending,
           sent: s.sent,
-          dead: _deadSend(live, _canCarry),
+          dead: _deadSend(live),
           inflight: mediaInflight.contains(uid),
         );
         if (seen == SendSeen.keep) continue;

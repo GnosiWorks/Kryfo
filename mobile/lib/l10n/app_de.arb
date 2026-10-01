@@ -1056,6 +1056,8 @@
   "pairCodeLooking": "Suche…",
   "pairCodeNothingThereYetTrying": "Noch nichts da · versuche es erneut",
   "pairCodeNothingAtThatCode": "Unter diesem Code ist nichts. Er ist vielleicht schon verschwunden, oder die Person hat ihn noch nicht geteilt.",
+  "pairCodeUnreached": "Die Relais waren nicht erreichbar. Versuch es gleich noch mal.",
+  "pairCodeFailed": "Das hat nicht geklappt. Versuch es noch mal.",
   "pairCodeTypeTheSixDigits": "Gib die sechs Ziffern ein, die dir vorgelesen wurden.",
   "pairCodeAddThem": "Hinzufügen",
   "pairCodeUsedTwice": "Dieser Code wurde zweimal verwendet. Bitte um einen neuen.",
@@ -1737,6 +1739,7 @@
   "confirmSheetCancel": "Abbrechen",
   "bridgesSaved": "{count, plural, one{{count} Brücke} other{{count} Brücken}}",
   "bridgesSavedSomeBad": "{good} übernommen, {bad} nicht verstanden",
+  "bridgesNoneUsable": "Keine dieser Zeilen ist eine brauchbare Brücke, also bleiben Brücken aus",
   "languageTitle": "Sprache",
   "languageMatchPhone": "Wie das Handy",
   "languageMatchPhoneValue": "Wie das Handy ({language})",
@@ -1955,6 +1958,5 @@
   "appYourOwnInvite": "Das ist deine eigene Einladung. Teile sie mit jemand anderem, um euch zu verbinden.",
   "appTheyAreBlocked": "Du hast {id} blockiert. Gib die Person unter „Blockiert“ in den Einstellungen frei, um sie wieder hinzuzufügen.",
   "devLinkGone": "Du hast den Chat mit Marios gelöscht. Für einen neuen tippe in den Einstellungen auf „Marios schreiben“.",
-  "pairCodeCouldNotReach": "Keine Verbindung. Prüf deine Verbindung und versuch es noch mal.",
   "lockTooManyTriesFor": "Zu viele Versuche · {left}"
 }

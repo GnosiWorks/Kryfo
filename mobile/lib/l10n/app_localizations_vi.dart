@@ -4054,6 +4054,13 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không có gì ở mã đó. Có thể mã đã tự hủy, hoặc họ chưa chia sẻ.';
 
   @override
+  String get pairCodeUnreached =>
+      'Không liên lạc được với các relay. Hãy thử lại sau giây lát.';
+
+  @override
+  String get pairCodeFailed => 'Không thành công. Hãy thử lại.';
+
+  @override
   String get pairCodeTypeTheSixDigits => 'Nhập sáu chữ số họ đọc cho bạn.';
 
   @override
@@ -6592,6 +6599,10 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String get bridgesNoneUsable =>
+      'Không dòng nào ở đây là cầu nối dùng được, nên cầu nối vẫn tắt';
+
+  @override
   String get languageTitle => 'Ngôn ngữ';
 
   @override
@@ -7457,10 +7468,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get devLinkGone =>
       'Bạn đã xóa cuộc trò chuyện với Marios. Để bắt đầu cuộc mới, hãy chạm “Nhắn cho Marios” trong Cài đặt.';
-
-  @override
-  String get pairCodeCouldNotReach =>
-      'Không kết nối được. Hãy kiểm tra kết nối rồi thử lại.';
 
   @override
   String lockTooManyTriesFor(Object left) {

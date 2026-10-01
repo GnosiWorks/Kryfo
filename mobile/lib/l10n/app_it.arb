@@ -1056,6 +1056,8 @@
   "pairCodeLooking": "Ricerca…",
   "pairCodeNothingThereYetTrying": "Ancora niente · riprovo",
   "pairCodeNothingAtThatCode": "Niente con quel codice. Potrebbe essere sparito, o non l'hanno ancora condiviso.",
+  "pairCodeUnreached": "I relay non hanno risposto. Riprova tra un momento.",
+  "pairCodeFailed": "Non ha funzionato. Riprova.",
   "pairCodeTypeTheSixDigits": "Scrivi le sei cifre che ti hanno letto.",
   "pairCodeAddThem": "Aggiungi",
   "pairCodeUsedTwice": "Questo codice è stato usato due volte. Chiedine uno nuovo.",
@@ -1737,6 +1739,7 @@
   "confirmSheetCancel": "Annulla",
   "bridgesSaved": "{count, plural, one{{count} bridge} other{{count} bridge}}",
   "bridgesSavedSomeBad": "{good} accettati, {bad} non riconosciuti",
+  "bridgesNoneUsable": "Nessuna di queste righe è un bridge utilizzabile, quindi i bridge restano spenti",
   "languageTitle": "Lingua",
   "languageMatchPhone": "Come il telefono",
   "languageMatchPhoneValue": "Come il telefono ({language})",
@@ -1955,6 +1958,5 @@
   "appYourOwnInvite": "È il tuo invito. Condividilo con qualcun altro per collegarvi.",
   "appTheyAreBlocked": "Hai bloccato {id}. Sbloccalo da «Bloccati» nelle Impostazioni per aggiungerlo di nuovo.",
   "devLinkGone": "Hai eliminato la chat con Marios. Per iniziarne una nuova, tocca «Scrivi a Marios» nelle Impostazioni.",
-  "pairCodeCouldNotReach": "Impossibile connettersi. Controlla la connessione e riprova.",
   "lockTooManyTriesFor": "Troppi tentativi · {left}"
 }

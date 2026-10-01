@@ -16,6 +16,13 @@ import 'press_scale.dart';
 
 final _words = RegExp(r'^[a-z]+-[a-z]+-[a-z]+$');
 
+/// the engine's answer when no relay took a share or answered a lookup
+const pairUnreached = 'error: unreached';
+
+/// an engine error, worded for the person
+String pairErrorText(String res) =>
+    res == pairUnreached ? l10n.pairCodeUnreached : l10n.pairCodeFailed;
+
 /// the three words a fetched invite names, or null when it names none
 String? pairInviteWords(String invite) {
   if (!invite.startsWith('kryfo://share')) return null;
@@ -28,8 +35,8 @@ String? pairInviteWords(String invite) {
 }
 
 class PairJoin extends StatefulWidget {
-  // the engine's answer for a code: an invite, "empty", "twice" or an error,
-  // "error: unreachable" when no relay answered
+  // the engine's answer for a code: an invite, "empty", "twice",
+  // [pairUnreached] or another error
   final Future<String> Function(String code) fetch;
   // the app's own add path; its answer is the line to show afterwards
   final Future<String> Function(String invite) add;
@@ -51,7 +58,8 @@ class PairJoin extends StatefulWidget {
 class _PairJoinState extends State<PairJoin> {
   final _ctrl = TextEditingController();
   String _status = '';
-  bool _refused = false;
+  // refused or failed: said in the warning colour
+  bool _warn = false;
   bool _busy = false;
   bool _adding = false;
   String? _invite;
@@ -63,10 +71,10 @@ class _PairJoinState extends State<PairJoin> {
     super.dispose();
   }
 
-  void _say(String s, {bool refused = false}) => setState(() {
+  void _say(String s, {bool warn = false}) => setState(() {
     _busy = false;
     _status = s;
-    _refused = refused;
+    _warn = warn;
   });
 
   Future<void> _join() async {
@@ -78,17 +86,20 @@ class _PairJoinState extends State<PairJoin> {
     setState(() {
       _busy = true;
       _status = l10n.pairCodeLooking;
-      _refused = false;
+      _warn = false;
     });
 
-    // the other side may not have pressed share yet, so give it a few goes
+    // the other side may not have pressed share yet, so give it a few goes.
+    // a look no relay answered says nothing about the code, so it is tried
+    // again too, and only a look that was answered can call the code empty
+    var answered = false;
     for (var attempt = 0; attempt < 3; attempt++) {
       final res = await widget.fetch(code);
       if (!mounted) return;
       if (res == 'twice') {
         HapticFeedback.heavyImpact();
         _ctrl.clear();
-        _say(l10n.pairCodeUsedTwice, refused: true);
+        _say(l10n.pairCodeUsedTwice, warn: true);
         return;
       }
       if (res.startsWith('kryfo://')) {
@@ -106,19 +117,24 @@ class _PairJoinState extends State<PairJoin> {
         });
         return;
       }
-      // no relay answered: that is not an empty code, and the engine's
-      // words are not the person's
-      if (res.startsWith('error')) {
-        _say(l10n.pairCodeCouldNotReach);
+      if (res != pairUnreached && res.startsWith('error')) {
+        _say(pairErrorText(res), warn: true);
         return;
       }
+      if (res != pairUnreached) answered = true;
       if (attempt < 2) {
-        setState(() => _status = l10n.pairCodeNothingThereYetTrying);
+        setState(
+          () => _status = answered
+              ? l10n.pairCodeNothingThereYetTrying
+              : l10n.pairCodeLooking,
+        );
         await Future<void>.delayed(widget.retryGap);
         if (!mounted) return;
       }
     }
-    _say(l10n.pairCodeNothingAtThatCode);
+    answered
+        ? _say(l10n.pairCodeNothingAtThatCode)
+        : _say(l10n.pairCodeUnreached, warn: true);
   }
 
   Future<void> _add() async {
@@ -137,7 +153,7 @@ class _PairJoinState extends State<PairJoin> {
       _invite = null;
       _words = null;
       _status = l10n.pairCodeNotAdded;
-      _refused = false;
+      _warn = false;
     });
   }
 
@@ -190,7 +206,7 @@ class _PairJoinState extends State<PairJoin> {
             child: Text(
               _status,
               key: ValueKey(_status),
-              style: _refused
+              style: _warn
                   ? HaloType.sans(
                       size: 13,
                       weight: FontWeight.w600,

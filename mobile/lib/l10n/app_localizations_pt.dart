@@ -4096,6 +4096,13 @@ class AppLocalizationsPt extends AppLocalizations {
       'Nada nesse código. Ele pode ter sumido, ou a pessoa ainda não compartilhou.';
 
   @override
+  String get pairCodeUnreached =>
+      'Não foi possível falar com os retransmissores. Tente de novo em instantes.';
+
+  @override
+  String get pairCodeFailed => 'Não deu certo. Tente de novo.';
+
+  @override
   String get pairCodeTypeTheSixDigits =>
       'Digite os seis dígitos que a pessoa leu.';
 
@@ -6654,6 +6661,10 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get bridgesNoneUsable =>
+      'Nenhuma destas linhas é uma ponte utilizável, então as pontes continuam desligadas';
+
+  @override
   String get languageTitle => 'Idioma';
 
   @override
@@ -7527,10 +7538,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get devLinkGone =>
       'Você apagou a conversa com o Marios. Para começar uma nova, toque em “Escrever para o Marios” nas Configurações.';
-
-  @override
-  String get pairCodeCouldNotReach =>
-      'Não foi possível conectar. Verifique sua conexão e tente de novo.';
 
   @override
   String lockTooManyTriesFor(Object left) {

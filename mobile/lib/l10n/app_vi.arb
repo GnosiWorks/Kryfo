@@ -1056,6 +1056,8 @@
   "pairCodeLooking": "Đang tìm…",
   "pairCodeNothingThereYetTrying": "Chưa có gì · đang thử lại",
   "pairCodeNothingAtThatCode": "Không có gì ở mã đó. Có thể mã đã tự hủy, hoặc họ chưa chia sẻ.",
+  "pairCodeUnreached": "Không liên lạc được với các relay. Hãy thử lại sau giây lát.",
+  "pairCodeFailed": "Không thành công. Hãy thử lại.",
   "pairCodeTypeTheSixDigits": "Nhập sáu chữ số họ đọc cho bạn.",
   "pairCodeAddThem": "Thêm họ",
   "pairCodeUsedTwice": "Mã này đã được dùng hai lần. Hãy xin mã mới.",
@@ -1737,6 +1739,7 @@
   "confirmSheetCancel": "Hủy",
   "bridgesSaved": "{count, plural, other{{count} cầu nối}}",
   "bridgesSavedSomeBad": "{good} được chấp nhận, {bad} không hiểu được",
+  "bridgesNoneUsable": "Không dòng nào ở đây là cầu nối dùng được, nên cầu nối vẫn tắt",
   "languageTitle": "Ngôn ngữ",
   "languageMatchPhone": "Theo điện thoại",
   "languageMatchPhoneValue": "Theo điện thoại ({language})",
@@ -1955,6 +1958,5 @@
   "appYourOwnInvite": "Đây là lời mời của chính bạn. Hãy chia sẻ cho người khác để kết nối.",
   "appTheyAreBlocked": "Bạn đã chặn {id}. Hãy bỏ chặn trong mục “Đã chặn” ở Cài đặt để thêm lại.",
   "devLinkGone": "Bạn đã xóa cuộc trò chuyện với Marios. Để bắt đầu cuộc mới, hãy chạm “Nhắn cho Marios” trong Cài đặt.",
-  "pairCodeCouldNotReach": "Không kết nối được. Hãy kiểm tra kết nối rồi thử lại.",
   "lockTooManyTriesFor": "Quá nhiều lần thử · {left}"
 }

@@ -1056,6 +1056,8 @@
   "pairCodeLooking": "尋找中…",
   "pairCodeNothingThereYetTrying": "那裡還沒有東西 · 正在重試",
   "pairCodeNothingAtThatCode": "這組碼沒有對應任何東西。它可能已經焚毀，或對方還沒分享。",
+  "pairCodeUnreached": "聯絡不上中繼。請稍後再試。",
+  "pairCodeFailed": "沒有成功。請再試一次。",
   "pairCodeTypeTheSixDigits": "輸入對方唸出的六位數字。",
   "pairCodeAddThem": "新增對方",
   "pairCodeUsedTwice": "這組碼被用了兩次。請對方再產生一組新的。",
@@ -1737,6 +1739,7 @@
   "confirmSheetCancel": "取消",
   "bridgesSaved": "{count, plural, other{{count} 個橋接}}",
   "bridgesSavedSomeBad": "已接受 {good} 個，{bad} 個無法辨識",
+  "bridgesNoneUsable": "這些行裡沒有可用的橋接，所以橋接維持關閉",
   "languageTitle": "語言",
   "languageMatchPhone": "跟隨手機",
   "languageMatchPhoneValue": "跟隨手機（{language}）",
@@ -1955,6 +1958,5 @@
   "appYourOwnInvite": "這是你自己的邀請。分享給別人才能互相連線。",
   "appTheyAreBlocked": "你已封鎖 {id}。請在設定的「已封鎖」中解除封鎖後再新增。",
   "devLinkGone": "你已刪除與 Marios 的聊天。要開始新的聊天，請在設定中點按「傳訊息給 Marios」。",
-  "pairCodeCouldNotReach": "連線不上。請檢查網路後再試一次。",
   "lockTooManyTriesFor": "嘗試次數過多 · {left}"
 }

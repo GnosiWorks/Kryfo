@@ -82,6 +82,7 @@ import 'screens/support_screen.dart' show openSupportTap;
 import 'stickers/sticker_pack.dart' show StickerLibrary;
 import 'stickers/sticker_wire.dart' show StickerWire, stickerText;
 import 'widgets/motion.dart';
+import 'widgets/pair_join.dart' show pairUnreached;
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:app_links/app_links.dart';
 import 'signal_session.dart';
@@ -158,6 +159,7 @@ class HaloEngine {
   late final CStrFnDart _txState;
   late final TwoArgFnDart _setBridges;
   late final CStrFnDart _bridgeState;
+  late final int Function() _torPaused;
   late final CStrFnDart _restartTor;
   late final OneArgFnDart _setMode;
   late final OneArgFnDart _idFromEdPub;
@@ -201,6 +203,9 @@ class HaloEngine {
     _txState = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloTransportState');
     _setBridges = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloSetBridges');
     _bridgeState = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloBridgeState');
+    _torPaused = _lib.lookupFunction<Int32 Function(), int Function()>(
+      'HaloTorPaused',
+    );
     _restartTor = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloRestartTor');
     _setMode = _lib.lookupFunction<OneArgFn, OneArgFnDart>(
       'HaloSetTransportMode',
@@ -425,17 +430,19 @@ class HaloEngine {
 
   String firstContactPk(int counter) => engineTake(_fcPk(counter));
 
-  // put an invite where a six digit code points, and look for one there.
+  // put an invite where a six digit code points, and look for one there. a
+  // look that never came back heard from no relay, so it says nothing about
+  // the code
   Future<String> pairCodePublish(String code, String payload) =>
-      _pairCodeOnIsolate(code, payload).timeout(
-        const Duration(seconds: 50),
-        onTimeout: () => 'error: could not reach a relay',
-      );
+      _pairCodeOnIsolate(
+        code,
+        payload,
+      ).timeout(const Duration(seconds: 50), onTimeout: () => pairUnreached);
 
   Future<String> pairCodeFetch(String code) => _pairCodeOnIsolate(
     code,
     null,
-  ).timeout(const Duration(seconds: 40), onTimeout: () => 'error: unreachable');
+  ).timeout(const Duration(seconds: 40), onTimeout: () => pairUnreached);
 
   // unlike every other subscription this needs no contacts
   void subscribeFirstContactBg(int counter) {
@@ -495,6 +502,15 @@ class HaloEngine {
   // the wipe stops every relay listener and takes tor off the network before
   // it deletes, so nothing is written back into the folders it empties
   Future<String> wipeHold() => _torCtlOnIsolate('HaloWipeHold');
+
+  // check-ins put tor to sleep and wake it, off the ui thread
+  Future<String> torStop() => _torCtlOnIsolate('HaloTorStop');
+  Future<String> torResume() => _torCtlOnIsolate('HaloTorResume');
+  Future<String> startListenerBg(String dataDir) =>
+      _startListenerOnIsolate(dataDir);
+  // whether the engine holds tor asleep. a wake that failed has let it run
+  // already, whatever the app thinks
+  bool torPaused() => _torPaused() == 1;
 
   // the decoy's identity: pure engine calls that touch no engine state and
   // log nothing (engine/quiet.go)
@@ -864,24 +880,6 @@ Future<String> _fcSubscribeOnIsolate(int counter) {
       'HaloNostrSubscribeFirstContact',
     );
     return engineTake(fn(counter));
-  });
-}
-
-// blocking native calls run on a throwaway isolate so the ui thread never
-// stalls on a tor dial. its own libhalo handle is the same process image, so
-// it shares the running tor.
-Future<String> _nostrInitOnIsolate(String relaysCSV) {
-  return Isolate.run(() {
-    final lib = Platform.isAndroid
-        ? DynamicLibrary.open('libhalo.so')
-        : DynamicLibrary.process();
-    final fn = lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloNostrInit');
-    final p = relaysCSV.toNativeUtf8();
-    try {
-      return engineTake(fn(p));
-    } finally {
-      malloc.free(p);
-    }
   });
 }
 
@@ -6628,7 +6626,17 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  Future<void> setSendMode(String m) async {
+  // one switch at a time: two quick taps must not leave the engine in one
+  // mode with the other mode's relay list
+  Future<void> _modeQueue = Future.value();
+
+  Future<void> setSendMode(String m) {
+    final run = _modeQueue.then((_) => _switchSendMode(m));
+    _modeQueue = run.catchError((Object e) => dlog('mode: $e'));
+    return run;
+  }
+
+  Future<void> _switchSendMode(String m) async {
     final changed = _sendMode != m;
     _sendMode = m;
     notifyListeners();
@@ -6643,14 +6651,10 @@ class AppState extends ChangeNotifier {
     if (!changed) return;
     // the engine caches one http client per route, so the mode has to land
     // before the relay list is rebuilt or the first connection uses the old
-    // one.
+    // one. the list is in place before anything subscribes: each runner
+    // copies it once, as it starts
     engine.setTransportMode(m);
-    // every runner started below copies the list as it starts
-    try {
-      await _nostrInitOnIsolate(relaysFor(m));
-    } catch (e) {
-      dlog('mode: relays not rebuilt ($e)');
-    }
+    engine.nostrInit(relaysFor(m));
     await resubscribe();
     // the first-contact runner keeps the relay list it started with; it
     // has to follow the switch or strangers' openers go unread
@@ -6796,6 +6800,8 @@ class AppState extends ChangeNotifier {
 
   DeliveryMode _deliveryMode = DeliveryMode.always;
   DeliveryMode get deliveryMode => _deliveryMode;
+  @visibleForTesting
+  set deliveryModeForTest(DeliveryMode m) => _deliveryMode = m;
   String _docsPath = '';
   // tor is down because this side took it down
   bool _torHeld = false;
@@ -6804,6 +6810,7 @@ class AppState extends ChangeNotifier {
   bool get checkingIn => _checking;
   bool _inFront = false;
   Timer? _sleepTimer;
+  Timer? _wakeAgain;
   int _lastCheckAt = 0;
   int _lastWakeAt = 0;
   // how the last check-in ended, for the transport screen, including one
@@ -7089,25 +7096,31 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> _torSleep() async {
-    if (_torHeld || haloWiping) return;
+    if (haloWiping) return;
+    _wakeAgain?.cancel();
+    // held is only the app's word: a wake that failed half way has let the
+    // engine run again, and then it is stopped once more
+    if (_torHeld && engine.torPaused()) return;
     _torHeld = true;
-    final r = await _torCtlOnIsolate('HaloTorStop');
+    final r = await engine.torStop();
     dlog('delivery: tor stopped ($r)');
     notifyListeners();
   }
 
   Future<bool> _torWake() async {
+    _wakeAgain?.cancel();
     if (!_torHeld) return true;
     // 'ok': tor was asleep and is waking. 'start': there is no tor in this
     // process yet. either way the start call below hands back the address
     // of the tor that is up, or makes one.
-    final r = await _torCtlOnIsolate('HaloTorResume');
+    final r = await engine.torResume();
     if (r.startsWith('error')) {
       dlog('delivery: tor would not wake: $r');
+      _wakeLater();
       return false;
     }
     _torHeld = false;
-    final addr = await _startListenerOnIsolate(_docsPath);
+    final addr = await engine.startListenerBg(_docsPath);
     if (addr.isEmpty || addr.startsWith('error')) {
       dlog('delivery: tor did not start: $addr');
       return false;
@@ -7115,6 +7128,18 @@ class AppState extends ChangeNotifier {
     myOnion = addr;
     notifyListeners();
     return true;
+  }
+
+  // a wake that failed, most often a control port that stopped answering,
+  // is tried again for as long as tor is wanted. the watchdog leaves a held
+  // tor alone, so nothing else would
+  void _wakeLater() {
+    _wakeAgain?.cancel();
+    _wakeAgain = Timer(const Duration(seconds: 15), () {
+      if (!_torHeld || haloWiping) return;
+      if (!_inFront && _deliveryMode != DeliveryMode.always) return;
+      unawaited(_torWake());
+    });
   }
 
   // one check-in: tor up, every relay asked for what it holds, tor down.
@@ -7345,19 +7370,32 @@ class AppState extends ChangeNotifier {
     _bridgeHintOff = (await st.read(key: 'bridge_hint_off')) == '1';
     if (_bridgesOn && _bridgeLines.isNotEmpty) {
       final r = engine.setBridges(_bridgeLines, true);
+      _bridgesOn = _bridgesTaken(true);
       dlog('bridges: $r');
     }
     notifyListeners();
   }
 
+  // whether the engine is using bridges now. lines it could not read leave
+  // them off even with the switch on, and every hint and card goes by this
+  bool _bridgesTaken(bool asked) {
+    try {
+      final on = engine.bridgeState().split('|').first;
+      if (on == 'true' || on == 'false') return asked && on == 'true';
+    } catch (e) {
+      dlog('bridges: state unreadable ($e)');
+    }
+    return asked;
+  }
+
   // returns the engine's summary so the ui can say how many lines it liked.
   Future<String> applyBridges(String lines, bool on) async {
     _bridgeLines = lines;
-    _bridgesOn = on;
+    final r = engine.setBridges(lines, on);
+    _bridgesOn = _bridgesTaken(on);
     const st = secureStore;
     await st.write(key: 'bridge_lines', value: lines);
-    await st.write(key: 'bridges_on', value: on ? '1' : '0');
-    final r = engine.setBridges(lines, on);
+    await st.write(key: 'bridges_on', value: _bridgesOn ? '1' : '0');
     notifyListeners();
     return r;
   }
@@ -9769,6 +9807,18 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  @visibleForTesting
+  void setRouteOKForTest(bool ok) {
+    _routeOK = ok;
+    notifyListeners();
+  }
+
+  @visibleForTesting
+  void setRouteGenForTest(int gen) {
+    _routeGen = gen;
+    notifyListeners();
+  }
+
   // whether the route carries traffic, from the engine's relay verdict, and
   // how many times it has been torn down on purpose. see engine/route.go.
   bool _routeOK = true;
@@ -9815,6 +9865,26 @@ class AppState extends ChangeNotifier {
           _torStatus == TorStatus.publishing ||
           _torStatus == TorStatus.reachable);
   int get bootstrapPct => _bootstrapPct;
+
+  // what every screen means by connected: a network, and the route the send
+  // mode uses can carry traffic. connecting is that route not up yet while
+  // something is still trying to bring it up
+  bool get linkUp => _online && torReady;
+  bool get linkComing => !torReady && _torStatus != TorStatus.off;
+
+  // a reloaded 'sending' row has no send future left to resolve it, so past
+  // a minute it is dead and becomes retryable. while tor warms up it is
+  // queued, not dead: the reconnect retry fires it. torReady rather than
+  // reachable, since an onion that will not publish never reaches
+  // 'reachable'. a file still going out is never dead: its row is saved
+  // before the first slice leaves, however long the rest takes. the one
+  // rule for every chat screen
+  bool sendLooksDead(DateTime sentAt, {String? msgUid, DateTime? now}) =>
+      torReady &&
+      (msgUid == null || !mediaInflight.contains(msgUid)) &&
+      sentAt.isBefore(
+        (now ?? DateTime.now()).subtract(const Duration(seconds: 60)),
+      );
 
   // how long tor has been unable to carry traffic while kryfo is meant to be
   // connected. null when it is fine, when check-ins are holding tor off on
@@ -9869,11 +9939,35 @@ class AppState extends ChangeNotifier {
   DateTime? _relayDownSince;
   bool _relayHintOff = false;
 
-  bool get suggestFastFallback {
+  bool get suggestFastFallback => suggestFastFallbackAt(DateTime.now());
+
+  @visibleForTesting
+  bool suggestFastFallbackAt(DateTime now) {
     if (_relayHintOff || _sendMode != 'balanced' || !_online) return false;
     final t = _relayDownSince;
     if (t == null) return false;
-    return DateTime.now().difference(t).inSeconds > 90;
+    return now.difference(t).inSeconds > 90;
+  }
+
+  // what the home screen was last told about the relay hint
+  bool _fastHintShown = false;
+
+  // relay mode's read of its relay, on its own clock: tor sits still in that
+  // mode, so a read taken only when tor changes misses an outage and keeps a
+  // stale one. the hint turns on by time alone, so a change is announced
+  @visibleForTesting
+  void sampleRelayHealth({DateTime? now}) {
+    final at = now ?? DateTime.now();
+    try {
+      _noteRelayHealth(engine.transportState()['relays'] as List?, now: at);
+    } catch (_) {
+      // transport not readable yet: nothing to conclude
+    }
+    final v = suggestFastFallbackAt(at);
+    if (v != _fastHintShown) {
+      _fastHintShown = v;
+      notifyListeners();
+    }
   }
 
   Future<void> dismissRelayHint() async {
@@ -9886,7 +9980,7 @@ class AppState extends ChangeNotifier {
   // relay's last success and is deleted the moment one lands, so it says
   // what is true now. benched means it is in backoff. down is: nothing in
   // the list is usable.
-  void _noteRelayHealth(List? relays) {
+  void _noteRelayHealth(List? relays, {DateTime? now}) {
     if (_sendMode != 'balanced') {
       _relayDownSince = null;
       return;
@@ -9905,7 +9999,7 @@ class AppState extends ChangeNotifier {
     if (anyUsable) {
       _relayDownSince = null;
     } else {
-      _relayDownSince ??= DateTime.now();
+      _relayDownSince ??= now ?? DateTime.now();
     }
   }
 
@@ -10673,7 +10767,7 @@ class AppState extends ChangeNotifier {
     // the job's own check-in brings it up for its minute.
     if (_deliveryMode != DeliveryMode.always && !_inFront) {
       _torHeld = true;
-      await _torCtlOnIsolate('HaloTorStop');
+      await engine.torStop();
       _docsPath = docsDir.path;
     } else {
       _docsPath = docsDir.path;
@@ -10688,8 +10782,10 @@ class AppState extends ChangeNotifier {
     // poll bootstrap so the kryfo can breathe while the listener warms up.
     // it runs for the life of the app and doubles as the watchdog.
     var torKickedAt = DateTime.now();
+    var ticks = 0;
     Timer.periodic(const Duration(seconds: 1), (t) {
       if (haloWiping) return;
+      if (_sendMode == 'balanced' && ++ticks % 5 == 0) sampleRelayHealth();
       final raw = engine.getStatus();
       final st = parseTorStatus(raw);
       final pct = parseBootstrapPct(raw);
@@ -10738,9 +10834,10 @@ class AppState extends ChangeNotifier {
     if (_sendMode == 'normal') await setSendMode('private');
     engine.setTransportMode(_sendMode);
     dlog('transport: booting in $_sendMode');
-    _nostrInitOnIsolate(relaysFor(_sendMode));
-    // has to follow the relay list: the runner snapshots it on start and
-    // gives up if it is empty.
+    // only takes a lock in the engine, so it is set right here, before the
+    // first-contact runner: that snapshots the list on start and gives up
+    // if it is empty.
+    engine.nostrInit(relaysFor(_sendMode));
     _loadFirstContact();
     await loadScreenshotPref();
     await loadHeartbeat();
@@ -14119,8 +14216,11 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
           // bootstrapped and publishing both mean tor's client side is live:
           // messages send and arrive over relays, full 3 hops. the remaining
           // wait only publishes our own address so peers can dial us direct.
+          // none of it counts while no relay gets through
           final line = s == TorStatus.off
               ? l10n.appTorIsOff
+              : !appState.torUsable && s != TorStatus.starting
+              ? l10n.appConnecting2
               : s == TorStatus.reachable
               ? l10n.appConnectedRoutedThrough3
               : s == TorStatus.publishing
@@ -14151,7 +14251,7 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
                   line,
                   style: HaloType.mono(size: 12, color: HaloColors.text),
                 ),
-                if (s != TorStatus.reachable) ...[
+                if (s != TorStatus.reachable || !appState.torUsable) ...[
                   const SizedBox(height: 16),
                   Text(
                     s == TorStatus.off
@@ -14197,10 +14297,11 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
         builder: (context, _) {
           final s = appState.torStatus;
           final off = s == TorStatus.off;
-          final secured = s == TorStatus.reachable;
+          // ready is the test the outbox and the offline card use, so the
+          // pill never says ready over a route nothing gets through
+          final ready = appState.torUsable;
+          final secured = ready && s == TorStatus.reachable;
           final connecting = _isConnecting;
-          final usable =
-              s == TorStatus.bootstrapped || s == TorStatus.publishing;
           const torGreen = Color(0xFF34D399);
           final accent = off
               ? HaloColors.text3
@@ -14210,7 +14311,7 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
               ? const Color(0xFF4BB8C9)
               : appState.sendMode == 'fast'
               ? torGreen
-              : (secured || usable)
+              : ready
               ? const Color(0xFFB79CFF)
               : HaloColors.amber;
           final t = _c.value;
@@ -14264,12 +14365,12 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
           }
           final mode = appState.sendMode;
           final txt = mode == 'balanced'
-              ? (appState.online ? l10n.appViaRelay : l10n.appOffline)
+              ? (appState.linkUp ? l10n.appViaRelay : l10n.appOffline)
               : mode == 'fast'
-              ? (appState.online ? l10n.appFast : l10n.appOffline)
+              ? (appState.linkUp ? l10n.appFast : l10n.appOffline)
               : off
               ? l10n.appTorOff
-              : (secured || usable)
+              : ready
               ? l10n.appTorReady
               : l10n.appConnecting2;
           return tinted(

@@ -1056,6 +1056,8 @@
   "pairCodeLooking": "جارٍ البحث…",
   "pairCodeNothingThereYetTrying": "لا شيء بعد · جارٍ إعادة المحاولة",
   "pairCodeNothingAtThatCode": "لا شيء عند هذا الرمز. ربما اختفى، أو لم يشاركه بعد.",
+  "pairCodeUnreached": "تعذّر الوصول إلى المُرحِّلات. حاول مجددًا بعد قليل.",
+  "pairCodeFailed": "لم ينجح ذلك. حاول مجددًا.",
   "pairCodeTypeTheSixDigits": "اكتب الأرقام الستة التي قرأها عليك.",
   "pairCodeAddThem": "أضِفه",
   "pairCodeUsedTwice": "استُخدم هذا الرمز مرتين. اطلب رمزًا جديدًا.",
@@ -1737,6 +1739,7 @@
   "confirmSheetCancel": "إلغاء",
   "bridgesSaved": "{count, plural, zero{⁨{count}⁩ جسر} one{جسر واحد} two{جسران} few{⁨{count}⁩ جسور} many{⁨{count}⁩ جسرًا} other{⁨{count}⁩ جسر}}",
   "bridgesSavedSomeBad": "قُبل ⁨{good}⁩، ولم يُفهم ⁨{bad}⁩",
+  "bridgesNoneUsable": "لا يصلح أي سطر هنا جسرًا، لذا تبقى الجسور متوقفة",
   "languageTitle": "اللغة",
   "languageMatchPhone": "لغة الهاتف",
   "languageMatchPhoneValue": "لغة الهاتف (⁨{language}⁩)",
@@ -1955,6 +1958,5 @@
   "appYourOwnInvite": "هذه دعوتك أنت. شاركها مع شخص آخر للتواصل.",
   "appTheyAreBlocked": "لقد حظرت ⁨{id}⁩. ألغِ الحظر من «المحظورون» في الإعدادات لتضيفه من جديد.",
   "devLinkGone": "لقد حذفت المحادثة مع Marios. لبدء محادثة جديدة، اضغط «مراسلة Marios» في الإعدادات.",
-  "pairCodeCouldNotReach": "تعذّر الاتصال. تحقّق من اتصالك وحاول مجددًا.",
   "lockTooManyTriesFor": "محاولات كثيرة جدًا · ⁨{left}⁩"
 }

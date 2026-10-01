@@ -2127,25 +2127,14 @@ class _ChatScreenState extends State<ChatScreen>
     }
     // a reloaded 'sending' row has no send future left to resolve it, so it
     // becomes failed (or parked) and retryable
-    final staleCutoff = DateTime.now().subtract(const Duration(seconds: 60));
-    // while tor warms up a pending send is queued, not dead: the reconnect
-    // retry fires it. torReady rather than reachable, since an onion that
-    // will not publish never reaches 'reachable'.
-    final torUp = appState.torReady;
     final backPaired = await session.isBackPaired(widget.peerHaloId);
     for (final m in loaded) {
-      // under a minute old the send future may still be running. a file
-      // still going out is never stale: its row is saved before the first
-      // slice leaves, and a failed mark would make the retry send it twice.
-      if (m.msgUid != null &&
-          (mediaInflight.contains(m.msgUid) ||
-              _textInflight.contains(m.msgUid))) {
-        continue;
-      }
-      if (torUp &&
-          m.direction == 'out' &&
+      // a text this screen is still sending keeps its pill: a failed mark
+      // would make the retry send it twice. files are sendLooksDead's
+      if (m.msgUid != null && _textInflight.contains(m.msgUid)) continue;
+      if (m.direction == 'out' &&
           m.sending &&
-          m.when.isBefore(staleCutoff)) {
+          appState.sendLooksDead(m.when, msgUid: m.msgUid)) {
         m.sending = false;
         if (backPaired) {
           m.failed = true;

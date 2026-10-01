@@ -1056,6 +1056,8 @@
   "pairCodeLooking": "Procurando…",
   "pairCodeNothingThereYetTrying": "Nada ainda · tentando de novo",
   "pairCodeNothingAtThatCode": "Nada nesse código. Ele pode ter sumido, ou a pessoa ainda não compartilhou.",
+  "pairCodeUnreached": "Não foi possível falar com os retransmissores. Tente de novo em instantes.",
+  "pairCodeFailed": "Não deu certo. Tente de novo.",
   "pairCodeTypeTheSixDigits": "Digite os seis dígitos que a pessoa leu.",
   "pairCodeAddThem": "Adicionar",
   "pairCodeUsedTwice": "Este código foi usado duas vezes. Peça um novo.",
@@ -1737,6 +1739,7 @@
   "confirmSheetCancel": "Cancelar",
   "bridgesSaved": "{count, plural, one{{count} ponte} other{{count} pontes}}",
   "bridgesSavedSomeBad": "aceitas: {good}, não entendidas: {bad}",
+  "bridgesNoneUsable": "Nenhuma destas linhas é uma ponte utilizável, então as pontes continuam desligadas",
   "languageTitle": "Idioma",
   "languageMatchPhone": "Igual ao celular",
   "languageMatchPhoneValue": "Igual ao celular ({language})",
@@ -1955,6 +1958,5 @@
   "appYourOwnInvite": "Este é o seu próprio convite. Compartilhe com outra pessoa para se conectar.",
   "appTheyAreBlocked": "Você bloqueou {id}. Desbloqueie em “Bloqueados”, nas Configurações, para adicionar de novo.",
   "devLinkGone": "Você apagou a conversa com o Marios. Para começar uma nova, toque em “Escrever para o Marios” nas Configurações.",
-  "pairCodeCouldNotReach": "Não foi possível conectar. Verifique sua conexão e tente de novo.",
   "lockTooManyTriesFor": "Tentativas demais · {left}"
 }

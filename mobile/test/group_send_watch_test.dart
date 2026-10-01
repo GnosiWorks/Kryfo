@@ -136,11 +136,11 @@ void main() {
     final screen = sourceOf('lib/screens/group_chat_screen.dart');
 
     test('places every loaded row, full load and append alike', () {
-      expect('_placeLoadedSend(m, '.allMatches(screen).length, 2);
+      expect('_placeLoadedSend(m)'.allMatches(screen).length, 2);
       final load = bodyOf(screen, 'Future<void> _load(');
-      expect(load, contains('_placeLoadedSend(m, torUp)'));
+      expect(load, contains('_placeLoadedSend(m)'));
       final append = bodyOf(screen, 'Future<void> _appendNewInner(');
-      expect(append, contains('_placeLoadedSend(m, _canCarry)'));
+      expect(append, contains('_placeLoadedSend(m)'));
     });
 
     test('settles on every change of the chat and on the retry tick', () {

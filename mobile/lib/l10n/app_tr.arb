@@ -1056,6 +1056,8 @@
   "pairCodeLooking": "Aranıyor…",
   "pairCodeNothingThereYetTrying": "Henüz bir şey yok · tekrar deneniyor",
   "pairCodeNothingAtThatCode": "Bu kodda bir şey yok. Silinmiş olabilir ya da henüz paylaşmamış olabilir.",
+  "pairCodeUnreached": "Aktarıcılara ulaşılamadı. Birazdan yeniden dene.",
+  "pairCodeFailed": "Olmadı. Yeniden dene.",
   "pairCodeTypeTheSixDigits": "Sana okuduğu altı rakamı yaz.",
   "pairCodeAddThem": "Ekle",
   "pairCodeUsedTwice": "Bu kod iki kez kullanıldı. Yenisini iste.",
@@ -1737,6 +1739,7 @@
   "confirmSheetCancel": "İptal",
   "bridgesSaved": "{count, plural, one{{count} köprü} other{{count} köprü}}",
   "bridgesSavedSomeBad": "{good} kabul edildi, {bad} anlaşılmadı",
+  "bridgesNoneUsable": "Bu satırların hiçbiri kullanılabilir bir köprü değil, bu yüzden köprüler kapalı kalıyor",
   "languageTitle": "Dil",
   "languageMatchPhone": "Telefonla aynı",
   "languageMatchPhoneValue": "Telefonla aynı ({language})",
@@ -1955,6 +1958,5 @@
   "appYourOwnInvite": "Bu senin kendi davetin. Bağlanmak için başka biriyle paylaş.",
   "appTheyAreBlocked": "{id} engellendi. Yeniden eklemek için Ayarlar’daki “Engellenenler”den engelini kaldır.",
   "devLinkGone": "Marios ile sohbeti sildin. Yenisini başlatmak için Ayarlar’da “Marios’a yaz”a dokun.",
-  "pairCodeCouldNotReach": "Bağlanılamadı. Bağlantını kontrol edip yeniden dene.",
   "lockTooManyTriesFor": "Çok fazla deneme · {left}"
 }

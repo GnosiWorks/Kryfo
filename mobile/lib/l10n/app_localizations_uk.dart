@@ -4141,6 +4141,13 @@ class AppLocalizationsUk extends AppLocalizations {
       'За цим кодом нічого немає. Можливо, він уже зник або ним ще не поділилися.';
 
   @override
+  String get pairCodeUnreached =>
+      'Ретранслятори не відповіли. Спробуй трохи згодом.';
+
+  @override
+  String get pairCodeFailed => 'Не вийшло. Спробуй ще раз.';
+
+  @override
   String get pairCodeTypeTheSixDigits =>
       'Введи шість цифр, які тобі продиктували.';
 
@@ -6722,6 +6729,10 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String get bridgesNoneUsable =>
+      'Жоден із цих рядків не підходить як міст, тому мости лишаються вимкненими';
+
+  @override
   String get languageTitle => 'Мова';
 
   @override
@@ -7603,10 +7614,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get devLinkGone =>
       'Чат із Marios видалено. Щоб почати новий, натисни «Написати Marios» у налаштуваннях.';
-
-  @override
-  String get pairCodeCouldNotReach =>
-      'Не вдалося під’єднатися. Перевір з’єднання і спробуй ще раз.';
 
   @override
   String lockTooManyTriesFor(Object left) {

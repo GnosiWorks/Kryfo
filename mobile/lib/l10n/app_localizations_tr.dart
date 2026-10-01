@@ -4087,6 +4087,13 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bu kodda bir şey yok. Silinmiş olabilir ya da henüz paylaşmamış olabilir.';
 
   @override
+  String get pairCodeUnreached =>
+      'Aktarıcılara ulaşılamadı. Birazdan yeniden dene.';
+
+  @override
+  String get pairCodeFailed => 'Olmadı. Yeniden dene.';
+
+  @override
   String get pairCodeTypeTheSixDigits => 'Sana okuduğu altı rakamı yaz.';
 
   @override
@@ -6632,6 +6639,10 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String get bridgesNoneUsable =>
+      'Bu satırların hiçbiri kullanılabilir bir köprü değil, bu yüzden köprüler kapalı kalıyor';
+
+  @override
   String get languageTitle => 'Dil';
 
   @override
@@ -7502,10 +7513,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get devLinkGone =>
       'Marios ile sohbeti sildin. Yenisini başlatmak için Ayarlar’da “Marios’a yaz”a dokun.';
-
-  @override
-  String get pairCodeCouldNotReach =>
-      'Bağlanılamadı. Bağlantını kontrol edip yeniden dene.';
 
   @override
   String lockTooManyTriesFor(Object left) {

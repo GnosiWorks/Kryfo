@@ -1056,6 +1056,8 @@
   "pairCodeLooking": "Mencari…",
   "pairCodeNothingThereYetTrying": "Belum ada apa-apa · mencoba lagi",
   "pairCodeNothingAtThatCode": "Tidak ada apa pun di kode itu. Mungkin sudah hilang, atau dia belum membagikannya.",
+  "pairCodeUnreached": "Tidak bisa menghubungi relay. Coba lagi sebentar lagi.",
+  "pairCodeFailed": "Tidak berhasil. Coba lagi.",
   "pairCodeTypeTheSixDigits": "Ketik enam angka yang dia bacakan.",
   "pairCodeAddThem": "Tambahkan",
   "pairCodeUsedTwice": "Kode ini dipakai dua kali. Minta kode baru.",
@@ -1737,6 +1739,7 @@
   "confirmSheetCancel": "Batal",
   "bridgesSaved": "{count, plural, other{{count} jembatan}}",
   "bridgesSavedSomeBad": "{good} diterima, {bad} tidak dikenali",
+  "bridgesNoneUsable": "Tidak ada baris yang bisa dipakai sebagai jembatan, jadi jembatan tetap mati",
   "languageTitle": "Bahasa",
   "languageMatchPhone": "Ikuti ponsel",
   "languageMatchPhoneValue": "Ikuti ponsel ({language})",
@@ -1955,6 +1958,5 @@
   "appYourOwnInvite": "Ini undanganmu sendiri. Bagikan ke orang lain untuk terhubung.",
   "appTheyAreBlocked": "Kamu memblokir {id}. Buka blokirnya di “Diblokir” pada Pengaturan untuk menambahkannya lagi.",
   "devLinkGone": "Kamu sudah menghapus chat dengan Marios. Untuk memulai yang baru, ketuk “Kirim pesan ke Marios” di Pengaturan.",
-  "pairCodeCouldNotReach": "Tidak bisa terhubung. Periksa koneksimu lalu coba lagi.",
   "lockTooManyTriesFor": "Terlalu banyak percobaan · {left}"
 }

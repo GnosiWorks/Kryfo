@@ -10,7 +10,7 @@ import 'package:flutter/services.dart';
 import '../main.dart' show appState, engine, sessionQuiet;
 import '../theme.dart';
 import 'motion.dart' show BreathDot;
-import 'pair_join.dart' show PairWordsTag;
+import 'pair_join.dart' show PairWordsTag, pairErrorText, pairUnreached;
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
 
@@ -20,7 +20,10 @@ const kPairCodeLife = Duration(minutes: 10);
 class PairCodePanel extends StatefulWidget {
   // compact drops the explanatory lines, for use under a qr
   final bool compact;
-  const PairCodePanel({super.key, this.compact = false});
+  // puts the session's invite at a code and gives the engine's answer.
+  // tests stand in for it
+  final Future<String> Function(String code)? publish;
+  const PairCodePanel({super.key, this.compact = false, this.publish});
   @override
   State<PairCodePanel> createState() => _PairCodePanelState();
 }
@@ -28,6 +31,7 @@ class PairCodePanel extends StatefulWidget {
 class _PairCodePanelState extends State<PairCodePanel> {
   String? _code;
   String _status = '';
+  bool _failed = false;
   int _left = 0;
   Timer? _tick;
   bool _busy = false;
@@ -43,6 +47,7 @@ class _PairCodePanelState extends State<PairCodePanel> {
     HapticFeedback.selectionClick();
     setState(() {
       _busy = true;
+      _failed = false;
       _status = l10n.pairCodePanelPuttingYourInviteIn;
     });
     // Random.secure: a guessable code is one someone else can stand in
@@ -58,17 +63,13 @@ class _PairCodePanelState extends State<PairCodePanel> {
       }
       return;
     }
-    final uri = await appState.sessionInvite();
-    // a quiet session never reaches the relays: it answers as unreachable
-    // ones would
-    final res = sessionQuiet
-        ? 'error: no relays accepted'
-        : await engine.pairCodePublish(code, uri);
+    final res = await (widget.publish ?? _publish)(code);
     if (!mounted) return;
     if (res.startsWith('error')) {
       setState(() {
         _busy = false;
-        _status = l10n.pairCodeCouldNotReach;
+        _failed = true;
+        _status = pairErrorText(res);
       });
       return;
     }
@@ -87,6 +88,13 @@ class _PairCodePanelState extends State<PairCodePanel> {
         setState(() => _code = null);
       }
     });
+  }
+
+  static Future<String> _publish(String code) async {
+    final uri = await appState.sessionInvite();
+    // a quiet session never reaches the relays: it answers as unreachable
+    // ones would
+    return sessionQuiet ? pairUnreached : engine.pairCodePublish(code, uri);
   }
 
   @override
@@ -147,7 +155,10 @@ class _PairCodePanelState extends State<PairCodePanel> {
           Text(
             _status,
             textAlign: TextAlign.center,
-            style: HaloType.mono(size: 10.5, color: HaloColors.text3),
+            style: HaloType.mono(
+              size: 10.5,
+              color: _failed ? HaloColors.rose : HaloColors.text3,
+            ),
           ),
         ],
       ],

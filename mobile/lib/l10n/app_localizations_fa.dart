@@ -4080,6 +4080,13 @@ class AppLocalizationsFa extends AppLocalizations {
       'زیر این کد چیزی نیست. شاید محو شده باشد، یا او هنوز آن را هم‌رسانی نکرده.';
 
   @override
+  String get pairCodeUnreached =>
+      'به رله‌ها دسترسی نشد. کمی بعد دوباره امتحان کنید.';
+
+  @override
+  String get pairCodeFailed => 'انجام نشد. دوباره امتحان کنید.';
+
+  @override
   String get pairCodeTypeTheSixDigits => 'شش رقمی را که او می‌خواند تایپ کنید.';
 
   @override
@@ -6619,6 +6626,10 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
+  String get bridgesNoneUsable =>
+      'هیچ‌کدام از این خط‌ها پل قابل‌استفاده‌ای نیست، پس پل‌ها خاموش می‌مانند';
+
+  @override
   String get languageTitle => 'زبان';
 
   @override
@@ -7490,10 +7501,6 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get devLinkGone =>
       'گفتگو با Marios را حذف کرده‌اید. برای شروع گفتگوی تازه، در تنظیمات روی «پیام به Marios» بزنید.';
-
-  @override
-  String get pairCodeCouldNotReach =>
-      'اتصال برقرار نشد. اتصال خود را بررسی کنید و دوباره امتحان کنید.';
 
   @override
   String lockTooManyTriesFor(Object left) {

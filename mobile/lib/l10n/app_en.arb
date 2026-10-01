@@ -5078,6 +5078,14 @@
   "@pairCodeNothingAtThatCode": {
     "description": "screens/pair_code_screen.dart"
   },
+  "pairCodeUnreached": "Couldn't reach the relays. Try again in a moment.",
+  "@pairCodeUnreached": {
+    "description": "widgets/pair_join.dart, widgets/pair_code_panel.dart: no relay answered the lookup or took the share, so nothing is known about the code"
+  },
+  "pairCodeFailed": "That didn't work. Try again.",
+  "@pairCodeFailed": {
+    "description": "widgets/pair_join.dart, widgets/pair_code_panel.dart: sharing or looking up a pairing code failed for another reason"
+  },
   "pairCodeTypeTheSixDigits": "Type the six digits they read out.",
   "@pairCodeTypeTheSixDigits": {
     "description": "screens/pair_code_screen.dart"
@@ -8376,6 +8384,10 @@
       }
     }
   },
+  "bridgesNoneUsable": "None of these lines is a usable bridge, so bridges stay off",
+  "@bridgesNoneUsable": {
+    "description": "screens/bridges_screen.dart: after saving, not one line was a bridge line, so bridges were not turned on"
+  },
   "languageTitle": "Language",
   "@languageTitle": {
     "description": "widgets/language_sheet.dart: the sheet title and the settings row"
@@ -9432,10 +9444,6 @@
   "devLinkGone": "You deleted the chat with Marios. To start a new one, tap Write to Marios in Settings.",
   "@devLinkGone": {
     "description": "main.dart: the developer's card opened after his chat was deleted; only the settings row starts a new one"
-  },
-  "pairCodeCouldNotReach": "Couldn't get through. Check your connection and try again.",
-  "@pairCodeCouldNotReach": {
-    "description": "widgets/pair_code_panel.dart, widgets/pair_join.dart: no network answered, so nothing is known about the code"
   },
   "lockTooManyTriesFor": "Too many tries · {left}",
   "@lockTooManyTriesFor": {

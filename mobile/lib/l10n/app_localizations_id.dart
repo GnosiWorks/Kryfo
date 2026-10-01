@@ -4062,6 +4062,13 @@ class AppLocalizationsId extends AppLocalizations {
       'Tidak ada apa pun di kode itu. Mungkin sudah hilang, atau dia belum membagikannya.';
 
   @override
+  String get pairCodeUnreached =>
+      'Tidak bisa menghubungi relay. Coba lagi sebentar lagi.';
+
+  @override
+  String get pairCodeFailed => 'Tidak berhasil. Coba lagi.';
+
+  @override
   String get pairCodeTypeTheSixDigits => 'Ketik enam angka yang dia bacakan.';
 
   @override
@@ -6602,6 +6609,10 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
+  String get bridgesNoneUsable =>
+      'Tidak ada baris yang bisa dipakai sebagai jembatan, jadi jembatan tetap mati';
+
+  @override
   String get languageTitle => 'Bahasa';
 
   @override
@@ -7469,10 +7480,6 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get devLinkGone =>
       'Kamu sudah menghapus chat dengan Marios. Untuk memulai yang baru, ketuk “Kirim pesan ke Marios” di Pengaturan.';
-
-  @override
-  String get pairCodeCouldNotReach =>
-      'Tidak bisa terhubung. Periksa koneksimu lalu coba lagi.';
 
   @override
   String lockTooManyTriesFor(Object left) {

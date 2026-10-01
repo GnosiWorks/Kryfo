@@ -1056,6 +1056,8 @@
   "pairCodeLooking": "正在查找…",
   "pairCodeNothingThereYetTrying": "那里还没有 · 正在重试",
   "pairCodeNothingAtThatCode": "这个码下面什么都没有。它可能已经焚毁，或者对方还没有分享。",
+  "pairCodeUnreached": "联系不上中继。请稍后再试。",
+  "pairCodeFailed": "没有成功。请再试一次。",
   "pairCodeTypeTheSixDigits": "输入对方念出的六位数字。",
   "pairCodeAddThem": "添加对方",
   "pairCodeUsedTwice": "这个码被用了两次。请对方重新生成一个。",
@@ -1737,6 +1739,7 @@
   "confirmSheetCancel": "取消",
   "bridgesSaved": "{count, plural, other{{count} 个网桥}}",
   "bridgesSavedSomeBad": "{good} 条已接受，{bad} 条无法识别",
+  "bridgesNoneUsable": "这些行里没有可用的网桥，所以网桥保持关闭",
   "languageTitle": "语言",
   "languageMatchPhone": "跟随手机",
   "languageMatchPhoneValue": "跟随手机（{language}）",
@@ -1955,6 +1958,5 @@
   "appYourOwnInvite": "这是你自己的邀请。分享给别人才能互相连接。",
   "appTheyAreBlocked": "你已屏蔽 {id}。请在设置的“已屏蔽”中取消屏蔽后再添加。",
   "devLinkGone": "你已删除与 Marios 的聊天。要开始新的聊天，请在设置中点按“给 Marios 发消息”。",
-  "pairCodeCouldNotReach": "连接不上。请检查网络后重试。",
   "lockTooManyTriesFor": "尝试次数过多 · {left}"
 }
