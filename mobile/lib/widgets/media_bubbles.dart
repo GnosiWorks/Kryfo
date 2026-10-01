@@ -218,6 +218,7 @@ class VoiceBubbleState extends State<VoiceBubble> {
         _ready = false;
       }
       if (st.processingState == ProcessingState.completed) {
+        VoiceTurn.letGo(this);
         _player.seek(Duration.zero);
         _player.pause();
         if (mounted) {
@@ -296,6 +297,7 @@ class VoiceBubbleState extends State<VoiceBubble> {
 
   @override
   void dispose() {
+    VoiceTurn.letGo(this);
     _unguard?.call();
     _player.dispose();
     super.dispose();
@@ -313,20 +315,28 @@ class VoiceBubbleState extends State<VoiceBubble> {
       }
     }
     if (_playing) {
-      _unguard?.call();
-      _unguard = null;
-      _player.pause();
+      VoiceTurn.letGo(this);
+      _pause();
     } else {
       // the lock went up while the note was loading
       if (lockGuard.isLocked()) return;
+      // another note playing stops where it is; its next tap carries on
+      VoiceTurn.take(this, _pause);
       _unguard ??= lockGuard.closeOnLock(() {
         _unguard = null;
+        VoiceTurn.letGo(this);
         // stop, not pause: a note a call paused would start again by
         // itself when the call ends. the next tap carries on from here
         _player.stop();
       });
       _player.play();
     }
+  }
+
+  void _pause() {
+    _unguard?.call();
+    _unguard = null;
+    _player.pause();
   }
 
   String _fmt(Duration d) {

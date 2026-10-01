@@ -1,5 +1,9 @@
 // the pickers leave a copy of what was chosen in the app cache. once the
 // bytes are in hand it is zeroed and removed, with the plugin's own folder.
+// the recorder's take goes the same way.
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
@@ -25,4 +29,18 @@ Future<void> shredPickedImages(List<XFile> files) async {
   for (final x in files) {
     if (x.path.startsWith(cache)) await shredFile(x.path);
   }
+}
+
+// a voice note as recorded, read once and then zeroed and removed: the file
+// is the voice before any disguise. null when there is no take to read.
+Future<Uint8List?> takeRecording(String path) async {
+  final Uint8List bytes;
+  try {
+    bytes = await File(path).readAsBytes();
+  } catch (_) {
+    return null;
+  } finally {
+    await shredFile(path);
+  }
+  return bytes;
 }

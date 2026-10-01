@@ -88,6 +88,48 @@ Future<bool?> stripPictureFile(String path) async {
 Future<bool?> stripPictureFileOffUi(String path) =>
     Isolate.run(() => stripPictureFile(path));
 
+/// a photo as it may leave: cleaned, and a jpeg that still reads as tagged
+/// is refused. every photo lane passes here, the gallery's above all: its
+/// picker re-encodes and copies the tags across, and gives the original
+/// back untouched when it cannot read the size. null: drop it.
+Uint8List? photoToSend(Uint8List src) {
+  final out = stripPictureBytes(src);
+  if (out == null || jpegHasExif(out)) return null;
+  return out;
+}
+
+/// the same, off the ui thread
+Future<Uint8List?> photoToSendOffUi(Uint8List src) =>
+    Isolate.run(() => photoToSend(src));
+
+/// a saved photo made fit to go again, in place: a row left unsent by a
+/// version that did not clean gallery photos still holds the tags on disk.
+/// false when it was clean already, true when it was rewritten, null when it
+/// cannot be cleaned and may not go.
+Future<bool?> cleanSavedPhoto(String path) => Isolate.run(() async {
+  final f = File(path);
+  final Uint8List src;
+  try {
+    src = await f.readAsBytes();
+  } catch (_) {
+    return null;
+  }
+  final out = photoToSend(src);
+  if (out == null) return null;
+  if (_same(out, src)) return false;
+  await f.writeAsBytes(out, flush: true);
+  return true;
+});
+
+bool _same(Uint8List a, Uint8List b) {
+  if (identical(a, b)) return true;
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    if (a[i] != b[i]) return false;
+  }
+  return true;
+}
+
 /// the cleaned bytes; [src] itself when there was nothing to do or the file
 /// is no picture known here; null when it could not be read through.
 Uint8List? stripPictureBytes(Uint8List src) {

@@ -18,6 +18,33 @@ import 'press_scale.dart';
 /// how many bars a note's wave has
 const kVoiceBars = 30;
 
+/// one voice note plays at a time: a note that starts stops the one before
+class VoiceTurn {
+  VoiceTurn._();
+
+  static Object? _who;
+  static VoidCallback? _stop;
+
+  /// [who] starts playing; [stop] is how it is told to stop for the next
+  static void take(Object who, VoidCallback stop) {
+    final before = _stop;
+    final was = _who;
+    _who = who;
+    _stop = stop;
+    if (was != null && !identical(was, who)) before?.call();
+  }
+
+  /// [who] stopped on its own, or went
+  static void letGo(Object who) {
+    if (!identical(_who, who)) return;
+    _who = null;
+    _stop = null;
+  }
+
+  @visibleForTesting
+  static Object? get playing => _who;
+}
+
 // a note longer than this is not read for its wave: it keeps the flat one
 const _waveMaxBytes = 40 * 1024 * 1024;
 

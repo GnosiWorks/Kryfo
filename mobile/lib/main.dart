@@ -23,6 +23,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import 'theme.dart';
 import 'wipe.dart';
+import 'group_media_send.dart';
 import 'media_progress.dart';
 import 'media_send.dart';
 import 'media_resend.dart';
@@ -4800,6 +4801,7 @@ Future<void> sweepCaptures() async {
       // a backup copy that never got shredded, say the app died mid-save
       if (n.contains('/kryfo-backup-')) await shredFile(f.path);
     }
+    await sweepShareCopies(tmp);
     // the file picker keeps its own folder of copies
     final picks = Directory('${tmp.path}/file_picker');
     if (await picks.exists()) {
@@ -4811,6 +4813,19 @@ Future<void> sweepCaptures() async {
   } catch (e) {
     dlog('sweep: $e');
   }
+}
+
+// a file handed to the share sheet is a plain copy in the share plugin's
+// folder, kept there until the next share. the native side clears it on
+// resume once it is a few minutes old; this is the start's turn
+@visibleForTesting
+Future<void> sweepShareCopies(Directory cache) async {
+  final dir = Directory('${cache.path}/share_plus');
+  if (!await dir.exists()) return;
+  await for (final f in dir.list(recursive: true)) {
+    if (f is File) await shredFile(f.path);
+  }
+  await dir.delete(recursive: true);
 }
 
 String _safeLeaf(String s) => s.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
@@ -5428,10 +5443,6 @@ class AppState extends ChangeNotifier {
   // uids being processed right now, to dedup near-simultaneous arrivals
   // (preview re-send racing a manual retry) before the db write lands.
   final Set<String> _inflightUids = <String>{};
-  // group media slices already accepted by at least one member, per msg_uid,
-  // so tap-to-retry resumes instead of re-sending the whole file.
-  final Map<String, Set<int>> _grpChunkDone = {};
-  final Map<String, int> _grpChunkDoneAt = {};
   // uids the drainer is mid-flight on, so a slow send isn't fired twice by
   // the next sweep.
   final Set<String> _outboxInflight = <String>{};
@@ -5991,9 +6002,13 @@ class AppState extends ChangeNotifier {
       dlog('OUTBOX: group media redelivered $uid');
       await on.markSent(uid);
       await _lightBurn(r, uid, on);
+      // an open group re-reads the row, as the 1:1 drainer has it
+      _bumpChatRev('group:$groupId');
       notifyListeners();
-    } else {
+    } else if (res != 'busy') {
       dlog('OUTBOX: group media $uid still stuck ($res)');
+      // a bubble a busy retry left spinning settles into failed
+      _bumpChatRev('group:$groupId');
     }
   }
 
@@ -11684,6 +11699,8 @@ class AppState extends ChangeNotifier {
         msgUid: msgUid,
         replyTo: replyTo,
         burnAt: burnAt,
+        // a retry after a reload reads the timer back from the row
+        burnSecs: burnAt == null ? null : burnSeconds,
         // born unsent, or a dead send reloads as a ticked message nobody
         // ever received
         sent: 0,
@@ -11733,9 +11750,9 @@ class AppState extends ChangeNotifier {
     return anyOk;
   }
 
-  // chunked media multicast for groups. mirrors the 1:1 chunk engine but fans
-  // every 16k slice out to each member. the local row is saved by the caller;
-  // this only puts bytes on the wire. returns 'ok' or an error string.
+  // chunked media multicast for groups: every 16k slice to each member, see
+  // group_media_send. the local row is saved by the caller; this only puts
+  // bytes on the wire. returns 'ok', 'busy', 'cancelled' or an error string.
   Future<String> sendMediaToGroup(
     String groupId,
     String path, {
@@ -11749,66 +11766,30 @@ class AppState extends ChangeNotifier {
     // one send per media at a time, the same set the 1:1 path holds. the
     // drainer picks up any row older than 45 s, and a video to a group is
     // still leaving long after that: both would send the whole file.
-    if (!mediaInflight.add(msgUid)) return 'busy';
+    if (mediaInflight.contains(msgUid)) return 'busy';
     // a quiet session keeps the row here, unsent: nothing leaves
-    if (sessionQuiet) {
-      mediaInflight.remove(msgUid);
-      return 'error: quiet';
-    }
-    try {
-      return await _sendMediaToGroupInner(
-        groupId,
-        path,
-        msgUid: msgUid,
-        caption: caption,
-        fileName: fileName,
-        voice: voice,
-        voiceDisguised: voiceDisguised,
-        burnSeconds: burnSeconds,
-      );
-    } finally {
-      mediaInflight.remove(msgUid);
-    }
-  }
-
-  Future<String> _sendMediaToGroupInner(
-    String groupId,
-    String path, {
-    required String msgUid,
-    String caption = '',
-    String? fileName,
-    bool voice = false,
-    bool voiceDisguised = false,
-    int? burnSeconds,
-  }) async {
-    // 16k chunks. bigger sizes trip nip-44's 65535 plaintext ceiling once
-    // base64'd + double-wrapped (envelope + signal + gift wrap ~= x2.4), and
-    // public relays reject the event. 16k lands ~38-51k, safe on every relay.
-    // receivers reassemble by index/total, so chunk size is free to change.
-    // slices are read from the file as their turn comes, see media_send.
-    final int total;
-    try {
-      total = await mediaSliceCount(path);
-    } catch (e) {
-      return 'error: read';
-    }
+    if (sessionQuiet) return 'error: quiet';
     final d = _ownerOf(groupId);
-    if (total > 1) {
-      mediaProgressStart(msgUid, chatKey: d.container.chatKey(groupId));
-    }
     final members = await d.getGroupMembers(groupId);
     final adminId = await d.groupAdminId(groupId);
     final amAdmin = adminId == myId;
     final rosterParts = amAdmin ? await _buildParticipants(members) : null;
-    Future<bool> sendChunk(int i) async {
-      final String slice;
-      try {
-        slice = await mediaSlice(path, i);
-      } catch (e) {
-        dlog('GRP MEDIA chunk $i/$total unreadable: $e');
-        return false;
-      }
-      final wrapped = await wrapMessage(
+    // in a room this phone is its room key, which never takes a frame
+    final room = await _roomOf(groupId, d);
+    // 16k slices. bigger sizes trip nip-44's 65535 plaintext ceiling once
+    // base64'd + double-wrapped (envelope + signal + gift wrap ~= x2.4), and
+    // public relays reject the event. 16k lands ~38-51k, safe on every relay.
+    // receivers reassemble by index/total, so slice size is free to change.
+    return sendGroupSlices(
+      path: path,
+      msgUid: msgUid,
+      members: [
+        for (final m in members)
+          if (m != myId && m != room?.pub) m,
+      ],
+      progressKey: d.container.chatKey(groupId),
+      photo: fileName == null && !voice,
+      wrap: (slice, i, total) async => wrapMessage(
         caption,
         msgUid: msgUid,
         imageB64: fileName == null && !voice ? slice : null,
@@ -11825,51 +11806,9 @@ class AppState extends ChangeNotifier {
         rosterParticipants: rosterParts,
         supporterBadge: await sharedBadge(),
         sender: _mySender(),
-      );
-      var chunkOk = false;
-      for (var tryN = 0; tryN < 3 && !chunkOk; tryN++) {
-        final results = await Future.wait([
-          for (final memberId in members)
-            if (memberId != myId)
-              _sendGroupEnvelope(groupId, memberId, wrapped),
-        ]);
-        chunkOk = results.any((ok) => ok);
-        if (!chunkOk) {
-          dlog('GRP MEDIA chunk $i/$total try ${tryN + 1} failed');
-          if (tryN < 2) await Future.delayed(const Duration(seconds: 1));
-        }
-      }
-      if (!chunkOk) dlog('GRP MEDIA chunk $i/$total gave up');
-      return chunkOk;
-    }
-
-    // sequential on purpose: parallel waves drop chunks on the circuit.
-    // 150ms is the smallest safe breather dart-side.
-    // todo: batched publish in the engine
-    final now = DateTime.now().millisecondsSinceEpoch;
-    if (now - (_grpChunkDoneAt[msgUid] ?? now) > 240000) {
-      _grpChunkDone.remove(msgUid); // stale: a member may have restarted
-    }
-    _grpChunkDoneAt[msgUid] = now;
-    final done = _grpChunkDone.putIfAbsent(msgUid, () => <int>{});
-    if (done.isNotEmpty && total > 1) {
-      dlog('GRP MEDIA resume $msgUid: ${done.length}/$total already out');
-      mediaProgressUpdate(msgUid, done.length / total);
-    }
-    for (var i = 0; i < total; i++) {
-      if (done.contains(i)) continue;
-      final chunkOk = await sendChunk(i);
-      if (!chunkOk) return 'error: chunk $i undeliverable';
-      done.add(i);
-      _grpChunkDoneAt[msgUid] = DateTime.now().millisecondsSinceEpoch;
-      mediaProgressUpdate(msgUid, done.length / total);
-      if (total > 1 && i < total - 1) {
-        await Future.delayed(const Duration(milliseconds: 150));
-      }
-    }
-    _grpChunkDone.remove(msgUid);
-    _grpChunkDoneAt.remove(msgUid);
-    return 'ok';
+      ),
+      deliver: (m, wrapped) => _sendGroupEnvelope(groupId, m, wrapped),
+    );
   }
 
   // shared pin: everyone in the group sees the same pins

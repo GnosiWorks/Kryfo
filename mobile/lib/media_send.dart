@@ -7,6 +7,7 @@
 // so publishing there comes back as 'parked', not 'ok', and the row stays
 // queued.
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
@@ -16,6 +17,7 @@ import 'package:flutter/foundation.dart';
 
 import 'devchat/dev_start.dart' show devKeyFailed, kDevKeyFailed;
 import 'dlog.dart';
+import 'image_strip.dart' show cleanSavedPhoto;
 import 'main.dart' show appState, engine, signalEncryptSerial;
 import 'media_progress.dart';
 import 'message_envelope.dart';
@@ -32,6 +34,26 @@ final Set<String> mediaInflight = {};
 // there; the chat has already pulled the row and told the other side.
 final Set<String> mediaCancelled = {};
 void cancelMediaSend(String msgUid) => mediaCancelled.add(msgUid);
+
+final Map<String, List<Completer<void>>> _freeWaiters = {};
+
+// a send lets go of its row, and whoever waits on that row hears it
+void releaseMedia(String msgUid) {
+  mediaInflight.remove(msgUid);
+  final waiting = _freeWaiters.remove(msgUid);
+  if (waiting == null) return;
+  for (final c in waiting) {
+    c.complete();
+  }
+}
+
+/// done once no send holds [msgUid]; at once when none does
+Future<void> whenMediaFree(String msgUid) {
+  if (!mediaInflight.contains(msgUid)) return Future.value();
+  final c = Completer<void>();
+  _freeWaiters.putIfAbsent(msgUid, () => []).add(c);
+  return c.future;
+}
 
 int _mediaGrind(String seed) => grindPow(seed, powBits);
 
@@ -100,9 +122,9 @@ Future<String> sendChunkedMediaTo({
       progressKey: progressKey,
     );
   } finally {
-    mediaInflight.remove(msgUid);
     mediaCancelled.remove(msgUid);
     mediaProgressEnd(msgUid);
+    releaseMedia(msgUid);
   }
 }
 
@@ -131,6 +153,16 @@ Future<String> _sendChunkedMediaInner({
     torWait += 400;
   }
   if (!appState.torReady) return 'error: tor not ready';
+  // a photo is cleaned on every send, retries and the outbox included
+  if (fileName == null && !voice) {
+    final cleaned = await cleanSavedPhoto(path);
+    if (cleaned == null) return 'error: not clean';
+    if (cleaned) {
+      // the slices out so far were of other bytes
+      chunkDone.remove(msgUid);
+      if (only != null) return 'error: changed';
+    }
+  }
   final int total;
   try {
     total = await mediaSliceCount(path);

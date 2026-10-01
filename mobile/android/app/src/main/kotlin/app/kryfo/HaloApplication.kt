@@ -20,10 +20,12 @@ class HaloApplication : Application() {
         )
         FlutterEngineCache.getInstance().put(ENGINE_ID, engine)
         JobSetup.schedule(this)
-        // a file handed to another app to open is a copy in cache/open/.
-        // nothing needs it past the session that made it.
+        // a file handed to another app to open is a copy in cache/open/,
+        // one shared a copy in cache/share_plus/. nothing needs either past
+        // the session that made it.
         Thread {
             java.io.File(cacheDir, "open").deleteRecursively()
+            java.io.File(cacheDir, "share_plus").deleteRecursively()
             ToolsBridge.sweep(cacheDir, true)
         }.start()
     }
