@@ -19,6 +19,7 @@ import '../l10n/numbers.dart';
 import 'motion.dart' show kHouseCurve;
 import 'photo_viewer.dart';
 import 'voice_parts.dart';
+import 'press_scale.dart';
 import 'written_field.dart';
 import '../bidi_safe.dart';
 import '../dlog.dart';
@@ -486,7 +487,7 @@ class HoldToTalkMic extends StatefulWidget {
 
 class HoldToTalkMicState extends State<HoldToTalkMic> {
   final _rec = AudioRecorder();
-  OverlayEntry? _overlay;
+  RecordBarEntry? _overlay;
   Timer? _ticker;
   int _ms = 0;
   bool _willCancel = false;
@@ -552,11 +553,11 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
     HapticFeedback.mediumImpact();
     _ticker = Timer.periodic(const Duration(milliseconds: 100), (_) {
       _ms += 100;
-      _overlay?.markNeedsBuild();
+      _overlay?.rebuild();
     });
     if (mounted) _bottomInset = MediaQuery.of(context).padding.bottom;
-    _overlay = OverlayEntry(builder: (_) => _bar());
-    if (mounted) Overlay.of(context).insert(_overlay!);
+    _overlay = RecordBarEntry(_bar);
+    if (mounted) Overlay.of(context).insert(_overlay!.entry);
     // the lock stops the recording and throws it away
     _unguard = lockGuard.closeOnLock(_abort);
     _busy = false;
@@ -569,11 +570,13 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
     _ticker = null;
     _level?.cancel();
     _level = null;
-    _overlay?.remove();
-    _overlay = null;
-    final path = await _rec.stop();
     final ms = _ms;
     final cancel = _willCancel || ms < 400;
+    // a note thrown away leaves in the rose of a cancel
+    _willCancel = cancel;
+    _overlay?.leave();
+    _overlay = null;
+    final path = await _rec.stop();
     if (cancel) {
       final p = path ?? _path;
       if (p != null) {
@@ -601,7 +604,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
     return '${whole(m)}:${twoDigits(s % 60)}';
   }
 
-  Widget _bar() {
+  Widget _bar(bool leaving) {
     return Positioned(
       left: 0,
       right: 0,
@@ -618,6 +621,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
         closeLabel: l10n.commonClose,
         onClose: _abort,
         bottom: _bottomInset,
+        leaving: leaving,
       ),
     );
   }
@@ -641,13 +645,30 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
           _willCancel = wc;
           if (wc) HapticFeedback.mediumImpact();
         }
-        _overlay?.markNeedsBuild();
+        _overlay?.rebuild();
       },
       onLongPressEnd: (_) {
         _live = false;
         _end();
       },
-      child: Icon(Icons.mic_none_rounded, size: 22, color: HaloColors.text2),
+      // a short tap says how it works instead of doing nothing
+      onTap: () {
+        HapticFeedback.selectionClick();
+        showHaloToast(context, l10n.chatHoldToRecord);
+      },
+      // a finger-sized target; the icon keeps its place at the row's end
+      child: SizedBox(
+        width: 36,
+        height: 40,
+        child: Align(
+          alignment: AlignmentDirectional.centerEnd,
+          child: Icon(
+            Icons.mic_none_rounded,
+            size: 22,
+            color: HaloColors.text2,
+          ),
+        ),
+      ),
     );
   }
 }
@@ -680,7 +701,11 @@ class ImageCaptionScreenState extends State<ImageCaptionScreen> {
                 children: [
                   IconButton(
                     tooltip: l10n.commonBack,
-                    icon: Icon(Icons.arrow_back, color: HaloColors.text2),
+                    icon: Icon(
+                      Icons.chevron_left,
+                      color: HaloColors.text2,
+                      size: 26,
+                    ),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   Text(
@@ -746,27 +771,26 @@ class ImageCaptionScreenState extends State<ImageCaptionScreen> {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  Semantics(
+                  PressScale(
                     label: l10n.commonSend,
-                    button: true,
-                    child: GestureDetector(
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        Navigator.of(context).pop(_ctrl.text.trim());
-                      },
-                      child: Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: HaloColors.amber,
-                        ),
-                        alignment: Alignment.center,
-                        child: Icon(
-                          Icons.arrow_upward,
-                          size: 20,
-                          color: HaloColors.onAmber,
-                        ),
+                    scale: 0.88,
+                    haptic: false,
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      Navigator.of(context).pop(_ctrl.text.trim());
+                    },
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: HaloColors.amber,
+                      ),
+                      alignment: Alignment.center,
+                      child: Icon(
+                        Icons.arrow_upward,
+                        size: 20,
+                        color: HaloColors.onAmber,
                       ),
                     ),
                   ),

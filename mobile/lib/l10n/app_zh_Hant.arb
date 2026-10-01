@@ -463,6 +463,7 @@
   "chatDisguiseVoice": "變聲",
   "commonSend": "傳送",
   "chatNoPhotosInThis": "這個聊天裡還沒有照片",
+  "chatHoldToRecord": "按住即可錄製語音訊息",
   "chatSendPhoto": "傳送照片",
   "chatAddACaption": "加上說明…",
   "chatSecurityCodeChanged": "安全碼已變更",

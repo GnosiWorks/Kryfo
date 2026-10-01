@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../link_preview.dart' show domainOf;
 import '../theme.dart';
+import 'ease_size.dart';
 import 'press_scale.dart';
 import '../l10n/l10n.dart';
 
@@ -28,9 +29,8 @@ class PreviewStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = pending;
     final show = p != null || url != null;
-    return AnimatedSize(
+    return EaseSize(
       duration: const Duration(milliseconds: 220),
-      curve: Curves.easeOutCubic,
       alignment: Alignment.bottomCenter,
       child: !show
           ? const SizedBox(width: double.infinity)

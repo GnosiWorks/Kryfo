@@ -1820,6 +1820,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get chatNoPhotosInThis => 'هنوز عکسی در این گفت‌وگو نیست';
 
   @override
+  String get chatHoldToRecord => 'برای ضبط پیام صوتی نگه دارید';
+
+  @override
   String get chatSendPhoto => 'ارسال عکس';
 
   @override

@@ -4,9 +4,11 @@
 // group page feels like one on settings.
 import 'package:flutter/material.dart';
 
+import '../bidi_safe.dart';
 import '../theme.dart';
 import 'halo_sheet.dart';
 import 'sheet_handle.dart';
+import 'written_field.dart';
 import '../l10n/l10n.dart';
 
 Widget _frame(BuildContext ctx, List<Widget> children) => Padding(
@@ -136,18 +138,24 @@ Future<String?> showChangeOrRemoveSheet(
 );
 
 // a question with one consequential answer. rose when it destroys something.
+// [figure] is the number the answer turns on, such as a size, above the line
 Future<bool> showConfirmSheet(
   BuildContext context, {
   required String title,
   required String line,
   required String yes,
   String? keep,
+  String? figure,
   bool rose = true,
 }) async {
   final r = await showHaloSheet<bool>(
     context,
     builder: (ctx) => _frame(ctx, [
       _title(title, color: rose ? HaloColors.rose : null),
+      if (figure != null) ...[
+        const SizedBox(height: 8),
+        Text(figure, style: HaloType.mono(size: 12, color: HaloColors.amber)),
+      ],
       const SizedBox(height: 8),
       _line(line),
       const SizedBox(height: 16),
@@ -170,6 +178,8 @@ Future<String?> showInputSheet(
   bool mono = false,
   bool rose = false,
   int maxLength = 60,
+  // a message rather than a name: it wraps, keeps its line breaks, no cap
+  bool multiline = false,
 }) {
   final ctrl = TextEditingController(text: initial ?? '');
   return showHaloSheet<String>(
@@ -186,21 +196,30 @@ Future<String?> showInputSheet(
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: HaloColors.line, width: 0.5),
         ),
-        child: TextField(
+        child: WrittenDir(
           controller: ctrl,
-          autofocus: true,
-          maxLength: maxLength,
-          autocorrect: !mono,
-          enableSuggestions: !mono,
-          onSubmitted: (s) => Navigator.pop(ctx, s),
-          style: mono
-              ? HaloType.mono(size: 14, color: HaloColors.text)
-              : HaloType.sans(size: 15, color: HaloColors.text),
-          decoration: InputDecoration(
-            border: InputBorder.none,
-            counterText: '',
-            hintText: hint,
-            hintStyle: HaloType.mono(size: 13, color: HaloColors.text3),
+          builder: (dir) => TextField(
+            controller: ctrl,
+            textDirection: dir,
+            inputFormatters: const [UnmarkedInput()],
+            autofocus: true,
+            maxLength: multiline ? null : maxLength,
+            minLines: 1,
+            maxLines: multiline ? 6 : 1,
+            keyboardType: multiline ? TextInputType.multiline : null,
+            autocorrect: !mono,
+            enableSuggestions: !mono,
+            cursorColor: HaloColors.amber,
+            onSubmitted: multiline ? null : (s) => Navigator.pop(ctx, s),
+            style: mono
+                ? HaloType.mono(size: 14, color: HaloColors.text)
+                : HaloType.sans(size: 15, color: HaloColors.text),
+            decoration: InputDecoration(
+              border: InputBorder.none,
+              counterText: '',
+              hintText: hint,
+              hintStyle: HaloType.mono(size: 13, color: HaloColors.text3),
+            ),
           ),
         ),
       ),

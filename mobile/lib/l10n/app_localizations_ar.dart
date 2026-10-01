@@ -1862,6 +1862,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatNoPhotosInThis => 'لا صور في هذه المحادثة بعد';
 
   @override
+  String get chatHoldToRecord => 'اضغط مطولًا لتسجيل رسالة صوتية';
+
+  @override
   String get chatSendPhoto => 'إرسال الصورة';
 
   @override

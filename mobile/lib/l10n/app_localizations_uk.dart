@@ -1848,6 +1848,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get chatNoPhotosInThis => 'У цьому чаті ще немає фото';
 
   @override
+  String get chatHoldToRecord => 'Утримуй, щоб записати голосове повідомлення';
+
+  @override
   String get chatSendPhoto => 'Надіслати фото';
 
   @override

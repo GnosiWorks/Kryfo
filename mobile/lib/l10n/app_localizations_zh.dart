@@ -1750,6 +1750,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatNoPhotosInThis => '这个聊天里还没有照片';
 
   @override
+  String get chatHoldToRecord => '按住录制语音消息';
+
+  @override
   String get chatSendPhoto => '发送照片';
 
   @override
@@ -8931,6 +8934,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get chatNoPhotosInThis => '這個聊天裡還沒有照片';
+
+  @override
+  String get chatHoldToRecord => '按住即可錄製語音訊息';
 
   @override
   String get chatSendPhoto => '傳送照片';

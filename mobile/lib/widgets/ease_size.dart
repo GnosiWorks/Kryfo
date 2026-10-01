@@ -7,10 +7,12 @@ import 'package:flutter/material.dart';
 class EaseSize extends StatelessWidget {
   final Widget child;
   final Duration duration;
+  final AlignmentGeometry alignment;
   const EaseSize({
     super.key,
     required this.child,
     this.duration = const Duration(milliseconds: 260),
+    this.alignment = Alignment.topCenter,
   });
 
   @override
@@ -19,7 +21,7 @@ class EaseSize extends StatelessWidget {
     return AnimatedSize(
       duration: duration,
       curve: Curves.easeOutCubic,
-      alignment: Alignment.topCenter,
+      alignment: alignment,
       child: child,
     );
   }

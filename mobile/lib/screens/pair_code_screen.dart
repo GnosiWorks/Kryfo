@@ -36,7 +36,11 @@ class _PairCodeScreenState extends State<PairCodeScreen> {
                 children: staggerAll([
                   IconButton(
                     tooltip: l10n.commonBack,
-                    icon: Icon(Icons.arrow_back, color: HaloColors.text2),
+                    icon: Icon(
+                      Icons.chevron_left,
+                      color: HaloColors.text2,
+                      size: 26,
+                    ),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   Text(

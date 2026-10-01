@@ -1803,6 +1803,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get chatNoPhotosInThis => 'Belum ada foto di obrolan ini';
 
   @override
+  String get chatHoldToRecord => 'Tahan untuk merekam pesan suara';
+
+  @override
   String get chatSendPhoto => 'Kirim foto';
 
   @override

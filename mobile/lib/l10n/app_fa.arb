@@ -463,6 +463,7 @@
   "chatDisguiseVoice": "تغییر صدا",
   "commonSend": "ارسال",
   "chatNoPhotosInThis": "هنوز عکسی در این گفت‌وگو نیست",
+  "chatHoldToRecord": "برای ضبط پیام صوتی نگه دارید",
   "chatSendPhoto": "ارسال عکس",
   "chatAddACaption": "افزودن توضیح…",
   "chatSecurityCodeChanged": "کد امنیتی تغییر کرد",

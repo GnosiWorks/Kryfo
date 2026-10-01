@@ -6,7 +6,9 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 class MenuBackdrop extends StatefulWidget {
-  const MenuBackdrop({super.key});
+  // the menu is going: the dim fades back out
+  final bool closing;
+  const MenuBackdrop({super.key, this.closing = false});
 
   @override
   State<MenuBackdrop> createState() => _MenuBackdropState();
@@ -18,6 +20,14 @@ class _MenuBackdropState extends State<MenuBackdrop>
     vsync: this,
     duration: const Duration(milliseconds: 220),
   )..forward();
+
+  @override
+  void didUpdateWidget(MenuBackdrop old) {
+    super.didUpdateWidget(old);
+    if (widget.closing && !old.closing) {
+      _c.animateBack(0, duration: const Duration(milliseconds: 160));
+    }
+  }
 
   @override
   void dispose() {
@@ -33,21 +43,30 @@ class _MenuBackdropState extends State<MenuBackdrop>
         final t = Curves.easeOut.transform(_c.value);
         // only the dark overlay animates: an animated blur sigma recomputes
         // the whole blur every frame and janks on weaker phones
-        return BackdropFilter(
+        final blur = BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
           child: Container(color: Colors.black.withValues(alpha: 0.42 * t)),
         );
+        // on the way out the blur fades with the dim, or it cuts at the end
+        return widget.closing ? Opacity(opacity: t, child: blur) : blur;
       },
     );
   }
 }
 
 // the menu itself: grows out of the bubble's corner with a little overshoot,
-// so it reads as coming from the thing you pressed.
+// so it reads as coming from the thing you pressed, and shrinks back into
+// it when it closes.
 class MenuPop extends StatefulWidget {
   final bool fromRight;
+  final bool closing;
   final Widget child;
-  const MenuPop({super.key, required this.fromRight, required this.child});
+  const MenuPop({
+    super.key,
+    required this.fromRight,
+    this.closing = false,
+    required this.child,
+  });
 
   @override
   State<MenuPop> createState() => _MenuPopState();
@@ -58,6 +77,14 @@ class _MenuPopState extends State<MenuPop> with SingleTickerProviderStateMixin {
     vsync: this,
     duration: const Duration(milliseconds: 240),
   )..forward();
+
+  @override
+  void didUpdateWidget(MenuPop old) {
+    super.didUpdateWidget(old);
+    if (widget.closing && !old.closing) {
+      _c.animateBack(0, duration: const Duration(milliseconds: 160));
+    }
+  }
 
   @override
   void dispose() {
@@ -76,7 +103,10 @@ class _MenuPopState extends State<MenuPop> with SingleTickerProviderStateMixin {
         if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) {
           return Opacity(opacity: v, child: child);
         }
-        final t = Curves.easeOutBack.transform(v);
+        // out: no overshoot, it just folds into the corner
+        final t = widget.closing
+            ? Curves.easeInCubic.flipped.transform(v)
+            : Curves.easeOutBack.transform(v);
         return Opacity(
           opacity: v,
           child: Transform.scale(

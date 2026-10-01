@@ -463,6 +463,7 @@
   "chatDisguiseVoice": "Déguiser la voix",
   "commonSend": "Envoyer",
   "chatNoPhotosInThis": "Pas encore de photos dans cette discussion",
+  "chatHoldToRecord": "Maintenez pour enregistrer un message vocal",
   "chatSendPhoto": "Envoyer la photo",
   "chatAddACaption": "Ajouter une légende…",
   "chatSecurityCodeChanged": "Code de sécurité modifié",

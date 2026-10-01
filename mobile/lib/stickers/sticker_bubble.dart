@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import '../dlog.dart';
 import '../l10n/l10n.dart';
 import '../theme.dart';
+import '../widgets/chat_parts.dart' show CornerSwap, GrowSwap, SentTick;
 import '../widgets/motion.dart' show houseSpring;
 import '../widgets/press_scale.dart';
 import '../widgets/stroke_icon.dart';
@@ -202,15 +203,20 @@ class _StickerBubbleState extends State<StickerBubble>
                   label: stickerSaid(widget.emoji),
                 ),
         ),
-        if (stamp != null)
-          PositionedDirectional(
-            end: 0,
-            bottom: 0,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: kStickerBubble),
-              child: stamp,
-            ),
+        // the stamp grows in from the corner as the sending pill folds
+        PositionedDirectional(
+          end: 0,
+          bottom: 0,
+          child: CornerSwap(
+            child: stamp == null
+                ? const SizedBox.shrink(key: ValueKey('no-stamp'))
+                : ConstrainedBox(
+                    key: const ValueKey('stamp'),
+                    constraints: const BoxConstraints(maxWidth: kStickerBubble),
+                    child: stamp,
+                  ),
           ),
+        ),
       ],
     );
   }
@@ -224,13 +230,21 @@ class _StickerBubbleState extends State<StickerBubble>
           : CrossAxisAlignment.start,
       children: [
         StickerPlaceholder(emoji: widget.emoji),
-        if (stamp != null) ...[
-          const SizedBox(height: 4),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: kStickerBubble),
-            child: stamp,
-          ),
-        ],
+        GrowSwap(
+          alignment: widget.isOut
+              ? AlignmentDirectional.centerEnd
+              : AlignmentDirectional.centerStart,
+          child: stamp == null
+              ? const SizedBox.shrink(key: ValueKey('no-stamp'))
+              : Padding(
+                  key: const ValueKey('stamp'),
+                  padding: const EdgeInsets.only(top: 4),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: kStickerBubble),
+                    child: stamp,
+                  ),
+                ),
+        ),
       ],
     );
   }
@@ -437,23 +451,17 @@ class StickerStamp extends StatelessWidget {
               const SizedBox(width: 6),
             ],
             Text(time, style: style),
-            if (sent) ...[
+            // the same tick as a text bubble: delivered nods and grows out
+            if (sent || delivered != null) ...[
               const SizedBox(width: 3),
-              Text(
-                '✓',
-                style: TextStyle(
-                  fontSize: 10.5,
-                  color: HaloColors.text2,
-                  fontWeight: FontWeight.w700,
-                  height: 1,
+              SentTick(
+                delivered: delivered != null,
+                deliveredLabel: delivered ?? '',
+                color: HaloColors.text2,
+                labelStyle: style.copyWith(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w600,
                 ),
-              ),
-            ],
-            if (delivered != null) ...[
-              const SizedBox(width: 4),
-              Text(
-                delivered,
-                style: style.copyWith(fontSize: 9, fontWeight: FontWeight.w600),
               ),
             ],
           ],
