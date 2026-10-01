@@ -8,18 +8,31 @@ khatru and sqlite, listening on `127.0.0.1:3334` behind nginx at
 `relay.kryfo.app`. no auth. gift wraps are deleted after 14 days
 (`retention.go`).
 
-`limits.go` keeps it to what the app does: gift wraps with one address,
-messages up to 256 kB, stamped at most 2 hours ahead, reads by address or by
-id only (a filter without an address would dump everyone's post box), limit 0
-reads included. every event and every read is paced per connection, refused
-or not. sockets (`RELAY_MAX_CONNS`, 20000) and stored bytes
-(`RELAY_MAX_MB_PER_MIN`, 240 MB a minute, four minutes of it at once) are
-capped for everyone together, and wraps stop being taken below 2 GB of free
-disk, read every 30 s and again after every 32 MB taken. nothing is counted
-per ip: behind tor every caller looks the same. kind 5 deletion requests are
-refused before they reach the store: wraps go when they expire. there is no
-delete on delivery: watching deliveries means wrapping khatru's query
-channel, and that can stall every subscription.
+`limits.go` keeps it to what the app does: gift wraps with one address and at
+most 8 tags of 4 values, messages up to 256 kB, stamped at most 2 hours ahead,
+reads by address or by id only (a filter without an address would dump
+everyone's post box), limit 0 reads included. every event and every read is
+paced per connection, refused or not. sockets (`RELAY_MAX_CONNS`, 20000) and
+stored bytes (`RELAY_MAX_MB_PER_MIN`, 240 MB a minute, four minutes of it at
+once) are capped for everyone together, and wraps stop being taken below 2 GB
+of free disk, read every 30 s and again after every 32 MB taken. nothing is
+counted per ip: behind tor every caller looks the same. kind 5 deletion
+requests are refused before they reach the store: wraps go when they expire.
+there is no delete on delivery: watching deliveries means wrapping khatru's
+query channel, and that can stall every subscription.
+
+a sender gets its ok once the wrap is stored. listeners get it from a queue
+per connection, so a slow one holds up no one. queues count what their
+wraps hold in memory. a listener more than 8 MB behind, one that takes
+over 10 s to take a frame, or one whose next wrap would take all queues
+together past 256 MB (`RELAY_MAX_QUEUED_MB`), is closed and reads the rest
+from the store when it comes back. a page of stored wraps gets 2 minutes
+in all, since the store's read stays open while it is written. khatru is a
+fork for this, see `relay-live/VENDOR_PATCHES.md`.
+
+the store runs in wal mode, so `data/` holds `halo.sqlite`,
+`halo.sqlite-wal` and `halo.sqlite-shm`. copy all three, or stop the relay
+first.
 
 it needs cgo (`go-sqlite3`). with `CGO_ENABLED=0` it builds and then panics at
 start.
