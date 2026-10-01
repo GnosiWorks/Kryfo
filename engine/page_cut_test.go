@@ -236,7 +236,7 @@ func TestCutPagesResumeBelowWhatTheyMissed(t *testing.T) {
 
 // a relay that answers each request with stored events, an eose and then as
 // many live ones, numbered in the order they go out
-func floodRelay(t *testing.T, stored, live int) string {
+func burstRelay(t *testing.T, stored, live int) string {
 	t.Helper()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		conn, err := ws.Accept(w, r, nil)
@@ -284,7 +284,7 @@ func floodRelay(t *testing.T, stored, live int) string {
 // sent, the stored ones all before the eose is passed on
 func TestEventsComeInTheOrderTheyWereSent(t *testing.T) {
 	const stored, live = 300, 300
-	u := floodRelay(t, stored, live)
+	u := burstRelay(t, stored, live)
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	r, err := nostr.RelayConnect(ctx, u, nostr.RelayOptions{AssumeValid: true})
@@ -327,7 +327,7 @@ func TestEventsComeInTheOrderTheyWereSent(t *testing.T) {
 // first, which it would count as stored
 func TestALiveEventNeverComesBeforeTheEose(t *testing.T) {
 	const stored, live = 5, 3
-	u := floodRelay(t, stored, live)
+	u := burstRelay(t, stored, live)
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 	r, err := nostr.RelayConnect(ctx, u, nostr.RelayOptions{AssumeValid: true})
@@ -468,7 +468,7 @@ func TestAnEoseNeverFollowsADroppedStoredEvent(t *testing.T) {
 // came before it, in order, even when the reader is not there as it fires
 func TestAFakedEoseDropsNoStoredEvent(t *testing.T) {
 	const stored = 40
-	u := floodRelay(t, stored, 0)
+	u := burstRelay(t, stored, 0)
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	r, err := nostr.RelayConnect(ctx, u, nostr.RelayOptions{AssumeValid: true})
@@ -504,10 +504,10 @@ func TestAFakedEoseDropsNoStoredEvent(t *testing.T) {
 	}
 }
 
-// subscriptions ended part way through a flood hand over the start of it,
+// subscriptions ended part way through a burst hand over the start of it,
 // in order, and close their channel; nothing is sent on it after that
 func TestAnEndedSubscriptionKeepsTheStartOfWhatCame(t *testing.T) {
-	u := floodRelay(t, 400, 0)
+	u := burstRelay(t, 400, 0)
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 	r, err := nostr.RelayConnect(ctx, u, nostr.RelayOptions{AssumeValid: true})
