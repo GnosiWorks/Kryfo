@@ -3,6 +3,7 @@ module halo-relay
 go 1.25.0
 
 require (
+	github.com/fasthttp/websocket v1.5.12
 	github.com/fiatjaf/eventstore v0.17.9
 	github.com/fiatjaf/khatru v0.19.1
 	github.com/nbd-wtf/go-nostr v0.52.1
@@ -22,7 +23,6 @@ require (
 	github.com/coder/websocket v1.8.14 // indirect
 	github.com/decred/dcrd/crypto/blake256 v1.1.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.0 // indirect
-	github.com/fasthttp/websocket v1.5.12 // indirect
 	github.com/jmoiron/sqlx v1.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
@@ -46,3 +46,5 @@ require (
 	golang.org/x/net v0.52.0 // indirect
 	golang.org/x/sys v0.42.0 // indirect
 )
+
+replace github.com/fiatjaf/khatru => ./third_party/khatru

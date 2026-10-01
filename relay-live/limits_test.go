@@ -50,6 +50,15 @@ func setEventBudget(l *limits, n float64) {
 	}
 }
 
+// sets the refill of every open connection's events, keeping what is left
+func setEventRefill(l *limits, perSec float64) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	for _, b := range l.conns {
+		b.events.perSec = perSec
+	}
+}
+
 func connect(t *testing.T, url string) *nostr.Relay {
 	t.Helper()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -58,7 +67,7 @@ func connect(t *testing.T, url string) *nostr.Relay {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { r.Close() })
+	// left open: go-nostr's Close races with its own write loop
 	return r
 }
 
@@ -147,6 +156,16 @@ func TestWrapsGoInAndComeBackByAddress(t *testing.T) {
 	if err := publish(t, r, exp); err != nil {
 		t.Fatal(err)
 	}
+	// as many tags as a wrap may carry, each as long as it may be
+	full := wrap(t, to, func(e *nostr.Event) {
+		e.Tags = nostr.Tags{{"p", to, "wss://relay.example", "x"}}
+		for len(e.Tags) < maxTags {
+			e.Tags = append(e.Tags, nostr.Tag{"x", "a", "b", "c"})
+		}
+	})
+	if err := publish(t, r, full); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestOnlyWrapsToOneAddress(t *testing.T) {
@@ -160,6 +179,12 @@ func TestOnlyWrapsToOneAddress(t *testing.T) {
 		"a bad address":   func(e *nostr.Event) { e.Tags = nostr.Tags{{"p", "zz"}} },
 		"from the future": func(e *nostr.Event) { e.CreatedAt = nostr.Now() + nostr.Timestamp(futureSlack/time.Second) + 60 },
 		"too old":         func(e *nostr.Event) { e.CreatedAt = nostr.Now() - nostr.Timestamp(wrapTTL/time.Second) - 60 },
+		"too many tags": func(e *nostr.Event) {
+			for len(e.Tags) <= maxTags {
+				e.Tags = append(e.Tags, nostr.Tag{})
+			}
+		},
+		"a long tag": func(e *nostr.Event) { e.Tags = append(e.Tags, make(nostr.Tag, maxTagLen+1)) },
 	} {
 		if err := publish(t, r, wrap(t, to, mod)); err == nil {
 			t.Errorf("%s was taken", name)
@@ -219,18 +244,28 @@ func TestScrapesAreRefused(t *testing.T) {
 }
 
 func TestEventsArePacedPerConnection(t *testing.T) {
-	url, _ := testRelay(t)
+	url, l := testRelay(t)
 	r := connect(t, url)
 	to := addr()
-	taken := 0
-	for i := 0; i < eventBurst+20; i++ {
+	if err := publish(t, r, wrap(t, to, nil)); err != nil {
+		t.Fatal(err)
+	}
+	// no refill while the loop runs, however long it takes
+	setEventRefill(l, 0)
+	taken := 1
+	for i := 0; i < eventBurst+50; i++ {
 		if publish(t, r, wrap(t, to, nil)) == nil {
 			taken++
 		}
 	}
-	// the refill adds a few while the loop runs
-	if taken < eventBurst || taken > eventBurst+15 {
-		t.Fatalf("took %d of %d, burst is %d", taken, eventBurst+20, eventBurst)
+	if taken != eventBurst {
+		t.Fatalf("took %d of %d, burst is %d", taken, eventBurst+51, eventBurst)
+	}
+	// and the refill brings it back
+	setEventRefill(l, eventsPerSec)
+	time.Sleep(300 * time.Millisecond)
+	if err := publish(t, r, wrap(t, to, nil)); err != nil {
+		t.Fatalf("after the refill: %v", err)
 	}
 	// a second connection has its own budget
 	if err := publish(t, connect(t, url), wrap(t, to, nil)); err != nil {

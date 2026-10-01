@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/fiatjaf/eventstore/sqlite3"
 	"github.com/fiatjaf/khatru"
 )
 
@@ -33,13 +32,9 @@ func main() {
 		addr = v
 	}
 	startSweeper(db)
+	startCheckpoints(db)
 
 	fmt.Println("halo relay listening on", addr)
-	log.Fatal(http.ListenAndServe(addr, relay))
-}
-
-// the store as the relay runs it, its page size left at the backend's own
-func openStore(path string) (*sqlite3.SQLite3Backend, error) {
-	db := &sqlite3.SQLite3Backend{DatabaseURL: path}
-	return db, db.Init()
+	srv := &http.Server{Addr: addr, Handler: relay, WriteTimeout: writeWait}
+	log.Fatal(srv.ListenAndServe())
 }

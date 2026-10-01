@@ -9,6 +9,7 @@ package main
 import (
 	"context"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"os"
@@ -31,6 +32,10 @@ const (
 	// one live subscription per socket, catch-up pages one after another
 	reqsPerSec, reqBurst = 2, 100
 	maxIDs, maxAddrs     = 20, 10
+	// a wrap carries its address and an expiration. every parsed tag costs
+	// about 100 bytes of memory while the wrap waits for a listener, and is
+	// looked at for every listener, whatever it holds
+	maxTags, maxTagLen = 8, 4
 	// how far ahead of this box a wrap may be stamped. not tighter, so a
 	// phone whose clock runs fast still delivers
 	futureSlack = 2 * time.Hour
@@ -43,7 +48,26 @@ const (
 	// what a stored wrap costs beyond its content and tags: id, key,
 	// signature and the index entries
 	rowOverhead = 512
+	// what a save writes to the wal beside the wrap: the table's page, one
+	// per index and room for a split, 4 kB each. counted toward the
+	// recheck, so the floor holds while a long read keeps the wal full
+	walPages = 8 << 12
+	// a client gets this long to take each frame, then it is closed
+	writeWait = 10 * time.Second
+	// and this long for a page of stored wraps. the store's read stays open
+	// while a page is written, which keeps the wal from being emptied. the
+	// app gives up on a page after 90 s
+	pageWait = 2 * time.Minute
+	// live wraps waiting for one connection, counted as what they hold in
+	// memory. a phone on a slow circuit gets about 160 media slices of
+	// slack, then it is closed and reads the rest from the store
+	maxQueued = 8 << 20
 )
+
+// live wraps waiting for all connections together, so slow listeners
+// cannot add up past the box's memory. past it, the connection a wrap was
+// for is closed
+var maxQueuedTotal = int64(envInt("RELAY_MAX_QUEUED_MB", 256)) << 20
 
 // bytes of wraps taken per minute for everyone together, with four minutes
 // of it as a burst. a media slice is about 40 kB, so this is far above what
@@ -108,6 +132,10 @@ func applyLimits(relay *khatru.Relay, dataDir string) *limits {
 		dataDir:  dataDir,
 	}
 	relay.MaxMessageSize = maxMessage
+	relay.WriteWait = writeWait
+	relay.PageWait = pageWait
+	relay.MaxQueuedSize = maxQueued
+	relay.MaxQueuedTotal = maxQueuedTotal
 	relay.RejectConnection = append(relay.RejectConnection, l.full)
 	relay.OnConnect = append(relay.OnConnect, l.connect)
 	relay.OnDisconnect = append(relay.OnDisconnect, l.disconnect)
@@ -188,8 +216,14 @@ func (l *limits) event(ctx context.Context, ev *nostr.Event) (bool, string) {
 	if ev.Kind != wrapKind {
 		return true, "blocked: this relay only keeps gift wraps"
 	}
+	if len(ev.Tags) > maxTags {
+		return true, "invalid: too many tags"
+	}
 	addrs := 0
 	for _, t := range ev.Tags {
+		if len(t) > maxTagLen {
+			return true, "invalid: a tag is too long"
+		}
 		if len(t) > 0 && t[0] == "p" {
 			if len(t) < 2 || !isKey(t[1]) {
 				return true, "invalid: bad p tag"
@@ -217,18 +251,15 @@ func (l *limits) event(ctx context.Context, ev *nostr.Event) (bool, string) {
 	if !ok {
 		return true, "rate-limited: the relay is busy, try later"
 	}
-	l.noteWritten(size)
+	l.noteWritten(size + walPages)
 	return false, ""
 }
 
+// the tags are stored as the json the store writes for them, escapes and
+// all
 func storedSize(ev *nostr.Event) int {
-	n := rowOverhead + len(ev.Content)
-	for _, t := range ev.Tags {
-		for _, s := range t {
-			n += len(s) + 4
-		}
-	}
-	return n
+	tags, _ := json.Marshal(ev.Tags)
+	return rowOverhead + len(ev.Content) + len(tags)
 }
 
 func (l *limits) noteWritten(n int) {
