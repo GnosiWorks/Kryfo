@@ -463,6 +463,7 @@
   "chatDisguiseVoice": "Sesi gizle",
   "commonSend": "Gönder",
   "chatNoPhotosInThis": "Bu sohbette henüz fotoğraf yok",
+  "chatHoldToRecord": "Sesli mesaj kaydetmek için basılı tut",
   "chatSendPhoto": "Fotoğraf gönder",
   "chatAddACaption": "Açıklama ekle…",
   "chatSecurityCodeChanged": "Güvenlik kodu değişti",

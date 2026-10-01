@@ -11,7 +11,9 @@ import 'package:share_plus/share_plus.dart';
 import '../lock_state.dart';
 import '../open_file.dart';
 import '../theme.dart';
+import 'press_scale.dart';
 import 'remembered_height.dart';
+import 'swap.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
 import 'video_viewer.dart';
@@ -107,8 +109,9 @@ class _VideoBubbleState extends State<VideoBubble> {
     final length = info != null && info.length > Duration.zero
         ? videoLength(info.length)
         : (_asked ? l10n.videoBubbleVideo : '…');
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
+    return PressScale(
+      scale: 0.97,
+      haptic: false,
       onTap: widget.onOpen,
       child: RememberedHeight(
         id: 'v:${widget.path}',
@@ -124,13 +127,20 @@ class _VideoBubbleState extends State<VideoBubble> {
                     videoFlight(c, a, dir, from, to, widget.path),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(14),
-                  child: jpeg != null
-                      ? Image.memory(
-                          jpeg,
-                          fit: BoxFit.cover,
-                          gaplessPlayback: true,
-                        )
-                      : ColoredBox(color: HaloColors.surface3),
+                  // the first frame fades up over the plain box
+                  child: FadeSwap(
+                    child: jpeg != null
+                        ? Image.memory(
+                            jpeg,
+                            key: const ValueKey('frame'),
+                            fit: BoxFit.cover,
+                            gaplessPlayback: true,
+                          )
+                        : ColoredBox(
+                            key: const ValueKey('wait'),
+                            color: HaloColors.surface3,
+                          ),
+                  ),
                 ),
               ),
               ClipRRect(

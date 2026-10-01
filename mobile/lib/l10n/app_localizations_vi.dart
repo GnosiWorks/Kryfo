@@ -1801,6 +1801,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatNoPhotosInThis => 'Chưa có ảnh nào trong cuộc trò chuyện này';
 
   @override
+  String get chatHoldToRecord => 'Nhấn giữ để ghi tin nhắn thoại';
+
+  @override
   String get chatSendPhoto => 'Gửi ảnh';
 
   @override

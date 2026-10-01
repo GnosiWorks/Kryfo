@@ -463,6 +463,7 @@
   "chatDisguiseVoice": "تمويه الصوت",
   "commonSend": "إرسال",
   "chatNoPhotosInThis": "لا صور في هذه المحادثة بعد",
+  "chatHoldToRecord": "اضغط مطولًا لتسجيل رسالة صوتية",
   "chatSendPhoto": "إرسال الصورة",
   "chatAddACaption": "أضف تعليقًا…",
   "chatSecurityCodeChanged": "تغيّر رمز الأمان",

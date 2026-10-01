@@ -2310,6 +2310,10 @@
   "@chatNoPhotosInThis": {
     "description": "screens/chat_screen.dart"
   },
+  "chatHoldToRecord": "Hold to record a voice note",
+  "@chatHoldToRecord": {
+    "description": "screens/chat_screen.dart"
+  },
   "chatSendPhoto": "Send photo",
   "@chatSendPhoto": {
     "description": "screens/chat_screen.dart"

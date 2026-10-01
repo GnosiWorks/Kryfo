@@ -2904,6 +2904,12 @@ abstract class AppLocalizations {
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
+  /// **'Hold to record a voice note'**
+  String get chatHoldToRecord;
+
+  /// screens/chat_screen.dart
+  ///
+  /// In en, this message translates to:
   /// **'Send photo'**
   String get chatSendPhoto;
 

@@ -1823,6 +1823,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chatNoPhotosInThis => 'Noch keine Fotos in diesem Chat';
 
   @override
+  String get chatHoldToRecord =>
+      'Gedrückt halten, um eine Sprachnachricht aufzunehmen';
+
+  @override
   String get chatSendPhoto => 'Foto senden';
 
   @override

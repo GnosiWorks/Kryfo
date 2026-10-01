@@ -1825,6 +1825,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get chatNoPhotosInThis => 'Aún no hay fotos en este chat';
 
   @override
+  String get chatHoldToRecord => 'Mantén pulsado para grabar un mensaje de voz';
+
+  @override
   String get chatSendPhoto => 'Enviar foto';
 
   @override

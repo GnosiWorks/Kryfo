@@ -463,6 +463,7 @@
   "chatDisguiseVoice": "Изменить голос",
   "commonSend": "Отправить",
   "chatNoPhotosInThis": "В этом чате пока нет фото",
+  "chatHoldToRecord": "Удерживай, чтобы записать голосовое сообщение",
   "chatSendPhoto": "Отправить фото",
   "chatAddACaption": "Добавь подпись…",
   "chatSecurityCodeChanged": "Код безопасности изменился",

@@ -4,6 +4,7 @@
 // vouches, the scam shield and burner rooms.
 import 'package:flutter/material.dart';
 import '../theme.dart';
+import 'motion.dart' show motionStill;
 
 enum NoticeGlyph { people, shield, clock, link }
 
@@ -53,6 +54,8 @@ class _NoticeBannerState extends State<NoticeBanner>
 
   @override
   Widget build(BuildContext context) {
+    // no growing when the phone asks for no movement: the fade alone
+    final still = motionStill(context);
     final rise = CurvedAnimation(parent: _in, curve: Curves.easeOutBack);
     final fade = CurvedAnimation(
       parent: _in,
@@ -88,26 +91,31 @@ class _NoticeBannerState extends State<NoticeBanner>
         ],
       ),
     );
+    final shown = widget.onTap == null
+        ? body
+        : GestureDetector(
+            onTapDown: (_) => setState(() => _down = true),
+            onTapUp: (_) => setState(() => _down = false),
+            onTapCancel: () => setState(() => _down = false),
+            onTap: widget.onTap,
+            child: AnimatedScale(
+              scale: _down ? 0.98 : 1,
+              duration: still
+                  ? Duration.zero
+                  : const Duration(milliseconds: 110),
+              curve: Curves.easeOut,
+              child: body,
+            ),
+          );
     return FadeTransition(
       opacity: fade,
-      child: ScaleTransition(
-        scale: Tween<double>(begin: 0.96, end: 1).animate(rise),
-        alignment: Alignment.topCenter,
-        child: widget.onTap == null
-            ? body
-            : GestureDetector(
-                onTapDown: (_) => setState(() => _down = true),
-                onTapUp: (_) => setState(() => _down = false),
-                onTapCancel: () => setState(() => _down = false),
-                onTap: widget.onTap,
-                child: AnimatedScale(
-                  scale: _down ? 0.98 : 1,
-                  duration: const Duration(milliseconds: 110),
-                  curve: Curves.easeOut,
-                  child: body,
-                ),
-              ),
-      ),
+      child: still
+          ? shown
+          : ScaleTransition(
+              scale: Tween<double>(begin: 0.96, end: 1).animate(rise),
+              alignment: Alignment.topCenter,
+              child: shown,
+            ),
     );
   }
 }

@@ -1852,6 +1852,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chatNoPhotosInThis => 'В этом чате пока нет фото';
 
   @override
+  String get chatHoldToRecord =>
+      'Удерживай, чтобы записать голосовое сообщение';
+
+  @override
   String get chatSendPhoto => 'Отправить фото';
 
   @override

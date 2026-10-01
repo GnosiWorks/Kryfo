@@ -23,7 +23,7 @@ import 'introduce_sheet.dart';
 import 'shield_sheet.dart';
 import '../vouch_text.dart';
 import '../widgets/intro_chip.dart';
-import '../widgets/media_bubbles.dart' show VoiceBubble;
+import '../widgets/media_bubbles.dart' show ImageCaptionScreen, VoiceBubble;
 import '../widgets/voice_parts.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/hidden_mark.dart';
@@ -119,6 +119,7 @@ import '../l10n/marked.dart';
 import '../l10n/numbers.dart';
 import '../widgets/video_viewer.dart';
 import '../widgets/photo_viewer.dart';
+import '../widgets/swap.dart';
 import '../widgets/written_field.dart';
 import '../bidi_safe.dart';
 import '../back_on_top.dart';
@@ -330,57 +331,76 @@ void _openFullImage(
   double radius = 0,
 }) => openPhoto(context, path, tag: tag, radius: radius, secure: secure);
 
+// the room under a bubble that a reaction chip hangs in
+const _kChipRoom = 13.0;
+
 // the time and tick on a photo or a video with no caption: a small dark pill
 // in the corner, since there is no bubble under it to carry them
-Widget _mediaStamp(_Msg msg, bool pending, bool failedShown, bool ackOk) =>
-    Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+Widget _mediaStamp(_Msg msg) {
+  final mono = TextStyle(
+    fontFamily: HaloType.monoFamily,
+    fontFamilyFallback: HaloType.monoFallbackNow,
+    fontSize: 9,
+    fontWeight: FontWeight.w500,
+    color: Colors.white,
+    letterSpacing: track(0.4),
+  );
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+    decoration: BoxDecoration(
+      color: Colors.black.withValues(alpha: 0.45),
+      borderRadius: BorderRadius.circular(10),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(_fmtTime(msg.when), style: mono),
+        const SizedBox(width: 3),
+        SentTick(
+          delivered: msg.delivered,
+          deliveredLabel: l10n.chatDelivered,
+          color: Colors.white,
+          labelStyle: mono.copyWith(
+            fontSize: 8.5,
+            fontWeight: FontWeight.w600,
+            letterSpacing: track(0.3),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+// the corner of a photo or a video: its time and tick once it is there, a
+// mark when it failed or waits, so the picture itself carries the state
+Widget _mediaCorner(
+  _Msg msg, {
+  required bool showMeta,
+  required bool failedShown,
+  required bool parked,
+}) {
+  final Widget child;
+  if (showMeta) {
+    child = KeyedSubtree(key: const ValueKey('stamp'), child: _mediaStamp(msg));
+  } else if (failedShown || parked) {
+    child = Container(
+      key: ValueKey(failedShown ? 'failed' : 'parked'),
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.45),
-        borderRadius: BorderRadius.circular(10),
+        shape: BoxShape.circle,
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            _fmtTime(msg.when),
-            style: TextStyle(
-              fontFamily: HaloType.monoFamily,
-              fontFamilyFallback: HaloType.monoFallbackNow,
-              fontSize: 9,
-              color: Colors.white,
-              letterSpacing: track(0.4),
-            ),
-          ),
-          const SizedBox(width: 3),
-          if (!pending && !failedShown && ackOk) ...[
-            Text(
-              '✓',
-              style: const TextStyle(
-                fontSize: 10,
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-                height: 1,
-              ),
-            ),
-            if (msg.delivered) ...[
-              const SizedBox(width: 4),
-              Text(
-                l10n.chatDelivered,
-                style: TextStyle(
-                  fontFamily: HaloType.monoFamily,
-                  fontFamilyFallback: HaloType.monoFallbackNow,
-                  fontSize: 8.5,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                  letterSpacing: track(0.3),
-                ),
-              ),
-            ],
-          ],
-        ],
+      child: Icon(
+        failedShown ? Icons.error_outline_rounded : Icons.schedule_rounded,
+        size: 15,
+        color: failedShown ? HaloColors.rose : HaloColors.amber,
       ),
     );
+  } else {
+    child = const SizedBox.shrink(key: ValueKey('none'));
+  }
+  return CornerSwap(child: child);
+}
 
 // the phone cannot send at all: no network, or onion mode without a route
 bool _cannotSend() => !appState.online || !appState.torReady;
@@ -443,6 +463,8 @@ bool _lastGhost = false;
 class _ChatScreenState extends State<ChatScreen>
     with WidgetsBindingObserver, BackOnTop<ChatScreen> {
   final _msgCtrl = TextEditingController();
+  // a reply raises the keyboard at once, like a tap on the field
+  final _composerFocus = FocusNode();
   int _unreadAfterMs = 0;
   int _firstUnreadIndex = -1;
   bool _unreadResolved = false;
@@ -668,6 +690,10 @@ class _ChatScreenState extends State<ChatScreen>
   String? _nickname;
   late int? _peerFace = widget.avatarChoice;
   bool _blocked = false;
+  // the bottom bar is drawn once blocked and request state are read, the
+  // first one with no transition
+  bool _barKnown = false;
+  bool _barSettled = false;
   bool _muted = false;
   bool _verified = false;
   String? _peerBadge;
@@ -895,7 +921,7 @@ class _ChatScreenState extends State<ChatScreen>
       if (mounted) setState(() => _keyChanged = v);
     });
     _scrollCtrl.addListener(_onScrollPage);
-    session.isBlocked(widget.peerHaloId).then((v) {
+    final blockedRead = session.isBlocked(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _blocked = v);
     });
     session.isMuted(widget.peerHaloId).then((v) {
@@ -911,18 +937,32 @@ class _ChatScreenState extends State<ChatScreen>
     });
     // request lock: are they an accepted contact, have they engaged, and how
     // many messages have we already sent while unaccepted.
-    session.isAccepted(widget.peerHaloId).then((v) {
-      if (mounted) setState(() => _accepted = v);
-    });
-    session.isBackPaired(widget.peerHaloId).then((v) {
-      if (mounted) setState(() => _peerEngaged = v);
-    });
-    session.countMessagesTo(widget.peerHaloId).then((v) {
-      if (mounted) setState(() => _sentCount = v);
-    });
-    session.countMessagesFrom(widget.peerHaloId).then((v) {
-      if (mounted) setState(() => _recvCount = v);
-    });
+    final barReads = <Future<void>>[
+      blockedRead,
+      session.isAccepted(widget.peerHaloId).then((v) {
+        if (mounted) setState(() => _accepted = v);
+      }),
+      session.isBackPaired(widget.peerHaloId).then((v) {
+        if (mounted) setState(() => _peerEngaged = v);
+      }),
+      session.countMessagesTo(widget.peerHaloId).then((v) {
+        if (mounted) setState(() => _sentCount = v);
+      }),
+      session.countMessagesFrom(widget.peerHaloId).then((v) {
+        if (mounted) setState(() => _recvCount = v);
+      }),
+    ];
+    // the bottom bar waits for these, so a blocked chat or a request never
+    // shows the composer first
+    Future.wait(barReads)
+        .then<void>((_) {}, onError: (Object e) => dlog('chat: bar read $e'))
+        .whenComplete(() {
+          if (!mounted) return;
+          setState(() => _barKnown = true);
+          WidgetsBinding.instance.addPostFrameCallback(
+            (_) => _barSettled = true,
+          );
+        });
     _scrollCtrl.addListener(_onScroll);
     _scrollCtrl.addListener(_updateSticky);
     Future.delayed(const Duration(milliseconds: 1200), () {
@@ -1423,215 +1463,247 @@ class _ChatScreenState extends State<ChatScreen>
     // not entry.mounted: an entry closed before its first frame is not
     // mounted yet and has to go all the same
     var gone = false;
-    void dismiss() {
-      if (gone) return;
+    var removed = false;
+    // the menu folds back the way it came before it goes
+    var closing = false;
+    // what the picked action does to the row, held until the copy is back
+    VoidCallback? landed;
+    void remove() {
+      if (removed) return;
+      removed = true;
+      entry.remove();
+      // the copy has landed on the row: the row shows again at once
+      if (mounted) setState(() => _liftedUid = null);
+      final run = landed;
+      landed = null;
+      if (mounted) run?.call();
+    }
+
+    // [then] runs once the copy is back on the row, so a change that moves
+    // the row (a reaction's room, the reply bar) does not move it under
+    // the copy
+    void dismiss({bool now = false, VoidCallback? then}) {
+      if (gone && !now) return;
+      if (!gone) landed = then;
       gone = true;
       unguard?.call();
-      entry.remove();
-      if (mounted) setState(() => _liftedUid = null);
+      unguard = null;
+      if (now || !mounted) {
+        remove();
+        return;
+      }
+      closing = true;
+      entry.markNeedsBuild();
+      Future.delayed(
+        still ? const Duration(milliseconds: 160) : kHouseTime,
+        remove,
+      );
     }
 
     entry = OverlayEntry(
       builder: (_) {
-        return Stack(
-          children: [
-            Positioned.fill(
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: dismiss,
-                child: const MenuBackdrop(),
+        return IgnorePointer(
+          ignoring: closing,
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: dismiss,
+                  child: MenuBackdrop(closing: closing),
+                ),
               ),
-            ),
-            // the offset is from the left edge, in either direction
-            Positioned(
-              left: offset.dx,
-              top: offset.dy,
-              width: bubbleSize.width,
-              child: IgnorePointer(
-                child: TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0.0, end: still ? 0.0 : 1.0),
-                  duration: kHouseTime,
-                  curve: kHouseCurve,
-                  child: Material(
-                    type: MaterialType.transparency,
-                    child: _Bubble(msg: target),
-                  ),
-                  builder: (_, t, child) => Transform.scale(
-                    scale: 1.0 + 0.04 * t,
-                    alignment: alignRight
-                        ? AlignmentDirectional.centerEnd
-                        : AlignmentDirectional.centerStart,
-                    child: child,
+              // the offset is from the left edge, in either direction
+              Positioned(
+                left: offset.dx,
+                top: offset.dy,
+                width: bubbleSize.width,
+                child: IgnorePointer(
+                  child: TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0.0, end: still || closing ? 0.0 : 1.0),
+                    duration: kHouseTime,
+                    curve: kHouseCurve,
+                    child: Material(
+                      type: MaterialType.transparency,
+                      child: _Bubble(msg: target),
+                    ),
+                    builder: (_, t, child) => Transform.scale(
+                      scale: 1.0 + 0.04 * t,
+                      alignment: alignRight
+                          ? AlignmentDirectional.centerEnd
+                          : AlignmentDirectional.centerStart,
+                      child: child,
+                    ),
                   ),
                 ),
               ),
-            ),
 
-            if (!welcome)
+              if (!welcome)
+                PositionedDirectional(
+                  top: reactTop,
+                  start: alignRight ? null : 12,
+                  end: alignRight ? 12 : null,
+                  child: MenuPop(
+                    fromRight: alignRight,
+                    closing: closing,
+                    child: _EmojiPickerBubble(
+                      emojis: const ['❤️', '👍', '😂', '😮', '😢', '🔥'],
+                      selected: target.reactions[''],
+                      onPick: (e) => dismiss(
+                        then: () {
+                          final added = target.reactions[''] != e;
+                          _toggleReaction(target, e);
+                          if (added) _flashReaction(target);
+                        },
+                      ),
+                      // no reply bar or keyboard over the lock
+                      onReply: () => dismiss(
+                        then: () {
+                          if (!lockGuard.isLocked()) _replyWith(target);
+                        },
+                      ),
+                    ),
+                  ),
+                ),
               PositionedDirectional(
-                top: reactTop,
+                top: menuTop,
+                bottom: menuBottom,
                 start: alignRight ? null : 12,
                 end: alignRight ? 12 : null,
                 child: MenuPop(
                   fromRight: alignRight,
-                  child: _EmojiPickerBubble(
-                    emojis: const ['❤️', '👍', '😂', '😮', '😢', '🔥'],
-                    selected: target.reactions[''],
-                    onPick: (e) {
-                      dismiss();
-                      final added = target.reactions[''] != e;
-                      _toggleReaction(target, e);
-                      if (added) _flashReaction(target);
-                    },
-                    onReply: () {
-                      dismiss();
-                      setState(() {
-                        _replyTo = target;
-                        _replyFlash = target;
-                      });
-                      Future.delayed(const Duration(milliseconds: 700), () {
-                        if (mounted && identical(_replyFlash, target)) {
-                          setState(() => _replyFlash = null);
-                        }
-                      });
-                    },
-                  ),
-                ),
-              ),
-            PositionedDirectional(
-              top: menuTop,
-              bottom: menuBottom,
-              start: alignRight ? null : 12,
-              end: alignRight ? 12 : null,
-              child: MenuPop(
-                fromRight: alignRight,
-                child: MessageMenuCard(
-                  actions: [
-                    // his first line: copy, and nothing else
-                    if (!welcome)
+                  closing: closing,
+                  child: MessageMenuCard(
+                    actions: [
+                      // his first line: copy, and nothing else
+                      if (!welcome)
+                        MenuAction(
+                          icon: target.pinned
+                              ? Icons.push_pin
+                              : Icons.push_pin_outlined,
+                          label: target.pinned ? l10n.chatUnpin : l10n.chatPin,
+                          onTap: () {
+                            dismiss();
+                            _togglePin(target);
+                          },
+                        ),
+                      if (!welcome)
+                        MenuAction(
+                          icon: target.saved
+                              ? Icons.bookmark
+                              : Icons.bookmark_outline,
+                          label: target.saved
+                              ? l10n.chatUnsave
+                              : l10n.commonSave,
+                          tint: target.saved ? HaloColors.amber : null,
+                          onTap: () =>
+                              dismiss(then: () => _toggleSaved(target)),
+                        ),
                       MenuAction(
-                        icon: target.pinned
-                            ? Icons.push_pin
-                            : Icons.push_pin_outlined,
-                        label: target.pinned ? l10n.chatUnpin : l10n.chatPin,
-                        onTap: () {
-                          dismiss();
-                          _togglePin(target);
-                        },
-                      ),
-                    if (!welcome)
-                      MenuAction(
-                        icon: target.saved
-                            ? Icons.bookmark
-                            : Icons.bookmark_outline,
-                        label: target.saved ? l10n.chatUnsave : l10n.commonSave,
-                        tint: target.saved ? HaloColors.amber : null,
-                        onTap: () {
-                          dismiss();
-                          _toggleSaved(target);
-                        },
-                      ),
-                    MenuAction(
-                      icon: Icons.copy_rounded,
-                      label: l10n.commonCopy,
-                      onTap: target.text.isEmpty || target.sticker != null
-                          ? null
-                          : () {
-                              dismiss();
-                              Clipboard.setData(
-                                ClipboardData(text: target.text),
-                              );
-                              showHaloToast(context, l10n.commonCopied);
-                            },
-                    ),
-                    // a sticker is not forwarded, copied or edited, and
-                    // a photo, a file or a voice note is not forwarded
-                    if (!welcome)
-                      MenuAction(
-                        icon: Icons.forward_rounded,
-                        label: l10n.chatForward,
-                        onTap:
-                            !canForward(
-                              text: target.text,
-                              mediaPath: target.mediaPath,
-                              filePath: target.filePath,
-                              sticker: target.sticker != null,
-                            )
+                        icon: Icons.copy_rounded,
+                        label: l10n.commonCopy,
+                        onTap: target.text.isEmpty || target.sticker != null
                             ? null
                             : () {
                                 dismiss();
-                                _forwardMessage(target);
+                                Clipboard.setData(
+                                  ClipboardData(text: target.text),
+                                );
+                                showHaloToast(context, l10n.commonCopied);
                               },
                       ),
-                    // a tap opens a file, so sharing it lives here
-                    MenuAction(
-                      icon: Icons.ios_share_rounded,
-                      label: l10n.commonShare,
-                      onTap:
-                          target.filePath == null ||
-                              target.fileName == 'voice.wav'
-                          ? null
-                          : () {
-                              dismiss();
-                              lockState.hold(
-                                () => SharePlus.instance.share(
-                                  ShareParams(files: [XFile(target.filePath!)]),
-                                ),
-                              );
-                            },
-                    ),
-                    // words can be edited; a photo, a file or a voice note
-                    // is what it is
-                    MenuAction(
-                      icon: Icons.edit_outlined,
-                      label: l10n.commonEdit,
-                      tint: HaloColors.amber,
-                      onTap:
-                          target.direction != 'out' ||
-                              target.mediaPath != null ||
-                              target.filePath != null ||
-                              target.sticker != null
-                          ? null
-                          : () {
-                              dismiss();
-                              _editMessage(target);
-                            },
-                    ),
-                    MenuAction(
-                      icon: Icons.delete_outline,
-                      danger: true,
-                      label:
-                          target.sending &&
-                              (target.mediaPath != null ||
-                                  target.filePath != null)
-                          ? l10n.chatStopSending
-                          : l10n.chatUnsend,
-                      onTap: target.direction != 'out'
-                          ? null
-                          : () {
-                              dismiss();
-                              // a photo or file still on its way stops here
-                              // and the other side drops what it has
-                              if (target.sending &&
-                                  (target.mediaPath != null ||
-                                      target.filePath != null)) {
-                                _stopSending(target);
-                              } else {
-                                _unsendMessage(target);
-                              }
-                            },
-                    ),
-                  ],
+                      // a sticker is not forwarded, copied or edited, and
+                      // a photo, a file or a voice note is not forwarded
+                      if (!welcome)
+                        MenuAction(
+                          icon: Icons.forward_rounded,
+                          label: l10n.chatForward,
+                          onTap:
+                              !canForward(
+                                text: target.text,
+                                mediaPath: target.mediaPath,
+                                filePath: target.filePath,
+                                sticker: target.sticker != null,
+                              )
+                              ? null
+                              : () {
+                                  // a sheet takes its place: no copy over it
+                                  dismiss(now: true);
+                                  _forwardMessage(target);
+                                },
+                        ),
+                      // a tap opens a file, so sharing it lives here
+                      MenuAction(
+                        icon: Icons.ios_share_rounded,
+                        label: l10n.commonShare,
+                        onTap:
+                            target.filePath == null ||
+                                target.fileName == 'voice.wav'
+                            ? null
+                            : () {
+                                dismiss(now: true);
+                                lockState.hold(
+                                  () => SharePlus.instance.share(
+                                    ShareParams(
+                                      files: [XFile(target.filePath!)],
+                                    ),
+                                  ),
+                                );
+                              },
+                      ),
+                      // words can be edited; a photo, a file or a voice note
+                      // is what it is
+                      MenuAction(
+                        icon: Icons.edit_outlined,
+                        label: l10n.commonEdit,
+                        tint: HaloColors.amber,
+                        onTap:
+                            target.direction != 'out' ||
+                                target.mediaPath != null ||
+                                target.filePath != null ||
+                                target.sticker != null
+                            ? null
+                            : () {
+                                dismiss(now: true);
+                                _editMessage(target);
+                              },
+                      ),
+                      MenuAction(
+                        icon: Icons.delete_outline,
+                        danger: true,
+                        label:
+                            target.sending &&
+                                (target.mediaPath != null ||
+                                    target.filePath != null)
+                            ? l10n.chatStopSending
+                            : l10n.chatUnsend,
+                        onTap: target.direction != 'out'
+                            ? null
+                            : () {
+                                dismiss(now: true);
+                                // a photo or file still on its way stops here
+                                // and the other side drops what it has
+                                if (target.sending &&
+                                    (target.mediaPath != null ||
+                                        target.filePath != null)) {
+                                  _stopSending(target);
+                                } else {
+                                  _unsendMessage(target);
+                                }
+                              },
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );
     Overlay.of(context).insert(entry);
-    // the lock closes it, with what it shows
-    unguard = lockGuard.closeOnLock(dismiss);
+    // the lock closes it at once, with what it shows
+    unguard = lockGuard.closeOnLock(() => dismiss(now: true));
   }
 
   // the list is read from the database, not from the rows on screen: a pin
@@ -1728,55 +1800,11 @@ class _ChatScreenState extends State<ChatScreen>
     // the confirm sheet hands focus back to the composer on close, which pops
     // the keyboard for no reason. let go of it now and again after.
     FocusManager.instance.primaryFocus?.unfocus();
-    final confirm = await showHaloSheet<bool>(
+    final confirm = await showConfirmSheet(
       context,
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SheetHandle(),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 18, 20, 6),
-              child: Text(
-                l10n.chatUnsendMessage,
-                style: HaloType.serif(size: 18, color: HaloColors.text),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
-              child: Text(
-                l10n.chatItDisappearsWithNo,
-                style: HaloType.sans(size: 13, color: HaloColors.text2),
-              ),
-            ),
-            InkWell(
-              onTap: () => Navigator.pop(ctx, true),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 16,
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.delete_outline,
-                      size: 18,
-                      color: HaloColors.rose,
-                    ),
-                    const SizedBox(width: 14),
-                    Text(
-                      l10n.chatUnsend,
-                      style: HaloType.sans(size: 14, color: HaloColors.rose),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
+      title: l10n.chatUnsendMessage,
+      line: l10n.chatItDisappearsWithNo,
+      yes: l10n.chatUnsend,
     );
     FocusManager.instance.primaryFocus?.unfocus();
     if (confirm != true) return;
@@ -1864,75 +1892,12 @@ class _ChatScreenState extends State<ChatScreen>
       );
     }
     if (!mounted) return;
-    final ctrl = TextEditingController(text: m.text);
-    final result = await showHaloSheet<String>(
+    final result = await showInputSheet(
       context,
-      scroll: true,
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 20,
-          bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SheetHandle(),
-            Text(
-              l10n.chatEditMessage,
-              style: HaloType.serif(
-                size: 20,
-                italic: true,
-                color: HaloColors.amber,
-              ),
-            ),
-            const SizedBox(height: 14),
-            TextField(
-              controller: ctrl,
-              autofocus: true,
-              maxLines: null,
-              cursorColor: HaloColors.amber,
-              style: HaloType.sans(size: 15),
-              decoration: InputDecoration(
-                enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: HaloColors.line2),
-                ),
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: HaloColors.amber),
-                ),
-              ),
-            ),
-            const SizedBox(height: 18),
-            Row(
-              children: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: Text(
-                    l10n.commonCancel,
-                    style: HaloType.sans(size: 13, color: HaloColors.text2),
-                  ),
-                ),
-                const Spacer(),
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, ctrl.text),
-                  child: Text(
-                    l10n.commonSave,
-                    style: HaloType.sans(
-                      size: 14,
-                      weight: FontWeight.w500,
-                      color: HaloColors.amber,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
+      title: l10n.chatEditMessage,
+      initial: m.text,
+      multiline: true,
     );
-    ctrl.dispose();
     if (result == null) return;
     final newText = result.trim();
     if (newText.isEmpty || newText == m.text) return;
@@ -2415,92 +2380,28 @@ class _ChatScreenState extends State<ChatScreen>
     }
   }
 
-  void _pickBurnDuration() {
-    final options = <int, String>{
-      30: l10n.chat30Seconds,
-      60: l10n.chat1Minute,
-      300: l10n.chat5Minutes,
-      3600: l10n.chat1Hour,
-      86400: l10n.chat24Hours,
-    };
-    showHaloSheet<void>(
+  Future<void> _pickBurnDuration() async {
+    final picked = await showChoiceSheet<int>(
       context,
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SheetHandle(),
-              Row(
-                children: [
-                  Icon(
-                    Icons.local_fire_department_outlined,
-                    size: 14,
-                    color: HaloColors.amber,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    l10n.chatGhostTimer,
-                    style: HaloType.serif(
-                      size: 16,
-                      color: HaloColors.text,
-                      italic: true,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text(
-                l10n.chatHowLongBeforeSent,
-                style: HaloType.mono(size: 11, color: HaloColors.text3),
-              ),
-              const SizedBox(height: 12),
-              ...options.entries.map((e) {
-                final isSelected = _burnSeconds == e.key;
-                return InkWell(
-                  onTap: () {
-                    setState(() {
-                      _burnSeconds = e.key;
-                      _ghost = true;
-                      _lastBurnSeconds = e.key;
-                      _lastGhost = true;
-                      appState.saveGhostPref(true, e.key);
-                    });
-                    Navigator.of(ctx).pop();
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            e.value,
-                            style: HaloType.sans(
-                              size: 14,
-                              color: isSelected
-                                  ? HaloColors.amber
-                                  : HaloColors.text,
-                            ),
-                          ),
-                        ),
-                        if (isSelected)
-                          Icon(
-                            Icons.check_rounded,
-                            size: 16,
-                            color: HaloColors.amber,
-                          ),
-                      ],
-                    ),
-                  ),
-                );
-              }),
-            ],
-          ),
-        ),
-      ),
+      title: l10n.chatGhostTimer,
+      line: l10n.chatHowLongBeforeSent,
+      current: _burnSeconds,
+      choices: [
+        SheetChoice(30, l10n.chat30Seconds),
+        SheetChoice(60, l10n.chat1Minute),
+        SheetChoice(300, l10n.chat5Minutes),
+        SheetChoice(3600, l10n.chat1Hour),
+        SheetChoice(86400, l10n.chat24Hours),
+      ],
     );
+    if (picked == null || !mounted) return;
+    setState(() {
+      _burnSeconds = picked;
+      _ghost = true;
+      _lastBurnSeconds = picked;
+      _lastGhost = true;
+      appState.saveGhostPref(true, picked);
+    });
   }
 
   // a one-shot amber ring on a bubble when a reaction lands on it
@@ -2818,88 +2719,19 @@ class _ChatScreenState extends State<ChatScreen>
   Future<bool> _confirmBigSend(int bytes) async {
     if (bytes < 512 * 1024) return true;
     if (!mounted) return false;
-    final ok = await showHaloSheet<bool>(
+    final ok = await showConfirmSheet(
       context,
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(22, 20, 22, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SheetHandle(),
-              Text(
-                l10n.chatSendThis,
-                style: HaloType.serif(size: 19, color: HaloColors.text),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                appState.sendMode == 'private'
-                    ? l10n.chatOverTor(_humanBytes(bytes), _wireEstimate(bytes))
-                    : _humanBytes(bytes),
-                style: HaloType.mono(size: 12, color: HaloColors.amber),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                l10n.chatBigFilesGoOut,
-                style: HaloType.sans(
-                  size: 12,
-                  color: HaloColors.text2,
-                ).copyWith(height: 1.4),
-              ),
-              const SizedBox(height: 18),
-              Row(
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => Navigator.pop(ctx, false),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 13),
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          border: Border.all(color: HaloColors.line),
-                          borderRadius: BorderRadius.circular(11),
-                        ),
-                        child: Text(
-                          l10n.commonCancel,
-                          style: HaloType.sans(
-                            size: 13,
-                            color: HaloColors.text2,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => Navigator.pop(ctx, true),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 13),
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: HaloColors.amber,
-                          borderRadius: BorderRadius.circular(11),
-                        ),
-                        child: Text(
-                          l10n.chatSendIt,
-                          style: HaloType.sans(
-                            size: 13,
-                            color: HaloColors.onAmber,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
+      title: l10n.chatSendThis,
+      figure: appState.sendMode == 'private'
+          ? l10n.chatOverTor(_humanBytes(bytes), _wireEstimate(bytes))
+          : _humanBytes(bytes),
+      line: l10n.chatBigFilesGoOut,
+      yes: l10n.chatSendIt,
+      keep: l10n.commonCancel,
+      rose: false,
     );
     if (mounted) FocusManager.instance.primaryFocus?.unfocus();
-    return ok == true;
+    return ok;
   }
 
   // the picker hands back a path to its own copy, copied from there into the
@@ -2933,7 +2765,7 @@ class _ChatScreenState extends State<ChatScreen>
     if (r.photo != null) {
       final caption = await Navigator.of(
         context,
-      ).push<String?>(haloRoute<String?>(_ImageCaptionScreen(bytes: r.photo!)));
+      ).push<String?>(haloRoute<String?>(ImageCaptionScreen(bytes: r.photo!)));
       if (caption == null) return;
       await _sendOneImage(r.photo!, caption);
       return;
@@ -3278,7 +3110,7 @@ class _ChatScreenState extends State<ChatScreen>
       if (!mounted) return;
       final caption = await Navigator.of(
         context,
-      ).push<String?>(haloRoute<String?>(_ImageCaptionScreen(bytes: bytes)));
+      ).push<String?>(haloRoute<String?>(ImageCaptionScreen(bytes: bytes)));
       if (caption == null) return;
       await _sendOneImage(bytes, caption);
       return;
@@ -3702,7 +3534,10 @@ class _ChatScreenState extends State<ChatScreen>
       width: double.infinity,
       child: AnimatedOpacity(
         opacity: _rowKey(m) == _liftedUid ? 0.0 : 1.0,
-        duration: const Duration(milliseconds: 300),
+        // back with no fade: the menu's copy has just landed right on it
+        duration: _rowKey(m) == _liftedUid
+            ? const Duration(milliseconds: 300)
+            : Duration.zero,
         child: _Bubble(
           key: isMatch ? _matchKeys[ix] : null,
           msg: m,
@@ -3727,6 +3562,13 @@ class _ChatScreenState extends State<ChatScreen>
             _retryAny(m);
           },
           onLongPress: (ctx) => _showEmojiPickerAt(ctx, m),
+          onReact: m.welcome
+              ? null
+              : (e) {
+                  final added = m.reactions[''] != e;
+                  _toggleReaction(m, e);
+                  if (added) _flashReaction(m);
+                },
           secure: m.secure,
           quotedText: quoted,
           onQuoteTap: m.replyTo == null
@@ -3765,15 +3607,7 @@ class _ChatScreenState extends State<ChatScreen>
                 : SwipeToReply(
                     onReply: () {
                       HapticFeedback.selectionClick();
-                      setState(() {
-                        _replyTo = m;
-                        _replyFlash = m;
-                      });
-                      Future.delayed(const Duration(milliseconds: 700), () {
-                        if (mounted && identical(_replyFlash, m)) {
-                          setState(() => _replyFlash = null);
-                        }
-                      });
+                      _replyWith(m);
                     },
                     child: bubble,
                   ),
@@ -3786,6 +3620,20 @@ class _ChatScreenState extends State<ChatScreen>
   // nothing to do: protection lives in the viewer, so a marked photo is
   // covered and the chat around it stays usable
   void _applySecureContent() {}
+
+  // the quote goes up over the composer and the keyboard comes with it
+  void _replyWith(_Msg m) {
+    setState(() {
+      _replyTo = m;
+      _replyFlash = m;
+    });
+    _composerFocus.requestFocus();
+    Future.delayed(const Duration(milliseconds: 700), () {
+      if (mounted && identical(_replyFlash, m)) {
+        setState(() => _replyFlash = null);
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -3809,6 +3657,7 @@ class _ChatScreenState extends State<ChatScreen>
       _draftPerPeer[_memo] = draft;
     }
     _msgCtrl.dispose();
+    _composerFocus.dispose();
     _searchCtrl.dispose();
     _stickyHideTimer?.cancel();
     _scrollCtrl.removeListener(_onScroll);
@@ -4262,58 +4111,12 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _clearConversation() async {
-    final confirm = await showHaloSheet<bool>(
+    final confirm = await showConfirmSheet(
       context,
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SheetHandle(),
-              Text(
-                l10n.chatClearThisConversation,
-                style: HaloType.serif(size: 18, color: HaloColors.text),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                l10n.chatEveryMessageHereIs,
-                style: HaloType.sans(
-                  size: 13,
-                  color: HaloColors.text2,
-                  height: 1.5,
-                ),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx, false),
-                    child: Text(
-                      l10n.commonCancel,
-                      style: HaloType.sans(size: 14, color: HaloColors.text2),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx, true),
-                    child: Text(
-                      l10n.chatClear,
-                      style: HaloType.sans(
-                        size: 14,
-                        weight: FontWeight.w600,
-                        color: HaloColors.rose,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
+      title: l10n.chatClearThisConversation,
+      line: l10n.chatEveryMessageHereIs,
+      yes: l10n.chatClear,
+      keep: l10n.commonCancel,
     );
     if (confirm != true) return;
     HapticFeedback.selectionClick();
@@ -4349,67 +4152,12 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _blockContact() async {
-    final confirm = await showHaloSheet<bool>(
+    final confirm = await showConfirmSheet(
       context,
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SheetHandle(),
-              Row(
-                children: [
-                  Icon(Icons.block, size: 15, color: HaloColors.amber),
-                  const SizedBox(width: 8),
-                  Text(
-                    l10n.chatBlockThisContact,
-                    style: HaloType.serif(
-                      size: 18,
-                      italic: true,
-                      color: HaloColors.text,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                l10n.chatTheirMessagesStopArriving,
-                style: HaloType.sans(
-                  size: 13,
-                  color: HaloColors.text2,
-                  height: 1.5,
-                ),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx, false),
-                    child: Text(
-                      l10n.commonCancel,
-                      style: HaloType.sans(size: 14, color: HaloColors.text2),
-                    ),
-                  ),
-                  const Spacer(),
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx, true),
-                    child: Text(
-                      l10n.commonBlock,
-                      style: HaloType.sans(
-                        size: 14,
-                        weight: FontWeight.w500,
-                        color: HaloColors.amber,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
+      title: l10n.chatBlockThisContact,
+      line: l10n.chatTheirMessagesStopArriving,
+      yes: l10n.commonBlock,
+      keep: l10n.commonCancel,
     );
     if (confirm != true) return;
     await appState.block(widget.peerHaloId);
@@ -4517,7 +4265,8 @@ class _ChatScreenState extends State<ChatScreen>
                       DevForwardTile(
                         onTap: () => Navigator.pop(ctx, dev!.chatId),
                       ),
-                    InkWell(
+                    PressScale(
+                      scale: 0.98,
                       onTap: () => Navigator.pop(ctx, c.haloId),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
@@ -4526,7 +4275,11 @@ class _ChatScreenState extends State<ChatScreen>
                         ),
                         child: Row(
                           children: [
-                            KryfoAvatar(seed: c.avatarSeed, size: 32),
+                            KryfoAvatar(
+                              seed: c.avatarSeed,
+                              size: 32,
+                              choice: c.avatar,
+                            ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
@@ -4667,7 +4420,6 @@ class _ChatScreenState extends State<ChatScreen>
   // out, and until the first message the note that says what he will see.
   // the note folds away as that message goes out
   List<Widget> _devAboveComposer(BuildContext context) {
-    final still = motionStill(context);
     final o = _devOpening;
     final note =
         o != null &&
@@ -4675,20 +4427,8 @@ class _ChatScreenState extends State<ChatScreen>
         _devStop == null &&
         !_requestLocked &&
         !appState.movedAway;
-    Widget swap(Duration d, Widget child) => AnimatedSwitcher(
-      duration: still ? Duration.zero : d,
-      switchInCurve: Curves.easeOutCubic,
-      switchOutCurve: Curves.easeInCubic,
-      transitionBuilder: (child, anim) => SizeTransition(
-        sizeFactor: anim,
-        axisAlignment: -1,
-        child: FadeTransition(opacity: anim, child: child),
-      ),
-      child: child,
-    );
     return [
-      swap(
-        const Duration(milliseconds: 220),
+      _Fold(
         _devKeyFailed
             ? NoticeBanner(
                 key: const ValueKey('dev-key'),
@@ -4699,8 +4439,8 @@ class _ChatScreenState extends State<ChatScreen>
               )
             : const SizedBox(key: ValueKey('dev-key-none'), width: 0),
       ),
-      swap(
-        const Duration(milliseconds: 240),
+      _Fold(
+        time: const Duration(milliseconds: 240),
         note
             ? DevNote(
                 key: const ValueKey('dev-note'),
@@ -4724,68 +4464,88 @@ class _ChatScreenState extends State<ChatScreen>
       body: SafeArea(
         child: Column(
           children: [
-            _searching
-                ? SearchHead(
-                    controller: _searchCtrl,
-                    matchCount: _matches.length,
-                    matchPos: _matches.isEmpty ? 0 : _matchPos + 1,
-                    onChanged: _onQueryChanged,
-                    onPrev: () => _gotoMatch(-1),
-                    onNext: () => _gotoMatch(1),
-                    onClose: _closeSearch,
-                  )
-                : _isDev
-                ? DevChatHead(
-                    anon: (_devOpening?.started ?? false) && _devAnon,
-                    onBack: () => Navigator.pop(context),
-                    onAbout: () => showDevAboutSheet(context),
-                    onSearch: _openSearch,
-                    onMore: _devActions,
-                    pinnedCount: _pinCount,
-                    onPinned: _showPinnedSheet,
-                  )
-                : _ChatHead(
-                    haloId: widget.peerHaloId,
-                    nickname: _nickname,
-                    note: _note,
-                    verified: _verified,
-                    supporterBadge: _peerBadge,
-                    onBlock: _openContact,
-                    onMore: _chatActions,
-                    avatarSeed: widget.avatarSeed,
-                    face: _peerFace,
-                    onBack: () => Navigator.pop(context),
-                    onSearch: _openSearch,
-                    onRename: _openContact,
-                    pinnedCount: _pinCount,
-                    onPinned: _showPinnedSheet,
-                  ),
-            // his chat is no request: its lock line says the rest
-            if ((_flag != null && !_accepted) || _isDev)
-              const SizedBox.shrink()
-            else if (_vouched && !_accepted && _recvCount == 0)
-              _IntroBanner(
-                names: _voucherNames,
-                seed: _voucherSeed!,
-                avatar: _voucherAvatar,
-                verified: _voucherVerified,
-              )
-            else if (_requestPending && _sentCount > 0)
-              const _RequestBanner(),
+            // search and the head cross over both ways
+            FadeSwap(
+              child: _searching
+                  ? SearchHead(
+                      key: const ValueKey('search'),
+                      controller: _searchCtrl,
+                      matchCount: _matches.length,
+                      matchPos: _matches.isEmpty ? 0 : _matchPos + 1,
+                      onChanged: _onQueryChanged,
+                      onPrev: () => _gotoMatch(-1),
+                      onNext: () => _gotoMatch(1),
+                      onClose: _closeSearch,
+                    )
+                  : _isDev
+                  ? DevChatHead(
+                      key: const ValueKey('head'),
+                      anon: (_devOpening?.started ?? false) && _devAnon,
+                      onBack: () => Navigator.pop(context),
+                      onAbout: () => showDevAboutSheet(context),
+                      onSearch: _openSearch,
+                      onMore: _devActions,
+                      pinnedCount: _pinCount,
+                      onPinned: _showPinnedSheet,
+                    )
+                  : _ChatHead(
+                      key: const ValueKey('head'),
+                      haloId: widget.peerHaloId,
+                      nickname: _nickname,
+                      note: _note,
+                      verified: _verified,
+                      supporterBadge: _peerBadge,
+                      onBlock: _openContact,
+                      onMore: _chatActions,
+                      avatarSeed: widget.avatarSeed,
+                      face: _peerFace,
+                      onBack: () => Navigator.pop(context),
+                      onSearch: _openSearch,
+                      onRename: _openContact,
+                      pinnedCount: _pinCount,
+                      onPinned: _showPinnedSheet,
+                    ),
+            ),
+            // each line around the thread grows in and folds away, so the
+            // thread does not jump
+            _Fold(
+              // his chat is no request: its lock line says the rest
+              (_flag != null && !_accepted) || _isDev
+                  ? const SizedBox(key: ValueKey('top-none'), width: 0)
+                  : _vouched && !_accepted && _recvCount == 0
+                  ? _IntroBanner(
+                      key: const ValueKey('intro'),
+                      names: _voucherNames,
+                      seed: _voucherSeed!,
+                      avatar: _voucherAvatar,
+                      verified: _voucherVerified,
+                    )
+                  : _requestPending && _sentCount > 0
+                  ? const _RequestBanner(key: ValueKey('request'))
+                  : const SizedBox(key: ValueKey('top-none'), width: 0),
+            ),
             // his key moved on: this chat still reads and writes
-            if (_devShown?.status == DevKeyStatus.previous)
-              NoticeBanner(
-                glyph: NoticeGlyph.shield,
-                text: l10n.devNewKey,
-                color: HaloColors.amber,
-                margin: const EdgeInsets.fromLTRB(14, 10, 14, 2),
-              ),
-            if (_keyChanged && !_isDev)
-              _KeyChangedBanner(
-                peerName: _nickname ?? widget.peerHaloId,
-                onVerify: _openKeyVerification,
-                onDismiss: _dismissKeyChanged,
-              ),
+            _Fold(
+              _devShown?.status == DevKeyStatus.previous
+                  ? NoticeBanner(
+                      key: const ValueKey('dev-moved'),
+                      glyph: NoticeGlyph.shield,
+                      text: l10n.devNewKey,
+                      color: HaloColors.amber,
+                      margin: const EdgeInsets.fromLTRB(14, 10, 14, 2),
+                    )
+                  : const SizedBox(key: ValueKey('dev-moved-none'), width: 0),
+            ),
+            _Fold(
+              _keyChanged && !_isDev
+                  ? _KeyChangedBanner(
+                      key: const ValueKey('key-changed'),
+                      peerName: _nickname ?? widget.peerHaloId,
+                      onVerify: _openKeyVerification,
+                      onDismiss: _dismissKeyChanged,
+                    )
+                  : const SizedBox(key: ValueKey('key-none'), width: 0),
+            ),
             Expanded(
               child: AtmoScope(
                 atmo: _atmosphere,
@@ -4810,55 +4570,59 @@ class _ChatScreenState extends State<ChatScreen>
                     ],
                     if (_atmosphere != Atmo.none)
                       Positioned.fill(child: AtmosphereWash(_atmosphere)),
-                    !_loaded
-                        ? const SizedBox.shrink()
-                        : _messages.isEmpty
-                        ? const _EmptyConversation()
-                        : ListView.builder(
-                            controller: _scrollCtrl,
-                            reverse: true,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                            itemCount: _messages.length,
-                            findChildIndexCallback: _indexOfRow,
-                            itemBuilder: (c, i) {
-                              // one unbuildable message must never cost
-                              // the whole conversation. draw a stub and
-                              // carry on.
-                              try {
-                                // keyed by the message at the top, where
-                                // the list looks: in a reversed list every
-                                // arrival moves every index, and a voice
-                                // note must keep its player. the same id
-                                // is the anchor a jump lands on.
-                                final id = _rowKey(
-                                  _messages[_messages.length - 1 - i],
-                                );
-                                return RowAnchor(
-                                  key: ValueKey(id),
-                                  anchors: _anchors,
-                                  id: id,
-                                  child: _buildRow(c, i, searchActive),
-                                );
-                              } catch (e) {
-                                dlog('bubble failed: $e');
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 6,
-                                  ),
-                                  child: Text(
-                                    l10n.chatThisMessageCanT,
-                                    style: HaloType.sans(
-                                      size: 12,
-                                      color: HaloColors.text3,
+                    // a slow first read fades the thread up, not a cut
+                    FadeSwap(
+                      child: !_loaded
+                          ? const SizedBox.shrink(key: ValueKey('wait'))
+                          : _messages.isEmpty
+                          ? const _EmptyConversation(key: ValueKey('empty'))
+                          : ListView.builder(
+                              key: const ValueKey('list'),
+                              controller: _scrollCtrl,
+                              reverse: true,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                              itemCount: _messages.length,
+                              findChildIndexCallback: _indexOfRow,
+                              itemBuilder: (c, i) {
+                                // one unbuildable message must never cost
+                                // the whole conversation. draw a stub and
+                                // carry on.
+                                try {
+                                  // keyed by the message at the top, where
+                                  // the list looks: in a reversed list every
+                                  // arrival moves every index, and a voice
+                                  // note must keep its player. the same id
+                                  // is the anchor a jump lands on.
+                                  final id = _rowKey(
+                                    _messages[_messages.length - 1 - i],
+                                  );
+                                  return RowAnchor(
+                                    key: ValueKey(id),
+                                    anchors: _anchors,
+                                    id: id,
+                                    child: _buildRow(c, i, searchActive),
+                                  );
+                                } catch (e) {
+                                  dlog('bubble failed: $e');
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 6,
                                     ),
-                                  ),
-                                );
-                              }
-                            },
-                          ),
+                                    child: Text(
+                                      l10n.chatThisMessageCanT,
+                                      style: HaloType.sans(
+                                        size: 12,
+                                        color: HaloColors.text3,
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
+                            ),
+                    ),
                     Positioned(
                       left: 0,
                       right: 0,
@@ -4898,55 +4662,70 @@ class _ChatScreenState extends State<ChatScreen>
                 ),
               ),
             ),
-            if (_friendlyStatus(_status).isNotEmpty && !appState.movedAway)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Text(
-                  _friendlyStatus(_status),
-                  style: HaloType.mono(size: 10, color: HaloColors.amber),
-                ),
-              ),
+            _Fold(
+              _friendlyStatus(_status).isNotEmpty && !appState.movedAway
+                  ? Padding(
+                      key: const ValueKey('status'),
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+                      child: Text(
+                        _friendlyStatus(_status),
+                        textAlign: TextAlign.center,
+                        style: HaloType.mono(size: 10, color: HaloColors.amber),
+                      ),
+                    )
+                  : const SizedBox(key: ValueKey('status-none'), width: 0),
+            ),
             const PowNote(),
             // tor still warming: messages typed now are queued. not on a
             // phone whose identity has moved, where tor is off on purpose.
-            if (appState.sendMode == 'private' &&
-                !_torReadyToSend() &&
-                !appState.movedAway)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const TorHalo(),
-                    const SizedBox(width: 7),
-                    Flexible(
-                      child: Text(
-                        l10n.chatBuildingAPrivateRoute,
-                        style: HaloType.sans(
-                          size: 10.5,
-                          color: HaloColors.text2,
-                        ).copyWith(height: 1.35),
+            _Fold(
+              appState.sendMode == 'private' &&
+                      !_torReadyToSend() &&
+                      !appState.movedAway
+                  ? Padding(
+                      key: const ValueKey('tor-warm'),
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const TorHalo(),
+                          const SizedBox(width: 7),
+                          Flexible(
+                            child: Text(
+                              l10n.chatBuildingAPrivateRoute,
+                              style: HaloType.sans(
+                                size: 10.5,
+                                color: HaloColors.text2,
+                              ).copyWith(height: 1.35),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
-              ),
-            if (_flag != null && !_accepted && !_blocked)
-              NoticeBanner(
-                glyph: NoticeGlyph.shield,
-                text: _flag!.headline,
-                color: HaloColors.rose,
-                margin: const EdgeInsets.fromLTRB(14, 0, 14, 8),
-                onTap: _openShield,
-              )
-            else if (_shieldClean && !_accepted && !_blocked)
-              // the calm state. same banner, softest colour, nothing to tap
-              NoticeBanner(
-                glyph: NoticeGlyph.shield,
-                text: l10n.chatLooksSafeNothingSuspicious,
-                color: HaloColors.text2,
-                margin: const EdgeInsets.fromLTRB(14, 0, 14, 8),
-              ),
+                    )
+                  : const SizedBox(key: ValueKey('tor-none'), width: 0),
+            ),
+            _Fold(
+              _flag != null && !_accepted && !_blocked
+                  ? NoticeBanner(
+                      key: const ValueKey('shield-flag'),
+                      glyph: NoticeGlyph.shield,
+                      text: _flag!.headline,
+                      color: HaloColors.rose,
+                      margin: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+                      onTap: _openShield,
+                    )
+                  : _shieldClean && !_accepted && !_blocked
+                  // the calm state. same banner, softest colour, nothing to
+                  // tap
+                  ? NoticeBanner(
+                      key: const ValueKey('shield-clean'),
+                      glyph: NoticeGlyph.shield,
+                      text: l10n.chatLooksSafeNothingSuspicious,
+                      color: HaloColors.text2,
+                      margin: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+                    )
+                  : const SizedBox(key: ValueKey('shield-none'), width: 0),
+            ),
             if (_isDev) ..._devAboveComposer(context),
             AnimatedSwitcher(
               duration: motionStill(context)
@@ -4978,7 +4757,7 @@ class _ChatScreenState extends State<ChatScreen>
               },
             ),
             AnimatedSwitcher(
-              duration: motionStill(context)
+              duration: motionStill(context) || !_barSettled
                   ? Duration.zero
                   : const Duration(milliseconds: 260),
               switchInCurve: Curves.easeOut,
@@ -4990,7 +4769,9 @@ class _ChatScreenState extends State<ChatScreen>
               ),
               child: KeyedSubtree(
                 key: ValueKey(
-                  _blocked
+                  !_barKnown
+                      ? 'bar_wait'
+                      : _blocked
                       ? 'bar_blocked'
                       : _devStop != null
                       ? 'bar_dev_stop'
@@ -5000,7 +4781,9 @@ class _ChatScreenState extends State<ChatScreen>
                       ? 'bar_locked'
                       : 'bar_composer',
                 ),
-                child: _blocked
+                child: !_barKnown
+                    ? const SizedBox(width: double.infinity)
+                    : _blocked
                     ? _BlockedBar(onUnblock: _unblockContact)
                     : _devStop != null
                     ? _RequestLockBar(
@@ -5065,6 +4848,7 @@ class _ChatScreenState extends State<ChatScreen>
                             onPickBurn: _pickBurnDuration,
                             burnSeconds: _burnSeconds,
                             controller: _msgCtrl,
+                            focusNode: _composerFocus,
                             sending: _sending,
                             onSend: _send,
                             disguise: _voiceDisguise,
@@ -5083,6 +4867,28 @@ class _ChatScreenState extends State<ChatScreen>
       ),
     );
   }
+}
+
+// a line around the thread that grows in and folds away instead of
+// popping, so the thread does not jump. instant when the phone asks for no
+// movement. [child] is keyed by what it shows
+class _Fold extends StatelessWidget {
+  final Widget child;
+  final Duration time;
+  const _Fold(this.child, {this.time = const Duration(milliseconds: 220)});
+
+  @override
+  Widget build(BuildContext context) => AnimatedSwitcher(
+    duration: motionStill(context) ? Duration.zero : time,
+    switchInCurve: Curves.easeOutCubic,
+    switchOutCurve: Curves.easeInCubic,
+    transitionBuilder: (child, anim) => SizeTransition(
+      sizeFactor: anim,
+      axisAlignment: -1,
+      child: FadeTransition(opacity: anim, child: child),
+    ),
+    child: child,
+  );
 }
 
 // quick press-down scale for the request buttons.
@@ -5151,24 +4957,33 @@ class _AcceptRequestBar extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 11),
+          // every button takes a share of the row, so a long word or a big
+          // font shrinks a label instead of pushing the row off the screen
           Row(
             children: [
-              _reqBtn(
-                l10n.chatBlock,
-                HaloColors.rose,
-                HaloColors.surface2,
-                onBlock,
-              ),
-              const SizedBox(width: 8),
-              _reqBtn(
-                l10n.chatDecline,
-                HaloColors.text,
-                HaloColors.surface2,
-                onDecline,
+              Expanded(
+                flex: 4,
+                child: _barBtn(
+                  l10n.chatBlock,
+                  HaloColors.rose,
+                  HaloColors.surface2,
+                  onBlock,
+                ),
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: _reqBtn(
+                flex: 4,
+                child: _barBtn(
+                  l10n.chatDecline,
+                  HaloColors.text,
+                  HaloColors.surface2,
+                  onDecline,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                flex: 5,
+                child: _barBtn(
                   l10n.chatAccept,
                   HaloColors.onAmber,
                   HaloColors.amber,
@@ -5182,36 +4997,42 @@ class _AcceptRequestBar extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _reqBtn(
-    String label,
-    Color fg,
-    Color bg,
-    VoidCallback onTap, {
-    bool bold = false,
-  }) {
-    return _ScaleTap(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 18),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(12),
-          border: bg == HaloColors.surface2
-              ? Border.all(color: HaloColors.line, width: 0.5)
-              : null,
-        ),
+// a button in the bars around the thread: the request bar and the security
+// code notice share one shape
+Widget _barBtn(
+  String label,
+  Color fg,
+  Color bg,
+  VoidCallback onTap, {
+  bool bold = false,
+}) {
+  return _ScaleTap(
+    onTap: onTap,
+    child: Container(
+      padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 8),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(12),
+        border: bg == HaloColors.surface2
+            ? Border.all(color: HaloColors.line, width: 0.5)
+            : null,
+      ),
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
         child: Text(
           label,
+          maxLines: 1,
           style: HaloType.sans(
             size: 13,
             color: fg,
           ).copyWith(fontWeight: bold ? FontWeight.w600 : FontWeight.w400),
         ),
       ),
-    );
-  }
+    ),
+  );
 }
 
 // shown above the thread when a friend introduced this peer and neither side
@@ -5222,6 +5043,7 @@ class _IntroBanner extends StatelessWidget {
   final int? avatar;
   final bool verified;
   const _IntroBanner({
+    super.key,
     required this.names,
     required this.seed,
     this.avatar,
@@ -5265,7 +5087,7 @@ class _IntroBanner extends StatelessWidget {
 
 // shown above the thread when we're messaging someone who hasn't accepted us.
 class _RequestBanner extends StatelessWidget {
-  const _RequestBanner();
+  const _RequestBanner({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -5284,9 +5106,11 @@ class _RequestBanner extends StatelessWidget {
             children: [
               Icon(Icons.schedule, size: 13, color: HaloColors.amber),
               const SizedBox(width: 7),
-              Text(
-                l10n.chatMessageRequest,
-                style: HaloType.serif(size: 13, color: HaloColors.text),
+              Flexible(
+                child: Text(
+                  l10n.chatMessageRequest,
+                  style: HaloType.serif(size: 13, color: HaloColors.text),
+                ),
               ),
             ],
           ),
@@ -5432,6 +5256,7 @@ class _ChatHead extends StatelessWidget {
   final String? note;
   final String? supporterBadge;
   const _ChatHead({
+    super.key,
     required this.haloId,
     this.nickname,
     required this.avatarSeed,
@@ -5487,13 +5312,15 @@ class _ChatHead extends StatelessWidget {
                           duration: const Duration(milliseconds: 300),
                           transitionBuilder: (child, anim) => FadeTransition(
                             opacity: anim,
-                            child: ScaleTransition(
-                              scale: Tween<double>(
-                                begin: 0.98,
-                                end: 1.0,
-                              ).animate(anim),
-                              child: child,
-                            ),
+                            child: motionStill(context)
+                                ? child
+                                : ScaleTransition(
+                                    scale: Tween<double>(
+                                      begin: 0.98,
+                                      end: 1.0,
+                                    ).animate(anim),
+                                    child: child,
+                                  ),
                           ),
                           child: Text(
                             nickname ?? haloId,
@@ -5879,6 +5706,8 @@ class _Bubble extends StatelessWidget {
   final _Msg msg;
   final void Function(_Msg)? onRetry;
   final void Function(BuildContext)? onLongPress;
+  // a tap on a reaction chip: the same emoji from this phone, on or off
+  final void Function(String emoji)? onReact;
   final bool secure;
   final String? quotedText;
   final String? quotedAuthor;
@@ -5911,6 +5740,7 @@ class _Bubble extends StatelessWidget {
     this.quotedSticker,
     this.onRetry,
     this.onLongPress,
+    this.onReact,
     this.secure = false,
     this.quotedText,
     this.quotedAuthor,
@@ -5946,38 +5776,11 @@ class _Bubble extends StatelessWidget {
       );
     }
     final text = msg.text;
-    final lower = text.toLowerCase();
-    final q = query.toLowerCase();
-    final spans = <TextSpan>[];
-    var start = 0;
-    while (true) {
-      final hit = lower.indexOf(q, start);
-      if (hit < 0) {
-        spans.add(TextSpan(text: text.substring(start)));
-        break;
-      }
-      if (hit > start) {
-        spans.add(TextSpan(text: text.substring(start, hit)));
-      }
-      // the hit marked like a highlighter: amber on its own tint in their
-      // bubble, amber on ink in ours, where amber text alone would vanish
-      final onAmber = isOut && !image;
-      spans.add(
-        TextSpan(
-          text: text.substring(hit, hit + q.length),
-          style: TextStyle(
-            color: HaloColors.amber,
-            backgroundColor: onAmber
-                ? HaloColors.onAmber
-                : HaloColors.amber.withValues(alpha: 0.22),
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      );
-      start = hit + q.length;
-    }
     return Text.rich(
-      TextSpan(style: base, children: spans),
+      TextSpan(
+        style: base,
+        children: searchLit(text, query, onAmber: isOut && !image),
+      ),
       textDirection: writtenDir(text),
     );
   }
@@ -6004,9 +5807,14 @@ class _Bubble extends StatelessWidget {
     final ackOk = !isMedia || msg.delivered;
     final showMeta = isOut && !pending && !failedShown && !parked && ackOk;
     final showPill = isOut && pending;
+    final reacted = msg.reactions.isNotEmpty;
+    final roomTime = motionStill(context) ? Duration.zero : kHouseTime;
+    // full strength: weight and size set the time apart, not a fade
     final metaColor = (isOut && !frameless)
-        ? HaloColors.onAmber.withValues(alpha: 0.55)
-        : HaloColors.text3;
+        ? HaloColors.onAmber
+        : HaloColors.text2;
+    // under a photo or a video there is no amber behind the words
+    final onAmberText = isOut && !frameless;
     final remainingMs = msg.burnAt != null
         ? msg.burnAt! - DateTime.now().millisecondsSinceEpoch
         : 9999999;
@@ -6060,12 +5868,12 @@ class _Bubble extends StatelessWidget {
             ? () => onRetry!(msg)
             : onReveal,
         onLongPress: onLongPress == null ? null : () => onLongPress!(context),
-        child: Padding(
+        child: AnimatedPadding(
+          duration: roomTime,
+          curve: kHouseCurve,
           padding: EdgeInsets.only(
             top: firstInGroup ? 4 : 1,
-            // a reaction hangs ~13px below the bubble. reserve room so the
-            // next message does not overlap and clip the pill.
-            bottom: msg.reactions.isNotEmpty ? 16 : (lastInGroup ? 4 : 1),
+            bottom: reacted ? 3 : (lastInGroup ? 4 : 1),
           ),
           child: Column(
             crossAxisAlignment: isOut
@@ -6078,575 +5886,679 @@ class _Bubble extends StatelessWidget {
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    BurnFade(
-                      active: isExpiring || msg.removing,
-                      child: Container(
-                        constraints: BoxConstraints(
-                          maxWidth: MediaQuery.of(context).size.width * 0.78,
-                        ),
-                        padding: frameless
-                            ? EdgeInsets.zero
-                            : const EdgeInsets.fromLTRB(14, 10, 14, 8),
-                        decoration: BoxDecoration(
-                          color: (isImage && msg.text.isNotEmpty)
-                              ? HaloColors.surface2
-                              : frameless
-                              ? null
-                              : isOut
-                              ? HaloColors.amber
-                              : atmoBubbleIn(context),
-                          gradient: null,
-                          borderRadius: BorderRadiusDirectional.only(
-                            topStart: const Radius.circular(14),
-                            topEnd: const Radius.circular(14),
-                            bottomStart: Radius.circular(
-                              isOut ? 14 : (lastInGroup ? 4 : 14),
-                            ),
-                            bottomEnd: Radius.circular(
-                              isOut ? (lastInGroup ? 4 : 14) : 14,
-                            ),
-                          ),
-                          border: isCurrentMatch
-                              ? Border.all(color: HaloColors.amber, width: 1)
-                              : null,
-                          boxShadow: isCurrentMatch
-                              ? [
-                                  BoxShadow(
-                                    color: HaloColors.amber.withValues(
-                                      alpha: 0.28,
-                                    ),
-                                    blurRadius: 22,
-                                    spreadRadius: -4,
-                                    offset: const Offset(0, 6),
+                    // a reaction hangs below the bubble: its room is inside
+                    // the stack, so the chip can be tapped, and eases open
+                    AnimatedPadding(
+                      duration: roomTime,
+                      curve: kHouseCurve,
+                      padding: EdgeInsets.only(
+                        bottom: reacted ? _kChipRoom : 0,
+                      ),
+                      // the ring sits inside the room, so it follows it open
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          BurnFade(
+                            active: isExpiring || msg.removing,
+                            child: Container(
+                              constraints: BoxConstraints(
+                                maxWidth:
+                                    MediaQuery.of(context).size.width * 0.78,
+                              ),
+                              padding: frameless
+                                  ? EdgeInsets.zero
+                                  : const EdgeInsets.fromLTRB(14, 10, 14, 8),
+                              decoration: BoxDecoration(
+                                color: (isImage && msg.text.isNotEmpty)
+                                    ? HaloColors.surface2
+                                    : frameless
+                                    ? null
+                                    : isOut
+                                    ? HaloColors.amber
+                                    : atmoBubbleIn(context),
+                                gradient: null,
+                                borderRadius: BorderRadiusDirectional.only(
+                                  topStart: const Radius.circular(14),
+                                  topEnd: const Radius.circular(14),
+                                  bottomStart: Radius.circular(
+                                    isOut ? 14 : (lastInGroup ? 4 : 14),
                                   ),
-                                ]
-                              : null,
-                        ),
-                        clipBehavior: frameless ? Clip.antiAlias : Clip.none,
-                        child: IntrinsicWidth(
-                          child: Column(
-                            crossAxisAlignment: isOut
-                                ? CrossAxisAlignment.end
-                                : CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (quotedText != null)
-                                GestureDetector(
-                                  behavior: HitTestBehavior.opaque,
-                                  onTap: onQuoteTap,
-                                  child: Container(
-                                    margin: const EdgeInsets.only(bottom: 4),
-                                    clipBehavior: Clip.antiAlias,
-                                    decoration: BoxDecoration(
-                                      color: isOut
-                                          ? HaloColors.onAmber.withValues(
-                                              alpha: 0.1,
-                                            )
-                                          : HaloColors.amber.withValues(
-                                              alpha: 0.08,
-                                            ),
-                                      borderRadius: BorderRadius.circular(9),
-                                    ),
-                                    child: IntrinsicHeight(
-                                      child: Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.stretch,
-                                        mainAxisSize: MainAxisSize.max,
-                                        children: [
-                                          Container(
-                                            width: 3,
+                                  bottomEnd: Radius.circular(
+                                    isOut ? (lastInGroup ? 4 : 14) : 14,
+                                  ),
+                                ),
+                                border: searchRing(isCurrentMatch),
+                                boxShadow: searchGlow(isCurrentMatch),
+                              ),
+                              clipBehavior: frameless
+                                  ? Clip.antiAlias
+                                  : Clip.none,
+                              child: IntrinsicWidth(
+                                child: Column(
+                                  crossAxisAlignment: isOut
+                                      ? CrossAxisAlignment.end
+                                      : CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (quotedText != null)
+                                      PressScale(
+                                        scale: 0.97,
+                                        haptic: false,
+                                        onTap: onQuoteTap,
+                                        child: Container(
+                                          margin: const EdgeInsets.only(
+                                            bottom: 4,
+                                          ),
+                                          clipBehavior: Clip.antiAlias,
+                                          decoration: BoxDecoration(
                                             color: isOut
                                                 ? HaloColors.onAmber.withValues(
-                                                    alpha: 0.7,
+                                                    alpha: 0.1,
                                                   )
-                                                : HaloColors.amber,
-                                          ),
-                                          const SizedBox(width: 9),
-                                          Flexible(
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsetsDirectional.fromSTEB(
-                                                    0,
-                                                    6,
-                                                    10,
-                                                    6,
+                                                : HaloColors.amber.withValues(
+                                                    alpha: 0.08,
                                                   ),
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  if (quotedAuthor != null)
-                                                    Text(
-                                                      quotedAuthor!,
-                                                      style: HaloType.mono(
-                                                        size: 10,
-                                                        color: isOut
-                                                            ? HaloColors.onAmber
-                                                                  .withValues(
-                                                                    alpha: 0.85,
-                                                                  )
-                                                            : HaloColors.amber,
-                                                        letter: 0.4,
-                                                      ),
-                                                    ),
-                                                  if (quotedAuthor != null)
-                                                    const SizedBox(height: 2),
-                                                  if (quotedSticker
-                                                      case final qs?)
-                                                    StickerLine(
-                                                      qs,
-                                                      style: _quoteStyle(isOut),
-                                                    )
-                                                  else
-                                                    Text(
-                                                      quotedText!,
-                                                      maxLines: 1,
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                      style: _quoteStyle(isOut),
-                                                    ),
-                                                ],
-                                              ),
+                                            borderRadius: BorderRadius.circular(
+                                              9,
                                             ),
                                           ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              if (msg.fileName == 'voice.wav' &&
-                                  msg.filePath != null)
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 2,
-                                  ),
-                                  child: VoiceBubble(
-                                    key: ValueKey('vb_${msg.filePath}'),
-                                    path: msg.filePath!,
-                                    isOut: isOut,
-                                    disguised: msg.voiceDisguised,
-                                  ),
-                                )
-                              else if (msg.filePath != null &&
-                                  nameSaysVideo(msg.fileName))
-                                VideoBubble(
-                                  key: ValueKey('vid_${msg.filePath}'),
-                                  path: msg.filePath!,
-                                  fileName: msg.fileName!,
-                                  width:
-                                      (MediaQuery.of(context).size.width * 0.66)
-                                          .clamp(180.0, 300.0),
-                                  onOpen: () => openVideo(
-                                    context,
-                                    path: msg.filePath!,
-                                    fileName: msg.fileName,
-                                  ),
-                                  stamp: showMeta
-                                      ? _mediaStamp(
-                                          msg,
-                                          pending,
-                                          failedShown,
-                                          ackOk,
-                                        )
-                                      : null,
-                                )
-                              else if (msg.fileName != null)
-                                GestureDetector(
-                                  behavior: HitTestBehavior.opaque,
-                                  onTap: () {
-                                    if (msg.filePath != null) {
-                                      openReceivedFile(
-                                        context,
-                                        msg.filePath!,
-                                        msg.fileName,
-                                      );
-                                    }
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 2,
-                                    ),
-                                    child: _fileCard(msg, isOut),
-                                  ),
-                                ),
-                              if (msg.mediaPath != null)
-                                GestureDetector(
-                                  onTap: () => _openFullImage(
-                                    context,
-                                    msg.mediaPath!,
-                                    secure: msg.secure,
-                                    tag: photoHeroTag(msg.mediaPath!, 'chat'),
-                                    radius: 14,
-                                  ),
-                                  child: ClipRRect(
-                                    borderRadius: msg.text.isNotEmpty
-                                        ? const BorderRadius.vertical(
-                                            top: Radius.circular(14),
-                                          )
-                                        : BorderRadius.circular(14),
-                                    child: Stack(
-                                      clipBehavior: Clip.none,
-                                      children: [
-                                        ConstrainedBox(
-                                          constraints: const BoxConstraints(
-                                            maxHeight: 280,
-                                          ),
-                                          // the bubble sizes itself with
-                                          // IntrinsicWidth, and an Image
-                                          // answers infinity until the file
-                                          // decodes, so pin a width
-                                          child: RememberedHeight(
-                                            id: msg.mediaPath!,
-                                            child: Hero(
-                                              tag: photoHeroTag(
-                                                msg.mediaPath!,
-                                                'chat',
-                                              ),
-                                              child: SizedBox(
-                                                width:
-                                                    MediaQuery.of(
-                                                      context,
-                                                    ).size.width *
-                                                    0.78,
-                                                child: Image.file(
-                                                  File(msg.mediaPath!),
-                                                  gaplessPlayback: true,
-                                                  fit: BoxFit.cover,
-                                                  cacheWidth: screenPx(
-                                                    context,
-                                                    times: 0.78,
-                                                  ),
-                                                  errorBuilder: (_, e, _) {
-                                                    dlog(
-                                                      'Image failed: '
-                                                      '${msg.mediaPath} / $e',
-                                                    );
-                                                    return Container(
-                                                      height: 120,
-                                                      alignment:
-                                                          Alignment.center,
-                                                      color: Colors.black26,
-                                                      child: Text(
-                                                        l10n.chatPhotoUnavailable,
-                                                        style: HaloType.mono(
-                                                          size: 11,
-                                                          color:
-                                                              HaloColors.text2,
-                                                        ),
-                                                      ),
-                                                    );
-                                                  },
+                                          child: IntrinsicHeight(
+                                            child: Row(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.stretch,
+                                              mainAxisSize: MainAxisSize.max,
+                                              children: [
+                                                Container(
+                                                  width: 3,
+                                                  color: isOut
+                                                      ? HaloColors.onAmber
+                                                            .withValues(
+                                                              alpha: 0.7,
+                                                            )
+                                                      : HaloColors.amber,
                                                 ),
-                                              ),
+                                                const SizedBox(width: 9),
+                                                Flexible(
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsetsDirectional.fromSTEB(
+                                                          0,
+                                                          6,
+                                                          10,
+                                                          6,
+                                                        ),
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      mainAxisSize:
+                                                          MainAxisSize.min,
+                                                      children: [
+                                                        if (quotedAuthor !=
+                                                            null)
+                                                          Text(
+                                                            quotedAuthor!,
+                                                            style: HaloType.mono(
+                                                              size: 10,
+                                                              color: isOut
+                                                                  ? HaloColors
+                                                                        .onAmber
+                                                                  : HaloColors
+                                                                        .amber,
+                                                              letter: 0.4,
+                                                            ),
+                                                          ),
+                                                        if (quotedAuthor !=
+                                                            null)
+                                                          const SizedBox(
+                                                            height: 2,
+                                                          ),
+                                                        if (quotedSticker
+                                                            case final qs?)
+                                                          StickerLine(
+                                                            qs,
+                                                            style: _quoteStyle(
+                                                              isOut,
+                                                            ),
+                                                          )
+                                                        else
+                                                          Text(
+                                                            quotedText!,
+                                                            maxLines: 1,
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
+                                                            style: _quoteStyle(
+                                                              isOut,
+                                                            ),
+                                                          ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ),
                                         ),
-                                        if (showMeta)
-                                          PositionedDirectional(
-                                            end: 8,
-                                            bottom: 8,
-                                            child: _mediaStamp(
-                                              msg,
-                                              pending,
-                                              failedShown,
-                                              ackOk,
-                                            ),
+                                      ),
+                                    if (msg.fileName == 'voice.wav' &&
+                                        msg.filePath != null)
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 2,
+                                        ),
+                                        child: VoiceBubble(
+                                          key: ValueKey('vb_${msg.filePath}'),
+                                          path: msg.filePath!,
+                                          isOut: isOut,
+                                          disguised: msg.voiceDisguised,
+                                        ),
+                                      )
+                                    else if (msg.filePath != null &&
+                                        nameSaysVideo(msg.fileName))
+                                      VideoBubble(
+                                        key: ValueKey('vid_${msg.filePath}'),
+                                        path: msg.filePath!,
+                                        fileName: msg.fileName!,
+                                        width:
+                                            (MediaQuery.of(context).size.width *
+                                                    0.66)
+                                                .clamp(180.0, 300.0),
+                                        onOpen: () => openVideo(
+                                          context,
+                                          path: msg.filePath!,
+                                          fileName: msg.fileName,
+                                        ),
+                                        stamp: _mediaCorner(
+                                          msg,
+                                          showMeta: showMeta,
+                                          failedShown: failedShown,
+                                          parked: parked,
+                                        ),
+                                      )
+                                    else if (msg.fileName != null)
+                                      PressScale(
+                                        scale: 0.97,
+                                        haptic: false,
+                                        onTap: () {
+                                          if (msg.filePath != null) {
+                                            openReceivedFile(
+                                              context,
+                                              msg.filePath!,
+                                              msg.fileName,
+                                            );
+                                          }
+                                        },
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 2,
                                           ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              Padding(
-                                padding: msg.mediaPath != null
-                                    ? (msg.text.isNotEmpty
-                                          ? const EdgeInsets.fromLTRB(
-                                              12,
-                                              8,
-                                              12,
-                                              10,
-                                            )
-                                          : const EdgeInsets.fromLTRB(
-                                              2,
-                                              6,
-                                              2,
-                                              0,
-                                            ))
-                                    : EdgeInsets.zero,
-                                child: Column(
-                                  crossAxisAlignment: msg.mediaPath != null
-                                      ? CrossAxisAlignment.start
-                                      : CrossAxisAlignment.end,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    if (msg.text.isNotEmpty)
-                                      _body(
-                                        isOut,
-                                        image: msg.mediaPath != null,
+                                          child: _fileCard(msg, isOut),
+                                        ),
                                       ),
-                                    if (firstUrl(msg.text) case final u?) ...[
-                                      const SizedBox(height: 6),
-                                      LinkStub(
-                                        url: u,
-                                        isOut: isOut,
-                                        title: linkTitle,
-                                        bySender: linkBySender,
-                                      ),
-                                    ],
-                                    // the time and tick grow in as the
-                                    // sending pill under the bubble folds
-                                    GrowSwap(
-                                      child: !(showMeta && !frameless)
-                                          ? const SizedBox.shrink(
-                                              key: ValueKey('no-meta'),
-                                            )
-                                          : Padding(
-                                              key: const ValueKey('meta'),
-                                              padding: const EdgeInsets.only(
-                                                top: 4,
+                                    if (msg.mediaPath != null)
+                                      PressScale(
+                                        scale: 0.97,
+                                        haptic: false,
+                                        onTap: () => _openFullImage(
+                                          context,
+                                          msg.mediaPath!,
+                                          secure: msg.secure,
+                                          tag: photoHeroTag(
+                                            msg.mediaPath!,
+                                            'chat',
+                                          ),
+                                          radius: 14,
+                                        ),
+                                        child: ClipRRect(
+                                          borderRadius: msg.text.isNotEmpty
+                                              ? const BorderRadius.vertical(
+                                                  top: Radius.circular(14),
+                                                )
+                                              : BorderRadius.circular(14),
+                                          child: Stack(
+                                            clipBehavior: Clip.none,
+                                            children: [
+                                              ConstrainedBox(
+                                                constraints:
+                                                    const BoxConstraints(
+                                                      maxHeight: 280,
+                                                    ),
+                                                // the bubble sizes itself with
+                                                // IntrinsicWidth, and an Image
+                                                // answers infinity until the file
+                                                // decodes, so pin a width
+                                                child: RememberedHeight(
+                                                  id: msg.mediaPath!,
+                                                  child: Hero(
+                                                    tag: photoHeroTag(
+                                                      msg.mediaPath!,
+                                                      'chat',
+                                                    ),
+                                                    child: SizedBox(
+                                                      width:
+                                                          MediaQuery.of(
+                                                            context,
+                                                          ).size.width *
+                                                          0.78,
+                                                      child: Image.file(
+                                                        File(msg.mediaPath!),
+                                                        gaplessPlayback: true,
+                                                        fit: BoxFit.cover,
+                                                        cacheWidth: screenPx(
+                                                          context,
+                                                          times: 0.78,
+                                                        ),
+                                                        // fades up once decoded,
+                                                        // over a quiet box
+                                                        frameBuilder:
+                                                            (
+                                                              _,
+                                                              child,
+                                                              frame,
+                                                              sync,
+                                                            ) => PhotoTileFade(
+                                                              shown:
+                                                                  sync ||
+                                                                  frame != null,
+                                                              child: child,
+                                                            ),
+                                                        errorBuilder: (_, e, _) {
+                                                          dlog(
+                                                            'Image failed: '
+                                                            '${msg.mediaPath} / $e',
+                                                          );
+                                                          return Container(
+                                                            height: 120,
+                                                            alignment: Alignment
+                                                                .center,
+                                                            color: HaloColors
+                                                                .surface2,
+                                                            child: Column(
+                                                              mainAxisSize:
+                                                                  MainAxisSize
+                                                                      .min,
+                                                              children: [
+                                                                Icon(
+                                                                  Icons
+                                                                      .image_not_supported_outlined,
+                                                                  size: 22,
+                                                                  color:
+                                                                      HaloColors
+                                                                          .text2,
+                                                                ),
+                                                                const SizedBox(
+                                                                  height: 6,
+                                                                ),
+                                                                Text(
+                                                                  l10n.chatPhotoUnavailable,
+                                                                  style: HaloType.mono(
+                                                                    size: 11,
+                                                                    color: HaloColors
+                                                                        .text2,
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          );
+                                                        },
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
                                               ),
+                                              PositionedDirectional(
+                                                end: 8,
+                                                bottom: 8,
+                                                child: _mediaCorner(
+                                                  msg,
+                                                  showMeta: showMeta,
+                                                  failedShown: failedShown,
+                                                  parked: parked,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    Padding(
+                                      padding: msg.mediaPath != null
+                                          ? (msg.text.isNotEmpty
+                                                ? const EdgeInsets.fromLTRB(
+                                                    12,
+                                                    8,
+                                                    12,
+                                                    10,
+                                                  )
+                                                : const EdgeInsets.fromLTRB(
+                                                    2,
+                                                    6,
+                                                    2,
+                                                    0,
+                                                  ))
+                                          : EdgeInsets.zero,
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            msg.mediaPath != null
+                                            ? CrossAxisAlignment.start
+                                            : CrossAxisAlignment.end,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          if (msg.text.isNotEmpty)
+                                            _body(
+                                              isOut,
+                                              image: msg.mediaPath != null,
+                                            ),
+                                          if (firstUrl(msg.text)
+                                              case final u?) ...[
+                                            const SizedBox(height: 6),
+                                            LinkStub(
+                                              url: u,
+                                              isOut: isOut,
+                                              title: linkTitle,
+                                              bySender: linkBySender,
+                                            ),
+                                          ],
+                                          // the time and tick grow in as the
+                                          // sending pill under the bubble folds
+                                          GrowSwap(
+                                            child: !(showMeta && !frameless)
+                                                ? const SizedBox.shrink(
+                                                    key: ValueKey('no-meta'),
+                                                  )
+                                                : Padding(
+                                                    key: const ValueKey('meta'),
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                          top: 4,
+                                                        ),
+                                                    child: Row(
+                                                      mainAxisSize:
+                                                          MainAxisSize.min,
+                                                      children: [
+                                                        if (msg.secure) ...[
+                                                          Icon(
+                                                            Icons
+                                                                .shield_rounded,
+                                                            size: 10,
+                                                            color: metaColor,
+                                                          ),
+                                                          const SizedBox(
+                                                            width: 4,
+                                                          ),
+                                                        ],
+                                                        Text(
+                                                          _fmtTime(msg.when),
+                                                          style: TextStyle(
+                                                            fontFamily: HaloType
+                                                                .monoFamily,
+                                                            fontFamilyFallback:
+                                                                HaloType
+                                                                    .monoFallbackNow,
+                                                            fontSize: 9,
+                                                            fontWeight:
+                                                                FontWeight.w500,
+                                                            color: metaColor,
+                                                            letterSpacing:
+                                                                track(0.4),
+                                                          ),
+                                                        ),
+                                                        if (msg.edited) ...[
+                                                          const SizedBox(
+                                                            width: 5,
+                                                          ),
+                                                          Text(
+                                                            l10n.chatEdited,
+                                                            style: TextStyle(
+                                                              fontFamily: HaloType
+                                                                  .monoFamily,
+                                                              fontFamilyFallback:
+                                                                  HaloType
+                                                                      .monoFallbackNow,
+                                                              fontSize: 9,
+                                                              color: metaColor,
+                                                              fontStyle:
+                                                                  slant(),
+                                                              letterSpacing:
+                                                                  track(0.4),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                        const SizedBox(
+                                                          width: 3,
+                                                        ),
+                                                        SentTick(
+                                                          delivered:
+                                                              msg.delivered,
+                                                          deliveredLabel: l10n
+                                                              .chatDelivered,
+                                                          color: metaColor,
+                                                          labelStyle: TextStyle(
+                                                            fontFamily: HaloType
+                                                                .monoFamily,
+                                                            fontFamilyFallback:
+                                                                HaloType
+                                                                    .monoFallbackNow,
+                                                            fontSize: 8.5,
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                            color: metaColor,
+                                                            letterSpacing:
+                                                                track(0.3),
+                                                          ),
+                                                        ),
+                                                        if (msg.burnAt !=
+                                                            null) ...[
+                                                          const SizedBox(
+                                                            width: 6,
+                                                          ),
+                                                          Icon(
+                                                            Icons
+                                                                .local_fire_department_outlined,
+                                                            size: 11,
+                                                            color: metaColor,
+                                                          ),
+                                                          const SizedBox(
+                                                            width: 2,
+                                                          ),
+                                                          Text(
+                                                            _fmtBurn(
+                                                              msg.burnAt!,
+                                                            ),
+                                                            style:
+                                                                HaloType.mono(
+                                                                  size: 9.5,
+                                                                  color:
+                                                                      metaColor,
+                                                                  weight:
+                                                                      FontWeight
+                                                                          .w600,
+                                                                ),
+                                                          ),
+                                                        ],
+                                                      ],
+                                                    ),
+                                                  ),
+                                          ),
+                                          if (!isOut &&
+                                              msg.edited &&
+                                              msg.mediaPath == null) ...[
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              l10n.chatEdited,
+                                              style: TextStyle(
+                                                fontFamily: HaloType.monoFamily,
+                                                fontFamilyFallback:
+                                                    HaloType.monoFallbackNow,
+                                                fontSize: 9,
+                                                color: HaloColors.amber,
+                                                fontStyle: slant(),
+                                                letterSpacing: track(0.4),
+                                              ),
+                                            ),
+                                          ],
+
+                                          // a sent photo has no meta row, so its
+                                          // countdown lives here like an incoming one
+                                          if (msg.burnAt != null &&
+                                              !pending &&
+                                              (!showMeta ||
+                                                  msg.mediaPath != null)) ...[
+                                            const SizedBox(height: 4),
+                                            Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 4,
+                                                  ),
                                               child: Row(
                                                 mainAxisSize: MainAxisSize.min,
                                                 children: [
-                                                  if (msg.secure) ...[
-                                                    Icon(
-                                                      Icons.shield_rounded,
-                                                      size: 10,
-                                                      color: metaColor,
-                                                    ),
-                                                    const SizedBox(width: 4),
-                                                  ],
+                                                  Icon(
+                                                    Icons
+                                                        .local_fire_department_outlined,
+                                                    size: 11,
+                                                    color: onAmberText
+                                                        ? HaloColors.onAmber
+                                                        : HaloColors.amber,
+                                                  ),
+                                                  const SizedBox(width: 4),
                                                   Text(
-                                                    _fmtTime(msg.when),
-                                                    style: TextStyle(
-                                                      fontFamily:
-                                                          HaloType.monoFamily,
-                                                      fontFamilyFallback:
-                                                          HaloType
-                                                              .monoFallbackNow,
-                                                      fontSize: 9,
-                                                      color: metaColor,
-                                                      letterSpacing: track(0.4),
-                                                    ),
-                                                  ),
-                                                  if (msg.edited) ...[
-                                                    const SizedBox(width: 5),
-                                                    Text(
-                                                      l10n.chatEdited,
-                                                      style: TextStyle(
-                                                        fontFamily:
-                                                            HaloType.monoFamily,
-                                                        fontFamilyFallback:
-                                                            HaloType
-                                                                .monoFallbackNow,
-                                                        fontSize: 9,
-                                                        color: metaColor,
-                                                        fontStyle: slant(),
-                                                        letterSpacing: track(
-                                                          0.4,
+                                                    _fmtBurn(msg.burnAt!),
+                                                    style:
+                                                        HaloType.mono(
+                                                          size: 9.5,
+                                                          color: onAmberText
+                                                              ? HaloColors
+                                                                    .onAmber
+                                                              : HaloColors
+                                                                    .amber,
+                                                          weight:
+                                                              FontWeight.w600,
+                                                        ).copyWith(
+                                                          letterSpacing: track(
+                                                            0.3,
+                                                          ),
                                                         ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                  const SizedBox(width: 3),
-                                                  SentTick(
-                                                    delivered: msg.delivered,
-                                                    deliveredLabel:
-                                                        l10n.chatDelivered,
-                                                    color: metaColor,
-                                                    labelStyle: TextStyle(
-                                                      fontFamily:
-                                                          HaloType.monoFamily,
-                                                      fontFamilyFallback:
-                                                          HaloType
-                                                              .monoFallbackNow,
-                                                      fontSize: 8.5,
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                      color: metaColor,
-                                                      letterSpacing: track(0.3),
-                                                    ),
                                                   ),
-                                                  if (msg.burnAt != null) ...[
-                                                    const SizedBox(width: 6),
-                                                    Icon(
-                                                      Icons
-                                                          .local_fire_department_outlined,
-                                                      size: 11,
-                                                      color: metaColor,
-                                                    ),
-                                                    const SizedBox(width: 2),
-                                                    Text(
-                                                      _fmtBurn(msg.burnAt!),
-                                                      style: HaloType.mono(
-                                                        size: 9.5,
-                                                        color: metaColor,
-                                                        weight: FontWeight.w600,
-                                                      ),
-                                                    ),
-                                                  ],
                                                 ],
                                               ),
                                             ),
-                                    ),
-                                    if (!isOut &&
-                                        msg.edited &&
-                                        msg.mediaPath == null) ...[
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        l10n.chatEdited,
-                                        style: TextStyle(
-                                          fontFamily: HaloType.monoFamily,
-                                          fontFamilyFallback:
-                                              HaloType.monoFallbackNow,
-                                          fontSize: 9,
-                                          color: HaloColors.amber.withValues(
-                                            alpha: 0.55,
-                                          ),
-                                          fontStyle: slant(),
-                                          letterSpacing: track(0.4),
-                                        ),
-                                      ),
-                                    ],
-
-                                    // a sent photo has no meta row, so its
-                                    // countdown lives here like an incoming one
-                                    if (msg.burnAt != null &&
-                                        !pending &&
-                                        (!showMeta ||
-                                            msg.mediaPath != null)) ...[
-                                      const SizedBox(height: 4),
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 4,
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(
-                                              Icons
-                                                  .local_fire_department_outlined,
-                                              size: 11,
-                                              color: (isOut && !isImage)
-                                                  ? HaloColors.onAmber
-                                                  : HaloColors.amber.withValues(
-                                                      alpha: 0.75,
-                                                    ),
-                                            ),
-                                            const SizedBox(width: 4),
+                                          ],
+                                          if (failedShown || parked) ...[
+                                            const SizedBox(height: 4),
                                             Text(
-                                              _fmtBurn(msg.burnAt!),
-                                              style:
-                                                  HaloType.mono(
-                                                    size: 9.5,
-                                                    color: (isOut && !isImage)
-                                                        ? HaloColors.onAmber
-                                                        : HaloColors.amber
-                                                              .withValues(
-                                                                alpha: 0.75,
-                                                              ),
-                                                    weight: FontWeight.w600,
-                                                  ).copyWith(
-                                                    letterSpacing: track(0.3),
-                                                  ),
+                                              parked
+                                                  ? l10n.chatWaitingForThemToComeOnline
+                                                  : l10n.chatFailedTapToRetry,
+                                              style: TextStyle(
+                                                fontFamily: HaloType.monoFamily,
+                                                fontFamilyFallback:
+                                                    HaloType.monoFallbackNow,
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w500,
+                                                // on amber it reads in the bubble's
+                                                // ink; under a photo, in the house
+                                                // colours, as under a sticker
+                                                color: onAmberText
+                                                    ? HaloColors.onAmber
+                                                    : parked
+                                                    ? HaloColors.amber
+                                                    : HaloColors.rose,
+                                                letterSpacing: track(0.4),
+                                              ),
                                             ),
                                           ],
-                                        ),
+                                        ],
                                       ),
-                                    ],
-                                    if (failedShown || parked) ...[
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        parked
-                                            ? l10n.chatWaitingForThemToComeOnline
-                                            : l10n.chatFailedTapToRetry,
-                                        style: TextStyle(
-                                          fontFamily: HaloType.monoFamily,
-                                          fontFamilyFallback:
-                                              HaloType.monoFallbackNow,
-                                          fontSize: 10,
-                                          color: HaloColors.onAmber.withValues(
-                                            alpha: 0.95,
-                                          ),
-                                          letterSpacing: track(0.4),
-                                        ),
-                                      ),
-                                    ],
+                                    ),
                                   ],
                                 ),
                               ),
-                            ],
+                            ),
                           ),
-                        ),
-                      ),
-                    ),
-                    if (msg.reactions.isNotEmpty)
-                      PositionedDirectional(
-                        // hangs below the bubble on the sender's side. keyed
-                        // off direction, so groups work the same.
-                        bottom: -13,
-                        end: isOut ? 10 : null,
-                        start: isOut ? null : 10,
-                        child: Wrap(
-                          spacing: 3,
-                          children: _buildReactionChips(msg),
-                        ),
-                      ),
-                    if (ripple)
-                      Positioned.fill(
-                        child: IgnorePointer(
-                          child: TweenAnimationBuilder<double>(
-                            tween: Tween(begin: 0.0, end: 1.0),
-                            duration: const Duration(milliseconds: 820),
-                            curve: Curves.easeOut,
-                            builder: (context, t, child) => Opacity(
-                              opacity: (1 - t) * 0.92,
-                              child: Transform.scale(
-                                scale: motionStill(context) ? 1 : 1 + t * 0.16,
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadiusDirectional.only(
-                                      topStart: const Radius.circular(14),
-                                      topEnd: const Radius.circular(14),
-                                      bottomStart: Radius.circular(
-                                        isOut ? 14 : (lastInGroup ? 4 : 14),
+                          if (ripple)
+                            Positioned.fill(
+                              child: IgnorePointer(
+                                child: TweenAnimationBuilder<double>(
+                                  tween: Tween(begin: 0.0, end: 1.0),
+                                  duration: const Duration(milliseconds: 820),
+                                  curve: Curves.easeOut,
+                                  builder: (context, t, child) => Opacity(
+                                    opacity: (1 - t) * 0.92,
+                                    child: Transform.scale(
+                                      scale: motionStill(context)
+                                          ? 1
+                                          : 1 + t * 0.16,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadiusDirectional.only(
+                                                topStart: const Radius.circular(
+                                                  14,
+                                                ),
+                                                topEnd: const Radius.circular(
+                                                  14,
+                                                ),
+                                                bottomStart: Radius.circular(
+                                                  isOut
+                                                      ? 14
+                                                      : (lastInGroup ? 4 : 14),
+                                                ),
+                                                bottomEnd: Radius.circular(
+                                                  isOut
+                                                      ? (lastInGroup ? 4 : 14)
+                                                      : 14,
+                                                ),
+                                              ),
+                                          border: Border.all(
+                                            color: HaloColors.amber,
+                                            width: 2,
+                                          ),
+                                        ),
                                       ),
-                                      bottomEnd: Radius.circular(
-                                        isOut ? (lastInGroup ? 4 : 14) : 14,
-                                      ),
-                                    ),
-                                    border: Border.all(
-                                      color: HaloColors.amber,
-                                      width: 2,
                                     ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                        ),
+                        ],
                       ),
+                    ),
+                    // hangs below the bubble on the sender's side. keyed
+                    // off direction, so groups work the same.
+                    PositionedDirectional(
+                      bottom: 0,
+                      end: isOut ? 10 : null,
+                      start: isOut ? null : 10,
+                      child: _reactionRow(context, isOut),
+                    ),
                   ],
                 ),
               ),
-              if (revealed)
-                Padding(
-                  // a reaction pill hangs ~13px below the bubble. when the
-                  // timestamp reveals, push it clear so they don't overlap.
-                  padding: EdgeInsets.only(
-                    top: msg.reactions.isNotEmpty ? 16 : 4,
-                    left: 4,
-                    right: 4,
-                  ),
-                  child: Text(
-                    _fmtFull(msg.when),
-                    style: HaloType.mono(
-                      size: 9.5,
-                      color: HaloColors.text3,
-                      letter: 0.3,
-                    ),
-                  ),
-                ),
+              // the full date grows in under the bubble and folds away
+              GrowSwap(
+                alignment: isOut
+                    ? AlignmentDirectional.centerEnd
+                    : AlignmentDirectional.centerStart,
+                child: !revealed
+                    ? const SizedBox.shrink(key: ValueKey('no-date'))
+                    : Padding(
+                        key: const ValueKey('full-date'),
+                        padding: const EdgeInsets.only(
+                          top: 4,
+                          left: 4,
+                          right: 4,
+                        ),
+                        child: Text(
+                          _fmtFull(msg.when),
+                          style: HaloType.mono(
+                            size: 9.5,
+                            color: HaloColors.text2,
+                            letter: 0.3,
+                          ),
+                        ),
+                      ),
+              ),
               if (isOut)
                 GrowSwap(
                   child: !showPill
@@ -6680,9 +6592,7 @@ class _Bubble extends StatelessWidget {
 
   TextStyle _quoteStyle(bool isOut) => HaloType.sans(
     size: 12.5,
-    color: isOut
-        ? HaloColors.onAmber.withValues(alpha: 0.85)
-        : HaloColors.text2,
+    color: isOut ? HaloColors.onAmber : HaloColors.text2,
     height: 1.25,
   );
 
@@ -6701,6 +6611,8 @@ class _Bubble extends StatelessWidget {
   }) {
     final quoted = quotedText;
     final burn = msg.burnAt;
+    final reacted = msg.reactions.isNotEmpty;
+    final roomTime = motionStill(context) ? Duration.zero : kHouseTime;
     final retry = (failedShown || parked) && onRetry != null
         ? () => onRetry!(msg)
         : null;
@@ -6711,10 +6623,12 @@ class _Bubble extends StatelessWidget {
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onLongPress: onLongPress == null ? null : () => onLongPress!(context),
-        child: Padding(
+        child: AnimatedPadding(
+          duration: roomTime,
+          curve: kHouseCurve,
           padding: EdgeInsets.only(
             top: firstInGroup ? 4 : 1,
-            bottom: msg.reactions.isNotEmpty ? 16 : (lastInGroup ? 4 : 1),
+            bottom: reacted ? 3 : (lastInGroup ? 4 : 1),
           ),
           child: Column(
             crossAxisAlignment: isOut
@@ -6724,94 +6638,112 @@ class _Bubble extends StatelessWidget {
               Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  BurnFade(
-                    active: isExpiring || msg.removing,
-                    child: StickerBubble(
-                      wire: st,
-                      emoji: msg.text,
-                      isOut: isOut,
-                      seed: msg.msgUid ?? '',
-                      budget: stickers,
-                      order: stickerOrder,
-                      arriving: arriving,
-                      landing: landing,
-                      onTap: retry,
-                      quote: quoted == null
-                          ? null
-                          : StickerQuoteCard(
-                              author: quotedAuthor,
-                              text: quoted,
-                              sticker: quotedSticker,
-                              onTap: onQuoteTap,
-                            ),
-                      // while it is sending the pill under it says so
-                      stamp: pending
-                          ? null
-                          : StickerStamp(
-                              time: _fmtTime(msg.when),
-                              sent: showMeta,
-                              delivered: showMeta && msg.delivered
-                                  ? l10n.chatDelivered
-                                  : null,
-                              burn: burn == null ? null : _fmtBurn(burn),
-                              alert: failedShown
-                                  ? l10n.chatFailedTapToRetry
-                                  : parked
-                                  ? l10n.chatWaitingForThemToComeOnline
-                                  : null,
-                              alertColor: failedShown ? HaloColors.rose : null,
-                            ),
-                    ),
-                  ),
-                  if (msg.reactions.isNotEmpty)
-                    PositionedDirectional(
-                      bottom: -13,
-                      end: isOut ? 10 : null,
-                      start: isOut ? null : 10,
-                      child: Wrap(
-                        spacing: 3,
-                        children: _buildReactionChips(msg),
-                      ),
-                    ),
-                  if (ripple)
-                    PositionedDirectional(
-                      end: isOut ? 0 : null,
-                      start: isOut ? null : 0,
-                      bottom: 0,
-                      width: kStickerBubble,
-                      height: kStickerBubble,
-                      child: IgnorePointer(
-                        child: TweenAnimationBuilder<double>(
-                          tween: Tween(begin: 0.0, end: 1.0),
-                          duration: const Duration(milliseconds: 820),
-                          curve: Curves.easeOut,
-                          builder: (context, t, child) => Opacity(
-                            opacity: (1 - t) * 0.92,
-                            child: Transform.scale(
-                              scale: motionStill(context) ? 1 : 1 + t * 0.16,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(28),
-                                  border: Border.all(
-                                    color: HaloColors.amber,
-                                    width: 2,
+                  AnimatedPadding(
+                    duration: roomTime,
+                    curve: kHouseCurve,
+                    padding: EdgeInsets.only(bottom: reacted ? _kChipRoom : 0),
+                    // the ring sits inside the room, so it follows it open
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        BurnFade(
+                          active: isExpiring || msg.removing,
+                          child: StickerBubble(
+                            wire: st,
+                            emoji: msg.text,
+                            isOut: isOut,
+                            seed: msg.msgUid ?? '',
+                            budget: stickers,
+                            order: stickerOrder,
+                            arriving: arriving,
+                            landing: landing,
+                            onTap: retry,
+                            quote: quoted == null
+                                ? null
+                                : StickerQuoteCard(
+                                    author: quotedAuthor,
+                                    text: quoted,
+                                    sticker: quotedSticker,
+                                    onTap: onQuoteTap,
+                                  ),
+                            // while it is sending the pill under it says so
+                            stamp: pending
+                                ? null
+                                : StickerStamp(
+                                    time: _fmtTime(msg.when),
+                                    sent: showMeta,
+                                    delivered: showMeta && msg.delivered
+                                        ? l10n.chatDelivered
+                                        : null,
+                                    burn: burn == null ? null : _fmtBurn(burn),
+                                    alert: failedShown
+                                        ? l10n.chatFailedTapToRetry
+                                        : parked
+                                        ? l10n.chatWaitingForThemToComeOnline
+                                        : null,
+                                    alertColor: failedShown
+                                        ? HaloColors.rose
+                                        : null,
+                                  ),
+                          ),
+                        ),
+                        if (ripple)
+                          PositionedDirectional(
+                            end: isOut ? 0 : null,
+                            start: isOut ? null : 0,
+                            bottom: 0,
+                            width: kStickerBubble,
+                            height: kStickerBubble,
+                            child: IgnorePointer(
+                              child: TweenAnimationBuilder<double>(
+                                tween: Tween(begin: 0.0, end: 1.0),
+                                duration: const Duration(milliseconds: 820),
+                                curve: Curves.easeOut,
+                                builder: (context, t, child) => Opacity(
+                                  opacity: (1 - t) * 0.92,
+                                  child: Transform.scale(
+                                    scale: motionStill(context)
+                                        ? 1
+                                        : 1 + t * 0.16,
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(28),
+                                        border: Border.all(
+                                          color: HaloColors.amber,
+                                          width: 2,
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                      ),
+                      ],
                     ),
+                  ),
+                  PositionedDirectional(
+                    bottom: 0,
+                    end: isOut ? 10 : null,
+                    start: isOut ? null : 10,
+                    child: _reactionRow(context, isOut),
+                  ),
                 ],
               ),
-              if (isOut && pending) ...[
-                const SizedBox(height: 4),
-                Padding(
-                  padding: const EdgeInsetsDirectional.only(end: 4),
-                  child: SendPill(mode: _pmFrom(appState.sendMode)),
+              // the pill folds as the stamp grows, as under a bubble
+              if (isOut)
+                GrowSwap(
+                  child: !pending
+                      ? const SizedBox.shrink(key: ValueKey('no-pill'))
+                      : Padding(
+                          key: const ValueKey('pill'),
+                          padding: const EdgeInsetsDirectional.only(
+                            top: 4,
+                            end: 4,
+                          ),
+                          child: SendPill(mode: _pmFrom(appState.sendMode)),
+                        ),
                 ),
-              ],
             ],
           ),
         ),
@@ -6826,6 +6758,7 @@ class _Bubble extends StatelessWidget {
       counts[emoji] = (counts[emoji] ?? 0) + 1;
     }
     final mine = m.reactions[''];
+    final react = onReact;
     return [
       for (final e in counts.entries)
         ReactionChip(
@@ -6834,8 +6767,41 @@ class _Bubble extends StatelessWidget {
           count: e.value,
           mine: e.key == mine,
           popKey: '${m.msgUid}:${e.key}',
+          onTap: react == null ? null : () => react(e.key),
         ),
     ];
+  }
+
+  // the chips under the bubble. the last one to go scales back out instead
+  // of vanishing; a fade alone when the phone asks for no movement
+  Widget _reactionRow(BuildContext context, bool isOut) {
+    final still = motionStill(context);
+    final reacted = msg.reactions.isNotEmpty;
+    return AnimatedSwitcher(
+      duration: Duration(milliseconds: still ? 150 : 200),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      // a new row springs its own chips in: only the way out is drawn here
+      transitionBuilder: (c, a) {
+        if (c.key != const ValueKey('chips') || reacted) return c;
+        final fade = FadeTransition(opacity: a, child: c);
+        return still ? fade : ScaleTransition(scale: a, child: fade);
+      },
+      layoutBuilder: (top, gone) => Stack(
+        clipBehavior: Clip.none,
+        alignment: isOut
+            ? AlignmentDirectional.bottomEnd
+            : AlignmentDirectional.bottomStart,
+        children: [...gone, ?top],
+      ),
+      child: !reacted
+          ? const SizedBox.shrink(key: ValueKey('no-chips'))
+          : Wrap(
+              key: const ValueKey('chips'),
+              spacing: 3,
+              children: _buildReactionChips(msg),
+            ),
+    );
   }
 }
 
@@ -6866,7 +6832,9 @@ class _EmojiTapState extends State<_EmojiTap> {
       onTapCancel: () => setState(() => _scale = 1.0),
       child: AnimatedScale(
         scale: _scale,
-        duration: const Duration(milliseconds: 90),
+        duration: motionStill(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 90),
         curve: Curves.easeOut,
         child: Container(
           width: 46,
@@ -7093,7 +7061,9 @@ class _ActionTapState extends State<_ActionTap> {
       onTapCancel: () => setState(() => _scale = 1.0),
       child: AnimatedScale(
         scale: _scale,
-        duration: const Duration(milliseconds: 90),
+        duration: motionStill(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 90),
         curve: Curves.easeOut,
         child: Container(
           width: 46,
@@ -7112,7 +7082,16 @@ class _ActionTapState extends State<_ActionTap> {
 }
 
 class _EmptyConversation extends StatelessWidget {
-  const _EmptyConversation();
+  // the shared photos page says it has none the same way
+  final IconData icon;
+  final String? title;
+  final bool withLine;
+  const _EmptyConversation({
+    super.key,
+    this.icon = Icons.lock_outline_rounded,
+    this.title,
+    this.withLine = true,
+  });
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -7150,33 +7129,31 @@ class _EmptyConversation extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: Icon(
-                  Icons.lock_outline_rounded,
-                  color: HaloColors.amber,
-                  size: 25,
-                ),
+                child: Icon(icon, color: HaloColors.amber, size: 25),
               ),
               const SizedBox(height: 20),
               Text(
-                l10n.chatSayHi,
+                title ?? l10n.chatSayHi,
                 textAlign: TextAlign.center,
                 style: HaloType.serif(
-                  size: 24,
+                  size: withLine ? 24 : 20,
                   weight: FontWeight.w300,
                   italic: true,
                   color: HaloColors.text,
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                l10n.chatJustTheTwoOf,
-                textAlign: TextAlign.center,
-                style: HaloType.sans(
-                  size: 13,
-                  color: HaloColors.text2,
-                  height: 1.5,
+              if (withLine) ...[
+                const SizedBox(height: 8),
+                Text(
+                  l10n.chatJustTheTwoOf,
+                  textAlign: TextAlign.center,
+                  style: HaloType.sans(
+                    size: 13,
+                    color: HaloColors.text2,
+                    height: 1.5,
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
         ),
@@ -7244,7 +7221,7 @@ class _HoldToTalkMic extends StatefulWidget {
 
 class _HoldToTalkMicState extends State<_HoldToTalkMic> {
   final _rec = AudioRecorder();
-  OverlayEntry? _overlay;
+  RecordBarEntry? _overlay;
   Timer? _ticker;
   int _ms = 0;
   bool _willCancel = false;
@@ -7320,7 +7297,7 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
       HapticFeedback.mediumImpact();
       _ticker = Timer.periodic(const Duration(milliseconds: 100), (_) {
         _ms += 100;
-        _overlay?.markNeedsBuild();
+        _overlay?.rebuild();
       });
       if (mounted) {
         // the scaffold strips the keyboard inset from its body's media
@@ -7329,8 +7306,8 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
         _bottomInset = view.padding.bottom;
         _keyboardInset = view.viewInsets.bottom;
       }
-      _overlay = OverlayEntry(builder: (_) => _bar());
-      if (mounted) Overlay.of(context).insert(_overlay!);
+      _overlay = RecordBarEntry(_bar);
+      if (mounted) Overlay.of(context).insert(_overlay!.entry);
       // the lock stops the recording and throws it away
       _recUnguard = lockGuard.closeOnLock(_abort);
     } catch (e) {
@@ -7361,11 +7338,13 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
     _ticker = null;
     _level?.cancel();
     _level = null;
-    _overlay?.remove();
-    _overlay = null;
-    final path = await _rec.stop();
     final ms = _ms;
     final cancel = _willCancel || ms < 400;
+    // a note thrown away leaves in the rose of a cancel
+    _willCancel = cancel;
+    _overlay?.leave();
+    _overlay = null;
+    final path = await _rec.stop();
     if (cancel) {
       final p = path ?? _path;
       if (p != null) {
@@ -7395,7 +7374,7 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
     return '${whole(m)}:${twoDigits(s % 60)}';
   }
 
-  Widget _bar() {
+  Widget _bar(bool leaving) {
     return Positioned(
       left: 0,
       right: 0,
@@ -7412,6 +7391,7 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
         closeLabel: l10n.commonClose,
         onClose: _abort,
         bottom: _bottomInset,
+        leaving: leaving,
       ),
     );
   }
@@ -7435,19 +7415,37 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
           _willCancel = wc;
           if (wc) HapticFeedback.mediumImpact();
         }
-        _overlay?.markNeedsBuild();
+        _overlay?.rebuild();
       },
       onLongPressEnd: (_) {
         _live = false;
         _end();
       },
-      child: Icon(Icons.mic_none_rounded, size: 22, color: HaloColors.text2),
+      // a short tap says how it works instead of doing nothing
+      onTap: () {
+        HapticFeedback.selectionClick();
+        showHaloToast(context, l10n.chatHoldToRecord);
+      },
+      // a finger-sized target; the icon keeps its place at the row's end
+      child: SizedBox(
+        width: 36,
+        height: 40,
+        child: Align(
+          alignment: AlignmentDirectional.centerEnd,
+          child: Icon(
+            Icons.mic_none_rounded,
+            size: 22,
+            color: HaloColors.text2,
+          ),
+        ),
+      ),
     );
   }
 }
 
 class _Composer extends StatelessWidget {
   final TextEditingController controller;
+  final FocusNode? focusNode;
   final bool sending;
   final VoidCallback onSend;
   final bool ghost;
@@ -7467,6 +7465,7 @@ class _Composer extends StatelessWidget {
 
   const _Composer({
     required this.controller,
+    this.focusNode,
     required this.sending,
     required this.onSend,
     required this.ghost,
@@ -7533,20 +7532,30 @@ class _Composer extends StatelessWidget {
                           color: HaloColors.amber,
                         ),
                         const SizedBox(width: 6),
-                        Text(
-                          l10n.chatGhostMode,
-                          style: HaloType.serif(
-                            size: 12,
-                            color: HaloColors.amber,
-                            italic: true,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          l10n.chatMessagesBurnAfter(_humanBurn(burnSeconds)),
-                          style: HaloType.mono(
-                            size: 10.5,
-                            color: HaloColors.text3,
+                        // one line that wraps: a long translation or a big
+                        // font never runs off the row
+                        Expanded(
+                          child: Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: l10n.chatGhostMode,
+                                  style: HaloType.serif(
+                                    size: 12,
+                                    color: HaloColors.amber,
+                                    italic: true,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text:
+                                      ' · ${l10n.chatMessagesBurnAfter(_humanBurn(burnSeconds))}',
+                                  style: HaloType.mono(
+                                    size: 10.5,
+                                    color: HaloColors.text2,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ],
@@ -7588,75 +7597,94 @@ class _Composer extends StatelessWidget {
               ),
               // the shield toggle stays hidden until it is verified end to
               // end. the flag, the wire and the viewer are all in place.
-              const SizedBox(width: 10),
-              // the camera that keeps its photos inside kryfo
+              const SizedBox(width: 1),
+              // the camera that keeps its photos inside kryfo. each icon
+              // sits in a finger-sized box, so a tap between them lands
               PressScale(
                 label: l10n.chatOpenTheCamera,
                 onTap: onCamera,
                 scale: 0.86,
-                child: Icon(
-                  Icons.photo_camera_outlined,
-                  size: 22,
-                  color: HaloColors.text2,
+                child: SizedBox(
+                  width: 38,
+                  height: 40,
+                  child: Icon(
+                    Icons.photo_camera_outlined,
+                    size: 22,
+                    color: HaloColors.text2,
+                  ),
                 ),
               ),
-              const SizedBox(width: 10),
               PressScale(
                 label: l10n.chatAttachAPhoto,
                 onTap: onAttach,
                 scale: 0.86,
-                child: Icon(
-                  Icons.add_photo_alternate_outlined,
-                  size: 22,
-                  color: HaloColors.text2,
+                child: SizedBox(
+                  width: 38,
+                  height: 40,
+                  child: Icon(
+                    Icons.add_photo_alternate_outlined,
+                    size: 22,
+                    color: HaloColors.text2,
+                  ),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 1),
               Expanded(
-                child: TextField(
+                child: WrittenDir(
                   controller: controller,
-                  style: HaloType.sans(size: 14),
-                  minLines: 1,
-                  maxLines: 4,
-                  decoration: InputDecoration(
-                    hintText: l10n.chatMessage,
-                    hintStyle: HaloType.sans(size: 14, color: HaloColors.text3),
-                    // stickers sit inside the field: no width taken from the row
-                    suffixIcon: StickerButton(onTap: onStickers),
-                    suffixIconConstraints: const BoxConstraints(
-                      minWidth: 40,
-                      minHeight: 36,
-                    ),
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 10,
-                    ),
-                    filled: true,
-                    fillColor: HaloColors.surface2,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      borderSide: BorderSide.none,
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      borderSide: BorderSide.none,
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      borderSide: BorderSide(
-                        color: HaloColors.amber,
-                        width: 0.5,
+                  builder: (dir) => TextField(
+                    controller: controller,
+                    focusNode: focusNode,
+                    textDirection: dir,
+                    inputFormatters: const [UnmarkedInput()],
+                    cursorColor: HaloColors.amber,
+                    style: HaloType.sans(size: 14),
+                    minLines: 1,
+                    maxLines: 4,
+                    decoration: InputDecoration(
+                      hintText: l10n.chatMessage,
+                      hintStyle: HaloType.sans(
+                        size: 14,
+                        color: HaloColors.text3,
+                      ),
+                      // stickers sit inside the field: no width taken from the row
+                      suffixIcon: StickerButton(onTap: onStickers),
+                      suffixIconConstraints: const BoxConstraints(
+                        minWidth: 40,
+                        minHeight: 36,
+                      ),
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      filled: true,
+                      fillColor: HaloColors.surface2,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide(
+                          color: HaloColors.amber,
+                          width: 0.5,
+                        ),
                       ),
                     ),
+                    onSubmitted: (_) => onSend(),
                   ),
-                  onSubmitted: (_) => onSend(),
                 ),
               ),
               const SizedBox(width: 10),
               ValueListenableBuilder<TextEditingValue>(
                 valueListenable: controller,
                 builder: (context, value, _) {
+                  final still = motionStill(context);
                   final hasText = value.text.trim().isNotEmpty;
                   final canSend = !sending && hasText;
                   // mic and send trade places with a small pop instead of a cut
@@ -7690,7 +7718,9 @@ class _Composer extends StatelessWidget {
                             scale: 0.86,
                             haptic: false, // _send already fires its own impact
                             child: AnimatedScale(
-                              duration: const Duration(milliseconds: 200),
+                              duration: still
+                                  ? Duration.zero
+                                  : const Duration(milliseconds: 200),
                               curve: Curves.easeOut,
                               scale: canSend ? 1.0 : 0.88,
                               child: AnimatedContainer(
@@ -7727,14 +7757,17 @@ class _Composer extends StatelessWidget {
                             ),
                           ),
                         );
+                  // with less movement, a crossfade and nothing that grows
                   return AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 200),
-                    switchInCurve: Curves.easeOutBack,
+                    duration: Duration(milliseconds: still ? 150 : 200),
+                    switchInCurve: still ? Curves.easeOut : Curves.easeOutBack,
                     switchOutCurve: Curves.easeIn,
-                    transitionBuilder: (child, anim) => ScaleTransition(
-                      scale: anim,
-                      child: FadeTransition(opacity: anim, child: child),
-                    ),
+                    transitionBuilder: (child, anim) => still
+                        ? FadeTransition(opacity: anim, child: child)
+                        : ScaleTransition(
+                            scale: anim,
+                            child: FadeTransition(opacity: anim, child: child),
+                          ),
                     child: end,
                   );
                 },
@@ -7769,7 +7802,7 @@ class MediaGalleryScreen extends StatelessWidget {
         elevation: 0,
         leading: IconButton(
           tooltip: l10n.commonBack,
-          icon: const Icon(Icons.arrow_back, size: 20),
+          icon: const Icon(Icons.chevron_left, size: 26),
           color: HaloColors.text,
           onPressed: () => Navigator.of(context).pop(),
         ),
@@ -7789,11 +7822,10 @@ class MediaGalleryScreen extends StatelessWidget {
         ),
       ),
       body: paths.isEmpty
-          ? Center(
-              child: Text(
-                l10n.chatNoPhotosInThis,
-                style: HaloType.sans(size: 13, color: HaloColors.text3),
-              ),
+          ? _EmptyConversation(
+              icon: Icons.photo_library_outlined,
+              title: l10n.chatNoPhotosInThis,
+              withLine: false,
             )
           : GridView.builder(
               padding: const EdgeInsets.all(2),
@@ -7846,131 +7878,6 @@ class MediaGalleryScreen extends StatelessWidget {
   }
 }
 
-// the picked photo and a caption field. pops the caption on send, null on
-// back.
-class _ImageCaptionScreen extends StatefulWidget {
-  final Uint8List bytes;
-  const _ImageCaptionScreen({required this.bytes});
-  @override
-  State<_ImageCaptionScreen> createState() => _ImageCaptionScreenState();
-}
-
-class _ImageCaptionScreenState extends State<_ImageCaptionScreen> {
-  final _ctrl = TextEditingController();
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: HaloColors.surface,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(4, 4, 16, 4),
-              child: Row(
-                children: [
-                  IconButton(
-                    tooltip: l10n.commonBack,
-                    icon: Icon(Icons.arrow_back, color: HaloColors.text2),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                  Text(
-                    l10n.chatSendPhoto,
-                    style: HaloType.serif(
-                      size: 16,
-                      italic: true,
-                      color: HaloColors.text,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(14),
-                    child: Image.memory(
-                      widget.bytes,
-                      fit: BoxFit.contain,
-                      cacheWidth: screenPx(context),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _ctrl,
-                      autofocus: true,
-                      style: HaloType.sans(size: 14),
-                      minLines: 1,
-                      maxLines: 4,
-                      decoration: InputDecoration(
-                        hintText: l10n.chatAddACaption,
-                        hintStyle: HaloType.sans(
-                          size: 14,
-                          color: HaloColors.text3,
-                        ),
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 10,
-                        ),
-                        filled: true,
-                        fillColor: HaloColors.surface2,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Semantics(
-                    label: l10n.commonSend,
-                    button: true,
-                    child: GestureDetector(
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        Navigator.of(context).pop(_ctrl.text.trim());
-                      },
-                      child: Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: HaloColors.amber,
-                        ),
-                        alignment: Alignment.center,
-                        child: Icon(
-                          Icons.arrow_upward,
-                          size: 20,
-                          color: HaloColors.onAmber,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 // the saved mode string as the pill's enum. private is full tor, 3 hops.
 PrivacyMode _pmFrom(String m) => m == 'fast'
     ? PrivacyMode.fast
@@ -7986,6 +7893,7 @@ class _KeyChangedBanner extends StatelessWidget {
   final VoidCallback onVerify;
   final VoidCallback onDismiss;
   const _KeyChangedBanner({
+    super.key,
     required this.peerName,
     required this.onVerify,
     required this.onDismiss,
@@ -8006,14 +7914,12 @@ class _KeyChangedBanner extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.gpp_maybe_outlined, size: 15, color: HaloColors.amber),
+              Icon(Icons.gpp_maybe_outlined, size: 14, color: HaloColors.amber),
               const SizedBox(width: 7),
-              Text(
-                l10n.chatSecurityCodeChanged,
-                style: TextStyle(
-                  color: HaloColors.amber,
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w600,
+              Flexible(
+                child: Text(
+                  l10n.chatSecurityCodeChanged,
+                  style: HaloType.serif(size: 13, color: HaloColors.text),
                 ),
               ),
             ],
@@ -8021,52 +7927,33 @@ class _KeyChangedBanner extends StatelessWidget {
           const SizedBox(height: 5),
           Text(
             l10n.chatMayHaveReinstalledOr(peerName),
-            style: TextStyle(
-              color: HaloColors.text.withValues(alpha: 0.8),
-              fontSize: 12,
-              height: 1.35,
+            style: HaloType.sans(
+              size: 12.5,
+              color: HaloColors.text2,
+              height: 1.5,
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 11),
           Row(
             children: [
-              _ScaleTap(
-                onTap: onDismiss,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 7,
-                    horizontal: 16,
-                  ),
-                  decoration: BoxDecoration(
-                    color: HaloColors.surface2,
-                    borderRadius: BorderRadius.circular(9),
-                  ),
-                  child: Text(
-                    l10n.chatOk,
-                    style: TextStyle(color: HaloColors.text, fontSize: 12.5),
-                  ),
+              Expanded(
+                flex: 2,
+                child: _barBtn(
+                  l10n.chatOk,
+                  HaloColors.text,
+                  HaloColors.surface2,
+                  onDismiss,
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: _ScaleTap(
-                  onTap: onVerify,
-                  child: Container(
-                    alignment: Alignment.center,
-                    padding: const EdgeInsets.symmetric(vertical: 7),
-                    decoration: BoxDecoration(
-                      color: HaloColors.amber,
-                      borderRadius: BorderRadius.circular(9),
-                    ),
-                    child: Text(
-                      l10n.chatVerify,
-                      style: TextStyle(
-                        color: HaloColors.ink,
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
+                flex: 3,
+                child: _barBtn(
+                  l10n.chatVerify,
+                  HaloColors.onAmber,
+                  HaloColors.amber,
+                  onVerify,
+                  bold: true,
                 ),
               ),
             ],

@@ -3,12 +3,13 @@
 // title when the sender fetched one over tor and shipped it inside the
 // message. the reader's phone never asks the network for anything here.
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../link_preview.dart';
 import '../theme.dart';
 import '../l10n/l10n.dart';
+import 'ease_size.dart';
+import 'press_scale.dart';
 
 class LinkStub extends StatelessWidget {
   final String url;
@@ -27,33 +28,30 @@ class LinkStub extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final fg = isOut ? HaloColors.onAmber : HaloColors.text;
-    final soft = isOut
-        ? HaloColors.onAmber.withValues(alpha: 0.75)
-        : HaloColors.text2;
+    final soft = isOut ? HaloColors.onAmber : HaloColors.text2;
     final t = title;
-    return Container(
-      padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-      decoration: BoxDecoration(
-        color: (isOut ? HaloColors.onAmber : HaloColors.text).withValues(
-          alpha: 0.07,
+    // the whole card opens the link, which is the reader's own doing
+    return PressScale(
+      scale: 0.97,
+      onTap: () async {
+        final u = Uri.tryParse(url);
+        if (u != null && await canLaunchUrl(u)) {
+          await launchUrl(u, mode: LaunchMode.externalApplication);
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+        decoration: BoxDecoration(
+          color: (isOut ? HaloColors.onAmber : HaloColors.text).withValues(
+            alpha: 0.07,
+          ),
+          borderRadius: BorderRadius.circular(9),
         ),
-        borderRadius: BorderRadius.circular(9),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // the domain row opens the link, which is the reader's own doing
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () async {
-              HapticFeedback.selectionClick();
-              final u = Uri.tryParse(url);
-              if (u != null && await canLaunchUrl(u)) {
-                await launchUrl(u, mode: LaunchMode.externalApplication);
-              }
-            },
-            child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
               children: [
                 Icon(Icons.link, size: 12, color: soft),
                 const SizedBox(width: 5),
@@ -67,50 +65,49 @@ class LinkStub extends StatelessWidget {
                 ),
               ],
             ),
-          ),
-          AnimatedSize(
-            duration: const Duration(milliseconds: 220),
-            curve: Curves.easeOutCubic,
-            alignment: AlignmentDirectional.topStart,
-            child: t != null
-                ? Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          t,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: HaloType.sans(
-                            size: 13,
-                            weight: FontWeight.w600,
-                            color: fg,
-                            height: 1.3,
-                          ),
-                        ),
-                        if (bySender) ...[
-                          const SizedBox(height: 3),
+            EaseSize(
+              duration: const Duration(milliseconds: 220),
+              alignment: AlignmentDirectional.topStart,
+              child: t != null
+                  ? Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
                           Text(
-                            isOut
-                                ? l10n.linkStubFetchedOverTorBy
-                                : l10n.linkStubFetchedOverTorByTheirDevice,
-                            style: HaloType.mono(
-                              size: 9.5,
-                              color: isOut
-                                  ? HaloColors.onAmber.withValues(alpha: 0.7)
-                                  : HaloColors.text3,
-                              letter: 0.02,
+                            t,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: HaloType.sans(
+                              size: 13,
+                              weight: FontWeight.w600,
+                              color: fg,
+                              height: 1.3,
                             ),
                           ),
+                          if (bySender) ...[
+                            const SizedBox(height: 3),
+                            Text(
+                              isOut
+                                  ? l10n.linkStubFetchedOverTorBy
+                                  : l10n.linkStubFetchedOverTorByTheirDevice,
+                              style: HaloType.mono(
+                                size: 9.5,
+                                color: isOut
+                                    ? HaloColors.onAmber
+                                    : HaloColors.text3,
+                                letter: 0.02,
+                              ),
+                            ),
+                          ],
                         ],
-                      ],
-                    ),
-                  )
-                : const SizedBox(width: double.infinity),
-          ),
-        ],
+                      ),
+                    )
+                  : const SizedBox(width: double.infinity),
+            ),
+          ],
+        ),
       ),
     );
   }

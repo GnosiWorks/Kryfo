@@ -441,6 +441,8 @@ class VoiceRecordBar extends StatelessWidget {
   final String closeLabel;
   final VoidCallback onClose;
   final double bottom;
+  // the note went out or was thrown away: the bar slides back down
+  final bool leaving;
   const VoiceRecordBar({
     super.key,
     required this.time,
@@ -454,9 +456,11 @@ class VoiceRecordBar extends StatelessWidget {
     required this.closeLabel,
     required this.onClose,
     this.bottom = 0,
+    this.leaving = false,
   });
 
   static const cancelAt = 90.0;
+  static const outTime = Duration(milliseconds: 160);
 
   @override
   Widget build(BuildContext context) {
@@ -493,17 +497,20 @@ class VoiceRecordBar extends StatelessWidget {
             ),
           ];
     return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeOutCubic,
-      builder: (_, t, child) => Opacity(
-        opacity: t,
-        child: still
-            ? child
-            : Transform.translate(
-                offset: Offset(0, (1 - t) * 44),
-                child: child,
-              ),
+      tween: Tween(begin: 0.0, end: leaving ? 0.0 : 1.0),
+      duration: leaving ? outTime : const Duration(milliseconds: 200),
+      curve: leaving ? Curves.easeInCubic : Curves.easeOutCubic,
+      builder: (_, t, child) => IgnorePointer(
+        ignoring: leaving,
+        child: Opacity(
+          opacity: t,
+          child: still
+              ? child
+              : Transform.translate(
+                  offset: Offset(0, (1 - t) * 44),
+                  child: child,
+                ),
+        ),
       ),
       child: Material(
         color: Colors.transparent,
@@ -583,6 +590,38 @@ class VoiceRecordBar extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// the record bar's overlay entry: it slides in, and on the way out it
+/// slides back down before it is taken off the overlay
+class RecordBarEntry {
+  RecordBarEntry(Widget Function(bool leaving) bar) {
+    entry = OverlayEntry(builder: (_) => bar(_leaving));
+  }
+
+  late final OverlayEntry entry;
+  bool _leaving = false;
+  bool _gone = false;
+
+  void rebuild() {
+    if (!_gone) entry.markNeedsBuild();
+  }
+
+  void leave() {
+    if (_leaving || _gone) return;
+    _leaving = true;
+    entry.markNeedsBuild();
+    Future.delayed(
+      VoiceRecordBar.outTime + const Duration(milliseconds: 20),
+      remove,
+    );
+  }
+
+  void remove() {
+    if (_gone) return;
+    _gone = true;
+    entry.remove();
   }
 }
 

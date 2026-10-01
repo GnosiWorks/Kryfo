@@ -463,6 +463,7 @@
   "chatDisguiseVoice": "变声",
   "commonSend": "发送",
   "chatNoPhotosInThis": "这个聊天里还没有照片",
+  "chatHoldToRecord": "按住录制语音消息",
   "chatSendPhoto": "发送照片",
   "chatAddACaption": "添加说明…",
   "chatSecurityCodeChanged": "安全码已变更",

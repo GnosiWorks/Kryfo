@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// a sticker in a chat: its size and pill, the pop and the reduced-motion
-// fade, the tile for one this version lacks, the flight from the sheet,
+// a sticker in a chat: its size and pill, the stamp coming in from the
+// corner, the pop and the reduced-motion fade, the tile for one this
+// version lacks, the flight from the sheet,
 // "Sticker" wherever a sticker is quoted, and each pack's stickers drawn
 // from that pack.
 import 'dart:math' as math;
@@ -13,6 +14,7 @@ import 'package:kryfo/stickers/sticker_pack.dart';
 import 'package:kryfo/stickers/sticker_view.dart';
 import 'package:kryfo/stickers/sticker_wire.dart';
 import 'package:kryfo/theme.dart';
+import 'package:kryfo/widgets/chat_parts.dart' show CornerSwap;
 import 'package:kryfo/widgets/pins.dart';
 
 import 'sticker_test_util.dart';
@@ -106,6 +108,61 @@ void main() {
     );
   });
 
+  // the stamp takes over from the sending pill under it: it grows in from
+  // the corner, and only fades when the phone asks for no movement
+  for (final reduce in [false, true]) {
+    testWidgets('the stamp comes in from the corner'
+        '${reduce ? ', as a fade' : ', fading and growing'}', (t) async {
+      Widget at(bool sent) => _host(
+        StickerBubble(
+          wire: wave,
+          emoji: hi.emoji,
+          isOut: true,
+          stamp: sent ? const StickerStamp(time: '12:04', sent: true) : null,
+        ),
+        reduce: reduce,
+      );
+      await t.pumpWidget(at(false));
+      expect(find.byType(StickerStamp), findsNothing);
+      await t.pumpWidget(at(true));
+      await t.pump(const Duration(milliseconds: 40));
+      final stamp = find.byType(StickerStamp);
+      expect(stamp, findsOneWidget);
+      final fade = t.widget<FadeTransition>(
+        find.ancestor(of: stamp, matching: find.byType(FadeTransition)).first,
+      );
+      expect(fade.opacity.value, inExclusiveRange(0.0, 1.0));
+      // the sticker's own pop sits above it: only the corner's counts
+      final grow = find.descendant(
+        of: find.byType(CornerSwap),
+        matching: find.ancestor(
+          of: stamp,
+          matching: find.byType(ScaleTransition),
+        ),
+      );
+      if (reduce) {
+        expect(grow, findsNothing);
+      } else {
+        expect(
+          t.widget<ScaleTransition>(grow.first).scale.value,
+          inExclusiveRange(0.85, 1.0),
+        );
+      }
+      await t.pump(const Duration(milliseconds: 400));
+      expect(
+        t
+            .widget<FadeTransition>(
+              find
+                  .ancestor(of: stamp, matching: find.byType(FadeTransition))
+                  .first,
+            )
+            .opacity
+            .value,
+        1.0,
+      );
+    });
+  }
+
   testWidgets('a failed one says so in its pill, instead of the time', (
     t,
   ) async {
@@ -180,11 +237,14 @@ void main() {
     );
     expect(_scale(t), 1);
     await t.pump(const Duration(milliseconds: 60));
+    // the arrival's own fade, above the stamp's corner
     final fade = t.widget<FadeTransition>(
-      find.descendant(
-        of: find.byType(StickerBubble),
-        matching: find.byType(FadeTransition),
-      ),
+      find
+          .descendant(
+            of: find.byType(StickerBubble),
+            matching: find.byType(FadeTransition),
+          )
+          .first,
     );
     expect(fade.opacity.value, inExclusiveRange(0, 1));
     await t.pump(const Duration(milliseconds: 100));
@@ -359,11 +419,14 @@ void main() {
     await t.pump();
     expect(_boxes(t).single.time, closeTo(900, 0.001));
     await t.pump(const Duration(milliseconds: 90));
+    // the arrival's own fade, above the stamp's corner
     final fade = t.widget<FadeTransition>(
-      find.descendant(
-        of: find.byType(StickerBubble),
-        matching: find.byType(FadeTransition),
-      ),
+      find
+          .descendant(
+            of: find.byType(StickerBubble),
+            matching: find.byType(FadeTransition),
+          )
+          .first,
     );
     expect(fade.opacity.value, 1);
   });

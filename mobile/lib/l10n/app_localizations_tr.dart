@@ -1818,6 +1818,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get chatNoPhotosInThis => 'Bu sohbette henüz fotoğraf yok';
 
   @override
+  String get chatHoldToRecord => 'Sesli mesaj kaydetmek için basılı tut';
+
+  @override
   String get chatSendPhoto => 'Fotoğraf gönder';
 
   @override

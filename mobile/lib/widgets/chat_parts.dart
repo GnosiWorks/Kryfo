@@ -312,12 +312,15 @@ class ReactionChip extends StatefulWidget {
   final bool mine;
   // the reaction's own id, so a chip that already played stays still
   final String popKey;
+  // a tap puts the same emoji on from this phone, or takes it off
+  final VoidCallback? onTap;
   const ReactionChip({
     super.key,
     required this.emoji,
     required this.count,
     required this.popKey,
     this.mine = false,
+    this.onTap,
   });
 
   static final Set<String> _popped = {};
@@ -405,7 +408,7 @@ class _ReactionChipState extends State<ReactionChip>
         ],
       ),
     );
-    return FadeTransition(
+    final shown = FadeTransition(
       opacity: CurvedAnimation(
         parent: _c,
         curve: const Interval(0, 0.5, curve: Curves.easeOut),
@@ -414,6 +417,9 @@ class _ReactionChipState extends State<ReactionChip>
           ? chip
           : ScaleTransition(scale: _pop.animate(_c), child: chip),
     );
+    final tap = widget.onTap;
+    if (tap == null) return shown;
+    return PressScale(scale: 0.9, onTap: tap, child: shown);
   }
 }
 
@@ -602,6 +608,42 @@ class GrowSwap extends StatelessWidget {
         sizeFactor: a,
         axisAlignment: -1,
         child: FadeTransition(opacity: a, child: child),
+      ),
+      child: child,
+    );
+  }
+}
+
+// swaps what sits in a corner over a picture or a sticker (its time and
+// tick, a failed or waiting mark): the new one fades and grows in from the
+// corner as the old one fades out, a fade alone when the phone asks for no
+// movement. [child] is keyed by what it shows
+class CornerSwap extends StatelessWidget {
+  final Widget child;
+  const CornerSwap({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final still = motionStill(context);
+    return AnimatedSwitcher(
+      duration: Duration(milliseconds: still ? 150 : 220),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      layoutBuilder: (top, gone) => Stack(
+        alignment: AlignmentDirectional.bottomEnd,
+        children: [...gone, ?top],
+      ),
+      transitionBuilder: (c, a) => FadeTransition(
+        opacity: a,
+        child: still
+            ? c
+            : ScaleTransition(
+                scale: Tween(begin: 0.85, end: 1.0).animate(a),
+                alignment: AlignmentDirectional.bottomEnd.resolve(
+                  Directionality.of(context),
+                ),
+                child: c,
+              ),
       ),
       child: child,
     );
