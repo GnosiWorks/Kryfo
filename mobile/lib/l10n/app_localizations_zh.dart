@@ -3635,10 +3635,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get newGroupAddAtLeastOne => '创建群组之前，请先添加至少一位联系人。';
 
   @override
-  String get notesToday => '今天';
+  String get notesDeleteThisNote => '删除这条笔记？';
 
   @override
-  String get notesYesterday => '昨天';
+  String get notesGoneFromThisPhone => '它会从这部手机上永久清除。';
 
   @override
   String get notesNoteToSelf => '给自己的笔记';
@@ -4588,6 +4588,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get savedNothingSavedYet => '还没有收藏';
+
+  @override
+  String get savedChatGone => '那个聊天已不在这部手机上';
 
   @override
   String get savedLongPressAnyMessage => '长按任意消息，点“保存”，就能把它留在这里。';
@@ -10820,10 +10823,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get newGroupAddAtLeastOne => '建立群組前，請先新增至少一位聯絡人。';
 
   @override
-  String get notesToday => '今天';
+  String get notesDeleteThisNote => '要刪除這則筆記嗎？';
 
   @override
-  String get notesYesterday => '昨天';
+  String get notesGoneFromThisPhone => '它會從這支手機上永久抹除。';
 
   @override
   String get notesNoteToSelf => '給自己的筆記';
@@ -11772,6 +11775,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get savedNothingSavedYet => '還沒有收藏任何東西';
+
+  @override
+  String get savedChatGone => '那個聊天已不在這支手機上';
 
   @override
   String get savedLongPressAnyMessage => '長按任何訊息，再點「儲存」，就能收藏在這裡。';

@@ -3855,10 +3855,11 @@ class AppLocalizationsUk extends AppLocalizations {
       'Щоб створити групу, спершу додай хоча б один контакт.';
 
   @override
-  String get notesToday => 'СЬОГОДНІ';
+  String get notesDeleteThisNote => 'Видалити цю нотатку?';
 
   @override
-  String get notesYesterday => 'УЧОРА';
+  String get notesGoneFromThisPhone =>
+      'Її буде стерто з цього телефону назавжди.';
 
   @override
   String get notesNoteToSelf => 'Нотатки для себе';
@@ -4863,6 +4864,9 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get savedNothingSavedYet => 'Ще нічого не збережено';
+
+  @override
+  String get savedChatGone => 'Цього чату більше немає на цьому телефоні';
 
   @override
   String get savedLongPressAnyMessage =>

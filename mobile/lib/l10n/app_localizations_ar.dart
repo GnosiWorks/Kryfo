@@ -3876,10 +3876,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'أضف جهة اتصال واحدة على الأقل قبل إنشاء مجموعة.';
 
   @override
-  String get notesToday => 'اليوم';
+  String get notesDeleteThisNote => 'حذف هذه الملاحظة؟';
 
   @override
-  String get notesYesterday => 'أمس';
+  String get notesGoneFromThisPhone => 'ستُمحى من هذا الهاتف نهائيًا.';
 
   @override
   String get notesNoteToSelf => 'ملاحظة لنفسي';
@@ -4862,6 +4862,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get savedNothingSavedYet => 'لا محفوظات بعد';
+
+  @override
+  String get savedChatGone => 'تلك المحادثة لم تعد على هذا الهاتف';
 
   @override
   String get savedLongPressAnyMessage =>

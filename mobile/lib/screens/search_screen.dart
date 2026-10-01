@@ -28,17 +28,16 @@ import '../widgets/halo_bar.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/kryfo_avatar.dart';
-import '../widgets/motion.dart' show haloRoute, kHouseCurve, kHouseTime;
+import '../widgets/motion.dart' show kHouseCurve, kHouseTime;
+import '../widgets/photo_viewer.dart' show PhotoTileFade;
 import '../widgets/poll_card.dart' show pollGlyph;
 import '../widgets/press_scale.dart';
 import '../widgets/stroke_icon.dart';
-import 'chat_screen.dart';
-import 'group_chat_screen.dart';
+import 'chat_door.dart';
 import '../widgets/written_field.dart';
 import '../bidi_safe.dart';
 import '../devchat/dev_key.dart' show isDevChat;
 import '../widgets/dev_avatar.dart';
-import 'dev_about_sheet.dart';
 
 /// the search field on home flies into the one here
 const kSearchHero = 'home-search';
@@ -105,6 +104,9 @@ class _SearchScreenState extends State<SearchScreen> {
   final _ctrl = TextEditingController();
   final _focus = FocusNode();
   SearchKind _kind = SearchKind.all;
+  // the kind the rows on screen were found for. a new filter keeps the old
+  // rows in their own layout until its own land, then fades once
+  SearchKind _shown = SearchKind.all;
   Timer? _wait;
   int _stamp = 0;
   bool _done = false;
@@ -242,6 +244,7 @@ class _SearchScreenState extends State<SearchScreen> {
         _names = const [];
         _chats = const [];
         _done = false;
+        _shown = kind;
       });
       return;
     }
@@ -327,39 +330,14 @@ class _SearchScreenState extends State<SearchScreen> {
       _names = names;
       _chats = byChat.values.where((c) => c.hits.isNotEmpty).toList();
       _done = true;
+      _shown = kind;
     });
   }
 
   Future<void> _open({String? groupId, String? peer, String? uid}) async {
     HapticFeedback.selectionClick();
     _focus.unfocus();
-    if (groupId != null) {
-      await Navigator.of(
-        context,
-      ).push(haloRoute(GroupChatScreen(groupId: groupId, jumpToUid: uid)));
-      return;
-    }
-    if (peer == null) return;
-    if (isDevChat(peer)) {
-      if (appState.devRow?.chatId != peer) return;
-      await Navigator.of(context).push(devChatRoute(peer, jumpToUid: uid));
-      return;
-    }
-    final rows = await session.contacts();
-    final row = rows.where((r) => r['halo_id'] == peer).firstOrNull;
-    if (row == null || !mounted) return;
-    await Navigator.of(context).push(
-      haloRoute(
-        ChatScreen(
-          peerHaloId: peer,
-          peerOnion: row['onion'] as String,
-          peerXPub: row['xpub'] as String,
-          avatarSeed: peer,
-          avatarChoice: (row['avatar'] as num?)?.toInt(),
-          jumpToUid: uid,
-        ),
-      ),
-    );
+    await openChatAt(context, groupId: groupId, peer: peer, uid: uid);
   }
 
   @override
@@ -368,7 +346,7 @@ class _SearchScreenState extends State<SearchScreen> {
     final q = _ctrl.text;
     final Widget body;
     final String bodyKey;
-    final pq = _kind == SearchKind.all ? peopleQuery(q) : null;
+    final pq = _shown == SearchKind.all ? peopleQuery(q) : null;
     final people = pq == null
         ? null
         : _People(
@@ -391,12 +369,12 @@ class _SearchScreenState extends State<SearchScreen> {
         names: _names,
         chats: _chats,
         query: q,
-        kind: _kind,
+        kind: _shown,
         onOpen: _open,
         people: people,
         peopleFirst: looksLikePerson(q),
       );
-      bodyKey = 'r$_kind';
+      bodyKey = 'r$_shown';
     }
     return Scaffold(
       backgroundColor: HaloColors.surface,
@@ -823,10 +801,16 @@ class _Label extends StatelessWidget {
   const _Label(this.text);
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
+    padding: const EdgeInsetsDirectional.fromSTEB(20, 14, 20, 8),
+    // the house section heading, as over home's chats
     child: Text(
       text,
-      style: HaloType.mono(size: 10, color: HaloColors.amber, letter: 0.6),
+      style: HaloType.mono(
+        size: 10,
+        color: HaloColors.text3,
+        weight: FontWeight.w500,
+        letter: 0.14,
+      ),
     ),
   );
 }
@@ -1611,6 +1595,9 @@ class _HitRow extends StatelessWidget {
                   height: 40,
                   fit: BoxFit.cover,
                   cacheWidth: decodePx(context, 40),
+                  // it fades up once decoded, not in one frame
+                  frameBuilder: (_, child, frame, sync) =>
+                      PhotoTileFade(shown: sync || frame != null, child: child),
                   errorBuilder: (_, _, _) =>
                       const SizedBox(width: 40, height: 40),
                 ),
@@ -1745,6 +1732,8 @@ class _Thumb extends StatelessWidget {
           fit: BoxFit.cover,
           cacheWidth: decodePx(context, size),
           gaplessPlayback: true,
+          frameBuilder: (_, child, frame, sync) =>
+              PhotoTileFade(shown: sync || frame != null, child: child),
           errorBuilder: (_, _, _) =>
               Container(width: size, height: size, color: HaloColors.surface3),
         ),

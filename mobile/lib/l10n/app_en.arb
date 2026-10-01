@@ -4733,12 +4733,12 @@
   "@newGroupAddAtLeastOne": {
     "description": "screens/new_group_screen.dart"
   },
-  "notesToday": "TODAY",
-  "@notesToday": {
+  "notesDeleteThisNote": "Delete this note?",
+  "@notesDeleteThisNote": {
     "description": "screens/notes_screen.dart"
   },
-  "notesYesterday": "YESTERDAY",
-  "@notesYesterday": {
+  "notesGoneFromThisPhone": "It is gone from this phone for good.",
+  "@notesGoneFromThisPhone": {
     "description": "screens/notes_screen.dart"
   },
   "notesNoteToSelf": "Note to self",
@@ -6001,6 +6001,10 @@
   },
   "savedNothingSavedYet": "Nothing saved yet",
   "@savedNothingSavedYet": {
+    "description": "screens/saved_screen.dart"
+  },
+  "savedChatGone": "That chat is no longer on this phone",
+  "@savedChatGone": {
     "description": "screens/saved_screen.dart"
   },
   "savedLongPressAnyMessage": "Long-press any message and tap save to keep it here.",

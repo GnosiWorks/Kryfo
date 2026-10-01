@@ -26,6 +26,7 @@ import 'package:kryfo/screens/seen_screen.dart';
 import 'package:kryfo/screens/settings_screen.dart';
 import 'package:kryfo/widgets/count_badge.dart';
 import 'package:kryfo/widgets/dev_avatar.dart';
+import 'package:kryfo/widgets/message_menu.dart' show MenuSheet;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'dev_chat_fakes.dart';
@@ -166,7 +167,10 @@ void main() {
       }
       expect(find.text(l10n.chatHide), findsNothing);
       expect(find.text(l10n.commonBlock), findsNothing);
-      expect(find.byType(ListTile), findsNWidgets(4));
+      // the house menu: mute, archive and unpin, then delete on its own
+      final menu = t.widget<MenuSheet>(find.byType(MenuSheet));
+      expect([for (final g in menu.groups) g.length], [3, 1]);
+      expect(menu.groups.last.single.danger, isTrue);
       await t.tapAt(const Offset(10, 10));
       await t.pump(const Duration(milliseconds: 500));
       await devClose(t);

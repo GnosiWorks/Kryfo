@@ -186,6 +186,57 @@ void main() {
       expect(find.text('form'), findsNothing);
       expect(t.hasRunningAnimations, isFalse);
     });
+
+    // home's empty page and its list both carry the developer's face
+    testWidgets('a page opened mid-cross finds each hero once', (t) async {
+      Widget face(String v) => KeyedSubtree(
+        key: ValueKey(v),
+        child: const Hero(tag: 'face', child: SizedBox(width: 40, height: 40)),
+      );
+      final shown = ValueNotifier('empty');
+      addTearDown(shown.dispose);
+      await t.pumpWidget(
+        framed(
+          Builder(
+            builder: (ctx) => Scaffold(
+              body: Column(
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const Scaffold(body: Text('over')),
+                      ),
+                    ),
+                    child: const Text('open'),
+                  ),
+                  Expanded(
+                    child: ValueListenableBuilder<String>(
+                      valueListenable: shown,
+                      builder: (_, v, _) => FadeSwap(child: face(v)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+      shown.value = 'list';
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.byType(Hero), findsNWidgets(2));
+      await t.tap(find.text('open'));
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 100));
+      expect(t.takeException(), isNull);
+      await t.pumpAndSettle();
+      Navigator.of(t.element(find.text('over'))).pop();
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 100));
+      expect(t.takeException(), isNull);
+      await t.pumpAndSettle();
+      expect(find.byType(Hero), findsOneWidget);
+    });
   });
 
   group('the bottom tabs', () {

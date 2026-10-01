@@ -3773,10 +3773,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Add at least one contact first before creating a group.';
 
   @override
-  String get notesToday => 'TODAY';
+  String get notesDeleteThisNote => 'Delete this note?';
 
   @override
-  String get notesYesterday => 'YESTERDAY';
+  String get notesGoneFromThisPhone => 'It is gone from this phone for good.';
 
   @override
   String get notesNoteToSelf => 'Note to self';
@@ -4776,6 +4776,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get savedNothingSavedYet => 'Nothing saved yet';
+
+  @override
+  String get savedChatGone => 'That chat is no longer on this phone';
 
   @override
   String get savedLongPressAnyMessage =>

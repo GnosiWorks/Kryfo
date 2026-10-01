@@ -3793,10 +3793,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'پیش از ساختن گروه، دست‌کم یک مخاطب اضافه کنید.';
 
   @override
-  String get notesToday => 'امروز';
+  String get notesDeleteThisNote => 'این یادداشت حذف شود؟';
 
   @override
-  String get notesYesterday => 'دیروز';
+  String get notesGoneFromThisPhone => 'برای همیشه از این گوشی پاک می‌شود.';
 
   @override
   String get notesNoteToSelf => 'یادداشت برای خود';
@@ -4793,6 +4793,9 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get savedNothingSavedYet => 'هنوز چیزی ذخیره نشده';
+
+  @override
+  String get savedChatGone => 'آن گفت‌وگو دیگر روی این گوشی نیست';
 
   @override
   String get savedLongPressAnyMessage =>

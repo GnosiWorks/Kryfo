@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../widgets/breathing_ring.dart';
@@ -9,8 +11,13 @@ import '../main.dart' hide live;
 import '../stickers/sticker_bubble.dart' show StickerLine;
 import '../stickers/sticker_wire.dart' show StickerWire;
 import '../theme.dart';
-import 'chat_screen.dart';
-import '../widgets/motion.dart' show haloRoute, kHouseCurve, motionStill;
+import '../devchat/dev_key.dart' show isDevChat;
+import '../rooms.dart' show looksLikeRoomKey, roomTag;
+import '../widgets/decode_px.dart';
+import '../widgets/photo_viewer.dart' show PhotoTileFade;
+import 'chat_door.dart';
+import '../widgets/motion.dart' show kHouseCurve, motionStill;
+import '../widgets/page_head.dart' show PageBar;
 import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
@@ -27,7 +34,15 @@ class SavedScreen extends StatefulWidget {
 class _SavedScreenState extends State<SavedScreen> {
   List<Map<String, Object?>> _rows = [];
   Map<String, String> _names = {};
+  Map<String, String> _groups = {};
   bool _loaded = false;
+  final _scroll = ScrollController();
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -43,31 +58,39 @@ class _SavedScreenState extends State<SavedScreen> {
       final id = c['halo_id'] as String;
       names[id] = (c['nickname'] as String?) ?? id;
     }
+    // the groups' names, when a group's message is among them
+    final inGroups = rows.any((r) => (r['group_id'] as String?) != null);
+    final groups = {
+      if (inGroups)
+        for (final g in await session.loadGroups())
+          g['group_id'] as String: (g['name'] as String?) ?? '',
+    };
     if (!mounted) return;
     setState(() {
       _rows = rows;
       _names = names;
+      _groups = groups;
       _loaded = true;
     });
   }
 
-  Future<void> _open(String peerId, String? uid) async {
-    final rows = await session.contacts();
-    final match = rows.where((r) => r['halo_id'] == peerId).toList();
-    if (match.isEmpty || !mounted) return;
-    final r = match.first;
-    Navigator.of(context).push(
-      haloRoute(
-        ChatScreen(
-          peerHaloId: peerId,
-          peerOnion: (r['onion'] as String?) ?? '',
-          peerXPub: (r['xpub'] as String?) ?? '',
-          avatarSeed: peerId,
-          avatarChoice: (r['avatar'] as num?)?.toInt(),
-          jumpToUid: uid,
-        ),
-      ),
+  // the chat the message was saved in: its group, the developer chat or
+  // the person's own, landing on the message
+  Future<void> _open(Map<String, Object?> r) async {
+    final ok = await openChatAt(
+      context,
+      groupId: r['group_id'] as String?,
+      peer: r['peer_id'] as String?,
+      uid: r['msg_uid'] as String?,
     );
+    if (!ok && mounted) showHaloToast(context, l10n.savedChatGone);
+  }
+
+  String _who(String peer) {
+    if (isDevChat(peer)) return l10n.devRowTitle;
+    final n = _names[peer];
+    if (n != null) return n;
+    return looksLikeRoomKey(peer) ? roomTag(peer) : peer;
   }
 
   // unsaved rows fade and fold (FadeFold) before the list reloads
@@ -120,36 +143,40 @@ class _SavedScreenState extends State<SavedScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: HaloColors.surface,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: BackButton(color: HaloColors.text2),
-        title: Text(
-          l10n.savedSaved,
-          style: HaloType.serif(size: 22, color: HaloColors.text, italic: true),
-        ),
-      ),
       body: SafeArea(
-        child: !_loaded
-            ? const SizedBox.shrink()
-            // the last one unsaved, the empty page fades in
-            : FadeSwap(
-                child: _rows.isEmpty
-                    ? KeyedSubtree(key: const ValueKey('none'), child: _empty())
-                    : ListView.builder(
-                        key: const ValueKey('cards'),
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                        itemCount: _rows.length,
-                        itemBuilder: (_, i) => StaggerIn(
-                          key: ValueKey(_rows[i]['msg_uid'] ?? i),
-                          index: i,
-                          child: FadeFold(
-                            leaving: _leaving.contains(_rows[i]['msg_uid']),
-                            child: _card(_rows[i]),
-                          ),
-                        ),
-                      ),
-              ),
+        child: Column(
+          children: [
+            PageBar(title: l10n.savedSaved, controller: _scroll),
+            Expanded(
+              child: !_loaded
+                  ? const SizedBox.shrink()
+                  // the last one unsaved, the empty page fades in
+                  : FadeSwap(
+                      child: _rows.isEmpty
+                          ? KeyedSubtree(
+                              key: const ValueKey('none'),
+                              child: _empty(),
+                            )
+                          : ListView.builder(
+                              key: const ValueKey('cards'),
+                              controller: _scroll,
+                              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                              itemCount: _rows.length,
+                              itemBuilder: (_, i) => StaggerIn(
+                                key: ValueKey(_rows[i]['msg_uid'] ?? i),
+                                index: i,
+                                child: FadeFold(
+                                  leaving: _leaving.contains(
+                                    _rows[i]['msg_uid'],
+                                  ),
+                                  child: _card(_rows[i]),
+                                ),
+                              ),
+                            ),
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -203,7 +230,13 @@ class _SavedScreenState extends State<SavedScreen> {
 
   Widget _card(Map<String, Object?> r) {
     final peer = r['peer_id'] as String? ?? '';
-    final who = _names[peer] ?? peer;
+    final gid = r['group_id'] as String?;
+    final group = gid == null || gid.isEmpty ? null : _groups[gid];
+    // a group's message names the group too: the sender alone reads as
+    // their own chat
+    final who = group == null || group.isEmpty
+        ? _who(peer)
+        : '${_who(peer)} · $group';
     final uid = r['msg_uid'] as String?;
     final ms = r['sent_at'] as int? ?? 0;
     final accent = _authorColor(peer);
@@ -211,91 +244,121 @@ class _SavedScreenState extends State<SavedScreen> {
     final isPhoto = _isPhoto(r);
     final sticker = StickerWire.parse(r['sticker']);
     return PressScale(
-      onTap: () => _open(peer, uid),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsetsDirectional.fromSTEB(14, 12, 13, 12),
-        decoration: BoxDecoration(
-          color: HaloColors.surface3,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: HaloColors.line2, width: 0.5),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 5,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    color: accent,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 7),
-                Flexible(
-                  child: Text(
-                    who,
-                    overflow: TextOverflow.ellipsis,
-                    style: HaloType.mono(size: 10, color: accent),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  _time(ms),
-                  style: HaloType.mono(size: 9, color: HaloColors.text3),
-                ),
-                const Spacer(),
-                Semantics(
-                  label: l10n.savedSaved,
-                  button: true,
-                  child: GestureDetector(
-                    onTap: uid == null ? null : () => _unsave(uid),
-                    behavior: HitTestBehavior.opaque,
-                    child: _Bookmark(on: !_leaving.contains(uid)),
-                  ),
-                ),
-              ],
+      onTap: () => _open(r),
+      child: Stack(
+        children: [
+          _cardBody(r, who, ms, accent, isVoice, isPhoto, sticker),
+          // a finger's worth around the mark, in the card's corner, so a
+          // near miss unsaves rather than opening the chat
+          PositionedDirectional(
+            top: 0,
+            end: 0,
+            child: PressScale(
+              label: l10n.savedSaved,
+              scale: 0.85,
+              haptic: false,
+              onTap: uid == null ? null : () => _unsave(uid),
+              child: SizedBox(
+                width: 44,
+                height: 40,
+                child: Center(child: _Bookmark(on: !_leaving.contains(uid))),
+              ),
             ),
-            const SizedBox(height: 10),
-            if (sticker != null)
-              StickerLine(
-                sticker,
-                style: HaloType.sans(size: 14, color: HaloColors.text),
-              )
-            else if (isVoice)
-              _mediaRow(Icons.graphic_eq, l10n.savedVoiceNote)
-            else if (isPhoto)
-              _photoRow()
-            else
-              Text(
-                _preview(r),
-                maxLines: 4,
-                overflow: TextOverflow.ellipsis,
-                style: HaloType.sans(
-                  size: 14,
-                  color: HaloColors.text,
-                  height: 1.45,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _cardBody(
+    Map<String, Object?> r,
+    String who,
+    int ms,
+    Color accent,
+    bool isVoice,
+    bool isPhoto,
+    StickerWire? sticker,
+  ) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsetsDirectional.fromSTEB(14, 12, 13, 12),
+      decoration: BoxDecoration(
+        color: HaloColors.surface3,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: HaloColors.line2, width: 0.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 5,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: accent,
+                  shape: BoxShape.circle,
                 ),
               ),
-            const SizedBox(height: 11),
-            Row(
-              children: [
-                Icon(
-                  Icons.subdirectory_arrow_right,
-                  size: 12,
-                  color: HaloColors.text3,
+              const SizedBox(width: 7),
+              Flexible(
+                child: Text(
+                  who,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: HaloType.mono(size: 10, color: accent),
                 ),
-                const SizedBox(width: 5),
-                Text(
-                  l10n.savedViewInChat,
-                  style: HaloType.mono(size: 8.5, color: HaloColors.text3),
-                ),
-              ],
+              ),
+              const SizedBox(width: 8),
+              Text(
+                _time(ms),
+                style: HaloType.mono(size: 10, color: HaloColors.text3),
+              ),
+              const Spacer(),
+              // room for the mark, which is drawn over the corner
+              const SizedBox(width: 17, height: 17),
+            ],
+          ),
+          const SizedBox(height: 10),
+          if (sticker != null)
+            StickerLine(
+              sticker,
+              style: HaloType.sans(size: 14, color: HaloColors.text),
+            )
+          else if (isVoice)
+            _mediaRow(Icons.graphic_eq, l10n.savedVoiceNote)
+          else if (isPhoto)
+            _photoRow(r)
+          else
+            Text(
+              _preview(r),
+              maxLines: 4,
+              overflow: TextOverflow.ellipsis,
+              // in the direction it was written, as in its chat
+              textDirection: writtenDir(_preview(r)),
+              textAlign: startOf(context),
+              style: HaloType.sans(
+                size: 14,
+                color: HaloColors.text,
+                height: 1.45,
+              ),
             ),
-          ],
-        ),
+          const SizedBox(height: 11),
+          Row(
+            children: [
+              Icon(
+                Icons.subdirectory_arrow_right,
+                size: 12,
+                color: HaloColors.text3,
+              ),
+              const SizedBox(width: 5),
+              Text(
+                l10n.savedViewInChat,
+                style: HaloType.mono(size: 10, color: HaloColors.text3),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -320,25 +383,48 @@ class _SavedScreenState extends State<SavedScreen> {
     ],
   );
 
-  Widget _photoRow() => Row(
-    children: [
-      Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          color: HaloColors.surface3,
+  // the photo itself, fading up once decoded, and its caption beside it
+  Widget _photoRow(Map<String, Object?> r) {
+    final caption = ((r['plaintext'] as String?) ?? '').trim();
+    final missing = Container(
+      width: 44,
+      height: 44,
+      color: HaloColors.surface2,
+      alignment: Alignment.center,
+      child: Icon(Icons.image_outlined, size: 18, color: HaloColors.text2),
+    );
+    return Row(
+      children: [
+        ClipRRect(
           borderRadius: BorderRadius.circular(9),
+          child: Image.file(
+            File(r['media_path'] as String),
+            width: 44,
+            height: 44,
+            fit: BoxFit.cover,
+            cacheWidth: decodePx(context, 44),
+            frameBuilder: (_, child, frame, sync) =>
+                PhotoTileFade(shown: sync || frame != null, child: child),
+            errorBuilder: (_, _, _) => missing,
+          ),
         ),
-        alignment: Alignment.center,
-        child: Icon(Icons.image_outlined, size: 18, color: HaloColors.text3),
-      ),
-      const SizedBox(width: 10),
-      Text(
-        l10n.savedPhoto2,
-        style: HaloType.sans(size: 13, color: HaloColors.text2),
-      ),
-    ],
-  );
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            caption.isEmpty ? l10n.savedPhoto2 : caption,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            textDirection: caption.isEmpty ? null : writtenDir(caption),
+            textAlign: startOf(context),
+            style: HaloType.sans(
+              size: 13,
+              color: caption.isEmpty ? HaloColors.text2 : HaloColors.text,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 // the bookmark on a card: unsaved, it empties with a small pop before the

@@ -33,14 +33,16 @@ import '../miui_autostart.dart';
 import '../main.dart' hide live;
 import '../widgets/motion.dart';
 import '../widgets/halo_sheet.dart';
-import '../widgets/sheet_handle.dart';
 import '../widgets/shift_in_place.dart';
 import '../widgets/burn_fade.dart' show FadeFold;
 import '../widgets/row_motion.dart';
 import '../widgets/count_badge.dart';
 import '../widgets/chat_parts.dart' show GrowSwap;
+import '../widgets/swap.dart';
+import '../widgets/message_menu.dart' show MenuSheet, MenuSheetRow;
 import '../widgets/confirm_sheet.dart';
 import '../widgets/hidden_mark.dart';
+import '../widgets/home_pin.dart';
 import '../widgets/swipe_actions.dart';
 import '../notif_permission.dart';
 import '../seen_timers.dart';
@@ -52,6 +54,7 @@ import '../devchat/dev_chat.dart' show DevRow;
 import '../widgets/dev_avatar.dart';
 import 'dev_about_sheet.dart';
 import 'search_screen.dart';
+import 'group_info_screen.dart' show leaveLine;
 import 'support_screen.dart' show SupportPin, supportRoute;
 
 bool _miuiPromptChecked = false;
@@ -486,59 +489,42 @@ class _ChatsTab extends StatelessWidget {
                     count: archived,
                     onTap: () {
                       HapticFeedback.selectionClick();
-                      Navigator.of(context).push(_archivedRoute());
+                      Navigator.of(
+                        context,
+                      ).push(haloRoute(const ArchivedScreen()));
                     },
                   )
                 : const SizedBox(key: ValueKey('no-archived'), width: 1),
           ),
+          // the empty page and the list cross-fade as the first chat comes
+          // or the last one goes
           Expanded(
-            child: visible.isEmpty && groups.isEmpty
-                ? _EmptyWithDev(
-                    dev: devShown,
-                    onOpenDev: onOpenDevChat,
-                    onAdd: onAddContact,
-                  )
-                : _ContactList(
-                    contacts: visible,
-                    groups: groups,
-                    dev: devShown,
-                    onTap: onOpenChat,
-                    onOpenDev: onOpenDevChat,
-                    onOpenGroup: onOpenGroup,
-                    onNewGroup: onNewGroup,
-                    onNewRoom: onNewRoom,
-                    expiredRoomName: expiredRoomName,
-                  ),
+            child: FadeSwap(
+              child: visible.isEmpty && groups.isEmpty
+                  ? _EmptyWithDev(
+                      key: const ValueKey('empty'),
+                      dev: devShown,
+                      onOpenDev: onOpenDevChat,
+                      onAdd: onAddContact,
+                    )
+                  : _ContactList(
+                      key: const ValueKey('list'),
+                      contacts: visible,
+                      groups: groups,
+                      dev: devShown,
+                      onTap: onOpenChat,
+                      onOpenDev: onOpenDevChat,
+                      onOpenGroup: onOpenGroup,
+                      onNewGroup: onNewGroup,
+                      onNewRoom: onNewRoom,
+                      expiredRoomName: expiredRoomName,
+                    ),
+            ),
           ),
         ],
       ),
     );
   }
-}
-
-Route<void> _archivedRoute() {
-  return PageRouteBuilder<void>(
-    transitionDuration: const Duration(milliseconds: 280),
-    reverseTransitionDuration: const Duration(milliseconds: 260),
-    pageBuilder: (_, _, _) => const ArchivedScreen(),
-    transitionsBuilder: (_, anim, _, child) {
-      final curved = CurvedAnimation(
-        parent: anim,
-        curve: Curves.easeOutCubic,
-        reverseCurve: Curves.easeInCubic,
-      );
-      return FadeTransition(
-        opacity: curved,
-        child: SlideTransition(
-          position: Tween(
-            begin: const Offset(0, 0.06),
-            end: Offset.zero,
-          ).animate(curved),
-          child: child,
-        ),
-      );
-    },
-  );
 }
 
 class ContactPreview {
@@ -600,9 +586,6 @@ class GroupSummary {
 
 // ───────── date header ─────────
 
-// the relay route's colour: cool enough never to read as tor's violet
-const kRelayCyan = Color(0xFF4BB8C9);
-
 class _AddScanButton extends StatelessWidget {
   final VoidCallback onTap;
   const _AddScanButton({required this.onTap});
@@ -631,48 +614,24 @@ class _AddScanButton extends StatelessWidget {
   }
 }
 
-class _GearButton extends StatefulWidget {
+class _GearButton extends StatelessWidget {
   final VoidCallback onTap;
   const _GearButton({required this.onTap});
   @override
-  State<_GearButton> createState() => _GearButtonState();
-}
-
-class _GearButtonState extends State<_GearButton> {
-  double _s = 1.0;
-  @override
   Widget build(BuildContext context) {
-    return Semantics(
+    return PressScale(
       label: l10n.commonSettings,
-      button: true,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTapDown: (_) => setState(() => _s = 0.9),
-        onTapUp: (_) => setState(() => _s = 1.0),
-        onTapCancel: () => setState(() => _s = 1.0),
-        onTap: () {
-          HapticFeedback.selectionClick();
-          widget.onTap();
-        },
-        child: AnimatedScale(
-          scale: _s,
-          duration: const Duration(milliseconds: 110),
-          curve: Curves.easeOut,
-          child: Container(
-            width: 38,
-            height: 38,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: HaloColors.line2, width: 1.4),
-            ),
-            child: Icon(
-              Icons.settings_outlined,
-              size: 19,
-              color: HaloColors.text2,
-            ),
-          ),
+      scale: 0.9,
+      onTap: onTap,
+      child: Container(
+        width: 38,
+        height: 38,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: HaloColors.line2, width: 1.4),
         ),
+        child: Icon(Icons.settings_outlined, size: 19, color: HaloColors.text2),
       ),
     );
   }
@@ -777,6 +736,169 @@ class _HomeHead extends StatelessWidget {
   }
 }
 
+// one card over the list: a breathing dot and its title, a line, and what
+// can be done. it opens its height as it comes, sliding the list down under
+// it, and folds away when it goes. simply there with less movement
+class _HomeCard extends StatelessWidget {
+  final bool show;
+  // the card's own key while shown, so two cards never swap for each other
+  final String id;
+  final Color tint;
+  final String title;
+  final String line;
+  final Color? lineColor;
+  // a soft wash from the top corner rather than a flat tint
+  final bool wash;
+  final List<Widget> actions;
+  const _HomeCard({
+    required this.show,
+    required this.id,
+    required this.tint,
+    required this.title,
+    required this.line,
+    required this.actions,
+    this.lineColor,
+    this.wash = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GrowSwap(
+      alignment: Alignment.topCenter,
+      child: !show
+          ? SizedBox(key: ValueKey('no-$id'), width: 1)
+          : Container(
+              key: ValueKey(id),
+              margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+              decoration: BoxDecoration(
+                color: wash ? null : tint.withValues(alpha: 0.10),
+                gradient: wash
+                    ? LinearGradient(
+                        begin: AlignmentDirectional.topStart,
+                        end: AlignmentDirectional.bottomEnd,
+                        colors: [
+                          tint.withValues(alpha: 0.16),
+                          tint.withValues(alpha: 0.05),
+                        ],
+                      )
+                    : null,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: tint.withValues(alpha: 0.35)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      BreathDot(color: tint, size: 7, breaths: 3),
+                      const SizedBox(width: 9),
+                      // a long title wraps rather than running off the card
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: HaloType.mono(
+                            size: 11,
+                            color: tint,
+                            weight: FontWeight.w600,
+                            letter: 0.12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 9),
+                  Text(
+                    line,
+                    style: HaloType.sans(
+                      size: 13,
+                      color: lineColor ?? HaloColors.text2,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  // the answers flow onto a second line in longer languages
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: actions,
+                  ),
+                ],
+              ),
+            ),
+    );
+  }
+}
+
+// an answer on a home card: a filled pill for the one the card is for, or
+// quiet words beside it. each dips under the finger with a click
+class _CardAction extends StatelessWidget {
+  final String label;
+  final VoidCallback? onTap;
+  // the pill's fill; null draws quiet words in [ink]
+  final Color? fill;
+  final Color ink;
+  final bool bold;
+  // a label that changes while its action runs rises in
+  final bool swap;
+  const _CardAction({
+    required this.label,
+    required this.onTap,
+    required this.ink,
+    this.fill,
+    this.bold = false,
+    this.swap = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Text(
+      label,
+      key: ValueKey(label),
+      style: HaloType.mono(
+        size: 11.5,
+        color: ink,
+        weight: fill != null || bold ? FontWeight.w600 : FontWeight.w400,
+      ),
+    );
+    final f = fill;
+    return PressScale(
+      label: label,
+      onTap: onTap,
+      child: ExcludeSemantics(
+        child: f == null
+            ? Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                child: text,
+              )
+            : AnimatedContainer(
+                duration: Duration(
+                  milliseconds: motionStill(context) ? 0 : 200,
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 15,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: onTap == null ? f.withValues(alpha: 0.45) : f,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: AnimatedSize(
+                  duration: Duration(
+                    milliseconds: motionStill(context) ? 0 : 200,
+                  ),
+                  curve: Curves.easeOutCubic,
+                  child: swap ? RiseSwap(child: text) : text,
+                ),
+              ),
+      ),
+    );
+  }
+}
+
 // android is not letting kryfo put a notification up, so nothing arrives
 // while the app is closed. the android 13 permission dialog does not come
 // back once the answer is final, so the only way out is the page this opens.
@@ -827,7 +949,6 @@ class _OfflineCardState extends State<_OfflineCard> {
   Future<void> _reconnect() async {
     if (_busy) return;
     setState(() => _busy = true);
-    HapticFeedback.selectionClick();
     engine.restartTor();
     // the bounce reports itself through the status poll; this only stops the
     // button being hammered while it runs.
@@ -848,90 +969,30 @@ class _OfflineCardState extends State<_OfflineCard> {
     return AnimatedBuilder(
       animation: appState,
       builder: (context, _) {
-        if (!appState.looksOffline) return const SizedBox.shrink();
         final since = appState.offlineFor ?? Duration.zero;
-        return Container(
-          margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-          decoration: BoxDecoration(
-            color: HaloColors.rose.withValues(alpha: 0.10),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: HaloColors.rose.withValues(alpha: 0.35)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  BreathDot(color: HaloColors.rose, size: 7, breaths: 3),
-                  const SizedBox(width: 9),
-                  Text(
-                    l10n.homeKryfoIsOffline,
-                    style: HaloType.mono(
-                      size: 11,
-                      color: HaloColors.rose,
-                      weight: FontWeight.w600,
-                      letter: 0.12,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                l10n.homeTorHasNotBeen(_howLong(since)),
-                style: HaloType.sans(size: 13, color: HaloColors.warm),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  GestureDetector(
-                    onTap: _busy ? null : _reconnect,
-                    behavior: HitTestBehavior.opaque,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 15,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _busy
-                            ? HaloColors.rose.withValues(alpha: 0.45)
-                            : HaloColors.rose,
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        _busy ? l10n.homeReconnecting : l10n.homeReconnect,
-                        style: HaloType.mono(
-                          size: 11.5,
-                          color: HaloColors.ink,
-                          weight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  GestureDetector(
-                    onTap: () => Navigator.of(
-                      context,
-                    ).push(haloRoute(const TransportScreen())),
-                    behavior: HitTestBehavior.opaque,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      child: Text(
-                        l10n.homeWhatIsWrong,
-                        style: HaloType.mono(
-                          size: 11.5,
-                          color: HaloColors.warm,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+        return _HomeCard(
+          show: appState.looksOffline,
+          id: 'offline',
+          tint: HaloColors.rose,
+          title: l10n.homeKryfoIsOffline,
+          line: l10n.homeTorHasNotBeen(_howLong(since)),
+          lineColor: HaloColors.warm,
+          actions: [
+            _CardAction(
+              label: _busy ? l10n.homeReconnecting : l10n.homeReconnect,
+              onTap: _busy ? null : _reconnect,
+              fill: HaloColors.rose,
+              ink: HaloColors.amberInk,
+              swap: true,
+            ),
+            _CardAction(
+              label: l10n.homeWhatIsWrong,
+              onTap: () => Navigator.of(
+                context,
+              ).push(haloRoute(const TransportScreen())),
+              ink: HaloColors.warm,
+            ),
+          ],
         );
       },
     );
@@ -965,88 +1026,27 @@ class _KeepsStoppingCardState extends State<_KeepsStoppingCard> {
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: appState,
-      builder: (context, _) {
-        if (!appState.nudgeDue) return const SizedBox.shrink();
-        return Container(
-          margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-          decoration: BoxDecoration(
-            color: HaloColors.amber.withValues(alpha: 0.10),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: HaloColors.amber.withValues(alpha: 0.35)),
+      builder: (context, _) => _HomeCard(
+        show: appState.nudgeDue,
+        id: 'keeps-stopping',
+        tint: HaloColors.amber,
+        title: l10n.homeYourPhoneKeepsStopping,
+        line: l10n.homeItHasClosedKryfo,
+        lineColor: HaloColors.warm,
+        actions: [
+          _CardAction(
+            label: l10n.homeSwitchToCheckIns,
+            onTap: _switch,
+            fill: HaloColors.amber,
+            ink: HaloColors.onAmber,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  BreathDot(color: HaloColors.amber, size: 7, breaths: 3),
-                  const SizedBox(width: 9),
-                  Text(
-                    l10n.homeYourPhoneKeepsStopping,
-                    style: HaloType.mono(
-                      size: 11,
-                      color: HaloColors.amber,
-                      weight: FontWeight.w600,
-                      letter: 0.12,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                l10n.homeItHasClosedKryfo,
-                style: HaloType.sans(size: 13, color: HaloColors.warm),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  GestureDetector(
-                    onTap: _switch,
-                    behavior: HitTestBehavior.opaque,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 15,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: HaloColors.amber,
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        l10n.homeSwitchToCheckIns,
-                        style: HaloType.mono(
-                          size: 11.5,
-                          color: HaloColors.ink,
-                          weight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  GestureDetector(
-                    onTap: () => appState.nudgeAnswered(),
-                    behavior: HitTestBehavior.opaque,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      child: Text(
-                        l10n.homeNotNow,
-                        style: HaloType.mono(
-                          size: 11.5,
-                          color: HaloColors.warm,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+          _CardAction(
+            label: l10n.homeNotNow,
+            onTap: () => appState.nudgeAnswered(),
+            ink: HaloColors.warm,
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 }
@@ -1083,90 +1083,33 @@ class _NotificationsBlockedHintState extends State<_NotificationsBlockedHint>
 
   @override
   Widget build(BuildContext context) {
-    if (!_show) return const SizedBox.shrink();
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-      decoration: BoxDecoration(
-        color: HaloColors.amber.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: HaloColors.amber.withValues(alpha: 0.35)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              BreathDot(color: HaloColors.amber, size: 7, breaths: 3),
-              const SizedBox(width: 9),
-              Text(
-                l10n.homeNotificationsAreOff,
-                style: HaloType.mono(
-                  size: 11,
-                  color: HaloColors.amber,
-                  weight: FontWeight.w600,
-                  letter: 0.12,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            l10n.homeAndroidIsBlockingThem,
-            style: HaloType.sans(size: 13, color: HaloColors.text2),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              GestureDetector(
-                onTap: () async {
-                  final opened = await openNotificationSettings();
-                  if (!opened && context.mounted) {
-                    showHaloToast(context, l10n.homeCouldnTOpenIt);
-                  }
-                },
-                behavior: HitTestBehavior.opaque,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 15,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: HaloColors.amber,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    l10n.homeTurnThemOn,
-                    style: HaloType.mono(
-                      size: 11.5,
-                      color: HaloColors.ink,
-                      weight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 6),
-              GestureDetector(
-                onTap: () async {
-                  await dismissNotifHint();
-                  if (mounted) setState(() => _show = false);
-                },
-                behavior: HitTestBehavior.opaque,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  child: Text(
-                    l10n.homeLeaveThemOff,
-                    style: HaloType.mono(size: 11.5, color: HaloColors.text2),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+    return _HomeCard(
+      show: _show,
+      id: 'notifications-off',
+      tint: HaloColors.amber,
+      title: l10n.homeNotificationsAreOff,
+      line: l10n.homeAndroidIsBlockingThem,
+      actions: [
+        _CardAction(
+          label: l10n.homeTurnThemOn,
+          onTap: () async {
+            final opened = await openNotificationSettings();
+            if (!opened && context.mounted) {
+              showHaloToast(context, l10n.homeCouldnTOpenIt);
+            }
+          },
+          fill: HaloColors.amber,
+          ink: HaloColors.onAmber,
+        ),
+        _CardAction(
+          label: l10n.homeLeaveThemOff,
+          onTap: () async {
+            await dismissNotifHint();
+            if (mounted) setState(() => _show = false);
+          },
+          ink: HaloColors.text2,
+        ),
+      ],
     );
   }
 }
@@ -1178,98 +1121,35 @@ class _RelayDownHint extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListenableBuilder(
       listenable: appState,
-      builder: (context, _) {
-        if (!appState.suggestFastFallback) return const SizedBox.shrink();
-        return Container(
-          margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-          decoration: BoxDecoration(
-            color: HaloColors.amber.withValues(alpha: 0.10),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: HaloColors.amber.withValues(alpha: 0.35)),
+      builder: (context, _) => _HomeCard(
+        show: appState.suggestFastFallback,
+        id: 'relay-down',
+        tint: HaloColors.amber,
+        title: l10n.homeOurRelayIsQuiet,
+        line: l10n.homeRelayModeUsesOnly,
+        actions: [
+          _CardAction(
+            label: l10n.homeUseFastMode,
+            onTap: () async {
+              // same warning as the modes screen: fast mode shows your
+              // address to public relays
+              final ok = await showFastGateSheet(context);
+              if (!ok || !context.mounted) return;
+              await appState.setSendMode('fast');
+              if (context.mounted) {
+                showHaloToast(context, l10n.homeSwitchedToFast);
+              }
+            },
+            fill: HaloColors.amber,
+            ink: HaloColors.onAmber,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  BreathDot(color: HaloColors.amber, size: 7, breaths: 3),
-                  const SizedBox(width: 9),
-                  Text(
-                    l10n.homeOurRelayIsQuiet,
-                    style: HaloType.mono(
-                      size: 11,
-                      color: HaloColors.amber,
-                      weight: FontWeight.w600,
-                      letter: 0.12,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Text(
-                l10n.homeRelayModeUsesOnly,
-                style: HaloType.sans(size: 13, color: HaloColors.text2),
-              ),
-              const SizedBox(height: 13),
-              Row(
-                children: [
-                  GestureDetector(
-                    onTap: () async {
-                      HapticFeedback.selectionClick();
-                      // same warning as the modes screen: fast mode shows
-                      // your address to public relays
-                      final ok = await showFastGateSheet(context);
-                      if (!ok || !context.mounted) return;
-                      await appState.setSendMode('fast');
-                      if (context.mounted) {
-                        showHaloToast(context, l10n.homeSwitchedToFast);
-                      }
-                    },
-                    behavior: HitTestBehavior.opaque,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 15,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: HaloColors.amber,
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        l10n.homeUseFastMode,
-                        style: HaloType.mono(
-                          size: 11.5,
-                          color: HaloColors.ink,
-                          weight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  GestureDetector(
-                    onTap: () => appState.dismissRelayHint(),
-                    behavior: HitTestBehavior.opaque,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      child: Text(
-                        l10n.homeKeepWaiting,
-                        style: HaloType.mono(
-                          size: 11.5,
-                          color: HaloColors.text3,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+          _CardAction(
+            label: l10n.homeKeepWaiting,
+            onTap: () => appState.dismissRelayHint(),
+            ink: HaloColors.text2,
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 }
@@ -1281,73 +1161,27 @@ class _BridgeStuckHint extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListenableBuilder(
       listenable: appState,
-      builder: (context, _) {
-        if (!appState.suggestBridgesOff) return const SizedBox.shrink();
-        return Container(
-          margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-          decoration: BoxDecoration(
-            color: HaloColors.rose.withValues(alpha: 0.10),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: HaloColors.rose.withValues(alpha: 0.35)),
+      builder: (context, _) => _HomeCard(
+        show: appState.suggestBridgesOff,
+        id: 'bridges-stuck',
+        tint: HaloColors.rose,
+        title: l10n.homeNotConnecting,
+        line: l10n.homeBridgesAreOnAnd,
+        actions: [
+          _CardAction(
+            label: l10n.homeTurnBridgesOff,
+            onTap: () async {
+              await appState.applyBridges(appState.bridgeLines, false);
+              engine.restartTor();
+              if (context.mounted) {
+                showHaloToast(context, l10n.homeGoingDirectReconnecting);
+              }
+            },
+            fill: HaloColors.rose,
+            ink: HaloColors.amberInk,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  BreathDot(color: HaloColors.rose, size: 7, breaths: 3),
-                  const SizedBox(width: 9),
-                  Text(
-                    l10n.homeNotConnecting,
-                    style: HaloType.mono(
-                      size: 11,
-                      color: HaloColors.rose,
-                      weight: FontWeight.w600,
-                      letter: 0.12,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Text(
-                l10n.homeBridgesAreOnAnd,
-                style: HaloType.sans(size: 13, color: HaloColors.text2),
-              ),
-              const SizedBox(height: 13),
-              GestureDetector(
-                onTap: () async {
-                  HapticFeedback.selectionClick();
-                  await appState.applyBridges(appState.bridgeLines, false);
-                  engine.restartTor();
-                  if (context.mounted) {
-                    showHaloToast(context, l10n.homeGoingDirectReconnecting);
-                  }
-                },
-                behavior: HitTestBehavior.opaque,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 15,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: HaloColors.rose,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    l10n.homeTurnBridgesOff,
-                    style: HaloType.mono(
-                      size: 11.5,
-                      color: HaloColors.text,
-                      weight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+        ],
+      ),
     );
   }
 }
@@ -1359,127 +1193,39 @@ class _BridgeHint extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListenableBuilder(
       listenable: appState,
-      builder: (context, _) {
-        if (!appState.suggestBridges) return const SizedBox.shrink();
-        return Container(
-          margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                HaloColors.violet.withValues(alpha: 0.16),
-                HaloColors.violet.withValues(alpha: 0.05),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: HaloColors.violet.withValues(alpha: 0.35),
-            ),
+      builder: (context, _) => _HomeCard(
+        show: appState.suggestBridges,
+        id: 'bridges',
+        tint: HaloColors.violet,
+        wash: true,
+        title: l10n.homeStillTrying,
+        line: l10n.homeTorIsNotGetting,
+        actions: [
+          _CardAction(
+            label: l10n.homeUseOurRelay,
+            onTap: () async {
+              await appState.setSendMode('balanced');
+              if (context.mounted) {
+                showHaloToast(context, l10n.homeSwitchedToRelay);
+              }
+            },
+            fill: kCyan,
+            ink: HaloColors.amberInk,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  BreathDot(color: HaloColors.violet, size: 7, breaths: 3),
-                  const SizedBox(width: 9),
-                  Text(
-                    l10n.homeStillTrying,
-                    style: HaloType.mono(
-                      size: 11,
-                      color: HaloColors.violet,
-                      weight: FontWeight.w600,
-                      letter: 0.12,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Text(
-                l10n.homeTorIsNotGetting,
-                style: HaloType.sans(size: 13, color: HaloColors.text2),
-              ),
-              const SizedBox(height: 13),
-              Row(
-                children: [
-                  GestureDetector(
-                    onTap: () async {
-                      HapticFeedback.selectionClick();
-                      await appState.setSendMode('balanced');
-                      if (context.mounted) {
-                        showHaloToast(context, l10n.homeSwitchedToRelay);
-                      }
-                    },
-                    behavior: HitTestBehavior.opaque,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 15,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: kRelayCyan,
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        l10n.homeUseOurRelay,
-                        style: HaloType.mono(
-                          size: 11.5,
-                          color: HaloColors.ink,
-                          weight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  GestureDetector(
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      Navigator.of(
-                        context,
-                      ).push(haloRoute(const BridgesScreen()));
-                    },
-                    behavior: HitTestBehavior.opaque,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      child: Text(
-                        l10n.homeBridges,
-                        style: HaloType.mono(
-                          size: 11.5,
-                          color: HaloColors.violet,
-                          weight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  GestureDetector(
-                    onTap: () => appState.dismissBridgeHint(),
-                    behavior: HitTestBehavior.opaque,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      child: Text(
-                        l10n.homeKeepWaiting,
-                        style: HaloType.mono(
-                          size: 11.5,
-                          color: HaloColors.text3,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+          _CardAction(
+            label: l10n.homeBridges,
+            onTap: () =>
+                Navigator.of(context).push(haloRoute(const BridgesScreen())),
+            ink: HaloColors.violet,
+            bold: true,
           ),
-        );
-      },
+          _CardAction(
+            label: l10n.homeKeepWaiting,
+            onTap: () => appState.dismissBridgeHint(),
+            ink: HaloColors.text2,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1498,100 +1244,105 @@ class _OfflineStrip extends StatelessWidget {
         // speaks when the phone cannot send, or when a message waits on
         // someone who has not added you back.
         final cannotSend = !appState.online || !appState.torReady;
-        if (!cannotSend && p == 0) return const SizedBox.shrink();
-
         final offline = !appState.online;
         final torDown = !offline && !appState.torReady;
         // tor coming up is what every launch looks like: with an empty queue
         // there is nothing to explain. offline is worth stating even with
         // nothing queued.
-        if (torDown && n == 0 && p == 0) return const SizedBox.shrink();
-        final tint = offline ? HaloColors.rose : HaloColors.amber;
-        final head = offline ? l10n.homeOffline : l10n.homeWaiting;
-        // say whether anything is queued, not only that the phone is offline
-        final tail = n == 0
-            ? l10n.homeNothingWaitingToSend
-            : offline
-            ? l10n.homeWaitingSendsWhenYou(n)
-            : torDown
-            ? l10n.homeWaitingTorIsStill(n)
-            : p >= n
-            ? l10n.homeWaitingForThemTo(n)
-            : p > 0
-            ? l10n.homeWaitingForThemToAddYou(n, p)
-            : l10n.homeWaitingSendingNow(n);
-
-        return Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
-          decoration: BoxDecoration(
-            color: tint.withValues(alpha: 0.14),
-            border: Border(
-              bottom: BorderSide(
-                color: tint.withValues(alpha: 0.35),
-                width: 0.5,
-              ),
-            ),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              BreathDot(color: tint, size: 7, breaths: 3),
-              const SizedBox(width: 10),
-              Text(
-                head,
-                style: HaloType.mono(
-                  size: 12,
-                  color: tint,
-                  weight: FontWeight.w500,
-                  letter: 0.08,
-                ),
-              ),
-              const SizedBox(width: 9),
-              Expanded(
-                child: Text(
-                  tail,
-                  style: HaloType.mono(
-                    size: 11.5,
-                    color: tint.withValues(alpha: 0.85),
-                    weight: FontWeight.w500,
-                  ),
-                  maxLines: 2,
-                ),
-              ),
-              if (n > 0 && !offline && !torDown) ...[
-                const SizedBox(width: 8),
-                GestureDetector(
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    appState.flushOutboxNow();
-                  },
-                  behavior: HitTestBehavior.opaque,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 7,
-                    ),
-                    decoration: BoxDecoration(
-                      color: tint.withValues(alpha: 0.18),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      l10n.commonRetry,
-                      style: HaloType.mono(
-                        size: 11,
-                        color: tint,
-                        weight: FontWeight.w600,
-                        letter: 0.06,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
+        final show = (cannotSend || p > 0) && !(torDown && n == 0 && p == 0);
+        // it opens its height and folds away, so the list slides
+        return GrowSwap(
+          alignment: Alignment.topCenter,
+          child: show
+              ? KeyedSubtree(
+                  key: const ValueKey('strip'),
+                  child: _strip(n, p, offline, torDown),
+                )
+              : const SizedBox(key: ValueKey('no-strip'), width: 1),
         );
       },
+    );
+  }
+
+  Widget _strip(int n, int p, bool offline, bool torDown) {
+    final tint = offline ? HaloColors.rose : HaloColors.amber;
+    final head = offline ? l10n.homeOffline : l10n.homeWaiting;
+    // say whether anything is queued, not only that the phone is offline
+    final tail = n == 0
+        ? l10n.homeNothingWaitingToSend
+        : offline
+        ? l10n.homeWaitingSendsWhenYou(n)
+        : torDown
+        ? l10n.homeWaitingTorIsStill(n)
+        : p >= n
+        ? l10n.homeWaitingForThemTo(n)
+        : p > 0
+        ? l10n.homeWaitingForThemToAddYou(n, p)
+        : l10n.homeWaitingSendingNow(n);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
+      decoration: BoxDecoration(
+        color: tint.withValues(alpha: 0.14),
+        border: Border(
+          bottom: BorderSide(color: tint.withValues(alpha: 0.35), width: 0.5),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          BreathDot(color: tint, size: 7, breaths: 3),
+          const SizedBox(width: 10),
+          Text(
+            head,
+            style: HaloType.mono(
+              size: 12,
+              color: tint,
+              weight: FontWeight.w500,
+              letter: 0.08,
+            ),
+          ),
+          const SizedBox(width: 9),
+          Expanded(
+            child: Text(
+              tail,
+              style: HaloType.mono(
+                size: 11.5,
+                color: tint.withValues(alpha: 0.85),
+                weight: FontWeight.w500,
+              ),
+              maxLines: 2,
+            ),
+          ),
+          if (n > 0 && !offline && !torDown) ...[
+            const SizedBox(width: 8),
+            PressScale(
+              label: l10n.commonRetry,
+              onTap: () => appState.flushOutboxNow(),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 7,
+                ),
+                decoration: BoxDecoration(
+                  color: tint.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  l10n.commonRetry,
+                  style: HaloType.mono(
+                    size: 11,
+                    color: tint,
+                    weight: FontWeight.w600,
+                    letter: 0.06,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
@@ -1605,6 +1356,7 @@ class _EmptyWithDev extends StatelessWidget {
   final void Function(String chatId) onOpenDev;
   final VoidCallback onAdd;
   const _EmptyWithDev({
+    super.key,
     required this.dev,
     required this.onOpenDev,
     required this.onAdd,
@@ -1808,65 +1560,20 @@ class _EmptyStateState extends State<_EmptyState>
   }
 }
 
+// the archive, under the other pins and shaped like them
 class _ArchivedPin extends StatelessWidget {
   final VoidCallback onTap;
   final int count;
   const _ArchivedPin({super.key, required this.onTap, required this.count});
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
-      child: Material(
-        color: HaloColors.surface2,
-        borderRadius: BorderRadius.circular(14),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-            child: Row(
-              children: [
-                Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: HaloColors.amberSoft,
-                  ),
-                  alignment: Alignment.center,
-                  child: Icon(
-                    Icons.inventory_2_outlined,
-                    size: 16,
-                    color: HaloColors.amber,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l10n.homeArchived,
-                        style: HaloType.sans(
-                          size: 14,
-                          weight: FontWeight.w500,
-                          color: HaloColors.text,
-                        ),
-                      ),
-                      const SizedBox(height: 1),
-                      Text(
-                        l10n.home1Chat(count),
-                        style: HaloType.mono(size: 10, color: HaloColors.text3),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(Icons.chevron_right, color: HaloColors.text3, size: 18),
-              ],
-            ),
-          ),
-        ),
-      ),
+    return HomePin(
+      icon: Icons.inventory_2_outlined,
+      title: l10n.homeArchived,
+      line: l10n.home1Chat(count),
+      lit: false,
+      onTap: onTap,
+      trailing: Icon(Icons.chevron_right, color: HaloColors.text2, size: 18),
     );
   }
 }
@@ -1903,6 +1610,7 @@ class _ContactList extends StatefulWidget {
   final VoidCallback onNewRoom;
   final String? expiredRoomName;
   const _ContactList({
+    super.key,
     required this.contacts,
     required this.groups,
     this.dev,
@@ -2053,18 +1761,27 @@ class _ContactListState extends State<_ContactList> {
               ),
             ],
           ),
-          // a room that just ended: one quiet line, gone in a few seconds
-          if (widget.expiredRoomName != null)
-            _Enter(
-              index: 0,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
-                child: Text(
-                  l10n.homeRoomExpired(widget.expiredRoomName!),
-                  style: HaloType.mono(size: 10, color: HaloColors.violet),
-                ),
-              ),
-            ),
+          // a room that just ended: one quiet line that opens under the
+          // heading and folds away a few seconds later
+          GrowSwap(
+            alignment: Alignment.topCenter,
+            child: widget.expiredRoomName == null
+                ? const SizedBox(key: ValueKey('no-expired'), width: 1)
+                : Padding(
+                    key: ValueKey('expired-${widget.expiredRoomName}'),
+                    padding: const EdgeInsetsDirectional.fromSTEB(20, 4, 20, 8),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: Text(
+                        l10n.homeRoomExpired(widget.expiredRoomName!),
+                        style: HaloType.mono(
+                          size: 10,
+                          color: HaloColors.violet,
+                        ),
+                      ),
+                    ),
+                  ),
+          ),
           for (final (n, g) in groups.indexed) _row(_groups, g, n),
           if (chats.isNotEmpty) ...[
             const SizedBox(height: 10),
@@ -2244,6 +1961,8 @@ class _GroupRow extends StatelessWidget {
       type: MaterialType.transparency,
       child: InkWell(
         onTap: onTap,
+        // held: its menu, as a chat's
+        onLongPress: () => _groupMenu(context, g),
         splashColor: HaloColors.amber.withValues(alpha: 0.10),
         highlightColor: HaloColors.amber.withValues(alpha: 0.05),
         child: Ink(
@@ -2413,97 +2132,134 @@ class _SwipeRow extends StatelessWidget {
   }
 }
 
+// a chat's menu on the house sheet: what it does to the chat in one group,
+// the delete on its own at the end
 void _chatMenu(BuildContext context, ContactPreview c) {
   HapticFeedback.mediumImpact();
-  showHaloSheet<void>(
+  showHaloSheet<String>(
     context,
-    builder: (sheetCtx) => SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SheetHandle(),
-          const SizedBox(height: 14),
-          ListTile(
-            leading: Icon(
-              c.muted
-                  ? Icons.notifications_active_outlined
-                  : Icons.notifications_off_outlined,
-              color: HaloColors.text2,
-              size: 22,
-            ),
-            title: Text(
-              c.muted ? l10n.homeUnmute : l10n.homeMute,
-              style: HaloType.sans(size: 15, color: HaloColors.text),
-            ),
-            onTap: () {
-              Navigator.pop(sheetCtx);
-              c.muted ? appState.unmute(c.haloId) : appState.mute(c.haloId);
-            },
-          ),
-          ListTile(
-            leading: Icon(
-              Icons.archive_outlined,
-              color: HaloColors.amber,
-              size: 22,
-            ),
-            title: Text(
-              l10n.homeArchive,
-              style: HaloType.sans(size: 15, color: HaloColors.text),
-            ),
-            onTap: () {
-              Navigator.pop(sheetCtx);
-              appState.archive(c.haloId);
-            },
-          ),
-          // hidden chats open: a chat goes out of the everyday list, or
-          // comes back to it, and its row says which
-          if (lockState.inVault && !c.blocked)
-            ListTile(
-              leading: Icon(
-                c.hidden
-                    ? Icons.visibility_outlined
-                    : Icons.visibility_off_outlined,
-                color: HaloColors.violet,
-                size: 22,
+    scroll: true,
+    builder: (ctx) {
+      void pick(String a) => Navigator.pop(ctx, a);
+      return SingleChildScrollView(
+        child: MenuSheet(
+          groups: [
+            [
+              MenuSheetRow(
+                icon: c.muted
+                    ? Icons.notifications_active_outlined
+                    : Icons.notifications_off_outlined,
+                label: c.muted ? l10n.homeUnmute : l10n.homeMute,
+                onTap: () => pick('mute'),
               ),
-              title: Text(
-                c.hidden ? l10n.chatShowInList : l10n.chatHide,
-                style: HaloType.sans(size: 15, color: HaloColors.text),
+              MenuSheetRow(
+                icon: Icons.archive_outlined,
+                label: l10n.homeArchive,
+                onTap: () => pick('archive'),
               ),
-              onTap: () {
-                Navigator.pop(sheetCtx);
-                moveHiddenChat(
-                  context,
-                  c.haloId,
-                  group: false,
-                  hide: !c.hidden,
-                );
-              },
-            ),
-          ListTile(
-            leading: Icon(
-              Icons.delete_outline_rounded,
-              color: HaloColors.rose,
-              size: 22,
-            ),
-            title: Text(
-              l10n.homeDeleteChat,
-              style: HaloType.sans(size: 15, color: HaloColors.rose),
-            ),
-            subtitle: Text(
-              l10n.homeMessagesAndContactGone,
-              style: HaloType.mono(size: 11, color: HaloColors.text3),
-            ),
-            onTap: () {
-              Navigator.pop(sheetCtx);
-              _confirmDelete(context, c);
-            },
-          ),
-          const SizedBox(height: 8),
-        ],
-      ),
+              // hidden chats open: a chat goes out of the everyday list, or
+              // comes back to it, and its row says which
+              if (lockState.inVault && !c.blocked)
+                MenuSheetRow(
+                  icon: c.hidden
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
+                  label: c.hidden ? l10n.chatShowInList : l10n.chatHide,
+                  tint: HaloColors.violet,
+                  onTap: () => pick('hide'),
+                ),
+            ],
+            [
+              MenuSheetRow(
+                icon: Icons.delete_outline,
+                label: l10n.homeDeleteChat,
+                sub: l10n.homeMessagesAndContactGone,
+                danger: true,
+                onTap: () => pick('delete'),
+              ),
+            ],
+          ],
+        ),
+      );
+    },
+  ).then((a) {
+    if (a == null || !context.mounted) return;
+    switch (a) {
+      case 'mute':
+        c.muted ? appState.unmute(c.haloId) : appState.mute(c.haloId);
+      case 'archive':
+        appState.archive(c.haloId);
+      case 'hide':
+        moveHiddenChat(context, c.haloId, group: false, hide: !c.hidden);
+      case 'delete':
+        _confirmDelete(context, c);
+    }
+  });
+}
+
+// a group's or a room's menu: hide it while hidden chats are open, or
+// leave it, after saying what leaving costs
+void _groupMenu(BuildContext context, GroupSummary g) {
+  HapticFeedback.mediumImpact();
+  showHaloSheet<String>(
+    context,
+    scroll: true,
+    builder: (ctx) {
+      void pick(String a) => Navigator.pop(ctx, a);
+      return SingleChildScrollView(
+        child: MenuSheet(
+          groups: [
+            if (lockState.inVault)
+              [
+                MenuSheetRow(
+                  icon: g.hidden
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
+                  label: g.hidden ? l10n.chatShowInList : l10n.chatHide,
+                  tint: HaloColors.violet,
+                  onTap: () => pick('hide'),
+                ),
+              ],
+            [
+              MenuSheetRow(
+                icon: Icons.logout_rounded,
+                label: g.isRoom
+                    ? l10n.groupInfoLeaveRoom2
+                    : l10n.groupInfoLeaveGroup2,
+                danger: true,
+                onTap: () => pick('leave'),
+              ),
+            ],
+          ],
+        ),
+      );
+    },
+  ).then((a) {
+    if (a == null || !context.mounted) return;
+    switch (a) {
+      case 'hide':
+        moveHiddenChat(context, g.groupId, group: true, hide: !g.hidden);
+      case 'leave':
+        _confirmLeave(context, g);
+    }
+  });
+}
+
+Future<void> _confirmLeave(BuildContext context, GroupSummary g) async {
+  final row = await session.getGroup(g.groupId);
+  if (!context.mounted) return;
+  final ok = await showConfirmSheet(
+    context,
+    title: g.isRoom ? l10n.groupInfoLeaveRoom : l10n.groupInfoLeaveGroup,
+    line: leaveLine(
+      room: g.isRoom,
+      admin: ((row?['is_admin'] as int?) ?? 0) == 1,
     ),
+    yes: l10n.groupInfoLeave,
   );
+  if (!ok) return;
+  HapticFeedback.heavyImpact();
+  await appState.leaveGroupAndAnnounce(g.groupId);
 }
 
 Future<void> _confirmDelete(BuildContext context, ContactPreview c) async {
@@ -2556,72 +2312,58 @@ class _DevSwipeRow extends StatelessWidget {
 
 void _devMenu(BuildContext context, DevRow d) {
   HapticFeedback.mediumImpact();
-  Widget item({
-    required IconData icon,
-    required Color tint,
-    required String label,
-    Color? ink,
-    required VoidCallback onTap,
-  }) => ListTile(
-    leading: Icon(icon, color: tint, size: 22),
-    title: Text(
-      label,
-      style: HaloType.sans(size: 15, color: ink ?? HaloColors.text),
-    ),
-    onTap: onTap,
-  );
-  showHaloSheet<void>(
+  showHaloSheet<String>(
     context,
-    builder: (sheetCtx) => SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SheetHandle(),
-          const SizedBox(height: 14),
-          item(
-            icon: d.muted
-                ? Icons.notifications_active_outlined
-                : Icons.notifications_off_outlined,
-            tint: HaloColors.text2,
-            label: d.muted ? l10n.homeUnmute : l10n.homeMute,
-            onTap: () {
-              Navigator.pop(sheetCtx);
-              setDevMuted(!d.muted);
-            },
-          ),
-          item(
-            icon: Icons.archive_outlined,
-            tint: HaloColors.amber,
-            label: l10n.homeArchive,
-            onTap: () {
-              Navigator.pop(sheetCtx);
-              setDevArchived(true);
-            },
-          ),
-          item(
-            icon: d.pinned ? Icons.push_pin_outlined : Icons.push_pin,
-            tint: HaloColors.amber,
-            label: d.pinned ? l10n.contactUnpin : l10n.contactPinToTop,
-            onTap: () {
-              Navigator.pop(sheetCtx);
-              setDevPinned(!d.pinned);
-            },
-          ),
-          item(
-            icon: Icons.delete_outline_rounded,
-            tint: HaloColors.rose,
-            ink: HaloColors.rose,
-            label: l10n.homeDeleteChat,
-            onTap: () {
-              Navigator.pop(sheetCtx);
-              deleteDevChat(context, d);
-            },
-          ),
-          const SizedBox(height: 8),
-        ],
-      ),
-    ),
-  );
+    scroll: true,
+    builder: (ctx) {
+      void pick(String a) => Navigator.pop(ctx, a);
+      return SingleChildScrollView(
+        child: MenuSheet(
+          groups: [
+            [
+              MenuSheetRow(
+                icon: d.muted
+                    ? Icons.notifications_active_outlined
+                    : Icons.notifications_off_outlined,
+                label: d.muted ? l10n.homeUnmute : l10n.homeMute,
+                onTap: () => pick('mute'),
+              ),
+              MenuSheetRow(
+                icon: Icons.archive_outlined,
+                label: l10n.homeArchive,
+                onTap: () => pick('archive'),
+              ),
+              MenuSheetRow(
+                icon: d.pinned ? Icons.push_pin_outlined : Icons.push_pin,
+                label: d.pinned ? l10n.contactUnpin : l10n.contactPinToTop,
+                onTap: () => pick('pin'),
+              ),
+            ],
+            [
+              MenuSheetRow(
+                icon: Icons.delete_outline,
+                label: l10n.homeDeleteChat,
+                danger: true,
+                onTap: () => pick('delete'),
+              ),
+            ],
+          ],
+        ),
+      );
+    },
+  ).then((a) {
+    if (a == null || !context.mounted) return;
+    switch (a) {
+      case 'mute':
+        setDevMuted(!d.muted);
+      case 'archive':
+        setDevArchived(true);
+      case 'pin':
+        setDevPinned(!d.pinned);
+      case 'delete':
+        deleteDevChat(context, d);
+    }
+  });
 }
 
 // the ring for a face, the tick of a key built into the app, one title in
@@ -2737,7 +2479,9 @@ class _DevRowTile extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: HaloType.sans(
                               size: 12,
-                              color: HaloColors.text2,
+                              color: unread
+                                  ? HaloColors.text
+                                  : HaloColors.text2,
                             ),
                           ),
                         ),
@@ -2903,10 +2647,11 @@ class _Row extends StatelessWidget {
                             (c.preview ?? '').contains('kryfo://room?')
                                 ? l10n.homeRoomInvite
                                 : (c.preview ?? ''),
+                            // unread reads in full colour until it is read
                             style: HaloType.sans(
                               size: 12,
                               color: c.unread > 0
-                                  ? HaloColors.text2
+                                  ? HaloColors.text
                                   : HaloColors.text2,
                             ),
                             maxLines: 1,
@@ -3061,65 +2806,16 @@ class _RequestsPin extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PressScale(
+    return HomePin(
+      icon: Icons.mail_outline,
+      title: l10n.homeRequests,
+      line: l10n.home1PersonWantsTo(count),
       onTap: onTap,
-      scale: 0.98,
-      child: Container(
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: HaloColors.surface2,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: HaloColors.amber.withValues(alpha: 0.35),
-            width: 0.8,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: HaloColors.amberSoft,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              alignment: Alignment.center,
-              child: Icon(
-                Icons.mail_outline,
-                color: HaloColors.amber,
-                size: 18,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.homeRequests,
-                    style: HaloType.serif(
-                      size: 14,
-                      color: HaloColors.text,
-                      italic: true,
-                    ),
-                  ),
-                  const SizedBox(height: 1),
-                  Text(
-                    l10n.home1PersonWantsTo(count),
-                    style: HaloType.sans(size: 11, color: HaloColors.text3),
-                  ),
-                ],
-              ),
-            ),
-            CountBadge(
-              count: count,
-              fontSize: 11.5,
-              minWidth: 24,
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            ),
-          ],
-        ),
+      trailing: CountBadge(
+        count: count,
+        fontSize: 11.5,
+        minWidth: 24,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       ),
     );
   }

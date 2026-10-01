@@ -1,5 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import '../widgets/burn_fade.dart' show FadeFold;
+import '../widgets/chat_parts.dart' show DayChip;
+import '../widgets/confirm_sheet.dart';
+import '../widgets/halo_sheet.dart';
+import '../widgets/message_menu.dart' show MenuSheet, MenuSheetRow;
+import '../widgets/page_head.dart' show PageBar;
 import '../widgets/stagger_in.dart';
 import '../widgets/breathing_ring.dart';
 import '../widgets/press_scale.dart';
@@ -26,8 +33,15 @@ class NotesScreen extends StatefulWidget {
 class _NotesScreenState extends State<NotesScreen> {
   final _input = TextEditingController();
   List<Map<String, Object?>> _notes = [];
+  // nothing is drawn until the first load: the empty page is for no notes,
+  // not for notes still on their way
+  bool _loaded = false;
   // the notes on screen before the last load: any other one is new
   Set<Object>? _had;
+  // deleted notes fold away before the list reloads
+  final Set<Object> _leaving = {};
+  // how far the notes run up under the bar, for its hairline
+  final _under = ValueNotifier<double>(0);
 
   @override
   void initState() {
@@ -38,7 +52,20 @@ class _NotesScreenState extends State<NotesScreen> {
   @override
   void dispose() {
     _input.dispose();
+    _under.dispose();
     super.dispose();
+  }
+
+  // the list starts at the bottom, so what is above the bar is the extent
+  // after, not the offset
+  bool _track(Notification n) {
+    final m = switch (n) {
+      ScrollNotification(depth: 0, :final metrics) => metrics,
+      ScrollMetricsNotification(depth: 0, :final metrics) => metrics,
+      _ => null,
+    };
+    if (m != null) _under.value = m.extentAfter;
+    return false;
   }
 
   static Object _key(Map<String, Object?> n) =>
@@ -50,15 +77,86 @@ class _NotesScreenState extends State<NotesScreen> {
     setState(() {
       _had = _notes.isEmpty && _had == null ? null : _notes.map(_key).toSet();
       _notes = rows;
+      _loaded = true;
     });
+    if (rows.isEmpty) _under.value = 0;
   }
 
   Future<void> _save() async {
     final text = _input.text.trim();
     if (text.isEmpty) return;
-    await session.saveMessage(kNotesPeerId, 'in', text);
+    // a uid, so the note can be found again to delete
+    await session.saveMessage(kNotesPeerId, 'in', text, msgUid: newMsgUid());
     _input.clear();
     await _load();
+  }
+
+  void _menu(Map<String, Object?> n) {
+    final text = n['plaintext'] as String? ?? '';
+    showHaloSheet<String>(
+      context,
+      scroll: true,
+      builder: (ctx) {
+        void pick(String a) => Navigator.pop(ctx, a);
+        return SingleChildScrollView(
+          child: MenuSheet(
+            groups: [
+              [
+                MenuSheetRow(
+                  icon: Icons.copy_rounded,
+                  label: l10n.commonCopy,
+                  onTap: text.isEmpty ? null : () => pick('copy'),
+                ),
+              ],
+              [
+                MenuSheetRow(
+                  icon: Icons.delete_outline,
+                  label: l10n.commonDelete,
+                  danger: true,
+                  onTap: () => pick('delete'),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    ).then((a) {
+      if (!mounted || a == null) return;
+      switch (a) {
+        case 'copy':
+          Clipboard.setData(ClipboardData(text: text));
+          showHaloToast(context, l10n.commonCopied);
+        case 'delete':
+          _delete(n);
+      }
+    });
+  }
+
+  Future<void> _delete(Map<String, Object?> n) async {
+    final ok = await showConfirmSheet(
+      context,
+      title: l10n.notesDeleteThisNote,
+      line: l10n.notesGoneFromThisPhone,
+      yes: l10n.commonDelete,
+    );
+    final key = _key(n);
+    if (!ok || !mounted || !_leaving.add(key)) return;
+    HapticFeedback.heavyImpact();
+    setState(() {});
+    // notes kept before they had a uid are given one now, by their time
+    var uid = n['msg_uid'] as String?;
+    if (uid == null) {
+      uid = newMsgUid();
+      await session.assignUidIfMissing(
+        kNotesPeerId,
+        n['sent_at'] as int? ?? 0,
+        uid,
+      );
+    }
+    await session.deleteMessage(uid);
+    await Future.delayed(FadeFold.gone);
+    await _load();
+    _leaving.remove(key);
   }
 
   bool _sameDay(int a, int b) {
@@ -68,106 +166,105 @@ class _NotesScreenState extends State<NotesScreen> {
     return da.year == dbb.year && da.month == dbb.month && da.day == dbb.day;
   }
 
+  // the chat's own day pill and words: today, yesterday, a date with its
+  // year once it is not this one
   String _dayLabel(int ms) {
     final d = DateTime.fromMillisecondsSinceEpoch(ms);
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final that = DateTime(d.year, d.month, d.day);
     final diff = today.difference(that).inDays;
-    if (diff == 0) return l10n.notesToday;
-    if (diff == 1) return l10n.notesYesterday;
-    return dateCaps(dayMonth(d));
+    if (diff == 0) return l10n.chatToday;
+    if (diff == 1) return l10n.chatYesterday;
+    return dayMonthMaybeYear(d, now: now);
   }
 
-  Widget _dayDivider(int ms) => Center(
-    child: Container(
-      margin: const EdgeInsets.fromLTRB(0, 8, 0, 14),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      decoration: BoxDecoration(
-        color: HaloColors.surface2,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        _dayLabel(ms),
-        style: HaloType.mono(
-          size: 8.5,
-          color: HaloColors.text3,
-        ).copyWith(letterSpacing: track(1.6)),
-      ),
-    ),
+  Widget _dayDivider(int ms) => Padding(
+    padding: const EdgeInsets.fromLTRB(0, 8, 0, 14),
+    child: Center(child: DayChip(_dayLabel(ms))),
   );
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: HaloColors.surface,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: BackButton(color: HaloColors.text2),
-        titleSpacing: 0,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.notesNoteToSelf,
-              style: HaloType.serif(
-                size: 20,
-                color: HaloColors.text,
-                italic: true,
-              ),
-            ),
-            Text(
-              l10n.notesOnlyOnThisPhone,
-              style: HaloType.mono(size: 9.5, color: HaloColors.text3),
-            ),
-          ],
-        ),
-      ),
       body: SafeArea(
         child: Column(
           children: [
+            PageBar(
+              under: _under,
+              title: l10n.notesNoteToSelf,
+              sub: Text(
+                l10n.notesOnlyOnThisPhone,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: HaloType.mono(size: 10, color: HaloColors.text2),
+              ),
+            ),
             Expanded(
               // the first note fades the empty page away
-              child: FadeSwap(
-                child: _notes.isEmpty
-                    ? KeyedSubtree(key: const ValueKey('none'), child: _empty())
-                    : ListView.builder(
-                        key: const ValueKey('notes'),
-                        // newest at the bottom, on the bar: the list starts
-                        // there and a new note pushes the rest up
-                        reverse: true,
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-                        itemCount: _notes.length,
-                        itemBuilder: (_, k) {
-                          final i = _notes.length - 1 - k;
-                          final n = _notes[i];
-                          final text = n['plaintext'] as String? ?? '';
-                          final ts = n['sent_at'] as int? ?? 0;
-                          final prevTs = i == 0
-                              ? 0
-                              : (_notes[i - 1]['sent_at'] as int? ?? 0);
-                          final showDay = !_sameDay(ts, prevTs);
-                          // fade older notes so the newest read brightest
-                          final fresh = i >= _notes.length - 2;
-                          final had = _had;
-                          return GrowIn(
-                            key: ValueKey(_key(n)),
-                            active: had != null && !had.contains(_key(n)),
-                            child: StaggerIn(
-                              index: k,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  if (showDay) _dayDivider(ts),
-                                  _NoteBubble(text: text, ts: ts, fresh: fresh),
-                                ],
+              child: !_loaded
+                  ? const SizedBox.shrink()
+                  : NotificationListener<Notification>(
+                      onNotification: _track,
+                      child: FadeSwap(
+                        child: _notes.isEmpty
+                            ? KeyedSubtree(
+                                key: const ValueKey('none'),
+                                child: _empty(),
+                              )
+                            : ListView.builder(
+                                key: const ValueKey('notes'),
+                                // newest at the bottom, on the bar: the list starts
+                                // there and a new note pushes the rest up
+                                reverse: true,
+                                padding: const EdgeInsets.fromLTRB(
+                                  16,
+                                  16,
+                                  16,
+                                  16,
+                                ),
+                                itemCount: _notes.length,
+                                itemBuilder: (_, k) {
+                                  final i = _notes.length - 1 - k;
+                                  final n = _notes[i];
+                                  final text = n['plaintext'] as String? ?? '';
+                                  final ts = n['sent_at'] as int? ?? 0;
+                                  final prevTs = i == 0
+                                      ? 0
+                                      : (_notes[i - 1]['sent_at'] as int? ?? 0);
+                                  final showDay = !_sameDay(ts, prevTs);
+                                  // fade older notes so the newest read brightest
+                                  final fresh = i >= _notes.length - 2;
+                                  final had = _had;
+                                  return GrowIn(
+                                    key: ValueKey(_key(n)),
+                                    active:
+                                        had != null && !had.contains(_key(n)),
+                                    child: StaggerIn(
+                                      index: k,
+                                      child: FadeFold(
+                                        leaving: _leaving.contains(_key(n)),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.stretch,
+                                          children: [
+                                            if (showDay) _dayDivider(ts),
+                                            _NoteBubble(
+                                              text: text,
+                                              ts: ts,
+                                              fresh: fresh,
+                                              onLongPress: () => _menu(n),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
                               ),
-                            ),
-                          );
-                        },
                       ),
-              ),
+                    ),
             ),
             _inputBar(),
           ],
@@ -309,7 +406,13 @@ class _NoteBubble extends StatelessWidget {
   final String text;
   final int ts;
   final bool fresh;
-  const _NoteBubble({required this.text, required this.ts, this.fresh = true});
+  final VoidCallback onLongPress;
+  const _NoteBubble({
+    required this.text,
+    required this.ts,
+    required this.onLongPress,
+    this.fresh = true,
+  });
 
   String _time() {
     if (ts == 0) return '';
@@ -318,56 +421,64 @@ class _NoteBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              width: 3,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    HaloColors.amber.withValues(alpha: fresh ? 1 : 0.4),
-                    HaloColors.amber.withValues(alpha: fresh ? 0.35 : 0.15),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(width: 11),
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(13, 11, 13, 11),
+    // held, it dips with a haptic and opens its menu
+    return PressScale(
+      scale: 0.98,
+      onLongPress: onLongPress,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                width: 3,
                 decoration: BoxDecoration(
-                  color: HaloColors.surface3,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: HaloColors.line2, width: 0.5),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      text,
-                      style: HaloType.sans(
-                        size: 14.5,
-                        color: fresh ? HaloColors.text : HaloColors.text2,
-                        height: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 7),
-                    Text(
-                      _time(),
-                      style: HaloType.mono(size: 9, color: HaloColors.text3),
-                    ),
-                  ],
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      HaloColors.amber.withValues(alpha: fresh ? 1 : 0.4),
+                      HaloColors.amber.withValues(alpha: fresh ? 0.35 : 0.15),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
-            ),
-          ],
+              const SizedBox(width: 11),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(13, 11, 13, 11),
+                  decoration: BoxDecoration(
+                    color: HaloColors.surface3,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: HaloColors.line2, width: 0.5),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        text,
+                        // in the direction it was written, as in a chat
+                        textDirection: writtenDir(text),
+                        textAlign: startOf(context),
+                        style: HaloType.sans(
+                          size: 14.5,
+                          color: fresh ? HaloColors.text : HaloColors.text2,
+                          height: 1.5,
+                        ),
+                      ),
+                      const SizedBox(height: 7),
+                      Text(
+                        _time(),
+                        style: HaloType.mono(size: 9, color: HaloColors.text3),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

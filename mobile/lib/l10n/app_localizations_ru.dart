@@ -3866,10 +3866,11 @@ class AppLocalizationsRu extends AppLocalizations {
       'Чтобы создать группу, сначала добавь хотя бы один контакт.';
 
   @override
-  String get notesToday => 'СЕГОДНЯ';
+  String get notesDeleteThisNote => 'Удалить эту заметку?';
 
   @override
-  String get notesYesterday => 'ВЧЕРА';
+  String get notesGoneFromThisPhone =>
+      'Она будет стёрта с этого телефона навсегда.';
 
   @override
   String get notesNoteToSelf => 'Заметки';
@@ -4875,6 +4876,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get savedNothingSavedYet => 'Пока ничего не сохранено';
+
+  @override
+  String get savedChatGone => 'Этого чата больше нет на этом телефоне';
 
   @override
   String get savedLongPressAnyMessage =>
