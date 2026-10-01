@@ -297,6 +297,9 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 					// expose subscription id in the context
 					reqCtx = context.WithValue(reqCtx, subscriptionIdKey, env.SubscriptionID)
 
+					// kryfo: no live event goes out before the eose
+					ws.hold(env.SubscriptionID)
+
 					// handle each filter separately -- dispatching events as they're loaded from databases
 					for _, filter := range env.Filters {
 						srl := rl
@@ -312,6 +315,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 							}
 							ws.WriteJSON(nostr.ClosedEnvelope{SubscriptionID: env.SubscriptionID, Reason: reason})
 							cancelReqCtx(errors.New("filter rejected"))
+							ws.release(env.SubscriptionID) // kryfo
 							return
 						} else {
 							rl.addListener(ws, env.SubscriptionID, srl, filter, cancelReqCtx)
@@ -322,6 +326,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 						// when all events have been loaded from databases and dispatched we can fire the EOSE message
 						eose.Wait()
 						ws.WriteJSON(nostr.EOSEEnvelope(env.SubscriptionID))
+						ws.release(env.SubscriptionID) // kryfo
 					}()
 				case *nostr.CloseEnvelope:
 					id := string(*env)
