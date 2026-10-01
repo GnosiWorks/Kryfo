@@ -42,6 +42,7 @@ import 'package:kryfo/stickers/sticker_sheet.dart' show StickerButton;
 import 'package:kryfo/widgets/dev_avatar.dart';
 import 'package:kryfo/widgets/dev_note.dart';
 import 'package:kryfo/widgets/kryfo_avatar.dart';
+import 'package:kryfo/widgets/swipe_to_reply.dart';
 import 'package:kryfo/widgets/voice_parts.dart' show DisguiseToggle;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -102,7 +103,7 @@ class _ChatDb extends DevTestDb {
   @override
   Future<void> clearUnread(String peerId) async {}
   @override
-  Future<int> countMessagesFrom(String peerId) async =>
+  Future<int> countMessagesFrom(String peerId, {bool inGroups = false}) async =>
       _thread(peerId).where((r) => r['direction'] == 'in').length;
   @override
   Future<int> countMessagesTo(String peerId) async =>
@@ -189,6 +190,7 @@ class _ChatDb extends DevTestDb {
       'plaintext': plaintext,
       'sent_at': sentAt ?? DateTime.now().millisecondsSinceEpoch,
       'msg_uid': msgUid,
+      'reply_to': replyTo,
       'media_path': mediaPath,
       'file_path': filePath,
       'file_name': fileName,
@@ -842,6 +844,20 @@ void main() {
       await _close(t);
     });
 
+    testWidgets('a forward keeps what was already written there, under '
+        'it', (t) async {
+      await _world(container: HaloContainer.decoy);
+      await _open(t);
+      await _type(t, 'half a thought');
+      await _close(t);
+      await _open(t, text: 'from another chat');
+      final field = t.widget<TextField>(find.byType(TextField).last);
+      expect(field.controller!.text, 'half a thought\nfrom another chat');
+      // nothing left over for the next chat opened
+      await _type(t, '');
+      await _close(t);
+    });
+
     testWidgets('written anonymously, it starts anonymous and the choice is '
         'fixed from then on', (t) async {
       await _world();
@@ -1023,6 +1039,37 @@ void main() {
         );
       }
     });
+  });
+
+  group('a reply that goes as a photo, a file or a voice note', () {
+    for (final kind in ['photos', 'file', 'voice']) {
+      testWidgets('$kind: it carries the quote, lets it go and moves the '
+          'home row', (t) async {
+        await _world(container: HaloContainer.decoy);
+        await _open(t);
+        await _type(t, 'is this the one?');
+        await _send(t);
+        final asked = _sent().single['msg_uid'];
+        t
+            .widget<SwipeToReply>(
+              find.ancestor(
+                of: find.text('is this the one?'),
+                matching: find.byType(SwipeToReply),
+              ),
+            )
+            .onReply();
+        await _beat(t, 300);
+        expect(find.text(l10n.chatReplyingToYourself), findsOneWidget);
+        final before = appState.devRow?.preview;
+        final (send, rows) = _kinds[kind]!;
+        await send(t, () => _sent().length >= 1 + rows);
+        expect(_sent()[1]['reply_to'], asked, reason: kind);
+        expect(find.text(l10n.chatReplyingToYourself), findsNothing);
+        expect(appState.devRow?.preview, isNotNull);
+        expect(appState.devRow?.preview, isNot(before), reason: kind);
+        await _close(t);
+      });
+    }
   });
 
   group('voice in an anonymous chat', () {

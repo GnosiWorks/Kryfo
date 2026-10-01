@@ -11,7 +11,7 @@ import 'container.dart';
 import 'devchat/dev_chat.dart' show DevChat;
 import 'devchat/dev_key.dart' show isDevChat;
 import 'devchat/support.dart' show SupportChats;
-import 'main.dart' show HaloDb;
+import 'main.dart' show HaloDb, kFrameReaction, kFrameUnsend;
 import 'polls.dart' show PollSpec, PollVote;
 import 'search.dart' show SearchKind;
 
@@ -396,6 +396,17 @@ class Session {
   )).putPollVote(pollUid, voter, groupId, choices, seq);
   Future<void> queueEdit(String msgUid, String peerId, String newText) async =>
       (await _ofUid(msgUid, peer: peerId)).queueEdit(msgUid, peerId, newText);
+  // an unsend's message is gone already: its chat's container keeps it
+  Future<void> queueUnsend(String msgUid, String peerId) =>
+      _ofPeer(peerId).queueFrame(msgUid, kFrameUnsend, peerId, '');
+  Future<void> queueReaction(
+    String msgUid,
+    String peerId,
+    String emoji,
+  ) async => (await _ofUid(
+    msgUid,
+    peer: peerId,
+  )).queueFrame(msgUid, kFrameReaction, peerId, emoji);
   Future<void> queuePin(String msgUid, String peerId, bool pinned) async =>
       (await _ofUid(msgUid, peer: peerId)).queuePin(msgUid, peerId, pinned);
   Future<void> removeReaction(String msgUid, String reactor) async =>

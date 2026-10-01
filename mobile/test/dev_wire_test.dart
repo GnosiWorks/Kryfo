@@ -191,10 +191,11 @@ class _Phone extends DevTestDb {
   Future<int> filesInFlightFrom(String from, {String? except}) async => 0;
 
   @override
-  Future<int> countMessagesFrom(String peerId) async => mem
-      .rows('messages')
-      .where((r) => r['peer_id'] == peerId && r['direction'] == 'in')
-      .length;
+  Future<int> countMessagesFrom(String peerId, {bool inGroups = false}) async =>
+      mem
+          .rows('messages')
+          .where((r) => r['peer_id'] == peerId && r['direction'] == 'in')
+          .length;
 
   @override
   Future<void> saveMessage(
@@ -276,6 +277,7 @@ class _Io extends AppIo {
     required String title,
     required String body,
     String? payload,
+    String? msgUid,
   }) async => rang.add((title, payload));
 
   @override
@@ -840,6 +842,20 @@ void main() {
       final tick = _io.sent.single;
       expect(tick.$1, 'relay ${_m1.xPub}');
       expect((await _hisRead(s.who, tick.$2))['h'], _myWords);
+    });
+
+    test('his answers caught up in any order land in the order he wrote '
+        'them', () async {
+      final s = await started(false);
+      final words = ['are you free?', 'at 6', 'at the station'];
+      final said = [
+        for (final (i, w) in words.indexed) await _hisAnswer(s.who, w, 'o$i'),
+      ];
+      await _app.receiveRelay([
+        for (final c in [said[2], said[0], said[1]]) (peer: s.tag!, cipher: c),
+      ]);
+      await _settle();
+      expect(_inbox(), words);
     });
 
     for (final anon in [false, true]) {

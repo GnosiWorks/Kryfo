@@ -99,7 +99,7 @@ class _ChatDb extends _Db {
   @override
   Future<String?> getAtmosphere(String peerId) async => null;
   @override
-  Future<int> countMessagesFrom(String peerId) async =>
+  Future<int> countMessagesFrom(String peerId, {bool inGroups = false}) async =>
       _thread(peerId).where((r) => r['direction'] == 'in').length;
   @override
   Future<int> countMessagesTo(String peerId) async =>

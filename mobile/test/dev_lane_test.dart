@@ -25,7 +25,6 @@ import 'package:kryfo/main.dart'
         processPeerBundle,
         signalDecrypt,
         signalEncrypt,
-        signalEncryptSerial,
         signalFor;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/signal_session.dart';
@@ -425,14 +424,19 @@ void main() {
       }
     });
 
-    test('the serial seal is the same seal', () async {
+    test('seals made at once each open', () async {
       final a = (await _start(anon: true))!;
-      final c = await signalEncryptSerial(
-        _dev,
-        await buildFrame(madeFrames['text opener']!),
-      );
-      expect(devTokens.has(c), isTrue);
-      expect(frameLeaks(await _open(_marios.ss, a.id, c), anon: true), isEmpty);
+      final frame = await buildFrame(madeFrames['text opener']!);
+      final cs = await Future.wait([
+        for (var i = 0; i < 3; i++) signalEncrypt(_dev, frame),
+      ]);
+      for (final c in cs) {
+        expect(devTokens.has(c), isTrue);
+        expect(
+          frameLeaks(await _open(_marios.ss, a.id, c), anon: true),
+          isEmpty,
+        );
+      }
     });
 
     test('the wire takes the seal\'s ciphers and nothing else', () async {

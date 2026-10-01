@@ -133,9 +133,29 @@ class SignalSession {
     signedPreKeyStore = HaloSignedPreKeyStore(database, prefix: prefix);
   }
 
+  // one session step at a time per peer, seals and opens alike. each loads
+  // the record, awaits the identity store, then writes it back, so two
+  // that overlap lose one of the steps and the next seal repeats a number
+  final Map<String, Future<void>> _steps = {};
+
+  /// [job] run after every earlier one queued for [peer] has ended
+  Future<T> serial<T>(String peer, Future<T> Function() job) {
+    final out = (_steps[peer] ?? Future<void>.value()).then((_) => job());
+    // the caller gets any error from out; the chain only keeps the order
+    final tail = out.then<void>((_) {}, onError: (_) {});
+    _steps[peer] = tail;
+    tail.whenComplete(() {
+      if (identical(_steps[peer], tail)) _steps.remove(peer);
+    });
+    return out;
+  }
+
   // [plain] sealed to [peer] in this store, as the wire carries it: the
   // message type byte, then the message, in base64
-  Future<String> encryptTo(String peer, String plain) async {
+  Future<String> encryptTo(String peer, String plain) =>
+      serial(peer, () => _seal(peer, plain));
+
+  Future<String> _seal(String peer, String plain) async {
     final cipher = SessionCipher(
       sessionStore,
       preKeyStore,

@@ -196,13 +196,36 @@ Future<void> setHideNotifContent(
 
 // ids by chat, so opening the chat by hand takes its notifications down
 final Map<String, List<int>> _shownFor = {};
+// the chat and id each message rang under, so a message taken back or
+// burned takes its own one down
+final Map<String, (String, int)> _shownForMsg = {};
 
 Future<void> clearNotificationsFor(String payload) async {
+  _shownForMsg.removeWhere((_, v) => v.$1 == payload);
   final ids = _shownFor.remove(payload);
   if (ids == null) return;
   for (final id in ids) {
     await cancelWithRetry(() => notifPlugin.cancel(id: id), 'shade');
   }
+}
+
+Future<void> clearMessageNotification(String msgUid) async {
+  final shown = _shownForMsg.remove(msgUid);
+  if (shown == null) return;
+  final (payload, id) = shown;
+  final ids = _shownFor[payload];
+  ids?.remove(id);
+  if (ids != null && ids.isEmpty) _shownFor.remove(payload);
+  await cancelWithRetry(() => notifPlugin.cancel(id: id), 'shade');
+}
+
+void _noteShown(String? payload, String? msgUid, int id) {
+  if (payload == null) return;
+  (_shownFor[payload] ??= []).add(id);
+  if (msgUid == null) return;
+  _shownForMsg[msgUid] = (payload, id);
+  // the oldest go first: a shade that full has been cleared long since
+  if (_shownForMsg.length > 500) _shownForMsg.remove(_shownForMsg.keys.first);
 }
 
 // how long a cancel that failed waits for its one more try
@@ -230,6 +253,7 @@ Future<void> showMessageNotification({
   required String title,
   required String body,
   String? payload,
+  String? msgUid,
 }) async {
   // a decoy session is open: no notification at all
   if (await quietNow()) return;
@@ -270,7 +294,7 @@ Future<void> showMessageNotification({
   // unique per message: android never re-alerts when a notification is
   // updated in place
   final id = DateTime.now().microsecondsSinceEpoch & 0x7fffffff;
-  if (payload != null) (_shownFor[payload] ??= []).add(id);
+  _noteShown(payload, msgUid, id);
   await notifPlugin.show(
     id: id,
     title: title,
