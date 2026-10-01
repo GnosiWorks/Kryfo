@@ -5958,14 +5958,14 @@ abstract class AppLocalizations {
   /// screens/notes_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'TODAY'**
-  String get notesToday;
+  /// **'Delete this note?'**
+  String get notesDeleteThisNote;
 
   /// screens/notes_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'YESTERDAY'**
-  String get notesYesterday;
+  /// **'It is gone from this phone for good.'**
+  String get notesGoneFromThisPhone;
 
   /// screens/notes_screen.dart
   ///
@@ -7676,6 +7676,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Nothing saved yet'**
   String get savedNothingSavedYet;
+
+  /// screens/saved_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'That chat is no longer on this phone'**
+  String get savedChatGone;
 
   /// screens/saved_screen.dart
   ///

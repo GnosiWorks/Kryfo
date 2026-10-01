@@ -3826,10 +3826,11 @@ class AppLocalizationsDe extends AppLocalizations {
       'Füge zuerst mindestens einen Kontakt hinzu, bevor du eine Gruppe erstellst.';
 
   @override
-  String get notesToday => 'HEUTE';
+  String get notesDeleteThisNote => 'Diese Notiz löschen?';
 
   @override
-  String get notesYesterday => 'GESTERN';
+  String get notesGoneFromThisPhone =>
+      'Sie wird endgültig von diesem Handy gelöscht.';
 
   @override
   String get notesNoteToSelf => 'Notiz an mich';
@@ -4844,6 +4845,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get savedNothingSavedYet => 'Noch nichts gespeichert';
+
+  @override
+  String get savedChatGone => 'Dieser Chat ist nicht mehr auf diesem Handy';
 
   @override
   String get savedLongPressAnyMessage =>

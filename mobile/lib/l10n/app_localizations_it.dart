@@ -3821,10 +3821,11 @@ class AppLocalizationsIt extends AppLocalizations {
       'Prima di creare un gruppo, aggiungi almeno un contatto.';
 
   @override
-  String get notesToday => 'OGGI';
+  String get notesDeleteThisNote => 'Eliminare questa nota?';
 
   @override
-  String get notesYesterday => 'IERI';
+  String get notesGoneFromThisPhone =>
+      'Viene cancellata da questo telefono per sempre.';
 
   @override
   String get notesNoteToSelf => 'Note';
@@ -4830,6 +4831,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get savedNothingSavedYet => 'Ancora niente di salvato';
+
+  @override
+  String get savedChatGone => 'Quella chat non è più su questo telefono';
 
   @override
   String get savedLongPressAnyMessage =>

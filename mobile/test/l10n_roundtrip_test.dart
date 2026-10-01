@@ -1952,8 +1952,8 @@ void main() {
       l.newGroupAddAtLeastOne,
       "Add at least one contact first before creating a group.",
     );
-    expect(l.notesToday, "TODAY");
-    expect(l.notesYesterday, "YESTERDAY");
+    expect(l.notesDeleteThisNote, "Delete this note?");
+    expect(l.notesGoneFromThisPhone, "It is gone from this phone for good.");
     expect(l.notesNoteToSelf, "Note to self");
     expect(l.notesOnlyOnThisPhone, "Only on this phone");
     expect(l.notesAQuietPlace, "A quiet place");
@@ -2472,6 +2472,7 @@ void main() {
     expect(l.savedPhoto, "Photo");
     expect(l.savedSaved, "Saved");
     expect(l.savedNothingSavedYet, "Nothing saved yet");
+    expect(l.savedChatGone, "That chat is no longer on this phone");
     expect(
       l.savedLongPressAnyMessage,
       "Long-press any message and tap save to keep it here.",

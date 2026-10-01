@@ -3803,10 +3803,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Grup oluşturmadan önce en az bir kişi ekle.';
 
   @override
-  String get notesToday => 'BUGÜN';
+  String get notesDeleteThisNote => 'Bu not silinsin mi?';
 
   @override
-  String get notesYesterday => 'DÜN';
+  String get notesGoneFromThisPhone => 'Bu telefondan kalıcı olarak silinir.';
 
   @override
   String get notesNoteToSelf => 'Kendime not';
@@ -4807,6 +4807,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get savedNothingSavedYet => 'Henüz kaydedilen yok';
+
+  @override
+  String get savedChatGone => 'O sohbet artık bu telefonda değil';
 
   @override
   String get savedLongPressAnyMessage =>

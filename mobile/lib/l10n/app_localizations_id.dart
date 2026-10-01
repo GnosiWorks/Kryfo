@@ -3777,10 +3777,11 @@ class AppLocalizationsId extends AppLocalizations {
       'Tambahkan minimal satu kontak dulu sebelum membuat grup.';
 
   @override
-  String get notesToday => 'HARI INI';
+  String get notesDeleteThisNote => 'Hapus catatan ini?';
 
   @override
-  String get notesYesterday => 'KEMARIN';
+  String get notesGoneFromThisPhone =>
+      'Catatan ini terhapus dari ponsel ini untuk selamanya.';
 
   @override
   String get notesNoteToSelf => 'Catatan pribadi';
@@ -4783,6 +4784,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get savedNothingSavedYet => 'Belum ada yang disimpan';
+
+  @override
+  String get savedChatGone => 'Obrolan itu sudah tidak ada di ponsel ini';
 
   @override
   String get savedLongPressAnyMessage =>

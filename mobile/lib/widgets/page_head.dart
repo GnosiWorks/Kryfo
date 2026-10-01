@@ -3,8 +3,10 @@
 // the page's speed, shrinks and dims as the page scrolls, and the bar above
 // takes over its name. still when the phone asks for no movement, where the
 // name in the bar only fades.
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n.dart';
 import '../theme.dart';
 import 'motion.dart' show motionStill;
 
@@ -85,22 +87,27 @@ class HeadTitle extends StatelessWidget {
   }
 }
 
-// the hairline under a page's bar, there once the page has scrolled under it
+// the hairline under a page's bar, there once the page has scrolled under it.
+// a list that starts at the bottom passes [under], how far its content runs
+// up past the bar, since its offset says nothing about the top
 class HeadLine extends StatelessWidget implements PreferredSizeWidget {
-  final ScrollController controller;
-  const HeadLine({super.key, required this.controller});
+  final ScrollController? controller;
+  final ValueListenable<double>? under;
+  const HeadLine({super.key, this.controller, this.under})
+    : assert(controller != null || under != null);
 
   @override
   Size get preferredSize => const Size.fromHeight(0.5);
 
   @override
   Widget build(BuildContext context) {
+    final u = under;
     return AnimatedBuilder(
-      animation: controller,
+      animation: u ?? controller!,
       builder: (_, _) => Container(
         height: 0.5,
         color: HaloColors.line.withValues(
-          alpha: (_offset(controller) / 24).clamp(0.0, 1.0),
+          alpha: ((u?.value ?? _offset(controller!)) / 24).clamp(0.0, 1.0),
         ),
       ),
     );
@@ -136,6 +143,71 @@ class PageSection extends StatelessWidget {
           for (final a in actions) ...[const SizedBox(width: 6), a],
         ],
       ),
+    );
+  }
+}
+
+// the bar over a list page off home: back, the title with a line under it
+// when there is one, its actions at the end, and the hairline once the
+// list scrolls under it. one shape for every such page
+class PageBar extends StatelessWidget {
+  final String title;
+  final Widget? sub;
+  final List<Widget> actions;
+  final ScrollController? controller;
+  // in place of [controller], for a list that starts at the bottom
+  final ValueListenable<double>? under;
+  const PageBar({
+    super.key,
+    required this.title,
+    this.sub,
+    this.actions = const [],
+    this.controller,
+    this.under,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = controller;
+    final u = under;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsetsDirectional.fromSTEB(4, 6, 8, 6),
+          child: Row(
+            children: [
+              IconButton(
+                tooltip: l10n.commonBack,
+                icon: Icon(
+                  Icons.chevron_left,
+                  color: HaloColors.text2,
+                  size: 26,
+                ),
+                onPressed: () => Navigator.of(context).maybePop(),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: HaloType.serif(size: 22, color: HaloColors.text),
+                    ),
+                    if (sub != null) ...[const SizedBox(height: 2), sub!],
+                  ],
+                ),
+              ),
+              ...actions,
+            ],
+          ),
+        ),
+        if (c != null || u != null) HeadLine(controller: c, under: u),
+      ],
     );
   }
 }

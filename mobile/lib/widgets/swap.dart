@@ -53,11 +53,17 @@ class FadeSwap extends StatelessWidget {
           : const Duration(milliseconds: 240),
       switchInCurve: Curves.easeOutCubic,
       switchOutCurve: Curves.easeInCubic,
-      // both pages fill the same room while they cross, so nothing jumps
+      // both pages fill the same room while they cross, so nothing jumps.
+      // the leaving one gives up its heroes: both pages may carry the same
+      // tag, and a cross held still under a covering page would clash on
+      // the way back
       layoutBuilder: (top, gone) => Stack(
         fit: StackFit.passthrough,
         alignment: Alignment.topCenter,
-        children: [...gone, ?top],
+        children: [
+          for (final g in gone) HeroMode(key: g.key, enabled: false, child: g),
+          if (top != null) HeroMode(key: top.key, child: top),
+        ],
       ),
       child: child,
     );

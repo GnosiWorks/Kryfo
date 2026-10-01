@@ -3772,10 +3772,11 @@ class AppLocalizationsVi extends AppLocalizations {
       'Hãy thêm ít nhất một liên hệ trước khi tạo nhóm.';
 
   @override
-  String get notesToday => 'HÔM NAY';
+  String get notesDeleteThisNote => 'Xóa ghi chú này?';
 
   @override
-  String get notesYesterday => 'HÔM QUA';
+  String get notesGoneFromThisPhone =>
+      'Ghi chú sẽ bị xóa vĩnh viễn khỏi điện thoại này.';
 
   @override
   String get notesNoteToSelf => 'Ghi chú riêng';
@@ -4779,6 +4780,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get savedNothingSavedYet => 'Chưa lưu gì';
+
+  @override
+  String get savedChatGone =>
+      'Cuộc trò chuyện đó không còn trên điện thoại này';
 
   @override
   String get savedLongPressAnyMessage =>

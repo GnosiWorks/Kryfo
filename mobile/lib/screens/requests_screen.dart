@@ -11,6 +11,7 @@ import '../widgets/breathing_ring.dart';
 import '../widgets/burn_fade.dart' show FadeFold;
 import '../widgets/press_scale.dart';
 import '../widgets/row_motion.dart';
+import '../widgets/page_head.dart' show PageBar;
 import '../widgets/stagger_in.dart';
 import '../widgets/swap.dart';
 import '../widgets/kryfo_avatar.dart';
@@ -60,9 +61,12 @@ class _RequestsScreenState extends State<RequestsScreen> {
     _load();
   }
 
+  final _scroll = ScrollController();
+
   @override
   void dispose() {
     _rows.dispose();
+    _scroll.dispose();
     super.dispose();
   }
 
@@ -249,29 +253,34 @@ class _RequestsScreenState extends State<RequestsScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _rows.built());
     return Scaffold(
       backgroundColor: HaloColors.surface,
-      appBar: AppBar(
-        backgroundColor: HaloColors.surface,
-        elevation: 0,
-        leading: BackButton(color: HaloColors.text),
-        title: Text(
-          l10n.requestsRequests,
-          style: HaloType.serif(size: 18, color: HaloColors.text),
-        ),
-      ),
-      body: _loading
-          ? const SizedBox.shrink()
-          // the last card folds away, then the empty page fades in
-          : FadeSwap(
-              child: rows.isEmpty
-                  ? KeyedSubtree(key: const ValueKey('none'), child: _empty())
-                  : ListView(
-                      key: const ValueKey('cards'),
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
-                      children: [
-                        for (final (i, row) in rows.indexed) _card(row, i),
-                      ],
+      body: SafeArea(
+        child: Column(
+          children: [
+            PageBar(title: l10n.requestsRequests, controller: _scroll),
+            Expanded(
+              child: _loading
+                  ? const SizedBox.shrink()
+                  // the last card folds away, then the empty page fades in
+                  : FadeSwap(
+                      child: rows.isEmpty
+                          ? KeyedSubtree(
+                              key: const ValueKey('none'),
+                              child: _empty(),
+                            )
+                          : ListView(
+                              key: const ValueKey('cards'),
+                              controller: _scroll,
+                              padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
+                              children: [
+                                for (final (i, row) in rows.indexed)
+                                  _card(row, i),
+                              ],
+                            ),
                     ),
             ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -366,91 +375,106 @@ class _RequestCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: HaloColors.line, width: 0.5),
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Hero(
-              tag: 'face-$haloId',
-              child: KryfoAvatar(seed: haloId, size: 44, choice: avatar),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    requestTitle(haloId),
-                    style: requestTitle(haloId) == haloId
-                        ? HaloType.mono(
-                            size: 12,
-                            color: HaloColors.text,
-                            weight: FontWeight.w500,
-                          )
-                        : HaloType.sans(
-                            size: 14,
-                            color: HaloColors.text,
-                            weight: FontWeight.w600,
-                          ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (introducer != null) ...[
-                    const SizedBox(height: 6),
-                    IntroducedBy(
-                      label: introducer!.label,
-                      seed: introducer!.seed,
-                      avatar: introducer!.avatar,
-                      verified: introducer!.verified,
-                      delay: Duration(milliseconds: 60 * order + 180),
-                    ),
-                  ],
-                  if (flag != null) ...[
-                    const SizedBox(height: 7),
-                    NoticeBanner(
-                      glyph: NoticeGlyph.shield,
-                      text: flag!.headline,
-                      color: HaloColors.rose,
-                      delay: Duration(milliseconds: 60 * order + 220),
-                      onTap: onShield,
-                    ),
-                  ] else if (clean) ...[
-                    const SizedBox(height: 7),
-                    NoticeBanner(
-                      glyph: NoticeGlyph.shield,
-                      text: l10n.requestsLooksSafeNothingSuspicious,
-                      color: HaloColors.green,
-                      delay: Duration(milliseconds: 60 * order + 220),
-                    ),
-                  ],
-                  const SizedBox(height: 4),
-                  Text(
-                    preview,
-                    style: HaloType.sans(size: 13, color: HaloColors.text2),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Hero(
+                  tag: 'face-$haloId',
+                  child: KryfoAvatar(seed: haloId, size: 44, choice: avatar),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _Answer(
-                        label: l10n.commonAccept,
-                        filled: true,
-                        onTap: onAccept,
+                      Text(
+                        requestTitle(haloId),
+                        style: requestTitle(haloId) == haloId
+                            ? HaloType.mono(
+                                size: 12,
+                                color: HaloColors.text,
+                                weight: FontWeight.w500,
+                              )
+                            : HaloType.sans(
+                                size: 14,
+                                color: HaloColors.text,
+                                weight: FontWeight.w600,
+                              ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(width: 8),
-                      _Answer(label: l10n.requestsDecline, onTap: onDecline),
-                      const SizedBox(width: 8),
-                      _Answer(
-                        label: l10n.commonBlock,
-                        color: HaloColors.rose,
-                        onTap: onBlock,
+                      if (introducer != null) ...[
+                        const SizedBox(height: 6),
+                        IntroducedBy(
+                          label: introducer!.label,
+                          seed: introducer!.seed,
+                          avatar: introducer!.avatar,
+                          verified: introducer!.verified,
+                          delay: Duration(milliseconds: 60 * order + 180),
+                        ),
+                      ],
+                      if (flag != null) ...[
+                        const SizedBox(height: 7),
+                        NoticeBanner(
+                          glyph: NoticeGlyph.shield,
+                          text: flag!.headline,
+                          color: HaloColors.rose,
+                          delay: Duration(milliseconds: 60 * order + 220),
+                          onTap: onShield,
+                        ),
+                      ] else if (clean) ...[
+                        const SizedBox(height: 7),
+                        NoticeBanner(
+                          glyph: NoticeGlyph.shield,
+                          text: l10n.requestsLooksSafeNothingSuspicious,
+                          color: HaloColors.green,
+                          delay: Duration(milliseconds: 60 * order + 220),
+                        ),
+                      ],
+                      const SizedBox(height: 4),
+                      Text(
+                        preview,
+                        style: HaloType.sans(size: 13, color: HaloColors.text2),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 8),
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Icon(
+                    Icons.chevron_right,
+                    size: 20,
+                    color: HaloColors.text2,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 8),
-            Icon(Icons.chevron_right, size: 20, color: HaloColors.text3),
+            const SizedBox(height: 12),
+            // the answers span the card under the face, and wrap to a second
+            // line in a longer language or a bigger font
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _Answer(
+                  label: l10n.commonAccept,
+                  filled: true,
+                  onTap: onAccept,
+                ),
+                _Answer(label: l10n.requestsDecline, onTap: onDecline),
+                _Answer(
+                  label: l10n.commonBlock,
+                  color: HaloColors.rose,
+                  onTap: onBlock,
+                ),
+              ],
+            ),
           ],
         ),
       ),

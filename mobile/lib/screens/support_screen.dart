@@ -25,10 +25,11 @@ import '../widgets/burn_fade.dart' show FadeFold;
 import '../widgets/confirm_sheet.dart';
 import '../widgets/count_badge.dart';
 import '../widgets/halo_sheet.dart';
+import '../widgets/home_pin.dart';
 import '../widgets/kryfo_avatar.dart';
 import '../widgets/message_menu.dart' show MenuSheet, MenuSheetRow;
 import '../widgets/motion.dart';
-import '../widgets/press_scale.dart';
+import '../widgets/page_head.dart' show PageBar;
 import '../widgets/row_motion.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/swap.dart' show FadeSwap;
@@ -89,89 +90,25 @@ class SupportPin extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final on = waiting > 0;
-    final still = motionStill(context);
-    return PressScale(
+    return HomePin(
+      icon: Icons.support_agent,
+      title: l10n.supportTitle,
+      line: l10n.supportWaiting(waiting),
+      lit: on,
       onTap: onTap,
-      scale: 0.98,
-      child: AnimatedContainer(
-        duration: Duration(milliseconds: still ? 0 : 240),
-        curve: Curves.easeOutCubic,
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: HaloColors.surface2,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: on
-                ? HaloColors.amber.withValues(alpha: 0.35)
-                : HaloColors.line,
-            width: 0.8,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: HaloColors.amberSoft,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              alignment: Alignment.center,
-              child: Icon(
-                Icons.support_agent,
-                color: HaloColors.amber,
-                size: 18,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          l10n.supportTitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: HaloType.serif(
-                            size: 14,
-                            color: HaloColors.text,
-                            italic: true,
-                          ),
-                        ),
-                      ),
-                      if (on) ...[
-                        const SizedBox(width: 7),
-                        BreathDot(
-                          key: const ValueKey('support-breath'),
-                          color: HaloColors.amber,
-                          size: 6,
-                          breaths: 3,
-                        ),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 1),
-                  Text(
-                    l10n.supportWaiting(waiting),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: HaloType.sans(size: 11, color: HaloColors.text3),
-                  ),
-                ],
-              ),
-            ),
-            CountBadge(
-              count: waiting,
-              fontSize: 11.5,
-              minWidth: 24,
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            ),
-          ],
-        ),
+      mark: on
+          ? BreathDot(
+              key: const ValueKey('support-breath'),
+              color: HaloColors.amber,
+              size: 6,
+              breaths: 3,
+            )
+          : null,
+      trailing: CountBadge(
+        count: waiting,
+        fontSize: 11.5,
+        minWidth: 24,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       ),
     );
   }
@@ -212,8 +149,11 @@ class _SupportScreenState extends State<SupportScreen> {
     _load();
   }
 
+  final _scroll = ScrollController();
+
   @override
   void dispose() {
+    _scroll.dispose();
     releaseChat(kSupportPayload);
     appState.removeListener(_onApp);
     _again?.cancel();
@@ -473,6 +413,7 @@ class _SupportScreenState extends State<SupportScreen> {
             _Head(
               waiting: _loading ? 0 : _count(SupportSection.waiting),
               onMenu: none ? null : _inboxMenu,
+              controller: _scroll,
             ),
             Expanded(
               child: _loading
@@ -483,6 +424,7 @@ class _SupportScreenState extends State<SupportScreen> {
                           ? const _Empty(key: ValueKey('none'))
                           : ListView(
                               key: const ValueKey('rows'),
+                              controller: _scroll,
                               padding: const EdgeInsets.only(bottom: 24),
                               children: [
                                 ..._section(
@@ -529,74 +471,57 @@ class _SupportScreenState extends State<SupportScreen> {
 
 // the bar: back, the title, how many wait, and the inbox's menu
 class _Head extends StatelessWidget {
-  const _Head({required this.waiting, required this.onMenu});
+  const _Head({
+    required this.waiting,
+    required this.onMenu,
+    required this.controller,
+  });
 
   final int waiting;
   final VoidCallback? onMenu;
+  final ScrollController controller;
 
   @override
   Widget build(BuildContext context) {
     final still = motionStill(context);
-    return Padding(
-      padding: const EdgeInsetsDirectional.fromSTEB(4, 6, 8, 6),
-      child: Row(
+    return PageBar(
+      title: l10n.supportTitle,
+      controller: controller,
+      sub: Row(
         children: [
-          IconButton(
-            tooltip: l10n.commonBack,
-            icon: Icon(Icons.chevron_left, color: HaloColors.text2, size: 26),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.supportTitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: HaloType.serif(size: 22, color: HaloColors.text),
+          if (waiting > 0) ...[
+            BreathDot(color: HaloColors.amber, size: 5, breaths: 3),
+            const SizedBox(width: 6),
+          ],
+          Flexible(
+            // the count rolls to its new number
+            child: AnimatedSwitcher(
+              duration: Duration(milliseconds: still ? 0 : 220),
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeInCubic,
+              child: Text(
+                l10n.supportWaiting(waiting),
+                key: ValueKey(waiting),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: HaloType.mono(
+                  size: 10.5,
+                  color: waiting > 0 ? HaloColors.amber : HaloColors.text2,
+                  letter: 0.06,
                 ),
-                const SizedBox(height: 2),
-                Row(
-                  children: [
-                    if (waiting > 0) ...[
-                      BreathDot(color: HaloColors.amber, size: 5, breaths: 3),
-                      const SizedBox(width: 6),
-                    ],
-                    Flexible(
-                      // the count rolls to its new number
-                      child: AnimatedSwitcher(
-                        duration: Duration(milliseconds: still ? 0 : 220),
-                        switchInCurve: Curves.easeOutCubic,
-                        switchOutCurve: Curves.easeInCubic,
-                        child: Text(
-                          l10n.supportWaiting(waiting),
-                          key: ValueKey(waiting),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: HaloType.mono(
-                            size: 10.5,
-                            color: waiting > 0
-                                ? HaloColors.amber
-                                : HaloColors.text3,
-                            letter: 0.06,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+              ),
             ),
           ),
-          if (onMenu != null)
-            IconButton(
-              tooltip: l10n.supportMenu,
-              icon: Icon(Icons.more_horiz, color: HaloColors.text2, size: 22),
-              onPressed: onMenu,
-            ),
         ],
       ),
+      actions: [
+        if (onMenu != null)
+          IconButton(
+            tooltip: l10n.supportMenu,
+            icon: Icon(Icons.more_horiz, color: HaloColors.text2, size: 22),
+            onPressed: onMenu,
+          ),
+      ],
     );
   }
 }
@@ -923,9 +848,12 @@ class _Tile extends StatelessWidget {
                             _lastLine(c),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
+                            // unread reads in full colour, as on home
                             style: HaloType.sans(
                               size: 12,
-                              color: HaloColors.text2,
+                              color: unread
+                                  ? HaloColors.text
+                                  : HaloColors.text2,
                             ),
                           ),
                         ),
