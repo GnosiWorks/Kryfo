@@ -77,10 +77,11 @@ class MainActivity : FlutterFragmentActivity() {
 
     override fun onResume() {
         super.onResume()
-        // a file opened with another app is a decrypted copy in cache/open.
-        // coming back here is the only sign that app is done with it, and a
-        // resume also follows every start. an app that still holds it open
-        // keeps its descriptor; the name is gone.
+        // a file opened or shared with another app is a decrypted copy in
+        // cache/open or cache/share_plus. coming back here is the only sign
+        // that app is done with it, and a resume also follows every start.
+        // an app that still holds it open keeps its descriptor; the name is
+        // gone. a shared copy is given a while longer, see clearShareCopies.
         clearOpenCopies()
         // dart asks for notifications (askNotifications) once the lock is
         // down, so android's dialog never opens over the pin pad. one that
@@ -428,6 +429,45 @@ class MainActivity : FlutterFragmentActivity() {
     // the folder holds one file; the last one goes before the next arrives.
     private fun clearOpenCopies() {
         Thread { File(cacheDir, "open").deleteRecursively() }.start()
+        clearShareCopies()
+    }
+
+    // the share sheet's copies sit in share_plus/ until the next share. some
+    // targets read theirs only after their dialog has closed and this app is
+    // back, so a copy is given a while first, and whatever is left goes at
+    // the next start.
+    private val shareGraceMs = 10 * 60 * 1000L
+    private val shareTimer = android.os.Handler(android.os.Looper.getMainLooper())
+    private val shareSweep = Runnable { clearShareCopies() }
+
+    private fun clearShareCopies() {
+        Thread {
+            if (clearAgedShareCopies()) {
+                shareTimer.removeCallbacks(shareSweep)
+                shareTimer.postDelayed(shareSweep, shareGraceMs)
+            }
+        }.start()
+    }
+
+    // true while a copy is still too young to go
+    private fun clearAgedShareCopies(): Boolean {
+        val dir = File(cacheDir, "share_plus")
+        if (!dir.exists()) return false
+        val cutoff = System.currentTimeMillis() - shareGraceMs
+        var young = false
+        for (f in dir.walkBottomUp()) {
+            if (f.isFile) {
+                if (f.lastModified() < cutoff) {
+                    f.delete()
+                } else {
+                    young = true
+                }
+            } else if (f != dir) {
+                // only an emptied folder goes
+                f.delete()
+            }
+        }
+        return young
     }
 
     private fun openFile(path: String, name: String?, result: MethodChannel.Result) {

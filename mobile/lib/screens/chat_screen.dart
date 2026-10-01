@@ -2976,8 +2976,14 @@ class _ChatScreenState extends State<ChatScreen>
     }
     if (!await _confirmBigSend(size)) return;
     // after the confirm, so a cancelled send does not spend one of the two
-    // slots a stranger gets
-    if (_requestPending) setState(() => _sentCount++);
+    // slots a stranger gets. taken now, before the awaits below, so a second
+    // send cannot slip past the limit; one that does not go gives it back
+    final slot = _requestPending;
+    if (slot) setState(() => _sentCount++);
+    void giveBack() {
+      if (slot && mounted) setState(() => _sentCount--);
+    }
+
     final msgUid = newMsgUid();
     final mediaDir = await session.mediaDirOf(widget.peerHaloId);
     final safe = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
@@ -2995,6 +3001,7 @@ class _ChatScreenState extends State<ChatScreen>
         } catch (_) {
           // not sent either way, and the original is still where it was
         }
+        giveBack();
         if (mounted) showHaloToast(context, l10n.chatCouldNotCleanThat);
         return;
       }
@@ -3009,6 +3016,7 @@ class _ChatScreenState extends State<ChatScreen>
       } catch (_) {
         // not sent either way, and the original is still where it was
       }
+      giveBack();
       if (mounted) {
         showHaloToast(context, l10n.chatCouldNotCleanThatPictureSend);
       }
@@ -3016,7 +3024,7 @@ class _ChatScreenState extends State<ChatScreen>
     }
     if (_isDev && !await _ensureDevStarted()) {
       await shredFile(dest.path);
-      if (mounted && _requestPending) setState(() => _sentCount--);
+      giveBack();
       return;
     }
     final filePath = dest.path;
@@ -3184,7 +3192,14 @@ class _ChatScreenState extends State<ChatScreen>
     await _sendOneImage(clean, '');
   }
 
-  Future<void> _sendOneImage(Uint8List bytes, String caption) async {
+  Future<void> _sendOneImage(Uint8List raw, String caption) async {
+    // the gallery's re-encode copies the tags across; nothing leaves with
+    // them. first, so a photo that is dropped spends no request slot
+    final bytes = await photoToSendOffUi(raw);
+    if (bytes == null) {
+      if (mounted) showHaloToast(context, l10n.cameraCouldNotStripThat);
+      return;
+    }
     // two of anything before they accept, photos included: the far side
     // holds a third
     if (_requestLocked) return;

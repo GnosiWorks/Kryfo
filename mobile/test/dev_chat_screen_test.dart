@@ -333,10 +333,11 @@ Future<void> _beat(WidgetTester t, [int ms = 700]) async {
 }
 
 // real files are read and written on the way out: frames run between
-// them until [done] holds, then a few more for what trails it
+// them until [done] holds, then a few more for what trails it. a photo is
+// cleaned on an isolate of its own first, slow to start on a busy machine
 Future<void> _io(WidgetTester t, bool Function() done) async {
   var left = 6;
-  for (var i = 0; i < 160 && left > 0; i++) {
+  for (var i = 0; i < 500 && left > 0; i++) {
     if (done()) left--;
     await t.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 20)),

@@ -59,7 +59,8 @@ import '../main.dart'
         shredFile;
 import '../theme.dart';
 import '../media_progress.dart';
-import '../media_send.dart' show cancelMediaSend;
+import '../group_send_watch.dart';
+import '../media_send.dart' show cancelMediaSend, mediaInflight, whenMediaFree;
 import '../image_strip.dart';
 import '../mp4_strip.dart';
 import '../widgets/kryfo_avatar.dart';
@@ -451,6 +452,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           when: DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
           sticker: StickerWire.parse(r['sticker']),
           burnAt: r['burn_at'] as int?,
+          burnSecs: (r['burn_secs'] as num?)?.toInt(),
           msgUid: uid,
           replyTo: r['reply_to'] as String?,
           mediaPath: r['media_path'] as String?,
@@ -584,6 +586,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             if (m.msgUid != null) m.msgUid!: (m.autoRetries, m.gaveUp),
         };
         final before = List<_GMsg>.of(_messages);
+        final torUp = _canCarry;
         _messages
           ..clear()
           ..addAll(
@@ -604,6 +607,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 when: DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
                 sticker: StickerWire.parse(r['sticker']),
                 burnAt: r['burn_at'] as int?,
+                burnSecs: (r['burn_secs'] as num?)?.toInt(),
                 msgUid: uid,
                 replyTo: r['reply_to'] as String?,
                 mediaPath: r['media_path'] as String?,
@@ -620,20 +624,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
               m.poll = PollSpec.parse(r['poll']);
               m.votes = votes[uid] ?? const {};
               m.rowid = (r['rowid'] as int?) ?? 0;
-              // only a stale sending out-message is dead: a live send (<60s
-              // old) keeps its pill, or a working media send flips to failed
-              // mid-flight. while tor warms up the send is queued, not dead;
-              // outside onion there is no warmup to wait out.
-              final torUp =
-                  appState.sendMode != 'private' ||
-                  appState.torStatus == TorStatus.reachable;
-              final stale = m.when.isBefore(
-                DateTime.now().subtract(const Duration(seconds: 60)),
-              );
-              if (torUp && m.direction == 'out' && m.sending && stale) {
-                m.sending = false;
-                m.failed = true;
-              }
+              _placeLoadedSend(m, torUp);
               final c = carry[m.msgUid];
               if (c != null) {
                 m.autoRetries = c.$1;
@@ -748,6 +739,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final rev = appState.chatRevOf('group:${widget.groupId}');
     if (rev == _seenRev) return;
     _seenRev = rev;
+    unawaited(_settleOthersSends());
     // a single multicast fires notifyListeners() once per recipient, and a
     // full _load() per fire freezes the ui. if a load is already running,
     // queue at most one follow-up.
@@ -839,6 +831,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         when: DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
         sticker: StickerWire.parse(r['sticker']),
         burnAt: r['burn_at'] as int?,
+        burnSecs: (r['burn_secs'] as num?)?.toInt(),
         msgUid: uid,
         replyTo: r['reply_to'] as String?,
         mediaPath: r['media_path'] as String?,
@@ -856,6 +849,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       m.votes = votes[uid] ?? const {};
       m.rowid = (r['rowid'] as int?) ?? 0;
       if (dir == 'in') m.fresh = true;
+      _placeLoadedSend(m, _canCarry);
       fresh.add(m);
     }
     final nowHave = _messages.map((m) => m.msgUid).toSet();
@@ -1125,13 +1119,16 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     });
     _scrollToEnd();
     var ok = false;
-    final sendFut = appState.sendToGroup(
-      widget.groupId,
-      text,
-      msgUid: uid,
-      replyTo: replyToUid,
-      burnSeconds: burnSeconds,
-      preview: preview,
+    final sendFut = _watch.owning(
+      uid,
+      () => appState.sendToGroup(
+        widget.groupId,
+        text,
+        msgUid: uid,
+        replyTo: replyToUid,
+        burnSeconds: burnSeconds,
+        preview: preview,
+      ),
     );
     try {
       ok = await sendFut;
@@ -1159,7 +1156,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // online, a failed send goes again on its own: half a minute apart, six
   // goes, then it is shown as failed with the tap
   void _autoRetryTick() {
-    if (!mounted || _sending || _cannotSend()) return;
+    if (!mounted) return;
+    // a row nobody is sending turns failed here once it is old enough
+    unawaited(_settleOthersSends());
+    if (_sending || _cannotSend()) return;
     for (final m in _messages) {
       if (m.direction != 'out' || !m.failed || m.gaveUp || m.msgUid == null) {
         continue;
@@ -1194,9 +1194,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         }
         return;
       }
-      String r;
-      try {
-        r = await appState.sendMediaToGroup(
+      await _sendGroupMedia(
+        m,
+        () => appState.sendMediaToGroup(
           widget.groupId,
           f.path,
           msgUid: m.msgUid!,
@@ -1205,23 +1205,23 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           voice: m.fileName == 'voice.wav',
           voiceDisguised: m.voiceDisguised,
           burnSeconds: m.burnSecs,
-        );
-      } catch (e) {
-        r = 'error: $e';
-      }
-      await _finishGroupMediaSend(m, r);
+        ),
+      );
       return;
     }
-    final uid = m.msgUid;
+    final uid = m.msgUid!;
     var ok = false;
     try {
-      ok = await appState.sendToGroup(
-        widget.groupId,
-        m.text,
-        msgUid: m.msgUid,
-        replyTo: m.replyTo,
-        burnSeconds: m.burnSecs,
-        preview: m.preview,
+      ok = await _watch.owning(
+        uid,
+        () => appState.sendToGroup(
+          widget.groupId,
+          m.text,
+          msgUid: m.msgUid,
+          replyTo: m.replyTo,
+          burnSeconds: m.burnSecs,
+          preview: m.preview,
+        ),
       );
     } catch (e) {
       dlog('group retry failed: $e');
@@ -1295,13 +1295,16 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     _scrollToEnd();
     var ok = false;
     try {
-      ok = await appState.sendToGroup(
-        widget.groupId,
-        s.emoji,
-        msgUid: uid,
-        replyTo: replyToUid,
-        burnSeconds: burnSeconds,
-        sticker: w.value,
+      ok = await _watch.owning(
+        uid,
+        () => appState.sendToGroup(
+          widget.groupId,
+          s.emoji,
+          msgUid: uid,
+          replyTo: replyToUid,
+          burnSeconds: burnSeconds,
+          sticker: w.value,
+        ),
       );
     } catch (e) {
       dlog('group sticker send failed: $e');
@@ -1436,12 +1439,15 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     _scrollToEnd();
     var ok = false;
     try {
-      ok = await appState.sendToGroup(
-        widget.groupId,
-        d.question,
-        msgUid: uid,
-        poll: poll,
-        burnSeconds: burnSeconds,
+      ok = await _watch.owning(
+        uid,
+        () => appState.sendToGroup(
+          widget.groupId,
+          d.question,
+          msgUid: uid,
+          poll: poll,
+          burnSeconds: burnSeconds,
+        ),
       );
     } catch (e) {
       dlog('group poll send failed: $e');
@@ -1527,7 +1533,13 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     await _sendGroupImage(clean, '');
   }
 
-  Future<void> _sendGroupImage(Uint8List bytes, String caption) async {
+  Future<void> _sendGroupImage(Uint8List raw, String caption) async {
+    // the gallery's re-encode copies the tags across; nothing leaves with them
+    final bytes = await photoToSendOffUi(raw);
+    if (bytes == null) {
+      if (mounted) showHaloToast(context, l10n.cameraCouldNotStripThat);
+      return;
+    }
     final uid = newMsgUid();
     final mediaDir = await session.mediaDirOf(widget.groupId);
     final f = File('${mediaDir.path}/$uid.jpg');
@@ -1557,23 +1569,27 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       groupId: widget.groupId,
       msgUid: uid,
       mediaPath: f.path,
+      burnSecs: burn,
       sent: 0,
     );
-    appState
-        .sendMediaToGroup(
+    unawaited(
+      _sendGroupMedia(
+        m,
+        () => appState.sendMediaToGroup(
           widget.groupId,
           f.path,
           msgUid: uid,
           caption: caption,
           burnSeconds: burn,
-        )
-        .then((r) => _finishGroupMediaSend(m, r));
+        ),
+      ),
+    );
   }
 
   Future<void> _sendGroupVoice(String srcPath, int ms) async {
-    final src = File(srcPath);
-    if (!await src.exists()) return;
-    var bytes = await src.readAsBytes();
+    // the recorder's file is the voice before any disguise: it goes once read
+    var bytes = await takeRecording(srcPath);
+    if (bytes == null) return;
     if (_disguise) bytes = disguiseWav(bytes);
     final uid = newMsgUid();
     final mediaDir = await session.mediaDirOf(widget.groupId);
@@ -1608,10 +1624,13 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       filePath: dest.path,
       fileName: 'voice.wav',
       voiceDisguised: _disguise,
+      burnSecs: burn,
       sent: 0,
     );
-    appState
-        .sendMediaToGroup(
+    unawaited(
+      _sendGroupMedia(
+        m,
+        () => appState.sendMediaToGroup(
           widget.groupId,
           dest.path,
           msgUid: uid,
@@ -1619,8 +1638,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           voice: true,
           voiceDisguised: _disguise,
           burnSeconds: burn,
-        )
-        .then((r) => _finishGroupMediaSend(m, r));
+        ),
+      ),
+    );
   }
 
   // the picker's own copy is copied into the media folder; no byte array
@@ -1744,17 +1764,21 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       msgUid: uid,
       filePath: dest.path,
       fileName: name,
+      burnSecs: burn,
       sent: 0,
     );
-    appState
-        .sendMediaToGroup(
+    unawaited(
+      _sendGroupMedia(
+        m,
+        () => appState.sendMediaToGroup(
           widget.groupId,
           dest.path,
           msgUid: uid,
           fileName: name,
           burnSeconds: burn,
-        )
-        .then((r) => _finishGroupMediaSend(m, r));
+        ),
+      ),
+    );
   }
 
   String? _badgeFor(String id) {
@@ -1780,6 +1804,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   Future<void> _stopGroupSending(_GMsg m) async {
     final uid = m.msgUid;
     if (uid == null) return;
+    // no send behind the strip: the file may be across, so only the strip goes
+    if (!mediaInflight.contains(uid)) {
+      mediaProgressEnd(uid);
+      return;
+    }
     cancelMediaSend(uid);
     mediaProgressEnd(uid);
     if (mounted) setState(() => m.removing = true);
@@ -1787,11 +1816,110 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     await session.deleteMessage(uid);
     if (mounted) setState(() => _messages.remove(m));
     unawaited(appState.unsendInGroup(widget.groupId, uid));
+    // a slice already on its way can land after that; said again once the
+    // send has let go, so nobody is left holding part of the file
+    final again = whenMediaFree(uid);
+    unawaited(again.then((_) => appState.unsendInGroup(widget.groupId, uid)));
+  }
+
+  final _watch = GroupSendWatch();
+
+  // a photo, voice note or file of this screen's, settled by it once done
+  Future<void> _sendGroupMedia(_GMsg m, Future<String> Function() send) =>
+      _watch.owning(m.msgUid!, () async {
+        String r;
+        try {
+          r = await send();
+        } catch (e) {
+          r = 'error: $e';
+        }
+        await _finishGroupMediaSend(m, r);
+      });
+
+  bool get _canCarry =>
+      appState.sendMode != 'private' ||
+      appState.torStatus == TorStatus.reachable;
+
+  // only a stale sending out-message is dead: a live send (<60s old) keeps
+  // its pill, or a working media send flips to failed mid-flight. while tor
+  // warms up the send is queued, not dead; outside onion there is no warmup
+  static bool _deadSend(_GMsg m, bool canCarry) =>
+      canCarry &&
+      m.when.isBefore(DateTime.now().subtract(const Duration(seconds: 60)));
+
+  void _placeLoadedSend(_GMsg m, bool canCarry) {
+    final uid = m.msgUid;
+    if (uid == null || m.direction != 'out') return;
+    final seen = _watch.loaded(
+      uid,
+      sending: m.sending,
+      dead: _deadSend(m, canCarry),
+      inflight: mediaInflight.contains(uid),
+    );
+    if (seen == SendSeen.failed) {
+      m.sending = false;
+      m.failed = true;
+    }
+  }
+
+  bool _settling = false;
+  bool _settleAgain = false;
+  Future<void> _settleOthersSends() async {
+    if (_settling) {
+      _settleAgain = true;
+      return;
+    }
+    _settling = true;
+    var changed = false;
+    try {
+      for (final m in List<_GMsg>.of(_messages)) {
+        final uid = m.msgUid;
+        if (uid == null || m.direction != 'out') continue;
+        final check = _watch.needsCheck(
+          uid,
+          sending: m.sending,
+          failed: m.failed,
+          inflight: mediaInflight.contains(uid),
+        );
+        if (!check) continue;
+        final s = await session.sendState(uid);
+        if (!mounted) return;
+        final live = _liveMsg(uid);
+        if (live == null) continue;
+        final seen = _watch.verdict(
+          uid,
+          sending: live.sending,
+          sent: s.sent,
+          dead: _deadSend(live, _canCarry),
+          inflight: mediaInflight.contains(uid),
+        );
+        if (seen == SendSeen.keep) continue;
+        final failed = seen == SendSeen.failed;
+        if (live.sending || live.failed != failed) changed = true;
+        live.sending = false;
+        live.failed = failed;
+      }
+    } finally {
+      _settling = false;
+    }
+    if (_settleAgain && mounted) {
+      _settleAgain = false;
+      unawaited(_settleOthersSends());
+    }
+    if (!changed || !mounted) return;
+    setState(() {});
+    if (!_messages.any((x) => x.sending)) _tryAppendNew();
   }
 
   Future<void> _finishGroupMediaSend(_GMsg m, String result) async {
-    // another sender already has this one; its verdict comes later
-    if (result == 'busy') return;
+    // a stopped send has no row left to finish
+    if (result == 'cancelled') return;
+    // another sender already has this one. its verdict is read off the row
+    // once that send has ended
+    if (result == 'busy') {
+      if (m.msgUid != null) _watch.busy(m.msgUid!);
+      return;
+    }
     if (m.msgUid != null) mediaProgressEnd(m.msgUid!);
     final ok = result == 'ok';
     final uid = m.msgUid;
@@ -1801,7 +1929,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       ba = DateTime.now().millisecondsSinceEpoch + m.burnSecs! * 1000;
       await session.setMsgBurnAt(uid, ba);
     }
-    if (!mounted) return;
+    if (!mounted) {
+      // left and reopened while it uploaded: tell the screen showing it now
+      appState.chatChanged('group:${widget.groupId}');
+      return;
+    }
     // re-find the on-screen object; a reload may have replaced m.
     final live = _liveMsg(uid) ?? m;
     setState(() {
