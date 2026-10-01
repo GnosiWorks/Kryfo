@@ -4,7 +4,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../lock_state.dart' show lockState;
-import '../main.dart' show appState, session;
+import '../main.dart' show appState, session, GroupFull;
 import '../atmosphere.dart' show Atmo, atmoFromName;
 import '../theme.dart';
 import '../widgets/kryfo_avatar.dart';
@@ -27,6 +27,15 @@ import '../widgets/row_motion.dart';
 import '../widgets/confirm_sheet.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
+
+// a member as the screens name them: a room key by its short tag
+String memberLabel(String id) => looksLikeRoomKey(id) ? roomTag(id) : id;
+
+// what leaving costs. everything here goes; a group's admin leaves it with
+// no one to change it, and a room's maker takes its link along
+String leaveLine({required bool room, required bool admin}) => room
+    ? (admin ? l10n.groupInfoLeaveRoomMaker : l10n.groupInfoEverythingInItIs)
+    : (admin ? l10n.groupInfoLeaveGroupAdmin : l10n.groupInfoLeaveGroupLine);
 
 class GroupInfoScreen extends StatefulWidget {
   final String groupId;
@@ -108,7 +117,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
         if (mounted) {
           showHaloToast(
             context,
-            e is StateError ? e.message : l10n.groupInfoCouldNotAdd,
+            e is GroupFull ? e.message : l10n.groupInfoCouldNotAdd,
           );
         }
         return;
@@ -120,7 +129,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   Future<void> _confirmRemove(String haloId) async {
     final ok = await showConfirmSheet(
       context,
-      title: l10n.groupInfoRemove(haloId),
+      title: l10n.groupInfoRemove(memberLabel(haloId)),
       line: l10n.groupInfoTheyWillStopReceiving,
       yes: l10n.commonRemove,
     );
@@ -188,9 +197,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
     final ok = await showConfirmSheet(
       context,
       title: _isRoom ? l10n.groupInfoLeaveRoom : l10n.groupInfoLeaveGroup,
-      line: _isRoom
-          ? l10n.groupInfoEverythingInItIs
-          : l10n.groupInfoYouWillStopReceiving,
+      line: leaveLine(room: _isRoom, admin: _isAdmin),
       yes: l10n.groupInfoLeave,
     );
     if (ok == true) {
@@ -589,7 +596,7 @@ class _MembersCardState extends State<MembersCard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  room ? roomTag(m) : m,
+                  memberLabel(m),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: room

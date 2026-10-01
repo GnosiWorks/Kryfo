@@ -2,7 +2,7 @@
 // pick a name and members, then create and announce the group
 
 import 'package:flutter/material.dart';
-import '../main.dart' show appState;
+import '../main.dart' show appState, GroupFull;
 import '../theme.dart';
 import '../widgets/kryfo_avatar.dart';
 import 'group_chat_screen.dart';
@@ -38,7 +38,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
         setState(() => _creating = false);
         showHaloToast(
           context,
-          e is StateError ? e.message : l10n.newGroupCouldNotCreate,
+          e is GroupFull ? e.message : l10n.newGroupCouldNotCreate,
         );
       }
       return;

@@ -201,8 +201,10 @@ class ArrivalIo implements AppIo {
     String? payload,
   }) async => rang.add(payload ?? title);
 
+  // what was taken out of the shade, by payload
+  final unrang = <String>[];
   @override
-  Future<void> unnotify(String payload) async {}
+  Future<void> unnotify(String payload) async => unrang.add(payload);
 }
 
 // a database in memory: the rows the receive side reads and writes, and a
@@ -771,6 +773,42 @@ class ArrivalRows implements HaloDb {
     _hit('deleteGroup', groupId, null);
     groupRows.remove(groupId);
     members.remove(groupId);
+  }
+
+  @override
+  Future<List<Map<String, Object?>>> rooms() async => _hit('rooms', null, [
+    for (final g in groupRows.values)
+      if (g['room_pub'] != null) g,
+  ]);
+  @override
+  Future<List<Map<String, Object?>>> expiredRooms(int now) async =>
+      _hit('expiredRooms', null, [
+        for (final g in groupRows.values)
+          if (g['room_pub'] != null && (g['expires_at'] as int) <= now) g,
+      ]);
+  // the files a group's rows name
+  final groupFiles = <String, List<String>>{};
+  @override
+  Future<List<String>> groupFilePaths(String groupId) async =>
+      _hit('groupFilePaths', groupId, [...?groupFiles[groupId]]);
+  @override
+  Future<void> deleteGroupMessages(String groupId) async {
+    _hit('deleteGroupMessages', groupId, null);
+    _dropGroupRows(groupId);
+  }
+
+  @override
+  Future<void> clearGroupConversation(String groupId) async {
+    _hit('clearGroupConversation', groupId, null);
+    _dropGroupRows(groupId);
+  }
+
+  void _dropGroupRows(String groupId) {
+    for (final m in msgs.where((m) => m['group_id'] == groupId)) {
+      reactions.remove(m['msg_uid']);
+    }
+    msgs.removeWhere((m) => m['group_id'] == groupId);
+    groupFiles.remove(groupId);
   }
 
   @override

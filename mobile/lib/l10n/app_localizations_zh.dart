@@ -2524,6 +2524,20 @@ class AppLocalizationsZh extends AppLocalizations {
   String get groupInfoTheyWillStopReceiving => '对方将不再收到这个群组的消息。';
 
   @override
+  String appGroupHoldsUpTo(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '一个群组最多 $countString 人',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get commonRemove => '移除';
 
   @override
@@ -2549,7 +2563,20 @@ class AppLocalizationsZh extends AppLocalizations {
   String get groupInfoEverythingInItIs => '里面的一切会立即从这部手机上抹掉，你在这里用过的密钥也会永久消失。';
 
   @override
-  String get groupInfoYouWillStopReceiving => '你将不再收到消息，其他成员会看到你退出。';
+  String groupChatYouWereRemovedFrom(Object name) {
+    return '你已被移出 $name';
+  }
+
+  @override
+  String get groupInfoLeaveGroupLine => '你将不再收到它的消息，里面的一切也会从这部手机上抹掉。';
+
+  @override
+  String get groupInfoLeaveGroupAdmin =>
+      '你将不再收到它的消息，里面的一切也会从这部手机上抹掉。你是管理员，退出后就没有人能再增减成员或重命名了。';
+
+  @override
+  String get groupInfoLeaveRoomMaker =>
+      '里面的一切会立即从这部手机上抹掉，你在这里用过的密钥也会永久消失。这个聊天室是你创建的，你退出后它的链接就不能再让人加入了。';
 
   @override
   String get groupInfoLeave => '退出';
@@ -3056,6 +3083,11 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String introduceGotItButCouldNotBe(Object c, Object b) {
     return '$c 收到了，但联系不上 $b';
+  }
+
+  @override
+  String introduceIntroduced(Object b, Object c) {
+    return '$b 和 $c 现在都有对方的名片了';
   }
 
   @override
@@ -4487,7 +4519,18 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get roomCreateOffAnyoneWithThe => '关。任何拿到链接的人';
+  String roomCreateOffUpTo(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '关。任何拿到链接的人，最多 $countString 人',
+    );
+    return '$_temp0';
+  }
 
   @override
   String roomCreateThisRoomAndEverything(Object expiryWords) {
@@ -9640,6 +9683,20 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get groupInfoTheyWillStopReceiving => '對方將不再收到這個群組的訊息。';
 
   @override
+  String appGroupHoldsUpTo(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '一個群組最多 $countString 人',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get commonRemove => '移除';
 
   @override
@@ -9665,7 +9722,20 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get groupInfoEverythingInItIs => '裡面的一切會立即從這支手機上清除，你在這裡使用的金鑰也會永久消失。';
 
   @override
-  String get groupInfoYouWillStopReceiving => '你將不再收到訊息，其他成員會看到你離開。';
+  String groupChatYouWereRemovedFrom(Object name) {
+    return '你已被移出 $name';
+  }
+
+  @override
+  String get groupInfoLeaveGroupLine => '你將不再收到它的訊息，裡面的一切也會從這支手機上清除。';
+
+  @override
+  String get groupInfoLeaveGroupAdmin =>
+      '你將不再收到它的訊息，裡面的一切也會從這支手機上清除。你是管理員，離開後就沒有人能再增減成員或重新命名了。';
+
+  @override
+  String get groupInfoLeaveRoomMaker =>
+      '裡面的一切會立即從這支手機上清除，你在這裡使用的金鑰也會永久消失。這個聊天室是你建立的，你離開後它的連結就不能再讓人加入了。';
 
   @override
   String get groupInfoLeave => '離開';
@@ -10173,6 +10243,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String introduceGotItButCouldNotBe(Object c, Object b) {
     return '$c 已收到，但聯絡不到 $b';
+  }
+
+  @override
+  String introduceIntroduced(Object b, Object c) {
+    return '$b 和 $c 現在都有對方的名片了';
   }
 
   @override
@@ -11603,7 +11678,18 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get roomCreateOffAnyoneWithThe => '關閉。任何有連結的人都能加入';
+  String roomCreateOffUpTo(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '關閉。任何有連結的人都能加入，最多 $countString 人',
+    );
+    return '$_temp0';
+  }
 
   @override
   String roomCreateThisRoomAndEverything(Object expiryWords) {

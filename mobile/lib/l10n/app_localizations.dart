@@ -4209,6 +4209,12 @@ abstract class AppLocalizations {
   /// **'They will stop receiving messages from this group.'**
   String get groupInfoTheyWillStopReceiving;
 
+  /// main.dart
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{A group holds up to {count} person} other{A group holds up to {count} people}}'**
+  String appGroupHoldsUpTo(int count);
+
   /// screens/group_info_screen.dart, screens/pins_screen.dart
   ///
   /// In en, this message translates to:
@@ -4257,11 +4263,29 @@ abstract class AppLocalizations {
   /// **'Everything in it is wiped from this phone now, and the key you used here is gone for good.'**
   String get groupInfoEverythingInItIs;
 
+  /// screens/group_chat_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'You were removed from {name}'**
+  String groupChatYouWereRemovedFrom(Object name);
+
   /// screens/group_info_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'You will stop receiving messages and other members will see you leave.'**
-  String get groupInfoYouWillStopReceiving;
+  /// **'You will stop receiving its messages, and everything in it is wiped from this phone.'**
+  String get groupInfoLeaveGroupLine;
+
+  /// screens/group_info_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'You will stop receiving its messages, and everything in it is wiped from this phone. You are its admin, so once you leave no one can change who is in it or rename it.'**
+  String get groupInfoLeaveGroupAdmin;
+
+  /// screens/group_info_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Everything in it is wiped from this phone now, and the key you used here is gone for good. You made this room, so its link stops letting anyone in.'**
+  String get groupInfoLeaveRoomMaker;
 
   /// screens/group_info_screen.dart
   ///
@@ -4964,6 +4988,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{c} got it, but {b} could not be reached'**
   String introduceGotItButCouldNotBe(Object c, Object b);
+
+  /// screens/introduce_sheet.dart
+  ///
+  /// In en, this message translates to:
+  /// **'{b} and {c} now have each other\'s card'**
+  String introduceIntroduced(Object b, Object c);
 
   /// screens/introduce_sheet.dart
   ///
@@ -7536,8 +7566,8 @@ abstract class AppLocalizations {
   /// screens/room_create_sheet.dart
   ///
   /// In en, this message translates to:
-  /// **'Off. Anyone with the link'**
-  String get roomCreateOffAnyoneWithThe;
+  /// **'{count, plural, other{Off. Anyone with the link, up to {count}}}'**
+  String roomCreateOffUpTo(int count);
 
   /// screens/room_create_sheet.dart
   ///

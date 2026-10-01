@@ -108,6 +108,25 @@ final Map<String, String> _draftPerGroup = {};
 String? _senderLabel(Map<String, String> nickById, String peer) =>
     nickById[peer] ?? (looksLikeRoomKey(peer) ? roomTag(peer) : null);
 
+// a group gone from here closes its screen. in front it simply goes; under
+// other screens only when this phone was taken out, since a leave from the
+// info screen pops both itself and one more pop would close the app
+@visibleForTesting
+bool closeGoneGroup(
+  NavigatorState nav,
+  Route<dynamic> route, {
+  required bool removed,
+}) {
+  if (route.isCurrent) {
+    nav.pop();
+    return true;
+  }
+  if (!removed || !route.isActive) return false;
+  nav.popUntil((r) => r == route);
+  nav.pop();
+  return true;
+}
+
 class GroupChatScreen extends StatefulWidget {
   final String groupId;
   // open at this message, lit for a moment (from search)
@@ -199,8 +218,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   bool _hasMore = true;
   bool _loadingOlder = false;
   bool _pagedOut = false;
-  // ghost mode - per-session, not persisted. when on, new messages carry a
-  // burn timer; receivers compute the burn deadline locally.
+  // ghost mode, kept as the 1:1 chats keep it. when on, new messages carry
+  // a burn timer; receivers compute the burn deadline locally.
   bool _ghost = false;
   bool _disguise = false;
   int _burnSeconds = 300; // 5 min default, same as 1:1
@@ -271,6 +290,14 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     _load();
     appState.loadDisguisePref().then((d) {
       if (mounted) setState(() => _disguise = d);
+    });
+    appState.loadGhostPref().then((p) {
+      if (mounted) {
+        setState(() {
+          _ghost = p.$1;
+          _burnSeconds = p.$2;
+        });
+      }
     });
     appState.addListener(_onAppStateChanged);
     _timers.every(const Duration(seconds: 30), _autoRetryTick);
@@ -515,13 +542,17 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         if (mounted) setState(() => _atmosphere = atmoFromName(a));
       });
       final g = await session.getGroup(widget.groupId);
-      // a room that ended while this was open is gone, so is the screen.
-      // only when it is the one in front: leaving from the info screen
-      // already pops both, and a third pop would close the app.
-      if (g == null && _isRoom) {
+      // a room that ended, or a group this phone was taken out of, is gone,
+      // so is the screen
+      if (g == null) {
+        final removed = appState.takeRemovedFrom(widget.groupId);
         if (!mounted) return;
-        if (ModalRoute.of(context)?.isCurrent ?? false) {
-          Navigator.of(context).pop();
+        final route = ModalRoute.of(context);
+        if (route == null) return;
+        final nav = Navigator.of(context);
+        final closed = closeGoneGroup(nav, route, removed: removed != null);
+        if (closed && removed != null) {
+          showHaloToast(nav.context, l10n.groupChatYouWereRemovedFrom(removed));
         }
         return;
       }
@@ -564,17 +595,19 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         if (n != null && n.isNotEmpty) nickById[c.haloId] = n;
         faceById[c.haloId] = c.avatar;
       }
-      _mentionable = [
-        for (final id in members)
-          if (id != appState.sessionId)
-            MentionCandidate(id: id, name: nickById[id], avatar: faceById[id]),
-      ];
+      _mentionable = mentionable(
+        members,
+        me: _me,
+        room: g['room_pub'] != null,
+        names: nickById,
+        faces: faceById,
+      );
       if (!mounted) return;
       setState(() {
-        _groupName = (g?['name'] as String?) ?? 'group';
+        _groupName = (g['name'] as String?) ?? 'group';
         _memberCount = members.length;
-        _roomExpiresAt = g?['expires_at'] as int?;
-        _isAdmin = ((g?['is_admin'] as int?) ?? 0) == 1;
+        _roomExpiresAt = g['expires_at'] as int?;
+        _isAdmin = ((g['is_admin'] as int?) ?? 0) == 1;
         // a reload rebuilds every row; the retry count rides across, or a
         // failed send never reaches its cap and spins forever
         final carry = {
@@ -1865,6 +1898,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 InkWell(
                   onTap: () {
                     setState(() => _burnSeconds = opt.$1);
+                    appState.saveGhostPref(_ghost, opt.$1);
                     Navigator.pop(c);
                   },
                   child: Padding(
@@ -2940,7 +2974,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
               sending: _sending,
               ghost: _ghost,
               disguise: _disguise,
-              onToggleGhost: () => setState(() => _ghost = !_ghost),
+              onToggleGhost: () {
+                setState(() => _ghost = !_ghost);
+                appState.saveGhostPref(_ghost, _burnSeconds);
+              },
               onLongPressGhost: _showBurnPicker,
               onSend: _send,
               onAttach: _showAttachSheet,

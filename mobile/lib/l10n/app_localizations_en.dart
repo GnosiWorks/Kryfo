@@ -2619,6 +2619,21 @@ class AppLocalizationsEn extends AppLocalizations {
       'They will stop receiving messages from this group.';
 
   @override
+  String appGroupHoldsUpTo(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'A group holds up to $countString people',
+      one: 'A group holds up to $countString person',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get commonRemove => 'Remove';
 
   @override
@@ -2645,8 +2660,21 @@ class AppLocalizationsEn extends AppLocalizations {
       'Everything in it is wiped from this phone now, and the key you used here is gone for good.';
 
   @override
-  String get groupInfoYouWillStopReceiving =>
-      'You will stop receiving messages and other members will see you leave.';
+  String groupChatYouWereRemovedFrom(Object name) {
+    return 'You were removed from $name';
+  }
+
+  @override
+  String get groupInfoLeaveGroupLine =>
+      'You will stop receiving its messages, and everything in it is wiped from this phone.';
+
+  @override
+  String get groupInfoLeaveGroupAdmin =>
+      'You will stop receiving its messages, and everything in it is wiped from this phone. You are its admin, so once you leave no one can change who is in it or rename it.';
+
+  @override
+  String get groupInfoLeaveRoomMaker =>
+      'Everything in it is wiped from this phone now, and the key you used here is gone for good. You made this room, so its link stops letting anyone in.';
 
   @override
   String get groupInfoLeave => 'Leave';
@@ -3164,6 +3192,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String introduceGotItButCouldNotBe(Object c, Object b) {
     return '$c got it, but $b could not be reached';
+  }
+
+  @override
+  String introduceIntroduced(Object b, Object c) {
+    return '$b and $c now have each other\'s card';
   }
 
   @override
@@ -4673,7 +4706,18 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get roomCreateOffAnyoneWithThe => 'Off. Anyone with the link';
+  String roomCreateOffUpTo(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Off. Anyone with the link, up to $countString',
+    );
+    return '$_temp0';
+  }
 
   @override
   String roomCreateThisRoomAndEverything(Object expiryWords) {

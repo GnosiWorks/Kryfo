@@ -3326,6 +3326,16 @@
   "@groupInfoTheyWillStopReceiving": {
     "description": "screens/group_info_screen.dart"
   },
+  "appGroupHoldsUpTo": "{count, plural, one{A group holds up to {count} person} other{A group holds up to {count} people}}",
+  "@appGroupHoldsUpTo": {
+    "description": "main.dart",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
   "commonRemove": "Remove",
   "@commonRemove": {
     "description": "screens/group_info_screen.dart, screens/pins_screen.dart"
@@ -3358,8 +3368,25 @@
   "@groupInfoEverythingInItIs": {
     "description": "screens/group_info_screen.dart"
   },
-  "groupInfoYouWillStopReceiving": "You will stop receiving messages and other members will see you leave.",
-  "@groupInfoYouWillStopReceiving": {
+  "groupChatYouWereRemovedFrom": "You were removed from {name}",
+  "@groupChatYouWereRemovedFrom": {
+    "description": "screens/group_chat_screen.dart",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "groupInfoLeaveGroupLine": "You will stop receiving its messages, and everything in it is wiped from this phone.",
+  "@groupInfoLeaveGroupLine": {
+    "description": "screens/group_info_screen.dart"
+  },
+  "groupInfoLeaveGroupAdmin": "You will stop receiving its messages, and everything in it is wiped from this phone. You are its admin, so once you leave no one can change who is in it or rename it.",
+  "@groupInfoLeaveGroupAdmin": {
+    "description": "screens/group_info_screen.dart"
+  },
+  "groupInfoLeaveRoomMaker": "Everything in it is wiped from this phone now, and the key you used here is gone for good. You made this room, so its link stops letting anyone in.",
+  "@groupInfoLeaveRoomMaker": {
     "description": "screens/group_info_screen.dart"
   },
   "groupInfoLeave": "Leave",
@@ -3967,6 +3994,18 @@
         "type": "Object"
       },
       "b": {
+        "type": "Object"
+      }
+    }
+  },
+  "introduceIntroduced": "{b} and {c} now have each other's card",
+  "@introduceIntroduced": {
+    "description": "screens/introduce_sheet.dart",
+    "placeholders": {
+      "b": {
+        "type": "Object"
+      },
+      "c": {
         "type": "Object"
       }
     }
@@ -5876,9 +5915,15 @@
       }
     }
   },
-  "roomCreateOffAnyoneWithThe": "Off. Anyone with the link",
-  "@roomCreateOffAnyoneWithThe": {
-    "description": "screens/room_create_sheet.dart"
+  "roomCreateOffUpTo": "{count, plural, other{Off. Anyone with the link, up to {count}}}",
+  "@roomCreateOffUpTo": {
+    "description": "screens/room_create_sheet.dart",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
   },
   "roomCreateThisRoomAndEverything": "This room and everything in it disappears in {expiryWords}",
   "@roomCreateThisRoomAndEverything": {

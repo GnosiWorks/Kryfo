@@ -2688,6 +2688,23 @@ class AppLocalizationsRu extends AppLocalizations {
       'Участник перестанет получать сообщения из этой группы.';
 
   @override
+  String appGroupHoldsUpTo(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'В группе может быть не больше $countString участника',
+      many: 'В группе может быть не больше $countString участников',
+      few: 'В группе может быть не больше $countString участников',
+      one: 'В группе может быть не больше $countString участника',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get commonRemove => 'Удалить';
 
   @override
@@ -2714,8 +2731,21 @@ class AppLocalizationsRu extends AppLocalizations {
       'Всё, что в ней есть, сейчас будет стёрто с этого телефона, а твой ключ от неё пропадёт навсегда.';
 
   @override
-  String get groupInfoYouWillStopReceiving =>
-      'Ты перестанешь получать сообщения, а остальные участники увидят твой выход.';
+  String groupChatYouWereRemovedFrom(Object name) {
+    return 'Тебя удалили из «$name»';
+  }
+
+  @override
+  String get groupInfoLeaveGroupLine =>
+      'Ты перестанешь получать её сообщения, а всё, что в ней есть, будет стёрто с этого телефона.';
+
+  @override
+  String get groupInfoLeaveGroupAdmin =>
+      'Ты перестанешь получать её сообщения, а всё, что в ней есть, будет стёрто с этого телефона. Ты её админ, поэтому после твоего выхода никто не сможет менять состав группы или переименовать её.';
+
+  @override
+  String get groupInfoLeaveRoomMaker =>
+      'Всё, что в ней есть, сейчас будет стёрто с этого телефона, а твой ключ от неё пропадёт навсегда. Эта комната твоя, поэтому по её ссылке больше никто не войдёт.';
 
   @override
   String get groupInfoLeave => 'Выйти';
@@ -3249,6 +3279,11 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String introduceGotItButCouldNotBe(Object c, Object b) {
     return '$c — получено, $b — не удалось связаться';
+  }
+
+  @override
+  String introduceIntroduced(Object b, Object c) {
+    return '$b и $c получили карточки друг друга';
   }
 
   @override
@@ -4770,7 +4805,18 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get roomCreateOffAnyoneWithThe => 'Выкл. Любой, у кого есть ссылка';
+  String roomCreateOffUpTo(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Выкл. Любой, у кого есть ссылка, максимум $countString',
+    );
+    return '$_temp0';
+  }
 
   @override
   String roomCreateThisRoomAndEverything(Object expiryWords) {

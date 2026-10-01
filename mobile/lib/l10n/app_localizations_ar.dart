@@ -2692,6 +2692,25 @@ class AppLocalizationsAr extends AppLocalizations {
       'سيتوقف عن تلقي رسائل هذه المجموعة.';
 
   @override
+  String appGroupHoldsUpTo(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'تتسع المجموعة لـ ⁨$countString⁩ شخص كحد أقصى',
+      many: 'تتسع المجموعة لـ ⁨$countString⁩ شخصًا كحد أقصى',
+      few: 'تتسع المجموعة لـ ⁨$countString⁩ أشخاص كحد أقصى',
+      two: 'تتسع المجموعة لشخصين كحد أقصى',
+      one: 'تتسع المجموعة لشخص واحد كحد أقصى',
+      zero: 'تتسع المجموعة لـ ⁨$countString⁩ شخص كحد أقصى',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get commonRemove => 'إزالة';
 
   @override
@@ -2718,8 +2737,21 @@ class AppLocalizationsAr extends AppLocalizations {
       'يُمسح كل ما فيها من هذا الهاتف الآن، ويزول المفتاح الذي استخدمته هنا إلى الأبد.';
 
   @override
-  String get groupInfoYouWillStopReceiving =>
-      'ستتوقف عن تلقي الرسائل وسيرى الأعضاء الآخرون أنك غادرت.';
+  String groupChatYouWereRemovedFrom(Object name) {
+    return 'تمت إزالتك من ⁨$name⁩';
+  }
+
+  @override
+  String get groupInfoLeaveGroupLine =>
+      'ستتوقف عن تلقي رسائلها، ويُمسح كل ما فيها من هذا الهاتف.';
+
+  @override
+  String get groupInfoLeaveGroupAdmin =>
+      'ستتوقف عن تلقي رسائلها، ويُمسح كل ما فيها من هذا الهاتف. أنت مشرفها، فبعد مغادرتك لن يستطيع أحد تغيير أعضائها أو إعادة تسميتها.';
+
+  @override
+  String get groupInfoLeaveRoomMaker =>
+      'يُمسح كل ما فيها من هذا الهاتف الآن، ويزول المفتاح الذي استخدمته هنا إلى الأبد. أنت من أنشأ هذه الغرفة، لذا لن يُدخل رابطها أحدًا بعد الآن.';
 
   @override
   String get groupInfoLeave => 'مغادرة';
@@ -3263,6 +3295,11 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String introduceGotItButCouldNotBe(Object c, Object b) {
     return 'وصل التعريف إلى ⁨$c⁩، لكن تعذّر الوصول إلى ⁨$b⁩';
+  }
+
+  @override
+  String introduceIntroduced(Object b, Object c) {
+    return 'حصل كلٌّ من ⁨$b⁩ و⁨$c⁩ على بطاقة الآخر';
   }
 
   @override
@@ -4755,7 +4792,18 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get roomCreateOffAnyoneWithThe => 'معطّل. أي شخص لديه الرابط';
+  String roomCreateOffUpTo(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'معطّل. أي شخص لديه الرابط، حتى ⁨$countString⁩',
+    );
+    return '$_temp0';
+  }
 
   @override
   String roomCreateThisRoomAndEverything(Object expiryWords) {

@@ -18,6 +18,21 @@ class MentionCandidate {
   const MentionCandidate({required this.id, this.name, this.avatar});
 }
 
+// who the @ picker offers: the other members by their three words. a room
+// offers no one, since its members are keys a mention never names
+List<MentionCandidate> mentionable(
+  List<String> members, {
+  required String me,
+  required bool room,
+  Map<String, String> names = const {},
+  Map<String, int?> faces = const {},
+}) => [
+  if (!room)
+    for (final id in members)
+      if (id != me)
+        MentionCandidate(id: id, name: names[id], avatar: faces[id]),
+];
+
 // the partial handle being typed at the cursor, or null when the cursor is
 // not right after an @word. an @ mid-word (an email) does not count.
 String? mentionQuery(String text, int cursor) {

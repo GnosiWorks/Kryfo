@@ -2619,6 +2619,20 @@ class AppLocalizationsVi extends AppLocalizations {
       'Họ sẽ không nhận được tin nhắn từ nhóm này nữa.';
 
   @override
+  String appGroupHoldsUpTo(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Một nhóm có tối đa $countString người',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get commonRemove => 'Gỡ bỏ';
 
   @override
@@ -2645,8 +2659,21 @@ class AppLocalizationsVi extends AppLocalizations {
       'Mọi thứ trong đó sẽ bị xóa sạch khỏi điện thoại này ngay bây giờ, và khóa bạn dùng ở đây sẽ mất vĩnh viễn.';
 
   @override
-  String get groupInfoYouWillStopReceiving =>
-      'Bạn sẽ không nhận tin nhắn nữa và các thành viên khác sẽ thấy bạn rời đi.';
+  String groupChatYouWereRemovedFrom(Object name) {
+    return 'Bạn đã bị xóa khỏi $name';
+  }
+
+  @override
+  String get groupInfoLeaveGroupLine =>
+      'Bạn sẽ không nhận tin nhắn của nhóm nữa, và mọi thứ trong đó sẽ bị xóa khỏi điện thoại này.';
+
+  @override
+  String get groupInfoLeaveGroupAdmin =>
+      'Bạn sẽ không nhận tin nhắn của nhóm nữa, và mọi thứ trong đó sẽ bị xóa khỏi điện thoại này. Bạn là quản trị viên, nên sau khi bạn rời đi sẽ không ai thay đổi được thành viên hay đổi tên nhóm.';
+
+  @override
+  String get groupInfoLeaveRoomMaker =>
+      'Mọi thứ trong đó sẽ bị xóa sạch khỏi điện thoại này ngay bây giờ, và khóa bạn dùng ở đây sẽ mất vĩnh viễn. Bạn đã tạo phòng này, nên liên kết của nó sẽ không cho ai vào nữa.';
 
   @override
   String get groupInfoLeave => 'Rời đi';
@@ -3160,6 +3187,11 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String introduceGotItButCouldNotBe(Object c, Object b) {
     return '$c đã nhận, nhưng không liên lạc được với $b';
+  }
+
+  @override
+  String introduceIntroduced(Object b, Object c) {
+    return '$b và $c giờ đã có thẻ của nhau';
   }
 
   @override
@@ -4674,7 +4706,18 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get roomCreateOffAnyoneWithThe => 'Tắt. Bất kỳ ai có liên kết';
+  String roomCreateOffUpTo(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Tắt. Bất kỳ ai có liên kết, tối đa $countString người',
+    );
+    return '$_temp0';
+  }
 
   @override
   String roomCreateThisRoomAndEverything(Object expiryWords) {

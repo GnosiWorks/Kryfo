@@ -2634,6 +2634,21 @@ class AppLocalizationsFa extends AppLocalizations {
       'دیگر پیامی از این گروه دریافت نمی‌کند.';
 
   @override
+  String appGroupHoldsUpTo(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'هر گروه حداکثر ⁨$countString⁩ نفر جا دارد',
+      one: 'هر گروه حداکثر ⁨$countString⁩ نفر جا دارد',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get commonRemove => 'حذف';
 
   @override
@@ -2660,8 +2675,21 @@ class AppLocalizationsFa extends AppLocalizations {
       'همه‌چیزِ آن همین حالا از این گوشی پاک می‌شود، و کلیدی که این‌جا به کار بردید برای همیشه از بین می‌رود.';
 
   @override
-  String get groupInfoYouWillStopReceiving =>
-      'دیگر پیامی دریافت نمی‌کنید و بقیه‌ی اعضا رفتن شما را می‌بینند.';
+  String groupChatYouWereRemovedFrom(Object name) {
+    return 'شما از ⁨$name⁩ حذف شدید';
+  }
+
+  @override
+  String get groupInfoLeaveGroupLine =>
+      'دیگر پیام‌هایش را دریافت نمی‌کنید و همه‌چیزِ آن از این گوشی پاک می‌شود.';
+
+  @override
+  String get groupInfoLeaveGroupAdmin =>
+      'دیگر پیام‌هایش را دریافت نمی‌کنید و همه‌چیزِ آن از این گوشی پاک می‌شود. شما مدیر آن هستید، پس بعد از رفتن شما هیچ‌کس نمی‌تواند اعضا را تغییر دهد یا نامش را عوض کند.';
+
+  @override
+  String get groupInfoLeaveRoomMaker =>
+      'همه‌چیزِ آن همین حالا از این گوشی پاک می‌شود، و کلیدی که این‌جا به کار بردید برای همیشه از بین می‌رود. این اتاق را شما ساختید، پس پیوندش دیگر کسی را راه نمی‌دهد.';
 
   @override
   String get groupInfoLeave => 'ترک کردن';
@@ -3182,6 +3210,11 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String introduceGotItButCouldNotBe(Object c, Object b) {
     return '⁨$c⁩ آن را گرفت، اما ⁨$b⁩ در دسترس نبود';
+  }
+
+  @override
+  String introduceIntroduced(Object b, Object c) {
+    return '⁨$b⁩ و ⁨$c⁩ حالا کارت همدیگر را دارند';
   }
 
   @override
@@ -4690,7 +4723,18 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
-  String get roomCreateOffAnyoneWithThe => 'خاموش. هر کس پیوند را داشته باشد';
+  String roomCreateOffUpTo(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'خاموش. هر کس پیوند را داشته باشد، تا ⁨$countString⁩ نفر',
+    );
+    return '$_temp0';
+  }
 
   @override
   String roomCreateThisRoomAndEverything(Object expiryWords) {

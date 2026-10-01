@@ -2631,6 +2631,21 @@ class AppLocalizationsTr extends AppLocalizations {
       'Artık bu gruptan mesaj almayacak.';
 
   @override
+  String appGroupHoldsUpTo(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Bir grupta en fazla $countString kişi olabilir',
+      one: 'Bir grupta en fazla $countString kişi olabilir',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get commonRemove => 'Kaldır';
 
   @override
@@ -2657,8 +2672,21 @@ class AppLocalizationsTr extends AppLocalizations {
       'İçindeki her şey şimdi bu telefondan silinir ve burada kullandığın anahtar sonsuza dek kaybolur.';
 
   @override
-  String get groupInfoYouWillStopReceiving =>
-      'Artık mesaj almayacaksın ve diğer üyeler ayrıldığını görecek.';
+  String groupChatYouWereRemovedFrom(Object name) {
+    return 'Çıkarıldın: $name';
+  }
+
+  @override
+  String get groupInfoLeaveGroupLine =>
+      'Artık mesajlarını almayacaksın ve içindeki her şey bu telefondan silinir.';
+
+  @override
+  String get groupInfoLeaveGroupAdmin =>
+      'Artık mesajlarını almayacaksın ve içindeki her şey bu telefondan silinir. Yöneticisi sensin, bu yüzden sen ayrıldıktan sonra kimse üyeleri ya da adını değiştiremez.';
+
+  @override
+  String get groupInfoLeaveRoomMaker =>
+      'İçindeki her şey şimdi bu telefondan silinir ve burada kullandığın anahtar sonsuza dek kaybolur. Bu odayı sen kurdun, bu yüzden bağlantısıyla artık kimse giremez.';
 
   @override
   String get groupInfoLeave => 'Çık';
@@ -3184,6 +3212,11 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String introduceGotItButCouldNotBe(Object c, Object b) {
     return '$c aldı ama $b ulaşılamaz durumdaydı';
+  }
+
+  @override
+  String introduceIntroduced(Object b, Object c) {
+    return '$b ve $c artık birbirinin kartına sahip';
   }
 
   @override
@@ -4701,7 +4734,18 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get roomCreateOffAnyoneWithThe => 'Kapalı. Bağlantıya sahip herkes';
+  String roomCreateOffUpTo(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Kapalı. Bağlantıya sahip herkes, en fazla $countString kişi',
+    );
+    return '$_temp0';
+  }
 
   @override
   String roomCreateThisRoomAndEverything(Object expiryWords) {

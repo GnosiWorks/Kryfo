@@ -2652,6 +2652,21 @@ class AppLocalizationsIt extends AppLocalizations {
       'Non riceverà più messaggi da questo gruppo.';
 
   @override
+  String appGroupHoldsUpTo(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Un gruppo può avere al massimo $countString persone',
+      one: 'Un gruppo può avere al massimo $countString persona',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get commonRemove => 'Rimuovi';
 
   @override
@@ -2678,8 +2693,21 @@ class AppLocalizationsIt extends AppLocalizations {
       'Tutto ciò che contiene viene cancellato subito da questo telefono, e la chiave che hai usato qui sparisce per sempre.';
 
   @override
-  String get groupInfoYouWillStopReceiving =>
-      'Non riceverai più messaggi e gli altri membri vedranno la tua uscita.';
+  String groupChatYouWereRemovedFrom(Object name) {
+    return 'Non fai più parte di $name';
+  }
+
+  @override
+  String get groupInfoLeaveGroupLine =>
+      'Non riceverai più i suoi messaggi, e tutto ciò che contiene viene cancellato da questo telefono.';
+
+  @override
+  String get groupInfoLeaveGroupAdmin =>
+      'Non riceverai più i suoi messaggi, e tutto ciò che contiene viene cancellato da questo telefono. Sei l\'admin, quindi dopo che esci nessuno potrà cambiare chi ne fa parte né rinominarlo.';
+
+  @override
+  String get groupInfoLeaveRoomMaker =>
+      'Tutto ciò che contiene viene cancellato subito da questo telefono, e la chiave che hai usato qui sparisce per sempre. Hai creato tu questa stanza, quindi il suo link non farà più entrare nessuno.';
 
   @override
   String get groupInfoLeave => 'Esci';
@@ -3201,6 +3229,11 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String introduceGotItButCouldNotBe(Object c, Object b) {
     return '$c l\'ha ricevuto, ma $b non è raggiungibile';
+  }
+
+  @override
+  String introduceIntroduced(Object b, Object c) {
+    return '$b e $c ora hanno il biglietto l\'uno dell\'altro';
   }
 
   @override
@@ -4723,8 +4756,18 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String get roomCreateOffAnyoneWithThe =>
-      'Disattivato. Chiunque abbia il link';
+  String roomCreateOffUpTo(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Disattivato. Chiunque abbia il link, fino a $countString',
+    );
+    return '$_temp0';
+  }
 
   @override
   String roomCreateThisRoomAndEverything(Object expiryWords) {
