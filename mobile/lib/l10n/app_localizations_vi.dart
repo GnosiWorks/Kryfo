@@ -4022,6 +4022,13 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không có gì ở mã đó. Có thể mã đã tự hủy, hoặc họ chưa chia sẻ.';
 
   @override
+  String get pairCodeUnreached =>
+      'Không liên lạc được với các relay. Hãy thử lại sau giây lát.';
+
+  @override
+  String get pairCodeFailed => 'Không thành công. Hãy thử lại.';
+
+  @override
   String get pairCodeTypeTheSixDigits => 'Nhập sáu chữ số họ đọc cho bạn.';
 
   @override
@@ -6547,6 +6554,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
     return '$goodString được chấp nhận, $badString không hiểu được';
   }
+
+  @override
+  String get bridgesNoneUsable =>
+      'Không dòng nào ở đây là cầu nối dùng được, nên cầu nối vẫn tắt';
 
   @override
   String get languageTitle => 'Ngôn ngữ';

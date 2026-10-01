@@ -4106,6 +4106,13 @@ class AppLocalizationsUk extends AppLocalizations {
       'За цим кодом нічого немає. Можливо, він уже зник або ним ще не поділилися.';
 
   @override
+  String get pairCodeUnreached =>
+      'Ретранслятори не відповіли. Спробуй трохи згодом.';
+
+  @override
+  String get pairCodeFailed => 'Не вийшло. Спробуй ще раз.';
+
+  @override
   String get pairCodeTypeTheSixDigits =>
       'Введи шість цифр, які тобі продиктували.';
 
@@ -6674,6 +6681,10 @@ class AppLocalizationsUk extends AppLocalizations {
 
     return 'Прийнято: $goodString, не розпізнано: $badString';
   }
+
+  @override
+  String get bridgesNoneUsable =>
+      'Жоден із цих рядків не підходить як міст, тому мости лишаються вимкненими';
 
   @override
   String get languageTitle => 'Мова';

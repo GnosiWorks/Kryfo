@@ -6429,6 +6429,18 @@ abstract class AppLocalizations {
   /// **'Nothing at that code. It may have burned, or they have not shared it yet.'**
   String get pairCodeNothingAtThatCode;
 
+  /// widgets/pair_join.dart, widgets/pair_code_panel.dart: no relay answered the lookup or took the share, so nothing is known about the code
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t reach the relays. Try again in a moment.'**
+  String get pairCodeUnreached;
+
+  /// widgets/pair_join.dart, widgets/pair_code_panel.dart: sharing or looking up a pairing code failed for another reason
+  ///
+  /// In en, this message translates to:
+  /// **'That didn\'t work. Try again.'**
+  String get pairCodeFailed;
+
   /// screens/pair_code_screen.dart
   ///
   /// In en, this message translates to:
@@ -10514,6 +10526,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{good} accepted, {bad} not understood'**
   String bridgesSavedSomeBad(int good, int bad);
+
+  /// screens/bridges_screen.dart: after saving, not one line was a bridge line, so bridges were not turned on
+  ///
+  /// In en, this message translates to:
+  /// **'None of these lines is a usable bridge, so bridges stay off'**
+  String get bridgesNoneUsable;
 
   /// widgets/language_sheet.dart: the sheet title and the settings row
   ///

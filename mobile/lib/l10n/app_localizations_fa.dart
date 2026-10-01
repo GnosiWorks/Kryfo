@@ -4047,6 +4047,13 @@ class AppLocalizationsFa extends AppLocalizations {
       'زیر این کد چیزی نیست. شاید محو شده باشد، یا او هنوز آن را هم‌رسانی نکرده.';
 
   @override
+  String get pairCodeUnreached =>
+      'به رله‌ها دسترسی نشد. کمی بعد دوباره امتحان کنید.';
+
+  @override
+  String get pairCodeFailed => 'انجام نشد. دوباره امتحان کنید.';
+
+  @override
   String get pairCodeTypeTheSixDigits => 'شش رقمی را که او می‌خواند تایپ کنید.';
 
   @override
@@ -6573,6 +6580,10 @@ class AppLocalizationsFa extends AppLocalizations {
 
     return '⁨$goodString⁩ پذیرفته شد، ⁨$badString⁩ فهمیده نشد';
   }
+
+  @override
+  String get bridgesNoneUsable =>
+      'هیچ‌کدام از این خط‌ها پل قابل‌استفاده‌ای نیست، پس پل‌ها خاموش می‌مانند';
 
   @override
   String get languageTitle => 'زبان';

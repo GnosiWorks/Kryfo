@@ -4071,6 +4071,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Rien à ce code. Il a peut-être disparu, ou la personne ne l’a pas encore partagé.';
 
   @override
+  String get pairCodeUnreached =>
+      'Les relais n’ont pas répondu. Réessayez dans un instant.';
+
+  @override
+  String get pairCodeFailed => 'Ça n’a pas marché. Réessayez.';
+
+  @override
   String get pairCodeTypeTheSixDigits =>
       'Tapez les six chiffres qu’on vous a lus.';
 
@@ -6626,6 +6633,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
     return 'Acceptés : $goodString, non compris : $badString';
   }
+
+  @override
+  String get bridgesNoneUsable =>
+      'Aucune de ces lignes n’est un pont utilisable, les ponts restent donc désactivés';
 
   @override
   String get languageTitle => 'Langue';

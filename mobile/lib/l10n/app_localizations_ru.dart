@@ -4118,6 +4118,13 @@ class AppLocalizationsRu extends AppLocalizations {
       'По этому коду ничего нет. Возможно, он уже сгорел или им ещё не поделились.';
 
   @override
+  String get pairCodeUnreached =>
+      'Ретрансляторы не ответили. Попробуй чуть позже.';
+
+  @override
+  String get pairCodeFailed => 'Не получилось. Попробуй ещё раз.';
+
+  @override
   String get pairCodeTypeTheSixDigits =>
       'Введи шесть цифр, которые тебе продиктовали.';
 
@@ -6679,6 +6686,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
     return 'Принято: $goodString, не распознано: $badString';
   }
+
+  @override
+  String get bridgesNoneUsable =>
+      'Ни одна из этих строк не подходит как мост, поэтому мосты остаются выключенными';
 
   @override
   String get languageTitle => 'Язык';

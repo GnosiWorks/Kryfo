@@ -4121,6 +4121,13 @@ class AppLocalizationsAr extends AppLocalizations {
       'لا شيء عند هذا الرمز. ربما اختفى، أو لم يشاركه بعد.';
 
   @override
+  String get pairCodeUnreached =>
+      'تعذّر الوصول إلى المُرحِّلات. حاول مجددًا بعد قليل.';
+
+  @override
+  String get pairCodeFailed => 'لم ينجح ذلك. حاول مجددًا.';
+
+  @override
   String get pairCodeTypeTheSixDigits => 'اكتب الأرقام الستة التي قرأها عليك.';
 
   @override
@@ -6674,6 +6681,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
     return 'قُبل ⁨$goodString⁩، ولم يُفهم ⁨$badString⁩';
   }
+
+  @override
+  String get bridgesNoneUsable =>
+      'لا يصلح أي سطر هنا جسرًا، لذا تبقى الجسور متوقفة';
 
   @override
   String get languageTitle => 'اللغة';

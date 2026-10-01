@@ -4030,6 +4030,13 @@ class AppLocalizationsId extends AppLocalizations {
       'Tidak ada apa pun di kode itu. Mungkin sudah hilang, atau dia belum membagikannya.';
 
   @override
+  String get pairCodeUnreached =>
+      'Tidak bisa menghubungi relay. Coba lagi sebentar lagi.';
+
+  @override
+  String get pairCodeFailed => 'Tidak berhasil. Coba lagi.';
+
+  @override
   String get pairCodeTypeTheSixDigits => 'Ketik enam angka yang dia bacakan.';
 
   @override
@@ -6558,6 +6565,10 @@ class AppLocalizationsId extends AppLocalizations {
 
     return '$goodString diterima, $badString tidak dikenali';
   }
+
+  @override
+  String get bridgesNoneUsable =>
+      'Tidak ada baris yang bisa dipakai sebagai jembatan, jadi jembatan tetap mati';
 
   @override
   String get languageTitle => 'Bahasa';

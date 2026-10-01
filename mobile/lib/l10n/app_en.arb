@@ -5039,6 +5039,14 @@
   "@pairCodeNothingAtThatCode": {
     "description": "screens/pair_code_screen.dart"
   },
+  "pairCodeUnreached": "Couldn't reach the relays. Try again in a moment.",
+  "@pairCodeUnreached": {
+    "description": "widgets/pair_join.dart, widgets/pair_code_panel.dart: no relay answered the lookup or took the share, so nothing is known about the code"
+  },
+  "pairCodeFailed": "That didn't work. Try again.",
+  "@pairCodeFailed": {
+    "description": "widgets/pair_join.dart, widgets/pair_code_panel.dart: sharing or looking up a pairing code failed for another reason"
+  },
   "pairCodeTypeTheSixDigits": "Type the six digits they read out.",
   "@pairCodeTypeTheSixDigits": {
     "description": "screens/pair_code_screen.dart"
@@ -8330,6 +8338,10 @@
         "format": "decimalPattern"
       }
     }
+  },
+  "bridgesNoneUsable": "None of these lines is a usable bridge, so bridges stay off",
+  "@bridgesNoneUsable": {
+    "description": "screens/bridges_screen.dart: after saving, not one line was a bridge line, so bridges were not turned on"
   },
   "languageTitle": "Language",
   "@languageTitle": {

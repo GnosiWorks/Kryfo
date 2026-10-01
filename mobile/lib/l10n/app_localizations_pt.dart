@@ -4063,6 +4063,13 @@ class AppLocalizationsPt extends AppLocalizations {
       'Nada nesse código. Ele pode ter sumido, ou a pessoa ainda não compartilhou.';
 
   @override
+  String get pairCodeUnreached =>
+      'Não foi possível falar com os retransmissores. Tente de novo em instantes.';
+
+  @override
+  String get pairCodeFailed => 'Não deu certo. Tente de novo.';
+
+  @override
   String get pairCodeTypeTheSixDigits =>
       'Digite os seis dígitos que a pessoa leu.';
 
@@ -6609,6 +6616,10 @@ class AppLocalizationsPt extends AppLocalizations {
 
     return 'aceitas: $goodString, não entendidas: $badString';
   }
+
+  @override
+  String get bridgesNoneUsable =>
+      'Nenhuma destas linhas é uma ponte utilizável, então as pontes continuam desligadas';
 
   @override
   String get languageTitle => 'Idioma';

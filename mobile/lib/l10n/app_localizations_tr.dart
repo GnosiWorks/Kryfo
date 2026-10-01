@@ -4054,6 +4054,13 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bu kodda bir şey yok. Silinmiş olabilir ya da henüz paylaşmamış olabilir.';
 
   @override
+  String get pairCodeUnreached =>
+      'Aktarıcılara ulaşılamadı. Birazdan yeniden dene.';
+
+  @override
+  String get pairCodeFailed => 'Olmadı. Yeniden dene.';
+
+  @override
   String get pairCodeTypeTheSixDigits => 'Sana okuduğu altı rakamı yaz.';
 
   @override
@@ -6586,6 +6593,10 @@ class AppLocalizationsTr extends AppLocalizations {
 
     return '$goodString kabul edildi, $badString anlaşılmadı';
   }
+
+  @override
+  String get bridgesNoneUsable =>
+      'Bu satırların hiçbiri kullanılabilir bir köprü değil, bu yüzden köprüler kapalı kalıyor';
 
   @override
   String get languageTitle => 'Dil';

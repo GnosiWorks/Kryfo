@@ -3868,6 +3868,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pairCodeNothingAtThatCode => '这个码下面什么都没有。它可能已经焚毁，或者对方还没有分享。';
 
   @override
+  String get pairCodeUnreached => '联系不上中继。请稍后再试。';
+
+  @override
+  String get pairCodeFailed => '没有成功。请再试一次。';
+
+  @override
   String get pairCodeTypeTheSixDigits => '输入对方念出的六位数字。';
 
   @override
@@ -6308,6 +6314,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
     return '$goodString 条已接受，$badString 条无法识别';
   }
+
+  @override
+  String get bridgesNoneUsable => '这些行里没有可用的网桥，所以网桥保持关闭';
 
   @override
   String get languageTitle => '语言';
@@ -10985,6 +10994,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get pairCodeNothingAtThatCode => '這組碼沒有對應任何東西。它可能已經焚毀，或對方還沒分享。';
 
   @override
+  String get pairCodeUnreached => '聯絡不上中繼。請稍後再試。';
+
+  @override
+  String get pairCodeFailed => '沒有成功。請再試一次。';
+
+  @override
   String get pairCodeTypeTheSixDigits => '輸入對方唸出的六位數字。';
 
   @override
@@ -13424,6 +13439,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
     return '已接受 $goodString 個，$badString 個無法辨識';
   }
+
+  @override
+  String get bridgesNoneUsable => '這些行裡沒有可用的橋接，所以橋接維持關閉';
 
   @override
   String get languageTitle => '語言';

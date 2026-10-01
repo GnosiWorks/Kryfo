@@ -4080,6 +4080,13 @@ class AppLocalizationsDe extends AppLocalizations {
       'Unter diesem Code ist nichts. Er ist vielleicht schon verschwunden, oder die Person hat ihn noch nicht geteilt.';
 
   @override
+  String get pairCodeUnreached =>
+      'Die Relais waren nicht erreichbar. Versuch es gleich noch mal.';
+
+  @override
+  String get pairCodeFailed => 'Das hat nicht geklappt. Versuch es noch mal.';
+
+  @override
   String get pairCodeTypeTheSixDigits =>
       'Gib die sechs Ziffern ein, die dir vorgelesen wurden.';
 
@@ -6632,6 +6639,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
     return '$goodString übernommen, $badString nicht verstanden';
   }
+
+  @override
+  String get bridgesNoneUsable =>
+      'Keine dieser Zeilen ist eine brauchbare Brücke, also bleiben Brücken aus';
 
   @override
   String get languageTitle => 'Sprache';

@@ -4026,6 +4026,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Nothing at that code. It may have burned, or they have not shared it yet.';
 
   @override
+  String get pairCodeUnreached =>
+      'Couldn\'t reach the relays. Try again in a moment.';
+
+  @override
+  String get pairCodeFailed => 'That didn\'t work. Try again.';
+
+  @override
   String get pairCodeTypeTheSixDigits => 'Type the six digits they read out.';
 
   @override
@@ -6553,6 +6560,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
     return '$goodString accepted, $badString not understood';
   }
+
+  @override
+  String get bridgesNoneUsable =>
+      'None of these lines is a usable bridge, so bridges stay off';
 
   @override
   String get languageTitle => 'Language';

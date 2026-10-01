@@ -5,12 +5,16 @@
 // card springs in under 300 ms or simply appears with less movement, and
 // the words stay left to right in a right-to-left language. the sharing
 // side shows its own three words under the code.
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
+import 'package:kryfo/main.dart' show appState;
+import 'package:kryfo/theme.dart';
 import 'package:kryfo/widgets/kryfo_avatar.dart';
+import 'package:kryfo/widgets/pair_code_panel.dart';
 import 'package:kryfo/widgets/pair_join.dart';
 
 import 'pin_flow_fakes.dart' show app, phone;
@@ -231,5 +235,102 @@ void main() {
     expect(find.text(l10n.pairCodePanelYourWords), findsOneWidget);
     expect(find.text(_words), findsOneWidget);
     expect(t.widget<Text>(find.text(_words)).textDirection, TextDirection.ltr);
+  });
+
+  testWidgets('no relay answering is not a wrong code', (t) async {
+    phone(t);
+    final p = _Pair([pairUnreached]);
+    await t.pumpWidget(app(p.widget()));
+    await _look(t);
+    await t.pumpAndSettle();
+    // tried again, as a code not shared yet is
+    expect(p.looked, hasLength(3));
+    expect(find.text(l10n.pairCodeUnreached), findsOneWidget);
+    expect(find.text(l10n.pairCodeNothingAtThatCode), findsNothing);
+    expect(
+      t.widget<Text>(find.text(l10n.pairCodeUnreached)).style!.color,
+      HaloColors.rose,
+    );
+
+    // one look that was answered is enough to call the code empty
+    final q = _Pair([pairUnreached, 'empty', pairUnreached]);
+    await t.pumpWidget(app(q.widget()));
+    await t.pumpAndSettle();
+    await _look(t);
+    await t.pumpAndSettle();
+    expect(find.text(l10n.pairCodeNothingAtThatCode), findsOneWidget);
+
+    // a relay answering on a later look still finds the invite
+    final r = _Pair([pairUnreached, _invite]);
+    await t.pumpWidget(app(r.widget()));
+    await t.pumpAndSettle();
+    await _look(t);
+    await t.pumpAndSettle();
+    expect(find.byType(PairConfirm), findsOneWidget);
+  });
+
+  testWidgets('an engine error is worded, in every language', (t) async {
+    phone(t);
+    for (final loc in const [Locale('en'), Locale('fa')]) {
+      setL10nLocale(loc);
+      final p = _Pair(['error: key: no curve point']);
+      await t.pumpWidget(app(p.widget(), locale: loc));
+      await t.pumpAndSettle();
+      await _look(t);
+      await t.pumpAndSettle();
+      expect(p.looked, hasLength(1));
+      expect(find.text(l10n.pairCodeFailed), findsOneWidget);
+      expect(find.textContaining('no curve point'), findsNothing);
+    }
+    expect(pairErrorText(pairUnreached), l10n.pairCodeUnreached);
+  });
+
+  test('the share side and the engine name no relay the same way', () {
+    final engine = File('../engine/paircode.go').readAsStringSync();
+    expect(engine, contains('const pairUnreached = "$pairUnreached"'));
+    for (final f in [
+      'lib/widgets/pair_code_panel.dart',
+      'lib/widgets/pair_join.dart',
+      'lib/screens/pair_code_screen.dart',
+    ]) {
+      final src = File(f).readAsStringSync();
+      expect(src, isNot(contains("replaceFirst('error: ', '')")), reason: f);
+      expect(src, isNot(contains('no relays accepted')), reason: f);
+    }
+  });
+
+  testWidgets('a share no relay took is worded, in the warning colour', (
+    t,
+  ) async {
+    phone(t);
+    final was = appState.myOnion;
+    appState.myOnion = 'sharer.onion';
+    addTearDown(() => appState.myOnion = was);
+    for (final (res, said) in [
+      (pairUnreached, l10n.pairCodeUnreached),
+      ('error: relay said no', l10n.pairCodeFailed),
+    ]) {
+      final codes = <String>[];
+      await t.pumpWidget(
+        app(
+          PairCodePanel(
+            publish: (code) async {
+              codes.add(code);
+              return res;
+            },
+          ),
+        ),
+      );
+      await t.pumpAndSettle();
+      await t.tap(find.text(l10n.pairCodePanelOrMakeASix));
+      await t.pumpAndSettle();
+      expect(codes, hasLength(1));
+      expect(find.text(said), findsOneWidget);
+      expect(t.widget<Text>(find.text(said)).style!.color, HaloColors.rose);
+      expect(find.textContaining('relay said no'), findsNothing);
+      // nothing went up, so the button is there for another go
+      expect(find.text(l10n.pairCodePanelOrMakeASix), findsOneWidget);
+      await t.pumpWidget(const SizedBox());
+    }
   });
 }

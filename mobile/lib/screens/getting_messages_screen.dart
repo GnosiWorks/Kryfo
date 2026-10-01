@@ -83,11 +83,11 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
   @override
   Widget build(BuildContext context) {
     final mode = appState.deliveryMode;
-    final s = appState.torStatus;
-    final connecting = s == TorStatus.starting || s == TorStatus.bootstrapped;
+    // the app's one meaning of connected, the same the home screen shows
+    final connecting = appState.linkComing;
     final status = deliveryStatus(
       mode: mode,
-      connected: s == TorStatus.reachable || s == TorStatus.publishing,
+      connected: appState.linkUp,
       connecting: connecting,
       lastCheckMs: appState.lastCheckAt,
       lastWakeMs: appState.lastWakeAt,

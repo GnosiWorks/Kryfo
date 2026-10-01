@@ -136,9 +136,8 @@ class _JoinSide extends StatelessWidget {
     return PairJoin(
       // a quiet session never reaches the relays: it answers as unreachable
       // ones would
-      fetch: (code) async => sessionQuiet
-          ? 'error: no relays accepted'
-          : await engine.pairCodeFetch(code),
+      fetch: (code) async =>
+          sessionQuiet ? pairUnreached : await engine.pairCodeFetch(code),
       add: (invite) async {
         final status = await handleHaloUri(invite);
         await appState.refreshContacts();

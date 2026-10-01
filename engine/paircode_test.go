@@ -250,3 +250,80 @@ func TestPairCodeEventHasItsOwnAuthor(t *testing.T) {
 		t.Fatalf("the event is not at the code's address: %v", tg)
 	}
 }
+
+// a lookup no relay answered says so, rather than that the code holds
+// nothing: the code may be right and the relays out of reach
+func TestPairCodeUnreachedIsNotEmpty(t *testing.T) {
+	const code = "482913"
+
+	t.Run("no relay answers", func(t *testing.T) {
+		a := newRelayStandIn(t, 0)
+		b := newRelayStandIn(t, 0)
+		useStandIns(t, modeBalanced, nil, a, b)
+		a.srv.Close()
+		b.srv.Close()
+		if got := pairCodeFetch(code); got != pairUnreached {
+			t.Fatalf("the joiner got %q", got)
+		}
+		if got := pairCodePublish(code, "kryfo://share?id=the-sharer"); got != pairUnreached {
+			t.Fatalf("the sharer got %q", got)
+		}
+	})
+
+	t.Run("one answers with nothing", func(t *testing.T) {
+		a := newRelayStandIn(t, 0)
+		b := newRelayStandIn(t, 0)
+		useStandIns(t, modeBalanced, nil, a, b)
+		b.srv.Close()
+		if got := pairCodeFetch(code); got != "empty" {
+			t.Fatalf("the joiner got %q", got)
+		}
+	})
+
+	t.Run("none configured", func(t *testing.T) {
+		useStandIns(t, modeBalanced, nil)
+		if got := pairCodeFetch(code); got != pairUnreached {
+			t.Fatalf("the joiner got %q", got)
+		}
+	})
+}
+
+// a relay slower to open than the deadline is still waited for while no
+// other has answered
+func TestPairCodeWaitsForTheFirstAnswer(t *testing.T) {
+	old := pairQueryDeadline
+	pairQueryDeadline = 300 * time.Millisecond
+	t.Cleanup(func() { pairQueryDeadline = old })
+
+	const code = "482913"
+	const invite = "kryfo://share?id=the-sharer"
+	r := newRelayStandIn(t, 0)
+	r.upgradeDelay = time.Second
+	useStandIns(t, modeBalanced, nil, r)
+	r.store(pairEventAt(t, code, invite, time.Now()))
+	if got := pairCodeFetch(code); got != invite {
+		t.Fatalf("the joiner got %q", got)
+	}
+}
+
+// past the deadline the first answer ends the lookup, even an empty one: a
+// relay that never answers is not waited for to the end
+func TestPairCodeLateAnswerEndsTheWait(t *testing.T) {
+	old := pairQueryDeadline
+	pairQueryDeadline = 300 * time.Millisecond
+	t.Cleanup(func() { pairQueryDeadline = old })
+
+	const code = "482913"
+	slow := newRelayStandIn(t, 0)
+	slow.upgradeDelay = time.Second
+	silent := newRelayStandIn(t, 0)
+	silent.upgradeDelay = 8 * time.Second
+	useStandIns(t, modeBalanced, nil, slow, silent)
+	start := time.Now()
+	if got := pairCodeFetch(code); got != "empty" {
+		t.Fatalf("the joiner got %q", got)
+	}
+	if took := time.Since(start); took > 4*time.Second {
+		t.Fatalf("the lookup took %v", took)
+	}
+}

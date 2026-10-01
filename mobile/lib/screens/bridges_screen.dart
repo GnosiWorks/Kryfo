@@ -38,6 +38,9 @@ class _BridgesScreenState extends State<BridgesScreen> {
   // when the reconnect began, and the route before it
   int _since = 0;
   int _genBefore = 0;
+  // the last save asked for bridges and the engine took none of its lines.
+  // tor still reconnects, without bridges, and that is no success to report
+  bool _noneTaken = false;
   // the reconnect is watched once a second while the page is seen. away or
   // under the lock nothing ticks; back, it looks at once
   final _timers = SeenTimers();
@@ -146,7 +149,8 @@ class _BridgesScreenState extends State<BridgesScreen> {
     setState(() => _busy = true);
     HapticFeedback.mediumImpact();
     final lines = _ctrl.text.trim();
-    final r = await appState.applyBridges(lines, _on && lines.isNotEmpty);
+    final asked = _on && lines.isNotEmpty;
+    final r = await appState.applyBridges(lines, asked);
     // the route generation before the reconnect. the reconnect happens after
     // restartTor returns, so a "ready" in the next second or two is the old
     // tor. connected means a newer route that a relay has connected through.
@@ -155,6 +159,9 @@ class _BridgesScreenState extends State<BridgesScreen> {
     if (!mounted) return;
     setState(() {
       _result = r;
+      // the switch shows what the engine took, not what was asked
+      _on = appState.bridgesOn;
+      _noneTaken = asked && !appState.bridgesOn;
       _reconnecting = true;
       _elapsed = 0;
       _since = DateTime.now().millisecondsSinceEpoch;
@@ -176,6 +183,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
       _busy = false;
     });
     if (through) {
+      if (_noneTaken) return;
       HapticFeedback.mediumImpact();
       showHaloToast(context, l10n.bridgesConnected);
     } else {
@@ -475,13 +483,13 @@ class _BridgesScreenState extends State<BridgesScreen> {
                     padding: const EdgeInsets.only(top: 10),
                     child: RiseSwap(
                       child: Text(
-                        _resultLine(_result!),
+                        bridgesResultLine(_result!),
                         key: ValueKey(_result),
                         style: HaloType.mono(
                           size: 11,
-                          color: _result!.startsWith('ok')
-                              ? HaloColors.text2
-                              : HaloColors.rose,
+                          color: bridgesResultBad(_result!)
+                              ? HaloColors.rose
+                              : HaloColors.text2,
                         ),
                       ),
                     ),
@@ -888,10 +896,13 @@ class _Note extends StatelessWidget {
   );
 }
 
-String _resultLine(String r) {
+// the engine's answer to a save, for the line under the button
+@visibleForTesting
+String bridgesResultLine(String r) {
   final some = RegExp(
     r'^ok: (\d+) accepted, (\d+) not understood',
   ).firstMatch(r);
+  if (some != null && some.group(1) == '0') return l10n.bridgesNoneUsable;
   if (some != null) {
     return l10n.bridgesSavedSomeBad(
       int.parse(some.group(1)!),
@@ -902,3 +913,8 @@ String _resultLine(String r) {
   if (all != null) return l10n.bridgesSaved(int.parse(all.group(1)!));
   return r.replaceFirst('error: ', '');
 }
+
+// a save that left no bridge in use, said in the warning colour
+@visibleForTesting
+bool bridgesResultBad(String r) =>
+    !r.startsWith('ok') || r.startsWith('ok: 0 accepted');

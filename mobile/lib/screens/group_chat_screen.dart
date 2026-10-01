@@ -620,15 +620,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
               m.rowid = (r['rowid'] as int?) ?? 0;
               // only a stale sending out-message is dead: a live send (<60s
               // old) keeps its pill, or a working media send flips to failed
-              // mid-flight. while tor warms up the send is queued, not dead;
-              // outside onion there is no warmup to wait out.
-              final torUp =
-                  appState.sendMode != 'private' ||
-                  appState.torStatus == TorStatus.reachable;
-              final stale = m.when.isBefore(
-                DateTime.now().subtract(const Duration(seconds: 60)),
-              );
-              if (torUp && m.direction == 'out' && m.sending && stale) {
+              // mid-flight. the same rule as a 1:1 chat
+              if (m.direction == 'out' &&
+                  m.sending &&
+                  appState.sendLooksDead(m.when, msgUid: m.msgUid)) {
                 m.sending = false;
                 m.failed = true;
               }
@@ -736,11 +731,21 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     await _loadShieldFlags();
   }
 
+  // whether the route was up at the last change, so a send left 'sending'
+  // while it was down is looked at again once it comes up. a look that a
+  // send in flight held back stays due until that send ends
+  bool _wasReady = appState.torReady;
+  bool _deadLookDue = false;
+
   void _onAppStateChanged() {
     // a verdict landed after its message did: refresh the marks alone
     if (appState.shieldRev != _seenShieldRev && !_loading) {
       unawaited(_loadShieldFlags());
     }
+    final ready = appState.torReady;
+    if (ready && !_wasReady) _deadLookDue = true;
+    _wasReady = ready;
+    if (_lookAtDeadSends()) return;
     // only react to our own group's traffic, or every 1:1 message reloads
     // this screen and churns every photo bubble
     final rev = appState.chatRevOf('group:${widget.groupId}');
@@ -755,6 +760,26 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     }
     _tryAppendNew();
   }
+
+  // reloads when the route came up over a dead 'sending' row, so the
+  // reload marks it failed and retryable. true when it reloaded
+  bool _lookAtDeadSends() {
+    if (!_deadLookDue || _sending) return false;
+    _deadLookDue = false;
+    if (!appState.torReady || !_messages.any(_deadSend)) return false;
+    _seenRev = appState.chatRevOf('group:${widget.groupId}');
+    if (_loading) {
+      _reloadQueued = true;
+    } else {
+      _load();
+    }
+    return true;
+  }
+
+  bool _deadSend(_GMsg m) =>
+      m.direction == 'out' &&
+      m.sending &&
+      appState.sendLooksDead(m.when, msgUid: m.msgUid);
 
   // append-fast-path: pull only rows newer than our max rowid and add the
   // brand-new ones, instead of rebuilding the whole list on every multicast
@@ -1149,7 +1174,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           live.failed = !ok; // no member acknowledged -> tap-to-retry
         });
         // catch up any change deferred while this send was in flight.
-        if (!_messages.any((x) => x.sending)) _tryAppendNew();
+        if (!_lookAtDeadSends() && !_messages.any((x) => x.sending)) {
+          _tryAppendNew();
+        }
       }
     }
   }
