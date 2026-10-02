@@ -4,22 +4,32 @@
 // a message of the group before the create that makes it there. a text, a
 // poll or a sticker that missed a member reads sent once someone has it,
 // is owed to the rest the way a file is, and its bubble says how many have
-// it until they all do. the database methods and the app's sends are the
-// real ones, over rows kept in maps; signal and the wire are stand-ins
+// it until they all do. a take-back rides the same lanes, once to each
+// member. the database methods and the app's sends are the real ones, over
+// rows kept in maps; signal and the wire are stand-ins
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/container.dart';
 import 'package:kryfo/group_media_send.dart' show kGroupOwedTries;
 import 'package:kryfo/main.dart'
-    show AppState, HaloDb, HaloEngine, useDatabasesForTest, useEngineForTest;
+    show
+        AppState,
+        HaloDb,
+        HaloEngine,
+        groupUnsendRow,
+        useDatabasesForTest,
+        useEngineForTest;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/outbox.dart';
 import 'package:kryfo/polls.dart' show PollSpec;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:kryfo/wipe.dart' show haloWiping;
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
 import 'arrival_fakes.dart';
@@ -27,7 +37,7 @@ import 'mem_db.dart';
 import 'source_body.dart';
 
 class _Rows extends HaloDb {
-  _Rows(this.mem);
+  _Rows(this.mem, [super.container]);
   final MemDb mem;
   @override
   Future<Database> open() async => mem;
@@ -41,13 +51,16 @@ class _Rows extends HaloDb {
 class _Io extends ArrivalIo {
   final noSession = <String>{};
   final cut = <String>{};
+  void Function(String to, String plain)? onSend;
 
   @override
   Future<bool> hasSession(String peer) async => !noSession.contains(peer);
 
   @override
   Future<String> relaySend(String xPub, String cipher) async {
-    if (cut.contains(cipher.split(' ')[1])) return 'error: down';
+    final to = cipher.split(' ')[1];
+    if (cut.contains(to)) return 'error: down';
+    onSend?.call(to, cipher.substring('to $to '.length));
     return super.relaySend(xPub, cipher);
   }
 
@@ -57,11 +70,15 @@ class _Io extends ArrivalIo {
         unwrapMessage(c.substring('to $member '.length)),
   ];
 
-  // what went to [member], in order: a control by its type, a message by
-  // its text
+  // what went to [member], in order: a control by its type, a take-back
+  // by its uid, a message by its text
   List<String> got(String member) => [
     for (final m in to(member))
-      m.groupControl == null ? m.message : 'ctl:${m.groupControl!.type}',
+      m.unsend != null
+          ? 'unsend:${m.unsend}'
+          : m.groupControl == null
+          ? m.message
+          : 'ctl:${m.groupControl!.type}',
   ];
 }
 
@@ -167,7 +184,10 @@ void main() {
     app = await start();
   });
 
-  tearDown(() => docs.deleteSync(recursive: true));
+  tearDown(() {
+    haloWiping = false;
+    docs.deleteSync(recursive: true);
+  });
 
   group('a control', () {
     test('a group made with no route reaches its members once the route is '
@@ -478,6 +498,366 @@ void main() {
       expect(mem.rows('group_media_owed'), hasLength(1));
       await db.removeGroupMember('grp000000001', 'carol');
       expect(mem.rows('group_media_owed'), isEmpty);
+    });
+  });
+
+  group('an unsend', () {
+    const g = 'grp000000001';
+
+    // a message of mine in [group], as the screen keeps it
+    Future<void> mine(MemDb m, String uid, {String group = g}) =>
+        m.insert('messages', {
+          'peer_id': 'me',
+          'direction': 'out',
+          'plaintext': 'oops',
+          'sent_at': 1,
+          'msg_uid': uid,
+          'group_id': group,
+          'sent': 1,
+        });
+
+    List<String> unsends(String member) => [
+      for (final m in io.to(member))
+        if (m.unsend != null) m.unsend!,
+    ];
+
+    setUp(() async {
+      await _theirGroup(mem, g, ['me', 'bob', 'carol']);
+      await mine(mem, 'u1');
+    });
+
+    test('reaches a member offline when it was made, after a restart and '
+        'once their session heals', () async {
+      io.noSession.add('carol');
+      await app.unsendInGroup(g, 'u1');
+      await app.ctlPassForTest;
+      expect(mem.rows('messages'), isEmpty);
+      expect(unsends('bob'), ['u1']);
+      expect(unsends('carol'), isEmpty);
+      expect(mem.rows('group_ctl_out').single['member'], 'carol');
+
+      // a restart: nothing in memory, the row on disk, its wait not up
+      app = await start();
+      await tick(app);
+      expect(unsends('carol'), isEmpty);
+
+      io.noSession.clear();
+      await app.owedDueForTest('carol');
+      await app.ctlPassForTest;
+      expect(unsends('carol'), ['u1']);
+      expect(io.to('carol').single.groupId, g);
+      expect(mem.rows('group_ctl_out'), isEmpty);
+    });
+
+    test('goes behind what a member is still to get of the group', () async {
+      io.cut.add('carol');
+      final mg = await app.createGroupAndAnnounce('Trip', ['bob', 'carol']);
+      await mine(mem, 'u2', group: mg);
+      await app.renameGroupAndAnnounce(mg, 'Trip two');
+      await app.unsendInGroup(mg, 'u2');
+      await app.ctlPassForTest;
+      expect(io.got('bob'), ['ctl:create', 'ctl:rename', 'unsend:u2']);
+      expect(io.got('carol'), isEmpty);
+      expect(queued('carol'), hasLength(3));
+
+      io.cut.clear();
+      await due();
+      await tick(app);
+      expect(io.got('carol'), ['ctl:create', 'ctl:rename', 'unsend:u2']);
+      expect(mem.rows('group_ctl_out'), isEmpty);
+    });
+
+    test('goes once to each, however often it is asked for or tried', () async {
+      io.cut.addAll(['bob', 'carol']);
+      await app.unsendInGroup(g, 'u1');
+      await app.unsendInGroup(g, 'u1');
+      await app.ctlPassForTest;
+      expect(queued('bob'), hasLength(1));
+      expect(queued('carol'), hasLength(1));
+
+      io.cut.remove('bob');
+      await app.owedDueForTest('bob');
+      await app.ctlPassForTest;
+      expect(unsends('bob'), ['u1']);
+      // passes, heals, a restart and a message that forces the lanes
+      expect(await app.sendToGroup(g, 'after', msgUid: 'a1'), isTrue);
+      io.cut.clear();
+      for (var i = 0; i < 2; i++) {
+        await due();
+        await tick(app);
+        await app.owedDueForTest('bob');
+        await app.owedDueForTest('carol');
+        await app.ctlPassForTest;
+        app = await start();
+      }
+      expect(unsends('bob'), ['u1']);
+      expect(unsends('carol'), ['u1']);
+      expect(io.got('carol'), ['unsend:u1', 'after']);
+      expect(mem.rows('group_ctl_out'), isEmpty);
+    });
+
+    test('a member who left before it was made is not queued for; one who '
+        'leaves while it waits still gets it', () async {
+      await db.removeGroupMember(g, 'bob');
+      io.cut.add('carol');
+      await app.unsendInGroup(g, 'u1');
+      await app.ctlPassForTest;
+      expect(queued('bob'), isEmpty);
+      expect(queued('carol'), hasLength(1));
+
+      // the phones out there keep a group's messages after a leave, and
+      // still act on a take-back
+      final leave = await wrapMessage(
+        '',
+        groupId: g,
+        groupControl: const GroupControl(type: 'leave'),
+        sender: asSender('carol'),
+      );
+      io.opens['c-leave'] = ('carol', leave);
+      await app.receiveOnion(['c-leave']);
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      expect(await db.getGroupMembers(g), ['me']);
+      expect(queued('carol'), hasLength(1));
+
+      io.cut.clear();
+      await due();
+      await tick(app);
+      expect(unsends('bob'), isEmpty);
+      expect(unsends('carol'), ['u1']);
+      expect(mem.rows('group_ctl_out'), isEmpty);
+    });
+
+    test('a member taken out after it was made still gets it, then the '
+        'remove', () async {
+      final mg = await app.createGroupAndAnnounce('Trip', ['bob', 'carol']);
+      await mine(mem, 'u3', group: mg);
+      await app.ctlPassForTest;
+      // carol has the group and the message, then is out of reach
+      io.cut.add('carol');
+      await app.unsendInGroup(mg, 'u3');
+      await app.removeMembersFromGroup(mg, ['carol']);
+      await app.ctlPassForTest;
+      expect(io.got('bob'), ['ctl:create', 'unsend:u3', 'ctl:remove']);
+
+      io.cut.clear();
+      await due();
+      await tick(app);
+      expect(io.got('carol'), ['ctl:create', 'unsend:u3', 'ctl:remove']);
+      expect(mem.rows('group_ctl_out'), isEmpty);
+    });
+
+    test('stays through the group\'s delete, its controls do not; a '
+        'room\'s goes with it', () async {
+      io.cut.add('carol');
+      await app.unsendInGroup(g, 'u1');
+      await db.queueGroupCtl(
+        g,
+        ['carol'],
+        const GroupControl(type: 'rename', name: 'x'),
+        now: 1,
+      );
+      await app.ctlPassForTest;
+      expect(mem.rows('group_ctl_out'), hasLength(2));
+      await db.deleteGroup(g);
+      expect(queued('carol'), [jsonEncode(groupUnsendRow('u1'))]);
+      io.cut.clear();
+      await due();
+      await tick(app);
+      expect(io.got('carol'), ['unsend:u1']);
+      expect(mem.rows('group_ctl_out'), isEmpty);
+
+      // a room's keys go with it: nothing of it could go
+      await mem.insert('groups', {
+        'group_id': 'room00000001',
+        'name': 'Room',
+        'created_at': 1,
+        'is_admin': 0,
+        'admin_id': 'k-admin',
+        'room_pub': 'k-me',
+        'room_priv': 'p-me',
+        'expires_at': 1 << 50,
+      });
+      await db.queueGroupUnsend('room00000001', ['k-bob'], 'r1', now: 1);
+      await db.deleteGroup('room00000001');
+      expect(mem.rows('group_ctl_out'), isEmpty);
+    });
+
+    test('past its tries it is kept, not tried on its own schedule, and goes '
+        'once their session heals', () async {
+      io.noSession.add('carol');
+      await app.unsendInGroup(g, 'u1');
+      await app.ctlPassForTest;
+      final id = mem.rows('group_ctl_out').single['id'];
+      await mem.update(
+        'group_ctl_out',
+        {'tries': kGroupOwedTries},
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      io.noSession.clear();
+      await due();
+      await tick(app);
+      expect(unsends('carol'), isEmpty);
+      expect(mem.rows('group_ctl_out').single['tries'], kGroupOwedTries);
+
+      await app.owedDueForTest('carol');
+      await app.ctlPassForTest;
+      expect(unsends('carol'), ['u1']);
+      expect(mem.rows('group_ctl_out'), isEmpty);
+    });
+
+    test(
+      'taken back, then the group left at once: the member out of reach '
+      'gets the take-back and then the leave, after a restart and a heal',
+      () async {
+        io.noSession.add('carol');
+        await app.unsendInGroup(g, 'u1');
+        await app.leaveGroupAndAnnounce(g);
+        await app.ctlPassForTest;
+        expect(io.got('bob'), ['unsend:u1', 'ctl:leave']);
+        expect(io.got('carol'), isEmpty);
+        expect(queued('carol'), hasLength(2));
+
+        app = await start();
+        await tick(app);
+        expect(io.got('carol'), isEmpty);
+        io.noSession.clear();
+        await app.owedDueForTest('carol');
+        await app.ctlPassForTest;
+        expect(io.got('carol'), ['unsend:u1', 'ctl:leave']);
+        expect(io.to('carol').first.groupId, g);
+        expect(mem.rows('group_ctl_out'), isEmpty);
+      },
+    );
+
+    test(
+      'taken out of the group myself: what I took back still goes',
+      () async {
+        await _person(mem, 'someone-else');
+        io.noSession.add('carol');
+        await app.unsendInGroup(g, 'u1');
+        await app.ctlPassForTest;
+        final out = await wrapMessage(
+          '',
+          groupId: g,
+          groupControl: const GroupControl(type: 'remove', members: ['me']),
+          sender: asSender('someone-else'),
+        );
+        io.opens['c-out'] = ('someone-else', out);
+        await app.receiveOnion(['c-out']);
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+        expect(await db.groupExists(g), isFalse);
+        expect(queued('carol'), hasLength(1));
+
+        app = await start();
+        io.noSession.clear();
+        await app.owedDueForTest('carol');
+        await app.ctlPassForTest;
+        expect(unsends('carol'), ['u1']);
+        expect(mem.rows('group_ctl_out'), isEmpty);
+      },
+    );
+
+    test('a quiet session queues nothing and sends nothing', () async {
+      // one queued in the everyday session waits through the quiet one
+      io.cut.add('carol');
+      await app.unsendInGroup(g, 'u1');
+      await app.ctlPassForTest;
+      io.cut.clear();
+      final dmem = MemDb();
+      final decoy = _Rows(dmem, HaloContainer.decoy);
+      await _theirGroup(dmem, g, ['me-quiet', 'bob', 'carol']);
+      await mine(dmem, 'u4');
+      useDatabasesForTest(db, Session(decoy));
+      final sent = io.sent.length;
+      await app.unsendInGroup(g, 'u4');
+      await due();
+      await tick(app);
+      await app.owedDueForTest('carol');
+      await app.ctlPassForTest;
+      expect(dmem.rows('messages'), isEmpty);
+      expect(dmem.rows('group_ctl_out'), isEmpty);
+      expect(io.sent.length, sent);
+      expect(mem.rows('group_ctl_out').single['member'], 'carol');
+    });
+
+    test('nothing goes while a wipe runs', () async {
+      haloWiping = true;
+      await app.unsendInGroup(g, 'u1');
+      await due();
+      await tick(app);
+      await app.owedDueForTest('carol');
+      await app.ctlPassForTest;
+      expect(io.sent, isEmpty);
+
+      // one begun while bob's lane runs: what was on its way lands, the
+      // next does not go
+      haloWiping = false;
+      await mine(mem, 'u6');
+      await app.unsendInGroup(g, 'u6');
+      await app.ctlPassForTest;
+      expect(unsends('bob'), ['u1', 'u6']);
+      io.cut.add('bob');
+      await mine(mem, 'u7');
+      await mine(mem, 'u8');
+      await app.unsendInGroup(g, 'u7');
+      await app.unsendInGroup(g, 'u8');
+      await app.ctlPassForTest;
+      io.cut.clear();
+      io.onSend = (to, plain) => haloWiping = true;
+      await app.owedDueForTest('bob');
+      await app.ctlPassForTest;
+      expect(unsends('bob'), ['u1', 'u6', 'u7']);
+      expect(queued('bob'), hasLength(1));
+    });
+
+    test('a hidden group\'s goes from the vault, and waits there while it '
+        'is shut', () async {
+      const hidden = 'grp00000000h';
+      final vmem = MemDb();
+      final vault = _Rows(vmem, HaloContainer.vault);
+      for (final p in ['bob', 'carol']) {
+        await _person(vmem, p);
+      }
+      await _theirGroup(vmem, hidden, ['me', 'bob', 'carol']);
+      await mine(vmem, 'u5', group: hidden);
+      final open = await Session.withVault(db, vault);
+      useDatabasesForTest(db, open);
+      io.cut.add('carol');
+      await app.unsendInGroup(hidden, 'u5');
+      await app.ctlPassForTest;
+      expect(unsends('bob'), ['u5']);
+      expect(vmem.rows('group_ctl_out').single['member'], 'carol');
+      expect(mem.rows('group_ctl_out'), isEmpty);
+
+      // shut: a restart with the everyday session alone
+      io.cut.clear();
+      app = await start();
+      for (final r in vmem.rows('group_ctl_out')) {
+        await vmem.update(
+          'group_ctl_out',
+          {'next_at': 0},
+          where: 'id = ?',
+          whereArgs: [r['id']],
+        );
+      }
+      await tick(app);
+      await app.owedDueForTest('carol');
+      await app.ctlPassForTest;
+      expect(unsends('carol'), isEmpty);
+      expect(vmem.rows('group_ctl_out'), hasLength(1));
+
+      // open again
+      useDatabasesForTest(db, await Session.withVault(db, vault));
+      await app.owedDueForTest('carol');
+      await app.ctlPassForTest;
+      expect(unsends('carol'), ['u5']);
+      expect(vmem.rows('group_ctl_out'), isEmpty);
+      // and the rows move with the group when it is hidden or shown
+      expect(
+        sourceOf('lib/vault_life.dart'),
+        contains("'group_ctl_out': 'group_id = ?1',"),
+      );
     });
   });
 

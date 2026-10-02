@@ -7,7 +7,8 @@ import 'dart:typed_data';
 
 import 'package:kryfo/container.dart';
 import 'package:kryfo/group_media_send.dart' show groupOwedGap;
-import 'package:kryfo/main.dart' show AppIo, HaloDb;
+import 'package:kryfo/main.dart'
+    show AppIo, HaloDb, groupUnsendOf, groupUnsendRow;
 import 'package:kryfo/media_resend.dart';
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
@@ -843,9 +844,13 @@ class ArrivalRows implements HaloDb {
   @override
   Future<void> deleteGroup(String groupId) async {
     _hit('deleteGroup', groupId, null);
-    groupRows.remove(groupId);
+    // a room's take-backs go with it, any other group's stay
+    final room = groupRows.remove(groupId)?['room_pub'] != null;
     members.remove(groupId);
-    ctlOut.removeWhere((r) => r['group_id'] == groupId);
+    ctlOut.removeWhere(
+      (r) =>
+          r['group_id'] == groupId && (room || groupUnsendOf(r['ctl']) == null),
+    );
     rosterStamps.remove(groupId);
     rosterGoneKeys.remove(groupId);
     roomSeqs.remove(groupId);
@@ -860,7 +865,9 @@ class ArrivalRows implements HaloDb {
     for (final r in ctlOut)
       if (r['member'] == member &&
           (groupId == null || r['group_id'] == groupId))
-        GroupControl.fromWire(jsonDecode(r['ctl'] as String))!.type,
+        groupUnsendOf(r['ctl']) != null
+            ? 'unsend'
+            : GroupControl.fromWire(jsonDecode(r['ctl'] as String))!.type,
   ];
 
   @override
@@ -877,6 +884,33 @@ class ArrivalRows implements HaloDb {
         'group_id': groupId,
         'member': m,
         'ctl': jsonEncode(ctl.toWire()),
+        'since': now,
+        'tries': 0,
+        'next_at': now,
+      });
+    }
+  }
+
+  @override
+  Future<void> queueGroupUnsend(
+    String groupId,
+    Iterable<String> who,
+    String uid, {
+    required int now,
+  }) async {
+    _hit('queueGroupUnsend', groupId, null);
+    final body = jsonEncode(groupUnsendRow(uid));
+    for (final m in who) {
+      if (ctlOut.any(
+        (r) => r['group_id'] == groupId && r['member'] == m && r['ctl'] == body,
+      )) {
+        continue;
+      }
+      ctlOut.add({
+        'id': ++_ctlId,
+        'group_id': groupId,
+        'member': m,
+        'ctl': body,
         'since': now,
         'tries': 0,
         'next_at': now,

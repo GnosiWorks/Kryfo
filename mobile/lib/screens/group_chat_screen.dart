@@ -1986,7 +1986,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     await Future.delayed(kLeaveGone);
     await session.deleteMessage(uid);
     if (mounted) setState(() => _messages.remove(m));
-    // said again once the send has let go, by the unsend itself
+    // the unsend goes to each member once the send has let go
     unawaited(appState.unsendInGroup(widget.groupId, uid));
   }
 

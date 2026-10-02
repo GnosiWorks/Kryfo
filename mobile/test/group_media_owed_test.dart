@@ -68,6 +68,8 @@ class _Io extends ArrivalIo {
   final noSession = <String>{};
   bool Function(String to, int? slice) refuse = (_, _) => false;
   void Function(String to, String plain)? onSend;
+  // how long a slice is on its way before it lands
+  Duration sliceLag = Duration.zero;
 
   @override
   Future<bool> hasSession(String peer) async =>
@@ -84,6 +86,9 @@ class _Io extends ArrivalIo {
     final to = cipher.split(' ')[1];
     onSend?.call(to, cipher.substring('to $to '.length));
     if (refuse(to, _slice(cipher, to))) return 'error: down';
+    if (sliceLag > Duration.zero && _slice(cipher, to) != null) {
+      await Future<void>.delayed(sliceLag);
+    }
     return super.relaySend(xPub, cipher);
   }
 
@@ -716,9 +721,11 @@ void main() {
     });
 
     test('taken back while it goes to the owed: stopped, and the take-back '
-        'said again once the send let go', () async {
+        'goes once to each, after the last slice', () async {
       await db.markSent(_uid);
       await _owe(mem, 'carol');
+      // the slice going when it is taken back lands a while later
+      io.sliceLag = const Duration(milliseconds: 300);
       var once = false;
       io.onSend = (to, plain) {
         if (once || to != 'carol') return;
@@ -726,9 +733,21 @@ void main() {
         unawaited(app.unsendInGroup(_g, _uid));
       };
       await tick();
-      await _until(() => io.unsends('carol', _uid) == 2);
+      await _until(
+        () => io.unsends('carol', _uid) > 0 && io.unsends('bob', _uid) > 0,
+      );
+      await app.ctlPassForTest;
+      expect(io.took('carol'), isNotEmpty);
       expect(io.took('carol').length, lessThan(3));
-      expect(io.unsends('bob', _uid), 2);
+      final toCarol = [
+        for (final (_, c) in io.sent)
+          if (c.startsWith('to carol '))
+            unwrapMessage(c.substring('to carol '.length)),
+      ];
+      expect(toCarol.last.unsend, _uid);
+      expect(io.unsends('carol', _uid), 1);
+      expect(io.unsends('bob', _uid), 1);
+      expect(mem.rows('group_ctl_out'), isEmpty);
       expect(mem.rows('group_media_owed'), isEmpty);
       expect(mem.rows('messages'), isEmpty);
       expect(mediaInflight, isNot(contains(_uid)));
