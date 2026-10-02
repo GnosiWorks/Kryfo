@@ -340,7 +340,8 @@ extern char* HaloPairCodePublish(char* cCode, char* cPayload);
 
 // look for an invite at the address the code names. returns the payload,
 // "empty" when nothing is there yet, since the other person may not have
-// pressed share, or "twice" when the relays that answer hold more than one
+// pressed share, "error: unreached" when no relay answered, so nothing is
+// known about the code, or "twice" when the relays that answer hold more than one
 // event there, or one answer is as long as a relay sends: a share is one
 // event, copied to each relay, and a code that points at two people points
 // at nobody.
