@@ -755,6 +755,10 @@
   "@appTheFirstConnectionTakes": {
     "description": "main.dart"
   },
+  "appTorNoRelayYet": "Tor is up, but no relay is answering yet. Kryfo keeps trying, and messages wait here until one does.",
+  "@appTorNoRelayYet": {
+    "description": "main.dart"
+  },
   "appRelayAndFastModes": "Relay and fast modes skip tor and are quicker. They are in settings, under speed & privacy, and each says what it costs.",
   "@appRelayAndFastModes": {
     "description": "main.dart"
@@ -3329,6 +3333,16 @@
         "type": "int",
         "format": "decimalPattern"
       },
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "groupChatFileGaveUp": "{count, plural, one{Sent · {count} didn't get it} other{Sent · {count} didn't get it}}",
+  "@groupChatFileGaveUp": {
+    "description": "widgets/file_reach.dart",
+    "placeholders": {
       "count": {
         "type": "int",
         "format": "decimalPattern"

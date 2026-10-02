@@ -266,7 +266,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   int _lastBurnSec = 0;
   bool _loading = false;
   // a message of ours some members still lack, by uid
-  Map<String, ({int have, int of})> _reach = const {};
+  Map<String, ({int have, int of, int gaveUp})> _reach = const {};
   bool _reloadQueued = false;
   bool _loaded = false; // first full load done - gates the append-fast-path
   int _seenRev = -1; // last group rev we reloaded for
@@ -3472,7 +3472,7 @@ class _GMsg {
   PollSpec? poll;
   Map<String, PollVote> votes = const {};
   // a message of ours some members still lack: how many of them have it
-  ({int have, int of})? reach;
+  ({int have, int of, int gaveUp})? reach;
   // a sticker: drawn from our pack; text is its emoji
   final StickerWire? sticker;
   _GMsg({
@@ -4920,18 +4920,27 @@ class _GroupBubble extends StatelessWidget {
                   if (m.reactions.isNotEmpty) const SizedBox(height: 10),
                   // the sending pill folds away as the tick comes in. a
                   // message some members still lack says how many have it
-                  // until they all do
+                  // until they all do, or how many did not get it once
+                  // only those past their tries are left
                   if (isOut)
                     GrowSwap(
                       child: !m.pending
                           ? switch (m.reach) {
                               final r? => Padding(
-                                key: ValueKey('reach-${r.have}-${r.of}'),
+                                // keyed on its words: a change that reads
+                                // the same is no change
+                                key: ValueKey(
+                                  'reach-${fileReachWords(r.have, r.of, r.gaveUp)}',
+                                ),
                                 padding: const EdgeInsetsDirectional.only(
                                   top: 4,
                                   end: 4,
                                 ),
-                                child: FileReachPill(have: r.have, of: r.of),
+                                child: FileReachPill(
+                                  have: r.have,
+                                  of: r.of,
+                                  gaveUp: r.gaveUp,
+                                ),
                               ),
                               null => const SizedBox.shrink(
                                 key: ValueKey('no-pill'),

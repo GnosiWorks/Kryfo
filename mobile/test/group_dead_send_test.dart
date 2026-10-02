@@ -76,7 +76,7 @@ class _GroupDb implements HaloDb {
     List<String> uids,
   ) async => {};
   @override
-  Future<Map<String, ({int have, int of})>> groupFileReach(
+  Future<Map<String, ({int have, int of, int gaveUp})>> groupFileReach(
     String groupId,
   ) async => {};
   @override

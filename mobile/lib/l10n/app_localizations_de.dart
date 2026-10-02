@@ -612,6 +612,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Die erste Verbindung dauert ein, zwei Minuten, während tor eine private Route aufbaut. Danach ist sie zwischengespeichert, und Kryfo öffnet sich später viel schneller.';
 
   @override
+  String get appTorNoRelayYet =>
+      'Tor läuft, aber noch antwortet kein Relais. Kryfo versucht es weiter, und Nachrichten warten hier, bis eines antwortet.';
+
+  @override
   String get appRelayAndFastModes =>
       'Die Modi Relais und Schnell umgehen tor und sind schneller. Du findest sie in den Einstellungen unter Tempo & Privatsphäre, und bei jedem steht, was er kostet.';
 
@@ -2671,6 +2675,21 @@ class AppLocalizationsDe extends AppLocalizations {
       other: 'Gesendet · $haveString von $countString haben es',
       one: 'Gesendet · $haveString von $countString hat es',
       zero: 'Gesendet · unterwegs',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String groupChatFileGaveUp(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Gesendet · $countString haben es nicht bekommen',
+      one: 'Gesendet · $countString hat es nicht bekommen',
     );
     return '$_temp0';
   }

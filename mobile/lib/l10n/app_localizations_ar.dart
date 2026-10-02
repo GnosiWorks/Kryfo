@@ -636,6 +636,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'يستغرق الاتصال الأول دقيقة أو دقيقتين ريثما يبني tor مسارًا خاصًا. بعد ذلك يُحفظ مؤقتًا، فيصبح فتح Kryfo لاحقًا أسرع بكثير.';
 
   @override
+  String get appTorNoRelayYet =>
+      'شبكة tor تعمل، لكن لم يستجب أي مُرحِّل بعد. يواصل Kryfo المحاولة، وتبقى الرسائل هنا إلى أن يستجيب أحدها.';
+
+  @override
   String get appRelayAndFastModes =>
       'وضعا المُرحِّل والسريع يتجاوزان tor وهما أسرع. تجدهما في الإعدادات، ضمن «السرعة والخصوصية»، وكلٌّ منهما يوضّح ما يكلّفه.';
 
@@ -2710,6 +2714,25 @@ class AppLocalizationsAr extends AppLocalizations {
       two: 'أُرسلت · وصلت إلى ⁨$haveString⁩ من ⁨$countString⁩',
       one: 'أُرسلت · وصلت إلى ⁨$haveString⁩ من ⁨$countString⁩',
       zero: 'أُرسلت · في الطريق',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String groupChatFileGaveUp(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'أُرسلت · لم تصل إلى ⁨$countString⁩',
+      many: 'أُرسلت · لم تصل إلى ⁨$countString⁩',
+      few: 'أُرسلت · لم تصل إلى ⁨$countString⁩',
+      two: 'أُرسلت · لم تصل إلى ⁨$countString⁩',
+      one: 'أُرسلت · لم تصل إلى ⁨$countString⁩',
+      zero: 'أُرسلت · لم تصل إلى ⁨$countString⁩',
     );
     return '$_temp0';
   }

@@ -251,29 +251,35 @@ class _SafetyNumberCardState extends State<SafetyNumberCard>
             ),
           ),
           // the same order on every phone, whatever its language: two people
-          // read it side by side
-          child: Directionality(
+          // read it side by side, or one reads it out to the other. western
+          // digits everywhere, so it compares equal across languages
+          child: Semantics(
+            label: groups.join(' '),
             textDirection: TextDirection.ltr,
-            child: Wrap(
-              spacing: 18,
-              runSpacing: 14,
-              alignment: WrapAlignment.center,
-              children: [
-                // each group lands a beat after the last, so the number
-                // assembles instead of popping in
-                for (var i = 0; i < groups.length; i++)
-                  StaggerIn(
-                    index: i + 2,
-                    child: Text(
-                      groups[i],
-                      style: HaloType.mono(
-                        size: 18,
-                        color: groupColor(i),
-                        letter: 1.0,
+            excludeSemantics: true,
+            child: Directionality(
+              textDirection: TextDirection.ltr,
+              child: Wrap(
+                spacing: 18,
+                runSpacing: 14,
+                alignment: WrapAlignment.center,
+                children: [
+                  // each group lands a beat after the last, so the number
+                  // assembles instead of popping in
+                  for (var i = 0; i < groups.length; i++)
+                    StaggerIn(
+                      index: i + 2,
+                      child: Text(
+                        groups[i],
+                        style: HaloType.mono(
+                          size: 18,
+                          color: groupColor(i),
+                          letter: 1.0,
+                        ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
         );

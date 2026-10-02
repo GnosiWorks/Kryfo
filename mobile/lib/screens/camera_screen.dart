@@ -323,20 +323,42 @@ class _CameraScreenState extends State<CameraScreen>
 
   Future<void> _toggleRecord(CameraController c) async {
     if (!_recording) {
+      // a second tap while it starts is not a second start
+      setState(() => _busy = true);
       try {
         await c.startVideoRecording();
-        HapticFeedback.mediumImpact();
-        setState(() {
-          _recording = true;
-          _recSecs = 0;
-        });
-        _recTick?.cancel();
-        _recTick = Timer.periodic(const Duration(seconds: 1), (_) {
-          if (mounted) setState(() => _recSecs++);
-        });
       } catch (_) {
-        if (mounted) showHaloToast(context, l10n.cameraCouldNotStartRecording);
+        // a camera let go while it started is no failure to report
+        if (mounted && identical(_cam, c)) {
+          showHaloToast(context, l10n.cameraCouldNotStartRecording);
+        }
+        return;
+      } finally {
+        if (mounted) setState(() => _busy = false);
       }
+      // the camera was let go while it started, the app sent to the
+      // background: what it began goes, unseen
+      if (!mounted || !identical(_cam, c)) {
+        try {
+          final x = await c.stopVideoRecording();
+          await shredFile(x.path);
+        } catch (e) {
+          dlog('camera: clip begun as it closed: $e');
+        }
+        return;
+      }
+      HapticFeedback.mediumImpact();
+      setState(() {
+        _recording = true;
+        _recSecs = 0;
+      });
+      _recTick?.cancel();
+      // a quarter-second beat, read from the timer's own count rather than
+      // added up, so a late tick never leaves the clock behind
+      _recTick = Timer.periodic(const Duration(milliseconds: 250), (tm) {
+        final secs = tm.tick ~/ 4;
+        if (mounted && secs != _recSecs) setState(() => _recSecs = secs);
+      });
       return;
     }
     setState(() => _busy = true);
@@ -537,6 +559,8 @@ class _CameraScreenState extends State<CameraScreen>
   // a breathing dot and the running time, so a long clip is no surprise
   Widget _recPill() {
     final t = _recSecs;
+    final h = t ~/ 3600;
+    final ms = '${twoDigits(t ~/ 60 % 60)}:${twoDigits(t % 60)}';
     return Semantics(
       key: const ValueKey('rec'),
       label: l10n.cameraRec,
@@ -551,8 +575,11 @@ class _CameraScreenState extends State<CameraScreen>
           children: [
             BreathDot(color: HaloColors.rose, size: 8),
             const SizedBox(width: 7),
+            // minutes then seconds in every language, hours first past one,
+            // as the app's other clocks
             Text(
-              '${whole(t ~/ 60)}:${twoDigits(t % 60)}',
+              h > 0 ? '${whole(h)}:$ms' : ms,
+              textDirection: TextDirection.ltr,
               style: HaloType.mono(
                 size: 12,
                 color: HaloColors.text,

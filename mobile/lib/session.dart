@@ -247,8 +247,9 @@ class Session {
       _ofGroup(groupId).getGroupAtmosphere(groupId);
   Future<List<String>> getGroupMembers(String groupId) =>
       _ofGroup(groupId).getGroupMembers(groupId);
-  Future<Map<String, ({int have, int of})>> groupFileReach(String groupId) =>
-      _ofGroup(groupId).groupFileReach(groupId);
+  Future<Map<String, ({int have, int of, int gaveUp})>> groupFileReach(
+    String groupId,
+  ) => _ofGroup(groupId).groupFileReach(groupId);
   Future<String?> groupAdminId(String groupId) =>
       _ofGroup(groupId).groupAdminId(groupId);
   Future<bool> groupExists(String groupId) =>

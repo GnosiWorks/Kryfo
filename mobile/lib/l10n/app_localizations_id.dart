@@ -602,6 +602,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Koneksi pertama butuh satu atau dua menit selagi tor membangun rute privat. Setelah itu tersimpan di cache, jadi membuka Kryfo berikutnya jauh lebih cepat.';
 
   @override
+  String get appTorNoRelayYet =>
+      'Tor sudah aktif, tapi belum ada relay yang menjawab. Kryfo terus mencoba, dan pesan menunggu di sini sampai ada yang menjawab.';
+
+  @override
   String get appRelayAndFastModes =>
       'Mode relay dan cepat tidak memakai tor dan lebih cepat. Keduanya ada di pengaturan, di bagian kecepatan & privasi, dan masing-masing menjelaskan apa yang dikorbankan.';
 
@@ -2640,6 +2644,20 @@ class AppLocalizationsId extends AppLocalizations {
       locale: localeName,
       other: 'Terkirim · $haveString dari $countString sudah menerima',
       zero: 'Terkirim · dalam perjalanan',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String groupChatFileGaveUp(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Terkirim · $countString orang tidak menerimanya',
     );
     return '$_temp0';
   }

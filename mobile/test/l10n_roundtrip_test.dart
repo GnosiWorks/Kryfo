@@ -347,6 +347,10 @@ void main() {
       "The first connection takes a minute or two while tor builds a private route. After that it is cached, so opening Kryfo later is much faster.",
     );
     expect(
+      l.appTorNoRelayYet,
+      "Tor is up, but no relay is answering yet. Kryfo keeps trying, and messages wait here until one does.",
+    );
+    expect(
       l.appRelayAndFastModes,
       "Relay and fast modes skip tor and are quicker. They are in settings, under speed & privacy, and each says what it costs.",
     );
@@ -3397,5 +3401,7 @@ void main() {
     expect(l.groupChatFileReach(1, 4), "Sent · 1 of 4 has it");
     expect(l.groupChatFileReach(2, 4), "Sent · 2 of 4 have it");
     expect(l.groupChatFileReach(5, 6), "Sent · 5 of 6 have it");
+    expect(l.groupChatFileGaveUp(1), "Sent · 1 didn't get it");
+    expect(l.groupChatFileGaveUp(3), "Sent · 3 didn't get it");
   });
 }

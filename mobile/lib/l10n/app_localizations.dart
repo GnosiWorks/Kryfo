@@ -972,6 +972,12 @@ abstract class AppLocalizations {
   /// main.dart
   ///
   /// In en, this message translates to:
+  /// **'Tor is up, but no relay is answering yet. Kryfo keeps trying, and messages wait here until one does.'**
+  String get appTorNoRelayYet;
+
+  /// main.dart
+  ///
+  /// In en, this message translates to:
   /// **'Relay and fast modes skip tor and are quicker. They are in settings, under speed & privacy, and each says what it costs.'**
   String get appRelayAndFastModes;
 
@@ -4214,6 +4220,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{have, plural, =0{Sent · on its way} one{Sent · {have} of {count} has it} other{Sent · {have} of {count} have it}}'**
   String groupChatFileReach(int have, int count);
+
+  /// widgets/file_reach.dart
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{Sent · {count} didn\'t get it} other{Sent · {count} didn\'t get it}}'**
+  String groupChatFileGaveUp(int count);
 
   /// screens/group_chat_screen.dart
   ///

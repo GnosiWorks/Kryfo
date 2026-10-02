@@ -611,6 +611,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'İlk bağlantı, tor gizli bir rota kurarken bir iki dakika sürer. Sonra önbelleğe alınır, bu yüzden Kryfo’yu sonradan açmak çok daha hızlıdır.';
 
   @override
+  String get appTorNoRelayYet =>
+      'Tor açık ama henüz hiçbir aktarıcı yanıt vermiyor. Kryfo denemeye devam ediyor; mesajlar biri yanıt verene kadar burada bekliyor.';
+
+  @override
   String get appRelayAndFastModes =>
       'Aktarıcı ve Hızlı modları tor’u atlar ve daha hızlıdır. Ayarlarda, hız ve gizlilik bölümündeler; her biri bedelini söyler.';
 
@@ -2646,6 +2650,21 @@ class AppLocalizationsTr extends AppLocalizations {
       other: 'Gönderildi · $countString kişiden $haveString kişiye ulaştı',
       one: 'Gönderildi · $countString kişiden $haveString kişiye ulaştı',
       zero: 'Gönderildi · yolda',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String groupChatFileGaveUp(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Gönderildi · $countString kişiye ulaşmadı',
+      one: 'Gönderildi · $countString kişiye ulaşmadı',
     );
     return '$_temp0';
   }
