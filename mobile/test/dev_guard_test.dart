@@ -731,6 +731,9 @@ class _Mem implements HaloDb {
   Future<List<String>> getGroupMembers(String groupId) async =>
       _hit('getGroupMembers', groupId, [...?members[groupId]]);
   @override
+  Future<Set<String>> rosterGone(String groupId) async =>
+      _hit('rosterGone', groupId, <String>{});
+  @override
   Future<void> syncGroupMembers(String groupId, List<String> who) async {
     _hit('syncGroupMembers', groupId, null);
     members[groupId] = [...who];

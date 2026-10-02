@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// under a group file of ours that some members still lack: how many of the
-// members it went to have it. it goes once they all do, and the bubble is
-// back to its plain sent state.
+// under a group message or file of ours that some members still lack: how
+// many of the members it went to have it. it goes once they all do, and
+// the bubble is back to its plain sent state.
 import 'package:flutter/material.dart';
 
 import '../l10n/l10n.dart';

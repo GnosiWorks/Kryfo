@@ -102,6 +102,8 @@ class _Engine implements HaloEngine {
   final dropBoxes = <String>[];
   final unlistened = <String>[];
   final roomSent = <String>[];
+  // what went into the room, by member key
+  final roomMsgs = <(String, String)>[];
 
   @override
   void roomSubscribeBg(String priv, String peerPub) => listens.add(peerPub);
@@ -114,6 +116,7 @@ class _Engine implements HaloEngine {
   @override
   Future<String> roomSend(String priv, String peerPub, String msg) async {
     roomSent.add(peerPub);
+    roomMsgs.add((peerPub, msg));
     return 'ok';
   }
 
@@ -189,6 +192,18 @@ Future<void> _inRoom(AppState app, String from, GroupControl gc) async {
     sender: SenderInfo(haloId: from, edPub: '', onion: '', xPub: ''),
   );
   await app.receiveRelay([(peer: 'room:$_roomPub:$from', cipher: plain)]);
+  await _settle();
+}
+
+// a frame off a member's lane of the room above, the one this phone made
+Future<void> _inMyRoom(AppState app, String from, GroupControl gc) async {
+  final plain = await wrapMessage(
+    '',
+    groupId: _room,
+    groupControl: gc,
+    sender: SenderInfo(haloId: from, edPub: '', onion: '', xPub: ''),
+  );
+  await app.receiveRelay([(peer: 'room:$_mine:$from', cipher: plain)]);
   await _settle();
 }
 
@@ -542,6 +557,96 @@ void main() {
     });
   });
 
+  group('a room\'s rosters out of order', () {
+    GroupControl roster(int stamp, List<String> keys) =>
+        GroupControl(type: 'create', name: _room, members: keys, stamp: stamp);
+
+    test('an older one never replaces a newer one', () async {
+      final (live, app) = await _roomWorld(cap: 6);
+      await _inRoom(
+        app,
+        _creator,
+        roster(300, [_roomPub, _creator, _m1, 'f1']),
+      );
+      expect(live.members[_room], [_roomPub, _creator, _m1, 'f1']);
+      // the catch-up hands back the roster from before f1 came in
+      await _inRoom(app, _creator, roster(200, [_roomPub, _creator, _m1]));
+      expect(live.members[_room], [_roomPub, _creator, _m1, 'f1']);
+      // and the same one again changes nothing either
+      await _inRoom(app, _creator, roster(300, [_roomPub, _creator]));
+      expect(live.members[_room], [_roomPub, _creator, _m1, 'f1']);
+      // a newer one is taken, whatever it holds
+      await _inRoom(app, _creator, roster(400, [_roomPub, _creator, 'f1']));
+      expect(live.members[_room], [_roomPub, _creator, 'f1']);
+    });
+
+    test(
+      'a key that left is not brought back by a roster made before',
+      () async {
+        final (live, app) = await _roomWorld(cap: 6);
+        await _inRoom(app, _m1, const GroupControl(type: 'leave'));
+        expect(live.members[_room], [_roomPub, _creator]);
+        await _inRoom(
+          app,
+          _creator,
+          roster(100, [_roomPub, _creator, _m1, 'f1']),
+        );
+        expect(live.members[_room], [_roomPub, _creator, 'f1']);
+        // nor one the creator took out
+        await _inRoom(
+          app,
+          _creator,
+          const GroupControl(type: 'remove', members: ['f1']),
+        );
+        await _inRoom(app, _creator, roster(200, [_roomPub, _creator, 'f1']));
+        expect(live.members[_room], [_roomPub, _creator]);
+      },
+    );
+
+    test(
+      'the creator stamps every roster it sends, each above the last',
+      () async {
+        final (live, app) = await _myRoom(1, cap: 6);
+        await _knock(app, _hexKey(7));
+        await app.ctlPassForTest;
+        await _knock(app, _hexKey(8));
+        await app.ctlPassForTest;
+        final stamps = [
+          for (final (to, msg) in _engine.roomMsgs)
+            if (to == _hexKey(0)) unwrapMessage(msg).groupControl!.stamp,
+        ];
+        expect(stamps, hasLength(2));
+        expect(stamps.first, isNotNull);
+        expect(stamps.last!, greaterThan(stamps.first!));
+        expect(live.ctlOut, isEmpty);
+      },
+    );
+    test('a key that left or was taken out does not join again', () async {
+      final (live, app) = await _myRoom(1, cap: 6);
+      await _knock(app, _hexKey(7));
+      await app.ctlPassForTest;
+      expect(live.members[_room], [_mine, _hexKey(0), _hexKey(7)]);
+      await _inMyRoom(app, _hexKey(7), const GroupControl(type: 'leave'));
+      expect(live.members[_room], [_mine, _hexKey(0)]);
+      await app.ctlPassForTest;
+      final sent = _engine.roomMsgs.length;
+      // its join again, off the drop box's catch-up
+      await _knock(app, _hexKey(7));
+      await app.ctlPassForTest;
+      expect(live.members[_room], [_mine, _hexKey(0)]);
+      expect(_engine.roomMsgs, hasLength(sent));
+      // one the creator took out stays out the same way
+      await app.removeMembersFromGroup(_room, [_hexKey(0)]);
+      await app.ctlPassForTest;
+      await _knock(app, _hexKey(0));
+      await app.ctlPassForTest;
+      expect(live.members[_room], [_mine]);
+      // a new key still comes in
+      await _knock(app, _hexKey(8));
+      expect(live.members[_room], [_mine, _hexKey(8)]);
+    });
+  });
+
   group('taken out, or leaving', () {
     Future<void> said(_World w, String uid) async => w.from(
       _v,
@@ -561,6 +666,72 @@ void main() {
       expect(w.app.takeRemovedFrom(_g), isNull);
     });
 
+    test('the admin\'s roster without me takes the group, as a remove '
+        'would', () async {
+      final w = await _World.make();
+      await said(w, 'h3');
+      await w.from(
+        _a,
+        await wrapMessage(
+          'bye',
+          groupId: _g,
+          msgUid: 'r9',
+          roster: [_a, _v],
+          sender: asSender(_a),
+        ),
+      );
+      expect(w.live.groupRows.containsKey(_g), isFalse);
+      expect(w.live.msg('r9'), isNull);
+      expect(w.live.msgs.where((m) => m['group_id'] == _g), isEmpty);
+      expect(w.app.takeRemovedFrom(_g), _g);
+    });
+
+    test('a member\'s roster without me takes nothing', () async {
+      final w = await _World.make();
+      await w.from(
+        _v,
+        await wrapMessage(
+          'hi',
+          groupId: _g,
+          msgUid: 'r8',
+          roster: [_a, _v],
+          sender: asSender(_v),
+        ),
+      );
+      expect(w.live.groupRows.containsKey(_g), isTrue);
+      expect(w.members, ['me', _a, _v]);
+      expect(w.app.takeRemovedFrom(_g), isNull);
+    });
+
+    test('leaving with no route still takes the group at once, and the '
+        'rest hear it once the route is back', () async {
+      final w = await _World.make();
+      w.app.sendModeForTest = 'fast';
+      w.io.down = true;
+      await w.app.leaveGroupAndAnnounce(_g);
+      expect(w.live.groupRows.containsKey(_g), isFalse);
+      await w.app.ctlPassForTest;
+      expect(w.io.sent, isEmpty);
+      expect(w.live.ctlTo(_a), ['leave']);
+      expect(w.live.ctlTo(_v), ['leave']);
+      w.io.down = false;
+      for (final r in w.live.ctlOut) {
+        r['next_at'] = 0;
+      }
+      await w.app.drainOutbox();
+      await w.app.ctlPassForTest;
+      final leaves = [
+        for (final (to, c) in w.io.sent)
+          if (unwrapMessage(
+                c.substring(c.indexOf(' ', 3) + 1),
+              ).groupControl?.type ==
+              'leave')
+            to,
+      ];
+      expect(leaves, hasLength(2));
+      expect(w.live.ctlOut, isEmpty);
+    });
+
     test('someone else taken out leaves nothing to say here', () async {
       final w = await _World.make();
       await w.control(_a, const GroupControl(type: 'remove', members: [_v]));
@@ -578,7 +749,9 @@ void main() {
         expect(w.live.groupRows.containsKey(_g), isFalse);
         expect(w.live.msgs.where((m) => m['group_id'] == _g), isEmpty);
         expect(w.io.unrang, contains('group:$_g'));
+        await w.app.ctlPassForTest;
         expect(w.io.sent, hasLength(2));
+        expect(w.live.ctlOut, isEmpty);
         // leaving is not being taken out
         expect(w.app.takeRemovedFrom(_g), isNull);
       },

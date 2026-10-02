@@ -540,6 +540,53 @@ class MemDb implements Database, Transaction {
   @override
   Future<void> close() async {}
 
+  // inserts, updates and deletes, run in order on commit, all or none
+  @override
+  Batch batch() => _MemBatch(this);
+
+  @override
+  dynamic noSuchMethod(Invocation i) =>
+      throw UnimplementedError('${i.memberName}');
+}
+
+class _MemBatch implements Batch {
+  _MemBatch(this._db);
+
+  final MemDb _db;
+  final _ops = <Future<Object?> Function()>[];
+
+  @override
+  void insert(
+    String table,
+    Map<String, Object?> values, {
+    String? nullColumnHack,
+    ConflictAlgorithm? conflictAlgorithm,
+  }) => _ops.add(
+    () => _db.insert(table, values, conflictAlgorithm: conflictAlgorithm),
+  );
+
+  @override
+  void update(
+    String table,
+    Map<String, Object?> values, {
+    String? where,
+    List<Object?>? whereArgs,
+    ConflictAlgorithm? conflictAlgorithm,
+  }) => _ops.add(
+    () => _db.update(table, values, where: where, whereArgs: whereArgs),
+  );
+
+  @override
+  void delete(String table, {String? where, List<Object?>? whereArgs}) =>
+      _ops.add(() => _db.delete(table, where: where, whereArgs: whereArgs));
+
+  @override
+  Future<List<Object?>> commit({
+    bool? exclusive,
+    bool? noResult,
+    bool? continueOnError,
+  }) => _db.transaction((_) async => [for (final op in _ops) await op()]);
+
   @override
   dynamic noSuchMethod(Invocation i) =>
       throw UnimplementedError('${i.memberName}');

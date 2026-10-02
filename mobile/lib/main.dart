@@ -1122,7 +1122,7 @@ class HaloDb implements GroupOwedStore {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 59,
+      version: 60,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -1265,8 +1265,13 @@ class HaloDb implements GroupOwedStore {
         await _devSignalTables(db);
         await _supportTables(db);
         await groupOwedTables(db);
+        await groupCtlTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 60) {
+          // group controls queued per member, and each group's roster stamp
+          await groupCtlTables(db);
+        }
         if (oldV < 59) {
           // what a group file's send left owed, member by member
           await groupOwedTables(db);
@@ -2650,11 +2655,13 @@ class HaloDb implements GroupOwedStore {
 
   Future<void> deleteGroup(String groupId) async {
     final db = await open();
-    await db.delete(
+    for (final table in const [
       'group_media_owed',
-      where: 'group_id = ?',
-      whereArgs: [groupId],
-    );
+      'group_ctl_out',
+      'group_roster',
+    ]) {
+      await db.delete(table, where: 'group_id = ?', whereArgs: [groupId]);
+    }
     await db.delete(
       'group_members',
       where: 'group_id = ?',
@@ -3982,7 +3989,7 @@ class HaloDb implements GroupOwedStore {
     await db.delete('media_wants', where: 'media_id = ?', whereArgs: [mediaId]);
   }
 
-  // ---- group files some members still lack ----
+  // ---- group messages and files some members still lack ----
 
   /// a send of [msgUid] to [tried] ended with [short] still lacking slices.
   /// the rest of [tried] have it all and are owed nothing. a short member
@@ -4138,7 +4145,7 @@ class HaloDb implements GroupOwedStore {
     });
   }
 
-  /// a group's files some members still lack, by uid: how many of the
+  /// a group's messages some members still lack, by uid: how many of the
   /// members each went to have it
   Future<Map<String, ({int have, int of})>> groupFileReach(
     String groupId,
@@ -4190,6 +4197,198 @@ class HaloDb implements GroupOwedStore {
         where: 'msg_uid = ?',
         whereArgs: [uid],
       );
+    }
+  }
+
+  // ---- group controls on their way to each member ----
+
+  /// [ctl] for each of [members], after what each is still to get of
+  /// [groupId]. due at once
+  Future<void> queueGroupCtl(
+    String groupId,
+    Iterable<String> members,
+    GroupControl ctl, {
+    required int now,
+  }) async {
+    final body = jsonEncode(ctl.toWire());
+    final db = await open();
+    await db.transaction((t) async {
+      for (final m in members) {
+        await t.insert('group_ctl_out', {
+          'group_id': groupId,
+          'member': m,
+          'ctl': body,
+          'since': now,
+          'tries': 0,
+          'next_at': now,
+        });
+      }
+    });
+  }
+
+  /// every control still to go, oldest first
+  Future<List<Map<String, Object?>>> groupCtlOut() async {
+    final db = await open();
+    return db.query('group_ctl_out', orderBy: 'id ASC');
+  }
+
+  /// what [member] is still to get of [groupId], oldest first
+  Future<List<Map<String, Object?>>> groupCtlFor(
+    String groupId,
+    String member,
+  ) async {
+    final db = await open();
+    return db.query(
+      'group_ctl_out',
+      where: 'group_id = ? AND member = ?',
+      whereArgs: [groupId, member],
+      orderBy: 'id ASC',
+    );
+  }
+
+  /// a try of [id] is starting: its count goes up and the next wait is set
+  Future<void> triedGroupCtl(int id, int now) async {
+    final db = await open();
+    await db.transaction((t) async {
+      final r = await t.query(
+        'group_ctl_out',
+        columns: ['tries'],
+        where: 'id = ?',
+        whereArgs: [id],
+        limit: 1,
+      );
+      if (r.isEmpty) return;
+      final tries = (r.first['tries'] as int? ?? 0) + 1;
+      await t.update(
+        'group_ctl_out',
+        {'tries': tries, 'next_at': now + groupOwedGap(tries)},
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+    });
+  }
+
+  Future<void> dropGroupCtl(int id) async {
+    final db = await open();
+    await db.delete('group_ctl_out', where: 'id = ?', whereArgs: [id]);
+  }
+
+  /// the members still to get a control of [groupId]
+  Future<Set<String>> groupCtlWaiting(String groupId) async {
+    final db = await open();
+    final rows = await db.query(
+      'group_ctl_out',
+      columns: ['member'],
+      where: 'group_id = ?',
+      whereArgs: [groupId],
+    );
+    return {for (final r in rows) r['member'] as String};
+  }
+
+  /// [member]'s session is there now: what it is still to get is due at
+  /// once, with a try more for one past its tries
+  Future<int> groupCtlDueNow(String member) async {
+    final db = await open();
+    return db.transaction((t) async {
+      final rows = await t.query(
+        'group_ctl_out',
+        columns: ['id', 'tries'],
+        where: 'member = ?',
+        whereArgs: [member],
+      );
+      for (final r in rows) {
+        final tries = r['tries'] as int? ?? 0;
+        await t.update(
+          'group_ctl_out',
+          {'next_at': 0, 'tries': min(tries, kGroupOwedTries - 1)},
+          where: 'id = ?',
+          whereArgs: [r['id']],
+        );
+      }
+      return rows.length;
+    });
+  }
+
+  // ---- the newest roster each group took ----
+
+  /// the stamp for a roster this phone makes of [groupId]: above the last
+  /// one, and the clock when that is higher
+  Future<int> nextRosterStamp(String groupId, int now) async {
+    final db = await open();
+    return db.transaction((t) async {
+      final held = await _rosterRow(t, groupId);
+      final stamp = max(now, ((held?['stamp'] as int?) ?? 0) + 1);
+      await _putRoster(t, groupId, stamp: stamp, had: held != null);
+      return stamp;
+    });
+  }
+
+  /// keeps [stamp] when it is newer than the last roster [groupId] took.
+  /// false for an older one, or the same one again
+  Future<bool> takeRosterStamp(String groupId, int stamp) async {
+    final db = await open();
+    return db.transaction((t) async {
+      final held = await _rosterRow(t, groupId);
+      if (stamp <= ((held?['stamp'] as int?) ?? 0)) return false;
+      await _putRoster(t, groupId, stamp: stamp, had: held != null);
+      return true;
+    });
+  }
+
+  /// the room keys that left [groupId] or were taken out
+  Future<Set<String>> rosterGone(String groupId) async {
+    final db = await open();
+    final held = await _rosterRow(db, groupId);
+    return {
+      for (final k in ((held?['gone'] as String?) ?? '').split(','))
+        if (k.isNotEmpty) k,
+    };
+  }
+
+  Future<void> noteRosterGone(String groupId, Iterable<String> keys) async {
+    final db = await open();
+    await db.transaction((t) async {
+      final held = await _rosterRow(t, groupId);
+      final gone = {
+        for (final k in ((held?['gone'] as String?) ?? '').split(','))
+          if (k.isNotEmpty) k,
+        for (final k in keys)
+          if (k.isNotEmpty && !k.contains(',')) k,
+      };
+      await _putRoster(t, groupId, gone: gone.join(','), had: held != null);
+    });
+  }
+
+  static Future<Map<String, Object?>?> _rosterRow(
+    DatabaseExecutor t,
+    String groupId,
+  ) async {
+    final r = await t.query(
+      'group_roster',
+      where: 'group_id = ?',
+      whereArgs: [groupId],
+      limit: 1,
+    );
+    return r.isEmpty ? null : r.first;
+  }
+
+  static Future<void> _putRoster(
+    DatabaseExecutor t,
+    String groupId, {
+    int? stamp,
+    String? gone,
+    required bool had,
+  }) async {
+    final cols = {'stamp': ?stamp, 'gone': ?gone};
+    if (had) {
+      await t.update(
+        'group_roster',
+        cols,
+        where: 'group_id = ?',
+        whereArgs: [groupId],
+      );
+    } else {
+      await t.insert('group_roster', {'group_id': groupId, ...cols});
     }
   }
 
@@ -4718,6 +4917,31 @@ Future<void> groupOwedTables(DatabaseExecutor db) async {
     'messages WHEN old.msg_uid IS NOT NULL BEGIN '
     'DELETE FROM group_media_owed WHERE msg_uid = old.msg_uid; END',
   );
+}
+
+// a group control each member is still to get, in the order it was made: a
+// member takes them one after the other. and per group, the stamp of the
+// newest roster taken, with the room keys that left, which an older roster
+// does not bring back
+Future<void> groupCtlTables(DatabaseExecutor db) async {
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS group_ctl_out (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      group_id TEXT NOT NULL,
+      member TEXT NOT NULL,
+      ctl TEXT NOT NULL,
+      since INTEGER NOT NULL,
+      tries INTEGER NOT NULL DEFAULT 0,
+      next_at INTEGER NOT NULL DEFAULT 0
+    )
+  ''');
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS group_roster (
+      group_id TEXT PRIMARY KEY,
+      stamp INTEGER NOT NULL DEFAULT 0,
+      gone TEXT NOT NULL DEFAULT ''
+    )
+  ''');
 }
 
 Future<void> _shieldTable(Database db) async {
@@ -6290,6 +6514,7 @@ class AppState extends ChangeNotifier {
     unawaited(_drainEdits());
     unawaited(_drainPins());
     unawaited(_drainFrames());
+    unawaited(_drainGroupCtl());
     unawaited(_drainGroupOwed());
     if (rows.isEmpty && vRows.isEmpty) {
       if (_outboxTries.isNotEmpty) {
@@ -6606,13 +6831,11 @@ class AppState extends ChangeNotifier {
         badge: await sharedBadge(),
       );
       if (groupId != null) {
-        final members = await d.getGroupMembers(groupId);
-        final results = await Future.wait([
-          for (final m in members)
-            if (m != myId) _sendGroupEnvelope(groupId, m, wrapped),
-        ]);
-        if (results.any((ok) => ok)) {
+        final to = await _othersIn(d, groupId);
+        final missed = await _fanOut(d, groupId, to, wrapped);
+        if (missed.length < to.length) {
           await d.markSent(uid);
+          await _oweText(d, uid, groupId, to: to, missed: missed, first: true);
           notifyListeners();
         }
         return;
@@ -6728,9 +6951,8 @@ class AppState extends ChangeNotifier {
     if ((r['sent'] as int? ?? 1) == 0) return 'later';
     final mediaPath = r['media_path'] as String?;
     final path = mediaPath ?? r['file_path'] as String?;
-    if (path == null || path.isEmpty || !await File(path).exists()) {
-      return 'gone';
-    }
+    if (path == null) return _sendOwedText(d, r, uid, groupId, have.keys);
+    if (path.isEmpty || !await File(path).exists()) return 'gone';
     final members = await d.getGroupMembers(groupId);
     await d.keepGroupOwedTo(groupId, members);
     final to = [
@@ -6754,18 +6976,289 @@ class AppState extends ChangeNotifier {
     );
   }
 
-  // a member's session just came up: what they are owed goes now, not at
-  // the end of their wait
+  // a text, a poll or a sticker again, to the members it missed
+  Future<String> _sendOwedText(
+    HaloDb d,
+    Map<String, Object?> r,
+    String uid,
+    String groupId,
+    Iterable<String> owed,
+  ) async {
+    final members = await d.getGroupMembers(groupId);
+    await d.keepGroupOwedTo(groupId, members);
+    final to = [
+      for (final m in owed)
+        if (members.contains(m)) m,
+    ];
+    if (to.isEmpty) return 'gone';
+    final wrapped = await wrapRedelivery(
+      r,
+      sender: _mySender(),
+      badge: await sharedBadge(),
+    );
+    final missed = await _fanOut(d, groupId, to, wrapped);
+    await _oweText(d, uid, groupId, to: to, missed: missed, first: false);
+    return missed.isEmpty ? 'ok' : 'error: ${missed.length} short';
+  }
+
+  // a group text, poll or sticker reads sent once a member has it. the
+  // members it missed are owed it, as a file's are, and get it from the
+  // outbox's tick
+  Future<void> _oweText(
+    HaloDb d,
+    String uid,
+    String groupId, {
+    required List<String> to,
+    required List<String> missed,
+    required bool first,
+  }) async {
+    if (first && missed.isEmpty) return;
+    try {
+      await d.settleGroupOwed(
+        uid,
+        groupId,
+        total: 1,
+        tried: to,
+        short: {for (final m in missed) m: <int>{}},
+        sentTo: to.length,
+        first: first,
+        now: DateTime.now().millisecondsSinceEpoch,
+      );
+    } catch (e) {
+      dlog('GRP $uid: owed not kept (${e.runtimeType})');
+    }
+    groupOwedTick.value++;
+  }
+
+  // a member's session just came up: the controls and messages they are
+  // owed go now, not at the end of their wait
   Future<void> _owedDueFor(String member) async {
     var due = 0;
+    var ctl = 0;
     for (final d in [live, ?_openVault]) {
       try {
+        ctl += await d.groupCtlDueNow(member);
         due += await d.groupOwedDueNow(member);
       } catch (e) {
         dlog('GRP MEDIA owed: ${e.runtimeType}');
       }
     }
+    if (ctl > 0) await _drainGroupCtl();
     if (due > 0 && torReady) await _drainGroupOwed();
+  }
+
+  @visibleForTesting
+  Future<void> owedDueForTest(String member) => _owedDueFor(member);
+
+  // ---- group controls, member by member ----
+
+  // a lane is one group's controls to one member. they go in the order they
+  // were made, the next once the one before went: an add or a message ahead
+  // of the create that makes the group is dropped on the far side. one run
+  // of a lane at a time; a lane asked for while it runs goes again after
+  final Map<String, Future<bool>> _ctlLanes = {};
+  final Set<String> _ctlLaneAgain = {};
+
+  Future<void>? _ctlRound;
+
+  @visibleForTesting
+  Future<void> get ctlPassForTest async {
+    await _ctlRound;
+    while (_ctlLanes.isNotEmpty) {
+      await Future.wait(_ctlLanes.values.toList());
+    }
+  }
+
+  // every lane whose next control is due. a send that fails waits its turn
+  // again, on the outbox's tick or when the member's session comes up
+  Future<void> _drainGroupCtl() => _ctlRound = _ctlLanesDue();
+
+  Future<void> _ctlLanesDue() async {
+    for (final d in [live, ?_openVault]) {
+      if (haloWiping || sessionQuiet) return;
+      final List<Map<String, Object?>> rows;
+      try {
+        rows = await d.groupCtlOut();
+      } catch (e) {
+        continue;
+      }
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final heads = <String, Map<String, Object?>>{};
+      for (final r in rows) {
+        heads.putIfAbsent('${r['group_id']} ${r['member']}', () => r);
+      }
+      for (final r in heads.values) {
+        if ((r['next_at'] as int? ?? 0) > now) continue;
+        unawaited(_ctlLane(d, r['group_id'] as String, r['member'] as String));
+      }
+    }
+  }
+
+  // true once [member] has every control of [groupId] queued for it.
+  // [force] tries each one even while it waits, and costs none a try
+  Future<bool> _ctlLane(
+    HaloDb d,
+    String groupId,
+    String member, {
+    bool force = false,
+  }) {
+    final key = '$groupId $member';
+    final running = _ctlLanes[key];
+    if (running != null) {
+      _ctlLaneAgain.add(key);
+      return running;
+    }
+    final run = _runCtlLane(d, groupId, member, force).whenComplete(() {
+      _ctlLanes.remove(key);
+      if (_ctlLaneAgain.remove(key)) unawaited(_ctlLane(d, groupId, member));
+    });
+    return _ctlLanes[key] = run;
+  }
+
+  Future<bool> _runCtlLane(
+    HaloDb d,
+    String groupId,
+    String member,
+    bool force,
+  ) async {
+    var sent = false;
+    try {
+      while (true) {
+        // a wipe or a quiet session sends nothing more
+        if (haloWiping || sessionQuiet) return false;
+        final rows = await d.groupCtlFor(groupId, member);
+        if (rows.isEmpty) break;
+        final r = rows.first;
+        final id = r['id'] as int;
+        final now = DateTime.now().millisecondsSinceEpoch;
+        if (!force && (r['next_at'] as int? ?? 0) > now) return false;
+        final gc = GroupControl.fromWire(_jsonOf(r['ctl']));
+        // no longer theirs to get: the next one goes
+        if (gc == null || !await _ctlStillOwed(d, groupId, member, gc)) {
+          await d.dropGroupCtl(id);
+          continue;
+        }
+        if ((r['tries'] as int? ?? 0) >= kGroupOwedTries) {
+          // past its tries a create stays: the group is not there without
+          // it, and what goes after would be dropped. it goes on a send of
+          // ours to them, or when their session comes up
+          if (gc.type != 'create') {
+            await d.dropGroupCtl(id);
+            continue;
+          }
+          if (!force) return false;
+        }
+        // only a pass on the lane's own schedule costs a try. one a send
+        // forces is free, or a busy group would spend them in hours.
+        // stamped before it goes, so a send cut short is not a free retry
+        if (!force) await d.triedGroupCtl(id, now);
+        final wrapped = await wrapMessage(
+          '',
+          groupId: groupId,
+          groupControl: gc,
+          sender: _mySender(),
+        );
+        if (!await _sendGroupEnvelope(groupId, member, wrapped)) {
+          dlog('group ctl ${gc.type} to $member: waits');
+          return false;
+        }
+        await d.dropGroupCtl(id);
+        sent = true;
+      }
+    } catch (e) {
+      dlog('group ctl: ${e.runtimeType}');
+      return false;
+    }
+    // what was held back behind the controls goes now
+    if (sent) {
+      try {
+        if (await d.groupOwedDueNow(member) > 0) unawaited(_drainGroupOwed());
+      } catch (e) {
+        dlog('GRP owed: ${e.runtimeType}');
+      }
+    }
+    return true;
+  }
+
+  static Object? _jsonOf(Object? raw) {
+    if (raw is! String) return null;
+    try {
+      return jsonDecode(raw);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // a leave goes once the group went from here; a remove to the member it
+  // takes out too; anything else only to a member of a group still here
+  Future<bool> _ctlStillOwed(
+    HaloDb d,
+    String groupId,
+    String member,
+    GroupControl gc,
+  ) async {
+    final here = await d.groupExists(groupId);
+    if (gc.type == 'leave') return !here;
+    if (!here) return false;
+    if ((await d.getGroupMembers(groupId)).contains(member)) return true;
+    return gc.type == 'remove' && (gc.members?.contains(member) ?? false);
+  }
+
+  // everyone a group frame of ours goes to. in a room this phone is its
+  // room key, which takes none
+  Future<List<String>> _othersIn(
+    HaloDb d,
+    String groupId, [
+    List<String>? members,
+  ]) async {
+    final room = await _roomOf(groupId, d);
+    return [
+      for (final m in members ?? await d.getGroupMembers(groupId))
+        if (m != myId && m != room?.pub) m,
+    ];
+  }
+
+  // one group message to [to], the members it missed back. a member still
+  // to get a control of the group gets that first, and is missed while it
+  // cannot
+  Future<List<String>> _fanOut(
+    HaloDb d,
+    String groupId,
+    List<String> to,
+    String wrapped,
+  ) async {
+    final waiting = await d.groupCtlWaiting(groupId);
+    Future<bool> one(String m) async {
+      if (waiting.contains(m) && !await _ctlLane(d, groupId, m, force: true)) {
+        return false;
+      }
+      return _sendGroupEnvelope(groupId, m, wrapped);
+    }
+
+    final ok = await Future.wait([for (final m in to) one(m)]);
+    return [
+      for (final (i, m) in to.indexed)
+        if (!ok[i]) m,
+    ];
+  }
+
+  // [gc] to each of [to], or everyone else in the group, through the lanes.
+  // kept until it goes: the route can be down, or tor still starting
+  Future<void> _queueControl(
+    String groupId,
+    GroupControl gc, {
+    List<String>? to,
+    HaloDb? on,
+  }) async {
+    final d = on ?? _ownerOf(groupId);
+    await d.queueGroupCtl(
+      groupId,
+      await _othersIn(d, groupId, to),
+      gc,
+      now: DateTime.now().millisecondsSinceEpoch,
+    );
+    // the first try goes now, whatever the route says
+    if (!haloWiping && !sessionQuiet) unawaited(_drainGroupCtl());
   }
 
   Future<void> _drainMedia(
@@ -8300,9 +8793,21 @@ class AppState extends ChangeNotifier {
       final roster = _members(env.roster!, room: isRoom);
       // the admin is always on their own list: one without them is from a
       // phone that already left, and would empty the group here
-      if (adminId != null &&
+      final fromAdmin =
+          adminId != null &&
           senderHaloId == adminId &&
-          roster.contains(adminId) &&
+          roster.contains(adminId);
+      // the admin's own list without this phone: taken out, as a remove
+      // naming it says, and that remove may never come
+      if (fromAdmin && !isRoom && !roster.contains(myId)) {
+        final name = (await db.getGroup(env.groupId!))?['name'] as String?;
+        await _dropGroup(env.groupId!, db);
+        if (name != null) _removedFrom[env.groupId!] = name;
+        _bumpChatRev('group:${env.groupId}');
+        await refreshGroups();
+        return to;
+      }
+      if (fromAdmin &&
           await _fitsCap(env.groupId!, roster.toSet().length, db)) {
         await db.syncGroupMembers(env.groupId!, roster);
         await _subscribeRoomMembers(env.groupId!);
@@ -9102,8 +9607,23 @@ class AppState extends ChangeNotifier {
             !await db.isVouched(senderHaloId)) {
           return;
         }
-        final members = _members(gc.members!, room: isRoom);
+        var members = _members(gc.members!, room: isRoom);
+        // a room key that left does not come back on a roster made before
+        if (isRoom && exists) {
+          final gone = await db.rosterGone(groupId);
+          members = [
+            for (final m in members)
+              if (!gone.contains(m)) m,
+          ];
+        }
         if (!await _fitsCap(groupId, members.toSet().length, db)) return;
+        // rosters can land out of order, a catch-up's most of all: one
+        // older than the last taken changes nothing
+        final stamp = gc.stamp;
+        if (stamp != null && !await db.takeRosterStamp(groupId, stamp)) {
+          dlog('group: an older roster, not taken');
+          return;
+        }
         if (!exists) {
           await db.createGroup(
             groupId,
@@ -9176,6 +9696,12 @@ class AppState extends ChangeNotifier {
         for (final h in gc.members!) {
           if (h != me) await db.removeGroupMember(groupId, h);
         }
+        if (room != null) {
+          await db.noteRosterGone(groupId, [
+            for (final h in gc.members!)
+              if (h != me) h,
+          ]);
+        }
         // taken out: the group goes from here with everything in it, as a
         // leave does, and an open screen says why it closed
         if (gc.members!.contains(me)) {
@@ -9197,6 +9723,10 @@ class AppState extends ChangeNotifier {
         break;
       case 'leave':
         await db.removeGroupMember(groupId, senderHaloId);
+        // a room key never comes back once it left
+        if (await _roomOf(groupId, db) != null) {
+          await db.noteRosterGone(groupId, [senderHaloId]);
+        }
         await refreshGroups();
         break;
     }
@@ -12499,6 +13029,9 @@ class AppState extends ChangeNotifier {
     // a room key that is a pinned key is no one's to join with
     if (devIdClaim(who)) return;
     final groupId = g['group_id'] as String;
+    // a key that left or was taken out stays out: its join can come in
+    // after its leave, off a lane of its own
+    if ((await live.rosterGone(groupId)).contains(who)) return;
     final members = await live.getGroupMembers(groupId);
     // no room is bigger than a group: a longer roster is one no member
     // would take
@@ -12515,9 +13048,18 @@ class AppState extends ChangeNotifier {
     }
     await _subscribeRoomMembers(groupId);
     final all = await live.getGroupMembers(groupId);
-    await _sendControlToGroup(
+    await _queueControl(
       groupId,
-      GroupControl(type: 'create', name: g['name'] as String, members: all),
+      GroupControl(
+        type: 'create',
+        name: g['name'] as String,
+        members: all,
+        stamp: await live.nextRosterStamp(
+          groupId,
+          DateTime.now().millisecondsSinceEpoch,
+        ),
+      ),
+      on: live,
     );
     _bumpChatRev('group:$groupId');
     await refreshGroups();
@@ -12601,8 +13143,18 @@ class AppState extends ChangeNotifier {
 
   Future<void> leaveRoom(String groupId) async {
     if (sessionQuiet) return _destroyRoom(groupId, on: session.primary);
+    // one try, now: the room's keys go with it, and nothing could send later
     try {
-      await _sendControlToGroup(groupId, const GroupControl(type: 'leave'));
+      final wrapped = await wrapMessage(
+        '',
+        groupId: groupId,
+        groupControl: const GroupControl(type: 'leave'),
+        sender: _mySender(),
+      );
+      await Future.wait([
+        for (final m in await _othersIn(live, groupId))
+          _sendGroupEnvelope(groupId, m, wrapped),
+      ]);
     } catch (e) {
       dlog('leave control not sent: $e');
     }
@@ -12683,20 +13235,6 @@ class AppState extends ChangeNotifier {
     return rooms.length;
   }
 
-  Future<void> _sendControlToGroup(String groupId, GroupControl gc) async {
-    final wrapped = await wrapMessage(
-      '',
-      groupId: groupId,
-      groupControl: gc,
-      sender: _mySender(),
-    );
-    final members = await _ownerOf(groupId).getGroupMembers(groupId);
-    await Future.wait([
-      for (final memberId in members)
-        if (memberId != myId) _sendGroupEnvelope(groupId, memberId, wrapped),
-    ]);
-  }
-
   // send a normal text message into a group. saves the local row, then
   // multicasts pairwise to every other member. returns true if at least
   // one recipient acknowledged.
@@ -12773,14 +13311,16 @@ class AppState extends ChangeNotifier {
       sticker: sticker,
     );
     dlog('GRPSEND group=$groupId members=$members me=$myId admin=$amAdmin');
-    final results = await Future.wait([
-      for (final memberId in members)
-        if (memberId != myId) _sendGroupEnvelope(groupId, memberId, wrapped),
-    ]);
-    final anyOk = results.any((ok) => ok);
+    final d = _ownerOf(groupId);
+    final to = await _othersIn(d, groupId, members);
+    final missed = await _fanOut(d, groupId, to, wrapped);
+    final anyOk = missed.length < to.length;
     // the tick is earned, not assumed: only a delivery to at least one
-    // member flips the row to sent.
-    if (anyOk) await session.markSent(msgUid);
+    // member flips the row to sent. the members it missed are owed it
+    if (anyOk) {
+      await session.markSent(msgUid);
+      await _oweText(d, msgUid, groupId, to: to, missed: missed, first: true);
+    }
     notifyListeners();
     return anyOk;
   }
@@ -12841,6 +13381,22 @@ class AppState extends ChangeNotifier {
     ];
     // the owed have all left the group
     if (owed != null && to.isEmpty) return 'gone';
+    // a member still to get a control of the group gets that first. one
+    // that cannot yet is owed the whole file
+    final waiting = await d.groupCtlWaiting(groupId);
+    final behind = <String>{};
+    await Future.wait([
+      for (final m in to)
+        if (waiting.contains(m))
+          _ctlLane(d, groupId, m, force: true).then((ok) {
+            if (!ok) behind.add(m);
+          }),
+    ]);
+    final go = [
+      for (final m in to)
+        if (!behind.contains(m)) m,
+    ];
+    if (go.isEmpty) return owed == null ? 'error: held' : 'later';
 
     // 16k slices. bigger sizes trip nip-44's 65535 plaintext ceiling once
     // base64'd + double-wrapped (envelope + signal + gift wrap ~= x2.4), and
@@ -12849,7 +13405,7 @@ class AppState extends ChangeNotifier {
     return sendGroupSlices(
       path: path,
       msgUid: msgUid,
-      members: to,
+      members: go,
       // a send to the owed is behind a row that already reads sent
       progressKey: owed == null ? d.container.chatKey(groupId) : null,
       owed: owed,
@@ -12862,8 +13418,12 @@ class AppState extends ChangeNotifier {
             msgUid,
             groupId,
             total: total,
-            tried: to,
-            short: short,
+            tried: go,
+            short: {
+              ...short,
+              if (owed == null)
+                for (final m in behind) m: <int>{},
+            },
             sentTo: to.length,
             first: owed == null,
             now: DateTime.now().millisecondsSinceEpoch,
@@ -13215,14 +13775,19 @@ class AppState extends ChangeNotifier {
       await refreshGroups();
       return groupId;
     }
+    final d = _ownerOf(groupId);
     final participants = await _buildParticipants(full);
     final gc = GroupControl(
       type: 'create',
       name: name,
       members: full,
       participants: participants,
+      stamp: await d.nextRosterStamp(
+        groupId,
+        DateTime.now().millisecondsSinceEpoch,
+      ),
     );
-    await _sendControlToGroup(groupId, gc);
+    await _queueControl(groupId, gc, on: d);
     await refreshGroups();
     return groupId;
   }
@@ -13249,22 +13814,14 @@ class AppState extends ChangeNotifier {
       await refreshGroups();
       return;
     }
+    final d = _ownerOf(groupId);
     final newParticipants = await _buildParticipants(newHaloIds);
     final addGc = GroupControl(
       type: 'add',
       members: newHaloIds,
       participants: newParticipants,
     );
-    for (final memberId in existingMembers) {
-      if (memberId == myId) continue;
-      final wrapped = await wrapMessage(
-        '',
-        groupId: groupId,
-        groupControl: addGc,
-        sender: _mySender(),
-      );
-      await _sendGroupEnvelope(groupId, memberId, wrapped);
-    }
+    await _queueControl(groupId, addGc, to: existingMembers, on: d);
     final allMembers = await session.getGroupMembers(groupId);
     final allParticipants = await _buildParticipants(allMembers);
     final createGc = GroupControl(
@@ -13272,16 +13829,12 @@ class AppState extends ChangeNotifier {
       name: group['name'] as String,
       members: allMembers,
       participants: allParticipants,
+      stamp: await d.nextRosterStamp(
+        groupId,
+        DateTime.now().millisecondsSinceEpoch,
+      ),
     );
-    for (final newMember in newHaloIds) {
-      final wrapped = await wrapMessage(
-        '',
-        groupId: groupId,
-        groupControl: createGc,
-        sender: _mySender(),
-      );
-      await _sendGroupEnvelope(groupId, newMember, wrapped);
-    }
+    await _queueControl(groupId, createGc, to: newHaloIds, on: d);
     await refreshGroups();
   }
 
@@ -13298,22 +13851,19 @@ class AppState extends ChangeNotifier {
     for (final h in removedHaloIds) {
       await session.removeGroupMember(groupId, h);
     }
+    // a room key taken out does not join again
+    final d = _ownerOf(groupId);
+    if (await _roomOf(groupId, d) != null) {
+      await d.noteRosterGone(groupId, removedHaloIds);
+    }
     // a quiet session keeps it on this phone: nothing leaves
     if (sessionQuiet) {
       await refreshGroups();
       return;
     }
+    // the ones taken out hear it too, so they drop the group
     final gc = GroupControl(type: 'remove', members: removedHaloIds);
-    for (final memberId in allMembers) {
-      if (memberId == myId) continue;
-      final wrapped = await wrapMessage(
-        '',
-        groupId: groupId,
-        groupControl: gc,
-        sender: _mySender(),
-      );
-      await _sendGroupEnvelope(groupId, memberId, wrapped);
-    }
+    await _queueControl(groupId, gc, to: allMembers);
     await refreshGroups();
   }
 
@@ -13324,21 +13874,32 @@ class AppState extends ChangeNotifier {
     await session.renameGroup(groupId, newName);
     final gc = GroupControl(type: 'rename', name: newName);
     // a quiet session keeps it on this phone: nothing leaves
-    if (!sessionQuiet) await _sendControlToGroup(groupId, gc);
+    if (!sessionQuiet) await _queueControl(groupId, gc);
     await refreshGroups();
   }
 
-  // anyone can leave. tells the remaining members so they can drop us from
-  // their copies, then the group goes from here with all it held
+  // anyone can leave. the group goes from here with all it held, then the
+  // rest are told, so they drop us from their copies. the leave is queued:
+  // it goes once the route is there, and leaving waits for nobody
   Future<void> leaveGroupAndAnnounce(String groupId) async {
     if (await _roomOf(groupId, session.primary) != null) {
       return leaveRoom(groupId);
     }
-    final gc = GroupControl(type: 'leave');
-    // a quiet session keeps it on this phone: nothing leaves
-    if (!sessionQuiet) await _sendControlToGroup(groupId, gc);
+    final d = _ownerOf(groupId);
+    final members = sessionQuiet
+        ? const <String>[]
+        : await d.getGroupMembers(groupId);
     await session.clearGroupConversation(groupId);
     await session.deleteGroup(groupId);
+    // a quiet session keeps it on this phone: nothing leaves
+    if (!sessionQuiet) {
+      await _queueControl(
+        groupId,
+        const GroupControl(type: 'leave'),
+        to: members,
+        on: d,
+      );
+    }
     await _io.unnotify('group:$groupId');
     _bumpChatRev('group:$groupId');
     await refreshGroups();
