@@ -246,6 +246,8 @@ class ArrivalRows implements HaloDb {
   var _clock = 0;
   final seen = <String>{};
   final held = <String>[];
+  // what was held, cipher by cipher, as takeHeld hands it back
+  final heldCiphers = <String, List<String>>{};
   final vouches = <String, Set<String>>{};
   // when each vouch and reaction was stamped
   final vouchedAt = <String, int?>{};
@@ -364,6 +366,8 @@ class ArrivalRows implements HaloDb {
       );
       return;
     }
+    // a parked row comes back on any touch, as the real one does
+    if (p['archived'] == 1 && p['accepted'] == 0) p['archived'] = 0;
     p['onion'] = onion;
     if (xpub.isNotEmpty) p['xpub'] = xpub;
     if (accepted == 1) p['accepted'] = 1;
@@ -408,6 +412,21 @@ class ArrivalRows implements HaloDb {
   Future<int> pendingRequestCount() async => (await pendingRequests()).length;
   @override
   Future<List<Map<String, Object?>>> requestsInbox() => pendingRequests();
+  // the rule kAskedRows writes in sql
+  @override
+  Future<bool> askedBefore(String haloId) async {
+    final p = people[haloId];
+    final asked =
+        p != null &&
+        p['accepted'] == 0 &&
+        p['blocked'] != 1 &&
+        (p['archived'] == 1 ||
+            held.contains(haloId) ||
+            vouches.containsKey(haloId) ||
+            msgs.any((m) => m['peer_id'] == haloId && m['group_id'] == null));
+    return _hit('askedBefore', haloId, asked);
+  }
+
   @override
   Future<bool> isAccepted(String haloId) async =>
       _hit('isAccepted', haloId, people[haloId]?['accepted'] == 1);
@@ -534,6 +553,13 @@ class ArrivalRows implements HaloDb {
   Future<void> holdCipher(String peerId, String cipher) async {
     _hit('holdCipher', peerId, null);
     held.add(peerId);
+    (heldCiphers[peerId] ??= []).add(cipher);
+  }
+
+  @override
+  Future<List<String>> takeHeld(String peerId) async {
+    held.removeWhere((p) => p == peerId);
+    return _hit('takeHeld', peerId, heldCiphers.remove(peerId) ?? const []);
   }
 
   @override
