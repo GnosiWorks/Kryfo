@@ -2,7 +2,10 @@
 // a restore under way holds the screen: no back arrow, the back gesture
 // does nothing, and the file it reads stays. a restore that fails, or a
 // handle not released and kept for later, gives the way back again. the
-// same identity from an older file keeps its handle and its face
+// same identity from an older file keeps its handle and its face. a session
+// switch under the lock that takes the screen away does not take the end of
+// the restore with it: the hidden chats still get their PIN and the app
+// still closes
 import 'dart:async';
 import 'dart:io';
 
@@ -14,7 +17,16 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/backup.dart';
 import 'package:kryfo/l10n/l10n.dart';
-import 'package:kryfo/main.dart' show HaloEngine, appState, useEngineForTest;
+import 'package:kryfo/lock_state.dart';
+import 'package:kryfo/main.dart'
+    show
+        HaloEngine,
+        appState,
+        navRevision,
+        renewRootNavigator,
+        rootNavKey,
+        useEngineForTest;
+import 'package:kryfo/screens/pin_flow_screen.dart';
 import 'package:kryfo/screens/restore_screen.dart';
 import 'package:kryfo/theme.dart';
 
@@ -37,9 +49,10 @@ void _mock(String channel, Future<Object?> Function(MethodCall)? h) =>
 Future<void> _openAndRestore(
   WidgetTester t, {
   RestoreScreen screen = const RestoreScreen(),
+  Widget Function(Widget home) wrap = app,
 }) async {
   await t.pumpWidget(
-    app(
+    wrap(
       Builder(
         builder: (ctx) => TextButton(
           onPressed: () => Navigator.of(
@@ -78,6 +91,17 @@ Future<void> _openAndRestore(
   await press(t, find.text(l10n.restoreMoveItHere));
   await t.pumpAndSettle();
 }
+
+// the app's own root: each session switch builds a new navigator
+Widget _rooted(Widget home) => ValueListenableBuilder<int>(
+  valueListenable: navRevision,
+  builder: (_, _, _) => MaterialApp(
+    navigatorKey: rootNavKey,
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    home: home,
+  ),
+);
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -211,5 +235,72 @@ void main() {
     const st = FlutterSecureStorage();
     expect(await st.read(key: 'my_handle'), 'amberfox');
     expect(await st.read(key: 'my_avatar'), '17');
+  });
+
+  testWidgets('the lock taking the screen away mid restore still asks for '
+      'the hidden chats PIN, then closes', (t) async {
+    phone(t);
+    FlutterSecureStorage.setMockInitialValues({});
+    await appState.loadMyHandle();
+    var quits = 0;
+    quitAfterRestore = () => quits++;
+    lockState.openForTest(enabled: true);
+    addTearDown(() {
+      quitAfterRestore = () => exit(0);
+      forgetRestoredHidden();
+      lockState.openForTest();
+    });
+    final running = Completer<void>();
+    inspectForTest = (_) async => const BackupSummary(
+      when: null,
+      version: 2,
+      haloId: 'amber-fox-run',
+      contacts: 2,
+      messages: 9,
+    );
+    restoreForTest = (_) async {
+      await running.future;
+      restoredHiddenForTest('the hidden key');
+    };
+    await _openAndRestore(t, wrap: _rooted);
+    expect(find.text(l10n.restoreRestoring), findsOneWidget);
+
+    // the screen goes dark: the lock comes up and the hidden chats close
+    lockState.lock();
+    renewRootNavigator();
+    await t.pumpAndSettle();
+    expect(find.byType(RestoreScreen), findsNothing);
+    running.complete();
+    await t.pumpAndSettle();
+    // nothing shows under the lock
+    expect(find.byType(PinFlowScreen), findsNothing);
+    expect(quits, 0);
+
+    // unlocked
+    lockState.openForTest(enabled: true);
+    lockState.inDecoy = false;
+    await t.pumpAndSettle();
+    expect(find.byType(PinFlowScreen), findsOneWidget);
+    expect(quits, 0);
+
+    // the lock again while it is chosen: asked for again after
+    lockState.lock();
+    renewRootNavigator();
+    await t.pumpAndSettle();
+    expect(find.byType(PinFlowScreen), findsNothing);
+    lockState.openForTest(enabled: true);
+    lockState.inDecoy = false;
+    await t.pumpAndSettle();
+    expect(find.byType(PinFlowScreen), findsOneWidget);
+    expect(quits, 0);
+
+    // the PIN is chosen
+    forgetRestoredHidden();
+    rootNavKey.currentState!.pop(true);
+    await t.pumpAndSettle();
+    expect(find.text(l10n.restoreRestored), findsOneWidget);
+    await t.tap(find.text(l10n.restoreReopenKryfo));
+    await t.pumpAndSettle();
+    expect(quits, 1);
   });
 }

@@ -1182,6 +1182,9 @@ Future<bool> sealRestoredHidden(LockState lock, String pin) async {
 @visibleForTesting
 void forgetRestoredHidden() => _restoredKey = null;
 
+@visibleForTesting
+void restoredHiddenForTest(String key) => _restoredKey = key;
+
 /// what a restore does to hidden chats here: they belonged to the account
 /// being replaced, so their entry goes first and then their files. hidden
 /// chats in the backup take their place in [into], the vault of the

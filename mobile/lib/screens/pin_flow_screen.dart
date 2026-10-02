@@ -133,8 +133,9 @@ class _PinFlowScreenState extends State<PinFlowScreen>
   bool get _changing => _vault && widget.skipIntro;
   // hidden chats a restore brought, waiting for their pin
   bool get _restoring => _vault && widget.restoring;
-  // no app lock yet: its pin comes first
-  late final bool _needsLock = _restoring && !_lock.enabled;
+  // no app lock yet: its pin comes first. a lock turned off in the decoy
+  // counts as none, as it does everywhere else there
+  late final bool _needsLock = _restoring && !_lock.lockOn;
   // the flow that made a new vault, whose key goes however it ends
   bool get _setup => _vault && !widget.skipIntro && !widget.restoring;
   Color get _tint => _wipe

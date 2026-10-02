@@ -160,7 +160,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
     // restartTor returns, so a "ready" in the next second or two is the old
     // tor. connected means a newer route that a relay has connected through.
     _genBefore = appState.routeGen;
-    engine.restartTor();
+    appState.restartTor();
     if (!mounted) return;
     setState(() {
       _result = r;

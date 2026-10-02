@@ -3,7 +3,9 @@
 // then restore. every failure names its cause. recovery is the encrypted
 // file plus its passphrase; there is no word list. a step done turns its
 // number into a tick.
+import 'dart:async';
 import 'dart:io';
+import '../lock_guard.dart';
 import '../lock_state.dart';
 
 import 'package:file_picker/file_picker.dart';
@@ -11,7 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../backup.dart';
-import '../main.dart' show appState, engine, shredFile;
+import '../main.dart' show appState, engine, navRevision, rootNavKey, shredFile;
 import '../picked.dart';
 import '../theme.dart';
 import '../widgets/confirm_sheet.dart';
@@ -41,6 +43,80 @@ Future<BackupSummary> Function(String passphrase)? inspectForTest;
 Future<void> Function(String passphrase)? restoreForTest;
 @visibleForTesting
 Future<PlatformFile?> Function()? pickForTest;
+// what closes the app once a restore is done, so the next start boots from
+// what it wrote
+@visibleForTesting
+void Function() quitAfterRestore = () => exit(0);
+
+// true once the navigator a route is on has been replaced: a session switch
+// under the lock drops every route without popping it, and a wait on one
+// would never end
+Future<bool> _navGoneBefore(Future<Object?> shown) {
+  final done = Completer<bool>();
+  void renewed() {
+    if (!done.isCompleted) done.complete(true);
+  }
+
+  navRevision.addListener(renewed);
+  shown.then(
+    (_) {
+      if (!done.isCompleted) done.complete(false);
+    },
+    onError: (_) {
+      if (!done.isCompleted) done.complete(false);
+    },
+  );
+  return done.future.whenComplete(() => navRevision.removeListener(renewed));
+}
+
+// the restore went on after the lock took its screen. the files are the
+// restored account by now: hidden chats it brought still need their PIN,
+// and the app still has to close, on whatever screen is up once the same
+// kind of session is open again
+@visibleForTesting
+Future<void> endRestoreAway(String haloId, {required bool decoy}) async {
+  while (true) {
+    while (lockGuard.isLocked() || lockState.inDecoy != decoy) {
+      final moved = Completer<void>();
+      void on() {
+        if (!moved.isCompleted) moved.complete();
+      }
+
+      lockState.addListener(on);
+      try {
+        await moved.future;
+      } finally {
+        lockState.removeListener(on);
+      }
+    }
+    // the session's navigator is built on the next frame
+    await WidgetsBinding.instance.endOfFrame;
+    final nav = rootNavKey.currentState;
+    if (nav == null || !nav.mounted) continue;
+    if (restoredHidden) {
+      final gone = await _navGoneBefore(
+        nav.push<bool>(
+          haloRoute(const PinFlowScreen(flow: PinFlow.vault, restoring: true)),
+        ),
+      );
+      if (gone) continue;
+    }
+    final ctx = nav.overlay?.context;
+    if (ctx != null && ctx.mounted) {
+      final gone = await _navGoneBefore(
+        showNoticeSheet(
+          ctx,
+          title: l10n.restoreRestored,
+          line: l10n.restoreKryfoWillCloseNow(haloId),
+          ok: l10n.restoreReopenKryfo,
+        ),
+      );
+      if (gone) continue;
+    }
+    quitAfterRestore();
+    return;
+  }
+}
 
 class RestoreScreen extends StatefulWidget {
   // called after a restore instead of the 'reopen kryfo' notice, so
@@ -194,6 +270,8 @@ class _RestoreScreenState extends State<RestoreScreen> {
         : const <String, String>{};
     if (!mounted) return;
     _running = true;
+    // the session the restore runs in, the one its end is shown in
+    final decoy = lockState.inDecoy;
     if (mine != null && !sameIdentity) {
       setState(() {
         _busy = true;
@@ -255,28 +333,38 @@ class _RestoreScreenState extends State<RestoreScreen> {
       // the face were carried: the key still proves the handle, so keep the
       // name, and the face picked stays too
       await keepIfDropped(kept);
-      if (!mounted) return;
+      if (!mounted) return endRestoreAway(s.haloId, decoy: decoy);
       HapticFeedback.mediumImpact();
       // hidden chats came back: they open with a PIN chosen now, and the
       // app lock first if there is none
       if (restoredHidden) {
-        await Navigator.of(context).push<bool>(
-          haloRoute(const PinFlowScreen(flow: PinFlow.vault, restoring: true)),
+        final gone = await _navGoneBefore(
+          Navigator.of(context).push<bool>(
+            haloRoute(
+              const PinFlowScreen(flow: PinFlow.vault, restoring: true),
+            ),
+          ),
         );
-        if (!mounted) return;
+        if (gone || !mounted) return endRestoreAway(s.haloId, decoy: decoy);
       }
       if (widget.onRestored != null) {
         widget.onRestored!();
         return;
       }
-      await showNoticeSheet(
-        context,
-        title: l10n.restoreRestored,
-        line: l10n.restoreKryfoWillCloseNow(s.haloId),
-        ok: l10n.restoreReopenKryfo,
+      final gone = await _navGoneBefore(
+        showNoticeSheet(
+          context,
+          title: l10n.restoreRestored,
+          line: l10n.restoreKryfoWillCloseNow(s.haloId),
+          ok: l10n.restoreReopenKryfo,
+        ),
       );
+      if (gone) return endRestoreAway(s.haloId, decoy: decoy);
       // exit so the next launch boots fresh from the restored db
-      Future.delayed(const Duration(milliseconds: 200), () => exit(0));
+      Future.delayed(
+        const Duration(milliseconds: 200),
+        () => quitAfterRestore(),
+      );
       if (mounted) Navigator.of(context).pop();
     } on RestoreError catch (e) {
       _running = false;

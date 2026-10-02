@@ -949,7 +949,7 @@ class _OfflineCardState extends State<_OfflineCard> {
   Future<void> _reconnect() async {
     if (_busy) return;
     setState(() => _busy = true);
-    engine.restartTor();
+    appState.restartTor();
     // the bounce reports itself through the status poll; this only stops the
     // button being hammered while it runs.
     await Future<void>.delayed(const Duration(seconds: 6));
@@ -1172,7 +1172,7 @@ class _BridgeStuckHint extends StatelessWidget {
             label: l10n.homeTurnBridgesOff,
             onTap: () async {
               await appState.applyBridges(appState.bridgeLines, false);
-              engine.restartTor();
+              appState.restartTor();
               if (context.mounted) {
                 showHaloToast(context, l10n.homeGoingDirectReconnecting);
               }

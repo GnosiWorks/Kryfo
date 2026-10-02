@@ -1485,6 +1485,27 @@ void main() {
       expect(find.byType(PinFlowScreen), findsNothing);
     });
 
+    testWidgets('in the decoy with its lock turned off: the app PIN first, '
+        'as anywhere with no lock', (t) async {
+      phone(t);
+      await t.runAsync(restored);
+      final lock = await makeLock({
+        PinSlot.app: (appPin, PinKind.everyday),
+        PinSlot.decoy: (decoyPin, PinKind.decoy),
+      }, inDecoy: true);
+      await lock.state.disable();
+      expect(lock.state.lockOn, isFalse);
+      await open(t, lock);
+      expect(find.text(l10n.restoreHiddenLockFirst), findsOneWidget);
+      await press(t, find.text(l10n.commonContinue));
+      await t.pumpAndSettle();
+      expect(find.text(l10n.lockSetupSetAPin), findsOneWidget);
+      await pin(t, '135791');
+      await pin(t, '135791');
+      expect(lock.state.lockOn, isTrue);
+      expect(find.text(l10n.flowVaultChoose), findsOneWidget);
+    });
+
     testWidgets('with an app lock: straight to their PIN; one in use asks '
         'for another', (t) async {
       phone(t);

@@ -191,7 +191,7 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
                           // a pin turns previews off. if someone turns them
                           // back on, say what that gives away.
                           Unfold(
-                            open: lockState.enabled && _hidePreview == false,
+                            open: lockState.lockOn && _hidePreview == false,
                             child: Padding(
                               padding: const EdgeInsets.only(top: 6),
                               child: Text(
