@@ -3305,6 +3305,20 @@
   "@groupChatTapToRetry": {
     "description": "screens/group_chat_screen.dart"
   },
+  "groupChatFileReach": "{have, plural, =0{Sent · on its way} one{Sent · {have} of {count} has it} other{Sent · {have} of {count} have it}}",
+  "@groupChatFileReach": {
+    "description": "widgets/file_reach.dart",
+    "placeholders": {
+      "have": {
+        "type": "int",
+        "format": "decimalPattern"
+      },
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
   "groupChat0s": "0s",
   "@groupChat0s": {
     "description": "screens/group_chat_screen.dart"

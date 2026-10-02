@@ -677,6 +677,7 @@
   "groupChatSupporter": "هوادار",
   "groupChatEdited": "ویرایش‌شده",
   "groupChatTapToRetry": "! برای تکرار بزنید",
+  "groupChatFileReach": "{have, plural, =0{فرستاده شد · در راه} one{فرستاده شد · ⁨{have}⁩ از ⁨{count}⁩ نفر دریافت کرده} other{فرستاده شد · ⁨{have}⁩ از ⁨{count}⁩ نفر دریافت کرده‌اند}}",
   "groupChat0s": "۰ ثانیه",
   "groupChatReply": "پاسخ",
   "groupChatPin": "سنجاق",

@@ -2510,6 +2510,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get groupChatTapToRetry => '! 点击重试';
 
   @override
+  String groupChatFileReach(int have, int count) {
+    final intl.NumberFormat haveNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String haveString = haveNumberFormat.format(have);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      have,
+      locale: localeName,
+      other: '已发送 · $countString 人中 $haveString 人已收到',
+      zero: '已发送 · 正在送达',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get groupChat0s => '0 秒';
 
   @override
@@ -9744,6 +9763,25 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get groupChatTapToRetry => '! 點一下重試';
+
+  @override
+  String groupChatFileReach(int have, int count) {
+    final intl.NumberFormat haveNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String haveString = haveNumberFormat.format(have);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      have,
+      locale: localeName,
+      other: '已傳送 · $countString 人中 $haveString 人已收到',
+      zero: '已傳送 · 正在送達',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get groupChat0s => '0 秒';

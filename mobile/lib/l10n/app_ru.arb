@@ -677,6 +677,7 @@
   "groupChatSupporter": "Сторонник",
   "groupChatEdited": "Изменено",
   "groupChatTapToRetry": "! Нажми для повтора",
+  "groupChatFileReach": "{have, plural, =0{Отправлено · в пути} one{Отправлено · есть у {have} из {count}} few{Отправлено · есть у {have} из {count}} many{Отправлено · есть у {have} из {count}} other{Отправлено · есть у {have} из {count}}}",
   "groupChat0s": "0 с",
   "groupChatReply": "Ответить",
   "groupChatPin": "Закрепить",

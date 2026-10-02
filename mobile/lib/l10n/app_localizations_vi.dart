@@ -2607,6 +2607,25 @@ class AppLocalizationsVi extends AppLocalizations {
   String get groupChatTapToRetry => '! Chạm để thử lại';
 
   @override
+  String groupChatFileReach(int have, int count) {
+    final intl.NumberFormat haveNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String haveString = haveNumberFormat.format(have);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      have,
+      locale: localeName,
+      other: 'Đã gửi · $haveString trên $countString người đã nhận',
+      zero: 'Đã gửi · đang trên đường',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get groupChat0s => '0 giây';
 
   @override

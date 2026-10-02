@@ -677,6 +677,7 @@
   "groupChatSupporter": "داعم",
   "groupChatEdited": "معدّلة",
   "groupChatTapToRetry": "! اضغط لإعادة المحاولة",
+  "groupChatFileReach": "{have, plural, zero{أُرسلت · في الطريق} one{أُرسلت · وصلت إلى ⁨{have}⁩ من ⁨{count}⁩} two{أُرسلت · وصلت إلى ⁨{have}⁩ من ⁨{count}⁩} few{أُرسلت · وصلت إلى ⁨{have}⁩ من ⁨{count}⁩} many{أُرسلت · وصلت إلى ⁨{have}⁩ من ⁨{count}⁩} other{أُرسلت · وصلت إلى ⁨{have}⁩ من ⁨{count}⁩}}",
   "groupChat0s": "٠ ث",
   "groupChatReply": "رد",
   "groupChatPin": "تثبيت",

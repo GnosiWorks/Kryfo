@@ -1017,7 +1017,7 @@ Future<String> torStrictGetOnIsolate(String url) {
   });
 }
 
-class HaloDb {
+class HaloDb implements GroupOwedStore {
   HaloDb([this.container = HaloContainer.everyday]);
 
   // a wrapped container, under the key its pin entry unwrapped. storage is
@@ -1122,7 +1122,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 58,
+      version: 59,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -1264,8 +1264,13 @@ class HaloDb {
         await _devChatTables(db);
         await _devSignalTables(db);
         await _supportTables(db);
+        await groupOwedTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 59) {
+          // what a group file's send left owed, member by member
+          await groupOwedTables(db);
+        }
         if (oldV < 58) {
           // unsends and reactions queue like edits
           await _framesTable(db);
@@ -2606,6 +2611,7 @@ class HaloDb {
   // the authoritative list from a create or reconcile control replaces the
   // whole member set
   Future<void> syncGroupMembers(String groupId, List<String> members) async {
+    await keepGroupOwedTo(groupId, members);
     final db = await open();
     final batch = db.batch();
     batch.delete('group_members', where: 'group_id = ?', whereArgs: [groupId]);
@@ -2627,6 +2633,9 @@ class HaloDb {
       where: 'group_id = ? AND halo_id = ?',
       whereArgs: [groupId, haloId],
     );
+    await db.transaction(
+      (t) => _owedGone(t, 'group_id = ? AND member = ?', [groupId, haloId]),
+    );
   }
 
   Future<void> renameGroup(String groupId, String name) async {
@@ -2641,6 +2650,11 @@ class HaloDb {
 
   Future<void> deleteGroup(String groupId) async {
     final db = await open();
+    await db.delete(
+      'group_media_owed',
+      where: 'group_id = ?',
+      whereArgs: [groupId],
+    );
     await db.delete(
       'group_members',
       where: 'group_id = ?',
@@ -2753,6 +2767,11 @@ class HaloDb {
         await db.delete('reactions', where: 'msg_uid = ?', whereArgs: [uid]);
       }
     }
+    await db.delete(
+      'group_media_owed',
+      where: 'group_id = ?',
+      whereArgs: [groupId],
+    );
     await db.delete('messages', where: 'group_id = ?', whereArgs: [groupId]);
   }
 
@@ -2936,6 +2955,11 @@ class HaloDb {
     );
     await _unreadGo(db, media);
     await db.delete('reactions', where: 'msg_uid = ?', whereArgs: [msgUid]);
+    await db.delete(
+      'group_media_owed',
+      where: 'msg_uid = ?',
+      whereArgs: [msgUid],
+    );
     await db.delete('messages', where: 'msg_uid = ?', whereArgs: [msgUid]);
     await _scrubMedia(media);
   }
@@ -3003,6 +3027,11 @@ class HaloDb {
       final uid = r['msg_uid'] as String?;
       if (uid != null) {
         await db.delete('reactions', where: 'msg_uid = ?', whereArgs: [uid]);
+        await db.delete(
+          'group_media_owed',
+          where: 'msg_uid = ?',
+          whereArgs: [uid],
+        );
       }
     }
     await db.delete(
@@ -3134,6 +3163,11 @@ class HaloDb {
       'DELETE FROM reactions WHERE msg_uid IN '
       '(SELECT msg_uid FROM messages WHERE group_id = ? AND msg_uid IS NOT NULL)',
       [groupId],
+    );
+    await db.delete(
+      'group_media_owed',
+      where: 'group_id = ?',
+      whereArgs: [groupId],
     );
     await db.delete('messages', where: 'group_id = ?', whereArgs: [groupId]);
     await _scrubMedia(media);
@@ -3948,6 +3982,217 @@ class HaloDb {
     await db.delete('media_wants', where: 'media_id = ?', whereArgs: [mediaId]);
   }
 
+  // ---- group files some members still lack ----
+
+  /// a send of [msgUid] to [tried] ended with [short] still lacking slices.
+  /// the rest of [tried] have it all and are owed nothing. a short member
+  /// keeps its row with what it holds; [first] sends add the ones new to
+  /// it, waiting from [now]. a row gone meanwhile leaves nothing owed
+  Future<void> settleGroupOwed(
+    String msgUid,
+    String groupId, {
+    required int total,
+    required Iterable<String> tried,
+    required Map<String, Set<int>> short,
+    required int sentTo,
+    required bool first,
+    required int now,
+  }) async {
+    final db = await open();
+    await db.transaction((t) async {
+      final row = await t.query(
+        'messages',
+        columns: ['msg_uid'],
+        where: 'msg_uid = ?',
+        whereArgs: [msgUid],
+        limit: 1,
+      );
+      if (row.isEmpty) {
+        await t.delete(
+          'group_media_owed',
+          where: 'msg_uid = ?',
+          whereArgs: [msgUid],
+        );
+        return;
+      }
+      for (final m in tried) {
+        if (short.containsKey(m)) continue;
+        await t.delete(
+          'group_media_owed',
+          where: 'msg_uid = ? AND member = ?',
+          whereArgs: [msgUid, m],
+        );
+      }
+      for (final MapEntry(key: m, value: have) in short.entries) {
+        final n = await t.update(
+          'group_media_owed',
+          {'have': packSlices(have), 'total': total},
+          where: 'msg_uid = ? AND member = ?',
+          whereArgs: [msgUid, m],
+        );
+        if (n > 0 || !first) continue;
+        await t.insert('group_media_owed', {
+          'msg_uid': msgUid,
+          'group_id': groupId,
+          'member': m,
+          'total': total,
+          'have': packSlices(have),
+          'sent_to': sentTo,
+          'since': now,
+          'tries': 0,
+          'next_at': now + groupOwedGap(0),
+        });
+      }
+    });
+  }
+
+  @override
+  Future<List<GroupOwed>> dueGroupOwed(int now) async {
+    final db = await open();
+    // a member past its tries is not tried again, and keeps its row
+    final rows = await db.query(
+      'group_media_owed',
+      where: 'next_at < ? AND tries < ?',
+      whereArgs: [now + 1, kGroupOwedTries],
+      orderBy: 'next_at ASC',
+    );
+    return [for (final r in rows) GroupOwed.fromRow(r)];
+  }
+
+  @override
+  Future<void> triedGroupOwed(
+    String msgUid,
+    Iterable<String> members,
+    int now,
+  ) async {
+    final db = await open();
+    await db.transaction((t) async {
+      for (final m in members) {
+        final r = await t.query(
+          'group_media_owed',
+          columns: ['tries'],
+          where: 'msg_uid = ? AND member = ?',
+          whereArgs: [msgUid, m],
+          limit: 1,
+        );
+        if (r.isEmpty) continue;
+        final tries = (r.first['tries'] as int? ?? 0) + 1;
+        await t.update(
+          'group_media_owed',
+          {'tries': tries, 'next_at': now + groupOwedGap(tries)},
+          where: 'msg_uid = ? AND member = ?',
+          whereArgs: [msgUid, m],
+        );
+      }
+    });
+  }
+
+  @override
+  Future<void> dropGroupOwed(String msgUid) async {
+    final db = await open();
+    await db.delete(
+      'group_media_owed',
+      where: 'msg_uid = ?',
+      whereArgs: [msgUid],
+    );
+  }
+
+  /// the members of [groupId] no longer in [members] are owed nothing
+  Future<void> keepGroupOwedTo(String groupId, List<String> members) async {
+    final db = await open();
+    await db.transaction((t) async {
+      final rows = await t.query(
+        'group_media_owed',
+        columns: ['member'],
+        where: 'group_id = ?',
+        whereArgs: [groupId],
+      );
+      for (final m in {for (final r in rows) r['member'] as String}) {
+        if (members.contains(m)) continue;
+        await _owedGone(t, 'group_id = ? AND member = ?', [groupId, m]);
+      }
+    });
+  }
+
+  /// [member]'s session is there now: what they are owed is due at once,
+  /// with a try more for one past its tries
+  Future<int> groupOwedDueNow(String member) async {
+    final db = await open();
+    return db.transaction((t) async {
+      final rows = await t.query(
+        'group_media_owed',
+        columns: ['msg_uid', 'tries'],
+        where: 'member = ?',
+        whereArgs: [member],
+      );
+      for (final r in rows) {
+        final tries = r['tries'] as int? ?? 0;
+        await t.update(
+          'group_media_owed',
+          {'next_at': 0, 'tries': min(tries, kGroupOwedTries - 1)},
+          where: 'msg_uid = ? AND member = ?',
+          whereArgs: [r['msg_uid'], member],
+        );
+      }
+      return rows.length;
+    });
+  }
+
+  /// a group's files some members still lack, by uid: how many of the
+  /// members each went to have it
+  Future<Map<String, ({int have, int of})>> groupFileReach(
+    String groupId,
+  ) async {
+    final db = await open();
+    final rows = await db.query(
+      'group_media_owed',
+      columns: ['msg_uid', 'sent_to'],
+      where: 'group_id = ?',
+      whereArgs: [groupId],
+    );
+    final owed = <String, int>{};
+    final of = <String, int>{};
+    for (final r in rows) {
+      final uid = r['msg_uid'] as String;
+      owed[uid] = (owed[uid] ?? 0) + 1;
+      of[uid] = max(of[uid] ?? 0, r['sent_to'] as int? ?? 0);
+    }
+    return {
+      for (final MapEntry(key: uid, value: n) in owed.entries)
+        uid: (have: max(0, of[uid]! - n), of: max(of[uid]!, n)),
+    };
+  }
+
+  // members who left or were taken out: their rows go, and each file they
+  // were owed counts one fewer it went to, so the others' line stays true
+  static Future<void> _owedGone(
+    DatabaseExecutor t,
+    String where,
+    List<Object?> args,
+  ) async {
+    final rows = await t.query(
+      'group_media_owed',
+      columns: ['msg_uid', 'member', 'sent_to'],
+      where: where,
+      whereArgs: args,
+    );
+    for (final r in rows) {
+      final uid = r['msg_uid'] as String;
+      final to = r['sent_to'] as int? ?? 1;
+      await t.delete(
+        'group_media_owed',
+        where: 'msg_uid = ? AND member = ?',
+        whereArgs: [uid, r['member']],
+      );
+      await t.update(
+        'group_media_owed',
+        {'sent_to': to > 1 ? to - 1 : 1},
+        where: 'msg_uid = ?',
+        whereArgs: [uid],
+      );
+    }
+  }
+
   // what a request for slices is checked against and answered from
   Future<Map<String, Object?>?> sentMediaRow(String msgUid) async {
     final db = await open();
@@ -4448,6 +4693,31 @@ Future<void> _framesTable(Database db) async {
       PRIMARY KEY (msg_uid, kind)
     )
   ''');
+}
+
+// a group file some members still lack once its row reads sent: per member,
+// the slices they hold and when to try them again. the trigger drops them
+// however the message goes, as poll_votes does
+Future<void> groupOwedTables(DatabaseExecutor db) async {
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS group_media_owed (
+      msg_uid TEXT NOT NULL,
+      group_id TEXT NOT NULL,
+      member TEXT NOT NULL,
+      total INTEGER NOT NULL,
+      have TEXT NOT NULL DEFAULT '',
+      sent_to INTEGER NOT NULL,
+      since INTEGER NOT NULL,
+      tries INTEGER NOT NULL DEFAULT 0,
+      next_at INTEGER NOT NULL,
+      PRIMARY KEY (msg_uid, member)
+    )
+  ''');
+  await db.execute(
+    'CREATE TRIGGER IF NOT EXISTS group_media_owed_follow AFTER DELETE ON '
+    'messages WHEN old.msg_uid IS NOT NULL BEGIN '
+    'DELETE FROM group_media_owed WHERE msg_uid = old.msg_uid; END',
+  );
 }
 
 Future<void> _shieldTable(Database db) async {
@@ -6020,7 +6290,7 @@ class AppState extends ChangeNotifier {
     unawaited(_drainEdits());
     unawaited(_drainPins());
     unawaited(_drainFrames());
-    unawaited(resendGroupOwed());
+    unawaited(_drainGroupOwed());
     if (rows.isEmpty && vRows.isEmpty) {
       if (_outboxTries.isNotEmpty) {
         _outboxTries.clear();
@@ -6410,6 +6680,92 @@ class AppState extends ChangeNotifier {
       // a bubble a busy retry left spinning settles into failed
       _bumpChatRev('group:$groupId');
     }
+  }
+
+  // what a group file's send left owed goes to the members that lack it,
+  // only the slices they lack, once their wait is up. one pass at a time,
+  // the open vault's after the everyday's. a shut vault's rows wait in it
+  Future<void>? _owedPass;
+  Future<void> _drainGroupOwed() =>
+      _owedPass ??= _owedRound().whenComplete(() => _owedPass = null);
+
+  @visibleForTesting
+  Future<void> get owedPassForTest => _owedPass ?? Future<void>.value();
+
+  Future<void> _owedRound() async {
+    for (final d in [live, ?_openVault]) {
+      // a quiet session sends nothing, and a wipe takes the rows with it
+      if (haloWiping || sessionQuiet) return;
+      try {
+        await resendGroupOwed(
+          d,
+          now: DateTime.now().millisecondsSinceEpoch,
+          send: (uid, groupId, have, total) =>
+              _sendOwed(d, uid, groupId, have, total),
+        );
+      } catch (e) {
+        dlog('GRP MEDIA owed: ${e.runtimeType}');
+      }
+    }
+  }
+
+  // one file again, to the members owed it. 'later' when the chat is not
+  // where this pass found it, or the row is still the outbox's
+  Future<String> _sendOwed(
+    HaloDb d,
+    String uid,
+    String groupId,
+    Map<String, Set<int>> have,
+    int total,
+  ) async {
+    // a wipe or a quiet session that began during the pass starts nothing
+    if (haloWiping || sessionQuiet) return 'error: quiet';
+    if (!identical(_ownerOf(groupId), d)) return 'later';
+    final r = await d.sentMediaRow(uid);
+    if (r == null || r['direction'] != 'out' || r['group_id'] != groupId) {
+      return 'gone';
+    }
+    if ((r['sent'] as int? ?? 1) == 0) return 'later';
+    final mediaPath = r['media_path'] as String?;
+    final path = mediaPath ?? r['file_path'] as String?;
+    if (path == null || path.isEmpty || !await File(path).exists()) {
+      return 'gone';
+    }
+    final members = await d.getGroupMembers(groupId);
+    await d.keepGroupOwedTo(groupId, members);
+    final to = [
+      for (final m in have.keys)
+        if (members.contains(m)) m,
+    ];
+    if (to.isEmpty) return 'gone';
+    // the file is not the one their slices were of: all of it again
+    final fresh = await mediaSliceCount(path) != total;
+    final fileName = mediaPath == null ? r['file_name'] as String? : null;
+    return sendMediaToGroup(
+      groupId,
+      path,
+      msgUid: uid,
+      caption: (r['plaintext'] as String?) ?? '',
+      fileName: fileName,
+      voice: fileName == 'voice.wav',
+      voiceDisguised: ((r['voice_disguised'] as int?) ?? 0) == 1,
+      burnSeconds: (r['burn_secs'] as num?)?.toInt(),
+      owed: {for (final m in to) m: fresh ? <int>{} : have[m]!},
+    );
+  }
+
+  // a member's session just came up: what they are owed goes now, not at
+  // the end of their wait
+  Future<void> _owedDueFor(String member) async {
+    var due = 0;
+    for (final d in [live, ?_openVault]) {
+      try {
+        due += await d.groupOwedDueNow(member);
+      } catch (e) {
+        dlog('GRP MEDIA owed: ${e.runtimeType}');
+      }
+    }
+    if (due > 0 && torReady) await _drainGroupOwed();
   }
 
   Future<void> _drainMedia(
@@ -11760,6 +12116,7 @@ class AppState extends ChangeNotifier {
         await signalSession.sessionStore.deleteSession(addr);
         await processPeerBundle(from, bundle);
         dlog('healed session for $from (bundle exchange)');
+        unawaited(_owedDueFor(from));
       }
       if (want) unawaited(_sendBundleCtl(from, want: false));
     } catch (e) {
@@ -12440,8 +12797,8 @@ class AppState extends ChangeNotifier {
     bool voice = false,
     bool voiceDisguised = false,
     int? burnSeconds,
-    // only these members, the ones a send that went left short
-    List<String>? onlyTo,
+    // only these members, owed it by a send that went, with what each has
+    Map<String, Set<int>>? owed,
   }) async {
     // one send per media at a time, the same set the 1:1 path holds. the
     // drainer picks up any row older than 45 s, and a video to a group is
@@ -12480,28 +12837,10 @@ class AppState extends ChangeNotifier {
     final room = await _roomOf(groupId, d);
     final to = [
       for (final m in members)
-        if (m != myId && m != room?.pub && (onlyTo?.contains(m) ?? true)) m,
+        if (m != myId && m != room?.pub && (owed?.containsKey(m) ?? true)) m,
     ];
     // the owed have all left the group
-    if (onlyTo != null && to.isEmpty) return 'gone';
-    // a member left short is sent it again later, while the row and its
-    // file are still here and the chat is still in the same place
-    Future<String> resend(List<String> owed) async {
-      if (!identical(_ownerOf(groupId), d)) return 'gone';
-      if (!await d.messageExists(msgUid)) return 'gone';
-      if (!await File(path).exists()) return 'gone';
-      return sendMediaToGroup(
-        groupId,
-        path,
-        msgUid: msgUid,
-        caption: caption,
-        fileName: fileName,
-        voice: voice,
-        voiceDisguised: voiceDisguised,
-        burnSeconds: burnSeconds,
-        onlyTo: owed,
-      );
-    }
+    if (owed != null && to.isEmpty) return 'gone';
 
     // 16k slices. bigger sizes trip nip-44's 65535 plaintext ceiling once
     // base64'd + double-wrapped (envelope + signal + gift wrap ~= x2.4), and
@@ -12512,13 +12851,28 @@ class AppState extends ChangeNotifier {
       msgUid: msgUid,
       members: to,
       // a send to the owed is behind a row that already reads sent
-      progressKey: onlyTo == null ? d.container.chatKey(groupId) : null,
-      onShort: (short) => noteGroupShort(
-        msgUid,
-        tried: onlyTo ?? to,
-        short: short,
-        resend: resend,
-      ),
+      progressKey: owed == null ? d.container.chatKey(groupId) : null,
+      owed: owed,
+      // a member left short is sent the rest later, from the outbox
+      onShort: (short, total) async {
+        // the send went either way: a row not written costs that member
+        // the file, not the others their sent tick
+        try {
+          await d.settleGroupOwed(
+            msgUid,
+            groupId,
+            total: total,
+            tried: to,
+            short: short,
+            sentTo: to.length,
+            first: owed == null,
+            now: DateTime.now().millisecondsSinceEpoch,
+          );
+        } catch (e) {
+          dlog('GRP MEDIA $msgUid: owed not kept (${e.runtimeType})');
+        }
+        groupOwedTick.value++;
+      },
       photo: fileName == null && !voice,
       wrap: (slice, i, total) async {
         final (ids, parts) = await roster();
@@ -12750,15 +13104,31 @@ class AppState extends ChangeNotifier {
   // recall a group message everywhere: delete locally, tell every member.
   // receiver handles 'un' group-agnostically (deletes by uid).
   Future<void> unsendInGroup(String groupId, String targetMsgUid) async {
-    // a file still going to the members it missed stops going
-    groupMediaOwed.remove(targetMsgUid);
-    if (mediaInflight.contains(targetMsgUid)) cancelMediaSend(targetMsgUid);
+    // a file still going, to everyone or to the members it missed, stops
+    // before its row and its file go, and what they were owed goes too
+    final going = mediaInflight.contains(targetMsgUid);
+    if (going) cancelMediaSend(targetMsgUid);
     await session.deleteMessage(targetMsgUid);
+    groupOwedTick.value++;
     // a quiet session keeps it on this phone: nothing leaves
     if (sessionQuiet) {
       notifyListeners();
       return;
     }
+    await _sayUnsent(groupId, targetMsgUid);
+    notifyListeners();
+    // a slice already on its way can land after that: said again once the
+    // send has let go, so nobody is left holding part of the file
+    if (going) {
+      unawaited(
+        whenMediaFree(
+          targetMsgUid,
+        ).then((_) => _sayUnsent(groupId, targetMsgUid)),
+      );
+    }
+  }
+
+  Future<void> _sayUnsent(String groupId, String targetMsgUid) async {
     final wrapped = await wrapMessage(
       '',
       groupId: groupId,
@@ -12770,7 +13140,6 @@ class AppState extends ChangeNotifier {
       for (final memberId in members)
         if (memberId != myId) _sendGroupEnvelope(groupId, memberId, wrapped),
     ]);
-    notifyListeners();
   }
 
   // edit a group message everywhere: swap text locally, tell every member.

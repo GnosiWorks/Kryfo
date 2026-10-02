@@ -4185,6 +4185,12 @@ abstract class AppLocalizations {
   /// **'! Tap to retry'**
   String get groupChatTapToRetry;
 
+  /// widgets/file_reach.dart
+  ///
+  /// In en, this message translates to:
+  /// **'{have, plural, =0{Sent · on its way} one{Sent · {have} of {count} has it} other{Sent · {have} of {count} have it}}'**
+  String groupChatFileReach(int have, int count);
+
   /// screens/group_chat_screen.dart
   ///
   /// In en, this message translates to:

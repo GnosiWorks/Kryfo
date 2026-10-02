@@ -12,6 +12,7 @@ import 'devchat/dev_chat.dart' show DevChat;
 import 'devchat/dev_key.dart' show isDevChat;
 import 'devchat/support.dart' show SupportChats;
 import 'main.dart' show HaloDb, kFrameReaction, kFrameUnsend;
+import 'media_send.dart' show cancelMediaSend, mediaInflight;
 import 'polls.dart' show PollSpec, PollVote;
 import 'search.dart' show SearchKind;
 
@@ -244,6 +245,8 @@ class Session {
       _ofGroup(groupId).getGroupAtmosphere(groupId);
   Future<List<String>> getGroupMembers(String groupId) =>
       _ofGroup(groupId).getGroupMembers(groupId);
+  Future<Map<String, ({int have, int of})>> groupFileReach(String groupId) =>
+      _ofGroup(groupId).groupFileReach(groupId);
   Future<String?> groupAdminId(String groupId) =>
       _ofGroup(groupId).groupAdminId(groupId);
   Future<bool> groupExists(String groupId) =>
@@ -363,8 +366,12 @@ class Session {
     uid,
     group: groupId,
   )).closePollRow(uid, spec, finals, groupId);
-  Future<void> deleteMessage(String msgUid) async =>
-      (await _ofUid(msgUid)).deleteMessage(msgUid);
+  // a send still reading its file stops before the file is scrubbed
+  Future<void> deleteMessage(String msgUid) async {
+    if (mediaInflight.contains(msgUid)) cancelMediaSend(msgUid);
+    await (await _ofUid(msgUid)).deleteMessage(msgUid);
+  }
+
   Future<void> editMessage(String msgUid, String newText) async =>
       (await _ofUid(msgUid)).editMessage(msgUid, newText);
   Future<bool> isSent(String msgUid) async =>

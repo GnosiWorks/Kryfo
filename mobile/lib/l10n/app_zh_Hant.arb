@@ -677,6 +677,7 @@
   "groupChatSupporter": "支持者",
   "groupChatEdited": "已編輯",
   "groupChatTapToRetry": "! 點一下重試",
+  "groupChatFileReach": "{have, plural, =0{已傳送 · 正在送達} other{已傳送 · {count} 人中 {have} 人已收到}}",
   "groupChat0s": "0 秒",
   "groupChatReply": "回覆",
   "groupChatPin": "置頂",

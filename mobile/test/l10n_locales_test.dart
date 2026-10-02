@@ -3017,6 +3017,12 @@ final _calls = <_Call>[
   ('seenDevChat', ["Marios"], (l) => l.seenDevChat),
   ('seenDevChatCell', [], (l) => l.seenDevChatCell),
   ('seenDevChatLine', [], (l) => l.seenDevChatLine),
+  ('groupChatFileReach', [], (l) => l.groupChatFileReach(0, 1)),
+  ('groupChatFileReach', [], (l) => l.groupChatFileReach(1, 2)),
+  ('groupChatFileReach', [], (l) => l.groupChatFileReach(2, 3)),
+  ('groupChatFileReach', [], (l) => l.groupChatFileReach(5, 6)),
+  ('groupChatFileReach', [], (l) => l.groupChatFileReach(21, 22)),
+  ('groupChatFileReach', [], (l) => l.groupChatFileReach(1000, 1001)),
 ];
 
 void main() {

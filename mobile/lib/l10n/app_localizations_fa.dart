@@ -2622,6 +2622,26 @@ class AppLocalizationsFa extends AppLocalizations {
   String get groupChatTapToRetry => '! برای تکرار بزنید';
 
   @override
+  String groupChatFileReach(int have, int count) {
+    final intl.NumberFormat haveNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String haveString = haveNumberFormat.format(have);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      have,
+      locale: localeName,
+      other: 'فرستاده شد · ⁨$haveString⁩ از ⁨$countString⁩ نفر دریافت کرده‌اند',
+      one: 'فرستاده شد · ⁨$haveString⁩ از ⁨$countString⁩ نفر دریافت کرده',
+      zero: 'فرستاده شد · در راه',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get groupChat0s => '۰ ثانیه';
 
   @override

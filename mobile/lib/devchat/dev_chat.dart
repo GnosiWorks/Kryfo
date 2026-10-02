@@ -502,6 +502,7 @@ class DevChat {
       ('vouches', 'halo_id'),
       ('vouches', 'voucher_id'),
       ('group_members', 'halo_id'),
+      ('group_media_owed', 'member'),
       ('messages', 'peer_id'),
       ('contacts', 'halo_id'),
       ('sessions', 'address'),

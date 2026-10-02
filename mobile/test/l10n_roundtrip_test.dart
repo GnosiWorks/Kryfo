@@ -3387,5 +3387,9 @@ void main() {
     expect(l.stickerCouldNotLoad, "Stickers could not be loaded");
     expect(l.stickerLabel, "Sticker");
     expect(l.stickerNewer, "From a newer Kryfo");
+    expect(l.groupChatFileReach(0, 4), "Sent · on its way");
+    expect(l.groupChatFileReach(1, 4), "Sent · 1 of 4 has it");
+    expect(l.groupChatFileReach(2, 4), "Sent · 2 of 4 have it");
+    expect(l.groupChatFileReach(5, 6), "Sent · 5 of 6 have it");
   });
 }

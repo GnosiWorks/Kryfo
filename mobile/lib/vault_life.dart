@@ -285,6 +285,8 @@ const _groupRows = {
   'poll_votes': 'poll_uid IN {uids}',
   'pins_out': 'msg_uid IN {uids}',
   'edits_out': 'msg_uid IN {uids}',
+  // a file some members still lack keeps going to them from where it is
+  'group_media_owed': 'group_id = ?1',
 };
 
 // every table a chat's rows sit in. msg_fts and polls_gone follow its

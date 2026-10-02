@@ -2618,6 +2618,26 @@ class AppLocalizationsTr extends AppLocalizations {
   String get groupChatTapToRetry => '! Tekrar için dokun';
 
   @override
+  String groupChatFileReach(int have, int count) {
+    final intl.NumberFormat haveNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String haveString = haveNumberFormat.format(have);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      have,
+      locale: localeName,
+      other: 'Gönderildi · $countString kişiden $haveString kişiye ulaştı',
+      one: 'Gönderildi · $countString kişiden $haveString kişiye ulaştı',
+      zero: 'Gönderildi · yolda',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get groupChat0s => '0 sn';
 
   @override
