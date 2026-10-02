@@ -87,9 +87,15 @@ class _Engine implements HaloEngine {
   @override
   void nostrSubscribeBg(String peerXPubHex) {}
   @override
-  dynamic noSuchMethod(Invocation i) =>
-      throw UnimplementedError('engine: ${i.memberName}');
+  dynamic noSuchMethod(Invocation i) {
+    engineAsked.add(i.memberName);
+    throw UnimplementedError('engine: ${i.memberName}');
+  }
 }
+
+// what the engine was asked for that it does not do here, sends among them
+final engineAsked = <Symbol>[];
+const _sends = {#sendTo, #nostrSend, #sendFirstContact};
 
 // the addresses let go of
 final unheard = <String>[];
@@ -452,6 +458,142 @@ void main() {
         true,
       ));
       expect(appState.contacts.where((c) => c.haloId == fresh), hasLength(1));
+    });
+
+    test('someone who asked is taken in by their card as the accept button '
+        'would', () async {
+      const asker = 'asked-me-first';
+      final them = await _phone();
+      final ed = _rndHex(32);
+      _idOf[ed] = asker;
+      live.person(asker, onion: 'o-asker', xpub: them.xPub, accepted: 0);
+      await live.saveMessage(asker, 'in', 'hello', msgUid: 'asked1');
+      // one past what a stranger gets, held until they are let in
+      await processPeerBundle(_me, await makePreKeyBundleB64(), into: them.ss);
+      await live.holdCipher(
+        asker,
+        await them.ss.encryptTo(
+          _me,
+          await wrapMessage(
+            'held for you',
+            msgUid: 'held1',
+            sender: SenderInfo(
+              haloId: asker,
+              edPub: ed,
+              onion: 'o-asker',
+              xPub: them.xPub,
+            ),
+          ),
+        ),
+      );
+      engineAsked.clear();
+      final card = haloUriV3(
+        asker,
+        'o-asker',
+        Uri.encodeQueryComponent(await makePreKeyBundleB64(them.ss)),
+        'ab' * 32,
+      );
+      expect(await handleHaloUriAdded(card), (
+        l10n.appAddedYouCanMessage(asker),
+        true,
+      ));
+      await _settle();
+      expect(live.people[asker], containsPair('accepted', 1));
+      // what was held is taken to be opened
+      expect(live.calls, contains('takeHeld:$asker'));
+      expect(live.heldCiphers[asker], isNull);
+      // and the word that they are in went out
+      expect(engineAsked.where(_sends.contains), isNotEmpty);
+    });
+
+    test(
+      'an old card from someone who asked takes them in the same way',
+      () async {
+        const asker = 'asked-with-old-card';
+        final them = await _phone();
+        final ed = _rndHex(32);
+        _idOf[ed] = asker;
+        live.person(asker, onion: 'o-old', xpub: them.xPub, accepted: 0);
+        await live.saveMessage(asker, 'in', 'hello', msgUid: 'oldasked1');
+        // an old card carries no bundle: the session is the one their
+        // first message made
+        await processPeerBundle(asker, await makePreKeyBundleB64(them.ss));
+        await processPeerBundle(
+          _me,
+          await makePreKeyBundleB64(),
+          into: them.ss,
+        );
+        await live.holdCipher(
+          asker,
+          await them.ss.encryptTo(
+            _me,
+            await wrapMessage(
+              'held for you',
+              msgUid: 'oldheld1',
+              sender: SenderInfo(
+                haloId: asker,
+                edPub: ed,
+                onion: 'o-old',
+                xPub: them.xPub,
+              ),
+            ),
+          ),
+        );
+        engineAsked.clear();
+        expect(
+          await handleHaloUriAdded(buildHaloUri(asker, 'o-old', them.xPub)),
+          (l10n.appPeerImportedV1(asker), false),
+        );
+        await _settle();
+        expect(live.people[asker], containsPair('accepted', 1));
+        expect(live.calls, contains('takeHeld:$asker'));
+        expect(live.heldCiphers[asker], isNull);
+        expect(engineAsked.where(_sends.contains), isNotEmpty);
+      },
+    );
+
+    test('a group member known by key alone is added, not already saved, '
+        'and is sent nothing', () async {
+      const member = 'met-in-a-group';
+      final them = await _phone();
+      live.person(member, onion: 'o-met', xpub: them.xPub, accepted: 0);
+      await live.saveMessage(member, 'in', 'in the group', groupId: 'g1');
+      engineAsked.clear();
+      final card = haloUriV3(
+        member,
+        'o-met',
+        Uri.encodeQueryComponent(await makePreKeyBundleB64(them.ss)),
+        'ab' * 32,
+      );
+      expect(await handleHaloUriAdded(card), (
+        l10n.appAddedYouCanMessage(member),
+        true,
+      ));
+      await _settle();
+      expect(live.people[member], containsPair('accepted', 1));
+      expect(live.calls, isNot(contains('takeHeld:$member')));
+      expect(engineAsked.where(_sends.contains), isEmpty);
+    });
+
+    test('one declined before is added again, not already saved', () async {
+      const parked = 'declined-once';
+      final them = await _phone();
+      live.person(parked, onion: 'o-p', xpub: them.xPub, accepted: 0);
+      live.people[parked]!['archived'] = 1;
+      final card = haloUriV3(
+        parked,
+        'o-p',
+        Uri.encodeQueryComponent(await makePreKeyBundleB64(them.ss)),
+        'ab' * 32,
+      );
+      expect(await handleHaloUriAdded(card), (
+        l10n.appAddedYouCanMessage(parked),
+        true,
+      ));
+      await _settle();
+      expect(live.people[parked], containsPair('accepted', 1));
+      expect(live.people[parked], containsPair('archived', 0));
+      expect(live.calls, contains('takeHeld:$parked'));
     });
   });
 

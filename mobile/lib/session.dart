@@ -176,6 +176,8 @@ class Session {
       _ofPeer(peerId).getAtmosphere(peerId);
   Future<Map<String, Object?>?> getContact(String haloId) =>
       _ofPeer(haloId).getContact(haloId);
+  Future<bool> askedBefore(String haloId) =>
+      _ofPeer(haloId).askedBefore(haloId);
   Future<bool> isAccepted(String haloId) => _ofPeer(haloId).isAccepted(haloId);
   Future<bool> isBackPaired(String peerId) =>
       _ofPeer(peerId).isBackPaired(peerId);

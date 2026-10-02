@@ -12,6 +12,7 @@ import 'package:file_picker/file_picker.dart';
 import '../back_on_top.dart';
 import '../forward.dart';
 import '../picked.dart';
+import '../sent_name.dart';
 import 'package:share_plus/share_plus.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/confirm_sheet.dart';
@@ -1588,8 +1589,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       () => ImagePicker().pickVideo(source: ImageSource.gallery),
     );
     if (x == null || !mounted) return;
-    await _sendGroupFileFrom(x.path, x.name);
-    await shredPickedImages([x]);
+    try {
+      await _sendGroupFileFrom(x.path, madeVideoName(x.name));
+    } finally {
+      await shredPickedImages([x]);
+    }
   }
 
   Future<void> _pickGroupMultiple() async {
@@ -1601,19 +1605,23 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       ),
     );
     if (picked.isEmpty) return;
-    if (picked.length == 1) {
-      final bytes = await picked.first.readAsBytes();
+    // the bytes are all that is kept; what the picker left goes even when
+    // a read fails
+    final List<Uint8List> bytesOf;
+    try {
+      bytesOf = [for (final x in picked) await x.readAsBytes()];
+    } finally {
       await shredPickedImages(picked);
+    }
+    if (bytesOf.length == 1) {
       if (!mounted) return;
-      final caption = await Navigator.of(
-        context,
-      ).push<String?>(haloRoute<String?>(ImageCaptionScreen(bytes: bytes)));
+      final caption = await Navigator.of(context).push<String?>(
+        haloRoute<String?>(ImageCaptionScreen(bytes: bytesOf[0])),
+      );
       if (caption == null) return;
-      await _sendGroupImage(bytes, caption);
+      await _sendGroupImage(bytesOf[0], caption);
       return;
     }
-    final bytesOf = [for (final x in picked) await x.readAsBytes()];
-    await shredPickedImages(picked);
     for (final bytes in bytesOf) {
       if (!mounted) return;
       await _sendGroupImage(bytes, '');
@@ -1801,14 +1809,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final path = r.videoPath;
     if (path == null) return;
     if (!mounted) return;
-    await _sendGroupFileFrom(
-      path,
-      'clip_${DateTime.now().millisecondsSinceEpoch}.mp4',
-    );
+    await _sendGroupFileFrom(path, madeVideoName());
     await shredFile(path);
   }
 
-  Future<void> _sendGroupFileFrom(String src, String name) async {
+  Future<void> _sendGroupFileFrom(String src, String picked) async {
+    final name = sentFileName(picked);
     final int size;
     try {
       size = await File(src).length();

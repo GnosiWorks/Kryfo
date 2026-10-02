@@ -18,6 +18,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'notifications.dart';
 import 'backup.dart' show sweepBackupLeftovers;
+import 'picked.dart' show sweepPickerLeftovers;
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
@@ -2266,6 +2267,17 @@ class HaloDb implements GroupOwedStore {
     final n = (r.first['c'] as int?) ?? 0;
     if (n == 0 || (await support.ids()).isEmpty) return n;
     return (await requestsInbox()).length;
+  }
+
+  // someone who asked, or asked and was let go: adding them by their card
+  // is the accept they were waiting for
+  Future<bool> askedBefore(String haloId) async {
+    final db = await open();
+    final r = await db.rawQuery(
+      'SELECT COUNT(*) c FROM contacts WHERE halo_id = ? AND ($kAskedRows)',
+      [haloId],
+    );
+    return ((r.first['c'] as int?) ?? 0) > 0;
   }
 
   Future<void> acceptRequest(String haloId) async {
@@ -5079,6 +5091,12 @@ const kRequestRows =
     'EXISTS (SELECT 1 FROM held_onion h WHERE h.peer_id = contacts.halo_id) OR '
     'EXISTS (SELECT 1 FROM vouches v WHERE v.halo_id = contacts.halo_id))';
 
+/// a request as the inbox shows it, or one declined and parked since
+@visibleForTesting
+const kAskedRows =
+    '($kRequestRows) OR '
+    '(accepted = 0 AND blocked = 0 AND IFNULL(archived, 0) = 1)';
+
 /// what a notification says for a message with no text: what kind of
 /// file it is, never the name a voice note or a camera clip was saved under
 String notifMediaLine(String? fileName, String? mediaPath) {
@@ -5467,7 +5485,11 @@ Future<(String, bool)> handleHaloUriAdded(String raw) async {
     return (l10n.appTheyAreBlocked(parsed['id']!), false);
   }
   if (parsed['v'] == '2' || parsed['v'] == '3') {
-    final already = await session.getContact(parsed['id']!) != null;
+    final id = parsed['id']!;
+    // saved means accepted. a group member known by key, a request or one
+    // let go has a row too, and this add is what takes them in
+    final already = await session.isAccepted(id);
+    final asked = !already && await session.askedBefore(id);
     // a quiet session keeps the contact on this phone and nothing more: the
     // session with them would live in the everyday identity's store
     if (!sessionQuiet) {
@@ -5498,6 +5520,9 @@ Future<(String, bool)> handleHaloUriAdded(String raw) async {
       await appState.rememberPeerFc(parsed['id']!, fc);
     }
     await appState.subscribePeer(parsed['id']!);
+    // as the accept button would: they hear they are in, and what was
+    // held for them opens
+    if (asked) await appState.afterAccept(id);
     // home, the pickers and the introductions show them now
     await appState.refreshContacts();
     return (
@@ -5507,13 +5532,14 @@ Future<(String, bool)> handleHaloUriAdded(String raw) async {
       true,
     );
   } else {
-    await session.upsertContact(
-      parsed['id']!,
-      parsed['onion']!,
-      parsed['xpub']!,
-    );
-    if (!sessionQuiet) await appState.subscribePeer(parsed['id']!);
-    return (l10n.appPeerImportedV1('${parsed['id']}'), false);
+    final id = parsed['id']!;
+    // an old card is an add all the same, and takes in who asked
+    final asked =
+        !await session.isAccepted(id) && await session.askedBefore(id);
+    await session.upsertContact(id, parsed['onion']!, parsed['xpub']!);
+    if (!sessionQuiet) await appState.subscribePeer(id);
+    if (asked && !sessionQuiet) await appState.afterAccept(id);
+    return (l10n.appPeerImportedV1(id), false);
   }
 }
 
@@ -5584,6 +5610,8 @@ Future<void> sweepCaptures() async {
       if (n.contains('/kryfo-backup-')) await shredFile(f.path);
     }
     await sweepShareCopies(tmp);
+    // the gallery picker's whole copies, in folders of their own
+    await sweepPickerLeftovers(tmp);
     // the file picker keeps its own folder of copies
     final picks = Directory('${tmp.path}/file_picker');
     if (await picks.exists()) {

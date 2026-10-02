@@ -12,6 +12,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import '../picked.dart';
+import '../sent_name.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:record/record.dart';
 import 'dart:io';
@@ -2819,17 +2820,15 @@ class _ChatScreenState extends State<ChatScreen>
     final path = r.videoPath;
     if (path == null) return;
     if (!mounted) return;
-    await _sendFileFrom(
-      path,
-      'clip_${DateTime.now().millisecondsSinceEpoch}.mp4',
-    );
+    await _sendFileFrom(path, madeVideoName());
     await shredFile(path);
   }
 
   // src is a file this app can read: the picker's copy or a camera clip.
   // it is copied into the media folder, never read into memory.
-  Future<void> _sendFileFrom(String src, String name) async {
+  Future<void> _sendFileFrom(String src, String picked) async {
     if (_requestLocked) return;
+    final name = sentFileName(picked);
     final int size;
     try {
       size = await File(src).length();
@@ -3136,8 +3135,11 @@ class _ChatScreenState extends State<ChatScreen>
       () => ImagePicker().pickVideo(source: ImageSource.gallery),
     );
     if (x == null || !mounted) return;
-    await _sendFileFrom(x.path, x.name);
-    await shredPickedImages([x]);
+    try {
+      await _sendFileFrom(x.path, madeVideoName(x.name));
+    } finally {
+      await shredPickedImages([x]);
+    }
   }
 
   Future<void> _pickAndSendMultiple() async {
@@ -3149,20 +3151,24 @@ class _ChatScreenState extends State<ChatScreen>
       ),
     );
     if (picked.isEmpty) return;
-    // one photo picked: same preview + caption screen the camera path gets.
-    if (picked.length == 1) {
-      final bytes = await picked.first.readAsBytes();
+    // the bytes are all that is kept; what the picker left goes even when
+    // a read fails
+    final List<Uint8List> bytesOf;
+    try {
+      bytesOf = [for (final x in picked) await x.readAsBytes()];
+    } finally {
       await shredPickedImages(picked);
+    }
+    // one photo picked: same preview + caption screen the camera path gets.
+    if (bytesOf.length == 1) {
       if (!mounted) return;
-      final caption = await Navigator.of(
-        context,
-      ).push<String?>(haloRoute<String?>(ImageCaptionScreen(bytes: bytes)));
+      final caption = await Navigator.of(context).push<String?>(
+        haloRoute<String?>(ImageCaptionScreen(bytes: bytesOf[0])),
+      );
       if (caption == null) return;
-      await _sendOneImage(bytes, caption);
+      await _sendOneImage(bytesOf[0], caption);
       return;
     }
-    final bytesOf = [for (final x in picked) await x.readAsBytes()];
-    await shredPickedImages(picked);
     for (final bytes in bytesOf) {
       if (!mounted) return;
       await _sendOneImage(bytes, '');
@@ -4138,11 +4144,11 @@ class _ChatScreenState extends State<ChatScreen>
       ),
     );
     if (x == null) return;
-    final bytes = await x.readAsBytes();
+    final Uint8List bytes;
     try {
-      await shredFile(x.path);
-    } catch (_) {
-      // shredFile logs its own failure
+      bytes = await x.readAsBytes();
+    } finally {
+      await shredPickedImages([x]);
     }
     final folder = await session.folderOf(widget.peerHaloId, 'wallpapers');
     final file = File('${folder.path}/${widget.peerHaloId}.jpg');

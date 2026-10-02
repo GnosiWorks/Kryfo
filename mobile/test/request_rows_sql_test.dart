@@ -9,7 +9,7 @@ import 'dart:io';
 
 import 'package:ffi/ffi.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kryfo/main.dart' show kRequestRows;
+import 'package:kryfo/main.dart' show kAskedRows, kRequestRows;
 
 typedef _OpenC = Int32 Function(Pointer<Utf8>, Pointer<Pointer<Void>>);
 typedef _Open = int Function(Pointer<Utf8>, Pointer<Pointer<Void>>);
@@ -205,6 +205,14 @@ void main() {
       expect(db.column('SELECT COUNT(*) c FROM contacts WHERE $kRequestRows'), [
         '3',
       ]);
+      // an add by card takes in who asked, and who was let go since
+      expect(
+        db.column(
+          'SELECT halo_id FROM contacts WHERE halo_id IS NOT NULL AND '
+          '($kAskedRows) ORDER BY halo_id',
+        ),
+        ['asked', 'introduced', 'parked', 'sealed'],
+      );
     },
     skip: lib == null ? 'no sqlite library on this machine' : false,
   );
