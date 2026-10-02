@@ -149,14 +149,28 @@ type pairAnswer struct {
 // the deadline waits on while none has, since an onion relay can take
 // longer than it to open, and then only until the first answer.
 func pairCodeQuery(ctx context.Context, pk string) (got []nostr.Event, full bool, heard int) {
-	nostrMu.Lock()
-	urls := append([]string(nil), nostrRelays...)
-	nostrMu.Unlock()
-	if len(urls) == 0 {
-		return nil, false, 0
+	for {
+		routeC := routeEnded()
+		urls := relaysWhenSet(ctx)
+		if len(urls) == 0 {
+			return nil, false, 0
+		}
+		var ended bool
+		got, full, heard, ended = pairCodeQueryOn(ctx, pk, urls, routeC)
+		if !ended || ctx.Err() != nil {
+			return got, full, heard
+		}
+		// the mode changed: what the old route heard goes, and the new
+		// list is asked from the start, the new way
+		log.Printf("paircode: the route changed, asking again")
 	}
+}
 
-	qctx, cancel := context.WithCancel(ctx)
+// one round over urls, the list of the route routeC belongs to. ended says
+// that route ended first, and the answer is no answer
+func pairCodeQueryOn(ctx context.Context, pk string, urls []string, routeC <-chan struct{}) (got []nostr.Event, full bool, heard int, ended bool) {
+	// the sockets go when the route does
+	qctx, cancel := onRoute(ctx, routeC)
 	defer cancel()
 	out := make(chan pairAnswer)
 	since := nostr.Timestamp(time.Now().Add(-pairCodeLife - time.Minute).Unix())
@@ -171,7 +185,8 @@ func pairCodeQuery(ctx context.Context, pk string) (got []nostr.Event, full bool
 				}
 			}
 			client, err := torNostrClientFor(pairLane(pk))
-			if err != nil {
+			// the list is the old mode's and the client may be the new one's
+			if err != nil || routeGone(routeC) {
 				done(false)
 				return
 			}
@@ -255,27 +270,29 @@ func pairCodeQuery(ctx context.Context, pk string) (got []nostr.Event, full bool
 				}
 				pending--
 				if pending == 0 || (late && a.heard) {
-					return got, false, count()
+					return got, false, count(), false
 				}
 				continue
 			}
 			answered[a.from] = true
 			got = append(got, *a.ev)
 			if sent[a.from]++; sent[a.from] >= pairQueryLimit {
-				return got, true, count()
+				return got, true, count(), false
 			}
 			if window == nil {
 				window = time.After(pairCollectWindow)
 			}
 		case <-window:
-			return got, false, count()
+			return got, false, count(), false
 		case <-deadline.C:
 			if n := count(); n > 0 {
-				return got, false, n
+				return got, false, n, false
 			}
 			late = true
+		case <-routeC:
+			return nil, false, 0, true
 		case <-ctx.Done():
-			return got, false, count()
+			return got, false, count(), false
 		}
 	}
 }
