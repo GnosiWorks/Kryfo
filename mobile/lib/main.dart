@@ -2024,6 +2024,7 @@ class HaloDb {
         }
       }
       await t.delete('messages', where: _kOneToOne, whereArgs: [haloId]);
+      await _dropFilesComingFrom(t, haloId);
       // the row stays: it carries the xpub our nostr subscription is built
       // from. archived + unaccepted = invisible everywhere until they write.
       await t.update(
@@ -2285,6 +2286,7 @@ class HaloDb {
       }
       await t.delete('messages', where: _kOneToOne, whereArgs: [haloId]);
       await t.delete('held_onion', where: 'peer_id = ?', whereArgs: [haloId]);
+      await _dropFilesComingFrom(t, haloId);
       // park, don't delete: the row carries the xpub the relay subscription
       // is built from. if they write again, unparkIfArchived surfaces them as
       // a new request.
@@ -3116,6 +3118,7 @@ class HaloDb {
       [peerId],
     );
     await db.delete('messages', where: _kOneToOne, whereArgs: [peerId]);
+    await _dropFilesComingFrom(db, peerId);
     await _scrubMedia(media);
   }
 
@@ -3923,6 +3926,21 @@ class HaloDb {
         whereArgs: [mediaId],
       );
     });
+  }
+
+  // a chat put away takes the files still coming in it: their slices, and
+  // the asks for the rest that would tell its person to send them again
+  Future<void> _dropFilesComingFrom(DatabaseExecutor t, String peerId) async {
+    await t.rawDelete(
+      'DELETE FROM media_chunks WHERE media_id IN '
+      '(SELECT media_id FROM media_wants WHERE peer_id = ?)',
+      [peerId],
+    );
+    await t.delete('media_wants', where: 'peer_id = ?', whereArgs: [peerId]);
+    // weighed again from what is left
+    _unfinished = null;
+    // nothing more comes for them, so the banner would stay paused for a day
+    incomingMediaDone(container.chatKey(peerId));
   }
 
   Future<void> dropMediaWant(String mediaId) async {
@@ -5883,6 +5901,15 @@ class AppState extends ChangeNotifier {
       );
       if (!ask) continue;
       if (await d.isBlocked(peer)) continue;
+      // a chat declined or deleted is asked nothing: the ask says this phone
+      // is here, and the file it brings would put the chat back
+      final c = await d.getContact(peer);
+      if (c != null && c['archived'] == 1 && c['accepted'] == 0) {
+        await d.dropMediaChunks(mid, from: peer);
+        await d.dropMediaWant(mid);
+        incomingMediaDone(d.container.chatKey(peer));
+        continue;
+      }
       final missing = missingSlices(have, total);
       if (missing.isEmpty) continue;
       dlog('NEED $mid: asking for ${missing.length} of $total');
@@ -5993,6 +6020,7 @@ class AppState extends ChangeNotifier {
     unawaited(_drainEdits());
     unawaited(_drainPins());
     unawaited(_drainFrames());
+    unawaited(resendGroupOwed());
     if (rows.isEmpty && vRows.isEmpty) {
       if (_outboxTries.isNotEmpty) {
         _outboxTries.clear();
@@ -7848,6 +7876,8 @@ class AppState extends ChangeNotifier {
       // anyone who can reach us could rewrite any row by uid otherwise.
       if (await db.isTheirs(env.edit!.targetUid, senderHaloId)) {
         await db.editMessage(env.edit!.targetUid, env.edit!.newText);
+        // home's row shows the last line, and only a refresh rereads it
+        await refreshContacts();
         notifyListeners();
       }
       return to;
@@ -12376,6 +12406,8 @@ class AppState extends ChangeNotifier {
     bool voice = false,
     bool voiceDisguised = false,
     int? burnSeconds,
+    // only these members, the ones a send that went left short
+    List<String>? onlyTo,
   }) async {
     // one send per media at a time, the same set the 1:1 path holds. the
     // drainer picks up any row older than 45 s, and a video to a group is
@@ -12390,6 +12422,31 @@ class AppState extends ChangeNotifier {
     final rosterParts = amAdmin ? await _buildParticipants(members) : null;
     // in a room this phone is its room key, which never takes a frame
     final room = await _roomOf(groupId, d);
+    final to = [
+      for (final m in members)
+        if (m != myId && m != room?.pub && (onlyTo?.contains(m) ?? true)) m,
+    ];
+    // the owed have all left the group
+    if (onlyTo != null && to.isEmpty) return 'gone';
+    // a member left short is sent it again later, while the row and its
+    // file are still here and the chat is still in the same place
+    Future<String> resend(List<String> owed) async {
+      if (!identical(_ownerOf(groupId), d)) return 'gone';
+      if (!await d.messageExists(msgUid)) return 'gone';
+      if (!await File(path).exists()) return 'gone';
+      return sendMediaToGroup(
+        groupId,
+        path,
+        msgUid: msgUid,
+        caption: caption,
+        fileName: fileName,
+        voice: voice,
+        voiceDisguised: voiceDisguised,
+        burnSeconds: burnSeconds,
+        onlyTo: owed,
+      );
+    }
+
     // 16k slices. bigger sizes trip nip-44's 65535 plaintext ceiling once
     // base64'd + double-wrapped (envelope + signal + gift wrap ~= x2.4), and
     // public relays reject the event. 16k lands ~38-51k, safe on every relay.
@@ -12397,11 +12454,15 @@ class AppState extends ChangeNotifier {
     return sendGroupSlices(
       path: path,
       msgUid: msgUid,
-      members: [
-        for (final m in members)
-          if (m != myId && m != room?.pub) m,
-      ],
-      progressKey: d.container.chatKey(groupId),
+      members: to,
+      // a send to the owed is behind a row that already reads sent
+      progressKey: onlyTo == null ? d.container.chatKey(groupId) : null,
+      onShort: (short) => noteGroupShort(
+        msgUid,
+        tried: onlyTo ?? to,
+        short: short,
+        resend: resend,
+      ),
       photo: fileName == null && !voice,
       wrap: (slice, i, total) async => wrapMessage(
         caption,
@@ -12630,6 +12691,9 @@ class AppState extends ChangeNotifier {
   // recall a group message everywhere: delete locally, tell every member.
   // receiver handles 'un' group-agnostically (deletes by uid).
   Future<void> unsendInGroup(String groupId, String targetMsgUid) async {
+    // a file still going to the members it missed stops going
+    groupMediaOwed.remove(targetMsgUid);
+    if (mediaInflight.contains(targetMsgUid)) cancelMediaSend(targetMsgUid);
     await session.deleteMessage(targetMsgUid);
     // a quiet session keeps it on this phone: nothing leaves
     if (sessionQuiet) {
