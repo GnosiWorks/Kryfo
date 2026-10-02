@@ -462,6 +462,38 @@ void main() {
       expect(w.live.groupRows.containsKey('grp000000009'), isFalse);
     });
 
+    test('a roster without its admin is not taken', () async {
+      final w = await _World.make();
+      for (final (uid, roster) in [
+        ('r1', <String>[]),
+        ('r2', ['me', _v]),
+      ]) {
+        await w.from(
+          _a,
+          await wrapMessage(
+            'still here',
+            groupId: _g,
+            msgUid: uid,
+            roster: roster,
+            sender: asSender(_a),
+          ),
+        );
+        expect(w.members, ['me', _a, _v], reason: uid);
+      }
+      // a list with the admin on it is taken as before
+      await w.from(
+        _a,
+        await wrapMessage(
+          'hi',
+          groupId: _g,
+          msgUid: 'r3',
+          roster: ['me', _a],
+          sender: asSender(_a),
+        ),
+      );
+      expect(w.members, ['me', _a]);
+    });
+
     test('leave takes out its sender and no one else', () async {
       final w = await _World.make();
       await w.control(_v, const GroupControl(type: 'leave', members: [_a]));

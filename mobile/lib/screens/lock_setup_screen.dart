@@ -132,7 +132,7 @@ class _LockSetupScreenState extends State<LockSetupScreen>
     if (!ok) {
       HapticFeedback.heavyImpact();
       if (!mounted) return;
-      showHaloToast(context, l10n.pinPickDifferent);
+      showHaloToast(context, pinNotTakenLine(_lock));
       setState(() {
         _first = '';
         _pin = '';

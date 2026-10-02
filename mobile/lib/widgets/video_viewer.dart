@@ -35,19 +35,22 @@ Future<void> openVideo(
 }) async {
   FocusManager.instance.primaryFocus?.unfocus();
   final still = MediaQuery.disableAnimationsOf(context);
-  final wasForced = appState.secureForced;
-  if (!wasForced) await appState.forceSecure(true);
-  if (!context.mounted) return;
-  await Navigator.of(context).push(
-    PageRouteBuilder<void>(
-      opaque: false,
-      transitionDuration: Duration(milliseconds: still ? 0 : 280),
-      reverseTransitionDuration: Duration(milliseconds: still ? 0 : 240),
-      pageBuilder: (_, anim, _) =>
-          _VideoViewer(path: path, fileName: fileName, route: anim),
-    ),
-  );
-  if (!wasForced) await appState.forceSecure(false);
+  // its own hold, let go however the viewer ends
+  await appState.forceSecure(true);
+  try {
+    if (!context.mounted) return;
+    await Navigator.of(context).push(
+      PageRouteBuilder<void>(
+        opaque: false,
+        transitionDuration: Duration(milliseconds: still ? 0 : 280),
+        reverseTransitionDuration: Duration(milliseconds: still ? 0 : 240),
+        pageBuilder: (_, anim, _) =>
+            _VideoViewer(path: path, fileName: fileName, route: anim),
+      ),
+    );
+  } finally {
+    await appState.forceSecure(false);
+  }
   FocusManager.instance.primaryFocus?.unfocus();
 }
 

@@ -1843,7 +1843,7 @@ void main() {
         w.wire(lock);
         expect(await w.type(decoyPin), PinResult.decoy);
         final before = entries(store);
-        final state = store.m['halo.lock.state'];
+        final state = jsonDecode(store.m['halo.lock.state']!) as Map;
         w.host.asked.clear();
         expect(await w.app.createVault(pin), isTrue);
         // the picked chat leaves the decoy's list whichever pin it was
@@ -1851,8 +1851,10 @@ void main() {
         await w.app.vaultSetupDone();
         expect(w.homeIds, {_dg});
         steps.add([...w.host.asked]);
-        // no miss counted either way
-        expect(store.m['halo.lock.state'], state);
+        // one try counted either way
+        final now = jsonDecode(store.m['halo.lock.state']!) as Map;
+        expect(now['r'], (state['r'] as int) + 1);
+        expect(now['b'], (state['b'] as int) + 1);
         final after = entries(store);
         if (pin != vaultPin) {
           expect(after['${PinSlot.decoyVault}']['p'], pin);

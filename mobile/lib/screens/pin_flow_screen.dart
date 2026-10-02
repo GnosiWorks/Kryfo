@@ -239,7 +239,7 @@ class _PinFlowScreenState extends State<PinFlowScreen>
             return;
           }
           if (!await _lock.setupPin(_pin)) {
-            await _again(l10n.pinPickDifferent, to: _Step.appChoose);
+            await _again(pinNotTakenLine(_lock), to: _Step.appChoose);
             return;
           }
           _first = '';
@@ -264,7 +264,7 @@ class _PinFlowScreenState extends State<PinFlowScreen>
               ? await _lock.setupDecoyPin(_pin)
               : await widget.host.setDecoyPin(_pin);
           if (!ok) {
-            await _again(l10n.pinPickDifferent);
+            await _again(pinNotTakenLine(_lock));
             return;
           }
           HapticFeedback.mediumImpact();
@@ -292,7 +292,7 @@ class _PinFlowScreenState extends State<PinFlowScreen>
   Future<void> _vaultPin() async {
     if (_changing) {
       if (!await _lock.rewrapVaultPin(_old, _first)) {
-        await _again(l10n.pinPickDifferent);
+        await _again(pinNotTakenLine(_lock));
         return;
       }
       _old = '';
@@ -321,7 +321,7 @@ class _PinFlowScreenState extends State<PinFlowScreen>
           : await widget.host.createVault(_first);
       if (!mounted) return;
       if (!ok) {
-        await _rechoose(l10n.pinPickDifferent);
+        await _rechoose(pinNotTakenLine(_lock));
         return;
       }
       _first = '';
