@@ -65,6 +65,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get backupThisFileIsDamaged => 'Tệp này bị hỏng và không thể đọc được';
 
   @override
+  String get backupTheRestoreStoppedPartway => 'Khôi phục đã dừng giữa chừng';
+
+  @override
   String get backupCouldNotMakeThe => 'Không tạo được khóa';
 
   @override
@@ -4590,6 +4593,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get restoreTheRestoreDidNot =>
       'Khôi phục chưa hoàn tất. Không có gì bị thay đổi';
+
+  @override
+  String get restoreKryfoClosesRestoreAgain =>
+      'Một phần dữ liệu ở đây đã bị thay thế. Kryfo sẽ đóng ngay bây giờ. Hãy mở lại và khôi phục tệp thêm một lần nữa.';
 
   @override
   String get restoreThisIdentity => 'danh tính này';

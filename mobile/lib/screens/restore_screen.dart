@@ -72,9 +72,13 @@ Future<bool> _navGoneBefore(Future<Object?> shown) {
 // the restore went on after the lock took its screen. the files are the
 // restored account by now: hidden chats it brought still need their PIN,
 // and the app still has to close, on whatever screen is up once the same
-// kind of session is open again
+// kind of session is open again. one [cutShort] only says so and closes
 @visibleForTesting
-Future<void> endRestoreAway(String haloId, {required bool decoy}) async {
+Future<void> endRestoreAway(
+  String haloId, {
+  required bool decoy,
+  bool cutShort = false,
+}) async {
   while (true) {
     while (lockGuard.isLocked() || lockState.inDecoy != decoy) {
       final moved = Completer<void>();
@@ -93,7 +97,7 @@ Future<void> endRestoreAway(String haloId, {required bool decoy}) async {
     await WidgetsBinding.instance.endOfFrame;
     final nav = rootNavKey.currentState;
     if (nav == null || !nav.mounted) continue;
-    if (restoredHidden) {
+    if (restoredHidden && !cutShort) {
       final gone = await _navGoneBefore(
         nav.push<bool>(
           haloRoute(const PinFlowScreen(flow: PinFlow.vault, restoring: true)),
@@ -104,12 +108,14 @@ Future<void> endRestoreAway(String haloId, {required bool decoy}) async {
     final ctx = nav.overlay?.context;
     if (ctx != null && ctx.mounted) {
       final gone = await _navGoneBefore(
-        showNoticeSheet(
-          ctx,
-          title: l10n.restoreRestored,
-          line: l10n.restoreKryfoWillCloseNow(haloId),
-          ok: l10n.restoreReopenKryfo,
-        ),
+        cutShort
+            ? _cutShortSheet(ctx)
+            : showNoticeSheet(
+                ctx,
+                title: l10n.restoreRestored,
+                line: l10n.restoreKryfoWillCloseNow(haloId),
+                ok: l10n.restoreReopenKryfo,
+              ),
       );
       if (gone) continue;
     }
@@ -117,6 +123,15 @@ Future<void> endRestoreAway(String haloId, {required bool decoy}) async {
     return;
   }
 }
+
+// a landing cut short: the database the app runs on is gone, so it closes
+// and the file is restored again from the next start
+Future<void> _cutShortSheet(BuildContext context) => showNoticeSheet(
+  context,
+  title: l10n.backupTheRestoreStoppedPartway,
+  line: l10n.restoreKryfoClosesRestoreAgain,
+  ok: l10n.restoreReopenKryfo,
+);
 
 class RestoreScreen extends StatefulWidget {
   // called after a restore instead of the 'reopen kryfo' notice, so
@@ -367,6 +382,18 @@ class _RestoreScreenState extends State<RestoreScreen> {
       );
       if (mounted) Navigator.of(context).pop();
     } on RestoreError catch (e) {
+      if (e.why == RestoreFailure.cutShort) {
+        await _dropOwnCopy();
+        if (!mounted) {
+          return endRestoreAway(s.haloId, decoy: decoy, cutShort: true);
+        }
+        final gone = await _navGoneBefore(_cutShortSheet(context));
+        if (gone) {
+          return endRestoreAway(s.haloId, decoy: decoy, cutShort: true);
+        }
+        quitAfterRestore();
+        return;
+      }
       _running = false;
       if (!mounted) return _dropOwnCopy();
       setState(() {

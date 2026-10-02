@@ -358,6 +358,12 @@ class _Db implements HaloDb {
   }
 
   @override
+  Future<void> retire() async {
+    closed = true;
+    log.add('retire');
+  }
+
+  @override
   Future<({Map<String, bool> people, Set<String> groups})> heldChats() async =>
       held!;
 

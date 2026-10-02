@@ -67,6 +67,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Este archivo está dañado y no se puede leer';
 
   @override
+  String get backupTheRestoreStoppedPartway =>
+      'La restauración se detuvo a medias';
+
+  @override
   String get backupCouldNotMakeThe => 'No se pudo crear la clave';
 
   @override
@@ -4637,6 +4641,10 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get restoreTheRestoreDidNot =>
       'La restauración no terminó. No se cambió nada';
+
+  @override
+  String get restoreKryfoClosesRestoreAgain =>
+      'Parte de lo que había aquí ya se ha reemplazado. Kryfo se cerrará ahora. Vuelve a abrirlo y restaura el archivo otra vez.';
 
   @override
   String get restoreThisIdentity => 'esta identidad';

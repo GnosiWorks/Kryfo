@@ -234,6 +234,12 @@ abstract class AppLocalizations {
   /// backup.dart
   ///
   /// In en, this message translates to:
+  /// **'The restore stopped partway'**
+  String get backupTheRestoreStoppedPartway;
+
+  /// backup.dart
+  ///
+  /// In en, this message translates to:
   /// **'Could not make the key'**
   String get backupCouldNotMakeThe;
 
@@ -7376,6 +7382,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The restore did not finish. Nothing was changed'**
   String get restoreTheRestoreDidNot;
+
+  /// screens/restore_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Part of what was here is already replaced. Kryfo will close now. Open it again and restore the file once more.'**
+  String get restoreKryfoClosesRestoreAgain;
 
   /// screens/restore_screen.dart
   ///

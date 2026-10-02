@@ -47,6 +47,8 @@ class _Everyday implements HaloDb {
   @override
   HaloContainer get container => HaloContainer.everyday;
   @override
+  Future<void> retire() async {}
+  @override
   dynamic noSuchMethod(Invocation i) =>
       throw UnimplementedError('the stand-in was asked for ${i.memberName}');
 }

@@ -72,6 +72,10 @@
   "@backupThisFileIsDamaged": {
     "description": "backup.dart"
   },
+  "backupTheRestoreStoppedPartway": "The restore stopped partway",
+  "@backupTheRestoreStoppedPartway": {
+    "description": "backup.dart"
+  },
   "backupCouldNotMakeThe": "Could not make the key",
   "@backupCouldNotMakeThe": {
     "description": "backup.dart"
@@ -5756,6 +5760,10 @@
   },
   "restoreTheRestoreDidNot": "The restore did not finish. Nothing was changed",
   "@restoreTheRestoreDidNot": {
+    "description": "screens/restore_screen.dart"
+  },
+  "restoreKryfoClosesRestoreAgain": "Part of what was here is already replaced. Kryfo will close now. Open it again and restore the file once more.",
+  "@restoreKryfoClosesRestoreAgain": {
     "description": "screens/restore_screen.dart"
   },
   "restoreThisIdentity": "this identity",

@@ -66,6 +66,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Diese Datei ist beschädigt und kann nicht gelesen werden';
 
   @override
+  String get backupTheRestoreStoppedPartway =>
+      'Die Wiederherstellung wurde mittendrin abgebrochen';
+
+  @override
   String get backupCouldNotMakeThe => 'Konnte Schlüssel nicht erstellen';
 
   @override
@@ -4653,6 +4657,10 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get restoreTheRestoreDidNot =>
       'Die Wiederherstellung wurde nicht abgeschlossen. Es wurde nichts verändert';
+
+  @override
+  String get restoreKryfoClosesRestoreAgain =>
+      'Ein Teil der Daten hier ist schon ersetzt. Kryfo schließt sich jetzt. Öffne es wieder und stelle die Datei noch einmal wieder her.';
 
   @override
   String get restoreThisIdentity => 'diese Identität';
