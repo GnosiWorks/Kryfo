@@ -3,7 +3,8 @@
 // which says nothing of when each was sent. signal numbers each message on
 // its sender's chain, so one sender's messages on one chain are put back in
 // the order they were sent before they are opened. different senders and
-// different chains keep the places they came in
+// different chains keep the places they came in. the engine hands a walk
+// over whole, so the batch is the catch-up and not one page of it
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -30,8 +31,13 @@ import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
   }
 }
 
-// [lane] is a lane many senders share: it names no one, so nothing on it
-// is reordered
+// room frames are not signal and carry no number. the first-contact lane
+// is shared by every stranger, but its chains are keyed by the sender's
+// ratchet key as well, so two strangers never mix
+bool keepsArrivalOrder(String peer) =>
+    peer.startsWith('room:') || peer.startsWith('roomfc:');
+
+// [lane] is a lane whose frames are left as they came
 List<T> inSendOrder<T>(
   List<T> batch, {
   required String Function(T) peer,

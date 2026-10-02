@@ -909,7 +909,8 @@ void main() {
           'sent_at': DateTime.now().millisecondsSinceEpoch - 60000,
           'msg_uid': 'q1',
           'sent': 0,
-          'pow_nonce': 7,
+          // ground over these words: one that does not fit is ground again
+          'pow_nonce': grindPow('still there?', powBits),
         });
         _app.sendModeForTest = 'fast';
         await _app.drainOutbox();

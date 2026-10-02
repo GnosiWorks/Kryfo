@@ -12,6 +12,7 @@ import 'package:kryfo/signal_stores.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 
 import 'mem_db.dart';
+import 'source_body.dart';
 
 typedef _Phone = ({SignalSession ss, String name});
 typedef _Got = ({String peer, String cipher});
@@ -137,5 +138,60 @@ void main() {
       (peer: 'firstcontact', cipher: a[0]),
     ];
     expect(_ordered(batch, lane: (p) => p == 'firstcontact'), batch);
+  });
+
+  // two strangers write first, their openers shuffled together on the one
+  // lane every stranger shares
+  test('strangers\' openers are put in order, each apart', () async {
+    final a = await said(alice, ['a0', 'a1', 'a2']);
+    final c = await said(carol, ['c0', 'c1', 'c2']);
+    final batch = <_Got>[
+      (peer: 'firstcontact', cipher: c[2]),
+      (peer: 'firstcontact', cipher: a[1]),
+      (peer: 'firstcontact', cipher: c[0]),
+      (peer: 'firstcontact', cipher: a[2]),
+      (peer: 'firstcontact', cipher: a[0]),
+      (peer: 'firstcontact', cipher: c[1]),
+    ];
+    final out = _ordered(batch, lane: keepsArrivalOrder);
+    final alices = {...a};
+    // every place keeps the sender it had
+    for (var i = 0; i < batch.length; i++) {
+      expect(
+        alices.contains(out[i].cipher),
+        alices.contains(batch[i].cipher),
+        reason: 'place $i',
+      );
+    }
+    expect(
+      [
+        for (final m in out)
+          if (alices.contains(m.cipher)) await _open(me, alice, m.cipher),
+      ],
+      ['a0', 'a1', 'a2'],
+    );
+    expect(
+      [
+        for (final m in out)
+          if (!alices.contains(m.cipher)) await _open(me, carol, m.cipher),
+      ],
+      ['c0', 'c1', 'c2'],
+    );
+  });
+
+  test('only room frames keep the order they came in', () {
+    expect(keepsArrivalOrder('room:abc'), isTrue);
+    expect(keepsArrivalOrder('roomfc:abc'), isTrue);
+    expect(keepsArrivalOrder('firstcontact'), isFalse);
+    expect(keepsArrivalOrder('ab' * 32), isFalse);
+  });
+
+  test('the relay receiver sorts with that rule', () {
+    final app = sourceOf('lib/main.dart');
+    final from = app.indexOf('Future<void> receiveRelay(');
+    // up to its loop: the body holds a brace in a string further on
+    final head = app.substring(from, app.indexOf('for (final m in', from));
+    final sort = callsOf(head, 'inSendOrder(').single;
+    expect(sort, contains('lane: keepsArrivalOrder'));
   });
 }

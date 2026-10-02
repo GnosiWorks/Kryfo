@@ -40,7 +40,10 @@ void main() {
     expect(redeliveryNeedsPow(row, backPaired: false), true);
     expect(redeliveryNeedsPow(row, backPaired: true), false);
     expect(
-      redeliveryNeedsPow({...row, 'pow_nonce': 7}, backPaired: false),
+      redeliveryNeedsPow({
+        ...row,
+        'pow_nonce': grindPow('x', powBits),
+      }, backPaired: false),
       false,
     );
     // group frames never see the stranger gate
@@ -79,5 +82,31 @@ void main() {
       await wrapRedelivery({...row, 'sticker': null}, sender: _sender),
     );
     expect(text.sticker, null);
+  });
+
+  // written offline to someone new, then a typo fixed before it went
+  test('an edited opener is ground again before it goes', () async {
+    const before = 'hi, sam gave me your kryfi';
+    const after = 'hi, sam gave me your kryfo';
+    final row = <String, Object?>{
+      'plaintext': after,
+      'msg_uid': 'u4',
+      'group_id': null,
+      'pow_nonce': grindPow(before, powBits),
+    };
+    expect(redeliveryNeedsPow(row, backPaired: false), true);
+    // what the outbox does with a row that needs it
+    final ground = {...row, 'pow_nonce': grindPow(after, powBits)};
+    expect(redeliveryNeedsPow(ground, backPaired: false), false);
+    final env = unwrapMessage(await wrapRedelivery(ground, sender: _sender));
+    expect(verifyPow(env.powText ?? env.message, env.powNonce!, powBits), true);
+    // answered, nothing is checked any more
+    expect(redeliveryNeedsPow(row, backPaired: true), false);
+  });
+
+  test('powFits holds a nonce to the words it was ground over', () {
+    final n = grindPow('one', powBits);
+    expect(powFits('one', n), true);
+    expect(powFits('two', n), isFalse);
   });
 }

@@ -38,6 +38,7 @@ import '../widgets/swipe_to_reply.dart';
 import '../signal_session.dart';
 import '../message_envelope.dart'
     show wrapMessage, powBusy, SenderInfo, grindPow, powBits;
+import '../outbox.dart' show powFits;
 import '../theme.dart';
 import '../media_progress.dart';
 import '../media_send.dart'
@@ -1997,12 +1998,24 @@ class _ChatScreenState extends State<ChatScreen>
       if (mounted) setState(() => _muted = v);
     });
     final wantAll = _searching || widget.jumpToUid != null || _pagedOut;
-    final rows = wantAll
-        ? await session.messagesFor(widget.peerHaloId)
-        : await session.messagesPage(widget.peerHaloId, limit: _pageSize + 1);
-    _hasMore = !wantAll && rows.length > _pageSize;
-    if (_hasMore) rows.removeAt(0);
-    if (wantAll) _hasMore = false;
+    // a reload keeps the pages already scrolled in: a receipt, a reaction
+    // or an edit must not drop what is being read
+    final keepFrom = wantAll || !_loaded ? null : _oldestHeldRowid();
+    final List<Map<String, Object?>> rows;
+    if (wantAll) {
+      rows = await session.messagesFor(widget.peerHaloId);
+      _hasMore = false;
+    } else if (keepFrom != null) {
+      rows = List.of(
+        await session.messagesAfter(widget.peerHaloId, keepFrom - 1),
+      );
+    } else {
+      rows = List.of(
+        await session.messagesPage(widget.peerHaloId, limit: _pageSize + 1),
+      );
+      _hasMore = rows.length > _pageSize;
+      if (_hasMore) rows.removeAt(0);
+    }
     if (!mounted) return;
     // collect msg_uids first, batch-load reactions, then setState.
     final loaded = <_Msg>[];
@@ -2122,6 +2135,8 @@ class _ChatScreenState extends State<ChatScreen>
       }
     }
     unawaited(_refreshPinCount());
+    // someone reading back stays where they are
+    final snap = !_loaded || _atNewest;
     setState(() {
       final before = List<_Msg>.of(_messages);
       final wasLoaded = _loaded;
@@ -2147,10 +2162,24 @@ class _ChatScreenState extends State<ChatScreen>
     } else if (!_didJump && widget.jumpToUid != null) {
       _didJump = true;
       _jumpToUid(widget.jumpToUid!);
-    } else {
+    } else if (snap) {
       _scrollToEnd(instant: true);
     }
   }
+
+  // the oldest row on screen that the database has, if any
+  int? _oldestHeldRowid() {
+    int? oldest;
+    for (final m in _messages) {
+      if (m.welcome || m.rowid <= 0) continue;
+      if (oldest == null || m.rowid < oldest) oldest = m.rowid;
+    }
+    return oldest;
+  }
+
+  // reversed list: the newest message sits at offset 0
+  bool get _atNewest =>
+      !_scrollReady || _scrollCtrl.positions.first.pixels < 64;
 
   bool _didJump = false;
   bool _wasReachable = false;
@@ -2310,11 +2339,14 @@ class _ChatScreenState extends State<ChatScreen>
     var handed = false;
     try {
       if (uid != null && await session.isSent(uid)) {
+        // a receipt said it went: a timed one starts its clock now
+        final burnAt = await session.lightBurn(uid);
         if (!mounted) return;
         setState(() {
           msg.sending = false;
           msg.failed = false;
           msg.parked = false;
+          if (burnAt != null) msg.burnAt = burnAt;
         });
         return;
       }
@@ -2333,10 +2365,22 @@ class _ChatScreenState extends State<ChatScreen>
         _status = '';
       });
       // a stranger's opener rides its nonce again, or the far side's gate
-      // drops the retry
-      final nonce = msg.msgUid == null
+      // drops the retry. one ground before an edit is ground again
+      var nonce = msg.msgUid == null
           ? null
           : await session.powNonceOf(msg.msgUid!);
+      if (nonce != null && !powFits(msg.text, nonce)) {
+        final text = msg.text;
+        powBusy.value = DateTime.now();
+        try {
+          nonce =
+              grindPowForTest?.call(text) ?? await compute(_grindPowTask, text);
+        } finally {
+          powBusy.value = null;
+        }
+        await session.setPowNonce(msg.msgUid!, nonce);
+        if (!mounted) return;
+      }
       final String cipher;
       try {
         final wrapped = await wrapMessage(
@@ -2431,10 +2475,12 @@ class _ChatScreenState extends State<ChatScreen>
       return true;
     }
     if (await session.isSent(uid)) {
+      final burnAt = await session.lightBurn(uid);
       if (mounted) {
         setState(() {
           msg.failed = false;
           msg.sending = false;
+          if (burnAt != null) msg.burnAt = burnAt;
         });
       }
       return true;

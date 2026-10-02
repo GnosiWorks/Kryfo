@@ -378,6 +378,8 @@ class Session {
       (await _ofUid(msgUid)).isSent(msgUid);
   Future<void> markSent(String msgUid) async =>
       (await _ofUid(msgUid)).markSent(msgUid);
+  Future<int?> lightBurn(String msgUid) async =>
+      (await _ofUid(msgUid)).lightBurn(msgUid);
   Future<bool> messageExists(String msgUid) async {
     final v = vault;
     if (v != null && await v.messageExists(msgUid)) return true;
