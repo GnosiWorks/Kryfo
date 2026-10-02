@@ -287,6 +287,9 @@ const _groupRows = {
   'edits_out': 'msg_uid IN {uids}',
   // a file some members still lack keeps going to them from where it is
   'group_media_owed': 'group_id = ?1',
+  // and so do the controls they are still to get, and its roster stamp
+  'group_ctl_out': 'group_id = ?1',
+  'group_roster': 'group_id = ?1',
 };
 
 // every table a chat's rows sit in. msg_fts and polls_gone follow its
@@ -427,7 +430,9 @@ class SqlChatMover implements ChatMover {
       src,
       dst,
       table,
-      skip: table == 'held_onion' ? const {'id'} : const {},
+      skip: table == 'held_onion' || table == 'group_ctl_out'
+          ? const {'id'}
+          : const {},
     );
     final pick = [
       for (final col in cols)

@@ -250,7 +250,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   late final SeenJob _burn;
   int _lastBurnSec = 0;
   bool _loading = false;
-  // a file of ours some members still lack, by uid
+  // a message of ours some members still lack, by uid
   Map<String, ({int have, int of})> _reach = const {};
   bool _reloadQueued = false;
   bool _loaded = false; // first full load done - gates the append-fast-path
@@ -764,8 +764,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     }
   }
 
-  // a file some members still lacked moved on: its line follows, without a
-  // reload of the whole list
+  // a message some members still lacked moved on: its line follows,
+  // without a reload of the whole list
   void _reachMoved() => unawaited(_loadReach());
 
   Future<void> _loadReach() async {
@@ -3406,7 +3406,7 @@ class _GMsg {
   // a poll: its answers on the row, the votes this phone holds for it
   PollSpec? poll;
   Map<String, PollVote> votes = const {};
-  // a file of ours some members still lack: how many of them have it
+  // a message of ours some members still lack: how many of them have it
   ({int have, int of})? reach;
   // a sticker: drawn from our pack; text is its emoji
   final StickerWire? sticker;
@@ -4851,7 +4851,7 @@ class _GroupBubble extends StatelessWidget {
                   ),
                   if (m.reactions.isNotEmpty) const SizedBox(height: 10),
                   // the sending pill folds away as the tick comes in. a
-                  // file some members still lack says how many have it
+                  // message some members still lack says how many have it
                   // until they all do
                   if (isOut)
                     GrowSwap(

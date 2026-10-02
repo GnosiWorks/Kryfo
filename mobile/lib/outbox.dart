@@ -5,6 +5,7 @@
 import 'dart:convert';
 
 import 'message_envelope.dart';
+import 'polls.dart' show PollSpec;
 import 'stickers/sticker_wire.dart' show StickerWire;
 
 // does this row still owe a nonce before it can leave. a peer who has
@@ -47,6 +48,8 @@ Future<String> wrapRedelivery(
     powBitsUsed: nonce == null ? null : powBits,
     // or a retried sticker arrives as its emoji
     sticker: StickerWire.parse(row['sticker'])?.value,
+    // or a retried poll arrives as its question alone
+    poll: PollSpec.parse(row['poll'])?.toWire(),
     sender: sender,
   );
 }

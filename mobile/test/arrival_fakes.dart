@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:kryfo/container.dart';
+import 'package:kryfo/group_media_send.dart' show groupOwedGap;
 import 'package:kryfo/main.dart' show AppIo, HaloDb;
 import 'package:kryfo/media_resend.dart';
 import 'package:kryfo/message_envelope.dart';
@@ -799,7 +800,110 @@ class ArrivalRows implements HaloDb {
     _hit('deleteGroup', groupId, null);
     groupRows.remove(groupId);
     members.remove(groupId);
+    ctlOut.removeWhere((r) => r['group_id'] == groupId);
+    rosterStamps.remove(groupId);
+    rosterGoneKeys.remove(groupId);
   }
+
+  // ---- group controls on their way to each member ----
+  final ctlOut = <Map<String, Object?>>[];
+  var _ctlId = 0;
+
+  // what [member] is still to get, as the controls' types
+  List<String> ctlTo(String member, {String? groupId}) => [
+    for (final r in ctlOut)
+      if (r['member'] == member &&
+          (groupId == null || r['group_id'] == groupId))
+        GroupControl.fromWire(jsonDecode(r['ctl'] as String))!.type,
+  ];
+
+  @override
+  Future<void> queueGroupCtl(
+    String groupId,
+    Iterable<String> who,
+    GroupControl ctl, {
+    required int now,
+  }) async {
+    _hit('queueGroupCtl', groupId, null);
+    for (final m in who) {
+      ctlOut.add({
+        'id': ++_ctlId,
+        'group_id': groupId,
+        'member': m,
+        'ctl': jsonEncode(ctl.toWire()),
+        'since': now,
+        'tries': 0,
+        'next_at': now,
+      });
+    }
+  }
+
+  @override
+  Future<List<Map<String, Object?>>> groupCtlOut() async => [
+    for (final r in ctlOut) {...r},
+  ];
+  @override
+  Future<List<Map<String, Object?>>> groupCtlFor(
+    String groupId,
+    String member,
+  ) async => [
+    for (final r in ctlOut)
+      if (r['group_id'] == groupId && r['member'] == member) {...r},
+  ];
+  @override
+  Future<void> triedGroupCtl(int id, int now) async {
+    for (final r in ctlOut.where((r) => r['id'] == id)) {
+      final tries = (r['tries'] as int) + 1;
+      r['tries'] = tries;
+      r['next_at'] = now + groupOwedGap(tries);
+    }
+  }
+
+  @override
+  Future<void> dropGroupCtl(int id) async =>
+      ctlOut.removeWhere((r) => r['id'] == id);
+  @override
+  Future<Set<String>> groupCtlWaiting(String groupId) async => {
+    for (final r in ctlOut)
+      if (r['group_id'] == groupId) r['member'] as String,
+  };
+  @override
+  Future<int> groupCtlDueNow(String member) async {
+    var n = 0;
+    for (final r in ctlOut.where((r) => r['member'] == member)) {
+      r['next_at'] = 0;
+      n++;
+    }
+    return n;
+  }
+
+  @override
+  Future<int> groupOwedDueNow(String member) async => 0;
+
+  // ---- the newest roster each group took ----
+  final rosterStamps = <String, int>{};
+  final rosterGoneKeys = <String, Set<String>>{};
+
+  @override
+  Future<int> nextRosterStamp(String groupId, int now) async {
+    final held = rosterStamps[groupId] ?? 0;
+    return rosterStamps[groupId] = held + 1 > now ? held + 1 : now;
+  }
+
+  @override
+  Future<bool> takeRosterStamp(String groupId, int stamp) async {
+    if (stamp <= (rosterStamps[groupId] ?? 0)) return false;
+    rosterStamps[groupId] = stamp;
+    return true;
+  }
+
+  @override
+  Future<Set<String>> rosterGone(String groupId) async => {
+    ...?rosterGoneKeys[groupId],
+  };
+  @override
+  Future<void> noteRosterGone(String groupId, Iterable<String> keys) async =>
+      rosterGoneKeys.putIfAbsent(groupId, () => {}).addAll(keys);
 
   @override
   Future<List<Map<String, Object?>>> rooms() async => _hit('rooms', null, [

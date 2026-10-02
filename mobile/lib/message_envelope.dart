@@ -113,12 +113,49 @@ class GroupControl {
   // keys for members the receiver may not have as contacts, on 'create' and
   // 'add'. receivers make contact stubs from it so group sends work.
   final List<Map<String, String>>? participants;
+  // on 'create': when the admin made this roster, above every one before.
+  // an older roster arriving late never replaces a newer one
+  final int? stamp;
   const GroupControl({
     required this.type,
     this.name,
     this.members,
     this.participants,
+    this.stamp,
   });
+
+  Map<String, dynamic> toWire() => {
+    't': type,
+    'n': ?name,
+    'm': ?members,
+    'p': ?participants,
+    'v': ?stamp,
+  };
+
+  static GroupControl? fromWire(Object? raw) {
+    if (raw is! Map) return null;
+    final membersRaw = raw['m'];
+    final partsRaw = raw['p'];
+    List<Map<String, String>>? parts;
+    if (partsRaw is List) {
+      parts = [];
+      for (final e in partsRaw) {
+        if (e is Map) {
+          parts.add(e.map((k, v) => MapEntry(k.toString(), v.toString())));
+        }
+      }
+    }
+    final stamp = raw['v'];
+    return GroupControl(
+      type: (raw['t'] as String?) ?? '',
+      name: raw['n'] as String?,
+      members: membersRaw is List
+          ? membersRaw.map((e) => e.toString()).toList()
+          : null,
+      participants: parts,
+      stamp: stamp is int && stamp > 0 ? stamp : null,
+    );
+  }
 }
 
 /// a reaction added or removed on an earlier message
@@ -341,13 +378,7 @@ Future<String> wrapMessage(
     body['b'] = burnSeconds;
   }
   if (groupId != null) body['g'] = groupId;
-  if (groupControl != null) {
-    final gc = <String, dynamic>{'t': groupControl.type};
-    if (groupControl.name != null) gc['n'] = groupControl.name;
-    if (groupControl.members != null) gc['m'] = groupControl.members;
-    if (groupControl.participants != null) gc['p'] = groupControl.participants;
-    body['gc'] = gc;
-  }
+  if (groupControl != null) body['gc'] = groupControl.toWire();
   return '$_envelopePrefix${jsonEncode(body)}';
 }
 
@@ -427,29 +458,7 @@ UnwrappedMessage unwrapMessage(String wrapped) {
         finalVotes: pcRaw['f'],
       );
     }
-    GroupControl? gc;
-    final gcRaw = json['gc'];
-    if (gcRaw is Map) {
-      final membersRaw = gcRaw['m'];
-      final partsRaw = gcRaw['p'];
-      List<Map<String, String>>? parts;
-      if (partsRaw is List) {
-        parts = [];
-        for (final e in partsRaw) {
-          if (e is Map) {
-            parts.add(e.map((k, v) => MapEntry(k.toString(), v.toString())));
-          }
-        }
-      }
-      gc = GroupControl(
-        type: (gcRaw['t'] as String?) ?? '',
-        name: gcRaw['n'] as String?,
-        members: membersRaw is List
-            ? membersRaw.map((e) => e.toString()).toList()
-            : null,
-        participants: parts,
-      );
-    }
+    final gc = GroupControl.fromWire(json['gc']);
     Map<String, String>? preview;
     final pvRaw = json['pv'];
     if (pvRaw is Map) {
