@@ -2678,6 +2678,28 @@ class AppLocalizationsRu extends AppLocalizations {
   String get groupChatTapToRetry => '! Нажми для повтора';
 
   @override
+  String groupChatFileReach(int have, int count) {
+    final intl.NumberFormat haveNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String haveString = haveNumberFormat.format(have);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      have,
+      locale: localeName,
+      other: 'Отправлено · есть у $haveString из $countString',
+      many: 'Отправлено · есть у $haveString из $countString',
+      few: 'Отправлено · есть у $haveString из $countString',
+      one: 'Отправлено · есть у $haveString из $countString',
+      zero: 'Отправлено · в пути',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get groupChat0s => '0 с';
 
   @override

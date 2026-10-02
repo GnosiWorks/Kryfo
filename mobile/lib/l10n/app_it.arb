@@ -677,6 +677,7 @@
   "groupChatSupporter": "Sostenitore",
   "groupChatEdited": "Modificato",
   "groupChatTapToRetry": "! Tocca per riprovare",
+  "groupChatFileReach": "{have, plural, =0{Inviato · in viaggio} one{Inviato · {have} su {count} l’ha ricevuto} other{Inviato · {have} su {count} l’hanno ricevuto}}",
   "groupChat0s": "0 s",
   "groupChatReply": "Rispondi",
   "groupChatPin": "Fissa",

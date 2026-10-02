@@ -677,6 +677,7 @@
   "groupChatSupporter": "Pendukung",
   "groupChatEdited": "Diubah",
   "groupChatTapToRetry": "! Ketuk untuk ulangi",
+  "groupChatFileReach": "{have, plural, =0{Terkirim · dalam perjalanan} other{Terkirim · {have} dari {count} sudah menerima}}",
   "groupChat0s": "0 dtk",
   "groupChatReply": "Balas",
   "groupChatPin": "Sematkan",

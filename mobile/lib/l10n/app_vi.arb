@@ -677,6 +677,7 @@
   "groupChatSupporter": "Người ủng hộ",
   "groupChatEdited": "Đã sửa",
   "groupChatTapToRetry": "! Chạm để thử lại",
+  "groupChatFileReach": "{have, plural, =0{Đã gửi · đang trên đường} other{Đã gửi · {have} trên {count} người đã nhận}}",
   "groupChat0s": "0 giây",
   "groupChatReply": "Trả lời",
   "groupChatPin": "Ghim",

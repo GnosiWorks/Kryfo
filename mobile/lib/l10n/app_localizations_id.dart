@@ -2611,6 +2611,25 @@ class AppLocalizationsId extends AppLocalizations {
   String get groupChatTapToRetry => '! Ketuk untuk ulangi';
 
   @override
+  String groupChatFileReach(int have, int count) {
+    final intl.NumberFormat haveNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String haveString = haveNumberFormat.format(have);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      have,
+      locale: localeName,
+      other: 'Terkirim · $haveString dari $countString sudah menerima',
+      zero: 'Terkirim · dalam perjalanan',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get groupChat0s => '0 dtk';
 
   @override

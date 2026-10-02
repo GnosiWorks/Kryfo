@@ -2637,6 +2637,26 @@ class AppLocalizationsFr extends AppLocalizations {
   String get groupChatTapToRetry => '! Réessayer';
 
   @override
+  String groupChatFileReach(int have, int count) {
+    final intl.NumberFormat haveNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String haveString = haveNumberFormat.format(have);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      have,
+      locale: localeName,
+      other: 'Envoyé · $haveString sur $countString l’ont reçu',
+      one: 'Envoyé · $haveString sur $countString l’a reçu',
+      zero: 'Envoyé · en route',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get groupChat0s => '0 s';
 
   @override

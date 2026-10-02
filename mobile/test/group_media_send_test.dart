@@ -49,7 +49,8 @@ void main() {
     msgUid = 'm${uid++}';
   });
   tearDown(() async {
-    groupMediaOwed.clear();
+    groupSliceDone.clear();
+    groupSliceDoneAt.clear();
     await tmp.delete(recursive: true);
   });
 
@@ -100,8 +101,13 @@ void main() {
   });
 
   group('a member still short when the send ends', () {
-    // the row reads sent by then, so what is owed goes from the outbox
-    Future<String> owedTo(_Members g, List<String> to) => sendGroupSlices(
+    // the row reads sent by then, so what is owed is kept and goes later
+    Future<String> owedTo(
+      _Members g,
+      List<String> to, {
+      Map<String, Set<int>>? owed,
+      required List<(Map<String, Set<int>>, int)> told,
+    }) => sendGroupSlices(
       path: path,
       msgUid: msgUid,
       members: to,
@@ -109,92 +115,113 @@ void main() {
       deliver: g.deliver,
       gap: Duration.zero,
       retryPause: Duration.zero,
-      onShort: (short) => noteGroupShort(
-        msgUid,
-        tried: to,
-        short: short,
-        resend: (owed) => owedTo(g, owed),
-        now: 0,
-      ),
+      owed: owed,
+      onShort: (short, total) async => told.add((short, total)),
     );
 
-    test('gets the file once its session is there', () async {
-      var healed = false;
-      final g = _Members()..refuse = (m, i, n) => m == 'b' && !healed;
-      expect(await owedTo(g, ['b', 'c']), 'ok');
-      expect(g.got['b'], isNull);
-      expect(groupMediaOwed[msgUid]?.members, {'b'});
-
-      final before = g.offered.length;
-      await resendGroupOwed(now: kGroupOwedGap - 1);
-      expect(g.offered.length, before);
-
-      // still no session: kept, and tried later than the first time
-      await resendGroupOwed(now: kGroupOwedGap);
-      expect(g.offered.length, greaterThan(before));
-      final owed = groupMediaOwed[msgUid]!;
-      expect(owed.members, {'b'});
-      expect(owed.nextAt - kGroupOwedGap, greaterThan(kGroupOwedGap));
-
-      healed = true;
-      await resendGroupOwed(now: owed.nextAt);
-      expect(g.got['b'], {0, 1, 2, 3, 4});
-      expect(groupMediaOwed, isEmpty);
-      // and the ones that had it are sent nothing again
-      expect(g.offered.where((o) => o.$1 == 'c').length, 5);
+    test('is told with what it has', () async {
+      final told = <(Map<String, Set<int>>, int)>[];
+      final g = _Members()..refuse = (m, i, n) => m == 'b' && i >= 2;
+      expect(await owedTo(g, ['b', 'c'], told: told), 'ok');
+      expect(told.single.$1, {
+        'b': {0, 1},
+      });
+      expect(told.single.$2, 5);
+      // what b holds is the store's now, not this map's
+      expect(groupSliceDone.containsKey(msgUid), isFalse);
+      expect(groupSliceDoneAt.containsKey(msgUid), isFalse);
     });
 
-    test('is sent only the slices it still lacks', () async {
-      var healed = false;
-      final g = _Members()..refuse = (m, i, n) => m == 'b' && i >= 2 && !healed;
-      expect(await owedTo(g, ['b', 'c']), 'ok');
-      expect(g.got['b'], {0, 1});
-      healed = true;
-      final before = g.offered.length;
-      await resendGroupOwed(now: kGroupOwedGap);
-      expect(g.offered.sublist(before), [('b', 2), ('b', 3), ('b', 4)]);
-      expect(groupMediaOwed, isEmpty);
+    test('a send that stopped long ago is let go at the next send', () async {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      groupSliceDone['long-ago'] = {
+        'b': {0},
+      };
+      groupSliceDoneAt['long-ago'] = now - 300000;
+      groupSliceDone['just-now'] = {
+        'b': {0},
+      };
+      groupSliceDoneAt['just-now'] = now;
+      expect(await send(_Members(), ['b']), 'ok');
+      expect(groupSliceDone.keys, ['just-now']);
+      expect(groupSliceDoneAt.keys, ['just-now']);
     });
 
-    test('is let go with its row, and after a day', () async {
-      var asked = 0;
-      Future<String> gone(List<String> to) async {
-        asked++;
-        return 'gone';
-      }
-
-      noteGroupShort('x', tried: ['b'], short: ['b'], resend: gone, now: 0);
-      await resendGroupOwed(now: kGroupOwedGap);
-      expect(asked, 1);
-      expect(groupMediaOwed, isEmpty);
-
-      noteGroupShort('y', tried: ['b'], short: ['b'], resend: gone, now: 0);
-      await resendGroupOwed(now: kGroupOwedFor + 1);
-      expect(asked, 1);
-      expect(groupMediaOwed, isEmpty);
+    test('a send where all went tells that nobody is short', () async {
+      final told = <(Map<String, Set<int>>, int)>[];
+      expect(await owedTo(_Members(), ['b', 'c'], told: told), 'ok');
+      expect(told.single.$1, isEmpty);
+      expect(groupSliceDone.containsKey(msgUid), isFalse);
     });
 
-    test('waits longer each try, ten minutes at most', () async {
-      var asked = 0;
-      noteGroupShort(
-        'x',
-        tried: ['b'],
-        short: ['b'],
-        resend: (_) async {
-          asked++;
-          return 'error: no session';
+    test('a send that stopped on a slice tells nothing: the row goes again '
+        'whole', () async {
+      final told = <(Map<String, Set<int>>, int)>[];
+      final g = _Members()..refuse = (m, i, n) => i == 2;
+      expect(await owedTo(g, ['b', 'c'], told: told), startsWith('error'));
+      expect(told, isEmpty);
+    });
+
+    test('is sent only the slices it lacks, and nobody else is', () async {
+      final told = <(Map<String, Set<int>>, int)>[];
+      final g = _Members();
+      final r = await owedTo(
+        g,
+        ['b'],
+        owed: {
+          'b': {0, 1},
         },
-        now: 0,
+        told: told,
       );
-      var at = 0;
-      for (var k = 0; k < 80; k++) {
-        at = groupMediaOwed['x']!.nextAt;
-        await resendGroupOwed(now: at);
-        final gap = groupMediaOwed['x']!.nextAt - at;
-        expect(gap, inInclusiveRange(kGroupOwedGap, kGroupOwedGapMost));
-      }
-      expect(asked, 80);
+      expect(r, 'ok');
+      expect(g.offered, [('b', 2), ('b', 3), ('b', 4)]);
+      expect(told.single.$1, isEmpty);
+      // what the owed hold is kept on disk, not in memory
+      expect(groupSliceDone.containsKey(msgUid), isFalse);
     });
+
+    test('a slice it holds past the end is not taken as held', () async {
+      final g = _Members();
+      final r = await owedTo(
+        g,
+        ['b'],
+        owed: {
+          'b': {0, 9},
+        },
+        told: [],
+      );
+      expect(r, 'ok');
+      expect(g.offered.map((o) => o.$2), [1, 2, 3, 4]);
+    });
+
+    test('keeps what it took on a try that stopped', () async {
+      final told = <(Map<String, Set<int>>, int)>[];
+      final g = _Members()..refuse = (m, i, n) => i >= 3;
+      final r = await owedTo(
+        g,
+        ['b'],
+        owed: {
+          'b': {0},
+        },
+        told: told,
+      );
+      expect(r, 'error: chunk 3 undeliverable');
+      expect(told.single.$1, {
+        'b': {0, 1, 2},
+      });
+    });
+
+    test(
+      'out of reach is tried a slice at a time, not the whole file',
+      () async {
+        final told = <(Map<String, Set<int>>, int)>[];
+        final g = _Members()..refuse = (m, i, n) => true;
+        final r = await owedTo(g, ['b'], owed: {'b': {}}, told: told);
+        expect(r, startsWith('error'));
+        expect(g.offered, List.filled(kGroupSliceTries, ('b', 0)));
+        expect(told.single.$1, {'b': <int>{}});
+      },
+    );
   });
 
   test('a member that went quiet halfway is tried a few at a time', () async {
@@ -363,16 +390,17 @@ void main() {
       expect(body, contains('m != myId && m != room?.pub'));
     });
 
-    test('what a member is owed goes again from the outbox', () {
+    test('what a member is owed is kept and goes again from the outbox', () {
       final body = bodyOf(app, 'Future<String> sendMediaToGroup(');
-      expect(body, contains('noteGroupShort('));
-      expect(body, contains('onlyTo: owed'));
+      expect(body, contains('d.settleGroupOwed('));
+      expect(body, contains('first: owed == null,'));
+      expect(body, contains('owed: owed,'));
       expect(
         bodyOf(app, 'Future<void> drainOutbox('),
-        contains('resendGroupOwed()'),
+        contains('unawaited(_drainGroupOwed());'),
       );
       final unsend = bodyOf(app, 'Future<void> unsendInGroup(');
-      expect(unsend, contains('groupMediaOwed.remove(targetMsgUid)'));
+      expect(unsend, contains('cancelMediaSend(targetMsgUid)'));
     });
 
     test('the outbox tells an open group its row moved', () {
@@ -392,7 +420,12 @@ void main() {
       final guard = body.indexOf('if (!mediaInflight.contains(uid))');
       expect(guard, greaterThan(0));
       expect(body.indexOf('deleteMessage'), greaterThan(guard));
-      expect(body, contains('whenMediaFree(uid)'));
+      expect(body, contains('appState.unsendInGroup(widget.groupId, uid)'));
+      // the unsend says it again once the send has let go
+      expect(
+        bodyOf(app, 'Future<void> unsendInGroup('),
+        contains('whenMediaFree('),
+      );
     });
   });
 }

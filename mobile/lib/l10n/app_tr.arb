@@ -677,6 +677,7 @@
   "groupChatSupporter": "Destekçi",
   "groupChatEdited": "Düzenlendi",
   "groupChatTapToRetry": "! Tekrar için dokun",
+  "groupChatFileReach": "{have, plural, =0{Gönderildi · yolda} one{Gönderildi · {count} kişiden {have} kişiye ulaştı} other{Gönderildi · {count} kişiden {have} kişiye ulaştı}}",
   "groupChat0s": "0 sn",
   "groupChatReply": "Yanıtla",
   "groupChatPin": "Sabitle",

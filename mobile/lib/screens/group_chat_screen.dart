@@ -60,7 +60,7 @@ import '../main.dart'
 import '../theme.dart';
 import '../media_progress.dart';
 import '../group_send_watch.dart';
-import '../media_send.dart' show cancelMediaSend, mediaInflight, whenMediaFree;
+import '../media_send.dart' show cancelMediaSend, mediaInflight;
 import '../image_strip.dart';
 import '../mp4_strip.dart';
 import '../widgets/kryfo_avatar.dart';
@@ -77,6 +77,8 @@ import '../widgets/motion.dart'
         kHouseCurve,
         kHouseTime;
 import '../widgets/chat_parts.dart';
+import '../widgets/file_reach.dart';
+import '../group_media_send.dart' show groupOwedTick;
 import '../widgets/message_menu.dart';
 import '../rooms.dart';
 import '../widgets/notice_banner.dart';
@@ -248,6 +250,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   late final SeenJob _burn;
   int _lastBurnSec = 0;
   bool _loading = false;
+  // a file of ours some members still lack, by uid
+  Map<String, ({int have, int of})> _reach = const {};
   bool _reloadQueued = false;
   bool _loaded = false; // first full load done - gates the append-fast-path
   int _seenRev = -1; // last group rev we reloaded for
@@ -330,6 +334,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       }
     });
     appState.addListener(_onAppStateChanged);
+    groupOwedTick.addListener(_reachMoved);
     _timers.every(const Duration(seconds: 30), _autoRetryTick);
     _burn = _timers.until(_burnWait, _burnTick);
   }
@@ -521,6 +526,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         m.preview = _decodePv(r['preview'] as String?);
         m.poll = PollSpec.parse(r['poll']);
         m.votes = votes[uid] ?? const {};
+        m.reach = _reach[uid];
         m.rowid = (r['rowid'] as int?) ?? 0;
         older.add(m);
       }
@@ -617,6 +623,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           .toList();
       final reactions = await session.loadReactionsFor(uids);
       final votes = await session.pollVotesFor(uids);
+      final reach = await session.groupFileReach(widget.groupId);
       // local nickname is the display source of truth. fall back to the 3-word
       // id when we have no nickname for that member.
       final nickById = <String, String>{};
@@ -639,6 +646,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         _memberCount = members.length;
         _roomExpiresAt = g['expires_at'] as int?;
         _isAdmin = ((g['is_admin'] as int?) ?? 0) == 1;
+        _reach = reach;
         // a reload rebuilds every row; the retry count rides across, or a
         // failed send never reaches its cap and spins forever
         final carry = {
@@ -682,6 +690,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
               m.preview = _decodePv(r['preview'] as String?);
               m.poll = PollSpec.parse(r['poll']);
               m.votes = votes[uid] ?? const {};
+              m.reach = reach[uid];
               m.rowid = (r['rowid'] as int?) ?? 0;
               _placeLoadedSend(m);
               final c = carry[m.msgUid];
@@ -753,6 +762,22 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       if (at < 0) at = _messages.length;
       _messages.insert(at, o);
     }
+  }
+
+  // a file some members still lacked moved on: its line follows, without a
+  // reload of the whole list
+  void _reachMoved() => unawaited(_loadReach());
+
+  Future<void> _loadReach() async {
+    final reach = await session.groupFileReach(widget.groupId);
+    if (!mounted) return;
+    setState(() {
+      _reach = reach;
+      for (final m in _messages) {
+        final uid = m.msgUid;
+        m.reach = uid == null ? null : reach[uid];
+      }
+    });
   }
 
   Future<void> _loadShieldFlags() async {
@@ -939,6 +964,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       m.preview = _decodePv(r['preview'] as String?);
       m.poll = PollSpec.parse(r['poll']);
       m.votes = votes[uid] ?? const {};
+      m.reach = _reach[uid];
       m.rowid = (r['rowid'] as int?) ?? 0;
       if (dir == 'in') m.fresh = true;
       _placeLoadedSend(m);
@@ -1910,11 +1936,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     await Future.delayed(kLeaveGone);
     await session.deleteMessage(uid);
     if (mounted) setState(() => _messages.remove(m));
+    // said again once the send has let go, by the unsend itself
     unawaited(appState.unsendInGroup(widget.groupId, uid));
-    // a slice already on its way can land after that; said again once the
-    // send has let go, so nobody is left holding part of the file
-    final again = whenMediaFree(uid);
-    unawaited(again.then((_) => appState.unsendInGroup(widget.groupId, uid)));
   }
 
   final _watch = GroupSendWatch();
@@ -3124,6 +3147,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     lockState.removeListener(_lockLifted);
     releaseChat('group:${widget.groupId}');
     appState.removeListener(_onAppStateChanged);
+    groupOwedTick.removeListener(_reachMoved);
     _timers.dispose();
     _msgCtrl.dispose();
     _scrollCtrl.dispose();
@@ -3382,6 +3406,8 @@ class _GMsg {
   // a poll: its answers on the row, the votes this phone holds for it
   PollSpec? poll;
   Map<String, PollVote> votes = const {};
+  // a file of ours some members still lack: how many of them have it
+  ({int have, int of})? reach;
   // a sticker: drawn from our pack; text is its emoji
   final StickerWire? sticker;
   _GMsg({
@@ -4824,11 +4850,25 @@ class _GroupBubble extends StatelessWidget {
                     ],
                   ),
                   if (m.reactions.isNotEmpty) const SizedBox(height: 10),
-                  // the sending pill folds away as the tick comes in
+                  // the sending pill folds away as the tick comes in. a
+                  // file some members still lack says how many have it
+                  // until they all do
                   if (isOut)
                     GrowSwap(
                       child: !m.pending
-                          ? const SizedBox.shrink(key: ValueKey('no-pill'))
+                          ? switch (m.reach) {
+                              final r? => Padding(
+                                key: ValueKey('reach-${r.have}-${r.of}'),
+                                padding: const EdgeInsetsDirectional.only(
+                                  top: 4,
+                                  end: 4,
+                                ),
+                                child: FileReachPill(have: r.have, of: r.of),
+                              ),
+                              null => const SizedBox.shrink(
+                                key: ValueKey('no-pill'),
+                              ),
+                            }
                           : Padding(
                               key: const ValueKey('pill'),
                               padding: const EdgeInsetsDirectional.only(
