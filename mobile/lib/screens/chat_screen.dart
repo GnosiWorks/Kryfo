@@ -481,7 +481,7 @@ class _ChatScreenState extends State<ChatScreen>
   final _timers = SeenTimers();
   late final SeenJob _burn;
   int _lastBurnSec = 0;
-  final _scrollCtrl = ScrollController();
+  final _scrollCtrl = HoldScrollController();
   static const _pageSize = 60;
   bool _hasMore = false;
   bool _loadingOlder = false;
@@ -731,7 +731,9 @@ class _ChatScreenState extends State<ChatScreen>
   // the shield looked at their opener and found nothing
   bool _shieldClean = false;
   bool _showScrollDown = false;
-  int _seenCount = 0;
+  // their messages that came in while reading back, for the jump button.
+  // counted as they arrive: older pages and reloads add none
+  int _unseenNew = 0;
   String? _rippleUid;
   _Msg? _replyFlash;
   String? _note;
@@ -1250,6 +1252,9 @@ class _ChatScreenState extends State<ChatScreen>
       _loadMessages();
       return;
     }
+    // someone reading back stays where they are. near the newest, where the
+    // jump button is not shown, they are taken down to it
+    final snap = _nearNewest;
     final fresh = <_Msg>[];
     for (final r in brandNew) {
       final uid = r['msg_uid'] as String?;
@@ -1288,9 +1293,19 @@ class _ChatScreenState extends State<ChatScreen>
       fresh.add(m);
       if (uid != null) _seenUids.add(uid);
     }
+    final theirs = fresh.where((m) => m.direction != 'out').length;
+    final follow = snap || theirs < fresh.length;
+    if (!follow && !_jumpActive) {
+      holdRowsInView(
+        ctrl: _scrollCtrl,
+        anchors: _anchors,
+        alive: () => mounted,
+      );
+    }
     setState(() {
       _messages.addAll(fresh);
       _normaliseMessages();
+      if (!follow) _unseenNew += theirs;
     });
     _applySecureContent();
     // clear the home badge for what we are reading. a backed-out chat stays
@@ -1300,7 +1315,7 @@ class _ChatScreenState extends State<ChatScreen>
       unawaited(session.clearUnread(widget.peerHaloId));
       unawaited(appState.refreshContacts());
     }
-    _scrollToEnd();
+    if (follow) _scrollToEnd();
   }
 
   Widget _newMessagesDivider() => UnreadDivider(l10n.chatNewMessages);
@@ -2181,6 +2196,11 @@ class _ChatScreenState extends State<ChatScreen>
   // reversed list: the newest message sits at offset 0
   bool get _atNewest =>
       !_scrollReady || _scrollCtrl.positions.first.pixels < 64;
+
+  // above this the jump button shows
+  static const _jumpButtonAt = 240.0;
+  bool get _nearNewest =>
+      !_scrollReady || _scrollCtrl.positions.first.pixels <= _jumpButtonAt;
 
   bool _didJump = false;
   bool _wasReachable = false;
@@ -4383,8 +4403,8 @@ class _ChatScreenState extends State<ChatScreen>
     if (!_scrollCtrl.hasClients) return;
     final pos = _scrollCtrl.position;
     // reversed list: bottom is offset 0
-    final show = pos.pixels > 240;
-    if (!show) _seenCount = _messages.length;
+    final show = pos.pixels > _jumpButtonAt;
+    if (!show) _unseenNew = 0;
     if (show != _showScrollDown && mounted) {
       setState(() => _showScrollDown = show);
     }
@@ -4392,7 +4412,7 @@ class _ChatScreenState extends State<ChatScreen>
 
   void _scrollToBottom() {
     if (!_scrollReady) return;
-    setState(() => _seenCount = _messages.length);
+    setState(() => _unseenNew = 0);
     // reversed list: newest sits at offset 0.
     _scrollCtrl.animateTo(
       0,
@@ -4683,7 +4703,7 @@ class _ChatScreenState extends State<ChatScreen>
                       child: Center(
                         child: JumpDownButton(
                           shown: _showScrollDown,
-                          count: _messages.length - _seenCount,
+                          count: _unseenNew,
                           label: l10n.chatJumpToTheNewest,
                           onTap: _scrollToBottom,
                         ),

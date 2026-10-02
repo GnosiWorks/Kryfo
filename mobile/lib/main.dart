@@ -3065,6 +3065,10 @@ class HaloDb implements GroupOwedStore {
     return rows.length;
   }
 
+  // a row of ours that has not gone yet is not due: its clock starts when
+  // it goes. only outgoing rows are ever unsent
+  static const _kBurnDue = 'burn_at IS NOT NULL AND burn_at < ? AND sent = 1';
+
   Future<void> purgeExpiredBurns() async {
     await _lightStrandedOnce();
     final db = await open();
@@ -3072,7 +3076,7 @@ class HaloDb implements GroupOwedStore {
     final rows = await db.query(
       'messages',
       columns: ['msg_uid', 'media_path', 'file_path', ..._kUnreadCols],
-      where: 'burn_at IS NOT NULL AND burn_at < ?',
+      where: _kBurnDue,
       whereArgs: [now],
     );
     await _unreadGo(db, rows);
@@ -3087,11 +3091,7 @@ class HaloDb implements GroupOwedStore {
         );
       }
     }
-    await db.delete(
-      'messages',
-      where: 'burn_at IS NOT NULL AND burn_at < ?',
-      whereArgs: [now],
-    );
+    await db.delete('messages', where: _kBurnDue, whereArgs: [now]);
     await _scrubMedia(rows);
   }
 
@@ -3690,7 +3690,7 @@ class HaloDb implements GroupOwedStore {
     final media = await db.query(
       'messages',
       columns: [..._kFileCols, ..._kUnreadCols, 'msg_uid'],
-      where: 'burn_at IS NOT NULL AND burn_at < ?',
+      where: _kBurnDue,
       whereArgs: [now],
     );
     await _unreadGo(db, media);
@@ -3700,11 +3700,7 @@ class HaloDb implements GroupOwedStore {
         if (uid != null && r['direction'] == 'in') gone(uid);
       }
     }
-    final n = await db.delete(
-      'messages',
-      where: 'burn_at IS NOT NULL AND burn_at < ?',
-      whereArgs: [now],
-    );
+    final n = await db.delete('messages', where: _kBurnDue, whereArgs: [now]);
     await _scrubMedia(media);
     return n;
   }
@@ -6933,7 +6929,9 @@ class AppState extends ChangeNotifier {
         final missed = await _fanOut(d, groupId, to, wrapped);
         if (missed.length < to.length) {
           await d.markSent(uid);
+          await _lightBurn(r, uid, d);
           await _oweText(d, uid, groupId, to: to, missed: missed, first: true);
+          _bumpChatRev('group:$groupId');
           notifyListeners();
         }
         return;
@@ -13428,8 +13426,10 @@ class AppState extends ChangeNotifier {
       sticker = await session.stickerOf(msgUid);
     }
     msgUid ??= newMsgUid();
-    final burnAt = (burnSeconds != null && burnSeconds > 0)
-        ? DateTime.now().millisecondsSinceEpoch + burnSeconds * 1000
+    // a timed one's clock starts once a member has it, as in a 1:1 chat:
+    // one that waits for a route must not burn before it ever went
+    final burnSecs = (burnSeconds != null && burnSeconds > 0)
+        ? burnSeconds
         : null;
     // save the local row up front so the chat list shows it at once.
     // peer_id = self so we render it as outgoing. a retry passes the same
@@ -13442,9 +13442,8 @@ class AppState extends ChangeNotifier {
         groupId: groupId,
         msgUid: msgUid,
         replyTo: replyTo,
-        burnAt: burnAt,
         // a retry after a reload reads the timer back from the row
-        burnSecs: burnAt == null ? null : burnSeconds,
+        burnSecs: burnSecs,
         // born unsent, or a dead send reloads as a ticked message nobody
         // ever received
         sent: 0,
@@ -13490,6 +13489,7 @@ class AppState extends ChangeNotifier {
     // member flips the row to sent. the members it missed are owed it
     if (anyOk) {
       await session.markSent(msgUid);
+      await session.lightBurn(msgUid);
       await _oweText(d, msgUid, groupId, to: to, missed: missed, first: true);
     }
     notifyListeners();

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // a receipt, a reaction or an edit reloads the open chat. someone reading
 // back stays where they are, with the pages they scrolled in still there.
+// a new message from them leaves the place too, and the jump button counts
+// only what came in, never the pages scrolled in.
 // the chat's own screen over rows kept in maps
 import 'dart:io';
 
@@ -20,6 +22,7 @@ import 'package:kryfo/main.dart'
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
+import 'package:kryfo/widgets/chat_parts.dart' show JumpDownButton;
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart'
     show Curve;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -289,12 +292,36 @@ void main() {
         i,
   ];
 
-  Widget chat() => ChatScreen(
+  Widget chat({String? jumpTo}) => ChatScreen(
     peerHaloId: _peer,
     peerOnion: '',
     peerXPub: 'ab' * 32,
     avatarSeed: _peer,
+    jumpToUid: jumpTo,
   );
+
+  // what the jump button says came in
+  int badge(WidgetTester t) =>
+      t.widget<JumpDownButton>(find.byType(JumpDownButton)).count;
+  bool button(WidgetTester t) =>
+      t.widget<JumpDownButton>(find.byType(JumpDownButton)).shown;
+
+  // a message from them lands, as the receiver writes it
+  Future<void> arrive(WidgetTester t, int n) async {
+    await mem.insert('messages', {
+      'peer_id': _peer,
+      'direction': 'in',
+      'plaintext': 'new $n',
+      'sent_at': DateTime.now().millisecondsSinceEpoch,
+      'msg_uid': 'new$n',
+      'sent': 1,
+    });
+    appState.chatChanged(_peer);
+    await settle(t);
+  }
+
+  bool seen(String text) =>
+      find.text(text, findRichText: true).hitTestable().evaluate().isNotEmpty;
 
   testWidgets('a reload with nothing new keeps the place and the pages', (
     t,
@@ -340,6 +367,125 @@ void main() {
     await settle(t);
     expect(thread(t).pixels, 0);
     expect(shown(), contains(_rows - 1));
+    await devClose(t);
+  });
+
+  testWidgets('a new message while reading back leaves the place, and the '
+      'jump button counts it', (t) async {
+    await devOpen(t, chat());
+    await settle(t);
+    for (var i = 0; i < 2; i++) {
+      thread(t).jumpTo(thread(t).maxScrollExtent);
+      await settle(t);
+    }
+    expect(db.olderPages, greaterThan(0));
+    final reading = shown();
+    expect(reading.first, lessThan(_rows - 60));
+    // the pages scrolled in are not new
+    expect(badge(t), 0);
+
+    await arrive(t, 1);
+    await arrive(t, 2);
+    expect(thread(t).pixels, greaterThan(240));
+    expect(shown(), reading);
+    expect(seen('new 2'), isFalse);
+    expect(badge(t), 2);
+    expect(button(t), isTrue);
+
+    // the button takes them down, and the count goes
+    await t.tap(find.byType(JumpDownButton));
+    await settle(t, 12);
+    expect(thread(t).pixels, 0);
+    expect(seen('new 2'), isTrue);
+    expect(badge(t), 0);
+    await devClose(t);
+  });
+
+  testWidgets('a new message at the newest is followed', (t) async {
+    await devOpen(t, chat());
+    await settle(t);
+    expect(thread(t).pixels, 0);
+    await arrive(t, 1);
+    expect(thread(t).pixels, 0);
+    expect(seen('new 1'), isTrue);
+    expect(badge(t), 0);
+    await devClose(t);
+  });
+
+  testWidgets('a new message just above the newest, where no jump button '
+      'shows, is followed', (t) async {
+    await devOpen(t, chat());
+    await settle(t);
+    thread(t).jumpTo(150);
+    await settle(t);
+    expect(button(t), isFalse);
+    for (var n = 1; n <= 3; n++) {
+      await arrive(t, n);
+      expect(thread(t).pixels, 0);
+      expect(seen('new $n'), isTrue);
+      expect(button(t), isFalse);
+      expect(badge(t), 0);
+    }
+    await devClose(t);
+  });
+
+  testWidgets('a new message in the middle of a fling leaves the rows where '
+      'they were going', (t) async {
+    await devOpen(t, chat());
+    await settle(t);
+    // the same fling twice, the second with a message landing on the way
+    Future<(List<int>, double)> fling({bool withNew = false}) async {
+      thread(t).jumpTo(1500);
+      await settle(t);
+      (thread(t) as ScrollPositionWithSingleContext).goBallistic(1200);
+      await t.pump(const Duration(milliseconds: 50));
+      await t.pump(const Duration(milliseconds: 50));
+      expect(thread(t).isScrollingNotifier.value, isTrue);
+      if (withNew) {
+        await mem.insert('messages', {
+          'peer_id': _peer,
+          'direction': 'in',
+          'plaintext': 'new 1',
+          'sent_at': DateTime.now().millisecondsSinceEpoch,
+          'msg_uid': 'new1',
+          'sent': 1,
+        });
+        appState.chatChanged(_peer);
+        // the row lands while the fling runs
+        for (var i = 0; i < 6; i++) {
+          await t.runAsync(
+            () => Future<void>.delayed(const Duration(milliseconds: 20)),
+          );
+          await t.pump(const Duration(milliseconds: 16));
+        }
+        expect(thread(t).isScrollingNotifier.value, isTrue);
+      }
+      for (var i = 0; i < 40; i++) {
+        await t.pump(const Duration(milliseconds: 100));
+      }
+      expect(thread(t).isScrollingNotifier.value, isFalse);
+      final rows = shown();
+      final at = find.text('note ${rows.first}', findRichText: true).first;
+      return (rows, t.getTopLeft(at).dy);
+    }
+
+    final (going, top) = await fling();
+    final (went, topAfter) = await fling(withNew: true);
+    expect(went, going);
+    expect(topAfter, moreOrLessEquals(top, epsilon: 1));
+    expect(badge(t), 1);
+    await devClose(t);
+  });
+
+  testWidgets('opened at an old message, the jump button counts nothing yet', (
+    t,
+  ) async {
+    await devOpen(t, chat(jumpTo: 'uid40'));
+    await settle(t, 12);
+    expect(thread(t).pixels, greaterThan(240));
+    expect(badge(t), 0);
+    await arrive(t, 1);
+    expect(badge(t), 1);
     await devClose(t);
   });
 }
