@@ -789,8 +789,6 @@
   "homeNothingWaitingToSend": "Nada pendiente de enviar",
   "homeWaitingSendsWhenYou": "{count, plural, other{{count} en espera · se envían cuando vuelvas}}",
   "homeWaitingTorIsStill": "{count, plural, other{{count} en espera · tor sigue conectando}}",
-  "homeWaitingForThemTo": "{count, plural, other{{count} en espera · a que te añadan también}}",
-  "homeWaitingForThemToAddYou": "{count, plural, other{{count} en espera · {parked} a que te añadan también}}",
   "homeWaitingSendingNow": "{count, plural, other{{count} en espera · enviando ahora}}",
   "commonRetry": "Reintentar",
   "homeNoKryfosYet": "Aún no hay Kryfos.",

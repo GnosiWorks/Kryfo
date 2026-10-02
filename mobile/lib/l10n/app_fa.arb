@@ -789,8 +789,6 @@
   "homeNothingWaitingToSend": "چیزی در انتظار ارسال نیست",
   "homeWaitingSendsWhenYou": "{count, plural, other{⁨{count}⁩ در انتظار · وقتی آنلاین شوید فرستاده می‌شود}}",
   "homeWaitingTorIsStill": "{count, plural, other{⁨{count}⁩ در انتظار · tor هنوز در حال اتصال است}}",
-  "homeWaitingForThemTo": "{count, plural, other{⁨{count}⁩ در انتظار · تا شما را اضافه کنند}}",
-  "homeWaitingForThemToAddYou": "{count, plural, other{⁨{count}⁩ در انتظار · ⁨{parked}⁩ منتظر تا شما را اضافه کنند}}",
   "homeWaitingSendingNow": "{count, plural, other{⁨{count}⁩ در انتظار · در حال ارسال}}",
   "commonRetry": "تلاش دوباره",
   "homeNoKryfosYet": "هنوز هیچ مخاطبی نیست.",

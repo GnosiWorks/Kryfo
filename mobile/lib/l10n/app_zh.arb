@@ -789,8 +789,6 @@
   "homeNothingWaitingToSend": "没有待发送的内容",
   "homeWaitingSendsWhenYou": "{count, plural, other{{count} 条待发送 · 恢复连接后发出}}",
   "homeWaitingTorIsStill": "{count, plural, other{{count} 条待发送 · tor 仍在连接}}",
-  "homeWaitingForThemTo": "{count, plural, other{{count} 条待发送 · 等对方把你加回去}}",
-  "homeWaitingForThemToAddYou": "{count, plural, other{{count} 条待发送 · {parked} 条在等对方把你加回去}}",
   "homeWaitingSendingNow": "{count, plural, other{{count} 条待发送 · 正在发送}}",
   "commonRetry": "重试",
   "homeNoKryfosYet": "还没有 Kryfo 联系人。",

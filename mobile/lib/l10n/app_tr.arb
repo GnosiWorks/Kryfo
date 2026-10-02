@@ -789,8 +789,6 @@
   "homeNothingWaitingToSend": "Bekleyen mesaj yok",
   "homeWaitingSendsWhenYou": "{count, plural, one{{count} bekliyor · bağlanınca gider} other{{count} bekliyor · bağlanınca gider}}",
   "homeWaitingTorIsStill": "{count, plural, one{{count} bekliyor · tor hâlâ bağlanıyor} other{{count} bekliyor · tor hâlâ bağlanıyor}}",
-  "homeWaitingForThemTo": "{count, plural, one{{count} bekliyor · seni geri eklemeleri gerek} other{{count} bekliyor · seni geri eklemeleri gerek}}",
-  "homeWaitingForThemToAddYou": "{count, plural, one{{count} bekliyor · {parked} tanesi seni geri eklemelerini bekliyor} other{{count} bekliyor · {parked} tanesi seni geri eklemelerini bekliyor}}",
   "homeWaitingSendingNow": "{count, plural, one{{count} bekliyor · şimdi gönderiliyor} other{{count} bekliyor · şimdi gönderiliyor}}",
   "commonRetry": "Yeniden dene",
   "homeNoKryfosYet": "Henüz Kryfo yok.",

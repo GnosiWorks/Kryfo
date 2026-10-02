@@ -1238,25 +1238,26 @@ class _OfflineStrip extends StatelessWidget {
     return ListenableBuilder(
       listenable: appState,
       builder: (context, _) {
-        final n = appState.queued;
-        final p = appState.parkedQueued;
+        // a message for someone who has not added you back waits on them,
+        // and their chat says so: the strip counts only what the phone
+        // itself holds back
+        final n = appState.queued - appState.parkedQueued;
         // a send in flight while the phone can send is not news. the strip
-        // speaks when the phone cannot send, or when a message waits on
-        // someone who has not added you back.
+        // speaks when the phone cannot send.
         final cannotSend = !appState.online || !appState.torReady;
         final offline = !appState.online;
         final torDown = !offline && !appState.torReady;
         // tor coming up is what every launch looks like: with an empty queue
         // there is nothing to explain. offline is worth stating even with
         // nothing queued.
-        final show = (cannotSend || p > 0) && !(torDown && n == 0 && p == 0);
+        final show = cannotSend && !(torDown && n == 0);
         // it opens its height and folds away, so the list slides
         return GrowSwap(
           alignment: Alignment.topCenter,
           child: show
               ? KeyedSubtree(
                   key: const ValueKey('strip'),
-                  child: _strip(n, p, offline, torDown),
+                  child: _strip(n, offline, torDown),
                 )
               : const SizedBox(key: ValueKey('no-strip'), width: 1),
         );
@@ -1264,7 +1265,7 @@ class _OfflineStrip extends StatelessWidget {
     );
   }
 
-  Widget _strip(int n, int p, bool offline, bool torDown) {
+  Widget _strip(int n, bool offline, bool torDown) {
     final tint = offline ? HaloColors.rose : HaloColors.amber;
     final head = offline ? l10n.homeOffline : l10n.homeWaiting;
     // say whether anything is queued, not only that the phone is offline
@@ -1274,10 +1275,6 @@ class _OfflineStrip extends StatelessWidget {
         ? l10n.homeWaitingSendsWhenYou(n)
         : torDown
         ? l10n.homeWaitingTorIsStill(n)
-        : p >= n
-        ? l10n.homeWaitingForThemTo(n)
-        : p > 0
-        ? l10n.homeWaitingForThemToAddYou(n, p)
         : l10n.homeWaitingSendingNow(n);
 
     return Container(

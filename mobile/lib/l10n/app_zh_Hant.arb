@@ -789,8 +789,6 @@
   "homeNothingWaitingToSend": "沒有待傳送的內容",
   "homeWaitingSendsWhenYou": "{count, plural, other{{count} 則等待中 · 你恢復連線後傳送}}",
   "homeWaitingTorIsStill": "{count, plural, other{{count} 則等待中 · tor 仍在連線}}",
-  "homeWaitingForThemTo": "{count, plural, other{{count} 則等待中 · 等對方把你加回來}}",
-  "homeWaitingForThemToAddYou": "{count, plural, other{{count} 則等待中 · {parked} 則在等對方把你加回來}}",
   "homeWaitingSendingNow": "{count, plural, other{{count} 則等待中 · 正在傳送}}",
   "commonRetry": "重試",
   "homeNoKryfosYet": "還沒有 Kryfo 聯絡人。",

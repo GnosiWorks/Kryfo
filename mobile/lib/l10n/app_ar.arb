@@ -789,8 +789,6 @@
   "homeNothingWaitingToSend": "لا شيء ينتظر الإرسال",
   "homeWaitingSendsWhenYou": "{count, plural, other{⁨{count}⁩ في الانتظار · تُرسل عند عودتك}}",
   "homeWaitingTorIsStill": "{count, plural, other{⁨{count}⁩ في الانتظار · ما زال tor يتصل}}",
-  "homeWaitingForThemTo": "{count, plural, other{⁨{count}⁩ في الانتظار · حتى يُعيدوا إضافتك}}",
-  "homeWaitingForThemToAddYou": "{count, plural, other{⁨{count}⁩ في الانتظار · ⁨{parked}⁩ منها حتى يُعيدوا إضافتك}}",
   "homeWaitingSendingNow": "{count, plural, other{⁨{count}⁩ في الانتظار · جارٍ الإرسال الآن}}",
   "commonRetry": "أعد المحاولة",
   "homeNoKryfosYet": "لا جهات اتصال بعد.",

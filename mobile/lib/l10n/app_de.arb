@@ -789,8 +789,6 @@
   "homeNothingWaitingToSend": "Nichts wartet aufs Senden",
   "homeWaitingSendsWhenYou": "{count, plural, one{{count} wartet · geht raus, sobald du zurück bist} other{{count} warten · gehen raus, sobald du zurück bist}}",
   "homeWaitingTorIsStill": "{count, plural, one{{count} wartet · tor verbindet noch} other{{count} warten · tor verbindet noch}}",
-  "homeWaitingForThemTo": "{count, plural, one{{count} wartet · bis du auch hinzugefügt wirst} other{{count} warten · bis du auch hinzugefügt wirst}}",
-  "homeWaitingForThemToAddYou": "{count, plural, one{{count} wartet · {parked} davon, bis du auch hinzugefügt wirst} other{{count} warten · {parked} davon, bis du auch hinzugefügt wirst}}",
   "homeWaitingSendingNow": "{count, plural, one{{count} wartet · wird gerade gesendet} other{{count} warten · werden gerade gesendet}}",
   "commonRetry": "Wiederholen",
   "homeNoKryfosYet": "Noch keine Kryfos.",

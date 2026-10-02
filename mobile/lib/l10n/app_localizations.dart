@@ -4860,18 +4860,6 @@ abstract class AppLocalizations {
   /// screens/home_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, other{{count} waiting · for them to add you back}}'**
-  String homeWaitingForThemTo(int count);
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, other{{count} waiting · {parked} for them to add you back}}'**
-  String homeWaitingForThemToAddYou(int count, int parked);
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'{count, plural, other{{count} waiting · sending now}}'**
   String homeWaitingSendingNow(int count);
 

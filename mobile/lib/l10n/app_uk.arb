@@ -789,8 +789,6 @@
   "homeNothingWaitingToSend": "Черга порожня",
   "homeWaitingSendsWhenYou": "{count, plural, other{{count} в черзі · надішлемо, коли будеш онлайн}}",
   "homeWaitingTorIsStill": "{count, plural, other{{count} в черзі · tor ще підключається}}",
-  "homeWaitingForThemTo": "{count, plural, other{{count} в черзі · чекаємо, поки тебе додадуть у відповідь}}",
-  "homeWaitingForThemToAddYou": "{count, plural, other{{count} в черзі · чекають, поки тебе додадуть у відповідь: {parked}}}",
   "homeWaitingSendingNow": "{count, plural, other{{count} в черзі · надсилаємо}}",
   "commonRetry": "Повторити",
   "homeNoKryfosYet": "Ще жодного Kryfo.",

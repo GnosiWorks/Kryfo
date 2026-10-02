@@ -789,8 +789,6 @@
   "homeNothingWaitingToSend": "Ничего не ждёт отправки",
   "homeWaitingSendsWhenYou": "{count, plural, other{{count} в очереди · отправка, когда снова будешь в сети}}",
   "homeWaitingTorIsStill": "{count, plural, other{{count} в очереди · tor ещё подключается}}",
-  "homeWaitingForThemTo": "{count, plural, other{{count} в очереди · ждём, когда тебя добавят в ответ}}",
-  "homeWaitingForThemToAddYou": "{count, plural, other{{count} в очереди · {parked} — пока тебя не добавят в ответ}}",
   "homeWaitingSendingNow": "{count, plural, other{{count} в очереди · отправляем}}",
   "commonRetry": "Повторить",
   "homeNoKryfosYet": "Пока ни одного Kryfo.",

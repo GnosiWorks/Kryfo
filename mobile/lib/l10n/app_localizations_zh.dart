@@ -2967,37 +2967,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String homeWaitingForThemTo(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString 条待发送 · 等对方把你加回去',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String homeWaitingForThemToAddYou(int count, int parked) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-    final intl.NumberFormat parkedNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String parkedString = parkedNumberFormat.format(parked);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString 条待发送 · $parkedString 条在等对方把你加回去',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String homeWaitingSendingNow(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
@@ -10249,37 +10218,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       count,
       locale: localeName,
       other: '$countString 則等待中 · tor 仍在連線',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String homeWaitingForThemTo(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString 則等待中 · 等對方把你加回來',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String homeWaitingForThemToAddYou(int count, int parked) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-    final intl.NumberFormat parkedNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String parkedString = parkedNumberFormat.format(parked);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString 則等待中 · $parkedString 則在等對方把你加回來',
     );
     return '$_temp0';
   }

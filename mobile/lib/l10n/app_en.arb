@@ -3850,30 +3850,6 @@
       }
     }
   },
-  "homeWaitingForThemTo": "{count, plural, other{{count} waiting · for them to add you back}}",
-  "@homeWaitingForThemTo": {
-    "description": "screens/home_screen.dart",
-    "placeholders": {
-      "count": {
-        "type": "int",
-        "format": "decimalPattern"
-      }
-    }
-  },
-  "homeWaitingForThemToAddYou": "{count, plural, other{{count} waiting · {parked} for them to add you back}}",
-  "@homeWaitingForThemToAddYou": {
-    "description": "screens/home_screen.dart",
-    "placeholders": {
-      "count": {
-        "type": "int",
-        "format": "decimalPattern"
-      },
-      "parked": {
-        "type": "int",
-        "format": "decimalPattern"
-      }
-    }
-  },
   "homeWaitingSendingNow": "{count, plural, other{{count} waiting · sending now}}",
   "@homeWaitingSendingNow": {
     "description": "screens/home_screen.dart",

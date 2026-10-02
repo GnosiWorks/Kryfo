@@ -789,8 +789,6 @@
   "homeNothingWaitingToSend": "Không có gì chờ gửi",
   "homeWaitingSendsWhenYou": "{count, plural, other{{count} đang chờ · sẽ gửi khi bạn trực tuyến lại}}",
   "homeWaitingTorIsStill": "{count, plural, other{{count} đang chờ · tor vẫn đang kết nối}}",
-  "homeWaitingForThemTo": "{count, plural, other{{count} đang chờ · chờ họ thêm lại bạn}}",
-  "homeWaitingForThemToAddYou": "{count, plural, other{{count} đang chờ · {parked} chờ họ thêm lại bạn}}",
   "homeWaitingSendingNow": "{count, plural, other{{count} đang chờ · đang gửi}}",
   "commonRetry": "Thử lại",
   "homeNoKryfosYet": "Chưa có Kryfo nào.",

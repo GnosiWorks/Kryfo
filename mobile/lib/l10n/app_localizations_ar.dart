@@ -3174,38 +3174,6 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String homeWaitingForThemTo(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '⁨$countString⁩ في الانتظار · حتى يُعيدوا إضافتك',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String homeWaitingForThemToAddYou(int count, int parked) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-    final intl.NumberFormat parkedNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String parkedString = parkedNumberFormat.format(parked);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other:
-          '⁨$countString⁩ في الانتظار · ⁨$parkedString⁩ منها حتى يُعيدوا إضافتك',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String homeWaitingSendingNow(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
