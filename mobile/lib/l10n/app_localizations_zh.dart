@@ -63,6 +63,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backupThisFileIsDamaged => '这个文件已损坏，无法读取';
 
   @override
+  String get backupTheRestoreStoppedPartway => '恢复中途停止了';
+
+  @override
   String get backupCouldNotMakeThe => '无法生成密钥';
 
   @override
@@ -4406,6 +4409,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get restoreTheRestoreDidNot => '恢复没有完成。没有做任何改动';
 
   @override
+  String get restoreKryfoClosesRestoreAgain =>
+      '这里的部分数据已经被替换。Kryfo 现在会关闭。请重新打开，再恢复一次这个文件。';
+
+  @override
   String get restoreThisIdentity => '这个身份';
 
   @override
@@ -7316,6 +7323,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get backupThisFileIsDamaged => '這個檔案已損毀，無法讀取';
+
+  @override
+  String get backupTheRestoreStoppedPartway => '還原中途停止了';
 
   @override
   String get backupCouldNotMakeThe => '無法建立金鑰';
@@ -11659,6 +11669,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get restoreTheRestoreDidNot => '還原沒有完成。沒有做任何變更';
+
+  @override
+  String get restoreKryfoClosesRestoreAgain =>
+      '這裡的部分資料已經被取代。Kryfo 現在會關閉。請重新開啟，再還原一次這個檔案。';
 
   @override
   String get restoreThisIdentity => '這個身分';

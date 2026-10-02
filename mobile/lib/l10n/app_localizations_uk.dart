@@ -66,6 +66,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Цей файл пошкоджений, і його неможливо прочитати';
 
   @override
+  String get backupTheRestoreStoppedPartway =>
+      'Відновлення перервалося на півдорозі';
+
+  @override
   String get backupCouldNotMakeThe => 'Не вдалося створити ключ';
 
   @override
@@ -4678,6 +4682,10 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get restoreTheRestoreDidNot =>
       'Відновлення не завершилося. Нічого не змінено';
+
+  @override
+  String get restoreKryfoClosesRestoreAgain =>
+      'Частину даних тут уже замінено. Kryfo зараз закриється. Відкрий його знову й віднови файл ще раз.';
 
   @override
   String get restoreThisIdentity => 'ідентичність із файлу';

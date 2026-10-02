@@ -1085,6 +1085,15 @@ class HaloDb implements GroupOwedStore {
     await d?.close();
   }
 
+  // a restore is putting another file where this one is: closed, and never
+  // opened again by this process, so nothing is stored, and acknowledged,
+  // in a file that is gone at the restart
+  bool _retired = false;
+  Future<void> retire() async {
+    _retired = true;
+    await close();
+  }
+
   // the file copied to [to] whole: a read holds the lock that keeps every
   // writer out until the copy is done
   Future<void> copyTo(String to) async {
@@ -1118,6 +1127,7 @@ class HaloDb implements GroupOwedStore {
   }
 
   Future<Database> open() async {
+    if (_retired) throw StateError('${container.dbFile} was replaced');
     if (_db != null) return _db!;
     final path = await container.dbPath();
     final pw = await _passphrase();
@@ -1675,6 +1685,11 @@ class HaloDb implements GroupOwedStore {
         }
       },
     );
+    // retired while it was opening
+    if (_retired) {
+      await close();
+      throw StateError('${container.dbFile} was replaced');
+    }
     return _db!;
   }
 

@@ -887,7 +887,7 @@ class LockState extends ChangeNotifier {
   // different pin" and never which one it matched
   Future<bool> setupPin(String pin) async {
     if (!_inDecoy) return _setup(pin, PinSlot.app, PinKind.everyday);
-    if (!await _decoyTry()) return false;
+    if (!await _setTry()) return false;
     // the wipe pin went with the turn off, as the sheet said: a pin set
     // again starts without it, so no pin wipes that shows as gone
     if (_dWipeHidden) await _dropDecoyWipe();
@@ -1001,9 +1001,22 @@ class LockState extends ChangeNotifier {
   String get _vaultContainer =>
       (_inDecoy ? HaloContainer.decoyVault : HaloContainer.vault).id;
 
+  // a vault named outright: a restore keeps to the one of the session it
+  // began in, whichever session is open by the time it lands
+  static int _slotOf(HaloContainer vault) => switch (vault) {
+    HaloContainer.vault => PinSlot.vault,
+    HaloContainer.decoyVault => PinSlot.decoyVault,
+    _ => throw ArgumentError('${vault.id} is not a vault'),
+  };
+
   // the vault's pin, its database key sealed into the entry. written last
-  // when a vault is made. false when the pin is in use
-  Future<bool> setupVaultPin(String pin, String keyHex) async {
+  // when a vault is made. false when the pin is in use. [of] names the
+  // vault, else it is the session's own
+  Future<bool> setupVaultPin(
+    String pin,
+    String keyHex, {
+    HaloContainer? of,
+  }) async {
     if (!RegExp(r'^[0-9a-fA-F]{64}$').hasMatch(keyHex)) {
       throw ArgumentError('a vault key is 64 hex characters');
     }
@@ -1011,21 +1024,21 @@ class LockState extends ChangeNotifier {
     if (!_enabled) throw StateError('no app lock');
     return _setup(
       pin,
-      _vaultSlot,
+      of == null ? _vaultSlot : _slotOf(of),
       PinKind.vault,
-      container: _vaultContainer,
+      container: of?.id ?? _vaultContainer,
       wrapPlain: keyHex,
     );
   }
 
   // a new pin for the same vault. the engine opens the key and seals it
   // again, so it never reaches here. the old pin is one confirmPin already
-  // took, so a wrong one throws without counting. false when the new pin is
-  // in use
+  // took, so a wrong one throws. the new one is a try as any set is. false
+  // when it is in use or the pad is held
   Future<bool> rewrapVaultPin(String oldPin, String newPin) async {
     final t = _table;
     if (t == null) throw StateError('no table');
-    if (_inDecoy && !await _decoyTry()) return false;
+    if (!await _setTry()) return false;
     try {
       final out = await _engine.rewrap(
         oldPin,
@@ -1046,11 +1059,13 @@ class LockState extends ChangeNotifier {
   }
 
   // the vault's entry goes back to random bytes: the first step when a
-  // vault is replaced or removed, so no pin opens a half-gone one
-  Future<void> clearVault() async {
+  // vault is replaced or removed, so no pin opens a half-gone one. [of]
+  // names the vault, else it is the session's own
+  Future<void> clearVault({HaloContainer? of}) async {
+    final slot = of == null ? _vaultSlot : _slotOf(of);
     final t = _table;
     if (t == null) return;
-    final out = await _engine.clear(t, _vaultSlot);
+    final out = await _engine.clear(t, slot);
     await _store.write(_kTable, out);
     _table = out;
   }
@@ -1084,10 +1099,13 @@ class LockState extends ChangeNotifier {
     int kind, {
     String? container,
     String wrapPlain = '',
-    // the decoy's try for it is counted already
+    // its try is counted already
     bool tried = false,
   }) async {
-    if (_inDecoy && !tried && !await _decoyTry()) return false;
+    // with no table yet there is no other pin it could find
+    if (!tried && (_inDecoy || _table != null) && !await _setTry()) {
+      return false;
+    }
     final wasOn = _enabled;
     final table = await _ensureTable();
     // a pin changed in place may equal the one it replaces: leave that
@@ -1132,10 +1150,11 @@ class LockState extends ChangeNotifier {
     return true;
   }
 
-  // inside the decoy any pin it sets may be one it cannot see, so each set
-  // is a try at the lock: counted whether it clashes or not, and refused
-  // while the pad is held. false when held
-  Future<bool> _decoyTry() async {
+  // any pin set may land on one the session cannot see, the hidden chats'
+  // or the decoy's own, so each set is a try at the lock: counted whether
+  // it clashes or not, and refused while the pad is held, before the engine
+  // is asked. false when held
+  Future<bool> _setTry() async {
     final uptime = await _clock.uptimeMs();
     final boot = await _clock.bootCount();
     final base = _counters.rebased(uptime, boot);
@@ -1148,17 +1167,9 @@ class LockState extends ChangeNotifier {
   }
 
   // a pin already in use. the screen says "pick a different pin", never
-  // which one, and it counts as a miss. inside the decoy it is taken and
-  // kept nowhere, so the decoy never learns a pin it cannot see. its try
-  // was counted before
-  Future<bool> _clash() async {
-    if (_inDecoy) return true;
-    final uptime = await _clock.uptimeMs();
-    final boot = await _clock.bootCount();
-    _counters = _counters.miss(uptime, boot);
-    await _store.write(_kState, _counters.encode());
-    return false;
-  }
+  // which one. inside the decoy it is taken and kept nowhere, so the decoy
+  // never learns a pin it cannot see. its try was counted before
+  Future<bool> _clash() async => _inDecoy;
 
   Future<void> _dropDecoyWipe() async {
     final t = _table;
@@ -1333,10 +1344,9 @@ class LockState extends ChangeNotifier {
 
 final lockState = LockState();
 
-/// why a new pin was not taken: inside the decoy only a held pad refuses
-/// one, anywhere else it is in use
-String pinNotTakenLine(LockState lock) =>
-    lock.inDecoy && lock.throttleLeft > Duration.zero
+/// why a new pin was not taken: a held pad, or anywhere but the decoy one
+/// in use
+String pinNotTakenLine(LockState lock) => lock.throttleLeft > Duration.zero
     ? tooManyTriesLine(lock.throttleLeft)
     : l10n.pinPickDifferent;
 

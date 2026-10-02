@@ -726,6 +726,49 @@ void main() {
     },
   );
 
+  // someone made to open the everyday app knows its pin. a pin set there
+  // may hit the hidden chats' one, so each is a try at the same limit as
+  // the lock screen's, and a held pad answers before anything is matched
+  test(
+    'outside the decoy each pin set is a try too, and a held pad takes none',
+    () async {
+      final lock = await make();
+      expect(await lock.setupPanicPin('4444'), isTrue);
+      expect(await lock.setupPanicPin('246810'), isFalse);
+      expect(await lock.setupPanicPin('135790'), isFalse);
+      expect(await lock.setupDecoyPin('4446'), isTrue);
+      expect(lock.throttleLeft, Duration.zero);
+      expect(await lock.setupPanicPin('4447'), isTrue);
+      expect(countersOf(store)['r'], 5);
+      expect(countersOf(store)['b'], 5);
+      expect(lock.throttleLeft, greaterThan(Duration.zero));
+      expect(pinNotTakenLine(lock), tooManyTriesLine(lock.throttleLeft));
+      final table = store.m['halo.lock.table'];
+      // held: refused before the engine is asked, the hidden chats' pin
+      // and a free one alike
+      for (final set in <Future<bool> Function()>[
+        () => lock.setupPanicPin('246810'),
+        () => lock.setupPanicPin('4448'),
+        () => lock.setupPin('246810'),
+        () => lock.setupDecoyPin('135790'),
+        () => lock.setupVaultPin('112233', vKey),
+        () => lock.rewrapVaultPin('246810', '112233'),
+      ]) {
+        engine.calls.clear();
+        expect(await set(), isFalse);
+        expect(engine.calls, isEmpty);
+      }
+      expect(store.m['halo.lock.table'], table);
+      expect(countersOf(store)['r'], 5);
+      // the lock screen holds for the same tries
+      lock.lock();
+      expect(await lock.verifyPin('246810'), PinResult.throttled);
+      clock.up += 31000;
+      expect(await lock.setupPanicPin('4449'), isTrue);
+      expect(countersOf(store)['r'], 6);
+    },
+  );
+
   test('outside the decoy a pin in use is said as before', () async {
     final lock = await make();
     expect(await lock.setupPanicPin('5555'), isFalse);
@@ -1069,32 +1112,30 @@ void main() {
     }
   });
 
-  test(
-    'a change that cannot be made writes nothing and counts nothing',
-    () async {
-      final lock = await make();
-      final before = store.m['halo.lock.table'];
-      // a wrong old pin. the flow only passes one confirmPin took
-      await expectLater(
-        lock.rewrapVaultPin('000000', '112233'),
-        throwsStateError,
-      );
-      expect(store.m['halo.lock.table'], before);
-      // an entry that wraps no key
-      store.m['halo.lock.table'] = table({
-        PinSlot.app: ('1234', PinKind.everyday),
-        PinSlot.vault: ('246810', PinKind.vault),
-      });
-      final bare = store.m['halo.lock.table'];
-      final again = await make();
-      await expectLater(
-        again.rewrapVaultPin('246810', '112233'),
-        throwsStateError,
-      );
-      expect(store.m['halo.lock.table'], bare);
-      expect(store.m.containsKey('halo.lock.state'), isFalse);
-    },
-  );
+  test('a change that cannot be made writes nothing but its try', () async {
+    final lock = await make();
+    final before = store.m['halo.lock.table'];
+    // a wrong old pin. the flow only passes one confirmPin took
+    await expectLater(
+      lock.rewrapVaultPin('000000', '112233'),
+      throwsStateError,
+    );
+    expect(store.m['halo.lock.table'], before);
+    // an entry that wraps no key
+    store.m['halo.lock.table'] = table({
+      PinSlot.app: ('1234', PinKind.everyday),
+      PinSlot.vault: ('246810', PinKind.vault),
+    });
+    final bare = store.m['halo.lock.table'];
+    final again = await make();
+    await expectLater(
+      again.rewrapVaultPin('246810', '112233'),
+      throwsStateError,
+    );
+    expect(store.m['halo.lock.table'], bare);
+    // each one a try, as any set is
+    expect(countersOf(store)['r'], 2);
+  });
 
   test('confirming inside a vault takes its pin', () async {
     final lock = await make();
@@ -1155,6 +1196,8 @@ void main() {
         // its own pin is no clash
         if (s.key.split(' ').first == p.key) continue;
         final why = '${s.key} to the ${p.key} pin';
+        // past the hold the try before left
+        clock.up += 8 * 3600000;
         store.log.clear();
         engine.calls.clear();
         expect(await s.value(p.value), isFalse, reason: why);

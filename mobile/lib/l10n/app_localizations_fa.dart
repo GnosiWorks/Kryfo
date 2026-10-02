@@ -66,6 +66,9 @@ class AppLocalizationsFa extends AppLocalizations {
       'این فایل آسیب دیده است و خوانده نمی‌شود';
 
   @override
+  String get backupTheRestoreStoppedPartway => 'بازیابی نیمه‌کاره ماند';
+
+  @override
   String get backupCouldNotMakeThe => 'کلید ساخته نشد';
 
   @override
@@ -4608,6 +4611,10 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get restoreTheRestoreDidNot => 'بازیابی تمام نشد. چیزی تغییر نکرد';
+
+  @override
+  String get restoreKryfoClosesRestoreAgain =>
+      'بخشی از آنچه اینجا بود جایگزین شده است. Kryfo حالا بسته می‌شود. دوباره بازش کنید و فایل را یک بار دیگر بازیابی کنید.';
 
   @override
   String get restoreThisIdentity => 'این هویت';

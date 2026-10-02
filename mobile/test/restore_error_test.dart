@@ -26,7 +26,7 @@ void main() {
     final lines = RestoreFailure.values
         .map((w) => RestoreError(w).line)
         .toSet();
-    expect(lines.length, 4);
+    expect(lines.length, RestoreFailure.values.length);
     for (final l in lines) {
       expect(l.contains('error'), isFalse);
       // sentence case: a capital to open, no shouting

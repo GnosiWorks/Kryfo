@@ -303,4 +303,71 @@ void main() {
     await t.pumpAndSettle();
     expect(quits, 1);
   });
+
+  group('a landing cut short', () {
+    late int quits;
+    setUp(() {
+      quits = 0;
+      quitAfterRestore = () => quits++;
+      lockState.openForTest(enabled: true);
+      FlutterSecureStorage.setMockInitialValues({});
+      inspectForTest = (_) async => const BackupSummary(
+        when: null,
+        version: 2,
+        haloId: 'amber-fox-run',
+        contacts: 2,
+        messages: 9,
+      );
+    });
+    tearDown(() {
+      quitAfterRestore = () => exit(0);
+      forgetRestoredHidden();
+      lockState.openForTest();
+    });
+
+    testWidgets('says so and closes the app, with no PIN asked for hidden '
+        'chats that landed', (t) async {
+      phone(t);
+      await appState.loadMyHandle();
+      restoreForTest = (_) async {
+        restoredHiddenForTest('the hidden key');
+        throw const RestoreError(RestoreFailure.cutShort);
+      };
+      await _openAndRestore(t);
+      expect(find.text(l10n.backupTheRestoreStoppedPartway), findsOneWidget);
+      expect(find.text(l10n.restoreKryfoClosesRestoreAgain), findsOneWidget);
+      expect(find.byType(PinFlowScreen), findsNothing);
+      expect(quits, 0);
+      await t.tap(find.text(l10n.restoreReopenKryfo));
+      await t.pumpAndSettle();
+      expect(quits, 1);
+    });
+
+    testWidgets('under the lock, says so once the same session is open '
+        'again', (t) async {
+      phone(t);
+      await appState.loadMyHandle();
+      final running = Completer<void>();
+      restoreForTest = (_) async {
+        await running.future;
+        throw const RestoreError(RestoreFailure.cutShort);
+      };
+      await _openAndRestore(t, wrap: _rooted);
+      lockState.lock();
+      renewRootNavigator();
+      await t.pumpAndSettle();
+      running.complete();
+      await t.pumpAndSettle();
+      expect(find.text(l10n.backupTheRestoreStoppedPartway), findsNothing);
+
+      lockState.openForTest(enabled: true);
+      lockState.inDecoy = false;
+      await t.pumpAndSettle();
+      expect(find.text(l10n.backupTheRestoreStoppedPartway), findsOneWidget);
+      expect(find.text(l10n.restoreRestored), findsNothing);
+      await t.tap(find.text(l10n.restoreReopenKryfo));
+      await t.pumpAndSettle();
+      expect(quits, 1);
+    });
+  });
 }

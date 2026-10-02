@@ -65,6 +65,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get backupThisFileIsDamaged => 'File ini rusak dan tidak bisa dibaca';
 
   @override
+  String get backupTheRestoreStoppedPartway =>
+      'Pemulihan berhenti di tengah jalan';
+
+  @override
   String get backupCouldNotMakeThe => 'Gagal membuat kunci';
 
   @override
@@ -4595,6 +4599,10 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get restoreTheRestoreDidNot =>
       'Pemulihan tidak selesai. Tidak ada yang diubah';
+
+  @override
+  String get restoreKryfoClosesRestoreAgain =>
+      'Sebagian data di sini sudah diganti. Kryfo akan ditutup sekarang. Buka lagi dan pulihkan file itu sekali lagi.';
 
   @override
   String get restoreThisIdentity => 'identitas ini';

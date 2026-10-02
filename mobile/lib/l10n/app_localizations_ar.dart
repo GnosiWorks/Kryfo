@@ -65,6 +65,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get backupThisFileIsDamaged => 'هذا الملف تالف ولا يمكن قراءته';
 
   @override
+  String get backupTheRestoreStoppedPartway => 'توقفت الاستعادة في منتصفها';
+
+  @override
   String get backupCouldNotMakeThe => 'تعذّر إنشاء المفتاح';
 
   @override
@@ -4681,6 +4684,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get restoreTheRestoreDidNot => 'لم تكتمل الاستعادة. لم يتغيّر شيء';
+
+  @override
+  String get restoreKryfoClosesRestoreAgain =>
+      'استُبدل جزء مما كان هنا. سيُغلق Kryfo الآن. افتحه من جديد واستعد الملف مرة أخرى.';
 
   @override
   String get restoreThisIdentity => 'هذه الهوية';

@@ -65,6 +65,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get backupThisFileIsDamaged => 'Bu dosya hasarlı ve okunamıyor';
 
   @override
+  String get backupTheRestoreStoppedPartway => 'Geri yükleme yarıda kaldı';
+
+  @override
   String get backupCouldNotMakeThe => 'Anahtar oluşturulamadı';
 
   @override
@@ -4616,6 +4619,10 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get restoreTheRestoreDidNot =>
       'Geri yükleme tamamlanmadı. Hiçbir şey değiştirilmedi';
+
+  @override
+  String get restoreKryfoClosesRestoreAgain =>
+      'Buradakilerin bir kısmı zaten değiştirildi. Kryfo şimdi kapanacak. Yeniden aç ve dosyayı bir kez daha geri yükle.';
 
   @override
   String get restoreThisIdentity => 'bu kimlik';
