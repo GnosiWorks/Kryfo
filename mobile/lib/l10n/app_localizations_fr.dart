@@ -1776,10 +1776,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get chatEdited => 'Modifié';
 
   @override
-  String get chatWaitingForThemToComeOnline =>
-      'En attente que la personne se connecte ou vous ajoute à son tour';
-
-  @override
   String get chatFailedTapToRetry => 'Échec · touchez pour réessayer';
 
   @override

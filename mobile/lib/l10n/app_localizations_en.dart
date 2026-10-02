@@ -1758,10 +1758,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatEdited => 'Edited';
 
   @override
-  String get chatWaitingForThemToComeOnline =>
-      'Waiting for them to come online or add you back';
-
-  @override
   String get chatFailedTapToRetry => 'Failed · tap to retry';
 
   @override

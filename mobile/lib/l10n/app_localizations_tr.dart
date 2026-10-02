@@ -1768,10 +1768,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get chatEdited => 'Düzenlendi';
 
   @override
-  String get chatWaitingForThemToComeOnline =>
-      'Çevrimiçi olması ya da seni geri eklemesi bekleniyor';
-
-  @override
   String get chatFailedTapToRetry => 'Başarısız · tekrar için dokun';
 
   @override

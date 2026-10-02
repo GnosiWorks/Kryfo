@@ -2808,12 +2808,6 @@ abstract class AppLocalizations {
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Waiting for them to come online or add you back'**
-  String get chatWaitingForThemToComeOnline;
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Failed · tap to retry'**
   String get chatFailedTapToRetry;
 

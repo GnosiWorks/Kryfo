@@ -1753,10 +1753,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get chatEdited => 'Diubah';
 
   @override
-  String get chatWaitingForThemToComeOnline =>
-      'Menunggu dia online atau menambahkanmu balik';
-
-  @override
   String get chatFailedTapToRetry => 'Gagal · ketuk untuk coba lagi';
 
   @override

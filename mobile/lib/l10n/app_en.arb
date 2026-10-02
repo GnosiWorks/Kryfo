@@ -2241,10 +2241,6 @@
   "@chatEdited": {
     "description": "screens/chat_screen.dart"
   },
-  "chatWaitingForThemToComeOnline": "Waiting for them to come online or add you back",
-  "@chatWaitingForThemToComeOnline": {
-    "description": "screens/chat_screen.dart"
-  },
   "chatFailedTapToRetry": "Failed · tap to retry",
   "@chatFailedTapToRetry": {
     "description": "screens/chat_screen.dart"

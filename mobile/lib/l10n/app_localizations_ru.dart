@@ -1804,10 +1804,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chatEdited => 'Изменено';
 
   @override
-  String get chatWaitingForThemToComeOnline =>
-      'Ждём, когда собеседник появится в сети или добавит тебя в ответ';
-
-  @override
   String get chatFailedTapToRetry => 'Ошибка · нажми, чтобы повторить';
 
   @override

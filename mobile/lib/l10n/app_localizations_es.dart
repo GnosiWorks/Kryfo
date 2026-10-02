@@ -1776,10 +1776,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get chatEdited => 'Editado';
 
   @override
-  String get chatWaitingForThemToComeOnline =>
-      'Esperando a que se conecte o te añada también';
-
-  @override
   String get chatFailedTapToRetry => 'Falló · toca para reintentar';
 
   @override

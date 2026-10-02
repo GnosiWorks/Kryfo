@@ -1751,10 +1751,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatEdited => 'Đã sửa';
 
   @override
-  String get chatWaitingForThemToComeOnline =>
-      'Đang chờ họ trực tuyến hoặc thêm lại bạn';
-
-  @override
   String get chatFailedTapToRetry => 'Thất bại · chạm để thử lại';
 
   @override

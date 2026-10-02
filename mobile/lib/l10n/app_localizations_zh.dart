@@ -1701,9 +1701,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatEdited => '已编辑';
 
   @override
-  String get chatWaitingForThemToComeOnline => '等待对方上线或把你加回去';
-
-  @override
   String get chatFailedTapToRetry => '失败 · 点击重试';
 
   @override
@@ -8987,9 +8984,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get chatEdited => '已編輯';
-
-  @override
-  String get chatWaitingForThemToComeOnline => '正在等對方上線，或把你加回來';
 
   @override
   String get chatFailedTapToRetry => '失敗 · 點一下重試';

@@ -767,11 +767,6 @@ final _calls = <_Call>[
   ('chatPhotoUnavailable', [], (l) => l.chatPhotoUnavailable),
   ('chatDelivered', [], (l) => l.chatDelivered),
   ('chatEdited', [], (l) => l.chatEdited),
-  (
-    'chatWaitingForThemToComeOnline',
-    [],
-    (l) => l.chatWaitingForThemToComeOnline,
-  ),
   ('chatFailedTapToRetry', [], (l) => l.chatFailedTapToRetry),
   ('chatReplyingTo', [], (l) => l.chatReplyingTo),
   ('chatReplyingToYourself', [], (l) => l.chatReplyingToYourself),

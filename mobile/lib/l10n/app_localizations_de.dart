@@ -1773,10 +1773,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chatEdited => 'Bearbeitet';
 
   @override
-  String get chatWaitingForThemToComeOnline =>
-      'Warte, bis die Person online ist oder dich auch hinzufügt';
-
-  @override
   String get chatFailedTapToRetry => 'Fehler · tippe zum Wiederholen';
 
   @override

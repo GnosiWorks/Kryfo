@@ -1770,10 +1770,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get chatEdited => 'ویرایش‌شده';
 
   @override
-  String get chatWaitingForThemToComeOnline =>
-      'در انتظار آنلاین شدن او، یا اینکه شما را اضافه کند';
-
-  @override
   String get chatFailedTapToRetry => 'ناموفق · برای تلاش دوباره بزنید';
 
   @override

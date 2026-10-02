@@ -856,10 +856,6 @@ void main() {
     expect(l.chatPhotoUnavailable, "Photo unavailable");
     expect(l.chatDelivered, "Delivered");
     expect(l.chatEdited, "Edited");
-    expect(
-      l.chatWaitingForThemToComeOnline,
-      "Waiting for them to come online or add you back",
-    );
     expect(l.chatFailedTapToRetry, "Failed · tap to retry");
     expect(l.chatReplyingTo, "Replying to them");
     expect(l.chatReplyingToYourself, "Replying to yourself");

@@ -1799,10 +1799,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get chatEdited => 'Змінено';
 
   @override
-  String get chatWaitingForThemToComeOnline =>
-      'Чекаємо, поки співрозмовник з’явиться в мережі або додасть тебе у відповідь';
-
-  @override
   String get chatFailedTapToRetry => 'Помилка · натисни ще раз';
 
   @override

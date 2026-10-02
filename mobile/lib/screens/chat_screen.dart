@@ -5882,10 +5882,10 @@ class _Bubble extends StatelessWidget {
     final showPill = isOut && pending;
     final reacted = msg.reactions.isNotEmpty;
     final roomTime = motionStill(context) ? Duration.zero : kHouseTime;
-    // full strength: weight and size set the time apart, not a fade
+    // lighter than the message, so the words lead
     final metaColor = (isOut && !frameless)
-        ? HaloColors.onAmber
-        : HaloColors.text2;
+        ? HaloColors.onAmber.withValues(alpha: 0.55)
+        : HaloColors.text3;
     // under a photo or a video there is no amber behind the words
     final onAmberText = isOut && !frameless;
     final remainingMs = msg.burnAt != null
@@ -6369,8 +6369,6 @@ class _Bubble extends StatelessWidget {
                                                                 HaloType
                                                                     .monoFallbackNow,
                                                             fontSize: 9,
-                                                            fontWeight:
-                                                                FontWeight.w500,
                                                             color: metaColor,
                                                             letterSpacing:
                                                                 track(0.4),
@@ -6517,12 +6515,10 @@ class _Bubble extends StatelessWidget {
                                               ),
                                             ),
                                           ],
-                                          if (failedShown || parked) ...[
+                                          if (failedShown) ...[
                                             const SizedBox(height: 4),
                                             Text(
-                                              parked
-                                                  ? l10n.chatWaitingForThemToComeOnline
-                                                  : l10n.chatFailedTapToRetry,
+                                              l10n.chatFailedTapToRetry,
                                               style: TextStyle(
                                                 fontFamily: HaloType.monoFamily,
                                                 fontFamilyFallback:
@@ -6534,8 +6530,6 @@ class _Bubble extends StatelessWidget {
                                                 // colours, as under a sticker
                                                 color: onAmberText
                                                     ? HaloColors.onAmber
-                                                    : parked
-                                                    ? HaloColors.amber
                                                     : HaloColors.rose,
                                                 letterSpacing: track(0.4),
                                               ),
@@ -6751,8 +6745,6 @@ class _Bubble extends StatelessWidget {
                                     burn: burn == null ? null : _fmtBurn(burn),
                                     alert: failedShown
                                         ? l10n.chatFailedTapToRetry
-                                        : parked
-                                        ? l10n.chatWaitingForThemToComeOnline
                                         : null,
                                     alertColor: failedShown
                                         ? HaloColors.rose

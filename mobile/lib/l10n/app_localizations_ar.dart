@@ -1813,9 +1813,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatEdited => 'معدّلة';
 
   @override
-  String get chatWaitingForThemToComeOnline => 'بانتظار أن يتصل أو يضيفك بدوره';
-
-  @override
   String get chatFailedTapToRetry => 'فشل · اضغط لإعادة المحاولة';
 
   @override
