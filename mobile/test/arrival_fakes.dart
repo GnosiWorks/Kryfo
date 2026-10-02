@@ -584,6 +584,9 @@ class ArrivalRows implements HaloDb {
   }
 
   @override
+  Future<void> markSent(String msgUid) async => _hit('markSent', msgUid, null);
+
+  @override
   Future<void> markDelivered(String msgUid, {required String from}) async {
     _hit('markDelivered', msgUid, null);
     delivered.add('$msgUid from $from');
@@ -829,6 +832,7 @@ class ArrivalRows implements HaloDb {
     ctlOut.removeWhere((r) => r['group_id'] == groupId);
     rosterStamps.remove(groupId);
     rosterGoneKeys.remove(groupId);
+    roomSeqs.remove(groupId);
   }
 
   // ---- group controls on their way to each member ----
@@ -909,6 +913,11 @@ class ArrivalRows implements HaloDb {
   // ---- the newest roster each group took ----
   final rosterStamps = <String, int>{};
   final rosterGoneKeys = <String, Set<String>>{};
+  final roomSeqs = <String, int>{};
+
+  @override
+  Future<int> nextRoomSeq(String groupId) async =>
+      roomSeqs[groupId] = (roomSeqs[groupId] ?? 0) + 1;
 
   @override
   Future<int> nextRosterStamp(String groupId, int now) async {

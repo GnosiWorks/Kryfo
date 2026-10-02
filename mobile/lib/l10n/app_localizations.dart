@@ -4080,6 +4080,24 @@ abstract class AppLocalizations {
   /// screens/group_chat_screen.dart
   ///
   /// In en, this message translates to:
+  /// **'Nobody is here yet.'**
+  String get groupChatNobodyHereYet;
+
+  /// screens/group_chat_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Share the room link. Whoever joins reads what is written from then on.'**
+  String get groupChatShareTheRoomLink;
+
+  /// screens/group_chat_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody else is here to read it.'**
+  String get groupChatNobodyToReadIt;
+
+  /// screens/group_chat_screen.dart
+  ///
+  /// In en, this message translates to:
   /// **'This message can\'t be shown'**
   String get groupChatThisMessageCanT;
 

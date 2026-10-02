@@ -97,6 +97,7 @@ import '../widgets/preview_strip.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/moved_strip.dart';
 import '../widgets/empty_chat.dart';
+import '../widgets/swap.dart' show FadeSwap;
 import '../widgets/ease_size.dart';
 import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
@@ -164,6 +165,17 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   int _memberCount = 0;
   // who this phone is in this chat: its kryfo id, or its key in a room
   String _me = '';
+  // nobody else is in it: a room before anyone joins, or a group everyone
+  // else left. a send would reach nobody and only turn failed
+  bool _alone = false;
+
+  // true, and says so, when there is nobody to send to
+  bool _nobodyToRead() {
+    if (!_alone) return false;
+    HapticFeedback.lightImpact();
+    showHaloToast(context, l10n.groupChatNobodyToReadIt);
+    return true;
+  }
 
   String _nameOf(String id) {
     for (final c in appState.contacts) {
@@ -645,6 +657,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       setState(() {
         _groupName = (g['name'] as String?) ?? l10n.groupInfoGroup;
         _memberCount = members.length;
+        _alone = !members.any((m) => m != _me && m != appState.sessionId);
         _roomExpiresAt = g['expires_at'] as int?;
         _isAdmin = ((g['is_admin'] as int?) ?? 0) == 1;
         _reach = reach;
@@ -1208,6 +1221,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   Future<void> _send() async {
     final text = _msgCtrl.text.trim();
     if (text.isEmpty || _sending) return;
+    // the words stay in the field until someone is here
+    if (_nobodyToRead()) return;
     setState(() => _sending = true);
     _msgCtrl.clear();
     final uid = newMsgUid();
@@ -1367,10 +1382,16 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   void _onVoiceComplete(String path, int ms, bool cancelled) {
     if (cancelled || path.isEmpty) return;
+    // the last one left while it recorded: the raw voice goes, unsent
+    if (_nobodyToRead()) {
+      unawaited(shredFile(path));
+      return;
+    }
     _sendGroupVoice(path, ms);
   }
 
   Future<void> _showStickers() async {
+    if (_nobodyToRead()) return;
     final pick = await showStickerSheet(context, container: session.container);
     // the sheet hands focus back to the composer; the keyboard stays down
     FocusManager.instance.primaryFocus?.unfocus();
@@ -1481,6 +1502,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   void _showAttachSheet() {
+    if (_nobodyToRead()) return;
     FocusManager.instance.primaryFocus?.unfocus();
     HapticFeedback.selectionClick();
     showHaloSheet<void>(
@@ -1794,6 +1816,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // the in-app camera: a stripped photo goes through the caption screen; a
   // clip goes as a file and its private copy is shredded once read
   Future<void> _openGroupCamera() async {
+    if (_nobodyToRead()) return;
     final r = await Navigator.of(
       context,
     ).push<CaptureResult>(haloRoute<CaptureResult>(const CameraScreen()));
@@ -3221,15 +3244,28 @@ class _GroupChatScreenState extends State<GroupChatScreen>
               child: !_loaded
                   ? const SizedBox.shrink()
                   : _messages.isEmpty
-                  ? EmptyChat(
-                      icon: Icons.groups_outlined,
-                      tint: _isRoom ? HaloColors.violet : null,
-                      title: _isRoom
-                          ? l10n.chatSayHi
-                          : _isAdmin
-                          ? l10n.groupChatGroupCreatedSayHi
-                          : l10n.groupChatNoMessagesYet,
-                      line: l10n.groupChatEveryoneHereReads,
+                  // the words cross over when the first person joins
+                  ? FadeSwap(
+                      child: EmptyChat(
+                        key: ValueKey(_alone),
+                        icon: Icons.groups_outlined,
+                        tint: _isRoom ? HaloColors.violet : null,
+                        // a group everyone else left is no new group
+                        title: _alone
+                            ? _isRoom
+                                  ? l10n.groupChatNobodyHereYet
+                                  : l10n.groupChatNoMessagesYet
+                            : _isRoom
+                            ? l10n.chatSayHi
+                            : _isAdmin
+                            ? l10n.groupChatGroupCreatedSayHi
+                            : l10n.groupChatNoMessagesYet,
+                        line: !_alone
+                            ? l10n.groupChatEveryoneHereReads
+                            : _isRoom
+                            ? l10n.groupChatShareTheRoomLink
+                            : l10n.groupChatNobodyToReadIt,
+                      ),
                     )
                   : AtmoScope(
                       atmo: _atmosphere,
@@ -3341,6 +3377,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
               onCamera: _openGroupCamera,
               onToggleDisguise: _toggleDisguise,
               onVoiceComplete: _onVoiceComplete,
+              mayRecord: () => !_nobodyToRead(),
             ),
           ],
         ),
@@ -3646,6 +3683,7 @@ class _Composer extends StatelessWidget {
   final VoidCallback onCamera;
   final VoidCallback onToggleDisguise;
   final void Function(String path, int ms, bool cancelled) onVoiceComplete;
+  final bool Function() mayRecord;
   // who @ can offer
   final List<MentionCandidate> members;
   const _Composer({
@@ -3663,6 +3701,7 @@ class _Composer extends StatelessWidget {
     required this.onCamera,
     required this.onToggleDisguise,
     required this.onVoiceComplete,
+    required this.mayRecord,
   });
   @override
   Widget build(BuildContext context) {
@@ -3887,6 +3926,7 @@ class _Composer extends StatelessWidget {
                                   disguise: disguise,
                                   onToggleDisguise: onToggleDisguise,
                                   onComplete: onVoiceComplete,
+                                  mayRecord: mayRecord,
                                 ),
                               ],
                             ),

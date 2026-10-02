@@ -2578,6 +2578,17 @@ class AppLocalizationsUk extends AppLocalizations {
   String get groupChatEveryoneHereReads => 'Усі тут читають те, що ти пишеш.';
 
   @override
+  String get groupChatNobodyHereYet => 'Тут поки нікого немає.';
+
+  @override
+  String get groupChatShareTheRoomLink =>
+      'Поділися посиланням на кімнату. Хто приєднається, читатиме те, що пишуть відтоді.';
+
+  @override
+  String get groupChatNobodyToReadIt =>
+      'Тут більше нікого немає, щоб це прочитати.';
+
+  @override
   String get groupChatThisMessageCanT => 'Це повідомлення неможливо показати';
 
   @override

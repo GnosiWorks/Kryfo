@@ -17,6 +17,7 @@ import 'package:kryfo/main.dart'
     show AppState, HaloEngine, useDatabasesForTest, useEngineForTest;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
+import 'package:kryfo/rooms.dart' show roomFrame, roomFramePlace;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -644,6 +645,101 @@ void main() {
       // a new key still comes in
       await _knock(app, _hexKey(8));
       expect(live.members[_room], [_mine, _hexKey(8)]);
+    });
+  });
+
+  group('a room\'s catch-up out of order', () {
+    // a frame as it comes off [from]'s lane, numbered [n] by its sender
+    Future<({String peer, String cipher})> frame(
+      String from,
+      int? n, {
+      String text = '',
+      String? uid,
+      GroupControl? gc,
+    }) async => (
+      peer: 'room:$_roomPub:$from',
+      cipher: roomFrame(
+        await wrapMessage(
+          text,
+          groupId: _room,
+          msgUid: uid,
+          groupControl: gc,
+          sender: SenderInfo(haloId: from, edPub: '', onion: '', xPub: ''),
+        ),
+        from,
+        number: n,
+      )!,
+    );
+
+    List<String> said(ArrivalRows live) => [
+      for (final m in live.msgs)
+        if (m['group_id'] == _room) m['plaintext'] as String,
+    ];
+
+    test(
+      'a member\'s last words land though their leave comes first',
+      () async {
+        final (live, app) = await _roomWorld();
+        await app.receiveRelay([
+          await frame(_m1, 3, gc: const GroupControl(type: 'leave')),
+          await frame(_m1, 2, text: 'bye', uid: 'u2'),
+          await frame(_m1, 1, text: 'thanks all', uid: 'u1'),
+        ]);
+        await _settle();
+        expect(said(live), ['thanks all', 'bye']);
+        expect(live.members[_room], [_roomPub, _creator]);
+        expect(await live.rosterGone(_room), {_m1});
+      },
+    );
+
+    // only within one batch: the creator's lane and the member's are walked
+    // apart, and a removal handed over first still drops what comes after
+    test('what a member wrote before being taken out, in the same batch, '
+        'is kept', () async {
+      final (live, app) = await _roomWorld();
+      await app.receiveRelay([
+        await frame(
+          _creator,
+          4,
+          gc: const GroupControl(type: 'remove', members: [_m1]),
+        ),
+        // from a version that numbers nothing
+        await frame(_m1, null, text: 'last one', uid: 'u9'),
+      ]);
+      await _settle();
+      expect(said(live), ['last one']);
+      expect(live.members[_room], [_roomPub, _creator]);
+    });
+
+    test('each member\'s words in the order they wrote them', () async {
+      final (live, app) = await _roomWorld();
+      await app.receiveRelay([
+        await frame(_m1, 3, text: 'three', uid: 'm3'),
+        await frame(_creator, 2, text: 'b', uid: 'c2'),
+        await frame(_m1, 1, text: 'one', uid: 'm1'),
+        await frame(_creator, 1, text: 'a', uid: 'c1'),
+        await frame(_m1, 2, text: 'two', uid: 'm2'),
+      ]);
+      await _settle();
+      // each lane sorted in the places it had, the lanes as they came
+      expect(said(live), ['one', 'a', 'two', 'b', 'three']);
+    });
+
+    test('this phone numbers its frames, one number to every member', () async {
+      final (live, app) = await _myRoom(2);
+      await app.sendToGroup(_room, 'first');
+      await app.sendToGroup(_room, 'second');
+      final numbers = <String, Set<int?>>{};
+      for (final (_, msg) in _engine.roomMsgs) {
+        numbers
+            .putIfAbsent(unwrapMessage(msg).message, () => {})
+            .add(roomFramePlace(msg).number);
+      }
+      expect(numbers.keys, ['first', 'second']);
+      expect(_engine.roomMsgs, hasLength(4));
+      expect(numbers['first'], {1});
+      expect(numbers['second'], {2});
+      expect(live.roomSeqs[_room], 2);
     });
   });
 

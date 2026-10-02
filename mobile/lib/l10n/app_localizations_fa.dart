@@ -2535,6 +2535,16 @@ class AppLocalizationsFa extends AppLocalizations {
       'همه‌ی کسانی که اینجا هستند نوشته‌هایت را می‌خوانند.';
 
   @override
+  String get groupChatNobodyHereYet => 'هنوز کسی اینجا نیست.';
+
+  @override
+  String get groupChatShareTheRoomLink =>
+      'پیوند اتاق را به اشتراک بگذار. هر کس بپیوندد، از آن به بعد نوشته‌ها را می‌خواند.';
+
+  @override
+  String get groupChatNobodyToReadIt => 'کس دیگری اینجا نیست که آن را بخواند.';
+
+  @override
   String get groupChatThisMessageCanT => 'این پیام را نمی‌توان نشان داد';
 
   @override

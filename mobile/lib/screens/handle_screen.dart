@@ -87,14 +87,13 @@ class _HandleScreenState extends State<HandleScreen> {
     // same invite the qr code carries, so the registry only holds what is
     // already public
     final uri = await appState.sessionInvite();
-    final r = sessionQuiet
-        ? _unreached
-        : await engine.handleClaim(h, uri, _bio.text.trim());
+    final bio = _bio.text.trim();
+    final r = sessionQuiet ? _unreached : await engine.handleClaim(h, uri, bio);
+    // kept even when the page is gone: the registry already holds it
+    if (r == 'ok') await appState.setMyHandle(h, bio: bio, invite: uri);
     if (!mounted) return;
     setState(() => _busy = false);
     if (r == 'ok') {
-      await appState.setMyHandle(h, bio: _bio.text.trim(), invite: uri);
-      if (!mounted) return;
       setState(() => _claimed = h);
       showHaloToast(context, l10n.handleYouAre(h));
     } else {
@@ -127,11 +126,11 @@ class _HandleScreenState extends State<HandleScreen> {
     if (!sure || !mounted || _claimed != h) return;
     setState(() => _busy = true);
     final r = sessionQuiet ? _unreached : await engine.handleRelease(h);
+    // forgotten even when the page is gone, or the next check claims it again
+    if (r == 'ok') await appState.setMyHandle(null);
     if (!mounted) return;
     setState(() => _busy = false);
     if (r == 'ok') {
-      await appState.setMyHandle(null);
-      if (!mounted) return;
       setState(() {
         _claimed = null;
         _ctrl.clear();

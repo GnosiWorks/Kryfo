@@ -2530,6 +2530,16 @@ class AppLocalizationsTr extends AppLocalizations {
   String get groupChatEveryoneHereReads => 'Buradaki herkes yazdıklarını okur.';
 
   @override
+  String get groupChatNobodyHereYet => 'Henüz burada kimse yok.';
+
+  @override
+  String get groupChatShareTheRoomLink =>
+      'Oda bağlantısını paylaş. Katılan herkes o andan itibaren yazılanları okur.';
+
+  @override
+  String get groupChatNobodyToReadIt => 'Burada bunu okuyacak başka kimse yok.';
+
+  @override
   String get groupChatThisMessageCanT => 'Bu mesaj gösterilemiyor';
 
   @override

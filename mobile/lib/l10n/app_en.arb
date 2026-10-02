@@ -3193,6 +3193,18 @@
   "@groupChatEveryoneHereReads": {
     "description": "screens/group_chat_screen.dart"
   },
+  "groupChatNobodyHereYet": "Nobody is here yet.",
+  "@groupChatNobodyHereYet": {
+    "description": "screens/group_chat_screen.dart"
+  },
+  "groupChatShareTheRoomLink": "Share the room link. Whoever joins reads what is written from then on.",
+  "@groupChatShareTheRoomLink": {
+    "description": "screens/group_chat_screen.dart"
+  },
+  "groupChatNobodyToReadIt": "Nobody else is here to read it.",
+  "@groupChatNobodyToReadIt": {
+    "description": "screens/group_chat_screen.dart"
+  },
   "groupChatThisMessageCanT": "This message can't be shown",
   "@groupChatThisMessageCanT": {
     "description": "screens/group_chat_screen.dart"

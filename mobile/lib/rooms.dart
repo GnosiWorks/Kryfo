@@ -90,7 +90,8 @@ const _roomStripped = ['o', 'e', 'p', 'bg', 'rp'];
 /// the frame it could not rewrite still carries the real onion, the kryfo
 /// id and the push endpoint, which is the one thing a burner room exists to
 /// withhold. the message itself ('m', 'st', 'u', 'q' and the rest) stays.
-String? roomFrame(String wrapped, String pub) {
+/// [number] is the frame's place on its sender's lane, see [roomFramePlace]
+String? roomFrame(String wrapped, String pub, {int? number}) {
   const prefix = 'halo/1:';
   if (!wrapped.startsWith(prefix)) {
     dlog('room: frame is not halo/1, not sending it');
@@ -104,6 +105,7 @@ String? roomFrame(String wrapped, String pub) {
     for (final k in _roomStripped) {
       j.remove(k);
     }
+    if (number != null) j['rn'] = number;
     final out = '$prefix${jsonEncode(j)}';
     // read it back: the fields have to be gone, whatever the encoder did
     final check = jsonDecode(out.substring(prefix.length)) as Map;
@@ -117,6 +119,28 @@ String? roomFrame(String wrapped, String pub) {
   } catch (e) {
     dlog('room: could not strip the frame, not sending it');
     return null;
+  }
+}
+
+/// what a catch-up needs of a room frame to put it back in order: the
+/// number its sender gave it, counting up from one in each room, and
+/// whether it is a leave or a removal, which takes keys off the roster.
+/// a frame with no number, from an older version, keeps where it came
+({int? number, bool shrinks}) roomFramePlace(String content) {
+  const prefix = 'halo/1:';
+  if (!content.startsWith(prefix)) return (number: null, shrinks: false);
+  try {
+    final j = jsonDecode(content.substring(prefix.length));
+    if (j is! Map) return (number: null, shrinks: false);
+    final n = j['rn'];
+    final gc = j['gc'];
+    final t = gc is Map ? gc['t'] : null;
+    return (
+      number: n is int && n > 0 ? n : null,
+      shrinks: t == 'leave' || t == 'remove',
+    );
+  } catch (_) {
+    return (number: null, shrinks: false);
   }
 }
 

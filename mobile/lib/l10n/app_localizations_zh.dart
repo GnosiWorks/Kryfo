@@ -2424,6 +2424,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get groupChatEveryoneHereReads => '这里的每个人都能看到你写的内容。';
 
   @override
+  String get groupChatNobodyHereYet => '这里还没有人。';
+
+  @override
+  String get groupChatShareTheRoomLink => '分享聊天室链接。加入的人从那时起能看到写下的内容。';
+
+  @override
+  String get groupChatNobodyToReadIt => '这里没有其他人能看到。';
+
+  @override
   String get groupChatThisMessageCanT => '这条消息无法显示';
 
   @override
@@ -9677,6 +9686,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get groupChatEveryoneHereReads => '這裡的每個人都能看到你寫的內容。';
+
+  @override
+  String get groupChatNobodyHereYet => '這裡還沒有人。';
+
+  @override
+  String get groupChatShareTheRoomLink => '分享聊天室連結。加入的人從那時起能看到寫下的內容。';
+
+  @override
+  String get groupChatNobodyToReadIt => '這裡沒有其他人能看到。';
 
   @override
   String get groupChatThisMessageCanT => '這則訊息無法顯示';

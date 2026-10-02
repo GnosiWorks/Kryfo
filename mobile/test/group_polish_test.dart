@@ -6,7 +6,9 @@
 // page and the safety number open in their real state, and a member you
 // know is one tap away
 import 'dart:async';
+import 'dart:io';
 
+import 'package:flutter/gestures.dart' show kLongPressTimeout;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -26,7 +28,9 @@ import 'package:kryfo/session.dart';
 import 'package:kryfo/widgets/empty_chat.dart';
 import 'package:kryfo/widgets/halo_switch.dart';
 import 'package:kryfo/widgets/kryfo_avatar.dart';
+import 'package:kryfo/widgets/media_bubbles.dart' show HoldToTalkMic;
 import 'package:kryfo/widgets/motion.dart' show TorStatus;
+import 'package:kryfo/widgets/voice_parts.dart' show VoiceRecordBar;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'pin_flow_fakes.dart' show app, phone;
@@ -34,6 +38,9 @@ import 'pin_flow_fakes.dart' show app, phone;
 const _group = 'g1';
 const _anna = 'thumb-behave-boring';
 const _bo = 'river-stone-quiet';
+// this phone's key in a room, and a joiner's
+final _roomPub = 'ab' * 32;
+final _joiner = 'cd' * 32;
 
 // a phone's database with one group and the people in it. [gate] holds
 // every first read of the group until it completes
@@ -42,10 +49,13 @@ class _Db implements HaloDb {
     this.rows = const [],
     this.members = const ['me', _anna],
     this.blocked = const {},
+    this.room = false,
   });
 
   final List<Map<String, Object?>> rows;
-  final List<String> members;
+  List<String> members;
+  // a burner room this phone made, its link already handed out
+  final bool room;
   final Set<String> blocked;
   Completer<void>? gate;
   // holds the group's whole history, read for its photos
@@ -64,7 +74,19 @@ class _Db implements HaloDb {
   @override
   Future<Map<String, Object?>?> getGroup(String groupId) async {
     await _wait();
-    return {'group_id': _group, 'name': 'Friends', 'is_admin': 1};
+    return {
+      'group_id': _group,
+      'name': 'Friends',
+      'is_admin': 1,
+      if (room) ...{
+        'room_pub': _roomPub,
+        'room_priv': 'ef' * 32,
+        'expires_at': DateTime.now()
+            .add(const Duration(hours: 24))
+            .millisecondsSinceEpoch,
+        'room_seen': 1,
+      },
+    };
   }
 
   @override
@@ -236,6 +258,112 @@ void main() {
     appState.setTorStatusForTest(TorStatus.off);
   });
 
+  // first in the file: the recorder's lock is shared, and a screen closed
+  // without letting it go holds it for every test after
+  group('the group mic with nobody to hear it', () {
+    late Directory tmp;
+    // what the recorder was asked, and the file it wrote
+    late List<String> asked;
+    String? recording;
+
+    void mock(String channel, Future<Object?> Function(MethodCall)? h) =>
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(MethodChannel(channel), h);
+
+    setUp(() {
+      tmp = Directory.systemTemp.createTempSync('group_alone_mic');
+      asked = [];
+      recording = null;
+      mock('plugins.flutter.io/path_provider', (_) async => tmp.path);
+      mock('com.llfbandit.record/messages', (c) async {
+        asked.add(c.method);
+        switch (c.method) {
+          case 'create':
+            final id = (c.arguments as Map)['recorderId'];
+            mock('com.llfbandit.record/events/$id', (_) async => null);
+          case 'hasPermission':
+            return true;
+          case 'start':
+            recording = (c.arguments as Map)['path'] as String;
+            File(recording!).writeAsBytesSync(List.filled(64, 1));
+          case 'stop':
+            return recording;
+        }
+        return null;
+      });
+    });
+
+    tearDown(() {
+      mock('plugins.flutter.io/path_provider', null);
+      mock('com.llfbandit.record/messages', null);
+      tmp.deleteSync(recursive: true);
+    });
+
+    // real file work runs outside the test's clock
+    Future<void> settle(WidgetTester t) async {
+      for (var i = 0; i < 20; i++) {
+        await t.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 20)),
+        );
+        await t.pump(const Duration(milliseconds: 50));
+      }
+    }
+
+    Future<TestGesture> hold(WidgetTester t) async {
+      final g = await t.startGesture(t.getCenter(find.byType(HoldToTalkMic)));
+      await t.pump(kLongPressTimeout + const Duration(milliseconds: 50));
+      await t.pump();
+      return g;
+    }
+
+    testWidgets('in a room nobody joined, it never opens', (t) async {
+      _use(t, _Db(room: true, members: [_roomPub]));
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      final g = await hold(t);
+      await settle(t);
+      expect(find.text(l10n.groupChatNobodyToReadIt), findsWidgets);
+      expect(asked, isNot(contains('start')));
+      expect(find.byType(VoiceRecordBar), findsNothing);
+      await g.up();
+      await settle(t);
+      expect(recording, isNull);
+      await t.pump(const Duration(seconds: 4));
+      await _close(t);
+      // the recorder lets go of the plugin's one lock before the next test
+      await settle(t);
+    });
+
+    testWidgets('the last one gone while it records: the voice is '
+        'shredded, not left behind', (t) async {
+      final db = _use(t, _Db(room: true, members: [_roomPub, _joiner]));
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      // a recorder an earlier screen left is let go first
+      await settle(t);
+      final g = await hold(t);
+      await settle(t);
+      expect(find.byType(VoiceRecordBar), findsOneWidget);
+      expect(File(recording!).existsSync(), isTrue);
+
+      // the joiner leaves before the finger comes up
+      db.members = [_roomPub];
+      appState.chatChanged('group:$_group');
+      await t.pump(const Duration(seconds: 1));
+      await t.pump(const Duration(seconds: 1));
+      expect(find.text(l10n.groupChatNobodyHereYet), findsOneWidget);
+      await g.up();
+      await settle(t);
+      expect(find.text(l10n.groupChatNobodyToReadIt), findsWidgets);
+      expect(File(recording!).existsSync(), isFalse);
+      expect(find.byType(EmptyChat), findsOneWidget);
+      await t.pump(const Duration(seconds: 4));
+      await _close(t);
+      // the recorder lets go of the plugin's one lock before the next test
+      await settle(t);
+    });
+  });
+
   group('group chat', () {
     testWidgets('no empty state while it loads; an empty group gets one', (
       t,
@@ -253,6 +381,57 @@ void main() {
       expect(find.byType(EmptyChat), findsOneWidget);
       expect(find.text(l10n.groupChatGroupCreatedSayHi), findsOneWidget);
       expect(find.text(l10n.groupChatEveryoneHereReads), findsOneWidget);
+      await _close(t);
+    });
+
+    testWidgets('a room nobody joined says so, and holds what is typed', (
+      t,
+    ) async {
+      final db = _use(t, _Db(room: true, members: [_roomPub]));
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      expect(find.text(l10n.groupChatNobodyHereYet), findsOneWidget);
+      expect(find.text(l10n.groupChatShareTheRoomLink), findsOneWidget);
+      expect(find.text(l10n.groupChatEveryoneHereReads), findsNothing);
+      expect(find.text(l10n.chatSayHi), findsNothing);
+
+      // nothing is sent, no bubble turns failed, the words stay put
+      await t.enterText(find.byType(TextField), 'plan for tonight');
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 250));
+      await t.tap(find.bySemanticsLabel(l10n.commonSend));
+      await t.pump();
+      expect(find.text(l10n.groupChatNobodyToReadIt), findsOneWidget);
+      expect(find.byType(EmptyChat), findsOneWidget);
+      expect(
+        t.widget<TextField>(find.byType(TextField)).controller!.text,
+        'plan for tonight',
+      );
+      await t.pump(const Duration(seconds: 4));
+
+      // someone joins: the room reads as one with people in it
+      db.members = [_roomPub, _joiner];
+      appState.chatChanged('group:$_group');
+      await t.pump(const Duration(seconds: 1));
+      await t.pump(const Duration(seconds: 1));
+      expect(find.text(l10n.chatSayHi), findsOneWidget);
+      expect(find.text(l10n.groupChatEveryoneHereReads), findsOneWidget);
+      expect(find.text(l10n.groupChatNobodyHereYet), findsNothing);
+      await t.enterText(find.byType(TextField), '');
+      await _close(t);
+    });
+
+    testWidgets('a group everyone else left is not called new', (t) async {
+      final was = appState.myId;
+      appState.myId = 'me';
+      addTearDown(() => appState.myId = was);
+      _use(t, _Db(members: ['me']));
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      expect(find.text(l10n.groupChatNoMessagesYet), findsOneWidget);
+      expect(find.text(l10n.groupChatNobodyToReadIt), findsOneWidget);
+      expect(find.text(l10n.groupChatGroupCreatedSayHi), findsNothing);
+      expect(find.text(l10n.groupChatEveryoneHereReads), findsNothing);
       await _close(t);
     });
 

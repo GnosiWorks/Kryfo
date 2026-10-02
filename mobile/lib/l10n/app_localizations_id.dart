@@ -2525,6 +2525,17 @@ class AppLocalizationsId extends AppLocalizations {
       'Semua orang di sini membaca apa yang kamu tulis.';
 
   @override
+  String get groupChatNobodyHereYet => 'Belum ada siapa pun di sini.';
+
+  @override
+  String get groupChatShareTheRoomLink =>
+      'Bagikan tautan ruang. Siapa pun yang bergabung membaca apa yang ditulis sejak saat itu.';
+
+  @override
+  String get groupChatNobodyToReadIt =>
+      'Tidak ada orang lain di sini yang bisa membacanya.';
+
+  @override
   String get groupChatThisMessageCanT => 'Pesan ini tidak bisa ditampilkan';
 
   @override

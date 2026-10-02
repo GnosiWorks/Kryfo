@@ -2521,6 +2521,16 @@ class AppLocalizationsVi extends AppLocalizations {
       'Mọi người ở đây đều đọc những gì bạn viết.';
 
   @override
+  String get groupChatNobodyHereYet => 'Chưa có ai ở đây.';
+
+  @override
+  String get groupChatShareTheRoomLink =>
+      'Hãy chia sẻ liên kết phòng. Ai tham gia sẽ đọc được những gì được viết từ lúc đó.';
+
+  @override
+  String get groupChatNobodyToReadIt => 'Không có ai khác ở đây để đọc.';
+
+  @override
   String get groupChatThisMessageCanT => 'Không thể hiển thị tin nhắn này';
 
   @override

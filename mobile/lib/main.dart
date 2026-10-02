@@ -1124,7 +1124,7 @@ class HaloDb implements GroupOwedStore {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 60,
+      version: 61,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -1270,6 +1270,13 @@ class HaloDb implements GroupOwedStore {
         await groupCtlTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 61) {
+          // the number on the next room frame this phone sends
+          await addColumn(
+            db,
+            'ALTER TABLE group_roster ADD COLUMN seq INTEGER NOT NULL DEFAULT 0',
+          );
+        }
         if (oldV < 60) {
           // group controls queued per member, and each group's roster stamp
           await groupCtlTables(db);
@@ -4382,6 +4389,18 @@ class HaloDb implements GroupOwedStore {
     });
   }
 
+  /// the number for the next frame this phone sends into room [groupId]:
+  /// one up from the last, from one
+  Future<int> nextRoomSeq(String groupId) async {
+    final db = await open();
+    return db.transaction((t) async {
+      final held = await _rosterRow(t, groupId);
+      final seq = ((held?['seq'] as int?) ?? 0) + 1;
+      await _putRoster(t, groupId, seq: seq, had: held != null);
+      return seq;
+    });
+  }
+
   /// the room keys that left [groupId] or were taken out
   Future<Set<String>> rosterGone(String groupId) async {
     final db = await open();
@@ -4424,9 +4443,10 @@ class HaloDb implements GroupOwedStore {
     String groupId, {
     int? stamp,
     String? gone,
+    int? seq,
     required bool had,
   }) async {
-    final cols = {'stamp': ?stamp, 'gone': ?gone};
+    final cols = {'stamp': ?stamp, 'gone': ?gone, 'seq': ?seq};
     if (had) {
       await t.update(
         'group_roster',
@@ -5019,7 +5039,8 @@ Future<void> groupCtlTables(DatabaseExecutor db) async {
     CREATE TABLE IF NOT EXISTS group_roster (
       group_id TEXT PRIMARY KEY,
       stamp INTEGER NOT NULL DEFAULT 0,
-      gone TEXT NOT NULL DEFAULT ''
+      gone TEXT NOT NULL DEFAULT '',
+      seq INTEGER NOT NULL DEFAULT 0
     )
   ''');
 }
@@ -11509,12 +11530,16 @@ class AppState extends ChangeNotifier {
     }
 
     // one sender's messages in the order they were sent, strangers' openers
-    // included. room frames stay put
-    final ordered = inSendOrder(
-      msgs,
+    // and room members included
+    final ordered = roomsInSendOrder(
+      inSendOrder(
+        msgs,
+        peer: (m) => m.peer,
+        cipher: (m) => m.cipher,
+        lane: keepsArrivalOrder,
+      ),
       peer: (m) => m.peer,
-      cipher: (m) => m.cipher,
-      lane: keepsArrivalOrder,
+      place: (m) => roomFramePlace(m.cipher),
     );
     for (final m in ordered) {
       // dedup: skip a message we've already handled (see direct-onion note).
@@ -13057,11 +13082,32 @@ class AppState extends ChangeNotifier {
     if (room == null) return _sendOneEnvelope(memberId, wrapped);
     if (memberId == room.pub) return false;
     if (room.expiresAt <= DateTime.now().millisecondsSinceEpoch) return false;
-    final stripped = roomFrame(wrapped, room.pub);
+    int? number;
+    try {
+      number = await _roomFrameNumber(groupId, wrapped);
+    } catch (e) {
+      // unnumbered, it keeps the place it arrives in, as before
+      dlog('room frame number: $e');
+    }
+    final stripped = roomFrame(wrapped, room.pub, number: number);
     if (stripped == null) return false;
     final r = await engine.roomSend(room.priv, memberId, stripped);
     if (r != 'ok') dlog('room send: $r');
     return r == 'ok';
+  }
+
+  // one number per frame, the same to every member it goes to, and again
+  // for a resend while it is remembered here
+  final Map<String, Future<int>> _roomNumbers = {};
+  Future<int> _roomFrameNumber(String groupId, String wrapped) {
+    final k = '$groupId ${sha256.convert(utf8.encode(wrapped))}';
+    final have = _roomNumbers.remove(k);
+    final n = have ?? live.nextRoomSeq(groupId);
+    _roomNumbers[k] = n;
+    while (_roomNumbers.length > 256) {
+      _roomNumbers.remove(_roomNumbers.keys.first);
+    }
+    return n;
   }
 
   // ---- burner rooms ----

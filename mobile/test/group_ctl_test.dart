@@ -488,7 +488,7 @@ void main() {
       expect(await db.takeRosterStamp('g1', 200), isFalse);
       expect(await db.takeRosterStamp('g1', 300), isTrue);
       expect(mem.rows('group_roster'), [
-        {'group_id': 'g1', 'stamp': 300, 'gone': ''},
+        {'group_id': 'g1', 'stamp': 300, 'gone': '', 'seq': 0},
       ]);
       // each group keeps its own
       expect(await db.takeRosterStamp('g2', 50), isTrue);
@@ -513,13 +513,30 @@ void main() {
       expect(await db.rosterGone('g2'), isEmpty);
     });
 
+    test(
+      'a room frame\'s number counts up from one, each room its own',
+      () async {
+        expect(await db.nextRoomSeq('g1'), 1);
+        expect(await db.nextRoomSeq('g1'), 2);
+        expect(await db.nextRoomSeq('g2'), 1);
+        // a roster taken and keys gone leave it where it was, and it them
+        expect(await db.takeRosterStamp('g1', 10), isTrue);
+        await db.noteRosterGone('g1', ['k1']);
+        expect(await db.nextRoomSeq('g1'), 3);
+        expect(await db.rosterGone('g1'), {'k1'});
+        expect(await db.nextRosterStamp('g1', 5), 11);
+      },
+    );
+
     test('goes with the group', () async {
       await _theirGroup(mem, 'grp000000001', ['me', 'bob']);
+      await db.nextRoomSeq('grp000000001');
       await db.noteRosterGone('grp000000001', ['k1']);
       expect(await db.takeRosterStamp('grp000000001', 10), isTrue);
       await db.deleteGroup('grp000000001');
       expect(mem.rows('group_roster'), isEmpty);
       expect(await db.takeRosterStamp('grp000000001', 1), isTrue);
+      expect(await db.nextRoomSeq('grp000000001'), 1);
     });
   });
 
@@ -533,10 +550,10 @@ void main() {
     expect(PollSpec.parse(unwrapMessage(wrapped).poll)?.options, ['Yes', 'No']);
   });
 
-  test('made on create and on the upgrade to 60', () {
+  test('made on create and on the upgrades to 60 and 61', () {
     final src = File('lib/main.dart').readAsStringSync();
     final version = RegExp(r'version: (\d+),').firstMatch(src)!.group(1)!;
-    expect(int.parse(version), 60);
+    expect(int.parse(version), 61);
     final create = src.indexOf('onCreate: (db, _) async {');
     final upgrade = src.indexOf('onUpgrade: (db, oldV, newV) async {');
     expect(
@@ -546,6 +563,13 @@ void main() {
     expect(
       RegExp(
         r'if \(oldV < 60\) \{[^}]*await groupCtlTables\(db\);',
+      ).hasMatch(src.substring(upgrade)),
+      isTrue,
+    );
+    // the room frame number, on a roster table from 60
+    expect(
+      RegExp(
+        r"if \(oldV < 61\) \{[^}]*ALTER TABLE group_roster ADD COLUMN seq ",
       ).hasMatch(src.substring(upgrade)),
       isTrue,
     );

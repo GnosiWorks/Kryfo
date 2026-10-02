@@ -2553,6 +2553,17 @@ class AppLocalizationsDe extends AppLocalizations {
   String get groupChatEveryoneHereReads => 'Alle hier lesen, was du schreibst.';
 
   @override
+  String get groupChatNobodyHereYet => 'Noch ist niemand hier.';
+
+  @override
+  String get groupChatShareTheRoomLink =>
+      'Teile den Raumlink. Wer beitritt, liest ab dann mit, was geschrieben wird.';
+
+  @override
+  String get groupChatNobodyToReadIt =>
+      'Niemand sonst ist hier, um es zu lesen.';
+
+  @override
   String get groupChatThisMessageCanT =>
       'Diese Nachricht kann nicht angezeigt werden';
 
