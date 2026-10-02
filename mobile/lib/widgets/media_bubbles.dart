@@ -516,56 +516,84 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
   Future<void> _start() async {
     if (_busy) return;
     _busy = true;
-    if (!await _rec.hasPermission()) {
+    // cleared in finally: a throw that left it set would kill the mic until
+    // the chat is reopened
+    try {
+      if (!await _rec.hasPermission()) {
+        if (mounted) {
+          showHaloToast(context, l10n.mediaBubblesMicPermissionNeeded);
+        }
+        return;
+      }
+      // the permission prompt eats the long-press: by the time the user
+      // grants, the finger is gone and nothing would stop the recording.
+      // they hold again.
+      if (!_live) return;
+      final dir = await getTemporaryDirectory();
+      final path =
+          '${dir.path}/vn_${DateTime.now().millisecondsSinceEpoch}.wav';
+      await _rec.start(
+        const RecordConfig(
+          encoder: AudioEncoder.wav,
+          sampleRate: 16000,
+          numChannels: 1,
+        ),
+        path: path,
+      );
+      _path = path;
+      // the finger came up while the recorder was starting. _end left it to
+      // this, so without it the mic would keep going with no hold behind it
+      if (!_live) {
+        final p = await _rec.stop();
+        await shredFile(p ?? path);
+        _path = null;
+        return;
+      }
+      _ms = 0;
+      _willCancel = false;
+      _dragDx = 0;
+      _levels.clear();
+      // the level meter only: an error on it leaves the recording going
+      _level = _rec
+          .onAmplitudeChanged(const Duration(milliseconds: 100))
+          .listen((a) {
+            _levels.add(micLevel(a.current));
+            if (_levels.length > 40) _levels.removeAt(0);
+          }, onError: (_) {});
+      HapticFeedback.mediumImpact();
+      _ticker = Timer.periodic(const Duration(milliseconds: 100), (_) {
+        _ms += 100;
+        _overlay?.rebuild();
+      });
+      if (mounted) _bottomInset = MediaQuery.of(context).padding.bottom;
+      _overlay = RecordBarEntry(_bar);
+      if (mounted) Overlay.of(context).insert(_overlay!.entry);
+      // the lock stops the recording and throws it away
+      _unguard = lockGuard.closeOnLock(_abort);
+    } catch (e) {
+      dlog('voice: could not start: $e');
+      _ticker?.cancel();
+      _ticker = null;
+      _level?.cancel();
+      _level = null;
+      _overlay?.remove();
+      _overlay = null;
+      final p = _path;
+      _path = null;
+      // shredFile logs its own failure
+      if (p != null) shredFile(p).ignore();
+      if (mounted) showHaloToast(context, l10n.chatTheMicWouldNot);
+    } finally {
       _busy = false;
-      if (mounted) showHaloToast(context, l10n.mediaBubblesMicPermissionNeeded);
-      return;
     }
-    // the permission prompt eats the long-press: by the time the user grants,
-    // the finger is gone and nothing would stop the recording. they hold
-    // again.
-    if (!_live) {
-      _busy = false;
-      return;
-    }
-    final dir = await getTemporaryDirectory();
-    final path = '${dir.path}/vn_${DateTime.now().millisecondsSinceEpoch}.wav';
-    await _rec.start(
-      const RecordConfig(
-        encoder: AudioEncoder.wav,
-        sampleRate: 16000,
-        numChannels: 1,
-      ),
-      path: path,
-    );
-    _path = path;
-    _ms = 0;
-    _willCancel = false;
-    _dragDx = 0;
-    _levels.clear();
-    // the level meter only: an error on it leaves the recording going
-    _level = _rec.onAmplitudeChanged(const Duration(milliseconds: 100)).listen((
-      a,
-    ) {
-      _levels.add(micLevel(a.current));
-      if (_levels.length > 40) _levels.removeAt(0);
-    }, onError: (_) {});
-    HapticFeedback.mediumImpact();
-    _ticker = Timer.periodic(const Duration(milliseconds: 100), (_) {
-      _ms += 100;
-      _overlay?.rebuild();
-    });
-    if (mounted) _bottomInset = MediaQuery.of(context).padding.bottom;
-    _overlay = RecordBarEntry(_bar);
-    if (mounted) Overlay.of(context).insert(_overlay!.entry);
-    // the lock stops the recording and throws it away
-    _unguard = lockGuard.closeOnLock(_abort);
-    _busy = false;
   }
 
   Future<void> _end() async {
+    // still starting: _start sees the finger is gone and cleans up itself
+    if (_busy) return;
     _unguard?.call();
     _unguard = null;
+    if (_ticker == null && _overlay == null) return;
     _ticker?.cancel();
     _ticker = null;
     _level?.cancel();

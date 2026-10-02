@@ -25,12 +25,87 @@ final Map<String, int> groupSliceDoneAt = {};
 
 // sends to every member that still lacks it while nobody has it yet
 const kGroupSliceTries = 3;
-// rounds at the end for the members a slice missed while others got it.
-// a member that took nothing at all is out of reach, not short a slice, and
-// is left to the next send
+// rounds at the end for the members a slice missed while others got it,
+// one that took nothing included: a session that was still being set up
+// may be there by now
 const kGroupCatchUpPasses = 2;
 // a member that fails this many in a row is left for the next round
 const kGroupMemberMisses = 3;
+
+// the row reads sent once the others have it, so a member still short after
+// the rounds is owed the file and sent it again on the outbox's tick: a
+// session that needs the far side's answer first takes minutes, not seconds
+const kGroupOwedGap = 45000;
+const kGroupOwedGapMost = 600000;
+const kGroupOwedFor = 86400000;
+
+class GroupOwed {
+  GroupOwed(this.resend, this.since) : nextAt = since + kGroupOwedGap;
+  // sends it again to these members only. 'gone' when the row, its file or
+  // its chat is
+  Future<String> Function(List<String> to) resend;
+  final members = <String>{};
+  final int since;
+  int tries = 0;
+  int nextAt;
+}
+
+// msgUid -> what is owed. in memory: a restart forgets it
+final Map<String, GroupOwed> groupMediaOwed = {};
+
+/// a send of [msgUid] to [tried] ended with [short] still missing slices
+void noteGroupShort(
+  String msgUid, {
+  required Iterable<String> tried,
+  required Iterable<String> short,
+  required Future<String> Function(List<String> to) resend,
+  int? now,
+}) {
+  var owed = groupMediaOwed[msgUid];
+  if (owed == null) {
+    if (short.isEmpty) return;
+    owed = GroupOwed(resend, now ?? DateTime.now().millisecondsSinceEpoch);
+    groupMediaOwed[msgUid] = owed;
+  }
+  owed.resend = resend;
+  owed.members
+    ..removeAll(tried)
+    ..addAll(short);
+  if (owed.members.isEmpty) groupMediaOwed.remove(msgUid);
+}
+
+Future<void>? _owedPass;
+
+/// sends again what is owed and due, one file at a time
+Future<void> resendGroupOwed({int? now}) =>
+    _owedPass ??= _resendOwed(now).whenComplete(() => _owedPass = null);
+
+Future<void> _resendOwed(int? now) async {
+  for (final MapEntry(key: uid, value: owed)
+      in groupMediaOwed.entries.toList()) {
+    final at = now ?? DateTime.now().millisecondsSinceEpoch;
+    if (!identical(groupMediaOwed[uid], owed)) continue;
+    if (at - owed.since > kGroupOwedFor) {
+      groupMediaOwed.remove(uid);
+      continue;
+    }
+    if (at < owed.nextAt) continue;
+    owed.tries++;
+    final gap = kGroupOwedGap << (owed.tries < 4 ? owed.tries : 4);
+    owed.nextAt = at + (gap < kGroupOwedGapMost ? gap : kGroupOwedGapMost);
+    String r;
+    try {
+      r = await owed.resend(owed.members.toList());
+    } catch (e) {
+      r = 'error: ${e.runtimeType}';
+    }
+    if (r == 'gone' || r == 'cancelled') {
+      if (identical(groupMediaOwed[uid], owed)) groupMediaOwed.remove(uid);
+    } else if (r != 'ok') {
+      dlog('GRP MEDIA $uid: owed still ($r)');
+    }
+  }
+}
 
 /// the envelope for slice [i] of [total]
 typedef GroupSliceWrap =
@@ -54,6 +129,8 @@ Future<String> sendGroupSlices({
   // sequential on purpose: parallel waves drop slices on the circuit
   Duration gap = const Duration(milliseconds: 150),
   Duration retryPause = const Duration(seconds: 1),
+  // told who is still short when a send that went ends
+  void Function(List<String> short)? onShort,
 }) async {
   if (!mediaInflight.add(msgUid)) return 'busy';
   try {
@@ -67,6 +144,7 @@ Future<String> sendGroupSlices({
       photo: photo,
       gap: gap,
       retryPause: retryPause,
+      onShort: onShort,
     );
   } finally {
     mediaCancelled.remove(msgUid);
@@ -85,6 +163,7 @@ Future<String> _send({
   required bool photo,
   required Duration gap,
   required Duration retryPause,
+  required void Function(List<String> short)? onShort,
 }) async {
   // nobody to send to is not a send that went
   if (members.isEmpty) return 'error: no members';
@@ -202,7 +281,7 @@ Future<String> _send({
   for (var pass = 0; pass < kGroupCatchUpPasses; pass++) {
     final short = [
       for (final m in members)
-        if (has(m).isNotEmpty && has(m).length < total) m,
+        if (has(m).length < total) m,
     ];
     if (short.isEmpty) break;
     await Future.delayed(retryPause * (2 * (pass + 1)));
@@ -211,11 +290,19 @@ Future<String> _send({
     await Future.wait([for (final m in short) catchUp(m)]);
     if (cancelled()) return 'cancelled';
   }
-  final short = members.where((m) => has(m).length < total).length;
-  if (short > 0) {
-    dlog('GRP MEDIA $msgUid: $short member(s) still short after catch-up');
+  final short = [
+    for (final m in members)
+      if (has(m).length < total) m,
+  ];
+  if (short.isNotEmpty) {
+    dlog('GRP MEDIA $msgUid: ${short.length} member(s) owed the file');
   }
-  groupSliceDone.remove(msgUid);
-  groupSliceDoneAt.remove(msgUid);
+  onShort?.call(short);
+  // what the owed have is kept, so a send to them soon after resumes
+  done.removeWhere((m, _) => !short.contains(m));
+  if (short.isEmpty) {
+    groupSliceDone.remove(msgUid);
+    groupSliceDoneAt.remove(msgUid);
+  }
   return 'ok';
 }
