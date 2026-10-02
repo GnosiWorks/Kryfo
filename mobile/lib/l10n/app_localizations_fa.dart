@@ -608,6 +608,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'اولین اتصال یکی دو دقیقه طول می‌کشد تا tor مسیری خصوصی بسازد. پس از آن مسیر در حافظه می‌ماند، پس Kryfo دفعه‌های بعد خیلی سریع‌تر باز می‌شود.';
 
   @override
+  String get appTorNoRelayYet =>
+      'اتصال tor برقرار است، اما هنوز هیچ رله‌ای پاسخ نمی‌دهد. Kryfo همچنان تلاش می‌کند و پیام‌ها همین‌جا می‌مانند تا یکی پاسخ دهد.';
+
+  @override
   String get appRelayAndFastModes =>
       'حالت‌های رله و سریع tor را دور می‌زنند و سریع‌ترند. این حالت‌ها در تنظیمات، زیر «سرعت و حریم خصوصی» هستند و هر کدام می‌گوید چه بهایی دارد.';
 
@@ -2650,6 +2654,21 @@ class AppLocalizationsFa extends AppLocalizations {
       other: 'فرستاده شد · ⁨$haveString⁩ از ⁨$countString⁩ نفر دریافت کرده‌اند',
       one: 'فرستاده شد · ⁨$haveString⁩ از ⁨$countString⁩ نفر دریافت کرده',
       zero: 'فرستاده شد · در راه',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String groupChatFileGaveUp(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'فرستاده شد · ⁨$countString⁩ نفر دریافت نکردند',
+      one: 'فرستاده شد · ⁨$countString⁩ نفر دریافت نکرد',
     );
     return '$_temp0';
   }

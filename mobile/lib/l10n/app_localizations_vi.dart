@@ -602,6 +602,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Lần kết nối đầu tiên mất một hai phút trong lúc tor dựng một tuyến đường riêng tư. Sau đó tuyến này được lưu lại, nên những lần mở Kryfo sau sẽ nhanh hơn nhiều.';
 
   @override
+  String get appTorNoRelayYet =>
+      'Tor đã chạy, nhưng chưa có relay nào phản hồi. Kryfo vẫn tiếp tục thử, và tin nhắn sẽ chờ ở đây cho đến khi có relay phản hồi.';
+
+  @override
   String get appRelayAndFastModes =>
       'Chế độ relay và chế độ nhanh bỏ qua tor và nhanh hơn. Chúng nằm trong cài đặt, mục tốc độ & riêng tư, và mỗi chế độ đều nói rõ cái giá phải trả.';
 
@@ -2634,6 +2638,20 @@ class AppLocalizationsVi extends AppLocalizations {
       locale: localeName,
       other: 'Đã gửi · $haveString trên $countString người đã nhận',
       zero: 'Đã gửi · đang trên đường',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String groupChatFileGaveUp(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Đã gửi · $countString người không nhận được',
     );
     return '$_temp0';
   }

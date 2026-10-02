@@ -628,6 +628,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Перше підключення триває хвилину-дві, поки tor будує приватний маршрут. Потім це зберігається в кеші, тож надалі Kryfo відкривається набагато швидше.';
 
   @override
+  String get appTorNoRelayYet =>
+      'Tor запущено, але жоден ретранслятор поки не відповідає. Kryfo пробує далі, а повідомлення чекають тут, доки якийсь не відповість.';
+
+  @override
   String get appRelayAndFastModes =>
       'Режим ретранслятора і швидкий режим обходять tor і працюють швидше. Вони в налаштуваннях, у розділі «Швидкість і приватність», і кожен каже, чим за це платиш.';
 
@@ -2699,6 +2703,23 @@ class AppLocalizationsUk extends AppLocalizations {
       few: 'Надіслано · є у $haveString з $countString',
       one: 'Надіслано · є у $haveString з $countString',
       zero: 'Надіслано · у дорозі',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String groupChatFileGaveUp(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Надіслано · $countString не отримали',
+      many: 'Надіслано · $countString не отримали',
+      few: 'Надіслано · $countString не отримали',
+      one: 'Надіслано · $countString не отримав',
     );
     return '$_temp0';
   }

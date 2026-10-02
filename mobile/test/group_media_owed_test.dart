@@ -14,6 +14,7 @@ import 'package:flutter/material.dart' hide Curve;
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/intl.dart' show NumberFormat;
 import 'package:kryfo/container.dart';
 import 'package:kryfo/group_media_send.dart';
 import 'package:kryfo/l10n/l10n.dart';
@@ -32,6 +33,7 @@ import 'package:kryfo/router.dart';
 import 'package:kryfo/screens/group_chat_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
+import 'package:kryfo/theme.dart';
 import 'package:kryfo/vault_life.dart' show chatTables;
 import 'package:kryfo/widgets/chat_parts.dart' show GrowSwap;
 import 'package:kryfo/widgets/file_reach.dart';
@@ -204,7 +206,7 @@ Map<String, Object?> _owed(MemDb mem, String member, {String uid = _uid}) => mem
 class _ScreenDb implements HaloDb {
   _ScreenDb(this.reach);
 
-  Map<String, ({int have, int of})> reach;
+  Map<String, ({int have, int of, int gaveUp})> reach;
 
   final _rows = [
     {
@@ -265,7 +267,7 @@ class _ScreenDb implements HaloDb {
     List<String> uids,
   ) async => {};
   @override
-  Future<Map<String, ({int have, int of})>> groupFileReach(
+  Future<Map<String, ({int have, int of, int gaveUp})>> groupFileReach(
     String groupId,
   ) async => reach;
   @override
@@ -590,7 +592,7 @@ void main() {
       expect(owed['have'], '');
       expect(owed['tries'], 0);
       expect(owed['next_at'] as int, greaterThan(owed['since'] as int));
-      expect(await db.groupFileReach(_g), {_uid: (have: 1, of: 2)});
+      expect(await db.groupFileReach(_g), {_uid: (have: 1, of: 2, gaveUp: 0)});
 
       // before its wait is up nothing goes
       await tick();
@@ -808,10 +810,14 @@ void main() {
       ];
 
       test('a member taken out, and the line counts one fewer', () async {
-        expect(await db.groupFileReach(_g), {_uid: (have: 1, of: 3)});
+        expect(await db.groupFileReach(_g), {
+          _uid: (have: 1, of: 3, gaveUp: 0),
+        });
         await db.removeGroupMember(_g, 'dave');
         expect(left(), ['$_uid:carol', 'elsewhere:bob']);
-        expect(await db.groupFileReach(_g), {_uid: (have: 1, of: 2)});
+        expect(await db.groupFileReach(_g), {
+          _uid: (have: 1, of: 2, gaveUp: 0),
+        });
       });
 
       test('a member no longer on the list', () async {
@@ -849,15 +855,109 @@ void main() {
         await tick();
         expect(io.took('dave'), isEmpty);
         expect(left(), ['$_uid:carol', '$_uid:dave', 'elsewhere:bob']);
-        expect(await db.groupFileReach(_g), {_uid: (have: 1, of: 3)});
+        expect(await db.groupFileReach(_g), {
+          _uid: (have: 1, of: 3, gaveUp: 1),
+        });
+        // carol is still tried, so the line still counts who has it
+        expect(fileReachWords(1, 3, 1), 'Sent · 1 of 3 has it');
         // a heal gives it one more go
         expect(await db.groupOwedDueNow('dave'), 1);
         expect(_owed(mem, 'dave')['tries'], kGroupOwedTries - 1);
         await tick();
         expect(io.took('dave'), [0, 1, 2]);
         expect(left(), ['$_uid:carol', 'elsewhere:bob']);
-        expect(await db.groupFileReach(_g), {_uid: (have: 2, of: 3)});
+        expect(await db.groupFileReach(_g), {
+          _uid: (have: 2, of: 3, gaveUp: 0),
+        });
       });
+
+      test('once all who lack it are past their tries, the line says how '
+          'many did not get it, until one heals', () async {
+        await mem.update(
+          'group_media_owed',
+          {'tries': kGroupOwedTries},
+          where: 'msg_uid = ?',
+          whereArgs: [_uid],
+        );
+        final reach = await db.groupFileReach(_g);
+        expect(reach, {_uid: (have: 1, of: 3, gaveUp: 2)});
+        final r = reach[_uid]!;
+        expect(fileReachGaveUp(r.have, r.of, r.gaveUp), isTrue);
+        expect(
+          fileReachWords(r.have, r.of, r.gaveUp),
+          "Sent · 2 didn't get it",
+        );
+        // a heal gives dave one more go: tried again, so counted again
+        expect(await db.groupOwedDueNow('dave'), 1);
+        final again = (await db.groupFileReach(_g))[_uid]!;
+        expect(again, (have: 1, of: 3, gaveUp: 1));
+        expect(
+          fileReachWords(again.have, again.of, again.gaveUp),
+          'Sent · 1 of 3 has it',
+        );
+      });
+
+      // a pass that ends on later, busy or an error says nothing on its own
+      test('the last try turns the line, whatever the send answered', () async {
+        await mem.update(
+          'group_media_owed',
+          {'tries': kGroupOwedTries - 1},
+          where: 'msg_uid = ?',
+          whereArgs: [_uid],
+        );
+        // the row reads unsent again: the app's own send answers later
+        await mem.update(
+          'messages',
+          {'sent': 0},
+          where: 'msg_uid = ?',
+          whereArgs: [_uid],
+        );
+        var moved = 0;
+        void count() => moved++;
+        groupOwedTick.addListener(count);
+        addTearDown(() => groupOwedTick.removeListener(count));
+        await tick();
+        expect(io.took('carol'), isEmpty);
+        expect(io.took('dave'), isEmpty);
+        expect(_owed(mem, 'carol')['tries'], kGroupOwedTries);
+        expect(moved, greaterThan(0));
+        final r = (await db.groupFileReach(_g))[_uid]!;
+        expect(r, (have: 1, of: 3, gaveUp: 2));
+        expect(
+          fileReachWords(r.have, r.of, r.gaveUp),
+          "Sent · 2 didn't get it",
+        );
+      });
+
+      // tor not ready, so nothing goes yet: the line still follows the heal
+      test(
+        'a heal turns the line back to counting, with tor not ready',
+        () async {
+          await mem.update(
+            'group_media_owed',
+            {'tries': kGroupOwedTries},
+            where: 'msg_uid = ?',
+            whereArgs: [_uid],
+          );
+          app.sendModeForTest = 'private';
+          app.setTorStatusForTest(TorStatus.starting);
+          expect(app.torReady, isFalse);
+          var moved = 0;
+          void count() => moved++;
+          groupOwedTick.addListener(count);
+          addTearDown(() => groupOwedTick.removeListener(count));
+          await app.owedDueForTest('dave');
+          await app.owedPassForTest;
+          expect(io.took('dave'), isEmpty);
+          expect(moved, greaterThan(0));
+          final r = (await db.groupFileReach(_g))[_uid]!;
+          expect(r, (have: 1, of: 3, gaveUp: 1));
+          expect(
+            fileReachWords(r.have, r.of, r.gaveUp),
+            'Sent · 1 of 3 has it',
+          );
+        },
+      );
 
       test('leaving the group', () async {
         await app.leaveGroupAndAnnounce(_g);
@@ -1148,26 +1248,110 @@ void main() {
       }
     });
 
-    Widget pill(int have, int of, {bool still = false, Locale? locale}) =>
-        MaterialApp(
-          locale: locale,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: MediaQuery(
-            data: MediaQueryData(disableAnimations: still),
-            child: Scaffold(
-              body: Center(
-                child: GrowSwap(
-                  child: FileReachPill(
-                    key: ValueKey('reach-$have-$of'),
-                    have: have,
-                    of: of,
-                  ),
-                ),
+    test('says honestly how many did not get it, in every form', () {
+      final en = lookupAppLocalizations(const Locale('en'));
+      expect(en.groupChatFileGaveUp(1), "Sent · 1 didn't get it");
+      expect(en.groupChatFileGaveUp(3), "Sent · 3 didn't get it");
+      expect(en.groupChatFileGaveUp(1200), "Sent · 1,200 didn't get it");
+      final de = lookupAppLocalizations(const Locale('de'));
+      expect(de.groupChatFileGaveUp(1), 'Gesendet · 1 hat es nicht bekommen');
+      expect(de.groupChatFileGaveUp(2), 'Gesendet · 2 haben es nicht bekommen');
+      final ru = lookupAppLocalizations(const Locale('ru'));
+      expect(ru.groupChatFileGaveUp(1), 'Отправлено · 1 не получил');
+      expect(ru.groupChatFileGaveUp(3), 'Отправлено · 3 не получили');
+      expect(ru.groupChatFileGaveUp(5), 'Отправлено · 5 не получили');
+      expect(ru.groupChatFileGaveUp(21), 'Отправлено · 21 не получил');
+      final uk = lookupAppLocalizations(const Locale('uk'));
+      expect(uk.groupChatFileGaveUp(1), 'Надіслано · 1 не отримав');
+      expect(uk.groupChatFileGaveUp(2), 'Надіслано · 2 не отримали');
+      final fr = lookupAppLocalizations(const Locale('fr'));
+      expect(fr.groupChatFileGaveUp(1), 'Envoyé · 1 ne l’a pas reçu');
+      expect(fr.groupChatFileGaveUp(2), 'Envoyé · 2 ne l’ont pas reçu');
+      final fa = lookupAppLocalizations(const Locale('fa'));
+      expect(fa.groupChatFileGaveUp(1), endsWith('دریافت نکرد'));
+      expect(fa.groupChatFileGaveUp(2), endsWith('دریافت نکردند'));
+      for (final locale in AppLocalizations.supportedLocales) {
+        final l = lookupAppLocalizations(locale);
+        for (final n in [1, 2, 3, 5, 11, 21, 100, 1000]) {
+          final s = l.groupChatFileGaveUp(n);
+          final num = NumberFormat.decimalPattern(l.localeName).format(n);
+          expect(s, contains(num), reason: '$locale $n');
+          expect(s, isNot(contains('{')), reason: '$locale $n');
+          expect(s, isNot(contains('\u2014')), reason: '$locale $n');
+          // never the line that is still counting
+          for (final of in [n, n + 1, n + 2]) {
+            for (final have in [0, 1, of - n]) {
+              expect(
+                s,
+                isNot(l.groupChatFileReach(have, of)),
+                reason: '$locale $n',
+              );
+            }
+          }
+        }
+        // it is the same sent as the counting line starts with
+        final sent = l.groupChatFileReach(0, 4).split(' · ').first;
+        expect(l.groupChatFileGaveUp(2), startsWith('$sent · '));
+      }
+      for (final code in ['ar', 'fa']) {
+        final s = lookupAppLocalizations(Locale(code)).groupChatFileGaveUp(2);
+        expect('\u2068'.allMatches(s).length, 1, reason: code);
+        expect('\u2069'.allMatches(s).length, 1, reason: code);
+      }
+    });
+
+    test('counts who has it while anyone is still tried', () {
+      // nobody given up on
+      expect(fileReachWords(1, 3, 0), 'Sent · 1 of 3 has it');
+      // one given up on, one still tried
+      expect(fileReachWords(1, 3, 1), 'Sent · 1 of 3 has it');
+      expect(fileReachGaveUp(1, 3, 1), isFalse);
+      // only the given up left
+      expect(fileReachWords(1, 3, 2), "Sent · 2 didn't get it");
+      expect(fileReachWords(0, 3, 3), "Sent · 3 didn't get it");
+      expect(fileReachWords(2, 3, 1), "Sent · 1 didn't get it");
+      expect(fileReachGaveUp(2, 3, 1), isTrue);
+    });
+
+    Widget pill(
+      int have,
+      int of, {
+      int gaveUp = 0,
+      bool still = false,
+      Locale? locale,
+    }) => MaterialApp(
+      locale: locale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: MediaQuery(
+        data: MediaQueryData(disableAnimations: still),
+        child: Scaffold(
+          body: Center(
+            child: GrowSwap(
+              child: FileReachPill(
+                key: ValueKey('reach-$have-$of-$gaveUp'),
+                have: have,
+                of: of,
+                gaveUp: gaveUp,
               ),
             ),
           ),
-        );
+        ),
+      ),
+    );
+
+    testWidgets('says it in rose once nothing more is coming', (t) async {
+      await t.pumpWidget(pill(1, 3, gaveUp: 1));
+      expect(find.text('Sent · 1 of 3 has it'), findsOneWidget);
+      Color colour(String s) => t.widget<Text>(find.text(s)).style!.color!;
+      expect(colour('Sent · 1 of 3 has it'), HaloColors.amber);
+      await t.pumpWidget(pill(1, 3, gaveUp: 2));
+      await t.pumpAndSettle();
+      expect(find.text('Sent · 1 of 3 has it'), findsNothing);
+      expect(find.text("Sent · 2 didn't get it"), findsOneWidget);
+      expect(find.bySemanticsLabel("Sent · 2 didn't get it"), findsOneWidget);
+      expect(colour("Sent · 2 didn't get it"), HaloColors.rose);
+    });
 
     testWidgets('changes smoothly as more have it', (t) async {
       await t.pumpWidget(pill(2, 4));
@@ -1203,7 +1387,7 @@ void main() {
 
     Future<_ScreenDb> openScreen(WidgetTester t, {bool still = false}) async {
       phone(t);
-      final db = _ScreenDb({_uid: (have: 1, of: 3)});
+      final db = _ScreenDb({_uid: (have: 1, of: 3, gaveUp: 0)});
       useDatabasesForTest(db, Session(db));
       appState.sendModeForTest = 'private';
       appState.setTorStatusForTest(TorStatus.off);
@@ -1228,13 +1412,36 @@ void main() {
         final db = await openScreen(t, still: still);
         expect(find.text('Sent · 1 of 3 has it'), findsOneWidget);
 
-        db.reach = {_uid: (have: 2, of: 3)};
+        db.reach = {_uid: (have: 2, of: 3, gaveUp: 0)};
         groupOwedTick.value++;
         await t.pump();
         await t.pump(Duration(milliseconds: still ? 0 : 400));
         await t.pump(Duration(milliseconds: still ? 0 : 400));
         expect(find.text('Sent · 1 of 3 has it'), findsNothing);
         expect(find.text('Sent · 2 of 3 have it'), findsOneWidget);
+
+        // a change that reads the same is no change: one pill, no fade
+        db.reach = {_uid: (have: 1, of: 4, gaveUp: 0)};
+        groupOwedTick.value++;
+        await t.pump();
+        await t.pump(Duration(milliseconds: still ? 0 : 400));
+        await t.pump(Duration(milliseconds: still ? 0 : 400));
+        expect(find.text('Sent · 1 of 4 has it'), findsOneWidget);
+        db.reach = {_uid: (have: 1, of: 4, gaveUp: 1)};
+        groupOwedTick.value++;
+        await t.pump();
+        await t.pump();
+        await t.pump(Duration(milliseconds: still ? 0 : 60));
+        expect(find.text('Sent · 1 of 4 has it'), findsOneWidget);
+
+        // the last one is past its tries: said, not counted on
+        db.reach = {_uid: (have: 2, of: 3, gaveUp: 1)};
+        groupOwedTick.value++;
+        await t.pump();
+        await t.pump(Duration(milliseconds: still ? 0 : 400));
+        await t.pump(Duration(milliseconds: still ? 0 : 400));
+        expect(find.text('Sent · 2 of 3 have it'), findsNothing);
+        expect(find.text("Sent · 1 didn't get it"), findsOneWidget);
 
         // all have it: the plain sent state
         db.reach = {};
@@ -1249,14 +1456,22 @@ void main() {
 
     test('its colour is the app\'s amber, never a grey', () {
       final src = sourceOf('lib/widgets/file_reach.dart');
-      expect(src, contains('color: HaloColors.amber)'));
+      expect(
+        src,
+        contains('color: lost ? HaloColors.rose : HaloColors.amber,'),
+      );
       expect(src, isNot(contains('text2')));
       expect(src, isNot(contains('text3')));
     });
 
     test('sits under our bubble once it is sent, until all have it', () {
       final screen = sourceOf('lib/screens/group_chat_screen.dart');
-      final at = screen.indexOf('FileReachPill(have: r.have, of: r.of)');
+      final at = screen.indexOf(
+        'FileReachPill(\n'
+        '                                  have: r.have,\n'
+        '                                  of: r.of,\n'
+        '                                  gaveUp: r.gaveUp,',
+      );
       expect(at, greaterThan(0));
       final swap = screen.lastIndexOf('GrowSwap(', at);
       expect(screen.substring(swap, at), contains('!m.pending'));

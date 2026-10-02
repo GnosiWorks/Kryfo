@@ -150,7 +150,7 @@ Future<void> resendGroupOwed(
     // another send has the row: the next tick sees what it left
     if (mediaInflight.contains(uid)) continue;
     // a member past its tries is tried no more. its row stays, so the line
-    // under the bubble still counts it as not having the file
+    // under the bubble still counts it, as one that did not get the file
     final go = [
       for (final o in owed)
         if (o.tries < kGroupOwedTries) o,
@@ -170,13 +170,16 @@ Future<void> resendGroupOwed(
     if (r == 'gone') {
       await store.dropGroupOwed(uid);
       groupOwedTick.value++;
-    } else if (r == 'error: quiet') {
-      return;
-    } else if (r != 'ok') {
+      continue;
+    }
+    // the last try for some: their line turns to did not get it, whatever
+    // this one answered. a later or a busy says nothing else
+    final last = go.any((o) => o.tries + 1 >= kGroupOwedTries);
+    if (last) groupOwedTick.value++;
+    if (r == 'error: quiet') return;
+    if (r != 'ok') {
       dlog('GRP MEDIA $uid: still owed ($r)');
-      if (go.any((o) => o.tries + 1 >= kGroupOwedTries)) {
-        dlog('GRP MEDIA $uid: no more tries for some members');
-      }
+      if (last) dlog('GRP MEDIA $uid: no more tries for some members');
     }
   }
 }

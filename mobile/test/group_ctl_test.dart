@@ -404,7 +404,7 @@ void main() {
       expect(io.got('carol'), isEmpty);
       // sent, and owed to carol
       expect(mem.rows('messages').single['sent'], 1);
-      expect(await db.groupFileReach(g), {'t1': (have: 1, of: 2)});
+      expect(await db.groupFileReach(g), {'t1': (have: 1, of: 2, gaveUp: 0)});
 
       // the message's wait is up before the create's: the create still
       // goes first
@@ -452,8 +452,8 @@ void main() {
       );
       expect(io.got('carol'), isEmpty);
       expect(await db.groupFileReach('grp000000001'), {
-        'p1': (have: 1, of: 2),
-        's1': (have: 1, of: 2),
+        'p1': (have: 1, of: 2, gaveUp: 0),
+        's1': (have: 1, of: 2, gaveUp: 0),
       });
 
       // still no session: kept, tried, and waits longer

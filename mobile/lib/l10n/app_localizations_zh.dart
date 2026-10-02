@@ -590,6 +590,10 @@ class AppLocalizationsZh extends AppLocalizations {
       '首次连接需要一两分钟，tor 要先建一条私密路线。之后它会被缓存，以后打开 Kryfo 会快很多。';
 
   @override
+  String get appTorNoRelayYet =>
+      'Tor 已启动，但还没有中继响应。Kryfo 会继续尝试，消息会在这里等候，直到有中继响应。';
+
+  @override
   String get appRelayAndFastModes =>
       '中继模式和快速模式不走 tor，速度更快。它们在设置的“速度与隐私”里，每种模式都写明了代价。';
 
@@ -2536,6 +2540,20 @@ class AppLocalizationsZh extends AppLocalizations {
       locale: localeName,
       other: '已发送 · $countString 人中 $haveString 人已收到',
       zero: '已发送 · 正在送达',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String groupChatFileGaveUp(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '已发送 · $countString 人未收到',
     );
     return '$_temp0';
   }
@@ -7861,6 +7879,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '第一次連線需要一、兩分鐘，讓 tor 建立一條私密路線。之後路線會被快取，下次開啟 Kryfo 就快多了。';
 
   @override
+  String get appTorNoRelayYet =>
+      'Tor 已啟動，但還沒有中繼回應。Kryfo 會繼續嘗試，訊息會在這裡等候，直到有中繼回應。';
+
+  @override
   String get appRelayAndFastModes =>
       '中繼和快速模式會略過 tor，速度更快。它們在設定的「速度與隱私」裡，每種模式都會說明代價。';
 
@@ -9807,6 +9829,20 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       locale: localeName,
       other: '已傳送 · $countString 人中 $haveString 人已收到',
       zero: '已傳送 · 正在送達',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String groupChatFileGaveUp(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '已傳送 · $countString 人未收到',
     );
     return '$_temp0';
   }

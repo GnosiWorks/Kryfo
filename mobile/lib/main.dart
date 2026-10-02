@@ -4220,27 +4220,36 @@ class HaloDb implements GroupOwedStore {
   }
 
   /// a group's messages some members still lack, by uid: how many of the
-  /// members each went to have it
-  Future<Map<String, ({int have, int of})>> groupFileReach(
+  /// members each went to have it, and how many of the rest are past their
+  /// tries
+  Future<Map<String, ({int have, int of, int gaveUp})>> groupFileReach(
     String groupId,
   ) async {
     final db = await open();
     final rows = await db.query(
       'group_media_owed',
-      columns: ['msg_uid', 'sent_to'],
+      columns: ['msg_uid', 'sent_to', 'tries'],
       where: 'group_id = ?',
       whereArgs: [groupId],
     );
     final owed = <String, int>{};
     final of = <String, int>{};
+    final gaveUp = <String, int>{};
     for (final r in rows) {
       final uid = r['msg_uid'] as String;
       owed[uid] = (owed[uid] ?? 0) + 1;
       of[uid] = max(of[uid] ?? 0, r['sent_to'] as int? ?? 0);
+      if ((r['tries'] as int? ?? 0) >= kGroupOwedTries) {
+        gaveUp[uid] = (gaveUp[uid] ?? 0) + 1;
+      }
     }
     return {
       for (final MapEntry(key: uid, value: n) in owed.entries)
-        uid: (have: max(0, of[uid]! - n), of: max(of[uid]!, n)),
+        uid: (
+          have: max(0, of[uid]! - n),
+          of: max(of[uid]!, n),
+          gaveUp: gaveUp[uid] ?? 0,
+        ),
     };
   }
 
@@ -7232,6 +7241,8 @@ class AppState extends ChangeNotifier {
       }
     }
     if (ctl > 0) await _drainGroupCtl();
+    // one past its tries is tried again: its line counts again, sent or not
+    if (due > 0) groupOwedTick.value++;
     if (due > 0 && torReady) await _drainGroupOwed();
   }
 
@@ -15561,12 +15572,17 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
         builder: (context, _) {
           final s = appState.torStatus;
           final pct = appState.bootstrapPct;
+          // no network: tor keeps its last word and the route reads down, but
+          // nothing about relays is true then. the home strip says offline too
+          final offline = s != TorStatus.off && !appState.online;
           // bootstrapped and publishing both mean tor's client side is live:
           // messages send and arrive over relays, full 3 hops. the remaining
           // wait only publishes our own address so peers can dial us direct.
           // none of it counts while no relay gets through
           final line = s == TorStatus.off
               ? l10n.appTorIsOff
+              : offline
+              ? l10n.appOffline
               : !appState.torUsable && s != TorStatus.starting
               ? l10n.appConnecting2
               : s == TorStatus.reachable
@@ -15599,22 +15615,33 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
                   line,
                   style: HaloType.mono(size: 12, color: HaloColors.text),
                 ),
-                if (s != TorStatus.reachable || !appState.torUsable) ...[
+                if (s != TorStatus.reachable ||
+                    !appState.torUsable ||
+                    offline) ...[
                   const SizedBox(height: 16),
+                  // past starting with no relay through, the first connection
+                  // line would promise a wait that is already over
                   Text(
                     s == TorStatus.off
                         ? l10n.appTorIsOffTurn
+                        : offline
+                        ? l10n.onboardingKryfoBuildsAPrivateRouteBefore
+                        : !appState.torUsable && s != TorStatus.starting
+                        ? l10n.appTorNoRelayYet
                         : l10n.appTheFirstConnectionTakes,
                     style: HaloType.sans(
                       size: 12.5,
                       color: HaloColors.text,
                     ).copyWith(height: 1.5),
                   ),
-                  const SizedBox(height: 10),
-                  Text(
-                    l10n.appRelayAndFastModes,
-                    style: HaloType.sans(size: 11, color: HaloColors.text2),
-                  ),
+                  // another send mode is no way out of having no network
+                  if (!offline) ...[
+                    const SizedBox(height: 10),
+                    Text(
+                      l10n.appRelayAndFastModes,
+                      style: HaloType.sans(size: 11, color: HaloColors.text2),
+                    ),
+                  ],
                 ],
               ],
             ),

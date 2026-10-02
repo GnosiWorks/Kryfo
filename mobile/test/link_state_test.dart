@@ -68,6 +68,134 @@ void main() {
       expect(find.text(l10n.appTorReady), findsOneWidget);
     });
 
+    // the sheet behind the pill: the first connection line only while
+    // tor is still starting, never once it is up with no relay through
+    testWidgets('the tor sheet says no relay answers yet, not first '
+        'connection, while tor is up and nothing gets through', (t) async {
+      phone(t);
+      final m = t.binding.defaultBinaryMessenger;
+      m.setMockMethodCallHandler(SystemChannels.platform, (_) async => null);
+      addTearDown(
+        () => m.setMockMethodCallHandler(SystemChannels.platform, null),
+      );
+      _set('private', TorStatus.publishing, route: false);
+      await t.pumpWidget(
+        app(const Center(child: TorHalo(label: true)), still: true),
+      );
+      await t.pump(const Duration(milliseconds: 400));
+      await t.tap(find.byType(TorHalo));
+      for (var i = 0; i < 5; i++) {
+        await t.pump(const Duration(milliseconds: 200));
+      }
+      expect(find.text(l10n.appTorNoRelayYet), findsOneWidget);
+      expect(find.text(l10n.appTheFirstConnectionTakes), findsNothing);
+      expect(
+        l10n.appTorNoRelayYet,
+        'Tor is up, but no relay is answering yet. Kryfo keeps trying, and '
+        'messages wait here until one does.',
+      );
+
+      // published, and still nothing through
+      _set('private', TorStatus.reachable, route: false);
+      await t.pump();
+      expect(find.text(l10n.appTorNoRelayYet), findsOneWidget);
+      expect(find.text(l10n.appTheFirstConnectionTakes), findsNothing);
+
+      // really starting: the first connection line, and only it
+      _set('private', TorStatus.starting, route: false);
+      await t.pump();
+      expect(find.text(l10n.appTheFirstConnectionTakes), findsOneWidget);
+      expect(find.text(l10n.appTorNoRelayYet), findsNothing);
+
+      // off says so, and nothing else
+      _set('private', TorStatus.off, route: false);
+      await t.pump();
+      expect(find.text(l10n.appTorIsOffTurn), findsOneWidget);
+      expect(find.text(l10n.appTorNoRelayYet), findsNothing);
+      expect(find.text(l10n.appTheFirstConnectionTakes), findsNothing);
+
+      await t.pumpWidget(const SizedBox());
+      await t.pump(const Duration(seconds: 1));
+    });
+
+    Future<void> openSheet(WidgetTester t) async {
+      phone(t);
+      final m = t.binding.defaultBinaryMessenger;
+      m.setMockMethodCallHandler(SystemChannels.platform, (_) async => null);
+      addTearDown(
+        () => m.setMockMethodCallHandler(SystemChannels.platform, null),
+      );
+      await t.pumpWidget(
+        app(const Center(child: TorHalo(label: true)), still: true),
+      );
+      await t.pump(const Duration(milliseconds: 400));
+      await t.tap(find.byType(TorHalo));
+      for (var i = 0; i < 5; i++) {
+        await t.pump(const Duration(milliseconds: 200));
+      }
+    }
+
+    Future<void> closeSheet(WidgetTester t) async {
+      await t.pumpWidget(const SizedBox());
+      await t.pump(const Duration(seconds: 1));
+    }
+
+    // the sheet's own words: the pill behind it says its own
+    Finder inSheet(String words) => find.descendant(
+      of: find.byType(BottomSheet),
+      matching: find.text(words),
+    );
+
+    // no network: tor keeps its last word and the route reads down. the
+    // sheet says offline, as the home strip does, not that no relay answers
+    testWidgets('the tor sheet says offline when the phone is', (t) async {
+      addTearDown(() => appState.noteOnline(true));
+      _set('private', TorStatus.publishing, route: false);
+      appState.noteOnline(false);
+      await openSheet(t);
+      expect(inSheet(l10n.appOffline), findsOneWidget);
+      expect(
+        find.text(l10n.onboardingKryfoBuildsAPrivateRouteBefore),
+        findsOneWidget,
+      );
+      expect(find.text(l10n.appTorNoRelayYet), findsNothing);
+      expect(inSheet(l10n.appConnecting2), findsNothing);
+      expect(find.text(l10n.appTheFirstConnectionTakes), findsNothing);
+      // another send mode does not help with no network
+      expect(find.text(l10n.appRelayAndFastModes), findsNothing);
+
+      // offline while it starts: no promise of a first connection either
+      _set('private', TorStatus.starting, route: false);
+      await t.pump();
+      expect(inSheet(l10n.appOffline), findsOneWidget);
+      expect(find.text(l10n.appTheFirstConnectionTakes), findsNothing);
+
+      // the network back, and still nothing through: the relay line
+      _set('private', TorStatus.publishing, route: false);
+      appState.noteOnline(true);
+      await t.pump();
+      expect(inSheet(l10n.appOffline), findsNothing);
+      expect(find.text(l10n.appTorNoRelayYet), findsOneWidget);
+      expect(find.text(l10n.appRelayAndFastModes), findsOneWidget);
+      await closeSheet(t);
+    });
+
+    testWidgets('the tor sheet while tor is bootstrapped', (t) async {
+      _set('private', TorStatus.bootstrapped, route: false);
+      await openSheet(t);
+      expect(inSheet(l10n.appConnecting2), findsOneWidget);
+      expect(find.text(l10n.appTorNoRelayYet), findsOneWidget);
+      expect(find.text(l10n.appTheFirstConnectionTakes), findsNothing);
+
+      // a relay through: ready, finishing setup, and no relay line
+      _set('private', TorStatus.bootstrapped);
+      await t.pump();
+      expect(inSheet(l10n.appReadyToSendFinishing), findsOneWidget);
+      expect(find.text(l10n.appTorNoRelayYet), findsNothing);
+      expect(find.text(l10n.appTheFirstConnectionTakes), findsOneWidget);
+      await closeSheet(t);
+    });
+
     testWidgets('getting messages says connected in relay mode', (t) async {
       phone(t);
       _set('balanced', TorStatus.starting);

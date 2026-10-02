@@ -295,6 +295,7 @@ final _calls = <_Call>[
   ('appTor', [], (l) => l.appTor),
   ('appTorIsOffTurn', [], (l) => l.appTorIsOffTurn),
   ('appTheFirstConnectionTakes', [], (l) => l.appTheFirstConnectionTakes),
+  ('appTorNoRelayYet', [], (l) => l.appTorNoRelayYet),
   ('appRelayAndFastModes', [], (l) => l.appRelayAndFastModes),
   ('appViaRelay', [], (l) => l.appViaRelay),
   ('appOffline', [], (l) => l.appOffline),
@@ -3026,6 +3027,12 @@ final _calls = <_Call>[
   ('groupChatFileReach', [], (l) => l.groupChatFileReach(5, 6)),
   ('groupChatFileReach', [], (l) => l.groupChatFileReach(21, 22)),
   ('groupChatFileReach', [], (l) => l.groupChatFileReach(1000, 1001)),
+  ('groupChatFileGaveUp', [], (l) => l.groupChatFileGaveUp(0)),
+  ('groupChatFileGaveUp', [], (l) => l.groupChatFileGaveUp(1)),
+  ('groupChatFileGaveUp', [], (l) => l.groupChatFileGaveUp(2)),
+  ('groupChatFileGaveUp', [], (l) => l.groupChatFileGaveUp(5)),
+  ('groupChatFileGaveUp', [], (l) => l.groupChatFileGaveUp(21)),
+  ('groupChatFileGaveUp', [], (l) => l.groupChatFileGaveUp(1000)),
 ];
 
 void main() {
