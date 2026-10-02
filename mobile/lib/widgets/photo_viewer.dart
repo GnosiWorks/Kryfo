@@ -67,19 +67,21 @@ Future<void> openPhotoImage(
   }
   if (!context.mounted) return;
   // the flag is per window, so the photo is protected and the chat around
-  // it is not. a screen that already forced it keeps it: the flag is one bool
-  final wasForced = appState.secureForced;
-  if (secure && !wasForced) appState.forceSecure(true);
-  await Navigator.of(context).push(
-    PageRouteBuilder<void>(
-      opaque: false,
-      transitionDuration: Duration(milliseconds: still ? 0 : 280),
-      reverseTransitionDuration: Duration(milliseconds: still ? 0 : 240),
-      pageBuilder: (_, anim, _) =>
-          PhotoViewer(image: image, tag: tag, radius: radius, route: anim),
-    ),
-  );
-  if (secure && !wasForced) appState.forceSecure(false);
+  // it is not. the viewer lets go of its own hold, never a screen's
+  if (secure) appState.forceSecure(true);
+  try {
+    await Navigator.of(context).push(
+      PageRouteBuilder<void>(
+        opaque: false,
+        transitionDuration: Duration(milliseconds: still ? 0 : 280),
+        reverseTransitionDuration: Duration(milliseconds: still ? 0 : 240),
+        pageBuilder: (_, anim, _) =>
+            PhotoViewer(image: image, tag: tag, radius: radius, route: anim),
+      ),
+    );
+  } finally {
+    if (secure) appState.forceSecure(false);
+  }
   FocusManager.instance.primaryFocus?.unfocus();
 }
 

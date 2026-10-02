@@ -288,7 +288,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         _roomExpiresAt = g['expires_at'] as int?;
         _roomBanner = (g['room_seen'] as int? ?? 0) == 0;
       });
-      appState.forceSecure(true);
+      // gone already: nothing is held for a screen that let go
+      if (!_left) _holdSecure(true);
       // the creator's first open: hand them the invite right away, that is
       // the only thing an empty room is for
       if (_roomBanner && (g['is_admin'] as int? ?? 0) == 1) {
@@ -3079,8 +3080,16 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   void _leaveRoomScreen() {
     if (_left) return;
     _left = true;
-    if (_isRoom) appState.forceSecure(false);
+    _holdSecure(false);
     if (_isRoom && _roomBanner) session.markRoomSeen(widget.groupId);
+  }
+
+  // this screen's one hold on the shield, taken and let go once each
+  bool _secureHeld = false;
+  void _holdSecure(bool on) {
+    if (on == _secureHeld) return;
+    _secureHeld = on;
+    appState.forceSecure(on);
   }
 
   @override
@@ -3088,7 +3097,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     super.activate();
     // came back after a deactivate that was only a reparent
     _left = false;
-    if (_isRoom) appState.forceSecure(true);
+    if (_isRoom) _holdSecure(true);
   }
 
   @override

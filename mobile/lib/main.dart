@@ -7556,16 +7556,17 @@ class AppState extends ChangeNotifier {
 
   // some screens are not optional. recovery shows the whole key, so it turns
   // the flag on whatever the user picked in settings, and hands it back on
-  // the way out.
-  bool _secureForced = false;
-  bool get secureForced => _secureForced;
+  // the way out. a count, one per screen holding it: a room closing over
+  // another room lets go of its own hold only
+  int _secureHolds = 0;
+  bool get secureForced => _secureHolds > 0;
   // an app lock keeps screenshots and the recents picture off, whatever the
   // switch says: the settings then never say one thing while the app does
   // another
   bool get screenSecureByLock => lockState.enabled;
 
   Future<void> forceSecure(bool on) async {
-    _secureForced = on;
+    _secureHolds = on ? _secureHolds + 1 : max(0, _secureHolds - 1);
     await _applyScreenSecure();
   }
 
@@ -7575,7 +7576,7 @@ class AppState extends ChangeNotifier {
   bool? _secureSent;
 
   Future<void> _applyScreenSecure() async {
-    final on = _blockScreenshotsApplied || _secureForced || screenSecureByLock;
+    final on = _blockScreenshotsApplied || secureForced || screenSecureByLock;
     if (on == _secureSent) return;
     _secureSent = on;
     try {
@@ -7935,8 +7936,11 @@ class AppState extends ChangeNotifier {
       final adminId = await db.groupAdminId(env.groupId!);
       final isRoom = await _roomOf(env.groupId!, db) != null;
       final roster = _members(env.roster!, room: isRoom);
+      // the admin is always on their own list: one without them is from a
+      // phone that already left, and would empty the group here
       if (adminId != null &&
           senderHaloId == adminId &&
+          roster.contains(adminId) &&
           await _fitsCap(env.groupId!, roster.toSet().length, db)) {
         await db.syncGroupMembers(env.groupId!, roster);
         await _subscribeRoomMembers(env.groupId!);
@@ -8655,6 +8659,13 @@ class AppState extends ChangeNotifier {
     }
     final existing = await db.getContact(h);
     if (existing != null && (existing['accepted'] as int? ?? 0) == 1) return;
+    // someone blocked stays blocked: no vouch, no listening, nothing sent.
+    // a block on the everyday side holds for a hidden chat's card too, or
+    // listening for them here would undo it
+    if (await db.isBlocked(h) || (!everyday && await live.isBlocked(h))) {
+      dlog('intro: names someone blocked, dropped');
+      return;
+    }
     await db.upsertContactStub(h, card.onion, card.xPub);
     // the note is the introducer's one line about them. it lives on the
     // vouch, so two introducers can each say their piece.
@@ -11670,7 +11681,10 @@ class AppState extends ChangeNotifier {
     _pruneHeal();
     _bundleCtlSentAt[key] = now;
     try {
-      final xpub = (await _reach(memberId))?.xpub ?? '';
+      final to = await _reach(memberId);
+      // nothing goes to someone blocked, not even keys
+      if (await to?.on?.isBlocked(memberId) ?? false) return;
+      final xpub = to?.xpub ?? '';
       if (xpub.isEmpty) return;
       final payload = jsonEncode({
         'halo_ctl': 'bundle',
@@ -12419,7 +12433,29 @@ class AppState extends ChangeNotifier {
     final members = await d.getGroupMembers(groupId);
     final adminId = await d.groupAdminId(groupId);
     final amAdmin = adminId == myId;
-    final rosterParts = amAdmin ? await _buildParticipants(members) : null;
+    // the roster is read again for each slice: a long file still going out
+    // after a remove or a leave must not carry the old list back to the
+    // other phones. once this phone has left or is no longer the admin, the
+    // slices carry none. ids and cards are one pair, so wraps running side
+    // by side never mix two lists
+    var held = (
+      ids: members,
+      parts: amAdmin ? await _buildParticipants(members) : null,
+    );
+    Future<(List<String>?, List<Map<String, String>>?)> roster() async {
+      if (!amAdmin) return (null, null);
+      final now = await d.getGroupMembers(groupId);
+      if (!now.contains(myId) || await d.groupAdminId(groupId) != myId) {
+        return (null, null);
+      }
+      var pair = held;
+      if (!listEquals(now, pair.ids)) {
+        pair = (ids: now, parts: await _buildParticipants(now));
+        held = pair;
+      }
+      return (pair.ids, pair.parts);
+    }
+
     // in a room this phone is its room key, which never takes a frame
     final room = await _roomOf(groupId, d);
     final to = [
@@ -12464,24 +12500,27 @@ class AppState extends ChangeNotifier {
         resend: resend,
       ),
       photo: fileName == null && !voice,
-      wrap: (slice, i, total) async => wrapMessage(
-        caption,
-        msgUid: msgUid,
-        imageB64: fileName == null && !voice ? slice : null,
-        fileB64: fileName != null || voice ? slice : null,
-        fileName: fileName,
-        voice: voice,
-        voiceDisguised: voiceDisguised,
-        mediaId: total > 1 ? msgUid : null,
-        chunkIndex: total > 1 ? i : null,
-        chunkTotal: total > 1 ? total : null,
-        burnSeconds: burnSeconds,
-        groupId: groupId,
-        roster: amAdmin ? members : null,
-        rosterParticipants: rosterParts,
-        supporterBadge: await sharedBadge(),
-        sender: _mySender(),
-      ),
+      wrap: (slice, i, total) async {
+        final (ids, parts) = await roster();
+        return wrapMessage(
+          caption,
+          msgUid: msgUid,
+          imageB64: fileName == null && !voice ? slice : null,
+          fileB64: fileName != null || voice ? slice : null,
+          fileName: fileName,
+          voice: voice,
+          voiceDisguised: voiceDisguised,
+          mediaId: total > 1 ? msgUid : null,
+          chunkIndex: total > 1 ? i : null,
+          chunkTotal: total > 1 ? total : null,
+          burnSeconds: burnSeconds,
+          groupId: groupId,
+          roster: ids,
+          rosterParticipants: parts,
+          supporterBadge: await sharedBadge(),
+          sender: _mySender(),
+        );
+      },
       deliver: (m, wrapped) => _sendGroupEnvelope(groupId, m, wrapped),
     );
   }

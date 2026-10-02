@@ -9,6 +9,7 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
+import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -642,12 +643,13 @@ void main() {
     final lock = await make();
     lock.inDecoy = true;
     final before = store.m['halo.lock.table'];
-    final state = store.m['halo.lock.state'];
     // 1234 is the everyday pin, 9999 the everyday wipe pin
     expect(await lock.setupPin('1234'), isTrue);
     expect(await lock.setupPanicPin('9999'), isTrue);
     expect(store.m['halo.lock.table'], before);
-    expect(store.m['halo.lock.state'], state);
+    // each one a try, as any set there is
+    expect(countersOf(store)['r'], 2);
+    expect(countersOf(store)['b'], 2);
     lock.inDecoy = false;
     lock.lock();
     expect(await lock.verifyPin('1234'), PinResult.normal);
@@ -666,6 +668,68 @@ void main() {
     // the next start locks again
     final again = await make();
     expect(again.locked, isTrue);
+  });
+
+  test('in the decoy a clash and a set look the same', () async {
+    final seen = <String, (bool, bool, String)>{};
+    // 1234 is the everyday pin, 246810 the vault's, 4444 is free
+    for (final pin in ['1234', '246810', '4444']) {
+      seed();
+      final lock = await make();
+      await lock.verifyPin('5555');
+      lock.inDecoy = true;
+      await lock.disable();
+      expect(lock.lockOn, isFalse);
+      final ok = await lock.setupPin(pin);
+      final c = countersOf(store)..remove('hs');
+      seen[pin] = (ok, lock.lockOn, jsonEncode(c));
+    }
+    expect(seen['1234'], seen['4444']);
+    expect(seen['246810'], seen['4444']);
+    expect(seen['4444']!.$1, isTrue);
+    expect(seen['4444']!.$2, isTrue);
+  });
+
+  test(
+    'in the decoy each pin set is a try, and a held pad takes none',
+    () async {
+      final lock = await make();
+      await lock.verifyPin('5555');
+      lock.inDecoy = true;
+      // a free pin and the everyday one count alike
+      for (final pin in ['4444', '1234', '4445', '1234', '4446']) {
+        expect(await lock.setupPin(pin), isTrue, reason: pin);
+      }
+      expect(countersOf(store)['r'], 5);
+      expect(lock.throttleLeft, greaterThan(Duration.zero));
+      expect(pinNotTakenLine(lock), tooManyTriesLine(lock.throttleLeft));
+      // held: refused before the engine is asked, whatever the pin
+      for (final set in <Future<bool> Function()>[
+        () => lock.setupPin('1234'),
+        () => lock.setupPin('4447'),
+        () => lock.setupPanicPin('9999'),
+        () => lock.setupDecoyPin('7777'),
+        () => lock.setupVaultPin('112233', dvKey),
+        () => lock.rewrapVaultPin('135790', '112233'),
+      ]) {
+        engine.calls.clear();
+        expect(await set(), isFalse);
+        expect(engine.calls, isEmpty);
+      }
+      expect(countersOf(store)['r'], 5);
+      // the lock screen holds for the same tries
+      lock.inDecoy = false;
+      lock.lock();
+      expect(await lock.verifyPin('1234'), PinResult.throttled);
+      clock.up += 31000;
+      expect(await lock.verifyPin('1234'), PinResult.normal);
+    },
+  );
+
+  test('outside the decoy a pin in use is said as before', () async {
+    final lock = await make();
+    expect(await lock.setupPanicPin('5555'), isFalse);
+    expect(pinNotTakenLine(lock), l10n.pinPickDifferent);
   });
 
   test('confirming the pin works like the lock', () async {
@@ -1103,17 +1167,19 @@ void main() {
     }
     expect(misses, 16);
 
-    // inside the decoy a clash looks like success and is kept nowhere
+    // inside the decoy a clash looks like success and is kept nowhere. each
+    // set is a try, past the hold the one before left
     lock.inDecoy = true;
-    final state = store.m['halo.lock.state'];
     for (final pin in ['1234', '9999', '246810']) {
+      clock.up += 8 * 3600000;
       expect(await lock.setupVaultPin(pin, dvKey), isTrue, reason: pin);
       lock.inVault = true;
+      clock.up += 8 * 3600000;
       expect(await lock.rewrapVaultPin('135790', pin), isTrue, reason: pin);
       lock.inVault = false;
     }
     expect(store.m['halo.lock.table'], before);
-    expect(store.m['halo.lock.state'], state);
+    expect(countersOf(store)['b'], misses + 6);
     lock.inDecoy = false;
     lock.lock();
     // past the holds the clashes above left

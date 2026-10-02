@@ -885,15 +885,22 @@ class LockState extends ChangeNotifier {
   // different pin" and never which one it matched
   Future<bool> setupPin(String pin) async {
     if (!_inDecoy) return _setup(pin, PinSlot.app, PinKind.everyday);
+    if (!await _decoyTry()) return false;
     // the wipe pin went with the turn off, as the sheet said: a pin set
     // again starts without it, so no pin wipes that shows as gone
     if (_dWipeHidden) await _dropDecoyWipe();
-    return _setup(
+    await _setup(
       pin,
       PinSlot.decoy,
       PinKind.decoy,
       container: HaloContainer.decoy.id,
+      tried: true,
     );
+    // it locks again whether the pin went in or hit one it cannot see, so
+    // the two look the same
+    _paused = false;
+    notifyListeners();
+    return true;
   }
 
   // the decoy's pin opens the decoy container. its entry is written last
@@ -1016,6 +1023,7 @@ class LockState extends ChangeNotifier {
   Future<bool> rewrapVaultPin(String oldPin, String newPin) async {
     final t = _table;
     if (t == null) throw StateError('no table');
+    if (_inDecoy && !await _decoyTry()) return false;
     try {
       final out = await _engine.rewrap(
         oldPin,
@@ -1028,6 +1036,7 @@ class LockState extends ChangeNotifier {
       await _store.write(_kTable, nt);
       _table = nt;
     } on PinCollision {
+      if (_inDecoy) await _store.write(_kTable, t);
       return _clash();
     }
     notifyListeners();
@@ -1073,7 +1082,10 @@ class LockState extends ChangeNotifier {
     int kind, {
     String? container,
     String wrapPlain = '',
+    // the decoy's try for it is counted already
+    bool tried = false,
   }) async {
+    if (_inDecoy && !tried && !await _decoyTry()) return false;
     final wasOn = _enabled;
     final table = await _ensureTable();
     // a pin changed in place may equal the one it replaces: leave that
@@ -1099,6 +1111,8 @@ class LockState extends ChangeNotifier {
       await _store.write(_kTable, t);
       _table = t;
     } on PinCollision {
+      // the same write a set makes, so a clash takes as long
+      if (_inDecoy) await _store.write(_kTable, table);
       return _clash();
     }
     if (slot == PinSlot.app) {
@@ -1112,15 +1126,29 @@ class LockState extends ChangeNotifier {
       if (!wasOn) await setHideNotifContent(true);
       _locked = false;
     }
-    // the decoy's own pin set again after a turn off there: it locks again
-    if (_inDecoy && slot == PinSlot.decoy) _paused = false;
     notifyListeners();
     return true;
   }
 
+  // inside the decoy any pin it sets may be one it cannot see, so each set
+  // is a try at the lock: counted whether it clashes or not, and refused
+  // while the pad is held. false when held
+  Future<bool> _decoyTry() async {
+    final uptime = await _clock.uptimeMs();
+    final boot = await _clock.bootCount();
+    final base = _counters.rebased(uptime, boot);
+    final held = base.holdLeft(uptime, boot) > 0;
+    _counters = held ? base : base.miss(uptime, boot);
+    await _store.write(_kState, _counters.encode());
+    await _refreshHoldForScreen();
+    if (held) notifyListeners();
+    return !held;
+  }
+
   // a pin already in use. the screen says "pick a different pin", never
   // which one, and it counts as a miss. inside the decoy it is taken and
-  // kept nowhere, so the decoy never learns a pin it cannot see
+  // kept nowhere, so the decoy never learns a pin it cannot see. its try
+  // was counted before
   Future<bool> _clash() async {
     if (_inDecoy) return true;
     final uptime = await _clock.uptimeMs();
@@ -1302,6 +1330,13 @@ class LockState extends ChangeNotifier {
 }
 
 final lockState = LockState();
+
+/// why a new pin was not taken: inside the decoy only a held pad refuses
+/// one, anywhere else it is in use
+String pinNotTakenLine(LockState lock) =>
+    lock.inDecoy && lock.throttleLeft > Duration.zero
+    ? tooManyTriesLine(lock.throttleLeft)
+    : l10n.pinPickDifferent;
 
 /// how long the pad is held, as a person reads it: seconds up to a minute
 /// and a half, then minutes and seconds, then hours, minutes and seconds,
