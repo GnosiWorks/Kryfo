@@ -6,6 +6,8 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/message_envelope.dart';
+import 'package:kryfo/rooms.dart';
 import 'package:kryfo/send_order.dart';
 import 'package:kryfo/signal_session.dart';
 import 'package:kryfo/signal_stores.dart';
@@ -186,6 +188,102 @@ void main() {
     expect(keepsArrivalOrder('ab' * 32), isFalse);
   });
 
+  group('room frames', () {
+    // a frame off [from]'s lane, as the relay layer hands it over
+    Future<_Got> frame(String from, int? n, String text, {String? gc}) async {
+      final w = await wrapMessage(
+        text,
+        groupId: 'room1',
+        groupControl: gc == null ? null : GroupControl(type: gc),
+        sender: SenderInfo(haloId: from, edPub: '', onion: '', xPub: ''),
+      );
+      return (peer: 'room:mine:$from', cipher: roomFrame(w, from, number: n)!);
+    }
+
+    List<String> texts(List<_Got> out) => [
+      for (final m in out) unwrapMessage(m.cipher).message,
+    ];
+
+    List<_Got> sorted(List<_Got> batch) => roomsInSendOrder(
+      batch,
+      peer: (m) => m.peer,
+      place: (m) => roomFramePlace(m.cipher),
+    );
+
+    test('each lane by its numbers, in the places it had', () async {
+      final batch = [
+        await frame('x', 3, 'x3'),
+        (peer: 'x-alice', cipher: 'not a room'),
+        await frame('y', 2, 'y2'),
+        await frame('x', 1, 'x1'),
+        await frame('y', 1, 'y1'),
+        await frame('x', 2, 'x2'),
+      ];
+      final out = sorted(batch);
+      expect(out[1], batch[1]);
+      expect([for (final m in out) m.peer], [for (final m in batch) m.peer]);
+      expect(texts([out[0], out[3], out[5]]), ['x1', 'x2', 'x3']);
+      expect(texts([out[2], out[4]]), ['y1', 'y2']);
+    });
+
+    test('a frame with no number keeps its place', () async {
+      final batch = [
+        await frame('x', 2, 'x2'),
+        await frame('x', null, 'old'),
+        await frame('x', 1, 'x1'),
+      ];
+      expect(texts(sorted(batch)), ['x1', 'old', 'x2']);
+    });
+
+    test('a leave or a removal goes after the rest of the batch', () async {
+      final batch = [
+        await frame('c', 7, '', gc: 'remove'),
+        await frame('x', 3, '', gc: 'leave'),
+        await frame('x', 2, 'bye'),
+        (peer: 'x-alice', cipher: 'not a room'),
+        await frame('y', null, '', gc: 'leave'),
+        await frame('y', null, 'later'),
+        await frame('c', 6, 'hi'),
+      ];
+      final out = sorted(batch);
+      expect(
+        [
+          for (final m in out)
+            m.peer.startsWith('room:')
+                ? unwrapMessage(m.cipher).groupControl?.type ??
+                      unwrapMessage(m.cipher).message
+                : m.cipher,
+        ],
+        // the creator's hi was written before its removal
+        ['hi', 'bye', 'not a room', 'later', 'leave', 'leave', 'remove'],
+      );
+      expect(out.map((m) => m.peer).toSet(), batch.map((m) => m.peer).toSet());
+    });
+
+    test('the drop box lane and other lanes are not touched', () async {
+      final batch = [
+        (peer: 'roomfc:mine', cipher: (await frame('x', 2, 'b')).cipher),
+        (peer: 'roomfc:mine', cipher: (await frame('x', 1, 'a')).cipher),
+        (peer: 'x-alice', cipher: 'one'),
+      ];
+      expect(sorted(batch), batch);
+    });
+
+    test('a frame carries its number and nothing of who sent it', () async {
+      final w = await wrapMessage(
+        'hi',
+        groupId: 'room1',
+        sender: SenderInfo(haloId: 'me', edPub: 'e', onion: 'o', xPub: 'x'),
+      );
+      expect(roomFramePlace(roomFrame(w, 'k', number: 5)!), (
+        number: 5,
+        shrinks: false,
+      ));
+      expect(roomFramePlace(roomFrame(w, 'k')!).number, isNull);
+      expect(roomFramePlace('not a frame'), (number: null, shrinks: false));
+    });
+  });
+
   test('the relay receiver sorts with that rule', () {
     final app = sourceOf('lib/main.dart');
     final from = app.indexOf('Future<void> receiveRelay(');
@@ -193,5 +291,8 @@ void main() {
     final head = app.substring(from, app.indexOf('for (final m in', from));
     final sort = callsOf(head, 'inSendOrder(').single;
     expect(sort, contains('lane: keepsArrivalOrder'));
+    // and the room frames after it, by their own numbers
+    final rooms = callsOf(head, 'roomsInSendOrder(').single;
+    expect(rooms, contains('roomFramePlace(m.cipher)'));
   });
 }

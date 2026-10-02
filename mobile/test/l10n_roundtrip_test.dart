@@ -2556,6 +2556,12 @@ void main() {
     );
     expect(l.seenBurnerRooms, "Burner rooms");
     expect(l.seenRoomKeys, "Room keys");
+    expect(l.groupChatNobodyHereYet, "Nobody is here yet.");
+    expect(
+      l.groupChatShareTheRoomLink,
+      "Share the room link. Whoever joins reads what is written from then on.",
+    );
+    expect(l.groupChatNobodyToReadIt, "Nobody else is here to read it.");
     expect(
       l.seenYouJoinARoom,
       "You join a room under a key made for it, so the people inside learn nothing that works elsewhere. Late joiners get no history. At expiry the keys, the messages and the media are destroyed.",

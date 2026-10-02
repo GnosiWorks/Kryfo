@@ -2590,6 +2590,17 @@ class AppLocalizationsRu extends AppLocalizations {
       'Все здесь читают то, что ты пишешь.';
 
   @override
+  String get groupChatNobodyHereYet => 'Здесь пока никого нет.';
+
+  @override
+  String get groupChatShareTheRoomLink =>
+      'Поделись ссылкой на комнату. Кто присоединится, будет читать то, что пишут с этого момента.';
+
+  @override
+  String get groupChatNobodyToReadIt =>
+      'Здесь больше никого нет, чтобы это прочитать.';
+
+  @override
   String get groupChatThisMessageCanT => 'Это сообщение нельзя показать';
 
   @override

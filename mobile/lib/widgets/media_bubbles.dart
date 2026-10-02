@@ -475,11 +475,14 @@ class HoldToTalkMic extends StatefulWidget {
   final bool disguise;
   final VoidCallback onToggleDisguise;
   final void Function(String path, int ms, bool cancelled) onComplete;
+  // asked as the hold begins: false and the mic never opens
+  final bool Function()? mayRecord;
   const HoldToTalkMic({
     super.key,
     required this.disguise,
     required this.onToggleDisguise,
     required this.onComplete,
+    this.mayRecord,
   });
   @override
   State<HoldToTalkMic> createState() => HoldToTalkMicState();
@@ -659,6 +662,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onLongPressStart: (_) {
+        if (widget.mayRecord?.call() == false) return;
         _live = true;
         _start();
       },
