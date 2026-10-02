@@ -4,8 +4,9 @@ package main
 // what the relay runners guarantee: the poll is one entry per event under
 // that event's own tag, an event counts under its own id, the since anchor
 // stays near now, what a runner remembers stays bounded, a relay that keeps
-// dropping is redialled slower, and a connection stays up whatever frames
-// arrive on it.
+// dropping is redialled slower, a relay taken off the list is not dialled
+// again, a mode switch ends what the old route opened, and a connection
+// stays up whatever frames arrive on it.
 
 import (
 	"bytes"
@@ -83,9 +84,7 @@ func freshInbox(t *testing.T) {
 
 // other relays for the runners started from here on, same data dir
 func useRelays(urls ...string) {
-	nostrMu.Lock()
-	nostrRelays = urls
-	nostrMu.Unlock()
+	setRelays(urls)
 }
 
 // an opener to our first-contact address, as a stranger's phone builds it
@@ -726,6 +725,315 @@ func TestRelayThatDropsYoungIsRedialledSlower(t *testing.T) {
 	// would have made seven
 	if n := conns.Load(); n > 5 {
 		t.Fatalf("%d connections in 15s to a relay that drops each one", n)
+	}
+}
+
+// a switch from fast to relay mode takes the public relays off the list. a
+// runner started on the old one stops dialling them at once, before the app
+// starts it again on the new list: relay mode shows the ip to our relay alone
+func TestRelayOffTheListIsNotDialledAgain(t *testing.T) {
+	var ours, public atomic.Int32
+	down := func(n *atomic.Int32) *httptest.Server {
+		return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			n.Add(1)
+			http.Error(w, "down", http.StatusServiceUnavailable)
+		}))
+	}
+	own, pub := down(&ours), down(&public)
+	defer own.Close()
+	defer pub.Close()
+	wsOf := func(s *httptest.Server) string { return "ws" + strings.TrimPrefix(s.URL, "http") }
+	useStandIns(t, modeFast, nil)
+	useRelays(wsOf(own), wsOf(pub))
+	freshInbox(t)
+	peer := newXid(t)
+	_, rcv, err := nip17RcvAddress(peer.pub)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), peer.pub, rcv)
+	deadline := time.Now().Add(10 * time.Second)
+	for ours.Load() == 0 || public.Load() == 0 {
+		if time.Now().After(deadline) {
+			t.Fatal("the runner never dialled")
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+
+	// the app's order: the mode, then that mode's list a moment later.
+	// in between the old list names the public relays, and the new mode
+	// would dial them in the clear
+	switchMode(modeBalanced)
+	// a dial already past the check lands now, not later
+	time.Sleep(300 * time.Millisecond)
+	pubBefore, oursBefore := public.Load(), ours.Load()
+	for i := 0; i < 3; i++ {
+		kickRelays()
+		time.Sleep(500 * time.Millisecond)
+	}
+	if n := public.Load() - pubBefore; n != 0 {
+		t.Fatalf("the old list was dialled %d times before the new one came", n)
+	}
+	if n := ours.Load() - oursBefore; n != 0 {
+		t.Fatalf("the old list was dialled %d times before the new one came", n)
+	}
+
+	useRelays(wsOf(own))
+	for i := 0; i < 3; i++ {
+		kickRelays()
+		time.Sleep(time.Second)
+	}
+	if n := public.Load() - pubBefore; n != 0 {
+		t.Fatalf("a relay off the list was dialled %d more times", n)
+	}
+	if ours.Load() == oursBefore {
+		t.Fatal("our relay, still on the list, was not dialled again")
+	}
+}
+
+// open subscription sockets on our relay, through tor or direct
+func openSubs(r *relayStandIn, socks *socksStandIn, viaTor bool) int {
+	n := 0
+	for _, c := range r.snapshot() {
+		_, tor := socks.nameOf(c.remote)
+		if c.closed.IsZero() && len(c.reqs) > 0 && tor == viaTor {
+			n++
+		}
+	}
+	return n
+}
+
+// relay mode to onion. our relay is on both lists, so nothing takes it off,
+// yet the socket the runner holds went straight from this phone's ip. the
+// switch closes it, and the runner comes back through tor
+func TestSwitchClosesWhatTheOldRouteOpened(t *testing.T) {
+	socks := newSocksStandIn(t)
+	own := newRelayStandIn(t, 0)
+	useStandIns(t, modeBalanced, socks, own)
+	freshInbox(t)
+	peer := newXid(t)
+	_, rcv, err := nip17RcvAddress(peer.pub)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), peer.pub, rcv)
+	waitFor(t, "a direct socket", 10*time.Second, func() bool {
+		return openSubs(own, socks, false) == 1
+	})
+
+	switchMode(modePrivate)
+	setRelays([]string{own.url()})
+	waitFor(t, "the direct socket closed", 3*time.Second, func() bool {
+		return openSubs(own, socks, false) == 0
+	})
+	waitFor(t, "the runner back through tor", 15*time.Second, func() bool {
+		return openSubs(own, socks, true) == 1
+	})
+	for i, c := range own.snapshot() {
+		if _, tor := socks.nameOf(c.remote); i > 0 && !tor {
+			t.Fatal("dialled direct after the switch to onion")
+		}
+	}
+}
+
+// a dial under way when the mode changes lands on the old route. it asks
+// nothing there: no address goes out on a socket of the mode that went
+func TestADialFromBeforeTheSwitchAsksNothing(t *testing.T) {
+	socks := newSocksStandIn(t)
+	own := newRelayStandIn(t, 0)
+	own.upgradeDelay = 800 * time.Millisecond
+	useStandIns(t, modeBalanced, socks, own)
+	freshInbox(t)
+	peer := newXid(t)
+	_, rcv, err := nip17RcvAddress(peer.pub)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), peer.pub, rcv)
+	waitFor(t, "a dial", 5*time.Second, func() bool { return len(own.snapshot()) > 0 })
+
+	switchMode(modePrivate)
+	setRelays([]string{own.url()})
+	waitFor(t, "the old dial closed", 5*time.Second, func() bool {
+		c := own.snapshot()[0]
+		return !c.closed.IsZero()
+	})
+	if c := own.snapshot()[0]; len(c.reqs) > 0 {
+		t.Fatal("a socket from before the switch was asked for an address")
+	}
+}
+
+// a dial under way when the mode changes ends with it, and does not open a
+// socket the old way once the new route is in place
+func TestARunnerDialFromBeforeTheSwitchEndsWithIt(t *testing.T) {
+	socks := newSocksStandIn(t)
+	own := newRelayStandIn(t, 0)
+	own.upgradeDelay = 30 * time.Second
+	useStandIns(t, modeBalanced, socks, own)
+	freshInbox(t)
+	peer := newXid(t)
+	_, rcv, err := nip17RcvAddress(peer.pub)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), peer.pub, rcv)
+	waitFor(t, "a dial", 5*time.Second, func() bool { return len(own.snapshot()) > 0 })
+	own.mu.Lock()
+	own.upgradeDelay = 0
+	own.mu.Unlock()
+
+	switchMode(modePrivate)
+	setRelays([]string{own.url()})
+	waitFor(t, "the old dial ended", 3*time.Second, func() bool {
+		return !own.snapshot()[0].closed.IsZero()
+	})
+	waitFor(t, "the runner back through tor", 15*time.Second, func() bool {
+		return openSubs(own, socks, true) == 1
+	})
+}
+
+// a publish took the onion list, and relay mode came before its relays had
+// their client. the client they get is the new mode's, direct: the old
+// list's public relays are not dialled with it, and the wrap goes out on
+// the new list instead
+func TestAPublishOnTheOldListDialsNothingTheNewWay(t *testing.T) {
+	socks := newSocksStandIn(t)
+	own := newRelayStandIn(t, 0)
+	pub := newRelayStandIn(t, 0)
+	useStandIns(t, modePrivate, socks, own, pub)
+	me, err := myXid()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ev := wrapTo(t, me, newXid(t).pub, "hi")
+
+	cachedNostrClientMu.Lock()
+	held := true
+	defer func() {
+		if held {
+			cachedNostrClientMu.Unlock()
+		}
+	}()
+	res := make(chan int, 1)
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+		defer cancel()
+		res <- nostrPublishMulti(ctx, laneEveryday, ev)
+	}()
+	// its relays wait on the client
+	time.Sleep(300 * time.Millisecond)
+	switched := make(chan struct{})
+	go func() {
+		switchMode(modeBalanced)
+		close(switched)
+	}()
+	waitFor(t, "the new mode", 3*time.Second, func() bool { return currentMode() == modeBalanced })
+	setRelays([]string{own.url()})
+	held = false
+	cachedNostrClientMu.Unlock()
+	<-switched
+
+	if n := <-res; n == 0 {
+		t.Fatal("the wrap went nowhere")
+	}
+	if n := len(pub.snapshot()); n != 0 {
+		t.Fatalf("a relay off the new list was dialled %d times", n)
+	}
+}
+
+// a publish dialling direct when onion is picked: the dial ends there, the
+// wrap is not sent on it, and it goes out again through tor
+func TestAPublishDialFromBeforeTheSwitchSendsNothing(t *testing.T) {
+	socks := newSocksStandIn(t)
+	own := newRelayStandIn(t, 0)
+	own.upgradeDelay = 30 * time.Second
+	useStandIns(t, modeBalanced, socks, own)
+	me, err := myXid()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ev := wrapTo(t, me, newXid(t).pub, "hi")
+	res := make(chan int, 1)
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
+		defer cancel()
+		res <- nostrPublishMulti(ctx, laneEveryday, ev)
+	}()
+	waitFor(t, "a dial", 5*time.Second, func() bool { return len(own.snapshot()) > 0 })
+	own.mu.Lock()
+	own.upgradeDelay = 0
+	own.mu.Unlock()
+
+	switchMode(modePrivate)
+	setRelays([]string{own.url()})
+	waitFor(t, "the old dial ended", 3*time.Second, func() bool {
+		return !own.snapshot()[0].closed.IsZero()
+	})
+	if n := <-res; n == 0 {
+		t.Fatal("the wrap went nowhere")
+	}
+	sent := false
+	for _, c := range own.snapshot() {
+		_, tor := socks.nameOf(c.remote)
+		if len(c.published) > 0 {
+			if !tor {
+				t.Fatal("sent direct after the switch to onion")
+			}
+			sent = true
+		}
+	}
+	if !sent {
+		t.Fatal("the wrap did not go through tor")
+	}
+}
+
+// a pair code lookup open on direct sockets when onion is picked: those
+// close, and the code is asked again through tor
+func TestAPairLookupAtTheSwitchAsksAgainTheNewWay(t *testing.T) {
+	socks := newSocksStandIn(t)
+	own := newRelayStandIn(t, 0)
+	own.reqDelay = 3 * time.Second
+	useStandIns(t, modeFast, socks, own)
+	_, pk, err := pairCodeKeys("482913")
+	if err != nil {
+		t.Fatal(err)
+	}
+	res := make(chan int, 1)
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+		defer cancel()
+		_, _, heard := pairCodeQuery(ctx, pk)
+		res <- heard
+	}()
+	waitFor(t, "the lookup asked", 5*time.Second, func() bool {
+		c := own.snapshot()
+		return len(c) > 0 && len(c[0].reqs) > 0
+	})
+	own.mu.Lock()
+	own.reqDelay = 0
+	own.mu.Unlock()
+
+	switchMode(modePrivate)
+	setRelays([]string{own.url()})
+	if heard := <-res; heard != 1 {
+		t.Fatalf("%d relays answered, want 1", heard)
+	}
+	viaTor := false
+	for _, c := range own.snapshot() {
+		if _, tor := socks.nameOf(c.remote); tor && c.addrs[pk] {
+			viaTor = true
+		}
+	}
+	if !viaTor {
+		t.Fatal("the code was not asked again through tor")
 	}
 }
 

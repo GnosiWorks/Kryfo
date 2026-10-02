@@ -99,13 +99,18 @@ func pubGet(ctx context.Context, key pubKey, client *http.Client) (s *pubSock, f
 	pubMu.Unlock()
 
 	// the dial is shared by every wrap that comes while it runs, so it is
-	// not tied to this caller's context
+	// not tied to this caller's context, only to the route its client is of
 	// a burst can outlast a minute, and over a busy circuit the library's
 	// 800ms pong wait closes a socket that is only slow
 	r := nostr.NewRelay(context.Background(), key.url, subscribeRelayOptions())
-	dctx, dcancel := relayDialCtx(context.Background(), key.url)
+	base, bcancel := context.Background(), context.CancelFunc(func() {})
+	if route := routeOf(ctx); route != nil {
+		base, bcancel = onRoute(base, route)
+	}
+	dctx, dcancel := relayDialCtx(base, key.url)
 	err = r.ConnectWithClient(dctx, client)
 	dcancel()
+	bcancel()
 	if err != nil {
 		// a relay that never connected still waits on its context
 		r.Close()
@@ -236,6 +241,11 @@ func publishTo(ctx context.Context, lane, u string, client *http.Client, ev nost
 		s, fresh, err := pubGet(ctx, key, client)
 		if err != nil {
 			return err
+		}
+		// the route may have ended while the dial ran: nothing goes out on it
+		if ctx.Err() != nil {
+			pubDone(s)
+			return ctx.Err()
 		}
 		quiet := make(chan struct{})
 		stop := make(chan struct{})

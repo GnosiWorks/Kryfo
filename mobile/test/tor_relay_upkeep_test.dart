@@ -3,8 +3,11 @@
 // an outage shows while tor sits still and a mended relay clears the hint. a
 // tor wake that fails is tried again while the app is open, and a tor the
 // engine already lets run is put to sleep again. a mode switch sets its
-// relay list before anything subscribes, one switch at a time. bridges count
-// as on only when the engine took one. the engine and the rows are stand-ins
+// relay list before anything subscribes, one switch at a time, and moves
+// everyone listened for. a spell offline or another mode's outage never
+// shows as our relay's. bridges count as on only when the engine took one.
+// the engine and the rows are stand-ins
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
@@ -13,6 +16,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/delivery_mode.dart';
 import 'package:kryfo/l10n/l10n.dart';
+import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/main.dart'
     show AppState, HaloEngine, useDatabasesForTest, useEngineForTest;
 import 'package:kryfo/router.dart';
@@ -93,6 +97,17 @@ class _Io extends ArrivalIo {
   }
 }
 
+// a chat deleted here: its row goes, its runner lives on so they can still
+// reach us
+class _Rows extends ArrivalRows {
+  _Rows() : super(HaloContainer.everyday);
+  @override
+  Future<void> deleteConversation(String haloId) async {
+    calls.add('deleteConversation:$haloId');
+    people.remove(haloId);
+  }
+}
+
 const _failing = [
   {'url': 'wss://relay.kryfo.app', 'fails': 3},
 ];
@@ -145,6 +160,41 @@ void main() {
       app.sampleRelayHealth(now: later);
       expect(app.suggestFastFallbackAt(later), isFalse);
       expect(told, 2);
+    });
+
+    test('a spell offline is not an outage, and the clock starts again when '
+        'the network is back', () {
+      final app = AppState()..sendModeForTest = 'balanced';
+      eng.relays = _failing;
+      app.noteOnline(false);
+      for (var s = 0; s <= 120; s += 5) {
+        app.sampleRelayHealth(now: t0.add(Duration(seconds: s)));
+      }
+      app.noteOnline(true);
+      // the runner is still waiting out its backoff, so the row still fails
+      app.sampleRelayHealth(now: t0.add(const Duration(seconds: 125)));
+      expect(
+        app.suggestFastFallbackAt(t0.add(const Duration(seconds: 126))),
+        isFalse,
+      );
+      // still down a full spell after it came back: that one is the relay
+      app.sampleRelayHealth(now: t0.add(const Duration(seconds: 220)));
+      expect(
+        app.suggestFastFallbackAt(t0.add(const Duration(seconds: 220))),
+        isTrue,
+      );
+    });
+
+    test('back online, the clock starts again with no read in between', () {
+      final app = AppState()..sendModeForTest = 'balanced';
+      eng.relays = _failing;
+      app.sampleRelayHealth(now: t0);
+      app.noteOnline(false);
+      app.noteOnline(true);
+      expect(
+        app.suggestFastFallbackAt(t0.add(const Duration(seconds: 95))),
+        isFalse,
+      );
     });
 
     test('the status poll samples it in relay mode', () {
@@ -246,6 +296,68 @@ void main() {
         'listen:x-$c',
       ]);
       expect(app.sendMode, 'private');
+    });
+
+    test('moves everyone listened for, not just contacts, once each', () async {
+      final live = _Rows()
+        ..person(c, xpub: 'x-$c')
+        ..person('asked', accepted: 0, xpub: 'x-asked')
+        ..person('parked', accepted: 0, archived: 1, xpub: 'x-parked')
+        ..person('introduced', accepted: 0, xpub: 'x-introduced')
+        ..person('gone', xpub: 'x-gone');
+      live.vouches['introduced'] = {c};
+      final io = _Io(log);
+      final router = VaultRouter(ArrivalStore(), ArrivalSeal());
+      await router.load();
+      final app = AppState(io: io, router: router)..myId = 'me';
+      useDatabasesForTest(live, Session(live));
+      await app.subscribeKnown();
+      // since the boot: a stranger who back-paired, and a chat deleted
+      final plain = await wrapMessage(
+        'hi',
+        powNonce: grindPow('hi', powBits),
+        powBitsUsed: powBits,
+        sender: asSender('newcomer'),
+      );
+      io.firstContact = (
+        haloId: 'newcomer',
+        plain: plain,
+        env: unwrapMessage(plain),
+      );
+      await app.receiveOnion([
+        base64Encode([3, 1, 2, 3]),
+      ]);
+      await app.deleteConversation('gone');
+      expect(live.people['newcomer']?['accepted'], 0);
+      log.clear();
+
+      await app.setSendMode('balanced');
+      final moved = [
+        for (final l in log)
+          if (l.startsWith('listen:')) l.substring('listen:'.length),
+      ]..sort();
+      expect(moved, [
+        'x-asked',
+        'x-$c',
+        'x-gone',
+        'x-introduced',
+        'x-newcomer',
+        'x-parked',
+      ]);
+      expect(log.first, 'mode:balanced');
+    });
+
+    test('an outage seen before a switch is not carried back', () async {
+      final app = await world();
+      final t0 = DateTime.now().subtract(const Duration(minutes: 5));
+      app.sendModeForTest = 'balanced';
+      eng.relays = _failing;
+      app.sampleRelayHealth(now: t0);
+      app.sampleRelayHealth(now: t0.add(const Duration(seconds: 95)));
+      expect(app.suggestFastFallback, isTrue);
+      await app.setSendMode('private');
+      await app.setSendMode('balanced');
+      expect(app.suggestFastFallback, isFalse);
     });
 
     test('the boot sets the list before the invite address listens', () {

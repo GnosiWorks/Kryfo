@@ -51,6 +51,20 @@ void main() {
       p.relative(e.path, from: dir(name)),
   ]..sort();
 
+  // the first erase done: keys and prefs, then every folder but tor's. a
+  // folder caught mid-delete is not done yet
+  Future<bool> erased() async {
+    try {
+      return left('docs').join(',') == 'tor,tor/state' &&
+          left('support').isEmpty &&
+          left('tmp').isEmpty &&
+          (await const FlutterSecureStorage().readAll()).isEmpty &&
+          (await SharedPreferences.getInstance()).getKeys().isEmpty;
+    } on FileSystemException {
+      return false;
+    }
+  }
+
   setUp(() {
     root = Directory.systemTemp.createTempSync('wipe_order');
     final m = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
@@ -101,8 +115,9 @@ void main() {
     useEngineForTest(engine);
     final clock = Stopwatch()..start();
     final done = wipeHalo(releaseHandle: true);
-    // the erase, with the release unanswered
-    while (left('docs').length > 2 && clock.elapsed.inSeconds < 3) {
+    // the erase, with the release unanswered: every folder it empties, not
+    // just the first, since a busy machine leaves the last ones for later
+    while (!await erased() && clock.elapsed.inSeconds < 3) {
       await Future<void>.delayed(const Duration(milliseconds: 20));
     }
     expect(engine.calls, ['release wren']);

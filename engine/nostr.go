@@ -39,7 +39,10 @@ import (
 var (
 	nostrMu     sync.Mutex
 	nostrRelays []string
-	nostrSubs   = map[string]context.CancelFunc{}
+	// the mode changed and the app has not set its relays yet: the list
+	// still names the old mode's, and the new route must not dial them
+	nostrRelaysStale bool
+	nostrSubs        = map[string]context.CancelFunc{}
 	// "tag|content" per event, and what each one still owes once the poll
 	// has handed it over
 	nostrInbox     []string
@@ -70,6 +73,89 @@ var (
 // a plain pair rather than a cancel it cannot follow into the goroutines.
 func detachedPublishCtx() (context.Context, context.CancelFunc) {
 	return context.WithTimeout(context.Background(), 30*time.Second)
+}
+
+// closed when the mode changes: a connection made before it went the old
+// way, direct or through tor, and must not outlive it
+var (
+	routeEndMu sync.Mutex
+	routeEnd   = make(chan struct{})
+)
+
+func routeEnded() <-chan struct{} {
+	routeEndMu.Lock()
+	defer routeEndMu.Unlock()
+	return routeEnd
+}
+
+type routeKey struct{}
+
+// parent, ending also when routeC does. a shared dial under it finds the
+// route with routeOf
+func onRoute(parent context.Context, routeC <-chan struct{}) (context.Context, context.CancelFunc) {
+	ctx, cancel := context.WithCancel(context.WithValue(parent, routeKey{}, routeC))
+	go func() {
+		select {
+		case <-routeC:
+			cancel()
+		case <-ctx.Done():
+		}
+	}()
+	return ctx, cancel
+}
+
+// the route a context from onRoute is on, or nil
+func routeOf(ctx context.Context) <-chan struct{} {
+	c, _ := ctx.Value(routeKey{}).(<-chan struct{})
+	return c
+}
+
+func routeGone(routeC <-chan struct{}) bool {
+	select {
+	case <-routeC:
+		return true
+	default:
+		return false
+	}
+}
+
+// a mode switch: every relay connection closes, and nothing is dialled off
+// the old mode's list until setRelays brings the new one
+func endRoute() {
+	nostrMu.Lock()
+	nostrRelaysStale = true
+	nostrMu.Unlock()
+	routeEndMu.Lock()
+	close(routeEnd)
+	routeEnd = make(chan struct{})
+	routeEndMu.Unlock()
+}
+
+func setRelays(urls []string) {
+	nostrMu.Lock()
+	nostrRelays = urls
+	nostrRelaysStale = false
+	nostrMu.Unlock()
+}
+
+// the relays to use now. right after a mode switch the list is the old
+// mode's for a moment, until the app sets the new one: wait for it while
+// ctx lives
+func relaysWhenSet(ctx context.Context) []string {
+	for {
+		nostrMu.Lock()
+		stale := nostrRelaysStale
+		urls := append([]string(nil), nostrRelays...)
+		nostrMu.Unlock()
+		if !stale {
+			return urls
+		}
+		select {
+		case <-ctx.Done():
+			return nil
+		case <-time.After(50 * time.Millisecond):
+		}
+	}
 }
 
 func kickChan() chan struct{} {
@@ -694,6 +780,16 @@ func relayClearBenches() {
 	relayHealthMu.Unlock()
 }
 
+// whether the relays now configured still name u
+func relayListed(ctx context.Context, u string) bool {
+	for _, r := range relaysWhenSet(ctx) {
+		if r == u {
+			return true
+		}
+	}
+	return false
+}
+
 // end every runner's backoff now, so it dials again instead of waiting out a
 // sleep that was sized for the route that is gone.
 func kickRelays() {
@@ -837,9 +933,22 @@ func torNostrClientFor(lane string) (*http.Client, error) {
 }
 
 func nostrPublishMulti(ctx context.Context, lane string, ev nostr.Event) (ok int) {
-	nostrMu.Lock()
-	all := append([]string(nil), nostrRelays...)
-	nostrMu.Unlock()
+	for {
+		routeC := routeEnded()
+		ok = nostrPublishOn(ctx, lane, ev, routeC)
+		if ok > 0 || ctx.Err() != nil || !routeGone(routeC) {
+			return ok
+		}
+		// the mode changed under it: out again on the new list, the new way
+		log.Printf("nostr: the route changed during a publish, sending again")
+	}
+}
+
+// one fan-out over the relays of the route routeC belongs to. a relay whose
+// client comes from a newer route, or whose publish is still going when the
+// route ends, is left out
+func nostrPublishOn(ctx context.Context, lane string, ev nostr.Event, routeC <-chan struct{}) (ok int) {
+	all := relaysWhenSet(ctx)
 
 	// index 0 is our own relay and is never benched: it carries the traffic
 	// and the tor watchdog already covers it going away.
@@ -878,9 +987,18 @@ func nostrPublishMulti(ctx context.Context, lane string, ev nostr.Event) (ok int
 				result <- false
 				return
 			}
-			if err := publishTo(bg, lane, u, client, ev); err != nil {
+			// the list is the old mode's and the client may be the new one's
+			if routeGone(routeC) {
+				result <- false
+				return
+			}
+			pctx, pcancel := onRoute(bg, routeC)
+			defer pcancel()
+			if err := publishTo(pctx, lane, u, client, ev); err != nil {
 				log.Printf("nostr: publish %s: %v", u, err)
-				relayFailed(u)
+				if !routeGone(routeC) {
+					relayFailed(u)
+				}
 				result <- false
 				return
 			}
@@ -937,9 +1055,10 @@ func nostrSubscribeRunnerMode(ctx context.Context, peerXPubHex string, peerArr [
 // it, one tag the inbox line carries so dart knows who it was for, and the
 // lane whose circuits it may use.
 func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string, unwrap func(nostr2.Event) (string, error)) {
-	nostrMu.Lock()
-	urls := append([]string(nil), nostrRelays...)
-	nostrMu.Unlock()
+	urls := relaysWhenSet(ctx)
+	if ctx.Err() != nil {
+		return
+	}
 
 	// remember ids and the high-water timestamp on disk so a relaunch picks
 	// up where it left off rather than refetch the whole window.
@@ -1089,6 +1208,18 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 					return
 				default:
 				}
+				// taken before the list and the client, so both are of one
+				// mode: a switch after this ends what it dials
+				routeC := routeEnded()
+				// a mode switch took this relay off the list. the app starts
+				// every runner again on the new one; until it gets here this
+				// one must not dial it, least of all in the clear
+				if !relayListed(ctx, u) {
+					if ctx.Err() == nil {
+						log.Printf("nostr: %s is off the relay list, not dialled again", u)
+					}
+					return
+				}
 				// tor is down because it was asked to be. do not poll for it
 				// every ten seconds: the kick that follows a resume wakes this.
 				if modeNeedsTor() && torIsPaused() {
@@ -1115,6 +1246,12 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 					sleepOrKick(wait)
 					continue
 				}
+				// the client may be the new mode's, the relay the old list's
+				select {
+				case <-routeC:
+					continue
+				default:
+				}
 				// each connection has a context of its own, so the relay and
 				// everything the library starts for it end with the connection
 				// and not with the subscription. ending it closes the relay.
@@ -1122,15 +1259,32 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 				r := nostr.NewRelay(conn, u, subscribeRelayOptions())
 				dialAt := time.Now()
 				noteRelayDial(u)
-				dctx, dcancel := relayDialCtx(conn, u)
+				// a dial still under way when the mode changes ends there
+				rctx, rcancel := onRoute(conn, routeC)
+				dctx, dcancel := relayDialCtx(rctx, u)
 				err = r.ConnectWithClient(dctx, client)
 				dcancel()
+				rcancel()
+				if err != nil && routeGone(routeC) {
+					connDone()
+					sleepOrKick(rejoin)
+					continue
+				}
 				if err != nil {
 					connDone()
 					log.Printf("nostr: subscribe-connect %s: %v", u, err)
 					relayFailed(u)
 					sleepOrKick(relayRetryAfter(u, retry, own))
 					continue
+				}
+				// the mode changed while it dialled. nothing is asked on it
+				select {
+				case <-routeC:
+					r.Close()
+					connDone()
+					sleepOrKick(rejoin)
+					continue
+				default:
 				}
 				// wall clock, like lastAlive: a connection that lived through a
 				// night asleep lived
@@ -1403,6 +1557,15 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 						r.Close()
 						kicked = true
 						goto reconnect
+					case <-routeC:
+						// the mode changed: this socket went the old way. the
+						// app starts this runner again in a moment; one it
+						// missed redials after the usual wait, the new way
+						log.Printf("nostr: the route changed, %s closed", u)
+						idle.Stop()
+						stopKick()
+						r.Close()
+						goto reconnect
 					case <-ctx.Done():
 						idle.Stop()
 						stopKick()
@@ -1454,9 +1617,7 @@ func HaloNostrInit(cRelaysCSV *C.char) *C.char {
 	if len(clean) == 0 {
 		return C.CString("error: no valid relay urls")
 	}
-	nostrMu.Lock()
-	nostrRelays = clean
-	nostrMu.Unlock()
+	setRelays(clean)
 	log.Printf("nostr: configured %d relays: %v", len(clean), clean)
 	return C.CString("ok")
 }

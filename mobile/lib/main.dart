@@ -6677,6 +6677,9 @@ class AppState extends ChangeNotifier {
       }
     }
     if (!changed) return;
+    // an outage seen on another mode is not this one's
+    _relayDownSince = null;
+    _fastHintShown = false;
     // the engine caches one http client per route, so the mode has to land
     // before the relay list is rebuilt or the first connection uses the old
     // one. the list is in place before anything subscribes: each runner
@@ -6690,9 +6693,10 @@ class AppState extends ChangeNotifier {
     dlog('mode: $m, relays rebuilt');
   }
 
-  // the everyday rows and the hidden chats' keys, never the screen's list,
-  // on the relays of a new mode. the dev chat's lane is its own, and only
-  // once it has started
+  // every key listened on, never the screen's list, on the relays of a new
+  // mode: a runner left alone keeps the old mode's relays and route until
+  // the app restarts. the dev chat's lane is its own, and only once it has
+  // started
   @visibleForTesting
   Future<void> resubscribe() async {
     // rooms first and on their own, as at boot: a runner keeps the relays it
@@ -6703,13 +6707,15 @@ class AppState extends ChangeNotifier {
     } catch (e) {
       dlog('rooms: not listened to again ($e)');
     }
-    for (final r in await live.contacts()) {
-      final id = r['halo_id'] as String;
-      if (isDevChat(id)) continue;
-      await subscribePeer(id);
-    }
-    for (final x in _router.listenFor.keys) {
-      _io.listen(x);
+    // whoever boot listens for, then whoever was listened for since: a
+    // stranger who back-paired, a card filed in the vault, a chat deleted
+    // while its runner lives on. once each
+    final done = await _listenKnown();
+    for (final e in _xPubToHaloId.entries.toList()) {
+      if (done.contains(e.key) || isDevId(e.value) || devIdClaim(e.key)) {
+        continue;
+      }
+      _io.listen(e.key);
     }
     await subscribeDevLane();
   }
@@ -10298,6 +10304,11 @@ class AppState extends ChangeNotifier {
   // chats. those never go into the cache on disk
   @visibleForTesting
   Future<void> subscribeKnown() async {
+    await _listenKnown(cache: true);
+  }
+
+  // the keys it listened on
+  Future<Set<String>> _listenKnown({bool cache = false}) async {
     // subscribe off the xpub stored on the contact row, the same key the
     // send path uses. the signal store has none until a session exists, so
     // the scanned side could never receive the first message.
@@ -10333,11 +10344,13 @@ class AppState extends ChangeNotifier {
       _io.listen(xPub);
       fresh[xPub] = haloId;
     }
-    for (final e in _router.listenFor.entries) {
+    final hidden = _router.listenFor;
+    for (final e in hidden.entries) {
       _xPubToHaloId[e.key] = e.value;
       _io.listen(e.key);
     }
-    await _saveXPubCache(fresh);
+    if (cache) await _saveXPubCache(fresh);
+    return {...fresh.keys, ...hidden.keys};
   }
 
   // what the onion inbox held. an arrival for a hidden chat while its vault
@@ -11022,11 +11035,18 @@ class AppState extends ChangeNotifier {
         engine.networkChanged();
       }
       lastKinds = kinds;
-      if (on != _online) {
-        _online = on;
-        notifyListeners();
-      }
+      noteOnline(on);
     });
+  }
+
+  @visibleForTesting
+  void noteOnline(bool on) {
+    if (on == _online) return;
+    _online = on;
+    // the relay's clock starts again from here: dials that failed while
+    // the network was gone were not the relay's fault
+    _relayDownSince = null;
+    notifyListeners();
   }
 
   // done once the signal store can take a bundle. a failed boot completes

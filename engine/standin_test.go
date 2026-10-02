@@ -93,14 +93,19 @@ func (s *relayStandIn) handle(w http.ResponseWriter, r *http.Request) {
 	s.conns = append(s.conns, c)
 	up := s.upgradeDelay
 	s.mu.Unlock()
-	if up > 0 {
-		time.Sleep(up)
-	}
 	defer func() {
 		s.mu.Lock()
 		c.closed = time.Now()
 		s.mu.Unlock()
 	}()
+	// a dial given up during the upgrade is closed when the client goes
+	if up > 0 {
+		select {
+		case <-time.After(up):
+		case <-r.Context().Done():
+			return
+		}
+	}
 	conn, err := ws.Accept(w, r, &ws.AcceptOptions{
 		OnPingReceived: func(context.Context, []byte) bool {
 			s.mu.Lock()
@@ -490,9 +495,7 @@ func useStandIns(t *testing.T, mode string, socks *socksStandIn, relays ...*rela
 		transportMode.Store(oldMode)
 		atomic.StoreInt32(&pinnedSocks, oldPin)
 		savedDataDir = oldDir
-		nostrMu.Lock()
-		nostrRelays = oldRelays
-		nostrMu.Unlock()
+		setRelays(oldRelays)
 		nostrResetClient()
 		relayClearBenches()
 	})
@@ -508,9 +511,7 @@ func useStandIns(t *testing.T, mode string, socks *socksStandIn, relays ...*rela
 	for _, r := range relays {
 		urls = append(urls, r.url())
 	}
-	nostrMu.Lock()
-	nostrRelays = urls
-	nostrMu.Unlock()
+	setRelays(urls)
 	me := newXid(t)
 	mu.Lock()
 	myXPriv, myXPub = me.priv, me.pub

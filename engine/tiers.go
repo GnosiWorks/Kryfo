@@ -76,14 +76,8 @@ func HaloSetTransportMode(cMode *C.char) *C.char {
 	default:
 		m = modePrivate
 	}
-	prev := currentMode()
-	transportMode.Store(m)
+	prev := switchMode(m)
 	if prev != m {
-		log.Printf("transport: mode %s -> %s", prev, m)
-		// the cached client is bound to one route; drop it so the next
-		// connection is built the new way.
-		nostrResetClient()
-		resetTrafficClock()
 		// back on onion after a spell elsewhere, tor's dialer is usually
 		// stale and that is not reliably detectable, so rebuild now rather
 		// than fail sends until the watchdog notices.
@@ -96,6 +90,24 @@ func HaloSetTransportMode(cMode *C.char) *C.char {
 		}
 	}
 	return C.CString(m)
+}
+
+// the mode lands, and what was bound to the old route lets go. the route
+// ends before the mode is stored: a relay connection dialled after that
+// has its list and its client from the same mode
+func switchMode(m string) (prev string) {
+	prev = currentMode()
+	if prev == m {
+		return prev
+	}
+	endRoute()
+	transportMode.Store(m)
+	log.Printf("transport: mode %s -> %s", prev, m)
+	// the cached client is bound to one route; drop it so the next
+	// connection is built the new way.
+	nostrResetClient()
+	resetTrafficClock()
+	return prev
 }
 
 //export HaloTransportMode
