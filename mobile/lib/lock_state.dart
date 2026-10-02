@@ -549,9 +549,11 @@ class LockState extends ChangeNotifier {
 
   // tests stand in a lock that was read and is open, without the pin engine
   @visibleForTesting
-  void openForTest() {
+  void openForTest({bool enabled = false}) {
     _loaded = true;
     _locked = false;
+    _enabled = enabled;
+    _paused = false;
   }
 
   // a keystore that would not answer. the lock stays shut and load tries

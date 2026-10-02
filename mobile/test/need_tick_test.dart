@@ -3,7 +3,10 @@
 // tick every 15 s that reads one small table and sends nothing while no
 // file is due, an ask stamped before it goes so no second one follows it
 // out, a count of asks that starts again once one brings slices, and no
-// ask while a catch-up may still be bringing the slices in.
+// ask while a catch-up may still be bringing the slices in. with no network
+// neither an ask nor an outbox try goes or counts, in any mode. back online
+// the poll sends at once, and after a spell offline the tries start again;
+// a drop of a second or two while the phone changes networks keeps them.
 // the rows are kept in maps, the wire and the engine are stand-ins
 import 'dart:async';
 import 'dart:io';
@@ -46,6 +49,13 @@ class _Rows extends HaloDb {
     await h?.future;
     return super.mediaWants();
   }
+
+  // the outbox's own query, read straight off the rows
+  @override
+  Future<List<Map<String, Object?>>> unsentOutbox() async => [
+    for (final r in mem.rows('messages'))
+      if (r['direction'] == 'out' && r['sent'] == 0) r,
+  ];
 
   @override
   Future<bool> messageExists(String msgUid) {
@@ -426,5 +436,106 @@ void main() {
         [5, 6, 7, 8, 9],
       ]);
     }, timeout: const Timeout(Duration(seconds: 60)));
+  });
+
+  group('with no network', () {
+    test('a file due an ask is not asked for, nor counted', () async {
+      final w = await _World.make();
+      await w.want(last: _now() - 50 * _sec);
+      w.app.noteOnline(false);
+      await w.app.askForMissingSlices();
+      expect(w.rows.reads, isEmpty);
+      expect(w.io.out, isEmpty);
+      expect((w.row['asked_at'], w.row['asks']), (0, 0));
+    });
+
+    // a text queued two minutes ago to someone who added us back
+    Future<_World> queued(String mode) async {
+      final w = await _World.make();
+      w.app.sendModeForTest = mode;
+      await w.mem.insert('messages', {
+        'peer_id': _p,
+        'direction': 'out',
+        'plaintext': 'hello',
+        'sent_at': _now() - 120 * _sec,
+        'msg_uid': 'waiting-text',
+        'sent': 0,
+      });
+      // every send fails, as on a phone with no signal
+      w.io.down = true;
+      return w;
+    }
+
+    Future<void> settle() async {
+      for (var i = 0; i < 50; i++) {
+        await Future<void>.delayed(Duration.zero);
+      }
+    }
+
+    for (final mode in ['balanced', 'fast']) {
+      test('$mode: the outbox tries nothing, and back online tries at '
+          'once', () async {
+        final w = await queued(mode);
+        int tries() => w.io.out.length;
+        Future<void> tick() async {
+          await w.app.drainOutbox();
+          await settle();
+        }
+
+        final t0 = DateTime.now();
+        DateTime at(int s) => t0.add(Duration(seconds: s));
+        w.app.noteOnline(false, now: at(0));
+        await tick();
+        expect(tries(), 0);
+        w.app.noteOnline(true, now: at(300));
+        await tick();
+        expect(tries(), 1);
+        // the next one waits out its gap
+        await tick();
+        expect(tries(), 1);
+        // a drop of a second or two as the phone changes networks keeps
+        // the gap and the count
+        w.app.noteOnline(false, now: at(360));
+        w.app.noteOnline(true, now: at(362));
+        await tick();
+        expect(tries(), 1);
+        // a spell offline and back: the gap starts again
+        w.app.noteOnline(false, now: at(400));
+        w.app.noteOnline(true, now: at(500));
+        await tick();
+        expect(tries(), 2);
+      });
+
+      test('$mode: the status poll sends the moment the network is '
+          'back', () async {
+        final w = await _World.make();
+        w.app.sendModeForTest = mode;
+        // a sweep with the route up and nothing queued
+        await w.app.drainOutbox();
+        await w.mem.insert('messages', {
+          'peer_id': _p,
+          'direction': 'out',
+          'plaintext': 'hello',
+          'sent_at': _now() - 120 * _sec,
+          'msg_uid': 'waiting-text',
+          'sent': 0,
+        });
+        w.io.down = true;
+        int tries() => w.io.out.length;
+        // gone and back between two sweeps: only the poll sees it
+        w.app.noteOnline(false);
+        w.app.flushOnRouteUp();
+        await settle();
+        expect(tries(), 0);
+        w.app.noteOnline(true);
+        w.app.flushOnRouteUp();
+        await settle();
+        expect(tries(), 1);
+        // only on the edge: the next second's poll leaves it to its gap
+        w.app.flushOnRouteUp();
+        await settle();
+        expect(tries(), 1);
+      });
+    }
   });
 }

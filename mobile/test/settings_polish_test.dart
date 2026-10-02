@@ -14,6 +14,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/backup.dart' show BackupError;
 import 'package:kryfo/container.dart';
 import 'package:kryfo/l10n/l10n.dart';
+import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/main.dart'
     show HaloDb, HaloEngine, appState, useDatabasesForTest, useEngineForTest;
 import 'package:kryfo/screens/backup_screen.dart' show backupFailLine;
@@ -274,6 +275,38 @@ void main() {
       expect(shield()?.value, isNot(true));
       await t.pump(const Duration(seconds: 1));
       expect(shield()?.value, isFalse);
+      await devClose(t);
+    });
+
+    testWidgets('a lock turned off in the decoy frees the screenshot switch', (
+      t,
+    ) async {
+      SharedPreferences.setMockInitialValues({
+        'battery_opt_prompt_seen': true,
+        'miui_autostart_prompt_seen': true,
+      });
+      await devWorld();
+      lockState.openForTest(enabled: true);
+      lockState.inDecoy = true;
+      addTearDown(() {
+        lockState.inDecoy = false;
+        lockState.openForTest();
+      });
+      await lockState.disable();
+      t.view.physicalSize = const Size(1000, 6000);
+      t.view.devicePixelRatio = 2;
+      addTearDown(t.view.reset);
+      await t.pumpWidget(devApp(const SettingsScreen()));
+      await t.pump(const Duration(seconds: 1));
+      final row = t.widget<HaloRow>(
+        find.ancestor(
+          of: find.text(l10n.settingsBlockScreenshots),
+          matching: find.byType(HaloRow),
+        ),
+      );
+      // as after a turn off in the everyday app
+      expect(row.hint, isNot(l10n.settingsKeptOnWhileLock));
+      expect(row.onTap, isNotNull);
       await devClose(t);
     });
   });

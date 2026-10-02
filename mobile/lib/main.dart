@@ -6097,7 +6097,8 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> _askPassNow(bool walked) async {
-    if (!torReady) {
+    // an ask sent with no network still counts toward the cap
+    if (!linkUp) {
       _needHold.down(DateTime.now().millisecondsSinceEpoch);
       return;
     }
@@ -6280,8 +6281,9 @@ class AppState extends ChangeNotifier {
       notifyListeners();
     }
     // torReady already knows the mode: outside onion there is nothing to
-    // wait for and a queued message should just go.
-    final ready = torReady;
+    // wait for and a queued message should just go. with no network a try
+    // only uses up the cap
+    final ready = linkUp;
     if (!ready) {
       _outboxWasReady = false;
       return;
@@ -7036,6 +7038,7 @@ class AppState extends ChangeNotifier {
     // an outage seen on another mode is not this one's
     _relayDownSince = null;
     _fastHintShown = false;
+    _newTorTry();
     // the engine caches one http client per route, so the mode has to land
     // before the relay list is rebuilt or the first connection uses the old
     // one. the list is in place before anything subscribes: each runner
@@ -7706,15 +7709,15 @@ class AppState extends ChangeNotifier {
   // the lock turned on or off: the window follows at once
   bool? _lockWasOn;
   void _lockMoved() {
-    if (_lockWasOn == lockState.enabled) return;
-    _lockWasOn = lockState.enabled;
+    if (_lockWasOn == lockState.lockOn) return;
+    _lockWasOn = lockState.lockOn;
     unawaited(_applyScreenSecure());
     notifyListeners();
   }
 
   Future<void> loadScreenshotPref() async {
     if (_lockWasOn == null) {
-      _lockWasOn = lockState.enabled;
+      _lockWasOn = lockState.lockOn;
       lockState.addListener(_lockMoved);
     }
     _blockScreenshots =
@@ -7786,6 +7789,7 @@ class AppState extends ChangeNotifier {
     const st = secureStore;
     await st.write(key: 'bridge_lines', value: lines);
     await st.write(key: 'bridges_on', value: _bridgesOn ? '1' : '0');
+    _newTorTry();
     notifyListeners();
     return r;
   }
@@ -7924,8 +7928,8 @@ class AppState extends ChangeNotifier {
   bool get secureForced => _secureHolds > 0;
   // an app lock keeps screenshots and the recents picture off, whatever the
   // switch says: the settings then never say one thing while the app does
-  // another
-  bool get screenSecureByLock => lockState.enabled;
+  // another. a lock turned off in the decoy is off here too, as anywhere
+  bool get screenSecureByLock => lockState.lockOn;
 
   Future<void> forceSecure(bool on) async {
     _secureHolds = on ? _secureHolds + 1 : max(0, _secureHolds - 1);
@@ -10231,30 +10235,84 @@ class AppState extends ChangeNotifier {
 
   // called from the status poll. the clock runs while tor is trying and
   // resets the moment it can carry traffic.
-  void _noteTorProgress() {
+  void _noteTorProgress(DateTime now) {
     // the relay rows carry the only live signal: fails counts failures since
     // that relay's last success and is cleared the moment one lands.
     try {
       final tx = engine.transportState();
-      _noteRelayHealth(tx['relays'] as List?);
+      _noteRelayHealth(tx['relays'] as List?, now: now);
     } catch (_) {
       // transport not readable yet: nothing to conclude
     }
-    if (_bootstrapPct != _lastPct) {
-      _lastPct = _bootstrapPct;
-      _pctMovedAt = DateTime.now();
+    // only a climb past the best of this try is progress: a route torn down
+    // that climbs back to where it stuck has not moved
+    if (_bootstrapPct > _pctBest) {
+      _pctBest = _bootstrapPct;
+      _pctMovedAt = now;
     }
     if (torReady) {
       _torTryingSince = null;
+      _pctBest = -1;
     } else {
-      _torTryingSince ??= DateTime.now();
+      _torTryingSince ??= now;
     }
   }
 
+  // what the home screen was last told about the two bridge cards
+  (bool, bool) _bridgeHintsShown = (false, false);
+
+  // a route the person changed starts a try of its own: bridges, the mode, a
+  // reconnect, another network. the last try's best and clock say nothing
+  // about it. the engine's own rescue is not one and keeps them
+  bool _torTryNew = false;
+  void _newTorTry() => _torTryNew = true;
+
+  // tor torn down and started again on purpose
+  void restartTor() {
+    engine.restartTor();
+    _newTorTry();
+  }
+
+  // tor's status as the poll reads it each second. the bridge cards turn on
+  // by time alone, so a change in them is announced too
+  @visibleForTesting
+  TorStatus takeTorStatus(String raw, {DateTime? now}) {
+    final at = now ?? DateTime.now();
+    final fresh = _torTryNew;
+    _torTryNew = false;
+    if (fresh) {
+      _pctBest = -1;
+      _pctMovedAt = at;
+    }
+    final st = parseTorStatus(raw);
+    final pct = parseBootstrapPct(raw);
+    final rok = parseRouteOK(raw);
+    final rgen = parseRouteGen(raw);
+    var changed = false;
+    if (st != _torStatus ||
+        pct != _bootstrapPct ||
+        rok != _routeOK ||
+        rgen != _routeGen) {
+      _torStatus = st;
+      _routeOK = rok;
+      _routeGen = rgen;
+      _bootstrapPct = pct;
+      _noteTorProgress(at);
+      changed = true;
+    }
+    if (fresh) _torTryingSince = torReady ? null : at;
+    final hints = (suggestBridgesAt(at), suggestBridgesOffAt(at));
+    if (hints != _bridgeHintsShown) {
+      _bridgeHintsShown = hints;
+      changed = true;
+    }
+    if (changed) notifyListeners();
+    return st;
+  }
+
   // the one test the outbox, the transport screen and the ui share; mirrors
-  // torReadyNow() in the engine. outside onion nothing waits on a bootstrap,
-  // so ready means there is a network, or failed sends in relay mode never
-  // get retried.
+  // torReadyNow() in the engine. outside onion nothing waits on a bootstrap.
+  // it does not ask for a network: linkUp does
   bool get torReady => _sendMode != 'private' || torUsable;
 
   // tor can carry traffic. "reachable" is the end of publishing, not the
@@ -10313,19 +10371,19 @@ class AppState extends ChangeNotifier {
   bool _bridgeHintOff = false;
   // when the bootstrap percentage last moved. a climbing bar is a slow
   // network; a stuck one under half way is a blocked one.
-  int _lastPct = -1;
+  int _pctBest = -1;
   DateTime? _pctMovedAt;
 
-  bool get _torLooksBlocked {
+  bool _torLooksBlockedAt(DateTime now) {
     if (_sendMode != 'private') return false;
     if (torReady) return false;
     final t = _torTryingSince;
     if (t == null) return false;
     // still early: give it room before calling anything wrong
-    if (DateTime.now().difference(t).inSeconds < 120) return false;
+    if (now.difference(t).inSeconds < 120) return false;
     // it is climbing, just not quickly. that is a slow network, not a wall.
     final moved = _pctMovedAt;
-    if (moved != null && DateTime.now().difference(moved).inSeconds < 90) {
+    if (moved != null && now.difference(moved).inSeconds < 90) {
       return false;
     }
     // past halfway it is talking to the network fine and something else is
@@ -10333,9 +10391,12 @@ class AppState extends ChangeNotifier {
     return _bootstrapPct < 50;
   }
 
-  bool get suggestBridges {
+  bool get suggestBridges => suggestBridgesAt(DateTime.now());
+
+  @visibleForTesting
+  bool suggestBridgesAt(DateTime now) {
     if (_bridgeHintOff || _bridgesOn || !_online) return false;
-    return _torLooksBlocked;
+    return _torLooksBlockedAt(now);
   }
 
   // our relay is not answering and it is the only one relay mode uses.
@@ -10406,9 +10467,12 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  bool get suggestBridgesOff {
+  bool get suggestBridgesOff => suggestBridgesOffAt(DateTime.now());
+
+  @visibleForTesting
+  bool suggestBridgesOffAt(DateTime now) {
     if (!_bridgesOn || !_online) return false;
-    return _torLooksBlocked;
+    return _torLooksBlockedAt(now);
   }
 
   Future<void> dismissBridgeHint() async {
@@ -11196,27 +11260,8 @@ class AppState extends ChangeNotifier {
     Timer.periodic(const Duration(seconds: 1), (t) {
       if (haloWiping) return;
       if (_sendMode == 'balanced' && ++ticks % 5 == 0) sampleRelayHealth();
-      final raw = engine.getStatus();
-      final st = parseTorStatus(raw);
-      final pct = parseBootstrapPct(raw);
-      final rok = parseRouteOK(raw);
-      final rgen = parseRouteGen(raw);
-      if (st != _torStatus ||
-          pct != _bootstrapPct ||
-          rok != _routeOK ||
-          rgen != _routeGen) {
-        _torStatus = st;
-        _routeOK = rok;
-        _routeGen = rgen;
-        _noteTorProgress();
-        _bootstrapPct = pct;
-        notifyListeners();
-      }
-      // the route just became usable: flush anything the outbox is holding
-      // instead of waiting out the next 20s tick. torReady asks the mode
-      // first, so outside onion this never waits on a bootstrap.
-      final nowReady = torReady;
-      if (nowReady && !_outboxWasReady) unawaited(drainOutbox());
+      final st = takeTorStatus(engine.getStatus());
+      flushOnRouteUp();
       // tor died or never came up in this process. nothing else
       // restarts it, so we do. throttled: a start takes a while.
       if (st == TorStatus.off &&
@@ -11386,22 +11431,55 @@ class AppState extends ChangeNotifier {
       // mobile data): tor's open connections belong to the network that went.
       // the engine waits for the network to settle before it bounces, so a
       // flapping one is not bounced on every flap.
-      if (on && (!_online || kinds != lastKinds)) {
-        _needRouteUp();
-        engine.networkChanged();
-      }
+      if (on && (!_online || kinds != lastKinds)) networkMoved();
       lastKinds = kinds;
       noteOnline(on);
     });
   }
 
+  // tor's connections belong to the network that went
   @visibleForTesting
-  void noteOnline(bool on) {
+  void networkMoved() {
+    _needRouteUp();
+    engine.networkChanged();
+    _newTorTry();
+  }
+
+  // the route just became usable: flush anything the outbox is holding
+  // instead of waiting out the next 20s tick. torReady asks the mode first,
+  // so outside onion this never waits on a bootstrap
+  @visibleForTesting
+  void flushOnRouteUp() {
+    if (linkUp && !_outboxWasReady) unawaited(drainOutbox());
+  }
+
+  // when the network last went. a drop shorter than this is the phone
+  // handing over between networks, not a spell offline
+  DateTime? _offlineAt;
+  static const _offlineSpell = Duration(seconds: 60);
+
+  @visibleForTesting
+  void noteOnline(bool on, {DateTime? now}) {
     if (on == _online) return;
+    final at = now ?? DateTime.now();
     _online = on;
     // the relay's clock starts again from here: dials that failed while
     // the network was gone were not the relay's fault
     _relayDownSince = null;
+    if (!on) {
+      _offlineAt = at;
+    } else {
+      // back from a spell offline, waiting rows go with their tries whole. a
+      // network that flaps keeps its count, or a failing row never stops
+      final gone = _offlineAt;
+      _offlineAt = null;
+      if (gone == null || at.difference(gone) >= _offlineSpell) {
+        _outboxTries.clear();
+        _outboxNextAt.clear();
+      }
+      // the status poll sees the route come up and drains
+      _outboxWasReady = false;
+    }
     notifyListeners();
   }
 
@@ -14418,7 +14496,7 @@ class _DevScreenState extends State<DevScreen> {
               const SizedBox(height: 8),
               GestureDetector(
                 onTap: () async {
-                  if (lockState.enabled) {
+                  if (lockState.lockOn) {
                     final ok = await showDialog<bool>(
                       context: context,
                       builder: (ctx) => AlertDialog(
@@ -14471,7 +14549,7 @@ class _DevScreenState extends State<DevScreen> {
                 child: AnimatedBuilder(
                   animation: lockState,
                   builder: (_, _) => Text(
-                    lockState.enabled ? l10n.appAppLockOn : l10n.appAppLockOff,
+                    lockState.lockOn ? l10n.appAppLockOn : l10n.appAppLockOff,
                     style: HaloType.mono(size: 11, color: HaloColors.amber),
                   ),
                 ),

@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the shield is held once per screen that wants it. a room opened over
 // another room lets go of its own hold when it closes, and the room under
-// it stays shielded until it closes too
+// it stays shielded until it closes too. a lock turned off in the decoy
+// lets the window go as a turn off anywhere does
 import 'package:flutter/services.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/main.dart' show AppState;
 import 'package:kryfo/router.dart';
 
@@ -16,6 +19,7 @@ void main() {
 
   setUp(() {
     told = [];
+    FlutterSecureStorage.setMockInitialValues({});
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(const MethodChannel('halo/platform'), (
           call,
@@ -56,5 +60,23 @@ void main() {
     expect(app.secureForced, isTrue);
     await app.forceSecure(false);
     expect(app.secureForced, isFalse);
+  });
+
+  test('a lock turned off in the decoy no longer holds the window', () async {
+    lockState.openForTest(enabled: true);
+    addTearDown(() {
+      lockState.inDecoy = false;
+      lockState.openForTest();
+    });
+    final app = await make();
+    await app.loadScreenshotPref();
+    expect(app.screenSecureByLock, isTrue);
+    expect(told.last, isTrue);
+    lockState.inDecoy = true;
+    await lockState.disable();
+    await Future<void>.delayed(Duration.zero);
+    // the same as a turn off in the everyday app
+    expect(app.screenSecureByLock, isFalse);
+    expect(told.last, isFalse);
   });
 }

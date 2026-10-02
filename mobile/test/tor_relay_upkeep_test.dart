@@ -6,6 +6,10 @@
 // relay list before anything subscribes, one switch at a time, and moves
 // everyone listened for. a spell offline or another mode's outage never
 // shows as our relay's. bridges count as on only when the engine took one.
+// a tor stuck on a network that blocks it brings up the bridges card on time
+// alone, and a route torn down that climbs back to where it stuck keeps it.
+// bridges, a reconnect, a mode or a network the person changed start a try
+// of their own, and no card shows while it climbs.
 // the engine and the rows are stand-ins
 import 'dart:convert';
 import 'dart:io';
@@ -82,6 +86,13 @@ class _Engine implements HaloEngine {
   String setBridges(String lines, bool on) => saved;
   @override
   String bridgeState() => state;
+
+  @override
+  void restartTor() => log.add('restart');
+  @override
+  void networkChanged() => log.add('network');
+  @override
+  (int, int) catchupState() => (0, 1);
 
   @override
   dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
@@ -392,6 +403,122 @@ void main() {
       eng.state = 'true|2|41234';
       await app.applyBridges('a\nb', false);
       expect(app.bridgesOn, isFalse);
+    });
+  });
+
+  group('the bridges card', () {
+    final t0 = DateTime(2026, 10, 1, 12);
+    DateTime at(int s) => t0.add(Duration(seconds: s));
+
+    // a second of the status poll, the same status every time
+    void poll(AppState app, String raw, int from, int to) {
+      for (var s = from; s <= to; s++) {
+        app.takeTorStatus(raw, now: at(s));
+      }
+    }
+
+    test('a tor stuck under half way shows it by time alone', () {
+      final app = AppState()..sendModeForTest = 'private';
+      var told = 0;
+      app.addListener(() => told++);
+      poll(app, 'starting|5|0|0|0', 0, 119);
+      expect(app.suggestBridgesAt(at(119)), isFalse);
+      expect(told, 1);
+      // nothing about tor changed, the poll still says so
+      poll(app, 'starting|5|0|0|0', 120, 125);
+      expect(app.suggestBridgesAt(at(125)), isTrue);
+      expect(told, 2);
+    });
+
+    test('a route torn down that climbs back to where it stuck keeps it', () {
+      final app = AppState()..sendModeForTest = 'private';
+      poll(app, 'starting|5|0|0|0', 0, 130);
+      expect(app.suggestBridgesAt(at(130)), isTrue);
+      // the engine's rescue: down to nothing and back to the same place
+      poll(app, 'starting|0|0|0|1', 131, 140);
+      poll(app, 'starting|5|0|0|1', 141, 150);
+      expect(app.suggestBridgesAt(at(150)), isTrue);
+      // a climb past it is progress, a slow network and not a wall
+      poll(app, 'starting|20|0|0|1', 151, 160);
+      expect(app.suggestBridgesAt(at(160)), isFalse);
+    });
+
+    // a minute's climb from nothing that stays under the old best, with
+    // neither card up at any second of it
+    void climb(AppState app, int from) {
+      for (final (i, pct) in [0, 10, 20, 25].indexed) {
+        for (var s = 0; s < 15; s++) {
+          final now = at(from + i * 15 + s);
+          app.takeTorStatus('starting|$pct|0|0|1', now: now);
+          expect(app.suggestBridgesAt(now), isFalse, reason: '$pct% $now');
+          expect(app.suggestBridgesOffAt(now), isFalse, reason: '$pct% $now');
+        }
+      }
+    }
+
+    test('bridges turned on get a try of their own', () async {
+      final app = AppState()..sendModeForTest = 'private';
+      poll(app, 'starting|30|0|0|0', 0, 130);
+      expect(app.suggestBridgesAt(at(130)), isTrue);
+      await app.applyBridges('a\nb', true);
+      expect(app.bridgesOn, isTrue);
+      climb(app, 131);
+      // stuck from here on, it is the bridges that are not working
+      poll(app, 'starting|25|0|0|1', 191, 300);
+      expect(app.suggestBridgesOffAt(at(300)), isTrue);
+    });
+
+    test('bridges turned off do not bring the other card back', () async {
+      final app = AppState()..sendModeForTest = 'private';
+      await app.applyBridges('a\nb', true);
+      poll(app, 'starting|30|0|0|0', 0, 130);
+      expect(app.suggestBridgesOffAt(at(130)), isTrue);
+      eng.state = 'false|1|0';
+      await app.applyBridges('a\nb', false);
+      app.restartTor();
+      expect(log, ['restart']);
+      climb(app, 131);
+    });
+
+    test('a reconnect or another network is a try of its own', () {
+      for (final change in ['reconnect', 'network']) {
+        final app = AppState()..sendModeForTest = 'private';
+        poll(app, 'starting|30|0|0|0', 0, 130);
+        expect(app.suggestBridgesAt(at(130)), isTrue);
+        if (change == 'reconnect') {
+          app.restartTor();
+        } else {
+          app.networkMoved();
+        }
+        climb(app, 131);
+      }
+      expect(log, ['restart', 'network']);
+    });
+
+    test('so is a mode switched away and back', () async {
+      final live = ArrivalRows(HaloContainer.everyday);
+      final router = VaultRouter(ArrivalStore(), ArrivalSeal());
+      await router.load();
+      final app = AppState(io: _Io(log), router: router)
+        ..myId = 'me'
+        ..sendModeForTest = 'private';
+      useDatabasesForTest(live, Session(live));
+      poll(app, 'starting|30|0|0|0', 0, 130);
+      expect(app.suggestBridgesAt(at(130)), isTrue);
+      await app.setSendMode('balanced');
+      await app.setSendMode('private');
+      poll(app, 'starting|30|0|0|0', 131, 200);
+      expect(app.suggestBridgesAt(at(200)), isFalse);
+    });
+
+    test('nothing to say once tor carries traffic', () {
+      final app = AppState()..sendModeForTest = 'private';
+      var told = 0;
+      poll(app, 'starting|5|0|0|0', 0, 130);
+      app.addListener(() => told++);
+      poll(app, 'bootstrapped|100|0|1|0', 131, 140);
+      expect(app.suggestBridgesAt(at(140)), isFalse);
+      expect(told, 1);
     });
   });
 }
