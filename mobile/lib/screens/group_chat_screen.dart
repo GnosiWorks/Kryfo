@@ -159,7 +159,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   final _scrollCtrl = ScrollController();
   final List<_GMsg> _messages = [];
   bool _showScrollDown = false;
-  int _seenCount = 0;
+  // others' messages that came in while reading back, for the jump button.
+  // counted as they arrive: older pages and reloads add none
+  int _unseenNew = 0;
   String _groupName = '';
   int _memberCount = 0;
   // who this phone is in this chat: its kryfo id, or its key in a room
@@ -420,10 +422,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       child: Center(
         child: JumpDownButton(
           shown: _showScrollDown,
-          count: _messages.length - _seenCount,
+          count: _unseenNew,
           label: l10n.groupChatJumpToTheNewest,
           onTap: () {
-            setState(() => _seenCount = _messages.length);
+            setState(() => _unseenNew = 0);
             _scrollToEnd();
           },
         ),
@@ -433,11 +435,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   void _onGroupScroll() {
     if (!_scrollReady) return;
-    // not reversed here, unlike 1:1 - the newest message lives at
-    // maxScrollExtent, so distance from the bottom is the gap to it.
-    final fromBottom = _maxScroll - _pixels;
-    final show = fromBottom > 240;
-    if (!show) _seenCount = _messages.length;
+    final show = !_nearNewest;
+    if (!show) _unseenNew = 0;
     if (show != _showScrollDown && mounted) {
       setState(() => _showScrollDown = show);
     }
@@ -974,11 +973,16 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final nowHave = _messages.map((m) => m.msgUid).toSet();
     fresh.removeWhere((m) => m.msgUid != null && nowHave.contains(m.msgUid));
     if (fresh.isEmpty) return;
+    // someone reading back stays where they are: rows added at the end move
+    // nothing above them. near the newest they are taken down to it
+    final theirs = fresh.where((m) => m.direction != 'out').length;
+    final follow = _nearNewest || theirs < fresh.length;
     setState(() {
       _messages.addAll(fresh);
       _normaliseMessages();
+      if (!follow) _unseenNew += theirs;
     });
-    _scrollToEnd();
+    if (follow) _scrollToEnd();
   }
 
   // .position asserts exactly one attached scroll view, and during a route
@@ -992,6 +996,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       _scrollReady ? _scrollCtrl.positions.first.maxScrollExtent : 0.0;
 
   double get _pixels => _scrollReady ? _scrollCtrl.positions.first.pixels : 0.0;
+
+  // not reversed here, unlike 1:1: the newest message lives at
+  // maxScrollExtent. the jump button shows above this
+  bool get _nearNewest => !_scrollReady || _maxScroll - _pixels <= 240;
 
   Widget _buildGroupRow(int i) {
     final m = _messages[i];
@@ -1226,9 +1234,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       replyTo: replyToUid,
       sending: true,
       burnSecs: burnSeconds,
-      burnAt: _ghost
-          ? DateTime.now().millisecondsSinceEpoch + _burnSeconds * 1000
-          : null,
     )..fresh = true;
     optimistic.preview = preview;
     setState(() {
@@ -1239,6 +1244,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     });
     _scrollToEnd();
     var ok = false;
+    int? burnAt;
     final sendFut = _watch.owning(
       uid,
       () => appState.sendToGroup(
@@ -1252,6 +1258,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     );
     try {
       ok = await sendFut;
+      burnAt = await _burnFrom(uid, ok);
     } catch (e) {
       dlog('group send failed: $e');
     } finally {
@@ -1266,6 +1273,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           _sending = false;
           live.sending = false;
           live.failed = !ok; // no member acknowledged -> tap-to-retry
+          if (burnAt != null) live.burnAt = burnAt;
         });
         // catch up any change deferred while this send was in flight.
         if (!_lookAtDeadSends() && !_messages.any((x) => x.sending)) {
@@ -1333,6 +1341,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     }
     final uid = m.msgUid!;
     var ok = false;
+    int? burnAt;
     try {
       ok = await _watch.owning(
         uid,
@@ -1345,6 +1354,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           preview: m.preview,
         ),
       );
+      burnAt = await _burnFrom(uid, ok);
     } catch (e) {
       dlog('group retry failed: $e');
     } finally {
@@ -1353,6 +1363,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         setState(() {
           live.sending = false;
           live.failed = !ok;
+          if (burnAt != null) live.burnAt = burnAt;
         });
         if (!_messages.any((x) => x.sending)) _tryAppendNew();
       }
@@ -1404,9 +1415,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       replyTo: replyToUid,
       sending: true,
       burnSecs: burnSeconds,
-      burnAt: burnSeconds == null
-          ? null
-          : DateTime.now().millisecondsSinceEpoch + burnSeconds * 1000,
     )..fresh = true;
     _fly(uid, s, pick);
     setState(() {
@@ -1431,11 +1439,13 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     } catch (e) {
       dlog('group sticker send failed: $e');
     }
+    final burnAt = await _burnFrom(uid, ok);
     if (!mounted) return;
     final live = _liveMsg(uid) ?? optimistic;
     setState(() {
       live.sending = false;
       live.failed = !ok;
+      if (burnAt != null) live.burnAt = burnAt;
     });
     if (!_messages.any((x) => x.sending)) _tryAppendNew();
   }
@@ -1548,9 +1558,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             msgUid: uid,
             sending: true,
             burnSecs: burnSeconds,
-            burnAt: burnSeconds == null
-                ? null
-                : DateTime.now().millisecondsSinceEpoch + burnSeconds * 1000,
           )
           ..fresh = true
           ..poll = poll;
@@ -1574,11 +1581,13 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     } catch (e) {
       dlog('group poll send failed: $e');
     }
+    final burnAt = await _burnFrom(uid, ok);
     if (!mounted) return;
     final live = _liveMsg(uid) ?? optimistic;
     setState(() {
       live.sending = false;
       live.failed = !ok;
+      if (burnAt != null) live.burnAt = burnAt;
     });
     if (!_messages.any((x) => x.sending)) _tryAppendNew();
   }
@@ -1913,6 +1922,18 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       if (c.haloId == id) return c.supporterBadge;
     }
     return null;
+  }
+
+  // a timed message's clock, started by the send that went. null for one
+  // that did not go or has no timer
+  Future<int?> _burnFrom(String uid, bool ok) async {
+    if (!ok) return null;
+    try {
+      return await session.lightBurn(uid);
+    } catch (e) {
+      dlog('group burn: $e');
+      return null;
+    }
   }
 
   // after a send completes, the optimistic object may have been replaced by
@@ -3237,7 +3258,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                         children: [
                           if (_atmosphere != Atmo.none)
                             Positioned.fill(child: AtmosphereWash(_atmosphere)),
-                          _scrollDownButton(),
                           ListView.builder(
                             key: _listKey,
                             controller: _scrollCtrl,
@@ -3290,6 +3310,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                               ),
                             ),
                           ),
+                          // over the list, or the list takes its taps
+                          _scrollDownButton(),
                         ],
                       ),
                     ),

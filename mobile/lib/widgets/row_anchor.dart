@@ -152,3 +152,102 @@ void landOnRow({
 
   next();
 }
+
+/// a scroll controller whose offset can be moved along with the rows under
+/// it, for [holdRowsInView]
+class HoldScrollController extends ScrollController {
+  @override
+  ScrollPosition createScrollPosition(
+    ScrollPhysics physics,
+    ScrollContext context,
+    ScrollPosition? oldPosition,
+  ) => _HoldPosition(
+    physics: physics,
+    context: context,
+    initialPixels: initialScrollOffset,
+    keepScrollOffset: keepScrollOffset,
+    oldPosition: oldPosition,
+    debugLabel: debugLabel,
+  );
+}
+
+class _HoldPosition extends ScrollPositionWithSingleContext {
+  _HoldPosition({
+    required super.physics,
+    required super.context,
+    super.initialPixels,
+    super.keepScrollOffset,
+    super.oldPosition,
+    super.debugLabel,
+  });
+
+  // the rows moved, not the reader: a drag goes on from here, a fling
+  // starts again from here at the speed it had, and listeners hear of it
+  void shiftTo(double to) {
+    correctPixels(to);
+    activity?.resetActivity();
+    notifyListeners();
+  }
+}
+
+/// keeps the rows on screen where they are while rows are added out of
+/// view. call it before the change. a lazy list places its rows by index,
+/// so rows added at the start push the rest along by their height; the
+/// offset is put back after the next layout. with a [HoldScrollController]
+/// this holds through a fling too; an animation to a set place keeps its
+/// target
+void holdRowsInView({
+  required ScrollController ctrl,
+  required RowAnchors anchors,
+  required bool Function() alive,
+}) {
+  if (ctrl.positions.length != 1) return;
+  final pixels = ctrl.positions.first.pixels;
+  // the built row nearest the viewport's edge: they all move together
+  String? id;
+  double? was;
+  for (final k in anchors.built) {
+    final at = _offsetOf(anchors, k);
+    if (at == null) continue;
+    if (was == null || (at - pixels).abs() < (was - pixels).abs()) {
+      id = k;
+      was = at;
+    }
+  }
+  if (id == null || was == null) return;
+  final key = id;
+  final before = was;
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (!alive() || ctrl.positions.length != 1) return;
+    final now = _offsetOf(anchors, key);
+    if (now == null) return;
+    final moved = now - before;
+    if (moved.abs() < 0.5) return;
+    final pos = ctrl.positions.first;
+    final to = (pos.pixels + moved)
+        .clamp(pos.minScrollExtent, pos.maxScrollExtent)
+        .toDouble();
+    if (pos is _HoldPosition) {
+      pos.shiftTo(to);
+      return;
+    }
+    // without ending a drag under way: the reader did not scroll, the rows did
+    pos.correctPixels(to);
+    final ro = anchors.of(key)?.findRenderObject();
+    if (ro != null && ro.attached) {
+      (RenderAbstractViewport.of(ro) as RenderObject).markNeedsLayout();
+    }
+  });
+}
+
+// the scroll offset that puts the row at the viewport's leading edge
+double? _offsetOf(RowAnchors anchors, String id) {
+  final ctx = anchors.of(id);
+  final ro = ctx == null || !ctx.mounted ? null : ctx.findRenderObject();
+  if (ro == null || !ro.attached) return null;
+  try {
+    return RenderAbstractViewport.of(ro).getOffsetToReveal(ro, 0).offset;
+  } catch (_) {
+    return null;
+  }
+}
