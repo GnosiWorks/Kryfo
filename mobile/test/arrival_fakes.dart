@@ -586,6 +586,22 @@ class ArrivalRows implements HaloDb {
   @override
   Future<void> markSent(String msgUid) async => _hit('markSent', msgUid, null);
 
+  // as the real one: an own timed row starts burning once, others are left
+  @override
+  Future<int?> lightBurn(String msgUid) async {
+    _hit('lightBurn', msgUid, null);
+    for (final m in msgs) {
+      if (m['msg_uid'] != msgUid || m['direction'] != 'out') continue;
+      final lit = (m['burn_at'] as num?)?.toInt();
+      final secs = (m['burn_secs'] as num?)?.toInt();
+      if (lit != null || secs == null) return lit;
+      final at = DateTime.now().millisecondsSinceEpoch + secs * 1000;
+      m['burn_at'] = at;
+      return at;
+    }
+    return null;
+  }
+
   @override
   Future<void> markDelivered(String msgUid, {required String from}) async {
     _hit('markDelivered', msgUid, null);
