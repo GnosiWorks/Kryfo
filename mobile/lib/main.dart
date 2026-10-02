@@ -2690,12 +2690,21 @@ class HaloDb implements GroupOwedStore {
 
   Future<void> deleteGroup(String groupId) async {
     final db = await open();
-    for (final table in const [
-      'group_media_owed',
-      'group_ctl_out',
-      'group_roster',
-    ]) {
+    final room = (await getGroup(groupId))?['room_pub'] != null;
+    for (final table in const ['group_media_owed', 'group_roster']) {
       await db.delete(table, where: 'group_id = ?', whereArgs: [groupId]);
+    }
+    // a take-back still goes to members who may hold the message, after
+    // a leave or a remove too: they act on it without the group. a room's
+    // keys go with it, and nothing of it could go
+    for (final r in await db.query(
+      'group_ctl_out',
+      columns: ['id', 'ctl'],
+      where: 'group_id = ?',
+      whereArgs: [groupId],
+    )) {
+      if (!room && groupUnsendOf(r['ctl']) != null) continue;
+      await db.delete('group_ctl_out', where: 'id = ?', whereArgs: [r['id']]);
     }
     await db.delete(
       'group_members',
@@ -4291,6 +4300,38 @@ class HaloDb implements GroupOwedStore {
     });
   }
 
+  /// the take-back of [uid] for each of [members], in the same lanes as the
+  /// controls. a member it already waits for gets no second one
+  Future<void> queueGroupUnsend(
+    String groupId,
+    Iterable<String> members,
+    String uid, {
+    required int now,
+  }) async {
+    final body = jsonEncode(groupUnsendRow(uid));
+    final db = await open();
+    await db.transaction((t) async {
+      for (final m in members) {
+        final held = await t.query(
+          'group_ctl_out',
+          columns: ['id'],
+          where: 'group_id = ? AND member = ? AND ctl = ?',
+          whereArgs: [groupId, m, body],
+          limit: 1,
+        );
+        if (held.isNotEmpty) continue;
+        await t.insert('group_ctl_out', {
+          'group_id': groupId,
+          'member': m,
+          'ctl': body,
+          'since': now,
+          'tries': 0,
+          'next_at': now,
+        });
+      }
+    });
+  }
+
   /// every control still to go, oldest first
   Future<List<Map<String, Object?>>> groupCtlOut() async {
     final db = await open();
@@ -4988,6 +5029,21 @@ Future<void> _editsTable(Database db) async {
 
 const kFrameUnsend = 'unsend';
 const kFrameReaction = 'reaction';
+
+// a group take-back waits in a member's control lane as a row of its own
+// shape, and goes out as an unsend frame, never as a control
+Map<String, String> groupUnsendRow(String uid) => {'un': uid};
+
+String? groupUnsendOf(Object? ctl) {
+  if (ctl is! String || !ctl.startsWith('{"un":')) return null;
+  try {
+    final raw = jsonDecode(ctl);
+    final uid = raw is Map ? raw['un'] : null;
+    return uid is String && uid.isNotEmpty ? uid : null;
+  } catch (_) {
+    return null;
+  }
+}
 
 // an unsend or a reaction in a 1:1 chat that has not reached the other
 // person yet, one of each kind a message: the latest word replaces the last.
@@ -7264,21 +7320,36 @@ class AppState extends ChangeNotifier {
         final id = r['id'] as int;
         final now = DateTime.now().millisecondsSinceEpoch;
         if (!force && (r['next_at'] as int? ?? 0) > now) return false;
-        final gc = GroupControl.fromWire(_jsonOf(r['ctl']));
-        // no longer theirs to get: the next one goes
-        if (gc == null || !await _ctlStillOwed(d, groupId, member, gc)) {
+        final un = groupUnsendOf(r['ctl']);
+        final gc = un != null ? null : GroupControl.fromWire(_jsonOf(r['ctl']));
+        // no longer theirs to get: the next one goes. a take-back is kept
+        // only where it can still go: members who left, were taken out, or
+        // saw us leave or be taken out may hold the message yet, and act
+        // on it without the group
+        final owed =
+            un != null ||
+            gc != null && await _ctlStillOwed(d, groupId, member, gc);
+        if (!owed) {
           await d.dropGroupCtl(id);
           continue;
         }
         if ((r['tries'] as int? ?? 0) >= kGroupOwedTries) {
           // past its tries a create stays: the group is not there without
-          // it, and what goes after would be dropped. it goes on a send of
-          // ours to them, or when their session comes up
-          if (gc.type != 'create') {
+          // it, and what goes after would be dropped. a take-back stays
+          // too: the message is theirs to keep without it. either goes on
+          // a send of ours to them, or when their session comes up
+          if (un == null && gc?.type != 'create') {
             await d.dropGroupCtl(id);
             continue;
           }
           if (!force) return false;
+        }
+        if (un != null && mediaInflight.contains(un)) {
+          // a slice of the file it takes back may still be on its way: the
+          // take-back goes once the stopped send let go, so it lands last
+          await whenMediaFree(un);
+          if (haloWiping || sessionQuiet) return false;
+          continue;
         }
         // only a pass on the lane's own schedule costs a try. one a send
         // forces is free, or a busy group would spend them in hours.
@@ -7288,10 +7359,11 @@ class AppState extends ChangeNotifier {
           '',
           groupId: groupId,
           groupControl: gc,
+          unsend: un,
           sender: _mySender(),
         );
         if (!await _sendGroupEnvelope(groupId, member, wrapped)) {
-          dlog('group ctl ${gc.type} to $member: waits');
+          dlog('group ctl ${gc?.type ?? 'unsend'} to $member: waits');
           return false;
         }
         await d.dropGroupCtl(id);
@@ -13898,8 +13970,7 @@ class AppState extends ChangeNotifier {
   Future<void> unsendInGroup(String groupId, String targetMsgUid) async {
     // a file still going, to everyone or to the members it missed, stops
     // before its row and its file go, and what they were owed goes too
-    final going = mediaInflight.contains(targetMsgUid);
-    if (going) cancelMediaSend(targetMsgUid);
+    if (mediaInflight.contains(targetMsgUid)) cancelMediaSend(targetMsgUid);
     await session.deleteMessage(targetMsgUid);
     groupOwedTick.value++;
     // a quiet session keeps it on this phone: nothing leaves
@@ -13907,31 +13978,23 @@ class AppState extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    await _sayUnsent(groupId, targetMsgUid);
-    notifyListeners();
-    // a slice already on its way can land after that: said again once the
-    // send has let go, so nobody is left holding part of the file
-    if (going) {
-      unawaited(
-        whenMediaFree(
-          targetMsgUid,
-        ).then((_) => _sayUnsent(groupId, targetMsgUid)),
-      );
-    }
-  }
-
-  Future<void> _sayUnsent(String groupId, String targetMsgUid) async {
-    final wrapped = await wrapMessage(
-      '',
-      groupId: groupId,
-      unsend: targetMsgUid,
-      sender: _mySender(),
+    // each member's lane keeps it until they have it, behind what that
+    // member is still to get of the group, after a restart too
+    final d = _ownerOf(groupId);
+    final to = await _othersIn(d, groupId);
+    await d.queueGroupUnsend(
+      groupId,
+      to,
+      targetMsgUid,
+      now: DateTime.now().millisecondsSinceEpoch,
     );
-    final members = await session.getGroupMembers(groupId);
-    await Future.wait([
-      for (final memberId in members)
-        if (memberId != myId) _sendGroupEnvelope(groupId, memberId, wrapped),
-    ]);
+    notifyListeners();
+    // the first try goes now, as a message would, and costs none of its
+    // tries
+    if (haloWiping || sessionQuiet) return;
+    for (final m in to) {
+      unawaited(_ctlLane(d, groupId, m, force: true));
+    }
   }
 
   // edit a group message everywhere: swap text locally, tell every member.

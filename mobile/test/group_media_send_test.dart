@@ -421,10 +421,10 @@ void main() {
       expect(guard, greaterThan(0));
       expect(body.indexOf('deleteMessage'), greaterThan(guard));
       expect(body, contains('appState.unsendInGroup(widget.groupId, uid)'));
-      // the unsend says it again once the send has let go
+      // the unsend goes once the send has let go
       expect(
-        bodyOf(app, 'Future<void> unsendInGroup('),
-        contains('whenMediaFree('),
+        bodyOf(app, 'Future<bool> _runCtlLane('),
+        contains('await whenMediaFree(un);'),
       );
     });
   });

@@ -175,6 +175,37 @@ void main() {
       await from(_bob, await said(_bob, 'u3'));
       expect(live.msg('u3'), isNotNull);
     });
+
+    test('in a group: one taken back late goes, one taken back before it '
+        'came never lands, and only its sender takes it back', () async {
+      live.group(_g, ['me', _bob, _eve]);
+      Future<String> saidIn(String who, String uid) => wrapMessage(
+        'call me',
+        msgUid: uid,
+        groupId: _g,
+        sender: asSender(who),
+      );
+      Future<String> unsaidIn(String who, String uid) =>
+          wrapMessage('', unsend: uid, groupId: _g, sender: asSender(who));
+
+      await from(_bob, await saidIn(_bob, 'g1'));
+      expect(live.msg('g1')?['group_id'], _g);
+      await from(_bob, await unsaidIn(_bob, 'g1'));
+      expect(live.msg('g1'), isNull);
+      // a second copy of it, as a retry would bring, changes nothing
+      await from(_bob, await unsaidIn(_bob, 'g1'));
+      expect(live.msg('g1'), isNull);
+
+      await from(_bob, await unsaidIn(_bob, 'g2'));
+      await from(_bob, await saidIn(_bob, 'g2'));
+      expect(live.msg('g2'), isNull);
+
+      await from(_eve, await unsaidIn(_eve, 'g3'));
+      await from(_bob, await saidIn(_bob, 'g3'));
+      expect(live.msg('g3'), isNotNull);
+      await from(_eve, await unsaidIn(_eve, 'g3'));
+      expect(live.msg('g3'), isNotNull);
+    });
   });
 
   group('queued', () {
