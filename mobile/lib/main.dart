@@ -1080,6 +1080,7 @@ class HaloDb implements GroupOwedStore {
     _db = null;
     _given = null;
     _unfinished = null;
+    _strandedLit = false;
     await d?.close();
   }
 
@@ -3013,7 +3014,40 @@ class HaloDb implements GroupOwedStore {
     }
   }
 
+  // a timed message of ours that went but never had its clock started:
+  // from before receipts lit it, or a stop between marking it sent and
+  // lighting it. once per open is enough, nothing makes new ones after
+  bool _strandedLit = false;
+  Future<void> _lightStrandedOnce() async {
+    if (_strandedLit) return;
+    await lightStrandedBurns();
+    _strandedLit = true;
+  }
+
+  Future<int> lightStrandedBurns() async {
+    final db = await open();
+    final rows = await db.query(
+      'messages',
+      columns: ['id', 'burn_secs'],
+      where:
+          "direction = 'out' AND sent = 1 AND burn_secs IS NOT NULL "
+          'AND burn_at IS NULL',
+    );
+    final now = DateTime.now().millisecondsSinceEpoch;
+    for (final r in rows) {
+      final secs = (r['burn_secs'] as num).toInt();
+      await db.update(
+        'messages',
+        {'burn_at': now + secs * 1000},
+        where: 'id = ? AND burn_at IS NULL',
+        whereArgs: [r['id']],
+      );
+    }
+    return rows.length;
+  }
+
   Future<void> purgeExpiredBurns() async {
+    await _lightStrandedOnce();
     final db = await open();
     final now = DateTime.now().millisecondsSinceEpoch;
     final rows = await db.query(
@@ -3631,6 +3665,7 @@ class HaloDb implements GroupOwedStore {
   // delete messages whose burn_at is past. called by the periodic
   // sweep started in boot(). [gone] hears each one that came in
   Future<int> purgeExpired({void Function(String msgUid)? gone}) async {
+    await _lightStrandedOnce();
     final db = await open();
     final now = DateTime.now().millisecondsSinceEpoch;
     final media = await db.query(
@@ -4288,7 +4323,7 @@ class HaloDb implements GroupOwedStore {
     final db = await open();
     final rows = await db.query(
       'messages',
-      columns: ['peer_id', 'group_id'],
+      columns: ['peer_id', 'group_id', 'burn_secs', 'burn_at'],
       where: 'msg_uid = ? AND direction = ?',
       whereArgs: [msgUid, 'out'],
     );
@@ -4298,15 +4333,48 @@ class HaloDb implements GroupOwedStore {
           ? r['peer_id'] == from
           : (await getGroupMembers(g)).contains(from);
       if (!ok) continue;
+      // a timed message whose own send never came back ok is lit here,
+      // or once it counts as sent nothing else ever starts its clock
+      final secs = (r['burn_secs'] as num?)?.toInt();
       await db.update(
         'messages',
-        {'sent': 1, 'delivered': 1},
+        {
+          'sent': 1,
+          'delivered': 1,
+          if (secs != null && r['burn_at'] == null)
+            'burn_at': DateTime.now().millisecondsSinceEpoch + secs * 1000,
+        },
         where: g == null || g.isEmpty
             ? 'msg_uid = ? AND direction = ? AND peer_id = ?'
             : 'msg_uid = ? AND direction = ? AND group_id = ?',
         whereArgs: [msgUid, 'out', g == null || g.isEmpty ? from : g],
       );
     }
+  }
+
+  // the clock of a timed message of ours that went, started now if nothing
+  // started it yet. null for a message with no timer
+  Future<int?> lightBurn(String msgUid) async {
+    final db = await open();
+    final r = await db.query(
+      'messages',
+      columns: ['burn_secs', 'burn_at'],
+      where: 'msg_uid = ? AND direction = ?',
+      whereArgs: [msgUid, 'out'],
+      limit: 1,
+    );
+    if (r.isEmpty) return null;
+    final lit = (r.first['burn_at'] as num?)?.toInt();
+    final secs = (r.first['burn_secs'] as num?)?.toInt();
+    if (lit != null || secs == null) return lit;
+    final at = DateTime.now().millisecondsSinceEpoch + secs * 1000;
+    await db.update(
+      'messages',
+      {'burn_at': at},
+      where: 'msg_uid = ? AND direction = ? AND burn_at IS NULL',
+      whereArgs: [msgUid, 'out'],
+    );
+    return at;
   }
 
   Future<void> markSent(String msgUid) async {
@@ -10818,16 +10886,13 @@ class AppState extends ChangeNotifier {
       _noteDrain();
     }
 
-    // one sender's messages in the order they were sent, as far as the
-    // batch tells. a lane many senders share and room frames stay put
+    // one sender's messages in the order they were sent, strangers' openers
+    // included. room frames stay put
     final ordered = inSendOrder(
       msgs,
       peer: (m) => m.peer,
       cipher: (m) => m.cipher,
-      lane: (p) =>
-          p == 'firstcontact' ||
-          p.startsWith('room:') ||
-          p.startsWith('roomfc:'),
+      lane: keepsArrivalOrder,
     );
     for (final m in ordered) {
       // dedup: skip a message we've already handled (see direct-onion note).

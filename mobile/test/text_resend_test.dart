@@ -4,6 +4,7 @@
 // verdict reaches the bubble drawn now. the chat's own screen, with real
 // signal over rows kept in maps and a relay that answers when told
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart' hide Curve;
@@ -19,12 +20,19 @@ import 'package:kryfo/main.dart'
         processPeerBundle,
         useDatabasesForTest,
         useEngineForTest;
+import 'package:kryfo/message_envelope.dart' show grindPow, powBits, verifyPow;
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
 import 'package:kryfo/widgets/motion.dart' show SendPill;
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart'
-    show Curve;
+    show
+        CiphertextMessage,
+        Curve,
+        PreKeySignalMessage,
+        SessionCipher,
+        SignalMessage,
+        SignalProtocolAddress;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'dev_chat_fakes.dart';
@@ -120,10 +128,28 @@ class _Db extends DevTestDb {
   }) async => [];
   @override
   Future<bool> messageExists(String msgUid) async => _row(msgUid) != null;
+  final nonces = <String, int>{};
   @override
-  Future<void> setPowNonce(String msgUid, int nonce) async {}
+  Future<void> setPowNonce(String msgUid, int nonce) async =>
+      nonces[msgUid] = nonce;
   @override
-  Future<int?> powNonceOf(String msgUid) async => null;
+  Future<int?> powNonceOf(String msgUid) async => nonces[msgUid];
+  @override
+  Future<int?> lightBurn(String msgUid) async {
+    final r = _row(msgUid);
+    final lit = r?['burn_at'] as int?;
+    final secs = r?['burn_secs'] as int?;
+    if (lit != null || secs == null) return lit;
+    final at = DateTime.now().millisecondsSinceEpoch + secs * 1000;
+    await mem.update(
+      'messages',
+      {'burn_at': at},
+      where: 'msg_uid = ?',
+      whereArgs: [msgUid],
+    );
+    return at;
+  }
+
   @override
   Future<void> markSent(String msgUid) => mem.update(
     'messages',
@@ -174,11 +200,13 @@ class _Db extends DevTestDb {
 // the relay: every send waits for its answer
 class _Engine implements HaloEngine {
   final sends = <Completer<String>>[];
+  final ciphers = <String>[];
 
   @override
   Future<String> nostrSend(String peerXPubHex, String b64Cipher) {
     final c = Completer<String>();
     sends.add(c);
+    ciphers.add(b64Cipher);
     return c.future;
   }
 
@@ -202,6 +230,7 @@ void _mock(String channel, Future<Object?> Function(MethodCall c)? h) =>
 void main() {
   late SignalSession amber;
   late MemDb mem;
+  late _Db db;
   late _Engine relay;
   late Directory docs;
 
@@ -253,7 +282,7 @@ void main() {
       'plaintext': 'are you there',
       'sent_at': DateTime.now().millisecondsSinceEpoch - 600000,
     });
-    final db = _Db(mem);
+    db = _Db(mem);
     useDatabasesForTest(db, Session(db));
     await appState.refreshContacts();
   });
@@ -328,4 +357,107 @@ void main() {
     expect(find.byType(SendPill), findsNothing);
     await devClose(t);
   });
+
+  // what amber reads of a cipher of ours
+  Future<Map<String, dynamic>> ambersRead(String cipher) async {
+    final w = base64Decode(cipher);
+    final body = Uint8List.fromList(w.sublist(1));
+    final c = SessionCipher(
+      amber.sessionStore,
+      amber.preKeyStore,
+      amber.signedPreKeyStore,
+      amber.identityStore,
+      const SignalProtocolAddress('me-to-amber', 1),
+    );
+    final plain = w[0] == CiphertextMessage.prekeyType
+        ? await c.decrypt(PreKeySignalMessage(body))
+        : await c.decryptFromSignal(SignalMessage.fromSerialized(body));
+    final s = utf8.decode(plain);
+    expect(s, startsWith('halo/1:'));
+    return jsonDecode(s.substring(7)) as Map<String, dynamic>;
+  }
+
+  // a failed text of ours, as a reload finds it
+  Future<void> failed(String uid, String text, {int? burnSecs}) =>
+      mem.insert('messages', {
+        'peer_id': _peer,
+        'direction': 'out',
+        'plaintext': text,
+        'sent_at': DateTime.now().millisecondsSinceEpoch - 120000,
+        'msg_uid': uid,
+        'sent': 0,
+        'burn_secs': ?burnSecs,
+      });
+
+  Future<void> openChat(WidgetTester t) => devOpen(
+    t,
+    ChatScreen(
+      peerHaloId: _peer,
+      peerOnion: '',
+      peerXPub: 'ab' * 32,
+      avatarSeed: _peer,
+    ),
+  );
+
+  // written offline, a typo fixed with edit, then the retry comes round
+  testWidgets('a retry of an edited opener grinds again for its new words', (
+    t,
+  ) async {
+    const before = 'meet at the statoin';
+    const after = 'meet at the station';
+    final old = grindPow(before, powBits);
+    expect(verifyPow(after, old, powBits), isFalse);
+    await failed('e1', after);
+    db.nonces['e1'] = old;
+    final ground = <String>[];
+    grindPowForTest = (text) {
+      ground.add(text);
+      return grindPow(text, powBits);
+    };
+    await openChat(t);
+    await settle(t);
+    await t.pump(const Duration(seconds: 31));
+    await settle(t);
+    expect(relay.ciphers, hasLength(1), reason: 'the retry never went');
+    expect(ground, [after]);
+    expect(db.nonces['e1'], isNot(old));
+    final read = await t.runAsync(() => ambersRead(relay.ciphers.single));
+    expect(read!['m'], after);
+    expect(read['pw'], db.nonces['e1']);
+    expect(verifyPow(after, read['pw'] as int, powBits), isTrue);
+    relay.sends.single.complete('ok');
+    await settle(t);
+    await devClose(t);
+  });
+
+  // shown failed, but a receipt since said it went
+  testWidgets(
+    'a retry that finds it went starts its clock and sends nothing more',
+    (t) async {
+      await failed('b1', 'gone already', burnSecs: 30);
+      await openChat(t);
+      await settle(t);
+      // the first retry times out, though the relay did take it
+      expect(relay.sends, hasLength(1));
+      relay.sends.single.complete('error: timeout');
+      await settle(t);
+      expect(mem.rows('messages').last['burn_at'], isNull);
+      await mem.update(
+        'messages',
+        {'sent': 1, 'delivered': 1},
+        where: 'msg_uid = ?',
+        whereArgs: ['b1'],
+      );
+      final before = DateTime.now().millisecondsSinceEpoch;
+      await t.pump(const Duration(seconds: 31));
+      await settle(t);
+      expect(relay.sends, hasLength(1));
+      final at = mem
+          .rows('messages')
+          .firstWhere((r) => r['msg_uid'] == 'b1')['burn_at'];
+      expect(at, isA<int>());
+      expect(at as int, greaterThanOrEqualTo(before + 30000));
+      await devClose(t);
+    },
+  );
 }

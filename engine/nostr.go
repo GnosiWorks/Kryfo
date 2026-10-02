@@ -1368,6 +1368,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 				// missed, so a check-in knows when it may stop tor again
 				atomic.AddInt32(&catchupActive, 1)
 				atomic.AddInt64(&catchupStarted, 1)
+				walkBegins(tag)
 				noteCatchupStart(ck)
 				var settleOnce sync.Once
 				var capT *time.Timer
@@ -1377,6 +1378,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 							capT.Stop()
 						}
 						atomic.AddInt32(&catchupActive, -1)
+						walkEnds(tag)
 						noteCatchupDone(ck, false)
 					})
 				}
@@ -1400,6 +1402,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 							saveLast(0)
 						}
 						atomic.AddInt32(&catchupActive, -1)
+						walkEnds(tag)
 						noteCatchupDone(ck, true)
 						ccancel()
 					})
@@ -1864,13 +1867,91 @@ func HaloNostrPoll() *C.char {
 }
 
 func nostrPoll() string {
+	return nostrPollAt(time.Now())
+}
+
+// a walk brings its stored wraps a page at a time, and each page is a random
+// slice of the conversation. while an address is walked the poll keeps its
+// lines back, so the app gets the whole of it at once and can put it in
+// order. other addresses go over as they come. a walk that runs long, or
+// brings a lot, goes over as it stands.
+const (
+	pollHoldMax   = 20 * time.Second
+	pollHoldBytes = 8 << 20
+)
+
+// when the poll first kept lines back. nostrMu
+var pollHeldSince time.Time
+
+// addresses with a walk under way, by the tag their lines carry, one count
+// per relay. nostrMu
+var walkingTags = map[string]int{}
+
+func walkBegins(tag string) {
+	nostrMu.Lock()
+	walkingTags[tag]++
+	nostrMu.Unlock()
+}
+
+func walkEnds(tag string) {
+	nostrMu.Lock()
+	if walkingTags[tag] <= 1 {
+		delete(walkingTags, tag)
+	} else {
+		walkingTags[tag]--
+	}
+	nostrMu.Unlock()
+}
+
+func lineTag(line string) string {
+	if i := strings.IndexByte(line, '|'); i >= 0 {
+		return line[:i]
+	}
+	return line
+}
+
+func nostrPollAt(now time.Time) string {
 	nostrMu.Lock()
 	lines, done := nostrInbox, nostrInboxDone
-	nostrInbox, nostrInboxDone = nil, nil
+	var kept []string
+	var keptDone []inboxDone
+	if len(walkingTags) > 0 && len(lines) > 0 {
+		lines, done = nil, nil
+		size := 0
+		for i, l := range nostrInbox {
+			if walkingTags[lineTag(l)] > 0 {
+				kept = append(kept, l)
+				keptDone = append(keptDone, nostrInboxDone[i])
+				size += len(l)
+			} else {
+				lines = append(lines, l)
+				done = append(done, nostrInboxDone[i])
+			}
+		}
+		if len(kept) > 0 && !pollHolds(now, size) {
+			lines, done = nostrInbox, nostrInboxDone
+			kept, keptDone = nil, nil
+		}
+	}
+	nostrInbox, nostrInboxDone = kept, keptDone
+	if len(kept) == 0 {
+		pollHeldSince = time.Time{}
+	}
 	nostrMu.Unlock()
+	if len(lines) == 0 {
+		return ""
+	}
 	out := pollJSON(lines)
 	markHandedOver(done)
 	return out
+}
+
+// nostrMu must be held
+func pollHolds(now time.Time, size int) bool {
+	if pollHeldSince.IsZero() {
+		pollHeldSince = now
+	}
+	return now.Sub(pollHeldSince) < pollHoldMax && size < pollHoldBytes
 }
 
 type pollEntry struct {

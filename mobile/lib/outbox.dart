@@ -8,12 +8,17 @@ import 'message_envelope.dart';
 import 'stickers/sticker_wire.dart' show StickerWire;
 
 // does this row still owe a nonce before it can leave. a peer who has
-// answered us (back-paired) has no gate for us any more.
+// answered us (back-paired) has no gate for us any more. a nonce ground
+// over words since edited no longer passes the gate.
 bool redeliveryNeedsPow(Map<String, Object?> row, {required bool backPaired}) {
   if (backPaired) return false;
   if ((row['group_id'] as String?)?.isNotEmpty == true) return false;
-  return row['pow_nonce'] == null;
+  final nonce = (row['pow_nonce'] as num?)?.toInt();
+  return nonce == null || !powFits(row['plaintext'] as String? ?? '', nonce);
 }
+
+// does a stored nonce still prove work over [text]
+bool powFits(String text, int nonce) => verifyPow(text, nonce, powBits);
 
 Future<String> wrapRedelivery(
   Map<String, Object?> row, {
