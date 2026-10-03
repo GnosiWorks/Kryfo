@@ -723,6 +723,40 @@ class BackupSide {
       await db.close();
     }
   }
+
+  // every copy of a container's database that leaves the phone: what waits
+  // to be read counts from [at] in it (settleWaitingBurns)
+  Future<void> settleBurns(String copy, String key, int at) async {
+    final db = await openDatabase(copy, password: key, singleInstance: false);
+    try {
+      await db.transaction((t) => settleWaitingBurns(t, at));
+      await db.rawQuery('PRAGMA wal_checkpoint(TRUNCATE)');
+    } finally {
+      await db.close();
+    }
+  }
+}
+
+// a timed message that came in and has not been read has no clock on the
+// phone. in a copy it counts from the backup, [at]: read and burned here
+// later, a restore sweeps it by then, and never brings it back to be read
+// again with a whole window. a restore soon after still shows it, with
+// what is left. ours already count from when they went
+Future<void> settleWaitingBurns(DatabaseExecutor db, int at) async {
+  final rows = await db.query(
+    'messages',
+    columns: ['id', 'burn_secs'],
+    where: "direction = 'in' AND burn_secs IS NOT NULL AND burn_at IS NULL",
+  );
+  for (final r in rows) {
+    final secs = (r['burn_secs'] as num).toInt();
+    await db.update(
+      'messages',
+      {'burn_at': at + secs * 1000},
+      where: 'id = ?',
+      whereArgs: [r['id']],
+    );
+  }
 }
 
 // the hidden chats a backup carries, taken while their vault holds still:
@@ -734,11 +768,13 @@ Future<String> _carryHidden(
   String stage,
   String docs,
   List<BackupFileEntry> files,
-  Map<String, String> sources,
-) async {
+  Map<String, String> sources, {
+  required int at,
+}) async {
   final to = p.join(stage, kHiddenDb);
   await Directory(p.dirname(to)).create(recursive: true);
   final key = await side.copyHidden(vault, to);
+  await side.settleBurns(to, "x'$key'", at);
   files.add(BackupFileEntry(kHiddenDb, await File(to).length()));
   sources[kHiddenDb] = to;
   await _addFolders(
@@ -790,6 +826,8 @@ Future<BackupDraft> draftBackup(
   final dbCopy = p.join(stage, 'halo.db');
   final folders = <BackupFileEntry>[];
   final sources = <String, String>{};
+  // what waits to be read counts from here in the copy
+  final at = DateTime.now().millisecondsSinceEpoch;
   final key = await side.still((vault) async {
     // a vault shut before this ran is not in the file, and the file is not
     // made: a backup that should hold hidden chats never comes out without
@@ -797,10 +835,11 @@ Future<BackupDraft> draftBackup(
     await side.copyEveryday(dbCopy);
     await _addFolders(folders, sources, docs, '');
     if (!hidden) return null;
-    return _carryHidden(side, vault!, stage, docs, folders, sources);
+    return _carryHidden(side, vault!, stage, docs, folders, sources, at: at);
   }, made: made);
   // no backup and no move carries an anonymous dev chat's made name
   await side.scrubDev(dbCopy, dbKey);
+  await side.settleBurns(dbCopy, dbKey, at);
   if (!hidden) {
     final people = await side.scrub(dbCopy, dbKey);
     final fc = secure['peer_fc'];
@@ -946,6 +985,8 @@ Future<BackupDraft> _draftQuiet(
   final docs = await getApplicationDocumentsDirectory();
   final hiddenFiles = <BackupFileEntry>[];
   final sources = <String, String>{};
+  // what waits to be read counts from here in the copy
+  final at = DateTime.now().millisecondsSinceEpoch;
   final key = !hidden
       ? null
       : await side.still((vault) async {
@@ -957,6 +998,7 @@ Future<BackupDraft> _draftQuiet(
             docs.path,
             hiddenFiles,
             sources,
+            at: at,
           );
         }, made: made);
   final raw = await session.primary.open();
@@ -974,6 +1016,7 @@ Future<BackupDraft> _draftQuiet(
   await session.primary.checkpoint();
   await File(await c.dbPath()).copy(p.join(stage, 'halo.db'));
   await side.scrubDev(p.join(stage, 'halo.db'), dbKey);
+  await side.settleBurns(p.join(stage, 'halo.db'), dbKey, at);
   await File(
     p.join(stage, 'onion.key'),
   ).writeAsBytes(_hex(onion.first['v'] as String), flush: true);

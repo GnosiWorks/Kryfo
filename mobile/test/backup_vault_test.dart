@@ -227,7 +227,15 @@ class _MemDb implements Database, Transaction {
     if (eq != null) return r[eq.group(1)!] == args![0];
     final any = RegExp(r'^(\w+) IN \(').firstMatch(where);
     if (any != null) return args!.contains(r[any.group(1)!]);
-    throw UnimplementedError(where);
+    // col = 'text' AND col IS [NOT] NULL ...
+    final parts = where.split(' AND ');
+    return parts.every((c) {
+      final lit = RegExp(r"^(\w+) = '(.*)'$").firstMatch(c);
+      if (lit != null) return r[lit.group(1)!] == lit.group(2);
+      final nul = RegExp(r'^(\w+) IS (NOT )?NULL$').firstMatch(c);
+      if (nul == null) throw UnimplementedError(where);
+      return (r[nul.group(1)!] == null) == (nul.group(2) == null);
+    });
   }
 
   @override
@@ -530,6 +538,19 @@ class _Side extends BackupSide {
     devScrubbed.add(key);
     final db = await _MemDb.load(copy);
     await db.transaction(scrubDevAnon);
+    await db.save();
+  }
+
+  // the keys the copies were opened with to start what waits to be read
+  final burnsSettled = <String>[];
+
+  @override
+  Future<void> settleBurns(String copy, String key, int at) async {
+    burnsSettled.add(key);
+    // a stand-in file that is no database has nothing to settle
+    if (!(await File(copy).readAsString()).startsWith('{')) return;
+    final db = await _MemDb.load(copy);
+    await db.transaction((t) => settleWaitingBurns(t, at));
     await db.save();
   }
 }
@@ -1089,6 +1110,67 @@ void main() {
       await _phone(docs);
       final d = await draftBackup(stage, side: _Forgets(kryfo));
       expect(_madeName(await _read(d.sources['halo.db']!)), hasLength(9));
+    });
+  });
+
+  // read and burned on this phone after the backup, a restore must not
+  // bring it back to be read again with a whole window
+  group('a timed message waiting to be read', () {
+    Future<void> waiting(String db, String uid) async {
+      final path = p.join(docs, db);
+      final t = await _read(path);
+      t['messages']!.add({
+        'id': 99,
+        'msg_uid': uid,
+        'peer_id': _v,
+        'direction': 'in',
+        'plaintext': 'gone soon',
+        'burn_secs': 30,
+      });
+      await _put(path, jsonEncode(t));
+    }
+
+    Map<String, Object?> row(_Tables t, String uid) =>
+        t['messages']!.singleWhere((r) => r['msg_uid'] == uid);
+
+    test('counts from the backup in every copy, and the phone keeps it '
+        'waiting', () async {
+      await _phone(docs);
+      await waiting('halo.db', 'w-everyday');
+      await waiting('halo_v.db', 'w-hidden');
+      await openVault();
+      final before = DateTime.now().millisecondsSinceEpoch;
+      final d = await draftBackup(stage, side: side, hidden: true);
+      final after = DateTime.now().millisecondsSinceEpoch;
+      for (final (file, uid) in [
+        (d.sources['halo.db']!, 'w-everyday'),
+        (d.sources[kHiddenDb]!, 'w-hidden'),
+      ]) {
+        final r = row(await _read(file), uid);
+        expect(
+          r['burn_at'],
+          inInclusiveRange(before + 30000, after + 30000),
+          reason: uid,
+        );
+      }
+      expect(
+        row(await _read(p.join(docs, 'halo.db')), 'w-everyday')['burn_at'],
+        isNull,
+      );
+      expect(
+        row(await _read(p.join(docs, 'halo_v.db')), 'w-hidden')['burn_at'],
+        isNull,
+      );
+    });
+
+    test('and in a move', () async {
+      await _phone(docs);
+      await waiting('halo.db', 'w-everyday');
+      final d = await draftBackup(stage, side: side, move: true);
+      expect(
+        row(await _read(d.sources['halo.db']!), 'w-everyday')['burn_at'],
+        isNotNull,
+      );
     });
   });
 

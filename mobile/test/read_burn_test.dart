@@ -6,7 +6,11 @@
 // kept in maps
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/backup.dart' show settleWaitingBurns;
 import 'package:kryfo/main.dart' show HaloDb;
+import 'package:kryfo/read_burn.dart' show ReadBurns, burnLeft;
+import 'package:kryfo/seen_timers.dart';
+import 'package:kryfo/widgets/row_anchor.dart';
 import 'package:kryfo/widgets/burn_fade.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
@@ -30,8 +34,11 @@ Future<void> _row(
   int? burnAt,
   int sentAt = 1,
   String? group,
+  String peer = _peer,
+  String? media,
 }) => mem.insert('messages', {
-  'peer_id': _peer,
+  'peer_id': peer,
+  'media_path': media,
   'direction': direction,
   'plaintext': 'hi $uid',
   'sent_at': sentAt,
@@ -99,7 +106,8 @@ void main() {
       'next start', () async {
     final mem = MemDb();
     await _row(mem, 'brief', burnSecs: 1);
-    await _row(mem, 'unread', burnSecs: 1);
+    // came after: reading the first does not read it
+    await _row(mem, 'unread', burnSecs: 1, sentAt: 2);
     await _Rows(mem).lightReadBurns(['brief']);
     // the process dies here; a new one opens the same file later
     await Future<void>.delayed(const Duration(milliseconds: 1100));
@@ -124,6 +132,194 @@ void main() {
     await db.purgeExpiredBurns();
     expect(_get(mem, 'due'), isNull);
     expect(_get(mem, 'running'), isNotNull);
+  });
+
+  // as the unread count clears for all of it: what came before the row
+  // read has been read too, scrolled past or not
+  test('reading one starts the clock of every timed one before it in the '
+      'chat, and nothing after or elsewhere', () async {
+    final mem = MemDb();
+    final db = _Rows(mem);
+    await _row(mem, 'old', burnSecs: 60, sentAt: 10);
+    await _row(mem, 'same', burnSecs: 60, sentAt: 20);
+    await _row(mem, 'read', burnSecs: 300, sentAt: 20);
+    await _row(mem, 'newer', burnSecs: 60, sentAt: 30);
+    await _row(mem, 'mine', direction: 'out', burnSecs: 60, sentAt: 5);
+    await _row(mem, 'other', burnSecs: 60, sentAt: 5, peer: 'blue-owl-sky');
+    await _row(mem, 'ingroup', burnSecs: 60, sentAt: 5, group: _g);
+    final before = DateTime.now().millisecondsSinceEpoch;
+    final lit = await db.lightReadBurns(['read']);
+    expect(lit.keys, unorderedEquals(['old', 'same', 'read']));
+    for (final uid in ['old', 'same']) {
+      expect(_get(mem, uid)!['burn_at'], lit[uid]);
+      expect(lit[uid], greaterThanOrEqualTo(before + 60000), reason: uid);
+    }
+    for (final uid in ['newer', 'mine', 'other', 'ingroup']) {
+      expect(_get(mem, uid)!['burn_at'], isNull, reason: uid);
+    }
+
+    // in a group, the group's own and nobody else's
+    await _row(mem, 'g-old', burnSecs: 60, sentAt: 1, group: _g, peer: 'x');
+    await _row(mem, 'g-read', burnSecs: 60, sentAt: 9, group: _g);
+    final g = await db.lightReadBurns(['g-read']);
+    expect(g.keys, unorderedEquals(['ingroup', 'g-old', 'g-read']));
+    expect(_get(mem, 'newer')!['burn_at'], isNull);
+    expect(_get(mem, 'other')!['burn_at'], isNull);
+  });
+
+  // a photo in the strip or a gallery is no read: it shows in the thread
+  // alone until then
+  test('a timed photo nobody has read stays out of the shared media', () async {
+    final mem = MemDb();
+    final db = _Rows(mem);
+    final soon = DateTime.now().millisecondsSinceEpoch + 60000;
+    await _row(mem, 'plain', media: '/m/plain.jpg');
+    await _row(mem, 'waits', burnSecs: 30, media: '/m/waits.jpg');
+    await _row(mem, 'lit', burnSecs: 30, burnAt: soon, media: '/m/lit.jpg');
+    await _row(
+      mem,
+      'mine',
+      direction: 'out',
+      burnSecs: 30,
+      media: '/m/mine.jpg',
+    );
+    final shown = [for (final r in await db.mediaFor(_peer)) r['media_path']];
+    expect(
+      shown,
+      unorderedEquals(['/m/plain.jpg', '/m/lit.jpg', '/m/mine.jpg']),
+    );
+    await db.lightReadBurns(['waits']);
+    expect(await db.mediaFor(_peer), hasLength(4));
+  });
+
+  // read and burned after the backup, a restore sweeps it by then and never
+  // shows it again with a whole window
+  test('a backup copy counts what waits from when it was made', () async {
+    final mem = MemDb();
+    await _row(mem, 'waits', burnSecs: 30);
+    await _row(mem, 'lit', burnSecs: 30, burnAt: 5);
+    await _row(mem, 'mine', direction: 'out', burnSecs: 30);
+    await _row(mem, 'plain');
+    await mem.transaction((t) => settleWaitingBurns(t, 1000));
+    expect(_get(mem, 'waits')!['burn_at'], 1000 + 30000);
+    expect(_get(mem, 'lit')!['burn_at'], 5);
+    expect(_get(mem, 'mine')!['burn_at'], isNull);
+    expect(_get(mem, 'plain')!['burn_at'], isNull);
+  });
+
+  test('both chats read a countdown the same way', () {
+    // a fresh 5 minute clock, a moment in
+    expect(burnLeft(300000), '5m 00s');
+    expect(burnLeft(299990), '5m 00s');
+    expect(burnLeft(61000), '1m 01s');
+    expect(burnLeft(59000), '59s');
+    expect(burnLeft(3600000), '1h 00m');
+    expect(burnLeft(0), '0s');
+  });
+
+  // the look a chat takes twice a second, on a clock the test moves
+  group('the beat', () {
+    late int now;
+    late SeenTimers timers;
+    late ReadBurns reads;
+    late List<String> waiting;
+    var readingAsked = 0;
+    var lit = <List<String>>[];
+
+    Future<void> open(
+      WidgetTester t,
+      Future<Map<String, int>> Function(List<String> ids) light,
+    ) async {
+      now = 0;
+      readingAsked = 0;
+      lit = [];
+      waiting = ['x'];
+      final anchors = RowAnchors();
+      await t.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: ListView(
+            children: [
+              RowAnchor(
+                anchors: anchors,
+                id: 'x',
+                child: const SizedBox(height: 50),
+              ),
+            ],
+          ),
+        ),
+      );
+      timers = SeenTimers(clock: () => now);
+      reads = ReadBurns(
+        anchors: anchors,
+        allowed: () => true,
+        reading: () {
+          readingAsked++;
+          return true;
+        },
+        waiting: () => waiting,
+        light: (ids) {
+          lit.add(ids);
+          return light(ids);
+        },
+        clock: () => now,
+      )..keepTime(timers);
+    }
+
+    Future<void> wait(WidgetTester t, int ms) async {
+      for (var i = 0; i < ms ~/ 100; i++) {
+        now += 100;
+        await t.pump(const Duration(milliseconds: 100));
+      }
+    }
+
+    void close() {
+      reads.dispose();
+      timers.dispose();
+    }
+
+    testWidgets('it rests while nothing waits', (t) async {
+      // as the screen does: a row lit waits no more
+      await open(t, (ids) async {
+        waiting = [];
+        return {for (final id in ids) id: 1};
+      });
+      await wait(t, 1000);
+      expect(lit, [
+        ['x'],
+      ]);
+      readingAsked = 0;
+      await wait(t, 5000);
+      expect(readingAsked, 0);
+      // something new waits and the chat looks: it beats again
+      waiting = ['y'];
+      reads.look();
+      await wait(t, 1000);
+      expect(readingAsked, greaterThan(0));
+      close();
+    });
+
+    testWidgets('a write that fails is tried again later, not twice a '
+        'second', (t) async {
+      await open(t, (ids) async => throw StateError('disk full'));
+      // the chat looks often, a countdown ticking say
+      for (var i = 0; i < 70; i++) {
+        reads.check();
+        await wait(t, 100);
+      }
+      // at the first beat, then after two seconds, then after four more
+      expect(lit.length, inInclusiveRange(2, 3));
+      close();
+    });
+
+    testWidgets('a row that comes back unlit is not asked again', (t) async {
+      await open(t, (ids) async => const {});
+      await wait(t, 5000);
+      expect(lit, [
+        ['x'],
+      ]);
+      close();
+    });
   });
 
   group('the flame', () {

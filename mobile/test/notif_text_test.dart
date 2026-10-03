@@ -152,47 +152,62 @@ void main() {
     expect(w.live.msg('text0003')?['plaintext'], 'see you at 6');
   });
 
-  // its clock starts when it is read, so nothing takes it from the shade
-  // before then; opening the chat clears the shade anyway
-  test(
-    'a timed message waits to be read, and rings with no time out',
-    () async {
-      final w = await _World.make();
-      await w.from(
-        _mum,
-        await wrapMessage(
-          'gone soon',
-          msgUid: 'text0004',
-          burnSeconds: 30,
-          sender: asSender(_mum),
-        ),
-      );
-      await w.from(
-        _mum,
-        await wrapMessage(
-          'gone soon too',
-          msgUid: 'text0006',
-          groupId: _g,
-          burnSeconds: 60,
-          sender: asSender(_mum),
-        ),
-      );
-      await w.from(
-        _mum,
-        await wrapMessage(
-          'staying',
-          msgUid: 'text0005',
-          sender: asSender(_mum),
-        ),
-      );
-      expect(w.io.burns, [null, null, null]);
-      for (final (uid, secs) in [('text0004', 30), ('text0006', 60)]) {
-        expect(w.live.msg(uid)?['burn_at'], isNull, reason: uid);
-        expect(w.live.msg(uid)?['burn_secs'], secs, reason: uid);
-      }
-      expect(w.live.msg('text0005')?['burn_secs'], isNull);
-    },
-  );
+  // its clock starts when it is read, but its text leaves the shade its
+  // window after it came, read or not: the shade is no place to keep it
+  test('a timed message waits to be read, and leaves the shade its window '
+      'after it came', () async {
+    final w = await _World.make();
+    final before = DateTime.now().millisecondsSinceEpoch;
+    await w.from(
+      _mum,
+      await wrapMessage(
+        'gone soon',
+        msgUid: 'text0004',
+        burnSeconds: 30,
+        sender: asSender(_mum),
+      ),
+    );
+    await w.from(
+      _mum,
+      await wrapMessage(
+        'gone soon too',
+        msgUid: 'text0006',
+        groupId: _g,
+        burnSeconds: 60,
+        sender: asSender(_mum),
+      ),
+    );
+    await w.from(
+      _mum,
+      await wrapMessage('staying', msgUid: 'text0005', sender: asSender(_mum)),
+    );
+    final after = DateTime.now().millisecondsSinceEpoch;
+    expect(w.io.burns, hasLength(3));
+    expect(w.io.burns[0], inInclusiveRange(before + 30000, after + 30000));
+    expect(w.io.burns[1], inInclusiveRange(before + 60000, after + 60000));
+    expect(w.io.burns[2], isNull);
+    for (final (uid, secs) in [('text0004', 30), ('text0006', 60)]) {
+      expect(w.live.msg(uid)?['burn_at'], isNull, reason: uid);
+      expect(w.live.msg(uid)?['burn_secs'], secs, reason: uid);
+    }
+    expect(w.live.msg('text0005')?['burn_secs'], isNull);
+  });
+
+  // nothing can name it as read, so it counts from when it came, as all
+  // timed messages did before
+  test('a timed message with no uid counts from when it came', () async {
+    final w = await _World.make();
+    final before = DateTime.now().millisecondsSinceEpoch;
+    await w.from(
+      _mum,
+      await wrapMessage('no name', burnSeconds: 30, sender: asSender(_mum)),
+    );
+    final after = DateTime.now().millisecondsSinceEpoch;
+    final r = w.live.msgs.singleWhere((m) => m['plaintext'] == 'no name');
+    expect(r['msg_uid'], isNull);
+    expect(r['burn_at'], inInclusiveRange(before + 30000, after + 30000));
+    expect(r['burn_secs'], isNull);
+  });
 
   test('the chat on screen reads a message that lands while other news '
       'goes round', () async {

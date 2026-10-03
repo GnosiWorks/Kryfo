@@ -270,8 +270,9 @@ Future<void> showMessageNotification({
     title = 'Kryfo';
     body = l10n.notificationsNewMessage;
   }
-  // a timed message leaves the shade when it burns, whatever is running
-  // then: android takes it down itself
+  // a timed message leaves the shade its window after it came, read or
+  // not, whatever is running then: android takes it down itself. the
+  // message waits in the chat to be read
   final left = burnAt == null
       ? null
       : max(1, burnAt - DateTime.now().millisecondsSinceEpoch);

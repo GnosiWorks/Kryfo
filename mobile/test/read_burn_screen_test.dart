@@ -17,6 +17,8 @@ import 'package:kryfo/main.dart'
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/widgets/burn_fade.dart';
+import 'package:kryfo/widgets/pins.dart' show PinHeaderButton;
+import 'package:kryfo/widgets/row_anchor.dart' show RowAnchor;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
@@ -39,6 +41,8 @@ class _Db extends DevTestDb {
 
   // every clock this screen asked to start
   final asked = <String>[];
+  // the rows went from the database before they were read
+  bool forget = false;
 
   Map<String, Object?>? _contact(String id) {
     for (final r in mem.rows('contacts')) {
@@ -56,8 +60,9 @@ class _Db extends DevTestDb {
   bool _flag(String id, String col) => _contact(id)?[col] == 1;
 
   @override
-  Future<Map<String, int>> lightReadBurns(List<String> msgUids) {
+  Future<Map<String, int>> lightReadBurns(List<String> msgUids) async {
     asked.addAll(msgUids);
+    if (forget) return const {};
     return _Real(mem).lightReadBurns(msgUids);
   }
 
@@ -127,7 +132,10 @@ class _Db extends DevTestDb {
   Future<List<Map<String, Object?>>> pinnedIn({
     String? peerId,
     String? groupId,
-  }) async => [];
+  }) async => [
+    for (final r in _thread(peerId!))
+      if (r['pinned'] == 1) r,
+  ];
   @override
   Future<bool> messageExists(String msgUid) async =>
       _thread(_peer).any((r) => r['msg_uid'] == msgUid);
@@ -359,6 +367,252 @@ void main() {
     expect(builtOff, greaterThan(0));
     await settle(t);
     expect(burnAt(), isNotNull);
+    await devClose(t);
+  });
+
+  // the newest row the list draws: the bottom of the screen
+  Future<void> addTimed(String uid, String text, {int? sentAt}) =>
+      mem.insert('messages', {
+        'peer_id': _peer,
+        'direction': 'in',
+        'plaintext': text,
+        'sent_at': sentAt ?? DateTime.now().millisecondsSinceEpoch,
+        'msg_uid': uid,
+        'burn_secs': 300,
+        'sent': 1,
+      });
+
+  int? burnOf(String uid) {
+    for (final r in mem.rows('messages')) {
+      if (r['msg_uid'] == uid) return r['burn_at'] as int?;
+    }
+    return null;
+  }
+
+  Rect viewOf(WidgetTester t) {
+    final box = list(t).context.findRenderObject()! as RenderBox;
+    return box.localToGlobal(Offset.zero) & box.size;
+  }
+
+  // up a little at a time until the timed bubble just shows at the top
+  Future<Rect> peek(WidgetTester t) async {
+    final view = viewOf(t);
+    final bubble = find.ancestor(
+      of: find.text('gone soon', findRichText: true),
+      matching: find.byType(LeaveFold),
+    );
+    for (var i = 0; i < 800; i++) {
+      if (bubble.evaluate().isNotEmpty &&
+          t.getRect(bubble.first).bottom > view.top + 4) {
+        break;
+      }
+      final p = list(t).position;
+      p.jumpTo((p.pixels + 4).clamp(0, p.maxScrollExtent).toDouble());
+      await t.pump();
+    }
+    return t.getRect(bubble.first);
+  }
+
+  testWidgets('a sheet, a dialog or a see-through page over the chat: what '
+      'lands under it waits until it goes', (t) async {
+    await thread(before: 2, timed: false);
+    await devOpen(t, chat());
+    await settle(t);
+    final ctx = t.element(find.byType(ChatScreen));
+    final covers = <String, void Function()>{
+      'dialog': () => showDialog<void>(
+        context: ctx,
+        builder: (_) => const Center(child: Text('over')),
+      ),
+      'sheet': () => showModalBottomSheet<void>(
+        context: ctx,
+        builder: (_) => const SizedBox(height: 80, child: Text('over')),
+      ),
+      // as the photo and the video viewer open
+      'page': () => Navigator.of(ctx).push(
+        PageRouteBuilder<void>(
+          opaque: false,
+          pageBuilder: (_, _, _) => const Center(child: Text('over')),
+        ),
+      ),
+    };
+    for (final MapEntry(key: name, value: cover) in covers.entries) {
+      cover();
+      await settle(t);
+      final uid = 'under-$name';
+      await addTimed(uid, 'gone soon');
+      appState.chatChanged(_peer);
+      await settle(t, 10);
+      expect(find.text('over'), findsOneWidget, reason: name);
+      expect(burnOf(uid), isNull, reason: name);
+      expect(db.asked, isEmpty, reason: name);
+      Navigator.of(ctx).pop();
+      await settle(t);
+      expect(burnOf(uid), isNotNull, reason: name);
+      db.asked.clear();
+    }
+    await devClose(t);
+  });
+
+  testWidgets('held for its menu, it is read, however little of it shows', (
+    t,
+  ) async {
+    await thread(after: 40);
+    await devOpen(t, chat());
+    await settle(t);
+    final view = viewOf(t);
+    final at = await peek(t);
+    await settle(t);
+    // less than half of it in view: not read by being seen
+    expect(burnAt(), isNull);
+    await t.longPressAt(Offset(at.left + 24, (view.top + at.bottom) / 2));
+    await settle(t);
+    expect(burnAt(), isNotNull);
+    await devClose(t);
+  });
+
+  testWidgets('swiped to answer, it is read, however little of it shows', (
+    t,
+  ) async {
+    await thread(after: 40);
+    await devOpen(t, chat());
+    await settle(t);
+    final view = viewOf(t);
+    final at = await peek(t);
+    await settle(t);
+    expect(burnAt(), isNull);
+    await t.dragFrom(
+      Offset(at.left + 24, (view.top + at.bottom) / 2),
+      const Offset(140, 0),
+    );
+    await settle(t);
+    expect(burnAt(), isNotNull);
+    await devClose(t);
+  });
+
+  // the date and the new messages line above it are not the message
+  testWidgets('its day line in view and the bubble mostly not: it waits', (
+    t,
+  ) async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    for (var i = 0; i < 30; i++) {
+      await mem.insert('messages', {
+        'peer_id': _peer,
+        'direction': 'out',
+        'plaintext': 'days ago $i',
+        'sent_at': now - 3 * 86400000 + i * 60000,
+        'msg_uid': 'old$i',
+        'sent': 1,
+      });
+    }
+    await addTimed(_timed, 'gone soon', sentAt: now - 3600000);
+    for (var i = 0; i < 40; i++) {
+      await mem.insert('messages', {
+        'peer_id': _peer,
+        'direction': 'out',
+        'plaintext': 'after $i',
+        'sent_at': now - 3000000 + i * 60000,
+        'msg_uid': 'a$i',
+        'sent': 1,
+      });
+    }
+    db = _Db(mem);
+    useDatabasesForTest(db, Session(db));
+    await appState.refreshContacts();
+    await devOpen(t, chat());
+    await settle(t);
+    // nothing is read while the app is not in front
+    t.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    final text = find.text('gone soon', findRichText: true);
+    final row = find.byWidgetPredicate((w) => w is RowAnchor && w.id == _timed);
+    for (var i = 0; i < 600 && text.evaluate().isEmpty; i++) {
+      final p = list(t).position;
+      p.jumpTo((p.pixels + 40).clamp(0, p.maxScrollExtent).toDouble());
+      await t.pump();
+    }
+    await t.pump();
+    final whole = t.getRect(row.first);
+    final bubble = t.getRect(
+      find.ancestor(of: text, matching: find.byType(LeaveFold)).first,
+    );
+    final above = bubble.top - whole.top;
+    expect(above, greaterThan(16));
+    // more than half the row on screen, less than half the bubble
+    final shown = (whole.height / 2 + above + bubble.height / 2) / 2;
+    final view = viewOf(t);
+    final p = list(t).position;
+    p.jumpTo(p.pixels + (view.bottom - shown) - whole.top);
+    await t.pump();
+    expect(view.bottom - t.getRect(row.first).top, closeTo(shown, 1));
+    t.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await settle(t);
+    expect(burnAt(), isNull);
+    expect(db.asked, isEmpty);
+    // half the bubble up: read
+    p.jumpTo(p.pixels - bubble.height);
+    await settle(t);
+    expect(burnAt(), isNotNull);
+    await devClose(t);
+  });
+
+  // gone, say unsent, before it was read: it shows what it showed, and is
+  // not asked about again
+  testWidgets('a row that comes back unlit keeps its whole window', (t) async {
+    await thread();
+    db.forget = true;
+    await devOpen(t, chat());
+    await settle(t, 30);
+    expect(db.asked, [_timed]);
+    expect(find.text('5m 00s'), findsOneWidget);
+    expect(waits(t), isTrue);
+    await devClose(t);
+  });
+
+  // as the unread count clears for all of it
+  testWidgets('one read starts the ones above it too, and the screen counts '
+      'them down without asking again', (t) async {
+    await thread(after: 40);
+    await addTimed('newest', 'read now');
+    await devOpen(t, chat());
+    await settle(t);
+    expect(db.asked, ['newest']);
+    expect(burnOf('newest'), isNotNull);
+    expect(burnAt(), isNotNull);
+    await peek(t);
+    final p = list(t).position;
+    p.jumpTo((p.pixels + 200).clamp(0, p.maxScrollExtent).toDouble());
+    await settle(t);
+    expect(find.text('gone soon', findRichText: true), findsOneWidget);
+    expect(db.asked, ['newest']);
+    await devClose(t);
+  });
+
+  // a pin shows what it pins: one not read yet shows in the thread alone
+  testWidgets('a timed message not read yet is not in the pins until it is', (
+    t,
+  ) async {
+    await thread(after: 40);
+    for (final r in mem.rows('messages')) {
+      if (r['msg_uid'] == _timed || r['msg_uid'] == 'a1') {
+        await mem.update(
+          'messages',
+          {'pinned': 1, 'pinned_at': 1},
+          where: 'id = ?',
+          whereArgs: [r['id']],
+        );
+      }
+    }
+    await devOpen(t, chat());
+    await settle(t);
+    int pins() => t.widget<PinHeaderButton>(find.byType(PinHeaderButton)).count;
+    expect(burnAt(), isNull);
+    expect(pins(), 1);
+    await peek(t);
+    final p = list(t).position;
+    p.jumpTo((p.pixels + 200).clamp(0, p.maxScrollExtent).toDouble());
+    await settle(t);
+    expect(burnAt(), isNotNull);
+    expect(pins(), 2);
     await devClose(t);
   });
 

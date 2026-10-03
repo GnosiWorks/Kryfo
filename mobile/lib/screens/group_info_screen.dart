@@ -33,6 +33,7 @@ import '../widgets/row_motion.dart';
 import '../widgets/confirm_sheet.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
+import '../read_burn.dart' show burnWaitsRow;
 
 // a member as the screens name them: a room key by its short tag
 String memberLabel(String id) => looksLikeRoomKey(id) ? roomTag(id) : id;
@@ -118,6 +119,9 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
     final secure = <String>{};
     for (final r in rows.reversed) {
       if (blocked.contains(r['peer_id'])) continue;
+      // a timed photo not read yet shows in the thread alone, where reading
+      // it starts its clock
+      if (burnWaitsRow(r)) continue;
       final mp = r['media_path'] as String?;
       if (mp == null || mp.isEmpty) continue;
       media.add(mp);

@@ -90,6 +90,7 @@ import 'signal_session.dart';
 import 'signal_stores.dart' show invitePreKeyId, kDevSignalPrefix;
 import 'dart:isolate';
 import 'dlog.dart';
+import 'read_burn.dart' show burnWaitsRow;
 import 'stranger_gate.dart';
 import 'fast_gate.dart';
 import 'mentions.dart';
@@ -2937,6 +2938,9 @@ class HaloDb implements GroupOwedStore {
         'file_name',
         'pinned_at',
         'sticker',
+        // what says it waits to be read (burnWaitsRow)
+        'burn_secs',
+        'burn_at',
       ],
       where: groupId != null
           ? 'pinned = 1 AND msg_uid IS NOT NULL AND group_id = ?'
@@ -4706,7 +4710,9 @@ class HaloDb implements GroupOwedStore {
 
   // timed messages that came in, read just now: each clock starts here,
   // written before the screen counts it down. a row lit already keeps its
-  // time. gives every one's burn time
+  // time. what came in before them in the same chat has been read as well,
+  // scrolled past or not, and starts with them, as the unread count clears
+  // for all of it. gives the burn time of every row lit
   Future<Map<String, int>> lightReadBurns(List<String> msgUids) async {
     if (msgUids.isEmpty) return const {};
     final db = await open();
@@ -4716,19 +4722,29 @@ class HaloDb implements GroupOwedStore {
     await db.transaction((t) async {
       final rows = await t.query(
         'messages',
-        columns: ['id', 'msg_uid', 'burn_secs', 'burn_at'],
+        columns: [
+          'id',
+          'msg_uid',
+          'peer_id',
+          'group_id',
+          'sent_at',
+          'burn_secs',
+          'burn_at',
+        ],
         where: "msg_uid IN ($marks) AND direction = 'in'",
         whereArgs: msgUids,
       );
-      for (final r in rows) {
-        final uid = r['msg_uid'] as String;
+      // the newest row read in each chat, the order both chats sort by
+      final newest = <(String, String?), int>{};
+      Future<void> lightRow(Map<String, Object?> r) async {
+        final uid = r['msg_uid'] as String?;
         final lit = (r['burn_at'] as num?)?.toInt();
         if (lit != null) {
-          out[uid] = lit;
-          continue;
+          if (uid != null) out[uid] = lit;
+          return;
         }
         final secs = (r['burn_secs'] as num?)?.toInt();
-        if (secs == null) continue;
+        if (secs == null) return;
         final at = now + secs * 1000;
         await t.update(
           'messages',
@@ -4736,7 +4752,31 @@ class HaloDb implements GroupOwedStore {
           where: 'id = ? AND burn_at IS NULL',
           whereArgs: [r['id']],
         );
-        out[uid] = at;
+        if (uid != null) out[uid] = at;
+      }
+
+      for (final r in rows) {
+        await lightRow(r);
+        final g = r['group_id'] as String?;
+        final chat = (g == null || g.isEmpty)
+            ? (r['peer_id'] as String, null)
+            : ('', g);
+        final sent = (r['sent_at'] as num?)?.toInt() ?? 0;
+        if (sent > (newest[chat] ?? -1)) newest[chat] = sent;
+      }
+      for (final MapEntry(key: (peer, group), value: sent) in newest.entries) {
+        final older = await t.query(
+          'messages',
+          columns: ['id', 'msg_uid', 'burn_secs', 'burn_at'],
+          where:
+              "${group == null ? 'peer_id = ? AND group_id IS NULL' : 'group_id = ?'}"
+              " AND direction = 'in' AND burn_secs IS NOT NULL"
+              ' AND burn_at IS NULL AND sent_at < ?',
+          whereArgs: [group ?? peer, sent + 1],
+        );
+        for (final r in older) {
+          await lightRow(r);
+        }
       }
     });
     return out;
@@ -4821,18 +4861,25 @@ class HaloDb implements GroupOwedStore {
   }
 
   // the media a chat holds, newest first, and nothing else about the
-  // messages: a contact page has no use for the text.
+  // messages: a contact page has no use for the text. a timed photo not
+  // read yet is left out: it shows in the thread alone, where reading it
+  // starts its clock
   Future<List<Map<String, Object?>>> mediaFor(String peerId) async {
     final db = await open();
-    return db.query(
+    final rows = await db.query(
       'messages',
-      columns: ['media_path', 'secure'],
+      columns: ['media_path', 'secure', 'direction', 'burn_secs', 'burn_at'],
       where:
-          "peer_id = ? AND group_id IS NULL AND media_path IS NOT NULL "
-          "AND media_path != ''",
-      whereArgs: [peerId],
-      orderBy: 'Rowid DESC',
+          'peer_id = ? AND group_id IS NULL AND media_path IS NOT NULL '
+          'AND media_path != ?',
+      whereArgs: [peerId, ''],
+      orderBy: 'rowid DESC',
     );
+    return [
+      for (final r in rows)
+        if (!burnWaitsRow(r))
+          {'media_path': r['media_path'], 'secure': r['secure']},
+    ];
   }
 
   // when the first message with a peer was, either way. null before any.
@@ -9444,11 +9491,19 @@ class AppState extends ChangeNotifier {
     final burnSecs = burnOk && chunkBurn != null && chunkBurn > 0
         ? chunkBurn
         : null;
+    // its window from when it came: the most its text stays in the shade
+    final burnFromArrival = burnSecs == null
+        ? null
+        : (arrivedAt ?? DateTime.now().millisecondsSinceEpoch) +
+              burnSecs * 1000;
+    // one with no uid can never be named as read: it counts from arrival
+    final waits = env.msgUid != null;
     await db.saveMessage(
       senderHaloId,
       'in',
       text,
-      burnSecs: burnSecs,
+      burnSecs: waits ? burnSecs : null,
+      burnAt: waits ? null : burnFromArrival,
       msgUid: env.msgUid,
       replyTo: env.replyTo,
       groupId: env.groupId,
@@ -9594,6 +9649,7 @@ class AppState extends ChangeNotifier {
         body: notifBody,
         payload: notifPayload,
         msgUid: env.msgUid,
+        burnAt: burnFromArrival,
       );
     }
     return to;

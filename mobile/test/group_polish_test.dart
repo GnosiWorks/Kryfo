@@ -737,6 +737,35 @@ void main() {
       await _close(t);
     });
 
+    // it shows in the thread alone, where reading it starts its clock
+    testWidgets('a timed photo nobody has read stays out of the shared '
+        'media', (t) async {
+      final soon = DateTime.now().millisecondsSinceEpoch + 60000;
+      _use(
+        t,
+        _Db(
+          rows: [
+            {..._in(1, _anna, ''), 'media_path': '/nowhere/a.jpg'},
+            {
+              ..._in(2, _anna, ''),
+              'media_path': '/nowhere/b.jpg',
+              'burn_secs': 30,
+            },
+            {
+              ..._in(3, _anna, ''),
+              'media_path': '/nowhere/c.jpg',
+              'burn_secs': 30,
+              'burn_at': soon,
+            },
+          ],
+        ),
+      );
+      await t.pumpWidget(app(const GroupInfoScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      expect(find.text(l10n.contactSharedMedia('2')), findsOneWidget);
+      await _close(t);
+    });
+
     testWidgets('a blocked member\'s photos stay out of sight', (t) async {
       _use(
         t,

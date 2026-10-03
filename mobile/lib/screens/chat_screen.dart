@@ -242,7 +242,7 @@ class _Msg {
   String? get burnLabel => burnAt != null
       ? _fmtBurn(burnAt!)
       : burnWaits
-      ? _fmtBurnSecs(burnSecs!)
+      ? burnLeft(burnSecs! * 1000)
       : null;
 }
 
@@ -456,21 +456,9 @@ String _humanBurn(int seconds) {
   return l10n.chatD(whole(seconds ~/ 86400));
 }
 
-String _fmtBurn(int burnAtMs) => _fmtBurnSecs(
-  ((burnAtMs - DateTime.now().millisecondsSinceEpoch) / 1000).round(),
-);
-
-String _fmtBurnSecs(int seconds) {
-  var s = seconds;
-  if (s <= 0) return l10n.chat0s;
-  final h = s ~/ 3600;
-  s -= h * 3600;
-  final m = s ~/ 60;
-  s -= m * 60;
-  if (h > 0) return l10n.chatHM(whole(h), twoDigits(m));
-  if (m > 0) return l10n.chatMS(whole(m), twoDigits(s));
-  return l10n.chatS2(whole(s));
-}
+// the countdown, as groups show it too (burnLeft)
+String _fmtBurn(int burnAtMs) =>
+    burnLeft(burnAtMs - DateTime.now().millisecondsSinceEpoch);
 
 // isolate entrypoint for compute(): grinds first-contact pow
 int _grindPowTask(String seed) => grindPow(seed, powBits);
@@ -995,10 +983,8 @@ class _ChatScreenState extends State<ChatScreen>
     });
     _loadMessages();
     _burn = _timers.until(_burnWait, _burnTick);
-    // back in view: what shows now has been read. the beat catches a row
-    // that came into view with no scroll or rebuild, a photo sizing in say
-    _timers.until(() => null, (_) => _reads.look());
-    _timers.every(const Duration(milliseconds: 500), _reads.check);
+    // back in view: what shows now has been read
+    _reads.keepTime(_timers);
     _scrollCtrl.addListener(_reads.look);
     _timers.every(const Duration(seconds: 30), _autoRetryTick);
     _timers.every(const Duration(seconds: 1), () {
@@ -1010,6 +996,9 @@ class _ChatScreenState extends State<ChatScreen>
   void didChangeDependencies() {
     super.didChangeDependencies();
     _timers.watch(context);
+    _route = ModalRoute.of(context);
+    // what covered the chat has gone: what shows now is read
+    _reads.look();
   }
 
   // when the burn looks again: the next deadline, or the countdown's next
@@ -1442,6 +1431,7 @@ class _ChatScreenState extends State<ChatScreen>
     _Msg target,
   ) async {
     HapticFeedback.selectionClick();
+    _touched(target);
     // his first line is the app's own: it is copied and nothing else
     final welcome = target.welcome;
     // a row without a uid gets a local one. the peer doesn't know it, so the
@@ -1762,7 +1752,7 @@ class _ChatScreenState extends State<ChatScreen>
   // the list is read from the database, not from the rows on screen: a pin
   // far up the thread is still a pin when only the last page is loaded
   Future<List<PinEntry>> _loadPins() async {
-    final rows = await session.pinnedIn(peerId: widget.peerHaloId);
+    final rows = await _shownPins();
     final nick = _nickname;
     final them = _isDev
         ? l10n.devName
@@ -1787,9 +1777,16 @@ class _ChatScreenState extends State<ChatScreen>
     ];
   }
 
+  // a timed message not read yet stays out of the pins, as it does out of
+  // the photos: it shows in the thread, where reading it starts its clock
+  Future<List<Map<String, Object?>>> _shownPins() async => [
+    for (final r in await session.pinnedIn(peerId: widget.peerHaloId))
+      if (!burnWaitsRow(r)) r,
+  ];
+
   int _pinCount = 0;
   Future<void> _refreshPinCount() async {
-    final n = (await session.pinnedIn(peerId: widget.peerHaloId)).length;
+    final n = (await _shownPins()).length;
     if (mounted && n != _pinCount) setState(() => _pinCount = n);
   }
 
@@ -1899,10 +1896,23 @@ class _ChatScreenState extends State<ChatScreen>
   // saved message opened from outside. see row_anchor.dart.
   final RowAnchors _anchors = RowAnchors();
 
+  // the bubbles alone, without the date and the new messages line above
+  // them: what says a message has been read
+  final RowAnchors _readAnchors = RowAnchors();
+
+  // the route this chat is on: a sheet, a dialog or a see-through page over
+  // it leaves it drawn but not read
+  ModalRoute<Object?>? _route;
+
   // their timed messages start counting once read here
   late final _reads = ReadBurns(
-    anchors: _anchors,
-    reading: () => _timers.seen && !lockGuard.isLocked() && !sessionQuiet,
+    anchors: _readAnchors,
+    allowed: () => !lockGuard.isLocked() && !sessionQuiet,
+    reading: () =>
+        _timers.seen &&
+        (_route?.isCurrent ?? true) &&
+        !lockGuard.isLocked() &&
+        !sessionQuiet,
     waiting: () => [
       for (final m in _messages)
         if (m.burnWaits && !m.removing && m.msgUid != null) m.msgUid!,
@@ -1910,22 +1920,24 @@ class _ChatScreenState extends State<ChatScreen>
     light: _lightRead,
   );
 
-  Future<void> _lightRead(List<String> uids) async {
+  // what is acted on is read: opened, played, held or answered
+  void _touched(_Msg m) {
+    if (m.burnWaits) _reads.touched(m.msgUid);
+  }
+
+  Future<Map<String, int>> _lightRead(List<String> uids) async {
     final at = await session.lightReadBurns(widget.peerHaloId, uids);
-    if (!mounted) return;
+    if (!mounted || at.isEmpty) return at;
     setState(() {
+      // older rows lit along with them come back too
       for (final m in _messages) {
-        final uid = m.msgUid;
-        if (uid == null || !m.burnWaits || !uids.contains(uid)) continue;
-        // a row gone from the database has no clock to wait for
-        final t = at[uid];
-        if (t == null) {
-          m.burnSecs = null;
-        } else {
-          m.burnAt = t;
-        }
+        final t = at[m.msgUid];
+        if (t != null && m.burnWaits) m.burnAt = t;
       }
     });
+    // a pin that waited shows now
+    unawaited(_refreshPinCount());
+    return at;
   }
 
   void _scrollToMessage(_Msg m) => _landOn(_rowKey(m));
@@ -3711,6 +3723,7 @@ class _ChatScreenState extends State<ChatScreen>
             _retryAny(m);
           },
           onLongPress: (ctx) => _showEmojiPickerAt(ctx, m),
+          onAct: () => _touched(m),
           onReact: m.welcome
               ? null
               : (e) {
@@ -3746,20 +3759,25 @@ class _ChatScreenState extends State<ChatScreen>
         children: [
           if (showDate) _dateDivider(m.when, m.msgUid ?? 'r${m.rowid}'),
           if (ix == _firstUnreadIndex) _newMessagesDivider(),
-          LeaveFold(
-            leaving: m.removing,
-            // a timed bubble has burned already; any other burns now
-            after: m.burnedAway ? Duration.zero : kBurnDissolve,
-            // his first line takes no reply
-            child: m.welcome
-                ? bubble
-                : SwipeToReply(
-                    onReply: () {
-                      HapticFeedback.selectionClick();
-                      _replyWith(m);
-                    },
-                    child: bubble,
-                  ),
+          // the bubble alone: what says it has been read
+          RowAnchor(
+            anchors: _readAnchors,
+            id: _rowKey(m),
+            child: LeaveFold(
+              leaving: m.removing,
+              // a timed bubble has burned already; any other burns now
+              after: m.burnedAway ? Duration.zero : kBurnDissolve,
+              // his first line takes no reply
+              child: m.welcome
+                  ? bubble
+                  : SwipeToReply(
+                      onReply: () {
+                        HapticFeedback.selectionClick();
+                        _replyWith(m);
+                      },
+                      child: bubble,
+                    ),
+            ),
           ),
         ],
       ),
@@ -3772,6 +3790,7 @@ class _ChatScreenState extends State<ChatScreen>
 
   // the quote goes up over the composer and the keyboard comes with it
   void _replyWith(_Msg m) {
+    _touched(m);
     setState(() {
       _replyTo = m;
       _replyFlash = m;
@@ -3824,6 +3843,8 @@ class _ChatScreenState extends State<ChatScreen>
     final paths = <String>[];
     final securePaths = <String>{};
     for (final r in rows) {
+      // one not read yet shows in the thread alone
+      if (burnWaitsRow(r)) continue;
       final mp = r['media_path'] as String?;
       if (mp != null && mp.isNotEmpty && await File(mp).exists()) {
         paths.add(mp);
@@ -5864,6 +5885,8 @@ class _Bubble extends StatelessWidget {
   final _Msg msg;
   final void Function(_Msg)? onRetry;
   final void Function(BuildContext)? onLongPress;
+  // its photo, video or file opened, or its voice note played
+  final VoidCallback? onAct;
   // a tap on a reaction chip: the same emoji from this phone, on or off
   final void Function(String emoji)? onReact;
   final bool secure;
@@ -5898,6 +5921,7 @@ class _Bubble extends StatelessWidget {
     this.quotedSticker,
     this.onRetry,
     this.onLongPress,
+    this.onAct,
     this.onReact,
     this.secure = false,
     this.quotedText,
@@ -6213,6 +6237,7 @@ class _Bubble extends StatelessWidget {
                                           path: msg.filePath!,
                                           isOut: isOut,
                                           disguised: msg.voiceDisguised,
+                                          onPlay: onAct,
                                         ),
                                       )
                                     else if (msg.filePath != null &&
@@ -6225,11 +6250,14 @@ class _Bubble extends StatelessWidget {
                                             (MediaQuery.of(context).size.width *
                                                     0.66)
                                                 .clamp(180.0, 300.0),
-                                        onOpen: () => openVideo(
-                                          context,
-                                          path: msg.filePath!,
-                                          fileName: msg.fileName,
-                                        ),
+                                        onOpen: () {
+                                          onAct?.call();
+                                          openVideo(
+                                            context,
+                                            path: msg.filePath!,
+                                            fileName: msg.fileName,
+                                          );
+                                        },
                                         stamp: _mediaCorner(
                                           msg,
                                           showMeta: showTime,
@@ -6242,6 +6270,7 @@ class _Bubble extends StatelessWidget {
                                         scale: 0.97,
                                         haptic: false,
                                         onTap: () {
+                                          onAct?.call();
                                           if (msg.filePath != null) {
                                             openReceivedFile(
                                               context,
@@ -6261,16 +6290,19 @@ class _Bubble extends StatelessWidget {
                                       PressScale(
                                         scale: 0.97,
                                         haptic: false,
-                                        onTap: () => _openFullImage(
-                                          context,
-                                          msg.mediaPath!,
-                                          secure: msg.secure,
-                                          tag: photoHeroTag(
+                                        onTap: () {
+                                          onAct?.call();
+                                          _openFullImage(
+                                            context,
                                             msg.mediaPath!,
-                                            'chat',
-                                          ),
-                                          radius: 14,
-                                        ),
+                                            secure: msg.secure,
+                                            tag: photoHeroTag(
+                                              msg.mediaPath!,
+                                              'chat',
+                                            ),
+                                            radius: 14,
+                                          );
+                                        },
                                         // said as a photo from the start,
                                         // before the picture has faded up
                                         child: Semantics(

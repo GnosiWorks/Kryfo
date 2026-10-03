@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // a timed message that came in starts its clock when it is first read: the
-// chat in view with the app in front, no lock or decoy over it, and its row
-// on screen. a row the list built just past the edge is not read.
+// chat in view with the app in front, no lock, decoy, sheet or page over it,
+// and its bubble on screen, or the person acting on it. a row the list built
+// just past the edge is not read.
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -9,7 +10,30 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
 import 'dlog.dart';
+import 'l10n/l10n.dart';
+import 'l10n/numbers.dart';
+import 'seen_timers.dart';
 import 'widgets/row_anchor.dart';
+
+/// a row that came in timed and has not been read: its clock waits. shown
+/// only in its own chat, where reading it starts the clock, never in a
+/// gallery, a media strip or the pins sheet
+bool burnWaitsRow(Map<String, Object?> r) =>
+    r['direction'] == 'in' && r['burn_secs'] != null && r['burn_at'] == null;
+
+/// what is left on a timed message's clock, as both chats show it: a fresh
+/// 5 minute clock reads 5m 00s, 61 seconds 1m 01s
+String burnLeft(int ms) {
+  var s = (ms / 1000).round();
+  if (s <= 0) return l10n.chat0s;
+  final h = s ~/ 3600;
+  s -= h * 3600;
+  final m = s ~/ 60;
+  s -= m * 60;
+  if (h > 0) return l10n.chatHM(whole(h), twoDigits(m));
+  if (m > 0) return l10n.chatMS(whole(m), twoDigits(s));
+  return l10n.chatS2(whole(s));
+}
 
 /// [ro] shows inside its scroll view: half of it, or half the view for a
 /// row taller than that
@@ -31,26 +55,64 @@ bool rowInView(RenderObject ro) {
 class ReadBurns {
   ReadBurns({
     required this.anchors,
+    required this.allowed,
     required this.reading,
     required this.waiting,
     required this.light,
-  });
+    int Function()? clock,
+  }) : _clock = clock ?? _wall;
+
+  static int _wall() => DateTime.now().millisecondsSinceEpoch;
+
+  /// how often a chat with rows waiting looks again
+  static const beat = Duration(milliseconds: 500);
+
+  /// after a failed write it waits this long, doubling to [restMost]
+  static const restLeast = Duration(seconds: 2);
+  static const restMost = Duration(minutes: 1);
 
   final RowAnchors anchors;
-  // the chat can be read at all: in view, the app in front, nothing over it
+  // a clock may start at all: no lock and no decoy over the chat
+  final bool Function() allowed;
+  // the chat can be read: in view, the app in front, nothing over it
   final bool Function() reading;
   // the ids of the rows whose clock waits
   final Iterable<String> Function() waiting;
-  // the rows read just now; their clocks are written before this completes
-  final Future<void> Function(List<String> ids) light;
+  // the rows read just now; their clocks are written before this completes.
+  // gives the clock of each row lit, older ones it lit along with them too
+  final Future<Map<String, int>> Function(List<String> ids) light;
+  final int Function() _clock;
 
   final Set<String> _going = {};
+  // asked once and nothing came back: gone from the database, the screen
+  // drops it on its next load
+  final Set<String> _spent = {};
+  SeenJob? _beat;
   bool _asked = false;
   bool _gone = false;
+  int _fails = 0;
+  int _restUntil = 0;
+
+  Iterable<String> get _open =>
+      waiting().where((id) => !_going.contains(id) && !_spent.contains(id));
+
+  /// looks again every [beat] while a row waits, so a row that comes into
+  /// view with no scroll or rebuild, a photo sizing in say, is still read.
+  /// back in view, it looks at once
+  void keepTime(SeenTimers timers) {
+    _beat = timers.until(_nextBeat, (back) => back ? look() : check());
+  }
+
+  Duration? _nextBeat() {
+    if (_gone || _open.isEmpty) return null;
+    final rest = _restUntil - _clock();
+    return rest > beat.inMilliseconds ? Duration(milliseconds: rest) : beat;
+  }
 
   /// looks once this frame is laid out. cheap to call often
   void look() {
-    if (_asked || _gone || waiting().isEmpty) return;
+    if (_asked || _gone || _clock() < _restUntil || _open.isEmpty) return;
+    _beat?.poke();
     _asked = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _asked = false;
@@ -61,17 +123,46 @@ class ReadBurns {
 
   /// the waiting rows on screen now start their clocks
   void check() {
-    if (_gone || !reading()) return;
-    final due = [
-      for (final id in waiting())
-        if (!_going.contains(id) && _shown(id)) id,
-    ];
+    if (_gone || _clock() < _restUntil || !reading()) return;
+    _go([
+      for (final id in _open)
+        if (_shown(id)) id,
+    ]);
+  }
+
+  /// the person acted on row [id]: opened it, played it, held it or swiped
+  /// to answer it. that is reading it, however little of it shows
+  void touched(String? id) {
+    if (id == null || _gone || !allowed()) return;
+    if (!_open.contains(id)) return;
+    _go([id]);
+  }
+
+  void _go(List<String> due) {
     if (due.isEmpty) return;
     _going.addAll(due);
     unawaited(
       light(due)
-          .catchError((Object e) => dlog('read burn: not lit ($e)'))
-          .whenComplete(() => _going.removeAll(due)),
+          .then((lit) {
+            _fails = 0;
+            _restUntil = 0;
+            _spent.addAll(due.where((id) => !lit.containsKey(id)));
+          })
+          .catchError((Object e) {
+            // a database that will not write is not asked twice a second
+            final rest = math.min(
+              restLeast.inMilliseconds << math.min(_fails, 5),
+              restMost.inMilliseconds,
+            );
+            _fails++;
+            _restUntil = _clock() + rest;
+            dlog('read burn: not lit, again in ${rest ~/ 1000}s ($e)');
+          })
+          .whenComplete(() {
+            _going.removeAll(due);
+            // the beat stood down while they were out
+            if (!_gone) _beat?.poke();
+          }),
     );
   }
 
