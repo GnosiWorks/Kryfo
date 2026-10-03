@@ -14,6 +14,8 @@ import 'package:kryfo/lock_guard.dart';
 import 'package:kryfo/lock_layer.dart';
 import 'package:kryfo/theme.dart';
 
+import 'source_body.dart';
+
 class _Lock extends ChangeNotifier {
   bool loaded = true;
   bool locked = false;
@@ -556,11 +558,63 @@ void main() {
     // a screenshot keeps the person where they are, home does not
     expect(k, contains('"screenshot", "globalactions" -> return'));
     expect(k, isNot(contains('"homekey"')));
-    // an intent from outside while covered: dart hears it before the intent
-    final at = k.indexOf('override fun onNewIntent');
-    final told = k.indexOf('tellLeft()', at);
-    expect(told, greaterThan(at));
-    expect(told, lessThan(k.indexOf('super.onNewIntent', at)));
+  });
+
+  test('an intent from outside after the screen was covered says left', () {
+    final k = sourceOf('android/app/src/main/kotlin/app/kryfo/MainActivity.kt');
+    // android 10 and later start the screen again before the intent, so
+    // what counts is a stop with no resume since
+    final intent = bodyOf(k, 'override fun onNewIntent(');
+    final told = intent.indexOf('if (stoppedSinceResume) tellLeft()');
+    expect(told, greaterThan(0));
+    // dart hears it before the intent
+    expect(told, lessThan(intent.indexOf('super.onNewIntent')));
+    expect(intent, isNot(contains('isAtLeast(')));
+    expect(
+      bodyOf(k, 'override fun onStop('),
+      contains('stoppedSinceResume = true'),
+    );
+    expect(
+      bodyOf(k, 'override fun onResume('),
+      contains('stoppedSinceResume = false'),
+    );
+  });
+
+  test('a close reason that will not unpack counts as a leave', () {
+    final k = sourceOf('android/app/src/main/kotlin/app/kryfo/MainActivity.kt');
+    final receive = bodyOf(k, 'override fun onReceive(');
+    expect(
+      receive,
+      contains(
+        'val reason = try {\n'
+        '                intent.getStringExtra("reason")\n'
+        '            } catch (e: Exception) {\n'
+        '                null\n'
+        '            }',
+      ),
+    );
+    expect(receive, contains('when (reason) {'));
+    expect('getStringExtra('.allMatches(receive).length, 1);
+    expect(receive, contains('MainActivity.tellLeft()'));
+  });
+
+  test('a share is offered once, not again from recents or a rebuild', () {
+    final k = sourceOf('android/app/src/main/kotlin/app/kryfo/MainActivity.kt');
+    final create = bodyOf(k, 'override fun onCreate(');
+    final saved = create.indexOf('restored = savedInstanceState != null');
+    expect(saved, greaterThan(0));
+    expect(saved, lessThan(create.indexOf('super.onCreate(')));
+    final engine = bodyOf(k, 'override fun configureFlutterEngine(');
+    expect(
+      engine,
+      contains(
+        'if (!restored && (intent.flags and '
+        'Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) == 0) {\n'
+        '            tools.offer(intent)\n'
+        '        }',
+      ),
+    );
+    expect('tools.offer('.allMatches(engine).length, 1);
   });
 
   test('there is only ever one main screen', () {

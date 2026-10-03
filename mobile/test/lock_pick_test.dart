@@ -8,6 +8,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/lock_guard.dart';
 import 'package:kryfo/lock_state.dart';
 
+import 'source_body.dart';
+
 // a picker on screen until the test says what it gave back
 class _Picker {
   _Picker() {
@@ -36,6 +38,7 @@ void main() {
     lockState.openForTest(enabled: true);
     lockState.inDecoy = false;
     lockState.inVault = false;
+    lockState.picksDropped = null;
   });
 
   test('coming straight back from a picker keeps the app open', () async {
@@ -123,6 +126,59 @@ void main() {
     await expectLater(p.result, throwsA(isA<LockDropped>()));
   });
 
+  test('a leave just after the picker came back still locks', () async {
+    final p = _Picker();
+    await _settle();
+    lockState.leaving();
+    // android hands the picker's cancel over first, then says the person
+    // left, then resumes the app
+    p.give(null);
+    expect(await p.result, isNull);
+    lockState.left();
+    lockState.returned();
+    expect(lockState.locked, isTrue);
+    expect(lockState.holding, isFalse);
+  });
+
+  test('a pick from the decoy unlocked into the decoy goes through', () async {
+    lockState.inDecoy = true;
+    final p = _Picker();
+    await _settle();
+    lockState.left();
+    p.give('photo');
+    await _settle();
+    // the decoy pin again: the same session, so what was picked is its own
+    _unlock(decoy: true);
+    expect(await p.result, 'photo');
+  });
+
+  test('a dropped pick takes the picker copies with it', () async {
+    var swept = 0;
+    lockState.picksDropped = () async => swept++;
+    final p = _Picker();
+    await _settle();
+    lockState.left();
+    p.give('photo');
+    await _settle();
+    lockState.inDecoy = true;
+    _unlock(decoy: true);
+    await expectLater(p.result, throwsA(isA<LockDropped>()));
+    expect(swept, 1);
+  });
+
+  test('a pick handed over keeps its copies for the screen', () async {
+    var swept = 0;
+    lockState.picksDropped = () async => swept++;
+    final p = _Picker();
+    await _settle();
+    lockState.left();
+    p.give('photo');
+    await _settle();
+    _unlock();
+    expect(await p.result, 'photo');
+    expect(swept, 0);
+  });
+
   test('a leave with the lock off changes nothing', () async {
     lockState.openForTest();
     final p = _Picker();
@@ -131,5 +187,27 @@ void main() {
     expect(lockState.locked, isFalse);
     p.give('photo');
     expect(await p.result, 'photo');
+  });
+
+  test('a pick dropped by the lock is a quiet cancel on screen', () {
+    final chat = sourceOf('lib/screens/chat_screen.dart');
+    final group = sourceOf('lib/screens/group_chat_screen.dart');
+    final qr = sourceOf('lib/screens/qr_screen.dart');
+    for (final (src, fn) in [
+      (chat, 'Future<void> _pickAndSendFile('),
+      (chat, 'Future<void> _pickAndSendGif('),
+      (group, 'Future<void> _pickGroupGif('),
+      (group, 'Future<void> _pickGroupFile('),
+      (qr, 'Future<void> _out('),
+    ]) {
+      final body = bodyOf(src, fn);
+      final quiet = body.indexOf('} on LockDropped {');
+      expect(quiet, greaterThan(0), reason: fn);
+      // ahead of the catch that says it could not be read or drawn
+      expect(quiet, lessThan(body.indexOf('} catch (')), reason: fn);
+      final arm = body.substring(quiet, body.indexOf('} catch (', quiet));
+      expect(arm, isNot(contains('showHaloToast')), reason: fn);
+      expect(arm, isNot(contains('l10n.')), reason: fn);
+    }
   });
 }

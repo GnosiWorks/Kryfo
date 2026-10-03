@@ -18,7 +18,8 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'notifications.dart';
 import 'backup.dart' show sweepBackupLeftovers;
-import 'picked.dart' show sweepPickerLeftovers;
+import 'picked.dart'
+    show dropPickerCopies, sweepFilePickerCopies, sweepPickerLeftovers;
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
@@ -5752,14 +5753,7 @@ Future<void> sweepCaptures() async {
     await sweepShareCopies(tmp);
     // the gallery picker's whole copies, in folders of their own
     await sweepPickerLeftovers(tmp);
-    // the file picker keeps its own folder of copies
-    final picks = Directory('${tmp.path}/file_picker');
-    if (await picks.exists()) {
-      await for (final f in picks.list(recursive: true)) {
-        if (f is File) await shredFile(f.path);
-      }
-      await picks.delete(recursive: true);
-    }
+    await sweepFilePickerCopies(tmp);
   } catch (e) {
     dlog('sweep: $e');
   }
@@ -14628,6 +14622,7 @@ void main() async {
   // an unlock opens its session under the lock screen, before it lifts
   lockState.onOutcome = appState.sessionFor;
   lockState.sessionsReady = appState.containersReady;
+  lockState.picksDropped = dropPickerCopies;
   unawaited(_sweepPlaintextLeftovers());
   // what a backup or a restore cut short left, before either can run again
   unawaited(sweepBackupLeftovers());

@@ -32,7 +32,6 @@ import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.Lifecycle
 import android.content.ActivityNotFoundException
 import android.net.Uri
 import android.provider.Settings
@@ -96,10 +95,14 @@ class MainActivity : FlutterFragmentActivity() {
     // nostr poll timer keep running in the background
     override fun shouldDestroyEngineWithHost(): Boolean = false
 
+    // stopped and not shown since. android 10 and later start this screen
+    // again before a new intent reaches it, so the lifecycle cannot say
+    private var stoppedSinceResume = false
+
     override fun onNewIntent(intent: Intent) {
-        // an intent from outside while something else covers this screen:
+        // an intent from outside while something else covered this screen:
         // the person went somewhere first. dart hears it before the intent
-        if (!lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) tellLeft()
+        if (stoppedSinceResume) tellLeft()
         super.onNewIntent(intent)
         setIntent(intent)
         tools.offer(intent)
@@ -144,6 +147,11 @@ class MainActivity : FlutterFragmentActivity() {
         openedAt = 0L
     }
 
+    override fun onStop() {
+        super.onStop()
+        stoppedSinceResume = true
+    }
+
     override fun onDestroy() {
         windowSeen?.let {
             it.gone = null
@@ -155,6 +163,7 @@ class MainActivity : FlutterFragmentActivity() {
 
     override fun onResume() {
         super.onResume()
+        stoppedSinceResume = false
         // a file opened or shared with another app is a decrypted copy in
         // cache/open or cache/share_plus. coming back here is the only sign
         // that app is done with it, and a resume also follows every start.
@@ -264,9 +273,13 @@ class MainActivity : FlutterFragmentActivity() {
         }
     }
 
+    // this screen was rebuilt from a saved state
+    private var restored = false
+
     // dart's last screenshot setting, kept so the next start's first frame is
     // covered before dart runs
     override fun onCreate(savedInstanceState: android.os.Bundle?) {
+        restored = savedInstanceState != null
         if (getSharedPreferences("kryfo_window", MODE_PRIVATE).getBoolean("secure", false)) {
             window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
             if (android.os.Build.VERSION.SDK_INT >= 33) setRecentsScreenshotEnabled(false)
@@ -335,7 +348,11 @@ class MainActivity : FlutterFragmentActivity() {
         FlutterEngineCache.getInstance().put(ENGINE_ID, flutterEngine)
         awayChannel = BasicMessageChannel(flutterEngine.dartExecutor.binaryMessenger, "kryfo/window", StringCodec.INSTANCE)
         tools.attach(MethodChannel(flutterEngine.dartExecutor.binaryMessenger, ToolsBridge.CHANNEL))
-        tools.offer(intent)
+        // a share is offered once. a screen rebuilt after the process went,
+        // or opened again from recents, still carries the old one
+        if (!restored && (intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) == 0) {
+            tools.offer(intent)
+        }
         videos = VideoPlayers(flutterEngine.renderer).also { v ->
             MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "kryfo/video")
                 .setMethodCallHandler { call, result -> v.handle(call, result) }
@@ -840,8 +857,14 @@ private class LeftWatch : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         @Suppress("DEPRECATION")
         if (intent.action == Intent.ACTION_CLOSE_SYSTEM_DIALOGS) {
-            // a screenshot or the power menu keep the person where they are
-            when (intent.getStringExtra("reason")) {
+            // a screenshot or the power menu keep the person where they are.
+            // an extra that will not unpack counts as a leave
+            val reason = try {
+                intent.getStringExtra("reason")
+            } catch (e: Exception) {
+                null
+            }
+            when (reason) {
                 "screenshot", "globalactions" -> return
             }
         }

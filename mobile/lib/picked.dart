@@ -100,6 +100,24 @@ Future<void> sweepPickerLeftovers(Directory cache) async {
   }
 }
 
+// the file picker keeps its copies in a folder of its own
+Future<void> sweepFilePickerCopies(Directory cache) async {
+  final picks = Directory(p.join(cache.path, 'file_picker'));
+  if (!await picks.exists()) return;
+  await for (final f in picks.list(recursive: true)) {
+    if (f is File) await shredFile(f.path);
+  }
+  await picks.delete(recursive: true);
+}
+
+// a pick the lock dropped: nothing will read what it left, so every
+// picker copy goes now
+Future<void> dropPickerCopies() async {
+  final cache = await getTemporaryDirectory();
+  await sweepPickerLeftovers(cache);
+  await sweepFilePickerCopies(cache);
+}
+
 // a voice note as recorded, read once and then zeroed and removed: the file
 // is the voice before any disguise. null when there is no take to read.
 Future<Uint8List?> takeRecording(String path) async {

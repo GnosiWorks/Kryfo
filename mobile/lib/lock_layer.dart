@@ -231,7 +231,8 @@ class LockGate extends StatefulWidget {
   // the session on screen is a decoy's
   final bool Function() quiet;
   final WidgetBuilder pad;
-  // android says the person went home or to recents, or the screen went off
+  // android says the person went home or to recents, the screen went off,
+  // or the app was opened from outside while something covered it
   final VoidCallback? left;
   // the lock is going up: the app puts away what only an unlock showed
   final VoidCallback? lockingUp;
