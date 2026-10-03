@@ -32,6 +32,7 @@ import 'main.dart'
 import 'router.dart' show scrubHidden;
 import 'devchat/dev_chat.dart' show scrubDevAnon;
 import 'dlog.dart';
+import 'read_burn.dart' show burnStartBy;
 import 'engine_strings.dart';
 import 'dart:typed_data';
 import 'backup_stream.dart';
@@ -738,21 +739,26 @@ class BackupSide {
 }
 
 // a timed message that came in and has not been read has no clock on the
-// phone. in a copy it counts from the backup, [at]: read and burned here
-// later, a restore sweeps it by then, and never brings it back to be read
-// again with a whole window. a restore soon after still shows it, with
-// what is left. ours already count from when they went
+// phone. in a copy it counts from the backup, [at], or from a day after it
+// came if that is sooner (kBurnWaitMost): read and burned here later, a
+// restore sweeps it by then, and never brings it back to be read again
+// with a whole window. a restore soon after still shows it, with what is
+// left, out of lists until read. ours already count from when they went
 Future<void> settleWaitingBurns(DatabaseExecutor db, int at) async {
   final rows = await db.query(
     'messages',
-    columns: ['id', 'burn_secs'],
+    columns: ['id', 'sent_at', 'burn_secs'],
     where: "direction = 'in' AND burn_secs IS NOT NULL AND burn_at IS NULL",
   );
   for (final r in rows) {
     final secs = (r['burn_secs'] as num).toInt();
+    final from = min(
+      at,
+      burnStartBy((r['sent_at'] as num?)?.toInt() ?? at, at),
+    );
     await db.update(
       'messages',
-      {'burn_at': at + secs * 1000},
+      {'burn_at': from + secs * 1000, 'burn_unseen': 1},
       where: 'id = ?',
       whereArgs: [r['id']],
     );

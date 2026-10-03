@@ -99,7 +99,9 @@ class _Db extends DevTestDb {
   @override
   Future<Map<String, Object?>?> shieldFor(String haloId) async => null;
   @override
-  Future<void> purgeExpiredBurns() async {}
+  Future<void> purgeExpiredBurns({
+    Future<Set<String>> Function()? blocked,
+  }) async {}
   @override
   Future<List<Map<String, Object?>>> messagesFor(String peerId) async =>
       _thread(peerId);
@@ -307,6 +309,42 @@ void main() {
     );
     // the count started in place: the bubble did not move
     expect(t.getRect(find.text('gone soon', findRichText: true)), box);
+    await devClose(t);
+  });
+
+  // a day after it came its clock starts, read or not: the open chat
+  // counts it down from then, as the sweep writes it, and a read after
+  // gives it no more time
+  testWidgets('a day after it came it counts from then, unread, and a read '
+      'keeps that clock', (t) async {
+    await thread();
+    final came = DateTime.now().millisecondsSinceEpoch - 86400000 - 10000;
+    await mem.update(
+      'messages',
+      {'sent_at': came},
+      where: 'msg_uid = ?',
+      whereArgs: [_timed],
+    );
+    lockState.openForTest(enabled: true);
+    lockState.lock();
+    await devOpen(t, chat());
+    // the first frame that shows it shows the clock it started then
+    expect(find.text('gone soon', findRichText: true), findsOneWidget);
+    expect(find.text('5m 00s'), findsNothing);
+    await settle(t);
+    expect(burnAt(), isNull);
+    expect(find.text('5m 00s'), findsNothing);
+    expect(
+      find.text('4m 50s').evaluate().length +
+          find.text('4m 49s').evaluate().length,
+      1,
+    );
+    expect(waits(t), isFalse);
+
+    lockState.openForTest(enabled: true);
+    lockState.inDecoy = false;
+    await settle(t);
+    expect(burnAt(), came + 86400000 + 300000);
     await devClose(t);
   });
 

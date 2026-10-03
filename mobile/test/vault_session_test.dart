@@ -507,7 +507,11 @@ class _Db implements HaloDb {
 
   // ---- what runs on a timer ----
   @override
-  Future<int> purgeExpired({void Function(String msgUid)? gone}) async {
+  Future<int> purgeExpired({
+    void Function(String msgUid)? gone,
+    Future<Set<String>> Function()? blocked,
+    bool ifOpen = false,
+  }) async {
     _hit('purgeExpired', null, null);
     final now = DateTime.now().millisecondsSinceEpoch;
     final before = r.msgs.length;

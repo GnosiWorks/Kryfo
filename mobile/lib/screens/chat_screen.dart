@@ -177,6 +177,8 @@ class _Msg {
   // the burn window: ours is lit into burnAt when it goes, theirs when it
   // is first read
   int? burnSecs;
+  // theirs, counting since before it was read (kBurnWaitMost)
+  bool burnUnseen;
   String? msgUid;
   // msg_uid of the message this one replies to, or null.
   final String? replyTo;
@@ -219,6 +221,7 @@ class _Msg {
     this.welcome = false,
     this.burnAt,
     this.burnSecs,
+    this.burnUnseen = false,
     this.msgUid,
     this.replyTo,
     this.secure = false,
@@ -236,6 +239,9 @@ class _Msg {
 
   // came in timed and not read yet: its clock waits for the first read
   bool get burnWaits => direction == 'in' && burnAt == null && burnSecs != null;
+
+  // not read yet, its clock waiting or running: reading it is still owed
+  bool get burnUnread => burnWaits || (burnUnseen && burnAt != null);
 
   // what the countdown shows: the time left, or the whole window while it
   // waits. null for a message with no clock to show
@@ -523,6 +529,7 @@ class _ChatScreenState extends State<ChatScreen>
           sticker: StickerWire.parse(r['sticker']),
           burnAt: r['burn_at'] as int?,
           burnSecs: (r['burn_secs'] as num?)?.toInt(),
+          burnUnseen: r['burn_unseen'] == 1,
           msgUid: uid,
           replyTo: r['reply_to'] as String?,
           secure: (r['secure'] as int? ?? 0) == 1,
@@ -1004,25 +1011,46 @@ class _ChatScreenState extends State<ChatScreen>
   // when the burn looks again: the next deadline, or the countdown's next
   // second. nothing while no message here counts down
   Duration? _burnWait() {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    // what waited its day counts from then, in the frame that asks
+    _startWaited(now);
     var ghosts = false;
     int? soonest;
+    // a row still waiting starts counting a day after it came
+    final starts = <int>[];
     for (final m in _messages) {
+      if (m.burnWaits) {
+        starts.add(burnStartBy(m.when.millisecondsSinceEpoch, now));
+      }
       final at = m.burnAt;
       if (at == null) continue;
       ghosts = true;
       if (m.removing || m.sending || m.failed) continue;
       if (soonest == null || at < soonest) soonest = at;
     }
-    return burnWait(
-      DateTime.now().millisecondsSinceEpoch,
+    return burnWaitStarts(
+      now,
       ghosts: ghosts,
       soonest: soonest,
+      starts: starts,
     );
+  }
+
+  // what waited a day unread counts from then, as the sweep writes it
+  void _startWaited(int now) {
+    for (final m in _messages) {
+      if (!m.burnWaits) continue;
+      final s = burnStartBy(m.when.millisecondsSinceEpoch, now);
+      if (s > now) continue;
+      m.burnAt = s + m.burnSecs! * 1000;
+      m.burnUnseen = true;
+    }
   }
 
   void _burnTick(bool back) {
     if (!mounted) return;
     final now = DateTime.now().millisecondsSinceEpoch;
+    _startWaited(now);
     // one pass, and no list unless something burnt
     List<_Msg>? expired;
     var anyGhost = false;
@@ -1280,6 +1308,7 @@ class _ChatScreenState extends State<ChatScreen>
         sticker: StickerWire.parse(r['sticker']),
         burnAt: r['burn_at'] as int?,
         burnSecs: (r['burn_secs'] as num?)?.toInt(),
+        burnUnseen: r['burn_unseen'] == 1,
         msgUid: uid,
         replyTo: r['reply_to'] as String?,
         secure: (r['secure'] as int? ?? 0) == 1,
@@ -1915,14 +1944,14 @@ class _ChatScreenState extends State<ChatScreen>
         !sessionQuiet,
     waiting: () => [
       for (final m in _messages)
-        if (m.burnWaits && !m.removing && m.msgUid != null) m.msgUid!,
+        if (m.burnUnread && !m.removing && m.msgUid != null) m.msgUid!,
     ],
     light: _lightRead,
   );
 
   // what is acted on is read: opened, played, held or answered
   void _touched(_Msg m) {
-    if (m.burnWaits) _reads.touched(m.msgUid);
+    if (m.burnUnread) _reads.touched(m.msgUid);
   }
 
   Future<Map<String, int>> _lightRead(List<String> uids) async {
@@ -1932,7 +1961,10 @@ class _ChatScreenState extends State<ChatScreen>
       // older rows lit along with them come back too
       for (final m in _messages) {
         final t = at[m.msgUid];
-        if (t != null && m.burnWaits) m.burnAt = t;
+        if (t != null && m.burnUnread) {
+          m.burnAt = t;
+          m.burnUnseen = false;
+        }
       }
     });
     // a pin that waited shows now, and the chat list line its words
@@ -2124,6 +2156,7 @@ class _ChatScreenState extends State<ChatScreen>
           sticker: StickerWire.parse(r['sticker']),
           burnAt: r['burn_at'] as int?,
           burnSecs: (r['burn_secs'] as num?)?.toInt(),
+          burnUnseen: r['burn_unseen'] == 1,
           msgUid: uid,
           replyTo: r['reply_to'] as String?,
           secure: (r['secure'] as int? ?? 0) == 1,
@@ -3669,7 +3702,7 @@ class _ChatScreenState extends State<ChatScreen>
             : l10n.chatThem;
         // a timed message not read yet says only that it is one: its words
         // show on its own bubble, where reading them starts its clock
-        if (original.burnWaits) {
+        if (original.burnUnread) {
           quoted = l10n.timedMessageLabel;
         } else if (original.sticker != null) {
           quoted = l10n.stickerLabel;

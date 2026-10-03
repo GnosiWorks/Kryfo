@@ -1027,6 +1027,10 @@ class ArrivalRows implements HaloDb {
     for (final g in groupRows.values)
       if (g['room_pub'] != null) g,
   ]);
+  // a file open, as a decoy is but while its files are swapped or wiped
+  bool shut = false;
+  @override
+  bool get isOpen => !shut;
   @override
   Future<List<Map<String, Object?>>> expiredRooms(int now) async =>
       _hit('expiredRooms', null, [

@@ -1524,6 +1524,39 @@ void main() {
       expect(w.store.inbox, isEmpty);
     });
 
+    // a day after it came its clock starts, read or not: one whose clock
+    // ran out while the vault was shut never comes in, one still counting
+    // comes in with the clock it started then
+    test('a timed message sealed over a day ago keeps that day', () async {
+      final w = await _World.make();
+      final h = _as(_h);
+      final at = DateTime.now().millisecondsSinceEpoch - 86400000 - 10000;
+      for (final (uid, secs) in [('burned', 5), ('counting', 3600)]) {
+        await w.router.seal(
+          Unsealed(
+            _h,
+            await wrapMessage(
+              'sealed $uid',
+              msgUid: uid,
+              burnSeconds: secs,
+              sender: h,
+            ),
+            false,
+            at,
+          ),
+          uid: uid,
+        );
+      }
+      await w.open();
+      await w.app.drainSealed(w.vault, 'priv-A');
+      expect(w.vault.msg('burned'), isNull);
+      final r = w.vault.msg('counting')!;
+      expect(r['burn_at'], at + 86400000 + 3600 * 1000);
+      expect(r['burn_secs'], 3600);
+      expect(r['sent_at'], at);
+      expect(w.store.inbox, isEmpty);
+    });
+
     test('every kind opened from the seal keeps the time it came', () async {
       final w = await _World.make();
       final h = _as(_h);

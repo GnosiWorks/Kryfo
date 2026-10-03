@@ -140,12 +140,14 @@ void main() {
   // sent and having its clock lit: nothing would ever light it again
   Future<_Rows> stranded() async {
     final db = _Rows(MemDb());
+    // theirs came just now: a day unread would start its clock
+    final now = DateTime.now().millisecondsSinceEpoch;
     Future<void> row(String uid, String dir, int sent, int? secs) =>
         db.mem.insert('messages', {
           'peer_id': _v,
           'direction': dir,
           'plaintext': 'hi',
-          'sent_at': 1,
+          'sent_at': now,
           'msg_uid': uid,
           'sent': sent,
           'delivered': sent,
