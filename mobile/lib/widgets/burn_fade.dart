@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 import '../theme.dart';
+import 'motion.dart' show HouseCurve, kHouseTime, motionStill;
 
 // dissolve-and-ember burn shown when a ghost message expires. shared by the
 // 1:1 chat and group chat so both burn the same way.
@@ -20,6 +21,34 @@ class BurnFade extends StatelessWidget {
       duration: kBurnDissolve,
       curve: Curves.easeIn,
       builder: (context, t, _) => _burning(t, child),
+    );
+  }
+}
+
+/// the flame beside a timed message's countdown. while its clock waits for
+/// the message to be read it rests low and small, and it kindles as the
+/// count starts. with less movement it only brightens
+class BurnFlame extends StatelessWidget {
+  final bool waiting;
+  final Widget child;
+  const BurnFlame({super.key, required this.waiting, required this.child});
+
+  static const restOpacity = 0.4;
+  static const restScale = 0.8;
+
+  @override
+  Widget build(BuildContext context) {
+    final still = motionStill(context);
+    return AnimatedScale(
+      scale: waiting && !still ? restScale : 1,
+      duration: still ? Duration.zero : kHouseTime,
+      curve: const HouseCurve(),
+      child: AnimatedOpacity(
+        opacity: waiting ? restOpacity : 1,
+        duration: kHouseTime,
+        curve: Curves.easeOut,
+        child: child,
+      ),
     );
   }
 }

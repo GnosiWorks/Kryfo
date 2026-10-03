@@ -674,6 +674,7 @@ class ArrivalRows implements HaloDb {
       'plaintext': plaintext,
       'sent_at': sentAt ?? DateTime.now().millisecondsSinceEpoch,
       'burn_at': burnAt,
+      'burn_secs': burnSecs,
       'msg_uid': msgUid,
       'group_id': groupId,
       'media_path': mediaPath,

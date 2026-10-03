@@ -92,6 +92,7 @@ import '../stickers/sticker_wire.dart' show StickerWire;
 import '../widgets/motion.dart';
 import '../widgets/burn_fade.dart';
 import '../seen_timers.dart';
+import '../read_burn.dart';
 import '../dlog.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/menu_backdrop.dart';
@@ -173,7 +174,9 @@ class _Msg {
   String text;
   final DateTime when;
   int? burnAt;
-  int? burnSecs; // intended burn window; lit into burnAt on delivery.
+  // the burn window: ours is lit into burnAt when it goes, theirs when it
+  // is first read
+  int? burnSecs;
   String? msgUid;
   // msg_uid of the message this one replies to, or null.
   final String? replyTo;
@@ -230,6 +233,17 @@ class _Msg {
     this.delivered = false,
     Map<String, String>? reactions,
   }) : reactions = reactions ?? <String, String>{};
+
+  // came in timed and not read yet: its clock waits for the first read
+  bool get burnWaits => direction == 'in' && burnAt == null && burnSecs != null;
+
+  // what the countdown shows: the time left, or the whole window while it
+  // waits. null for a message with no clock to show
+  String? get burnLabel => burnAt != null
+      ? _fmtBurn(burnAt!)
+      : burnWaits
+      ? _fmtBurnSecs(burnSecs!)
+      : null;
 }
 
 String _humanSize(int bytes) {
@@ -442,9 +456,12 @@ String _humanBurn(int seconds) {
   return l10n.chatD(whole(seconds ~/ 86400));
 }
 
-String _fmtBurn(int burnAtMs) {
-  final now = DateTime.now().millisecondsSinceEpoch;
-  var s = ((burnAtMs - now) / 1000).round();
+String _fmtBurn(int burnAtMs) => _fmtBurnSecs(
+  ((burnAtMs - DateTime.now().millisecondsSinceEpoch) / 1000).round(),
+);
+
+String _fmtBurnSecs(int seconds) {
+  var s = seconds;
   if (s <= 0) return l10n.chat0s;
   final h = s ~/ 3600;
   s -= h * 3600;
@@ -517,6 +534,7 @@ class _ChatScreenState extends State<ChatScreen>
           DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
           sticker: StickerWire.parse(r['sticker']),
           burnAt: r['burn_at'] as int?,
+          burnSecs: (r['burn_secs'] as num?)?.toInt(),
           msgUid: uid,
           replyTo: r['reply_to'] as String?,
           secure: (r['secure'] as int? ?? 0) == 1,
@@ -977,6 +995,11 @@ class _ChatScreenState extends State<ChatScreen>
     });
     _loadMessages();
     _burn = _timers.until(_burnWait, _burnTick);
+    // back in view: what shows now has been read. the beat catches a row
+    // that came into view with no scroll or rebuild, a photo sizing in say
+    _timers.until(() => null, (_) => _reads.look());
+    _timers.every(const Duration(milliseconds: 500), _reads.check);
+    _scrollCtrl.addListener(_reads.look);
     _timers.every(const Duration(seconds: 30), _autoRetryTick);
     _timers.every(const Duration(seconds: 1), () {
       if (mounted) _checkInbox();
@@ -1267,6 +1290,7 @@ class _ChatScreenState extends State<ChatScreen>
         DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
         sticker: StickerWire.parse(r['sticker']),
         burnAt: r['burn_at'] as int?,
+        burnSecs: (r['burn_secs'] as num?)?.toInt(),
         msgUid: uid,
         replyTo: r['reply_to'] as String?,
         secure: (r['secure'] as int? ?? 0) == 1,
@@ -1875,6 +1899,35 @@ class _ChatScreenState extends State<ChatScreen>
   // saved message opened from outside. see row_anchor.dart.
   final RowAnchors _anchors = RowAnchors();
 
+  // their timed messages start counting once read here
+  late final _reads = ReadBurns(
+    anchors: _anchors,
+    reading: () => _timers.seen && !lockGuard.isLocked() && !sessionQuiet,
+    waiting: () => [
+      for (final m in _messages)
+        if (m.burnWaits && !m.removing && m.msgUid != null) m.msgUid!,
+    ],
+    light: _lightRead,
+  );
+
+  Future<void> _lightRead(List<String> uids) async {
+    final at = await session.lightReadBurns(widget.peerHaloId, uids);
+    if (!mounted) return;
+    setState(() {
+      for (final m in _messages) {
+        final uid = m.msgUid;
+        if (uid == null || !m.burnWaits || !uids.contains(uid)) continue;
+        // a row gone from the database has no clock to wait for
+        final t = at[uid];
+        if (t == null) {
+          m.burnSecs = null;
+        } else {
+          m.burnAt = t;
+        }
+      }
+    });
+  }
+
   void _scrollToMessage(_Msg m) => _landOn(_rowKey(m));
 
   void _landOn(String rowKey) {
@@ -2057,6 +2110,7 @@ class _ChatScreenState extends State<ChatScreen>
           DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
           sticker: StickerWire.parse(r['sticker']),
           burnAt: r['burn_at'] as int?,
+          burnSecs: (r['burn_secs'] as num?)?.toInt(),
           msgUid: uid,
           replyTo: r['reply_to'] as String?,
           secure: (r['secure'] as int? ?? 0) == 1,
@@ -2461,7 +2515,7 @@ class _ChatScreenState extends State<ChatScreen>
     final picked = await showChoiceSheet<int>(
       context,
       title: l10n.chatGhostTimer,
-      line: l10n.chatHowLongBeforeSent,
+      line: l10n.chatHowLongAfterReading,
       current: _burnSeconds,
       choices: [
         SheetChoice(30, l10n.chat30Seconds),
@@ -3494,6 +3548,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   void _markRead() {
+    _reads.look();
     session
         .clearUnread(widget.peerHaloId)
         .then((_) => appState.refreshContacts());
@@ -3735,6 +3790,7 @@ class _ChatScreenState extends State<ChatScreen>
       land();
     }
     _timers.dispose();
+    _reads.dispose();
     releaseChat(widget.peerHaloId);
     lockState.removeListener(_lockLifted);
     appState.removeListener(_onAppStateChanged);
@@ -4553,6 +4609,8 @@ class _ChatScreenState extends State<ChatScreen>
   Widget build(BuildContext context) {
     // a message that just started counting down gets its burn on time
     _burn.poke();
+    // and one that waits is read once this frame shows it
+    _reads.look();
     final searchActive = _searching && _query.isNotEmpty;
     return Scaffold(
       backgroundColor: HaloColors.surface,
@@ -6509,11 +6567,13 @@ class _Bubble extends StatelessWidget {
                                           ],
 
                                           // a sent photo has no meta row, so its
-                                          // countdown lives here like an incoming one
-                                          if (msg.burnAt != null &&
-                                              !pending &&
-                                              (!showMeta ||
-                                                  msg.mediaPath != null)) ...[
+                                          // countdown lives here like an incoming one.
+                                          // one not read yet shows its whole window
+                                          if (msg.burnLabel case final burn?
+                                              when !pending &&
+                                                  (!showMeta ||
+                                                      msg.mediaPath !=
+                                                          null)) ...[
                                             const SizedBox(height: 4),
                                             Padding(
                                               padding:
@@ -6523,17 +6583,20 @@ class _Bubble extends StatelessWidget {
                                               child: Row(
                                                 mainAxisSize: MainAxisSize.min,
                                                 children: [
-                                                  Icon(
-                                                    Icons
-                                                        .local_fire_department_outlined,
-                                                    size: 11,
-                                                    color: onAmberText
-                                                        ? HaloColors.onAmber
-                                                        : HaloColors.amber,
+                                                  BurnFlame(
+                                                    waiting: msg.burnWaits,
+                                                    child: Icon(
+                                                      Icons
+                                                          .local_fire_department_outlined,
+                                                      size: 11,
+                                                      color: onAmberText
+                                                          ? HaloColors.onAmber
+                                                          : HaloColors.amber,
+                                                    ),
                                                   ),
                                                   const SizedBox(width: 4),
                                                   Text(
-                                                    _fmtBurn(msg.burnAt!),
+                                                    burn,
                                                     style:
                                                         HaloType.mono(
                                                           size: 9.5,
@@ -6716,7 +6779,7 @@ class _Bubble extends StatelessWidget {
     required bool arriving,
   }) {
     final quoted = quotedText;
-    final burn = msg.burnAt;
+    final burn = msg.burnLabel;
     final reacted = msg.reactions.isNotEmpty;
     final roomTime = motionStill(context) ? Duration.zero : kHouseTime;
     final retry = (failedShown || parked) && onRetry != null
@@ -6781,7 +6844,8 @@ class _Bubble extends StatelessWidget {
                                     delivered: showMeta && msg.delivered
                                         ? l10n.chatDelivered
                                         : null,
-                                    burn: burn == null ? null : _fmtBurn(burn),
+                                    burn: burn,
+                                    burnWaits: msg.burnWaits,
                                     alert: failedShown
                                         ? l10n.chatFailedTapToRetry
                                         : null,

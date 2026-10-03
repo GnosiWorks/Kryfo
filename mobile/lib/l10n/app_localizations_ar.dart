@@ -1471,7 +1471,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatGhostTimer => 'الرسائل المؤقتة';
 
   @override
-  String get chatHowLongBeforeSent => 'بعد كم من الوقت تختفي الرسائل المُرسلة؟';
+  String get chatHowLongAfterReading =>
+      'بعد كم من الوقت من قراءتها تختفي الرسائل؟ رسائلك تُحسب من لحظة إرسالها.';
 
   @override
   String get chatCamera => 'الكاميرا';
@@ -2492,8 +2493,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get groupChatBurnTimer => 'الرسائل المؤقتة';
 
   @override
-  String get groupChatNewMessagesDisappearAfter =>
-      'تختفي الرسائل الجديدة بعد هذه المدة';
+  String get groupChatNewMessagesDisappearOnceRead =>
+      'تختفي الرسائل الجديدة بعد هذه المدة من قراءتها. رسائلك تُحسب من لحظة إرسالها.';
 
   @override
   String get groupChatToday => 'اليوم';

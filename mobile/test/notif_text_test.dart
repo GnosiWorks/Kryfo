@@ -152,26 +152,47 @@ void main() {
     expect(w.live.msg('text0003')?['plaintext'], 'see you at 6');
   });
 
-  test('a timed message rings with the time it burns', () async {
-    final w = await _World.make();
-    final before = DateTime.now().millisecondsSinceEpoch;
-    await w.from(
-      _mum,
-      await wrapMessage(
-        'gone soon',
-        msgUid: 'text0004',
-        burnSeconds: 30,
-        sender: asSender(_mum),
-      ),
-    );
-    await w.from(
-      _mum,
-      await wrapMessage('staying', msgUid: 'text0005', sender: asSender(_mum)),
-    );
-    expect(w.io.burns, hasLength(2));
-    expect(w.io.burns.first, greaterThanOrEqualTo(before + 30000));
-    expect(w.io.burns.last, isNull);
-  });
+  // its clock starts when it is read, so nothing takes it from the shade
+  // before then; opening the chat clears the shade anyway
+  test(
+    'a timed message waits to be read, and rings with no time out',
+    () async {
+      final w = await _World.make();
+      await w.from(
+        _mum,
+        await wrapMessage(
+          'gone soon',
+          msgUid: 'text0004',
+          burnSeconds: 30,
+          sender: asSender(_mum),
+        ),
+      );
+      await w.from(
+        _mum,
+        await wrapMessage(
+          'gone soon too',
+          msgUid: 'text0006',
+          groupId: _g,
+          burnSeconds: 60,
+          sender: asSender(_mum),
+        ),
+      );
+      await w.from(
+        _mum,
+        await wrapMessage(
+          'staying',
+          msgUid: 'text0005',
+          sender: asSender(_mum),
+        ),
+      );
+      expect(w.io.burns, [null, null, null]);
+      for (final (uid, secs) in [('text0004', 30), ('text0006', 60)]) {
+        expect(w.live.msg(uid)?['burn_at'], isNull, reason: uid);
+        expect(w.live.msg(uid)?['burn_secs'], secs, reason: uid);
+      }
+      expect(w.live.msg('text0005')?['burn_secs'], isNull);
+    },
+  );
 
   test('the chat on screen reads a message that lands while other news '
       'goes round', () async {

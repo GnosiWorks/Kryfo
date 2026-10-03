@@ -2259,11 +2259,11 @@ abstract class AppLocalizations {
   /// **'Timed messages'**
   String get chatGhostTimer;
 
-  /// screens/chat_screen.dart
+  /// screens/chat_screen.dart: the line under the timer sheet's title. their copy's clock starts when it is read, yours when it is sent
   ///
   /// In en, this message translates to:
-  /// **'How long before sent messages burn?'**
-  String get chatHowLongBeforeSent;
+  /// **'How long after they\'re read do messages burn? Yours count from when you send them.'**
+  String get chatHowLongAfterReading;
 
   /// screens/chat_screen.dart
   ///
@@ -3933,11 +3933,11 @@ abstract class AppLocalizations {
   /// **'Timed messages'**
   String get groupChatBurnTimer;
 
-  /// screens/group_chat_screen.dart
+  /// screens/group_chat_screen.dart: the line under the group timer sheet's title. each copy's clock starts when it is read, yours when it is sent
   ///
   /// In en, this message translates to:
-  /// **'New messages disappear after this'**
-  String get groupChatNewMessagesDisappearAfter;
+  /// **'New messages disappear this long after they\'re read. Yours count from when you send them.'**
+  String get groupChatNewMessagesDisappearOnceRead;
 
   /// screens/group_chat_screen.dart
   ///

@@ -1819,9 +1819,9 @@
   "@chatGhostTimer": {
     "description": "screens/chat_screen.dart"
   },
-  "chatHowLongBeforeSent": "How long before sent messages burn?",
-  "@chatHowLongBeforeSent": {
-    "description": "screens/chat_screen.dart"
+  "chatHowLongAfterReading": "How long after they're read do messages burn? Yours count from when you send them.",
+  "@chatHowLongAfterReading": {
+    "description": "screens/chat_screen.dart: the line under the timer sheet's title. their copy's clock starts when it is read, yours when it is sent"
   },
   "chatCamera": "Camera",
   "@chatCamera": {
@@ -3081,9 +3081,9 @@
   "@groupChatBurnTimer": {
     "description": "screens/group_chat_screen.dart"
   },
-  "groupChatNewMessagesDisappearAfter": "New messages disappear after this",
-  "@groupChatNewMessagesDisappearAfter": {
-    "description": "screens/group_chat_screen.dart"
+  "groupChatNewMessagesDisappearOnceRead": "New messages disappear this long after they're read. Yours count from when you send them.",
+  "@groupChatNewMessagesDisappearOnceRead": {
+    "description": "screens/group_chat_screen.dart: the line under the group timer sheet's title. each copy's clock starts when it is read, yours when it is sent"
   },
   "groupChatToday": "Today",
   "@groupChatToday": {

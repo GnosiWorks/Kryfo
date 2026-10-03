@@ -1458,8 +1458,8 @@ class AppLocalizationsUk extends AppLocalizations {
   String get chatGhostTimer => 'Зникаючі повідомлення';
 
   @override
-  String get chatHowLongBeforeSent =>
-      'Через скільки надіслані повідомлення зникатимуть?';
+  String get chatHowLongAfterReading =>
+      'Через скільки після прочитання повідомлення зникатимуть? Твої рахуються з моменту надсилання.';
 
   @override
   String get chatCamera => 'Камера';
@@ -2485,8 +2485,8 @@ class AppLocalizationsUk extends AppLocalizations {
   String get groupChatBurnTimer => 'Зникаючі повідомлення';
 
   @override
-  String get groupChatNewMessagesDisappearAfter =>
-      'Нові повідомлення зникатимуть через цей час';
+  String get groupChatNewMessagesDisappearOnceRead =>
+      'Нові повідомлення зникатимуть через цей час після прочитання. Твої рахуються з моменту надсилання.';
 
   @override
   String get groupChatToday => 'Сьогодні';

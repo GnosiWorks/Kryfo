@@ -1436,8 +1436,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get chatGhostTimer => 'Messages éphémères';
 
   @override
-  String get chatHowLongBeforeSent =>
-      'Combien de temps avant que les messages envoyés disparaissent ?';
+  String get chatHowLongAfterReading =>
+      'Combien de temps après leur lecture les messages disparaissent-ils ? Les vôtres comptent dès leur envoi.';
 
   @override
   String get chatCamera => 'Caméra';
@@ -2458,8 +2458,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get groupChatBurnTimer => 'Messages éphémères';
 
   @override
-  String get groupChatNewMessagesDisappearAfter =>
-      'Les nouveaux messages disparaissent après ce délai';
+  String get groupChatNewMessagesDisappearOnceRead =>
+      'Les nouveaux messages disparaissent ce délai après leur lecture. Les vôtres comptent dès leur envoi.';
 
   @override
   String get groupChatToday => 'Aujourd’hui';

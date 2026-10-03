@@ -565,6 +565,7 @@ class _Mem implements HaloDb {
       'plaintext': plaintext,
       'sent_at': sentAt ?? DateTime.now().millisecondsSinceEpoch,
       'burn_at': burnAt,
+      'burn_secs': burnSecs,
       'msg_uid': msgUid,
       'group_id': groupId,
       'media_path': mediaPath,
@@ -1481,7 +1482,7 @@ void main() {
       expect(w.app.contacts.map((c) => c.haloId), contains(_h));
     });
 
-    test('a timer that ran out while shut is dropped', () async {
+    test('a timed message opened from the seal waits to be read', () async {
       final w = await _World.make();
       final h = _as(_h);
       final at = DateTime.now().millisecondsSinceEpoch - 60000;
@@ -1515,9 +1516,11 @@ void main() {
       );
       await w.open();
       await w.app.drainSealed(w.vault, 'priv-A');
-      expect(w.vault.msg('t'), isNull);
-      // the clock ran from when it came, not from now
-      expect(w.vault.msg('u')!['burn_at'], at + 3600 * 1000);
+      // nobody has read either: no clock runs, however long ago they came
+      for (final (uid, secs) in [('t', 5), ('u', 3600)]) {
+        expect(w.vault.msg(uid)!['burn_at'], isNull, reason: uid);
+        expect(w.vault.msg(uid)!['burn_secs'], secs, reason: uid);
+      }
       expect(w.store.inbox, isEmpty);
     });
 

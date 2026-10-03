@@ -4704,6 +4704,44 @@ class HaloDb implements GroupOwedStore {
     return at;
   }
 
+  // timed messages that came in, read just now: each clock starts here,
+  // written before the screen counts it down. a row lit already keeps its
+  // time. gives every one's burn time
+  Future<Map<String, int>> lightReadBurns(List<String> msgUids) async {
+    if (msgUids.isEmpty) return const {};
+    final db = await open();
+    final marks = List.filled(msgUids.length, '?').join(', ');
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final out = <String, int>{};
+    await db.transaction((t) async {
+      final rows = await t.query(
+        'messages',
+        columns: ['id', 'msg_uid', 'burn_secs', 'burn_at'],
+        where: "msg_uid IN ($marks) AND direction = 'in'",
+        whereArgs: msgUids,
+      );
+      for (final r in rows) {
+        final uid = r['msg_uid'] as String;
+        final lit = (r['burn_at'] as num?)?.toInt();
+        if (lit != null) {
+          out[uid] = lit;
+          continue;
+        }
+        final secs = (r['burn_secs'] as num?)?.toInt();
+        if (secs == null) continue;
+        final at = now + secs * 1000;
+        await t.update(
+          'messages',
+          {'burn_at': at},
+          where: 'id = ? AND burn_at IS NULL',
+          whereArgs: [r['id']],
+        );
+        out[uid] = at;
+      }
+    });
+    return out;
+  }
+
   Future<void> markSent(String msgUid) async {
     final db = await open();
     await db.update(
@@ -8882,6 +8920,7 @@ class AppState extends ChangeNotifier {
         fromBackPair: fromBackPair,
         into: into,
         arrivedAt: arrivedAt,
+        marks: marks,
         claims: claims,
       );
     } catch (_) {
@@ -8897,6 +8936,7 @@ class AppState extends ChangeNotifier {
     required bool fromBackPair,
     required HaloDb? into,
     required int? arrivedAt,
+    required Set<String>? marks,
     required List<String> claims,
   }) async {
     final RouteTo to;
@@ -9203,18 +9243,6 @@ class AppState extends ChangeNotifier {
     // first). hold onto whichever one carried it so the rebuilt message keeps
     // its timer instead of landing permanent on the receiver.
     int? chunkBurn = env.burnSeconds;
-    // a timer runs from when the message came, sealed or not: one that ran
-    // out while the vault was shut goes unread, as it would have on time.
-    // never a stranger's, whose timers do not count
-    Future<bool> burnedWhileSealed() async {
-      final at = arrivedAt;
-      final secs = chunkBurn;
-      if (at == null || secs == null || secs <= 0) return false;
-      if (at + secs * 1000 > DateTime.now().millisecondsSinceEpoch) {
-        return false;
-      }
-      return isGroup || await db.isAccepted(senderHaloId);
-    }
 
     // a save can fail, a full phone say. the message still lands, with a
     // line saying what is missing, rather than an empty bubble
@@ -9301,12 +9329,6 @@ class AppState extends ChangeNotifier {
         if (!env.voice) incomingMediaUpdate(progressKey, have, total);
         return to;
       }
-      if (await burnedWhileSealed()) {
-        await db.dropMediaChunks(mid);
-        unawaited(db.dropMediaWant(mid));
-        incomingMediaDone(progressKey);
-        return to;
-      }
       // all pieces in. each goes from the database to the file on its own,
       // so the whole file is never in memory at once. a preview thumbnail
       // from an older client is never drawn, never kept.
@@ -9343,8 +9365,6 @@ class AppState extends ChangeNotifier {
       // save it again
       imgB64 = null;
       fileB64v = null;
-    } else if (await burnedWhileSealed()) {
-      return to;
     } else if (uid != null) {
       final known = _inflightUids.contains(uid) || await db.messageExists(uid);
       // a preview-only frame from an older client carries nothing we draw:
@@ -9419,16 +9439,16 @@ class AppState extends ChangeNotifier {
     // a deleted (parked) peer writing again surfaces as a fresh request.
     if (!isGroup) await db.unparkIfArchived(senderHaloId);
     final senderAccepted = await db.isAccepted(senderHaloId);
+    // its clock starts when it is first read (lightReadBurns), not here
     final burnOk = isGroup || senderAccepted;
-    final burnAt = burnOk && chunkBurn != null && chunkBurn > 0
-        ? (arrivedAt ?? DateTime.now().millisecondsSinceEpoch) +
-              chunkBurn * 1000
+    final burnSecs = burnOk && chunkBurn != null && chunkBurn > 0
+        ? chunkBurn
         : null;
     await db.saveMessage(
       senderHaloId,
       'in',
       text,
-      burnAt: burnAt,
+      burnSecs: burnSecs,
       msgUid: env.msgUid,
       replyTo: env.replyTo,
       groupId: env.groupId,
@@ -9574,7 +9594,6 @@ class AppState extends ChangeNotifier {
         body: notifBody,
         payload: notifPayload,
         msgUid: env.msgUid,
-        burnAt: burnAt,
       );
     }
     return to;
