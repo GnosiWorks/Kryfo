@@ -8,6 +8,7 @@ import android.os.Process
 import android.os.SystemClock
 import android.app.job.JobInfo
 import android.app.job.JobScheduler
+import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.ContentValues
 import android.content.ClipData
@@ -25,6 +26,7 @@ import java.io.ByteArrayInputStream
 import android.content.Context
 import android.provider.MediaStore
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.app.ActivityCompat
@@ -67,6 +69,18 @@ class MainActivity : FlutterFragmentActivity() {
             @Suppress("OVERRIDE_DEPRECATION")
             override fun onActivityResult(activity: android.app.Activity, requestCode: Int, resultCode: Int, data: Intent?): Boolean = false
         }
+
+        // heard for the whole process, so it still hears while a picker,
+        // the camera or a share sheet covers this screen
+        private var leftWatch: LeftWatch? = null
+
+        // home, recents or the screen going off. dart acts on it only while
+        // a picker hold is open; the lifecycle covers the rest
+        fun tellLeft() {
+            val engine = FlutterEngineCache.getInstance().get(ENGINE_ID) ?: return
+            BasicMessageChannel(engine.dartExecutor.binaryMessenger, "kryfo/window", StringCodec.INSTANCE)
+                .send("left")
+        }
     }
 
     // one engine per process, made by HaloApplication, and every activity
@@ -81,7 +95,14 @@ class MainActivity : FlutterFragmentActivity() {
     // nostr poll timer keep running in the background
     override fun shouldDestroyEngineWithHost(): Boolean = false
 
+    // stopped and not shown since. android 10 and later start this screen
+    // again before a new intent reaches it, so the lifecycle cannot say
+    private var stoppedSinceResume = false
+
     override fun onNewIntent(intent: Intent) {
+        // an intent from outside while something else covered this screen:
+        // the person went somewhere first. dart hears it before the intent
+        if (stoppedSinceResume) tellLeft()
         super.onNewIntent(intent)
         setIntent(intent)
         tools.offer(intent)
@@ -126,6 +147,11 @@ class MainActivity : FlutterFragmentActivity() {
         openedAt = 0L
     }
 
+    override fun onStop() {
+        super.onStop()
+        stoppedSinceResume = true
+    }
+
     override fun onDestroy() {
         windowSeen?.let {
             it.gone = null
@@ -137,6 +163,7 @@ class MainActivity : FlutterFragmentActivity() {
 
     override fun onResume() {
         super.onResume()
+        stoppedSinceResume = false
         // a file opened or shared with another app is a decrypted copy in
         // cache/open or cache/share_plus. coming back here is the only sign
         // that app is done with it, and a resume also follows every start.
@@ -246,9 +273,13 @@ class MainActivity : FlutterFragmentActivity() {
         }
     }
 
+    // this screen was rebuilt from a saved state
+    private var restored = false
+
     // dart's last screenshot setting, kept so the next start's first frame is
     // covered before dart runs
     override fun onCreate(savedInstanceState: android.os.Bundle?) {
+        restored = savedInstanceState != null
         if (getSharedPreferences("kryfo_window", MODE_PRIVATE).getBoolean("secure", false)) {
             window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
             if (android.os.Build.VERSION.SDK_INT >= 33) setRecentsScreenshotEnabled(false)
@@ -260,6 +291,20 @@ class MainActivity : FlutterFragmentActivity() {
             addContentView(it, ViewGroup.LayoutParams(0, 0))
         }
         ActivityCompat.setPermissionCompatDelegate(promptSeen)
+        if (leftWatch == null) {
+            val filter = IntentFilter().apply {
+                @Suppress("DEPRECATION")
+                addAction(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)
+                addAction(Intent.ACTION_SCREEN_OFF)
+                // a process android parks gets only the last of off and on
+                addAction(Intent.ACTION_SCREEN_ON)
+            }
+            // exported: some launchers send the home broadcast as themselves,
+            // and one from anywhere else can only bring the lock up
+            leftWatch = LeftWatch().also {
+                ContextCompat.registerReceiver(applicationContext, it, filter, ContextCompat.RECEIVER_EXPORTED)
+            }
+        }
     }
 
     private fun setSecureWindow(on: Boolean) {
@@ -303,7 +348,11 @@ class MainActivity : FlutterFragmentActivity() {
         FlutterEngineCache.getInstance().put(ENGINE_ID, flutterEngine)
         awayChannel = BasicMessageChannel(flutterEngine.dartExecutor.binaryMessenger, "kryfo/window", StringCodec.INSTANCE)
         tools.attach(MethodChannel(flutterEngine.dartExecutor.binaryMessenger, ToolsBridge.CHANNEL))
-        tools.offer(intent)
+        // a share is offered once. a screen rebuilt after the process went,
+        // or opened again from recents, still carries the old one
+        if (!restored && (intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) == 0) {
+            tools.offer(intent)
+        }
         videos = VideoPlayers(flutterEngine.renderer).also { v ->
             MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "kryfo/video")
                 .setMethodCallHandler { call, result -> v.handle(call, result) }
@@ -800,6 +849,26 @@ class MainActivity : FlutterFragmentActivity() {
         } catch (e: Exception) {
             false
         }
+    }
+}
+
+// the person left the app outright, wherever they were in it
+private class LeftWatch : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        @Suppress("DEPRECATION")
+        if (intent.action == Intent.ACTION_CLOSE_SYSTEM_DIALOGS) {
+            // a screenshot or the power menu keep the person where they are.
+            // an extra that will not unpack counts as a leave
+            val reason = try {
+                intent.getStringExtra("reason")
+            } catch (e: Exception) {
+                null
+            }
+            when (reason) {
+                "screenshot", "globalactions" -> return
+            }
+        }
+        MainActivity.tellLeft()
     }
 }
 

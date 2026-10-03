@@ -115,7 +115,7 @@ import '../widgets/poll_card.dart';
 import '../widgets/stroke_icon.dart';
 import '../widgets/written_field.dart';
 import '../bidi_safe.dart';
-import '../lock_guard.dart' show lockGuard, onScreen;
+import '../lock_guard.dart' show LockDropped, lockGuard, onScreen;
 
 // unsent drafts per group, keyed by session.chatKey: each container keeps
 // its own
@@ -1685,8 +1685,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final x = await lockState.hold(
       () => ImagePicker().pickVideo(source: ImageSource.gallery),
     );
-    if (x == null || !mounted) return;
+    if (x == null) return;
     try {
+      // a screen gone meanwhile sends nothing, and the copy still goes
+      if (!mounted) return;
       await _sendGroupFileFrom(x.path, madeVideoName(x.name));
     } finally {
       await shredPickedImages([x]);
@@ -1734,6 +1736,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           allowedExtensions: ['gif'],
         ),
       );
+    } on LockDropped {
+      return;
     } catch (e) {
       if (mounted) showHaloToast(context, l10n.groupChatCouldNotReadThat);
       return;
@@ -1875,6 +1879,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final PlatformFile? res;
     try {
       res = await lockState.hold(() => FilePicker.pickFile());
+    } on LockDropped {
+      // the session it was picked in is gone: nothing to say
+      return;
     } catch (e) {
       // the picker could not copy what was chosen: a provider that will
       // not hand the file over, a gone download. say so instead of nothing.

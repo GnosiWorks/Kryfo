@@ -14,6 +14,7 @@ import '../widgets/stroke_icon.dart';
 import '../widgets/swap.dart';
 import '../widgets/tool_parts.dart';
 import '../l10n/l10n.dart';
+import '../lock_guard.dart' show LockDropped;
 
 class _Field {
   final String id;
@@ -280,6 +281,9 @@ class _QrScreenState extends State<QrScreen> {
         final ok = await ToolsBridge.instance.shareOut(path, 'image/png');
         if (!ok) said = l10n.qrNoAppOnThis;
       }
+    } on LockDropped {
+      // the session it was asked in is gone: nothing to say
+      said = null;
     } catch (_) {
       said = l10n.qrCouldNotDrawThe;
     }

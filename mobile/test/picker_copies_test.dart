@@ -86,6 +86,45 @@ void main() {
     kept();
   });
 
+  test('the file picker folder goes whole', () async {
+    final copy = File('${cache.path}/file_picker/1759500000000/$_name')
+      ..createSync(recursive: true)
+      ..writeAsBytesSync(_photo);
+    await sweepFilePickerCopies(cache);
+    expect(copy.existsSync(), isFalse);
+    expect(Directory('${cache.path}/file_picker').existsSync(), isFalse);
+    expect(original.existsSync(), isTrue, reason: 'a gallery copy is not its');
+    kept();
+  });
+
+  test('a pick the lock drops takes every picker copy at once', () {
+    final drop = bodyOf(
+      sourceOf('lib/picked.dart'),
+      'Future<void> dropPickerCopies(',
+    );
+    expect(drop, contains('await sweepPickerLeftovers(cache)'));
+    expect(drop, contains('await sweepFilePickerCopies(cache)'));
+    final main = sourceOf('lib/main.dart');
+    expect(main, contains('lockState.picksDropped = dropPickerCopies;'));
+    expect(
+      bodyOf(main, 'Future<void> sweepCaptures('),
+      contains('await sweepFilePickerCopies(tmp)'),
+    );
+  });
+
+  test('a picked clip is shredded even when its screen has gone', () {
+    for (final (path, fn) in [
+      ('lib/screens/chat_screen.dart', 'Future<void> _pickAndSendVideo('),
+      ('lib/screens/group_chat_screen.dart', 'Future<void> _pickGroupVideo('),
+    ]) {
+      final body = bodyOf(sourceOf(path), fn);
+      final gone = body.indexOf('if (!mounted) return;');
+      expect(gone, greaterThan(body.indexOf('try {')), reason: fn);
+      expect(gone, lessThan(body.indexOf('} finally {')), reason: fn);
+      expect(body, isNot(contains('|| !mounted')), reason: fn);
+    }
+  });
+
   test('every gallery pick and the boot sweep go through it', () {
     final main = sourceOf('lib/main.dart');
     expect(

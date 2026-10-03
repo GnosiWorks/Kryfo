@@ -21,7 +21,7 @@ import 'dlog.dart';
 import 'engine_strings.dart';
 import 'l10n/l10n.dart';
 import 'l10n/numbers.dart';
-import 'lock_guard.dart' show lockGuard;
+import 'lock_guard.dart' show LockDropped, lockGuard;
 import 'notifications.dart';
 
 // vault: the everyday app with its hidden chats. the decoy's vault comes back
@@ -516,6 +516,9 @@ class LockState extends ChangeNotifier {
   // waits for it (the same wait whatever is typed), so a decoy pin typed
   // in the first second after a cold start is not taken for a wrong one
   Future<void>? sessionsReady;
+  // a pick that will not be handed over: the copies the pickers left in the
+  // cache go now rather than at the next start
+  Future<void> Function()? picksDropped;
   // the fingerprint key is gone or was invalidated by a new finger: no
   // finger opens kryfo until the pin has been typed once
   bool _bioStale = false;
@@ -1305,10 +1308,13 @@ class LockState extends ChangeNotifier {
   }
 
   // set while the app itself sent the user out to a picker, the camera or a
-  // share sheet: that pause is ours and does not lock. cleared when the call
-  // returns, or by a deadline in case it never does.
+  // share sheet: that pause is ours and does not lock. cleared a beat after
+  // the call returns, when android says the person left (see left), or by a
+  // deadline in case it never does.
   DateTime? _holdUntil;
   int _holdGen = 0;
+  // how many holds a real leave has ended
+  int _holdsEnded = 0;
   bool get holding =>
       _holdUntil != null && DateTime.now().isBefore(_holdUntil!);
 
@@ -1319,8 +1325,25 @@ class LockState extends ChangeNotifier {
     await lockGuard.unlocked();
     _holdUntil = DateTime.now().add(const Duration(minutes: 5));
     final gen = ++_holdGen;
+    final ended = _holdsEnded;
+    final decoy = _inDecoy;
+    final vault = _inVault;
     try {
-      return await body();
+      final r = await body();
+      if (_holdsEnded != ended) {
+        // left from inside the picker: what it gave back waits for the pin,
+        // whichever pin it is, and never reaches another session
+        await lockGuard.anyUnlock();
+        if (_inDecoy != decoy || _inVault != vault) {
+          try {
+            await picksDropped?.call();
+          } catch (e) {
+            dlog('lock: picker copies not swept (${e.runtimeType})');
+          }
+          throw const LockDropped();
+        }
+      }
+      return r;
     } finally {
       // a beat past the return: the resume event trails the picker's
       // result and must not see the hold already dropped. a newer hold
@@ -1343,9 +1366,20 @@ class LockState extends ChangeNotifier {
     lock();
   }
 
-  // called on resume. the picker coming back keeps its hold. anything else
-  // (the home key inside the picker, a call) let the hold expire in the
-  // background, and this is the only place that notices.
+  // android says the person went home or to recents, the screen went off,
+  // or the app was opened from outside while a picker covered it. leaving
+  // from inside a picker locks too: the hold ends here, also in the beat
+  // after the picker returned. with no hold open the lifecycle already locks
+  void left() {
+    if (!_enabled || !holding) return;
+    _holdUntil = null;
+    _holdsEnded++;
+    lock();
+  }
+
+  // called on resume. the picker coming back keeps its hold. a hold that
+  // ran out while the app was away (a picker left open past its deadline)
+  // locks here; a hold that left ended has locked already.
   void returned() {
     unawaited(_probeBioAgain());
     if (!_leftWhileHeld) return;

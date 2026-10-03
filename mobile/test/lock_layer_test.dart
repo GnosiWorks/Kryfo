@@ -14,6 +14,8 @@ import 'package:kryfo/lock_guard.dart';
 import 'package:kryfo/lock_layer.dart';
 import 'package:kryfo/theme.dart';
 
+import 'source_body.dart';
+
 class _Lock extends ChangeNotifier {
   bool loaded = true;
   bool locked = false;
@@ -72,6 +74,8 @@ class _App {
   int padTaps = 0;
   int keys = 0;
   bool quiet = false;
+  // android's word that the person went home or to recents
+  int lefts = 0;
   // the app's own lock-up: a vault session shuts here
   int ups = 0;
   VoidCallback? onUp;
@@ -93,6 +97,7 @@ class _App {
         load: () async {},
         leaving: () => lock.set(locked: true),
         returned: () {},
+        left: () => lefts++,
         guard: guard,
         quiet: () => quiet,
         pad: (_) => _Pad(this),
@@ -207,10 +212,10 @@ Widget _page(String text) => Scaffold(
 );
 
 // android's word that the app was left
-Future<void> _away(WidgetTester tester) =>
+Future<void> _away(WidgetTester tester, [String word = 'away']) =>
     tester.binding.defaultBinaryMessenger.handlePlatformMessage(
       lockWindowChannel.name,
-      lockWindowChannel.codec.encodeMessage('away'),
+      lockWindowChannel.codec.encodeMessage(word),
       (_) {},
     );
 
@@ -523,6 +528,102 @@ void main() {
     // the listener form needs android 14, the app runs from 7
     expect(k, isNot(contains('OnWindowVisibilityChangeListener')));
     expect(k, contains('override fun onUserLeaveHint'));
+  });
+
+  testWidgets('leaving from inside a picker reaches the lock', (tester) async {
+    final a = _App(tester);
+    await a.pump();
+    await _away(tester, 'left');
+    expect(a.lefts, 1);
+  });
+
+  test('android says when the person leaves from inside a picker', () {
+    final k = File(
+      'android/app/src/main/kotlin/app/kryfo/MainActivity.kt',
+    ).readAsStringSync();
+    for (final action in [
+      'Intent.ACTION_CLOSE_SYSTEM_DIALOGS',
+      'Intent.ACTION_SCREEN_OFF',
+      // a parked process gets only the last of off and on
+      'Intent.ACTION_SCREEN_ON',
+    ]) {
+      expect(k, contains('addAction($action)'));
+    }
+    expect(k, contains('.send("left")'));
+    // for the whole process: it hears while a picker covers the screen
+    expect(k, contains('registerReceiver(applicationContext, '));
+    expect(k, isNot(contains('unregisterReceiver')));
+    // android 13 and later want the flag; some launchers send it themselves
+    expect(k, contains('ContextCompat.RECEIVER_EXPORTED'));
+    // a screenshot keeps the person where they are, home does not
+    expect(k, contains('"screenshot", "globalactions" -> return'));
+    expect(k, isNot(contains('"homekey"')));
+  });
+
+  test('an intent from outside after the screen was covered says left', () {
+    final k = sourceOf('android/app/src/main/kotlin/app/kryfo/MainActivity.kt');
+    // android 10 and later start the screen again before the intent, so
+    // what counts is a stop with no resume since
+    final intent = bodyOf(k, 'override fun onNewIntent(');
+    final told = intent.indexOf('if (stoppedSinceResume) tellLeft()');
+    expect(told, greaterThan(0));
+    // dart hears it before the intent
+    expect(told, lessThan(intent.indexOf('super.onNewIntent')));
+    expect(intent, isNot(contains('isAtLeast(')));
+    expect(
+      bodyOf(k, 'override fun onStop('),
+      contains('stoppedSinceResume = true'),
+    );
+    expect(
+      bodyOf(k, 'override fun onResume('),
+      contains('stoppedSinceResume = false'),
+    );
+  });
+
+  test('a close reason that will not unpack counts as a leave', () {
+    final k = sourceOf('android/app/src/main/kotlin/app/kryfo/MainActivity.kt');
+    final receive = bodyOf(k, 'override fun onReceive(');
+    expect(
+      receive,
+      contains(
+        'val reason = try {\n'
+        '                intent.getStringExtra("reason")\n'
+        '            } catch (e: Exception) {\n'
+        '                null\n'
+        '            }',
+      ),
+    );
+    expect(receive, contains('when (reason) {'));
+    expect('getStringExtra('.allMatches(receive).length, 1);
+    expect(receive, contains('MainActivity.tellLeft()'));
+  });
+
+  test('a share is offered once, not again from recents or a rebuild', () {
+    final k = sourceOf('android/app/src/main/kotlin/app/kryfo/MainActivity.kt');
+    final create = bodyOf(k, 'override fun onCreate(');
+    final saved = create.indexOf('restored = savedInstanceState != null');
+    expect(saved, greaterThan(0));
+    expect(saved, lessThan(create.indexOf('super.onCreate(')));
+    final engine = bodyOf(k, 'override fun configureFlutterEngine(');
+    expect(
+      engine,
+      contains(
+        'if (!restored && (intent.flags and '
+        'Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) == 0) {\n'
+        '            tools.offer(intent)\n'
+        '        }',
+      ),
+    );
+    expect('tools.offer('.allMatches(engine).length, 1);
+  });
+
+  test('there is only ever one main screen', () {
+    final m = File(
+      'android/app/src/main/AndroidManifest.xml',
+    ).readAsStringSync();
+    final at = m.indexOf('android:name=".MainActivity"');
+    final end = m.indexOf('>', at);
+    expect(m.substring(at, end), contains('android:launchMode="singleTask"'));
   });
 
   testWidgets('a decoy unlock drops what waited', (tester) async {
