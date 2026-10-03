@@ -433,12 +433,13 @@ class HaloEngine {
 
   // put an invite where a six digit code points, and look for one there. a
   // look that never came back heard from no relay, so it says nothing about
-  // the code
+  // the code. a share waits past the engine's publishWait, so a slow onion
+  // dial that lands is not reported as unreached
   Future<String> pairCodePublish(String code, String payload) =>
       _pairCodeOnIsolate(
         code,
         payload,
-      ).timeout(const Duration(seconds: 50), onTimeout: () => pairUnreached);
+      ).timeout(const Duration(seconds: 60), onTimeout: () => pairUnreached);
 
   Future<String> pairCodeFetch(String code) => _pairCodeOnIsolate(
     code,

@@ -68,11 +68,11 @@ var (
 	lastEvRecv int64
 )
 
-// a context for publishes that outlive the caller: thirty seconds of its
-// own, cancelled by the last publisher out. made here so the analyser sees
-// a plain pair rather than a cancel it cannot follow into the goroutines.
+// a context for publishes that outlive the caller: publishWait of its own,
+// cancelled by the last publisher out. made here so the analyser sees a
+// plain pair rather than a cancel it cannot follow into the goroutines.
 func detachedPublishCtx() (context.Context, context.CancelFunc) {
-	return context.WithTimeout(context.Background(), 30*time.Second)
+	return context.WithTimeout(context.Background(), publishWait)
 }
 
 // closed when the mode changes: a connection made before it went the old
@@ -243,12 +243,13 @@ func quietFor(deaf time.Duration) time.Duration {
 // a connection that dies within this of opening counts as dropped young
 const youngConn = time.Minute
 
-// the wait before redialling a relay that keeps dropping young connections:
+// the wait before redialling u when it keeps dropping young connections:
 // the usual pause for the first, doubling from there to a ceiling. our own
-// relay's ceiling is low, as with failed dials.
-func youngDropWait(rejoin time.Duration, drops int, own bool) time.Duration {
+// relay's ceiling is low, as with failed dials, see ownWaitRule.
+func youngDropWait(u string, rejoin time.Duration, drops int, own bool) time.Duration {
+	mine, short := ownWaitRule(u, own)
 	ceiling := 5 * time.Minute
-	if own {
+	if short {
 		ceiling = ownRelayCeiling
 	}
 	d := rejoin
@@ -257,6 +258,9 @@ func youngDropWait(rejoin time.Duration, drops int, own bool) time.Duration {
 	}
 	if d > ceiling {
 		d = ceiling
+	}
+	if mine {
+		d = ownSpread(d)
 	}
 	return d
 }
@@ -717,15 +721,71 @@ var (
 	relayHealthMu sync.Mutex
 	relayFails    = map[string]int{}
 	relayCoolTill = map[string]time.Time{}
+	// when each relay's last failure was counted
+	relayFailAt = map[string]time.Time{}
+	// when each relay last answered: a subscription, an event, a probe, an ok
+	relayUpAt = map[string]time.Time{}
 )
 
 // a couple of misses is just a bad circuit, not a dead relay.
 const relayFailGrace = 3
 
+// failures to one relay this close after a counted one count with it: many
+// sockets failing together is one hiccup on the way there, and counted one
+// by one it benched the relay for every subscription at once. a var for
+// the tests.
+var relayFailBurst = 5 * time.Second
+
 // our own relay carries the traffic, so it is retried far more eagerly than
 // the public ones: seconds apart rather than minutes. it is still a ceiling
-// and not an exemption.
+// and not an exemption. it holds wraps no other relay has, and a receiver in
+// relay mode reads nothing else.
 const ownRelayCeiling = 20 * time.Second
+
+// another way into our relay that answered this recently is taken as up
+const ownUpRecent = 10 * time.Minute
+
+func relayUp(u string) {
+	relayHealthMu.Lock()
+	relayUpAt[u] = time.Now()
+	relayHealthMu.Unlock()
+}
+
+// mine: u reaches our relay, in the list now set or as the runner's first
+// entry (own). short: it gets the low ceiling, which is only while no other
+// way into our relay answers. while one does, nothing waits on u, and
+// redialling it every few seconds from every runner gains nothing.
+func ownWaitRule(u string, own bool) (mine, short bool) {
+	nostrMu.Lock()
+	urls := nostrRelays
+	nostrMu.Unlock()
+	others := ownRelays(urls)
+	for _, o := range others {
+		if o == u {
+			mine = true
+		}
+	}
+	if !mine && !own {
+		return false, false
+	}
+	relayHealthMu.Lock()
+	defer relayHealthMu.Unlock()
+	for _, o := range others {
+		if at, ok := relayUpAt[o]; ok && o != u && time.Since(at) < ownUpRecent {
+			return true, false
+		}
+	}
+	return true, true
+}
+
+// a fifth either way, so the runners of one relay do not all redial it in
+// the same second
+func ownSpread(d time.Duration) time.Duration {
+	if d <= 0 {
+		return d
+	}
+	return d*4/5 + time.Duration(mrand.Int64N(int64(d*2/5)+1))
+}
 
 func relayBackoff(n int) time.Duration {
 	if n <= relayFailGrace {
@@ -749,7 +809,8 @@ func relayCold(u string) bool {
 	return ok && time.Now().Before(till)
 }
 
-func relayFailed(u string) {
+// an attempt on u that began at began has failed
+func relayFailed(u string, began time.Time) {
 	// only tor's warmup can make a connect failure meaningless
 	if modeNeedsTor() && !torReadyNow() {
 		return
@@ -757,11 +818,23 @@ func relayFailed(u string) {
 	if modeNeedsTor() {
 		routeNoteFail(u)
 	}
+	_, short := ownWaitRule(u, false)
 	relayHealthMu.Lock()
 	defer relayHealthMu.Unlock()
+	now := time.Now()
+	// an attempt already under way when the last failure was counted, or
+	// failing right after it, went down in the same hiccup
+	if last, ok := relayFailAt[u]; ok && (began.Before(last) || now.Sub(last) < relayFailBurst) {
+		return
+	}
+	relayFailAt[u] = now
 	relayFails[u]++
-	if d := relayBackoff(relayFails[u]); d > 0 {
-		relayCoolTill[u] = time.Now().Add(d)
+	d := relayBackoff(relayFails[u])
+	if short && d > ownRelayCeiling {
+		d = ownRelayCeiling
+	}
+	if d > 0 {
+		relayCoolTill[u] = now.Add(d)
 		log.Printf("nostr: benching %s for %s, %d failures in a row", u, d, relayFails[u])
 	}
 }
@@ -776,6 +849,12 @@ func relayClearBenches() {
 	}
 	for k := range relayCoolTill {
 		delete(relayCoolTill, k)
+	}
+	for k := range relayFailAt {
+		delete(relayFailAt, k)
+	}
+	for k := range relayUpAt {
+		delete(relayUpAt, k)
 	}
 	relayHealthMu.Unlock()
 }
@@ -802,28 +881,34 @@ func kickRelays() {
 func relayOK(u string) {
 	relayHealthMu.Lock()
 	defer relayHealthMu.Unlock()
+	relayUpAt[u] = time.Now()
 	if relayFails[u] != 0 {
 		delete(relayFails, u)
 		delete(relayCoolTill, u)
+		delete(relayFailAt, u)
 	}
 }
 
 // how long to wait before the next attempt, never shorter than the caller's
-// own cadence. our own relay backs off too, but to a much lower ceiling:
-// exempt, every subscription would redial a failing relay every few seconds,
-// around the clock, on whatever connection the phone has.
+// own cadence. our own relay backs off too, but to a much lower ceiling
+// (see ownWaitRule): exempt, every subscription would redial a failing relay
+// every few seconds, around the clock, on whatever connection the phone has.
 func relayRetryAfter(u string, base time.Duration, own bool) time.Duration {
+	mine, short := ownWaitRule(u, own)
 	relayHealthMu.Lock()
 	n := relayFails[u]
 	relayHealthMu.Unlock()
 	d := relayBackoff(n)
-	if own && d > ownRelayCeiling {
+	if short && d > ownRelayCeiling {
 		d = ownRelayCeiling
 	}
-	if d > base {
-		return d
+	if d < base {
+		d = base
 	}
-	return base
+	if mine {
+		d = ownSpread(d)
+	}
+	return d
 }
 
 func nostrConversationID(a, b [32]byte) []byte {
@@ -877,12 +962,22 @@ func nostrResetClient() {
 // handshake is bounded by this; the connection lives on the relay's own
 // context.
 func relayDialCtx(parent context.Context, u string) (context.Context, context.CancelFunc) {
-	d := 20 * time.Second
+	d := relayDialWait
 	if strings.Contains(u, ".onion") {
-		d = 45 * time.Second
+		d = onionDialWait
 	}
 	return context.WithTimeout(parent, d)
 }
+
+const (
+	relayDialWait = 20 * time.Second
+	onionDialWait = 45 * time.Second
+)
+
+// how long a send waits for a relay to take its wrap. our relay's onion can
+// be the only way in and may need the whole onion dial before it can take
+// anything. the first ok still ends the wait. the app gives a send 60s.
+const publishWait = onionDialWait + 10*time.Second
 
 // the everyday lane's client, for the main identity's sends
 func torNostrClient() (*http.Client, error) { return torNostrClientFor(laneEveryday) }
@@ -950,11 +1045,15 @@ func nostrPublishMulti(ctx context.Context, lane string, ev nostr.Event) (ok int
 func nostrPublishOn(ctx context.Context, lane string, ev nostr.Event, routeC <-chan struct{}) (ok int) {
 	all := relaysWhenSet(ctx)
 
-	// index 0 is our own relay and is never benched: it carries the traffic
-	// and the tor watchdog already covers it going away.
+	// our relay's entries are never left out: it carries the traffic and the
+	// tor watchdog already covers it going away.
+	own := map[string]bool{}
+	for _, u := range ownRelays(all) {
+		own[u] = true
+	}
 	urls := make([]string, 0, len(all))
-	for i, u := range all {
-		if i == 0 || !relayCold(u) {
+	for _, u := range all {
+		if own[u] || !relayCold(u) {
 			urls = append(urls, u)
 		}
 	}
@@ -975,6 +1074,7 @@ func nostrPublishOn(ctx context.Context, lane string, ev nostr.Event, routeC <-c
 	var pending int32 = int32(len(urls))
 	for _, url := range urls {
 		go func(u string) {
+			began := time.Now()
 			// last publisher out turns off the lights (frees bg).
 			defer func() {
 				if atomic.AddInt32(&pending, -1) == 0 {
@@ -997,7 +1097,7 @@ func nostrPublishOn(ctx context.Context, lane string, ev nostr.Event, routeC <-c
 			if err := publishTo(pctx, lane, u, client, ev); err != nil {
 				log.Printf("nostr: publish %s: %v", u, err)
 				if !routeGone(routeC) {
-					relayFailed(u)
+					relayFailed(u, began)
 				}
 				result <- false
 				return
@@ -1196,7 +1296,10 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 			// on purpose: go's monotonic clock stops while the phone is
 			// asleep, and a night asleep is exactly the gap this has to see.
 			var lastAlive time.Time
-			markAlive := func() { lastAlive = time.Now().Round(0) }
+			markAlive := func() {
+				lastAlive = time.Now().Round(0)
+				relayUp(u)
+			}
 			if own {
 				retry = 3 * time.Second
 				rejoin = 2 * time.Second
@@ -1273,7 +1376,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 				if err != nil {
 					connDone()
 					log.Printf("nostr: subscribe-connect %s: %v", u, err)
-					relayFailed(u)
+					relayFailed(u, dialAt)
 					sleepOrKick(relayRetryAfter(u, retry, own))
 					continue
 				}
@@ -1335,7 +1438,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 				if err != nil {
 					log.Printf("nostr: subscribe %s: %v", u, err)
 					connDone()
-					relayFailed(u)
+					relayFailed(u, dialAt)
 					sleepOrKick(relayRetryAfter(u, retry, own))
 					continue
 				}
@@ -1594,7 +1697,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 				case kicked:
 					kicked = false
 				case youngDrops > 0:
-					sleepOrKick(youngDropWait(rejoin, youngDrops, own))
+					sleepOrKick(youngDropWait(u, rejoin, youngDrops, own))
 				default:
 					sleepOrKick(rejoin)
 				}
@@ -1655,7 +1758,7 @@ func nostrSend(peerHex, msg string) string {
 	}
 	nostrMu.Unlock()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 40*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), publishWait)
 	defer cancel()
 	ok := nostrPublishMulti(ctx, laneEveryday, ev)
 	if ok == 0 {
@@ -1818,7 +1921,7 @@ func nostrSendFirstContact(peerHex, fcPk, msg string) string {
 	}
 	nostrMu.Unlock()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 40*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), publishWait)
 	defer cancel()
 	ok := nostrPublishMulti(ctx, laneEveryday, ev)
 	if ok == 0 {

@@ -63,9 +63,23 @@ class _PairCodePanelState extends State<PairCodePanel> {
       }
       return;
     }
+    // the engine stamps the invite's life as it builds it, and a publish
+    // over a slow route takes a while: the count starts now, not on the
+    // answer, so it never runs past the invite
+    _left = kPairCodeLife.inSeconds;
+    _tick?.cancel();
+    _tick = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (!mounted) return t.cancel();
+      setState(() => _left--);
+      if (_left <= 0) {
+        t.cancel();
+        setState(() => _code = null);
+      }
+    });
     final res = await (widget.publish ?? _publish)(code);
     if (!mounted) return;
     if (res.startsWith('error')) {
+      _tick?.cancel();
       setState(() {
         _busy = false;
         _failed = true;
@@ -76,17 +90,7 @@ class _PairCodePanelState extends State<PairCodePanel> {
     setState(() {
       _busy = false;
       _code = code;
-      _left = kPairCodeLife.inSeconds;
       _status = '';
-    });
-    _tick?.cancel();
-    _tick = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (!mounted) return t.cancel();
-      setState(() => _left--);
-      if (_left <= 0) {
-        t.cancel();
-        setState(() => _code = null);
-      }
     });
   }
 

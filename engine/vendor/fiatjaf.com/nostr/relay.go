@@ -605,7 +605,11 @@ func (r *Relay) publish(ctx context.Context, id ID, env Envelope) error {
 			r.okCallbacksMutex.Unlock()
 			return fmt.Errorf("publish: %w", context.Cause(ctx))
 		case <-r.connectionContext.Done():
+			// kryfo: under the lock, as every other use of the map is: other
+			// publishes on this connection are waiting on it too
+			r.okCallbacksMutex.Lock()
 			r.okCallbacks = make(map[ID]okcallback)
+			r.okCallbacksMutex.Unlock()
 			return fmt.Errorf("relay: %w", context.Cause(r.connectionContext))
 		}
 	}

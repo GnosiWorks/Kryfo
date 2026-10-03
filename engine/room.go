@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"fiatjaf.com/nostr"
 	"github.com/mailru/easyjson"
@@ -54,7 +53,7 @@ func publishWrap(lane string, gw nostr2.Event) (int, error) {
 		nostrSentIDs = map[string]bool{}
 	}
 	nostrMu.Unlock()
-	ctx, cancel := context.WithTimeout(context.Background(), 40*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), publishWait)
 	defer cancel()
 	ok := nostrPublishMulti(ctx, lane, ev)
 	if ok == 0 {

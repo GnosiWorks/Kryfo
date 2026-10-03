@@ -29,7 +29,12 @@ var pubIdle = 30 * time.Second
 // how long a socket with wraps waiting may go without a single ok. a circuit
 // can die without the socket noticing; its wraps then go out again on a new
 // one. a slow socket still hands back an ok now and then and is kept.
-var pubQuiet = 20 * time.Second
+// atomic: a socket's watch may still read it while a test sets it.
+var pubQuiet = func() *atomic.Int64 {
+	var d atomic.Int64
+	d.Store(int64(20 * time.Second))
+	return &d
+}()
 
 type pubKey struct{ lane, url, addr string }
 
@@ -250,14 +255,15 @@ func publishTo(ctx context.Context, lane, u string, client *http.Client, ev nost
 		quiet := make(chan struct{})
 		stop := make(chan struct{})
 		go func() {
-			t := time.NewTicker(pubQuiet / 4)
+			quietAfter := time.Duration(pubQuiet.Load())
+			t := time.NewTicker(quietAfter / 4)
 			defer t.Stop()
 			for {
 				select {
 				case <-stop:
 					return
 				case <-t.C:
-					if time.Since(time.Unix(0, s.heard.Load())) > pubQuiet {
+					if time.Since(time.Unix(0, s.heard.Load())) > quietAfter {
 						close(quiet)
 						pubDrop(s)
 						return
