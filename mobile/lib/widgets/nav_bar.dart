@@ -2,11 +2,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../store.dart';
 import '../theme.dart';
 import 'stroke_icon.dart';
 import '../l10n/l10n.dart';
 
 enum HaloTab { chats, tools, support, me }
+
+// the tabs on the bar. the play build has no support tab
+List<HaloTab> get shownTabs => [
+  for (final t in HaloTab.values)
+    if (!kPlayBuild || t != HaloTab.support) t,
+];
 
 Map<HaloTab, String> get _labels => {
   HaloTab.chats: l10n.navBarChats,
@@ -47,7 +54,7 @@ class HaloNavBar extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(6, 5, 6, 7),
       child: Row(
         children: [
-          for (final t in HaloTab.values)
+          for (final t in shownTabs)
             Expanded(
               child: _NavTab(
                 tab: t,

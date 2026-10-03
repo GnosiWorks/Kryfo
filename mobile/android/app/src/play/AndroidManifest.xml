@@ -1,0 +1,12 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <!-- google play build only, laid over main by build.gradle.kts -->
+    <application>
+        <service android:name=".HaloListenerService">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Kryfo private messenger: keeps its own encrypted connection over tor and nostr relays open so messages arrive while the app is closed, with no push service. The user turns it on as Always on in Getting messages and can switch to check-ins."
+                tools:replace="android:value" />
+        </service>
+    </application>
+</manifest>

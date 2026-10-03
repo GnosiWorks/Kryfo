@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../store.dart';
 import '../theme.dart';
 import '../tools/qr_payload.dart';
 import '../tools/qr_png.dart';
@@ -166,29 +167,31 @@ List<_Kind> get _kinds => [
       ),
     ],
   ),
-  _Kind(
-    QrKind.btc,
-    l10n.qrBitcoin,
-    [
-      'M8 5h5.5a3 3 0 0 1 0 6H8z',
-      'M8 11h6.5a3 3 0 0 1 0 6H8z',
-      'M8 5v12',
-      'M10 3v2',
-      'M13 3v2',
-      'M10 17v2',
-      'M13 17v2',
-    ],
-    l10n.qrAddressAndAmountNo,
-    [
-      _Field('address', l10n.qrAddress, plain: true),
-      _Field(
-        'amount',
-        l10n.qrAmountInBtc,
-        keyboard: TextInputType.numberWithOptions(decimal: true),
-        hint: '0.001',
-      ),
-    ],
-  ),
+  // the play build makes no payment codes
+  if (!kPlayBuild)
+    _Kind(
+      QrKind.btc,
+      l10n.qrBitcoin,
+      [
+        'M8 5h5.5a3 3 0 0 1 0 6H8z',
+        'M8 11h6.5a3 3 0 0 1 0 6H8z',
+        'M8 5v12',
+        'M10 3v2',
+        'M13 3v2',
+        'M10 17v2',
+        'M13 17v2',
+      ],
+      l10n.qrAddressAndAmountNo,
+      [
+        _Field('address', l10n.qrAddress, plain: true),
+        _Field(
+          'amount',
+          l10n.qrAmountInBtc,
+          keyboard: TextInputType.numberWithOptions(decimal: true),
+          hint: '0.001',
+        ),
+      ],
+    ),
 ];
 
 const _shareIcon = [

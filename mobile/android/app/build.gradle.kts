@@ -1,5 +1,6 @@
 import com.android.build.gradle.internal.api.ApkVariantOutputImpl
 import java.io.FileInputStream
+import java.util.Base64
 import java.util.Properties
 
 plugins {
@@ -15,6 +16,14 @@ val keystoreProperties = Properties().apply {
         load(FileInputStream(keystorePropertiesFile))
     }
 }
+
+// the google play build: --dart-define=KRYFO_STORE=play. read from the define
+// the dart side reads, so the two halves cannot disagree. every other build
+// leaves this false and comes out as before
+val playStore = (project.findProperty("dart-defines") as String?)
+    ?.split(",")
+    ?.any { String(Base64.getDecoder().decode(it)) == "KRYFO_STORE=play" }
+    ?: false
 
 android {
     lint {
@@ -64,8 +73,14 @@ android {
         applicationId = "app.kryfo"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
+        // play gets one bundle per version, above the per-abi apks (N*10+1
+        // to +3, room left to +8) and below the next version's
+        versionCode = if (playStore) flutter.versionCode * 10 + 9 else flutter.versionCode
         versionName = flutter.versionName
+    }
+
+    if (playStore) {
+        sourceSets.getByName("release").manifest.srcFile("src/play/AndroidManifest.xml")
     }
 
     signingConfigs {
@@ -128,7 +143,8 @@ android.applicationVariants.configureEach {
     variant.outputs.forEach { output ->
         val abiVersionCode =
             abiCodes[output.filters.find { it.filterType == "ABI" }?.identifier]
-        if (abiVersionCode != null) {
+        // play builds a bundle and keeps its own code
+        if (abiVersionCode != null && !playStore) {
             (output as ApkVariantOutputImpl).versionCodeOverride =
                 variant.versionCode * 10 + abiVersionCode
         }
