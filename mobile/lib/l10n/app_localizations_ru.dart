@@ -1460,8 +1460,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chatGhostTimer => 'Исчезающие сообщения';
 
   @override
-  String get chatHowLongBeforeSent =>
-      'Через сколько отправленные сообщения исчезнут?';
+  String get chatHowLongAfterReading =>
+      'Через сколько после прочтения сообщения исчезнут? Твои считаются с момента отправки.';
 
   @override
   String get chatCamera => 'Камера';
@@ -2492,8 +2492,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get groupChatBurnTimer => 'Исчезающие сообщения';
 
   @override
-  String get groupChatNewMessagesDisappearAfter =>
-      'Новые сообщения исчезнут через это время';
+  String get groupChatNewMessagesDisappearOnceRead =>
+      'Новые сообщения исчезнут через это время после прочтения. Твои считаются с момента отправки.';
 
   @override
   String get groupChatToday => 'Сегодня';
@@ -2730,9 +2730,6 @@ class AppLocalizationsRu extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get groupChat0s => '0 с';
 
   @override
   String get groupChatReply => 'Ответить';
@@ -7497,6 +7494,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get stickerLabel => 'Стикер';
+
+  @override
+  String get timedMessageLabel => 'Исчезающее сообщение';
 
   @override
   String get stickerNewer => 'Из более новой версии Kryfo';

@@ -1424,7 +1424,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatGhostTimer => 'Timed messages';
 
   @override
-  String get chatHowLongBeforeSent => 'How long before sent messages burn?';
+  String get chatHowLongAfterReading =>
+      'How long after they\'re read do messages burn? Yours count from when you send them.';
 
   @override
   String get chatCamera => 'Camera';
@@ -2427,8 +2428,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get groupChatBurnTimer => 'Timed messages';
 
   @override
-  String get groupChatNewMessagesDisappearAfter =>
-      'New messages disappear after this';
+  String get groupChatNewMessagesDisappearOnceRead =>
+      'New messages disappear this long after they\'re read. Yours count from when you send them.';
 
   @override
   String get groupChatToday => 'Today';
@@ -2653,9 +2654,6 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get groupChat0s => '0s';
 
   @override
   String get groupChatReply => 'Reply';
@@ -7347,6 +7345,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get stickerLabel => 'Sticker';
+
+  @override
+  String get timedMessageLabel => 'Timed message';
 
   @override
   String get stickerNewer => 'From a newer Kryfo';

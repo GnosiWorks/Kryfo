@@ -1375,7 +1375,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatGhostTimer => '限时消息';
 
   @override
-  String get chatHowLongBeforeSent => '发出的消息多久后焚毁？';
+  String get chatHowLongAfterReading => '消息被读后多久焚毁？你发出的从发送时开始计时。';
 
   @override
   String get chatCamera => '相机';
@@ -2338,7 +2338,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get groupChatBurnTimer => '限时消息';
 
   @override
-  String get groupChatNewMessagesDisappearAfter => '新消息会在这段时间后消失';
+  String get groupChatNewMessagesDisappearOnceRead =>
+      '新消息在被读后经过这段时间消失。你发出的从发送时开始计时。';
 
   @override
   String get groupChatToday => '今天';
@@ -2554,9 +2555,6 @@ class AppLocalizationsZh extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get groupChat0s => '0 秒';
 
   @override
   String get groupChatReply => '回复';
@@ -7060,6 +7058,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get stickerLabel => '贴纸';
 
   @override
+  String get timedMessageLabel => '限时消息';
+
+  @override
   String get stickerNewer => '来自更新版本的 Kryfo';
 
   @override
@@ -8649,7 +8650,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatGhostTimer => '限時訊息';
 
   @override
-  String get chatHowLongBeforeSent => '已傳送的訊息要多久後焚毀？';
+  String get chatHowLongAfterReading => '訊息被讀取後要多久焚毀？你傳送的從傳送時開始計時。';
 
   @override
   String get chatCamera => '相機';
@@ -9612,7 +9613,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get groupChatBurnTimer => '限時訊息';
 
   @override
-  String get groupChatNewMessagesDisappearAfter => '新訊息會在這段時間後消失';
+  String get groupChatNewMessagesDisappearOnceRead =>
+      '新訊息在被讀取後經過這段時間消失。你傳送的從傳送時開始計時。';
 
   @override
   String get groupChatToday => '今天';
@@ -9828,9 +9830,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
     );
     return '$_temp0';
   }
-
-  @override
-  String get groupChat0s => '0 秒';
 
   @override
   String get groupChatReply => '回覆';
@@ -14332,6 +14331,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get stickerLabel => '貼圖';
+
+  @override
+  String get timedMessageLabel => '限時訊息';
 
   @override
   String get stickerNewer => '來自較新版的 Kryfo';

@@ -1430,8 +1430,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get chatGhostTimer => 'Süreli mesajlar';
 
   @override
-  String get chatHowLongBeforeSent =>
-      'Gönderilen mesajlar ne kadar sonra silinsin?';
+  String get chatHowLongAfterReading =>
+      'Mesajlar okunduktan ne kadar sonra silinsin? Seninkiler gönderdiğin andan itibaren sayılır.';
 
   @override
   String get chatCamera => 'Kamera';
@@ -2438,8 +2438,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get groupChatBurnTimer => 'Süreli mesajlar';
 
   @override
-  String get groupChatNewMessagesDisappearAfter =>
-      'Yeni mesajlar bu süreden sonra kaybolur';
+  String get groupChatNewMessagesDisappearOnceRead =>
+      'Yeni mesajlar okunduktan bu süre sonra kaybolur. Seninkiler gönderdiğin andan itibaren sayılır.';
 
   @override
   String get groupChatToday => 'Bugün';
@@ -2664,9 +2664,6 @@ class AppLocalizationsTr extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get groupChat0s => '0 sn';
 
   @override
   String get groupChatReply => 'Yanıtla';
@@ -7379,6 +7376,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get stickerLabel => 'Çıkartma';
+
+  @override
+  String get timedMessageLabel => 'Süreli mesaj';
 
   @override
   String get stickerNewer => 'Daha yeni bir Kryfo’dan';

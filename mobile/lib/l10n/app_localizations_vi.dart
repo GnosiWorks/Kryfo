@@ -1414,7 +1414,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatGhostTimer => 'Tin nhắn tự hủy';
 
   @override
-  String get chatHowLongBeforeSent => 'Tin nhắn đã gửi sẽ tự hủy sau bao lâu?';
+  String get chatHowLongAfterReading =>
+      'Tin nhắn sẽ tự hủy sau bao lâu kể từ khi được đọc? Tin của bạn tính từ lúc bạn gửi.';
 
   @override
   String get chatCamera => 'Máy ảnh';
@@ -2428,8 +2429,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get groupChatBurnTimer => 'Tin nhắn tự hủy';
 
   @override
-  String get groupChatNewMessagesDisappearAfter =>
-      'Tin nhắn mới sẽ biến mất sau khoảng thời gian này';
+  String get groupChatNewMessagesDisappearOnceRead =>
+      'Tin nhắn mới sẽ biến mất sau khoảng thời gian này kể từ khi được đọc. Tin của bạn tính từ lúc bạn gửi.';
 
   @override
   String get groupChatToday => 'Hôm nay';
@@ -2651,9 +2652,6 @@ class AppLocalizationsVi extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get groupChat0s => '0 giây';
 
   @override
   String get groupChatReply => 'Trả lời';
@@ -7336,6 +7334,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get stickerLabel => 'Nhãn dán';
+
+  @override
+  String get timedMessageLabel => 'Tin nhắn tự hủy';
 
   @override
   String get stickerNewer => 'Từ một bản Kryfo mới hơn';

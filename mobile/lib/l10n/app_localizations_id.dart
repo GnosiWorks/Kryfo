@@ -1416,8 +1416,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get chatGhostTimer => 'Pesan berwaktu';
 
   @override
-  String get chatHowLongBeforeSent =>
-      'Berapa lama sampai pesan terkirim hilang?';
+  String get chatHowLongAfterReading =>
+      'Berapa lama setelah dibaca pesan hilang? Pesanmu dihitung sejak kamu mengirimnya.';
 
   @override
   String get chatCamera => 'Kamera';
@@ -2433,8 +2433,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get groupChatBurnTimer => 'Pesan berwaktu';
 
   @override
-  String get groupChatNewMessagesDisappearAfter =>
-      'Pesan baru hilang setelah waktu ini';
+  String get groupChatNewMessagesDisappearOnceRead =>
+      'Pesan baru hilang setelah waktu ini sejak dibaca. Pesanmu dihitung sejak kamu mengirimnya.';
 
   @override
   String get groupChatToday => 'Hari ini';
@@ -2657,9 +2657,6 @@ class AppLocalizationsId extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get groupChat0s => '0 dtk';
 
   @override
   String get groupChatReply => 'Balas';
@@ -7350,6 +7347,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get stickerLabel => 'Stiker';
+
+  @override
+  String get timedMessageLabel => 'Pesan berwaktu';
 
   @override
   String get stickerNewer => 'Dari Kryfo versi lebih baru';

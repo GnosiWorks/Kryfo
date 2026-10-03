@@ -92,6 +92,7 @@ import '../stickers/sticker_wire.dart' show StickerWire;
 import '../widgets/motion.dart';
 import '../widgets/burn_fade.dart';
 import '../seen_timers.dart';
+import '../read_burn.dart';
 import '../dlog.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/menu_backdrop.dart';
@@ -173,7 +174,9 @@ class _Msg {
   String text;
   final DateTime when;
   int? burnAt;
-  int? burnSecs; // intended burn window; lit into burnAt on delivery.
+  // the burn window: ours is lit into burnAt when it goes, theirs when it
+  // is first read
+  int? burnSecs;
   String? msgUid;
   // msg_uid of the message this one replies to, or null.
   final String? replyTo;
@@ -230,6 +233,17 @@ class _Msg {
     this.delivered = false,
     Map<String, String>? reactions,
   }) : reactions = reactions ?? <String, String>{};
+
+  // came in timed and not read yet: its clock waits for the first read
+  bool get burnWaits => direction == 'in' && burnAt == null && burnSecs != null;
+
+  // what the countdown shows: the time left, or the whole window while it
+  // waits. null for a message with no clock to show
+  String? get burnLabel => burnAt != null
+      ? _fmtBurn(burnAt!)
+      : burnWaits
+      ? burnLeft(burnSecs! * 1000)
+      : null;
 }
 
 String _humanSize(int bytes) {
@@ -442,18 +456,9 @@ String _humanBurn(int seconds) {
   return l10n.chatD(whole(seconds ~/ 86400));
 }
 
-String _fmtBurn(int burnAtMs) {
-  final now = DateTime.now().millisecondsSinceEpoch;
-  var s = ((burnAtMs - now) / 1000).round();
-  if (s <= 0) return l10n.chat0s;
-  final h = s ~/ 3600;
-  s -= h * 3600;
-  final m = s ~/ 60;
-  s -= m * 60;
-  if (h > 0) return l10n.chatHM(whole(h), twoDigits(m));
-  if (m > 0) return l10n.chatMS(whole(m), twoDigits(s));
-  return l10n.chatS2(whole(s));
-}
+// the countdown, as groups show it too (burnLeft)
+String _fmtBurn(int burnAtMs) =>
+    burnLeft(burnAtMs - DateTime.now().millisecondsSinceEpoch);
 
 // isolate entrypoint for compute(): grinds first-contact pow
 int _grindPowTask(String seed) => grindPow(seed, powBits);
@@ -517,6 +522,7 @@ class _ChatScreenState extends State<ChatScreen>
           DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
           sticker: StickerWire.parse(r['sticker']),
           burnAt: r['burn_at'] as int?,
+          burnSecs: (r['burn_secs'] as num?)?.toInt(),
           msgUid: uid,
           replyTo: r['reply_to'] as String?,
           secure: (r['secure'] as int? ?? 0) == 1,
@@ -977,6 +983,9 @@ class _ChatScreenState extends State<ChatScreen>
     });
     _loadMessages();
     _burn = _timers.until(_burnWait, _burnTick);
+    // back in view: what shows now has been read
+    _reads.keepTime(_timers);
+    _scrollCtrl.addListener(_reads.look);
     _timers.every(const Duration(seconds: 30), _autoRetryTick);
     _timers.every(const Duration(seconds: 1), () {
       if (mounted) _checkInbox();
@@ -987,6 +996,9 @@ class _ChatScreenState extends State<ChatScreen>
   void didChangeDependencies() {
     super.didChangeDependencies();
     _timers.watch(context);
+    _route = ModalRoute.of(context);
+    // what covered the chat has gone: what shows now is read
+    _reads.look();
   }
 
   // when the burn looks again: the next deadline, or the countdown's next
@@ -1267,6 +1279,7 @@ class _ChatScreenState extends State<ChatScreen>
         DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
         sticker: StickerWire.parse(r['sticker']),
         burnAt: r['burn_at'] as int?,
+        burnSecs: (r['burn_secs'] as num?)?.toInt(),
         msgUid: uid,
         replyTo: r['reply_to'] as String?,
         secure: (r['secure'] as int? ?? 0) == 1,
@@ -1418,6 +1431,7 @@ class _ChatScreenState extends State<ChatScreen>
     _Msg target,
   ) async {
     HapticFeedback.selectionClick();
+    _touched(target);
     // his first line is the app's own: it is copied and nothing else
     final welcome = target.welcome;
     // a row without a uid gets a local one. the peer doesn't know it, so the
@@ -1738,7 +1752,7 @@ class _ChatScreenState extends State<ChatScreen>
   // the list is read from the database, not from the rows on screen: a pin
   // far up the thread is still a pin when only the last page is loaded
   Future<List<PinEntry>> _loadPins() async {
-    final rows = await session.pinnedIn(peerId: widget.peerHaloId);
+    final rows = await _shownPins();
     final nick = _nickname;
     final them = _isDev
         ? l10n.devName
@@ -1763,9 +1777,16 @@ class _ChatScreenState extends State<ChatScreen>
     ];
   }
 
+  // a timed message not read yet stays out of the pins, as it does out of
+  // the photos: it shows in the thread, where reading it starts its clock
+  Future<List<Map<String, Object?>>> _shownPins() async => [
+    for (final r in await session.pinnedIn(peerId: widget.peerHaloId))
+      if (!burnWaitsRow(r)) r,
+  ];
+
   int _pinCount = 0;
   Future<void> _refreshPinCount() async {
-    final n = (await session.pinnedIn(peerId: widget.peerHaloId)).length;
+    final n = (await _shownPins()).length;
     if (mounted && n != _pinCount) setState(() => _pinCount = n);
   }
 
@@ -1874,6 +1895,51 @@ class _ChatScreenState extends State<ChatScreen>
   // every jump to a message lands through here: a pin, a quoted reply, a
   // saved message opened from outside. see row_anchor.dart.
   final RowAnchors _anchors = RowAnchors();
+
+  // the bubbles alone, without the date and the new messages line above
+  // them: what says a message has been read
+  final RowAnchors _readAnchors = RowAnchors();
+
+  // the route this chat is on: a sheet, a dialog or a see-through page over
+  // it leaves it drawn but not read
+  ModalRoute<Object?>? _route;
+
+  // their timed messages start counting once read here
+  late final _reads = ReadBurns(
+    anchors: _readAnchors,
+    allowed: () => !lockGuard.isLocked() && !sessionQuiet,
+    reading: () =>
+        _timers.seen &&
+        (_route?.isCurrent ?? true) &&
+        !lockGuard.isLocked() &&
+        !sessionQuiet,
+    waiting: () => [
+      for (final m in _messages)
+        if (m.burnWaits && !m.removing && m.msgUid != null) m.msgUid!,
+    ],
+    light: _lightRead,
+  );
+
+  // what is acted on is read: opened, played, held or answered
+  void _touched(_Msg m) {
+    if (m.burnWaits) _reads.touched(m.msgUid);
+  }
+
+  Future<Map<String, int>> _lightRead(List<String> uids) async {
+    final at = await session.lightReadBurns(widget.peerHaloId, uids);
+    if (!mounted || at.isEmpty) return at;
+    setState(() {
+      // older rows lit along with them come back too
+      for (final m in _messages) {
+        final t = at[m.msgUid];
+        if (t != null && m.burnWaits) m.burnAt = t;
+      }
+    });
+    // a pin that waited shows now, and the chat list line its words
+    unawaited(_refreshPinCount());
+    unawaited(appState.refreshContacts());
+    return at;
+  }
 
   void _scrollToMessage(_Msg m) => _landOn(_rowKey(m));
 
@@ -2057,6 +2123,7 @@ class _ChatScreenState extends State<ChatScreen>
           DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
           sticker: StickerWire.parse(r['sticker']),
           burnAt: r['burn_at'] as int?,
+          burnSecs: (r['burn_secs'] as num?)?.toInt(),
           msgUid: uid,
           replyTo: r['reply_to'] as String?,
           secure: (r['secure'] as int? ?? 0) == 1,
@@ -2461,7 +2528,7 @@ class _ChatScreenState extends State<ChatScreen>
     final picked = await showChoiceSheet<int>(
       context,
       title: l10n.chatGhostTimer,
-      line: l10n.chatHowLongBeforeSent,
+      line: l10n.chatHowLongAfterReading,
       current: _burnSeconds,
       choices: [
         SheetChoice(30, l10n.chat30Seconds),
@@ -3494,6 +3561,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   void _markRead() {
+    _reads.look();
     session
         .clearUnread(widget.peerHaloId)
         .then((_) => appState.refreshContacts());
@@ -3592,7 +3660,11 @@ class _ChatScreenState extends State<ChatScreen>
         quotedAuthor = original.direction == 'out'
             ? l10n.chatYou2
             : l10n.chatThem;
-        if (original.sticker != null) {
+        // a timed message not read yet says only that it is one: its words
+        // show on its own bubble, where reading them starts its clock
+        if (original.burnWaits) {
+          quoted = l10n.timedMessageLabel;
+        } else if (original.sticker != null) {
           quoted = l10n.stickerLabel;
           quotedSticker = original.sticker;
         } else if (original.text.isNotEmpty) {
@@ -3656,6 +3728,7 @@ class _ChatScreenState extends State<ChatScreen>
             _retryAny(m);
           },
           onLongPress: (ctx) => _showEmojiPickerAt(ctx, m),
+          onAct: () => _touched(m),
           onReact: m.welcome
               ? null
               : (e) {
@@ -3691,20 +3764,25 @@ class _ChatScreenState extends State<ChatScreen>
         children: [
           if (showDate) _dateDivider(m.when, m.msgUid ?? 'r${m.rowid}'),
           if (ix == _firstUnreadIndex) _newMessagesDivider(),
-          LeaveFold(
-            leaving: m.removing,
-            // a timed bubble has burned already; any other burns now
-            after: m.burnedAway ? Duration.zero : kBurnDissolve,
-            // his first line takes no reply
-            child: m.welcome
-                ? bubble
-                : SwipeToReply(
-                    onReply: () {
-                      HapticFeedback.selectionClick();
-                      _replyWith(m);
-                    },
-                    child: bubble,
-                  ),
+          // the bubble alone: what says it has been read
+          RowAnchor(
+            anchors: _readAnchors,
+            id: _rowKey(m),
+            child: LeaveFold(
+              leaving: m.removing,
+              // a timed bubble has burned already; any other burns now
+              after: m.burnedAway ? Duration.zero : kBurnDissolve,
+              // his first line takes no reply
+              child: m.welcome
+                  ? bubble
+                  : SwipeToReply(
+                      onReply: () {
+                        HapticFeedback.selectionClick();
+                        _replyWith(m);
+                      },
+                      child: bubble,
+                    ),
+            ),
           ),
         ],
       ),
@@ -3717,6 +3795,7 @@ class _ChatScreenState extends State<ChatScreen>
 
   // the quote goes up over the composer and the keyboard comes with it
   void _replyWith(_Msg m) {
+    _touched(m);
     setState(() {
       _replyTo = m;
       _replyFlash = m;
@@ -3735,6 +3814,7 @@ class _ChatScreenState extends State<ChatScreen>
       land();
     }
     _timers.dispose();
+    _reads.dispose();
     releaseChat(widget.peerHaloId);
     lockState.removeListener(_lockLifted);
     appState.removeListener(_onAppStateChanged);
@@ -3768,6 +3848,8 @@ class _ChatScreenState extends State<ChatScreen>
     final paths = <String>[];
     final securePaths = <String>{};
     for (final r in rows) {
+      // one not read yet shows in the thread alone
+      if (burnWaitsRow(r)) continue;
       final mp = r['media_path'] as String?;
       if (mp != null && mp.isNotEmpty && await File(mp).exists()) {
         paths.add(mp);
@@ -4553,6 +4635,8 @@ class _ChatScreenState extends State<ChatScreen>
   Widget build(BuildContext context) {
     // a message that just started counting down gets its burn on time
     _burn.poke();
+    // and one that waits is read once this frame shows it
+    _reads.look();
     final searchActive = _searching && _query.isNotEmpty;
     return Scaffold(
       backgroundColor: HaloColors.surface,
@@ -5806,6 +5890,8 @@ class _Bubble extends StatelessWidget {
   final _Msg msg;
   final void Function(_Msg)? onRetry;
   final void Function(BuildContext)? onLongPress;
+  // its photo, video or file opened, or its voice note played
+  final VoidCallback? onAct;
   // a tap on a reaction chip: the same emoji from this phone, on or off
   final void Function(String emoji)? onReact;
   final bool secure;
@@ -5840,6 +5926,7 @@ class _Bubble extends StatelessWidget {
     this.quotedSticker,
     this.onRetry,
     this.onLongPress,
+    this.onAct,
     this.onReact,
     this.secure = false,
     this.quotedText,
@@ -6155,6 +6242,7 @@ class _Bubble extends StatelessWidget {
                                           path: msg.filePath!,
                                           isOut: isOut,
                                           disguised: msg.voiceDisguised,
+                                          onPlay: onAct,
                                         ),
                                       )
                                     else if (msg.filePath != null &&
@@ -6167,11 +6255,14 @@ class _Bubble extends StatelessWidget {
                                             (MediaQuery.of(context).size.width *
                                                     0.66)
                                                 .clamp(180.0, 300.0),
-                                        onOpen: () => openVideo(
-                                          context,
-                                          path: msg.filePath!,
-                                          fileName: msg.fileName,
-                                        ),
+                                        onOpen: () {
+                                          onAct?.call();
+                                          openVideo(
+                                            context,
+                                            path: msg.filePath!,
+                                            fileName: msg.fileName,
+                                          );
+                                        },
                                         stamp: _mediaCorner(
                                           msg,
                                           showMeta: showTime,
@@ -6184,6 +6275,7 @@ class _Bubble extends StatelessWidget {
                                         scale: 0.97,
                                         haptic: false,
                                         onTap: () {
+                                          onAct?.call();
                                           if (msg.filePath != null) {
                                             openReceivedFile(
                                               context,
@@ -6203,16 +6295,19 @@ class _Bubble extends StatelessWidget {
                                       PressScale(
                                         scale: 0.97,
                                         haptic: false,
-                                        onTap: () => _openFullImage(
-                                          context,
-                                          msg.mediaPath!,
-                                          secure: msg.secure,
-                                          tag: photoHeroTag(
+                                        onTap: () {
+                                          onAct?.call();
+                                          _openFullImage(
+                                            context,
                                             msg.mediaPath!,
-                                            'chat',
-                                          ),
-                                          radius: 14,
-                                        ),
+                                            secure: msg.secure,
+                                            tag: photoHeroTag(
+                                              msg.mediaPath!,
+                                              'chat',
+                                            ),
+                                            radius: 14,
+                                          );
+                                        },
                                         // said as a photo from the start,
                                         // before the picture has faded up
                                         child: Semantics(
@@ -6509,11 +6604,13 @@ class _Bubble extends StatelessWidget {
                                           ],
 
                                           // a sent photo has no meta row, so its
-                                          // countdown lives here like an incoming one
-                                          if (msg.burnAt != null &&
-                                              !pending &&
-                                              (!showMeta ||
-                                                  msg.mediaPath != null)) ...[
+                                          // countdown lives here like an incoming one.
+                                          // one not read yet shows its whole window
+                                          if (msg.burnLabel case final burn?
+                                              when !pending &&
+                                                  (!showMeta ||
+                                                      msg.mediaPath !=
+                                                          null)) ...[
                                             const SizedBox(height: 4),
                                             Padding(
                                               padding:
@@ -6523,17 +6620,20 @@ class _Bubble extends StatelessWidget {
                                               child: Row(
                                                 mainAxisSize: MainAxisSize.min,
                                                 children: [
-                                                  Icon(
-                                                    Icons
-                                                        .local_fire_department_outlined,
-                                                    size: 11,
-                                                    color: onAmberText
-                                                        ? HaloColors.onAmber
-                                                        : HaloColors.amber,
+                                                  BurnFlame(
+                                                    waiting: msg.burnWaits,
+                                                    child: Icon(
+                                                      Icons
+                                                          .local_fire_department_outlined,
+                                                      size: 11,
+                                                      color: onAmberText
+                                                          ? HaloColors.onAmber
+                                                          : HaloColors.amber,
+                                                    ),
                                                   ),
                                                   const SizedBox(width: 4),
                                                   Text(
-                                                    _fmtBurn(msg.burnAt!),
+                                                    burn,
                                                     style:
                                                         HaloType.mono(
                                                           size: 9.5,
@@ -6716,7 +6816,7 @@ class _Bubble extends StatelessWidget {
     required bool arriving,
   }) {
     final quoted = quotedText;
-    final burn = msg.burnAt;
+    final burn = msg.burnLabel;
     final reacted = msg.reactions.isNotEmpty;
     final roomTime = motionStill(context) ? Duration.zero : kHouseTime;
     final retry = (failedShown || parked) && onRetry != null
@@ -6781,7 +6881,8 @@ class _Bubble extends StatelessWidget {
                                     delivered: showMeta && msg.delivered
                                         ? l10n.chatDelivered
                                         : null,
-                                    burn: burn == null ? null : _fmtBurn(burn),
+                                    burn: burn,
+                                    burnWaits: msg.burnWaits,
                                     alert: failedShown
                                         ? l10n.chatFailedTapToRetry
                                         : null,

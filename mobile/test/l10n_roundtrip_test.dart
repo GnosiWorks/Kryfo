@@ -705,7 +705,10 @@ void main() {
     expect(l.chat1Hour, "1 hour");
     expect(l.chat24Hours, "24 hours");
     expect(l.chatGhostTimer, "Timed messages");
-    expect(l.chatHowLongBeforeSent, "How long before sent messages burn?");
+    expect(
+      l.chatHowLongAfterReading,
+      "How long after they're read do messages burn? Yours count from when you send them.",
+    );
     expect(l.chatCamera, "Camera");
     expect(l.chatNoExifNeverSaved, "No exif, never saved to your photos");
     expect(l.chatGallery, "Gallery");
@@ -1212,8 +1215,8 @@ void main() {
     expect(l.groupChat24Hours, "24 hours");
     expect(l.groupChatBurnTimer, "Timed messages");
     expect(
-      l.groupChatNewMessagesDisappearAfter,
-      "New messages disappear after this",
+      l.groupChatNewMessagesDisappearOnceRead,
+      "New messages disappear this long after they're read. Yours count from when you send them.",
     );
     expect(l.groupChatToday, "Today");
     expect(l.groupChatYesterday, "Yesterday");
@@ -1280,7 +1283,6 @@ void main() {
     expect(l.groupChatSupporter, "Supporter");
     expect(l.groupChatEdited, "Edited");
     expect(l.groupChatTapToRetry, "! Tap to retry");
-    expect(l.groupChat0s, "0s");
     expect(l.groupChatReply, "Reply");
     expect(l.groupChatPin, "Pin");
     expect(l.groupChatUnsave, "Unsave");
@@ -3324,6 +3326,7 @@ void main() {
     expect(l.stickerRemoveRecent, "Remove from recent");
     expect(l.stickerCouldNotLoad, "Stickers could not be loaded");
     expect(l.stickerLabel, "Sticker");
+    expect(l.timedMessageLabel, "Timed message");
     expect(l.stickerNewer, "From a newer Kryfo");
     expect(l.groupChatFileReach(0, 4), "Sent · on its way");
     expect(l.groupChatFileReach(1, 4), "Sent · 1 of 4 has it");

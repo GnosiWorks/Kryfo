@@ -88,7 +88,9 @@ Future<void> _bench(String path) async {
           file_path TEXT,
           file_name TEXT,
           preview TEXT,
-          poll TEXT
+          poll TEXT,
+          burn_at INTEGER,
+          burn_secs INTEGER
         )
       ''');
       await db.execute(

@@ -1435,8 +1435,8 @@ class AppLocalizationsPt extends AppLocalizations {
   String get chatGhostTimer => 'Mensagens temporárias';
 
   @override
-  String get chatHowLongBeforeSent =>
-      'Quanto tempo até as mensagens enviadas sumirem?';
+  String get chatHowLongAfterReading =>
+      'Quanto tempo depois de lidas as mensagens somem? As suas contam a partir do envio.';
 
   @override
   String get chatCamera => 'Câmera';
@@ -2457,8 +2457,8 @@ class AppLocalizationsPt extends AppLocalizations {
   String get groupChatBurnTimer => 'Mensagens temporárias';
 
   @override
-  String get groupChatNewMessagesDisappearAfter =>
-      'Novas mensagens somem depois desse tempo';
+  String get groupChatNewMessagesDisappearOnceRead =>
+      'Novas mensagens somem depois desse tempo, contado a partir da leitura. As suas contam a partir do envio.';
 
   @override
   String get groupChatToday => 'Hoje';
@@ -2683,9 +2683,6 @@ class AppLocalizationsPt extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get groupChat0s => '0s';
 
   @override
   String get groupChatReply => 'Responder';
@@ -7407,6 +7404,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get stickerLabel => 'Figurinha';
+
+  @override
+  String get timedMessageLabel => 'Mensagem temporária';
 
   @override
   String get stickerNewer => 'De um Kryfo mais novo';

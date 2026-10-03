@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import '../dlog.dart';
 import '../l10n/l10n.dart';
 import '../theme.dart';
+import '../widgets/burn_fade.dart' show BurnFlame;
 import '../widgets/chat_parts.dart' show CornerSwap, GrowSwap, SentTick;
 import '../widgets/motion.dart' show houseSpring;
 import '../widgets/press_scale.dart';
@@ -398,6 +399,7 @@ class StickerStamp extends StatelessWidget {
     this.sent = false,
     this.delivered,
     this.burn,
+    this.burnWaits = false,
     this.alert,
     this.alertColor,
   });
@@ -408,6 +410,8 @@ class StickerStamp extends StatelessWidget {
   final String? delivered;
   // what is left of a timed message
   final String? burn;
+  // its clock waits for the message to be read
+  final bool burnWaits;
   final String? alert;
   final Color? alertColor;
 
@@ -435,10 +439,13 @@ class StickerStamp extends StatelessWidget {
             )
           else ...[
             if (burn != null) ...[
-              Icon(
-                Icons.local_fire_department_outlined,
-                size: 11,
-                color: HaloColors.amber,
+              BurnFlame(
+                waiting: burnWaits,
+                child: Icon(
+                  Icons.local_fire_department_outlined,
+                  size: 11,
+                  color: HaloColors.amber,
+                ),
               ),
               const SizedBox(width: 2),
               Text(

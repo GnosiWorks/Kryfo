@@ -1430,8 +1430,8 @@ class AppLocalizationsFa extends AppLocalizations {
   String get chatGhostTimer => 'پیام‌های زمان‌دار';
 
   @override
-  String get chatHowLongBeforeSent =>
-      'پیام‌های فرستاده‌شده پس از چه مدت محو شوند؟';
+  String get chatHowLongAfterReading =>
+      'پیام‌ها چه مدت پس از خوانده شدن محو شوند؟ پیام‌های شما از لحظه‌ی فرستادن حساب می‌شوند.';
 
   @override
   String get chatCamera => 'دوربین';
@@ -2442,8 +2442,8 @@ class AppLocalizationsFa extends AppLocalizations {
   String get groupChatBurnTimer => 'پیام‌های زمان‌دار';
 
   @override
-  String get groupChatNewMessagesDisappearAfter =>
-      'پیام‌های جدید پس از این مدت محو می‌شوند';
+  String get groupChatNewMessagesDisappearOnceRead =>
+      'پیام‌های جدید این مدت پس از خوانده شدن محو می‌شوند. پیام‌های شما از لحظه‌ی فرستادن حساب می‌شوند.';
 
   @override
   String get groupChatToday => 'امروز';
@@ -2668,9 +2668,6 @@ class AppLocalizationsFa extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get groupChat0s => '۰ ثانیه';
 
   @override
   String get groupChatReply => 'پاسخ';
@@ -7369,6 +7366,9 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get stickerLabel => 'استیکر';
+
+  @override
+  String get timedMessageLabel => 'پیام زمان‌دار';
 
   @override
   String get stickerNewer => 'از نسخه‌ی جدیدتر Kryfo';

@@ -67,6 +67,8 @@ import '../mp4_strip.dart';
 import '../widgets/kryfo_avatar.dart';
 import '../widgets/burn_fade.dart';
 import '../seen_timers.dart';
+import '../read_burn.dart';
+import '../widgets/row_anchor.dart' show RowAnchor, RowAnchors;
 import 'group_info_screen.dart';
 import '../widgets/motion.dart'
     show
@@ -352,12 +354,60 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     groupOwedTick.addListener(_reachMoved);
     _timers.every(const Duration(seconds: 30), _autoRetryTick);
     _burn = _timers.until(_burnWait, _burnTick);
+    // back in view: what shows now has been read
+    _reads.keepTime(_timers);
+    _scrollCtrl.addListener(_reads.look);
+  }
+
+  final RowAnchors _anchors = RowAnchors();
+
+  // the route this chat is on: a sheet, a dialog or a see-through page over
+  // it leaves it drawn but not read
+  ModalRoute<Object?>? _route;
+
+  // others' timed messages start counting once read here
+  late final _reads = ReadBurns(
+    anchors: _anchors,
+    allowed: () => !lockGuard.isLocked() && !sessionQuiet,
+    reading: () =>
+        _timers.seen &&
+        (_route?.isCurrent ?? true) &&
+        !lockGuard.isLocked() &&
+        !sessionQuiet,
+    waiting: () => [
+      for (final m in _messages)
+        if (m.burnWaits && !m.removing && m.msgUid != null) m.msgUid!,
+    ],
+    light: _lightRead,
+  );
+
+  // what is acted on is read: opened, played, voted on, held or answered
+  void _touched(_GMsg m) {
+    if (m.burnWaits) _reads.touched(m.msgUid);
+  }
+
+  Future<Map<String, int>> _lightRead(List<String> uids) async {
+    final at = await session.lightReadBurns(widget.groupId, uids);
+    if (!mounted || at.isEmpty) return at;
+    setState(() {
+      // older rows lit along with them come back too
+      for (final m in _messages) {
+        final t = at[m.msgUid];
+        if (t != null && m.burnWaits) m.burnAt = t;
+      }
+    });
+    // a pin that waited shows now
+    unawaited(_refreshPinCount());
+    return at;
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _timers.watch(context);
+    _route = ModalRoute.of(context);
+    // what covered the chat has gone: what shows now is read
+    _reads.look();
   }
 
   // when the burn looks again: the next deadline, or the countdown's next
@@ -1040,7 +1090,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             ? l10n.groupChatYou
             : orig.senderName;
       }
-      if (orig.sticker != null) {
+      // a timed message not read yet says only that it is one: its words
+      // show on its own bubble, where reading them starts its clock
+      if (orig.burnWaits) {
+        quoted = l10n.timedMessageLabel;
+      } else if (orig.sticker != null) {
         quoted = l10n.stickerLabel;
         quotedSticker = orig.sticker;
       } else if (orig.poll != null) {
@@ -1072,77 +1126,89 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       mainAxisSize: MainAxisSize.min,
       children: [
         if (showDate) _dateDivider(m.when, m.msgUid ?? 'r${m.rowid}'),
-        RepaintBoundary(
-          key: (m.msgUid != null && m.msgUid == _jumpUid) ? _jumpKey : null,
-          child: BubbleEntrance(
-            isOut: m.direction == 'out',
-            // a sticker pops or flies in on its own
-            active: animateIn && m.sticker == null,
-            // the row is the width of the list: a glow would light all of it
-            glow: false,
-            child: SwipeToReply(
-              onReply: () => setState(() => _replyTo = m),
-              // the lifted copy in the overlay is the one that animates;
-              // the row underneath just steps aside
-              child: Opacity(
-                opacity: (m.msgUid != null && m.msgUid == _liftedUid)
-                    ? 0.0
-                    : 1.0,
-                child: _GroupBubble(
-                  m: m,
-                  showSender: showSender,
-                  stickers: _stickers,
-                  stickerOrder: _messages.length - 1 - i,
-                  landing: landing,
-                  arriving: animateIn && landing == null,
-                  quotedSticker: quotedSticker,
-                  me: _me,
-                  nameOf: _nameOf,
-                  faceOf: _faceOf,
-                  onVote: m.poll == null || m.msgUid == null
-                      ? null
-                      : (c) => appState.votePoll(widget.groupId, m.msgUid!, c),
-                  onClosePoll: m.poll == null || m.msgUid == null
-                      ? null
-                      : () => appState.closePoll(widget.groupId, m.msgUid!),
-                  senderBadge: _badgeFor(m.sender),
-                  shieldFlag: shieldFlag,
-                  onShield: shieldFlag == null
-                      ? null
-                      : () => _openShield(m.sender),
-                  linkTitle: m.preview?['title'],
-                  linkBySender: m.preview?['by'] == 'sender',
-                  quotedText: quoted,
-                  quotedAuthor: quotedAuthor,
-                  onLongPress: (ctx) => _showEmojiPickerAt(
-                    ctx,
-                    m,
+        // the bubble alone: what says it has been read
+        RowAnchor(
+          anchors: _anchors,
+          id: m.msgUid ?? 'r${m.rowid}',
+          child: RepaintBoundary(
+            key: (m.msgUid != null && m.msgUid == _jumpUid) ? _jumpKey : null,
+            child: BubbleEntrance(
+              isOut: m.direction == 'out',
+              // a sticker pops or flies in on its own
+              active: animateIn && m.sticker == null,
+              // the row is the width of the list: a glow would light all of it
+              glow: false,
+              child: SwipeToReply(
+                onReply: () {
+                  _touched(m);
+                  setState(() => _replyTo = m);
+                },
+                // the lifted copy in the overlay is the one that animates;
+                // the row underneath just steps aside
+                child: Opacity(
+                  opacity: (m.msgUid != null && m.msgUid == _liftedUid)
+                      ? 0.0
+                      : 1.0,
+                  child: _GroupBubble(
+                    m: m,
                     showSender: showSender,
+                    stickers: _stickers,
+                    stickerOrder: _messages.length - 1 - i,
+                    landing: landing,
+                    arriving: animateIn && landing == null,
+                    quotedSticker: quotedSticker,
+                    me: _me,
+                    nameOf: _nameOf,
+                    faceOf: _faceOf,
+                    onVote: m.poll == null || m.msgUid == null
+                        ? null
+                        : (c) {
+                            _touched(m);
+                            appState.votePoll(widget.groupId, m.msgUid!, c);
+                          },
+                    onAct: () => _touched(m),
+                    onClosePoll: m.poll == null || m.msgUid == null
+                        ? null
+                        : () => appState.closePoll(widget.groupId, m.msgUid!),
+                    senderBadge: _badgeFor(m.sender),
+                    shieldFlag: shieldFlag,
+                    onShield: shieldFlag == null
+                        ? null
+                        : () => _openShield(m.sender),
+                    linkTitle: m.preview?['title'],
+                    linkBySender: m.preview?['by'] == 'sender',
                     quotedText: quoted,
                     quotedAuthor: quotedAuthor,
-                    quotedSticker: quotedSticker,
-                  ),
-                  onRetry: m.looksFailed
-                      ? () {
-                          m.autoRetries = 0;
-                          m.gaveUp = false;
-                          _retryGroup(m);
-                        }
-                      : null,
-                  ripple: m.msgUid != null && m.msgUid == _rippleUid,
-                  query: searchActive ? _query : '',
-                  isCurrentMatch: isCurrent,
-                  dimmed: searchActive && !isMatch,
-                  onReplyTap: m.replyTo == null
-                      ? null
-                      : () {
-                          for (final x in _messages) {
-                            if (x.msgUid != null && x.msgUid == m.replyTo) {
-                              _scrollToGroupMessage(x);
-                              break;
-                            }
+                    onLongPress: (ctx) => _showEmojiPickerAt(
+                      ctx,
+                      m,
+                      showSender: showSender,
+                      quotedText: quoted,
+                      quotedAuthor: quotedAuthor,
+                      quotedSticker: quotedSticker,
+                    ),
+                    onRetry: m.looksFailed
+                        ? () {
+                            m.autoRetries = 0;
+                            m.gaveUp = false;
+                            _retryGroup(m);
                           }
-                        },
+                        : null,
+                    ripple: m.msgUid != null && m.msgUid == _rippleUid,
+                    query: searchActive ? _query : '',
+                    isCurrentMatch: isCurrent,
+                    dimmed: searchActive && !isMatch,
+                    onReplyTap: m.replyTo == null
+                        ? null
+                        : () {
+                            for (final x in _messages) {
+                              if (x.msgUid != null && x.msgUid == m.replyTo) {
+                                _scrollToGroupMessage(x);
+                                break;
+                              }
+                            }
+                          },
+                  ),
                 ),
               ),
             ),
@@ -2162,7 +2228,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  l10n.groupChatNewMessagesDisappearAfter,
+                  l10n.groupChatNewMessagesDisappearOnceRead,
                   style: HaloType.mono(size: 11, color: HaloColors.text3),
                 ),
                 const SizedBox(height: 12),
@@ -2219,6 +2285,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     String? quotedAuthor,
     StickerWire? quotedSticker,
   }) async {
+    _touched(target);
     // drop composer focus before anything opens: a route captures the
     // focused node at open and restores it at close, which would pull the
     // keyboard up after unsend, edit or forward
@@ -2731,7 +2798,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // read from the database: a pin far up the thread is still a pin when
   // only the last page is loaded
   Future<List<PinEntry>> _loadPins() async {
-    final rows = await session.pinnedIn(groupId: widget.groupId);
+    final rows = await _shownPins();
     final nickById = <String, String>{};
     final faceById = <String, int?>{};
     for (final c in appState.contacts) {
@@ -2761,9 +2828,16 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     ];
   }
 
+  // a timed message not read yet stays out of the pins, as it does out of
+  // the photos: it shows in the thread, where reading it starts its clock
+  Future<List<Map<String, Object?>>> _shownPins() async => [
+    for (final r in await session.pinnedIn(groupId: widget.groupId))
+      if (!burnWaitsRow(r)) r,
+  ];
+
   int _pinCount = 0;
   Future<void> _refreshPinCount() async {
-    final n = (await session.pinnedIn(groupId: widget.groupId)).length;
+    final n = (await _shownPins()).length;
     if (mounted && n != _pinCount) setState(() => _pinCount = n);
   }
 
@@ -3118,6 +3192,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   void _markRead() {
+    _reads.look();
     session
         .clearGroupUnread(widget.groupId)
         .then((_) => appState.refreshGroups());
@@ -3219,6 +3294,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     appState.removeListener(_onAppStateChanged);
     groupOwedTick.removeListener(_reachMoved);
     _timers.dispose();
+    _reads.dispose();
     _msgCtrl.dispose();
     _scrollCtrl.dispose();
     super.dispose();
@@ -3228,6 +3304,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   Widget build(BuildContext context) {
     // a message that just started counting down gets its burn on time
     _burn.poke();
+    // and one that waits is read once this frame shows it
+    _reads.look();
     return Scaffold(
       backgroundColor: HaloColors.surface,
       body: SafeArea(
@@ -3465,7 +3543,9 @@ class _GMsg {
   String text;
   final DateTime when;
   int? burnAt;
-  int? burnSecs; // intended burn window; lit into burnAt on delivery
+  // the burn window: ours is lit into burnAt when it goes, theirs when it
+  // is first read
+  int? burnSecs;
   final String? msgUid;
   final String? replyTo;
   bool sending;
@@ -3517,6 +3597,17 @@ class _GMsg {
     Map<String, String>? reactions,
   }) : reactions = reactions ?? {},
        senderName = senderName ?? sender;
+
+  // came in timed and not read yet: its clock waits for the first read
+  bool get burnWaits => direction == 'in' && burnAt == null && burnSecs != null;
+
+  // what is left on its clock, or the whole window while it waits. null
+  // for a message with no clock to show
+  int? get burnLeftMs => burnAt != null
+      ? burnAt! - DateTime.now().millisecondsSinceEpoch
+      : burnWaits
+      ? burnSecs! * 1000
+      : null;
 }
 
 class _Header extends StatelessWidget {
@@ -4156,6 +4247,8 @@ class _GroupBubble extends StatelessWidget {
   final String? quotedText;
   final String? quotedAuthor;
   final void Function(BuildContext)? onLongPress;
+  // its photo, video or file opened, or its voice note played
+  final VoidCallback? onAct;
   final VoidCallback? onRetry;
   final bool ripple;
   // an in-chat search: the words to mark, this is the hit in view, or it is
@@ -4199,6 +4292,7 @@ class _GroupBubble extends StatelessWidget {
     this.quotedText,
     this.quotedAuthor,
     this.onLongPress,
+    this.onAct,
     this.onRetry,
     this.ripple = false,
     this.query = '',
@@ -4508,6 +4602,7 @@ class _GroupBubble extends StatelessWidget {
                                             path: m.filePath!,
                                             isOut: isOut,
                                             disguised: m.voiceDisguised,
+                                            onPlay: onAct,
                                           ),
                                         )
                                       else if (m.filePath != null &&
@@ -4517,11 +4612,14 @@ class _GroupBubble extends StatelessWidget {
                                           path: m.filePath!,
                                           fileName: m.fileName!,
                                           width: 240,
-                                          onOpen: () => openVideo(
-                                            context,
-                                            path: m.filePath!,
-                                            fileName: m.fileName,
-                                          ),
+                                          onOpen: () {
+                                            onAct?.call();
+                                            openVideo(
+                                              context,
+                                              path: m.filePath!,
+                                              fileName: m.fileName,
+                                            );
+                                          },
                                           stamp: m.failed
                                               ? null
                                               : _groupStamp(m),
@@ -4530,6 +4628,7 @@ class _GroupBubble extends StatelessWidget {
                                         GestureDetector(
                                           behavior: HitTestBehavior.opaque,
                                           onTap: () {
+                                            onAct?.call();
                                             if (m.filePath != null) {
                                               openReceivedFile(
                                                 context,
@@ -4557,15 +4656,18 @@ class _GroupBubble extends StatelessWidget {
                                           child: GestureDetector(
                                             onTap: m.failed
                                                 ? onRetry
-                                                : () => openFullImage(
-                                                    context,
-                                                    m.mediaPath!,
-                                                    tag: photoHeroTag(
+                                                : () {
+                                                    onAct?.call();
+                                                    openFullImage(
+                                                      context,
                                                       m.mediaPath!,
-                                                      'chat',
-                                                    ),
-                                                    radius: 10,
-                                                  ),
+                                                      tag: photoHeroTag(
+                                                        m.mediaPath!,
+                                                        'chat',
+                                                      ),
+                                                      radius: 10,
+                                                    );
+                                                  },
                                             child: ClipRRect(
                                               borderRadius:
                                                   BorderRadius.circular(10),
@@ -4722,7 +4824,8 @@ class _GroupBubble extends StatelessWidget {
                                       Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          if (m.burnAt != null) ...[
+                                          if (m.burnLeftMs
+                                              case final left?) ...[
                                             Container(
                                               padding:
                                                   const EdgeInsets.symmetric(
@@ -4745,17 +4848,14 @@ class _GroupBubble extends StatelessWidget {
                                                 borderRadius:
                                                     BorderRadius.circular(4),
                                               ),
-                                              child: Text(
-                                                '🔥 ${_remaining(m.burnAt!)}',
-                                                style: HaloType.mono(
-                                                  size: 9,
-                                                  color:
-                                                      (isOut &&
-                                                          m.mediaPath == null)
-                                                      ? HaloColors.onAmber
-                                                      : HaloColors.amber,
-                                                  letter: 0.2,
-                                                ),
+                                              child: _burnPill(
+                                                left,
+                                                waits: m.burnWaits,
+                                                color:
+                                                    (isOut &&
+                                                        m.mediaPath == null)
+                                                    ? HaloColors.onAmber
+                                                    : HaloColors.amber,
                                               ),
                                             ),
                                             const SizedBox(width: 6),
@@ -5017,7 +5117,7 @@ class _GroupBubble extends StatelessWidget {
   Widget _sticker(StickerWire st) {
     final isOut = m.direction == 'out';
     final quoted = quotedText;
-    final burn = m.burnAt;
+    final burn = m.burnLeftMs;
     return StickerBubble(
       wire: st,
       emoji: m.text,
@@ -5039,7 +5139,8 @@ class _GroupBubble extends StatelessWidget {
       stamp: StickerStamp(
         time: _fmtTime(m.when),
         sent: isOut && !m.pending && !m.looksFailed,
-        burn: burn == null ? null : _remaining(burn),
+        burn: burn == null ? null : burnLeft(burn),
+        burnWaits: m.burnWaits,
         alert: m.looksFailed ? l10n.groupChatTapToRetry : null,
         alertColor: HaloColors.rose,
       ),
@@ -5059,7 +5160,7 @@ class _GroupBubble extends StatelessWidget {
       onVote: (c) => onVote?.call(c),
       onClose: isOut ? onClosePoll : null,
       nameOf: nameOf ?? (id) => id,
-      burn: m.burnAt == null
+      burn: m.burnLeftMs == null
           ? null
           : Container(
               padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
@@ -5067,9 +5168,11 @@ class _GroupBubble extends StatelessWidget {
                 color: HaloColors.amberSoft,
                 borderRadius: BorderRadius.circular(4),
               ),
-              child: Text(
-                _remaining(m.burnAt!),
-                style: HaloType.mono(size: 9, color: HaloColors.amber),
+              // the flame low while the clock waits, as on a bubble
+              child: _burnPill(
+                m.burnLeftMs!,
+                waits: m.burnWaits,
+                color: HaloColors.amber,
               ),
             ),
       stamp: Row(
@@ -5131,14 +5234,19 @@ class _GroupBubble extends StatelessWidget {
 
   String _fmtTime(DateTime t) => hourMinute(t);
 
-  String _remaining(int burnAt) {
-    final ms = burnAt - DateTime.now().millisecondsSinceEpoch;
-    if (ms <= 0) return l10n.groupChat0s;
-    final s = ms ~/ 1000;
-    if (s < 60) return l10n.groupChatS(whole(s));
-    if (s < 3600) return l10n.groupChatM(whole(s ~/ 60));
-    if (s < 86400) return l10n.groupChatH(whole(s ~/ 3600));
-    return l10n.groupChatD(whole(s ~/ 86400));
+  // the flame and what is left, the flame low while the clock waits
+  Widget _burnPill(int left, {required bool waits, required Color color}) {
+    final style = HaloType.mono(size: 9, color: color, letter: 0.2);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        BurnFlame(
+          waiting: waits,
+          child: Text('🔥', style: style),
+        ),
+        Text(' ${burnLeft(left)}', style: style),
+      ],
+    );
   }
 }
 

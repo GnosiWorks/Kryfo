@@ -429,6 +429,11 @@ class Session {
       (await _ofUid(msgUid)).sendState(msgUid);
   Future<void> setMsgBurnAt(String msgUid, int burnAt) async =>
       (await _ofUid(msgUid)).setMsgBurnAt(msgUid, burnAt);
+  // the rows read in one chat are all its container's
+  Future<Map<String, int>> lightReadBurns(
+    String chatId,
+    List<String> msgUids,
+  ) => _ofChat(chatId).lightReadBurns(msgUids);
   Future<void> setPinned(String msgUid, bool pinned) async =>
       (await _ofUid(msgUid)).setPinned(msgUid, pinned);
   Future<void> setPowNonce(String msgUid, int nonce) async =>

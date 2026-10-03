@@ -182,11 +182,14 @@ class VoiceBubble extends StatefulWidget {
   final String path;
   final bool isOut;
   final bool disguised;
+  // it starts playing
+  final VoidCallback? onPlay;
   const VoiceBubble({
     super.key,
     required this.path,
     required this.isOut,
     this.disguised = false,
+    this.onPlay,
   });
   @override
   State<VoiceBubble> createState() => VoiceBubbleState();
@@ -330,6 +333,7 @@ class VoiceBubbleState extends State<VoiceBubble> {
         // itself when the call ends. the next tap carries on from here
         _player.stop();
       });
+      widget.onPlay?.call();
       _player.play();
     }
   }
