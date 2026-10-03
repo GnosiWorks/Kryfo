@@ -45,9 +45,8 @@ bool strangerCapHolds({
   int cap = 2,
 }) => !accepted && !vouched && have >= cap;
 
-// thrown when the cap holds a message back. the poll loop must not mark the
-// event seen then: it stays on the relay, and the replay after accept brings
-// it in.
+// thrown when the cap holds a message back. the receiver keeps it as it
+// opened, on a small shelf, and lets it in on accept.
 class CapHeld implements Exception {
   const CapHeld();
 }

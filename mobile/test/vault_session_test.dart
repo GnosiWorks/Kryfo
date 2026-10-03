@@ -258,6 +258,8 @@ class _Rows {
   final msgs = <Map<String, Object?>>[];
   final seen = <String>{};
   final meta = <String, String>{};
+  // badges that fail next, which an arrival writes before its row
+  var badgeFails = 0;
   var _id = 0;
   // called as each message is kept
   void Function()? onSave;
@@ -588,8 +590,14 @@ class _Db implements HaloDb {
   Future<void> markBackPaired(String peerId) async =>
       _hit('markBackPaired', peerId, null);
   @override
-  Future<void> setContactBadge(String haloId, String? tier) async =>
-      _hit('setContactBadge', haloId, null);
+  Future<void> setContactBadge(String haloId, String? tier) async {
+    if (r.badgeFails > 0) {
+      r.badgeFails--;
+      throw StateError('the database went away');
+    }
+    return _hit('setContactBadge', haloId, null);
+  }
+
   @override
   Future<void> setContactAvatar(String haloId, int? av) async =>
       _hit('setContactAvatar', haloId, null);
@@ -1609,6 +1617,23 @@ void main() {
   });
 
   group('inside the vault', () {
+    test('opening it drops what a relay delivery opened to before', () async {
+      final w = await _World.make();
+      const c = 'relay-v1';
+      w.io.opens[c] = (
+        _v,
+        await wrapMessage('late', msgUid: 'rv1', sender: _as(_v)),
+      );
+      w.liveRows.badgeFails = 1;
+      expect(await w.app.receiveRelay([(peer: 'x-$_v', cipher: c)]), {0});
+      // signal spent its keys on that open
+      w.io.opens.remove(c);
+      await w.open();
+      expect(await w.app.receiveRelay([(peer: 'x-$_v', cipher: c)]), isEmpty);
+      expect(w.liveRows.msg('rv1'), isNull);
+      expect(w.vaultRows.msg('rv1'), isNull);
+    });
+
     test('a chat is kept in memory under the container that holds it, '
         'the decoy\'s apart', () async {
       final w = await _World.make();

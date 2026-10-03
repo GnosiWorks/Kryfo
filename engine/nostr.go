@@ -23,6 +23,7 @@ import (
 	"net/url"
 	"os"
 	"runtime"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -314,11 +315,11 @@ func HaloCatchupState() *C.char {
 // events keep coming, so one slow relay could otherwise hold tor awake for
 // the whole window.
 //
-// past this the relay's backfill is cancelled and it stops counting as active.
-// its live subscription stays up, and the next connect asks again from the
-// same anchor, so nothing is lost: it arrives later instead of holding the
-// phone awake now.
-const catchupCap = 30 * time.Second
+// past this the relay stops counting as active, so a check-in can stop tor,
+// which ends the walk and leaves its mark for the next connect. otherwise
+// the walk goes on: a healthy socket is not redialled for hours, and what
+// it has not reached yet would wait for that. a var for the tests.
+var catchupCap = 30 * time.Second
 
 // a relay dropped three check-ins running gets one longer window. a backlog
 // deeper than the cap is walked in pieces and does finish eventually, but a
@@ -616,7 +617,15 @@ func catchupOf(u string) (int, bool, bool, bool) {
 // how long a page may go without a single event before it is given up. a
 // hundred media slices over a slow circuit take longer than any fixed wait,
 // yet each one comes within this; a dead circuit sends nothing at all.
-var pageQuiet = 20 * time.Second
+// the tests set it, and a walk can outlive the test that started it
+var pageQuietSet atomic.Int64
+
+func pageQuiet() time.Duration {
+	if d := pageQuietSet.Load(); d > 0 {
+		return time.Duration(d)
+	}
+	return 20 * time.Second
+}
 
 // how many times its limit a page reads at most while it waits for the
 // eose. a contact's photo is a hundred wraps, and a relay can send them
@@ -671,7 +680,7 @@ func relayPage(ctx context.Context, r *nostr.Relay, rcvPk string, since, until n
 		return nil, err
 	}
 	defer sub.Unsub()
-	quiet := time.NewTimer(pageQuiet)
+	quiet := time.NewTimer(pageQuiet())
 	defer quiet.Stop()
 	var out []nostr.Event
 	read := 0
@@ -686,7 +695,7 @@ func relayPage(ctx context.Context, r *nostr.Relay, rcvPk string, since, until n
 			if limit > 0 && read >= limit*pageReads {
 				return out, nil
 			}
-			quiet.Reset(pageQuiet)
+			quiet.Reset(pageQuiet())
 		case <-sub.EndOfStoredEvents:
 			return out, nil
 		case <-quiet.C:
@@ -1200,7 +1209,8 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 	// file once an address has been caught up. it stays at or below what our
 	// relay still owes: after a restart no walk is remembered, and its first
 	// window comes from the file. so whenever a walk is left owing,
-	// saveLast(0) takes the file down to it at once.
+	// saveLast(0) takes the file down to it at once. it stays at or below
+	// every line the app has not kept yet too, and moves up once it has.
 	saveLast := func(ts int64) {
 		lastMu.Lock()
 		defer lastMu.Unlock()
@@ -1209,6 +1219,11 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 		}
 		disk := lastSaved
 		if f, held := catchupFloor(ownKeys); held && int64(f) < disk {
+			disk = int64(f)
+		}
+		// nor past what the app has not kept yet: a death before it does
+		// fetches that again from the file
+		if f, owed := owedFloor(seen); owed && int64(f) < disk {
 			disk = int64(f)
 		}
 		if lastPath == "" || disk == lastOnDisk || engineHeld.Load() {
@@ -1262,7 +1277,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 		noteRecv()
 		nostrMu.Lock()
 		nostrInbox = append(nostrInbox, tag+"|"+content)
-		nostrInboxDone = append(nostrInboxDone, inboxDone{set: seen, id: ev.ID})
+		nostrInboxDone = append(nostrInboxDone, inboxDone{set: seen, id: ev.ID, at: ev.CreatedAt, resave: saveLast})
 		nostrMu.Unlock()
 		short := tag
 		if len(short) > 12 {
@@ -1473,21 +1488,30 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 				atomic.AddInt64(&catchupStarted, 1)
 				walkBegins(tag)
 				noteCatchupStart(ck)
-				var settleOnce sync.Once
+				var settleOnce, walkOnce sync.Once
 				var capT *time.Timer
+				// the poll holds the address until the walk is out, not just
+				// while a check-in waits for it, and no longer than the walk
+				// keeps bringing something
+				endHold := func() { walkOnce.Do(func() { walkEnds(tag) }) }
+				holdT := time.AfterFunc(pageQuiet(), endHold)
+				brought := func() { holdT.Reset(pageQuiet()) }
 				settled := func() {
 					settleOnce.Do(func() {
 						if capT != nil {
 							capT.Stop()
 						}
 						atomic.AddInt32(&catchupActive, -1)
-						walkEnds(tag)
 						noteCatchupDone(ck, false)
 					})
+					holdT.Stop()
+					endHold()
 				}
 				// nobody waits on one relay for longer than this. whichever
 				// of the two fires first wins the Once, so a relay is either
-				// finished or dropped, never both.
+				// finished or dropped, never both. a dropped walk still goes
+				// on while the socket lives: a healthy one is not redialled
+				// for a long time, and what lies below would wait for that.
 				thisCap, longTurn := catchupCapFor(ck)
 				if longTurn {
 					log.Printf("nostr: %s dropped %d check-ins running, giving it %s this time",
@@ -1505,9 +1529,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 							saveLast(0)
 						}
 						atomic.AddInt32(&catchupActive, -1)
-						walkEnds(tag)
 						noteCatchupDone(ck, true)
-						ccancel()
 					})
 				})
 				eose := sub.EndOfStoredEvents
@@ -1541,6 +1563,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 						markAlive()
 						if ev.ID.Hex() != "" {
 							if eose != nil {
+								brought()
 								stored++
 								first.Add(ev.CreatedAt)
 								firstOldest.Store(int64(first.Below()))
@@ -1548,7 +1571,11 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 									oldest = ev.CreatedAt
 								}
 							}
-							if _, opened := take(ev); opened {
+							fresh, opened := take(ev)
+							if fresh && opened && eose == nil {
+								liveCame(tag)
+							}
+							if opened {
 								ts := anchorStamp(ev.CreatedAt, time.Now())
 								if ts > last {
 									last = ts
@@ -1595,7 +1622,10 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 							m := catchupMarkOf(ck)
 							res, mark := catchup.Continue(cctx, func(pc context.Context, s, t nostr.Timestamp, n int) ([]nostr.Event, error) {
 								return relayPage(pc, r, rcvPk, s, t, n)
-							}, since, from, catchupPage, catchupMaxPages, dispatch, m)
+							}, since, from, catchupPage, catchupMaxPages, func(ev nostr.Event) bool {
+								brought()
+								return dispatch(ev)
+							}, m)
 							if res.Complete {
 								catchupDone(cc, m.Started())
 							} else {
@@ -1606,6 +1636,18 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 							log.Printf("nostr: %s paged back %d pages, %d events, %d new, complete=%v, resume=%d",
 								u, res.Pages, res.Fetched, res.Fresh, res.Complete, res.Until)
 							if !res.Complete {
+								// stopped short on a socket that is still up, past
+								// where it began. only a new connection carries on
+								// from the mark, and this one may answer probes for
+								// hours. one that got nowhere keeps its socket, or
+								// a page never answered redials it for ever
+								start := from
+								if m.Started() && from <= m.Top && from > m.Cursor {
+									start = m.Cursor
+								}
+								if cctx.Err() == nil && res.Until < start {
+									r.Close()
+								}
 								return
 							}
 							atomic.StoreInt32(&caughtUp, 1)
@@ -1960,24 +2002,134 @@ func HaloMemStats() *C.char {
 	))
 }
 
-// what the relays delivered since the last poll, as a json array of
-// {"t": tag, "c": content}, or "" when there is nothing. the events in it
-// are remembered as seen from here on.
+// what the relays delivered since the last poll, as {"k": token, "m": [...]}
+// with one {"t": tag, "c": content} per event, or "" when there is nothing.
+// the events in it are remembered as seen only once HaloNostrAck confirms
+// them; a batch not confirmed by the next poll is offered again.
 //
 //export HaloNostrPoll
 func HaloNostrPoll() *C.char {
 	return C.CString(nostrPoll())
 }
 
+// the app has kept a batch from the poll: token is its "k", failed a json
+// array of the places in its "m" the app could not keep, which are offered
+// again. "ok", or "error: ..." with the batch left to come again.
+//
+//export HaloNostrAck
+func HaloNostrAck(cToken, cFailed *C.char) *C.char {
+	return C.CString(nostrAck(C.GoString(cToken), C.GoString(cFailed)))
+}
+
 func nostrPoll() string {
 	return nostrPollAt(time.Now())
+}
+
+// a line offered this many times and never kept stops coming. it is not
+// remembered as seen, so a copy fetched again, in this process or the next,
+// is taken again
+const pollMaxTries = 5
+
+// batches handed to the app and not yet confirmed, by token. nostrMu
+var (
+	pollInflight = map[uint64]pollBatch{}
+	pollToken    uint64
+)
+
+type pollBatch struct {
+	lines []string
+	done  []inboxDone
+}
+
+// lines back to the front of the inbox, in their order, each one try
+// further on. nostrMu must be held
+func pollRequeueLocked(lines []string, done []inboxDone) {
+	var l []string
+	var d []inboxDone
+	for i, line := range lines {
+		dn := done[i]
+		dn.tries++
+		if dn.tries >= pollMaxTries {
+			log.Printf("nostr: a delivery the app never kept, left for the next start")
+			if dn.set != nil {
+				dn.set.release(dn.id)
+			}
+			continue
+		}
+		l = append(l, line)
+		d = append(d, dn)
+	}
+	nostrInbox = append(l, nostrInbox...)
+	nostrInboxDone = append(d, nostrInboxDone...)
+}
+
+// the oldest stamp among the lines of set the app has not kept yet, in the
+// inbox or handed over and not confirmed
+func owedFloor(set *seenIDs) (nostr.Timestamp, bool) {
+	nostrMu.Lock()
+	defer nostrMu.Unlock()
+	var low nostr.Timestamp
+	owed := false
+	see := func(done []inboxDone) {
+		for _, d := range done {
+			if d.set == set && (!owed || d.at < low) {
+				low, owed = d.at, true
+			}
+		}
+	}
+	see(nostrInboxDone)
+	for _, b := range pollInflight {
+		see(b.done)
+	}
+	return low, owed
+}
+
+func nostrAck(token, failed string) string {
+	tok, err := strconv.ParseUint(token, 10, 64)
+	if err != nil {
+		return "error: bad token"
+	}
+	var bad []int
+	if failed != "" {
+		if err := json.Unmarshal([]byte(failed), &bad); err != nil {
+			return "error: bad list"
+		}
+	}
+	nostrMu.Lock()
+	b, ok := pollInflight[tok]
+	delete(pollInflight, tok)
+	if !ok {
+		// offered again already, the next ack covers it
+		nostrMu.Unlock()
+		return "ok"
+	}
+	again := map[int]bool{}
+	for _, i := range bad {
+		again[i] = true
+	}
+	var kept []inboxDone
+	var backL []string
+	var backD []inboxDone
+	for i, l := range b.lines {
+		if again[i] {
+			backL = append(backL, l)
+			backD = append(backD, b.done[i])
+		} else {
+			kept = append(kept, b.done[i])
+		}
+	}
+	pollRequeueLocked(backL, backD)
+	nostrMu.Unlock()
+	markHandedOver(kept)
+	return "ok"
 }
 
 // a walk brings its stored wraps a page at a time, and each page is a random
 // slice of the conversation. while an address is walked the poll keeps its
 // lines back, so the app gets the whole of it at once and can put it in
 // order. other addresses go over as they come. a walk that runs long, or
-// brings a lot, goes over as it stands.
+// brings a lot, goes over as it stands, and so does an address the moment
+// a live wrap comes for it.
 const (
 	pollHoldMax   = 20 * time.Second
 	pollHoldBytes = 8 << 20
@@ -1989,6 +2141,9 @@ var pollHeldSince time.Time
 // addresses with a walk under way, by the tag their lines carry, one count
 // per relay. nostrMu
 var walkingTags = map[string]int{}
+
+// held addresses a live wrap came for since the last poll. nostrMu
+var liveTags = map[string]bool{}
 
 func walkBegins(tag string) {
 	nostrMu.Lock()
@@ -2006,6 +2161,15 @@ func walkEnds(tag string) {
 	nostrMu.Unlock()
 }
 
+// a live wrap for tag is in the inbox: what is held for it goes with it
+func liveCame(tag string) {
+	nostrMu.Lock()
+	if walkingTags[tag] > 0 {
+		liveTags[tag] = true
+	}
+	nostrMu.Unlock()
+}
+
 func lineTag(line string) string {
 	if i := strings.IndexByte(line, '|'); i >= 0 {
 		return line[:i]
@@ -2015,6 +2179,17 @@ func lineTag(line string) string {
 
 func nostrPollAt(now time.Time) string {
 	nostrMu.Lock()
+	// what the app took last time and never confirmed comes again first
+	toks := make([]uint64, 0, len(pollInflight))
+	for k := range pollInflight {
+		toks = append(toks, k)
+	}
+	slices.Sort(toks)
+	for i := len(toks) - 1; i >= 0; i-- {
+		b := pollInflight[toks[i]]
+		delete(pollInflight, toks[i])
+		pollRequeueLocked(b.lines, b.done)
+	}
 	lines, done := nostrInbox, nostrInboxDone
 	var kept []string
 	var keptDone []inboxDone
@@ -2022,7 +2197,8 @@ func nostrPollAt(now time.Time) string {
 		lines, done = nil, nil
 		size := 0
 		for i, l := range nostrInbox {
-			if walkingTags[lineTag(l)] > 0 {
+			tag := lineTag(l)
+			if walkingTags[tag] > 0 && !liveTags[tag] {
 				kept = append(kept, l)
 				keptDone = append(keptDone, nostrInboxDone[i])
 				size += len(l)
@@ -2036,17 +2212,55 @@ func nostrPollAt(now time.Time) string {
 			kept, keptDone = nil, nil
 		}
 	}
+	clear(liveTags)
 	nostrInbox, nostrInboxDone = kept, keptDone
 	if len(kept) == 0 {
 		pollHeldSince = time.Time{}
 	}
-	nostrMu.Unlock()
 	if len(lines) == 0 {
+		nostrMu.Unlock()
 		return ""
 	}
-	out := pollJSON(lines)
-	markHandedOver(done)
-	return out
+	entries, took := pollEntriesOf(lines)
+	// what cannot go over never will: remembered now, as before
+	var gone []inboxDone
+	var b pollBatch
+	at := 0
+	for i := range lines {
+		if at < len(took) && took[at] == i {
+			b.lines = append(b.lines, lines[i])
+			b.done = append(b.done, done[i])
+			at++
+		} else {
+			gone = append(gone, done[i])
+		}
+	}
+	var tok uint64
+	if len(entries) > 0 {
+		pollToken++
+		tok = pollToken
+		pollInflight[tok] = b
+	}
+	nostrMu.Unlock()
+	markHandedOver(gone)
+	if tok == 0 {
+		return ""
+	}
+	// a batch can be megabytes, and every runner's take waits on nostrMu
+	raw, err := json.Marshal(struct {
+		K string      `json:"k"`
+		M []pollEntry `json:"m"`
+	}{strconv.FormatUint(tok, 10), entries})
+	if err == nil {
+		return string(raw)
+	}
+	nostrMu.Lock()
+	if _, ok := pollInflight[tok]; ok {
+		delete(pollInflight, tok)
+		pollRequeueLocked(b.lines, b.done)
+	}
+	nostrMu.Unlock()
+	return ""
 }
 
 // nostrMu must be held
@@ -2066,8 +2280,22 @@ type pollEntry struct {
 // carries one (signal is base64, frames are encoded json). each entry stands
 // alone, so the others always arrive.
 func pollJSON(lines []string) string {
+	out, _ := pollEntriesOf(lines)
+	if len(out) == 0 {
+		return ""
+	}
+	b, err := json.Marshal(out)
+	if err != nil {
+		return ""
+	}
+	return string(b)
+}
+
+// the entries pollJSON hands over, and the places in lines they came from
+func pollEntriesOf(lines []string) ([]pollEntry, []int) {
 	out := make([]pollEntry, 0, len(lines))
-	for _, l := range lines {
+	var took []int
+	for n, l := range lines {
 		i := strings.IndexByte(l, '|')
 		if i < 0 {
 			continue
@@ -2078,15 +2306,9 @@ func pollJSON(lines []string) string {
 			continue
 		}
 		out = append(out, pollEntry{T: l[:i], C: c})
+		took = append(took, n)
 	}
-	if len(out) == 0 {
-		return ""
-	}
-	b, err := json.Marshal(out)
-	if err != nil {
-		return ""
-	}
-	return string(b)
+	return out, took
 }
 
 // a client that only ever dials through tor, whatever the send mode. the

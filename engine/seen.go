@@ -4,8 +4,8 @@ package main
 // what a relay runner remembers of the events it has finished with, so a
 // reconnect or a restart does not open them again. bounded in memory and on
 // disk whatever a relay sends: the newest ids stay, the oldest go first.
-// an event that opened is remembered only once the app has taken it from the
-// poll, so a batch that never reached the app is fetched again.
+// an event that opened is remembered only once the app confirms it kept it,
+// so what never reached the app, or did not go in, is fetched again.
 
 import (
 	"encoding/hex"
@@ -180,7 +180,7 @@ func (s *seenIDs) claim(id nostr.ID) bool {
 	return true
 }
 
-// true when the app took the id from a poll, on this run or one before
+// true when the app kept the id, on this run or one before
 func (s *seenIDs) handed(id nostr.ID) bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -196,7 +196,15 @@ func (s *seenIDs) notOpened(id nostr.ID) {
 	s.write([]string{seenUnopenedMark + id.Hex()})
 }
 
-// events the app has taken from the poll
+// an id the app never kept and that is no longer offered: a copy that
+// comes again is taken again
+func (s *seenIDs) release(id nostr.ID) {
+	s.mu.Lock()
+	delete(s.queued, id)
+	s.mu.Unlock()
+}
+
+// events the app confirmed it kept
 func (s *seenIDs) handedOver(ids []nostr.ID) {
 	lines := make([]string, 0, len(ids))
 	s.mu.Lock()
@@ -278,6 +286,12 @@ func (s *seenIDs) compactLocked() {
 type inboxDone struct {
 	set *seenIDs
 	id  nostr.ID
+	// times the poll offered it and the app did not keep it
+	tries int
+	// the event's stamp, which the anchor file stays at or below until the
+	// app keeps it, and the runner's save that moves the file up after
+	at     nostr.Timestamp
+	resave func(int64)
 }
 
 // remembers every event of a batch the poll handed over, one write per file
@@ -296,7 +310,16 @@ func markHandedOver(done []inboxDone) {
 		}
 		by[d.set] = append(by[d.set], d.id)
 	}
+	saves := map[*seenIDs]func(int64){}
+	for _, d := range done {
+		if d.resave != nil {
+			saves[d.set] = d.resave
+		}
+	}
 	for _, s := range order {
 		s.handedOver(by[s])
+	}
+	for _, save := range saves {
+		save(0)
 	}
 }

@@ -86,6 +86,14 @@ func TestWrapStampedIntoAWalkedStretchArrives(t *testing.T) {
 		t.Fatalf("the next connection asked from %d, after %d", since, began-12*3600)
 	}
 	waitFor(t, "the hold let go", 5*time.Second, func() bool { return !catchupHoldOf(ck).Held() })
+	// the file stays at or below what the app has not kept yet
+	if a := anchor(); a > int64(ts(-12*time.Hour-30*time.Minute)) {
+		t.Fatalf("the anchor file went to %d, past a wrap the app has not kept", a)
+	}
+	waitFor(t, "the app kept everything", 5*time.Second, func() bool {
+		pollAcked(time.Now())
+		return inboxLen() == 0
+	})
 	if a := anchor(); a < int64(ts(-11*time.Minute)) {
 		t.Fatalf("with nothing owed the anchor file stayed at %d", a)
 	}
@@ -423,6 +431,9 @@ func stallingRelay(t *testing.T, events []nostr.Event) (string, *atomic.Int32) {
 // text, and the next process asks from there and moves the file to the next
 // text.
 func TestPublicRelaysThatNeverGetThroughHoldNothing(t *testing.T) {
+	// the stalled walk holds the poll back no longer than this, so the app
+	// keeps the text within the wait
+	withPageQuiet(t, 500*time.Millisecond)
 	ours, other := newRelayStandIn(t, 0), newRelayStandIn(t, 0)
 	useStandIns(t, modeFast, nil, ours, other)
 	freshInbox(t)
@@ -468,7 +479,9 @@ func TestPublicRelaysThatNeverGetThroughHoldNothing(t *testing.T) {
 		waitFor(t, "every public relay failing once", 10*time.Second, func() bool {
 			return refused.Load() > r0 && dials.Load() > d0 && stalled.Load() > s0
 		})
+		// the app keeps what came, and the file follows
 		waitFor(t, "the anchor file at "+body, 10*time.Second, func() bool {
+			pollAcked(time.Now())
 			return anchor() == int64(text.CreatedAt)
 		})
 		c := ours.snapshot()

@@ -500,8 +500,7 @@ void main() {
       await _settle();
       expect(live.people[asker], containsPair('accepted', 1));
       // what was held is taken to be opened
-      expect(live.calls, contains('takeHeld:$asker'));
-      expect(live.heldCiphers[asker], isNull);
+      expect(live.calls, contains('heldOf:$asker'));
       // and the word that they are in went out
       expect(engineAsked.where(_sends.contains), isNotEmpty);
     });
@@ -546,8 +545,7 @@ void main() {
         );
         await _settle();
         expect(live.people[asker], containsPair('accepted', 1));
-        expect(live.calls, contains('takeHeld:$asker'));
-        expect(live.heldCiphers[asker], isNull);
+        expect(live.calls, contains('heldOf:$asker'));
         expect(engineAsked.where(_sends.contains), isNotEmpty);
       },
     );
@@ -571,7 +569,7 @@ void main() {
       ));
       await _settle();
       expect(live.people[member], containsPair('accepted', 1));
-      expect(live.calls, isNot(contains('takeHeld:$member')));
+      expect(live.calls, isNot(contains('heldOf:$member')));
       expect(engineAsked.where(_sends.contains), isEmpty);
     });
 
@@ -593,7 +591,7 @@ void main() {
       await _settle();
       expect(live.people[parked], containsPair('accepted', 1));
       expect(live.people[parked], containsPair('archived', 0));
-      expect(live.calls, contains('takeHeld:$parked'));
+      expect(live.calls, contains('heldOf:$parked'));
     });
   });
 

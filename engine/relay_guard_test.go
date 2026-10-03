@@ -46,11 +46,21 @@ func pollEntries(t *testing.T) []pollEntry {
 	if strings.ContainsRune(raw, 0) {
 		t.Fatal("the poll holds a nul")
 	}
-	var out []pollEntry
-	if err := json.Unmarshal([]byte(raw), &out); err != nil {
-		t.Fatalf("the poll is not a json array: %v", err)
+	var b pollOut
+	if err := json.Unmarshal([]byte(raw), &b); err != nil {
+		t.Fatalf("the poll is not a batch: %v", err)
 	}
-	return out
+	// the app kept all of it
+	if r := nostrAck(b.K, ""); r != "ok" {
+		t.Fatalf("ack: %s", r)
+	}
+	return b.M
+}
+
+// a batch as the poll hands it over
+type pollOut struct {
+	K string      `json:"k"`
+	M []pollEntry `json:"m"`
 }
 
 func inboxLen() int {

@@ -111,6 +111,8 @@ class _Phone extends DevTestDb {
   final seen = <String>{};
   // the rooms the poll looked for
   final roomsAsked = <String>[];
+  // saves that fail next
+  var saveFails = 0;
 
   Map<String, Object?>? _contact(String id) {
     for (final r in mem.rows('contacts')) {
@@ -219,6 +221,10 @@ class _Phone extends DevTestDb {
     String? sticker,
     int? sentAt,
   }) async {
+    if (saveFails > 0) {
+      saveFails--;
+      throw StateError('the disk is full');
+    }
     await mem.insert('messages', {
       'peer_id': peerId,
       'direction': direction,
@@ -842,6 +848,23 @@ void main() {
       final tick = _io.sent.single;
       expect(tick.$1, 'relay ${_m1.xPub}');
       expect((await _hisRead(s.who, tick.$2))['h'], _myWords);
+    });
+
+    test('an answer that opened and did not go in lands when it comes '
+        'again', () async {
+      final s = await started(false);
+      final answer = await _hisAnswer(s.who, 'on it', 'r3');
+      final line = (peer: s.tag!, cipher: answer);
+      _live.saveFails = 1;
+      expect(await _app.receiveRelay([line]), {0});
+      expect(_inbox(), isEmpty);
+      expect(_live.seen, isNot(contains(_hash(answer))));
+      // signal does not open it a second time
+      expect(await _app.receiveRelay([line]), isEmpty);
+      await _settle();
+      expect(_inbox(), ['on it']);
+      expect(_io.tried, [_dev]);
+      expect(_live.seen, contains(_hash(answer)));
     });
 
     test('his answers caught up in any order land in the order he wrote '

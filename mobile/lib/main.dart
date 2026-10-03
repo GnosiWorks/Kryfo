@@ -498,8 +498,23 @@ class HaloEngine {
 
   // what the relays delivered, one entry per event (relay_poll.dart). room
   // frames in it are plaintext, so it is zeroed on the way back
-  List<({String peer, String cipher})> nostrPoll() =>
-      parseRelayPoll(engineTakeSecret(_nostrPoll()));
+  RelayBatch nostrPoll() => parseRelayPoll(engineTakeSecret(_nostrPoll()));
+
+  late final TwoArgFnDart _nostrAck = _lib
+      .lookupFunction<TwoArgFn, TwoArgFnDart>('HaloNostrAck');
+
+  // a batch from nostrPoll kept, but for the places in it at [failed]: the
+  // engine remembers the rest as seen and offers those again
+  String nostrAck(String token, List<int> failed) {
+    final a = token.toNativeUtf8();
+    final b = jsonEncode(failed).toNativeUtf8();
+    try {
+      return engineTake(_nostrAck(a, b));
+    } finally {
+      malloc.free(a);
+      malloc.free(b);
+    }
+  }
 
   // the wipe stops every relay listener and takes tor off the network before
   // it deletes, so nothing is written back into the folders it empties
@@ -3285,17 +3300,33 @@ class HaloDb implements GroupOwedStore {
     });
   }
 
-  Future<List<String>> takeHeld(String peerId) async {
+  // what the shelf holds for them, oldest first. a row goes with
+  // forgetHeld once it is in, so one that fails stays
+  Future<List<({int id, String cipher})>> heldOf(String peerId) async {
     final db = await open();
     final rows = await db.query(
       'held_onion',
-      columns: ['cipher'],
+      columns: ['id', 'cipher'],
       where: 'peer_id = ?',
       whereArgs: [peerId],
       orderBy: 'id ASC',
     );
-    await db.delete('held_onion', where: 'peer_id = ?', whereArgs: [peerId]);
-    return [for (final r in rows) r['cipher'] as String];
+    return [
+      for (final r in rows) (id: r['id'] as int, cipher: r['cipher'] as String),
+    ];
+  }
+
+  Future<void> forgetHeld(int id) async {
+    final db = await open();
+    await db.delete('held_onion', where: 'id = ?', whereArgs: [id]);
+  }
+
+  // people accepted already with something still on the shelf: an accept
+  // that failed part way, or died before it was through
+  Future<List<String>> heldOfAccepted() async {
+    final db = await open();
+    final rows = await db.rawQuery(kHeldOfAccepted);
+    return [for (final r in rows) r['peer_id'] as String];
   }
 
   Future<void> dropHeld(String peerId) async {
@@ -5189,6 +5220,14 @@ const kRequestRows =
     'EXISTS (SELECT 1 FROM held_onion h WHERE h.peer_id = contacts.halo_id) OR '
     'EXISTS (SELECT 1 FROM vouches v WHERE v.halo_id = contacts.halo_id))';
 
+/// the people the shelf may let in without an accept: accepted already and
+/// not blocked. a stranger's rows wait for theirs
+@visibleForTesting
+const kHeldOfAccepted =
+    'SELECT DISTINCT h.peer_id FROM held_onion h '
+    'JOIN contacts c ON c.halo_id = h.peer_id '
+    'WHERE c.accepted = 1 AND IFNULL(c.blocked, 0) = 0';
+
 /// a request as the inbox shows it, or one declined and parked since
 @visibleForTesting
 const kAskedRows =
@@ -6348,6 +6387,14 @@ class EngineSeal implements VaultSeal {
       engine.vaultOpenMany(priv, b64s);
 }
 
+// a message the stranger cap held, kept as it opened: signal has spent the
+// keys for it, so it is let in from here once they are accepted. a held
+// cipher from before this was kept as it came
+const _kHeldWire = 'wire:';
+String heldWire(String wire) => '$_kHeldWire$wire';
+String? heldWireOf(String held) =>
+    held.startsWith(_kHeldWire) ? held.substring(_kHeldWire.length) : null;
+
 // a stranger's cap held a message back, in the container it was going to
 class _HeldIn extends CapHeld {
   const _HeldIn(this.into);
@@ -6398,6 +6445,7 @@ class AppState extends ChangeNotifier {
     devGate.chat = () => live.devChat.load();
     devLane.chat = () => live.devChat.load();
     devLane.open = () => live.open();
+    wipeForget = _dropOpened;
   }
 
   // signal, the engine and android, as the receive side reaches them
@@ -8808,6 +8856,34 @@ class AppState extends ChangeNotifier {
     HaloDb? into,
     int? arrivedAt,
   }) async {
+    // a uid claimed and never saved is let go, or a copy that comes again
+    // is taken for one already in and dropped
+    final claims = <String>[];
+    try {
+      return await _fileArrivalClaiming(
+        senderHaloId,
+        env,
+        wire: wire,
+        fromBackPair: fromBackPair,
+        into: into,
+        arrivedAt: arrivedAt,
+        claims: claims,
+      );
+    } catch (_) {
+      _inflightUids.removeAll(claims);
+      rethrow;
+    }
+  }
+
+  Future<RouteTo> _fileArrivalClaiming(
+    String senderHaloId,
+    UnwrappedMessage env, {
+    required String wire,
+    required bool fromBackPair,
+    required HaloDb? into,
+    required int? arrivedAt,
+    required List<String> claims,
+  }) async {
     final RouteTo to;
     final HaloDb db;
     if (into != null) {
@@ -9120,7 +9196,6 @@ class AppState extends ChangeNotifier {
     // when two copies arrive at once, so an in-memory set of uids in flight
     // backs it: the first in claims the uid, a twin takes the known path
     final uid = env.msgUid;
-    String? claimed;
     final taken = _sliced(env) ? env.mediaId : uid;
     if (taken != null && _wasTakenBack(senderHaloId, taken)) {
       dlog('recv: taken back before it came, dropped');
@@ -9205,7 +9280,7 @@ class AppState extends ChangeNotifier {
       // so the whole file is never in memory at once. a preview thumbnail
       // from an older client is never drawn, never kept.
       if (!_inflightUids.add(mid)) return to;
-      claimed = mid;
+      claims.add(mid);
       if (!env.pvImg) {
         try {
           final out = fileName != null
@@ -9264,7 +9339,7 @@ class AppState extends ChangeNotifier {
         return to;
       }
       _inflightUids.add(uid);
-      claimed = uid;
+      claims.add(uid);
     }
     if (imgB64 != null && imgB64.isNotEmpty) {
       try {
@@ -9355,7 +9430,8 @@ class AppState extends ChangeNotifier {
       );
     }
     // saved now, messageExists covers dedup from here
-    if (claimed != null) _inflightUids.remove(claimed);
+    _inflightUids.removeAll(claims);
+    claims.clear();
     // send a delivery receipt back for 1:1 messages we just stored, so the
     // sender's tick means "on your phone" not "a relay took it". groups skip
     // this (N acks per message is noise); receipts themselves carry no uid of
@@ -9603,8 +9679,13 @@ class AppState extends ChangeNotifier {
                 into: vault,
                 arrivedAt: u.at,
               );
-            } on CapHeld {
-              // past a stranger's two: not kept, as on the relay lane
+            } on CapHeld catch (e) {
+              // past a stranger's two: on the shelf, let in on accept. a
+              // shelf that fails leaves the row for the next time
+              await (e is _HeldIn ? e.into : vault).holdCipher(
+                u.from,
+                heldWire(u.wire),
+              );
             } on _NoProof {
               await _io.dropSession(u.from);
             } catch (e) {
@@ -10660,6 +10741,7 @@ class AppState extends ChangeNotifier {
     );
     final coming = _otherShown;
     _otherShown = leaving;
+    _dropOpened();
     _session = Session(want);
     _quiet = decoy ? _decoyId : null;
     if (coming != null) {
@@ -10758,6 +10840,7 @@ class AppState extends ChangeNotifier {
       );
     }
     lockState.inDecoy = decoy;
+    _dropOpened();
     _session = s;
     _quiet = decoy ? _decoyId : null;
     contacts = home.$1;
@@ -10811,6 +10894,8 @@ class AppState extends ChangeNotifier {
       await refreshHiddenCards();
       // what came sealed while it was shut
       await _unseal();
+      // and what its shelf still holds for people it accepted
+      unawaited(letHeldIn(v));
       unawaited(_fillSearch(v));
       // what was typed in it and never went, and files half arrived
       unawaited(drainOutbox());
@@ -10890,6 +10975,7 @@ class AppState extends ChangeNotifier {
 
   // what the session kept of the vault beside its handle
   void _forgetVaultSide() {
+    _dropOpened();
     _sealKey = null;
     _sealKeyOf = null;
     _vq = _Queue.none;
@@ -11343,8 +11429,10 @@ class AppState extends ChangeNotifier {
           wire: opened.plain,
           fromBackPair: true,
         );
-      } on CapHeld {
-        // the row exists now; the relay replays this after accept
+      } on CapHeld catch (e) {
+        // the row exists now. kept as opened, let in on accept
+        final into = e is _HeldIn ? e.into : filed;
+        await into?.holdCipher(h, heldWire(opened.plain));
       } on _NoProof {
         // the session it opened goes, so nothing later from it opens
         // without the proof, and a row it made goes with it
@@ -11557,8 +11645,11 @@ class AppState extends ChangeNotifier {
             await _applyIncomingPayload(known.id, env, wire: known.plain),
           );
         } on CapHeld catch (e) {
-          // no relay to replay from: kept here, opened on accept
-          await (e is _HeldIn ? e.into : live).holdCipher(known.id, cipher);
+          // no relay to replay from: kept here, let in on accept
+          await (e is _HeldIn ? e.into : live).holdCipher(
+            known.id,
+            heldWire(known.plain),
+          );
         }
         if (shown) notifyListeners();
         handled = true;
@@ -11587,8 +11678,11 @@ class AppState extends ChangeNotifier {
               wire: parked.plain,
               fromBackPair: true,
             );
-          } on CapHeld {
-            await live.holdCipher(addr, cipher);
+          } on CapHeld catch (e) {
+            await (e is _HeldIn ? e.into : live).holdCipher(
+              addr,
+              heldWire(parked.plain),
+            );
           } on _NoProof {
             // dropped, as a cold stranger's opener is
           }
@@ -11616,9 +11710,12 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  // what the relays held, as the onion inbox above
+  // what the relays held, as the onion inbox above. the places in msgs of
+  // those it could not keep, which the engine offers again
   @visibleForTesting
-  Future<void> receiveRelay(List<({String peer, String cipher})> msgs) async {
+  Future<Set<int>> receiveRelay(
+    List<({String peer, String cipher})> msgs,
+  ) async {
     var noted = false;
     void arrived() {
       if (noted) return;
@@ -11630,7 +11727,10 @@ class AppState extends ChangeNotifier {
     // and room members included
     final ordered = roomsInSendOrder(
       inSendOrder(
-        msgs,
+        [
+          for (var i = 0; i < msgs.length; i++)
+            (at: i, peer: msgs[i].peer, cipher: msgs[i].cipher),
+        ],
         peer: (m) => m.peer,
         cipher: (m) => m.cipher,
         lane: keepsArrivalOrder,
@@ -11638,113 +11738,176 @@ class AppState extends ChangeNotifier {
       peer: (m) => m.peer,
       place: (m) => roomFramePlace(m.cipher),
     );
+    final failed = <int>{};
     for (final m in ordered) {
-      // dedup: skip a message we've already handled (see direct-onion note).
-      final h = sha256.convert(utf8.encode(m.cipher)).toString();
-      if (await live.alreadySeen(h)) {
-        arrived();
-        continue;
-      }
-      // his lanes are the dev chat's alone, and only while it runs on them
-      if (devKeyOfTag(m.peer) != null) {
-        if (await _receiveDev(m.peer, m.cipher, h)) notifyListeners();
-        arrived();
-        continue;
-      }
-      // a room frame: opened by the room key already, never signal
-      if (m.peer.startsWith('room:') || m.peer.startsWith('roomfc:')) {
-        try {
-          await _handleRoomFrame(m.peer, m.cipher);
-        } catch (e) {
-          dlog('room frame: $e');
-        }
-        await live.markSeen(h);
-        notifyListeners();
-        arrived();
-        continue;
-      }
-      if (m.cipher.startsWith('{')) {
-        // control frame riding the transport outside signal (bundle
-        // exchange). signal wire is base64, never starts with '{'.
-        await _handleBundleCtl(m.peer, m.cipher, h);
-        arrived();
-        continue;
-      }
-      // 'firstcontact' is a lane, not a peer. every stranger's opening
-      // message arrives under that one tag, so it can neither name who
-      // sent this nor be remembered as anyone.
-      final fcLane = m.peer == 'firstcontact';
-      var haloId = fcLane ? null : _xPubToHaloId[m.peer];
-      // flagKeyChange means "this cipher really is from this peer", which
-      // skips the identity check and spends the one-time prekey. only a
-      // real xpub mapping earns that.
-      String? wrapped = haloId == null
-          ? null
-          : await _io.decrypt(haloId, m.cipher, flagKeyChange: true);
-      // fallback: xpub not mapped yet (or it decrypted wrong). trial
-      // against everyone known like the direct path, then remember it.
-      if (wrapped == null) {
-        final known = await _openKnown(m.cipher, skip: haloId);
-        if (known != null) {
-          wrapped = known.plain;
-          haloId = known.id;
-          if (!fcLane) _xPubToHaloId[m.peer] = known.id;
-        }
-      }
-      if (wrapped == null) {
-        // a peer we deleted keeps its session but loses its contact row.
-        // their next message is a plain whisper, so back-pair can't help:
-        // re-file them as a fresh request.
-        final parked = await _openParked(m.cipher);
-        if (parked != null) {
-          final addr = parked.id;
-          wrapped = parked.plain;
-          haloId = addr;
-          if (!fcLane) _xPubToHaloId[m.peer] = addr;
-          final env0 = unwrapMessage(parked.plain);
-          await live.upsertContact(
-            addr,
-            env0.senderOnion ?? '',
-            env0.senderXPub ?? '',
-            accepted: 0,
-          );
-          await refreshContacts();
-          dlog('relay: recovered deleted peer $addr into requests');
-        }
-      }
-      if (wrapped == null) {
-        // only a prekey can bootstrap a new session. a whisper nothing
-        // could decrypt is undeliverable: drop it without the noise.
-        var landed = false;
-        var shown = true;
-        if (_isPreKeyWire(m.cipher)) {
-          final paired = await backPairFromCipher(m.cipher);
-          dlog('nostr: back-pair ${paired != null ? "ok" : "failed"}');
-          if (paired != null) {
-            if (!fcLane) _xPubToHaloId[m.peer] = paired.$1;
-            await live.markSeen(h);
-            landed = true;
-            shown = _shown(paired.$2);
-          }
-        }
-        if (!landed) _strikeUndecryptable(h, 'nostr');
-        if (shown) arrived();
-        continue;
-      }
-      final env = unwrapMessage(wrapped);
-      final RouteTo went;
+      // each on its own: one that throws comes again, the rest stay kept
       try {
-        went = await _applyIncomingPayload(haloId!, env, wire: wrapped);
-      } on CapHeld {
-        // not seen: it stays on the relay and lands once we accept them
-        arrived();
-        continue;
+        await _receiveRelayOne((peer: m.peer, cipher: m.cipher), arrived);
+      } catch (e, st) {
+        dlog('relay: one not kept, it comes again ($e)\n$st');
+        failed.add(m.at);
+      }
+    }
+    return failed;
+  }
+
+  // what a relay delivery opened to, by its hash, until it is marked seen.
+  // signal spends the keys on the first open, so one that fails after it and
+  // comes again would not open twice: it goes on from here. memory only
+  final _relayOpened = <String, ({String id, String plain, bool parked})>{};
+  static const _relayOpenedMax = 64;
+  // moves on each time what was opened is dropped: an open begun before
+  // that is not kept after it
+  int _openedEpoch = 0;
+
+  // what was opened goes with the session it was opened under, and with a
+  // wipe. whatever comes again after this is opened again or not at all
+  void _dropOpened() {
+    _relayOpened.clear();
+    _openedEpoch++;
+  }
+
+  void _keepOpened(
+    String h,
+    String id,
+    String plain,
+    int epoch, {
+    bool parked = false,
+  }) {
+    if (epoch != _openedEpoch) return;
+    _relayOpened.remove(h);
+    _relayOpened[h] = (id: id, plain: plain, parked: parked);
+    while (_relayOpened.length > _relayOpenedMax) {
+      _relayOpened.remove(_relayOpened.keys.first);
+    }
+  }
+
+  Future<void> _receiveRelayOne(
+    ({String peer, String cipher}) m,
+    void Function() arrived,
+  ) async {
+    // what it opens to is kept only under the session it began in
+    final epoch = _openedEpoch;
+    // dedup: skip a message we've already handled (see direct-onion note).
+    final h = sha256.convert(utf8.encode(m.cipher)).toString();
+    if (await live.alreadySeen(h)) {
+      arrived();
+      return;
+    }
+    // his lanes are the dev chat's alone, and only while it runs on them
+    if (devKeyOfTag(m.peer) != null) {
+      if (await _receiveDev(m.peer, m.cipher, h, epoch)) notifyListeners();
+      arrived();
+      return;
+    }
+    // a room frame: opened by the room key already, never signal
+    if (m.peer.startsWith('room:') || m.peer.startsWith('roomfc:')) {
+      try {
+        await _handleRoomFrame(m.peer, m.cipher);
+      } catch (e) {
+        dlog('room frame: $e');
       }
       await live.markSeen(h);
-      if (_shown(went)) {
-        notifyListeners();
-        arrived();
+      notifyListeners();
+      arrived();
+      return;
+    }
+    if (m.cipher.startsWith('{')) {
+      // control frame riding the transport outside signal (bundle
+      // exchange). signal wire is base64, never starts with '{'.
+      await _handleBundleCtl(m.peer, m.cipher, h);
+      arrived();
+      return;
+    }
+    // 'firstcontact' is a lane, not a peer. every stranger's opening
+    // message arrives under that one tag, so it can neither name who
+    // sent this nor be remembered as anyone.
+    final fcLane = m.peer == 'firstcontact';
+    // opened on a try before that did not get as far as kept
+    final before = _relayOpened[h];
+    var haloId = before?.id ?? (fcLane ? null : _xPubToHaloId[m.peer]);
+    var wrapped = before?.plain;
+    var parkedAt = before != null && before.parked ? before.id : null;
+    // flagKeyChange means "this cipher really is from this peer", which
+    // skips the identity check and spends the one-time prekey. only a
+    // real xpub mapping earns that.
+    if (wrapped == null && haloId != null) {
+      wrapped = await _io.decrypt(haloId, m.cipher, flagKeyChange: true);
+      if (wrapped != null) _keepOpened(h, haloId, wrapped, epoch);
+    }
+    // fallback: xpub not mapped yet (or it decrypted wrong). trial
+    // against everyone known like the direct path, then remember it.
+    if (wrapped == null) {
+      final known = await _openKnown(m.cipher, skip: haloId);
+      if (known != null) {
+        _keepOpened(h, known.id, known.plain, epoch);
+        wrapped = known.plain;
+        haloId = known.id;
+        if (!fcLane) _xPubToHaloId[m.peer] = known.id;
       }
+    }
+    if (wrapped == null) {
+      // a peer we deleted keeps its session but loses its contact row.
+      // their next message is a plain whisper, so back-pair can't help:
+      // re-file them as a fresh request.
+      final parked = await _openParked(m.cipher);
+      if (parked != null) {
+        _keepOpened(h, parked.id, parked.plain, epoch, parked: true);
+        wrapped = parked.plain;
+        haloId = parkedAt = parked.id;
+      }
+    }
+    if (parkedAt != null) {
+      if (!fcLane) _xPubToHaloId[m.peer] = parkedAt;
+      final env0 = unwrapMessage(wrapped!);
+      await live.upsertContact(
+        parkedAt,
+        env0.senderOnion ?? '',
+        env0.senderXPub ?? '',
+        accepted: 0,
+      );
+      await refreshContacts();
+      dlog('relay: recovered deleted peer $parkedAt into requests');
+    }
+    if (wrapped == null) {
+      // only a prekey can bootstrap a new session. a whisper nothing
+      // could decrypt is undeliverable: drop it without the noise.
+      var landed = false;
+      var shown = true;
+      if (_isPreKeyWire(m.cipher)) {
+        final paired = await backPairFromCipher(m.cipher);
+        dlog('nostr: back-pair ${paired != null ? "ok" : "failed"}');
+        if (paired != null) {
+          if (!fcLane) _xPubToHaloId[m.peer] = paired.$1;
+          await live.markSeen(h);
+          landed = true;
+          shown = _shown(paired.$2);
+        }
+      }
+      if (!landed) _strikeUndecryptable(h, 'nostr');
+      if (shown) arrived();
+      return;
+    }
+    final env = unwrapMessage(wrapped);
+    final RouteTo went;
+    try {
+      went = await _applyIncomingPayload(haloId!, env, wire: wrapped);
+    } on CapHeld catch (e) {
+      // kept as opened: signal has spent its keys, so accept lets it in
+      await (e is _HeldIn ? e.into : live).holdCipher(
+        haloId!,
+        heldWire(wrapped),
+      );
+      await live.markSeen(h);
+      _relayOpened.remove(h);
+      arrived();
+      return;
+    }
+    await live.markSeen(h);
+    _relayOpened.remove(h);
+    if (_shown(went)) {
+      notifyListeners();
+      arrived();
     }
   }
 
@@ -11961,6 +12124,8 @@ class AppState extends ChangeNotifier {
     _signalBoot = _bootSignal().whenComplete(() {
       dlog('BOOT signal (deferred) done');
       if (!_signalReady.isCompleted) _signalReady.complete();
+      // a row kept as it came needs signal to open
+      if (signalSession.ready) unawaited(letHeldIn(live));
     });
     // outbox drainer: anything the wire never confirmed gets re-sent for the
     // life of the app, whatever screen you're on and across restarts.
@@ -12144,9 +12309,12 @@ class AppState extends ChangeNotifier {
       _polling = true;
       _beat();
       try {
-        final msgs = engine.nostrPoll();
-        if (msgs.isEmpty) return;
-        await receiveRelay(msgs);
+        final batch = engine.nostrPoll();
+        if (batch.token.isEmpty) return;
+        // not confirmed when this throws: the next poll offers it again
+        final failed = await receiveRelay(batch.msgs);
+        final r = engine.nostrAck(batch.token, failedPlaces(batch, failed));
+        if (r != 'ok') dlog('relay poll: ack $r');
       } finally {
         _polling = false;
       }
@@ -12339,18 +12507,88 @@ class AppState extends ChangeNotifier {
     }
     unawaited(subscribePeer(haloId));
     unawaited(sendAcceptAck(haloId));
-    for (final cipher in await session.takeHeld(haloId)) {
-      try {
-        final plain = await _io.decrypt(haloId, cipher);
-        if (plain == null) continue;
-        await _applyIncomingPayload(haloId, unwrapMessage(plain), wire: plain);
-      } catch (e) {
-        dlog('held: could not open one for $haloId ($e)');
-      }
-    }
+    final s = session;
+    await _letHeldIn(
+      haloId,
+      () => s.heldOf(haloId),
+      (id) => s.forgetHeld(haloId, id),
+    );
     _bumpChatRev(haloId);
     await refreshContacts();
     notifyListeners();
+  }
+
+  // one run over a person's shelf at a time, so an accept and the sweep
+  // never let the same row in twice
+  final _lettingIn = <String, Future<void>>{};
+
+  // what the shelf holds for someone accepted, oldest first. a row goes
+  // only once it is in, so one that fails stays for the next run
+  Future<void> _letHeldIn(
+    String haloId,
+    Future<List<({int id, String cipher})>> Function() rows,
+    Future<void> Function(int id) forget, {
+    bool Function()? still,
+  }) {
+    final before = _lettingIn[haloId];
+    final run = () async {
+      if (before != null) {
+        try {
+          await before;
+        } catch (_) {
+          // its own caller hears of it
+        }
+      }
+      for (final held in await rows()) {
+        if (still != null && !still()) return;
+        try {
+          final cipher = held.cipher;
+          final plain = heldWireOf(cipher) ?? await _io.decrypt(haloId, cipher);
+          if (plain != null) {
+            await _applyIncomingPayload(
+              haloId,
+              unwrapMessage(plain),
+              wire: plain,
+            );
+          }
+          await forget(held.id);
+        } catch (e) {
+          dlog('held: could not open one for $haloId ($e)');
+        }
+      }
+    }();
+    _lettingIn[haloId] = run;
+    return run.whenComplete(() {
+      if (identical(_lettingIn[haloId], run)) _lettingIn.remove(haloId);
+    });
+  }
+
+  // what the shelf still holds for people accepted already, once a start
+  // or an unlock: an accept that failed part way or died before it was
+  // through has no other way in. only the everyday container and its open
+  // vault take anything in, each from its own rows
+  @visibleForTesting
+  Future<void> letHeldIn(HaloDb db) async {
+    bool still() =>
+        !haloWiping && (identical(db, live) || identical(db, _openVault));
+    if (!still()) return;
+    final vault = !identical(db, live);
+    var any = false;
+    try {
+      for (final id in await db.heldOfAccepted()) {
+        if (!still()) break;
+        // the vault's rows go where its chats go, never the everyday side
+        final to = _routeOf(id, null);
+        if (vault && to != RouteTo.vault && to != RouteTo.sealed) continue;
+        any = true;
+        await _letHeldIn(id, () => db.heldOf(id), db.forgetHeld, still: still);
+        _bumpChatRev(id);
+      }
+      if (any) await refreshContacts();
+    } catch (e) {
+      dlog('held: left for the next time ($e)');
+    }
+    if (any) notifyListeners();
   }
 
   // an unblock listens for them again
@@ -12702,14 +12940,19 @@ class AppState extends ChangeNotifier {
   // a line on one of his lanes. taken only by the everyday chat running on
   // that lane, opened in its own store; anything else, and anything outside
   // signal, is dropped and marked seen. true when it shows
-  Future<bool> _receiveDev(String tag, String cipher, String h) async {
+  Future<bool> _receiveDev(
+    String tag,
+    String cipher,
+    String h,
+    int epoch,
+  ) async {
     final DevChatRow? r;
     try {
       r = await live.devChat.load();
     } catch (e) {
-      // left on the relay: it comes again
+      // not kept: the engine offers it again
       dlog('dev lane: the chat did not read ($e)');
-      return false;
+      rethrow;
     }
     final id = r?.chatId;
     if (id == null || !devLaneTakes(r, tag) || cipher.startsWith('{')) {
@@ -12717,18 +12960,26 @@ class AppState extends ChangeNotifier {
       await live.markSeen(h);
       return false;
     }
-    final plain = await _io.decrypt(id, cipher, flagKeyChange: true);
+    // opened on a try that did not get as far as kept: signal will not
+    // open it again
+    final before = _relayOpened[h];
+    final plain = before != null && before.id == id
+        ? before.plain
+        : await _io.decrypt(id, cipher, flagKeyChange: true);
     if (plain == null) {
       _strikeUndecryptable(h, 'dev lane');
       return false;
     }
+    _keepOpened(h, id, plain, epoch);
     final RouteTo went;
     try {
       went = await _applyIncomingPayload(id, unwrapMessage(plain), wire: plain);
     } on CapHeld {
+      _relayOpened.remove(h);
       return false;
     }
     await live.markSeen(h);
+    _relayOpened.remove(h);
     return _shown(went);
   }
 

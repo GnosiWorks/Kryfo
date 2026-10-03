@@ -21,6 +21,10 @@ import 'dlog.dart';
 // timers outlive the widget tree and cannot all be cancelled from here.
 bool haloWiping = false;
 
+// what the app keeps in memory of messages on their way in, dropped as the
+// wipe starts. the app sets it
+void Function() wipeForget = () {};
+
 // how the wipe ends the process, so a test can watch what it leaves
 @visibleForTesting
 void Function(int code) wipeExit = exit;
@@ -34,6 +38,7 @@ Future<void> wipeHalo({bool releaseHandle = false}) async {
   final release = releaseHandle && !sessionQuiet;
   final handleKey = session.container.key('my_handle');
   haloWiping = true;
+  wipeForget();
   // a beat for anything mid-query to finish before the files vanish
   await Future.delayed(const Duration(milliseconds: 120));
   // the handle goes back while the key that proves it is ours is still in

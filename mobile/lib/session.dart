@@ -222,8 +222,10 @@ class Session {
       _ofPeer(haloId).setVerified(haloId, verified);
   Future<Map<String, Object?>?> shieldFor(String haloId) =>
       _ofPeer(haloId).shieldFor(haloId);
-  Future<List<String>> takeHeld(String peerId) =>
-      _ofPeer(peerId).takeHeld(peerId);
+  Future<List<({int id, String cipher})>> heldOf(String peerId) =>
+      _ofPeer(peerId).heldOf(peerId);
+  Future<void> forgetHeld(String peerId, int id) =>
+      _ofPeer(peerId).forgetHeld(id);
   // someone new is an add, and an add is the primary's
   Future<void> upsertContact(
     String haloId,
