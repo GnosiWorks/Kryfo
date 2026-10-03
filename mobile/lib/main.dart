@@ -91,7 +91,7 @@ import 'signal_session.dart';
 import 'signal_stores.dart' show invitePreKeyId, kDevSignalPrefix;
 import 'dart:isolate';
 import 'dlog.dart';
-import 'read_burn.dart' show burnStartBy, burnWaitsRow, burnWaitsSql;
+import 'read_burn.dart' show burnStartBy, burnWaitsRow, burnWaitsSql, kBurnSkew;
 import 'stranger_gate.dart';
 import 'fast_gate.dart';
 import 'mentions.dart';
@@ -1103,6 +1103,10 @@ class HaloDb implements GroupOwedStore {
     await d?.close();
   }
 
+  // its file is open. a sweep never opens one shut: a restore, a removal
+  // or a wipe is putting other files in its place
+  bool get isOpen => _db != null;
+
   // a restore is putting another file where this one is: closed, and never
   // opened again by this process, so nothing is stored, and acknowledged,
   // in a file that is gone at the restart
@@ -1234,6 +1238,7 @@ class HaloDb implements GroupOwedStore {
         await db.execute(
           'CREATE INDEX idx_messages_group_id ON messages(group_id)',
         );
+        await burnIndex(db);
         await db.execute('''
           CREATE TABLE groups (
             group_id TEXT PRIMARY KEY,
@@ -1299,13 +1304,7 @@ class HaloDb implements GroupOwedStore {
         await groupCtlTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
-        if (oldV < 62) {
-          // a timed message whose clock started before it was read
-          await addColumn(
-            db,
-            'ALTER TABLE messages ADD COLUMN burn_unseen INTEGER NOT NULL DEFAULT 0',
-          );
-        }
+        // 62 runs last, below: its index names columns older steps add
         if (oldV < 61) {
           // the number on the next room frame this phone sends
           await addColumn(
@@ -1715,6 +1714,10 @@ class HaloDb implements GroupOwedStore {
               FOREIGN KEY (group_id) REFERENCES groups(group_id) ON DELETE CASCADE
             )
           ''');
+        }
+        if (oldV < 62) {
+          // after every older step: the index names burn_at and burn_secs
+          await burnUnseenTables(db);
         }
       },
     );
@@ -2245,8 +2248,9 @@ class HaloDb implements GroupOwedStore {
 
   // every blocked id, accepted or not. contacts() is accepted-only, so a
   // caller built on it never sees someone blocked while still a stranger.
-  Future<Set<String>> blockedIds() async {
-    final db = await open();
+  Future<Set<String>> blockedIds() async => _blockedIn(await open());
+
+  static Future<Set<String>> _blockedIn(DatabaseExecutor db) async {
     final rows = await db.query(
       'contacts',
       columns: ['halo_id'],
@@ -3153,14 +3157,15 @@ class HaloDb implements GroupOwedStore {
   // from before receipts lit it, or a stop between marking it sent and
   // lighting it. once per open is enough, nothing makes new ones after
   bool _strandedLit = false;
-  Future<void> _lightStrandedOnce() async {
+  Future<void> _lightStrandedOnce(Database db) async {
     if (_strandedLit) return;
-    await lightStrandedBurns();
+    await _lightStranded(db);
     _strandedLit = true;
   }
 
-  Future<int> lightStrandedBurns() async {
-    final db = await open();
+  Future<int> lightStrandedBurns() async => _lightStranded(await open());
+
+  static Future<int> _lightStranded(Database db) async {
     final rows = await db.query(
       'messages',
       columns: ['id', 'burn_secs'],
@@ -3215,42 +3220,53 @@ class HaloDb implements GroupOwedStore {
   }
 
   // what still waits a day after it came starts counting, unread, and so
-  // does a blocked sender's (a restore or a hide brings blocks along). an
-  // arrival ahead of this phone's clock counts from now, written down so
-  // it cannot wait on
+  // does a blocked sender's (a restore or a hide brings blocks along).
+  // [blocked] is everyone blocked on this side, this container's own list
+  // when null. an arrival further ahead of this phone's clock than
+  // kBurnSkew counts from now, written down so it cannot wait on
   Future<void> _lightWaited(
     Database db,
     int now,
     List<Map<String, Object?>> idle,
+    Future<Set<String>> Function()? blocked,
   ) async {
     final rows = [
       for (final r in idle)
         if (!_waitedOut(r, now)) r,
     ];
     if (rows.isEmpty) return;
-    final blocked = await blockedIds();
+    final out = await (blocked == null ? _blockedIn(db) : blocked());
+    final ahead = now + kBurnSkew.inMilliseconds;
+    final lit = <(Map<String, Object?>, int)>[];
+    for (final r in rows) {
+      final sent = (r['sent_at'] as num?)?.toInt() ?? now;
+      final by = burnStartBy(sent, now);
+      if (out.contains(r['peer_id'])) {
+        lit.add((r, min(now, by)));
+      } else if (by <= now || sent > ahead) {
+        lit.add((r, by));
+      }
+    }
+    if (lit.isEmpty) return;
     await db.transaction((t) async {
-      for (final r in rows) {
-        final sent = (r['sent_at'] as num?)?.toInt() ?? now;
-        final by = burnStartBy(sent, now);
-        if (blocked.contains(r['peer_id'])) {
-          await _lightUnread(t, r, min(now, by));
-        } else if (by <= now || sent > now) {
-          await _lightUnread(t, r, by);
-        }
+      for (final (r, from) in lit) {
+        await _lightUnread(t, r, from);
       }
     });
   }
 
-  Future<void> purgeExpiredBurns() async {
-    await _lightStrandedOnce();
+  // [blocked] as for purgeExpired
+  Future<void> purgeExpiredBurns({
+    Future<Set<String>> Function()? blocked,
+  }) async {
     final db = await open();
-    final now = DateTime.now().millisecondsSinceEpoch;
+    await _lightStrandedOnce(db);
+    final cut = DateTime.now().millisecondsSinceEpoch;
     final due = await db.query(
       'messages',
       columns: ['msg_uid', 'media_path', 'file_path', ..._kUnreadCols],
       where: _kBurnDue,
-      whereArgs: [now],
+      whereArgs: [cut],
     );
     final idle = await _idle(db, [
       'msg_uid',
@@ -3258,6 +3274,8 @@ class HaloDb implements GroupOwedStore {
       'file_path',
       ..._kUnreadCols,
     ]);
+    // after what waits is read: nothing in it was filed past this now
+    final now = DateTime.now().millisecondsSinceEpoch;
     final waited = [
       for (final r in idle)
         if (_waitedOut(r, now)) r,
@@ -3278,10 +3296,10 @@ class HaloDb implements GroupOwedStore {
         );
       }
     }
-    await db.delete('messages', where: _kBurnDue, whereArgs: [now]);
+    await db.delete('messages', where: _kBurnDue, whereArgs: [cut]);
     await _dropRows(db, waited);
     await _scrubMedia(rows);
-    await _lightWaited(db, now, idle);
+    await _lightWaited(db, now, idle, blocked);
   }
 
   Future<void> bumpUnread(String peerId) async {
@@ -3888,18 +3906,29 @@ class HaloDb implements GroupOwedStore {
 
   // delete messages whose burn_at is past, and what waited unread past a
   // day and its window. called by the periodic sweep started in boot().
-  // [gone] hears each one that came in
-  Future<int> purgeExpired({void Function(String msgUid)? gone}) async {
-    await _lightStrandedOnce();
-    final db = await open();
-    final now = DateTime.now().millisecondsSinceEpoch;
+  // [gone] hears each one that came in. [blocked] gives everyone blocked
+  // on this side, the open vault's list with the everyday one's, so a
+  // block made in one starts the other's clocks; this container's own
+  // list when null. [ifOpen]: one shut is left shut, and 0
+  Future<int> purgeExpired({
+    void Function(String msgUid)? gone,
+    Future<Set<String>> Function()? blocked,
+    bool ifOpen = false,
+  }) async {
+    // an open one is handed back at once, and nothing below opens it again
+    final db = ifOpen && !isOpen ? null : await open();
+    if (db == null) return 0;
+    await _lightStrandedOnce(db);
+    final cut = DateTime.now().millisecondsSinceEpoch;
     final due = await db.query(
       'messages',
       columns: [..._kFileCols, ..._kUnreadCols, 'msg_uid'],
       where: _kBurnDue,
-      whereArgs: [now],
+      whereArgs: [cut],
     );
     final idle = await _idle(db, [..._kFileCols, ..._kUnreadCols, 'msg_uid']);
+    // after what waits is read: nothing in it was filed past this now
+    final now = DateTime.now().millisecondsSinceEpoch;
     final waited = [
       for (final r in idle)
         if (_waitedOut(r, now)) r,
@@ -3912,10 +3941,10 @@ class HaloDb implements GroupOwedStore {
         if (uid != null && r['direction'] == 'in') gone(uid);
       }
     }
-    var n = await db.delete('messages', where: _kBurnDue, whereArgs: [now]);
+    var n = await db.delete('messages', where: _kBurnDue, whereArgs: [cut]);
     n += await _dropRows(db, waited);
     await _scrubMedia(media);
-    await _lightWaited(db, now, idle);
+    await _lightWaited(db, now, idle, blocked);
     return n;
   }
 
@@ -5247,6 +5276,23 @@ Future<void> addColumn(DatabaseExecutor db, String sql) async {
     }
   }
 }
+
+// the upgrade to 62: a timed message whose clock started before it was
+// read, and the index the burn sweep reads
+Future<void> burnUnseenTables(DatabaseExecutor db) async {
+  await addColumn(
+    db,
+    'ALTER TABLE messages ADD COLUMN burn_unseen INTEGER NOT NULL DEFAULT 0',
+  );
+  await burnIndex(db);
+}
+
+// what the burn sweep reads every few seconds: the timed rows alone, lit
+// or waiting
+Future<void> burnIndex(DatabaseExecutor db) => db.execute(
+  'CREATE INDEX IF NOT EXISTS idx_messages_burn ON messages(burn_at) '
+  'WHERE burn_at IS NOT NULL OR burn_secs IS NOT NULL',
+);
 
 // wrapped: one throw in a migration and the app never opens again. without
 // the table there is simply no developer row
@@ -11173,7 +11219,7 @@ class AppState extends ChangeNotifier {
     if (!identical(_session.vault, v)) return;
     await cancelWithRetry(notifPlugin.cancelAll, 'decoy shade');
     try {
-      await v.purgeExpired();
+      await v.purgeExpired(blocked: _session.blockedIds);
       await refreshContacts();
       await refreshGroups();
     } catch (e) {
@@ -11187,8 +11233,9 @@ class AppState extends ChangeNotifier {
   Future<void> _vaultShown(HaloDb v) async {
     if (!identical(_openVault, v)) return;
     try {
-      // its timers that ran out while it was shut go now
-      await v.purgeExpired();
+      // its timers that ran out while it was shut go now, and what waits
+      // from someone blocked on the everyday side starts
+      await v.purgeExpired(blocked: _realBlocked);
       await refreshContacts();
       await refreshGroups();
       // the list names every chat it holds, whatever the last close left
@@ -12525,32 +12572,11 @@ class AppState extends ChangeNotifier {
     Timer.periodic(const Duration(seconds: 5), (_) async {
       if (haloWiping) return;
       try {
-        void unring(String uid) => unawaited(_io.unnotifyMessage(uid));
-        var gone = await live.purgeExpired(gone: unring);
-        final stray = ++sweeps % 12 == 0;
-        if (stray) await live.purgeStrayVotes();
-        // the open vault's too. shut, its timers wait for the next open
-        final v = _openVault;
-        if (v != null) {
-          try {
-            gone += await v.purgeExpired(gone: unring);
-            if (stray) await v.purgeStrayVotes();
-          } catch (e) {
-            if (identical(_openVault, v)) rethrow;
-          }
-        }
-        // a decoy session's own, while it is the one open
-        final d = session.primary;
-        if (!identical(d, live)) {
-          try {
-            gone += await d.purgeExpired(gone: unring);
-          } catch (e) {
-            if (identical(session.primary, d)) rethrow;
-          }
-        }
+        final gone = await sweepBurns(stray: ++sweeps % 12 == 0);
         sweepFails = 0;
-        // a row whose newest message just burned needs a new preview
-        if (gone > 0) {
+        // a row whose newest message just burned needs a new preview. a
+        // decoy shut while its files are swapped is not read
+        if (gone > 0 && session.primary.isOpen) {
           unawaited(refreshContacts());
           unawaited(refreshGroups());
         }
@@ -14040,6 +14066,53 @@ class AppState extends ChangeNotifier {
     await _destroyRoom(groupId);
   }
 
+  // everyone blocked on the everyday side: in its container and in the
+  // open vault, so a block in one starts the other's waiting clocks. the
+  // decoy's list never counts here, nor this one there
+  Future<Set<String>> _realBlocked() async {
+    final out = {...await live.blockedIds()};
+    final v = _openVault;
+    if (v != null) {
+      try {
+        out.addAll(await v.blockedIds());
+      } catch (e) {
+        // the next sweep reads it, or its own when it opens again
+        dlog('burn sweep: vault blocks not read (${e.runtimeType})');
+      }
+    }
+    return out;
+  }
+
+  // one pass of the burn sweep: the everyday container, the open vault
+  // and a decoy session's own. gives how many went. [stray]: old votes too
+  @visibleForTesting
+  Future<int> sweepBurns({bool stray = false}) async {
+    void unring(String uid) => unawaited(_io.unnotifyMessage(uid));
+    var gone = await live.purgeExpired(gone: unring, blocked: _realBlocked);
+    if (stray) await live.purgeStrayVotes();
+    // the open vault's too. shut, its timers wait for the next open
+    final v = _openVault;
+    if (v != null) {
+      try {
+        gone += await v.purgeExpired(gone: unring, blocked: _realBlocked);
+        if (stray) await v.purgeStrayVotes();
+      } catch (e) {
+        if (identical(_openVault, v)) rethrow;
+      }
+    }
+    // a decoy session's own, while it is the one open. one shut is having
+    // its files swapped or wiped, and is never opened from here
+    final d = session.primary;
+    if (!identical(d, live)) {
+      try {
+        gone += await d.purgeExpired(gone: unring, ifOpen: true);
+      } catch (e) {
+        if (identical(session.primary, d) && d.isOpen) rethrow;
+      }
+    }
+    return gone;
+  }
+
   // every container a room can be made in: the everyday one, and the
   // decoy's, whose rooms end on time too
   List<HaloDb> get _roomHomes {
@@ -14054,6 +14127,8 @@ class AppState extends ChangeNotifier {
   Future<void> sweepRooms() async {
     final now = DateTime.now().millisecondsSinceEpoch;
     for (final d in _roomHomes) {
+      // a decoy shut while its files are swapped or wiped stays shut
+      if (!identical(d, live) && !d.isOpen) continue;
       for (final g in await d.expiredRooms(now)) {
         await _destroyRoom(g['group_id'] as String, expired: true, on: d);
       }

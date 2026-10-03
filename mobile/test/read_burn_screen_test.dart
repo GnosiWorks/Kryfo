@@ -99,7 +99,9 @@ class _Db extends DevTestDb {
   @override
   Future<Map<String, Object?>?> shieldFor(String haloId) async => null;
   @override
-  Future<void> purgeExpiredBurns() async {}
+  Future<void> purgeExpiredBurns({
+    Future<Set<String>> Function()? blocked,
+  }) async {}
   @override
   Future<List<Map<String, Object?>>> messagesFor(String peerId) async =>
       _thread(peerId);
@@ -326,6 +328,9 @@ void main() {
     lockState.openForTest(enabled: true);
     lockState.lock();
     await devOpen(t, chat());
+    // the first frame that shows it shows the clock it started then
+    expect(find.text('gone soon', findRichText: true), findsOneWidget);
+    expect(find.text('5m 00s'), findsNothing);
     await settle(t);
     expect(burnAt(), isNull);
     expect(find.text('5m 00s'), findsNothing);

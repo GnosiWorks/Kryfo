@@ -417,14 +417,15 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // second. nothing while no message here counts down
   Duration? _burnWait() {
     final now = DateTime.now().millisecondsSinceEpoch;
+    // what waited its day counts from then, in the frame that asks
+    _startWaited(now);
     var ghosts = false;
     int? soonest;
     // a row still waiting starts counting a day after it came
-    int? starts;
+    final starts = <int>[];
     for (final m in _messages) {
       if (m.burnWaits) {
-        final s = burnStartBy(m.when.millisecondsSinceEpoch, now);
-        if (starts == null || s < starts) starts = s;
+        starts.add(burnStartBy(m.when.millisecondsSinceEpoch, now));
       }
       final at = m.burnAt;
       if (at == null) continue;
@@ -432,10 +433,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       if (m.removing || m.sending || m.failed) continue;
       if (soonest == null || at < soonest) soonest = at;
     }
-    final wait = burnWait(now, ghosts: ghosts, soonest: soonest);
-    if (starts == null) return wait;
-    final start = Duration(milliseconds: math.max(0, starts - now));
-    return wait == null || start < wait ? start : wait;
+    return burnWaitStarts(
+      now,
+      ghosts: ghosts,
+      soonest: soonest,
+      starts: starts,
+    );
   }
 
   // what waited a day unread counts from then, as the sweep writes it

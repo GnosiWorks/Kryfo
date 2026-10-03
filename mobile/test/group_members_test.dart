@@ -902,6 +902,24 @@ void main() {
       },
     );
 
+    // a restore or a removal closed it to put other files in its place:
+    // opened again here it would be an empty database the session keeps
+    test('a decoy shut while its files are swapped is left shut', () async {
+      final io = ArrivalIo();
+      final (live, app) = await _roomWorld(io: io);
+      final decoy = ArrivalRows(HaloContainer.decoy)..shut = true;
+      decoy.group('decoyroom001', ['dd']);
+      decoy.groupRows['decoyroom001']!.addAll({
+        'room_priv': 'p2',
+        'room_pub': 'dd',
+        'expires_at': DateTime.now().millisecondsSinceEpoch - 1000,
+      });
+      useDatabasesForTest(live, Session(decoy));
+      await app.sweepRooms();
+      expect(decoy.groupRows.keys, ['decoyroom001']);
+      expect(io.unrang, isEmpty);
+    });
+
     test(
       'a decoy opening after the rooms were counted still ends its rooms',
       () async {

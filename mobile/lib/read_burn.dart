@@ -24,6 +24,37 @@ const kBurnWaitMost = Duration(hours: 24);
 int burnStartBy(int arrived, int now) =>
     math.min(arrived, now) + kBurnWaitMost.inMilliseconds;
 
+/// how far ahead of this phone's clock an arrival may be and still wait as
+/// one stamped now: a row filed while a sweep runs is a few ms past its
+/// now. one further ahead came under a clock set back since
+const kBurnSkew = Duration(minutes: 1);
+
+/// the wait to the next burn tick, as burnWait gives it, or sooner when a
+/// row still waiting starts counting first. [starts] are their start times
+/// (burnStartBy). one due already and not lit yet gets the next whole
+/// second, as a countdown does: a wait of nothing would wake the screen
+/// over and over
+Duration? burnWaitStarts(
+  int now, {
+  required bool ghosts,
+  int? soonest,
+  required Iterable<int> starts,
+}) {
+  int? next;
+  var due = false;
+  for (final s in starts) {
+    if (s <= now) {
+      due = true;
+    } else if (next == null || s < next) {
+      next = s;
+    }
+  }
+  final wait = burnWait(now, ghosts: ghosts || due, soonest: soonest);
+  if (next == null) return wait;
+  final start = Duration(milliseconds: next - now);
+  return wait == null || start < wait ? start : wait;
+}
+
 /// a row that came in timed and has not been read: its clock waits, or ran
 /// unread from [kBurnWaitMost] on (burn_unseen). shown only in its own chat,
 /// where reading it starts the clock, never in a gallery, a media strip,

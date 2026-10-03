@@ -139,7 +139,9 @@ class _GroupDb implements HaloDb {
   Future<({bool sent, bool delivered})> sendState(String msgUid) async =>
       (sent: true, delivered: true);
   @override
-  Future<void> purgeExpiredBurns() async {}
+  Future<void> purgeExpiredBurns({
+    Future<Set<String>> Function()? blocked,
+  }) async {}
   @override
   Future<void> deleteMessage(String msgUid) async {}
 
