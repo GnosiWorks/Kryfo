@@ -15,17 +15,29 @@ import 'l10n/numbers.dart';
 import 'seen_timers.dart';
 import 'widgets/row_anchor.dart';
 
-/// a row that came in timed and has not been read: its clock waits. shown
-/// only in its own chat, where reading it starts the clock, never in a
-/// gallery, a media strip, the pins sheet, search, saved messages, the chat
-/// list line or a quote of it
+/// the longest a timed message that came in waits to be read: a day after
+/// it came its clock starts, read or not
+const kBurnWaitMost = Duration(hours: 24);
+
+/// when the clock of a timed message that came at [arrived] starts at the
+/// latest. an arrival ahead of this phone's clock counts as now
+int burnStartBy(int arrived, int now) =>
+    math.min(arrived, now) + kBurnWaitMost.inMilliseconds;
+
+/// a row that came in timed and has not been read: its clock waits, or ran
+/// unread from [kBurnWaitMost] on (burn_unseen). shown only in its own chat,
+/// where reading it starts the clock, never in a gallery, a media strip,
+/// the pins sheet, search, saved messages, the chat list line or a quote
 bool burnWaitsRow(Map<String, Object?> r) =>
-    r['direction'] == 'in' && r['burn_secs'] != null && r['burn_at'] == null;
+    r['direction'] == 'in' &&
+    r['burn_secs'] != null &&
+    (r['burn_at'] == null || r['burn_unseen'] == 1);
 
 /// [burnWaitsRow] as sql, for a query that leaves those rows out before its
 /// limit. [m] names the messages table
 String burnWaitsSql([String m = 'messages']) =>
-    "($m.direction = 'in' AND $m.burn_secs IS NOT NULL AND $m.burn_at IS NULL)";
+    "($m.direction = 'in' AND $m.burn_secs IS NOT NULL "
+    'AND ($m.burn_at IS NULL OR $m.burn_unseen = 1))';
 
 /// what is left on a timed message's clock, as both chats show it: a fresh
 /// 5 minute clock reads 5m 00s, 61 seconds 1m 01s

@@ -204,8 +204,17 @@ class Session {
       _ofPeer(haloId).setArchived(haloId, archived);
   Future<void> setAtmosphere(String peerId, String atmosphere) =>
       _ofPeer(peerId).setAtmosphere(peerId, atmosphere);
-  Future<void> setBlocked(String haloId, bool blocked) =>
-      _ofPeer(haloId).setBlocked(haloId, blocked);
+  // their timed messages in the other container's groups start counting
+  // too
+  Future<void> setBlocked(String haloId, bool blocked) async {
+    final own = _ofPeer(haloId);
+    await own.setBlocked(haloId, blocked);
+    if (!blocked) return;
+    for (final d in [primary, ?vault]) {
+      if (!identical(d, own)) await d.lightBurnsFrom(haloId);
+    }
+  }
+
   Future<void> setContactPinned(String haloId, bool pinned) =>
       _ofPeer(haloId).setContactPinned(haloId, pinned);
   Future<void> setKeyChanged(String haloId, bool changed) =>
