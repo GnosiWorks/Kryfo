@@ -6326,6 +6326,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get mediaBubblesHidden => 'مموّه';
 
   @override
+  String get mediaBubblesPlaying => 'قيد التشغيل';
+
+  @override
   String get mediaBubblesMicPermissionNeeded => 'يلزم إذن الميكروفون';
 
   @override
@@ -6692,6 +6695,22 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get avatarPickerTurn => 'تدوير';
+
+  @override
+  String avatarPickerOption(String what, int n, int count) {
+    final intl.NumberFormat nNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String nString = nNumberFormat.format(n);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$what، $nString من $countString';
+  }
+
+  @override
+  String get avatarPickerYourInitial => 'حرفك الأول';
 
   @override
   String get transportStatus => 'الحالة';

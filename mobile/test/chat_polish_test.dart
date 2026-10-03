@@ -14,6 +14,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/devchat/dev_chat.dart' show devChatTables;
+import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/main.dart'
     show HaloEngine, appState, useDatabasesForTest, useEngineForTest;
@@ -282,6 +283,23 @@ void main() {
       await devClose(t);
     });
   }
+
+  testWidgets('the face in the header says where it leads', (t) async {
+    final sem = t.ensureSemantics();
+    await devOpen(t, chat());
+    final face = find.bySemanticsLabel(l10n.chatViewContact);
+    expect(face, findsOneWidget);
+    expect(
+      t.getSemantics(face),
+      matchesSemantics(
+        label: l10n.chatViewContact,
+        isButton: true,
+        hasTapAction: true,
+      ),
+    );
+    await devClose(t);
+    sem.dispose();
+  });
 
   testWidgets('reply from the menu raises the keyboard', (t) async {
     await devOpen(t, chat());

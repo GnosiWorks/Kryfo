@@ -2222,8 +2222,13 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     // drop composer focus before anything opens: a route captures the
     // focused node at open and restores it at close, which would pull the
     // keyboard up after unsend, edit or forward
-    FocusManager.instance.primaryFocus?.unfocus();
-    if (target.msgUid == null) return;
+    await keyboardDown(context);
+    if (target.msgUid == null ||
+        !mounted ||
+        !bubbleCtx.mounted ||
+        lockGuard.isLocked()) {
+      return;
+    }
     final renderBox = bubbleCtx.findRenderObject() as RenderBox?;
     if (renderBox == null) return;
     final pos = renderBox.localToGlobal(Offset.zero);
@@ -2250,7 +2255,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     // where there is no room for that, both go on the side that has it
     const pickerH = 58.0;
     final safeTop = mq.padding.top + 8;
-    final safeBottom = screenH - mq.padding.bottom - 12;
+    // above a keyboard that would not go, too
+    final safeBottom =
+        screenH - math.max(mq.padding.bottom, mq.viewInsets.bottom) - 12;
     final bubbleBottom = pos.dy + size.height;
     final aboveTop = pos.dy - pickerH - 10;
     double reactTop;
@@ -3095,6 +3102,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (!(ModalRoute.of(context)?.isCurrent ?? false)) return;
     claimChat('group:${widget.groupId}');
     _markRead();
+    _catchUp();
   }
 
   // a screen pushed over this one closed: this is the one being read again
@@ -3106,6 +3114,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     }
     claimChat('group:${widget.groupId}');
     _markRead();
+    _catchUp();
   }
 
   void _markRead() {
@@ -3113,6 +3122,17 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         .clearGroupUnread(widget.groupId)
         .then((_) => appState.refreshGroups());
     unawaited(clearNotificationsFor('group:${widget.groupId}'));
+  }
+
+  // back in front: what changed while it was away is read from the
+  // database, whatever the notes on the way said
+  void _catchUp() {
+    _seenRev = appState.chatRevOf('group:${widget.groupId}');
+    if (_loading) {
+      _reloadQueued = true;
+    } else {
+      _load();
+    }
   }
 
   @override
@@ -3132,9 +3152,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         return;
       }
       claimChat('group:${widget.groupId}');
-      session
-          .clearGroupUnread(widget.groupId)
-          .then((_) => appState.refreshGroups());
+      // what rang while it was away has been seen now
+      _markRead();
+      _catchUp();
     }
   }
 
@@ -4566,6 +4586,8 @@ class _GroupBubble extends StatelessWidget {
                                                         ),
                                                         child: Image.file(
                                                           File(m.mediaPath!),
+                                                          semanticLabel:
+                                                              l10n.appPhoto,
                                                           cacheWidth: decodePx(
                                                             context,
                                                             240,

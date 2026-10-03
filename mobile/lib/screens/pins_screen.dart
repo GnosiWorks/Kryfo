@@ -503,10 +503,12 @@ void _showHow(BuildContext context) {
   HapticFeedback.selectionClick();
   showHaloSheet<void>(
     context,
+    // the sheet scrolls as one, so nothing in it scrolls on its own
     builder: (ctx) => SafeArea(
-      child: SingleChildScrollView(
+      child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SheetHandle(),

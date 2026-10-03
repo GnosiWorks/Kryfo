@@ -666,6 +666,18 @@ class LockState extends ChangeNotifier {
     await _upgradeTable();
     _standIn ??= await _engine.newTable(14);
     await _refreshHoldForScreen();
+    await _probeBio();
+    // read and told in one step, after the probe: until then the app stays
+    // under its cover, and the lock screen knows about the fingerprint
+    _locked = _enabled;
+    _loaded = true;
+    notifyListeners();
+  }
+
+  // whether this phone can unlock with a finger. android answers only
+  // with a screen attached, and a process the service or the job started
+  // has none, so a no is asked again each time the app comes to the front
+  Future<void> _probeBio() async {
     // the app waits under its cover for these, so none of them may hang
     const most = Duration(seconds: 3);
     try {
@@ -685,11 +697,18 @@ class LockState extends ChangeNotifier {
         dlog('lock: finger state unread (${e.runtimeType})');
       }
     }
-    // read and told in one step, after the probe: until then the app stays
-    // under its cover, and the lock screen knows about the fingerprint
-    _locked = _enabled;
-    _loaded = true;
-    notifyListeners();
+  }
+
+  bool _reprobing = false;
+  Future<void> _probeBioAgain() async {
+    if (_reprobing || !_loaded || _bioSupported) return;
+    _reprobing = true;
+    try {
+      await _probeBio();
+    } finally {
+      _reprobing = false;
+    }
+    if (_bioSupported) notifyListeners();
   }
 
   // a table from before vaults gets its wraps and more entries, in one
@@ -1328,6 +1347,7 @@ class LockState extends ChangeNotifier {
   // (the home key inside the picker, a call) let the hold expire in the
   // background, and this is the only place that notices.
   void returned() {
+    unawaited(_probeBioAgain());
     if (!_leftWhileHeld) return;
     _leftWhileHeld = false;
     lock();

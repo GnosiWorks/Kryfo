@@ -75,4 +75,43 @@ void main() {
     await t.pump(const Duration(milliseconds: 400));
     expect(t.hasRunningAnimations, isFalse);
   });
+
+  testWidgets('each option says what it is to a screen reader', (t) async {
+    phone(t);
+    quiet(t);
+    final sem = t.ensureSemantics();
+    await t.pumpWidget(framed(still: true));
+    await t.pump(const Duration(seconds: 2));
+    expect(
+      t.getSemantics(find.bySemanticsLabel(l10n.avatarPickerYourInitial)),
+      matchesSemantics(
+        label: l10n.avatarPickerYourInitial,
+        isButton: true,
+        hasSelectedState: true,
+        isSelected: true,
+        hasTapAction: true,
+      ),
+    );
+    final shape = l10n.avatarPickerOption(l10n.avatarPickerShape, 1, 12);
+    expect(find.bySemanticsLabel(shape), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(
+        l10n.avatarPickerOption(
+          l10n.avatarPickerColour,
+          avatarPaletteCount,
+          avatarPaletteCount,
+        ),
+      ),
+      findsOneWidget,
+    );
+    await t.tap(find.bySemanticsLabel(shape));
+    await t.pump();
+    expect(
+      find.bySemanticsLabel(
+        l10n.avatarPickerOption(l10n.avatarPickerTurn, 4, 4),
+      ),
+      findsOneWidget,
+    );
+    sem.dispose();
+  });
 }

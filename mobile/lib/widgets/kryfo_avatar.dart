@@ -23,8 +23,12 @@ class KryfoAvatar extends StatelessWidget {
     this.choice,
   });
 
+  // a picture: its letters are drawn from the id, and a screen reader that
+  // read them out would announce a name nobody gave
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ExcludeSemantics(child: _draw());
+
+  Widget _draw() {
     if (choice != null) return _markedAvatar(choice!, size);
     final b = _seedBytes(seed);
     final palette = _palettes[b[0] % _palettes.length];

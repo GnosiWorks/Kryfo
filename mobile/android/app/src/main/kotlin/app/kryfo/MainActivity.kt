@@ -41,7 +41,9 @@ import android.os.Bundle
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.engine.FlutterEngineCache
+import io.flutter.plugin.common.BasicMessageChannel
 import io.flutter.plugin.common.MethodChannel
+import io.flutter.plugin.common.StringCodec
 
 class MainActivity : FlutterFragmentActivity() {
     private val REQ_SAVE_DOCUMENT = 7311
@@ -55,6 +57,16 @@ class MainActivity : FlutterFragmentActivity() {
         private var notifPermAsked = false
         // the one engine we keep across activity teardown
         const val ENGINE_ID = "halo_engine"
+        // when this app last opened a screen or a permission prompt itself
+        private var openedAt = 0L
+        private val promptSeen = object : ActivityCompat.PermissionCompatDelegate {
+            override fun requestPermissions(activity: android.app.Activity, permissions: Array<String>, requestCode: Int): Boolean {
+                openedAt = SystemClock.uptimeMillis()
+                return false
+            }
+            @Suppress("OVERRIDE_DEPRECATION")
+            override fun onActivityResult(activity: android.app.Activity, requestCode: Int, resultCode: Int, data: Intent?): Boolean = false
+        }
     }
 
     // one engine per process, made by HaloApplication, and every activity
@@ -73,6 +85,54 @@ class MainActivity : FlutterFragmentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         tools.offer(intent)
+    }
+
+    // the window and the user leaving lock too, not only the lifecycle
+    private var awayChannel: BasicMessageChannel<String>? = null
+    private fun tellAway() {
+        awayChannel?.send("away")
+    }
+
+    private var windowSeen: WindowWatch? = null
+
+    // a prompt or a screen this app opened itself is not the user leaving.
+    // a permission prompt keeps the window on screen, so a real trip away
+    // still reaches dart through the window or onStop
+    @Suppress("OVERRIDE_DEPRECATION", "DEPRECATION")
+    override fun startActivityForResult(intent: Intent, requestCode: Int, options: Bundle?) {
+        openedAt = SystemClock.uptimeMillis()
+        try {
+            super.startActivityForResult(intent, requestCode, options)
+        } catch (e: Throwable) {
+            openedAt = 0L
+            throw e
+        }
+    }
+
+    // a request android answers without a prompt never pauses this screen
+    @Suppress("OVERRIDE_DEPRECATION", "DEPRECATION")
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        openedAt = 0L
+    }
+
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        if (SystemClock.uptimeMillis() - openedAt > 3000) tellAway()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        openedAt = 0L
+    }
+
+    override fun onDestroy() {
+        windowSeen?.let {
+            it.gone = null
+            (it.parent as? ViewGroup)?.removeView(it)
+        }
+        windowSeen = null
+        super.onDestroy()
     }
 
     override fun onResume() {
@@ -195,6 +255,11 @@ class MainActivity : FlutterFragmentActivity() {
             secureNow = true
         }
         super.onCreate(savedInstanceState)
+        windowSeen = WindowWatch(this).also {
+            it.gone = { tellAway() }
+            addContentView(it, ViewGroup.LayoutParams(0, 0))
+        }
+        ActivityCompat.setPermissionCompatDelegate(promptSeen)
     }
 
     private fun setSecureWindow(on: Boolean) {
@@ -236,6 +301,7 @@ class MainActivity : FlutterFragmentActivity() {
         super.configureFlutterEngine(flutterEngine)
         // hold on to it so the next activity attaches to this same engine
         FlutterEngineCache.getInstance().put(ENGINE_ID, flutterEngine)
+        awayChannel = BasicMessageChannel(flutterEngine.dartExecutor.binaryMessenger, "kryfo/window", StringCodec.INSTANCE)
         tools.attach(MethodChannel(flutterEngine.dartExecutor.binaryMessenger, ToolsBridge.CHANNEL))
         tools.offer(intent)
         videos = VideoPlayers(flutterEngine.renderer).also { v ->
@@ -734,5 +800,21 @@ class MainActivity : FlutterFragmentActivity() {
         } catch (e: Exception) {
             false
         }
+    }
+}
+
+// a view of no size that hears when its window leaves the screen
+private class WindowWatch(context: Context) : View(context) {
+    var gone: (() -> Unit)? = null
+
+    init {
+        isFocusable = false
+        isClickable = false
+        importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
+    }
+
+    override fun onWindowVisibilityChanged(visibility: Int) {
+        super.onWindowVisibilityChanged(visibility)
+        if (visibility != VISIBLE) gone?.invoke()
     }
 }

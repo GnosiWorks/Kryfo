@@ -9,6 +9,21 @@ import 'count_badge.dart';
 import 'motion.dart';
 import 'press_scale.dart';
 
+// the keyboard goes before a message menu opens, and the menu is measured
+// once the chat has settled without it. a menu placed under the keyboard
+// hides its last rows, and taps there type instead
+Future<void> keyboardDown(BuildContext context) async {
+  FocusManager.instance.primaryFocus?.unfocus();
+  if (MediaQuery.viewInsetsOf(context).bottom == 0) return;
+  for (var i = 0; i < 40; i++) {
+    await WidgetsBinding.instance.endOfFrame;
+    if (!context.mounted) return;
+    if (MediaQuery.viewInsetsOf(context).bottom == 0) break;
+  }
+  // one more frame, so the list has been laid out at its new height
+  await WidgetsBinding.instance.endOfFrame;
+}
+
 // a new bubble's way in. ours rises from the composer on the end side with
 // an amber glow; theirs slides in from the start side. mirrored in a
 // right-to-left language, a plain fade when the phone asks for no movement.

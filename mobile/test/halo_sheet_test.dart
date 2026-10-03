@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/widgets/halo_sheet.dart';
@@ -48,5 +50,37 @@ void main() {
     await tester.pumpAndSettle();
     expect(got, 'picked');
     expect(find.byType(BottomSheet), findsNothing);
+  });
+
+  // a sheet that leaves scrolling to showHaloSheet scrolls as one. a scroll
+  // view of its own inside takes every drag and never moves, and what lies
+  // below the screen cannot be reached
+  test('no sheet scrolls inside the sheet scroll', () {
+    final bad = <String>[];
+    final calls = RegExp(r'showHaloSheet(<[^>]*>)?\(');
+    for (final f in Directory('lib').listSync(recursive: true)) {
+      if (f is! File || !f.path.endsWith('.dart')) continue;
+      final src = f.readAsStringSync();
+      for (final m in calls.allMatches(src)) {
+        var depth = 1;
+        var i = m.end;
+        while (depth > 0 && i < src.length) {
+          final c = src[i++];
+          if (c == '(') depth++;
+          if (c == ')') depth--;
+        }
+        final call = src.substring(m.start, i);
+        if (call.contains('scroll: true')) continue;
+        final own =
+            call.contains('SingleChildScrollView(') ||
+            call.contains('CustomScrollView(') ||
+            RegExp(r'(ListView|GridView)(\.builder)?\(').hasMatch(call) &&
+                !call.contains('NeverScrollableScrollPhysics');
+        if (own) {
+          bad.add('${f.path}:${src.substring(0, m.start).split('\n').length}');
+        }
+      }
+    }
+    expect(bad, isEmpty);
   });
 }

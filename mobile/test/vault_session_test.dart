@@ -228,6 +228,7 @@ class _Io implements AppIo {
     required String body,
     String? payload,
     String? msgUid,
+    int? burnAt,
   }) async => rang.add(payload ?? title);
 
   @override

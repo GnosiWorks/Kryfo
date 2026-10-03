@@ -357,17 +357,20 @@ Widget _mediaStamp(_Msg msg) {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(_fmtTime(msg.when), style: mono),
-        const SizedBox(width: 3),
-        SentTick(
-          delivered: msg.delivered,
-          deliveredLabel: l10n.chatDelivered,
-          color: Colors.white,
-          labelStyle: mono.copyWith(
-            fontSize: 8.5,
-            fontWeight: FontWeight.w600,
-            letterSpacing: track(0.3),
+        // a received one has its time alone
+        if (msg.direction == 'out') ...[
+          const SizedBox(width: 3),
+          SentTick(
+            delivered: msg.delivered,
+            deliveredLabel: l10n.chatDelivered,
+            color: Colors.white,
+            labelStyle: mono.copyWith(
+              fontSize: 8.5,
+              fontWeight: FontWeight.w600,
+              letterSpacing: track(0.3),
+            ),
           ),
-        ),
+        ],
       ],
     ),
   );
@@ -1428,6 +1431,8 @@ class _ChatScreenState extends State<ChatScreen>
         uid,
       );
     }
+    if (!mounted) return;
+    await keyboardDown(context);
     // the lock went up while the uid was written: no menu
     if (!mounted || !bubbleContext.mounted || lockGuard.isLocked()) return;
     final box = bubbleContext.findRenderObject() as RenderBox?;
@@ -1453,7 +1458,14 @@ class _ChatScreenState extends State<ChatScreen>
     final menuH = rows * rowH + 16;
     final screenH = MediaQuery.of(context).size.height;
     final safeTop = MediaQuery.of(context).padding.top + 8;
-    final safeBottom = screenH - MediaQuery.of(context).padding.bottom - 12;
+    // above a keyboard that would not go, too
+    final safeBottom =
+        screenH -
+        math.max(
+          MediaQuery.of(context).padding.bottom,
+          MediaQuery.viewInsetsOf(context).bottom,
+        ) -
+        12;
     final bubbleTop = offset.dy;
     final bubbleBottom = offset.dy + bubbleSize.height;
     final aboveTop = bubbleTop - pickerH - 14;
@@ -3466,6 +3478,7 @@ class _ChatScreenState extends State<ChatScreen>
     if (!(ModalRoute.of(context)?.isCurrent ?? false)) return;
     claimChat(widget.peerHaloId);
     _markRead();
+    _catchUp();
   }
 
   // a chat pushed over this one closed: this is the one being read again
@@ -3477,6 +3490,7 @@ class _ChatScreenState extends State<ChatScreen>
     }
     claimChat(widget.peerHaloId);
     _markRead();
+    _catchUp();
   }
 
   void _markRead() {
@@ -3484,6 +3498,15 @@ class _ChatScreenState extends State<ChatScreen>
         .clearUnread(widget.peerHaloId)
         .then((_) => appState.refreshContacts());
     unawaited(clearNotificationsFor(widget.peerHaloId));
+  }
+
+  // back in front: what changed while it was away is read from the
+  // database, whatever the notes on the way said
+  void _catchUp() {
+    _lastRev = appState.chatRevOf(widget.peerHaloId);
+    _loadMessages();
+    unawaited(_refreshDelivered());
+    unawaited(_reconcileSending());
   }
 
   @override
@@ -3503,10 +3526,9 @@ class _ChatScreenState extends State<ChatScreen>
         return;
       }
       claimChat(widget.peerHaloId);
-      session
-          .clearUnread(widget.peerHaloId)
-          .then((_) => appState.refreshContacts());
-      _reconcileSending();
+      // what rang while it was away has been seen now
+      _markRead();
+      _catchUp();
     }
   }
 
@@ -5360,13 +5382,18 @@ class _ChatHead extends StatelessWidget {
             icon: Icon(Icons.chevron_left, color: HaloColors.text2, size: 26),
             onPressed: onBack,
           ),
-          GestureDetector(
-            onTap: onBlock, // avatar opens the contact page
-            behavior: HitTestBehavior.opaque,
-            // the same face flies in from the list row
-            child: Hero(
-              tag: 'face-$avatarSeed',
-              child: KryfoAvatar(seed: avatarSeed, size: 36, choice: face),
+          Semantics(
+            container: true,
+            button: true,
+            label: l10n.chatViewContact,
+            child: GestureDetector(
+              onTap: onBlock, // avatar opens the contact page
+              behavior: HitTestBehavior.opaque,
+              // the same face flies in from the list row
+              child: Hero(
+                tag: 'face-$avatarSeed',
+                child: KryfoAvatar(seed: avatarSeed, size: 36, choice: face),
+              ),
             ),
           ),
           const SizedBox(width: 11),
@@ -5879,6 +5906,9 @@ class _Bubble extends StatelessWidget {
     final isMedia = msg.mediaPath != null || msg.filePath != null;
     final ackOk = !isMedia || msg.delivered;
     final showMeta = isOut && !pending && !failedShown && !parked && ackOk;
+    // a photo, a video, a file or a voice note that came in says when, as
+    // ours do: there is no text of it to place it by
+    final showTime = showMeta || (!isOut && isMedia);
     final showPill = isOut && pending;
     final reacted = msg.reactions.isNotEmpty;
     final roomTime = motionStill(context) ? Duration.zero : kHouseTime;
@@ -6144,7 +6174,7 @@ class _Bubble extends StatelessWidget {
                                         ),
                                         stamp: _mediaCorner(
                                           msg,
-                                          showMeta: showMeta,
+                                          showMeta: showTime,
                                           failedShown: failedShown,
                                           parked: parked,
                                         ),
@@ -6183,114 +6213,121 @@ class _Bubble extends StatelessWidget {
                                           ),
                                           radius: 14,
                                         ),
-                                        child: ClipRRect(
-                                          borderRadius: msg.text.isNotEmpty
-                                              ? const BorderRadius.vertical(
-                                                  top: Radius.circular(14),
-                                                )
-                                              : BorderRadius.circular(14),
-                                          child: Stack(
-                                            clipBehavior: Clip.none,
-                                            children: [
-                                              ConstrainedBox(
-                                                constraints:
-                                                    const BoxConstraints(
-                                                      maxHeight: 280,
-                                                    ),
-                                                // the bubble sizes itself with
-                                                // IntrinsicWidth, and an Image
-                                                // answers infinity until the file
-                                                // decodes, so pin a width
-                                                child: RememberedHeight(
-                                                  id: msg.mediaPath!,
-                                                  child: Hero(
-                                                    tag: photoHeroTag(
-                                                      msg.mediaPath!,
-                                                      'chat',
-                                                    ),
-                                                    child: SizedBox(
-                                                      width:
-                                                          MediaQuery.of(
+                                        // said as a photo from the start,
+                                        // before the picture has faded up
+                                        child: Semantics(
+                                          image: true,
+                                          label: l10n.appPhoto,
+                                          child: ClipRRect(
+                                            borderRadius: msg.text.isNotEmpty
+                                                ? const BorderRadius.vertical(
+                                                    top: Radius.circular(14),
+                                                  )
+                                                : BorderRadius.circular(14),
+                                            child: Stack(
+                                              clipBehavior: Clip.none,
+                                              children: [
+                                                ConstrainedBox(
+                                                  constraints:
+                                                      const BoxConstraints(
+                                                        maxHeight: 280,
+                                                      ),
+                                                  // the bubble sizes itself with
+                                                  // IntrinsicWidth, and an Image
+                                                  // answers infinity until the file
+                                                  // decodes, so pin a width
+                                                  child: RememberedHeight(
+                                                    id: msg.mediaPath!,
+                                                    child: Hero(
+                                                      tag: photoHeroTag(
+                                                        msg.mediaPath!,
+                                                        'chat',
+                                                      ),
+                                                      child: SizedBox(
+                                                        width:
+                                                            MediaQuery.of(
+                                                              context,
+                                                            ).size.width *
+                                                            0.78,
+                                                        child: Image.file(
+                                                          File(msg.mediaPath!),
+                                                          gaplessPlayback: true,
+                                                          fit: BoxFit.cover,
+                                                          cacheWidth: screenPx(
                                                             context,
-                                                          ).size.width *
-                                                          0.78,
-                                                      child: Image.file(
-                                                        File(msg.mediaPath!),
-                                                        gaplessPlayback: true,
-                                                        fit: BoxFit.cover,
-                                                        cacheWidth: screenPx(
-                                                          context,
-                                                          times: 0.78,
-                                                        ),
-                                                        // fades up once decoded,
-                                                        // over a quiet box
-                                                        frameBuilder:
-                                                            (
-                                                              _,
-                                                              child,
-                                                              frame,
-                                                              sync,
-                                                            ) => PhotoTileFade(
-                                                              shown:
-                                                                  sync ||
-                                                                  frame != null,
-                                                              child: child,
-                                                            ),
-                                                        errorBuilder: (_, e, _) {
-                                                          dlog(
-                                                            'Image failed: '
-                                                            '${msg.mediaPath} / $e',
-                                                          );
-                                                          return Container(
-                                                            height: 120,
-                                                            alignment: Alignment
-                                                                .center,
-                                                            color: HaloColors
-                                                                .surface2,
-                                                            child: Column(
-                                                              mainAxisSize:
-                                                                  MainAxisSize
-                                                                      .min,
-                                                              children: [
-                                                                Icon(
-                                                                  Icons
-                                                                      .image_not_supported_outlined,
-                                                                  size: 22,
-                                                                  color:
-                                                                      HaloColors
-                                                                          .text2,
-                                                                ),
-                                                                const SizedBox(
-                                                                  height: 6,
-                                                                ),
-                                                                Text(
-                                                                  l10n.chatPhotoUnavailable,
-                                                                  style: HaloType.mono(
-                                                                    size: 11,
+                                                            times: 0.78,
+                                                          ),
+                                                          // fades up once decoded,
+                                                          // over a quiet box
+                                                          frameBuilder:
+                                                              (
+                                                                _,
+                                                                child,
+                                                                frame,
+                                                                sync,
+                                                              ) => PhotoTileFade(
+                                                                shown:
+                                                                    sync ||
+                                                                    frame !=
+                                                                        null,
+                                                                child: child,
+                                                              ),
+                                                          errorBuilder: (_, e, _) {
+                                                            dlog(
+                                                              'Image failed: '
+                                                              '${msg.mediaPath} / $e',
+                                                            );
+                                                            return Container(
+                                                              height: 120,
+                                                              alignment:
+                                                                  Alignment
+                                                                      .center,
+                                                              color: HaloColors
+                                                                  .surface2,
+                                                              child: Column(
+                                                                mainAxisSize:
+                                                                    MainAxisSize
+                                                                        .min,
+                                                                children: [
+                                                                  Icon(
+                                                                    Icons
+                                                                        .image_not_supported_outlined,
+                                                                    size: 22,
                                                                     color: HaloColors
                                                                         .text2,
                                                                   ),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                          );
-                                                        },
+                                                                  const SizedBox(
+                                                                    height: 6,
+                                                                  ),
+                                                                  Text(
+                                                                    l10n.chatPhotoUnavailable,
+                                                                    style: HaloType.mono(
+                                                                      size: 11,
+                                                                      color: HaloColors
+                                                                          .text2,
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            );
+                                                          },
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
                                                 ),
-                                              ),
-                                              PositionedDirectional(
-                                                end: 8,
-                                                bottom: 8,
-                                                child: _mediaCorner(
-                                                  msg,
-                                                  showMeta: showMeta,
-                                                  failedShown: failedShown,
-                                                  parked: parked,
+                                                PositionedDirectional(
+                                                  end: 8,
+                                                  bottom: 8,
+                                                  child: _mediaCorner(
+                                                    msg,
+                                                    showMeta: showTime,
+                                                    failedShown: failedShown,
+                                                    parked: parked,
+                                                  ),
                                                 ),
-                                              ),
-                                            ],
+                                              ],
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -6335,7 +6372,7 @@ class _Bubble extends StatelessWidget {
                                           // the time and tick grow in as the
                                           // sending pill under the bubble folds
                                           GrowSwap(
-                                            child: !(showMeta && !frameless)
+                                            child: !(showTime && !frameless)
                                                 ? const SizedBox.shrink(
                                                     key: ValueKey('no-meta'),
                                                   )
@@ -6398,26 +6435,28 @@ class _Bubble extends StatelessWidget {
                                                         const SizedBox(
                                                           width: 3,
                                                         ),
-                                                        SentTick(
-                                                          delivered:
-                                                              msg.delivered,
-                                                          deliveredLabel: l10n
-                                                              .chatDelivered,
-                                                          color: metaColor,
-                                                          labelStyle: TextStyle(
-                                                            fontFamily: HaloType
-                                                                .monoFamily,
-                                                            fontFamilyFallback:
-                                                                HaloType
-                                                                    .monoFallbackNow,
-                                                            fontSize: 8.5,
-                                                            fontWeight:
-                                                                FontWeight.w600,
+                                                        if (isOut)
+                                                          SentTick(
+                                                            delivered:
+                                                                msg.delivered,
+                                                            deliveredLabel: l10n
+                                                                .chatDelivered,
                                                             color: metaColor,
-                                                            letterSpacing:
-                                                                track(0.3),
+                                                            labelStyle: TextStyle(
+                                                              fontFamily: HaloType
+                                                                  .monoFamily,
+                                                              fontFamilyFallback:
+                                                                  HaloType
+                                                                      .monoFallbackNow,
+                                                              fontSize: 8.5,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                              color: metaColor,
+                                                              letterSpacing:
+                                                                  track(0.3),
+                                                            ),
                                                           ),
-                                                        ),
                                                         if (msg.burnAt !=
                                                             null) ...[
                                                           const SizedBox(

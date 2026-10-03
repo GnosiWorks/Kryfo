@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
+import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/main.dart' show HaloDb, appState, useDatabasesForTest;
 import 'package:kryfo/screens/group_chat_screen.dart';
 import 'package:kryfo/polls.dart' show PollVote;
@@ -108,6 +109,8 @@ class _GroupDb implements HaloDb {
   @override
   Future<void> clearGroupUnread(String groupId) async {}
   @override
+  Future<List<Map<String, Object?>>> loadGroups() async => [];
+  @override
   Future<({bool sent, bool delivered})> sendState(String msgUid) async =>
       (sent: true, delivered: true);
 
@@ -207,6 +210,24 @@ void main() {
     expect(thread(t).pixels, thread(t).maxScrollExtent);
     expect(seen('new 1'), isTrue);
     expect(jump(t).count, 0);
+    await close(t);
+  });
+
+  testWidgets('back in front, it shows what came while it was away', (t) async {
+    lockState.openForTest();
+    await open(t);
+    await arrive(t, 'new 1');
+    expect(seen('new 1'), isTrue);
+    t.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    t.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    t.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    // written with no note to the open group
+    db.add('while away');
+    t.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    t.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    t.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await frames(t, 10);
+    expect(seen('while away'), isTrue);
     await close(t);
   });
 }

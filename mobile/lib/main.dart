@@ -3114,6 +3114,9 @@ class HaloDb implements GroupOwedStore {
     for (final r in rows) {
       final uid = r['msg_uid'] as String?;
       if (uid != null) {
+        // the sweep would have taken its notification down, and this
+        // read can beat the sweep to it
+        if (r['direction'] == 'in') unawaited(clearMessageNotification(uid));
         await db.delete('reactions', where: 'msg_uid = ?', whereArgs: [uid]);
         await db.delete(
           'group_media_owed',
@@ -6281,11 +6284,13 @@ class AppIo {
     required String body,
     String? payload,
     String? msgUid,
+    int? burnAt,
   }) => showMessageNotification(
     title: title,
     body: body,
     payload: payload,
     msgUid: msgUid,
+    burnAt: burnAt,
   );
 
   // what this process showed for a chat leaves the shade
@@ -8780,18 +8785,26 @@ class AppState extends ChangeNotifier {
     for (final k in keys) {
       _arriving[k] = (_arriving[k] ?? 0) + 1;
     }
+    final marks = <String>{};
     try {
       return await _fileArrival(
         senderHaloId,
         env,
         wire: wire,
         fromBackPair: fromBackPair,
+        marks: marks,
       );
     } finally {
       for (final k in keys) {
         final n = (_arriving[k] ?? 1) - 1;
         n > 0 ? _arriving[k] = n : _arriving.remove(k);
       }
+      // all of it is written now: a chat it changed reads it once more,
+      // even if a notify on the way already took the first mark
+      for (final k in marks) {
+        _bumpChatRev(k);
+      }
+      if (marks.isNotEmpty) notifyListeners();
     }
   }
 
@@ -8806,6 +8819,8 @@ class AppState extends ChangeNotifier {
     bool fromBackPair = false,
     HaloDb? into,
     int? arrivedAt,
+    // the chats to mark once the caller is done, on the live path
+    Set<String>? marks,
   }) async {
     final RouteTo to;
     final HaloDb db;
@@ -8827,8 +8842,16 @@ class AppState extends ChangeNotifier {
     // once the batch is in, and what it writes carries the time it came.
     // the clocks that wait on it (a vote's hour, a slice's week) start now
     final unsealing = arrivedAt != null;
-    _bumpChatRev(senderHaloId);
-    if (env.groupId != null) _bumpChatRev('group:${env.groupId}');
+    // the live path marks a chat it wrote to once all is written, in
+    // _applyIncomingPayload
+    void changed() => marks?.addAll([
+      senderHaloId,
+      if (env.groupId != null) 'group:${env.groupId}',
+    ]);
+    if (into != null) {
+      _bumpChatRev(senderHaloId);
+      if (env.groupId != null) _bumpChatRev('group:${env.groupId}');
+    }
     dlog(
       'INCOMING len=${env.message.length} hasPreview=${env.preview != null} uid=${env.msgUid}',
     );
@@ -8864,11 +8887,13 @@ class AppState extends ChangeNotifier {
     // 1) group control
     if (env.groupControl != null) {
       await _applyGroupControl(senderHaloId, env, db);
+      changed();
       return to;
     }
     // 1.5) introduction: a friend hands us someone's card
     if (env.intro != null) {
       await _applyIntro(senderHaloId, env.intro!, db, at: arrivedAt);
+      changed();
       return to;
     }
     // they are missing slices of something we sent them
@@ -8905,16 +8930,19 @@ class AppState extends ChangeNotifier {
         }
       }
       await db.setPinned(env.pin!.targetUid, env.pin!.pinned, at: arrivedAt);
+      changed();
       notifyListeners();
       return to;
     }
     // polls: a vote, or the creator closing one
     if (env.vote != null) {
       await _applyVote(senderHaloId, env, db);
+      changed();
       return to;
     }
     if (env.pollClose != null) {
       await _applyPollClose(senderHaloId, env, db);
+      changed();
       return to;
     }
     // 2) reaction
@@ -8941,6 +8969,7 @@ class AppState extends ChangeNotifier {
       } else {
         await db.addReaction(r.targetUid, senderHaloId, r.emoji, at: arrivedAt);
       }
+      changed();
       return to;
     }
     // 2.5) edit: swap the text of an existing message
@@ -8949,6 +8978,7 @@ class AppState extends ChangeNotifier {
       // anyone who can reach us could rewrite any row by uid otherwise.
       if (await db.isTheirs(env.edit!.targetUid, senderHaloId)) {
         await db.editMessage(env.edit!.targetUid, env.edit!.newText);
+        changed();
         // home's row shows the last line, and only a refresh rereads it
         await refreshContacts();
         notifyListeners();
@@ -8965,6 +8995,7 @@ class AppState extends ChangeNotifier {
       }
       _noteTakenBack(senderHaloId, env.unsend!);
       await db.deleteMessage(env.unsend!);
+      changed();
       // the delete took its unread mark; its notification goes too
       unawaited(_io.unnotifyMessage(env.unsend!));
       // a recall mid-transfer would otherwise leave a half-filled buffer and
@@ -9313,14 +9344,15 @@ class AppState extends ChangeNotifier {
     if (!isGroup) await db.unparkIfArchived(senderHaloId);
     final senderAccepted = await db.isAccepted(senderHaloId);
     final burnOk = isGroup || senderAccepted;
+    final burnAt = burnOk && chunkBurn != null && chunkBurn > 0
+        ? (arrivedAt ?? DateTime.now().millisecondsSinceEpoch) +
+              chunkBurn * 1000
+        : null;
     await db.saveMessage(
       senderHaloId,
       'in',
       text,
-      burnAt: burnOk && chunkBurn != null && chunkBurn > 0
-          ? (arrivedAt ?? DateTime.now().millisecondsSinceEpoch) +
-                chunkBurn * 1000
-          : null,
+      burnAt: burnAt,
       msgUid: env.msgUid,
       replyTo: env.replyTo,
       groupId: env.groupId,
@@ -9341,6 +9373,7 @@ class AppState extends ChangeNotifier {
       sticker: sticker?.value,
       sentAt: arrivedAt,
     );
+    changed();
     // remember the face they picked. cheap, and it arrives with every
     // message so it stays current if they change it.
     if (env.senderAvatar != null) {
@@ -9464,6 +9497,7 @@ class AppState extends ChangeNotifier {
         body: notifBody,
         payload: notifPayload,
         msgUid: env.msgUid,
+        burnAt: burnAt,
       );
     }
     return to;

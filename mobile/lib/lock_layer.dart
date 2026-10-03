@@ -241,11 +241,28 @@ class LockGate extends StatefulWidget {
   State<LockGate> createState() => _LockGateState();
 }
 
+// the window and the user leaving lock too, not only the lifecycle
+const lockWindowChannel = BasicMessageChannel<String>(
+  'kryfo/window',
+  StringCodec(),
+);
+
 class _LockGateState extends State<LockGate> with WidgetsBindingObserver {
+  // android said the app was left, and it has not come back since
+  bool _away = false;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    lockWindowChannel.setMessageHandler((m) async {
+      if (m == 'away') {
+        _away = true;
+        widget.leaving();
+        widget.inFront?.call(false);
+      }
+      return '';
+    });
     widget.load();
     // the lifecycle only reports changes, and a fresh start in front is not
     // one. a process the job started builds this too, with nobody looking.
@@ -257,6 +274,7 @@ class _LockGateState extends State<LockGate> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    lockWindowChannel.setMessageHandler(null);
     super.dispose();
   }
 
@@ -274,6 +292,7 @@ class _LockGateState extends State<LockGate> with WidgetsBindingObserver {
       widget.leaving();
       widget.inFront?.call(false);
     } else if (state == AppLifecycleState.resumed) {
+      _away = false;
       widget.returned();
       widget.inFront?.call(true);
     }
@@ -295,7 +314,8 @@ class _LockGateState extends State<LockGate> with WidgetsBindingObserver {
       // the app was left while the pin was checked: it locks again before
       // anything that waited runs
       final life = WidgetsBinding.instance.lifecycleState;
-      if (life == AppLifecycleState.paused ||
+      if (_away ||
+          life == AppLifecycleState.paused ||
           life == AppLifecycleState.hidden) {
         widget.leaving();
         return;

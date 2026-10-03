@@ -117,4 +117,84 @@ void main() {
       (_g, '$_plain: see you there'),
     ]);
   });
+  test('a text from a named contact rings under their name', () async {
+    final w = await _World.make();
+    await w.from(
+      _mum,
+      await wrapMessage(
+        'n title check',
+        msgUid: 'text0002',
+        sender: asSender(_mum),
+      ),
+    );
+    expect(w.io.shown, [('Mum', 'n title check')]);
+  });
+
+  test('an edit changes the text and never rings', () async {
+    final w = await _World.make();
+    await w.from(
+      _mum,
+      await wrapMessage(
+        'see you at 5',
+        msgUid: 'text0003',
+        sender: asSender(_mum),
+      ),
+    );
+    await w.from(
+      _mum,
+      await wrapMessage(
+        '',
+        edit: const EditFrame(targetUid: 'text0003', newText: 'see you at 6'),
+        sender: asSender(_mum),
+      ),
+    );
+    expect(w.io.shown, [('Mum', 'see you at 5')]);
+    expect(w.live.msg('text0003')?['plaintext'], 'see you at 6');
+  });
+
+  test('a timed message rings with the time it burns', () async {
+    final w = await _World.make();
+    final before = DateTime.now().millisecondsSinceEpoch;
+    await w.from(
+      _mum,
+      await wrapMessage(
+        'gone soon',
+        msgUid: 'text0004',
+        burnSeconds: 30,
+        sender: asSender(_mum),
+      ),
+    );
+    await w.from(
+      _mum,
+      await wrapMessage('staying', msgUid: 'text0005', sender: asSender(_mum)),
+    );
+    expect(w.io.burns, hasLength(2));
+    expect(w.io.burns.first, greaterThanOrEqualTo(before + 30000));
+    expect(w.io.burns.last, isNull);
+  });
+
+  test('the chat on screen reads a message that lands while other news '
+      'goes round', () async {
+    final w = await _World.make();
+    // the open chat: it reads its rows each time its mark moves
+    var mark = w.app.chatRevOf(_mum);
+    var readIt = false;
+    w.app.addListener(() {
+      final now = w.app.chatRevOf(_mum);
+      if (now == mark) return;
+      mark = now;
+      readIt = w.live.msgs.any((m) => m['msg_uid'] == 'text0006');
+    });
+    // something else tells the app it changed just before the row is kept
+    w.live.beforeSave = () => w.app.chatChanged('someone-else');
+    await w.from(
+      _mum,
+      await wrapMessage(
+        'are you there',
+        msgUid: 'text0006',
+        sender: asSender(_mum),
+      ),
+    );
+    expect(readIt, isTrue);
+  });
 }

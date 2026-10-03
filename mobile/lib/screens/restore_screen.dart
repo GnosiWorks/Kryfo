@@ -419,80 +419,80 @@ class _RestoreScreenState extends State<RestoreScreen> {
         : l10n.restoreThisBackupMadeOn(name, dayMonth(when), hourMinute(when));
     final r = await showHaloSheet<bool>(
       context,
+      // the sheet scrolls as one: a scroll view of its own in here would
+      // take the drag and never move
       builder: (ctx) => SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(22, 0, 22, 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Center(child: SheetHandle()),
-                const SizedBox(height: 18),
-                Text(
-                  l10n.restoreMoveYourKryfoHere,
-                  style: HaloType.serif(size: 21, color: HaloColors.text),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(22, 0, 22, 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Center(child: SheetHandle()),
+              const SizedBox(height: 18),
+              Text(
+                l10n.restoreMoveYourKryfoHere,
+                style: HaloType.serif(size: 21, color: HaloColors.text),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                about,
+                style: HaloType.sans(
+                  size: 13.5,
+                  color: HaloColors.text2,
+                  height: 1.45,
                 ),
-                const SizedBox(height: 8),
+              ),
+              if (big) ...[
+                const SizedBox(height: 10),
                 Text(
-                  about,
+                  l10n.restoreItHoldsOfPhotos(_mb(s.bytes)),
                   style: HaloType.sans(
                     size: 13.5,
-                    color: HaloColors.text2,
+                    color: HaloColors.amber,
                     height: 1.45,
                   ),
                 ),
-                if (big) ...[
-                  const SizedBox(height: 10),
-                  Text(
-                    l10n.restoreItHoldsOfPhotos(_mb(s.bytes)),
-                    style: HaloType.sans(
-                      size: 13.5,
-                      color: HaloColors.amber,
-                      height: 1.45,
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 18),
-                _head(l10n.restoreWhatFollows),
-                _item(l10n.restoreYourNameYourCode),
-                _item(l10n.restoreEveryConversationBackTo),
-                _item(
-                  s.files > 0
-                      ? l10n.restoreYourPhotosVoiceNotesCount(s.files)
-                      : l10n.restoreYourPhotosVoiceNotes,
-                ),
-                _item(l10n.restoreYourOnionAddressSo),
-                _item(l10n.restoreAnythingSentToYou),
-                _item(l10n.restoreYourSupporterBadgeIf),
-                if (s.hiddenChats != null) _item(l10n.restoreHiddenFollow),
-                const SizedBox(height: 16),
-                _head(l10n.restoreWhatDoesnT),
-                _item(l10n.restoreTheOldPhoneStops, strong: true),
-                if (s.moved != true)
-                  _item(l10n.restoreIfThePhoneThis, strong: true),
-                _item(l10n.restoreNotificationsNeedSettingUp),
-                const SizedBox(height: 22),
-                HaloPrimaryButton(
-                  label: l10n.restoreMoveItHere,
-                  onTap: () => Navigator.pop(ctx, true),
-                ),
-                const SizedBox(height: 6),
-                Center(
-                  child: PressScale(
-                    scale: 0.97,
-                    onTap: () => Navigator.pop(ctx, false),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      child: Text(
-                        l10n.restoreNotNow,
-                        style: HaloType.sans(size: 13, color: HaloColors.text2),
-                      ),
-                    ),
-                  ),
-                ),
               ],
-            ),
+              const SizedBox(height: 18),
+              _head(l10n.restoreWhatFollows),
+              _item(l10n.restoreYourNameYourCode),
+              _item(l10n.restoreEveryConversationBackTo),
+              _item(
+                s.files > 0
+                    ? l10n.restoreYourPhotosVoiceNotesCount(s.files)
+                    : l10n.restoreYourPhotosVoiceNotes,
+              ),
+              _item(l10n.restoreYourOnionAddressSo),
+              _item(l10n.restoreAnythingSentToYou),
+              _item(l10n.restoreYourSupporterBadgeIf),
+              if (s.hiddenChats != null) _item(l10n.restoreHiddenFollow),
+              const SizedBox(height: 16),
+              _head(l10n.restoreWhatDoesnT),
+              _item(l10n.restoreTheOldPhoneStops, strong: true),
+              if (s.moved != true)
+                _item(l10n.restoreIfThePhoneThis, strong: true),
+              _item(l10n.restoreNotificationsNeedSettingUp),
+              const SizedBox(height: 22),
+              HaloPrimaryButton(
+                label: l10n.restoreMoveItHere,
+                onTap: () => Navigator.pop(ctx, true),
+              ),
+              const SizedBox(height: 6),
+              Center(
+                child: PressScale(
+                  scale: 0.97,
+                  onTap: () => Navigator.pop(ctx, false),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: Text(
+                      l10n.restoreNotNow,
+                      style: HaloType.sans(size: 13, color: HaloColors.text2),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),

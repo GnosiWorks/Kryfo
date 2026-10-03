@@ -7845,6 +7845,10 @@
   "@mediaBubblesHidden": {
     "description": "widgets/media_bubbles.dart"
   },
+  "mediaBubblesPlaying": "Playing",
+  "@mediaBubblesPlaying": {
+    "description": "widgets/media_bubbles.dart: what a screen reader says of a voice note while it plays"
+  },
   "mediaBubblesMicPermissionNeeded": "Mic permission needed",
   "@mediaBubblesMicPermissionNeeded": {
     "description": "widgets/media_bubbles.dart"
@@ -8337,6 +8341,27 @@
   "avatarPickerTurn": "Turn",
   "@avatarPickerTurn": {
     "description": "screens/avatar_picker_screen.dart"
+  },
+  "avatarPickerOption": "{what}, {n} of {count}",
+  "@avatarPickerOption": {
+    "description": "screens/avatar_picker_screen.dart: what a screen reader says of one option in a row, what is the row's name (shape, colour, turn)",
+    "placeholders": {
+      "what": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int",
+        "format": "decimalPattern"
+      },
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "avatarPickerYourInitial": "Your initial",
+  "@avatarPickerYourInitial": {
+    "description": "screens/avatar_picker_screen.dart: what a screen reader says of the shape option that keeps the initial drawn from your id"
   },
   "transportStatus": "Status",
   "@transportStatus": {

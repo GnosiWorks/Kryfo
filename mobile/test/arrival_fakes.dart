@@ -207,10 +207,15 @@ class ArrivalIo implements AppIo {
     required String body,
     String? payload,
     String? msgUid,
+    int? burnAt,
   }) async {
     rang.add(payload ?? title);
     shown.add((title, body));
+    burns.add(burnAt);
   }
+
+  // when each notification is to burn, null for one that does not
+  final burns = <int?>[];
 
   // what each notification said
   final shown = <(String, String)>[];
@@ -258,6 +263,8 @@ class ArrivalRows implements HaloDb {
   final shields = <String, Map<String, Object?>>{};
   // called after each message is kept
   void Function()? onSave;
+  // called as a message is about to be kept
+  void Function()? beforeSave;
 
   // calls that leave a row behind. the seen marks are the receive side's
   // own bookkeeping and say nothing of anyone
@@ -636,6 +643,7 @@ class ArrivalRows implements HaloDb {
     String? sticker,
     int? sentAt,
   }) async {
+    beforeSave?.call();
     _hit('saveMessage', msgUid ?? peerId, null);
     msgs.add({
       'peer_id': peerId,

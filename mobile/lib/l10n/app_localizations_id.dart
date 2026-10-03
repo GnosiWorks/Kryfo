@@ -6201,6 +6201,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get mediaBubblesHidden => 'Disamarkan';
 
   @override
+  String get mediaBubblesPlaying => 'Sedang diputar';
+
+  @override
   String get mediaBubblesMicPermissionNeeded => 'Perlu izin mikrofon';
 
   @override
@@ -6569,6 +6572,22 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get avatarPickerTurn => 'Putar';
+
+  @override
+  String avatarPickerOption(String what, int n, int count) {
+    final intl.NumberFormat nNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String nString = nNumberFormat.format(n);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$what, $nString dari $countString';
+  }
+
+  @override
+  String get avatarPickerYourInitial => 'Inisialmu';
 
   @override
   String get transportStatus => 'Status';

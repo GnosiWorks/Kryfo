@@ -2,6 +2,7 @@
 // the app lock as a layer (lock_layer.dart), on the app's own MaterialApp
 // (app_shell.dart): nothing the app draws, however it draws it, shows, takes
 // a touch, reaches the screen reader or takes back while the lock is up.
+import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -204,6 +205,14 @@ Widget _page(String text) => Scaffold(
     ],
   ),
 );
+
+// android's word that the app was left
+Future<void> _away(WidgetTester tester) =>
+    tester.binding.defaultBinaryMessenger.handlePlatformMessage(
+      lockWindowChannel.name,
+      lockWindowChannel.codec.encodeMessage('away'),
+      (_) {},
+    );
 
 void main() {
   setUp(() {
@@ -492,6 +501,30 @@ void main() {
     expect(find.text('secret home'), findsNothing);
   });
 
+  testWidgets('the window leaving the screen locks', (tester) async {
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    final a = _App(tester);
+    await a.pump();
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    await _away(tester);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    expect(a.lock.locked, isTrue);
+    expect(find.byType(_Pad), findsOneWidget);
+    expect(find.text('secret home'), findsNothing);
+  });
+
+  test('android tells the lock when the window leaves', () {
+    final k = File(
+      'android/app/src/main/kotlin/app/kryfo/MainActivity.kt',
+    ).readAsStringSync();
+    expect(k, contains('"${lockWindowChannel.name}"'));
+    expect(k, contains('override fun onWindowVisibilityChanged'));
+    // the listener form needs android 14, the app runs from 7
+    expect(k, isNot(contains('OnWindowVisibilityChangeListener')));
+    expect(k, contains('override fun onUserLeaveHint'));
+  });
+
   testWidgets('a decoy unlock drops what waited', (tester) async {
     final a = _App(tester);
     await a.pump();
@@ -562,6 +595,29 @@ void main() {
     expect(find.byType(_Pad), findsOneWidget);
     expect(find.text('secret home'), findsNothing);
     // back in front, the next unlock is an unlock
+    await a.unlock();
+    expect(opened, isTrue);
+    expect(find.text('secret home'), findsOneWidget);
+  });
+
+  testWidgets('left while the pin was checked, android said so', (
+    tester,
+  ) async {
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    final a = _App(tester);
+    await a.pump();
+    await a.lockUp();
+    var opened = false;
+    await a.guard.afterUnlock(() async => opened = true, key: 'chat:w');
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    await _away(tester);
+    a.lock.set(locked: false);
+    await tester.pump();
+    expect(a.lock.locked, isTrue);
+    expect(opened, isFalse);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    expect(find.byType(_Pad), findsOneWidget);
     await a.unlock();
     expect(opened, isTrue);
     expect(find.text('secret home'), findsOneWidget);

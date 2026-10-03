@@ -6216,6 +6216,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get mediaBubblesHidden => 'تغییر صدا';
 
   @override
+  String get mediaBubblesPlaying => 'در حال پخش';
+
+  @override
   String get mediaBubblesMicPermissionNeeded => 'اجازه‌ی میکروفون لازم است';
 
   @override
@@ -6584,6 +6587,22 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get avatarPickerTurn => 'چرخش';
+
+  @override
+  String avatarPickerOption(String what, int n, int count) {
+    final intl.NumberFormat nNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String nString = nNumberFormat.format(n);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$what، $nString از $countString';
+  }
+
+  @override
+  String get avatarPickerYourInitial => 'حرف اول نامتان';
 
   @override
   String get transportStatus => 'وضعیت';

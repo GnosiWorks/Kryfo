@@ -4,13 +4,18 @@
 // a new message from them leaves the place too, and the jump button counts
 // only what came in, never the pages scrolled in.
 // the chat's own screen over rows kept in maps
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart' hide Curve;
 import 'package:flutter/services.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/devchat/dev_chat.dart' show devChatTables;
+import 'package:kryfo/l10n/dates.dart' show hourMinute;
+import 'package:kryfo/l10n/l10n.dart';
+import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/main.dart'
     show
         HaloEngine,
@@ -19,6 +24,7 @@ import 'package:kryfo/main.dart'
         processPeerBundle,
         useDatabasesForTest,
         useEngineForTest;
+import 'package:kryfo/notifications.dart' show showMessageNotification;
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
@@ -32,6 +38,9 @@ import 'mem_db.dart';
 
 const _peer = 'amber-long-thread';
 const _rows = 400;
+// a one-pixel png
+const _dot =
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
 
 class _Db extends DevTestDb {
   _Db(super.mem);
@@ -182,6 +191,21 @@ class _Db extends DevTestDb {
   }
 }
 
+// android's shade, noting what is up
+class _Shade extends AndroidFlutterLocalNotificationsPlugin {
+  final up = <int>[];
+  @override
+  Future<void> show({
+    required int id,
+    String? title,
+    String? body,
+    AndroidNotificationDetails? notificationDetails,
+    String? payload,
+  }) async => up.add(id);
+  @override
+  Future<void> cancel({required int id, String? tag}) async => up.remove(id);
+}
+
 // nothing is sent here
 class _Engine implements HaloEngine {
   @override
@@ -322,6 +346,120 @@ void main() {
 
   bool seen(String text) =>
       find.text(text, findRichText: true).hitTestable().evaluate().isNotEmpty;
+
+  testWidgets('back in front, it shows what came while it was away and '
+      'takes down what rang', (t) async {
+    lockState.openForTest();
+    final shade = _Shade();
+    FlutterLocalNotificationsPlatform.instance = shade;
+    await devOpen(t, chat());
+    await settle(t);
+    // the chat is up to date with every note so far
+    await arrive(t, 1);
+    expect(seen('new 1'), isTrue);
+    t.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    t.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    t.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    // written, and rung, with no note to the open chat
+    await mem.insert('messages', {
+      'peer_id': _peer,
+      'direction': 'in',
+      'plaintext': 'while away',
+      'sent_at': DateTime.now().millisecondsSinceEpoch,
+      'msg_uid': 'away1',
+      'sent': 1,
+    });
+    await t.runAsync(
+      () => showMessageNotification(
+        title: _peer,
+        body: 'while away',
+        payload: _peer,
+        msgUid: 'away1',
+      ),
+    );
+    expect(shade.up, hasLength(1));
+    t.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    t.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    t.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await settle(t);
+    expect(seen('while away'), isTrue);
+    expect(shade.up, isEmpty);
+    await devClose(t);
+  });
+
+  testWidgets('with the keyboard up, the message menu opens once it has '
+      'gone, above where it was', (t) async {
+    lockState.openForTest();
+    await devOpen(t, chat());
+    await settle(t);
+    await t.tap(find.byType(TextField));
+    await t.pump();
+    // the keyboard: up while the composer has focus
+    t.view.viewInsets = const FakeViewPadding(bottom: 900);
+    addTearDown(t.view.resetViewInsets);
+    void follow() {
+      if (FocusManager.instance.primaryFocus?.context?.widget
+          is! EditableText) {
+        t.view.resetViewInsets();
+      }
+    }
+
+    FocusManager.instance.addListener(follow);
+    addTearDown(() => FocusManager.instance.removeListener(follow));
+    await t.pump();
+    await t.longPress(find.text('note 399', findRichText: true));
+    for (var i = 0; i < 10; i++) {
+      await t.pump(const Duration(milliseconds: 50));
+    }
+    final edit = find.text(l10n.commonEdit);
+    expect(edit, findsOneWidget);
+    // the menu sits wholly above whatever keyboard is up by then
+    final keyTop =
+        (t.view.physicalSize.height - t.view.viewInsets.bottom) /
+        t.view.devicePixelRatio;
+    expect(t.getRect(edit).bottom, lessThanOrEqualTo(keyTop));
+    expect(t.view.viewInsets.bottom, 0);
+    await t.tapAt(const Offset(5, 5));
+    await settle(t);
+    await devClose(t);
+  });
+
+  testWidgets('a photo and a file that came in say when, and the photo '
+      'says what it is', (t) async {
+    final sem = t.ensureSemantics();
+    final png = File('${docs.path}/in_photo.png')
+      ..writeAsBytesSync(base64Decode(_dot));
+    final doc = File('${docs.path}/notes.pdf')..writeAsBytesSync([1, 2, 3]);
+    // hours from the thread's own minutes, so no other row shares them
+    final at = DateTime.now().millisecondsSinceEpoch + 3 * 3600000;
+    await mem.insert('messages', {
+      'peer_id': _peer,
+      'direction': 'in',
+      'plaintext': '',
+      'sent_at': at - 120000,
+      'msg_uid': 'photo1',
+      'media_path': png.path,
+      'sent': 1,
+    });
+    await mem.insert('messages', {
+      'peer_id': _peer,
+      'direction': 'in',
+      'plaintext': '',
+      'sent_at': at - 60000,
+      'msg_uid': 'file1',
+      'file_path': doc.path,
+      'file_name': 'notes.pdf',
+      'sent': 1,
+    });
+    await devOpen(t, chat());
+    await settle(t);
+    String hm(int ms) => hourMinute(DateTime.fromMillisecondsSinceEpoch(ms));
+    expect(find.text(hm(at - 120000)), findsOneWidget);
+    expect(find.text(hm(at - 60000)), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp(l10n.appPhoto)), findsOneWidget);
+    await devClose(t);
+    sem.dispose();
+  });
 
   testWidgets('a reload with nothing new keeps the place and the pages', (
     t,
