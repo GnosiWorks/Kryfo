@@ -72,7 +72,7 @@ func pairCodePublish(code, payload string) string {
 	if err != nil {
 		return "error: " + err.Error()
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 40*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), publishWait)
 	defer cancel()
 	ok := nostrPublishMulti(ctx, pairLane(pk), out)
 	if ok == 0 {

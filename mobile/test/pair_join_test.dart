@@ -313,6 +313,36 @@ void main() {
     }
   });
 
+  test('a share waits longer than the engine does for its publish', () {
+    final nostr = File('../engine/nostr.go').readAsStringSync();
+    final onion = RegExp(
+      r'onionDialWait = (\d+) \* time\.Second',
+    ).firstMatch(nostr);
+    final extra = RegExp(
+      r'const publishWait = onionDialWait \+ (\d+)\*time\.Second',
+    ).firstMatch(nostr);
+    expect(onion, isNotNull);
+    expect(extra, isNotNull);
+    final engineWait =
+        int.parse(onion!.group(1)!) + int.parse(extra!.group(1)!);
+    final pair = File('../engine/paircode.go').readAsStringSync();
+    final publish = RegExp(
+      r'func pairCodePublish\(.*?\n}',
+      dotAll: true,
+    ).firstMatch(pair);
+    expect(publish, isNotNull);
+    expect(
+      publish!.group(0),
+      contains('context.WithTimeout(context.Background(), publishWait)'),
+    );
+    final app = File('lib/main.dart').readAsStringSync();
+    final wait = RegExp(
+      r'Future<String> pairCodePublish\([^;]*Duration\(seconds: (\d+)\)',
+    ).firstMatch(app);
+    expect(wait, isNotNull);
+    expect(int.parse(wait!.group(1)!), greaterThan(engineWait));
+  });
+
   testWidgets('a share no relay took is worded, in the warning colour', (
     t,
   ) async {

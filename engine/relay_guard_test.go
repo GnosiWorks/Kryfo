@@ -666,15 +666,15 @@ func TestProbeLooksLikeTheSocketsOwnRequest(t *testing.T) {
 func TestYoungDropWaitGrows(t *testing.T) {
 	got := []time.Duration{}
 	for n := 1; n <= 8; n++ {
-		got = append(got, youngDropWait(5*time.Second, n, false))
+		got = append(got, youngDropWait("", 5*time.Second, n, false))
 	}
 	want := []time.Duration{5 * time.Second, 10 * time.Second, 20 * time.Second, 40 * time.Second,
 		80 * time.Second, 160 * time.Second, 5 * time.Minute, 5 * time.Minute}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("waits %v, want %v", got, want)
 	}
-	if d := youngDropWait(2*time.Second, 10, true); d != ownRelayCeiling {
-		t.Fatalf("our own relay waits %s at most, got %s", ownRelayCeiling, d)
+	if d := youngDropWait("", 2*time.Second, 10, true); d < ownRelayCeiling*4/5 || d > ownRelayCeiling*6/5 {
+		t.Fatalf("our own relay waits about %s at most, got %s", ownRelayCeiling, d)
 	}
 }
 

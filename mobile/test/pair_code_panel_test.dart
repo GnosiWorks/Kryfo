@@ -3,6 +3,7 @@
 // keeps the invite at the code, and a share no relay took is said in the
 // person's language, never in the engine's words. signal is real over rows
 // kept in maps; the engine and the relays are stand-ins
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart' hide Curve;
@@ -23,12 +24,15 @@ import 'pin_flow_fakes.dart' show app, phone;
 
 class _Engine implements HaloEngine {
   String answer = 'ok';
+  // holds the answer back, as a slow route does
+  Completer<void>? hold;
   final shared = <String>[];
   @override
   String firstContactPk(int counter) => 'ab' * 32;
   @override
   Future<String> pairCodePublish(String code, String payload) async {
     shared.add(code);
+    await hold?.future;
     return answer;
   }
 
@@ -81,6 +85,26 @@ void main() {
     await t.pump(const Duration(seconds: 1));
     await t.pumpAndSettle();
     expect(find.text(l10n.pairCodePanelOrMakeASix), findsOneWidget);
+  });
+
+  testWidgets('the countdown starts with the code, not with the answer', (
+    t,
+  ) async {
+    phone(t);
+    e.answer = 'ok';
+    final hold = Completer<void>();
+    e.hold = hold;
+    addTearDown(() => e.hold = null);
+    final before = e.shared.length;
+    await share(t);
+    expect(e.shared, hasLength(before + 1));
+    await t.pump(const Duration(seconds: 40));
+    hold.complete();
+    for (var i = 0; i < 10; i++) {
+      await t.runAsync(() => Future<void>.delayed(Duration.zero));
+      await t.pump();
+    }
+    expect(find.text(l10n.pairCodePanelBurnsIn('9', '20')), findsOneWidget);
   });
 
   testWidgets('a share no relay took says so plainly', (t) async {

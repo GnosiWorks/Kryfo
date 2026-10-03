@@ -204,9 +204,9 @@ func TestPublishSocketRedialsAfterDrop(t *testing.T) {
 // a kept socket that stops answering, the way a dead circuit does, is let
 // go, and the wrap goes out on a new one
 func TestPublishSocketThatGoesQuietIsReplaced(t *testing.T) {
-	old := pubQuiet
-	pubQuiet = 400 * time.Millisecond
-	defer func() { pubQuiet = old }()
+	old := pubQuiet.Load()
+	pubQuiet.Store(int64(400 * time.Millisecond))
+	defer pubQuiet.Store(old)
 	socks := newSocksStandIn(t)
 	r := newRelayStandIn(t, 0)
 	useStandIns(t, modePrivate, socks, r)
@@ -234,9 +234,10 @@ func TestPublishSocketThatGoesQuietIsReplaced(t *testing.T) {
 // a socket that sat idle longer than pubQuiet is not taken for a dead one
 // when the next burst starts on it
 func TestIdleSocketIsNotQuiet(t *testing.T) {
-	oldQ, oldI := pubQuiet, pubIdle
-	pubQuiet, pubIdle = 200*time.Millisecond, time.Minute
-	defer func() { pubQuiet, pubIdle = oldQ, oldI }()
+	oldQ, oldI := pubQuiet.Load(), pubIdle
+	pubQuiet.Store(int64(200 * time.Millisecond))
+	pubIdle = time.Minute
+	defer func() { pubQuiet.Store(oldQ); pubIdle = oldI }()
 	socks := newSocksStandIn(t)
 	socks.lag = 60 * time.Millisecond
 	r := newRelayStandIn(t, 0)

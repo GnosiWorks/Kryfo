@@ -70,6 +70,9 @@ files differ, the new lines marked `kryfo:`:
   late ones close the socket.
 - `relay.go`: `handleMessage` ends at most its own connection, whatever
   the frame, and the caller dials again.
+- `relay.go`: a publish that sees its connection end clears the OK
+  callbacks under their lock. upstream clears them without it, which races
+  with other publishes on the same connection.
 - `helpers.go`, `envelopes.go`, `relay.go`: length checks in the frame
   pre-parsers and the OK envelope.
 - `signature.go`, `signature_libsecp256k1.go`: `VerifySignature` also
