@@ -939,6 +939,36 @@ void main() {
     expect(seen, [PinResult.vault]);
   });
 
+  test('a phone that could not say at the start offers the finger once the '
+      'app is in front', () async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    const ch = MethodChannel('plugins.flutter.io/local_auth');
+    final m = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    // no screen yet: local_auth knows of no finger
+    var screen = false;
+    m.setMockMethodCallHandler(
+      ch,
+      (c) async => c.method == 'getAvailableBiometrics'
+          ? (screen ? <String>['fingerprint'] : <String>[])
+          : null,
+    );
+    addTearDown(() => m.setMockMethodCallHandler(ch, null));
+    store.m['halo.lock.biometric'] = 'true';
+    final lock = await make();
+    expect(lock.bioSupported, isFalse);
+    var told = 0;
+    lock.addListener(() => told++);
+    screen = true;
+    lock.returned();
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    expect(lock.bioSupported, isTrue);
+    expect(told, 1);
+    // known now: not asked again
+    lock.returned();
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    expect(told, 1);
+  });
+
   test('the fingerprint never opens the vault', () async {
     // a phone with a finger: local_auth answers through its channel
     TestWidgetsFlutterBinding.ensureInitialized();

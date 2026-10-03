@@ -13,10 +13,12 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/backup.dart' show BackupError;
 import 'package:kryfo/container.dart';
+import 'package:kryfo/delivery_mode.dart' show deliveryModeName;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/main.dart'
     show HaloDb, HaloEngine, appState, useDatabasesForTest, useEngineForTest;
+import 'package:kryfo/notifications.dart' show setHideNotifContent;
 import 'package:kryfo/screens/backup_screen.dart' show backupFailLine;
 import 'package:kryfo/screens/bridges_screen.dart';
 import 'package:kryfo/screens/handle_screen.dart';
@@ -307,6 +309,31 @@ void main() {
       // as after a turn off in the everyday app
       expect(row.hint, isNot(l10n.settingsKeptOnWhileLock));
       expect(row.onTap, isNotNull);
+      await devClose(t);
+    });
+  });
+
+  group('getting messages row', () {
+    testWidgets('says the preview is hidden as soon as a PIN hides it', (
+      t,
+    ) async {
+      SharedPreferences.setMockInitialValues({
+        'battery_opt_prompt_seen': true,
+        'miui_autostart_prompt_seen': true,
+        HaloContainer.everyday.key('notif_hide_content'): false,
+      });
+      await devWorld();
+      t.view.physicalSize = const Size(1000, 6000);
+      t.view.devicePixelRatio = 2;
+      addTearDown(t.view.reset);
+      await t.pumpWidget(devApp(const SettingsScreen()));
+      await t.pump(const Duration(seconds: 1));
+      final mode = deliveryModeName(appState.deliveryMode);
+      expect(find.text(l10n.settingsPreviewShown(mode)), findsOneWidget);
+      // what setting a PIN writes, from the App lock screen
+      await setHideNotifContent(true);
+      await t.pump(const Duration(seconds: 1));
+      expect(find.text(l10n.settingsPreviewHidden(mode)), findsOneWidget);
       await devClose(t);
     });
   });

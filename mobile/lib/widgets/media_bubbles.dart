@@ -358,7 +358,7 @@ class VoiceBubbleState extends State<VoiceBubble> {
         ? 0.0
         : (_pos.inMilliseconds / _dur.inMilliseconds).clamp(0.0, 1.0);
     final shown = _pos > Duration.zero ? _pos : _dur;
-    return GestureDetector(
+    final bubble = GestureDetector(
       onTap: _missing ? null : _toggle,
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
@@ -467,6 +467,23 @@ class VoiceBubbleState extends State<VoiceBubble> {
                 ],
               ),
       ),
+    );
+    if (_missing) return bubble;
+    // one node for a screen reader: what it is, whether it plays and where
+    // it is, and what a tap does
+    return Semantics(
+      container: true,
+      button: true,
+      label: widget.disguised
+          ? '${l10n.appVoiceMessage}, ${l10n.mediaBubblesHidden}'
+          : l10n.appVoiceMessage,
+      value: _playing
+          ? '${l10n.mediaBubblesPlaying}, ${_fmt(_pos)} / ${_fmt(_dur)}'
+          : _fmt(shown),
+      onTapHint: _playing ? l10n.videoViewerPause : l10n.videoViewerPlay,
+      onTap: _toggle,
+      excludeSemantics: true,
+      child: bubble,
     );
   }
 }

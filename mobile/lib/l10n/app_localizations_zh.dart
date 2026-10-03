@@ -5961,6 +5961,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get mediaBubblesHidden => '已隐藏';
 
   @override
+  String get mediaBubblesPlaying => '正在播放';
+
+  @override
   String get mediaBubblesMicPermissionNeeded => '需要麦克风权限';
 
   @override
@@ -6313,6 +6316,22 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get avatarPickerTurn => '旋转';
+
+  @override
+  String avatarPickerOption(String what, int n, int count) {
+    final intl.NumberFormat nNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String nString = nNumberFormat.format(n);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$what，第 $nString 个，共 $countString 个';
+  }
+
+  @override
+  String get avatarPickerYourInitial => '你的首字母';
 
   @override
   String get transportStatus => '状态';
@@ -13216,6 +13235,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get mediaBubblesHidden => '已隱藏';
 
   @override
+  String get mediaBubblesPlaying => '正在播放';
+
+  @override
   String get mediaBubblesMicPermissionNeeded => '需要麥克風權限';
 
   @override
@@ -13568,6 +13590,22 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get avatarPickerTurn => '旋轉';
+
+  @override
+  String avatarPickerOption(String what, int n, int count) {
+    final intl.NumberFormat nNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String nString = nNumberFormat.format(n);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$what，第 $nString 個，共 $countString 個';
+  }
+
+  @override
+  String get avatarPickerYourInitial => '你的名字首字';
 
   @override
   String get transportStatus => '狀態';

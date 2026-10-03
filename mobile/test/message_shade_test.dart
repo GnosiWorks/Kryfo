@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class _Shade extends AndroidFlutterLocalNotificationsPlugin {
   final up = <int>[];
+  final timeouts = <int?>[];
 
   @override
   Future<void> show({
@@ -18,7 +19,10 @@ class _Shade extends AndroidFlutterLocalNotificationsPlugin {
     String? body,
     AndroidNotificationDetails? notificationDetails,
     String? payload,
-  }) async => up.add(id);
+  }) async {
+    up.add(id);
+    timeouts.add(notificationDetails?.timeoutAfter);
+  }
 
   @override
   Future<void> cancel({required int id, String? tag}) async => up.remove(id);
@@ -57,5 +61,31 @@ void main() {
     expect(shade.up, [second]);
     await clearNotificationsFor('bob');
     expect(shade.up, isEmpty);
+  });
+
+  test('a timed message leaves the shade by itself when it burns', () async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    SharedPreferences.setMockInitialValues({});
+    FlutterSecureStorage.setMockInitialValues({});
+    final shade = _Shade();
+    FlutterLocalNotificationsPlatform.instance = shade;
+    final burnAt = DateTime.now().millisecondsSinceEpoch + 30000;
+    await showMessageNotification(
+      title: 'bob',
+      body: 'gone soon',
+      payload: 'bob',
+      msgUid: 'b1',
+      burnAt: burnAt,
+    );
+    await showMessageNotification(
+      title: 'bob',
+      body: 'staying',
+      payload: 'bob',
+      msgUid: 'b2',
+    );
+    expect(shade.timeouts.first, inInclusiveRange(28000, 30000));
+    expect(shade.timeouts.last, isNull);
+    await clearNotificationsFor('bob');
   });
 }

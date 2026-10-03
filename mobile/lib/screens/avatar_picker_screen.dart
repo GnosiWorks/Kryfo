@@ -104,6 +104,11 @@ class _AvatarChoiceEditorState extends State<AvatarChoiceEditor> {
             for (var r = 0; r < rotCount; r++) ...[
               _Swatch(
                 selected: _rot == r,
+                label: l10n.avatarPickerOption(
+                  l10n.avatarPickerTurn,
+                  r + 1,
+                  rotCount,
+                ),
                 onTap: () => _pick(() => _rot = r),
                 child: KryfoAvatar(
                   seed: id,
@@ -147,12 +152,18 @@ class _AvatarChoiceEditorState extends State<AvatarChoiceEditor> {
             children: [
               _Swatch(
                 selected: _shape == null,
+                label: l10n.avatarPickerYourInitial,
                 onTap: () => _pick(() => _shape = null),
                 child: KryfoAvatar(seed: id, size: 50),
               ),
               for (var m = 0; m < markCount; m++)
                 _Swatch(
                   selected: _shape == m,
+                  label: l10n.avatarPickerOption(
+                    l10n.avatarPickerShape,
+                    m + 1,
+                    markCount,
+                  ),
                   onTap: () => _pick(() => _shape = m),
                   child: KryfoAvatar(
                     seed: id,
@@ -173,6 +184,11 @@ class _AvatarChoiceEditorState extends State<AvatarChoiceEditor> {
               for (var p = 0; p < avatarPaletteCount; p++)
                 _Swatch(
                   selected: _pal == p,
+                  label: l10n.avatarPickerOption(
+                    l10n.avatarPickerColour,
+                    p + 1,
+                    avatarPaletteCount,
+                  ),
                   onTap: () => _pick(() => _pal = p),
                   child: KryfoAvatar(
                     seed: id,
@@ -274,17 +290,23 @@ class _Label extends StatelessWidget {
 class _Swatch extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
+  // the face itself says nothing to a screen reader
+  final String label;
   final Widget child;
   const _Swatch({
     required this.selected,
     required this.onTap,
+    required this.label,
     required this.child,
   });
 
   @override
   Widget build(BuildContext context) {
     return Semantics(
+      container: true,
+      button: true,
       selected: selected,
+      label: label,
       child: PressScale(
         onTap: onTap,
         scale: 0.92,

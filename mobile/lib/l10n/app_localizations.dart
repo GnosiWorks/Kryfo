@@ -9867,6 +9867,12 @@ abstract class AppLocalizations {
   /// **'Hidden'**
   String get mediaBubblesHidden;
 
+  /// widgets/media_bubbles.dart: what a screen reader says of a voice note while it plays
+  ///
+  /// In en, this message translates to:
+  /// **'Playing'**
+  String get mediaBubblesPlaying;
+
   /// widgets/media_bubbles.dart
   ///
   /// In en, this message translates to:
@@ -10496,6 +10502,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Turn'**
   String get avatarPickerTurn;
+
+  /// screens/avatar_picker_screen.dart: what a screen reader says of one option in a row, what is the row's name (shape, colour, turn)
+  ///
+  /// In en, this message translates to:
+  /// **'{what}, {n} of {count}'**
+  String avatarPickerOption(String what, int n, int count);
+
+  /// screens/avatar_picker_screen.dart: what a screen reader says of the shape option that keeps the initial drawn from your id
+  ///
+  /// In en, this message translates to:
+  /// **'Your initial'**
+  String get avatarPickerYourInitial;
 
   /// screens/transport_screen.dart
   ///

@@ -625,6 +625,45 @@ void main() {
       }
     });
 
+    testWidgets('no menu once the lock is up as the keyboard goes', (t) async {
+      _use(t, _Db(rows: [_in(1, _anna, 'hello there')]));
+      lockState.openForTest(enabled: true);
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      await t.tap(find.byType(TextField));
+      t.view.viewInsets = const FakeViewPadding(bottom: 600);
+      addTearDown(t.view.resetViewInsets);
+      await t.pump();
+      await t.longPress(find.text('hello there'));
+      // the keyboard is on its way down when the lock goes up
+      lockState.lock();
+      final buzzed = <Object?>[];
+      t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async {
+          if (call.method == 'HapticFeedback.vibrate') buzzed.add(call);
+          return null;
+        },
+      );
+      addTearDown(
+        () => t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        ),
+      );
+      t.view.resetViewInsets();
+      for (var i = 0; i < 20; i++) {
+        await t.pump(const Duration(milliseconds: 16));
+        expect(
+          find.byKey(const ValueKey('group-menu-reactions')),
+          findsNothing,
+        );
+      }
+      expect(buzzed, isEmpty, reason: 'the menu never started');
+      lockState.openForTest();
+      await _close(t);
+    });
+
     testWidgets('with less movement the menu goes at once', (t) async {
       _use(t, _Db(rows: [_in(1, _anna, 'hello there')]));
       await t.pumpWidget(

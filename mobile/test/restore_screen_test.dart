@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/app_shell.dart' show HaloScrollBehavior;
 import 'package:kryfo/backup.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart';
@@ -50,6 +51,7 @@ Future<void> _openAndRestore(
   WidgetTester t, {
   RestoreScreen screen = const RestoreScreen(),
   Widget Function(Widget home) wrap = app,
+  bool move = true,
 }) async {
   await t.pumpWidget(
     wrap(
@@ -80,14 +82,18 @@ Future<void> _openAndRestore(
   await t.enterText(find.byType(TextField), 'the passphrase');
   await t.tap(find.text(l10n.restoreCheckTheFile));
   await t.pumpAndSettle();
-  await press(
-    t,
-    find.descendant(
-      of: find.byType(ListView),
-      matching: find.text(l10n.restoreRestore),
-    ),
+  final restore = find.descendant(
+    of: find.byType(ListView),
+    matching: find.text(l10n.restoreRestore),
   );
+  await t.dragUntilVisible(
+    restore,
+    find.byType(ListView),
+    const Offset(0, -200),
+  );
+  await press(t, restore);
   await t.pumpAndSettle();
+  if (!move) return;
   await press(t, find.text(l10n.restoreMoveItHere));
   await t.pumpAndSettle();
 }
@@ -172,6 +178,64 @@ void main() {
     await t.pumpAndSettle();
     expect(find.byType(RestoreScreen), findsNothing);
   });
+
+  // a 720x1600 phone, a big file with hidden chats: every line of the
+  // sheet shows, and the button is reached by a finger, not by code
+  for (final (scale, locale) in [
+    (1.0, const Locale('en')),
+    (1.6, const Locale('en')),
+    (1.6, const Locale('ar')),
+  ]) {
+    testWidgets('the move sheet scrolls to its button at $scale '
+        '${locale.languageCode}', (t) async {
+      t.view.physicalSize = const Size(720, 1600);
+      t.view.devicePixelRatio = 1.875;
+      addTearDown(t.view.reset);
+      t.platformDispatcher.textScaleFactorTestValue = scale;
+      addTearDown(t.platformDispatcher.clearAllTestValues);
+      inspectForTest = (_) async => const BackupSummary(
+        when: null,
+        version: 2,
+        haloId: 'tourist-admit-sun',
+        contacts: 1,
+        messages: 7,
+        bytes: 66 * 1024 * 1024,
+        files: 17,
+        hiddenChats: 1,
+      );
+      final running = Completer<void>();
+      restoreForTest = (_) => running.future;
+      await _openAndRestore(
+        t,
+        wrap: (home) => MaterialApp(
+          locale: locale,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          // the app's own scroll feel: every scroll view takes a drag
+          scrollBehavior: const HaloScrollBehavior(),
+          home: home,
+        ),
+        move: false,
+      );
+      final go = find.text(l10n.restoreMoveItHere);
+      expect(go, findsOneWidget);
+      final screen = t.view.physicalSize / t.view.devicePixelRatio;
+      bool shown() => t.getRect(go).bottom <= screen.height;
+      for (var i = 0; i < 12 && !shown(); i++) {
+        await t.dragFrom(
+          Offset(screen.width / 2, screen.height * 0.7),
+          const Offset(0, -300),
+        );
+        await t.pumpAndSettle();
+      }
+      expect(shown(), isTrue);
+      await t.tap(go);
+      await t.pumpAndSettle();
+      expect(find.text(l10n.restoreRestoring), findsOneWidget);
+      running.complete();
+      await t.pumpAndSettle();
+    });
+  }
 
   testWidgets('a handle not released and not yet gives the way back', (
     t,

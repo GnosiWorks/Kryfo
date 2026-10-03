@@ -245,6 +245,20 @@ void main() {
     });
   });
 
+  test('a slice short of its file leaves the chat as it is', () async {
+    final w = await _World.make();
+    var told = 0;
+    w.app.addListener(() => told++);
+    await w.slice(_c, 'two', total: 2);
+    expect(w.app.chatRevOf(_c), 0);
+    // only the drain's own word that a frame came
+    expect(told, 1);
+    // the last one puts the message in, and the chat reads it
+    await w.slice(_c, 'two', index: 1, total: 2);
+    expect(w.live.msg('two'), isNotNull);
+    expect(w.app.chatRevOf(_c), greaterThan(0));
+  });
+
   test('a receipt names who sent it', () async {
     final w = await _World.make();
     await w.from(

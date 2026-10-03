@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:async';
+import 'dart:math' show max;
 import 'dart:typed_data';
 
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart' show ValueNotifier;
 import 'package:flutter/services.dart';
 import 'dlog.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -186,12 +188,17 @@ Future<bool> loadHideNotifContent([
   return prefs.getBool(c.key(_hideContentKey)) ?? true;
 }
 
+// moves on every write, so a screen that shows the setting reads it again
+// whoever changed it
+final hideNotifRevision = ValueNotifier<int>(0);
+
 Future<void> setHideNotifContent(
   bool v, [
   HaloContainer c = HaloContainer.everyday,
 ]) async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.setBool(c.key(_hideContentKey), v);
+  hideNotifRevision.value++;
 }
 
 // ids by chat, so opening the chat by hand takes its notifications down
@@ -254,6 +261,7 @@ Future<void> showMessageNotification({
   required String body,
   String? payload,
   String? msgUid,
+  int? burnAt,
 }) async {
   // a decoy session is open: no notification at all
   if (await quietNow()) return;
@@ -262,6 +270,11 @@ Future<void> showMessageNotification({
     title = 'Kryfo';
     body = l10n.notificationsNewMessage;
   }
+  // a timed message leaves the shade when it burns, whatever is running
+  // then: android takes it down itself
+  final left = burnAt == null
+      ? null
+      : max(1, burnAt - DateTime.now().millisecondsSinceEpoch);
   final details = AndroidNotificationDetails(
     'halo_messages_v2',
     l10n.notificationsChannelName,
@@ -283,6 +296,7 @@ Future<void> showMessageNotification({
     ledOffMs: 2000,
     ticker: hidden ? l10n.notificationsNewMessage2 : '$title: $body',
     autoCancel: true,
+    timeoutAfter: left,
     when: DateTime.now().millisecondsSinceEpoch,
     // sender on top, message underneath, expands for long text
     styleInformation: BigTextStyleInformation(

@@ -283,9 +283,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
-    loadHideNotifContent(session.container).then((v) {
-      if (mounted) setState(() => _hidePreview = v);
-    });
+    _readHidePreview();
+    // a PIN set on the App lock screen hides the preview too
+    hideNotifRevision.addListener(_readHidePreview);
     appState.loadDisguisePref().then((d) {
       if (mounted) setState(() => _disguise = d);
     });
@@ -295,6 +295,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
     loadScamShieldOn(session.container).then((v) {
       if (mounted) setState(() => _shieldOn = v);
     });
+  }
+
+  void _readHidePreview() {
+    loadHideNotifContent(session.container).then((v) {
+      if (mounted) setState(() => _hidePreview = v);
+    });
+  }
+
+  @override
+  void dispose() {
+    hideNotifRevision.removeListener(_readHidePreview);
+    super.dispose();
   }
 
   @override

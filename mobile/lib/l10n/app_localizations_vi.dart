@@ -6191,6 +6191,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get mediaBubblesHidden => 'Đã ẩn';
 
   @override
+  String get mediaBubblesPlaying => 'Đang phát';
+
+  @override
   String get mediaBubblesMicPermissionNeeded => 'Cần quyền micrô';
 
   @override
@@ -6559,6 +6562,22 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get avatarPickerTurn => 'Xoay';
+
+  @override
+  String avatarPickerOption(String what, int n, int count) {
+    final intl.NumberFormat nNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String nString = nNumberFormat.format(n);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$what, $nString trên $countString';
+  }
+
+  @override
+  String get avatarPickerYourInitial => 'Chữ cái đầu của bạn';
 
   @override
   String get transportStatus => 'Trạng thái';

@@ -6227,6 +6227,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get mediaBubblesHidden => 'Gizli';
 
   @override
+  String get mediaBubblesPlaying => 'Oynatılıyor';
+
+  @override
   String get mediaBubblesMicPermissionNeeded => 'Mikrofon izni gerekli';
 
   @override
@@ -6593,6 +6596,22 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get avatarPickerTurn => 'Döndür';
+
+  @override
+  String avatarPickerOption(String what, int n, int count) {
+    final intl.NumberFormat nNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String nString = nNumberFormat.format(n);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$what, $countString seçenekten $nString';
+  }
+
+  @override
+  String get avatarPickerYourInitial => 'Baş harfin';
 
   @override
   String get transportStatus => 'Durum';

@@ -6331,6 +6331,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get mediaBubblesHidden => 'Скрыто';
 
   @override
+  String get mediaBubblesPlaying => 'Воспроизводится';
+
+  @override
   String get mediaBubblesMicPermissionNeeded => 'Нужен доступ к микрофону';
 
   @override
@@ -6699,6 +6702,22 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get avatarPickerTurn => 'Поворот';
+
+  @override
+  String avatarPickerOption(String what, int n, int count) {
+    final intl.NumberFormat nNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String nString = nNumberFormat.format(n);
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$what, $nString из $countString';
+  }
+
+  @override
+  String get avatarPickerYourInitial => 'Твой инициал';
 
   @override
   String get transportStatus => 'Статус';
