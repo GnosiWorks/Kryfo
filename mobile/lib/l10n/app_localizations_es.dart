@@ -2690,9 +2690,6 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get groupChat0s => '0s';
-
-  @override
   String get groupChatReply => 'Responder';
 
   @override
@@ -7411,6 +7408,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get stickerLabel => 'Sticker';
+
+  @override
+  String get timedMessageLabel => 'Mensaje temporal';
 
   @override
   String get stickerNewer => 'De un Kryfo más nuevo';

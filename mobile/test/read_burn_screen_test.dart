@@ -616,6 +616,52 @@ void main() {
     await devClose(t);
   });
 
+  testWidgets('the chat list names it a timed message until it is read, '
+      'then shows its words', (t) async {
+    await thread(before: 2);
+    String? line() =>
+        appState.contacts.firstWhere((c) => c.haloId == _peer).preview;
+    expect(line(), 'Timed message');
+    await devOpen(t, chat());
+    await settle(t);
+    expect(burnAt(), isNotNull);
+    // the list hears of it with no other change
+    expect(line(), 'gone soon');
+    await devClose(t);
+  });
+
+  testWidgets('a quote of it says only that it is a timed message until it '
+      'is read', (t) async {
+    await thread();
+    await mem.insert('messages', {
+      'peer_id': _peer,
+      'direction': 'in',
+      'plaintext': 'about that',
+      'sent_at': DateTime.now().millisecondsSinceEpoch,
+      'msg_uid': 'reply01',
+      'reply_to': _timed,
+      'sent': 1,
+    });
+    lockState.openForTest(enabled: true);
+    lockState.lock();
+    await devOpen(t, chat());
+    await settle(t);
+    final words = find.text('gone soon', findRichText: true);
+    final label = find.text('Timed message', findRichText: true);
+    expect(burnAt(), isNull);
+    // its own bubble, and the quote names it
+    expect(words, findsOneWidget);
+    expect(label, findsOneWidget);
+
+    lockState.openForTest(enabled: true);
+    lockState.inDecoy = false;
+    await settle(t);
+    expect(burnAt(), isNotNull);
+    expect(label, findsNothing);
+    expect(words, findsNWidgets(2));
+    await devClose(t);
+  });
+
   testWidgets('a decoy never starts one', (t) async {
     await thread(container: HaloContainer.decoy);
     await devOpen(t, chat());

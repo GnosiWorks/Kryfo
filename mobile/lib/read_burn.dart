@@ -17,9 +17,15 @@ import 'widgets/row_anchor.dart';
 
 /// a row that came in timed and has not been read: its clock waits. shown
 /// only in its own chat, where reading it starts the clock, never in a
-/// gallery, a media strip or the pins sheet
+/// gallery, a media strip, the pins sheet, search, saved messages, the chat
+/// list line or a quote of it
 bool burnWaitsRow(Map<String, Object?> r) =>
     r['direction'] == 'in' && r['burn_secs'] != null && r['burn_at'] == null;
+
+/// [burnWaitsRow] as sql, for a query that leaves those rows out before its
+/// limit. [m] names the messages table
+String burnWaitsSql([String m = 'messages']) =>
+    "($m.direction = 'in' AND $m.burn_secs IS NOT NULL AND $m.burn_at IS NULL)";
 
 /// what is left on a timed message's clock, as both chats show it: a fresh
 /// 5 minute clock reads 5m 00s, 61 seconds 1m 01s

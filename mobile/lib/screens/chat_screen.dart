@@ -1935,8 +1935,9 @@ class _ChatScreenState extends State<ChatScreen>
         if (t != null && m.burnWaits) m.burnAt = t;
       }
     });
-    // a pin that waited shows now
+    // a pin that waited shows now, and the chat list line its words
     unawaited(_refreshPinCount());
+    unawaited(appState.refreshContacts());
     return at;
   }
 
@@ -3659,7 +3660,11 @@ class _ChatScreenState extends State<ChatScreen>
         quotedAuthor = original.direction == 'out'
             ? l10n.chatYou2
             : l10n.chatThem;
-        if (original.sticker != null) {
+        // a timed message not read yet says only that it is one: its words
+        // show on its own bubble, where reading them starts its clock
+        if (original.burnWaits) {
+          quoted = l10n.timedMessageLabel;
+        } else if (original.sticker != null) {
           quoted = l10n.stickerLabel;
           quotedSticker = original.sticker;
         } else if (original.text.isNotEmpty) {

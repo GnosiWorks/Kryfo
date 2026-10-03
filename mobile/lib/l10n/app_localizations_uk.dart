@@ -2721,9 +2721,6 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get groupChat0s => '0 с';
-
-  @override
   String get groupChatReply => 'Відповісти';
 
   @override
@@ -7490,6 +7487,9 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get stickerLabel => 'Стікер';
+
+  @override
+  String get timedMessageLabel => 'Зникаюче повідомлення';
 
   @override
   String get stickerNewer => 'З новішої версії Kryfo';

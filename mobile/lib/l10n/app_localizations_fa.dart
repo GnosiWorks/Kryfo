@@ -2670,9 +2670,6 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
-  String get groupChat0s => '۰ ثانیه';
-
-  @override
   String get groupChatReply => 'پاسخ';
 
   @override
@@ -7369,6 +7366,9 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get stickerLabel => 'استیکر';
+
+  @override
+  String get timedMessageLabel => 'پیام زمان‌دار';
 
   @override
   String get stickerNewer => 'از نسخه‌ی جدیدتر Kryfo';

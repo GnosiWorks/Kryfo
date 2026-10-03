@@ -2557,9 +2557,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get groupChat0s => '0 秒';
-
-  @override
   String get groupChatReply => '回复';
 
   @override
@@ -7061,6 +7058,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get stickerLabel => '贴纸';
 
   @override
+  String get timedMessageLabel => '限时消息';
+
+  @override
   String get stickerNewer => '来自更新版本的 Kryfo';
 
   @override
@@ -9830,9 +9830,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
     );
     return '$_temp0';
   }
-
-  @override
-  String get groupChat0s => '0 秒';
 
   @override
   String get groupChatReply => '回覆';
@@ -14334,6 +14331,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get stickerLabel => '貼圖';
+
+  @override
+  String get timedMessageLabel => '限時訊息';
 
   @override
   String get stickerNewer => '來自較新版的 Kryfo';

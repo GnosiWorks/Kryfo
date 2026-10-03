@@ -90,7 +90,7 @@ import 'signal_session.dart';
 import 'signal_stores.dart' show invitePreKeyId, kDevSignalPrefix;
 import 'dart:isolate';
 import 'dlog.dart';
-import 'read_burn.dart' show burnWaitsRow;
+import 'read_burn.dart' show burnWaitsRow, burnWaitsSql;
 import 'stranger_gate.dart';
 import 'fast_gate.dart';
 import 'mentions.dart';
@@ -2963,14 +2963,20 @@ class HaloDb implements GroupOwedStore {
 
   // every saved message across all chats, newest first. peer_id rides along
   // so the saved screen can show who it's from.
+  // a timed message not read yet is left out: it shows in its own chat
+  // alone, where reading it starts its clock
   Future<List<Map<String, Object?>>> savedMessages() async {
     final db = await open();
-    return db.query(
+    final rows = await db.query(
       'messages',
       where: 'saved = 1',
       orderBy: 'sent_at DESC',
       limit: 500,
     );
+    return [
+      for (final r in rows)
+        if (!burnWaitsRow(r)) r,
+    ];
   }
 
   // every column that names a file of a message: a photo, or a voice note,
@@ -4845,12 +4851,13 @@ class HaloDb implements GroupOwedStore {
   }
 
   // the newest 1:1 row per peer in one query, for the home list, which
-  // refreshes after every send
+  // refreshes after every send. the burn columns say a timed one still
+  // waits to be read (burnWaitsRow)
   Future<Map<String, Map<String, Object?>>> lastMessages() async {
     final db = await open();
     final rows = await db.rawQuery('''
       SELECT m.peer_id, m.direction, m.plaintext, m.media_path, m.file_name,
-             m.sent_at, m.sticker
+             m.sent_at, m.sticker, m.burn_secs, m.burn_at
       FROM messages m
       JOIN (
         SELECT peer_id, MAX(rowid) AS r FROM messages
@@ -4960,6 +4967,9 @@ Future<List<Map<String, Object?>>> runSearchQuery(
     "(m.group_id IN (SELECT group_id FROM groups) OR (m.group_id IS NULL "
         "AND (m.direction = 'out' OR m.peer_id IN "
         '(SELECT halo_id FROM contacts WHERE accepted = 1))))',
+    // a timed message not read yet is found in its own chat alone, where
+    // reading it starts its clock
+    'NOT ${burnWaitsSql('m')}',
   ];
   final args = <Object?>[];
   final kw = kindWhere(kind);
@@ -12751,8 +12761,12 @@ class AppState extends ChangeNotifier {
     final media = last['media_path'] as String?;
     final fileName = last['file_name'] as String?;
     String body;
-    // a sticker's text is its emoji; the row says what it is
-    if (last['sticker'] != null) {
+    // a timed message not read yet says only that it is one: its words show
+    // in the chat, where reading them starts its clock
+    if (burnWaitsRow(last)) {
+      body = l10n.timedMessageLabel;
+    } else if (last['sticker'] != null) {
+      // a sticker's text is its emoji; the row says what it is
       body = l10n.stickerLabel;
     } else if (text.isNotEmpty) {
       body = text;

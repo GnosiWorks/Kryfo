@@ -321,6 +321,30 @@ void main() {
     await close(t);
   });
 
+  testWidgets('a quote of it says only that it is a timed message until it '
+      'is read', (t) async {
+    lockState.openForTest(enabled: true);
+    lockState.lock();
+    await open(
+      t,
+      more: (db) => db.add('reply01', 'about that', more: {'reply_to': _timed}),
+    );
+    final words = find.text('gone soon', findRichText: true);
+    final label = find.text('Timed message', findRichText: true);
+    expect(db.burnAt(_timed), isNull);
+    // its own bubble, and the quote names it
+    expect(words, findsOneWidget);
+    expect(label, findsOneWidget);
+
+    lockState.openForTest(enabled: true);
+    lockState.inDecoy = false;
+    await frames(t, 10);
+    expect(db.burnAt(_timed), isNotNull);
+    expect(label, findsNothing);
+    expect(words, findsNWidgets(2));
+    await close(t);
+  });
+
   testWidgets('a timed message not read yet is not in the pins until it is', (
     t,
   ) async {

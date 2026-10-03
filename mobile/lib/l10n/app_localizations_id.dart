@@ -2659,9 +2659,6 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get groupChat0s => '0 dtk';
-
-  @override
   String get groupChatReply => 'Balas';
 
   @override
@@ -7350,6 +7347,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get stickerLabel => 'Stiker';
+
+  @override
+  String get timedMessageLabel => 'Pesan berwaktu';
 
   @override
   String get stickerNewer => 'Dari Kryfo versi lebih baru';

@@ -2654,9 +2654,6 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get groupChat0s => '0 giây';
-
-  @override
   String get groupChatReply => 'Trả lời';
 
   @override
@@ -7337,6 +7334,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get stickerLabel => 'Nhãn dán';
+
+  @override
+  String get timedMessageLabel => 'Tin nhắn tự hủy';
 
   @override
   String get stickerNewer => 'Từ một bản Kryfo mới hơn';

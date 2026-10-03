@@ -1090,7 +1090,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             ? l10n.groupChatYou
             : orig.senderName;
       }
-      if (orig.sticker != null) {
+      // a timed message not read yet says only that it is one: its words
+      // show on its own bubble, where reading them starts its clock
+      if (orig.burnWaits) {
+        quoted = l10n.timedMessageLabel;
+      } else if (orig.sticker != null) {
         quoted = l10n.stickerLabel;
         quotedSticker = orig.sticker;
       } else if (orig.poll != null) {

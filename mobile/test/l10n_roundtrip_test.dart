@@ -1283,7 +1283,6 @@ void main() {
     expect(l.groupChatSupporter, "Supporter");
     expect(l.groupChatEdited, "Edited");
     expect(l.groupChatTapToRetry, "! Tap to retry");
-    expect(l.groupChat0s, "0s");
     expect(l.groupChatReply, "Reply");
     expect(l.groupChatPin, "Pin");
     expect(l.groupChatUnsave, "Unsave");
@@ -3327,6 +3326,7 @@ void main() {
     expect(l.stickerRemoveRecent, "Remove from recent");
     expect(l.stickerCouldNotLoad, "Stickers could not be loaded");
     expect(l.stickerLabel, "Sticker");
+    expect(l.timedMessageLabel, "Timed message");
     expect(l.stickerNewer, "From a newer Kryfo");
     expect(l.groupChatFileReach(0, 4), "Sent · on its way");
     expect(l.groupChatFileReach(1, 4), "Sent · 1 of 4 has it");

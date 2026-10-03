@@ -4224,12 +4224,6 @@ abstract class AppLocalizations {
   /// screens/group_chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'0s'**
-  String get groupChat0s;
-
-  /// screens/group_chat_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Reply'**
   String get groupChatReply;
 
@@ -11786,6 +11780,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sticker'**
   String get stickerLabel;
+
+  /// a timed message that came in and has not been read, named in words instead of its own: chat list row and reply quote (main.dart and the chat screens). its words show only on its bubble, where reading them starts its clock
+  ///
+  /// In en, this message translates to:
+  /// **'Timed message'**
+  String get timedMessageLabel;
 
   /// under a sticker this version does not have (stickers/sticker_bubble.dart)
   ///

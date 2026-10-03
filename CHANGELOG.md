@@ -20,7 +20,7 @@
 - the relay takes only what the app sends and paces each connection, the handle registry paces reads, writes and new names, and the badge service paces receipt checks.
 - the tor dot on the chat list and in chats stops pulsing once tor is usable, and pulses only a few times while it starts.
 - chat stickers play three times and rest; a tap plays them again. open chats stop their timers while they are out of sight, and the drifting chat backgrounds hold still with reduced motion.
-- a timed message you receive starts its countdown when you first see it, not when it arrives. your own copy still counts from when you send it.
+- a timed message you receive starts its countdown when you first see it, not when it arrives. your own copy still counts from when you send it. unread timed messages stay out of shared media, pins and search until read.
 
 ### Security
 - security improvements throughout. update when you can.
