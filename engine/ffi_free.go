@@ -40,6 +40,7 @@ func wipeHold() string {
 		delete(nostrSubs, k)
 	}
 	nostrInbox, nostrInboxDone = nil, nil
+	clear(pollInflight)
 	nostrMu.Unlock()
 	return torStop()
 }

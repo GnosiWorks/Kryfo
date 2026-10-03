@@ -245,9 +245,7 @@ func TestPageKeepsNoMoreThanItAskedFor(t *testing.T) {
 		}
 	}))
 	defer srv.Close()
-	old := pageQuiet
-	pageQuiet = 3 * time.Second
-	defer func() { pageQuiet = old }()
+	withPageQuiet(t, 3*time.Second)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

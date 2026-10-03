@@ -286,7 +286,7 @@ void main() {
 
   test('the relay receiver sorts with that rule', () {
     final app = sourceOf('lib/main.dart');
-    final from = app.indexOf('Future<void> receiveRelay(');
+    final from = app.indexOf('Future<Set<int>> receiveRelay(');
     // up to its loop: the body holds a brace in a string further on
     final head = app.substring(from, app.indexOf('for (final m in', from));
     final sort = callsOf(head, 'inSendOrder(').single;

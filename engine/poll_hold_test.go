@@ -6,10 +6,23 @@ package main
 // never keeps them past the hold's limits. other addresses are not kept.
 
 import (
+	"encoding/json"
 	"strings"
 	"testing"
 	"time"
 )
+
+// a poll whose batch the app kept whole
+func pollAcked(now time.Time) string {
+	raw := nostrPollAt(now)
+	if raw != "" {
+		var b pollOut
+		if json.Unmarshal([]byte(raw), &b) == nil {
+			nostrAck(b.K, "")
+		}
+	}
+	return raw
+}
 
 func pollHoldReset(t *testing.T) {
 	t.Helper()
@@ -18,6 +31,8 @@ func pollHoldReset(t *testing.T) {
 		nostrInbox, nostrInboxDone = nil, nil
 		pollHeldSince = time.Time{}
 		walkingTags = map[string]int{}
+		clear(liveTags)
+		clear(pollInflight)
 		nostrMu.Unlock()
 	}
 	reset()
@@ -38,22 +53,22 @@ func TestPollHoldsAWalkUntilItIsOut(t *testing.T) {
 	now := time.Unix(1_800_000_000, 0)
 	walkBegins("x-alice")
 	pollHoldPut("x-alice|c2")
-	if got := nostrPollAt(now); got != "" {
+	if got := pollAcked(now); got != "" {
 		t.Fatalf("handed over while the walk was going: %s", got)
 	}
 	// the next page
 	pollHoldPut("x-alice|c0", "x-alice|c1")
-	if got := nostrPollAt(now.Add(5 * time.Second)); got != "" {
+	if got := pollAcked(now.Add(5 * time.Second)); got != "" {
 		t.Fatalf("handed over while the walk was going: %s", got)
 	}
 	walkEnds("x-alice")
-	got := nostrPollAt(now.Add(6 * time.Second))
+	got := pollAcked(now.Add(6 * time.Second))
 	for _, c := range []string{"c2", "c0", "c1"} {
 		if !strings.Contains(got, `"c":"`+c+`"`) {
 			t.Fatalf("%s missing from the batch: %s", c, got)
 		}
 	}
-	if again := nostrPollAt(now.Add(7 * time.Second)); again != "" {
+	if again := pollAcked(now.Add(7 * time.Second)); again != "" {
 		t.Fatalf("handed over twice: %s", again)
 	}
 }
@@ -61,7 +76,7 @@ func TestPollHoldsAWalkUntilItIsOut(t *testing.T) {
 func TestPollWithNoWalkHandsOverAtOnce(t *testing.T) {
 	pollHoldReset(t)
 	pollHoldPut("x-alice|live")
-	if got := nostrPollAt(time.Unix(1_800_000_000, 0)); !strings.Contains(got, "live") {
+	if got := pollAcked(time.Unix(1_800_000_000, 0)); !strings.Contains(got, "live") {
 		t.Fatalf("a live wrap waited: %q", got)
 	}
 }
@@ -71,15 +86,15 @@ func TestPollHoldEndsAfterItsTime(t *testing.T) {
 	now := time.Unix(1_800_000_000, 0)
 	walkBegins("x-alice")
 	pollHoldPut("x-alice|c0")
-	if got := nostrPollAt(now); got != "" {
+	if got := pollAcked(now); got != "" {
 		t.Fatalf("handed over at once: %s", got)
 	}
-	if got := nostrPollAt(now.Add(pollHoldMax)); !strings.Contains(got, "c0") {
+	if got := pollAcked(now.Add(pollHoldMax)); !strings.Contains(got, "c0") {
 		t.Fatalf("a walk that never ends kept the wraps: %q", got)
 	}
 	// a new hold starts from the next line, not the old one
 	pollHoldPut("x-alice|c1")
-	if got := nostrPollAt(now.Add(pollHoldMax + time.Second)); got != "" {
+	if got := pollAcked(now.Add(pollHoldMax + time.Second)); got != "" {
 		t.Fatalf("the next line was not held: %s", got)
 	}
 }
@@ -89,7 +104,7 @@ func TestPollHoldEndsPastItsSize(t *testing.T) {
 	walkBegins("x-alice")
 	big := strings.Repeat("a", pollHoldBytes/2+1)
 	pollHoldPut("x-alice|"+big, "x-alice|"+big)
-	if got := nostrPollAt(time.Unix(1_800_000_000, 0)); got == "" {
+	if got := pollAcked(time.Unix(1_800_000_000, 0)); got == "" {
 		t.Fatal("held past the size limit")
 	}
 }
@@ -101,7 +116,7 @@ func TestPollHoldsOnlyTheAddressWalked(t *testing.T) {
 	now := time.Unix(1_800_000_000, 0)
 	walkBegins("x-alice")
 	pollHoldPut("x-alice|a1", "x-bob|b1", "room:r1:x-carol|r1", "firstcontact|f1")
-	got := nostrPollAt(now)
+	got := pollAcked(now)
 	for _, c := range []string{"b1", "r1", "f1"} {
 		if !strings.Contains(got, `"c":"`+c+`"`) {
 			t.Fatalf("%s waited on another address's walk: %s", c, got)
@@ -111,12 +126,12 @@ func TestPollHoldsOnlyTheAddressWalked(t *testing.T) {
 		t.Fatalf("the walked address went over: %s", got)
 	}
 	pollHoldPut("x-bob|b2", "x-alice|a0")
-	got = nostrPollAt(now.Add(time.Second))
+	got = pollAcked(now.Add(time.Second))
 	if !strings.Contains(got, "b2") || strings.Contains(got, "a0") {
 		t.Fatalf("the second poll: %s", got)
 	}
 	walkEnds("x-alice")
-	got = nostrPollAt(now.Add(2 * time.Second))
+	got = pollAcked(now.Add(2 * time.Second))
 	if !strings.Contains(got, "a1") || !strings.Contains(got, "a0") ||
 		strings.Index(got, "a1") > strings.Index(got, "a0") {
 		t.Fatalf("the walk did not go over whole and in arrival order: %s", got)
@@ -131,11 +146,11 @@ func TestPollHoldsUntilEveryRelaysWalkIsOut(t *testing.T) {
 	walkBegins("x-alice")
 	pollHoldPut("x-alice|a1")
 	walkEnds("x-alice")
-	if got := nostrPollAt(now); got != "" {
+	if got := pollAcked(now); got != "" {
 		t.Fatalf("went over with a relay still walking: %s", got)
 	}
 	walkEnds("x-alice")
-	if got := nostrPollAt(now.Add(time.Second)); !strings.Contains(got, "a1") {
+	if got := pollAcked(now.Add(time.Second)); !strings.Contains(got, "a1") {
 		t.Fatalf("kept after both walks were out: %q", got)
 	}
 	nostrMu.Lock()

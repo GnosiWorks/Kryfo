@@ -248,8 +248,13 @@ class ArrivalRows implements HaloDb {
   var _clock = 0;
   final seen = <String>{};
   final held = <String>[];
-  // what was held, cipher by cipher, as takeHeld hands it back
-  final heldCiphers = <String, List<String>>{};
+  // what was held, row by row, as heldOf hands it back
+  final heldRows = <String, List<({int id, String cipher})>>{};
+  var _heldId = 0;
+  Map<String, List<String>> get heldCiphers => {
+    for (final e in heldRows.entries)
+      if (e.value.isNotEmpty) e.key: [for (final r in e.value) r.cipher],
+  };
   final vouches = <String, Set<String>>{};
   // when each vouch and reaction was stamped
   final vouchedAt = <String, int?>{};
@@ -555,13 +560,31 @@ class ArrivalRows implements HaloDb {
   Future<void> holdCipher(String peerId, String cipher) async {
     _hit('holdCipher', peerId, null);
     held.add(peerId);
-    (heldCiphers[peerId] ??= []).add(cipher);
+    (heldRows[peerId] ??= []).add((id: ++_heldId, cipher: cipher));
   }
 
   @override
-  Future<List<String>> takeHeld(String peerId) async {
-    held.removeWhere((p) => p == peerId);
-    return _hit('takeHeld', peerId, heldCiphers.remove(peerId) ?? const []);
+  Future<List<({int id, String cipher})>> heldOf(String peerId) async =>
+      _hit('heldOf', peerId, [...?heldRows[peerId]]);
+
+  @override
+  Future<List<String>> heldOfAccepted() async => _hit('heldOfAccepted', null, [
+    for (final e in heldRows.entries)
+      if (e.value.isNotEmpty &&
+          people[e.key]?['accepted'] == 1 &&
+          people[e.key]?['blocked'] != 1)
+        e.key,
+  ]);
+
+  @override
+  Future<void> forgetHeld(int id) async {
+    _hit('forgetHeld', id, null);
+    for (final e in heldRows.entries) {
+      if (e.value.any((r) => r.id == id)) {
+        e.value.removeWhere((r) => r.id == id);
+        held.remove(e.key);
+      }
+    }
   }
 
   @override

@@ -309,11 +309,18 @@ extern char* HaloNostrKick(void);
 //
 extern char* HaloMemStats(void);
 
-// what the relays delivered since the last poll, as a json array of
-// {"t": tag, "c": content}, or "" when there is nothing. the events in it
-// are remembered as seen from here on.
+// what the relays delivered since the last poll, as {"k": token, "m": [...]}
+// with one {"t": tag, "c": content} per event, or "" when there is nothing.
+// the events in it are remembered as seen only once HaloNostrAck confirms
+// them; a batch not confirmed by the next poll is offered again.
 //
 extern char* HaloNostrPoll(void);
+
+// the app has kept a batch from the poll: token is its "k", failed a json
+// array of the places in its "m" the app could not keep, which are offered
+// again. "ok", or "error: ..." with the batch left to come again.
+//
+extern char* HaloNostrAck(char* cToken, char* cFailed);
 
 // GET a page over tor and nothing else, for the sender-side link preview.
 // capped at 128kb, html only, no user agent, "error: ..." on any failure

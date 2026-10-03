@@ -44,6 +44,7 @@ type siConn struct {
 	pings     []time.Time
 	kill      context.CancelFunc
 	mute      bool // takes events and never answers, like a dead circuit
+	ws        *ws.Conn
 }
 
 // one req, when it came and what it asked for
@@ -67,6 +68,12 @@ type relayStandIn struct {
 	// stand-in does not have
 	upgradeDelay time.Duration
 	accepted     int // events taken
+	// the stallAt-th request for stored events, counted over every
+	// connection, gets no answer while its socket stays up, and with
+	// stallAll every one after it too
+	stallAt  int
+	stallAll bool
+	asked    int
 }
 
 func newRelayStandIn(t *testing.T, pongDelay time.Duration) *relayStandIn {
@@ -120,6 +127,9 @@ func (s *relayStandIn) handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer conn.CloseNow()
+	s.mu.Lock()
+	c.ws = conn
+	s.mu.Unlock()
 	// a media wrap is past the library's 32 KB default, as it is on real relays
 	conn.SetReadLimit(1 << 20)
 	for {
@@ -147,7 +157,15 @@ func (s *relayStandIn) handle(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 			delay := s.reqDelay
+			stall := false
+			if !f.LimitZero {
+				s.asked++
+				stall = s.asked == s.stallAt || (s.stallAll && s.stallAt > 0 && s.asked > s.stallAt)
+			}
 			s.mu.Unlock()
+			if stall {
+				continue
+			}
 			if delay > 0 {
 				time.Sleep(delay)
 			}
@@ -189,6 +207,34 @@ func (s *relayStandIn) handle(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
+	}
+}
+
+// ev goes out live on every open connection's first subscription it
+// matches, as a relay passes on what is published to it
+func (s *relayStandIn) pushLive(ev nostr.Event) {
+	s.mu.Lock()
+	s.events = append(s.events, ev)
+	type target struct {
+		conn *ws.Conn
+		sid  string
+	}
+	var to []target
+	for _, c := range s.conns {
+		if c.ws == nil || !c.closed.IsZero() || len(c.reqs) == 0 {
+			continue
+		}
+		f := c.reqs[0].filter
+		f.Limit = 0
+		if f.Matches(ev) {
+			to = append(to, target{c.ws, c.subIDs[0]})
+		}
+	}
+	s.mu.Unlock()
+	for _, t := range to {
+		sid := t.sid
+		b, _ := nostr.EventEnvelope{SubscriptionID: &sid, Event: ev}.MarshalJSON()
+		t.conn.Write(context.Background(), ws.MessageText, b)
 	}
 }
 

@@ -9,7 +9,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kryfo/main.dart' show HaloDb, kRequestRows;
+import 'package:kryfo/main.dart' show HaloDb, kHeldOfAccepted, kRequestRows;
 import 'package:path/path.dart' as p;
 
 void main() {
@@ -34,6 +34,14 @@ void main() {
         case 'openDatabase':
           return 1;
         case 'query':
+          if (sql == kHeldOfAccepted) {
+            return {
+              'columns': ['peer_id'],
+              'rows': [
+                ['accepted-one'],
+              ],
+            };
+          }
           if (sql.contains('user_version')) {
             return {
               'columns': ['user_version'],
@@ -98,5 +106,20 @@ void main() {
       said.where((s) => s.contains('FROM contacts')).first,
       contains(kRequestRows),
     );
+  });
+
+  test('the shelf goes in without an accept only for someone accepted '
+      'already and not blocked', () async {
+    expect(
+      kHeldOfAccepted,
+      contains('JOIN contacts c ON c.halo_id = h.peer_id'),
+    );
+    expect(kHeldOfAccepted, contains('c.accepted = 1'));
+    expect(kHeldOfAccepted, contains('IFNULL(c.blocked, 0) = 0'));
+    final db = HaloDb();
+    await db.open();
+    said.clear();
+    expect(await db.heldOfAccepted(), ['accepted-one']);
+    expect(said.where((s) => s.contains('held_onion')), [kHeldOfAccepted]);
   });
 }
