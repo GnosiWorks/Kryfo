@@ -21,7 +21,7 @@ import 'dlog.dart';
 import 'engine_strings.dart';
 import 'l10n/l10n.dart';
 import 'l10n/numbers.dart';
-import 'lock_guard.dart' show lockGuard;
+import 'lock_guard.dart' show LockDropped, lockGuard;
 import 'notifications.dart';
 
 // vault: the everyday app with its hidden chats. the decoy's vault comes back
@@ -1309,6 +1309,8 @@ class LockState extends ChangeNotifier {
   // returns, or by a deadline in case it never does.
   DateTime? _holdUntil;
   int _holdGen = 0;
+  // how many holds a real leave has ended
+  int _holdsEnded = 0;
   bool get holding =>
       _holdUntil != null && DateTime.now().isBefore(_holdUntil!);
 
@@ -1319,8 +1321,18 @@ class LockState extends ChangeNotifier {
     await lockGuard.unlocked();
     _holdUntil = DateTime.now().add(const Duration(minutes: 5));
     final gen = ++_holdGen;
+    final ended = _holdsEnded;
+    final decoy = _inDecoy;
+    final vault = _inVault;
     try {
-      return await body();
+      final r = await body();
+      if (_holdsEnded != ended) {
+        // left from inside the picker: what it gave back waits for the pin,
+        // and never reaches another session
+        await lockGuard.unlocked();
+        if (_inDecoy != decoy || _inVault != vault) throw const LockDropped();
+      }
+      return r;
     } finally {
       // a beat past the return: the resume event trails the picker's
       // result and must not see the hold already dropped. a newer hold
@@ -1340,6 +1352,16 @@ class LockState extends ChangeNotifier {
   void leaving() {
     if (!_enabled) return;
     _leftWhileHeld = holding;
+    lock();
+  }
+
+  // android says the person went home or to recents, or the screen went
+  // off. leaving from inside a picker locks too: the hold ends here. with
+  // no hold open the lifecycle already locks
+  void left() {
+    if (!_enabled || !holding) return;
+    _holdUntil = null;
+    _holdsEnded++;
     lock();
   }
 

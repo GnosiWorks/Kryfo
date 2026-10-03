@@ -15785,6 +15785,7 @@ class _LockGateState extends State<_LockGate> {
     load: lockState.load,
     leaving: lockState.leaving,
     returned: lockState.returned,
+    left: lockState.left,
     guard: lockGuard,
     quiet: () => sessionQuiet,
     pad: (_) => const LockScreen(),

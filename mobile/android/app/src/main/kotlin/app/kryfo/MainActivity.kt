@@ -8,6 +8,7 @@ import android.os.Process
 import android.os.SystemClock
 import android.app.job.JobInfo
 import android.app.job.JobScheduler
+import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.ContentValues
 import android.content.ClipData
@@ -25,11 +26,13 @@ import java.io.ByteArrayInputStream
 import android.content.Context
 import android.provider.MediaStore
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
 import android.content.ActivityNotFoundException
 import android.net.Uri
 import android.provider.Settings
@@ -67,6 +70,18 @@ class MainActivity : FlutterFragmentActivity() {
             @Suppress("OVERRIDE_DEPRECATION")
             override fun onActivityResult(activity: android.app.Activity, requestCode: Int, resultCode: Int, data: Intent?): Boolean = false
         }
+
+        // heard for the whole process, so it still hears while a picker,
+        // the camera or a share sheet covers this screen
+        private var leftWatch: LeftWatch? = null
+
+        // home, recents or the screen going off. dart acts on it only while
+        // a picker hold is open; the lifecycle covers the rest
+        fun tellLeft() {
+            val engine = FlutterEngineCache.getInstance().get(ENGINE_ID) ?: return
+            BasicMessageChannel(engine.dartExecutor.binaryMessenger, "kryfo/window", StringCodec.INSTANCE)
+                .send("left")
+        }
     }
 
     // one engine per process, made by HaloApplication, and every activity
@@ -82,6 +97,9 @@ class MainActivity : FlutterFragmentActivity() {
     override fun shouldDestroyEngineWithHost(): Boolean = false
 
     override fun onNewIntent(intent: Intent) {
+        // an intent from outside while something else covers this screen:
+        // the person went somewhere first. dart hears it before the intent
+        if (!lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) tellLeft()
         super.onNewIntent(intent)
         setIntent(intent)
         tools.offer(intent)
@@ -260,6 +278,20 @@ class MainActivity : FlutterFragmentActivity() {
             addContentView(it, ViewGroup.LayoutParams(0, 0))
         }
         ActivityCompat.setPermissionCompatDelegate(promptSeen)
+        if (leftWatch == null) {
+            val filter = IntentFilter().apply {
+                @Suppress("DEPRECATION")
+                addAction(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)
+                addAction(Intent.ACTION_SCREEN_OFF)
+                // a process android parks gets only the last of off and on
+                addAction(Intent.ACTION_SCREEN_ON)
+            }
+            // exported: some launchers send the home broadcast as themselves,
+            // and one from anywhere else can only bring the lock up
+            leftWatch = LeftWatch().also {
+                ContextCompat.registerReceiver(applicationContext, it, filter, ContextCompat.RECEIVER_EXPORTED)
+            }
+        }
     }
 
     private fun setSecureWindow(on: Boolean) {
@@ -800,6 +832,20 @@ class MainActivity : FlutterFragmentActivity() {
         } catch (e: Exception) {
             false
         }
+    }
+}
+
+// the person left the app outright, wherever they were in it
+private class LeftWatch : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        @Suppress("DEPRECATION")
+        if (intent.action == Intent.ACTION_CLOSE_SYSTEM_DIALOGS) {
+            // a screenshot or the power menu keep the person where they are
+            when (intent.getStringExtra("reason")) {
+                "screenshot", "globalactions" -> return
+            }
+        }
+        MainActivity.tellLeft()
     }
 }
 

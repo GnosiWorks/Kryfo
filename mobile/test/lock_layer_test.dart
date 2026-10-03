@@ -72,6 +72,8 @@ class _App {
   int padTaps = 0;
   int keys = 0;
   bool quiet = false;
+  // android's word that the person went home or to recents
+  int lefts = 0;
   // the app's own lock-up: a vault session shuts here
   int ups = 0;
   VoidCallback? onUp;
@@ -93,6 +95,7 @@ class _App {
         load: () async {},
         leaving: () => lock.set(locked: true),
         returned: () {},
+        left: () => lefts++,
         guard: guard,
         quiet: () => quiet,
         pad: (_) => _Pad(this),
@@ -207,10 +210,10 @@ Widget _page(String text) => Scaffold(
 );
 
 // android's word that the app was left
-Future<void> _away(WidgetTester tester) =>
+Future<void> _away(WidgetTester tester, [String word = 'away']) =>
     tester.binding.defaultBinaryMessenger.handlePlatformMessage(
       lockWindowChannel.name,
-      lockWindowChannel.codec.encodeMessage('away'),
+      lockWindowChannel.codec.encodeMessage(word),
       (_) {},
     );
 
@@ -523,6 +526,50 @@ void main() {
     // the listener form needs android 14, the app runs from 7
     expect(k, isNot(contains('OnWindowVisibilityChangeListener')));
     expect(k, contains('override fun onUserLeaveHint'));
+  });
+
+  testWidgets('leaving from inside a picker reaches the lock', (tester) async {
+    final a = _App(tester);
+    await a.pump();
+    await _away(tester, 'left');
+    expect(a.lefts, 1);
+  });
+
+  test('android says when the person leaves from inside a picker', () {
+    final k = File(
+      'android/app/src/main/kotlin/app/kryfo/MainActivity.kt',
+    ).readAsStringSync();
+    for (final action in [
+      'Intent.ACTION_CLOSE_SYSTEM_DIALOGS',
+      'Intent.ACTION_SCREEN_OFF',
+      // a parked process gets only the last of off and on
+      'Intent.ACTION_SCREEN_ON',
+    ]) {
+      expect(k, contains('addAction($action)'));
+    }
+    expect(k, contains('.send("left")'));
+    // for the whole process: it hears while a picker covers the screen
+    expect(k, contains('registerReceiver(applicationContext, '));
+    expect(k, isNot(contains('unregisterReceiver')));
+    // android 13 and later want the flag; some launchers send it themselves
+    expect(k, contains('ContextCompat.RECEIVER_EXPORTED'));
+    // a screenshot keeps the person where they are, home does not
+    expect(k, contains('"screenshot", "globalactions" -> return'));
+    expect(k, isNot(contains('"homekey"')));
+    // an intent from outside while covered: dart hears it before the intent
+    final at = k.indexOf('override fun onNewIntent');
+    final told = k.indexOf('tellLeft()', at);
+    expect(told, greaterThan(at));
+    expect(told, lessThan(k.indexOf('super.onNewIntent', at)));
+  });
+
+  test('there is only ever one main screen', () {
+    final m = File(
+      'android/app/src/main/AndroidManifest.xml',
+    ).readAsStringSync();
+    final at = m.indexOf('android:name=".MainActivity"');
+    final end = m.indexOf('>', at);
+    expect(m.substring(at, end), contains('android:launchMode="singleTask"'));
   });
 
   testWidgets('a decoy unlock drops what waited', (tester) async {
