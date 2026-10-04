@@ -6456,26 +6456,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get pinsUnpin => 'Sfissa';
 
   @override
-  String powNoteFirstMessageToSomeone(int secs) {
-    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
-    final String secsString = secsNumberFormat.format(secs);
-
-    return 'Primo messaggio a una persona nuova · prova che è autentico · $secsString s';
-  }
-
-  @override
-  String powNoteFirstMessageSlow(int secs) {
-    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
-    final String secsString = secsNumberFormat.format(secs);
-
-    return 'Primo messaggio a una persona nuova · prova che è autentico · $secsString s · fino a un minuto su un telefono lento';
-  }
-
-  @override
   String previewStripFetchedOverTor(Object domainOf) {
     return '$domainOf · scaricata via tor';
   }

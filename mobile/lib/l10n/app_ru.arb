@@ -1679,8 +1679,6 @@
   "pinsNothingPinnedHereYet": "Здесь пока ничего не закреплено. Удерживай сообщение и выбери «Закрепить» — и оно будет ждать здесь всех в чате.",
   "pinsJump": "Перейти",
   "pinsUnpin": "Открепить",
-  "powNoteFirstMessageToSomeone": "Первое сообщение новому человеку · доказываем, что оно настоящее · {secs} с",
-  "powNoteFirstMessageSlow": "Первое сообщение новому человеку · доказываем, что оно настоящее · {secs} с · на медленном телефоне до минуты",
   "previewStripFetchedOverTor": "{domainOf} · загружено через tor",
   "previewStripDropThePreview": "Убрать превью",
   "previewStripAddPreview": "Добавить превью",

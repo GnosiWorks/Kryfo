@@ -3157,38 +3157,6 @@ void main() {
     expect(l.pinsJump, "Jump");
     expect(l.pinsUnpin, "Unpin");
     expect(
-      l.powNoteFirstMessageToSomeone(0),
-      "First message to someone new · proving it is real · 0s",
-    );
-    expect(
-      l.powNoteFirstMessageToSomeone(1),
-      "First message to someone new · proving it is real · 1s",
-    );
-    expect(
-      l.powNoteFirstMessageToSomeone(2),
-      "First message to someone new · proving it is real · 2s",
-    );
-    expect(
-      l.powNoteFirstMessageToSomeone(5),
-      "First message to someone new · proving it is real · 5s",
-    );
-    expect(
-      l.powNoteFirstMessageSlow(0),
-      "First message to someone new · proving it is real · 0s · up to a minute on a slow phone",
-    );
-    expect(
-      l.powNoteFirstMessageSlow(1),
-      "First message to someone new · proving it is real · 1s · up to a minute on a slow phone",
-    );
-    expect(
-      l.powNoteFirstMessageSlow(2),
-      "First message to someone new · proving it is real · 2s · up to a minute on a slow phone",
-    );
-    expect(
-      l.powNoteFirstMessageSlow(5),
-      "First message to someone new · proving it is real · 5s · up to a minute on a slow phone",
-    );
-    expect(
       l.previewStripFetchedOverTor("<domainOf>"),
       "<domainOf> · fetched over tor",
     );

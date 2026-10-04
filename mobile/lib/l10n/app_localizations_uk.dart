@@ -6510,26 +6510,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get pinsUnpin => 'Відкріпити';
 
   @override
-  String powNoteFirstMessageToSomeone(int secs) {
-    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
-    final String secsString = secsNumberFormat.format(secs);
-
-    return 'Перше повідомлення новій людині · доводимо, що воно справжнє · $secsString с';
-  }
-
-  @override
-  String powNoteFirstMessageSlow(int secs) {
-    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
-    final String secsString = secsNumberFormat.format(secs);
-
-    return 'Перше повідомлення новій людині · доводимо, що воно справжнє · $secsString с · на повільному телефоні до хвилини';
-  }
-
-  @override
   String previewStripFetchedOverTor(Object domainOf) {
     return '$domainOf · завантажено через tor';
   }

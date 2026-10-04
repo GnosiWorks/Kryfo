@@ -10197,18 +10197,6 @@ abstract class AppLocalizations {
   /// **'Unpin'**
   String get pinsUnpin;
 
-  /// widgets/pow_note.dart
-  ///
-  /// In en, this message translates to:
-  /// **'First message to someone new · proving it is real · {secs}s'**
-  String powNoteFirstMessageToSomeone(int secs);
-
-  /// widgets/pow_note.dart: shown from 20 seconds on
-  ///
-  /// In en, this message translates to:
-  /// **'First message to someone new · proving it is real · {secs}s · up to a minute on a slow phone'**
-  String powNoteFirstMessageSlow(int secs);
-
   /// widgets/preview_strip.dart
   ///
   /// In en, this message translates to:

@@ -6462,26 +6462,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get pinsUnpin => 'Loslösen';
 
   @override
-  String powNoteFirstMessageToSomeone(int secs) {
-    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
-    final String secsString = secsNumberFormat.format(secs);
-
-    return 'Erste Nachricht an jemand Neues · Echtheit wird nachgewiesen · ${secsString}s';
-  }
-
-  @override
-  String powNoteFirstMessageSlow(int secs) {
-    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
-    final String secsString = secsNumberFormat.format(secs);
-
-    return 'Erste Nachricht an jemand Neues · Echtheit wird nachgewiesen · ${secsString}s · auf einem langsamen Handy bis zu einer Minute';
-  }
-
-  @override
   String previewStripFetchedOverTor(Object domainOf) {
     return '$domainOf · über tor abgerufen';
   }

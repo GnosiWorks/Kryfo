@@ -38,7 +38,7 @@ import '../widgets/notice_banner.dart';
 import '../widgets/swipe_to_reply.dart';
 import '../signal_session.dart';
 import '../message_envelope.dart'
-    show wrapMessage, powBusy, SenderInfo, grindPow, powBits;
+    show wrapMessage, SenderInfo, grindPow, powBits;
 import '../outbox.dart' show powFits;
 import '../theme.dart';
 import '../media_progress.dart';
@@ -46,7 +46,6 @@ import '../media_send.dart'
     show sendChunkedMediaTo, cancelMediaSend, mediaInflight;
 import '../image_strip.dart';
 import '../mp4_strip.dart';
-import '../widgets/pow_note.dart';
 import '../widgets/decode_px.dart';
 import '../notifications.dart' show clearNotificationsFor;
 import '../devchat/dev_chat.dart' show DevChatRow, DevRow, DevState;
@@ -2504,13 +2503,8 @@ class _ChatScreenState extends State<ChatScreen>
           : await session.powNonceOf(msg.msgUid!);
       if (nonce != null && !powFits(msg.text, nonce)) {
         final text = msg.text;
-        powBusy.value = DateTime.now();
-        try {
-          nonce =
-              grindPowForTest?.call(text) ?? await compute(_grindPowTask, text);
-        } finally {
-          powBusy.value = null;
-        }
+        nonce =
+            grindPowForTest?.call(text) ?? await compute(_grindPowTask, text);
         await session.setPowNonce(msg.msgUid!, nonce);
         if (!mounted) return;
       }
@@ -3484,15 +3478,8 @@ class _ChatScreenState extends State<ChatScreen>
         // may have let us go and its gate asks again
         final fresh = !await hasSessionWith(widget.peerHaloId);
         if (_recvCount == 0 || fresh) {
-          powBusy.value = DateTime.now();
-          final int n;
-          try {
-            n =
-                grindPowForTest?.call(text) ??
-                await compute(_grindPowTask, text);
-          } finally {
-            powBusy.value = null;
-          }
+          final int n =
+              grindPowForTest?.call(text) ?? await compute(_grindPowTask, text);
           powNonce = n;
           // kept on the row so a retry from the outbox carries the same nonce
           await session.setPowNonce(msgUid, n);
@@ -4894,7 +4881,6 @@ class _ChatScreenState extends State<ChatScreen>
                     )
                   : const SizedBox(key: ValueKey('status-none'), width: 0),
             ),
-            const PowNote(),
             // tor still warming: messages typed now are queued. not on a
             // phone whose identity has moved, where tor is off on purpose.
             _Fold(

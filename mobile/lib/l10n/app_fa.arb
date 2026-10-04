@@ -1679,8 +1679,6 @@
   "pinsNothingPinnedHereYet": "هنوز چیزی این‌جا سنجاق نشده. پیامی را نگه دارید و «سنجاق» را انتخاب کنید تا این‌جا برای همه‌ی اعضای گفت‌وگو بماند.",
   "pinsJump": "رفتن",
   "pinsUnpin": "برداشتن سنجاق",
-  "powNoteFirstMessageToSomeone": "اولین پیام به کسی تازه · در حال اثبات واقعی بودنش · ⁨{secs}⁩ ثانیه",
-  "powNoteFirstMessageSlow": "اولین پیام به کسی تازه · در حال اثبات واقعی بودنش · ⁨{secs}⁩ ثانیه · روی گوشی کند تا یک دقیقه",
   "previewStripFetchedOverTor": "⁨{domainOf}⁩ · از راه tor گرفته شد",
   "previewStripDropThePreview": "حذف پیش‌نمایش",
   "previewStripAddPreview": "افزودن پیش‌نمایش",

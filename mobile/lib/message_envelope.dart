@@ -4,7 +4,6 @@
 
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:crypto/crypto.dart';
 import 'bidi_safe.dart';
 import 'dlog.dart';
@@ -255,10 +254,6 @@ int _leadingZeroBits(List<int> hash) {
   }
   return bits;
 }
-
-// since when a grind is running. the chat shows a line under the composer
-// while it is set, as a slow phone can take a minute.
-final ValueNotifier<DateTime?> powBusy = ValueNotifier(null);
 
 // runs on the caller's isolate: wrap it in compute() to keep the ui smooth
 int grindPow(String seed, int bits) {

@@ -6512,26 +6512,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pinsUnpin => 'إلغاء التثبيت';
 
   @override
-  String powNoteFirstMessageToSomeone(int secs) {
-    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
-    final String secsString = secsNumberFormat.format(secs);
-
-    return 'أول رسالة لشخص جديد · جارٍ إثبات أنها حقيقية · ⁨$secsString⁩ ث';
-  }
-
-  @override
-  String powNoteFirstMessageSlow(int secs) {
-    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
-    final String secsString = secsNumberFormat.format(secs);
-
-    return 'أول رسالة لشخص جديد · جارٍ إثبات أنها حقيقية · ⁨$secsString⁩ ث · حتى دقيقة على هاتف بطيء';
-  }
-
-  @override
   String previewStripFetchedOverTor(Object domainOf) {
     return '⁨$domainOf⁩ · جُلبت عبر tor';
   }

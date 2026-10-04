@@ -179,12 +179,7 @@ Future<String> _sendChunkedMediaInner({
   if (showProgress) mediaProgressStart(msgUid, chatKey: progressKey);
   int? pow;
   if (needPow) {
-    powBusy.value = DateTime.now();
-    try {
-      pow = await compute(_mediaGrind, caption);
-    } finally {
-      powBusy.value = null;
-    }
+    pow = await compute(_mediaGrind, caption);
   }
   final now = DateTime.now().millisecondsSinceEpoch;
   final Set<int> done;

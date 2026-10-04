@@ -6518,26 +6518,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get pinsUnpin => 'Открепить';
 
   @override
-  String powNoteFirstMessageToSomeone(int secs) {
-    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
-    final String secsString = secsNumberFormat.format(secs);
-
-    return 'Первое сообщение новому человеку · доказываем, что оно настоящее · $secsString с';
-  }
-
-  @override
-  String powNoteFirstMessageSlow(int secs) {
-    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
-    final String secsString = secsNumberFormat.format(secs);
-
-    return 'Первое сообщение новому человеку · доказываем, что оно настоящее · $secsString с · на медленном телефоне до минуты';
-  }
-
-  @override
   String previewStripFetchedOverTor(Object domainOf) {
     return '$domainOf · загружено через tor';
   }

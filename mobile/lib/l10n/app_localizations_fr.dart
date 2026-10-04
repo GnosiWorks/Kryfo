@@ -6458,26 +6458,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get pinsUnpin => 'Désépingler';
 
   @override
-  String powNoteFirstMessageToSomeone(int secs) {
-    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
-    final String secsString = secsNumberFormat.format(secs);
-
-    return 'Premier message à quelqu’un de nouveau · preuve qu’il est réel · $secsString s';
-  }
-
-  @override
-  String powNoteFirstMessageSlow(int secs) {
-    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
-    final String secsString = secsNumberFormat.format(secs);
-
-    return 'Premier message à quelqu’un de nouveau · preuve qu’il est réel · $secsString s · jusqu’à une minute sur un téléphone lent';
-  }
-
-  @override
   String previewStripFetchedOverTor(Object domainOf) {
     return '$domainOf · récupéré par tor';
   }

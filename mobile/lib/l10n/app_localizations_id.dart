@@ -6387,26 +6387,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get pinsUnpin => 'Lepas sematan';
 
   @override
-  String powNoteFirstMessageToSomeone(int secs) {
-    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
-    final String secsString = secsNumberFormat.format(secs);
-
-    return 'Pesan pertama ke orang baru · membuktikan ini asli · $secsString dtk';
-  }
-
-  @override
-  String powNoteFirstMessageSlow(int secs) {
-    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
-    final String secsString = secsNumberFormat.format(secs);
-
-    return 'Pesan pertama ke orang baru · membuktikan ini asli · $secsString dtk · bisa sampai semenit di ponsel lambat';
-  }
-
-  @override
   String previewStripFetchedOverTor(Object domainOf) {
     return '$domainOf · diambil lewat tor';
   }

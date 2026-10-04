@@ -8096,26 +8096,6 @@
   "@pinsUnpin": {
     "description": "widgets/pins.dart"
   },
-  "powNoteFirstMessageToSomeone": "First message to someone new · proving it is real · {secs}s",
-  "@powNoteFirstMessageToSomeone": {
-    "description": "widgets/pow_note.dart",
-    "placeholders": {
-      "secs": {
-        "type": "int",
-        "format": "decimalPattern"
-      }
-    }
-  },
-  "powNoteFirstMessageSlow": "First message to someone new · proving it is real · {secs}s · up to a minute on a slow phone",
-  "@powNoteFirstMessageSlow": {
-    "description": "widgets/pow_note.dart: shown from 20 seconds on",
-    "placeholders": {
-      "secs": {
-        "type": "int",
-        "format": "decimalPattern"
-      }
-    }
-  },
   "previewStripFetchedOverTor": "{domainOf} · fetched over tor",
   "@previewStripFetchedOverTor": {
     "description": "widgets/preview_strip.dart",

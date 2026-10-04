@@ -6403,26 +6403,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get pinsUnpin => 'برداشتن سنجاق';
 
   @override
-  String powNoteFirstMessageToSomeone(int secs) {
-    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
-    final String secsString = secsNumberFormat.format(secs);
-
-    return 'اولین پیام به کسی تازه · در حال اثبات واقعی بودنش · ⁨$secsString⁩ ثانیه';
-  }
-
-  @override
-  String powNoteFirstMessageSlow(int secs) {
-    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
-    final String secsString = secsNumberFormat.format(secs);
-
-    return 'اولین پیام به کسی تازه · در حال اثبات واقعی بودنش · ⁨$secsString⁩ ثانیه · روی گوشی کند تا یک دقیقه';
-  }
-
-  @override
   String previewStripFetchedOverTor(Object domainOf) {
     return '⁨$domainOf⁩ · از راه tor گرفته شد';
   }
