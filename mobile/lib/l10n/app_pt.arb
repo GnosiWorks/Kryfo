@@ -1679,8 +1679,6 @@
   "pinsNothingPinnedHereYet": "Nada fixado aqui ainda. Segure uma mensagem e escolha Fixar, e ela fica aqui esperando por todos na conversa.",
   "pinsJump": "Ir",
   "pinsUnpin": "Desafixar",
-  "powNoteFirstMessageToSomeone": "Primeira mensagem para alguém novo · provando que é real · {secs}s",
-  "powNoteFirstMessageSlow": "Primeira mensagem para alguém novo · provando que é real · {secs}s · até um minuto num celular lento",
   "previewStripFetchedOverTor": "{domainOf} · buscado pelo tor",
   "previewStripDropThePreview": "Tirar a prévia",
   "previewStripAddPreview": "Adicionar prévia",

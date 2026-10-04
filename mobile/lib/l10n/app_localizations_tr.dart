@@ -6413,26 +6413,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get pinsUnpin => 'Kaldır';
 
   @override
-  String powNoteFirstMessageToSomeone(int secs) {
-    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
-    final String secsString = secsNumberFormat.format(secs);
-
-    return 'Yeni birine ilk mesaj · gerçek olduğu kanıtlanıyor · $secsString sn';
-  }
-
-  @override
-  String powNoteFirstMessageSlow(int secs) {
-    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
-    final String secsString = secsNumberFormat.format(secs);
-
-    return 'Yeni birine ilk mesaj · gerçek olduğu kanıtlanıyor · $secsString sn · yavaş bir telefonda bir dakikayı bulabilir';
-  }
-
-  @override
   String previewStripFetchedOverTor(Object domainOf) {
     return '$domainOf · tor üzerinden alındı';
   }

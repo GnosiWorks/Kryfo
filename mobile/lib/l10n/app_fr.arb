@@ -1679,8 +1679,6 @@
   "pinsNothingPinnedHereYet": "Rien d’épinglé ici pour l’instant. Maintenez un message et choisissez Épingler : il attendra ici pour tout le monde dans la discussion.",
   "pinsJump": "Aller",
   "pinsUnpin": "Désépingler",
-  "powNoteFirstMessageToSomeone": "Premier message à quelqu’un de nouveau · preuve qu’il est réel · {secs} s",
-  "powNoteFirstMessageSlow": "Premier message à quelqu’un de nouveau · preuve qu’il est réel · {secs} s · jusqu’à une minute sur un téléphone lent",
   "previewStripFetchedOverTor": "{domainOf} · récupéré par tor",
   "previewStripDropThePreview": "Retirer l’aperçu",
   "previewStripAddPreview": "Ajouter l’aperçu",

@@ -1679,8 +1679,6 @@
   "pinsNothingPinnedHereYet": "Noch nichts angeheftet. Halte eine Nachricht gedrückt und wähle Anheften, dann wartet sie hier für alle im Chat.",
   "pinsJump": "Springen",
   "pinsUnpin": "Loslösen",
-  "powNoteFirstMessageToSomeone": "Erste Nachricht an jemand Neues · Echtheit wird nachgewiesen · {secs}s",
-  "powNoteFirstMessageSlow": "Erste Nachricht an jemand Neues · Echtheit wird nachgewiesen · {secs}s · auf einem langsamen Handy bis zu einer Minute",
   "previewStripFetchedOverTor": "{domainOf} · über tor abgerufen",
   "previewStripDropThePreview": "Vorschau weglassen",
   "previewStripAddPreview": "Vorschau hinzufügen",

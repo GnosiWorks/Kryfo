@@ -1679,8 +1679,6 @@
   "pinsNothingPinnedHereYet": "Belum ada yang disematkan di sini. Tahan sebuah pesan lalu pilih Sematkan, dan pesan itu menunggu di sini untuk semua orang di obrolan.",
   "pinsJump": "Lihat",
   "pinsUnpin": "Lepas sematan",
-  "powNoteFirstMessageToSomeone": "Pesan pertama ke orang baru · membuktikan ini asli · {secs} dtk",
-  "powNoteFirstMessageSlow": "Pesan pertama ke orang baru · membuktikan ini asli · {secs} dtk · bisa sampai semenit di ponsel lambat",
   "previewStripFetchedOverTor": "{domainOf} · diambil lewat tor",
   "previewStripDropThePreview": "Buang pratinjau",
   "previewStripAddPreview": "Tambah pratinjau",

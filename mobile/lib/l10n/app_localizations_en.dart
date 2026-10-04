@@ -6385,26 +6385,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pinsUnpin => 'Unpin';
 
   @override
-  String powNoteFirstMessageToSomeone(int secs) {
-    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
-    final String secsString = secsNumberFormat.format(secs);
-
-    return 'First message to someone new · proving it is real · ${secsString}s';
-  }
-
-  @override
-  String powNoteFirstMessageSlow(int secs) {
-    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
-    final String secsString = secsNumberFormat.format(secs);
-
-    return 'First message to someone new · proving it is real · ${secsString}s · up to a minute on a slow phone';
-  }
-
-  @override
   String previewStripFetchedOverTor(Object domainOf) {
     return '$domainOf · fetched over tor';
   }

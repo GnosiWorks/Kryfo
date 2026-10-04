@@ -6447,26 +6447,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get pinsUnpin => 'Dejar de fijar';
 
   @override
-  String powNoteFirstMessageToSomeone(int secs) {
-    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
-    final String secsString = secsNumberFormat.format(secs);
-
-    return 'Primer mensaje a alguien nuevo · demostrando que es real · ${secsString}s';
-  }
-
-  @override
-  String powNoteFirstMessageSlow(int secs) {
-    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
-    final String secsString = secsNumberFormat.format(secs);
-
-    return 'Primer mensaje a alguien nuevo · demostrando que es real · ${secsString}s · hasta un minuto en un teléfono lento';
-  }
-
-  @override
   String previewStripFetchedOverTor(Object domainOf) {
     return '$domainOf · obtenido vía tor';
   }

@@ -1679,8 +1679,6 @@
   "pinsNothingPinnedHereYet": "لا شيء مثبّت هنا بعد. اضغط مطولًا على رسالة واختر «تثبيت»، فتنتظر هنا للجميع في المحادثة.",
   "pinsJump": "انتقال",
   "pinsUnpin": "إلغاء التثبيت",
-  "powNoteFirstMessageToSomeone": "أول رسالة لشخص جديد · جارٍ إثبات أنها حقيقية · ⁨{secs}⁩ ث",
-  "powNoteFirstMessageSlow": "أول رسالة لشخص جديد · جارٍ إثبات أنها حقيقية · ⁨{secs}⁩ ث · حتى دقيقة على هاتف بطيء",
   "previewStripFetchedOverTor": "⁨{domainOf}⁩ · جُلبت عبر tor",
   "previewStripDropThePreview": "إزالة المعاينة",
   "previewStripAddPreview": "إضافة معاينة",

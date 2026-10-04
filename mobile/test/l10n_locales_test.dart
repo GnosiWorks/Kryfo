@@ -2793,12 +2793,6 @@ final _calls = <_Call>[
   ('pinsJump', [], (l) => l.pinsJump),
   ('pinsUnpin', [], (l) => l.pinsUnpin),
   (
-    'powNoteFirstMessageToSomeone',
-    [],
-    (l) => l.powNoteFirstMessageToSomeone(7),
-  ),
-  ('powNoteFirstMessageSlow', [], (l) => l.powNoteFirstMessageSlow(7)),
-  (
     'previewStripFetchedOverTor',
     ["⟨domainOf⟩"],
     (l) => l.previewStripFetchedOverTor("⟨domainOf⟩"),

@@ -1679,8 +1679,6 @@
   "pinsNothingPinnedHereYet": "这里还没有置顶内容。长按一条消息，选择“置顶”，它就会在这里等着聊天里的每个人。",
   "pinsJump": "跳转",
   "pinsUnpin": "取消置顶",
-  "powNoteFirstMessageToSomeone": "给新联系人的第一条消息 · 正在证明它是真实的 · {secs} 秒",
-  "powNoteFirstMessageSlow": "给新联系人的第一条消息 · 正在证明它是真实的 · {secs} 秒 · 在较慢的手机上最多需要 1 分钟",
   "previewStripFetchedOverTor": "{domainOf} · 经由 tor 获取",
   "previewStripDropThePreview": "去掉预览",
   "previewStripAddPreview": "添加预览",

@@ -1679,8 +1679,6 @@
   "pinsNothingPinnedHereYet": "Ancora niente di fissato qui. Tieni premuto un messaggio e scegli Fissa: resterà qui per tutti nella chat.",
   "pinsJump": "Vai",
   "pinsUnpin": "Sfissa",
-  "powNoteFirstMessageToSomeone": "Primo messaggio a una persona nuova · prova che è autentico · {secs} s",
-  "powNoteFirstMessageSlow": "Primo messaggio a una persona nuova · prova che è autentico · {secs} s · fino a un minuto su un telefono lento",
   "previewStripFetchedOverTor": "{domainOf} · scaricata via tor",
   "previewStripDropThePreview": "Togli l'anteprima",
   "previewStripAddPreview": "Aggiungi anteprima",
