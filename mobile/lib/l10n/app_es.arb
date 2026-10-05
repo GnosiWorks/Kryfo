@@ -1679,8 +1679,6 @@
   "pinsNothingPinnedHereYet": "Aún no hay nada fijado. Mantén presionado un mensaje y elige Fijar, y quedará aquí para todos en el chat.",
   "pinsJump": "Ir",
   "pinsUnpin": "Dejar de fijar",
-  "powNoteFirstMessageToSomeone": "Primer mensaje a alguien nuevo · demostrando que es real · {secs}s",
-  "powNoteFirstMessageSlow": "Primer mensaje a alguien nuevo · demostrando que es real · {secs}s · hasta un minuto en un teléfono lento",
   "previewStripFetchedOverTor": "{domainOf} · obtenido vía tor",
   "previewStripDropThePreview": "Quitar la vista previa",
   "previewStripAddPreview": "Añadir vista previa",

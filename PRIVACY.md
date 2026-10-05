@@ -14,7 +14,7 @@ backups are files you make and control. they are encrypted with a passphrase onl
 
 ## what travels over the network
 
-to deliver a message, Kryfo routes it through tor and, when the other person is offline, leaves it in an encrypted mailbox on public nostr relays. relays only ever hold sealed, encrypted data. they do not hold your contact list or a record of your account, because no such account exists.
+to deliver a message, Kryfo routes it through tor and, when the other person is offline, leaves it in an encrypted mailbox on nostr relays: a few public ones and ours in onion and fast mode, only ours in relay mode. relays only ever hold sealed, encrypted data. they do not hold your contact list or a record of your account, because no such account exists.
 
 your ip is hidden behind tor on the default private mode. relay mode and fast mode skip tor to go quicker. relay mode connects straight to our own relay, which then sees your ip for that connection and writes nothing down. fast mode adds public relays, and each of them sees your ip too. both are off by default and labeled where you turn them on.
 
@@ -32,7 +32,7 @@ the "Marios · built Kryfo" chat at the top of the list talks to the person who 
 
 with your three words, Marios sees them and can write back like any contact. the face you picked, your onion address and any supporter badge are not sent. "Write anonymously" makes a new name and keys for that chat alone: they stay on your phone, are never used anywhere else and are left out of backups. either way Marios sees what you write and when, and delivery receipts tell each side when a message arrived. anonymous does not hide your writing style, the details you share, or your ip in relay and fast modes. voice notes in an anonymous chat always go through the voice disguise.
 
-deleting the chat deletes it on your phone, and it does not come back unless you open it again from settings. Marios keeps his copy of what you sent, as any person you write to does.
+deleting the chat deletes it on your phone, and it does not come back unless you open it again from settings. Marios keeps a copy of what you sent, as any person you write to does.
 
 ## notifications
 

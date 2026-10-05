@@ -1679,8 +1679,6 @@
   "pinsNothingPinnedHereYet": "Henüz sabitlenen bir şey yok. Bir mesaja basılı tut ve Sabitle’yi seç; sohbetteki herkes için burada durur.",
   "pinsJump": "Git",
   "pinsUnpin": "Kaldır",
-  "powNoteFirstMessageToSomeone": "Yeni birine ilk mesaj · gerçek olduğu kanıtlanıyor · {secs} sn",
-  "powNoteFirstMessageSlow": "Yeni birine ilk mesaj · gerçek olduğu kanıtlanıyor · {secs} sn · yavaş bir telefonda bir dakikayı bulabilir",
   "previewStripFetchedOverTor": "{domainOf} · tor üzerinden alındı",
   "previewStripDropThePreview": "Önizlemeyi kaldır",
   "previewStripAddPreview": "Önizleme ekle",

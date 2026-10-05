@@ -11,6 +11,7 @@ import 'container.dart';
 import 'devchat/dev_chat.dart' show DevChat;
 import 'devchat/dev_key.dart' show isDevChat;
 import 'devchat/support.dart' show SupportChats;
+import 'dlog.dart';
 import 'main.dart' show HaloDb, kFrameReaction, kFrameUnsend;
 import 'media_send.dart' show cancelMediaSend, mediaInflight;
 import 'polls.dart' show PollSpec, PollVote;
@@ -204,8 +205,23 @@ class Session {
       _ofPeer(haloId).setArchived(haloId, archived);
   Future<void> setAtmosphere(String peerId, String atmosphere) =>
       _ofPeer(peerId).setAtmosphere(peerId, atmosphere);
-  Future<void> setBlocked(String haloId, bool blocked) =>
-      _ofPeer(haloId).setBlocked(haloId, blocked);
+  // their timed messages in the other container's groups start counting
+  // too. the block holds whatever happens there: one shut meanwhile
+  // starts them a day after they came, or at its next sweep
+  Future<void> setBlocked(String haloId, bool blocked) async {
+    final own = _ofPeer(haloId);
+    await own.setBlocked(haloId, blocked);
+    if (!blocked) return;
+    for (final d in [primary, ?vault]) {
+      if (identical(d, own)) continue;
+      try {
+        await d.lightBurnsFrom(haloId);
+      } catch (e) {
+        dlog('block: other container not lit (${e.runtimeType})');
+      }
+    }
+  }
+
   Future<void> setContactPinned(String haloId, bool pinned) =>
       _ofPeer(haloId).setContactPinned(haloId, pinned);
   Future<void> setKeyChanged(String haloId, bool changed) =>
@@ -538,9 +554,10 @@ class Session {
     return {...await primary.pollVotesFor(uids), ...await v.pollVotesFor(uids)};
   }
 
+  // a block in either container starts the other's waiting clocks
   Future<void> purgeExpiredBurns() async {
-    await primary.purgeExpiredBurns();
-    await vault?.purgeExpiredBurns();
+    await primary.purgeExpiredBurns(blocked: blockedIds);
+    await vault?.purgeExpiredBurns(blocked: blockedIds);
   }
 
   Future<List<Map<String, Object?>>> savedMessages() async {

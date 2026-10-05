@@ -26,6 +26,9 @@ class _Rows extends HaloDb {
 const _peer = 'amber-fox-run';
 const _g = 'grp000000001';
 
+// what [sentAt] counts from: the rows came within the hour
+final _t0 = DateTime.now().millisecondsSinceEpoch - 3600000;
+
 Future<void> _row(
   MemDb mem,
   String uid, {
@@ -41,7 +44,7 @@ Future<void> _row(
   'media_path': media,
   'direction': direction,
   'plaintext': 'hi $uid',
-  'sent_at': sentAt,
+  'sent_at': _t0 + sentAt,
   'msg_uid': uid,
   'group_id': group,
   'burn_secs': burnSecs,
@@ -57,11 +60,11 @@ Map<String, Object?>? _get(MemDb mem, String uid) {
 }
 
 void main() {
-  test('a timed message nobody has read does not burn, however old', () async {
+  test('a timed message nobody has read does not burn within a day', () async {
     final mem = MemDb();
     final db = _Rows(mem);
-    // came a day ago with a 30 second timer
-    final dayAgo = DateTime.now().millisecondsSinceEpoch - 86400000;
+    // came most of a day ago with a 30 second timer
+    const dayAgo = -22 * 3600000;
     await _row(mem, 'unread', burnSecs: 30, sentAt: dayAgo);
     await _row(mem, 'ingroup', burnSecs: 30, sentAt: dayAgo, group: _g);
     await db.purgeExpiredBurns();

@@ -1679,8 +1679,6 @@
   "pinsNothingPinnedHereYet": "這裡還沒有置頂的訊息。按住一則訊息並選擇「置頂」，它就會在這裡等著聊天中的每個人。",
   "pinsJump": "跳至",
   "pinsUnpin": "取消置頂",
-  "powNoteFirstMessageToSomeone": "傳給新對象的第一則訊息 · 正在證明它是真的 · {secs} 秒",
-  "powNoteFirstMessageSlow": "傳給新對象的第一則訊息 · 正在證明它是真的 · {secs} 秒 · 在較慢的手機上最多需要一分鐘",
   "previewStripFetchedOverTor": "{domainOf} · 經由 tor 擷取",
   "previewStripDropThePreview": "移除預覽",
   "previewStripAddPreview": "加上預覽",

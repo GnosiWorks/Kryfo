@@ -109,7 +109,9 @@ class _ChatDb extends _Db {
   @override
   Future<Map<String, Object?>?> shieldFor(String haloId) async => null;
   @override
-  Future<void> purgeExpiredBurns() async {}
+  Future<void> purgeExpiredBurns({
+    Future<Set<String>> Function()? blocked,
+  }) async {}
   @override
   Future<List<Map<String, Object?>>> messagesFor(String peerId) async =>
       _thread(peerId);

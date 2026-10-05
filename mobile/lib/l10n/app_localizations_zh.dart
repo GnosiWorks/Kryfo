@@ -6140,26 +6140,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pinsUnpin => '取消置顶';
 
   @override
-  String powNoteFirstMessageToSomeone(int secs) {
-    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
-    final String secsString = secsNumberFormat.format(secs);
-
-    return '给新联系人的第一条消息 · 正在证明它是真实的 · $secsString 秒';
-  }
-
-  @override
-  String powNoteFirstMessageSlow(int secs) {
-    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
-    final String secsString = secsNumberFormat.format(secs);
-
-    return '给新联系人的第一条消息 · 正在证明它是真实的 · $secsString 秒 · 在较慢的手机上最多需要 1 分钟';
-  }
-
-  @override
   String previewStripFetchedOverTor(Object domainOf) {
     return '$domainOf · 经由 tor 获取';
   }
@@ -13413,26 +13393,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get pinsUnpin => '取消置頂';
-
-  @override
-  String powNoteFirstMessageToSomeone(int secs) {
-    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
-    final String secsString = secsNumberFormat.format(secs);
-
-    return '傳給新對象的第一則訊息 · 正在證明它是真的 · $secsString 秒';
-  }
-
-  @override
-  String powNoteFirstMessageSlow(int secs) {
-    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
-    final String secsString = secsNumberFormat.format(secs);
-
-    return '傳給新對象的第一則訊息 · 正在證明它是真的 · $secsString 秒 · 在較慢的手機上最多需要一分鐘';
-  }
 
   @override
   String previewStripFetchedOverTor(Object domainOf) {

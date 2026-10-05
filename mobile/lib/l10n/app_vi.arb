@@ -1679,8 +1679,6 @@
   "pinsNothingPinnedHereYet": "Chưa có gì được ghim ở đây. Nhấn giữ một tin nhắn và chọn Ghim, tin nhắn sẽ nằm ở đây cho mọi người trong cuộc trò chuyện.",
   "pinsJump": "Đi tới",
   "pinsUnpin": "Bỏ ghim",
-  "powNoteFirstMessageToSomeone": "Tin nhắn đầu tiên tới người mới · đang chứng minh là thật · {secs}s",
-  "powNoteFirstMessageSlow": "Tin nhắn đầu tiên tới người mới · đang chứng minh là thật · {secs}s · có thể tới một phút trên máy chậm",
   "previewStripFetchedOverTor": "{domainOf} · tải qua tor",
   "previewStripDropThePreview": "Bỏ xem trước",
   "previewStripAddPreview": "Thêm xem trước",

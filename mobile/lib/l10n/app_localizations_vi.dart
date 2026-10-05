@@ -6379,26 +6379,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pinsUnpin => 'Bỏ ghim';
 
   @override
-  String powNoteFirstMessageToSomeone(int secs) {
-    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
-    final String secsString = secsNumberFormat.format(secs);
-
-    return 'Tin nhắn đầu tiên tới người mới · đang chứng minh là thật · ${secsString}s';
-  }
-
-  @override
-  String powNoteFirstMessageSlow(int secs) {
-    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
-    final String secsString = secsNumberFormat.format(secs);
-
-    return 'Tin nhắn đầu tiên tới người mới · đang chứng minh là thật · ${secsString}s · có thể tới một phút trên máy chậm';
-  }
-
-  @override
   String previewStripFetchedOverTor(Object domainOf) {
     return '$domainOf · tải qua tor';
   }

@@ -39,6 +39,17 @@ class _Rows extends ArrivalRows {
   };
 }
 
+// a vault shut while the block is made: it cannot be written
+class _ShutVault extends ArrivalRows {
+  _ShutVault() : super(HaloContainer.vault);
+
+  @override
+  Future<void> lightBurnsFrom(String haloId) async {
+    calls.add('lightBurnsFrom:$haloId');
+    throw StateError('shut');
+  }
+}
+
 class _World {
   final live = _Rows();
   final io = ArrivalIo();
@@ -75,6 +86,19 @@ void main() {
     expect(w.io.listened, containsAll(['x-$_c', 'x-$_o']));
     await w.app.block(_c);
     expect(w.live.people[_c]!['blocked'], 1);
+    expect(w.io.unheard, ['x-$_c']);
+  });
+
+  // their rows there start a day after they came, or at its next sweep:
+  // the block and all that follows it happen here whatever it does
+  test('a vault that cannot be written leaves the block whole', () async {
+    final w = await _World.make();
+    final vault = _ShutVault();
+    useDatabasesForTest(w.live, await Session.withVault(w.live, vault));
+    await w.app.block(_c);
+    expect(vault.calls, contains('lightBurnsFrom:$_c'));
+    expect(w.live.people[_c]!['blocked'], 1);
+    expect(w.live.calls, contains('dropHeld:$_c'));
     expect(w.io.unheard, ['x-$_c']);
   });
 
