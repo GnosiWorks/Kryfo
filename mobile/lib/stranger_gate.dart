@@ -9,11 +9,11 @@ import 'message_envelope.dart';
 
 // who to listen for at boot. accepted contacts, people a friend vouched for,
 // and plain strangers sitting in requests: all three can write to us on a
-// pair address, so all three need a subscription. so does everyone
-// [blocked]: what they send while the block holds comes in to be dropped,
-// or the relay keeps it for an unblock. never the dev chat: its lane is its
-// own, and an anonymous one must never be listened for as the everyday
-// identity
+// pair address, so all three need a subscription. someone blocked only
+// from [blocked], the blocks young enough to listen on, and after everyone
+// else, so a key they share stays the other's. never the dev chat: its
+// lane is its own, and an anonymous one must never be listened for as the
+// everyday identity
 List<Map<String, Object?>> bootSubscribeRows({
   required List<Map<String, Object?>> accepted,
   required List<Map<String, Object?>> vouchedPending,
@@ -22,17 +22,16 @@ List<Map<String, Object?>> bootSubscribeRows({
 }) {
   final seen = <String>{};
   final out = <Map<String, Object?>>[];
-  for (final r in [
-    ...accepted,
-    ...vouchedPending,
-    ...pendingRequests,
-    ...blocked,
-  ]) {
+  void take(Map<String, Object?> r) {
     final id = r['halo_id'] as String?;
-    if (id == null || !seen.add(id)) continue;
-    if (isDevChat(id)) continue;
+    if (id == null || isDevChat(id) || !seen.add(id)) return;
     out.add(r);
   }
+
+  for (final r in [...accepted, ...vouchedPending, ...pendingRequests]) {
+    if ((r['blocked'] as int? ?? 0) != 1) take(r);
+  }
+  blocked.forEach(take);
   return out;
 }
 

@@ -2301,14 +2301,7 @@ class HaloDb implements GroupOwedStore {
   Future<bool> droppedWhileBlocked(String haloId, String uid) async {
     try {
       final db = await open();
-      final r = await db.query(
-        'blocked_drops',
-        columns: ['uid'],
-        where: 'peer_id = ? AND uid = ?',
-        whereArgs: [haloId, uid],
-        limit: 1,
-      );
-      if (r.isEmpty) return false;
+      if (!await droppedIn(db, haloId, uid)) return false;
       await noteBlockedDrop(haloId, uid);
       return true;
     } catch (e) {
@@ -2361,10 +2354,18 @@ class HaloDb implements GroupOwedStore {
   // caller built on it never sees someone blocked while still a stranger.
   Future<Set<String>> blockedIds() async => _blockedIn(await open());
 
-  // their rows, for listening on
-  Future<List<Map<String, Object?>>> blockedRows() async {
+  // their rows, each with listen = 1 while its block is young enough to
+  // be listened on (kBlockListenFor). without the spans none is
+  Future<List<Map<String, Object?>>> blockedRows({required int now}) async {
     final db = await open();
-    return db.query('contacts', where: 'blocked = 1');
+    try {
+      return await db.rawQuery(kBlockedRowsSql, [now - kBlockListenFor]);
+    } catch (e) {
+      dlog('blocked rows: $e');
+      return db.rawQuery(
+        'SELECT *, 0 AS listen FROM contacts WHERE blocked = 1',
+      );
+    }
   }
 
   // blocked, or never taken in: no one a restore asks to start afresh
@@ -5647,6 +5648,16 @@ const kSeedBlockSpans =
 const kBlockedAtWhere =
     'peer_id = ? AND from_at <= ? AND to_at IS NOT NULL AND to_at > ?';
 
+// relays keep a wrap fourteen days (nip17.go). a block is listened on a
+// day past that, so nothing it held is left there; later its stamp judges
+const kBlockListenFor = 15 * 86400000;
+
+// every blocked row, and whether its open span began after the argument
+const kBlockedRowsSql =
+    'SELECT c.*, EXISTS (SELECT 1 FROM block_spans s WHERE '
+    's.peer_id = c.halo_id AND s.to_at IS NULL AND s.from_at > ?) AS listen '
+    'FROM contacts c WHERE c.blocked = 1';
+
 // the stamp is the sender's clock, which may run behind this one. what
 // they wrote in the last minutes before the unblock is let in, or a slow
 // clock costs them what they sent once they were free to
@@ -5663,19 +5674,9 @@ List<Object> blockedAtArgs(
   int slack = kUnblockGrace,
 }) => [haloId, at, at + slack];
 
-// what a block's spans judge an arrival by: [at], by their clock, and the
-// [slack] their clock may run behind ours. at is when it was [written],
-// which a retry keeps, or when this copy was [wrapped] from a version that
-// does not say. never past the wrap: both are their clock, and nothing is
-// wrapped before it is written. one far ahead of [now] is taken as now.
-// the slack is the grace, less where the copy shows it: it [came] that
-// long after it was wrapped, so their clock is no further behind ours
-// than that, and a retry wrapped after the unblock still shows it was
-// written before. null with no stamp at all.
-// written before the block on a phone that was offline and sent while it
-// held: let in, it was written outside the span. a block listens on, so
-// what is sent while it holds is dropped and noted as it comes; this
-// judges what only comes after it, to a phone that heard nothing then
+// when their clock says it was written, never past the wrap, and how far
+// behind ours that clock may run: no further than the copy took to come.
+// for what comes after a block to a phone that heard nothing while it held
 ({int at, int slack})? blockStamp({
   int? written,
   int? wrapped,
@@ -5704,8 +5705,12 @@ const kCloseSpansOnDelete = '''
   END
 ''';
 
-// keeps [uid] as dropped from [haloId] at [now], and at most once a day
-// lets go of what has not come again in sixty days. when it last swept
+// how many dropped uids are kept per person, the newest
+const kBlockedDropsKept = 2000;
+
+// keeps [uid] as dropped from [haloId] at [now], their newest
+// kBlockedDropsKept only, and at most once a day lets go of what has not
+// come again in sixty days. when it last swept
 Future<int> noteBlockedDropIn(
   DatabaseExecutor db,
   String haloId,
@@ -5718,12 +5723,25 @@ Future<int> noteBlockedDropIn(
     'VALUES (?, ?, ?)',
     [haloId, uid, now],
   );
+  await db.rawDelete(
+    'DELETE FROM blocked_drops WHERE peer_id = ?1 AND rowid NOT IN '
+    '(SELECT rowid FROM blocked_drops WHERE peer_id = ?1 '
+    'ORDER BY at DESC, rowid DESC LIMIT ?2)',
+    [haloId, kBlockedDropsKept],
+  );
   if (now - sweptAt < 86400000) return sweptAt;
   await db.rawDelete('DELETE FROM blocked_drops WHERE at < ?', [
     now - 60 * 86400000,
   ]);
   return now;
 }
+
+// whether [uid] from [haloId] was dropped while they were blocked
+Future<bool> droppedIn(DatabaseExecutor db, String haloId, String uid) async =>
+    (await db.rawQuery(
+      'SELECT 1 FROM blocked_drops WHERE peer_id = ? AND uid = ? LIMIT 1',
+      [haloId, uid],
+    )).isNotEmpty;
 
 // when each block held, and the uids of what came while it did. a copy of
 // one, or one stamped inside a block that ended, is dropped after an
@@ -8800,7 +8818,8 @@ class AppState extends ChangeNotifier {
     }
     // whoever boot listens for, then whoever was listened for since: a
     // stranger who back-paired, a card filed in the vault, a chat deleted
-    // while its runner lives on. once each
+    // while its runner lives on. once each, and no block grown old
+    await unlistenOldBlocks();
     final done = await _listenKnown();
     for (final e in _xPubToHaloId.entries.toList()) {
       if (done.contains(e.key) || isDevId(e.value) || devIdClaim(e.key)) {
@@ -12727,7 +12746,12 @@ class AppState extends ChangeNotifier {
         ...await live.pendingRequests(),
         ...await live.parkedRequests(),
       ],
-      blocked: await live.blockedRows(),
+      blocked: [
+        for (final r in await live.blockedRows(
+          now: DateTime.now().millisecondsSinceEpoch,
+        ))
+          if (r['listen'] == 1) r,
+      ],
     );
     final fresh = <String, String>{};
     for (final r in rows) {
@@ -12745,17 +12769,50 @@ class AppState extends ChangeNotifier {
         }
       }
       if (xPub == null || xPub.isEmpty) continue;
+      // a key someone else is heard on stays theirs
+      if (r['blocked'] == 1 && _heardAsOther(xPub, haloId)) continue;
       _xPubToHaloId[xPub] = haloId;
       _io.listen(xPub);
       fresh[xPub] = haloId;
     }
-    final hidden = _router.listenFor;
+    final hidden = {
+      for (final e in _router.listenFor.entries)
+        if (!_router.blocks(e.value) || !_heardAsOther(e.key, e.value))
+          e.key: e.value,
+    };
     for (final e in hidden.entries) {
       _xPubToHaloId[e.key] = e.value;
       _io.listen(e.key);
     }
     if (cache) await _saveXPubCache(fresh);
     return {...fresh.keys, ...hidden.keys};
+  }
+
+  bool _heardAsOther(String xPub, String haloId) {
+    final heard = _xPubToHaloId[xPub];
+    return heard != null && heard != haloId;
+  }
+
+  // a block older than kBlockListenFor is listened on no more: the relays
+  // hold nothing from its time now. a key someone else is heard on stays
+  @visibleForTesting
+  Future<void> unlistenOldBlocks() async {
+    if (sessionQuiet) return;
+    try {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final old = {
+        for (final r in await live.blockedRows(now: now))
+          if (r['listen'] != 1) r['halo_id'] as String,
+      };
+      if (old.isEmpty) return;
+      for (final e in _xPubToHaloId.entries.toList()) {
+        if (!old.contains(e.value) || _router.keeps(e.value)) continue;
+        _xPubToHaloId.remove(e.key);
+        _io.unlisten(e.key);
+      }
+    } catch (e) {
+      dlog('old blocks: still listened on ($e)');
+    }
   }
 
   // what the onion inbox held. an arrival for a hidden chat while its vault
@@ -13380,8 +13437,10 @@ class AppState extends ChangeNotifier {
     var sweeps = 0;
     Timer.periodic(const Duration(seconds: 5), (_) async {
       if (haloWiping) return;
+      // hourly: a block grown old is listened on no more
+      if (++sweeps % 720 == 0) unawaited(unlistenOldBlocks());
       try {
-        final gone = await sweepBurns(stray: ++sweeps % 12 == 0);
+        final gone = await sweepBurns(stray: sweeps % 12 == 0);
         sweepFails = 0;
         // a row whose newest message just burned needs a new preview. a
         // decoy shut while its files are swapped is not read
@@ -16026,8 +16085,16 @@ class AppState extends ChangeNotifier {
     // exists; v2 bundle pairing leaves it empty and puts the key in the
     // signal store instead. try both, backfill the row when we learn it.
     // a hidden chat's row is in the open vault. someone blocked is heard
-    // too, and what they send is dropped as it comes
+    // too while the block is young, and what they send is dropped as it
+    // comes
     final d = _ownerOf(haloId);
+    if (await d.isBlocked(haloId)) {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final rows = await d.blockedRows(now: now);
+      if (!rows.any((r) => r['halo_id'] == haloId && r['listen'] == 1)) {
+        return;
+      }
+    }
     var xPub = await d.contactXPub(haloId);
     if (xPub == null || xPub.isEmpty) {
       xPub = await signalSession.peerXPubHex(haloId);

@@ -2,15 +2,17 @@
 // a block keeps listening on the person's relay address, so what they send
 // while it holds comes in to be dropped and the relay keeps nothing for an
 // unblock. everyone blocked, a stranger too, is listened for when every
-// contact is subscribed again. the engine calls are the app's own
-// stand-in, the rows kept in maps
+// contact is subscribed again, until the block is older than the relays
+// keep anything, and never on a key someone else is heard on. the engine
+// calls are the app's own stand-in, the rows kept in maps
 import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
-import 'package:kryfo/main.dart' show AppState, useDatabasesForTest;
+import 'package:kryfo/main.dart'
+    show AppState, kBlockListenFor, useDatabasesForTest;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -22,12 +24,6 @@ const _o = 'other-contact';
 
 class _Rows extends ArrivalRows {
   _Rows() : super(HaloContainer.everyday);
-
-  @override
-  Future<void> setBlocked(String haloId, bool blocked) async {
-    calls.add('setBlocked:$haloId');
-    people[haloId]!['blocked'] = blocked ? 1 : 0;
-  }
 
   @override
   Future<void> dropHeld(String peerId) async => calls.add('dropHeld:$peerId');
@@ -121,6 +117,38 @@ void main() {
     w.io.listened.clear();
     await w.app.resubscribe();
     expect(w.io.listened, unorderedEquals(['x-$_c', 'x-$_o', 'x-$stranger']));
+  });
+
+  test('a block older than the relays keep anything is listened on no '
+      'more, and is not taken up again', () async {
+    final w = await _World.make();
+    await w.app.block(_c);
+    final now = DateTime.now().millisecondsSinceEpoch;
+    // a day short of the bound: still heard
+    w.live.blockSpans[_c] = [(now - kBlockListenFor + 86400000, null)];
+    await w.app.unlistenOldBlocks();
+    expect(w.io.unheard, isEmpty);
+    w.live.blockSpans[_c] = [(now - kBlockListenFor - 1000, null)];
+    await w.app.unlistenOldBlocks();
+    expect(w.io.unheard, ['x-$_c']);
+    w.io.listened.clear();
+    await w.app.resubscribe();
+    await w.app.subscribePeer(_c);
+    expect(w.io.listened, ['x-$_o']);
+    // an unblock hears them again
+    await w.app.unblock(_c);
+    expect(w.io.listened, ['x-$_o', 'x-$_c']);
+  });
+
+  test('a blocked row never takes a key someone else is heard on', () async {
+    final w = await _World.make();
+    w.live.people[_c]!['xpub'] = 'x-$_o';
+    await w.app.block(_c);
+    await w.app.resubscribe();
+    w.io.tries.clear();
+    w.io.opens['from-o'] = (_o, 'halo/1:{"m":"hi","u":"o1"}');
+    await w.app.receiveRelay([(peer: 'x-$_o', cipher: 'from-o')]);
+    expect(w.io.tries.first, '$_o from-o');
   });
 
   test('the blocked page lists everyone blocked, a stranger blocked from '

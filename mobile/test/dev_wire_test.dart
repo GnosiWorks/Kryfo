@@ -162,7 +162,8 @@ class _Phone extends DevTestDb {
   @override
   Future<List<Map<String, Object?>>> parkedRequests() async => const [];
   @override
-  Future<List<Map<String, Object?>>> blockedRows() async => const [];
+  Future<List<Map<String, Object?>>> blockedRows({required int now}) async =>
+      const [];
   @override
   Future<List<Map<String, Object?>>> vouchedPending() async => const [];
   @override

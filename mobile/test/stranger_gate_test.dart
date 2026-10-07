@@ -39,19 +39,19 @@ void main() {
       );
       expect(rows.map((r) => r['halo_id']), ['friend']);
     });
-    test('listens for everyone blocked, friend or stranger, so what they '
-        'send while it holds comes in to be dropped', () {
+    test('listens for someone blocked only as [blocked] gives them, after '
+        'everyone else', () {
       final rows = bootSubscribeRows(
-        accepted: [_row('f', blocked: 1)],
+        accepted: [_row('f', blocked: 1), _row('old', blocked: 1)],
         vouchedPending: [],
-        pendingRequests: [],
+        pendingRequests: [_row('s', accepted: 0)],
         blocked: [
           _row('f', blocked: 1),
           _row('b', accepted: 0, blocked: 1),
           _row('dev:m3', accepted: 0, blocked: 1),
         ],
       );
-      expect(rows.map((r) => r['halo_id']), ['f', 'b']);
+      expect(rows.map((r) => r['halo_id']), ['s', 'f', 'b']);
     });
   });
 

@@ -396,10 +396,10 @@ class _Mem implements HaloDb {
           if (p['accepted'] == 0 && p['archived'] == 1) p,
       ]);
   @override
-  Future<List<Map<String, Object?>>> blockedRows() async =>
+  Future<List<Map<String, Object?>>> blockedRows({required int now}) async =>
       _hit('blockedRows', null, [
         for (final p in people.values)
-          if (p['blocked'] == 1) p,
+          if (p['blocked'] == 1) {...p, 'listen': 1},
       ]);
   @override
   Future<List<Map<String, Object?>>> vouchedPending() async =>

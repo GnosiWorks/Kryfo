@@ -211,8 +211,7 @@ void main() {
       expect(w.kept(who), unorderedEquals(['late', 'req4']));
     });
 
-    // the phone's recheck (9.1.6): blocked for under three minutes, X
-    // written thirty seconds in, the block ended forty seconds ago
+    // a block of under three minutes that ended forty seconds ago
     Future<(_World, int, int, int)> blockedMinutes() async {
       final w = await _World.make();
       await w.app.block(who);
@@ -374,9 +373,8 @@ void main() {
       expect(w.sentTo(who), isEmpty, reason: 'nothing goes back');
     });
 
-    // the phone's case: X came while the block held, wrapped three minutes
-    // before the unblock, and its copy comes again just after it. by its
-    // stamp alone it would pass as a slow clock
+    // a copy wrapped three minutes before the unblock passes the stamp as
+    // a slow clock. its noted uid keeps it out
     test('$kind blocked: a copy of what came while the block held, wrapped '
         'three minutes before the unblock, stays out after it', () async {
       final w = await _World.make();
@@ -413,6 +411,83 @@ void main() {
       expect(w.io.ticksFor('after'), isNotEmpty);
     });
   }
+
+  test('a reaction, edit, unsend, pin, vote, group control or introduction '
+      'from someone blocked changes nothing', () async {
+    final w = await _World.make();
+    const g = 'grp-of-blocked';
+    w.live.group(g, ['me', _f], admin: _f);
+    await w.app.receiveRelay([await w.copy(_f, 't1')]);
+    expect(w.kept(_f), ['t1']);
+    await w.app.block(_f);
+    final before = w.live.calls.length;
+    final from = _World.sender(_f);
+    final frames = [
+      await wrapMessage(
+        '',
+        reaction: const ReactionFrame(targetUid: 't1', emoji: 'x'),
+        sender: from,
+      ),
+      await wrapMessage(
+        '',
+        edit: const EditFrame(targetUid: 't1', newText: 'changed'),
+        sender: from,
+      ),
+      await wrapMessage('', unsend: 't1', sender: from),
+      await wrapMessage(
+        '',
+        pin: const PinFrame(targetUid: 't1', pinned: true),
+        sender: from,
+      ),
+      await wrapMessage(
+        '',
+        vote: const VoteFrame(pollUid: 't1', choices: [0], seq: 1),
+        sender: from,
+      ),
+      await wrapMessage(
+        '',
+        groupId: g,
+        groupControl: const GroupControl(type: 'rename', name: 'taken'),
+        sender: from,
+      ),
+      await wrapMessage(
+        '',
+        intro: const IntroFrame(
+          haloId: 'someone-new-here',
+          onion: 'o-new',
+          xPub: 'x-new',
+        ),
+        sender: from,
+      ),
+    ];
+    await w.app.receiveRelay([for (final f in frames) w.frame(_f, f)]);
+    final asked = w.live.calls.sublist(before);
+    for (final c in [
+      'addReaction',
+      'removeReaction',
+      'editMessage',
+      'deleteMessage',
+      'setPinned',
+      'putPollVote',
+      'renameGroup',
+      'createGroup',
+      'addGroupMember',
+      'syncGroupMembers',
+      'upsertContactStub',
+      'addVouch',
+    ]) {
+      expect(asked.where((a) => a.startsWith(c)), isEmpty, reason: c);
+    }
+    expect(w.kept(_f), ['t1']);
+    expect(w.live.groupRows[g]!['name'], g);
+    expect(w.live.blockedDrops[_f] ?? const {}, isEmpty);
+    expect(w.sentTo(_f), isEmpty);
+
+    // the same reaction once unblocked is theirs to make
+    await w.app.unblock(_f);
+    await w.app.receiveRelay([w.frame(_f, frames.first)]);
+    expect(w.live.calls.where((a) => a.startsWith('addReaction')), isNotEmpty);
+  });
 
   test('a block takes their notifications out of the shade', () async {
     final w = await _World.make();

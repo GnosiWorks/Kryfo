@@ -14,6 +14,7 @@ import 'package:kryfo/main.dart'
         blockedAtArgs,
         groupUnsendOf,
         groupUnsendRow,
+        kBlockListenFor,
         kUnblockGrace;
 import 'package:kryfo/media_resend.dart';
 import 'package:kryfo/message_envelope.dart';
@@ -424,10 +425,19 @@ class ArrivalRows implements HaloDb {
           if (p['accepted'] == 0 && p['archived'] == 1) p,
       ]);
   @override
-  Future<List<Map<String, Object?>>> blockedRows() async =>
+  Future<List<Map<String, Object?>>> blockedRows({required int now}) async =>
       _hit('blockedRows', null, [
         for (final p in people.values)
-          if (p['blocked'] == 1) p,
+          if (p['blocked'] == 1)
+            {
+              ...p,
+              'listen':
+                  [
+                    ...?blockSpans[p['halo_id']],
+                  ].any((s) => s.$2 == null && s.$1 > now - kBlockListenFor)
+                  ? 1
+                  : 0,
+            },
       ]);
   @override
   Future<List<Map<String, Object?>>> vouchedPending() async =>
