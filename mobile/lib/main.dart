@@ -16238,7 +16238,6 @@ Future<void> showAddContact(BuildContext context) async {
   final ctrl = TextEditingController();
   final action = await showHaloSheet<String>(
     context,
-    scroll: true,
     builder: (sheetCtx) => _AddSheet(ctrl: ctrl, done: sheetCtx),
   );
   if (action == null || !context.mounted) return;
@@ -16266,7 +16265,8 @@ Future<void> showAddContact(BuildContext context) async {
 }
 
 // the add someone sheet. the field lights up while it is typed in, and
-// "add them" fills once there is something to add
+// "add them" fills once there is something to add. the house sheet scrolls
+// it above the keyboard
 class _AddSheet extends StatefulWidget {
   final TextEditingController ctrl;
   // the sheet's own context, which the choice pops
@@ -16276,8 +16276,13 @@ class _AddSheet extends StatefulWidget {
   State<_AddSheet> createState() => _AddSheetState();
 }
 
-class _AddSheetState extends State<_AddSheet> {
+class _AddSheetState extends State<_AddSheet>
+    with SingleTickerProviderStateMixin {
   final _focus = FocusNode();
+  late final _shake = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 380),
+  );
 
   @override
   void initState() {
@@ -16294,7 +16299,19 @@ class _AddSheetState extends State<_AddSheet> {
   void dispose() {
     widget.ctrl.removeListener(_repaint);
     _focus.dispose();
+    _shake.dispose();
     super.dispose();
+  }
+
+  // nothing to add yet: the sheet stays, the field shakes and takes the
+  // focus, so a link can go straight in
+  void _add() {
+    if (widget.ctrl.text.trim().isNotEmpty) {
+      Navigator.pop(widget.done, 'paste');
+      return;
+    }
+    _focus.requestFocus();
+    if (!MediaQuery.disableAnimationsOf(context)) _shake.forward(from: 0);
   }
 
   @override
@@ -16305,12 +16322,7 @@ class _AddSheetState extends State<_AddSheet> {
     final typed = widget.ctrl.text.trim().isNotEmpty;
     final lit = _focus.hasFocus;
     return Padding(
-      padding: EdgeInsets.fromLTRB(
-        22,
-        0,
-        22,
-        24 + MediaQuery.of(context).viewInsets.bottom,
-      ),
+      padding: const EdgeInsets.fromLTRB(22, 0, 22, 24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -16361,37 +16373,48 @@ class _AddSheetState extends State<_AddSheet> {
             ),
           ),
           const SizedBox(height: 14),
-          AnimatedContainer(
-            duration: d,
-            curve: Curves.easeOutCubic,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-            decoration: BoxDecoration(
-              color: HaloColors.surface3,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: lit
-                    ? HaloColors.amber.withValues(alpha: 0.7)
-                    : HaloColors.line,
-                width: lit ? 1 : 0.5,
+          AnimatedBuilder(
+            animation: _shake,
+            // a damped side to side, three swings
+            builder: (_, child) => Transform.translate(
+              offset: Offset(
+                sin(_shake.value * pi * 6) * 9 * (1 - _shake.value),
+                0,
               ),
+              child: child,
             ),
-            child: TextField(
-              textDirection: TextDirection.ltr,
-              controller: widget.ctrl,
-              focusNode: _focus,
-              minLines: 1,
-              maxLines: 3,
-              style: HaloType.mono(size: 12, color: HaloColors.text),
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                hintText: l10n.appAKryfoLinkA,
-                hintStyle: HaloType.mono(size: 12, color: HaloColors.text3),
+            child: AnimatedContainer(
+              duration: d,
+              curve: Curves.easeOutCubic,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+              decoration: BoxDecoration(
+                color: HaloColors.surface3,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: lit
+                      ? HaloColors.amber.withValues(alpha: 0.7)
+                      : HaloColors.line,
+                  width: lit ? 1 : 0.5,
+                ),
+              ),
+              child: TextField(
+                textDirection: TextDirection.ltr,
+                controller: widget.ctrl,
+                focusNode: _focus,
+                minLines: 1,
+                maxLines: 3,
+                style: HaloType.mono(size: 12, color: HaloColors.text),
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  hintText: l10n.appAKryfoLinkA,
+                  hintStyle: HaloType.mono(size: 12, color: HaloColors.text3),
+                ),
               ),
             ),
           ),
           const SizedBox(height: 10),
           _Pressable(
-            onTap: () => Navigator.pop(sheetCtx, 'paste'),
+            onTap: _add,
             child: AnimatedContainer(
               duration: d,
               curve: Curves.easeOutCubic,

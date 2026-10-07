@@ -352,9 +352,6 @@ void _openFullImage(
   double radius = 0,
 }) => openPhoto(context, path, tag: tag, radius: radius, secure: secure);
 
-// the room under a bubble that a reaction chip hangs in
-const _kChipRoom = 13.0;
-
 // the time and tick on a photo or a video with no caption: a small dark pill
 // in the corner, since there is no bubble under it to carry them
 Widget _mediaStamp(_Msg msg) {
@@ -6124,9 +6121,7 @@ class _Bubble extends StatelessWidget {
                     AnimatedPadding(
                       duration: roomTime,
                       curve: kHouseCurve,
-                      padding: EdgeInsets.only(
-                        bottom: reacted ? _kChipRoom : 0,
-                      ),
+                      padding: EdgeInsets.only(bottom: reacted ? kChipRoom : 0),
                       // the ring sits inside the room, so it follows it open
                       child: Stack(
                         clipBehavior: Clip.none,
@@ -6890,7 +6885,7 @@ class _Bubble extends StatelessWidget {
                   AnimatedPadding(
                     duration: roomTime,
                     curve: kHouseCurve,
-                    padding: EdgeInsets.only(bottom: reacted ? _kChipRoom : 0),
+                    padding: EdgeInsets.only(bottom: reacted ? kChipRoom : 0),
                     // the ring sits inside the room, so it follows it open
                     child: Stack(
                       clipBehavior: Clip.none,

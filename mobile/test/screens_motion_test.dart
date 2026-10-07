@@ -293,6 +293,77 @@ void main() {
       await t.pump(const Duration(seconds: 1));
     });
 
+    testWidgets('"add them" with nothing in it: the sheet stays, the field '
+        'shakes and takes the focus', (t) async {
+      for (final still in [false, true]) {
+        quiet(t);
+        await open(t, still: still);
+        double shift() => t
+            .widget<Transform>(
+              find
+                  .ancestor(
+                    of: find.byType(TextField),
+                    matching: find.byType(Transform),
+                  )
+                  .first,
+            )
+            .transform
+            .getTranslation()
+            .x;
+        await t.tap(find.text(l10n.appAddThem));
+        await t.pump();
+        await t.pump(const Duration(milliseconds: 40));
+        final moved = shift().abs();
+        await t.pump(const Duration(seconds: 1));
+        expect(find.text(l10n.appAddSomeone), findsOneWidget);
+        expect(
+          t.widget<TextField>(find.byType(TextField)).focusNode!.hasFocus,
+          isTrue,
+        );
+        expect(moved, still ? 0 : greaterThan(1), reason: 'still: $still');
+        expect(shift(), 0);
+        await t.pumpWidget(const SizedBox());
+        await t.pump(const Duration(seconds: 1));
+      }
+    });
+
+    testWidgets('fits a small phone at a big font with the keyboard up', (
+      t,
+    ) async {
+      quiet(t);
+      await open(t);
+      t.view.physicalSize = const Size(720, 1280);
+      t.view.padding = const FakeViewPadding(top: 48);
+      t.platformDispatcher.textScaleFactorTestValue = 1.3;
+      addTearDown(t.platformDispatcher.clearTextScaleFactorTestValue);
+      await t.pump(const Duration(seconds: 1));
+      expect(t.takeException(), isNull);
+      await t.tap(find.byType(TextField));
+      addTearDown(t.view.resetViewInsets);
+      // the keyboard slides up over a few frames
+      for (var b = 100.0; b <= 600; b += 100) {
+        t.view.viewInsets = FakeViewPadding(bottom: b);
+        await t.pump(const Duration(milliseconds: 16));
+      }
+      await t.pump(const Duration(seconds: 1));
+      expect(t.takeException(), isNull);
+      // the field stays above the keyboard, and the rest scrolls to
+      final field = t.getRect(find.byType(TextField));
+      expect(field.bottom, lessThanOrEqualTo(640 - 300));
+      expect(field.top, greaterThanOrEqualTo(24));
+      await t.enterText(find.byType(TextField), '@wren');
+      await t.pump(const Duration(milliseconds: 250));
+      await t.ensureVisible(find.text(l10n.appEveryWayToAdd));
+      await t.pump(const Duration(milliseconds: 250));
+      expect(
+        t.getRect(find.text(l10n.appEveryWayToAdd)).bottom,
+        lessThanOrEqualTo(640 - 300),
+      );
+      expect(t.takeException(), isNull);
+      await t.pumpWidget(const SizedBox());
+      await t.pump(const Duration(seconds: 1));
+    });
+
     testWidgets('reduced motion: presses do not scale', (t) async {
       await open(t, still: true);
       final g = await t.startGesture(

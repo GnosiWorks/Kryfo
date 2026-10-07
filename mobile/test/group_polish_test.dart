@@ -35,6 +35,8 @@ import 'package:kryfo/screens/key_verification_screen.dart';
 import 'package:kryfo/screens/search_screen.dart';
 import 'package:kryfo/search.dart' show SearchKind;
 import 'package:kryfo/session.dart';
+import 'package:kryfo/widgets/burn_fade.dart' show LeaveFold;
+import 'package:kryfo/widgets/chat_parts.dart' show ReactionChip, kChipRoom;
 import 'package:kryfo/widgets/empty_chat.dart';
 import 'package:kryfo/widgets/halo_switch.dart';
 import 'package:kryfo/widgets/kryfo_avatar.dart';
@@ -83,8 +85,10 @@ class _Db implements HaloDb {
     if (g != null) await g.future;
   }
 
+  // a quiet one keeps a reaction from here on the phone
+  HaloContainer box = HaloContainer.everyday;
   @override
-  HaloContainer get container => HaloContainer.everyday;
+  HaloContainer get container => box;
 
   @override
   Future<Map<String, Object?>?> getGroup(String groupId) async {
@@ -149,10 +153,30 @@ class _Db implements HaloDb {
     for (final r in rows)
       if ((r['rowid'] as int) > afterRowid) r,
   ];
+  // who reacted to what, '' for this phone
+  final reactions = <String, List<MapEntry<String, String>>>{};
   @override
   Future<Map<String, List<MapEntry<String, String>>>> loadReactionsFor(
     List<String> msgUids,
-  ) async => {};
+  ) async => {
+    for (final u in msgUids)
+      if (reactions[u] case final r?) u: List.of(r),
+  };
+  @override
+  Future<void> addReaction(
+    String msgUid,
+    String reactor,
+    String emoji, {
+    int? at,
+  }) async {
+    final r = reactions.putIfAbsent(msgUid, () => []);
+    r.removeWhere((e) => e.key == reactor);
+    r.add(MapEntry(reactor, emoji));
+  }
+
+  @override
+  Future<void> removeReaction(String msgUid, String reactor) async =>
+      reactions[msgUid]?.removeWhere((e) => e.key == reactor);
   @override
   Future<Map<String, Map<String, PollVote>>> pollVotesFor(
     List<String> uids,
@@ -758,6 +782,98 @@ void main() {
     });
   });
 
+  group('reactions', () {
+    // anna's message with her thumb on it, kept on this phone
+    _Db thumbed(WidgetTester t) {
+      final db = _use(t, _Db(rows: [_in(1, _anna, 'hello there')]))
+        ..box = HaloContainer.decoy;
+      db.reactions['uid-1'] = [const MapEntry(_anna, '👍')];
+      return db;
+    }
+
+    testWidgets('a chip takes a tap: the same one from here, then off', (
+      t,
+    ) async {
+      for (final (locale, scale) in [
+        (const Locale('en'), 1.0),
+        (const Locale('ar'), 1.0),
+        (const Locale('en'), 1.3),
+      ]) {
+        setL10nLocale(locale);
+        t.platformDispatcher.textScaleFactorTestValue = scale;
+        final db = thumbed(t);
+        await t.pumpWidget(
+          app(const GroupChatScreen(groupId: _group), locale: locale),
+        );
+        await t.pump(const Duration(seconds: 1));
+        final chip = find.byType(ReactionChip);
+        final two = find.descendant(of: chip, matching: find.text('2'));
+        expect(chip, findsOneWidget);
+        expect(two, findsNothing);
+        // on her side of the bubble, whichever way the page reads
+        final rtl = locale.languageCode == 'ar';
+        final words = t.getRect(find.text('hello there'));
+        final at = t.getCenter(chip);
+        expect(rtl ? at.dx > words.center.dx : at.dx < words.center.dx, true);
+        expect(at.dy, greaterThan(words.bottom));
+
+        await t.tap(chip);
+        await t.pump();
+        await t.pump(const Duration(milliseconds: 500));
+        expect(two, findsOneWidget, reason: '$locale x$scale');
+        expect(
+          db.reactions['uid-1']!.any((e) => e.key == '' && e.value == '👍'),
+          isTrue,
+        );
+        await t.tap(chip);
+        await t.pump();
+        await t.pump(const Duration(milliseconds: 500));
+        expect(two, findsNothing);
+        expect(db.reactions['uid-1']!.any((e) => e.key == ''), isFalse);
+        expect(t.takeException(), isNull);
+        await _close(t);
+        t.platformDispatcher.clearTextScaleFactorTestValue();
+        setL10nLocale(const Locale('en'));
+      }
+    });
+
+    testWidgets('the first one eases its room open, at once when still', (
+      t,
+    ) async {
+      for (final still in [false, true]) {
+        final db = _use(t, _Db(rows: [_in(1, _anna, 'hello there')]));
+        await t.pumpWidget(
+          app(const GroupChatScreen(groupId: _group), still: still),
+        );
+        await t.pump(const Duration(seconds: 1));
+        double row() => t
+            .getSize(
+              find
+                  .ancestor(
+                    of: find.text('hello there'),
+                    matching: find.byType(LeaveFold),
+                  )
+                  .first,
+            )
+            .height;
+        final before = row();
+        db.reactions['uid-1'] = [const MapEntry(_anna, '👍')];
+        appState.chatChanged('group:$_group');
+        final seen = <double>[];
+        for (var i = 0; i < 60; i++) {
+          await t.pump(const Duration(milliseconds: 16));
+          seen.add(row());
+        }
+        final after = row();
+        expect(find.byType(ReactionChip), findsOneWidget);
+        expect(after, closeTo(before + kChipRoom, 0.01));
+        final between = seen.where((h) => h > before + 0.5 && h < after - 0.5);
+        expect(between, still ? isEmpty : isNotEmpty, reason: 'still: $still');
+        await _close(t);
+      }
+    });
+  });
+
   group('a room not let in yet', () {
     // a room joined [ago] back, as the chat list has it
     _Db joined(WidgetTester t, Duration ago) {
@@ -889,6 +1005,54 @@ void main() {
       expect(t.takeException(), isNull);
       expect(db.knocks, isEmpty);
       await _close(t);
+    });
+
+    testWidgets('no search or pins while it waits; they fade in when let in', (
+      t,
+    ) async {
+      for (final still in [false, true]) {
+        final db = joined(t, Duration.zero);
+        await t.pumpWidget(
+          app(const GroupChatScreen(groupId: _group), still: still),
+        );
+        await t.pump(const Duration(seconds: 1));
+        final search = find.byTooltip(l10n.groupChatSearchThisChat);
+        final pins = find.byTooltip(l10n.pinsPinnedMessages2);
+        double shown() => t
+            .widget<FadeTransition>(
+              find
+                  .ancestor(of: search, matching: find.byType(FadeTransition))
+                  .first,
+            )
+            .opacity
+            .value;
+        await t.tap(search, warnIfMissed: false);
+        await t.pump(const Duration(seconds: 1));
+        expect(find.byType(SearchHead), findsNothing);
+        await t.tap(pins, warnIfMissed: false);
+        await t.pump(const Duration(seconds: 1));
+        expect(find.text(l10n.pinsPinned), findsNothing);
+        expect(shown(), 0);
+        expect(find.text(l10n.roomJoinWaitingFor('Friends')), findsOneWidget);
+
+        db.joiningAt = null;
+        appState.chatChanged('group:$_group');
+        await t.pump();
+        await t.pump(const Duration(milliseconds: 60));
+        final mid = shown();
+        if (still) {
+          expect(mid, 1);
+        } else {
+          expect(mid, greaterThan(0));
+          expect(mid, lessThan(1));
+        }
+        await t.pump(const Duration(seconds: 1));
+        expect(shown(), 1);
+        await t.tap(search);
+        await t.pump(const Duration(seconds: 1));
+        expect(find.byType(SearchHead), findsOneWidget);
+        await _close(t);
+      }
     });
 
     testWidgets('search names it as waiting, not by a member count', (t) async {
