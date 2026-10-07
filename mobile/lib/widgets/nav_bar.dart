@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 
 import '../store.dart';
 import '../theme.dart';
+import 'press_scale.dart';
 import 'stroke_icon.dart';
 import '../l10n/l10n.dart';
 
@@ -126,8 +127,10 @@ class _NavTabState extends State<_NavTab> with SingleTickerProviderStateMixin {
       onTap: widget.onTap,
       onLongPress: widget.onLongPress,
       excludeSemantics: true,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
+      // gives under the finger like every other button; the open tab
+      // does not click again
+      child: PressScale(
+        haptic: false,
         onTap: () {
           if (!on) HapticFeedback.selectionClick();
           widget.onTap();

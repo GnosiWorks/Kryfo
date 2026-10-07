@@ -64,6 +64,35 @@ void main() {
     expect(dev, 1);
   });
 
+  testWidgets('a tab gives under the finger, at once with less movement', (
+    t,
+  ) async {
+    for (final still in [false, true]) {
+      await t.pumpWidget(host(active: HaloTab.chats, still: still));
+      AnimatedScale press() => t.widget<AnimatedScale>(
+        find
+            .ancestor(
+              of: find.text('Tools'),
+              matching: find.byType(AnimatedScale),
+            )
+            .first,
+      );
+      expect(press().scale, 1);
+      final g = await t.startGesture(t.getCenter(find.text('Tools')));
+      await t.pump(const Duration(milliseconds: 150));
+      expect(press().scale, lessThan(1));
+      expect(
+        press().duration,
+        still ? Duration.zero : greaterThan(Duration.zero),
+      );
+      await g.up();
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 300));
+      expect(press().scale, 1);
+      expect(t.hasRunningAnimations, isFalse);
+    }
+  });
+
   testWidgets('one button per tab, open one selected', (t) async {
     final h = t.ensureSemantics();
     await t.pumpWidget(host(active: HaloTab.tools));

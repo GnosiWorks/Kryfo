@@ -317,6 +317,9 @@ class JumpDownButton extends StatelessWidget {
   }
 }
 
+// the room under a bubble that a reaction chip hangs in
+const kChipRoom = 13.0;
+
 // one emoji under a bubble, with how many picked it. it springs on when it
 // is new and its count rolls when that changes; only once per reaction, so a
 // reload does not spring every chip in the chat again
