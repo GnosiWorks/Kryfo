@@ -6178,6 +6178,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'C’est une panne sur cet appareil, pas sur le réseau. Tor n’est pas en cause.';
 
   @override
+  String get bootFailedKeysDidNotAnswer =>
+      'Le stockage des clés de votre téléphone ne répond plus. Fermer puis rouvrir Kryfo règle généralement le problème.';
+
+  @override
+  String get bootFailedCloseAndReopen => 'Fermer et rouvrir Kryfo';
+
+  @override
   String get kryfoLinkTextThatLinkIsNot => 'Kryfo ne sait pas lire ce lien';
 
   @override
@@ -6535,6 +6542,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get torBootSplashFirstLaunchTakesA =>
       'Le premier lancement prend un moment · seulement au démarrage';
+
+  @override
+  String get torBootSplashTakingLonger =>
+      'Cela prend plus de temps que d’habitude';
 
   @override
   String get videoBubbleNothingHereOpensThat =>

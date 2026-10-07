@@ -5874,6 +5874,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bootFailedThisIsAFault => '这是这台设备上的故障，不是网络问题。与 tor 无关。';
 
   @override
+  String get bootFailedKeysDidNotAnswer => '手机的密钥存储没有响应。关闭并重新打开 Kryfo 通常可以解决。';
+
+  @override
+  String get bootFailedCloseAndReopen => '关闭并重新打开 Kryfo';
+
+  @override
   String get kryfoLinkTextThatLinkIsNot => '这个链接 Kryfo 读不了';
 
   @override
@@ -6212,6 +6218,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get torBootSplashFirstLaunchTakesA => '首次启动需要一点时间 · 只在启动时';
+
+  @override
+  String get torBootSplashTakingLonger => '这比平时要久一些';
 
   @override
   String get videoBubbleNothingHereOpensThat => '这里打不开它 · 改为分享';
@@ -13162,6 +13171,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bootFailedThisIsAFault => '這是這台裝置上的故障，不是網路問題。和 Tor 無關。';
 
   @override
+  String get bootFailedKeysDidNotAnswer => '手機的金鑰儲存區沒有回應。關閉並重新開啟 Kryfo 通常可以解決。';
+
+  @override
+  String get bootFailedCloseAndReopen => '關閉並重新開啟 Kryfo';
+
+  @override
   String get kryfoLinkTextThatLinkIsNot => '這個連結不是 Kryfo 能讀取的';
 
   @override
@@ -13500,6 +13515,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get torBootSplashFirstLaunchTakesA => '首次啟動需要一點時間 · 只在開啟時';
+
+  @override
+  String get torBootSplashTakingLonger => '這比平常久一些';
 
   @override
   String get videoBubbleNothingHereOpensThat => '這裡打不開它 · 改用分享';

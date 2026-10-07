@@ -6177,6 +6177,13 @@ class AppLocalizationsIt extends AppLocalizations {
       'È un guasto su questo dispositivo, non della rete. Tor non c\'entra.';
 
   @override
+  String get bootFailedKeysDidNotAnswer =>
+      'L\'archivio delle chiavi del telefono non risponde più. Chiudere e riaprire Kryfo di solito risolve.';
+
+  @override
+  String get bootFailedCloseAndReopen => 'Chiudi e riapri Kryfo';
+
+  @override
   String get kryfoLinkTextThatLinkIsNot => 'Kryfo non sa leggere questo link';
 
   @override
@@ -6533,6 +6540,9 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get torBootSplashFirstLaunchTakesA =>
       'Il primo avvio richiede un momento · solo all\'accensione';
+
+  @override
+  String get torBootSplashTakingLonger => 'Ci sta mettendo più del solito';
 
   @override
   String get videoBubbleNothingHereOpensThat =>

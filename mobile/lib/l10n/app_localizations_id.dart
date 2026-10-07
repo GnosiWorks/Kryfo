@@ -6112,6 +6112,13 @@ class AppLocalizationsId extends AppLocalizations {
       'Ini kesalahan di perangkat ini, bukan jaringan. Tor tidak terlibat.';
 
   @override
+  String get bootFailedKeysDidNotAnswer =>
+      'Penyimpanan kunci di ponselmu berhenti merespons. Menutup lalu membuka lagi Kryfo biasanya menyelesaikannya.';
+
+  @override
+  String get bootFailedCloseAndReopen => 'Tutup dan buka lagi Kryfo';
+
+  @override
   String get kryfoLinkTextThatLinkIsNot => 'Tautan itu tidak bisa dibaca Kryfo';
 
   @override
@@ -6464,6 +6471,9 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get torBootSplashFirstLaunchTakesA =>
       'Pembukaan pertama butuh sebentar · hanya saat mulai';
+
+  @override
+  String get torBootSplashTakingLonger => 'Ini lebih lama dari biasanya';
 
   @override
   String get videoBubbleNothingHereOpensThat =>

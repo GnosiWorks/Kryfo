@@ -9,10 +9,14 @@ import '../l10n/l10n.dart';
 class BootFailedScreen extends StatelessWidget {
   final String error;
   final VoidCallback onRetry;
+  // set when only a new process can help: a retry here waits behind the
+  // call that never answered
+  final VoidCallback? onReopen;
   const BootFailedScreen({
     super.key,
     required this.error,
     required this.onRetry,
+    this.onReopen,
   });
 
   @override
@@ -33,7 +37,9 @@ class BootFailedScreen extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               Text(
-                l10n.bootFailedThisIsAFault,
+                onReopen == null
+                    ? l10n.bootFailedThisIsAFault
+                    : l10n.bootFailedKeysDidNotAnswer,
                 textAlign: TextAlign.center,
                 style: HaloType.sans(
                   size: 13,
@@ -55,42 +61,59 @@ class BootFailedScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 14),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  TextButton(
-                    onPressed: () =>
-                        Clipboard.setData(ClipboardData(text: error)),
-                    child: Text(
-                      l10n.commonCopy,
-                      style: HaloType.mono(size: 12, color: HaloColors.text3),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: onRetry,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: HaloColors.amber,
-                      foregroundColor: HaloColors.onAmber,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 26,
-                        vertical: 13,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
+              if (onReopen case final reopen?) ...[
+                Center(child: _main(l10n.bootFailedCloseAndReopen, reopen)),
+                const SizedBox(height: 6),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _copy(),
+                    const SizedBox(width: 8),
+                    TextButton(
+                      onPressed: onRetry,
+                      child: Text(
+                        l10n.commonTryAgain,
+                        style: HaloType.sans(size: 13, color: HaloColors.text2),
                       ),
                     ),
-                    child: Text(
-                      l10n.commonTryAgain,
-                      style: HaloType.sans(size: 14, color: HaloColors.onAmber),
-                    ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
+              ] else
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _copy(),
+                    const SizedBox(width: 8),
+                    _main(l10n.commonTryAgain, onRetry),
+                  ],
+                ),
             ],
           ),
         ),
       ),
     );
   }
+
+  Widget _copy() => TextButton(
+    onPressed: () => Clipboard.setData(ClipboardData(text: error)),
+    child: Text(
+      l10n.commonCopy,
+      style: HaloType.mono(size: 12, color: HaloColors.text3),
+    ),
+  );
+
+  Widget _main(String label, VoidCallback onPressed) => ElevatedButton(
+    onPressed: onPressed,
+    style: ElevatedButton.styleFrom(
+      backgroundColor: HaloColors.amber,
+      foregroundColor: HaloColors.onAmber,
+      padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 13),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+    ),
+    child: Text(
+      label,
+      textAlign: TextAlign.center,
+      style: HaloType.sans(size: 14, color: HaloColors.onAmber),
+    ),
+  );
 }

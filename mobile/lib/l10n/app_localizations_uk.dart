@@ -6230,6 +6230,13 @@ class AppLocalizationsUk extends AppLocalizations {
       'Це збій на цьому пристрої, а не в мережі. Tor тут ні до чого.';
 
   @override
+  String get bootFailedKeysDidNotAnswer =>
+      'Сховище ключів телефона перестало відповідати. Зазвичай допомагає закрити й знову відкрити Kryfo.';
+
+  @override
+  String get bootFailedCloseAndReopen => 'Закрити й знову відкрити Kryfo';
+
+  @override
   String get kryfoLinkTextThatLinkIsNot =>
       'Це посилання Kryfo не може прочитати';
 
@@ -6588,6 +6595,9 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get torBootSplashFirstLaunchTakesA =>
       'Перший запуск триває трохи довше · лише під час старту';
+
+  @override
+  String get torBootSplashTakingLonger => 'Це триває довше, ніж зазвичай';
 
   @override
   String get videoBubbleNothingHereOpensThat =>

@@ -2642,6 +2642,9 @@ final _calls = <_Call>[
   ),
   ('bootFailedKryfoCouldNotStart', [], (l) => l.bootFailedKryfoCouldNotStart),
   ('bootFailedThisIsAFault', [], (l) => l.bootFailedThisIsAFault),
+  ('bootFailedKeysDidNotAnswer', [], (l) => l.bootFailedKeysDidNotAnswer),
+  ('bootFailedCloseAndReopen', [], (l) => l.bootFailedCloseAndReopen),
+  ('torBootSplashTakingLonger', [], (l) => l.torBootSplashTakingLonger),
   ('kryfoLinkTextThatLinkIsNot', [], (l) => l.kryfoLinkTextThatLinkIsNot),
   ('kryfoLinkTextAdd', ["⟨who⟩"], (l) => l.kryfoLinkTextAdd("⟨who⟩")),
   (

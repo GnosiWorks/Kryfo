@@ -4,6 +4,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../dlog.dart';
 import '../main.dart' show appState;
+import '../reopen.dart';
+import '../secure_store.dart';
 import '../theme.dart';
 import 'fit_column.dart';
 import 'onion_loader.dart';
@@ -204,10 +206,30 @@ class _TorBootSplashState extends State<TorBootSplash>
             _rise(
               0.6,
               1,
-              Text(
-                l10n.torBootSplashFirstLaunchTakesA,
-                textAlign: TextAlign.center,
-                style: HaloType.mono(size: 10, color: HaloColors.text2),
+              // a key store call that has not answered for a while: the way
+              // out is a new process, offered before boot gives up on it
+              ValueListenableBuilder<bool>(
+                valueListenable: keyStoreSlow,
+                builder: (_, slow, _) {
+                  final line = slow
+                      ? _slow()
+                      : Text(
+                          l10n.torBootSplashFirstLaunchTakesA,
+                          key: const ValueKey('first'),
+                          textAlign: TextAlign.center,
+                          style: HaloType.mono(
+                            size: 10,
+                            color: HaloColors.text2,
+                          ),
+                        );
+                  if (_still) return line;
+                  const d = Duration(milliseconds: 320);
+                  return AnimatedSize(
+                    duration: d,
+                    curve: Curves.easeOutCubic,
+                    child: AnimatedSwitcher(duration: d, child: line),
+                  );
+                },
               ),
             ),
           ],
@@ -215,6 +237,27 @@ class _TorBootSplashState extends State<TorBootSplash>
       ),
     );
   }
+
+  Widget _slow() => Column(
+    key: const ValueKey('slow'),
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Text(
+        l10n.torBootSplashTakingLonger,
+        textAlign: TextAlign.center,
+        style: HaloType.sans(size: 12.5, color: HaloColors.text2, height: 1.5),
+      ),
+      const SizedBox(height: 2),
+      TextButton(
+        onPressed: reopenApp,
+        child: Text(
+          l10n.bootFailedCloseAndReopen,
+          textAlign: TextAlign.center,
+          style: HaloType.sans(size: 13, color: HaloColors.amber),
+        ),
+      ),
+    ],
+  );
 
   Widget _hopDot(String label, double phase) {
     final lit = _hop(phase);

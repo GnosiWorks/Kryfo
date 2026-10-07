@@ -6238,6 +6238,13 @@ class AppLocalizationsAr extends AppLocalizations {
       'هذا عطل في هذا الجهاز، لا في الشبكة. لا علاقة لـ tor بذلك.';
 
   @override
+  String get bootFailedKeysDidNotAnswer =>
+      'توقّف مخزن المفاتيح في هاتفك عن الاستجابة. إغلاق Kryfo وإعادة فتحه يحلّ المشكلة عادةً.';
+
+  @override
+  String get bootFailedCloseAndReopen => 'إغلاق Kryfo وإعادة فتحه';
+
+  @override
   String get kryfoLinkTextThatLinkIsNot => 'لا يستطيع Kryfo قراءة هذا الرابط';
 
   @override
@@ -6588,6 +6595,9 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get torBootSplashFirstLaunchTakesA =>
       'التشغيل الأول يستغرق لحظة · عند البدء فقط';
+
+  @override
+  String get torBootSplashTakingLonger => 'يستغرق هذا وقتًا أطول من المعتاد';
 
   @override
   String get videoBubbleNothingHereOpensThat =>
