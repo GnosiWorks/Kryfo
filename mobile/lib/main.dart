@@ -2361,6 +2361,12 @@ class HaloDb implements GroupOwedStore {
   // caller built on it never sees someone blocked while still a stranger.
   Future<Set<String>> blockedIds() async => _blockedIn(await open());
 
+  // their rows, for listening on
+  Future<List<Map<String, Object?>>> blockedRows() async {
+    final db = await open();
+    return db.query('contacts', where: 'blocked = 1');
+  }
+
   // blocked, or never taken in: no one a restore asks to start afresh
   Future<Set<String>> unaskedIds() async {
     final db = await open();
@@ -5667,9 +5673,9 @@ List<Object> blockedAtArgs(
 // than that, and a retry wrapped after the unblock still shows it was
 // written before. null with no stamp at all.
 // written before the block on a phone that was offline and sent while it
-// held: let in, it was written outside the span. nothing tells a sender
-// of a block, so what they write during one is still sent, and dropped
-// here
+// held: let in, it was written outside the span. a block listens on, so
+// what is sent while it holds is dropped and noted as it comes; this
+// judges what only comes after it, to a phone that heard nothing then
 ({int at, int slack})? blockStamp({
   int? written,
   int? wrapped,
@@ -6413,7 +6419,7 @@ Future<(String, bool)> handleHaloUriAdded(
     return (l10n.appLinkOtherKey(parsed['id']!), false);
   }
   // someone blocked stays blocked: an add would say they can be written to
-  // while nothing of theirs is heard. the blocked list lets them back
+  // while nothing of theirs is kept. the blocked list lets them back
   if (await session.isBlocked(parsed['id']!)) {
     return (l10n.appTheyAreBlocked(parsed['id']!), false);
   }
@@ -9928,6 +9934,16 @@ class AppState extends ChangeNotifier {
     dlog(
       'INCOMING len=${env.message.length} hasPreview=${env.preview != null} uid=${env.msgUid}',
     );
+    // nothing from someone blocked is kept or answered, a receipt or a proof
+    // neither. their address is listened on while the block holds, so what
+    // they send then comes in now, judged by this clock alone. what they
+    // wrote is noted by its uid, and a copy of it stays out after an
+    // unblock (droppedWhileBlocked)
+    if (await db.isBlocked(senderHaloId)) {
+      final key = _dataFrame(env) ? env.msgUid ?? env.mediaId : null;
+      if (key != null) await db.noteBlockedDrop(senderHaloId, key);
+      return to;
+    }
     // delivery receipt, handled before the stranger gate and dedup so an ack
     // is never treated as a message or counted toward the cap. it leaves
     // back-paired alone: that flag lifts the sender-side cap, and a stranger
@@ -9949,29 +9965,20 @@ class AppState extends ChangeNotifier {
         unawaited(drainOutbox());
       }
     }
-    // nothing from someone blocked is kept, and what came while the block
-    // held stays dropped after an unblock: a copy by its uid, one the
-    // relays held back or the sender sent again by when it was written
-    // (blockStamp). only a block holding now notes the uid: a stamp is
-    // their clock, and one running behind could match an ended span for
-    // something sent after it, whose copies must still come in
-    final blockedNow = await db.isBlocked(senderHaloId);
+    // what a phone that heard nothing while a block held gets after it,
+    // the relays' copies or the sender's again, stays out by when it was
+    // written (blockStamp). nothing is noted by it: a stamp is their clock,
+    // and one running behind could match an ended span for something sent
+    // after it, whose copies must still come in
     final heard = DateTime.now().millisecondsSinceEpoch;
-    final stamp = blockedNow
-        ? null
-        : blockStamp(
-            written: env.writtenAt,
-            wrapped: wrappedAt,
-            came: arrivedAt ?? heard,
-            now: heard,
-          );
-    if (blockedNow ||
-        (stamp != null &&
-            await db.blockedAt(senderHaloId, stamp.at, slack: stamp.slack))) {
-      final key = _dataFrame(env) ? env.msgUid ?? env.mediaId : null;
-      if (blockedNow && key != null) {
-        await db.noteBlockedDrop(senderHaloId, key);
-      }
+    final stamp = blockStamp(
+      written: env.writtenAt,
+      wrapped: wrappedAt,
+      came: arrivedAt ?? heard,
+      now: heard,
+    );
+    if (stamp != null &&
+        await db.blockedAt(senderHaloId, stamp.at, slack: stamp.slack)) {
       return to;
     }
     // the developer's own phone: a chat started from the Marios row goes to
@@ -10923,9 +10930,9 @@ class AppState extends ChangeNotifier {
     }
     final existing = await db.getContact(h);
     if (existing != null && (existing['accepted'] as int? ?? 0) == 1) return;
-    // someone blocked stays blocked: no vouch, no listening, nothing sent.
-    // a block on the everyday side holds for a hidden chat's card too, or
-    // listening for them here would undo it
+    // someone blocked stays blocked: no vouch, no card, nothing sent. a
+    // block on the everyday side holds for a hidden chat's card too, or a
+    // card for them here would undo it
     if (await db.isBlocked(h) || (!everyday && await live.isBlocked(h))) {
       dlog('intro: names someone blocked, dropped');
       return;
@@ -12720,6 +12727,7 @@ class AppState extends ChangeNotifier {
         ...await live.pendingRequests(),
         ...await live.parkedRequests(),
       ],
+      blocked: await live.blockedRows(),
     );
     final fresh = <String, String>{};
     for (final r in rows) {
@@ -13621,34 +13629,18 @@ class AppState extends ChangeNotifier {
         notifyListeners();
       });
 
-  // a block stops listening on their relay address, and that address's
-  // files go with it. what of theirs is in the shade goes too, in the
+  // a block keeps listening on their relay address: what they send while
+  // it holds comes in and is dropped, or the relay would keep it and hand
+  // it over after an unblock. what of theirs is in the shade goes, in the
   // session that showed it: a decoy shows nothing, and the same words there
   // may name someone the everyday app has in the shade
   Future<void> block(String haloId) async {
     await session.setBlocked(haloId, true);
     await session.dropHeld(haloId);
     if (!sessionQuiet) {
-      await _unlistenPeer(haloId);
       await cancelWithRetry(() => _io.unnotify(haloId), 'block shade');
     }
     await refreshContacts();
-  }
-
-  Future<void> _unlistenPeer(String haloId) async {
-    final keys = {
-      for (final e in _xPubToHaloId.entries)
-        if (e.value == haloId) e.key,
-    };
-    final x = await _ownerOf(haloId).contactXPub(haloId);
-    if (x != null && x.isNotEmpty) keys.add(x);
-    for (final k in keys) {
-      // a key someone else here is heard on stays
-      final heard = _xPubToHaloId[k];
-      if (heard != null && heard != haloId) continue;
-      _xPubToHaloId.remove(k);
-      _io.unlisten(k);
-    }
   }
 
   // a support chat is taken on by its first reply, and stays in support.
@@ -13761,7 +13753,7 @@ class AppState extends ChangeNotifier {
     if (any) notifyListeners();
   }
 
-  // an unblock listens for them again
+  // an unblock listens for them, if nothing did yet
   Future<void> unblock(String haloId) async {
     await session.setBlocked(haloId, false);
     if (!sessionQuiet) await subscribePeer(haloId);
@@ -16033,9 +16025,9 @@ class AppState extends ChangeNotifier {
     // the row xpub is set by v1 pairing and is there before any session
     // exists; v2 bundle pairing leaves it empty and puts the key in the
     // signal store instead. try both, backfill the row when we learn it.
-    // a hidden chat's row is in the open vault. no one blocked is heard
+    // a hidden chat's row is in the open vault. someone blocked is heard
+    // too, and what they send is dropped as it comes
     final d = _ownerOf(haloId);
-    if (await d.isBlocked(haloId)) return;
     var xPub = await d.contactXPub(haloId);
     if (xPub == null || xPub.isEmpty) {
       xPub = await signalSession.peerXPubHex(haloId);

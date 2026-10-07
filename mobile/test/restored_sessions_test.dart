@@ -71,6 +71,8 @@ class _Rows extends HaloDb {
   Future<List<Map<String, Object?>>> pendingRequests() async => const [];
   @override
   Future<List<Map<String, Object?>>> parkedRequests() async => const [];
+  @override
+  Future<List<Map<String, Object?>>> blockedRows() async => const [];
 }
 
 // signal as the app runs it, and a relay that keeps what it is handed

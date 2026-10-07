@@ -424,6 +424,12 @@ class ArrivalRows implements HaloDb {
           if (p['accepted'] == 0 && p['archived'] == 1) p,
       ]);
   @override
+  Future<List<Map<String, Object?>>> blockedRows() async =>
+      _hit('blockedRows', null, [
+        for (final p in people.values)
+          if (p['blocked'] == 1) p,
+      ]);
+  @override
   Future<List<Map<String, Object?>>> vouchedPending() async =>
       _hit('vouchedPending', null, [
         for (final p in people.values)

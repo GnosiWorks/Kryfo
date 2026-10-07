@@ -394,6 +394,12 @@ class _Mem implements HaloDb {
           if (p['accepted'] == 0 && p['archived'] == 1) p,
       ]);
   @override
+  Future<List<Map<String, Object?>>> blockedRows() async =>
+      _hit('blockedRows', null, [
+        for (final p in people.values)
+          if (p['blocked'] == 1) p,
+      ]);
+  @override
   Future<List<Map<String, Object?>>> vouchedPending() async =>
       _hit('vouchedPending', null, [
         for (final p in people.values)
@@ -1128,7 +1134,8 @@ void main() {
     });
   });
 
-  test('no one the vault blocked is listened for', () async {
+  test('someone the vault blocked is listened for, so the relay keeps '
+      'nothing of theirs for an unblock', () async {
     final w = await _World.make();
     await w.store.putHidden(
       'blocked-hidden-one',
@@ -1139,8 +1146,9 @@ void main() {
       1,
     );
     await w.router.load();
-    expect(w.router.listenFor, {'x-$_h': _h});
+    expect(w.router.listenFor, {'x-$_h': _h, 'x-b': 'blocked-hidden-one'});
     expect(w.router.keeps('blocked-hidden-one'), isTrue);
+    expect(w.router.blocks('blocked-hidden-one'), isTrue);
   });
 
   group('while the vault is shut', () {

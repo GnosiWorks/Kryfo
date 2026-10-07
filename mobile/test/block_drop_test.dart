@@ -115,6 +115,26 @@ class _World {
     return (peer: 'x-$from', cipher: cipher);
   }
 
+  // any frame of theirs on the wire, a cipher of its own
+  ({String peer, String cipher}) frame(String from, String wire) {
+    final cipher = 'cipher-frame-${_n++}';
+    io.opens[cipher] = (from, wire);
+    return (peer: 'x-$from', cipher: cipher);
+  }
+
+  static SenderInfo sender(String from) => SenderInfo(
+    haloId: from,
+    edPub: 'ed-$from',
+    onion: 'o-$from',
+    xPub: 'x-$from',
+  );
+
+  // anything that went out to them, on any lane
+  List<(String, String)> sentTo(String who) => [
+    for (final s in io.sent)
+      if (s.$1.endsWith('-$who')) s,
+  ];
+
   List<Object?> kept(String from) => [
     for (final m in live.msgs)
       if (m['peer_id'] == from && m['direction'] == 'in') m['msg_uid'],
@@ -294,6 +314,103 @@ void main() {
       // their clock may be what put it there: sent again, it comes in
       await w.app.receiveOnion([(await w.copy(who, 'skewed')).cipher]);
       expect(w.kept(who), ['skewed']);
+    });
+  }
+
+  for (final who in [_f, _s]) {
+    final kind = who == _f ? 'a friend' : 'a stranger';
+
+    test('$kind blocked: their address is still listened on, and what comes '
+        'while the block holds is dropped by this clock and noted', () async {
+      final w = await _World.make();
+      await w.app.block(who);
+      expect(w.io.unheard, isEmpty, reason: 'a block listens on');
+      w.io.listened.clear();
+      await w.app.subscribePeer(who);
+      expect(w.io.listened, ['x-$who']);
+
+      final before = w.live.calls.length;
+      // a text, a file in slices and a receipt of theirs, each stamped as
+      // written long after any span would end: this clock decides
+      final later = DateTime.now().millisecondsSinceEpoch + 3600000;
+      await w.app.receiveRelay([
+        await w.copy(who, 'during', written: later),
+        w.frame(
+          who,
+          await wrapMessage(
+            '',
+            mediaId: 'clip',
+            chunkIndex: 0,
+            chunkTotal: 2,
+            fileB64: base64Encode([1, 2, 3]),
+            fileName: 'a.bin',
+            sender: _World.sender(who),
+          ),
+        ),
+        w.frame(
+          who,
+          await wrapMessage(
+            '',
+            deliveredUid: 'mine-1',
+            sender: _World.sender(who),
+          ),
+        ),
+      ]);
+      expect(w.kept(who), isEmpty);
+      expect(w.live.blockedDrops[who], {'during', 'clip'});
+      expect(w.live.delivered, isEmpty, reason: 'no tick from them');
+      final asked = w.live.calls.sublist(before);
+      for (final c in [
+        'markDelivered',
+        'markBackPaired',
+        'saveMessage',
+        'putMediaChunk',
+        'bumpUnread',
+        'holdCipher',
+      ]) {
+        expect(asked.where((a) => a.startsWith(c)), isEmpty, reason: c);
+      }
+      expect(w.io.rang, isEmpty);
+      expect(w.sentTo(who), isEmpty, reason: 'nothing goes back');
+    });
+
+    // the phone's case: X came while the block held, wrapped three minutes
+    // before the unblock, and its copy comes again just after it. by its
+    // stamp alone it would pass as a slow clock
+    test('$kind blocked: a copy of what came while the block held, wrapped '
+        'three minutes before the unblock, stays out after it', () async {
+      final w = await _World.make();
+      await w.app.block(who);
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final to = now - 1000;
+      final x = to - 3 * 60000;
+      await w.app.receiveRelay(
+        [await w.copy(who, 'x3', written: x)],
+        written: [x],
+      );
+      expect(w.live.blockedDrops[who], {'x3'});
+      await w.app.unblock(who);
+      w.live.blockSpans[who] = [(x - 60000, to)];
+      // the sender's retry and a restore's resend, each a cipher of its own
+      await w.app.receiveRelay(
+        [await w.copy(who, 'x3', written: x)],
+        written: [x],
+      );
+      await w.app.receiveOnion([(await w.copy(who, 'x3', written: x)).cipher]);
+      expect(w.kept(who), isEmpty);
+      expect(w.io.rang, isEmpty);
+      expect(w.io.ticksFor('x3'), isEmpty);
+      expect(w.sentTo(who), isEmpty);
+
+      // written after the unblock: in, rung and ticked
+      await w.app.receiveRelay(
+        [await w.copy(who, 'after', written: now)],
+        written: [now],
+      );
+      await pumpEventQueue();
+      expect(w.kept(who), ['after']);
+      expect(w.io.rang, [who]);
+      expect(w.io.ticksFor('after'), isNotEmpty);
     });
   }
 
