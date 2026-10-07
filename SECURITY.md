@@ -7,9 +7,10 @@ do something they shouldn't, please tell me privately first.
 ## how to report
 
 - email: gnosiworks@proton.me
-- in the app: the "Marios · built Kryfo" chat at the top of the chat list.
-  its key is pinned inside the app, so nobody else can answer as me. you can
-  write from your own identity or anonymously from a throwaway one.
+- in the app, from kryfo 0.5.0: the "Marios · built Kryfo" chat at the top
+  of the chat list. its key is pinned inside the app, so nobody else can
+  answer as me. you can write from your own identity or anonymously from a
+  throwaway one.
 
 the pinned developer identity:
 
@@ -38,7 +39,8 @@ people's data, don't degrade the servers for others.
 ## in scope
 
 - the android app (mobile/) and the engine (engine/): crypto, storage, the
-  lock layer, decoy and hidden chats, backups, the tor and relay transport
+  lock layer, decoy and hidden chats (from 0.5.0), backups, the tor and
+  relay transport
 - relay.kryfo.app: the relay, the handle registry, people search
 - kryfo.app
 
