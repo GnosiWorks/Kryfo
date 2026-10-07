@@ -498,6 +498,7 @@ class DevChat {
       ('pins_out', 'peer_id'),
       ('edits_out', 'peer_id'),
       ('frames_out', 'peer_id'),
+      ('gone_in', 'peer_id'),
       ('shield', 'halo_id'),
       ('vouches', 'halo_id'),
       ('vouches', 'voucher_id'),

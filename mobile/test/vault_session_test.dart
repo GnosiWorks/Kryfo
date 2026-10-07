@@ -707,6 +707,8 @@ class _Db implements HaloDb {
   @override
   Future<bool> messageExists(String msgUid) async =>
       _hit('messageExists', msgUid, r.msg(msgUid) != null);
+  @override
+  Future<bool> goneFrom(String peer, String msgUid) async => false;
 
   // ---- groups ----
   @override

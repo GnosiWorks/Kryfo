@@ -462,4 +462,70 @@ void main() {
       await devClose(t);
     },
   );
+
+  // the last here: the store stays marked restored after it
+  testWidgets('after a restore, a text waiting on their card stays going '
+      'through the retries and the reloads, and a new one goes on as going', (
+    t,
+  ) async {
+    await t.runAsync(signalSession.markRestored);
+    // shown failed from before: the retry finds the seal waits on their card
+    await failed('w0', 'from before');
+    // opened offline, so its first retry comes once the chat is read
+    appState.noteOnline(false);
+    await openChat(t);
+    await settle(t);
+    appState.noteOnline(true);
+    await settle(t);
+    // past the six retries a failed send gets before it shows as failed
+    for (var i = 0; i < 8; i++) {
+      await t.pump(const Duration(seconds: 31));
+      await settle(t, 2);
+    }
+    expect(appState.waitsForCard(_peer), isTrue);
+    expect(find.byType(SendPill), findsOneWidget);
+    // and as many again, the chat read again each time
+    for (var i = 0; i < 8; i++) {
+      await t.pump(const Duration(seconds: 31));
+      await settle(t, 2);
+      await mem.update(
+        'messages',
+        {'sent_at': DateTime.now().millisecondsSinceEpoch - 300000},
+        where: 'direction = ?',
+        whereArgs: ['out'],
+      );
+      appState.chatChanged(_peer);
+      await settle(t, 2);
+    }
+    expect(appState.waitsForCard(_peer), isTrue);
+    expect(find.byType(SendPill), findsOneWidget);
+
+    await t.enterText(find.byType(TextField).last, 'are you there');
+    await t.pump();
+    await t.pump(const Duration(seconds: 1));
+    await t.tap(find.byIcon(Icons.arrow_upward));
+    await settle(t);
+    // the network gone, one failed would say so: these are still going.
+    // a text of theirs coming in draws the chat again
+    appState.noteOnline(false);
+    await mem.insert('messages', {
+      'peer_id': _peer,
+      'direction': 'in',
+      'plaintext': 'hello?',
+      'sent_at': DateTime.now().millisecondsSinceEpoch,
+      'msg_uid': 'in1',
+    });
+    appState.chatChanged(_peer);
+    await settle(t);
+    expect(find.byType(SendPill), findsNWidgets(2));
+    expect(
+      [
+        for (final r in mem.rows('messages'))
+          if (r['direction'] == 'out') r['sent'],
+      ],
+      [0, 0],
+    );
+    appState.noteOnline(true);
+    await devClose(t);
+  });
 }

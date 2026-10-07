@@ -587,6 +587,8 @@ class _Mem implements HaloDb {
   Future<bool> messageExists(String msgUid) async =>
       _hit('messageExists', msgUid, msg(msgUid) != null);
   @override
+  Future<bool> goneFrom(String peer, String msgUid) async => false;
+  @override
   Future<(String, String?)?> chatOf(String msgUid) async {
     final m = msg(msgUid);
     return _hit(

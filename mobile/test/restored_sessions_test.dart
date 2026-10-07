@@ -22,13 +22,14 @@ import 'package:kryfo/main.dart'
         AppIo,
         AppState,
         HaloDb,
+        kFrameReceipt,
         makePreKeyBundleB64,
         openSignalStore,
-        preKeyBundleOf,
         processPeerBundle,
         signalDecrypt,
         signalEncrypt,
         useDatabasesForTest;
+import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
@@ -39,15 +40,30 @@ import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 import 'arrival_fakes.dart' show ArrivalSeal, ArrivalStore;
 import 'mem_db.dart';
 
-// the app's rows over maps. the outbox's and the requests' own queries
-// are not this test's
+// the app's rows over maps. the requests' own queries are not this
+// test's, nor the outbox's but where a test drains it
 class _Rows extends HaloDb {
-  _Rows(this.mem) : super(HaloContainer.everyday);
+  _Rows(this.mem, [super.container = HaloContainer.everyday]);
   final MemDb mem;
+  // the outbox read off the rows, for the tests that drain it
+  var outbox = false;
   @override
   Future<Database> open() async => mem;
   @override
-  Future<List<Map<String, Object?>>> unsentOutbox() async => const [];
+  Future<List<Map<String, Object?>>> unsentOutbox() async => [
+    if (outbox)
+      for (final r in mem.rows('messages'))
+        if (r['direction'] == 'out' && r['sent'] == 0) r,
+  ];
+  // the counts and the home list's last lines are not this test's either
+  @override
+  Future<void> bumpUnread(String peerId) async {}
+  @override
+  Future<Map<String, Map<String, Object?>>> lastMessages() async => const {};
+  @override
+  Future<int> pendingRequestCount() async => 0;
+  @override
+  Future<List<Map<String, Object?>>> askedRequests() async => const [];
   @override
   Future<List<Map<String, Object?>>> vouchedPending() async => const [];
   @override
@@ -81,6 +97,19 @@ class _Io extends AppIo {
   String edPub() => 'ed-me';
   @override
   String xPub() => 'x-me';
+  // the shade is not this test's
+  @override
+  Future<void> notify({
+    required String title,
+    required String body,
+    String? payload,
+    String? msgUid,
+    int? burnAt,
+  }) async {}
+  @override
+  Future<void> unnotifyMessage(String msgUid) async {}
+  @override
+  Future<void> unnotify(String payload) async {}
 
   // the bundle frames that went to [xPub], by whether they ask
   List<bool> asksTo(String xPub) => [
@@ -94,19 +123,23 @@ typedef _Peer = ({SignalSession ss, String name, String xpub, String card});
 
 var _n = 0;
 
+String _hex(List<int> b) =>
+    [for (final x in b) x.toRadixString(16).padLeft(2, '0')].join();
+
 Future<_Peer> _peer() async {
   final pair = Curve.generateKeyPair();
   final ss = SignalSession();
+  final x = pair.publicKey.serialize().sublist(1);
   await ss.bootstrap(
     database: MemDb(),
-    xPubBytes: pair.publicKey.serialize().sublist(1),
+    xPubBytes: x,
     xPrivBytes: pair.privateKey.serialize(),
   );
-  final name = 'amber-river-${_n++}';
   return (
     ss: ss,
-    name: name,
-    xpub: 'x-$name',
+    name: 'amber-river-${_n++}',
+    // their x key, which their signal identity is made from
+    xpub: _hex(x),
     card: await makePreKeyBundleB64(ss),
   );
 }
@@ -161,8 +194,11 @@ void main() {
   // this phone's signal store, and the rows its sessions are kept in
   final store = MemDb();
   late MemDb mem;
+  late _Rows rows;
   late _Io io;
   late AppState app;
+  late VaultRouter router;
+  late ArrivalStore vaultList;
 
   setUpAll(() async {
     final me = Curve.generateKeyPair();
@@ -177,12 +213,16 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     FlutterSecureStorage.setMockInitialValues({});
     mem = MemDb();
-    final rows = _Rows(mem);
+    rows = _Rows(mem);
     useDatabasesForTest(rows, Session(rows));
-    final router = VaultRouter(ArrivalStore(), ArrivalSeal());
+    vaultList = ArrivalStore();
+    router = VaultRouter(vaultList, ArrivalSeal());
     await router.load();
     io = _Io();
-    app = AppState(io: io, router: router)..myId = 'me';
+    app = AppState(io: io, router: router)
+      ..myId = 'me'
+      // a route is up: nothing waits on tor
+      ..sendModeForTest = 'fast';
   });
 
   Future<void> contact(_Peer p, {bool card = true}) => mem.insert('contacts', {
@@ -220,6 +260,85 @@ void main() {
     }
     await signalSession.markRestored();
   }
+
+  // a text of theirs as their app wraps it, sealed and on the relay
+  Future<void> came(_Peer p, String uid, String text, {int? burn}) async {
+    final w = await wrapMessage(
+      text,
+      msgUid: uid,
+      burnSeconds: burn,
+      sender: SenderInfo(
+        haloId: p.name,
+        edPub: 'ed-${p.name}',
+        onion: '',
+        xPub: p.xpub,
+      ),
+    );
+    final c = await _fromPeer(p, w);
+    await app.receiveRelay([(peer: p.xpub, cipher: c)]);
+    await _settle();
+  }
+
+  // what of ours has reached them, as their phone opens it. a cipher opens
+  // once, so each is kept as it opened
+  final opened = <String, String?>{};
+  Future<List<String?>> atThem(_Peer p) async => [
+    for (final (to, c) in [...io.sent])
+      if (to == p.xpub && !c.startsWith('{'))
+        opened.containsKey(c) ? opened[c] : (opened[c] = await _atPeer(p, c)),
+  ];
+  Future<List<String>> receiptsAt(_Peer p) async => [
+    for (final w in await atThem(p))
+      if (w != null) ?unwrapMessage(w).deliveredUid,
+  ];
+
+  Map<String, Object?>? row(String uid) {
+    for (final r in mem.rows('messages')) {
+      if (r['msg_uid'] == uid) return r;
+    }
+    return null;
+  }
+
+  // their card, asking nothing back, or asking us to start afresh. [n]
+  // makes each one its own wrap, as a relay hands it over
+  Future<void> card(
+    _Peer p, {
+    bool want = false,
+    String? bundle,
+    int n = 0,
+  }) async {
+    await app.receiveRelay([
+      (
+        peer: p.xpub,
+        cipher: jsonEncode({
+          'halo_ctl': 'bundle',
+          'from': p.name,
+          'bundle': bundle ?? p.card,
+          'want': want,
+          'n': n,
+        }),
+      ),
+    ]);
+    await _settle();
+  }
+
+  // a text of ours to them that went and never came back delivered
+  Future<void> outTo(
+    _Peer p,
+    String uid, {
+    int ago = 60000,
+    String? peer,
+    String direction = 'out',
+    MemDb? into,
+  }) => (into ?? mem).insert('messages', {
+    'peer_id': peer ?? p.name,
+    'direction': direction,
+    'plaintext': uid,
+    'sent_at': DateTime.now().millisecondsSinceEpoch - ago,
+    'msg_uid': uid,
+    'sent': 1,
+    'delivered': 0,
+  });
 
   Future<Uint8List> record(_Peer p) async =>
       (await store.query(
@@ -471,5 +590,263 @@ void main() {
     );
     expect(base64Decode(w).first, CiphertextMessage.prekeyType);
     expect(await ss.sealsOnRestored(p.name), isFalse);
+  });
+
+  test('a text of theirs that burned or was deleted here and comes again '
+      'is acked and never shown again', () async {
+    final p = await _peer();
+    await contact(p);
+    await talk(p);
+    await app.subscribeKnown();
+    await came(p, 'burns', 'gone in a minute', burn: 60);
+    await came(p, 'deleted', 'delete me');
+    expect(row('burns'), isNotNull);
+    expect(row('deleted'), isNotNull);
+    // read, its minute over and swept; the other deleted by hand
+    await mem.update(
+      'messages',
+      {'burn_at': 1},
+      where: 'msg_uid = ?',
+      whereArgs: ['burns'],
+    );
+    await rows.purgeExpired();
+    await rows.deleteMessage('deleted');
+    expect(row('burns'), isNull);
+    expect(row('deleted'), isNull);
+    final acked = (await receiptsAt(p)).length;
+
+    // their phone puts both out again, as an ask after a restore has it,
+    // past the half minute a receipt is sent again in at most
+    app = AppState(io: io, router: router)
+      ..myId = 'me'
+      ..sendModeForTest = 'fast';
+    await app.subscribeKnown();
+    await came(p, 'burns', 'gone in a minute', burn: 60);
+    await came(p, 'deleted', 'delete me');
+    expect(row('burns'), isNull, reason: 'a burned one came back');
+    expect(row('deleted'), isNull, reason: 'a deleted one came back');
+    expect((await receiptsAt(p)).skip(acked), ['burns', 'deleted']);
+    // someone else's with the same uid is theirs to send
+    final q = await _peer();
+    await contact(q);
+    await talk(q);
+    await came(q, 'burns', 'not the same one');
+    expect(row('burns')?['peer_id'], q.name);
+  });
+
+  test('a receipt that cannot be sealed while the session waits on their '
+      'card waits with it, and goes once the card is here', () async {
+    final p = await _peer();
+    await contact(p, card: false);
+    await talk(p);
+    await app.subscribeKnown();
+    final file = backUp(p);
+    expect(await _atPeer(p, await _toPeer(p, 'after')), 'after');
+    await restore(p, file);
+
+    await came(p, 'r1', 'did you get this');
+    expect(row('r1')?['plaintext'], 'did you get this');
+    expect(await receiptsAt(p), isEmpty);
+    expect(app.waitsForCard(p.name), isTrue);
+    expect(mem.rows('frames_out').single['kind'], kFrameReceipt);
+
+    await card(p);
+    expect(await receiptsAt(p), ['r1']);
+    expect(mem.rows('frames_out'), isEmpty);
+    expect(app.waitsForCard(p.name), isFalse);
+  });
+
+  test('a text waiting on their card is no failed try, and goes the moment '
+      'their card is here', () async {
+    final p = await _peer();
+    await contact(p, card: false);
+    await talk(p);
+    final file = backUp(p);
+    expect(await _atPeer(p, await _toPeer(p, 'after')), 'after');
+    await restore(p, file);
+    rows.outbox = true;
+    await mem.insert('messages', {
+      'peer_id': p.name,
+      'direction': 'out',
+      'plaintext': 'waits',
+      'sent_at': DateTime.now().millisecondsSinceEpoch - 60000,
+      'msg_uid': 'w1',
+      'sent': 0,
+    });
+
+    await app.drainOutbox();
+    await _settle();
+    expect(row('w1')?['sent'], 0);
+    expect(app.waitsForCard(p.name), isTrue);
+    expect(app.outboxTriesForTest('w1'), 0);
+
+    await card(p);
+    expect(row('w1')?['sent'], 1);
+    final at = await atThem(p);
+    expect(unwrapMessage(at.whereType<String>().last).message, 'waits');
+  });
+
+  test('asked again within ten minutes, nothing goes again', () async {
+    final p = await _peer();
+    await contact(p);
+    await talk(p);
+    await outTo(p, 'lost');
+    await card(p, want: true);
+    expect(row('lost')?['sent'], 0);
+    // the outbox sent it, and it is lost again
+    await mem.update(
+      'messages',
+      {'sent': 1},
+      where: 'msg_uid = ?',
+      whereArgs: ['lost'],
+    );
+    await card(p, want: true, n: 1);
+    expect(row('lost')?['sent'], 1);
+  });
+
+  test(
+    'asked while their key is flagged as changed, nothing goes again',
+    () async {
+      final p = await _peer();
+      await contact(p);
+      await talk(p);
+      await mem.update(
+        'contacts',
+        {'key_changed': 1},
+        where: 'halo_id = ?',
+        whereArgs: [p.name],
+      );
+      await outTo(p, 'lost');
+      await card(p, want: true);
+      expect(row('lost')?['sent'], 1);
+    },
+  );
+
+  test('only our own text to them goes again, never a row of the same uid '
+      'that came in or went to someone else', () async {
+    final p = await _peer();
+    await outTo(p, 'u1');
+    await outTo(p, 'u1', peer: 'someone-else-here');
+    await outTo(p, 'u1', direction: 'in');
+    final n = await rows.resendUndelivered(p.name, since: 0);
+    expect(n, 1);
+    expect([for (final r in mem.rows('messages')) r['sent']], [0, 1, 1]);
+  });
+
+  test('a hidden chat asked while its vault is shut gets what never reached '
+      'them as the vault opens', () async {
+    final p = await _peer();
+    await processPeerBundle(p.name, p.card);
+    await vaultList.putMeta('pub', 'pub-A');
+    await vaultList.putHidden(
+      p.name,
+      kHiddenPeer,
+      peerCard(RouterCard(p.name, '', p.xpub, backPaired: true)),
+      1,
+    );
+    await router.load();
+    await card(p, want: true);
+
+    // the vault opens: their chat and our text in it
+    final vmem = MemDb();
+    final vault = _Rows(vmem, HaloContainer.vault);
+    await vmem.insert('contacts', {
+      'halo_id': p.name,
+      'onion': '',
+      'xpub': p.xpub,
+      'first_seen': 1,
+      'last_seen': 1,
+      'back_paired': 1,
+      'accepted': 1,
+    });
+    await outTo(p, 'lost', into: vmem);
+    useDatabasesForTest(rows, await Session.withVault(rows, vault));
+    await app.drainSealed(vault, 'priv-A');
+    expect(vmem.rows('messages').single['sent'], 0);
+    expect(vaultList.inbox, isEmpty);
+  });
+
+  test('with no key pinned for them, a card is taken only with the key '
+      'their x key makes', () async {
+    final p = await _peer();
+    final q = await _peer();
+    await contact(p, card: false);
+    // q's card under p's name, on p's relay lane
+    await card(p, bundle: q.card);
+    expect(mem.rows('contacts').single['peer_bundle'], isNull);
+    // p's own, as 0.4.2 sends it
+    await card(p);
+    expect(mem.rows('contacts').single['peer_bundle'], p.card);
+  });
+
+  test('who was asked is kept with the sessions: a start after this one '
+      'does not ask again', () async {
+    final p = await _peer();
+    await contact(p);
+    await talk(p);
+    await signalSession.markRestored();
+    await app.askAfreshForTest();
+    expect(io.asksTo(p.xpub), [true]);
+
+    final again = AppState(io: io, router: router)..myId = 'me';
+    await again.askAfreshForTest();
+    expect(io.asksTo(p.xpub), [true]);
+  });
+
+  test('a pass asks a few people at a time', () async {
+    final people = [for (var i = 0; i < 10; i++) await _peer()];
+    for (final p in people) {
+      await contact(p);
+      await processPeerBundle(p.name, p.card);
+    }
+    await signalSession.markRestored();
+    await app.askAfreshForTest();
+    final asked = [
+      for (final p in people)
+        if (io.asksTo(p.xpub).isNotEmpty) p,
+    ];
+    expect(asked, hasLength(8));
+  });
+
+  test('someone who never answers is asked again later and later, and the '
+      'marks go once every session has started afresh', () async {
+    final db = MemDb();
+    final pair = Curve.generateKeyPair();
+    Future<SignalSession> start() async {
+      final ss = SignalSession();
+      await ss.bootstrap(
+        database: db,
+        xPubBytes: pair.publicKey.serialize().sublist(1),
+        xPrivBytes: pair.privateKey.serialize(),
+      );
+      return ss;
+    }
+
+    final p = await _peer();
+    var ss = await start();
+    await processPeerBundle(p.name, p.card, into: ss);
+    await ss.markRestored();
+    const hour = 3600 * 1000;
+    expect(await ss.askDue(p.name, 0), isTrue);
+    await ss.noteAsked(p.name, 0);
+    ss = await start();
+    expect(await ss.askDue(p.name, hour - 1), isFalse);
+    expect(await ss.askDue(p.name, hour), isTrue);
+    await ss.noteAsked(p.name, hour);
+    expect(await ss.askDue(p.name, 2 * hour), isFalse);
+    expect(await ss.askDue(p.name, 3 * hour), isTrue);
+
+    expect(await ss.dropRestoredWhenDone(), isFalse);
+    expect(ss.hasRestored, isTrue);
+    await ss.encryptTo(
+      p.name,
+      'afresh',
+      afresh: () async => preKeyBundleOf(p.card),
+    );
+    expect(await ss.dropRestoredWhenDone(), isTrue);
+    expect(ss.hasRestored, isFalse);
+    expect(db.rows('signal_meta').map((r) => r['k']), ['regId']);
+    ss = await start();
+    expect(ss.hasRestored, isFalse);
   });
 }

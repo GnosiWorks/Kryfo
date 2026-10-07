@@ -3,6 +3,7 @@
 // generates signed prekey + one-time prekeys on first run.
 
 import 'dart:convert';
+import 'dart:math' show min;
 
 import 'package:flutter/foundation.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
@@ -26,6 +27,9 @@ class SignalSession {
   // spent their next message keys already: a seal on one repeats a number
   // the peer drops as a duplicate. none is sealed on again (see encryptTo)
   Set<String> _restored = const {};
+  // when the person on each of those was last asked to start afresh, and
+  // how many times, by the same base key: [at, n]
+  Map<String, List<int>> _asks = {};
 
   /// a restore brought sessions back into this store
   bool get hasRestored => _restored.isNotEmpty;
@@ -162,6 +166,7 @@ class SignalSession {
     _db = database;
     _prefix = prefix;
     _restored = await _loadRestored();
+    _asks = await _loadAsks();
     if (restored) await markRestored();
 
     identityStore = HaloIdentityKeyStore(
@@ -218,12 +223,71 @@ class SignalSession {
   });
 
   /// whether the session a seal to [peer] would use came back with a restore
-  Future<bool> sealsOnRestored(String peer) async {
-    if (_restored.isEmpty) return false;
+  Future<bool> sealsOnRestored(String peer) async =>
+      await _restoredBase(peer) != null;
+
+  // the base key of [peer]'s session when it came back with a restore
+  Future<String?> _restoredBase(String peer) async {
+    if (_restored.isEmpty) return null;
     final addr = SignalProtocolAddress(peer, 1);
-    if (!await sessionStore.containsSession(addr)) return false;
+    if (!await sessionStore.containsSession(addr)) return null;
     final record = await sessionStore.loadSession(addr);
-    return _restored.contains(_baseOf(record.sessionState));
+    final base = _baseOf(record.sessionState);
+    return _restored.contains(base) ? base : null;
+  }
+
+  /// [peer] holds a session that came back with a restore and is due an
+  /// ask to start afresh: never asked, or the wait since the last ask is
+  /// over. the wait doubles from an hour up to a week for someone who
+  /// never answers
+  Future<bool> askDue(String peer, int now) async {
+    final base = await _restoredBase(peer);
+    if (base == null) return false;
+    final a = _asks[base];
+    if (a == null) return true;
+    final wait = min(
+      const Duration(hours: 1).inMilliseconds << min(a[1] - 1, 8),
+      const Duration(days: 7).inMilliseconds,
+    );
+    return now - a[0] >= wait;
+  }
+
+  /// [peer] was asked to start afresh at [now], written down so a start
+  /// after this one does not ask again before the wait is over
+  Future<void> noteAsked(String peer, int now) async {
+    final base = await _restoredBase(peer);
+    if (base == null) return;
+    _asks[base] = [now, (_asks[base]?[1] ?? 0) + 1];
+    await _db.insert('${_prefix}signal_meta', {
+      'k': _kRestoredAsks,
+      'v': jsonEncode(_asks),
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  /// a restore's marks go once no session a seal would use came back with
+  /// it. true when they went, or there were none
+  Future<bool> dropRestoredWhenDone() async {
+    if (_restored.isEmpty) return true;
+    for (final r in await _db.query(
+      '${_prefix}sessions',
+      columns: ['record'],
+    )) {
+      try {
+        final record = SessionRecord.fromSerialized(r['record'] as Uint8List);
+        if (_restored.contains(_baseOf(record.sessionState))) return false;
+      } catch (_) {
+        // one that does not read is sealed on by no one
+      }
+    }
+    await _db.delete(
+      '${_prefix}signal_meta',
+      where: 'k IN (?, ?)',
+      whereArgs: [_kRestored, _kRestoredAsks],
+    );
+    _restored = const {};
+    _asks = {};
+    dlog('signal: every restored session started afresh');
+    return true;
   }
 
   /// every session held now came back with a restore: written down with
@@ -249,7 +313,13 @@ class SignalSession {
       'k': _kRestored,
       'v': jsonEncode(keys.toList()),
     }, conflictAlgorithm: ConflictAlgorithm.replace);
+    await _db.delete(
+      '${_prefix}signal_meta',
+      where: 'k = ?',
+      whereArgs: [_kRestoredAsks],
+    );
     _restored = keys;
+    _asks = {};
     dlog('signal: ${keys.length} sessions came back with a restore');
   }
 
@@ -265,6 +335,25 @@ class SignalSession {
       return {for (final k in jsonDecode(rows.first['v'] as String)) '$k'};
     } catch (_) {
       return const {};
+    }
+  }
+
+  Future<Map<String, List<int>>> _loadAsks() async {
+    final rows = await _db.query(
+      '${_prefix}signal_meta',
+      where: 'k = ?',
+      whereArgs: [_kRestoredAsks],
+      limit: 1,
+    );
+    if (rows.isEmpty) return {};
+    try {
+      final j = jsonDecode(rows.first['v'] as String) as Map;
+      return {
+        for (final e in j.entries)
+          if (e.value case [final int at, final int n]) '${e.key}': [at, n],
+      };
+    } catch (_) {
+      return {};
     }
   }
 
@@ -318,7 +407,24 @@ class SignalSession {
   }
 }
 
+/// a card's prekey bundle as signal takes it
+PreKeyBundle preKeyBundleOf(String bundleB64) {
+  final j =
+      jsonDecode(utf8.decode(base64Decode(bundleB64))) as Map<String, dynamic>;
+  return PreKeyBundle(
+    j['registrationId'] as int,
+    j['deviceId'] as int,
+    j['preKeyId'] as int,
+    Curve.decodePoint(base64Decode(j['preKeyPublic'] as String), 0),
+    j['signedPreKeyId'] as int,
+    Curve.decodePoint(base64Decode(j['signedPreKeyPublic'] as String), 0),
+    base64Decode(j['signedPreKeySignature'] as String),
+    IdentityKey(Curve.decodePoint(base64Decode(j['identityKey'] as String), 0)),
+  );
+}
+
 const _kRestored = 'restored_sessions';
+const _kRestoredAsks = 'restored_asks';
 
 // what names a session on both sides of it: the base key its opener made
 String _baseOf(SessionState s) => base64Encode(s.aliceBaseKey);

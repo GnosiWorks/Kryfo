@@ -691,6 +691,11 @@ class ArrivalRows implements HaloDb {
   @override
   Future<bool> messageExists(String msgUid) async =>
       _hit('messageExists', msgUid, msg(msgUid) != null);
+  // what came in and went, by sender
+  final gone = <(String, String)>{};
+  @override
+  Future<bool> goneFrom(String peer, String msgUid) async =>
+      gone.contains((peer, msgUid));
   @override
   Future<(String, String?)?> chatOf(String msgUid) async {
     final m = msg(msgUid);
