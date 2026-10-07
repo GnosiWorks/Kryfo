@@ -2,7 +2,7 @@ ein privater Messenger. keine Telefonnummer, keine E-Mail, kein Konto. du bist
 ein Schlüsselpaar, erzeugt auf deinem Gerät. niemand, auch wir nicht, kann nach
 dir suchen oder deine Chats mit einer echten Identität verknüpfen.
 
-alles läuft über tor. Inhalte sind mit dem Signal-Protokoll
+standardmäßig läuft alles über tor. Inhalte sind mit dem Signal-Protokoll
 Ende-zu-Ende-verschlüsselt. ist ein Kontakt offline, warten Nachrichten auf
 Relais, versiegelt, sodass das Relais nichts darüber erfährt, wer spricht oder
 was gesagt wird. kein Hochladen des Adressbuchs, niemals.
@@ -11,7 +11,7 @@ Funktionen:
 
 * keine Telefonnummer oder E-Mail zur Anmeldung
 * Ende-zu-Ende-Verschlüsselung (Signal-Protokoll)
-* aller Datenverkehr über einen eingebauten tor-Client
+* aller Datenverkehr standardmäßig über einen eingebauten tor-Client
 * direkte Onion-Zustellung, Relais als Ausweichweg, wenn ein Kontakt offline ist
 * Gruppen mit Fotos, Dateien, Sprachnachrichten, Antworten, Reaktionen, angehefteten Nachrichten und Umfragen
 * animierte Sticker, die nur als Name verschickt werden, sodass kein Bild das Handy verlässt

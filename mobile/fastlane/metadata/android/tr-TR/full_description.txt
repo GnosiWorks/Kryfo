@@ -2,16 +2,16 @@ gizli bir mesajlaşma uygulaması. telefon numarası yok, e-posta yok, hesap yok
 sen, cihazında üretilmiş bir anahtar çiftisin. biz dahil hiç kimse seni arayıp
 bulamaz ya da sohbetlerini gerçek bir kimliğe bağlayamaz.
 
-her şey tor üzerinden gider. içerik, signal protokolüyle uçtan uca şifrelenir.
-bir kişi çevrimdışıyken mesajlar aktarıcılarda bekler; mühürlüdürler, böylece
-aktarıcı kimin konuştuğu ya da ne söylendiği hakkında hiçbir şey öğrenmez.
-rehber asla yüklenmez.
+varsayılan olarak her şey tor üzerinden gider. içerik, signal protokolüyle
+uçtan uca şifrelenir. bir kişi çevrimdışıyken mesajlar aktarıcılarda bekler;
+mühürlüdürler, böylece aktarıcı kimin konuştuğu ya da ne söylendiği hakkında
+hiçbir şey öğrenmez. rehber asla yüklenmez.
 
 özellikler:
 
 * kayıt için telefon numarası ya da e-posta yok
 * uçtan uca şifreleme (signal protokolü)
-* tüm trafik gömülü bir tor istemcisinden geçer
+* varsayılan olarak tüm trafik gömülü bir tor istemcisinden geçer
 * doğrudan onion teslimi, karşı taraf çevrimdışıysa aktarıcı üzerinden
 * fotoğraf, dosya, sesli mesaj, yanıt, tepki, sabitleme ve anketli gruplar
 * ad olarak gönderilen animasyonlu çıkartmalar, böylece hiçbir resim telefondan çıkmaz

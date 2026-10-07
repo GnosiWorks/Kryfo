@@ -1,12 +1,12 @@
 une messagerie privée. pas de numéro de téléphone, pas d’e-mail, pas de compte. vous êtes une paire de clés générée sur votre appareil. personne, nous compris, ne peut vous retrouver ni relier vos discussions à une identité réelle.
 
-tout passe par tor. le contenu est chiffré de bout en bout avec le protocole signal. quand un contact est hors ligne, les messages attendent sur des relais, scellés pour que le relais n’apprenne rien de qui parle ni de ce qui se dit. jamais d’envoi du carnet d’adresses.
+par défaut, tout passe par tor. le contenu est chiffré de bout en bout avec le protocole signal. quand un contact est hors ligne, les messages attendent sur des relais, scellés pour que le relais n’apprenne rien de qui parle ni de ce qui se dit. jamais d’envoi du carnet d’adresses.
 
 fonctionnalités :
 
 * pas de numéro de téléphone ni d’e-mail pour s’inscrire
 * chiffrement de bout en bout (protocole signal)
-* tout le trafic passe par un client tor intégré
+* par défaut, tout le trafic passe par un client tor intégré
 * distribution directe en onion, repli sur les relais quand un contact est hors ligne
 * groupes avec photos, fichiers, messages vocaux, réponses, réactions, messages épinglés et sondages
 * stickers animés envoyés sous forme de nom, aucune image ne quitte donc le téléphone

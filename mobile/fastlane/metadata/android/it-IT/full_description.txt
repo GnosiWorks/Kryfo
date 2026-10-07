@@ -1,12 +1,12 @@
 un messenger privato. niente numero di telefono, niente email, niente account. sei una coppia di chiavi generata sul tuo dispositivo. nessuno, noi compresi, può cercarti o collegare le tue chat a un'identità reale.
 
-tutto viaggia su tor. i contenuti sono cifrati end-to-end con il protocollo signal. quando un contatto è offline, i messaggi aspettano sui relay, sigillati in modo che il relay non sappia niente di chi parla né di cosa si dice. la rubrica non viene caricata, mai.
+di default tutto viaggia su tor. i contenuti sono cifrati end-to-end con il protocollo signal. quando un contatto è offline, i messaggi aspettano sui relay, sigillati in modo che il relay non sappia niente di chi parla né di cosa si dice. la rubrica non viene caricata, mai.
 
 funzioni:
 
 * nessun numero di telefono né email per registrarti
 * cifratura end-to-end (protocollo signal)
-* tutto il traffico passa da un client tor integrato
+* di default tutto il traffico passa da un client tor integrato
 * consegna diretta via onion, con i relay come riserva quando l'altra persona è offline
 * gruppi con foto, file, messaggi vocali, risposte, reazioni, messaggi fissati e sondaggi
 * sticker animati che viaggiano come un nome, così nessuna immagine lascia il telefono
