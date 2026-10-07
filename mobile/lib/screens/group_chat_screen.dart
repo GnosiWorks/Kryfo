@@ -878,7 +878,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final next = <String, ShieldFlag>{};
     for (final id in senders) {
       if (await session.isAccepted(id)) continue;
-      final f = ShieldFlag.fromRow(await session.shieldFor(id));
+      final f = ShieldFlag.fromRow(await session.shownShieldFor(id));
       if (f != null) next[id] = f;
     }
     if (!mounted) return;

@@ -30,6 +30,7 @@ import 'main.dart'
         engine,
         shredFile;
 import 'router.dart' show scrubHidden;
+import 'signal_session.dart' show kSessionsRestoredPref;
 import 'devchat/dev_chat.dart' show scrubDevAnon;
 import 'dlog.dart';
 import 'read_burn.dart' show burnStartBy;
@@ -304,9 +305,7 @@ Future<void> landV1Payload(
     }
 
     await restorePrefs(payload['prefs']);
-    // this device is where the identity lives now, whatever it was before
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('moved.at');
+    await _livesHereNow();
 
     // a v1 backup carries none of these; what is here is the old identity's
     await _applyIdentitySecure(payload['secure']);
@@ -319,6 +318,15 @@ Future<void> landV1Payload(
     engine.restoreIdentity(edPriv, xPriv);
   });
   dlog('backup: restored identity');
+}
+
+// this device is where the identity lives now, whatever it was before. the
+// file's signal sessions are older than the far side's view of them: the
+// next start marks them, and none is sealed on again
+Future<void> _livesHereNow() async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.remove('moved.at');
+  await prefs.setBool(kSessionsRestoredPref, true);
 }
 
 // from here on the phone's own files are going: a failure leaves the app on
@@ -1636,9 +1644,7 @@ Future<void> restoreBackupFile(
       value: manifest['dbPassphrase'] as String,
     );
     await restorePrefs(manifest['prefs']);
-    // this device is where the identity lives now, whatever it was before
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('moved.at');
+    await _livesHereNow();
     await _applyIdentitySecure(manifest['secure']);
     if (onboardingAfterRestore(manifest['onboardingDone']) case final done?) {
       await secureStore.write(key: 'onboarding_done', value: done);

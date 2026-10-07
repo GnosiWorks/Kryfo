@@ -365,7 +365,7 @@ void main() {
     expect(at, greaterThan(0));
     final loop = app.substring(at, app.indexOf('} finally {', at));
     expect(
-      loop.indexOf('await receiveRelay(batch.msgs)'),
+      loop.indexOf('await receiveRelay(batch.msgs, written: batch.written)'),
       lessThan(loop.indexOf('engine.nostrAck(batch.token, failedPlaces(')),
     );
   });

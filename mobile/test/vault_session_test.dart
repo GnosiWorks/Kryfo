@@ -707,6 +707,8 @@ class _Db implements HaloDb {
   @override
   Future<bool> messageExists(String msgUid) async =>
       _hit('messageExists', msgUid, r.msg(msgUid) != null);
+  @override
+  Future<bool> goneFrom(String peer, String msgUid) async => false;
 
   // ---- groups ----
   @override
@@ -738,6 +740,14 @@ class _Db implements HaloDb {
   Future<({PollSpec spec, String? groupId, bool mine})?> pollRow(
     String uid,
   ) async => _hit('pollRow', uid, null);
+
+  // no block here ever held
+  @override
+  Future<bool> blockedAt(String haloId, int at) async => false;
+  @override
+  Future<void> noteBlockedDrop(String haloId, String uid) async {}
+  @override
+  Future<bool> droppedWhileBlocked(String haloId, String uid) async => false;
 
   @override
   dynamic noSuchMethod(Invocation i) {

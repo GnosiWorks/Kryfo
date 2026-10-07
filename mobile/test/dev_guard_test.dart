@@ -587,6 +587,8 @@ class _Mem implements HaloDb {
   Future<bool> messageExists(String msgUid) async =>
       _hit('messageExists', msgUid, msg(msgUid) != null);
   @override
+  Future<bool> goneFrom(String peer, String msgUid) async => false;
+  @override
   Future<(String, String?)?> chatOf(String msgUid) async {
     final m = msg(msgUid);
     return _hit(
@@ -860,6 +862,14 @@ class _Mem implements HaloDb {
   @override
   Future<void> dropMediaWant(String mediaId) async =>
       _hit('dropMediaWant', mediaId, null);
+
+  // no block here ever held
+  @override
+  Future<bool> blockedAt(String haloId, int at) async => false;
+  @override
+  Future<void> noteBlockedDrop(String haloId, String uid) async {}
+  @override
+  Future<bool> droppedWhileBlocked(String haloId, String uid) async => false;
 
   @override
   dynamic noSuchMethod(Invocation i) =>
@@ -1461,13 +1471,17 @@ void main() {
       final said = [
         await handleHaloUriAdded(haloUriV3(_words, '', theirs, _rnd64())),
         await handleHaloUriAdded(
-          'kryfo://share?id=${_words.toUpperCase()}&onion=&v=2&bundle=$theirs',
-        ),
-        await handleHaloUriAdded(
           'kryfo://share?id=$_words&onion=&xpub=${_grinder.xPub}',
         ),
       ];
       expect(said, everyElement((l10n.devLinkMismatch, false)));
+      // his words in capitals are no words at all
+      expect(
+        await handleHaloUriAdded(
+          'kryfo://share?id=${_words.toUpperCase()}&onion=&v=2&bundle=$theirs',
+        ),
+        (l10n.appInvalidUri, false),
+      );
       expect(await handleHaloUriAdded(haloUriV3(_dev, '', theirs, _rnd64())), (
         l10n.appInvalidUri,
         false,

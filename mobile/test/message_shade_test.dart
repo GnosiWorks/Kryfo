@@ -26,6 +26,14 @@ class _Shade extends AndroidFlutterLocalNotificationsPlugin {
 
   @override
   Future<void> cancel({required int id, String? tag}) async => up.remove(id);
+
+  // what an earlier run of the app left there, by payload
+  final earlier = <int, String>{};
+  @override
+  Future<List<ActiveNotification>> getActiveNotifications() async => [
+    for (final e in earlier.entries)
+      if (up.contains(e.key)) ActiveNotification(id: e.key, payload: e.value),
+  ];
 }
 
 void main() {
@@ -88,4 +96,22 @@ void main() {
     expect(shade.timeouts.last, isNull);
     await clearNotificationsFor('bob');
   });
+
+  test(
+    'what an earlier run showed for a chat leaves the shade with it',
+    () async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      addTearDown(() => debugDefaultTargetPlatformOverride = null);
+      SharedPreferences.setMockInitialValues({});
+      FlutterSecureStorage.setMockInitialValues({});
+      final shade = _Shade();
+      FlutterLocalNotificationsPlatform.instance = shade;
+      shade
+        ..up.addAll([7, 8, 9])
+        ..earlier.addAll({7: 'guitar-present-kid', 8: 'guitar-present-kid'})
+        ..earlier[9] = 'amy';
+      await clearNotificationsFor('guitar-present-kid');
+      expect(shade.up, [9]);
+    },
+  );
 }

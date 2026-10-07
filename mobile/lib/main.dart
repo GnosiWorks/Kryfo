@@ -85,6 +85,7 @@ import 'stickers/sticker_pack.dart' show StickerLibrary;
 import 'stickers/sticker_wire.dart' show StickerWire, stickerText;
 import 'widgets/motion.dart';
 import 'widgets/pair_join.dart' show pairUnreached;
+import 'widgets/kryfo_link_text.dart' show takeOutsideLink;
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:app_links/app_links.dart';
 import 'signal_session.dart';
@@ -1156,7 +1157,7 @@ class HaloDb implements GroupOwedStore {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 62,
+      version: 64,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -1302,8 +1303,11 @@ class HaloDb implements GroupOwedStore {
         await _supportTables(db);
         await groupOwedTables(db);
         await groupCtlTables(db);
+        await _goneTable(db);
+        await blockTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        await upgradeTo64(db, oldV);
         // 62 runs last, below: its index names columns older steps add
         if (oldV < 61) {
           // the number on the next room frame this phone sends
@@ -2076,7 +2080,7 @@ class HaloDb implements GroupOwedStore {
     final files = await d.transaction((t) async {
       final rows = await t.query(
         'messages',
-        columns: ['msg_uid', ..._kFileCols],
+        columns: [..._kFileCols, ..._kUnreadCols, ..._kGoneCols],
         where: _kOneToOne,
         whereArgs: [haloId],
       );
@@ -2086,6 +2090,7 @@ class HaloDb implements GroupOwedStore {
           await t.delete('reactions', where: 'msg_uid = ?', whereArgs: [uid]);
         }
       }
+      await _noteGone(t, rows);
       await t.delete('messages', where: _kOneToOne, whereArgs: [haloId]);
       await _dropFilesComingFrom(t, haloId);
       // the row stays: it carries the xpub our nostr subscription is built
@@ -2192,7 +2197,8 @@ class HaloDb implements GroupOwedStore {
   }
 
   // a block starts the clocks of what they sent that waits to be read, in
-  // their chat and in groups. an unblock leaves them counting
+  // their chat and in groups, and drops the receipts queued for them. an
+  // unblock leaves them counting
   Future<void> setBlocked(String haloId, bool blocked) async {
     final db = await open();
     await db.transaction((t) async {
@@ -2202,8 +2208,99 @@ class HaloDb implements GroupOwedStore {
         where: 'halo_id = ?',
         whereArgs: [haloId],
       );
-      if (blocked) await _lightFrom(t, haloId);
+      if (blocked) {
+        await _lightFrom(t, haloId);
+        await _dropReceiptsTo(t, haloId);
+      }
+      await _markSpan(t, haloId, blocked);
     });
+  }
+
+  // a block opens a span and an unblock closes it
+  static Future<void> _markSpan(
+    DatabaseExecutor t,
+    String haloId,
+    bool blocked,
+  ) async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    try {
+      final open = await t.query(
+        'block_spans',
+        columns: ['rowid'],
+        where: 'peer_id = ? AND to_at IS NULL',
+        whereArgs: [haloId],
+        limit: 1,
+      );
+      if (blocked && open.isEmpty) {
+        await t.insert('block_spans', {'peer_id': haloId, 'from_at': now});
+      } else if (!blocked && open.isNotEmpty) {
+        await t.update(
+          'block_spans',
+          {'to_at': now},
+          where: 'peer_id = ? AND to_at IS NULL',
+          whereArgs: [haloId],
+        );
+      }
+    } catch (e) {
+      dlog('block span: $e');
+    }
+  }
+
+  // whether [at], by the sender's own clock, falls in a time they were
+  // blocked here and that has ended
+  Future<bool> blockedAt(String haloId, int at) async {
+    try {
+      final db = await open();
+      final r = await db.query(
+        'block_spans',
+        columns: ['from_at'],
+        where: kBlockedAtWhere,
+        whereArgs: blockedAtArgs(haloId, at),
+        limit: 1,
+      );
+      return r.isNotEmpty;
+    } catch (e) {
+      dlog('block span: $e');
+      return false;
+    }
+  }
+
+  // what came from someone while they were blocked, by uid. one that comes
+  // again keeps its row a while longer, so a sender that retries for weeks
+  // is still turned away
+  int _dropsSweptAt = 0;
+  Future<void> noteBlockedDrop(String haloId, String uid) async {
+    try {
+      final db = await open();
+      _dropsSweptAt = await noteBlockedDropIn(
+        db,
+        haloId,
+        uid,
+        now: DateTime.now().millisecondsSinceEpoch,
+        sweptAt: _dropsSweptAt,
+      );
+    } catch (e) {
+      dlog('blocked drop: $e');
+    }
+  }
+
+  Future<bool> droppedWhileBlocked(String haloId, String uid) async {
+    try {
+      final db = await open();
+      final r = await db.query(
+        'blocked_drops',
+        columns: ['uid'],
+        where: 'peer_id = ? AND uid = ?',
+        whereArgs: [haloId, uid],
+        limit: 1,
+      );
+      if (r.isEmpty) return false;
+      await noteBlockedDrop(haloId, uid);
+      return true;
+    } catch (e) {
+      dlog('blocked drop: $e');
+      return false;
+    }
   }
 
   // [haloId] blocked elsewhere: their rows here that wait start counting
@@ -2249,6 +2346,20 @@ class HaloDb implements GroupOwedStore {
   // every blocked id, accepted or not. contacts() is accepted-only, so a
   // caller built on it never sees someone blocked while still a stranger.
   Future<Set<String>> blockedIds() async => _blockedIn(await open());
+
+  // blocked, or never taken in: no one a restore asks to start afresh
+  Future<Set<String>> unaskedIds() async {
+    final db = await open();
+    final rows = await db.query(
+      'contacts',
+      columns: ['halo_id'],
+      where: 'accepted = 0',
+    );
+    return {
+      ...await _blockedIn(db),
+      for (final r in rows) r['halo_id'] as String,
+    };
+  }
 
   static Future<Set<String>> _blockedIn(DatabaseExecutor db) async {
     final rows = await db.query(
@@ -3089,11 +3200,12 @@ class HaloDb implements GroupOwedStore {
     final db = await open();
     final media = await db.query(
       'messages',
-      columns: [..._kFileCols, ..._kUnreadCols],
+      columns: [..._kFileCols, ..._kUnreadCols, ..._kGoneCols],
       where: 'msg_uid = ?',
       whereArgs: [msgUid],
     );
     await _unreadGo(db, media);
+    await _noteGone(db, media);
     await db.delete('reactions', where: 'msg_uid = ?', whereArgs: [msgUid]);
     await db.delete(
       'group_media_owed',
@@ -3106,6 +3218,50 @@ class HaloDb implements GroupOwedStore {
 
   // what a row needs for _unreadGo to place it
   static const _kUnreadCols = ['id', 'peer_id', 'group_id', 'direction'];
+  // and for _noteGone, with those
+  static const _kGoneCols = ['msg_uid', 'sent_at'];
+
+  // how long one that came in and went is known by its uid: as far back
+  // as a resend reaches
+  static const kGoneFor = Duration(days: 7);
+
+  // the 1:1 rows of these that came in, kept by uid as they go. only what
+  // a resend could still bring: sent within kGoneFor and a day for clocks
+  static Future<void> _noteGone(
+    DatabaseExecutor db,
+    Iterable<Map<String, Object?>> rows,
+  ) async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final from =
+        now - kGoneFor.inMilliseconds - const Duration(days: 1).inMilliseconds;
+    for (final r in rows) {
+      final uid = r['msg_uid'] as String?;
+      final peer = r['peer_id'] as String?;
+      final sent = (r['sent_at'] as num?)?.toInt();
+      if (uid == null || peer == null || r['direction'] != 'in') continue;
+      if (r['group_id'] != null || (sent != null && sent < from)) continue;
+      await db.insert('gone_in', {
+        'msg_uid': uid,
+        'peer_id': peer,
+        'at': now,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+    }
+  }
+
+  /// [msgUid] came in from [peer] and burned or was deleted here lately
+  Future<bool> goneFrom(String peer, String msgUid) async {
+    final db = await open();
+    final r = await db.query(
+      'gone_in',
+      columns: ['at'],
+      where: 'msg_uid = ? AND peer_id = ?',
+      whereArgs: [msgUid, peer],
+      limit: 1,
+    );
+    if (r.isEmpty) return false;
+    final at = (r.first['at'] as num).toInt();
+    return DateTime.now().millisecondsSinceEpoch - at < kGoneFor.inMilliseconds;
+  }
 
   // rows that came in and go before they were read take their unread mark
   // with them. the unread ones are the newest that many that came in
@@ -3264,15 +3420,14 @@ class HaloDb implements GroupOwedStore {
     final cut = DateTime.now().millisecondsSinceEpoch;
     final due = await db.query(
       'messages',
-      columns: ['msg_uid', 'media_path', 'file_path', ..._kUnreadCols],
+      columns: [..._kFileCols, ..._kUnreadCols, ..._kGoneCols],
       where: _kBurnDue,
       whereArgs: [cut],
     );
     final idle = await _idle(db, [
-      'msg_uid',
-      'media_path',
-      'file_path',
+      ..._kFileCols,
       ..._kUnreadCols,
+      ..._kGoneCols,
     ]);
     // after what waits is read: nothing in it was filed past this now
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -3282,6 +3437,7 @@ class HaloDb implements GroupOwedStore {
     ];
     final rows = [...due, ...waited];
     await _unreadGo(db, rows);
+    await _noteGone(db, rows);
     for (final r in rows) {
       final uid = r['msg_uid'] as String?;
       if (uid != null) {
@@ -3397,10 +3553,11 @@ class HaloDb implements GroupOwedStore {
     final db = await open();
     final media = await db.query(
       'messages',
-      columns: _kFileCols,
+      columns: [..._kFileCols, ..._kUnreadCols, ..._kGoneCols],
       where: _kOneToOne,
       whereArgs: [peerId],
     );
+    await _noteGone(db, media);
     await db.rawDelete(
       'DELETE FROM reactions WHERE msg_uid IN '
       '(SELECT msg_uid FROM messages WHERE $_kOneToOne AND msg_uid IS NOT NULL)',
@@ -3531,7 +3688,11 @@ class HaloDb implements GroupOwedStore {
       // a message taken back has nothing left to edit, pin or react to
       if (kind == kFrameUnsend) {
         for (final table in const ['edits_out', 'pins_out', 'frames_out']) {
-          await t.delete(table, where: 'msg_uid = ?', whereArgs: [msgUid]);
+          await t.delete(
+            table,
+            where: 'msg_uid = ? AND peer_id = ?',
+            whereArgs: [msgUid, peerId],
+          );
         }
       }
       await t.insert('frames_out', {
@@ -3544,19 +3705,65 @@ class HaloDb implements GroupOwedStore {
     });
   }
 
-  Future<List<Map<String, Object?>>> unsentFrames() async {
-    final db = await open();
-    return db.query('frames_out', orderBy: 'at ASC', limit: 40);
-  }
-
-  // only the word that was sent: a newer one queued meanwhile stays
-  Future<void> dropFrame(String msgUid, String kind, String body) async {
+  // the oldest rows that can go now: none of the [waiting] peers', whose
+  // seals wait on their card. a receipt a week old has no one left
+  // waiting on it, and goes
+  Future<List<Map<String, Object?>>> unsentFrames({
+    Iterable<String> waiting = const [],
+  }) async {
     final db = await open();
     await db.delete(
       'frames_out',
-      where: 'msg_uid = ? AND kind = ? AND body = ?',
-      whereArgs: [msgUid, kind, body],
+      where: 'kind = ? AND at < ?',
+      whereArgs: [
+        kFrameReceipt,
+        DateTime.now().millisecondsSinceEpoch - kReceiptKeptFor.inMilliseconds,
+      ],
     );
+    final skip = waiting.toList();
+    return db.query(
+      'frames_out',
+      where: skip.isEmpty
+          ? null
+          : 'peer_id NOT IN (${List.filled(skip.length, '?').join(', ')})',
+      whereArgs: skip.isEmpty ? null : skip,
+      orderBy: 'at ASC',
+      limit: 40,
+    );
+  }
+
+  // only the word that was sent: a newer one queued meanwhile stays
+  Future<void> dropFrame(
+    String msgUid,
+    String kind,
+    String peerId,
+    String body,
+  ) async {
+    final db = await open();
+    await db.delete(
+      'frames_out',
+      where: 'msg_uid = ? AND kind = ? AND peer_id = ? AND body = ?',
+      whereArgs: [msgUid, kind, peerId, body],
+    );
+  }
+
+  // a block: no receipt queued for them goes after it
+  Future<void> dropReceiptsTo(String peerId) async =>
+      _dropReceiptsTo(await open(), peerId);
+
+  static Future<void> _dropReceiptsTo(
+    DatabaseExecutor db,
+    String peerId,
+  ) async {
+    try {
+      await db.delete(
+        'frames_out',
+        where: 'peer_id = ? AND kind = ?',
+        whereArgs: [peerId, kFrameReceipt],
+      );
+    } catch (e) {
+      dlog('block: receipts not dropped (${e.runtimeType})');
+    }
   }
 
   Future<void> queueEdit(String msgUid, String peerId, String newText) async {
@@ -3922,11 +4129,15 @@ class HaloDb implements GroupOwedStore {
     final cut = DateTime.now().millisecondsSinceEpoch;
     final due = await db.query(
       'messages',
-      columns: [..._kFileCols, ..._kUnreadCols, 'msg_uid'],
+      columns: [..._kFileCols, ..._kUnreadCols, ..._kGoneCols],
       where: _kBurnDue,
       whereArgs: [cut],
     );
-    final idle = await _idle(db, [..._kFileCols, ..._kUnreadCols, 'msg_uid']);
+    final idle = await _idle(db, [
+      ..._kFileCols,
+      ..._kUnreadCols,
+      ..._kGoneCols,
+    ]);
     // after what waits is read: nothing in it was filed past this now
     final now = DateTime.now().millisecondsSinceEpoch;
     final waited = [
@@ -3935,6 +4146,12 @@ class HaloDb implements GroupOwedStore {
     ];
     final media = [...due, ...waited];
     await _unreadGo(db, media);
+    await _noteGone(db, media);
+    await db.delete(
+      'gone_in',
+      where: 'at < ?',
+      whereArgs: [now - kGoneFor.inMilliseconds],
+    );
     if (gone != null) {
       for (final r in media) {
         final uid = r['msg_uid'] as String?;
@@ -4968,6 +5185,35 @@ class HaloDb implements GroupOwedStore {
     return out;
   }
 
+  /// texts of ours to [peer] since [since] that went out and never came
+  /// back delivered, put back in the outbox. how many
+  Future<int> resendUndelivered(String peer, {required int since}) async {
+    final db = await open();
+    const ours =
+        "$_kOneToOne AND direction = 'out' AND sent = 1 AND delivered = 0";
+    final rows = await db.query(
+      'messages',
+      columns: ['msg_uid', 'sent_at'],
+      where:
+          '$ours AND msg_uid IS NOT NULL '
+          'AND media_path IS NULL AND file_path IS NULL',
+      whereArgs: [peer],
+    );
+    var n = 0;
+    for (final r in rows) {
+      if ((r['sent_at'] as int) < since) continue;
+      // a uid is only ours to [peer]: a row of theirs or of another chat
+      // with the same one stays as it is
+      n += await db.update(
+        'messages',
+        {'sent': 0},
+        where: 'msg_uid = ? AND $ours',
+        whereArgs: [r['msg_uid'], peer],
+      );
+    }
+    return n;
+  }
+
   Future<void> markSent(String msgUid) async {
     final db = await open();
     await db.update(
@@ -5314,6 +5560,112 @@ Future<void> _supportTables(Database db) async {
   }
 }
 
+// someone blocked before the spans were kept counts as blocked from the
+// start. one with a span open already keeps that one
+const kSeedBlockSpans =
+    'INSERT INTO block_spans (peer_id, from_at) '
+    'SELECT halo_id, 0 FROM contacts WHERE blocked = 1 AND halo_id NOT IN '
+    '(SELECT peer_id FROM block_spans WHERE to_at IS NULL)';
+
+// an ended span of [peer_id] that held at a time, given twice
+// (blockedAtArgs). an open one adds nothing: isBlocked is asked first, and
+// one left open by a row that went must not hold over a later add
+const kBlockedAtWhere =
+    'peer_id = ? AND from_at <= ? AND to_at IS NOT NULL AND to_at > ?';
+
+// the stamp is the sender's clock, which may run behind this one. what
+// they wrapped in the last minutes before the unblock is let in, or a slow
+// clock costs them what they sent once they were free to
+const kUnblockGrace = 10 * 60 * 1000;
+
+// the arguments of kBlockedAtWhere for a stamp [at]: the span's end has
+// to be past it by the grace
+List<Object> blockedAtArgs(String haloId, int at) => [
+  haloId,
+  at,
+  at + kUnblockGrace,
+];
+
+// a contact row that goes ends its open span, so what is left of a block
+// never holds over someone added again
+const kCloseSpansOnDelete = '''
+  CREATE TRIGGER IF NOT EXISTS block_spans_row_gone
+  AFTER DELETE ON contacts
+  BEGIN
+    UPDATE block_spans
+    SET to_at = CAST(strftime('%s', 'now') AS INTEGER) * 1000
+    WHERE peer_id = OLD.halo_id AND to_at IS NULL;
+  END
+''';
+
+// keeps [uid] as dropped from [haloId] at [now], and at most once a day
+// lets go of what has not come again in sixty days. when it last swept
+Future<int> noteBlockedDropIn(
+  DatabaseExecutor db,
+  String haloId,
+  String uid, {
+  required int now,
+  required int sweptAt,
+}) async {
+  await db.rawInsert(
+    'INSERT OR REPLACE INTO blocked_drops (peer_id, uid, at) '
+    'VALUES (?, ?, ?)',
+    [haloId, uid, now],
+  );
+  if (now - sweptAt < 86400000) return sweptAt;
+  await db.rawDelete('DELETE FROM blocked_drops WHERE at < ?', [
+    now - 60 * 86400000,
+  ]);
+  return now;
+}
+
+// when each block held, and the uids of what came while it did. a copy of
+// one, or one stamped inside a block that ended, is dropped after an
+// unblock as it was during it. someone already blocked is taken as blocked
+// from the start. wrapped: without them a block still drops what comes
+// while it holds
+Future<void> blockTables(DatabaseExecutor db, {bool seed = false}) async {
+  try {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS block_spans (
+        peer_id TEXT NOT NULL,
+        from_at INTEGER NOT NULL,
+        to_at INTEGER
+      )
+    ''');
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS block_spans_peer ON block_spans(peer_id)',
+    );
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS blocked_drops (
+        peer_id TEXT NOT NULL,
+        uid TEXT NOT NULL,
+        at INTEGER NOT NULL,
+        PRIMARY KEY (peer_id, uid)
+      )
+    ''');
+    // the daily sweep goes by age
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS blocked_drops_at ON blocked_drops(at)',
+    );
+    await db.execute(kCloseSpansOnDelete);
+    if (seed) await db.execute(kSeedBlockSpans);
+  } catch (e) {
+    dlog('block tables: $e');
+  }
+}
+
+// steps 63 and 64. a phone at 63 may hold either table, so both are made
+// from below 64, and making one again changes nothing
+@visibleForTesting
+Future<void> upgradeTo64(DatabaseExecutor db, int oldV) async {
+  if (oldV >= 64) return;
+  // what someone blocked sent while it held, and when it held
+  await blockTables(db, seed: true);
+  // what came in and went, known by its uid and sender for a week
+  await _goneTable(db);
+}
+
 // a direct-onion message past a stranger's two has no relay to wait on. it
 // waits here instead, still sealed, and opens when the person is accepted.
 Future<void> _heldTable(Database db) async {
@@ -5372,6 +5724,10 @@ Future<void> _editsTable(Database db) async {
 
 const kFrameUnsend = 'unsend';
 const kFrameReaction = 'reaction';
+// a receipt that could not be sealed while a session waits on their card
+const kFrameReceipt = 'receipt';
+// and how long it waits at most
+const kReceiptKeptFor = Duration(days: 7);
 
 // a group take-back waits in a member's control lane as a row of its own
 // shape, and goes out as an unsend frame, never as a control
@@ -5388,9 +5744,25 @@ String? groupUnsendOf(Object? ctl) {
   }
 }
 
+// a 1:1 message that came in and burned or was deleted here, for a week.
+// a copy sent again, after a restore on the far side say, is known by its
+// uid and sender: acked again and never shown again
+Future<void> _goneTable(DatabaseExecutor db) async {
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS gone_in (
+      msg_uid TEXT NOT NULL,
+      peer_id TEXT NOT NULL,
+      at INTEGER NOT NULL,
+      PRIMARY KEY (msg_uid, peer_id)
+    )
+  ''');
+}
+
 // an unsend or a reaction in a 1:1 chat that has not reached the other
-// person yet, one of each kind a message: the latest word replaces the last.
-// a reaction's body is its emoji, empty when it was taken off
+// person yet, one of each kind a message and person: the latest word
+// replaces the last. a reaction's body is its emoji, empty when it was
+// taken off. the uid of what came in is the sender's to pick, so the
+// person is in the key
 Future<void> _framesTable(Database db) async {
   await db.execute('''
     CREATE TABLE IF NOT EXISTS frames_out (
@@ -5399,7 +5771,7 @@ Future<void> _framesTable(Database db) async {
       peer_id TEXT NOT NULL,
       body TEXT NOT NULL,
       at INTEGER NOT NULL,
-      PRIMARY KEY (msg_uid, kind)
+      PRIMARY KEY (msg_uid, kind, peer_id)
     )
   ''');
 }
@@ -5564,6 +5936,26 @@ Future<String> makePreKeyBundleB64([SignalSession? of]) async {
   return base64Encode(utf8.encode(jsonEncode(bundle)));
 }
 
+/// opens the everyday signal store. the first start after a restore marks
+/// the sessions the file brought back as it opens, before anything can seal
+/// on one, and the restore's pref goes once they are written down
+Future<void> openSignalStore(
+  SignalSession ss, {
+  required Database database,
+  required Uint8List xPubBytes,
+  required Uint8List xPrivBytes,
+}) async {
+  final prefs = await SharedPreferences.getInstance();
+  final restored = prefs.getBool(kSessionsRestoredPref) == true;
+  await ss.bootstrap(
+    database: database,
+    xPubBytes: xPubBytes,
+    xPrivBytes: xPrivBytes,
+    restored: restored,
+  );
+  if (restored) await prefs.remove(kSessionsRestoredPref);
+}
+
 // the store a peer's messages go through: the everyday one, and for the
 // dev chat the one it was started with. null for a dev chat that has none
 // (not started, deleted, restored without its made name) and for any other
@@ -5580,18 +5972,7 @@ Future<void> processPeerBundle(
 }) async {
   final ss = into ?? await signalFor(haloId);
   if (ss == null) throw StateError('no signal store for this chat');
-  final j =
-      jsonDecode(utf8.decode(base64Decode(bundleB64))) as Map<String, dynamic>;
-  final preKeyBundle = PreKeyBundle(
-    j['registrationId'] as int,
-    j['deviceId'] as int,
-    j['preKeyId'] as int,
-    Curve.decodePoint(base64Decode(j['preKeyPublic'] as String), 0),
-    j['signedPreKeyId'] as int,
-    Curve.decodePoint(base64Decode(j['signedPreKeyPublic'] as String), 0),
-    base64Decode(j['signedPreKeySignature'] as String),
-    IdentityKey(Curve.decodePoint(base64Decode(j['identityKey'] as String), 0)),
-  );
+  final preKeyBundle = preKeyBundleOf(bundleB64);
   final addr = SignalProtocolAddress(haloId, 1);
   final builder = SessionBuilder(
     ss.sessionStore,
@@ -5623,8 +6004,17 @@ Future<bool> hasSessionWith(String peerId) async {
 // the wire asks for. either store seals one frame at a time per peer
 Future<String> signalEncrypt(String peerId, String plaintext) async {
   if (isDevId(peerId)) return devLane.encrypt(peerId, plaintext);
-  return signalSession.encryptTo(peerId, plaintext);
+  final from = _afreshFrom;
+  return signalSession.encryptTo(
+    peerId,
+    plaintext,
+    afresh: from == null ? null : () => from(peerId),
+  );
 }
+
+// where a seal finds a peer's card to start a session afresh from, after a
+// restore: the app state's rows. set as it is made
+Future<PreKeyBundle?> Function(String peer)? _afreshFrom;
 
 bool _eqBytes(List<int> a, List<int> b) {
   if (a.length != b.length) return false;
@@ -5826,7 +6216,11 @@ Future<String> handleHaloUri(String raw) async =>
 // the result line, and whether the link left the person in the contacts
 // (added now, or already there). a caller that acts on that asks this; the
 // line is in the app's language and is not compared with anything.
-Future<(String, bool)> handleHaloUriAdded(String raw) async {
+// [hidden] says who a shut vault holds, the app's state when not given
+Future<(String, bool)> handleHaloUriAdded(
+  String raw, {
+  bool Function(String id)? hidden,
+}) async {
   // @wren or the handle page link: ask the registry for the invite behind it
   // and carry on as if that had been pasted
   final h = handleFromInput(raw);
@@ -5916,6 +6310,11 @@ Future<(String, bool)> handleHaloUriAdded(String raw) async {
     row: session.getContact,
   );
   if (bound != null && !_eqBytes(bound, cardKey)) {
+    // the signal store holds a shut vault's people too: one of theirs on
+    // another key reads as any link that does not take
+    if ((hidden ?? appState.hiddenWhileShut)(parsed['id']!)) {
+      return (l10n.appInvalidUri, false);
+    }
     return (l10n.appLinkOtherKey(parsed['id']!), false);
   }
   // someone blocked stays blocked: an add would say they can be written to
@@ -6176,6 +6575,8 @@ Future<String> buildHaloUriV3(String id, String onion, int fcCounter) async {
 String haloUriV3(String id, String onion, String bundle, String fc) =>
     'kryfo://share?id=$id&onion=$onion&v=3&bundle=$bundle&fc=$fc';
 
+// an invite's id is three words, as every version has made them: anything
+// else would be shown to the person as if it were someone's name
 Map<String, String>? parseHaloUri(String raw) {
   raw = raw.trim();
   if (!raw.startsWith('kryfo://share')) return null;
@@ -6184,6 +6585,7 @@ Map<String, String>? parseHaloUri(String raw) {
     final id = uri.queryParameters['id'];
     final onion = uri.queryParameters['onion'];
     if (id == null || onion == null) return null;
+    if (!_wordsShape.hasMatch(id)) return null;
     final v = uri.queryParameters['v'] ?? '1';
     if (v == '3') {
       final bundle = uri.queryParameters['bundle'];
@@ -6206,6 +6608,72 @@ Map<String, String>? parseHaloUri(String raw) {
   } catch (_) {
     return null;
   }
+}
+
+/// what an invite's id is to the people here
+enum LinkKin {
+  // no one here goes by it
+  stranger,
+  // a contact on the same key: an add would add no one
+  kept,
+  // a contact by these words on another key: the link is not them
+  otherKey,
+  // a contact under other words that the person calls by these
+  lookalike,
+}
+
+/// what [link]'s id is to the people here, and the name the person knows
+/// them by. one that cannot be looked up is asked about as a stranger, and
+/// the door still checks it. [hidden] says who a shut vault holds, the
+/// app's state when not given
+Future<(LinkKin, String)> linkKinOf(
+  String link, {
+  bool Function(String id)? hidden,
+}) async {
+  final parsed = parseHaloUri(link);
+  if (parsed == null) return (LinkKin.stranger, '');
+  final id = parsed['id']!;
+  try {
+    // someone a shut vault holds is asked about as anyone else: the signal
+    // store, which knows their key, is the vault's as well
+    if ((hidden ?? appState.hiddenWhileShut)(id)) {
+      return (LinkKin.stranger, id);
+    }
+    return await _linkKin(parsed, id);
+  } catch (e) {
+    dlog('link kin: ${e.runtimeType}');
+    return (LinkKin.stranger, id);
+  }
+}
+
+Future<(LinkKin, String)> _linkKin(
+  Map<String, String> parsed,
+  String id,
+) async {
+  final cardKey = parsed['bundle'] != null
+      ? _bundleIdentity(parsed['bundle']!)
+      : _xIdentity((parsed['xpub'] ?? '').toLowerCase());
+  final row = await session.getContact(id);
+  final bound = await _boundIdentity(
+    id,
+    ss: sessionQuiet ? null : signalSession,
+    row: session.getContact,
+  );
+  final nick = (row?['nickname'] as String?)?.trim();
+  final name = nick == null || nick.isEmpty ? id : nick;
+  if (bound != null && (cardKey == null || !_eqBytes(bound, cardKey))) {
+    return (LinkKin.otherKey, name);
+  }
+  if (row != null && row['accepted'] == 1 && row['blocked'] != 1) {
+    return (LinkKin.kept, name);
+  }
+  for (final c in await session.contacts()) {
+    if (c['halo_id'] == id) continue;
+    if ((c['nickname'] as String?)?.trim() == id) {
+      return (LinkKin.lookalike, id);
+    }
+  }
+  return (LinkKin.stranger, id);
 }
 
 // shared singletons + state
@@ -6724,6 +7192,16 @@ class _Queue {
   }
 }
 
+// how to reach someone, and the container their chat is in: null for a
+// hidden chat while its vault is shut
+typedef _Reach = ({
+  String onion,
+  String xpub,
+  String? bundle,
+  bool backPaired,
+  HaloDb? on,
+});
+
 class AppState extends ChangeNotifier {
   AppState({
     AppIo io = const AppIo(),
@@ -6743,6 +7221,7 @@ class AppState extends ChangeNotifier {
     devLane.chat = () => live.devChat.load();
     devLane.open = () => live.open();
     wipeForget = _dropOpened;
+    _afreshFrom = _afreshCard;
   }
 
   // signal, the engine and android, as the receive side reaches them
@@ -6792,6 +7271,13 @@ class AppState extends ChangeNotifier {
   // wrap, so a flat cadence leaves one copy per attempt sitting on every
   // relay, and the receiver decrypts and acks all of them.
   final Map<String, int> _outboxNextAt = <String, int>{};
+  // whose each of those is, so a card that arrives lets theirs go at once
+  final Map<String, String> _outboxPeer = <String, String>{};
+
+  @visibleForTesting
+  int outboxTriesForTest(String uid) => _outboxTries[uid] ?? 0;
+  @visibleForTesting
+  int? outboxNextAtForTest(String uid) => _outboxNextAt[uid];
 
   // how many messages are sitting unsent, and for whom. the offline strip
   // reads this so it can say "2 waiting" instead of just "offline".
@@ -7057,10 +7543,12 @@ class AppState extends ChangeNotifier {
     unawaited(_drainFrames());
     unawaited(_drainGroupCtl());
     unawaited(_drainGroupOwed());
+    unawaited(_askAfresh());
     if (rows.isEmpty && vRows.isEmpty) {
       if (_outboxTries.isNotEmpty) {
         _outboxTries.clear();
         _outboxNextAt.clear();
+        _outboxPeer.clear();
       }
       return;
     }
@@ -7070,6 +7558,7 @@ class AppState extends ChangeNotifier {
     };
     _outboxTries.removeWhere((k, _) => !waiting.contains(k));
     _outboxNextAt.removeWhere((k, _) => !waiting.contains(k));
+    _outboxPeer.removeWhere((k, _) => !waiting.contains(k));
     for (final (r, d, paired) in [
       for (final r in rows) (r, live, q.paired),
       if (v != null)
@@ -7096,10 +7585,52 @@ class AppState extends ChangeNotifier {
       if (gap > 600000) gap = 600000;
       _outboxNextAt[uid] = now + gap;
       _outboxTries[uid] = tries + 1;
+      final peer = r['peer_id'] as String?;
+      if (peer != null) _outboxPeer[uid] = peer;
       _outboxInflight.add(uid);
       unawaited(
-        _drainOne(r, d).whenComplete(() => _outboxInflight.remove(uid)),
+        _drainOne(r, d).whenComplete(() async {
+          // waiting on their card is no failed try: it goes the moment the
+          // card is here, and until then it tries as they are asked again,
+          // an hour apart doubling to a week
+          if (peer != null && _waitingCard.contains(peer)) {
+            var due = 0;
+            try {
+              await _asking[peer];
+              due = await signalSession.askDueAt(peer) ?? 0;
+            } catch (e) {
+              dlog('outbox: ask time not read (${e.runtimeType})');
+            }
+            if (_waitingCard.contains(peer)) {
+              _outboxTries[uid] = tries;
+              _outboxNextAt[uid] = max(due, now + 600000);
+            }
+          }
+          _outboxInflight.remove(uid);
+        }),
       );
+    }
+  }
+
+  // people a seal to waits on their card, after a restore: the outbox and
+  // the chat hold their texts as going, not failed
+  final Set<String> _waitingCard = {};
+  bool waitsForCard(String peer) => _waitingCard.contains(peer);
+
+  // their card is here: what of theirs waited goes now, from the first try
+  void _cardCame(String peer) {
+    final was = _waitingCard.remove(peer);
+    final uids = [
+      for (final e in _outboxPeer.entries)
+        if (e.value == peer) e.key,
+    ];
+    for (final uid in uids) {
+      _outboxTries.remove(uid);
+      _outboxNextAt.remove(uid);
+    }
+    if (was || uids.isNotEmpty) {
+      _bumpChatRev(peer);
+      unawaited(drainOutbox());
     }
   }
 
@@ -7216,19 +7747,37 @@ class AppState extends ChangeNotifier {
   Future<void> _drainFrames() async {
     for (final d in [live, ?_openVault]) {
       final List<Map<String, Object?>> rows;
+      final Set<String> blocked;
       try {
-        rows = await d.unsentFrames();
+        // what waits on a card is left out, or it would fill the window
+        rows = await d.unsentFrames(waiting: _waitingCard);
+        blocked = rows.isEmpty ? const {} : await d.blockedIds();
       } catch (e) {
         continue;
       }
       for (final r in rows) {
         final uid = r['msg_uid'] as String;
         final kind = r['kind'] as String;
+        final peer = r['peer_id'] as String;
+        // nothing goes to someone blocked: what was queued for them goes
+        if (blocked.contains(peer)) {
+          try {
+            await d.dropFrame(uid, kind, peer, r['body'] as String);
+          } catch (e) {
+            dlog('$kind: blocked row not dropped (${e.runtimeType})');
+          }
+          continue;
+        }
         final age = DateTime.now().millisecondsSinceEpoch - (r['at'] as int);
-        if (age < 45000 || !_framesInflight.add('$kind $uid')) continue;
+        // a receipt has no send of its own still going: it waits only on
+        // the card the session waits on
+        if (kind == kFrameReceipt ? _waitingCard.contains(peer) : age < 45000) {
+          continue;
+        }
+        if (!_framesInflight.add('$kind $uid')) continue;
         unawaited(
           _sendFrame(
-            r['peer_id'] as String,
+            peer,
             uid,
             kind,
             r['body'] as String,
@@ -7279,15 +7828,21 @@ class AppState extends ChangeNotifier {
     HaloDb? on,
   }) async {
     try {
-      final wrapped = kind == kFrameUnsend
-          ? await wrapMessage('', unsend: uid, sender: _mySender())
-          : await wrapMessage(
-              '',
-              reaction: ReactionFrame(targetUid: uid, emoji: body),
-              sender: _mySender(),
-            );
+      final wrapped = switch (kind) {
+        kFrameUnsend => await wrapMessage('', unsend: uid, sender: _mySender()),
+        kFrameReceipt => await wrapMessage(
+          '',
+          deliveredUid: uid,
+          sender: _mySender(),
+        ),
+        _ => await wrapMessage(
+          '',
+          reaction: ReactionFrame(targetUid: uid, emoji: body),
+          sender: _mySender(),
+        ),
+      };
       final ok = await _sendOneEnvelope(peer, wrapped);
-      if (ok) await (on ?? _ownerOf(peer)).dropFrame(uid, kind, body);
+      if (ok) await (on ?? _ownerOf(peer)).dropFrame(uid, kind, peer, body);
       return ok;
     } catch (e) {
       dlog('$kind: $uid still stuck ($e)');
@@ -9090,6 +9645,9 @@ class AppState extends ChangeNotifier {
     bool fromBackPair = false,
     HaloDb? into,
     int? arrivedAt,
+    // when the sender wrapped it by their clock, where the lane says. each
+    // send wraps anew, so a retry carries its own
+    int? writtenAt,
   }) async {
     // the dev chat takes a frame only while it runs, and only what his
     // chat may carry, said by his pinned key. the rest is dropped unseen
@@ -9111,6 +9669,7 @@ class AppState extends ChangeNotifier {
         fromBackPair: fromBackPair,
         into: into,
         arrivedAt: arrivedAt,
+        writtenAt: writtenAt,
       );
     }
     await _afterClose();
@@ -9128,6 +9687,7 @@ class AppState extends ChangeNotifier {
         wire: wire,
         fromBackPair: fromBackPair,
         marks: marks,
+        writtenAt: writtenAt,
       );
     } finally {
       for (final k in keys) {
@@ -9143,6 +9703,19 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  // a message of its own, not a frame about one
+  static bool _dataFrame(UnwrappedMessage env) =>
+      env.deliveredUid == null &&
+      env.groupControl == null &&
+      env.intro == null &&
+      env.need == null &&
+      env.pin == null &&
+      env.vote == null &&
+      env.pollClose == null &&
+      env.reaction == null &&
+      env.edit == null &&
+      env.unsend == null;
+
   // a file that travels as slices, one of them in this frame
   static bool _sliced(UnwrappedMessage env) =>
       env.mediaId != null && env.chunkTotal != null && env.chunkTotal! > 1;
@@ -9156,6 +9729,7 @@ class AppState extends ChangeNotifier {
     int? arrivedAt,
     // the chats to mark once the caller is done, on the live path
     Set<String>? marks,
+    int? writtenAt,
   }) async {
     // a uid claimed and never saved is let go, or a copy that comes again
     // is taken for one already in and dropped
@@ -9170,6 +9744,7 @@ class AppState extends ChangeNotifier {
         arrivedAt: arrivedAt,
         marks: marks,
         claims: claims,
+        writtenAt: writtenAt,
       );
     } catch (_) {
       _inflightUids.removeAll(claims);
@@ -9186,6 +9761,7 @@ class AppState extends ChangeNotifier {
     required int? arrivedAt,
     required Set<String>? marks,
     required List<String> claims,
+    required int? writtenAt,
   }) async {
     final RouteTo to;
     final HaloDb db;
@@ -9196,7 +9772,13 @@ class AppState extends ChangeNotifier {
       to = _routeOf(senderHaloId, env.groupId);
       if (to == RouteTo.dropped) return to;
       if (to == RouteTo.sealed) {
-        await _sealArrival(senderHaloId, env, wire, fromBackPair);
+        await _sealArrival(
+          senderHaloId,
+          env,
+          wire,
+          fromBackPair,
+          writtenAt: writtenAt,
+        );
         return to;
       }
       final v = _openVault;
@@ -9241,7 +9823,21 @@ class AppState extends ChangeNotifier {
         unawaited(drainOutbox());
       }
     }
-    if (await db.isBlocked(senderHaloId)) return to;
+    // nothing from someone blocked is kept, and what came while the block
+    // held stays dropped after an unblock: a copy by its uid, one the
+    // relays held back by when it was wrapped. only a block holding now
+    // notes the uid: a stamp is their clock, and one running behind could
+    // match an ended span for something sent after it, whose copies must
+    // still come in
+    final blockedNow = await db.isBlocked(senderHaloId);
+    if (blockedNow ||
+        (writtenAt != null && await db.blockedAt(senderHaloId, writtenAt))) {
+      final key = _dataFrame(env) ? env.msgUid ?? env.mediaId : null;
+      if (blockedNow && key != null) {
+        await db.noteBlockedDrop(senderHaloId, key);
+      }
+      return to;
+    }
     // the developer's own phone: a chat started from the Marios row goes to
     // support by its marker, and is never a way into his groups or contacts
     final support = await _supportOf(senderHaloId, env, db);
@@ -9377,6 +9973,12 @@ class AppState extends ChangeNotifier {
       return to;
     }
     // 3) data message: could be 1:1 or group
+    final blockedKey = env.msgUid ?? env.mediaId;
+    if (blockedKey != null &&
+        await db.droppedWhileBlocked(senderHaloId, blockedKey)) {
+      dlog('recv: written while they were blocked, dropped');
+      return to;
+    }
     final isGroup = env.groupId != null;
     if (isGroup && !await db.groupExists(env.groupId!)) {
       // unknown group: drop, so random senders cannot inject rows into
@@ -9635,7 +10237,12 @@ class AppState extends ChangeNotifier {
     } else if (await burnedWhileSealed()) {
       return to;
     } else if (uid != null) {
-      final known = _inflightUids.contains(uid) || await db.messageExists(uid);
+      // one that came and went here is known too, so a resend of it never
+      // shows again
+      final known =
+          _inflightUids.contains(uid) ||
+          await db.messageExists(uid) ||
+          (!isGroup && await db.goneFrom(senderHaloId, uid));
       // a preview-only frame from an older client carries nothing we draw:
       // a sender never gets to put a title or an image on this screen
       final previewOnly =
@@ -9938,8 +10545,13 @@ class AppState extends ChangeNotifier {
     String sender,
     UnwrappedMessage env,
     String wire,
-    bool fromBackPair,
-  ) async {
+    bool fromBackPair, {
+    // kept with it, so a block's spans in the vault judge it as they would
+    // have on arrival
+    int? writtenAt,
+  }) async {
+    // someone the vault blocked: nothing is sealed to wait for it
+    if (_router.blocks(sender)) return;
     _lastSealAt = DateTime.now().millisecondsSinceEpoch;
     final uid = env.msgUid;
     final total = env.chunkTotal;
@@ -9957,8 +10569,7 @@ class AppState extends ChangeNotifier {
         env.deliveredUid == null &&
         env.reaction == null &&
         env.edit == null &&
-        !previewOnly &&
-        !_router.blocks(sender);
+        !previewOnly;
     // a sliced file ticks once every slice is in, as it does when shown
     Future<bool> whole() async =>
         !sliced || await _router.sealedParts(uid!) >= total;
@@ -9974,6 +10585,7 @@ class AppState extends ChangeNotifier {
         wire,
         fromBackPair,
         DateTime.now().millisecondsSinceEpoch,
+        wrapped: writtenAt,
       ),
       uid: uid,
       part: part,
@@ -9999,7 +10611,14 @@ class AppState extends ChangeNotifier {
         if (batch.isEmpty) break;
         for (final (id, u) in batch) {
           if (!identical(_openVault, vault) || _moveDone != null) return;
-          if (u != null) {
+          if (u != null && u.resend) {
+            try {
+              await _resendTo(vault, u.from);
+            } catch (e) {
+              if (!identical(_openVault, vault)) return;
+              dlog('unseal: an owed resend not run ($e)');
+            }
+          } else if (u != null) {
             try {
               final env = unwrapMessage(u.wire);
               // a first contact files its sender, as it does in the everyday
@@ -10019,6 +10638,7 @@ class AppState extends ChangeNotifier {
                 fromBackPair: u.backPair,
                 into: vault,
                 arrivedAt: u.at,
+                writtenAt: u.wrapped,
               );
             } on CapHeld catch (e) {
               // past a stranger's two: on the shelf, let in on accept. a
@@ -11687,6 +12307,51 @@ class AppState extends ChangeNotifier {
   final Map<String, int> _healPending = {};
   final Map<String, int> _bundleCtlSentAt = {};
   static const _healTtl = 60 * 60 * 1000;
+  // how far back an ask to start afresh puts undelivered texts out again
+  static const _kResendWindow = Duration(days: 7);
+  // and how often, per person: each ask is a fresh wrap, and a phone that
+  // cannot open what we send asks again on every text
+  static const _kResendGap = Duration(minutes: 10);
+  final Map<String, int> _resentAt = {};
+  final Map<String, int> _owedSealedAt = {};
+
+  // what we sent [peer] lately and never came back delivered, put out again
+  // from [on], the container their chat is in. not while their key is
+  // flagged as changed: that one is checked first
+  Future<void> _resendTo(HaloDb on, String peer) async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (now - (_resentAt[peer] ?? 0) < _kResendGap.inMilliseconds) return;
+    // someone blocked is sent nothing again, asked or owed
+    if (await on.isBlocked(peer)) return;
+    if (await on.keyChanged(peer)) {
+      dlog('resend: their key changed, nothing again');
+      return;
+    }
+    _resentAt[peer] = now;
+    final again = await on.resendUndelivered(
+      peer,
+      since: now - _kResendWindow.inMilliseconds,
+    );
+    if (again > 0) {
+      dlog('resend: $again undelivered to $peer go again');
+      _bumpChatRev(peer);
+      unawaited(drainOutbox());
+    }
+  }
+
+  // asked while their vault is shut: the resend is owed, sealed to the
+  // vault with what came for it, and runs as it opens (drainSealed)
+  Future<void> _oweResend(String peer) async {
+    // someone the vault blocked: nothing is sealed for them, as on arrival
+    if (_router.blocks(peer)) return;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (now - (_owedSealedAt[peer] ?? 0) < _kResendGap.inMilliseconds) return;
+    final kept = await _router.seal(
+      Unsealed(peer, '', false, now, resend: true),
+    );
+    if (kept) _owedSealedAt[peer] = now;
+  }
+
   void _pruneHeal() {
     final cut = DateTime.now().millisecondsSinceEpoch - _healTtl;
     _healPending.removeWhere((_, t) => t < cut);
@@ -12056,8 +12721,10 @@ class AppState extends ChangeNotifier {
   // those it could not keep, which the engine offers again
   @visibleForTesting
   Future<Set<int>> receiveRelay(
-    List<({String peer, String cipher})> msgs,
-  ) async {
+    List<({String peer, String cipher})> msgs, {
+    // when each was wrapped, by the sender's clock, where the lane says
+    List<int?> written = const [],
+  }) async {
     var noted = false;
     void arrived() {
       if (noted) return;
@@ -12084,7 +12751,11 @@ class AppState extends ChangeNotifier {
     for (final m in ordered) {
       // each on its own: one that throws comes again, the rest stay kept
       try {
-        await _receiveRelayOne((peer: m.peer, cipher: m.cipher), arrived);
+        await _receiveRelayOne(
+          (peer: m.peer, cipher: m.cipher),
+          arrived,
+          writtenAt: m.at < written.length ? written[m.at] : null,
+        );
       } catch (e, st) {
         dlog('relay: one not kept, it comes again ($e)\n$st');
         failed.add(m.at);
@@ -12126,8 +12797,9 @@ class AppState extends ChangeNotifier {
 
   Future<void> _receiveRelayOne(
     ({String peer, String cipher}) m,
-    void Function() arrived,
-  ) async {
+    void Function() arrived, {
+    int? writtenAt,
+  }) async {
     // what it opens to is kept only under the session it began in
     final epoch = _openedEpoch;
     // dedup: skip a message we've already handled (see direct-onion note).
@@ -12226,14 +12898,25 @@ class AppState extends ChangeNotifier {
           shown = _shown(paired.$2);
         }
       }
-      if (!landed) _strikeUndecryptable(h, 'nostr');
+      if (!landed) {
+        _strikeUndecryptable(h, 'nostr');
+        // on the lane of someone we hold a session with: theirs and ours
+        // have gone apart, a restore on one side say. they are asked to
+        // start afresh, and they put again what never came back delivered
+        if (haloId != null && !fcLane) unawaited(_askToStartAfresh(haloId));
+      }
       if (shown) arrived();
       return;
     }
     final env = unwrapMessage(wrapped);
     final RouteTo went;
     try {
-      went = await _applyIncomingPayload(haloId!, env, wire: wrapped);
+      went = await _applyIncomingPayload(
+        haloId!,
+        env,
+        wire: wrapped,
+        writtenAt: writtenAt,
+      );
     } on CapHeld catch (e) {
       // kept as opened: signal has spent its keys, so accept lets it in
       await (e is _HeldIn ? e.into : live).holdCipher(
@@ -12402,14 +13085,7 @@ class AppState extends ChangeNotifier {
     // store, which boots after the home paints. both handlers wait for it.
     _appLinks.uriLinkStream.listen((uri) async {
       if (uri.scheme != 'kryfo') return;
-      await lockGuard.afterUnlock(key: 'link:$uri', () async {
-        await _signalReady.future;
-        final result = await handleHaloUri(uri.toString());
-        dlog('deep link: $result');
-        _sayLinkResult(result);
-        await refreshContacts();
-        notifyListeners();
-      });
+      await _outsideLink(uri, 'deep link');
     });
     // the stream only fires while we're already running. a link tapped with
     // kryfo closed cold-starts the app and would otherwise be dropped.
@@ -12418,14 +13094,7 @@ class AppState extends ChangeNotifier {
           .getInitialLink()
           .then((uri) async {
             if (uri == null || uri.scheme != 'kryfo') return;
-            await lockGuard.afterUnlock(key: 'link:$uri', () async {
-              await _signalReady.future;
-              final result = await handleHaloUri(uri.toString());
-              dlog('deep link (cold start): $result');
-              _sayLinkResult(result);
-              await refreshContacts();
-              notifyListeners();
-            });
+            await _outsideLink(uri, 'deep link (cold start)');
           })
           .catchError((Object e) {
             dlog('deep link (cold start) failed: $e');
@@ -12642,7 +13311,7 @@ class AppState extends ChangeNotifier {
         final batch = engine.nostrPoll();
         if (batch.token.isEmpty) return;
         // not confirmed when this throws: the next poll offers it again
-        final failed = await receiveRelay(batch.msgs);
+        final failed = await receiveRelay(batch.msgs, written: batch.written);
         final r = engine.nostrAck(batch.token, failedPlaces(batch, failed));
         if (r != 'ok') dlog('relay poll: ack $r');
       } finally {
@@ -12735,7 +13404,8 @@ class AppState extends ChangeNotifier {
     try {
       final database = await live.open();
       final xpb = _hexDecode(engine.myXPrivkey());
-      await signalSession.bootstrap(
+      await openSignalStore(
+        signalSession,
         database: database,
         xPubBytes: _hexDecode(engine.myXPubkey()),
         xPrivBytes: xpb,
@@ -12786,12 +13456,44 @@ class AppState extends ChangeNotifier {
     await refreshContacts();
   }
 
+  // a link any app or page can send: once the lock is open, the person is
+  // asked before it adds or joins anything (takeOutsideLink). of those that
+  // came under the lock only the latest is asked about
+  Future<void> _outsideLink(Uri uri, String how) =>
+      lockGuard.afterUnlock(key: 'link:$uri', slot: 'outside-link', () async {
+        await _signalReady.future;
+        var ctx = rootNavKey.currentContext;
+        for (var i = 0; i < 50 && ctx == null; i++) {
+          await Future.delayed(const Duration(milliseconds: 100));
+          ctx = rootNavKey.currentContext;
+        }
+        if (ctx == null || !ctx.mounted) {
+          dlog('$how: no screen to ask on, dropped');
+          return;
+        }
+        final result = await takeOutsideLink(
+          ctx,
+          uri.toString(),
+          selfId: sessionId,
+        );
+        dlog('$how: ${result ?? 'not taken'}');
+        if (result == null) return;
+        _sayLinkResult(result);
+        await refreshContacts();
+        notifyListeners();
+      });
+
   // a block stops listening on their relay address, and that address's
-  // files go with it
+  // files go with it. what of theirs is in the shade goes too, in the
+  // session that showed it: a decoy shows nothing, and the same words there
+  // may name someone the everyday app has in the shade
   Future<void> block(String haloId) async {
     await session.setBlocked(haloId, true);
     await session.dropHeld(haloId);
-    if (!sessionQuiet) await _unlistenPeer(haloId);
+    if (!sessionQuiet) {
+      await _unlistenPeer(haloId);
+      await cancelWithRetry(() => _io.unnotify(haloId), 'block shade');
+    }
     await refreshContacts();
   }
 
@@ -13414,7 +14116,14 @@ class AppState extends ChangeNotifier {
         deliveredUid: uid,
         sender: _mySender(),
       );
-      await _sendOneEnvelope(toHaloId, wrapped);
+      if (await _sendOneEnvelope(toHaloId, wrapped)) return;
+      // the seal waits on their card: the receipt waits with it, where
+      // their chat's rows are, and goes once the session is fresh
+      if (_waitingCard.contains(toHaloId)) {
+        await (await _reach(
+          toHaloId,
+        ))?.on?.queueFrame(uid, kFrameReceipt, toHaloId, '');
+      }
     } catch (e) {
       dlog('receipt for $uid failed: $e');
     }
@@ -13427,6 +14136,121 @@ class AppState extends ChangeNotifier {
     xPub: _io.xPub(),
     avatar: _myAvatar,
   );
+
+  // the card a seal starts a session afresh from, when the one held came
+  // back with a restore. with none kept they are asked for theirs: their
+  // answer leaves it on the row, and the outbox sends again
+  Future<PreKeyBundle?> _afreshCard(String peer) async {
+    final card = (await _reach(peer))?.bundle;
+    if (card != null && card.isNotEmpty) {
+      try {
+        final b = preKeyBundleOf(card);
+        _waitingCard.remove(peer);
+        return b;
+      } catch (e) {
+        dlog('afresh: their card does not read (${e.runtimeType})');
+      }
+    }
+    _waitingCard.add(peer);
+    // asked as the pass asks, an hour apart doubling to a week: a seal
+    // tried again in between asks nothing
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (!_asking.containsKey(peer) && await signalSession.askDue(peer, now)) {
+      unawaited(_askOnce(peer, now));
+    }
+    return null;
+  }
+
+  // an ask for their card on its way, one per person: a pass and a seal
+  // share it, and the outbox waits on it to know when the next is due
+  final Map<String, Future<bool>> _asking = {};
+
+  Future<bool> _askOnce(String peer, int now) =>
+      _asking[peer] ??= _askToStartAfresh(peer, now: now)
+          .catchError((Object e) {
+            dlog('afresh: ask failed (${e.runtimeType})');
+            return false;
+          })
+          // a block body: the removed entry is this future, and waiting
+          // on it here would never end
+          .whenComplete(() {
+            _asking.remove(peer);
+          });
+
+  // when a pass last looked for people to ask to start afresh with us. a
+  // restore brought back sessions their side has gone past: ours is not
+  // sealed on again, and what they seal on theirs may not open here. the
+  // ask hands them our card, they start a session from it, send back
+  // theirs and put again what of theirs never came back delivered. who was
+  // asked when is kept with the sessions (askDue), so a start does not ask
+  // again, and the marks go once every session has started afresh
+  int _afreshLookedAt = 0;
+  Future<void>? _afreshPass;
+  // asks a pass sends at most: a phone of many people asks a few at a time
+  static const _kAsksPerPass = 8;
+
+  Future<void> _askAfresh({int? now}) => _afreshPass ??= _askAfreshRound(
+    now ?? DateTime.now().millisecondsSinceEpoch,
+  ).whenComplete(() => _afreshPass = null);
+
+  Future<void> _askAfreshRound(int now) async {
+    if (!signalSession.ready || !signalSession.hasRestored) return;
+    if (now - _afreshLookedAt < 10 * 60 * 1000) return;
+    _afreshLookedAt = now;
+    // someone blocked or never taken in is never asked, and their session
+    // would hold the marks for good
+    final unasked = <String>{};
+    for (final d in [live, ?_openVault]) {
+      try {
+        unasked.addAll(await d.unaskedIds());
+      } catch (e) {
+        dlog('afresh: unasked not read (${e.runtimeType})');
+      }
+    }
+    if (await signalSession.dropRestoredWhenDone(
+      leaveOut: (id) => unasked.contains(id) || _router.blocks(id),
+    )) {
+      return;
+    }
+    var left = _kAsksPerPass;
+    // the open vault's people too: one shut now is looked at on a later pass
+    for (final d in [live, ?_openVault]) {
+      final List<Map<String, Object?>> people;
+      try {
+        people = await d.contacts();
+      } catch (_) {
+        continue;
+      }
+      for (final r in people) {
+        if (left == 0) return;
+        final id = r['halo_id'] as String;
+        if (isDevId(id) || !await signalSession.askDue(id, now)) continue;
+        if (await _askOnce(id, now)) left--;
+      }
+    }
+  }
+
+  @visibleForTesting
+  Future<void> askAfreshForTest({int? now}) => _askAfresh(now: now);
+
+  // [peer] asked to start a session with us afresh from our card. their
+  // answer carries theirs, and ours starts afresh from it too. true once the
+  // relay took the ask
+  Future<bool> _askToStartAfresh(String peer, {int? now}) async {
+    if (!await _io.hasSession(peer)) return false;
+    // someone blocked is asked nothing, and their card would not be taken
+    final to = await _reach(peer);
+    if (to == null || await _blockedAt(peer, to)) return false;
+    _wantHeal(peer);
+    final ok = await _sendBundleCtl(peer, want: true);
+    if (ok) {
+      await signalSession.noteAsked(
+        peer,
+        now ?? DateTime.now().millisecondsSinceEpoch,
+      );
+    }
+    return ok;
+  }
 
   // wipe a corrupt outbound session and rebuild it from the peer's stored
   // prekey bundle. false if we never kept a bundle: the caller then surfaces
@@ -13454,22 +14278,23 @@ class AppState extends ChangeNotifier {
   // ship our prekey bundle to a peer over the gift-wrap transport: no
   // signal session needed, which is the point, since ours to them is broken.
   // want=true asks them to reset their session with us and send theirs back.
-  Future<void> _sendBundleCtl(String memberId, {required bool want}) async {
+  // true once the relay took it
+  Future<bool> _sendBundleCtl(String memberId, {required bool want}) async {
     // the dev chat's bundle is pinned: nothing goes to him in the clear
-    if (isDevId(memberId)) return;
+    if (isDevId(memberId)) return false;
     final key = '$memberId:$want';
     final now = DateTime.now().millisecondsSinceEpoch;
     if (now - (_bundleCtlSentAt[key] ?? 0) < 60000) {
-      return; // 1/min, not 1/chunk
+      return false; // 1/min, not 1/chunk
     }
     _pruneHeal();
     _bundleCtlSentAt[key] = now;
     try {
       final to = await _reach(memberId);
       // nothing goes to someone blocked, not even keys
-      if (await to?.on?.isBlocked(memberId) ?? false) return;
-      final xpub = to?.xpub ?? '';
-      if (xpub.isEmpty) return;
+      if (to == null || await _blockedAt(memberId, to)) return false;
+      final xpub = to.xpub;
+      if (xpub.isEmpty) return false;
       final payload = jsonEncode({
         'halo_ctl': 'bundle',
         'from': myId,
@@ -13478,8 +14303,10 @@ class AppState extends ChangeNotifier {
       });
       final r = await Future(() => _io.relaySend(xpub, payload));
       dlog('bundle ctl (want=$want) to $memberId: $r');
+      return r == 'ok';
     } catch (e) {
       dlog('bundle ctl to $memberId failed: $e');
+      return false;
     }
   }
 
@@ -13504,6 +14331,8 @@ class AppState extends ChangeNotifier {
       }
       final to = await _reach(from);
       if (to == null) return;
+      // someone blocked gets nothing back: no card, no session, no resend
+      if (await _blockedAt(from, to)) return;
       if (to.xpub != peerXPub) {
         dlog('bundle ctl: xpub mismatch for $from, dropped');
         return;
@@ -13513,20 +14342,48 @@ class AppState extends ChangeNotifier {
       final claimed = base64Decode(bj['identityKey'] as String);
       final addr = SignalProtocolAddress(from, 1);
       final known = await signalSession.identityStore.getIdentity(addr);
-      if (known != null && !_eqBytes(known.serialize(), claimed)) {
+      // with none pinned yet, the key is the one their x key makes: the
+      // relay vouched for that one
+      final ok = known != null
+          ? _eqBytes(known.serialize(), claimed)
+          : _eqBytes(_xIdentity(peerXPub.toLowerCase()) ?? const [], claimed);
+      if (!ok) {
         dlog('bundle ctl: identity mismatch for $from, dropped');
         return;
       }
       // kept on the row, where there is one: a hidden chat's card holds no
       // bundle while the vault is shut
       await to.on?.setPeerBundle(from, bundle);
+      var rebuilt = false;
       if (want || _healPending.remove(from) != null) {
-        await signalSession.sessionStore.deleteSession(addr);
-        await processPeerBundle(from, bundle);
+        // the session it replaces is archived, so what they sealed on it
+        // before still opens. one that does not read goes
+        try {
+          await processPeerBundle(from, bundle);
+        } catch (e) {
+          await signalSession.sessionStore.deleteSession(addr);
+          await processPeerBundle(from, bundle);
+        }
+        rebuilt = true;
         dlog('healed session for $from (bundle exchange)');
         unawaited(_owedDueFor(from));
       }
-      if (want) unawaited(_sendBundleCtl(from, want: false));
+      // what waited on their card goes now
+      _cardCame(from);
+      if (want) {
+        unawaited(_sendBundleCtl(from, want: false));
+        // they asked because ours did not open there: what we sent them
+        // lately that never came back delivered goes again, on the new
+        // session. the same uid lands once. a hidden chat's waits sealed
+        // for its vault to open
+        final on = to.on;
+        if (!rebuilt) return;
+        if (on != null) {
+          await _resendTo(on, from);
+        } else {
+          await _oweResend(from);
+        }
+      }
     } catch (e) {
       dlog('bundle ctl handle failed: $e');
     } finally {
@@ -13534,12 +14391,14 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  /// [id] is someone a shut vault holds: nothing here may show they are
+  /// known
+  bool hiddenWhileShut(String id) =>
+      _openVault == null && _router.cardOf(id) != null;
+
   // how to reach someone: their everyday row, the open vault's, else the
   // card the router keeps for a hidden chat while the vault is shut
-  Future<
-    ({String onion, String xpub, String? bundle, bool backPaired, HaloDb? on})?
-  >
-  _reach(String id) async {
+  Future<_Reach?> _reach(String id) async {
     for (final d in [live, ?_openVault]) {
       final c = await d.getContact(id);
       if (c == null) continue;
@@ -13561,6 +14420,11 @@ class AppState extends ChangeNotifier {
       on: null,
     );
   }
+
+  // blocked where [to] has them: their row, or the router's card while
+  // the vault is shut
+  Future<bool> _blockedAt(String id, _Reach to) async =>
+      to.on != null ? await to.on!.isBlocked(id) : _router.blocks(id);
 
   Future<bool> _sendOneEnvelope(String memberId, String wrapped) async {
     // one attempt. the engine calls carry their own timeouts (onion 15s,
@@ -13588,6 +14452,9 @@ class AppState extends ChangeNotifier {
       }
       try {
         cipher = await _io.encrypt(memberId, wrapped);
+      } on StartingAfresh {
+        // waits on their card, asked for as it falls due (_afreshCard)
+        rethrow;
       } catch (e) {
         // a corrupt session (InvalidKeyException or bad state) can't encrypt.
         // if we kept the peer's bundle at pairing, wipe the broken session and

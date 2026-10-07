@@ -286,8 +286,23 @@ void main() {
     test('a word sent leaves a newer one queued', () async {
       await db.queueFrame('u3', kFrameReaction, _bob, 'x');
       await db.queueFrame('u3', kFrameReaction, _bob, 'y');
-      await db.dropFrame('u3', kFrameReaction, 'x');
+      await db.dropFrame('u3', kFrameReaction, _bob, 'x');
       expect(mem.rows('frames_out').single['body'], 'y');
+    });
+
+    test('the same uid in two chats queues apart and goes apart', () async {
+      // the uid of what came in is its sender's to pick
+      const other = 'carol-other-chat';
+      await db.queueFrame('u5', kFrameReaction, _bob, 'x');
+      await db.queueFrame('u5', kFrameReaction, other, 'x');
+      expect(mem.rows('frames_out'), hasLength(2));
+      await db.dropFrame('u5', kFrameReaction, _bob, 'x');
+      expect(mem.rows('frames_out').single['peer_id'], other);
+      await db.queueFrame('u5', kFrameReaction, _bob, 'y');
+      await db.queueFrame('u5', kFrameUnsend, _bob, '');
+      expect([
+        for (final r in mem.rows('frames_out')) (r['peer_id'], r['kind']),
+      ], unorderedEquals([(other, kFrameReaction), (_bob, kFrameUnsend)]));
     });
 
     test('taken back, nothing else queued for it goes', () async {

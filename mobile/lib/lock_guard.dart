@@ -14,7 +14,8 @@ class LockGuard {
 
   final bool Function() isLocked;
 
-  final Map<Object, Future<void> Function()> _held = {};
+  // what waits, by its slot, with the key it is told apart by
+  final Map<Object, (Object?, Future<void> Function())> _held = {};
   int _unkeyed = 0;
   // work waiting to open a system dialog once the lock lifts
   final List<Completer<void>> _waiting = [];
@@ -23,11 +24,17 @@ class LockGuard {
   final Set<VoidCallback> _closers = {};
 
   // done now, or once the lock lifts. a key keeps one of a kind, so a link
-  // that arrives by two routes at a cold start is handled once
-  Future<void> afterUnlock(Future<void> Function() act, {Object? key}) async {
+  // that arrives by two routes at a cold start is handled once. a slot
+  // keeps only the latest of what waits in it, whatever its key
+  Future<void> afterUnlock(
+    Future<void> Function() act, {
+    Object? key,
+    Object? slot,
+  }) async {
     if (isLocked()) {
-      _held.remove(key);
-      _held[key ?? _unkeyed++] = act;
+      final at = slot ?? key;
+      _held.remove(at);
+      _held[at ?? _unkeyed++] = (key, act);
       return;
     }
     if (_justRan(key)) return;
@@ -70,9 +77,9 @@ class LockGuard {
     if (_held.isEmpty) return;
     final held = Map.of(_held);
     _held.clear();
-    for (final e in held.entries) {
-      if (e.key is! int && _justRan(e.key)) continue;
-      unawaited(e.value());
+    for (final (key, act) in held.values) {
+      if (_justRan(key)) continue;
+      unawaited(act());
     }
   }
 

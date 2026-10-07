@@ -8,7 +8,7 @@ import 'dart:typed_data';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/group_media_send.dart' show groupOwedGap;
 import 'package:kryfo/main.dart'
-    show AppIo, HaloDb, groupUnsendOf, groupUnsendRow;
+    show AppIo, HaloDb, blockedAtArgs, groupUnsendOf, groupUnsendRow;
 import 'package:kryfo/media_resend.dart';
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
@@ -450,6 +450,37 @@ class ArrivalRows implements HaloDb {
   @override
   Future<bool> isBlocked(String haloId) async =>
       _hit('isBlocked', haloId, people[haloId]?['blocked'] == 1);
+  // each block's span, and the uids of what came while one held, as the
+  // real tables keep them
+  final blockSpans = <String, List<(int, int?)>>{};
+  final blockedDrops = <String, Set<String>>{};
+  @override
+  Future<void> setBlocked(String haloId, bool blocked) async {
+    _hit('setBlocked', haloId, null);
+    people[haloId]?['blocked'] = blocked ? 1 : 0;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final spans = blockSpans[haloId] ??= [];
+    final open = spans.indexWhere((s) => s.$2 == null);
+    if (blocked && open < 0) spans.add((now, null));
+    if (!blocked && open >= 0) spans[open] = (spans[open].$1, now);
+  }
+
+  // as kBlockedAtWhere reads its arguments: an ended span, from its start
+  // to its end less the grace
+  @override
+  Future<bool> blockedAt(String haloId, int at) async {
+    final a = blockedAtArgs(haloId, at);
+    return [...?blockSpans[haloId]].any(
+      (s) => s.$1 <= (a[1] as int) && s.$2 != null && s.$2! > (a[2] as int),
+    );
+  }
+
+  @override
+  Future<void> noteBlockedDrop(String haloId, String uid) async =>
+      (blockedDrops[haloId] ??= {}).add(uid);
+  @override
+  Future<bool> droppedWhileBlocked(String haloId, String uid) async =>
+      blockedDrops[haloId]?.contains(uid) ?? false;
   @override
   Future<bool> isMuted(String haloId) async =>
       _hit('isMuted', haloId, people[haloId]?['muted'] == 1);
@@ -691,6 +722,11 @@ class ArrivalRows implements HaloDb {
   @override
   Future<bool> messageExists(String msgUid) async =>
       _hit('messageExists', msgUid, msg(msgUid) != null);
+  // what came in and went, by sender
+  final gone = <(String, String)>{};
+  @override
+  Future<bool> goneFrom(String peer, String msgUid) async =>
+      gone.contains((peer, msgUid));
   @override
   Future<(String, String?)?> chatOf(String msgUid) async {
     final m = msg(msgUid);

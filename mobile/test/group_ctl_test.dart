@@ -933,7 +933,7 @@ void main() {
   test('made on create and on the upgrades to 60 and 61', () {
     final src = File('lib/main.dart').readAsStringSync();
     final version = RegExp(r'version: (\d+),').firstMatch(src)!.group(1)!;
-    expect(int.parse(version), 62);
+    expect(int.parse(version), 64);
     final create = src.indexOf('onCreate: (db, _) async {');
     final upgrade = src.indexOf('onUpgrade: (db, oldV, newV) async {');
     expect(
