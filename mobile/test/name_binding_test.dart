@@ -646,6 +646,36 @@ void main() {
       ));
     });
 
+    test('someone a shut vault holds is asked about as a stranger, and '
+        'their words on another key read as any link that does not '
+        'take', () async {
+      const shut = 'shut-away-friend';
+      final held = await _phone();
+      await world(hiddenMembers: [RouterCard(shut, 'o-s', held.xPub)]);
+      // their session is in the signal store the vault shares
+      await processPeerBundle(shut, await makePreKeyBundleB64(held.ss));
+      expect(app.hiddenWhileShut(shut), isTrue);
+      expect(app.hiddenWhileShut(_amber), isFalse);
+      final link = await card(shut, await _phone());
+      expect(await linkKinOf(link, hidden: app.hiddenWhileShut), (
+        LinkKin.stranger,
+        shut,
+      ));
+      expect(await handleHaloUriAdded(link, hidden: app.hiddenWhileShut), (
+        l10n.appInvalidUri,
+        false,
+      ));
+      expect(live.people.containsKey(shut), isFalse);
+      // someone here on another key is still said to be
+      expect(
+        await handleHaloUriAdded(
+          await card(_amber, await _phone()),
+          hidden: app.hiddenWhileShut,
+        ),
+        (l10n.appLinkOtherKey(_amber), false),
+      );
+    });
+
     test('anyone else, one who asked and one blocked among them, is asked '
         'about as a stranger', () async {
       final them = await _phone();

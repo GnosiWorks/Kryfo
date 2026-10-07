@@ -205,12 +205,14 @@ class RoomLink {
   }
 }
 
-final _unseen = RegExp(r'[\p{Cc}\p{Cf}]', unicode: true);
+// every control and format mark but the joiners: persian spells with the
+// non-joiner, and emoji are built with the joiner. the direction marks go
+final _unseen = RegExp(r'(?![\u200C\u200D])[\p{Cc}\p{Cf}]', unicode: true);
 final _spaces = RegExp(r'\s+', unicode: true);
 
 /// a room's name as a link gives it, made fit to show: no controls or
-/// unseen marks, one space wherever there were more, at most 48 letters.
-/// a name made here is 32 at most
+/// unseen marks but the joiners, one space wherever there were more, at
+/// most 48 letters. a name made here is 32 at most
 String roomLinkName(String raw) {
   // a line break is a space before it is a control
   final flat = raw

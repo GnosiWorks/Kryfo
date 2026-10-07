@@ -241,15 +241,22 @@ class SignalSession {
   /// over. the wait doubles from an hour up to a week for someone who
   /// never answers
   Future<bool> askDue(String peer, int now) async {
+    final at = await askDueAt(peer);
+    return at != null && now >= at;
+  }
+
+  /// when [peer] is next due an ask to start afresh, 0 when never asked.
+  /// null when no session of theirs came back with a restore
+  Future<int?> askDueAt(String peer) async {
     final base = await _restoredBase(peer);
-    if (base == null) return false;
+    if (base == null) return null;
     final a = _asks[base];
-    if (a == null) return true;
+    if (a == null) return 0;
     final wait = min(
       const Duration(hours: 1).inMilliseconds << min(a[1] - 1, 8),
       const Duration(days: 7).inMilliseconds,
     );
-    return now - a[0] >= wait;
+    return a[0] + wait;
   }
 
   /// [peer] was asked to start afresh at [now], written down so a start
@@ -265,13 +272,17 @@ class SignalSession {
   }
 
   /// a restore's marks go once no session a seal would use came back with
-  /// it. true when they went, or there were none
-  Future<bool> dropRestoredWhenDone() async {
+  /// it. the sessions of anyone [leaveOut] names are never asked to start
+  /// afresh, and do not hold them. true when they went, or there were none
+  Future<bool> dropRestoredWhenDone({
+    bool Function(String peer)? leaveOut,
+  }) async {
     if (_restored.isEmpty) return true;
     for (final r in await _db.query(
       '${_prefix}sessions',
-      columns: ['record'],
+      columns: ['address', 'record'],
     )) {
+      if (leaveOut?.call(r['address'] as String) ?? false) continue;
       try {
         final record = SessionRecord.fromSerialized(r['record'] as Uint8List);
         if (_restored.contains(_baseOf(record.sessionState))) return false;

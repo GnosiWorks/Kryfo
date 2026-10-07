@@ -13,7 +13,8 @@ import 'package:kryfo/main.dart'
         kBlockedAtWhere,
         kSeedBlockSpans,
         kUnblockGrace,
-        noteBlockedDropIn;
+        noteBlockedDropIn,
+        upgradeTo64;
 
 import 'sqlite_ffi.dart';
 
@@ -169,5 +170,44 @@ void main() {
       [1],
     );
     expect('$plan', contains('blocked_drops_at'));
+  }, skip: skip);
+
+  test('the steps to 64 make both tables from 63 whichever it held, and run '
+      'again they open no second span', () async {
+    final db = SqliteMem.open()!;
+    await db.execute(
+      'CREATE TABLE contacts (halo_id TEXT PRIMARY KEY, '
+      'blocked INTEGER NOT NULL DEFAULT 0)',
+    );
+    await db.execute(
+      "INSERT INTO contacts (halo_id, blocked) VALUES ('long-blocked', 1), "
+      "('blocked-at-63', 1)",
+    );
+    // a 63 that made the block tables, and a block it kept
+    await blockTables(db);
+    await db.execute(
+      "INSERT INTO block_spans (peer_id, from_at) VALUES ('blocked-at-63', 5)",
+    );
+    await upgradeTo64(db, 63);
+    await upgradeTo64(db, 63);
+    expect(
+      await db.rawQuery(
+        'SELECT peer_id, from_at, to_at FROM block_spans ORDER BY peer_id',
+      ),
+      [
+        {'peer_id': 'blocked-at-63', 'from_at': 5, 'to_at': null},
+        {'peer_id': 'long-blocked', 'from_at': 0, 'to_at': null},
+      ],
+    );
+    // and the table of what came in and went, with the same uid from two
+    // people kept for each
+    for (final peer in ['long-blocked', 'blocked-at-63']) {
+      await db.execute(
+        'INSERT OR REPLACE INTO gone_in (msg_uid, peer_id, at) '
+        "VALUES ('same-uid', ?, 1)",
+        [peer],
+      );
+    }
+    expect(await db.rawQuery('SELECT peer_id FROM gone_in'), hasLength(2));
   }, skip: skip);
 }

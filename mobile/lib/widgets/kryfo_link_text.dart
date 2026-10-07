@@ -9,28 +9,42 @@ import 'package:flutter/services.dart';
 
 import '../bidi_safe.dart';
 import '../lock_guard.dart';
-import '../main.dart' show LinkKin, handleHaloUri, linkKinOf, parseHaloUri;
+import '../main.dart'
+    show LinkKin, appState, handleHaloUri, linkKinOf, parseHaloUri;
 import '../rooms.dart';
 import '../theme.dart';
 import 'confirm_sheet.dart';
 import '../l10n/l10n.dart';
 
 /// takes a tapped link through the one door every link goes through, and
-/// says what came of it. a room opens itself once joined.
-Future<void> followKryfoLink(BuildContext context, String link) async {
-  final room = RoomLink.parse(link);
-  if (room == null) {
-    final who = parseHaloUri(link)?['id'];
-    if (who == null) {
-      showHaloToast(context, l10n.kryfoLinkTextThatLinkIsNot);
-      return;
-    }
-    if (!await _askAdd(context, who) || !context.mounted) return;
+/// says what came of it. a room opens itself once joined. an invite is
+/// held up against the people here first, as one from outside is
+Future<void> followKryfoLink(
+  BuildContext context,
+  String link, {
+  LockGuard? guard,
+  String? Function()? self,
+  Future<String> Function(String link) act = handleHaloUri,
+  Future<(LinkKin, String)> Function(String link) kin = linkKinOf,
+}) async {
+  final String? r;
+  if (RoomLink.parse(link) == null) {
+    r = await takeOutsideLink(
+      context,
+      link,
+      selfId: (self ?? _sessionId)(),
+      guard: guard,
+      act: act,
+      kin: kin,
+    );
+  } else {
+    HapticFeedback.selectionClick();
+    r = await act(link);
   }
-  HapticFeedback.selectionClick();
-  final r = await handleHaloUri(link);
-  if (context.mounted) showHaloToast(context, r);
+  if (r != null && context.mounted) showHaloToast(context, r);
 }
+
+String? _sessionId() => appState.sessionId;
 
 Future<bool> _askAdd(
   BuildContext context,
@@ -54,8 +68,8 @@ Future<bool> _askAdd(
 /// a link from outside the app: another app, a web page, a cold start. any
 /// of them can fire one, so nothing is added or joined until the person
 /// says yes here, and the question goes if the lock comes up. an invite is
-/// held up against the people here first ([kin]). what it came to, or null
-/// when they said no
+/// held up against the people here first ([kin]), and so is one tapped in
+/// a chat. what it came to, or null when they said no
 Future<String?> takeOutsideLink(
   BuildContext context,
   String raw, {

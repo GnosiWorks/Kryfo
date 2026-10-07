@@ -191,7 +191,7 @@ class MemDb implements Database, Transaction {
   }
 
   // a AND b AND ...: col = ? or a literal, col != ?, col < ?, col LIKE ?,
-  // col IN (?, ...), col IS [NOT] NULL
+  // col [NOT] IN (?, ...), col IS [NOT] NULL
   bool Function(Map<String, Object?>) _where(
     _Table t,
     String table,
@@ -204,7 +204,7 @@ class MemDb implements Database, Transaction {
     for (final clause in where.split(' AND ')) {
       final c = clause.trim();
       final m = RegExp(
-        r'^(\w+) (=|!=|<|LIKE|IN|IS NULL|IS NOT NULL)(.*)$',
+        r'^(\w+) (=|!=|<|LIKE|NOT IN|IN|IS NULL|IS NOT NULL)(.*)$',
       ).firstMatch(c);
       if (m == null) throw UnimplementedError('where: $c');
       final col = m.group(1)!;
@@ -243,6 +243,11 @@ class MemDb implements Database, Transaction {
           final vs = args!.sublist(at, at + n);
           at += n;
           tests.add((r) => vs.any((v) => _same(_get(t, r, col), v)));
+        case 'NOT IN':
+          final n = '?'.allMatches(m.group(3)!).length;
+          final vs = args!.sublist(at, at + n);
+          at += n;
+          tests.add((r) => !vs.any((v) => _same(_get(t, r, col), v)));
         case 'IS NULL':
           tests.add((r) => _get(t, r, col) == null);
         case 'IS NOT NULL':

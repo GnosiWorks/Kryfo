@@ -22,6 +22,7 @@ import 'package:kryfo/main.dart'
         AppIo,
         AppState,
         HaloDb,
+        kFrameReaction,
         kFrameReceipt,
         makePreKeyBundleB64,
         openSignalStore,
@@ -848,5 +849,268 @@ void main() {
     expect(db.rows('signal_meta').map((r) => r['k']), ['regId']);
     ss = await start();
     expect(ss.hasRestored, isFalse);
+  });
+
+  test('a text waiting on their card asks once, and tries again as they '
+      'are asked again, an hour on', () async {
+    final p = await _peer();
+    await contact(p, card: false);
+    await talk(p);
+    final file = backUp(p);
+    expect(await _atPeer(p, await _toPeer(p, 'after')), 'after');
+    await restore(p, file);
+    rows.outbox = true;
+    await mem.insert('messages', {
+      'peer_id': p.name,
+      'direction': 'out',
+      'plaintext': 'waits',
+      'sent_at': DateTime.now().millisecondsSinceEpoch - 60000,
+      'msg_uid': 'w1',
+      'sent': 0,
+    });
+    final t0 = DateTime.now().millisecondsSinceEpoch;
+    await app.drainOutbox();
+    await _settle();
+    expect(io.asksTo(p.xpub), [true]);
+    expect(app.outboxTriesForTest('w1'), 0);
+    expect(
+      app.outboxNextAtForTest('w1'),
+      greaterThanOrEqualTo(t0 + 3600 * 1000),
+    );
+
+    // a start after this one tries at once, and asks nothing before it is due
+    final again = AppState(io: io, router: router)
+      ..myId = 'me'
+      ..sendModeForTest = 'fast';
+    await again.drainOutbox();
+    await _settle();
+    expect(again.waitsForCard(p.name), isTrue);
+    expect(row('w1')?['sent'], 0);
+    expect(io.asksTo(p.xpub), [true]);
+  });
+
+  test('a blocked contact who asks to start afresh is sent nothing, and '
+      'their card is not kept', () async {
+    final p = await _peer();
+    await contact(p, card: false);
+    await talk(p);
+    await outTo(p, 'lost');
+    await mem.update(
+      'contacts',
+      {'blocked': 1},
+      where: 'halo_id = ?',
+      whereArgs: [p.name],
+    );
+    final was = await record(p);
+    await card(p, want: true);
+    expect(io.asksTo(p.xpub), isEmpty);
+    expect(row('lost')?['sent'], 1);
+    expect(mem.rows('contacts').single['peer_bundle'], isNull);
+    expect(await record(p), was);
+  });
+
+  test('someone a shut vault holds as blocked is sent nothing when they '
+      'ask', () async {
+    final p = await _peer();
+    await processPeerBundle(p.name, p.card);
+    final was = await record(p);
+    await vaultList.putMeta('pub', 'pub-A');
+    await vaultList.putHidden(
+      p.name,
+      kHiddenPeer,
+      peerCard(RouterCard(p.name, '', p.xpub, backPaired: true, blocked: true)),
+      1,
+    );
+    await router.load();
+    await card(p, want: true);
+    expect(io.asksTo(p.xpub), isEmpty);
+    expect(vaultList.inbox, isEmpty);
+    expect(await record(p), was, reason: 'no session from their card');
+  });
+
+  test('a resend owed to a hidden chat is not made once they are blocked '
+      'there', () async {
+    final p = await _peer();
+    await processPeerBundle(p.name, p.card);
+    await vaultList.putMeta('pub', 'pub-A');
+    await vaultList.putHidden(
+      p.name,
+      kHiddenPeer,
+      peerCard(RouterCard(p.name, '', p.xpub, backPaired: true)),
+      1,
+    );
+    await router.load();
+    await card(p, want: true);
+    expect(vaultList.inbox, isNotEmpty);
+
+    final vmem = MemDb();
+    final vault = _Rows(vmem, HaloContainer.vault);
+    await vmem.insert('contacts', {
+      'halo_id': p.name,
+      'onion': '',
+      'xpub': p.xpub,
+      'first_seen': 1,
+      'last_seen': 1,
+      'back_paired': 1,
+      'accepted': 1,
+      'blocked': 1,
+    });
+    await outTo(p, 'lost', into: vmem);
+    useDatabasesForTest(rows, await Session.withVault(rows, vault));
+    await app.drainSealed(vault, 'priv-A');
+    expect(vmem.rows('messages').single['sent'], 1);
+  });
+
+  test('a receipt queued for someone goes with the block, and never goes '
+      'out', () async {
+    final p = await _peer();
+    await contact(p, card: false);
+    await talk(p);
+    await app.subscribeKnown();
+    final file = backUp(p);
+    expect(await _atPeer(p, await _toPeer(p, 'after')), 'after');
+    await restore(p, file);
+    await came(p, 'r1', 'did you get this');
+    expect(mem.rows('frames_out').single['kind'], kFrameReceipt);
+
+    await app.block(p.name);
+    expect(mem.rows('frames_out'), isEmpty);
+    await card(p);
+    await app.drainOutbox();
+    await _settle();
+    expect(await receiptsAt(p), isEmpty);
+  });
+
+  test('a word queued for someone blocked since never goes, and its row '
+      'goes', () async {
+    final p = await _peer();
+    await contact(p);
+    await talk(p);
+    await rows.queueFrame('u1', kFrameReaction, p.name, 'x');
+    await mem.update(
+      'frames_out',
+      {'at': DateTime.now().millisecondsSinceEpoch - 60000},
+      where: 'msg_uid = ?',
+      whereArgs: ['u1'],
+    );
+    await mem.update(
+      'contacts',
+      {'blocked': 1},
+      where: 'halo_id = ?',
+      whereArgs: [p.name],
+    );
+    await app.drainOutbox();
+    await _settle();
+    expect(io.sent.where((s) => s.$1 == p.xpub), isEmpty);
+    expect(mem.rows('frames_out'), isEmpty);
+  });
+
+  test('receipts waiting on a card leave the window to the rest, and go '
+      'after a week', () async {
+    final w = await _peer();
+    await contact(w, card: false);
+    await talk(w);
+    await app.subscribeKnown();
+    final file = backUp(w);
+    expect(await _atPeer(w, await _toPeer(w, 'after')), 'after');
+    await restore(w, file);
+    await came(w, 'r0', 'did you get this');
+    expect(app.waitsForCard(w.name), isTrue);
+    final now = DateTime.now().millisecondsSinceEpoch;
+    const day = 24 * 3600 * 1000;
+    for (var i = 0; i < 40; i++) {
+      await mem.insert('frames_out', {
+        'msg_uid': 'r${i + 1}',
+        'kind': kFrameReceipt,
+        'peer_id': w.name,
+        'body': '',
+        'at': now - 2 * day + i,
+      });
+    }
+    await mem.insert('frames_out', {
+      'msg_uid': 'old',
+      'kind': kFrameReceipt,
+      'peer_id': w.name,
+      'body': '',
+      'at': now - 8 * day,
+    });
+
+    // someone else, paired since, with a reaction queued behind them
+    final p = await _peer();
+    await contact(p);
+    await talk(p);
+    await mem.insert('frames_out', {
+      'msg_uid': 'u1',
+      'kind': kFrameReaction,
+      'peer_id': p.name,
+      'body': 'x',
+      'at': now - 60000,
+    });
+    await app.drainOutbox();
+    await _settle();
+    expect(
+      [for (final w in await atThem(p)) unwrapMessage(w!).reaction?.emoji],
+      ['x'],
+    );
+    final left = {for (final r in mem.rows('frames_out')) r['msg_uid']};
+    expect(left, hasLength(41));
+    expect(left, isNot(contains('old')));
+  });
+
+  test('someone blocked or never taken in is not asked, and holds no '
+      'restore\'s marks', () async {
+    // the sessions of the tests before are not this one's
+    await store.delete('sessions');
+    final p = await _peer();
+    final b = await _peer();
+    final r = await _peer();
+    for (final x in [p, b, r]) {
+      await contact(x);
+      await processPeerBundle(x.name, x.card);
+    }
+    await mem.update(
+      'contacts',
+      {'blocked': 1},
+      where: 'halo_id = ?',
+      whereArgs: [b.name],
+    );
+    await mem.update(
+      'contacts',
+      {'accepted': 0},
+      where: 'halo_id = ?',
+      whereArgs: [r.name],
+    );
+    await signalSession.markRestored();
+    final t = DateTime.now().millisecondsSinceEpoch;
+    await app.askAfreshForTest(now: t);
+    expect(io.asksTo(p.xpub), [true]);
+    expect(io.asksTo(b.xpub), isEmpty);
+    expect(io.asksTo(r.xpub), isEmpty);
+    expect(signalSession.hasRestored, isTrue);
+
+    // p's next seal starts afresh from the card on its row
+    expect(await _atPeer(p, await _toPeer(p, 'fresh')), 'fresh');
+    await app.askAfreshForTest(now: t + 11 * 60 * 1000);
+    expect(signalSession.hasRestored, isFalse);
+  });
+
+  test('the same uid from two people, both gone here, is known for '
+      'each', () async {
+    final p = await _peer();
+    final q = await _peer();
+    final now = DateTime.now().millisecondsSinceEpoch;
+    for (final x in [p, q]) {
+      await mem.insert('messages', {
+        'peer_id': x.name,
+        'direction': 'in',
+        'plaintext': 'same',
+        'sent_at': now,
+        'msg_uid': 'twice',
+        'sent': 1,
+      });
+    }
+    await rows.deleteMessage('twice');
+    expect(await rows.goneFrom(p.name, 'twice'), isTrue);
+    expect(await rows.goneFrom(q.name, 'twice'), isTrue);
   });
 }

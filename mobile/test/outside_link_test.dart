@@ -86,6 +86,23 @@ class _World {
     });
     await t.pumpAndSettle();
   }
+
+  // a link tapped in a chat
+  Future<void> tap(WidgetTester t, String link) async {
+    finished = false;
+    followKryfoLink(
+      ctx,
+      link,
+      guard: guard,
+      self: () => null,
+      act: door.call,
+      kin: (link) async {
+        kinAsked.add(link);
+        return kin;
+      },
+    ).then((_) => finished = true);
+    await t.pumpAndSettle();
+  }
 }
 
 void main() {
@@ -315,6 +332,65 @@ void main() {
           .widget<Text>(find.text(l10n.kryfoLinkTextAdd('tourist-admit-sun')))
           .maxLines,
       2,
+    );
+  });
+
+  testWidgets('an invite tapped in a chat for one already here, on the same '
+      'key, is said so and nothing is added', (t) async {
+    final w = _World()..kin = (LinkKin.kept, 'Ana');
+    await w.start(t);
+    await w.tap(t, _invite);
+    expect(w.kinAsked, [_invite]);
+    expect(find.text(l10n.kryfoLinkTextAddThem), findsNothing);
+    expect(find.text(l10n.kryfoLinkTextYouAlreadyHave('Ana')), findsOne);
+    expect(w.finished, isTrue);
+    expect(w.door.taken, isEmpty);
+    // the toast's own time out
+    await t.pump(const Duration(seconds: 10));
+    await t.pumpAndSettle();
+  });
+
+  testWidgets('an invite tapped in a chat with a contact\'s words on another '
+      'key says so and adds no one', (t) async {
+    final w = _World()..kin = (LinkKin.otherKey, 'Ana');
+    await w.start(t);
+    await w.tap(t, _invite);
+    expect(find.text(l10n.kryfoLinkTextNotTheOne('Ana')), findsOne);
+    expect(find.text(l10n.kryfoLinkTextAddThem), findsNothing);
+    await t.tap(find.text(l10n.appOk));
+    await t.pumpAndSettle();
+    expect(w.finished, isTrue);
+    expect(w.door.taken, isEmpty);
+  });
+
+  testWidgets('an invite tapped in a chat from a stranger is asked about, '
+      'and a room joins as it did', (t) async {
+    final w = _World();
+    await w.start(t);
+    await w.tap(t, _invite);
+    expect(find.text(l10n.kryfoLinkTextAdd('tourist-admit-sun')), findsOne);
+    await t.tap(find.text(l10n.kryfoLinkTextAddThem));
+    await t.pumpAndSettle();
+    expect(w.door.taken, [_invite]);
+    final room = _room();
+    await w.tap(t, room);
+    expect(w.door.taken, [_invite, room]);
+    await t.pump(const Duration(seconds: 10));
+    await t.pumpAndSettle();
+  });
+
+  test('a room\'s name keeps the joiners persian and emoji are written '
+      'with, and loses the direction marks', () {
+    const persian = 'نیم\u200Cفاصله';
+    const family = '\u{1F469}\u200D\u{1F469}\u200D\u{1F467}';
+    expect(roomLinkName(persian), persian);
+    expect(roomLinkName('$family crew'), '$family crew');
+    expect(
+      roomLinkName(
+        'a\u200Eb\u200Fc\u202Ad\u202Be\u202Cf\u202Dg\u202Eh'
+        '\u2066i\u2067j\u2068k\u2069l\u200Bm\u00ADn',
+      ),
+      'abcdefghijklmn',
     );
   });
 }
