@@ -7,7 +7,9 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../main.dart' show handleHaloUri, parseHaloUri;
+import '../bidi_safe.dart';
+import '../lock_guard.dart';
+import '../main.dart' show LinkKin, handleHaloUri, linkKinOf, parseHaloUri;
 import '../rooms.dart';
 import '../theme.dart';
 import 'confirm_sheet.dart';
@@ -23,19 +25,107 @@ Future<void> followKryfoLink(BuildContext context, String link) async {
       showHaloToast(context, l10n.kryfoLinkTextThatLinkIsNot);
       return;
     }
-    final ok = await showConfirmSheet(
-      context,
-      title: l10n.kryfoLinkTextAdd(who),
-      line: l10n.kryfoLinkTextThisIsAnInvite(who),
-      yes: l10n.kryfoLinkTextAddThem,
-      keep: l10n.kryfoLinkTextNotNow,
-      rose: false,
-    );
-    if (!ok || !context.mounted) return;
+    if (!await _askAdd(context, who) || !context.mounted) return;
   }
   HapticFeedback.selectionClick();
   final r = await handleHaloUri(link);
   if (context.mounted) showHaloToast(context, r);
+}
+
+Future<bool> _askAdd(
+  BuildContext context,
+  String who, {
+  LockGuard? guard,
+  String? line,
+}) {
+  who = unmarked(who);
+  return showConfirmSheet(
+    context,
+    title: l10n.kryfoLinkTextAdd(who),
+    line: line ?? l10n.kryfoLinkTextThisIsAnInvite(who),
+    yes: l10n.kryfoLinkTextAddThem,
+    keep: l10n.kryfoLinkTextNotNow,
+    rose: false,
+    shutOnLock: guard,
+    titleLines: 2,
+  );
+}
+
+/// a link from outside the app: another app, a web page, a cold start. any
+/// of them can fire one, so nothing is added or joined until the person
+/// says yes here, and the question goes if the lock comes up. an invite is
+/// held up against the people here first ([kin]). what it came to, or null
+/// when they said no
+Future<String?> takeOutsideLink(
+  BuildContext context,
+  String raw, {
+  String? selfId,
+  LockGuard? guard,
+  Future<String> Function(String link) act = handleHaloUri,
+  Future<(LinkKin, String)> Function(String link) kin = linkKinOf,
+}) async {
+  // the link alone, as the door reads it, so the question is about what
+  // the door then does
+  final link = firstKryfoLink(raw.trim());
+  final room = link == null ? null : RoomLink.parse(link);
+  final who = link == null || room != null ? null : parseHaloUri(link)?['id'];
+  if (link == null || (room == null && who == null)) {
+    return l10n.kryfoLinkTextThatLinkIsNot;
+  }
+  final g = guard ?? lockGuard;
+  if (g.isLocked()) return null;
+  final bool ok;
+  if (room != null) {
+    // a closed room joins nothing: the door only says so
+    ok =
+        room.expiresAt <= DateTime.now().millisecondsSinceEpoch ||
+        await showConfirmSheet(
+          context,
+          title: l10n.kryfoLinkTextJoinRoom(room.name),
+          line: l10n.kryfoLinkTextThisIsARoom,
+          yes: l10n.kryfoLinkTextJoin2,
+          keep: l10n.kryfoLinkTextNotNow,
+          rose: false,
+          shutOnLock: g,
+          titleLines: 2,
+        );
+  } else if (who == selfId) {
+    // one's own invite adds no one: the door only says so
+    ok = true;
+  } else {
+    final (k, name) = await kin(link);
+    if (!context.mounted || g.isLocked()) return null;
+    switch (k) {
+      case LinkKin.kept:
+        // their chat is here: the card goes nowhere near the door again
+        return l10n.kryfoLinkTextYouAlreadyHave(unmarked(name));
+      case LinkKin.otherKey:
+        // the words of someone here on another key: never shown as them,
+        // and the door would turn it away
+        await showNoticeSheet(
+          context,
+          title: l10n.kryfoLinkTextNotTheOne(unmarked(name)),
+          line: l10n.appLinkOtherKey(who!),
+          ok: l10n.appOk,
+          shutOnLock: g,
+          titleLines: 2,
+        );
+        return null;
+      case LinkKin.lookalike:
+        ok = await _askAdd(
+          context,
+          who!,
+          guard: g,
+          line: l10n.kryfoLinkTextSomeoneElse(who),
+        );
+      case LinkKin.stranger:
+        ok = await _askAdd(context, who!, guard: g);
+    }
+  }
+  // a no, or the lock came up while it asked
+  if (!ok || g.isLocked()) return null;
+  HapticFeedback.selectionClick();
+  return act(link);
 }
 
 class KryfoLinkText extends StatefulWidget {

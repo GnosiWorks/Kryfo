@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 
 import '../bidi_safe.dart';
+import '../lock_guard.dart';
 import '../theme.dart';
 import 'halo_sheet.dart';
 import 'sheet_handle.dart';
@@ -29,8 +30,14 @@ Widget _frame(BuildContext ctx, List<Widget> children) => Padding(
   ),
 );
 
-Widget _title(String t, {Color? color}) =>
-    Text(t, style: HaloType.serif(size: 20, color: color ?? HaloColors.text));
+// [lines] caps a title that carries words from outside, such as a name a
+// link gave
+Widget _title(String t, {Color? color, int? lines}) => Text(
+  t,
+  maxLines: lines,
+  overflow: lines == null ? null : TextOverflow.ellipsis,
+  style: HaloType.serif(size: 20, color: color ?? HaloColors.text),
+);
 
 Widget _line(String t) => Text(
   t,
@@ -138,7 +145,9 @@ Future<String?> showChangeOrRemoveSheet(
 );
 
 // a question with one consequential answer. rose when it destroys something.
-// [figure] is the number the answer turns on, such as a size, above the line
+// [figure] is the number the answer turns on, such as a size, above the line.
+// with [shutOnLock] the sheet goes as that lock comes up, and that is a no.
+// [titleLines] caps the title
 Future<bool> showConfirmSheet(
   BuildContext context, {
   required String title,
@@ -147,24 +156,67 @@ Future<bool> showConfirmSheet(
   String? keep,
   String? figure,
   bool rose = true,
+  LockGuard? shutOnLock,
+  int? titleLines,
 }) async {
   final r = await showHaloSheet<bool>(
     context,
-    builder: (ctx) => _frame(ctx, [
-      _title(title, color: rose ? HaloColors.rose : null),
-      if (figure != null) ...[
+    builder: (ctx) {
+      final body = _frame(ctx, [
+        _title(title, color: rose ? HaloColors.rose : null, lines: titleLines),
+        if (figure != null) ...[
+          const SizedBox(height: 8),
+          Text(figure, style: HaloType.mono(size: 12, color: HaloColors.amber)),
+        ],
         const SizedBox(height: 8),
-        Text(figure, style: HaloType.mono(size: 12, color: HaloColors.amber)),
-      ],
-      const SizedBox(height: 8),
-      _line(line),
-      const SizedBox(height: 16),
-      _primary(yes, () => Navigator.pop(ctx, true), rose: rose),
-      const SizedBox(height: 6),
-      _quiet(keep ?? l10n.confirmSheetKeep, () => Navigator.pop(ctx, false)),
-    ]),
+        _line(line),
+        const SizedBox(height: 16),
+        _primary(yes, () => Navigator.pop(ctx, true), rose: rose),
+        const SizedBox(height: 6),
+        _quiet(keep ?? l10n.confirmSheetKeep, () => Navigator.pop(ctx, false)),
+      ]);
+      return shutOnLock == null
+          ? body
+          : _ShutOnLock(guard: shutOnLock, child: body);
+    },
   );
   return r == true;
+}
+
+// a sheet taken off as the lock comes up, so it never waits behind it
+class _ShutOnLock extends StatefulWidget {
+  const _ShutOnLock({required this.guard, required this.child});
+  final LockGuard guard;
+  final Widget child;
+  @override
+  State<_ShutOnLock> createState() => _ShutOnLockState();
+}
+
+class _ShutOnLockState extends State<_ShutOnLock> {
+  VoidCallback? _unguard;
+
+  @override
+  void initState() {
+    super.initState();
+    _unguard = widget.guard.closeOnLock(_shut);
+  }
+
+  void _shut() {
+    if (!mounted) return;
+    final route = ModalRoute.of(context);
+    if (route != null && route.isActive) {
+      Navigator.of(context).removeRoute(route);
+    }
+  }
+
+  @override
+  void dispose() {
+    _unguard?.call();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 // one line of text. null when dismissed.
@@ -308,20 +360,28 @@ Future<T?> showChoiceSheet<T>(
   ]),
 );
 
-// something to read, one button, no way past it
+// something to read, one button, no way past it. with [shutOnLock] it
+// goes as that lock comes up. [titleLines] caps the title
 Future<void> showNoticeSheet(
   BuildContext context, {
   required String title,
   required String line,
   required String ok,
+  LockGuard? shutOnLock,
+  int? titleLines,
 }) => showHaloSheet<void>(
   context,
   dismissible: false,
-  builder: (ctx) => _frame(ctx, [
-    _title(title),
-    const SizedBox(height: 8),
-    _line(line),
-    const SizedBox(height: 16),
-    _primary(ok, () => Navigator.pop(ctx)),
-  ]),
+  builder: (ctx) {
+    final body = _frame(ctx, [
+      _title(title, lines: titleLines),
+      const SizedBox(height: 8),
+      _line(line),
+      const SizedBox(height: 16),
+      _primary(ok, () => Navigator.pop(ctx)),
+    ]);
+    return shutOnLock == null
+        ? body
+        : _ShutOnLock(guard: shutOnLock, child: body);
+  },
 );

@@ -145,6 +145,7 @@ class Unsealed {
     this.backPair,
     this.at, {
     this.resend = false,
+    this.wrapped,
   });
 
   final String from;
@@ -158,6 +159,8 @@ class Unsealed {
   // was shut, and it goes again as the vault opens. only this phone seals
   // one, the envelope of an arrival never says it
   final bool resend;
+  // when the sender wrapped it, by their clock, where the lane said
+  final int? wrapped;
 }
 
 // the tables, behind a seam so the router runs on a stand-in
@@ -671,6 +674,7 @@ class VaultRouter {
         'bp': a.backPair ? 1 : 0,
         'at': a.at,
         if (a.resend) 'rs': 1,
+        'a': ?a.wrapped,
       }),
     );
     final sealed = _sealer.seal(pub, base64Encode(plain));
@@ -742,7 +746,15 @@ class VaultRouter {
       final w = j['w'];
       final at = j['at'];
       if (f is! String || w is! String || at is! int) return null;
-      return Unsealed(f, w, j['bp'] == 1, at, resend: j['rs'] == 1);
+      final a = j['a'];
+      return Unsealed(
+        f,
+        w,
+        j['bp'] == 1,
+        at,
+        resend: j['rs'] == 1,
+        wrapped: a is int ? a : null,
+      );
     } catch (_) {
       return null;
     }

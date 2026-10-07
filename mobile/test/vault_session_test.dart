@@ -741,6 +741,14 @@ class _Db implements HaloDb {
     String uid,
   ) async => _hit('pollRow', uid, null);
 
+  // no block here ever held
+  @override
+  Future<bool> blockedAt(String haloId, int at) async => false;
+  @override
+  Future<void> noteBlockedDrop(String haloId, String uid) async {}
+  @override
+  Future<bool> droppedWhileBlocked(String haloId, String uid) async => false;
+
   @override
   dynamic noSuchMethod(Invocation i) {
     if (untouchable) touched.add('${i.memberName}');

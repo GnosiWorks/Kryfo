@@ -144,9 +144,23 @@ func nip17Unwrap(peer [32]byte, gw nostr2.Event) (string, error) {
 }
 
 func nip17UnwrapAs(me xid, peer [32]byte, gw nostr2.Event) (string, error) {
+	content, _, err := nip17UnwrapAsStamped(me, peer, gw)
+	return content, err
+}
+
+// with the stamp the sender's rumor carries
+func nip17UnwrapStamped(peer [32]byte, gw nostr2.Event) (string, nostr2.Timestamp, error) {
+	me, err := myXid()
+	if err != nil {
+		return "", 0, err
+	}
+	return nip17UnwrapAsStamped(me, peer, gw)
+}
+
+func nip17UnwrapAsStamped(me xid, peer [32]byte, gw nostr2.Event) (string, nostr2.Timestamp, error) {
 	rcvSk, _, err := nip17RcvAddressAs(me, peer)
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
 	rumor, err := nip59.GiftUnwrap(gw, func(otherPk, ct string) (string, error) {
 		k, err := nip44.GenerateConversationKey(otherPk, rcvSk)
@@ -156,14 +170,14 @@ func nip17UnwrapAs(me xid, peer [32]byte, gw nostr2.Event) (string, error) {
 		return nip44.Decrypt(ct, k)
 	})
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
 	_, wantSnd, err := nip17DeriveRoleAs(me, peer, nip17SndInfo, hex.EncodeToString(peer[:]))
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
 	if rumor.PubKey != wantSnd {
-		return "", fmt.Errorf("seal not from expected peer")
+		return "", 0, fmt.Errorf("seal not from expected peer")
 	}
-	return rumor.Content, nil
+	return rumor.Content, rumor.CreatedAt, nil
 }

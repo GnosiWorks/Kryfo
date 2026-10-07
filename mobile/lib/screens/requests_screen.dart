@@ -79,7 +79,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
     final clean = <String>{};
     for (final r in rows) {
       final id = r['halo_id'] as String;
-      final shieldRow = await session.shieldFor(id);
+      final shieldRow = await session.shownShieldFor(id);
       final flag = ShieldFlag.fromRow(shieldRow);
       if (flag != null) flags[id] = flag;
       // the shield ran and found nothing: worth a line here, since this is

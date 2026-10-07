@@ -1147,7 +1147,7 @@ class _ChatScreenState extends State<ChatScreen>
 
   Future<void> _loadShield() async {
     if (await session.isAccepted(widget.peerHaloId)) return;
-    final row = await session.shieldFor(widget.peerHaloId);
+    final row = await session.shownShieldFor(widget.peerHaloId);
     final f = ShieldFlag.fromRow(row);
     final clean = ShieldFlag.cleanRow(row);
     if (mounted && (f != _flag || clean != _shieldClean)) {
