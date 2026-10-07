@@ -33,6 +33,7 @@ const _v = 'plain-friend-here'; // a contact, who introduces
 const _k = 'blocked-once-before'; // blocked from a request
 const _n = 'someone-new-here'; // never seen
 const _h = 'hidden-wreck-tone'; // a hidden chat, who introduces
+const _d = 'deleted-chat-here'; // deleted here before
 
 class _Engine implements HaloEngine {
   @override
@@ -55,6 +56,7 @@ class _World {
     w.live.person(_v, onion: 'o-$_v', xpub: 'x-$_v');
     w.live.person(_k, onion: 'o-$_k', xpub: 'x-$_k', accepted: 0);
     w.live.people[_k]!['blocked'] = 1;
+    w.live.person(_d, onion: 'o-$_d', xpub: 'x-$_d', accepted: 0, archived: 1);
     final store = ArrivalStore();
     if (hidden) {
       w.vault.person(_h, onion: 'o-$_h', xpub: 'x-$_h');
@@ -167,6 +169,15 @@ void main() {
     expect(w.io.listened, contains('x-$_n'));
     expect(w.bundlesTo('x-$_n'), hasLength(1));
     expect(w.bundlesTo('x-$_n').single['want'], isTrue);
+  });
+
+  test('an introduction brings back someone deleted, as a request', () async {
+    final w = await _World.make();
+    await w.introduce(_d);
+    expect(w.live.vouches[_d], {_v});
+    expect(w.live.people[_d]!['archived'], 0);
+    expect(w.live.people[_d]!['accepted'], 0);
+    expect(w.io.listened, contains('x-$_d'));
   });
 
   test('a hidden chat introducing someone blocked does nothing', () async {

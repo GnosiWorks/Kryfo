@@ -10960,6 +10960,9 @@ class AppState extends ChangeNotifier {
     // the note is the introducer's one line about them. it lives on the
     // vouch, so two introducers can each say their piece.
     await db.addVouch(h, senderHaloId, card.note, at: at);
+    // someone deleted here is parked out of sight: a friend's card brings
+    // them back as a request, as their own message would
+    await db.unparkIfArchived(h);
     if (card.avatar != null) await db.setContactAvatar(h, card.avatar);
     // the first-contact addresses are kept for the phone, so only the
     // everyday side's go there
