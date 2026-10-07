@@ -270,7 +270,7 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
     final String text;
     final refill = b.refillAt(_now);
     if (refill == null) {
-      text = l10n.introduceOfIntroductionsLeftThis(_left, introBudgetMax);
+      text = l10n.introduceOfIntroductionsLeftThis(introBudgetMax, _left);
     } else {
       final until = Duration(milliseconds: refill - _now);
       text = l10n.introduceNoIntroductionsLeftNext(refillPhrase(until));
