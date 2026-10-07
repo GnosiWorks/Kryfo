@@ -38,6 +38,7 @@
 - the relay takes only what the app sends and paces each connection, the handle registry paces reads, writes and new names, and the badge service paces receipt checks.
 - the tor dot on the chat list and in chats stops pulsing once tor is usable, and pulses only a few times while it starts.
 - chat stickers play three times and rest; a tap plays them again. open chats stop their timers while they are out of sight, and the drifting chat backgrounds hold still with reduced motion.
+- the first start was polished: a step bar, calmer transitions, clearer text, and every step fits small screens and large text.
 
 ### Fixed
 - notifications use the name you gave a contact, and clear when you open the chat.
@@ -45,6 +46,8 @@
 - rooms could stop receiving after a change of delivery mode.
 - a menu could open under the keyboard.
 - the button on the restore sheet could be out of reach.
+- an introduction to someone you had deleted did not show up.
+- the introductions sheet showed its count the wrong way round.
 
 ### Security
 - the engine's crypto and network libraries are updated: x/crypto 0.55.0, x/net 0.58.0, age 1.3.2 and websocket 1.8.15.
