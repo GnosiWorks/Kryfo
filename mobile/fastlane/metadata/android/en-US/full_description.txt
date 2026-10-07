@@ -2,16 +2,16 @@ a private messenger. no phone number, no email, no account. you are a key
 pair generated on your device. nobody, including us, can look you up or tie
 your chats to a real identity.
 
-everything travels over tor. content is end to end encrypted with the signal
-protocol. when a contact is offline, messages wait on relays, sealed so the
-relay learns nothing about who is talking or what is said. no address book
-upload, ever.
+by default everything travels over tor. content is end to end encrypted with
+the signal protocol. when a contact is offline, messages wait on relays,
+sealed so the relay learns nothing about who is talking or what is said. no
+address book upload, ever.
 
 features:
 
 * no phone number or email to sign up
 * end to end encryption (signal protocol)
-* all traffic through an embedded tor client
+* all traffic through an embedded tor client by default
 * direct onion delivery, relay fallback when a peer is offline
 * groups with photos, files, voice messages, replies, reactions, pins and polls
 * animated stickers that travel as a name, so no picture leaves the phone

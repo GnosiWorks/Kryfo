@@ -3,16 +3,16 @@ khoản. bạn là một cặp khóa được tạo trên thiết bị của b�
 chúng tôi, có thể tra cứu bạn hay gắn các cuộc trò chuyện của bạn với một
 danh tính thật.
 
-mọi thứ đều đi qua tor. nội dung được mã hóa đầu cuối bằng giao thức signal.
-khi một liên hệ đang ngoại tuyến, tin nhắn chờ trên các relay, được mã hóa
-kín để relay không biết gì về việc ai đang nói chuyện hay nói gì. không bao
-giờ tải danh bạ lên.
+theo mặc định, mọi thứ đều đi qua tor. nội dung được mã hóa đầu cuối bằng
+giao thức signal. khi một liên hệ đang ngoại tuyến, tin nhắn chờ trên các
+relay, được mã hóa kín để relay không biết gì về việc ai đang nói chuyện hay
+nói gì. không bao giờ tải danh bạ lên.
 
 tính năng:
 
 * đăng ký không cần số điện thoại hay email
 * mã hóa đầu cuối (giao thức signal)
-* mọi lưu lượng đi qua một tor client tích hợp sẵn
+* theo mặc định, mọi lưu lượng đi qua một tor client tích hợp sẵn
 * gửi trực tiếp qua onion, dùng relay dự phòng khi người kia ngoại tuyến
 * nhóm với ảnh, tệp, tin nhắn thoại, trả lời, bày tỏ cảm xúc, ghim và bình chọn
 * nhãn dán động được gửi đi dưới dạng một cái tên, nên không có hình ảnh nào rời khỏi điện thoại

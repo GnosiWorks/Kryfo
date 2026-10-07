@@ -2,16 +2,17 @@ um mensageiro privado. sem número de telefone, sem e-mail, sem conta. você é 
 par de chaves gerado no seu aparelho. ninguém, nem mesmo nós, consegue buscar
 você ou ligar suas conversas a uma identidade real.
 
-tudo passa pelo tor. o conteúdo é criptografado de ponta a ponta com o protocolo
-Signal. quando um contato está offline, as mensagens esperam em retransmissores,
-lacradas para que o retransmissor não fique sabendo nada sobre quem está falando
-nem sobre o que é dito. a sua agenda de contatos nunca é enviada.
+por padrão, tudo passa pelo tor. o conteúdo é criptografado de ponta a ponta com
+o protocolo Signal. quando um contato está offline, as mensagens esperam em
+retransmissores, lacradas para que o retransmissor não fique sabendo nada sobre
+quem está falando nem sobre o que é dito. a sua agenda de contatos nunca é
+enviada.
 
 recursos:
 
 * sem número de telefone nem e-mail para se cadastrar
 * criptografia de ponta a ponta (protocolo Signal)
-* todo o tráfego por um cliente tor embutido
+* por padrão, todo o tráfego por um cliente tor embutido
 * entrega direta por onion, com retransmissores como reserva quando o contato está offline
 * grupos com fotos, arquivos, mensagens de voz, respostas, reações, mensagens fixadas e enquetes
 * figurinhas animadas que viajam como um nome, então nenhuma imagem sai do aparelho
