@@ -32,6 +32,7 @@ import 'send_order.dart';
 import 'media_resend.dart';
 import 'delivery_mode.dart';
 import 'offline_gate.dart';
+import 'in_front.dart';
 import 'helper_push.dart';
 import 'screens/getting_messages_screen.dart';
 import 'screens/home_screen.dart';
@@ -13162,12 +13163,15 @@ class AppState extends ChangeNotifier {
   // set up boots at once; one with nothing yet waits until the app is in
   // front of someone.
   Future<void> bootWhenWanted() async {
-    final state = WidgetsBinding.instance.lifecycleState;
-    dlog('LAUNCH lifecycle at boot request: $state');
-    if (state == AppLifecycleState.resumed || await _hasLocalData()) {
+    dlog(
+      'LAUNCH lifecycle at boot request: '
+      '${WidgetsBinding.instance.lifecycleState}',
+    );
+    if (await bootsNow(_hasLocalData)) {
       await boot();
       return;
     }
+    // no await from the last state read to here: a resume cannot slip between
     if (_seen != null) return;
     dlog('LAUNCH nothing here and not in front - boot waits');
     _seen = AppLifecycleListener(
