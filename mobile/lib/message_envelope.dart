@@ -55,6 +55,10 @@ class UnwrappedMessage {
   final PollCloseFrame? pollClose; // 'pc' - the creator closed a poll
   final String? sticker; // 'st' - pack:id:since, drawn from our own pack
   final int? supportMarker; // 'sp' - written in a chat with the developer
+  // 'w' - when the sender wrote it, ms by their clock. set once and kept on
+  // every retry, so a copy wrapped again still says when it was written.
+  // null from a version without it
+  final int? writtenAt;
   // 'm' as it was sent, before the direction controls came out: the
   // proof of work was done over these characters
   final String? powText;
@@ -100,6 +104,7 @@ class UnwrappedMessage {
     this.pollClose,
     this.sticker,
     this.supportMarker,
+    this.writtenAt,
   });
 }
 
@@ -307,8 +312,12 @@ Future<String> wrapMessage(
   PollCloseFrame? pollClose,
   String? sticker,
   int? supportMarker,
+  // when it was written: a retry, a resend or a slice passes the time the
+  // row was written, anything else is written now
+  int? writtenAt,
 }) async {
   final body = <String, dynamic>{'m': plain};
+  body['w'] = writtenAt ?? DateTime.now().millisecondsSinceEpoch;
   if (sticker != null) body['st'] = sticker;
   if (supportMarker != null) body['sp'] = supportMarker;
   if (poll != null) body['pl'] = poll;
@@ -508,6 +517,10 @@ UnwrappedMessage unwrapMessage(String wrapped) {
       sticker: StickerWire.parse(sent['st'])?.value,
       supportMarker: switch (json['sp']) {
         final num n => n.toInt(),
+        _ => null,
+      },
+      writtenAt: switch (json['w']) {
+        final num n when n.isFinite && n > 0 => n.toInt(),
         _ => null,
       },
     );

@@ -13,7 +13,7 @@ import 'package:kryfo/devchat/dev_key.dart';
 import 'package:kryfo/devchat/support.dart' show SupportChats;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
-    show HaloDb, appState, haloUriV3, useDatabasesForTest;
+    show HaloDb, appState, haloUriV3, kUnblockGrace, useDatabasesForTest;
 import 'package:kryfo/screens/home_screen.dart';
 import 'package:kryfo/search.dart' show SearchKind;
 import 'package:kryfo/session.dart';
@@ -119,7 +119,11 @@ class DevTestDb implements HaloDb {
 
   // no block here ever held
   @override
-  Future<bool> blockedAt(String haloId, int at) async => false;
+  Future<bool> blockedAt(
+    String haloId,
+    int at, {
+    int slack = kUnblockGrace,
+  }) async => false;
   @override
   Future<void> noteBlockedDrop(String haloId, String uid) async {}
   @override

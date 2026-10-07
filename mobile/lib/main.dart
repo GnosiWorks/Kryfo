@@ -2256,15 +2256,20 @@ class HaloDb implements GroupOwedStore {
   }
 
   // whether [at], by the sender's own clock, falls in a time they were
-  // blocked here and that has ended
-  Future<bool> blockedAt(String haloId, int at) async {
+  // blocked here and that has ended. [slack]: how far behind ours their
+  // clock may run (blockStamp)
+  Future<bool> blockedAt(
+    String haloId,
+    int at, {
+    int slack = kUnblockGrace,
+  }) async {
     try {
       final db = await open();
       final r = await db.query(
         'block_spans',
         columns: ['from_at'],
         where: kBlockedAtWhere,
-        whereArgs: blockedAtArgs(haloId, at),
+        whereArgs: blockedAtArgs(haloId, at, slack: slack),
         limit: 1,
       );
       return r.isNotEmpty;
@@ -5637,17 +5642,49 @@ const kBlockedAtWhere =
     'peer_id = ? AND from_at <= ? AND to_at IS NOT NULL AND to_at > ?';
 
 // the stamp is the sender's clock, which may run behind this one. what
-// they wrapped in the last minutes before the unblock is let in, or a slow
+// they wrote in the last minutes before the unblock is let in, or a slow
 // clock costs them what they sent once they were free to
 const kUnblockGrace = 10 * 60 * 1000;
 
+// a stamp further ahead of this clock than this is taken as now
+const kStampAhead = 10 * 60 * 1000;
+
 // the arguments of kBlockedAtWhere for a stamp [at]: the span's end has
-// to be past it by the grace
-List<Object> blockedAtArgs(String haloId, int at) => [
-  haloId,
-  at,
-  at + kUnblockGrace,
-];
+// to be past it by the slack, the grace unless the copy shows less
+List<Object> blockedAtArgs(
+  String haloId,
+  int at, {
+  int slack = kUnblockGrace,
+}) => [haloId, at, at + slack];
+
+// what a block's spans judge an arrival by: [at], by their clock, and the
+// [slack] their clock may run behind ours. at is when it was [written],
+// which a retry keeps, or when this copy was [wrapped] from a version that
+// does not say. never past the wrap: both are their clock, and nothing is
+// wrapped before it is written. one far ahead of [now] is taken as now.
+// the slack is the grace, less where the copy shows it: it [came] that
+// long after it was wrapped, so their clock is no further behind ours
+// than that, and a retry wrapped after the unblock still shows it was
+// written before. null with no stamp at all.
+// written before the block on a phone that was offline and sent while it
+// held: let in, it was written outside the span. nothing tells a sender
+// of a block, so what they write during one is still sent, and dropped
+// here
+({int at, int slack})? blockStamp({
+  int? written,
+  int? wrapped,
+  required int came,
+  required int now,
+}) {
+  var at = written ?? wrapped;
+  if (at == null || at <= 0) return null;
+  if (wrapped != null && wrapped > 0 && wrapped < at) at = wrapped;
+  if (at > now + kStampAhead) at = now;
+  final slack = wrapped == null || wrapped <= 0
+      ? kUnblockGrace
+      : (came - wrapped).clamp(0, kUnblockGrace);
+  return (at: at, slack: slack);
+}
 
 // a contact row that goes ends its open span, so what is left of a block
 // never holds over someone added again
@@ -7741,6 +7778,7 @@ class AppState extends ChangeNotifier {
             uid,
             r['new_text'] as String,
             on: d,
+            writtenAt: r['at'] as int,
           ).whenComplete(() => _editsInflight.remove(uid)),
         );
       }
@@ -7767,6 +7805,7 @@ class AppState extends ChangeNotifier {
             uid,
             (r['pinned'] as int) == 1,
             on: d,
+            writtenAt: r['at'] as int,
           ).whenComplete(() => _pinsInflight.remove(uid)),
         );
       }
@@ -7792,12 +7831,15 @@ class AppState extends ChangeNotifier {
     String uid,
     bool pinned, {
     HaloDb? on,
+    // a queued one: when it was queued
+    int? writtenAt,
   }) async {
     try {
       final wrapped = await wrapMessage(
         '',
         pin: PinFrame(targetUid: uid, pinned: pinned),
         sender: _mySender(),
+        writtenAt: writtenAt,
       );
       final ok = await _sendOneEnvelope(peer, wrapped);
       if (ok) await (on ?? _ownerOf(peer)).dropPin(uid, pinned);
@@ -7847,6 +7889,7 @@ class AppState extends ChangeNotifier {
             kind,
             r['body'] as String,
             on: d,
+            writtenAt: r['at'] as int,
           ).whenComplete(() => _framesInflight.remove('$kind $uid')),
         );
       }
@@ -7891,19 +7934,28 @@ class AppState extends ChangeNotifier {
     String kind,
     String body, {
     HaloDb? on,
+    // a queued one: when it was queued
+    int? writtenAt,
   }) async {
     try {
       final wrapped = switch (kind) {
-        kFrameUnsend => await wrapMessage('', unsend: uid, sender: _mySender()),
+        kFrameUnsend => await wrapMessage(
+          '',
+          unsend: uid,
+          sender: _mySender(),
+          writtenAt: writtenAt,
+        ),
         kFrameReceipt => await wrapMessage(
           '',
           deliveredUid: uid,
           sender: _mySender(),
+          writtenAt: writtenAt,
         ),
         _ => await wrapMessage(
           '',
           reaction: ReactionFrame(targetUid: uid, emoji: body),
           sender: _mySender(),
+          writtenAt: writtenAt,
         ),
       };
       final ok = await _sendOneEnvelope(peer, wrapped);
@@ -7923,12 +7975,15 @@ class AppState extends ChangeNotifier {
     String uid,
     String newText, {
     HaloDb? on,
+    // a queued one: when the edit was made, not when the message was
+    int? writtenAt,
   }) async {
     try {
       final wrapped = await wrapMessage(
         '',
         edit: EditFrame(targetUid: uid, newText: newText),
         sender: _mySender(),
+        writtenAt: writtenAt,
       );
       final ok = await _sendOneEnvelope(peer, wrapped);
       if (ok) await (on ?? _ownerOf(peer)).dropEdit(uid);
@@ -8044,6 +8099,7 @@ class AppState extends ChangeNotifier {
         voice: fileName == 'voice.wav',
         voiceDisguised: ((r['voice_disguised'] as int?) ?? 0) == 1,
         burnSeconds: (r['burn_secs'] as num?)?.toInt(),
+        writtenAt: (r['sent_at'] as num?)?.toInt(),
       );
     } catch (e) {
       res = 'error: $e';
@@ -8129,6 +8185,7 @@ class AppState extends ChangeNotifier {
       voice: fileName == 'voice.wav',
       voiceDisguised: ((r['voice_disguised'] as int?) ?? 0) == 1,
       burnSeconds: (r['burn_secs'] as num?)?.toInt(),
+      writtenAt: (r['sent_at'] as num?)?.toInt(),
       owed: {for (final m in to) m: fresh ? <int>{} : have[m]!},
     );
   }
@@ -8332,6 +8389,8 @@ class AppState extends ChangeNotifier {
           groupControl: gc,
           unsend: un,
           sender: _mySender(),
+          // when it was queued
+          writtenAt: (r['since'] as num?)?.toInt(),
         );
         if (!await _sendGroupEnvelope(groupId, member, wrapped)) {
           dlog('group ctl ${gc?.type ?? 'unsend'} to $member: waits');
@@ -8468,6 +8527,7 @@ class AppState extends ChangeNotifier {
       burnSeconds: (r['burn_secs'] as num?)?.toInt(),
       secure: ((r['secure'] as int?) ?? 0) == 1,
       replyTo: r['reply_to'] as String?,
+      writtenAt: (r['sent_at'] as num?)?.toInt(),
       sender: _mySender(),
       only: only,
       progressKey: d.container.chatKey(peer),
@@ -9711,8 +9771,9 @@ class AppState extends ChangeNotifier {
     HaloDb? into,
     int? arrivedAt,
     // when the sender wrapped it by their clock, where the lane says. each
-    // send wraps anew, so a retry carries its own
-    int? writtenAt,
+    // send wraps anew, so a retry carries its own. when it was written
+    // rides in the envelope (blockStamp)
+    int? wrappedAt,
   }) async {
     // the dev chat takes a frame only while it runs, and only what his
     // chat may carry, said by his pinned key. the rest is dropped unseen
@@ -9734,7 +9795,7 @@ class AppState extends ChangeNotifier {
         fromBackPair: fromBackPair,
         into: into,
         arrivedAt: arrivedAt,
-        writtenAt: writtenAt,
+        wrappedAt: wrappedAt,
       );
     }
     await _afterClose();
@@ -9752,7 +9813,7 @@ class AppState extends ChangeNotifier {
         wire: wire,
         fromBackPair: fromBackPair,
         marks: marks,
-        writtenAt: writtenAt,
+        wrappedAt: wrappedAt,
       );
     } finally {
       for (final k in keys) {
@@ -9794,7 +9855,7 @@ class AppState extends ChangeNotifier {
     int? arrivedAt,
     // the chats to mark once the caller is done, on the live path
     Set<String>? marks,
-    int? writtenAt,
+    int? wrappedAt,
   }) async {
     // a uid claimed and never saved is let go, or a copy that comes again
     // is taken for one already in and dropped
@@ -9809,7 +9870,7 @@ class AppState extends ChangeNotifier {
         arrivedAt: arrivedAt,
         marks: marks,
         claims: claims,
-        writtenAt: writtenAt,
+        wrappedAt: wrappedAt,
       );
     } catch (_) {
       _inflightUids.removeAll(claims);
@@ -9826,7 +9887,7 @@ class AppState extends ChangeNotifier {
     required int? arrivedAt,
     required Set<String>? marks,
     required List<String> claims,
-    required int? writtenAt,
+    required int? wrappedAt,
   }) async {
     final RouteTo to;
     final HaloDb db;
@@ -9842,7 +9903,7 @@ class AppState extends ChangeNotifier {
           env,
           wire,
           fromBackPair,
-          writtenAt: writtenAt,
+          wrappedAt: wrappedAt,
         );
         return to;
       }
@@ -9890,13 +9951,23 @@ class AppState extends ChangeNotifier {
     }
     // nothing from someone blocked is kept, and what came while the block
     // held stays dropped after an unblock: a copy by its uid, one the
-    // relays held back by when it was wrapped. only a block holding now
-    // notes the uid: a stamp is their clock, and one running behind could
-    // match an ended span for something sent after it, whose copies must
-    // still come in
+    // relays held back or the sender sent again by when it was written
+    // (blockStamp). only a block holding now notes the uid: a stamp is
+    // their clock, and one running behind could match an ended span for
+    // something sent after it, whose copies must still come in
     final blockedNow = await db.isBlocked(senderHaloId);
+    final heard = DateTime.now().millisecondsSinceEpoch;
+    final stamp = blockedNow
+        ? null
+        : blockStamp(
+            written: env.writtenAt,
+            wrapped: wrappedAt,
+            came: arrivedAt ?? heard,
+            now: heard,
+          );
     if (blockedNow ||
-        (writtenAt != null && await db.blockedAt(senderHaloId, writtenAt))) {
+        (stamp != null &&
+            await db.blockedAt(senderHaloId, stamp.at, slack: stamp.slack))) {
       final key = _dataFrame(env) ? env.msgUid ?? env.mediaId : null;
       if (blockedNow && key != null) {
         await db.noteBlockedDrop(senderHaloId, key);
@@ -10614,7 +10685,7 @@ class AppState extends ChangeNotifier {
     bool fromBackPair, {
     // kept with it, so a block's spans in the vault judge it as they would
     // have on arrival
-    int? writtenAt,
+    int? wrappedAt,
   }) async {
     // someone the vault blocked: nothing is sealed to wait for it
     if (_router.blocks(sender)) return;
@@ -10651,7 +10722,7 @@ class AppState extends ChangeNotifier {
         wire,
         fromBackPair,
         DateTime.now().millisecondsSinceEpoch,
-        wrapped: writtenAt,
+        wrapped: wrappedAt,
       ),
       uid: uid,
       part: part,
@@ -10704,7 +10775,7 @@ class AppState extends ChangeNotifier {
                 fromBackPair: u.backPair,
                 into: vault,
                 arrivedAt: u.at,
-                writtenAt: u.wrapped,
+                wrappedAt: u.wrapped,
               );
             } on CapHeld catch (e) {
               // past a stranger's two: on the shelf, let in on accept. a
@@ -12821,7 +12892,7 @@ class AppState extends ChangeNotifier {
         await _receiveRelayOne(
           (peer: m.peer, cipher: m.cipher),
           arrived,
-          writtenAt: m.at < written.length ? written[m.at] : null,
+          wrappedAt: m.at < written.length ? written[m.at] : null,
         );
       } catch (e, st) {
         dlog('relay: one not kept, it comes again ($e)\n$st');
@@ -12865,7 +12936,7 @@ class AppState extends ChangeNotifier {
   Future<void> _receiveRelayOne(
     ({String peer, String cipher}) m,
     void Function() arrived, {
-    int? writtenAt,
+    int? wrappedAt,
   }) async {
     // what it opens to is kept only under the session it began in
     final epoch = _openedEpoch;
@@ -12982,7 +13053,7 @@ class AppState extends ChangeNotifier {
         haloId!,
         env,
         wire: wrapped,
-        writtenAt: writtenAt,
+        wrappedAt: wrappedAt,
       );
     } on CapHeld catch (e) {
       // kept as opened: signal has spent its keys, so accept lets it in
@@ -15241,6 +15312,8 @@ class AppState extends ChangeNotifier {
     Map<String, String>? preview,
     PollSpec? poll,
     String? sticker,
+    // a retry passes when its row was written
+    int? writtenAt,
   }) async {
     // a room not let in yet: nobody reads this phone's key, nothing is kept
     if (await _roomWaiting(session.getGroup(groupId))) return false;
@@ -15253,6 +15326,7 @@ class AppState extends ChangeNotifier {
       sticker = await session.stickerOf(msgUid);
     }
     msgUid ??= newMsgUid();
+    final written = writtenAt ?? DateTime.now().millisecondsSinceEpoch;
     // a timed one's clock starts once a member has it, as in a 1:1 chat:
     // one that waits for a route must not burn before it ever went
     final burnSecs = (burnSeconds != null && burnSeconds > 0)
@@ -15306,6 +15380,7 @@ class AppState extends ChangeNotifier {
       sender: _mySender(),
       poll: poll?.toWire(),
       sticker: sticker,
+      writtenAt: written,
     );
     dlog('GRPSEND group=$groupId members=$members me=$myId admin=$amAdmin');
     final d = _ownerOf(groupId);
@@ -15335,9 +15410,12 @@ class AppState extends ChangeNotifier {
     bool voice = false,
     bool voiceDisguised = false,
     int? burnSeconds,
+    // when its row was written, on every slice. now when not given
+    int? writtenAt,
     // only these members, owed it by a send that went, with what each has
     Map<String, Set<int>>? owed,
   }) async {
+    final written = writtenAt ?? DateTime.now().millisecondsSinceEpoch;
     // one send per media at a time, the same set the 1:1 path holds. the
     // drainer picks up any row older than 45 s, and a video to a group is
     // still leaving long after that: both would send the whole file.
@@ -15453,6 +15531,7 @@ class AppState extends ChangeNotifier {
           rosterParticipants: parts,
           supporterBadge: await sharedBadge(),
           sender: _mySender(),
+          writtenAt: written,
         );
       },
       deliver: (m, wrapped) => _sendGroupEnvelope(groupId, m, wrapped),

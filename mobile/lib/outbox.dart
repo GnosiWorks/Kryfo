@@ -56,5 +56,8 @@ Future<String> wrapRedelivery(
     // or a retried poll arrives as its question alone
     poll: PollSpec.parse(row['poll'])?.toWire(),
     sender: sender,
+    // when the row was written, not now: a block that held then still
+    // holds for the retry
+    writtenAt: (row['sent_at'] as num?)?.toInt(),
   );
 }

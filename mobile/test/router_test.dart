@@ -11,7 +11,13 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/main.dart'
-    show AppIo, AppState, HaloDb, blockedAtArgs, useDatabasesForTest;
+    show
+        AppIo,
+        AppState,
+        HaloDb,
+        blockedAtArgs,
+        kUnblockGrace,
+        useDatabasesForTest;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
 import 'package:kryfo/router.dart';
@@ -859,9 +865,13 @@ class _Mem implements HaloDb {
   // a block that held and ended, by person, read as the real table is
   final spans = <String, (int, int)>{};
   @override
-  Future<bool> blockedAt(String haloId, int at) async {
+  Future<bool> blockedAt(
+    String haloId,
+    int at, {
+    int slack = kUnblockGrace,
+  }) async {
     final s = spans[haloId];
-    final a = blockedAtArgs(haloId, at);
+    final a = blockedAtArgs(haloId, at, slack: slack);
     return s != null && s.$1 <= (a[1] as int) && s.$2 > (a[2] as int);
   }
 
@@ -1542,6 +1552,41 @@ void main() {
           await wrapMessage('hi $uid', msgUid: uid, sender: _as(_h)),
         );
         await w.app.receiveRelay([(peer: 'x-$_h', cipher: c)], written: [at]);
+      }
+      await _settle();
+      expect(w.store.inbox, hasLength(2));
+      await w.open();
+      await w.app.drainSealed(w.vault, 'priv-A');
+      expect(w.vault.msg('during'), isNull);
+      expect(w.vault.msg('since'), isNotNull);
+      expect(w.store.inbox, isEmpty);
+    });
+
+    test('what came while it was shut is judged by when it was written, '
+        'which a retry wrapped after the block keeps', () async {
+      final w = await _World.make();
+      final now = DateTime.now().millisecondsSinceEpoch;
+      // blocked in the vault for two hours, until an hour ago
+      w.vault.spans[_h] = (now - 3 * 3600000, now - 3600000);
+      for (final (uid, written) in [
+        ('during', now - 2 * 3600000),
+        ('since', now - 60000),
+      ]) {
+        final c = 'relay-$uid';
+        w.io.opens[c] = (
+          _h,
+          await wrapMessage(
+            'hi $uid',
+            msgUid: uid,
+            sender: _as(_h),
+            writtenAt: written,
+          ),
+        );
+        // both wrapped again half a minute ago, long after the block
+        await w.app.receiveRelay(
+          [(peer: 'x-$_h', cipher: c)],
+          written: [now - 30000],
+        );
       }
       await _settle();
       expect(w.store.inbox, hasLength(2));

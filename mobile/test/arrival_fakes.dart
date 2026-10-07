@@ -8,7 +8,13 @@ import 'dart:typed_data';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/group_media_send.dart' show groupOwedGap;
 import 'package:kryfo/main.dart'
-    show AppIo, HaloDb, blockedAtArgs, groupUnsendOf, groupUnsendRow;
+    show
+        AppIo,
+        HaloDb,
+        blockedAtArgs,
+        groupUnsendOf,
+        groupUnsendRow,
+        kUnblockGrace;
 import 'package:kryfo/media_resend.dart';
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
@@ -469,8 +475,12 @@ class ArrivalRows implements HaloDb {
   // as kBlockedAtWhere reads its arguments: an ended span, from its start
   // to its end less the grace
   @override
-  Future<bool> blockedAt(String haloId, int at) async {
-    final a = blockedAtArgs(haloId, at);
+  Future<bool> blockedAt(
+    String haloId,
+    int at, {
+    int slack = kUnblockGrace,
+  }) async {
+    final a = blockedAtArgs(haloId, at, slack: slack);
     return [...?blockSpans[haloId]].any(
       (s) => s.$1 <= (a[1] as int) && s.$2 != null && s.$2! > (a[2] as int),
     );

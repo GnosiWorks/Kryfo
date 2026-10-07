@@ -29,6 +29,7 @@ import 'package:kryfo/main.dart'
         HaloDb,
         handleHaloUriAdded,
         haloUriV3,
+        kUnblockGrace,
         makePreKeyBundleB64,
         openDevChatLater,
         signalDecrypt,
@@ -865,7 +866,11 @@ class _Mem implements HaloDb {
 
   // no block here ever held
   @override
-  Future<bool> blockedAt(String haloId, int at) async => false;
+  Future<bool> blockedAt(
+    String haloId,
+    int at, {
+    int slack = kUnblockGrace,
+  }) async => false;
   @override
   Future<void> noteBlockedDrop(String haloId, String uid) async {}
   @override

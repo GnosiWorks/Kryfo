@@ -21,6 +21,7 @@ import 'package:kryfo/main.dart'
         HaloDb,
         QuietIdentity,
         appState,
+        kUnblockGrace,
         searchFill,
         session,
         sessionQuiet,
@@ -743,7 +744,11 @@ class _Db implements HaloDb {
 
   // no block here ever held
   @override
-  Future<bool> blockedAt(String haloId, int at) async => false;
+  Future<bool> blockedAt(
+    String haloId,
+    int at, {
+    int slack = kUnblockGrace,
+  }) async => false;
   @override
   Future<void> noteBlockedDrop(String haloId, String uid) async {}
   @override

@@ -25,7 +25,7 @@ const kDevSupport = 1;
 
 // the message and what hangs off it: kept as they are, both ways
 final kDevKept = _set(
-  'm u q b r ed un pn dr i f fn vo vd mid ci ct pi cr nd sc st pv',
+  'm u q b r ed un pn dr i f fn vo vd mid ci ct pi cr nd sc st pv w',
 );
 
 // out only: the proof of work, over 'm', which stays as it was

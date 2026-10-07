@@ -97,6 +97,8 @@ Future<String> sendChunkedMediaTo({
   bool secure = false,
   // the message this one answers, on every slice like the name
   String? replyTo,
+  // when its row was written, on every slice too. now when not given
+  int? writtenAt,
   required SenderInfo sender,
   // the receiver named the slices it lacks: send those and no others
   Set<int>? only,
@@ -120,6 +122,7 @@ Future<String> sendChunkedMediaTo({
       burnSeconds: burnSeconds,
       secure: secure,
       replyTo: replyTo,
+      writtenAt: writtenAt,
       sender: sender,
       only: only,
       progressKey: progressKey,
@@ -147,6 +150,7 @@ Future<String> _sendChunkedMediaInner({
   int? burnSeconds,
   bool secure = false,
   String? replyTo,
+  int? writtenAt,
   required SenderInfo sender,
   Set<int>? only,
   required String progressKey,
@@ -182,6 +186,7 @@ Future<String> _sendChunkedMediaInner({
     pow = await compute(_mediaGrind, caption);
   }
   final now = DateTime.now().millisecondsSinceEpoch;
+  final written = writtenAt ?? now;
   final Set<int> done;
   if (only != null) {
     // its own record: everything counts as landed but what was asked for,
@@ -271,6 +276,7 @@ Future<String> _sendChunkedMediaInner({
           supporterBadge: await appState.sharedBadge(),
           sender: sender,
           canResend: total > 1,
+          writtenAt: written,
         );
         cipher = await signalEncrypt(peerId, wrapped);
       } catch (e) {
