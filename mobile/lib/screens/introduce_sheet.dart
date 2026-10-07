@@ -15,6 +15,7 @@ import '../widgets/notice_banner.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/ease_size.dart';
+import '../widgets/motion.dart' show motionStill;
 import '../widgets/press_scale.dart';
 import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
@@ -329,7 +330,9 @@ class _GoButtonState extends State<_GoButton> {
                   key: const ValueKey('sending'),
                   width: 18,
                   height: 18,
+                  // held still with less movement, as elsewhere
                   child: CircularProgressIndicator(
+                    value: motionStill(context) ? 0.3 : null,
                     strokeWidth: 2,
                     color: HaloColors.onAmber,
                   ),

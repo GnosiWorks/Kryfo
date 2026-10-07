@@ -245,13 +245,21 @@ class _PollCardState extends State<PollCard> {
               height: 1.25,
             ),
           ),
-          if (!results) ...[
-            const SizedBox(height: 3),
-            Text(
-              widget.poll.multi ? l10n.pollPickSeveral : l10n.pollPickOne,
-              style: HaloType.sans(size: 11.5, color: HaloColors.text2),
-            ),
-          ],
+          // folds away once voted, and comes back on a take back
+          EaseSize(
+            duration: const Duration(milliseconds: 200),
+            child: !results
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 3),
+                    child: Text(
+                      widget.poll.multi
+                          ? l10n.pollPickSeveral
+                          : l10n.pollPickOne,
+                      style: HaloType.sans(size: 11.5, color: HaloColors.text2),
+                    ),
+                  )
+                : const SizedBox(width: double.infinity),
+          ),
           const SizedBox(height: 10),
           EaseSize(
             child: AnimatedSwitcher(
@@ -318,8 +326,9 @@ class _PollCardState extends State<PollCard> {
           Row(
             children: [
               Expanded(
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
+                child: PressScale(
+                  scale: 0.97,
+                  haptic: false,
                   onTap: voters > 0 ? _showVoters : null,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4),
@@ -354,25 +363,39 @@ class _PollCardState extends State<PollCard> {
               ?widget.stamp,
             ],
           ),
-          if (!closed && (mine.isNotEmpty || widget.mine))
-            Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: Row(
-                children: [
-                  if (mine.isNotEmpty)
-                    _Link(
-                      text: l10n.pollTakeBack,
-                      onTap: () {
-                        HapticFeedback.selectionClick();
-                        _vote(const []);
-                      },
+          // take back and close ease in under the votes, not in one frame
+          EaseSize(
+            duration: const Duration(milliseconds: 200),
+            child: !closed && (mine.isNotEmpty || widget.mine)
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Row(
+                      children: [
+                        AnimatedSwitcher(
+                          duration: Duration(milliseconds: still ? 0 : 200),
+                          child: mine.isNotEmpty
+                              ? _Link(
+                                  key: const ValueKey('take-back'),
+                                  text: l10n.pollTakeBack,
+                                  onTap: () {
+                                    HapticFeedback.selectionClick();
+                                    _vote(const []);
+                                  },
+                                )
+                              : const SizedBox.shrink(),
+                        ),
+                        const Spacer(),
+                        if (widget.mine && widget.onClose != null)
+                          _Link(
+                            text: l10n.pollClose,
+                            onTap: _close,
+                            strong: true,
+                          ),
+                      ],
                     ),
-                  const Spacer(),
-                  if (widget.mine && widget.onClose != null)
-                    _Link(text: l10n.pollClose, onTap: _close, strong: true),
-                ],
-              ),
-            ),
+                  )
+                : const SizedBox(width: double.infinity),
+          ),
         ],
       ),
     );
@@ -383,7 +406,12 @@ class _Link extends StatelessWidget {
   final String text;
   final VoidCallback onTap;
   final bool strong;
-  const _Link({required this.text, required this.onTap, this.strong = false});
+  const _Link({
+    super.key,
+    required this.text,
+    required this.onTap,
+    this.strong = false,
+  });
   @override
   Widget build(BuildContext context) {
     return PressScale(

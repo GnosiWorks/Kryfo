@@ -298,7 +298,7 @@ class _PickRow extends StatelessWidget {
             opacity: dim ? 0.45 : 1,
             duration: still ? Duration.zero : const Duration(milliseconds: 200),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 9, 22, 9),
+              padding: const EdgeInsetsDirectional.fromSTEB(24, 9, 22, 9),
               child: Row(
                 children: [
                   c.group

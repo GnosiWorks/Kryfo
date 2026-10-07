@@ -115,4 +115,55 @@ void main() {
     expect(find.text(l10n.pairCodeUnreached), findsOneWidget);
     expect(find.textContaining('unreached'), findsNothing);
   });
+
+  // the panel's own swap, not one inside the code
+  Iterable<ScaleTransition> swapScales(WidgetTester t) =>
+      t.widgetList<ScaleTransition>(
+        find.descendant(
+          of: find.byType(PairCodePanel),
+          matching: find.byType(ScaleTransition),
+        ),
+      );
+
+  testWidgets('the code settles in from near its size as the card eases', (
+    t,
+  ) async {
+    phone(t);
+    e.answer = 'ok';
+    await share(t);
+    // never grown from a point
+    expect(swapScales(t), isNotEmpty);
+    for (final s in swapScales(t)) {
+      expect(s.scale.value, greaterThanOrEqualTo(0.94));
+    }
+    expect(
+      find.descendant(
+        of: find.byType(PairCodePanel),
+        matching: find.byType(AnimatedSize),
+      ),
+      findsOneWidget,
+    );
+    await t.pump(const Duration(seconds: 1));
+  });
+
+  testWidgets('with less movement the code is simply there', (t) async {
+    phone(t);
+    e.answer = 'ok';
+    await t.pumpWidget(app(const Scaffold(body: PairCodePanel()), still: true));
+    await t.pumpAndSettle();
+    await t.tap(find.text(l10n.pairCodePanelOrMakeASix));
+    for (var i = 0; i < 10; i++) {
+      await t.runAsync(() => Future<void>.delayed(Duration.zero));
+      await t.pump();
+    }
+    expect(find.text(l10n.pairCodePanelOrMakeASix), findsNothing);
+    expect(
+      find.descendant(
+        of: find.byType(PairCodePanel),
+        matching: find.byType(AnimatedSize),
+      ),
+      findsNothing,
+    );
+    expect(t.hasRunningAnimations, isFalse);
+  });
 }

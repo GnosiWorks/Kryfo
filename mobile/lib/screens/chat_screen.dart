@@ -4882,10 +4882,18 @@ class _ChatScreenState extends State<ChatScreen>
                   ? Padding(
                       key: const ValueKey('status'),
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
-                      child: Text(
-                        _friendlyStatus(_status),
-                        textAlign: TextAlign.center,
-                        style: HaloType.mono(size: 10, color: HaloColors.amber),
+                      // new words rise in over the last ones
+                      child: RiseSwap(
+                        alignment: Alignment.center,
+                        child: Text(
+                          _friendlyStatus(_status),
+                          key: ValueKey(_friendlyStatus(_status)),
+                          textAlign: TextAlign.center,
+                          style: HaloType.mono(
+                            size: 10,
+                            color: HaloColors.amber,
+                          ),
+                        ),
                       ),
                     )
                   : const SizedBox(key: ValueKey('status-none'), width: 0),
@@ -7346,7 +7354,8 @@ class _EmptyConversation extends StatelessWidget {
             child: child,
           ),
         ),
-        child: Padding(
+        // scrolls rather than overflows with the keyboard up at a big font
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(40),
           child: Column(
             mainAxisSize: MainAxisSize.min,

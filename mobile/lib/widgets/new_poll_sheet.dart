@@ -321,7 +321,7 @@ class _NewPollSheetState extends State<_NewPollSheet> {
             ),
             const SizedBox(height: 6),
             Container(
-              padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+              padding: const EdgeInsetsDirectional.fromSTEB(14, 12, 12, 12),
               decoration: BoxDecoration(
                 color: HaloColors.surface3,
                 borderRadius: BorderRadius.circular(13),

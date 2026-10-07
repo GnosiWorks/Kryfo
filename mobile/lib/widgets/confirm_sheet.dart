@@ -8,6 +8,7 @@ import '../bidi_safe.dart';
 import '../lock_guard.dart';
 import '../theme.dart';
 import 'halo_sheet.dart';
+import 'press_scale.dart';
 import 'sheet_handle.dart';
 import 'written_field.dart';
 import '../l10n/l10n.dart';
@@ -46,9 +47,9 @@ Widget _line(String t) => Text(
 
 Widget _primary(String label, VoidCallback? onTap, {bool rose = false}) {
   final on = onTap != null;
-  return GestureDetector(
+  return PressScale(
     onTap: onTap,
-    behavior: HitTestBehavior.opaque,
+    scale: 0.96,
     child: AnimatedContainer(
       duration: const Duration(milliseconds: 160),
       // taller rather than cut off when a long label wraps at a big font
@@ -80,24 +81,23 @@ Widget _primary(String label, VoidCallback? onTap, {bool rose = false}) {
   );
 }
 
-Widget _quiet(String label, VoidCallback onTap, {Color? color}) =>
-    GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        child: Center(
-          child: Text(
-            label,
-            style: HaloType.sans(size: 13, color: color ?? HaloColors.text2),
-          ),
-        ),
-      ),
-    );
-
-Widget _outline(String label, VoidCallback onTap) => GestureDetector(
+Widget _quiet(String label, VoidCallback onTap, {Color? color}) => PressScale(
   onTap: onTap,
-  behavior: HitTestBehavior.opaque,
+  scale: 0.96,
+  child: Padding(
+    padding: const EdgeInsets.symmetric(vertical: 10),
+    child: Center(
+      child: Text(
+        label,
+        style: HaloType.sans(size: 13, color: color ?? HaloColors.text2),
+      ),
+    ),
+  ),
+);
+
+Widget _outline(String label, VoidCallback onTap) => PressScale(
+  onTap: onTap,
+  scale: 0.96,
   child: Container(
     constraints: const BoxConstraints(minHeight: 46),
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -308,9 +308,9 @@ Future<T?> showChoiceSheet<T>(
     if (line != null) ...[const SizedBox(height: 8), _line(line)],
     const SizedBox(height: 14),
     for (final c in choices) ...[
-      GestureDetector(
+      PressScale(
         onTap: () => Navigator.pop(ctx, c.value),
-        behavior: HitTestBehavior.opaque,
+        scale: 0.98,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(

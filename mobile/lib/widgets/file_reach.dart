@@ -7,6 +7,9 @@ import 'package:flutter/material.dart';
 
 import '../l10n/l10n.dart';
 import '../theme.dart';
+import 'ease_size.dart';
+import 'motion.dart' show motionStill;
+import 'swap.dart';
 
 /// only members past their tries are left: nothing more is coming
 bool fileReachGaveUp(int have, int of, int gaveUp) =>
@@ -34,10 +37,16 @@ class FileReachPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final words = fileReachWords(have, of, gaveUp);
     final lost = fileReachGaveUp(have, of, gaveUp);
+    // a new count rises in over the old one and the pill eases to its
+    // width, so the bubble under it never folds and grows again
     return Semantics(
       label: words,
       excludeSemantics: true,
-      child: Container(
+      child: AnimatedContainer(
+        duration: motionStill(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
         padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
         decoration: BoxDecoration(
           color: lost
@@ -45,12 +54,19 @@ class FileReachPill extends StatelessWidget {
               : HaloColors.amberSoft,
           borderRadius: BorderRadius.circular(999),
         ),
-        child: Text(
-          words,
-          style: HaloType.mono(
-            size: 9.5,
-            letter: 0.5,
-            color: lost ? HaloColors.rose : HaloColors.amber,
+        child: EaseSize(
+          duration: const Duration(milliseconds: 220),
+          alignment: AlignmentDirectional.centerStart,
+          child: RiseSwap(
+            child: Text(
+              words,
+              key: ValueKey(words),
+              style: HaloType.mono(
+                size: 9.5,
+                letter: 0.5,
+                color: lost ? HaloColors.rose : HaloColors.amber,
+              ),
+            ),
           ),
         ),
       ),

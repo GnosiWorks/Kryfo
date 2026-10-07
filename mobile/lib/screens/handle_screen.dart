@@ -272,7 +272,7 @@ class _ListingCardState extends State<_ListingCard> {
     final name = appState.handleName;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 220),
-      padding: const EdgeInsets.fromLTRB(18, 16, 14, 16),
+      padding: const EdgeInsetsDirectional.fromSTEB(18, 16, 14, 16),
       decoration: BoxDecoration(
         color: on
             ? Color.alphaBlend(

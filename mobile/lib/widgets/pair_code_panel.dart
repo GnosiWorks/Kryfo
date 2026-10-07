@@ -9,7 +9,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../main.dart' show appState, engine, sessionQuiet;
 import '../theme.dart';
-import 'motion.dart' show BreathDot;
+import 'ease_size.dart';
+import 'motion.dart' show BreathDot, kHouseCurve, kHouseTime, motionStill;
 import 'pair_join.dart' show PairWordsTag, pairErrorText, pairUnreached;
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
@@ -103,15 +104,31 @@ class _PairCodePanelState extends State<PairCodePanel> {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 240),
-      switchInCurve: Curves.easeOutBack,
-      switchOutCurve: Curves.easeIn,
-      transitionBuilder: (c, a) => FadeTransition(
-        opacity: a,
-        child: ScaleTransition(scale: a, child: c),
+    final still = motionStill(context);
+    // the code settles in on the house spring as the card eases to its
+    // height, so the buttons under it move instead of jumping. with less
+    // movement it simply swaps
+    return EaseSize(
+      child: AnimatedSwitcher(
+        duration: still ? Duration.zero : kHouseTime,
+        reverseDuration: still
+            ? Duration.zero
+            : const Duration(milliseconds: 160),
+        transitionBuilder: (c, a) => FadeTransition(
+          opacity: a.drive(
+            CurveTween(curve: const Interval(0, 0.6, curve: Curves.easeOut)),
+          ),
+          child: ScaleTransition(
+            scale: a
+                .drive(CurveTween(curve: kHouseCurve))
+                .drive(Tween<double>(begin: 0.94, end: 1)),
+            child: c,
+          ),
+        ),
+        layoutBuilder: (top, gone) =>
+            Stack(alignment: Alignment.topCenter, children: [...gone, ?top]),
+        child: _code == null ? _idle() : _live(),
       ),
-      child: _code == null ? _idle() : _live(),
     );
   }
 

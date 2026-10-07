@@ -185,7 +185,7 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
                             l10n.gettingMessagesAGenericAlertWith,
                             style: HaloType.sans(
                               size: 12,
-                              color: HaloColors.text3,
+                              color: HaloColors.text2,
                             ),
                           ),
                           // a pin turns previews off. if someone turns them

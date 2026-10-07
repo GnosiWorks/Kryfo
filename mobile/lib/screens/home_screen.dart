@@ -2037,30 +2037,45 @@ class _GroupRow extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 2),
-                      // not let in yet: no clock, no count, until it is
-                      if (g.isRoom && g.joiningAt != null)
-                        RoomJoinLine(joiningAt: g.joiningAt!)
-                      else if (g.isRoom)
-                        RoomCountdown(expiresAt: g.expiresAt!, size: 10)
-                      else if (g.mentioned)
-                        // your three words came up in there
-                        Text(
-                          l10n.homeMentionedYou,
-                          style: HaloType.mono(
-                            size: 10,
-                            color: HaloColors.amber,
-                            weight: FontWeight.w600,
-                            letter: 0.06,
-                          ),
-                        )
-                      else
-                        Text(
-                          l10n.homeMembers(g.memberCount),
-                          style: HaloType.mono(
-                            size: 10,
-                            color: HaloColors.text3,
-                          ),
-                        ),
+                      // not let in yet: no clock, no count, until it is.
+                      // a new state rises in over the last one
+                      RiseSwap(
+                        child: g.isRoom && g.joiningAt != null
+                            ? RoomJoinLine(
+                                key: const ValueKey('joining'),
+                                joiningAt: g.joiningAt!,
+                              )
+                            : g.isRoom
+                            ? RoomCountdown(
+                                key: const ValueKey('room'),
+                                expiresAt: g.expiresAt!,
+                                size: 10,
+                              )
+                            : g.mentioned
+                            // your three words came up in there
+                            ? Text(
+                                l10n.homeMentionedYou,
+                                key: const ValueKey('mentioned'),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: HaloType.mono(
+                                  size: 10,
+                                  color: HaloColors.amber,
+                                  weight: FontWeight.w600,
+                                  letter: 0.06,
+                                ),
+                              )
+                            : Text(
+                                l10n.homeMembers(g.memberCount),
+                                key: const ValueKey('members'),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: HaloType.mono(
+                                  size: 10,
+                                  color: HaloColors.text3,
+                                ),
+                              ),
+                      ),
                     ],
                   ),
                 ),

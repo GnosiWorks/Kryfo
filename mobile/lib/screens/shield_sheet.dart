@@ -6,7 +6,9 @@ import 'package:flutter/services.dart';
 import 'dart:convert';
 import '../main.dart' show session, appState;
 import '../theme.dart';
+import '../widgets/motion.dart' show motionStill;
 import '../widgets/notice_banner.dart';
+import '../widgets/press_scale.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';
 import '../l10n/l10n.dart';
@@ -101,19 +103,24 @@ class _ShieldSheet extends StatelessWidget {
               style: HaloType.mono(size: 10, color: HaloColors.text3),
             ),
             const SizedBox(height: 16),
+            // three even buttons: long words shrink to fit, never break
             Row(
               children: [
-                _Btn(
-                  l10n.shieldBlock,
-                  HaloColors.rose,
-                  onTap: () => Navigator.pop(context, ShieldChoice.block),
+                Expanded(
+                  child: _Btn(
+                    l10n.shieldBlock,
+                    HaloColors.rose,
+                    onTap: () => Navigator.pop(context, ShieldChoice.block),
+                  ),
                 ),
                 if (!group) ...[
                   const SizedBox(width: 8),
-                  _Btn(
-                    l10n.shieldDelete,
-                    HaloColors.text,
-                    onTap: () => Navigator.pop(context, ShieldChoice.delete),
+                  Expanded(
+                    child: _Btn(
+                      l10n.shieldDelete,
+                      HaloColors.text,
+                      onTap: () => Navigator.pop(context, ShieldChoice.delete),
+                    ),
                   ),
                 ],
                 const SizedBox(width: 8),
@@ -154,11 +161,14 @@ class _LineState extends State<_Line> {
 
   @override
   Widget build(BuildContext context) {
+    // in from the end of the line, and only a fade with less movement
+    final rtl = Directionality.of(context) == TextDirection.rtl;
+    final still = motionStill(context);
     return AnimatedOpacity(
       opacity: _t,
       duration: const Duration(milliseconds: 240),
       child: AnimatedSlide(
-        offset: Offset((1 - _t) * 0.04, 0),
+        offset: Offset(still ? 0 : (1 - _t) * (rtl ? -0.04 : 0.04), 0),
         duration: const Duration(milliseconds: 280),
         curve: Curves.easeOutCubic,
         child: Padding(
@@ -196,42 +206,35 @@ class _LineState extends State<_Line> {
   }
 }
 
-class _Btn extends StatefulWidget {
+class _Btn extends StatelessWidget {
   final String label;
   final Color color;
   final bool fill;
   final VoidCallback onTap;
   const _Btn(this.label, this.color, {this.fill = false, required this.onTap});
   @override
-  State<_Btn> createState() => _BtnState();
-}
-
-class _BtnState extends State<_Btn> {
-  bool _down = false;
-  @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _down = true),
-      onTapUp: (_) => setState(() => _down = false),
-      onTapCancel: () => setState(() => _down = false),
-      onTap: widget.onTap,
-      child: AnimatedScale(
-        scale: _down ? 0.96 : 1,
-        duration: const Duration(milliseconds: 100),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 18),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: widget.fill ? HaloColors.surface3 : HaloColors.surface2,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: HaloColors.line, width: 0.5),
-          ),
+    return PressScale(
+      onTap: onTap,
+      scale: 0.96,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 44),
+        padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 12),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: fill ? HaloColors.surface3 : HaloColors.surface2,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: HaloColors.line, width: 0.5),
+        ),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
           child: Text(
-            widget.label,
+            label,
+            maxLines: 1,
             style: HaloType.sans(
               size: 13,
-              weight: widget.fill ? FontWeight.w600 : FontWeight.w400,
-              color: widget.color,
+              weight: fill ? FontWeight.w600 : FontWeight.w400,
+              color: color,
             ),
           ),
         ),

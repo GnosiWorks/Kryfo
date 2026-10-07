@@ -107,6 +107,11 @@ class _RoomCountdownState extends State<RoomCountdown> {
     final label = '${widget.prefix}${countdownLabel(left)}';
     return AnimatedSwitcher(
       duration: Duration(milliseconds: still ? 120 : 220),
+      // held at the line's start, so a shorter figure never slides sideways
+      layoutBuilder: (top, gone) => Stack(
+        alignment: AlignmentDirectional.centerStart,
+        children: [...gone, ?top],
+      ),
       transitionBuilder: (c, a) => FadeTransition(
         opacity: a,
         // time running down: the new figure drops in from above

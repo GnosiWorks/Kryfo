@@ -130,7 +130,13 @@ class PinPad extends StatelessWidget {
     final still = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     Widget row(List<Widget> keys) => Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(mainAxisAlignment: MainAxisAlignment.center, children: keys),
+      // a keypad reads 1 2 3 left to right in every language, as the
+      // phone's own does
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        textDirection: TextDirection.ltr,
+        children: keys,
+      ),
     );
     Widget d(String n) =>
         _Key(label: n, onTap: enabled ? () => onDigit(n) : null);
@@ -157,7 +163,11 @@ class PinPad extends StatelessWidget {
               ),
             ),
           d('0'),
-          _Key(icon: Icons.backspace_outlined, onTap: enabled ? onBack : null),
+          _Key(
+            icon: Icons.backspace_outlined,
+            semantic: l10n.commonDelete,
+            onTap: enabled ? onBack : null,
+          ),
         ]),
       ],
     );
