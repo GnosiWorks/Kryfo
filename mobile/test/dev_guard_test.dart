@@ -861,6 +861,14 @@ class _Mem implements HaloDb {
   Future<void> dropMediaWant(String mediaId) async =>
       _hit('dropMediaWant', mediaId, null);
 
+  // no block here ever held
+  @override
+  Future<bool> blockedAt(String haloId, int at) async => false;
+  @override
+  Future<void> noteBlockedDrop(String haloId, String uid) async {}
+  @override
+  Future<bool> droppedWhileBlocked(String haloId, String uid) async => false;
+
   @override
   dynamic noSuchMethod(Invocation i) =>
       throw UnimplementedError('the stand-in was asked for ${i.memberName}');

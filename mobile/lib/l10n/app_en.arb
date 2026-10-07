@@ -7734,6 +7734,19 @@
   "@kryfoLinkTextNotNow": {
     "description": "widgets/kryfo_link_text.dart"
   },
+  "kryfoLinkTextJoinRoom": "Join {roomName}?",
+  "@kryfoLinkTextJoinRoom": {
+    "description": "widgets/kryfo_link_text.dart: a room link opened from another app or a web page",
+    "placeholders": {
+      "roomName": {
+        "type": "Object"
+      }
+    }
+  },
+  "kryfoLinkTextThisIsARoom": "This is an invite to a burner room. Join only if you know where the link came from.",
+  "@kryfoLinkTextThisIsARoom": {
+    "description": "widgets/kryfo_link_text.dart: a room link opened from another app or a web page"
+  },
   "kryfoLinkTextJoin": "Join {roomName}",
   "@kryfoLinkTextJoin": {
     "description": "widgets/kryfo_link_text.dart",

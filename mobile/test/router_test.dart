@@ -854,6 +854,14 @@ class _Mem implements HaloDb {
   Future<void> dropMediaWant(String mediaId) async =>
       _hit('dropMediaWant', mediaId, null);
 
+  // no block here ever held
+  @override
+  Future<bool> blockedAt(String haloId, int at) async => false;
+  @override
+  Future<void> noteBlockedDrop(String haloId, String uid) async {}
+  @override
+  Future<bool> droppedWhileBlocked(String haloId, String uid) async => false;
+
   @override
   dynamic noSuchMethod(Invocation i) =>
       throw UnimplementedError('the stand-in was asked for ${i.memberName}');
@@ -1136,6 +1144,26 @@ void main() {
       expect(raw, isNot(contains(_h)));
       // the cipher is spent, so it is marked seen
       expect(w.live.seen, hasLength(1));
+    });
+
+    test('nothing from someone the vault blocked is sealed', () async {
+      final w = await _World.make();
+      const b = 'blocked-hidden-one';
+      await w.store.putHidden(
+        b,
+        kHiddenPeer,
+        peerCard(const RouterCard(b, 'o-b', 'x-b', blocked: true)),
+        1,
+      );
+      await w.router.load();
+      await w.onion(
+        b,
+        await wrapMessage('let me back in', msgUid: 'b1', sender: _as(b)),
+      );
+      // nothing waits for the vault to open, and no tick goes back
+      expect(w.store.inbox, isEmpty);
+      expect(w.io.ticksFor('b1'), isEmpty);
+      expect(w.io.rang, isEmpty);
     });
 
     test('the tick goes as for a visible message, to the card', () async {

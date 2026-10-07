@@ -1148,22 +1148,31 @@ func nostrSubscribeRunner(ctx context.Context, peerXPubHex string, peerArr [32]b
 func nostrSubscribeRunnerMode(ctx context.Context, peerXPubHex string, peerArr [32]byte, rcvPk string, fc bool, fcCounter int) {
 	lane := receiveLane(rcvPk)
 	tag := peerXPubHex
-	unwrap := func(gw nostr2.Event) (string, error) { return nip17Unwrap(peerArr, gw) }
+	unwrap := func(gw nostr2.Event) (string, nostr2.Timestamp, error) { return nip17UnwrapStamped(peerArr, gw) }
 	if fc {
 		lane = laneFirstContact
 		tag = "firstcontact"
-		unwrap = func(gw nostr2.Event) (string, error) {
-			content, _, err := nip17UnwrapFirstContact(fcCounter, gw)
-			return content, err
+		unwrap = func(gw nostr2.Event) (string, nostr2.Timestamp, error) {
+			content, _, at, err := nip17UnwrapFirstContactStamped(fcCounter, gw)
+			return content, at, err
 		}
 	}
-	nostrSubscribeRunnerFn(ctx, lane, tag, rcvPk, unwrap)
+	nostrSubscribeRunnerAt(ctx, lane, tag, rcvPk, unwrap)
 }
 
 // the general runner: one receive address, one way to open what lands on
 // it, one tag the inbox line carries so dart knows who it was for, and the
 // lane whose circuits it may use.
 func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string, unwrap func(nostr2.Event) (string, error)) {
+	nostrSubscribeRunnerAt(ctx, lane, tag, rcvPk, func(gw nostr2.Event) (string, nostr2.Timestamp, error) {
+		content, err := unwrap(gw)
+		return content, 0, err
+	})
+}
+
+// the same, with the stamp the sender put inside the wrap handed on with
+// each line: the outer stamps are made up, that one is their clock
+func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string, unwrap func(nostr2.Event) (string, nostr2.Timestamp, error)) {
 	urls := relaysWhenSet(ctx)
 	if ctx.Err() != nil {
 		return
@@ -1264,7 +1273,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 			seen.notOpened(ev.ID)
 			return true, false
 		}
-		content, err := unwrap(gw)
+		content, sent, err := unwrap(gw)
 		if err != nil {
 			log.Printf("nostr: unwrap dropped one: %v", err)
 			seen.notOpened(ev.ID)
@@ -1277,7 +1286,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, lane, tag string, rcvPk string,
 		noteRecv()
 		nostrMu.Lock()
 		nostrInbox = append(nostrInbox, tag+"|"+content)
-		nostrInboxDone = append(nostrInboxDone, inboxDone{set: seen, id: ev.ID, at: ev.CreatedAt, resave: saveLast})
+		nostrInboxDone = append(nostrInboxDone, inboxDone{set: seen, id: ev.ID, at: ev.CreatedAt, sent: int64(sent), resave: saveLast})
 		nostrMu.Unlock()
 		short := tag
 		if len(short) > 12 {
@@ -2222,6 +2231,9 @@ func nostrPollAt(now time.Time) string {
 		return ""
 	}
 	entries, took := pollEntriesOf(lines)
+	for j, n := range took {
+		entries[j].A = done[n].sent
+	}
 	// what cannot go over never will: remembered now, as before
 	var gone []inboxDone
 	var b pollBatch
@@ -2274,6 +2286,9 @@ func pollHolds(now time.Time, size int) bool {
 type pollEntry struct {
 	T string `json:"t"`
 	C string `json:"c"`
+	// when the sender wrote it, by their clock, in seconds. 0 when the
+	// lane has no such stamp
+	A int64 `json:"a,omitempty"`
 }
 
 // content with a line break or a nul is dropped: nothing the app sends

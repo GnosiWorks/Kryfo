@@ -1606,6 +1606,8 @@
   "kryfoLinkTextThisIsAnInvite": "هذه دعوة للتحدث مع ⁨{who}⁩. لا تضفه إلا إن كنت تعرف مصدر الرابط.",
   "kryfoLinkTextAddThem": "أضِفه",
   "kryfoLinkTextNotNow": "ليس الآن",
+  "kryfoLinkTextJoinRoom": "الانضمام إلى ⁨{roomName}⁩؟",
+  "kryfoLinkTextThisIsARoom": "هذه دعوة إلى غرفة مؤقتة. لا تنضم إلا إن كنت تعرف مصدر الرابط.",
   "kryfoLinkTextJoin": "الانضمام إلى ⁨{roomName}⁩",
   "kryfoLinkTextKryfoLink": "رابط Kryfo",
   "kryfoLinkTextAdd2": "إضافة ⁨{who}⁩",

@@ -6120,6 +6120,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kryfoLinkTextNotNow => 'Not now';
 
   @override
+  String kryfoLinkTextJoinRoom(Object roomName) {
+    return 'Join $roomName?';
+  }
+
+  @override
+  String get kryfoLinkTextThisIsARoom =>
+      'This is an invite to a burner room. Join only if you know where the link came from.';
+
+  @override
   String kryfoLinkTextJoin(Object roomName) {
     return 'Join $roomName';
   }

@@ -1606,6 +1606,8 @@
   "kryfoLinkTextThisIsAnInvite": "Ini undangan untuk mengobrol dengan {who}. Tambahkan hanya kalau kamu tahu dari mana tautan ini berasal.",
   "kryfoLinkTextAddThem": "Tambahkan",
   "kryfoLinkTextNotNow": "Nanti saja",
+  "kryfoLinkTextJoinRoom": "Gabung ke {roomName}?",
+  "kryfoLinkTextThisIsARoom": "Ini undangan ke ruang sekali pakai. Gabung hanya kalau kamu tahu dari mana tautan ini berasal.",
   "kryfoLinkTextJoin": "Gabung ke {roomName}",
   "kryfoLinkTextKryfoLink": "Tautan Kryfo",
   "kryfoLinkTextAdd2": "Tambahkan {who}",

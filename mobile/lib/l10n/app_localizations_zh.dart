@@ -5883,6 +5883,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get kryfoLinkTextNotNow => '暂不';
 
   @override
+  String kryfoLinkTextJoinRoom(Object roomName) {
+    return '加入 $roomName？';
+  }
+
+  @override
+  String get kryfoLinkTextThisIsARoom => '这是一个临时聊天室的邀请。只有在你知道链接来源时才加入。';
+
+  @override
   String kryfoLinkTextJoin(Object roomName) {
     return '加入 $roomName';
   }
@@ -13136,6 +13144,14 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get kryfoLinkTextNotNow => '以後再說';
+
+  @override
+  String kryfoLinkTextJoinRoom(Object roomName) {
+    return '要加入 $roomName 嗎？';
+  }
+
+  @override
+  String get kryfoLinkTextThisIsARoom => '這是臨時聊天室的邀請。只有在你知道連結從哪裡來時，才加入。';
 
   @override
   String kryfoLinkTextJoin(Object roomName) {

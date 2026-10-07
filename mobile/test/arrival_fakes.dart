@@ -450,6 +450,31 @@ class ArrivalRows implements HaloDb {
   @override
   Future<bool> isBlocked(String haloId) async =>
       _hit('isBlocked', haloId, people[haloId]?['blocked'] == 1);
+  // each block's span, and the uids of what came while one held, as the
+  // real tables keep them
+  final blockSpans = <String, List<(int, int?)>>{};
+  final blockedDrops = <String, Set<String>>{};
+  @override
+  Future<void> setBlocked(String haloId, bool blocked) async {
+    _hit('setBlocked', haloId, null);
+    people[haloId]?['blocked'] = blocked ? 1 : 0;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final spans = blockSpans[haloId] ??= [];
+    final open = spans.indexWhere((s) => s.$2 == null);
+    if (blocked && open < 0) spans.add((now, null));
+    if (!blocked && open >= 0) spans[open] = (spans[open].$1, now);
+  }
+
+  @override
+  Future<bool> blockedAt(String haloId, int at) async => [
+    ...?blockSpans[haloId],
+  ].any((s) => s.$1 <= at && (s.$2 == null || s.$2! > at));
+  @override
+  Future<void> noteBlockedDrop(String haloId, String uid) async =>
+      (blockedDrops[haloId] ??= {}).add(uid);
+  @override
+  Future<bool> droppedWhileBlocked(String haloId, String uid) async =>
+      blockedDrops[haloId]?.contains(uid) ?? false;
   @override
   Future<bool> isMuted(String haloId) async =>
       _hit('isMuted', haloId, people[haloId]?['muted'] == 1);

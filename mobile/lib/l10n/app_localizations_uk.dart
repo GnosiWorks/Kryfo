@@ -6239,6 +6239,15 @@ class AppLocalizationsUk extends AppLocalizations {
   String get kryfoLinkTextNotNow => 'Не зараз';
 
   @override
+  String kryfoLinkTextJoinRoom(Object roomName) {
+    return 'Увійти в «$roomName»?';
+  }
+
+  @override
+  String get kryfoLinkTextThisIsARoom =>
+      'Це запрошення до одноразової кімнати. Входь, лише якщо знаєш, звідки взялося посилання.';
+
+  @override
   String kryfoLinkTextJoin(Object roomName) {
     return 'Увійти в «$roomName»';
   }

@@ -9,7 +9,8 @@ import 'dart:io';
 
 import 'package:ffi/ffi.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kryfo/main.dart' show kAskedRows, kRequestRows;
+import 'package:kryfo/main.dart'
+    show kAskedRows, kBlockedAtWhere, kRequestRows, kSeedBlockSpans;
 
 typedef _OpenC = Int32 Function(Pointer<Utf8>, Pointer<Pointer<Void>>);
 typedef _Open = int Function(Pointer<Utf8>, Pointer<Pointer<Void>>);
@@ -216,4 +217,43 @@ void main() {
     },
     skip: lib == null ? 'no sqlite library on this machine' : false,
   );
+
+  test('a block holds from its start to its end, on real sqlite, and one made '
+      'before the spans were kept holds from the start', () {
+    final db = _Sqlite(lib!);
+    addTearDown(db.close);
+    final src = File('lib/main.dart').readAsStringSync();
+    for (final t in const ['contacts', 'block_spans', 'blocked_drops']) {
+      db.exec(_create(src, t));
+    }
+    for (final (id, blocked) in const [('long-blocked', 1), ('free', 0)]) {
+      db.exec(
+        'INSERT INTO contacts (halo_id, onion, xpub, first_seen, '
+        "last_seen, blocked) VALUES ('$id', '', '', 1, 1, $blocked)",
+      );
+    }
+    db.exec(kSeedBlockSpans);
+    db.exec(
+      'INSERT INTO block_spans (peer_id, from_at, to_at) '
+      "VALUES ('was-blocked', 100, 200)",
+    );
+    bool held(String peer, int at) => db
+        .column(
+          'SELECT peer_id FROM block_spans WHERE '
+          '${kBlockedAtWhere.replaceFirst('?', "'$peer'").replaceAll('?', '$at')}',
+        )
+        .isNotEmpty;
+    expect(held('long-blocked', 5), isTrue);
+    expect(held('free', 5), isFalse);
+    expect(held('was-blocked', 99), isFalse);
+    expect(held('was-blocked', 100), isTrue);
+    expect(held('was-blocked', 199), isTrue);
+    expect(held('was-blocked', 200), isFalse);
+    // a uid is kept once per person
+    db.exec(
+      'INSERT OR REPLACE INTO blocked_drops (peer_id, uid, at) '
+      "VALUES ('was-blocked', 'u1', 1), ('was-blocked', 'u1', 2)",
+    );
+    expect(db.column('SELECT at FROM blocked_drops'), ['2']);
+  }, skip: lib == null ? 'no sqlite library on this machine' : false);
 }

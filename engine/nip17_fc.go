@@ -98,6 +98,20 @@ func nip17UnwrapFirstContact(counter int, gw nostr2.Event) (content, sealPk stri
 }
 
 func nip17UnwrapFirstContactWith(fcSk string, gw nostr2.Event) (content, sealPk string, err error) {
+	content, sealPk, _, err = nip17UnwrapFirstContactWithStamped(fcSk, gw)
+	return content, sealPk, err
+}
+
+// with the stamp the sender's rumor carries
+func nip17UnwrapFirstContactStamped(counter int, gw nostr2.Event) (content, sealPk string, at nostr2.Timestamp, err error) {
+	fcSk, _, err := nip17FirstContactKeys(counter)
+	if err != nil {
+		return "", "", 0, err
+	}
+	return nip17UnwrapFirstContactWithStamped(fcSk, gw)
+}
+
+func nip17UnwrapFirstContactWithStamped(fcSk string, gw nostr2.Event) (content, sealPk string, at nostr2.Timestamp, err error) {
 	rumor, err := nip59.GiftUnwrap(gw, func(otherPk, ct string) (string, error) {
 		k, kerr := nip44.GenerateConversationKey(otherPk, fcSk)
 		if kerr != nil {
@@ -106,7 +120,7 @@ func nip17UnwrapFirstContactWith(fcSk string, gw nostr2.Event) (content, sealPk 
 		return nip44.Decrypt(ct, k)
 	})
 	if err != nil {
-		return "", "", err
+		return "", "", 0, err
 	}
-	return rumor.Content, rumor.PubKey, nil
+	return rumor.Content, rumor.PubKey, rumor.CreatedAt, nil
 }

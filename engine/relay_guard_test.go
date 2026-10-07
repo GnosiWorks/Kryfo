@@ -180,7 +180,7 @@ func TestPollIsOneEntryPerEvent(t *testing.T) {
 	if err := json.Unmarshal([]byte(raw), &got); err != nil {
 		t.Fatal(err)
 	}
-	want := []pollEntry{{"firstcontact", "AAAA"}, {"room:ab:cd", `{"t":"x"}`}, {"abc", "a|b"}, {"abc", ""}}
+	want := []pollEntry{{T: "firstcontact", C: "AAAA"}, {T: "room:ab:cd", C: `{"t":"x"}`}, {T: "abc", C: "a|b"}, {T: "abc", C: ""}}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("poll entries %q, want %q", got, want)
 	}
@@ -223,7 +223,16 @@ func TestPollCarriesEachEventUnderItsOwnTag(t *testing.T) {
 	waitFor(t, "every event opened", 10*time.Second, func() bool { return inboxLen() == 5 })
 	got := pollEntries(t)
 	sort.Slice(got, func(i, j int) bool { return got[i].T < got[j].T })
-	want := []pollEntry{{friendTag, "from a friend"}, {"firstcontact", "hello"}}
+	// each carries the stamp the sender wrote it at, a friend's and a
+	// stranger's alike, not the made-up one outside the wrap
+	now := time.Now().Unix()
+	for i, e := range got {
+		if e.A < now-60 || e.A > now+5 {
+			t.Fatalf("%s came stamped %d, not when it was written (%d)", e.T, e.A, now)
+		}
+		got[i].A = 0
+	}
+	want := []pollEntry{{T: friendTag, C: "from a friend"}, {T: "firstcontact", C: "hello"}}
 	sort.Slice(want, func(i, j int) bool { return want[i].T < want[j].T })
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("the app got %q, want %q", got, want)

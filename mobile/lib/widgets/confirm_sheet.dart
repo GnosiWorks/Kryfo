@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 
 import '../bidi_safe.dart';
+import '../lock_guard.dart';
 import '../theme.dart';
 import 'halo_sheet.dart';
 import 'sheet_handle.dart';
@@ -138,7 +139,8 @@ Future<String?> showChangeOrRemoveSheet(
 );
 
 // a question with one consequential answer. rose when it destroys something.
-// [figure] is the number the answer turns on, such as a size, above the line
+// [figure] is the number the answer turns on, such as a size, above the line.
+// with [shutOnLock] the sheet goes as that lock comes up, and that is a no
 Future<bool> showConfirmSheet(
   BuildContext context, {
   required String title,
@@ -147,24 +149,66 @@ Future<bool> showConfirmSheet(
   String? keep,
   String? figure,
   bool rose = true,
+  LockGuard? shutOnLock,
 }) async {
   final r = await showHaloSheet<bool>(
     context,
-    builder: (ctx) => _frame(ctx, [
-      _title(title, color: rose ? HaloColors.rose : null),
-      if (figure != null) ...[
+    builder: (ctx) {
+      final body = _frame(ctx, [
+        _title(title, color: rose ? HaloColors.rose : null),
+        if (figure != null) ...[
+          const SizedBox(height: 8),
+          Text(figure, style: HaloType.mono(size: 12, color: HaloColors.amber)),
+        ],
         const SizedBox(height: 8),
-        Text(figure, style: HaloType.mono(size: 12, color: HaloColors.amber)),
-      ],
-      const SizedBox(height: 8),
-      _line(line),
-      const SizedBox(height: 16),
-      _primary(yes, () => Navigator.pop(ctx, true), rose: rose),
-      const SizedBox(height: 6),
-      _quiet(keep ?? l10n.confirmSheetKeep, () => Navigator.pop(ctx, false)),
-    ]),
+        _line(line),
+        const SizedBox(height: 16),
+        _primary(yes, () => Navigator.pop(ctx, true), rose: rose),
+        const SizedBox(height: 6),
+        _quiet(keep ?? l10n.confirmSheetKeep, () => Navigator.pop(ctx, false)),
+      ]);
+      return shutOnLock == null
+          ? body
+          : _ShutOnLock(guard: shutOnLock, child: body);
+    },
   );
   return r == true;
+}
+
+// a sheet taken off as the lock comes up, so it never waits behind it
+class _ShutOnLock extends StatefulWidget {
+  const _ShutOnLock({required this.guard, required this.child});
+  final LockGuard guard;
+  final Widget child;
+  @override
+  State<_ShutOnLock> createState() => _ShutOnLockState();
+}
+
+class _ShutOnLockState extends State<_ShutOnLock> {
+  VoidCallback? _unguard;
+
+  @override
+  void initState() {
+    super.initState();
+    _unguard = widget.guard.closeOnLock(_shut);
+  }
+
+  void _shut() {
+    if (!mounted) return;
+    final route = ModalRoute.of(context);
+    if (route != null && route.isActive) {
+      Navigator.of(context).removeRoute(route);
+    }
+  }
+
+  @override
+  void dispose() {
+    _unguard?.call();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 // one line of text. null when dismissed.

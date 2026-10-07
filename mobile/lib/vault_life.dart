@@ -276,6 +276,9 @@ const _peerRows = {
       'media_id IN (SELECT media_id FROM {s}.media_wants WHERE peer_id = ?1)',
   'media_wants': 'peer_id = ?1',
   'held_onion': 'peer_id = ?1',
+  // a block's spans and what it dropped go where the person goes
+  'block_spans': 'peer_id = ?1',
+  'blocked_drops': 'peer_id = ?1',
   'shield': 'halo_id = ?1',
   'vouches': 'halo_id = ?1 OR voucher_id = ?1',
 };

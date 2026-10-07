@@ -6136,6 +6136,15 @@ class AppLocalizationsFa extends AppLocalizations {
   String get kryfoLinkTextNotNow => 'فعلاً نه';
 
   @override
+  String kryfoLinkTextJoinRoom(Object roomName) {
+    return 'پیوستن به ⁨$roomName⁩؟';
+  }
+
+  @override
+  String get kryfoLinkTextThisIsARoom =>
+      'این دعوتی به یک اتاق یک‌بارمصرف است. فقط وقتی بپیوندید که بدانید پیوند از کجا آمده.';
+
+  @override
   String kryfoLinkTextJoin(Object roomName) {
     return 'پیوستن به ⁨$roomName⁩';
   }

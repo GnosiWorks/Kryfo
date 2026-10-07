@@ -15,6 +15,7 @@ import 'dlog.dart';
 import 'main.dart' show HaloDb, kFrameReaction, kFrameUnsend;
 import 'media_send.dart' show cancelMediaSend, mediaInflight;
 import 'polls.dart' show PollSpec, PollVote;
+import 'scam_prefs.dart' show loadScamShieldOn;
 import 'search.dart' show SearchKind;
 
 class Session {
@@ -238,6 +239,10 @@ class Session {
       _ofPeer(haloId).setVerified(haloId, verified);
   Future<Map<String, Object?>?> shieldFor(String haloId) =>
       _ofPeer(haloId).shieldFor(haloId);
+  // what the shield made of someone, while it is on. off, no verdict shows,
+  // safe or not, whatever it said while it ran
+  Future<Map<String, Object?>?> shownShieldFor(String haloId) async =>
+      await loadScamShieldOn(container) ? shieldFor(haloId) : null;
   Future<List<({int id, String cipher})>> heldOf(String peerId) =>
       _ofPeer(peerId).heldOf(peerId);
   Future<void> forgetHeld(String peerId, int id) =>

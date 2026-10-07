@@ -1606,6 +1606,8 @@
   "kryfoLinkTextThisIsAnInvite": "这是一个和 {who} 聊天的邀请。只有在你知道链接来源时才添加对方。",
   "kryfoLinkTextAddThem": "添加对方",
   "kryfoLinkTextNotNow": "暂不",
+  "kryfoLinkTextJoinRoom": "加入 {roomName}？",
+  "kryfoLinkTextThisIsARoom": "这是一个临时聊天室的邀请。只有在你知道链接来源时才加入。",
   "kryfoLinkTextJoin": "加入 {roomName}",
   "kryfoLinkTextKryfoLink": "Kryfo 链接",
   "kryfoLinkTextAdd2": "添加 {who}",

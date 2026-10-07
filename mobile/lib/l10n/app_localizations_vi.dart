@@ -6112,6 +6112,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get kryfoLinkTextNotNow => 'Để sau';
 
   @override
+  String kryfoLinkTextJoinRoom(Object roomName) {
+    return 'Tham gia $roomName?';
+  }
+
+  @override
+  String get kryfoLinkTextThisIsARoom =>
+      'Đây là lời mời vào một phòng tạm. Chỉ tham gia nếu bạn biết liên kết này đến từ đâu.';
+
+  @override
   String kryfoLinkTextJoin(Object roomName) {
     return 'Tham gia $roomName';
   }

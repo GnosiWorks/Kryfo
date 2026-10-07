@@ -1606,6 +1606,8 @@
   "kryfoLinkTextThisIsAnInvite": "Das ist eine Einladung zum Gespräch mit {who}. Füge die Person nur hinzu, wenn du weißt, woher der Link kommt.",
   "kryfoLinkTextAddThem": "Hinzufügen",
   "kryfoLinkTextNotNow": "Nicht jetzt",
+  "kryfoLinkTextJoinRoom": "{roomName} beitreten?",
+  "kryfoLinkTextThisIsARoom": "Das ist eine Einladung in einen Wegwerf-Raum. Tritt nur bei, wenn du weißt, woher der Link kommt.",
   "kryfoLinkTextJoin": "{roomName} beitreten",
   "kryfoLinkTextKryfoLink": "Kryfo-Link",
   "kryfoLinkTextAdd2": "{who} hinzufügen",
