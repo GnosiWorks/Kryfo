@@ -1,3 +1,5 @@
-Mới: mã PIN ngụy trang mở ra một Kryfo trống, trò chuyện ẩn sau một mã PIN riêng, nhãn dán động, và một cuộc trò chuyện với Marios, người làm ra Kryfo, ẩn danh nếu bạn muốn. Mã ghép nối giờ cho thấy bạn đang thêm ai, để đối chiếu với màn hình của họ.
+Mới: mã PIN ngụy trang mở ra một Kryfo trống, trò chuyện ẩn sau một mã PIN riêng, nhãn dán động, và một cuộc trò chuyện với Marios, người làm ra Kryfo, ẩn danh nếu bạn muốn.
+
+Tin nhắn tự hủy bạn nhận được bắt đầu đếm ngược khi được đọc, hoặc một ngày sau khi đến nếu vẫn chưa đọc. Gửi tin ổn định hơn sau khi ngoại tuyến, và khóa ứng dụng bật lên chắc chắn hơn khi bạn rời ứng dụng.
 
 Cải thiện bảo mật ở khắp nơi. Hãy cập nhật khi có thể.

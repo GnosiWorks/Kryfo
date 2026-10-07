@@ -1,3 +1,5 @@
-Yeni: boş bir Kryfo açan yem PIN’i, kendi PIN’i olan gizli sohbetler, animasyonlu çıkartmalar ve Kryfo’yu yapan Marios ile bir sohbet, istersen anonim. Eşleştirme kodları artık kimi eklediğini gösteriyor, karşındakinin ekranıyla karşılaştırabilmen için.
+Yeni: boş bir Kryfo açan yem PIN’i, kendi PIN’i olan gizli sohbetler, animasyonlu çıkartmalar ve Kryfo’yu yapan Marios ile bir sohbet, istersen anonim.
+
+Aldığın süreli mesajlar okunduğunda geri sayıma başlar, okunmazsa gelişinden bir gün sonra. Çevrimdışı kaldıktan sonra teslim daha istikrarlı, uygulamadan çıktığında da uygulama kilidi daha güvenilir şekilde devreye giriyor.
 
 Her yerde güvenlik iyileştirmeleri. Fırsat bulunca güncelle.

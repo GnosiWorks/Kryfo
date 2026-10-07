@@ -1,3 +1,5 @@
-New: a decoy pin that opens an empty Kryfo, hidden chats behind a pin of their own, animated stickers, and a chat with Marios, who builds Kryfo, anonymous if you like. Pair codes now show who you are adding, to check against their screen.
+New: a decoy pin that opens an empty Kryfo, hidden chats behind a pin of their own, animated stickers, and a chat with Marios, who builds Kryfo, anonymous if you like.
+
+Timed messages you receive start counting down when read, or a day after they arrive if still unread. Delivery is steadier after time offline, and the app lock comes up more reliably when you leave the app.
 
 Security improvements throughout. Update when you can.

@@ -1,3 +1,5 @@
-Novo: um PIN de disfarce que abre um Kryfo vazio, conversas ocultas atrás de um PIN próprio, figurinhas animadas e uma conversa com o Marios, que cria o Kryfo, anonimamente se você quiser. Os códigos de pareamento agora mostram quem você está adicionando, para conferir com a tela da pessoa.
+Novo: um PIN de disfarce que abre um Kryfo vazio, conversas ocultas atrás de um PIN próprio, figurinhas animadas e uma conversa com o Marios, que cria o Kryfo, anonimamente se você quiser.
+
+A contagem das mensagens temporárias recebidas começa na leitura, ou um dia após a chegada se continuarem não lidas. Entrega mais estável depois de um tempo offline, e o bloqueio do app aparece de forma mais confiável quando você sai dele.
 
 Melhorias de segurança em todo o app. Atualize quando puder.

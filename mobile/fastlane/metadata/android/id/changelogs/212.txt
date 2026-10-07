@@ -1,3 +1,5 @@
-Baru: PIN umpan yang membuka Kryfo kosong, obrolan tersembunyi di balik PIN tersendiri, stiker animasi, dan obrolan dengan Marios, pembuat Kryfo, secara anonim kalau kamu mau. Kode penautan kini menunjukkan siapa yang kamu tambahkan, untuk dicocokkan dengan layar orang itu.
+Baru: PIN umpan yang membuka Kryfo kosong, obrolan tersembunyi di balik PIN tersendiri, stiker animasi, dan obrolan dengan Marios, pembuat Kryfo, secara anonim kalau kamu mau.
+
+Pesan berwaktu yang kamu terima mulai menghitung mundur saat dibaca, atau sehari setelah tiba jika belum dibaca. Pengiriman lebih stabil setelah lama offline, dan kunci aplikasi muncul lebih andal saat kamu keluar dari aplikasi.
 
 Peningkatan keamanan di seluruh aplikasi. Perbarui kalau sempat.

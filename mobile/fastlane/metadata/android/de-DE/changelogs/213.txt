@@ -1,3 +1,5 @@
-Neu: eine Tarn-PIN, die ein leeres Kryfo öffnet, versteckte Chats hinter einer eigenen PIN, animierte Sticker und ein Chat mit Marios, der Kryfo baut, auf Wunsch anonym. Kopplungscodes zeigen jetzt, wen du hinzufügst, zum Vergleich mit dem Bildschirm der Person.
+Neu: eine Tarn-PIN, die ein leeres Kryfo öffnet, versteckte Chats hinter einer eigenen PIN, animierte Sticker und ein Chat mit Marios, der Kryfo baut, auf Wunsch anonym.
+
+Befristete Nachrichten, die du bekommst, zählen ab dem Lesen herunter, ungelesen spätestens ab einem Tag nach dem Eingang. Die Zustellung nach einer Zeit offline ist stabiler, und die App-Sperre greift zuverlässiger, wenn du die App verlässt.
 
 Sicherheitsverbesserungen überall. Aktualisiere, wenn du kannst.

@@ -1,3 +1,5 @@
-Novità: un PIN esca che apre un Kryfo vuoto, chat nascoste dietro un PIN tutto loro, sticker animati e una chat con Marios, che crea Kryfo, in forma anonima se vuoi. I codici di abbinamento ora mostrano chi stai aggiungendo, da confrontare con il suo schermo.
+Novità: un PIN esca che apre un Kryfo vuoto, chat nascoste dietro un PIN tutto loro, sticker animati e una chat con Marios, che crea Kryfo, in forma anonima se vuoi.
+
+I messaggi a tempo che ricevi avviano il conto alla rovescia quando li leggi, o un giorno dopo l'arrivo se restano non letti. Consegna più stabile dopo un periodo offline, e il blocco app scatta in modo più affidabile quando esci dall'app.
 
 Miglioramenti alla sicurezza ovunque. Aggiorna appena puoi.

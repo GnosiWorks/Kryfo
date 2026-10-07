@@ -3,14 +3,32 @@
 ## [Unreleased]
 
 ### Added
-- decoy pin: a second pin opens an empty kryfo, as if just installed. set it up in app lock, advanced protection.
+- decoy pin: a second pin opens an empty Kryfo, as if just installed. set it up in app lock, advanced protection.
 - a chat with Marios, who builds Kryfo, pinned at the top of the list. nothing is sent until you write, and you can write anonymously, from a name made for that chat alone. his key is built into the app.
 - pair codes show the other person's three words and face to check against their screen before adding them.
 - hidden chats: chosen chats and groups stay out of the chat list, search and notifications until you enter the hidden chats pin. set it up in app lock, advanced protection.
 - stickers: the Fokia and Fokia Remix packs, 47 animated stickers, in chats, groups and rooms. a sticker travels as its name and the app draws it, so it costs a few bytes and no picture leaves the phone. older versions show its emoji.
+- a group file's bubble says how many members have it, and after three days how many didn't get it.
 
 ### Changed
+- a timed message you receive starts its countdown when you first see it, or a day after it arrives if still unread. blocking someone starts the countdown on their unread ones. your own copy still counts from when you send it. unread timed messages stay out of search, shared media, pins and previews until read.
+- delivery is steadier after being offline. messages fetched from relays are kept until the app confirms it has them, and a long catch-up runs to the end, in order.
+- a relay that fails now and then is tried again sooner, sends wait longer for a slow relay over tor, and missing pieces of a file are asked for sooner.
+- in groups, texts, polls, stickers, files, member changes and deletions for everyone go again to members a send missed, in order, until each has them.
+- messages sent in quick succession keep their order and all go out.
+- the app lock comes up more reliably when you leave the app, also from a photo or file picker.
 - the app lock is drawn above every screen, sheet and dialog, and players, the recorder and the camera stop when it comes up.
+- the composer no longer shows a proof-of-work line for a first message to someone new.
+- home, chats and settings show one connection state, and the tor sheet says when tor is up but no relay answers yet.
+- the strip on home shows only when the phone cannot send, and the waiting line under bubbles is gone.
+- time and ticks on bubbles are lighter.
+- a chat keeps your reading place when new messages arrive.
+- videos, and files whose name carries a date, leave under a made-up name with the same extension, so the name no longer says when something was taken.
+- pairing and adding say what went wrong, such as your own invite or someone you blocked.
+- a restore that stops partway says so, closes Kryfo and asks for the file once more.
+- deleting your handle asks first.
+- safety numbers read left to right in every language, and the camera timer keeps its digits still.
+- Kryfo calls itself alpha everywhere. a few places said pre-alpha.
 - arabic and persian text uses fuller fonts, so every mark and joiner shows.
 - handle, search and badge requests go over a tor circuit of their own, and your handle is only sent again when your invite changes.
 - lists, sheets and transitions across the app were polished, and every language uses sentence case.
@@ -20,9 +38,17 @@
 - the relay takes only what the app sends and paces each connection, the handle registry paces reads, writes and new names, and the badge service paces receipt checks.
 - the tor dot on the chat list and in chats stops pulsing once tor is usable, and pulses only a few times while it starts.
 - chat stickers play three times and rest; a tap plays them again. open chats stop their timers while they are out of sight, and the drifting chat backgrounds hold still with reduced motion.
-- a timed message you receive starts its countdown when you first see it, or a day after it arrives if still unread. blocking someone starts the countdown on their unread ones. your own copy still counts from when you send it. unread timed messages stay out of shared media, pins and search until read.
+
+### Fixed
+- notifications use the name you gave a contact, and clear when you open the chat.
+- clearing, deleting or declining a chat also removed that person's messages in groups.
+- rooms could stop receiving after a change of delivery mode.
+- a menu could open under the keyboard.
+- the button on the restore sheet could be out of reach.
 
 ### Security
+- every photo is cleaned of its metadata again right before it goes, retries included.
+- the engine's crypto and network libraries are updated: x/crypto 0.55.0, x/net 0.58.0, age 1.3.2 and websocket 1.8.15.
 - security improvements throughout. update when you can.
 
 ## [0.4.2] - 2026-09-28

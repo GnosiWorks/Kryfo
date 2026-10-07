@@ -1,3 +1,5 @@
-Nouveau : un code leurre qui ouvre un Kryfo vide, des discussions masquées derrière leur propre code, des stickers animés, et une discussion avec Marios, qui crée Kryfo, anonymement si vous le souhaitez. Les codes d’appairage montrent maintenant qui vous ajoutez, à comparer avec son écran.
+Nouveau : un code leurre qui ouvre un Kryfo vide, des discussions masquées derrière leur propre code, des stickers animés, et une discussion avec Marios, qui crée Kryfo, anonymement si vous voulez.
+
+Le compte à rebours des messages éphémères reçus démarre à la lecture, au plus tard un jour après l’arrivée. Distribution plus stable après une période hors ligne, et verrouillage plus fiable quand vous quittez l’app.
 
 Des améliorations de sécurité partout. Mettez à jour dès que possible.
