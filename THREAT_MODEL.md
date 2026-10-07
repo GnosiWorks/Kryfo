@@ -5,8 +5,9 @@ put you in danger, read all of it.
 
 ## what it protects against
 
-- network observers. everything goes through tor. your isp sees a tor
-  connection, not who you talk to or what you say.
+- network observers. by default everything goes through tor. your isp sees
+  a tor connection, not who you talk to or what you say. relay and fast
+  modes, which you can choose, skip tor for speed.
 - the relays. offline messages sit on nostr relays sealed with nip-44/59. a
   relay learns neither who is talking nor what is said.
 - server seizure. there is no central server holding a contact graph or

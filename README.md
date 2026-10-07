@@ -1,8 +1,8 @@
 # Kryfo
 
 a private messenger for android. no phone number, no email, no account.
-messages are end to end encrypted and go phone to phone over tor onion
-services, or wait on nostr relays when the other side is offline.
+messages are end to end encrypted and by default go phone to phone over
+tor onion services, or wait on nostr relays when the other side is offline.
 
 alpha and not audited yet. THREAT_MODEL.md says what it protects against
 and what it doesn't.
