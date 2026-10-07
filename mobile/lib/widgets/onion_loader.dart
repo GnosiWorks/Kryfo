@@ -9,10 +9,13 @@ import 'package:flutter/material.dart';
 class OnionLoader extends StatefulWidget {
   final double size;
   final Color color;
+  // the drawn lines. null keeps the warm highlights made for a dark page
+  final Color? ink;
   const OnionLoader({
     super.key,
     this.size = 120,
     this.color = const Color(0xFFF59E0B),
+    this.ink,
   });
 
   @override
@@ -56,6 +59,7 @@ class _OnionLoaderState extends State<OnionLoader>
         painter: _OnionPainter(
           (_c.value * 64).floorToDouble() / 64,
           widget.color,
+          widget.ink,
         ),
       ),
     ),
@@ -111,7 +115,8 @@ Path _onionLayers() {
 class _OnionPainter extends CustomPainter {
   final double t;
   final Color color;
-  _OnionPainter(this.t, this.color);
+  final Color? ink;
+  _OnionPainter(this.t, this.color, this.ink);
 
   // the art never changes, so the arc metrics are computed once, not every
   // frame
@@ -167,7 +172,7 @@ class _OnionPainter extends CustomPainter {
       _stM,
       _stTotal,
       fStruct,
-      _p(2.2, const Color(0xFFFFD27A)),
+      _p(2.2, ink ?? const Color(0xFFFFD27A)),
     );
     _drawPartial(
       canvas,
@@ -175,11 +180,11 @@ class _OnionPainter extends CustomPainter {
       _lyM,
       _lyTotal,
       fLayer,
-      _p(1.5, const Color(0xFFFBBF4D)),
+      _p(1.5, ink?.withValues(alpha: 0.8) ?? const Color(0xFFFBBF4D)),
     );
   }
 
   @override
   bool shouldRepaint(covariant _OnionPainter old) =>
-      old.t != t || old.color != color;
+      old.t != t || old.color != color || old.ink != ink;
 }
