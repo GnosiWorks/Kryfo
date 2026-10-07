@@ -17,6 +17,7 @@ import 'package:kryfo/container.dart';
 import 'package:kryfo/main.dart'
     show HaloDb, HaloEngine, useDatabasesForTest, useEngineForTest;
 import 'package:kryfo/session.dart';
+import 'package:kryfo/signal_session.dart' show kSessionsRestoredPref;
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -207,6 +208,9 @@ void main() {
     expect(await store.read(key: 'halo.db.passphrase'), 'everyday key');
     expect(await store.read(key: 'halo.d.key'), "x'${'4e' * 32}'");
     expect(await store.read(key: 'my_handle'), 'mine');
+    // the everyday sessions are not the ones that came back
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.containsKey(kSessionsRestoredPref), isFalse);
     // nothing staged is left behind
     expect(Directory(p.join(docs, 'restore_d')).existsSync(), isFalse);
   });
@@ -228,6 +232,8 @@ void main() {
     });
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.containsKey('moved.at'), isFalse);
+    // and the next start marks the sessions the file brought back
+    expect(prefs.getBool(kSessionsRestoredPref), isTrue);
     expect(e.restored, ['ed']);
     expect(
       File(p.join(root.path, 'docs', 'halo.db')).readAsStringSync(),

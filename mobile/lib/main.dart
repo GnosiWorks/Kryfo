@@ -4968,6 +4968,32 @@ class HaloDb implements GroupOwedStore {
     return out;
   }
 
+  /// texts of ours to [peer] since [since] that went out and never came
+  /// back delivered, put back in the outbox. how many
+  Future<int> resendUndelivered(String peer, {required int since}) async {
+    final db = await open();
+    final rows = await db.query(
+      'messages',
+      columns: ['msg_uid', 'group_id', 'sent_at'],
+      where:
+          "peer_id = ? AND direction = 'out' AND sent = 1 AND delivered = 0 "
+          'AND msg_uid IS NOT NULL AND media_path IS NULL AND file_path IS NULL',
+      whereArgs: [peer],
+    );
+    var n = 0;
+    for (final r in rows) {
+      if ((r['group_id'] as String? ?? '').isNotEmpty) continue;
+      if ((r['sent_at'] as int) < since) continue;
+      n += await db.update(
+        'messages',
+        {'sent': 0},
+        where: 'msg_uid = ? AND sent = 1 AND delivered = 0',
+        whereArgs: [r['msg_uid']],
+      );
+    }
+    return n;
+  }
+
   Future<void> markSent(String msgUid) async {
     final db = await open();
     await db.update(
@@ -5564,6 +5590,26 @@ Future<String> makePreKeyBundleB64([SignalSession? of]) async {
   return base64Encode(utf8.encode(jsonEncode(bundle)));
 }
 
+/// opens the everyday signal store. the first start after a restore marks
+/// the sessions the file brought back as it opens, before anything can seal
+/// on one, and the restore's pref goes once they are written down
+Future<void> openSignalStore(
+  SignalSession ss, {
+  required Database database,
+  required Uint8List xPubBytes,
+  required Uint8List xPrivBytes,
+}) async {
+  final prefs = await SharedPreferences.getInstance();
+  final restored = prefs.getBool(kSessionsRestoredPref) == true;
+  await ss.bootstrap(
+    database: database,
+    xPubBytes: xPubBytes,
+    xPrivBytes: xPrivBytes,
+    restored: restored,
+  );
+  if (restored) await prefs.remove(kSessionsRestoredPref);
+}
+
 // the store a peer's messages go through: the everyday one, and for the
 // dev chat the one it was started with. null for a dev chat that has none
 // (not started, deleted, restored without its made name) and for any other
@@ -5580,18 +5626,7 @@ Future<void> processPeerBundle(
 }) async {
   final ss = into ?? await signalFor(haloId);
   if (ss == null) throw StateError('no signal store for this chat');
-  final j =
-      jsonDecode(utf8.decode(base64Decode(bundleB64))) as Map<String, dynamic>;
-  final preKeyBundle = PreKeyBundle(
-    j['registrationId'] as int,
-    j['deviceId'] as int,
-    j['preKeyId'] as int,
-    Curve.decodePoint(base64Decode(j['preKeyPublic'] as String), 0),
-    j['signedPreKeyId'] as int,
-    Curve.decodePoint(base64Decode(j['signedPreKeyPublic'] as String), 0),
-    base64Decode(j['signedPreKeySignature'] as String),
-    IdentityKey(Curve.decodePoint(base64Decode(j['identityKey'] as String), 0)),
-  );
+  final preKeyBundle = preKeyBundleOf(bundleB64);
   final addr = SignalProtocolAddress(haloId, 1);
   final builder = SessionBuilder(
     ss.sessionStore,
@@ -5601,6 +5636,22 @@ Future<void> processPeerBundle(
     addr,
   );
   await ss.serial(haloId, () => builder.processPreKeyBundle(preKeyBundle));
+}
+
+/// a card's prekey bundle as signal takes it
+PreKeyBundle preKeyBundleOf(String bundleB64) {
+  final j =
+      jsonDecode(utf8.decode(base64Decode(bundleB64))) as Map<String, dynamic>;
+  return PreKeyBundle(
+    j['registrationId'] as int,
+    j['deviceId'] as int,
+    j['preKeyId'] as int,
+    Curve.decodePoint(base64Decode(j['preKeyPublic'] as String), 0),
+    j['signedPreKeyId'] as int,
+    Curve.decodePoint(base64Decode(j['signedPreKeyPublic'] as String), 0),
+    base64Decode(j['signedPreKeySignature'] as String),
+    IdentityKey(Curve.decodePoint(base64Decode(j['identityKey'] as String), 0)),
+  );
 }
 
 // best-effort wipe of key or plaintext bytes from ram. dart strings are
@@ -5623,8 +5674,17 @@ Future<bool> hasSessionWith(String peerId) async {
 // the wire asks for. either store seals one frame at a time per peer
 Future<String> signalEncrypt(String peerId, String plaintext) async {
   if (isDevId(peerId)) return devLane.encrypt(peerId, plaintext);
-  return signalSession.encryptTo(peerId, plaintext);
+  final from = _afreshFrom;
+  return signalSession.encryptTo(
+    peerId,
+    plaintext,
+    afresh: from == null ? null : () => from(peerId),
+  );
 }
+
+// where a seal finds a peer's card to start a session afresh from, after a
+// restore: the app state's rows. set as it is made
+Future<PreKeyBundle?> Function(String peer)? _afreshFrom;
 
 bool _eqBytes(List<int> a, List<int> b) {
   if (a.length != b.length) return false;
@@ -6743,6 +6803,7 @@ class AppState extends ChangeNotifier {
     devLane.chat = () => live.devChat.load();
     devLane.open = () => live.open();
     wipeForget = _dropOpened;
+    _afreshFrom = _afreshCard;
   }
 
   // signal, the engine and android, as the receive side reaches them
@@ -7057,6 +7118,7 @@ class AppState extends ChangeNotifier {
     unawaited(_drainFrames());
     unawaited(_drainGroupCtl());
     unawaited(_drainGroupOwed());
+    unawaited(_askAfresh());
     if (rows.isEmpty && vRows.isEmpty) {
       if (_outboxTries.isNotEmpty) {
         _outboxTries.clear();
@@ -11687,6 +11749,8 @@ class AppState extends ChangeNotifier {
   final Map<String, int> _healPending = {};
   final Map<String, int> _bundleCtlSentAt = {};
   static const _healTtl = 60 * 60 * 1000;
+  // how far back an ask to start afresh puts undelivered texts out again
+  static const _kResendWindow = Duration(days: 7);
   void _pruneHeal() {
     final cut = DateTime.now().millisecondsSinceEpoch - _healTtl;
     _healPending.removeWhere((_, t) => t < cut);
@@ -12226,7 +12290,13 @@ class AppState extends ChangeNotifier {
           shown = _shown(paired.$2);
         }
       }
-      if (!landed) _strikeUndecryptable(h, 'nostr');
+      if (!landed) {
+        _strikeUndecryptable(h, 'nostr');
+        // on the lane of someone we hold a session with: theirs and ours
+        // have gone apart, a restore on one side say. they are asked to
+        // start afresh, and they put again what never came back delivered
+        if (haloId != null && !fcLane) unawaited(_askToStartAfresh(haloId));
+      }
       if (shown) arrived();
       return;
     }
@@ -12735,7 +12805,8 @@ class AppState extends ChangeNotifier {
     try {
       final database = await live.open();
       final xpb = _hexDecode(engine.myXPrivkey());
-      await signalSession.bootstrap(
+      await openSignalStore(
+        signalSession,
         database: database,
         xPubBytes: _hexDecode(engine.myXPubkey()),
         xPrivBytes: xpb,
@@ -13428,6 +13499,68 @@ class AppState extends ChangeNotifier {
     avatar: _myAvatar,
   );
 
+  // the card a seal starts a session afresh from, when the one held came
+  // back with a restore. with none kept they are asked for theirs: their
+  // answer leaves it on the row, and the outbox sends again
+  Future<PreKeyBundle?> _afreshCard(String peer) async {
+    final card = (await _reach(peer))?.bundle;
+    if (card != null && card.isNotEmpty) {
+      try {
+        return preKeyBundleOf(card);
+      } catch (e) {
+        dlog('afresh: their card does not read (${e.runtimeType})');
+      }
+    }
+    unawaited(_askToStartAfresh(peer));
+    return null;
+  }
+
+  // people asked this run to start afresh with us, and when a pass last
+  // looked. a restore brought back sessions their side has gone past: ours
+  // is not sealed on again, and what they seal on theirs may not open here.
+  // the ask hands them our card, they start a session from it, send back
+  // theirs and put again what of theirs never came back delivered
+  final Set<String> _askedAfresh = {};
+  int _afreshLookedAt = 0;
+  Future<void>? _afreshPass;
+
+  Future<void> _askAfresh() =>
+      _afreshPass ??= _askAfreshRound().whenComplete(() => _afreshPass = null);
+
+  Future<void> _askAfreshRound() async {
+    if (!signalSession.ready || !signalSession.hasRestored) return;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (now - _afreshLookedAt < 10 * 60 * 1000) return;
+    _afreshLookedAt = now;
+    // the open vault's people too: one shut now is looked at on a later pass
+    for (final d in [live, ?_openVault]) {
+      final List<Map<String, Object?>> people;
+      try {
+        people = await d.contacts();
+      } catch (_) {
+        continue;
+      }
+      for (final r in people) {
+        final id = r['halo_id'] as String;
+        if (isDevId(id) || _askedAfresh.contains(id)) continue;
+        if (!await signalSession.sealsOnRestored(id)) continue;
+        if (await _askToStartAfresh(id)) _askedAfresh.add(id);
+      }
+    }
+  }
+
+  @visibleForTesting
+  Future<void> askAfreshForTest() => _askAfresh();
+
+  // [peer] asked to start a session with us afresh from our card. their
+  // answer carries theirs, and ours starts afresh from it too. true once the
+  // relay took the ask
+  Future<bool> _askToStartAfresh(String peer) async {
+    if (!await _io.hasSession(peer)) return false;
+    _wantHeal(peer);
+    return _sendBundleCtl(peer, want: true);
+  }
+
   // wipe a corrupt outbound session and rebuild it from the peer's stored
   // prekey bundle. false if we never kept a bundle: the caller then surfaces
   // the original failure.
@@ -13454,22 +13587,23 @@ class AppState extends ChangeNotifier {
   // ship our prekey bundle to a peer over the gift-wrap transport: no
   // signal session needed, which is the point, since ours to them is broken.
   // want=true asks them to reset their session with us and send theirs back.
-  Future<void> _sendBundleCtl(String memberId, {required bool want}) async {
+  // true once the relay took it
+  Future<bool> _sendBundleCtl(String memberId, {required bool want}) async {
     // the dev chat's bundle is pinned: nothing goes to him in the clear
-    if (isDevId(memberId)) return;
+    if (isDevId(memberId)) return false;
     final key = '$memberId:$want';
     final now = DateTime.now().millisecondsSinceEpoch;
     if (now - (_bundleCtlSentAt[key] ?? 0) < 60000) {
-      return; // 1/min, not 1/chunk
+      return false; // 1/min, not 1/chunk
     }
     _pruneHeal();
     _bundleCtlSentAt[key] = now;
     try {
       final to = await _reach(memberId);
       // nothing goes to someone blocked, not even keys
-      if (await to?.on?.isBlocked(memberId) ?? false) return;
+      if (await to?.on?.isBlocked(memberId) ?? false) return false;
       final xpub = to?.xpub ?? '';
-      if (xpub.isEmpty) return;
+      if (xpub.isEmpty) return false;
       final payload = jsonEncode({
         'halo_ctl': 'bundle',
         'from': myId,
@@ -13478,8 +13612,10 @@ class AppState extends ChangeNotifier {
       });
       final r = await Future(() => _io.relaySend(xpub, payload));
       dlog('bundle ctl (want=$want) to $memberId: $r');
+      return r == 'ok';
     } catch (e) {
       dlog('bundle ctl to $memberId failed: $e');
+      return false;
     }
   }
 
@@ -13521,12 +13657,34 @@ class AppState extends ChangeNotifier {
       // bundle while the vault is shut
       await to.on?.setPeerBundle(from, bundle);
       if (want || _healPending.remove(from) != null) {
-        await signalSession.sessionStore.deleteSession(addr);
-        await processPeerBundle(from, bundle);
+        // the session it replaces is archived, so what they sealed on it
+        // before still opens. one that does not read goes
+        try {
+          await processPeerBundle(from, bundle);
+        } catch (e) {
+          await signalSession.sessionStore.deleteSession(addr);
+          await processPeerBundle(from, bundle);
+        }
         dlog('healed session for $from (bundle exchange)');
         unawaited(_owedDueFor(from));
       }
-      if (want) unawaited(_sendBundleCtl(from, want: false));
+      if (want) {
+        unawaited(_sendBundleCtl(from, want: false));
+        // they asked because ours did not open there: what we sent them
+        // lately that never came back delivered goes again, on the new
+        // session. the same uid lands once
+        final again = await to.on?.resendUndelivered(
+          from,
+          since:
+              DateTime.now().millisecondsSinceEpoch -
+              _kResendWindow.inMilliseconds,
+        );
+        if ((again ?? 0) > 0) {
+          dlog('bundle ctl: $again undelivered to $from go again');
+          _bumpChatRev(from);
+          unawaited(drainOutbox());
+        }
+      }
     } catch (e) {
       dlog('bundle ctl handle failed: $e');
     } finally {

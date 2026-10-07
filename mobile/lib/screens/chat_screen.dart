@@ -3518,7 +3518,9 @@ class _ChatScreenState extends State<ChatScreen>
           sealing(false);
           if (devKeyFailed(e)) {
             _devKeyFailed = true;
-          } else {
+          } else if (e is! StartingAfresh) {
+            // one waiting on their card after a restore is no broken
+            // session: the outbox sends it once their card is here
             _status = l10n.chatNoSignalSessionRe;
           }
         });
