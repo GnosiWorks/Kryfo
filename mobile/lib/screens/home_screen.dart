@@ -21,6 +21,7 @@ import 'open_locked_screen.dart';
 import '../tools/tools_bridge.dart';
 import '../lock_guard.dart' show lockGuard;
 import '../lock_state.dart';
+import '../store.dart';
 import '../widgets/nav_bar.dart';
 import 'package:flutter/services.dart';
 import '../theme.dart';
@@ -226,7 +227,8 @@ class _HomeScreenState extends State<HomeScreen> {
           onOpenLocked: () => _pickFor((f) => OpenLockedScreen(file: f)),
         );
       case HaloTab.support:
-        return const DonateScreen();
+        // never on the bar in the play build
+        return kPlayBuild ? const SizedBox.shrink() : const DonateScreen();
       case HaloTab.me:
         return ProfileScreen(onOpenSupport: () => _pick(HaloTab.support));
     }

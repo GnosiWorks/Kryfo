@@ -3,6 +3,7 @@
 // and the gear into settings.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../store.dart';
 import '../theme.dart';
 import 'avatar_picker_screen.dart';
 import '../main.dart' show appState, session, showAddContact;
@@ -281,26 +282,29 @@ class _ProfileScreenState extends State<ProfileScreen>
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
-              _reveal(
-                4,
-                _Section(
-                  hasBadge ? l10n.profileGiveAgain : l10n.profileSupportKryfo,
+              // the play build offers no way to give
+              if (!kPlayBuild) ...[
+                const SizedBox(height: 24),
+                _reveal(
+                  4,
+                  _Section(
+                    hasBadge ? l10n.profileGiveAgain : l10n.profileSupportKryfo,
+                  ),
                 ),
-              ),
-              _reveal(
-                4,
-                _SupportCard(
-                  label: hasBadge
-                      ? l10n.profileKryfoRunsOnWhat
-                      : l10n.profileKeepKryfoIndependent,
-                  onTap:
-                      widget.onOpenSupport ??
-                      () => Navigator.of(
-                        context,
-                      ).push(haloRoute(const DonateScreen())),
+                _reveal(
+                  4,
+                  _SupportCard(
+                    label: hasBadge
+                        ? l10n.profileKryfoRunsOnWhat
+                        : l10n.profileKeepKryfoIndependent,
+                    onTap:
+                        widget.onOpenSupport ??
+                        () => Navigator.of(
+                          context,
+                        ).push(haloRoute(const DonateScreen())),
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
         ),

@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:qr_flutter/qr_flutter.dart';
 import '../l10n/l10n.dart';
+import '../store.dart';
 
 enum QrKind { link, text, wifi, contact, email, phone, sms, geo, btc }
 
@@ -158,6 +159,8 @@ QrBuilt buildQr(
         caption: l10n.qrPayloadOpensAMap,
       );
     case QrKind.btc:
+      // the play build makes no payment codes
+      if (kPlayBuild) return const QrBuilt(caption: '');
       final addr = get('address').trim();
       if (addr.isEmpty) return QrBuilt(caption: l10n.qrPayloadPayThisAddress);
       if (!RegExp(r'^[A-Za-z0-9]{14,90}$').hasMatch(addr)) {
