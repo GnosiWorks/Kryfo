@@ -112,15 +112,20 @@ class _World {
 Future<void> _settle() =>
     Future<void>.delayed(const Duration(milliseconds: 200));
 
-Future<String> _bundleOf() async {
+// someone's card and the x key it is made from, as hex
+Future<({String card, String x})> _keysOf() async {
   final pair = Curve.generateKeyPair();
+  final x = pair.publicKey.serialize().sublist(1);
   final them = SignalSession();
   await them.bootstrap(
     database: MemDb(),
-    xPubBytes: pair.publicKey.serialize().sublist(1),
+    xPubBytes: x,
     xPrivBytes: pair.privateKey.serialize(),
   );
-  return makePreKeyBundleB64(them);
+  return (
+    card: await makePreKeyBundleB64(them),
+    x: [for (final b in x) b.toRadixString(16).padLeft(2, '0')].join(),
+  );
 }
 
 void main() {
@@ -182,26 +187,29 @@ void main() {
 
   test('someone blocked who asks for keys gets none', () async {
     final w = await _World.make();
-    Future<void> asks(String who) async {
+    // their card carries the key their x key makes, as a real one does
+    Future<String> asks(String who) async {
+      final k = await _keysOf();
+      w.live.people[who]!['xpub'] = k.x;
       await w.app.receiveRelay([
         (
-          peer: 'x-$who',
+          peer: k.x,
           cipher: jsonEncode({
             'halo_ctl': 'bundle',
             'from': who,
-            'bundle': await _bundleOf(),
+            'bundle': k.card,
             'want': true,
           }),
         ),
       ]);
       await _settle();
+      return k.x;
     }
 
-    await asks(_k);
-    expect(w.bundlesTo('x-$_k'), isEmpty);
+    expect(w.bundlesTo(await asks(_k)), isEmpty);
     // a contact who asks is answered
-    await asks(_v);
-    expect(w.bundlesTo('x-$_v'), hasLength(1));
-    expect(w.bundlesTo('x-$_v').single['want'], isFalse);
+    final v = await asks(_v);
+    expect(w.bundlesTo(v), hasLength(1));
+    expect(w.bundlesTo(v).single['want'], isFalse);
   });
 }

@@ -278,6 +278,7 @@ const _peerRows = {
   'held_onion': 'peer_id = ?1',
   'shield': 'halo_id = ?1',
   'vouches': 'halo_id = ?1 OR voucher_id = ?1',
+  'gone_in': 'peer_id = ?1',
 };
 const _groupRows = {
   'group_members': 'group_id = ?1',

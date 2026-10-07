@@ -53,6 +53,10 @@ class DevTestDb implements HaloDb {
   @override
   SupportChats get support => SupportChats(() async => mem);
 
+  // nothing here came in and went
+  @override
+  Future<bool> goneFrom(String peer, String msgUid) async => false;
+
   @override
   Future<List<Map<String, Object?>>> contacts() =>
       mem.query('contacts', where: 'accepted = ?', whereArgs: [1]);

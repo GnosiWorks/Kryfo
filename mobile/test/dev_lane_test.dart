@@ -413,6 +413,31 @@ void main() {
       }
     });
 
+    test('three words after a restore: the seal starts afresh from his '
+        'pinned card, and he reads it', () async {
+      await _start(anon: false);
+      final first = await signalEncrypt(_dev, await buildFrame({'msgUid'}));
+      expect(
+        frameRead(await _open(_marios.ss, everydayWords, first))['m'],
+        'hello marios',
+      );
+      await signalSession.markRestored();
+      expect(await signalSession.sealsOnRestored(_dev), isTrue);
+      final c = await signalEncrypt(
+        _dev,
+        await buildFrame({'msgUid'}, m: 'after the restore'),
+      );
+      expect(base64Decode(c).first, CiphertextMessage.prekeyType);
+      expect(
+        frameRead(await _open(_marios.ss, everydayWords, c))['m'],
+        'after the restore',
+      );
+      expect(await signalSession.sealsOnRestored(_dev), isFalse);
+      // started afresh, the store's marks go
+      expect(await signalSession.dropRestoredWhenDone(), isTrue);
+      expect(signalSession.hasRestored, isFalse);
+    });
+
     test('three words: the everyday store, no onion, face or tier', () async {
       await _start(anon: false);
       for (final e in madeFrames.entries) {
