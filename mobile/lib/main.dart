@@ -17099,28 +17099,39 @@ class _OnboardingGateState extends State<_OnboardingGate> {
     return ListenableBuilder(
       listenable: appState,
       builder: (context, _) {
+        final Widget before;
         if (appState.bootError != null) {
-          return BootFailedScreen(
+          before = BootFailedScreen(
+            key: const ValueKey('failed'),
             error: appState.bootError!,
             onRetry: () {
               setState(() => _hold = false);
               appState.retryBoot();
             },
           );
-        }
-        if (!appState.ready || _hold) {
-          return const TorBootSplash();
-        }
-        if (appState.movedAway && !appState.movedReadOnly) {
-          return const MovedScreen();
-        }
-        if (!appState.onboardingComplete) {
-          return OnboardingScreen(
+        } else if (!appState.ready || _hold) {
+          before = const TorBootSplash(key: ValueKey('splash'));
+        } else if (appState.movedAway && !appState.movedReadOnly) {
+          before = const MovedScreen(key: ValueKey('moved'));
+        } else if (!appState.onboardingComplete) {
+          before = OnboardingScreen(
+            key: const ValueKey('onboarding'),
             appState: appState,
             onComplete: () => appState.markOnboardingComplete(),
           );
+        } else {
+          return widget.child;
         }
-        return widget.child;
+        // the splash goes out first, then the next screen comes up: no
+        // cut, and never both at once
+        return AnimatedSwitcher(
+          duration: motionStill(context)
+              ? Duration.zero
+              : const Duration(milliseconds: 440),
+          switchInCurve: const Interval(0.35, 1, curve: Curves.easeOutCubic),
+          switchOutCurve: const Interval(0.65, 1, curve: Curves.easeIn),
+          child: before,
+        );
       },
     );
   }
