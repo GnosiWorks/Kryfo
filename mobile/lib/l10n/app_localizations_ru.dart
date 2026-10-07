@@ -448,19 +448,30 @@ class AppLocalizationsRu extends AppLocalizations {
   String get appCouldNotMakeA => 'Не удалось создать ключ комнаты';
 
   @override
-  String appJoinedButYourHello(Object linkName) {
-    return 'Ты в «$linkName», но твоё приветствие задержано';
-  }
-
-  @override
   String appJoined(Object linkName) {
     return 'Ты в «$linkName»';
   }
 
   @override
-  String appJoinedButTheCreator(Object linkName) {
-    return 'Ты в «$linkName», но создатель пока недоступен';
+  String get roomJoinWaitingToJoin => 'Ожидание входа';
+
+  @override
+  String get roomJoinNotAnswering => 'Не отвечает';
+
+  @override
+  String roomJoinWaitingFor(Object room) {
+    return 'Ждём, когда «$room» тебя впустит…';
   }
+
+  @override
+  String get roomJoinWaitingLine =>
+      'Писать здесь можно будет, когда тебя впустят.';
+
+  @override
+  String get roomJoinNoAnswer => 'Эта комната не отвечает.';
+
+  @override
+  String get roomJoinMayHaveEnded => 'Возможно, она уже закончилась.';
 
   @override
   String get appBooting => 'Запуск...';

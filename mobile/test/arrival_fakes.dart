@@ -1063,6 +1063,40 @@ class ArrivalRows implements HaloDb {
   }
 
   @override
+  Future<void> createRoom({
+    required String groupId,
+    required String name,
+    required String priv,
+    required String pub,
+    required int expiresAt,
+    required String creatorPub,
+    required String fcPk,
+    int? cap,
+    required List<String> members,
+    int? joiningAt,
+  }) async {
+    _hit('createRoom', groupId, null);
+    group(groupId, members, admin: creatorPub);
+    groupRows[groupId]!.addAll({
+      'name': name,
+      'is_admin': creatorPub == pub ? 1 : 0,
+      'room_priv': priv,
+      'room_pub': pub,
+      'expires_at': expiresAt,
+      'creator_pub': creatorPub,
+      'fc_pk': fcPk,
+      'member_cap': cap,
+      'joining_at': joiningAt,
+    });
+  }
+
+  @override
+  Future<void> setRoomJoining(String groupId, int? at) async {
+    _hit('setRoomJoining', groupId, null);
+    groupRows[groupId]?['joining_at'] = at;
+  }
+
+  @override
   Future<Map<String, Object?>?> roomByPub(String pub) async {
     for (final g in groupRows.values) {
       if (g['room_pub'] == pub) return g;

@@ -430,19 +430,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appCouldNotMakeA => 'Could not make a room key';
 
   @override
-  String appJoinedButYourHello(Object linkName) {
-    return 'Joined $linkName, but your hello was held back';
-  }
-
-  @override
   String appJoined(Object linkName) {
     return 'Joined $linkName';
   }
 
   @override
-  String appJoinedButTheCreator(Object linkName) {
-    return 'Joined $linkName, but the creator could not be reached yet';
+  String get roomJoinWaitingToJoin => 'Waiting to join';
+
+  @override
+  String get roomJoinNotAnswering => 'Not answering';
+
+  @override
+  String roomJoinWaitingFor(Object room) {
+    return 'Waiting for $room to let you in…';
   }
+
+  @override
+  String get roomJoinWaitingLine => 'You can write here once you are in.';
+
+  @override
+  String get roomJoinNoAnswer => 'This room isn\'t answering.';
+
+  @override
+  String get roomJoinMayHaveEnded => 'It may have ended.';
 
   @override
   String get appBooting => 'Booting...';

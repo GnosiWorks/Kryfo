@@ -430,19 +430,29 @@ class AppLocalizationsFa extends AppLocalizations {
   String get appCouldNotMakeA => 'کلید اتاق ساخته نشد';
 
   @override
-  String appJoinedButYourHello(Object linkName) {
-    return 'به ⁨$linkName⁩ پیوستید، اما سلامتان فعلاً نگه داشته شد';
-  }
-
-  @override
   String appJoined(Object linkName) {
     return 'به ⁨$linkName⁩ پیوستید';
   }
 
   @override
-  String appJoinedButTheCreator(Object linkName) {
-    return 'به ⁨$linkName⁩ پیوستید، اما هنوز به سازنده‌اش دسترسی نیست';
+  String get roomJoinWaitingToJoin => 'در انتظار پیوستن';
+
+  @override
+  String get roomJoinNotAnswering => 'پاسخی نمی‌دهد';
+
+  @override
+  String roomJoinWaitingFor(Object room) {
+    return 'منتظر اجازهٔ ورود به ⁨$room⁩…';
   }
+
+  @override
+  String get roomJoinWaitingLine => 'وقتی وارد شدید، می‌توانید اینجا بنویسید.';
+
+  @override
+  String get roomJoinNoAnswer => 'این اتاق پاسخی نمی‌دهد.';
+
+  @override
+  String get roomJoinMayHaveEnded => 'شاید به پایان رسیده باشد.';
 
   @override
   String get appBooting => 'راه‌اندازی...';

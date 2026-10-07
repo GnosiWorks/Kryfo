@@ -86,6 +86,7 @@ import '../widgets/message_menu.dart';
 import '../rooms.dart';
 import '../widgets/notice_banner.dart';
 import '../widgets/room_countdown.dart';
+import '../widgets/room_join.dart';
 import '../widgets/swipe_to_reply.dart';
 import 'room_link_sheet.dart';
 import '../dlog.dart';
@@ -173,12 +174,34 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // else left. a send would reach nobody and only turn failed
   bool _alone = false;
 
-  // true, and says so, when there is nobody to send to
+  // true, and says so, when there is nobody to send to. a room not let in
+  // yet has nobody either: no member reads its key
   bool _nobodyToRead() {
+    if (_waiting) {
+      HapticFeedback.lightImpact();
+      return true;
+    }
     if (!_alone) return false;
     HapticFeedback.lightImpact();
     showHaloToast(context, l10n.groupChatNobodyToReadIt);
     return true;
+  }
+
+  // the room did not answer: the join goes again and the wait starts over.
+  // the panel turns back to waiting at once, the relays take their time
+  void _knockAgain() {
+    HapticFeedback.selectionClick();
+    setState(() => _joiningAt = DateTime.now().millisecondsSinceEpoch);
+    unawaited(appState.retryRoomJoin(widget.groupId));
+  }
+
+  // nothing in it to lose: the room goes from this phone, and the screen
+  // with it
+  void _leaveWaiting() {
+    HapticFeedback.mediumImpact();
+    final id = widget.groupId;
+    Navigator.of(context).pop();
+    unawaited(appState.leaveRoom(id));
   }
 
   String _nameOf(String id) {
@@ -200,6 +223,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   int? _roomExpiresAt;
   bool _roomBanner = false;
   bool get _isRoom => _roomExpiresAt != null;
+  // joined off a link and not let in yet: when the join went
+  int? _joiningAt;
+  bool get _waiting => _isRoom && _joiningAt != null;
   bool _isAdmin = false;
   bool _sending = false;
   // at most six stickers play at once in the whole chat
@@ -292,6 +318,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       _memberCount = g.memberCount;
       _isAdmin = g.isAdmin;
       _roomExpiresAt = g.expiresAt;
+      _joiningAt = g.joiningAt;
       break;
     }
 
@@ -728,11 +755,17 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         faces: faceById,
       );
       if (!mounted) return;
+      final joining = g['room_pub'] != null ? g['joining_at'] as int? : null;
+      // let in while the room is open: a light tap as it comes alive
+      if (_waiting && joining == null && _loaded) {
+        HapticFeedback.lightImpact();
+      }
       setState(() {
         _groupName = (g['name'] as String?) ?? l10n.groupInfoGroup;
         _memberCount = members.length;
         _alone = !members.any((m) => m != _me && m != appState.sessionId);
         _roomExpiresAt = g['expires_at'] as int?;
+        _joiningAt = joining;
         _isAdmin = ((g['is_admin'] as int?) ?? 0) == 1;
         _reach = reach;
         // a reload rebuilds every row; the retry count rides across, or a
@@ -3283,7 +3316,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (_left) return;
     _left = true;
     _holdSecure(false);
-    if (_isRoom && _roomBanner) session.markRoomSeen(widget.groupId);
+    // a room still waiting never showed its line
+    if (_isRoom && _roomBanner && !_waiting) {
+      session.markRoomSeen(widget.groupId);
+    }
   }
 
   // this screen's one hold on the shield, taken and let go once each
@@ -3360,6 +3396,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                     groupId: widget.groupId,
                     memberCount: _memberCount,
                     expiresAt: _roomExpiresAt,
+                    joiningAt: _waiting ? _joiningAt : null,
                     onBack: () => Navigator.of(context).pop(),
                     onSearch: _openSearch,
                     pinnedCount: _pinCount,
@@ -3374,7 +3411,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             // the room's first open: its line eases the thread down
             // instead of shoving it when the room is known
             EaseSize(
-              child: _isRoom && _roomBanner
+              child: _isRoom && _roomBanner && !_waiting
                   ? NoticeBanner(
                       glyph: NoticeGlyph.clock,
                       text: l10n.groupChatThisRoomAndEverything(
@@ -3396,29 +3433,38 @@ class _GroupChatScreenState extends State<GroupChatScreen>
               // never flashes over a group that has messages
               child: !_loaded
                   ? const SizedBox.shrink()
-                  : _messages.isEmpty
-                  // the words cross over when the first person joins
+                  : _waiting || _messages.isEmpty
+                  // the words cross over when the first person joins, and
+                  // when the room lets this phone in
                   ? FadeSwap(
-                      child: EmptyChat(
-                        key: ValueKey(_alone),
-                        icon: Icons.groups_outlined,
-                        tint: _isRoom ? HaloColors.violet : null,
-                        // a group everyone else left is no new group
-                        title: _alone
-                            ? _isRoom
-                                  ? l10n.groupChatNobodyHereYet
-                                  : l10n.groupChatNoMessagesYet
-                            : _isRoom
-                            ? l10n.chatSayHi
-                            : _isAdmin
-                            ? l10n.groupChatGroupCreatedSayHi
-                            : l10n.groupChatNoMessagesYet,
-                        line: !_alone
-                            ? l10n.groupChatEveryoneHereReads
-                            : _isRoom
-                            ? l10n.groupChatShareTheRoomLink
-                            : l10n.groupChatNobodyToReadIt,
-                      ),
+                      child: _waiting
+                          ? RoomJoinPanel(
+                              key: const ValueKey('joining'),
+                              name: _groupName,
+                              joiningAt: _joiningAt!,
+                              onTryAgain: _knockAgain,
+                              onLeave: _leaveWaiting,
+                            )
+                          : EmptyChat(
+                              key: ValueKey(_alone),
+                              icon: Icons.groups_outlined,
+                              tint: _isRoom ? HaloColors.violet : null,
+                              // a group everyone else left is no new group
+                              title: _alone
+                                  ? _isRoom
+                                        ? l10n.groupChatNobodyHereYet
+                                        : l10n.groupChatNoMessagesYet
+                                  : _isRoom
+                                  ? l10n.chatSayHi
+                                  : _isAdmin
+                                  ? l10n.groupChatGroupCreatedSayHi
+                                  : l10n.groupChatNoMessagesYet,
+                              line: !_alone
+                                  ? l10n.groupChatEveryoneHereReads
+                                  : _isRoom
+                                  ? l10n.groupChatShareTheRoomLink
+                                  : l10n.groupChatNobodyToReadIt,
+                            ),
                     )
                   : AtmoScope(
                       atmo: _atmosphere,
@@ -3513,25 +3559,38 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 onDrop: () => setState(() => _pendingPreview = null),
               ),
             ),
-            _Composer(
-              controller: _msgCtrl,
-              members: _mentionable,
-              sending: _sending,
-              ghost: _ghost,
-              burnSeconds: _burnSeconds,
-              disguise: _disguise,
-              onToggleGhost: () {
-                setState(() => _ghost = !_ghost);
-                appState.saveGhostPref(_ghost, _burnSeconds);
-              },
-              onLongPressGhost: _showBurnPicker,
-              onSend: _send,
-              onAttach: _showAttachSheet,
-              onStickers: _showStickers,
-              onCamera: _openGroupCamera,
-              onToggleDisguise: _toggleDisguise,
-              onVoiceComplete: _onVoiceComplete,
-              mayRecord: () => !_nobodyToRead(),
+            // no composer while the room has not let this phone in: it
+            // grows in once the room does
+            GrowSwap(
+              alignment: Alignment.topCenter,
+              child: _waiting
+                  ? const SizedBox(
+                      key: ValueKey('no-composer'),
+                      width: double.infinity,
+                    )
+                  : KeyedSubtree(
+                      key: const ValueKey('composer'),
+                      child: _Composer(
+                        controller: _msgCtrl,
+                        members: _mentionable,
+                        sending: _sending,
+                        ghost: _ghost,
+                        burnSeconds: _burnSeconds,
+                        disguise: _disguise,
+                        onToggleGhost: () {
+                          setState(() => _ghost = !_ghost);
+                          appState.saveGhostPref(_ghost, _burnSeconds);
+                        },
+                        onLongPressGhost: _showBurnPicker,
+                        onSend: _send,
+                        onAttach: _showAttachSheet,
+                        onStickers: _showStickers,
+                        onCamera: _openGroupCamera,
+                        onToggleDisguise: _toggleDisguise,
+                        onVoiceComplete: _onVoiceComplete,
+                        mayRecord: () => !_nobodyToRead(),
+                      ),
+                    ),
             ),
           ],
         ),
@@ -3655,6 +3714,8 @@ class _Header extends StatelessWidget {
   final String groupId;
   final int memberCount;
   final int? expiresAt; // a room: the subtitle is the clock, not the count
+  // a room not let in yet: its subtitle says so, and there is no info page
+  final int? joiningAt;
   final VoidCallback onBack;
   final VoidCallback onTapInfo;
   final VoidCallback? onSearch;
@@ -3665,6 +3726,7 @@ class _Header extends StatelessWidget {
     required this.groupId,
     required this.memberCount,
     this.expiresAt,
+    this.joiningAt,
     required this.onBack,
     required this.onTapInfo,
     this.onSearch,
@@ -3687,7 +3749,7 @@ class _Header extends StatelessWidget {
           ),
           Expanded(
             child: InkWell(
-              onTap: onTapInfo,
+              onTap: joiningAt == null ? onTapInfo : null,
               borderRadius: BorderRadius.circular(8),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
@@ -3739,7 +3801,9 @@ class _Header extends StatelessWidget {
                               color: HaloColors.text,
                             ),
                           ),
-                          if (expiresAt != null)
+                          if (joiningAt != null)
+                            RoomJoinLine(joiningAt: joiningAt!)
+                          else if (expiresAt != null)
                             SlotLine(
                               msg: (t) => l10n.groupChatHere(memberCount, t),
                               slot: RoomCountdown(

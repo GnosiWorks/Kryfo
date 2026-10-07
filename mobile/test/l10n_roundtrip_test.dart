@@ -271,15 +271,13 @@ void main() {
     expect(l.appThisRoomHasAlready, "This room has already expired");
     expect(l.appYouAreAlreadyIn, "You are already in this room");
     expect(l.appCouldNotMakeA, "Could not make a room key");
-    expect(
-      l.appJoinedButYourHello("<linkName>"),
-      "Joined <linkName>, but your hello was held back",
-    );
     expect(l.appJoined("<linkName>"), "Joined <linkName>");
-    expect(
-      l.appJoinedButTheCreator("<linkName>"),
-      "Joined <linkName>, but the creator could not be reached yet",
-    );
+    expect(l.roomJoinWaitingToJoin, "Waiting to join");
+    expect(l.roomJoinNotAnswering, "Not answering");
+    expect(l.roomJoinWaitingFor("<room>"), "Waiting for <room> to let you in…");
+    expect(l.roomJoinWaitingLine, "You can write here once you are in.");
+    expect(l.roomJoinNoAnswer, "This room isn't answering.");
+    expect(l.roomJoinMayHaveEnded, "It may have ended.");
     expect(l.appBooting, "Booting...");
     expect(l.appSettingUpYourIdentity, "Setting up your identity...");
     expect(l.appAddSomeone, "Add someone");

@@ -514,15 +514,6 @@
   "@appCouldNotMakeA": {
     "description": "main.dart"
   },
-  "appJoinedButYourHello": "Joined {linkName}, but your hello was held back",
-  "@appJoinedButYourHello": {
-    "description": "main.dart",
-    "placeholders": {
-      "linkName": {
-        "type": "Object"
-      }
-    }
-  },
   "appJoined": "Joined {linkName}",
   "@appJoined": {
     "description": "main.dart",
@@ -532,14 +523,34 @@
       }
     }
   },
-  "appJoinedButTheCreator": "Joined {linkName}, but the creator could not be reached yet",
-  "@appJoinedButTheCreator": {
-    "description": "main.dart",
+  "roomJoinWaitingToJoin": "Waiting to join",
+  "@roomJoinWaitingToJoin": {
+    "description": "widgets/room_join.dart"
+  },
+  "roomJoinNotAnswering": "Not answering",
+  "@roomJoinNotAnswering": {
+    "description": "widgets/room_join.dart"
+  },
+  "roomJoinWaitingFor": "Waiting for {room} to let you in…",
+  "@roomJoinWaitingFor": {
+    "description": "widgets/room_join.dart",
     "placeholders": {
-      "linkName": {
+      "room": {
         "type": "Object"
       }
     }
+  },
+  "roomJoinWaitingLine": "You can write here once you are in.",
+  "@roomJoinWaitingLine": {
+    "description": "widgets/room_join.dart"
+  },
+  "roomJoinNoAnswer": "This room isn't answering.",
+  "@roomJoinNoAnswer": {
+    "description": "widgets/room_join.dart"
+  },
+  "roomJoinMayHaveEnded": "It may have ended.",
+  "@roomJoinMayHaveEnded": {
+    "description": "widgets/room_join.dart"
   },
   "appBooting": "Booting...",
   "@appBooting": {
@@ -2836,7 +2847,7 @@
   },
   "commonTryAgain": "Try again",
   "@commonTryAgain": {
-    "description": "screens/donate_screen.dart, widgets/boot_failed.dart"
+    "description": "screens/donate_screen.dart, widgets/boot_failed.dart, widgets/room_join.dart"
   },
   "donateBtc": "{btc} BTC",
   "@donateBtc": {
@@ -3459,7 +3470,7 @@
   },
   "groupInfoLeave": "Leave",
   "@groupInfoLeave": {
-    "description": "screens/group_info_screen.dart"
+    "description": "screens/group_info_screen.dart, widgets/room_join.dart"
   },
   "groupInfoGroupInfo": "Group info",
   "@groupInfoGroupInfo": {

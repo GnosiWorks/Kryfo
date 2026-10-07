@@ -17,8 +17,15 @@ import 'package:kryfo/container.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/main.dart'
-    show GroupPreview, HaloDb, appState, useDatabasesForTest;
+    show
+        GroupPreview,
+        HaloDb,
+        HaloEngine,
+        appState,
+        useDatabasesForTest,
+        useEngineForTest;
 import 'package:kryfo/polls.dart' show PollVote;
+import 'package:kryfo/rooms.dart' show kRoomJoinWait;
 import 'package:kryfo/screens/contact_screen.dart';
 import 'package:kryfo/screens/group_chat_screen.dart';
 import 'package:kryfo/screens/group_info_screen.dart';
@@ -30,6 +37,7 @@ import 'package:kryfo/widgets/halo_switch.dart';
 import 'package:kryfo/widgets/kryfo_avatar.dart';
 import 'package:kryfo/widgets/media_bubbles.dart' show HoldToTalkMic;
 import 'package:kryfo/widgets/motion.dart' show TorStatus;
+import 'package:kryfo/widgets/room_countdown.dart';
 import 'package:kryfo/widgets/voice_parts.dart' show VoiceRecordBar;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -56,6 +64,10 @@ class _Db implements HaloDb {
   List<String> members;
   // a burner room this phone made, its link already handed out
   final bool room;
+  // a room joined off a link, not let in yet: when the join went
+  int? joiningAt;
+  // when each knock again went
+  final knocks = <int?>[];
   final Set<String> blocked;
   Completer<void>? gate;
   // holds the group's whole history, read for its photos
@@ -77,8 +89,9 @@ class _Db implements HaloDb {
     return {
       'group_id': _group,
       'name': 'Friends',
-      'is_admin': 1,
+      'is_admin': joiningAt == null ? 1 : 0,
       if (room) ...{
+        'joining_at': joiningAt,
         'room_pub': _roomPub,
         'room_priv': 'ef' * 32,
         'expires_at': DateTime.now()
@@ -148,6 +161,12 @@ class _Db implements HaloDb {
   @override
   Future<void> markRoomSeen(String groupId) async {}
   @override
+  Future<void> setRoomJoining(String groupId, int? at) async {
+    knocks.add(at);
+    joiningAt = at;
+  }
+
+  @override
   Future<void> clearGroupUnread(String groupId) async {}
   @override
   Future<({bool sent, bool delivered})> sendState(String msgUid) async =>
@@ -186,6 +205,14 @@ class _Db implements HaloDb {
   @override
   dynamic noSuchMethod(Invocation i) =>
       throw UnimplementedError('${i.memberName}');
+}
+
+// a knock again listens to the room's creator first
+class _RoomEngine implements HaloEngine {
+  @override
+  void roomSubscribeBg(String priv, String peerPub) {}
+  @override
+  dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
 }
 
 Map<String, Object?> _in(int rowid, String from, String text) => {
@@ -677,6 +704,140 @@ void main() {
       await t.tapAt(const Offset(300, 650));
       await t.pump();
       expect(bar, findsNothing);
+      await _close(t);
+    });
+  });
+
+  group('a room not let in yet', () {
+    // a room joined [ago] back, as the chat list has it
+    _Db joined(WidgetTester t, Duration ago) {
+      final at = DateTime.now().subtract(ago).millisecondsSinceEpoch;
+      final db = _use(t, _Db(room: true, members: [_roomPub, _joiner]))
+        ..joiningAt = at;
+      appState.groups = [
+        GroupPreview(
+          groupId: _group,
+          name: 'Friends',
+          memberCount: 2,
+          isAdmin: false,
+          createdAt: DateTime(2026),
+          expiresAt: DateTime.now()
+              .add(const Duration(hours: 24))
+              .millisecondsSinceEpoch,
+          joiningAt: at,
+        ),
+      ];
+      return db;
+    }
+
+    // how far the composer has grown in, 1 when it is all there
+    double composer(WidgetTester t) => t
+        .widget<SizeTransition>(
+          find
+              .ancestor(
+                of: find.byType(TextField),
+                matching: find.byType(SizeTransition),
+              )
+              .first,
+        )
+        .sizeFactor
+        .value;
+
+    testWidgets('it waits: no composer, no count, nothing to send', (t) async {
+      joined(t, Duration.zero);
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump();
+      // from the first frame, as the chat list knew it
+      expect(find.text(l10n.roomJoinWaitingToJoin), findsOneWidget);
+      expect(find.byType(RoomCountdown), findsNothing);
+      await t.pump(const Duration(seconds: 1));
+      expect(find.text(l10n.roomJoinWaitingFor('Friends')), findsOneWidget);
+      expect(find.text(l10n.roomJoinWaitingLine), findsOneWidget);
+      expect(find.byType(TextField), findsNothing);
+      expect(find.bySemanticsLabel(l10n.commonSend), findsNothing);
+      expect(find.byType(HoldToTalkMic), findsNothing);
+      expect(find.byType(RoomCountdown), findsNothing);
+      expect(find.text(l10n.chatSayHi), findsNothing);
+      // and no info page with a member list nobody has confirmed
+      await t.tap(find.text('Friends'));
+      await t.pump(const Duration(seconds: 1));
+      expect(find.byType(GroupInfoScreen), findsNothing);
+      await _close(t);
+    });
+
+    testWidgets('the wait runs out: not answering, try again or leave', (
+      t,
+    ) async {
+      // a breath before the end of the wait
+      joined(t, kRoomJoinWait - const Duration(milliseconds: 300));
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.text(l10n.roomJoinWaitingFor('Friends')), findsOneWidget);
+      expect(find.text(l10n.roomJoinNoAnswer), findsNothing);
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 400)),
+      );
+      await t.pump(const Duration(seconds: 1));
+      await t.pump(const Duration(seconds: 1));
+      expect(find.text(l10n.roomJoinNoAnswer), findsOneWidget);
+      expect(find.text(l10n.roomJoinMayHaveEnded), findsOneWidget);
+      expect(find.text(l10n.commonTryAgain), findsOneWidget);
+      expect(find.text(l10n.groupInfoLeave), findsOneWidget);
+      expect(find.text(l10n.roomJoinNotAnswering), findsOneWidget);
+      expect(find.text(l10n.roomJoinWaitingFor('Friends')), findsNothing);
+      expect(find.byType(TextField), findsNothing);
+      await _close(t);
+    });
+
+    testWidgets('try again turns it back to waiting at once', (t) async {
+      useEngineForTest(_RoomEngine());
+      final db = joined(t, const Duration(minutes: 5));
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      expect(find.text(l10n.roomJoinNoAnswer), findsOneWidget);
+      final before = DateTime.now().millisecondsSinceEpoch;
+      await t.tap(find.text(l10n.commonTryAgain));
+      await t.pump();
+      await t.pump(const Duration(seconds: 1));
+      expect(find.text(l10n.roomJoinWaitingFor('Friends')), findsOneWidget);
+      expect(find.text(l10n.roomJoinNoAnswer), findsNothing);
+      expect(db.knocks, hasLength(1));
+      expect(db.knocks.single!, greaterThanOrEqualTo(before));
+      expect(find.byType(TextField), findsNothing);
+      await _close(t);
+    });
+
+    testWidgets('let in: the room comes alive in place, the composer grows '
+        'in', (t) async {
+      final db = joined(t, Duration.zero);
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      expect(find.byType(TextField), findsNothing);
+      db.joiningAt = null;
+      appState.chatChanged('group:$_group');
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 80));
+      final mid = composer(t);
+      expect(mid, greaterThan(0));
+      expect(mid, lessThan(1));
+      await t.pump(const Duration(seconds: 1));
+      expect(composer(t), 1);
+      expect(find.text(l10n.chatSayHi), findsOneWidget);
+      expect(find.text(l10n.roomJoinWaitingFor('Friends')), findsNothing);
+      expect(find.byType(RoomCountdown), findsOneWidget);
+      await _close(t);
+
+      // with less movement it is simply there
+      final db2 = joined(t, Duration.zero);
+      await t.pumpWidget(
+        app(const GroupChatScreen(groupId: _group), still: true),
+      );
+      await t.pump(const Duration(seconds: 1));
+      db2.joiningAt = null;
+      appState.chatChanged('group:$_group');
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 20));
+      expect(composer(t), 1);
       await _close(t);
     });
   });

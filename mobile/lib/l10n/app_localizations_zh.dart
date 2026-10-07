@@ -417,19 +417,29 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appCouldNotMakeA => '无法生成聊天室密钥';
 
   @override
-  String appJoinedButYourHello(Object linkName) {
-    return '已加入 $linkName，但你的问候被暂缓发送';
-  }
-
-  @override
   String appJoined(Object linkName) {
     return '已加入 $linkName';
   }
 
   @override
-  String appJoinedButTheCreator(Object linkName) {
-    return '已加入 $linkName，但暂时还联系不上创建者';
+  String get roomJoinWaitingToJoin => '等待加入';
+
+  @override
+  String get roomJoinNotAnswering => '没有回应';
+
+  @override
+  String roomJoinWaitingFor(Object room) {
+    return '正在等待 $room 让你加入…';
   }
+
+  @override
+  String get roomJoinWaitingLine => '进入后就可以在这里发消息。';
+
+  @override
+  String get roomJoinNoAnswer => '这个聊天室没有回应。';
+
+  @override
+  String get roomJoinMayHaveEnded => '它可能已经结束了。';
 
   @override
   String get appBooting => '启动中…';
@@ -7672,19 +7682,29 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get appCouldNotMakeA => '無法建立聊天室金鑰';
 
   @override
-  String appJoinedButYourHello(Object linkName) {
-    return '已加入 $linkName，但你的招呼尚未送出';
-  }
-
-  @override
   String appJoined(Object linkName) {
     return '已加入 $linkName';
   }
 
   @override
-  String appJoinedButTheCreator(Object linkName) {
-    return '已加入 $linkName，但暫時還聯絡不到建立者';
+  String get roomJoinWaitingToJoin => '等待加入';
+
+  @override
+  String get roomJoinNotAnswering => '沒有回應';
+
+  @override
+  String roomJoinWaitingFor(Object room) {
+    return '正在等待 $room 讓你加入…';
   }
+
+  @override
+  String get roomJoinWaitingLine => '進入後就可以在這裡發訊息。';
+
+  @override
+  String get roomJoinNoAnswer => '這個聊天室沒有回應。';
+
+  @override
+  String get roomJoinMayHaveEnded => '它可能已經結束了。';
 
   @override
   String get appBooting => '啟動中…';

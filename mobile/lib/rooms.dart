@@ -74,6 +74,24 @@ Duration countdownTick(Duration left) => left.inMinutes < 5
     ? const Duration(seconds: 1)
     : const Duration(minutes: 1);
 
+// how long a joiner waits for the creator's roster before the room says it
+// is not answering: two relay publishes at their longest (55 s each, one
+// each way) and the creator's phone taking the join in between. a roster
+// that comes later still lets the joiner in
+const kRoomJoinWait = Duration(minutes: 2);
+
+enum RoomJoin { live, waiting, silent }
+
+/// where a join stands. [joiningAt] is when the join went out, null once
+/// the creator's roster named this phone's key
+RoomJoin roomJoinState(int? joiningAt, int now) {
+  if (joiningAt == null || joiningAt <= 0) return RoomJoin.live;
+  final waited = now - joiningAt;
+  return waited >= 0 && waited < kRoomJoinWait.inMilliseconds
+      ? RoomJoin.waiting
+      : RoomJoin.silent;
+}
+
 // a room key on screen. six characters is enough to tell two people apart
 // inside one small room, and it says nothing about who they are.
 String roomTag(String pub) => pub.length >= 6 ? pub.substring(0, 6) : pub;

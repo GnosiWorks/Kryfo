@@ -26,6 +26,7 @@ import '../widgets/nav_bar.dart';
 import 'package:flutter/services.dart';
 import '../theme.dart';
 import '../widgets/room_countdown.dart';
+import '../widgets/room_join.dart';
 import '../widgets/kryfo_avatar.dart';
 import 'notes_screen.dart';
 import 'bridges_screen.dart';
@@ -573,6 +574,8 @@ class GroupSummary {
   final int unread;
   final bool mentioned;
   final int? expiresAt; // set for a burner room
+  // a room not let in yet: when its join went
+  final int? joiningAt;
   final bool hidden;
   const GroupSummary({
     required this.groupId,
@@ -581,6 +584,7 @@ class GroupSummary {
     this.unread = 0,
     this.mentioned = false,
     this.expiresAt,
+    this.joiningAt,
     this.hidden = false,
   });
   bool get isRoom => expiresAt != null;
@@ -2033,7 +2037,10 @@ class _GroupRow extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 2),
-                      if (g.isRoom)
+                      // not let in yet: no clock, no count, until it is
+                      if (g.isRoom && g.joiningAt != null)
+                        RoomJoinLine(joiningAt: g.joiningAt!)
+                      else if (g.isRoom)
                         RoomCountdown(expiresAt: g.expiresAt!, size: 10)
                       else if (g.mentioned)
                         // your three words came up in there

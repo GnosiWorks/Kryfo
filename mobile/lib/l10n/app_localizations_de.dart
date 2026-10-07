@@ -433,19 +433,30 @@ class AppLocalizationsDe extends AppLocalizations {
   String get appCouldNotMakeA => 'Konnte keinen Raumschlüssel erstellen';
 
   @override
-  String appJoinedButYourHello(Object linkName) {
-    return '$linkName beigetreten, aber dein Hallo wurde zurückgehalten';
-  }
-
-  @override
   String appJoined(Object linkName) {
     return '$linkName beigetreten';
   }
 
   @override
-  String appJoinedButTheCreator(Object linkName) {
-    return '$linkName beigetreten, aber wer den Raum erstellt hat, ist noch nicht erreichbar';
+  String get roomJoinWaitingToJoin => 'Wartet auf Einlass';
+
+  @override
+  String get roomJoinNotAnswering => 'Keine Antwort';
+
+  @override
+  String roomJoinWaitingFor(Object room) {
+    return 'Warte darauf, dass $room dich hereinlässt…';
   }
+
+  @override
+  String get roomJoinWaitingLine =>
+      'Sobald du drin bist, kannst du hier schreiben.';
+
+  @override
+  String get roomJoinNoAnswer => 'Dieser Raum antwortet nicht.';
+
+  @override
+  String get roomJoinMayHaveEnded => 'Vielleicht ist er schon beendet.';
 
   @override
   String get appBooting => 'Startet...';
