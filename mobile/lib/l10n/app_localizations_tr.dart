@@ -430,19 +430,29 @@ class AppLocalizationsTr extends AppLocalizations {
   String get appCouldNotMakeA => 'Oda anahtarı oluşturulamadı';
 
   @override
-  String appJoinedButYourHello(Object linkName) {
-    return 'Katıldın: $linkName, ama merhaban bekletildi';
-  }
-
-  @override
   String appJoined(Object linkName) {
     return 'Katıldın: $linkName';
   }
 
   @override
-  String appJoinedButTheCreator(Object linkName) {
-    return 'Katıldın: $linkName, ama odayı kurana henüz ulaşılamadı';
+  String get roomJoinWaitingToJoin => 'Katılmayı bekliyor';
+
+  @override
+  String get roomJoinNotAnswering => 'Yanıt vermiyor';
+
+  @override
+  String roomJoinWaitingFor(Object room) {
+    return '$room seni içeri alana kadar bekleniyor…';
   }
+
+  @override
+  String get roomJoinWaitingLine => 'İçeri girince buraya yazabilirsin.';
+
+  @override
+  String get roomJoinNoAnswer => 'Bu oda yanıt vermiyor.';
+
+  @override
+  String get roomJoinMayHaveEnded => 'Sona ermiş olabilir.';
 
   @override
   String get appBooting => 'Açılıyor...';

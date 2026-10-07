@@ -1157,7 +1157,7 @@ class HaloDb implements GroupOwedStore {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 64,
+      version: 65,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -1257,7 +1257,8 @@ class HaloDb implements GroupOwedStore {
             fc_pk TEXT,
             member_cap INTEGER,
             room_seen INTEGER NOT NULL DEFAULT 0,
-            mentioned INTEGER NOT NULL DEFAULT 0
+            mentioned INTEGER NOT NULL DEFAULT 0,
+            joining_at INTEGER
           )
         ''');
         await db.execute('''
@@ -1307,8 +1308,15 @@ class HaloDb implements GroupOwedStore {
         await blockTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
-        await upgradeTo64(db, oldV);
         // 62 runs last, below: its index names columns older steps add
+        if (oldV < 65) {
+          // a room joined off a link and not let in yet: when the join went
+          await roomJoiningColumn(db);
+        }
+        if (oldV < 64) {
+          // what someone blocked sent, and what came in and went
+          await upgradeTo64(db, oldV);
+        }
         if (oldV < 61) {
           // the number on the next room frame this phone sends
           await addColumn(
@@ -1706,7 +1714,8 @@ class HaloDb implements GroupOwedStore {
               fc_pk TEXT,
               member_cap INTEGER,
               room_seen INTEGER NOT NULL DEFAULT 0,
-              mentioned INTEGER NOT NULL DEFAULT 0
+              mentioned INTEGER NOT NULL DEFAULT 0,
+              joining_at INTEGER
             )
           ''');
           await db.execute('''
@@ -2906,6 +2915,7 @@ class HaloDb implements GroupOwedStore {
 
   // a burner room: a group row with a key of its own and an end time.
   // members are room keys, not kryfo ids; admin_id is the creator's key.
+  // [joiningAt]: joined off a link, waiting for the creator's roster
   Future<void> createRoom({
     required String groupId,
     required String name,
@@ -2916,6 +2926,7 @@ class HaloDb implements GroupOwedStore {
     required String fcPk,
     int? cap,
     required List<String> members,
+    int? joiningAt,
   }) async {
     final db = await open();
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -2931,6 +2942,7 @@ class HaloDb implements GroupOwedStore {
       'creator_pub': creatorPub,
       'fc_pk': fcPk,
       'member_cap': cap,
+      'joining_at': joiningAt,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
     final batch = db.batch();
     for (final m in members) {
@@ -2966,6 +2978,43 @@ class HaloDb implements GroupOwedStore {
       where: 'room_pub IS NOT NULL AND expires_at <= ?',
       whereArgs: [now],
     );
+  }
+
+  /// a join sent again at [at], or null once the creator let this phone in
+  Future<void> setRoomJoining(String groupId, int? at) async {
+    final db = await open();
+    await db.update(
+      'groups',
+      {'joining_at': at},
+      where: 'group_id = ?',
+      whereArgs: [groupId],
+    );
+  }
+
+  /// the wait of a room still waiting starts again at [at]. one let in
+  /// meanwhile stays let in. false when there was no wait to restart
+  Future<bool> restartRoomJoining(String groupId, int at) async {
+    final db = await open();
+    final n = await db.update(
+      'groups',
+      {'joining_at': at},
+      where: 'group_id = ? AND joining_at IS NOT NULL',
+      whereArgs: [groupId],
+    );
+    return n > 0;
+  }
+
+  /// the join sent at [at] did not go: its wait is over at once, so the
+  /// room says it is not answering. a newer join, or a let-in, is kept
+  Future<bool> failRoomJoining(String groupId, int at) async {
+    final db = await open();
+    final n = await db.update(
+      'groups',
+      {'joining_at': at - kRoomJoinWait.inMilliseconds},
+      where: 'group_id = ? AND joining_at = ?',
+      whereArgs: [groupId, at],
+    );
+    return n > 0;
   }
 
   Future<void> markRoomSeen(String groupId) async {
@@ -4880,10 +4929,19 @@ class HaloDb implements GroupOwedStore {
   }
 
   /// the number for the next frame this phone sends into room [groupId]:
-  /// one up from the last, from one
+  /// one up from the last, from one. none for a room no longer here: its
+  /// roster row would outlive it
   Future<int> nextRoomSeq(String groupId) async {
     final db = await open();
     return db.transaction((t) async {
+      final there = await t.query(
+        'groups',
+        columns: ['group_id'],
+        where: 'group_id = ?',
+        whereArgs: [groupId],
+        limit: 1,
+      );
+      if (there.isEmpty) throw StateError('no room $groupId here');
       final held = await _rosterRow(t, groupId);
       final seq = ((held?['seq'] as int?) ?? 0) + 1;
       await _putRoster(t, groupId, seq: seq, had: held != null);
@@ -5522,6 +5580,11 @@ Future<void> addColumn(DatabaseExecutor db, String sql) async {
     }
   }
 }
+
+// the upgrade to 65: when a room joined off a link sent its join, until
+// its creator lets this phone in
+Future<void> roomJoiningColumn(DatabaseExecutor db) =>
+    addColumn(db, 'ALTER TABLE groups ADD COLUMN joining_at INTEGER');
 
 // the upgrade to 62: a timed message whose clock started before it was
 // read, and the index the burn sweep reads
@@ -6252,14 +6315,9 @@ Future<(String, bool)> handleHaloUriAdded(
   final room = RoomLink.parse(raw);
   if (room != null) {
     final r = await appState.joinRoom(room);
-    // a join opens the room. compared with the words themselves, not a
-    // prefix of the english
-    if (r == l10n.appJoined(room.name) ||
-        r == l10n.appJoinedButTheCreator(room.name) ||
-        r == l10n.appJoinedButYourHello(room.name) ||
-        r == l10n.appYouAreAlreadyIn) {
-      openRoomSoon(room.roomId);
-    }
+    // a join opens the room, waiting to be let in, and says nothing: the
+    // room is the answer
+    if (r.isEmpty || r == l10n.appYouAreAlreadyIn) openRoomSoon(room.roomId);
     return (r, false);
   }
   final parsed = parseHaloUri(raw);
@@ -6764,6 +6822,10 @@ void _openChatSoon(String chatId) {
   );
 }
 
+// what a room says once its creator lets this phone in. tests listen here
+@visibleForTesting
+void Function(String line) sayRoomJoined = _sayLinkResult;
+
 // what a link opened from outside the app came to, so an expired or full
 // room does not look like nothing happening
 void _sayLinkResult(String result) {
@@ -6928,6 +6990,8 @@ class GroupPreview {
   final int unread;
   final bool mentioned; // someone wrote your three words since you last read
   final int? expiresAt; // a burner room's end, null for a group
+  // a room joined off a link and not let in yet: when the join went
+  final int? joiningAt;
   // one of the open vault's: only its session shows it
   final bool hidden;
   const GroupPreview({
@@ -6939,6 +7003,7 @@ class GroupPreview {
     this.unread = 0,
     this.mentioned = false,
     this.expiresAt,
+    this.joiningAt,
     this.hidden = false,
   });
 }
@@ -10026,6 +10091,7 @@ class AppState extends ChangeNotifier {
           await _fitsCap(env.groupId!, roster.toSet().length, db)) {
         await db.syncGroupMembers(env.groupId!, roster);
         await _subscribeRoomMembers(env.groupId!);
+        if (isRoom) await _roomLetIn(env.groupId!, roster, db);
         // contact stubs for self-healed members so we can encrypt to them:
         // ids alone are not enough, we need their keys
         if (env.rosterParticipants != null) {
@@ -10898,6 +10964,7 @@ class AppState extends ChangeNotifier {
           await db.syncGroupMembers(groupId, members);
           await db.renameGroup(groupId, gc.name!);
         }
+        if (isRoom) await _roomLetIn(groupId, members, db);
         // auto-create contact stubs for unknown participants so we can
         // immediately send to them.
         if (gc.participants != null) {
@@ -14058,6 +14125,7 @@ class AppState extends ChangeNotifier {
     final list = <GroupPreview>[];
     for (final r in rows) {
       final gid = r['group_id'] as String;
+      if (_leavingRooms.contains(gid)) continue;
       final members = await s.getGroupMembers(gid);
       list.add(
         GroupPreview(
@@ -14071,6 +14139,7 @@ class AppState extends ChangeNotifier {
           unread: (r['unread'] as int? ?? 0),
           mentioned: (r['mentioned'] as int? ?? 0) == 1,
           expiresAt: r['expires_at'] as int?,
+          joiningAt: r['joining_at'] as int?,
           hidden: s.isHidden(gid),
         ),
       );
@@ -14713,12 +14782,32 @@ class AppState extends ChangeNotifier {
   }
 
   // join off a link: make a key for this room only, tell the creator's drop
-  // box about it, and listen for the creator. the roster comes back from
-  // them and opens the rest.
+  // box about it, and listen for the creator. the room waits until the
+  // creator's roster names the key, since nobody reads a key before that.
+  // the waiting room opening is the answer, so there is nothing to say
   Future<String> joinRoom(RoomLink link) async {
     final now = DateTime.now().millisecondsSinceEpoch;
     if (link.expiresAt <= now) return l10n.appThisRoomHasAlready;
-    if (await session.groupExists(link.roomId)) {
+    // the same link twice at once: the first one is opening the room
+    if (!_joiningRooms.add(link.roomId)) return '';
+    try {
+      return await _joinRoom(link, now);
+    } finally {
+      _joiningRooms.remove(link.roomId);
+    }
+  }
+
+  // rooms a link is joining right now, by room id
+  final Set<String> _joiningRooms = {};
+
+  Future<String> _joinRoom(RoomLink link, int now) async {
+    final had = await session.getGroup(link.roomId);
+    if (had != null) {
+      // not let in yet: the link knocks again
+      if (had['room_pub'] != null && had['joining_at'] != null) {
+        await retryRoomJoin(link.roomId);
+        return '';
+      }
       return l10n.appYouAreAlreadyIn;
     }
     final k = engine.roomKeygen();
@@ -14733,39 +14822,114 @@ class AppState extends ChangeNotifier {
       fcPk: link.fcPk,
       cap: link.cap,
       members: [link.creatorPub, k.pub],
+      joiningAt: now,
     );
-    // a quiet session keeps the room on this phone: the hello never leaves
-    if (sessionQuiet) {
-      _armRoomTimer();
-      await refreshGroups();
-      return l10n.appJoinedButTheCreator(link.name);
-    }
-    _roomSubs[k.pub] = {};
-    await _subscribeRoomMembers(link.roomId);
     _armRoomTimer();
+    // a quiet session keeps the room on this phone: the hello never leaves
+    if (!sessionQuiet) {
+      _roomSubs[k.pub] = {};
+      await _subscribeRoomMembers(link.roomId);
+      // the room opens at once and waits; the relays take their time
+      unawaited(_knockRoom(link.roomId, now));
+    }
     await refreshGroups();
+    return '';
+  }
+
+  // the join, in the background. one that did not go leaves the room not
+  // answering at once, so try again is there without the wait
+  Future<void> _knockRoom(String groupId, int at) async {
+    var sent = false;
+    try {
+      sent = await _sendRoomJoin(groupId);
+    } catch (e) {
+      dlog('room join not sent: ${e.runtimeType}');
+    }
+    if (sent) return;
+    try {
+      if (!await live.failRoomJoining(groupId, at)) return;
+      _bumpChatRev('group:$groupId');
+      await refreshGroups();
+    } catch (e) {
+      dlog('room join not marked: ${e.runtimeType}');
+    }
+  }
+
+  // the join, to the creator's drop box, the same way every time
+  Future<bool> _sendRoomJoin(String groupId) async {
+    final g = await live.getGroup(groupId);
+    final priv = g?['room_priv'] as String?;
+    final pub = g?['room_pub'] as String?;
+    final creator = g?['creator_pub'] as String?;
+    final fc = g?['fc_pk'] as String?;
+    if (priv == null || pub == null || creator == null || fc == null) {
+      return false;
+    }
+    // numbered like every room frame: a knock again is not the same bytes
+    // as the last, which the creator would drop as one it already saw
+    int? number;
+    try {
+      number = await live.nextRoomSeq(groupId);
+    } catch (e) {
+      dlog('room join number: $e');
+    }
     final wrapped = roomFrame(
       await wrapMessage(
         '',
-        groupId: link.roomId,
+        groupId: groupId,
         groupControl: const GroupControl(type: 'join'),
         sender: _mySender(),
       ),
-      k.pub,
+      pub,
+      number: number,
     );
-    if (wrapped == null) {
-      return l10n.appJoinedButYourHello(link.name);
+    if (wrapped == null) return false;
+    // left while it was made: a join now would give the creator a seat for
+    // a key nobody holds any more
+    if (_leavingRooms.contains(groupId) || !await live.groupExists(groupId)) {
+      dlog('room join: the room went, not sent');
+      return false;
     }
-    final r = await engine.roomSendFirstContact(
-      k.priv,
-      link.creatorPub,
-      link.fcPk,
-      wrapped,
-    );
+    final r = await engine.roomSendFirstContact(priv, creator, fc, wrapped);
     dlog('room join: $r');
-    return r == 'ok'
-        ? l10n.appJoined(link.name)
-        : l10n.appJoinedButTheCreator(link.name);
+    return r == 'ok';
+  }
+
+  /// a room not let in yet knocks again, as the first time, and its wait
+  /// starts over. the join goes in the background
+  Future<void> retryRoomJoin(String groupId) async {
+    final g = await session.getGroup(groupId);
+    if (g == null || g['room_pub'] == null || g['joining_at'] == null) return;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if ((g['expires_at'] as int? ?? 0) <= now) return;
+    // let in since the read above: it stays let in, and nothing is sent
+    if (!await session.restartRoomJoining(groupId, now)) return;
+    _bumpChatRev('group:$groupId');
+    await refreshGroups();
+    if (sessionQuiet) return;
+    await _subscribeRoomMembers(groupId);
+    unawaited(_knockRoom(groupId, now));
+  }
+
+  // the creator's roster names this phone's key: the room is joined. one
+  // without it lets no one in
+  Future<void> _roomLetIn(
+    String groupId,
+    List<String> roster,
+    HaloDb db,
+  ) async {
+    // on its way out: no "joined" for a room just left
+    if (_leavingRooms.contains(groupId)) return;
+    final g = await db.getGroup(groupId);
+    if (g == null || g['joining_at'] == null) return;
+    final pub = g['room_pub'] as String?;
+    if (pub == null || !roster.contains(pub)) return;
+    await db.setRoomJoining(groupId, null);
+    _bumpChatRev('group:$groupId');
+    await refreshGroups();
+    if (identical(db, session.primary)) {
+      sayRoomJoined(l10n.appJoined(g['name'] as String));
+    }
   }
 
   // open a subscription for every member key we do not listen to yet
@@ -14907,8 +15071,13 @@ class AppState extends ChangeNotifier {
     await refreshGroups();
   }
 
+  // rooms on their way out: off the list at once, while the leave goes
+  final Set<String> _leavingRooms = {};
+
   Future<void> leaveRoom(String groupId) async {
     if (sessionQuiet) return _destroyRoom(groupId, on: session.primary);
+    _leavingRooms.add(groupId);
+    await refreshGroups();
     // one try, now: the room's keys go with it, and nothing could send later
     try {
       final wrapped = await wrapMessage(
@@ -14924,7 +15093,11 @@ class AppState extends ChangeNotifier {
     } catch (e) {
       dlog('leave control not sent: $e');
     }
-    await _destroyRoom(groupId);
+    try {
+      await _destroyRoom(groupId);
+    } finally {
+      _leavingRooms.remove(groupId);
+    }
   }
 
   // everyone blocked on the everyday side: in its container and in the
@@ -15050,6 +15223,12 @@ class AppState extends ChangeNotifier {
     return rooms.length;
   }
 
+  // joined off a link and not let in yet
+  static Future<bool> _roomWaiting(Future<Map<String, Object?>?> row) async {
+    final g = await row;
+    return g != null && g['room_pub'] != null && g['joining_at'] != null;
+  }
+
   // send a normal text message into a group. saves the local row, then
   // multicasts pairwise to every other member. returns true if at least
   // one recipient acknowledged.
@@ -15063,6 +15242,8 @@ class AppState extends ChangeNotifier {
     PollSpec? poll,
     String? sticker,
   }) async {
+    // a room not let in yet: nobody reads this phone's key, nothing is kept
+    if (await _roomWaiting(session.getGroup(groupId))) return false;
     // a retry of a poll passes only its uid: the options come off the row
     if (poll == null && msgUid != null) {
       poll = (await session.pollRow(msgUid))?.spec;
@@ -15164,6 +15345,8 @@ class AppState extends ChangeNotifier {
     // a quiet session keeps the row here, unsent: nothing leaves
     if (sessionQuiet) return 'error: quiet';
     final d = _ownerOf(groupId);
+    // a room not let in yet: nobody reads this phone's key
+    if (await _roomWaiting(d.getGroup(groupId))) return 'error: waiting';
     final members = await d.getGroupMembers(groupId);
     final adminId = await d.groupAdminId(groupId);
     final amAdmin = adminId == myId;
@@ -16010,6 +16193,7 @@ class _RootShellState extends State<RootShell> {
               unread: g.unread,
               mentioned: g.mentioned,
               expiresAt: g.expiresAt,
+              joiningAt: g.joiningAt,
               hidden: g.hidden,
             ),
           )

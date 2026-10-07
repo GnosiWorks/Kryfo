@@ -648,20 +648,44 @@ abstract class AppLocalizations {
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **'Joined {linkName}, but your hello was held back'**
-  String appJoinedButYourHello(Object linkName);
-
-  /// main.dart
-  ///
-  /// In en, this message translates to:
   /// **'Joined {linkName}'**
   String appJoined(Object linkName);
 
-  /// main.dart
+  /// widgets/room_join.dart
   ///
   /// In en, this message translates to:
-  /// **'Joined {linkName}, but the creator could not be reached yet'**
-  String appJoinedButTheCreator(Object linkName);
+  /// **'Waiting to join'**
+  String get roomJoinWaitingToJoin;
+
+  /// widgets/room_join.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Not answering'**
+  String get roomJoinNotAnswering;
+
+  /// widgets/room_join.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for {room} to let you in…'**
+  String roomJoinWaitingFor(Object room);
+
+  /// widgets/room_join.dart
+  ///
+  /// In en, this message translates to:
+  /// **'You can write here once you are in.'**
+  String get roomJoinWaitingLine;
+
+  /// widgets/room_join.dart
+  ///
+  /// In en, this message translates to:
+  /// **'This room isn\'t answering.'**
+  String get roomJoinNoAnswer;
+
+  /// widgets/room_join.dart
+  ///
+  /// In en, this message translates to:
+  /// **'It may have ended.'**
+  String get roomJoinMayHaveEnded;
 
   /// main.dart
   ///
@@ -3585,7 +3609,7 @@ abstract class AppLocalizations {
   /// **'The payment service is having trouble right now. You can still donate to the address below - your badge just won\'t unlock automatically. Try again later for the badge.'**
   String get donateThePaymentServiceIsHavingTrouble;
 
-  /// screens/donate_screen.dart, widgets/boot_failed.dart
+  /// screens/donate_screen.dart, widgets/boot_failed.dart, widgets/room_join.dart
   ///
   /// In en, this message translates to:
   /// **'Try again'**
@@ -4365,7 +4389,7 @@ abstract class AppLocalizations {
   /// **'Everything in it is wiped from this phone now, and the key you used here is gone for good. You made this room, so its link stops letting anyone in.'**
   String get groupInfoLeaveRoomMaker;
 
-  /// screens/group_info_screen.dart
+  /// screens/group_info_screen.dart, widgets/room_join.dart
   ///
   /// In en, this message translates to:
   /// **'Leave'**

@@ -896,6 +896,8 @@ void main() {
     test(
       'a room frame\'s number counts up from one, each room its own',
       () async {
+        await _theirGroup(mem, 'g1', ['me']);
+        await _theirGroup(mem, 'g2', ['me']);
         expect(await db.nextRoomSeq('g1'), 1);
         expect(await db.nextRoomSeq('g1'), 2);
         expect(await db.nextRoomSeq('g2'), 1);
@@ -916,6 +918,12 @@ void main() {
       await db.deleteGroup('grp000000001');
       expect(mem.rows('group_roster'), isEmpty);
       expect(await db.takeRosterStamp('grp000000001', 1), isTrue);
+      // no number for a room gone, and no row for it either
+      await db.deleteGroup('grp000000001');
+      await expectLater(db.nextRoomSeq('grp000000001'), throwsStateError);
+      expect(mem.rows('group_roster'), isEmpty);
+      // the same id made again counts from one
+      await _theirGroup(mem, 'grp000000001', ['me', 'bob']);
       expect(await db.nextRoomSeq('grp000000001'), 1);
     });
   });
@@ -933,7 +941,7 @@ void main() {
   test('made on create and on the upgrades to 60 and 61', () {
     final src = File('lib/main.dart').readAsStringSync();
     final version = RegExp(r'version: (\d+),').firstMatch(src)!.group(1)!;
-    expect(int.parse(version), 64);
+    expect(int.parse(version), 65);
     final create = src.indexOf('onCreate: (db, _) async {');
     final upgrade = src.indexOf('onUpgrade: (db, oldV, newV) async {');
     expect(

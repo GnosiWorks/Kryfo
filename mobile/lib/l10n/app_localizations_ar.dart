@@ -461,19 +461,29 @@ class AppLocalizationsAr extends AppLocalizations {
   String get appCouldNotMakeA => 'تعذّر إنشاء مفتاح للغرفة';
 
   @override
-  String appJoinedButYourHello(Object linkName) {
-    return 'انضممت إلى ⁨$linkName⁩، لكن تحيتك لا تزال معلّقة';
-  }
-
-  @override
   String appJoined(Object linkName) {
     return 'انضممت إلى ⁨$linkName⁩';
   }
 
   @override
-  String appJoinedButTheCreator(Object linkName) {
-    return 'انضممت إلى ⁨$linkName⁩، لكن تعذّر الوصول إلى منشئها حتى الآن';
+  String get roomJoinWaitingToJoin => 'بانتظار الانضمام';
+
+  @override
+  String get roomJoinNotAnswering => 'لا تستجيب';
+
+  @override
+  String roomJoinWaitingFor(Object room) {
+    return 'بانتظار السماح لك بدخول ⁨$room⁩…';
   }
+
+  @override
+  String get roomJoinWaitingLine => 'يمكنك الكتابة هنا بمجرد دخولك.';
+
+  @override
+  String get roomJoinNoAnswer => 'هذه الغرفة لا تستجيب.';
+
+  @override
+  String get roomJoinMayHaveEnded => 'ربما انتهت.';
 
   @override
   String get appBooting => 'جارٍ الإقلاع...';

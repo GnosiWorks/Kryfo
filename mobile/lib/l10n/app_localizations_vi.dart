@@ -422,19 +422,29 @@ class AppLocalizationsVi extends AppLocalizations {
   String get appCouldNotMakeA => 'Không tạo được khóa phòng';
 
   @override
-  String appJoinedButYourHello(Object linkName) {
-    return 'Đã vào $linkName, nhưng lời chào của bạn bị giữ lại';
-  }
-
-  @override
   String appJoined(Object linkName) {
     return 'Đã vào $linkName';
   }
 
   @override
-  String appJoinedButTheCreator(Object linkName) {
-    return 'Đã vào $linkName, nhưng chưa liên lạc được với người tạo phòng';
+  String get roomJoinWaitingToJoin => 'Đang chờ vào phòng';
+
+  @override
+  String get roomJoinNotAnswering => 'Không phản hồi';
+
+  @override
+  String roomJoinWaitingFor(Object room) {
+    return 'Đang chờ $room cho bạn vào…';
   }
+
+  @override
+  String get roomJoinWaitingLine => 'Bạn có thể viết ở đây khi đã vào phòng.';
+
+  @override
+  String get roomJoinNoAnswer => 'Phòng này không phản hồi.';
+
+  @override
+  String get roomJoinMayHaveEnded => 'Có thể phòng đã kết thúc.';
 
   @override
   String get appBooting => 'Đang khởi động...';

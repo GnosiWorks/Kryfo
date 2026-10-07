@@ -14,6 +14,7 @@ import 'package:kryfo/container.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
     show HaloDb, HaloEngine, appState, useDatabasesForTest, useEngineForTest;
+import 'package:kryfo/rooms.dart' show kRoomJoinWait;
 import 'package:kryfo/screens/archived_screen.dart';
 import 'package:kryfo/screens/chat_door.dart';
 import 'package:kryfo/screens/home_screen.dart';
@@ -25,6 +26,7 @@ import 'package:kryfo/theme.dart';
 import 'package:kryfo/widgets/breathing_ring.dart';
 import 'package:kryfo/widgets/message_menu.dart' show MenuSheet;
 import 'package:kryfo/widgets/page_head.dart' show HeadLine;
+import 'package:kryfo/widgets/room_countdown.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // only what these screens ask for; anything else fails on its type
@@ -440,6 +442,50 @@ void main() {
       await t.pump(const Duration(milliseconds: 600));
       expect(find.text(l10n.groupInfoLeaveGroup), findsOneWidget);
       expect(find.text(l10n.groupInfoLeaveGroupLine), findsOneWidget);
+      await drain(t);
+    });
+
+    testWidgets('a room not let in yet says so on its row, with no clock', (
+      t,
+    ) async {
+      phone(t);
+      final now = DateTime.now().millisecondsSinceEpoch;
+      GroupSummary room(int joiningAt) => GroupSummary(
+        groupId: 'r1',
+        name: 'Friday',
+        memberCount: 2,
+        expiresAt: now + 3600000,
+        joiningAt: joiningAt,
+      );
+      await t.pumpWidget(framed(_home(groups: [room(now)])));
+      await t.pump(const Duration(seconds: 1));
+      expect(find.text(l10n.roomJoinWaitingToJoin), findsOneWidget);
+      expect(find.byType(RoomCountdown), findsNothing);
+      // past the wait it says the room is not answering
+      final long = now - kRoomJoinWait.inMilliseconds - 1;
+      await t.pumpWidget(framed(_home(groups: [room(long)])));
+      await t.pump(const Duration(seconds: 1));
+      expect(find.text(l10n.roomJoinNotAnswering), findsOneWidget);
+      expect(find.text(l10n.roomJoinWaitingToJoin), findsNothing);
+      expect(find.byType(RoomCountdown), findsNothing);
+      // let in: the clock, as any room
+      await t.pumpWidget(
+        framed(
+          _home(
+            groups: [
+              GroupSummary(
+                groupId: 'r1',
+                name: 'Friday',
+                memberCount: 2,
+                expiresAt: now + 3600000,
+              ),
+            ],
+          ),
+        ),
+      );
+      await t.pump(const Duration(seconds: 1));
+      expect(find.byType(RoomCountdown), findsOneWidget);
+      expect(find.text(l10n.roomJoinNotAnswering), findsNothing);
       await drain(t);
     });
 

@@ -432,19 +432,29 @@ class AppLocalizationsFr extends AppLocalizations {
   String get appCouldNotMakeA => 'Impossible de créer une clé de salon';
 
   @override
-  String appJoinedButYourHello(Object linkName) {
-    return 'Vous avez rejoint $linkName, mais votre bonjour a été retenu';
-  }
-
-  @override
   String appJoined(Object linkName) {
     return 'Vous avez rejoint $linkName';
   }
 
   @override
-  String appJoinedButTheCreator(Object linkName) {
-    return 'Vous avez rejoint $linkName, mais le créateur n’a pas encore pu être joint';
+  String get roomJoinWaitingToJoin => 'En attente d’admission';
+
+  @override
+  String get roomJoinNotAnswering => 'Ne répond pas';
+
+  @override
+  String roomJoinWaitingFor(Object room) {
+    return 'En attente que $room vous laisse entrer…';
   }
+
+  @override
+  String get roomJoinWaitingLine => 'Vous pourrez écrire ici dès votre entrée.';
+
+  @override
+  String get roomJoinNoAnswer => 'Ce salon ne répond pas.';
+
+  @override
+  String get roomJoinMayHaveEnded => 'Il est peut-être terminé.';
 
   @override
   String get appBooting => 'Démarrage...';

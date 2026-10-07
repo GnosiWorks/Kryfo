@@ -424,19 +424,29 @@ class AppLocalizationsId extends AppLocalizations {
   String get appCouldNotMakeA => 'Gagal membuat kunci ruang';
 
   @override
-  String appJoinedButYourHello(Object linkName) {
-    return 'Bergabung ke $linkName, tapi salammu tertahan';
-  }
-
-  @override
   String appJoined(Object linkName) {
     return 'Bergabung ke $linkName';
   }
 
   @override
-  String appJoinedButTheCreator(Object linkName) {
-    return 'Bergabung ke $linkName, tapi pembuatnya belum bisa dihubungi';
+  String get roomJoinWaitingToJoin => 'Menunggu bergabung';
+
+  @override
+  String get roomJoinNotAnswering => 'Tidak menjawab';
+
+  @override
+  String roomJoinWaitingFor(Object room) {
+    return 'Menunggu $room mengizinkanmu masuk…';
   }
+
+  @override
+  String get roomJoinWaitingLine => 'Kamu bisa menulis di sini setelah masuk.';
+
+  @override
+  String get roomJoinNoAnswer => 'Ruang ini tidak menjawab.';
+
+  @override
+  String get roomJoinMayHaveEnded => 'Mungkin sudah berakhir.';
 
   @override
   String get appBooting => 'Memulai...';

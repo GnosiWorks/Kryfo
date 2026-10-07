@@ -12,6 +12,7 @@ import 'package:kryfo/main.dart'
 import 'package:kryfo/media_resend.dart';
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
+import 'package:kryfo/rooms.dart' show kRoomJoinWait;
 import 'package:kryfo/router.dart';
 
 class ArrivalStore implements RouterStore {
@@ -1034,8 +1035,11 @@ class ArrivalRows implements HaloDb {
   final roomSeqs = <String, int>{};
 
   @override
-  Future<int> nextRoomSeq(String groupId) async =>
-      roomSeqs[groupId] = (roomSeqs[groupId] ?? 0) + 1;
+  Future<int> nextRoomSeq(String groupId) async {
+    // as on disk: none for a room no longer here
+    if (!groupRows.containsKey(groupId)) throw StateError('no room $groupId');
+    return roomSeqs[groupId] = (roomSeqs[groupId] ?? 0) + 1;
+  }
 
   @override
   Future<int> nextRosterStamp(String groupId, int now) async {
@@ -1096,6 +1100,58 @@ class ArrivalRows implements HaloDb {
     }
     msgs.removeWhere((m) => m['group_id'] == groupId);
     groupFiles.remove(groupId);
+  }
+
+  @override
+  Future<void> createRoom({
+    required String groupId,
+    required String name,
+    required String priv,
+    required String pub,
+    required int expiresAt,
+    required String creatorPub,
+    required String fcPk,
+    int? cap,
+    required List<String> members,
+    int? joiningAt,
+  }) async {
+    _hit('createRoom', groupId, null);
+    group(groupId, members, admin: creatorPub);
+    groupRows[groupId]!.addAll({
+      'name': name,
+      'is_admin': creatorPub == pub ? 1 : 0,
+      'room_priv': priv,
+      'room_pub': pub,
+      'expires_at': expiresAt,
+      'creator_pub': creatorPub,
+      'fc_pk': fcPk,
+      'member_cap': cap,
+      'joining_at': joiningAt,
+    });
+  }
+
+  @override
+  Future<void> setRoomJoining(String groupId, int? at) async {
+    _hit('setRoomJoining', groupId, null);
+    groupRows[groupId]?['joining_at'] = at;
+  }
+
+  @override
+  Future<bool> restartRoomJoining(String groupId, int at) async {
+    _hit('restartRoomJoining', groupId, null);
+    final g = groupRows[groupId];
+    if (g == null || g['joining_at'] == null) return false;
+    g['joining_at'] = at;
+    return true;
+  }
+
+  @override
+  Future<bool> failRoomJoining(String groupId, int at) async {
+    _hit('failRoomJoining', groupId, null);
+    final g = groupRows[groupId];
+    if (g == null || g['joining_at'] != at) return false;
+    g['joining_at'] = at - kRoomJoinWait.inMilliseconds;
+    return true;
   }
 
   @override

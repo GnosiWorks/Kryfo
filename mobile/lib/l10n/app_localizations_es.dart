@@ -433,19 +433,29 @@ class AppLocalizationsEs extends AppLocalizations {
   String get appCouldNotMakeA => 'No se pudo crear una clave de sala';
 
   @override
-  String appJoinedButYourHello(Object linkName) {
-    return 'Te uniste a $linkName, pero tu saludo quedó retenido';
-  }
-
-  @override
   String appJoined(Object linkName) {
     return 'Te uniste a $linkName';
   }
 
   @override
-  String appJoinedButTheCreator(Object linkName) {
-    return 'Te uniste a $linkName, pero aún no se pudo contactar con quien la creó';
+  String get roomJoinWaitingToJoin => 'Esperando para entrar';
+
+  @override
+  String get roomJoinNotAnswering => 'No responde';
+
+  @override
+  String roomJoinWaitingFor(Object room) {
+    return 'Esperando a que $room te deje entrar…';
   }
+
+  @override
+  String get roomJoinWaitingLine => 'Podrás escribir aquí en cuanto entres.';
+
+  @override
+  String get roomJoinNoAnswer => 'Esta sala no responde.';
+
+  @override
+  String get roomJoinMayHaveEnded => 'Puede que haya terminado.';
 
   @override
   String get appBooting => 'Arrancando...';

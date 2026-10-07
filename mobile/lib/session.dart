@@ -294,6 +294,10 @@ class Session {
       _ofGroup(groupId).loadGroupMessages(groupId);
   Future<void> markRoomSeen(String groupId) =>
       _ofGroup(groupId).markRoomSeen(groupId);
+  Future<void> setRoomJoining(String groupId, int? at) =>
+      _ofGroup(groupId).setRoomJoining(groupId, at);
+  Future<bool> restartRoomJoining(String groupId, int at) =>
+      _ofGroup(groupId).restartRoomJoining(groupId, at);
   Future<void> removeGroupMember(String groupId, String haloId) =>
       _ofGroup(groupId).removeGroupMember(groupId, haloId);
   Future<void> renameGroup(String groupId, String name) =>
@@ -370,6 +374,7 @@ class Session {
     required String fcPk,
     int? cap,
     required List<String> members,
+    int? joiningAt,
   }) => primary.createRoom(
     groupId: groupId,
     name: name,
@@ -380,6 +385,7 @@ class Session {
     fcPk: fcPk,
     cap: cap,
     members: members,
+    joiningAt: joiningAt,
   );
 
   // ---- one message, by its uid ----
