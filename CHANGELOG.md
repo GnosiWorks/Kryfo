@@ -47,7 +47,6 @@
 - the button on the restore sheet could be out of reach.
 
 ### Security
-- every photo is cleaned of its metadata again right before it goes, retries included.
 - the engine's crypto and network libraries are updated: x/crypto 0.55.0, x/net 0.58.0, age 1.3.2 and websocket 1.8.15.
 - security improvements throughout. update when you can.
 
