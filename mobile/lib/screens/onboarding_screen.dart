@@ -17,7 +17,8 @@ import '../main.dart' show appState, AppState, handleHaloUri;
 import 'scan_screen.dart';
 import 'avatar_picker_screen.dart' show AvatarChoiceEditor;
 import '../widgets/kryfo_avatar.dart';
-import '../widgets/motion.dart' show haloRoute, motionStill;
+import '../widgets/motion.dart'
+    show haloRoute, motionStill, kHouseCurve, kHouseTime;
 import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
 import '../l10n/marked.dart';
@@ -37,35 +38,39 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
+  static const _steps = 7;
   final _ctrl = PageController();
   int _page = 0;
+  // the step being moved to: it settles in while the one left fades out
+  int _to = 0;
+  // steps already shown: coming back to one, it is simply there
+  final _seen = <int>{0};
 
-  void _next() {
-    // with less movement the next step is simply there
-    if (MediaQuery.disableAnimationsOf(context)) {
-      _ctrl.jumpToPage((_ctrl.page ?? 0).round() + 1);
-      return;
-    }
-    _ctrl.nextPage(
-      duration: const Duration(milliseconds: 280),
-      curve: Curves.easeOutCubic,
-    );
-  }
-
-  // system back walks one step back; only the first step leaves the app
-  void _back() {
-    final to = (_ctrl.page ?? _page.toDouble()).round() - 1;
-    if (to < 0) return;
-    HapticFeedback.selectionClick();
+  void _go(int to) {
+    if (to < 0 || to >= _steps) return;
+    setState(() => _to = to);
+    // with less movement the step is simply there
     if (MediaQuery.disableAnimationsOf(context)) {
       _ctrl.jumpToPage(to);
       return;
     }
     _ctrl.animateToPage(
       to,
-      duration: const Duration(milliseconds: 280),
-      curve: Curves.easeOutCubic,
+      duration: const Duration(milliseconds: 320),
+      curve: Curves.easeInOutCubic,
     );
+  }
+
+  int get _at => (_ctrl.page ?? _page.toDouble()).round();
+
+  void _next() => _go(_at + 1);
+
+  // system back walks one step back; only the first step leaves the app
+  void _back() {
+    final to = _at - 1;
+    if (to < 0) return;
+    HapticFeedback.selectionClick();
+    _go(to);
   }
 
   @override
@@ -76,6 +81,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final steps = <Widget>[
+      _WelcomeScreen(onContinue: _next, enter: !_seen.contains(1)),
+      _IdentityScreen(
+        appState: widget.appState,
+        onContinue: _next,
+        enter: !_seen.contains(1),
+      ),
+      _PickFaceScreen(onContinue: _next),
+      _TransportScreen(onContinue: _next),
+      _ThreeThingsScreen(onContinue: _next),
+      _NotificationScreen(onContinue: _next),
+      _AddSomeoneScreen(onComplete: widget.onComplete),
+    ];
     return PopScope(
       canPop: _page == 0,
       onPopInvokedWithResult: (done, _) {
@@ -84,18 +102,29 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Scaffold(
         backgroundColor: HaloColors.ink,
         body: SafeArea(
-          child: PageView(
-            controller: _ctrl,
-            physics: const NeverScrollableScrollPhysics(),
-            onPageChanged: (i) => setState(() => _page = i),
+          child: Column(
             children: [
-              _WelcomeScreen(onContinue: _next),
-              _IdentityScreen(appState: widget.appState, onContinue: _next),
-              _PickFaceScreen(onContinue: _next),
-              _TransportScreen(onContinue: _next),
-              _ThreeThingsScreen(onContinue: _next),
-              _NotificationScreen(onContinue: _next),
-              _AddSomeoneScreen(onComplete: widget.onComplete),
+              _StepBar(pages: _ctrl, step: _to, count: _steps, onBack: _back),
+              Expanded(
+                child: PageView(
+                  controller: _ctrl,
+                  physics: const NeverScrollableScrollPhysics(),
+                  onPageChanged: (i) => setState(() {
+                    _page = i;
+                    _to = i;
+                    _seen.add(i);
+                  }),
+                  children: [
+                    for (var i = 0; i < steps.length; i++)
+                      _StepFrame(
+                        pages: _ctrl,
+                        index: i,
+                        coming: i == _to,
+                        child: steps[i],
+                      ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -104,18 +133,204 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 }
 
+// the pager moves a whole width; each step is pulled back so it only
+// shifts a little: the one left fades out first, then the next settles in
+class _StepFrame extends StatelessWidget {
+  final PageController pages;
+  final int index;
+  final bool coming;
+  final Widget child;
+  const _StepFrame({
+    required this.pages,
+    required this.index,
+    required this.coming,
+    required this.child,
+  });
+
+  static const _shift = 28.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final rtl = Directionality.of(context) == TextDirection.rtl;
+    return AnimatedBuilder(
+      animation: pages,
+      child: child,
+      builder: (context, child) {
+        var d = 0.0;
+        var w = 0.0;
+        if (pages.hasClients && pages.position.haveDimensions) {
+          d = pages.page! - index;
+          w = pages.position.viewportDimension;
+        }
+        final q = d.abs().clamp(0.0, 1.0);
+        final shown = coming
+            ? Curves.easeOut.transform(((0.7 - q) / 0.7).clamp(0.0, 1.0))
+            : 1 - Curves.easeIn.transform((q / 0.3).clamp(0.0, 1.0));
+        return IgnorePointer(
+          // a tap while steps change would land on the wrong one
+          ignoring: q > 0.01,
+          child: Opacity(
+            opacity: shown,
+            child: Transform.translate(
+              offset: Offset(d * (w - _shift) * (rtl ? -1 : 1), 0),
+              child: child,
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// back, the steps as a filling track, and the count. on the welcome step
+// only the language chip shows
+class _StepBar extends StatelessWidget {
+  final PageController pages;
+  final int step;
+  final int count;
+  final VoidCallback onBack;
+  const _StepBar({
+    required this.pages,
+    required this.step,
+    required this.count,
+    required this.onBack,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final still = motionStill(context);
+    final counter = AnimatedSwitcher(
+      duration: Duration(milliseconds: still ? 0 : 240),
+      transitionBuilder: (child, anim) => FadeTransition(
+        opacity: anim,
+        child: SlideTransition(
+          position: Tween(
+            begin: const Offset(0, 0.5),
+            end: Offset.zero,
+          ).animate(anim),
+          child: child,
+        ),
+      ),
+      child: Text(
+        '${twoDigits(step + 1)} / ${twoDigits(count)}',
+        key: ValueKey(step),
+        style: HaloType.mono(
+          size: 10,
+          color: HaloColors.amber,
+        ).copyWith(letterSpacing: track(2), fontWeight: FontWeight.w500),
+      ),
+    );
+    // grows with a large text size rather than squeezing the chip
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 56),
+      child: AnimatedBuilder(
+        animation: pages,
+        builder: (context, _) {
+          final pos = pages.hasClients && pages.position.haveDimensions
+              ? pages.page!
+              : step.toDouble();
+          final shown = pos.clamp(0.0, 1.0);
+          return Row(
+            children: [
+              const SizedBox(width: 4),
+              IgnorePointer(
+                ignoring: shown < 0.5,
+                child: Opacity(
+                  opacity: shown,
+                  child: IconButton(
+                    tooltip: l10n.commonBack,
+                    onPressed: onBack,
+                    icon: Icon(
+                      Icons.chevron_left,
+                      size: 26,
+                      color: HaloColors.text2,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Opacity(
+                  opacity: shown,
+                  child: ExcludeSemantics(child: _track(pos)),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Stack(
+                alignment: AlignmentDirectional.centerEnd,
+                children: [
+                  IgnorePointer(
+                    ignoring: shown >= 0.5,
+                    child: Opacity(
+                      opacity: 1 - (shown * 2).clamp(0.0, 1.0),
+                      child: const LanguageChip(),
+                    ),
+                  ),
+                  IgnorePointer(
+                    child: Opacity(
+                      opacity: (shown * 2 - 1).clamp(0.0, 1.0),
+                      child: Padding(
+                        padding: const EdgeInsetsDirectional.only(end: 10),
+                        child: counter,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 12),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  // one short bar a step, filled from the reading side as the step arrives
+  Widget _track(double pos) {
+    return Row(
+      children: [
+        for (var k = 0; k < count; k++) ...[
+          if (k > 0) const SizedBox(width: 4),
+          Expanded(
+            child: Container(
+              height: 3,
+              decoration: BoxDecoration(
+                color: HaloColors.line2,
+                borderRadius: BorderRadius.circular(2),
+              ),
+              child: FractionallySizedBox(
+                alignment: AlignmentDirectional.centerStart,
+                widthFactor: (pos + 1 - k).clamp(0.0, 1.0),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: HaloColors.amber,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
 // === 01 · WELCOME ===
 
 class _WelcomeScreen extends StatefulWidget {
   final VoidCallback onContinue;
-  const _WelcomeScreen({required this.onContinue});
+  final bool enter;
+  const _WelcomeScreen({required this.onContinue, required this.enter});
   @override
   State<_WelcomeScreen> createState() => _WelcomeScreenState();
 }
 
 class _WelcomeScreenState extends State<_WelcomeScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final AnimationController _ctl;
+  // the page comes up in order: the light, the line, the promises, the button
+  late final AnimationController _in;
 
   @override
   void initState() {
@@ -123,6 +338,10 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
     _ctl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2400),
+    );
+    _in = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1100),
     );
   }
 
@@ -133,8 +352,13 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
     super.didChangeDependencies();
     // two slow glows as the page opens, then it rests: nothing loops while
     // someone reads
-    if (_glowed || MediaQuery.disableAnimationsOf(context)) return;
+    if (_glowed) return;
     _glowed = true;
+    if (!widget.enter || MediaQuery.disableAnimationsOf(context)) {
+      _in.value = 1;
+      return;
+    }
+    _in.forward();
     // a whole number of glows ends where it began
     _ctl.repeat(count: 2).whenComplete(() {
       if (mounted) _ctl.value = 0;
@@ -144,35 +368,142 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
   @override
   void dispose() {
     _ctl.dispose();
+    _in.dispose();
     super.dispose();
+  }
+
+  Widget _rise(double from, double to, Widget child, {double by = 14}) {
+    final curve = Interval(from, to, curve: Curves.easeOutCubic);
+    return AnimatedBuilder(
+      animation: _in,
+      child: child,
+      builder: (_, child) {
+        final v = curve.transform(_in.value);
+        return Opacity(
+          opacity: v,
+          child: Transform.translate(
+            offset: Offset(0, (1 - v) * by),
+            child: child,
+          ),
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
+    // a short phone keeps the button in view with a smaller light and type
+    final tight = MediaQuery.sizeOf(context).height < 720;
+    final hero = tight ? 34.0 : 38.0;
+    return _StepPage(
+      top: tight ? 12 : 20,
+      cross: CrossAxisAlignment.start,
+      footer: [
+        _rise(
+          0.68,
+          1,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _Cta(label: l10n.onboardingBegin, onTap: widget.onContinue),
+              const SizedBox(height: 2),
+              Center(
+                child: _TextLink(
+                  label: l10n.onboardingHaveABackupRestore,
+                  onTap: () => Navigator.of(
+                    context,
+                  ).push(haloRoute(const RestoreScreen())),
+                ),
+              ),
+            ],
+          ),
+          by: 10,
+        ),
+      ],
       children: [
-        _welcome(),
-        const PositionedDirectional(top: 5, end: 11, child: LanguageChip()),
+        _orb(tight ? 58 : 70),
+        SizedBox(height: tight ? 22 : 28),
+        _rise(
+          0.15,
+          0.5,
+          Text(
+            l10n.onboardingPrivateByDefault,
+            style: HaloType.mono(
+              size: 10,
+              color: HaloColors.amber,
+            ).copyWith(letterSpacing: track(4), fontWeight: FontWeight.w500),
+          ),
+          by: 8,
+        ),
+        SizedBox(height: tight ? 16 : 20),
+        _rise(
+          0.22,
+          0.65,
+          Text.rich(
+            TextSpan(
+              style: HaloType.serif(
+                size: hero,
+                weight: FontWeight.w300,
+                color: HaloColors.text,
+                height: 1.08,
+              ),
+              children: markedSpans(
+                l10n.onboardingPrivateMessaging,
+                HaloType.serif(
+                  size: hero,
+                  weight: FontWeight.w300,
+                  italic: true,
+                  color: HaloColors.amber,
+                  height: 1.08,
+                ),
+              ),
+            ),
+            textScaler: _headScale(context),
+          ),
+        ),
+        SizedBox(height: tight ? 22 : 28),
+        _rise(0.4, 0.78, _bullet(l10n.onboardingYourNameIsThree)),
+        SizedBox(height: tight ? 10 : 14),
+        _rise(0.48, 0.86, _bullet(l10n.onboardingNobodyGetsInUnless)),
+        SizedBox(height: tight ? 10 : 14),
+        _rise(0.56, 0.94, _bullet(l10n.onboardingTheFirstConnectionTakes)),
+        const Spacer(),
+        const SizedBox(height: 24),
+        _rise(
+          0.68,
+          1,
+          Center(
+            child: Text(
+              l10n.onboardingKryfoIsOpenSource,
+              textAlign: TextAlign.center,
+              style: HaloType.mono(
+                size: 10,
+                color: HaloColors.text3,
+              ).copyWith(letterSpacing: track(2)),
+            ),
+          ),
+        ),
       ],
     );
   }
 
-  Widget _welcome() {
-    return FitColumn(
-      padding: const EdgeInsets.fromLTRB(32, 60, 32, 36),
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        AnimatedBuilder(
-          animation: _ctl,
-          builder: (c, _) {
-            final op = 0.7 + 0.3 * math.sin(_ctl.value * 2 * math.pi);
-            return Container(
-              width: 70,
-              height: 70,
+  Widget _orb(double size) {
+    return AnimatedBuilder(
+      animation: Listenable.merge([_ctl, _in]),
+      builder: (c, _) {
+        final op = 0.7 + 0.3 * math.sin(_ctl.value * 2 * math.pi);
+        final v = const Interval(0, 0.5).transform(_in.value);
+        return Opacity(
+          opacity: Curves.easeOut.transform(v),
+          child: Transform.scale(
+            scale: 0.6 + 0.4 * Curves.easeOutBack.transform(v),
+            child: Container(
+              width: size,
+              height: size,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
-                  center: Alignment(-0.3, -0.3),
+                  center: const Alignment(-0.3, -0.3),
                   colors: [HaloColors.amber, HaloColors.amberDeep],
                 ),
                 boxShadow: [
@@ -183,125 +514,54 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
                   ),
                 ],
               ),
-            );
-          },
-        ),
-        const SizedBox(height: 28),
-        Text(
-          l10n.onboardingPrivateByDefault,
-          style: HaloType.mono(
-            size: 10,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // the lead words carry the weight. the rest is warm, a step brighter than
+  // the usual second line: this page has to be read
+  Widget _bullet(String msg) {
+    const size = 14.0;
+    const height = 1.55;
+    final line = MediaQuery.textScalerOf(context).scale(size) * height;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 6,
+          height: 6,
+          margin: EdgeInsetsDirectional.only(top: line / 2 - 3, end: 14),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
             color: HaloColors.amber,
-          ).copyWith(letterSpacing: track(4), fontWeight: FontWeight.w500),
-        ),
-        const SizedBox(height: 22),
-        RichText(
-          text: TextSpan(
-            style: HaloType.serif(
-              size: 38,
-              weight: FontWeight.w300,
-              color: HaloColors.text,
-              height: 1.05,
-            ),
-            children: markedSpans(
-              l10n.onboardingPrivateMessaging,
-              HaloType.serif(
-                size: 38,
-                weight: FontWeight.w300,
-                italic: true,
-                color: HaloColors.amber,
-                height: 1.05,
-              ),
-            ),
           ),
         ),
-        const SizedBox(height: 26),
-        _bullet(l10n.onboardingYourNameIsThree),
-        const SizedBox(height: 13),
-        _bullet(l10n.onboardingNobodyGetsInUnless),
-        const SizedBox(height: 13),
-        _bullet(l10n.onboardingTheFirstConnectionTakes),
-        const Spacer(),
-        PressScale(
-          scale: 0.97,
-          onTap: widget.onContinue,
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            decoration: BoxDecoration(
-              color: HaloColors.amber,
-              borderRadius: BorderRadius.circular(999),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              l10n.onboardingBegin,
+        Expanded(
+          child: Text.rich(
+            TextSpan(
               style: HaloType.sans(
-                size: 14,
-                color: HaloColors.onAmber,
-                weight: FontWeight.w500,
+                size: size,
+                color: HaloColors.warm,
+                height: height,
+              ),
+              children: markedSpans(
+                msg,
+                HaloType.sans(
+                  size: size,
+                  color: HaloColors.text,
+                  weight: FontWeight.w600,
+                  height: height,
+                ),
               ),
             ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Center(
-          child: PressScale(
-            onTap: () {
-              Navigator.of(context).push(haloRoute(const RestoreScreen()));
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              child: Text(
-                l10n.onboardingHaveABackupRestore,
-                style: HaloType.sans(size: 12, color: HaloColors.text2),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 14),
-        Center(
-          child: Text(
-            l10n.onboardingKryfoIsOpenSource,
-            style: HaloType.mono(
-              size: 10,
-              color: HaloColors.text3,
-            ).copyWith(letterSpacing: track(2)),
           ),
         ),
       ],
     );
   }
-
-  Widget _bullet(String msg) => Row(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Container(
-        width: 12,
-        height: 0.5,
-        color: HaloColors.amber,
-        margin: const EdgeInsetsDirectional.only(top: 10, end: 12),
-      ),
-      Expanded(
-        child: RichText(
-          text: TextSpan(
-            style: HaloType.sans(
-              size: 13.5,
-              color: HaloColors.text2,
-              height: 1.6,
-            ),
-            children: markedSpans(
-              msg,
-              HaloType.sans(
-                size: 13.5,
-                color: HaloColors.text,
-                weight: FontWeight.w500,
-                height: 1.6,
-              ),
-            ),
-          ),
-        ),
-      ),
-    ],
-  );
 }
 
 // === 02 · IDENTITY REVEAL ===
@@ -309,17 +569,27 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
 class _IdentityScreen extends StatefulWidget {
   final AppState appState;
   final VoidCallback onContinue;
-  const _IdentityScreen({required this.appState, required this.onContinue});
+  final bool enter;
+  const _IdentityScreen({
+    required this.appState,
+    required this.onContinue,
+    required this.enter,
+  });
   @override
   State<_IdentityScreen> createState() => _IdentityScreenState();
 }
 
 class _IdentityScreenState extends State<_IdentityScreen>
     with TickerProviderStateMixin {
+  // the reveal's timeline, in ms
+  static const _length = 2400;
   late final AnimationController _shimmer;
   late final AnimationController _reveal;
   late final AnimationController _breath;
-  int _revealKey = 0;
+  // a new name: the old words lift away, the new ones land one by one
+  late final AnimationController _roll;
+  late final AnimationController _spin;
+  bool _leaving = false;
 
   @override
   void initState() {
@@ -334,7 +604,16 @@ class _IdentityScreenState extends State<_IdentityScreen>
     );
     _reveal = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 3000),
+      duration: const Duration(milliseconds: _length),
+    );
+    _roll = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 720),
+      value: 1,
+    );
+    _spin = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
     );
   }
 
@@ -345,13 +624,9 @@ class _IdentityScreenState extends State<_IdentityScreen>
     super.didChangeDependencies();
     if (_shown) return;
     _shown = true;
-    _play();
-  }
-
-  // the name writes itself in, the shine and the ring play twice, then
-  // rest. with less movement it is simply there
-  void _play() {
-    if (MediaQuery.disableAnimationsOf(context)) {
+    // the name writes itself in, the shine and the ring play twice, then
+    // rest. with less movement, or back on this step, it is simply there
+    if (!widget.enter || MediaQuery.disableAnimationsOf(context)) {
       _reveal.value = 1;
       return;
     }
@@ -367,32 +642,76 @@ class _IdentityScreenState extends State<_IdentityScreen>
     _shimmer.dispose();
     _reveal.dispose();
     _breath.dispose();
+    _roll.dispose();
+    _spin.dispose();
     super.dispose();
   }
 
-  // the first key's signal setup may still be running: the button turns
+  // the first key's signal setup may still be running: the arrow turns
   // until the new name is ready, and taps meanwhile change nothing
   bool _busy = false;
 
   Future<void> _regenerate() async {
     if (_busy) return;
-    setState(() => _busy = true);
+    final still = motionStill(context);
+    _reveal.value = 1;
+    setState(() {
+      _busy = true;
+      _leaving = !still;
+      _held = widget.appState.sessionId;
+    });
+    if (!still) _spin.repeat();
     try {
-      await widget.appState.regenerateIdentity();
+      await Future.wait([
+        widget.appState.regenerateIdentity(),
+        if (!still)
+          _roll
+              .animateBack(
+                0,
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeInCubic,
+              )
+              .orCancel
+              .catchError((_) {}),
+      ]);
+      HapticFeedback.lightImpact();
     } finally {
-      if (mounted) setState(() => _busy = false);
+      if (mounted) {
+        setState(() {
+          _busy = false;
+          _leaving = false;
+          _held = null;
+        });
+        if (!still) _land();
+      }
     }
-    if (!mounted) return;
-    setState(() => _revealKey++);
-    _play();
+  }
+
+  void _land() {
+    _roll.forward(from: 0);
+    _shimmer.forward(from: 0);
+    // the arrow finishes its turn and rests
+    _spin
+        .animateTo(
+          1,
+          duration: Duration(milliseconds: (500 * (1 - _spin.value)).round()),
+          curve: Curves.easeOutCubic,
+        )
+        .whenComplete(() {
+          if (mounted) _spin.value = 0;
+        });
   }
 
   void _continue() {
     if (!_busy) widget.onContinue();
   }
 
+  // the name on screen: the old one stays until the new one lands
+  String? _held;
+  String get _id => _held ?? widget.appState.sessionId;
+
   List<String> get _words {
-    final id = widget.appState.sessionId;
+    final id = _id;
     if (id.isEmpty) return ['...', '...', '...'];
     return id.split('-').take(3).toList();
   }
@@ -400,160 +719,173 @@ class _IdentityScreenState extends State<_IdentityScreen>
   @override
   Widget build(BuildContext context) {
     final words = _words;
-    return Container(
-      decoration: BoxDecoration(
-        gradient: RadialGradient(
-          center: const Alignment(0, -0.4),
-          radius: 0.9,
-          colors: [
-            HaloColors.amber.withValues(alpha: 0.06),
-            Colors.transparent,
-          ],
+    return _StepPage(
+      top: 8,
+      cross: CrossAxisAlignment.center,
+      footer: [
+        _fadeAt(
+          1650,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _Cta(label: l10n.onboardingUseThisName, onTap: _continue),
+              const SizedBox(height: 10),
+              _tryAnother(),
+            ],
+          ),
         ),
-      ),
-      child: FitColumn(
-        padding: const EdgeInsets.fromLTRB(28, 36, 28, 36),
-        children: [
-          const Spacer(),
-          _sigilReveal(),
-          const SizedBox(height: 22),
-          Text(
+      ],
+      children: [
+        const Spacer(),
+        _sigilReveal(),
+        const SizedBox(height: 24),
+        _fadeAt(
+          300,
+          child: Text(
             l10n.onboardingYourKryfoId,
+            textAlign: TextAlign.center,
             style: HaloType.mono(
               size: 10,
               color: HaloColors.amber,
             ).copyWith(letterSpacing: track(4), fontWeight: FontWeight.w500),
           ),
-          const SizedBox(height: 14),
-          _shimmerPill(words),
-          const SizedBox(height: 18),
-          _fadeAt(1500, child: _italicLine()),
-          const SizedBox(height: 14),
-          _fadeAt(
-            1800,
-            // a plain SizedBox would let the fit pass measure this at the
-            // full width and the page would overflow instead of scroll
-            child: FitWidth(
-              width: 240,
-              child: RichText(
-                textAlign: TextAlign.center,
-                text: TextSpan(
-                  style: HaloType.sans(
-                    size: 11,
-                    color: HaloColors.text3,
+        ),
+        const SizedBox(height: 14),
+        _shimmerPill(words),
+        const SizedBox(height: 22),
+        _fadeAt(1300, child: _italicLine()),
+        const SizedBox(height: 12),
+        _fadeAt(
+          1450,
+          // a plain SizedBox would let the fit pass measure this at the
+          // full width and the page would overflow instead of scroll
+          child: FitWidth(
+            width: 280,
+            child: Text.rich(
+              TextSpan(
+                style: HaloType.sans(
+                  size: 12.5,
+                  color: HaloColors.text2,
+                  height: 1.55,
+                ),
+                children: markedSpans(
+                  l10n.onboardingGeneratedFromAKey,
+                  HaloType.sans(
+                    size: 12.5,
+                    color: HaloColors.text,
+                    weight: FontWeight.w500,
                     height: 1.55,
-                  ),
-                  children: markedSpans(
-                    l10n.onboardingGeneratedFromAKey,
-                    HaloType.sans(
-                      size: 11,
-                      color: HaloColors.text2,
-                      weight: FontWeight.w500,
-                      height: 1.55,
-                    ),
                   ),
                 ),
               ),
+              textAlign: TextAlign.center,
             ),
           ),
-          const SizedBox(height: 26),
-          _fadeAt(
-            2100,
-            // side by side while they fit; when they don't, the main
-            // one goes on top
-            child: Wrap(
-              alignment: WrapAlignment.center,
-              verticalDirection: VerticalDirection.up,
-              spacing: 10,
-              runSpacing: 10,
-              children: [
-                PressScale(
-                  scale: 0.96,
-                  onTap: _regenerate,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 18,
-                      vertical: 11,
-                    ),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: HaloColors.line2, width: 0.5),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    // the label keeps the size while the arc turns
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Opacity(
-                          opacity: _busy ? 0 : 1,
-                          child: Text(
-                            l10n.onboardingTryAnother,
-                            textAlign: TextAlign.center,
-                            style: HaloType.sans(
-                              size: 12,
-                              color: HaloColors.text2,
-                            ),
-                          ),
-                        ),
-                        if (_busy)
-                          SizedBox(
-                            key: const ValueKey('regenerating'),
-                            width: 12,
-                            height: 12,
-                            child: CircularProgressIndicator(
-                              value: motionStill(context) ? 0.3 : null,
-                              strokeWidth: 1.5,
-                              color: HaloColors.text2,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-                PressScale(
-                  scale: 0.96,
-                  onTap: _continue,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 22,
-                      vertical: 11,
-                    ),
-                    decoration: BoxDecoration(
-                      color: HaloColors.amber,
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      l10n.onboardingUseThisName,
-                      textAlign: TextAlign.center,
-                      style: HaloType.sans(
-                        size: 12,
-                        color: HaloColors.onAmber,
-                        weight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+        ),
+        const Spacer(),
+      ],
+    );
+  }
+
+  Widget _tryAnother() {
+    final still = motionStill(context);
+    return PressScale(
+      scale: 0.97,
+      onTap: _regenerate,
+      child: AnimatedOpacity(
+        // with less movement nothing turns: the button dims while it works
+        opacity: _busy && still ? 0.5 : 1,
+        duration: const Duration(milliseconds: 150),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+          decoration: BoxDecoration(
+            border: Border.all(color: HaloColors.line2),
+            borderRadius: BorderRadius.circular(999),
           ),
-          const Spacer(flex: 2),
-        ],
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              RotationTransition(
+                turns: _spin,
+                child: Icon(
+                  Icons.refresh_rounded,
+                  key: _busy ? const ValueKey('regenerating') : null,
+                  size: 17,
+                  color: HaloColors.amber,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  l10n.onboardingTryAnother,
+                  textAlign: TextAlign.center,
+                  style: HaloType.sans(
+                    size: 14,
+                    color: HaloColors.text,
+                    weight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 
   Widget _sigilReveal() {
+    final still = motionStill(context);
+    final seed = _id.isEmpty ? 'Kryfo' : _id;
     return AnimatedBuilder(
       animation: Listenable.merge([_breath, _reveal]),
-      builder: (c, _) {
+      // a new name draws a new face: it pops in over the last
+      child: AnimatedSwitcher(
+        duration: Duration(milliseconds: still ? 0 : 360),
+        switchInCurve: kHouseCurve,
+        switchOutCurve: Curves.easeInCubic,
+        transitionBuilder: (child, anim) => FadeTransition(
+          opacity: anim,
+          child: ScaleTransition(
+            scale: Tween(begin: 0.8, end: 1.0).animate(anim),
+            child: child,
+          ),
+        ),
+        child: KryfoAvatar(key: ValueKey(seed), seed: seed, size: 56),
+      ),
+      builder: (c, face) {
         final breath = 0.7 + 0.3 * math.sin(_breath.value * 2 * math.pi);
-        final rv = (_reveal.value * 3000 / 1100).clamp(0.0, 1.0);
+        final rv = (_reveal.value * _length / 1000).clamp(0.0, 1.0);
         final eased = Curves.easeOutCubic.transform(rv);
         return SizedBox(
           width: 88,
           height: 88,
           child: Stack(
             alignment: Alignment.center,
+            clipBehavior: Clip.none,
             children: [
+              // a warm light around the face, faded out before its edge
+              Positioned(
+                left: -66,
+                top: -66,
+                right: -66,
+                bottom: -66,
+                child: IgnorePointer(
+                  child: Opacity(
+                    opacity: eased,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            HaloColors.amber.withValues(alpha: 0.10),
+                            HaloColors.amber.withValues(alpha: 0),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
               CustomPaint(
                 size: const Size(88, 88),
                 painter: _HaloRingPainter(eased, breath),
@@ -561,13 +893,8 @@ class _IdentityScreenState extends State<_IdentityScreen>
               Opacity(
                 opacity: eased,
                 child: Transform.scale(
-                  scale: 0.72 + 0.28 * eased,
-                  child: KryfoAvatar(
-                    seed: widget.appState.sessionId.isEmpty
-                        ? 'Kryfo'
-                        : widget.appState.sessionId,
-                    size: 56,
-                  ),
+                  scale: 0.72 + 0.28 * Curves.easeOutBack.transform(rv),
+                  child: face,
                 ),
               ),
             ],
@@ -577,11 +904,10 @@ class _IdentityScreenState extends State<_IdentityScreen>
     );
   }
 
-  Widget _italicLine() => RichText(
-    textAlign: TextAlign.center,
-    text: TextSpan(
+  Widget _italicLine() => Text.rich(
+    TextSpan(
       style: HaloType.serif(
-        size: 19,
+        size: 20,
         weight: FontWeight.w300,
         color: HaloColors.text,
         height: 1.25,
@@ -589,7 +915,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
       children: markedSpans(
         l10n.onboardingThreeWords,
         HaloType.serif(
-          size: 19,
+          size: 20,
           weight: FontWeight.w300,
           italic: true,
           color: HaloColors.amber,
@@ -597,9 +923,23 @@ class _IdentityScreenState extends State<_IdentityScreen>
         ),
       ),
     ),
+    textAlign: TextAlign.center,
   );
 
   Widget _shimmerPill(List<String> words) {
+    final still = motionStill(context);
+    // the id reads left to right in every language
+    final name = Row(
+      mainAxisSize: MainAxisSize.min,
+      textDirection: TextDirection.ltr,
+      children: [
+        _wordReveal(words[0], 0, 350),
+        _sep(1150),
+        _wordReveal(words[1], 1, 600),
+        _sep(1150),
+        _wordReveal(words[2], 2, 850),
+      ],
+    );
     return AnimatedBuilder(
       animation: _shimmer,
       // long words at a large text size shrink the pill instead of
@@ -610,28 +950,26 @@ class _IdentityScreenState extends State<_IdentityScreen>
           clipBehavior: Clip.hardEdge,
           children: [
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
               decoration: BoxDecoration(
                 color: HaloColors.amberSoft,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: HaloColors.amber, width: 0.5),
               ),
-              child: Row(
-                key: ValueKey(_revealKey),
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _wordReveal(words[0], 200),
-                  _sep(1300),
-                  _wordReveal(words[1], 600),
-                  _sep(1300),
-                  _wordReveal(words[2], 1000),
-                ],
-              ),
+              // the pill eases to the new name's width. a zero-length
+              // size animation would relayout inside its own layout
+              child: still
+                  ? name
+                  : AnimatedSize(
+                      duration: const Duration(milliseconds: 320),
+                      curve: Curves.easeOutCubic,
+                      child: name,
+                    ),
             ),
             if (_shimmer.isAnimating)
               Positioned.fill(
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(16),
                   child: IgnorePointer(
                     child: ShaderMask(
                       blendMode: BlendMode.dstATop,
@@ -660,19 +998,31 @@ class _IdentityScreenState extends State<_IdentityScreen>
     );
   }
 
-  Widget _wordReveal(String word, int delayMs) {
+  Widget _wordReveal(String word, int i, int delayMs) {
     return AnimatedBuilder(
-      animation: _reveal,
+      animation: Listenable.merge([_reveal, _roll]),
       builder: (c, _) {
-        final t = (_reveal.value * 3000 - delayMs) / 700;
-        final v = t.clamp(0.0, 1.0);
+        // the first time: written in from blur. a new name: the words
+        // lift away together, then land one after another
+        var v = ((_reveal.value * _length - delayMs) / 650).clamp(0.0, 1.0);
+        var dy = (1 - v) * 10;
+        if (_reveal.value >= 1) {
+          if (_leaving) {
+            v = Curves.easeIn.transform(_roll.value);
+            dy = -(1 - v) * 8;
+          } else {
+            final t = ((_roll.value * 720 - i * 110) / 480).clamp(0.0, 1.0);
+            v = Curves.easeOutCubic.transform(t);
+            dy = (1 - Curves.easeOutBack.transform(t)) * 12;
+          }
+        }
         final blur = (1 - v) * 6;
-        final dy = (1 - v) * 10;
         return Opacity(
           opacity: v,
           child: Transform.translate(
             offset: Offset(0, dy),
             child: ImageFiltered(
+              enabled: blur > 0.05,
               imageFilter: ui.ImageFilter.blur(
                 sigmaX: blur,
                 sigmaY: blur,
@@ -680,7 +1030,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
               ),
               child: Text(
                 word,
-                style: HaloType.mono(size: 14, color: HaloColors.amber)
+                style: HaloType.mono(size: 15, color: HaloColors.amber)
                     .copyWith(
                       letterSpacing: track(0.4),
                       fontWeight: FontWeight.w500,
@@ -696,21 +1046,22 @@ class _IdentityScreenState extends State<_IdentityScreen>
   Widget _sep(int delayMs) => _fadeAt(
     delayMs,
     child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Text('·', style: HaloType.mono(size: 14, color: HaloColors.text3)),
+      padding: const EdgeInsets.symmetric(horizontal: 9),
+      child: Text('·', style: HaloType.mono(size: 15, color: HaloColors.text2)),
     ),
   );
 
   Widget _fadeAt(int delayMs, {required Widget child}) {
     return AnimatedBuilder(
       animation: _reveal,
-      builder: (c, _) {
-        final t = (_reveal.value * 3000 - delayMs) / 700;
-        final v = t.clamp(0.0, 1.0);
+      child: child,
+      builder: (c, child) {
+        final t = (_reveal.value * _length - delayMs) / 650;
+        final v = Curves.easeOutCubic.transform(t.clamp(0.0, 1.0));
         return Opacity(
           opacity: v,
           child: Transform.translate(
-            offset: Offset(0, (1 - v) * 8),
+            offset: Offset(0, (1 - v) * 10),
             child: child,
           ),
         );
@@ -767,9 +1118,9 @@ class _PickFaceScreenState extends State<_PickFaceScreen> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(28, 44, 28, 36),
+      padding: _pagePad,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
             child: AvatarChoiceEditor(
@@ -781,97 +1132,31 @@ class _PickFaceScreenState extends State<_PickFaceScreen> {
               }),
               // the heading scrolls with the choices, so a large text
               // size still leaves room for them
-              header: _heading(),
+              header: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _Headline(l10n.onboardingPickA),
+                  const SizedBox(height: 12),
+                  _lead(l10n.onboardingDrawnOnThisPhone),
+                  const SizedBox(height: 20),
+                ],
+              ),
             ),
           ),
-          // side by side while they fit; when they don't, the main one
-          // goes on top
-          Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            verticalDirection: VerticalDirection.up,
-            runSpacing: 6,
-            children: [
-              PressScale(
-                onTap: widget.onContinue,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 4,
-                    vertical: 11,
-                  ),
-                  child: Text(
-                    l10n.onboardingKeepMyInitial,
-                    style: HaloType.sans(size: 12, color: HaloColors.text2),
-                  ),
-                ),
-              ),
-              PressScale(
-                scale: 0.96,
-                onTap: _saveAndGo,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 22,
-                    vertical: 11,
-                  ),
-                  decoration: BoxDecoration(
-                    color: HaloColors.amber,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    _touched ? l10n.onboardingThatOne : l10n.onboardingContinue,
-                    textAlign: TextAlign.center,
-                    style: HaloType.sans(
-                      size: 12,
-                      color: HaloColors.onAmber,
-                      weight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+          const SizedBox(height: 12),
+          _Cta(
+            label: _touched ? l10n.onboardingThatOne : l10n.onboardingContinue,
+            onTap: _saveAndGo,
+          ),
+          const SizedBox(height: 4),
+          Center(
+            child: _TextLink(
+              label: l10n.onboardingKeepMyInitial,
+              onTap: widget.onContinue,
+            ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _heading() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const _Step(3),
-        const SizedBox(height: 22),
-        RichText(
-          text: TextSpan(
-            style: HaloType.serif(
-              size: 30,
-              weight: FontWeight.w300,
-              color: HaloColors.text,
-              height: 1.05,
-            ),
-            children: markedSpans(
-              l10n.onboardingPickA,
-              HaloType.serif(
-                size: 30,
-                weight: FontWeight.w300,
-                italic: true,
-                color: HaloColors.amber,
-                height: 1.05,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          l10n.onboardingDrawnOnThisPhone,
-          style: HaloType.sans(
-            size: 13.5,
-            color: HaloColors.text2,
-            height: 1.55,
-          ),
-        ),
-        const SizedBox(height: 20),
-      ],
     );
   }
 }
@@ -902,22 +1187,30 @@ class _TransportScreenState extends State<_TransportScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return FitColumn(
-      padding: const EdgeInsets.fromLTRB(28, 44, 28, 36),
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const _Step(4),
-        const SizedBox(height: 22),
-        _headline(l10n.onboardingHowYourMessages),
-        const SizedBox(height: 12),
-        Text(
-          l10n.onboardingYouCanChangeThis,
-          style: HaloType.sans(
-            size: 13.5,
-            color: HaloColors.text2,
-            height: 1.55,
+    return _StepPage(
+      footer: [
+        _Cta(
+          label: _pick == 'private'
+              ? l10n.onboardingKeepOnion
+              : l10n.onboardingUseThis,
+          onTap: _go,
+        ),
+        const SizedBox(height: 2),
+        Center(
+          child: _TextLink(
+            label: l10n.onboardingSkipOnionIsA,
+            onTap: () async {
+              // skip means onion. make it so rather than assume it.
+              await appState.setSendMode('private');
+              if (mounted) widget.onContinue();
+            },
           ),
         ),
+      ],
+      children: [
+        _Headline(l10n.onboardingHowYourMessages),
+        const SizedBox(height: 12),
+        _lead(l10n.onboardingYouCanChangeThis),
         const SizedBox(height: 24),
         ...staggerAll([
           _ModeCard(
@@ -944,30 +1237,6 @@ class _TransportScreenState extends State<_TransportScreen> {
             onTap: () => setState(() => _pick = 'fast'),
           ),
         ]),
-        const Spacer(),
-        _Cta(
-          label: _pick == 'private'
-              ? l10n.onboardingKeepOnion
-              : l10n.onboardingUseThis,
-          onTap: _go,
-        ),
-        const SizedBox(height: 10),
-        Center(
-          child: PressScale(
-            onTap: () async {
-              // skip means onion. make it so rather than assume it.
-              await appState.setSendMode('private');
-              if (mounted) widget.onContinue();
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Text(
-                l10n.onboardingSkipOnionIsA,
-                style: HaloType.sans(size: 13, color: HaloColors.text2),
-              ),
-            ),
-          ),
-        ),
       ],
     );
   }
@@ -989,70 +1258,118 @@ class _ModeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PressScale(
-      scale: 0.98,
-      onTap: () {
-        HapticFeedback.selectionClick();
-        onTap();
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOut,
-        padding: const EdgeInsets.fromLTRB(15, 13, 15, 13),
-        decoration: BoxDecoration(
-          color: on
-              ? HaloColors.amber.withValues(alpha: 0.10)
-              : HaloColors.surface2,
-          border: Border.all(
-            color: on ? HaloColors.amber : HaloColors.line,
-            width: on ? 1 : 0.5,
+    final still = motionStill(context);
+    // read as one radio: the title, the cost, the gain, and whether it is on
+    return MergeSemantics(
+      child: Semantics(
+        inMutuallyExclusiveGroup: true,
+        checked: on,
+        child: PressScale(
+          scale: 0.98,
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: Duration(milliseconds: still ? 0 : 220),
+            curve: Curves.easeOutCubic,
+            padding: const EdgeInsetsDirectional.fromSTEB(14, 14, 16, 14),
+            decoration: BoxDecoration(
+              color: on
+                  ? Color.alphaBlend(
+                      HaloColors.amber.withValues(alpha: 0.10),
+                      HaloColors.surface2,
+                    )
+                  : HaloColors.surface2,
+              border: Border.all(
+                color: on ? HaloColors.amber : HaloColors.line,
+                width: on ? 1.2 : 0.5,
+              ),
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: HaloColors.amber.withValues(alpha: on ? 0.16 : 0),
+                  blurRadius: 18,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 1),
+                  child: _Radio(on: on),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: HaloType.serif(size: 18, color: HaloColors.text),
+                      ),
+                      const SizedBox(height: 5),
+                      // the cost first, then what it buys: a card that lists
+                      // only benefits sends everyone to the fastest one
+                      Text(
+                        cost,
+                        style: HaloType.sans(
+                          size: 13,
+                          color: HaloColors.text,
+                          height: 1.45,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        gain,
+                        style: HaloType.sans(
+                          size: 13,
+                          color: HaloColors.text2,
+                          height: 1.45,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-          borderRadius: BorderRadius.circular(12),
         ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: Icon(
-                on ? Icons.radio_button_checked : Icons.radio_button_off,
-                size: 18,
-                color: on ? HaloColors.amber : HaloColors.text3,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: HaloType.serif(size: 17, color: HaloColors.text),
-                  ),
-                  const SizedBox(height: 4),
-                  // the cost first, then what it buys: a card that lists
-                  // only benefits sends everyone to the fastest one
-                  Text(
-                    cost,
-                    style: HaloType.sans(
-                      size: 12.5,
-                      color: HaloColors.text,
-                      height: 1.45,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    gain,
-                    style: HaloType.sans(
-                      size: 12.5,
-                      color: HaloColors.text2,
-                      height: 1.45,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+      ),
+    );
+  }
+}
+
+// a ring, and a dot that springs in when it is the one
+class _Radio extends StatelessWidget {
+  final bool on;
+  const _Radio({required this.on});
+
+  @override
+  Widget build(BuildContext context) {
+    final still = motionStill(context);
+    return AnimatedContainer(
+      duration: Duration(milliseconds: still ? 0 : 200),
+      width: 20,
+      height: 20,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: on ? HaloColors.amber : HaloColors.text3,
+          width: 1.5,
+        ),
+      ),
+      child: AnimatedScale(
+        scale: on ? 1 : 0,
+        duration: still ? Duration.zero : kHouseTime,
+        curve: on ? kHouseCurve : Curves.easeInCubic,
+        child: Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: HaloColors.amber,
+          ),
         ),
       ),
     );
@@ -1070,22 +1387,12 @@ class _ThreeThingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FitColumn(
-      padding: const EdgeInsets.fromLTRB(28, 44, 28, 36),
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return _StepPage(
+      footer: [_Cta(label: l10n.onboardingIUnderstand, onTap: onContinue)],
       children: [
-        const _Step(5),
-        const SizedBox(height: 22),
-        _headline(l10n.onboardingThreeThingsThen),
+        _Headline(l10n.onboardingThreeThingsThen),
         const SizedBox(height: 12),
-        Text(
-          l10n.onboardingEverythingElseTheApp,
-          style: HaloType.sans(
-            size: 13.5,
-            color: HaloColors.text2,
-            height: 1.55,
-          ),
-        ),
+        _lead(l10n.onboardingEverythingElseTheApp),
         const SizedBox(height: 24),
         ...staggerAll([
           _Card(
@@ -1093,13 +1400,13 @@ class _ThreeThingsScreen extends StatelessWidget {
             title: l10n.onboardingYourNameIsThreeWords,
             desc: l10n.onboardingThatIsTheWhole,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           _Card(
             num: 2,
             title: l10n.onboardingNobodyCanReachYou,
             desc: l10n.onboardingAStrangerWithYour,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           _Card(
             num: 3,
             title: l10n.onboardingTheFirstConnectionTakesAMinute,
@@ -1109,14 +1416,12 @@ class _ThreeThingsScreen extends StatelessWidget {
           Text(
             l10n.onboardingYourIdentityLivesOn,
             style: HaloType.sans(
-              size: 12,
-              color: HaloColors.text3,
+              size: 12.5,
+              color: HaloColors.text2,
               height: 1.5,
             ),
           ),
         ], from: 1),
-        const Spacer(),
-        _Cta(label: l10n.onboardingIUnderstand, onTap: onContinue),
       ],
     );
   }
@@ -1133,32 +1438,20 @@ class _NotificationScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FitColumn(
-      padding: const EdgeInsets.fromLTRB(28, 44, 28, 36),
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return _StepPage(
+      footer: [_Cta(label: l10n.onboardingGotIt, onTap: onContinue)],
       children: [
-        const _Step(6),
-        const SizedBox(height: 22),
-        _headline(l10n.onboardingOneQuiet),
+        _Headline(l10n.onboardingOneQuiet),
         const SizedBox(height: 12),
-        Text(
-          l10n.onboardingAndroidNeedsAVisible,
-          style: HaloType.sans(
-            size: 13.5,
-            color: HaloColors.text2,
-            height: 1.55,
-          ),
-        ),
+        _lead(l10n.onboardingAndroidNeedsAVisible),
         const SizedBox(height: 24),
         ...staggerAll([
           _Card(
-            icon: Icons.notifications_none,
+            icon: Icons.notifications_none_rounded,
             title: l10n.onboardingSilentAndAtThe,
             desc: l10n.onboardingItNeverBuzzesTurn,
           ),
         ], from: 1),
-        const Spacer(),
-        _Cta(label: l10n.onboardingGotIt, onTap: onContinue),
       ],
     );
   }
@@ -1172,22 +1465,31 @@ class _AddSomeoneScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FitColumn(
-      padding: const EdgeInsets.fromLTRB(28, 44, 28, 36),
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const _Step(7),
-        const SizedBox(height: 22),
-        _headline(l10n.onboardingNow),
-        const SizedBox(height: 12),
+    return _StepPage(
+      footer: [
         Text(
-          l10n.onboardingTheAppIsReady,
-          style: HaloType.sans(
-            size: 13.5,
+          l10n.onboardingTheAppIsReadyWhenYou,
+          textAlign: TextAlign.center,
+          style: HaloType.serif(
+            size: 17,
+            weight: FontWeight.w300,
+            italic: true,
             color: HaloColors.text2,
-            height: 1.55,
+            height: 1.3,
           ),
         ),
+        const SizedBox(height: 4),
+        Center(
+          child: _TextLink(
+            label: l10n.onboardingNotNowAddPeople,
+            onTap: onComplete,
+          ),
+        ),
+      ],
+      children: [
+        _Headline(l10n.onboardingNow),
+        const SizedBox(height: 12),
+        _lead(l10n.onboardingTheAppIsReady),
         const SizedBox(height: 24),
         ...staggerAll([
           _Path(
@@ -1203,7 +1505,7 @@ class _AddSomeoneScreen extends StatelessWidget {
               onComplete();
             },
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           _Path(
             icon: Icons.center_focus_weak,
             title: l10n.onboardingScanTheirs,
@@ -1224,34 +1526,6 @@ class _AddSomeoneScreen extends StatelessWidget {
             },
           ),
         ], from: 1),
-        const Spacer(),
-        Center(
-          child: Text(
-            l10n.onboardingTheAppIsReadyWhenYou,
-            textAlign: TextAlign.center,
-            style: HaloType.serif(
-              size: 16,
-              weight: FontWeight.w300,
-              italic: true,
-              color: HaloColors.text2,
-              height: 1.3,
-            ),
-          ),
-        ),
-        const SizedBox(height: 18),
-        Center(
-          child: PressScale(
-            onTap: onComplete,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
-              child: Text(
-                l10n.onboardingNotNowAddPeople,
-                textAlign: TextAlign.center,
-                style: HaloType.sans(size: 12.5, color: HaloColors.text2),
-              ),
-            ),
-          ),
-        ),
       ],
     );
   }
@@ -1259,42 +1533,132 @@ class _AddSomeoneScreen extends StatelessWidget {
 
 // ───────── shared pieces ─────────
 
-// "04 / 07" in mono, so the pace is visible without a progress bar
-class _Step extends StatelessWidget {
-  final int n;
-  const _Step(this.n);
+// every step sits under the step bar with the same margins
+const _pagePad = EdgeInsets.fromLTRB(28, 16, 28, 20);
+
+// a step: what it says scrolls when it has to, its buttons stay in reach
+// at the bottom
+class _StepPage extends StatelessWidget {
+  final double top;
+  final CrossAxisAlignment cross;
+  final List<Widget> children;
+  final List<Widget> footer;
+  const _StepPage({
+    this.top = 16,
+    this.cross = CrossAxisAlignment.stretch,
+    required this.children,
+    required this.footer,
+  });
+
   @override
   Widget build(BuildContext context) {
-    return Text(
-      '${twoDigits(n)} / ${twoDigits(7)}',
-      style: HaloType.mono(
-        size: 10,
-        color: HaloColors.amber,
-      ).copyWith(letterSpacing: track(3), fontWeight: FontWeight.w500),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          // what scrolls under the bar or the buttons fades out at the
+          // edge instead of being cut
+          child: ShaderMask(
+            blendMode: BlendMode.dstIn,
+            shaderCallback: (r) => LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: const [
+                Color(0x00000000),
+                Color(0xFF000000),
+                Color(0xFF000000),
+                Color(0x00000000),
+              ],
+              stops: [
+                0,
+                math.min(8 / r.height, 0.2),
+                math.max(1 - 16 / r.height, 0.8),
+                1,
+              ],
+            ).createShader(r),
+            child: FitColumn(
+              padding: _pagePad.copyWith(top: top, bottom: 16),
+              crossAxisAlignment: cross,
+              children: children,
+            ),
+          ),
+        ),
+        Padding(
+          padding: _pagePad.copyWith(top: 4),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: footer,
+          ),
+        ),
+      ],
     );
   }
 }
 
-Widget _headline(String msg) => RichText(
-  text: TextSpan(
-    style: HaloType.serif(
-      size: 30,
-      weight: FontWeight.w300,
-      color: HaloColors.text,
-      height: 1.05,
-    ),
-    children: markedSpans(
-      msg,
-      HaloType.serif(
-        size: 30,
-        weight: FontWeight.w300,
-        italic: true,
-        color: HaloColors.amber,
-        height: 1.05,
+// big type grows less with the text size: a long word at the full scale
+// would not fit the line
+TextScaler _headScale(BuildContext context) =>
+    MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.15);
+
+class _Headline extends StatelessWidget {
+  final String msg;
+  const _Headline(this.msg);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text.rich(
+      TextSpan(
+        style: HaloType.serif(
+          size: 30,
+          weight: FontWeight.w300,
+          color: HaloColors.text,
+          height: 1.1,
+        ),
+        children: markedSpans(
+          msg,
+          HaloType.serif(
+            size: 30,
+            weight: FontWeight.w300,
+            italic: true,
+            color: HaloColors.amber,
+            height: 1.1,
+          ),
+        ),
       ),
-    ),
-  ),
+      textScaler: _headScale(context),
+    );
+  }
+}
+
+Widget _lead(String msg) => Text(
+  msg,
+  style: HaloType.sans(size: 14, color: HaloColors.text2, height: 1.55),
 );
+
+// the amber tile a card leads with: its number or its icon
+class _Badge extends StatelessWidget {
+  final Widget child;
+  const _Badge({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 34,
+      height: 34,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: HaloColors.amberSoft,
+        border: Border.all(
+          color: HaloColors.amber.withValues(alpha: 0.55),
+          width: 0.5,
+        ),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: child,
+    );
+  }
+}
 
 class _Card extends StatelessWidget {
   final int? num;
@@ -1306,48 +1670,50 @@ class _Card extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(15, 13, 15, 13),
+      padding: const EdgeInsetsDirectional.fromSTEB(14, 14, 16, 15),
       decoration: BoxDecoration(
         color: HaloColors.surface2,
         border: Border.all(color: HaloColors.line, width: 0.5),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 2),
+          _Badge(
             child: num != null
                 ? Text(
                     twoDigits(num!),
-                    style: HaloType.mono(size: 10, color: HaloColors.amber)
+                    textScaler: TextScaler.noScaling,
+                    style: HaloType.mono(size: 11, color: HaloColors.amber)
                         .copyWith(
-                          letterSpacing: track(2),
-                          fontWeight: FontWeight.w500,
+                          letterSpacing: track(0.5),
+                          fontWeight: FontWeight.w600,
                         ),
                   )
-                : Icon(icon, size: 16, color: HaloColors.amber),
+                : Icon(icon, size: 17, color: HaloColors.amber),
           ),
-          const SizedBox(width: 13),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const SizedBox(height: 1),
                 Text(
                   title,
                   style: HaloType.sans(
-                    size: 13,
+                    size: 14,
                     color: HaloColors.text,
-                    weight: FontWeight.w500,
+                    weight: FontWeight.w600,
+                    height: 1.35,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   desc,
                   style: HaloType.sans(
-                    size: 12.5,
+                    size: 13,
                     color: HaloColors.text2,
-                    height: 1.55,
+                    height: 1.5,
                   ),
                 ),
               ],
@@ -1374,9 +1740,10 @@ class _Path extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PressScale(
+      scale: 0.98,
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+        padding: const EdgeInsetsDirectional.fromSTEB(14, 15, 14, 15),
         decoration: BoxDecoration(
           color: HaloColors.surface2,
           border: Border.all(color: HaloColors.line, width: 0.5),
@@ -1384,17 +1751,7 @@ class _Path extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: HaloColors.amberSoft,
-                border: Border.all(color: HaloColors.amber, width: 0.5),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              alignment: Alignment.center,
-              child: Icon(icon, size: 16, color: HaloColors.amber),
-            ),
+            _Badge(child: Icon(icon, size: 17, color: HaloColors.amber)),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
@@ -1403,29 +1760,31 @@ class _Path extends StatelessWidget {
                   Text(
                     title,
                     style: HaloType.sans(
-                      size: 13,
+                      size: 14,
                       color: HaloColors.text,
-                      weight: FontWeight.w500,
+                      weight: FontWeight.w600,
+                      height: 1.35,
                     ),
                   ),
                   const SizedBox(height: 3),
                   Text(
                     desc,
                     style: HaloType.sans(
-                      size: 11,
-                      color: HaloColors.text3,
+                      size: 12.5,
+                      color: HaloColors.text2,
                       height: 1.5,
                     ),
                   ),
                 ],
               ),
             ),
+            const SizedBox(width: 10),
             // points the way reading goes
             Transform.flip(
               flipX: Directionality.of(context) == TextDirection.rtl,
               child: Text(
                 '→',
-                style: HaloType.sans(size: 18, color: HaloColors.text3),
+                style: HaloType.sans(size: 18, color: HaloColors.text2),
               ),
             ),
           ],
@@ -1435,27 +1794,67 @@ class _Path extends StatelessWidget {
   }
 }
 
+// the main button of a step. a new label crossfades in
 class _Cta extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
   const _Cta({required this.label, required this.onTap});
   @override
   Widget build(BuildContext context) {
+    final still = motionStill(context);
     return PressScale(
       scale: 0.97,
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14),
+        constraints: const BoxConstraints(minHeight: 52),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         decoration: BoxDecoration(
           color: HaloColors.amber,
           borderRadius: BorderRadius.circular(999),
         ),
         alignment: Alignment.center,
+        child: AnimatedSwitcher(
+          duration: Duration(milliseconds: still ? 0 : 200),
+          transitionBuilder: (child, anim) => FadeTransition(
+            opacity: anim,
+            child: ScaleTransition(
+              scale: Tween(begin: 0.94, end: 1.0).animate(anim),
+              child: child,
+            ),
+          ),
+          child: Text(
+            label,
+            key: ValueKey(label),
+            textAlign: TextAlign.center,
+            style: HaloType.sans(
+              size: 15,
+              color: HaloColors.onAmber,
+              weight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// the quiet way past a step: plain words, a full finger's height
+class _TextLink extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+  const _TextLink({required this.label, required this.onTap});
+  @override
+  Widget build(BuildContext context) {
+    return PressScale(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
         child: Text(
           label,
+          textAlign: TextAlign.center,
           style: HaloType.sans(
-            size: 14,
-            color: HaloColors.onAmber,
+            size: 13,
+            color: HaloColors.text2,
             weight: FontWeight.w500,
           ),
         ),
