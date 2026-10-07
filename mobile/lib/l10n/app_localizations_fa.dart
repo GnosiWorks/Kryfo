@@ -6126,6 +6126,13 @@ class AppLocalizationsFa extends AppLocalizations {
       'این خطایی روی همین دستگاه است، نه در شبکه. Tor در آن نقشی ندارد.';
 
   @override
+  String get bootFailedKeysDidNotAnswer =>
+      'فضای نگهداری کلیدهای گوشی پاسخ نمی‌دهد. بستن و باز کردن دوبارهٔ Kryfo معمولاً مشکل را حل می‌کند.';
+
+  @override
+  String get bootFailedCloseAndReopen => 'بستن و باز کردن دوبارهٔ Kryfo';
+
+  @override
   String get kryfoLinkTextThatLinkIsNot =>
       'این پیوندی نیست که Kryfo بتواند بخواند';
 
@@ -6479,6 +6486,9 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get torBootSplashFirstLaunchTakesA =>
       'اولین اجرا کمی طول می‌کشد · فقط هنگام شروع';
+
+  @override
+  String get torBootSplashTakingLonger => 'این بیشتر از معمول طول می‌کشد';
 
   @override
   String get videoBubbleNothingHereOpensThat =>

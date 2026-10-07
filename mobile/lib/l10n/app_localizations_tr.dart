@@ -6135,6 +6135,13 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bu, ağdaki değil bu cihazdaki bir arıza. Tor’un bununla ilgisi yok.';
 
   @override
+  String get bootFailedKeysDidNotAnswer =>
+      'Telefonunun anahtar deposu yanıt vermiyor. Kryfo’yu kapatıp yeniden açmak genellikle sorunu çözer.';
+
+  @override
+  String get bootFailedCloseAndReopen => 'Kryfo’yu kapat ve yeniden aç';
+
+  @override
   String get kryfoLinkTextThatLinkIsNot =>
       'Bu bağlantı Kryfo’nun okuyabileceği bir bağlantı değil';
 
@@ -6488,6 +6495,9 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get torBootSplashFirstLaunchTakesA =>
       'İlk açılış biraz sürer · yalnızca başlangıçta';
+
+  @override
+  String get torBootSplashTakingLonger => 'Bu, her zamankinden uzun sürüyor';
 
   @override
   String get videoBubbleNothingHereOpensThat =>

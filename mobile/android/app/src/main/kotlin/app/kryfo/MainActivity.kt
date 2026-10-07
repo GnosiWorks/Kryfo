@@ -486,6 +486,12 @@ class MainActivity : FlutterFragmentActivity() {
                         val ok = try { am.clearApplicationUserData() } catch (e: Exception) { false }
                         result.success(ok)
                     }
+                    // a new process: a call stuck in a plugin's thread holds
+                    // every call after it until this one is gone
+                    "reopen" -> {
+                        result.success(null)
+                        ReopenActivity.start(this)
+                    }
                     // a copy the keyboard's history and the android 13 preview
                     // treat as sensitive: ids, codes, addresses
                     "copySensitive" -> {

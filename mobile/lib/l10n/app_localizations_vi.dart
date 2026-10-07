@@ -6103,6 +6103,13 @@ class AppLocalizationsVi extends AppLocalizations {
       'Đây là lỗi trên thiết bị này, không phải do mạng. Tor không liên quan.';
 
   @override
+  String get bootFailedKeysDidNotAnswer =>
+      'Kho khóa của điện thoại không phản hồi. Đóng rồi mở lại Kryfo thường sẽ khắc phục được.';
+
+  @override
+  String get bootFailedCloseAndReopen => 'Đóng và mở lại Kryfo';
+
+  @override
   String get kryfoLinkTextThatLinkIsNot => 'Kryfo không đọc được liên kết đó';
 
   @override
@@ -6455,6 +6462,9 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get torBootSplashFirstLaunchTakesA =>
       'Lần mở đầu tiên mất một lúc · chỉ khi khởi động';
+
+  @override
+  String get torBootSplashTakingLonger => 'Việc này lâu hơn bình thường';
 
   @override
   String get videoBubbleNothingHereOpensThat =>

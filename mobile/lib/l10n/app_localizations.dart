@@ -9753,6 +9753,18 @@ abstract class AppLocalizations {
   /// **'This is a fault on this device, not the network. Tor is not involved.'**
   String get bootFailedThisIsAFault;
 
+  /// widgets/boot_failed.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone\'s key storage stopped answering. Closing and reopening Kryfo usually fixes this.'**
+  String get bootFailedKeysDidNotAnswer;
+
+  /// widgets/boot_failed.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Close and reopen Kryfo'**
+  String get bootFailedCloseAndReopen;
+
   /// widgets/kryfo_link_text.dart
   ///
   /// In en, this message translates to:
@@ -10316,6 +10328,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'First launch takes a moment · only on startup'**
   String get torBootSplashFirstLaunchTakesA;
+
+  /// widgets/tor_boot_splash.dart
+  ///
+  /// In en, this message translates to:
+  /// **'This is taking longer than usual'**
+  String get torBootSplashTakingLonger;
 
   /// widgets/video_bubble.dart
   ///

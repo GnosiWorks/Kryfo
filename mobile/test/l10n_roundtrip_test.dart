@@ -3021,6 +3021,12 @@ void main() {
       l.bootFailedThisIsAFault,
       "This is a fault on this device, not the network. Tor is not involved.",
     );
+    expect(
+      l.bootFailedKeysDidNotAnswer,
+      "Your phone's key storage stopped answering. Closing and reopening Kryfo usually fixes this.",
+    );
+    expect(l.bootFailedCloseAndReopen, "Close and reopen Kryfo");
+    expect(l.torBootSplashTakingLonger, "This is taking longer than usual");
     expect(l.kryfoLinkTextThatLinkIsNot, "That link is not one Kryfo can read");
     expect(l.kryfoLinkTextAdd("<who>"), "Add <who>?");
     expect(

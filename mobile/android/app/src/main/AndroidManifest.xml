@@ -100,6 +100,15 @@
                 <action android:name="org.unifiedpush.android.connector.UNREGISTERED" />
             </intent-filter>
         </receiver>
+        <!-- ends the app's process and opens it again: a process of its
+             own, so it outlives the one it ends -->
+        <activity
+            android:name=".ReopenActivity"
+            android:exported="false"
+            android:process=":reopen"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
         <service
             android:name=".HaloPeriodicJobService"
             android:permission="android.permission.BIND_JOB_SERVICE"

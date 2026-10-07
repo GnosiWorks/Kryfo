@@ -33,6 +33,7 @@ import 'media_resend.dart';
 import 'delivery_mode.dart';
 import 'offline_gate.dart';
 import 'in_front.dart';
+import 'reopen.dart';
 import 'helper_push.dart';
 import 'screens/getting_messages_screen.dart';
 import 'screens/home_screen.dart';
@@ -1062,20 +1063,22 @@ class HaloDb implements GroupOwedStore {
   String? _given;
 
   // 32 bytes from the platform csprng, made once, before its database
-  // file. a read that fails throws, and boot shows it: a new key is made
-  // only while no file exists that the old one opens
+  // file. a read that fails or gives up throws, and boot shows it: a new
+  // key is made only while no file exists that the old one opens
   Future<String> _passphrase() async {
     final given = _given;
     if (given != null) return given;
     final name = container.keyName;
     if (name == null) throw StateError('${container.dbFile} has no key here');
-    var pw = await _storage.read(key: name);
-    if (pw != null) return pw;
+    final kept = await keyStoreCall(() => _storage.read(key: name));
+    if (kept != null) return kept;
     if (await File(await container.dbPath()).exists()) {
       throw StateError('${container.dbFile} has no key here');
     }
-    pw = container.newKey();
-    await _storage.write(key: name, value: pw);
+    final pw = container.newKey();
+    // no file is made under a key until its write has answered. one that
+    // gives up may still land, and the next read waits for it
+    await keyStoreCall(() => _storage.write(key: name, value: pw));
     return pw;
   }
 
@@ -13154,6 +13157,8 @@ class AppState extends ChangeNotifier {
   // a boot that throws leaves ready false behind the splash, so the error is
   // held for the gate to show
   String? bootError;
+  // the key store stopped answering: a new process is what clears it
+  bool bootStuck = false;
 
   AppLifecycleListener? _seen;
 
@@ -13190,6 +13195,7 @@ class AppState extends ChangeNotifier {
     } catch (e, st) {
       dlog('BOOT failed: $e\n$st');
       bootError = e.toString();
+      bootStuck = e is KeyStoreStuck;
       _booting = false;
       // both deep link handlers wait on this
       if (!_signalReady.isCompleted) _signalReady.complete();
@@ -13201,6 +13207,7 @@ class AppState extends ChangeNotifier {
   // permanent, but retrying costs nothing and beats a force-stop.
   Future<void> retryBoot() async {
     bootError = null;
+    bootStuck = false;
     notifyListeners();
     await boot();
   }
@@ -13318,7 +13325,8 @@ class AppState extends ChangeNotifier {
     // paint the home as soon as contacts/groups are ready; notifications,
     // nostr subscriptions keep warming up in the background.
     onboardingComplete =
-        (await secureStore.read(key: 'onboarding_done')) == 'true';
+        (await keyStoreCall(() => secureStore.read(key: 'onboarding_done'))) ==
+        'true';
     _movedAway =
         (await SharedPreferences.getInstance()).getInt('moved.at') != null;
     // let the onion linger a beat before the home appears
@@ -17253,6 +17261,7 @@ class _OnboardingGateState extends State<_OnboardingGate> {
               setState(() => _hold = false);
               appState.retryBoot();
             },
+            onReopen: appState.bootStuck ? reopenApp : null,
           );
         } else if (!appState.ready || _hold) {
           before = const TorBootSplash(key: ValueKey('splash'));

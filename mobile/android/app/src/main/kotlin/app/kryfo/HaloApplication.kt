@@ -14,6 +14,8 @@ class HaloApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        // the reopen screen's process runs nothing of the app
+        if (ReopenActivity.inOwnProcess()) return
         val engine = FlutterEngine(this)
         engine.dartExecutor.executeDartEntrypoint(
             DartExecutor.DartEntrypoint.createDefault()
