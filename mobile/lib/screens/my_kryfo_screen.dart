@@ -240,7 +240,7 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
               padding: const EdgeInsets.fromLTRB(6, 8, 6, 0),
               child: Text(
                 l10n.myKryfoIfThisLinkEnds,
-                style: HaloType.mono(size: 10, color: HaloColors.text3),
+                style: HaloType.mono(size: 10, color: HaloColors.text2),
               ),
             ),
             const SizedBox(height: 12),

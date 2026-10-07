@@ -719,27 +719,35 @@ class _RestoreScreenState extends State<RestoreScreen> {
                         child: HaloBar(value: _progress, height: 3),
                       ),
               ),
-              if (s != null) ...[
-                const SizedBox(height: 6),
-                Center(
-                  child: PressScale(
-                    scale: 0.97,
-                    onTap: _busy
-                        ? null
-                        : () => setState(() {
-                            _summary = null;
-                            _passCtrl.clear();
-                          }),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      child: Text(
-                        l10n.restoreNotThisOne,
-                        style: HaloType.sans(size: 13, color: HaloColors.text2),
+              // eases in under the button with the summary, as the card does
+              EaseSize(
+                child: s == null
+                    ? const SizedBox(width: double.infinity)
+                    : Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: Center(
+                          child: PressScale(
+                            scale: 0.97,
+                            onTap: _busy
+                                ? null
+                                : () => setState(() {
+                                    _summary = null;
+                                    _passCtrl.clear();
+                                  }),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              child: Text(
+                                l10n.restoreNotThisOne,
+                                style: HaloType.sans(
+                                  size: 13,
+                                  color: HaloColors.text2,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ]),
           ),
         ),

@@ -330,9 +330,10 @@ class _ContactScreenState extends State<ContactScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  GestureDetector(
+                  PressScale(
                     onTap: _rename,
-                    behavior: HitTestBehavior.opaque,
+                    scale: 0.97,
+                    haptic: false,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -365,26 +366,37 @@ class _ContactScreenState extends State<ContactScreen> {
                     ),
                   ],
                   const SizedBox(height: 10),
-                  Text(
-                    status,
-                    style: HaloType.mono(
-                      size: 11,
-                      color: statusColor,
-                      letter: 0.04,
-                    ),
-                  ),
-                  if (note != null && note.isNotEmpty) ...[
-                    const SizedBox(height: 10),
-                    Text(
-                      note,
+                  // a new status rises in over the last, and the note eases
+                  // in once it loads instead of shoving the page down
+                  RiseSwap(
+                    alignment: Alignment.center,
+                    child: Text(
+                      status,
+                      key: ValueKey(status),
                       textAlign: TextAlign.center,
-                      style: HaloType.serif(
-                        size: 14,
-                        italic: true,
-                        color: HaloColors.text2,
+                      style: HaloType.mono(
+                        size: 11,
+                        color: statusColor,
+                        letter: 0.04,
                       ),
                     ),
-                  ],
+                  ),
+                  EaseSize(
+                    child: note != null && note.isNotEmpty
+                        ? Padding(
+                            padding: const EdgeInsets.only(top: 10),
+                            child: Text(
+                              note,
+                              textAlign: TextAlign.center,
+                              style: HaloType.serif(
+                                size: 14,
+                                italic: true,
+                                color: HaloColors.text2,
+                              ),
+                            ),
+                          )
+                        : const SizedBox(width: double.infinity),
+                  ),
                 ],
               ),
             ),
@@ -408,19 +420,24 @@ class _ContactScreenState extends State<ContactScreen> {
                     ),
             ),
           ),
-          if (_voucherNames.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            HaloGroup(
-              children: [
-                HaloRow(
-                  icon: Icons.people_outline,
-                  label: l10n.contactVouches,
-                  hint: status,
-                  onTap: () => showVouchersSheet(context, widget.haloId),
-                ),
-              ],
-            ),
-          ],
+          EaseSize(
+            child: _voucherNames.isNotEmpty
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: HaloGroup(
+                      children: [
+                        HaloRow(
+                          icon: Icons.people_outline,
+                          label: l10n.contactVouches,
+                          hint: status,
+                          onTap: () =>
+                              showVouchersSheet(context, widget.haloId),
+                        ),
+                      ],
+                    ),
+                  )
+                : const SizedBox(width: double.infinity),
+          ),
           SharedMediaSection(
             paths: _media,
             count: _mediaCount,

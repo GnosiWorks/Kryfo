@@ -29,6 +29,7 @@ import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/kryfo_avatar.dart';
 import '../widgets/motion.dart' show kHouseCurve, kHouseTime;
+import '../widgets/swap.dart' show RiseSwap;
 import '../widgets/photo_viewer.dart' show PhotoTileFade;
 import '../widgets/poll_card.dart' show pollGlyph;
 import '../widgets/press_scale.dart';
@@ -1270,19 +1271,8 @@ class _PersonSheetState extends State<_PersonSheet>
                     color: _adding ? HaloColors.amberSoft : HaloColors.amber,
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 180),
-                    switchInCurve: Curves.easeOutCubic,
-                    transitionBuilder: (c, a) => FadeTransition(
-                      opacity: a,
-                      child: SlideTransition(
-                        position: Tween(
-                          begin: const Offset(0, 0.35),
-                          end: Offset.zero,
-                        ).animate(a),
-                        child: c,
-                      ),
-                    ),
+                  child: RiseSwap(
+                    alignment: Alignment.center,
                     child: Text(
                       _adding ? l10n.peopleAdding : l10n.peopleAdd,
                       key: ValueKey(_adding),

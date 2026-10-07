@@ -761,12 +761,16 @@ class ImageCaptionScreenState extends State<ImageCaptionScreen> {
                     ),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
-                  Text(
-                    l10n.mediaBubblesSendPhoto,
-                    style: HaloType.serif(
-                      size: 16,
-                      italic: true,
-                      color: HaloColors.text,
+                  Expanded(
+                    child: Text(
+                      l10n.mediaBubblesSendPhoto,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: HaloType.serif(
+                        size: 16,
+                        italic: true,
+                        color: HaloColors.text,
+                      ),
                     ),
                   ),
                 ],

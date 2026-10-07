@@ -26,6 +26,7 @@ import 'package:kryfo/main.dart'
         useEngineForTest;
 import 'package:kryfo/polls.dart' show PollVote;
 import 'package:kryfo/rooms.dart' show kRoomJoinWait;
+import 'package:kryfo/screens/chat_screen.dart' show SearchHead;
 import 'package:kryfo/screens/contact_screen.dart';
 import 'package:kryfo/screens/group_chat_screen.dart';
 import 'package:kryfo/screens/group_info_screen.dart';
@@ -1199,6 +1200,149 @@ void main() {
     await t.pump();
     expect(find.text(l10n.keyVerificationVerified), findsOneWidget);
     db.verified!.complete(true);
+    await _close(t);
+  });
+
+  group('cross-overs', () {
+    testWidgets('the first message crosses over from the empty state', (
+      t,
+    ) async {
+      final rows = <Map<String, Object?>>[];
+      _use(t, _Db(rows: rows));
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      await t.pump(const Duration(seconds: 1));
+      expect(find.byType(EmptyChat), findsOneWidget);
+      rows.add(_in(1, _anna, 'first one'));
+      appState.chatChanged('group:$_group');
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 80));
+      // both for a moment: the empty state on its way out
+      expect(find.byType(EmptyChat), findsOneWidget);
+      expect(find.text('first one'), findsOneWidget);
+      await t.pump(const Duration(seconds: 1));
+      expect(find.byType(EmptyChat), findsNothing);
+      expect(find.text('first one'), findsOneWidget);
+      await _close(t);
+    });
+
+    testWidgets('with less movement the first message is simply there', (
+      t,
+    ) async {
+      final rows = <Map<String, Object?>>[];
+      _use(t, _Db(rows: rows));
+      await t.pumpWidget(
+        app(const GroupChatScreen(groupId: _group), still: true),
+      );
+      await t.pump(const Duration(seconds: 1));
+      rows.add(_in(1, _anna, 'first one'));
+      appState.chatChanged('group:$_group');
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 20));
+      expect(find.byType(EmptyChat), findsNothing);
+      expect(find.text('first one'), findsOneWidget);
+      await _close(t);
+    });
+
+    testWidgets('search and the head cross over, at once when still', (
+      t,
+    ) async {
+      _use(t, _Db(rows: [_in(1, _anna, 'hello')]));
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      await t.tap(find.byTooltip(l10n.groupChatSearchThisChat));
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 80));
+      expect(find.byType(SearchHead), findsOneWidget);
+      expect(find.text('Friends'), findsOneWidget);
+      await t.pump(const Duration(seconds: 1));
+      expect(find.text('Friends'), findsNothing);
+      await _close(t);
+
+      _use(t, _Db(rows: [_in(1, _anna, 'hello')]));
+      await t.pumpWidget(
+        app(const GroupChatScreen(groupId: _group), still: true),
+      );
+      await t.pump(const Duration(seconds: 1));
+      await t.tap(find.byTooltip(l10n.groupChatSearchThisChat));
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 20));
+      expect(find.byType(SearchHead), findsOneWidget);
+      expect(find.text('Friends'), findsNothing);
+      await _close(t);
+    });
+
+    testWidgets('let in, the waiting line rises into the clock', (t) async {
+      final at = DateTime.now().millisecondsSinceEpoch;
+      final db = _use(t, _Db(room: true, members: [_roomPub, _joiner]))
+        ..joiningAt = at;
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      await t.pump(const Duration(seconds: 1));
+      expect(find.text(l10n.roomJoinWaitingToJoin), findsOneWidget);
+      db.joiningAt = null;
+      appState.chatChanged('group:$_group');
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 60));
+      // the line on its way out as the clock comes in
+      expect(find.text(l10n.roomJoinWaitingToJoin), findsOneWidget);
+      expect(find.byType(RoomCountdown), findsOneWidget);
+      await t.pump(const Duration(seconds: 1));
+      expect(find.text(l10n.roomJoinWaitingToJoin), findsNothing);
+      expect(find.byType(RoomCountdown), findsOneWidget);
+      await _close(t);
+    });
+
+    testWidgets('a long name does not squeeze out of the mention list', (
+      t,
+    ) async {
+      _use(t, _Db(rows: [_in(1, _anna, 'hello')]));
+      appState.contacts = [_contact(_anna, nick: 'Anna Maria Magdalena')];
+      await t.pumpWidget(
+        MediaQuery(
+          data: const MediaQueryData(textScaler: TextScaler.linear(1.6)),
+          child: app(const GroupChatScreen(groupId: _group)),
+        ),
+      );
+      await t.pump(const Duration(seconds: 1));
+      await t.enterText(find.byType(TextField), '@');
+      await t.pump(const Duration(seconds: 1));
+      expect(t.takeException(), isNull);
+      // the name keeps more of the row than the three words beside it
+      final name = find.text('Anna Maria Magdalena').last;
+      expect(
+        t.getSize(name).width,
+        greaterThan(t.getSize(find.text(_anna).last).width),
+      );
+      await _close(t);
+    });
+  });
+
+  testWidgets('the safety number button\'s words rise into verified', (
+    t,
+  ) async {
+    final db = _use(t, _Db())..verified = Completer<bool>();
+    t.view.physicalSize = const Size(1080, 7000);
+    await t.pumpWidget(
+      app(
+        KeyVerificationScreen(
+          peerHaloId: _anna,
+          peerName: 'Anna',
+          myXpub: 'ab' * 32,
+          peerXpub: 'cd' * 32,
+        ),
+      ),
+    );
+    await t.pump(const Duration(seconds: 2));
+    expect(find.text(l10n.keyVerificationMarkAsVerified), findsOneWidget);
+    db.verified!.complete(true);
+    await t.pump();
+    await t.pump(const Duration(milliseconds: 60));
+    // both for a moment, the new words rising over the old
+    expect(find.text(l10n.keyVerificationMarkAsVerified), findsOneWidget);
+    expect(find.text(l10n.keyVerificationVerified), findsOneWidget);
+    await t.pump(const Duration(seconds: 1));
+    expect(find.text(l10n.keyVerificationMarkAsVerified), findsNothing);
     await _close(t);
   });
 }

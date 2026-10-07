@@ -320,7 +320,7 @@ class _Advanced extends StatelessWidget {
               haptic: false,
               onTap: onToggle,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
+                padding: const EdgeInsetsDirectional.fromSTEB(16, 14, 12, 14),
                 child: Row(
                   children: [
                     Icon(

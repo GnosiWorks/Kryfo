@@ -100,7 +100,7 @@ import '../widgets/preview_strip.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/moved_strip.dart';
 import '../widgets/empty_chat.dart';
-import '../widgets/swap.dart' show FadeSwap;
+import '../widgets/swap.dart' show FadeSwap, RiseSwap;
 import '../widgets/ease_size.dart';
 import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
@@ -3388,33 +3388,38 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       body: SafeArea(
         child: Column(
           children: [
-            _searching
-                ? SearchHead(
-                    controller: _searchCtrl,
-                    matchCount: _matches.length,
-                    matchPos: _matches.isEmpty ? 0 : _matchPos + 1,
-                    onChanged: _onQueryChanged,
-                    onPrev: () => _gotoMatch(-1),
-                    onNext: () => _gotoMatch(1),
-                    onClose: _closeSearch,
-                  )
-                : _Header(
-                    name: _groupName,
-                    groupId: widget.groupId,
-                    memberCount: _memberCount,
-                    expiresAt: _roomExpiresAt,
-                    joiningAt: _waiting ? _joiningAt : null,
-                    onBack: () => Navigator.of(context).pop(),
-                    onSearch: _openSearch,
-                    pinnedCount: _pinCount,
-                    onPinned: _showGroupPinnedSheet,
-                    onTapInfo: () async {
-                      await Navigator.of(context).push(
-                        haloRoute(GroupInfoScreen(groupId: widget.groupId)),
-                      );
-                      _load();
-                    },
-                  ),
+            // search and the head cross over both ways, as in a 1:1 chat
+            FadeSwap(
+              child: _searching
+                  ? SearchHead(
+                      key: const ValueKey('search'),
+                      controller: _searchCtrl,
+                      matchCount: _matches.length,
+                      matchPos: _matches.isEmpty ? 0 : _matchPos + 1,
+                      onChanged: _onQueryChanged,
+                      onPrev: () => _gotoMatch(-1),
+                      onNext: () => _gotoMatch(1),
+                      onClose: _closeSearch,
+                    )
+                  : _Header(
+                      key: const ValueKey('head'),
+                      name: _groupName,
+                      groupId: widget.groupId,
+                      memberCount: _memberCount,
+                      expiresAt: _roomExpiresAt,
+                      joiningAt: _waiting ? _joiningAt : null,
+                      onBack: () => Navigator.of(context).pop(),
+                      onSearch: _openSearch,
+                      pinnedCount: _pinCount,
+                      onPinned: _showGroupPinnedSheet,
+                      onTapInfo: () async {
+                        await Navigator.of(context).push(
+                          haloRoute(GroupInfoScreen(groupId: widget.groupId)),
+                        );
+                        _load();
+                      },
+                    ),
+            ),
             // the room's first open: its line eases the thread down
             // instead of shoving it when the room is known
             EaseSize(
@@ -3437,14 +3442,14 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             Divider(height: 0.5, color: HaloColors.line, thickness: 0.5),
             Expanded(
               // nothing until the first load lands, so an empty state
-              // never flashes over a group that has messages
-              child: !_loaded
-                  ? const SizedBox.shrink()
-                  : _waiting || _messages.isEmpty
-                  // the words cross over when the first person joins, and
-                  // when the room lets this phone in
-                  ? FadeSwap(
-                      child: _waiting
+              // never flashes over a group that has messages. the words
+              // cross over when the first person joins, when the room lets
+              // this phone in, and into the first message
+              child: FadeSwap(
+                child: !_loaded
+                    ? const SizedBox.shrink(key: ValueKey('wait'))
+                    : _waiting || _messages.isEmpty
+                    ? _waiting
                           ? RoomJoinPanel(
                               key: const ValueKey('joining'),
                               name: _groupName,
@@ -3471,71 +3476,76 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                                   : _isRoom
                                   ? l10n.groupChatShareTheRoomLink
                                   : l10n.groupChatNobodyToReadIt,
-                            ),
-                    )
-                  : AtmoScope(
-                      atmo: _atmosphere,
-                      child: Stack(
-                        children: [
-                          if (_atmosphere != Atmo.none)
-                            Positioned.fill(child: AtmosphereWash(_atmosphere)),
-                          ListView.builder(
-                            key: _listKey,
-                            controller: _scrollCtrl,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 12,
-                            ),
-                            itemCount: _messages.length,
-                            itemBuilder: (_, i) {
-                              // one unbuildable message must not cost the
-                              // whole conversation.
-                              try {
-                                return _buildGroupRow(i);
-                              } catch (e) {
-                                dlog('group bubble failed: \$e');
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 6,
-                                  ),
-                                  child: Text(
-                                    l10n.groupChatThisMessageCanT,
-                                    style: HaloType.sans(
-                                      size: 12,
-                                      color: HaloColors.text3,
+                            )
+                    : AtmoScope(
+                        key: const ValueKey('list'),
+                        atmo: _atmosphere,
+                        child: Stack(
+                          children: [
+                            if (_atmosphere != Atmo.none)
+                              Positioned.fill(
+                                child: AtmosphereWash(_atmosphere),
+                              ),
+                            ListView.builder(
+                              key: _listKey,
+                              controller: _scrollCtrl,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 12,
+                              ),
+                              itemCount: _messages.length,
+                              itemBuilder: (_, i) {
+                                // one unbuildable message must not cost the
+                                // whole conversation.
+                                try {
+                                  return _buildGroupRow(i);
+                                } catch (e) {
+                                  dlog('group bubble failed: \$e');
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 6,
                                     ),
-                                  ),
-                                );
-                              }
-                            },
-                          ),
-                          Positioned(
-                            top: 8,
-                            left: 0,
-                            right: 0,
-                            child: IgnorePointer(
-                              child: Center(
-                                child: ValueListenableBuilder<bool>(
-                                  valueListenable: _stickyShown,
-                                  builder: (_, shown, _) => AnimatedOpacity(
-                                    duration: const Duration(milliseconds: 220),
-                                    opacity: shown ? 1.0 : 0.0,
-                                    child: ValueListenableBuilder<String?>(
-                                      valueListenable: _stickyLabel,
-                                      builder: (_, label, _) => label == null
-                                          ? const SizedBox.shrink()
-                                          : DayChip(label),
+                                    child: Text(
+                                      l10n.groupChatThisMessageCanT,
+                                      style: HaloType.sans(
+                                        size: 12,
+                                        color: HaloColors.text3,
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
+                            ),
+                            Positioned(
+                              top: 8,
+                              left: 0,
+                              right: 0,
+                              child: IgnorePointer(
+                                child: Center(
+                                  child: ValueListenableBuilder<bool>(
+                                    valueListenable: _stickyShown,
+                                    builder: (_, shown, _) => AnimatedOpacity(
+                                      duration: const Duration(
+                                        milliseconds: 220,
+                                      ),
+                                      opacity: shown ? 1.0 : 0.0,
+                                      child: ValueListenableBuilder<String?>(
+                                        valueListenable: _stickyLabel,
+                                        builder: (_, label, _) => label == null
+                                            ? const SizedBox.shrink()
+                                            : DayChip(label),
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                          // over the list, or the list takes its taps
-                          _scrollDownButton(),
-                        ],
+                            // over the list, or the list takes its taps
+                            _scrollDownButton(),
+                          ],
+                        ),
                       ),
-                    ),
+              ),
             ),
             // grows in over the composer and folds away, as in the 1:1 chat
             GrowSwap(
@@ -3729,6 +3739,7 @@ class _Header extends StatelessWidget {
   final int pinnedCount;
   final VoidCallback? onPinned;
   const _Header({
+    super.key,
     required this.name,
     required this.groupId,
     required this.memberCount,
@@ -3808,30 +3819,38 @@ class _Header extends StatelessWidget {
                               color: HaloColors.text,
                             ),
                           ),
-                          if (joiningAt != null)
-                            RoomJoinLine(joiningAt: joiningAt!)
-                          else if (expiresAt != null)
-                            SlotLine(
-                              msg: (t) => l10n.groupChatHere(memberCount, t),
-                              slot: RoomCountdown(
-                                expiresAt: expiresAt!,
-                                size: 10,
-                              ),
-                              style: HaloType.mono(
-                                size: 10,
-                                color: HaloColors.text3,
-                              ),
-                            )
-                          else
-                            Text(
-                              l10n.groupChatMembers(memberCount),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: HaloType.mono(
-                                size: 10,
-                                color: HaloColors.text3,
-                              ),
-                            ),
+                          // let in, the waiting line rises into the clock
+                          RiseSwap(
+                            child: joiningAt != null
+                                ? RoomJoinLine(
+                                    key: const ValueKey('joining'),
+                                    joiningAt: joiningAt!,
+                                  )
+                                : expiresAt != null
+                                ? SlotLine(
+                                    key: const ValueKey('room'),
+                                    msg: (t) =>
+                                        l10n.groupChatHere(memberCount, t),
+                                    slot: RoomCountdown(
+                                      expiresAt: expiresAt!,
+                                      size: 10,
+                                    ),
+                                    style: HaloType.mono(
+                                      size: 10,
+                                      color: HaloColors.text3,
+                                    ),
+                                  )
+                                : Text(
+                                    l10n.groupChatMembers(memberCount),
+                                    key: const ValueKey('members'),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: HaloType.mono(
+                                      size: 10,
+                                      color: HaloColors.text3,
+                                    ),
+                                  ),
+                          ),
                         ],
                       ),
                     ),
@@ -4319,11 +4338,21 @@ class _MentionPicker extends StatelessWidget {
                                 ),
                                 if (m.name != null) ...[
                                   const SizedBox(width: 8),
-                                  Text(
-                                    m.id,
-                                    style: HaloType.mono(
-                                      size: 10,
-                                      color: HaloColors.text3,
+                                  // never more than a third of the row, so
+                                  // the name keeps its room at a big font
+                                  ConstrainedBox(
+                                    constraints: BoxConstraints(
+                                      maxWidth:
+                                          MediaQuery.sizeOf(context).width / 3,
+                                    ),
+                                    child: Text(
+                                      m.id,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: HaloType.mono(
+                                        size: 10,
+                                        color: HaloColors.text3,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -4628,9 +4657,10 @@ class _GroupBubble extends StatelessWidget {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       if (quotedText != null) ...[
-                                        GestureDetector(
+                                        PressScale(
+                                          scale: 0.97,
+                                          haptic: false,
                                           onTap: onReplyTap,
-                                          behavior: HitTestBehavior.opaque,
                                           child: Container(
                                             width: double.infinity,
                                             margin: const EdgeInsets.only(
@@ -4736,8 +4766,9 @@ class _GroupBubble extends StatelessWidget {
                                               : _groupStamp(m),
                                         )
                                       else if (m.fileName != null)
-                                        GestureDetector(
-                                          behavior: HitTestBehavior.opaque,
+                                        PressScale(
+                                          scale: 0.97,
+                                          haptic: false,
                                           onTap: () {
                                             onAct?.call();
                                             if (m.filePath != null) {
@@ -4764,7 +4795,9 @@ class _GroupBubble extends StatelessWidget {
                                           padding: EdgeInsets.only(
                                             bottom: m.text.isNotEmpty ? 6 : 0,
                                           ),
-                                          child: GestureDetector(
+                                          child: PressScale(
+                                            scale: 0.97,
+                                            haptic: false,
                                             onTap: m.failed
                                                 ? onRetry
                                                 : () {
@@ -5160,11 +5193,9 @@ class _GroupBubble extends StatelessWidget {
                       child: !m.pending
                           ? switch (m.reach) {
                               final r? => Padding(
-                                // keyed on its words: a change that reads
-                                // the same is no change
-                                key: ValueKey(
-                                  'reach-${fileReachWords(r.have, r.of, r.gaveUp)}',
-                                ),
+                                // one key while it counts: the pill rolls
+                                // its words in place instead of folding
+                                key: const ValueKey('reach'),
                                 padding: const EdgeInsetsDirectional.only(
                                   top: 4,
                                   end: 4,

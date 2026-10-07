@@ -332,9 +332,10 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                     child: _tile(_name),
                   ),
                   const SizedBox(height: 14),
-                  GestureDetector(
+                  PressScale(
                     onTap: _isAdmin && !_isRoom ? _rename : null,
-                    behavior: HitTestBehavior.opaque,
+                    scale: 0.97,
+                    haptic: false,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [

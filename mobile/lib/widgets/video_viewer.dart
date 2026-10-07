@@ -14,6 +14,8 @@ import 'package:flutter/services.dart';
 import '../main.dart' show appState;
 import '../open_file.dart';
 import '../theme.dart';
+import 'motion.dart' show kText2, motionStill;
+import 'press_scale.dart';
 import '../l10n/l10n.dart';
 import 'video_bubble.dart' show openReceivedFile;
 import '../lock_guard.dart' show LockGuard, lockGuard;
@@ -455,7 +457,9 @@ class _VideoViewerState extends State<_VideoViewer>
                     child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 160),
                       transitionBuilder: (c, a) => ScaleTransition(
-                        scale: a,
+                        scale: motionStill(context)
+                            ? const AlwaysStoppedAnimation(1.0)
+                            : a,
                         child: FadeTransition(opacity: a, child: c),
                       ),
                       child: Icon(
@@ -527,7 +531,8 @@ class _VideoViewerState extends State<_VideoViewer>
             style: HaloType.sans(size: 14, color: Colors.white, height: 1.45),
           ),
           const SizedBox(height: 18),
-          GestureDetector(
+          PressScale(
+            scale: 0.96,
             onTap: () async {
               final nav = Navigator.of(context);
               await openReceivedFile(context, widget.path, widget.fileName);
@@ -549,12 +554,18 @@ class _VideoViewerState extends State<_VideoViewer>
               ),
             ),
           ),
-          const SizedBox(height: 22),
-          GestureDetector(
+          const SizedBox(height: 10),
+          // the dark theme's text2 on the viewer's black in both themes, a
+          // full finger wide
+          PressScale(
+            scale: 0.96,
             onTap: _close,
-            child: Text(
-              l10n.commonClose,
-              style: HaloType.sans(size: 13, color: HaloColors.text2),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              child: Text(
+                l10n.commonClose,
+                style: HaloType.sans(size: 13, color: kText2),
+              ),
             ),
           ),
         ],

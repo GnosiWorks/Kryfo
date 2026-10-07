@@ -192,22 +192,24 @@ class _RoomLinkSheetState extends State<_RoomLinkSheet> {
               child: QrWipe(
                 child: Container(
                   padding: const EdgeInsets.all(12),
+                  // dark on light in both themes: some scanners refuse
+                  // an inverted code
                   decoration: BoxDecoration(
-                    color: HaloColors.text,
+                    color: HaloColors.qrPaper,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: QrImageView(
                     data: uri,
                     version: QrVersions.auto,
                     size: 208,
-                    backgroundColor: HaloColors.text,
+                    backgroundColor: HaloColors.qrPaper,
                     eyeStyle: QrEyeStyle(
                       eyeShape: QrEyeShape.square,
-                      color: HaloColors.ink,
+                      color: HaloColors.qrInk,
                     ),
                     dataModuleStyle: QrDataModuleStyle(
                       dataModuleShape: QrDataModuleShape.square,
-                      color: HaloColors.ink,
+                      color: HaloColors.qrInk,
                     ),
                   ),
                 ),

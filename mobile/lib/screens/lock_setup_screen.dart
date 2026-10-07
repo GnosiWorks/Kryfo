@@ -244,16 +244,20 @@ class _LockSetupScreenState extends State<LockSetupScreen>
               ),
             ),
             const SizedBox(height: 8),
-            // the line under the title changes the way the title does
-            RiseSwap(
-              alignment: Alignment.center,
-              child: Text(
-                hint,
-                key: ValueKey('$hint$_mismatch'),
-                textAlign: TextAlign.center,
-                style: HaloType.sans(
-                  size: 13,
-                  color: _mismatch ? HaloColors.rose : HaloColors.text2,
+            // the line under the title changes the way the title does, held
+            // off the edges as on the pin flow
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: RiseSwap(
+                alignment: Alignment.center,
+                child: Text(
+                  hint,
+                  key: ValueKey('$hint$_mismatch'),
+                  textAlign: TextAlign.center,
+                  style: HaloType.sans(
+                    size: 13,
+                    color: _mismatch ? HaloColors.rose : HaloColors.text2,
+                  ),
                 ),
               ),
             ),

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../main.dart' show session;
 import '../theme.dart';
 import '../widgets/kryfo_avatar.dart';
+import '../widgets/motion.dart' show motionStill;
 import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';
 import '../l10n/l10n.dart';
@@ -96,7 +97,8 @@ class _VoucherRowState extends State<_VoucherRow> {
       duration: const Duration(milliseconds: 260),
       curve: Curves.easeOut,
       child: AnimatedSlide(
-        offset: Offset(0, (1 - _t) * 0.1),
+        // a fade alone with less movement
+        offset: Offset(0, motionStill(context) ? 0 : (1 - _t) * 0.1),
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOutCubic,
         child: Padding(

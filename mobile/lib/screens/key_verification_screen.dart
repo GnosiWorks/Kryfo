@@ -6,7 +6,8 @@ import 'package:flutter/services.dart';
 import '../theme.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/press_scale.dart';
-import '../widgets/motion.dart' show kHouseCurve;
+import '../widgets/swap.dart';
+import '../widgets/motion.dart' show kHouseCurve, motionStill;
 import '../main.dart' show session, appState;
 import '../l10n/l10n.dart';
 
@@ -298,9 +299,11 @@ class _VerifyButton extends StatelessWidget {
     return PressScale(
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 280),
         curve: Curves.easeOut,
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        duration: motionStill(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 280),
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
         decoration: BoxDecoration(
           color: verified ? HaloColors.greenSoft : HaloColors.surface2,
           borderRadius: BorderRadius.circular(14),
@@ -329,17 +332,23 @@ class _VerifyButton extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 10),
-            AnimatedDefaultTextStyle(
-              duration: const Duration(milliseconds: 260),
-              style: HaloType.sans(
-                size: 14,
-                weight: FontWeight.w500,
-                color: verified ? HaloColors.green : HaloColors.text,
-              ),
-              child: Text(
-                verified
-                    ? l10n.keyVerificationVerified
-                    : l10n.keyVerificationMarkAsVerified,
+            // the new words rise in, and a long label wraps instead of
+            // running off the card
+            Flexible(
+              child: RiseSwap(
+                alignment: AlignmentDirectional.center,
+                child: Text(
+                  verified
+                      ? l10n.keyVerificationVerified
+                      : l10n.keyVerificationMarkAsVerified,
+                  key: ValueKey(verified),
+                  textAlign: TextAlign.center,
+                  style: HaloType.sans(
+                    size: 14,
+                    weight: FontWeight.w500,
+                    color: verified ? HaloColors.green : HaloColors.text,
+                  ),
+                ),
               ),
             ),
           ],

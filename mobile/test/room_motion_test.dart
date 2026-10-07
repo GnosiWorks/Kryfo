@@ -5,6 +5,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/theme.dart' show HaloColors;
+import 'package:qr_flutter/qr_flutter.dart' show QrImageView;
 import 'package:kryfo/rooms.dart';
 import 'package:kryfo/screens/room_link_sheet.dart';
 import 'package:kryfo/widgets/qr_wipe.dart';
@@ -159,5 +161,32 @@ void main() {
       await t.pumpWidget(const SizedBox());
       await t.pump(const Duration(seconds: 1));
     });
+
+    testWidgets('the code is dark on light in the light theme too', (t) async {
+      HaloColors.setLight(true);
+      addTearDown(() => HaloColors.setLight(false));
+      await open(t, still: true);
+      await t.pump(const Duration(seconds: 1));
+      final qr = t.widget<QrImageView>(find.byType(QrImageView));
+      expect(qr.backgroundColor, HaloColors.qrPaper);
+      expect(qr.dataModuleStyle.color, HaloColors.qrInk);
+      expect(qr.eyeStyle.color, HaloColors.qrInk);
+      await t.pumpWidget(const SizedBox());
+      await t.pump(const Duration(seconds: 1));
+    });
+  });
+
+  testWidgets('a shorter figure stays at the line\'s start as it changes', (
+    t,
+  ) async {
+    await t.pumpWidget(host(RoomCountdown(expiresAt: inMinutes(600))));
+    final stack = t.widget<Stack>(
+      find.descendant(
+        of: find.byType(RoomCountdown),
+        matching: find.byType(Stack),
+      ),
+    );
+    expect(stack.alignment, AlignmentDirectional.centerStart);
+    await t.pumpWidget(const SizedBox());
   });
 }
