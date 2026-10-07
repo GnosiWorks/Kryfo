@@ -8,7 +8,14 @@ import 'dart:typed_data';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/group_media_send.dart' show groupOwedGap;
 import 'package:kryfo/main.dart'
-    show AppIo, HaloDb, blockedAtArgs, groupUnsendOf, groupUnsendRow;
+    show
+        AppIo,
+        HaloDb,
+        blockedAtArgs,
+        groupUnsendOf,
+        groupUnsendRow,
+        kBlockListenFor,
+        kUnblockGrace;
 import 'package:kryfo/media_resend.dart';
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
@@ -418,6 +425,21 @@ class ArrivalRows implements HaloDb {
           if (p['accepted'] == 0 && p['archived'] == 1) p,
       ]);
   @override
+  Future<List<Map<String, Object?>>> blockedRows({required int now}) async =>
+      _hit('blockedRows', null, [
+        for (final p in people.values)
+          if (p['blocked'] == 1)
+            {
+              ...p,
+              'listen':
+                  [
+                    ...?blockSpans[p['halo_id']],
+                  ].any((s) => s.$2 == null && s.$1 > now - kBlockListenFor)
+                  ? 1
+                  : 0,
+            },
+      ]);
+  @override
   Future<List<Map<String, Object?>>> vouchedPending() async =>
       _hit('vouchedPending', null, [
         for (final p in people.values)
@@ -469,8 +491,12 @@ class ArrivalRows implements HaloDb {
   // as kBlockedAtWhere reads its arguments: an ended span, from its start
   // to its end less the grace
   @override
-  Future<bool> blockedAt(String haloId, int at) async {
-    final a = blockedAtArgs(haloId, at);
+  Future<bool> blockedAt(
+    String haloId,
+    int at, {
+    int slack = kUnblockGrace,
+  }) async {
+    final a = blockedAtArgs(haloId, at, slack: slack);
     return [...?blockSpans[haloId]].any(
       (s) => s.$1 <= (a[1] as int) && s.$2 != null && s.$2! > (a[2] as int),
     );

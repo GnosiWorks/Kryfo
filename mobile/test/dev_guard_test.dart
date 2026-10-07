@@ -29,6 +29,7 @@ import 'package:kryfo/main.dart'
         HaloDb,
         handleHaloUriAdded,
         haloUriV3,
+        kUnblockGrace,
         makePreKeyBundleB64,
         openDevChatLater,
         signalDecrypt,
@@ -393,6 +394,12 @@ class _Mem implements HaloDb {
       _hit('parkedRequests', null, [
         for (final p in people.values)
           if (p['accepted'] == 0 && p['archived'] == 1) p,
+      ]);
+  @override
+  Future<List<Map<String, Object?>>> blockedRows({required int now}) async =>
+      _hit('blockedRows', null, [
+        for (final p in people.values)
+          if (p['blocked'] == 1) {...p, 'listen': 1},
       ]);
   @override
   Future<List<Map<String, Object?>>> vouchedPending() async =>
@@ -865,7 +872,11 @@ class _Mem implements HaloDb {
 
   // no block here ever held
   @override
-  Future<bool> blockedAt(String haloId, int at) async => false;
+  Future<bool> blockedAt(
+    String haloId,
+    int at, {
+    int slack = kUnblockGrace,
+  }) async => false;
   @override
   Future<void> noteBlockedDrop(String haloId, String uid) async {}
   @override

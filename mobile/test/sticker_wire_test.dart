@@ -84,6 +84,8 @@ void main() {
   });
 
   test('one key and 18 bytes over the text', () async {
+    // one written time for both, or a tick between them shows as a change
+    final at = DateTime.now().millisecondsSinceEpoch;
     Future<String> wrap({String? sticker}) => wrapMessage(
       '🔒',
       msgUid: 'u1',
@@ -91,6 +93,7 @@ void main() {
       burnSeconds: 60,
       sender: _sender,
       sticker: sticker,
+      writtenAt: at,
     );
     final text = await wrap();
     final sticker = await wrap(sticker: 'fokia:17:1');

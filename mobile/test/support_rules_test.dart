@@ -176,6 +176,10 @@ class _Phone extends HaloDb {
     (r) => r['accepted'] == 0 && r['blocked'] == 0 && r['archived'] == 1,
   );
   @override
+  Future<List<Map<String, Object?>>> blockedRows({required int now}) async => [
+    for (final r in _people((r) => r['blocked'] == 1)) {...r, 'listen': 1},
+  ];
+  @override
   Future<List<Map<String, Object?>>> vouchedPending() async => const [];
   @override
   Future<bool> isVouched(String haloId) async => false;

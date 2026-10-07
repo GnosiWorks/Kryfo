@@ -3,14 +3,19 @@
 // statements: an ended span holds from its start to its end less the
 // grace for a slow clock, an open one adds nothing, a contact row that goes
 // ends its open span, someone blocked before the spans were kept holds
-// from the start, and the drops are swept by age at most once a day. the
-// system's sqlite library is used; with none the tests are skipped
+// from the start, and the drops are swept by age at most once a day and
+// held to a count per person. a block is listened on while it is young.
+// the system's sqlite library is used; with none the tests are skipped
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/main.dart'
     show
         blockTables,
         blockedAtArgs,
+        droppedIn,
+        kBlockListenFor,
         kBlockedAtWhere,
+        kBlockedDropsKept,
+        kBlockedRowsSql,
         kSeedBlockSpans,
         kUnblockGrace,
         noteBlockedDropIn,
@@ -170,6 +175,52 @@ void main() {
       [1],
     );
     expect('$plan', contains('blocked_drops_at'));
+  }, skip: skip);
+
+  test('a person keeps only their newest drops, and one person\'s note '
+      'leaves another\'s same uid alone', () async {
+    final db = await _db();
+    const now = 100 * _day;
+    for (var i = 0; i < kBlockedDropsKept + 5; i++) {
+      await noteBlockedDropIn(db, 'a', 'u$i', now: now + i, sweptAt: now);
+    }
+    await noteBlockedDropIn(db, 'b', 'other', now: now, sweptAt: now);
+    Future<int> count(String peer) async =>
+        (await db.rawQuery(
+              'SELECT COUNT(*) AS n FROM blocked_drops WHERE peer_id = ?',
+              [peer],
+            )).first['n']
+            as int;
+    expect(await count('a'), kBlockedDropsKept);
+    expect(await count('b'), 1);
+    expect(await droppedIn(db, 'a', 'u4'), isFalse);
+    expect(await droppedIn(db, 'a', 'u5'), isTrue);
+    expect(await droppedIn(db, 'a', 'u${kBlockedDropsKept + 4}'), isTrue);
+    expect(await droppedIn(db, 'b', 'u5'), isFalse);
+    expect(await droppedIn(db, 'a', 'other'), isFalse);
+    expect(await droppedIn(db, 'b', 'other'), isTrue);
+  }, skip: skip);
+
+  test('a block is listened on until it is older than the bound, an ended '
+      'or seeded one not at all', () async {
+    final db = await _db();
+    const now = 100 * _day;
+    await db.execute(
+      'INSERT INTO contacts (halo_id, blocked) VALUES '
+      "('young', 1), ('old', 1), ('seeded', 1), ('free', 0)",
+    );
+    await _span(db, 'young', now - kBlockListenFor + 1, null);
+    await _span(db, 'old', 5, 10);
+    await _span(db, 'old', now - kBlockListenFor, null);
+    await _span(db, 'seeded', 0, null);
+    await _span(db, 'free', now - 1, now);
+    final rows = await db.rawQuery('$kBlockedRowsSql ORDER BY c.halo_id', [
+      now - kBlockListenFor,
+    ]);
+    expect(
+      {for (final r in rows) r['halo_id']: r['listen']},
+      {'old': 0, 'seeded': 0, 'young': 1},
+    );
   }, skip: skip);
 
   test('the steps to 64 make both tables from 63 whichever it held, and run '

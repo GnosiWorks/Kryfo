@@ -656,10 +656,11 @@ class VaultRouter {
   // no tick for someone the vault blocked
   bool blocks(String id) => cardOf(id)?.blocked ?? false;
 
-  // the keys to listen on, each to its person. no one the vault blocked
+  // the keys to listen on, each to its person. the vault's blocked too:
+  // what they send while it holds is dropped as it comes
   Map<String, String> get listenFor => {
     for (final c in [..._members.values, ..._peers.values])
-      if (c.xpub.isNotEmpty && !c.blocked) c.xpub: c.id,
+      if (c.xpub.isNotEmpty) c.xpub: c.id,
   };
 
   // an arrival sealed to the vault. false when there is nothing to seal to,

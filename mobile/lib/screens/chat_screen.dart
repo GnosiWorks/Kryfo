@@ -2528,6 +2528,8 @@ class _ChatScreenState extends State<ChatScreen>
           ),
           // or a retried sticker arrives as its emoji
           sticker: msg.sticker?.value,
+          // when it was written, not now
+          writtenAt: msg.when.millisecondsSinceEpoch,
         );
         cipher = await signalEncrypt(widget.peerHaloId, wrapped);
       } catch (e) {
@@ -2641,6 +2643,7 @@ class _ChatScreenState extends State<ChatScreen>
       burnSeconds: msg.burnSecs,
       secure: msg.secure,
       replyTo: msg.replyTo,
+      writtenAt: msg.when.millisecondsSinceEpoch,
     ).then((result) => _finishMediaSend(msg, result));
   }
 
@@ -2669,6 +2672,7 @@ class _ChatScreenState extends State<ChatScreen>
       voiceDisguised: msg.voiceDisguised,
       burnSeconds: msg.burnSecs,
       replyTo: msg.replyTo,
+      writtenAt: msg.when.millisecondsSinceEpoch,
     ).then((result) => _finishMediaSend(msg, result));
   }
 
@@ -2869,6 +2873,7 @@ class _ChatScreenState extends State<ChatScreen>
       voiceDisguised: disguise,
       burnSeconds: _ghost ? _burnSeconds : null,
       replyTo: replyToUid,
+      writtenAt: msg.when.millisecondsSinceEpoch,
     ).then((result) => _finishMediaSend(msg, result));
   }
 
@@ -3066,6 +3071,7 @@ class _ChatScreenState extends State<ChatScreen>
       fileName: name,
       burnSeconds: _ghost ? _burnSeconds : null,
       replyTo: replyToUid,
+      writtenAt: msg.when.millisecondsSinceEpoch,
     ).then((result) => _finishMediaSend(msg, result));
   }
 
@@ -3082,6 +3088,8 @@ class _ChatScreenState extends State<ChatScreen>
     int? burnSeconds,
     bool secure = false,
     String? replyTo,
+    // when its row was written
+    required int writtenAt,
   }) async {
     // a quiet session keeps it here: it waits, and nothing leaves
     if (sessionQuiet) return 'parked';
@@ -3100,6 +3108,7 @@ class _ChatScreenState extends State<ChatScreen>
       burnSeconds: burnSeconds,
       secure: secure,
       replyTo: replyTo,
+      writtenAt: writtenAt,
       sender: SenderInfo(
         haloId: appState.sessionId,
         edPub: appState.sessionEdPub,
@@ -3256,6 +3265,7 @@ class _ChatScreenState extends State<ChatScreen>
         burnSeconds: _ghost ? _burnSeconds : null,
         secure: wantSecure,
         replyTo: replyToUid,
+        writtenAt: msg.when.millisecondsSinceEpoch,
       ).then((r) => _finishMediaSend(msg, r)),
     );
   }
@@ -3502,6 +3512,7 @@ class _ChatScreenState extends State<ChatScreen>
             xPub: appState.sessionXPub,
           ),
           sticker: sticker?.value,
+          writtenAt: msg.when.millisecondsSinceEpoch,
         );
         final prev = _encryptGate;
         final gate = Completer<void>();

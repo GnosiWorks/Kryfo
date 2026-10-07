@@ -357,7 +357,7 @@ void main() {
       j['zz'] = {'h': everydayWords};
       j['hd'] = everydayHandle;
       final got = frameJson(devInFrame(_dev, 'halo/1:${jsonEncode(j)}')!);
-      expect(got.keys.toSet(), {'m', 'u', 'h', 'e', 'o', 'x'});
+      expect(got.keys.toSet(), {'m', 'w', 'u', 'h', 'e', 'o', 'x'});
     });
 
     test('who it says sent it must be his pinned key', () async {

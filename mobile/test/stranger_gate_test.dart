@@ -39,13 +39,19 @@ void main() {
       );
       expect(rows.map((r) => r['halo_id']), ['friend']);
     });
-    test('never listens for a blocked row', () {
+    test('listens for someone blocked only as [blocked] gives them, after '
+        'everyone else', () {
       final rows = bootSubscribeRows(
-        accepted: [],
+        accepted: [_row('f', blocked: 1), _row('old', blocked: 1)],
         vouchedPending: [],
-        pendingRequests: [_row('b', accepted: 0, blocked: 1)],
+        pendingRequests: [_row('s', accepted: 0)],
+        blocked: [
+          _row('f', blocked: 1),
+          _row('b', accepted: 0, blocked: 1),
+          _row('dev:m3', accepted: 0, blocked: 1),
+        ],
       );
-      expect(rows, isEmpty);
+      expect(rows.map((r) => r['halo_id']), ['s', 'f', 'b']);
     });
   });
 

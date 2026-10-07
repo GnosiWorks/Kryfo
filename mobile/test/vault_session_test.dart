@@ -21,6 +21,7 @@ import 'package:kryfo/main.dart'
         HaloDb,
         QuietIdentity,
         appState,
+        kUnblockGrace,
         searchFill,
         session,
         sessionQuiet,
@@ -434,6 +435,12 @@ class _Db implements HaloDb {
           if (p['accepted'] == 0 && p['archived'] == 1) p,
       ]);
   @override
+  Future<List<Map<String, Object?>>> blockedRows({required int now}) async =>
+      _hit('blockedRows', null, [
+        for (final p in r.people.values)
+          if (p['blocked'] == 1) {...p, 'listen': 1},
+      ]);
+  @override
   Future<List<Map<String, Object?>>> vouchedPending() async =>
       _hit('vouchedPending', null, const []);
   @override
@@ -743,7 +750,11 @@ class _Db implements HaloDb {
 
   // no block here ever held
   @override
-  Future<bool> blockedAt(String haloId, int at) async => false;
+  Future<bool> blockedAt(
+    String haloId,
+    int at, {
+    int slack = kUnblockGrace,
+  }) async => false;
   @override
   Future<void> noteBlockedDrop(String haloId, String uid) async {}
   @override

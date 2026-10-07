@@ -654,6 +654,27 @@ void main() {
       expect(_owed(mem, 'carol')['tries'], 1);
     });
 
+    test('what a member is owed says when its row was written, on every '
+        'slice, not when it goes again', () async {
+      const at = 1791000000000;
+      await mem.update(
+        'messages',
+        {'sent_at': at},
+        where: 'msg_uid = ?',
+        whereArgs: [_uid],
+      );
+      await _owe(mem, 'carol');
+      await db.markSent(_uid);
+      await tick();
+      final toCarol = [
+        for (final (_, c) in io.sent)
+          if (c.startsWith('to carol '))
+            unwrapMessage(c.substring('to carol '.length)),
+      ];
+      expect([for (final e in toCarol) e.chunkIndex], [0, 1, 2]);
+      expect({for (final e in toCarol) e.writtenAt}, {at});
+    });
+
     test('a row the outbox still holds is left to it', () async {
       await _owe(mem, 'carol');
       await tick();

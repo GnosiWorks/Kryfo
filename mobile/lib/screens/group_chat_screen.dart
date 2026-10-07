@@ -1490,6 +1490,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           voice: m.fileName == 'voice.wav',
           voiceDisguised: m.voiceDisguised,
           burnSeconds: m.burnSecs,
+          // when it was written, not now
+          writtenAt: m.when.millisecondsSinceEpoch,
         ),
       );
       return;
@@ -1507,6 +1509,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           replyTo: m.replyTo,
           burnSeconds: m.burnSecs,
           preview: m.preview,
+          writtenAt: m.when.millisecondsSinceEpoch,
         ),
       );
       burnAt = await _burnFrom(uid, ok);

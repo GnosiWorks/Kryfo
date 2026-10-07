@@ -143,6 +143,7 @@ final frameParams = <String, Object>{
   'pollClose': const PollCloseFrame(pollUid: 'uid0000poll', finalVotes: {}),
   'sticker': 'fokia:3:1',
   'supportMarker': 1,
+  'writtenAt': 1791393419123,
 };
 
 // the parameters whose frames never go to him
@@ -198,6 +199,7 @@ Future<String> buildFrame(Set<String> on, {String m = 'hello marios'}) =>
       pollClose: _param(on, 'pollClose'),
       sticker: _param(on, 'sticker'),
       supportMarker: _param(on, 'supportMarker'),
+      writtenAt: _param(on, 'writtenAt'),
     );
 
 // the frames the app's own code builds, as each call site builds them
@@ -225,6 +227,7 @@ final madeFrames = <String, Set<String>>{
     'powNonce',
     'powBitsUsed',
     'sticker',
+    'writtenAt',
   },
   'photo slice': {
     'sender',
@@ -239,6 +242,7 @@ final madeFrames = <String, Set<String>>{
     'powBitsUsed',
     'supporterBadge',
     'canResend',
+    'writtenAt',
   },
   'file slice': {
     'sender',
@@ -250,6 +254,7 @@ final madeFrames = <String, Set<String>>{
     'chunkTotal',
     'supporterBadge',
     'canResend',
+    'writtenAt',
   },
   'voice note, disguised': {
     'sender',
@@ -319,5 +324,6 @@ Map<String, Object?> frameRead(String wrapped) {
     'pv': u.preview,
     'pw': u.powNonce,
     'pb': u.powBitsUsed,
+    'w': u.writtenAt,
   };
 }
