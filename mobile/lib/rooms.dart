@@ -1,6 +1,7 @@
 import 'dart:convert';
 
-import 'bidi_safe.dart';
+import 'package:flutter/widgets.dart' show StringCharacters;
+
 import 'dlog.dart';
 import 'l10n/l10n.dart';
 import 'l10n/numbers.dart';
@@ -100,8 +101,8 @@ bool looksLikeRoomKey(String id) =>
     id.length == 64 && RegExp(r'^[0-9a-f]+$').hasMatch(id);
 
 // what a room frame may not carry: the onion, the signing key, the push
-// endpoint, the badge and the roster's keys
-const _roomStripped = ['o', 'e', 'p', 'bg', 'rp'];
+// endpoint, the badge, the face picked and the roster's keys
+const _roomStripped = ['o', 'e', 'p', 'bg', 'av', 'rp'];
 
 /// [wrapped] with every trace of who sent it gone and the room key [pub] in
 /// its place. null when it cannot be done, and the send has to be dropped:
@@ -207,7 +208,7 @@ class RoomLink {
         return null;
       }
       if (!looksLikeRoomKey(pub) || fc.length != 64) return null;
-      final name = unmarked(u.queryParameters['n'] ?? '').trim();
+      final name = roomLinkName(u.queryParameters['n'] ?? '');
       return RoomLink(
         roomId: id,
         name: name.isEmpty ? l10n.homeRoom : name,
@@ -220,6 +221,25 @@ class RoomLink {
       return null;
     }
   }
+}
+
+// every control and format mark but the joiners: persian spells with the
+// non-joiner, and emoji are built with the joiner. the direction marks go
+final _unseen = RegExp(r'(?![\u200C\u200D])[\p{Cc}\p{Cf}]', unicode: true);
+final _spaces = RegExp(r'\s+', unicode: true);
+
+/// a room's name as a link gives it, made fit to show: no controls or
+/// unseen marks but the joiners, one space wherever there were more, at
+/// most 48 letters. a name made here is 32 at most
+String roomLinkName(String raw) {
+  // a line break is a space before it is a control
+  final flat = raw
+      .replaceAll(_spaces, ' ')
+      .replaceAll(_unseen, '')
+      .replaceAll(_spaces, ' ')
+      .trim();
+  final c = flat.characters;
+  return c.length <= 48 ? flat : c.take(48).toString().trimRight();
 }
 
 // a kryfo link inside whatever it arrived in. people paste the whole

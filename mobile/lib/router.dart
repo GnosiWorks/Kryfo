@@ -139,7 +139,14 @@ String hidingCard(String card, List<String> files) {
 
 // an arrival as it was sealed
 class Unsealed {
-  const Unsealed(this.from, this.wire, this.backPair, this.at);
+  const Unsealed(
+    this.from,
+    this.wire,
+    this.backPair,
+    this.at, {
+    this.resend = false,
+    this.wrapped,
+  });
 
   final String from;
   // the envelope as it was opened
@@ -148,6 +155,12 @@ class Unsealed {
   final bool backPair;
   // when it arrived: a timer runs from here
   final int at;
+  // no arrival: [from] asked for what never reached them while the vault
+  // was shut, and it goes again as the vault opens. only this phone seals
+  // one, the envelope of an arrival never says it
+  final bool resend;
+  // when the sender wrapped it, by their clock, where the lane said
+  final int? wrapped;
 }
 
 // the tables, behind a seam so the router runs on a stand-in
@@ -660,6 +673,8 @@ class VaultRouter {
         'w': a.wire,
         'bp': a.backPair ? 1 : 0,
         'at': a.at,
+        if (a.resend) 'rs': 1,
+        'a': ?a.wrapped,
       }),
     );
     final sealed = _sealer.seal(pub, base64Encode(plain));
@@ -731,7 +746,15 @@ class VaultRouter {
       final w = j['w'];
       final at = j['at'];
       if (f is! String || w is! String || at is! int) return null;
-      return Unsealed(f, w, j['bp'] == 1, at);
+      final a = j['a'];
+      return Unsealed(
+        f,
+        w,
+        j['bp'] == 1,
+        at,
+        resend: j['rs'] == 1,
+        wrapped: a is int ? a : null,
+      );
     } catch (_) {
       return null;
     }

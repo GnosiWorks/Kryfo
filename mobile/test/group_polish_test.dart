@@ -31,6 +31,8 @@ import 'package:kryfo/screens/group_chat_screen.dart';
 import 'package:kryfo/screens/group_info_screen.dart';
 import 'package:kryfo/screens/home_screen.dart' show ContactPreview;
 import 'package:kryfo/screens/key_verification_screen.dart';
+import 'package:kryfo/screens/search_screen.dart';
+import 'package:kryfo/search.dart' show SearchKind;
 import 'package:kryfo/session.dart';
 import 'package:kryfo/widgets/empty_chat.dart';
 import 'package:kryfo/widgets/halo_switch.dart';
@@ -94,6 +96,8 @@ class _Db implements HaloDb {
         'joining_at': joiningAt,
         'room_pub': _roomPub,
         'room_priv': 'ef' * 32,
+        'creator_pub': _joiner,
+        'fc_pk': 'fc' * 32,
         'expires_at': DateTime.now()
             .add(const Duration(hours: 24))
             .millisecondsSinceEpoch,
@@ -102,6 +106,16 @@ class _Db implements HaloDb {
     };
   }
 
+  @override
+  Future<bool> groupExists(String groupId) async => true;
+  @override
+  Future<List<Map<String, Object?>>> searchMessages(
+    String? match,
+    SearchKind kind, {
+    int limit = 300,
+  }) async => [];
+  @override
+  Future<int> nextRoomSeq(String groupId) async => knocks.length;
   @override
   Future<String?> getGroupAtmosphere(String groupId) async => null;
   @override
@@ -162,8 +176,25 @@ class _Db implements HaloDb {
   Future<void> markRoomSeen(String groupId) async {}
   @override
   Future<void> setRoomJoining(String groupId, int? at) async {
+    joiningAt = at;
+  }
+
+  // a knock again: [shut] as a vault shut under it
+  bool shut = false;
+  @override
+  Future<bool> restartRoomJoining(String groupId, int at) async {
+    if (shut) throw StateError('shut');
+    if (joiningAt == null) return false;
     knocks.add(at);
     joiningAt = at;
+    return true;
+  }
+
+  @override
+  Future<bool> failRoomJoining(String groupId, int at) async {
+    if (joiningAt != at) return false;
+    joiningAt = at - kRoomJoinWait.inMilliseconds;
+    return true;
   }
 
   @override
@@ -207,10 +238,28 @@ class _Db implements HaloDb {
       throw UnimplementedError('${i.memberName}');
 }
 
-// a knock again listens to the room's creator first
+// a knock again listens to the room's creator first, then knocks. the
+// relays answer [answer]
 class _RoomEngine implements HaloEngine {
+  String answer = 'ok';
+  final knocked = <String>[];
   @override
   void roomSubscribeBg(String priv, String peerPub) {}
+  @override
+  String myEdPubkey() => '';
+  @override
+  String myXPubkey() => '';
+  @override
+  Future<String> roomSendFirstContact(
+    String priv,
+    String peerPub,
+    String fcPk,
+    String msg,
+  ) async {
+    knocked.add(msg);
+    return answer;
+  }
+
   @override
   dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
 }
@@ -790,7 +839,8 @@ void main() {
     });
 
     testWidgets('try again turns it back to waiting at once', (t) async {
-      useEngineForTest(_RoomEngine());
+      final engine = _RoomEngine();
+      useEngineForTest(engine);
       final db = joined(t, const Duration(minutes: 5));
       await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
       await t.pump(const Duration(seconds: 1));
@@ -803,7 +853,66 @@ void main() {
       expect(find.text(l10n.roomJoinNoAnswer), findsNothing);
       expect(db.knocks, hasLength(1));
       expect(db.knocks.single!, greaterThanOrEqualTo(before));
+      expect(engine.knocked, hasLength(1));
       expect(find.byType(TextField), findsNothing);
+      await _close(t);
+    });
+
+    testWidgets('a knock that does not go: not answering again at once', (
+      t,
+    ) async {
+      final engine = _RoomEngine()..answer = 'error: no relay';
+      useEngineForTest(engine);
+      final db = joined(t, const Duration(minutes: 5));
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      await t.tap(find.text(l10n.commonTryAgain));
+      await t.pump();
+      await t.pump(const Duration(seconds: 1));
+      expect(engine.knocked, hasLength(1));
+      expect(find.text(l10n.roomJoinNoAnswer), findsOneWidget);
+      expect(find.text(l10n.commonTryAgain), findsOneWidget);
+      expect(find.text(l10n.roomJoinWaitingFor('Friends')), findsNothing);
+      expect(db.joiningAt, lessThan(db.knocks.single! - 1));
+      await _close(t);
+    });
+
+    testWidgets('try again with the room shut under it is let go', (t) async {
+      useEngineForTest(_RoomEngine());
+      final db = joined(t, const Duration(minutes: 5))..shut = true;
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      await t.tap(find.text(l10n.commonTryAgain));
+      await t.pump();
+      await t.pump(const Duration(seconds: 1));
+      expect(t.takeException(), isNull);
+      expect(db.knocks, isEmpty);
+      await _close(t);
+    });
+
+    testWidgets('search names it as waiting, not by a member count', (t) async {
+      final m = t.binding.defaultBinaryMessenger;
+      m.setMockMethodCallHandler(SystemChannels.textInput, (_) async => null);
+      addTearDown(
+        () => m.setMockMethodCallHandler(SystemChannels.textInput, null),
+      );
+      Future<void> look() async {
+        await t.pumpWidget(app(const SearchScreen()));
+        await t.pump(const Duration(seconds: 1));
+        await t.enterText(find.byType(TextField), 'frie');
+        await t.pump(const Duration(milliseconds: 200));
+        await t.pump(const Duration(milliseconds: 500));
+        expect(find.text(l10n.homeMembers(2)), findsNothing);
+      }
+
+      joined(t, Duration.zero);
+      await look();
+      expect(find.text(l10n.roomJoinWaitingToJoin), findsOneWidget);
+      await _close(t);
+
+      joined(t, const Duration(minutes: 5));
+      await look();
+      expect(find.text(l10n.roomJoinNotAnswering), findsOneWidget);
       await _close(t);
     });
 

@@ -3,6 +3,7 @@
 // generates signed prekey + one-time prekeys on first run.
 
 import 'dart:convert';
+import 'dart:math' show min;
 
 import 'package:flutter/foundation.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
@@ -19,15 +20,29 @@ class SignalSession {
   late int registrationId;
   bool _ready = false;
   bool get ready => _ready;
+  late Database _db;
+  String _prefix = '';
+  // the base keys of the sessions a restore brought back. the phone the
+  // file was made on went on sealing on them after it, so the peer has
+  // spent their next message keys already: a seal on one repeats a number
+  // the peer drops as a duplicate. none is sealed on again (see encryptTo)
+  Set<String> _restored = const {};
+  // when the person on each of those was last asked to start afresh, and
+  // how many times, by the same base key: [at, n]
+  Map<String, List<int>> _asks = {};
+
+  /// a restore brought sessions back into this store
+  bool get hasRestored => _restored.isNotEmpty;
 
   Future<void> bootstrap({
     required Database database,
     required Uint8List xPubBytes,
     required Uint8List xPrivBytes,
     String prefix = '',
+    bool restored = false,
   }) async {
     if (_ready) return;
-    await _open(database, xPubBytes, xPrivBytes, prefix);
+    await _open(database, xPubBytes, xPrivBytes, prefix, restored: restored);
 
     final spkRows = await database.query('${prefix}signed_prekeys', limit: 1);
     SignedPreKeyRecord? spk;
@@ -127,12 +142,15 @@ class SignalSession {
     _ready = true;
   }
 
+  // [restored]: the first start after a restore. its sessions are marked
+  // before any store is up, so nothing can seal on one before that
   Future<void> _open(
     Database database,
     Uint8List xPubBytes,
     Uint8List xPrivBytes,
-    String prefix,
-  ) async {
+    String prefix, {
+    bool restored = false,
+  }) async {
     // clamp priv per RFC 7748: libsignal expects an already-clamped scalar
     final clamped = Uint8List.fromList(xPrivBytes);
     clamped[0] &= 0xF8;
@@ -145,6 +163,11 @@ class SignalSession {
     identityKeyPair = IdentityKeyPair(IdentityKey(pub), priv);
 
     registrationId = await _loadOrGenRegId(database, prefix);
+    _db = database;
+    _prefix = prefix;
+    _restored = await _loadRestored();
+    _asks = await _loadAsks();
+    if (restored) await markRestored();
 
     identityStore = HaloIdentityKeyStore(
       database,
@@ -175,9 +198,175 @@ class SignalSession {
   }
 
   // [plain] sealed to [peer] in this store, as the wire carries it: the
-  // message type byte, then the message, in base64
-  Future<String> encryptTo(String peer, String plain) =>
-      serial(peer, () => _seal(peer, plain));
+  // message type byte, then the message, in base64. a session a restore
+  // brought back is not sealed on: one is started afresh from the card
+  // [afresh] hands over, the old one archived so what the peer sealed on it
+  // still opens. with no card the seal fails with StartingAfresh
+  Future<String> encryptTo(
+    String peer,
+    String plain, {
+    Future<PreKeyBundle?> Function()? afresh,
+  }) => serial(peer, () async {
+    if (await sealsOnRestored(peer)) {
+      final card = afresh == null ? null : await afresh();
+      if (card == null) throw StartingAfresh(peer);
+      await SessionBuilder(
+        sessionStore,
+        preKeyStore,
+        signedPreKeyStore,
+        identityStore,
+        SignalProtocolAddress(peer, 1),
+      ).processPreKeyBundle(card);
+      dlog('signal: started afresh after a restore');
+    }
+    return _seal(peer, plain);
+  });
+
+  /// whether the session a seal to [peer] would use came back with a restore
+  Future<bool> sealsOnRestored(String peer) async =>
+      await _restoredBase(peer) != null;
+
+  // the base key of [peer]'s session when it came back with a restore
+  Future<String?> _restoredBase(String peer) async {
+    if (_restored.isEmpty) return null;
+    final addr = SignalProtocolAddress(peer, 1);
+    if (!await sessionStore.containsSession(addr)) return null;
+    final record = await sessionStore.loadSession(addr);
+    final base = _baseOf(record.sessionState);
+    return _restored.contains(base) ? base : null;
+  }
+
+  /// [peer] holds a session that came back with a restore and is due an
+  /// ask to start afresh: never asked, or the wait since the last ask is
+  /// over. the wait doubles from an hour up to a week for someone who
+  /// never answers
+  Future<bool> askDue(String peer, int now) async {
+    final at = await askDueAt(peer);
+    return at != null && now >= at;
+  }
+
+  /// when [peer] is next due an ask to start afresh, 0 when never asked.
+  /// null when no session of theirs came back with a restore
+  Future<int?> askDueAt(String peer) async {
+    final base = await _restoredBase(peer);
+    if (base == null) return null;
+    final a = _asks[base];
+    if (a == null) return 0;
+    final wait = min(
+      const Duration(hours: 1).inMilliseconds << min(a[1] - 1, 8),
+      const Duration(days: 7).inMilliseconds,
+    );
+    return a[0] + wait;
+  }
+
+  /// [peer] was asked to start afresh at [now], written down so a start
+  /// after this one does not ask again before the wait is over
+  Future<void> noteAsked(String peer, int now) async {
+    final base = await _restoredBase(peer);
+    if (base == null) return;
+    _asks[base] = [now, (_asks[base]?[1] ?? 0) + 1];
+    await _db.insert('${_prefix}signal_meta', {
+      'k': _kRestoredAsks,
+      'v': jsonEncode(_asks),
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  /// a restore's marks go once no session a seal would use came back with
+  /// it. the sessions of anyone [leaveOut] names are never asked to start
+  /// afresh, and do not hold them. true when they went, or there were none
+  Future<bool> dropRestoredWhenDone({
+    bool Function(String peer)? leaveOut,
+  }) async {
+    if (_restored.isEmpty) return true;
+    for (final r in await _db.query(
+      '${_prefix}sessions',
+      columns: ['address', 'record'],
+    )) {
+      if (leaveOut?.call(r['address'] as String) ?? false) continue;
+      try {
+        final record = SessionRecord.fromSerialized(r['record'] as Uint8List);
+        if (_restored.contains(_baseOf(record.sessionState))) return false;
+      } catch (_) {
+        // one that does not read is sealed on by no one
+      }
+    }
+    await _db.delete(
+      '${_prefix}signal_meta',
+      where: 'k IN (?, ?)',
+      whereArgs: [_kRestored, _kRestoredAsks],
+    );
+    _restored = const {};
+    _asks = {};
+    dlog('signal: every restored session started afresh');
+    return true;
+  }
+
+  /// every session held now came back with a restore: written down with
+  /// the sessions, so it holds across starts. an earlier restore's list
+  /// goes, its sessions are in this one's
+  Future<void> markRestored() async {
+    final keys = <String>{};
+    for (final r in await _db.query(
+      '${_prefix}sessions',
+      columns: ['record'],
+    )) {
+      try {
+        final record = SessionRecord.fromSerialized(r['record'] as Uint8List);
+        keys.add(_baseOf(record.sessionState));
+        for (final s in record.previousSessionStates) {
+          keys.add(_baseOf(s));
+        }
+      } catch (e) {
+        dlog('signal: a session not read (${e.runtimeType})');
+      }
+    }
+    await _db.insert('${_prefix}signal_meta', {
+      'k': _kRestored,
+      'v': jsonEncode(keys.toList()),
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+    await _db.delete(
+      '${_prefix}signal_meta',
+      where: 'k = ?',
+      whereArgs: [_kRestoredAsks],
+    );
+    _restored = keys;
+    _asks = {};
+    dlog('signal: ${keys.length} sessions came back with a restore');
+  }
+
+  Future<Set<String>> _loadRestored() async {
+    final rows = await _db.query(
+      '${_prefix}signal_meta',
+      where: 'k = ?',
+      whereArgs: [_kRestored],
+      limit: 1,
+    );
+    if (rows.isEmpty) return const {};
+    try {
+      return {for (final k in jsonDecode(rows.first['v'] as String)) '$k'};
+    } catch (_) {
+      return const {};
+    }
+  }
+
+  Future<Map<String, List<int>>> _loadAsks() async {
+    final rows = await _db.query(
+      '${_prefix}signal_meta',
+      where: 'k = ?',
+      whereArgs: [_kRestoredAsks],
+      limit: 1,
+    );
+    if (rows.isEmpty) return {};
+    try {
+      final j = jsonDecode(rows.first['v'] as String) as Map;
+      return {
+        for (final e in j.entries)
+          if (e.value case [final int at, final int n]) '${e.key}': [at, n],
+      };
+    } catch (_) {
+      return {};
+    }
+  }
 
   Future<String> _seal(String peer, String plain) async {
     final cipher = SessionCipher(
@@ -227,6 +416,41 @@ class SignalSession {
       return null;
     }
   }
+}
+
+/// a card's prekey bundle as signal takes it
+PreKeyBundle preKeyBundleOf(String bundleB64) {
+  final j =
+      jsonDecode(utf8.decode(base64Decode(bundleB64))) as Map<String, dynamic>;
+  return PreKeyBundle(
+    j['registrationId'] as int,
+    j['deviceId'] as int,
+    j['preKeyId'] as int,
+    Curve.decodePoint(base64Decode(j['preKeyPublic'] as String), 0),
+    j['signedPreKeyId'] as int,
+    Curve.decodePoint(base64Decode(j['signedPreKeyPublic'] as String), 0),
+    base64Decode(j['signedPreKeySignature'] as String),
+    IdentityKey(Curve.decodePoint(base64Decode(j['identityKey'] as String), 0)),
+  );
+}
+
+const _kRestored = 'restored_sessions';
+const _kRestoredAsks = 'restored_asks';
+
+// what names a session on both sides of it: the base key its opener made
+String _baseOf(SessionState s) => base64Encode(s.aliceBaseKey);
+
+/// the pref a restore leaves for the next start, which then marks the
+/// sessions it brought back as the store opens (bootstrap, restored)
+const kSessionsRestoredPref = 'signal.restored';
+
+/// a seal to [peer] waits for a session started afresh: the one held came
+/// back with a restore, and no card of theirs is kept to start one from
+class StartingAfresh implements Exception {
+  StartingAfresh(this.peer);
+  final String peer;
+  @override
+  String toString() => 'StartingAfresh: waiting for their card';
 }
 
 // prekey generation is heavy curve math, slow enough on weak phones for

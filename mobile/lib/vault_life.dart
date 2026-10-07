@@ -9,6 +9,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
@@ -276,9 +277,15 @@ const _peerRows = {
       'media_id IN (SELECT media_id FROM {s}.media_wants WHERE peer_id = ?1)',
   'media_wants': 'peer_id = ?1',
   'held_onion': 'peer_id = ?1',
+  // a block's spans and what it dropped go where the person goes
+  'block_spans': 'peer_id = ?1',
+  'blocked_drops': 'peer_id = ?1',
   'shield': 'halo_id = ?1',
   'vouches': 'halo_id = ?1 OR voucher_id = ?1',
+  'gone_in': 'peer_id = ?1',
 };
+// a person's block rows, by peer_id, which go with a group's people
+const _blockRows = ['block_spans', 'blocked_drops'];
 const _groupRows = {
   'group_members': 'group_id = ?1',
   'reactions': 'msg_uid IN {uids}',
@@ -415,7 +422,7 @@ class SqlChatMover implements ChatMover {
   }
 
   Future<void> _put(
-    Transaction t,
+    DatabaseExecutor t,
     String table,
     String where,
     ChatRef c,
@@ -449,7 +456,7 @@ class SqlChatMover implements ChatMover {
   // a chat's rows from one database into the other, its messages as new
   // rows with their search words, paths moved to the other's folders
   Future<void> _copy(
-    Transaction t,
+    DatabaseExecutor t,
     ChatRef c,
     String src,
     String dst,
@@ -459,6 +466,15 @@ class SqlChatMover implements ChatMover {
     if (c.group) {
       await _put(t, 'groups', 'group_id = ?1', c, src, dst, from, to);
       // members and senders, as keys only where the other side lacks them
+      final fresh = [
+        for (final r in await t.rawQuery(
+          'SELECT halo_id FROM $src.contacts WHERE halo_id IN '
+          '(${_peopleOf(src)}) AND halo_id NOT IN '
+          '(SELECT halo_id FROM $dst.contacts)',
+          [c.id],
+        ))
+          r['halo_id'] as String,
+      ];
       await t.execute(
         'INSERT OR IGNORE INTO $dst.contacts (halo_id, onion, xpub, '
         'first_seen, last_seen, back_paired, blocked, accepted) '
@@ -466,6 +482,11 @@ class SqlChatMover implements ChatMover {
         'blocked, 0 FROM $src.contacts WHERE halo_id IN (${_peopleOf(src)})',
         [c.id],
       );
+      // and their blocks with them, or one blocked lands there blocked with
+      // nothing of when, and what they sent in it comes in after an unblock
+      for (final who in fresh) {
+        await _carryBlocks(t, who, src, dst);
+      }
     } else {
       // a full row takes the place of a key-only one, never of a full one
       await _put(
@@ -508,7 +529,7 @@ class SqlChatMover implements ChatMover {
   }
 
   // search words for the rows a copy just made
-  Future<void> _index(Transaction t, String s, int after) async {
+  Future<void> _index(DatabaseExecutor t, String s, int after) async {
     var at = after;
     while (true) {
       final rows = await t.rawQuery(
@@ -534,7 +555,7 @@ class SqlChatMover implements ChatMover {
   // a chat's rows out of one database. someone a group there still names
   // keeps a key-only row, as any member you have not added. someone
   // nothing there names any more goes
-  Future<void> _drop(Transaction t, ChatRef c, String s) async {
+  Future<void> _drop(DatabaseExecutor t, ChatRef c, String s) async {
     final people = c.group
         ? {
             for (final r in await t.rawQuery(_peopleOf(s), [c.id]))
@@ -568,6 +589,11 @@ class SqlChatMover implements ChatMover {
       await t.execute('DELETE FROM $s.groups WHERE group_id = ?1', [c.id]);
       for (final who in people) {
         if (!await _unheld(t, s, who)) continue;
+        // a span left open here would hold over them if they were added
+        // again, and drop all they send
+        for (final table in _blockRows) {
+          await t.execute('DELETE FROM $s.$table WHERE peer_id = ?1', [who]);
+        }
         await t.execute('DELETE FROM $s.contacts WHERE halo_id = ?1', [who]);
         await t.execute('DELETE FROM $s.shield WHERE halo_id = ?1', [who]);
       }
@@ -595,6 +621,46 @@ class SqlChatMover implements ChatMover {
         r['blocked'],
       ],
     );
+  }
+
+  // someone's block spans and what they dropped, from one database into
+  // the other
+  Future<void> _carryBlocks(
+    DatabaseExecutor t,
+    String who,
+    String src,
+    String dst,
+  ) async {
+    for (final table in _blockRows) {
+      final cols = (await _shared(t, src, dst, table)).join(', ');
+      await t.execute(
+        'INSERT OR REPLACE INTO $dst.$table ($cols) '
+        'SELECT $cols FROM $src.$table WHERE peer_id = ?1',
+        [who],
+      );
+    }
+  }
+
+  // the rows of a move, copy then drop, on [t] with folders made up: what
+  // the tables do, without the files or the list
+  @visibleForTesting
+  Future<void> moveRowsOn(
+    DatabaseExecutor t,
+    ChatRef c, {
+    required bool intoVault,
+  }) async {
+    _liveAt = _Folders('/docs', '');
+    _vaultAt = _Folders('/docs', '_v');
+    final (src, dst) = intoVault ? ('main', 'v') : ('v', 'main');
+    await _copy(
+      t,
+      c,
+      src,
+      dst,
+      intoVault ? _liveAt : _vaultAt,
+      intoVault ? _vaultAt : _liveAt,
+    );
+    await _drop(t, c, src);
   }
 
   // a group there names them, as a member or a sender

@@ -18,6 +18,7 @@ import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/main.dart'
     show HaloDb, HaloEngine, useDatabasesForTest, useEngineForTest;
 import 'package:kryfo/session.dart';
+import 'package:kryfo/signal_session.dart' show kSessionsRestoredPref;
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -190,6 +191,9 @@ void main() {
     expect(read('halo.db'), 'everyday');
     expect(read('halo_d.db'), 'restored');
     expect(engine.restored, isEmpty);
+    // the everyday sessions are not the ones that came back
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.containsKey(kSessionsRestoredPref), isFalse);
   });
 
   test('a restore begun in the everyday app and finished in the decoy '
@@ -210,6 +214,9 @@ void main() {
     expect(read('halo_d.db'), 'decoy');
     expect(read('halo.db'), 'restored');
     expect(engine.restored, ['ed']);
+    // the next start marks the sessions the file brought back
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getBool(kSessionsRestoredPref), isTrue);
   });
 
   test('the everyday database takes nothing more once a restore lands on '

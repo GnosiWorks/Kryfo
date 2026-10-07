@@ -209,10 +209,23 @@ final Map<String, (String, int)> _shownForMsg = {};
 
 Future<void> clearNotificationsFor(String payload) async {
   _shownForMsg.removeWhere((_, v) => v.$1 == payload);
-  final ids = _shownFor.remove(payload);
-  if (ids == null) return;
+  final ids = _shownFor.remove(payload) ?? const <int>[];
   for (final id in ids) {
     await cancelWithRetry(() => notifPlugin.cancel(id: id), 'shade');
+  }
+  // what an earlier run or the receiving job showed, only the shade knows
+  try {
+    final active = await notifPlugin.getActiveNotifications();
+    for (final a in active) {
+      final id = a.id;
+      if (a.payload != payload || id == null || ids.contains(id)) continue;
+      await cancelWithRetry(
+        () => notifPlugin.cancel(id: id, tag: a.tag),
+        'shade',
+      );
+    }
+  } catch (e) {
+    dlog('shade: not read (${e.runtimeType})');
   }
 }
 

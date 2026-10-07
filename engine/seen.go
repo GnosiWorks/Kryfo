@@ -292,6 +292,8 @@ type inboxDone struct {
 	// app keeps it, and the runner's save that moves the file up after
 	at     nostr.Timestamp
 	resave func(int64)
+	// the stamp inside the wrap, the sender's own clock, for the app
+	sent int64
 }
 
 // remembers every event of a batch the poll handed over, one write per file

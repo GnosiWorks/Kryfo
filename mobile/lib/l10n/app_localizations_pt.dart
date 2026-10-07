@@ -6181,6 +6181,30 @@ class AppLocalizationsPt extends AppLocalizations {
   String get kryfoLinkTextNotNow => 'Agora não';
 
   @override
+  String kryfoLinkTextJoinRoom(Object roomName) {
+    return 'Entrar em $roomName?';
+  }
+
+  @override
+  String get kryfoLinkTextThisIsARoom =>
+      'Este é um convite para uma sala temporária. Só entre se você souber de onde o link veio.';
+
+  @override
+  String kryfoLinkTextYouAlreadyHave(Object who) {
+    return 'Você já tem $who';
+  }
+
+  @override
+  String kryfoLinkTextNotTheOne(Object who) {
+    return 'Não é $who das suas conversas';
+  }
+
+  @override
+  String kryfoLinkTextSomeoneElse(Object who) {
+    return 'Você chama alguém das suas conversas de $who. Este link é de outra pessoa. Só adicione se você souber de onde ele veio.';
+  }
+
+  @override
   String kryfoLinkTextJoin(Object roomName) {
     return 'Entrar em $roomName';
   }

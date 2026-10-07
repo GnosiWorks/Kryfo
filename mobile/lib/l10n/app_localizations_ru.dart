@@ -6258,6 +6258,30 @@ class AppLocalizationsRu extends AppLocalizations {
   String get kryfoLinkTextNotNow => 'Не сейчас';
 
   @override
+  String kryfoLinkTextJoinRoom(Object roomName) {
+    return 'Войти в «$roomName»?';
+  }
+
+  @override
+  String get kryfoLinkTextThisIsARoom =>
+      'Это приглашение в одноразовую комнату. Входи, только если знаешь, откуда эта ссылка.';
+
+  @override
+  String kryfoLinkTextYouAlreadyHave(Object who) {
+    return '$who уже есть в твоих чатах';
+  }
+
+  @override
+  String kryfoLinkTextNotTheOne(Object who) {
+    return 'Это не $who из твоих чатов';
+  }
+
+  @override
+  String kryfoLinkTextSomeoneElse(Object who) {
+    return 'В твоих чатах под именем $who записан другой человек. Эта ссылка от кого-то ещё. Добавляй, только если знаешь, откуда она.';
+  }
+
+  @override
   String kryfoLinkTextJoin(Object roomName) {
     return 'Войти в «$roomName»';
   }

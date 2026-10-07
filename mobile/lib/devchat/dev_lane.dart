@@ -154,7 +154,12 @@ class DevLane {
     }
     final out = frame(wrapped, anon: s.anon);
     if (out == null) throw DevSealRefused(DevRefusal.frame);
-    final cipher = await s.store.encryptTo(peer, out);
+    // a session a restore brought back starts afresh from his pinned card
+    final cipher = await s.store.encryptTo(
+      peer,
+      out,
+      afresh: () async => preKeyBundleOf(s.key.bundle),
+    );
     tokens.mint(cipher);
     return cipher;
   }

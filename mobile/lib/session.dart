@@ -15,6 +15,7 @@ import 'dlog.dart';
 import 'main.dart' show HaloDb, kFrameReaction, kFrameUnsend;
 import 'media_send.dart' show cancelMediaSend, mediaInflight;
 import 'polls.dart' show PollSpec, PollVote;
+import 'scam_prefs.dart' show loadScamShieldOn;
 import 'search.dart' show SearchKind;
 
 class Session {
@@ -206,8 +207,9 @@ class Session {
   Future<void> setAtmosphere(String peerId, String atmosphere) =>
       _ofPeer(peerId).setAtmosphere(peerId, atmosphere);
   // their timed messages in the other container's groups start counting
-  // too. the block holds whatever happens there: one shut meanwhile
-  // starts them a day after they came, or at its next sweep
+  // too, and no receipt queued for them there goes. the block holds
+  // whatever happens there: one shut meanwhile starts them a day after
+  // they came, or at its next sweep
   Future<void> setBlocked(String haloId, bool blocked) async {
     final own = _ofPeer(haloId);
     await own.setBlocked(haloId, blocked);
@@ -216,6 +218,7 @@ class Session {
       if (identical(d, own)) continue;
       try {
         await d.lightBurnsFrom(haloId);
+        await d.dropReceiptsTo(haloId);
       } catch (e) {
         dlog('block: other container not lit (${e.runtimeType})');
       }
@@ -238,6 +241,10 @@ class Session {
       _ofPeer(haloId).setVerified(haloId, verified);
   Future<Map<String, Object?>?> shieldFor(String haloId) =>
       _ofPeer(haloId).shieldFor(haloId);
+  // what the shield made of someone, while it is on. off, no verdict shows,
+  // safe or not, whatever it said while it ran
+  Future<Map<String, Object?>?> shownShieldFor(String haloId) async =>
+      await loadScamShieldOn(container) ? shieldFor(haloId) : null;
   Future<List<({int id, String cipher})>> heldOf(String peerId) =>
       _ofPeer(peerId).heldOf(peerId);
   Future<void> forgetHeld(String peerId, int id) =>
@@ -289,6 +296,8 @@ class Session {
       _ofGroup(groupId).markRoomSeen(groupId);
   Future<void> setRoomJoining(String groupId, int? at) =>
       _ofGroup(groupId).setRoomJoining(groupId, at);
+  Future<bool> restartRoomJoining(String groupId, int at) =>
+      _ofGroup(groupId).restartRoomJoining(groupId, at);
   Future<void> removeGroupMember(String groupId, String haloId) =>
       _ofGroup(groupId).removeGroupMember(groupId, haloId);
   Future<void> renameGroup(String groupId, String name) =>

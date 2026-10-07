@@ -7745,6 +7745,46 @@
   "@kryfoLinkTextNotNow": {
     "description": "widgets/kryfo_link_text.dart"
   },
+  "kryfoLinkTextJoinRoom": "Join {roomName}?",
+  "@kryfoLinkTextJoinRoom": {
+    "description": "widgets/kryfo_link_text.dart: a room link opened from another app or a web page",
+    "placeholders": {
+      "roomName": {
+        "type": "Object"
+      }
+    }
+  },
+  "kryfoLinkTextThisIsARoom": "This is an invite to a burner room. Join only if you know where the link came from.",
+  "@kryfoLinkTextThisIsARoom": {
+    "description": "widgets/kryfo_link_text.dart: a room link opened from another app or a web page"
+  },
+  "kryfoLinkTextYouAlreadyHave": "You already have {who}",
+  "@kryfoLinkTextYouAlreadyHave": {
+    "description": "widgets/kryfo_link_text.dart: an invite opened from outside names a contact already here, on the same key",
+    "placeholders": {
+      "who": {
+        "type": "Object"
+      }
+    }
+  },
+  "kryfoLinkTextNotTheOne": "Not the {who} in your chats",
+  "@kryfoLinkTextNotTheOne": {
+    "description": "widgets/kryfo_link_text.dart: sheet title, an invite opened from outside gives the words of a contact here with another key",
+    "placeholders": {
+      "who": {
+        "type": "Object"
+      }
+    }
+  },
+  "kryfoLinkTextSomeoneElse": "You call someone in your chats {who}. This link is from someone else. Add them only if you know where it came from.",
+  "@kryfoLinkTextSomeoneElse": {
+    "description": "widgets/kryfo_link_text.dart: an invite opened from outside gives words the person uses as the name of another contact",
+    "placeholders": {
+      "who": {
+        "type": "Object"
+      }
+    }
+  },
   "kryfoLinkTextJoin": "Join {roomName}",
   "@kryfoLinkTextJoin": {
     "description": "widgets/kryfo_link_text.dart",

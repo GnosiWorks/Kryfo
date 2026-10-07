@@ -147,6 +147,10 @@ Future<List<String>> _fill(MemDb db, String id, Directory dir) async {
     'at': 1,
   });
   await db.insert('held_onion', {'peer_id': id, 'cipher': 'c-$id', 'at': 1});
+  // a block once, and what came while it held
+  await db.insert('block_spans', {'peer_id': id, 'from_at': 1, 'to_at': 2});
+  await db.insert('block_spans', {'peer_id': id, 'from_at': 3});
+  await db.insert('blocked_drops', {'peer_id': id, 'uid': '$id-9', 'at': 2});
   await db.insert('shield', {
     'halo_id': id,
     'headline': 'h',
@@ -212,6 +216,8 @@ Map<String, int> _named(MemDb db, String id) {
     'frames_out': ['peer_id'],
     'media_wants': ['peer_id'],
     'held_onion': ['peer_id'],
+    'block_spans': ['peer_id'],
+    'blocked_drops': ['peer_id'],
     'shield': ['halo_id'],
     'vouches': ['halo_id', 'voucher_id'],
     'group_members': ['halo_id'],
@@ -541,6 +547,8 @@ void main() {
             'media_wants',
             'media_chunks',
             'held_onion',
+            'block_spans',
+            'blocked_drops',
             'msg_fts',
             'shield',
             'vouches',

@@ -255,13 +255,22 @@ class _SearchScreenState extends State<SearchScreen> {
     final names = <_Name>[];
     final needle = fold(q.trim());
     if (needle.isNotEmpty && kind == SearchKind.all) {
+      final now = DateTime.now().millisecondsSinceEpoch;
       for (final g in appState.groups) {
         if (fold(g.name).contains(needle)) {
           names.add(
             _Name(
               groupId: g.groupId,
               name: g.name,
-              sub: l10n.homeMembers(g.memberCount),
+              // a room not let in yet has no members to count
+              sub: switch (roomJoinState(
+                g.expiresAt == null ? null : g.joiningAt,
+                now,
+              )) {
+                RoomJoin.waiting => l10n.roomJoinWaitingToJoin,
+                RoomJoin.silent => l10n.roomJoinNotAnswering,
+                RoomJoin.live => l10n.homeMembers(g.memberCount),
+              },
             ),
           );
         }

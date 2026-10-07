@@ -192,7 +192,14 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   void _knockAgain() {
     HapticFeedback.selectionClick();
     setState(() => _joiningAt = DateTime.now().millisecondsSinceEpoch);
-    unawaited(appState.retryRoomJoin(widget.groupId));
+    final id = widget.groupId;
+    unawaited(() async {
+      try {
+        await appState.retryRoomJoin(id);
+      } catch (e) {
+        dlog('room join again: ${e.runtimeType}');
+      }
+    }());
   }
 
   // nothing in it to lose: the room goes from this phone, and the screen
@@ -911,7 +918,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final next = <String, ShieldFlag>{};
     for (final id in senders) {
       if (await session.isAccepted(id)) continue;
-      final f = ShieldFlag.fromRow(await session.shieldFor(id));
+      final f = ShieldFlag.fromRow(await session.shownShieldFor(id));
       if (f != null) next[id] = f;
     }
     if (!mounted) return;

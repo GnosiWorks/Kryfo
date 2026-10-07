@@ -1147,7 +1147,7 @@ class _ChatScreenState extends State<ChatScreen>
 
   Future<void> _loadShield() async {
     if (await session.isAccepted(widget.peerHaloId)) return;
-    final row = await session.shieldFor(widget.peerHaloId);
+    final row = await session.shownShieldFor(widget.peerHaloId);
     final f = ShieldFlag.fromRow(row);
     final clean = ShieldFlag.cleanRow(row);
     if (mounted && (f != _flag || clean != _shieldClean)) {
@@ -2233,10 +2233,13 @@ class _ChatScreenState extends State<ChatScreen>
     // a reloaded 'sending' row has no send future left to resolve it, so it
     // becomes failed (or parked) and retryable
     final backPaired = await session.isBackPaired(widget.peerHaloId);
+    // a text that waits on their card after a restore is going, not dead
+    final waits = appState.waitsForCard(widget.peerHaloId);
     for (final m in loaded) {
       // a text this screen is still sending keeps its pill: a failed mark
       // would make the retry send it twice. files are sendLooksDead's
       if (m.msgUid != null && _textInflight.contains(m.msgUid)) continue;
+      if (waits && m.mediaPath == null && m.filePath == null) continue;
       if (m.direction == 'out' &&
           m.sending &&
           appState.sendLooksDead(m.when, msgUid: m.msgUid)) {
@@ -2532,6 +2535,8 @@ class _ChatScreenState extends State<ChatScreen>
         cipher = await signalEncrypt(widget.peerHaloId, wrapped);
       } catch (e) {
         if (!mounted) return;
+        // waiting on their card: still going, as the first send has it
+        if (e is StartingAfresh) return;
         setState(() {
           msg.sending = false;
           msg.failed = true;
@@ -3513,9 +3518,13 @@ class _ChatScreenState extends State<ChatScreen>
       } catch (e) {
         if (!mounted) return;
         setState(() {
+          sealing(false);
+          // one waiting on their card after a restore is no broken session
+          // and no failed send: it stays going, and the outbox sends it
+          // once their card is here
+          if (e is StartingAfresh) return;
           msg.sending = false;
           msg.failed = true;
-          sealing(false);
           if (devKeyFailed(e)) {
             _devKeyFailed = true;
           } else {

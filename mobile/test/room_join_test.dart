@@ -5,6 +5,8 @@
 // takes everything, and the wait outlives a restart. the creator runs here
 // too, on its own stand-ins, so the roster that lets the joiner in is the
 // one a creator really sends. the engine and the databases are stand-ins
+import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
@@ -56,6 +58,10 @@ class _Engine implements HaloEngine {
   final forgot = <String>[];
   final sent = <({String priv, String to, String msg})>[];
   final knocks = <({String priv, String to, String fc, String msg})>[];
+  // the relays: what they answer a knock, and a hold on it or on a frame
+  String answer = 'ok';
+  Completer<void>? knockGate;
+  Completer<void>? sendGate;
 
   @override
   ({String priv, String pub})? roomKeygen() =>
@@ -70,6 +76,7 @@ class _Engine implements HaloEngine {
   void roomForgetBg(String priv, List<String> members) => forgot.add(priv);
   @override
   Future<String> roomSend(String priv, String peerPub, String msg) async {
+    await sendGate?.future;
     sent.add((priv: priv, to: peerPub, msg: msg));
     return 'ok';
   }
@@ -81,12 +88,40 @@ class _Engine implements HaloEngine {
     String fcPk,
     String msg,
   ) async {
+    await knockGate?.future;
     knocks.add((priv: priv, to: peerPub, fc: fcPk, msg: msg));
-    return 'ok';
+    return answer;
   }
 
   @override
   dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
+}
+
+// rows where a let-in lands right after the room is read, and where the
+// next number can be held
+class _Racing extends ArrivalRows {
+  _Racing() : super(HaloContainer.everyday);
+  bool letInAfterRead = false;
+  Completer<void>? seqGate;
+
+  @override
+  Future<Map<String, Object?>?> getGroup(String groupId) async {
+    final g = await super.getGroup(groupId);
+    if (!letInAfterRead || g == null) return g;
+    letInAfterRead = false;
+    final read = {...g};
+    groupRows[groupId]!['joining_at'] = null;
+    return read;
+  }
+
+  @override
+  Future<int> nextRoomSeq(String groupId) async {
+    // the next number only, the join's
+    final g = seqGate;
+    seqGate = null;
+    await g?.future;
+    return super.nextRoomSeq(groupId);
+  }
 }
 
 // one phone: its database, its engine and its app. [use] puts it on
@@ -343,6 +378,7 @@ void main() {
     await me.app.retryRoomJoin(_room);
     expect(_stateOf(me), RoomJoin.waiting);
     expect(me.room!['joining_at'] as int, greaterThan(long));
+    await _settle();
     expect(me.engine.knocks, hasLength(2));
     final (a, b) = (me.engine.knocks.first, me.engine.knocks.last);
     expect((b.priv, b.to, b.fc), (a.priv, a.to, a.fc));
@@ -356,6 +392,7 @@ void main() {
 
     // the link again knocks again too, and does not say "already in"
     expect(await me.app.joinRoom(_link()), '');
+    await _settle();
     expect(me.engine.knocks, hasLength(3));
 
     // and a creator who took the first knock answers the next one
@@ -426,6 +463,39 @@ void main() {
     expect((await _Rows(mem).getGroup(_room))!['joining_at'], isNull);
   });
 
+  test('on disk, try again restarts only a wait, and a failed join ends only '
+      'its own', () async {
+    final mem = MemDb();
+    final db = _Rows(mem);
+    final at = DateTime.now().millisecondsSinceEpoch - 600000;
+    await db.createRoom(
+      groupId: _room,
+      name: 'Friday',
+      priv: 'mypriv',
+      pub: _mine,
+      expiresAt: at + 3600000,
+      creatorPub: _creator,
+      fcPk: _fc,
+      members: [_creator, _mine],
+      joiningAt: at,
+    );
+    Future<Object?> joining() async =>
+        (await db.getGroup(_room))!['joining_at'];
+    expect(await db.restartRoomJoining(_room, at + 1), isTrue);
+    expect(await joining(), at + 1);
+    // an older join failing leaves the newer wait alone
+    expect(await db.failRoomJoining(_room, at), isFalse);
+    expect(await joining(), at + 1);
+    expect(await db.failRoomJoining(_room, at + 1), isTrue);
+    expect(await joining(), at + 1 - kRoomJoinWait.inMilliseconds);
+    // let in: neither brings the wait back
+    await db.setRoomJoining(_room, null);
+    expect(await db.restartRoomJoining(_room, at + 2), isFalse);
+    expect(await db.failRoomJoining(_room, at + 2), isFalse);
+    expect(await joining(), isNull);
+    expect(await db.restartRoomJoining('nothere0001', at), isFalse);
+  });
+
   final sql = RealSqlite.open();
   test(
     'a phone from 62 gets the column, and keeps its rooms',
@@ -464,6 +534,169 @@ void main() {
     },
     skip: sql == null ? 'no sqlite library here' : null,
   );
+
+  test('the link again does not wait for the relays', () async {
+    final me = await _Phone.make();
+    await me.app.joinRoom(_link());
+    await _settle();
+    me.room!['joining_at'] = DateTime.now().millisecondsSinceEpoch - 600000;
+    // a publish that takes its time, as a slow relay's does
+    final gate = me.engine.knockGate = Completer<void>();
+    expect(
+      await me.app.joinRoom(_link()).timeout(const Duration(seconds: 2)),
+      '',
+    );
+    expect(_stateOf(me), RoomJoin.waiting);
+    await me.app.retryRoomJoin(_room).timeout(const Duration(seconds: 2));
+    expect(me.engine.knocks, hasLength(1));
+    gate.complete();
+    await _settle();
+    expect(me.engine.knocks, hasLength(3));
+    expect(_stateOf(me), RoomJoin.waiting);
+  });
+
+  test('a roster for a room on its way out says nothing', () async {
+    final me = await _Phone.make();
+    await me.app.joinRoom(_link());
+    await _settle();
+    // the leave is still going out when the creator's roster comes
+    final gate = me.engine.sendGate = Completer<void>();
+    final leaving = me.app.leaveRoom(_room);
+    await _settle();
+    expect(me.rows.groupRows, isNotEmpty);
+    await _fromRoom(me, _creator, await _roster([_creator, _mine], stamp: 5));
+    expect(said, isEmpty);
+    expect(me.room!['joining_at'], isNotNull);
+    gate.complete();
+    await leaving;
+    expect(me.rows.groupRows, isEmpty);
+    expect(said, isEmpty);
+  });
+
+  test('try again keeps a let-in that lands while it reads the room', () async {
+    final rows = _Racing();
+    final me = await _Phone.make(rows: rows);
+    await me.app.joinRoom(_link());
+    await _settle();
+    me.room!['joining_at'] = DateTime.now().millisecondsSinceEpoch - 600000;
+    rows.letInAfterRead = true;
+    await me.app.retryRoomJoin(_room);
+    await _settle();
+    expect(me.room!['joining_at'], isNull);
+    expect(_stateOf(me), RoomJoin.live);
+    // and nothing knocked for a room it is in
+    expect(me.engine.knocks, hasLength(1));
+  });
+
+  test('a join still being made when the room is left is never sent', () async {
+    final rows = _Racing();
+    final me = await _Phone.make(rows: rows);
+    final gate = rows.seqGate = Completer<void>();
+    await me.app.joinRoom(_link());
+    await me.app.leaveRoom(_room);
+    expect(me.rows.groupRows, isEmpty);
+    gate.complete();
+    await _settle();
+    // no knock for a key nobody holds, and no number kept for the room
+    expect(me.engine.knocks, isEmpty);
+    expect(rows.roomSeqs, isEmpty);
+    expect(me.rows.groupRows, isEmpty);
+  });
+
+  test('a join that does not go leaves the room not answering at once, and '
+      'a roster later still lets it in', () async {
+    final me = await _Phone.make();
+    me.engine.answer = 'error: no relay';
+    await me.app.joinRoom(_link());
+    await _settle();
+    expect(me.engine.knocks, hasLength(1));
+    expect(_stateOf(me), RoomJoin.silent);
+    expect(me.app.groups.single.joiningAt, me.room!['joining_at']);
+    // try again, and it fails again: not answering again at once
+    await me.app.retryRoomJoin(_room);
+    expect(_stateOf(me), RoomJoin.waiting);
+    await _settle();
+    expect(_stateOf(me), RoomJoin.silent);
+    // the relays back: try again waits as it should
+    me.engine.answer = 'ok';
+    await me.app.retryRoomJoin(_room);
+    await _settle();
+    expect(_stateOf(me), RoomJoin.waiting);
+    await _fromRoom(me, _creator, await _roster([_creator, _mine], stamp: 5));
+    expect(_stateOf(me), RoomJoin.live);
+    expect(said, hasLength(1));
+  });
+
+  test('the same link twice at once is one join', () async {
+    final me = await _Phone.make();
+    me.engine.keys.add((priv: 'mypriv2', pub: _other));
+    final both = await Future.wait([
+      me.app.joinRoom(_link()),
+      me.app.joinRoom(_link()),
+    ]);
+    await _settle();
+    expect(both, ['', '']);
+    expect(me.room!['room_pub'], _mine);
+    expect(me.engine.keys, hasLength(1));
+    expect(me.engine.knocks, hasLength(1));
+    // and once the first is done, the link knocks again as before
+    me.room!['joining_at'] = DateTime.now().millisecondsSinceEpoch - 600000;
+    expect(await me.app.joinRoom(_link()), '');
+    await _settle();
+    expect(me.engine.knocks, hasLength(2));
+  });
+
+  test('nothing goes into a room not let in yet', () async {
+    final me = await _Phone.make();
+    await me.app.joinRoom(_link());
+    await _settle();
+    expect(await me.app.sendToGroup(_room, 'anyone here?'), isFalse);
+    final file = File('${docs.path}/photo.jpg')..writeAsBytesSync([1, 2, 3]);
+    expect(
+      await me.app.sendMediaToGroup(_room, file.path, msgUid: 'ph1'),
+      'error: waiting',
+    );
+    expect(me.rows.msgs, isEmpty);
+    expect(me.engine.sent, isEmpty);
+  });
+
+  test('a room frame carries no face, and a member\'s message lands without '
+      'one', () async {
+    final wrapped = await wrapMessage(
+      'hello all',
+      msgUid: 'av1',
+      groupId: _room,
+      supporterBadge: 'gold',
+      sender: SenderInfo(
+        haloId: 'me',
+        edPub: 'ed',
+        onion: 'me.onion',
+        xPub: 'xme',
+        avatar: 7,
+      ),
+    );
+    Map<String, Object?> body(String w) =>
+        jsonDecode(w.substring('halo/1:'.length)) as Map<String, Object?>;
+    expect(body(wrapped)['av'], 7);
+    final out = roomFrame(wrapped, _creator)!;
+    for (final k in ['o', 'e', 'p', 'bg', 'av', 'rp']) {
+      expect(body(out).containsKey(k), isFalse, reason: k);
+    }
+    expect(unwrapMessage(out).senderAvatar, isNull);
+
+    // let in, the frame lands: no face kept for the room key
+    final me = await _Phone.make();
+    await me.app.joinRoom(_link());
+    await _settle();
+    await _fromRoom(me, _creator, await _roster([_creator, _mine], stamp: 5));
+    expect(_stateOf(me), RoomJoin.live);
+    await _fromRoom(me, _creator, out);
+    expect(me.rows.msgs.map((m) => m['plaintext']), ['hello all']);
+    expect(
+      me.rows.calls.where((c) => c.startsWith('setContactAvatar')),
+      isEmpty,
+    );
+  });
 
   test('a waiting room ends on time like any room', () async {
     final me = await _Phone.make();

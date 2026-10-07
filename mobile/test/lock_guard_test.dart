@@ -29,6 +29,33 @@ void main() {
     expect(done.where((d) => d == 'dup').length, 1);
   });
 
+  test('of the links held under the lock only the latest is asked about, '
+      'and the same one twice once', () async {
+    var locked = true;
+    final g = LockGuard(isLocked: () => locked);
+    final done = <String>[];
+    Future<void> link(String u) => g.afterUnlock(
+      () async => done.add(u),
+      key: 'link:$u',
+      slot: 'outside-link',
+    );
+    await link('a');
+    await link('b');
+    await link('c');
+    await g.afterUnlock(() async => done.add('tap'), key: 'chat:a');
+    locked = false;
+    g.lifted();
+    await Future<void>.delayed(Duration.zero);
+    expect(done, ['c', 'tap']);
+    // the same link by its second route, just after, is not asked again
+    await link('c');
+    expect(done, ['c', 'tap']);
+    // while open each link is its own
+    await link('d');
+    await link('e');
+    expect(done, ['c', 'tap', 'd', 'e']);
+  });
+
   test('open menus close once on lock', () {
     final g = LockGuard(isLocked: () => false);
     var menu = 0, player = 0;

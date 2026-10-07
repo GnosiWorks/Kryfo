@@ -186,15 +186,20 @@ Future<void> _until(bool Function() done) async {
   }
 }
 
-Future<String> _bundleOf() async {
+// someone's card and the x key it is made from, as hex
+Future<({String card, String x})> _keysOf() async {
   final pair = Curve.generateKeyPair();
+  final x = pair.publicKey.serialize().sublist(1);
   final them = SignalSession();
   await them.bootstrap(
     database: MemDb(),
-    xPubBytes: pair.publicKey.serialize().sublist(1),
+    xPubBytes: x,
     xPrivBytes: pair.privateKey.serialize(),
   );
-  return makePreKeyBundleB64(them);
+  return (
+    card: await makePreKeyBundleB64(them),
+    x: [for (final b in x) b.toRadixString(16).padLeft(2, '0')].join(),
+  );
 }
 
 Map<String, Object?> _owed(MemDb mem, String member, {String uid = _uid}) => mem
@@ -673,14 +678,22 @@ void main() {
             SignalProtocolAddress('carol', 1),
           ),
         );
-        // carol's keys come in over the relay and the session is made
+        // carol's keys come in over the relay and the session is made. her
+        // card carries the key her x key makes, as a real one does
+        final k = await _keysOf();
+        await mem.update(
+          'contacts',
+          {'xpub': k.x},
+          where: 'halo_id = ?',
+          whereArgs: ['carol'],
+        );
         await app.receiveRelay([
           (
-            peer: 'x-carol',
+            peer: k.x,
             cipher: jsonEncode({
               'halo_ctl': 'bundle',
               'from': 'carol',
-              'bundle': await _bundleOf(),
+              'bundle': k.card,
               'want': true,
             }),
           ),
