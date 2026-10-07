@@ -73,7 +73,7 @@
             android:foregroundServiceType="specialUse">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="halo private messenger - tor and nostr background relay so encrypted messages can arrive while the app is closed" />
+                android:value="Kryfo private messenger: keeps its own encrypted connection to its message relays open, over tor by default, so messages arrive while the app is closed, with no push service. Always on is the default in Getting messages; the user can switch to check-ins, which stops it." />
         </service>
         <receiver
             android:name=".BootReceiver"

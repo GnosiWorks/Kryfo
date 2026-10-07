@@ -5,7 +5,7 @@
         <service android:name=".HaloListenerService">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Kryfo private messenger: keeps its own encrypted connection over tor and nostr relays open so messages arrive while the app is closed, with no push service. The user turns it on as Always on in Getting messages and can switch to check-ins."
+                android:value="Kryfo private messenger: keeps its own encrypted connection to its message relays open, over tor by default, so messages arrive while the app is closed, with no push service. Always on is the default in Getting messages; the user can switch to check-ins, which stops it."
                 tools:replace="android:value" />
         </service>
     </application>
