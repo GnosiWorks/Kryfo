@@ -6154,6 +6154,21 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bu, geçici bir odaya davet. Yalnızca bağlantının nereden geldiğini biliyorsan katıl.';
 
   @override
+  String kryfoLinkTextYouAlreadyHave(Object who) {
+    return '$who zaten sohbetlerinde var';
+  }
+
+  @override
+  String kryfoLinkTextNotTheOne(Object who) {
+    return 'Bu, sohbetlerindeki $who değil';
+  }
+
+  @override
+  String kryfoLinkTextSomeoneElse(Object who) {
+    return 'Sohbetlerindeki birine $who diyorsun. Bu bağlantı başka birinden. Yalnızca nereden geldiğini biliyorsan ekle.';
+  }
+
+  @override
   String kryfoLinkTextJoin(Object roomName) {
     return 'Katıl: $roomName';
   }

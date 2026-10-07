@@ -1157,7 +1157,7 @@ class HaloDb implements GroupOwedStore {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 63,
+      version: 64,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -1303,13 +1303,13 @@ class HaloDb implements GroupOwedStore {
         await _supportTables(db);
         await groupOwedTables(db);
         await groupCtlTables(db);
-        await _blockTables(db);
+        await blockTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
         // 62 runs last, below: its index names columns older steps add
-        if (oldV < 63) {
+        if (oldV < 64) {
           // what someone blocked sent while it held, and when it held
-          await _blockTables(db, seed: true);
+          await blockTables(db, seed: true);
         }
         if (oldV < 61) {
           // the number on the next room frame this phone sends
@@ -2244,7 +2244,7 @@ class HaloDb implements GroupOwedStore {
   }
 
   // whether [at], by the sender's own clock, falls in a time they were
-  // blocked here
+  // blocked here and that has ended
   Future<bool> blockedAt(String haloId, int at) async {
     try {
       final db = await open();
@@ -2252,7 +2252,7 @@ class HaloDb implements GroupOwedStore {
         'block_spans',
         columns: ['from_at'],
         where: kBlockedAtWhere,
-        whereArgs: [haloId, at, at],
+        whereArgs: blockedAtArgs(haloId, at),
         limit: 1,
       );
       return r.isNotEmpty;
@@ -2265,19 +2265,16 @@ class HaloDb implements GroupOwedStore {
   // what came from someone while they were blocked, by uid. one that comes
   // again keeps its row a while longer, so a sender that retries for weeks
   // is still turned away
+  int _dropsSweptAt = 0;
   Future<void> noteBlockedDrop(String haloId, String uid) async {
     try {
       final db = await open();
-      final now = DateTime.now().millisecondsSinceEpoch;
-      await db.insert('blocked_drops', {
-        'peer_id': haloId,
-        'uid': uid,
-        'at': now,
-      }, conflictAlgorithm: ConflictAlgorithm.replace);
-      await db.delete(
-        'blocked_drops',
-        where: 'at < ?',
-        whereArgs: [now - 60 * 86400000],
+      _dropsSweptAt = await noteBlockedDropIn(
+        db,
+        haloId,
+        uid,
+        now: DateTime.now().millisecondsSinceEpoch,
+        sweptAt: _dropsSweptAt,
       );
     } catch (e) {
       dlog('blocked drop: $e');
@@ -5416,15 +5413,64 @@ const kSeedBlockSpans =
     'INSERT INTO block_spans (peer_id, from_at) '
     'SELECT halo_id, 0 FROM contacts WHERE blocked = 1';
 
-// a span of [peer_id] holding at a time given twice
+// an ended span of [peer_id] that held at a time, given twice
+// (blockedAtArgs). an open one adds nothing: isBlocked is asked first, and
+// one left open by a row that went must not hold over a later add
 const kBlockedAtWhere =
-    'peer_id = ? AND from_at <= ? AND (to_at IS NULL OR to_at > ?)';
+    'peer_id = ? AND from_at <= ? AND to_at IS NOT NULL AND to_at > ?';
+
+// the stamp is the sender's clock, which may run behind this one. what
+// they wrapped in the last minutes before the unblock is let in, or a slow
+// clock costs them what they sent once they were free to
+const kUnblockGrace = 10 * 60 * 1000;
+
+// the arguments of kBlockedAtWhere for a stamp [at]: the span's end has
+// to be past it by the grace
+List<Object> blockedAtArgs(String haloId, int at) => [
+  haloId,
+  at,
+  at + kUnblockGrace,
+];
+
+// a contact row that goes ends its open span, so what is left of a block
+// never holds over someone added again
+const kCloseSpansOnDelete = '''
+  CREATE TRIGGER IF NOT EXISTS block_spans_row_gone
+  AFTER DELETE ON contacts
+  BEGIN
+    UPDATE block_spans
+    SET to_at = CAST(strftime('%s', 'now') AS INTEGER) * 1000
+    WHERE peer_id = OLD.halo_id AND to_at IS NULL;
+  END
+''';
+
+// keeps [uid] as dropped from [haloId] at [now], and at most once a day
+// lets go of what has not come again in sixty days. when it last swept
+Future<int> noteBlockedDropIn(
+  DatabaseExecutor db,
+  String haloId,
+  String uid, {
+  required int now,
+  required int sweptAt,
+}) async {
+  await db.rawInsert(
+    'INSERT OR REPLACE INTO blocked_drops (peer_id, uid, at) '
+    'VALUES (?, ?, ?)',
+    [haloId, uid, now],
+  );
+  if (now - sweptAt < 86400000) return sweptAt;
+  await db.rawDelete('DELETE FROM blocked_drops WHERE at < ?', [
+    now - 60 * 86400000,
+  ]);
+  return now;
+}
 
 // when each block held, and the uids of what came while it did. a copy of
-// one, or one stamped inside a block, is dropped after an unblock as it was
-// during it. someone already blocked is taken as blocked from the start.
-// wrapped: without them a block still drops what comes while it holds
-Future<void> _blockTables(Database db, {bool seed = false}) async {
+// one, or one stamped inside a block that ended, is dropped after an
+// unblock as it was during it. someone already blocked is taken as blocked
+// from the start. wrapped: without them a block still drops what comes
+// while it holds
+Future<void> blockTables(DatabaseExecutor db, {bool seed = false}) async {
   try {
     await db.execute('''
       CREATE TABLE IF NOT EXISTS block_spans (
@@ -5444,6 +5490,11 @@ Future<void> _blockTables(Database db, {bool seed = false}) async {
         PRIMARY KEY (peer_id, uid)
       )
     ''');
+    // the daily sweep goes by age
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS blocked_drops_at ON blocked_drops(at)',
+    );
+    await db.execute(kCloseSpansOnDelete);
     if (seed) await db.execute(kSeedBlockSpans);
   } catch (e) {
     dlog('block tables: $e');
@@ -6312,6 +6363,8 @@ Future<String> buildHaloUriV3(String id, String onion, int fcCounter) async {
 String haloUriV3(String id, String onion, String bundle, String fc) =>
     'kryfo://share?id=$id&onion=$onion&v=3&bundle=$bundle&fc=$fc';
 
+// an invite's id is three words, as every version has made them: anything
+// else would be shown to the person as if it were someone's name
 Map<String, String>? parseHaloUri(String raw) {
   raw = raw.trim();
   if (!raw.startsWith('kryfo://share')) return null;
@@ -6320,6 +6373,7 @@ Map<String, String>? parseHaloUri(String raw) {
     final id = uri.queryParameters['id'];
     final onion = uri.queryParameters['onion'];
     if (id == null || onion == null) return null;
+    if (!_wordsShape.hasMatch(id)) return null;
     final v = uri.queryParameters['v'] ?? '1';
     if (v == '3') {
       final bundle = uri.queryParameters['bundle'];
@@ -6342,6 +6396,63 @@ Map<String, String>? parseHaloUri(String raw) {
   } catch (_) {
     return null;
   }
+}
+
+/// what an invite's id is to the people here
+enum LinkKin {
+  // no one here goes by it
+  stranger,
+  // a contact on the same key: an add would add no one
+  kept,
+  // a contact by these words on another key: the link is not them
+  otherKey,
+  // a contact under other words that the person calls by these
+  lookalike,
+}
+
+/// what [link]'s id is to the people here, and the name the person knows
+/// them by. one that cannot be looked up is asked about as a stranger, and
+/// the door still checks it
+Future<(LinkKin, String)> linkKinOf(String link) async {
+  final parsed = parseHaloUri(link);
+  if (parsed == null) return (LinkKin.stranger, '');
+  final id = parsed['id']!;
+  try {
+    return await _linkKin(parsed, id);
+  } catch (e) {
+    dlog('link kin: ${e.runtimeType}');
+    return (LinkKin.stranger, id);
+  }
+}
+
+Future<(LinkKin, String)> _linkKin(
+  Map<String, String> parsed,
+  String id,
+) async {
+  final cardKey = parsed['bundle'] != null
+      ? _bundleIdentity(parsed['bundle']!)
+      : _xIdentity((parsed['xpub'] ?? '').toLowerCase());
+  final row = await session.getContact(id);
+  final bound = await _boundIdentity(
+    id,
+    ss: sessionQuiet ? null : signalSession,
+    row: session.getContact,
+  );
+  final nick = (row?['nickname'] as String?)?.trim();
+  final name = nick == null || nick.isEmpty ? id : nick;
+  if (bound != null && (cardKey == null || !_eqBytes(bound, cardKey))) {
+    return (LinkKin.otherKey, name);
+  }
+  if (row != null && row['accepted'] == 1 && row['blocked'] != 1) {
+    return (LinkKin.kept, name);
+  }
+  for (final c in await session.contacts()) {
+    if (c['halo_id'] == id) continue;
+    if ((c['nickname'] as String?)?.trim() == id) {
+      return (LinkKin.lookalike, id);
+    }
+  }
+  return (LinkKin.stranger, id);
 }
 
 // shared singletons + state
@@ -9226,7 +9337,8 @@ class AppState extends ChangeNotifier {
     bool fromBackPair = false,
     HaloDb? into,
     int? arrivedAt,
-    // when the sender wrote it by their clock, where the lane says
+    // when the sender wrapped it by their clock, where the lane says. each
+    // send wraps anew, so a retry carries its own
     int? writtenAt,
   }) async {
     // the dev chat takes a frame only while it runs, and only what his
@@ -9352,7 +9464,13 @@ class AppState extends ChangeNotifier {
       to = _routeOf(senderHaloId, env.groupId);
       if (to == RouteTo.dropped) return to;
       if (to == RouteTo.sealed) {
-        await _sealArrival(senderHaloId, env, wire, fromBackPair);
+        await _sealArrival(
+          senderHaloId,
+          env,
+          wire,
+          fromBackPair,
+          writtenAt: writtenAt,
+        );
         return to;
       }
       final v = _openVault;
@@ -9397,13 +9515,19 @@ class AppState extends ChangeNotifier {
         unawaited(drainOutbox());
       }
     }
-    // nothing from someone blocked is kept, and what they write while the
-    // block holds stays dropped after an unblock: a copy by its uid, one
-    // the relays held back by when they wrote it
-    if (await db.isBlocked(senderHaloId) ||
+    // nothing from someone blocked is kept, and what came while the block
+    // held stays dropped after an unblock: a copy by its uid, one the
+    // relays held back by when it was wrapped. only a block holding now
+    // notes the uid: a stamp is their clock, and one running behind could
+    // match an ended span for something sent after it, whose copies must
+    // still come in
+    final blockedNow = await db.isBlocked(senderHaloId);
+    if (blockedNow ||
         (writtenAt != null && await db.blockedAt(senderHaloId, writtenAt))) {
       final key = _dataFrame(env) ? env.msgUid ?? env.mediaId : null;
-      if (key != null) await db.noteBlockedDrop(senderHaloId, key);
+      if (blockedNow && key != null) {
+        await db.noteBlockedDrop(senderHaloId, key);
+      }
       return to;
     }
     // the developer's own phone: a chat started from the Marios row goes to
@@ -10108,8 +10232,11 @@ class AppState extends ChangeNotifier {
     String sender,
     UnwrappedMessage env,
     String wire,
-    bool fromBackPair,
-  ) async {
+    bool fromBackPair, {
+    // kept with it, so a block's spans in the vault judge it as they would
+    // have on arrival
+    int? writtenAt,
+  }) async {
     // someone the vault blocked: nothing is sealed to wait for it
     if (_router.blocks(sender)) return;
     _lastSealAt = DateTime.now().millisecondsSinceEpoch;
@@ -10145,6 +10272,7 @@ class AppState extends ChangeNotifier {
         wire,
         fromBackPair,
         DateTime.now().millisecondsSinceEpoch,
+        wrapped: writtenAt,
       ),
       uid: uid,
       part: part,
@@ -10190,6 +10318,7 @@ class AppState extends ChangeNotifier {
                 fromBackPair: u.backPair,
                 into: vault,
                 arrivedAt: u.at,
+                writtenAt: u.wrapped,
               );
             } on CapHeld catch (e) {
               // past a stranger's two: on the shelf, let in on accept. a
@@ -12228,7 +12357,7 @@ class AppState extends ChangeNotifier {
   @visibleForTesting
   Future<Set<int>> receiveRelay(
     List<({String peer, String cipher})> msgs, {
-    // when each was written, by the sender's clock, where the lane says
+    // when each was wrapped, by the sender's clock, where the lane says
     List<int?> written = const [],
   }) async {
     var noted = false;
@@ -12956,9 +13085,10 @@ class AppState extends ChangeNotifier {
   }
 
   // a link any app or page can send: once the lock is open, the person is
-  // asked before it adds or joins anything (takeOutsideLink)
+  // asked before it adds or joins anything (takeOutsideLink). of those that
+  // came under the lock only the latest is asked about
   Future<void> _outsideLink(Uri uri, String how) =>
-      lockGuard.afterUnlock(key: 'link:$uri', () async {
+      lockGuard.afterUnlock(key: 'link:$uri', slot: 'outside-link', () async {
         await _signalReady.future;
         var ctx = rootNavKey.currentContext;
         for (var i = 0; i < 50 && ctx == null; i++) {
@@ -12982,12 +13112,16 @@ class AppState extends ChangeNotifier {
       });
 
   // a block stops listening on their relay address, and that address's
-  // files go with it. what of theirs is in the shade goes too
+  // files go with it. what of theirs is in the shade goes too, in the
+  // session that showed it: a decoy shows nothing, and the same words there
+  // may name someone the everyday app has in the shade
   Future<void> block(String haloId) async {
     await session.setBlocked(haloId, true);
     await session.dropHeld(haloId);
-    if (!sessionQuiet) await _unlistenPeer(haloId);
-    await cancelWithRetry(() => _io.unnotify(haloId), 'block shade');
+    if (!sessionQuiet) {
+      await _unlistenPeer(haloId);
+      await cancelWithRetry(() => _io.unnotify(haloId), 'block shade');
+    }
     await refreshContacts();
   }
 

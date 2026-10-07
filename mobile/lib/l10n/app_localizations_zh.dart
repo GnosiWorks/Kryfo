@@ -5891,6 +5891,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get kryfoLinkTextThisIsARoom => '这是一个临时聊天室的邀请。只有在你知道链接来源时才加入。';
 
   @override
+  String kryfoLinkTextYouAlreadyHave(Object who) {
+    return '你已经有 $who 了';
+  }
+
+  @override
+  String kryfoLinkTextNotTheOne(Object who) {
+    return '不是你聊天里的 $who';
+  }
+
+  @override
+  String kryfoLinkTextSomeoneElse(Object who) {
+    return '你聊天里有一个人被你叫作 $who。这个链接来自另一个人。只有在你知道链接来源时才添加。';
+  }
+
+  @override
   String kryfoLinkTextJoin(Object roomName) {
     return '加入 $roomName';
   }
@@ -13152,6 +13167,21 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get kryfoLinkTextThisIsARoom => '這是臨時聊天室的邀請。只有在你知道連結從哪裡來時，才加入。';
+
+  @override
+  String kryfoLinkTextYouAlreadyHave(Object who) {
+    return '你已經有 $who 了';
+  }
+
+  @override
+  String kryfoLinkTextNotTheOne(Object who) {
+    return '不是你聊天裡的 $who';
+  }
+
+  @override
+  String kryfoLinkTextSomeoneElse(Object who) {
+    return '你聊天裡有一個人被你叫作 $who。這個連結來自另一個人。只有在你知道連結從哪裡來時，才新增。';
+  }
 
   @override
   String kryfoLinkTextJoin(Object roomName) {

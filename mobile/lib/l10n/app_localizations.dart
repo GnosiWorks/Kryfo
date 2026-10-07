@@ -9771,6 +9771,24 @@ abstract class AppLocalizations {
   /// **'This is an invite to a burner room. Join only if you know where the link came from.'**
   String get kryfoLinkTextThisIsARoom;
 
+  /// widgets/kryfo_link_text.dart: an invite opened from outside names a contact already here, on the same key
+  ///
+  /// In en, this message translates to:
+  /// **'You already have {who}'**
+  String kryfoLinkTextYouAlreadyHave(Object who);
+
+  /// widgets/kryfo_link_text.dart: sheet title, an invite opened from outside gives the words of a contact here with another key
+  ///
+  /// In en, this message translates to:
+  /// **'Not the {who} in your chats'**
+  String kryfoLinkTextNotTheOne(Object who);
+
+  /// widgets/kryfo_link_text.dart: an invite opened from outside gives words the person uses as the name of another contact
+  ///
+  /// In en, this message translates to:
+  /// **'You call someone in your chats {who}. This link is from someone else. Add them only if you know where it came from.'**
+  String kryfoLinkTextSomeoneElse(Object who);
+
   /// widgets/kryfo_link_text.dart
   ///
   /// In en, this message translates to:

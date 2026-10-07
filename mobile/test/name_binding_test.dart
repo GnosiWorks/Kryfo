@@ -22,10 +22,12 @@ import 'package:kryfo/main.dart'
         AppState,
         appState,
         HaloEngine,
+        LinkKin,
         buildHaloUri,
         haloUriV3,
         handleHaloUriAdded,
         hasSessionWith,
+        linkKinOf,
         makePreKeyBundleB64,
         processPeerBundle,
         signalDecrypt,
@@ -509,7 +511,7 @@ void main() {
     test(
       'an old card from someone who asked takes them in the same way',
       () async {
-        const asker = 'asked-with-old-card';
+        const asker = 'asked-old-card';
         final them = await _phone();
         final ed = _rndHex(32);
         _idOf[ed] = asker;
@@ -553,7 +555,7 @@ void main() {
 
     test('a group member known by key alone is added, not already saved, '
         'and is sent nothing', () async {
-      const member = 'met-in-a-group';
+      const member = 'met-in-group';
       final them = await _phone();
       live.person(member, onion: 'o-met', xpub: them.xPub, accepted: 0);
       await live.saveMessage(member, 'in', 'in the group', groupId: 'g1');
@@ -575,7 +577,7 @@ void main() {
     });
 
     test('one declined before is added again, not already saved', () async {
-      const parked = 'declined-once';
+      const parked = 'declined-once-before';
       final them = await _phone();
       live.person(parked, onion: 'o-p', xpub: them.xPub, accepted: 0);
       live.people[parked]!['archived'] = 1;
@@ -593,6 +595,74 @@ void main() {
       expect(live.people[parked], containsPair('accepted', 1));
       expect(live.people[parked], containsPair('archived', 0));
       expect(live.calls, contains('heldOf:$parked'));
+    });
+  });
+
+  group('an invite from outside, held up against the people here', () {
+    Future<String> card(String id, _Phone p) async => haloUriV3(
+      id,
+      'o-$id',
+      Uri.encodeQueryComponent(await makePreKeyBundleB64(p.ss)),
+      'ab' * 32,
+    );
+
+    test('a contact on their own key is one already here, by the name they '
+        'have here', () async {
+      live.people[_amber]!['nickname'] = 'Amber';
+      expect(await linkKinOf(await card(_amber, amber)), (
+        LinkKin.kept,
+        'Amber',
+      ));
+      // the older card, by its x key
+      expect(await linkKinOf(buildHaloUri(_amber, 'o', amber.xPub)), (
+        LinkKin.kept,
+        'Amber',
+      ));
+    });
+
+    test('their words on another key are not them', () async {
+      final other = await _phone();
+      expect(await linkKinOf(await card(_amber, other)), (
+        LinkKin.otherKey,
+        _amber,
+      ));
+      expect(await linkKinOf(buildHaloUri(_amber, 'o', other.xPub)), (
+        LinkKin.otherKey,
+        _amber,
+      ));
+      // nor is a card whose key does not read
+      expect(await linkKinOf(buildHaloUri(_amber, 'o', 'zz')), (
+        LinkKin.otherKey,
+        _amber,
+      ));
+    });
+
+    test('words someone here is called by are someone else\'s', () async {
+      live.people[_amber]!['nickname'] = 'fresh-new-words';
+      final them = await _phone();
+      expect(await linkKinOf(await card('fresh-new-words', them)), (
+        LinkKin.lookalike,
+        'fresh-new-words',
+      ));
+    });
+
+    test('anyone else, one who asked and one blocked among them, is asked '
+        'about as a stranger', () async {
+      final them = await _phone();
+      expect(await linkKinOf(await card('fresh-new-words', them)), (
+        LinkKin.stranger,
+        'fresh-new-words',
+      ));
+      live.person('asked-quietly-once', xpub: them.xPub, accepted: 0);
+      expect(
+        await linkKinOf(buildHaloUri('asked-quietly-once', 'o', them.xPub)),
+        (LinkKin.stranger, 'asked-quietly-once'),
+      );
+      live.people[_amber]!['blocked'] = 1;
+      expect(await linkKinOf(await card(_amber, amber)), (
+        LinkKin.stranger,
+        _amber,
+      ));
     });
   });
 

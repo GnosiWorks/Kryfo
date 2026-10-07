@@ -2286,8 +2286,8 @@ func pollHolds(now time.Time, size int) bool {
 type pollEntry struct {
 	T string `json:"t"`
 	C string `json:"c"`
-	// when the sender wrote it, by their clock, in seconds. 0 when the
-	// lane has no such stamp
+	// when the sender wrapped it, by their clock, in seconds: each send
+	// wraps anew, so a retry has its own. 0 when the lane has no such stamp
 	A int64 `json:"a,omitempty"`
 }
 

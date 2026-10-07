@@ -223,12 +223,12 @@ func TestPollCarriesEachEventUnderItsOwnTag(t *testing.T) {
 	waitFor(t, "every event opened", 10*time.Second, func() bool { return inboxLen() == 5 })
 	got := pollEntries(t)
 	sort.Slice(got, func(i, j int) bool { return got[i].T < got[j].T })
-	// each carries the stamp the sender wrote it at, a friend's and a
+	// each carries the stamp the sender wrapped it at, a friend's and a
 	// stranger's alike, not the made-up one outside the wrap
 	now := time.Now().Unix()
 	for i, e := range got {
 		if e.A < now-60 || e.A > now+5 {
-			t.Fatalf("%s came stamped %d, not when it was written (%d)", e.T, e.A, now)
+			t.Fatalf("%s came stamped %d, not when it was wrapped (%d)", e.T, e.A, now)
 		}
 		got[i].A = 0
 	}

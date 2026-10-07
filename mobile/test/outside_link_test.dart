@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // a kryfo link from another app, a web page or a cold start asks before it
 // adds or joins anything, never under the lock, and a no changes nothing.
-// the door the link would go through is a stand-in that counts its calls
+// an invite's id has to be three words and is held up against the people
+// here, and a room's name is cleaned before it is shown. the door the link
+// would go through is a stand-in that counts its calls
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -9,6 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_guard.dart';
+import 'package:kryfo/main.dart' show LinkKin;
 import 'package:kryfo/rooms.dart';
 import 'package:kryfo/theme.dart';
 import 'package:kryfo/widgets/kryfo_link_text.dart';
@@ -17,9 +20,9 @@ const _invite =
     'kryfo://share?id=tourist-admit-sun&onion=abcdefghijklmnop.onion'
     '&v=3&bundle=QUJDRA';
 
-String _room({int hours = 2}) => RoomLink(
+String _room({int hours = 2, String name = 'Night shift'}) => RoomLink(
   roomId: 'room-one',
-  name: 'Night shift',
+  name: name,
   expiresAt: DateTime.now().add(Duration(hours: hours)).millisecondsSinceEpoch,
   creatorPub: 'a' * 64,
   fcPk: 'b' * 64,
@@ -40,6 +43,9 @@ class _World {
   late BuildContext ctx;
   String? result;
   var finished = false;
+  // what the invite's id is to the people here
+  (LinkKin, String) kin = (LinkKin.stranger, '');
+  final kinAsked = <String>[];
 
   Future<void> start(WidgetTester t) async {
     t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
@@ -69,6 +75,10 @@ class _World {
       raw,
       guard: guard,
       act: door.call,
+      kin: (link) async {
+        kinAsked.add(link);
+        return kin;
+      },
       selfId: selfId,
     ).then((r) {
       result = r;
@@ -217,7 +227,94 @@ void main() {
     ).firstMatch(app)?.group(1);
     expect(outside, isNotNull);
     expect(outside, contains('lockGuard.afterUnlock'));
+    // of those held under the lock, only the latest
+    expect(outside, contains("slot: 'outside-link'"));
     expect(outside, contains('takeOutsideLink('));
     expect(outside, isNot(contains('handleHaloUri')));
+  });
+
+  testWidgets('one already in the chats, on the same key, is said so and '
+      'nothing is added', (t) async {
+    final w = _World()..kin = (LinkKin.kept, 'Ana');
+    await w.start(t);
+    await w.open(t, _invite);
+    expect(w.kinAsked, [_invite]);
+    expect(find.text(l10n.kryfoLinkTextAddThem), findsNothing);
+    expect(w.result, l10n.kryfoLinkTextYouAlreadyHave('Ana'));
+    expect(w.door.taken, isEmpty);
+  });
+
+  testWidgets('a contact\'s words on another key are never shown as them, '
+      'and add no one', (t) async {
+    final w = _World()..kin = (LinkKin.otherKey, 'Ana');
+    await w.start(t);
+    await w.open(t, _invite);
+    expect(find.text(l10n.kryfoLinkTextNotTheOne('Ana')), findsOne);
+    expect(find.text(l10n.appLinkOtherKey('tourist-admit-sun')), findsOne);
+    expect(find.text(l10n.kryfoLinkTextAddThem), findsNothing);
+    await t.tap(find.text(l10n.appOk));
+    await t.pumpAndSettle();
+    expect(w.finished, isTrue);
+    expect(w.result, isNull);
+    expect(w.door.taken, isEmpty);
+  });
+
+  testWidgets('words someone here is called by are asked about as someone '
+      'else', (t) async {
+    final w = _World()..kin = (LinkKin.lookalike, 'tourist-admit-sun');
+    await w.start(t);
+    await w.open(t, _invite);
+    expect(find.text(l10n.kryfoLinkTextAdd('tourist-admit-sun')), findsOne);
+    expect(
+      find.text(l10n.kryfoLinkTextSomeoneElse('tourist-admit-sun')),
+      findsOne,
+    );
+    await t.tap(find.text(l10n.kryfoLinkTextAddThem));
+    await t.pumpAndSettle();
+    expect(w.door.taken, [_invite]);
+  });
+
+  testWidgets('an id that is not three words is no invite', (t) async {
+    final w = _World();
+    await w.start(t);
+    for (final id in [
+      'Tourist-admit-sun',
+      'tourist-admit-\u202Enus',
+      'a b c',
+    ]) {
+      await w.open(
+        t,
+        'kryfo://share?id=${Uri.encodeQueryComponent(id)}'
+        '&onion=abcdefghijklmnop.onion&v=3&bundle=QUJDRA',
+      );
+      expect(w.result, l10n.kryfoLinkTextThatLinkIsNot, reason: id);
+    }
+    expect(w.kinAsked, isEmpty);
+    expect(w.door.taken, isEmpty);
+  });
+
+  testWidgets('a room\'s name is shown without controls, on one line, cut '
+      'short, under a title of two lines at most', (t) async {
+    final w = _World();
+    await w.start(t);
+    final long = 'Night\u202E shift\n\t\u200Bcrew ${'x' * 80}';
+    await w.open(t, _room(name: long));
+    final shown = 'Night shift crew ${'x' * 31}';
+    expect(roomLinkName(long), shown);
+    final title = find.text(l10n.kryfoLinkTextJoinRoom(shown));
+    expect(title, findsOne);
+    final text = t.widget<Text>(title);
+    expect(text.maxLines, 2);
+    expect(text.overflow, TextOverflow.ellipsis);
+    await t.tap(find.text(l10n.kryfoLinkTextNotNow));
+    await t.pumpAndSettle();
+    // the invite's question is held to two lines too
+    await w.open(t, _invite);
+    expect(
+      t
+          .widget<Text>(find.text(l10n.kryfoLinkTextAdd('tourist-admit-sun')))
+          .maxLines,
+      2,
+    );
   });
 }

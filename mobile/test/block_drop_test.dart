@@ -2,8 +2,11 @@
 // what someone blocked sends while the block holds is dropped for good: a
 // copy of it after the unblock, sent again or held by the relays, never
 // lands in requests or the chat. what they send after the unblock does.
-// the block takes what of theirs is in the shade with it. signal and the
-// database are the app's stand-ins
+// what an ended block alone turns away by its stamp is not noted, so a
+// copy sent again lands, and the last ten minutes before the unblock are
+// given to a slow clock. the block takes what of theirs is in the shade
+// with it, outside the decoy. signal and the database are the app's
+// stand-ins
 import 'dart:io';
 
 import 'package:flutter/services.dart';
@@ -45,7 +48,7 @@ class _OnceIo extends ArrivalIo {
 }
 
 class _Rows extends ArrivalRows {
-  _Rows() : super(HaloContainer.everyday);
+  _Rows([super.container = HaloContainer.everyday]);
 
   @override
   Future<void> dropHeld(String peerId) async => heldRows.remove(peerId);
@@ -58,13 +61,14 @@ class _Rows extends ArrivalRows {
 }
 
 class _World {
-  final live = _Rows();
+  _World([HaloContainer c = HaloContainer.everyday]) : live = _Rows(c);
+  final _Rows live;
   final io = _OnceIo();
   late AppState app;
   var _n = 0;
 
-  static Future<_World> make() async {
-    final w = _World();
+  static Future<_World> make({bool decoy = false}) async {
+    final w = _World(decoy ? HaloContainer.decoy : HaloContainer.everyday);
     w.live.person(_f, onion: 'o-$_f', xpub: 'x-$_f');
     w.live.person(_s, onion: 'o-$_s', xpub: 'x-$_s', accepted: 0);
     w.io.sessions = [_f, _s];
@@ -101,8 +105,6 @@ class _World {
       if (m['peer_id'] == from && m['direction'] == 'in') m['msg_uid'],
   ];
 }
-
-Future<void> _tick() => Future<void>.delayed(const Duration(milliseconds: 5));
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -146,32 +148,46 @@ void main() {
       expect(w.kept(who), ['req4']);
     });
 
-    test('$kind blocked: what the relays held back while the block held '
-        'stays out after the unblock', () async {
+    // the block held two hours and ended a minute ago
+    Future<(_World, int, int)> blockedAWhile() async {
       final w = await _World.make();
-      final before = DateTime.now().millisecondsSinceEpoch - 60000;
-      await _tick();
       await w.app.block(who);
-      await _tick();
-      final during = DateTime.now().millisecondsSinceEpoch;
-      await _tick();
       await w.app.unblock(who);
-      await _tick();
-      final after = DateTime.now().millisecondsSinceEpoch;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final to = now - 60000;
+      w.live.blockSpans[who] = [(to - 2 * 3600000, to)];
+      return (w, to - 2 * 3600000, to);
+    }
+
+    test('$kind blocked: what the relays held back while the block held '
+        'stays out after the unblock, and a clock a few minutes slow loses '
+        'nothing sent after it', () async {
+      final (w, from, to) = await blockedAWhile();
       // listening again, the relay hands over what it kept for them: none
-      // of it was ever seen here
+      // of it was ever seen here. a stranger's two are kept, so three
       await w.app.receiveRelay(
         [
-          await w.copy(who, 'old'),
           await w.copy(who, 'req3b'),
+          await w.copy(who, 'late'),
           await w.copy(who, 'req4'),
         ],
-        written: [before, during, after],
+        written: [from + 3600000, to - 5 * 60000, to + 60000],
       );
-      expect(w.kept(who), ['old', 'req4']);
-      // and a copy of the one written during the block, sent again later
-      await w.app.receiveOnion([(await w.copy(who, 'req3b')).cipher]);
-      expect(w.kept(who), ['old', 'req4']);
+      expect(w.kept(who), unorderedEquals(['late', 'req4']));
+    });
+
+    test('$kind blocked: what an ended block alone turns away is not noted, '
+        'so a copy that comes again without a stamp is let in', () async {
+      final (w, from, _) = await blockedAWhile();
+      await w.app.receiveRelay(
+        [await w.copy(who, 'skewed')],
+        written: [from + 3600000],
+      );
+      expect(w.kept(who), isEmpty);
+      expect(w.live.blockedDrops[who] ?? const {}, isEmpty);
+      // their clock may be what put it there: sent again, it comes in
+      await w.app.receiveOnion([(await w.copy(who, 'skewed')).cipher]);
+      expect(w.kept(who), ['skewed']);
     });
   }
 
@@ -181,6 +197,15 @@ void main() {
     expect(w.io.rang, [_s]);
     await w.app.block(_s);
     expect(w.io.unrang, [_s]);
+  });
+
+  test('a block in the decoy takes nothing out of the shade: it showed '
+      'nothing, and the same words may be someone the everyday app '
+      'shows', () async {
+    final w = await _World.make(decoy: true);
+    await w.app.block(_s);
+    expect(w.live.people[_s]!['blocked'], 1);
+    expect(w.io.unrang, isEmpty);
   });
 
   test(

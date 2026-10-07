@@ -6187,6 +6187,21 @@ class AppLocalizationsEs extends AppLocalizations {
       'Es una invitación a una sala efímera. Únete solo si sabes de dónde viene el enlace.';
 
   @override
+  String kryfoLinkTextYouAlreadyHave(Object who) {
+    return 'Ya tienes a $who';
+  }
+
+  @override
+  String kryfoLinkTextNotTheOne(Object who) {
+    return 'No es $who de tus chats';
+  }
+
+  @override
+  String kryfoLinkTextSomeoneElse(Object who) {
+    return 'Llamas $who a alguien de tus chats. Este enlace es de otra persona. Añádela solo si sabes de dónde viene.';
+  }
+
+  @override
   String kryfoLinkTextJoin(Object roomName) {
     return 'Unirse a $roomName';
   }

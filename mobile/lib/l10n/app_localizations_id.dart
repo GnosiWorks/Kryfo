@@ -6130,6 +6130,21 @@ class AppLocalizationsId extends AppLocalizations {
       'Ini undangan ke ruang sekali pakai. Gabung hanya kalau kamu tahu dari mana tautan ini berasal.';
 
   @override
+  String kryfoLinkTextYouAlreadyHave(Object who) {
+    return 'Kamu sudah punya $who';
+  }
+
+  @override
+  String kryfoLinkTextNotTheOne(Object who) {
+    return 'Bukan $who yang ada di obrolanmu';
+  }
+
+  @override
+  String kryfoLinkTextSomeoneElse(Object who) {
+    return 'Kamu menyebut seseorang di obrolanmu $who. Tautan ini dari orang lain. Tambahkan hanya kalau kamu tahu dari mana asalnya.';
+  }
+
+  @override
   String kryfoLinkTextJoin(Object roomName) {
     return 'Gabung ke $roomName';
   }

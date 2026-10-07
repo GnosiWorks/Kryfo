@@ -30,8 +30,14 @@ Widget _frame(BuildContext ctx, List<Widget> children) => Padding(
   ),
 );
 
-Widget _title(String t, {Color? color}) =>
-    Text(t, style: HaloType.serif(size: 20, color: color ?? HaloColors.text));
+// [lines] caps a title that carries words from outside, such as a name a
+// link gave
+Widget _title(String t, {Color? color, int? lines}) => Text(
+  t,
+  maxLines: lines,
+  overflow: lines == null ? null : TextOverflow.ellipsis,
+  style: HaloType.serif(size: 20, color: color ?? HaloColors.text),
+);
 
 Widget _line(String t) => Text(
   t,
@@ -140,7 +146,8 @@ Future<String?> showChangeOrRemoveSheet(
 
 // a question with one consequential answer. rose when it destroys something.
 // [figure] is the number the answer turns on, such as a size, above the line.
-// with [shutOnLock] the sheet goes as that lock comes up, and that is a no
+// with [shutOnLock] the sheet goes as that lock comes up, and that is a no.
+// [titleLines] caps the title
 Future<bool> showConfirmSheet(
   BuildContext context, {
   required String title,
@@ -150,12 +157,13 @@ Future<bool> showConfirmSheet(
   String? figure,
   bool rose = true,
   LockGuard? shutOnLock,
+  int? titleLines,
 }) async {
   final r = await showHaloSheet<bool>(
     context,
     builder: (ctx) {
       final body = _frame(ctx, [
-        _title(title, color: rose ? HaloColors.rose : null),
+        _title(title, color: rose ? HaloColors.rose : null, lines: titleLines),
         if (figure != null) ...[
           const SizedBox(height: 8),
           Text(figure, style: HaloType.mono(size: 12, color: HaloColors.amber)),
@@ -352,20 +360,28 @@ Future<T?> showChoiceSheet<T>(
   ]),
 );
 
-// something to read, one button, no way past it
+// something to read, one button, no way past it. with [shutOnLock] it
+// goes as that lock comes up. [titleLines] caps the title
 Future<void> showNoticeSheet(
   BuildContext context, {
   required String title,
   required String line,
   required String ok,
+  LockGuard? shutOnLock,
+  int? titleLines,
 }) => showHaloSheet<void>(
   context,
   dismissible: false,
-  builder: (ctx) => _frame(ctx, [
-    _title(title),
-    const SizedBox(height: 8),
-    _line(line),
-    const SizedBox(height: 16),
-    _primary(ok, () => Navigator.pop(ctx)),
-  ]),
+  builder: (ctx) {
+    final body = _frame(ctx, [
+      _title(title, lines: titleLines),
+      const SizedBox(height: 8),
+      _line(line),
+      const SizedBox(height: 16),
+      _primary(ok, () => Navigator.pop(ctx)),
+    ]);
+    return shutOnLock == null
+        ? body
+        : _ShutOnLock(guard: shutOnLock, child: body);
+  },
 );

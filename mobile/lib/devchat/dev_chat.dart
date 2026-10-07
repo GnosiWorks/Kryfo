@@ -504,6 +504,8 @@ class DevChat {
       ('group_members', 'halo_id'),
       ('group_media_owed', 'member'),
       ('group_ctl_out', 'member'),
+      ('block_spans', 'peer_id'),
+      ('blocked_drops', 'peer_id'),
       ('messages', 'peer_id'),
       ('contacts', 'halo_id'),
       ('sessions', 'address'),

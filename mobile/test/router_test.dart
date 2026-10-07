@@ -11,7 +11,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/main.dart'
-    show AppIo, AppState, HaloDb, useDatabasesForTest;
+    show AppIo, AppState, HaloDb, blockedAtArgs, useDatabasesForTest;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
 import 'package:kryfo/router.dart';
@@ -854,9 +854,15 @@ class _Mem implements HaloDb {
   Future<void> dropMediaWant(String mediaId) async =>
       _hit('dropMediaWant', mediaId, null);
 
-  // no block here ever held
+  // a block that held and ended, by person, read as the real table is
+  final spans = <String, (int, int)>{};
   @override
-  Future<bool> blockedAt(String haloId, int at) async => false;
+  Future<bool> blockedAt(String haloId, int at) async {
+    final s = spans[haloId];
+    final a = blockedAtArgs(haloId, at);
+    return s != null && s.$1 <= (a[1] as int) && s.$2 > (a[2] as int);
+  }
+
   @override
   Future<void> noteBlockedDrop(String haloId, String uid) async {}
   @override
@@ -1033,6 +1039,14 @@ void main() {
   });
 
   group('what waits sealed', () {
+    test('the stamp it came with is kept with it', () async {
+      final w = await _World.make();
+      await w.router.seal(Unsealed(_h, 'x', false, 1, wrapped: 1234), uid: 'a');
+      await w.router.seal(Unsealed(_h, 'y', false, 2), uid: 'b');
+      final got = await w.router.openOldest('priv-A');
+      expect([for (final (_, u) in got) u!.wrapped], [1234, null]);
+    });
+
     Future<VaultRouter> capped(
       _World w, {
       int n = 3,
@@ -1508,6 +1522,32 @@ void main() {
       expect(w.everydayRows, isEmpty);
       // the home lists were read again
       expect(w.app.contacts.map((c) => c.haloId), contains(_h));
+    });
+
+    test('what came while it was shut is judged by when it was wrapped, as '
+        'it would have been on arrival', () async {
+      final w = await _World.make();
+      final now = DateTime.now().millisecondsSinceEpoch;
+      // blocked in the vault for two hours, until an hour ago
+      w.vault.spans[_h] = (now - 3 * 3600000, now - 3600000);
+      for (final (uid, at) in [
+        ('during', now - 2 * 3600000),
+        ('since', now - 60000),
+      ]) {
+        final c = 'relay-$uid';
+        w.io.opens[c] = (
+          _h,
+          await wrapMessage('hi $uid', msgUid: uid, sender: _as(_h)),
+        );
+        await w.app.receiveRelay([(peer: 'x-$_h', cipher: c)], written: [at]);
+      }
+      await _settle();
+      expect(w.store.inbox, hasLength(2));
+      await w.open();
+      await w.app.drainSealed(w.vault, 'priv-A');
+      expect(w.vault.msg('during'), isNull);
+      expect(w.vault.msg('since'), isNotNull);
+      expect(w.store.inbox, isEmpty);
     });
 
     test('a timed message opened from the seal waits to be read', () async {

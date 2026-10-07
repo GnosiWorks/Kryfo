@@ -6248,6 +6248,21 @@ class AppLocalizationsUk extends AppLocalizations {
       'Це запрошення до одноразової кімнати. Входь, лише якщо знаєш, звідки взялося посилання.';
 
   @override
+  String kryfoLinkTextYouAlreadyHave(Object who) {
+    return '$who вже є у твоїх чатах';
+  }
+
+  @override
+  String kryfoLinkTextNotTheOne(Object who) {
+    return 'Це не $who з твоїх чатів';
+  }
+
+  @override
+  String kryfoLinkTextSomeoneElse(Object who) {
+    return 'У твоїх чатах під іменем $who записана інша людина. Це посилання від когось іншого. Додавай, лише якщо знаєш, звідки воно.';
+  }
+
+  @override
   String kryfoLinkTextJoin(Object roomName) {
     return 'Увійти в «$roomName»';
   }

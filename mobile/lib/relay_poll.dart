@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // what the relays delivered, as the engine hands it over: {k, m}, k the
 // batch's token and m a list with one {t, c, a} per event, t the lane it
-// came in on, c what it carried and a when the sender wrote it by their
-// clock, in seconds, where the lane knows. an entry of any other shape is
+// came in on, c what it carried and a when the sender wrapped it by their
+// clock, in seconds, where the lane knows. every send wraps anew, so a
+// retry carries the time of the retry. an entry of any other shape is
 // passed over on its own; the rest still count. the app confirms the batch
 // with k once it has kept it, naming the places in m it could not keep.
 
@@ -15,7 +16,7 @@ typedef RelayBatch = ({
   List<({String peer, String cipher})> msgs,
   // where each of msgs stood in m
   List<int> places,
-  // when each of msgs was written, in ms by the sender's clock, or null
+  // when each of msgs was wrapped, in ms by the sender's clock, or null
   List<int?> written,
 });
 
