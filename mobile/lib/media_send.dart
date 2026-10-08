@@ -279,6 +279,13 @@ Future<String> _sendChunkedMediaInner({
           writtenAt: written,
         );
         cipher = await signalEncrypt(peerId, wrapped);
+      } on KeyHeld {
+        // waits on a check of their new number: going, not failed
+        parked = true;
+        return;
+      } on StartingAfresh {
+        parked = true;
+        return;
       } catch (e) {
         failure = devKeyFailed(e) ? kDevKeyFailed : 'error: encrypt';
         return;

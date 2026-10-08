@@ -3753,9 +3753,18 @@ class HaloDb implements GroupOwedStore {
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  Future<List<Map<String, Object?>>> unsentPins() async {
+  Future<List<Map<String, Object?>>> unsentPins({
+    Set<String> skip = const {},
+  }) async {
     final db = await open();
-    return db.query('pins_out', orderBy: 'at ASC', limit: 40);
+    final s = skip.toList();
+    return db.query(
+      'pins_out',
+      where: s.isEmpty ? null : _notIn(s).substring(5),
+      whereArgs: s.isEmpty ? null : s,
+      orderBy: 'at ASC',
+      limit: 40,
+    );
   }
 
   // only the word that was sent: a newer one queued meanwhile stays
@@ -3867,9 +3876,18 @@ class HaloDb implements GroupOwedStore {
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  Future<List<Map<String, Object?>>> unsentEdits() async {
+  Future<List<Map<String, Object?>>> unsentEdits({
+    Set<String> skip = const {},
+  }) async {
     final db = await open();
-    return db.query('edits_out', orderBy: 'at ASC', limit: 40);
+    final s = skip.toList();
+    return db.query(
+      'edits_out',
+      where: s.isEmpty ? null : _notIn(s).substring(5),
+      whereArgs: s.isEmpty ? null : s,
+      orderBy: 'at ASC',
+      limit: 40,
+    );
   }
 
   Future<void> dropEdit(String msgUid) async {
@@ -4273,8 +4291,11 @@ class HaloDb implements GroupOwedStore {
   // walks this on a timer so a send survives tor warmup, backing out of the
   // chat, and a cold restart. keyed on `sent`, not `delivered`: retrying on
   // a missing ack loops forever when the ack never comes.
-  Future<List<Map<String, Object?>>> unsentOutbox() async {
+  Future<List<Map<String, Object?>>> unsentOutbox({
+    Set<String> skip = const {},
+  }) async {
     final db = await open();
+    final s = skip.toList();
     return db.query(
       'messages',
       // group text stays out: a group send marks sent on the first ack, so
@@ -4283,10 +4304,32 @@ class HaloDb implements GroupOwedStore {
       where:
           "direction = 'out' AND sent = 0 AND msg_uid IS NOT NULL "
           "AND (group_id IS NULL OR group_id = '' "
-          "OR media_path IS NOT NULL OR file_path IS NOT NULL)",
+          "OR media_path IS NOT NULL OR file_path IS NOT NULL)"
+          '${_notIn(s)}',
+      whereArgs: s.isEmpty ? null : s,
       orderBy: 'sent_at ASC',
       limit: 40,
     );
+  }
+
+  // rows for these peers stay out of a queue's window
+  static String _notIn(List<String> s) => s.isEmpty
+      ? ''
+      : ' AND peer_id NOT IN (${List.filled(s.length, '?').join(', ')})';
+
+  // every contact held here: verified under one key, holding another now
+  Future<Set<String>> heldPeers() async {
+    final db = await open();
+    final rows = await db.query(
+      'contacts',
+      columns: ['halo_id'],
+      where: 'verified_key IS NOT NULL',
+    );
+    return {
+      for (final r in rows)
+        if (await keyHeldIn(db, r['halo_id'] as String, identity: _keySource))
+          r['halo_id'] as String,
+    };
   }
 
   // --- chunked media, buffered on disk so a restart doesn't lose a transfer ---
@@ -6345,26 +6388,18 @@ Future<bool> hasSessionWith(String peerId) async {
       await ss.sessionStore.containsSession(SignalProtocolAddress(peerId, 1));
 }
 
-// someone verified under one key who holds another now: nothing is sealed
-// for them until the new number is checked or the new key accepted
-class KeyHeld implements Exception {
-  KeyHeld(this.peer);
-  final String peer;
-  @override
-  String toString() => 'KeyHeld: their key moved since it was verified';
-}
-
 // the one place a frame is sealed for a peer. every frame for the dev chat
 // goes through its own seal instead: the allowlist, its store, the token
 // the wire asks for. either store seals one frame at a time per peer
 Future<String> signalEncrypt(String peerId, String plaintext) async {
   if (isDevId(peerId)) return devLane.encrypt(peerId, plaintext);
-  if (await appState.keyHeld(peerId)) throw KeyHeld(peerId);
   final from = _afreshFrom;
   return signalSession.encryptTo(
     peerId,
     plaintext,
     afresh: from == null ? null : () => from(peerId),
+    // a read that fails seals nothing
+    held: () => appState.keyHeld(peerId, strict: true),
   );
 }
 
@@ -7790,6 +7825,8 @@ class AppState extends ChangeNotifier {
       }
       final missing = missingSlices(have, total);
       if (missing.isEmpty) continue;
+      // an ask sealed for no one uses none of the asks
+      if (await keyHeld(peer)) continue;
       dlog('NEED $mid: asking for ${missing.length} of $total');
       // stamped before it goes, with the time it was decided on: a send
       // takes seconds, and the tick its backoff ends on would miss it
@@ -7863,7 +7900,8 @@ class AppState extends ChangeNotifier {
   Future<void> drainOutbox() async {
     // count first, wire or no wire: the strip and the rows say what is
     // waiting whether or not anything can move yet
-    final rows = await live.unsentOutbox();
+    var held = await _heldOf(live);
+    final rows = await live.unsentOutbox(skip: held);
     final q = await _queueOf(rows, live);
     // the open vault's rows go while it is open. shut, they wait in it for
     // the next open
@@ -7872,7 +7910,9 @@ class AppState extends ChangeNotifier {
     var vq = _Queue.none;
     if (v != null) {
       try {
-        vRows = await v.unsentOutbox();
+        final vHeld = await _heldOf(v);
+        held = {...held, ...vHeld};
+        vRows = await v.unsentOutbox(skip: vHeld);
         vq = await _queueOf(vRows, v);
       } catch (e) {
         vRows = const [];
@@ -7924,8 +7964,8 @@ class AppState extends ChangeNotifier {
     ]) {
       final uid = r['msg_uid'] as String?;
       if (uid == null || _outboxInflight.contains(uid)) continue;
-      final to = r['peer_id'] as String?;
-      if (to != null && await keyHeld(to)) continue;
+      // held rows stay out of the window; one that came in anyway waits too
+      if (held.contains(r['peer_id'])) continue;
       // a send fired seconds ago still has its own future running; leave it be.
       final age = DateTime.now().millisecondsSinceEpoch - (r['sent_at'] as int);
       if (age < 45000) continue;
@@ -7979,15 +8019,26 @@ class AppState extends ChangeNotifier {
 
   // a contact verified under another key than they hold now: nothing goes
   // to them until the new number is checked or the new key accepted. the
-  // queues pass them by without using a try. a read that fails says
-  // nothing about their key
-  Future<bool> keyHeld(String peer) async {
+  // queues pass them by without using a try. a read that fails says nothing
+  // about their key: the queues go on, and the seal ([strict]) waits
+  Future<bool> keyHeld(String peer, {bool strict = false}) async {
     if (isDevId(peer)) return false;
     try {
       return await session.keyHeld(peer);
     } catch (e) {
       dlog('key hold: not read (${e.runtimeType})');
-      return false;
+      return strict;
+    }
+  }
+
+  // every held contact of one database, read once per pass: their queued
+  // rows stay out of the windows the queues read, so they never fill them
+  Future<Set<String>> _heldOf(HaloDb d) async {
+    try {
+      return await d.heldPeers();
+    } catch (e) {
+      dlog('key hold: none read (${e.runtimeType})');
+      return const {};
     }
   }
 
@@ -8033,8 +8084,10 @@ class AppState extends ChangeNotifier {
   Future<void> _drainEdits() async {
     for (final d in [live, ?_openVault]) {
       final List<Map<String, Object?>> rows;
+      final Set<String> held;
       try {
-        rows = await d.unsentEdits();
+        held = await _heldOf(d);
+        rows = await d.unsentEdits(skip: held);
       } catch (e) {
         // the vault closed part way: its edits wait for the next open
         continue;
@@ -8043,7 +8096,7 @@ class AppState extends ChangeNotifier {
         final uid = r['msg_uid'] as String;
         final age = DateTime.now().millisecondsSinceEpoch - (r['at'] as int);
         if (age < 45000 || _editsInflight.contains(uid)) continue;
-        if (await keyHeld(r['peer_id'] as String)) continue;
+        if (held.contains(r['peer_id'])) continue;
         _editsInflight.add(uid);
         unawaited(
           sendEdit(
@@ -8062,8 +8115,10 @@ class AppState extends ChangeNotifier {
   Future<void> _drainPins() async {
     for (final d in [live, ?_openVault]) {
       final List<Map<String, Object?>> rows;
+      final Set<String> held;
       try {
-        rows = await d.unsentPins();
+        held = await _heldOf(d);
+        rows = await d.unsentPins(skip: held);
       } catch (e) {
         continue;
       }
@@ -8071,7 +8126,7 @@ class AppState extends ChangeNotifier {
         final uid = r['msg_uid'] as String;
         final age = DateTime.now().millisecondsSinceEpoch - (r['at'] as int);
         if (age < 45000 || _pinsInflight.contains(uid)) continue;
-        if (await keyHeld(r['peer_id'] as String)) continue;
+        if (held.contains(r['peer_id'])) continue;
         _pinsInflight.add(uid);
         unawaited(
           _sendPin(
@@ -8129,9 +8184,12 @@ class AppState extends ChangeNotifier {
     for (final d in [live, ?_openVault]) {
       final List<Map<String, Object?>> rows;
       final Set<String> blocked;
+      final Set<String> held;
       try {
-        // what waits on a card is left out, or it would fill the window
-        rows = await d.unsentFrames(waiting: _waitingCard);
+        held = await _heldOf(d);
+        // what waits on a card or a check is left out, or it would fill
+        // the window
+        rows = await d.unsentFrames(waiting: {..._waitingCard, ...held});
         blocked = rows.isEmpty ? const {} : await d.blockedIds();
       } catch (e) {
         continue;
@@ -8155,7 +8213,7 @@ class AppState extends ChangeNotifier {
         if (kind == kFrameReceipt ? _waitingCard.contains(peer) : age < 45000) {
           continue;
         }
-        if (await keyHeld(peer)) continue;
+        if (held.contains(peer)) continue;
         if (!_framesInflight.add('$kind $uid')) continue;
         unawaited(
           _sendFrame(
@@ -8578,9 +8636,10 @@ class AppState extends ChangeNotifier {
       for (final r in rows) {
         heads.putIfAbsent('${r['group_id']} ${r['member']}', () => r);
       }
+      final held = await _heldOf(d);
       for (final r in heads.values) {
         if ((r['next_at'] as int? ?? 0) > now) continue;
-        if (await keyHeld(r['member'] as String)) continue;
+        if (held.contains(r['member'])) continue;
         unawaited(_ctlLane(d, r['group_id'] as String, r['member'] as String));
       }
     }
@@ -8658,6 +8717,7 @@ class AppState extends ChangeNotifier {
         // only a pass on the lane's own schedule costs a try. one a send
         // forces is free, or a busy group would spend them in hours.
         // stamped before it goes, so a send cut short is not a free retry
+        if (!force && await keyHeld(member)) return sent;
         if (!force) await d.triedGroupCtl(id, now);
         final wrapped = await wrapMessage(
           '',
@@ -14589,7 +14649,7 @@ class AppState extends ChangeNotifier {
       if (await _sendOneEnvelope(toHaloId, wrapped)) return;
       // the seal waits on their card: the receipt waits with it, where
       // their chat's rows are, and goes once the session is fresh
-      if (_waitingCard.contains(toHaloId)) {
+      if (_waitingCard.contains(toHaloId) || await keyHeld(toHaloId)) {
         await (await _reach(
           toHaloId,
         ))?.on?.queueFrame(uid, kFrameReceipt, toHaloId, '');
@@ -15029,6 +15089,8 @@ class AppState extends ChangeNotifier {
   Future<IntroFrame?> _introCardFor(String haloId, String note) async {
     // the dev chat is never handed on
     if (isDevId(haloId)) return null;
+    // nor a key this phone has not taken yet
+    if (await keyHeld(haloId)) return null;
     // a hidden chat's row is in the open vault
     final c = await _ownerOf(haloId).getContact(haloId);
     if (c == null || (c['accepted'] as int? ?? 0) != 1) return null;

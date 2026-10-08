@@ -52,7 +52,9 @@ class _Rows extends HaloDb {
 
   // the outbox's own query, read straight off the rows
   @override
-  Future<List<Map<String, Object?>>> unsentOutbox() async => [
+  Future<List<Map<String, Object?>>> unsentOutbox({
+    Set<String> skip = const {},
+  }) async => [
     for (final r in mem.rows('messages'))
       if (r['direction'] == 'out' && r['sent'] == 0) r,
   ];

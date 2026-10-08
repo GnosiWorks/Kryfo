@@ -72,7 +72,6 @@ import '../main.dart'
         sessionQuiet,
         signalEncrypt,
         hasSessionWith,
-        KeyHeld,
         appState,
         currentChatPeer,
         claimChat,
@@ -717,11 +716,17 @@ class _ChatScreenState extends State<ChatScreen>
   // the new number is checked or the new key accepted
   bool _keyHeld = false;
   bool _keyReading = false;
+  // a read asked for while one runs runs again after it
+  bool _keyAgain = false;
 
   // what this chat shows about their key, read again whenever a key changes
   // or a mark is set somewhere else
   Future<void> _readKeyState() async {
-    if (_keyReading || _isDev) return;
+    if (_isDev) return;
+    if (_keyReading) {
+      _keyAgain = true;
+      return;
+    }
     _keyReading = true;
     try {
       final changed = await session.keyChanged(widget.peerHaloId);
@@ -739,6 +744,10 @@ class _ChatScreenState extends State<ChatScreen>
       dlog('key state: not read (${e.runtimeType})');
     } finally {
       _keyReading = false;
+    }
+    if (_keyAgain && mounted) {
+      _keyAgain = false;
+      await _readKeyState();
     }
   }
 
@@ -1012,6 +1021,8 @@ class _ChatScreenState extends State<ChatScreen>
       session.countMessagesFrom(widget.peerHaloId).then((v) {
         if (mounted) setState(() => _recvCount = v);
       }),
+      // a held chat never shows the composer first
+      _readKeyState(),
     ];
     // the bottom bar waits for these, so a blocked chat or a request never
     // shows the composer first

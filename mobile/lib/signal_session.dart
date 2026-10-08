@@ -206,7 +206,11 @@ class SignalSession {
     String peer,
     String plain, {
     Future<PreKeyBundle?> Function()? afresh,
+    Future<bool> Function()? held,
   }) => serial(peer, () async {
+    // asked in the lane, right before the seal: a key that came in a frame
+    // opened ahead of this one is the key this one would go to
+    if (held != null && await held()) throw KeyHeld(peer);
     if (await sealsOnRestored(peer)) {
       final card = afresh == null ? null : await afresh();
       if (card == null) throw StartingAfresh(peer);
@@ -446,6 +450,15 @@ const kSessionsRestoredPref = 'signal.restored';
 
 /// a seal to [peer] waits for a session started afresh: the one held came
 /// back with a restore, and no card of theirs is kept to start one from
+// someone verified under one key who holds another now: nothing is sealed
+// for them until the new number is checked or the new key accepted
+class KeyHeld implements Exception {
+  KeyHeld(this.peer);
+  final String peer;
+  @override
+  String toString() => 'KeyHeld: their key moved since it was verified';
+}
+
 class StartingAfresh implements Exception {
   StartingAfresh(this.peer);
   final String peer;

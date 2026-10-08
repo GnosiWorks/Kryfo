@@ -27,7 +27,9 @@ class _Rows extends HaloDb {
   @override
   Future<Database> open() async => mem;
   @override
-  Future<List<Map<String, Object?>>> unsentOutbox() async => const [];
+  Future<List<Map<String, Object?>>> unsentOutbox({
+    Set<String> skip = const {},
+  }) async => const [];
 }
 
 // a member's route can be down

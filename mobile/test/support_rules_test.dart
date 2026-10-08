@@ -217,7 +217,9 @@ class _Phone extends HaloDb {
   @override
   Future<List<Map<String, Object?>>> loadGroups() async => mem.rows('groups');
   @override
-  Future<List<Map<String, Object?>>> unsentOutbox() async => const [];
+  Future<List<Map<String, Object?>>> unsentOutbox({
+    Set<String> skip = const {},
+  }) async => const [];
   @override
   Future<void> holdCipher(String peerId, String cipher) async {
     await mem.insert('held_onion', {

@@ -41,6 +41,12 @@ DevKey devCard(String keyId, {DevKeyStatus status = DevKeyStatus.current}) {
 
 // the everyday or a decoy's database, as the session reaches it
 class DevTestDb implements HaloDb {
+  // nobody verified under another key: nothing is held
+  @override
+  Future<bool> keyHeld(String haloId) async => false;
+  @override
+  Future<Set<String>> heldPeers() async => const {};
+
   DevTestDb(this.mem, [this.container = HaloContainer.everyday]);
 
   final MemDb mem;

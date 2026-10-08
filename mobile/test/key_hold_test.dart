@@ -10,13 +10,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/main.dart'
     show
         HaloDb,
-        KeyHeld,
         acceptNewKeyIn,
         keyHeldIn,
         markVerified,
         signalEncrypt,
         useDatabasesForTest;
 import 'package:kryfo/session.dart';
+import 'package:kryfo/signal_session.dart' show KeyHeld;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'mem_db.dart';
