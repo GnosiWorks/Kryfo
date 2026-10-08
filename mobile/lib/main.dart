@@ -2228,6 +2228,12 @@ class HaloDb implements GroupOwedStore {
   Future<String?> heldKey(String haloId) async =>
       heldKeyHex(await open(), haloId, identity: _signalKey);
 
+  Future<bool> keyHeld(String haloId) async =>
+      keyHeldIn(await open(), haloId, identity: _signalKey);
+
+  Future<void> acceptNewKey(String haloId) async =>
+      acceptNewKeyIn(await open(), haloId);
+
   // a block starts the clocks of what they sent that waits to be read, in
   // their chat and in groups, and drops the receipts queued for them. an
   // unblock leaves them counting
@@ -5757,6 +5763,41 @@ Future<bool> markVerified(
   return true;
 }
 
+// verified under one key, holding another now: the mark stays on the old key
+// until the new number is checked (a new mark) or the new key accepted
+Future<bool> keyHeldIn(
+  DatabaseExecutor db,
+  String haloId, {
+  Future<String?> Function(String haloId)? identity,
+}) async {
+  if (isDevId(haloId)) return false;
+  final rows = await db.query(
+    'contacts',
+    columns: ['verified_key', 'xpub'],
+    where: 'halo_id = ?',
+    whereArgs: [haloId],
+    limit: 1,
+  );
+  if (rows.isEmpty) return false;
+  final mark = (rows.first['verified_key'] as String?)?.toLowerCase();
+  if (mark == null || mark.isEmpty) return false;
+  final held = await heldKeyHex(
+    db,
+    haloId,
+    xpub: rows.first['xpub'] as String?,
+    identity: identity,
+  );
+  return held != null && held != mark;
+}
+
+// the new key taken as it is: no mark, no banner, and sending goes on
+Future<void> acceptNewKeyIn(DatabaseExecutor db, String haloId) => db.update(
+  'contacts',
+  {'verified': 0, 'verified_key': null, 'key_changed': 0},
+  where: 'halo_id = ?',
+  whereArgs: [haloId],
+);
+
 // the upgrade to 65: when a room joined off a link sent its join, until
 // its creator lets this phone in
 Future<void> roomJoiningColumn(DatabaseExecutor db) =>
@@ -6287,11 +6328,21 @@ Future<bool> hasSessionWith(String peerId) async {
       await ss.sessionStore.containsSession(SignalProtocolAddress(peerId, 1));
 }
 
+// someone verified under one key who holds another now: nothing is sealed
+// for them until the new number is checked or the new key accepted
+class KeyHeld implements Exception {
+  KeyHeld(this.peer);
+  final String peer;
+  @override
+  String toString() => 'KeyHeld: their key moved since it was verified';
+}
+
 // the one place a frame is sealed for a peer. every frame for the dev chat
 // goes through its own seal instead: the allowlist, its store, the token
 // the wire asks for. either store seals one frame at a time per peer
 Future<String> signalEncrypt(String peerId, String plaintext) async {
   if (isDevId(peerId)) return devLane.encrypt(peerId, plaintext);
+  if (await appState.keyHeld(peerId)) throw KeyHeld(peerId);
   final from = _afreshFrom;
   return signalSession.encryptTo(
     peerId,
@@ -7856,6 +7907,8 @@ class AppState extends ChangeNotifier {
     ]) {
       final uid = r['msg_uid'] as String?;
       if (uid == null || _outboxInflight.contains(uid)) continue;
+      final to = r['peer_id'] as String?;
+      if (to != null && await keyHeld(to)) continue;
       // a send fired seconds ago still has its own future running; leave it be.
       final age = DateTime.now().millisecondsSinceEpoch - (r['sent_at'] as int);
       if (age < 45000) continue;
@@ -7906,6 +7959,20 @@ class AppState extends ChangeNotifier {
   // the chat hold their texts as going, not failed
   final Set<String> _waitingCard = {};
   bool waitsForCard(String peer) => _waitingCard.contains(peer);
+
+  // a contact verified under another key than they hold now: nothing goes
+  // to them until the new number is checked or the new key accepted. the
+  // queues pass them by without using a try. a read that fails says
+  // nothing about their key
+  Future<bool> keyHeld(String peer) async {
+    if (isDevId(peer)) return false;
+    try {
+      return await session.keyHeld(peer);
+    } catch (e) {
+      dlog('key hold: not read (${e.runtimeType})');
+      return false;
+    }
+  }
 
   // their card is here: what of theirs waited goes now, from the first try
   void _cardCame(String peer) {
@@ -7959,6 +8026,7 @@ class AppState extends ChangeNotifier {
         final uid = r['msg_uid'] as String;
         final age = DateTime.now().millisecondsSinceEpoch - (r['at'] as int);
         if (age < 45000 || _editsInflight.contains(uid)) continue;
+        if (await keyHeld(r['peer_id'] as String)) continue;
         _editsInflight.add(uid);
         unawaited(
           sendEdit(
@@ -7986,6 +8054,7 @@ class AppState extends ChangeNotifier {
         final uid = r['msg_uid'] as String;
         final age = DateTime.now().millisecondsSinceEpoch - (r['at'] as int);
         if (age < 45000 || _pinsInflight.contains(uid)) continue;
+        if (await keyHeld(r['peer_id'] as String)) continue;
         _pinsInflight.add(uid);
         unawaited(
           _sendPin(
@@ -8069,6 +8138,7 @@ class AppState extends ChangeNotifier {
         if (kind == kFrameReceipt ? _waitingCard.contains(peer) : age < 45000) {
           continue;
         }
+        if (await keyHeld(peer)) continue;
         if (!_framesInflight.add('$kind $uid')) continue;
         unawaited(
           _sendFrame(
@@ -8493,6 +8563,7 @@ class AppState extends ChangeNotifier {
       }
       for (final r in heads.values) {
         if ((r['next_at'] as int? ?? 0) > now) continue;
+        if (await keyHeld(r['member'] as String)) continue;
         unawaited(_ctlLane(d, r['group_id'] as String, r['member'] as String));
       }
     }
@@ -14836,6 +14907,9 @@ class AppState extends ChangeNotifier {
         cipher = await _io.encrypt(memberId, wrapped);
       } on StartingAfresh {
         // waits on their card, asked for as it falls due (_afreshCard)
+        rethrow;
+      } on KeyHeld {
+        // waits on a check of their new number: their session is fine
         rethrow;
       } catch (e) {
         // a corrupt session (InvalidKeyException or bad state) can't encrypt.
