@@ -3354,6 +3354,19 @@ class AppLocalizationsEs extends AppLocalizations {
   String get keyVerificationSafetyNumber => 'Número de seguridad';
 
   @override
+  String get keyVerificationNewNumber =>
+      'El código de seguridad cambió mientras esta página estaba abierta. Este es el número nuevo: compáralo otra vez.';
+
+  @override
+  String get keyVerificationKeyMoved =>
+      'El código de seguridad acaba de cambiar. Compara el número nuevo.';
+
+  @override
+  String keyVerificationNoKeyYet(Object peerName) {
+    return 'Todavía no hay clave de $peerName. El número aparece aquí en cuanto te escriba.';
+  }
+
+  @override
   String keyVerificationWith(Object peerName) {
     return 'Con $peerName';
   }

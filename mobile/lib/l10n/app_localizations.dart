@@ -5166,6 +5166,24 @@ abstract class AppLocalizations {
   /// screens/key_verification_screen.dart
   ///
   /// In en, this message translates to:
+  /// **'Their security code changed while this was open. This is the new number: compare it again.'**
+  String get keyVerificationNewNumber;
+
+  /// screens/key_verification_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Their security code just changed. Compare the new number.'**
+  String get keyVerificationKeyMoved;
+
+  /// screens/key_verification_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'No key from {peerName} yet. Their number shows here once they have written to you.'**
+  String keyVerificationNoKeyYet(Object peerName);
+
+  /// screens/key_verification_screen.dart
+  ///
+  /// In en, this message translates to:
   /// **'With {peerName}'**
   String keyVerificationWith(Object peerName);
 

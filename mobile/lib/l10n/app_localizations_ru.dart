@@ -3415,6 +3415,19 @@ class AppLocalizationsRu extends AppLocalizations {
   String get keyVerificationSafetyNumber => 'Код безопасности';
 
   @override
+  String get keyVerificationNewNumber =>
+      'Код безопасности изменился, пока эта страница была открыта. Это новый код: сравни его ещё раз.';
+
+  @override
+  String get keyVerificationKeyMoved =>
+      'Код безопасности только что изменился. Сравни новый код.';
+
+  @override
+  String keyVerificationNoKeyYet(Object peerName) {
+    return 'Ключа от $peerName пока нет. Код появится здесь, как только $peerName тебе напишет.';
+  }
+
+  @override
   String keyVerificationWith(Object peerName) {
     return 'Собеседник: $peerName';
   }

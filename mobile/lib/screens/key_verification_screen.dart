@@ -7,6 +7,7 @@ import '../theme.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/swap.dart';
+import '../widgets/ease_size.dart';
 import '../widgets/motion.dart' show kHouseCurve, motionStill;
 import '../main.dart' show session, appState;
 import '../l10n/l10n.dart';
@@ -59,23 +60,60 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
   late bool _verified = widget.initialVerified ?? false;
   // the change came from a tap here, not from reading what was stored
   bool _tapped = false;
+  // the key the number on screen is made from: the one held for them now,
+  // read as the page opens and again whenever something changes
+  late String _key = widget.peerXpub.trim().toLowerCase();
+  // their key changed while this page was open
+  bool _moved = false;
+  // the first read only puts the held key in place of the one passed in;
+  // until it is back no number shows, so nobody compares the wrong one
+  bool _read1 = false;
+  // reads answer out of order: only the newest one lands
+  int _reads = 0;
 
   @override
   void initState() {
     super.initState();
-    session.isVerified(widget.peerHaloId).then((v) {
-      if (mounted) setState(() => _verified = v);
+    _read();
+    appState.addListener(_read);
+  }
+
+  @override
+  void dispose() {
+    appState.removeListener(_read);
+    super.dispose();
+  }
+
+  Future<void> _read() async {
+    final n = ++_reads;
+    final held = await session.heldKey(widget.peerHaloId);
+    final v = await session.isVerified(widget.peerHaloId);
+    if (!mounted || n != _reads) return;
+    // no key held is no number: the one passed in may be a card's, gone
+    final key = held ?? '';
+    final first = !_read1;
+    if (key == _key && v == _verified && !first) return;
+    setState(() {
+      if (key != _key && !first) {
+        _moved = true;
+        _tapped = false;
+      }
+      _read1 = true;
+      _key = key;
+      _verified = v;
     });
   }
 
   Future<void> _toggle() async {
     final next = !_verified;
-    await session.setVerified(widget.peerHaloId, next);
-    // the new key is already trusted and the session rebuilt on the inbound
-    // message (deliver-and-warn), so verifying only clears the banner. a
-    // session teardown here would break sending.
-    if (next && await session.keyChanged(widget.peerHaloId)) {
-      await session.clearKeyChanged(widget.peerHaloId);
+    // a mark for the number on screen, never for a key that came since. the
+    // new key is already trusted and the session rebuilt on the inbound
+    // message (deliver-and-warn), so the mark also ends the banner, in the
+    // same write. a session teardown here would break sending.
+    if (!await session.setVerified(widget.peerHaloId, next, key: _key)) {
+      await _read();
+      if (mounted) showHaloToast(context, l10n.keyVerificationKeyMoved);
+      return;
     }
     await appState.refreshContacts();
     if (next) HapticFeedback.mediumImpact();
@@ -89,7 +127,9 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final groups = haloSafetyNumber(widget.myXpub, widget.peerXpub).split(' ');
+    final groups = haloSafetyNumber(widget.myXpub, _key).split(' ');
+    // no key from them yet: there is no number to compare
+    final none = _read1 && _key.isEmpty;
     return Scaffold(
       backgroundColor: HaloColors.surface,
       body: SafeArea(
@@ -131,32 +171,71 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
                       style: HaloType.sans(size: 14, color: HaloColors.text2),
                     ),
                   ),
+                  EaseSize(
+                    child: _moved
+                        ? Padding(
+                            padding: const EdgeInsets.only(top: 16),
+                            child: Text(
+                              l10n.keyVerificationNewNumber,
+                              style: HaloType.sans(
+                                size: 13.5,
+                                color: HaloColors.amber,
+                                height: 1.45,
+                              ),
+                            ),
+                          )
+                        : const SizedBox(width: double.infinity),
+                  ),
                   const SizedBox(height: 24),
                   StaggerIn(
                     index: 1,
-                    child: SafetyNumberCard(
-                      groups: groups,
-                      verified: _verified,
-                      celebrate: _tapped,
+                    // a new key is a new number: it assembles again
+                    child: FadeSwap(
+                      child: !_read1
+                          ? const SizedBox(key: ValueKey('wait'), height: 140)
+                          : none
+                          ? Padding(
+                              key: const ValueKey('none'),
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              child: Text(
+                                l10n.keyVerificationNoKeyYet(widget.peerName),
+                                style: HaloType.sans(
+                                  size: 15,
+                                  color: HaloColors.text,
+                                  height: 1.5,
+                                ),
+                              ),
+                            )
+                          : SafetyNumberCard(
+                              key: ValueKey(_key),
+                              groups: groups,
+                              verified: _verified,
+                              celebrate: _tapped,
+                            ),
                     ),
                   ),
                   const SizedBox(height: 24),
-                  StaggerIn(
-                    index: 4,
-                    child: Text(
-                      l10n.keyVerificationIfSeesTheSame(widget.peerName),
-                      style: HaloType.sans(
-                        size: 13,
-                        color: HaloColors.text2,
-                        height: 1.5,
+                  if (!none)
+                    StaggerIn(
+                      index: 4,
+                      child: Text(
+                        l10n.keyVerificationIfSeesTheSame(widget.peerName),
+                        style: HaloType.sans(
+                          size: 13,
+                          color: HaloColors.text2,
+                          height: 1.5,
+                        ),
                       ),
                     ),
-                  ),
                   const SizedBox(height: 28),
-                  StaggerIn(
-                    index: 6,
-                    child: _VerifyButton(verified: _verified, onTap: _toggle),
-                  ),
+                  if (!none)
+                    StaggerIn(
+                      index: 6,
+                      child: _VerifyButton(
+                        verified: _verified,
+                        onTap: _read1 ? _toggle : () {},
+                      ),
+                    ),
                 ],
               ),
             ),

@@ -3311,6 +3311,19 @@ class AppLocalizationsVi extends AppLocalizations {
   String get keyVerificationSafetyNumber => 'Số an toàn';
 
   @override
+  String get keyVerificationNewNumber =>
+      'Mã bảo mật đã thay đổi trong lúc trang này đang mở. Đây là số mới, hãy so sánh lại.';
+
+  @override
+  String get keyVerificationKeyMoved =>
+      'Mã bảo mật vừa thay đổi. Hãy so sánh số mới.';
+
+  @override
+  String keyVerificationNoKeyYet(Object peerName) {
+    return 'Chưa có khóa của $peerName. Số sẽ hiện ở đây khi họ nhắn cho bạn.';
+  }
+
+  @override
   String keyVerificationWith(Object peerName) {
     return 'Với $peerName';
   }

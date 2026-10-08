@@ -356,6 +356,7 @@ class DevChat {
         'last_seen': at,
         'accepted': 1,
         'verified': 1,
+        'verified_key': key.xPub.toLowerCase(),
         'blocked': 0,
         'key_changed': 0,
         'unread': 0,

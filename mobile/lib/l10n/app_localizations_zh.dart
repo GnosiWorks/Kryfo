@@ -3199,6 +3199,17 @@ class AppLocalizationsZh extends AppLocalizations {
   String get keyVerificationSafetyNumber => '安全码';
 
   @override
+  String get keyVerificationNewNumber => '此页面打开期间，安全码变更了。这是新的安全码，请再比对一次。';
+
+  @override
+  String get keyVerificationKeyMoved => '安全码刚刚变更了，请比对新的安全码。';
+
+  @override
+  String keyVerificationNoKeyYet(Object peerName) {
+    return '还没有 $peerName 的密钥。对方给你发消息后，安全码就会显示在这里。';
+  }
+
+  @override
   String keyVerificationWith(Object peerName) {
     return '与 $peerName';
   }
@@ -10498,6 +10509,17 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get keyVerificationSafetyNumber => '安全碼';
+
+  @override
+  String get keyVerificationNewNumber => '此頁面開啟期間，安全碼變更了。這是新的安全碼，請再比對一次。';
+
+  @override
+  String get keyVerificationKeyMoved => '安全碼剛剛變更了，請比對新的安全碼。';
+
+  @override
+  String keyVerificationNoKeyYet(Object peerName) {
+    return '還沒有 $peerName 的金鑰。對方傳訊息給你之後，安全碼就會顯示在這裡。';
+  }
 
   @override
   String keyVerificationWith(Object peerName) {

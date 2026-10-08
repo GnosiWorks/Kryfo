@@ -3318,6 +3318,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get keyVerificationSafetyNumber => 'Safety number';
 
   @override
+  String get keyVerificationNewNumber =>
+      'Their security code changed while this was open. This is the new number: compare it again.';
+
+  @override
+  String get keyVerificationKeyMoved =>
+      'Their security code just changed. Compare the new number.';
+
+  @override
+  String keyVerificationNoKeyYet(Object peerName) {
+    return 'No key from $peerName yet. Their number shows here once they have written to you.';
+  }
+
+  @override
   String keyVerificationWith(Object peerName) {
     return 'With $peerName';
   }

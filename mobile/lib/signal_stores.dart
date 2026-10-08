@@ -21,6 +21,10 @@ const kSignalTables = [
 // the anonymous dev chat's store
 const kDevSignalPrefix = 'dev_';
 
+// called when a key saved for someone replaces another: whoever shows their
+// number reads it again
+void Function()? onPeerKeyChanged;
+
 class HaloIdentityKeyStore implements IdentityKeyStore {
   final Database _db;
   final IdentityKeyPair _idPair;
@@ -62,6 +66,12 @@ class HaloIdentityKeyStore implements IdentityKeyStore {
       'address': addr,
       'identity_key': newBytes,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
+    // the same key again changes nothing: one look per key, not per message
+    if (changed || existing.isEmpty) await _unverifyOtherKey(addr, newBytes);
+    // the first-contact try's stand-in name is nobody's page
+    if ((changed || existing.isEmpty) && addr != '_pending_back_pair_') {
+      onPeerKeyChanged?.call();
+    }
     return changed;
   }
 
@@ -119,6 +129,28 @@ class HaloIdentityKeyStore implements IdentityKeyStore {
   // again. only called after the user accepts the new safety number.
   Future<void> removePeerIdentity(SignalProtocolAddress address) async {
     await _db.delete(_t, where: 'address = ?', whereArgs: [address.getName()]);
+  }
+
+  // a verified mark names the key it was given for: another key saved for
+  // them takes it off, whichever way that key came
+  Future<void> _unverifyOtherKey(String addr, Uint8List key) async {
+    final pub = key.length == 33 ? key.sublist(1) : key;
+    final hex = pub.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+    final rows = await _db.query(
+      'contacts',
+      columns: ['verified', 'verified_key'],
+      where: 'halo_id = ?',
+      whereArgs: [addr],
+      limit: 1,
+    );
+    if (rows.isEmpty || (rows.first['verified'] as int? ?? 0) != 1) return;
+    if ((rows.first['verified_key'] as String?)?.toLowerCase() == hex) return;
+    await _db.update(
+      'contacts',
+      {'verified': 0},
+      where: 'halo_id = ?',
+      whereArgs: [addr],
+    );
   }
 
   // the key an address dev:<id> is pinned to, while that key still works

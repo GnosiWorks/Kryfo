@@ -4142,6 +4142,23 @@
   "@keyVerificationSafetyNumber": {
     "description": "screens/key_verification_screen.dart"
   },
+  "keyVerificationNewNumber": "Their security code changed while this was open. This is the new number: compare it again.",
+  "@keyVerificationNewNumber": {
+    "description": "screens/key_verification_screen.dart"
+  },
+  "keyVerificationKeyMoved": "Their security code just changed. Compare the new number.",
+  "@keyVerificationKeyMoved": {
+    "description": "screens/key_verification_screen.dart"
+  },
+  "keyVerificationNoKeyYet": "No key from {peerName} yet. Their number shows here once they have written to you.",
+  "@keyVerificationNoKeyYet": {
+    "description": "screens/key_verification_screen.dart",
+    "placeholders": {
+      "peerName": {
+        "type": "Object"
+      }
+    }
+  },
   "keyVerificationWith": "With {peerName}",
   "@keyVerificationWith": {
     "description": "screens/key_verification_screen.dart",

@@ -237,8 +237,10 @@ class Session {
       _ofPeer(haloId).setNote(haloId, note);
   Future<void> setPeerBundle(String haloId, String bundleB64) =>
       _ofPeer(haloId).setPeerBundle(haloId, bundleB64);
-  Future<void> setVerified(String haloId, bool verified) =>
-      _ofPeer(haloId).setVerified(haloId, verified);
+  Future<bool> setVerified(String haloId, bool verified, {String? key}) =>
+      _ofPeer(haloId).setVerified(haloId, verified, key: key);
+
+  Future<String?> heldKey(String haloId) => _ofPeer(haloId).heldKey(haloId);
   Future<Map<String, Object?>?> shieldFor(String haloId) =>
       _ofPeer(haloId).shieldFor(haloId);
   // what the shield made of someone, while it is on. off, no verdict shows,

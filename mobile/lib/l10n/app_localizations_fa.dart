@@ -3334,6 +3334,19 @@ class AppLocalizationsFa extends AppLocalizations {
   String get keyVerificationSafetyNumber => 'شماره‌ی امنیتی';
 
   @override
+  String get keyVerificationNewNumber =>
+      'کد امنیتی در حالی که این صفحه باز بود تغییر کرد. این شماره‌ی تازه است، دوباره مقایسه‌اش کنید.';
+
+  @override
+  String get keyVerificationKeyMoved =>
+      'کد امنیتی همین حالا تغییر کرد. شماره‌ی تازه را مقایسه کنید.';
+
+  @override
+  String keyVerificationNoKeyYet(Object peerName) {
+    return 'هنوز کلیدی از ⁨$peerName⁩ نیست. وقتی به شما پیام بدهد، شماره این‌جا نشان داده می‌شود.';
+  }
+
+  @override
   String keyVerificationWith(Object peerName) {
     return 'با ⁨$peerName⁩';
   }
