@@ -842,6 +842,7 @@
   "keyVerificationSafetyNumber": "Номер безпеки",
   "keyVerificationNewNumber": "Код безпеки змінився, поки ця сторінка була відкрита. Це новий номер: порівняй його ще раз.",
   "keyVerificationKeyMoved": "Код безпеки щойно змінився. Порівняй новий номер.",
+  "keyVerificationNoKeyYet": "Ключа від {peerName} ще немає. Номер з’явиться тут, щойно {peerName} тобі напише.",
   "keyVerificationWith": "Контакт: {peerName}",
   "keyVerificationIfSeesTheSame": "Якщо {peerName} бачить той самий номер, ваші повідомлення бачите лише ви двоє. Звірити особисто або під час дзвінка, якому ти довіряєш, - найнадійніший спосіб переконатися, але це необов’язково і для спілкування ніколи не потрібно.",
   "keyVerificationVerified": "Звірено",

@@ -91,7 +91,8 @@ import 'widgets/kryfo_link_text.dart' show takeOutsideLink;
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:app_links/app_links.dart';
 import 'signal_session.dart';
-import 'signal_stores.dart' show invitePreKeyId, kDevSignalPrefix;
+import 'signal_stores.dart'
+    show invitePreKeyId, kDevSignalPrefix, onPeerKeyChanged;
 import 'dart:isolate';
 import 'dlog.dart';
 import 'read_burn.dart' show burnStartBy, burnWaitsRow, burnWaitsSql, kBurnSkew;
@@ -1314,10 +1315,6 @@ class HaloDb implements GroupOwedStore {
       },
       onUpgrade: (db, oldV, newV) async {
         // 62 runs last, below: its index names columns older steps add
-        if (oldV < 66) {
-          // the key each verified contact was verified under
-          await verifiedKeyColumn(db);
-        }
         if (oldV < 65) {
           // a room joined off a link and not let in yet: when the join went
           await roomJoiningColumn(db);
@@ -1741,6 +1738,11 @@ class HaloDb implements GroupOwedStore {
           // after every older step: the index names burn_at and burn_secs
           await burnUnseenTables(db);
         }
+        if (oldV < 66) {
+          // after every older step: it reads contacts.verified and the
+          // signal store's peer_identities
+          await verifiedKeyColumn(db);
+        }
       },
     );
     // retired while it was opening
@@ -1820,7 +1822,12 @@ class HaloDb implements GroupOwedStore {
     DatabaseExecutor db,
     List<Map<String, Object?>> rows, {
     String idColumn = 'halo_id',
-  }) => verifiedNow(db, rows, idColumn: idColumn);
+  }) => verifiedNow(db, rows, idColumn: idColumn, identity: _signalKey);
+
+  // the key the identity's signal store holds for someone: the hidden
+  // chats' database keeps none of its own
+  static Future<String?> _signalKey(String haloId) async =>
+      signalSession.ready ? signalSession.peerXPubHex(haloId) : null;
 
   // a contact stub from group invite info. a peer we already know is left
   // as is.
@@ -2205,7 +2212,13 @@ class HaloDb implements GroupOwedStore {
   }
 
   Future<bool> setVerified(String haloId, bool verified, {String? key}) async =>
-      markVerified(await open(), haloId, verified, key: key);
+      markVerified(
+        await open(),
+        haloId,
+        verified,
+        key: key,
+        identity: _signalKey,
+      );
 
   Future<bool> isVerified(String haloId) async {
     final c = await getContact(haloId);
@@ -2213,7 +2226,7 @@ class HaloDb implements GroupOwedStore {
   }
 
   Future<String?> heldKey(String haloId) async =>
-      heldKeyHex(await open(), haloId);
+      heldKeyHex(await open(), haloId, identity: _signalKey);
 
   // a block starts the clocks of what they sent that waits to be read, in
   // their chat and in groups, and drops the receipts queued for them. an
@@ -5632,14 +5645,20 @@ Future<void> tieVerifiedToKeys(DatabaseExecutor db) async {
 }
 
 // the key someone is known by here, as lowercase hex: the one their sessions
-// are built on, else the one their card brought. the dev chat's is pinned on
-// its row. null when there is none
+// are built on (asked of [identity], the identity's own signal store, else
+// read from this database's), else the one their card brought, else the one
+// inside their bundle. the dev chat's is pinned on its row. null when there
+// is none. a hidden chat's database keeps no signal tables: [identity] is
+// what reads its key
 Future<String?> heldKeyHex(
   DatabaseExecutor db,
   String haloId, {
   String? xpub,
+  Future<String?> Function(String haloId)? identity,
 }) async {
   if (!isDevId(haloId)) {
+    final asked = await identity?.call(haloId);
+    if (asked != null && asked.isNotEmpty) return asked.toLowerCase();
     try {
       final rows = await db.query(
         'peer_identities',
@@ -5649,28 +5668,34 @@ Future<String?> heldKeyHex(
         limit: 1,
       );
       if (rows.isNotEmpty) {
-        final b = rows.first['identity_key'] as List<int>;
-        final pub = b.length == 33 ? b.sublist(1) : b;
-        return pub.map((x) => x.toRadixString(16).padLeft(2, '0')).join();
+        return _keyHex(rows.first['identity_key'] as List<int>);
       }
     } catch (e) {
-      // a database with no signal tables yet knows no key but the card's
+      // a database with no signal tables knows no key but the card's
       dlog('held key: ${e.runtimeType}');
     }
   }
-  var x = xpub;
-  if (x == null) {
-    final rows = await db.query(
-      'contacts',
-      columns: ['xpub'],
-      where: 'halo_id = ?',
-      whereArgs: [haloId],
-      limit: 1,
-    );
-    x = rows.isEmpty ? null : rows.first['xpub'] as String?;
-  }
-  x = x?.trim().toLowerCase();
-  return x == null || x.isEmpty ? null : x;
+  final rows = await db.query(
+    'contacts',
+    columns: ['xpub', 'peer_bundle'],
+    where: 'halo_id = ?',
+    whereArgs: [haloId],
+    limit: 1,
+  );
+  final x = (xpub ?? (rows.isEmpty ? null : rows.first['xpub'] as String?))
+      ?.trim()
+      .toLowerCase();
+  if (x != null && x.isNotEmpty) return x;
+  final bundle = rows.isEmpty ? null : rows.first['peer_bundle'] as String?;
+  if (isDevId(haloId) || bundle == null || bundle.isEmpty) return null;
+  final b = _bundleIdentity(bundle);
+  return b == null ? null : _keyHex(b);
+}
+
+// a signal identity key as hex, without its one-byte type
+String _keyHex(List<int> b) {
+  final pub = b.length == 33 ? b.sublist(1) : b;
+  return pub.map((x) => x.toRadixString(16).padLeft(2, '0')).join();
 }
 
 // verified counts only while the key it was given for is still theirs: a
@@ -5679,13 +5704,19 @@ Future<List<Map<String, Object?>>> verifiedNow(
   DatabaseExecutor db,
   List<Map<String, Object?>> rows, {
   String idColumn = 'halo_id',
+  Future<String?> Function(String haloId)? identity,
 }) async {
   List<Map<String, Object?>>? out;
   for (var i = 0; i < rows.length; i++) {
     final r = rows[i];
     if ((r['verified'] as int? ?? 0) != 1) continue;
     final id = r[idColumn] as String;
-    final key = await heldKeyHex(db, id, xpub: r['xpub'] as String?);
+    final key = await heldKeyHex(
+      db,
+      id,
+      xpub: r['xpub'] as String?,
+      identity: identity,
+    );
     final mark = (r['verified_key'] as String?)?.toLowerCase();
     if (key != null && mark == key) continue;
     out ??= List.of(rows);
@@ -5696,12 +5727,13 @@ Future<List<Map<String, Object?>>> verifiedNow(
 
 // a mark for the key that was on screen, and only while it is still the one
 // held for them. false when it has moved on since: the number shown was for
-// another key
+// another key. the mark and the end of the "changed" banner are one write
 Future<bool> markVerified(
   DatabaseExecutor db,
   String haloId,
   bool verified, {
   String? key,
+  Future<String?> Function(String haloId)? identity,
 }) async {
   if (!verified) {
     await db.update(
@@ -5712,13 +5744,13 @@ Future<bool> markVerified(
     );
     return true;
   }
-  final held = await heldKeyHex(db, haloId);
+  final held = await heldKeyHex(db, haloId, identity: identity);
   if (held == null || key == null || key.trim().toLowerCase() != held) {
     return false;
   }
   await db.update(
     'contacts',
-    {'verified': 1, 'verified_key': held},
+    {'verified': 1, 'verified_key': held, 'key_changed': 0},
     where: 'halo_id = ?',
     whereArgs: [haloId],
   );
@@ -16313,6 +16345,9 @@ class AppState extends ChangeNotifier {
 final appState = AppState();
 
 void main() async {
+  // a key saved for someone that is not the one held before: open pages that
+  // show it read again
+  onPeerKeyChanged = appState.keyChanged;
   dlog('LAUNCH main');
   WidgetsFlutterBinding.ensureInitialized();
   // a toast shown while the lock is up waits for it to lift

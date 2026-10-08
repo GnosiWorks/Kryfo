@@ -3319,6 +3319,11 @@ class AppLocalizationsVi extends AppLocalizations {
       'Mã bảo mật vừa thay đổi. Hãy so sánh số mới.';
 
   @override
+  String keyVerificationNoKeyYet(Object peerName) {
+    return 'Chưa có khóa của $peerName. Số sẽ hiện ở đây khi họ nhắn cho bạn.';
+  }
+
+  @override
   String keyVerificationWith(Object peerName) {
     return 'Với $peerName';
   }

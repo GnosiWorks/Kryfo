@@ -3366,6 +3366,11 @@ class AppLocalizationsIt extends AppLocalizations {
       'Il codice di sicurezza è appena cambiato. Confronta il nuovo numero.';
 
   @override
+  String keyVerificationNoKeyYet(Object peerName) {
+    return 'Ancora nessuna chiave da $peerName. Il numero compare qui appena ti avrà scritto.';
+  }
+
+  @override
   String keyVerificationWith(Object peerName) {
     return 'Con $peerName';
   }

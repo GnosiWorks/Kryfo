@@ -4,10 +4,12 @@
 // a mark is only taken for the number that was on screen. contacts verified
 // before the mark named a key are tied to the key held for them at upgrade.
 // the rows are the app's own tables, kept in maps
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+
 import 'package:kryfo/main.dart'
     show heldKeyHex, markVerified, tieVerifiedToKeys, verifiedNow;
 import 'package:kryfo/signal_stores.dart';
@@ -125,5 +127,76 @@ void main() {
     final steps = src.substring(upgrade, src.indexOf('\n    );', upgrade));
     expect(steps, contains('if (oldV < 66) {'));
     expect(steps, contains('await verifiedKeyColumn(db);'));
+    // after every older step: it reads columns and tables they make
+    final at66 = steps.indexOf('if (oldV < 66) {');
+    for (final m in RegExp(r'if \(oldV < (\d+)\) \{').allMatches(steps)) {
+      if (int.parse(m.group(1)!) < 66) expect(m.start, lessThan(at66));
+    }
+  });
+
+  test(
+    'a hidden chat keeps no signal tables: its key is asked of the '
+    "identity's store, and a key that moved there takes the mark off",
+    () async {
+      // the vault's row: the card's key, verified under it
+      final vault = await _db(xpub: _hex(_keyA));
+      await markVerified(vault, _peer, true, key: _hex(_keyA));
+      expect(await _verified(vault), isTrue);
+      // the identity's store holds another key for them now
+      Future<String?> store(String id) async => _hex(_keyB);
+      final rows = await verifiedNow(
+        vault,
+        vault.rows('contacts'),
+        identity: store,
+      );
+      expect(rows.first['verified'], 0);
+      expect(await heldKeyHex(vault, _peer, identity: store), _hex(_keyB));
+      // and the mark is only taken for the key the store holds
+      expect(
+        await markVerified(
+          vault,
+          _peer,
+          true,
+          key: _hex(_keyA),
+          identity: store,
+        ),
+        isFalse,
+      );
+    },
+  );
+
+  test("with no key from them but a bundle, the bundle's key; with none, no "
+      'mark at all', () async {
+    final db = await _db();
+    expect(await markVerified(db, _peer, true, key: ''), isFalse);
+    expect(db.rows('contacts').first['verified'], 0);
+    final bundle = base64Encode(
+      utf8.encode(
+        jsonEncode({
+          'identityKey': base64Encode([5, ..._keyA]),
+        }),
+      ),
+    );
+    await db.update('contacts', {'peer_bundle': bundle});
+    expect(await heldKeyHex(db, _peer), _hex(_keyA));
+  });
+
+  test('a key saved over another tells whoever shows the number', () async {
+    final db = await _db(identity: _keyA);
+    var told = 0;
+    onPeerKeyChanged = () => told++;
+    addTearDown(() => onPeerKeyChanged = null);
+    final store = HaloIdentityKeyStore(db, generateIdentityKeyPair(), 1);
+    final addr = SignalProtocolAddress(_peer, 1);
+    await store.saveIdentity(
+      addr,
+      IdentityKey(Curve.decodePoint(Uint8List.fromList([5, ..._keyA]), 0)),
+    );
+    expect(told, 0);
+    await store.saveIdentity(
+      addr,
+      IdentityKey(Curve.decodePoint(Uint8List.fromList([5, ..._keyB]), 0)),
+    );
+    expect(told, 1);
   });
 }

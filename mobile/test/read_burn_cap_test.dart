@@ -710,13 +710,17 @@ void main() {
       expect(made, contains(column));
       expect(made, contains('await burnIndex(db);'));
       final steps = src.substring(upgrade, src.indexOf('\n    );', upgrade));
-      final last = steps.lastIndexOf(RegExp(r'if \(oldV < \d+\) \{'));
+      // after every older step; a newer one may follow it
+      final at62 = steps.indexOf('if (oldV < 62) {');
       expect(
         RegExp(
           r'^if \(oldV < 62\) \{[^}]*await burnUnseenTables\(db\);',
-        ).hasMatch(steps.substring(last)),
+        ).hasMatch(steps.substring(at62)),
         isTrue,
       );
+      for (final m in RegExp(r'if \(oldV < (\d+)\) \{').allMatches(steps)) {
+        if (int.parse(m.group(1)!) < 62) expect(m.start, lessThan(at62));
+      }
       expect('if (oldV < 62)'.allMatches(steps), hasLength(1));
       final step = bodyOf(src, 'Future<void> burnUnseenTables(');
       expect(step, contains('ADD COLUMN $column'));

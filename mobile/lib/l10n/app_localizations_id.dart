@@ -3322,6 +3322,11 @@ class AppLocalizationsId extends AppLocalizations {
       'Kode keamanan baru saja berubah. Bandingkan nomor yang baru.';
 
   @override
+  String keyVerificationNoKeyYet(Object peerName) {
+    return 'Belum ada kunci dari $peerName. Nomornya muncul di sini setelah dia mengirim pesan kepadamu.';
+  }
+
+  @override
   String keyVerificationWith(Object peerName) {
     return 'Dengan $peerName';
   }

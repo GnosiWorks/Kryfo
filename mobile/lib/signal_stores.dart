@@ -21,6 +21,10 @@ const kSignalTables = [
 // the anonymous dev chat's store
 const kDevSignalPrefix = 'dev_';
 
+// called when a key saved for someone replaces another: whoever shows their
+// number reads it again
+void Function()? onPeerKeyChanged;
+
 class HaloIdentityKeyStore implements IdentityKeyStore {
   final Database _db;
   final IdentityKeyPair _idPair;
@@ -62,7 +66,9 @@ class HaloIdentityKeyStore implements IdentityKeyStore {
       'address': addr,
       'identity_key': newBytes,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
-    await _unverifyOtherKey(addr, newBytes);
+    // the same key again changes nothing: one look per key, not per message
+    if (changed || existing.isEmpty) await _unverifyOtherKey(addr, newBytes);
+    if (changed) onPeerKeyChanged?.call();
     return changed;
   }
 

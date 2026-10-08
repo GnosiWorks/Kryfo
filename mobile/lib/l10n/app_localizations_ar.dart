@@ -3439,6 +3439,11 @@ class AppLocalizationsAr extends AppLocalizations {
       'تغيّر رمز الأمان للتو. قارن الرقم الجديد.';
 
   @override
+  String keyVerificationNoKeyYet(Object peerName) {
+    return 'لا يوجد مفتاح من ⁨$peerName⁩ بعد. يظهر الرقم هنا حين يراسلك.';
+  }
+
+  @override
   String keyVerificationWith(Object peerName) {
     return 'مع ⁨$peerName⁩';
   }

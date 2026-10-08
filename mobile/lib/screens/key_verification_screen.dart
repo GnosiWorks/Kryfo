@@ -65,8 +65,11 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
   late String _key = widget.peerXpub.trim().toLowerCase();
   // their key changed while this page was open
   bool _moved = false;
-  // the first read only puts the held key in place of the one passed in
+  // the first read only puts the held key in place of the one passed in;
+  // until it is back no number shows, so nobody compares the wrong one
   bool _read1 = false;
+  // reads answer out of order: only the newest one lands
+  int _reads = 0;
 
   @override
   void initState() {
@@ -82,18 +85,19 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
   }
 
   Future<void> _read() async {
+    final n = ++_reads;
     final held = await session.heldKey(widget.peerHaloId);
     final v = await session.isVerified(widget.peerHaloId);
-    if (!mounted) return;
+    if (!mounted || n != _reads) return;
     final key = held ?? _key;
     final first = !_read1;
-    _read1 = true;
-    if (key == _key && v == _verified) return;
+    if (key == _key && v == _verified && !first) return;
     setState(() {
       if (key != _key && !first) {
         _moved = true;
         _tapped = false;
       }
+      _read1 = true;
       _key = key;
       _verified = v;
     });
@@ -101,17 +105,14 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
 
   Future<void> _toggle() async {
     final next = !_verified;
-    // a mark for the number on screen, never for a key that came since
+    // a mark for the number on screen, never for a key that came since. the
+    // new key is already trusted and the session rebuilt on the inbound
+    // message (deliver-and-warn), so the mark also ends the banner, in the
+    // same write. a session teardown here would break sending.
     if (!await session.setVerified(widget.peerHaloId, next, key: _key)) {
       await _read();
       if (mounted) showHaloToast(context, l10n.keyVerificationKeyMoved);
       return;
-    }
-    // the new key is already trusted and the session rebuilt on the inbound
-    // message (deliver-and-warn), so verifying only clears the banner. a
-    // session teardown here would break sending.
-    if (next && await session.keyChanged(widget.peerHaloId)) {
-      await session.clearKeyChanged(widget.peerHaloId);
     }
     await appState.refreshContacts();
     if (next) HapticFeedback.mediumImpact();
@@ -126,6 +127,8 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
   @override
   Widget build(BuildContext context) {
     final groups = haloSafetyNumber(widget.myXpub, _key).split(' ');
+    // no key from them yet: there is no number to compare
+    final none = _read1 && _key.isEmpty;
     return Scaffold(
       backgroundColor: HaloColors.surface,
       body: SafeArea(
@@ -187,31 +190,51 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
                     index: 1,
                     // a new key is a new number: it assembles again
                     child: FadeSwap(
-                      child: SafetyNumberCard(
-                        key: ValueKey(_key),
-                        groups: groups,
-                        verified: _verified,
-                        celebrate: _tapped,
-                      ),
+                      child: !_read1
+                          ? const SizedBox(key: ValueKey('wait'), height: 140)
+                          : none
+                          ? Padding(
+                              key: const ValueKey('none'),
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              child: Text(
+                                l10n.keyVerificationNoKeyYet(widget.peerName),
+                                style: HaloType.sans(
+                                  size: 15,
+                                  color: HaloColors.text,
+                                  height: 1.5,
+                                ),
+                              ),
+                            )
+                          : SafetyNumberCard(
+                              key: ValueKey(_key),
+                              groups: groups,
+                              verified: _verified,
+                              celebrate: _tapped,
+                            ),
                     ),
                   ),
                   const SizedBox(height: 24),
-                  StaggerIn(
-                    index: 4,
-                    child: Text(
-                      l10n.keyVerificationIfSeesTheSame(widget.peerName),
-                      style: HaloType.sans(
-                        size: 13,
-                        color: HaloColors.text2,
-                        height: 1.5,
+                  if (!none)
+                    StaggerIn(
+                      index: 4,
+                      child: Text(
+                        l10n.keyVerificationIfSeesTheSame(widget.peerName),
+                        style: HaloType.sans(
+                          size: 13,
+                          color: HaloColors.text2,
+                          height: 1.5,
+                        ),
                       ),
                     ),
-                  ),
                   const SizedBox(height: 28),
-                  StaggerIn(
-                    index: 6,
-                    child: _VerifyButton(verified: _verified, onTap: _toggle),
-                  ),
+                  if (!none)
+                    StaggerIn(
+                      index: 6,
+                      child: _VerifyButton(
+                        verified: _verified,
+                        onTap: _read1 ? _toggle : () {},
+                      ),
+                    ),
                 ],
               ),
             ),

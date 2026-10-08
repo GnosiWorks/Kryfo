@@ -3412,6 +3412,11 @@ class AppLocalizationsUk extends AppLocalizations {
       'Код безпеки щойно змінився. Порівняй новий номер.';
 
   @override
+  String keyVerificationNoKeyYet(Object peerName) {
+    return 'Ключа від $peerName ще немає. Номер з’явиться тут, щойно $peerName тобі напише.';
+  }
+
+  @override
   String keyVerificationWith(Object peerName) {
     return 'Контакт: $peerName';
   }

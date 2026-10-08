@@ -3358,6 +3358,11 @@ class AppLocalizationsPt extends AppLocalizations {
       'O código de segurança acabou de mudar. Compare o número novo.';
 
   @override
+  String keyVerificationNoKeyYet(Object peerName) {
+    return 'Ainda não há chave de $peerName. O número aparece aqui assim que essa pessoa escrever para você.';
+  }
+
+  @override
   String keyVerificationWith(Object peerName) {
     return 'Com $peerName';
   }

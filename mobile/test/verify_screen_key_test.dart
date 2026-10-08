@@ -54,7 +54,7 @@ Future<void> _identity(MemDb mem, List<int> key) async {
   });
 }
 
-Widget _page() => MaterialApp(
+Widget _page({String? passed}) => MaterialApp(
   theme: buildHaloTheme(),
   localizationsDelegates: AppLocalizations.localizationsDelegates,
   supportedLocales: AppLocalizations.supportedLocales,
@@ -63,7 +63,7 @@ Widget _page() => MaterialApp(
     peerName: 'Lena',
     myXpub: _mine,
     // the key the chat under it was opened with, gone since
-    peerXpub: _hex(_keyB),
+    peerXpub: passed ?? _hex(_keyB),
   ),
 );
 
@@ -129,5 +129,18 @@ void main() {
     await t.pumpAndSettle();
     expect(mem.rows('contacts').first['verified'], 1);
     expect(mem.rows('contacts').first['verified_key'], _hex(_keyC));
+  });
+
+  testWidgets('with no key from them yet the page says so and offers no '
+      'mark', (t) async {
+    t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (_) async => null,
+    );
+    await mem.delete('peer_identities');
+    await t.pumpWidget(_page(passed: ''));
+    await t.pumpAndSettle();
+    expect(find.text(l10n.keyVerificationNoKeyYet('Lena')), findsOneWidget);
+    expect(find.text(l10n.keyVerificationMarkAsVerified), findsNothing);
   });
 }

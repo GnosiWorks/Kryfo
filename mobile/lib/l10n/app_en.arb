@@ -4150,6 +4150,15 @@
   "@keyVerificationKeyMoved": {
     "description": "screens/key_verification_screen.dart"
   },
+  "keyVerificationNoKeyYet": "No key from {peerName} yet. Their number shows here once they have written to you.",
+  "@keyVerificationNoKeyYet": {
+    "description": "screens/key_verification_screen.dart",
+    "placeholders": {
+      "peerName": {
+        "type": "Object"
+      }
+    }
+  },
   "keyVerificationWith": "With {peerName}",
   "@keyVerificationWith": {
     "description": "screens/key_verification_screen.dart",

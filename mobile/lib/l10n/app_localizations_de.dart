@@ -3362,11 +3362,16 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get keyVerificationNewNumber =>
-      'Der Sicherheitscode hat sich geändert, während diese Seite offen war. Das ist die neue Nummer, vergleicht sie noch einmal.';
+      'Der Sicherheitscode hat sich geändert, während diese Seite offen war. Das ist die neue Nummer, vergleiche sie noch einmal.';
 
   @override
   String get keyVerificationKeyMoved =>
-      'Der Sicherheitscode hat sich gerade geändert. Vergleicht die neue Nummer.';
+      'Der Sicherheitscode hat sich gerade geändert. Vergleiche die neue Nummer.';
+
+  @override
+  String keyVerificationNoKeyYet(Object peerName) {
+    return 'Noch kein Schlüssel von $peerName. Die Nummer erscheint hier, sobald $peerName dir geschrieben hat.';
+  }
 
   @override
   String keyVerificationWith(Object peerName) {

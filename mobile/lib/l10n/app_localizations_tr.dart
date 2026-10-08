@@ -3341,6 +3341,11 @@ class AppLocalizationsTr extends AppLocalizations {
       'Güvenlik kodu az önce değişti. Yeni numarayı karşılaştır.';
 
   @override
+  String keyVerificationNoKeyYet(Object peerName) {
+    return '$peerName kişisinden henüz anahtar yok. Sana yazdığında numara burada görünür.';
+  }
+
+  @override
   String keyVerificationWith(Object peerName) {
     return '$peerName ile';
   }

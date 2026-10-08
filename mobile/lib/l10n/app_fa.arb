@@ -842,6 +842,7 @@
   "keyVerificationSafetyNumber": "شماره‌ی امنیتی",
   "keyVerificationNewNumber": "کد امنیتی در حالی که این صفحه باز بود تغییر کرد. این شماره‌ی تازه است، دوباره مقایسه‌اش کنید.",
   "keyVerificationKeyMoved": "کد امنیتی همین حالا تغییر کرد. شماره‌ی تازه را مقایسه کنید.",
+  "keyVerificationNoKeyYet": "هنوز کلیدی از ⁨{peerName}⁩ نیست. وقتی به شما پیام بدهد، شماره این‌جا نشان داده می‌شود.",
   "keyVerificationWith": "با ⁨{peerName}⁩",
   "keyVerificationIfSeesTheSame": "اگر ⁨{peerName}⁩ همین شماره را ببیند، پیام‌های شما فقط میان شما دو نفر خصوصی است. مقایسه‌ی حضوری یا در تماسی که به آن اعتماد دارید مطمئن‌ترین راه است - اما اختیاری است و برای گفت‌وگو هرگز لازم نیست.",
   "keyVerificationVerified": "تأییدشده",

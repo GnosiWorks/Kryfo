@@ -3342,6 +3342,11 @@ class AppLocalizationsFa extends AppLocalizations {
       'کد امنیتی همین حالا تغییر کرد. شماره‌ی تازه را مقایسه کنید.';
 
   @override
+  String keyVerificationNoKeyYet(Object peerName) {
+    return 'هنوز کلیدی از ⁨$peerName⁩ نیست. وقتی به شما پیام بدهد، شماره این‌جا نشان داده می‌شود.';
+  }
+
+  @override
   String keyVerificationWith(Object peerName) {
     return 'با ⁨$peerName⁩';
   }
