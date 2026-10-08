@@ -1314,7 +1314,8 @@ class HaloDb implements GroupOwedStore {
         await blockTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
-        // 62 runs last, below: its index names columns older steps add
+        // 62 runs after every older step, below: its index names columns
+        // they add. 66 runs after it: it reads what they all make
         if (oldV < 65) {
           // a room joined off a link and not let in yet: when the join went
           await roomJoiningColumn(db);
@@ -1822,12 +1823,12 @@ class HaloDb implements GroupOwedStore {
     DatabaseExecutor db,
     List<Map<String, Object?>> rows, {
     String idColumn = 'halo_id',
-  }) => verifiedNow(db, rows, idColumn: idColumn, identity: _signalKey);
+  }) => verifiedNow(db, rows, idColumn: idColumn, identity: _keySource);
 
-  // the key the identity's signal store holds for someone: the hidden
-  // chats' database keeps none of its own
-  static Future<String?> _signalKey(String haloId) async =>
-      signalSession.ready ? signalSession.peerXPubHex(haloId) : null;
+  // where a key held for someone is read when this database keeps no signal
+  // tables of its own (keySourceFor)
+  Future<String?> Function(String haloId)? get _keySource =>
+      keySourceFor(container);
 
   // a contact stub from group invite info. a peer we already know is left
   // as is.
@@ -2217,7 +2218,7 @@ class HaloDb implements GroupOwedStore {
         haloId,
         verified,
         key: key,
-        identity: _signalKey,
+        identity: _keySource,
       );
 
   Future<bool> isVerified(String haloId) async {
@@ -2226,7 +2227,7 @@ class HaloDb implements GroupOwedStore {
   }
 
   Future<String?> heldKey(String haloId) async =>
-      heldKeyHex(await open(), haloId, identity: _signalKey);
+      heldKeyHex(await open(), haloId, identity: _keySource);
 
   // a block starts the clocks of what they sent that waits to be read, in
   // their chat and in groups, and drops the receipts queued for them. an
@@ -5659,21 +5660,8 @@ Future<String?> heldKeyHex(
   if (!isDevId(haloId)) {
     final asked = await identity?.call(haloId);
     if (asked != null && asked.isNotEmpty) return asked.toLowerCase();
-    try {
-      final rows = await db.query(
-        'peer_identities',
-        columns: ['identity_key'],
-        where: 'address = ?',
-        whereArgs: [haloId],
-        limit: 1,
-      );
-      if (rows.isNotEmpty) {
-        return _keyHex(rows.first['identity_key'] as List<int>);
-      }
-    } catch (e) {
-      // a database with no signal tables knows no key but the card's
-      dlog('held key: ${e.runtimeType}');
-    }
+    final own = await peerIdentityHex(db, haloId);
+    if (own != null) return own;
   }
   final rows = await db.query(
     'contacts',
@@ -5696,6 +5684,35 @@ Future<String?> heldKeyHex(
 String _keyHex(List<int> b) {
   final pub = b.length == 33 ? b.sublist(1) : b;
   return pub.map((x) => x.toRadixString(16).padLeft(2, '0')).join();
+}
+
+// the hidden chats' database keeps no signal tables: the keys of their people
+// sit in the everyday database's, read straight from its file, with no wait
+// on the signal store. the decoy and its hidden chats never read the everyday
+// identity's keys: the decoy goes nowhere, and their cards are all it knows.
+// the everyday and the decoy database read their own tables
+Future<String?> Function(String haloId)? keySourceFor(HaloContainer c) =>
+    identical(c, HaloContainer.vault)
+    ? (id) async => peerIdentityHex(await live.open(), id)
+    : null;
+
+// the key a database's signal tables hold for someone, null when none
+Future<String?> peerIdentityHex(DatabaseExecutor db, String haloId) async {
+  try {
+    final rows = await db.query(
+      'peer_identities',
+      columns: ['identity_key'],
+      where: 'address = ?',
+      whereArgs: [haloId],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return _keyHex(rows.first['identity_key'] as List<int>);
+  } catch (e) {
+    // a database with no signal tables knows no key but the card's
+    dlog('held key: ${e.runtimeType}');
+    return null;
+  }
 }
 
 // verified counts only while the key it was given for is still theirs: a
@@ -16345,11 +16362,11 @@ class AppState extends ChangeNotifier {
 final appState = AppState();
 
 void main() async {
+  dlog('LAUNCH main');
+  WidgetsFlutterBinding.ensureInitialized();
   // a key saved for someone that is not the one held before: open pages that
   // show it read again
   onPeerKeyChanged = appState.keyChanged;
-  dlog('LAUNCH main');
-  WidgetsFlutterBinding.ensureInitialized();
   // a toast shown while the lock is up waits for it to lift
   haloWhenOpen = (act) => lockGuard.afterUnlock(act);
   // toasts live in the root overlay, over every route and sheet

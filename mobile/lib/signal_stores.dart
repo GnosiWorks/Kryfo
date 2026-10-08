@@ -68,7 +68,7 @@ class HaloIdentityKeyStore implements IdentityKeyStore {
     }, conflictAlgorithm: ConflictAlgorithm.replace);
     // the same key again changes nothing: one look per key, not per message
     if (changed || existing.isEmpty) await _unverifyOtherKey(addr, newBytes);
-    if (changed) onPeerKeyChanged?.call();
+    if (changed || existing.isEmpty) onPeerKeyChanged?.call();
     return changed;
   }
 

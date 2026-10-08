@@ -89,7 +89,8 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
     final held = await session.heldKey(widget.peerHaloId);
     final v = await session.isVerified(widget.peerHaloId);
     if (!mounted || n != _reads) return;
-    final key = held ?? _key;
+    // no key held is no number: the one passed in may be a card's, gone
+    final key = held ?? '';
     final first = !_read1;
     if (key == _key && v == _verified && !first) return;
     setState(() {
