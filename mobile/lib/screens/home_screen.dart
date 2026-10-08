@@ -432,6 +432,7 @@ class _ChatsTab extends StatelessWidget {
               haloId: haloId,
               onAdd: onAddContact,
               onSettings: onOpenSettingsDirect,
+              onSearch: () => Navigator.of(context).push(searchRoute(context)),
             ),
           ),
           const _OfflineStrip(),
@@ -441,15 +442,6 @@ class _ChatsTab extends StatelessWidget {
           const _OfflineCard(),
           const _KeepsStoppingCard(),
           const _NotificationsBlockedHint(),
-          StaggerIn(
-            index: 1,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 2, 20, 10),
-              child: SearchField(
-                onTap: () => Navigator.of(context).push(searchRoute()),
-              ),
-            ),
-          ),
           StaggerIn(
             index: 1,
             child: _QuickTiles(
@@ -648,11 +640,13 @@ class _HomeHead extends StatelessWidget {
   final String haloId;
   final VoidCallback onAdd;
   final VoidCallback onSettings;
+  final VoidCallback onSearch;
   const _HomeHead({
     required this.now,
     required this.haloId,
     required this.onAdd,
     required this.onSettings,
+    required this.onSearch,
   });
   @override
   Widget build(BuildContext context) {
@@ -731,6 +725,10 @@ class _HomeHead extends StatelessWidget {
               ],
             ),
           ),
+          // the search button's room for a finger is wider than its round,
+          // so the gap beside it is the others' less that margin
+          SearchDoor(onTap: onSearch),
+          const SizedBox(width: 10 - (kDoorBox - kDoorRound) / 2),
           _GearButton(onTap: onSettings),
           const SizedBox(width: 10),
           _AddScanButton(onTap: onAdd),
@@ -1735,7 +1733,7 @@ class _ContactListState extends State<_ContactList> {
             n.metrics.pixels < -72) {
           _opened = true;
           HapticFeedback.lightImpact();
-          Navigator.of(context).push(searchRoute());
+          Navigator.of(context).push(searchRoute(context));
         }
         if (n.metrics.pixels >= 0) _opened = false;
         return false;
