@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [0.5.0] - 2026-10-08
 
 ### Added
 - decoy pin: a second pin opens an empty Kryfo, as if just installed. set it up in app lock, advanced protection.
@@ -39,6 +39,7 @@
 - the tor dot on the chat list and in chats stops pulsing once tor is usable, and pulses only a few times while it starts.
 - chat stickers play three times and rest; a tap plays them again. open chats stop their timers while they are out of sight, and the drifting chat backgrounds hold still with reduced motion.
 - the first start was polished: a step bar, calmer transitions, clearer text, and every step fits small screens and large text.
+- after a restore, Kryfo says to check your protections in settings. settings are not part of a backup.
 
 ### Fixed
 - notifications use the name you gave a contact, and clear when you open the chat.
@@ -48,6 +49,9 @@
 - the button on the restore sheet could be out of reach.
 - an introduction to someone you had deleted did not show up.
 - the introductions sheet showed its count the wrong way round.
+- a chat could show only part of its messages.
+- older messages in a long chat load as you scroll up.
+- when someone accepts you, no empty unread message shows up in the chat any more.
 
 ### Security
 - the engine's crypto and network libraries are updated: x/crypto 0.55.0, x/net 0.58.0, age 1.3.2 and websocket 1.8.15.
