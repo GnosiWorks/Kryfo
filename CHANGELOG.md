@@ -216,7 +216,7 @@
 
 ### Fixed
 - the wipe left the pins behind. it uses android's clear data now.
-- the app lock only covered home. it covers every screen now.
+- the app lock covers every screen now.
 - screenshots, permission prompts and the notification shade no longer ask for the pin.
 - a message to someone who had not added you back showed a tick.
 - a retried first message to a stranger was dropped.
