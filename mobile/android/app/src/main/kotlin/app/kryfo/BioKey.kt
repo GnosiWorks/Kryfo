@@ -75,6 +75,10 @@ object BioKey {
 
     // the prompt, with the key: "ok", "cancel", "invalidated", "none", "error"
     fun unlock(activity: Activity, title: String, cancel: String, done: (String) -> Unit) {
+        if (Build.VERSION.SDK_INT < 28) {
+            done("none")
+            return
+        }
         val (c, why) = cipher()
         if (c == null) {
             done(why)
