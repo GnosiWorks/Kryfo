@@ -7181,6 +7181,24 @@ class AppLocalizationsZh extends AppLocalizations {
   String get devDeleteLineAnon => '每一条消息和为这个聊天生成的名字都会删除，这个聊天也不会再回来。';
 
   @override
+  String get devDeleteLineBack =>
+      '每一条消息都会删除，这个聊天也不会再回来。你发出的消息也会从 Marios 的手机上撤回。';
+
+  @override
+  String get devDeleteLineAnonBack =>
+      '每一条消息和为这个聊天生成的名字都会删除，这个聊天也不会再回来。你发出的消息也会从 Marios 的手机上撤回。';
+
+  @override
+  String devDeleteNotTakenBack(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '有 $count 条消息没能从 Marios 的手机上撤回',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get supportTitle => 'Inbox';
 
   @override
@@ -14538,6 +14556,24 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get devDeleteLineAnon => '每則訊息和為這個聊天產生的名字都會刪除，這個聊天也不會再回來。';
+
+  @override
+  String get devDeleteLineBack =>
+      '每則訊息都會刪除，這個聊天也不會再回來。你傳出的訊息也會從 Marios 的手機上收回。';
+
+  @override
+  String get devDeleteLineAnonBack =>
+      '每則訊息和為這個聊天產生的名字都會刪除，這個聊天也不會再回來。你傳出的訊息也會從 Marios 的手機上收回。';
+
+  @override
+  String devDeleteNotTakenBack(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '有 $count 則訊息沒能從 Marios 的手機上收回',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get settingsWriteToMarios => '傳訊息給 Marios';

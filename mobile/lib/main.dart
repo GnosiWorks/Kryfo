@@ -14309,6 +14309,8 @@ class AppState extends ChangeNotifier {
     Map<String, Map<String, Object?>> rows,
     Map<String, Map<String, Object?>> lasts,
   ) async {
+    // going: off home now, though its rows go only once the take-back ends
+    if (devGoing != null && !s.container.quiet) return null;
     try {
       final r = await s.devChat.load();
       final id = r?.chatId;
@@ -14575,11 +14577,34 @@ class AppState extends ChangeNotifier {
   // ciphers, the made name's room lane is dropped and his key maps to no
   // chat. his pair lane stays open until the app restarts, and what comes
   // on it is dropped. a decoy's delete leaves the everyday chat running
-  Future<void> devDelete() async {
+  //
+  // with [takeBack], what was sent there is taken back first, so it goes
+  // from his phone too. it has to go before the store is forgotten: after,
+  // nothing could seal it. how many could not be taken back
+  Future<int> devDelete({bool takeBack = false}) {
+    final going = devGoing;
+    if (going != null) return going;
+    late final Future<int> f;
+    f = _devDelete(takeBack).whenComplete(() {
+      if (identical(devGoing, f)) devGoing = null;
+    });
+    devGoing = f;
+    return f;
+  }
+
+  // a delete still running: home shows no row for it, and a new start
+  // waits for it
+  Future<int>? devGoing;
+
+  // how long a delete spends taking back what was sent
+  @visibleForTesting
+  Duration devTakeBackFor = const Duration(seconds: 30);
+
+  Future<int> _devDelete(bool takeBack) async {
     final s = session;
     if (s.container.quiet) {
       await s.devChat.delete();
-      return;
+      return 0;
     }
     DevChatRow? was;
     try {
@@ -14587,11 +14612,45 @@ class AppState extends ChangeNotifier {
     } catch (e) {
       dlog('dev delete: the chat did not read ($e)');
     }
+    final missed = takeBack ? await _takeBackDev(was) : 0;
     await s.devChat.delete();
     devLane.forget();
     _xPubToHaloId.removeWhere((_, id) => isDevId(id));
     final self = DevSelf.ofKeys(was?.anonId, was?.anonEdPriv, was?.anonXPriv);
     if (self != null) engine.roomUnsubscribeBg(self.xPub);
+    return missed;
+  }
+
+  // every message this phone sent in the dev chat, taken back one by one
+  // under the name it was sent with, for half a minute at most. how many
+  // did not get through
+  Future<int> _takeBackDev(DevChatRow? was) async {
+    final chat = was?.chatId;
+    if (was == null || chat == null || !was.started || was.nameless) return 0;
+    final List<String> uids;
+    try {
+      uids = await live.devChat.sentUids();
+    } catch (e) {
+      dlog('dev delete: what was sent did not read (${e.runtimeType})');
+      return 0;
+    }
+    final missed = {...uids};
+    var next = 0;
+    var stop = false;
+    // a few at a time: one slow relay does not hold the rest. none starts
+    // after the half minute, so none goes under a name made after it
+    Future<void> lane() async {
+      while (!stop && next < uids.length) {
+        final uid = uids[next++];
+        if (await _sendFrame(chat, uid, kFrameUnsend, '')) missed.remove(uid);
+      }
+    }
+
+    await Future.wait([
+      for (var i = 0; i < 4; i++) lane(),
+    ]).timeout(devTakeBackFor, onTimeout: () => const []);
+    stop = true;
+    return missed.length;
   }
 
   // ---- groups ----

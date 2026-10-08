@@ -7618,6 +7618,29 @@ class AppLocalizationsAr extends AppLocalizations {
       'تُحذف كل رسالة والاسم الذي صُنع لهذه المحادثة، ولن تعود هذه المحادثة.';
 
   @override
+  String get devDeleteLineBack =>
+      'تُحذف كل رسالة، ولن تعود هذه المحادثة. وما أرسلته يُسحب من هاتف Marios أيضًا.';
+
+  @override
+  String get devDeleteLineAnonBack =>
+      'تُحذف كل رسالة والاسم الذي صُنع لهذه المحادثة، ولن تعود هذه المحادثة. وما أرسلته يُسحب من هاتف Marios أيضًا.';
+
+  @override
+  String devDeleteNotTakenBack(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'تعذّر سحب ⁨$count⁩ رسالة من هاتف Marios',
+      many: 'تعذّر سحب ⁨$count⁩ رسالة من هاتف Marios',
+      few: 'تعذّر سحب ⁨$count⁩ رسائل من هاتف Marios',
+      two: 'تعذّر سحب رسالتين من هاتف Marios',
+      one: 'تعذّر سحب رسالة واحدة من هاتف Marios',
+      zero: 'تعذّر سحب ⁨$count⁩ رسالة من هاتف Marios',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get supportTitle => 'Inbox';
 
   @override

@@ -7470,6 +7470,24 @@ class AppLocalizationsVi extends AppLocalizations {
       'Mọi tin nhắn và cái tên được tạo cho cuộc trò chuyện này sẽ bị xóa, và cuộc trò chuyện sẽ không quay lại.';
 
   @override
+  String get devDeleteLineBack =>
+      'Mọi tin nhắn sẽ bị xóa, và cuộc trò chuyện sẽ không quay lại. Những gì bạn đã gửi cũng được thu hồi khỏi điện thoại của Marios.';
+
+  @override
+  String get devDeleteLineAnonBack =>
+      'Mọi tin nhắn và cái tên được tạo cho cuộc trò chuyện này sẽ bị xóa, và cuộc trò chuyện sẽ không quay lại. Những gì bạn đã gửi cũng được thu hồi khỏi điện thoại của Marios.';
+
+  @override
+  String devDeleteNotTakenBack(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Không thu hồi được $count tin nhắn khỏi điện thoại của Marios',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get supportTitle => 'Inbox';
 
   @override

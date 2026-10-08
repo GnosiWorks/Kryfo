@@ -8,6 +8,7 @@
 // running on that lane, opened in its own store, and the rest is dropped
 // and marked seen. a delete lets go of all of it and stays a delete, a
 // decoy never reaches the wire, and each new guard broken once is caught
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
@@ -185,6 +186,14 @@ class _Phone extends DevTestDb {
   ];
   @override
   Future<void> markSent(String msgUid) async => marked.add(msgUid);
+  // a frame that went: nothing queued here to drop
+  @override
+  Future<void> dropFrame(
+    String msgUid,
+    String kind,
+    String peerId,
+    String body,
+  ) async {}
   @override
   Future<bool> messageExists(String msgUid) async =>
       mem.rows('messages').any((r) => r['msg_uid'] == msgUid);
@@ -277,10 +286,13 @@ class _Io extends AppIo {
     return 'ok';
   }
 
+  // what the next first-contact sends answer, in turn. 'ok' once it runs out
+  final answers = <Future<String>>[];
+
   @override
   Future<String> firstContactSend(String xPub, String fc, String cipher) async {
     sent.add(('fc $xPub $fc', cipher));
-    return 'ok';
+    return answers.isEmpty ? 'ok' : answers.removeAt(0);
   }
 
   @override
@@ -1101,6 +1113,118 @@ void main() {
       expect(_io.tried, isEmpty);
       expect(_io.rang, isEmpty);
       expect(_live.seen, contains(_hash(answer)));
+    });
+  });
+
+  group('a delete that takes back what was sent', () {
+    // what the person sent in the chat, as the chat keeps it
+    Future<void> sent(List<String> uids) async {
+      for (final (i, uid) in uids.indexed) {
+        await _mem.insert('messages', {
+          'peer_id': _dev,
+          'direction': 'out',
+          'plaintext': 'line $i',
+          'sent_at': 1000 + i,
+          'msg_uid': uid,
+          'sent': 1,
+        });
+      }
+    }
+
+    // what he reads of each send, newest first as they go
+    Future<List<Map<String, dynamic>>> read() async {
+      final who = 'back-${_n++}';
+      return [for (final s in _io.sent) await _hisRead(who, s.$2)];
+    }
+
+    setUp(() => _app.sendModeForTest = 'fast');
+
+    for (final anon in [false, true]) {
+      test('${anon ? 'anonymous' : 'three words'}: each one is taken back '
+          'under the name it went with, then the chat goes', () async {
+        await _app.devBegin(anon: anon);
+        final name = anon ? _self().id : _myWords;
+        await sent(['a1', 'a2', 'a3']);
+        expect(await _app.devDelete(takeBack: true), 0);
+        expect(_io.sent.map((s) => s.$1).toSet(), {'fc ${_m1.xPub} ${_m1.fc}'});
+        final got = await read();
+        expect(got.map((r) => r['un']), ['a3', 'a2', 'a1']);
+        for (final r in got) {
+          expect(r['h'], name);
+          expect(r['m'] ?? '', '');
+          if (anon) expect(jsonEncode(r), isNot(contains(_myWords)));
+        }
+        expect(_row().state, DevState.gone);
+        expect(_hasDevContact, isFalse);
+        expect(
+          _mem.rows('messages').where((r) => r['peer_id'] == _dev),
+          isEmpty,
+        );
+      });
+    }
+
+    test(
+      'without asking, or in a chat that only reads, nothing goes',
+      () async {
+        await _app.devBegin(anon: false);
+        await sent(['c1']);
+        await _app.devDelete();
+        expect(_io.sent, isEmpty);
+        // started, then restored without its name: it cannot seal a thing
+        await _world();
+        _app.sendModeForTest = 'fast';
+        await _app.devBegin(anon: true);
+        await sent(['c2']);
+        await _mem.update('devchat', {'anon_x_priv': null});
+        expect(_row().nameless, isTrue);
+        expect(await _app.devDelete(takeBack: true), 0);
+        expect(_io.sent, isEmpty);
+        expect(_row().state, DevState.gone);
+      },
+    );
+
+    test('never started: nothing goes and nothing is missed', () async {
+      await sent(['d1']);
+      expect(await _app.devDelete(takeBack: true), 0);
+      expect(_io.sent, isEmpty);
+    });
+
+    test(
+      'one that does not get through is counted, the rest still go',
+      () async {
+        await _app.devBegin(anon: false);
+        await sent(['e1', 'e2', 'e3']);
+        _io.answers.addAll([Future.value('ok'), Future.value('error: down')]);
+        expect(await _app.devDelete(takeBack: true), 1);
+        // each tried once on his first-contact address
+        expect(_io.sent.where((s) => s.$1.startsWith('fc ')), hasLength(3));
+        expect(_row().state, DevState.gone);
+      },
+    );
+
+    test('one that hangs is counted once the time is up, none starts after '
+        'it, and home shows no row meanwhile', () async {
+      await _app.devBegin(anon: false);
+      await _app.refreshContacts();
+      expect(_app.devRow, isNotNull);
+      await sent([for (var i = 0; i < 9; i++) 'f$i']);
+      final never = Completer<String>();
+      // four lanes, each stuck on its first
+      _io.answers.addAll([for (var i = 0; i < 4; i++) never.future]);
+      _app.devTakeBackFor = const Duration(milliseconds: 300);
+      final going = _app.devDelete(takeBack: true);
+      expect(_app.devGoing, isNotNull);
+      // a second tap joins the first
+      expect(identical(_app.devDelete(takeBack: true), going), isTrue);
+      await _app.refreshContacts();
+      expect(_app.devRow, isNull);
+      expect(await going, 9);
+      expect(_io.sent, hasLength(4));
+      expect(_app.devGoing, isNull);
+      never.complete('ok');
+      await _settle();
+      expect(_io.sent, hasLength(4));
+      expect(_row().state, DevState.gone);
     });
   });
 

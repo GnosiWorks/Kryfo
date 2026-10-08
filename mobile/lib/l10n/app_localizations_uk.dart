@@ -7625,6 +7625,27 @@ class AppLocalizationsUk extends AppLocalizations {
       'Усі повідомлення та ім’я, створене для цього чату, зникнуть, і чат більше не повернеться.';
 
   @override
+  String get devDeleteLineBack =>
+      'Усі повідомлення зникнуть, і чат більше не повернеться. Надіслане вами теж відкликається з телефона Marios.';
+
+  @override
+  String get devDeleteLineAnonBack =>
+      'Усі повідомлення та ім’я, створене для цього чату, зникнуть, і чат більше не повернеться. Надіслане вами теж відкликається з телефона Marios.';
+
+  @override
+  String devDeleteNotTakenBack(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count повідомлення не вдалося відкликати з телефона Marios',
+      many: '$count повідомлень не вдалося відкликати з телефона Marios',
+      few: '$count повідомлення не вдалося відкликати з телефона Marios',
+      one: '$count повідомлення не вдалося відкликати з телефона Marios',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get supportTitle => 'Inbox';
 
   @override

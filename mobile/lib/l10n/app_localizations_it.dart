@@ -7557,6 +7557,25 @@ class AppLocalizationsIt extends AppLocalizations {
       'Tutti i messaggi e il nome creato per questa chat vengono eliminati, e la chat non tornerà.';
 
   @override
+  String get devDeleteLineBack =>
+      'Tutti i messaggi vengono eliminati, e la chat non tornerà. Anche ciò che hai inviato viene ritirato dal telefono di Marios.';
+
+  @override
+  String get devDeleteLineAnonBack =>
+      'Tutti i messaggi e il nome creato per questa chat vengono eliminati, e la chat non tornerà. Anche ciò che hai inviato viene ritirato dal telefono di Marios.';
+
+  @override
+  String devDeleteNotTakenBack(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count messaggi non sono stati ritirati dal telefono di Marios',
+      one: '$count messaggio non è stato ritirato dal telefono di Marios',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get supportTitle => 'Inbox';
 
   @override

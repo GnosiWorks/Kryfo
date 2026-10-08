@@ -82,12 +82,30 @@ Future<bool> deleteDevChat(BuildContext context, DevRow d) async {
   final ok = await showConfirmSheet(
     context,
     title: l10n.homeDeleteThisChat,
-    line: d.anonymous ? l10n.devDeleteLineAnon : l10n.devDeleteLine,
+    line: switch ((d.anonymous, d.started && !d.nameless)) {
+      (true, true) => l10n.devDeleteLineAnonBack,
+      (true, false) => l10n.devDeleteLineAnon,
+      (false, true) => l10n.devDeleteLineBack,
+      (false, false) => l10n.devDeleteLine,
+    },
     yes: l10n.commonDelete,
   );
   if (!ok) return false;
   HapticFeedback.heavyImpact();
-  await _gone(d.chatId);
+  // off home at once. what was sent is taken back from his phone behind
+  // it, and only what did not get through is said
+  final going = appState.devDelete(takeBack: true);
+  unawaited(clearNotificationsFor(d.chatId));
+  await appState.refreshContacts();
+  unawaited(
+    going.then((missed) async {
+      forgetDevChoices();
+      await appState.refreshContacts();
+      if (missed > 0) {
+        showHaloToast(context, l10n.devDeleteNotTakenBack(missed));
+      }
+    }),
+  );
   return true;
 }
 
@@ -113,6 +131,7 @@ Future<String?> startNewDevChat(BuildContext context, String chatId) async {
   if (!ok) return null;
   HapticFeedback.heavyImpact();
   await _gone(chatId);
+  await appState.devGoing;
   final id = await session.devChat.writeToMarios();
   await appState.refreshContacts();
   return id;
@@ -121,6 +140,8 @@ Future<String?> startNewDevChat(BuildContext context, String chatId) async {
 // the settings row: the chat as it is, or after a delete a fresh one, made
 // on this tap only
 Future<void> writeToMarios(BuildContext context) async {
+  // a delete still taking back what was sent ends first
+  await appState.devGoing;
   final id = await session.devChat.writeToMarios();
   await appState.refreshContacts();
   if (id == null || !context.mounted) return;

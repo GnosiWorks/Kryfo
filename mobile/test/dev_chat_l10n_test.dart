@@ -66,6 +66,9 @@ Set<String> _ours() => {
   l10n.devKeyLabel,
   l10n.devDeleteLine,
   l10n.devDeleteLineAnon,
+  l10n.devDeleteLineBack,
+  l10n.devDeleteLineAnonBack,
+  l10n.devDeleteNotTakenBack(3),
   l10n.settingsWriteToMarios,
   l10n.settingsWriteToMariosHint,
   l10n.seenDevChat,
@@ -180,7 +183,7 @@ Future<void> _walk(WidgetTester t, Locale locale, double scale) async {
   await t.pump();
   await t.pump(const Duration(milliseconds: 600));
   _fits(t, '$tag, delete');
-  expect(find.text(l10n.devDeleteLineAnon), findsOneWidget, reason: tag);
+  expect(find.text(l10n.devDeleteLineAnonBack), findsOneWidget, reason: tag);
   await devClose(t);
 
   // the settings row

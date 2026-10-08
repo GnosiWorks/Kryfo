@@ -7512,6 +7512,25 @@ class AppLocalizationsTr extends AppLocalizations {
       'Her mesaj ve bu sohbet için oluşturulan ad gider, sohbet de geri gelmez.';
 
   @override
+  String get devDeleteLineBack =>
+      'Her mesaj gider ve sohbet geri gelmez. Gönderdiklerin Marios’un telefonundan da geri çekilir.';
+
+  @override
+  String get devDeleteLineAnonBack =>
+      'Her mesaj ve bu sohbet için oluşturulan ad gider, sohbet de geri gelmez. Gönderdiklerin Marios’un telefonundan da geri çekilir.';
+
+  @override
+  String devDeleteNotTakenBack(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count mesaj Marios’un telefonundan geri çekilemedi',
+      one: '$count mesaj Marios’un telefonundan geri çekilemedi',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get supportTitle => 'Inbox';
 
   @override

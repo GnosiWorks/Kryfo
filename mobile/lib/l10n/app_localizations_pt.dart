@@ -7542,6 +7542,25 @@ class AppLocalizationsPt extends AppLocalizations {
       'Todas as mensagens e o nome criado para esta conversa somem, e a conversa não volta mais.';
 
   @override
+  String get devDeleteLineBack =>
+      'Todas as mensagens somem, e a conversa não volta mais. O que você enviou também sai do celular do Marios.';
+
+  @override
+  String get devDeleteLineAnonBack =>
+      'Todas as mensagens e o nome criado para esta conversa somem, e a conversa não volta mais. O que você enviou também sai do celular do Marios.';
+
+  @override
+  String devDeleteNotTakenBack(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count mensagens não saíram do celular do Marios',
+      one: '$count mensagem não saiu do celular do Marios',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get supportTitle => 'Inbox';
 
   @override

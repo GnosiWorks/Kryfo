@@ -7502,6 +7502,25 @@ class AppLocalizationsFa extends AppLocalizations {
       'همه‌ی پیام‌ها و نامی که برای این گفت‌وگو ساخته شد حذف می‌شوند و این گفت‌وگو دیگر برنمی‌گردد.';
 
   @override
+  String get devDeleteLineBack =>
+      'همه‌ی پیام‌ها حذف می‌شوند و این گفت‌وگو دیگر برنمی‌گردد. آنچه فرستاده‌اید از گوشی Marios هم پس گرفته می‌شود.';
+
+  @override
+  String get devDeleteLineAnonBack =>
+      'همه‌ی پیام‌ها و نامی که برای این گفت‌وگو ساخته شد حذف می‌شوند و این گفت‌وگو دیگر برنمی‌گردد. آنچه فرستاده‌اید از گوشی Marios هم پس گرفته می‌شود.';
+
+  @override
+  String devDeleteNotTakenBack(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count پیام از گوشی Marios پس گرفته نشد',
+      one: '$count پیام از گوشی Marios پس گرفته نشد',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get supportTitle => 'Inbox';
 
   @override
