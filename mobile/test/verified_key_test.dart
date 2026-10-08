@@ -10,8 +10,15 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:kryfo/container.dart';
 import 'package:kryfo/main.dart'
-    show heldKeyHex, markVerified, tieVerifiedToKeys, verifiedNow;
+    show
+        heldKeyHex,
+        keySourceFor,
+        markVerified,
+        peerIdentityHex,
+        tieVerifiedToKeys,
+        verifiedNow;
 import 'package:kryfo/signal_stores.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 
@@ -196,6 +203,44 @@ void main() {
     await store.saveIdentity(
       addr,
       IdentityKey(Curve.decodePoint(Uint8List.fromList([5, ..._keyB]), 0)),
+    );
+    expect(told, 1);
+  });
+
+  test('only the hidden chats read keys elsewhere: the everyday and the '
+      "decoy database read their own, and the decoy never the everyday's", () {
+    expect(keySourceFor(HaloContainer.vault), isNotNull);
+    expect(keySourceFor(HaloContainer.everyday), isNull);
+    expect(keySourceFor(HaloContainer.decoy), isNull);
+    expect(keySourceFor(HaloContainer.decoyVault), isNull);
+  });
+
+  test("a database's own signal tables, or none", () async {
+    expect(
+      await peerIdentityHex(await _db(identity: _keyA), _peer),
+      _hex(_keyA),
+    );
+    expect(await peerIdentityHex(await _db(), _peer), isNull);
+    final bare = MemDb(except: {'peer_identities'});
+    expect(await peerIdentityHex(bare, _peer), isNull);
+  });
+
+  test('the mark ends the changed banner in the same write', () async {
+    final db = await _db(identity: _keyA);
+    await db.update('contacts', {'key_changed': 1});
+    await markVerified(db, _peer, true, key: _hex(_keyA));
+    expect(db.rows('contacts').first['key_changed'], 0);
+  });
+
+  test('the first key saved for someone tells an open page too', () async {
+    final db = await _db();
+    var told = 0;
+    onPeerKeyChanged = () => told++;
+    addTearDown(() => onPeerKeyChanged = null);
+    final store = HaloIdentityKeyStore(db, generateIdentityKeyPair(), 1);
+    await store.saveIdentity(
+      SignalProtocolAddress(_peer, 1),
+      IdentityKey(Curve.decodePoint(Uint8List.fromList([5, ..._keyA]), 0)),
     );
     expect(told, 1);
   });

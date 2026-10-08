@@ -15,9 +15,9 @@ import 'pin_flow_fakes.dart' show app, phone;
 class _Db implements HaloDb {
   @override
   Future<bool> isVerified(String haloId) async => false;
-  // no key held: the page shows the one it was opened with
+  // the key held for them: the one the page was opened with
   @override
-  Future<String?> heldKey(String haloId) async => null;
+  Future<String?> heldKey(String haloId) async => _theirs;
 
   @override
   dynamic noSuchMethod(Invocation i) =>
