@@ -3853,6 +3853,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notesDeleteThisNote => 'Delete this note?';
 
   @override
+  String get notesHoldHint => 'Hold a note to copy or delete it.';
+
+  @override
+  String get notesMenu => 'Notes menu';
+
+  @override
+  String get notesDeleteAll => 'Delete all notes';
+
+  @override
+  String get notesDeleteAllTitle => 'Delete all notes?';
+
+  @override
+  String get notesDeleteAllLine => 'Every note on this phone goes, for good.';
+
+  @override
+  String get notesDeleteAllYes => 'Delete all';
+
+  @override
   String get notesGoneFromThisPhone => 'It is gone from this phone for good.';
 
   @override

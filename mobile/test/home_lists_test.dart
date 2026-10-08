@@ -84,6 +84,17 @@ class _Db implements HaloDb {
     notes.removeWhere((n) => n['msg_uid'] == msgUid);
   }
 
+  // every note at once
+  int wiped = 0;
+  @override
+  Future<int> deleteAllOf(String chatId) async {
+    if (chatId != kNotesPeerId) return 0;
+    wiped++;
+    final n = notes.length;
+    notes = [];
+    return n;
+  }
+
   @override
   dynamic noSuchMethod(Invocation i) =>
       throw UnimplementedError('the stand-in was asked for ${i.memberName}');
@@ -411,6 +422,51 @@ void main() {
       expect(db.deleted, hasLength(1));
       expect(find.text('buy lemons'), findsNothing);
       expect(find.text(l10n.notesAQuietPlace), findsOneWidget);
+      await drain(t);
+    });
+
+    testWidgets('notes say they can be held, until the first hold', (t) async {
+      phone(t);
+      db.notes = [note('buy lemons', uid: 'n1')];
+      await t.pumpWidget(framed(const NotesScreen()));
+      await t.pump(const Duration(seconds: 1));
+      expect(find.text(l10n.notesHoldHint), findsOneWidget);
+      await t.longPress(find.text('buy lemons'));
+      await t.pump(const Duration(milliseconds: 600));
+      await t.tapAt(const Offset(10, 10));
+      await t.pump(const Duration(seconds: 1));
+      expect(find.text(l10n.notesHoldHint), findsNothing);
+      // and stays told
+      await t.pumpWidget(const SizedBox());
+      await t.pumpWidget(framed(const NotesScreen()));
+      await t.pump(const Duration(seconds: 1));
+      expect(find.text(l10n.notesHoldHint), findsNothing);
+      await drain(t);
+    });
+
+    testWidgets('delete all is in the page menu, asks first, and empties the '
+        'page', (t) async {
+      phone(t);
+      db.notes = [note('buy lemons', uid: 'n1'), note('call Ana', uid: 'n2')];
+      await t.pumpWidget(framed(const NotesScreen()));
+      await t.pump(const Duration(seconds: 1));
+      await t.tap(find.byTooltip(l10n.notesMenu));
+      await t.pump(const Duration(milliseconds: 600));
+      await t.pump(const Duration(seconds: 1));
+      await t.tap(find.text(l10n.notesDeleteAll));
+      await t.pump(const Duration(milliseconds: 600));
+      await t.pump(const Duration(seconds: 1));
+      expect(find.text(l10n.notesDeleteAllTitle), findsOneWidget);
+      expect(db.wiped, 0);
+      await t.tap(find.text(l10n.notesDeleteAllYes));
+      await t.pump(const Duration(milliseconds: 600));
+      await t.pump(const Duration(seconds: 1));
+      expect(db.wiped, 1);
+      expect(find.text('buy lemons'), findsNothing);
+      expect(find.text('call Ana'), findsNothing);
+      expect(find.text(l10n.notesAQuietPlace), findsOneWidget);
+      // no notes, no menu
+      expect(find.byTooltip(l10n.notesMenu), findsNothing);
       await drain(t);
     });
   });

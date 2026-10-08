@@ -3874,6 +3874,26 @@ class AppLocalizationsTr extends AppLocalizations {
   String get notesDeleteThisNote => 'Bu not silinsin mi?';
 
   @override
+  String get notesHoldHint =>
+      'Kopyalamak ya da silmek için bir notun üstüne basılı tut.';
+
+  @override
+  String get notesMenu => 'Not menüsü';
+
+  @override
+  String get notesDeleteAll => 'Tüm notları sil';
+
+  @override
+  String get notesDeleteAllTitle => 'Tüm notlar silinsin mi?';
+
+  @override
+  String get notesDeleteAllLine =>
+      'Bu telefondaki tüm notlar kalıcı olarak gider.';
+
+  @override
+  String get notesDeleteAllYes => 'Tümünü sil';
+
+  @override
   String get notesGoneFromThisPhone => 'Bu telefondan kalıcı olarak silinir.';
 
   @override

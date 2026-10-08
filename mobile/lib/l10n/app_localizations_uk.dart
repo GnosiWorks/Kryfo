@@ -3940,6 +3940,26 @@ class AppLocalizationsUk extends AppLocalizations {
   String get notesDeleteThisNote => 'Видалити цю нотатку?';
 
   @override
+  String get notesHoldHint =>
+      'Утримуй нотатку, щоб скопіювати або видалити її.';
+
+  @override
+  String get notesMenu => 'Меню нотаток';
+
+  @override
+  String get notesDeleteAll => 'Видалити всі нотатки';
+
+  @override
+  String get notesDeleteAllTitle => 'Видалити всі нотатки?';
+
+  @override
+  String get notesDeleteAllLine =>
+      'Усі нотатки на цьому телефоні зникнуть назавжди.';
+
+  @override
+  String get notesDeleteAllYes => 'Видалити все';
+
+  @override
   String get notesGoneFromThisPhone =>
       'Її буде стерто з цього телефону назавжди.';
 

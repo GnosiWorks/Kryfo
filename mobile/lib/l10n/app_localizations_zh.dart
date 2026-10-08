@@ -3707,6 +3707,24 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notesDeleteThisNote => '删除这条笔记？';
 
   @override
+  String get notesHoldHint => '长按一条笔记即可复制或删除。';
+
+  @override
+  String get notesMenu => '笔记菜单';
+
+  @override
+  String get notesDeleteAll => '删除全部笔记';
+
+  @override
+  String get notesDeleteAllTitle => '删除全部笔记？';
+
+  @override
+  String get notesDeleteAllLine => '这部手机上的所有笔记都会被永久删除。';
+
+  @override
+  String get notesDeleteAllYes => '全部删除';
+
+  @override
   String get notesGoneFromThisPhone => '它会从这部手机上永久清除。';
 
   @override
@@ -11029,6 +11047,24 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get notesDeleteThisNote => '要刪除這則筆記嗎？';
+
+  @override
+  String get notesHoldHint => '長按一則筆記即可複製或刪除。';
+
+  @override
+  String get notesMenu => '筆記選單';
+
+  @override
+  String get notesDeleteAll => '刪除全部筆記';
+
+  @override
+  String get notesDeleteAllTitle => '刪除全部筆記？';
+
+  @override
+  String get notesDeleteAllLine => '這支手機上的所有筆記都會被永久刪除。';
+
+  @override
+  String get notesDeleteAllYes => '全部刪除';
 
   @override
   String get notesGoneFromThisPhone => '它會從這支手機上永久抹除。';

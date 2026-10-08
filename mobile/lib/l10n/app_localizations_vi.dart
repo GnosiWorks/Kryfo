@@ -3847,6 +3847,25 @@ class AppLocalizationsVi extends AppLocalizations {
   String get notesDeleteThisNote => 'Xóa ghi chú này?';
 
   @override
+  String get notesHoldHint => 'Nhấn giữ một ghi chú để sao chép hoặc xóa.';
+
+  @override
+  String get notesMenu => 'Menu ghi chú';
+
+  @override
+  String get notesDeleteAll => 'Xóa tất cả ghi chú';
+
+  @override
+  String get notesDeleteAllTitle => 'Xóa tất cả ghi chú?';
+
+  @override
+  String get notesDeleteAllLine =>
+      'Mọi ghi chú trên điện thoại này sẽ mất vĩnh viễn.';
+
+  @override
+  String get notesDeleteAllYes => 'Xóa tất cả';
+
+  @override
   String get notesGoneFromThisPhone =>
       'Ghi chú sẽ bị xóa vĩnh viễn khỏi điện thoại này.';
 

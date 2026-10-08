@@ -3953,6 +3953,26 @@ class AppLocalizationsRu extends AppLocalizations {
   String get notesDeleteThisNote => 'Удалить эту заметку?';
 
   @override
+  String get notesHoldHint =>
+      'Удерживай заметку, чтобы скопировать или удалить её.';
+
+  @override
+  String get notesMenu => 'Меню заметок';
+
+  @override
+  String get notesDeleteAll => 'Удалить все заметки';
+
+  @override
+  String get notesDeleteAllTitle => 'Удалить все заметки?';
+
+  @override
+  String get notesDeleteAllLine =>
+      'Все заметки на этом телефоне исчезнут навсегда.';
+
+  @override
+  String get notesDeleteAllYes => 'Удалить все';
+
+  @override
   String get notesGoneFromThisPhone =>
       'Она будет стёрта с этого телефона навсегда.';
 

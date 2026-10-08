@@ -3901,6 +3901,26 @@ class AppLocalizationsDe extends AppLocalizations {
   String get notesDeleteThisNote => 'Diese Notiz löschen?';
 
   @override
+  String get notesHoldHint =>
+      'Halte eine Notiz gedrückt, um sie zu kopieren oder zu löschen.';
+
+  @override
+  String get notesMenu => 'Notizen-Menü';
+
+  @override
+  String get notesDeleteAll => 'Alle Notizen löschen';
+
+  @override
+  String get notesDeleteAllTitle => 'Alle Notizen löschen?';
+
+  @override
+  String get notesDeleteAllLine =>
+      'Jede Notiz auf diesem Handy ist dann für immer weg.';
+
+  @override
+  String get notesDeleteAllYes => 'Alle löschen';
+
+  @override
   String get notesGoneFromThisPhone =>
       'Sie wird endgültig von diesem Handy gelöscht.';
 

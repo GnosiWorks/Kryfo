@@ -167,6 +167,8 @@ class Session {
       _ofPeer(peerId).countMessagesTo(peerId);
   Future<void> declineRequest(String haloId) =>
       _ofPeer(haloId).declineRequest(haloId);
+  Future<int> deleteAllOf(String chatId) => _ofPeer(chatId).deleteAllOf(chatId);
+
   Future<void> deleteConversation(String haloId) =>
       _ofPeer(haloId).deleteConversation(haloId);
   Future<void> dismissShield(String haloId) =>

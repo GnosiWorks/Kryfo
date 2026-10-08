@@ -6084,6 +6084,42 @@ abstract class AppLocalizations {
   /// screens/notes_screen.dart
   ///
   /// In en, this message translates to:
+  /// **'Hold a note to copy or delete it.'**
+  String get notesHoldHint;
+
+  /// screens/notes_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Notes menu'**
+  String get notesMenu;
+
+  /// screens/notes_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all notes'**
+  String get notesDeleteAll;
+
+  /// screens/notes_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all notes?'**
+  String get notesDeleteAllTitle;
+
+  /// screens/notes_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Every note on this phone goes, for good.'**
+  String get notesDeleteAllLine;
+
+  /// screens/notes_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all'**
+  String get notesDeleteAllYes;
+
+  /// screens/notes_screen.dart
+  ///
+  /// In en, this message translates to:
   /// **'It is gone from this phone for good.'**
   String get notesGoneFromThisPhone;
 
