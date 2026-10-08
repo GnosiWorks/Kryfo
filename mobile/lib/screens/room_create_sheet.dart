@@ -145,41 +145,44 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
                 ],
               ),
               const SizedBox(height: 14),
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.roomCreateMemberCap,
-                          style: HaloType.sans(
-                            size: 13,
-                            color: HaloColors.text,
+              // one switch to a screen reader, named by its title and line
+              MergeSemantics(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.roomCreateMemberCap,
+                            style: HaloType.sans(
+                              size: 13,
+                              color: HaloColors.text,
+                            ),
                           ),
-                        ),
-                        Text(
-                          _capOn
-                              ? l10n.roomCreateNoOnePastThe(_cap)
-                              : l10n.roomCreateOffUpTo(
-                                  AppState.kGroupMemberCap,
-                                ),
-                          style: HaloType.mono(
-                            size: 9.5,
-                            color: HaloColors.text3,
+                          Text(
+                            _capOn
+                                ? l10n.roomCreateNoOnePastThe(_cap)
+                                : l10n.roomCreateOffUpTo(
+                                    AppState.kGroupMemberCap,
+                                  ),
+                            style: HaloType.mono(
+                              size: 9.5,
+                              color: HaloColors.text3,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  HaloSwitch(
-                    value: _capOn,
-                    onChanged: (v) {
-                      HapticFeedback.selectionClick();
-                      setState(() => _capOn = v);
-                    },
-                  ),
-                ],
+                    HaloSwitch(
+                      value: _capOn,
+                      onChanged: (v) {
+                        HapticFeedback.selectionClick();
+                        setState(() => _capOn = v);
+                      },
+                    ),
+                  ],
+                ),
               ),
               EaseSize(
                 duration: const Duration(milliseconds: 220),

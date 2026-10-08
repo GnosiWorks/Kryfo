@@ -17,42 +17,53 @@ class HaloSwitch extends StatelessWidget {
     final on = value;
     final enabled = onChanged != null;
     final still = motionStill(context);
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: enabled
-          ? () {
-              HapticFeedback.selectionClick();
-              onChanged!(!on);
-            }
-          : null,
-      child: Opacity(
-        opacity: enabled ? 1 : 0.5,
-        child: AnimatedContainer(
-          duration: still ? Duration.zero : const Duration(milliseconds: 200),
-          curve: Curves.easeOutCubic,
-          width: 46,
-          height: 26,
-          padding: const EdgeInsets.all(3),
-          decoration: BoxDecoration(
-            color: on ? HaloColors.amber : HaloColors.surface3,
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(
-              color: on ? HaloColors.amber : HaloColors.line2,
-              width: 0.6,
+    final flip = enabled
+        ? () {
+            HapticFeedback.selectionClick();
+            onChanged!(!on);
+          }
+        : null;
+    // a switch to a screen reader. a row around it wraps itself in
+    // MergeSemantics so its title and line name this node
+    return Semantics(
+      toggled: on,
+      enabled: enabled,
+      onTap: flip,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        excludeFromSemantics: true,
+        onTap: flip,
+        child: Opacity(
+          opacity: enabled ? 1 : 0.5,
+          child: AnimatedContainer(
+            duration: still ? Duration.zero : const Duration(milliseconds: 200),
+            curve: Curves.easeOutCubic,
+            width: 46,
+            height: 26,
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              color: on ? HaloColors.amber : HaloColors.surface3,
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(
+                color: on ? HaloColors.amber : HaloColors.line2,
+                width: 0.6,
+              ),
             ),
-          ),
-          child: AnimatedAlign(
-            duration: still ? Duration.zero : const Duration(milliseconds: 240),
-            curve: Curves.easeOutBack,
-            alignment: on
-                ? AlignmentDirectional.centerEnd
-                : AlignmentDirectional.centerStart,
-            child: Container(
-              width: 20,
-              height: 20,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: on ? HaloColors.onAmber : HaloColors.text3,
+            child: AnimatedAlign(
+              duration: still
+                  ? Duration.zero
+                  : const Duration(milliseconds: 240),
+              curve: Curves.easeOutBack,
+              alignment: on
+                  ? AlignmentDirectional.centerEnd
+                  : AlignmentDirectional.centerStart,
+              child: Container(
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: on ? HaloColors.onAmber : HaloColors.text3,
+                ),
               ),
             ),
           ),

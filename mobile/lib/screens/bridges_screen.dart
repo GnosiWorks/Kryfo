@@ -356,52 +356,60 @@ class _BridgesScreenState extends State<BridgesScreen> {
           ),
           const SizedBox(height: 18),
 
-          // the switch, and the lines it applies to
-          PressScale(
-            scale: 0.98,
-            onTap: () => setState(() => _on = !_on),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: HaloColors.surface2,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: _on
-                      ? HaloColors.violet.withValues(alpha: 0.4)
-                      : HaloColors.line,
+          // the switch, and the lines it applies to, as one switch to a
+          // screen reader
+          MergeSemantics(
+            child: PressScale(
+              scale: 0.98,
+              onTap: () => setState(() => _on = !_on),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
                 ),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.bridgesUseBridges,
-                          style: HaloType.sans(
-                            size: 14.5,
-                            color: HaloColors.text,
+                decoration: BoxDecoration(
+                  color: HaloColors.surface2,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: _on
+                        ? HaloColors.violet.withValues(alpha: 0.4)
+                        : HaloColors.line,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.bridgesUseBridges,
+                            style: HaloType.sans(
+                              size: 14.5,
+                              color: HaloColors.text,
+                            ),
                           ),
-                        ),
-                        Text(
-                          n == 0
-                              ? l10n.bridgesNoLinesYet
-                              : l10n.bridges1LineSaved(n),
-                          style: HaloType.mono(
-                            size: 10.5,
-                            color: n > 0 ? HaloColors.violet : HaloColors.text3,
+                          Text(
+                            n == 0
+                                ? l10n.bridgesNoLinesYet
+                                : l10n.bridges1LineSaved(n),
+                            style: HaloType.mono(
+                              size: 10.5,
+                              color: n > 0
+                                  ? HaloColors.violet
+                                  : HaloColors.text3,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  // the switch clicks on its own
-                  HaloSwitch(
-                    value: _on,
-                    onChanged: (v) => setState(() => _on = v),
-                  ),
-                ],
+                    // the switch clicks on its own
+                    HaloSwitch(
+                      value: _on,
+                      onChanged: (v) => setState(() => _on = v),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

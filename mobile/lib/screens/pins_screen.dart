@@ -687,21 +687,24 @@ class _Toggle extends StatelessWidget {
   final VoidCallback onTap;
   const _Toggle({required this.label, required this.on, required this.onTap});
   @override
-  Widget build(BuildContext context) => GestureDetector(
-    onTap: onTap,
-    behavior: HitTestBehavior.opaque,
-    child: Row(
-      children: [
-        Icon(Icons.fingerprint, size: 18, color: HaloColors.amber),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            label,
-            style: HaloType.sans(size: 13.5, color: HaloColors.text),
+  Widget build(BuildContext context) => MergeSemantics(
+    child: GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      excludeFromSemantics: true,
+      child: Row(
+        children: [
+          Icon(Icons.fingerprint, size: 18, color: HaloColors.amber),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              label,
+              style: HaloType.sans(size: 13.5, color: HaloColors.text),
+            ),
           ),
-        ),
-        HaloSwitch(value: on, onChanged: (_) => onTap()),
-      ],
+          HaloSwitch(value: on, onChanged: (_) => onTap()),
+        ],
+      ),
     ),
   );
 }
