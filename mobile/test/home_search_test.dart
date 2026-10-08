@@ -2,8 +2,8 @@
 // search opens from a round button in the home header: the field grows out
 // of it with the keyboard up once it lands, and shrinks back on the way out.
 // with less movement the page only fades. the header keeps its four
-// controls on a small phone at a big font in the long languages, both
-// themes, and mirrors right to left.
+// controls, each button a full finger wide, on a small phone at a big font
+// in the long languages, both themes, and mirrors right to left.
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -264,6 +264,20 @@ void main() {
           for (final r in [door, gear, add, tor]) {
             expect(r.left, greaterThanOrEqualTo(0));
             expect(r.right, lessThanOrEqualTo(360));
+          }
+          // all three buttons take a full finger, as laid out and as a
+          // screen reader reaches them, their tops in one line
+          for (final (r, label) in [
+            (door, l10n.searchHint),
+            (gear, l10n.commonSettings),
+            (add, l10n.homeAddAContact),
+          ]) {
+            expect(r.width, greaterThanOrEqualTo(48), reason: label);
+            expect(r.height, greaterThanOrEqualTo(48), reason: label);
+            final node = t.getSemantics(find.bySemanticsLabel(label)).rect;
+            expect(node.width, greaterThanOrEqualTo(48), reason: label);
+            expect(node.height, greaterThanOrEqualTo(48), reason: label);
+            expect(r.top, door.top, reason: label);
           }
           // in reading order, mirrored right to left
           final rtl = code == 'fa' || code == 'ar';

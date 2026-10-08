@@ -584,27 +584,40 @@ class GroupSummary {
 
 // ───────── date header ─────────
 
+// a header button: a round of kDoorRound in a full finger's room of
+// kDoorBox, top-aligned so the rounds line up with the date beside them
+class _HeadRoom extends StatelessWidget {
+  final Widget child;
+  const _HeadRoom({required this.child});
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    width: kDoorBox,
+    height: kDoorBox,
+    child: Align(alignment: Alignment.topCenter, child: child),
+  );
+}
+
 class _AddScanButton extends StatelessWidget {
   final VoidCallback onTap;
   const _AddScanButton({required this.onTap});
   @override
   Widget build(BuildContext context) {
     return PressScale(
+      label: l10n.homeAddAContact,
+      scale: 0.9,
       onTap: onTap,
-      child: Container(
-        width: 38,
-        height: 38,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: HaloColors.amber.withValues(alpha: 0.55),
-            width: 1.4,
+      child: _HeadRoom(
+        child: Container(
+          width: kDoorRound,
+          height: kDoorRound,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: HaloColors.amber.withValues(alpha: 0.55),
+              width: 1.4,
+            ),
           ),
-        ),
-        child: Semantics(
-          label: l10n.homeAddAContact,
-          button: true,
           child: Icon(Icons.add, size: 20, color: HaloColors.amber),
         ),
       ),
@@ -621,15 +634,21 @@ class _GearButton extends StatelessWidget {
       label: l10n.commonSettings,
       scale: 0.9,
       onTap: onTap,
-      child: Container(
-        width: 38,
-        height: 38,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(color: HaloColors.line2, width: 1.4),
+      child: _HeadRoom(
+        child: Container(
+          width: kDoorRound,
+          height: kDoorRound,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: HaloColors.line2, width: 1.4),
+          ),
+          child: Icon(
+            Icons.settings_outlined,
+            size: 19,
+            color: HaloColors.text2,
+          ),
         ),
-        child: Icon(Icons.settings_outlined, size: 19, color: HaloColors.text2),
       ),
     );
   }
@@ -725,14 +744,12 @@ class _HomeHead extends StatelessWidget {
               ],
             ),
           ),
-          // the search button's room for a finger is wider than its round,
-          // so the gap beside it is the others' less that margin
+          // the rooms meet edge to edge: their margins make the gaps
+          // between the rounds
           SearchDoor(onTap: onSearch),
-          const SizedBox(width: 10 - (kDoorBox - kDoorRound) / 2),
           _GearButton(onTap: onSettings),
-          const SizedBox(width: 10),
           _AddScanButton(onTap: onAdd),
-          const SizedBox(width: 12),
+          const SizedBox(width: 12 - (kDoorBox - kDoorRound) / 2),
           TorHalo(label: true),
         ],
       ),
