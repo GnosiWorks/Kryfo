@@ -5278,6 +5278,28 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bağımsız bir denetimden geçmedi. Alfa: test için iyi, ama henüz yüksek riskli kullanım için değil.';
 
   @override
+  String get settingsFollowTitle => 'GnosiWorks\'ü takip et (geliştirici)';
+
+  @override
+  String get settingsFollowBrowserNote => 'Tarayıcında, Kryfo dışında açılır.';
+
+  @override
+  String get settingsFollowNostrNote =>
+      'Nostr uygulamanı Kryfo dışında açar. Uygulama yoksa adres kopyalanır.';
+
+  @override
+  String get settingsFollowOpen => 'Aç';
+
+  @override
+  String get settingsFollowNpubCopied =>
+      'Burada Nostr uygulaması yok. Adres kopyalandı.';
+
+  @override
+  String settingsFollowOn(Object name) {
+    return '$name üzerinde takip et, Kryfo dışında';
+  }
+
+  @override
   String get settingsDangerZone => 'Tehlikeli bölge';
 
   @override

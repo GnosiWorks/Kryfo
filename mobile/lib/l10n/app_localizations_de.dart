@@ -5321,6 +5321,29 @@ class AppLocalizationsDe extends AppLocalizations {
       'Nicht unabhängig auditiert. Alpha: gut zum Testen, noch nicht für Einsätze, bei denen viel auf dem Spiel steht.';
 
   @override
+  String get settingsFollowTitle => 'GnosiWorks folgen (Entwickler)';
+
+  @override
+  String get settingsFollowBrowserNote =>
+      'Öffnet sich in deinem Browser, außerhalb von Kryfo.';
+
+  @override
+  String get settingsFollowNostrNote =>
+      'Öffnet deine Nostr-App, außerhalb von Kryfo. Ohne App wird die Adresse kopiert.';
+
+  @override
+  String get settingsFollowOpen => 'Öffnen';
+
+  @override
+  String get settingsFollowNpubCopied =>
+      'Keine Nostr-App vorhanden. Die Adresse ist kopiert.';
+
+  @override
+  String settingsFollowOn(Object name) {
+    return 'Auf $name folgen, außerhalb von Kryfo';
+  }
+
+  @override
   String get settingsDangerZone => 'Gefahrenzone';
 
   @override

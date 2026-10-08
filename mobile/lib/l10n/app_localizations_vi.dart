@@ -5256,6 +5256,29 @@ class AppLocalizationsVi extends AppLocalizations {
       'Chưa được kiểm định độc lập. Bản alpha: phù hợp để thử nghiệm, chưa dành cho mục đích hệ trọng.';
 
   @override
+  String get settingsFollowTitle => 'Theo dõi GnosiWorks (nhà phát triển)';
+
+  @override
+  String get settingsFollowBrowserNote =>
+      'Mở trong trình duyệt của bạn, bên ngoài Kryfo.';
+
+  @override
+  String get settingsFollowNostrNote =>
+      'Mở ứng dụng Nostr của bạn, bên ngoài Kryfo. Nếu không có, địa chỉ sẽ được sao chép.';
+
+  @override
+  String get settingsFollowOpen => 'Mở';
+
+  @override
+  String get settingsFollowNpubCopied =>
+      'Không có ứng dụng Nostr nào. Đã sao chép địa chỉ.';
+
+  @override
+  String settingsFollowOn(Object name) {
+    return 'Theo dõi trên $name, bên ngoài Kryfo';
+  }
+
+  @override
   String get settingsDangerZone => 'Vùng nguy hiểm';
 
   @override

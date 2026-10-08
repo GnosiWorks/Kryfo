@@ -5044,6 +5044,26 @@ class AppLocalizationsZh extends AppLocalizations {
       '未经独立审计。Alpha 版——适合测试，还不适合高风险用途。';
 
   @override
+  String get settingsFollowTitle => '关注 GnosiWorks（开发者）';
+
+  @override
+  String get settingsFollowBrowserNote => '在你的浏览器中打开，离开 Kryfo。';
+
+  @override
+  String get settingsFollowNostrNote => '打开你的 Nostr 应用，离开 Kryfo。没有的话会复制地址。';
+
+  @override
+  String get settingsFollowOpen => '打开';
+
+  @override
+  String get settingsFollowNpubCopied => '这里没有 Nostr 应用，地址已复制。';
+
+  @override
+  String settingsFollowOn(Object name) {
+    return '在 $name 关注，离开 Kryfo';
+  }
+
+  @override
   String get settingsDangerZone => '危险区';
 
   @override
@@ -12383,6 +12403,26 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get settingsNotIndependentlyAuditedPre =>
       '尚未經過獨立稽核。目前是 alpha 版：適合測試，還不適合高風險用途。';
+
+  @override
+  String get settingsFollowTitle => '追蹤 GnosiWorks（開發者）';
+
+  @override
+  String get settingsFollowBrowserNote => '在你的瀏覽器中開啟，離開 Kryfo。';
+
+  @override
+  String get settingsFollowNostrNote => '開啟你的 Nostr App，離開 Kryfo。沒有的話會複製地址。';
+
+  @override
+  String get settingsFollowOpen => '開啟';
+
+  @override
+  String get settingsFollowNpubCopied => '這裡沒有 Nostr App，地址已複製。';
+
+  @override
+  String settingsFollowOn(Object name) {
+    return '在 $name 追蹤，離開 Kryfo';
+  }
 
   @override
   String get settingsDangerZone => '危險區域';

@@ -5362,6 +5362,28 @@ class AppLocalizationsRu extends AppLocalizations {
       'Независимого аудита не было. Альфа-версия — годится для тестов, но пока не для случаев, когда на кону многое.';
 
   @override
+  String get settingsFollowTitle => 'Следить за GnosiWorks (разработчик)';
+
+  @override
+  String get settingsFollowBrowserNote => 'Откроется в браузере, вне Kryfo.';
+
+  @override
+  String get settingsFollowNostrNote =>
+      'Откроется приложение Nostr, вне Kryfo. Если его нет, адрес будет скопирован.';
+
+  @override
+  String get settingsFollowOpen => 'Открыть';
+
+  @override
+  String get settingsFollowNpubCopied =>
+      'Приложения Nostr нет. Адрес скопирован.';
+
+  @override
+  String settingsFollowOn(Object name) {
+    return 'Следить в $name, вне Kryfo';
+  }
+
+  @override
   String get settingsDangerZone => 'Опасная зона';
 
   @override

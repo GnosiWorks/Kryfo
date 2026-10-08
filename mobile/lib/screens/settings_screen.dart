@@ -28,6 +28,7 @@ import 'getting_messages_screen.dart';
 import '../widgets/halo_rows.dart';
 import '../widgets/dev_avatar.dart' show DevRing;
 import 'dev_about_sheet.dart' show devChatOffered, writeToMarios;
+import 'follow_section.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/unfold.dart';
 import '../widgets/confirm_sheet.dart';
@@ -735,6 +736,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
           ),
+          const SizedBox(height: 24),
+
+          const FollowSection(),
           const SizedBox(height: 24),
 
           HaloSection(l10n.settingsDangerZone),
