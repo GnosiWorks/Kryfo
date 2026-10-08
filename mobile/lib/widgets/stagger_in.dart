@@ -61,6 +61,9 @@ class _StaggerInState extends State<StaggerIn> {
       opacity: _t,
       duration: d,
       curve: Curves.easeOut,
+      // a reader gets the row at once. left out while at zero, a row built
+      // after a page jump never comes back into the tree
+      alwaysIncludeSemantics: true,
       child: AnimatedSlide(
         offset: Offset(0, (1 - _t) * (_late ? 0.03 : 0.08)),
         duration: d,
