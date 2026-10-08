@@ -2230,7 +2230,7 @@ class HaloDb implements GroupOwedStore {
       heldKeyHex(await open(), haloId, identity: _keySource);
 
   Future<bool> keyHeld(String haloId) async =>
-      keyHeldIn(await open(), haloId, identity: _signalKey);
+      keyHeldIn(await open(), haloId, identity: _keySource);
 
   Future<void> acceptNewKey(String haloId) async =>
       acceptNewKeyIn(await open(), haloId);
