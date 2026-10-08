@@ -8436,6 +8436,30 @@ abstract class AppLocalizations {
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
+  /// **'Write in Kryfo'**
+  String get settingsReportInKryfo;
+
+  /// screens/settings_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'The chat with Marios. You can write anonymously.'**
+  String get settingsReportInKryfoSub;
+
+  /// screens/settings_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Send an email'**
+  String get settingsReportByEmail;
+
+  /// screens/settings_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'gnosiworks@proton.me, from your mail app'**
+  String get settingsReportByEmailSub;
+
+  /// screens/settings_screen.dart
+  ///
+  /// In en, this message translates to:
   /// **'Bug or security flaw'**
   String get settingsBugOrSecurityFlaw;
 

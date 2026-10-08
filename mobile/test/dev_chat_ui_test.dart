@@ -308,6 +308,34 @@ void main() {
       await devClose(t);
     });
 
+    testWidgets('report an issue: writing in kryfo first, mail second, and '
+        'the first opens the chat with Marios', (t) async {
+      await devWorld(chats: const []);
+      await devOpen(t, const SettingsScreen());
+      final report = find.text(l10n.settingsReportAnIssue);
+      await t.scrollUntilVisible(
+        report,
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await Scrollable.ensureVisible(t.element(report), alignment: 0.5);
+      await t.pump(const Duration(milliseconds: 500));
+      await t.tap(report);
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 600));
+      final inKryfo = find.text(l10n.settingsReportInKryfo);
+      final byMail = find.text(l10n.settingsReportByEmail);
+      expect(inKryfo, findsOneWidget);
+      expect(byMail, findsOneWidget);
+      expect(find.text(l10n.settingsReportInKryfoSub), findsOneWidget);
+      expect(t.getTopLeft(inKryfo).dy, lessThan(t.getTopLeft(byMail).dy));
+      await t.tap(inKryfo);
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 600));
+      expect(find.text('the chat dev:m1 '), findsOneWidget);
+      await devClose(t);
+    });
+
     testWidgets('an anonymous chat says its name goes too', (t) async {
       await devWorld(chats: [('amber-fox-river', 50, false)]);
       await devTestChat.begin(
@@ -516,6 +544,11 @@ void main() {
         scrollable: find.byType(Scrollable).first,
       );
       expect(find.text(l10n.settingsWriteToMarios), findsNothing);
+      // no chat to offer: the row goes to mail, with no sheet first
+      await t.tap(find.text(l10n.settingsReportAnIssue));
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 600));
+      expect(find.text(l10n.settingsReportInKryfo), findsNothing);
       await devClose(t);
 
       await devOpen(t, const SeenScreen());

@@ -5221,6 +5221,20 @@ class AppLocalizationsFa extends AppLocalizations {
   String get settingsReportAnIssue => 'گزارش مشکل';
 
   @override
+  String get settingsReportInKryfo => 'نوشتن در Kryfo';
+
+  @override
+  String get settingsReportInKryfoSub =>
+      'گفت‌وگو با Marios. می‌توانید ناشناس بنویسید.';
+
+  @override
+  String get settingsReportByEmail => 'فرستادن ایمیل';
+
+  @override
+  String get settingsReportByEmailSub =>
+      'gnosiworks@proton.me، از برنامه‌ی ایمیل شما';
+
+  @override
   String get settingsBugOrSecurityFlaw => 'باگ یا نقص امنیتی';
 
   @override
