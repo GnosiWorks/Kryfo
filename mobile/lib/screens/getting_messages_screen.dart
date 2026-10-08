@@ -165,65 +165,68 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
                   ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(22, 4, 22, 8),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.gettingMessagesHideMessagePreview,
-                            style: HaloType.sans(
-                              size: 14,
-                              color: HaloColors.text,
+              // one switch to a screen reader, named by its title and line
+              MergeSemantics(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(22, 4, 22, 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.gettingMessagesHideMessagePreview,
+                              style: HaloType.sans(
+                                size: 14,
+                                color: HaloColors.text,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            l10n.gettingMessagesAGenericAlertWith,
-                            style: HaloType.sans(
-                              size: 12,
-                              color: HaloColors.text2,
+                            const SizedBox(height: 2),
+                            Text(
+                              l10n.gettingMessagesAGenericAlertWith,
+                              style: HaloType.sans(
+                                size: 12,
+                                color: HaloColors.text2,
+                              ),
                             ),
-                          ),
-                          // a pin turns previews off. if someone turns them
-                          // back on, say what that gives away.
-                          Unfold(
-                            open: lockState.lockOn && _hidePreview == false,
-                            child: Padding(
-                              padding: const EdgeInsets.only(top: 6),
-                              child: Text(
-                                l10n.gettingMessagesShowsMessageTextIn,
-                                style: HaloType.sans(
-                                  size: 12,
-                                  color: HaloColors.rose,
+                            // a pin turns previews off. if someone turns them
+                            // back on, say what that gives away.
+                            Unfold(
+                              open: lockState.lockOn && _hidePreview == false,
+                              child: Padding(
+                                padding: const EdgeInsets.only(top: 6),
+                                child: Text(
+                                  l10n.gettingMessagesShowsMessageTextIn,
+                                  style: HaloType.sans(
+                                    size: 12,
+                                    color: HaloColors.rose,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    FadeSwap(
-                      child: _hidePreview == null
-                          ? const SizedBox(
-                              key: ValueKey('pending'),
-                              width: 46,
-                              height: 26,
-                            )
-                          : HaloSwitch(
-                              key: const ValueKey('switch'),
-                              value: _hidePreview!,
-                              onChanged: (v) {
-                                setState(() => _hidePreview = v);
-                                setHideNotifContent(v, session.container);
-                              },
-                            ),
-                    ),
-                  ],
+                      const SizedBox(width: 12),
+                      FadeSwap(
+                        child: _hidePreview == null
+                            ? const SizedBox(
+                                key: ValueKey('pending'),
+                                width: 46,
+                                height: 26,
+                              )
+                            : HaloSwitch(
+                                key: const ValueKey('switch'),
+                                value: _hidePreview!,
+                                onChanged: (v) {
+                                  setState(() => _hidePreview = v);
+                                  setHideNotifContent(v, session.container);
+                                },
+                              ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               Padding(

@@ -320,47 +320,50 @@ class _NewPollSheetState extends State<_NewPollSheet> {
                   : const SizedBox(width: double.infinity),
             ),
             const SizedBox(height: 6),
-            Container(
-              padding: const EdgeInsetsDirectional.fromSTEB(14, 12, 12, 12),
-              decoration: BoxDecoration(
-                color: HaloColors.surface3,
-                borderRadius: BorderRadius.circular(13),
-                border: Border.all(color: HaloColors.line, width: 0.5),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.pollMultiple,
-                          style: HaloType.sans(
-                            size: 14,
-                            weight: FontWeight.w600,
-                            color: HaloColors.text,
+            // one switch to a screen reader, named by its title and line
+            MergeSemantics(
+              child: Container(
+                padding: const EdgeInsetsDirectional.fromSTEB(14, 12, 12, 12),
+                decoration: BoxDecoration(
+                  color: HaloColors.surface3,
+                  borderRadius: BorderRadius.circular(13),
+                  border: Border.all(color: HaloColors.line, width: 0.5),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.pollMultiple,
+                            style: HaloType.sans(
+                              size: 14,
+                              weight: FontWeight.w600,
+                              color: HaloColors.text,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          l10n.pollMultipleLine,
-                          style: HaloType.sans(
-                            size: 12,
-                            color: HaloColors.text2,
+                          const SizedBox(height: 2),
+                          Text(
+                            l10n.pollMultipleLine,
+                            style: HaloType.sans(
+                              size: 12,
+                              color: HaloColors.text2,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  HaloSwitch(
-                    value: _multi,
-                    onChanged: (v) {
-                      HapticFeedback.selectionClick();
-                      setState(() => _multi = v);
-                    },
-                  ),
-                ],
+                    const SizedBox(width: 10),
+                    HaloSwitch(
+                      value: _multi,
+                      onChanged: (v) {
+                        HapticFeedback.selectionClick();
+                        setState(() => _multi = v);
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 16),
