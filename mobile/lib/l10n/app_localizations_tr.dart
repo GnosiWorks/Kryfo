@@ -4003,7 +4003,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get onboardingThatIsTheWhole =>
-      'Kimliğin bundan ibaret. Sızacak numara yok, oltalanacak e-posta yok, aranıp bulunacak hiçbir şey yok. Konuştuğun kişiler bu kelimeleri ve seçtiğin yüzü görür.';
+      'Kimliğin bundan ibaret. Sızacak numara yok, oltalanacak e-posta yok, peşine düşülecek bir iz yok. Konuştuğun kişiler bu kelimeleri ve seçtiğin yüzü görür.';
 
   @override
   String get onboardingNobodyCanReachYou =>
