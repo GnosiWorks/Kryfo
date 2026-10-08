@@ -789,7 +789,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
 
   Widget _tryAnother() {
     final still = motionStill(context);
-    return PressScale(
+    final b = PressScale(
       scale: 0.97,
       onTap: _regenerate,
       child: AnimatedOpacity(
@@ -831,6 +831,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
         ),
       ),
     );
+    return _button(b);
   }
 
   Widget _sigilReveal() {
@@ -1583,12 +1584,18 @@ class _StepPage extends StatelessWidget {
             ),
           ),
         ),
-        Padding(
-          padding: _pagePad.copyWith(top: 4),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: footer,
+        // its own node with a node for each piece: a lone button here
+        // would otherwise lend its tap and words to the whole page
+        Semantics(
+          container: true,
+          explicitChildNodes: true,
+          child: Padding(
+            padding: _pagePad.copyWith(top: 4),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: footer,
+            ),
           ),
         ),
       ],
@@ -1669,57 +1676,60 @@ class _Card extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsetsDirectional.fromSTEB(14, 14, 16, 15),
-      decoration: BoxDecoration(
-        color: HaloColors.surface2,
-        border: Border.all(color: HaloColors.line, width: 0.5),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _Badge(
-            child: num != null
-                ? Text(
-                    twoDigits(num!),
-                    textScaler: TextScaler.noScaling,
-                    style: HaloType.mono(size: 11, color: HaloColors.amber)
-                        .copyWith(
-                          letterSpacing: track(0.5),
-                          fontWeight: FontWeight.w600,
-                        ),
-                  )
-                : Icon(icon, size: 17, color: HaloColors.amber),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 1),
-                Text(
-                  title,
-                  style: HaloType.sans(
-                    size: 14,
-                    color: HaloColors.text,
-                    weight: FontWeight.w600,
-                    height: 1.35,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  desc,
-                  style: HaloType.sans(
-                    size: 13,
-                    color: HaloColors.text2,
-                    height: 1.5,
-                  ),
-                ),
-              ],
+    // read as one: its number, its title, its line
+    return MergeSemantics(
+      child: Container(
+        padding: const EdgeInsetsDirectional.fromSTEB(14, 14, 16, 15),
+        decoration: BoxDecoration(
+          color: HaloColors.surface2,
+          border: Border.all(color: HaloColors.line, width: 0.5),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _Badge(
+              child: num != null
+                  ? Text(
+                      twoDigits(num!),
+                      textScaler: TextScaler.noScaling,
+                      style: HaloType.mono(size: 11, color: HaloColors.amber)
+                          .copyWith(
+                            letterSpacing: track(0.5),
+                            fontWeight: FontWeight.w600,
+                          ),
+                    )
+                  : Icon(icon, size: 17, color: HaloColors.amber),
             ),
-          ),
-        ],
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 1),
+                  Text(
+                    title,
+                    style: HaloType.sans(
+                      size: 14,
+                      color: HaloColors.text,
+                      weight: FontWeight.w600,
+                      height: 1.35,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    desc,
+                    style: HaloType.sans(
+                      size: 13,
+                      color: HaloColors.text2,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1739,7 +1749,8 @@ class _Path extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PressScale(
+    // one button, read as its title and its line
+    final card = PressScale(
       scale: 0.98,
       onTap: onTap,
       child: Container(
@@ -1780,17 +1791,20 @@ class _Path extends StatelessWidget {
             ),
             const SizedBox(width: 10),
             // points the way reading goes
-            Transform.flip(
-              flipX: Directionality.of(context) == TextDirection.rtl,
-              child: Text(
-                '→',
-                style: HaloType.sans(size: 18, color: HaloColors.text2),
+            ExcludeSemantics(
+              child: Transform.flip(
+                flipX: Directionality.of(context) == TextDirection.rtl,
+                child: Text(
+                  '→',
+                  style: HaloType.sans(size: 18, color: HaloColors.text2),
+                ),
               ),
             ),
           ],
         ),
       ),
     );
+    return MergeSemantics(child: Semantics(button: true, child: card));
   }
 }
 
@@ -1802,34 +1816,36 @@ class _Cta extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final still = motionStill(context);
-    return PressScale(
-      scale: 0.97,
-      onTap: onTap,
-      child: Container(
-        constraints: const BoxConstraints(minHeight: 52),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        decoration: BoxDecoration(
-          color: HaloColors.amber,
-          borderRadius: BorderRadius.circular(999),
-        ),
-        alignment: Alignment.center,
-        child: AnimatedSwitcher(
-          duration: Duration(milliseconds: still ? 0 : 200),
-          transitionBuilder: (child, anim) => FadeTransition(
-            opacity: anim,
-            child: ScaleTransition(
-              scale: Tween(begin: 0.94, end: 1.0).animate(anim),
-              child: child,
-            ),
+    return _button(
+      PressScale(
+        scale: 0.97,
+        onTap: onTap,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 52),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          decoration: BoxDecoration(
+            color: HaloColors.amber,
+            borderRadius: BorderRadius.circular(999),
           ),
-          child: Text(
-            label,
-            key: ValueKey(label),
-            textAlign: TextAlign.center,
-            style: HaloType.sans(
-              size: 15,
-              color: HaloColors.onAmber,
-              weight: FontWeight.w600,
+          alignment: Alignment.center,
+          child: AnimatedSwitcher(
+            duration: Duration(milliseconds: still ? 0 : 200),
+            transitionBuilder: (child, anim) => FadeTransition(
+              opacity: anim,
+              child: ScaleTransition(
+                scale: Tween(begin: 0.94, end: 1.0).animate(anim),
+                child: child,
+              ),
+            ),
+            child: Text(
+              label,
+              key: ValueKey(label),
+              textAlign: TextAlign.center,
+              style: HaloType.sans(
+                size: 15,
+                color: HaloColors.onAmber,
+                weight: FontWeight.w600,
+              ),
             ),
           ),
         ),
@@ -1838,6 +1854,10 @@ class _Cta extends StatelessWidget {
   }
 }
 
+// a button with its own node, sized to itself and named by its words
+Widget _button(Widget child) =>
+    Semantics(container: true, button: true, child: child);
+
 // the quiet way past a step: plain words, a full finger's height
 class _TextLink extends StatelessWidget {
   final String label;
@@ -1845,17 +1865,19 @@ class _TextLink extends StatelessWidget {
   const _TextLink({required this.label, required this.onTap});
   @override
   Widget build(BuildContext context) {
-    return PressScale(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-        child: Text(
-          label,
-          textAlign: TextAlign.center,
-          style: HaloType.sans(
-            size: 13,
-            color: HaloColors.text2,
-            weight: FontWeight.w500,
+    return _button(
+      PressScale(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: HaloType.sans(
+              size: 13,
+              color: HaloColors.text2,
+              weight: FontWeight.w500,
+            ),
           ),
         ),
       ),
