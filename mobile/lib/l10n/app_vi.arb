@@ -1213,6 +1213,7 @@
   "restoreNotYet": "Chưa",
   "restoreRestored": "Đã khôi phục",
   "restoreKryfoWillCloseNow": "Kryfo sẽ đóng ngay bây giờ. Chạm vào biểu tượng để mở lại với tư cách {haloId}.",
+  "restoreCheckProtections": "Bản sao lưu không chứa phần cài đặt. Khi Kryfo mở lại, hãy kiểm tra Lớp bảo vệ của bạn trong Cài đặt.",
   "restoreReopenKryfo": "Mở lại Kryfo",
   "restoreTheRestoreDidNot": "Khôi phục chưa hoàn tất. Không có gì bị thay đổi",
   "restoreKryfoClosesRestoreAgain": "Một phần dữ liệu ở đây đã bị thay thế. Kryfo sẽ đóng ngay bây giờ. Hãy mở lại và khôi phục tệp thêm một lần nữa.",

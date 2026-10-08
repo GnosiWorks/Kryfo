@@ -1213,6 +1213,7 @@
   "restoreNotYet": "Pas encore",
   "restoreRestored": "Restauré",
   "restoreKryfoWillCloseNow": "Kryfo va se fermer. Touchez l’icône pour le rouvrir en tant que {haloId}.",
+  "restoreCheckProtections": "Les paramètres ne sont pas dans la sauvegarde. À la réouverture de Kryfo, vérifiez « Vos protections » dans Paramètres.",
   "restoreReopenKryfo": "Rouvrir Kryfo",
   "restoreTheRestoreDidNot": "La restauration n’a pas abouti. Rien n’a été modifié",
   "restoreKryfoClosesRestoreAgain": "Une partie de ce qui était ici est déjà remplacée. Kryfo va se fermer. Rouvrez-le et restaurez le fichier une nouvelle fois.",

@@ -7404,6 +7404,12 @@ abstract class AppLocalizations {
   /// screens/restore_screen.dart
   ///
   /// In en, this message translates to:
+  /// **'Settings aren\'t kept in a backup. Once Kryfo reopens, check Your protections in Settings.'**
+  String get restoreCheckProtections;
+
+  /// screens/restore_screen.dart
+  ///
+  /// In en, this message translates to:
   /// **'Reopen Kryfo'**
   String get restoreReopenKryfo;
 

@@ -1213,6 +1213,7 @@
   "restoreNotYet": "先不要",
   "restoreRestored": "已還原",
   "restoreKryfoWillCloseNow": "Kryfo 現在會關閉。點一下圖示，以 {haloId} 重新開啟。",
+  "restoreCheckProtections": "備份不包含設定。Kryfo 重新開啟後，請在設定裡檢查「你的防護」。",
   "restoreReopenKryfo": "重新開啟 Kryfo",
   "restoreTheRestoreDidNot": "還原沒有完成。沒有做任何變更",
   "restoreKryfoClosesRestoreAgain": "這裡的部分資料已經被取代。Kryfo 現在會關閉。請重新開啟，再還原一次這個檔案。",

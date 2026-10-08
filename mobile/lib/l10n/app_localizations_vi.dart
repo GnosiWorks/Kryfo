@@ -4589,6 +4589,10 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String get restoreCheckProtections =>
+      'Bản sao lưu không chứa phần cài đặt. Khi Kryfo mở lại, hãy kiểm tra Lớp bảo vệ của bạn trong Cài đặt.';
+
+  @override
   String get restoreReopenKryfo => 'Mở lại Kryfo';
 
   @override

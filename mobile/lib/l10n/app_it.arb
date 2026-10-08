@@ -1213,6 +1213,7 @@
   "restoreNotYet": "Non ancora",
   "restoreRestored": "Ripristinato",
   "restoreKryfoWillCloseNow": "Ora Kryfo si chiude. Tocca l'icona per riaprirlo come {haloId}.",
+  "restoreCheckProtections": "Le impostazioni non sono nel backup. Quando Kryfo si riapre, controlla «Le tue protezioni» in Impostazioni.",
   "restoreReopenKryfo": "Riapri Kryfo",
   "restoreTheRestoreDidNot": "Il ripristino non è terminato. Non è stato modificato niente",
   "restoreKryfoClosesRestoreAgain": "Una parte di ciò che c'era qui è già stata sostituita. Ora Kryfo si chiude. Riaprilo e ripristina di nuovo il file.",

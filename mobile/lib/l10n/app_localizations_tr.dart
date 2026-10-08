@@ -4611,6 +4611,10 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String get restoreCheckProtections =>
+      'Ayarlar yedekte yer almaz. Kryfo yeniden açılınca Ayarlar\'da “Korumaların” bölümüne bak.';
+
+  @override
   String get restoreReopenKryfo => 'Kryfo’yu yeniden aç';
 
   @override

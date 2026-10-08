@@ -4643,6 +4643,10 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get restoreCheckProtections =>
+      'Les paramètres ne sont pas dans la sauvegarde. À la réouverture de Kryfo, vérifiez « Vos protections » dans Paramètres.';
+
+  @override
   String get restoreReopenKryfo => 'Rouvrir Kryfo';
 
   @override

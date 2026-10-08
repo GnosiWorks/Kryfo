@@ -1213,6 +1213,7 @@
   "restoreNotYet": "Belum",
   "restoreRestored": "Dipulihkan",
   "restoreKryfoWillCloseNow": "Kryfo akan ditutup sekarang. Ketuk ikonnya untuk membuka lagi sebagai {haloId}.",
+  "restoreCheckProtections": "Pengaturan tidak ikut dalam cadangan. Setelah Kryfo terbuka lagi, periksa Perlindunganmu di Pengaturan.",
   "restoreReopenKryfo": "Buka lagi Kryfo",
   "restoreTheRestoreDidNot": "Pemulihan tidak selesai. Tidak ada yang diubah",
   "restoreKryfoClosesRestoreAgain": "Sebagian data di sini sudah diganti. Kryfo akan ditutup sekarang. Buka lagi dan pulihkan file itu sekali lagi.",

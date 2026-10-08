@@ -1213,6 +1213,7 @@
   "restoreNotYet": "Пока нет",
   "restoreRestored": "Восстановлено",
   "restoreKryfoWillCloseNow": "Сейчас Kryfo закроется. Нажми на иконку, чтобы снова открыть его как {haloId}.",
+  "restoreCheckProtections": "Настройки не входят в резервную копию. Когда Kryfo откроется, проверь «Твоя защита» в настройках.",
   "restoreReopenKryfo": "Открыть Kryfo снова",
   "restoreTheRestoreDidNot": "Восстановление не завершилось. Ничего не изменено",
   "restoreKryfoClosesRestoreAgain": "Часть данных здесь уже заменена. Сейчас Kryfo закроется. Открой его снова и восстанови файл ещё раз.",

@@ -1213,6 +1213,7 @@
   "restoreNotYet": "Henüz değil",
   "restoreRestored": "Geri yüklendi",
   "restoreKryfoWillCloseNow": "Kryfo şimdi kapanacak. {haloId} olarak yeniden açmak için simgeye dokun.",
+  "restoreCheckProtections": "Ayarlar yedekte yer almaz. Kryfo yeniden açılınca Ayarlar'da “Korumaların” bölümüne bak.",
   "restoreReopenKryfo": "Kryfo’yu yeniden aç",
   "restoreTheRestoreDidNot": "Geri yükleme tamamlanmadı. Hiçbir şey değiştirilmedi",
   "restoreKryfoClosesRestoreAgain": "Buradakilerin bir kısmı zaten değiştirildi. Kryfo şimdi kapanacak. Yeniden aç ve dosyayı bir kez daha geri yükle.",

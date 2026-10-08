@@ -4628,6 +4628,10 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get restoreCheckProtections =>
+      'As configurações não vão no backup. Quando o Kryfo abrir de novo, confira “Suas proteções” em Configurações.';
+
+  @override
   String get restoreReopenKryfo => 'Reabrir o Kryfo';
 
   @override

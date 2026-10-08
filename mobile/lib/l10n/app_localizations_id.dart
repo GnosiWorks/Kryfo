@@ -4594,6 +4594,10 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
+  String get restoreCheckProtections =>
+      'Pengaturan tidak ikut dalam cadangan. Setelah Kryfo terbuka lagi, periksa Perlindunganmu di Pengaturan.';
+
+  @override
   String get restoreReopenKryfo => 'Buka lagi Kryfo';
 
   @override

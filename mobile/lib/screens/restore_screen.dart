@@ -113,7 +113,10 @@ Future<void> endRestoreAway(
             : showNoticeSheet(
                 ctx,
                 title: l10n.restoreRestored,
-                line: l10n.restoreKryfoWillCloseNow(haloId),
+                // no settings travel in a backup
+                line:
+                    '${l10n.restoreKryfoWillCloseNow(haloId)}\n\n'
+                    '${l10n.restoreCheckProtections}',
                 ok: l10n.restoreReopenKryfo,
               ),
       );
@@ -370,7 +373,10 @@ class _RestoreScreenState extends State<RestoreScreen> {
         showNoticeSheet(
           context,
           title: l10n.restoreRestored,
-          line: l10n.restoreKryfoWillCloseNow(s.haloId),
+          // no settings travel in a backup
+          line:
+              '${l10n.restoreKryfoWillCloseNow(s.haloId)}\n\n'
+              '${l10n.restoreCheckProtections}',
           ok: l10n.restoreReopenKryfo,
         ),
       );

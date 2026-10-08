@@ -4404,6 +4404,9 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get restoreCheckProtections => '备份不包含设置。Kryfo 重新打开后，请在设置里检查“你的保护”。';
+
+  @override
   String get restoreReopenKryfo => '重新打开 Kryfo';
 
   @override
@@ -11699,6 +11702,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String restoreKryfoWillCloseNow(Object haloId) {
     return 'Kryfo 現在會關閉。點一下圖示，以 $haloId 重新開啟。';
   }
+
+  @override
+  String get restoreCheckProtections => '備份不包含設定。Kryfo 重新開啟後，請在設定裡檢查「你的防護」。';
 
   @override
   String get restoreReopenKryfo => '重新開啟 Kryfo';

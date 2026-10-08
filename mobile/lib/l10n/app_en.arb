@@ -5759,6 +5759,10 @@
       }
     }
   },
+  "restoreCheckProtections": "Settings aren't kept in a backup. Once Kryfo reopens, check Your protections in Settings.",
+  "@restoreCheckProtections": {
+    "description": "screens/restore_screen.dart"
+  },
   "restoreReopenKryfo": "Reopen Kryfo",
   "@restoreReopenKryfo": {
     "description": "screens/restore_screen.dart"

@@ -363,6 +363,11 @@ void main() {
     rootNavKey.currentState!.pop(true);
     await t.pumpAndSettle();
     expect(find.text(l10n.restoreRestored), findsOneWidget);
+    // no settings travel in a backup: the notice says to check them
+    expect(
+      find.textContaining(l10n.restoreCheckProtections),
+      findsOneWidget,
+    );
     await t.tap(find.text(l10n.restoreReopenKryfo));
     await t.pumpAndSettle();
     expect(quits, 1);

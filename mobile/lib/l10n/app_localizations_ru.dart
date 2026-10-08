@@ -4695,6 +4695,10 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get restoreCheckProtections =>
+      'Настройки не входят в резервную копию. Когда Kryfo откроется, проверь «Твоя защита» в настройках.';
+
+  @override
   String get restoreReopenKryfo => 'Открыть Kryfo снова';
 
   @override

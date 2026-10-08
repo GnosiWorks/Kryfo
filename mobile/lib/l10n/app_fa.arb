@@ -1213,6 +1213,7 @@
   "restoreNotYet": "هنوز نه",
   "restoreRestored": "بازیابی شد",
   "restoreKryfoWillCloseNow": "Kryfo حالا بسته می‌شود. نماد را بزنید تا دوباره به‌عنوان ⁨{haloId}⁩ باز شود.",
+  "restoreCheckProtections": "تنظیمات در پشتیبان نیست. وقتی Kryfo دوباره باز شد، «محافظت‌های شما» را در تنظیمات بررسی کنید.",
   "restoreReopenKryfo": "بازگشایی Kryfo",
   "restoreTheRestoreDidNot": "بازیابی تمام نشد. چیزی تغییر نکرد",
   "restoreKryfoClosesRestoreAgain": "بخشی از آنچه اینجا بود جایگزین شده است. Kryfo حالا بسته می‌شود. دوباره بازش کنید و فایل را یک بار دیگر بازیابی کنید.",
