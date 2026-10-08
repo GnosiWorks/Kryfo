@@ -3871,7 +3871,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingNobodyGetsInUnless =>
-      '*Nobody gets in unless you let them.* There is no search. People are added by hand, both ways.';
+      '*Nobody gets in unless you let them.* No one can look you up unless you claim a public handle. People are added by hand, both ways.';
 
   @override
   String get onboardingTheFirstConnectionTakes =>

@@ -999,7 +999,7 @@
   "onboardingPrivateByDefault": "ПРИВАТНО ЗА ЗАМОВЧУВАННЯМ",
   "onboardingPrivateMessaging": "Приватне листування,\n*без підступу*.",
   "onboardingYourNameIsThree": "*Твоє ім’я - три слова.* Без телефону, без пошти, без адресної книги.",
-  "onboardingNobodyGetsInUnless": "*Ніхто не ввійде без твого дозволу.* Пошуку немає. Людей додають вручну, з обох боків.",
+  "onboardingNobodyGetsInUnless": "*Ніхто не ввійде без твого дозволу.* Знайти тебе можна, лише якщо ти займеш публічне ім’я користувача. Людей додають вручну, з обох боків.",
   "onboardingTheFirstConnectionTakes": "*Перше підключення триває хвилину.* Kryfo будує приватний маршрут, перш ніж щось надіслати. Далі швидко.",
   "onboardingBegin": "Почати",
   "onboardingHaveABackupRestore": "Є резервна копія? Відновити →",

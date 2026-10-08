@@ -3917,7 +3917,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get onboardingNobodyGetsInUnless =>
-      '*Nessuno entra se non lo fai entrare tu.* Non c\'è ricerca. Le persone si aggiungono a mano, da entrambe le parti.';
+      '*Nessuno entra se non lo fai entrare tu.* Ti si può cercare solo se registri un nome utente pubblico. Le persone si aggiungono a mano, da entrambe le parti.';
 
   @override
   String get onboardingTheFirstConnectionTakes =>

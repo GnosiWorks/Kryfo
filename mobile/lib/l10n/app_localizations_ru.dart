@@ -3972,7 +3972,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get onboardingNobodyGetsInUnless =>
-      '*Никто не войдёт, пока ты не впустишь.* Поиска нет. Люди добавляют друг друга вручную, с обеих сторон.';
+      '*Никто не войдёт, пока ты не впустишь.* Найти тебя можно, только если ты займёшь публичное имя пользователя. Люди добавляют друг друга вручную, с обеих сторон.';
 
   @override
   String get onboardingTheFirstConnectionTakes =>

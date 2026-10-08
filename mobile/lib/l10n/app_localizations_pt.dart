@@ -3906,7 +3906,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get onboardingNobodyGetsInUnless =>
-      '*Ninguém entra se você não deixar.* Não existe busca. As pessoas são adicionadas à mão, pelos dois lados.';
+      '*Ninguém entra se você não deixar.* Só dá para buscar você se você reservar um nome de usuário público. As pessoas são adicionadas à mão, pelos dois lados.';
 
   @override
   String get onboardingTheFirstConnectionTakes =>

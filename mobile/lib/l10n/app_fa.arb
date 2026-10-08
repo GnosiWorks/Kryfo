@@ -999,7 +999,7 @@
   "onboardingPrivateByDefault": "به‌طور پیش‌فرض خصوصی",
   "onboardingPrivateMessaging": "پیام‌رسانی خصوصی،\n*بی قید و شرط*.",
   "onboardingYourNameIsThree": "*نام شما سه واژه است.* نه تلفن، نه ایمیل، نه دفترچه‌ی تلفن.",
-  "onboardingNobodyGetsInUnless": "*هیچ‌کس وارد نمی‌شود مگر اینکه شما بگذارید.* جست‌وجویی در کار نیست. آدم‌ها دستی اضافه می‌شوند، از هر دو طرف.",
+  "onboardingNobodyGetsInUnless": "*هیچ‌کس وارد نمی‌شود مگر اینکه شما بگذارید.* فقط اگر یک نام کاربری عمومی ثبت کنید، دیگران می‌توانند پیدایتان کنند. آدم‌ها دستی اضافه می‌شوند، از هر دو طرف.",
   "onboardingTheFirstConnectionTakes": "*اولین اتصال یک دقیقه طول می‌کشد.* Kryfo پیش از ارسال یک مسیر خصوصی می‌سازد. بعدش سریع است.",
   "onboardingBegin": "شروع",
   "onboardingHaveABackupRestore": "نسخه‌ی پشتیبان دارید؟ بازیابی ←",

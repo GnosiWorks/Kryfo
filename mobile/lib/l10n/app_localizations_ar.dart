@@ -3979,7 +3979,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get onboardingNobodyGetsInUnless =>
-      '*لا يدخل أحد إلا إن سمحت له.* لا يوجد بحث. يُضاف الناس يدويًا، من الطرفين.';
+      '*لا يدخل أحد إلا إن سمحت له.* لن يجدك أحد ما لم تحجز اسم مستخدم عامًا. يُضاف الناس يدويًا، من الطرفين.';
 
   @override
   String get onboardingTheFirstConnectionTakes =>

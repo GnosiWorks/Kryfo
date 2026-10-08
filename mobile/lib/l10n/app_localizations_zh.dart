@@ -3724,7 +3724,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get onboardingNobodyGetsInUnless =>
-      '*除非你允许，否则谁也进不来。*没有搜索功能。人都是手动添加的，双方都要加。';
+      '*除非你允许，否则谁也进不来。*只有认领了公开用户名，别人才能搜到你。人都是手动添加的，双方都要加。';
 
   @override
   String get onboardingTheFirstConnectionTakes =>
@@ -11022,7 +11022,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get onboardingNobodyGetsInUnless =>
-      '*除非你允許，沒有人能進來。*沒有搜尋功能。聯絡人都由雙方親手新增。';
+      '*除非你允許，沒有人能進來。*只有認領了公開使用者名稱，別人才能搜尋到你。聯絡人都由雙方親手新增。';
 
   @override
   String get onboardingTheFirstConnectionTakes =>

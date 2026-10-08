@@ -3920,7 +3920,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get onboardingNobodyGetsInUnless =>
-      '*Niemand kommt rein, außer du lässt es zu.* Es gibt keine Suche. Leute werden von Hand hinzugefügt, in beide Richtungen.';
+      '*Niemand kommt rein, außer du lässt es zu.* Suchen kann man dich nur, wenn du dir einen öffentlichen Benutzernamen sicherst. Leute werden von Hand hinzugefügt, in beide Richtungen.';
 
   @override
   String get onboardingTheFirstConnectionTakes =>

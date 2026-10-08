@@ -999,7 +999,7 @@
   "onboardingPrivateByDefault": "PRIVAT VON ANFANG AN",
   "onboardingPrivateMessaging": "Private Nachrichten,\n*ohne Haken*.",
   "onboardingYourNameIsThree": "*Dein Name besteht aus drei Wörtern.* Keine Telefonnummer, keine E-Mail, kein Adressbuch.",
-  "onboardingNobodyGetsInUnless": "*Niemand kommt rein, außer du lässt es zu.* Es gibt keine Suche. Leute werden von Hand hinzugefügt, in beide Richtungen.",
+  "onboardingNobodyGetsInUnless": "*Niemand kommt rein, außer du lässt es zu.* Suchen kann man dich nur, wenn du dir einen öffentlichen Benutzernamen sicherst. Leute werden von Hand hinzugefügt, in beide Richtungen.",
   "onboardingTheFirstConnectionTakes": "*Die erste Verbindung dauert eine Minute.* Kryfo baut eine private Route auf, bevor es sendet. Danach geht es schnell.",
   "onboardingBegin": "Loslegen",
   "onboardingHaveABackupRestore": "Backup vorhanden? Wiederherstellen →",

@@ -999,7 +999,7 @@
   "onboardingPrivateByDefault": "RIÊNG TƯ MẶC ĐỊNH",
   "onboardingPrivateMessaging": "Nhắn tin riêng tư,\n*không có cạm bẫy*.",
   "onboardingYourNameIsThree": "*Tên bạn là ba từ.* Không số điện thoại, không email, không danh bạ.",
-  "onboardingNobodyGetsInUnless": "*Không ai vào được trừ khi bạn cho phép.* Không có tìm kiếm. Mọi người được thêm thủ công, từ cả hai phía.",
+  "onboardingNobodyGetsInUnless": "*Không ai vào được trừ khi bạn cho phép.* Chỉ khi bạn đăng ký tên người dùng công khai, người khác mới tìm được bạn. Mọi người được thêm thủ công, từ cả hai phía.",
   "onboardingTheFirstConnectionTakes": "*Lần kết nối đầu tiên mất một phút.* Kryfo dựng một tuyến đường riêng tư trước khi gửi. Sau đó sẽ nhanh.",
   "onboardingBegin": "Bắt đầu",
   "onboardingHaveABackupRestore": "Có bản sao lưu? Khôi phục →",

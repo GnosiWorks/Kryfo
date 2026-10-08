@@ -999,7 +999,7 @@
   "onboardingPrivateByDefault": "PRIVADO POR DEFECTO",
   "onboardingPrivateMessaging": "Mensajería privada,\n*sin trampa*.",
   "onboardingYourNameIsThree": "*Tu nombre son tres palabras.* Sin teléfono, sin correo, sin agenda.",
-  "onboardingNobodyGetsInUnless": "*Nadie entra a menos que tú lo permitas.* No hay búsqueda. Las personas se añaden a mano, en ambos sentidos.",
+  "onboardingNobodyGetsInUnless": "*Nadie entra a menos que tú lo permitas.* Solo pueden buscarte si reservas un nombre de usuario público. Las personas se añaden a mano, en ambos sentidos.",
   "onboardingTheFirstConnectionTakes": "*La primera conexión tarda un minuto.* Kryfo construye una ruta privada antes de enviar. Después, es rápido.",
   "onboardingBegin": "Empezar",
   "onboardingHaveABackupRestore": "¿Tienes una copia? Restaurar →",

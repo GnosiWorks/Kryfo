@@ -999,7 +999,7 @@
   "onboardingPrivateByDefault": "VARSAYILAN OLARAK GİZLİ",
   "onboardingPrivateMessaging": "Gizli mesajlaşma,\n*bit yeniği olmadan*.",
   "onboardingYourNameIsThree": "*Adın üç kelime.* Telefon yok, e-posta yok, rehber yok.",
-  "onboardingNobodyGetsInUnless": "*Sen izin vermedikçe kimse giremez.* Arama yok. İnsanlar elle, iki taraftan da eklenir.",
+  "onboardingNobodyGetsInUnless": "*Sen izin vermedikçe kimse giremez.* Ancak genel bir kullanıcı adı alırsan aranıp bulunabilirsin. İnsanlar elle, iki taraftan da eklenir.",
   "onboardingTheFirstConnectionTakes": "*İlk bağlantı bir dakika sürer.* Kryfo göndermeden önce gizli bir rota kurar. Sonrası hızlı.",
   "onboardingBegin": "Başla",
   "onboardingHaveABackupRestore": "Yedeğin mi var? Geri yükle →",

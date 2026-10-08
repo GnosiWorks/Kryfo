@@ -999,7 +999,7 @@
   "onboardingPrivateByDefault": "PRIVAT SEJAK AWAL",
   "onboardingPrivateMessaging": "Pesan privat,\n*tanpa jebakan*.",
   "onboardingYourNameIsThree": "*Namamu tiga kata.* Tanpa nomor ponsel, tanpa email, tanpa buku alamat.",
-  "onboardingNobodyGetsInUnless": "*Tak ada yang masuk tanpa izinmu.* Tidak ada pencarian. Orang ditambahkan secara manual, dari dua arah.",
+  "onboardingNobodyGetsInUnless": "*Tak ada yang masuk tanpa izinmu.* Kamu hanya bisa dicari kalau kamu mengklaim nama pengguna publik. Orang ditambahkan secara manual, dari dua arah.",
   "onboardingTheFirstConnectionTakes": "*Koneksi pertama butuh satu menit.* Kryfo membangun rute privat sebelum mengirim. Setelahnya cepat.",
   "onboardingBegin": "Mulai",
   "onboardingHaveABackupRestore": "Punya cadangan? Pulihkan →",

@@ -3870,7 +3870,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get onboardingNobodyGetsInUnless =>
-      '*Tak ada yang masuk tanpa izinmu.* Tidak ada pencarian. Orang ditambahkan secara manual, dari dua arah.';
+      '*Tak ada yang masuk tanpa izinmu.* Kamu hanya bisa dicari kalau kamu mengklaim nama pengguna publik. Orang ditambahkan secara manual, dari dua arah.';
 
   @override
   String get onboardingTheFirstConnectionTakes =>
