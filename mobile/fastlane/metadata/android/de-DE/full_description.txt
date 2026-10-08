@@ -1,6 +1,7 @@
 ein privater Messenger. keine Telefonnummer, keine E-Mail, kein Konto. du bist
-ein Schlüsselpaar, erzeugt auf deinem Gerät. niemand, auch wir nicht, kann nach
-dir suchen oder deine Chats mit einer echten Identität verknüpfen.
+ein Schlüsselpaar, erzeugt auf deinem Gerät. niemand, auch wir nicht, kann
+deine Chats mit einer echten Identität verknüpfen, und suchen kann man dich
+nur, wenn du dir einen öffentlichen Benutzernamen sicherst.
 
 standardmäßig läuft alles über tor. Inhalte sind mit dem Signal-Protokoll
 Ende-zu-Ende-verschlüsselt. ist ein Kontakt offline, warten Nachrichten auf

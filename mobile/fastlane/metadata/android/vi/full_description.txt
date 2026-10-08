@@ -1,7 +1,8 @@
 ứng dụng nhắn tin riêng tư. không số điện thoại, không email, không tài
 khoản. bạn là một cặp khóa được tạo trên thiết bị của bạn. không ai, kể cả
-chúng tôi, có thể tra cứu bạn hay gắn các cuộc trò chuyện của bạn với một
-danh tính thật.
+chúng tôi, có thể gắn các cuộc trò chuyện của bạn với một danh tính thật,
+và chỉ khi bạn đăng ký tên người dùng công khai, người khác mới tìm được
+bạn.
 
 theo mặc định, mọi thứ đều đi qua tor. nội dung được mã hóa đầu cuối bằng
 giao thức signal. khi một liên hệ đang ngoại tuyến, tin nhắn chờ trên các

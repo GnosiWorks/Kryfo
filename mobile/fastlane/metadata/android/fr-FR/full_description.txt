@@ -1,4 +1,4 @@
-une messagerie privée. pas de numéro de téléphone, pas d’e-mail, pas de compte. vous êtes une paire de clés générée sur votre appareil. personne, nous compris, ne peut vous retrouver ni relier vos discussions à une identité réelle.
+une messagerie privée. pas de numéro de téléphone, pas d’e-mail, pas de compte. vous êtes une paire de clés générée sur votre appareil. personne, nous compris, ne peut relier vos discussions à une identité réelle, et on ne peut vous trouver que si vous réservez un pseudo public.
 
 par défaut, tout passe par tor. le contenu est chiffré de bout en bout avec le protocole signal. quand un contact est hors ligne, les messages attendent sur des relais, scellés pour que le relais n’apprenne rien de qui parle ni de ce qui se dit. jamais d’envoi du carnet d’adresses.
 

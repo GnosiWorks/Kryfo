@@ -1,6 +1,7 @@
 a private messenger. no phone number, no email, no account. you are a key
-pair generated on your device. nobody, including us, can look you up or tie
-your chats to a real identity.
+pair generated on your device. nobody, including us, can tie your chats to
+a real identity, and no one can look you up unless you claim a public
+handle.
 
 by default everything travels over tor. content is end to end encrypted with
 the signal protocol. when a contact is offline, messages wait on relays,

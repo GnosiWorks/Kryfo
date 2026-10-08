@@ -1,6 +1,7 @@
 una app de mensajería privada. sin número de teléfono, sin correo, sin cuenta.
 eres un par de claves generado en tu dispositivo. nadie, ni siquiera nosotros,
-puede buscarte ni vincular tus chats a una identidad real.
+puede vincular tus chats a una identidad real, y solo pueden buscarte si
+reservas un nombre de usuario público.
 
 por defecto, todo viaja por tor. el contenido va cifrado de extremo a extremo
 con el protocolo signal. cuando un contacto no tiene conexión, los mensajes

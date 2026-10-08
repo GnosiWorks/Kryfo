@@ -1,7 +1,7 @@
 aplikasi pesan privat. tanpa nomor telepon, tanpa email, tanpa akun. kamu
 adalah sepasang kunci yang dibuat di perangkatmu. tidak ada seorang pun,
-termasuk kami, yang bisa mencarimu atau mengaitkan obrolanmu dengan
-identitas asli.
+termasuk kami, yang bisa mengaitkan obrolanmu dengan identitas asli, dan
+kamu hanya bisa dicari kalau kamu mengklaim nama pengguna publik.
 
 secara bawaan, semuanya berjalan lewat tor. isi pesan terenkripsi ujung
 ke ujung dengan protokol Signal. saat kontak sedang offline, pesan

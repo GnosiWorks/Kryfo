@@ -1,4 +1,4 @@
-un messenger privato. niente numero di telefono, niente email, niente account. sei una coppia di chiavi generata sul tuo dispositivo. nessuno, noi compresi, può cercarti o collegare le tue chat a un'identità reale.
+un messenger privato. niente numero di telefono, niente email, niente account. sei una coppia di chiavi generata sul tuo dispositivo. nessuno, noi compresi, può collegare le tue chat a un'identità reale, e ti si può cercare solo se registri un nome utente pubblico.
 
 di default tutto viaggia su tor. i contenuti sono cifrati end-to-end con il protocollo signal. quando un contatto è offline, i messaggi aspettano sui relay, sigillati in modo che il relay non sappia niente di chi parla né di cosa si dice. la rubrica non viene caricata, mai.
 
