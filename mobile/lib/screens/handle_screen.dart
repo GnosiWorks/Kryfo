@@ -270,7 +270,7 @@ class _ListingCardState extends State<_ListingCard> {
   Widget build(BuildContext context) {
     final on = appState.handleListed;
     final name = appState.handleName;
-    return AnimatedContainer(
+    final card = AnimatedContainer(
       duration: const Duration(milliseconds: 220),
       padding: const EdgeInsetsDirectional.fromSTEB(18, 16, 14, 16),
       decoration: BoxDecoration(
@@ -320,7 +320,9 @@ class _ListingCardState extends State<_ListingCard> {
                 opacity: _busy ? 0.4 : 1,
                 child: IgnorePointer(
                   ignoring: _busy,
-                  child: HaloSwitch(value: on, onChanged: _set),
+                  child: ExcludeSemantics(
+                    child: HaloSwitch(value: on, onChanged: _set),
+                  ),
                 ),
               ),
             ],
@@ -343,6 +345,19 @@ class _ListingCardState extends State<_ListingCard> {
                 : const SizedBox(width: double.infinity),
           ),
         ],
+      ),
+    );
+    // one switch to a screen reader: the title, its line and the name
+    // shown, and the whole card takes the tap
+    return MergeSemantics(
+      child: Semantics(
+        toggled: on,
+        child: PressScale(
+          scale: 0.99,
+          haptic: false,
+          onTap: _busy ? null : () => _set(!on),
+          child: card,
+        ),
       ),
     );
   }
