@@ -41,7 +41,7 @@ import 'dart:math';
 import 'l10n/l10n.dart';
 
 const _kDbPassphrase = 'halo.db.passphrase';
-const _secureStorage = secureStoreEsp;
+const _secureStorage = secureStore;
 
 // where a backup or a restore stages. the first four sit in the app support
 // folder, the last two in the documents folder

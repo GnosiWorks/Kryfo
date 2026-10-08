@@ -86,7 +86,7 @@ abstract class LockStore {
 
 class SecureLockStore implements LockStore {
   // a read that fails leaves every key where it is (secure_store.dart)
-  static const _s = secureStoreEsp;
+  static const _s = secureStore;
   @override
   Future<String?> read(String key) => _s.read(key: key);
   @override

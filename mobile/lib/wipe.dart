@@ -103,7 +103,6 @@ Future<void> _erase({Set<String> keep = const {}}) async {
     // identity markers go first. if anything below fails the next launch
     // still starts at onboarding instead of an empty home screen.
     await secureStore.deleteAll();
-    await secureStoreEsp.deleteAll();
     final prefs0 = await SharedPreferences.getInstance();
     await prefs0.clear();
     // empty every app storage dir, so the wal/shm sidecars and media/ go
