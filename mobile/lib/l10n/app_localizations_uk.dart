@@ -1885,6 +1885,25 @@ class AppLocalizationsUk extends AppLocalizations {
   String get chatSecurityCodeChanged => 'Код безпеки змінився';
 
   @override
+  String chatKeyHeldLine(Object peerName) {
+    return 'Ти вже перевіряв(-ла) $peerName. Нічого не надсилається, доки ти не звіриш новий номер або не приймеш новий ключ. Повідомлення від $peerName і далі надходять.';
+  }
+
+  @override
+  String get chatCheckTheNumber => 'Звірити номер';
+
+  @override
+  String get chatAcceptNewKey => 'Прийняти новий ключ';
+
+  @override
+  String get chatAcceptNewKeyTitle => 'Прийняти новий ключ?';
+
+  @override
+  String chatAcceptNewKeyLine(Object peerName) {
+    return 'Тоді Kryfo надсилатиме на новий ключ без перевірки, а $peerName більше не буде позначено як перевірений контакт. Перевірити знову можна будь-коли.';
+  }
+
+  @override
   String chatMayHaveReinstalledOr(Object peerName) {
     return '$peerName: можливо, застосунок перевстановили, а можливо, хтось видає себе за цю людину. Щоб переконатися, звір номери безпеки.';
   }

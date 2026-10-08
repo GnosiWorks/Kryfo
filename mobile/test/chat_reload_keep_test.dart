@@ -86,6 +86,10 @@ class _Db extends DevTestDb {
   Future<bool> isVerified(String haloId) async => _flag(haloId, 'verified');
   @override
   Future<bool> keyChanged(String haloId) async => false;
+  // verified under a key they no longer hold
+  bool held = false;
+  @override
+  Future<bool> keyHeld(String haloId) async => held;
   @override
   Future<String?> getAtmosphere(String peerId) async => null;
   @override
@@ -627,5 +631,23 @@ void main() {
     await arrive(t, 1);
     expect(badge(t), 1);
     await devClose(t);
+  });
+
+  testWidgets('a verified contact whose key moved gets no composer: the '
+      'number to check or the new key to accept, until one is done', (t) async {
+    lockState.openForTest();
+    db.held = true;
+    await devOpen(t, chat());
+    await settle(t);
+    expect(find.text(l10n.chatCheckTheNumber), findsOneWidget);
+    expect(find.text(l10n.chatAcceptNewKey), findsOneWidget);
+    expect(find.text(l10n.chatMessage), findsNothing);
+
+    // checked somewhere else: the composer is back
+    db.held = false;
+    appState.keyChanged();
+    await settle(t);
+    expect(find.text(l10n.chatCheckTheNumber), findsNothing);
+    expect(find.text(l10n.chatMessage), findsOneWidget);
   });
 }

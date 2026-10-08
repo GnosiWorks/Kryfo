@@ -27,6 +27,7 @@ import 'package:kryfo/main.dart'
         makePreKeyBundleB64,
         openSignalStore,
         processPeerBundle,
+        session,
         signalDecrypt,
         signalEncrypt,
         useDatabasesForTest;
@@ -1115,5 +1116,40 @@ void main() {
     await rows.deleteMessage('twice');
     expect(await rows.goneFrom(p.name, 'twice'), isTrue);
     expect(await rows.goneFrom(q.name, 'twice'), isTrue);
+  });
+
+  test('a verified contact whose key moved: their texts wait without a '
+      'try, and go once the new key is accepted', () async {
+    final p = await _peer();
+    await contact(p);
+    await talk(p);
+    // verified under a key that is not the one held for them now
+    await mem.update(
+      'contacts',
+      {'verified': 0, 'verified_key': 'ab' * 32},
+      where: 'halo_id = ?',
+      whereArgs: [p.name],
+    );
+    rows.outbox = true;
+    await mem.insert('messages', {
+      'peer_id': p.name,
+      'direction': 'out',
+      'plaintext': 'held',
+      'sent_at': DateTime.now().millisecondsSinceEpoch - 60000,
+      'msg_uid': 'h1',
+      'sent': 0,
+    });
+    await app.drainOutbox();
+    await _settle();
+    expect(row('h1')?['sent'], 0);
+    expect(app.outboxTriesForTest('h1'), 0);
+    expect(await atThem(p), isEmpty);
+
+    await session.acceptNewKey(p.name);
+    await app.drainOutbox();
+    await _settle();
+    expect(row('h1')?['sent'], 1);
+    final at = await atThem(p);
+    expect(unwrapMessage(at.whereType<String>().last).message, 'held');
   });
 }

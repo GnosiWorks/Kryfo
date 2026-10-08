@@ -1861,6 +1861,25 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chatSecurityCodeChanged => 'Sicherheitscode geändert';
 
   @override
+  String chatKeyHeldLine(Object peerName) {
+    return 'Du hast $peerName schon verifiziert. Nichts wird gesendet, bis du die neue Nummer prüfst oder den neuen Schlüssel annimmst. Nachrichten von $peerName kommen weiter an.';
+  }
+
+  @override
+  String get chatCheckTheNumber => 'Nummer prüfen';
+
+  @override
+  String get chatAcceptNewKey => 'Neuen Schlüssel annehmen';
+
+  @override
+  String get chatAcceptNewKeyTitle => 'Neuen Schlüssel annehmen?';
+
+  @override
+  String chatAcceptNewKeyLine(Object peerName) {
+    return 'Kryfo sendet dann ohne Prüfung an den neuen Schlüssel, und $peerName ist nicht mehr als verifiziert markiert. Du kannst jederzeit neu verifizieren.';
+  }
+
+  @override
   String chatMayHaveReinstalledOr(Object peerName) {
     return '$peerName hat die App vielleicht neu installiert, oder jemand könnte sich als diese Person ausgeben. Vergleiche die Sicherheitsnummern, um sicherzugehen.';
   }

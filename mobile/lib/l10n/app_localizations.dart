@@ -2976,6 +2976,36 @@ abstract class AppLocalizations {
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
+  /// **'You verified {peerName} before. Nothing is sent until you check the new number or accept the new key. Their messages still arrive.'**
+  String chatKeyHeldLine(Object peerName);
+
+  /// screens/chat_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Check the number'**
+  String get chatCheckTheNumber;
+
+  /// screens/chat_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Accept new key'**
+  String get chatAcceptNewKey;
+
+  /// screens/chat_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Accept their new key?'**
+  String get chatAcceptNewKeyTitle;
+
+  /// screens/chat_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo then sends to the new key without a check, and {peerName} is no longer marked verified. You can verify them again any time.'**
+  String chatAcceptNewKeyLine(Object peerName);
+
+  /// screens/chat_screen.dart
+  ///
+  /// In en, this message translates to:
   /// **'{peerName} may have reinstalled, or someone could be impersonating them. Compare safety numbers to be sure.'**
   String chatMayHaveReinstalledOr(Object peerName);
 

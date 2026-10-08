@@ -1785,6 +1785,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatSecurityCodeChanged => '安全码已变更';
 
   @override
+  String chatKeyHeldLine(Object peerName) {
+    return '你之前验证过 $peerName。在你核对新的安全码或接受新密钥之前，什么都不会发出。对方的消息仍会收到。';
+  }
+
+  @override
+  String get chatCheckTheNumber => '核对安全码';
+
+  @override
+  String get chatAcceptNewKey => '接受新密钥';
+
+  @override
+  String get chatAcceptNewKeyTitle => '接受对方的新密钥？';
+
+  @override
+  String chatAcceptNewKeyLine(Object peerName) {
+    return '之后 Kryfo 会不经核对就发往新密钥，$peerName 也不再标为已验证。你随时可以重新验证。';
+  }
+
+  @override
   String chatMayHaveReinstalledOr(Object peerName) {
     return '$peerName 可能重装了应用，也可能有人在冒充对方。比对安全码才能确定。';
   }
@@ -9093,6 +9112,25 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get chatSecurityCodeChanged => '安全碼已變更';
+
+  @override
+  String chatKeyHeldLine(Object peerName) {
+    return '你之前驗證過 $peerName。在你核對新的安全碼或接受新金鑰之前，什麼都不會送出。對方的訊息仍會收到。';
+  }
+
+  @override
+  String get chatCheckTheNumber => '核對安全碼';
+
+  @override
+  String get chatAcceptNewKey => '接受新金鑰';
+
+  @override
+  String get chatAcceptNewKeyTitle => '接受對方的新金鑰？';
+
+  @override
+  String chatAcceptNewKeyLine(Object peerName) {
+    return '之後 Kryfo 會不經核對就傳送到新金鑰，$peerName 也不再標為已驗證。你隨時可以重新驗證。';
+  }
 
   @override
   String chatMayHaveReinstalledOr(Object peerName) {

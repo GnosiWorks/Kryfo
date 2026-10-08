@@ -1843,6 +1843,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatSecurityCodeChanged => 'Security code changed';
 
   @override
+  String chatKeyHeldLine(Object peerName) {
+    return 'You verified $peerName before. Nothing is sent until you check the new number or accept the new key. Their messages still arrive.';
+  }
+
+  @override
+  String get chatCheckTheNumber => 'Check the number';
+
+  @override
+  String get chatAcceptNewKey => 'Accept new key';
+
+  @override
+  String get chatAcceptNewKeyTitle => 'Accept their new key?';
+
+  @override
+  String chatAcceptNewKeyLine(Object peerName) {
+    return 'Kryfo then sends to the new key without a check, and $peerName is no longer marked verified. You can verify them again any time.';
+  }
+
+  @override
   String chatMayHaveReinstalledOr(Object peerName) {
     return '$peerName may have reinstalled, or someone could be impersonating them. Compare safety numbers to be sure.';
   }

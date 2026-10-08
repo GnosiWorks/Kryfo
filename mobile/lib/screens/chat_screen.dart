@@ -72,6 +72,7 @@ import '../main.dart'
         sessionQuiet,
         signalEncrypt,
         hasSessionWith,
+        KeyHeld,
         appState,
         currentChatPeer,
         claimChat,
@@ -725,11 +726,9 @@ class _ChatScreenState extends State<ChatScreen>
     try {
       final changed = await session.keyChanged(widget.peerHaloId);
       final verified = await session.isVerified(widget.peerHaloId);
-      final held = await session.keyHeld(widget.peerHaloId);
+      final held = await appState.keyHeld(widget.peerHaloId);
       if (!mounted) return;
-      if (changed != _keyChanged ||
-          verified != _verified ||
-          held != _keyHeld) {
+      if (changed != _keyChanged || verified != _verified || held != _keyHeld) {
         setState(() {
           _keyChanged = changed;
           _verified = verified;
@@ -5365,11 +5364,7 @@ class _KeyHeldBar extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             l10n.chatKeyHeldLine(peerName),
-            style: HaloType.sans(
-              size: 13,
-              color: HaloColors.text,
-              height: 1.5,
-            ),
+            style: HaloType.sans(size: 13, color: HaloColors.text, height: 1.5),
           ),
           const SizedBox(height: 12),
           Row(
