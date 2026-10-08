@@ -27,6 +27,7 @@ import 'package:kryfo/main.dart'
         makePreKeyBundleB64,
         openSignalStore,
         processPeerBundle,
+        session,
         signalDecrypt,
         signalEncrypt,
         useDatabasesForTest;
@@ -51,11 +52,16 @@ class _Rows extends HaloDb {
   @override
   Future<Database> open() async => mem;
   @override
-  Future<List<Map<String, Object?>>> unsentOutbox() async => [
+  Future<List<Map<String, Object?>>> unsentOutbox({
+    Set<String> skip = const {},
+  }) async => [
     if (outbox)
       for (final r in mem.rows('messages'))
-        if (r['direction'] == 'out' && r['sent'] == 0) r,
-  ];
+        if (r['direction'] == 'out' &&
+            r['sent'] == 0 &&
+            !skip.contains(r['peer_id']))
+          r,
+  ].take(40).toList();
   // the counts and the home list's last lines are not this test's either
   @override
   Future<void> bumpUnread(String peerId) async {}
@@ -1115,5 +1121,87 @@ void main() {
     await rows.deleteMessage('twice');
     expect(await rows.goneFrom(p.name, 'twice'), isTrue);
     expect(await rows.goneFrom(q.name, 'twice'), isTrue);
+  });
+
+  test('a verified contact whose key moved: their texts wait without a '
+      'try, and go once the new key is accepted', () async {
+    final p = await _peer();
+    await contact(p);
+    await talk(p);
+    // verified under a key that is not the one held for them now
+    await mem.update(
+      'contacts',
+      {'verified': 0, 'verified_key': 'ab' * 32},
+      where: 'halo_id = ?',
+      whereArgs: [p.name],
+    );
+    rows.outbox = true;
+    await mem.insert('messages', {
+      'peer_id': p.name,
+      'direction': 'out',
+      'plaintext': 'held',
+      'sent_at': DateTime.now().millisecondsSinceEpoch - 60000,
+      'msg_uid': 'h1',
+      'sent': 0,
+    });
+    await app.drainOutbox();
+    await _settle();
+    expect(row('h1')?['sent'], 0);
+    expect(app.outboxTriesForTest('h1'), 0);
+    expect(await atThem(p), isEmpty);
+    // their session stays as it was: a held seal is no broken one
+    expect(
+      await signalSession.sessionStore.containsSession(
+        SignalProtocolAddress(p.name, 1),
+      ),
+      isTrue,
+    );
+
+    await session.acceptNewKey(p.name);
+    await app.drainOutbox();
+    await _settle();
+    expect(row('h1')?['sent'], 1);
+    final at = await atThem(p);
+    expect(unwrapMessage(at.whereType<String>().last).message, 'held');
+  });
+
+  test('a held contact with a full window of texts keeps no one else '
+      'waiting', () async {
+    final held = await _peer();
+    final other = await _peer();
+    await contact(held);
+    await contact(other);
+    await talk(held);
+    await talk(other);
+    await mem.update(
+      'contacts',
+      {'verified_key': 'ab' * 32},
+      where: 'halo_id = ?',
+      whereArgs: [held.name],
+    );
+    rows.outbox = true;
+    final then = DateTime.now().millisecondsSinceEpoch - 120000;
+    for (var i = 0; i < 41; i++) {
+      await mem.insert('messages', {
+        'peer_id': held.name,
+        'direction': 'out',
+        'plaintext': 'held $i',
+        'sent_at': then + i,
+        'msg_uid': 'held$i',
+        'sent': 0,
+      });
+    }
+    await mem.insert('messages', {
+      'peer_id': other.name,
+      'direction': 'out',
+      'plaintext': 'goes',
+      'sent_at': then + 100,
+      'msg_uid': 'goes',
+      'sent': 0,
+    });
+    await app.drainOutbox();
+    await _settle();
+    expect(row('goes')?['sent'], 1);
+    expect(row('held0')?['sent'], 0);
   });
 }

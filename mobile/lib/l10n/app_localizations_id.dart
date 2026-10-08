@@ -1838,6 +1838,25 @@ class AppLocalizationsId extends AppLocalizations {
   String get chatSecurityCodeChanged => 'Kode keamanan berubah';
 
   @override
+  String chatKeyHeldLine(Object peerName) {
+    return 'Kamu sudah memverifikasi $peerName sebelumnya. Tidak ada yang terkirim sampai kamu memeriksa nomor yang baru atau menerima kunci yang baru. Pesan darinya tetap masuk.';
+  }
+
+  @override
+  String get chatCheckTheNumber => 'Periksa nomornya';
+
+  @override
+  String get chatAcceptNewKey => 'Terima kunci baru';
+
+  @override
+  String get chatAcceptNewKeyTitle => 'Terima kunci barunya?';
+
+  @override
+  String chatAcceptNewKeyLine(Object peerName) {
+    return 'Kryfo lalu mengirim ke kunci baru tanpa pemeriksaan, dan $peerName tidak lagi ditandai terverifikasi. Kamu bisa memverifikasinya lagi kapan saja.';
+  }
+
+  @override
   String chatMayHaveReinstalledOr(Object peerName) {
     return '$peerName mungkin memasang ulang aplikasinya, atau mungkin ada yang menyamar sebagai dia. Bandingkan nomor keamanan untuk memastikan.';
   }

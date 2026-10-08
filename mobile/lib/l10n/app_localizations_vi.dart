@@ -1836,6 +1836,25 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatSecurityCodeChanged => 'Mã bảo mật đã thay đổi';
 
   @override
+  String chatKeyHeldLine(Object peerName) {
+    return 'Bạn đã xác minh $peerName trước đây. Không có gì được gửi cho đến khi bạn kiểm tra số mới hoặc chấp nhận khóa mới. Tin nhắn của họ vẫn đến.';
+  }
+
+  @override
+  String get chatCheckTheNumber => 'Kiểm tra số';
+
+  @override
+  String get chatAcceptNewKey => 'Chấp nhận khóa mới';
+
+  @override
+  String get chatAcceptNewKeyTitle => 'Chấp nhận khóa mới của họ?';
+
+  @override
+  String chatAcceptNewKeyLine(Object peerName) {
+    return 'Khi đó Kryfo sẽ gửi tới khóa mới mà không kiểm tra, và $peerName không còn được đánh dấu đã xác minh. Bạn có thể xác minh lại bất cứ lúc nào.';
+  }
+
+  @override
   String chatMayHaveReinstalledOr(Object peerName) {
     return '$peerName có thể đã cài lại ứng dụng, hoặc cũng có thể có người đang mạo danh họ. Hãy so sánh số an toàn để chắc chắn.';
   }

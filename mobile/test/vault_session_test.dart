@@ -541,17 +541,20 @@ class _Db implements HaloDb {
   }
 
   @override
-  Future<List<Map<String, Object?>>> unsentOutbox() async =>
-      _hit('unsentOutbox', null, [
-        for (final m in r.msgs)
-          if (m['direction'] == 'out' && m['sent'] == 0) {...m},
-      ]);
+  Future<List<Map<String, Object?>>> unsentOutbox({
+    Set<String> skip = const {},
+  }) async => _hit('unsentOutbox', null, [
+    for (final m in r.msgs)
+      if (m['direction'] == 'out' && m['sent'] == 0) {...m},
+  ]);
   @override
-  Future<List<Map<String, Object?>>> unsentEdits() async =>
-      _hit('unsentEdits', null, const []);
+  Future<List<Map<String, Object?>>> unsentEdits({
+    Set<String> skip = const {},
+  }) async => _hit('unsentEdits', null, const []);
   @override
-  Future<List<Map<String, Object?>>> unsentPins() async =>
-      _hit('unsentPins', null, const []);
+  Future<List<Map<String, Object?>>> unsentPins({
+    Set<String> skip = const {},
+  }) async => _hit('unsentPins', null, const []);
   @override
   Future<List<Map<String, Object?>>> mediaWants() async =>
       _hit('mediaWants', null, const []);

@@ -243,6 +243,11 @@ class Session {
       _ofPeer(haloId).setVerified(haloId, verified, key: key);
 
   Future<String?> heldKey(String haloId) => _ofPeer(haloId).heldKey(haloId);
+
+  Future<bool> keyHeld(String haloId) => _ofPeer(haloId).keyHeld(haloId);
+
+  Future<void> acceptNewKey(String haloId) =>
+      _ofPeer(haloId).acceptNewKey(haloId);
   Future<Map<String, Object?>?> shieldFor(String haloId) =>
       _ofPeer(haloId).shieldFor(haloId);
   // what the shield made of someone, while it is on. off, no verdict shows,

@@ -177,7 +177,9 @@ class _Phone extends DevTestDb {
   // what the outbox took as sent
   final marked = <String>[];
   @override
-  Future<List<Map<String, Object?>>> unsentOutbox() async => [
+  Future<List<Map<String, Object?>>> unsentOutbox({
+    Set<String> skip = const {},
+  }) async => [
     for (final r in mem.rows('messages'))
       if (r['direction'] == 'out' && r['sent'] == 0 && r['group_id'] == null) r,
   ];

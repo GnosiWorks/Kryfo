@@ -243,6 +243,12 @@ class ArrivalIo implements AppIo {
 // a database in memory: the rows the receive side reads and writes, and a
 // note of every call. anything else it is asked fails the test
 class ArrivalRows implements HaloDb {
+  // nobody verified under another key: nothing is held
+  @override
+  Future<bool> keyHeld(String haloId) async => false;
+  @override
+  Future<Set<String>> heldPeers() async => const {};
+
   ArrivalRows(this._container);
 
   final HaloContainer _container;
@@ -698,8 +704,9 @@ class ArrivalRows implements HaloDb {
   }
 
   @override
-  Future<List<Map<String, Object?>>> unsentOutbox() async =>
-      _hit('unsentOutbox', null, const []);
+  Future<List<Map<String, Object?>>> unsentOutbox({
+    Set<String> skip = const {},
+  }) async => _hit('unsentOutbox', null, const []);
 
   // ---- messages ----
   @override

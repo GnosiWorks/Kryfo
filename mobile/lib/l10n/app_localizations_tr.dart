@@ -1852,6 +1852,25 @@ class AppLocalizationsTr extends AppLocalizations {
   String get chatSecurityCodeChanged => 'Güvenlik kodu değişti';
 
   @override
+  String chatKeyHeldLine(Object peerName) {
+    return '$peerName kişisini daha önce doğruladın. Yeni numarayı kontrol edene ya da yeni anahtarı kabul edene kadar hiçbir şey gönderilmez. Onun mesajları gelmeye devam eder.';
+  }
+
+  @override
+  String get chatCheckTheNumber => 'Numarayı kontrol et';
+
+  @override
+  String get chatAcceptNewKey => 'Yeni anahtarı kabul et';
+
+  @override
+  String get chatAcceptNewKeyTitle => 'Yeni anahtarı kabul edilsin mi?';
+
+  @override
+  String chatAcceptNewKeyLine(Object peerName) {
+    return 'Kryfo bundan sonra kontrol etmeden yeni anahtara gönderir ve $peerName için doğrulama işareti kalkar. İstediğin zaman yeniden doğrulayabilirsin.';
+  }
+
+  @override
   String chatMayHaveReinstalledOr(Object peerName) {
     return '$peerName uygulamayı yeniden kurmuş olabilir ya da biri onu taklit ediyor olabilir. Emin olmak için güvenlik numaralarını karşılaştır.';
   }

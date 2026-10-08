@@ -1898,6 +1898,25 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatSecurityCodeChanged => 'تغيّر رمز الأمان';
 
   @override
+  String chatKeyHeldLine(Object peerName) {
+    return 'سبق أن تحققت من ⁨$peerName⁩. لن يُرسل شيء حتى تتحقق من الرقم الجديد أو تقبل المفتاح الجديد. رسائله ما زالت تصل.';
+  }
+
+  @override
+  String get chatCheckTheNumber => 'تحقق من الرقم';
+
+  @override
+  String get chatAcceptNewKey => 'قبول المفتاح الجديد';
+
+  @override
+  String get chatAcceptNewKeyTitle => 'أتقبل مفتاحه الجديد؟';
+
+  @override
+  String chatAcceptNewKeyLine(Object peerName) {
+    return 'سيرسل Kryfo بعدها إلى المفتاح الجديد دون تحقق، ولن يظهر ⁨$peerName⁩ بعد الآن كجهة متحقَّق منها. يمكنك التحقق منه مجددًا في أي وقت.';
+  }
+
+  @override
   String chatMayHaveReinstalledOr(Object peerName) {
     return 'ربما أعاد ⁨$peerName⁩ تثبيت التطبيق، أو ربما ينتحل أحدٌ شخصيته. قارن أرقام الأمان لتتأكد.';
   }

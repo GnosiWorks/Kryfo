@@ -544,8 +544,9 @@ class _Mem implements HaloDb {
   }
 
   @override
-  Future<List<Map<String, Object?>>> unsentOutbox() async =>
-      _hit('unsentOutbox', null, const []);
+  Future<List<Map<String, Object?>>> unsentOutbox({
+    Set<String> skip = const {},
+  }) async => _hit('unsentOutbox', null, const []);
 
   // ---- messages ----
   @override

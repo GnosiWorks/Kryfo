@@ -2353,6 +2353,36 @@
   "@chatSecurityCodeChanged": {
     "description": "screens/chat_screen.dart"
   },
+  "chatKeyHeldLine": "You verified {peerName} before. Nothing is sent until you check the new number or accept the new key. Their messages still arrive.",
+  "@chatKeyHeldLine": {
+    "description": "screens/chat_screen.dart",
+    "placeholders": {
+      "peerName": {
+        "type": "Object"
+      }
+    }
+  },
+  "chatCheckTheNumber": "Check the number",
+  "@chatCheckTheNumber": {
+    "description": "screens/chat_screen.dart"
+  },
+  "chatAcceptNewKey": "Accept new key",
+  "@chatAcceptNewKey": {
+    "description": "screens/chat_screen.dart"
+  },
+  "chatAcceptNewKeyTitle": "Accept their new key?",
+  "@chatAcceptNewKeyTitle": {
+    "description": "screens/chat_screen.dart"
+  },
+  "chatAcceptNewKeyLine": "Kryfo then sends to the new key without a check, and {peerName} is no longer marked verified. You can verify them again any time.",
+  "@chatAcceptNewKeyLine": {
+    "description": "screens/chat_screen.dart",
+    "placeholders": {
+      "peerName": {
+        "type": "Object"
+      }
+    }
+  },
   "chatMayHaveReinstalledOr": "{peerName} may have reinstalled, or someone could be impersonating them. Compare safety numbers to be sure.",
   "@chatMayHaveReinstalledOr": {
     "description": "screens/chat_screen.dart",

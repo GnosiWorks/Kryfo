@@ -43,7 +43,9 @@ class _Rows extends HaloDb {
   Future<Database> open() async => mem;
   // its or-clause is past what the map rows read
   @override
-  Future<List<Map<String, Object?>>> unsentOutbox() async => const [];
+  Future<List<Map<String, Object?>>> unsentOutbox({
+    Set<String> skip = const {},
+  }) async => const [];
 }
 
 // signal and the wire: a member with no session has no stored bundle

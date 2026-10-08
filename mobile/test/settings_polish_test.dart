@@ -106,7 +106,9 @@ class _MoatEngine implements HaloEngine {
 class _OutboxDb extends DevTestDb {
   _OutboxDb() : super(devMem);
   @override
-  Future<List<Map<String, Object?>>> unsentOutbox() async => const [];
+  Future<List<Map<String, Object?>>> unsentOutbox({
+    Set<String> skip = const {},
+  }) async => const [];
 }
 
 // the transport page's engine, quiet

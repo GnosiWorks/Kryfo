@@ -1860,6 +1860,25 @@ class AppLocalizationsIt extends AppLocalizations {
   String get chatSecurityCodeChanged => 'Codice di sicurezza cambiato';
 
   @override
+  String chatKeyHeldLine(Object peerName) {
+    return 'Avevi già verificato $peerName. Non parte niente finché non controlli il nuovo numero o accetti la nuova chiave. I suoi messaggi continuano ad arrivare.';
+  }
+
+  @override
+  String get chatCheckTheNumber => 'Controlla il numero';
+
+  @override
+  String get chatAcceptNewKey => 'Accetta la nuova chiave';
+
+  @override
+  String get chatAcceptNewKeyTitle => 'Accettare la sua nuova chiave?';
+
+  @override
+  String chatAcceptNewKeyLine(Object peerName) {
+    return 'Kryfo invierà alla nuova chiave senza controllo e $peerName non sarà più segnato come verificato. Puoi verificarlo di nuovo quando vuoi.';
+  }
+
+  @override
   String chatMayHaveReinstalledOr(Object peerName) {
     return '$peerName potrebbe aver reinstallato l\'app, oppure qualcuno potrebbe spacciarsi per questa persona. Confronta i numeri di sicurezza per averne la certezza.';
   }
