@@ -840,6 +840,8 @@
   "introduceNoIntroductionsLeftNext": "لم تبقَ تعريفات. يتاح التالي ⁨{refillPhrase}⁩",
   "introduceIntroduce": "تعريف",
   "keyVerificationSafetyNumber": "رقم الأمان",
+  "keyVerificationNewNumber": "تغيّر رمز الأمان بينما كانت هذه الصفحة مفتوحة. هذا هو الرقم الجديد، قارنه مرة أخرى.",
+  "keyVerificationKeyMoved": "تغيّر رمز الأمان للتو. قارن الرقم الجديد.",
   "keyVerificationWith": "مع ⁨{peerName}⁩",
   "keyVerificationIfSeesTheSame": "إن رأى ⁨{peerName}⁩ الرقم نفسه، فرسائلكما خاصة بكما وحدكما. المقارنة وجهًا لوجه أو عبر مكالمة تثق بها هي أضمن طريقة للتأكد - لكنها اختيارية، وليست شرطًا للمراسلة أبدًا.",
   "keyVerificationVerified": "تم التحقق",

@@ -3333,6 +3333,14 @@ class AppLocalizationsTr extends AppLocalizations {
   String get keyVerificationSafetyNumber => 'Güvenlik numarası';
 
   @override
+  String get keyVerificationNewNumber =>
+      'Bu sayfa açıkken güvenlik kodu değişti. Yeni numara bu, tekrar karşılaştır.';
+
+  @override
+  String get keyVerificationKeyMoved =>
+      'Güvenlik kodu az önce değişti. Yeni numarayı karşılaştır.';
+
+  @override
   String keyVerificationWith(Object peerName) {
     return '$peerName ile';
   }

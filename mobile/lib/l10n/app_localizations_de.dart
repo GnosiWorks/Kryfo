@@ -3361,6 +3361,14 @@ class AppLocalizationsDe extends AppLocalizations {
   String get keyVerificationSafetyNumber => 'Sicherheitsnummer';
 
   @override
+  String get keyVerificationNewNumber =>
+      'Der Sicherheitscode hat sich geändert, während diese Seite offen war. Das ist die neue Nummer, vergleicht sie noch einmal.';
+
+  @override
+  String get keyVerificationKeyMoved =>
+      'Der Sicherheitscode hat sich gerade geändert. Vergleicht die neue Nummer.';
+
+  @override
   String keyVerificationWith(Object peerName) {
     return 'Mit $peerName';
   }

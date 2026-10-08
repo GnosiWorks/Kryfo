@@ -3431,6 +3431,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get keyVerificationSafetyNumber => 'رقم الأمان';
 
   @override
+  String get keyVerificationNewNumber =>
+      'تغيّر رمز الأمان بينما كانت هذه الصفحة مفتوحة. هذا هو الرقم الجديد، قارنه مرة أخرى.';
+
+  @override
+  String get keyVerificationKeyMoved =>
+      'تغيّر رمز الأمان للتو. قارن الرقم الجديد.';
+
+  @override
   String keyVerificationWith(Object peerName) {
     return 'مع ⁨$peerName⁩';
   }

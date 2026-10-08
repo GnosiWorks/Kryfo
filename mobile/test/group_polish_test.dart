@@ -258,6 +258,10 @@ class _Db implements HaloDb {
     return v == null ? false : await v.future;
   }
 
+  // no key held: the page shows the one it was opened with
+  @override
+  Future<String?> heldKey(String haloId) async => null;
+
   @override
   dynamic noSuchMethod(Invocation i) =>
       throw UnimplementedError('${i.memberName}');

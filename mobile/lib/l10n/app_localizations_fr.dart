@@ -3353,6 +3353,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get keyVerificationSafetyNumber => 'Numéro de sécurité';
 
   @override
+  String get keyVerificationNewNumber =>
+      'Le code de sécurité a changé pendant que cette page était ouverte. Voici le nouveau numéro : comparez-le à nouveau.';
+
+  @override
+  String get keyVerificationKeyMoved =>
+      'Le code de sécurité vient de changer. Comparez le nouveau numéro.';
+
+  @override
   String keyVerificationWith(Object peerName) {
     return 'Avec $peerName';
   }

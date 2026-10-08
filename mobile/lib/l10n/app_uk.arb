@@ -840,6 +840,8 @@
   "introduceNoIntroductionsLeftNext": "Знайомства закінчилися. Наступне буде доступне {refillPhrase}",
   "introduceIntroduce": "Познайомити",
   "keyVerificationSafetyNumber": "Номер безпеки",
+  "keyVerificationNewNumber": "Код безпеки змінився, поки ця сторінка була відкрита. Це новий номер: порівняй його ще раз.",
+  "keyVerificationKeyMoved": "Код безпеки щойно змінився. Порівняй новий номер.",
   "keyVerificationWith": "Контакт: {peerName}",
   "keyVerificationIfSeesTheSame": "Якщо {peerName} бачить той самий номер, ваші повідомлення бачите лише ви двоє. Звірити особисто або під час дзвінка, якому ти довіряєш, - найнадійніший спосіб переконатися, але це необов’язково і для спілкування ніколи не потрібно.",
   "keyVerificationVerified": "Звірено",

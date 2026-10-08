@@ -840,6 +840,8 @@
   "introduceNoIntroductionsLeftNext": "Hết lượt giới thiệu. Lượt tiếp theo sẽ có {refillPhrase}",
   "introduceIntroduce": "Giới thiệu",
   "keyVerificationSafetyNumber": "Số an toàn",
+  "keyVerificationNewNumber": "Mã bảo mật đã thay đổi trong lúc trang này đang mở. Đây là số mới, hãy so sánh lại.",
+  "keyVerificationKeyMoved": "Mã bảo mật vừa thay đổi. Hãy so sánh số mới.",
   "keyVerificationWith": "Với {peerName}",
   "keyVerificationIfSeesTheSame": "Nếu {peerName} thấy cùng một số, tin nhắn của bạn chỉ riêng hai người biết. So sánh trực tiếp hoặc qua một cuộc gọi bạn tin tưởng là cách chắc chắn nhất - nhưng việc này không bắt buộc, không bao giờ là điều kiện để trò chuyện.",
   "keyVerificationVerified": "Đã xác minh",

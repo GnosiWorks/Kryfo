@@ -840,6 +840,8 @@
   "introduceNoIntroductionsLeftNext": "Знакомств не осталось. Следующее освободится {refillPhrase}",
   "introduceIntroduce": "Познакомить",
   "keyVerificationSafetyNumber": "Код безопасности",
+  "keyVerificationNewNumber": "Код безопасности изменился, пока эта страница была открыта. Это новый код: сравни его ещё раз.",
+  "keyVerificationKeyMoved": "Код безопасности только что изменился. Сравни новый код.",
   "keyVerificationWith": "Собеседник: {peerName}",
   "keyVerificationIfSeesTheSame": "Если {peerName} видит тот же код, ваши сообщения видны только вам двоим. Сверить его лично или по звонку, которому ты доверяешь, — самый надёжный способ убедиться. Но это необязательно: для переписки это никогда не требуется.",
   "keyVerificationVerified": "Проверено",

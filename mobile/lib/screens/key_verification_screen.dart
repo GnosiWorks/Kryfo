@@ -7,6 +7,7 @@ import '../theme.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/swap.dart';
+import '../widgets/ease_size.dart';
 import '../widgets/motion.dart' show kHouseCurve, motionStill;
 import '../main.dart' show session, appState;
 import '../l10n/l10n.dart';
@@ -59,18 +60,53 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
   late bool _verified = widget.initialVerified ?? false;
   // the change came from a tap here, not from reading what was stored
   bool _tapped = false;
+  // the key the number on screen is made from: the one held for them now,
+  // read as the page opens and again whenever something changes
+  late String _key = widget.peerXpub.trim().toLowerCase();
+  // their key changed while this page was open
+  bool _moved = false;
+  // the first read only puts the held key in place of the one passed in
+  bool _read1 = false;
 
   @override
   void initState() {
     super.initState();
-    session.isVerified(widget.peerHaloId).then((v) {
-      if (mounted) setState(() => _verified = v);
+    _read();
+    appState.addListener(_read);
+  }
+
+  @override
+  void dispose() {
+    appState.removeListener(_read);
+    super.dispose();
+  }
+
+  Future<void> _read() async {
+    final held = await session.heldKey(widget.peerHaloId);
+    final v = await session.isVerified(widget.peerHaloId);
+    if (!mounted) return;
+    final key = held ?? _key;
+    final first = !_read1;
+    _read1 = true;
+    if (key == _key && v == _verified) return;
+    setState(() {
+      if (key != _key && !first) {
+        _moved = true;
+        _tapped = false;
+      }
+      _key = key;
+      _verified = v;
     });
   }
 
   Future<void> _toggle() async {
     final next = !_verified;
-    await session.setVerified(widget.peerHaloId, next);
+    // a mark for the number on screen, never for a key that came since
+    if (!await session.setVerified(widget.peerHaloId, next, key: _key)) {
+      await _read();
+      if (mounted) showHaloToast(context, l10n.keyVerificationKeyMoved);
+      return;
+    }
     // the new key is already trusted and the session rebuilt on the inbound
     // message (deliver-and-warn), so verifying only clears the banner. a
     // session teardown here would break sending.
@@ -89,7 +125,7 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final groups = haloSafetyNumber(widget.myXpub, widget.peerXpub).split(' ');
+    final groups = haloSafetyNumber(widget.myXpub, _key).split(' ');
     return Scaffold(
       backgroundColor: HaloColors.surface,
       body: SafeArea(
@@ -131,13 +167,32 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
                       style: HaloType.sans(size: 14, color: HaloColors.text2),
                     ),
                   ),
+                  EaseSize(
+                    child: _moved
+                        ? Padding(
+                            padding: const EdgeInsets.only(top: 16),
+                            child: Text(
+                              l10n.keyVerificationNewNumber,
+                              style: HaloType.sans(
+                                size: 13.5,
+                                color: HaloColors.amber,
+                                height: 1.45,
+                              ),
+                            ),
+                          )
+                        : const SizedBox(width: double.infinity),
+                  ),
                   const SizedBox(height: 24),
                   StaggerIn(
                     index: 1,
-                    child: SafetyNumberCard(
-                      groups: groups,
-                      verified: _verified,
-                      celebrate: _tapped,
+                    // a new key is a new number: it assembles again
+                    child: FadeSwap(
+                      child: SafetyNumberCard(
+                        key: ValueKey(_key),
+                        groups: groups,
+                        verified: _verified,
+                        celebrate: _tapped,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 24),

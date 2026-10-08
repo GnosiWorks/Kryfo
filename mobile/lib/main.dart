@@ -1161,7 +1161,7 @@ class HaloDb implements GroupOwedStore {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 65,
+      version: 66,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -1184,6 +1184,7 @@ class HaloDb implements GroupOwedStore {
             muted INTEGER NOT NULL DEFAULT 0,
             archived INTEGER NOT NULL DEFAULT 0,
             verified INTEGER NOT NULL DEFAULT 0,
+            verified_key TEXT,
             unread INTEGER NOT NULL DEFAULT 0,
             atmosphere TEXT,
             note TEXT,
@@ -1313,6 +1314,10 @@ class HaloDb implements GroupOwedStore {
       },
       onUpgrade: (db, oldV, newV) async {
         // 62 runs last, below: its index names columns older steps add
+        if (oldV < 66) {
+          // the key each verified contact was verified under
+          await verifiedKeyColumn(db);
+        }
         if (oldV < 65) {
           // a room joined off a link and not let in yet: when the join went
           await roomJoiningColumn(db);
@@ -1808,8 +1813,14 @@ class HaloDb implements GroupOwedStore {
       whereArgs: [haloId],
       limit: 1,
     );
-    return rows.isEmpty ? null : rows.first;
+    return rows.isEmpty ? null : (await _verifiedNow(db, rows)).first;
   }
+
+  Future<List<Map<String, Object?>>> _verifiedNow(
+    DatabaseExecutor db,
+    List<Map<String, Object?>> rows, {
+    String idColumn = 'halo_id',
+  }) => verifiedNow(db, rows, idColumn: idColumn);
 
   // a contact stub from group invite info. a peer we already know is left
   // as is.
@@ -1938,15 +1949,19 @@ class HaloDb implements GroupOwedStore {
   // blocked one drops out here rather than lingering as a name.
   Future<List<Map<String, Object?>>> vouchesFor(String haloId) async {
     final db = await open();
-    return db.rawQuery(
-      '''
+    return _verifiedNow(
+      db,
+      await db.rawQuery(
+        '''
       SELECT v.voucher_id, v.note, v.created_at,
-             c.nickname, c.avatar, c.verified
+             c.nickname, c.avatar, c.verified, c.verified_key, c.xpub
       FROM vouches v JOIN contacts c ON c.halo_id = v.voucher_id
       WHERE v.halo_id = ? AND c.accepted = 1 AND c.blocked = 0
       ORDER BY v.created_at ASC
       ''',
-      [haloId],
+        [haloId],
+      ),
+      idColumn: 'voucher_id',
     );
   }
 
@@ -2060,10 +2075,13 @@ class HaloDb implements GroupOwedStore {
 
   Future<List<Map<String, Object?>>> contacts() async {
     final db = await open();
-    return db.query(
-      'contacts',
-      where: 'accepted = 1',
-      orderBy: 'last_seen DESC',
+    return _verifiedNow(
+      db,
+      await db.query(
+        'contacts',
+        where: 'accepted = 1',
+        orderBy: 'last_seen DESC',
+      ),
     );
   }
 
@@ -2186,28 +2204,16 @@ class HaloDb implements GroupOwedStore {
     return (rows.first['muted'] as int? ?? 0) == 1;
   }
 
-  Future<void> setVerified(String haloId, bool verified) async {
-    final db = await open();
-    await db.update(
-      'contacts',
-      {'verified': verified ? 1 : 0},
-      where: 'halo_id = ?',
-      whereArgs: [haloId],
-    );
-  }
+  Future<bool> setVerified(String haloId, bool verified, {String? key}) async =>
+      markVerified(await open(), haloId, verified, key: key);
 
   Future<bool> isVerified(String haloId) async {
-    final db = await open();
-    final rows = await db.query(
-      'contacts',
-      columns: ['verified'],
-      where: 'halo_id = ?',
-      whereArgs: [haloId],
-      limit: 1,
-    );
-    if (rows.isEmpty) return false;
-    return (rows.first['verified'] as int? ?? 0) == 1;
+    final c = await getContact(haloId);
+    return (c?['verified'] as int? ?? 0) == 1;
   }
+
+  Future<String?> heldKey(String haloId) async =>
+      heldKeyHex(await open(), haloId);
 
   // a block starts the clocks of what they sent that waits to be read, in
   // their chat and in groups, and drops the receipts queued for them. an
@@ -5597,6 +5603,126 @@ Future<void> addColumn(DatabaseExecutor db, String sql) async {
       rethrow;
     }
   }
+}
+
+// the upgrade to 66: the key a contact was verified under. one verified
+// before is tied to the key held for them now; with none held, the mark goes
+Future<void> verifiedKeyColumn(DatabaseExecutor db) async {
+  await addColumn(db, 'ALTER TABLE contacts ADD COLUMN verified_key TEXT');
+  await tieVerifiedToKeys(db);
+}
+
+Future<void> tieVerifiedToKeys(DatabaseExecutor db) async {
+  final rows = await db.query(
+    'contacts',
+    columns: ['halo_id', 'xpub'],
+    where: 'verified = 1',
+  );
+  for (final r in rows) {
+    final id = r['halo_id'];
+    if (id is! String) continue;
+    final key = await heldKeyHex(db, id, xpub: r['xpub'] as String?);
+    await db.update(
+      'contacts',
+      key == null ? {'verified': 0} : {'verified_key': key},
+      where: 'halo_id = ?',
+      whereArgs: [id],
+    );
+  }
+}
+
+// the key someone is known by here, as lowercase hex: the one their sessions
+// are built on, else the one their card brought. the dev chat's is pinned on
+// its row. null when there is none
+Future<String?> heldKeyHex(
+  DatabaseExecutor db,
+  String haloId, {
+  String? xpub,
+}) async {
+  if (!isDevId(haloId)) {
+    try {
+      final rows = await db.query(
+        'peer_identities',
+        columns: ['identity_key'],
+        where: 'address = ?',
+        whereArgs: [haloId],
+        limit: 1,
+      );
+      if (rows.isNotEmpty) {
+        final b = rows.first['identity_key'] as List<int>;
+        final pub = b.length == 33 ? b.sublist(1) : b;
+        return pub.map((x) => x.toRadixString(16).padLeft(2, '0')).join();
+      }
+    } catch (e) {
+      // a database with no signal tables yet knows no key but the card's
+      dlog('held key: ${e.runtimeType}');
+    }
+  }
+  var x = xpub;
+  if (x == null) {
+    final rows = await db.query(
+      'contacts',
+      columns: ['xpub'],
+      where: 'halo_id = ?',
+      whereArgs: [haloId],
+      limit: 1,
+    );
+    x = rows.isEmpty ? null : rows.first['xpub'] as String?;
+  }
+  x = x?.trim().toLowerCase();
+  return x == null || x.isEmpty ? null : x;
+}
+
+// verified counts only while the key it was given for is still theirs: a
+// row whose mark names another key reads as not verified
+Future<List<Map<String, Object?>>> verifiedNow(
+  DatabaseExecutor db,
+  List<Map<String, Object?>> rows, {
+  String idColumn = 'halo_id',
+}) async {
+  List<Map<String, Object?>>? out;
+  for (var i = 0; i < rows.length; i++) {
+    final r = rows[i];
+    if ((r['verified'] as int? ?? 0) != 1) continue;
+    final id = r[idColumn] as String;
+    final key = await heldKeyHex(db, id, xpub: r['xpub'] as String?);
+    final mark = (r['verified_key'] as String?)?.toLowerCase();
+    if (key != null && mark == key) continue;
+    out ??= List.of(rows);
+    out[i] = {...r, 'verified': 0};
+  }
+  return out ?? rows;
+}
+
+// a mark for the key that was on screen, and only while it is still the one
+// held for them. false when it has moved on since: the number shown was for
+// another key
+Future<bool> markVerified(
+  DatabaseExecutor db,
+  String haloId,
+  bool verified, {
+  String? key,
+}) async {
+  if (!verified) {
+    await db.update(
+      'contacts',
+      {'verified': 0, 'verified_key': null},
+      where: 'halo_id = ?',
+      whereArgs: [haloId],
+    );
+    return true;
+  }
+  final held = await heldKeyHex(db, haloId);
+  if (held == null || key == null || key.trim().toLowerCase() != held) {
+    return false;
+  }
+  await db.update(
+    'contacts',
+    {'verified': 1, 'verified_key': held},
+    where: 'halo_id = ?',
+    whereArgs: [haloId],
+  );
+  return true;
 }
 
 // the upgrade to 65: when a room joined off a link sent its join, until
