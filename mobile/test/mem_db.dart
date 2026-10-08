@@ -339,14 +339,19 @@ class MemDb implements Database, Transaction {
       throw UnimplementedError('query: $table');
     }
     final t = _t(table);
-    // a column, or length(col) AS name: its text's length, as sqlite gives it
+    // a column, col AS name, or length(col) AS name: its text's length, as
+    // sqlite gives it. a bare rowid comes back named after the table's
+    // INTEGER PRIMARY KEY, as sqlite names it
     final picks = <(String, Object? Function(Map<String, Object?>))>[];
     for (final c in columns ?? const <String>[]) {
       final len = RegExp(r'^length\((\w+)\) AS (\w+)$').firstMatch(c);
-      final col = len?.group(1) ?? c;
+      final as = RegExp(r'^(\w+) AS (\w+)$').firstMatch(c);
+      final col = len?.group(1) ?? as?.group(1) ?? c;
       _known(t, table, [col]);
       picks.add((
-        len?.group(2) ?? c,
+        len?.group(2) ??
+            as?.group(2) ??
+            (c == 'rowid' && t.auto != null ? t.auto! : c),
         len == null
             ? (r) => _get(t, r, col)
             : (r) => switch (_get(t, r, col)) {

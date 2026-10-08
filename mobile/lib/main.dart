@@ -2239,7 +2239,7 @@ class HaloDb implements GroupOwedStore {
     try {
       final open = await t.query(
         'block_spans',
-        columns: ['rowid'],
+        columns: ['rowid AS rowid'],
         where: 'peer_id = ? AND to_at IS NULL',
         whereArgs: [haloId],
         limit: 1,
@@ -3086,7 +3086,7 @@ class HaloDb implements GroupOwedStore {
     final db = await open();
     return db.query(
       'messages',
-      columns: ['*', 'rowid'],
+      columns: ['*', 'rowid AS rowid'],
       where: 'group_id = ?',
       whereArgs: [groupId],
       orderBy: 'sent_at ASC',
@@ -3101,7 +3101,7 @@ class HaloDb implements GroupOwedStore {
     final db = await open();
     final rows = await db.query(
       'messages',
-      columns: ['*', 'rowid'],
+      columns: ['*', 'rowid AS rowid'],
       where: beforeRowid == null
           ? 'group_id = ?'
           : 'group_id = ? AND rowid < ?',
@@ -3119,7 +3119,7 @@ class HaloDb implements GroupOwedStore {
     final db = await open();
     return db.query(
       'messages',
-      columns: ['*', 'rowid'],
+      columns: ['*', 'rowid AS rowid'],
       where: 'group_id = ? AND rowid > ?',
       whereArgs: [groupId, afterRowid],
       orderBy: 'sent_at ASC',
@@ -4108,7 +4108,7 @@ class HaloDb implements GroupOwedStore {
     final db = await open();
     final rows = await db.query(
       'messages',
-      columns: ['rowid'],
+      columns: ['rowid AS rowid'],
       where: 'msg_uid = ?',
       whereArgs: [msgUid],
       limit: 1,
@@ -5298,11 +5298,13 @@ class HaloDb implements GroupOwedStore {
     );
   }
 
+  // a bare rowid comes back named after the INTEGER PRIMARY KEY (id), so
+  // every read here asks for it AS rowid
   Future<List<Map<String, Object?>>> messagesFor(String peerId) async {
     final db = await open();
     return db.query(
       'messages',
-      columns: ['*', 'rowid'],
+      columns: ['*', 'rowid AS rowid'],
       // group_id IS NULL keeps group messages out of the 1:1 thread: a group
       // row carries peer_id = sender too
       where: 'peer_id = ? AND group_id IS NULL',
@@ -5321,7 +5323,7 @@ class HaloDb implements GroupOwedStore {
     final db = await open();
     final rows = await db.query(
       'messages',
-      columns: ['*', 'rowid'],
+      columns: ['*', 'rowid AS rowid'],
       where: beforeRowid == null
           ? 'peer_id = ? AND group_id IS NULL'
           : 'peer_id = ? AND group_id IS NULL AND rowid < ?',
@@ -5343,7 +5345,7 @@ class HaloDb implements GroupOwedStore {
     // than our local newest. rowid always climbs.
     return db.query(
       'messages',
-      columns: ['*', 'rowid'],
+      columns: ['*', 'rowid AS rowid'],
       where: "peer_id = ? AND group_id IS NULL AND rowid > ?",
       whereArgs: [peerId, afterRowid],
       orderBy: 'Rowid ASC',
@@ -10479,6 +10481,18 @@ class AppState extends ChangeNotifier {
     // a stranger doesn't get to set disappearing rules in the inbox: burned
     // rows refund the 2-message cap and can vanish before the request is even
     // seen. burn only counts once they're accepted.
+    // no uid and nothing to draw: a signal, an accept's ack say, never a
+    // message. kept, it is a blank row and an unread
+    if (env.msgUid == null &&
+        said.trim().isEmpty &&
+        sticker == null &&
+        mediaPath == null &&
+        filePath == null &&
+        env.poll == null &&
+        env.preview == null &&
+        !unsaved) {
+      return to;
+    }
     // a deleted (parked) peer writing again surfaces as a fresh request.
     if (!isGroup) await db.unparkIfArchived(senderHaloId);
     final senderAccepted = await db.isAccepted(senderHaloId);
