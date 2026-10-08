@@ -237,48 +237,60 @@ class _ModeCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Text(
-                      name,
-                      style: HaloType.serif(size: 18, weight: FontWeight.w400),
+                    // the name wraps before the pill is pushed off the card
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              name,
+                              style: HaloType.serif(
+                                size: 18,
+                                weight: FontWeight.w400,
+                              ),
+                            ),
+                          ),
+                          if (soon) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: HaloColors.surface3,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                l10n.modesSoon,
+                                style: HaloType.mono(
+                                  size: 9,
+                                  color: HaloColors.amber,
+                                  letter: 0.6,
+                                ),
+                              ),
+                            ),
+                          ],
+                          if (accent != null) ...[
+                            const SizedBox(width: 6),
+                            AnimatedOpacity(
+                              opacity: active ? 1 : 0,
+                              duration: d,
+                              child: Text(
+                                accent!,
+                                style: HaloType.serif(
+                                  size: 18,
+                                  weight: FontWeight.w400,
+                                  italic: true,
+                                  color: HaloColors.amber,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
-                    if (soon) ...[
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: HaloColors.surface3,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          l10n.modesSoon,
-                          style: HaloType.mono(
-                            size: 9,
-                            color: HaloColors.amber,
-                            letter: 0.6,
-                          ),
-                        ),
-                      ),
-                    ],
-                    if (accent != null) ...[
-                      const SizedBox(width: 6),
-                      AnimatedOpacity(
-                        opacity: active ? 1 : 0,
-                        duration: d,
-                        child: Text(
-                          accent!,
-                          style: HaloType.serif(
-                            size: 18,
-                            weight: FontWeight.w400,
-                            italic: true,
-                            color: HaloColors.amber,
-                          ),
-                        ),
-                      ),
-                    ],
-                    const Spacer(),
+                    const SizedBox(width: 8),
                     // the pill pops onto the card that was picked
                     AnimatedSwitcher(
                       duration: still

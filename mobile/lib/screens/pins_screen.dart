@@ -487,9 +487,11 @@ class _HowRow extends StatelessWidget {
           children: [
             Icon(Icons.info_outline_rounded, size: 17, color: HaloColors.amber),
             const SizedBox(width: 8),
-            Text(
-              l10n.pinsHowThisWorks,
-              style: HaloType.sans(size: 13.5, color: HaloColors.amber),
+            Flexible(
+              child: Text(
+                l10n.pinsHowThisWorks,
+                style: HaloType.sans(size: 13.5, color: HaloColors.amber),
+              ),
             ),
           ],
         ),

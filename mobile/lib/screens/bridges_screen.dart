@@ -334,7 +334,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 2),
                 _Ghost(
                   icon: Icons.content_paste_rounded,
                   label: l10n.bridgesPasteFromClipboard,
@@ -458,16 +458,19 @@ class _BridgesScreenState extends State<BridgesScreen> {
                           ),
                         ),
                         const SizedBox(width: 11),
-                        Text(
-                          _elapsed < 20
-                              ? l10n.bridgesRestartingTor
-                              : _elapsed < 60
-                              ? l10n.bridgesFindingABridgeS(whole(_elapsed))
-                              : l10n.bridgesStillTryingS(whole(_elapsed)),
-                          style: HaloType.mono(
-                            size: 12.5,
-                            color: HaloColors.text2,
-                            weight: FontWeight.w600,
+                        Flexible(
+                          child: Text(
+                            _elapsed < 20
+                                ? l10n.bridgesRestartingTor
+                                : _elapsed < 60
+                                ? l10n.bridgesFindingABridgeS(whole(_elapsed))
+                                : l10n.bridgesStillTryingS(whole(_elapsed)),
+                            textAlign: TextAlign.center,
+                            style: HaloType.mono(
+                              size: 12.5,
+                              color: HaloColors.text2,
+                              weight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ],
@@ -560,17 +563,26 @@ class _BridgeCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
-              Text(
-                name,
-                style: HaloType.serif(size: 20, color: HaloColors.text),
-              ),
-              const SizedBox(width: 8),
+              // one run of text, so on a narrow screen the source wraps
+              // under the name instead of pushing the tag off the edge
               Expanded(
-                child: Text(
-                  from,
-                  style: HaloType.sans(size: 12, color: HaloColors.text2),
+                child: Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: name,
+                        style: HaloType.serif(size: 20, color: HaloColors.text),
+                      ),
+                      const TextSpan(text: '  '),
+                      TextSpan(
+                        text: from,
+                        style: HaloType.sans(size: 12, color: HaloColors.text2),
+                      ),
+                    ],
+                  ),
                 ),
               ),
+              const SizedBox(width: 8),
               RiseSwap(
                 alignment: AlignmentDirectional.centerEnd,
                 child: connected
@@ -703,12 +715,14 @@ class _RequestBlock extends StatelessWidget {
             children: [
               Icon(Icons.download_rounded, size: 16, color: HaloColors.violet),
               const SizedBox(width: 8),
-              Text(
-                l10n.bridgesGetBridges,
-                style: HaloType.sans(
-                  size: 14.5,
-                  color: HaloColors.text,
-                  weight: FontWeight.w600,
+              Expanded(
+                child: Text(
+                  l10n.bridgesGetBridges,
+                  style: HaloType.sans(
+                    size: 14.5,
+                    color: HaloColors.text,
+                    weight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],
@@ -909,7 +923,7 @@ class _RequestBlock extends StatelessWidget {
                     ),
                   ),
           ),
-          const SizedBox(height: 13),
+          const SizedBox(height: 2),
           _Ghost(
             icon: Icons.refresh_rounded,
             label: asking
@@ -936,19 +950,25 @@ class _Ghost extends StatelessWidget {
     scale: 0.97,
     haptic: false,
     onTap: onTap,
-    child: Row(
-      children: [
-        Icon(icon, size: 15, color: HaloColors.amber),
-        const SizedBox(width: 8),
-        Text(
-          label,
-          style: HaloType.mono(
-            size: 12,
-            color: HaloColors.amber,
-            weight: FontWeight.w600,
+    // a finger's height, however short the line
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 48),
+      child: Row(
+        children: [
+          Icon(icon, size: 15, color: HaloColors.amber),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              label,
+              style: HaloType.mono(
+                size: 12,
+                color: HaloColors.amber,
+                weight: FontWeight.w600,
+              ),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     ),
   );
 }
