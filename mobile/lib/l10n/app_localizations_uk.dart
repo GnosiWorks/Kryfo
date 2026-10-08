@@ -5298,6 +5298,20 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settingsReportAnIssue => 'Повідомити про проблему';
 
   @override
+  String get settingsReportInKryfo => 'Написати в Kryfo';
+
+  @override
+  String get settingsReportInKryfoSub =>
+      'Чат із Marios. Можна писати анонімно.';
+
+  @override
+  String get settingsReportByEmail => 'Надіслати лист';
+
+  @override
+  String get settingsReportByEmailSub =>
+      'gnosiworks@proton.me, з поштового застосунку';
+
+  @override
   String get settingsBugOrSecurityFlaw => 'Помилка чи вразливість';
 
   @override

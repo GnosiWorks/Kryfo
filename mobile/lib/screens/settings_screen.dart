@@ -31,6 +31,8 @@ import 'dev_about_sheet.dart' show devChatOffered, writeToMarios;
 import '../widgets/stagger_in.dart';
 import '../widgets/unfold.dart';
 import '../widgets/confirm_sheet.dart';
+import '../widgets/message_menu.dart' show MenuSheet, MenuSheetRow;
+import '../widgets/halo_sheet.dart';
 import '../l10n/l10n.dart';
 import '../widgets/language_sheet.dart';
 import '../wipe_word.dart';
@@ -690,12 +692,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 icon: Icons.flag_outlined,
                 label: l10n.settingsReportAnIssue,
                 value: l10n.settingsBugOrSecurityFlaw,
-                onTap: () => launchUrl(
-                  Uri.parse(
-                    'mailto:gnosiworks@proton.me?subject=Kryfo%20report',
-                  ),
-                  mode: LaunchMode.externalApplication,
-                ),
+                onTap: () => reportAnIssue(context),
               ),
               // copies, never opens: a browser hop would hand github the
               // phone's address
@@ -757,4 +754,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
+}
+
+// a report goes where it is read soonest: the chat with Marios first, then
+// mail. on his own phone, or with no key pinned, mail is the only way
+Future<void> reportAnIssue(BuildContext context) async {
+  void mail() => launchUrl(
+    Uri.parse('mailto:gnosiworks@proton.me?subject=Kryfo%20report'),
+    mode: LaunchMode.externalApplication,
+  );
+  if (!devChatOffered) {
+    mail();
+    return;
+  }
+  final pick = await showHaloSheet<String>(
+    context,
+    scroll: true,
+    builder: (ctx) => SingleChildScrollView(
+      child: MenuSheet(
+        groups: [
+          [
+            MenuSheetRow(
+              icon: Icons.forum_outlined,
+              label: l10n.settingsReportInKryfo,
+              sub: l10n.settingsReportInKryfoSub,
+              tint: HaloColors.amber,
+              onTap: () => Navigator.pop(ctx, 'chat'),
+            ),
+            MenuSheetRow(
+              icon: Icons.mail_outline,
+              label: l10n.settingsReportByEmail,
+              sub: l10n.settingsReportByEmailSub,
+              onTap: () => Navigator.pop(ctx, 'mail'),
+            ),
+          ],
+        ],
+      ),
+    ),
+  );
+  if (!context.mounted) return;
+  if (pick == 'chat') await writeToMarios(context);
+  if (pick == 'mail') mail();
 }

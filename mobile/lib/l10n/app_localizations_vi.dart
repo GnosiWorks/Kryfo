@@ -5206,6 +5206,20 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsReportAnIssue => 'Báo lỗi';
 
   @override
+  String get settingsReportInKryfo => 'Viết trong Kryfo';
+
+  @override
+  String get settingsReportInKryfoSub =>
+      'Cuộc trò chuyện với Marios. Bạn có thể viết ẩn danh.';
+
+  @override
+  String get settingsReportByEmail => 'Gửi email';
+
+  @override
+  String get settingsReportByEmailSub =>
+      'gnosiworks@proton.me, từ ứng dụng thư của bạn';
+
+  @override
   String get settingsBugOrSecurityFlaw => 'Lỗi hoặc lỗ hổng bảo mật';
 
   @override

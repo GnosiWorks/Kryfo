@@ -4997,6 +4997,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsReportAnIssue => '报告问题';
 
   @override
+  String get settingsReportInKryfo => '在 Kryfo 里写';
+
+  @override
+  String get settingsReportInKryfoSub => '和 Marios 的聊天。你可以匿名写。';
+
+  @override
+  String get settingsReportByEmail => '发送邮件';
+
+  @override
+  String get settingsReportByEmailSub => 'gnosiworks@proton.me，用你的邮件应用';
+
+  @override
   String get settingsBugOrSecurityFlaw => 'Bug 或安全漏洞';
 
   @override
@@ -12306,6 +12318,18 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsReportAnIssue => '回報問題';
+
+  @override
+  String get settingsReportInKryfo => '在 Kryfo 裡寫';
+
+  @override
+  String get settingsReportInKryfoSub => '和 Marios 的聊天。你可以匿名寫。';
+
+  @override
+  String get settingsReportByEmail => '傳送電子郵件';
+
+  @override
+  String get settingsReportByEmailSub => 'gnosiworks@proton.me，用你的郵件 App';
 
   @override
   String get settingsBugOrSecurityFlaw => '錯誤或安全漏洞';

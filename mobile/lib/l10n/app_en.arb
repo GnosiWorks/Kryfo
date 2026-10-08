@@ -6531,6 +6531,22 @@
   "@settingsReportAnIssue": {
     "description": "screens/settings_screen.dart"
   },
+  "settingsReportInKryfo": "Write in Kryfo",
+  "@settingsReportInKryfo": {
+    "description": "screens/settings_screen.dart"
+  },
+  "settingsReportInKryfoSub": "The chat with Marios. You can write anonymously.",
+  "@settingsReportInKryfoSub": {
+    "description": "screens/settings_screen.dart"
+  },
+  "settingsReportByEmail": "Send an email",
+  "@settingsReportByEmail": {
+    "description": "screens/settings_screen.dart"
+  },
+  "settingsReportByEmailSub": "gnosiworks@proton.me, from your mail app",
+  "@settingsReportByEmailSub": {
+    "description": "screens/settings_screen.dart"
+  },
   "settingsBugOrSecurityFlaw": "Bug or security flaw",
   "@settingsBugOrSecurityFlaw": {
     "description": "screens/settings_screen.dart"

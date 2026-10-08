@@ -5210,6 +5210,20 @@ class AppLocalizationsId extends AppLocalizations {
   String get settingsReportAnIssue => 'Laporkan masalah';
 
   @override
+  String get settingsReportInKryfo => 'Tulis di Kryfo';
+
+  @override
+  String get settingsReportInKryfoSub =>
+      'Obrolan dengan Marios. Kamu bisa menulis secara anonim.';
+
+  @override
+  String get settingsReportByEmail => 'Kirim email';
+
+  @override
+  String get settingsReportByEmailSub =>
+      'gnosiworks@proton.me, dari aplikasi email-mu';
+
+  @override
   String get settingsBugOrSecurityFlaw => 'Bug atau celah keamanan';
 
   @override

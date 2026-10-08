@@ -5270,6 +5270,20 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsReportAnIssue => 'Problem melden';
 
   @override
+  String get settingsReportInKryfo => 'In Kryfo schreiben';
+
+  @override
+  String get settingsReportInKryfoSub =>
+      'Der Chat mit Marios. Du kannst anonym schreiben.';
+
+  @override
+  String get settingsReportByEmail => 'E-Mail senden';
+
+  @override
+  String get settingsReportByEmailSub =>
+      'gnosiworks@proton.me, aus deiner Mail-App';
+
+  @override
   String get settingsBugOrSecurityFlaw => 'Fehler oder Sicherheitslücke';
 
   @override

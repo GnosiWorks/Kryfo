@@ -5227,6 +5227,20 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsReportAnIssue => 'Sorun bildir';
 
   @override
+  String get settingsReportInKryfo => 'Kryfo\'da yaz';
+
+  @override
+  String get settingsReportInKryfoSub =>
+      'Marios ile sohbet. Anonim yazabilirsin.';
+
+  @override
+  String get settingsReportByEmail => 'E-posta gönder';
+
+  @override
+  String get settingsReportByEmailSub =>
+      'gnosiworks@proton.me, e-posta uygulamandan';
+
+  @override
   String get settingsBugOrSecurityFlaw => 'Hata ya da güvenlik açığı';
 
   @override
