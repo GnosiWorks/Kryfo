@@ -10491,6 +10491,10 @@ class AppState extends ChangeNotifier {
         env.poll == null &&
         env.preview == null &&
         !unsaved) {
+      // the face they picked rides on it all the same
+      if (env.senderAvatar != null) {
+        await db.setContactAvatar(senderHaloId, env.senderAvatar);
+      }
       return to;
     }
     // a deleted (parked) peer writing again surfaces as a fresh request.
