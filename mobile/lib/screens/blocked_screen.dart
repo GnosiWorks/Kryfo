@@ -79,7 +79,12 @@ class _BlockedScreenState extends State<BlockedScreen> {
                     ),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
-                  Text(l10n.blockedBlocked, style: HaloType.pageTitle()),
+                  Flexible(
+                    child: Text(
+                      l10n.blockedBlocked,
+                      style: HaloType.pageTitle(),
+                    ),
+                  ),
                 ],
               ),
             ),

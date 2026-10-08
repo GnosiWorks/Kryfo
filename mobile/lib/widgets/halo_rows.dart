@@ -88,11 +88,18 @@ class HaloRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // once the 14pt label renders past ~19 two columns stop fitting on a
-    // phone, so a long value goes under the label instead of wrapping
+    // phone, so a long value goes under the label instead of wrapping. so
+    // does one that takes more than about a third of the screen
     final on = toggled;
     final v = on != null ? '' : value ?? '';
+    final scaler = MediaQuery.textScalerOf(context);
+    final valueStyle = HaloType.sans(size: 13, color: HaloColors.text2);
     final stacked =
-        v.length > 16 || MediaQuery.of(context).textScaler.scale(14) > 19;
+        v.length > 16 ||
+        scaler.scale(14) > 19 ||
+        (v.isNotEmpty &&
+            _width(v, valueStyle, scaler, Directionality.of(context)) >
+                MediaQuery.sizeOf(context).width * 0.35);
     final fg = rose ? HaloColors.rose : HaloColors.text;
     final tile = rose
         ? HaloColors.rose.withValues(alpha: 0.12)
@@ -146,17 +153,14 @@ class HaloRow extends StatelessWidget {
                         top: 4,
                         end: 10,
                       ),
-                      child: Text(
-                        v,
-                        style: HaloType.sans(size: 13, color: HaloColors.text2),
-                      ),
+                      child: Text(v, style: valueStyle),
                     ),
                 ],
               ),
             ),
             if (v.isNotEmpty && !stacked) ...[
               const SizedBox(width: 8),
-              Text(v, style: HaloType.sans(size: 13, color: HaloColors.text2)),
+              Text(v, style: valueStyle),
             ],
             if (on != null) ...[
               const SizedBox(width: 10),
@@ -190,4 +194,16 @@ class HaloRow extends StatelessWidget {
     if (on == null) return row;
     return Semantics(toggled: on, child: row);
   }
+}
+
+double _width(String s, TextStyle style, TextScaler scaler, TextDirection dir) {
+  final p = TextPainter(
+    text: TextSpan(text: s, style: style),
+    textDirection: dir,
+    textScaler: scaler,
+    maxLines: 1,
+  )..layout();
+  final w = p.width;
+  p.dispose();
+  return w;
 }

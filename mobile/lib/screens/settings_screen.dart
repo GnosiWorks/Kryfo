@@ -125,32 +125,39 @@ class _ProtectionLineState extends State<ProtectionLine>
               ),
             ),
             const SizedBox(width: 8),
-            AnimatedSwitcher(
-              duration: still
-                  ? Duration.zero
-                  : const Duration(milliseconds: 220),
-              switchInCurve: Curves.easeOutCubic,
-              switchOutCurve: Curves.easeInCubic,
-              transitionBuilder: (c, a) => FadeTransition(
-                opacity: a,
-                child: SlideTransition(
-                  position: Tween(
-                    begin: const Offset(0, 0.35),
-                    end: Offset.zero,
-                  ).animate(a),
-                  child: c,
+            // a long state wraps at its end rather than running off it
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.sizeOf(context).width * 0.4,
+              ),
+              child: AnimatedSwitcher(
+                duration: still
+                    ? Duration.zero
+                    : const Duration(milliseconds: 220),
+                switchInCurve: Curves.easeOutCubic,
+                switchOutCurve: Curves.easeInCubic,
+                transitionBuilder: (c, a) => FadeTransition(
+                  opacity: a,
+                  child: SlideTransition(
+                    position: Tween(
+                      begin: const Offset(0, 0.35),
+                      end: Offset.zero,
+                    ).animate(a),
+                    child: c,
+                  ),
                 ),
-              ),
-              layoutBuilder: (top, gone) => Stack(
-                alignment: AlignmentDirectional.centerEnd,
-                children: [...gone, ?top],
-              ),
-              child: Text(
-                widget.state,
-                key: ValueKey(widget.state),
-                style: HaloType.mono(
-                  size: 10,
-                  color: on ? HaloColors.amber : HaloColors.text3,
+                layoutBuilder: (top, gone) => Stack(
+                  alignment: AlignmentDirectional.centerEnd,
+                  children: [...gone, ?top],
+                ),
+                child: Text(
+                  widget.state,
+                  key: ValueKey(widget.state),
+                  textAlign: TextAlign.end,
+                  style: HaloType.mono(
+                    size: 10,
+                    color: on ? HaloColors.amber : HaloColors.text3,
+                  ),
                 ),
               ),
             ),
