@@ -3852,6 +3852,26 @@ class AppLocalizationsId extends AppLocalizations {
   String get notesDeleteThisNote => 'Hapus catatan ini?';
 
   @override
+  String get notesHoldHint =>
+      'Tahan sebuah catatan untuk menyalin atau menghapusnya.';
+
+  @override
+  String get notesMenu => 'Menu catatan';
+
+  @override
+  String get notesDeleteAll => 'Hapus semua catatan';
+
+  @override
+  String get notesDeleteAllTitle => 'Hapus semua catatan?';
+
+  @override
+  String get notesDeleteAllLine =>
+      'Semua catatan di ponsel ini hilang untuk selamanya.';
+
+  @override
+  String get notesDeleteAllYes => 'Hapus semua';
+
+  @override
   String get notesGoneFromThisPhone =>
       'Catatan ini terhapus dari ponsel ini untuk selamanya.';
 

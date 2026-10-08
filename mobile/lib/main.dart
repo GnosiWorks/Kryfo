@@ -3281,6 +3281,29 @@ class HaloDb implements GroupOwedStore {
     return out;
   }
 
+  // every 1:1 row of one chat that is not a person's, the notes to self:
+  // their files and reactions go with them. how many went
+  Future<int> deleteAllOf(String chatId) async {
+    final db = await open();
+    final rows = await db.query(
+      'messages',
+      columns: [..._kFileCols, ..._kUnreadCols, ..._kGoneCols],
+      where: _kOneToOne,
+      whereArgs: [chatId],
+    );
+    await db.transaction((t) async {
+      for (final r in rows) {
+        final uid = r['msg_uid'] as String?;
+        if (uid != null) {
+          await t.delete('reactions', where: 'msg_uid = ?', whereArgs: [uid]);
+        }
+      }
+      await t.delete('messages', where: _kOneToOne, whereArgs: [chatId]);
+    });
+    await _scrubMedia(rows);
+    return rows.length;
+  }
+
   Future<void> deleteMessage(String msgUid) async {
     final db = await open();
     final media = await db.query(

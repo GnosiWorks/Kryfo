@@ -3962,6 +3962,24 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notesDeleteThisNote => 'حذف هذه الملاحظة؟';
 
   @override
+  String get notesHoldHint => 'اضغط مطولًا على ملاحظة لنسخها أو حذفها.';
+
+  @override
+  String get notesMenu => 'قائمة الملاحظات';
+
+  @override
+  String get notesDeleteAll => 'حذف كل الملاحظات';
+
+  @override
+  String get notesDeleteAllTitle => 'أتحذف كل الملاحظات؟';
+
+  @override
+  String get notesDeleteAllLine => 'تُحذف كل الملاحظات على هذا الهاتف نهائيًا.';
+
+  @override
+  String get notesDeleteAllYes => 'حذف الكل';
+
+  @override
   String get notesGoneFromThisPhone => 'ستُمحى من هذا الهاتف نهائيًا.';
 
   @override

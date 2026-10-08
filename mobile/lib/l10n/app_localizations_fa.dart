@@ -3871,6 +3871,25 @@ class AppLocalizationsFa extends AppLocalizations {
   String get notesDeleteThisNote => 'این یادداشت حذف شود؟';
 
   @override
+  String get notesHoldHint => 'برای کپی یا حذف، روی یادداشت نگه دارید.';
+
+  @override
+  String get notesMenu => 'منوی یادداشت‌ها';
+
+  @override
+  String get notesDeleteAll => 'حذف همه‌ی یادداشت‌ها';
+
+  @override
+  String get notesDeleteAllTitle => 'همه‌ی یادداشت‌ها حذف شوند؟';
+
+  @override
+  String get notesDeleteAllLine =>
+      'همه‌ی یادداشت‌های این گوشی برای همیشه پاک می‌شوند.';
+
+  @override
+  String get notesDeleteAllYes => 'حذف همه';
+
+  @override
   String get notesGoneFromThisPhone => 'برای همیشه از این گوشی پاک می‌شود.';
 
   @override

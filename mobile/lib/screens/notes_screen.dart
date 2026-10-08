@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/burn_fade.dart' show FadeFold;
 import '../widgets/chat_parts.dart' show DayChip;
 import '../widgets/confirm_sheet.dart';
@@ -17,6 +18,7 @@ import '../theme.dart';
 import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
 import '../widgets/written_field.dart';
+import '../widgets/ease_size.dart';
 import '../bidi_safe.dart';
 
 const String kNotesPeerId = '_notes_self_';
@@ -42,11 +44,66 @@ class _NotesScreenState extends State<NotesScreen> {
   final Set<Object> _leaving = {};
   // how far the notes run up under the bar, for its hairline
   final _under = ValueNotifier<double>(0);
+  // a note can be held: said under the notes until the first hold
+  static const _kHoldTold = 'notes_hold_told';
+  bool _holdTold = true;
 
   @override
   void initState() {
     super.initState();
     _load();
+    SharedPreferences.getInstance().then((p) {
+      if (mounted && p.getBool(_kHoldTold) != true) {
+        setState(() => _holdTold = false);
+      }
+    });
+  }
+
+  void _heldOnce() {
+    if (_holdTold) return;
+    setState(() => _holdTold = true);
+    SharedPreferences.getInstance().then((p) => p.setBool(_kHoldTold, true));
+  }
+
+  // every note at once, asked first, folding away together
+  Future<void> _deleteAll() async {
+    final ok = await showConfirmSheet(
+      context,
+      title: l10n.notesDeleteAllTitle,
+      line: l10n.notesDeleteAllLine,
+      yes: l10n.notesDeleteAllYes,
+    );
+    if (!ok || !mounted) return;
+    HapticFeedback.heavyImpact();
+    setState(() => _leaving.addAll(_notes.map(_key)));
+    await session.deleteAllOf(kNotesPeerId);
+    await Future.delayed(FadeFold.gone);
+    if (!mounted) return;
+    _leaving.clear();
+    await _load();
+  }
+
+  void _pageMenu() {
+    showHaloSheet<String>(
+      context,
+      scroll: true,
+      builder: (ctx) => SingleChildScrollView(
+        child: MenuSheet(
+          groups: [
+            [
+              MenuSheetRow(
+                icon: Icons.delete_sweep_outlined,
+                label: l10n.notesDeleteAll,
+                danger: true,
+                onTap: () => Navigator.pop(ctx, 'all'),
+              ),
+            ],
+          ],
+        ),
+      ),
+    ).then((a) {
+      if (a == 'all' && mounted) _deleteAll();
+    });
   }
 
   @override
@@ -92,6 +149,7 @@ class _NotesScreenState extends State<NotesScreen> {
   }
 
   void _menu(Map<String, Object?> n) {
+    _heldOnce();
     final text = n['plaintext'] as String? ?? '';
     showHaloSheet<String>(
       context,
@@ -200,6 +258,18 @@ class _NotesScreenState extends State<NotesScreen> {
                 overflow: TextOverflow.ellipsis,
                 style: HaloType.mono(size: 10, color: HaloColors.text2),
               ),
+              actions: [
+                if (_notes.isNotEmpty)
+                  IconButton(
+                    tooltip: l10n.notesMenu,
+                    icon: Icon(
+                      Icons.more_horiz,
+                      color: HaloColors.text2,
+                      size: 22,
+                    ),
+                    onPressed: _pageMenu,
+                  ),
+              ],
             ),
             Expanded(
               // the first note fades the empty page away
@@ -265,6 +335,37 @@ class _NotesScreenState extends State<NotesScreen> {
                               ),
                       ),
                     ),
+            ),
+            EaseSize(
+              child: !_holdTold && _notes.isNotEmpty
+                  ? Padding(
+                      padding: const EdgeInsetsDirectional.fromSTEB(
+                        18,
+                        6,
+                        18,
+                        8,
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.touch_app_outlined,
+                            size: 15,
+                            color: HaloColors.amber,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              l10n.notesHoldHint,
+                              style: HaloType.sans(
+                                size: 12.5,
+                                color: HaloColors.text,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : const SizedBox(width: double.infinity),
             ),
             _inputBar(),
           ],

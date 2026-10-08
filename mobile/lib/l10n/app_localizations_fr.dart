@@ -3896,6 +3896,26 @@ class AppLocalizationsFr extends AppLocalizations {
   String get notesDeleteThisNote => 'Supprimer cette note ?';
 
   @override
+  String get notesHoldHint =>
+      'Maintenez une note pour la copier ou la supprimer.';
+
+  @override
+  String get notesMenu => 'Menu des notes';
+
+  @override
+  String get notesDeleteAll => 'Supprimer toutes les notes';
+
+  @override
+  String get notesDeleteAllTitle => 'Supprimer toutes les notes ?';
+
+  @override
+  String get notesDeleteAllLine =>
+      'Toutes les notes de ce téléphone disparaissent, pour de bon.';
+
+  @override
+  String get notesDeleteAllYes => 'Tout supprimer';
+
+  @override
   String get notesGoneFromThisPhone =>
       'Elle est effacée de ce téléphone pour de bon.';
 

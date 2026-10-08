@@ -3887,6 +3887,25 @@ class AppLocalizationsPt extends AppLocalizations {
   String get notesDeleteThisNote => 'Excluir esta nota?';
 
   @override
+  String get notesHoldHint => 'Toque e segure uma nota para copiar ou apagar.';
+
+  @override
+  String get notesMenu => 'Menu das notas';
+
+  @override
+  String get notesDeleteAll => 'Apagar todas as notas';
+
+  @override
+  String get notesDeleteAllTitle => 'Apagar todas as notas?';
+
+  @override
+  String get notesDeleteAllLine =>
+      'Todas as notas deste celular somem para sempre.';
+
+  @override
+  String get notesDeleteAllYes => 'Apagar tudo';
+
+  @override
   String get notesGoneFromThisPhone =>
       'Ela é apagada deste celular para sempre.';
 

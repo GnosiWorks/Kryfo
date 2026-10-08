@@ -3898,6 +3898,26 @@ class AppLocalizationsIt extends AppLocalizations {
   String get notesDeleteThisNote => 'Eliminare questa nota?';
 
   @override
+  String get notesHoldHint =>
+      'Tieni premuta una nota per copiarla o eliminarla.';
+
+  @override
+  String get notesMenu => 'Menu note';
+
+  @override
+  String get notesDeleteAll => 'Elimina tutte le note';
+
+  @override
+  String get notesDeleteAllTitle => 'Eliminare tutte le note?';
+
+  @override
+  String get notesDeleteAllLine =>
+      'Tutte le note su questo telefono spariscono per sempre.';
+
+  @override
+  String get notesDeleteAllYes => 'Elimina tutto';
+
+  @override
   String get notesGoneFromThisPhone =>
       'Viene cancellata da questo telefono per sempre.';
 

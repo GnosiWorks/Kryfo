@@ -4826,6 +4826,30 @@
   "@notesDeleteThisNote": {
     "description": "screens/notes_screen.dart"
   },
+  "notesHoldHint": "Hold a note to copy or delete it.",
+  "@notesHoldHint": {
+    "description": "screens/notes_screen.dart"
+  },
+  "notesMenu": "Notes menu",
+  "@notesMenu": {
+    "description": "screens/notes_screen.dart"
+  },
+  "notesDeleteAll": "Delete all notes",
+  "@notesDeleteAll": {
+    "description": "screens/notes_screen.dart"
+  },
+  "notesDeleteAllTitle": "Delete all notes?",
+  "@notesDeleteAllTitle": {
+    "description": "screens/notes_screen.dart"
+  },
+  "notesDeleteAllLine": "Every note on this phone goes, for good.",
+  "@notesDeleteAllLine": {
+    "description": "screens/notes_screen.dart"
+  },
+  "notesDeleteAllYes": "Delete all",
+  "@notesDeleteAllYes": {
+    "description": "screens/notes_screen.dart"
+  },
   "notesGoneFromThisPhone": "It is gone from this phone for good.",
   "@notesGoneFromThisPhone": {
     "description": "screens/notes_screen.dart"
