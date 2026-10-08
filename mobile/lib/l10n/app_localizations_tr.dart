@@ -3892,7 +3892,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get onboardingNobodyGetsInUnless =>
-      '*Sen izin vermedikçe kimse giremez.* Arama yok. İnsanlar elle, iki taraftan da eklenir.';
+      '*Sen izin vermedikçe kimse giremez.* Ancak genel bir kullanıcı adı alırsan aranıp bulunabilirsin. İnsanlar elle, iki taraftan da eklenir.';
 
   @override
   String get onboardingTheFirstConnectionTakes =>

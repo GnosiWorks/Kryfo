@@ -3888,7 +3888,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get onboardingNobodyGetsInUnless =>
-      '*هیچ‌کس وارد نمی‌شود مگر اینکه شما بگذارید.* جست‌وجویی در کار نیست. آدم‌ها دستی اضافه می‌شوند، از هر دو طرف.';
+      '*هیچ‌کس وارد نمی‌شود مگر اینکه شما بگذارید.* فقط اگر یک نام کاربری عمومی ثبت کنید، دیگران می‌توانند پیدایتان کنند. آدم‌ها دستی اضافه می‌شوند، از هر دو طرف.';
 
   @override
   String get onboardingTheFirstConnectionTakes =>

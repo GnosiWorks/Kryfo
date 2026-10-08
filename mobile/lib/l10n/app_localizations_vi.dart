@@ -3866,7 +3866,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get onboardingNobodyGetsInUnless =>
-      '*Không ai vào được trừ khi bạn cho phép.* Không có tìm kiếm. Mọi người được thêm thủ công, từ cả hai phía.';
+      '*Không ai vào được trừ khi bạn cho phép.* Chỉ khi bạn đăng ký tên người dùng công khai, người khác mới tìm được bạn. Mọi người được thêm thủ công, từ cả hai phía.';
 
   @override
   String get onboardingTheFirstConnectionTakes =>

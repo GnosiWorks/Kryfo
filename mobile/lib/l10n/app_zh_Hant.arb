@@ -999,7 +999,7 @@
   "onboardingPrivateByDefault": "預設就是私密",
   "onboardingPrivateMessaging": "私密通訊，\n*沒有隱藏代價*。",
   "onboardingYourNameIsThree": "*你的名字就是三個詞。*不用手機號碼，不用電子郵件，不用通訊錄。",
-  "onboardingNobodyGetsInUnless": "*除非你允許，沒有人能進來。*沒有搜尋功能。聯絡人都由雙方親手新增。",
+  "onboardingNobodyGetsInUnless": "*除非你允許，沒有人能進來。*只有認領了公開使用者名稱，別人才能搜尋到你。聯絡人都由雙方親手新增。",
   "onboardingTheFirstConnectionTakes": "*第一次連線需要一分鐘。*Kryfo 會先建立私密路線再傳送。之後就快了。",
   "onboardingBegin": "開始",
   "onboardingHaveABackupRestore": "有備份嗎？還原 →",

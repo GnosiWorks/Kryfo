@@ -999,7 +999,7 @@
   "onboardingPrivateByDefault": "خاص افتراضيًا",
   "onboardingPrivateMessaging": "مراسلة خاصة،\n*بلا ثمن خفي*.",
   "onboardingYourNameIsThree": "*اسمك ثلاث كلمات.* بلا هاتف، ولا بريد إلكتروني، ولا دفتر عناوين.",
-  "onboardingNobodyGetsInUnless": "*لا يدخل أحد إلا إن سمحت له.* لا يوجد بحث. يُضاف الناس يدويًا، من الطرفين.",
+  "onboardingNobodyGetsInUnless": "*لا يدخل أحد إلا إن سمحت له.* لن يجدك أحد ما لم تحجز اسم مستخدم عامًا. يُضاف الناس يدويًا، من الطرفين.",
   "onboardingTheFirstConnectionTakes": "*الاتصال الأول يستغرق دقيقة.* يبني Kryfo مسارًا خاصًا قبل أن يرسل. ثم يصبح سريعًا.",
   "onboardingBegin": "ابدأ",
   "onboardingHaveABackupRestore": "لديك نسخة احتياطية؟ استعدها ←",

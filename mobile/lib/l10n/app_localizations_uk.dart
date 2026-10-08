@@ -3959,7 +3959,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get onboardingNobodyGetsInUnless =>
-      '*Ніхто не ввійде без твого дозволу.* Пошуку немає. Людей додають вручну, з обох боків.';
+      '*Ніхто не ввійде без твого дозволу.* Знайти тебе можна, лише якщо ти займеш публічне ім’я користувача. Людей додають вручну, з обох боків.';
 
   @override
   String get onboardingTheFirstConnectionTakes =>
