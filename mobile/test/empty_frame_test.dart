@@ -51,6 +51,14 @@ void main() {
     expect(live.msgs, isEmpty);
   });
 
+  test('the face on an empty frame is still taken', () async {
+    final (app, live, io) = await _world();
+    io.opens['ack'] = (_c, 'halo/1:{"m":"","h":"$_c","av":7}');
+    await app.receiveRelay([(peer: 'x-$_c', cipher: 'ack')]);
+    expect(live.calls, contains('setContactAvatar:$_c'));
+    expect(live.msgs, isEmpty);
+  });
+
   test('a text with no uid is still kept', () async {
     final (app, live, io) = await _world();
     io.opens['old'] = (_c, 'halo/1:{"m":"from an older phone"}');
