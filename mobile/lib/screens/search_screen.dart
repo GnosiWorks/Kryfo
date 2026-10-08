@@ -5,6 +5,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 import 'dart:io';
+import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -28,7 +29,7 @@ import '../widgets/halo_bar.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/kryfo_avatar.dart';
-import '../widgets/motion.dart' show kHouseCurve, kHouseTime;
+import '../widgets/motion.dart' show kHouseCurve, kHouseTime, motionStill;
 import '../widgets/swap.dart' show RiseSwap;
 import '../widgets/photo_viewer.dart' show PhotoTileFade;
 import '../widgets/poll_card.dart' show pollGlyph;
@@ -40,7 +41,7 @@ import '../bidi_safe.dart';
 import '../devchat/dev_key.dart' show isDevChat;
 import '../widgets/dev_avatar.dart';
 
-/// the search field on home flies into the one here
+/// home's search button grows into the field here
 const kSearchHero = 'home-search';
 
 const searchGlyph = [
@@ -129,6 +130,17 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   bool _focusAsked = false;
+  // the field had the keyboard as the page began to close
+  bool _wasOn = false;
+  // what is around the field: in once the page has covered home, out
+  // before it uncovers it again, so the two never show through each other
+  CurvedAnimation? _around;
+
+  Widget _in(Widget child, bool still) {
+    final a = _around;
+    if (still || a == null) return child;
+    return FadeTransition(opacity: a, child: child);
+  }
 
   // the keyboard comes up once the field has landed, not during the flight
   @override
@@ -136,8 +148,18 @@ class _SearchScreenState extends State<SearchScreen> {
     super.didChangeDependencies();
     if (_focusAsked) return;
     _focusAsked = true;
-    final a = ModalRoute.of(context)?.animation;
-    if (a == null || a.isCompleted) {
+    final route = ModalRoute.of(context);
+    final a = route?.animation;
+    if (a != null) {
+      _around = CurvedAnimation(
+        parent: a,
+        curve: const Interval(0.35, 1, curve: Curves.easeOutCubic),
+        reverseCurve: const Interval(0.45, 1, curve: Curves.easeInCubic),
+      );
+    }
+    // a page pushed is laid out offstage first, for the flights to measure,
+    // and its animation reads as done then though it has not begun
+    if (a == null || (a.isCompleted && !route!.offstage)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _focus.requestFocus();
       });
@@ -154,6 +176,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   void dispose() {
+    _around?.dispose();
     _wait?.cancel();
     _peopleWait?.cancel();
     _ctrl.dispose();
@@ -386,109 +409,301 @@ class _SearchScreenState extends State<SearchScreen> {
       );
       bodyKey = 'r$_shown';
     }
-    return Scaffold(
-      backgroundColor: HaloColors.surface,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(4, 8, 16, 6),
-              child: Row(
-                children: [
-                  IconButton(
-                    tooltip: l10n.commonBack,
-                    onPressed: () => Navigator.of(context).maybePop(),
-                    icon: StrokeIcon(
-                      const ['M15 5l-7 7l7 7'],
-                      size: 22,
-                      color: HaloColors.text,
-                      pointing: true,
-                    ),
-                  ),
-                  Expanded(
-                    child: Hero(
-                      tag: kSearchHero,
-                      // a still copy flies: a live field built in the flight
-                      // takes the focus with it and leaves the keyboard deaf
-                      flightShuttleBuilder: (_, _, _, _, _) => const Material(
-                        type: MaterialType.transparency,
-                        child: _Field(),
+    return PopScope(
+      onPopInvokedWithResult: (popped, _) {
+        if (!popped) return;
+        // the keyboard goes down as the field shrinks back
+        _wasOn = _focus.hasFocus;
+        _focus.unfocus();
+      },
+      child: Scaffold(
+        backgroundColor: HaloColors.surface,
+        body: SafeArea(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsetsDirectional.fromSTEB(4, 8, 16, 6),
+                child: Row(
+                  children: [
+                    _in(
+                      IconButton(
+                        tooltip: l10n.commonBack,
+                        onPressed: () => Navigator.of(context).maybePop(),
+                        icon: StrokeIcon(
+                          const ['M15 5l-7 7l7 7'],
+                          size: 22,
+                          color: HaloColors.text,
+                          pointing: true,
+                        ),
                       ),
-                      child: Material(
-                        type: MaterialType.transparency,
-                        child: _Field(ctrl: _ctrl, focus: _focus),
+                      still,
+                    ),
+                    Expanded(
+                      child: HeroMode(
+                        enabled: !still,
+                        child: Hero(
+                          tag: kSearchHero,
+                          createRectTween: _straight,
+                          // a still copy flies: a live field built in the
+                          // flight takes the focus with it and leaves the
+                          // keyboard deaf. on the way back it keeps what was
+                          // typed and the amber edge until it shrinks away
+                          flightShuttleBuilder: (_, a, way, _, _) {
+                            final back = way == HeroFlightDirection.pop;
+                            return _Flight(
+                              t: a,
+                              query: back ? _ctrl.text : '',
+                              focused: back && _wasOn,
+                            );
+                          },
+                          child: Material(
+                            type: MaterialType.transparency,
+                            child: _Field(ctrl: _ctrl, focus: _focus),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            SearchFilters(kind: _kind, onPick: _pick),
-            const _FillLine(),
-            Expanded(
-              child: AnimatedSwitcher(
-                duration: Duration(milliseconds: still ? 0 : 200),
-                switchInCurve: Curves.easeOutCubic,
-                switchOutCurve: Curves.easeInCubic,
-                transitionBuilder: (c, a) => FadeTransition(
-                  opacity: a,
-                  child: SlideTransition(
-                    position: Tween(
-                      begin: const Offset(0, 0.015),
-                      end: Offset.zero,
-                    ).animate(a),
-                    child: c,
-                  ),
+                  ],
                 ),
-                child: KeyedSubtree(key: ValueKey(bodyKey), child: body),
               ),
-            ),
-          ],
+              _in(SearchFilters(kind: _kind, onPick: _pick), still),
+              _in(const _FillLine(), still),
+              Expanded(
+                child: _in(
+                  AnimatedSwitcher(
+                    duration: Duration(milliseconds: still ? 0 : 200),
+                    switchInCurve: Curves.easeOutCubic,
+                    switchOutCurve: Curves.easeInCubic,
+                    transitionBuilder: (c, a) => FadeTransition(
+                      opacity: a,
+                      child: SlideTransition(
+                        position: Tween(
+                          begin: const Offset(0, 0.015),
+                          end: Offset.zero,
+                        ).animate(a),
+                        child: c,
+                      ),
+                    ),
+                    child: KeyedSubtree(key: ValueKey(bodyKey), child: body),
+                  ),
+                  still,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-/// the field, on home (read-only, a door) and here
-class SearchField extends StatelessWidget {
+/// home's door into search: a round button the field grows out of, and
+/// shrinks back into. with less movement the page only fades
+class SearchDoor extends StatelessWidget {
   final VoidCallback onTap;
-  const SearchField({super.key, required this.onTap});
+  const SearchDoor({super.key, required this.onTap});
   @override
   Widget build(BuildContext context) {
-    return Hero(
-      tag: kSearchHero,
-      child: Material(
-        type: MaterialType.transparency,
-        child: Semantics(
-          button: true,
-          label: l10n.searchHint,
-          excludeSemantics: true,
-          child: PressScale(scale: 0.98, onTap: onTap, child: const _Field()),
+    return PressScale(
+      label: l10n.searchHint,
+      scale: 0.9,
+      onTap: onTap,
+      // a full finger's room around the round button, which lines up with
+      // the ones beside it
+      child: SizedBox(
+        width: kDoorBox,
+        height: kDoorBox,
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: HeroMode(
+            enabled: !motionStill(context),
+            child: Hero(
+              tag: kSearchHero,
+              createRectTween: _straight,
+              child: SizedBox(
+                width: kDoorRound,
+                height: kDoorRound,
+                child: _Morph(t: 0),
+              ),
+            ),
+          ),
         ),
+      ),
+    );
+  }
+}
+
+/// the round button, and the room it takes to be tapped
+const kDoorRound = 38.0;
+const kDoorBox = 48.0;
+
+// the field grows along a straight line from the button, not on an arc
+Tween<Rect?> _straight(Rect? a, Rect? b) => RectTween(begin: a, end: b);
+
+/// the flying field, redrawn as the flight runs
+class _Flight extends StatelessWidget {
+  final Animation<double> t;
+  final String query;
+  final bool focused;
+  const _Flight({required this.t, required this.query, required this.focused});
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      key: const ValueKey('search-flight'),
+      type: MaterialType.transparency,
+      child: AnimatedBuilder(
+        animation: t,
+        builder: (_, _) => _Morph(t: t.value, query: query, focused: focused),
+      ),
+    );
+  }
+}
+
+/// the round button at 0, the field at 1, anything between in the flight.
+/// the glass keeps its place at the start; the words come in over the last
+/// half, once there is room for them
+class _Morph extends StatelessWidget {
+  final double t;
+  final String query;
+  final bool focused;
+  const _Morph({required this.t, this.query = '', this.focused = false});
+  @override
+  Widget build(BuildContext context) {
+    final f = t.clamp(0.0, 1.0);
+    final edge = focused
+        ? HaloColors.amber.withValues(alpha: 0.7)
+        : HaloColors.line;
+    final words = Curves.easeOut.transform(((f - 0.5) * 2).clamp(0.0, 1.0));
+    final typed = query.isNotEmpty;
+    return LayoutBuilder(
+      builder: (context, box) {
+        final w = box.maxWidth;
+        // where the field's own row puts its words and its clear button
+        final room = math.max(0.0, w - _wordsStart - _wordsEnd);
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            // solid from the start: the round button sits on the page's
+            // own colour, and nothing under the flight shows through it
+            color: f == 0
+                ? null
+                : Color.lerp(HaloColors.surface, HaloColors.surface2, f),
+            borderRadius: BorderRadius.circular(
+              lerpDouble(kDoorRound / 2, _fieldRadius, f)!,
+            ),
+            border: Border.all(
+              color: Color.lerp(HaloColors.line2, edge, f)!,
+              width: lerpDouble(1.4, focused ? 1 : 0.6, f)!,
+            ),
+          ),
+          child: ClipRect(
+            child: Stack(
+              children: [
+                PositionedDirectional(
+                  start: lerpDouble((kDoorRound - 18) / 2, _glassStart, f)!,
+                  top: 0,
+                  bottom: 0,
+                  child: Center(
+                    child: StrokeIcon(
+                      searchGlyph,
+                      size: 18,
+                      color: Color.lerp(
+                        HaloColors.text2,
+                        focused ? HaloColors.amber : HaloColors.text2,
+                        f,
+                      )!,
+                      stroke: 1.7,
+                    ),
+                  ),
+                ),
+                if (words > 0 && room > 0)
+                  PositionedDirectional(
+                    start: _wordsStart,
+                    width: room,
+                    top: 0,
+                    bottom: 0,
+                    child: Opacity(
+                      opacity: words,
+                      child: Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: Text(
+                          typed ? query : l10n.searchHint,
+                          maxLines: 1,
+                          softWrap: false,
+                          overflow: TextOverflow.ellipsis,
+                          textDirection: typed ? writtenDir(query) : null,
+                          style: typed
+                              ? HaloType.sans(size: 15, color: HaloColors.text)
+                              : HaloType.sans(
+                                  size: 14,
+                                  color: HaloColors.text2,
+                                ),
+                        ),
+                      ),
+                    ),
+                  ),
+                if (typed && words > 0 && w > _wordsStart + _wordsEnd)
+                  PositionedDirectional(
+                    end: _fieldEnd,
+                    top: 0,
+                    bottom: 0,
+                    child: Opacity(opacity: words, child: const _ClearGlyph()),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// the field's measures, shared with the flight so the landing does not jump
+const _fieldRadius = 14.0;
+const _fieldStart = 12.0;
+const _fieldEnd = 4.0;
+const _edge = 0.6;
+const _glassStart = _fieldStart + _edge;
+const _wordsStart = _glassStart + 18 + 10;
+// the clear button: 16 and 8 either side
+const _wordsEnd = _fieldEnd + _edge + 32;
+
+class _ClearGlyph extends StatelessWidget {
+  const _ClearGlyph();
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(8),
+      child: StrokeIcon(
+        const ['M7 7l10 10', 'M17 7L7 17'],
+        size: 16,
+        color: HaloColors.text2,
+        stroke: 1.6,
       ),
     );
   }
 }
 
 class _Field extends StatelessWidget {
-  final TextEditingController? ctrl;
-  final FocusNode? focus;
-  const _Field({this.ctrl, this.focus});
+  final TextEditingController ctrl;
+  final FocusNode focus;
+  const _Field({required this.ctrl, required this.focus});
   @override
   Widget build(BuildContext context) {
-    final on = focus?.hasFocus ?? false;
-    final hasText = ctrl != null && ctrl!.text.isNotEmpty;
+    final on = focus.hasFocus;
+    final hasText = ctrl.text.isNotEmpty;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 160),
       height: 44,
-      padding: const EdgeInsetsDirectional.only(start: 12, end: 4),
+      padding: const EdgeInsetsDirectional.only(
+        start: _fieldStart,
+        end: _fieldEnd,
+      ),
       decoration: BoxDecoration(
         color: HaloColors.surface2,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(_fieldRadius),
         border: Border.all(
           color: on ? HaloColors.amber.withValues(alpha: 0.7) : HaloColors.line,
-          width: on ? 1 : 0.6,
+          width: on ? 1 : _edge,
         ),
       ),
       child: Row(
@@ -501,34 +716,24 @@ class _Field extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: ctrl == null
-                ? Text(
-                    l10n.searchHint,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: HaloType.sans(size: 14, color: HaloColors.text2),
-                  )
-                : WrittenDir(
-                    controller: ctrl!,
-                    builder: (dir) => TextField(
-                      textDirection: dir,
-                      inputFormatters: const [UnmarkedInput()],
-                      controller: ctrl,
-                      focusNode: focus,
-                      textInputAction: TextInputAction.search,
-                      style: HaloType.sans(size: 15, color: HaloColors.text),
-                      cursorColor: HaloColors.amber,
-                      decoration: InputDecoration(
-                        isDense: true,
-                        border: InputBorder.none,
-                        hintText: l10n.searchHint,
-                        hintStyle: HaloType.sans(
-                          size: 14,
-                          color: HaloColors.text2,
-                        ),
-                      ),
-                    ),
-                  ),
+            child: WrittenDir(
+              controller: ctrl,
+              builder: (dir) => TextField(
+                textDirection: dir,
+                inputFormatters: const [UnmarkedInput()],
+                controller: ctrl,
+                focusNode: focus,
+                textInputAction: TextInputAction.search,
+                style: HaloType.sans(size: 15, color: HaloColors.text),
+                cursorColor: HaloColors.amber,
+                decoration: InputDecoration(
+                  isDense: true,
+                  border: InputBorder.none,
+                  hintText: l10n.searchHint,
+                  hintStyle: HaloType.sans(size: 14, color: HaloColors.text2),
+                ),
+              ),
+            ),
           ),
           AnimatedOpacity(
             opacity: hasText ? 1 : 0,
@@ -537,16 +742,8 @@ class _Field extends StatelessWidget {
               ignoring: !hasText,
               child: PressScale(
                 label: l10n.searchClear,
-                onTap: () => ctrl?.clear(),
-                child: Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: StrokeIcon(
-                    const ['M7 7l10 10', 'M17 7L7 17'],
-                    size: 16,
-                    color: HaloColors.text2,
-                    stroke: 1.6,
-                  ),
-                ),
+                onTap: ctrl.clear,
+                child: const _ClearGlyph(),
               ),
             ),
           ),
@@ -1741,16 +1938,33 @@ class _Thumb extends StatelessWidget {
   }
 }
 
-/// opens search from anywhere: a quick fade, the field flying up
-Route<void> searchRoute() => PageRouteBuilder<void>(
-  transitionDuration: const Duration(milliseconds: 260),
-  reverseTransitionDuration: const Duration(milliseconds: 220),
-  pageBuilder: (_, _, _) => const SearchScreen(),
-  transitionsBuilder: (_, a, _, child) => FadeTransition(
-    opacity: CurvedAnimation(parent: a, curve: Curves.easeOutCubic),
-    child: child,
-  ),
-);
+/// opens search: the field grows out of home's search button while the page
+/// fades in around it, and shrinks back into it on the way out. with less
+/// movement only a short fade of the whole page
+Route<void> searchRoute(BuildContext context) {
+  final still = motionStill(context);
+  return PageRouteBuilder<void>(
+    transitionDuration: still ? kSearchFade : kSearchOpen,
+    reverseTransitionDuration: still ? kSearchFade : kSearchClose,
+    pageBuilder: (_, _, _) => const SearchScreen(),
+    transitionsBuilder: (_, a, _, child) => FadeTransition(
+      opacity: still
+          ? a
+          // the page's ground covers home early and uncovers it late; what
+          // is on it fades on its own (_SearchScreenState._around)
+          : CurvedAnimation(
+              parent: a,
+              curve: const Interval(0, 0.45, curve: Curves.easeOut),
+              reverseCurve: const Interval(0, 0.45, curve: Curves.easeIn),
+            ),
+      child: child,
+    ),
+  );
+}
+
+const kSearchOpen = Duration(milliseconds: 300);
+const kSearchClose = Duration(milliseconds: 260);
+const kSearchFade = Duration(milliseconds: 150);
 
 // how many rows a whole number reads as
 String searchCount(int n) => whole(n);
