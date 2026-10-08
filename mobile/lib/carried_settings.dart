@@ -75,13 +75,16 @@ Future<Map<String, Object>> readCarriedSettings(HaloContainer c) async {
 /// the identity's own for [c], and with [phone] the phone's too. a decoy
 /// restore leaves the phone's alone, as it leaves the everyday identity. a
 /// file without settings, or with names or values this version does not
-/// know, changes nothing it does not know. a language picked here stays
-Future<void> landCarriedSettings(
+/// know, changes nothing it does not know. a language picked here stays,
+/// and so does a helper app's delivery. whether the file carried settings
+Future<bool> landCarriedSettings(
   Object? carried,
   HaloContainer c, {
   required bool phone,
 }) async {
-  if (carried is! Map) return;
+  if (carried is! Map) return false;
+  // a decoy's keys for the phone's are the phone's own: never from there
+  phone = phone && !c.quiet;
   const st = secureStore;
   final prefs = await SharedPreferences.getInstance();
   Future<void> flag(String name, String key, String on, String off) async {
@@ -98,7 +101,7 @@ Future<void> landCarriedSettings(
   await pref(Carried.previewsHidden, _kPreviews);
   await pref(Carried.shield, _kShield);
   await pref(Carried.intros, _kIntros);
-  if (!phone) return;
+  if (!phone) return true;
   await flag(Carried.screenshots, _kShots, 'true', 'false');
   await flag(Carried.light, _kLight, 'true', 'false');
   final route = carried[Carried.route];
@@ -107,7 +110,9 @@ Future<void> landCarriedSettings(
   }
   final delivery = carried[Carried.delivery];
   final was = prefs.getString(c.key(kDeliveryModeKey)) ?? 'always';
-  if (delivery is String && _kDeliveries.contains(delivery)) {
+  if (delivery is String &&
+      _kDeliveries.contains(delivery) &&
+      was != 'helper') {
     await prefs.setString(c.key(kDeliveryModeKey), delivery);
     if (delivery != was) await _deliveryMoved();
   }
@@ -118,6 +123,7 @@ Future<void> landCarriedSettings(
       here == 'system') {
     await prefs.setString(c.key(kAppLocaleKey), language);
   }
+  return true;
 }
 
 // android starts or stops its service by the mode, now: one left running

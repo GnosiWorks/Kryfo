@@ -1228,6 +1228,7 @@
   "restoreRestored": "Restaurado",
   "restoreKryfoWillCloseNow": "O Kryfo vai fechar agora. Toque no ícone para abrir de novo como {haloId}.",
   "restorePrivacyKept": "Suas configurações de privacidade voltam com o backup. Os PINs nunca vão junto: defina-os de novo em Configurações.",
+  "restoreCheckProtections": "As configurações não vão no backup. Quando o Kryfo abrir de novo, confira “Suas proteções” em Configurações.",
   "restoreReopenKryfo": "Reabrir o Kryfo",
   "restoreTheRestoreDidNot": "A restauração não terminou. Nada foi alterado",
   "restoreKryfoClosesRestoreAgain": "Parte do que havia aqui já foi substituída. O Kryfo vai fechar agora. Abra de novo e restaure o arquivo mais uma vez.",

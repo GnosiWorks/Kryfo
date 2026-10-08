@@ -4740,6 +4740,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'تعود إعدادات الخصوصية مع النسخة الاحتياطية. رموز PIN لا تنتقل أبدًا: عيّنها من جديد في الإعدادات.';
 
   @override
+  String get restoreCheckProtections =>
+      'الإعدادات ليست ضمن النسخة الاحتياطية. بعد إعادة فتح Kryfo، راجع «وسائل حمايتك» في الإعدادات.';
+
+  @override
   String get restoreReopenKryfo => 'إعادة فتح Kryfo';
 
   @override

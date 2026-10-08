@@ -113,10 +113,11 @@ Future<void> endRestoreAway(
             : showNoticeSheet(
                 ctx,
                 title: l10n.restoreRestored,
-                // the privacy settings came with it, never a PIN
+                // the privacy settings came with it, never a PIN. a file
+                // that brought none says to check them
                 line:
                     '${l10n.restoreKryfoWillCloseNow(haloId)}\n\n'
-                    '${l10n.restorePrivacyKept}',
+                    '${restoredSettings ? l10n.restorePrivacyKept : l10n.restoreCheckProtections}',
                 ok: l10n.restoreReopenKryfo,
               ),
       );
@@ -373,10 +374,11 @@ class _RestoreScreenState extends State<RestoreScreen> {
         showNoticeSheet(
           context,
           title: l10n.restoreRestored,
-          // the privacy settings came with it, never a PIN
+          // the privacy settings came with it, never a PIN. a file that
+          // brought none says to check them
           line:
               '${l10n.restoreKryfoWillCloseNow(s.haloId)}\n\n'
-              '${l10n.restorePrivacyKept}',
+              '${restoredSettings ? l10n.restorePrivacyKept : l10n.restoreCheckProtections}',
           ok: l10n.restoreReopenKryfo,
         ),
       );

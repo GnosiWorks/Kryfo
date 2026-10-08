@@ -301,6 +301,37 @@ void main() {
     expect(await st.read(key: 'my_avatar'), '17');
   });
 
+  for (final landed in [true, false]) {
+    testWidgets('the notice says the settings came back only when they did: '
+        '$landed', (t) async {
+      phone(t);
+      FlutterSecureStorage.setMockInitialValues({});
+      await appState.loadMyHandle();
+      var quits = 0;
+      quitAfterRestore = () => quits++;
+      addTearDown(() => quitAfterRestore = () => exit(0));
+      inspectForTest = (_) async => const BackupSummary(
+        when: null,
+        version: 2,
+        haloId: 'amber-fox-run',
+        contacts: 2,
+        messages: 9,
+      );
+      restoreForTest = (_) async => restoredSettingsForTest(landed);
+      await _openAndRestore(t, wrap: _rooted);
+      await t.pumpAndSettle();
+      expect(find.text(l10n.restoreRestored), findsOneWidget);
+      expect(
+        find.textContaining(l10n.restorePrivacyKept),
+        landed ? findsOneWidget : findsNothing,
+      );
+      expect(
+        find.textContaining(l10n.restoreCheckProtections),
+        landed ? findsNothing : findsOneWidget,
+      );
+    });
+  }
+
   testWidgets('the lock taking the screen away mid restore still asks for '
       'the hidden chats PIN, then closes', (t) async {
     phone(t);
@@ -325,6 +356,7 @@ void main() {
     restoreForTest = (_) async {
       await running.future;
       restoredHiddenForTest('the hidden key');
+      restoredSettingsForTest(true);
     };
     await _openAndRestore(t, wrap: _rooted);
     expect(find.text(l10n.restoreRestoring), findsOneWidget);
@@ -364,10 +396,7 @@ void main() {
     await t.pumpAndSettle();
     expect(find.text(l10n.restoreRestored), findsOneWidget);
     // the notice says the privacy settings came back and the PINs did not
-    expect(
-      find.textContaining(l10n.restorePrivacyKept),
-      findsOneWidget,
-    );
+    expect(find.textContaining(l10n.restorePrivacyKept), findsOneWidget);
     await t.tap(find.text(l10n.restoreReopenKryfo));
     await t.pumpAndSettle();
     expect(quits, 1);

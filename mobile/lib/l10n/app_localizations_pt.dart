@@ -4683,6 +4683,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Suas configurações de privacidade voltam com o backup. Os PINs nunca vão junto: defina-os de novo em Configurações.';
 
   @override
+  String get restoreCheckProtections =>
+      'As configurações não vão no backup. Quando o Kryfo abrir de novo, confira “Suas proteções” em Configurações.';
+
+  @override
   String get restoreReopenKryfo => 'Reabrir o Kryfo';
 
   @override

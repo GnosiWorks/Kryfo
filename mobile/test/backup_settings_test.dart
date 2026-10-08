@@ -351,6 +351,8 @@ void main() {
       await restore(out, inDecoy: false);
       expect(engine.restored, ['everyday-ed']);
       expect(await readBack(HaloContainer.everyday), _everydaySettings);
+      // the notice says they came back
+      expect(restoredSettings, isTrue);
       // nothing of the old phone's lock, wipe or prompts came along
       final secure = await const FlutterSecureStorage().readAll();
       expect(secure.keys.where((k) => k.startsWith('halo.lock.')), isEmpty);
@@ -392,6 +394,8 @@ void main() {
         ..._defaults,
         Carried.language: 'system',
       });
+      // the notice says to check them, not that they came back
+      expect(restoredSettings, isFalse);
     });
 
     test('leaves the settings here as they are', () async {
@@ -428,6 +432,57 @@ void main() {
     });
   });
 
+  test('settings that are not a list of names land nothing, and the notice '
+      'says to check them', () async {
+    for (final odd in <Object?>[
+      [true, false],
+      'shield=false',
+      null,
+    ]) {
+      oldPhone();
+      final d = await draftBackup(stage, side: const _Side());
+      d.manifest['settings'] = odd;
+      final out = await write(d.manifest, d.sources);
+      newPhone();
+      await restore(out, inDecoy: false);
+      expect(await readBack(HaloContainer.everyday), {
+        ..._defaults,
+        Carried.language: 'system',
+      }, reason: '$odd');
+      expect(restoredSettings, isFalse, reason: '$odd');
+    }
+  });
+
+  test('a helper app\'s delivery here stays as it is', () async {
+    oldPhone();
+    final d = await draftBackup(stage, side: const _Side());
+    final out = await write(d.manifest, d.sources);
+    newPhone();
+    SharedPreferences.setMockInitialValues({'delivery_mode': 'helper'});
+    await restore(out, inDecoy: false);
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString('delivery_mode'), 'helper');
+    expect(await loadScamShieldOn(), isFalse);
+  });
+
+  test('landed for a decoy, the phone\'s are never written, even when '
+      'asked', () async {
+    newPhone();
+    expect(
+      await landCarriedSettings(
+        _everydaySettings,
+        HaloContainer.decoy,
+        phone: true,
+      ),
+      isTrue,
+    );
+    expect(await readBack(HaloContainer.everyday), {
+      ..._defaults,
+      Carried.language: 'system',
+    });
+    expect(await loadScamShieldOn(HaloContainer.decoy), isFalse);
+  });
+
   group('the decoy', () {
     test('a restore in a decoy lands the identity\'s own settings as the '
         'decoy\'s, and leaves the phone\'s and the everyday side\'s', () async {
@@ -444,6 +499,8 @@ void main() {
       await restore(out, inDecoy: true);
       expect(engine.restored, isEmpty);
       expect(decoy.log, ['close']);
+      // the phone's stayed: the notice does not say they all came back
+      expect(restoredSettings, isFalse);
       final c = HaloContainer.decoy;
       expect(await loadScamShieldOn(c), isFalse);
       expect(await loadAcceptIntros(c), isFalse);

@@ -4650,6 +4650,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Pengaturan privasimu ikut kembali bersama cadangan. PIN tidak pernah ikut pindah: atur lagi di Pengaturan.';
 
   @override
+  String get restoreCheckProtections =>
+      'Pengaturan tidak ikut dalam cadangan. Setelah Kryfo terbuka lagi, periksa Perlindunganmu di Pengaturan.';
+
+  @override
   String get restoreReopenKryfo => 'Buka lagi Kryfo';
 
   @override

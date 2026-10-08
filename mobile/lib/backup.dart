@@ -258,6 +258,7 @@ Future<BackupSummary> inspectBackup(String blob, String passphrase) async {
 // it lands on the session it began in: the other one may be unlocked by
 // the time the file is open
 Future<void> restoreBackupBlob(String blob, String passphrase) async {
+  _restoredSettings = false;
   final own = session.primary;
   return landV1Payload(await _openPayload(blob, passphrase), own: own);
 }
@@ -1325,6 +1326,14 @@ HaloContainer _restoredInto = HaloContainer.vault;
 /// a restore brought hidden chats: they wait for a hidden chats PIN
 bool get restoredHidden => _restoredKey != null;
 
+/// the last restore put every privacy setting back: the phone's and the
+/// identity's. not after an older file, a decoy restore or a v1 one
+bool get restoredSettings => _restoredSettings;
+var _restoredSettings = false;
+
+@visibleForTesting
+void restoredSettingsForTest(bool v) => _restoredSettings = v;
+
 /// the hidden chats a restore brought, under the PIN the person chose. false
 /// when that PIN is in use
 Future<bool> sealRestoredHidden(LockState lock, String pin) async {
@@ -1585,6 +1594,7 @@ Future<void> restoreBackupFile(
   void Function(int done, int total)? onProgress,
   @visibleForTesting LockState? lock,
 }) async {
+  _restoredSettings = false;
   if (!await isBackupV2(path)) {
     throw const RestoreError(RestoreFailure.notABackup);
   }
@@ -1652,7 +1662,7 @@ Future<void> restoreBackupFile(
     );
     await restorePrefs(manifest['prefs']);
     // in place before the restart reads them
-    await landCarriedSettings(
+    _restoredSettings = await landCarriedSettings(
       manifest['settings'],
       HaloContainer.everyday,
       phone: true,

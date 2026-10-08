@@ -1228,6 +1228,7 @@
   "restoreRestored": "Wiederhergestellt",
   "restoreKryfoWillCloseNow": "Kryfo schließt sich jetzt. Tippe auf das Symbol, um es als {haloId} wieder zu öffnen.",
   "restorePrivacyKept": "Deine Privatsphäre-Einstellungen kommen mit zurück. PINs reisen nie mit: Lege sie in den Einstellungen neu fest.",
+  "restoreCheckProtections": "Einstellungen sind nicht im Backup. Prüfe nach dem Öffnen „Dein Schutz“ in den Einstellungen.",
   "restoreReopenKryfo": "Kryfo wieder öffnen",
   "restoreTheRestoreDidNot": "Die Wiederherstellung wurde nicht abgeschlossen. Es wurde nichts verändert",
   "restoreKryfoClosesRestoreAgain": "Ein Teil der Daten hier ist schon ersetzt. Kryfo schließt sich jetzt. Öffne es wieder und stelle die Datei noch einmal wieder her.",
