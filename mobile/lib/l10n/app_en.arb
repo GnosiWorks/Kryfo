@@ -5830,8 +5830,8 @@
       }
     }
   },
-  "restoreCheckProtections": "Settings aren't kept in a backup. Once Kryfo reopens, check Your protections in Settings.",
-  "@restoreCheckProtections": {
+  "restorePrivacyKept": "Your privacy settings come back with it. PINs never travel: set them again in Settings.",
+  "@restorePrivacyKept": {
     "description": "screens/restore_screen.dart"
   },
   "restoreReopenKryfo": "Reopen Kryfo",

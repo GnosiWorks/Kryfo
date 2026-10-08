@@ -363,9 +363,9 @@ void main() {
     rootNavKey.currentState!.pop(true);
     await t.pumpAndSettle();
     expect(find.text(l10n.restoreRestored), findsOneWidget);
-    // no settings travel in a backup: the notice says to check them
+    // the notice says the privacy settings came back and the PINs did not
     expect(
-      find.textContaining(l10n.restoreCheckProtections),
+      find.textContaining(l10n.restorePrivacyKept),
       findsOneWidget,
     );
     await t.tap(find.text(l10n.restoreReopenKryfo));

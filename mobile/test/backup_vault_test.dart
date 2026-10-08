@@ -1214,6 +1214,7 @@ void main() {
         'dbPassphrase',
         'prefs',
         'secure',
+        'settings',
         'onboardingDone',
         'chunk',
         'files',

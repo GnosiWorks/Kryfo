@@ -16,6 +16,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
+import 'carried_settings.dart';
 import 'container.dart';
 import 'lock_state.dart' show LockState, lockState;
 import 'main.dart'
@@ -837,6 +838,7 @@ Future<BackupDraft> draftBackup(
   }
   final onboardingDone = await secureStore.read(key: 'onboarding_done');
   final secure = await _readIdentitySecure();
+  final settings = await readCarriedSettings(HaloContainer.everyday);
   final dbCopy = p.join(stage, 'halo.db');
   final folders = <BackupFileEntry>[];
   final sources = <String, String>{};
@@ -892,6 +894,7 @@ Future<BackupDraft> draftBackup(
     'dbPassphrase': dbKey,
     'prefs': prefsMap,
     'secure': secure,
+    'settings': settings,
     'onboardingDone': onboardingDone,
     'chunk': kBackupChunk,
     'files': [for (final f in files) f.toJson()],
@@ -1056,6 +1059,8 @@ Future<BackupDraft> _draftQuiet(
     'dbPassphrase': dbKey,
     'prefs': <String, dynamic>{},
     'secure': <String, String>{},
+    // the decoy's own settings, and the phone's as the decoy sees them
+    'settings': await readCarriedSettings(c),
     'onboardingDone': 'true',
     'chunk': kBackupChunk,
     'files': [for (final f in files) f.toJson()],
@@ -1445,6 +1450,8 @@ Future<void> _landInDecoy(
     key: c.keyName!,
     value: manifest['dbPassphrase'] as String,
   );
+  // the decoy's own settings. the phone's stay as the everyday side has them
+  await landCarriedSettings(manifest['settings'], c, phone: false);
   try {
     await Directory(from).delete(recursive: true);
   } catch (_) {
@@ -1644,6 +1651,12 @@ Future<void> restoreBackupFile(
       value: manifest['dbPassphrase'] as String,
     );
     await restorePrefs(manifest['prefs']);
+    // in place before the restart reads them
+    await landCarriedSettings(
+      manifest['settings'],
+      HaloContainer.everyday,
+      phone: true,
+    );
     await _livesHereNow();
     await _applyIdentitySecure(manifest['secure']);
     if (onboardingAfterRestore(manifest['onboardingDone']) case final done?) {

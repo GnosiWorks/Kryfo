@@ -4689,8 +4689,8 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get restoreCheckProtections =>
-      'Los ajustes no van en la copia. Cuando Kryfo vuelva a abrirse, revisa «Tus protecciones» en Ajustes.';
+  String get restorePrivacyKept =>
+      'Tus ajustes de privacidad vuelven con la copia. Los PIN nunca viajan: vuelve a ponerlos en Ajustes.';
 
   @override
   String get restoreReopenKryfo => 'Volver a abrir Kryfo';

@@ -4693,8 +4693,8 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String get restoreCheckProtections =>
-      'Le impostazioni non sono nel backup. Quando Kryfo si riapre, controlla «Le tue protezioni» in Impostazioni.';
+  String get restorePrivacyKept =>
+      'Le tue impostazioni di privacy tornano con il backup. I PIN non viaggiano mai: impostali di nuovo in Impostazioni.';
 
   @override
   String get restoreReopenKryfo => 'Riapri Kryfo';

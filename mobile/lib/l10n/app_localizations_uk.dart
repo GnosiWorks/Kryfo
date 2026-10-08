@@ -4733,8 +4733,8 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get restoreCheckProtections =>
-      'Налаштування не входять у резервну копію. Коли Kryfo відкриється, перевір «Твій захист» у налаштуваннях.';
+  String get restorePrivacyKept =>
+      'Налаштування приватності повернуться разом із копією. PIN-коди ніколи не переносяться: задай їх знову в налаштуваннях.';
 
   @override
   String get restoreReopenKryfo => 'Відкрити Kryfo знову';

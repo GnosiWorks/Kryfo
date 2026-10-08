@@ -4452,7 +4452,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get restoreCheckProtections => '备份不包含设置。Kryfo 重新打开后，请在设置里检查“你的保护”。';
+  String get restorePrivacyKept => '你的隐私设置会随备份一起回来。PIN 码永远不会随之转移：请在设置里重新设定。';
 
   @override
   String get restoreReopenKryfo => '重新打开 Kryfo';
@@ -11812,7 +11812,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get restoreCheckProtections => '備份不包含設定。Kryfo 重新開啟後，請在設定裡檢查「你的防護」。';
+  String get restorePrivacyKept => '你的隱私設定會隨備份一起回來。PIN 碼永遠不會隨之轉移：請在設定裡重新設定。';
 
   @override
   String get restoreReopenKryfo => '重新開啟 Kryfo';

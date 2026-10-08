@@ -1227,7 +1227,7 @@
   "restoreNotYet": "ليس بعد",
   "restoreRestored": "تمت الاستعادة",
   "restoreKryfoWillCloseNow": "سيُغلق Kryfo الآن. اضغط الأيقونة لإعادة فتحه باسم ⁨{haloId}⁩.",
-  "restoreCheckProtections": "الإعدادات ليست ضمن النسخة الاحتياطية. بعد إعادة فتح Kryfo، راجع «وسائل حمايتك» في الإعدادات.",
+  "restorePrivacyKept": "تعود إعدادات الخصوصية مع النسخة الاحتياطية. رموز PIN لا تنتقل أبدًا: عيّنها من جديد في الإعدادات.",
   "restoreReopenKryfo": "إعادة فتح Kryfo",
   "restoreTheRestoreDidNot": "لم تكتمل الاستعادة. لم يتغيّر شيء",
   "restoreKryfoClosesRestoreAgain": "استُبدل جزء مما كان هنا. سيُغلق Kryfo الآن. افتحه من جديد واستعد الملف مرة أخرى.",
