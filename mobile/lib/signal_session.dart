@@ -448,8 +448,6 @@ String _baseOf(SessionState s) => base64Encode(s.aliceBaseKey);
 /// sessions it brought back as the store opens (bootstrap, restored)
 const kSessionsRestoredPref = 'signal.restored';
 
-/// a seal to [peer] waits for a session started afresh: the one held came
-/// back with a restore, and no card of theirs is kept to start one from
 // someone verified under one key who holds another now: nothing is sealed
 // for them until the new number is checked or the new key accepted
 class KeyHeld implements Exception {
@@ -459,6 +457,8 @@ class KeyHeld implements Exception {
   String toString() => 'KeyHeld: their key moved since it was verified';
 }
 
+/// a seal to [peer] waits for a session started afresh: the one held came
+/// back with a restore, and no card of theirs is kept to start one from
 class StartingAfresh implements Exception {
   StartingAfresh(this.peer);
   final String peer;

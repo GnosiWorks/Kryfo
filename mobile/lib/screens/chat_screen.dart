@@ -989,7 +989,6 @@ class _ChatScreenState extends State<ChatScreen>
     session.isBackPaired(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _backPaired = v);
     });
-    unawaited(_readKeyState());
     _scrollCtrl.addListener(_onScrollPage);
     final blockedRead = session.isBlocked(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _blocked = v);

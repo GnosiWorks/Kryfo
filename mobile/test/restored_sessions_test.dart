@@ -57,8 +57,11 @@ class _Rows extends HaloDb {
   }) async => [
     if (outbox)
       for (final r in mem.rows('messages'))
-        if (r['direction'] == 'out' && r['sent'] == 0) r,
-  ];
+        if (r['direction'] == 'out' &&
+            r['sent'] == 0 &&
+            !skip.contains(r['peer_id']))
+          r,
+  ].take(40).toList();
   // the counts and the home list's last lines are not this test's either
   @override
   Future<void> bumpUnread(String peerId) async {}
