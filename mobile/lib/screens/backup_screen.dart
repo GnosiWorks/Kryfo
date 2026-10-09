@@ -71,7 +71,7 @@ class _BackupScreenState extends State<BackupScreen> {
   Future<void> _create() async {
     final pw = _p1.text.trim();
     final pw2 = _p2.text.trim();
-    if (pw.isEmpty || pw.length < 6) {
+    if (pw.isEmpty || pw.length < kBackupMinPassphrase) {
       setState(() => _error = l10n.backupPassphraseMustBeAt);
       return;
     }

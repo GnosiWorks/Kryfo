@@ -234,7 +234,7 @@
   "avatarPickerThatOneIsYours": "Це твоє",
   "avatarPickerPickAFace": "Обери обличчя",
   "commonSave": "Зберегти",
-  "backupPassphraseMustBeAt": "У парольній фразі має бути щонайменше 6 символів",
+  "backupPassphraseMustBeAt": "У парольній фразі має бути щонайменше 12 символів",
   "backupPassphrasesDonTMatch": "Парольні фрази не збігаються",
   "backupBackupSavedKeepThe": "Резервну копію збережено · бережи парольну фразу",
   "backupKryfoBackup": "Резервна копія Kryfo",

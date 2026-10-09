@@ -234,7 +234,7 @@
   "avatarPickerThatOneIsYours": "این مال شماست",
   "avatarPickerPickAFace": "انتخاب چهره",
   "commonSave": "ذخیره",
-  "backupPassphraseMustBeAt": "عبارت عبور باید دست‌کم ۶ کاراکتر باشد",
+  "backupPassphraseMustBeAt": "عبارت عبور باید دست‌کم ۱۲ کاراکتر باشد",
   "backupPassphrasesDonTMatch": "عبارت‌های عبور یکی نیستند",
   "backupBackupSavedKeepThe": "نسخه‌ی پشتیبان ذخیره شد · عبارت عبور را امن نگه دارید",
   "backupKryfoBackup": "نسخه‌ی پشتیبان Kryfo",

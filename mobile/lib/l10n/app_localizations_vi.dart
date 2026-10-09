@@ -971,7 +971,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get commonSave => 'Lưu';
 
   @override
-  String get backupPassphraseMustBeAt => 'Cụm mật khẩu phải có ít nhất 6 ký tự';
+  String get backupPassphraseMustBeAt =>
+      'Cụm mật khẩu phải có ít nhất 12 ký tự';
 
   @override
   String get backupPassphrasesDonTMatch => 'Cụm mật khẩu không khớp';

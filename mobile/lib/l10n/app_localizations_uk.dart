@@ -1010,7 +1010,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get backupPassphraseMustBeAt =>
-      'У парольній фразі має бути щонайменше 6 символів';
+      'У парольній фразі має бути щонайменше 12 символів';
 
   @override
   String get backupPassphrasesDonTMatch => 'Парольні фрази не збігаються';

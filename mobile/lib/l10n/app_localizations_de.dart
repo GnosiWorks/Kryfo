@@ -989,7 +989,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get backupPassphraseMustBeAt =>
-      'Passphrase muss mindestens 6 Zeichen haben';
+      'Passphrase muss mindestens 12 Zeichen haben';
 
   @override
   String get backupPassphrasesDonTMatch => 'Passphrasen stimmen nicht überein';

@@ -984,7 +984,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get backupPassphraseMustBeAt =>
-      'عبارت عبور باید دست‌کم ۶ کاراکتر باشد';
+      'عبارت عبور باید دست‌کم ۱۲ کاراکتر باشد';
 
   @override
   String get backupPassphrasesDonTMatch => 'عبارت‌های عبور یکی نیستند';

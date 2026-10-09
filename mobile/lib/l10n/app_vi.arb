@@ -234,7 +234,7 @@
   "avatarPickerThatOneIsYours": "Bạn đang dùng cái này",
   "avatarPickerPickAFace": "Chọn khuôn mặt",
   "commonSave": "Lưu",
-  "backupPassphraseMustBeAt": "Cụm mật khẩu phải có ít nhất 6 ký tự",
+  "backupPassphraseMustBeAt": "Cụm mật khẩu phải có ít nhất 12 ký tự",
   "backupPassphrasesDonTMatch": "Cụm mật khẩu không khớp",
   "backupBackupSavedKeepThe": "Đã lưu bản sao lưu · hãy giữ kỹ cụm mật khẩu",
   "backupKryfoBackup": "Bản sao lưu Kryfo",

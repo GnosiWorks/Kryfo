@@ -1011,7 +1011,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get backupPassphraseMustBeAt =>
-      'Парольная фраза должна быть не короче 6 символов';
+      'Парольная фраза должна быть не короче 12 символов';
 
   @override
   String get backupPassphrasesDonTMatch => 'Парольные фразы не совпадают';

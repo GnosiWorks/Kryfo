@@ -1023,7 +1023,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get commonSave => 'حفظ';
 
   @override
-  String get backupPassphraseMustBeAt => 'يجب ألا تقل عبارة المرور عن ٦ أحرف';
+  String get backupPassphraseMustBeAt => 'يجب ألا تقل عبارة المرور عن ١٢ حرفًا';
 
   @override
   String get backupPassphrasesDonTMatch => 'عبارتا المرور غير متطابقتين';

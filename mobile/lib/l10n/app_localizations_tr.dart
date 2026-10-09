@@ -987,7 +987,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get backupPassphraseMustBeAt =>
-      'Parola ifadesi en az 6 karakter olmalı';
+      'Parola ifadesi en az 12 karakter olmalı';
 
   @override
   String get backupPassphrasesDonTMatch => 'Parola ifadeleri eşleşmiyor';

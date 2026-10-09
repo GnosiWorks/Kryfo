@@ -973,7 +973,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get commonSave => 'Simpan';
 
   @override
-  String get backupPassphraseMustBeAt => 'Frasa sandi minimal 6 karakter';
+  String get backupPassphraseMustBeAt => 'Frasa sandi minimal 12 karakter';
 
   @override
   String get backupPassphrasesDonTMatch => 'Frasa sandi tidak cocok';

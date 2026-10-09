@@ -507,7 +507,7 @@ void main() {
     expect(l.commonSave, "Save");
     expect(
       l.backupPassphraseMustBeAt,
-      "Passphrase must be at least 6 characters",
+      "Passphrase must be at least 12 characters",
     );
     expect(l.backupPassphrasesDonTMatch, "Passphrases don't match");
     expect(
