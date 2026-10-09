@@ -13748,6 +13748,8 @@ class AppState extends ChangeNotifier {
     // drop week-old partial transfers nobody ever completed.
     unawaited(live.sweepMediaChunks());
     _deliveryMode = await loadDeliveryMode();
+    // read now, so settings shows it whole from the first frame
+    unawaited(loadHideNotifContent());
     // in front means resumed, not that a view exists: android hands every
     // engine an implicit view, window or not
     _inFront =
