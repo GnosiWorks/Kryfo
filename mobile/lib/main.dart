@@ -13705,9 +13705,10 @@ class AppState extends ChangeNotifier {
 
   // what a relay delivery opened to, by its hash, until it is marked seen.
   // signal spends the keys on the first open, so one that fails after it and
-  // comes again would not open twice: it goes on from here. memory only
+  // comes again would not open twice: it goes on from here. memory only,
+  // bounded by size rather than count so a failed batch fits whole
   final _relayOpened = <String, ({String id, String plain, bool parked})>{};
-  static const _relayOpenedMax = 64;
+  static const _relayOpenedChars = 8 << 20;
   // moves on each time what was opened is dropped: an open begun before
   // that is not kept after it
   int _openedEpoch = 0;
@@ -13729,8 +13730,12 @@ class AppState extends ChangeNotifier {
     if (epoch != _openedEpoch) return;
     _relayOpened.remove(h);
     _relayOpened[h] = (id: id, plain: plain, parked: parked);
-    while (_relayOpened.length > _relayOpenedMax) {
-      _relayOpened.remove(_relayOpened.keys.first);
+    var size = 0;
+    for (final o in _relayOpened.values) {
+      size += o.plain.length;
+    }
+    while (size > _relayOpenedChars && _relayOpened.length > 1) {
+      size -= _relayOpened.remove(_relayOpened.keys.first)!.plain.length;
     }
   }
 
