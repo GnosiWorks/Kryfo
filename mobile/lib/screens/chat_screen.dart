@@ -4240,7 +4240,13 @@ class _ChatScreenState extends State<ChatScreen>
           left: 20,
           right: 20,
           top: 18,
-          bottom: MediaQuery.of(ctx).viewInsets.bottom + 22,
+          // the keyboard, or the navigation bar when it is down
+          bottom:
+              math.max(
+                MediaQuery.paddingOf(ctx).bottom,
+                MediaQuery.viewInsetsOf(ctx).bottom,
+              ) +
+              22,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
