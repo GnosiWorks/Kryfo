@@ -214,7 +214,7 @@ class _PinsScreenState extends State<PinsScreen> {
                 },
                 secondary: on ? l10n.pinsTurnOff : null,
                 onSecondary: on ? _turnOff : null,
-                extra: on && _lock.bioSupported
+                extra: on && _lock.fingerOffered
                     ? _Toggle(
                         label: l10n.pinsUnlockWithFingerprint,
                         on: _lock.biometricShown,

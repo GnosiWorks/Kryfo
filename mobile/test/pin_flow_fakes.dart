@@ -179,8 +179,10 @@ Future<Lock> makeLock(
   bool inDecoy = false,
   bool inVault = false,
   bool wipeOn = false,
+  LockBio? bio,
+  Map<String, String> stored = const {},
 }) async {
-  final store = MemStore();
+  final store = MemStore()..m.addAll(stored);
   if (pins != null) {
     store.m['halo.lock.enabled'] = 'true';
     if (wipeOn) store.m['halo.lock.panic_enabled'] = 'true';
@@ -202,7 +204,7 @@ Future<Lock> makeLock(
     store: store,
     engine: MemEngine(),
     clock: StillClock(),
-    bio: NoBio(),
+    bio: bio ?? NoBio(),
     revealAfter: Duration.zero,
   );
   await s.load();
