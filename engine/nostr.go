@@ -1375,6 +1375,10 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 		// first relay is our own: it carries the traffic, heal it hard
 		own := i == 0
 		go func(u string) {
+			if tag == laneFirstContact {
+				fcRelaysLive.Add(1)
+				defer fcRelaysLive.Add(-1)
+			}
 			// this subscription's catch-up record, apart from every other
 			// contact's on the same relay
 			ck := catchupKey(u, rcvPk)
@@ -2096,6 +2100,26 @@ func HaloFirstContactPk(counter C.int) *C.char {
 		return C.CString(fmt.Sprintf("error: %v", err))
 	}
 	return C.CString(pk)
+}
+
+// relay loops the first-contact listener runs now, old and new together
+// for a moment while it is replaced
+var fcRelaysLive atomic.Int32
+
+// how many relays the first-contact listener is on, -1 when there is none.
+// a listener that started on an empty list is on none and hears nothing
+//
+//export HaloFirstContactRelays
+func HaloFirstContactRelays() C.int { return C.int(firstContactRelays()) }
+
+func firstContactRelays() int {
+	nostrMu.Lock()
+	_, on := nostrSubs["firstcontact"]
+	nostrMu.Unlock()
+	if !on {
+		return -1
+	}
+	return int(fcRelaysLive.Load())
 }
 
 // watch our own first-contact address. unlike every other subscription this
