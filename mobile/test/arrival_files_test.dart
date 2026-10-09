@@ -254,6 +254,46 @@ void main() {
     expect(await clip.readAsBytes(), [5, 5, 5, 6, 6, 6]);
   });
 
+  test('a sliced file whose row is not filed keeps its slices, and lands '
+      'when its last slice comes again', () async {
+    final w = await _World.make();
+    Future<Set<int>> slice(int i, String c) async {
+      w.io.opens[c] = (
+        _x,
+        await wrapMessage(
+          '',
+          msgUid: 'clip-again',
+          mediaId: 'clip-again',
+          chunkIndex: i,
+          chunkTotal: 2,
+          fileB64: base64Encode([5 + i, 5 + i, 5 + i]),
+          fileName: 'clip.mp4',
+          sender: asSender(_x),
+        ),
+      );
+      return w.app.receiveRelay([(peer: 'x-$_x', cipher: c)]);
+    }
+
+    expect(await slice(0, 'a0'), isEmpty);
+    w.live.beforeSave = () {
+      w.live.beforeSave = null;
+      throw StateError('the disk is full');
+    };
+    expect(await slice(1, 'a1'), {0});
+    expect(w.live.msg('clip-again'), isNull);
+    expect(w.live.chunks['clip-again'], hasLength(2));
+    expect(await slice(1, 'a1'), isEmpty);
+    expect(await w.fileOf('clip-again', 'file_path').readAsBytes(), [
+      5,
+      5,
+      5,
+      6,
+      6,
+      6,
+    ]);
+    expect(w.live.chunks['clip-again'] ?? const {}, isEmpty);
+  });
+
   test('a sliced file deleted here does not come back slice by slice, and '
       'is asked for no more', () async {
     final w = await _World.make();

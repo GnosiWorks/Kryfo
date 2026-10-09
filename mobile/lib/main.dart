@@ -10933,6 +10933,7 @@ class AppState extends ChangeNotifier {
       dlog('recv: taken back before it came, dropped');
       return to;
     }
+    String? sliced;
     if (_sliced(env)) {
       final mid = env.mediaId!;
       final total = env.chunkTotal!;
@@ -11036,13 +11037,16 @@ class AppState extends ChangeNotifier {
           unsaved = true;
         }
       }
-      await db.dropMediaChunks(mid);
       unawaited(db.dropMediaWant(mid));
       incomingMediaDone(progressKey);
       if (env.pvImg) {
+        await db.dropMediaChunks(mid);
         _inflightUids.remove(mid);
         return to;
       }
+      // the slices stay until the row is filed, so one that fails before
+      // that is put together again when it comes again
+      sliced = mid;
       // the slice in this envelope is on disk now; nothing below should
       // save it again
       imgB64 = null;
@@ -11204,6 +11208,7 @@ class AppState extends ChangeNotifier {
           ),
     );
     changed();
+    if (sliced != null) await db.dropMediaChunks(sliced);
     // remember the face they picked. cheap, and it arrives with every
     // message so it stays current if they change it.
     if (env.senderAvatar != null) {
