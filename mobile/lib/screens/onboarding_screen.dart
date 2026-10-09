@@ -92,7 +92,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       _PickFaceScreen(onContinue: _next),
       _TransportScreen(onContinue: _next),
       _ThreeThingsScreen(onContinue: _next),
-      _NotificationScreen(onContinue: _next),
+      _NotificationScreen(onContinue: _next, enter: !_seen.contains(6)),
       _AddSomeoneScreen(onComplete: widget.onComplete),
     ];
     return PopScope(
@@ -1423,11 +1423,12 @@ class _ThreeThingsScreen extends StatelessWidget {
 // === 06 · ONE NOTIFICATION ===
 //
 // the one android fact worth a page: a background listener needs a visible
-// notification, so the tray will show one. two lines, then on.
+// notification, so the tray will show one. two lines and the shade, then on.
 
 class _NotificationScreen extends StatelessWidget {
   final VoidCallback onContinue;
-  const _NotificationScreen({required this.onContinue});
+  final bool enter;
+  const _NotificationScreen({required this.onContinue, required this.enter});
 
   @override
   Widget build(BuildContext context) {
@@ -1438,6 +1439,8 @@ class _NotificationScreen extends StatelessWidget {
         const SizedBox(height: 12),
         _lead(l10n.onboardingAndroidNeedsAVisible),
         const SizedBox(height: 24),
+        Center(child: _ShadeArt(enter: enter)),
+        const SizedBox(height: 16),
         ...staggerAll([
           _Card(
             icon: Icons.notifications_none_rounded,
@@ -1446,6 +1449,235 @@ class _NotificationScreen extends StatelessWidget {
           ),
         ], from: 1),
       ],
+    );
+  }
+}
+
+// the shade as the phone shows it: a message as kryfo posts it, its preview
+// hidden, and under it the quiet one folded to a line. it pulls down once as
+// the step comes in, then rests
+class _ShadeArt extends StatefulWidget {
+  final bool enter;
+  const _ShadeArt({required this.enter});
+  @override
+  State<_ShadeArt> createState() => _ShadeArtState();
+}
+
+class _ShadeArtState extends State<_ShadeArt>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _in = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1200),
+  );
+  bool _started = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+    // with less movement, or back on this step, it is simply there
+    if (!widget.enter || MediaQuery.disableAnimationsOf(context)) {
+      _in.value = 1;
+      return;
+    }
+    _in.forward();
+  }
+
+  @override
+  void dispose() {
+    _in.dispose();
+    super.dispose();
+  }
+
+  // a piece fades in and slides into place between [from] and [to]
+  Widget _part(double from, double to, double by, Widget child) {
+    final curve = Interval(from, to, curve: Curves.easeOutCubic);
+    return AnimatedBuilder(
+      animation: _in,
+      child: child,
+      builder: (_, child) {
+        final v = curve.transform(_in.value);
+        return Opacity(
+          opacity: v,
+          child: Transform.translate(
+            offset: Offset(0, (1 - v) * by),
+            child: child,
+          ),
+        );
+      },
+    );
+  }
+
+  // the small icon as android draws it: the ring on the notification colour
+  Widget _icon(double d) => Container(
+    width: d,
+    height: d,
+    alignment: Alignment.center,
+    decoration: BoxDecoration(shape: BoxShape.circle, color: HaloColors.amber),
+    child: Container(
+      width: d * 0.5,
+      height: d * 0.5,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: HaloColors.onAmber, width: d * 0.08),
+      ),
+    ),
+  );
+
+  Widget _bar(double w, double h) => Container(
+    width: w,
+    height: h,
+    decoration: BoxDecoration(
+      color: HaloColors.line2,
+      borderRadius: BorderRadius.circular(h / 2),
+    ),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    // a picture: its words grow less than the page's
+    final scale = MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.3);
+    final title = HaloType.sans(
+      size: 12.5,
+      color: HaloColors.text,
+      weight: FontWeight.w600,
+      height: 1.3,
+    );
+    final line = HaloType.sans(size: 12, color: HaloColors.text2, height: 1.35);
+    final status = Padding(
+      padding: const EdgeInsetsDirectional.fromSTEB(6, 0, 6, 10),
+      child: Row(
+        children: [
+          _bar(24, 6),
+          const Spacer(),
+          _bar(8, 6),
+          const SizedBox(width: 4),
+          _bar(8, 6),
+          const SizedBox(width: 4),
+          _bar(14, 7),
+        ],
+      ),
+    );
+    final message = Container(
+      padding: const EdgeInsetsDirectional.fromSTEB(10, 10, 12, 10),
+      decoration: BoxDecoration(
+        color: HaloColors.surface2,
+        border: Border.all(color: HaloColors.line, width: 0.5),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          _icon(24),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Kryfo',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textScaler: scale,
+                  style: title,
+                ),
+                Text(
+                  l10n.notificationsNewMessage,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textScaler: scale,
+                  style: line,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+    final quiet = Row(
+      children: [
+        _icon(18),
+        const SizedBox(width: 9),
+        Expanded(
+          child: Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(text: l10n.androidServiceTitle, style: title),
+                TextSpan(text: '  ${l10n.androidServiceText}', style: line),
+              ],
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textScaler: scale,
+          ),
+        ),
+      ],
+    );
+    // the quiet one lands last and glows once to be seen
+    const glow = Interval(0.62, 1);
+    final art = Container(
+      padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
+      decoration: BoxDecoration(
+        color: HaloColors.surface,
+        border: Border.all(color: HaloColors.line, width: 0.5),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          status,
+          _part(0.18, 0.55, -10, message),
+          const SizedBox(height: 8),
+          _part(
+            0.45,
+            0.85,
+            10,
+            AnimatedBuilder(
+              animation: _in,
+              child: quiet,
+              builder: (_, child) {
+                final g = math.sin(glow.transform(_in.value) * math.pi);
+                return Container(
+                  padding: const EdgeInsetsDirectional.fromSTEB(10, 9, 12, 9),
+                  decoration: BoxDecoration(
+                    color: Color.alphaBlend(
+                      HaloColors.amberSoft,
+                      HaloColors.surface2,
+                    ),
+                    border: Border.all(
+                      color: HaloColors.amber.withValues(alpha: 0.55),
+                      width: 0.5,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: HaloColors.amber.withValues(alpha: 0.3 * g),
+                        blurRadius: 16,
+                      ),
+                    ],
+                  ),
+                  child: child,
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 10),
+          Center(child: _bar(28, 3)),
+        ],
+      ),
+    );
+    // read as the notification's own words
+    return Semantics(
+      container: true,
+      image: true,
+      label: '${l10n.androidServiceTitle}. ${l10n.androidServiceText}',
+      child: ExcludeSemantics(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 380),
+          child: _part(0, 0.4, -14, art),
+        ),
+      ),
     );
   }
 }
