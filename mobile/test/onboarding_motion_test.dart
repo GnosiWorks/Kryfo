@@ -14,7 +14,7 @@ import 'package:kryfo/main.dart'
 import 'package:kryfo/screens/onboarding_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/theme.dart';
-import 'package:kryfo/widgets/language_sheet.dart' show LanguageChip;
+import 'package:kryfo/widgets/language_sheet.dart' show LanguageRow;
 import 'package:kryfo/widgets/tor_boot_splash.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -107,18 +107,18 @@ void main() {
     await t.pumpWidget(const SizedBox());
   });
 
-  testWidgets('the bar: language on the welcome, then back and the count', (
+  testWidgets('the language on the welcome page, then back and the count', (
     t,
   ) async {
     phone(t);
     quiet(t);
     await t.pumpWidget(onboarding(still: true));
     await t.pump();
-    expect(find.byType(LanguageChip).hitTestable(), findsOneWidget);
+    expect(find.byType(LanguageRow).hitTestable(), findsOneWidget);
     expect(find.byTooltip(l10n.commonBack).hitTestable(), findsNothing);
     await toName(t);
     expect(find.text('02 / 07'), findsOneWidget);
-    expect(find.byType(LanguageChip).hitTestable(), findsNothing);
+    expect(find.byType(LanguageRow).hitTestable(), findsNothing);
     await t.tap(find.byTooltip(l10n.commonBack));
     await t.pump();
     expect(pages(t).page, 0);
