@@ -72,8 +72,17 @@ class _Db implements HaloDb {
       throw UnimplementedError('the stand-in was asked for ${i.memberName}');
 }
 
+// what a landing did, in order: the relays held, the shade cleared
+final _steps = <String>[];
+
 class _Engine implements HaloEngine {
   final restored = <String>[];
+  @override
+  Future<String> wipeHold() async {
+    _steps.add('hold');
+    return 'ok';
+  }
+
   // the last step of a landing fails
   var fail = false;
   @override
@@ -95,7 +104,11 @@ class _Shade extends AndroidFlutterLocalNotificationsPlugin {
   @override
   Future<void> cancel({required int id, String? tag}) async => up.remove(id);
   @override
-  Future<void> cancelAll() async => up.clear();
+  Future<void> cancelAll() async {
+    _steps.add('shade');
+    up.clear();
+  }
+
   @override
   Future<List<ActiveNotification>> getActiveNotifications() async => [
     for (final id in up) ActiveNotification(id: id),
@@ -254,6 +267,7 @@ void main() {
   group('the shade', () {
     late _Shade shade;
     setUp(() {
+      _steps.clear();
       debugDefaultTargetPlatformOverride = TargetPlatform.android;
       shade = _Shade()..up.addAll([7, 8]);
       FlutterLocalNotificationsPlatform.instance = shade;
@@ -267,6 +281,8 @@ void main() {
       restoreCipherForTest = _Cipher.new;
       await restoreBackupFile(await file(), 'pass', lock: lock.state);
       expect(shade.up, isEmpty);
+      // held first: nothing a reader still running brings rings again
+      expect(_steps, ['hold', 'shade']);
     });
 
     test('an old text file in the everyday app takes it down too', () async {
@@ -284,6 +300,7 @@ void main() {
         lock: lock.state,
       );
       expect(shade.up, isEmpty);
+      expect(_steps, ['hold', 'shade']);
     });
 
     test('a decoy restore leaves it alone', () async {

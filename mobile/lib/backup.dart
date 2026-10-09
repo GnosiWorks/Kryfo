@@ -330,9 +330,9 @@ Future<void> landV1Payload(
     }
 
     await restorePrefs(payload['prefs']);
-    await _clearShade();
     // a v1 file carries no catch-up: the relays are read again whole
     await _holdRelays();
+    await _clearShade();
     await landCatchUpAnchors(docsDir.path, null);
     await _livesHereNow(payload['ts']);
 
@@ -365,7 +365,7 @@ Future<void> _livesHereNow(Object? made) async {
 }
 
 // what the shade holds came for the account just replaced. a decoy's
-// session shows none
+// session shows none. after the relays are held, so nothing rings again
 Future<void> _clearShade() =>
     cancelWithRetry(notifPlugin.cancelAll, 'restore shade');
 
@@ -1725,8 +1725,8 @@ Future<void> restoreBackupFile(
       value: manifest['dbPassphrase'] as String,
     );
     await restorePrefs(manifest['prefs']);
-    await _clearShade();
     await _holdRelays();
+    await _clearShade();
     await landCatchUpAnchors(docs.path, manifest['catchUp']);
     // in place before the restart reads them
     _restoredSettings = await landCarriedSettings(
