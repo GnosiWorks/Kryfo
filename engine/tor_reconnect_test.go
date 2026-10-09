@@ -98,7 +98,7 @@ func TestReconnect(t *testing.T) {
 		bridgeOn = on
 		bridgeMu.Unlock()
 		if on {
-			if err := startPTListener(); err != nil {
+			if err := startPTListeners(); err != nil {
 				t.Fatalf("pt listener: %v", err)
 			}
 		}

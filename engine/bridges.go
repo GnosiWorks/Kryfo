@@ -1,26 +1,33 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package main
 
-// bridges. android will not execute an obfs4proxy binary from app storage,
-// so the obfs4 client runs inside the engine as a plain socks5 proxy on
-// localhost. tor supports that natively:
+// bridges. android will not execute a transport binary from app storage, so
+// the obfs4, webtunnel and snowflake clients run inside the engine, each as
+// a plain socks5 proxy on its own localhost port. tor supports that
+// natively:
 //
 //	ClientTransportPlugin obfs4 socks5 127.0.0.1:<port>
 //
-// tor hands us the per bridge arguments (cert, iat-mode) in the socks
-// handshake, and obfs4's own socks5 package parses them.
+// tor sends a bridge's arguments in the socks handshake. they are ignored:
+// any app on the phone can reach these ports, and for webtunnel and
+// snowflake the arguments say which host to dial. the listener takes the
+// target address, finds the active line for it and uses that line's
+// arguments, so it only ever dials what the bridge lines say.
 
 import "C"
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"log"
 	"net"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
+	"syscall"
 	"time"
 
 	pt "gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/goptlib"
@@ -32,8 +39,6 @@ var (
 	bridgeMu   sync.RWMutex
 	bridgeOn   bool
 	bridgeList []string
-	ptPort     int
-	ptListener net.Listener
 
 	// when a bridge last carried a connection, and how many times each has
 	// failed in a row. a list usually contains one or two that no longer
@@ -44,6 +49,27 @@ var (
 
 const bridgeDeadAfter = 4
 
+// the transports tor gets a listener for, in the order the plugin lines are
+// handed over. meek_lite only reaches moat and has no listener.
+var ptNames = []string{"obfs4", "webtunnel", "snowflake"}
+
+// one local socks5 listener. ports never change within a process: tor is
+// never restarted, and it keeps the plugin lines it was given.
+type ptListen struct {
+	name    string
+	ln      net.Listener
+	port    int
+	factory base.ClientFactory
+	// socks requests tor made here, and when the last one came, unix nanos
+	requests atomic.Int64
+	lastReq  atomic.Int64
+}
+
+var (
+	ptMu   sync.Mutex
+	ptRegs map[string]*ptListen
+)
+
 // true if any bridge worked in the last three minutes. the dialer watchdog
 // checks this before blaming tor.
 func bridgeWorkingRecently() bool {
@@ -52,47 +78,202 @@ func bridgeWorkingRecently() bool {
 	return !lastBridgeOK.IsZero() && time.Since(lastBridgeOK) < 3*time.Minute
 }
 
-func noteBridgeOK(target string) {
+func noteBridgeOK(key string) {
 	bridgeMu.Lock()
 	lastBridgeOK = time.Now()
-	delete(bridgeFails, target)
+	delete(bridgeFails, key)
 	bridgeMu.Unlock()
 }
 
-func noteBridgeFail(target string) {
+func noteBridgeFail(key string) {
 	bridgeMu.Lock()
-	bridgeFails[target]++
-	n := bridgeFails[target]
+	bridgeFails[key]++
+	n := bridgeFails[key]
 	bridgeMu.Unlock()
 	if n == bridgeDeadAfter {
-		log.Printf("bridges: %s has failed %d times, skipping it", target, n)
+		log.Printf("bridges: a %s bridge has failed %d times, skipping it",
+			strings.Fields(key)[0], n)
 	}
 }
 
 // a bridge that has failed this many times in a row is not coming back this
 // session. tor still has the line, but we stop wasting dials on it.
-func bridgeIsDead(target string) bool {
+func bridgeIsDead(key string) bool {
 	bridgeMu.RLock()
 	defer bridgeMu.RUnlock()
-	return bridgeFails[target] >= bridgeDeadAfter
+	return bridgeFails[key] >= bridgeDeadAfter
 }
 
-// a bridge line looks like:
+// one bridge line taken apart:
 //
 //	obfs4 1.2.3.4:443 FINGERPRINT cert=... iat-mode=0
-//
-// we only check the shape. a wrong cert fails at connect time with a real
-// error, and pretending to validate it here would just be theatre.
-func validBridgeLine(s string) bool {
+//	webtunnel [2001:db8::1]:443 FINGERPRINT url=https://... ver=0.0.1
+//	snowflake 192.0.2.3:80 FINGERPRINT fingerprint=... url=... fronts=... ice=...
+type bridgeLine struct {
+	transport string
+	addr      string
+	fp        string
+	args      pt.Args
+	// the k=v fields as written, in order, for the length tor will send
+	kv []string
+}
+
+var (
+	errLineUnknown = errors.New("not a bridge line kryfo understands")
+	errLineLong    = errors.New("arguments too long for tor")
+)
+
+// tor sends a line's arguments as the socks5 username and password, at
+// most 255 bytes each
+const ptArgsMax = 510
+
+func parseBridgeLine(s string) (bridgeLine, error) {
+	var b bridgeLine
 	f := strings.Fields(strings.TrimSpace(s))
-	if len(f) < 3 || !strings.EqualFold(f[0], "obfs4") {
-		return false
+	if len(f) < 2 {
+		return b, errLineUnknown
+	}
+	b.transport = strings.ToLower(f[0])
+	known := false
+	for _, n := range ptNames {
+		known = known || n == b.transport
+	}
+	if !known {
+		return b, errLineUnknown
 	}
 	host, port, err := net.SplitHostPort(f[1])
-	if err != nil || host == "" || port == "" {
+	if err != nil || host == "" {
+		return b, fmt.Errorf("bad address")
+	}
+	if p, err := strconv.Atoi(port); err != nil || p < 1 || p > 65535 {
+		return b, fmt.Errorf("bad port")
+	}
+	if strings.Contains(host, ":") && net.ParseIP(host) == nil {
+		return b, fmt.Errorf("bad address")
+	}
+	b.addr = f[1]
+	rest := f[2:]
+	if len(rest) > 0 && !strings.Contains(rest[0], "=") {
+		if !isFingerprint(rest[0]) {
+			return b, fmt.Errorf("bad fingerprint")
+		}
+		b.fp = strings.ToUpper(rest[0])
+		rest = rest[1:]
+	}
+	b.args = pt.Args{}
+	for _, kv := range rest {
+		k, v, ok := strings.Cut(kv, "=")
+		if !ok || k == "" {
+			return b, fmt.Errorf("bad argument")
+		}
+		b.args.Add(k, v)
+		b.kv = append(b.kv, kv)
+	}
+	return b, nil
+}
+
+func isFingerprint(s string) bool {
+	if len(s) != 40 {
 		return false
 	}
-	return strings.Contains(strings.Join(f[3:], " "), "cert=")
+	for _, c := range s {
+		if !strings.ContainsRune("0123456789abcdefABCDEF", c) {
+			return false
+		}
+	}
+	return true
+}
+
+// what tor puts in the socks5 username and password: k=v pairs joined by
+// semicolons, with semicolons and backslashes escaped
+func ptArgsLen(kv []string) int {
+	n := 0
+	for i, s := range kv {
+		if i > 0 {
+			n++
+		}
+		n += len(s) + strings.Count(s, ";") + strings.Count(s, `\`)
+	}
+	return n
+}
+
+// checks a line the way the transport will read it. the transport's own
+// argument parser is the judge of its arguments, so what passes here is
+// what it accepts at connect time.
+func checkBridgeLine(s string) (bridgeLine, error) {
+	b, err := parseBridgeLine(s)
+	if err != nil {
+		return b, err
+	}
+	if ptArgsLen(b.kv) > ptArgsMax {
+		return b, errLineLong
+	}
+	switch b.transport {
+	case "obfs4":
+		if _, ok := b.args.Get("cert"); !ok {
+			return b, fmt.Errorf("obfs4: no cert")
+		}
+	case "webtunnel":
+		if b.fp == "" {
+			return b, fmt.Errorf("webtunnel: no fingerprint")
+		}
+		u, _ := b.args.Get("url")
+		if !strings.HasPrefix(strings.ToLower(u), "https://") {
+			return b, fmt.Errorf("webtunnel: url is not https")
+		}
+	case "snowflake":
+		if fp, ok := b.args.Get("fingerprint"); !ok || !isFingerprint(fp) {
+			return b, fmt.Errorf("snowflake: no fingerprint")
+		}
+		if ice, ok := b.args.Get("ice"); ok {
+			stun := false
+			for _, s := range splitList(ice) {
+				stun = stun || strings.HasPrefix(strings.ToLower(s), "stun:")
+			}
+			if !stun {
+				return b, fmt.Errorf("snowflake: no stun server")
+			}
+		}
+	}
+	f, err := ptClientFactory(b.transport)
+	if err != nil {
+		return b, err
+	}
+	if _, err := f.ParseArgs(&b.args); err != nil {
+		return b, fmt.Errorf("%s: %w", b.transport, err)
+	}
+	return b, nil
+}
+
+func validBridgeLine(s string) bool {
+	_, err := checkBridgeLine(s)
+	return err == nil
+}
+
+// splits pasted text into lines tor can use and lines it cannot. a line
+// whose transport and address repeat an earlier one is refused too: the
+// listener finds a line by its address, and two would be ambiguous.
+func sortBridgeLines(raw string) (good, bad []string) {
+	seen := map[string]bool{}
+	for _, ln := range strings.Split(raw, "\n") {
+		ln = strings.TrimSpace(ln)
+		if ln == "" {
+			continue
+		}
+		b, err := checkBridgeLine(ln)
+		if err != nil {
+			bad = append(bad, ln)
+			continue
+		}
+		key := b.transport + " " + bridgeAddrKey(b.addr)
+		if seen[key] {
+			bad = append(bad, ln)
+			continue
+		}
+		seen[key] = true
+		good = append(good, ln)
+	}
+	return good, bad
 }
 
 // host:port the way the socks handshake gives it, so a bridge line and a
@@ -108,20 +289,20 @@ func bridgeAddrKey(addr string) string {
 	return strings.ToLower(net.JoinHostPort(host, port))
 }
 
-// whether target is the address of a bridge in use: the listener dials
-// the bridges tor was given and nothing else
-func bridgeTarget(target string) bool {
+// the active line of this transport whose address is target. the listener
+// dials the bridges tor was given and nothing else.
+func bridgeFor(transport, target string) (bridgeLine, bool) {
 	want := bridgeAddrKey(target)
 	if want == "" || !bridgesEnabled() {
-		return false
+		return bridgeLine{}, false
 	}
 	for _, ln := range bridgeLines() {
-		f := strings.Fields(ln)
-		if len(f) > 1 && bridgeAddrKey(f[1]) == want {
-			return true
+		b, err := parseBridgeLine(ln)
+		if err == nil && b.transport == transport && bridgeAddrKey(b.addr) == want {
+			return b, true
 		}
 	}
-	return false
+	return bridgeLine{}, false
 }
 
 func bridgesEnabled() bool {
@@ -157,120 +338,146 @@ func bridgeTorArgs() []string {
 	if !bridgesEnabled() {
 		return nil
 	}
-	bridgeMu.RLock()
-	port := ptPort
-	bridgeMu.RUnlock()
-	if port == 0 {
-		log.Println("bridges: no pt listener, starting direct instead")
+	if err := startPTListeners(); err != nil {
+		log.Printf("bridges: %v, starting direct instead", err)
 		return nil
 	}
-	args := []string{
-		"--UseBridges", "1",
-		"--ClientTransportPlugin", fmt.Sprintf("obfs4 socks5 127.0.0.1:%d", port),
+	args := []string{"--UseBridges", "1"}
+	for _, p := range ptPlugins() {
+		args = append(args, "--ClientTransportPlugin", p)
 	}
 	lines := bridgeLines()
 	for _, b := range lines {
 		args = append(args, "--Bridge", b)
 	}
-	log.Printf("bridges: handing tor %d bridge lines via 127.0.0.1:%d", len(lines), port)
+	log.Printf("bridges: handing tor %d bridge lines", len(lines))
 	return args
 }
 
-// startPTListener brings up the local socks5 endpoint that tor will dial.
-// idempotent: if one is already running we keep it, since restarting tor must
-// not orphan the port it was told to use.
-func startPTListener() error {
-	bridgeMu.Lock()
-	if ptListener != nil {
-		bridgeMu.Unlock()
-		return nil
-	}
-	bridgeMu.Unlock()
-
-	ln, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		return fmt.Errorf("pt listen: %w", err)
-	}
-	port := ln.Addr().(*net.TCPAddr).Port
-
-	factory, err := ptClientFactory("obfs4")
-	if err != nil {
-		ln.Close()
-		return fmt.Errorf("obfs4 client factory: %w", err)
-	}
-
-	bridgeMu.Lock()
-	ptListener = ln
-	ptPort = port
-	bridgeMu.Unlock()
-
-	log.Printf("bridges: obfs4 socks5 listening on 127.0.0.1:%d", port)
-
-	go func() {
-		for {
-			conn, err := ln.Accept()
-			if err != nil {
-				bridgeMu.Lock()
-				closed := ptListener == nil
-				bridgeMu.Unlock()
-				if closed {
-					return
-				}
-				log.Printf("bridges: accept: %v", err)
-				return
-			}
-			go servePTConn(conn, factory)
+// the ClientTransportPlugin values for tor, one per transport. all of them
+// are set whenever any bridge is on, whatever the lines' transports.
+func ptPlugins() []string {
+	ptMu.Lock()
+	defer ptMu.Unlock()
+	var out []string
+	for _, n := range ptNames {
+		if r := ptRegs[n]; r != nil {
+			out = append(out, fmt.Sprintf("%s socks5 127.0.0.1:%d", n, r.port))
 		}
-	}()
+	}
+	return out
+}
+
+func ptReg(name string) *ptListen {
+	ptMu.Lock()
+	defer ptMu.Unlock()
+	return ptRegs[name]
+}
+
+// brings up one local socks5 endpoint per transport. idempotent: a running
+// set is kept, since tor holds the ports it was told about for the life of
+// the process.
+func startPTListeners() error {
+	ptMu.Lock()
+	defer ptMu.Unlock()
+	if ptRegs == nil {
+		ptRegs = map[string]*ptListen{}
+	}
+	for _, n := range ptNames {
+		if ptRegs[n] != nil {
+			continue
+		}
+		f, err := ptClientFactory(n)
+		if err != nil {
+			return fmt.Errorf("%s client factory: %w", n, err)
+		}
+		ln, err := net.Listen("tcp", "127.0.0.1:0")
+		if err != nil {
+			return fmt.Errorf("pt listen: %w", err)
+		}
+		r := &ptListen{name: n, ln: ln, port: ln.Addr().(*net.TCPAddr).Port, factory: f}
+		ptRegs[n] = r
+		log.Printf("bridges: %s socks5 listening on 127.0.0.1:%d", n, r.port)
+		go r.accept()
+	}
 	return nil
 }
 
-// one connection from tor: read the socks request, pull the per-bridge args
-// out of it, dial the bridge through obfs4, then copy bytes both ways.
-func servePTConn(conn net.Conn, factory base.ClientFactory) {
+func (r *ptListen) accept() {
+	for {
+		conn, err := r.ln.Accept()
+		if err != nil {
+			var ne net.Error
+			if errors.As(err, &ne) && ne.Timeout() {
+				continue
+			}
+			log.Printf("bridges: %s accept: %v", r.name, err)
+			return
+		}
+		go r.serve(conn)
+	}
+}
+
+func (r *ptListen) serve(conn net.Conn) {
+	defer func() {
+		if p := recover(); p != nil {
+			log.Printf("bridges: %s connection panicked: %v", r.name, p)
+		}
+	}()
+	servePTConn(conn, r.name, r.factory, r)
+}
+
+// one connection from tor: read the socks request, find the bridge line its
+// target belongs to, dial that bridge with the line's own arguments, then
+// copy bytes both ways. the arguments in the handshake are never used.
+func servePTConn(conn net.Conn, name string, factory base.ClientFactory, r *ptListen) {
 	defer conn.Close()
 
 	req, err := socks5.Handshake(conn)
 	if err != nil {
-		log.Printf("bridges: socks handshake: %v", err)
+		log.Printf("bridges: %s socks handshake: %v", name, err)
 		return
 	}
-	if !bridgeTarget(req.Target) {
-		log.Printf("bridges: a target that is no bridge in use, refused")
+	if r != nil {
+		r.requests.Add(1)
+		r.lastReq.Store(time.Now().UnixNano())
+	}
+	line, ok := bridgeFor(name, req.Target)
+	if !ok {
+		log.Printf("bridges: %s: a target that is no bridge in use, refused", name)
 		_ = req.Reply(socks5.ReplyConnectionNotAllowed)
 		return
 	}
-
-	args, err := factory.ParseArgs(&req.Args)
-	if err != nil {
-		log.Printf("bridges: bad bridge args: %v", err)
-		_ = req.Reply(socks5.ReplyGeneralFailure)
-		return
-	}
-
-	dial := func(network, addr string) (net.Conn, error) {
-		return net.Dial(network, addr)
-	}
-	if bridgeIsDead(req.Target) {
+	key := name + " " + bridgeAddrKey(line.addr)
+	if bridgeIsDead(key) {
 		// fail fast rather than making tor wait out another timeout
 		_ = req.Reply(socks5.ReplyHostUnreachable)
 		return
 	}
+	args, err := factory.ParseArgs(&line.args)
+	if err != nil {
+		log.Printf("bridges: %s line not usable", name)
+		_ = req.Reply(socks5.ReplyGeneralFailure)
+		return
+	}
+	dial := func(network, addr string) (net.Conn, error) {
+		return net.Dial(network, addr)
+	}
 	remote, err := factory.Dial("tcp", req.Target, dial, args)
 	if err != nil {
-		log.Printf("bridges: dial %s: %v", req.Target, err)
-		noteBridgeFail(req.Target)
+		log.Printf("bridges: %s dial failed: %s", name, dialErrKind(err))
+		noteBridgeFail(key)
 		_ = req.Reply(socks5.ErrorToReplyCode(err))
 		return
 	}
-	noteBridgeOK(req.Target)
+	noteBridgeOK(key)
 	defer remote.Close()
 
 	if err = req.Reply(socks5.ReplySucceeded); err != nil {
 		log.Printf("bridges: socks reply: %v", err)
 		return
 	}
-	log.Printf("bridges: obfs4 connected to %s", req.Target)
+	log.Printf("bridges: %s connected", name)
 
 	var wg sync.WaitGroup
 	wg.Add(2)
@@ -291,8 +498,24 @@ func servePTConn(conn net.Conn, factory base.ClientFactory) {
 	wg.Wait()
 }
 
-// req.Args is a pt.Args; keep the goptlib dependency stated, not implied
-var _ = pt.Args{}
+// a dial error names the address it failed on, and logs never carry bridge
+// addresses, so only its kind is logged
+func dialErrKind(err error) string {
+	var ne net.Error
+	switch {
+	case errors.As(err, &ne) && ne.Timeout():
+		return "timeout"
+	case errors.Is(err, syscall.ECONNREFUSED):
+		return "refused"
+	case errors.Is(err, syscall.ECONNRESET):
+		return "reset"
+	case errors.Is(err, syscall.ENETUNREACH), errors.Is(err, syscall.EHOSTUNREACH):
+		return "unreachable"
+	case errors.Is(err, os.ErrDeadlineExceeded):
+		return "timeout"
+	}
+	return "other"
+}
 
 // takes newline separated bridge lines and whether to use them. the caller
 // calls HaloRestartTor afterwards, which hands the new config to the running
@@ -300,19 +523,7 @@ var _ = pt.Args{}
 //
 //export HaloSetBridges
 func HaloSetBridges(cLines *C.char, on C.int) *C.char {
-	raw := C.GoString(cLines)
-	var good, bad []string
-	for _, ln := range strings.Split(raw, "\n") {
-		ln = strings.TrimSpace(ln)
-		if ln == "" {
-			continue
-		}
-		if validBridgeLine(ln) {
-			good = append(good, ln)
-		} else {
-			bad = append(bad, ln)
-		}
-	}
+	good, bad := sortBridgeLines(C.GoString(cLines))
 
 	bridgeMu.Lock()
 	bridgeList = good
@@ -321,14 +532,13 @@ func HaloSetBridges(cLines *C.char, on C.int) *C.char {
 	bridgeMu.Unlock()
 
 	if enabled {
-		if err := startPTListener(); err != nil {
+		if err := startPTListeners(); err != nil {
 			return C.CString(fmt.Sprintf("error: %v", err))
 		}
 	}
-	// turning bridges off leaves the listener up. tor hangs if
-	// ClientTransportPlugin is set a second time in a process (see
-	// applyBridgeConf), so the port it points at has to stay. a localhost
-	// socket nobody dials costs nothing.
+	// turning bridges off leaves the listeners up: tor keeps the ports it
+	// was given for the life of the process. a localhost socket nobody
+	// dials costs nothing.
 
 	if len(bad) > 0 {
 		return C.CString(fmt.Sprintf("ok: %d accepted, %d not understood", len(good), len(bad)))
@@ -356,9 +566,15 @@ func HaloNetworkChanged() *C.char {
 	return C.CString("ok")
 }
 
+// on|count|port, the port being obfs4's listener, 0 before any
+//
 //export HaloBridgeState
 func HaloBridgeState() *C.char {
+	port := 0
+	if r := ptReg("obfs4"); r != nil {
+		port = r.port
+	}
 	bridgeMu.RLock()
 	defer bridgeMu.RUnlock()
-	return C.CString(fmt.Sprintf("%t|%d|%d", bridgeOn, len(bridgeList), ptPort))
+	return C.CString(fmt.Sprintf("%t|%d|%d", bridgeOn, len(bridgeList), port))
 }

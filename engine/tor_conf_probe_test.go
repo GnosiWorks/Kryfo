@@ -6,7 +6,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -42,13 +41,10 @@ func TestWhichCommandHangs(t *testing.T) {
 	bridgeList = []string{fakeBridge}
 	bridgeOn = true
 	bridgeMu.Unlock()
-	if err := startPTListener(); err != nil {
+	if err := startPTListeners(); err != nil {
 		t.Fatal(err)
 	}
-	bridgeMu.RLock()
-	port := ptPort
-	bridgeMu.RUnlock()
-	plugin := fmt.Sprintf("obfs4 socks5 127.0.0.1:%d", port)
+	plugin := ptPlugins()[0]
 
 	timed(t, "SETCONF DisableNetwork=1", func() error {
 		return c.SetConf(control.KeyVals("DisableNetwork", "1")...)
