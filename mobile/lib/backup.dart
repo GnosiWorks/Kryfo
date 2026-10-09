@@ -427,13 +427,18 @@ bool restorableName(String name) {
 
 /// the prefs a restore takes from a file: the ones a backup ever carried
 /// that still mean something here
-const kRestorablePrefs = {
-  'onboarding.complete',
-  // the supporter badge and the receipt that proves it, as the restore
-  // sheet promises
+const kRestorablePrefs = {'onboarding.complete', ...kSupporterPrefs};
+
+/// the supporter badge, the receipt that proves it, where it shows and an
+/// invoice not yet settled, as the restore sheet promises. one the file
+/// lacks goes: it was the identity's being replaced
+const kSupporterPrefs = {
   'supporter_tier',
   'supporter_receipt_payload',
   'supporter_receipt_sig',
+  'supporter_show_self',
+  'supporter_share_contacts',
+  'badge_open_invoice',
 };
 
 /// what a restore writes as onboarding_done: a file that says it was done
@@ -443,11 +448,13 @@ String? onboardingAfterRestore(Object? carried) =>
 
 @visibleForTesting
 Future<void> restorePrefs(Object? carried) async {
-  if (carried is! Map) return;
   final prefs = await SharedPreferences.getInstance();
+  final from = carried is Map ? carried : const {};
   for (final k in kRestorablePrefs) {
-    final v = carried[k];
-    if (v is String) {
+    final v = from[k];
+    if (v == null && kSupporterPrefs.contains(k)) {
+      await prefs.remove(k);
+    } else if (v is String) {
       await prefs.setString(k, v);
     } else if (v is int) {
       await prefs.setInt(k, v);
