@@ -230,7 +230,12 @@ class _BridgesScreenState extends State<BridgesScreen> {
         ),
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
+        padding: EdgeInsets.fromLTRB(
+          20,
+          0,
+          20,
+          40 + MediaQuery.paddingOf(context).bottom,
+        ),
         children: staggerAll([
           Text(
             l10n.bridgesTorIsBlockedWhere,

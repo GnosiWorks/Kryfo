@@ -37,7 +37,12 @@ class _SeenScreenState extends State<SeenScreen> {
         ),
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 44),
+        padding: EdgeInsets.fromLTRB(
+          20,
+          4,
+          20,
+          44 + MediaQuery.paddingOf(context).bottom,
+        ),
         children: staggerAll([
           Text(
             l10n.seenEveryMessengerClaimsPrivacy,
