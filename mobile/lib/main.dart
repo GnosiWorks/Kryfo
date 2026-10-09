@@ -87,7 +87,7 @@ import 'stickers/sticker_pack.dart' show StickerLibrary;
 import 'stickers/sticker_wire.dart' show StickerWire, stickerText;
 import 'widgets/motion.dart';
 import 'widgets/pair_join.dart' show pairUnreached;
-import 'widgets/kryfo_link_text.dart' show takeOutsideLink;
+import 'widgets/kryfo_link_text.dart' show takeOutsideLink, takeOwnLink;
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:app_links/app_links.dart';
 import 'signal_session.dart';
@@ -17688,7 +17688,10 @@ Future<void> showAddContact(BuildContext context) async {
     if (uri.isEmpty) return;
   }
 
-  final status = await handleHaloUri(uri);
+  if (!context.mounted) return;
+  // a room shows what its link says first: put away, nothing happened
+  final status = await takeOwnLink(context, uri);
+  if (status == null) return;
   await appState.refreshContacts();
   if (!context.mounted) return;
   showHaloToast(context, status);
@@ -18257,7 +18260,9 @@ class _DevScreenState extends State<DevScreen> {
       uri = ctrl.text;
     }
 
-    final status = await handleHaloUri(uri);
+    if (!mounted) return;
+    final status = await takeOwnLink(context, uri);
+    if (status == null) return;
     await appState.refreshContacts();
     final parsed = parseHaloUri(uri);
     if (!mounted) return;

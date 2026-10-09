@@ -11,7 +11,8 @@ import 'package:share_plus/share_plus.dart';
 import '../contact_card.dart';
 import '../dlog.dart';
 import '../handle_lookup.dart' show handleFromInput;
-import '../main.dart' show appState, handleHaloUri, handleHaloUriAdded;
+import '../main.dart' show appState, handleHaloUriAdded;
+import '../widgets/kryfo_link_text.dart' show takeOwnLink;
 import '../theme.dart';
 import '../widgets/copied_mark.dart';
 import '../widgets/halo_buttons.dart';
@@ -81,7 +82,8 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
       context,
     ).push<String>(haloRoute<String>(const ScanScreen()));
     if (raw == null || !mounted) return;
-    final status = await handleHaloUri(raw);
+    final status = await takeOwnLink(context, raw);
+    if (status == null) return;
     await appState.refreshContacts();
     if (mounted) showHaloToast(context, status);
   }

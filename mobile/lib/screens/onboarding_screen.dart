@@ -13,7 +13,8 @@ import '../widgets/fit_column.dart';
 import '../theme.dart';
 import 'restore_screen.dart';
 import 'my_kryfo_screen.dart';
-import '../main.dart' show appState, AppState, handleHaloUri;
+import '../main.dart' show appState, AppState;
+import '../widgets/kryfo_link_text.dart' show takeOwnLink;
 import 'scan_screen.dart';
 import 'avatar_picker_screen.dart' show AvatarChoiceEditor;
 import '../widgets/kryfo_avatar.dart';
@@ -1507,12 +1508,14 @@ class _AddSomeoneScreen extends StatelessWidget {
               final raw = await nav.push<String>(
                 haloRoute<String>(const ScanScreen()),
               );
-              // the scanner only hands the code back; handleHaloUri is what
-              // adds the contact
-              if (raw != null) {
-                final status = await handleHaloUri(raw);
+              // the scanner only hands the code back; takeOwnLink is what
+              // adds the contact, and a room shows its link first
+              if (raw != null && context.mounted) {
+                final status = await takeOwnLink(context, raw);
                 await appState.refreshContacts();
-                if (context.mounted) showHaloToast(context, status);
+                if (status != null && context.mounted) {
+                  showHaloToast(context, status);
+                }
               }
               onComplete();
             },

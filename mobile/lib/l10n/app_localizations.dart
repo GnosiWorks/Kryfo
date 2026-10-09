@@ -9933,18 +9933,6 @@ abstract class AppLocalizations {
   /// **'Not now'**
   String get kryfoLinkTextNotNow;
 
-  /// widgets/kryfo_link_text.dart: a room link opened from another app or a web page
-  ///
-  /// In en, this message translates to:
-  /// **'Join {roomName}?'**
-  String kryfoLinkTextJoinRoom(Object roomName);
-
-  /// widgets/kryfo_link_text.dart: a room link opened from another app or a web page
-  ///
-  /// In en, this message translates to:
-  /// **'This is an invite to a burner room. Join only if you know where the link came from.'**
-  String get kryfoLinkTextThisIsARoom;
-
   /// widgets/kryfo_link_text.dart: an invite opened from outside names a contact already here, on the same key
   ///
   /// In en, this message translates to:

@@ -7860,19 +7860,6 @@
   "@kryfoLinkTextNotNow": {
     "description": "widgets/kryfo_link_text.dart"
   },
-  "kryfoLinkTextJoinRoom": "Join {roomName}?",
-  "@kryfoLinkTextJoinRoom": {
-    "description": "widgets/kryfo_link_text.dart: a room link opened from another app or a web page",
-    "placeholders": {
-      "roomName": {
-        "type": "Object"
-      }
-    }
-  },
-  "kryfoLinkTextThisIsARoom": "This is an invite to a burner room. Join only if you know where the link came from.",
-  "@kryfoLinkTextThisIsARoom": {
-    "description": "widgets/kryfo_link_text.dart: a room link opened from another app or a web page"
-  },
   "kryfoLinkTextYouAlreadyHave": "You already have {who}",
   "@kryfoLinkTextYouAlreadyHave": {
     "description": "widgets/kryfo_link_text.dart: an invite opened from outside names a contact already here, on the same key",

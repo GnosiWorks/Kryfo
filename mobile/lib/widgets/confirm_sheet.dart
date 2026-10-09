@@ -177,22 +177,22 @@ Future<bool> showConfirmSheet(
       ]);
       return shutOnLock == null
           ? body
-          : _ShutOnLock(guard: shutOnLock, child: body);
+          : ShutOnLock(guard: shutOnLock, child: body);
     },
   );
   return r == true;
 }
 
 // a sheet taken off as the lock comes up, so it never waits behind it
-class _ShutOnLock extends StatefulWidget {
-  const _ShutOnLock({required this.guard, required this.child});
+class ShutOnLock extends StatefulWidget {
+  const ShutOnLock({super.key, required this.guard, required this.child});
   final LockGuard guard;
   final Widget child;
   @override
-  State<_ShutOnLock> createState() => _ShutOnLockState();
+  State<ShutOnLock> createState() => _ShutOnLockState();
 }
 
-class _ShutOnLockState extends State<_ShutOnLock> {
+class _ShutOnLockState extends State<ShutOnLock> {
   VoidCallback? _unguard;
 
   @override
@@ -382,6 +382,6 @@ Future<void> showNoticeSheet(
     ]);
     return shutOnLock == null
         ? body
-        : _ShutOnLock(guard: shutOnLock, child: body);
+        : ShutOnLock(guard: shutOnLock, child: body);
   },
 );
