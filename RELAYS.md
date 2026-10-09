@@ -45,10 +45,6 @@ engine doesn't speak nip-42 yet: subscriptions fail to authenticate while
 publishes still succeed, so messages look sent and never arrive. teach the
 engine nip-42 first, then test on a spare box.
 
-## `relay/`: dead
-
-the old store-and-forward protocol from before nostr. nothing uses it.
-
 ## deploying relay-live
 
     cd relay-live
