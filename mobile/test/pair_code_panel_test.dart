@@ -136,14 +136,30 @@ void main() {
     for (final s in swapScales(t)) {
       expect(s.scale.value, greaterThanOrEqualTo(0.94));
     }
+    // the card eases to its height (its status line eases in its own)
     expect(
       find.descendant(
         of: find.byType(PairCodePanel),
         matching: find.byType(AnimatedSize),
       ),
-      findsOneWidget,
+      findsWidgets,
     );
     await t.pump(const Duration(seconds: 1));
+  });
+
+  testWidgets('a code whose ten minutes are over goes, and says so', (
+    t,
+  ) async {
+    phone(t);
+    e.answer = 'ok';
+    await share(t);
+    await t.pump(const Duration(seconds: 1));
+    for (var i = 0; i < kPairCodeLife.inSeconds; i++) {
+      await t.pump(const Duration(seconds: 1));
+    }
+    await t.pump(const Duration(seconds: 1));
+    expect(find.text(l10n.pairCodePanelBurned), findsOneWidget);
+    expect(find.text(l10n.pairCodePanelOrMakeASix), findsOneWidget);
   });
 
   testWidgets('with less movement the code is simply there', (t) async {

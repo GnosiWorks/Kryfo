@@ -1697,6 +1697,7 @@
   "pairCodePanelReadSixDigitsOut": "Lies sechs Ziffern laut vor, und die Person kann dich hinzufügen. Sonst muss nichts ausgetauscht werden.",
   "pairCodePanelWorking": "Einen Moment",
   "pairCodePanelOrMakeASix": "Oder erstelle einen sechsstelligen Code zum Vorlesen",
+  "pairCodePanelBurned": "Der Code ist verbrannt. Erstelle einen neuen, wenn die Person bereit ist.",
   "pairCodePanelCodeCopied": "Code kopiert",
   "pairCodePanelBurnsIn": "Verschwindet in {mm}:{ss}",
   "pairCodePanelTheyTapAddChoose": "Die Person tippt auf Hinzufügen, wählt Code und gibt diese ein.",

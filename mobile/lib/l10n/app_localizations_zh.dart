@@ -6196,6 +6196,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pairCodePanelOrMakeASix => '或者生成一个六位数字的码，念给对方';
 
   @override
+  String get pairCodePanelBurned => '这个码已经烧掉了。对方准备好时再生成一个新的。';
+
+  @override
   String get pairCodePanelCodeCopied => '配对码已复制';
 
   @override
@@ -13587,6 +13590,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get pairCodePanelOrMakeASix => '或產生一組六位數的配對碼唸給對方';
+
+  @override
+  String get pairCodePanelBurned => '這個碼已經燒掉了。對方準備好時再產生一個新的。';
 
   @override
   String get pairCodePanelCodeCopied => '已複製配對碼';

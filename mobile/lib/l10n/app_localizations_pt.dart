@@ -6505,6 +6505,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Ou crie um código de seis dígitos para ler em voz alta';
 
   @override
+  String get pairCodePanelBurned =>
+      'Esse código queimou. Crie um novo quando a pessoa estiver pronta.';
+
+  @override
   String get pairCodePanelCodeCopied => 'Código copiado';
 
   @override

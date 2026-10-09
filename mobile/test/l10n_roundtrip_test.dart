@@ -2163,9 +2163,9 @@ void main() {
     expect(l.profileKryfoRunsOnWhat, "Kryfo runs on what people give");
     expect(l.profileKeepKryfoIndependent, "Keep Kryfo independent");
     expect(l.qrLink, "Link");
-    expect(l.qrYourLinkAsTyped, "YOUR LINK AS TYPED · NO TRACKING REDIRECT");
+    expect(l.qrYourLinkAsTyped, "Your link as typed · no tracking redirect");
     expect(l.qrText, "Text");
-    expect(l.qrStaysInTheCode, "STAYS IN THE CODE · NO SERVER HOLDS IT");
+    expect(l.qrStaysInTheCode, "Stays in the code · no server holds it");
     expect(l.qrWiFi, "Wi-Fi");
     expect(
       l.qrMadeOnThisPhone,
@@ -2187,7 +2187,7 @@ void main() {
     );
     expect(l.qrTo, "To");
     expect(l.qrSubject, "Subject");
-    expect(l.qrANumberNothingElse, "A NUMBER · NOTHING ELSE");
+    expect(l.qrANumberNothingElse, "A number · nothing else");
     expect(l.qrNumber, "Number");
     expect(l.qrSms, "SMS");
     expect(
@@ -2196,7 +2196,7 @@ void main() {
     );
     expect(l.qrMessage, "Message");
     expect(l.qrLocation, "Location");
-    expect(l.qrCoordinatesOnlyNoMap, "COORDINATES ONLY · NO MAP SERVICE ASKED");
+    expect(l.qrCoordinatesOnlyNoMap, "Coordinates only · no map service asked");
     expect(l.qrLatitude, "Latitude");
     expect(l.qrLongitude, "Longitude");
     expect(l.qrBitcoin, "Bitcoin");
@@ -3038,7 +3038,7 @@ void main() {
     expect(l.kryfoLinkTextJoin("<roomName>"), "Join <roomName>");
     expect(l.kryfoLinkTextKryfoLink, "Kryfo link");
     expect(l.kryfoLinkTextAdd2("<who>"), "Add <who>");
-    expect(l.kryfoLinkTextBurnerRoom, "BURNER ROOM");
+    expect(l.kryfoLinkTextBurnerRoom, "Burner room");
     expect(l.kryfoLinkTextThisRoomHasClosed, "This room has closed");
     expect(l.kryfoLinkTextClosesIn("<time>"), "Closes in <time>");
     expect(

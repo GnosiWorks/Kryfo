@@ -6584,6 +6584,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Или создай шестизначный код, чтобы продиктовать';
 
   @override
+  String get pairCodePanelBurned =>
+      'Этот код сгорел. Создай новый, когда человек будет готов.';
+
+  @override
   String get pairCodePanelCodeCopied => 'Код скопирован';
 
   @override

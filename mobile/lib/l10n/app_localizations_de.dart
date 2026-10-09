@@ -6529,6 +6529,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Oder erstelle einen sechsstelligen Code zum Vorlesen';
 
   @override
+  String get pairCodePanelBurned =>
+      'Der Code ist verbrannt. Erstelle einen neuen, wenn die Person bereit ist.';
+
+  @override
   String get pairCodePanelCodeCopied => 'Code kopiert';
 
   @override

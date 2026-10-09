@@ -1697,6 +1697,7 @@
   "pairCodePanelReadSixDigitsOut": "Đọc to sáu chữ số là họ có thể thêm bạn. Không cần trao đổi gì khác.",
   "pairCodePanelWorking": "Đang xử lý",
   "pairCodePanelOrMakeASix": "Hoặc tạo mã sáu chữ số để đọc to",
+  "pairCodePanelBurned": "Mã đó đã hết hạn. Tạo mã mới khi họ sẵn sàng.",
   "pairCodePanelCodeCopied": "Đã sao chép mã",
   "pairCodePanelBurnsIn": "Tự hủy sau {mm}:{ss}",
   "pairCodePanelTheyTapAddChoose": "Họ chạm Thêm, chọn Mã, rồi nhập các số này.",

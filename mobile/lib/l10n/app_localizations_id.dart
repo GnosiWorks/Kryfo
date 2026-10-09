@@ -6453,6 +6453,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Atau buat kode enam angka untuk dibacakan';
 
   @override
+  String get pairCodePanelBurned =>
+      'Kode itu sudah hangus. Buat yang baru saat mereka siap.';
+
+  @override
   String get pairCodePanelCodeCopied => 'Kode disalin';
 
   @override

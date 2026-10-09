@@ -1697,6 +1697,7 @@
   "pairCodePanelReadSixDigitsOut": "Altı rakamı yüksek sesle oku, seni ekleyebilsin. Başka hiçbir şeyin el değiştirmesi gerekmez.",
   "pairCodePanelWorking": "Hazırlanıyor",
   "pairCodePanelOrMakeASix": "Ya da okumak için altı haneli bir kod oluştur",
+  "pairCodePanelBurned": "O kod yandı. Karşı taraf hazır olduğunda yenisini oluştur.",
   "pairCodePanelCodeCopied": "Kod kopyalandı",
   "pairCodePanelBurnsIn": "{mm}:{ss} sonra silinir",
   "pairCodePanelTheyTapAddChoose": "Karşındaki ekleme ekranını açar, kodu seçer ve bunları yazar.",

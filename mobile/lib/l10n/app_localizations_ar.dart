@@ -6576,6 +6576,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pairCodePanelOrMakeASix => 'أو أنشئ رمزًا من ستة أرقام لتقرأه';
 
   @override
+  String get pairCodePanelBurned =>
+      'احترق هذا الرمز. أنشئ رمزًا جديدًا عندما يكون الطرف الآخر جاهزًا.';
+
+  @override
   String get pairCodePanelCodeCopied => 'نُسخ الرمز';
 
   @override

@@ -6479,6 +6479,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Ya da okumak için altı haneli bir kod oluştur';
 
   @override
+  String get pairCodePanelBurned =>
+      'O kod yandı. Karşı taraf hazır olduğunda yenisini oluştur.';
+
+  @override
   String get pairCodePanelCodeCopied => 'Kod kopyalandı';
 
   @override

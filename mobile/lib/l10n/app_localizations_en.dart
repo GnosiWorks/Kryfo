@@ -6449,6 +6449,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pairCodePanelOrMakeASix => 'Or make a six digit code to read out';
 
   @override
+  String get pairCodePanelBurned =>
+      'That code burned. Make a new one when they\'re ready.';
+
+  @override
   String get pairCodePanelCodeCopied => 'Code copied';
 
   @override

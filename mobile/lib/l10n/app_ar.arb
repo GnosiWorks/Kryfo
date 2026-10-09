@@ -1697,6 +1697,7 @@
   "pairCodePanelReadSixDigitsOut": "اقرأ ستة أرقام بصوت عالٍ فيستطيع إضافتك. لا حاجة إلى تبادل أي شيء آخر.",
   "pairCodePanelWorking": "جارٍ العمل",
   "pairCodePanelOrMakeASix": "أو أنشئ رمزًا من ستة أرقام لتقرأه",
+  "pairCodePanelBurned": "احترق هذا الرمز. أنشئ رمزًا جديدًا عندما يكون الطرف الآخر جاهزًا.",
   "pairCodePanelCodeCopied": "نُسخ الرمز",
   "pairCodePanelBurnsIn": "يختفي بعد ⁨{mm}⁩:⁨{ss}⁩",
   "pairCodePanelTheyTapAddChoose": "يضغط «إضافة»، ويختار «رمز»، ثم يكتب هذه الأرقام.",

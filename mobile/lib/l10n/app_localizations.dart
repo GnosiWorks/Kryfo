@@ -10305,6 +10305,12 @@ abstract class AppLocalizations {
   /// **'Or make a six digit code to read out'**
   String get pairCodePanelOrMakeASix;
 
+  /// widgets/pair_code_panel.dart: where the six digits were, once their ten minutes are over
+  ///
+  /// In en, this message translates to:
+  /// **'That code burned. Make a new one when they\'re ready.'**
+  String get pairCodePanelBurned;
+
   /// widgets/pair_code_panel.dart
   ///
   /// In en, this message translates to:

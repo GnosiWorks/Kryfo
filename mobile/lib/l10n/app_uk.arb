@@ -1697,6 +1697,7 @@
   "pairCodePanelReadSixDigitsOut": "Продиктуй шість цифр - і тебе зможуть додати. Більше нічим обмінюватися не треба.",
   "pairCodePanelWorking": "Працюємо",
   "pairCodePanelOrMakeASix": "Або створи шестизначний код, щоб продиктувати",
+  "pairCodePanelBurned": "Цей код згорів. Створи новий, коли людина буде готова.",
   "pairCodePanelCodeCopied": "Код скопійовано",
   "pairCodePanelBurnsIn": "Зникне через {mm}:{ss}",
   "pairCodePanelTheyTapAddChoose": "Хай натиснуть «Додати», оберуть код і введуть ці цифри.",

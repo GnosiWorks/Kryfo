@@ -6444,6 +6444,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pairCodePanelOrMakeASix => 'Hoặc tạo mã sáu chữ số để đọc to';
 
   @override
+  String get pairCodePanelBurned =>
+      'Mã đó đã hết hạn. Tạo mã mới khi họ sẵn sàng.';
+
+  @override
   String get pairCodePanelCodeCopied => 'Đã sao chép mã';
 
   @override

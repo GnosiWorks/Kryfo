@@ -8172,6 +8172,10 @@
   "@pairCodePanelOrMakeASix": {
     "description": "widgets/pair_code_panel.dart"
   },
+  "pairCodePanelBurned": "That code burned. Make a new one when they're ready.",
+  "@pairCodePanelBurned": {
+    "description": "widgets/pair_code_panel.dart: where the six digits were, once their ten minutes are over"
+  },
   "pairCodePanelCodeCopied": "Code copied",
   "@pairCodePanelCodeCopied": {
     "description": "widgets/pair_code_panel.dart"

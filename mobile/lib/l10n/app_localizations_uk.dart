@@ -6577,6 +6577,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Або створи шестизначний код, щоб продиктувати';
 
   @override
+  String get pairCodePanelBurned =>
+      'Цей код згорів. Створи новий, коли людина буде готова.';
+
+  @override
   String get pairCodePanelCodeCopied => 'Код скопійовано';
 
   @override
