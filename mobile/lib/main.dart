@@ -6713,17 +6713,19 @@ Future<(String, bool)> handleHaloUriAdded(
       ? _bundleIdentity(parsed['bundle']!)
       : _xIdentity(parsed['xpub']!.toLowerCase());
   if (cardKey == null) return (l10n.appInvalidUri, false);
+  // the signal store holds a shut vault's people too: a link of one of
+  // theirs reads as any link that does not take, on their key or another.
+  // an add would put an everyday row beside the hidden one and a fresh
+  // session over theirs. a decoy only keeps rows of its own
+  if (!sessionQuiet && (hidden ?? appState.hiddenWhileShut)(parsed['id']!)) {
+    return (l10n.appInvalidUri, false);
+  }
   final bound = await _boundIdentity(
     parsed['id']!,
     ss: sessionQuiet ? null : signalSession,
     row: session.getContact,
   );
   if (bound != null && !_eqBytes(bound, cardKey)) {
-    // the signal store holds a shut vault's people too: one of theirs on
-    // another key reads as any link that does not take
-    if ((hidden ?? appState.hiddenWhileShut)(parsed['id']!)) {
-      return (l10n.appInvalidUri, false);
-    }
     return (l10n.appLinkOtherKey(parsed['id']!), false);
   }
   // someone blocked stays blocked: an add would say they can be written to

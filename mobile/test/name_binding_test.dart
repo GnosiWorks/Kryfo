@@ -666,6 +666,26 @@ void main() {
         false,
       ));
       expect(live.people.containsKey(shut), isFalse);
+      // their own card too: no everyday row, and their session stays
+      final before = await signalSession.sessionStore.loadSession(
+        SignalProtocolAddress(shut, 1),
+      );
+      final own = await card(shut, held);
+      expect(await linkKinOf(own, hidden: app.hiddenWhileShut), (
+        LinkKin.stranger,
+        shut,
+      ));
+      expect(await handleHaloUriAdded(own, hidden: app.hiddenWhileShut), (
+        l10n.appInvalidUri,
+        false,
+      ));
+      expect(live.people.containsKey(shut), isFalse);
+      expect(
+        (await signalSession.sessionStore.loadSession(
+          SignalProtocolAddress(shut, 1),
+        )).serialize(),
+        before.serialize(),
+      );
       // someone here on another key is still said to be
       expect(
         await handleHaloUriAdded(
