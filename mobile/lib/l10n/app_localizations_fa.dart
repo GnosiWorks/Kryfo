@@ -6468,6 +6468,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'یا یک کد شش‌رقمی بسازید تا بلند بخوانید';
 
   @override
+  String get pairCodePanelBurned =>
+      'این کد محو شد. وقتی طرف مقابل آماده بود، کد تازه‌ای بسازید.';
+
+  @override
   String get pairCodePanelCodeCopied => 'کد کپی شد';
 
   @override

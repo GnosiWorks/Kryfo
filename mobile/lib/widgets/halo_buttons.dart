@@ -34,26 +34,32 @@ class HaloPrimaryButton extends StatelessWidget {
             ? Duration.zero
             : const Duration(milliseconds: 200),
         curve: Curves.easeOutCubic,
-        height: 46,
-        alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
+        // a long label in a long language takes a second line, never "…"
+        constraints: const BoxConstraints(minHeight: 46),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
         decoration: BoxDecoration(
           color: on ? HaloColors.amber : HaloColors.surface3,
           borderRadius: BorderRadius.circular(13),
         ),
         // a label that changes in place (claim, claiming) rises in
-        child: ExcludeSemantics(
-          child: RiseSwap(
-            alignment: Alignment.center,
-            child: Text(
-              label,
-              key: ValueKey(phase ?? label),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: HaloType.sans(
-                size: 14,
-                weight: FontWeight.w600,
-                color: on ? HaloColors.onAmber : HaloColors.text3,
+        // as tall as its words, at least the 46 above: never the whole
+        // height a parent offers
+        child: Align(
+          heightFactor: 1,
+          child: ExcludeSemantics(
+            child: RiseSwap(
+              alignment: Alignment.center,
+              child: Text(
+                label,
+                key: ValueKey(phase ?? label),
+                maxLines: 2,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                style: HaloType.sans(
+                  size: 14,
+                  weight: FontWeight.w600,
+                  color: on ? HaloColors.onAmber : HaloColors.text3,
+                ),
               ),
             ),
           ),
@@ -81,29 +87,36 @@ class HaloGhostButton extends StatelessWidget {
       onTap: onTap,
       scale: 0.96,
       child: Container(
-        height: 46,
-        alignment: Alignment.center,
+        // a long label in a long language takes a second line, never "…"
+        constraints: const BoxConstraints(minHeight: 46),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(13),
           border: quiet
               ? Border.all(color: HaloColors.line)
               : Border.all(color: HaloColors.amber, width: 1),
         ),
-        child: ExcludeSemantics(
-          child: RiseSwap(
-            alignment: Alignment.center,
-            child: Text(
-              label,
-              key: ValueKey(label),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: quiet
-                  ? HaloType.sans(size: 14, color: HaloColors.text2)
-                  : HaloType.sans(
-                      size: 14,
-                      weight: FontWeight.w600,
-                      color: HaloColors.amber,
-                    ),
+        // as tall as its words, at least the 46 above: never the whole
+        // height a parent offers
+        child: Align(
+          heightFactor: 1,
+          child: ExcludeSemantics(
+            child: RiseSwap(
+              alignment: Alignment.center,
+              child: Text(
+                label,
+                key: ValueKey(label),
+                maxLines: 2,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                style: quiet
+                    ? HaloType.sans(size: 14, color: HaloColors.text2)
+                    : HaloType.sans(
+                        size: 14,
+                        weight: FontWeight.w600,
+                        color: HaloColors.amber,
+                      ),
+              ),
             ),
           ),
         ),

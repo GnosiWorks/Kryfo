@@ -38,6 +38,8 @@ class PollCard extends StatefulWidget {
   final ValueChanged<List<int>> onVote;
   final VoidCallback? onClose;
   final String Function(String id) nameOf;
+  // the face someone chose, null for the one their key draws
+  final int? Function(String id)? faceOf;
 
   const PollCard({
     super.key,
@@ -49,6 +51,7 @@ class PollCard extends StatefulWidget {
     required this.isOut,
     required this.onVote,
     required this.nameOf,
+    this.faceOf,
     this.onClose,
     this.stamp,
     this.burn,
@@ -142,6 +145,7 @@ class _PollCardState extends State<PollCard> {
         tally: t,
         me: widget.me,
         nameOf: widget.nameOf,
+        faceOf: widget.faceOf,
       ),
     );
   }
@@ -336,7 +340,10 @@ class _PollCardState extends State<PollCard> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         if (voters > 0) ...[
-                          _Faces(ids: widget.votes.keys.take(3).toList()),
+                          _Faces(
+                            ids: widget.votes.keys.take(3).toList(),
+                            faceOf: widget.faceOf,
+                          ),
                           const SizedBox(width: 6),
                         ],
                         Flexible(
@@ -648,7 +655,8 @@ class _Mark extends StatelessWidget {
 // the first few who voted, their faces overlapping
 class _Faces extends StatelessWidget {
   final List<String> ids;
-  const _Faces({required this.ids});
+  final int? Function(String id)? faceOf;
+  const _Faces({required this.ids, this.faceOf});
   @override
   Widget build(BuildContext context) {
     const s = 18.0;
@@ -666,7 +674,11 @@ class _Faces extends StatelessWidget {
                   shape: BoxShape.circle,
                   border: Border.all(color: HaloColors.surface2, width: 1.5),
                 ),
-                child: KryfoAvatar(seed: ids[i], size: s - 3),
+                child: KryfoAvatar(
+                  seed: ids[i],
+                  size: s - 3,
+                  choice: faceOf?.call(ids[i]),
+                ),
               ),
             ),
         ],
@@ -681,12 +693,14 @@ class _VotersSheet extends StatelessWidget {
   final PollTally tally;
   final String me;
   final String Function(String id) nameOf;
+  final int? Function(String id)? faceOf;
   const _VotersSheet({
     required this.question,
     required this.poll,
     required this.tally,
     required this.me,
     required this.nameOf,
+    this.faceOf,
   });
 
   @override
@@ -789,7 +803,11 @@ class _VotersSheet extends StatelessWidget {
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    KryfoAvatar(seed: id, size: 22),
+                                    KryfoAvatar(
+                                      seed: id,
+                                      size: 22,
+                                      choice: faceOf?.call(id),
+                                    ),
                                     const SizedBox(width: 6),
                                     Text(
                                       id == me ? l10n.pollYou : nameOf(id),

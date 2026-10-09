@@ -4508,21 +4508,21 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get qrYourLinkAsTyped =>
-      'ТВОЯ ССЫЛКА КАК ЕСТЬ · БЕЗ СЛЕДЯЩЕЙ ПЕРЕАДРЕСАЦИИ';
+      'Твоя ссылка как есть · без следящей переадресации';
 
   @override
   String get qrText => 'Текст';
 
   @override
   String get qrStaysInTheCode =>
-      'ОСТАЁТСЯ В КОДЕ · НИКАКОЙ СЕРВЕР ЕГО НЕ ХРАНИТ';
+      'Остаётся в коде · никакой сервер его не хранит';
 
   @override
   String get qrWiFi => 'Wi-Fi';
 
   @override
   String get qrMadeOnThisPhone =>
-      'СДЕЛАНО НА ЭТОМ ТЕЛЕФОНЕ · НИ ОДИН САЙТ НЕ ВИДЕЛ ПАРОЛЬ';
+      'Сделано на этом телефоне · ни один сайт не видел пароль';
 
   @override
   String get qrNetworkName => 'Имя сети';
@@ -4535,7 +4535,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get qrOnlyWhatYouType =>
-      'ТОЛЬКО ТО, ЧТО ТЫ ВВОДИШЬ · НИЧЕГО ИЗ ТВОИХ КОНТАКТОВ';
+      'Только то, что ты вводишь · ничего из твоих контактов';
 
   @override
   String get qrName => 'Имя';
@@ -4548,7 +4548,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get qrOpensTheirMailApp =>
-      'ОТКРЫВАЕТ ПОЧТОВОЕ ПРИЛОЖЕНИЕ · ОТСЮДА НИЧЕГО НЕ ОТПРАВЛЯЕТСЯ';
+      'Открывает почтовое приложение · отсюда ничего не отправляется';
 
   @override
   String get qrTo => 'Кому';
@@ -4557,7 +4557,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get qrSubject => 'Тема';
 
   @override
-  String get qrANumberNothingElse => 'НОМЕР · И НИЧЕГО БОЛЬШЕ';
+  String get qrANumberNothingElse => 'Номер · и ничего больше';
 
   @override
   String get qrNumber => 'Номер';
@@ -4567,7 +4567,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get qrOpensTheirMessagesApp =>
-      'ОТКРЫВАЕТ ПРИЛОЖЕНИЕ СООБЩЕНИЙ · ОТСЮДА НИЧЕГО НЕ ОТПРАВЛЯЕТСЯ';
+      'Открывает приложение сообщений · отсюда ничего не отправляется';
 
   @override
   String get qrMessage => 'Сообщение';
@@ -4577,7 +4577,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get qrCoordinatesOnlyNoMap =>
-      'ТОЛЬКО КООРДИНАТЫ · КАРТОГРАФИЧЕСКИЕ СЕРВИСЫ НЕ ЗАПРАШИВАЮТСЯ';
+      'Только координаты · картографические сервисы не запрашиваются';
 
   @override
   String get qrLatitude => 'Широта';
@@ -4590,7 +4590,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get qrAddressAndAmountNo =>
-      'АДРЕС И СУММА · БЕЗ ПЛАТЁЖНЫХ САЙТОВ ПОСЕРЕДИНЕ';
+      'Адрес и сумма · без платёжных сайтов посередине';
 
   @override
   String get qrAddress => 'Адрес';
@@ -6385,7 +6385,7 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get kryfoLinkTextBurnerRoom => 'ОДНОРАЗОВАЯ КОМНАТА';
+  String get kryfoLinkTextBurnerRoom => 'Одноразовая комната';
 
   @override
   String get kryfoLinkTextThisRoomHasClosed => 'Эта комната закрыта';
@@ -6582,6 +6582,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get pairCodePanelOrMakeASix =>
       'Или создай шестизначный код, чтобы продиктовать';
+
+  @override
+  String get pairCodePanelBurned =>
+      'Этот код сгорел. Создай новый, когда человек будет готов.';
 
   @override
   String get pairCodePanelCodeCopied => 'Код скопирован';

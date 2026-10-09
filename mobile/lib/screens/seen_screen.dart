@@ -3,6 +3,8 @@
 // thing, one column per route, the word in each cell. tap a row for the why.
 // including the parts that are not flattering. if this page ever stops being
 // true, fix the app, not the page.
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../main.dart' hide live;
@@ -25,6 +27,7 @@ class _SeenScreenState extends State<SeenScreen> {
   Widget build(BuildContext context) {
     final mode = appState.sendMode;
     final col = mode == 'balanced' ? 1 : (mode == 'fast' ? 2 : 0);
+    final cols = _cellWidth(context, _rows);
     return Scaffold(
       backgroundColor: HaloColors.surface,
       appBar: AppBar(
@@ -41,14 +44,15 @@ class _SeenScreenState extends State<SeenScreen> {
         children: staggerAll([
           Text(
             l10n.seenEveryMessengerClaimsPrivacy,
-            style: HaloType.mono(size: 12, color: HaloColors.text3),
+            style: HaloType.mono(size: 12, color: HaloColors.text2),
           ),
           const SizedBox(height: 22),
-          _Header(active: col),
+          _Header(active: col, cols: cols),
           for (final (i, row) in _rows.indexed)
             _RowTile(
               row: row,
               active: col,
+              cols: cols,
               open: _open == i,
               onTap: () {
                 HapticFeedback.selectionClick();
@@ -156,7 +160,57 @@ List<_Row> get _rows => [
   ], l10n.seenTheRatchetAndStorage),
 ];
 
-const _cellW = 66.0;
+// a column is as wide as its longest word, never narrower than this, so a
+// word wraps whole and is never broken inside. where three such columns
+// leave the row's words too little room, the row stacks: its words above,
+// the three columns sharing the whole width below
+const _cellMin = 66.0;
+
+// the columns' width, whether the rows stack, and how much smaller their
+// words are drawn when even a third of the width is short of the longest
+typedef _Cols = ({double w, bool stacked, double shrink});
+
+TextStyle _cellStyle(FontWeight weight, [double shrink = 1]) =>
+    HaloType.mono(size: 9.5 * shrink, weight: weight, letter: 0.04);
+TextStyle _headStyle([double shrink = 1]) =>
+    HaloType.mono(size: 10 * shrink, letter: 0.1, weight: FontWeight.w600);
+
+_Cols _cellWidth(BuildContext context, List<_Row> rows) {
+  final scaler = MediaQuery.textScalerOf(context);
+  final dir = Directionality.of(context);
+  double widest(String text, TextStyle style) {
+    var most = 0.0;
+    for (final word in text.split(RegExp(r'\s+'))) {
+      final p = TextPainter(
+        text: TextSpan(text: word, style: style),
+        textDirection: dir,
+        textScaler: scaler,
+        maxLines: 1,
+      )..layout();
+      if (p.width > most) most = p.width;
+      p.dispose();
+    }
+    return most;
+  }
+
+  var most = 0.0;
+  for (final h in [l10n.seenOnion, l10n.seenRelay, l10n.seenFast]) {
+    most = max(most, widest(h, _headStyle()));
+  }
+  for (final r in rows) {
+    for (final c in r.cells) {
+      most = max(most, widest(c.word, _cellStyle(FontWeight.w700)));
+    }
+  }
+  final full = MediaQuery.sizeOf(context).width - 40;
+  // beside the row's own words, which keep a third of the width at least
+  final room = full * 2 / 3 / 3;
+  final need = max(_cellMin, most + 8);
+  if (need <= room) return (w: need, stacked: false, shrink: 1.0);
+  final third = full / 3;
+  final shrink = need <= third ? 1.0 : max(0.7, (third - 8) / most);
+  return (w: third, stacked: true, shrink: shrink);
+}
 
 Color _tint(_Tone t) => switch (t) {
   _Tone.good => HaloColors.green,
@@ -167,15 +221,16 @@ Color _tint(_Tone t) => switch (t) {
 // the column of the route in use, a soft amber band down the table, so
 // the other routes' words keep their full colour beside it
 Widget _band(
-  int active, {
+  int active,
+  double w, {
   double above = 0,
   double below = 0,
   BorderRadius? radius,
 }) => PositionedDirectional(
   top: -above,
   bottom: -below,
-  end: (2 - active) * _cellW,
-  width: _cellW,
+  end: (2 - active) * w,
+  width: w,
   child: DecoratedBox(
     decoration: BoxDecoration(
       color: HaloColors.amber.withValues(alpha: 0.07),
@@ -186,37 +241,37 @@ Widget _band(
 
 class _Header extends StatelessWidget {
   final int active;
-  const _Header({required this.active});
+  final _Cols cols;
+  const _Header({required this.active, required this.cols});
   @override
   Widget build(BuildContext context) {
+    final w = cols.w;
     final names = [l10n.seenOnion, l10n.seenRelay, l10n.seenFast];
     return Stack(
       clipBehavior: Clip.none,
       children: [
         _band(
           active,
+          w,
           radius: const BorderRadius.vertical(top: Radius.circular(8)),
         ),
         Padding(
           padding: const EdgeInsets.only(top: 6, bottom: 6),
           child: Row(
             children: [
-              const Expanded(child: SizedBox()),
+              if (!cols.stacked) const Expanded(child: SizedBox()),
               for (var i = 0; i < 3; i++)
                 SizedBox(
-                  width: _cellW,
+                  width: w,
                   child: Column(
                     children: [
                       Text(
                         names[i],
                         textAlign: TextAlign.center,
-                        style: HaloType.mono(
-                          size: 10,
-                          letter: 0.1,
-                          weight: FontWeight.w600,
+                        style: _headStyle(cols.shrink).copyWith(
                           color: i == active
                               ? HaloColors.amber
-                              : HaloColors.text3,
+                              : HaloColors.text2,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -244,20 +299,45 @@ class _Header extends StatelessWidget {
 class _RowTile extends StatelessWidget {
   final _Row row;
   final int active;
+  final _Cols cols;
   final bool open;
   final VoidCallback onTap;
   const _RowTile({
     required this.row,
     required this.active,
+    required this.cols,
     required this.open,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    final w = cols.w;
+    final what = Text(
+      row.what,
+      style: HaloType.sans(size: 13.5, color: HaloColors.text),
+    );
+    final cells = [
+      for (var i = 0; i < 3; i++)
+        SizedBox(
+          width: w,
+          child: Text(
+            row.cells[i].word,
+            textAlign: TextAlign.center,
+            maxLines: 3,
+            style: _cellStyle(
+              i == active ? FontWeight.w700 : FontWeight.w500,
+              cols.shrink,
+            ).copyWith(color: _tint(row.cells[i].tone)),
+          ),
+        ),
+    ];
+    // pressed, the row lights as the settings rows do: the column band
+    // keeps its line
+    return InkWell(
       onTap: onTap,
-      behavior: HitTestBehavior.opaque,
+      splashColor: HaloColors.amber.withValues(alpha: 0.08),
+      highlightColor: HaloColors.amber.withValues(alpha: 0.08),
       child: Container(
         decoration: BoxDecoration(
           border: Border(top: BorderSide(color: HaloColors.line, width: 0.5)),
@@ -266,44 +346,38 @@ class _RowTile extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                // runs through the row's own padding, so the band is whole;
-                // an open row's why is left clear of it
-                _band(active, above: 11, below: open ? 0 : 11),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        row.what,
-                        style: HaloType.sans(
-                          size: 13.5,
-                          color: HaloColors.text,
-                        ),
-                      ),
-                    ),
-                    for (var i = 0; i < 3; i++)
-                      SizedBox(
-                        width: _cellW,
-                        child: Text(
-                          row.cells[i].word,
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          style: HaloType.mono(
-                            size: 9.5,
-                            weight: i == active
-                                ? FontWeight.w700
-                                : FontWeight.w500,
-                            letter: 0.04,
-                            color: _tint(row.cells[i].tone),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ],
-            ),
+            if (cols.stacked)
+              // the band runs behind the words as well, so it stays whole
+              // down the table
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  _band(active, w, above: 11, below: open ? 0 : 11),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      what,
+                      const SizedBox(height: 6),
+                      Row(children: cells),
+                    ],
+                  ),
+                ],
+              )
+            else
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  // runs through the row's own padding, so the band is
+                  // whole; an open row's why is left clear of it
+                  _band(active, w, above: 11, below: open ? 0 : 11),
+                  Row(
+                    children: [
+                      Expanded(child: what),
+                      ...cells,
+                    ],
+                  ),
+                ],
+              ),
             EaseSize(
               duration: const Duration(milliseconds: 220),
               child: open

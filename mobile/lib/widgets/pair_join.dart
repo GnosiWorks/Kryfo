@@ -12,6 +12,7 @@ import '../l10n/l10n.dart';
 import '../theme.dart';
 import 'kryfo_avatar.dart';
 import 'motion.dart' show kHouseCurve, kHouseTime, motionStill;
+import 'halo_buttons.dart';
 import 'press_scale.dart';
 
 final _words = RegExp(r'^[a-z]+-[a-z]+-[a-z]+$');
@@ -261,27 +262,10 @@ class _PairJoinState extends State<PairJoin> {
           ),
         ),
         const SizedBox(height: 16),
-        PressScale(
-          scale: 0.97,
-          onTap: _busy ? null : _join,
-          child: AnimatedContainer(
-            duration: still ? Duration.zero : const Duration(milliseconds: 180),
-            curve: Curves.easeOutCubic,
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: _busy ? HaloColors.surface2 : HaloColors.amber,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              _busy ? l10n.pairCodeLooking : l10n.pairCodeAddThem,
-              style: HaloType.mono(
-                size: 12,
-                weight: FontWeight.w600,
-                color: _busy ? HaloColors.text2 : HaloColors.onAmber,
-              ),
-            ),
-          ),
+        HaloPrimaryButton(
+          label: _busy ? l10n.pairCodeLooking : l10n.pairCodeAddThem,
+          busy: _busy,
+          onTap: _join,
         ),
         // with less movement the line is simply there
         if (still)
@@ -358,31 +342,7 @@ class PairConfirm extends StatelessWidget {
             style: HaloType.sans(size: 13.5, color: HaloColors.text2),
           ),
           const SizedBox(height: 22),
-          PressScale(
-            scale: 0.97,
-            onTap: busy ? null : onAdd,
-            child: AnimatedContainer(
-              duration: still
-                  ? Duration.zero
-                  : const Duration(milliseconds: 180),
-              constraints: const BoxConstraints(minHeight: 48),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: busy ? HaloColors.surface3 : HaloColors.amber,
-                borderRadius: BorderRadius.circular(13),
-              ),
-              child: Text(
-                l10n.commonAdd,
-                textAlign: TextAlign.center,
-                style: HaloType.sans(
-                  size: 14.5,
-                  weight: FontWeight.w600,
-                  color: busy ? HaloColors.text2 : HaloColors.onAmber,
-                ),
-              ),
-            ),
-          ),
+          HaloPrimaryButton(label: l10n.commonAdd, busy: busy, onTap: onAdd),
           const SizedBox(height: 4),
           PressScale(
             scale: 0.97,

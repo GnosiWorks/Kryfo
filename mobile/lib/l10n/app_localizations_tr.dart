@@ -4428,20 +4428,20 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get qrYourLinkAsTyped =>
-      'BAĞLANTIN YAZDIĞIN GİBİ · İZLEYEN YÖNLENDİRME YOK';
+      'Bağlantın yazdığın gibi · izleyen yönlendirme yok';
 
   @override
   String get qrText => 'Metin';
 
   @override
-  String get qrStaysInTheCode => 'KODUN İÇİNDE KALIR · HİÇBİR SUNUCU TUTMAZ';
+  String get qrStaysInTheCode => 'Kodun içinde kalır · hiçbir sunucu tutmaz';
 
   @override
   String get qrWiFi => 'Wi-Fi';
 
   @override
   String get qrMadeOnThisPhone =>
-      'BU TELEFONDA YAPILDI · ŞİFREYİ HİÇBİR SİTE GÖRMEDİ';
+      'Bu telefonda yapıldı · şifreyi hiçbir site görmedi';
 
   @override
   String get qrNetworkName => 'Ağ adı';
@@ -4453,7 +4453,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get qrContact => 'Kişi';
 
   @override
-  String get qrOnlyWhatYouType => 'YALNIZCA YAZDIĞIN · KİŞİLERİNDEN HİÇBİR ŞEY';
+  String get qrOnlyWhatYouType => 'Yalnızca yazdığın · kişilerinden hiçbir şey';
 
   @override
   String get qrName => 'Ad';
@@ -4466,7 +4466,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get qrOpensTheirMailApp =>
-      'KARŞI TARAFIN E-POSTA UYGULAMASINI AÇAR · BURADAN HİÇBİR ŞEY GİTMEZ';
+      'Karşı tarafın e-posta uygulamasını açar · buradan hiçbir şey gitmez';
 
   @override
   String get qrTo => 'Kime';
@@ -4475,7 +4475,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get qrSubject => 'Konu';
 
   @override
-  String get qrANumberNothingElse => 'BİR NUMARA · BAŞKA HİÇBİR ŞEY';
+  String get qrANumberNothingElse => 'Bir numara · başka hiçbir şey';
 
   @override
   String get qrNumber => 'Numara';
@@ -4485,7 +4485,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get qrOpensTheirMessagesApp =>
-      'KARŞI TARAFIN MESAJ UYGULAMASINI AÇAR · BURADAN HİÇBİR ŞEY GİTMEZ';
+      'Karşı tarafın mesaj uygulamasını açar · buradan hiçbir şey gitmez';
 
   @override
   String get qrMessage => 'Mesaj';
@@ -4495,7 +4495,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get qrCoordinatesOnlyNoMap =>
-      'YALNIZCA KOORDİNAT · HİÇBİR HARİTA SERVİSİNE SORULMADI';
+      'Yalnızca koordinat · hiçbir harita servisine sorulmadı';
 
   @override
   String get qrLatitude => 'Enlem';
@@ -4507,7 +4507,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get qrBitcoin => 'Bitcoin';
 
   @override
-  String get qrAddressAndAmountNo => 'ADRES VE TUTAR · ARADA ÖDEME SİTESİ YOK';
+  String get qrAddressAndAmountNo => 'Adres ve tutar · arada ödeme sitesi yok';
 
   @override
   String get qrAddress => 'Adres';
@@ -6283,7 +6283,7 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get kryfoLinkTextBurnerRoom => 'GEÇİCİ ODA';
+  String get kryfoLinkTextBurnerRoom => 'Geçici oda';
 
   @override
   String get kryfoLinkTextThisRoomHasClosed => 'Bu oda kapandı';
@@ -6477,6 +6477,10 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get pairCodePanelOrMakeASix =>
       'Ya da okumak için altı haneli bir kod oluştur';
+
+  @override
+  String get pairCodePanelBurned =>
+      'O kod yandı. Karşı taraf hazır olduğunda yenisini oluştur.';
 
   @override
   String get pairCodePanelCodeCopied => 'Kod kopyalandı';

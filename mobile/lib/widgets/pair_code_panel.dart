@@ -10,6 +10,8 @@ import 'package:flutter/services.dart';
 import '../main.dart' show appState, engine, sessionQuiet;
 import '../theme.dart';
 import 'ease_size.dart';
+import 'halo_buttons.dart';
+import 'swap.dart';
 import 'motion.dart' show BreathDot, kHouseCurve, kHouseTime, motionStill;
 import 'pair_join.dart' show PairWordsTag, pairErrorText, pairUnreached;
 import '../l10n/l10n.dart';
@@ -74,7 +76,12 @@ class _PairCodePanelState extends State<PairCodePanel> {
       setState(() => _left--);
       if (_left <= 0) {
         t.cancel();
-        setState(() => _code = null);
+        // gone, and said so: a code that just vanished reads as a fault
+        setState(() {
+          _code = null;
+          _failed = false;
+          _status = l10n.pairCodePanelBurned;
+        });
       }
     });
     final res = await (widget.publish ?? _publish)(code);
@@ -144,44 +151,42 @@ class _PairCodePanelState extends State<PairCodePanel> {
           ),
           const SizedBox(height: 22),
         ],
-        GestureDetector(
-          onTap: _make,
-          behavior: HitTestBehavior.opaque,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            padding: const EdgeInsets.symmetric(vertical: 13),
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: _busy ? HaloColors.surface2 : HaloColors.surface3,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: _busy
-                    ? HaloColors.line
-                    : HaloColors.amber.withValues(alpha: 0.5),
-                width: 0.8,
-              ),
-            ),
-            child: Text(
-              _busy ? l10n.pairCodePanelWorking : l10n.pairCodePanelOrMakeASix,
-              style: HaloType.mono(
-                size: 11.5,
-                weight: FontWeight.w600,
-                color: _busy ? HaloColors.text3 : HaloColors.amber,
-              ),
-            ),
+        // under a qr it is the other way, so it stays the quieter one
+        if (widget.compact)
+          HaloGhostButton(
+            label: _busy
+                ? l10n.pairCodePanelWorking
+                : l10n.pairCodePanelOrMakeASix,
+            onTap: _busy ? null : _make,
+          )
+        else
+          HaloPrimaryButton(
+            label: _busy
+                ? l10n.pairCodePanelWorking
+                : l10n.pairCodePanelOrMakeASix,
+            busy: _busy,
+            onTap: _make,
           ),
+        // a new line rises in over the last, and the card eases to it
+        EaseSize(
+          child: _status.isEmpty
+              ? const SizedBox(width: double.infinity)
+              : Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: RiseSwap(
+                    alignment: Alignment.center,
+                    child: Text(
+                      _status,
+                      key: ValueKey(_status),
+                      textAlign: TextAlign.center,
+                      style: HaloType.mono(
+                        size: 10.5,
+                        color: _failed ? HaloColors.rose : HaloColors.text2,
+                      ),
+                    ),
+                  ),
+                ),
         ),
-        if (_status.isNotEmpty) ...[
-          const SizedBox(height: 10),
-          Text(
-            _status,
-            textAlign: TextAlign.center,
-            style: HaloType.mono(
-              size: 10.5,
-              color: _failed ? HaloColors.rose : HaloColors.text3,
-            ),
-          ),
-        ],
       ],
     );
   }
@@ -218,7 +223,7 @@ class _PairCodePanelState extends State<PairCodePanel> {
             const SizedBox(width: 8),
             Text(
               l10n.pairCodePanelBurnsIn(mm, ss),
-              style: HaloType.mono(size: 11, color: HaloColors.text3),
+              style: HaloType.mono(size: 11, color: HaloColors.text2),
             ),
           ],
         ),

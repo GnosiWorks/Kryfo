@@ -2163,46 +2163,46 @@ void main() {
     expect(l.profileKryfoRunsOnWhat, "Kryfo runs on what people give");
     expect(l.profileKeepKryfoIndependent, "Keep Kryfo independent");
     expect(l.qrLink, "Link");
-    expect(l.qrYourLinkAsTyped, "YOUR LINK AS TYPED · NO TRACKING REDIRECT");
+    expect(l.qrYourLinkAsTyped, "Your link as typed · no tracking redirect");
     expect(l.qrText, "Text");
-    expect(l.qrStaysInTheCode, "STAYS IN THE CODE · NO SERVER HOLDS IT");
+    expect(l.qrStaysInTheCode, "Stays in the code · no server holds it");
     expect(l.qrWiFi, "Wi-Fi");
     expect(
       l.qrMadeOnThisPhone,
-      "MADE ON THIS PHONE · NO WEBSITE SAW THE PASSWORD",
+      "Made on this phone · no website saw the password",
     );
     expect(l.qrNetworkName, "Network name");
     expect(l.qrPassword, "Password");
     expect(l.qrContact, "Contact");
     expect(
       l.qrOnlyWhatYouType,
-      "ONLY WHAT YOU TYPE · NOTHING FROM YOUR CONTACTS",
+      "Only what you type · nothing from your contacts",
     );
     expect(l.qrName, "Name");
     expect(l.qrPhone, "Phone");
     expect(l.qrEmail, "Email");
     expect(
       l.qrOpensTheirMailApp,
-      "OPENS THEIR MAIL APP · NOTHING SENT FROM HERE",
+      "Opens their mail app · nothing sent from here",
     );
     expect(l.qrTo, "To");
     expect(l.qrSubject, "Subject");
-    expect(l.qrANumberNothingElse, "A NUMBER · NOTHING ELSE");
+    expect(l.qrANumberNothingElse, "A number · nothing else");
     expect(l.qrNumber, "Number");
     expect(l.qrSms, "SMS");
     expect(
       l.qrOpensTheirMessagesApp,
-      "OPENS THEIR MESSAGES APP · NOTHING SENT FROM HERE",
+      "Opens their messages app · nothing sent from here",
     );
     expect(l.qrMessage, "Message");
     expect(l.qrLocation, "Location");
-    expect(l.qrCoordinatesOnlyNoMap, "COORDINATES ONLY · NO MAP SERVICE ASKED");
+    expect(l.qrCoordinatesOnlyNoMap, "Coordinates only · no map service asked");
     expect(l.qrLatitude, "Latitude");
     expect(l.qrLongitude, "Longitude");
     expect(l.qrBitcoin, "Bitcoin");
     expect(
       l.qrAddressAndAmountNo,
-      "ADDRESS AND AMOUNT · NO PAYMENT SITE IN BETWEEN",
+      "Address and amount · no payment site in between",
     );
     expect(l.qrAddress, "Address");
     expect(l.qrAmountInBtc, "Amount in BTC");
@@ -3038,7 +3038,7 @@ void main() {
     expect(l.kryfoLinkTextJoin("<roomName>"), "Join <roomName>");
     expect(l.kryfoLinkTextKryfoLink, "Kryfo link");
     expect(l.kryfoLinkTextAdd2("<who>"), "Add <who>");
-    expect(l.kryfoLinkTextBurnerRoom, "BURNER ROOM");
+    expect(l.kryfoLinkTextBurnerRoom, "Burner room");
     expect(l.kryfoLinkTextThisRoomHasClosed, "This room has closed");
     expect(l.kryfoLinkTextClosesIn("<time>"), "Closes in <time>");
     expect(
