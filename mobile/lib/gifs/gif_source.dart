@@ -63,7 +63,9 @@ class GifItem {
   }
 }
 
-enum GifError { none, offline, busy, unreachable }
+// refused: the relay would not take the question, which reads as nothing
+// found
+enum GifError { none, offline, busy, unreachable, refused }
 
 class GifPage {
   final List<GifItem> items;
@@ -129,11 +131,17 @@ GifPage parseGifPage(String body) {
   }
 }
 
-GifError gifErrorOf(String body) => body.contains('status 429')
-    ? GifError.busy
-    : body.contains('tor')
-    ? GifError.offline
-    : GifError.unreachable;
+/// what an engine error means. only a tor that is not up says so, and only
+/// on the onion route: on the others there is no tor to wait for
+GifError gifErrorOf(String body, {required bool overTor}) {
+  if (body.startsWith('error: status 429')) return GifError.busy;
+  if (body.startsWith('error: status 400')) return GifError.refused;
+  if (overTor && body.startsWith('error: tor client')) return GifError.offline;
+  return GifError.unreachable;
+}
+
+/// what may be typed, counted as the relay counts it: in code points
+const kGifQueryMax = 50;
 
 /// the language results are asked in, as giphy writes it
 String gifLang() {
@@ -152,7 +160,7 @@ abstract class GifSource {
   Future<Uint8List?> bytes(String url);
 }
 
-/// what the engine offers: the same lane and route as people search
+/// what the engine offers: a lane of its own, the route people search takes
 abstract class GifWire {
   Future<String> post(String url, String body);
   Future<String> get(String url);
@@ -160,11 +168,17 @@ abstract class GifWire {
 }
 
 class RelayGifSource implements GifSource {
-  RelayGifSource(this.wire, {required this.quiet, GifMemory? memory})
-    : memory = memory ?? gifMemory;
+  RelayGifSource(
+    this.wire, {
+    required this.quiet,
+    required this.overTor,
+    GifMemory? memory,
+  }) : memory = memory ?? gifMemory;
   final GifWire wire;
   // a quiet session never reaches the network
   final bool Function() quiet;
+  // the onion route: only there does a tor that is not up explain a failure
+  final bool Function() overTor;
   final GifMemory memory;
 
   @override
@@ -187,7 +201,6 @@ class RelayGifSource implements GifSource {
       queryParameters: {
         'lang': gifLang(),
         'offset': '$offset',
-        'limit': '$kGifPage',
         'provider': ?provider,
       },
     ).query;
@@ -202,7 +215,9 @@ class RelayGifSource implements GifSource {
       dlog('gif: ${e.runtimeType}');
       return const GifPage.failed(GifError.unreachable);
     }
-    if (body.startsWith('error:')) return GifPage.failed(gifErrorOf(body));
+    if (body.startsWith('error:')) {
+      return GifPage.failed(gifErrorOf(body, overTor: overTor()));
+    }
     return parseGifPage(body);
   }
 
@@ -215,15 +230,24 @@ class RelayGifSource implements GifSource {
     if (quiet() || !url.startsWith('$kGifRelay/gif/v1/m/')) return null;
     final had = memory[url];
     if (had != null) return had;
+    // a lock while this runs drops what it brings back
+    final gen = memory.watch();
     await _slots.take();
     File? part;
     try {
       final again = memory[url];
       if (again != null) return again;
+      if (memory.gen != gen) return null;
       part = await _partFile();
       final r = await wire.getFile(url, part.path);
-      if (!r.startsWith('ok')) return null;
+      if (r.contains('timeout')) {
+        // the engine may still finish into it after the wait gave up
+        final late = part;
+        Future.delayed(_lateWrite, () => _drop(late));
+      }
+      if (!r.startsWith('ok') || memory.gen != gen) return null;
       final b = await part.readAsBytes();
+      if (memory.gen != gen) return null;
       memory[url] = b;
       return b;
     } catch (e) {
@@ -235,6 +259,9 @@ class RelayGifSource implements GifSource {
     }
   }
 }
+
+// longer than the engine's own deadline for a picture
+const _lateWrite = Duration(seconds: 120);
 
 Future<void> _drop(File f) async {
   try {
@@ -306,8 +333,25 @@ class GifMemory {
   final _m = <String, Uint8List>{};
   int _size = 0;
   VoidCallback? _unguard;
+  int _gen = 0;
 
   int get size => _size;
+
+  /// one more with every clear: a fetch started before it keeps nothing
+  int get gen => _gen;
+
+  /// the lock is watched from the first fetch on, not only once something
+  /// is kept. returns the generation the caller started in
+  int watch() {
+    _unguard ??= _onLock(_locked);
+    return _gen;
+  }
+
+  void _locked() {
+    clear();
+    unawaited(sweepGifParts());
+  }
+
   bool get isEmpty => _m.isEmpty;
 
   Uint8List? operator [](String k) {
@@ -325,10 +369,11 @@ class GifMemory {
       final first = _m.keys.first;
       _size -= _m.remove(first)!.length;
     }
-    _unguard ??= _onLock(clear);
+    watch();
   }
 
   void clear() {
+    _gen++;
     _m.clear();
     _size = 0;
     _unguard?.call();

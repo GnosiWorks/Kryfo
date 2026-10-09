@@ -262,7 +262,9 @@ class GifPanelState extends State<GifPanel> {
                   if (q != _shown) _ask(q);
                 },
                 textInputAction: TextInputAction.search,
-                maxLength: 50,
+                // counted in code points, as the relay counts: an emoji
+                // with a skin tone is two
+                inputFormatters: const [CodePointLimit(kGifQueryMax)],
                 // nothing typed here is learned by the keyboard
                 enableSuggestions: false,
                 autocorrect: false,
@@ -271,7 +273,6 @@ class GifPanelState extends State<GifPanel> {
                 cursorColor: HaloColors.amber,
                 decoration: InputDecoration(
                   isDense: true,
-                  counterText: '',
                   border: InputBorder.none,
                   hintText: l10n.gifSearchHint,
                   hintStyle: HaloType.sans(size: 15, color: HaloColors.text2),
@@ -394,7 +395,7 @@ class GifPanelState extends State<GifPanel> {
     ];
     if (_loading) {
       slivers.add(_masonry(_skeleton.length, _skeleton, (i) => _Skeleton(i)));
-    } else if (_error != GifError.none) {
+    } else if (_error != GifError.none && _error != GifError.refused) {
       slivers.add(
         SliverFillRemaining(
           hasScrollBody: false,
@@ -967,5 +968,29 @@ class GifPhonePanel extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+/// a field's text kept to [max] code points; what is typed past it is not
+/// taken. a pair of surrogates is never split
+class CodePointLimit extends TextInputFormatter {
+  const CodePointLimit(this.max);
+  final int max;
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    if (newValue.text.runes.length <= max) return newValue;
+    if (oldValue.text.runes.length <= max) {
+      // a paste that would go past: keep what fits of it
+      final cut = String.fromCharCodes(newValue.text.runes.take(max));
+      return TextEditingValue(
+        text: cut,
+        selection: TextSelection.collapsed(offset: cut.length),
+      );
+    }
+    return oldValue;
   }
 }

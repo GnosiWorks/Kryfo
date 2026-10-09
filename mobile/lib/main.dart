@@ -503,13 +503,29 @@ class HaloEngine {
     what: 'tor',
   );
 
-  // a picture from the gif relay into [path], whole or not at all: "ok <n>"
-  // or "error: ...". the same lane and route as people search
-  Future<String> torGetFile(String url, String path) => _ffiOnIsolate(
-    'HaloTorGetFile',
+  // the gif relay, on a lane of its own: search, trending, and a picture
+  // into [path] whole or not at all ("ok <n>"). the route people search
+  // takes. a wait that runs out says gif, not tor: off the onion route
+  // there is no tor to blame
+  Future<String> gifPost(String url, String body) => _ffiOnIsolate(
+    'HaloGifPost',
+    [url, body],
+    wait: const Duration(seconds: 60),
+    what: 'gif',
+  );
+
+  Future<String> gifGet(String url) => _ffiOnIsolate(
+    'HaloGifGet',
+    [url],
+    wait: const Duration(seconds: 60),
+    what: 'gif',
+  );
+
+  Future<String> gifGetFile(String url, String path) => _ffiOnIsolate(
+    'HaloGifGetFile',
     [url, path],
     wait: const Duration(seconds: 80),
-    what: 'tor',
+    what: 'gif',
   );
 
   // what the relays delivered, one entry per event (relay_poll.dart). room

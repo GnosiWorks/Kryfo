@@ -242,7 +242,7 @@ void main() {
 
     test('the question goes in the body, to our relay only', () async {
       final w = _Wire();
-      final src = RelayGifSource(w, quiet: () => false);
+      final src = RelayGifSource(w, quiet: () => false, overTor: () => true);
       final p = await src.search('happy seal', offset: 24, provider: 'klipy');
       expect(p.error, GifError.none);
       expect(w.posts.single.$1, '$kGifRelay/gif/v1/search');
@@ -259,7 +259,7 @@ void main() {
 
     test('a quiet session reaches nothing', () async {
       final w = _Wire();
-      final src = RelayGifSource(w, quiet: () => true);
+      final src = RelayGifSource(w, quiet: () => true, overTor: () => true);
       expect((await src.search('seal')).error, isNot(GifError.none));
       expect((await src.trending()).error, isNot(GifError.none));
       expect(await src.bytes('$kGifRelay/gif/v1/m/a.b'), isNull);
@@ -268,15 +268,85 @@ void main() {
       expect(w.files, isEmpty);
     });
 
-    test('errors are told apart', () async {
-      for (final (said, want) in [
-        ('error: status 429', GifError.busy),
-        ('error: tor client: tor not started', GifError.offline),
-        ('error: status 502', GifError.unreachable),
+    test('errors are told apart, tor only on the onion route', () async {
+      for (final (said, tor, want) in [
+        ('error: status 429', true, GifError.busy),
+        ('error: status 400', true, GifError.refused),
+        ('error: tor client: tor not started', true, GifError.offline),
+        ('error: tor client: tor not started', false, GifError.unreachable),
+        ('error: gif timeout', true, GifError.unreachable),
+        ('error: gif timeout', false, GifError.unreachable),
+        ('error: get: dial tcp: i/o timeout', false, GifError.unreachable),
+        ('error: status 502', true, GifError.unreachable),
       ]) {
-        final src = RelayGifSource(_Wire(answer: said), quiet: () => false);
-        expect((await src.search('seal')).error, want, reason: said);
+        final src = RelayGifSource(
+          _Wire(answer: said),
+          quiet: () => false,
+          overTor: () => tor,
+        );
+        expect((await src.search('seal')).error, want, reason: '$said $tor');
       }
+    });
+
+    test('trending asks whole pages and no size of its own', () async {
+      final w = _Wire();
+      final src = RelayGifSource(w, quiet: () => false, overTor: () => true);
+      await src.trending(offset: 48, provider: 'giphy');
+      final q = Uri.parse(w.gets.single).queryParameters;
+      expect(q['offset'], '48');
+      expect(q.containsKey('limit'), false);
+    });
+
+    test('a lock while a picture is on its way keeps nothing', () async {
+      final w = _Wire()..gate = Completer();
+      VoidCallback? lock;
+      final mem = GifMemory(
+        onLock: (c) {
+          lock = c;
+          return () => lock = null;
+        },
+      );
+      final src = RelayGifSource(
+        w,
+        quiet: () => false,
+        overTor: () => true,
+        memory: mem,
+      );
+      final url = '$kGifRelay/gif/v1/m/a.b';
+      final got = src.bytes(url);
+      await pumpEventQueue();
+      // watched from the start, though nothing is kept yet
+      expect(lock, isNotNull);
+      lock!();
+      w.gate!.complete();
+      expect(await got, isNull);
+      expect(mem.isEmpty, true);
+      await pumpEventQueue();
+      final parts = await gifPartsDir();
+      expect(
+        parts.existsSync() ? parts.listSync() : const <FileSystemEntity>[],
+        isEmpty,
+      );
+    });
+
+    test('the lock sweeps what a crash left on disk', () async {
+      VoidCallback? lock;
+      final mem = GifMemory(
+        onLock: (c) {
+          lock = c;
+          return () => lock = null;
+        },
+      );
+      final parts = await gifPartsDir();
+      File('${parts.path}/x.part')
+        ..createSync(recursive: true)
+        ..writeAsBytesSync(_gif);
+      mem.watch();
+      lock!();
+      for (var i = 0; i < 20 && parts.existsSync(); i++) {
+        await Future.delayed(const Duration(milliseconds: 10));
+      }
+      expect(parts.existsSync(), false);
     });
 
     test(
@@ -290,7 +360,12 @@ void main() {
             return () => lock = null;
           },
         );
-        final src = RelayGifSource(w, quiet: () => false, memory: mem);
+        final src = RelayGifSource(
+          w,
+          quiet: () => false,
+          overTor: () => true,
+          memory: mem,
+        );
         final url = '$kGifRelay/gif/v1/m/a.b';
         expect(await src.bytes(url), _gif);
         expect(await src.bytes(url), _gif);
@@ -403,6 +478,13 @@ void main() {
       await h.frames(30);
       expect(find.text('No GIFs found. Try other words.'), findsOneWidget);
 
+      // a question the relay would not take reads as nothing found
+      h.gifs.answer = (q, _) => const GifPage.failed(GifError.refused);
+      await t.enterText(find.byType(TextField), '!!!');
+      await h.frames(30);
+      expect(find.text('No GIFs found. Try other words.'), findsOneWidget);
+      expect(find.text("Couldn't reach Kryfo's GIF service."), findsNothing);
+
       h.gifs.answer = (q, _) => const GifPage.failed(GifError.unreachable);
       await t.enterText(find.byType(TextField), 'seal');
       await h.frames(30);
@@ -451,6 +533,25 @@ void main() {
       await h.frames(20);
       expect(h.gifs.asked, contains('@24/giphy'));
       expect(t.takeException(), isNull);
+    });
+
+    testWidgets('the field takes fifty code points, as the relay counts', (
+      t,
+    ) async {
+      final h = _Harness(t, lib)..on = true;
+      await h.pump();
+      await h.open();
+      await h.tab('GIFs');
+      // a thumbs up with a skin tone is two code points, one character
+      await t.enterText(find.byType(TextField), '👍🏽' * 30);
+      await h.frames(30);
+      final text = t.widget<TextField>(find.byType(TextField)).controller!.text;
+      expect(text.runes.length, 50);
+      expect(h.gifs.asked.last, '${'👍🏽' * 25}@0');
+      // farsi with its joiner goes as typed
+      await t.enterText(find.byType(TextField), 'گربه\u200cها');
+      await h.frames(30);
+      expect(h.gifs.asked.last, 'گربه\u200cها@0');
     });
 
     testWidgets('a tap shows which, send sends its full gif', (t) async {
@@ -640,6 +741,8 @@ void main() {
 class _Wire implements GifWire {
   _Wire({this.answer});
   final String? answer;
+  // held until completed: a picture still on its way
+  Completer<void>? gate;
   final posts = <(String, String)>[];
   final gets = <String>[];
   final files = <String>[];
@@ -661,6 +764,7 @@ class _Wire implements GifWire {
   @override
   Future<String> getFile(String url, String path) async {
     files.add(url);
+    await gate?.future;
     await File(path).writeAsBytes(_gif);
     return 'ok ${_gif.length}';
   }

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the app's gif source: the engine's services lane, the route people search
+// the app's gif source: the engine's gif lane, the route people search
 // takes. a quiet session gets nothing from it
 import '../main.dart' show appState, engine, session, sessionQuiet;
 import '../stickers/sticker_sheet.dart' show GifTabs;
@@ -10,19 +10,20 @@ class _EngineWire implements GifWire {
   const _EngineWire();
 
   @override
-  Future<String> post(String url, String body) => engine.torPost(url, body);
+  Future<String> post(String url, String body) => engine.gifPost(url, body);
 
   @override
-  Future<String> get(String url) => engine.torGetJson(url);
+  Future<String> get(String url) => engine.gifGet(url);
 
   @override
   Future<String> getFile(String url, String path) =>
-      engine.torGetFile(url, path);
+      engine.gifGetFile(url, path);
 }
 
 final appGifSource = RelayGifSource(
   const _EngineWire(),
   quiet: () => sessionQuiet,
+  overTor: () => appState.sendMode == 'private',
 );
 
 /// the picker's gif tabs for the open session
