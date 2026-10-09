@@ -2629,6 +2629,9 @@ class HaloDb implements GroupOwedStore {
         'last_seen': now,
         'accepted': accepted,
       });
+    } else if ((existing.first['blocked'] as int? ?? 0) == 1) {
+      // someone blocked stays as the block left them
+      return;
     } else {
       // xpub changed on someone we already know = they reinstalled, or its a
       // mitm. dont just swap the key silently, flag it so the chat warns

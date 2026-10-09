@@ -3,8 +3,9 @@
 // unsend or a receipt goes, in the container that holds them and in the
 // other one, a decoy's own too. what they still have queued, a text or a
 // file, waits and goes nowhere while the block holds, wherever they are
-// blocked. the database methods are the real ones over rows kept in maps;
-// the wire and signal are stand-ins
+// blocked. a back-pair leaves their row as the block left it. the database
+// methods are the real ones over rows kept in maps; the wire and signal
+// are stand-ins
 import 'dart:io';
 
 import 'package:flutter/services.dart';
@@ -148,6 +149,26 @@ void main() {
       expect(hidden.rows('contacts').single['blocked'], 1);
       expect(_queued(hidden, _bob), isEmpty);
       expect(_queued(everyday, _bob), isEmpty);
+    });
+  });
+
+  group('their row', () {
+    test('a back-pair leaves a blocked row as the block left it', () async {
+      final mem = MemDb();
+      final db = _Rows(mem);
+      await _person(mem, _bob, blocked: true);
+      await _person(mem, _amy);
+      for (final id in [_bob, _amy]) {
+        await db.upsertContact(id, 'o-new', 'x-new', accepted: 0);
+      }
+      final rows = {for (final r in mem.rows('contacts')) r['halo_id']: r};
+      final bob = rows[_bob]!;
+      expect(
+        (bob['onion'], bob['xpub'], bob['last_seen'], bob['key_changed']),
+        ('o-$_bob', 'x-$_bob', 1, 0),
+      );
+      // someone not blocked is filed as before
+      expect((rows[_amy]!['xpub'], rows[_amy]!['key_changed']), ('x-new', 1));
     });
   });
 
