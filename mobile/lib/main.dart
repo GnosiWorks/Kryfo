@@ -99,6 +99,7 @@ import 'read_burn.dart' show burnStartBy, burnWaitsRow, burnWaitsSql, kBurnSkew;
 import 'stranger_gate.dart';
 import 'fast_gate.dart';
 import 'mentions.dart';
+import 'gifs/gif_source.dart' show sweepGifParts;
 import 'handle_lookup.dart';
 import 'handle_repoint.dart';
 import 'widgets/sheet_handle.dart';
@@ -498,6 +499,15 @@ class HaloEngine {
   Future<String> torGetJson(String url) => _ffiOnIsolate(
     'HaloTorGetJSON',
     [url],
+    wait: const Duration(seconds: 80),
+    what: 'tor',
+  );
+
+  // a picture from the gif relay into [path], whole or not at all: "ok <n>"
+  // or "error: ...". the same lane and route as people search
+  Future<String> torGetFile(String url, String path) => _ffiOnIsolate(
+    'HaloTorGetFile',
+    [url, path],
     wait: const Duration(seconds: 80),
     what: 'tor',
   );
@@ -15814,8 +15824,7 @@ class AppState extends ChangeNotifier {
   // rooms whose creator said this phone's join found no seat, by the
   // container they are in, until it knocks again, is let in or leaves
   final Set<String> _roomsFull = {};
-  static String _fullKey(HaloContainer c, String groupId) =>
-      '${c.id} $groupId';
+  static String _fullKey(HaloContainer c, String groupId) => '${c.id} $groupId';
   bool roomFull(String groupId) =>
       _roomsFull.contains(_fullKey(session.primary.container, groupId));
 
@@ -18439,6 +18448,7 @@ Future<void> _sweepPlaintextLeftovers() async {
   } catch (e) {
     dlog('sweep: voice leftovers (${e.runtimeType})');
   }
+  await sweepGifParts();
 }
 
 // every raw recording in [dir]: one that will not go is logged and the

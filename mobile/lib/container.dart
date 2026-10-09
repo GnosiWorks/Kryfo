@@ -266,6 +266,7 @@ const containerKeys = {
   'kryfo.intro.accept',
   'kryfo.intro.sent',
   'kryfo.scamshield.on',
+  'kryfo.gif.on',
   'notif_hide_content',
   'sticker_recents',
 };

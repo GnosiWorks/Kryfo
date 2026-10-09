@@ -85,7 +85,9 @@ import '../stickers/sticker_bubble.dart';
 import '../stickers/sticker_flight.dart';
 import '../stickers/sticker_pack.dart' show Sticker, StickerLibrary;
 import '../stickers/sticker_sheet.dart'
-    show StickerButton, StickerPick, showStickerSheet;
+    show GifPick, PhoneGifPick, StickerButton, StickerPick, showStickerSheet;
+import '../gifs/gif_engine.dart' show appGifTabs;
+import '../gifs/gif_picture.dart';
 import '../stickers/sticker_view.dart' show StickerBudget;
 import '../stickers/sticker_wire.dart' show StickerWire;
 import '../widgets/motion.dart';
@@ -2733,10 +2735,19 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _showStickers() async {
-    final pick = await showStickerSheet(context, container: session.container);
+    final pick = await showStickerSheet(
+      context,
+      container: session.container,
+      gifs: appGifTabs(),
+    );
     // the sheet hands focus back to the composer; the keyboard stays down
     FocusManager.instance.primaryFocus?.unfocus();
     if (pick == null || !mounted) return;
+    // a found gif goes the way a gif from the phone goes: inside the
+    // message, cleaned, never fetched again by anyone
+    if (pick is GifPick) return _sendOneImage(pick.bytes, '');
+    if (pick is PhoneGifPick) return _pickAndSendGif();
+    if (pick is! StickerPick) return;
     StickerLibrary lib;
     try {
       lib = StickerLibrary.ready ?? await StickerLibrary.load();
@@ -6541,68 +6552,76 @@ class _Bubble extends StatelessWidget {
                                                               context,
                                                             ).size.width *
                                                             0.78,
-                                                        child: Image.file(
-                                                          File(msg.mediaPath!),
-                                                          gaplessPlayback: true,
-                                                          fit: BoxFit.cover,
-                                                          cacheWidth: screenPx(
-                                                            context,
-                                                            times: 0.78,
-                                                          ),
-                                                          // fades up once decoded,
-                                                          // over a quiet box
-                                                          frameBuilder:
-                                                              (
-                                                                _,
-                                                                child,
-                                                                frame,
-                                                                sync,
-                                                              ) => PhotoTileFade(
-                                                                shown:
-                                                                    sync ||
-                                                                    frame !=
-                                                                        null,
-                                                                child: child,
-                                                              ),
-                                                          errorBuilder: (_, e, _) {
-                                                            dlog(
-                                                              'Image failed: '
-                                                              '${msg.mediaPath} / $e',
-                                                            );
-                                                            return Container(
-                                                              height: 120,
-                                                              alignment:
-                                                                  Alignment
-                                                                      .center,
-                                                              color: HaloColors
-                                                                  .surface2,
-                                                              child: Column(
-                                                                mainAxisSize:
-                                                                    MainAxisSize
-                                                                        .min,
-                                                                children: [
-                                                                  Icon(
-                                                                    Icons
-                                                                        .image_not_supported_outlined,
-                                                                    size: 22,
-                                                                    color: HaloColors
-                                                                        .text2,
-                                                                  ),
-                                                                  const SizedBox(
-                                                                    height: 6,
-                                                                  ),
-                                                                  Text(
-                                                                    l10n.chatPhotoUnavailable,
-                                                                    style: HaloType.mono(
-                                                                      size: 11,
+                                                        child: ChatPicture(
+                                                          path: msg.mediaPath!,
+                                                          child: Image.file(
+                                                            File(
+                                                              msg.mediaPath!,
+                                                            ),
+                                                            gaplessPlayback:
+                                                                true,
+                                                            fit: BoxFit.cover,
+                                                            cacheWidth:
+                                                                screenPx(
+                                                                  context,
+                                                                  times: 0.78,
+                                                                ),
+                                                            // fades up once decoded,
+                                                            // over a quiet box
+                                                            frameBuilder:
+                                                                (
+                                                                  _,
+                                                                  child,
+                                                                  frame,
+                                                                  sync,
+                                                                ) => PhotoTileFade(
+                                                                  shown:
+                                                                      sync ||
+                                                                      frame !=
+                                                                          null,
+                                                                  child: child,
+                                                                ),
+                                                            errorBuilder: (_, e, _) {
+                                                              dlog(
+                                                                'Image failed: '
+                                                                '${msg.mediaPath} / $e',
+                                                              );
+                                                              return Container(
+                                                                height: 120,
+                                                                alignment:
+                                                                    Alignment
+                                                                        .center,
+                                                                color: HaloColors
+                                                                    .surface2,
+                                                                child: Column(
+                                                                  mainAxisSize:
+                                                                      MainAxisSize
+                                                                          .min,
+                                                                  children: [
+                                                                    Icon(
+                                                                      Icons
+                                                                          .image_not_supported_outlined,
+                                                                      size: 22,
                                                                       color: HaloColors
                                                                           .text2,
                                                                     ),
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                            );
-                                                          },
+                                                                    const SizedBox(
+                                                                      height: 6,
+                                                                    ),
+                                                                    Text(
+                                                                      l10n.chatPhotoUnavailable,
+                                                                      style: HaloType.mono(
+                                                                        size:
+                                                                            11,
+                                                                        color: HaloColors
+                                                                            .text2,
+                                                                      ),
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                              );
+                                                            },
+                                                          ),
                                                         ),
                                                       ),
                                                     ),
@@ -6651,6 +6670,10 @@ class _Bubble extends StatelessWidget {
                                               isOut,
                                               image: msg.mediaPath != null,
                                             ),
+                                          if (isOut &&
+                                              msg.text.isEmpty &&
+                                              msg.mediaPath != null)
+                                            GifSentLine(path: msg.mediaPath!),
                                           if (firstUrl(msg.text)
                                               case final u?) ...[
                                             const SizedBox(height: 6),

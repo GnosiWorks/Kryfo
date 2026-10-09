@@ -11,6 +11,9 @@ import 'package:flutter/services.dart';
 
 import '../container.dart';
 import '../dlog.dart';
+import '../gifs/gif_opt_in.dart';
+import '../gifs/gif_panel.dart';
+import '../gifs/gif_source.dart';
 import '../l10n/l10n.dart';
 import '../theme.dart';
 import '../widgets/halo_sheet.dart';
@@ -69,9 +72,15 @@ class StickerButton extends StatelessWidget {
   }
 }
 
-/// what the picker hands back: the sticker, and where it was drawn when it
-/// was picked, so it can fly from there to its bubble
-class StickerPick {
+/// what the picker hands back: a sticker, a found gif, or a gif to choose
+/// from the phone
+sealed class SheetPick {
+  const SheetPick();
+}
+
+/// the sticker, and where it was drawn when it was picked, so it can fly
+/// from there to its bubble
+class StickerPick extends SheetPick {
   const StickerPick(this.ref, {this.from = Rect.zero, this.at = -1});
   final StickerRef ref;
   // global rect of the drawn sticker; empty when it could not be found
@@ -80,26 +89,61 @@ class StickerPick {
   final double at;
 }
 
+/// a gif from the search, its bytes already through our relay
+class GifPick extends SheetPick {
+  const GifPick(this.bytes);
+  final Uint8List bytes;
+}
+
+/// the person wants a gif saved on this phone
+class PhoneGifPick extends SheetPick {
+  const PhoneGifPick();
+}
+
+/// the picker's other tabs. without it the sheet is stickers only
+class GifTabs {
+  const GifTabs({
+    required this.source,
+    required this.route,
+    required this.loadOn,
+    required this.saveOn,
+  });
+
+  // null in a quiet session: no gifs tab, nothing reaches the network
+  final GifSource? source;
+  final GifRoute route;
+  final Future<bool> Function() loadOn;
+  final Future<void> Function(bool on) saveOn;
+}
+
 /// opens the picker. the pick comes back with the recents already updated;
 /// sending it is the caller's.
-Future<StickerPick?> showStickerSheet(
+Future<SheetPick?> showStickerSheet(
   BuildContext context, {
   required HaloContainer container,
+  GifTabs? gifs,
 }) {
   HapticFeedback.selectionClick();
   FocusScope.of(context).unfocus();
-  return showHaloSheet<StickerPick>(
+  return showHaloSheet<SheetPick>(
     context,
     scroll: true,
-    builder: (_) => StickerSheet(recents: StickerRecents(container)),
+    builder: (_) =>
+        StickerSheet(recents: StickerRecents(container), gifs: gifs),
   );
 }
 
 class StickerSheet extends StatefulWidget {
-  const StickerSheet({super.key, required this.recents, this.library});
+  const StickerSheet({
+    super.key,
+    required this.recents,
+    this.library,
+    this.gifs,
+  });
   final StickerRecents recents;
   // for tests: packs already in hand
   final StickerLibrary? library;
+  final GifTabs? gifs;
 
   @override
   State<StickerSheet> createState() => StickerSheetState();
@@ -120,6 +164,11 @@ class StickerSheetState extends State<StickerSheet>
   int _tab = 0;
   // where each section starts in the grid, one per tab
   List<double> _starts = const [];
+  // stickers, gifs or on this phone
+  _Kind _kind = _Kind.stickers;
+  // null until read
+  bool? _gifOn;
+  final _drag = DraggableScrollableController();
 
   late final AnimationController _in = AnimationController(
     vsync: this,
@@ -143,6 +192,66 @@ class StickerSheetState extends State<StickerSheet>
   void initState() {
     super.initState();
     _load();
+    final g = widget.gifs;
+    if (g != null && g.source != null) {
+      g.loadOn().then((v) {
+        if (mounted) setState(() => _gifOn = v);
+      });
+    }
+  }
+
+  @visibleForTesting
+  void showKind(int i) => _setKind(_kinds[i]);
+
+  List<_Kind> get _kinds => [
+    _Kind.stickers,
+    if (widget.gifs?.source != null) _Kind.gifs,
+    _Kind.phone,
+  ];
+
+  void _setKind(_Kind k) {
+    if (k == _kind) return;
+    HapticFeedback.selectionClick();
+    FocusManager.instance.primaryFocus?.unfocus();
+    _closePreviewNow();
+    setState(() => _kind = k);
+    // gifs want the room: the opt-in whole, or more of the grid. after the
+    // new tab is laid out, so its list takes over the sheet first
+    if (k == _Kind.gifs) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _kind == _Kind.gifs) _grow();
+      });
+    }
+  }
+
+  Future<void> _turnGifsOn() async {
+    setState(() => _gifOn = true);
+    await widget.gifs?.saveOn(true);
+  }
+
+  void _gifPicked(Uint8List b) {
+    if (mounted) Navigator.of(context).pop(GifPick(b));
+  }
+
+  void _phonePicked() {
+    HapticFeedback.lightImpact();
+    if (mounted) Navigator.of(context).pop(const PhoneGifPick());
+  }
+
+  // the keyboard takes half the screen: the sheet goes up to keep the grid
+  void _searchFocused() => _grow();
+
+  void _grow() {
+    if (!_drag.isAttached || _drag.size >= 0.9) return;
+    if (_reduce) {
+      _drag.jumpTo(0.92);
+    } else {
+      _drag.animateTo(
+        0.92,
+        duration: const Duration(milliseconds: 260),
+        curve: Curves.easeOutCubic,
+      );
+    }
   }
 
   @override
@@ -231,6 +340,7 @@ class StickerSheetState extends State<StickerSheet>
     _previewEntry = null;
     _in.dispose();
     _pill.dispose();
+    _drag.dispose();
     super.dispose();
   }
 
@@ -274,6 +384,7 @@ class StickerSheetState extends State<StickerSheet>
 
   void _scrolled() {
     final sc = _scroll;
+    if (_kind != _Kind.stickers) return;
     if (_jumping || sc == null || !sc.hasClients || _starts.length < 2) return;
     // the last section whose start has scrolled up to the top; one that
     // cannot get there counts once the end is reached
@@ -431,6 +542,7 @@ class StickerSheetState extends State<StickerSheet>
         if (!didPop) _previewKey.currentState?.close();
       },
       child: DraggableScrollableSheet(
+        controller: _drag,
         expand: false,
         initialChildSize: 0.55,
         minChildSize: 0.3,
@@ -441,14 +553,125 @@ class StickerSheetState extends State<StickerSheet>
             _scroll = controller..addListener(_scrolled);
           }
           final sections = _ready ? _sections() : const <_Section>[];
+          final g = widget.gifs;
           return Column(
             children: [
               const SheetHandle(),
-              if (_ready) _tabs(sections),
-              Expanded(child: _body(controller, sections)),
+              if (g != null) _kindTabs(),
+              if (_kind == _Kind.stickers) ...[
+                if (_ready) _tabs(sections),
+                Expanded(child: _body(controller, sections)),
+              ] else
+                Expanded(
+                  child: _FadeIn(
+                    key: ValueKey(_kind),
+                    child: _kind == _Kind.phone
+                        ? GifPhonePanel(
+                            controller: controller,
+                            onChoose: _phonePicked,
+                          )
+                        : _gifBody(g!, controller),
+                  ),
+                ),
             ],
           );
         },
+      ),
+    );
+  }
+
+  Widget _gifBody(GifTabs g, ScrollController controller) {
+    final on = _gifOn;
+    if (on == null) return ListView(controller: controller);
+    if (!on) {
+      return ListView(
+        controller: controller,
+        children: [
+          GifOptIn(
+            overTor: g.route == GifRoute.onion,
+            onTurnOn: _turnGifsOn,
+            onNotNow: () => _setKind(_Kind.stickers),
+          ),
+          SizedBox(height: MediaQuery.paddingOf(context).bottom),
+        ],
+      );
+    }
+    return GifPanel(
+      source: g.source!,
+      controller: controller,
+      route: g.route,
+      onPick: _gifPicked,
+      onSearchFocus: _searchFocused,
+    );
+  }
+
+  // stickers, gifs, on this phone: pills that scroll sideways when a
+  // language makes them long
+  Widget _kindTabs() {
+    final kinds = _kinds;
+    final time = _reduce ? Duration.zero : const Duration(milliseconds: 180);
+    return Padding(
+      padding: const EdgeInsets.only(top: 4, bottom: 6),
+      child: Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: _side + 4),
+          child: Row(
+            children: [
+              for (final k in kinds)
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(end: 6),
+                  child: Semantics(
+                    button: true,
+                    selected: k == _kind,
+                    child: PressScale(
+                      onTap: () => _setKind(k),
+                      haptic: false,
+                      scale: 0.94,
+                      child: AnimatedContainer(
+                        duration: time,
+                        curve: Curves.easeOutCubic,
+                        constraints: const BoxConstraints(minHeight: 36),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 7,
+                        ),
+                        decoration: BoxDecoration(
+                          color: k == _kind
+                              ? HaloColors.amberSoft
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(
+                            color: k == _kind
+                                ? HaloColors.amber
+                                : HaloColors.line,
+                          ),
+                        ),
+                        child: Text(
+                          switch (k) {
+                            _Kind.stickers => l10n.stickerOpen,
+                            _Kind.gifs => l10n.gifTab,
+                            _Kind.phone => l10n.gifPhoneTab,
+                          },
+                          style: HaloType.sans(
+                            size: 14,
+                            height: 1.3,
+                            weight: k == _kind
+                                ? FontWeight.w600
+                                : FontWeight.w500,
+                            color: k == _kind
+                                ? HaloColors.amber
+                                : HaloColors.text2,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -674,6 +897,26 @@ class StickerSheetState extends State<StickerSheet>
           child: Transform.scale(scale: 0.82 + 0.18 * v, child: c),
         );
       },
+      child: child,
+    );
+  }
+}
+
+enum _Kind { stickers, gifs, phone }
+
+// a tab's content comes up over a few frames, or at once with less movement
+class _FadeIn extends StatelessWidget {
+  const _FadeIn({super.key, required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) return child;
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOut,
+      builder: (_, v, c) => Opacity(opacity: v, child: c),
       child: child,
     );
   }

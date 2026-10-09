@@ -7,6 +7,8 @@ import '../main.dart' show appState, session, sessionQuiet;
 import '../lock_state.dart';
 import '../intro_prefs.dart';
 import '../scam_prefs.dart';
+import '../gifs/gif_opt_in.dart' show showGifOptInSheet;
+import '../gifs/gif_source.dart' show loadGifSearchOn, saveGifSearchOn;
 import '../miui_autostart.dart';
 import '../widgets/motion.dart' show haloRoute, houseSpring;
 import 'why_kryfo_screen.dart';
@@ -287,6 +289,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool? _disguise;
   bool? _acceptIntros;
   bool? _shieldOn;
+  bool? _gifOn;
   // asked once a visit, not on every rebuild
   late final Future<bool> _notifs = notificationsEnabled();
 
@@ -304,6 +307,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
     loadScamShieldOn(session.container).then((v) {
       if (mounted) setState(() => _shieldOn = v);
+    });
+    loadGifSearchOn(session.container).then((v) {
+      if (mounted) setState(() => _gifOn = v);
     });
   }
 
@@ -533,6 +539,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   final v = !(_shieldOn ?? true);
                   setState(() => _shieldOn = v);
                   await saveScamShieldOn(v, session.container);
+                },
+              ),
+              // off by default: turning it on says first what it does
+              HaloRow(
+                icon: Icons.gif_box_outlined,
+                label: l10n.settingsGifSearch,
+                hint: l10n.settingsGifSearchHint,
+                toggled: _gifOn ?? false,
+                pending: _gifOn == null,
+                onTap: () async {
+                  if (_gifOn ?? false) {
+                    setState(() => _gifOn = false);
+                    await saveGifSearchOn(false, session.container);
+                    return;
+                  }
+                  final yes = await showGifOptInSheet(
+                    context,
+                    overTor: appState.sendMode == 'private',
+                  );
+                  if (!yes || !mounted) return;
+                  setState(() => _gifOn = true);
+                  await saveGifSearchOn(true, session.container);
                 },
               ),
             ],
