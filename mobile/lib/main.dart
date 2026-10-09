@@ -12857,8 +12857,10 @@ class AppState extends ChangeNotifier {
   // how far back an ask to start afresh puts undelivered texts out again
   static const _kResendWindow = Duration(days: 7);
   // and how often, per person: each ask is a fresh wrap, and a phone that
-  // cannot open what we send asks again on every text
-  static const _kResendGap = Duration(minutes: 10);
+  // cannot open what we send asks again on every text, a minute apart at
+  // most. short, so a text written just after the first ask goes with the
+  // next one rather than ten minutes on
+  static const _kResendGap = Duration(minutes: 2);
   final Map<String, int> _resentAt = {};
   final Map<String, int> _owedSealedAt = {};
 

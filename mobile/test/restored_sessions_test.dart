@@ -696,7 +696,7 @@ void main() {
     expect(unwrapMessage(at.whereType<String>().last).message, 'waits');
   });
 
-  test('asked again within ten minutes, nothing goes again', () async {
+  test('asked again within two minutes, nothing goes again', () async {
     final p = await _peer();
     await contact(p);
     await talk(p);
