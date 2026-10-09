@@ -293,7 +293,11 @@ class DevChat {
     final rows = await db.query(
       'messages',
       columns: ['msg_uid'],
-      where: "peer_id LIKE ? AND direction = 'out' AND msg_uid IS NOT NULL",
+      // only what went: one that never left has nothing to take back, and
+      // a burst of take-backs would be the first his phone ever heard
+      where:
+          "peer_id LIKE ? AND direction = 'out' AND sent = 1 "
+          'AND msg_uid IS NOT NULL',
       whereArgs: [_kDev],
       orderBy: 'sent_at DESC',
     );

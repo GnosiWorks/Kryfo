@@ -7610,6 +7610,15 @@ class _Queue {
 
 // how to reach someone, and the container their chat is in: null for a
 // hidden chat while its vault is shut
+// a dev chat delete's take-backs, sealed before its wipe
+typedef _TakeBacks = ({
+  String xPub,
+  String? fc,
+  bool backPaired,
+  List<String> ciphers,
+  int failed,
+});
+
 typedef _Reach = ({
   String onion,
   String xpub,
@@ -14578,71 +14587,138 @@ class AppState extends ChangeNotifier {
   // chat. his pair lane stays open until the app restarts, and what comes
   // on it is dropped. a decoy's delete leaves the everyday chat running
   //
-  // with [takeBack], what was sent there is taken back first, so it goes
-  // from his phone too. it has to go before the store is forgotten: after,
-  // nothing could seal it. how many could not be taken back
+  // with [takeBack], what was sent there is taken back from his phone too:
+  // each take-back is sealed before the wipe, under the name it was sent
+  // with, and goes after it, so a kill midway still leaves nothing here.
+  // how many could not be taken back
   Future<int> devDelete({bool takeBack = false}) {
-    final going = devGoing;
+    final s = session;
+    // a decoy's chat is its own: it never waits on the everyday one's
+    if (s.container.quiet) return s.devChat.delete().then((_) => 0);
+    final going = _devDeleting;
     if (going != null) return going;
+    final wiped = Completer<void>();
+    devGoing = wiped.future;
+    void gone() {
+      if (!wiped.isCompleted) wiped.complete();
+      devGoing = null;
+    }
+
     late final Future<int> f;
-    f = _devDelete(takeBack).whenComplete(() {
-      if (identical(devGoing, f)) devGoing = null;
+    f = _devDelete(s, takeBack, gone).whenComplete(() {
+      gone();
+      if (identical(_devDeleting, f)) _devDeleting = null;
     });
-    devGoing = f;
+    _devDeleting = f;
     return f;
   }
 
-  // a delete still running: home shows no row for it, and a new start
-  // waits for it
-  Future<int>? devGoing;
+  // the everyday chat's delete, until its take-backs end
+  Future<int>? _devDeleting;
 
-  // how long a delete spends taking back what was sent
+  // until the everyday chat's rows are gone: home shows no row for it, and
+  // a new start waits for it
+  Future<void>? devGoing;
+
+  // how long a delete spends sending its take-backs
   @visibleForTesting
   Duration devTakeBackFor = const Duration(seconds: 30);
 
-  Future<int> _devDelete(bool takeBack) async {
-    final s = session;
-    if (s.container.quiet) {
-      await s.devChat.delete();
-      return 0;
-    }
+  Future<int> _devDelete(Session s, bool takeBack, void Function() gone) async {
     DevChatRow? was;
     try {
       was = await live.devChat.load();
     } catch (e) {
       dlog('dev delete: the chat did not read ($e)');
     }
-    final missed = takeBack ? await _takeBackDev(was) : 0;
-    await s.devChat.delete();
+    final back = takeBack ? await _sealTakeBacks(was) : null;
+    try {
+      await s.devChat.delete();
+    } catch (_) {
+      // kept: nothing of it goes, its take-backs neither
+      for (final c in back?.ciphers ?? const <String>[]) {
+        devGate.parted(c);
+      }
+      rethrow;
+    }
     devLane.forget();
     _xPubToHaloId.removeWhere((_, id) => isDevId(id));
     final self = DevSelf.ofKeys(was?.anonId, was?.anonEdPriv, was?.anonXPriv);
     if (self != null) engine.roomUnsubscribeBg(self.xPub);
-    return missed;
+    gone();
+    return back == null ? 0 : _sendTakeBacks(back);
   }
 
-  // every message this phone sent in the dev chat, taken back one by one
-  // under the name it was sent with, for half a minute at most. how many
-  // did not get through
-  Future<int> _takeBackDev(DevChatRow? was) async {
+  // a take-back sealed for each message this phone sent in the dev chat,
+  // under the name it went with, and where they go. none for a chat that
+  // never sent, only reads or talks to a retired key
+  Future<_TakeBacks?> _sealTakeBacks(DevChatRow? was) async {
     final chat = was?.chatId;
-    if (was == null || chat == null || !was.started || was.nameless) return 0;
+    if (was == null ||
+        chat == null ||
+        !was.started ||
+        was.nameless ||
+        (was.key?.status ?? DevKeyStatus.retired) == DevKeyStatus.retired) {
+      return null;
+    }
+    final to = await _reach(chat);
+    if (to == null) return null;
     final List<String> uids;
     try {
       uids = await live.devChat.sentUids();
     } catch (e) {
       dlog('dev delete: what was sent did not read (${e.runtimeType})');
-      return 0;
+      return null;
     }
-    final missed = {...uids};
+    final ciphers = <String>[];
+    var failed = 0;
+    for (final uid in uids) {
+      try {
+        final c = await _io.encrypt(
+          chat,
+          await wrapMessage('', unsend: uid, sender: _mySender()),
+        );
+        devGate.part(c, was);
+        ciphers.add(c);
+      } catch (e) {
+        dlog('dev delete: a take-back did not seal (${e.runtimeType})');
+        failed++;
+      }
+    }
+    return (
+      xPub: to.xpub,
+      fc: to.backPaired ? null : peerFcFor(chat),
+      backPaired: to.backPaired,
+      ciphers: ciphers,
+      failed: failed,
+    );
+  }
+
+  // the sealed take-backs, a few at a time for half a minute at most. the
+  // gate lets them go until then and forgets them after. how many did not
+  // get through
+  Future<int> _sendTakeBacks(_TakeBacks t) async {
+    final left = {...t.ciphers};
     var next = 0;
     var stop = false;
-    // a few at a time: one slow relay does not hold the rest. none starts
-    // after the half minute, so none goes under a name made after it
+    // as the chat's own send goes: his first-contact address until he is
+    // added back, the pair lane after
+    Future<bool> one(String c) async {
+      final fc = t.fc;
+      if (fc != null && fc.isNotEmpty) {
+        if (await _io.firstContactSend(t.xPub, fc, c) == 'ok') return true;
+      }
+      return await _io.relaySend(t.xPub, c) == 'ok' && t.backPaired;
+    }
+
     Future<void> lane() async {
-      while (!stop && next < uids.length) {
-        final uid = uids[next++];
-        if (await _sendFrame(chat, uid, kFrameUnsend, '')) missed.remove(uid);
+      while (!stop && next < t.ciphers.length) {
+        final c = t.ciphers[next++];
+        try {
+          if (await one(c)) left.remove(c);
+        } catch (e) {
+          dlog('dev delete: a take-back did not go (${e.runtimeType})');
+        }
       }
     }
 
@@ -14650,7 +14726,10 @@ class AppState extends ChangeNotifier {
       for (var i = 0; i < 4; i++) lane(),
     ]).timeout(devTakeBackFor, onTimeout: () => const []);
     stop = true;
-    return missed.length;
+    for (final c in t.ciphers) {
+      devGate.parted(c);
+    }
+    return left.length + t.failed;
   }
 
   // ---- groups ----

@@ -12,6 +12,7 @@ import 'package:flutter/services.dart';
 import '../devchat/dev_chat.dart' show DevRow, devModeOf;
 import '../devchat/dev_key.dart';
 import '../devchat/dev_start.dart' show forgetDevChoices;
+import '../dlog.dart';
 import '../l10n/l10n.dart';
 import '../main.dart' show appState, session, sessionQuiet;
 import '../notifications.dart' show clearNotificationsFor;
@@ -82,7 +83,10 @@ Future<bool> deleteDevChat(BuildContext context, DevRow d) async {
   final ok = await showConfirmSheet(
     context,
     title: l10n.homeDeleteThisChat,
-    line: switch ((d.anonymous, d.started && !d.nameless)) {
+    line: switch ((
+      d.anonymous,
+      d.started && !d.nameless && d.status != DevKeyStatus.retired,
+    )) {
       (true, true) => l10n.devDeleteLineAnonBack,
       (true, false) => l10n.devDeleteLineAnon,
       (false, true) => l10n.devDeleteLineBack,
@@ -92,19 +96,26 @@ Future<bool> deleteDevChat(BuildContext context, DevRow d) async {
   );
   if (!ok) return false;
   HapticFeedback.heavyImpact();
-  // off home at once. what was sent is taken back from his phone behind
-  // it, and only what did not get through is said
+  // gone at once. what was sent is taken back from his phone behind it,
+  // and only what did not get through is said, in the everyday session
+  final from = session.container;
   final going = appState.devDelete(takeBack: true);
+  await (appState.devGoing ?? going);
+  forgetDevChoices();
   unawaited(clearNotificationsFor(d.chatId));
   await appState.refreshContacts();
   unawaited(
-    going.then((missed) async {
-      forgetDevChoices();
-      await appState.refreshContacts();
+    going.then((missed) {
       if (missed > 0) {
-        showHaloToast(context, l10n.devDeleteNotTakenBack(missed));
+        showHaloToast(
+          // the root overlay takes it: this screen may be gone by then
+          // ignore: use_build_context_synchronously
+          context,
+          l10n.devDeleteNotTakenBack(missed),
+          still: () => session.container == from,
+        );
       }
-    }),
+    }, onError: (Object e) => dlog('dev delete: ${e.runtimeType}')),
   );
   return true;
 }

@@ -1202,9 +1202,10 @@ void main() {
       },
     );
 
-    test('one that hangs is counted once the time is up, none starts after '
-        'it, and home shows no row meanwhile', () async {
-      await _app.devBegin(anon: false);
+    test('the chat goes before its take-backs do: one that hangs is '
+        'counted once the time is up, none starts after it, and the gate '
+        'lets go of them', () async {
+      await _app.devBegin(anon: true);
       await _app.refreshContacts();
       expect(_app.devRow, isNotNull);
       await sent([for (var i = 0; i < 9; i++) 'f$i']);
@@ -1216,15 +1217,60 @@ void main() {
       expect(_app.devGoing, isNotNull);
       // a second tap joins the first
       expect(identical(_app.devDelete(takeBack: true), going), isTrue);
+      await _app.devGoing;
+      // gone already, made name and all, while the take-backs still wait
+      expect(_app.devGoing, isNull);
+      expect(_row().state, DevState.gone);
+      expect(_hasDevContact, isFalse);
+      expect(_anonRows(), 0);
+      expect(_row().anonXPriv, isNull);
       await _app.refreshContacts();
       expect(_app.devRow, isNull);
+      expect(devGate.partingCount, 9);
       expect(await going, 9);
       expect(_io.sent, hasLength(4));
-      expect(_app.devGoing, isNull);
+      expect(devGate.partingCount, 0);
       never.complete('ok');
       await _settle();
       expect(_io.sent, hasLength(4));
-      expect(_row().state, DevState.gone);
+    });
+
+    test('only what went is taken back', () async {
+      await _app.devBegin(anon: false);
+      await sent(['g1']);
+      await _mem.insert('messages', {
+        'peer_id': _dev,
+        'direction': 'out',
+        'plaintext': 'never left',
+        'sent_at': 2000,
+        'msg_uid': 'g2',
+        'sent': 0,
+      });
+      expect(await _app.devDelete(takeBack: true), 0);
+      expect((await read()).map((r) => r['un']), ['g1']);
+    });
+
+    test('a decoy\'s delete never joins the everyday one\'s', () async {
+      await _app.devBegin(anon: false);
+      await sent(['h1']);
+      final never = Completer<String>();
+      _io.answers.add(never.future);
+      _app.devTakeBackFor = const Duration(milliseconds: 300);
+      final going = _app.devDelete(takeBack: true);
+      await _app.devGoing;
+      final decoyMem = MemDb();
+      await devChatTables(decoyMem, now: 1);
+      useDatabasesForTest(
+        _live,
+        Session(_Phone(decoyMem, HaloContainer.decoy)),
+      );
+      final quiet = _app.devDelete(takeBack: true);
+      expect(identical(quiet, going), isFalse);
+      expect(await quiet, 0);
+      expect(_app.devGoing, isNull);
+      expect(DevChatRow.of(decoyMem.rows('devchat')[0]).state, DevState.gone);
+      expect(await going, 1);
+      useDatabasesForTest(_live, Session(_live));
     });
   });
 
