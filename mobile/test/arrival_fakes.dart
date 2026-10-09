@@ -631,7 +631,10 @@ class ArrivalRows implements HaloDb {
   Future<void> holdCipher(String peerId, String cipher) async {
     _hit('holdCipher', peerId, null);
     held.add(peerId);
-    (heldRows[peerId] ??= []).add((id: ++_heldId, cipher: cipher));
+    final rows = heldRows[peerId] ??= [];
+    // a copy of one held already is held once, as the table keeps it
+    if (rows.any((r) => r.cipher == cipher)) return;
+    rows.add((id: ++_heldId, cipher: cipher));
   }
 
   @override

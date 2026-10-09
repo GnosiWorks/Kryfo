@@ -236,6 +236,73 @@ void main() {
     await world();
   });
 
+  // a stranger's next text, as their phone seals it
+  Future<String> strayNext(
+    _Phone p,
+    String says,
+    String ed,
+    String uid,
+  ) async => p.ss.encryptTo(
+    _me,
+    await wrapMessage(
+      _said,
+      msgUid: uid,
+      powNonce: pow,
+      powBitsUsed: powBits,
+      sender: SenderInfo(haloId: says, edPub: ed, onion: 'o-s', xPub: p.xPub),
+    ),
+  );
+
+  test('copies of a stranger\'s opener off a relay\'s backlog take no '
+      'place on their shelf and change nothing of the request', () async {
+    final stray = await _phone();
+    final ed = _rndHex(32);
+    const id = 'stray-words-here';
+    _idOf[ed] = id;
+    final c = await _opener(stray, id, ed, _said, pow: pow);
+    await app.receiveRelay([(peer: 'firstcontact', cipher: c)]);
+    await _settle();
+    await app.receiveRelay([
+      (peer: stray.xPub, cipher: await strayNext(stray, id, ed, 'u2')),
+    ]);
+    await _settle();
+    final held = live.heldRows[id]?.length ?? 0;
+    final row = {...?live.people[id]};
+    for (var i = 0; i < 2; i++) {
+      live.seen.clear();
+      await app.receiveRelay([(peer: 'firstcontact', cipher: c)]);
+      await _settle();
+    }
+    expect(live.heldRows[id]?.length ?? 0, held);
+    expect(live.people[id], row);
+  });
+
+  test('a copy of a turned-away stranger\'s opener leaves them turned '
+      'away, and tells them nothing', () async {
+    final stray = await _phone();
+    final ed = _rndHex(32);
+    const id = 'stray-words-two';
+    _idOf[ed] = id;
+    final c = await _opener(stray, id, ed, _said, pow: pow);
+    await app.receiveRelay([(peer: 'firstcontact', cipher: c)]);
+    await _settle();
+    final uid =
+        live.msgs.firstWhere((m) => m['peer_id'] == id)['msg_uid'] as String;
+    // declined: the text gone and kept as gone, the row parked
+    live.msgs.removeWhere((m) => m['peer_id'] == id);
+    live.gone.add((id, uid));
+    live.people[id]!['archived'] = 1;
+    live.people[id]!['accepted'] = 0;
+    final row = {...live.people[id]!};
+    live.seen.clear();
+    engineAsked.clear();
+    await app.receiveRelay([(peer: 'firstcontact', cipher: c)]);
+    await _settle();
+    expect(live.people[id], row);
+    expect(live.msgs.where((m) => m['peer_id'] == id), isEmpty);
+    expect(engineAsked.where(_sends.contains), isEmpty);
+  });
+
   test('a first contact under a contact\'s name with another key leaves '
       'the contact as it was', () async {
     final other = await _phone();

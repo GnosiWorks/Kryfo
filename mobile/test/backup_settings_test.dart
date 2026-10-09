@@ -185,6 +185,13 @@ const _defaults = {
   Carried.delivery: 'always',
 };
 
+// a phone with hidden chats, backed up without them
+class _HiddenLeftOut extends _Side {
+  const _HiddenLeftOut();
+  @override
+  Future<Set<String>> scrub(String copy, String key) async => {'kept-apart'};
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late Directory root;
@@ -373,6 +380,16 @@ void main() {
         'nostr_last_aaaaaaaaaaaaaaaa': '1791400000',
         'nostr_last_bbbbbbbbbbbbbbbb': '1791500000',
       });
+    });
+
+    test('a file that leaves hidden chats out names none of their '
+        'addresses: it carries no anchors', () async {
+      oldPhone();
+      put('nostr_last_aaaaaaaaaaaaaaaa', '1791400000');
+      final d = await draftBackup(stage, side: const _HiddenLeftOut());
+      expect(d.manifest['catchUp'], isEmpty);
+      final with_ = await draftBackup(stage, side: const _Side());
+      expect(with_.manifest['catchUp'], isNotEmpty);
     });
 
     test('a file without anchors, or with odd ones, leaves every address to '

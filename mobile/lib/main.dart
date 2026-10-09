@@ -3746,6 +3746,15 @@ class HaloDb implements GroupOwedStore {
       ]),
     );
     if ((n ?? 0) >= 20) return;
+    // a copy of one held already (off a relay's backlog) is held once
+    final had = await db.query(
+      'held_onion',
+      columns: ['id'],
+      where: 'peer_id = ? AND cipher = ?',
+      whereArgs: [peerId, cipher],
+      limit: 1,
+    );
+    if (had.isNotEmpty) return;
     await db.insert('held_onion', {
       'peer_id': peerId,
       'cipher': cipher,
@@ -13017,6 +13026,20 @@ class AppState extends ChangeNotifier {
         h = at;
       }
       final to = _routeOf(h, null);
+      // a copy of one here or one that went (off a relay's backlog, say):
+      // the row stays as it is, a request turned away stays turned away,
+      // and only someone accepted hears again that it came
+      final uid = env.msgUid;
+      if (uid != null && (to == RouteTo.everyday || to == RouteTo.vault)) {
+        final db = to == RouteTo.vault ? _openVault! : live;
+        final have = await db.messageExists(uid);
+        if (have || await db.goneFrom(h, uid)) {
+          if (have && await db.isAccepted(h)) {
+            unawaited(_sendDeliveryReceipt(h, uid));
+          }
+          return (h, RouteTo.dropped);
+        }
+      }
       // persist contact + nostr sub. a stranger who back-paired to us lands
       // unaccepted: their message waits in requests until we accept. while
       // the vault is shut its people are filed when it opens

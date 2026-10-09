@@ -308,6 +308,7 @@ Future<void> landV1Payload(
 
     await restorePrefs(payload['prefs']);
     // a v1 file carries no catch-up: the relays are read again whole
+    await _holdRelays();
     await landCatchUpAnchors(docsDir.path, null);
     await _livesHereNow();
 
@@ -831,6 +832,8 @@ Future<BackupDraft> draftBackup(
   final docs = (await getApplicationDocumentsDirectory()).path;
   final id = side.identity();
   if (id.ed.isEmpty || id.x.isEmpty) throw BackupError('identity not loaded');
+  // read before the database is copied: no anchor is past what it holds
+  var catchUp = await catchUpAnchors(docs);
   final dbKey = await _secureStorage.read(key: _kDbPassphrase);
   if (dbKey == null) throw BackupError('db passphrase missing');
   final prefs = await SharedPreferences.getInstance();
@@ -861,6 +864,9 @@ Future<BackupDraft> draftBackup(
   await side.settleBurns(dbCopy, dbKey, at);
   if (!hidden) {
     final people = await side.scrub(dbCopy, dbKey);
+    // a file without its hidden chats names none of their addresses: with
+    // any left out it carries no anchors, and the restore reads it all
+    if (people.isNotEmpty) catchUp = const {};
     final fc = secure['peer_fc'];
     if (fc != null && people.isNotEmpty) {
       try {
@@ -899,7 +905,7 @@ Future<BackupDraft> draftBackup(
     'secure': secure,
     'settings': settings,
     'onboardingDone': onboardingDone,
-    'catchUp': await catchUpAnchors(docs),
+    'catchUp': catchUp,
     'chunk': kBackupChunk,
     'files': [for (final f in files) f.toJson()],
     if (hidden) 'vault': {'key': key},
@@ -1065,6 +1071,8 @@ Future<BackupDraft> _draftQuiet(
     'secure': <String, String>{},
     // the decoy's own settings, and the phone's as the decoy sees them
     'settings': await readCarriedSettings(c),
+    // as an account's own file has it: a decoy reads no relays
+    'catchUp': const <String, int>{},
     'onboardingDone': 'true',
     'chunk': kBackupChunk,
     'files': [for (final f in files) f.toJson()],
@@ -1664,6 +1672,7 @@ Future<void> restoreBackupFile(
       value: manifest['dbPassphrase'] as String,
     );
     await restorePrefs(manifest['prefs']);
+    await _holdRelays();
     await landCatchUpAnchors(docs.path, manifest['catchUp']);
     // in place before the restart reads them
     _restoredSettings = await landCarriedSettings(
@@ -1705,6 +1714,16 @@ Future<Map<String, int>> catchUpAnchors(String docs) async {
 }
 
 final _kAnchorName = RegExp(r'^nostr_last_[0-9a-f]{1,16}$');
+
+// the relays let go before a restore rewrites their anchors: a reader
+// still running would write its own back. the app starts again after
+Future<void> _holdRelays() async {
+  try {
+    await engine.wipeHold();
+  } catch (e) {
+    dlog('backup: relays not held (${e.runtimeType})');
+  }
+}
 
 /// a restore's catch-up: what this folder held of the relays goes, the
 /// marks of what was read with it, and each address starts where the phone
