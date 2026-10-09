@@ -7,6 +7,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"strconv"
 	"strings"
@@ -18,6 +19,10 @@ import (
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/lyrebird/transports/webtunnel"
 	sf "gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/client/lib"
 )
+
+// goptlib writes pt protocol lines to stdout for a parent process that is
+// not there, and webtunnel's carry the address it dialled
+func init() { pt.Stdout = io.Discard }
 
 // tor browser's stun servers for its built-in snowflake lines
 var snowflakeICE = []string{
