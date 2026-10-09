@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // onboarding: steps fade through, the bar counts, a new name lands word by
-// word, every step's button stays in reach on a small phone, and with less
-// movement nothing moves.
+// word, every step's button stays in reach on a small phone, the shade on the
+// notification step pulls down once and fits, and with less movement nothing
+// moves.
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart' show SemanticsNode;
 import 'package:flutter/services.dart';
@@ -72,6 +73,22 @@ double shown(WidgetTester t, String text) => t
 
 PageController pages(WidgetTester t) =>
     t.widget<PageView>(find.byType(PageView)).controller!;
+
+// the quiet notification in the shade, folded to one line
+Finder quietLine() =>
+    find.textContaining(l10n.androidServiceTitle, findRichText: true);
+
+List<double> fades(WidgetTester t, Finder f) => [
+  for (final o in t.widgetList<Opacity>(
+    find.ancestor(of: f, matching: find.byType(Opacity)),
+  ))
+    o.opacity,
+];
+
+Future<void> toShade(WidgetTester t) async {
+  pages(t).jumpToPage(5);
+  await t.pump();
+}
 
 Future<void> toName(WidgetTester t) async {
   await t.tap(find.text(l10n.onboardingBegin));
@@ -260,6 +277,98 @@ void main() {
         await t.pumpWidget(framed(const TorBootSplash(), scale: 1.3));
         await t.pump(const Duration(seconds: 1));
         expect(t.takeException(), isNull, reason: 'splash');
+        await t.pumpWidget(const SizedBox());
+      });
+    }
+  }
+
+  testWidgets('the notification step: the shade pulls down once, then rests', (
+    t,
+  ) async {
+    phone(t);
+    quiet(t);
+    final sem = t.ensureSemantics();
+    await t.pumpWidget(onboarding());
+    await t.pump(const Duration(seconds: 6));
+    await toShade(t);
+    await t.pump(const Duration(milliseconds: 100));
+    expect(find.text('Kryfo'), findsOneWidget);
+    expect(find.text(l10n.notificationsNewMessage), findsOneWidget);
+    expect(quietLine(), findsOneWidget);
+    expect(fades(t, quietLine()).reduce((a, b) => a < b ? a : b), lessThan(1));
+    expect(t.hasRunningAnimations, isTrue);
+    await t.pump(const Duration(seconds: 2));
+    expect(fades(t, quietLine()), everyElement(1.0));
+    expect(t.hasRunningAnimations, isFalse);
+    // the words start at the left
+    expect(t.getCenter(find.text('Kryfo')).dx, lessThan(411 / 2));
+    expect(
+      find.bySemanticsLabel(
+        '${l10n.androidServiceTitle}. ${l10n.androidServiceText}',
+      ),
+      findsOneWidget,
+    );
+    await t.pumpWidget(const SizedBox());
+    sem.dispose();
+  });
+
+  testWidgets('reduced motion: the shade is simply there', (t) async {
+    phone(t);
+    quiet(t);
+    await t.pumpWidget(onboarding(still: true));
+    await t.pump();
+    await toShade(t);
+    expect(fades(t, quietLine()), everyElement(1.0));
+    expect(
+      fades(t, find.text(l10n.notificationsNewMessage)),
+      everyElement(1.0),
+    );
+    expect(t.hasRunningAnimations, isFalse);
+    await t.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('right to left: the shade reads from the right', (t) async {
+    phone(t);
+    quiet(t);
+    lang('ar');
+    await t.pumpWidget(onboarding(still: true, locale: const Locale('ar')));
+    await toShade(t);
+    expect(quietLine(), findsOneWidget);
+    final name = t.getRect(find.text('Kryfo'));
+    final line = t.getRect(find.text(l10n.notificationsNewMessage));
+    expect(name.center.dx, greaterThan(411 / 2));
+    expect(name.right, moreOrLessEquals(line.right, epsilon: 0.5));
+    await t.pumpWidget(const SizedBox());
+  });
+
+  for (final code in ['en', 'ar']) {
+    for (final light in [false, true]) {
+      final theme = light ? 'light' : 'dark';
+      testWidgets('360 wide, text 1.5, $code, $theme: the shade fits', (
+        t,
+      ) async {
+        phone(t, size: const Size(360, 640));
+        quiet(t);
+        lang(code);
+        HaloColors.setLight(light);
+        addTearDown(() => HaloColors.setLight(false));
+        await t.pumpWidget(
+          onboarding(still: true, locale: Locale(code), scale: 1.5),
+        );
+        await toShade(t);
+        await t.pump(const Duration(seconds: 1));
+        expect(t.takeException(), isNull);
+        expect(quietLine(), findsOneWidget);
+        for (final f in [
+          quietLine(),
+          find.text('Kryfo'),
+          find.text(l10n.notificationsNewMessage),
+        ]) {
+          final r = t.getRect(f);
+          expect(r.left, greaterThanOrEqualTo(0));
+          expect(r.right, lessThanOrEqualTo(360));
+        }
+        expect(find.text(l10n.onboardingGotIt).hitTestable(), findsOneWidget);
         await t.pumpWidget(const SizedBox());
       });
     }
