@@ -2556,7 +2556,7 @@ class HaloDb implements GroupOwedStore {
     final files = await d.transaction((t) async {
       final rows = await t.query(
         'messages',
-        columns: ['msg_uid', ..._kFileCols],
+        columns: [..._kFileCols, ..._kUnreadCols, ..._kGoneCols],
         where: _kOneToOne,
         whereArgs: [haloId],
       );
@@ -2566,6 +2566,8 @@ class HaloDb implements GroupOwedStore {
           await t.delete('reactions', where: 'msg_uid = ?', whereArgs: [uid]);
         }
       }
+      // turned away, they stay away: a resend or the relays bring none back
+      await _noteGone(t, rows);
       await t.delete('messages', where: _kOneToOne, whereArgs: [haloId]);
       await t.delete('held_onion', where: 'peer_id = ?', whereArgs: [haloId]);
       await _dropFilesComingFrom(t, haloId);
@@ -3304,6 +3306,7 @@ class HaloDb implements GroupOwedStore {
           await t.delete('reactions', where: 'msg_uid = ?', whereArgs: [uid]);
         }
       }
+      await _noteGone(t, rows);
       await t.delete('messages', where: _kOneToOne, whereArgs: [chatId]);
     });
     await _scrubMedia(rows);
@@ -3336,8 +3339,9 @@ class HaloDb implements GroupOwedStore {
   static const _kGoneCols = ['msg_uid', 'sent_at'];
 
   // how long one that came in and went is known by its uid: as far back
-  // as a resend reaches
-  static const kGoneFor = Duration(days: 7);
+  // as a resend or the relays reach. relays keep a fortnight, and a fresh
+  // install after a restore reads it all again
+  static const kGoneFor = Duration(days: 15);
 
   // the 1:1 rows of these that came in, kept by uid as they go. only what
   // a resend could still bring: sent within kGoneFor and a day for clocks

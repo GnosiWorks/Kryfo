@@ -1123,6 +1123,54 @@ void main() {
     expect(await rows.goneFrom(q.name, 'twice'), isTrue);
   });
 
+  test('what went here is known for as long as the relays keep it: a '
+      'deleted text, a turned-away request, a chat deleted whole', () async {
+    final p = await _peer();
+    final q = await _peer();
+    final now = DateTime.now().millisecondsSinceEpoch;
+    const day = 86400000;
+    Future<void> put(String peer, String uid, int ago) =>
+        mem.insert('messages', {
+          'peer_id': peer,
+          'direction': 'in',
+          'plaintext': uid,
+          'sent_at': now - ago,
+          'msg_uid': uid,
+          'sent': 1,
+        });
+    // ten days old: within the relays' fortnight
+    await put(p.name, 'old', 10 * day);
+    await rows.deleteMessage('old');
+    expect(await rows.goneFrom(p.name, 'old'), isTrue);
+    // a request turned away
+    await put(q.name, 'asked', day);
+    await rows.declineRequest(q.name);
+    expect(await rows.goneFrom(q.name, 'asked'), isTrue);
+    // a chat deleted whole
+    await put(p.name, 'whole', 12 * day);
+    await rows.deleteAllOf(p.name);
+    expect(await rows.goneFrom(p.name, 'whole'), isTrue);
+    // past the relays' fortnight and a day, nothing can bring one back
+    await put(p.name, 'ancient', 17 * day);
+    await rows.deleteMessage('ancient');
+    expect(await rows.goneFrom(p.name, 'ancient'), isFalse);
+    // a mark is good for the fortnight and a day, then goes
+    await mem.update(
+      'gone_in',
+      {'at': now - 14 * day},
+      where: 'msg_uid = ?',
+      whereArgs: ['old'],
+    );
+    expect(await rows.goneFrom(p.name, 'old'), isTrue);
+    await mem.update(
+      'gone_in',
+      {'at': now - 16 * day},
+      where: 'msg_uid = ?',
+      whereArgs: ['old'],
+    );
+    expect(await rows.goneFrom(p.name, 'old'), isFalse);
+  });
+
   test('a verified contact whose key moved: their texts wait without a '
       'try, and go once the new key is accepted', () async {
     final p = await _peer();
