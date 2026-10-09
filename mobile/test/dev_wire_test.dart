@@ -118,8 +118,17 @@ class _Phone extends DevTestDb {
   // what the stranger cap held back, as held
   final held = <(String, String)>[];
   @override
-  Future<void> holdCipher(String peerId, String cipher) async =>
-      held.add((peerId, cipher));
+  Future<bool> holdCipher(
+    String peerId,
+    String cipher, {
+    String? mediaId,
+  }) async {
+    held.add((peerId, cipher));
+    return true;
+  }
+
+  @override
+  Future<Map<String, Set<String>>> fullShelves({String? only}) async => {};
 
   Map<String, Object?>? _contact(String id) {
     for (final r in mem.rows('contacts')) {

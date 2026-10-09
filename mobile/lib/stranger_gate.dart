@@ -57,3 +57,19 @@ bool strangerCapHolds({
 class CapHeld implements Exception {
   const CapHeld();
 }
+
+// places on a stranger's shelf. a file takes one however many slices it
+// came in, and its slices always fit once it is on it
+const kShelfPlaces = 20;
+
+bool shelfTakes({
+  required int places,
+  required Set<String> files,
+  String? mediaId,
+}) => (mediaId != null && files.contains(mediaId)) || places < kShelfPlaces;
+
+// thrown as a full shelf turns a message down before signal keeps anything
+// of it: it stays on the relay and opens again once there is room
+class ShelfFull implements Exception {
+  const ShelfFull();
+}

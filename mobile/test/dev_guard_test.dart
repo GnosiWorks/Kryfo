@@ -123,6 +123,15 @@ List<Map<String, Object?>> _kept(MemDb db, String table, String address) => [
 // signal and the engine as the receive side reaches them: what a cipher
 // opens to, and a note of every call
 class _Io implements AppIo {
+  @override
+  Future<String?> decryptIf(
+    String peer,
+    String cipher,
+    bool Function(String plain) keep, {
+    bool flagKeyChange = false,
+  }) => decrypt(peer, cipher, flagKeyChange: flagKeyChange);
+  @override
+  void letHeld(String xPub, {required bool free}) {}
   // sessions let go of, and addresses no longer listened on
   final dropped = <String>[];
   @override
@@ -517,10 +526,18 @@ class _Mem implements HaloDb {
     List<Map<String, String>> lines,
   ) async => _hit('setShield', haloId, null);
   @override
-  Future<void> holdCipher(String peerId, String cipher) async {
+  Future<bool> holdCipher(
+    String peerId,
+    String cipher, {
+    String? mediaId,
+  }) async {
     _hit('holdCipher', peerId, null);
     held.add(peerId);
+    return true;
   }
+
+  @override
+  Future<Map<String, Set<String>>> fullShelves({String? only}) async => {};
 
   @override
   Future<void> setPeerBundle(String haloId, String bundleB64) async =>

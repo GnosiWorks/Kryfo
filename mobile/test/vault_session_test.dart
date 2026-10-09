@@ -165,6 +165,15 @@ class _Seal implements VaultSeal {
 // ---- signal, the engine and android ----
 
 class _Io implements AppIo {
+  @override
+  Future<String?> decryptIf(
+    String peer,
+    String cipher,
+    bool Function(String plain) keep, {
+    bool flagKeyChange = false,
+  }) => decrypt(peer, cipher, flagKeyChange: flagKeyChange);
+  @override
+  void letHeld(String xPub, {required bool free}) {}
   // sessions let go of, and addresses no longer listened on
   final dropped = <String>[];
   @override
@@ -766,6 +775,10 @@ class _Db implements HaloDb {
   Future<void> noteBlockedDrop(String haloId, String uid) async {}
   @override
   Future<bool> droppedWhileBlocked(String haloId, String uid) async => false;
+  // no shelf here is full
+  @override
+  Future<Map<String, Set<String>>> fullShelves({String? only}) async =>
+      _hit('fullShelves', only, <String, Set<String>>{});
 
   @override
   dynamic noSuchMethod(Invocation i) {
