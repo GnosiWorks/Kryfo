@@ -3447,6 +3447,34 @@
   "@groupInfoTheyWillStopReceiving": {
     "description": "screens/group_info_screen.dart"
   },
+  "groupInfoResetLink": "Reset link",
+  "@groupInfoResetLink": {
+    "description": "screens/group_info_screen.dart"
+  },
+  "groupInfoResetTheRoomLink": "Reset the room link?",
+  "@groupInfoResetTheRoomLink": {
+    "description": "screens/group_info_screen.dart"
+  },
+  "groupInfoResetLinkLine": "The old link stops working. People in the room stay and get the new link.",
+  "@groupInfoResetLinkLine": {
+    "description": "screens/group_info_screen.dart"
+  },
+  "groupInfoRemoveRoomLine": "They can join again with the room link. Reset the link to keep them out. People still in the room get the new one.",
+  "@groupInfoRemoveRoomLine": {
+    "description": "screens/group_info_screen.dart"
+  },
+  "groupInfoRemoveAndResetLink": "Remove and reset link",
+  "@groupInfoRemoveAndResetLink": {
+    "description": "screens/group_info_screen.dart"
+  },
+  "groupInfoCouldNotResetLink": "Could not reset the link",
+  "@groupInfoCouldNotResetLink": {
+    "description": "screens/group_info_screen.dart"
+  },
+  "roomLinkNewLinkTheOld": "New link. The old one no longer works.",
+  "@roomLinkNewLinkTheOld": {
+    "description": "screens/room_link_sheet.dart"
+  },
   "appGroupHoldsUpTo": "{count, plural, one{A group holds up to {count} person} other{A group holds up to {count} people}}",
   "@appGroupHoldsUpTo": {
     "description": "main.dart",

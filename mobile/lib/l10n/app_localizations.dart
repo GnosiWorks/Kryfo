@@ -4359,6 +4359,48 @@ abstract class AppLocalizations {
   /// **'They will stop receiving messages from this group.'**
   String get groupInfoTheyWillStopReceiving;
 
+  /// screens/group_info_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Reset link'**
+  String get groupInfoResetLink;
+
+  /// screens/group_info_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Reset the room link?'**
+  String get groupInfoResetTheRoomLink;
+
+  /// screens/group_info_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'The old link stops working. People in the room stay and get the new link.'**
+  String get groupInfoResetLinkLine;
+
+  /// screens/group_info_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'They can join again with the room link. Reset the link to keep them out. People still in the room get the new one.'**
+  String get groupInfoRemoveRoomLine;
+
+  /// screens/group_info_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Remove and reset link'**
+  String get groupInfoRemoveAndResetLink;
+
+  /// screens/group_info_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reset the link'**
+  String get groupInfoCouldNotResetLink;
+
+  /// screens/room_link_sheet.dart
+  ///
+  /// In en, this message translates to:
+  /// **'New link. The old one no longer works.'**
+  String get roomLinkNewLinkTheOld;
+
   /// main.dart
   ///
   /// In en, this message translates to:

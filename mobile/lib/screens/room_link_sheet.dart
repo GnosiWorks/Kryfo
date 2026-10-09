@@ -23,17 +23,23 @@ import 'chat_screen.dart';
 import '../l10n/l10n.dart';
 import '../l10n/marked.dart';
 
-Future<void> showRoomLinkSheet(BuildContext context, RoomLink link) {
+/// [fresh]: the link was just reset, and the sheet says the old one is done
+Future<void> showRoomLinkSheet(
+  BuildContext context,
+  RoomLink link, {
+  bool fresh = false,
+}) {
   // no field in it: the sheet's own ceiling and scrolling are what it needs
   return showHaloSheet<void>(
     context,
-    builder: (_) => _RoomLinkSheet(link: link),
+    builder: (_) => _RoomLinkSheet(link: link, fresh: fresh),
   );
 }
 
 class _RoomLinkSheet extends StatefulWidget {
   final RoomLink link;
-  const _RoomLinkSheet({required this.link});
+  final bool fresh;
+  const _RoomLinkSheet({required this.link, this.fresh = false});
   @override
   State<_RoomLinkSheet> createState() => _RoomLinkSheetState();
 }
@@ -186,6 +192,29 @@ class _RoomLinkSheetState extends State<_RoomLinkSheet> {
                       RoomCountdown(expiresAt: widget.link.expiresAt, size: 10),
                     ],
                   ),
+            if (widget.fresh) ...[
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Icon(
+                    Icons.check_circle_outline_rounded,
+                    size: 15,
+                    color: HaloColors.violet,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      l10n.roomLinkNewLinkTheOld,
+                      style: HaloType.sans(
+                        size: 12.5,
+                        weight: FontWeight.w600,
+                        color: HaloColors.violet,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 18),
             // the code assembles corner to corner once the sheet is up
             Center(

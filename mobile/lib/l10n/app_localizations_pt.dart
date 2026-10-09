@@ -2761,6 +2761,29 @@ class AppLocalizationsPt extends AppLocalizations {
       'A pessoa vai parar de receber mensagens deste grupo.';
 
   @override
+  String get groupInfoResetLink => 'Redefinir link';
+
+  @override
+  String get groupInfoResetTheRoomLink => 'Redefinir o link da sala?';
+
+  @override
+  String get groupInfoResetLinkLine =>
+      'O link antigo para de funcionar. Quem está na sala continua e recebe o novo link.';
+
+  @override
+  String get groupInfoRemoveRoomLine =>
+      'A pessoa pode entrar de novo com o link da sala. Redefina o link para deixá-la de fora. Quem continua na sala recebe o novo.';
+
+  @override
+  String get groupInfoRemoveAndResetLink => 'Remover e redefinir link';
+
+  @override
+  String get groupInfoCouldNotResetLink => 'Não foi possível redefinir o link';
+
+  @override
+  String get roomLinkNewLinkTheOld => 'Link novo. O antigo não funciona mais.';
+
+  @override
   String appGroupHoldsUpTo(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

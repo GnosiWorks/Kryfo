@@ -4,6 +4,7 @@
 // statements, so a statement naming a table or a column the app does not
 // have fails here as it would on a phone. defaults, NOT NULL, primary keys,
 // INSERT OR IGNORE / REPLACE and rollback behave as sqlite's do
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:kryfo/signal_stores.dart' show kDevSignalPrefix;
@@ -152,6 +153,25 @@ class MemDb implements Database, Transaction {
   final log = <String>[];
   // throws on the first statement whose log line starts with it
   String? failOn;
+
+  // the rows as a copy of the file holds them, apart from these from here
+  MemDb copy() =>
+      MemDb()
+        .._tables = {for (final e in _tables.entries) e.key: e.value.copy()};
+
+  // every row, as a file of json holds them, and back
+  String dump() =>
+      jsonEncode({for (final e in _tables.entries) e.key: e.value.rows});
+
+  static MemDb load(String json) {
+    final m = MemDb();
+    for (final e in (jsonDecode(json) as Map<String, dynamic>).entries) {
+      m._t(e.key).rows = [
+        for (final r in e.value as List) Map<String, Object?>.from(r as Map),
+      ];
+    }
+    return m;
+  }
 
   bool has(String table) => _tables.containsKey(table);
 

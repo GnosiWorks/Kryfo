@@ -2811,6 +2811,29 @@ class AppLocalizationsAr extends AppLocalizations {
       'سيتوقف عن تلقي رسائل هذه المجموعة.';
 
   @override
+  String get groupInfoResetLink => 'إعادة تعيين الرابط';
+
+  @override
+  String get groupInfoResetTheRoomLink => 'إعادة تعيين رابط الغرفة؟';
+
+  @override
+  String get groupInfoResetLinkLine =>
+      'سيتوقف الرابط القديم عن العمل. يبقى من في الغرفة ويصلهم الرابط الجديد.';
+
+  @override
+  String get groupInfoRemoveRoomLine =>
+      'يمكنه الانضمام مجددًا عبر رابط الغرفة. أعد تعيين الرابط لإبقائه خارجها. من بقي في الغرفة يصله الرابط الجديد.';
+
+  @override
+  String get groupInfoRemoveAndResetLink => 'إزالة وإعادة تعيين الرابط';
+
+  @override
+  String get groupInfoCouldNotResetLink => 'تعذّرت إعادة تعيين الرابط';
+
+  @override
+  String get roomLinkNewLinkTheOld => 'رابط جديد. الرابط القديم لم يعد يعمل.';
+
+  @override
   String appGroupHoldsUpTo(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

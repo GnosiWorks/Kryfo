@@ -2741,6 +2741,29 @@ class AppLocalizationsTr extends AppLocalizations {
       'Artık bu gruptan mesaj almayacak.';
 
   @override
+  String get groupInfoResetLink => 'Bağlantıyı sıfırla';
+
+  @override
+  String get groupInfoResetTheRoomLink => 'Oda bağlantısı sıfırlansın mı?';
+
+  @override
+  String get groupInfoResetLinkLine =>
+      'Eski bağlantı artık çalışmaz. Odadakiler kalır ve yeni bağlantıyı alır.';
+
+  @override
+  String get groupInfoRemoveRoomLine =>
+      'Oda bağlantısıyla yeniden katılabilir. Dışarıda kalması için bağlantıyı sıfırla. Odada kalanlar yenisini alır.';
+
+  @override
+  String get groupInfoRemoveAndResetLink => 'Çıkar ve bağlantıyı sıfırla';
+
+  @override
+  String get groupInfoCouldNotResetLink => 'Bağlantı sıfırlanamadı';
+
+  @override
+  String get roomLinkNewLinkTheOld => 'Yeni bağlantı. Eskisi artık çalışmıyor.';
+
+  @override
   String appGroupHoldsUpTo(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

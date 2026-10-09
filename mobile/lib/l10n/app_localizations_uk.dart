@@ -2797,6 +2797,29 @@ class AppLocalizationsUk extends AppLocalizations {
       'Цей учасник більше не отримуватиме повідомлень із цієї групи.';
 
   @override
+  String get groupInfoResetLink => 'Скинути посилання';
+
+  @override
+  String get groupInfoResetTheRoomLink => 'Скинути посилання на кімнату?';
+
+  @override
+  String get groupInfoResetLinkLine =>
+      'Старе посилання перестане працювати. Ті, хто в кімнаті, залишаться й отримають нове посилання.';
+
+  @override
+  String get groupInfoRemoveRoomLine =>
+      'Учасник зможе знову ввійти за посиланням на кімнату. Скинь посилання, щоб він не повернувся. Ті, хто лишився в кімнаті, отримають нове.';
+
+  @override
+  String get groupInfoRemoveAndResetLink => 'Прибрати й скинути посилання';
+
+  @override
+  String get groupInfoCouldNotResetLink => 'Не вдалося скинути посилання';
+
+  @override
+  String get roomLinkNewLinkTheOld => 'Нове посилання. Старе більше не працює.';
+
+  @override
   String appGroupHoldsUpTo(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

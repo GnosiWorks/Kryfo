@@ -2731,6 +2731,29 @@ class AppLocalizationsEn extends AppLocalizations {
       'They will stop receiving messages from this group.';
 
   @override
+  String get groupInfoResetLink => 'Reset link';
+
+  @override
+  String get groupInfoResetTheRoomLink => 'Reset the room link?';
+
+  @override
+  String get groupInfoResetLinkLine =>
+      'The old link stops working. People in the room stay and get the new link.';
+
+  @override
+  String get groupInfoRemoveRoomLine =>
+      'They can join again with the room link. Reset the link to keep them out. People still in the room get the new one.';
+
+  @override
+  String get groupInfoRemoveAndResetLink => 'Remove and reset link';
+
+  @override
+  String get groupInfoCouldNotResetLink => 'Could not reset the link';
+
+  @override
+  String get roomLinkNewLinkTheOld => 'New link. The old one no longer works.';
+
+  @override
   String appGroupHoldsUpTo(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

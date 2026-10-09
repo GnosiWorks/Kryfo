@@ -770,19 +770,28 @@ class HaloEngine {
     _roomFfiOnIsolate('HaloRoomUnsubscribe', [pub]),
     'room unlisten',
   );
+  // the same, waited on: what listens again comes after it
+  Future<String> roomUnsubscribe(String pub) =>
+      _roomFfiOnIsolate('HaloRoomUnsubscribe', [pub]);
 
   // what a room's addresses kept on disk, gone with the room: its key and
   // its members' keys name every address it had
-  void roomForgetBg(String priv, List<String> members) => _background(
-    _roomFfiOnIsolate('HaloRoomForget', [priv, jsonEncode(members)]),
-    'room forget',
-  );
+  void roomForgetBg(String priv, List<String> members) =>
+      _background(roomForget(priv, members), 'room forget');
+  // the same, waited on: 'ok' once the files are gone
+  Future<String> roomForget(String priv, List<String> members) =>
+      _roomFfiOnIsolate('HaloRoomForget', [priv, jsonEncode(members)]);
 
   // no more listening for a peer, and its address's files gone
   void nostrUnsubscribeBg(String peerXPubHex) => _background(
     _roomFfiOnIsolate('HaloNostrUnsubscribe', [peerXPubHex]),
     'unlisten',
   );
+}
+
+// a knock left to wait its room's turn: offered again, not an error
+class _KnockWaits implements Exception {
+  const _KnockWaits();
 }
 
 // a call nobody waits on: what it threw still shows in a debug log
@@ -1189,7 +1198,7 @@ class HaloDb implements GroupOwedStore {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 67,
+      version: 68,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -1292,7 +1301,10 @@ class HaloDb implements GroupOwedStore {
             member_cap INTEGER,
             room_seen INTEGER NOT NULL DEFAULT 0,
             mentioned INTEGER NOT NULL DEFAULT 0,
-            joining_at INTEGER
+            joining_at INTEGER,
+            door_priv TEXT,
+            door_pub TEXT,
+            door_was TEXT
           )
         ''');
         await db.execute('''
@@ -1343,7 +1355,8 @@ class HaloDb implements GroupOwedStore {
       },
       onUpgrade: (db, oldV, newV) async {
         // 62 runs after every older step, below: its index names columns
-        // they add. 66 runs after it: it reads what they all make. 67 last
+        // they add. 66 runs after it: it reads what they all make. 67 and
+        // 68 last
         if (oldV < 65) {
           // a room joined off a link and not let in yet: when the join went
           await roomJoiningColumn(db);
@@ -1750,7 +1763,10 @@ class HaloDb implements GroupOwedStore {
               member_cap INTEGER,
               room_seen INTEGER NOT NULL DEFAULT 0,
               mentioned INTEGER NOT NULL DEFAULT 0,
-              joining_at INTEGER
+              joining_at INTEGER,
+              door_priv TEXT,
+              door_pub TEXT,
+              door_was TEXT
             )
           ''');
           await db.execute('''
@@ -1775,6 +1791,10 @@ class HaloDb implements GroupOwedStore {
         if (oldV < 67) {
           // a contact's message that came through the developer chat
           await viaDevColumn(db);
+        }
+        if (oldV < 68) {
+          // a room whose maker reset its link: the key its new link knocks on
+          await roomDoorColumns(db);
         }
       },
     );
@@ -3112,6 +3132,117 @@ class HaloDb implements GroupOwedStore {
       limit: 1,
     );
     return rows.isEmpty ? null : rows.first;
+  }
+
+  /// the room a knock on [pub] is for: its door key since a reset, its own
+  /// key before one. once reset, its own key finds nothing
+  Future<Map<String, Object?>?> roomByDoor(String pub) async {
+    final db = await open();
+    final reset = await db.query(
+      'groups',
+      where: 'door_pub = ?',
+      whereArgs: [pub],
+      limit: 1,
+    );
+    if (reset.isNotEmpty) return reset.first;
+    final rows = await db.query(
+      'groups',
+      where: 'room_pub = ? AND door_pub IS NULL',
+      whereArgs: [pub],
+      limit: 1,
+    );
+    return rows.isEmpty ? null : rows.first;
+  }
+
+  /// a new link for a room this phone made: a new door key and the
+  /// address it gives the link. [was] is the door before, kept until its
+  /// files are gone. with [roster] the members' roster carrying the new
+  /// address is queued in the same step, so a kill leaves both or neither.
+  /// false when the room is not here, or not this phone's
+  Future<bool> resetRoomDoor(
+    String groupId, {
+    required String priv,
+    required String pub,
+    required String fcPk,
+    String? was,
+    bool roster = false,
+    required int now,
+  }) async {
+    final db = await open();
+    return db.transaction((t) async {
+      final rows = await t.query(
+        'groups',
+        where: 'group_id = ? AND is_admin = 1 AND room_pub IS NOT NULL',
+        whereArgs: [groupId],
+        limit: 1,
+      );
+      if (rows.isEmpty) return false;
+      final g = rows.first;
+      final n = await t.update(
+        'groups',
+        {'door_priv': priv, 'door_pub': pub, 'fc_pk': fcPk, 'door_was': was},
+        where: 'group_id = ?',
+        whereArgs: [groupId],
+      );
+      if (n == 0) return false;
+      if (!roster) return true;
+      final members = [
+        for (final r in await t.query(
+          'group_members',
+          columns: ['halo_id'],
+          where: 'group_id = ?',
+          whereArgs: [groupId],
+          orderBy: 'joined_at ASC',
+        ))
+          r['halo_id'] as String,
+      ];
+      final held = await _rosterRow(t, groupId);
+      final stamp = max(now, ((held?['stamp'] as int?) ?? 0) + 1);
+      await _putRoster(t, groupId, stamp: stamp, had: held != null);
+      final body = jsonEncode(
+        GroupControl(
+          type: 'create',
+          name: g['name'] as String,
+          members: members,
+          stamp: stamp,
+          fc: fcPk,
+        ).toWire(),
+      );
+      for (final m in members) {
+        if (m == g['room_pub']) continue;
+        await t.insert('group_ctl_out', {
+          'group_id': groupId,
+          'member': m,
+          'ctl': body,
+          'since': now,
+          'tries': 0,
+          'next_at': now,
+        });
+      }
+      return true;
+    });
+  }
+
+  /// the door before a reset, its files gone
+  Future<void> clearRoomDoorWas(String groupId, String priv) async {
+    final db = await open();
+    await db.update(
+      'groups',
+      {'door_was': null},
+      where: 'group_id = ? AND door_was = ?',
+      whereArgs: [groupId, priv],
+    );
+  }
+
+  /// the address a room's link knocks on, as its maker last gave it
+  Future<void> setRoomFc(String groupId, String fcPk) async {
+    final db = await open();
+    await db.update(
+      'groups',
+      {'fc_pk': fcPk},
+      where: 'group_id = ? AND room_pub IS NOT NULL',
+      whereArgs: [groupId],
+    );
   }
 
   Future<List<Map<String, Object?>>> rooms() async {
@@ -6073,6 +6204,15 @@ Future<void> viaDevColumn(DatabaseExecutor db) => addColumn(
 // its creator lets this phone in
 Future<void> roomJoiningColumn(DatabaseExecutor db) =>
     addColumn(db, 'ALTER TABLE groups ADD COLUMN joining_at INTEGER');
+
+// the upgrade to 68: the key a reset room link knocks on, none until a
+// reset and the room's own key takes the knocks, and the door before it
+// until its files are gone
+Future<void> roomDoorColumns(DatabaseExecutor db) async {
+  await addColumn(db, 'ALTER TABLE groups ADD COLUMN door_priv TEXT');
+  await addColumn(db, 'ALTER TABLE groups ADD COLUMN door_pub TEXT');
+  await addColumn(db, 'ALTER TABLE groups ADD COLUMN door_was TEXT');
+}
 
 // the upgrade to 62: a timed message whose clock started before it was
 // read, and the index the burn sweep reads
@@ -12051,7 +12191,14 @@ class AppState extends ChangeNotifier {
           await db.syncGroupMembers(groupId, members);
           await db.renameGroup(groupId, gc.name!);
         }
-        if (isRoom) await _roomLetIn(groupId, members, db);
+        if (isRoom) {
+          // the link a member shares is the one its maker last reset to
+          final fc = gc.fc;
+          if (exists && fc != null && looksLikeRoomKey(fc)) {
+            await db.setRoomFc(groupId, fc);
+          }
+          await _roomLetIn(groupId, members, db);
+        }
         // auto-create contact stubs for unknown participants so we can
         // immediately send to them.
         if (gc.participants != null) {
@@ -14003,6 +14150,8 @@ class AppState extends ChangeNotifier {
           arrived,
           wrappedAt: m.at < written.length ? written[m.at] : null,
         );
+      } on _KnockWaits {
+        failed.add(m.at);
       } catch (e, st) {
         dlog('relay: one not kept, it comes again ($e)\n$st');
         failed.add(m.at);
@@ -14069,6 +14218,12 @@ class AppState extends ChangeNotifier {
     // a room frame: opened by the room key already, never signal. one that
     // throws is not kept and comes again
     if (m.peer.startsWith('room:') || m.peer.startsWith('roomfc:')) {
+      // a knock on a room busy with a reset waits on its own, and the
+      // inbox goes on. it is offered again until it is seen
+      if (m.peer.startsWith('roomfc:') && _roomBusy(m.cipher)) {
+        _knockLater(m.peer, m.cipher, h);
+        throw const _KnockWaits();
+      }
       await _handleRoomFrame(m.peer, m.cipher);
       await live.markSeen(h);
       notifyListeners();
@@ -16240,6 +16395,150 @@ class AppState extends ChangeNotifier {
     );
   }
 
+  // knocks and resets of one room, one at a time, by room id
+  final Map<String, Future<void>> _roomTurns = {};
+
+  Future<T> _roomTurn<T>(String groupId, Future<T> Function() run) {
+    final mine = (_roomTurns[groupId] ?? Future<void>.value()).then(
+      (_) => run(),
+    );
+    final done = mine.then<void>((_) {}, onError: (_) {});
+    _roomTurns[groupId] = done;
+    done.then((_) {
+      if (identical(_roomTurns[groupId], done)) _roomTurns.remove(groupId);
+    });
+    return mine;
+  }
+
+  // how long a reset waits on the engine before it goes on without it
+  @visibleForTesting
+  Duration roomEngineWait = const Duration(seconds: 20);
+
+  // whether the room a frame names has a knock or a reset under way
+  bool _roomBusy(String content) {
+    final g = unwrapMessage(content).groupId;
+    return g != null && _roomTurns.containsKey(g);
+  }
+
+  // knocks waiting their room's turn off the inbox, by hash
+  final Set<String> _knocks = {};
+
+  void _knockLater(String tag, String content, String h) {
+    if (!_knocks.add(h)) return;
+    unawaited(
+      _handleRoomFrame(tag, content)
+          .then((_) => live.markSeen(h))
+          .then((_) => notifyListeners())
+          .catchError((Object e) => dlog('room knock: ${e.runtimeType}'))
+          .whenComplete(() => _knocks.remove(h)),
+    );
+  }
+
+  // resets running now: a second ask waits for the same one
+  final Map<String, Future<RoomLink?>> _resetting = {};
+
+  /// a new link for a room this phone made. the old one knocks on a key
+  /// nobody listens to any more, so it lets no one in, and a knock on it
+  /// goes unanswered as one on a phone that is off. the members stay, and
+  /// the roster queued with it gives them the new link. null when it
+  /// cannot be done
+  Future<RoomLink?> resetRoomLink(String groupId) {
+    final running = _resetting[groupId];
+    if (running != null) return running;
+    final r = _roomTurn(groupId, () => _resetRoomLink(groupId));
+    _resetting[groupId] = r;
+    return r.whenComplete(() => _resetting.remove(groupId));
+  }
+
+  Future<RoomLink?> _resetRoomLink(String groupId) async {
+    final g = await session.getGroup(groupId);
+    final priv = g?['room_priv'] as String?;
+    final pub = g?['room_pub'] as String?;
+    if (g == null || priv == null || pub == null) return null;
+    if ((g['is_admin'] as int? ?? 0) != 1) return null;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if ((g['expires_at'] as int? ?? 0) <= now) return null;
+    // a quiet session keeps the room on this phone: nothing listens or goes
+    final quiet = sessionQuiet;
+    // a door the last reset could not forget goes first, or it never would
+    if (!quiet && !await _forgetDoor(groupId, g['door_was'] as String?)) {
+      return null;
+    }
+    final k = engine.roomKeygen();
+    if (k == null) return null;
+    final fc = engine.roomFcPk(k.priv);
+    if (!looksLikeRoomKey(fc)) return null;
+    final was = (
+      priv: (g['door_priv'] as String?) ?? priv,
+      pub: (g['door_pub'] as String?) ?? pub,
+    );
+    // from here a knock on the old door finds no room, and the roster that
+    // takes the new link to the members waits in the queue
+    final reset = await session.resetRoomDoor(
+      groupId,
+      priv: k.priv,
+      pub: k.pub,
+      fcPk: fc,
+      was: quiet ? null : was.priv,
+      roster: !quiet,
+      now: now,
+    );
+    // gone under it, as an ended room does: no lane is touched
+    if (!reset) return null;
+    if (!quiet) {
+      await _moveRoomDoor(groupId, pub, was, k.priv);
+      await _forgetDoor(groupId, was.priv);
+      // after the move: the first door's lane is the members' too
+      if (!haloWiping) unawaited(_drainGroupCtl());
+    }
+    _bumpChatRev('group:$groupId');
+    await refreshGroups();
+    return roomLinkFor(groupId);
+  }
+
+  // the files of a door a reset left, gone, and the note of it with them.
+  // one not gone stays noted, for the next start or reset
+  // true once nothing is left to forget
+  Future<bool> _forgetDoor(String groupId, String? priv) async {
+    if (priv == null) return true;
+    try {
+      final r = await engine
+          .roomForget(priv, const [])
+          .timeout(roomEngineWait, onTimeout: () => 'error: timeout');
+      if (r != 'ok') return false;
+      await live.clearRoomDoorWas(groupId, priv);
+      return true;
+    } catch (e) {
+      dlog('room door: not forgotten (${e.runtimeType})');
+      return false;
+    }
+  }
+
+  // the old door stops listening, the new one listens.
+  // the first door is the room's own key, whose lane its members share:
+  // they listen again once it is shut
+  Future<void> _moveRoomDoor(
+    String groupId,
+    String roomPub,
+    ({String priv, String pub}) was,
+    String doorPriv,
+  ) async {
+    if (was.pub == roomPub) {
+      try {
+        await engine
+            .roomUnsubscribe(roomPub)
+            .timeout(roomEngineWait, onTimeout: () => 'error: timeout');
+      } catch (e) {
+        dlog('room door: not shut (${e.runtimeType})');
+      }
+      _roomSubs[roomPub] = {};
+      await _subscribeRoomMembers(groupId);
+    } else {
+      engine.roomUnsubscribeBg(was.pub);
+    }
+    engine.roomSubscribeFcBg(doorPriv);
+  }
+
   // join off a link: make a key for this room only, tell the creator's drop
   // box about it, and listen for the creator. the room waits until the
   // creator's roster names the key, since nobody reads a key before that.
@@ -16262,8 +16561,12 @@ class AppState extends ChangeNotifier {
   Future<String> _joinRoom(RoomLink link, int now) async {
     final had = await session.getGroup(link.roomId);
     if (had != null) {
-      // not let in yet: the link knocks again
+      // not let in yet: the link knocks again, on the door it names
       if (had['room_pub'] != null && had['joining_at'] != null) {
+        if (had['creator_pub'] == link.creatorPub &&
+            had['fc_pk'] != link.fcPk) {
+          await session.setRoomFc(link.roomId, link.fcPk);
+        }
         await retryRoomJoin(link.roomId);
         return '';
       }
@@ -16465,7 +16768,19 @@ class AppState extends ChangeNotifier {
   // someone came in off the link. only the creator takes these, only for a
   // live room, only under the cap. then everyone gets the new roster and
   // subscribes to the newcomer off it.
-  Future<void> _roomJoin(String roomPub, UnwrappedMessage env) async {
+  // [door] is the key the knock came to. a reset takes its turn before or
+  // after, never in between
+  Future<void> _roomJoin(String roomPub, String door, UnwrappedMessage env) {
+    final groupId = env.groupId;
+    if (groupId == null) return Future.value();
+    return _roomTurn(groupId, () => _roomJoinTurn(roomPub, door, env));
+  }
+
+  Future<void> _roomJoinTurn(
+    String roomPub,
+    String door,
+    UnwrappedMessage env,
+  ) async {
     final g = await live.roomByPub(roomPub);
     if (g == null || env.groupId != g['group_id']) return;
     if ((g['is_admin'] as int? ?? 0) != 1) return;
@@ -16481,6 +16796,8 @@ class AppState extends ChangeNotifier {
     // after its leave, off a lane of its own
     if ((await live.rosterGone(groupId)).contains(who)) return;
     final members = await live.getGroupMembers(groupId);
+    // the door it came to is still the room's: a reset shut it meanwhile
+    if ((await live.roomByDoor(door))?['group_id'] != groupId) return;
     // no room is bigger than a group: a longer roster is one no member
     // would take
     final cap = min(
@@ -16498,16 +16815,20 @@ class AppState extends ChangeNotifier {
     }
     await _subscribeRoomMembers(groupId);
     final all = await live.getGroupMembers(groupId);
+    final stamp = await live.nextRosterStamp(
+      groupId,
+      DateTime.now().millisecondsSinceEpoch,
+    );
+    // the link as it is now, not as it was when the knock came
+    final fc = (await live.getGroup(groupId))?['fc_pk'] as String?;
     await _queueControl(
       groupId,
       GroupControl(
         type: 'create',
         name: g['name'] as String,
         members: all,
-        stamp: await live.nextRosterStamp(
-          groupId,
-          DateTime.now().millisecondsSinceEpoch,
-        ),
+        stamp: stamp,
+        fc: fc,
       ),
       on: live,
     );
@@ -16521,9 +16842,13 @@ class AppState extends ChangeNotifier {
   Future<void> _handleRoomFrame(String tag, String content) async {
     final parts = tag.split(':');
     if (parts.length < 2) return;
-    final roomPub = parts[1];
-    final g = await live.roomByPub(roomPub);
+    // a knock comes to the room's door: one on a door a reset closed finds
+    // no room, as a knock on no room at all
+    final g = parts[0] == 'roomfc'
+        ? await live.roomByDoor(parts[1])
+        : await live.roomByPub(parts[1]);
     if (g == null) return;
+    final roomPub = g['room_pub'] as String;
     final groupId = g['group_id'] as String;
     if ((g['expires_at'] as int) <= DateTime.now().millisecondsSinceEpoch) {
       await _destroyRoom(groupId, expired: true);
@@ -16532,7 +16857,9 @@ class AppState extends ChangeNotifier {
     final env = unwrapMessage(content);
     if (env.groupId != groupId) return;
     if (parts[0] == 'roomfc') {
-      if (env.groupControl?.type == 'join') await _roomJoin(roomPub, env);
+      if (env.groupControl?.type == 'join') {
+        await _roomJoin(roomPub, parts[1], env);
+      }
       return;
     }
     if (parts.length < 3) return;
@@ -16554,7 +16881,18 @@ class AppState extends ChangeNotifier {
   // subscriptions. the wipe goes through the same shred the burn timer
   // uses. a gone room is not a notification, just a line in the list for
   // a moment if someone is looking.
+  // in the room's turn: a reset under way finishes first, and nothing of
+  // it is left listening after
   Future<void> _destroyRoom(
+    String groupId, {
+    bool expired = false,
+    HaloDb? on,
+  }) => _roomTurn(
+    groupId,
+    () => _destroyRoomTurn(groupId, expired: expired, on: on),
+  );
+
+  Future<void> _destroyRoomTurn(
     String groupId, {
     bool expired = false,
     HaloDb? on,
@@ -16571,6 +16909,14 @@ class AppState extends ChangeNotifier {
       if (priv != null) {
         engine.roomForgetBg(priv, await d.getGroupMembers(groupId));
       }
+      final doorPriv = g['door_priv'] as String?;
+      final doorPub = g['door_pub'] as String?;
+      if (doorPriv != null && doorPub != null) {
+        engine.roomUnsubscribeBg(doorPub);
+        engine.roomForgetBg(doorPriv, const []);
+      }
+      final was = g['door_was'] as String?;
+      if (was != null) engine.roomForgetBg(was, const []);
     }
     for (final path in await d.groupFilePaths(groupId)) {
       await shredFile(path);
@@ -16733,13 +17079,24 @@ class AppState extends ChangeNotifier {
   // them dial the relays of the mode now in use
   Future<int> _listenToRooms() async {
     final rooms = await live.rooms();
-    for (final g in rooms) {
-      final gid = g['group_id'] as String;
-      final priv = g['room_priv'] as String;
-      final pub = g['room_pub'] as String;
-      _roomSubs[pub] = {};
-      if ((g['is_admin'] as int? ?? 0) == 1) engine.roomSubscribeFcBg(priv);
-      await _subscribeRoomMembers(gid);
+    for (final r in rooms) {
+      final gid = r['group_id'] as String;
+      // in the room's turn, off the row as it is then: a reset or an end
+      // under way never leaves an old door listening
+      await _roomTurn(gid, () async {
+        final g = await live.getGroup(gid);
+        final priv = g?['room_priv'] as String?;
+        final pub = g?['room_pub'] as String?;
+        if (g == null || priv == null || pub == null) return;
+        _roomSubs[pub] = {};
+        // a reset link knocks on its door key, the first one on the room's
+        if ((g['is_admin'] as int? ?? 0) == 1) {
+          engine.roomSubscribeFcBg((g['door_priv'] as String?) ?? priv);
+          // a reset cut short: the door before it is forgotten now
+          await _forgetDoor(gid, g['door_was'] as String?);
+        }
+        await _subscribeRoomMembers(gid);
+      });
     }
     return rooms.length;
   }

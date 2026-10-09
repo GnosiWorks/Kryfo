@@ -63,6 +63,8 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
     (g) => g.groupId == widget.groupId && g.expiresAt != null,
   );
   List<String> _members = [];
+  // a link reset running from this page
+  bool _resetting = false;
   // the first read is in. until then the page draws from the chat list's
   // row, so the tile can fly in and only the members fill in
   bool _loaded = false;
@@ -207,18 +209,65 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   }
 
   Future<void> _confirmRemove(String haloId) async {
-    final ok = await showConfirmSheet(
-      context,
-      title: l10n.groupInfoRemove(
-        _contactOf(haloId)?.nickname ?? memberLabel(haloId),
-      ),
-      line: l10n.groupInfoTheyWillStopReceiving,
-      yes: l10n.commonRemove,
+    final title = l10n.groupInfoRemove(
+      _contactOf(haloId)?.nickname ?? memberLabel(haloId),
     );
-    if (ok == true) {
+    if (!_isRoom) {
+      final ok = await showConfirmSheet(
+        context,
+        title: title,
+        line: l10n.groupInfoTheyWillStopReceiving,
+        yes: l10n.commonRemove,
+      );
+      if (!ok) return;
       await appState.removeMembersFromGroup(widget.groupId, [haloId]);
       await _load();
+      return;
     }
+    // a room key taken out can come back under a new one off the link
+    final r = await showConfirmOrMoreSheet(
+      context,
+      title: title,
+      line: l10n.groupInfoRemoveRoomLine,
+      yes: l10n.commonRemove,
+      more: l10n.groupInfoRemoveAndResetLink,
+    );
+    if (r == null) return;
+    // out first, so the new link never reaches them
+    await appState.removeMembersFromGroup(widget.groupId, [haloId]);
+    await _load();
+    if (r == 'more') await _resetLink();
+  }
+
+  // the maker's: the link anyone may hold stops working, a new one comes
+  Future<void> _confirmResetLink() async {
+    // one is running: its row says so, and its link sheet is on its way
+    if (_resetting) return;
+    final ok = await showConfirmSheet(
+      context,
+      title: l10n.groupInfoResetTheRoomLink,
+      line: l10n.groupInfoResetLinkLine,
+      yes: l10n.groupInfoResetLink,
+    );
+    if (ok) await _resetLink();
+  }
+
+  Future<void> _resetLink() async {
+    if (_resetting) return;
+    setState(() => _resetting = true);
+    final RoomLink? link;
+    try {
+      link = await appState.resetRoomLink(widget.groupId);
+    } finally {
+      if (mounted) setState(() => _resetting = false);
+    }
+    if (!mounted) return;
+    if (link == null) {
+      showHaloToast(context, l10n.groupInfoCouldNotResetLink);
+      return;
+    }
+    HapticFeedback.mediumImpact();
+    await showRoomLinkSheet(context, link, fresh: true);
   }
 
   Future<void> _pickAtmosphere() async {
@@ -426,6 +475,32 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                 label: l10n.groupInfoWallpaper,
                 onTap: _pickAtmosphere,
               ),
+              // the maker's alone: known from the list's row, so it is
+              // there from the first frame
+              if ((_isRoom || _roomAtOpen) && _isAdmin)
+                HaloRow(
+                  label: l10n.groupInfoResetLink,
+                  // the glyph turns into a spinner while the reset runs
+                  mark: FadeSwap(
+                    child: _resetting
+                        ? SizedBox(
+                            key: const ValueKey('resetting'),
+                            width: 15,
+                            height: 15,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: HaloColors.amber,
+                            ),
+                          )
+                        : Icon(
+                            Icons.refresh_rounded,
+                            key: const ValueKey('reset'),
+                            size: 17,
+                            color: HaloColors.amber,
+                          ),
+                  ),
+                  onTap: _confirmResetLink,
+                ),
               // hidden chats open: out of the everyday list, or back in it
               if (lockState.inVault && !_isRoom)
                 HaloRow(

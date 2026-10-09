@@ -2767,6 +2767,31 @@ class AppLocalizationsDe extends AppLocalizations {
       'Die Person bekommt dann keine Nachrichten mehr aus dieser Gruppe.';
 
   @override
+  String get groupInfoResetLink => 'Link zurücksetzen';
+
+  @override
+  String get groupInfoResetTheRoomLink => 'Raumlink zurücksetzen?';
+
+  @override
+  String get groupInfoResetLinkLine =>
+      'Der alte Link funktioniert dann nicht mehr. Wer im Raum ist, bleibt und bekommt den neuen Link.';
+
+  @override
+  String get groupInfoRemoveRoomLine =>
+      'Die Person kann über den Raumlink wieder beitreten. Setz den Link zurück, damit sie draußen bleibt. Wer noch im Raum ist, bekommt den neuen.';
+
+  @override
+  String get groupInfoRemoveAndResetLink => 'Entfernen und Link zurücksetzen';
+
+  @override
+  String get groupInfoCouldNotResetLink =>
+      'Link konnte nicht zurückgesetzt werden';
+
+  @override
+  String get roomLinkNewLinkTheOld =>
+      'Neuer Link. Der alte funktioniert nicht mehr.';
+
+  @override
   String appGroupHoldsUpTo(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

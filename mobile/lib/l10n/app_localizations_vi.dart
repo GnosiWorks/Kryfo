@@ -2730,6 +2730,30 @@ class AppLocalizationsVi extends AppLocalizations {
       'Họ sẽ không nhận được tin nhắn từ nhóm này nữa.';
 
   @override
+  String get groupInfoResetLink => 'Đặt lại liên kết';
+
+  @override
+  String get groupInfoResetTheRoomLink => 'Đặt lại liên kết phòng?';
+
+  @override
+  String get groupInfoResetLinkLine =>
+      'Liên kết cũ sẽ không dùng được nữa. Những người trong phòng vẫn ở lại và nhận liên kết mới.';
+
+  @override
+  String get groupInfoRemoveRoomLine =>
+      'Họ có thể vào lại bằng liên kết phòng. Hãy đặt lại liên kết để giữ họ ở ngoài. Những người còn trong phòng sẽ nhận liên kết mới.';
+
+  @override
+  String get groupInfoRemoveAndResetLink => 'Gỡ và đặt lại liên kết';
+
+  @override
+  String get groupInfoCouldNotResetLink => 'Không thể đặt lại liên kết';
+
+  @override
+  String get roomLinkNewLinkTheOld =>
+      'Liên kết mới. Liên kết cũ không còn dùng được.';
+
+  @override
   String appGroupHoldsUpTo(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

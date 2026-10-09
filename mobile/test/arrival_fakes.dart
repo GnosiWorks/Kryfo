@@ -1221,6 +1221,77 @@ class ArrivalRows implements HaloDb {
   }
 
   @override
+  Future<Map<String, Object?>?> roomByDoor(String pub) async {
+    for (final g in groupRows.values) {
+      if (g['door_pub'] == pub) return g;
+    }
+    for (final g in groupRows.values) {
+      if (g['room_pub'] == pub && g['door_pub'] == null) return g;
+    }
+    return null;
+  }
+
+  @override
+  Future<bool> resetRoomDoor(
+    String groupId, {
+    required String priv,
+    required String pub,
+    required String fcPk,
+    String? was,
+    bool roster = false,
+    required int now,
+  }) async {
+    _hit('resetRoomDoor', groupId, null);
+    final g = groupRows[groupId];
+    if (g == null || g['is_admin'] != 1 || g['room_pub'] == null) return false;
+    g.addAll({
+      'door_priv': priv,
+      'door_pub': pub,
+      'fc_pk': fcPk,
+      'door_was': was,
+    });
+    if (!roster) return true;
+    final all = [...?members[groupId]];
+    final held = rosterStamps[groupId] ?? 0;
+    final stamp = rosterStamps[groupId] = held + 1 > now ? held + 1 : now;
+    final ctl = GroupControl(
+      type: 'create',
+      name: g['name'] as String,
+      members: all,
+      stamp: stamp,
+      fc: fcPk,
+    );
+    for (final m in all) {
+      if (m == g['room_pub']) continue;
+      ctlOut.add({
+        'id': ++_ctlId,
+        'group_id': groupId,
+        'member': m,
+        'ctl': jsonEncode(ctl.toWire()),
+        'since': now,
+        'tries': 0,
+        'next_at': now,
+      });
+    }
+    return true;
+  }
+
+  @override
+  Future<void> clearRoomDoorWas(String groupId, String priv) async {
+    _hit('clearRoomDoorWas', groupId, null);
+    final g = groupRows[groupId];
+    if (g != null && g['door_was'] == priv) g['door_was'] = null;
+  }
+
+  @override
+  Future<void> setRoomFc(String groupId, String fcPk) async {
+    _hit('setRoomFc', groupId, null);
+    final g = groupRows[groupId];
+    if (g == null || g['room_pub'] == null) return;
+    g['fc_pk'] = fcPk;
+  }
+
+  @override
   Future<void> bumpGroupUnread(String groupId) async {
     _hit('bumpGroupUnread', groupId, null);
     final g = groupRows[groupId];

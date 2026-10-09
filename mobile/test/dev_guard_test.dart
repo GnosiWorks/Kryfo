@@ -333,6 +333,9 @@ class _Mem implements HaloDb {
   @override
   Future<Map<String, Object?>?> roomByPub(String pub) async =>
       _hit('roomByPub', pub, roomRows[pub]);
+  @override
+  Future<Map<String, Object?>?> roomByDoor(String pub) async =>
+      _hit('roomByDoor', pub, roomRows[pub]);
 
   @override
   Future<void> setKeyChanged(String haloId, bool changed) async =>
@@ -1400,6 +1403,7 @@ void main() {
       final roomPub = 'ab' * 32;
       w.live.roomRows[roomPub] = {
         'group_id': 'room1',
+        'room_pub': roomPub,
         'is_admin': 1,
         'expires_at': DateTime.now().millisecondsSinceEpoch + 3600000,
         'member_cap': null,

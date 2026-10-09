@@ -1295,6 +1295,19 @@ void main() {
       l.groupInfoTheyWillStopReceiving,
       "They will stop receiving messages from this group.",
     );
+    expect(l.groupInfoResetLink, "Reset link");
+    expect(l.groupInfoResetTheRoomLink, "Reset the room link?");
+    expect(
+      l.groupInfoResetLinkLine,
+      "The old link stops working. People in the room stay and get the new link.",
+    );
+    expect(
+      l.groupInfoRemoveRoomLine,
+      "They can join again with the room link. Reset the link to keep them out. People still in the room get the new one.",
+    );
+    expect(l.groupInfoRemoveAndResetLink, "Remove and reset link");
+    expect(l.groupInfoCouldNotResetLink, "Could not reset the link");
+    expect(l.roomLinkNewLinkTheOld, "New link. The old one no longer works.");
     expect(l.appGroupHoldsUpTo(0), "A group holds up to 0 people");
     expect(l.appGroupHoldsUpTo(1), "A group holds up to 1 person");
     expect(l.appGroupHoldsUpTo(2), "A group holds up to 2 people");
