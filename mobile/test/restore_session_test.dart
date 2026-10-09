@@ -359,6 +359,33 @@ void main() {
     expect(engine.restored, isEmpty);
   });
 
+  test('an old text file in the decoy takes the old decoy\'s hidden chats '
+      'and their PIN with it', () async {
+    final lock = await pins(inDecoy: true);
+    useDatabasesForTest(live, Session(decoy));
+    put('media_dv/a.jpg', 'decoy hidden photo');
+    await landV1Payload(
+      {
+        'v': 1,
+        'db': base64Encode(utf8.encode('old file')),
+        'dbPassphrase': "x'${'4e' * 32}'",
+        'edPriv': 'ed',
+        'xPriv': 'x',
+      },
+      own: decoy,
+      lock: lock.state,
+    );
+    expect(read('halo_d.db'), 'old file');
+    expect(lock.entries.keys, isNot(contains('${PinSlot.decoyVault}')));
+    expect(read('halo_dv.db'), isNull);
+    expect(read('media_dv/a.jpg'), isNull);
+    expect(restoredHidden, isFalse);
+    // the everyday account and its hidden chats as they were
+    expect((lock.entries['${PinSlot.vault}'] as Map)['p'], vaultPin);
+    expect(read('halo_v.db'), 'everyday hidden');
+    expect(read('halo.db'), 'everyday');
+  });
+
   test('an old text file in the everyday app retires the database before '
       'writing over it, and clears only the everyday hidden chats', () async {
     final lock = await pins(inDecoy: true);

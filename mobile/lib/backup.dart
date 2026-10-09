@@ -275,7 +275,9 @@ Future<void> landV1Payload(
   final docsDir = await getApplicationDocumentsDirectory();
   // in a decoy session an old file becomes the decoy's account, as a v2 one
   // does, and the everyday one is not touched
-  if (db.container.quiet) return _landV1InDecoy(db, payload, docsDir.path);
+  if (db.container.quiet) {
+    return _landV1InDecoy(db, payload, docsDir.path, lock ?? lockState);
+  }
 
   final dbPassphrase = payload['dbPassphrase'] as String;
   final dbBytes = base64Decode(payload['db'] as String);
@@ -353,6 +355,7 @@ Future<void> _landV1InDecoy(
   HaloDb own,
   Map<String, dynamic> payload,
   String docs,
+  LockState pins,
 ) async {
   final root = Directory(
     p.join((await getApplicationSupportDirectory()).path, _kRestoreQuiet),
@@ -369,12 +372,20 @@ Future<void> _landV1InDecoy(
   await stage('halo.db', payload['db'] as String);
   final onion = payload['onionKey'];
   if (onion is String) await stage('onion.key', onion);
-  await _landing(
-    () => _landInDecoy(own, root.path, docs, {
+  await _landing(() async {
+    // the decoy's hidden chats go with the account they belonged to
+    await landHidden(
+      docs,
+      null,
+      const {},
+      clearEntry: () => pins.clearVault(of: HaloContainer.decoyVault),
+      into: HaloContainer.decoyVault,
+    );
+    await _landInDecoy(own, root.path, docs, {
       'files': files,
       'dbPassphrase': payload['dbPassphrase'],
-    }),
-  );
+    });
+  });
 }
 
 // ───────────────────────── v2: the streamed file ─────────────────────────
