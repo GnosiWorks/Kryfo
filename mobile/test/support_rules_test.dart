@@ -223,17 +223,20 @@ class _Phone extends HaloDb {
     Set<String> skip = const {},
   }) async => const [];
   @override
-  Future<bool> holdCipher(
+  Future<Shelved> holdCipher(
     String peerId,
     String cipher, {
     String? mediaId,
+    int? chunk,
+    int? total,
+    bool overflow = false,
   }) async {
     await mem.insert('held_onion', {
       'peer_id': peerId,
       'cipher': cipher,
       'at': 1,
     });
-    return true;
+    return Shelved.kept;
   }
 
   @override
@@ -284,7 +287,9 @@ class _Io implements AppIo {
     bool flagKeyChange = false,
   }) => decrypt(peer, cipher, flagKeyChange: flagKeyChange);
   @override
-  void letHeld(String xPub, {required bool free}) {}
+  Future<String> letHeld(String xPub, String how) async => 'ok';
+  @override
+  Future<String> freeHeld(List<String> xPubs) async => 'ok';
   // sessions let go of, and addresses no longer listened on
   final dropped = <String>[];
   @override

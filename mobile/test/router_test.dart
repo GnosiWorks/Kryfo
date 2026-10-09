@@ -21,6 +21,7 @@ import 'package:kryfo/main.dart'
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
 import 'package:kryfo/router.dart';
+import 'package:kryfo/stranger_gate.dart' show Shelved;
 import 'package:kryfo/session.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -95,8 +96,11 @@ class _Store implements RouterStore {
     for (final r in inbox) (r['id'] as int, (r['sealed'] as List<int>).length),
   ];
   @override
-  Future<List<Map<String, Object?>>> inboxOldest(int limit) async =>
-      inbox.take(limit).toList();
+  Future<List<Map<String, Object?>>> inboxOldest(
+    int limit, {
+    int after = 0,
+  }) async =>
+      inbox.where((r) => (r['id'] as num).toInt() > after).take(limit).toList();
   @override
   Future<void> inboxDelete(int id) async {
     inbox.removeWhere((r) => r['id'] == id);
@@ -149,7 +153,9 @@ class _Io implements AppIo {
     bool flagKeyChange = false,
   }) => decrypt(peer, cipher, flagKeyChange: flagKeyChange);
   @override
-  void letHeld(String xPub, {required bool free}) {}
+  Future<String> letHeld(String xPub, String how) async => 'ok';
+  @override
+  Future<String> freeHeld(List<String> xPubs) async => 'ok';
   // sessions let go of, and addresses no longer listened on
   final dropped = <String>[];
   @override
@@ -526,14 +532,17 @@ class _Mem implements HaloDb {
     List<Map<String, String>> lines,
   ) async => _hit('setShield', haloId, null);
   @override
-  Future<bool> holdCipher(
+  Future<Shelved> holdCipher(
     String peerId,
     String cipher, {
     String? mediaId,
+    int? chunk,
+    int? total,
+    bool overflow = false,
   }) async {
     _hit('holdCipher', peerId, null);
     held.add(peerId);
-    return true;
+    return Shelved.kept;
   }
 
   @override

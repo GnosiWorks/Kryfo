@@ -37,6 +37,7 @@ import 'package:kryfo/main.dart'
         useEngineForTest;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
+import 'package:kryfo/stranger_gate.dart' show Shelved;
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
 import 'package:kryfo/signal_stores.dart';
@@ -118,13 +119,16 @@ class _Phone extends DevTestDb {
   // what the stranger cap held back, as held
   final held = <(String, String)>[];
   @override
-  Future<bool> holdCipher(
+  Future<Shelved> holdCipher(
     String peerId,
     String cipher, {
     String? mediaId,
+    int? chunk,
+    int? total,
+    bool overflow = false,
   }) async {
     held.add((peerId, cipher));
-    return true;
+    return Shelved.kept;
   }
 
   @override

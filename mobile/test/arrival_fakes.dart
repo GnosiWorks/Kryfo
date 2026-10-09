@@ -22,7 +22,7 @@ import 'package:kryfo/polls.dart';
 import 'package:kryfo/rooms.dart' show kRoomJoinWait;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/stranger_gate.dart'
-    show ShelfFull, kShelfPlaces, shelfTakes;
+    show ShelfFull, Shelved, kShelfPlaces, shelfVerdict;
 
 class ArrivalStore implements RouterStore {
   final rows = <String, Map<String, Object?>>{};
@@ -89,8 +89,11 @@ class ArrivalStore implements RouterStore {
     for (final r in inbox) (r['id'] as int, (r['sealed'] as List<int>).length),
   ];
   @override
-  Future<List<Map<String, Object?>>> inboxOldest(int limit) async =>
-      inbox.take(limit).toList();
+  Future<List<Map<String, Object?>>> inboxOldest(
+    int limit, {
+    int after = 0,
+  }) async =>
+      inbox.where((r) => (r['id'] as num).toInt() > after).take(limit).toList();
   @override
   Future<void> inboxDelete(int id) async {
     inbox.removeWhere((r) => r['id'] == id);
@@ -173,15 +176,33 @@ class ArrivalIo implements AppIo {
     final o = opens[cipher];
     if (o != null && o.$1 == peer && !keep(o.$2)) {
       tries.add('$peer $cipher');
-      throw const ShelfFull();
+      onShelfFull?.call();
+      throw ShelfFull(peer: peer);
     }
     return decrypt(peer, cipher, flagKeyChange: flagKeyChange);
   }
 
-  // what a full shelf left on the relay, let go: a key and fetched or not
-  final letGo = <(String, bool)>[];
+  // called as a full shelf turns one down
+  void Function()? onShelfFull;
+
+  // what a full shelf left on the relay, let go: a key and how
+  final letGo = <(String, String)>[];
+  // called as each is asked
+  void Function(String xPub, String how)? onLetHeld;
   @override
-  void letHeld(String xPub, {required bool free}) => letGo.add((xPub, free));
+  Future<String> letHeld(String xPub, String how) async {
+    letGo.add((xPub, how));
+    onLetHeld?.call(xPub, how);
+    return 'ok';
+  }
+
+  // keys asked to fetch what is held, on a start
+  final freed = <String>[];
+  @override
+  Future<String> freeHeld(List<String> xPubs) async {
+    freed.addAll(xPubs);
+    return 'ok';
+  }
 
   @override
   Future<List<String>> sessionAddresses() async => sessions;
@@ -663,39 +684,71 @@ class ArrivalRows implements HaloDb {
     );
   }
 
-  // the file each held row is a slice of
+  // the file each held row is a slice of, and its place in it
   final heldMedia = <int, String>{};
+  final heldChunk = <int, int?>{};
+  // called as each held row goes, by its id
+  void Function(int id)? onForget;
 
   @override
-  Future<bool> holdCipher(
+  Future<Shelved> holdCipher(
     String peerId,
     String cipher, {
     String? mediaId,
+    int? chunk,
+    int? total,
+    bool overflow = false,
   }) async {
     _hit('holdCipher', peerId, null);
-    final shelf = await shelfOf(peerId);
-    if (!shelfTakes(
-      places: shelf.places,
-      files: shelf.files,
-      mediaId: mediaId,
-    )) {
-      return false;
-    }
-    held.add(peerId);
     final rows = heldRows[peerId] ??= [];
     // a copy of one held already is held once, as the table keeps it
-    if (rows.any((r) => r.cipher == cipher)) return true;
+    final slice = !overflow && mediaId != null && chunk != null;
+    if (rows.any(
+      (r) => slice
+          ? heldMedia[r.id] == mediaId && heldChunk[r.id] == chunk
+          : r.cipher == cipher,
+    )) {
+      return Shelved.kept;
+    }
+    final shelf = await shelfOf(peerId);
+    final v = shelfVerdict(
+      places: shelf.places,
+      files: shelf.files,
+      bytes: shelf.bytes,
+      size: cipher.length,
+      mediaId: mediaId,
+      chunk: chunk,
+      total: total,
+      overflow: overflow,
+    );
+    if (v != Shelved.kept) return v;
+    held.add(peerId);
     rows.add((id: ++_heldId, cipher: cipher));
-    if (mediaId != null) heldMedia[_heldId] = mediaId;
-    return true;
+    if (mediaId != null && !overflow) {
+      heldMedia[_heldId] = mediaId;
+      heldChunk[_heldId] = chunk;
+    }
+    return Shelved.kept;
   }
 
   @override
-  Future<({int places, Set<String> files})> shelfOf(String peerId) async {
+  Future<({int places, Map<String, Set<int?>> files, int bytes})> shelfOf(
+    String peerId,
+  ) async {
     final rows = heldRows[peerId] ?? const [];
-    final files = {for (final r in rows) ?heldMedia[r.id]};
-    final texts = rows.where((r) => heldMedia[r.id] == null).length;
-    return (places: texts + files.length, files: files);
+    final files = <String, Set<int?>>{};
+    var texts = 0;
+    var bytes = 0;
+    for (final r in rows) {
+      bytes += r.cipher.length;
+      final m = heldMedia[r.id];
+      if (m != null) {
+        (files[m] ??= {}).add(heldChunk[r.id]);
+      } else if (r.cipher.startsWith('wire:')) {
+        texts++;
+      }
+    }
+    return (places: texts + files.length, files: files, bytes: bytes);
   }
 
   @override
@@ -707,7 +760,7 @@ class ArrivalRows implements HaloDb {
       if (await isAccepted(id) || await isBlocked(id) || await isVouched(id)) {
         continue;
       }
-      out[id] = shelf.files;
+      out[id] = shelf.files.keys.toSet();
     }
     return out;
   }
@@ -735,6 +788,7 @@ class ArrivalRows implements HaloDb {
   @override
   Future<void> forgetHeld(int id) async {
     _hit('forgetHeld', id, null);
+    onForget?.call(id);
     for (final e in heldRows.entries) {
       if (e.value.any((r) => r.id == id)) {
         e.value.removeWhere((r) => r.id == id);

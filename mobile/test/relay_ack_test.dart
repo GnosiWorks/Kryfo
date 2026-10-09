@@ -379,7 +379,7 @@ void main() {
     expect(ack, greaterThan(0));
     final named = loop.substring(ack);
     expect(named, contains('failedPlaces(batch, failed)'));
-    expect(named, contains('held: failedPlaces(batch, held)'));
+    expect(named, contains('held: failedPlaces(batch, keys)'));
   });
 
   group('what was opened goes with the session it was opened under', () {
