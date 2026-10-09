@@ -543,7 +543,11 @@ class _Mem implements HaloDb {
   }
 
   @override
-  Future<void> markDelivered(String msgUid, {required String from}) async {
+  Future<void> markDelivered(
+    String msgUid, {
+    required String from,
+    int? before,
+  }) async {
     _hit('markDelivered', msgUid, null);
     delivered.add(msgUid);
   }

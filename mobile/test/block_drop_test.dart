@@ -351,10 +351,12 @@ void main() {
       ]);
       expect(w.kept(who), isEmpty);
       expect(w.live.blockedDrops[who], {'during', 'clip'});
-      expect(w.live.delivered, isEmpty, reason: 'no tick from them');
+      // their receipt ticks only what went to them before the block
+      expect(w.live.deliveredBefore, {
+        'mine-1': w.live.blockSpans[who]!.single.$1,
+      });
       final asked = w.live.calls.sublist(before);
       for (final c in [
-        'markDelivered',
         'markBackPaired',
         'saveMessage',
         'putMediaChunk',
@@ -406,7 +408,7 @@ void main() {
     });
   }
 
-  test('a reaction, edit, unsend, pin, vote, group control or introduction '
+  test('a reaction, edit, pin, vote, group control or introduction '
       'from someone blocked changes nothing', () async {
     final w = await _World.make();
     const g = 'grp-of-blocked';
@@ -427,7 +429,6 @@ void main() {
         edit: const EditFrame(targetUid: 't1', newText: 'changed'),
         sender: from,
       ),
-      await wrapMessage('', unsend: 't1', sender: from),
       await wrapMessage(
         '',
         pin: const PinFrame(targetUid: 't1', pinned: true),
@@ -481,6 +482,50 @@ void main() {
     await w.app.unblock(_f);
     await w.app.receiveRelay([w.frame(_f, frames.first)]);
     expect(w.live.calls.where((a) => a.startsWith('addReaction')), isNotEmpty);
+  });
+
+  test('their own take-back still goes while the block holds: the row and '
+      'its slices go, nothing is answered, and a copy stays out after the '
+      'unblock', () async {
+    final w = await _World.make();
+    await w.app.receiveRelay([await w.copy(_f, 't1')]);
+    await w.app.receiveRelay([await w.copy(_s, 's1')]);
+    w.live.chunks['clip'] = {0: 'AAAA'};
+    w.live.chunkFrom['clip'] = _f;
+    await w.app.block(_f);
+    w.io.sent.clear();
+    final from = _World.sender(_f);
+    await w.app.receiveRelay([
+      w.frame(_f, await wrapMessage('', unsend: 't1', sender: from)),
+      w.frame(_f, await wrapMessage('', unsend: 'clip', sender: from)),
+      // someone else's row is not theirs to take back
+      w.frame(_f, await wrapMessage('', unsend: 's1', sender: from)),
+    ]);
+    expect(w.kept(_f), isEmpty);
+    expect(w.kept(_s), ['s1']);
+    expect(w.live.chunks['clip'], isNull);
+    expect(w.sentTo(_f), isEmpty);
+    expect(w.io.rang, [_f, _s]);
+
+    await w.app.unblock(_f);
+    await w.app.receiveRelay([await w.copy(_f, 't1')]);
+    expect(w.kept(_f), isEmpty);
+  });
+
+  test('a receipt while the block holds ticks what went to them before it, '
+      'and answers nothing', () async {
+    final w = await _World.make();
+    await w.app.block(_f);
+    w.io.sent.clear();
+    await w.app.receiveRelay([
+      w.frame(
+        _f,
+        await wrapMessage('', deliveredUid: 'o1', sender: _World.sender(_f)),
+      ),
+    ]);
+    expect(w.live.delivered, {'o1 from $_f'});
+    expect(w.live.deliveredBefore['o1'], w.live.blockSpans[_f]!.single.$1);
+    expect(w.sentTo(_f), isEmpty);
   });
 
   test('a block takes their notifications out of the shade', () async {

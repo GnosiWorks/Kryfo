@@ -2309,6 +2309,24 @@ class HaloDb implements GroupOwedStore {
     }
   }
 
+  // when the block on [haloId] that holds now began, or null without one
+  Future<int?> blockedSince(String haloId) async {
+    try {
+      final db = await open();
+      final r = await db.query(
+        'block_spans',
+        columns: ['from_at'],
+        where: 'peer_id = ? AND to_at IS NULL',
+        whereArgs: [haloId],
+        limit: 1,
+      );
+      return r.isEmpty ? null : r.first['from_at'] as int?;
+    } catch (e) {
+      dlog('block span: $e');
+      return null;
+    }
+  }
+
   // what came from someone while they were blocked, by uid. one that comes
   // again keeps its row a while longer, so a sender that retries for weeks
   // is still turned away
@@ -5236,15 +5254,23 @@ class HaloDb implements GroupOwedStore {
 
   // a receipt from [from]: it ticks only a message of ours that went to
   // them, or one in a group they are a member of
-  Future<void> markDelivered(String msgUid, {required String from}) async {
+  // [before]: only a row written before then
+  Future<void> markDelivered(
+    String msgUid, {
+    required String from,
+    int? before,
+  }) async {
     final db = await open();
     final rows = await db.query(
       'messages',
-      columns: ['peer_id', 'group_id', 'burn_secs', 'burn_at'],
+      columns: ['peer_id', 'group_id', 'burn_secs', 'burn_at', 'sent_at'],
       where: 'msg_uid = ? AND direction = ?',
       whereArgs: [msgUid, 'out'],
     );
     for (final r in rows) {
+      if (before != null && (r['sent_at'] as int? ?? before) >= before) {
+        continue;
+      }
       final g = r['group_id'] as String?;
       final ok = g == null || g.isEmpty
           ? r['peer_id'] == from
@@ -10342,6 +10368,23 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  // a take-back from someone blocked: a row of theirs goes, and the slices
+  // they sent of it, and a copy of it after an unblock stays out. true when
+  // a row went
+  Future<bool> _takenBackWhileBlocked(
+    String sender,
+    String uid,
+    HaloDb db,
+  ) async {
+    await db.noteBlockedDrop(sender, uid);
+    await db.dropMediaChunks(uid, from: sender);
+    if (!await db.messageExists(uid) || !await db.isTheirs(uid, sender)) {
+      return false;
+    }
+    await db.deleteMessage(uid);
+    return true;
+  }
+
   Future<RouteTo> _fileArrivalClaiming(
     String senderHaloId,
     UnwrappedMessage env, {
@@ -10400,6 +10443,23 @@ class AppState extends ChangeNotifier {
     if (await db.isBlocked(senderHaloId)) {
       final key = _dataFrame(env) ? env.msgUid ?? env.mediaId : null;
       if (key != null) await db.noteBlockedDrop(senderHaloId, key);
+      // two words still count, and neither is answered: a receipt for what
+      // went to them before the block, and their own take-back
+      final got = env.deliveredUid;
+      final since = got == null ? null : await db.blockedSince(senderHaloId);
+      if (got != null && since != null) {
+        await db.markDelivered(got, from: senderHaloId, before: since);
+        _bumpChatRev(senderHaloId);
+        notifyListeners();
+      }
+      final back = env.unsend;
+      if (back != null &&
+          await _takenBackWhileBlocked(senderHaloId, back, db)) {
+        changed();
+        await refreshContacts();
+        if (env.groupId != null) await refreshGroups();
+        notifyListeners();
+      }
       return to;
     }
     // delivery receipt, handled before the stranger gate and dedup so an ack

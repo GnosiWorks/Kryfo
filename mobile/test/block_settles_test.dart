@@ -3,9 +3,10 @@
 // unsend or a receipt goes, in the container that holds them and in the
 // other one, a decoy's own too. what they still have queued, a text or a
 // file, waits and goes nowhere while the block holds, wherever they are
-// blocked. a back-pair leaves their row as the block left it. the database
-// methods are the real ones over rows kept in maps; the wire and signal
-// are stand-ins
+// blocked. a receipt from them ticks only what went before the block, and
+// a back-pair leaves their row as the block left it. the database methods
+// are the real ones over rows kept in maps; the wire and signal are
+// stand-ins
 import 'dart:io';
 
 import 'package:flutter/services.dart';
@@ -149,6 +150,19 @@ void main() {
       expect(hidden.rows('contacts').single['blocked'], 1);
       expect(_queued(hidden, _bob), isEmpty);
       expect(_queued(everyday, _bob), isEmpty);
+    });
+
+    test('a receipt from them ticks only what was written before', () async {
+      final mem = MemDb();
+      final db = _Rows(mem);
+      await _out(mem, 'old', _bob, at: 100);
+      await _out(mem, 'new', _bob, at: 300);
+      await db.markDelivered('old', from: _bob, before: 200);
+      await db.markDelivered('new', from: _bob, before: 200);
+      final r = {
+        for (final m in mem.rows('messages')) m['msg_uid']: m['delivered'],
+      };
+      expect(r, {'old': 1, 'new': 0});
     });
   });
 

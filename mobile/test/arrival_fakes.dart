@@ -514,6 +514,14 @@ class ArrivalRows implements HaloDb {
   }
 
   @override
+  Future<int?> blockedSince(String haloId) async {
+    for (final s in [...?blockSpans[haloId]]) {
+      if (s.$2 == null) return s.$1;
+    }
+    return null;
+  }
+
+  @override
   Future<void> noteBlockedDrop(String haloId, String uid) async =>
       (blockedDrops[haloId] ??= {}).add(uid);
   @override
@@ -706,10 +714,18 @@ class ArrivalRows implements HaloDb {
   }
 
   @override
-  Future<void> markDelivered(String msgUid, {required String from}) async {
+  Future<void> markDelivered(
+    String msgUid, {
+    required String from,
+    int? before,
+  }) async {
     _hit('markDelivered', msgUid, null);
     delivered.add('$msgUid from $from');
+    if (before != null) deliveredBefore[msgUid] = before;
   }
+
+  // a receipt that ticks only what was written before then
+  final deliveredBefore = <String, int>{};
 
   @override
   Future<List<Map<String, Object?>>> unsentOutbox({
