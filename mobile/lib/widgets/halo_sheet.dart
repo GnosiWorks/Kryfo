@@ -56,11 +56,14 @@ Future<T?> showHaloSheet<T>(
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(kSheetRadius)),
     ),
-    sheetAnimationStyle: const AnimationStyle(
-      duration: Duration(milliseconds: 260),
-      curve: Curves.easeOutCubic,
-      reverseDuration: Duration(milliseconds: 200),
-      reverseCurve: Curves.easeInCubic,
-    ),
+    // with less movement it is simply there, and simply gone
+    sheetAnimationStyle: MediaQuery.maybeDisableAnimationsOf(context) ?? false
+        ? AnimationStyle.noAnimation
+        : const AnimationStyle(
+            duration: Duration(milliseconds: 260),
+            curve: Curves.easeOutCubic,
+            reverseDuration: Duration(milliseconds: 200),
+            reverseCurve: Curves.easeInCubic,
+          ),
   );
 }

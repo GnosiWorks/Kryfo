@@ -838,7 +838,6 @@ void main() {
     await processPeerBundle(p.name, p.card, into: ss);
     await ss.markRestored();
     const minute = 60 * 1000;
-    const hour = 60 * minute;
     expect(await ss.askDue(p.name, 0), isTrue);
     // soon at first: someone restoring in the same hour has their card
     // out by the next ask
