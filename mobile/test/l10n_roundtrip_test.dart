@@ -2169,21 +2169,21 @@ void main() {
     expect(l.qrWiFi, "Wi-Fi");
     expect(
       l.qrMadeOnThisPhone,
-      "MADE ON THIS PHONE · NO WEBSITE SAW THE PASSWORD",
+      "Made on this phone · no website saw the password",
     );
     expect(l.qrNetworkName, "Network name");
     expect(l.qrPassword, "Password");
     expect(l.qrContact, "Contact");
     expect(
       l.qrOnlyWhatYouType,
-      "ONLY WHAT YOU TYPE · NOTHING FROM YOUR CONTACTS",
+      "Only what you type · nothing from your contacts",
     );
     expect(l.qrName, "Name");
     expect(l.qrPhone, "Phone");
     expect(l.qrEmail, "Email");
     expect(
       l.qrOpensTheirMailApp,
-      "OPENS THEIR MAIL APP · NOTHING SENT FROM HERE",
+      "Opens their mail app · nothing sent from here",
     );
     expect(l.qrTo, "To");
     expect(l.qrSubject, "Subject");
@@ -2192,7 +2192,7 @@ void main() {
     expect(l.qrSms, "SMS");
     expect(
       l.qrOpensTheirMessagesApp,
-      "OPENS THEIR MESSAGES APP · NOTHING SENT FROM HERE",
+      "Opens their messages app · nothing sent from here",
     );
     expect(l.qrMessage, "Message");
     expect(l.qrLocation, "Location");
@@ -2202,7 +2202,7 @@ void main() {
     expect(l.qrBitcoin, "Bitcoin");
     expect(
       l.qrAddressAndAmountNo,
-      "ADDRESS AND AMOUNT · NO PAYMENT SITE IN BETWEEN",
+      "Address and amount · no payment site in between",
     );
     expect(l.qrAddress, "Address");
     expect(l.qrAmountInBtc, "Amount in BTC");
