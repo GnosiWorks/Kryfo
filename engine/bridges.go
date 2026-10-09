@@ -23,10 +23,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"gitlab.com/yawning/obfs4.git/common/socks5"
-	"gitlab.com/yawning/obfs4.git/transports/base"
-	"gitlab.com/yawning/obfs4.git/transports/obfs4"
 	pt "gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/goptlib"
+	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/lyrebird/common/socks5"
+	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/lyrebird/transports/base"
 )
 
 var (
@@ -194,7 +193,7 @@ func startPTListener() error {
 	}
 	port := ln.Addr().(*net.TCPAddr).Port
 
-	factory, err := (&obfs4.Transport{}).ClientFactory("")
+	factory, err := ptClientFactory("obfs4")
 	if err != nil {
 		ln.Close()
 		return fmt.Errorf("obfs4 client factory: %w", err)

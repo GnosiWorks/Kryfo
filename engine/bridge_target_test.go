@@ -14,8 +14,7 @@ import (
 	"testing"
 	"time"
 
-	"gitlab.com/yawning/obfs4.git/common/socks5"
-	"gitlab.com/yawning/obfs4.git/transports/obfs4"
+	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/lyrebird/common/socks5"
 )
 
 // a listener that counts what reaches it
@@ -44,7 +43,7 @@ func knocks(t *testing.T) (net.Listener, chan struct{}) {
 // arguments in the username. the reply code comes back
 func socksConnect(t *testing.T, target, args string) byte {
 	t.Helper()
-	factory, err := (&obfs4.Transport{}).ClientFactory("")
+	factory, err := ptClientFactory("obfs4")
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -10,7 +10,51 @@ require (
 	github.com/mailru/easyjson v0.9.2
 	github.com/nbd-wtf/go-nostr v0.52.3
 	github.com/tyler-smith/go-bip39 v1.1.0
+	gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/lyrebird v0.0.0-20260115133752-0b10edbb61e0
+	gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2 v2.14.1
 	golang.org/x/crypto v0.55.0
+)
+
+require (
+	github.com/andybalholm/brotli v1.1.1 // indirect
+	github.com/google/uuid v1.6.0 // indirect
+	github.com/klauspost/compress v1.18.0 // indirect
+	github.com/klauspost/reedsolomon v1.12.4 // indirect
+	github.com/miekg/dns v1.1.65 // indirect
+	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
+	github.com/pion/datachannel v1.6.0 // indirect
+	github.com/pion/dtls/v3 v3.1.2 // indirect
+	github.com/pion/ice/v4 v4.2.0 // indirect
+	github.com/pion/interceptor v0.1.43 // indirect
+	github.com/pion/logging v0.2.4 // indirect
+	github.com/pion/mdns/v2 v2.1.0 // indirect
+	github.com/pion/randutil v0.1.0 // indirect
+	github.com/pion/rtcp v1.2.16 // indirect
+	github.com/pion/rtp v1.10.1 // indirect
+	github.com/pion/sctp v1.9.2 // indirect
+	github.com/pion/sdp/v3 v3.0.17 // indirect
+	github.com/pion/srtp/v3 v3.0.10 // indirect
+	github.com/pion/stun/v3 v3.1.1 // indirect
+	github.com/pion/transport/v4 v4.0.1 // indirect
+	github.com/pion/turn/v4 v4.1.4 // indirect
+	github.com/pion/webrtc/v4 v4.2.3-securityfix // indirect
+	github.com/pkg/errors v0.9.1 // indirect
+	github.com/realclientip/realclientip-go v1.0.0 // indirect
+	github.com/refraction-networking/utls v1.8.2 // indirect
+	github.com/theodorsm/covert-dtls v1.5.0 // indirect
+	github.com/tjfoc/gmsm v1.4.1 // indirect
+	github.com/txthinking/runnergroup v0.0.0-20241229123329-7b873ad00768 // indirect
+	github.com/txthinking/socks5 v0.0.0-20251011041537-5c31f201a10e // indirect
+	github.com/wlynxg/anet v0.0.5 // indirect
+	github.com/xtaci/kcp-go/v5 v5.6.24 // indirect
+	github.com/xtaci/smux v1.5.56 // indirect
+	gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/ptutil v0.0.0-20250815012447-418f76dcf315 // indirect
+	gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/webtunnel v0.0.3-0.20250724131018-aab00213ba56 // indirect
+	golang.org/x/mod v0.39.0 // indirect
+	golang.org/x/sync v0.22.0 // indirect
+	golang.org/x/text v0.41.0 // indirect
+	golang.org/x/time v0.10.0 // indirect
+	golang.org/x/tools v0.49.0 // indirect
 )
 
 require (
@@ -33,14 +77,13 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/puzpuzpuz/xsync/v3 v3.5.1 // indirect
-	github.com/templexxx/cpu v0.0.1 // indirect
+	github.com/templexxx/cpu v0.1.1 // indirect
 	github.com/templexxx/xhex v0.0.0-20200614015412-aed53437177b // indirect
 	github.com/tidwall/gjson v1.18.0 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	gitlab.com/yawning/edwards25519-extra v0.0.0-20231005122941-2149dcafc266 // indirect
-	gitlab.com/yawning/obfs4.git v0.0.0-20231012084234-c3e2d44b1033
 	gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/goptlib v1.6.0
 	golang.org/x/arch v0.15.0 // indirect
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394 // indirect
@@ -50,3 +93,6 @@ require (
 
 // per-connection subscription ids and a settable ping, see VENDOR_PATCHES.md
 replace fiatjaf.com/nostr => ./third_party/nostr
+
+// snowflake client without the sqs rendezvous, see VENDOR_PATCHES.md
+replace gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2 => ./third_party/snowflake

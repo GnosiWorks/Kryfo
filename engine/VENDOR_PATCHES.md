@@ -118,3 +118,38 @@ the new go.mod moves any dependency it is a full update: `./vendor.sh`.
 
 the engine's embedded module list names the replacement,
 `=> ./third_party/nostr`, the same on every machine.
+
+## snowflake: a client-only fork without sqs
+
+snowflake v2.14.1 (cd33fc638ac0) lives in `third_party/snowflake` and go.mod
+points at it with a `replace`, like nostr above. it holds upstream's
+LICENSE, go.mod, `client/lib` and the `common` packages it imports, tests
+left out. it differs from upstream in:
+
+- `client/lib/rendezvous_sqs.go` is gone, and the aws sdk with it. the
+  broker is reached through cdn fronting only. upstream has no build tag
+  for it.
+- `client/lib/rendezvous.go`: a config that asks for sqs, or for no
+  rendezvous at all, gets an error back instead of `log.Fatal`, which would
+  end the app the engine runs in. marked `kryfo:`.
+- `go.mod`: the aws and golang/mock requirements are dropped.
+
+vendor/gitlab.torproject.org/.../snowflake/v2 is a copy of it:
+
+    diff -r third_party/snowflake vendor/gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2    # only go.mod
+
+to move to a newer upstream: copy the new tag's LICENSE, go.mod and the
+non-test files of the same packages over `third_party/snowflake`, delete
+`rendezvous_sqs.go`, redo the two edits, then `./vendor.sh`.
+
+## lyrebird
+
+lyrebird-0.8.1, commit 0b10edbb61e0. its tags are not go semver tags, so
+go.mod names the tag's commit as a pseudo-version. 0.9.0 asks for go
+1.26.0 and the engine builds with 1.25.14. the engine imports the obfs4,
+webtunnel and meek_lite transports one by one, never `transports.Init()`.
+
+lyrebird 0.8.1's own go.mod replaces utls with a temporary fork for the
+chrome120 profile. go ignores replaces in dependencies, so the engine gets
+utls v1.8.2 through snowflake, which dropped the same backport when it
+moved to that utls.
