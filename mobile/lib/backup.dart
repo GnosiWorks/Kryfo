@@ -255,12 +255,16 @@ Future<BackupSummary> inspectBackup(String blob, String passphrase) async {
   );
 }
 
-// it lands on the session it began in: the other one may be unlocked by
-// the time the file is open
-Future<void> restoreBackupBlob(String blob, String passphrase) async {
+// it lands on the session it began in, [own] when the screen began before
+// this: the other one may be unlocked by the time the file is open
+Future<void> restoreBackupBlob(
+  String blob,
+  String passphrase, {
+  HaloDb? own,
+}) async {
   _restoredSettings = false;
-  final own = session.primary;
-  return landV1Payload(await _openPayload(blob, passphrase), own: own);
+  final db = own ?? session.primary;
+  return landV1Payload(await _openPayload(blob, passphrase), own: db);
 }
 
 /// the end of a v1 restore, once the text file is open. [own] is the
@@ -1616,11 +1620,13 @@ Future<BackupSummary> inspectBackupFile(String path, String passphrase) async {
 /// to exit afterwards and boot from what was written. every step lands on
 /// the session it began in: the other one may be unlocked by the time the
 /// file is read. a failure once the phone's own files begin to go is
-/// RestoreFailure.cutShort, and the app has to close then too
+/// RestoreFailure.cutShort, and the app has to close then too. [own] is
+/// the database of the session it began in, when that was before this
 Future<void> restoreBackupFile(
   String path,
   String passphrase, {
   void Function(int done, int total)? onProgress,
+  HaloDb? own,
   @visibleForTesting LockState? lock,
 }) async {
   _restoredSettings = false;
@@ -1632,8 +1638,8 @@ Future<void> restoreBackupFile(
   final docs = await getApplicationDocumentsDirectory();
   // in a decoy session everything lands in the decoy's container, and the
   // everyday one is not touched
-  final own = session.primary;
-  final quiet = own.container.quiet;
+  final db = own ?? session.primary;
+  final quiet = db.container.quiet;
   final into = quiet ? HaloContainer.decoyVault : HaloContainer.vault;
   final pins = lock ?? lockState;
   final root = quiet
@@ -1673,7 +1679,7 @@ Future<void> restoreBackupFile(
     if (!quiet) {
       // nothing is kept in the database being replaced from here on: a
       // message stored there would be acknowledged and gone at the restart
-      await own.retire();
+      await db.retire();
       await landStagedBackup(root, manifest, hidden: hidden);
     }
     // the vault entry of the identity the restore began in
@@ -1684,7 +1690,7 @@ Future<void> restoreBackupFile(
       clearEntry: () => pins.clearVault(of: into),
       into: into,
     );
-    if (quiet) return _landInDecoy(own, root, docs.path, manifest);
+    if (quiet) return _landInDecoy(db, root, docs.path, manifest);
     await _secureStorage.write(
       key: _kDbPassphrase,
       value: manifest['dbPassphrase'] as String,

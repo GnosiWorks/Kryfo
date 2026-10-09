@@ -42,6 +42,17 @@ class _Engine implements HaloEngine {
       throw UnimplementedError('engine: ${i.memberName}');
 }
 
+// a release that ends when the test says
+class _Releasing implements HaloEngine {
+  _Releasing(this.done);
+  final Future<String> done;
+  @override
+  Future<String> handleRelease(String h) => done;
+  @override
+  dynamic noSuchMethod(Invocation i) =>
+      throw UnimplementedError('engine: ${i.memberName}');
+}
+
 void _mock(String channel, Future<Object?> Function(MethodCall)? h) =>
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(MethodChannel(channel), h);
@@ -408,6 +419,50 @@ void main() {
     expect(find.text(l10n.restoreRestored), findsOneWidget);
     // the notice says the privacy settings came back and the PINs did not
     expect(find.textContaining(l10n.restorePrivacyKept), findsOneWidget);
+    await t.tap(find.text(l10n.restoreReopenKryfo));
+    await t.pumpAndSettle();
+    expect(quits, 1);
+  });
+
+  testWidgets('the lock taking the screen away while the handle is released '
+      'still restores, then says so and closes', (t) async {
+    phone(t);
+    FlutterSecureStorage.setMockInitialValues({'my_handle': 'amberfox'});
+    await appState.loadMyHandle();
+    final releasing = Completer<String>();
+    useEngineForTest(_Releasing(releasing.future));
+    var quits = 0;
+    quitAfterRestore = () => quits++;
+    lockState.openForTest(enabled: true);
+    addTearDown(() {
+      quitAfterRestore = () => exit(0);
+      lockState.openForTest();
+    });
+    inspectForTest = (_) async => const BackupSummary(
+      when: null,
+      version: 2,
+      haloId: 'amber-fox-run',
+      contacts: 2,
+      messages: 9,
+    );
+    final asked = <String>[];
+    restoreForTest = (pw) async => asked.add(pw);
+    await _openAndRestore(t, wrap: _rooted);
+
+    lockState.lock();
+    renewRootNavigator();
+    await t.pumpAndSettle();
+    expect(find.byType(RestoreScreen), findsNothing);
+    releasing.complete('ok');
+    await t.pumpAndSettle();
+    expect(appState.myHandle, isNull);
+    expect(asked, ['the passphrase']);
+    expect(find.text(l10n.restoreRestored), findsNothing);
+
+    lockState.openForTest(enabled: true);
+    lockState.inDecoy = false;
+    await t.pumpAndSettle();
+    expect(find.text(l10n.restoreRestored), findsOneWidget);
     await t.tap(find.text(l10n.restoreReopenKryfo));
     await t.pumpAndSettle();
     expect(quits, 1);

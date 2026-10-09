@@ -15,7 +15,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../backup.dart';
-import '../main.dart' show appState, engine, navRevision, rootNavKey, shredFile;
+import '../main.dart'
+    show appState, engine, navRevision, rootNavKey, session, shredFile;
 import '../picked.dart';
 import '../theme.dart';
 import '../widgets/confirm_sheet.dart';
@@ -293,6 +294,8 @@ class _RestoreScreenState extends State<RestoreScreen> {
     _running = true;
     // the session the restore runs in, the one its end is shown in
     final decoy = lockState.inDecoy;
+    final own = session.primary;
+    final pw = _passCtrl.text.trim();
     if (mine != null && !sameIdentity) {
       setState(() {
         _busy = true;
@@ -309,11 +312,18 @@ class _RestoreScreenState extends State<RestoreScreen> {
         dlog('restore: handle release (${e.runtimeType})');
       }
       if (r == 'ok') await appState.setMyHandle(null);
-      if (!mounted) return;
-      setState(() {
-        _busy = false;
-        _releasing = false;
-      });
+      // a handle released goes on to the restore, with the screen or
+      // without it. one kept leaves the phone as it was
+      if (r != 'ok' && !mounted) {
+        _running = false;
+        return _dropOwnCopy();
+      }
+      if (mounted) {
+        setState(() {
+          _busy = false;
+          _releasing = false;
+        });
+      }
       if (r != 'ok') {
         final ok = await showConfirmSheet(
           context,
@@ -325,30 +335,34 @@ class _RestoreScreenState extends State<RestoreScreen> {
         if (!ok || !mounted) {
           // the way back opens again
           _running = false;
-          if (mounted) setState(() {});
+          if (!mounted) return _dropOwnCopy();
+          setState(() {});
           return;
         }
       }
     }
-    setState(() {
-      _busy = true;
-      _error = null;
-      _progress = 0;
-    });
+    if (mounted) {
+      setState(() {
+        _busy = true;
+        _error = null;
+        _progress = 0;
+      });
+    }
     try {
       if (restoreForTest != null) {
-        await restoreForTest!(_passCtrl.text.trim());
+        await restoreForTest!(pw);
       } else if (path != null) {
         await restoreBackupFile(
           path,
-          _passCtrl.text.trim(),
+          pw,
+          own: own,
           onProgress: (a, b) {
             if (mounted && b > 0) setState(() => _progress = a / b);
           },
         );
         await _dropOwnCopy();
       } else {
-        await restoreBackupBlob(blob!, _passCtrl.text.trim());
+        await restoreBackupBlob(blob!, pw, own: own);
       }
       // the same identity coming back, from a file made before handles or
       // the face were carried: the key still proves the handle, so keep the

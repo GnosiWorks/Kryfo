@@ -219,6 +219,19 @@ void main() {
     expect(prefs.getBool(kSessionsRestoredPref), isTrue);
   });
 
+  test('a restore given the session it began in lands there, whatever is '
+      'open as it starts', () async {
+    final lock = await pins(inDecoy: false);
+    useDatabasesForTest(live, Session(live));
+    restoreCipherForTest = _Cipher.new;
+    await restoreBackupFile(await file(), 'pass', own: decoy, lock: lock.state);
+    expect(read('halo_d.db'), 'restored');
+    expect(read('halo.db'), 'everyday');
+    expect(live.log, isEmpty);
+    expect(read('halo_v.db'), 'everyday hidden');
+    expect(engine.restored, isEmpty);
+  });
+
   test('the everyday database takes nothing more once a restore lands on '
       'it', () async {
     final lock = await pins(inDecoy: false);
