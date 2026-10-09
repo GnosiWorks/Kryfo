@@ -7790,6 +7790,18 @@ String heldWire(String wire) => '$_kHeldWire$wire';
 String? heldWireOf(String held) =>
     held.startsWith(_kHeldWire) ? held.substring(_kHeldWire.length) : null;
 
+// a frame that came before the message it names, as it came
+typedef _Early = ({
+  HaloDb db,
+  HaloDb? into,
+  String sender,
+  UnwrappedMessage env,
+  String wire,
+  int? arrivedAt,
+  int? wrappedAt,
+  int at,
+});
+
 // a stranger's cap held a message back, in the container it was going to
 class _HeldIn extends CapHeld {
   const _HeldIn(this.into);
@@ -7898,6 +7910,48 @@ class AppState extends ChangeNotifier {
     return at != null &&
         DateTime.now().millisecondsSinceEpoch - at <
             _kTakenBackFor.inMilliseconds;
+  }
+
+  // edits, reactions and pins that came before the message they name, by
+  // its uid, in the order they came. each goes in once that message is
+  // filed in the container it was going to. memory only
+  final Map<String, List<_Early>> _early = {};
+
+  void _parkEarly(String uid, _Early e) {
+    final cut = e.at - _kTakenBackFor.inMilliseconds;
+    _early.removeWhere((_, l) => l.last.at < cut);
+    final l = _early.remove(uid) ?? [];
+    if (l.length < 32) l.add(e);
+    _early[uid] = l;
+    if (_early.length > 1000) _early.remove(_early.keys.first);
+  }
+
+  Future<void> _applyEarly(String uid, HaloDb db, Set<String>? marks) async {
+    final l = _early.remove(uid);
+    if (l == null) return;
+    final rest = [
+      for (final e in l)
+        if (!identical(e.db, db)) e,
+    ];
+    if (rest.isNotEmpty) _early[uid] = rest;
+    final cut =
+        DateTime.now().millisecondsSinceEpoch - _kTakenBackFor.inMilliseconds;
+    for (final e in l) {
+      if (!identical(e.db, db) || e.at < cut) continue;
+      try {
+        await _fileArrival(
+          e.sender,
+          e.env,
+          wire: e.wire,
+          into: e.into,
+          arrivedAt: e.arrivedAt,
+          marks: marks,
+          wrappedAt: e.wrappedAt,
+        );
+      } catch (err) {
+        dlog('early: one did not go in ($err)');
+      }
+    }
   }
 
   // uids the drainer is mid-flight on, so a slow send isn't fired twice by
@@ -10671,19 +10725,34 @@ class AppState extends ChangeNotifier {
       await _answerNeed(senderHaloId, env.need!, db);
       return to;
     }
+    // a frame for a message not here yet waits for it
+    void early(String uid) => _parkEarly(uid, (
+      db: db,
+      into: into,
+      sender: senderHaloId,
+      env: env,
+      wire: wire,
+      arrivedAt: arrivedAt,
+      wrappedAt: wrappedAt,
+      at: DateTime.now().millisecondsSinceEpoch,
+    ));
     // shared pin: every member mirrors it. only from someone in the chat
     // the row lives in: the frame names a uid and nothing else, and it rides
     // in above the stranger gate like an edit does.
     if (env.pin != null) {
       final where = await db.chatOf(env.pin!.targetUid);
+      if (where == null) {
+        early(env.pin!.targetUid);
+        return to;
+      }
       final ok = pinAllowed(
-        rowPeer: where?.$1,
-        rowGroup: where?.$2,
+        rowPeer: where.$1,
+        rowGroup: where.$2,
         sender: senderHaloId,
         frameGroup: env.groupId,
-        members: where?.$2 == null
+        members: where.$2 == null
             ? const []
-            : await db.getGroupMembers(where!.$2!),
+            : await db.getGroupMembers(where.$2!),
       );
       if (!ok) {
         dlog('pin: dropped, sender is not in that chat');
@@ -10692,7 +10761,7 @@ class AppState extends ChangeNotifier {
       // the sender counts before it pins, but that is their word. held
       // here too, or a member could fill the list from afar.
       if (env.pin!.pinned) {
-        final held = await db.pinnedIn(peerId: where!.$1, groupId: where.$2);
+        final held = await db.pinnedIn(peerId: where.$1, groupId: where.$2);
         if (held.length >= kMaxPins &&
             !held.any((r) => r['msg_uid'] == env.pin!.targetUid)) {
           dlog('pin: dropped, that chat is full');
@@ -10721,14 +10790,18 @@ class AppState extends ChangeNotifier {
       // the frame names a uid and nothing else, so only someone in the chat
       // that row lives in gets to react to it
       final where = await db.chatOf(r.targetUid);
+      if (where == null) {
+        early(r.targetUid);
+        return to;
+      }
       final ok = pinAllowed(
-        rowPeer: where?.$1,
-        rowGroup: where?.$2,
+        rowPeer: where.$1,
+        rowGroup: where.$2,
         sender: senderHaloId,
         frameGroup: env.groupId,
-        members: where?.$2 == null
+        members: where.$2 == null
             ? const []
-            : await db.getGroupMembers(where!.$2!),
+            : await db.getGroupMembers(where.$2!),
       );
       if (!ok || r.emoji.length > 32) {
         dlog('reaction: dropped');
@@ -10752,6 +10825,8 @@ class AppState extends ChangeNotifier {
         // home's row shows the last line, and only a refresh rereads it
         await refreshContacts();
         notifyListeners();
+      } else if (!await db.messageExists(env.edit!.targetUid)) {
+        early(env.edit!.targetUid);
       }
       return to;
     }
@@ -11224,6 +11299,7 @@ class AppState extends ChangeNotifier {
     // saved now, messageExists covers dedup from here
     _inflightUids.removeAll(claims);
     claims.clear();
+    if (env.msgUid != null) await _applyEarly(env.msgUid!, db, marks);
     // send a delivery receipt back for 1:1 messages we just stored, so the
     // sender's tick means "on your phone" not "a relay took it". groups skip
     // this (N acks per message is noise); receipts themselves carry no uid of
@@ -13722,6 +13798,7 @@ class AppState extends ChangeNotifier {
   // wipe. whatever comes again after this is opened again or not at all
   void _dropOpened() {
     _relayOpened.clear();
+    _early.clear();
     _openedEpoch++;
   }
 

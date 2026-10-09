@@ -178,6 +178,71 @@ void main() {
       expect(live.msg('u3'), isNotNull);
     });
 
+    test('an edit, a reaction and a pin before their message go in once it '
+        'lands, and only from someone who may make them', () async {
+      live.group(_g, ['me', _bob, _eve]);
+      await from(
+        _bob,
+        await wrapMessage(
+          '',
+          edit: const EditFrame(targetUid: 'e1', newText: 'call me later'),
+          sender: asSender(_bob),
+        ),
+      );
+      // eve may not edit what bob wrote
+      await from(
+        _eve,
+        await wrapMessage(
+          '',
+          edit: const EditFrame(targetUid: 'e1', newText: 'not bob'),
+          sender: asSender(_eve),
+        ),
+      );
+      await from(
+        _bob,
+        await wrapMessage(
+          '',
+          reaction: const ReactionFrame(targetUid: 'e1', emoji: '👍'),
+          sender: asSender(_bob),
+        ),
+      );
+      await from(
+        _bob,
+        await wrapMessage(
+          '',
+          pin: const PinFrame(targetUid: 'e1', pinned: true),
+          sender: asSender(_bob),
+        ),
+      );
+      expect(live.msg('e1'), isNull);
+      await from(_bob, await said(_bob, 'e1'));
+      final m = live.msg('e1')!;
+      expect(m['plaintext'], 'call me later');
+      expect(m['pinned'], 1);
+      expect(live.reactions['e1'], {_bob: '👍'});
+
+      // in a group, another member's reaction waits for the message too
+      await from(
+        _eve,
+        await wrapMessage(
+          '',
+          groupId: _g,
+          reaction: const ReactionFrame(targetUid: 'g9', emoji: '🎉'),
+          sender: asSender(_eve),
+        ),
+      );
+      await from(
+        _bob,
+        await wrapMessage(
+          'call me',
+          msgUid: 'g9',
+          groupId: _g,
+          sender: asSender(_bob),
+        ),
+      );
+      expect(live.reactions['g9'], {_eve: '🎉'});
+    });
+
     test('in a group: one taken back late goes, one taken back before it '
         'came never lands, and only its sender takes it back', () async {
       live.group(_g, ['me', _bob, _eve]);
