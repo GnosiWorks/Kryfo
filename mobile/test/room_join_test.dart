@@ -346,8 +346,10 @@ void main() {
     expect(env.groupControl?.type, 'full');
     expect(env.groupControl?.members, isNull);
     expect(env.groupId, _room);
-    // the room key alone, as on every room frame
+    // the room key alone, as on every room frame, and no number: the
+    // frames this room sent are not counted out to a stranger
     expect(env.senderHaloId, _creator);
+    expect(roomFramePlace(back.single).number, isNull);
     expect(full.room!['member_cap'], 2);
     expect(await full.rows.getGroupMembers(_room), [_creator, _other]);
 
@@ -359,7 +361,7 @@ void main() {
     expect(_stateOf(me), RoomJoin.waiting);
     expect(said, isEmpty);
 
-    // a knock again clears it, and within the minute is not answered again
+    // a knock again clears it; one hard on its heels is not answered again
     await me.app.retryRoomJoin(_room);
     expect(me.app.roomFull(_room), isFalse);
     await _settle();
@@ -378,21 +380,37 @@ void main() {
     expect(me.app.roomFull(_room), isFalse);
   });
 
-  test('full from anyone but the creator, or once let in, changes '
-      'nothing', () async {
+  test('full from anyone but the creator, from before this knock, or once '
+      'let in, changes nothing; leaving forgets it', () async {
     final me = await _Phone.make();
     await me.app.joinRoom(_link());
     await _settle();
-    Future<String> fullFrom(String key) async => roomFrame(
+    Future<String> fullFrom(String key, {int? at}) async => roomFrame(
       await wrapMessage(
         '',
         groupId: _room,
         groupControl: const GroupControl(type: 'full'),
         sender: SenderInfo(haloId: key, edPub: '', onion: '', xPub: ''),
+        writtenAt: at,
       ),
       key,
     )!;
+    // a member who is not the creator
+    await me.rows.addGroupMember(_room, _other);
     await _fromRoom(me, _other, await fullFrom(_other));
+    expect(me.app.roomFull(_room), isFalse);
+    // the creator's, but to a knock long before this one
+    final since = me.room!['joining_at'] as int;
+    await _fromRoom(me, _creator, await fullFrom(_creator, at: since - 120000));
+    expect(me.app.roomFull(_room), isFalse);
+    // left and joined again off the link: waiting afresh
+    await _fromRoom(me, _creator, await fullFrom(_creator));
+    expect(me.app.roomFull(_room), isTrue);
+    await me.app.leaveRoom(_room);
+    await _settle();
+    expect(me.app.roomFull(_room), isFalse);
+    await me.app.joinRoom(_link());
+    await _settle();
     expect(me.app.roomFull(_room), isFalse);
     await _fromRoom(me, _creator, await _roster([_creator, _mine], stamp: 5));
     expect(_stateOf(me), RoomJoin.live);

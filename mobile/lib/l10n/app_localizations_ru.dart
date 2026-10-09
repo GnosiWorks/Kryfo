@@ -481,7 +481,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get roomJoinFullLine =>
-      'Свободных мест сейчас нет. Попробуйте позже или спросите того, кто поделился ссылкой.';
+      'Свободных мест сейчас нет. Попробуй позже или спроси того, кто поделился ссылкой.';
 
   @override
   String get appBooting => 'Запуск...';

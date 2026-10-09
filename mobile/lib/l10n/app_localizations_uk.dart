@@ -480,7 +480,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get roomJoinFullLine =>
-      'Вільних місць зараз немає. Спробуйте пізніше або спитайте того, хто поділився посиланням.';
+      'Вільних місць зараз немає. Спробуй пізніше або спитай того, хто поділився посиланням.';
 
   @override
   String get appBooting => 'Запуск...';
