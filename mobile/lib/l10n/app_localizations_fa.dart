@@ -264,11 +264,6 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
-  String appAddedYouCanMessage(Object parsed) {
-    return '⁨$parsed⁩ اضافه شد · حالا می‌توانید به او پیام دهید';
-  }
-
-  @override
   String appPeerImportedV1(Object parsed) {
     return 'همتای v1 وارد شد: ⁨$parsed⁩';
   }
@@ -1806,6 +1801,16 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get chatJustTheTwoOf => 'فقط شما دو نفر، با رمزگذاری سرتاسری.';
+
+  @override
+  String get chatSayHiSoThey => 'سلام کنید تا شما را ببیند';
+
+  @override
+  String get chatTheyWonTKnow =>
+      'تا اولین پیامتان به دستش نرسد، نمی‌داند که او را اضافه کرده‌اید.';
+
+  @override
+  String get chatWave => 'دست تکان دهید';
 
   @override
   String get chatMicPermissionNeeded => 'اجازه‌ی میکروفون لازم است';

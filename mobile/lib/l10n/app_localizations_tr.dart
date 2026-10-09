@@ -265,11 +265,6 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String appAddedYouCanMessage(Object parsed) {
-    return '$parsed eklendi · artık ona yazabilirsin';
-  }
-
-  @override
   String appPeerImportedV1(Object parsed) {
     return 'Eş içe aktarıldı (v1): $parsed';
   }
@@ -1804,6 +1799,16 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get chatJustTheTwoOf => 'Yalnızca ikiniz, uçtan uca şifreli.';
+
+  @override
+  String get chatSayHiSoThey => 'Selam ver ki seni görsün';
+
+  @override
+  String get chatTheyWonTKnow =>
+      'İlk mesajın ulaşana kadar onu eklediğini bilmeyecek.';
+
+  @override
+  String get chatWave => 'El salla';
 
   @override
   String get chatMicPermissionNeeded => 'Mikrofon izni gerekli';

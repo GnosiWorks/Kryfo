@@ -474,12 +474,6 @@ abstract class AppLocalizations {
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **'Added {parsed} · you can message them now'**
-  String appAddedYouCanMessage(Object parsed);
-
-  /// main.dart
-  ///
-  /// In en, this message translates to:
   /// **'Peer imported (v1): {parsed}'**
   String appPeerImportedV1(Object parsed);
 
@@ -2882,6 +2876,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Just the two of you, end-to-end encrypted.'**
   String get chatJustTheTwoOf;
+
+  /// widgets/say_hi_card.dart: the card in a chat with someone just added, while nothing has gone to them
+  ///
+  /// In en, this message translates to:
+  /// **'Say hi so they see you'**
+  String get chatSayHiSoThey;
+
+  /// widgets/say_hi_card.dart: under the card's title. nothing reaches them before a first message does
+  ///
+  /// In en, this message translates to:
+  /// **'They won\'t know you added them until your first message arrives.'**
+  String get chatTheyWonTKnow;
+
+  /// widgets/say_hi_card.dart: the card's button, sends a waving hand as the first message
+  ///
+  /// In en, this message translates to:
+  /// **'Wave'**
+  String get chatWave;
 
   /// screens/chat_screen.dart
   ///

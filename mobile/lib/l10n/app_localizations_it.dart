@@ -266,11 +266,6 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String appAddedYouCanMessage(Object parsed) {
-    return 'Hai aggiunto $parsed · ora potete scrivervi';
-  }
-
-  @override
   String appPeerImportedV1(Object parsed) {
     return 'Peer importato (v1): $parsed';
   }
@@ -1811,6 +1806,16 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get chatJustTheTwoOf => 'Solo voi due, cifrato end-to-end.';
+
+  @override
+  String get chatSayHiSoThey => 'Saluta per farti vedere';
+
+  @override
+  String get chatTheyWonTKnow =>
+      'Finché non arriva il tuo primo messaggio, non sapranno che li hai aggiunti.';
+
+  @override
+  String get chatWave => 'Manda un saluto';
 
   @override
   String get chatMicPermissionNeeded => 'Serve il permesso del microfono';

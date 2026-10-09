@@ -100,10 +100,6 @@ void main() {
     expect(l.appInvalidUri, "Invalid uri");
     expect(l.appBundleError("<e>"), "Bundle error: <e>");
     expect(l.appAlreadySaved("<parsed>"), "Already saved: <parsed>");
-    expect(
-      l.appAddedYouCanMessage("<parsed>"),
-      "Added <parsed> · you can message them now",
-    );
     expect(l.appPeerImportedV1("<parsed>"), "Peer imported (v1): <parsed>");
     expect(l.appLongWindow("<line>"), "<line> long window");
     expect(
@@ -863,6 +859,12 @@ void main() {
     expect(l.chatReply, "Reply");
     expect(l.chatSayHi, "Say hi.");
     expect(l.chatJustTheTwoOf, "Just the two of you, end-to-end encrypted.");
+    expect(l.chatSayHiSoThey, "Say hi so they see you");
+    expect(
+      l.chatTheyWonTKnow,
+      "They won't know you added them until your first message arrives.",
+    );
+    expect(l.chatWave, "Wave");
     expect(l.chatMicPermissionNeeded, "Mic permission needed");
     expect(l.chatTheMicWouldNot, "The mic would not start. Try again");
     expect(l.chatReleaseToCancel, "Release to cancel");

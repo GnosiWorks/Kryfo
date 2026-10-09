@@ -280,11 +280,6 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String appAddedYouCanMessage(Object parsed) {
-    return 'تمت إضافة ⁨$parsed⁩ · يمكنك مراسلته الآن';
-  }
-
-  @override
   String appPeerImportedV1(Object parsed) {
     return 'تم استيراد النظير (v1): ⁨$parsed⁩';
   }
@@ -1850,6 +1845,15 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get chatJustTheTwoOf => 'أنتما فقط، والمحادثة مشفّرة بين الطرفين.';
+
+  @override
+  String get chatSayHiSoThey => 'قل مرحبًا حتى يراك';
+
+  @override
+  String get chatTheyWonTKnow => 'لن يعرف أنك أضفته حتى تصله رسالتك الأولى.';
+
+  @override
+  String get chatWave => 'لوّح';
 
   @override
   String get chatMicPermissionNeeded => 'يلزم إذن الميكروفون';

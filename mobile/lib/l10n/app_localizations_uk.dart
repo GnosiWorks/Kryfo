@@ -273,11 +273,6 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String appAddedYouCanMessage(Object parsed) {
-    return 'Додано $parsed · тепер можна писати';
-  }
-
-  @override
   String appPeerImportedV1(Object parsed) {
     return 'Контакт імпортовано (v1): $parsed';
   }
@@ -1836,6 +1831,16 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get chatJustTheTwoOf => 'Лише ви двоє, з наскрізним шифруванням.';
+
+  @override
+  String get chatSayHiSoThey => 'Привітайся, щоб тебе помітили';
+
+  @override
+  String get chatTheyWonTKnow =>
+      'Людина не дізнається про тебе, доки не дійде твоє перше повідомлення.';
+
+  @override
+  String get chatWave => 'Помахати';
 
   @override
   String get chatMicPermissionNeeded => 'Потрібен дозвіл на мікрофон';

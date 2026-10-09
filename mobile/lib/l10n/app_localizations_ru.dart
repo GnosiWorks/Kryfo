@@ -273,11 +273,6 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String appAddedYouCanMessage(Object parsed) {
-    return 'Добавлено: $parsed · теперь можно писать';
-  }
-
-  @override
   String appPeerImportedV1(Object parsed) {
     return 'Собеседник импортирован (v1): $parsed';
   }
@@ -1841,6 +1836,16 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get chatJustTheTwoOf => 'Только вы двое, со сквозным шифрованием.';
+
+  @override
+  String get chatSayHiSoThey => 'Поздоровайся, чтобы тебя заметили';
+
+  @override
+  String get chatTheyWonTKnow =>
+      'Человек не узнает о тебе, пока не дойдёт твоё первое сообщение.';
+
+  @override
+  String get chatWave => 'Помахать';
 
   @override
   String get chatMicPermissionNeeded => 'Нужен доступ к микрофону';

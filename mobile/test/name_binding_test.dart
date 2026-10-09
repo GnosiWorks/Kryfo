@@ -31,6 +31,7 @@ import 'package:kryfo/main.dart'
         haloUriV3,
         handleHaloUriAdded,
         hasSessionWith,
+        openAddedChatLater,
         linkKinOf,
         makePreKeyBundleB64,
         processPeerBundle,
@@ -282,10 +283,17 @@ void main() {
 
   tearDownAll(() => docs.deleteSync(recursive: true));
 
+  // the chats an add opened
+  final opened = <String>[];
+
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     FlutterSecureStorage.setMockInitialValues({});
     await world();
+    opened.clear();
+    final was = openAddedChatLater;
+    openAddedChatLater = opened.add;
+    addTearDown(() => openAddedChatLater = was);
   });
 
   // a stranger's next text, as their phone seals it
@@ -766,6 +774,7 @@ void main() {
         'ab' * 32,
       );
       expect(await handleHaloUriAdded(mine), (l10n.appYourOwnInvite, false));
+      expect(opened, isEmpty);
       expect(live.people.containsKey(_me), isFalse);
       expect(live.rowWrites, isEmpty);
     });
@@ -785,6 +794,7 @@ void main() {
         l10n.appTheyAreBlocked(blocked),
         false,
       ));
+      expect(opened, isEmpty);
       expect(live.people[blocked], containsPair('accepted', 0));
       expect(live.people[blocked], containsPair('blocked', 1));
       expect(live.rowWrites, isEmpty);
@@ -822,6 +832,8 @@ void main() {
       expect(appState.devMode, isTrue);
       expect((await handleHaloUriAdded(await card(inInbox))).$2, isTrue);
       expect(asked, [inInbox]);
+      // the question is the answer: their chat does not open over it
+      expect(opened, isEmpty);
       // kept apart, and their card again: asked once, not on every add
       expect((await handleHaloUriAdded(await card(inInbox))).$2, isTrue);
       expect(asked, [inInbox]);
@@ -838,7 +850,8 @@ void main() {
       expect(asked, [inInbox]);
     });
 
-    test('someone added is in the chat list at once', () async {
+    test('someone added is in the chat list at once, and their chat '
+        'opens', () async {
       const fresh = 'fresh-from-search';
       final them = await _phone();
       final card = haloUriV3(
@@ -848,11 +861,38 @@ void main() {
         'ab' * 32,
       );
       expect(appState.contacts.where((c) => c.haloId == fresh), isEmpty);
+      expect(await handleHaloUriAdded(card), ('', true));
+      expect(appState.contacts.where((c) => c.haloId == fresh), hasLength(1));
+      expect(opened, [fresh]);
+      // nothing went to them: the chat's card says how they hear of it
+      expect(engineAsked.where(_sends.contains), isEmpty);
+    });
+
+    test('in the decoy someone added stays on this phone, and their chat '
+        'opens as it would anywhere', () async {
+      const fresh = 'fresh-decoy-face';
+      final them = await _phone();
+      final decoy = ArrivalRows(HaloContainer.decoy);
+      useDatabasesForTest(live, Session(decoy));
+      addTearDown(() => useDatabasesForTest(live, Session(live)));
+      engineAsked.clear();
+      final card = haloUriV3(
+        fresh,
+        'o-fresh',
+        Uri.encodeQueryComponent(await makePreKeyBundleB64(them.ss)),
+        'ab' * 32,
+      );
+      expect(await handleHaloUriAdded(card), ('', true));
+      expect(opened, [fresh]);
+      expect(decoy.people[fresh], containsPair('accepted', 1));
+      expect(live.people.containsKey(fresh), isFalse);
+      expect(engineAsked.where(_sends.contains), isEmpty);
+      // again: the line says so, and the chat opens again
       expect(await handleHaloUriAdded(card), (
-        l10n.appAddedYouCanMessage(fresh),
+        l10n.appAlreadySaved(fresh),
         true,
       ));
-      expect(appState.contacts.where((c) => c.haloId == fresh), hasLength(1));
+      expect(opened, [fresh, fresh]);
     });
 
     test('someone who asked is taken in by their card as the accept button '
@@ -888,10 +928,7 @@ void main() {
         Uri.encodeQueryComponent(await makePreKeyBundleB64(them.ss)),
         'ab' * 32,
       );
-      expect(await handleHaloUriAdded(card), (
-        l10n.appAddedYouCanMessage(asker),
-        true,
-      ));
+      expect(await handleHaloUriAdded(card), ('', true));
       await _settle();
       expect(live.people[asker], containsPair('accepted', 1));
       // what was held is taken to be opened
@@ -958,10 +995,7 @@ void main() {
         Uri.encodeQueryComponent(await makePreKeyBundleB64(them.ss)),
         'ab' * 32,
       );
-      expect(await handleHaloUriAdded(card), (
-        l10n.appAddedYouCanMessage(member),
-        true,
-      ));
+      expect(await handleHaloUriAdded(card), ('', true));
       await _settle();
       expect(live.people[member], containsPair('accepted', 1));
       expect(live.calls, isNot(contains('heldOf:$member')));
@@ -979,10 +1013,7 @@ void main() {
         Uri.encodeQueryComponent(await makePreKeyBundleB64(them.ss)),
         'ab' * 32,
       );
-      expect(await handleHaloUriAdded(card), (
-        l10n.appAddedYouCanMessage(parked),
-        true,
-      ));
+      expect(await handleHaloUriAdded(card), ('', true));
       await _settle();
       expect(live.people[parked], containsPair('accepted', 1));
       expect(live.people[parked], containsPair('archived', 0));
@@ -1071,6 +1102,8 @@ void main() {
         l10n.appInvalidUri,
         false,
       ));
+      // nor does any chat open for them
+      expect(opened, isEmpty);
       expect(live.people.containsKey(shut), isFalse);
       expect(
         (await signalSession.sessionStore.loadSession(
@@ -1135,6 +1168,8 @@ void main() {
       l10n.appAlreadySaved(_amber),
       true,
     ));
+    // their chat opens all the same
+    expect(opened, [_amber]);
   });
 
   test('a hidden group\'s member keeps their name while the vault is '

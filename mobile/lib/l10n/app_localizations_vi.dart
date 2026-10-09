@@ -259,11 +259,6 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String appAddedYouCanMessage(Object parsed) {
-    return 'Đã thêm $parsed · giờ bạn có thể nhắn tin cho họ';
-  }
-
-  @override
   String appPeerImportedV1(Object parsed) {
     return 'Đã nhập peer (v1): $parsed';
   }
@@ -1789,6 +1784,16 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get chatJustTheTwoOf => 'Chỉ hai bạn với nhau, được mã hóa đầu cuối.';
+
+  @override
+  String get chatSayHiSoThey => 'Gửi lời chào để họ thấy bạn';
+
+  @override
+  String get chatTheyWonTKnow =>
+      'Họ sẽ không biết bạn đã thêm họ cho đến khi tin nhắn đầu tiên của bạn đến nơi.';
+
+  @override
+  String get chatWave => 'Vẫy tay';
 
   @override
   String get chatMicPermissionNeeded => 'Cần quyền micrô';

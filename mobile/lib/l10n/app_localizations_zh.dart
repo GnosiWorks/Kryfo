@@ -257,11 +257,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String appAddedYouCanMessage(Object parsed) {
-    return '已添加 $parsed · 现在可以给对方发消息了';
-  }
-
-  @override
   String appPeerImportedV1(Object parsed) {
     return '已导入对端（v1）：$parsed';
   }
@@ -1736,6 +1731,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get chatJustTheTwoOf => '只有你们两个人，端到端加密。';
+
+  @override
+  String get chatSayHiSoThey => '打个招呼，让对方看到你';
+
+  @override
+  String get chatTheyWonTKnow => '在你的第一条消息送达前，对方不会知道已被你添加。';
+
+  @override
+  String get chatWave => '挥手';
 
   @override
   String get chatMicPermissionNeeded => '需要麦克风权限';
@@ -7822,11 +7826,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String appAddedYouCanMessage(Object parsed) {
-    return '已新增 $parsed · 現在可以傳訊息給對方了';
-  }
-
-  @override
   String appPeerImportedV1(Object parsed) {
     return '已匯入對等端（v1）：$parsed';
   }
@@ -9300,6 +9299,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get chatJustTheTwoOf => '只有你們兩個，端對端加密。';
+
+  @override
+  String get chatSayHiSoThey => '打聲招呼，讓對方看到你';
+
+  @override
+  String get chatTheyWonTKnow => '在你的第一則訊息送達前，對方不會知道已被你新增。';
+
+  @override
+  String get chatWave => '揮手';
 
   @override
   String get chatMicPermissionNeeded => '需要麥克風權限';
