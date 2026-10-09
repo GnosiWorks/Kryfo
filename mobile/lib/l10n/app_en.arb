@@ -1235,7 +1235,7 @@
   "@commonSave": {
     "description": "screens/avatar_picker_screen.dart, screens/chat_screen.dart, screens/contact_screen.dart, screens/group_chat_screen.dart, screens/notes_screen.dart"
   },
-  "backupPassphraseMustBeAt": "Passphrase must be at least 6 characters",
+  "backupPassphraseMustBeAt": "Passphrase must be at least 12 characters",
   "@backupPassphraseMustBeAt": {
     "description": "screens/backup_screen.dart"
   },

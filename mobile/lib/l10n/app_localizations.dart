@@ -1530,7 +1530,7 @@ abstract class AppLocalizations {
   /// screens/backup_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Passphrase must be at least 6 characters'**
+  /// **'Passphrase must be at least 12 characters'**
   String get backupPassphraseMustBeAt;
 
   /// screens/backup_screen.dart

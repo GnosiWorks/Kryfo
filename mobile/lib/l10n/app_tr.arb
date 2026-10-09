@@ -234,7 +234,7 @@
   "avatarPickerThatOneIsYours": "Bu senin",
   "avatarPickerPickAFace": "Bir yüz seç",
   "commonSave": "Kaydet",
-  "backupPassphraseMustBeAt": "Parola ifadesi en az 6 karakter olmalı",
+  "backupPassphraseMustBeAt": "Parola ifadesi en az 12 karakter olmalı",
   "backupPassphrasesDonTMatch": "Parola ifadeleri eşleşmiyor",
   "backupBackupSavedKeepThe": "Yedek kaydedildi · parola ifadesini güvende tut",
   "backupKryfoBackup": "Kryfo yedeği",

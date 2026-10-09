@@ -915,6 +915,11 @@ Future<BackupDraft> draftBackup(
 
 /// writes a v2 backup to [outPath]. everything the phone holds: identity,
 /// database, onion key, prefs, and every photo, voice note and file; with
+/// the shortest passphrase a new backup takes: the file holds the whole
+/// identity and every message, and can be tried offline. a file made
+/// before with a shorter one still opens
+const kBackupMinPassphrase = 12;
+
 /// the hidden chats open, or [withHiddenChats] from their setup, those too.
 /// [onProgress] is told bytes done of bytes total.
 Future<void> createBackupFile(
@@ -924,7 +929,9 @@ Future<void> createBackupFile(
   bool withHiddenChats = false,
   void Function(int done, int total)? onProgress,
 }) async {
-  if (passphrase.length < 6) throw BackupError('passphrase too short');
+  if (passphrase.length < kBackupMinPassphrase) {
+    throw BackupError('passphrase too short');
+  }
   await sweepBackupLeftovers();
   final stage = Directory(
     p.join((await getApplicationSupportDirectory()).path, _kBackupStage),

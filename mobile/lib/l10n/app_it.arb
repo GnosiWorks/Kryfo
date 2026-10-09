@@ -234,7 +234,7 @@
   "avatarPickerThatOneIsYours": "Quello è il tuo",
   "avatarPickerPickAFace": "Scegli un volto",
   "commonSave": "Salva",
-  "backupPassphraseMustBeAt": "La passphrase deve avere almeno 6 caratteri",
+  "backupPassphraseMustBeAt": "La passphrase deve avere almeno 12 caratteri",
   "backupPassphrasesDonTMatch": "Le passphrase non coincidono",
   "backupBackupSavedKeepThe": "Backup salvato · custodisci la passphrase",
   "backupKryfoBackup": "Backup di Kryfo",

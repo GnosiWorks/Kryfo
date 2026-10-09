@@ -983,7 +983,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupPassphraseMustBeAt =>
-      'Passphrase must be at least 6 characters';
+      'Passphrase must be at least 12 characters';
 
   @override
   String get backupPassphrasesDonTMatch => 'Passphrases don\'t match';

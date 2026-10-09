@@ -234,7 +234,7 @@
   "avatarPickerThatOneIsYours": "هذا وجهك",
   "avatarPickerPickAFace": "اختر وجهًا",
   "commonSave": "حفظ",
-  "backupPassphraseMustBeAt": "يجب ألا تقل عبارة المرور عن ٦ أحرف",
+  "backupPassphraseMustBeAt": "يجب ألا تقل عبارة المرور عن ١٢ حرفًا",
   "backupPassphrasesDonTMatch": "عبارتا المرور غير متطابقتين",
   "backupBackupSavedKeepThe": "حُفظت النسخة الاحتياطية · احفظ عبارة المرور في مكان آمن",
   "backupKryfoBackup": "نسخة Kryfo الاحتياطية",

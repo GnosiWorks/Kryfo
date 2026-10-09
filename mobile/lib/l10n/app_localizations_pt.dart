@@ -990,7 +990,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get backupPassphraseMustBeAt =>
-      'A frase-senha precisa ter pelo menos 6 caracteres';
+      'A frase-senha precisa ter pelo menos 12 caracteres';
 
   @override
   String get backupPassphrasesDonTMatch => 'As frases-senha não são iguais';

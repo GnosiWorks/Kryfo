@@ -234,7 +234,7 @@
   "avatarPickerThatOneIsYours": "Esse é o seu",
   "avatarPickerPickAFace": "Escolha um rosto",
   "commonSave": "Salvar",
-  "backupPassphraseMustBeAt": "A frase-senha precisa ter pelo menos 6 caracteres",
+  "backupPassphraseMustBeAt": "A frase-senha precisa ter pelo menos 12 caracteres",
   "backupPassphrasesDonTMatch": "As frases-senha não são iguais",
   "backupBackupSavedKeepThe": "Backup salvo · guarde bem a frase-senha",
   "backupKryfoBackup": "Backup do Kryfo",

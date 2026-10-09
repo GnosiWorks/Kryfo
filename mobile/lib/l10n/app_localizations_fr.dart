@@ -989,7 +989,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get backupPassphraseMustBeAt =>
-      'La phrase secrète doit faire au moins 6 caractères';
+      'La phrase secrète doit faire au moins 12 caractères';
 
   @override
   String get backupPassphrasesDonTMatch => 'Les phrases secrètes diffèrent';

@@ -234,7 +234,7 @@
   "avatarPickerThatOneIsYours": "这个就是你的",
   "avatarPickerPickAFace": "选一张脸",
   "commonSave": "保存",
-  "backupPassphraseMustBeAt": "密码短语至少要 6 个字符",
+  "backupPassphraseMustBeAt": "密码短语至少要 12 个字符",
   "backupPassphrasesDonTMatch": "两次输入的密码短语不一致",
   "backupBackupSavedKeepThe": "备份已保存 · 请保管好密码短语",
   "backupKryfoBackup": "Kryfo 备份",

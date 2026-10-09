@@ -947,7 +947,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get commonSave => '保存';
 
   @override
-  String get backupPassphraseMustBeAt => '密码短语至少要 6 个字符';
+  String get backupPassphraseMustBeAt => '密码短语至少要 12 个字符';
 
   @override
   String get backupPassphrasesDonTMatch => '两次输入的密码短语不一致';
@@ -8478,7 +8478,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get commonSave => '儲存';
 
   @override
-  String get backupPassphraseMustBeAt => '密碼短語至少要 6 個字元';
+  String get backupPassphraseMustBeAt => '密碼短語至少要 12 個字元';
 
   @override
   String get backupPassphrasesDonTMatch => '密碼短語不一致';

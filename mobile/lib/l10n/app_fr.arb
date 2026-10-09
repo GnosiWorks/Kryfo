@@ -234,7 +234,7 @@
   "avatarPickerThatOneIsYours": "C’est le vôtre",
   "avatarPickerPickAFace": "Choisir un visage",
   "commonSave": "Enregistrer",
-  "backupPassphraseMustBeAt": "La phrase secrète doit faire au moins 6 caractères",
+  "backupPassphraseMustBeAt": "La phrase secrète doit faire au moins 12 caractères",
   "backupPassphrasesDonTMatch": "Les phrases secrètes diffèrent",
   "backupBackupSavedKeepThe": "Sauvegarde enregistrée · gardez la phrase secrète en lieu sûr",
   "backupKryfoBackup": "Sauvegarde Kryfo",
