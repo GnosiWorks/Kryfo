@@ -7251,8 +7251,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get flowDecoy1 => 'Membuka Kryfo kosong, seperti baru dipasang.';
 
   @override
-  String get flowDecoyFinger =>
-      'Sidik jarimu membuka Kryfo-mu yang asli. Jika seseorang bisa memaksamu memakainya, matikan sidik jari.';
+  String get flowDecoyFingerOff =>
+      'Buka kunci dengan sidik jari mati selama PIN umpan dipasang.';
 
   @override
   String get flowDecoyDigits =>

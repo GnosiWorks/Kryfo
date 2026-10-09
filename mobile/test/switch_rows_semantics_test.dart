@@ -271,7 +271,7 @@ void main() {
       ),
     );
     await _flips(t, l10n.pinsUnlockWithFingerprint);
-    expect(lock.biometricShown, isTrue);
+    expect(lock.biometric, isTrue);
     await done(t);
   });
 

@@ -534,9 +534,7 @@ class LockState extends ChangeNotifier {
   // whether the decoy has a wipe pin, or a decoy pin, of its own
   static const _kDWipe = 'halo.lock.d.wipe';
   static const _kDDecoy = 'halo.lock.d.decoy';
-  // the fingerprint switch as the decoy shows it. a finger opens the
-  // everyday app, so the decoy's switch is a setting of its own and never
-  // the real one
+  // the decoy's old fingerprint switch, which opened nothing. only removed
   static const _kDBio = 'halo.lock.d.bio';
   // legacy sha256("salt:pin") keys, kept until migrated
   static const _kHash = 'halo.lock.pin_hash';
@@ -578,11 +576,16 @@ class LockState extends ChangeNotifier {
 
   bool get enabled => _enabled;
   bool get locked => (_enabled || _unreadable) && _locked;
-  bool get biometric => _biometric;
+  // a finger opens the everyday app, so it opens nothing while a decoy
+  // pin is set
+  bool get biometric => _biometric && !decoySet;
   bool get bioSupported => _bioSupported;
   bool get panicEnabled => _inDecoy ? _dWipe && !_dWipeHidden : _panicEnabled;
-  // the fingerprint switch on the App lock screen of this session
-  bool get biometricShown => _inDecoy ? _dBio : _biometric;
+  bool get fingerOffered => _bioSupported && !decoySet;
+
+  // the app lists a decoy: a decoy pin is set. a decoy session is one too
+  bool _decoyListed = false;
+  bool get decoySet => _decoyListed || _inDecoy;
 
   // a decoy session is open: the App lock screen works on the decoy's own
   // entries. a pin that clashes with one it cannot see is taken and kept
@@ -605,7 +608,6 @@ class LockState extends ChangeNotifier {
   bool _paused = false;
   bool _dWipe = false;
   bool _dDecoy = false;
-  bool _dBio = false;
   // a turn off in the decoy shows its wipe pin gone, as a turn off does
   // anywhere. its entry stays until the next start, or goes when a pin is
   // set again
@@ -630,7 +632,9 @@ class LockState extends ChangeNotifier {
       _panicEnabled = (await _store.read(_kWipeOn)) == 'true';
       _dWipe = (await _store.read(_kDWipe)) == 'true';
       _dDecoy = (await _store.read(_kDDecoy)) == 'true';
-      _dBio = (await _store.read(_kDBio)) == 'true';
+      _decoyListed = (await _store.read(kListedContainers) ?? '')
+          .split(',')
+          .contains(HaloContainer.decoy.id);
       _table = await _store.read(_kTable);
       _legacy = {
         'as': await _store.read(_kSalt) ?? '',
@@ -665,6 +669,13 @@ class LockState extends ChangeNotifier {
       notifyListeners();
       Future.delayed(const Duration(seconds: 2), load);
       return;
+    }
+    // fingerprint unlock from before a decoy pin goes off as a new one would
+    try {
+      if (await _store.read(_kDBio) != null) await _store.delete(_kDBio);
+      if (_biometric && _decoyListed) await _fingerOff();
+    } catch (e) {
+      dlog('lock: decoy finger left (${e.runtimeType})');
     }
     await _upgradeTable();
     _standIn ??= await _engine.newTable(14);
@@ -941,6 +952,11 @@ class LockState extends ChangeNotifier {
       _dDecoy = true;
       notifyListeners();
     }
+    if (ok && !_inDecoy) {
+      _decoyListed = true;
+      await _fingerOff();
+      notifyListeners();
+    }
     return ok;
   }
 
@@ -964,8 +980,8 @@ class LockState extends ChangeNotifier {
     await _store.delete(_kDBio);
     _dWipe = false;
     _dDecoy = false;
-    _dBio = false;
     _dWipeHidden = false;
+    _decoyListed = false;
     notifyListeners();
   }
 
@@ -1261,32 +1277,40 @@ class LockState extends ChangeNotifier {
     _panicEnabled = false;
     _dWipe = false;
     _dDecoy = false;
-    _dBio = false;
     notifyListeners();
   }
 
   Future<bool> setBiometric(bool v) async {
-    // inside the decoy only its own switch moves: the everyday app's
-    // fingerprint key is neither made nor deleted from there
-    if (_inDecoy) {
-      await _store.write(_kDBio, v ? 'true' : 'false');
-      _dBio = v;
-      notifyListeners();
-      return true;
-    }
+    // off while a decoy pin is set, and its key already gone
+    if (decoySet) return false;
     if (v && !await _bio.enable()) return false;
-    if (!v) await _bio.disable();
-    await _store.write(_kBio, v ? 'true' : 'false');
-    _biometric = v;
-    _bioStale = false;
+    if (v) {
+      await _store.write(_kBio, 'true');
+      _biometric = true;
+      _bioStale = false;
+    } else {
+      await _fingerOff();
+    }
     notifyListeners();
     return true;
+  }
+
+  // the key goes with the switch
+  Future<void> _fingerOff() async {
+    try {
+      await _bio.disable();
+    } catch (e) {
+      dlog('lock: finger key not dropped (${e.runtimeType})');
+    }
+    await _store.write(_kBio, 'false');
+    _biometric = false;
+    _bioStale = false;
   }
 
   // a finger opens the everyday app and nothing else, never a vault
   Future<bool> tryBiometric() async {
     if (throttleLeft > Duration.zero) return false;
-    if (!_enabled || !_biometric || !_bioSupported || _bioStale) return false;
+    if (!_enabled || !biometric || !_bioSupported || _bioStale) return false;
     final r = await _bio.unlock(l10n.lockStateUnlockKryfo, l10n.commonCancel);
     if (r == 'invalidated' || r == 'none') {
       // a finger was added since, or the key is gone: the pin first

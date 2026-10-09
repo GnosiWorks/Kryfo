@@ -7397,8 +7397,8 @@ class AppLocalizationsRu extends AppLocalizations {
       'Открывает пустой Kryfo, как будто его только что установили.';
 
   @override
-  String get flowDecoyFinger =>
-      'Твой отпечаток открывает настоящий Kryfo. Если тебя могут заставить приложить палец, выключи вход по отпечатку.';
+  String get flowDecoyFingerOff =>
+      'Разблокировка отпечатком выключается, пока задана PIN-приманка.';
 
   @override
   String get flowDecoyDigits =>

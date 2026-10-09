@@ -2127,6 +2127,10 @@ void main() {
       "The PIN goes, and the wipe PIN and any hidden chats with it. Anyone holding your phone opens Kryfo as you.",
     );
     expect(l.pinsUnlockWithFingerprint, "Unlock with fingerprint");
+    expect(
+      l.flowDecoyFingerOff,
+      "Fingerprint unlock turns off while a decoy PIN is set.",
+    );
     expect(l.pinsWipePin, "Wipe PIN");
     expect(l.pinsNeedsAPinFirst, "Needs a PIN first");
     expect(l.pinsSet, "Set");

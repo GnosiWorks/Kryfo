@@ -412,7 +412,7 @@ class _PinFlowScreenState extends State<PinFlowScreen>
       ],
       PinFlow.decoy => [
         (Icons.inbox_outlined, l10n.flowDecoy1),
-        (Icons.fingerprint, l10n.flowDecoyFinger),
+        if (_lock.bioSupported) (Icons.fingerprint, l10n.flowDecoyFingerOff),
         (Icons.dialpad_outlined, l10n.flowDecoyDigits),
         (Icons.notifications_off_outlined, l10n.flowDecoyShade),
         (Icons.gavel_outlined, l10n.flowLaw),

@@ -9217,9 +9217,9 @@
   "@flowDecoy1": {
     "description": "decoy PIN setup, what it does and does not do"
   },
-  "flowDecoyFinger": "Your fingerprint opens your real Kryfo. If someone could make you use it, turn fingerprint off.",
-  "@flowDecoyFinger": {
-    "description": "decoy PIN setup"
+  "flowDecoyFingerOff": "Fingerprint unlock turns off while a decoy PIN is set.",
+  "@flowDecoyFingerOff": {
+    "description": "decoy PIN setup and the how App lock works sheet, only on phones with fingerprint unlock"
   },
   "flowDecoyDigits": "Use the same number of digits as your PIN, because anyone watching can count the dots.",
   "@flowDecoyDigits": {

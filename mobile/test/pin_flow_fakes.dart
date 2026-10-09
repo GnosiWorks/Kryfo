@@ -179,11 +179,17 @@ Future<Lock> makeLock(
   bool inDecoy = false,
   bool inVault = false,
   bool wipeOn = false,
+  LockBio? bio,
+  Map<String, String> stored = const {},
 }) async {
-  final store = MemStore();
+  final store = MemStore()..m.addAll(stored);
   if (pins != null) {
     store.m['halo.lock.enabled'] = 'true';
     if (wipeOn) store.m['halo.lock.panic_enabled'] = 'true';
+    // the app lists a decoy before its entry is written
+    if (pins.containsKey(PinSlot.decoy)) {
+      store.m[kListedContainers] = HaloContainer.decoy.id;
+    }
     store.m['halo.lock.table'] = jsonEncode({
       'v': 2,
       'n': 15,
@@ -202,7 +208,7 @@ Future<Lock> makeLock(
     store: store,
     engine: MemEngine(),
     clock: StillClock(),
-    bio: NoBio(),
+    bio: bio ?? NoBio(),
     revealAfter: Duration.zero,
   );
   await s.load();

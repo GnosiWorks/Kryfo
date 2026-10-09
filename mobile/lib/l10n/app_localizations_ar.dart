@@ -7384,8 +7384,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get flowDecoy1 => 'يفتح Kryfo فارغًا، كأنه مثبت للتو.';
 
   @override
-  String get flowDecoyFinger =>
-      'بصمتك تفتح Kryfo الحقيقي. إن كان أحد قادرًا على إجبارك على استخدامها، فأوقف فتح القفل بالبصمة.';
+  String get flowDecoyFingerOff =>
+      'يتوقف فتح القفل بالبصمة ما دام رمز PIN للتمويه مضبوطًا.';
 
   @override
   String get flowDecoyDigits =>

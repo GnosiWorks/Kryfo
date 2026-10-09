@@ -142,7 +142,7 @@ class _LockSetupScreenState extends State<LockSetupScreen>
       return;
     }
     HapticFeedback.mediumImpact();
-    if (mounted && _lock.bioSupported && !_lock.biometricShown) {
+    if (mounted && _lock.fingerOffered && !_lock.biometric) {
       final useBio = await showHaloSheet<bool>(
         context,
         builder: (ctx) => SafeArea(

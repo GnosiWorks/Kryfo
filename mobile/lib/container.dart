@@ -209,10 +209,10 @@ class HaloContainer {
 // container's pin entry is written, and struck after it is cleared, so a
 // crash in between leaves a listed container and never an unlisted one
 const _registry = secureStore;
-const _kListed = 'halo.containers';
+const kListedContainers = 'halo.containers';
 
 Future<Set<String>> listedContainers() async {
-  final s = await _registry.read(key: _kListed);
+  final s = await _registry.read(key: kListedContainers);
   if (s == null || s.isEmpty) return {};
   return s.split(',').where((x) => x.isNotEmpty).toSet();
 }
@@ -222,7 +222,7 @@ Future<void> listContainer(HaloContainer c, bool on) async {
   if (c.wrapped) throw ArgumentError('${c.dbFile} is never listed');
   final now = await listedContainers();
   on ? now.add(c.id) : now.remove(c.id);
-  await _registry.write(key: _kListed, value: now.join(','));
+  await _registry.write(key: kListedContainers, value: now.join(','));
 }
 
 // a container on disk that no list names was being made or taken away

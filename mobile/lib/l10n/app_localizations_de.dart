@@ -7335,8 +7335,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get flowDecoy1 => 'Öffnet ein leeres Kryfo, wie frisch installiert.';
 
   @override
-  String get flowDecoyFinger =>
-      'Dein Fingerabdruck öffnet dein echtes Kryfo. Wenn dich jemand zwingen könnte, ihn zu benutzen, schalte den Fingerabdruck aus.';
+  String get flowDecoyFingerOff =>
+      'Das Entsperren mit Fingerabdruck ist aus, solange eine Tarn-PIN gesetzt ist.';
 
   @override
   String get flowDecoyDigits =>

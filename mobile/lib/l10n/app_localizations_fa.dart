@@ -7268,8 +7268,8 @@ class AppLocalizationsFa extends AppLocalizations {
   String get flowDecoy1 => 'یک Kryfo خالی باز می‌کند، انگار تازه نصب شده.';
 
   @override
-  String get flowDecoyFinger =>
-      'اثر انگشت شما Kryfo واقعی را باز می‌کند. اگر ممکن است کسی شما را به استفاده از آن وادار کند، اثر انگشت را خاموش کنید.';
+  String get flowDecoyFingerOff =>
+      'تا وقتی PIN فریب تنظیم شده، باز کردن قفل با اثر انگشت خاموش است.';
 
   @override
   String get flowDecoyDigits =>
