@@ -8420,6 +8420,17 @@ class AppState extends ChangeNotifier {
   // the moment it is made; this is for the ones that did not get through.
   final Set<String> _editsInflight = {};
 
+  // a row of ours a block kept from going: what is queued for it waits for
+  // the tap. a read that fails says held, and the next pass reads again
+  Future<bool> _heldRow(HaloDb d, String uid) async {
+    try {
+      return await d.heldBack(uid);
+    } catch (e) {
+      dlog('held row: not read (${e.runtimeType})');
+      return true;
+    }
+  }
+
   // blockedAnywhere read once a person in one pass of a queue
   Future<bool> Function(String id) _blockedInPass() {
     final read = <String, Future<bool>>{};
@@ -8452,6 +8463,8 @@ class AppState extends ChangeNotifier {
         }
         if (age < 45000 || _editsInflight.contains(uid)) continue;
         if (held.contains(r['peer_id'])) continue;
+        // its row a block kept from going: the edit waits for the tap
+        if (await _heldRow(d, uid)) continue;
         _editsInflight.add(uid);
         unawaited(
           sendEdit(
@@ -8491,6 +8504,7 @@ class AppState extends ChangeNotifier {
         }
         if (age < 45000 || _pinsInflight.contains(uid)) continue;
         if (held.contains(r['peer_id'])) continue;
+        if (await _heldRow(d, uid)) continue;
         _pinsInflight.add(uid);
         unawaited(
           _sendPin(
@@ -8509,16 +8523,16 @@ class AppState extends ChangeNotifier {
   // frame queues like an edit does, so it survives tor being down.
   Future<void> pinInChat(String peer, String uid, bool pinned) async {
     await session.setPinned(uid, pinned);
-    // someone blocked is told nothing, nor of a row a block kept from
-    // going: it stays ours alone
-    if (await blockedAnywhere(peer) || await session.heldBack(uid)) {
+    // someone blocked is told nothing: it stays ours alone
+    if (await blockedAnywhere(peer)) {
       notifyListeners();
       return;
     }
     await session.queuePin(uid, peer, pinned);
     notifyListeners();
-    // a quiet session keeps it queued here: nothing leaves
-    if (sessionQuiet) return;
+    // a quiet session keeps it queued here: nothing leaves. on a row a
+    // block kept from going it waits for the tap
+    if (sessionQuiet || await session.heldBack(uid)) return;
     _pinsInflight.add(uid);
     unawaited(
       _sendPin(peer, uid, pinned).whenComplete(() => _pinsInflight.remove(uid)),
@@ -8585,6 +8599,7 @@ class AppState extends ChangeNotifier {
           continue;
         }
         if (held.contains(peer)) continue;
+        if (kind == kFrameReaction && await _heldRow(d, uid)) continue;
         if (!_framesInflight.add('$kind $uid')) continue;
         unawaited(
           _sendFrame(
@@ -8609,21 +8624,23 @@ class AppState extends ChangeNotifier {
 
   // an edit in a 1:1 chat, once the row here has it. queued first, sent
   // now: if the route is down the outbox carries it. none for someone
-  // blocked: it stays here alone. a row a block kept from going is edited
-  // here only, and the tap that sends it carries the new words
+  // blocked: it stays here alone. on a row a block kept from going it is
+  // queued and waits for the tap: the row may be on a relay already
   Future<void> editInChat(String peer, String uid, String newText) async {
-    if (await blockedAnywhere(peer) || await session.heldBack(uid)) return;
+    if (await blockedAnywhere(peer)) return;
     await session.queueEdit(uid, peer, newText);
     // a quiet session keeps it queued here: nothing leaves
-    if (sessionQuiet) return;
+    if (sessionQuiet || await session.heldBack(uid)) return;
     unawaited(sendEdit(peer, uid, newText));
   }
 
   // a reaction in a 1:1 chat, empty to take it off. queued like a pin.
-  // none for someone blocked, nor on a row a block kept from going
+  // none for someone blocked. on a row a block kept from going it waits
+  // for the tap, as an edit does
   Future<void> reactInChat(String peer, String uid, String emoji) async {
-    if (await blockedAnywhere(peer) || await session.heldBack(uid)) return;
+    if (await blockedAnywhere(peer)) return;
     await session.queueReaction(uid, peer, emoji);
+    if (await session.heldBack(uid)) return;
     await _frameNow(peer, uid, kFrameReaction, emoji);
   }
 

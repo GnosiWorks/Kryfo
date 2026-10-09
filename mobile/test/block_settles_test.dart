@@ -6,8 +6,9 @@
 // blocked is introduced. our texts and files to them that have not gone
 // are not sent, in the container that blocked: the unblock sends none of
 // them, a tap does. a block in the other container only holds them back,
-// and they go once it is lifted. nothing a block kept is edited, pinned,
-// reacted to or finished off for them. the queues read the block list in
+// and they go once it is lifted. an edit, a pin or a reaction on a row a
+// block kept waits for its tap, and nothing it kept is finished off for
+// them. the queues read the block list in
 // the database, never as a list of variables. a receipt from them ticks
 // only what went before the block, and a back-pair leaves their row as the
 // block left it but for a new key's warning. the database methods are the
@@ -476,17 +477,48 @@ void main() {
       expect([for (final m in wire()) m.msgUid], ['v1']);
     });
 
-    test('a row a block kept from going is edited, pinned and reacted to '
-        'here alone', () async {
-      await _out(mem, 'n1', _bob, sent: kNotSent);
-      await app.editInChat(_bob, 'n1', 'changed');
-      await app.pinInChat(_bob, 'n1', true);
-      await app.reactInChat(_bob, 'n1', 'x');
-      await settle();
-      expect(_queued(mem, _bob), isEmpty);
-      expect(io.sent, isEmpty);
-      expect(mem.rows('messages').single['pinned'], 1);
-    });
+    for (final (kind, said) in [
+      ('edit', 'an edit'),
+      ('pin', 'a pin'),
+      ('reaction', 'a reaction'),
+    ]) {
+      test('$said on a row a block kept from going waits after the '
+          'unblock, and goes once after the tap', () async {
+        await _out(mem, 'n1', _bob, sent: kNotSent);
+        switch (kind) {
+          case 'edit':
+            await app.editInChat(_bob, 'n1', 'changed');
+          case 'pin':
+            await app.pinInChat(_bob, 'n1', true);
+          default:
+            await app.reactInChat(_bob, 'n1', 'x');
+        }
+        await settle();
+        expect(_queued(mem, _bob), hasLength(1));
+        for (var i = 0; i < 2; i++) {
+          await age();
+          await app.drainOutbox();
+          await settle();
+        }
+        expect(io.sent, isEmpty);
+
+        // the tap
+        await db.sendAgain('n1');
+        for (var i = 0; i < 3; i++) {
+          await age();
+          await app.drainOutbox();
+          await settle();
+        }
+        final w = wire();
+        int count(bool Function(UnwrappedMessage) f) => w.where(f).length;
+        expect(switch (kind) {
+          'edit' => count((m) => m.edit?.targetUid == 'n1'),
+          'pin' => count((m) => m.pin?.targetUid == 'n1'),
+          _ => count((m) => m.reaction?.targetUid == 'n1'),
+        }, 1);
+        expect(_queued(mem, _bob), isEmpty);
+      });
+    }
 
     test('their ask for the slices of a file a block kept from going is '
         'not answered', () async {
