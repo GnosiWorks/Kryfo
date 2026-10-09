@@ -8,7 +8,10 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, debugDefaultTargetPlatformOverride;
 import 'package:flutter/services.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/backup.dart';
@@ -82,6 +85,20 @@ class _Engine implements HaloEngine {
   @override
   dynamic noSuchMethod(Invocation i) =>
       throw StateError('the engine was asked for ${i.memberName}');
+}
+
+// android's shade: what is up, and lists it as android does, without the
+// payload each was shown with
+class _Shade extends AndroidFlutterLocalNotificationsPlugin {
+  final up = <int>{};
+  @override
+  Future<void> cancel({required int id, String? tag}) async => up.remove(id);
+  @override
+  Future<void> cancelAll() async => up.clear();
+  @override
+  Future<List<ActiveNotification>> getActiveNotifications() async => [
+    for (final id in up) ActiveNotification(id: id),
+  ];
 }
 
 void main() {
@@ -230,6 +247,50 @@ void main() {
     expect(live.log, isEmpty);
     expect(read('halo_v.db'), 'everyday hidden');
     expect(engine.restored, isEmpty);
+  });
+
+  group('the shade', () {
+    late _Shade shade;
+    setUp(() {
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      shade = _Shade()..up.addAll([7, 8]);
+      FlutterLocalNotificationsPlatform.instance = shade;
+    });
+    tearDown(() => debugDefaultTargetPlatformOverride = null);
+
+    test('an everyday restore takes down what came for the account it '
+        'replaced', () async {
+      final lock = await pins(inDecoy: false);
+      useDatabasesForTest(live, Session(live));
+      restoreCipherForTest = _Cipher.new;
+      await restoreBackupFile(await file(), 'pass', lock: lock.state);
+      expect(shade.up, isEmpty);
+    });
+
+    test('an old text file in the everyday app takes it down too', () async {
+      final lock = await pins(inDecoy: false);
+      useDatabasesForTest(live, Session(live));
+      await landV1Payload(
+        {
+          'v': 1,
+          'db': base64Encode(utf8.encode('old file')),
+          'dbPassphrase': "x'${'4e' * 32}'",
+          'edPriv': 'ed',
+          'xPriv': 'x',
+        },
+        own: live,
+        lock: lock.state,
+      );
+      expect(shade.up, isEmpty);
+    });
+
+    test('a decoy restore leaves it alone', () async {
+      final lock = await pins(inDecoy: true);
+      useDatabasesForTest(live, Session(decoy));
+      restoreCipherForTest = _Cipher.new;
+      await restoreBackupFile(await file(), 'pass', lock: lock.state);
+      expect(shade.up, {7, 8});
+    });
   });
 
   test('the everyday database takes nothing more once a restore lands on '

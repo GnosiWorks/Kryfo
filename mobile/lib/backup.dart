@@ -19,6 +19,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'carried_settings.dart';
 import 'container.dart';
 import 'lock_state.dart' show LockState, lockState;
+import 'notifications.dart' show cancelWithRetry, notifPlugin;
 import 'main.dart'
     show
         HaloDb,
@@ -313,6 +314,7 @@ Future<void> landV1Payload(
     }
 
     await restorePrefs(payload['prefs']);
+    await _clearShade();
     // a v1 file carries no catch-up: the relays are read again whole
     await _holdRelays();
     await landCatchUpAnchors(docsDir.path, null);
@@ -339,6 +341,11 @@ Future<void> _livesHereNow() async {
   await prefs.remove('moved.at');
   await prefs.setBool(kSessionsRestoredPref, true);
 }
+
+// what the shade holds came for the account just replaced. a decoy's
+// session shows none
+Future<void> _clearShade() =>
+    cancelWithRetry(notifPlugin.cancelAll, 'restore shade');
 
 // from here on the phone's own files are going: a failure leaves the app on
 // a database it no longer has, so it has to close and start again
@@ -1696,6 +1703,7 @@ Future<void> restoreBackupFile(
       value: manifest['dbPassphrase'] as String,
     );
     await restorePrefs(manifest['prefs']);
+    await _clearShade();
     await _holdRelays();
     await landCatchUpAnchors(docs.path, manifest['catchUp']);
     // in place before the restart reads them
