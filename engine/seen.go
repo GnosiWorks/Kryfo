@@ -8,6 +8,7 @@ package main
 // so what never reached the app, or did not go in, is fetched again.
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"os"
@@ -570,9 +571,40 @@ func (s *seenIDs) compactLocked() {
 	s.lines = len(keep)
 }
 
-// a mark for every id the address holds, on its file: "!" to fetch them
-// again, "~" to take them as kept. a runner reads it when it starts
+// the sets of the runners running now, by file: a mark reaches them too
+var (
+	liveSeenMu sync.Mutex
+	liveSeen   = map[string]map[*seenIDs]bool{}
+)
+
+// a running runner's set, until ctx ends
+func seenWhileRunning(ctx context.Context, s *seenIDs) {
+	if s.path == "" {
+		return
+	}
+	liveSeenMu.Lock()
+	if liveSeen[s.path] == nil {
+		liveSeen[s.path] = map[*seenIDs]bool{}
+	}
+	liveSeen[s.path][s] = true
+	liveSeenMu.Unlock()
+	go func() {
+		<-ctx.Done()
+		liveSeenMu.Lock()
+		delete(liveSeen[s.path], s)
+		if len(liveSeen[s.path]) == 0 {
+			delete(liveSeen, s.path)
+		}
+		liveSeenMu.Unlock()
+	}()
+}
+
+// a mark for every id the address holds, on its file and in the sets of
+// its running runners: "!" to fetch them again, "~" to take them as kept.
+// a runner asks for what it lets go of on its next connection or probe,
+// never because of the mark
 func markHeldFile(path, mark string) {
+	markHeldRunning(path, mark)
 	if path == "" || engineHeld.Load() {
 		return
 	}
@@ -595,6 +627,23 @@ func markHeldFile(path, mark string) {
 	}
 	f.WriteString(mark + "\n")
 	f.Close()
+}
+
+func markHeldRunning(path, mark string) {
+	if path == "" {
+		return
+	}
+	liveSeenMu.Lock()
+	sets := make([]*seenIDs, 0, len(liveSeen[path]))
+	for s := range liveSeen[path] {
+		sets = append(sets, s)
+	}
+	liveSeenMu.Unlock()
+	for _, s := range sets {
+		s.mu.Lock()
+		s.readLine(mark)
+		s.mu.Unlock()
+	}
 }
 
 // what a line in the inbox still owes once the app has taken it

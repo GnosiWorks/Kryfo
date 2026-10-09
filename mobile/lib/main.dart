@@ -787,7 +787,8 @@ class HaloEngine {
   );
 
   // what a full shelf left on the peer's address: "mark" lets it go for the
-  // runner's next start, "free" fetches it by id now, "drop" takes it as kept
+  // runner's next connection or probe, "free" fetches it by id now, "drop"
+  // takes it as kept
   Future<String> nostrLetHeld(String peerXPubHex, String how) =>
       _roomFfiOnIsolate('HaloNostrLetHeld', [peerXPubHex, how]);
 
@@ -15158,9 +15159,9 @@ class AppState extends ChangeNotifier {
   }
 
   // on a start or an unlock: what the relay still holds back for someone
-  // accepted since, an accept that died before its fetch, comes when their
-  // runner next starts. one call, marks on the files of the addresses that
-  // hold something and nothing else: no runner and no lane starts again
+  // accepted since, an accept that died before its fetch, is asked for on
+  // their runner's next connection or probe. one call, marks on the
+  // addresses that hold something and nothing else: nothing reconnects
   Future<void> _markHeldOf(HaloDb db) async {
     if (sessionQuiet) return;
     final xs = <String>{};
@@ -15252,8 +15253,8 @@ class AppState extends ChangeNotifier {
         final to = _routeOf(id, null);
         if (vault && to != RouteTo.vault && to != RouteTo.sealed) continue;
         any = true;
-        // what waits on the relay comes at their runner's next start: a
-        // start or an unlock makes nothing reconnect
+        // what waits on the relay is asked for on their runner's next
+        // connection or probe: a start or an unlock makes nothing reconnect
         await _relayLeft(id, 'mark');
         await _letHeldIn(id, () => db.heldOf(id), db.forgetHeld, still: still);
         _bumpChatRev(id);

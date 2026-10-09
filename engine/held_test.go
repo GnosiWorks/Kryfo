@@ -573,3 +573,71 @@ func TestAStartMarkRestartsNothing(t *testing.T) {
 		t.Fatalf("the held one was not let go: %v", w)
 	}
 }
+
+// an accept that died before its fetch, then an unlock: the mark reaches
+// the runner already running, the unlock sends nothing, and the next probe
+// on the same socket brings what was held
+func TestAnUnlockMarkComesOnTheNextProbe(t *testing.T) {
+	relay, peer, tag, rcv, ck := heldSetUp(t)
+	oldSpread := kickSpread
+	kickSpread = 0
+	t.Cleanup(func() { kickSpread = oldSpread })
+	now := time.Now()
+	relay.store(wrapToAt(t, peer, myXPub, "x", now.Add(-30*time.Hour)))
+	relay.store(wrapToAt(t, peer, myXPub, "new", now.Add(-time.Minute)))
+	how := func(c string) string {
+		if c == "x" {
+			return "hold"
+		}
+		return "keep"
+	}
+	if got := heldRun(t, tag, peer, rcv, ck, how); !got["x"] {
+		t.Fatalf("the first start got %v", got)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go nostrSubscribeRunner(ctx, tag, peer.pub, rcv)
+	reqs := func() (conns, n int) {
+		cs := relay.snapshot()
+		for _, c := range cs {
+			n += len(c.reqs)
+		}
+		return len(cs), n
+	}
+	waitFor(t, "the subscription", 5*time.Second, func() bool {
+		_, n := reqs()
+		return n > 0
+	})
+	time.Sleep(500 * time.Millisecond)
+	if b := pollRaw(t); b.K != "" {
+		t.Fatalf("offered before the unlock: %q", bodies(b))
+	}
+	conns, n := reqs()
+	nostrMarkHeld([]string{tag})
+	time.Sleep(500 * time.Millisecond)
+	if c, m := reqs(); c != conns || m != n {
+		t.Fatalf("the unlock sent %d reqs on %d new sockets", m-n, c-conns)
+	}
+	if b := pollRaw(t); b.K != "" {
+		t.Fatalf("offered on the unlock: %q", bodies(b))
+	}
+	// the job's knock: the socket answers its probe and stays
+	kickRelays()
+	got := false
+	end := time.Now().Add(5 * time.Second)
+	for time.Now().Before(end) && !got {
+		if b := pollRaw(t); b.K != "" {
+			for _, e := range b.M {
+				got = got || e.C == "x"
+			}
+			nostrAck(b.K, "")
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+	if !got {
+		t.Fatal("the held text did not come on the next probe")
+	}
+	if c, _ := reqs(); c != conns {
+		t.Fatalf("it reconnected: %d sockets, was %d", c, conns)
+	}
+}

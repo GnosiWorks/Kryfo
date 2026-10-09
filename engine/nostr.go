@@ -1275,6 +1275,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 	ownKeys := ownCatchupKeys(urls, rcvPk)
 	catchupStart(ownKeys, nostr.Timestamp(lastSaved), nostr.Timestamp(time.Now().Unix()))
 	seen := loadSeen(seenPath)
+	seenWhileRunning(ctx, seen)
 	// runners share the anchor and read it back, or a relay that never sees
 	// a new event stays pinned to the launch window for the whole process.
 	loadLast := func() int64 {
@@ -1562,16 +1563,24 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				// the anchor is held back until that has been fetched too.
 				cctx, ccancel := context.WithCancel(conn)
 				// held events let go of come by their ids: the window has
-				// mostly moved past them. the poll keeps them together
-				if ids := seen.wanted(time.Now()); len(ids) > 0 {
+				// mostly moved past them. the poll keeps them together. asked
+				// on connecting, and on a probe this socket makes anyway
+				var asking atomic.Bool
+				askWanted := func() {
+					ids := seen.wanted(time.Now())
+					if len(ids) == 0 || !asking.CompareAndSwap(false, true) {
+						return
+					}
 					walkBegins(tag)
 					go func() {
+						defer asking.Store(false)
 						defer walkEnds(tag)
 						if missing, answered := relayByIDs(cctx, r, rcvPk, ids, dispatch); answered {
 							seen.notOnRelay(u, urls, missing)
 						}
 					}()
 				}
+				askWanted()
 				// counted while this connection is still fetching what it
 				// missed, so a check-in knows when it may stop tor again
 				atomic.AddInt32(&catchupActive, 1)
@@ -1752,6 +1761,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						// carries data.
 						if relayResponds(conn, r, rcvPk) {
 							markAlive()
+							askWanted()
 							idle.Reset(quietFor(deaf))
 							continue
 						}
@@ -1781,6 +1791,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						if relayResponds(conn, r, rcvPk) {
 							markAlive()
 							log.Printf("nostr: %s kicked but still answering, keeping the sub", u)
+							askWanted()
 							if !idle.Stop() {
 								select {
 								case <-idle.C:
@@ -1942,10 +1953,10 @@ func nostrSubscribeAt(peerHex string, peerArr [32]byte, rcvPk string) {
 }
 
 // what a full shelf left on the relay for a peer: "mark" lets it go on
-// its own file alone, for the next start of its runner; "free", for an
-// accept, does that and fetches it now, by id, the first-contact
-// address's too; "drop" takes it as kept. free and mark do nothing where
-// nothing is held
+// its own address alone, for its runner's next connection or probe;
+// "free", for an accept, does that and fetches it now, by id, the
+// first-contact address's too; "drop" takes it as kept. free and mark do
+// nothing where nothing is held
 //
 //export HaloNostrLetHeld
 func HaloNostrLetHeld(cPeerXPubHex, cHow *C.char) *C.char {
@@ -1956,9 +1967,9 @@ func HaloNostrLetHeld(cPeerXPubHex, cHow *C.char) *C.char {
 }
 
 // "mark" for each peer of a json list of x keys, on a start or an unlock:
-// an accept that died before its fetch goes on when the peer's runner
-// next starts. its own address only, where something is held, and nothing
-// restarts
+// an accept that died before its fetch goes on at the peer's runner's
+// next connection or probe. its own address only, where something is
+// held, and nothing restarts
 //
 //export HaloNostrMarkHeld
 func HaloNostrMarkHeld(cPeersJSON *C.char) *C.char {
