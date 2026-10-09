@@ -74,6 +74,8 @@ type relayStandIn struct {
 	stallAt  int
 	stallAll bool
 	asked    int
+	// the most stored events one req brings, as a relay may cap a filter
+	capAt int
 }
 
 func newRelayStandIn(t *testing.T, pongDelay time.Duration) *relayStandIn {
@@ -173,6 +175,11 @@ func (s *relayStandIn) handle(w http.ResponseWriter, r *http.Request) {
 			if f.Limit > 0 && len(match) > f.Limit {
 				match = match[:f.Limit]
 			}
+			s.mu.Lock()
+			if s.capAt > 0 && len(match) > s.capAt {
+				match = match[:s.capAt]
+			}
+			s.mu.Unlock()
 			id := e.SubscriptionID
 			for _, ev := range match {
 				b, _ := nostr.EventEnvelope{SubscriptionID: &id, Event: ev}.MarshalJSON()

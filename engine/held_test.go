@@ -426,7 +426,150 @@ func TestAFreedIDTheRelayLostIsForgotten(t *testing.T) {
 		t.Fatalf("let go, got %v", got)
 	}
 	seenPath, _ := addressFiles(rcv)
+	// one answer without it is not enough
+	if w := loadSeen(seenPath).wanted(time.Now()); len(w) != 1 {
+		t.Fatalf("%d asked for after one answer, want 1", len(w))
+	}
+	heldRun(t, tag, peer, rcv, ck, how)
 	if w := loadSeen(seenPath).wanted(time.Now()); len(w) != 0 {
 		t.Fatalf("%d still asked for", len(w))
+	}
+}
+
+// two relays, the held text on one of them only: the one without it answers
+// first, and the text still comes
+func TestAFreedIDOneRelayLacksStillComes(t *testing.T) {
+	a, b := newRelayStandIn(t, 0), newRelayStandIn(t, 0)
+	useStandIns(t, modeFast, nil, a, b)
+	pollHoldReset(t)
+	peer := newXid(t)
+	tag := hex.EncodeToString(peer.pub[:])
+	rcv := mustRcv(t, peer)
+	cks := []string{catchupKey(a.url(), rcv), catchupKey(b.url(), rcv)}
+	forget := func() {
+		for _, ck := range cks {
+			forgetCatchup(ck)
+		}
+	}
+	forget()
+	t.Cleanup(forget)
+	now := time.Now()
+	x := wrapToAt(t, peer, myXPub, "x", now.Add(-30*time.Hour))
+	n := wrapToAt(t, peer, myXPub, "new", now.Add(-time.Minute))
+	a.store(x, n)
+	b.store(x, n)
+	how := func(c string) string {
+		if c == "x" {
+			return "hold"
+		}
+		return "keep"
+	}
+	if got := heldRun(t, tag, peer, rcv, cks[1], how); !got["x"] {
+		t.Fatalf("the first start got %v", got)
+	}
+	forget()
+	a.mu.Lock()
+	a.events = []nostr.Event{n}
+	a.mu.Unlock()
+	b.mu.Lock()
+	b.reqDelay = 300 * time.Millisecond
+	b.mu.Unlock()
+	if err := nostrLetHeld(tag, "free"); err != nil {
+		t.Fatal(err)
+	}
+	keep := func(string) string { return "keep" }
+	if got := heldRun(t, tag, peer, rcv, cks[1], keep); !got["x"] {
+		t.Fatalf("let go, the relay that has it was not heard: %v", got)
+	}
+}
+
+// a relay that brings fewer than a filter asks for: the rest is asked again
+func TestACappedRelayBringsEveryFreedID(t *testing.T) {
+	relay, peer, tag, rcv, ck := heldSetUp(t)
+	now := time.Now()
+	n := 150
+	for i := 0; i < n; i++ {
+		relay.store(wrapToAt(t, peer, myXPub, fmt.Sprintf("f%d", i), now.Add(-30*time.Hour+time.Duration(i)*time.Second)))
+	}
+	relay.store(wrapToAt(t, peer, myXPub, "new", now.Add(-time.Minute)))
+	how := func(c string) string {
+		if c == "new" {
+			return "keep"
+		}
+		return "hold"
+	}
+	if got := heldRun(t, tag, peer, rcv, ck, how); len(got) != n+1 {
+		t.Fatalf("the first start offered %d", len(got))
+	}
+	relay.mu.Lock()
+	relay.capAt = 40
+	relay.mu.Unlock()
+	if err := nostrLetHeld(tag, "free"); err != nil {
+		t.Fatal(err)
+	}
+	keep := func(string) string { return "keep" }
+	if got := heldRun(t, tag, peer, rcv, ck, keep); len(got) != n {
+		t.Fatalf("let go, %d of %d came", len(got), n)
+	}
+}
+
+// a start or an unlock marks the addresses that hold something, its own
+// files alone: no runner and no first-contact lane starts again
+func TestAStartMarkRestartsNothing(t *testing.T) {
+	heldSetUp(t)
+	now := time.Now()
+	holdOn := func(path string) {
+		s := loadSeen(path)
+		id := randomID(t)
+		s.claim(id)
+		if !s.hold(id, nostr.Timestamp(now.Unix()), "", now) {
+			t.Fatal("not held")
+		}
+	}
+	var peers []string
+	var paths []string
+	for i := 0; i < 5; i++ {
+		p := newXid(t)
+		peers = append(peers, hex.EncodeToString(p.pub[:]))
+		path, _ := addressFiles(mustRcv(t, p))
+		paths = append(paths, path)
+	}
+	holdOn(paths[0])
+	loadSeen(paths[1]).handedOver([]nostr.ID{randomID(t)})
+	const fc = 7
+	_, fcPk, err := nip17FirstContactKeys(fc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fcPath, _ := addressFiles(fcPk)
+	holdOn(fcPath)
+	restarts := 0
+	nostrMu.Lock()
+	for _, p := range append([]string{"firstcontact"}, peers...) {
+		nostrSubs[p] = func() { restarts++ }
+	}
+	fcCounterNow = fc
+	nostrMu.Unlock()
+	t.Cleanup(func() {
+		nostrMu.Lock()
+		for _, p := range append([]string{"firstcontact"}, peers...) {
+			delete(nostrSubs, p)
+		}
+		nostrMu.Unlock()
+	})
+	fcBefore, _ := os.ReadFile(fcPath)
+	quietBefore, _ := os.ReadFile(paths[1])
+	nostrMarkHeld(peers)
+	if restarts != 0 {
+		t.Fatalf("%d restarts", restarts)
+	}
+	if b, _ := os.ReadFile(fcPath); string(b) != string(fcBefore) {
+		t.Fatal("the first-contact lane was touched")
+	}
+	if b, _ := os.ReadFile(paths[1]); string(b) != string(quietBefore) {
+		t.Fatal("an address with nothing held was marked")
+	}
+	if w := loadSeen(paths[0]).wanted(now); len(w) != 1 {
+		t.Fatalf("the held one was not let go: %v", w)
 	}
 }

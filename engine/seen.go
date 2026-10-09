@@ -339,12 +339,47 @@ func (s *seenIDs) hold(id nostr.ID, at nostr.Timestamp, name string, now time.Ti
 	return true
 }
 
-// freed ids a relay answered for without them: it no longer has them, and
-// they are not asked for again
-func (s *seenIDs) notOnRelay(ids []nostr.ID) {
+// freed ids a relay asked for, by its own answer, did not have: by file,
+// id, then relay, how many connections came back without it
+var (
+	heldMissMu sync.Mutex
+	heldMissed = map[string]map[nostr.ID]map[string]int{}
+)
+
+// freed ids [relay] answered for without them. one every relay of
+// [relays] has, on two connections each, no longer exists and is not asked
+// for again: another relay may still have one a first answer lacked
+func (s *seenIDs) notOnRelay(relay string, relays []string, ids []nostr.ID) {
+	var gone []nostr.ID
+	heldMissMu.Lock()
+	m := heldMissed[s.path]
+	if m == nil {
+		m = map[nostr.ID]map[string]int{}
+		heldMissed[s.path] = m
+	}
+	for _, id := range ids {
+		by := m[id]
+		if by == nil {
+			by = map[string]int{}
+			m[id] = by
+		}
+		by[relay]++
+		all := len(relays) > 0
+		for _, u := range relays {
+			if by[u] < 2 {
+				all = false
+				break
+			}
+		}
+		if all {
+			gone = append(gone, id)
+			delete(m, id)
+		}
+	}
+	heldMissMu.Unlock()
 	var lines []string
 	s.mu.Lock()
-	for _, id := range ids {
+	for _, id := range gone {
 		if h, ok := s.held[id]; ok && h.free {
 			delete(s.held, id)
 			s.opened.add(id)

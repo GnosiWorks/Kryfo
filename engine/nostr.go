@@ -712,10 +712,40 @@ func relayPage(ctx context.Context, r *nostr.Relay, rcvPk string, since, until n
 	}
 }
 
-// the stored events with these ids, each handed to take as it comes. once
-// the relay said that was all, answered is true and missing the ids it
-// did not have
+// ids asked for in one filter
+const heldAskChunk = 100
+
+// the stored events with these ids, each handed to take as it comes, asked
+// for heldAskChunk at a time. a chunk answered in part is asked again for
+// the rest: a relay may cap what one filter brings. answered is true once
+// the relay went through all of them, and missing holds the ids an answer
+// that brought none of what it was asked for came back without
 func relayByIDs(ctx context.Context, r *nostr.Relay, rcvPk string, ids []nostr.ID, take func(nostr.Event) bool) (missing []nostr.ID, answered bool) {
+	for at := 0; at < len(ids); at += heldAskChunk {
+		left := ids[at:min(at+heldAskChunk, len(ids))]
+		for len(left) > 0 {
+			got, ok := relayIDsOnce(ctx, r, rcvPk, left, take)
+			if !ok {
+				return nil, false
+			}
+			var rest []nostr.ID
+			for _, id := range left {
+				if !got[id] {
+					rest = append(rest, id)
+				}
+			}
+			if len(rest) == len(left) {
+				missing = append(missing, rest...)
+				break
+			}
+			left = rest
+		}
+	}
+	return missing, true
+}
+
+// one filter of ids: those that came, and whether the relay said that was all
+func relayIDsOnce(ctx context.Context, r *nostr.Relay, rcvPk string, ids []nostr.ID, take func(nostr.Event) bool) (map[nostr.ID]bool, bool) {
 	pctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	sub, err := r.Subscribe(pctx, nostr.Filter{
@@ -741,12 +771,7 @@ func relayByIDs(ctx context.Context, r *nostr.Relay, rcvPk string, ids []nostr.I
 			take(ev)
 			quiet.Reset(pageQuiet())
 		case <-sub.EndOfStoredEvents:
-			for _, id := range ids {
-				if !got[id] {
-					missing = append(missing, id)
-				}
-			}
-			return missing, true
+			return got, true
 		case <-quiet.C:
 			return nil, false
 		case <-ctx.Done():
@@ -1543,7 +1568,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 					go func() {
 						defer walkEnds(tag)
 						if missing, answered := relayByIDs(cctx, r, rcvPk, ids, dispatch); answered {
-							seen.notOnRelay(missing)
+							seen.notOnRelay(u, urls, missing)
 						}
 					}()
 				}
@@ -1917,9 +1942,10 @@ func nostrSubscribeAt(peerHex string, peerArr [32]byte, rcvPk string) {
 }
 
 // what a full shelf left on the relay for a peer: "mark" lets it go on
-// the file alone, for the next start of its runner; "free" does that and
-// fetches it now, by id, the first-contact address's too; "drop" takes it
-// as kept. free and mark do nothing where nothing is held
+// its own file alone, for the next start of its runner; "free", for an
+// accept, does that and fetches it now, by id, the first-contact
+// address's too; "drop" takes it as kept. free and mark do nothing where
+// nothing is held
 //
 //export HaloNostrLetHeld
 func HaloNostrLetHeld(cPeerXPubHex, cHow *C.char) *C.char {
@@ -1929,24 +1955,43 @@ func HaloNostrLetHeld(cPeerXPubHex, cHow *C.char) *C.char {
 	return C.CString("ok")
 }
 
-// "free" for each peer of a json list of x keys, on a start: an accept
-// that died before its fetch goes on
+// "mark" for each peer of a json list of x keys, on a start or an unlock:
+// an accept that died before its fetch goes on when the peer's runner
+// next starts. its own address only, where something is held, and nothing
+// restarts
 //
-//export HaloNostrFreeHeld
-func HaloNostrFreeHeld(cPeersJSON *C.char) *C.char {
+//export HaloNostrMarkHeld
+func HaloNostrMarkHeld(cPeersJSON *C.char) *C.char {
 	var peers []string
 	if err := json.Unmarshal([]byte(C.GoString(cPeersJSON)), &peers); err != nil {
 		return C.CString("error: bad list")
 	}
-	for _, p := range peers {
-		nostrLetHeld(p, "free")
-	}
+	nostrMarkHeld(peers)
 	return C.CString("ok")
 }
 
-// how many ids an address's file holds back
+func nostrMarkHeld(peers []string) {
+	for _, h := range peers {
+		peer, err := peerArr(h)
+		if err != nil {
+			continue
+		}
+		if _, rcvPk, err := nip17RcvAddress(peer); err == nil {
+			if p, _ := addressFiles(rcvPk); heldOnFile(p) > 0 {
+				markHeldFile(p, seenFreeMark)
+			}
+		}
+	}
+}
+
+// how many ids an address's file holds back. a file with no held line is
+// not read twice
 func heldOnFile(path string) int {
 	if path == "" {
+		return 0
+	}
+	b, err := os.ReadFile(path)
+	if err != nil || !(strings.HasPrefix(string(b), seenHeldMark) || strings.Contains(string(b), "\n"+seenHeldMark)) {
 		return 0
 	}
 	return loadSeen(path).heldCount()
@@ -1975,7 +2020,7 @@ func nostrLetHeld(peerHex, how string) error {
 	fc := fcCounterNow
 	nostrMu.Unlock()
 	fcPath := ""
-	if fcOn {
+	if fcOn && how == "free" {
 		if _, fcPk, err := nip17FirstContactKeys(fc); err == nil {
 			fcPath, _ = addressFiles(fcPk)
 		}
