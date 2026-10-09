@@ -1920,7 +1920,7 @@
   "flowWipeDoneLine": "Nada na tela de bloqueio mostra que ele existe.",
   "flowDecoyTitle": "Um PIN de disfarce",
   "flowDecoy1": "Abre um Kryfo vazio, como se acabasse de ser instalado.",
-  "flowDecoyFinger": "Sua digital abre seu Kryfo de verdade. Se alguém puder obrigar você a usá-la, desative a digital.",
+  "flowDecoyFingerOff": "O desbloqueio com a digital fica desativado enquanto houver um PIN de disfarce.",
   "flowDecoyDigits": "Use o mesmo número de dígitos do seu PIN, porque quem estiver olhando pode contar os pontos.",
   "flowDecoyShade": "As notificações que já estão na barra já foram vistas. Enquanto o disfarce estiver aberto, nenhuma nova aparece.",
   "flowDecoyChoose": "Escolha um PIN de disfarce",

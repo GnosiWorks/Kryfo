@@ -7309,8 +7309,8 @@ class AppLocalizationsPt extends AppLocalizations {
       'Abre um Kryfo vazio, como se acabasse de ser instalado.';
 
   @override
-  String get flowDecoyFinger =>
-      'Sua digital abre seu Kryfo de verdade. Se alguém puder obrigar você a usá-la, desative a digital.';
+  String get flowDecoyFingerOff =>
+      'O desbloqueio com a digital fica desativado enquanto houver um PIN de disfarce.';
 
   @override
   String get flowDecoyDigits =>

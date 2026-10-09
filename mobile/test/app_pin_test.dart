@@ -3,14 +3,17 @@
 // as the advanced flows do. inside the decoy a turn off pauses the lock and
 // shows its wipe pin gone while its entry stays, a pin set again there
 // locks again and drops that wipe pin for good. a finger opens the everyday
-// app only, so the decoy offers no fingerprint switch, after a new pin
-// neither, and an old decoy switch is dropped. a long hold reads in minutes
-// and hours, not in thousands of seconds
+// app, so while a decoy pin is set fingerprint unlock is off: no switch and
+// no offer in either app, no finger at the lock, and the decoy setup says
+// so on a phone with a finger. a long hold reads in minutes and hours, not
+// in thousands of seconds
+import 'package:flutter/material.dart' hide LockState;
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/screens/lock_setup_screen.dart';
+import 'package:kryfo/screens/pin_flow_screen.dart';
 import 'package:kryfo/screens/pins_screen.dart';
 
 import 'pin_flow_fakes.dart';
@@ -33,7 +36,10 @@ class _Bio implements LockBio {
   @override
   Future<void> disable() async => calls.add('disable');
   @override
-  Future<String> unlock(String title, String cancel) async => 'none';
+  Future<String> unlock(String title, String cancel) async {
+    calls.add('unlock');
+    return 'ok';
+  }
 }
 
 const Map<int, (String, int)> _withDecoy = {
@@ -177,26 +183,39 @@ void main() {
     expect(await lock.state.confirmPin(_decoyWipePin), PinResult.normal);
   });
 
-  testWidgets('the fingerprint switch is in the everyday app only', (t) async {
+  testWidgets('while a decoy pin is set neither app shows the fingerprint '
+      'switch, and it comes back off once the decoy goes', (t) async {
     phone(t);
     _finger();
     final lock = await makeLock(_withDecoy, bio: _Bio());
-    expect(lock.state.bioSupported, isTrue);
+    final s = lock.state;
+    expect(s.bioSupported, isTrue);
+    expect(s.decoySet, isTrue);
     await _card(t, lock);
-    expect(find.text(l10n.pinsUnlockWithFingerprint), findsOneWidget);
-    lock.state.inDecoy = true;
+    expect(find.text(l10n.pinsYourPin), findsOneWidget);
+    expect(find.text(l10n.pinsUnlockWithFingerprint), findsNothing);
+    s.inDecoy = true;
     await t.pumpAndSettle();
     expect(find.text(l10n.pinsYourPin), findsOneWidget);
     expect(find.text(l10n.pinsUnlockWithFingerprint), findsNothing);
+
+    s.inDecoy = false;
+    await s.clearDecoyPins();
+    await t.pumpAndSettle();
+    expect(find.text(l10n.pinsUnlockWithFingerprint), findsOneWidget);
+    expect(s.biometric, isFalse);
   });
 
-  for (final decoy in [false, true]) {
-    final where = decoy ? 'the decoy' : 'the everyday app';
-    testWidgets('a new pin in $where '
-        '${decoy ? 'offers no' : 'offers the'} fingerprint', (t) async {
+  for (final (name, pins, decoy, offered) in [
+    ('with no decoy', appOnly, false, true),
+    ('with a decoy, in the everyday app,', _withDecoy, false, false),
+    ('in the decoy', _withDecoy, true, false),
+  ]) {
+    testWidgets('a new pin $name '
+        '${offered ? 'offers the' : 'offers no'} fingerprint', (t) async {
       phone(t);
       _finger();
-      final lock = await makeLock(_withDecoy, bio: _Bio(), inDecoy: decoy);
+      final lock = await makeLock(pins, bio: _Bio(), inDecoy: decoy);
       await _card(t, lock);
       await t.tap(find.text(l10n.pinsChangePin));
       await t.pumpAndSettle();
@@ -204,10 +223,13 @@ void main() {
       await _pin(t, _newPin);
       await _pin(t, _newPin);
       final offer = find.text(l10n.lockSetupUnlockWithFingerprint);
-      if (decoy) {
+      if (!offered) {
         expect(offer, findsNothing);
         expect(find.byType(LockSetupScreen), findsNothing);
-        expect(lock.entries['${PinSlot.decoy}']['p'], _newPin);
+        expect(
+          lock.entries['${decoy ? PinSlot.decoy : PinSlot.app}']['p'],
+          _newPin,
+        );
         return;
       }
       expect(offer, findsOneWidget);
@@ -217,37 +239,93 @@ void main() {
     });
   }
 
-  test(
-    'an old decoy fingerprint switch is dropped and opens nothing',
-    () async {
-      _finger();
-      final bio = _Bio();
-      final lock = await makeLock(
-        _withDecoy,
-        bio: bio,
-        stored: {'halo.lock.d.bio': 'true'},
-      );
-      final s = lock.state;
-      expect(lock.store.m.containsKey('halo.lock.d.bio'), isFalse);
-      s.inDecoy = true;
-      expect(s.biometricShown, isFalse);
-      expect(s.fingerOffered, isFalse);
-      expect(await s.setBiometric(true), isFalse);
-      expect(s.biometricShown, isFalse);
-      expect(lock.store.m.containsKey('halo.lock.d.bio'), isFalse);
-      expect(lock.store.m.containsKey('halo.lock.biometric'), isFalse);
-      expect(await s.tryBiometric(), isFalse);
-      expect(bio.calls, isEmpty);
+  test('setting a decoy pin turns fingerprint unlock off', () async {
+    _finger();
+    final bio = _Bio();
+    final lock = await makeLock(appOnly, bio: bio);
+    final s = lock.state;
+    expect(await s.setBiometric(true), isTrue);
+    expect(s.biometric, isTrue);
+    expect(await s.setupDecoyPin(decoyPin), isTrue);
+    expect(s.decoySet, isTrue);
+    expect(s.biometric, isFalse);
+    expect(s.fingerOffered, isFalse);
+    expect(lock.store.m['halo.lock.biometric'], 'false');
+    expect(bio.calls, ['enable', 'disable']);
+    expect(await s.setBiometric(true), isFalse);
+    expect(bio.calls, ['enable', 'disable']);
+  });
 
-      // the everyday session's switch is the real one
-      s.inDecoy = false;
-      expect(s.fingerOffered, isTrue);
-      await s.setBiometric(true);
-      expect(bio.calls, ['enable']);
-      expect(lock.store.m['halo.lock.biometric'], 'true');
-      expect(s.biometricShown, isTrue);
-    },
-  );
+  test('an install with a decoy and fingerprint on turns it off at start, '
+      'and an old decoy switch is dropped', () async {
+    _finger();
+    final bio = _Bio();
+    final lock = await makeLock(
+      _withDecoy,
+      bio: bio,
+      stored: {'halo.lock.biometric': 'true', 'halo.lock.d.bio': 'true'},
+    );
+    expect(lock.store.m['halo.lock.biometric'], 'false');
+    expect(lock.store.m.containsKey('halo.lock.d.bio'), isFalse);
+    expect(bio.calls, ['disable']);
+    expect(lock.state.biometric, isFalse);
+  });
+
+  test('a finger opens nothing while a decoy pin is set', () async {
+    _finger();
+    final bio = _Bio();
+    final lock = await makeLock(
+      appOnly,
+      bio: bio,
+      stored: {'halo.lock.biometric': 'true'},
+    );
+    final s = lock.state;
+    // a decoy session counts as a set decoy pin
+    s.inDecoy = true;
+    expect(s.biometric, isFalse);
+    expect(await s.tryBiometric(), isFalse);
+    expect(bio.calls, isEmpty);
+    s.inDecoy = false;
+    expect(s.biometric, isTrue);
+    expect(await s.tryBiometric(), isTrue);
+    expect(bio.calls, ['unlock']);
+  });
+
+  for (final finger in [true, false]) {
+    testWidgets('the decoy setup and the how sheet '
+        '${finger ? 'say' : 'skip'} that fingerprint unlock turns off', (
+      t,
+    ) async {
+      phone(t);
+      if (finger) _finger();
+      final lock = await makeLock(appOnly, bio: finger ? _Bio() : null);
+      expect(lock.state.bioSupported, finger);
+      final note = find.text(l10n.flowDecoyFingerOff);
+      await t.pumpWidget(
+        app(
+          PinFlowScreen(
+            flow: PinFlow.decoy,
+            lock: lock.state,
+            host: FakeHost(lock: lock.state),
+          ),
+        ),
+      );
+      await t.pumpAndSettle();
+      expect(find.text(l10n.flowDecoy1), findsOneWidget);
+      expect(note, finger ? findsOneWidget : findsNothing);
+
+      await t.pumpWidget(const SizedBox());
+      await _card(t, lock);
+      await t.tap(find.text(l10n.pinsAdvanced));
+      await t.pumpAndSettle();
+      await t.ensureVisible(find.text(l10n.pinsHowThisWorks));
+      await t.pumpAndSettle();
+      await t.tap(find.text(l10n.pinsHowThisWorks));
+      await t.pumpAndSettle();
+      expect(find.text(l10n.howDecoy), findsOneWidget);
+      expect(note, finger ? findsOneWidget : findsNothing);
+    });
+  }
 
   test('a long hold reads in minutes and hours', () {
     expect(

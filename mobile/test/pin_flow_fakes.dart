@@ -186,6 +186,10 @@ Future<Lock> makeLock(
   if (pins != null) {
     store.m['halo.lock.enabled'] = 'true';
     if (wipeOn) store.m['halo.lock.panic_enabled'] = 'true';
+    // the app lists a decoy before its entry is written
+    if (pins.containsKey(PinSlot.decoy)) {
+      store.m[kListedContainers] = HaloContainer.decoy.id;
+    }
     store.m['halo.lock.table'] = jsonEncode({
       'v': 2,
       'n': 15,

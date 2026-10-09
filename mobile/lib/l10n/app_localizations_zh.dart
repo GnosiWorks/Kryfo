@@ -6965,7 +6965,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get flowDecoy1 => '打开一个空的 Kryfo，就像刚装好一样。';
 
   @override
-  String get flowDecoyFinger => '你的指纹会打开真正的 Kryfo。如果有人可能逼你用指纹，请关闭指纹解锁。';
+  String get flowDecoyFingerOff => '设置伪装 PIN 后，指纹解锁会关闭。';
 
   @override
   String get flowDecoyDigits => '位数要和你的 PIN 码一样，因为旁边看着的人能数出圆点。';
@@ -14488,7 +14488,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get flowDecoy1 => '開啟一個空的 Kryfo，就像剛安裝好一樣。';
 
   @override
-  String get flowDecoyFinger => '你的指紋會開啟真正的 Kryfo。如果有人可能逼你用指紋，請關閉指紋解鎖。';
+  String get flowDecoyFingerOff => '設定偽裝 PIN 後，指紋解鎖會關閉。';
 
   @override
   String get flowDecoyDigits => '位數要跟你的 PIN 碼一樣，因為旁邊看著的人數得出圓點。';

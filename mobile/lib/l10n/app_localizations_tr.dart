@@ -7280,8 +7280,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get flowDecoy1 => 'Yeni kurulmuş gibi boş bir Kryfo açar.';
 
   @override
-  String get flowDecoyFinger =>
-      'Parmak izin gerçek Kryfo’nu açar. Biri seni onu kullanmaya zorlayabilecekse parmak izini kapat.';
+  String get flowDecoyFingerOff =>
+      'Yem PIN’i ayarlıyken parmak iziyle kilit açma kapalıdır.';
 
   @override
   String get flowDecoyDigits =>

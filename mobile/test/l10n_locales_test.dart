@@ -2941,6 +2941,7 @@ final _calls = <_Call>[
   ('flowVault1', [], (l) => l.flowVault1),
   ('flowVault2', [], (l) => l.flowVault2),
   ('flowVaultFinger', [], (l) => l.flowVaultFinger),
+  ('flowDecoyFingerOff', [], (l) => l.flowDecoyFingerOff),
   ('flowVaultDigits', [], (l) => l.flowVaultDigits),
   ('flowVaultReplace', [], (l) => l.flowVaultReplace),
   ('flowVaultChoose', [], (l) => l.flowVaultChoose),

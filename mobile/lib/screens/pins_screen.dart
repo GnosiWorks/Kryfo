@@ -217,10 +217,10 @@ class _PinsScreenState extends State<PinsScreen> {
                 extra: on && _lock.fingerOffered
                     ? _Toggle(
                         label: l10n.pinsUnlockWithFingerprint,
-                        on: _lock.biometricShown,
+                        on: _lock.biometric,
                         onTap: () {
                           HapticFeedback.selectionClick();
-                          _lock.setBiometric(!_lock.biometricShown);
+                          _lock.setBiometric(!_lock.biometric);
                         },
                       )
                     : null,
@@ -276,7 +276,9 @@ class _PinsScreenState extends State<PinsScreen> {
                         : HaloColors.text3,
                     onTap: on ? _hiddenRow : null,
                   ),
-                  _HowRow(onTap: () => _showHow(context)),
+                  _HowRow(
+                    onTap: () => _showHow(context, finger: _lock.bioSupported),
+                  ),
                 ],
               ),
             ]),
@@ -500,8 +502,9 @@ class _HowRow extends StatelessWidget {
   );
 }
 
-// what the extra pins do, what they do not, and the law
-void _showHow(BuildContext context) {
+// what the extra pins do, what they do not, and the law. the finger line
+// only on a phone that has one
+void _showHow(BuildContext context, {required bool finger}) {
   HapticFeedback.selectionClick();
   showHaloSheet<void>(
     context,
@@ -528,7 +531,8 @@ void _showHow(BuildContext context) {
               ),
               (Icons.theater_comedy_outlined, HaloColors.amber, l10n.howDecoy),
               (Icons.visibility_off_outlined, HaloColors.violet, l10n.howVault),
-              (Icons.fingerprint, HaloColors.amber, l10n.flowDecoyFinger),
+              if (finger)
+                (Icons.fingerprint, HaloColors.amber, l10n.flowDecoyFingerOff),
               (Icons.dialpad_outlined, HaloColors.amber, l10n.flowDecoyDigits),
               (Icons.gavel_outlined, HaloColors.text2, l10n.flowLaw),
             ]) ...[

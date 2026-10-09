@@ -7324,8 +7324,8 @@ class AppLocalizationsIt extends AppLocalizations {
   String get flowDecoy1 => 'Apre un Kryfo vuoto, come appena installato.';
 
   @override
-  String get flowDecoyFinger =>
-      'La tua impronta apre il tuo vero Kryfo. Se qualcuno potesse costringerti a usarla, disattiva l\'impronta.';
+  String get flowDecoyFingerOff =>
+      'Lo sblocco con l\'impronta si disattiva finché è impostato un PIN esca.';
 
   @override
   String get flowDecoyDigits =>

@@ -7328,8 +7328,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get flowDecoy1 => 'Ouvre un Kryfo vide, comme tout juste installé.';
 
   @override
-  String get flowDecoyFinger =>
-      'Votre empreinte ouvre votre vrai Kryfo. Si quelqu’un pouvait vous forcer à l’utiliser, désactivez l’empreinte.';
+  String get flowDecoyFingerOff =>
+      'Le déverrouillage par empreinte est désactivé tant qu’un code leurre est défini.';
 
   @override
   String get flowDecoyDigits =>
