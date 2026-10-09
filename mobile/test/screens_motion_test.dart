@@ -364,6 +364,48 @@ void main() {
       await t.pump(const Duration(seconds: 1));
     });
 
+    testWidgets('clears a three-button navigation bar', (t) async {
+      phone(t);
+      t.view.padding = const FakeViewPadding(top: 48, bottom: 96);
+      t.view.viewPadding = const FakeViewPadding(top: 48, bottom: 96);
+      await open(t);
+      // the last row sits above the 48 of the bar
+      final last = t.getRect(
+        find
+            .ancestor(
+              of: find.text(l10n.appEveryWayToAdd),
+              matching: find.byWidgetPredicate(
+                (w) => w is Container && w.decoration != null,
+              ),
+            )
+            .first,
+      );
+      expect(last.bottom, lessThanOrEqualTo(800 - 48));
+      await t.pumpWidget(const SizedBox());
+      await t.pump(const Duration(seconds: 1));
+    });
+
+    testWidgets('a tall keyboard leaves "add them" in view', (t) async {
+      quiet(t);
+      await open(t);
+      t.view.padding = const FakeViewPadding(top: 48);
+      t.view.viewPadding = const FakeViewPadding(top: 48, bottom: 96);
+      await t.tap(find.byType(TextField));
+      addTearDown(t.view.resetViewInsets);
+      for (var b = 200.0; b <= 1000; b += 200) {
+        t.view.viewInsets = FakeViewPadding(bottom: b);
+        await t.pump(const Duration(milliseconds: 16));
+      }
+      await t.pump(const Duration(seconds: 1));
+      expect(t.takeException(), isNull);
+      // the button under the field scrolls up with it
+      final add = t.getRect(find.text(l10n.appAddThem));
+      expect(add.bottom, lessThanOrEqualTo(800 - 500));
+      expect(add.top, greaterThanOrEqualTo(24));
+      await t.pumpWidget(const SizedBox());
+      await t.pump(const Duration(seconds: 1));
+    });
+
     testWidgets('reduced motion: presses do not scale', (t) async {
       await open(t, still: true);
       final g = await t.startGesture(

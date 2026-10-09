@@ -161,32 +161,35 @@ class _PhotoKnowsScreenState extends State<PhotoKnowsScreen>
     final lines = _story?.everything ?? const <String>[];
     showHaloSheet<void>(
       context,
-      builder: (_) => Padding(
-        padding: const EdgeInsets.fromLTRB(22, 0, 22, 26),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Center(child: SheetHandle()),
-            const SizedBox(height: 12),
-            Text(
-              l10n.photoKnowsEverythingInside,
-              style: HaloType.serif(size: 23, color: HaloColors.text),
-            ),
-            const SizedBox(height: 14),
-            for (final l in lines)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 9),
-                child: Text(
-                  l,
-                  style: HaloType.sans(
-                    size: 13.5,
-                    height: 1.45,
-                    color: HaloColors.warm,
+      builder: (_) => SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(22, 0, 22, 26),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Center(child: SheetHandle()),
+              const SizedBox(height: 12),
+              Text(
+                l10n.photoKnowsEverythingInside,
+                style: HaloType.serif(size: 23, color: HaloColors.text),
+              ),
+              const SizedBox(height: 14),
+              for (final l in lines)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 9),
+                  child: Text(
+                    l,
+                    style: HaloType.sans(
+                      size: 13.5,
+                      height: 1.45,
+                      color: HaloColors.warm,
+                    ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );

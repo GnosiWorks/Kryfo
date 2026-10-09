@@ -316,7 +316,12 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
       ),
       body: ListView(
         controller: _scroll,
-        padding: const EdgeInsets.fromLTRB(16, 4, 16, 28),
+        padding: EdgeInsets.fromLTRB(
+          16,
+          4,
+          16,
+          28 + MediaQuery.paddingOf(context).bottom,
+        ),
         children: staggerAllIn(context, [
           // big group identity
           ParallaxHead(

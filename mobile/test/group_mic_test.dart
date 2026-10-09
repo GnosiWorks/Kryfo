@@ -83,6 +83,24 @@ void main() {
     ),
   );
 
+  // the mic as the composer has it: inside a safe area, which strips the
+  // insets from the media query below it
+  Future<void> openSafe(WidgetTester t) => devOpen(
+    t,
+    Scaffold(
+      body: SafeArea(
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          child: HoldToTalkMic(
+            disguise: false,
+            onToggleDisguise: () {},
+            onComplete: (_, _, _) {},
+          ),
+        ),
+      ),
+    ),
+  );
+
   Future<TestGesture> hold(WidgetTester t) async {
     final g = await t.startGesture(t.getCenter(find.byType(HoldToTalkMic)));
     await t.pump(kLongPressTimeout + const Duration(milliseconds: 50));
@@ -154,6 +172,40 @@ void main() {
     expect(find.byType(VoiceRecordBar), findsNothing);
     await devClose(t);
     // the recorder lets go of the plugin's one lock before the next test
+    await settle(t);
+  });
+
+  testWidgets('the bar clears the navigation bar', (t) async {
+    starting.complete();
+    // three-button navigation, 48 high
+    t.view.padding = const FakeViewPadding(bottom: 96);
+    t.view.viewPadding = const FakeViewPadding(bottom: 96);
+    await openSafe(t);
+    final g = await hold(t);
+    await settle(t);
+    final bar = find.byType(VoiceRecordBar);
+    expect(t.widget<VoiceRecordBar>(bar).bottom, 48);
+    expect(t.getRect(bar).bottom, 900);
+    await g.up();
+    await settle(t);
+    await devClose(t);
+    await settle(t);
+  });
+
+  testWidgets('the bar sits on the keyboard', (t) async {
+    starting.complete();
+    // the keyboard covers the navigation bar
+    t.view.viewPadding = const FakeViewPadding(bottom: 96);
+    t.view.viewInsets = const FakeViewPadding(bottom: 600);
+    await openSafe(t);
+    final g = await hold(t);
+    await settle(t);
+    final bar = find.byType(VoiceRecordBar);
+    expect(t.widget<VoiceRecordBar>(bar).bottom, 0);
+    expect(t.getRect(bar).bottom, 900 - 300);
+    await g.up();
+    await settle(t);
+    await devClose(t);
     await settle(t);
   });
 }

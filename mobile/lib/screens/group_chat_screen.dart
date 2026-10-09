@@ -3132,7 +3132,13 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           left: 20,
           right: 20,
           top: 20,
-          bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+          // the keyboard, or the navigation bar when it is down
+          bottom:
+              math.max(
+                MediaQuery.paddingOf(ctx).bottom,
+                MediaQuery.viewInsetsOf(ctx).bottom,
+              ) +
+              20,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -3151,7 +3157,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             TextField(
               controller: ctrl,
               autofocus: true,
-              maxLines: null,
+              // a long message scrolls in the field, so save stays in view
+              minLines: 1,
+              maxLines: 6,
               cursorColor: HaloColors.amber,
               style: HaloType.sans(size: 15),
               decoration: InputDecoration(

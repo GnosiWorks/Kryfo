@@ -155,7 +155,12 @@ class _HandleScreenState extends State<HandleScreen> {
         title: Text(l10n.handlePublicHandle, style: HaloType.pageTitle()),
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 40),
+        padding: EdgeInsets.fromLTRB(
+          20,
+          4,
+          20,
+          40 + MediaQuery.paddingOf(context).bottom,
+        ),
         children: [
           FadeSwap(
             child: KeyedSubtree(

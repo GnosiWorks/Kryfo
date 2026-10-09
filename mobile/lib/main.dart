@@ -16821,6 +16821,9 @@ void main() async {
   unawaited(
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]),
   );
+  // drawn under the bars on android 10 to 14 too, as 15 and later force.
+  // older versions ignore it
+  unawaited(SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge));
   // the periodic job knocks here every fifteen minutes. registered before
   // anything that could fail, and whether or not a screen is attached:
   // after a kill the system restarts the process for the service or the
@@ -17108,193 +17111,213 @@ class _AddSheetState extends State<_AddSheet>
     final d = still ? Duration.zero : const Duration(milliseconds: 200);
     final typed = widget.ctrl.text.trim().isNotEmpty;
     final lit = _focus.hasFocus;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(22, 0, 22, 24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const SheetHandle(),
-          const SizedBox(height: 18),
-          Text(
-            l10n.appAddSomeone,
-            style: HaloType.serif(
-              size: 22,
-              italic: true,
-              color: HaloColors.text,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            l10n.appScanTheirCodeOr,
-            style: HaloType.sans(size: 12.5, color: HaloColors.text2),
-          ),
-          const SizedBox(height: 16),
-          _Pressable(
-            onTap: () => Navigator.pop(sheetCtx, 'scan'),
-            child: Container(
-              height: 48,
-              decoration: BoxDecoration(
-                color: HaloColors.amber,
-                borderRadius: BorderRadius.circular(14),
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(22, 0, 22, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SheetHandle(),
+            const SizedBox(height: 18),
+            Text(
+              l10n.appAddSomeone,
+              style: HaloType.serif(
+                size: 22,
+                italic: true,
+                color: HaloColors.text,
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.qr_code_scanner,
-                    size: 19,
-                    color: HaloColors.onAmber,
-                  ),
-                  const SizedBox(width: 9),
-                  Text(
-                    l10n.appScanTheirCode,
-                    style: HaloType.sans(
-                      size: 14,
-                      weight: FontWeight.w600,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              l10n.appScanTheirCodeOr,
+              style: HaloType.sans(size: 12.5, color: HaloColors.text2),
+            ),
+            const SizedBox(height: 16),
+            _Pressable(
+              onTap: () => Navigator.pop(sheetCtx, 'scan'),
+              child: Container(
+                height: 48,
+                decoration: BoxDecoration(
+                  color: HaloColors.amber,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.qr_code_scanner,
+                      size: 19,
                       color: HaloColors.onAmber,
                     ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 14),
-          AnimatedBuilder(
-            animation: _shake,
-            // a damped side to side, three swings
-            builder: (_, child) => Transform.translate(
-              offset: Offset(
-                sin(_shake.value * pi * 6) * 9 * (1 - _shake.value),
-                0,
-              ),
-              child: child,
-            ),
-            child: AnimatedContainer(
-              duration: d,
-              curve: Curves.easeOutCubic,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-              decoration: BoxDecoration(
-                color: HaloColors.surface3,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: lit
-                      ? HaloColors.amber.withValues(alpha: 0.7)
-                      : HaloColors.line,
-                  width: lit ? 1 : 0.5,
-                ),
-              ),
-              child: TextField(
-                textDirection: TextDirection.ltr,
-                controller: widget.ctrl,
-                focusNode: _focus,
-                minLines: 1,
-                maxLines: 3,
-                style: HaloType.mono(size: 12, color: HaloColors.text),
-                decoration: InputDecoration(
-                  border: InputBorder.none,
-                  hintText: l10n.appAKryfoLinkA,
-                  hintStyle: HaloType.mono(size: 12, color: HaloColors.text3),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          _Pressable(
-            onTap: _add,
-            child: AnimatedContainer(
-              duration: d,
-              curve: Curves.easeOutCubic,
-              height: 46,
-              decoration: BoxDecoration(
-                color: typed ? HaloColors.amber : Colors.transparent,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: HaloColors.amber, width: 1),
-              ),
-              child: Center(
-                child: AnimatedDefaultTextStyle(
-                  duration: d,
-                  style: HaloType.sans(
-                    size: 13.5,
-                    weight: FontWeight.w600,
-                    color: typed ? HaloColors.onAmber : HaloColors.amber,
-                  ),
-                  child: Text(l10n.appAddThem),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 18),
-          // the page with every way in: your own code, a link to send,
-          // handles, introductions
-          _Pressable(
-            onTap: () => Navigator.pop(sheetCtx, 'mine'),
-            // the door most people need, so it gets the amber edge and glow
-            // the jump button uses
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
-              decoration: BoxDecoration(
-                color: HaloColors.surface2,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: HaloColors.amber.withValues(alpha: 0.5),
-                  width: 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: HaloColors.amber.withValues(alpha: 0.16),
-                    blurRadius: 16,
-                    spreadRadius: -2,
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: HaloColors.amberSoft,
-                      borderRadius: BorderRadius.circular(10),
+                    const SizedBox(width: 9),
+                    Text(
+                      l10n.appScanTheirCode,
+                      style: HaloType.sans(
+                        size: 14,
+                        weight: FontWeight.w600,
+                        color: HaloColors.onAmber,
+                      ),
                     ),
-                    alignment: Alignment.center,
-                    child: Icon(
-                      Icons.qr_code_2,
-                      size: 20,
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            AnimatedBuilder(
+              animation: _shake,
+              // a damped side to side, three swings
+              builder: (_, child) => Transform.translate(
+                offset: Offset(
+                  sin(_shake.value * pi * 6) * 9 * (1 - _shake.value),
+                  0,
+                ),
+                child: child,
+              ),
+              child: AnimatedContainer(
+                duration: d,
+                curve: Curves.easeOutCubic,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 2,
+                ),
+                decoration: BoxDecoration(
+                  color: HaloColors.surface3,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: lit
+                        ? HaloColors.amber.withValues(alpha: 0.7)
+                        : HaloColors.line,
+                    width: lit ? 1 : 0.5,
+                  ),
+                ),
+                child: TextField(
+                  textDirection: TextDirection.ltr,
+                  controller: widget.ctrl,
+                  focusNode: _focus,
+                  minLines: 1,
+                  maxLines: 3,
+                  // "add them" under it comes into view with it
+                  scrollPadding: const EdgeInsets.fromLTRB(
+                    20,
+                    20,
+                    20,
+                    20 + 10 + 46,
+                  ),
+                  style: HaloType.mono(size: 12, color: HaloColors.text),
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    hintText: l10n.appAKryfoLinkA,
+                    hintStyle: HaloType.mono(size: 12, color: HaloColors.text3),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            _Pressable(
+              onTap: _add,
+              child: AnimatedContainer(
+                duration: d,
+                curve: Curves.easeOutCubic,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: typed ? HaloColors.amber : Colors.transparent,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: HaloColors.amber, width: 1),
+                ),
+                child: Center(
+                  child: AnimatedDefaultTextStyle(
+                    duration: d,
+                    style: HaloType.sans(
+                      size: 13.5,
+                      weight: FontWeight.w600,
+                      color: typed ? HaloColors.onAmber : HaloColors.amber,
+                    ),
+                    child: Text(l10n.appAddThem),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 18),
+            // the page with every way in: your own code, a link to send,
+            // handles, introductions
+            _Pressable(
+              onTap: () => Navigator.pop(sheetCtx, 'mine'),
+              // the door most people need, so it gets the amber edge and glow
+              // the jump button uses
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 15,
+                ),
+                decoration: BoxDecoration(
+                  color: HaloColors.surface2,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: HaloColors.amber.withValues(alpha: 0.5),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: HaloColors.amber.withValues(alpha: 0.16),
+                      blurRadius: 16,
+                      spreadRadius: -2,
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: HaloColors.amberSoft,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      alignment: Alignment.center,
+                      child: Icon(
+                        Icons.qr_code_2,
+                        size: 20,
+                        color: HaloColors.amber,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.appEveryWayToAdd,
+                            style: HaloType.sans(
+                              size: 14.5,
+                              weight: FontWeight.w600,
+                              color: HaloColors.text,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            l10n.appShowYourCodeSend,
+                            style: HaloType.sans(
+                              size: 11.5,
+                              color: HaloColors.text2,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      Icons.chevron_right,
+                      size: 18,
                       color: HaloColors.amber,
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.appEveryWayToAdd,
-                          style: HaloType.sans(
-                            size: 14.5,
-                            weight: FontWeight.w600,
-                            color: HaloColors.text,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          l10n.appShowYourCodeSend,
-                          style: HaloType.sans(
-                            size: 11.5,
-                            color: HaloColors.text2,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(Icons.chevron_right, size: 18, color: HaloColors.amber),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 4),
-        ],
+            const SizedBox(height: 4),
+          ],
+        ),
       ),
     );
   }
@@ -18074,9 +18097,10 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
   }
 
   void _explain() {
+    // capped and scrolling: on a small phone the words run taller than the
+    // room above the navigation bar
     showHaloSheet(
       context,
-      scroll: true,
       builder: (_) => AnimatedBuilder(
         animation: appState,
         builder: (context, _) {
@@ -18102,58 +18126,61 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
               : s == TorStatus.bootstrapped
               ? l10n.appReadyToSendFinishing
               : l10n.appConnecting(percent(pct / 100));
-          return Padding(
-            padding: const EdgeInsets.fromLTRB(22, 0, 22, 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SheetHandle(),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.appTor,
-                  style: HaloType.serif(
-                    size: 20,
-                    italic: true,
-                    color: HaloColors.text,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TorWarmupGraph(status: s, bootstrapPct: pct),
-                const SizedBox(height: 16),
-                Text(
-                  line,
-                  style: HaloType.mono(size: 12, color: HaloColors.text),
-                ),
-                if (s != TorStatus.reachable ||
-                    !appState.torUsable ||
-                    offline) ...[
-                  const SizedBox(height: 16),
-                  // past starting with no relay through, the first connection
-                  // line would promise a wait that is already over
+          return SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(22, 0, 22, 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SheetHandle(),
+                  const SizedBox(height: 8),
                   Text(
-                    s == TorStatus.off
-                        ? l10n.appTorIsOffTurn
-                        : offline
-                        ? l10n.onboardingKryfoBuildsAPrivateRouteBefore
-                        : !appState.torUsable && s != TorStatus.starting
-                        ? l10n.appTorNoRelayYet
-                        : l10n.appTheFirstConnectionTakes,
-                    style: HaloType.sans(
-                      size: 12.5,
+                    l10n.appTor,
+                    style: HaloType.serif(
+                      size: 20,
+                      italic: true,
                       color: HaloColors.text,
-                    ).copyWith(height: 1.5),
-                  ),
-                  // another send mode is no way out of having no network
-                  if (!offline) ...[
-                    const SizedBox(height: 10),
-                    Text(
-                      l10n.appRelayAndFastModes,
-                      style: HaloType.sans(size: 11, color: HaloColors.text2),
                     ),
+                  ),
+                  const SizedBox(height: 16),
+                  TorWarmupGraph(status: s, bootstrapPct: pct),
+                  const SizedBox(height: 16),
+                  Text(
+                    line,
+                    style: HaloType.mono(size: 12, color: HaloColors.text),
+                  ),
+                  if (s != TorStatus.reachable ||
+                      !appState.torUsable ||
+                      offline) ...[
+                    const SizedBox(height: 16),
+                    // past starting with no relay through, the first connection
+                    // line would promise a wait that is already over
+                    Text(
+                      s == TorStatus.off
+                          ? l10n.appTorIsOffTurn
+                          : offline
+                          ? l10n.onboardingKryfoBuildsAPrivateRouteBefore
+                          : !appState.torUsable && s != TorStatus.starting
+                          ? l10n.appTorNoRelayYet
+                          : l10n.appTheFirstConnectionTakes,
+                      style: HaloType.sans(
+                        size: 12.5,
+                        color: HaloColors.text,
+                      ).copyWith(height: 1.5),
+                    ),
+                    // another send mode is no way out of having no network
+                    if (!offline) ...[
+                      const SizedBox(height: 10),
+                      Text(
+                        l10n.appRelayAndFastModes,
+                        style: HaloType.sans(size: 11, color: HaloColors.text2),
+                      ),
+                    ],
                   ],
                 ],
-              ],
+              ),
             ),
           );
         },

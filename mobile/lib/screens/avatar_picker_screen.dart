@@ -129,7 +129,10 @@ class _AvatarChoiceEditorState extends State<AvatarChoiceEditor> {
     final id = appState.sessionId;
     final still = motionStill(context);
     return ListView(
-      padding: widget.padding,
+      // over the navigation bar where nothing below took it out
+      padding:
+          widget.padding +
+          EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom),
       children: [
         ?widget.header,
         ...staggerAll([

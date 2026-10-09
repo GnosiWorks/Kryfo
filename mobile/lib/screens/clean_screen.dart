@@ -695,130 +695,133 @@ class _SavedSheetState extends State<_SavedSheet> {
     final what = hadPlace
         ? l10n.cleanWithTheLocationInside
         : l10n.cleanWithEverythingItKnew;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Center(child: SheetHandle()),
-          const SizedBox(height: 14),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _Tile(
-                label: l10n.cleanOriginal,
-                tint: HaloColors.rose,
-                badge: hadPlace ? _pin : _note,
-                child: ToolThumb(
-                  path: widget.result.path!,
-                  video: video,
-                  size: 84,
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Center(child: SheetHandle()),
+            const SizedBox(height: 14),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _Tile(
+                  label: l10n.cleanOriginal,
+                  tint: HaloColors.rose,
+                  badge: hadPlace ? _pin : _note,
+                  child: ToolThumb(
+                    path: widget.result.path!,
+                    video: video,
+                    size: 84,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                _Tile(
+                  label: l10n.cleanClean2,
+                  tint: HaloColors.green,
+                  badge: _tick,
+                  child: ToolThumb(
+                    path: widget.result.path!,
+                    video: video,
+                    size: 84,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Text(
+              l10n.cleanSavedToYourGallery,
+              textAlign: TextAlign.center,
+              style: HaloType.serif(size: 23, color: HaloColors.text),
+            ),
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Text(
+                canDelete
+                    ? l10n.cleanTheOriginalIsStill(what)
+                    : l10n.cleanTheOriginalIsStillWhereIt(what),
+                textAlign: TextAlign.center,
+                style: HaloType.sans(
+                  size: 13.5,
+                  height: 1.55,
+                  color: HaloColors.warm,
                 ),
               ),
-              const SizedBox(width: 10),
-              _Tile(
-                label: l10n.cleanClean2,
-                tint: HaloColors.green,
-                badge: _tick,
-                child: ToolThumb(
-                  path: widget.result.path!,
-                  video: video,
-                  size: 84,
+            ),
+            const SizedBox(height: 22),
+            if (canDelete) ...[
+              Opacity(
+                opacity: _asking ? 0.55 : 1,
+                child: PressScale(
+                  label: l10n.cleanDeleteTheOriginal,
+                  onTap: _asking ? null : _delete,
+                  scale: 0.96,
+                  child: Container(
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: HaloColors.rose.withValues(alpha: 0.14),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: HaloColors.rose.withValues(alpha: 0.35),
+                        width: 0.5,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        StrokeIcon(_trash, size: 19, color: HaloColors.rose),
+                        const SizedBox(width: 9),
+                        ExcludeSemantics(
+                          child: Text(
+                            l10n.cleanDeleteTheOriginal,
+                            style: HaloType.sans(
+                              size: 14.5,
+                              weight: FontWeight.w600,
+                              color: HaloColors.rose,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+            PressScale(
+              label: canDelete ? l10n.cleanKeepBoth : l10n.commonDone,
+              onTap: () => Navigator.of(context).pop('kept'),
+              scale: 0.96,
+              child: SizedBox(
+                height: 46,
+                child: Center(
+                  child: ExcludeSemantics(
+                    child: Text(
+                      canDelete ? l10n.cleanKeepBoth : l10n.commonDone,
+                      style: HaloType.sans(size: 14, color: HaloColors.warm),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            if (canDelete) ...[
+              const SizedBox(height: 6),
+              Text(
+                l10n.cleanAndroidWillAskYou,
+                textAlign: TextAlign.center,
+                style: HaloType.mono(
+                  size: 9.5,
+                  letter: 0.1,
+                  color: HaloColors.warm,
                 ),
               ),
             ],
-          ),
-          const SizedBox(height: 20),
-          Text(
-            l10n.cleanSavedToYourGallery,
-            textAlign: TextAlign.center,
-            style: HaloType.serif(size: 23, color: HaloColors.text),
-          ),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Text(
-              canDelete
-                  ? l10n.cleanTheOriginalIsStill(what)
-                  : l10n.cleanTheOriginalIsStillWhereIt(what),
-              textAlign: TextAlign.center,
-              style: HaloType.sans(
-                size: 13.5,
-                height: 1.55,
-                color: HaloColors.warm,
-              ),
-            ),
-          ),
-          const SizedBox(height: 22),
-          if (canDelete) ...[
-            Opacity(
-              opacity: _asking ? 0.55 : 1,
-              child: PressScale(
-                label: l10n.cleanDeleteTheOriginal,
-                onTap: _asking ? null : _delete,
-                scale: 0.96,
-                child: Container(
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: HaloColors.rose.withValues(alpha: 0.14),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: HaloColors.rose.withValues(alpha: 0.35),
-                      width: 0.5,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      StrokeIcon(_trash, size: 19, color: HaloColors.rose),
-                      const SizedBox(width: 9),
-                      ExcludeSemantics(
-                        child: Text(
-                          l10n.cleanDeleteTheOriginal,
-                          style: HaloType.sans(
-                            size: 14.5,
-                            weight: FontWeight.w600,
-                            color: HaloColors.rose,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
           ],
-          PressScale(
-            label: canDelete ? l10n.cleanKeepBoth : l10n.commonDone,
-            onTap: () => Navigator.of(context).pop('kept'),
-            scale: 0.96,
-            child: SizedBox(
-              height: 46,
-              child: Center(
-                child: ExcludeSemantics(
-                  child: Text(
-                    canDelete ? l10n.cleanKeepBoth : l10n.commonDone,
-                    style: HaloType.sans(size: 14, color: HaloColors.warm),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          if (canDelete) ...[
-            const SizedBox(height: 6),
-            Text(
-              l10n.cleanAndroidWillAskYou,
-              textAlign: TextAlign.center,
-              style: HaloType.mono(
-                size: 9.5,
-                letter: 0.1,
-                color: HaloColors.warm,
-              ),
-            ),
-          ],
-        ],
+        ),
       ),
     );
   }

@@ -260,27 +260,36 @@ class _PhotoViewerState extends State<PhotoViewer>
     final tag = widget.tag;
     return AnimatedBuilder(
       animation: widget.route,
-      builder: (context, child) => GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: _tap,
-        onDoubleTapDown: (d) => _tapAt = d.globalPosition,
-        onDoubleTap: _doubleTap,
-        // a zoomed photo pans instead
-        onVerticalDragUpdate: _zoomed ? null : _dragUpdate,
-        onVerticalDragEnd: _zoomed ? null : _dragEnd,
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: ColoredBox(
-                color: Colors.black.withValues(
-                  alpha: widget.route.value * (1 - pulled * 0.75),
+      builder: (context, child) {
+        final dark = widget.route.value * (1 - pulled * 0.75);
+        // light bar icons while the black is behind them
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          value: dark > 0.5
+              ? haloOverlayOnDark
+              : haloOverlayStyle(
+                  underNav: MediaQuery.viewPaddingOf(context).bottom > 0,
                 ),
-              ),
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: _tap,
+            onDoubleTapDown: (d) => _tapAt = d.globalPosition,
+            onDoubleTap: _doubleTap,
+            // a zoomed photo pans instead
+            onVerticalDragUpdate: _zoomed ? null : _dragUpdate,
+            onVerticalDragEnd: _zoomed ? null : _dragEnd,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: ColoredBox(
+                    color: Colors.black.withValues(alpha: dark),
+                  ),
+                ),
+                Positioned.fill(child: child!),
+              ],
             ),
-            Positioned.fill(child: child!),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
       child: Transform.translate(
         offset: Offset(0, _drag),
         child: Transform.scale(

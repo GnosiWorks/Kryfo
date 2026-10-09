@@ -54,7 +54,12 @@ class TransportScreen extends StatelessWidget {
           final pubFor = tx['publishing_secs'] as int? ?? -1;
 
           return ListView(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
+            padding: EdgeInsets.fromLTRB(
+              20,
+              8,
+              20,
+              40 + MediaQuery.paddingOf(context).bottom,
+            ),
             children: staggerAll([
               Text(
                 l10n.transportNothingHereLeavesThe,

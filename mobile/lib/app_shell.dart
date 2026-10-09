@@ -2,6 +2,7 @@
 // the app's MaterialApp, shared with the lock's tests so they pump exactly
 // what the app runs
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'back_on_top.dart';
 import 'l10n/app_localizations.dart';
@@ -34,17 +35,22 @@ MaterialApp haloAppShell({
     // being readable, which helps nobody.
     builder: (ctx, child) {
       final mq = MediaQuery.of(ctx);
-      return MediaQuery(
-        data: mq.copyWith(
-          textScaler: mq.textScaler.clamp(
-            minScaleFactor: 0.85,
-            maxScaleFactor: 1.6,
+      // bar icons by theme, for screens without an app bar. read again on
+      // every theme switch, as the whole app rebuilds then
+      return AnnotatedRegion<SystemUiOverlayStyle>(
+        value: haloOverlayStyle(underNav: mq.viewPadding.bottom > 0),
+        child: MediaQuery(
+          data: mq.copyWith(
+            textScaler: mq.textScaler.clamp(
+              minScaleFactor: 0.85,
+              maxScaleFactor: 1.6,
+            ),
           ),
+          // the lock sits here, above the navigator, so it covers every
+          // screen, sheet, menu and toast. nothing may go between this
+          // MediaQuery and the lock.
+          child: lock(child ?? const SizedBox.shrink()),
         ),
-        // the lock sits here, above the navigator, so it covers every
-        // screen, sheet, menu and toast. nothing may go between this
-        // MediaQuery and the lock.
-        child: lock(child ?? const SizedBox.shrink()),
       );
     },
     // one scroll feel everywhere: ios-style rubber-band on every platform,

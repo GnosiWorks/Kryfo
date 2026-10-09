@@ -175,6 +175,25 @@ void main() {
       }
     });
 
+    testWidgets('the end of the page clears a three-button bar', (t) async {
+      t.view.padding = const FakeViewPadding(bottom: 96);
+      t.view.viewPadding = const FakeViewPadding(bottom: 96);
+      await open(t);
+      final pos = t
+          .state<ScrollableState>(find.byType(Scrollable).first)
+          .position;
+      pos.jumpTo(pos.maxScrollExtent);
+      await t.pump();
+      // the page keeps its 44 of end margin above the 48 of the bar
+      var last = 0.0;
+      for (final e in find.byType(Text).evaluate()) {
+        final box = e.renderObject! as RenderBox;
+        final bottom = box.localToGlobal(Offset(0, box.size.height)).dy;
+        if (bottom > last) last = bottom;
+      }
+      expect(last, lessThanOrEqualTo(800 - 48 - 44));
+    });
+
     testWidgets('the band sits under the route in use', (t) async {
       await open(t);
       final band = bandIn(t);
@@ -294,6 +313,32 @@ void main() {
         expect(s.duration, Duration.zero);
       }
       h.dispose();
+      await t.pumpWidget(const SizedBox());
+      await t.pump(const Duration(seconds: 1));
+    });
+
+    testWidgets('with the keyboard up it stops below the status bar', (
+      t,
+    ) async {
+      // enough people that the sheet wants all the room there is
+      appState.contacts = [
+        for (var i = 0; i < 16; i++)
+          ContactPreview(haloId: 'friend-$i', avatarSeed: '$i'),
+      ];
+      await open(t);
+      t.view.padding = const FakeViewPadding(top: 48);
+      t.view.viewPadding = const FakeViewPadding(top: 48);
+      addTearDown(t.view.resetViewInsets);
+      t.view.viewInsets = const FakeViewPadding(bottom: 600);
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 300));
+      expect(t.takeException(), isNull);
+      // the sheet stays clear of the bar, its field above the keyboard
+      expect(t.getRect(find.byType(BottomSheet)).top, greaterThanOrEqualTo(24));
+      expect(
+        t.getRect(find.byType(TextField)).bottom,
+        lessThanOrEqualTo(800 - 300),
+      );
       await t.pumpWidget(const SizedBox());
       await t.pump(const Duration(seconds: 1));
     });
