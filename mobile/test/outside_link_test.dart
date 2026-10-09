@@ -79,6 +79,7 @@ class _World {
         kinAsked.add(link);
         return kin;
       },
+      here: (_) async => false,
       selfId: selfId,
     ).then((r) {
       result = r;
@@ -100,6 +101,7 @@ class _World {
         kinAsked.add(link);
         return kin;
       },
+      here: (_) async => false,
     ).then((_) => finished = true);
     await t.pumpAndSettle();
   }
@@ -136,8 +138,8 @@ void main() {
     await w.start(t);
     final link = _room();
     await w.open(t, link);
-    expect(find.text(l10n.kryfoLinkTextJoinRoom('Night shift')), findsOne);
-    expect(find.text(l10n.kryfoLinkTextThisIsARoom), findsOne);
+    expect(find.text('Night shift'), findsOne);
+    expect(find.text(l10n.kryfoLinkTextBurnerRoom), findsOne);
     expect(w.door.taken, isEmpty);
     await t.tap(find.text(l10n.kryfoLinkTextNotNow));
     await t.pumpAndSettle();
@@ -212,18 +214,22 @@ void main() {
     expect(w.door.taken, [_invite]);
   });
 
-  testWidgets('one\'s own invite and a closed room have nothing to ask', (
-    t,
-  ) async {
+  testWidgets('one\'s own invite has nothing to ask, and a closed room '
+      'says so and joins nothing', (t) async {
     final w = _World();
     await w.start(t);
     await w.open(t, _invite, selfId: 'tourist-admit-sun');
     expect(find.text(l10n.kryfoLinkTextAddThem), findsNothing);
-    final closed = _room(hours: -1);
-    await w.open(t, closed);
+    // the door says what it is and adds nothing
+    expect(w.door.taken, [_invite]);
+    await w.open(t, _room(hours: -1));
+    expect(find.text(l10n.kryfoLinkTextThisRoomHasClosed), findsOne);
     expect(find.text(l10n.kryfoLinkTextJoin2), findsNothing);
-    // the door says what it is and adds or joins nothing for either
-    expect(w.door.taken, [_invite, closed]);
+    await t.tap(find.text(l10n.appOk));
+    await t.pumpAndSettle();
+    expect(w.finished, isTrue);
+    expect(w.result, isNull);
+    expect(w.door.taken, [_invite]);
   });
 
   test('every link from outside goes through the question', () {
@@ -318,7 +324,7 @@ void main() {
     await w.open(t, _room(name: long));
     final shown = 'Night shift crew ${'x' * 31}';
     expect(roomLinkName(long), shown);
-    final title = find.text(l10n.kryfoLinkTextJoinRoom(shown));
+    final title = find.text(shown);
     expect(title, findsOne);
     final text = t.widget<Text>(title);
     expect(text.maxLines, 2);
@@ -364,7 +370,7 @@ void main() {
   });
 
   testWidgets('an invite tapped in a chat from a stranger is asked about, '
-      'and a room joins as it did', (t) async {
+      'and a room shows its link before it joins', (t) async {
     final w = _World();
     await w.start(t);
     await w.tap(t, _invite);
@@ -374,6 +380,10 @@ void main() {
     expect(w.door.taken, [_invite]);
     final room = _room();
     await w.tap(t, room);
+    expect(find.text('Night shift'), findsOne);
+    expect(w.door.taken, [_invite]);
+    await t.tap(find.text(l10n.kryfoLinkTextJoin2));
+    await t.pumpAndSettle();
     expect(w.door.taken, [_invite, room]);
     await t.pump(const Duration(seconds: 10));
     await t.pumpAndSettle();

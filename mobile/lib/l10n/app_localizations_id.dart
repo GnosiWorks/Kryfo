@@ -6222,15 +6222,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get kryfoLinkTextNotNow => 'Nanti saja';
 
   @override
-  String kryfoLinkTextJoinRoom(Object roomName) {
-    return 'Gabung ke $roomName?';
-  }
-
-  @override
-  String get kryfoLinkTextThisIsARoom =>
-      'Ini undangan ke ruang sekali pakai. Gabung hanya kalau kamu tahu dari mana tautan ini berasal.';
-
-  @override
   String kryfoLinkTextYouAlreadyHave(Object who) {
     return 'Kamu sudah punya $who';
   }

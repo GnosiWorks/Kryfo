@@ -191,9 +191,14 @@ class RoomLink {
     return Uri(scheme: 'kryfo', host: 'room', queryParameters: q).toString();
   }
 
+  /// the one reading of a room link, for the door and every way in. only
+  /// what [firstKryfoLink] finds as a whole counts: kryfo://room/?, or
+  /// kryfo://roomx?, is no room link
   static RoomLink? parse(String raw) {
     raw = raw.trim();
-    if (!raw.startsWith('kryfo://room')) return null;
+    if (!raw.startsWith('kryfo://room?') || firstKryfoLink(raw) != raw) {
+      return null;
+    }
     try {
       final u = Uri.parse(raw);
       final id = u.queryParameters['id'];

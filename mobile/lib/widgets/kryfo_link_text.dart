@@ -10,15 +10,17 @@ import 'package:flutter/services.dart';
 import '../bidi_safe.dart';
 import '../lock_guard.dart';
 import '../main.dart'
-    show LinkKin, appState, handleHaloUri, linkKinOf, parseHaloUri;
+    show LinkKin, appState, handleHaloUri, linkKinOf, parseHaloUri, session;
 import '../rooms.dart';
+import '../screens/room_preview_sheet.dart';
 import '../theme.dart';
 import 'confirm_sheet.dart';
 import '../l10n/l10n.dart';
 
 /// takes a tapped link through the one door every link goes through, and
-/// says what came of it. a room opens itself once joined. an invite is
-/// held up against the people here first, as one from outside is
+/// says what came of it. a room shows what its link says first and opens
+/// itself once joined. an invite is held up against the people here first,
+/// as one from outside is
 Future<void> followKryfoLink(
   BuildContext context,
   String link, {
@@ -26,25 +28,46 @@ Future<void> followKryfoLink(
   String? Function()? self,
   Future<String> Function(String link) act = handleHaloUri,
   Future<(LinkKin, String)> Function(String link) kin = linkKinOf,
+  Future<bool> Function(String roomId) here = roomHere,
 }) async {
-  final String? r;
-  if (RoomLink.parse(link) == null) {
-    r = await takeOutsideLink(
-      context,
-      link,
-      selfId: (self ?? _sessionId)(),
-      guard: guard,
-      act: act,
-      kin: kin,
-    );
-  } else {
-    HapticFeedback.selectionClick();
-    r = await act(link);
-  }
+  final r = await takeOutsideLink(
+    context,
+    link,
+    selfId: (self ?? _sessionId)(),
+    guard: guard,
+    act: act,
+    kin: kin,
+    here: here,
+  );
   if (r != null && context.mounted) showHaloToast(context, r);
 }
 
 String? _sessionId() => appState.sessionId;
+
+/// a room the open session already holds: made here, joined, or still
+/// waiting to be let in. read off this phone alone
+Future<bool> roomHere(String roomId) async {
+  try {
+    final g = await session.getGroup(roomId);
+    return g != null && g['room_pub'] != null;
+  } catch (e) {
+    return false;
+  }
+}
+
+// whether a room link goes on to the door. one already here opens as it
+// did, and a join still waiting knocks again; anything else shows what its
+// link says and goes only on join
+Future<bool> _roomGoes(
+  BuildContext context,
+  RoomLink room,
+  LockGuard g,
+  Future<bool> Function(String roomId) here,
+) async {
+  if (await here(room.roomId)) return true;
+  if (!context.mounted || g.isLocked()) return false;
+  return showRoomPreviewSheet(context, room, shutOnLock: g);
+}
 
 Future<bool> _askAdd(
   BuildContext context,
@@ -77,6 +100,7 @@ Future<String?> takeOutsideLink(
   LockGuard? guard,
   Future<String> Function(String link) act = handleHaloUri,
   Future<(LinkKin, String)> Function(String link) kin = linkKinOf,
+  Future<bool> Function(String roomId) here = roomHere,
 }) async {
   // the link alone, as the door reads it, so the question is about what
   // the door then does
@@ -90,19 +114,9 @@ Future<String?> takeOutsideLink(
   if (g.isLocked()) return null;
   final bool ok;
   if (room != null) {
-    // a closed room joins nothing: the door only says so
-    ok =
-        room.expiresAt <= DateTime.now().millisecondsSinceEpoch ||
-        await showConfirmSheet(
-          context,
-          title: l10n.kryfoLinkTextJoinRoom(room.name),
-          line: l10n.kryfoLinkTextThisIsARoom,
-          yes: l10n.kryfoLinkTextJoin2,
-          keep: l10n.kryfoLinkTextNotNow,
-          rose: false,
-          shutOnLock: g,
-          titleLines: 2,
-        );
+    // what the link says, and nothing sent before join. a closed room
+    // has no join
+    ok = await _roomGoes(context, room, g, here);
   } else if (who == selfId) {
     // one's own invite adds no one: the door only says so
     ok = true;
@@ -140,6 +154,28 @@ Future<String?> takeOutsideLink(
   if (!ok || g.isLocked()) return null;
   HapticFeedback.selectionClick();
   return act(link);
+}
+
+/// a link scanned or pasted here. a room shows what its link says and
+/// joins only on join; anything else goes to the door as it was given.
+/// null when the room was not joined
+Future<String?> takeOwnLink(
+  BuildContext context,
+  String raw, {
+  LockGuard? guard,
+  Future<String> Function(String link) act = handleHaloUri,
+  Future<bool> Function(String roomId) here = roomHere,
+}) async {
+  // the same reading the door makes of it
+  final link = firstKryfoLink(raw.trim());
+  final room = link == null ? null : RoomLink.parse(link);
+  if (room == null) return act(raw);
+  final g = guard ?? lockGuard;
+  if (g.isLocked()) return null;
+  if (!await _roomGoes(context, room, g, here)) return null;
+  if (g.isLocked()) return null;
+  HapticFeedback.selectionClick();
+  return act(link!);
 }
 
 class KryfoLinkText extends StatefulWidget {
@@ -257,6 +293,7 @@ class RoomInviteCard extends StatelessWidget {
           const SizedBox(height: 3),
           Text(
             room.name,
+            textDirection: writtenDir(room.name),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: HaloType.serif(size: 19, color: fg),
