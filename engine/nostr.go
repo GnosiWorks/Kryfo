@@ -49,6 +49,8 @@ var (
 	nostrInbox     []string
 	nostrInboxDone []inboxDone
 	nostrSentIDs   = map[string]bool{}
+	// the counter the first-contact address was last watched on
+	fcCounterNow int
 )
 
 // a kick makes every relay runner drop its socket and reconnect now, with
@@ -706,6 +708,40 @@ func relayPage(ctx context.Context, r *nostr.Relay, rcvPk string, since, until n
 			return out, errors.New("page went quiet")
 		case <-ctx.Done():
 			return out, ctx.Err()
+		}
+	}
+}
+
+// the stored events with these ids, each handed to take as it comes
+func relayByIDs(ctx context.Context, r *nostr.Relay, rcvPk string, ids []nostr.ID, take func(nostr.Event) bool) {
+	pctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	sub, err := r.Subscribe(pctx, nostr.Filter{
+		IDs:   ids,
+		Kinds: []nostr.Kind{1059},
+		Tags:  nostr.TagMap{"p": []string{rcvPk}},
+		Limit: len(ids),
+	}, nostr.SubscriptionOptions{MaxWaitForEOSE: time.Duration(math.MaxInt64)})
+	if err != nil {
+		return
+	}
+	defer sub.Unsub()
+	quiet := time.NewTimer(pageQuiet())
+	defer quiet.Stop()
+	for {
+		select {
+		case ev, alive := <-sub.Events:
+			if !alive {
+				return
+			}
+			take(ev)
+			quiet.Reset(pageQuiet())
+		case <-sub.EndOfStoredEvents:
+			return
+		case <-quiet.C:
+			return
+		case <-ctx.Done():
+			return
 		}
 	}
 }
@@ -1491,6 +1527,15 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				// the oldest: a full answer means there may be more behind it.
 				// the anchor is held back until that has been fetched too.
 				cctx, ccancel := context.WithCancel(conn)
+				// held events let go of come by their ids: the window has
+				// mostly moved past them. the poll keeps them together
+				if ids := seen.wanted(time.Now()); len(ids) > 0 {
+					walkBegins(tag)
+					go func() {
+						defer walkEnds(tag)
+						relayByIDs(cctx, r, rcvPk, ids, dispatch)
+					}()
+				}
 				// counted while this connection is still fetching what it
 				// missed, so a check-in knows when it may stop tor again
 				atomic.AddInt32(&catchupActive, 1)
@@ -1841,7 +1886,12 @@ func HaloNostrSubscribe(cPeerXPubHex *C.char) *C.char {
 	if err != nil {
 		return C.CString(fmt.Sprintf("error: derive: %v", err))
 	}
+	nostrSubscribeAt(peerHex, peerArr, rcvPk)
+	return C.CString("ok")
+}
 
+// a runner for the peer's address, in place of any running one
+func nostrSubscribeAt(peerHex string, peerArr [32]byte, rcvPk string) {
 	nostrMu.Lock()
 	if cancel, exists := nostrSubs[peerHex]; exists {
 		cancel()
@@ -1853,7 +1903,56 @@ func HaloNostrSubscribe(cPeerXPubHex *C.char) *C.char {
 
 	go nostrSubscribeRunner(ctx, peerHex, peerArr, rcvPk)
 	log.Printf("nostr: subscribed for peer %s... at addr %s...", peerHex[:12], rcvPk[:12])
+}
+
+// what a full shelf left on the relay for a peer: "free" fetches it now,
+// by id, the first-contact address's too; "drop" takes it as kept
+//
+//export HaloNostrLetHeld
+func HaloNostrLetHeld(cPeerXPubHex, cHow *C.char) *C.char {
+	if err := nostrLetHeld(C.GoString(cPeerXPubHex), C.GoString(cHow)); err != nil {
+		return C.CString("error: " + err.Error())
+	}
 	return C.CString("ok")
+}
+
+func nostrLetHeld(peerHex, how string) error {
+	if how != "free" && how != "drop" {
+		return errors.New("bad how")
+	}
+	peer, err := peerArr(peerHex)
+	if err != nil {
+		return err
+	}
+	_, rcvPk, err := nip17RcvAddress(peer)
+	if err != nil {
+		return err
+	}
+	seenPath, _ := addressFiles(rcvPk)
+	if how == "drop" {
+		markHeldFile(seenPath, seenDropMark)
+		return nil
+	}
+	markHeldFile(seenPath, seenFreeMark)
+	// a runner reads the mark as it starts
+	nostrMu.Lock()
+	_, on := nostrSubs[peerHex]
+	_, fcOn := nostrSubs["firstcontact"]
+	fc := fcCounterNow
+	nostrMu.Unlock()
+	if on {
+		nostrSubscribeAt(peerHex, peer, rcvPk)
+	}
+	// that lane is everyone's: whoever else it held is asked for again and
+	// held again
+	if fcOn {
+		if _, fcPk, err := nip17FirstContactKeys(fc); err == nil {
+			p, _ := addressFiles(fcPk)
+			markHeldFile(p, seenFreeMark)
+			return subscribeFirstContact(fc)
+		}
+	}
+	return nil
 }
 
 // stop listening for a peer, and take what its receive address kept on
@@ -1922,6 +2021,7 @@ func subscribeFirstContact(counter int) error {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	nostrSubs["firstcontact"] = cancel
+	fcCounterNow = counter
 	nostrMu.Unlock()
 	// the address that replaces it listens on a new circuit, so a relay
 	// cannot tie the two together
@@ -2023,7 +2123,8 @@ func HaloNostrPoll() *C.char {
 
 // the app has kept a batch from the poll: token is its "k", failed a json
 // array of the places in its "m" the app could not keep, which are offered
-// again. "ok", or "error: ..." with the batch left to come again.
+// again, or {"f": those, "h": the places it leaves on the relay until it
+// has room}. "ok", or "error: ..." with the batch left to come again.
 //
 //export HaloNostrAck
 func HaloNostrAck(cToken, cFailed *C.char) *C.char {
@@ -2098,11 +2199,9 @@ func nostrAck(token, failed string) string {
 	if err != nil {
 		return "error: bad token"
 	}
-	var bad []int
-	if failed != "" {
-		if err := json.Unmarshal([]byte(failed), &bad); err != nil {
-			return "error: bad list"
-		}
+	bad, later, err := ackLists(failed)
+	if err != nil {
+		return "error: bad list"
 	}
 	nostrMu.Lock()
 	b, ok := pollInflight[tok]
@@ -2116,21 +2215,67 @@ func nostrAck(token, failed string) string {
 	for _, i := range bad {
 		again[i] = true
 	}
-	var kept []inboxDone
+	left := map[int]bool{}
+	for _, i := range later {
+		left[i] = true
+	}
+	var kept, held []inboxDone
 	var backL []string
 	var backD []inboxDone
 	for i, l := range b.lines {
-		if again[i] {
+		switch {
+		case again[i]:
 			backL = append(backL, l)
 			backD = append(backD, b.done[i])
-		} else {
+		case left[i]:
+			held = append(held, b.done[i])
+		default:
 			kept = append(kept, b.done[i])
 		}
 	}
 	pollRequeueLocked(backL, backD)
 	nostrMu.Unlock()
-	markHandedOver(kept)
+	markHandedOver(append(kept, markHeld(held, time.Now())...))
 	return "ok"
+}
+
+// the app's list of places it could not keep, "[...]", or that list and
+// the places it leaves on the relay until it has room, {"f":[...],"h":[...]}
+func ackLists(raw string) (failed, held []int, err error) {
+	if raw == "" {
+		return nil, nil, nil
+	}
+	if strings.HasPrefix(strings.TrimSpace(raw), "{") {
+		var o struct {
+			F []int `json:"f"`
+			H []int `json:"h"`
+		}
+		err = json.Unmarshal([]byte(raw), &o)
+		return o.F, o.H, err
+	}
+	err = json.Unmarshal([]byte(raw), &failed)
+	return failed, nil, err
+}
+
+// events the app left on the relay: held where there is room, the rest
+// returned to be taken as kept. the anchor moves past them either way, a
+// held one comes back by its id
+func markHeld(done []inboxDone, now time.Time) []inboxDone {
+	var kept []inboxDone
+	saves := map[*seenIDs]func(int64){}
+	for _, d := range done {
+		if d.set == nil || !d.set.hold(d.id, d.at, now) {
+			kept = append(kept, d)
+			continue
+		}
+		if d.resave != nil {
+			saves[d.set] = d.resave
+		}
+	}
+	for _, save := range saves {
+		save(0)
+	}
+	return kept
 }
 
 // a walk brings its stored wraps a page at a time, and each page is a random

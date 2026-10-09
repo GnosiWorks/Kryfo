@@ -10,9 +10,11 @@ package main
 import (
 	"encoding/hex"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"fiatjaf.com/nostr"
 )
@@ -23,9 +25,28 @@ const (
 	// ids of events that did not open. kept apart, so the ids of events that
 	// opened stay whatever else arrives
 	seenUnopenedKeep = 500
+	// ids the app left on the relay for later, a full shelf's. past this an
+	// address's next one is taken as kept, so a flood costs a start nothing
+	seenHeldKeep = 200
+	// a relay keeps a wrap this long (its expiration tag), and no longer
+	seenHeldFor = 14 * 24 * time.Hour
 	// the file is rewritten to what is kept once it holds this many lines
-	seenFileMax = seenKeep + seenUnopenedKeep + 100
+	seenFileMax = seenKeep + seenUnopenedKeep + seenHeldKeep + 100
 )
+
+// a held id is written as "+id stamp". after a "!" line every id held
+// before it is fetched again, after a "~" line every one goes as kept
+const (
+	seenHeldMark = "+"
+	seenFreeMark = "!"
+	seenDropMark = "~"
+)
+
+// an event left on the relay, and whether it is wanted back now
+type heldAt struct {
+	at   nostr.Timestamp
+	free bool
+}
 
 // an unopened id is written with this in front, so a restart keeps the two
 // apart.
@@ -116,13 +137,14 @@ type seenIDs struct {
 	// taken by a runner and opened, not yet handed to the app, or being
 	// opened right now
 	queued map[nostr.ID]struct{}
+	held   map[nostr.ID]heldAt
 	lines  int
 }
 
 // the ids a runner starts with. path "" keeps them in memory only.
 func loadSeen(path string) *seenIDs {
 	s := &seenIDs{path: path, opened: newIDRing(seenKeep), unopened: newIDRing(seenUnopenedKeep),
-		queued: map[nostr.ID]struct{}{}}
+		queued: map[nostr.ID]struct{}{}, held: map[nostr.ID]heldAt{}}
 	if path == "" {
 		return s
 	}
@@ -137,21 +159,77 @@ func loadSeen(path string) *seenIDs {
 			continue
 		}
 		s.lines++
-		notOpen := strings.HasPrefix(line, seenUnopenedMark)
-		id, ok := parseSeenID(strings.TrimPrefix(line, seenUnopenedMark))
-		if !ok {
-			continue
-		}
-		if notOpen {
-			s.unopened.add(id)
-		} else {
-			s.opened.add(id)
-		}
+		s.readLine(line)
 	}
+	s.pruneHeld(time.Now())
 	if s.lines > seenFileMax {
 		s.compactLocked()
 	}
 	return s
+}
+
+// one line of the file, in the order it was written
+func (s *seenIDs) readLine(line string) {
+	switch {
+	case line == seenFreeMark:
+		for id, h := range s.held {
+			h.free = true
+			s.held[id] = h
+		}
+	case line == seenDropMark:
+		for id := range s.held {
+			s.opened.add(id)
+			delete(s.held, id)
+		}
+	case strings.HasPrefix(line, seenHeldMark):
+		id, at, ok := parseHeldLine(line)
+		if !ok {
+			return
+		}
+		if _, had := s.held[id]; had || len(s.held) < seenHeldKeep {
+			s.held[id] = heldAt{at: at}
+		}
+	case strings.HasPrefix(line, seenUnopenedMark):
+		if id, ok := parseSeenID(line[len(seenUnopenedMark):]); ok {
+			s.unopened.add(id)
+			delete(s.held, id)
+		}
+	default:
+		if id, ok := parseSeenID(line); ok {
+			s.opened.add(id)
+			delete(s.held, id)
+		}
+	}
+}
+
+func parseHeldLine(line string) (nostr.ID, nostr.Timestamp, bool) {
+	h, ts, ok := strings.Cut(strings.TrimPrefix(line, seenHeldMark), " ")
+	if !ok {
+		return nostr.ID{}, 0, false
+	}
+	id, ok := parseSeenID(h)
+	at, err := strconv.ParseInt(ts, 10, 64)
+	if !ok || err != nil {
+		return nostr.ID{}, 0, false
+	}
+	return id, nostr.Timestamp(at), true
+}
+
+func heldLine(id nostr.ID, at nostr.Timestamp) string {
+	return seenHeldMark + id.Hex() + " " + strconv.FormatInt(int64(at), 10)
+}
+
+// what the relays no longer keep is not waited for
+func heldGone(at nostr.Timestamp, now time.Time) bool {
+	return int64(at) < now.Add(-seenHeldFor).Unix()
+}
+
+func (s *seenIDs) pruneHeld(now time.Time) {
+	for id, h := range s.held {
+		if heldGone(h.at, now) {
+			delete(s.held, id)
+		}
+	}
 }
 
 func parseSeenID(h string) (nostr.ID, bool) {
@@ -173,11 +251,54 @@ func (s *seenIDs) claim(id nostr.ID) bool {
 	if s.opened.has(id) || s.unopened.has(id) {
 		return false
 	}
+	if h, ok := s.held[id]; ok && !h.free {
+		return false
+	}
 	if _, ok := s.queued[id]; ok {
 		return false
 	}
 	s.queued[id] = struct{}{}
 	return true
+}
+
+// an event the app left on the relay until there is room for it: passed
+// over from here without being opened, and fetched by its id once let go.
+// false when the address holds its most already or the relay no longer
+// keeps it, and the caller takes it as kept
+func (s *seenIDs) hold(id nostr.ID, at nostr.Timestamp, now time.Time) bool {
+	s.mu.Lock()
+	delete(s.queued, id)
+	s.pruneHeld(now)
+	_, had := s.held[id]
+	if heldGone(at, now) || (!had && len(s.held) >= seenHeldKeep) {
+		s.mu.Unlock()
+		return false
+	}
+	s.held[id] = heldAt{at: at}
+	s.mu.Unlock()
+	s.write([]string{heldLine(id, at)})
+	return true
+}
+
+// held events let go of, which a connection asks the relay for by id
+func (s *seenIDs) wanted(now time.Time) []nostr.ID {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.pruneHeld(now)
+	var out []nostr.ID
+	for id, h := range s.held {
+		if h.free {
+			out = append(out, id)
+		}
+	}
+	return out
+}
+
+// how many events the address leaves on the relay
+func (s *seenIDs) heldCount() int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return len(s.held)
 }
 
 // true when the app kept the id, on this run or one before
@@ -191,6 +312,7 @@ func (s *seenIDs) handed(id nostr.ID) bool {
 func (s *seenIDs) notOpened(id nostr.ID) {
 	s.mu.Lock()
 	delete(s.queued, id)
+	delete(s.held, id)
 	s.unopened.add(id)
 	s.mu.Unlock()
 	s.write([]string{seenUnopenedMark + id.Hex()})
@@ -210,6 +332,7 @@ func (s *seenIDs) handedOver(ids []nostr.ID) {
 	s.mu.Lock()
 	for _, id := range ids {
 		delete(s.queued, id)
+		delete(s.held, id)
 		s.opened.add(id)
 		lines = append(lines, id.Hex())
 	}
@@ -241,9 +364,10 @@ func (s *seenIDs) write(lines []string) {
 	}
 }
 
-// rewrites the file to the newest ids of each kind it holds. it reads the
-// file rather than this runner's memory, which may not hold what another
-// runner on the same file wrote. seenFileMu must be held.
+// rewrites the file to the newest ids of each kind it holds, and to what is
+// still held. it reads the file rather than this runner's memory, which may
+// not hold what another runner on the same file wrote. seenFileMu must be
+// held.
 func (s *seenIDs) compactLocked() {
 	if engineHeld.Load() || fileGone(s.path) {
 		return
@@ -253,14 +377,46 @@ func (s *seenIDs) compactLocked() {
 		return
 	}
 	var opened, unopened []string
+	held := map[nostr.ID]heldAt{}
+	var order []nostr.ID
 	for _, line := range strings.Split(string(b), "\n") {
-		if line == "" {
-			continue
-		}
-		if strings.HasPrefix(line, seenUnopenedMark) {
+		switch {
+		case line == "":
+		case line == seenFreeMark:
+			for id, h := range held {
+				h.free = true
+				held[id] = h
+			}
+		case line == seenDropMark:
+			for _, id := range order {
+				if _, ok := held[id]; ok {
+					opened = append(opened, id.Hex())
+					delete(held, id)
+				}
+			}
+			order = nil
+		case strings.HasPrefix(line, seenHeldMark):
+			id, at, ok := parseHeldLine(line)
+			if !ok {
+				continue
+			}
+			if _, had := held[id]; !had {
+				if len(held) >= seenHeldKeep {
+					continue
+				}
+				order = append(order, id)
+			}
+			held[id] = heldAt{at: at}
+		case strings.HasPrefix(line, seenUnopenedMark):
 			unopened = append(unopened, line)
-		} else {
+			if id, ok := parseSeenID(line[len(seenUnopenedMark):]); ok {
+				delete(held, id)
+			}
+		default:
 			opened = append(opened, line)
+			if id, ok := parseSeenID(line); ok {
+				delete(held, id)
+			}
 		}
 	}
 	if len(opened) > seenKeep {
@@ -270,6 +426,28 @@ func (s *seenIDs) compactLocked() {
 		unopened = unopened[len(unopened)-seenUnopenedKeep:]
 	}
 	keep := append(opened, unopened...)
+	// the ones let go of first, then the mark, then the ones still held
+	now := time.Now()
+	var still []string
+	free := false
+	for _, id := range order {
+		h, ok := held[id]
+		if !ok || heldGone(h.at, now) {
+			continue
+		}
+		// once each, however often it was held
+		delete(held, id)
+		if h.free {
+			keep = append(keep, heldLine(id, h.at))
+			free = true
+		} else {
+			still = append(still, heldLine(id, h.at))
+		}
+	}
+	if free {
+		keep = append(keep, seenFreeMark)
+	}
+	keep = append(keep, still...)
 	tmp := s.path + ".tmp"
 	if err := os.WriteFile(tmp, []byte(strings.Join(keep, "\n")+"\n"), 0600); err != nil {
 		os.Remove(tmp)
@@ -280,6 +458,28 @@ func (s *seenIDs) compactLocked() {
 		return
 	}
 	s.lines = len(keep)
+}
+
+// a mark for every id the address holds, on its file: "!" to fetch them
+// again, "~" to take them as kept. a runner reads it when it starts
+func markHeldFile(path, mark string) {
+	if path == "" || engineHeld.Load() {
+		return
+	}
+	seenFileMu.Lock()
+	defer seenFileMu.Unlock()
+	if fileGone(path) {
+		return
+	}
+	if _, err := os.Stat(path); err != nil {
+		return
+	}
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY, 0600)
+	if err != nil {
+		return
+	}
+	f.WriteString(mark + "\n")
+	f.Close()
 }
 
 // what a line in the inbox still owes once the app has taken it
