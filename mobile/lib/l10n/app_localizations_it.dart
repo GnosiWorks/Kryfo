@@ -6523,7 +6523,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get pairCodePanelBurned =>
-      'Quel codice è bruciato. Creane uno nuovo quando sono pronti.';
+      'Quel codice è sparito. Creane uno nuovo quando sono pronti.';
 
   @override
   String get pairCodePanelCodeCopied => 'Codice copiato';

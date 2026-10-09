@@ -1697,7 +1697,7 @@
   "pairCodePanelReadSixDigitsOut": "Bacakan enam angka dengan keras dan dia bisa menambahkanmu. Tidak ada hal lain yang perlu dipertukarkan.",
   "pairCodePanelWorking": "Memproses",
   "pairCodePanelOrMakeASix": "Atau buat kode enam angka untuk dibacakan",
-  "pairCodePanelBurned": "Kode itu sudah hangus. Buat yang baru saat mereka siap.",
+  "pairCodePanelBurned": "Kode itu sudah hilang. Buat yang baru saat mereka siap.",
   "pairCodePanelCodeCopied": "Kode disalin",
   "pairCodePanelBurnsIn": "Hilang dalam {mm}:{ss}",
   "pairCodePanelTheyTapAddChoose": "Dia mengetuk tambah, memilih kode, lalu mengetik angka ini.",

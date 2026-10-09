@@ -6530,7 +6530,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get pairCodePanelBurned =>
-      'Der Code ist verbrannt. Erstelle einen neuen, wenn die Person bereit ist.';
+      'Der Code ist verschwunden. Erstelle einen neuen, wenn die Person bereit ist.';
 
   @override
   String get pairCodePanelCodeCopied => 'Code kopiert';

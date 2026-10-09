@@ -1697,7 +1697,7 @@
   "pairCodePanelReadSixDigitsOut": "大聲唸出六位數字，對方就能新增你。不需要交換其他任何東西。",
   "pairCodePanelWorking": "處理中",
   "pairCodePanelOrMakeASix": "或產生一組六位數的配對碼唸給對方",
-  "pairCodePanelBurned": "這個碼已經燒掉了。對方準備好時再產生一個新的。",
+  "pairCodePanelBurned": "這個碼已經焚毀。對方準備好時再產生一個新的。",
   "pairCodePanelCodeCopied": "已複製配對碼",
   "pairCodePanelBurnsIn": "{mm}:{ss} 後焚毀",
   "pairCodePanelTheyTapAddChoose": "對方點「新增」，選擇「配對碼」，然後輸入這些數字。",

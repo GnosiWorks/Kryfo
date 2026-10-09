@@ -1697,7 +1697,7 @@
   "pairCodePanelReadSixDigitsOut": "Leia seis dígitos em voz alta e a pessoa pode adicionar você. Nada mais precisa trocar de mãos.",
   "pairCodePanelWorking": "Trabalhando",
   "pairCodePanelOrMakeASix": "Ou crie um código de seis dígitos para ler em voz alta",
-  "pairCodePanelBurned": "Esse código queimou. Crie um novo quando a pessoa estiver pronta.",
+  "pairCodePanelBurned": "Esse código sumiu. Crie um novo quando a pessoa estiver pronta.",
   "pairCodePanelCodeCopied": "Código copiado",
   "pairCodePanelBurnsIn": "Some em {mm}:{ss}",
   "pairCodePanelTheyTapAddChoose": "A pessoa toca em adicionar, escolhe código e digita estes números.",

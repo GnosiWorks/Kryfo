@@ -6454,7 +6454,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get pairCodePanelBurned =>
-      'Kode itu sudah hangus. Buat yang baru saat mereka siap.';
+      'Kode itu sudah hilang. Buat yang baru saat mereka siap.';
 
   @override
   String get pairCodePanelCodeCopied => 'Kode disalin';

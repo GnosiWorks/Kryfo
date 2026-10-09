@@ -6525,7 +6525,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get pairCodePanelBurned =>
-      'Ce code a brûlé. Créez-en un nouveau quand la personne sera prête.';
+      'Ce code a disparu. Créez-en un nouveau quand la personne sera prête.';
 
   @override
   String get pairCodePanelCodeCopied => 'Code copié';

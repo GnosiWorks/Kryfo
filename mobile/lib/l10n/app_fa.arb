@@ -1697,7 +1697,7 @@
   "pairCodePanelReadSixDigitsOut": "شش رقم را بلند بخوانید تا او بتواند شما را اضافه کند. هیچ چیز دیگری لازم نیست دست‌به‌دست شود.",
   "pairCodePanelWorking": "در حال کار",
   "pairCodePanelOrMakeASix": "یا یک کد شش‌رقمی بسازید تا بلند بخوانید",
-  "pairCodePanelBurned": "این کد سوخت. وقتی طرف مقابل آماده بود، کد تازه‌ای بسازید.",
+  "pairCodePanelBurned": "این کد محو شد. وقتی طرف مقابل آماده بود، کد تازه‌ای بسازید.",
   "pairCodePanelCodeCopied": "کد کپی شد",
   "pairCodePanelBurnsIn": "تا محو شدن: ⁨{mm}⁩:⁨{ss}⁩",
   "pairCodePanelTheyTapAddChoose": "او «افزودن» را می‌زند، «کد» را انتخاب می‌کند و این‌ها را تایپ می‌کند.",

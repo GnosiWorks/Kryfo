@@ -6577,7 +6577,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get pairCodePanelBurned =>
-      'احترق هذا الرمز. أنشئ رمزًا جديدًا عندما يكون الطرف الآخر جاهزًا.';
+      'اختفى هذا الرمز. أنشئ رمزًا جديدًا عندما يكون الطرف الآخر جاهزًا.';
 
   @override
   String get pairCodePanelCodeCopied => 'نُسخ الرمز';

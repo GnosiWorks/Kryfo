@@ -195,7 +195,12 @@ class _PhotoViewerState extends State<PhotoViewer>
     final box = _viewer.currentContext?.findRenderObject() as RenderBox?;
     final at = _tapAt;
     if (box == null || at == null) return;
-    final p = _zoom.toScene(box.globalToLocal(at));
+    // a tap on the black around the photo zooms on its nearest edge, never
+    // off the photo
+    final l = box.globalToLocal(at);
+    final p = _zoom.toScene(
+      Offset(l.dx.clamp(0.0, box.size.width), l.dy.clamp(0.0, box.size.height)),
+    );
     const s = 2.5;
     HapticFeedback.selectionClick();
     _zoomTo(
@@ -247,6 +252,8 @@ class _PhotoViewerState extends State<PhotoViewer>
       minScale: 1,
       maxScale: 4,
       panEnabled: _zoomed,
+      // a pinch takes over from a zoom still easing
+      onInteractionStart: (_) => _ease.stop(),
       onInteractionEnd: _zoomEnded,
       child: Image(image: widget.image, gaplessPlayback: true),
     );

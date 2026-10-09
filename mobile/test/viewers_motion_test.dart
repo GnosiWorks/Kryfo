@@ -5,6 +5,8 @@
 // movement nothing flies.
 import 'dart:convert';
 
+import 'dart:ui' as ui;
+
 import 'package:flutter/gestures.dart' show kDoubleTapTimeout;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -135,7 +137,12 @@ void main() {
           '(still: $still)', (t) async {
         await open(t, still: still);
         await settles(t);
-        const at = Offset(260, 330);
+        // on the photo, off its middle
+        final photo = t.renderObject<RenderBox>(find.byType(InteractiveViewer));
+        final at = photo.localToGlobal(
+          photo.size.center(Offset.zero) +
+              Offset(photo.size.width / 4, photo.size.height / 4),
+        );
         await doubleTap(t, at);
         if (!still) {
           await t.pump(const Duration(milliseconds: 100));
@@ -161,6 +168,46 @@ void main() {
         expect(find.byType(PhotoViewer), findsOneWidget);
       });
     }
+
+    testWidgets('a double tap on the black around a wide photo zooms on '
+        'the photo, never off it', (t) async {
+      quiet(t);
+      t.view.physicalSize = const Size(720, 1480);
+      t.view.devicePixelRatio = 2;
+      addTearDown(t.view.reset);
+      // a wide photo: letterboxed, black above and below it
+      final wide = await t.runAsync(() async {
+        final rec = ui.PictureRecorder();
+        Canvas(rec).drawRect(
+          const Rect.fromLTWH(0, 0, 1200, 400),
+          Paint()..color = const Color(0xff336699),
+        );
+        final img = await rec.endRecording().toImage(1200, 400);
+        final png = await img.toByteData(format: ui.ImageByteFormat.png);
+        return MemoryImage(png!.buffer.asUint8List());
+      });
+      await t.pumpWidget(host(_Thumb(wide!)));
+      final ctx = t.element(find.byType(_Thumb));
+      await t.runAsync(() => precacheImage(wide, ctx));
+      await t.tap(find.byKey(const ValueKey('thumb')));
+      await settles(t);
+      final box = t.renderObject<RenderBox>(find.byType(InteractiveViewer));
+      final top = box.localToGlobal(Offset.zero).dy;
+      expect(top, greaterThan(100), reason: 'black above the photo');
+      await doubleTap(t, const Offset(180, 60));
+      await settles(t);
+      expect(scaleOf(t), closeTo(2.5, 0.01));
+      final m = t
+          .widget<InteractiveViewer>(find.byType(InteractiveViewer))
+          .transformationController!
+          .value;
+      final shown = MatrixUtils.transformRect(m, Offset.zero & box.size);
+      // the photo still fills the box it is drawn in
+      expect(
+        shown.intersect(Offset.zero & box.size).height,
+        closeTo(box.size.height, 0.5),
+      );
+    });
 
     testWidgets('zoomed, a tap brings the whole photo back and does not '
         'close it', (t) async {

@@ -6578,7 +6578,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get pairCodePanelBurned =>
-      'Цей код згорів. Створи новий, коли людина буде готова.';
+      'Цей код зник. Створи новий, коли людина буде готова.';
 
   @override
   String get pairCodePanelCodeCopied => 'Код скопійовано';

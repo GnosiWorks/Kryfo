@@ -10,7 +10,6 @@ import 'package:flutter/services.dart';
 import '../main.dart' hide live;
 import '../theme.dart';
 import '../widgets/ease_size.dart';
-import '../widgets/press_scale.dart';
 import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
 import 'dev_about_sheet.dart' show devChatOffered;
@@ -333,11 +332,12 @@ class _RowTile extends StatelessWidget {
           ),
         ),
     ];
-    // pressed, the row gives a little, as every row in the app does
-    return PressScale(
+    // pressed, the row lights as the settings rows do: the column band
+    // keeps its line
+    return InkWell(
       onTap: onTap,
-      scale: 0.985,
-      haptic: false,
+      splashColor: HaloColors.amber.withValues(alpha: 0.08),
+      highlightColor: HaloColors.amber.withValues(alpha: 0.08),
       child: Container(
         decoration: BoxDecoration(
           border: Border(top: BorderSide(color: HaloColors.line, width: 0.5)),

@@ -151,13 +151,22 @@ class _PairCodePanelState extends State<PairCodePanel> {
           ),
           const SizedBox(height: 22),
         ],
-        HaloPrimaryButton(
-          label: _busy
-              ? l10n.pairCodePanelWorking
-              : l10n.pairCodePanelOrMakeASix,
-          busy: _busy,
-          onTap: _make,
-        ),
+        // under a qr it is the other way, so it stays the quieter one
+        if (widget.compact)
+          HaloGhostButton(
+            label: _busy
+                ? l10n.pairCodePanelWorking
+                : l10n.pairCodePanelOrMakeASix,
+            onTap: _busy ? null : _make,
+          )
+        else
+          HaloPrimaryButton(
+            label: _busy
+                ? l10n.pairCodePanelWorking
+                : l10n.pairCodePanelOrMakeASix,
+            busy: _busy,
+            onTap: _make,
+          ),
         // a new line rises in over the last, and the card eases to it
         EaseSize(
           child: _status.isEmpty
