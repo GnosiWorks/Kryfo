@@ -7,6 +7,7 @@
 // key but no session yet takes a first message only with its proof of work.
 // real libsignal over rows kept in maps; the engine derives an id from an
 // ed key the way the app asks it to
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
@@ -190,6 +191,43 @@ class _InboxRows extends ArrivalRows {
   SupportChats get support => SupportChats(() async => inbox);
 }
 
+// rows where filing a contact can be held at [gate], noting how many are
+// filing at once, and where a block check can fail once
+class _GatedRows extends ArrivalRows {
+  _GatedRows() : super(HaloContainer.everyday);
+  Completer<void>? gate;
+  var inside = 0;
+  var most = 0;
+  var blockFails = 0;
+
+  @override
+  Future<void> upsertContact(
+    String haloId,
+    String onion,
+    String xpub, {
+    int accepted = 1,
+  }) async {
+    final g = gate;
+    gate = null;
+    most = max(most, ++inside);
+    try {
+      await g?.future;
+      await super.upsertContact(haloId, onion, xpub, accepted: accepted);
+    } finally {
+      inside--;
+    }
+  }
+
+  @override
+  Future<bool> isBlocked(String haloId) async {
+    if (blockFails > 0) {
+      blockFails--;
+      throw StateError('the disk is full');
+    }
+    return super.isBlocked(haloId);
+  }
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late Directory docs;
@@ -200,8 +238,11 @@ void main() {
   late String amberEd;
   late int pow;
 
-  Future<void> world({List<RouterCard> hiddenMembers = const []}) async {
-    live = ArrivalRows(HaloContainer.everyday);
+  Future<void> world({
+    List<RouterCard> hiddenMembers = const [],
+    ArrivalRows? rows,
+  }) async {
+    live = rows ?? ArrivalRows(HaloContainer.everyday);
     live.person(_amber, onion: 'o-amber', xpub: amber.xPub);
     store = ArrivalStore();
     if (hiddenMembers.isNotEmpty) {
@@ -314,6 +355,63 @@ void main() {
       [_said],
     );
     expect(live.seen, hasLength(1));
+  });
+
+  test('a copy of an opener being filed is not filed beside it, and comes '
+      'again', () async {
+    final rows = _GatedRows();
+    await world(rows: rows);
+    final stray = await _phone();
+    final ed = _rndHex(32);
+    const id = 'stray-words-seven';
+    _idOf[ed] = id;
+    final c = await _opener(stray, id, ed, _said, pow: pow);
+    final line = (peer: 'firstcontact', cipher: c);
+    final gate = rows.gate = Completer<void>();
+    // the first one fails once it is let go
+    rows.beforeSave = () {
+      rows.beforeSave = null;
+      throw StateError('the disk is full');
+    };
+    final first = app.receiveRelay([line]);
+    await _settle();
+    expect(rows.inside, 1);
+    // its copy off the onion lane and the relay's at the same time
+    await app.receiveOnion([c]);
+    expect(await app.receiveRelay([line]), {0});
+    gate.complete();
+    expect(await first, {0});
+    expect(rows.most, 1);
+    expect(await app.receiveRelay([line]), isEmpty);
+    await _settle();
+    expect(
+      [
+        for (final m in rows.msgs)
+          if (m['peer_id'] == id) m['plaintext'],
+      ],
+      [_said],
+    );
+  });
+
+  test('an opener without its proof that failed on its first try leaves '
+      'no row and no address behind', () async {
+    final rows = _GatedRows();
+    await world(rows: rows);
+    final stray = await _phone();
+    final ed = _rndHex(32);
+    const id = 'stray-words-eight';
+    _idOf[ed] = id;
+    final line = (
+      peer: 'firstcontact',
+      cipher: await _opener(stray, id, ed, _said),
+    );
+    unheard.clear();
+    rows.blockFails = 1;
+    expect(await app.receiveRelay([line]), {0});
+    expect(rows.people[id], isNotNull);
+    expect(await app.receiveRelay([line]), isEmpty);
+    expect(rows.people[id], isNull);
+    expect(unheard, [stray.xPub]);
   });
 
   test('a copy of a turned-away stranger\'s opener leaves them turned '
@@ -1064,6 +1162,33 @@ void main() {
     ]);
     await _settle();
     expect(store.inbox, hasLength(1));
+  });
+
+  test('a first contact moved off a hidden member\'s name that was not '
+      'filed lands on its own id when it comes again', () async {
+    final member = await _phone();
+    final memberEd = _rndHex(32);
+    _idOf[memberEd] = _hidden;
+    await world(hiddenMembers: [RouterCard(_hidden, 'o-m', member.xPub)]);
+    // nothing of the name held here from a test before
+    final addr = SignalProtocolAddress(_hidden, 1);
+    await signalSession.sessionStore.deleteSession(addr);
+    await signalSession.identityStore.removePeerIdentity(addr);
+    final other = await _phone();
+    final line = (
+      peer: 'firstcontact',
+      cipher: await _opener(other, _hidden, memberEd, _said, pow: pow),
+    );
+    live.beforeSave = () {
+      live.beforeSave = null;
+      throw StateError('the disk is full');
+    };
+    expect(await app.receiveRelay([line]), {0});
+    expect(await app.receiveRelay([line]), isEmpty);
+    await _settle();
+    final own = unboundIdOf(_keyOf(other));
+    expect(live.msgs.where((m) => m['peer_id'] == own), hasLength(1));
+    expect(store.inbox, isEmpty);
   });
 
   group('a first contact without its proof of work', () {

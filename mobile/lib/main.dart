@@ -7790,6 +7790,54 @@ String heldWire(String wire) => '$_kHeldWire$wire';
 String? heldWireOf(String held) =>
     held.startsWith(_kHeldWire) ? held.substring(_kHeldWire.length) : null;
 
+// what was opened and not filed yet, by its hash, the oldest going first
+// past [max] chars
+class _Kept<V> {
+  _Kept(this.max, this.size);
+  final int max;
+  final int Function(V) size;
+  final _m = <String, V>{};
+  var _chars = 0;
+
+  V? operator [](String k) => _m[k];
+
+  V? take(String k) {
+    final v = _m.remove(k);
+    if (v != null) _chars -= size(v);
+    return v;
+  }
+
+  void put(String k, V v) {
+    take(k);
+    _m[k] = v;
+    _chars += size(v);
+    while (_chars > max && _m.length > 1) {
+      take(_m.keys.first);
+    }
+  }
+
+  void clear() {
+    _m.clear();
+    _chars = 0;
+  }
+}
+
+// a first contact signal opened, and how far its filing got: a try after
+// one that failed goes on from there
+class _FirstOpen {
+  _FirstOpen(this.haloId, this.plain, this.env);
+  String haloId;
+  final String plain;
+  final UnwrappedMessage env;
+  // moved off a hidden chat's name already
+  bool refiled = false;
+  // whether its row was new on the first try
+  bool? fresh;
+  // who its address was heard as before it, once read
+  bool heard = false;
+  String? heardAs;
+}
+
 // a frame that came before the message it names, as it came
 typedef _Early = ({
   HaloDb db,
@@ -13331,30 +13379,30 @@ class AppState extends ChangeNotifier {
   // kept as opened and throws: it goes on from there when it comes again
   Future<(String, RouteTo)?> backPairFromCipher(String cipher) async {
     final epoch = _openedEpoch;
-    final k = 'fc:${sha256.convert(utf8.encode(cipher))}';
-    final before = _relayOpened[k];
-    final opened = before != null
-        ? (
-            haloId: before.id,
-            plain: before.plain,
-            env: unwrapMessage(before.plain),
-          )
-        : await _io.openFirstContact(cipher);
-    if (opened == null) return null;
-    _keepOpened(k, opened.haloId, opened.plain, epoch);
+    final k = sha256.convert(utf8.encode(cipher)).toString();
+    // one copy at a time: another is not kept now and comes again
+    if (!_firstInHand.add(k)) throw StateError('back-pair: a copy in hand');
+    _FirstOpen? o;
     try {
-      final r = await _backPairOpened(opened);
-      _relayOpened.remove(k);
-      return r;
+      o = _firstOpened.take(k);
+      if (o == null) {
+        final opened = await _io.openFirstContact(cipher);
+        if (opened == null) return null;
+        o = _FirstOpen(opened.haloId, opened.plain, opened.env);
+      }
+      return await _backPairOpened(o);
     } catch (e) {
-      dlog('back-pair: kept as opened, not filed ($e)');
+      if (o != null && epoch == _openedEpoch) {
+        _firstOpened.put(k, o);
+        dlog('back-pair: kept as opened, not filed ($e)');
+      }
       rethrow;
+    } finally {
+      _firstInHand.remove(k);
     }
   }
 
-  Future<(String, RouteTo)?> _backPairOpened(
-    ({String haloId, String plain, UnwrappedMessage env}) opened,
-  ) async {
+  Future<(String, RouteTo)?> _backPairOpened(_FirstOpen opened) async {
     var h = opened.haloId;
     final env = opened.env;
     // the developer never starts a chat this way, and no one else may
@@ -13363,10 +13411,13 @@ class AppState extends ChangeNotifier {
     await _afterClose();
     if (_moveDone != null) await _afterMove(h, null);
     // a hidden chat's name stays with its key as well
-    if (h == env.senderHaloId && await _hiddenKeyDiffers(h, env)) {
+    if (!opened.refiled &&
+        h == env.senderHaloId &&
+        await _hiddenKeyDiffers(h, env)) {
       final at = await _refileFirstContact(h);
       if (at == null) return null;
-      h = at;
+      h = opened.haloId = at;
+      opened.refiled = true;
     }
     final to = _routeOf(h, null);
     // a copy of one here or one that went (off a relay's backlog, say):
@@ -13391,7 +13442,8 @@ class AppState extends ChangeNotifier {
     if (to == RouteTo.everyday || to == RouteTo.vault) {
       final db = to == RouteTo.vault ? _openVault! : live;
       filed = db;
-      fresh = await db.getContact(h) == null;
+      // as the first try found it: a row it made is still its own
+      fresh = opened.fresh ??= await db.getContact(h) == null;
       await db.upsertContact(
         h,
         env.senderOnion ?? '',
@@ -13403,7 +13455,11 @@ class AppState extends ChangeNotifier {
       if (said != null && said != h) await _noteOtherKey(db, h, said);
     }
     final x = env.senderXPub;
-    final heardAs = x == null ? null : _xPubToHaloId[x];
+    if (!opened.heard) {
+      opened.heardAs = x == null ? null : _xPubToHaloId[x];
+      opened.heard = true;
+    }
+    final heardAs = opened.heardAs;
     if (to != RouteTo.dropped && x != null && x.isNotEmpty) {
       _xPubToHaloId[x] = h;
       _io.listen(x);
@@ -13788,8 +13844,14 @@ class AppState extends ChangeNotifier {
   // signal spends the keys on the first open, so one that fails after it and
   // comes again would not open twice: it goes on from here. memory only,
   // bounded by size rather than count so a failed batch fits whole
-  final _relayOpened = <String, ({String id, String plain, bool parked})>{};
-  static const _relayOpenedChars = 8 << 20;
+  final _relayOpened = _Kept<({String id, String plain, bool parked})>(
+    8 << 20,
+    (o) => o.plain.length,
+  );
+  // first contacts the same way, with how far their filing got
+  final _firstOpened = _Kept<_FirstOpen>(1 << 20, (o) => o.plain.length);
+  // first contacts being filed right now, by the same key
+  final _firstInHand = <String>{};
   // moves on each time what was opened is dropped: an open begun before
   // that is not kept after it
   int _openedEpoch = 0;
@@ -13798,6 +13860,7 @@ class AppState extends ChangeNotifier {
   // wipe. whatever comes again after this is opened again or not at all
   void _dropOpened() {
     _relayOpened.clear();
+    _firstOpened.clear();
     _early.clear();
     _openedEpoch++;
   }
@@ -13810,15 +13873,7 @@ class AppState extends ChangeNotifier {
     bool parked = false,
   }) {
     if (epoch != _openedEpoch) return;
-    _relayOpened.remove(h);
-    _relayOpened[h] = (id: id, plain: plain, parked: parked);
-    var size = 0;
-    for (final o in _relayOpened.values) {
-      size += o.plain.length;
-    }
-    while (size > _relayOpenedChars && _relayOpened.length > 1) {
-      size -= _relayOpened.remove(_relayOpened.keys.first)!.plain.length;
-    }
+    _relayOpened.put(h, (id: id, plain: plain, parked: parked));
   }
 
   Future<void> _receiveRelayOne(
@@ -13957,12 +14012,12 @@ class AppState extends ChangeNotifier {
         heldWire(wrapped),
       );
       await live.markSeen(h);
-      _relayOpened.remove(h);
+      _relayOpened.take(h);
       arrived();
       return;
     }
     await live.markSeen(h);
-    _relayOpened.remove(h);
+    _relayOpened.take(h);
     if (_shown(went)) {
       notifyListeners();
       arrived();
@@ -15082,11 +15137,11 @@ class AppState extends ChangeNotifier {
       // kept as opened, let in on accept
       await (e is _HeldIn ? e.into : live).holdCipher(id, heldWire(plain));
       await live.markSeen(h);
-      _relayOpened.remove(h);
+      _relayOpened.take(h);
       return false;
     }
     await live.markSeen(h);
-    _relayOpened.remove(h);
+    _relayOpened.take(h);
     return _shown(went);
   }
 
