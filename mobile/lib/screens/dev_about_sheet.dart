@@ -99,13 +99,19 @@ Future<bool> deleteDevChat(BuildContext context, DevRow d) async {
   // gone at once. what was sent is taken back from his phone behind it,
   // and only what did not get through is said, in the everyday session
   final from = session.container;
-  final going = appState.devDelete(takeBack: true);
-  await (appState.devGoing ?? going);
+  final going = appState.devDeleteSteps(takeBack: true);
+  try {
+    await going.wiped;
+  } catch (e) {
+    dlog('dev delete: kept (${e.runtimeType})');
+    if (context.mounted) showHaloToast(context, l10n.devDeleteFailed);
+    return false;
+  }
   forgetDevChoices();
   unawaited(clearNotificationsFor(d.chatId));
   await appState.refreshContacts();
   unawaited(
-    going.then((missed) {
+    going.missed.then((missed) {
       if (missed > 0) {
         showHaloToast(
           // the root overlay takes it: this screen may be gone by then
@@ -142,7 +148,7 @@ Future<String?> startNewDevChat(BuildContext context, String chatId) async {
   if (!ok) return null;
   HapticFeedback.heavyImpact();
   await _gone(chatId);
-  await appState.devGoing;
+  if (!sessionQuiet) await appState.devGoing;
   final id = await session.devChat.writeToMarios();
   await appState.refreshContacts();
   return id;
@@ -151,8 +157,8 @@ Future<String?> startNewDevChat(BuildContext context, String chatId) async {
 // the settings row: the chat as it is, or after a delete a fresh one, made
 // on this tap only
 Future<void> writeToMarios(BuildContext context) async {
-  // a delete still taking back what was sent ends first
-  await appState.devGoing;
+  // a delete still wiping the everyday chat ends first
+  if (!sessionQuiet) await appState.devGoing;
   final id = await session.devChat.writeToMarios();
   await appState.refreshContacts();
   if (id == null || !context.mounted) return;

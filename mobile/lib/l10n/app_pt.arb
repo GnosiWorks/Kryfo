@@ -1987,6 +1987,7 @@
   "devDeleteLineBack": "Todas as mensagens somem, e a conversa não volta mais. O que você enviou também sai do celular do Marios.",
   "devDeleteLineAnonBack": "Todas as mensagens e o nome criado para esta conversa somem, e a conversa não volta mais. O que você enviou também sai do celular do Marios.",
   "devDeleteNotTakenBack": "{count, plural, one{{count} mensagem não saiu do celular do Marios} other{{count} mensagens não saíram do celular do Marios}}",
+  "devDeleteFailed": "Não foi possível apagar a conversa. Tente de novo.",
   "settingsWriteToMarios": "Escrever para o Marios",
   "settingsWriteToMariosHint": "Bugs, ideias, perguntas",
   "seenDevChat": "A conversa com o Marios",

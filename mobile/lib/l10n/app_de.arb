@@ -1987,6 +1987,7 @@
   "devDeleteLineBack": "Jede Nachricht wird gelöscht, und der Chat kommt nicht wieder. Was du geschickt hast, wird auch vom Handy von Marios zurückgeholt.",
   "devDeleteLineAnonBack": "Jede Nachricht und der Name, der nur für diesen Chat gemacht wurde, werden gelöscht, und der Chat kommt nicht wieder. Was du geschickt hast, wird auch vom Handy von Marios zurückgeholt.",
   "devDeleteNotTakenBack": "{count, plural, one{{count} Nachricht konnte nicht vom Handy von Marios zurückgeholt werden} other{{count} Nachrichten konnten nicht vom Handy von Marios zurückgeholt werden}}",
+  "devDeleteFailed": "Der Chat konnte nicht gelöscht werden. Versuch es noch mal.",
   "settingsWriteToMarios": "Marios schreiben",
   "settingsWriteToMariosHint": "Fehler, Ideen, Fragen",
   "seenDevChat": "Der Chat mit Marios",

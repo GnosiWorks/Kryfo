@@ -7576,6 +7576,10 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get devDeleteFailed =>
+      'Non è stato possibile eliminare la chat. Riprova.';
+
+  @override
   String get supportTitle => 'Inbox';
 
   @override

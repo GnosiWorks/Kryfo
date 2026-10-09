@@ -7502,6 +7502,9 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
+  String get devDeleteFailed => 'Obrolan tidak bisa dihapus. Coba lagi.';
+
+  @override
   String get supportTitle => 'Inbox';
 
   @override

@@ -7521,6 +7521,9 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
+  String get devDeleteFailed => 'گفت‌وگو حذف نشد. دوباره امتحان کنید.';
+
+  @override
   String get supportTitle => 'Inbox';
 
   @override

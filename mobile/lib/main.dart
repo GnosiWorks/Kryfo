@@ -7608,8 +7608,6 @@ class _Queue {
   }
 }
 
-// how to reach someone, and the container their chat is in: null for a
-// hidden chat while its vault is shut
 // a dev chat delete's take-backs, sealed before its wipe
 typedef _TakeBacks = ({
   String xPub,
@@ -7619,6 +7617,8 @@ typedef _TakeBacks = ({
   int failed,
 });
 
+// how to reach someone, and the container their chat is in: null for a
+// hidden chat while its vault is shut
 typedef _Reach = ({
   String onion,
   String xpub,
@@ -14591,40 +14591,70 @@ class AppState extends ChangeNotifier {
   // each take-back is sealed before the wipe, under the name it was sent
   // with, and goes after it, so a kill midway still leaves nothing here.
   // how many could not be taken back
-  Future<int> devDelete({bool takeBack = false}) {
-    final s = session;
-    // a decoy's chat is its own: it never waits on the everyday one's
-    if (s.container.quiet) return s.devChat.delete().then((_) => 0);
-    final going = _devDeleting;
-    if (going != null) return going;
-    final wiped = Completer<void>();
-    devGoing = wiped.future;
-    void gone() {
-      if (!wiped.isCompleted) wiped.complete();
-      devGoing = null;
-    }
-
-    late final Future<int> f;
-    f = _devDelete(s, takeBack, gone).whenComplete(() {
-      gone();
-      if (identical(_devDeleting, f)) _devDeleting = null;
-    });
-    _devDeleting = f;
-    return f;
+  Future<int> devDelete({bool takeBack = false}) async {
+    final d = devDeleteSteps(takeBack: takeBack);
+    await d.wiped;
+    return d.missed;
   }
 
-  // the everyday chat's delete, until its take-backs end
-  Future<int>? _devDeleting;
+  /// the delete in its two steps: [wiped] once the rows are gone, an error
+  /// when they would not go, and [missed] once the take-backs have ended.
+  /// another delete before the wipe is this one, after it a new one
+  ({Future<void> wiped, Future<int> missed}) devDeleteSteps({
+    bool takeBack = false,
+  }) {
+    final s = session;
+    // a decoy's chat is its own: it never waits on the everyday one's
+    if (s.container.quiet) {
+      final w = s.devChat.delete();
+      return (wiped: w, missed: w.then((_) => 0, onError: (_) => 0));
+    }
+    final going = _devWipe;
+    if (going != null) return going;
+    final wiped = Completer<void>();
+    final missed = Completer<int>();
+    final steps = (wiped: wiped.future, missed: missed.future);
+    wiped.future.ignore();
+    _devWipe = steps;
+    devGoing = wiped.future.then((_) {}, onError: (_) {});
+    void gone([Object? e]) {
+      if (identical(_devWipe, steps)) {
+        _devWipe = null;
+        devGoing = null;
+      }
+      if (wiped.isCompleted) return;
+      e == null ? wiped.complete() : wiped.completeError(e);
+    }
+
+    unawaited(
+      _devDelete(s, takeBack, gone).then(
+        missed.complete,
+        onError: (Object e) {
+          dlog('dev delete: ${e.runtimeType}');
+          gone(e);
+          missed.complete(0);
+        },
+      ),
+    );
+    return steps;
+  }
+
+  // the everyday chat's delete, until its rows are gone
+  ({Future<void> wiped, Future<int> missed})? _devWipe;
 
   // until the everyday chat's rows are gone: home shows no row for it, and
-  // a new start waits for it
+  // a new start waits for it. it never fails
   Future<void>? devGoing;
 
   // how long a delete spends sending its take-backs
   @visibleForTesting
   Duration devTakeBackFor = const Duration(seconds: 30);
 
-  Future<int> _devDelete(Session s, bool takeBack, void Function() gone) async {
+  Future<int> _devDelete(
+    Session s,
+    bool takeBack,
+    void Function([Object? e]) gone,
+  ) async {
     DevChatRow? was;
     try {
       was = await live.devChat.load();
@@ -14646,8 +14676,15 @@ class AppState extends ChangeNotifier {
     final self = DevSelf.ofKeys(was?.anonId, was?.anonEdPriv, was?.anonXPriv);
     if (self != null) engine.roomUnsubscribeBg(self.xPub);
     gone();
-    return back == null ? 0 : _sendTakeBacks(back);
+    if (back == null) return 0;
+    final missed = await _sendTakeBacks(back);
+    // sending as the made name opened its lane again: it goes with them
+    if (self != null) engine.roomUnsubscribeBg(self.xPub);
+    return missed;
   }
+
+  // the most a delete seals: what goes in half a minute, and some
+  static const _kTakeBackMost = 200;
 
   // a take-back sealed for each message this phone sent in the dev chat,
   // under the name it went with, and where they go. none for a chat that
@@ -14661,24 +14698,36 @@ class AppState extends ChangeNotifier {
         (was.key?.status ?? DevKeyStatus.retired) == DevKeyStatus.retired) {
       return null;
     }
-    final to = await _reach(chat);
-    if (to == null) return null;
     final List<String> uids;
     try {
       uids = await live.devChat.sentUids();
     } catch (e) {
+      // the wipe reads the same file: it says what went wrong
       dlog('dev delete: what was sent did not read (${e.runtimeType})');
       return null;
     }
+    if (uids.isEmpty) return null;
+    // the gate holds only what it needs of the chat, no more of its keys
+    final held = DevChatRow(
+      state: was.state,
+      keyId: was.keyId,
+      anonXPriv: was.anonXPriv,
+      createdAt: was.createdAt,
+    );
+    final to = await _reach(chat);
     final ciphers = <String>[];
-    var failed = 0;
-    for (final uid in uids) {
+    // newest first: past the most, the oldest are counted as missed
+    var failed = to == null
+        ? uids.length
+        : max(0, uids.length - _kTakeBackMost);
+    for (final uid
+        in to == null ? const <String>[] : uids.take(_kTakeBackMost)) {
       try {
         final c = await _io.encrypt(
           chat,
           await wrapMessage('', unsend: uid, sender: _mySender()),
         );
-        devGate.part(c, was);
+        devGate.part(c, held);
         ciphers.add(c);
       } catch (e) {
         dlog('dev delete: a take-back did not seal (${e.runtimeType})');
@@ -14686,9 +14735,9 @@ class AppState extends ChangeNotifier {
       }
     }
     return (
-      xPub: to.xpub,
-      fc: to.backPaired ? null : peerFcFor(chat),
-      backPaired: to.backPaired,
+      xPub: to?.xpub ?? '',
+      fc: to == null || to.backPaired ? null : peerFcFor(chat),
+      backPaired: to?.backPaired ?? false,
       ciphers: ciphers,
       failed: failed,
     );

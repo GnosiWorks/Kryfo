@@ -7561,6 +7561,10 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get devDeleteFailed =>
+      'Não foi possível apagar a conversa. Tente de novo.';
+
+  @override
   String get supportTitle => 'Inbox';
 
   @override

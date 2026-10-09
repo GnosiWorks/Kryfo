@@ -7646,6 +7646,9 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String get devDeleteFailed => 'Не вдалося видалити чат. Спробуйте ще раз.';
+
+  @override
   String get supportTitle => 'Inbox';
 
   @override

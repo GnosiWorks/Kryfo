@@ -7582,6 +7582,10 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get devDeleteFailed =>
+      'La discussion n’a pas pu être supprimée. Réessayez.';
+
+  @override
   String get supportTitle => 'Inbox';
 
   @override

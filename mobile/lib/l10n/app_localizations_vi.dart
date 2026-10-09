@@ -7488,6 +7488,9 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String get devDeleteFailed => 'Không xóa được cuộc trò chuyện. Hãy thử lại.';
+
+  @override
   String get supportTitle => 'Inbox';
 
   @override

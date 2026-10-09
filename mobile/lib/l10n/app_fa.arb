@@ -1987,6 +1987,7 @@
   "devDeleteLineBack": "همه‌ی پیام‌ها حذف می‌شوند و این گفت‌وگو دیگر برنمی‌گردد. آنچه فرستاده‌اید از گوشی Marios هم پس گرفته می‌شود.",
   "devDeleteLineAnonBack": "همه‌ی پیام‌ها و نامی که برای این گفت‌وگو ساخته شد حذف می‌شوند و این گفت‌وگو دیگر برنمی‌گردد. آنچه فرستاده‌اید از گوشی Marios هم پس گرفته می‌شود.",
   "devDeleteNotTakenBack": "{count, plural, one{{count} پیام از گوشی Marios پس گرفته نشد} other{{count} پیام از گوشی Marios پس گرفته نشد}}",
+  "devDeleteFailed": "گفت‌وگو حذف نشد. دوباره امتحان کنید.",
   "settingsWriteToMarios": "پیام به Marios",
   "settingsWriteToMariosHint": "باگ، ایده، سؤال",
   "seenDevChat": "گفت‌وگو با Marios",

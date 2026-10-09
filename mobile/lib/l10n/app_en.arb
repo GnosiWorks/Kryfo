@@ -9506,6 +9506,10 @@
       }
     }
   },
+  "devDeleteFailed": "The chat could not be deleted. Try again.",
+  "@devDeleteFailed": {
+    "description": "screens/dev_about_sheet.dart: a toast when deleting the developer chat failed and it is kept"
+  },
   "supportTitle": "Inbox",
   "@supportTitle": {
     "description": "screens/support_screen.dart: the inbox of chats people start from the Marios row, its home pin and its notification's title. Only the developer's own phone shows it, in English."

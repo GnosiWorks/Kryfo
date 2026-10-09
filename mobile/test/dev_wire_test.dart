@@ -1213,11 +1213,14 @@ void main() {
       // four lanes, each stuck on its first
       _io.answers.addAll([for (var i = 0; i < 4; i++) never.future]);
       _app.devTakeBackFor = const Duration(milliseconds: 300);
-      final going = _app.devDelete(takeBack: true);
+      final going = _app.devDeleteSteps(takeBack: true);
       expect(_app.devGoing, isNotNull);
-      // a second tap joins the first
-      expect(identical(_app.devDelete(takeBack: true), going), isTrue);
-      await _app.devGoing;
+      // a second tap before the wipe is the first
+      expect(
+        identical(_app.devDeleteSteps(takeBack: true).wiped, going.wiped),
+        isTrue,
+      );
+      await going.wiped;
       // gone already, made name and all, while the take-backs still wait
       expect(_app.devGoing, isNull);
       expect(_row().state, DevState.gone);
@@ -1227,12 +1230,63 @@ void main() {
       await _app.refreshContacts();
       expect(_app.devRow, isNull);
       expect(devGate.partingCount, 9);
-      expect(await going, 9);
+      expect(await going.missed, 9);
       expect(_io.sent, hasLength(4));
       expect(devGate.partingCount, 0);
       never.complete('ok');
       await _settle();
       expect(_io.sent, hasLength(4));
+    });
+
+    test('a chat started again while the take-backs wait goes with the '
+        'next delete', () async {
+      await _app.devBegin(anon: false);
+      await sent(['m1']);
+      final never = Completer<String>();
+      _io.answers.add(never.future);
+      _app.devTakeBackFor = const Duration(milliseconds: 300);
+      final first = _app.devDeleteSteps(takeBack: true);
+      await first.wiped;
+      expect(await _live.devChat.writeToMarios(), _dev);
+      expect(await _app.devBegin(anon: false), DevStart.ok);
+      await sent(['m2']);
+      final second = _app.devDeleteSteps(takeBack: true);
+      expect(identical(second.wiped, first.wiped), isFalse);
+      await second.wiped;
+      expect(_row().state, DevState.gone);
+      expect(_hasDevContact, isFalse);
+      expect(await second.missed, 0);
+      expect(await first.missed, 1);
+      never.complete('ok');
+    });
+
+    test('a delete that does not go keeps the chat, says so, and lets go of '
+        'its take-backs', () async {
+      await _app.devBegin(anon: false);
+      await sent(['k1']);
+      _mem.failOn = 'PRAGMA secure_delete = 1';
+      final d = _app.devDeleteSteps(takeBack: true);
+      await expectLater(d.wiped, throwsStateError);
+      _mem.failOn = null;
+      expect(await d.missed, 0);
+      expect(_app.devGoing, isNull);
+      expect(devGate.partingCount, 0);
+      expect(_io.sent, isEmpty);
+      expect(_row().state, DevState.everyday);
+      expect(_hasDevContact, isTrue);
+      // and goes when asked again
+      expect(await _app.devDelete(takeBack: true), 0);
+      expect(_row().state, DevState.gone);
+    });
+
+    test('past the most it seals, the oldest are counted as missed', () async {
+      await _app.devBegin(anon: false);
+      await sent([for (var i = 0; i < 205; i++) 'p$i']);
+      expect(await _app.devDelete(takeBack: true), 5);
+      final got = (await read()).map((r) => r['un']).toList();
+      expect(got, hasLength(200));
+      expect(got.first, 'p204');
+      expect(got, isNot(contains('p4')));
     });
 
     test('only what went is taken back', () async {
@@ -1256,21 +1310,21 @@ void main() {
       final never = Completer<String>();
       _io.answers.add(never.future);
       _app.devTakeBackFor = const Duration(milliseconds: 300);
-      final going = _app.devDelete(takeBack: true);
-      await _app.devGoing;
+      final going = _app.devDeleteSteps(takeBack: true);
       final decoyMem = MemDb();
       await devChatTables(decoyMem, now: 1);
       useDatabasesForTest(
         _live,
         Session(_Phone(decoyMem, HaloContainer.decoy)),
       );
-      final quiet = _app.devDelete(takeBack: true);
-      expect(identical(quiet, going), isFalse);
-      expect(await quiet, 0);
-      expect(_app.devGoing, isNull);
+      final quiet = _app.devDeleteSteps(takeBack: true);
+      expect(identical(quiet.wiped, going.wiped), isFalse);
+      await quiet.wiped;
+      expect(await quiet.missed, 0);
       expect(DevChatRow.of(decoyMem.rows('devchat')[0]).state, DevState.gone);
-      expect(await going, 1);
       useDatabasesForTest(_live, Session(_live));
+      await going.wiped;
+      expect(await going.missed, 1);
     });
   });
 

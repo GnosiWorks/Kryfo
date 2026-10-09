@@ -7199,6 +7199,9 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get devDeleteFailed => '没能删除这个聊天。请再试一次。';
+
+  @override
   String get supportTitle => 'Inbox';
 
   @override
@@ -14574,6 +14577,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
     );
     return '$_temp0';
   }
+
+  @override
+  String get devDeleteFailed => '沒能刪除這個聊天。請再試一次。';
 
   @override
   String get settingsWriteToMarios => '傳訊息給 Marios';

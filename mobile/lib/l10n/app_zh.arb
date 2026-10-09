@@ -1987,6 +1987,7 @@
   "devDeleteLineBack": "每一条消息都会删除，这个聊天也不会再回来。你发出的消息也会从 Marios 的手机上撤回。",
   "devDeleteLineAnonBack": "每一条消息和为这个聊天生成的名字都会删除，这个聊天也不会再回来。你发出的消息也会从 Marios 的手机上撤回。",
   "devDeleteNotTakenBack": "{count, plural, other{有 {count} 条消息没能从 Marios 的手机上撤回}}",
+  "devDeleteFailed": "没能删除这个聊天。请再试一次。",
   "settingsWriteToMarios": "给 Marios 发消息",
   "settingsWriteToMariosHint": "Bug、想法、问题",
   "seenDevChat": "与 Marios 的聊天",

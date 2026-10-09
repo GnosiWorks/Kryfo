@@ -7641,6 +7641,9 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get devDeleteFailed => 'تعذّر حذف المحادثة. حاول مرة أخرى.';
+
+  @override
   String get supportTitle => 'Inbox';
 
   @override

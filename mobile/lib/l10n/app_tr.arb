@@ -1987,6 +1987,7 @@
   "devDeleteLineBack": "Her mesaj gider ve sohbet geri gelmez. Gönderdiklerin Marios’un telefonundan da geri çekilir.",
   "devDeleteLineAnonBack": "Her mesaj ve bu sohbet için oluşturulan ad gider, sohbet de geri gelmez. Gönderdiklerin Marios’un telefonundan da geri çekilir.",
   "devDeleteNotTakenBack": "{count, plural, one{{count} mesaj Marios’un telefonundan geri çekilemedi} other{{count} mesaj Marios’un telefonundan geri çekilemedi}}",
+  "devDeleteFailed": "Sohbet silinemedi. Yeniden dene.",
   "settingsWriteToMarios": "Marios’a yaz",
   "settingsWriteToMariosHint": "Hatalar, fikirler, sorular",
   "seenDevChat": "Marios sohbeti",

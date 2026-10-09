@@ -7531,6 +7531,9 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String get devDeleteFailed => 'Sohbet silinemedi. Yeniden dene.';
+
+  @override
   String get supportTitle => 'Inbox';
 
   @override

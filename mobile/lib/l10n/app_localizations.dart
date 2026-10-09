@@ -12045,6 +12045,12 @@ abstract class AppLocalizations {
   /// **'{count, plural, one{{count} message could not be taken back from Marios\'s phone} other{{count} messages could not be taken back from Marios\'s phone}}'**
   String devDeleteNotTakenBack(int count);
 
+  /// screens/dev_about_sheet.dart: a toast when deleting the developer chat failed and it is kept
+  ///
+  /// In en, this message translates to:
+  /// **'The chat could not be deleted. Try again.'**
+  String get devDeleteFailed;
+
   /// screens/support_screen.dart: the inbox of chats people start from the Marios row, its home pin and its notification's title. Only the developer's own phone shows it, in English.
   ///
   /// In en, this message translates to:
