@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// a block settles what was queued for them: an edit, a pin, a reaction, an
-// unsend or a receipt goes, in the container that holds them and in the
-// other one, a decoy's own too. what they still have queued, a text or a
-// file, waits and goes nowhere while the block holds, wherever they are
-// blocked. a receipt from them ticks only what went before the block, and
-// a back-pair leaves their row as the block left it. the database methods
-// are the real ones over rows kept in maps; the wire and signal are
-// stand-ins
+// a block settles what was queued for them: an edit, a pin, a reaction or
+// a receipt goes, in the container that holds them and in the other one, a
+// decoy's own too, and in a vault opened later. a take-back only withdraws
+// and still goes. while it holds an edit or a pin stays here, nobody
+// blocked is introduced, and a text or a file waits and goes nowhere. the
+// queues read the block list in the database, never as a list of
+// variables. a receipt from them ticks only what went before the block,
+// and a back-pair leaves their row as the block left it but for a new
+// key's warning. the database methods are the real ones over rows kept in
+// maps; the wire and signal are stand-ins
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -19,6 +22,7 @@ import 'package:kryfo/main.dart'
         HaloDb,
         HaloEngine,
         appState,
+        kNotBlocked,
         kFrameReaction,
         kFrameReceipt,
         kFrameUnsend,
@@ -33,6 +37,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
 import 'arrival_fakes.dart';
 import 'mem_db.dart';
+import 'sqlite_ffi.dart';
 
 const _bob = 'bob-who-writes';
 const _amy = 'amy-who-stays';
@@ -40,21 +45,63 @@ const _amy = 'amy-who-stays';
 class _Rows extends HaloDb {
   _Rows(this.mem, [super.container]);
   final MemDb mem;
+  // the most ids the outbox was handed to leave out
+  var mostSkipped = 0;
   @override
   Future<Database> open() async => mem;
   // its or-clause is past what the map rows read: the same rule, in dart
   @override
   Future<List<Map<String, Object?>>> unsentOutbox({
     Set<String> skip = const {},
-  }) async => [
-    for (final r in mem.rows('messages'))
-      if (r['direction'] == 'out' &&
-          r['sent'] == 0 &&
-          r['msg_uid'] != null &&
-          r['group_id'] == null &&
-          !skip.contains(r['peer_id']))
-        r,
-  ];
+  }) async {
+    mostSkipped = max(mostSkipped, skip.length);
+    final blocked = {
+      for (final c in mem.rows('contacts'))
+        if (c['blocked'] == 1) c['halo_id'],
+    };
+    return [
+      for (final r in mem.rows('messages'))
+        if (r['direction'] == 'out' &&
+            r['sent'] == 0 &&
+            r['msg_uid'] != null &&
+            r['group_id'] == null &&
+            !skip.contains(r['peer_id']) &&
+            !blocked.contains(r['peer_id']))
+          r,
+    ];
+  }
+}
+
+// the most variables any one read was handed
+class _Counted extends MemDb {
+  var most = 0;
+  @override
+  Future<List<Map<String, Object?>>> query(
+    String table, {
+    bool? distinct,
+    List<String>? columns,
+    String? where,
+    List<Object?>? whereArgs,
+    String? groupBy,
+    String? having,
+    String? orderBy,
+    int? limit,
+    int? offset,
+  }) {
+    most = max(most, whereArgs?.length ?? 0);
+    return super.query(
+      table,
+      distinct: distinct,
+      columns: columns,
+      where: where,
+      whereArgs: whereArgs,
+      groupBy: groupBy,
+      having: having,
+      orderBy: orderBy,
+      limit: limit,
+      offset: offset,
+    );
+  }
 }
 
 // nothing reaches the engine
@@ -122,8 +169,8 @@ void main() {
       ('everyday', HaloContainer.everyday),
       ('decoy', HaloContainer.decoy),
     ]) {
-      test('a block in the $name drops what was queued for them, and '
-          'no one else\'s', () async {
+      test('a block in the $name drops what was queued for them but a '
+          'take-back, and no one else\'s', () async {
         final mem = MemDb();
         final db = _Rows(mem, c);
         await _person(mem, _bob);
@@ -131,7 +178,7 @@ void main() {
         await _queueAll(db, _bob);
         await _queueAll(db, _amy);
         await db.setBlocked(_bob, true);
-        expect(_queued(mem, _bob), isEmpty);
+        expect(_queued(mem, _bob), ['frames_out u-$_bob']);
         expect(_queued(mem, _amy), hasLength(5));
       });
     }
@@ -148,8 +195,33 @@ void main() {
       final s = await Session.withVault(live, vault);
       await s.setBlocked(_bob, true);
       expect(hidden.rows('contacts').single['blocked'], 1);
-      expect(_queued(hidden, _bob), isEmpty);
-      expect(_queued(everyday, _bob), isEmpty);
+      expect(_queued(hidden, _bob), ['frames_out u-$_bob']);
+      expect(_queued(everyday, _bob), ['frames_out u-$_bob']);
+    });
+
+    test('the queues read the block list in the database, however long it '
+        'is', () async {
+      final sql = SqliteMem.open();
+      if (sql == null) return markTestSkipped('no sqlite on this host');
+      await sql.execute(
+        'CREATE TABLE contacts (halo_id TEXT PRIMARY KEY, blocked INTEGER)',
+      );
+      await sql.execute('CREATE TABLE edits_out (msg_uid TEXT, peer_id TEXT)');
+      await sql.execute('BEGIN');
+      for (var i = 0; i < 40000; i++) {
+        await sql.execute('INSERT INTO contacts VALUES (?, 1)', ['b$i']);
+        await sql.execute('INSERT INTO edits_out VALUES (?, ?)', [
+          'e$i',
+          'b$i',
+        ]);
+      }
+      await sql.execute('INSERT INTO contacts VALUES (?, 0)', [_amy]);
+      await sql.execute('INSERT INTO edits_out VALUES (?, ?)', ['ea', _amy]);
+      await sql.execute('COMMIT');
+      final left = await sql.rawQuery(
+        'SELECT msg_uid FROM edits_out WHERE $kNotBlocked',
+      );
+      expect([for (final r in left) r['msg_uid']], ['ea']);
     });
 
     test('a receipt from them ticks only what was written before', () async {
@@ -178,9 +250,13 @@ void main() {
       final rows = {for (final r in mem.rows('contacts')) r['halo_id']: r};
       final bob = rows[_bob]!;
       expect(
-        (bob['onion'], bob['xpub'], bob['last_seen'], bob['key_changed']),
-        ('o-$_bob', 'x-$_bob', 1, 0),
+        (bob['onion'], bob['xpub'], bob['last_seen']),
+        ('o-$_bob', 'x-$_bob', 1),
       );
+      // the new key still warns once the block ends
+      await db.setBlocked(_bob, false);
+      expect(await db.keyChanged(_bob), isTrue);
+      expect(await db.isVerified(_bob), isFalse);
       // someone not blocked is filed as before
       expect((rows[_amy]!['xpub'], rows[_amy]!['key_changed']), ('x-new', 1));
     });
@@ -212,10 +288,11 @@ void main() {
     Future<void> settle() =>
         Future<void>.delayed(const Duration(milliseconds: 50));
 
-    Future<void> age() async {
+    Future<void> age([MemDb? of]) async {
+      final m = of ?? mem;
       for (final t in ['edits_out', 'pins_out', 'frames_out']) {
-        for (final r in mem.rows(t)) {
-          await mem.update(
+        for (final r in m.rows(t)) {
+          await m.update(
             t,
             {'at': 1},
             where: 'msg_uid = ?',
@@ -230,13 +307,20 @@ void main() {
         unwrapMessage(c.substring('to $_bob '.length)),
     ];
 
-    test('nothing queued for them goes while the block holds, and it goes '
-        'once it ends', () async {
+    test('while the block holds an edit or a pin stays here and is never '
+        'queued, a take-back goes at once, and a text waits for the '
+        'unblock', () async {
       await db.setBlocked(_bob, true);
       await _out(mem, 't1', _bob);
-      await db.queueEdit('t0', _bob, 'changed');
-      await db.queuePin('t0', _bob, true);
-      await age();
+      await app.editInChat(_bob, 't0', 'changed');
+      await app.pinInChat(_bob, 't0', true);
+      await app.unsendInChat(_bob, 'u9');
+      await settle();
+      expect(mem.rows('edits_out'), isEmpty);
+      expect(mem.rows('pins_out'), isEmpty);
+      expect(mem.rows('frames_out'), isEmpty);
+      expect([for (final m in wire()) m.unsend], ['u9']);
+      io.sent.clear();
       await app.drainOutbox();
       await settle();
       expect(io.sent, isEmpty);
@@ -245,9 +329,64 @@ void main() {
       await app.drainOutbox();
       await settle();
       final w = wire();
-      expect(w.map((m) => m.msgUid), contains('t1'));
-      expect(w.any((m) => m.edit?.targetUid == 't0'), isTrue);
-      expect(w.any((m) => m.pin?.targetUid == 't0'), isTrue);
+      expect([for (final m in w) m.msgUid], ['t1']);
+      expect(w.any((m) => m.edit != null || m.pin != null), isFalse);
+    });
+
+    test('a take-back queued before the block still goes while it '
+        'holds', () async {
+      io.down = true;
+      await app.unsendInChat(_bob, 'u8');
+      await settle();
+      await db.setBlocked(_bob, true);
+      expect(mem.rows('frames_out').single['kind'], kFrameUnsend);
+      io.down = false;
+      await age();
+      await app.drainOutbox();
+      await settle();
+      expect(wire().single.unsend, 'u8');
+      expect(mem.rows('frames_out'), isEmpty);
+    });
+
+    test('what a vault queued for someone the everyday side blocked goes '
+        'unsent when it opens, but a take-back', () async {
+      await db.setBlocked(_bob, true);
+      final hidden = MemDb();
+      final vault = _Rows(hidden, HaloContainer.vault);
+      await _person(hidden, _bob);
+      await _queueAll(vault, _bob);
+      await age(hidden);
+      useDatabasesForTest(db, await Session.withVault(db, vault));
+      await app.drainOutbox();
+      await settle();
+      expect([for (final m in wire()) m.unsend], ['u-$_bob']);
+      expect(_queued(hidden, _bob), isEmpty);
+    });
+
+    test('someone blocked is neither introduced nor introduced to', () async {
+      await _person(mem, _amy);
+      await db.setBlocked(_bob, true);
+      for (final (a, b) in [(_bob, _amy), (_amy, _bob)]) {
+        final r = await app.introduce(a, b);
+        expect((r.toFirst, r.toSecond), (false, false));
+      }
+      expect(io.sent, isEmpty);
+    });
+
+    test('a long block list is never handed to the queues as '
+        'variables', () async {
+      final counted = _Counted();
+      final rows = _Rows(counted);
+      for (var i = 0; i < 2000; i++) {
+        await _person(counted, 'blocked-$i', blocked: true);
+      }
+      await _person(counted, _amy);
+      await rows.queueEdit('e1', _amy, 'changed');
+      useDatabasesForTest(rows, Session(rows));
+      await app.drainOutbox();
+      await settle();
+      expect(counted.most, lessThan(10));
+      expect(rows.mostSkipped, lessThan(10));
     });
 
     test('blocked in the open vault, nothing goes to them one to one, even '

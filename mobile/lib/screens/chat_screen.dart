@@ -2087,19 +2087,17 @@ class _ChatScreenState extends State<ChatScreen>
       m.edited = true;
     });
     await session.editMessage(m.msgUid!, newText);
-    // queued first, sent now: if the route is down the outbox carries it,
-    // the way it carries a message. the home row shows the new text too.
-    await session.queueEdit(m.msgUid!, widget.peerHaloId, newText);
+    await appState.editInChat(widget.peerHaloId, m.msgUid!, newText);
+    // the home row shows the new text too
     unawaited(appState.refreshContacts());
-    // a quiet session keeps the edit queued here: nothing leaves
-    if (!sessionQuiet) {
-      unawaited(appState.sendEdit(widget.peerHaloId, m.msgUid!, newText));
-    }
   }
 
   // toggle a reaction on a message. tap same emoji again to remove.
   // tap a different emoji to replace.
   Future<void> _toggleReaction(_Msg m, String emoji) async {
+    // read before anything is written: a block this screen has not seen yet
+    // keeps the reaction off both sides
+    if (await appState.blockedAnywhere(widget.peerHaloId)) return;
     if (m.msgUid == null) {
       final uid = newMsgUid();
       m.msgUid = uid;
@@ -4079,13 +4077,14 @@ class _ChatScreenState extends State<ChatScreen>
                 ),
                 // greyed with a reason while the contact is still a
                 // request: you cannot vouch for someone you have not
-                // accepted yourself
-                MenuSheetRow(
-                  icon: Icons.people_outline,
-                  label: l10n.chatIntroduceTo,
-                  sub: _accepted ? null : l10n.chatAcceptThemFirst,
-                  onTap: _accepted ? () => pick('introduce') : null,
-                ),
+                // accepted yourself. someone blocked is not offered
+                if (!_blocked)
+                  MenuSheetRow(
+                    icon: Icons.people_outline,
+                    label: l10n.chatIntroduceTo,
+                    sub: _accepted ? null : l10n.chatAcceptThemFirst,
+                    onTap: _accepted ? () => pick('introduce') : null,
+                  ),
                 MenuSheetRow(
                   icon: Icons.photo_library_outlined,
                   label: l10n.chatSharedPhotos,
