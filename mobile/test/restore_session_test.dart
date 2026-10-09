@@ -144,6 +144,7 @@ void main() {
       'halo.d.key': 'decoy key',
     });
     forgetLeftoverSweep();
+    restoreRunningForTest = false;
     forgetRestoredHidden();
     // both accounts, each with hidden chats of its own
     put('halo.db', 'everyday');
@@ -332,6 +333,47 @@ void main() {
       lock: lock.state,
     );
     expect(prefs.getInt(kRestoredFromPref), isNull);
+  });
+
+  test('one restore at a time: a second waits for none, and one that landed '
+      'holds until the app closes', () async {
+    final lock = await pins(inDecoy: false);
+    useDatabasesForTest(live, Session(live));
+    restoreCipherForTest = _Cipher.new;
+    final path = await file();
+    final first = restoreBackupFile(path, 'pass', lock: lock.state);
+    expect(restoreRunning, isTrue);
+    await expectLater(
+      restoreBackupFile(path, 'pass', own: decoy, lock: lock.state),
+      throwsA(isA<RestoreBusy>()),
+    );
+    await expectLater(
+      restoreBackupBlob('kryfo-backup:x', 'pass', own: decoy),
+      throwsA(isA<RestoreBusy>()),
+    );
+    await first;
+    expect(read('halo.db'), 'restored');
+    expect(read('halo_d.db'), 'decoy');
+    expect(decoy.log, isEmpty);
+    expect(restoreRunning, isTrue);
+  });
+
+  test('a restore that fails before landing lets the next one run', () async {
+    final lock = await pins(inDecoy: false);
+    useDatabasesForTest(live, Session(live));
+    restoreCipherForTest = _Cipher.new;
+    final path = await file();
+    // a record changed on the way: the file is not whole
+    final bytes = File(path).readAsBytesSync();
+    bytes[bytes.length - 3] ^= 1;
+    File(path).writeAsBytesSync(bytes);
+    await expectLater(
+      restoreBackupFile(path, 'pass', lock: lock.state),
+      throwsA(isA<RestoreError>()),
+    );
+    expect(restoreRunning, isFalse);
+    await restoreBackupFile(await file(), 'pass', lock: lock.state);
+    expect(read('halo.db'), 'restored');
   });
 
   test('the everyday database takes nothing more once a restore lands on '

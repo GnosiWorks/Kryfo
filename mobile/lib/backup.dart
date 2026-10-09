@@ -258,14 +258,41 @@ Future<BackupSummary> inspectBackup(String blob, String passphrase) async {
 
 // it lands on the session it began in, [own] when the screen began before
 // this: the other one may be unlocked by the time the file is open
-Future<void> restoreBackupBlob(
-  String blob,
-  String passphrase, {
-  HaloDb? own,
-}) async {
-  _restoredSettings = false;
-  final db = own ?? session.primary;
-  return landV1Payload(await _openPayload(blob, passphrase), own: db);
+Future<void> restoreBackupBlob(String blob, String passphrase, {HaloDb? own}) =>
+    _oneRestore(() async {
+      _restoredSettings = false;
+      final db = own ?? session.primary;
+      return landV1Payload(await _openPayload(blob, passphrase), own: db);
+    });
+
+// one restore at a time: a second, begun in the other session while the
+// first still lands, would land over it. one that landed, or was cut short,
+// holds it until the app closes
+var _restoreRunning = false;
+
+/// a restore is running, or one landed and the app is about to close
+bool get restoreRunning => _restoreRunning;
+
+@visibleForTesting
+set restoreRunningForTest(bool v) => _restoreRunning = v;
+
+/// what a second restore meets while one runs
+class RestoreBusy implements Exception {
+  const RestoreBusy();
+}
+
+Future<void> _oneRestore(Future<void> Function() run) async {
+  if (_restoreRunning) throw const RestoreBusy();
+  _restoreRunning = true;
+  try {
+    await run();
+  } on RestoreError catch (e) {
+    if (e.why != RestoreFailure.cutShort) _restoreRunning = false;
+    rethrow;
+  } catch (_) {
+    _restoreRunning = false;
+    rethrow;
+  }
 }
 
 /// a restore bound to the session open as it begins: it lands there, even
@@ -273,6 +300,9 @@ Future<void> restoreBackupBlob(
 class RestoreHere {
   RestoreHere() : _own = session.primary;
   final HaloDb _own;
+
+  /// the container it lands in
+  HaloContainer get into => _own.container;
 
   Future<void> file(
     String path,
@@ -1662,7 +1692,15 @@ Future<void> restoreBackupFile(
   void Function(int done, int total)? onProgress,
   HaloDb? own,
   @visibleForTesting LockState? lock,
-}) async {
+}) => _oneRestore(() => _restoreFile(path, passphrase, onProgress, own, lock));
+
+Future<void> _restoreFile(
+  String path,
+  String passphrase,
+  void Function(int done, int total)? onProgress,
+  HaloDb? own,
+  LockState? lock,
+) async {
   _restoredSettings = false;
   if (!await isBackupV2(path)) {
     throw const RestoreError(RestoreFailure.notABackup);

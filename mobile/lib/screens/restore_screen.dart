@@ -42,7 +42,7 @@ import '../dlog.dart';
 @visibleForTesting
 Future<BackupSummary> Function(String passphrase)? inspectForTest;
 @visibleForTesting
-Future<void> Function(String passphrase)? restoreForTest;
+Future<void> Function(String passphrase, RestoreHere here)? restoreForTest;
 @visibleForTesting
 Future<PlatformFile?> Function()? pickForTest;
 // what closes the app once a restore is done, so the next start boots from
@@ -159,6 +159,8 @@ class _RestoreScreenState extends State<RestoreScreen> {
   // a file of either kind is picked
   bool get _hasFile => _blob != null || _path != null;
   final _passCtrl = TextEditingController();
+  // where it lands: the session this screen was opened in
+  final _here = RestoreHere();
   bool _shown = false;
   bool _busy = false;
   // from the handle release to the end of a restore: the screen stays, so
@@ -230,6 +232,11 @@ class _RestoreScreenState extends State<RestoreScreen> {
       setState(() => _error = l10n.restoreTypeThePassphraseThe);
       return;
     }
+    // another restore is under way, from the other session say
+    if (restoreRunning) {
+      setState(() => _error = l10n.restoreTheRestoreDidNot);
+      return;
+    }
     setState(() {
       _busy = true;
       _error = null;
@@ -268,6 +275,10 @@ class _RestoreScreenState extends State<RestoreScreen> {
     final path = _path;
     final s = _summary;
     if ((blob == null && path == null) || s == null) return;
+    if (restoreRunning) {
+      setState(() => _error = l10n.restoreTheRestoreDidNot);
+      return;
+    }
     // what comes back, what does not, and plainly: the old phone stops
     // receiving the moment this one sends
     final go = await _moveSheet(s);
@@ -292,8 +303,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
     if (!mounted) return;
     _running = true;
     // the session the restore runs in, the one its end is shown in
-    final decoy = lockState.inDecoy;
-    final here = RestoreHere();
+    final decoy = _here.into.quiet;
     final pw = _passCtrl.text.trim();
     if (mine != null && !sameIdentity) {
       setState(() {
@@ -349,9 +359,9 @@ class _RestoreScreenState extends State<RestoreScreen> {
     }
     try {
       if (restoreForTest != null) {
-        await restoreForTest!(pw);
+        await restoreForTest!(pw, _here);
       } else if (path != null) {
-        await here.file(
+        await _here.file(
           path,
           pw,
           onProgress: (a, b) {
@@ -360,7 +370,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
         );
         await _dropOwnCopy();
       } else {
-        await here.blob(blob!, pw);
+        await _here.blob(blob!, pw);
       }
       // the same identity coming back, from a file made before handles or
       // the face were carried: the key still proves the handle, so keep the
