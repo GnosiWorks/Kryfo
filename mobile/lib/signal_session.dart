@@ -242,8 +242,8 @@ class SignalSession {
 
   /// [peer] holds a session that came back with a restore and is due an
   /// ask to start afresh: never asked, or the wait since the last ask is
-  /// over. the wait doubles from an hour up to a week for someone who
-  /// never answers
+  /// over. the wait grows to a week for someone who never answers
+  /// (askWait)
   Future<bool> askDue(String peer, int now) async {
     final at = await askDueAt(peer);
     return at != null && now >= at;

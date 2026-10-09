@@ -897,6 +897,7 @@ Future<BackupDraft> draftBackup(
     'secure': secure,
     'settings': settings,
     'onboardingDone': onboardingDone,
+    'caughtUpTo': await caughtUpTo(docs),
     'chunk': kBackupChunk,
     'files': [for (final f in files) f.toJson()],
     if (hidden) 'vault': {'key': key},
@@ -1661,6 +1662,7 @@ Future<void> restoreBackupFile(
       value: manifest['dbPassphrase'] as String,
     );
     await restorePrefs(manifest['prefs']);
+    await landCatchUpFloor(docs.path, manifest['caughtUpTo']);
     // in place before the restart reads them
     _restoredSettings = await landCarriedSettings(
       manifest['settings'],
@@ -1679,4 +1681,32 @@ Future<void> restoreBackupFile(
   });
   if (quiet) return;
   dlog('backup: restored identity from a v2 file');
+}
+
+/// where this phone's relay catch-up has reached, in seconds: the oldest
+/// anchor the engine keeps for an address, or now when it keeps none
+@visibleForTesting
+Future<int> caughtUpTo(String docs, {int? now}) async {
+  final at = now ?? DateTime.now().millisecondsSinceEpoch ~/ 1000;
+  var low = at;
+  try {
+    await for (final e in Directory(docs).list()) {
+      if (!p.basename(e.path).startsWith('nostr_last_')) continue;
+      final v = int.tryParse((await File(e.path).readAsString()).trim());
+      if (v != null && v > 0 && v < low) low = v;
+    }
+  } catch (e) {
+    dlog('backup: catch-up not read (${e.runtimeType})');
+  }
+  return low;
+}
+
+/// a restore's relay catch-up starts where the phone the backup came from
+/// had reached, for every address without an anchor of its own: what came
+/// before, kept or deleted there, is not fetched again. a file from before
+/// it was carried leaves the walk as it was
+@visibleForTesting
+Future<void> landCatchUpFloor(String docs, Object? from) async {
+  if (from is! int || from <= 0) return;
+  await File(p.join(docs, 'nostr_floor')).writeAsString('$from', flush: true);
 }

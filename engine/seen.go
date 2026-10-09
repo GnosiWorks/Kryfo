@@ -10,6 +10,7 @@ package main
 import (
 	"encoding/hex"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -50,6 +51,23 @@ func fileGone(path string) bool {
 }
 
 // where a receive address keeps the ids it has seen and how far it got
+// a restore's catch-up floor, in seconds: where the phone its backup came
+// from had caught up to. the app writes it; 0 when there is none
+func readFloor() int64 {
+	if savedDataDir == "" {
+		return 0
+	}
+	b, err := os.ReadFile(savedDataDir + "/nostr_floor")
+	if err != nil {
+		return 0
+	}
+	v, err := strconv.ParseInt(strings.TrimSpace(string(b)), 10, 64)
+	if err != nil || v < 0 {
+		return 0
+	}
+	return v
+}
+
 func addressFiles(rcvPk string) (seenPath, lastPath string) {
 	if savedDataDir == "" {
 		return "", ""

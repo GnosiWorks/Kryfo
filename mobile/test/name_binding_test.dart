@@ -304,6 +304,73 @@ void main() {
     );
   });
 
+  test(
+    'an opener that comes again off a relay is a copy: the session '
+    'as it runs stays, nothing shows twice, and what follows opens',
+    () async {
+      final c = await _opener(amber, _amber, amberEd, 'opened once');
+      await app.receiveRelay([(peer: amber.xPub, cipher: c)]);
+      await _settle();
+      // a turn each way: the session moves on past the opener
+      expect(
+        await _reads(amber.ss, await signalSession.encryptTo(_amber, 'back')),
+        'back',
+      );
+      final turned = await amber.ss.encryptTo(
+        _me,
+        await wrapMessage(
+          'a turn',
+          msgUid: 'u-turn',
+          sender: SenderInfo(
+            haloId: _amber,
+            edPub: amberEd,
+            onion: 'o-amber',
+            xPub: amber.xPub,
+          ),
+        ),
+      );
+      await app.receiveRelay([(peer: amber.xPub, cipher: turned)]);
+      await _settle();
+      final mine = live.msgs.where((m) => m['peer_id'] == _amber).length;
+      final addr = SignalProtocolAddress(_amber, 1);
+      final before = (await signalSession.sessionStore.loadSession(
+        addr,
+      )).serialize();
+      // a fresh install walks the relay's backlog, its seen marks gone,
+      // and the opener comes again
+      live.seen.clear();
+      await app.receiveRelay([(peer: amber.xPub, cipher: c)]);
+      await _settle();
+      expect(
+        (await signalSession.sessionStore.loadSession(addr)).serialize(),
+        before,
+      );
+      expect(live.msgs.where((m) => m['peer_id'] == _amber).length, mine);
+      // what she writes next still opens
+      final next = await amber.ss.encryptTo(
+        _me,
+        await wrapMessage(
+          'after the copy',
+          msgUid: 'u-after',
+          sender: SenderInfo(
+            haloId: _amber,
+            edPub: amberEd,
+            onion: 'o-amber',
+            xPub: amber.xPub,
+          ),
+        ),
+      );
+      await app.receiveRelay([(peer: amber.xPub, cipher: next)]);
+      await _settle();
+      expect(
+        live.msgs
+            .where((m) => m['peer_id'] == _amber)
+            .map((m) => m['plaintext']),
+        contains('after the copy'),
+      );
+    },
+  );
+
   test('a first message opens under a name only with the key bound to '
       'it', () async {
     final member = await _phone();

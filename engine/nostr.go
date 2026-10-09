@@ -1197,6 +1197,11 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				lastOnDisk = v
 				lastSaved = anchorNow(v, time.Now())
 			}
+		} else if f := readFloor(); f > 0 {
+			// no anchor of its own after a restore: it starts where the
+			// phone the backup came from had caught up to, not at the
+			// relays' oldest, so what went there does not come again
+			lastSaved = anchorNow(f, time.Now())
 		}
 	}
 	// the file is no later than anything our relay owed before, so it holds

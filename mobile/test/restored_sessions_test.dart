@@ -22,6 +22,7 @@ import 'package:kryfo/main.dart'
         AppIo,
         AppState,
         HaloDb,
+        heldWire,
         kFrameReaction,
         kFrameReceipt,
         makePreKeyBundleB64,
@@ -896,6 +897,7 @@ void main() {
       app.outboxNextAtForTest('w1'),
       greaterThanOrEqualTo(t0 + 10 * 60 * 1000),
     );
+    expect(app.outboxNextAtForTest('w1'), lessThan(t0 + 11 * 60 * 1000));
 
     // a start after this one tries at once, and asks nothing before it is due
     final again = AppState(io: io, router: router)
@@ -1152,10 +1154,22 @@ void main() {
     await put(p.name, 'old', 10 * day);
     await rows.deleteMessage('old');
     expect(await rows.goneFrom(p.name, 'old'), isTrue);
-    // a request turned away
+    // a request turned away, with a text the cap held as it opened
     await put(q.name, 'asked', day);
+    await mem.insert('held_onion', {
+      'peer_id': q.name,
+      'cipher': heldWire(
+        await wrapMessage(
+          'held',
+          msgUid: 'held-one',
+          sender: SenderInfo(haloId: q.name, edPub: '', onion: '', xPub: ''),
+        ),
+      ),
+      'at': now,
+    });
     await rows.declineRequest(q.name);
     expect(await rows.goneFrom(q.name, 'asked'), isTrue);
+    expect(await rows.goneFrom(q.name, 'held-one'), isTrue);
     // a chat deleted whole
     await put(p.name, 'whole', 12 * day);
     await rows.deleteAllOf(p.name);

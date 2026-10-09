@@ -342,6 +342,41 @@ void main() {
       );
     });
 
+    test('restored on a new phone, its relay catch-up starts where the old '
+        'one had reached', () async {
+      oldPhone();
+      // the engine's anchors on the old phone, one address behind
+      put('nostr_last_aaaaaaaaaaaaaaaa', '1791400000');
+      put('nostr_last_bbbbbbbbbbbbbbbb', '1791500000\n');
+      put('nostr_seen_aaaaaaaaaaaaaaaa', 'not an anchor');
+      final d = await draftBackup(stage, side: const _Side());
+      expect(d.manifest['caughtUpTo'], 1791400000);
+      final out = await write(d.manifest, d.sources);
+      newPhone();
+      for (final f in Directory(docs).listSync()) {
+        if (p.basename(f.path).startsWith('nostr_')) f.deleteSync();
+      }
+      await restore(out, inDecoy: false);
+      expect(
+        File(p.join(docs, 'nostr_floor')).readAsStringSync(),
+        '1791400000',
+      );
+    });
+
+    test('the catch-up point: the oldest anchor, now with none, and a file '
+        'without one leaves no floor', () async {
+      expect(await caughtUpTo(docs, now: 1800000000), 1800000000);
+      put('nostr_last_cccccccccccccccc', 'garbage');
+      put('nostr_last_dddddddddddddddd', '0');
+      expect(await caughtUpTo(docs, now: 1800000000), 1800000000);
+      put('nostr_last_eeeeeeeeeeeeeeee', '1790000000');
+      expect(await caughtUpTo(docs, now: 1800000000), 1790000000);
+      await landCatchUpFloor(docs, null);
+      await landCatchUpFloor(docs, 'soon');
+      await landCatchUpFloor(docs, -1);
+      expect(File(p.join(docs, 'nostr_floor')).existsSync(), isFalse);
+    });
+
     test('restored on a new phone brings every setting back before the '
         'restart, and no PIN', () async {
       oldPhone();
