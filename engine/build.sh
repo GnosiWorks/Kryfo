@@ -44,9 +44,7 @@ export CGO_ENABLED=1
 export CGO_CFLAGS="-O2 -g -fstack-protector-strong -D_FORTIFY_SOURCE=2"
 export CGO_LDFLAGS="-Wl,--build-id=none"
 export SOURCE_DATE_EPOCH=1700000000
-# anet, which snowflake uses for interfaces on android, reaches into net
-# with go:linkname, and go refuses that unless told not to check
-LDFLAGS="-buildid= -w -s -checklinkname=0"
+LDFLAGS="-buildid= -w -s"
 # go does not track the vendored c headers, HALO_FULL=1 rebuilds every object
 BUILD_FLAGS="${HALO_FULL:+-a}"
 # no vcs stamp: the commit and dirty flag differ between machines, so the

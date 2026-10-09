@@ -161,10 +161,11 @@ type ipv6ZoneCache struct {
 	toName       map[int]string // interface index to its name
 }
 
-//go:linkname zoneCache net.zoneCache
+// kryfo: local caches instead of linknames into net and x/net, so the
+// linker's linkname check can stay on. net no longer learns the
+// zone names of ipv6 link-local addresses from here.
 var zoneCache ipv6ZoneCache
 
-//go:linkname zoneCacheX golang.org/x/net/internal/socket.zoneCache
 var zoneCacheX ipv6ZoneCache
 
 // update refreshes the network interface information if the cache was last
