@@ -3306,5 +3306,56 @@ void main() {
     expect(l.groupChatFileReach(5, 6), "Sent · 5 of 6 have it");
     expect(l.groupChatFileGaveUp(1), "Sent · 1 didn't get it");
     expect(l.groupChatFileGaveUp(3), "Sent · 3 didn't get it");
+    expect(l.gifBadge, "GIF");
+    expect(l.gifPlay, "Play GIF");
+    expect(l.gifSentInside, "Sent inside your message");
+    expect(l.gifOptInTitle, "Search GIFs, privately");
+    expect(
+      l.gifOptInLead,
+      "GIF search needs the internet, so it stays off until you want it.",
+    );
+    expect(l.gifOptInOverTor, "Searched over Tor");
+    expect(l.gifOptInThroughKryfo, "Searched through Kryfo");
+    expect(
+      l.gifOptInAsksForYou,
+      "Kryfo's server asks the GIF service for you. The service never sees you, and the server keeps no record of what you searched.",
+    );
+    expect(
+      l.gifOptInLikeAPhoto,
+      "The GIF travels encrypted, like a photo. Your friend's phone fetches nothing.",
+    );
+    expect(l.gifOptInOffWhenever, "Off whenever you like");
+    expect(
+      l.gifOptInWhereToTurnOff,
+      "Settings, Privacy, GIF search. GIFs on your phone always work without it.",
+    );
+    expect(l.gifTurnOn, "Turn on GIF search");
+    expect(l.gifNotNow, "Not now");
+    expect(l.gifTab, "GIFs");
+    expect(l.gifPhoneTab, "On this phone");
+    expect(l.gifSearchHint, "Search GIFs");
+    expect(l.gifClear, "Clear search");
+    expect(l.gifServiceNeverSeesYou, "The GIF service never sees you");
+    expect(l.gifTrending, "Trending");
+    expect(l.gifOffline, "Tor is still connecting. GIFs come once it is up.");
+    expect(l.gifBusy, "A lot of searches right now. Try again in a moment.");
+    expect(l.gifUnreachable, "Couldn't reach Kryfo's GIF service.");
+    expect(l.gifNothingFound, "No GIFs found. Try other words.");
+    expect(l.gifCouldNotLoadMore, "Couldn't load more");
+    expect(l.gifLoading, "Loading GIFs");
+    expect(l.gifCouldNotGet, "Couldn't get that GIF. Try again.");
+    expect(l.gifPoweredBy("<brand>"), "Powered by <brand>");
+    expect(
+      l.gifNeverSeesYou("<brand>"),
+      "Searched through Kryfo, <brand> never sees you.",
+    );
+    expect(l.gifTileA11y("<number>"), "GIF <number>");
+    expect(l.gifPhoneLine, "GIFs saved on this phone. Nothing goes online.");
+    expect(l.gifPhoneChoose, "Choose a GIF");
+    expect(l.settingsGifSearch, "GIF search");
+    expect(
+      l.settingsGifSearchHint,
+      "Off until you turn it on. Kryfo's server searches for you, so the GIF service never sees you.",
+    );
   });
 }

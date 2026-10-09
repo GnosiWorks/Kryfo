@@ -45,7 +45,9 @@ import '../stickers/sticker_bubble.dart';
 import '../stickers/sticker_flight.dart';
 import '../stickers/sticker_pack.dart' show Sticker, StickerLibrary;
 import '../stickers/sticker_sheet.dart'
-    show StickerButton, StickerPick, showStickerSheet;
+    show GifPick, PhoneGifPick, StickerButton, StickerPick, showStickerSheet;
+import '../gifs/gif_engine.dart' show appGifTabs;
+import '../gifs/gif_picture.dart';
 import '../stickers/sticker_view.dart' show StickerBudget;
 import '../stickers/sticker_wire.dart' show StickerWire;
 import '../main.dart'
@@ -1551,10 +1553,19 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   Future<void> _showStickers() async {
     if (_nobodyToRead()) return;
-    final pick = await showStickerSheet(context, container: session.container);
+    final pick = await showStickerSheet(
+      context,
+      container: session.container,
+      gifs: appGifTabs(),
+    );
     // the sheet hands focus back to the composer; the keyboard stays down
     FocusManager.instance.primaryFocus?.unfocus();
     if (pick == null || !mounted) return;
+    // a found gif goes the way a gif from the phone goes: inside the
+    // message, cleaned, never fetched again by anyone
+    if (pick is GifPick) return _sendGroupImage(pick.bytes, '');
+    if (pick is PhoneGifPick) return _pickGroupGif();
+    if (pick is! StickerPick) return;
     StickerLibrary lib;
     try {
       lib = StickerLibrary.ready ?? await StickerLibrary.load();
@@ -4908,26 +4919,31 @@ class _GroupBubble extends StatelessWidget {
                                                             m.mediaPath!,
                                                             'chat',
                                                           ),
-                                                          child: Image.file(
-                                                            File(m.mediaPath!),
-                                                            semanticLabel:
-                                                                l10n.appPhoto,
-                                                            cacheWidth:
-                                                                decodePx(
-                                                                  context,
-                                                                  240,
-                                                                ),
-                                                            gaplessPlayback:
-                                                                true,
-                                                            filterQuality:
-                                                                FilterQuality
-                                                                    .medium,
-                                                            fit: BoxFit.cover,
-                                                            // the file is gone:
-                                                            // say so, not a gap
-                                                            errorBuilder:
-                                                                (_, _, _) =>
-                                                                    const _MissingPhoto(),
+                                                          child: ChatPicture(
+                                                            path: m.mediaPath!,
+                                                            child: Image.file(
+                                                              File(
+                                                                m.mediaPath!,
+                                                              ),
+                                                              semanticLabel:
+                                                                  l10n.appPhoto,
+                                                              cacheWidth:
+                                                                  decodePx(
+                                                                    context,
+                                                                    240,
+                                                                  ),
+                                                              gaplessPlayback:
+                                                                  true,
+                                                              filterQuality:
+                                                                  FilterQuality
+                                                                      .medium,
+                                                              fit: BoxFit.cover,
+                                                              // the file is gone:
+                                                              // say so, not a gap
+                                                              errorBuilder:
+                                                                  (_, _, _) =>
+                                                                      const _MissingPhoto(),
+                                                            ),
                                                           ),
                                                         ),
                                                       ),
@@ -4953,6 +4969,10 @@ class _GroupBubble extends StatelessWidget {
                                               ),
                                             ),
                                           ),
+                                        if (isOut &&
+                                            m.text.isEmpty &&
+                                            m.mediaPath != null)
+                                          GifSentLine(path: m.mediaPath!),
                                         if (m.text.isNotEmpty)
                                           Padding(
                                             padding: m.mediaPath != null

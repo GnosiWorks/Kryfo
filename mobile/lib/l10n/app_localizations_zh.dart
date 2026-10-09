@@ -7426,6 +7426,113 @@ class AppLocalizationsZh extends AppLocalizations {
   String lockTooManyTriesFor(Object left) {
     return '尝试次数过多 · $left';
   }
+
+  @override
+  String get gifBadge => 'GIF';
+
+  @override
+  String get gifPlay => '播放 GIF';
+
+  @override
+  String get gifSentInside => '随消息一起发送';
+
+  @override
+  String get gifOptInTitle => '私密地搜索 GIF';
+
+  @override
+  String get gifOptInLead => 'GIF 搜索需要联网，所以在你需要之前一直关闭。';
+
+  @override
+  String get gifOptInOverTor => '通过 Tor 搜索';
+
+  @override
+  String get gifOptInThroughKryfo => '通过 Kryfo 搜索';
+
+  @override
+  String get gifOptInAsksForYou =>
+      'Kryfo 的服务器替你向 GIF 服务查询。该服务永远看不到你，服务器也不会记录你搜了什么。';
+
+  @override
+  String get gifOptInLikeAPhoto => 'GIF 像照片一样加密传送。对方的手机不会下载任何东西。';
+
+  @override
+  String get gifOptInOffWhenever => '随时可以关闭';
+
+  @override
+  String get gifOptInWhereToTurnOff => '设置、隐私、GIF 搜索。手机里的 GIF 不开它也一直能用。';
+
+  @override
+  String get gifTurnOn => '开启 GIF 搜索';
+
+  @override
+  String get gifNotNow => '暂不';
+
+  @override
+  String get gifTab => 'GIF';
+
+  @override
+  String get gifPhoneTab => '这台手机上';
+
+  @override
+  String get gifSearchHint => '搜索 GIF';
+
+  @override
+  String get gifClear => '清除搜索';
+
+  @override
+  String get gifServiceNeverSeesYou => 'GIF 服务永远看不到你';
+
+  @override
+  String get gifTrending => '热门';
+
+  @override
+  String get gifOffline => 'Tor 还在连接。连上后 GIF 就会出现。';
+
+  @override
+  String get gifBusy => '现在搜索太多了，请稍后再试。';
+
+  @override
+  String get gifUnreachable => '联系不上 Kryfo 的 GIF 服务。';
+
+  @override
+  String get gifNothingFound => '没有找到 GIF。换个词试试。';
+
+  @override
+  String get gifCouldNotLoadMore => '无法加载更多';
+
+  @override
+  String get gifLoading => '正在加载 GIF';
+
+  @override
+  String get gifCouldNotGet => '无法获取这个 GIF，请重试。';
+
+  @override
+  String gifPoweredBy(String brand) {
+    return 'Powered by $brand';
+  }
+
+  @override
+  String gifNeverSeesYou(String brand) {
+    return '通过 Kryfo 搜索，$brand 永远看不到你。';
+  }
+
+  @override
+  String gifTileA11y(String number) {
+    return 'GIF $number';
+  }
+
+  @override
+  String get gifPhoneLine => '保存在这台手机上的 GIF。不会联网。';
+
+  @override
+  String get gifPhoneChoose => '选择 GIF';
+
+  @override
+  String get settingsGifSearch => 'GIF 搜索';
+
+  @override
+  String get settingsGifSearchHint =>
+      '在你开启前一直关闭。Kryfo 的服务器替你搜索，所以 GIF 服务永远看不到你。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -14730,4 +14837,111 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String lockTooManyTriesFor(Object left) {
     return '嘗試次數過多 · $left';
   }
+
+  @override
+  String get gifBadge => 'GIF';
+
+  @override
+  String get gifPlay => '播放 GIF';
+
+  @override
+  String get gifSentInside => '隨訊息一起傳送';
+
+  @override
+  String get gifOptInTitle => '私密地搜尋 GIF';
+
+  @override
+  String get gifOptInLead => 'GIF 搜尋需要連網，所以在你需要之前都會關閉。';
+
+  @override
+  String get gifOptInOverTor => '透過 Tor 搜尋';
+
+  @override
+  String get gifOptInThroughKryfo => '透過 Kryfo 搜尋';
+
+  @override
+  String get gifOptInAsksForYou =>
+      'Kryfo 的伺服器替你向 GIF 服務查詢。該服務永遠看不到你，伺服器也不會記錄你搜尋了什麼。';
+
+  @override
+  String get gifOptInLikeAPhoto => 'GIF 像照片一樣加密傳送。對方的手機不會下載任何東西。';
+
+  @override
+  String get gifOptInOffWhenever => '隨時可以關閉';
+
+  @override
+  String get gifOptInWhereToTurnOff => '設定、隱私、GIF 搜尋。手機裡的 GIF 不開它也一直能用。';
+
+  @override
+  String get gifTurnOn => '開啟 GIF 搜尋';
+
+  @override
+  String get gifNotNow => '暫時不要';
+
+  @override
+  String get gifTab => 'GIF';
+
+  @override
+  String get gifPhoneTab => '這支手機上';
+
+  @override
+  String get gifSearchHint => '搜尋 GIF';
+
+  @override
+  String get gifClear => '清除搜尋';
+
+  @override
+  String get gifServiceNeverSeesYou => 'GIF 服務永遠看不到你';
+
+  @override
+  String get gifTrending => '熱門';
+
+  @override
+  String get gifOffline => 'Tor 還在連線。連上後 GIF 就會出現。';
+
+  @override
+  String get gifBusy => '現在搜尋太多了，請稍後再試。';
+
+  @override
+  String get gifUnreachable => '聯絡不上 Kryfo 的 GIF 服務。';
+
+  @override
+  String get gifNothingFound => '找不到 GIF。換個詞試試。';
+
+  @override
+  String get gifCouldNotLoadMore => '無法載入更多';
+
+  @override
+  String get gifLoading => '正在載入 GIF';
+
+  @override
+  String get gifCouldNotGet => '無法取得這個 GIF，請再試一次。';
+
+  @override
+  String gifPoweredBy(String brand) {
+    return 'Powered by $brand';
+  }
+
+  @override
+  String gifNeverSeesYou(String brand) {
+    return '透過 Kryfo 搜尋，$brand 永遠看不到你。';
+  }
+
+  @override
+  String gifTileA11y(String number) {
+    return 'GIF $number';
+  }
+
+  @override
+  String get gifPhoneLine => '儲存在這支手機上的 GIF。不會連網。';
+
+  @override
+  String get gifPhoneChoose => '選擇 GIF';
+
+  @override
+  String get settingsGifSearch => 'GIF 搜尋';
+
+  @override
+  String get settingsGifSearchHint =>
+      '在你開啟前都會關閉。Kryfo 的伺服器替你搜尋，所以 GIF 服務永遠看不到你。';
 }

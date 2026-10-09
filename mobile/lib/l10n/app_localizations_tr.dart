@@ -7772,4 +7772,115 @@ class AppLocalizationsTr extends AppLocalizations {
   String lockTooManyTriesFor(Object left) {
     return 'Çok fazla deneme · $left';
   }
+
+  @override
+  String get gifBadge => 'GIF';
+
+  @override
+  String get gifPlay => 'GIF’i oynat';
+
+  @override
+  String get gifSentInside => 'Mesajının içinde gönderildi';
+
+  @override
+  String get gifOptInTitle => 'Gizlice GIF ara';
+
+  @override
+  String get gifOptInLead =>
+      'GIF arama internete ihtiyaç duyar, bu yüzden sen isteyene kadar kapalı kalır.';
+
+  @override
+  String get gifOptInOverTor => 'Tor üzerinden aranır';
+
+  @override
+  String get gifOptInThroughKryfo => 'Kryfo üzerinden aranır';
+
+  @override
+  String get gifOptInAsksForYou =>
+      'Kryfo’nun sunucusu GIF servisine senin yerine sorar. Servis seni asla görmez, sunucu da ne aradığının kaydını tutmaz.';
+
+  @override
+  String get gifOptInLikeAPhoto =>
+      'GIF, bir fotoğraf gibi şifreli gider. Arkadaşının telefonu hiçbir şey indirmez.';
+
+  @override
+  String get gifOptInOffWhenever => 'İstediğin an kapat';
+
+  @override
+  String get gifOptInWhereToTurnOff =>
+      'Ayarlar, Gizlilik, GIF arama. Telefonundaki GIF’ler onsuz da her zaman çalışır.';
+
+  @override
+  String get gifTurnOn => 'GIF aramayı aç';
+
+  @override
+  String get gifNotNow => 'Şimdi değil';
+
+  @override
+  String get gifTab => 'GIF’ler';
+
+  @override
+  String get gifPhoneTab => 'Bu telefonda';
+
+  @override
+  String get gifSearchHint => 'GIF ara';
+
+  @override
+  String get gifClear => 'Aramayı temizle';
+
+  @override
+  String get gifServiceNeverSeesYou => 'GIF servisi seni asla görmez';
+
+  @override
+  String get gifTrending => 'Gündemde';
+
+  @override
+  String get gifOffline => 'Tor hâlâ bağlanıyor. Hazır olunca GIF’ler gelir.';
+
+  @override
+  String get gifBusy => 'Şu an çok fazla arama var. Birazdan yeniden dene.';
+
+  @override
+  String get gifUnreachable => 'Kryfo’nun GIF servisine ulaşılamadı.';
+
+  @override
+  String get gifNothingFound => 'GIF bulunamadı. Başka kelimeler dene.';
+
+  @override
+  String get gifCouldNotLoadMore => 'Daha fazlası yüklenemedi';
+
+  @override
+  String get gifLoading => 'GIF’ler yükleniyor';
+
+  @override
+  String get gifCouldNotGet => 'Bu GIF alınamadı. Yeniden dene.';
+
+  @override
+  String gifPoweredBy(String brand) {
+    return 'Powered by $brand';
+  }
+
+  @override
+  String gifNeverSeesYou(String brand) {
+    return 'Kryfo üzerinden arandı, $brand seni asla görmez.';
+  }
+
+  @override
+  String gifTileA11y(String number) {
+    return 'GIF $number';
+  }
+
+  @override
+  String get gifPhoneLine =>
+      'Bu telefonda kayıtlı GIF’ler. Hiçbir şey internete çıkmaz.';
+
+  @override
+  String get gifPhoneChoose => 'GIF seç';
+
+  @override
+  String get settingsGifSearch => 'GIF arama';
+
+  @override
+  String get settingsGifSearchHint =>
+      'Sen açana kadar kapalı. Kryfo’nun sunucusu senin için arar, böylece GIF servisi seni asla görmez.';
 }

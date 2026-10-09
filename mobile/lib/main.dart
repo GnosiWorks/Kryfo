@@ -99,6 +99,7 @@ import 'read_burn.dart' show burnStartBy, burnWaitsRow, burnWaitsSql, kBurnSkew;
 import 'stranger_gate.dart';
 import 'fast_gate.dart';
 import 'mentions.dart';
+import 'gifs/gif_source.dart' show sweepGifParts;
 import 'handle_lookup.dart';
 import 'handle_repoint.dart';
 import 'widgets/sheet_handle.dart';
@@ -500,6 +501,31 @@ class HaloEngine {
     [url],
     wait: const Duration(seconds: 80),
     what: 'tor',
+  );
+
+  // the gif relay, on a lane of its own: search, trending, and a picture
+  // into [path] whole or not at all ("ok <n>"). the route people search
+  // takes. a wait that runs out says gif, not tor: off the onion route
+  // there is no tor to blame
+  Future<String> gifPost(String url, String body) => _ffiOnIsolate(
+    'HaloGifPost',
+    [url, body],
+    wait: const Duration(seconds: 60),
+    what: 'gif',
+  );
+
+  Future<String> gifGet(String url) => _ffiOnIsolate(
+    'HaloGifGet',
+    [url],
+    wait: const Duration(seconds: 60),
+    what: 'gif',
+  );
+
+  Future<String> gifGetFile(String url, String path) => _ffiOnIsolate(
+    'HaloGifGetFile',
+    [url, path],
+    wait: const Duration(seconds: 80),
+    what: 'gif',
   );
 
   // what the relays delivered, one entry per event (relay_poll.dart). room
@@ -16076,8 +16102,7 @@ class AppState extends ChangeNotifier {
   // rooms whose creator said this phone's join found no seat, by the
   // container they are in, until it knocks again, is let in or leaves
   final Set<String> _roomsFull = {};
-  static String _fullKey(HaloContainer c, String groupId) =>
-      '${c.id} $groupId';
+  static String _fullKey(HaloContainer c, String groupId) => '${c.id} $groupId';
   bool roomFull(String groupId) =>
       _roomsFull.contains(_fullKey(session.primary.container, groupId));
 
@@ -18701,6 +18726,7 @@ Future<void> _sweepPlaintextLeftovers() async {
   } catch (e) {
     dlog('sweep: voice leftovers (${e.runtimeType})');
   }
+  await sweepGifParts();
 }
 
 // every raw recording in [dir]: one that will not go is logged and the

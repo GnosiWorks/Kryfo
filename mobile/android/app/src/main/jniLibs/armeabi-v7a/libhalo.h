@@ -435,6 +435,19 @@ extern char* HaloRoomUnsubscribe(char* cPub);
 //
 extern char* HaloSetTransportMode(char* cMode);
 extern char* HaloTransportMode(void);
+
+// POST json to the gif relay. the body of a 2xx, or "error: ...".
+//
+extern char* HaloGifPost(char* cUrl, char* cBody);
+
+// GET from the gif relay. the body of a 2xx, or "error: ...".
+//
+extern char* HaloGifGet(char* cUrl);
+
+// GET a picture from the gif relay into path, whole or not at all.
+// "ok <bytes>" or "error: ...".
+//
+extern char* HaloGifGetFile(char* cUrl, char* cPath);
 extern char* HaloTransportState(void);
 
 // {"pub": "age1...", "priv": "AGE-SECRET-KEY-1..."}

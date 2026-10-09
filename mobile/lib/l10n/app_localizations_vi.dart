@@ -7731,4 +7731,117 @@ class AppLocalizationsVi extends AppLocalizations {
   String lockTooManyTriesFor(Object left) {
     return 'Quá nhiều lần thử · $left';
   }
+
+  @override
+  String get gifBadge => 'GIF';
+
+  @override
+  String get gifPlay => 'Phát GIF';
+
+  @override
+  String get gifSentInside => 'Gửi bên trong tin nhắn của bạn';
+
+  @override
+  String get gifOptInTitle => 'Tìm GIF một cách riêng tư';
+
+  @override
+  String get gifOptInLead =>
+      'Tìm GIF cần internet, nên nó tắt cho đến khi bạn muốn dùng.';
+
+  @override
+  String get gifOptInOverTor => 'Tìm qua Tor';
+
+  @override
+  String get gifOptInThroughKryfo => 'Tìm qua Kryfo';
+
+  @override
+  String get gifOptInAsksForYou =>
+      'Máy chủ của Kryfo hỏi dịch vụ GIF thay cho bạn. Dịch vụ không bao giờ thấy bạn, và máy chủ không lưu lại những gì bạn đã tìm.';
+
+  @override
+  String get gifOptInLikeAPhoto =>
+      'GIF được gửi đi đã mã hóa, như một bức ảnh. Điện thoại của bạn bè bạn không tải gì về.';
+
+  @override
+  String get gifOptInOffWhenever => 'Tắt bất cứ lúc nào';
+
+  @override
+  String get gifOptInWhereToTurnOff =>
+      'Cài đặt, Quyền riêng tư, Tìm GIF. GIF trên điện thoại của bạn luôn dùng được mà không cần nó.';
+
+  @override
+  String get gifTurnOn => 'Bật tìm GIF';
+
+  @override
+  String get gifNotNow => 'Để sau';
+
+  @override
+  String get gifTab => 'GIF';
+
+  @override
+  String get gifPhoneTab => 'Trên điện thoại này';
+
+  @override
+  String get gifSearchHint => 'Tìm GIF';
+
+  @override
+  String get gifClear => 'Xóa tìm kiếm';
+
+  @override
+  String get gifServiceNeverSeesYou => 'Dịch vụ GIF không bao giờ thấy bạn';
+
+  @override
+  String get gifTrending => 'Thịnh hành';
+
+  @override
+  String get gifOffline =>
+      'Tor vẫn đang kết nối. GIF sẽ hiện khi Tor sẵn sàng.';
+
+  @override
+  String get gifBusy =>
+      'Lúc này có quá nhiều lượt tìm. Hãy thử lại sau giây lát.';
+
+  @override
+  String get gifUnreachable => 'Không liên lạc được với dịch vụ GIF của Kryfo.';
+
+  @override
+  String get gifNothingFound => 'Không tìm thấy GIF. Hãy thử từ khác.';
+
+  @override
+  String get gifCouldNotLoadMore => 'Không tải thêm được';
+
+  @override
+  String get gifLoading => 'Đang tải GIF';
+
+  @override
+  String get gifCouldNotGet => 'Không lấy được GIF này. Hãy thử lại.';
+
+  @override
+  String gifPoweredBy(String brand) {
+    return 'Powered by $brand';
+  }
+
+  @override
+  String gifNeverSeesYou(String brand) {
+    return 'Tìm qua Kryfo, $brand không bao giờ thấy bạn.';
+  }
+
+  @override
+  String gifTileA11y(String number) {
+    return 'GIF $number';
+  }
+
+  @override
+  String get gifPhoneLine =>
+      'GIF đã lưu trên điện thoại này. Không có gì lên mạng.';
+
+  @override
+  String get gifPhoneChoose => 'Chọn một GIF';
+
+  @override
+  String get settingsGifSearch => 'Tìm GIF';
+
+  @override
+  String get settingsGifSearchHint =>
+      'Tắt cho đến khi bạn bật. Máy chủ của Kryfo tìm thay bạn, nên dịch vụ GIF không bao giờ thấy bạn.';
 }

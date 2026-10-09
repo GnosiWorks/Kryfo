@@ -7762,4 +7762,116 @@ class AppLocalizationsFa extends AppLocalizations {
   String lockTooManyTriesFor(Object left) {
     return 'تلاش بیش از حد · ⁨$left⁩';
   }
+
+  @override
+  String get gifBadge => 'GIF';
+
+  @override
+  String get gifPlay => 'پخش گیف';
+
+  @override
+  String get gifSentInside => 'داخل پیام شما فرستاده شد';
+
+  @override
+  String get gifOptInTitle => 'جست‌وجوی خصوصی گیف';
+
+  @override
+  String get gifOptInLead =>
+      'جست‌وجوی گیف به اینترنت نیاز دارد، برای همین تا وقتی نخواهید خاموش می‌ماند.';
+
+  @override
+  String get gifOptInOverTor => 'جست‌وجو از راه Tor';
+
+  @override
+  String get gifOptInThroughKryfo => 'جست‌وجو از راه Kryfo';
+
+  @override
+  String get gifOptInAsksForYou =>
+      'سرور Kryfo به جای شما از سرویس گیف می‌پرسد. سرویس هرگز شما را نمی‌بیند و سرور هیچ سابقه‌ای از جست‌وجوهای شما نگه نمی‌دارد.';
+
+  @override
+  String get gifOptInLikeAPhoto =>
+      'گیف مثل یک عکس، رمزگذاری‌شده می‌رود. گوشی دوستتان چیزی دانلود نمی‌کند.';
+
+  @override
+  String get gifOptInOffWhenever => 'هر وقت خواستید خاموشش کنید';
+
+  @override
+  String get gifOptInWhereToTurnOff =>
+      'تنظیمات، حریم خصوصی، جست‌وجوی گیف. گیف‌های روی گوشی شما بدون آن هم همیشه کار می‌کنند.';
+
+  @override
+  String get gifTurnOn => 'روشن کردن جست‌وجوی گیف';
+
+  @override
+  String get gifNotNow => 'حالا نه';
+
+  @override
+  String get gifTab => 'گیف‌ها';
+
+  @override
+  String get gifPhoneTab => 'روی این گوشی';
+
+  @override
+  String get gifSearchHint => 'جست‌وجوی گیف';
+
+  @override
+  String get gifClear => 'پاک کردن جست‌وجو';
+
+  @override
+  String get gifServiceNeverSeesYou => 'سرویس گیف هرگز شما را نمی‌بیند';
+
+  @override
+  String get gifTrending => 'پرطرفدار';
+
+  @override
+  String get gifOffline =>
+      'Tor هنوز در حال اتصال است. گیف‌ها به محض آماده شدن آن می‌آیند.';
+
+  @override
+  String get gifBusy => 'الان جست‌وجوها زیاد است. کمی بعد دوباره امتحان کنید.';
+
+  @override
+  String get gifUnreachable => 'سرویس گیف Kryfo پاسخ نداد.';
+
+  @override
+  String get gifNothingFound => 'گیفی پیدا نشد. کلمه‌های دیگری امتحان کنید.';
+
+  @override
+  String get gifCouldNotLoadMore => 'بیشتر بارگیری نشد';
+
+  @override
+  String get gifLoading => 'در حال بارگیری گیف‌ها';
+
+  @override
+  String get gifCouldNotGet => 'این گیف دریافت نشد. دوباره امتحان کنید.';
+
+  @override
+  String gifPoweredBy(String brand) {
+    return 'Powered by $brand';
+  }
+
+  @override
+  String gifNeverSeesYou(String brand) {
+    return 'از راه Kryfo جست‌وجو شد، ⁨$brand⁩ هرگز شما را نمی‌بیند.';
+  }
+
+  @override
+  String gifTileA11y(String number) {
+    return 'گیف ⁨$number⁩';
+  }
+
+  @override
+  String get gifPhoneLine =>
+      'گیف‌های ذخیره‌شده روی این گوشی. چیزی آنلاین نمی‌شود.';
+
+  @override
+  String get gifPhoneChoose => 'انتخاب گیف';
+
+  @override
+  String get settingsGifSearch => 'جست‌وجوی گیف';
+
+  @override
+  String get settingsGifSearchHint =>
+      'تا وقتی روشنش نکنید خاموش است. سرور Kryfo برای شما جست‌وجو می‌کند، پس سرویس گیف هرگز شما را نمی‌بیند.';
 }
