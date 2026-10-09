@@ -18,16 +18,22 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/app_shell.dart' show HaloScrollBehavior;
 import 'package:kryfo/backup.dart';
+import 'package:kryfo/container.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/main.dart'
     show
+        HaloDb,
         HaloEngine,
         appState,
+        live,
         navRevision,
         renewRootNavigator,
         rootNavKey,
+        session,
+        useDatabasesForTest,
         useEngineForTest;
+import 'package:kryfo/session.dart';
 import 'package:kryfo/screens/pin_flow_screen.dart';
 import 'package:kryfo/screens/restore_screen.dart';
 import 'package:kryfo/theme.dart';
@@ -37,6 +43,26 @@ import 'pin_flow_fakes.dart' show app, phone, press;
 class _Engine implements HaloEngine {
   @override
   Future<String> handleRelease(String h) async => 'error: no relay';
+  @override
+  dynamic noSuchMethod(Invocation i) =>
+      throw UnimplementedError('engine: ${i.memberName}');
+}
+
+class _Db implements HaloDb {
+  _Db(this.container);
+  @override
+  final HaloContainer container;
+  @override
+  dynamic noSuchMethod(Invocation i) =>
+      throw UnimplementedError('the stand-in was asked for ${i.memberName}');
+}
+
+// a release that ends when the test says
+class _Releasing implements HaloEngine {
+  _Releasing(this.done);
+  final Future<String> done;
+  @override
+  Future<String> handleRelease(String h) => done;
   @override
   dynamic noSuchMethod(Invocation i) =>
       throw UnimplementedError('engine: ${i.memberName}');
@@ -151,7 +177,7 @@ void main() {
       messages: 9,
     );
     var asks = 0;
-    restoreForTest = (_) {
+    restoreForTest = (_, _) {
       asks++;
       return running.future;
     };
@@ -205,7 +231,7 @@ void main() {
         hiddenChats: 1,
       );
       final running = Completer<void>();
-      restoreForTest = (_) => running.future;
+      restoreForTest = (_, _) => running.future;
       await _openAndRestore(
         t,
         wrap: (home) => MaterialApp(
@@ -263,7 +289,7 @@ void main() {
       contacts: 2,
       messages: 9,
     );
-    restoreForTest = (_) async => restored = true;
+    restoreForTest = (_, _) async => restored = true;
     await _openAndRestore(t);
 
     expect(find.text(l10n.restoreNotYet), findsOneWidget);
@@ -294,7 +320,7 @@ void main() {
       messages: 9,
     );
     // a file without them removes what is here, as identitySecurePlan says
-    restoreForTest = (_) async {
+    restoreForTest = (_, _) async {
       const st = FlutterSecureStorage();
       for (final k in identitySecurePlan(const {}).remove) {
         await st.delete(key: k);
@@ -328,7 +354,7 @@ void main() {
         contacts: 2,
         messages: 9,
       );
-      restoreForTest = (_) async => restoredSettingsForTest(landed);
+      restoreForTest = (_, _) async => restoredSettingsForTest(landed);
       await _openAndRestore(t, wrap: _rooted);
       await t.pumpAndSettle();
       expect(find.text(l10n.restoreRestored), findsOneWidget);
@@ -364,7 +390,7 @@ void main() {
       contacts: 2,
       messages: 9,
     );
-    restoreForTest = (_) async {
+    restoreForTest = (_, _) async {
       await running.future;
       restoredHiddenForTest('the hidden key');
       restoredSettingsForTest(true);
@@ -413,6 +439,132 @@ void main() {
     expect(quits, 1);
   });
 
+  testWidgets('the lock taking the screen away while the handle is released '
+      'still restores, then says so and closes', (t) async {
+    phone(t);
+    FlutterSecureStorage.setMockInitialValues({'my_handle': 'amberfox'});
+    await appState.loadMyHandle();
+    final releasing = Completer<String>();
+    useEngineForTest(_Releasing(releasing.future));
+    var quits = 0;
+    quitAfterRestore = () => quits++;
+    lockState.openForTest(enabled: true);
+    addTearDown(() {
+      quitAfterRestore = () => exit(0);
+      lockState.openForTest();
+    });
+    inspectForTest = (_) async => const BackupSummary(
+      when: null,
+      version: 2,
+      haloId: 'amber-fox-run',
+      contacts: 2,
+      messages: 9,
+    );
+    final asked = <String>[];
+    restoreForTest = (pw, _) async => asked.add(pw);
+    await _openAndRestore(t, wrap: _rooted);
+
+    lockState.lock();
+    renewRootNavigator();
+    await t.pumpAndSettle();
+    expect(find.byType(RestoreScreen), findsNothing);
+    releasing.complete('ok');
+    await t.pumpAndSettle();
+    expect(appState.myHandle, isNull);
+    expect(asked, ['the passphrase']);
+    expect(find.text(l10n.restoreRestored), findsNothing);
+
+    lockState.openForTest(enabled: true);
+    lockState.inDecoy = false;
+    await t.pumpAndSettle();
+    expect(find.text(l10n.restoreRestored), findsOneWidget);
+    await t.tap(find.text(l10n.restoreReopenKryfo));
+    await t.pumpAndSettle();
+    expect(quits, 1);
+  });
+
+  testWidgets('a restore lands in the session the screen was opened in, '
+      'whatever is open by the time it runs', (t) async {
+    phone(t);
+    FlutterSecureStorage.setMockInitialValues({});
+    await appState.loadMyHandle();
+    final was = (live, session);
+    addTearDown(() => useDatabasesForTest(was.$1, was.$2));
+    final everyday = _Db(HaloContainer.everyday);
+    useDatabasesForTest(everyday, Session(_Db(HaloContainer.decoy)));
+    inspectForTest = (_) async {
+      // the everyday PIN went in while the file was read
+      useDatabasesForTest(everyday, Session(everyday));
+      return const BackupSummary(
+        when: null,
+        version: 2,
+        haloId: 'amber-fox-run',
+        contacts: 2,
+        messages: 9,
+      );
+    };
+    final into = <HaloContainer>[];
+    restoreForTest = (_, here) async => into.add(here.into);
+    await _openAndRestore(t, screen: RestoreScreen(onRestored: () {}));
+    await t.pumpAndSettle();
+    expect(into, [HaloContainer.decoy]);
+  });
+
+  testWidgets('a restore running from the other session leaves this one to '
+      'say so, and starts nothing', (t) async {
+    phone(t);
+    FlutterSecureStorage.setMockInitialValues({});
+    await appState.loadMyHandle();
+    addTearDown(() => restoreRunningForTest = false);
+    var looks = 0;
+    inspectForTest = (_) async {
+      looks++;
+      // the other session's restore starts once this file is read
+      restoreRunningForTest = true;
+      return const BackupSummary(
+        when: null,
+        version: 2,
+        haloId: 'amber-fox-run',
+        contacts: 2,
+        messages: 9,
+      );
+    };
+    var restores = 0;
+    restoreForTest = (_, _) async => restores++;
+    await _openAndRestore(t, move: false);
+    expect(find.text(l10n.restoreMoveItHere), findsNothing);
+    expect(find.text(l10n.restoreTheRestoreDidNot), findsOneWidget);
+    expect(restores, 0);
+    expect(looks, 1);
+  });
+
+  testWidgets('a restore running from the other session leaves a file here '
+      'unread', (t) async {
+    phone(t);
+    restoreRunningForTest = true;
+    addTearDown(() => restoreRunningForTest = false);
+    var looks = 0;
+    inspectForTest = (_) async {
+      looks++;
+      throw const RestoreError(RestoreFailure.damaged);
+    };
+    await t.pumpWidget(app(const RestoreScreen()));
+    await t.pumpAndSettle();
+    await t.tap(find.text(l10n.restorePickTheBackupFile));
+    for (var i = 0; i < 40 && find.text('old.txt').evaluate().isEmpty; i++) {
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 50)),
+      );
+      await t.pump();
+    }
+    await t.pumpAndSettle();
+    await t.enterText(find.byType(TextField), 'the passphrase');
+    await t.tap(find.text(l10n.restoreCheckTheFile));
+    await t.pumpAndSettle();
+    expect(looks, 0);
+    expect(find.text(l10n.restoreTheRestoreDidNot), findsOneWidget);
+  });
+
   group('a landing cut short', () {
     late int quits;
     setUp(() {
@@ -438,7 +590,7 @@ void main() {
         'chats that landed', (t) async {
       phone(t);
       await appState.loadMyHandle();
-      restoreForTest = (_) async {
+      restoreForTest = (_, _) async {
         restoredHiddenForTest('the hidden key');
         throw const RestoreError(RestoreFailure.cutShort);
       };
@@ -457,7 +609,7 @@ void main() {
       phone(t);
       await appState.loadMyHandle();
       final running = Completer<void>();
-      restoreForTest = (_) async {
+      restoreForTest = (_, _) async {
         await running.future;
         throw const RestoreError(RestoreFailure.cutShort);
       };

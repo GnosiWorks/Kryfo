@@ -8,7 +8,10 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, debugDefaultTargetPlatformOverride;
 import 'package:flutter/services.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/backup.dart';
@@ -18,7 +21,8 @@ import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/main.dart'
     show HaloDb, HaloEngine, useDatabasesForTest, useEngineForTest;
 import 'package:kryfo/session.dart';
-import 'package:kryfo/signal_session.dart' show kSessionsRestoredPref;
+import 'package:kryfo/signal_session.dart'
+    show kRestoredFromPref, kSessionsRestoredPref;
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -68,8 +72,17 @@ class _Db implements HaloDb {
       throw UnimplementedError('the stand-in was asked for ${i.memberName}');
 }
 
+// what a landing did, in order: the relays held, the shade cleared
+final _steps = <String>[];
+
 class _Engine implements HaloEngine {
   final restored = <String>[];
+  @override
+  Future<String> wipeHold() async {
+    _steps.add('hold');
+    return 'ok';
+  }
+
   // the last step of a landing fails
   var fail = false;
   @override
@@ -82,6 +95,24 @@ class _Engine implements HaloEngine {
   @override
   dynamic noSuchMethod(Invocation i) =>
       throw StateError('the engine was asked for ${i.memberName}');
+}
+
+// android's shade: what is up, and lists it as android does, without the
+// payload each was shown with
+class _Shade extends AndroidFlutterLocalNotificationsPlugin {
+  final up = <int>{};
+  @override
+  Future<void> cancel({required int id, String? tag}) async => up.remove(id);
+  @override
+  Future<void> cancelAll() async {
+    _steps.add('shade');
+    up.clear();
+  }
+
+  @override
+  Future<List<ActiveNotification>> getActiveNotifications() async => [
+    for (final id in up) ActiveNotification(id: id),
+  ];
 }
 
 void main() {
@@ -113,6 +144,7 @@ void main() {
       'halo.d.key': 'decoy key',
     });
     forgetLeftoverSweep();
+    restoreRunningForTest = false;
     forgetRestoredHidden();
     // both accounts, each with hidden chats of its own
     put('halo.db', 'everyday');
@@ -133,7 +165,7 @@ void main() {
 
   // a v2 file holding a database, an onion key with [onion], and nothing
   // hidden
-  Future<String> file({bool onion = false}) async {
+  Future<String> file({bool onion = false, int? ts}) async {
     final src = p.join(root.path, 'src');
     File(p.join(src, 'halo.db'))
       ..createSync(recursive: true)
@@ -146,6 +178,7 @@ void main() {
       cipher: _Cipher(),
       manifest: {
         'v': kBackupVersion,
+        'ts': ?ts,
         'files': [
           {'name': 'halo.db', 'size': 8},
           if (onion) {'name': 'onion.key', 'size': 12},
@@ -217,6 +250,130 @@ void main() {
     // the next start marks the sessions the file brought back
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getBool(kSessionsRestoredPref), isTrue);
+  });
+
+  test('a restore given the session it began in lands there, whatever is '
+      'open as it starts', () async {
+    final lock = await pins(inDecoy: false);
+    useDatabasesForTest(live, Session(live));
+    restoreCipherForTest = _Cipher.new;
+    await restoreBackupFile(await file(), 'pass', own: decoy, lock: lock.state);
+    expect(read('halo_d.db'), 'restored');
+    expect(read('halo.db'), 'everyday');
+    expect(live.log, isEmpty);
+    expect(read('halo_v.db'), 'everyday hidden');
+    expect(engine.restored, isEmpty);
+  });
+
+  group('the shade', () {
+    late _Shade shade;
+    setUp(() {
+      _steps.clear();
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      shade = _Shade()..up.addAll([7, 8]);
+      FlutterLocalNotificationsPlatform.instance = shade;
+    });
+    tearDown(() => debugDefaultTargetPlatformOverride = null);
+
+    test('an everyday restore takes down what came for the account it '
+        'replaced', () async {
+      final lock = await pins(inDecoy: false);
+      useDatabasesForTest(live, Session(live));
+      restoreCipherForTest = _Cipher.new;
+      await restoreBackupFile(await file(), 'pass', lock: lock.state);
+      expect(shade.up, isEmpty);
+      // held first: nothing a reader still running brings rings again
+      expect(_steps, ['hold', 'shade']);
+    });
+
+    test('an old text file in the everyday app takes it down too', () async {
+      final lock = await pins(inDecoy: false);
+      useDatabasesForTest(live, Session(live));
+      await landV1Payload(
+        {
+          'v': 1,
+          'db': base64Encode(utf8.encode('old file')),
+          'dbPassphrase': "x'${'4e' * 32}'",
+          'edPriv': 'ed',
+          'xPriv': 'x',
+        },
+        own: live,
+        lock: lock.state,
+      );
+      expect(shade.up, isEmpty);
+      expect(_steps, ['hold', 'shade']);
+    });
+
+    test('a decoy restore leaves it alone', () async {
+      final lock = await pins(inDecoy: true);
+      useDatabasesForTest(live, Session(decoy));
+      restoreCipherForTest = _Cipher.new;
+      await restoreBackupFile(await file(), 'pass', lock: lock.state);
+      expect(shade.up, {7, 8});
+    });
+  });
+
+  test('the next start knows when the file restored was made', () async {
+    final lock = await pins(inDecoy: false);
+    useDatabasesForTest(live, Session(live));
+    restoreCipherForTest = _Cipher.new;
+    await restoreBackupFile(await file(ts: 777), 'pass', lock: lock.state);
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getInt(kRestoredFromPref), 777);
+    // an old text file without a date leaves none from before
+    await landV1Payload(
+      {
+        'v': 1,
+        'db': base64Encode(utf8.encode('old file')),
+        'dbPassphrase': "x'${'4e' * 32}'",
+        'edPriv': 'ed',
+        'xPriv': 'x',
+      },
+      own: live,
+      lock: lock.state,
+    );
+    expect(prefs.getInt(kRestoredFromPref), isNull);
+  });
+
+  test('one restore at a time: a second waits for none, and one that landed '
+      'holds until the app closes', () async {
+    final lock = await pins(inDecoy: false);
+    useDatabasesForTest(live, Session(live));
+    restoreCipherForTest = _Cipher.new;
+    final path = await file();
+    final first = restoreBackupFile(path, 'pass', lock: lock.state);
+    expect(restoreRunning, isTrue);
+    await expectLater(
+      restoreBackupFile(path, 'pass', own: decoy, lock: lock.state),
+      throwsA(isA<RestoreBusy>()),
+    );
+    await expectLater(
+      restoreBackupBlob('kryfo-backup:x', 'pass', own: decoy),
+      throwsA(isA<RestoreBusy>()),
+    );
+    await first;
+    expect(read('halo.db'), 'restored');
+    expect(read('halo_d.db'), 'decoy');
+    expect(decoy.log, isEmpty);
+    expect(restoreRunning, isTrue);
+  });
+
+  test('a restore that fails before landing lets the next one run', () async {
+    final lock = await pins(inDecoy: false);
+    useDatabasesForTest(live, Session(live));
+    restoreCipherForTest = _Cipher.new;
+    final path = await file();
+    // a record changed on the way: the file is not whole
+    final bytes = File(path).readAsBytesSync();
+    bytes[bytes.length - 3] ^= 1;
+    File(path).writeAsBytesSync(bytes);
+    await expectLater(
+      restoreBackupFile(path, 'pass', lock: lock.state),
+      throwsA(isA<RestoreError>()),
+    );
+    expect(restoreRunning, isFalse);
+    await restoreBackupFile(await file(), 'pass', lock: lock.state);
+    expect(read('halo.db'), 'restored');
   });
 
   test('the everyday database takes nothing more once a restore lands on '
@@ -357,6 +514,33 @@ void main() {
     expect(live.log, isEmpty);
     expect(decoy.log, ['close']);
     expect(engine.restored, isEmpty);
+  });
+
+  test('an old text file in the decoy takes the old decoy\'s hidden chats '
+      'and their PIN with it', () async {
+    final lock = await pins(inDecoy: true);
+    useDatabasesForTest(live, Session(decoy));
+    put('media_dv/a.jpg', 'decoy hidden photo');
+    await landV1Payload(
+      {
+        'v': 1,
+        'db': base64Encode(utf8.encode('old file')),
+        'dbPassphrase': "x'${'4e' * 32}'",
+        'edPriv': 'ed',
+        'xPriv': 'x',
+      },
+      own: decoy,
+      lock: lock.state,
+    );
+    expect(read('halo_d.db'), 'old file');
+    expect(lock.entries.keys, isNot(contains('${PinSlot.decoyVault}')));
+    expect(read('halo_dv.db'), isNull);
+    expect(read('media_dv/a.jpg'), isNull);
+    expect(restoredHidden, isFalse);
+    // the everyday account and its hidden chats as they were
+    expect((lock.entries['${PinSlot.vault}'] as Map)['p'], vaultPin);
+    expect(read('halo_v.db'), 'everyday hidden');
+    expect(read('halo.db'), 'everyday');
   });
 
   test('an old text file in the everyday app retires the database before '

@@ -278,6 +278,39 @@ void main() {
     expect(prefs.getString('supporter_receipt_sig'), 'sig');
   });
 
+  test('another identity\'s file leaves nothing of the badge here, and one '
+      'that has it brings where it shows', () async {
+    SharedPreferences.setMockInitialValues({
+      'supporter_tier': 'patron',
+      'supporter_receipt_payload': 'payload',
+      'supporter_receipt_sig': 'sig',
+      'supporter_show_self': true,
+      'supporter_share_contacts': true,
+      'badge_open_invoice': 'inv|patron',
+      'onboarding.complete': true,
+    });
+    await restorePrefs({'onboarding.complete': true});
+    final prefs = await SharedPreferences.getInstance();
+    // an invoice paid and not yet settled stays, whatever the file
+    expect(prefs.getKeys(), {'onboarding.complete', 'badge_open_invoice'});
+    expect(prefs.getString('badge_open_invoice'), 'inv|patron');
+
+    await restorePrefs({
+      'supporter_tier': 'supporter',
+      'supporter_show_self': true,
+      'supporter_share_contacts': false,
+    });
+    expect(prefs.getString('supporter_tier'), 'supporter');
+    expect(prefs.getBool('supporter_show_self'), isTrue);
+    expect(prefs.getBool('supporter_share_contacts'), isFalse);
+    // a file without prefs at all is a file without a badge
+    await restorePrefs(null);
+    expect(prefs.getKeys(), {'onboarding.complete', 'badge_open_invoice'});
+    // one the file carries is taken
+    await restorePrefs({'badge_open_invoice': 'inv2|guardian'});
+    expect(prefs.getString('badge_open_invoice'), 'inv2|guardian');
+  });
+
   test('of the prefs a file carries only the known ones are taken', () async {
     await restorePrefs({
       'onboarding.complete': true,

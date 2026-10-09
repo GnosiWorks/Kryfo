@@ -19,6 +19,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'carried_settings.dart';
 import 'container.dart';
 import 'lock_state.dart' show LockState, lockState;
+import 'notifications.dart' show cancelWithRetry, notifPlugin;
 import 'main.dart'
     show
         HaloDb,
@@ -31,7 +32,7 @@ import 'main.dart'
         engine,
         shredFile;
 import 'router.dart' show scrubHidden;
-import 'signal_session.dart' show kSessionsRestoredPref;
+import 'signal_session.dart' show kRestoredFromPref, kSessionsRestoredPref;
 import 'devchat/dev_chat.dart' show scrubDevAnon;
 import 'dlog.dart';
 import 'read_burn.dart' show burnStartBy;
@@ -255,12 +256,62 @@ Future<BackupSummary> inspectBackup(String blob, String passphrase) async {
   );
 }
 
-// it lands on the session it began in: the other one may be unlocked by
-// the time the file is open
-Future<void> restoreBackupBlob(String blob, String passphrase) async {
-  _restoredSettings = false;
-  final own = session.primary;
-  return landV1Payload(await _openPayload(blob, passphrase), own: own);
+// it lands on the session it began in, [own] when the screen began before
+// this: the other one may be unlocked by the time the file is open
+Future<void> restoreBackupBlob(String blob, String passphrase, {HaloDb? own}) =>
+    _oneRestore(() async {
+      _restoredSettings = false;
+      final db = own ?? session.primary;
+      return landV1Payload(await _openPayload(blob, passphrase), own: db);
+    });
+
+// one restore at a time: a second, begun in the other session while the
+// first still lands, would land over it. one that landed, or was cut short,
+// holds it until the app closes
+var _restoreRunning = false;
+
+/// a restore is running, or one landed and the app is about to close
+bool get restoreRunning => _restoreRunning;
+
+@visibleForTesting
+set restoreRunningForTest(bool v) => _restoreRunning = v;
+
+/// what a second restore meets while one runs
+class RestoreBusy implements Exception {
+  const RestoreBusy();
+}
+
+Future<void> _oneRestore(Future<void> Function() run) async {
+  if (_restoreRunning) throw const RestoreBusy();
+  _restoreRunning = true;
+  try {
+    await run();
+  } on RestoreError catch (e) {
+    if (e.why != RestoreFailure.cutShort) _restoreRunning = false;
+    rethrow;
+  } catch (_) {
+    _restoreRunning = false;
+    rethrow;
+  }
+}
+
+/// a restore bound to the session open as it begins: it lands there, even
+/// when the other one is open by the time the file is read
+class RestoreHere {
+  RestoreHere() : _own = session.primary;
+  final HaloDb _own;
+
+  /// the container it lands in
+  HaloContainer get into => _own.container;
+
+  Future<void> file(
+    String path,
+    String passphrase, {
+    void Function(int done, int total)? onProgress,
+  }) => restoreBackupFile(path, passphrase, onProgress: onProgress, own: _own);
+
+  Future<void> blob(String blob, String passphrase) =>
+      restoreBackupBlob(blob, passphrase, own: _own);
 }
 
 /// the end of a v1 restore, once the text file is open. [own] is the
@@ -275,7 +326,9 @@ Future<void> landV1Payload(
   final docsDir = await getApplicationDocumentsDirectory();
   // in a decoy session an old file becomes the decoy's account, as a v2 one
   // does, and the everyday one is not touched
-  if (db.container.quiet) return _landV1InDecoy(db, payload, docsDir.path);
+  if (db.container.quiet) {
+    return _landV1InDecoy(db, payload, docsDir.path, lock ?? lockState);
+  }
 
   final dbPassphrase = payload['dbPassphrase'] as String;
   final dbBytes = base64Decode(payload['db'] as String);
@@ -309,8 +362,9 @@ Future<void> landV1Payload(
     await restorePrefs(payload['prefs']);
     // a v1 file carries no catch-up: the relays are read again whole
     await _holdRelays();
+    await _clearShade();
     await landCatchUpAnchors(docsDir.path, null);
-    await _livesHereNow();
+    await _livesHereNow(payload['ts']);
 
     // a v1 backup carries none of these; what is here is the old identity's
     await _applyIdentitySecure(payload['secure']);
@@ -327,12 +381,23 @@ Future<void> landV1Payload(
 
 // this device is where the identity lives now, whatever it was before. the
 // file's signal sessions are older than the far side's view of them: the
-// next start marks them, and none is sealed on again
-Future<void> _livesHereNow() async {
+// next start marks them, with when the file was made ([made]), and none is
+// sealed on again
+Future<void> _livesHereNow(Object? made) async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.remove('moved.at');
   await prefs.setBool(kSessionsRestoredPref, true);
+  if (made is int && made > 0) {
+    await prefs.setInt(kRestoredFromPref, made);
+  } else {
+    await prefs.remove(kRestoredFromPref);
+  }
 }
+
+// what the shade holds came for the account just replaced. a decoy's
+// session shows none. after the relays are held, so nothing rings again
+Future<void> _clearShade() =>
+    cancelWithRetry(notifPlugin.cancelAll, 'restore shade');
 
 // from here on the phone's own files are going: a failure leaves the app on
 // a database it no longer has, so it has to close and start again
@@ -353,6 +418,7 @@ Future<void> _landV1InDecoy(
   HaloDb own,
   Map<String, dynamic> payload,
   String docs,
+  LockState pins,
 ) async {
   final root = Directory(
     p.join((await getApplicationSupportDirectory()).path, _kRestoreQuiet),
@@ -369,12 +435,20 @@ Future<void> _landV1InDecoy(
   await stage('halo.db', payload['db'] as String);
   final onion = payload['onionKey'];
   if (onion is String) await stage('onion.key', onion);
-  await _landing(
-    () => _landInDecoy(own, root.path, docs, {
+  await _landing(() async {
+    // the decoy's hidden chats go with the account they belonged to
+    await landHidden(
+      docs,
+      null,
+      const {},
+      clearEntry: () => pins.clearVault(of: HaloContainer.decoyVault),
+      into: HaloContainer.decoyVault,
+    );
+    await _landInDecoy(own, root.path, docs, {
       'files': files,
       'dbPassphrase': payload['dbPassphrase'],
-    }),
-  );
+    });
+  });
 }
 
 // ───────────────────────── v2: the streamed file ─────────────────────────
@@ -418,11 +492,21 @@ bool restorableName(String name) {
 /// that still mean something here
 const kRestorablePrefs = {
   'onboarding.complete',
-  // the supporter badge and the receipt that proves it, as the restore
-  // sheet promises
+  ...kSupporterPrefs,
+  // an invoice not yet settled. one the file lacks stays: a paid one is
+  // never lost to a file older than it
+  'badge_open_invoice',
+};
+
+/// the supporter badge, the receipt that proves it and where it shows, as
+/// the restore sheet promises. one the file lacks goes: it was the
+/// identity's being replaced
+const kSupporterPrefs = {
   'supporter_tier',
   'supporter_receipt_payload',
   'supporter_receipt_sig',
+  'supporter_show_self',
+  'supporter_share_contacts',
 };
 
 /// what a restore writes as onboarding_done: a file that says it was done
@@ -432,11 +516,13 @@ String? onboardingAfterRestore(Object? carried) =>
 
 @visibleForTesting
 Future<void> restorePrefs(Object? carried) async {
-  if (carried is! Map) return;
   final prefs = await SharedPreferences.getInstance();
+  final from = carried is Map ? carried : const {};
   for (final k in kRestorablePrefs) {
-    final v = carried[k];
-    if (v is String) {
+    final v = from[k];
+    if (v == null && kSupporterPrefs.contains(k)) {
+      await prefs.remove(k);
+    } else if (v is String) {
       await prefs.setString(k, v);
     } else if (v is int) {
       await prefs.setInt(k, v);
@@ -1598,13 +1684,23 @@ Future<BackupSummary> inspectBackupFile(String path, String passphrase) async {
 /// to exit afterwards and boot from what was written. every step lands on
 /// the session it began in: the other one may be unlocked by the time the
 /// file is read. a failure once the phone's own files begin to go is
-/// RestoreFailure.cutShort, and the app has to close then too
+/// RestoreFailure.cutShort, and the app has to close then too. [own] is
+/// the database of the session it began in, when that was before this
 Future<void> restoreBackupFile(
   String path,
   String passphrase, {
   void Function(int done, int total)? onProgress,
+  HaloDb? own,
   @visibleForTesting LockState? lock,
-}) async {
+}) => _oneRestore(() => _restoreFile(path, passphrase, onProgress, own, lock));
+
+Future<void> _restoreFile(
+  String path,
+  String passphrase,
+  void Function(int done, int total)? onProgress,
+  HaloDb? own,
+  LockState? lock,
+) async {
   _restoredSettings = false;
   if (!await isBackupV2(path)) {
     throw const RestoreError(RestoreFailure.notABackup);
@@ -1614,8 +1710,8 @@ Future<void> restoreBackupFile(
   final docs = await getApplicationDocumentsDirectory();
   // in a decoy session everything lands in the decoy's container, and the
   // everyday one is not touched
-  final own = session.primary;
-  final quiet = own.container.quiet;
+  final db = own ?? session.primary;
+  final quiet = db.container.quiet;
   final into = quiet ? HaloContainer.decoyVault : HaloContainer.vault;
   final pins = lock ?? lockState;
   final root = quiet
@@ -1655,7 +1751,7 @@ Future<void> restoreBackupFile(
     if (!quiet) {
       // nothing is kept in the database being replaced from here on: a
       // message stored there would be acknowledged and gone at the restart
-      await own.retire();
+      await db.retire();
       await landStagedBackup(root, manifest, hidden: hidden);
     }
     // the vault entry of the identity the restore began in
@@ -1666,13 +1762,14 @@ Future<void> restoreBackupFile(
       clearEntry: () => pins.clearVault(of: into),
       into: into,
     );
-    if (quiet) return _landInDecoy(own, root, docs.path, manifest);
+    if (quiet) return _landInDecoy(db, root, docs.path, manifest);
     await _secureStorage.write(
       key: _kDbPassphrase,
       value: manifest['dbPassphrase'] as String,
     );
     await restorePrefs(manifest['prefs']);
     await _holdRelays();
+    await _clearShade();
     await landCatchUpAnchors(docs.path, manifest['catchUp']);
     // in place before the restart reads them
     _restoredSettings = await landCarriedSettings(
@@ -1680,7 +1777,7 @@ Future<void> restoreBackupFile(
       HaloContainer.everyday,
       phone: true,
     );
-    await _livesHereNow();
+    await _livesHereNow(manifest['ts']);
     await _applyIdentitySecure(manifest['secure']);
     if (onboardingAfterRestore(manifest['onboardingDone']) case final done?) {
       await secureStore.write(key: 'onboarding_done', value: done);

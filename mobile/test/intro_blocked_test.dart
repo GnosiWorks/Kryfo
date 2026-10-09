@@ -16,6 +16,7 @@ import 'package:kryfo/main.dart'
         AppState,
         HaloEngine,
         makePreKeyBundleB64,
+        processPeerBundle,
         useDatabasesForTest,
         useEngineForTest;
 import 'package:kryfo/message_envelope.dart';
@@ -223,4 +224,22 @@ void main() {
     expect(w.bundlesTo(v), hasLength(1));
     expect(w.bundlesTo(v).single['want'], isFalse);
   });
+
+  test(
+    'the keys an introduction asks for never say when a backup was made',
+    () async {
+      // a session here came back with a restore
+      final k = await _keysOf();
+      await processPeerBundle('restored-one-here', k.card);
+      await signalSession.markRestored(from: 3 * Duration.millisecondsPerDay);
+      addTearDown(
+        () => signalSession.dropRestoredWhenDone(leaveOut: (_) => true),
+      );
+      expect(signalSession.restoredFrom, isNotNull);
+      final w = await _World.make();
+      await w.introduce(_n);
+      expect(w.bundlesTo('x-$_n').single['want'], isTrue);
+      expect(w.bundlesTo('x-$_n').single.containsKey('since'), isFalse);
+    },
+  );
 }

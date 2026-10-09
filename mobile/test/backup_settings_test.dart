@@ -217,6 +217,7 @@ void main() {
           (_) async => docs,
         );
     forgetLeftoverSweep();
+    restoreRunningForTest = false;
     forgetRestoredHidden();
     live = _Db(HaloContainer.everyday);
     decoy = _Db(HaloContainer.decoy);
@@ -284,6 +285,8 @@ void main() {
     }, inDecoy: inDecoy);
     useDatabasesForTest(live, Session(inDecoy ? decoy : live));
     restoreCipherForTest = _Cipher.new;
+    // each as the start after the last one would run it
+    restoreRunningForTest = false;
     await restoreBackupFile(out, 'pass', lock: lock.state);
   }
 
