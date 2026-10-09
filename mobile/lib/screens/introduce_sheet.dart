@@ -2,6 +2,8 @@
 // "introduce <B> to...": pick an accepted contact, add a line if you like,
 // and both get the other's card. a sheet, not a screen: one decision made
 // from inside a conversation.
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../intro_budget.dart';
@@ -124,8 +126,16 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
   @override
   Widget build(BuildContext context) {
     final others = _others;
-    final maxH = MediaQuery.of(context).size.height * 0.82;
-    final insets = MediaQuery.of(context).viewInsets.bottom;
+    final mq = MediaQuery.of(context);
+    final insets = mq.viewInsets.bottom;
+    // the sheet's route takes the status bar out of its padding, so the
+    // window is asked how tall that bar is
+    final bar = MediaQueryData.fromView(View.of(context)).padding.top;
+    // with the keyboard up it still stops below the status bar
+    final maxH = math.min(
+      mq.size.height * 0.82,
+      mq.size.height - insets - bar - 12,
+    );
     // the keyboard moves the insets every frame: the sheet rides on it
     return Padding(
       padding: EdgeInsets.only(bottom: insets),

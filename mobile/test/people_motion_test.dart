@@ -298,6 +298,32 @@ void main() {
       await t.pump(const Duration(seconds: 1));
     });
 
+    testWidgets('with the keyboard up it stops below the status bar', (
+      t,
+    ) async {
+      // enough people that the sheet wants all the room there is
+      appState.contacts = [
+        for (var i = 0; i < 16; i++)
+          ContactPreview(haloId: 'friend-$i', avatarSeed: '$i'),
+      ];
+      await open(t);
+      t.view.padding = const FakeViewPadding(top: 48);
+      t.view.viewPadding = const FakeViewPadding(top: 48);
+      addTearDown(t.view.resetViewInsets);
+      t.view.viewInsets = const FakeViewPadding(bottom: 600);
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 300));
+      expect(t.takeException(), isNull);
+      // the sheet stays clear of the bar, its field above the keyboard
+      expect(t.getRect(find.byType(BottomSheet)).top, greaterThanOrEqualTo(24));
+      expect(
+        t.getRect(find.byType(TextField)).bottom,
+        lessThanOrEqualTo(800 - 300),
+      );
+      await t.pumpWidget(const SizedBox());
+      await t.pump(const Duration(seconds: 1));
+    });
+
     testWidgets('right to left: the tick sits on the left', (t) async {
       final h = t.ensureSemantics();
       await open(t, dir: TextDirection.rtl);
