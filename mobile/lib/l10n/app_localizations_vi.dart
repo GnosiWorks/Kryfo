@@ -4640,6 +4640,10 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String get restorePrivacyKept =>
+      'Các cài đặt quyền riêng tư của bạn sẽ quay lại cùng bản sao lưu. Mã PIN không bao giờ đi theo: hãy đặt lại trong Cài đặt.';
+
+  @override
   String get restoreCheckProtections =>
       'Bản sao lưu không chứa phần cài đặt. Khi Kryfo mở lại, hãy kiểm tra Lớp bảo vệ của bạn trong Cài đặt.';
 

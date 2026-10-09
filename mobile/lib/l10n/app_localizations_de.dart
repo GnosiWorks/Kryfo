@@ -4703,6 +4703,10 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get restorePrivacyKept =>
+      'Deine Privatsphäre-Einstellungen kommen mit zurück. PINs reisen nie mit: Lege sie in den Einstellungen neu fest.';
+
+  @override
   String get restoreCheckProtections =>
       'Einstellungen sind nicht im Backup. Prüfe nach dem Öffnen „Dein Schutz“ in den Einstellungen.';
 

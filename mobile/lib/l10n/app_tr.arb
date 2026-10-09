@@ -1227,6 +1227,7 @@
   "restoreNotYet": "Henüz değil",
   "restoreRestored": "Geri yüklendi",
   "restoreKryfoWillCloseNow": "Kryfo şimdi kapanacak. {haloId} olarak yeniden açmak için simgeye dokun.",
+  "restorePrivacyKept": "Gizlilik ayarların da yedekle geri gelir. PIN’ler asla taşınmaz: onları Ayarlar’da yeniden belirle.",
   "restoreCheckProtections": "Ayarlar yedekte yer almaz. Kryfo yeniden açılınca Ayarlar'da “Korumaların” bölümüne bak.",
   "restoreReopenKryfo": "Kryfo’yu yeniden aç",
   "restoreTheRestoreDidNot": "Geri yükleme tamamlanmadı. Hiçbir şey değiştirilmedi",

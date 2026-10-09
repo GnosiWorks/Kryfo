@@ -1227,6 +1227,7 @@
   "restoreNotYet": "Pas encore",
   "restoreRestored": "Restauré",
   "restoreKryfoWillCloseNow": "Kryfo va se fermer. Touchez l’icône pour le rouvrir en tant que {haloId}.",
+  "restorePrivacyKept": "Vos paramètres de confidentialité reviennent avec la sauvegarde. Les codes PIN ne sont jamais transférés : définissez-les à nouveau dans Paramètres.",
   "restoreCheckProtections": "Les paramètres ne sont pas dans la sauvegarde. À la réouverture de Kryfo, vérifiez « Vos protections » dans Paramètres.",
   "restoreReopenKryfo": "Rouvrir Kryfo",
   "restoreTheRestoreDidNot": "La restauration n’a pas abouti. Rien n’a été modifié",

@@ -4747,6 +4747,10 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get restorePrivacyKept =>
+      'Настройки приватности вернутся вместе с копией. PIN-коды никогда не переносятся: задай их заново в настройках.';
+
+  @override
   String get restoreCheckProtections =>
       'Настройки не входят в резервную копию. Когда Kryfo откроется, проверь «Твоя защита» в настройках.';
 

@@ -1227,6 +1227,7 @@
   "restoreNotYet": "先不要",
   "restoreRestored": "已還原",
   "restoreKryfoWillCloseNow": "Kryfo 現在會關閉。點一下圖示，以 {haloId} 重新開啟。",
+  "restorePrivacyKept": "你的隱私設定會隨備份一起回來。PIN 碼永遠不會隨之轉移：請在設定裡重新設定。",
   "restoreCheckProtections": "備份不包含設定。Kryfo 重新開啟後，請在設定裡檢查「你的防護」。",
   "restoreReopenKryfo": "重新開啟 Kryfo",
   "restoreTheRestoreDidNot": "還原沒有完成。沒有做任何變更",

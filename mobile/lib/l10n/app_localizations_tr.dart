@@ -4663,6 +4663,10 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String get restorePrivacyKept =>
+      'Gizlilik ayarların da yedekle geri gelir. PIN’ler asla taşınmaz: onları Ayarlar’da yeniden belirle.';
+
+  @override
   String get restoreCheckProtections =>
       'Ayarlar yedekte yer almaz. Kryfo yeniden açılınca Ayarlar\'da “Korumaların” bölümüne bak.';
 

@@ -4639,6 +4639,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get restorePrivacyKept =>
+      'Your privacy settings come back with it. PINs never travel: set them again in Settings.';
+
+  @override
   String get restoreCheckProtections =>
       'Settings aren\'t kept in a backup. Once Kryfo reopens, check Your protections in Settings.';
 

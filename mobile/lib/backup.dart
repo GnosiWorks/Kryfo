@@ -16,6 +16,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
+import 'carried_settings.dart';
 import 'container.dart';
 import 'lock_state.dart' show LockState, lockState;
 import 'main.dart'
@@ -257,6 +258,7 @@ Future<BackupSummary> inspectBackup(String blob, String passphrase) async {
 // it lands on the session it began in: the other one may be unlocked by
 // the time the file is open
 Future<void> restoreBackupBlob(String blob, String passphrase) async {
+  _restoredSettings = false;
   final own = session.primary;
   return landV1Payload(await _openPayload(blob, passphrase), own: own);
 }
@@ -837,6 +839,7 @@ Future<BackupDraft> draftBackup(
   }
   final onboardingDone = await secureStore.read(key: 'onboarding_done');
   final secure = await _readIdentitySecure();
+  final settings = await readCarriedSettings(HaloContainer.everyday);
   final dbCopy = p.join(stage, 'halo.db');
   final folders = <BackupFileEntry>[];
   final sources = <String, String>{};
@@ -892,6 +895,7 @@ Future<BackupDraft> draftBackup(
     'dbPassphrase': dbKey,
     'prefs': prefsMap,
     'secure': secure,
+    'settings': settings,
     'onboardingDone': onboardingDone,
     'chunk': kBackupChunk,
     'files': [for (final f in files) f.toJson()],
@@ -1056,6 +1060,8 @@ Future<BackupDraft> _draftQuiet(
     'dbPassphrase': dbKey,
     'prefs': <String, dynamic>{},
     'secure': <String, String>{},
+    // the decoy's own settings, and the phone's as the decoy sees them
+    'settings': await readCarriedSettings(c),
     'onboardingDone': 'true',
     'chunk': kBackupChunk,
     'files': [for (final f in files) f.toJson()],
@@ -1320,6 +1326,14 @@ HaloContainer _restoredInto = HaloContainer.vault;
 /// a restore brought hidden chats: they wait for a hidden chats PIN
 bool get restoredHidden => _restoredKey != null;
 
+/// the last restore put every privacy setting back: the phone's and the
+/// identity's. not after an older file, a decoy restore or a v1 one
+bool get restoredSettings => _restoredSettings;
+var _restoredSettings = false;
+
+@visibleForTesting
+void restoredSettingsForTest(bool v) => _restoredSettings = v;
+
 /// the hidden chats a restore brought, under the PIN the person chose. false
 /// when that PIN is in use
 Future<bool> sealRestoredHidden(LockState lock, String pin) async {
@@ -1445,6 +1459,8 @@ Future<void> _landInDecoy(
     key: c.keyName!,
     value: manifest['dbPassphrase'] as String,
   );
+  // the decoy's own settings. the phone's stay as the everyday side has them
+  await landCarriedSettings(manifest['settings'], c, phone: false);
   try {
     await Directory(from).delete(recursive: true);
   } catch (_) {
@@ -1578,6 +1594,7 @@ Future<void> restoreBackupFile(
   void Function(int done, int total)? onProgress,
   @visibleForTesting LockState? lock,
 }) async {
+  _restoredSettings = false;
   if (!await isBackupV2(path)) {
     throw const RestoreError(RestoreFailure.notABackup);
   }
@@ -1644,6 +1661,12 @@ Future<void> restoreBackupFile(
       value: manifest['dbPassphrase'] as String,
     );
     await restorePrefs(manifest['prefs']);
+    // in place before the restart reads them
+    _restoredSettings = await landCarriedSettings(
+      manifest['settings'],
+      HaloContainer.everyday,
+      phone: true,
+    );
     await _livesHereNow();
     await _applyIdentitySecure(manifest['secure']);
     if (onboardingAfterRestore(manifest['onboardingDone']) case final done?) {

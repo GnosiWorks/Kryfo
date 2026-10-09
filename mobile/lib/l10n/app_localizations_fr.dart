@@ -4695,6 +4695,10 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get restorePrivacyKept =>
+      'Vos paramètres de confidentialité reviennent avec la sauvegarde. Les codes PIN ne sont jamais transférés : définissez-les à nouveau dans Paramètres.';
+
+  @override
   String get restoreCheckProtections =>
       'Les paramètres ne sont pas dans la sauvegarde. À la réouverture de Kryfo, vérifiez « Vos protections » dans Paramètres.';
 

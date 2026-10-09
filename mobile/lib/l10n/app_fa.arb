@@ -1227,6 +1227,7 @@
   "restoreNotYet": "هنوز نه",
   "restoreRestored": "بازیابی شد",
   "restoreKryfoWillCloseNow": "Kryfo حالا بسته می‌شود. نماد را بزنید تا دوباره به‌عنوان ⁨{haloId}⁩ باز شود.",
+  "restorePrivacyKept": "تنظیمات حریم خصوصی شما همراه پشتیبان برمی‌گردد. PINها هرگز منتقل نمی‌شوند: آن‌ها را دوباره در تنظیمات تعیین کنید.",
   "restoreCheckProtections": "تنظیمات در پشتیبان نیست. وقتی Kryfo دوباره باز شد، «محافظت‌های شما» را در تنظیمات بررسی کنید.",
   "restoreReopenKryfo": "بازگشایی Kryfo",
   "restoreTheRestoreDidNot": "بازیابی تمام نشد. چیزی تغییر نکرد",

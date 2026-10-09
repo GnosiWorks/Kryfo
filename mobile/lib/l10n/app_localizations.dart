@@ -7488,6 +7488,12 @@ abstract class AppLocalizations {
   /// screens/restore_screen.dart
   ///
   /// In en, this message translates to:
+  /// **'Your privacy settings come back with it. PINs never travel: set them again in Settings.'**
+  String get restorePrivacyKept;
+
+  /// screens/restore_screen.dart
+  ///
+  /// In en, this message translates to:
   /// **'Settings aren\'t kept in a backup. Once Kryfo reopens, check Your protections in Settings.'**
   String get restoreCheckProtections;
 

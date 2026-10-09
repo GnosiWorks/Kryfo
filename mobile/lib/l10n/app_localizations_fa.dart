@@ -4658,6 +4658,10 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
+  String get restorePrivacyKept =>
+      'تنظیمات حریم خصوصی شما همراه پشتیبان برمی‌گردد. PINها هرگز منتقل نمی‌شوند: آن‌ها را دوباره در تنظیمات تعیین کنید.';
+
+  @override
   String get restoreCheckProtections =>
       'تنظیمات در پشتیبان نیست. وقتی Kryfo دوباره باز شد، «محافظت‌های شما» را در تنظیمات بررسی کنید.';
 

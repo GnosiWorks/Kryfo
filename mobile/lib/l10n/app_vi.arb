@@ -1227,6 +1227,7 @@
   "restoreNotYet": "Chưa",
   "restoreRestored": "Đã khôi phục",
   "restoreKryfoWillCloseNow": "Kryfo sẽ đóng ngay bây giờ. Chạm vào biểu tượng để mở lại với tư cách {haloId}.",
+  "restorePrivacyKept": "Các cài đặt quyền riêng tư của bạn sẽ quay lại cùng bản sao lưu. Mã PIN không bao giờ đi theo: hãy đặt lại trong Cài đặt.",
   "restoreCheckProtections": "Bản sao lưu không chứa phần cài đặt. Khi Kryfo mở lại, hãy kiểm tra Lớp bảo vệ của bạn trong Cài đặt.",
   "restoreReopenKryfo": "Mở lại Kryfo",
   "restoreTheRestoreDidNot": "Khôi phục chưa hoàn tất. Không có gì bị thay đổi",

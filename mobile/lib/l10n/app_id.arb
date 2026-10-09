@@ -1227,6 +1227,7 @@
   "restoreNotYet": "Belum",
   "restoreRestored": "Dipulihkan",
   "restoreKryfoWillCloseNow": "Kryfo akan ditutup sekarang. Ketuk ikonnya untuk membuka lagi sebagai {haloId}.",
+  "restorePrivacyKept": "Pengaturan privasimu ikut kembali bersama cadangan. PIN tidak pernah ikut pindah: atur lagi di Pengaturan.",
   "restoreCheckProtections": "Pengaturan tidak ikut dalam cadangan. Setelah Kryfo terbuka lagi, periksa Perlindunganmu di Pengaturan.",
   "restoreReopenKryfo": "Buka lagi Kryfo",
   "restoreTheRestoreDidNot": "Pemulihan tidak selesai. Tidak ada yang diubah",
