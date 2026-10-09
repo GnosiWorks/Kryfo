@@ -863,6 +863,117 @@ void main() {
     expect(maker.room!['door_was'], isNull);
   });
 
+  test('a knock behind a stuck reset holds nothing else in the inbox, and '
+      'is taken once the reset is done', () async {
+    final maker = await _maker();
+    final old = (await _linkOf(maker))!;
+    final b = await _joiner('bpriv');
+    await b.app.joinRoom(old);
+    await _settle();
+    final knock = b.engine.knocks.single;
+    maker.use();
+    final gate = maker.engine.shutGate = Completer<void>();
+    final resetting = maker.app.resetRoomLink(_room);
+    await _settle();
+    final hi = roomFrame(
+      await wrapMessage(
+        'still here',
+        groupId: _room,
+        msgUid: 'hi1',
+        sender: SenderInfo(haloId: _other, edPub: '', onion: '', xPub: ''),
+      ),
+      _other,
+    )!;
+    final failed = await maker.app
+        .receiveRelay([
+          (peer: 'roomfc:$_creator', cipher: knock.msg),
+          (peer: 'room:$_creator:$_other', cipher: hi),
+        ])
+        .timeout(const Duration(seconds: 2));
+    // the knock is offered again; the message behind it is in
+    expect(failed, {0});
+    expect(maker.rows.msgs.map((r) => r['plaintext']), ['still here']);
+    gate.complete();
+    await resetting;
+    await _settle();
+    // it came to the door the reset shut, and is seen
+    expect(await maker.rows.getGroupMembers(_room), [_creator, _other]);
+    expect(
+      await maker.app.receiveRelay([
+        (peer: 'roomfc:$_creator', cipher: knock.msg),
+      ]),
+      isEmpty,
+    );
+  });
+
+  test('a reset whose engine never answers goes on after its wait', () async {
+    final maker = await _maker();
+    maker.app.roomEngineWait = const Duration(milliseconds: 200);
+    maker.engine.shutGate = Completer<void>();
+    maker.engine.forgetHangs = 'creatorpriv';
+    final link = await maker.app
+        .resetRoomLink(_room)
+        .timeout(const Duration(seconds: 3));
+    expect(link!.fcPk, _fc2);
+    expect(maker.engine.doors, contains('doorpriv'));
+    // its files are still owed: noted for the next start
+    expect(maker.room!['door_was'], 'creatorpriv');
+  });
+
+  test('a reset stops when the door before cannot be forgotten, and can '
+      'be tried again', () async {
+    final maker = await _maker();
+    // a door a reset cut short left
+    maker.room!['door_was'] = 'oldpriv';
+    maker.engine.forgetFails.add('oldpriv');
+    expect(await maker.app.resetRoomLink(_room), isNull);
+    expect(maker.room!['door_was'], 'oldpriv');
+    expect(maker.room!['door_pub'], isNull);
+    expect(maker.room!['fc_pk'], _fc);
+    expect(maker.engine.keys, hasLength(1));
+    expect(maker.engine.doors, {'creatorpriv'});
+    expect(maker.engine.unlistened, isEmpty);
+    expect(maker.rows.ctlOut, isEmpty);
+    maker.engine.forgetFails.clear();
+    expect((await maker.app.resetRoomLink(_room))!.fcPk, _fc2);
+    expect(maker.engine.forgot, ['oldpriv', 'creatorpriv']);
+    expect(maker.room!['door_was'], isNull);
+  });
+
+  test('listening again while a reset runs takes the door it leaves', () async {
+    final rows = _asMaker(_Gated());
+    final p = await _Phone.make(
+      rows: rows,
+      keys: [(priv: 'doorpriv', pub: _door)],
+    );
+    final hold = rows.roomsGate = Completer<void>();
+    final listening = p.app.subscribeRoomsAtBoot();
+    await _settle();
+    // the rooms are read as they were; the reset lands before they listen
+    expect((await p.app.resetRoomLink(_room))!.fcPk, _fc2);
+    hold.complete();
+    await listening;
+    await _settle();
+    expect(p.engine.doors, {'doorpriv'});
+  });
+
+  test('a room that ends while it is reset leaves nothing listening', () async {
+    final maker = await _maker();
+    final gate = maker.engine.shutGate = Completer<void>();
+    final resetting = maker.app.resetRoomLink(_room);
+    await _settle();
+    maker.room!['expires_at'] = DateTime.now().millisecondsSinceEpoch - 1;
+    final sweeping = maker.app.sweepRooms();
+    await _settle();
+    gate.complete();
+    await resetting;
+    await sweeping;
+    await _settle();
+    expect(maker.rows.groupRows, isEmpty);
+    expect(maker.engine.doors, isEmpty);
+    expect(maker.engine.listening, isEmpty);
+  });
+
   group('on screen', () {
     // the room's rows as the info page reads them
     ArrivalRows screenRows({bool maker = true, bool room = true}) {
@@ -1076,6 +1187,17 @@ class _ScreenRows extends ArrivalRows {
 class _Gated extends ArrivalRows {
   _Gated() : super(HaloContainer.everyday);
   Completer<void>? gate;
+  // holds the list of rooms once read, as it was then
+  Completer<void>? roomsGate;
+  @override
+  Future<List<Map<String, Object?>>> rooms() async {
+    final read = [
+      for (final g in await super.rooms()) {...g},
+    ];
+    await roomsGate?.future;
+    return read;
+  }
+
   @override
   Future<Set<String>> rosterGone(String groupId) async {
     await gate?.future;

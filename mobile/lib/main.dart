@@ -789,6 +789,11 @@ class HaloEngine {
   );
 }
 
+// a knock left to wait its room's turn: offered again, not an error
+class _KnockWaits implements Exception {
+  const _KnockWaits();
+}
+
 // a call nobody waits on: what it threw still shows in a debug log
 void _background(Future<Object?> call, String where) =>
     unawaited(call.then((_) {}, onError: (Object e) => dlog('$where: $e')));
@@ -14145,6 +14150,8 @@ class AppState extends ChangeNotifier {
           arrived,
           wrappedAt: m.at < written.length ? written[m.at] : null,
         );
+      } on _KnockWaits {
+        failed.add(m.at);
       } catch (e, st) {
         dlog('relay: one not kept, it comes again ($e)\n$st');
         failed.add(m.at);
@@ -14211,6 +14218,12 @@ class AppState extends ChangeNotifier {
     // a room frame: opened by the room key already, never signal. one that
     // throws is not kept and comes again
     if (m.peer.startsWith('room:') || m.peer.startsWith('roomfc:')) {
+      // a knock on a room busy with a reset waits on its own, and the
+      // inbox goes on. it is offered again until it is seen
+      if (m.peer.startsWith('roomfc:') && _roomBusy(m.cipher)) {
+        _knockLater(m.peer, m.cipher, h);
+        throw const _KnockWaits();
+      }
       await _handleRoomFrame(m.peer, m.cipher);
       await live.markSeen(h);
       notifyListeners();
@@ -16397,6 +16410,30 @@ class AppState extends ChangeNotifier {
     return mine;
   }
 
+  // how long a reset waits on the engine before it goes on without it
+  @visibleForTesting
+  Duration roomEngineWait = const Duration(seconds: 20);
+
+  // whether the room a frame names has a knock or a reset under way
+  bool _roomBusy(String content) {
+    final g = unwrapMessage(content).groupId;
+    return g != null && _roomTurns.containsKey(g);
+  }
+
+  // knocks waiting their room's turn off the inbox, by hash
+  final Set<String> _knocks = {};
+
+  void _knockLater(String tag, String content, String h) {
+    if (!_knocks.add(h)) return;
+    unawaited(
+      _handleRoomFrame(tag, content)
+          .then((_) => live.markSeen(h))
+          .then((_) => notifyListeners())
+          .catchError((Object e) => dlog('room knock: ${e.runtimeType}'))
+          .whenComplete(() => _knocks.remove(h)),
+    );
+  }
+
   // resets running now: a second ask waits for the same one
   final Map<String, Future<RoomLink?>> _resetting = {};
 
@@ -16424,7 +16461,9 @@ class AppState extends ChangeNotifier {
     // a quiet session keeps the room on this phone: nothing listens or goes
     final quiet = sessionQuiet;
     // a door the last reset could not forget goes first, or it never would
-    if (!quiet) await _forgetDoor(groupId, g['door_was'] as String?);
+    if (!quiet && !await _forgetDoor(groupId, g['door_was'] as String?)) {
+      return null;
+    }
     final k = engine.roomKeygen();
     if (k == null) return null;
     final fc = engine.roomFcPk(k.priv);
@@ -16459,13 +16498,19 @@ class AppState extends ChangeNotifier {
 
   // the files of a door a reset left, gone, and the note of it with them.
   // one not gone stays noted, for the next start or reset
-  Future<void> _forgetDoor(String groupId, String? priv) async {
-    if (priv == null) return;
+  // true once nothing is left to forget
+  Future<bool> _forgetDoor(String groupId, String? priv) async {
+    if (priv == null) return true;
     try {
-      if (await engine.roomForget(priv, const []) != 'ok') return;
+      final r = await engine
+          .roomForget(priv, const [])
+          .timeout(roomEngineWait, onTimeout: () => 'error: timeout');
+      if (r != 'ok') return false;
       await live.clearRoomDoorWas(groupId, priv);
+      return true;
     } catch (e) {
       dlog('room door: not forgotten (${e.runtimeType})');
+      return false;
     }
   }
 
@@ -16480,7 +16525,9 @@ class AppState extends ChangeNotifier {
   ) async {
     if (was.pub == roomPub) {
       try {
-        await engine.roomUnsubscribe(roomPub);
+        await engine
+            .roomUnsubscribe(roomPub)
+            .timeout(roomEngineWait, onTimeout: () => 'error: timeout');
       } catch (e) {
         dlog('room door: not shut (${e.runtimeType})');
       }
@@ -16834,7 +16881,18 @@ class AppState extends ChangeNotifier {
   // subscriptions. the wipe goes through the same shred the burn timer
   // uses. a gone room is not a notification, just a line in the list for
   // a moment if someone is looking.
+  // in the room's turn: a reset under way finishes first, and nothing of
+  // it is left listening after
   Future<void> _destroyRoom(
+    String groupId, {
+    bool expired = false,
+    HaloDb? on,
+  }) => _roomTurn(
+    groupId,
+    () => _destroyRoomTurn(groupId, expired: expired, on: on),
+  );
+
+  Future<void> _destroyRoomTurn(
     String groupId, {
     bool expired = false,
     HaloDb? on,
@@ -17021,18 +17079,24 @@ class AppState extends ChangeNotifier {
   // them dial the relays of the mode now in use
   Future<int> _listenToRooms() async {
     final rooms = await live.rooms();
-    for (final g in rooms) {
-      final gid = g['group_id'] as String;
-      final priv = g['room_priv'] as String;
-      final pub = g['room_pub'] as String;
-      _roomSubs[pub] = {};
-      // a reset link knocks on its door key, the first one on the room's
-      if ((g['is_admin'] as int? ?? 0) == 1) {
-        engine.roomSubscribeFcBg((g['door_priv'] as String?) ?? priv);
-        // a reset cut short: the door before it is forgotten now
-        await _forgetDoor(gid, g['door_was'] as String?);
-      }
-      await _subscribeRoomMembers(gid);
+    for (final r in rooms) {
+      final gid = r['group_id'] as String;
+      // in the room's turn, off the row as it is then: a reset or an end
+      // under way never leaves an old door listening
+      await _roomTurn(gid, () async {
+        final g = await live.getGroup(gid);
+        final priv = g?['room_priv'] as String?;
+        final pub = g?['room_pub'] as String?;
+        if (g == null || priv == null || pub == null) return;
+        _roomSubs[pub] = {};
+        // a reset link knocks on its door key, the first one on the room's
+        if ((g['is_admin'] as int? ?? 0) == 1) {
+          engine.roomSubscribeFcBg((g['door_priv'] as String?) ?? priv);
+          // a reset cut short: the door before it is forgotten now
+          await _forgetDoor(gid, g['door_was'] as String?);
+        }
+        await _subscribeRoomMembers(gid);
+      });
     }
     return rooms.length;
   }
