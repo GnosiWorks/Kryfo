@@ -105,6 +105,9 @@ Future<String> sendChunkedMediaTo({
   Set<int>? only,
   // the chat's key for the progress strip, its container's and its own
   required String progressKey,
+  // the sending container blocks them: a block in the other one only
+  // holds the file back
+  Future<bool> Function()? blockedHere,
 }) async {
   if (!mediaInflight.add(msgUid)) return 'busy';
   try {
@@ -127,6 +130,7 @@ Future<String> sendChunkedMediaTo({
       sender: sender,
       only: only,
       progressKey: progressKey,
+      blockedHere: blockedHere,
     );
   } finally {
     mediaCancelled.remove(msgUid);
@@ -155,6 +159,7 @@ Future<String> _sendChunkedMediaInner({
   required SenderInfo sender,
   Set<int>? only,
   required String progressKey,
+  Future<bool> Function()? blockedHere,
 }) async {
   var torWait = 0;
   while (!appState.torReady && torWait < 300000) {
@@ -243,9 +248,14 @@ Future<String> _sendChunkedMediaInner({
         failure = 'cancelled';
         return;
       }
-      // blocked part way: the rest is not sent, and waits for a tap
+      // blocked part way, here: the rest is not sent, and waits for a tap.
+      // blocked in the other container: it waits with the row
       if (await appState.blockedAnywhere(peerId)) {
-        blocked = true;
+        if (blockedHere != null && await blockedHere()) {
+          blocked = true;
+        } else {
+          parked = true;
+        }
         return;
       }
       final i = takeChunk();

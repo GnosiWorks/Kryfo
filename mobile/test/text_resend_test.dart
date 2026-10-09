@@ -114,7 +114,26 @@ class _Db extends DevTestDb {
     String peerId, {
     int? beforeRowid,
     int limit = 60,
-  }) async => _thread(peerId);
+  }) async {
+    final rows = [
+      for (final r in _thread(peerId))
+        if (beforeRowid == null || (r['id'] as int) < beforeRowid) r,
+    ];
+    return rows.length > limit ? rows.sublist(rows.length - limit) : rows;
+  }
+
+  @override
+  Future<List<Map<String, Object?>>> unsentOutbox({
+    Set<String> skip = const {},
+  }) async => [
+    for (final r in mem.rows('messages'))
+      if (r['direction'] == 'out' &&
+          r['sent'] == 0 &&
+          r['msg_uid'] != null &&
+          r['group_id'] == null &&
+          !skip.contains(r['peer_id']))
+        r,
+  ];
   @override
   Future<List<Map<String, Object?>>> messagesAfter(
     String peerId,
@@ -605,6 +624,129 @@ void main() {
     expect(relay.sends, hasLength(1));
     expect(sentOf('n3'), kNotSent);
     expect(find.text(l10n.chatFailedTapToRetry), findsOneWidget);
+    await devClose(t);
+  });
+
+  testWidgets('a block that comes while a text goes leaves it not sent, '
+      'whatever the send then says, and the unblock sends nothing', (t) async {
+    await failed('n5', 'see you there');
+    await openChat(t);
+    await settle(t);
+    expect(relay.sends, hasLength(1));
+    // the block, as the database makes it, and the chat read again
+    await setBlocked(true);
+    await mem.update(
+      'messages',
+      {'sent': kNotSent},
+      where: 'msg_uid = ?',
+      whereArgs: ['n5'],
+    );
+    appState.chatChanged(_peer);
+    await settle(t);
+    relay.sends.single.complete('error: timeout');
+    await settle(t);
+    await setBlocked(false);
+    await halfMinutes(t, 8);
+    expect(relay.sends, hasLength(1));
+    expect(sentOf('n5'), kNotSent);
+    expect(find.text(l10n.chatFailedTapToRetry), findsOneWidget);
+    await devClose(t);
+  });
+
+  testWidgets('the retries leave a row the block marked while it showed as '
+      'failed', (t) async {
+    await failed('n9', 'see you there');
+    await openChat(t);
+    await settle(t);
+    relay.sends.single.complete('error: timeout');
+    await settle(t);
+    // marked under the screen, which has not read it again
+    await mem.update(
+      'messages',
+      {'sent': kNotSent},
+      where: 'msg_uid = ?',
+      whereArgs: ['n9'],
+    );
+    await halfMinutes(t, 3);
+    expect(relay.sends, hasLength(1));
+    expect(sentOf('n9'), kNotSent);
+    expect(find.text(l10n.chatFailedTapToRetry), findsOneWidget);
+    await devClose(t);
+  });
+
+  testWidgets('a held back text paged in from further up shows as failed, '
+      'and its tap sends it', (t) async {
+    await failed('n6', 'the first one', sent: kNotSent);
+    final now = DateTime.now().millisecondsSinceEpoch;
+    for (var i = 0; i < 70; i++) {
+      await mem.insert('messages', {
+        'peer_id': _peer,
+        'direction': 'in',
+        'plaintext': 'line $i',
+        'sent_at': now - 60000 + i,
+        'msg_uid': 'in$i',
+      });
+    }
+    await openChat(t);
+    await settle(t);
+    final row = find.text('the first one');
+    expect(row, findsNothing);
+    for (var i = 0; i < 20 && row.evaluate().isEmpty; i++) {
+      await t.drag(find.byType(Scrollable).first, const Offset(0, 1500));
+      await settle(t, 2);
+    }
+    expect(row, findsOneWidget);
+    expect(find.text(l10n.chatFailedTapToRetry), findsOneWidget);
+    await halfMinutes(t, 2);
+    expect(relay.sends, isEmpty);
+    await t.tap(row);
+    await settle(t);
+    expect(relay.sends, hasLength(1));
+    relay.sends.single.complete('ok');
+    await settle(t);
+    expect(sentOf('n6'), 1);
+    await devClose(t);
+  });
+
+  testWidgets('a tap on a held back text sends one copy while the outbox '
+      'runs too', (t) async {
+    await failed('n7', 'see you there', sent: kNotSent);
+    await openChat(t);
+    await settle(t);
+    await t.tap(find.text('see you there'));
+    await settle(t);
+    expect(relay.sends, hasLength(1));
+    await t.runAsync(appState.drainOutbox);
+    await settle(t);
+    expect(relay.sends, hasLength(1));
+    relay.sends.single.complete('ok');
+    await settle(t);
+    expect(sentOf('n7'), 1);
+    await devClose(t);
+  });
+
+  testWidgets('a block in the vault leaves a text here waiting, not '
+      'failed, and nothing goes', (t) async {
+    final hidden = MemDb();
+    await hidden.insert('contacts', {
+      'halo_id': _peer,
+      'onion': '',
+      'xpub': 'ab' * 32,
+      'first_seen': 1,
+      'last_seen': 1,
+      'accepted': 1,
+      'back_paired': 1,
+      'blocked': 1,
+    });
+    useDatabasesForTest(db, await Session.withVault(db, _Db(hidden)));
+    await failed('n8', 'see you there');
+    await openChat(t);
+    await settle(t);
+    await halfMinutes(t, 8);
+    expect(relay.sends, isEmpty);
+    expect(sentOf('n8'), 0);
+    expect(find.text(l10n.chatFailedTapToRetry), findsNothing);
+    expect(find.text('see you there'), findsOneWidget);
     await devClose(t);
   });
 

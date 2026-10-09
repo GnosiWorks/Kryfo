@@ -4,16 +4,18 @@
 // decoy's own too, and in a vault opened later. a take-back only withdraws
 // and still goes. while it holds an edit or a pin stays here and nobody
 // blocked is introduced. our texts and files to them that have not gone
-// are not sent, in every container: the unblock sends none of them, a tap
-// does, and one put back while the block holds is not sent again. the
-// queues read the block list in the database, never as a list of
-// variables. a receipt from them ticks only what went before the block,
-// and a back-pair leaves their row as the block left it but for a new
-// key's warning. the database methods are the real ones over rows kept in
-// maps; the wire and signal are stand-ins
+// are not sent, in the container that blocked: the unblock sends none of
+// them, a tap does. a block in the other container only holds them back,
+// and they go once it is lifted. nothing a block kept is edited, pinned,
+// reacted to or finished off for them. the queues read the block list in
+// the database, never as a list of variables. a receipt from them ticks
+// only what went before the block, and a back-pair leaves their row as the
+// block left it but for a new key's warning. the database methods are the
+// real ones over rows kept in maps; the wire and signal are stand-ins
 import 'dart:io';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -31,6 +33,7 @@ import 'package:kryfo/main.dart'
         kFrameUnsend,
         useDatabasesForTest,
         useEngineForTest;
+import 'package:kryfo/media_resend.dart' show NeedFrame;
 import 'package:kryfo/media_send.dart';
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
@@ -258,29 +261,26 @@ void main() {
 
     for (final inVault in [true, false]) {
       final where = inVault ? 'the vault' : 'the everyday side';
-      test('a block in $where leaves what both containers wrote to them '
-          'not sent, and one written meanwhile is not sent after the '
-          'unblock', () async {
+      test('a block in $where leaves only its own rows not sent: the other '
+          'container\'s wait, and the unblock leaves both so', () async {
         final everyday = MemDb();
         final hidden = MemDb();
         final live = _Rows(everyday);
         final vault = _Rows(hidden, HaloContainer.vault);
-        await _person(inVault ? hidden : everyday, _bob);
-        await _rows(everyday, _bob, '1');
-        await _rows(hidden, _bob, '2');
+        final own = inVault ? hidden : everyday;
+        final other = inVault ? everyday : hidden;
+        await _person(own, _bob);
+        await _rows(own, _bob, '1');
+        await _rows(other, _bob, '2');
+        final waiting = _sent(other);
         final s = await Session.withVault(live, vault);
         await s.setBlocked(_bob, true);
-        expect(
-          (inVault ? hidden : everyday).rows('contacts').single['blocked'],
-          1,
-        );
-        expect(_sent(everyday), _held('1'));
-        expect(_sent(hidden), _held('2'));
-        // the other container's chat still has its composer
-        await _out(inVault ? everyday : hidden, 'late', _bob);
+        expect(own.rows('contacts').single['blocked'], 1);
+        expect(_sent(own), _held('1'));
+        expect(_sent(other), waiting);
         await s.setBlocked(_bob, false);
-        expect(_sent(everyday), {..._held('1'), if (inVault) 'late': kNotSent});
-        expect(_sent(hidden), {..._held('2'), if (!inVault) 'late': kNotSent});
+        expect(_sent(own), _held('1'));
+        expect(_sent(other), waiting);
       });
     }
 
@@ -440,44 +440,74 @@ void main() {
     });
 
     test('blocked in the open vault, what the everyday side wrote to them '
-        'is not sent, and a row put back while the block holds is not sent '
-        'again', () async {
+        'waits, and goes once the vault lifts the block', () async {
       final hidden = MemDb();
       final vault = _Rows(hidden, HaloContainer.vault);
       await _person(hidden, _bob, blocked: true);
       await _out(mem, 't1', _bob);
-      await _out(mem, 'f1', _bob, file: '${docs.path}/f1.bin');
-      File('${docs.path}/f1.bin').writeAsBytesSync([1, 2, 3]);
-      useDatabasesForTest(db, await Session.withVault(db, vault));
-      await app.drainOutbox();
-      await settle();
-      expect(io.sent, isEmpty);
-      expect(_sent(mem), {'t1': kNotSent, 'f1': kNotSent});
-      await db.sendAgain('t1');
-      await app.drainOutbox();
-      await settle();
-      expect(io.sent, isEmpty);
-      expect(_sent(mem)['t1'], kNotSent);
-    });
-
-    test('a vault opened after the everyday side blocked them holds back '
-        'what it wrote to them, and the unblock sends none of it', () async {
-      await db.setBlocked(_bob, true);
-      final hidden = MemDb();
-      final vault = _Rows(hidden, HaloContainer.vault);
-      await _person(hidden, _bob);
-      await _out(hidden, 'v1', _bob);
       final s = await Session.withVault(db, vault);
       useDatabasesForTest(db, s);
       await app.drainOutbox();
       await settle();
       expect(io.sent, isEmpty);
-      expect(_sent(hidden)['v1'], kNotSent);
-      await db.setBlocked(_bob, false);
+      expect(_sent(mem), {'t1': 0});
+      await s.setBlocked(_bob, false);
+      await app.drainOutbox();
+      await settle();
+      expect([for (final m in wire()) m.msgUid], ['t1']);
+      expect(_sent(mem), {'t1': 1});
+    });
+
+    test('a vault opened after the everyday side blocked them leaves what it '
+        'wrote to them waiting, and it goes after the unblock', () async {
+      await db.setBlocked(_bob, true);
+      final hidden = MemDb();
+      final vault = _Rows(hidden, HaloContainer.vault);
+      await _person(hidden, _bob);
+      await _out(hidden, 'v1', _bob);
+      useDatabasesForTest(db, await Session.withVault(db, vault));
       await app.drainOutbox();
       await settle();
       expect(io.sent, isEmpty);
-      expect(_sent(hidden)['v1'], kNotSent);
+      expect(_sent(hidden)['v1'], 0);
+      await db.setBlocked(_bob, false);
+      await app.drainOutbox();
+      await settle();
+      expect([for (final m in wire()) m.msgUid], ['v1']);
+    });
+
+    test('a row a block kept from going is edited, pinned and reacted to '
+        'here alone', () async {
+      await _out(mem, 'n1', _bob, sent: kNotSent);
+      await app.editInChat(_bob, 'n1', 'changed');
+      await app.pinInChat(_bob, 'n1', true);
+      await app.reactInChat(_bob, 'n1', 'x');
+      await settle();
+      expect(_queued(mem, _bob), isEmpty);
+      expect(io.sent, isEmpty);
+      expect(mem.rows('messages').single['pinned'], 1);
+    });
+
+    test('their ask for the slices of a file a block kept from going is '
+        'not answered', () async {
+      final f = File('${docs.path}/f1.bin')..writeAsBytesSync([1, 2, 3]);
+      await _out(mem, 'f1', _bob, sent: kNotSent, file: f.path);
+      final said = <String>[];
+      final was = debugPrint;
+      debugPrint = (m, {wrapWidth}) => said.add(m ?? '');
+      addTearDown(() => debugPrint = was);
+      final ask = await wrapMessage(
+        '',
+        need: const NeedFrame('f1', [0]),
+        sender: asSender(_bob),
+      );
+      io.opens['need-1'] = (_bob, ask);
+      await app.receiveRelay([(peer: 'x-$_bob', cipher: 'need-1')]);
+      await settle();
+      debugPrint = was;
+      expect(said, contains('NEED f1: not answered'));
+      expect(io.sent, isEmpty);
+      expect(_sent(mem)['f1'], kNotSent);
     });
 
     test('a take-back queued before the block still goes while it '
@@ -550,24 +580,29 @@ void main() {
       expect(_queued(mem, _bob), isEmpty);
     });
 
-    test('a file to someone blocked stops before a slice goes', () async {
+    test('a file to someone blocked stops before a slice goes: not sent '
+        'when the sending container blocked them, waiting when the other '
+        'one did', () async {
       await db.setBlocked(_bob, true);
       useEngineForTest(_Engine());
       appState.sendModeForTest = 'fast';
       final f = File('${docs.path}/a.bin')..writeAsBytesSync([1, 2, 3]);
-      final r = await sendChunkedMediaTo(
-        peerId: _bob,
-        peerOnion: 'o-$_bob',
-        peerXPub: 'x-$_bob',
-        backPaired: true,
-        needPow: false,
-        path: f.path,
-        msgUid: 'f1',
-        fileName: 'a.bin',
-        sender: asSender('me'),
-        progressKey: _bob,
-      );
-      expect(r, kSendBlocked);
+      for (final (here, said) in [(true, kSendBlocked), (false, 'parked')]) {
+        final r = await sendChunkedMediaTo(
+          peerId: _bob,
+          peerOnion: 'o-$_bob',
+          peerXPub: 'x-$_bob',
+          backPaired: true,
+          needPow: false,
+          path: f.path,
+          msgUid: 'f1',
+          fileName: 'a.bin',
+          sender: asSender('me'),
+          progressKey: _bob,
+          blockedHere: () async => here,
+        );
+        expect(r, said);
+      }
     });
   });
 }

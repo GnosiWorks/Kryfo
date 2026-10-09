@@ -4006,12 +4006,9 @@ class HaloDb implements GroupOwedStore {
     }
   }
 
-  // a block: our texts and files to them that have not gone are not sent.
-  // a tap sends each again, nothing else does. a group's rows are the
-  // group's
-  Future<void> holdBackTo(String peerId) async =>
-      _holdBackTo(await open(), peerId);
-
+  // a block here: our texts and files to them that have not gone are not
+  // sent. a tap sends each again, nothing else does. a group's rows are
+  // the group's
   static Future<void> _holdBackTo(DatabaseExecutor db, String peerId) async {
     for (final (where, args) in [
       ('group_id IS NULL', const <Object?>[]),
@@ -4028,6 +4025,19 @@ class HaloDb implements GroupOwedStore {
         dlog('block: rows not held back (${e.runtimeType})');
       }
     }
+  }
+
+  // a row of ours a block here kept from going
+  Future<bool> heldBack(String msgUid) async {
+    final db = await open();
+    final r = await db.query(
+      'messages',
+      columns: ['sent'],
+      where: 'msg_uid = ?',
+      whereArgs: [msgUid],
+      limit: 1,
+    );
+    return r.isNotEmpty && r.first['sent'] == kNotSent;
   }
 
   // one row a block kept from going
@@ -7956,6 +7966,10 @@ class AppState extends ChangeNotifier {
   // uids the drainer is mid-flight on, so a slow send isn't fired twice by
   // the next sweep.
   final Set<String> _outboxInflight = <String>{};
+
+  // a row the chat sends itself on a tap: the outbox leaves it be meanwhile
+  bool claimSend(String uid) => _outboxInflight.add(uid);
+  void releaseSend(String uid) => _outboxInflight.remove(uid);
   // re-fire count per uid this session. caps the loop so an unreachable peer
   // stops grinding; tap-to-retry in the chat still forces a send.
   final Map<String, int> _outboxTries = <String, int>{};
@@ -8158,8 +8172,10 @@ class AppState extends ChangeNotifier {
   Future<void> _answerNeed(String from, NeedFrame need, HaloDb db) async {
     final row = await db.sentMediaRow(need.mediaId);
     final now = DateTime.now().millisecondsSinceEpoch;
+    // a file a block kept from going is not finished off on their word
     final ok =
         row != null &&
+        row['sent'] != kNotSent &&
         resendAllowed(
           rowPeer: row['peer_id'] as String?,
           rowGroup: row['group_id'] as String?,
@@ -8270,17 +8286,20 @@ class AppState extends ChangeNotifier {
     ]) {
       final uid = r['msg_uid'] as String?;
       if (uid == null || _outboxInflight.contains(uid)) continue;
-      // to someone blocked here or in the other container: not sent, and it
-      // waits for a tap, never for the unblock
+      // to someone blocked in the row's own container: not sent, and it
+      // waits for a tap, never for the unblock. a block in the other one
+      // only holds it back, and it goes once that block is lifted
       final to = r['peer_id'] as String?;
       final g = r['group_id'] as String?;
       if (to != null && (g == null || g.isEmpty) && await blocked(to)) {
         try {
-          await d.holdBack(uid);
+          if (await d.isBlocked(to)) {
+            await d.holdBack(uid);
+            _bumpChatRev(to);
+          }
         } catch (e) {
           dlog('outbox: blocked row not held back (${e.runtimeType})');
         }
-        _bumpChatRev(to);
         continue;
       }
       // held rows stay out of the window; one that came in anyway waits too
@@ -8490,8 +8509,9 @@ class AppState extends ChangeNotifier {
   // frame queues like an edit does, so it survives tor being down.
   Future<void> pinInChat(String peer, String uid, bool pinned) async {
     await session.setPinned(uid, pinned);
-    // someone blocked is told nothing: it stays ours alone
-    if (await blockedAnywhere(peer)) {
+    // someone blocked is told nothing, nor of a row a block kept from
+    // going: it stays ours alone
+    if (await blockedAnywhere(peer) || await session.heldBack(uid)) {
       notifyListeners();
       return;
     }
@@ -8589,9 +8609,10 @@ class AppState extends ChangeNotifier {
 
   // an edit in a 1:1 chat, once the row here has it. queued first, sent
   // now: if the route is down the outbox carries it. none for someone
-  // blocked: it stays here alone
+  // blocked: it stays here alone. a row a block kept from going is edited
+  // here only, and the tap that sends it carries the new words
   Future<void> editInChat(String peer, String uid, String newText) async {
-    if (await blockedAnywhere(peer)) return;
+    if (await blockedAnywhere(peer) || await session.heldBack(uid)) return;
     await session.queueEdit(uid, peer, newText);
     // a quiet session keeps it queued here: nothing leaves
     if (sessionQuiet) return;
@@ -8599,9 +8620,9 @@ class AppState extends ChangeNotifier {
   }
 
   // a reaction in a 1:1 chat, empty to take it off. queued like a pin.
-  // none for someone blocked
+  // none for someone blocked, nor on a row a block kept from going
   Future<void> reactInChat(String peer, String uid, String emoji) async {
-    if (await blockedAnywhere(peer)) return;
+    if (await blockedAnywhere(peer) || await session.heldBack(uid)) return;
     await session.queueReaction(uid, peer, emoji);
     await _frameNow(peer, uid, kFrameReaction, emoji);
   }
@@ -9235,6 +9256,7 @@ class AppState extends ChangeNotifier {
       sender: _mySender(),
       only: only,
       progressKey: d.container.chatKey(peer),
+      blockedHere: () => d.isBlocked(peer),
     );
     if (only != null) {
       dlog('NEED $uid: resend ended $res');

@@ -553,8 +553,13 @@ class _ChatScreenState extends State<ChatScreen>
           voiceDisguised: (r['voice_disguised'] as int? ?? 0) == 1,
           saved: (r['saved'] as int? ?? 0) == 1,
           viaDev: r['via_dev'] == 1,
+          delivered: (r['delivered'] as int? ?? 0) == 1,
+          sending:
+              (r['direction'] as String) == 'out' &&
+              (r['sent'] as int? ?? 1) == 0,
         );
         m.rowid = (r['rowid'] as int?) ?? 0;
+        _readNotSent(m, r);
         final pvRaw = r['preview'] as String?;
         if (pvRaw != null && pvRaw.isNotEmpty) {
           try {
@@ -1257,11 +1262,11 @@ class _ChatScreenState extends State<ChatScreen>
     });
   }
 
-  // a tap on a row that failed or waits. while a block holds it stays not
-  // sent, and only this chat's own block says why
+  // a tap on a row that failed or waits. while this container's block
+  // holds it stays not sent, and says why. the tap alone puts it back
   Future<void> _tapRetry(_Msg m) async {
     final uid = m.msgUid;
-    if (await appState.blockedAnywhere(widget.peerHaloId)) {
+    if (await session.isBlocked(widget.peerHaloId)) {
       if (uid != null) await session.holdBack(uid);
       if (!mounted) return;
       setState(() {
@@ -1270,26 +1275,45 @@ class _ChatScreenState extends State<ChatScreen>
         m.failed = true;
         m.notSent = true;
       });
-      if (_blocked) showHaloToast(context, l10n.chatYouBlockedThisContact);
+      showHaloToast(context, l10n.chatYouBlockedThisContact);
       return;
     }
-    if (m.notSent && uid != null) await session.sendAgain(uid);
-    if (!mounted) return;
     m
-      ..notSent = false
       ..autoRetries = 0
       ..gaveUp = false;
-    _retryAny(m);
+    if (!m.notSent || uid == null) return _retryAny(m);
+    // the outbox leaves it be while this tap sends it
+    if (!appState.claimSend(uid)) return;
+    try {
+      await session.sendAgain(uid);
+      if (!mounted) return;
+      m.notSent = false;
+      await _retryAny(m);
+    } finally {
+      appState.releaseSend(uid);
+    }
   }
 
-  void _retryAny(_Msg m) {
-    if (m.mediaPath != null) {
-      _retryImage(m);
-    } else if (m.filePath != null) {
-      _retryMedia(m);
-    } else {
-      _retry(m);
+  // a row a block kept from going: only a tap puts it back (sendAgain)
+  Future<bool> _stillHeld(_Msg m) async {
+    final uid = m.msgUid;
+    if (uid == null || !await session.heldBack(uid)) return false;
+    if (mounted) {
+      setState(() {
+        m.sending = false;
+        m.parked = false;
+        m.failed = true;
+        m.notSent = true;
+      });
     }
+    return true;
+  }
+
+  // done once the send has its verdict
+  Future<void> _retryAny(_Msg m) {
+    if (m.mediaPath != null) return _retryImage(m);
+    if (m.filePath != null) return _retryMedia(m);
+    return _retry(m);
   }
 
   // online, a failed send goes again on its own: half a minute apart, six
@@ -2505,9 +2529,14 @@ class _ChatScreenState extends State<ChatScreen>
   // back-pair flow: they don't follow our xpub on nostr yet. on failure,
   // fall back to nostr store-and-forward.
   Future<String> _routeText(String cipher) async {
-    // a quiet session keeps it here, waiting. a block keeps it not sent
+    // a quiet session keeps it here, waiting. a block here keeps it not
+    // sent, one in the other container only waits
     if (sessionQuiet) return 'parked';
-    if (await appState.blockedAnywhere(widget.peerHaloId)) return kSendBlocked;
+    if (await appState.blockedAnywhere(widget.peerHaloId)) {
+      return await session.isBlocked(widget.peerHaloId)
+          ? kSendBlocked
+          : 'parked';
+    }
     String? tor;
     if (!_backPaired && widget.peerOnion.isNotEmpty) {
       tor = await Future(() => engine.sendTo(widget.peerOnion, cipher));
@@ -2546,9 +2575,10 @@ class _ChatScreenState extends State<ChatScreen>
     if (result == kTextTakenBack) return;
     final uid = msg.msgUid;
     if (result == 'ok' && uid != null) await session.markSent(uid);
-    // a block held it: not sent, and only a tap sends it
-    final held = result == kSendBlocked;
-    if (held && uid != null) await session.holdBack(uid);
+    if (result == kSendBlocked && uid != null) await session.holdBack(uid);
+    // not sent is the row's word, not the send's: a block that came while
+    // it went has marked it already
+    final held = result != 'ok' && uid != null && await session.heldBack(uid);
     int? burnAt;
     if (result == 'ok' && msg.burnSecs != null && uid != null) {
       burnAt = DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
@@ -2568,17 +2598,23 @@ class _ChatScreenState extends State<ChatScreen>
     setState(() {
       for (final m in shown) {
         m.sending = false;
-        m.parked = result == 'parked';
-        m.failed = result != 'ok' && result != 'parked';
+        m.parked = result == 'parked' && !held;
+        m.failed = held || (result != 'ok' && result != 'parked');
         m.notSent = held;
         if (burnAt != null) m.burnAt = burnAt;
       }
-      if (result != 'ok' && result != 'parked' && !held) _status = result;
+      if (result != 'ok' &&
+          result != 'parked' &&
+          result != kSendBlocked &&
+          !held) {
+        _status = result;
+      }
     });
   }
 
   Future<void> _retry(_Msg msg) async {
     if (_sending || _stickerSends > 0) return;
+    if (await _stillHeld(msg)) return;
     // still going, or it went after all: a second copy is only a duplicate
     final uid = msg.msgUid;
     if (uid != null && !_textInflight.add(uid)) return;
@@ -2659,7 +2695,7 @@ class _ChatScreenState extends State<ChatScreen>
       }
       if (_devKeyFailed && mounted) setState(() => _devKeyFailed = false);
       handed = true;
-      Future<String>(() => _wireText(uid, cipher))
+      await Future<String>(() => _wireText(uid, cipher))
           .whenComplete(() {
             if (uid != null) _textInflight.remove(uid);
           })
@@ -2738,6 +2774,7 @@ class _ChatScreenState extends State<ChatScreen>
     final path = msg.mediaPath;
     if (path == null) return;
     if (_isDev && !await _ensureDevStarted()) return;
+    if (await _stillHeld(msg)) return;
     if (await _alreadyGoing(msg)) return;
     final file = File(path);
     if (!await file.exists()) {
@@ -2750,7 +2787,7 @@ class _ChatScreenState extends State<ChatScreen>
     });
     final msgUid = msg.msgUid ?? newMsgUid();
     msg.msgUid = msgUid;
-    _sendChunkedMedia(
+    await _sendChunkedMedia(
       path: path,
       msgUid: msgUid,
       caption: msg.text,
@@ -2766,6 +2803,7 @@ class _ChatScreenState extends State<ChatScreen>
     final path = msg.filePath;
     if (path == null || msg.fileName == null) return;
     if (_isDev && !await _ensureDevStarted()) return;
+    if (await _stillHeld(msg)) return;
     if (await _alreadyGoing(msg)) return;
     final file = File(path);
     if (!await file.exists()) {
@@ -2778,7 +2816,7 @@ class _ChatScreenState extends State<ChatScreen>
     });
     final msgUid = msg.msgUid ?? newMsgUid();
     msg.msgUid = msgUid;
-    _sendChunkedMedia(
+    await _sendChunkedMedia(
       path: path,
       msgUid: msgUid,
       fileName: msg.fileName!,
@@ -3240,6 +3278,7 @@ class _ChatScreenState extends State<ChatScreen>
         avatar: appState.myAvatar,
       ),
       progressKey: _memo,
+      blockedHere: () => session.isBlocked(widget.peerHaloId),
     );
   }
 
@@ -3251,9 +3290,10 @@ class _ChatScreenState extends State<ChatScreen>
     if (result == 'ok' && msg.msgUid != null) {
       await session.markSent(msg.msgUid!);
     }
-    // a block held it: not sent, and only a tap sends it
-    final held = result == kSendBlocked;
-    if (held && msg.msgUid != null) await session.holdBack(msg.msgUid!);
+    final uid = msg.msgUid;
+    if (result == kSendBlocked && uid != null) await session.holdBack(uid);
+    // not sent is the row's word, as for a text
+    final held = result != 'ok' && uid != null && await session.heldBack(uid);
     if (result == 'ok' && msg.burnSecs != null && msg.msgUid != null) {
       final ba = DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
       await session.setMsgBurnAt(msg.msgUid!, ba);
@@ -3272,14 +3312,17 @@ class _ChatScreenState extends State<ChatScreen>
     setState(() {
       for (final m in {msg, ...shown}) {
         m.sending = false;
-        m.parked = result == 'parked';
-        m.failed = result != 'ok' && result != 'parked';
+        m.parked = result == 'parked' && !held;
+        m.failed = held || (result != 'ok' && result != 'parked');
         m.notSent = held;
       }
       // his key did not check out: the line says it, not the raw error
       if (result == kDevKeyFailed) {
         _devKeyFailed = true;
-      } else if (result != 'ok' && result != 'parked' && !held) {
+      } else if (result != 'ok' &&
+          result != 'parked' &&
+          result != kSendBlocked &&
+          !held) {
         _status = result;
       } else if (result == 'ok') {
         _devKeyFailed = false;
