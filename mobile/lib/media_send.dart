@@ -22,6 +22,7 @@ import 'main.dart' show appState, engine, signalEncrypt;
 import 'media_progress.dart';
 import 'message_envelope.dart';
 import 'signal_session.dart';
+import 'text_send.dart' show kSendBlocked;
 
 // msgUid -> slices the peer has. dropped when the file is across, or when
 // the record is old enough that the peer may have restarted without it
@@ -215,6 +216,7 @@ Future<String> _sendChunkedMediaInner({
   var onionDead = false;
   String? failure;
   var parked = false;
+  var blocked = false;
   var next = 0;
 
   // a chunk that will not go through costs that chunk, not the transfer: it
@@ -236,14 +238,14 @@ Future<String> _sendChunkedMediaInner({
   }
 
   Future<void> worker() async {
-    while (failure == null && !parked) {
+    while (failure == null && !parked && !blocked) {
       if (mediaCancelled.contains(msgUid)) {
         failure = 'cancelled';
         return;
       }
-      // blocked part way: the rest waits with the row
+      // blocked part way: the rest is not sent, and waits for a tap
       if (await appState.blockedAnywhere(peerId)) {
-        parked = true;
+        blocked = true;
         return;
       }
       final i = takeChunk();
@@ -373,6 +375,7 @@ Future<String> _sendChunkedMediaInner({
   await Future.wait([
     for (var w = 0; w < math.min(parallel, total); w++) worker(),
   ]);
+  if (blocked) return kSendBlocked;
   if (parked) return 'parked';
   if (failure != null) return failure!;
   if (only == null) {

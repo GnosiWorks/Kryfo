@@ -68,6 +68,7 @@ import '../widgets/kryfo_avatar.dart';
 import '../main.dart'
     show
         engine,
+        kNotSent,
         session,
         sessionQuiet,
         signalEncrypt,
@@ -194,6 +195,8 @@ class _Msg {
   // stored at an address they do not read yet: not sent, not failed. the
   // outbox keeps trying routes that reach them until they add us back.
   bool parked = false;
+  // a block kept it from going: shown failed, and only a tap sends it
+  bool notSent = false;
   bool delivered;
   bool edited;
   bool pinned;
@@ -434,7 +437,15 @@ bool _cannotSend() => !appState.online || !appState.torReady;
 // a failed send only reads as failed when the phone cannot send, or when
 // it has retried itself to the cap. online, the row keeps going on its own
 // and shows as pending.
-bool _sendLooksFailed(_Msg m) => m.failed && (m.gaveUp || _cannotSend());
+bool _sendLooksFailed(_Msg m) =>
+    m.failed && (m.gaveUp || m.notSent || _cannotSend());
+
+// a row a block held back reads as not sent
+void _readNotSent(_Msg m, Map<String, Object?> r) {
+  if (r['sent'] != kNotSent) return;
+  m.failed = true;
+  m.notSent = true;
+}
 
 String _friendlyStatus(String raw) {
   if (raw.isEmpty || raw == 'parked') return '';
@@ -1246,6 +1257,31 @@ class _ChatScreenState extends State<ChatScreen>
     });
   }
 
+  // a tap on a row that failed or waits. while a block holds it stays not
+  // sent, and only this chat's own block says why
+  Future<void> _tapRetry(_Msg m) async {
+    final uid = m.msgUid;
+    if (await appState.blockedAnywhere(widget.peerHaloId)) {
+      if (uid != null) await session.holdBack(uid);
+      if (!mounted) return;
+      setState(() {
+        m.sending = false;
+        m.parked = false;
+        m.failed = true;
+        m.notSent = true;
+      });
+      if (_blocked) showHaloToast(context, l10n.chatYouBlockedThisContact);
+      return;
+    }
+    if (m.notSent && uid != null) await session.sendAgain(uid);
+    if (!mounted) return;
+    m
+      ..notSent = false
+      ..autoRetries = 0
+      ..gaveUp = false;
+    _retryAny(m);
+  }
+
   void _retryAny(_Msg m) {
     if (m.mediaPath != null) {
       _retryImage(m);
@@ -1262,7 +1298,11 @@ class _ChatScreenState extends State<ChatScreen>
   void _autoRetryTick() {
     if (!mounted || _sending || _stickerSends > 0 || _cannotSend()) return;
     for (final m in _messages) {
-      if (m.direction != 'out' || !m.failed || m.gaveUp || m.msgUid == null) {
+      if (m.direction != 'out' ||
+          !m.failed ||
+          m.gaveUp ||
+          m.notSent ||
+          m.msgUid == null) {
         continue;
       }
       if (m.autoRetries >= 6) {
@@ -1282,7 +1322,10 @@ class _ChatScreenState extends State<ChatScreen>
       // clear any stale send error, we're about to resend
       if (_status.isNotEmpty) setState(() => _status = '');
       for (final m in _messages) {
-        if (m.direction == 'out' && m.failed && m.msgUid != null) {
+        if (m.direction == 'out' &&
+            m.failed &&
+            !m.notSent &&
+            m.msgUid != null) {
           if (m.mediaPath != null) {
             _retryImage(m);
           } else if (m.filePath != null) {
@@ -1386,6 +1429,7 @@ class _ChatScreenState extends State<ChatScreen>
             (r['sent'] as int? ?? 1) == 0,
       );
       m.rowid = (r['rowid'] as int?) ?? 0;
+      _readNotSent(m, r);
       final pvRaw = r['preview'] as String?;
       if (pvRaw != null && pvRaw.isNotEmpty) {
         try {
@@ -2243,6 +2287,7 @@ class _ChatScreenState extends State<ChatScreen>
         }
       }
       loaded.last.rowid = (r['rowid'] as int?) ?? 0;
+      _readNotSent(loaded.last, r);
       if (uid != null) uids.add(uid);
     }
     final reactionMap = await session.loadReactionsFor(uids);
@@ -2460,9 +2505,9 @@ class _ChatScreenState extends State<ChatScreen>
   // back-pair flow: they don't follow our xpub on nostr yet. on failure,
   // fall back to nostr store-and-forward.
   Future<String> _routeText(String cipher) async {
-    // a quiet session keeps it here, unsent, and so does a block
+    // a quiet session keeps it here, waiting. a block keeps it not sent
     if (sessionQuiet) return 'parked';
-    if (await appState.blockedAnywhere(widget.peerHaloId)) return 'parked';
+    if (await appState.blockedAnywhere(widget.peerHaloId)) return kSendBlocked;
     String? tor;
     if (!_backPaired && widget.peerOnion.isNotEmpty) {
       tor = await Future(() => engine.sendTo(widget.peerOnion, cipher));
@@ -2501,6 +2546,9 @@ class _ChatScreenState extends State<ChatScreen>
     if (result == kTextTakenBack) return;
     final uid = msg.msgUid;
     if (result == 'ok' && uid != null) await session.markSent(uid);
+    // a block held it: not sent, and only a tap sends it
+    final held = result == kSendBlocked;
+    if (held && uid != null) await session.holdBack(uid);
     int? burnAt;
     if (result == 'ok' && msg.burnSecs != null && uid != null) {
       burnAt = DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
@@ -2522,9 +2570,10 @@ class _ChatScreenState extends State<ChatScreen>
         m.sending = false;
         m.parked = result == 'parked';
         m.failed = result != 'ok' && result != 'parked';
+        m.notSent = held;
         if (burnAt != null) m.burnAt = burnAt;
       }
-      if (result != 'ok' && result != 'parked') _status = result;
+      if (result != 'ok' && result != 'parked' && !held) _status = result;
     });
   }
 
@@ -3202,6 +3251,9 @@ class _ChatScreenState extends State<ChatScreen>
     if (result == 'ok' && msg.msgUid != null) {
       await session.markSent(msg.msgUid!);
     }
+    // a block held it: not sent, and only a tap sends it
+    final held = result == kSendBlocked;
+    if (held && msg.msgUid != null) await session.holdBack(msg.msgUid!);
     if (result == 'ok' && msg.burnSecs != null && msg.msgUid != null) {
       final ba = DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
       await session.setMsgBurnAt(msg.msgUid!, ba);
@@ -3222,11 +3274,12 @@ class _ChatScreenState extends State<ChatScreen>
         m.sending = false;
         m.parked = result == 'parked';
         m.failed = result != 'ok' && result != 'parked';
+        m.notSent = held;
       }
       // his key did not check out: the line says it, not the raw error
       if (result == kDevKeyFailed) {
         _devKeyFailed = true;
-      } else if (result != 'ok' && result != 'parked') {
+      } else if (result != 'ok' && result != 'parked' && !held) {
         _status = result;
       } else if (result == 'ok') {
         _devKeyFailed = false;
@@ -3840,11 +3893,7 @@ class _ChatScreenState extends State<ChatScreen>
                   () =>
                       _revealedUid = _revealedUid == m.msgUid ? null : m.msgUid,
                 ),
-          onRetry: (m) {
-            m.autoRetries = 0;
-            m.gaveUp = false;
-            _retryAny(m);
-          },
+          onRetry: _tapRetry,
           onLongPress: (ctx) => _showEmojiPickerAt(ctx, m),
           onAct: () => _touched(m),
           onReact: m.welcome || !_canReact

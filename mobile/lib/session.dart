@@ -215,12 +215,15 @@ class Session {
   Future<void> setBlocked(String haloId, bool blocked) async {
     final own = _ofPeer(haloId);
     await own.setBlocked(haloId, blocked);
-    if (!blocked) return;
     for (final d in [primary, ?vault]) {
       if (identical(d, own)) continue;
       try {
-        await d.lightBurnsFrom(haloId);
-        await d.dropQueuedTo(haloId);
+        if (blocked) {
+          await d.lightBurnsFrom(haloId);
+          await d.dropQueuedTo(haloId);
+        }
+        // what of ours waits for them there is not sent either, both ways
+        await d.holdBackTo(haloId);
       } catch (e) {
         dlog('block: other container not lit (${e.runtimeType})');
       }
@@ -421,6 +424,10 @@ class Session {
       (await _ofUid(msgUid)).isSent(msgUid);
   Future<void> markSent(String msgUid) async =>
       (await _ofUid(msgUid)).markSent(msgUid);
+  Future<void> holdBack(String msgUid) async =>
+      (await _ofUid(msgUid)).holdBack(msgUid);
+  Future<void> sendAgain(String msgUid) async =>
+      (await _ofUid(msgUid)).sendAgain(msgUid);
   Future<int?> lightBurn(String msgUid) async =>
       (await _ofUid(msgUid)).lightBurn(msgUid);
   Future<bool> messageExists(String msgUid) async {
