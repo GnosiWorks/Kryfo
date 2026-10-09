@@ -361,6 +361,39 @@ void main() {
     await devClose(t);
   });
 
+  testWidgets('the sending pill sits under its own bubble, at the end', (
+    t,
+  ) async {
+    await devOpen(
+      t,
+      ChatScreen(
+        peerHaloId: _peer,
+        peerOnion: '',
+        peerXPub: 'ab' * 32,
+        avatarSeed: _peer,
+      ),
+    );
+    await t.enterText(find.byType(TextField).last, 'on my way');
+    await t.pump();
+    await t.pump(const Duration(seconds: 1));
+    await t.tap(find.byIcon(Icons.arrow_upward));
+    await settle(t);
+    expect(find.byType(SendPill), findsOneWidget);
+    final pill = t.getRect(find.byType(SendPill));
+    final text = t.getRect(find.text('on my way').last);
+    final width = t.view.physicalSize.width / t.view.devicePixelRatio;
+    // on the bubble's side of the screen, its end near the bubble's end
+    expect(pill.center.dx, greaterThan(width / 2), reason: '$pill in $width');
+    expect(
+      (pill.right - text.right).abs(),
+      lessThan(40),
+      reason: '$pill $text',
+    );
+    relay.sends.single.complete('ok');
+    await settle(t);
+    await devClose(t);
+  });
+
   // what amber reads of a cipher of ours
   Future<Map<String, dynamic>> ambersRead(String cipher) async {
     final w = base64Decode(cipher);
