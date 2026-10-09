@@ -2762,6 +2762,31 @@ class AppLocalizationsFr extends AppLocalizations {
       'Cette personne ne recevra plus les messages de ce groupe.';
 
   @override
+  String get groupInfoResetLink => 'Réinitialiser le lien';
+
+  @override
+  String get groupInfoResetTheRoomLink => 'Réinitialiser le lien du salon ?';
+
+  @override
+  String get groupInfoResetLinkLine =>
+      'L’ancien lien ne fonctionnera plus. Les personnes déjà dans le salon restent, et vous partagez le nouveau lien.';
+
+  @override
+  String get groupInfoRemoveRoomLine =>
+      'Cette personne peut revenir avec le lien du salon. Réinitialisez le lien pour la tenir à l’écart.';
+
+  @override
+  String get groupInfoRemoveAndResetLink => 'Retirer et réinitialiser le lien';
+
+  @override
+  String get groupInfoCouldNotResetLink =>
+      'Impossible de réinitialiser le lien';
+
+  @override
+  String get roomLinkNewLinkTheOld =>
+      'Nouveau lien. L’ancien ne fonctionne plus.';
+
+  @override
   String appGroupHoldsUpTo(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

@@ -2808,6 +2808,30 @@ class AppLocalizationsRu extends AppLocalizations {
       'Участник перестанет получать сообщения из этой группы.';
 
   @override
+  String get groupInfoResetLink => 'Сбросить ссылку';
+
+  @override
+  String get groupInfoResetTheRoomLink => 'Сбросить ссылку на комнату?';
+
+  @override
+  String get groupInfoResetLinkLine =>
+      'Старая ссылка перестанет работать. Те, кто уже в комнате, останутся, а ты поделишься новой ссылкой.';
+
+  @override
+  String get groupInfoRemoveRoomLine =>
+      'Участник сможет снова войти по ссылке на комнату. Сбрось ссылку, чтобы он не вернулся.';
+
+  @override
+  String get groupInfoRemoveAndResetLink => 'Удалить и сбросить ссылку';
+
+  @override
+  String get groupInfoCouldNotResetLink => 'Не удалось сбросить ссылку';
+
+  @override
+  String get roomLinkNewLinkTheOld =>
+      'Новая ссылка. Старая больше не работает.';
+
+  @override
   String appGroupHoldsUpTo(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

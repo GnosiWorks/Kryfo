@@ -183,6 +183,30 @@ Future<bool> showConfirmSheet(
   return r == true;
 }
 
+// the same question with a further answer beside it, such as remove and
+// also shut the door. 'yes', 'more', or null when kept or dismissed
+Future<String?> showConfirmOrMoreSheet(
+  BuildContext context, {
+  required String title,
+  required String line,
+  required String yes,
+  required String more,
+  int? titleLines,
+}) => showHaloSheet<String>(
+  context,
+  builder: (ctx) => _frame(ctx, [
+    _title(title, color: HaloColors.rose, lines: titleLines),
+    const SizedBox(height: 8),
+    _line(line),
+    const SizedBox(height: 16),
+    _primary(yes, () => Navigator.pop(ctx, 'yes'), rose: true),
+    const SizedBox(height: 8),
+    _outline(more, () => Navigator.pop(ctx, 'more')),
+    const SizedBox(height: 6),
+    _quiet(l10n.confirmSheetKeep, () => Navigator.pop(ctx)),
+  ]),
+);
+
 // a sheet taken off as the lock comes up, so it never waits behind it
 class ShutOnLock extends StatefulWidget {
   const ShutOnLock({super.key, required this.guard, required this.child});

@@ -153,6 +153,11 @@ class MemDb implements Database, Transaction {
   // throws on the first statement whose log line starts with it
   String? failOn;
 
+  // the rows as a copy of the file holds them, apart from these from here
+  MemDb copy() =>
+      MemDb()
+        .._tables = {for (final e in _tables.entries) e.key: e.value.copy()};
+
   bool has(String table) => _tables.containsKey(table);
 
   List<Map<String, Object?>> rows(String table) => [

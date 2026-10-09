@@ -2765,6 +2765,30 @@ class AppLocalizationsIt extends AppLocalizations {
       'Non riceverà più messaggi da questo gruppo.';
 
   @override
+  String get groupInfoResetLink => 'Reimposta link';
+
+  @override
+  String get groupInfoResetTheRoomLink => 'Reimpostare il link della stanza?';
+
+  @override
+  String get groupInfoResetLinkLine =>
+      'Il vecchio link smette di funzionare. Chi è già nella stanza resta, e tu condividi il nuovo link.';
+
+  @override
+  String get groupInfoRemoveRoomLine =>
+      'Può rientrare con il link della stanza. Reimposta il link e non potrà più farlo.';
+
+  @override
+  String get groupInfoRemoveAndResetLink => 'Rimuovi e reimposta link';
+
+  @override
+  String get groupInfoCouldNotResetLink => 'Impossibile reimpostare il link';
+
+  @override
+  String get roomLinkNewLinkTheOld =>
+      'Nuovo link. Quello vecchio non funziona più.';
+
+  @override
   String appGroupHoldsUpTo(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

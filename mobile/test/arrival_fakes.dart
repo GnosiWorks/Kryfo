@@ -1221,6 +1221,38 @@ class ArrivalRows implements HaloDb {
   }
 
   @override
+  Future<Map<String, Object?>?> roomByDoor(String pub) async {
+    for (final g in groupRows.values) {
+      if (g['door_pub'] == pub) return g;
+    }
+    for (final g in groupRows.values) {
+      if (g['room_pub'] == pub && g['door_pub'] == null) return g;
+    }
+    return null;
+  }
+
+  @override
+  Future<void> setRoomDoor(
+    String groupId, {
+    required String priv,
+    required String pub,
+    required String fcPk,
+  }) async {
+    _hit('setRoomDoor', groupId, null);
+    final g = groupRows[groupId];
+    if (g == null || g['is_admin'] != 1) return;
+    g.addAll({'door_priv': priv, 'door_pub': pub, 'fc_pk': fcPk});
+  }
+
+  @override
+  Future<void> setRoomFc(String groupId, String fcPk) async {
+    _hit('setRoomFc', groupId, null);
+    final g = groupRows[groupId];
+    if (g == null || g['room_pub'] == null) return;
+    g['fc_pk'] = fcPk;
+  }
+
+  @override
   Future<void> bumpGroupUnread(String groupId) async {
     _hit('bumpGroupUnread', groupId, null);
     final g = groupRows[groupId];

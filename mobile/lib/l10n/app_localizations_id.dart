@@ -2734,6 +2734,30 @@ class AppLocalizationsId extends AppLocalizations {
       'Dia tidak akan lagi menerima pesan dari grup ini.';
 
   @override
+  String get groupInfoResetLink => 'Atur ulang tautan';
+
+  @override
+  String get groupInfoResetTheRoomLink => 'Atur ulang tautan ruang?';
+
+  @override
+  String get groupInfoResetLinkLine =>
+      'Tautan lama tidak berfungsi lagi. Orang yang sudah ada di ruang tetap tinggal, dan kamu bagikan tautan baru.';
+
+  @override
+  String get groupInfoRemoveRoomLine =>
+      'Dia bisa masuk lagi lewat tautan ruang. Atur ulang tautannya agar dia tetap di luar.';
+
+  @override
+  String get groupInfoRemoveAndResetLink => 'Keluarkan dan atur ulang tautan';
+
+  @override
+  String get groupInfoCouldNotResetLink => 'Tautan tidak bisa diatur ulang';
+
+  @override
+  String get roomLinkNewLinkTheOld =>
+      'Tautan baru. Yang lama sudah tidak berfungsi.';
+
+  @override
   String appGroupHoldsUpTo(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

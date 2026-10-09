@@ -2745,6 +2745,30 @@ class AppLocalizationsFa extends AppLocalizations {
       'دیگر پیامی از این گروه دریافت نمی‌کند.';
 
   @override
+  String get groupInfoResetLink => 'بازنشانی پیوند';
+
+  @override
+  String get groupInfoResetTheRoomLink => 'پیوند اتاق بازنشانی شود؟';
+
+  @override
+  String get groupInfoResetLinkLine =>
+      'پیوند قبلی دیگر کار نمی‌کند. کسانی که در اتاق هستند می‌مانند، و شما پیوند تازه را هم‌رسانی می‌کنید.';
+
+  @override
+  String get groupInfoRemoveRoomLine =>
+      'او می‌تواند با پیوند اتاق دوباره بپیوندد. پیوند را بازنشانی کنید تا بیرون بماند.';
+
+  @override
+  String get groupInfoRemoveAndResetLink => 'حذف و بازنشانی پیوند';
+
+  @override
+  String get groupInfoCouldNotResetLink => 'پیوند بازنشانی نشد';
+
+  @override
+  String get roomLinkNewLinkTheOld =>
+      'پیوند تازه. پیوند قبلی دیگر کار نمی‌کند.';
+
+  @override
   String appGroupHoldsUpTo(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

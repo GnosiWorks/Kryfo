@@ -120,12 +120,16 @@ class GroupControl {
   // on 'create': when the admin made this roster, above every one before.
   // an older roster arriving late never replaces a newer one
   final int? stamp;
+  // on a room's 'create': the address its link knocks on now, so the link
+  // a member shares is the one the maker last reset to
+  final String? fc;
   const GroupControl({
     required this.type,
     this.name,
     this.members,
     this.participants,
     this.stamp,
+    this.fc,
   });
 
   Map<String, dynamic> toWire() => {
@@ -134,6 +138,7 @@ class GroupControl {
     'm': ?members,
     'p': ?participants,
     'v': ?stamp,
+    'fc': ?fc,
   };
 
   static GroupControl? fromWire(Object? raw) {
@@ -150,6 +155,7 @@ class GroupControl {
       }
     }
     final stamp = raw['v'];
+    final fc = raw['fc'];
     return GroupControl(
       type: (raw['t'] as String?) ?? '',
       name: raw['n'] as String?,
@@ -158,6 +164,7 @@ class GroupControl {
           : null,
       participants: parts,
       stamp: stamp is int && stamp > 0 ? stamp : null,
+      fc: fc is String ? fc : null,
     );
   }
 }

@@ -2630,6 +2630,27 @@ class AppLocalizationsZh extends AppLocalizations {
   String get groupInfoTheyWillStopReceiving => '对方将不再收到这个群组的消息。';
 
   @override
+  String get groupInfoResetLink => '重置链接';
+
+  @override
+  String get groupInfoResetTheRoomLink => '要重置聊天室链接吗？';
+
+  @override
+  String get groupInfoResetLinkLine => '旧链接将失效。已在聊天室里的人会留下，你再分享新链接即可。';
+
+  @override
+  String get groupInfoRemoveRoomLine => '对方仍可通过聊天室链接重新加入。重置链接即可把对方挡在外面。';
+
+  @override
+  String get groupInfoRemoveAndResetLink => '移除并重置链接';
+
+  @override
+  String get groupInfoCouldNotResetLink => '无法重置链接';
+
+  @override
+  String get roomLinkNewLinkTheOld => '新链接。旧链接已失效。';
+
+  @override
   String appGroupHoldsUpTo(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
@@ -10151,6 +10172,27 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get groupInfoTheyWillStopReceiving => '對方將不再收到這個群組的訊息。';
+
+  @override
+  String get groupInfoResetLink => '重設連結';
+
+  @override
+  String get groupInfoResetTheRoomLink => '要重設聊天室連結嗎？';
+
+  @override
+  String get groupInfoResetLinkLine => '舊連結將失效。已在聊天室裡的人會留下，你再分享新連結即可。';
+
+  @override
+  String get groupInfoRemoveRoomLine => '對方仍可透過聊天室連結重新加入。重設連結即可把對方擋在外面。';
+
+  @override
+  String get groupInfoRemoveAndResetLink => '移除並重設連結';
+
+  @override
+  String get groupInfoCouldNotResetLink => '無法重設連結';
+
+  @override
+  String get roomLinkNewLinkTheOld => '新連結。舊連結已失效。';
 
   @override
   String appGroupHoldsUpTo(int count) {

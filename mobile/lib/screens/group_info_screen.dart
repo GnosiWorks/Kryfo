@@ -207,18 +207,56 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   }
 
   Future<void> _confirmRemove(String haloId) async {
-    final ok = await showConfirmSheet(
-      context,
-      title: l10n.groupInfoRemove(
-        _contactOf(haloId)?.nickname ?? memberLabel(haloId),
-      ),
-      line: l10n.groupInfoTheyWillStopReceiving,
-      yes: l10n.commonRemove,
+    final title = l10n.groupInfoRemove(
+      _contactOf(haloId)?.nickname ?? memberLabel(haloId),
     );
-    if (ok == true) {
+    if (!_isRoom) {
+      final ok = await showConfirmSheet(
+        context,
+        title: title,
+        line: l10n.groupInfoTheyWillStopReceiving,
+        yes: l10n.commonRemove,
+      );
+      if (!ok) return;
       await appState.removeMembersFromGroup(widget.groupId, [haloId]);
       await _load();
+      return;
     }
+    // a room key taken out can come back under a new one off the link
+    final r = await showConfirmOrMoreSheet(
+      context,
+      title: title,
+      line: l10n.groupInfoRemoveRoomLine,
+      yes: l10n.commonRemove,
+      more: l10n.groupInfoRemoveAndResetLink,
+    );
+    if (r == null) return;
+    // out first, so the new link never reaches them
+    await appState.removeMembersFromGroup(widget.groupId, [haloId]);
+    await _load();
+    if (r == 'more') await _resetLink();
+  }
+
+  // the maker's: the link anyone may hold stops working, a new one comes
+  Future<void> _confirmResetLink() async {
+    final ok = await showConfirmSheet(
+      context,
+      title: l10n.groupInfoResetTheRoomLink,
+      line: l10n.groupInfoResetLinkLine,
+      yes: l10n.groupInfoResetLink,
+    );
+    if (ok) await _resetLink();
+  }
+
+  Future<void> _resetLink() async {
+    final link = await appState.resetRoomLink(widget.groupId);
+    if (!mounted) return;
+    if (link == null) {
+      showHaloToast(context, l10n.groupInfoCouldNotResetLink);
+      return;
+    }
+    HapticFeedback.mediumImpact();
+    await showRoomLinkSheet(context, link, fresh: true);
   }
 
   Future<void> _pickAtmosphere() async {
@@ -426,6 +464,14 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                 label: l10n.groupInfoWallpaper,
                 onTap: _pickAtmosphere,
               ),
+              // the maker's alone: known from the list's row, so it is
+              // there from the first frame
+              if ((_isRoom || _roomAtOpen) && _isAdmin)
+                HaloRow(
+                  icon: Icons.link_off_rounded,
+                  label: l10n.groupInfoResetLink,
+                  onTap: _confirmResetLink,
+                ),
               // hidden chats open: out of the everyday list, or back in it
               if (lockState.inVault && !_isRoom)
                 HaloRow(
