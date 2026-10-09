@@ -836,15 +836,25 @@ void main() {
     var ss = await start();
     await processPeerBundle(p.name, p.card, into: ss);
     await ss.markRestored();
-    const hour = 3600 * 1000;
+    const minute = 60 * 1000;
+    const hour = 60 * minute;
     expect(await ss.askDue(p.name, 0), isTrue);
+    // soon at first: someone restoring in the same hour has their card
+    // out by the next ask
     await ss.noteAsked(p.name, 0);
     ss = await start();
-    expect(await ss.askDue(p.name, hour - 1), isFalse);
-    expect(await ss.askDue(p.name, hour), isTrue);
-    await ss.noteAsked(p.name, hour);
-    expect(await ss.askDue(p.name, 2 * hour), isFalse);
-    expect(await ss.askDue(p.name, 3 * hour), isTrue);
+    expect(await ss.askDue(p.name, 10 * minute - 1), isFalse);
+    expect(await ss.askDue(p.name, 10 * minute), isTrue);
+    await ss.noteAsked(p.name, 10 * minute);
+    expect(await ss.askDue(p.name, 40 * minute - 1), isFalse);
+    expect(await ss.askDue(p.name, 40 * minute), isTrue);
+    // then an hour doubling, never more than a week
+    await ss.noteAsked(p.name, 40 * minute);
+    expect(await ss.askDue(p.name, 100 * minute - 1), isFalse);
+    expect(await ss.askDue(p.name, 100 * minute), isTrue);
+    await ss.noteAsked(p.name, 100 * minute);
+    expect(await ss.askDue(p.name, 220 * minute), isTrue);
+    expect(SignalSession.askWait(30), const Duration(days: 7));
 
     expect(await ss.dropRestoredWhenDone(), isFalse);
     expect(ss.hasRestored, isTrue);
@@ -861,7 +871,7 @@ void main() {
   });
 
   test('a text waiting on their card asks once, and tries again as they '
-      'are asked again, an hour on', () async {
+      'are asked again, ten minutes on', () async {
     final p = await _peer();
     await contact(p, card: false);
     await talk(p);
@@ -884,7 +894,7 @@ void main() {
     expect(app.outboxTriesForTest('w1'), 0);
     expect(
       app.outboxNextAtForTest('w1'),
-      greaterThanOrEqualTo(t0 + 3600 * 1000),
+      greaterThanOrEqualTo(t0 + 10 * 60 * 1000),
     );
 
     // a start after this one tries at once, and asks nothing before it is due

@@ -8043,8 +8043,8 @@ class AppState extends ChangeNotifier {
       unawaited(
         _drainOne(r, d).whenComplete(() async {
           // waiting on their card is no failed try: it goes the moment the
-          // card is here, and until then it tries as they are asked again,
-          // an hour apart doubling to a week
+          // card is here, and until then it tries as they are asked again
+          // (SignalSession.askWait)
           if (peer != null && _waitingCard.contains(peer)) {
             var due = 0;
             try {
@@ -14912,7 +14912,7 @@ class AppState extends ChangeNotifier {
       }
     }
     _waitingCard.add(peer);
-    // asked as the pass asks, an hour apart doubling to a week: a seal
+    // asked as the pass asks (SignalSession.askWait): a seal
     // tried again in between asks nothing
     final now = DateTime.now().millisecondsSinceEpoch;
     if (!_asking.containsKey(peer) && await signalSession.askDue(peer, now)) {
