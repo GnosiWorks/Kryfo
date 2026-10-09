@@ -5382,6 +5382,8 @@ class _GroupBubble extends StatelessWidget {
       onVote: (c) => onVote?.call(c),
       onClose: isOut ? onClosePoll : null,
       nameOf: nameOf ?? (id) => id,
+      // their own chosen faces, and this phone's for its own vote
+      faceOf: (id) => id == me ? appState.myAvatar : faceOf?.call(id),
       burn: m.burnLeftMs == null
           ? null
           : Container(

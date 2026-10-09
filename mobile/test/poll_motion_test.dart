@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/polls.dart';
 import 'package:kryfo/widgets/new_poll_sheet.dart';
+import 'package:kryfo/widgets/kryfo_avatar.dart';
 import 'package:kryfo/widgets/poll_card.dart';
 
 Widget host(
@@ -214,6 +215,37 @@ void main() {
       expect(find.byType(RollText), findsWidgets);
       await settles(t);
       expect(find.text('50%'), findsNothing);
+    });
+
+    testWidgets('voters show the faces they chose, and the rest the face '
+        'their key draws', (t) async {
+      quiet(t);
+      const spec = PollSpec(options: ['Ramen', 'Tacos']);
+      await t.pumpWidget(
+        host(
+          PollCard(
+            question: 'Dinner?',
+            poll: spec,
+            votes: {
+              'me': const PollVote([0], 1),
+              'a': const PollVote([1], 1),
+              'b': const PollVote([0], 1),
+            },
+            me: 'me',
+            mine: false,
+            isOut: false,
+            onVote: (_) {},
+            nameOf: (id) => id,
+            faceOf: (id) => {'me': 4, 'a': 9}[id],
+          ),
+        ),
+      );
+      await settles(t);
+      final faces = {
+        for (final a in t.widgetList<KryfoAvatar>(find.byType(KryfoAvatar)))
+          a.seed: a.choice,
+      };
+      expect(faces, {'me': 4, 'a': 9, 'b': null});
     });
   });
 }
