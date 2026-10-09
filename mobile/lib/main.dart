@@ -11145,7 +11145,8 @@ class AppState extends ChangeNotifier {
           unawaited(_sendDeliveryReceipt(senderHaloId, mid));
         }
         unawaited(db.dropMediaWant(mid));
-        if (gone) await db.dropMediaChunks(mid, from: senderHaloId);
+        // slices a filed one left, if its drop did not get as far
+        await db.dropMediaChunks(mid, from: senderHaloId);
         return to;
       }
       // slices land on disk as they arrive and the count is over rows, so a

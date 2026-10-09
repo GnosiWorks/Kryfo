@@ -294,6 +294,37 @@ void main() {
     expect(w.live.chunks['clip-again'] ?? const {}, isEmpty);
   });
 
+  test(
+    'a slice of a file filed here takes the slices it left with it',
+    () async {
+      final w = await _World.make();
+      w.live.msgs.add({
+        'peer_id': _x,
+        'direction': 'in',
+        'plaintext': '',
+        'sent_at': 1,
+        'msg_uid': 'clip-left',
+        'group_id': null,
+      });
+      w.live.chunks['clip-left'] = {0: 'AAAA'};
+      w.live.chunkFrom['clip-left'] = _x;
+      await w.from(
+        _x,
+        await wrapMessage(
+          '',
+          msgUid: 'clip-left',
+          mediaId: 'clip-left',
+          chunkIndex: 1,
+          chunkTotal: 2,
+          fileB64: base64Encode([6, 6, 6]),
+          fileName: 'clip.mp4',
+          sender: asSender(_x),
+        ),
+      );
+      expect(w.live.chunks['clip-left'] ?? const {}, isEmpty);
+    },
+  );
+
   test('a sliced file deleted here does not come back slice by slice, and '
       'is asked for no more', () async {
     final w = await _World.make();
