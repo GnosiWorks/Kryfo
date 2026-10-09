@@ -12033,6 +12033,30 @@ abstract class AppLocalizations {
   /// **'Every message and the name made for this chat go, and the chat will not come back.'**
   String get devDeleteLineAnon;
 
+  /// screens/dev_about_sheet.dart: asked before the developer chat is deleted, when what was sent there is taken back from his phone too. Marios stays in Latin letters
+  ///
+  /// In en, this message translates to:
+  /// **'Every message goes, and the chat will not come back. What you sent is taken back from Marios\'s phone too.'**
+  String get devDeleteLineBack;
+
+  /// screens/dev_about_sheet.dart: asked before a developer chat started anonymously is deleted, when what was sent there is taken back from his phone too. Marios stays in Latin letters
+  ///
+  /// In en, this message translates to:
+  /// **'Every message and the name made for this chat go, and the chat will not come back. What you sent is taken back from Marios\'s phone too.'**
+  String get devDeleteLineAnonBack;
+
+  /// screens/dev_about_sheet.dart: a toast after the developer chat was deleted, when some of what was sent could not be taken back from his phone in time. Marios stays in Latin letters
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} message could not be taken back from Marios\'s phone} other{{count} messages could not be taken back from Marios\'s phone}}'**
+  String devDeleteNotTakenBack(int count);
+
+  /// screens/dev_about_sheet.dart: a toast when deleting the developer chat failed and it is kept
+  ///
+  /// In en, this message translates to:
+  /// **'The chat could not be deleted. Try again.'**
+  String get devDeleteFailed;
+
   /// screens/support_screen.dart: the inbox of chats people start from the Marios row, its home pin and its notification's title. Only the developer's own phone shows it, in English.
   ///
   /// In en, this message translates to:

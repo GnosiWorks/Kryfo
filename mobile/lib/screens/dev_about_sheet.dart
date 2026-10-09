@@ -12,6 +12,7 @@ import 'package:flutter/services.dart';
 import '../devchat/dev_chat.dart' show DevRow, devModeOf;
 import '../devchat/dev_key.dart';
 import '../devchat/dev_start.dart' show forgetDevChoices;
+import '../dlog.dart';
 import '../l10n/l10n.dart';
 import '../main.dart' show appState, session, sessionQuiet;
 import '../notifications.dart' show clearNotificationsFor;
@@ -82,12 +83,46 @@ Future<bool> deleteDevChat(BuildContext context, DevRow d) async {
   final ok = await showConfirmSheet(
     context,
     title: l10n.homeDeleteThisChat,
-    line: d.anonymous ? l10n.devDeleteLineAnon : l10n.devDeleteLine,
+    line: switch ((
+      d.anonymous,
+      d.started && !d.nameless && d.status != DevKeyStatus.retired,
+    )) {
+      (true, true) => l10n.devDeleteLineAnonBack,
+      (true, false) => l10n.devDeleteLineAnon,
+      (false, true) => l10n.devDeleteLineBack,
+      (false, false) => l10n.devDeleteLine,
+    },
     yes: l10n.commonDelete,
   );
   if (!ok) return false;
   HapticFeedback.heavyImpact();
-  await _gone(d.chatId);
+  // gone at once. what was sent is taken back from his phone behind it,
+  // and only what did not get through is said, in the everyday session
+  final from = session.container;
+  final going = appState.devDeleteSteps(takeBack: true);
+  try {
+    await going.wiped;
+  } catch (e) {
+    dlog('dev delete: kept (${e.runtimeType})');
+    if (context.mounted) showHaloToast(context, l10n.devDeleteFailed);
+    return false;
+  }
+  forgetDevChoices();
+  unawaited(clearNotificationsFor(d.chatId));
+  await appState.refreshContacts();
+  unawaited(
+    going.missed.then((missed) {
+      if (missed > 0) {
+        showHaloToast(
+          // the root overlay takes it: this screen may be gone by then
+          // ignore: use_build_context_synchronously
+          context,
+          l10n.devDeleteNotTakenBack(missed),
+          still: () => session.container == from,
+        );
+      }
+    }, onError: (Object e) => dlog('dev delete: ${e.runtimeType}')),
+  );
   return true;
 }
 
@@ -113,6 +148,7 @@ Future<String?> startNewDevChat(BuildContext context, String chatId) async {
   if (!ok) return null;
   HapticFeedback.heavyImpact();
   await _gone(chatId);
+  if (!sessionQuiet) await appState.devGoing;
   final id = await session.devChat.writeToMarios();
   await appState.refreshContacts();
   return id;
@@ -121,6 +157,8 @@ Future<String?> startNewDevChat(BuildContext context, String chatId) async {
 // the settings row: the chat as it is, or after a delete a fresh one, made
 // on this tap only
 Future<void> writeToMarios(BuildContext context) async {
+  // a delete still wiping the everyday chat ends first
+  if (!sessionQuiet) await appState.devGoing;
   final id = await session.devChat.writeToMarios();
   await appState.refreshContacts();
   if (id == null || !context.mounted) return;

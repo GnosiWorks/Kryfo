@@ -358,6 +358,67 @@ void main() {
       expect(o.calls, isEmpty);
     });
 
+    test('a delete\'s take-backs go the way the chat was, each while held '
+        'and none after', () async {
+      final gate = DevGate(chat: () async => _row(DevState.gone), minted: _tok);
+      final o = _Out();
+      gate.part('back', _row(DevState.anon));
+      gate.part('back3', _row(DevState.everyday));
+      await gate.nostrSend(_m1.xPub, 'back', out: o.out, room: o.room);
+      await gate.sendFirstContact(
+        _m1.xPub,
+        _m1.fc,
+        'back',
+        out: o.out,
+        room: o.room,
+      );
+      await gate.roomSend('anon-priv', _m1.xPub, 'back', out: o.out);
+      await gate.roomSendFirstContact(
+        'anon-priv',
+        _m1.xPub,
+        _m1.fc,
+        'back',
+        out: o.out,
+      );
+      await gate.sendFirstContact(
+        _m1.xPub,
+        _m1.fc,
+        'back3',
+        out: o.out,
+        room: o.room,
+      );
+      expect(o.calls, [
+        'room anon-priv',
+        'room anon-priv',
+        'out',
+        'out',
+        'out',
+      ]);
+      o.calls.clear();
+      // nothing else: not another cipher, another name, another key or a
+      // listen on the chat that is gone
+      final shut = [
+        await gate.nostrSend(_m1.xPub, 'minted', out: o.out, room: o.room),
+        await gate.roomSend('room-key', _m1.xPub, 'back', out: o.out),
+        await gate.nostrSend(_m2.xPub, 'back', out: o.out, room: o.room),
+        await gate.listen(_m1.xPub, out: o.out, room: o.room),
+      ];
+      expect(shut, everyElement(kDevRefused));
+      // let go: shut like the rest
+      gate.parted('back');
+      gate.parted('back3');
+      expect(gate.partingCount, 0);
+      expect(
+        await gate.nostrSend(_m1.xPub, 'back', out: o.out, room: o.room),
+        kDevRefused,
+      );
+      expect(
+        await gate.roomSend('anon-priv', _m1.xPub, 'back', out: o.out),
+        kDevRefused,
+      );
+      expect(o.calls, isEmpty);
+    });
+
     test('no chat to read, or one that will not read, shuts him out', () async {
       final o = _Out();
       final none = DevGate();

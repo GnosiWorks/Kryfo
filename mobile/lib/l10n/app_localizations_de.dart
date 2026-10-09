@@ -7574,6 +7574,31 @@ class AppLocalizationsDe extends AppLocalizations {
       'Jede Nachricht und der Name, der nur für diesen Chat gemacht wurde, werden gelöscht, und der Chat kommt nicht wieder.';
 
   @override
+  String get devDeleteLineBack =>
+      'Jede Nachricht wird gelöscht, und der Chat kommt nicht wieder. Was du geschickt hast, wird auch vom Handy von Marios zurückgeholt.';
+
+  @override
+  String get devDeleteLineAnonBack =>
+      'Jede Nachricht und der Name, der nur für diesen Chat gemacht wurde, werden gelöscht, und der Chat kommt nicht wieder. Was du geschickt hast, wird auch vom Handy von Marios zurückgeholt.';
+
+  @override
+  String devDeleteNotTakenBack(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count Nachrichten konnten nicht vom Handy von Marios zurückgeholt werden',
+      one:
+          '$count Nachricht konnte nicht vom Handy von Marios zurückgeholt werden',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get devDeleteFailed =>
+      'Der Chat konnte nicht gelöscht werden. Versuch es noch mal.';
+
+  @override
   String get supportTitle => 'Inbox';
 
   @override

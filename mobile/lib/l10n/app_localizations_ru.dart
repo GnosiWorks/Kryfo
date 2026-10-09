@@ -7636,6 +7636,30 @@ class AppLocalizationsRu extends AppLocalizations {
       'Все сообщения и имя, созданное для этого чата, удаляются, и чат больше не вернётся.';
 
   @override
+  String get devDeleteLineBack =>
+      'Все сообщения удаляются, и чат больше не вернётся. Отправленное вами тоже отзывается с телефона Marios.';
+
+  @override
+  String get devDeleteLineAnonBack =>
+      'Все сообщения и имя, созданное для этого чата, удаляются, и чат больше не вернётся. Отправленное вами тоже отзывается с телефона Marios.';
+
+  @override
+  String devDeleteNotTakenBack(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count сообщения не удалось отозвать с телефона Marios',
+      many: '$count сообщений не удалось отозвать с телефона Marios',
+      few: '$count сообщения не удалось отозвать с телефона Marios',
+      one: '$count сообщение не удалось отозвать с телефона Marios',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get devDeleteFailed => 'Не удалось удалить чат. Попробуйте ещё раз.';
+
+  @override
   String get supportTitle => 'Inbox';
 
   @override

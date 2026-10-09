@@ -287,6 +287,23 @@ class DevChat {
 
   Future<DevChatRow?> load() async => _row(await _open());
 
+  // what this phone sent in the chat, newest first: what a delete takes back
+  Future<List<String>> sentUids() async {
+    final db = await _open();
+    final rows = await db.query(
+      'messages',
+      columns: ['msg_uid'],
+      // only what went: one that never left has nothing to take back, and
+      // a burst of take-backs would be the first his phone ever heard
+      where:
+          "peer_id LIKE ? AND direction = 'out' AND sent = 1 "
+          'AND msg_uid IS NOT NULL',
+      whereArgs: [_kDev],
+      orderBy: 'sent_at DESC',
+    );
+    return [for (final r in rows) r['msg_uid'] as String];
+  }
+
   Future<bool> setPinned(bool on) => _flag('pinned', on);
   Future<bool> setMuted(bool on) => _flag('muted', on);
   Future<bool> setArchived(bool on) => _flag('archived', on);

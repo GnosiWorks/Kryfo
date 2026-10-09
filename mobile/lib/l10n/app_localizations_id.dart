@@ -7488,6 +7488,27 @@ class AppLocalizationsId extends AppLocalizations {
       'Semua pesan dan nama yang dibuat untuk obrolan ini terhapus, dan obrolan ini tidak akan kembali.';
 
   @override
+  String get devDeleteLineBack =>
+      'Semua pesan terhapus, dan obrolan ini tidak akan kembali. Pesan yang kamu kirim juga ditarik dari ponsel Marios.';
+
+  @override
+  String get devDeleteLineAnonBack =>
+      'Semua pesan dan nama yang dibuat untuk obrolan ini terhapus, dan obrolan ini tidak akan kembali. Pesan yang kamu kirim juga ditarik dari ponsel Marios.';
+
+  @override
+  String devDeleteNotTakenBack(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count pesan tidak bisa ditarik dari ponsel Marios',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get devDeleteFailed => 'Obrolan tidak bisa dihapus. Coba lagi.';
+
+  @override
   String get supportTitle => 'Inbox';
 
   @override

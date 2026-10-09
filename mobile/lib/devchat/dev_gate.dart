@@ -8,6 +8,9 @@
 
 import 'dart:convert';
 
+import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
+
 import '../dlog.dart';
 import 'dev_chat.dart';
 import 'dev_frame.dart' show DevSelf, devTokens;
@@ -53,6 +56,27 @@ class DevGate {
   bool Function(String cipher) minted;
 
   static bool _none(String _) => false;
+
+  // what a delete sealed before it wiped the chat, each with the chat as it
+  // was: they go the way it was started until let go, nothing else does
+  final _parting = <String, DevChatRow>{};
+
+  static String _hash(String cipher) =>
+      sha256.convert(utf8.encode(cipher)).toString();
+
+  void part(String cipher, DevChatRow was) => _parting[_hash(cipher)] = was;
+
+  void parted(String cipher) => _parting.remove(_hash(cipher));
+
+  @visibleForTesting
+  int get partingCount => _parting.length;
+
+  // the chat a call for [cipher] is held to, and whether its seal made it
+  Future<(DevChatRow?, bool)> _rowFor(String cipher) async {
+    final was = _parting[_hash(cipher)];
+    if (was != null) return (was, true);
+    return (await _row(), minted(cipher));
+  }
 
   Future<DevChatRow?> _row() async {
     final read = chat;
@@ -138,7 +162,8 @@ class DevGate {
   }) async {
     final k = devKeyByXPub(xPub);
     if (k == null) return out();
-    return _go('relay', relayWay(await _row(), k, cipher, minted), out, room);
+    final (r, ok) = await _rowFor(cipher);
+    return _go('relay', relayWay(r, k, cipher, (_) => ok), out, room);
   }
 
   Future<String> sendFirstContact(
@@ -151,7 +176,8 @@ class DevGate {
     final byX = devKeyByXPub(xPub);
     final byFc = devKeyByFc(fc);
     if (byX == null && byFc == null) return out();
-    final way = firstContactWay(await _row(), byX, byFc, cipher, minted);
+    final (r, ok) = await _rowFor(cipher);
+    final way = firstContactWay(r, byX, byFc, cipher, (_) => ok);
     return _go('first contact', way, out, room);
   }
 
@@ -182,7 +208,8 @@ class DevGate {
   }) async {
     final k = devKeyByXPub(pub);
     if (k == null) return out();
-    final ok = roomOk(await _row(), k, priv, ok: minted(cipher));
+    final (r, made) = await _rowFor(cipher);
+    final ok = roomOk(r, k, priv, ok: made);
     return _go('room', ok ? DevWay.pass : DevWay.refused, out, null);
   }
 
@@ -196,11 +223,12 @@ class DevGate {
     final byX = devKeyByXPub(pub);
     final byFc = devKeyByFc(fc);
     if (byX == null && byFc == null) return out();
+    final (r, made) = await _rowFor(cipher);
     final ok =
         byX != null &&
         byFc != null &&
         byX.keyId == byFc.keyId &&
-        roomOk(await _row(), byX, priv, ok: minted(cipher));
+        roomOk(r, byX, priv, ok: made);
     return _go(
       'room first contact',
       ok ? DevWay.pass : DevWay.refused,

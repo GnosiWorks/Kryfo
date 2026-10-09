@@ -346,7 +346,7 @@ void main() {
       await devOpen(t, devHome(groups: _groups));
       await _longPress(t, _devTitle);
       await _tapIn(t, l10n.homeDeleteChat);
-      expect(find.text(l10n.devDeleteLineAnon), findsOneWidget);
+      expect(find.text(l10n.devDeleteLineAnonBack), findsOneWidget);
       // kept: nothing changes
       await _tapIn(t, l10n.confirmSheetKeep);
       expect(appState.devRow, isNotNull);

@@ -7567,6 +7567,29 @@ class AppLocalizationsFr extends AppLocalizations {
       'Tous les messages et le nom créé pour cette discussion disparaissent, et la discussion ne reviendra pas.';
 
   @override
+  String get devDeleteLineBack =>
+      'Tous les messages disparaissent, et la discussion ne reviendra pas. Ce que vous avez envoyé est aussi retiré du téléphone de Marios.';
+
+  @override
+  String get devDeleteLineAnonBack =>
+      'Tous les messages et le nom créé pour cette discussion disparaissent, et la discussion ne reviendra pas. Ce que vous avez envoyé est aussi retiré du téléphone de Marios.';
+
+  @override
+  String devDeleteNotTakenBack(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count messages n’ont pas pu être retirés du téléphone de Marios',
+      one: '$count message n’a pas pu être retiré du téléphone de Marios',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get devDeleteFailed =>
+      'La discussion n’a pas pu être supprimée. Réessayez.';
+
+  @override
   String get supportTitle => 'Inbox';
 
   @override

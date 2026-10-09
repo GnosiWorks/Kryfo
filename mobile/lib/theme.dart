@@ -309,14 +309,24 @@ void _dropToast(OverlayEntry e) {
 /// for it to lift
 Future<void> Function(Future<void> Function() act)? haloWhenOpen;
 
-void showHaloToast(BuildContext context, String message) {
+/// [still], when given, is asked again right before it shows: one that
+/// waited for the lock is dropped if it no longer fits where it lands
+void showHaloToast(
+  BuildContext context,
+  String message, {
+  bool Function()? still,
+}) {
   // nothing to say, nothing shown: a link that opened a chat says it so
   if (message.isEmpty) return;
+  void show() {
+    if (still == null || still()) _showHaloToast(context, message);
+  }
+
   final later = haloWhenOpen;
   if (later == null) {
-    _showHaloToast(context, message);
+    show();
   } else {
-    unawaited(later(() async => _showHaloToast(context, message)));
+    unawaited(later(() async => show()));
   }
 }
 

@@ -7484,6 +7484,28 @@ class AppLocalizationsEn extends AppLocalizations {
       'Every message and the name made for this chat go, and the chat will not come back.';
 
   @override
+  String get devDeleteLineBack =>
+      'Every message goes, and the chat will not come back. What you sent is taken back from Marios\'s phone too.';
+
+  @override
+  String get devDeleteLineAnonBack =>
+      'Every message and the name made for this chat go, and the chat will not come back. What you sent is taken back from Marios\'s phone too.';
+
+  @override
+  String devDeleteNotTakenBack(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count messages could not be taken back from Marios\'s phone',
+      one: '$count message could not be taken back from Marios\'s phone',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get devDeleteFailed => 'The chat could not be deleted. Try again.';
+
+  @override
   String get supportTitle => 'Inbox';
 
   @override
