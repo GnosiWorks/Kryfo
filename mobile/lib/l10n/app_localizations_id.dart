@@ -7614,6 +7614,34 @@ class AppLocalizationsId extends AppLocalizations {
       'This identity is pinned in Kryfo. A new link would cut off every chat with it.';
 
   @override
+  String get supportViaDev => 'Via developer chat';
+
+  @override
+  String get supportMoveAsk => 'Move your inbox chat with them into this chat?';
+
+  @override
+  String get supportMoveLine =>
+      'It leaves the inbox and shows in Chats. Keep apart leaves both as they are.';
+
+  @override
+  String get supportMove => 'Move';
+
+  @override
+  String get supportKeepApart => 'Keep apart';
+
+  @override
+  String get supportMoveToChats => 'Move to Chats';
+
+  @override
+  String get supportMovedToChats => 'Moved to Chats';
+
+  @override
+  String get supportMoveToInbox => 'Move to inbox';
+
+  @override
+  String get supportMovedToInbox => 'Moved to inbox';
+
+  @override
   String get settingsWriteToMarios => 'Kirim pesan ke Marios';
 
   @override

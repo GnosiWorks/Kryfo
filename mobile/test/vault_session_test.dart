@@ -698,6 +698,7 @@ class _Db implements HaloDb {
     String? poll,
     String? sticker,
     int? sentAt,
+    bool viaDev = false,
   }) async {
     _hit('saveMessage', msgUid ?? peerId, null);
     r.say(

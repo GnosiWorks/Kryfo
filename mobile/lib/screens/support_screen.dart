@@ -79,6 +79,25 @@ Future<void> openSupportTap(NavigatorState nav, String chatId) async {
   await openSupportChat(nav, chatId);
 }
 
+// someone just added whose chat is in the inbox: move it into Chats, or
+// keep the two apart. keep apart is the default, a dismiss included. true
+// when it moved
+Future<bool> askMoveIntoChats(BuildContext context, String id) async {
+  if (!await appState.inboxChatOf(id) || !context.mounted) return false;
+  final move = await showConfirmSheet(
+    context,
+    title: l10n.supportMoveAsk,
+    line: l10n.supportMoveLine,
+    yes: l10n.supportMove,
+    keep: l10n.supportKeepApart,
+    rose: false,
+  );
+  if (!move) return false;
+  await appState.moveToChats(id);
+  if (context.mounted) showHaloToast(context, l10n.supportMovedToChats);
+  return true;
+}
+
 // the inbox on home, under requests. his phone only. the dot breathes
 // while someone waits
 class SupportPin extends StatelessWidget {
@@ -218,6 +237,19 @@ class _SupportScreenState extends State<SupportScreen> {
     }
   }
 
+  // an answered chat goes to Chats, folding out of here
+  Future<void> _moveToChats(SupportChat c) async {
+    if (!_busy.add(c.haloId)) return;
+    HapticFeedback.selectionClick();
+    try {
+      await appState.moveToChats(c.haloId);
+      await _after();
+      if (mounted) showHaloToast(context, l10n.supportMovedToChats);
+    } finally {
+      _busy.remove(c.haloId);
+    }
+  }
+
   Future<void> _markAllDone() async {
     HapticFeedback.mediumImpact();
     await session.support.markWaitingDone();
@@ -292,6 +324,13 @@ class _SupportScreenState extends State<SupportScreen> {
                         label: l10n.supportMarkDone,
                         onTap: () => pick('done'),
                       ),
+                // a contact by now: their chat can sit in Chats instead
+                if (c.answered)
+                  MenuSheetRow(
+                    icon: Icons.chat_bubble_outline_rounded,
+                    label: l10n.supportMoveToChats,
+                    onTap: () => pick('chats'),
+                  ),
               ],
               [
                 MenuSheetRow(
@@ -318,6 +357,8 @@ class _SupportScreenState extends State<SupportScreen> {
           _setDone(c, true);
         case 'reopen':
           _setDone(c, false);
+        case 'chats':
+          _moveToChats(c);
         case 'block':
           _block(c);
         case 'delete':

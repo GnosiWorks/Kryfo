@@ -185,6 +185,7 @@ class _ChatDb extends DevTestDb {
     String? poll,
     String? sticker,
     int? sentAt,
+    bool viaDev = false,
   }) async {
     await mem.insert('messages', {
       'peer_id': peerId,

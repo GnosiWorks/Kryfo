@@ -83,6 +83,15 @@ const _devPhoneOnly = {
   'supportChannelName',
   'supportChannelLine',
   'supportResetPinned',
+  'supportViaDev',
+  'supportMoveAsk',
+  'supportMoveLine',
+  'supportMove',
+  'supportKeepApart',
+  'supportMoveToChats',
+  'supportMovedToChats',
+  'supportMoveToInbox',
+  'supportMovedToInbox',
 };
 // read and kept: the word is the same in that language
 // (test/l10n_same_as_english.json, key lists per language)

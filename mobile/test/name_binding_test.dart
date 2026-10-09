@@ -15,12 +15,15 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
+import 'package:kryfo/devchat/dev_key.dart';
+import 'package:kryfo/devchat/support.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
     show
         AppIo,
         AppState,
         appState,
+        askInboxMove,
         HaloEngine,
         LinkKin,
         buildHaloUri,
@@ -178,6 +181,14 @@ Future<String> _opener(
 
 Future<void> _settle() =>
     Future<void>.delayed(const Duration(milliseconds: 20));
+
+// his phone's rows, with the inbox beside them
+class _InboxRows extends ArrivalRows {
+  _InboxRows() : super(HaloContainer.everyday);
+  final inbox = MemDb();
+  @override
+  SupportChats get support => SupportChats(() async => inbox);
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -651,6 +662,54 @@ void main() {
       expect(live.people[blocked], containsPair('accepted', 0));
       expect(live.people[blocked], containsPair('blocked', 1));
       expect(live.rowWrites, isEmpty);
+    });
+
+    test('on his phone, someone added whose chat is in the inbox is asked '
+        'about, once; anyone else, or on another phone, never', () async {
+      const inInbox = 'wrote-from-row';
+      const other = 'plain-new-friend';
+      final rows = _InboxRows();
+      live = rows;
+      useDatabasesForTest(rows, Session(rows));
+      await rows.support.file(inInbox);
+      final asked = <String>[];
+      final was = askInboxMove;
+      askInboxMove = asked.add;
+      final x = 'ab' * 32;
+      useDevKeysForTest([
+        DevKey(keyId: 'm1', threeWords: 'a-b-c', xPub: x, bundle: '', fc: ''),
+      ]);
+      addTearDown(() {
+        askInboxMove = was;
+        useDevKeysForTest(null);
+        appState.myXPub = '';
+      });
+      final phones = {inInbox: await _phone(), other: await _phone()};
+      // the same person's card each time: their key stays theirs
+      Future<String> card(String id) async => haloUriV3(
+        id,
+        'o-$id',
+        Uri.encodeQueryComponent(await makePreKeyBundleB64(phones[id]!.ss)),
+        'ab' * 32,
+      );
+      appState.myXPub = x;
+      expect(appState.devMode, isTrue);
+      expect((await handleHaloUriAdded(await card(inInbox))).$2, isTrue);
+      expect(asked, [inInbox]);
+      // kept apart, and their card again: asked once, not on every add
+      expect((await handleHaloUriAdded(await card(inInbox))).$2, isTrue);
+      expect(asked, [inInbox]);
+      expect((await handleHaloUriAdded(await card(other))).$2, isTrue);
+      expect(asked, [inInbox]);
+      // moved: nothing more to ask
+      await rows.support.moveOut(inInbox);
+      expect((await handleHaloUriAdded(await card(inInbox))).$2, isTrue);
+      expect(asked, [inInbox]);
+      // another phone files nothing and asks nothing
+      await rows.support.file(inInbox);
+      appState.myXPub = '';
+      expect((await handleHaloUriAdded(await card(inInbox))).$2, isTrue);
+      expect(asked, [inInbox]);
     });
 
     test('someone added is in the chat list at once', () async {

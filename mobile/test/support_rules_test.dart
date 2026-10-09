@@ -9,8 +9,10 @@
 // before he answers, its proof of work still owed. his first reply takes
 // it on and it stays in support. a waiting chat rings as a count, once a
 // gap, never with its words; an answered one rings per message. the reset
-// link is off on his phone. each guard, broken once, is caught. the
-// databases are kept in maps; signal, the engine and android are stand-ins
+// link is off on his phone. a contact who writes through the row stays in
+// their chat, the message marked, and moves between the two by hand only.
+// each guard, broken once, is caught. the databases are kept in maps;
+// signal, the engine and android are stand-ins
 import 'dart:convert';
 import 'dart:io';
 
@@ -1037,6 +1039,137 @@ void main() {
   });
 
   // the checks above would catch each guard gone
+  group('one person, two ways in', () {
+    int? via(Map<String, Object?> m) => (m['via_dev'] as num?)?.toInt();
+
+    test('a contact who writes through the developer chat stays in their '
+        'chat, the message marked, and the inbox counts nothing', () async {
+      final w = await _World.make();
+      await w.onion(_c, await w.frame('from the row'));
+      await w.onion(_c, await w.frame('just me', marked: false));
+      expect(w.phone.filed, isEmpty);
+      expect([for (final m in w.phone.msgs(_c)) via(m)], [1, 0]);
+      expect([for (final c in w.app.contacts) c.haloId], [_c]);
+      expect(w.app.supportWaiting, 0);
+      expect(await w.phone.support.waiting(), 0);
+      expect(await w.phone.support.news(), (chats: 0, messages: 0));
+      expect(w.bell.summaries, isEmpty);
+      expect(await w.phone.hasViaDev(_c), isTrue);
+    });
+
+    test('a stranger filed into the inbox is not marked', () async {
+      final w = await _World.make();
+      await w.stranger(_s);
+      await w.onion(_s, await w.frame('help'));
+      expect(w.phone.filed, {_s});
+      expect(via(w.phone.msgs(_s).single), 0);
+      expect(w.app.supportWaiting, 1);
+      // an answered inbox chat stays one: its messages are not marked
+      await w.phone.acceptRequest(_s);
+      await w.onion(_s, await w.frame('thanks'));
+      expect([for (final m in w.phone.msgs(_s)) via(m)], [0, 0]);
+      expect(await w.phone.hasViaDev(_s), isFalse);
+    });
+
+    test('on anyone else\'s phone nothing is marked', () async {
+      final w = await _World.make(dev: false);
+      await w.onion(_c, await w.frame('from the row'));
+      expect(via(w.phone.msgs(_c).single), 0);
+    });
+
+    test('never a group\'s, never the dev chat\'s, never by name', () async {
+      final marked = unwrapMessage(
+        await wrapMessage('hi', supportMarker: kDevSupport),
+      );
+      final grouped = unwrapMessage(
+        await wrapMessage(
+          'hi',
+          supportMarker: kDevSupport,
+          groupId: 'grp000000001',
+        ),
+      );
+      final plain = unwrapMessage(await wrapMessage('hi'));
+      bool on(UnwrappedMessage e, {String s = _c, bool f = false}) =>
+          viaDevChat(e, sender: s, filed: f, accepted: true);
+      expect(on(marked), isTrue);
+      expect(on(grouped), isFalse);
+      expect(on(plain), isFalse);
+      expect(on(marked, s: 'dev:m1'), isFalse);
+      expect(on(marked, f: true), isFalse);
+      expect(
+        viaDevChat(marked, sender: _c, filed: false, accepted: false),
+        isFalse,
+      );
+    });
+
+    test('moved to Chats: out of the inbox and its counts, still known as '
+        'filed once; filed again it is new to the inbox', () async {
+      final mem = MemDb();
+      final chats = SupportChats(() async => mem, now: () => 5);
+      await chats.file(_s);
+      await chats.moveOut(_s);
+      expect(await chats.ids(), isEmpty);
+      expect(await chats.has(_s), isFalse);
+      expect(await chats.wasFiled(_s), isTrue);
+      expect(await chats.wasFiled(_t), isFalse);
+      expect(await chats.list(), isEmpty);
+      expect(await chats.waiting(), 0);
+      expect(await chats.file(_s), isTrue);
+      expect(await chats.ids(), {_s});
+      expect(mem.rows('support_chats').single['state'], 'open');
+    });
+
+    test('a contact moved to Chats who writes through the row again stays '
+        'there, marked', () async {
+      final w = await _World.make();
+      await w.phone.support.file(_c);
+      await w.app.refreshContacts();
+      expect(w.app.contacts, isEmpty);
+      await w.app.moveToChats(_c);
+      expect([for (final c in w.app.contacts) c.haloId], [_c]);
+      await w.onion(_c, await w.frame('me again'));
+      expect(await w.phone.support.has(_c), isFalse);
+      expect(via(w.phone.msgs(_c).single), 1);
+      expect(w.app.supportWaiting, 0);
+    });
+
+    test('the menu move: a marked chat or one filed before goes to the '
+        'inbox, any other stays put', () async {
+      final w = await _World.make();
+      await w.phone.person(_t);
+      await w.app.refreshContacts();
+      expect(await w.app.movableToInbox(_c), isFalse);
+      await w.app.moveToInbox(_c);
+      expect(w.phone.filed, isEmpty);
+      await w.onion(_c, await w.frame('from the row'));
+      expect(await w.app.movableToInbox(_c), isTrue);
+      await w.app.moveToInbox(_c);
+      expect(await w.phone.support.has(_c), isTrue);
+      expect([for (final c in w.app.contacts) c.haloId], [_t]);
+      // answered, so no waiting count
+      expect(w.app.supportWaiting, 0);
+      expect((await w.phone.support.list()).single.answered, isTrue);
+      // already there: nothing more to offer
+      expect(await w.app.movableToInbox(_c), isFalse);
+      // back to Chats, and from there to the inbox again
+      await w.app.moveToChats(_c);
+      expect(await w.app.movableToInbox(_c), isTrue);
+      // a stranger, or the dev chat, never
+      await w.stranger(_s);
+      expect(await w.app.movableToInbox(_s), isFalse);
+      expect(await w.app.movableToInbox('dev:m1'), isFalse);
+    });
+
+    test('on anyone else\'s phone there is no move', () async {
+      final w = await _World.make(dev: false);
+      await w.phone.support.file(_c);
+      await w.phone.support.moveOut(_c);
+      expect(await w.app.movableToInbox(_c), isFalse);
+      await w.app.moveToChats(_c);
+      expect(await w.app.inboxChatOf(_c), isFalse);
+    });
+  });
+
   group('each guard, broken once, is caught', () {
     // the filing rules, run against [file]: what they get wrong
     Future<List<String>> filing(

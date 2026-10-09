@@ -212,6 +212,8 @@ class _Msg {
   // the developer chat's first line, from the app itself: never stored,
   // sent or counted, and nothing can be done to it but copy it
   final bool welcome;
+  // a contact's, through the developer chat: his phone tags it
+  final bool viaDev;
   _Msg(
     this.direction,
     this.text,
@@ -233,6 +235,7 @@ class _Msg {
     this.voiceDisguised = false,
     this.saved = false,
     this.delivered = false,
+    this.viaDev = false,
     Map<String, String>? reactions,
   }) : reactions = reactions ?? <String, String>{};
 
@@ -536,6 +539,7 @@ class _ChatScreenState extends State<ChatScreen>
           fileName: r['file_name'] as String?,
           voiceDisguised: (r['voice_disguised'] as int? ?? 0) == 1,
           saved: (r['saved'] as int? ?? 0) == 1,
+          viaDev: r['via_dev'] == 1,
         );
         m.rowid = (r['rowid'] as int?) ?? 0;
         final pvRaw = r['preview'] as String?;
@@ -1371,6 +1375,7 @@ class _ChatScreenState extends State<ChatScreen>
         fileName: r['file_name'] as String?,
         voiceDisguised: (r['voice_disguised'] as int? ?? 0) == 1,
         saved: (r['saved'] as int? ?? 0) == 1,
+        viaDev: r['via_dev'] == 1,
         delivered: (r['delivered'] as int? ?? 0) == 1,
         sending:
             (r['direction'] as String) == 'out' &&
@@ -2219,6 +2224,7 @@ class _ChatScreenState extends State<ChatScreen>
           fileName: r['file_name'] as String?,
           voiceDisguised: (r['voice_disguised'] as int? ?? 0) == 1,
           saved: (r['saved'] as int? ?? 0) == 1,
+          viaDev: r['via_dev'] == 1,
           delivered: (r['delivered'] as int? ?? 0) == 1,
           sending:
               (r['direction'] as String) == 'out' &&
@@ -4058,6 +4064,11 @@ class _ChatScreenState extends State<ChatScreen>
     final hidden = session.isHidden(widget.peerHaloId);
     final hideable =
         lockState.inVault && _accepted && !_blocked && !widget.support;
+    // his phone: a contact's chat that came through the developer chat
+    final toInbox =
+        !widget.support &&
+        !_blocked &&
+        await appState.movableToInbox(widget.peerHaloId);
     if (!mounted) return;
     final action = await showHaloSheet<String>(
       context,
@@ -4109,6 +4120,12 @@ class _ChatScreenState extends State<ChatScreen>
                   label: l10n.chatArchiveChat,
                   onTap: () => pick('archive'),
                 ),
+                if (toInbox)
+                  MenuSheetRow(
+                    icon: Icons.support_agent,
+                    label: l10n.supportMoveToInbox,
+                    onTap: () => pick('inbox'),
+                  ),
                 // hidden chats open: out of the everyday list, or back in it
                 if (hideable)
                   MenuSheetRow(
@@ -4165,6 +4182,12 @@ class _ChatScreenState extends State<ChatScreen>
     } else if (action == 'archive') {
       await appState.archive(widget.peerHaloId);
       if (mounted) Navigator.of(context).pop();
+    } else if (action == 'inbox') {
+      // the chat folds out of Chats as it is left
+      await appState.moveToInbox(widget.peerHaloId);
+      if (!mounted) return;
+      showHaloToast(context, l10n.supportMovedToInbox);
+      Navigator.of(context).pop();
     } else if (action == 'hide') {
       // its rows move, so the chat is left as an archived one is
       final moved = await moveHiddenChat(
@@ -6782,6 +6805,10 @@ class _Bubble extends StatelessWidget {
                                                     ),
                                                   ),
                                           ),
+                                          if (!isOut && msg.viaDev) ...[
+                                            const SizedBox(height: 3),
+                                            const _ViaDevTag(),
+                                          ],
                                           if (!isOut &&
                                               msg.edited &&
                                               msg.mediaPath == null) ...[
@@ -7203,6 +7230,37 @@ class _Bubble extends StatelessWidget {
               spacing: 3,
               children: _buildReactionChips(msg),
             ),
+    );
+  }
+}
+
+// how a contact's message came: through the developer chat. his phone only
+class _ViaDevTag extends StatelessWidget {
+  const _ViaDevTag();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      key: const ValueKey('via-dev'),
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.support_agent, size: 10, color: HaloColors.amber),
+        const SizedBox(width: 4),
+        Flexible(
+          child: Text(
+            l10n.supportViaDev,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontFamily: HaloType.monoFamily,
+              fontFamilyFallback: HaloType.monoFallbackNow,
+              fontSize: 9,
+              color: HaloColors.amber,
+              letterSpacing: track(0.4),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

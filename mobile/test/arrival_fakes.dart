@@ -733,6 +733,7 @@ class ArrivalRows implements HaloDb {
     String? poll,
     String? sticker,
     int? sentAt,
+    bool viaDev = false,
   }) async {
     beforeSave?.call();
     _hit('saveMessage', msgUid ?? peerId, null);

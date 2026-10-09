@@ -27,6 +27,8 @@ const kSupportPayload = 'support:';
 
 const _open = 'open';
 const _done = 'done';
+// moved to Chats by hand: out of the inbox, still known as filed once
+const _out = 'out';
 
 // in every container, made the same way. empty everywhere but on his phone
 Future<void> supportTables(DatabaseExecutor db) async {
@@ -88,13 +90,19 @@ class SupportChats {
   static int _clock() => DateTime.now().millisecondsSinceEpoch;
 
   // a table a migration could not make holds nothing: home and requests
-  // still read
+  // still read. a chat moved to Chats is no inbox chat unless [all]
   Future<List<Map<String, Object?>>> _rows({
     String? where,
     List<Object?>? args,
+    bool all = false,
   }) async {
     try {
       final db = await _db();
+      if (!all) {
+        // the callers' clauses are plain ANDs
+        where = where == null ? 'state != ?' : '$where AND state != ?';
+        args = [...?args, _out];
+      }
       return await db.query('support_chats', where: where, whereArgs: args);
     } catch (e) {
       dlog('support: ${e.runtimeType}');
@@ -109,8 +117,12 @@ class SupportChats {
   Future<bool> has(String id) async =>
       (await _rows(where: 'halo_id = ?', args: [id])).isNotEmpty;
 
+  // in the inbox now, or once before it was moved to Chats
+  Future<bool> wasFiled(String id) async =>
+      (await _rows(where: 'halo_id = ?', args: [id], all: true)).isNotEmpty;
+
   // files [id] as a support chat. a done one written to again comes back
-  // when [reopen]. true when the chat is new
+  // when [reopen]. true when the chat is new to the inbox
   Future<bool> file(String id, {bool reopen = true}) async {
     final db = await _db();
     return db.transaction((t) async {
@@ -127,6 +139,15 @@ class SupportChats {
           'first_at': _now(),
           'state': _open,
         });
+        return true;
+      }
+      if (had.first['state'] == _out) {
+        await t.update(
+          'support_chats',
+          {'state': _open},
+          where: 'halo_id = ?',
+          whereArgs: [id],
+        );
         return true;
       }
       if (reopen && had.first['state'] == _done) {
@@ -169,6 +190,18 @@ class SupportChats {
       }
     });
     return ids;
+  }
+
+  // to Chats: the chat shows there and leaves the inbox. a marked message
+  // from them no longer files it while they are a contact
+  Future<void> moveOut(String id) async {
+    final db = await _db();
+    await db.update(
+      'support_chats',
+      {'state': _out},
+      where: 'halo_id = ?',
+      whereArgs: [id],
+    );
   }
 
   // a deleted chat: if they write again it is a new one
@@ -352,6 +385,21 @@ Future<({bool on, bool fresh})> fileSupport(
   if (news) await chats.file(sender);
   return (on: true, fresh: false);
 }
+
+// a contact's own message with the marker, on his phone: it stays in their
+// chat with a tag. never a group's, never one the inbox took. nothing is
+// matched by name or words, only by the chat it came in on
+bool viaDevChat(
+  UnwrappedMessage env, {
+  required String sender,
+  required bool filed,
+  required bool accepted,
+}) =>
+    !isDevChat(sender) &&
+    env.groupId == null &&
+    env.supportMarker != null &&
+    !filed &&
+    accepted;
 
 // whether a new waiting chat rings: the first one ever, or the first one a
 // gap after the last ring. a clock set back rings rather than going quiet
