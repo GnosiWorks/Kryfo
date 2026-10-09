@@ -21,7 +21,8 @@ import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/main.dart'
     show HaloDb, HaloEngine, useDatabasesForTest, useEngineForTest;
 import 'package:kryfo/session.dart';
-import 'package:kryfo/signal_session.dart' show kSessionsRestoredPref;
+import 'package:kryfo/signal_session.dart'
+    show kRestoredFromPref, kSessionsRestoredPref;
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -150,7 +151,7 @@ void main() {
 
   // a v2 file holding a database, an onion key with [onion], and nothing
   // hidden
-  Future<String> file({bool onion = false}) async {
+  Future<String> file({bool onion = false, int? ts}) async {
     final src = p.join(root.path, 'src');
     File(p.join(src, 'halo.db'))
       ..createSync(recursive: true)
@@ -163,6 +164,7 @@ void main() {
       cipher: _Cipher(),
       manifest: {
         'v': kBackupVersion,
+        'ts': ?ts,
         'files': [
           {'name': 'halo.db', 'size': 8},
           if (onion) {'name': 'onion.key', 'size': 12},
@@ -291,6 +293,28 @@ void main() {
       await restoreBackupFile(await file(), 'pass', lock: lock.state);
       expect(shade.up, {7, 8});
     });
+  });
+
+  test('the next start knows when the file restored was made', () async {
+    final lock = await pins(inDecoy: false);
+    useDatabasesForTest(live, Session(live));
+    restoreCipherForTest = _Cipher.new;
+    await restoreBackupFile(await file(ts: 777), 'pass', lock: lock.state);
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getInt(kRestoredFromPref), 777);
+    // an old text file without a date leaves none from before
+    await landV1Payload(
+      {
+        'v': 1,
+        'db': base64Encode(utf8.encode('old file')),
+        'dbPassphrase': "x'${'4e' * 32}'",
+        'edPriv': 'ed',
+        'xPriv': 'x',
+      },
+      own: live,
+      lock: lock.state,
+    );
+    expect(prefs.getInt(kRestoredFromPref), isNull);
   });
 
   test('the everyday database takes nothing more once a restore lands on '

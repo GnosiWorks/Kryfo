@@ -6473,8 +6473,12 @@ Future<void> openSignalStore(
     xPubBytes: xPubBytes,
     xPrivBytes: xPrivBytes,
     restored: restored,
+    restoredFrom: prefs.getInt(kRestoredFromPref),
   );
-  if (restored) await prefs.remove(kSessionsRestoredPref);
+  if (restored) {
+    await prefs.remove(kSessionsRestoredPref);
+    await prefs.remove(kRestoredFromPref);
+  }
 }
 
 // the store a peer's messages go through: the everyday one, and for the
@@ -11427,7 +11431,7 @@ class AppState extends ChangeNotifier {
           if (!identical(_openVault, vault) || _moveDone != null) return;
           if (u != null && u.resend) {
             try {
-              await _resendTo(vault, u.from);
+              await _resendTo(vault, u.from, since: u.resendSince);
             } catch (e) {
               if (!identical(_openVault, vault)) return;
               dlog('unseal: an owed resend not run ($e)');
@@ -13138,8 +13142,10 @@ class AppState extends ChangeNotifier {
   final Map<String, int> _healPending = {};
   final Map<String, int> _bundleCtlSentAt = {};
   static const _healTtl = 60 * 60 * 1000;
-  // how far back an ask to start afresh puts undelivered texts out again
+  // how far back an ask to start afresh puts undelivered texts out again,
+  // and how far an ask that says when its backup was made takes it
   static const _kResendWindow = Duration(days: 7);
+  static const _kResendMost = Duration(days: 30);
   // and how often, per person: each ask is a fresh wrap, and a phone that
   // cannot open what we send asks again on every text, a minute apart at
   // most. short, so a text written just after the first ask goes with the
@@ -13149,9 +13155,10 @@ class AppState extends ChangeNotifier {
   final Map<String, int> _owedSealedAt = {};
 
   // what we sent [peer] lately and never came back delivered, put out again
-  // from [on], the container their chat is in. not while their key is
-  // flagged as changed: that one is checked first
-  Future<void> _resendTo(HaloDb on, String peer) async {
+  // from [on], the container their chat is in: since their backup was made
+  // ([since]) when the ask says, never less than the window. not while
+  // their key is flagged as changed: that one is checked first
+  Future<void> _resendTo(HaloDb on, String peer, {int? since}) async {
     final now = DateTime.now().millisecondsSinceEpoch;
     if (now - (_resentAt[peer] ?? 0) < _kResendGap.inMilliseconds) return;
     // someone blocked is sent nothing again, asked or owed, whichever
@@ -13164,7 +13171,7 @@ class AppState extends ChangeNotifier {
     _resentAt[peer] = now;
     final again = await on.resendUndelivered(
       peer,
-      since: now - _kResendWindow.inMilliseconds,
+      since: resendFrom(now, since, window: _kResendWindow, most: _kResendMost),
     );
     if (again > 0) {
       dlog('resend: $again undelivered to $peer go again');
@@ -13175,13 +13182,13 @@ class AppState extends ChangeNotifier {
 
   // asked while their vault is shut: the resend is owed, sealed to the
   // vault with what came for it, and runs as it opens (drainSealed)
-  Future<void> _oweResend(String peer) async {
+  Future<void> _oweResend(String peer, {int? since}) async {
     // someone blocked: nothing is sealed for them, as on arrival
     if (await blockedAnywhere(peer)) return;
     final now = DateTime.now().millisecondsSinceEpoch;
     if (now - (_owedSealedAt[peer] ?? 0) < _kResendGap.inMilliseconds) return;
     final kept = await _router.seal(
-      Unsealed(peer, '', false, now, resend: true),
+      Unsealed(peer, '', false, now, resend: true, resendSince: since),
     );
     if (kept) _owedSealedAt[peer] = now;
   }
@@ -15415,6 +15422,9 @@ class AppState extends ChangeNotifier {
         'from': myId,
         'bundle': await makePreKeyBundleB64(),
         'want': want,
+        // a restored phone says when its backup was made: what never
+        // reached it since then goes again
+        if (want) 'since': ?signalSession.restoredFrom,
       });
       final r = await Future(() => _io.relaySend(xpub, payload));
       dlog('bundle ctl (want=$want) to $memberId: $r');
@@ -15437,6 +15447,7 @@ class AppState extends ChangeNotifier {
       final from = j['from'] as String?;
       final bundle = j['bundle'] as String?;
       final want = j['want'] == true;
+      final since = j['since'] is int ? j['since'] as int : null;
       if (from == null || bundle == null) return;
       // the pinned bundle is the dev chat's only one, and no one else may
       // speak for the developer
@@ -15494,9 +15505,9 @@ class AppState extends ChangeNotifier {
         final on = to.on;
         if (!rebuilt) return;
         if (on != null) {
-          await _resendTo(on, from);
+          await _resendTo(on, from, since: since);
         } else {
-          await _oweResend(from);
+          await _oweResend(from, since: since);
         }
       }
     } catch (e) {
@@ -16076,8 +16087,7 @@ class AppState extends ChangeNotifier {
   // rooms whose creator said this phone's join found no seat, by the
   // container they are in, until it knocks again, is let in or leaves
   final Set<String> _roomsFull = {};
-  static String _fullKey(HaloContainer c, String groupId) =>
-      '${c.id} $groupId';
+  static String _fullKey(HaloContainer c, String groupId) => '${c.id} $groupId';
   bool roomFull(String groupId) =>
       _roomsFull.contains(_fullKey(session.primary.container, groupId));
 
@@ -18735,4 +18745,18 @@ Future<bool> _hasLocalData() async {
     // cannot tell: assume it has been set up
     return true;
   }
+}
+
+/// where an ask to start afresh puts undelivered texts out again from: the
+/// last [window], or since the asker's backup was made ([since]) when that
+/// is further back, never past [most]
+int resendFrom(
+  int now,
+  int? since, {
+  required Duration window,
+  required Duration most,
+}) {
+  final last = now - window.inMilliseconds;
+  if (since == null) return last;
+  return min(last, max(since, now - most.inMilliseconds));
 }

@@ -30,9 +30,14 @@ class SignalSession {
   // when the person on each of those was last asked to start afresh, and
   // how many times, by the same base key: [at, n]
   Map<String, List<int>> _asks = {};
+  // when the file they came back from was made, by its phone's clock
+  int? _restoredFrom;
 
   /// a restore brought sessions back into this store
   bool get hasRestored => _restored.isNotEmpty;
+
+  /// when the backup those sessions came from was made, while any is held
+  int? get restoredFrom => hasRestored ? _restoredFrom : null;
 
   Future<void> bootstrap({
     required Database database,
@@ -40,9 +45,17 @@ class SignalSession {
     required Uint8List xPrivBytes,
     String prefix = '',
     bool restored = false,
+    int? restoredFrom,
   }) async {
     if (_ready) return;
-    await _open(database, xPubBytes, xPrivBytes, prefix, restored: restored);
+    await _open(
+      database,
+      xPubBytes,
+      xPrivBytes,
+      prefix,
+      restored: restored,
+      restoredFrom: restoredFrom,
+    );
 
     final spkRows = await database.query('${prefix}signed_prekeys', limit: 1);
     SignedPreKeyRecord? spk;
@@ -150,6 +163,7 @@ class SignalSession {
     Uint8List xPrivBytes,
     String prefix, {
     bool restored = false,
+    int? restoredFrom,
   }) async {
     // clamp priv per RFC 7748: libsignal expects an already-clamped scalar
     final clamped = Uint8List.fromList(xPrivBytes);
@@ -167,7 +181,8 @@ class SignalSession {
     _prefix = prefix;
     _restored = await _loadRestored();
     _asks = await _loadAsks();
-    if (restored) await markRestored();
+    _restoredFrom = await _loadFrom();
+    if (restored) await markRestored(from: restoredFrom);
 
     identityStore = HaloIdentityKeyStore(
       database,
@@ -306,19 +321,20 @@ class SignalSession {
     }
     await _db.delete(
       '${_prefix}signal_meta',
-      where: 'k IN (?, ?)',
-      whereArgs: [_kRestored, _kRestoredAsks],
+      where: 'k IN (?, ?, ?)',
+      whereArgs: [_kRestored, _kRestoredAsks, _kRestoredFrom],
     );
     _restored = const {};
     _asks = {};
+    _restoredFrom = null;
     dlog('signal: every restored session started afresh');
     return true;
   }
 
   /// every session held now came back with a restore: written down with
   /// the sessions, so it holds across starts. an earlier restore's list
-  /// goes, its sessions are in this one's
-  Future<void> markRestored() async {
+  /// goes, its sessions are in this one's. [from] is when the file was made
+  Future<void> markRestored({int? from}) async {
     final keys = <String>{};
     for (final r in await _db.query(
       '${_prefix}sessions',
@@ -340,11 +356,18 @@ class SignalSession {
     }, conflictAlgorithm: ConflictAlgorithm.replace);
     await _db.delete(
       '${_prefix}signal_meta',
-      where: 'k = ?',
-      whereArgs: [_kRestoredAsks],
+      where: 'k IN (?, ?)',
+      whereArgs: [_kRestoredAsks, _kRestoredFrom],
     );
+    if (from != null) {
+      await _db.insert('${_prefix}signal_meta', {
+        'k': _kRestoredFrom,
+        'v': '$from',
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+    }
     _restored = keys;
     _asks = {};
+    _restoredFrom = from;
     dlog('signal: ${keys.length} sessions came back with a restore');
   }
 
@@ -361,6 +384,16 @@ class SignalSession {
     } catch (_) {
       return const {};
     }
+  }
+
+  Future<int?> _loadFrom() async {
+    final rows = await _db.query(
+      '${_prefix}signal_meta',
+      where: 'k = ?',
+      whereArgs: [_kRestoredFrom],
+      limit: 1,
+    );
+    return rows.isEmpty ? null : int.tryParse('${rows.first['v']}');
   }
 
   Future<Map<String, List<int>>> _loadAsks() async {
@@ -450,6 +483,7 @@ PreKeyBundle preKeyBundleOf(String bundleB64) {
 
 const _kRestored = 'restored_sessions';
 const _kRestoredAsks = 'restored_asks';
+const _kRestoredFrom = 'restored_from';
 
 // what names a session on both sides of it: the base key its opener made
 String _baseOf(SessionState s) => base64Encode(s.aliceBaseKey);
@@ -457,6 +491,9 @@ String _baseOf(SessionState s) => base64Encode(s.aliceBaseKey);
 /// the pref a restore leaves for the next start, which then marks the
 /// sessions it brought back as the store opens (bootstrap, restored)
 const kSessionsRestoredPref = 'signal.restored';
+
+/// and when the backup was made, which an ask to start afresh carries
+const kRestoredFromPref = 'signal.restored_from';
 
 // someone verified under one key who holds another now: nothing is sealed
 // for them until the new number is checked or the new key accepted

@@ -28,6 +28,7 @@ import 'package:kryfo/main.dart'
         makePreKeyBundleB64,
         openSignalStore,
         processPeerBundle,
+        resendFrom,
         session,
         signalDecrypt,
         signalEncrypt,
@@ -317,6 +318,7 @@ void main() {
     bool want = false,
     String? bundle,
     int n = 0,
+    int? since,
   }) async {
     await app.receiveRelay([
       (
@@ -327,6 +329,7 @@ void main() {
           'bundle': bundle ?? p.card,
           'want': want,
           'n': n,
+          'since': ?since,
         }),
       ),
     ]);
@@ -580,16 +583,25 @@ void main() {
     expect(await ss.sealsOnRestored(p.name), isFalse);
 
     // the restore's pref: this start marks, and the pref goes
-    SharedPreferences.setMockInitialValues({kSessionsRestoredPref: true});
+    SharedPreferences.setMockInitialValues({
+      kSessionsRestoredPref: true,
+      kRestoredFromPref: 1234,
+    });
     ss = await start();
     expect(await ss.sealsOnRestored(p.name), isTrue);
+    expect(ss.restoredFrom, 1234);
     expect(
       (await SharedPreferences.getInstance()).getBool(kSessionsRestoredPref),
       isNull,
     );
-    // and the next start still knows them
+    expect(
+      (await SharedPreferences.getInstance()).getInt(kRestoredFromPref),
+      isNull,
+    );
+    // and the next start still knows them, and when the file was made
     ss = await start();
     expect(await ss.sealsOnRestored(p.name), isTrue);
+    expect(ss.restoredFrom, 1234);
     await expectLater(
       ss.encryptTo(p.name, 'no card'),
       throwsA(isA<StartingAfresh>()),
@@ -697,6 +709,50 @@ void main() {
     expect(unwrapMessage(at.whereType<String>().last).message, 'waits');
   });
 
+  test('a restored phone\'s ask says when its backup was made', () async {
+    final p = await _peer();
+    await contact(p);
+    await talk(p);
+    final file = backUp(p);
+    expect(await _atMe(p, await _fromPeer(p, 'after')), 'after');
+    await restore(p, file);
+    await signalSession.markRestored(from: 4242);
+    await app.askAfreshForTest();
+    final ask = jsonDecode(io.sent.last.$2) as Map;
+    expect(ask['want'], isTrue);
+    expect(ask['since'], 4242);
+  });
+
+  test('an ask with its backup\'s date puts out again what never came back '
+      'delivered since then, a month at most', () async {
+    final p = await _peer();
+    await contact(p);
+    await talk(p);
+    const day = 24 * 3600 * 1000;
+    await outTo(p, 'ten days', ago: 10 * day);
+    await outTo(p, 'forty days', ago: 40 * day);
+    await outTo(p, 'an hour', ago: 3600 * 1000);
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await card(p, want: true, since: now - 50 * day);
+    expect(row('an hour')?['sent'], 0);
+    expect(row('ten days')?['sent'], 0);
+    expect(row('forty days')?['sent'], 1);
+  });
+
+  test('where a resend starts: the window, or a backup further back, a month '
+      'at most', () {
+    const day = Duration(days: 1);
+    const now = 100 * 24 * 3600 * 1000;
+    int from(int? since) =>
+        resendFrom(now, since, window: day * 7, most: day * 30);
+    expect(from(null), now - 7 * day.inMilliseconds);
+    // a backup from yesterday: never less than the window
+    expect(from(now - day.inMilliseconds), now - 7 * day.inMilliseconds);
+    expect(from(now - 12 * day.inMilliseconds), now - 12 * day.inMilliseconds);
+    expect(from(0), now - 30 * day.inMilliseconds);
+    expect(from(now * 2), now - 7 * day.inMilliseconds);
+  });
+
   test('asked again within two minutes, nothing goes again', () async {
     final p = await _peer();
     await contact(p);
@@ -771,6 +827,40 @@ void main() {
       'accepted': 1,
     });
     await outTo(p, 'lost', into: vmem);
+    useDatabasesForTest(rows, await Session.withVault(rows, vault));
+    await app.drainSealed(vault, 'priv-A');
+    expect(vmem.rows('messages').single['sent'], 0);
+    expect(vaultList.inbox, isEmpty);
+  });
+
+  test('a hidden chat asked with a backup\'s date while its vault is shut '
+      'gets what never reached them since then as the vault opens', () async {
+    final p = await _peer();
+    await processPeerBundle(p.name, p.card);
+    await vaultList.putMeta('pub', 'pub-A');
+    await vaultList.putHidden(
+      p.name,
+      kHiddenPeer,
+      peerCard(RouterCard(p.name, '', p.xpub, backPaired: true)),
+      1,
+    );
+    await router.load();
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await card(p, want: true, since: now - 20 * 24 * 3600 * 1000);
+
+    // the vault opens: their chat and our text in it
+    final vmem = MemDb();
+    final vault = _Rows(vmem, HaloContainer.vault);
+    await vmem.insert('contacts', {
+      'halo_id': p.name,
+      'onion': '',
+      'xpub': p.xpub,
+      'first_seen': 1,
+      'last_seen': 1,
+      'back_paired': 1,
+      'accepted': 1,
+    });
+    await outTo(p, 'lost', into: vmem, ago: 12 * 24 * 3600 * 1000);
     useDatabasesForTest(rows, await Session.withVault(rows, vault));
     await app.drainSealed(vault, 'priv-A');
     expect(vmem.rows('messages').single['sent'], 0);

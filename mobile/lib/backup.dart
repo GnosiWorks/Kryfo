@@ -32,7 +32,7 @@ import 'main.dart'
         engine,
         shredFile;
 import 'router.dart' show scrubHidden;
-import 'signal_session.dart' show kSessionsRestoredPref;
+import 'signal_session.dart' show kRestoredFromPref, kSessionsRestoredPref;
 import 'devchat/dev_chat.dart' show scrubDevAnon;
 import 'dlog.dart';
 import 'read_burn.dart' show burnStartBy;
@@ -318,7 +318,7 @@ Future<void> landV1Payload(
     // a v1 file carries no catch-up: the relays are read again whole
     await _holdRelays();
     await landCatchUpAnchors(docsDir.path, null);
-    await _livesHereNow();
+    await _livesHereNow(payload['ts']);
 
     // a v1 backup carries none of these; what is here is the old identity's
     await _applyIdentitySecure(payload['secure']);
@@ -335,11 +335,17 @@ Future<void> landV1Payload(
 
 // this device is where the identity lives now, whatever it was before. the
 // file's signal sessions are older than the far side's view of them: the
-// next start marks them, and none is sealed on again
-Future<void> _livesHereNow() async {
+// next start marks them, with when the file was made ([made]), and none is
+// sealed on again
+Future<void> _livesHereNow(Object? made) async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.remove('moved.at');
   await prefs.setBool(kSessionsRestoredPref, true);
+  if (made is int && made > 0) {
+    await prefs.setInt(kRestoredFromPref, made);
+  } else {
+    await prefs.remove(kRestoredFromPref);
+  }
 }
 
 // what the shade holds came for the account just replaced. a decoy's
@@ -1712,7 +1718,7 @@ Future<void> restoreBackupFile(
       HaloContainer.everyday,
       phone: true,
     );
-    await _livesHereNow();
+    await _livesHereNow(manifest['ts']);
     await _applyIdentitySecure(manifest['secure']);
     if (onboardingAfterRestore(manifest['onboardingDone']) case final done?) {
       await secureStore.write(key: 'onboarding_done', value: done);
