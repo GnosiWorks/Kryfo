@@ -12,6 +12,7 @@ import 'dart:io';
 import 'package:android_file_picker/android_file_picker.dart';
 import 'package:file_picker/file_picker.dart' show FilePickerPlatform;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -219,6 +220,16 @@ void main() {
       );
       final go = find.text(l10n.restoreMoveItHere);
       expect(go, findsOneWidget);
+      // each step's number whole in its box
+      expect(find.textContaining(RegExp(r'^0\d$')), findsWidgets);
+      for (final e in find.textContaining(RegExp(r'^0\d$')).evaluate()) {
+        final p = e.renderObject! as RenderParagraph;
+        expect(
+          p.getMaxIntrinsicWidth(double.infinity),
+          lessThanOrEqualTo(p.size.width + 0.5),
+        );
+        expect(p.didExceedMaxLines, isFalse);
+      }
       final screen = t.view.physicalSize / t.view.devicePixelRatio;
       bool shown() => t.getRect(go).bottom <= screen.height;
       for (var i = 0; i < 12 && !shown(); i++) {

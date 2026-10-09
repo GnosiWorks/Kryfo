@@ -254,7 +254,8 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool? _hidePreview;
+  // known already when anything read it before: the row never grows a line
+  late bool? _hidePreview = hideNotifContentKnown(session.container);
   Future<void> _confirmWipe() async {
     // step 1: explain what's about to happen
     final go = await showConfirmSheet(

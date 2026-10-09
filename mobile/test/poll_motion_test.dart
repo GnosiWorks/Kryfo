@@ -9,6 +9,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/polls.dart';
 import 'package:kryfo/widgets/new_poll_sheet.dart';
 import 'package:kryfo/widgets/kryfo_avatar.dart';
+import 'package:kryfo/widgets/press_scale.dart';
+import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/widgets/poll_card.dart';
 
 Widget host(
@@ -246,6 +248,35 @@ void main() {
           a.seed: a.choice,
       };
       expect(faces, {'me': 4, 'a': 9, 'b': null});
+    });
+
+    testWidgets('taking a vote back takes a finger: 44 high at least', (
+      t,
+    ) async {
+      quiet(t);
+      const spec = PollSpec(options: ['Ramen', 'Tacos']);
+      await t.pumpWidget(
+        host(
+          PollCard(
+            question: 'Dinner?',
+            poll: spec,
+            votes: {
+              'me': const PollVote([0], 1),
+            },
+            me: 'me',
+            mine: false,
+            isOut: false,
+            onVote: (_) {},
+            nameOf: (id) => id,
+          ),
+        ),
+      );
+      await settles(t);
+      final hit = find.ancestor(
+        of: find.text(l10n.pollTakeBack),
+        matching: find.byType(PressScale),
+      );
+      expect(t.getSize(hit.first).height, greaterThanOrEqualTo(44));
     });
   });
 }

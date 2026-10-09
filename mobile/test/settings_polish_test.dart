@@ -18,7 +18,8 @@ import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/main.dart'
     show HaloDb, HaloEngine, appState, useDatabasesForTest, useEngineForTest;
-import 'package:kryfo/notifications.dart' show setHideNotifContent;
+import 'package:kryfo/notifications.dart'
+    show loadHideNotifContent, setHideNotifContent;
 import 'package:kryfo/screens/backup_screen.dart' show backupFailLine;
 import 'package:kryfo/screens/bridges_screen.dart';
 import 'package:kryfo/screens/handle_screen.dart';
@@ -334,6 +335,31 @@ void main() {
       expect(find.text(l10n.settingsPreviewShown(mode)), findsOneWidget);
       // what setting a PIN writes, from the App lock screen
       await setHideNotifContent(true);
+      await t.pump(const Duration(seconds: 1));
+      expect(find.text(l10n.settingsPreviewHidden(mode)), findsOneWidget);
+      await devClose(t);
+    });
+  });
+
+  group('getting messages row, once read', () {
+    testWidgets('read before, the row is whole from the first frame', (
+      t,
+    ) async {
+      SharedPreferences.setMockInitialValues({
+        'battery_opt_prompt_seen': true,
+        'miui_autostart_prompt_seen': true,
+        HaloContainer.everyday.key('notif_hide_content'): true,
+      });
+      await devWorld();
+      // as the boot reads it
+      expect(await loadHideNotifContent(), isTrue);
+      t.view.physicalSize = const Size(1000, 6000);
+      t.view.devicePixelRatio = 2;
+      addTearDown(t.view.reset);
+      await t.pumpWidget(devApp(const SettingsScreen()));
+      final mode = deliveryModeName(appState.deliveryMode);
+      // the very first frame, before any read comes back
+      expect(find.text(l10n.settingsPreviewHidden(mode)), findsOneWidget);
       await t.pump(const Duration(seconds: 1));
       expect(find.text(l10n.settingsPreviewHidden(mode)), findsOneWidget);
       await devClose(t);

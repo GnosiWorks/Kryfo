@@ -20,6 +20,7 @@ import 'package:kryfo/session.dart';
 import 'package:kryfo/theme.dart';
 import 'package:kryfo/widgets/breathing_ring.dart';
 import 'package:kryfo/widgets/burn_fade.dart' show FadeFold;
+import 'package:kryfo/widgets/press_scale.dart';
 import 'package:kryfo/widgets/row_motion.dart' show GrowIn;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -233,6 +234,25 @@ void main() {
       expect(find.text(l10n.requestsNoRequests), findsOneWidget);
       await rest(t);
       expect(t.hasRunningAnimations, isFalse, reason: 'the ring rests');
+      await drain(t);
+    });
+
+    testWidgets('each answer takes a finger: 44 high at least', (t) async {
+      phone(t);
+      db.requests = [_person('amber-fox-river')];
+      await t.pumpWidget(framed(const RequestsScreen()));
+      await t.pump(const Duration(seconds: 1));
+      for (final label in [
+        l10n.commonAccept,
+        l10n.requestsDecline,
+        l10n.commonBlock,
+      ]) {
+        final hit = find.ancestor(
+          of: find.text(label),
+          matching: find.byType(PressScale),
+        );
+        expect(t.getSize(hit.first).height, greaterThanOrEqualTo(44));
+      }
       await drain(t);
     });
 

@@ -185,8 +185,16 @@ Future<bool> loadHideNotifContent([
   HaloContainer c = HaloContainer.everyday,
 ]) async {
   final prefs = await SharedPreferences.getInstance();
-  return prefs.getBool(c.key(_hideContentKey)) ?? true;
+  final v = prefs.getBool(c.key(_hideContentKey)) ?? true;
+  _hideKnown[c.key(_hideContentKey)] = v;
+  return v;
 }
+
+// what the last read or write of the setting found, by container: a screen
+// shows it at once instead of growing a line once it is read
+final Map<String, bool> _hideKnown = {};
+bool? hideNotifContentKnown([HaloContainer c = HaloContainer.everyday]) =>
+    _hideKnown[c.key(_hideContentKey)];
 
 // moves on every write, so a screen that shows the setting reads it again
 // whoever changed it
@@ -198,6 +206,7 @@ Future<void> setHideNotifContent(
 ]) async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.setBool(c.key(_hideContentKey), v);
+  _hideKnown[c.key(_hideContentKey)] = v;
   hideNotifRevision.value++;
 }
 

@@ -425,15 +425,21 @@ class _Link extends StatelessWidget {
       onTap: onTap,
       haptic: false,
       label: text,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Text(
-          text,
-          semanticsLabel: '',
-          style: HaloType.sans(
-            size: 12,
-            weight: strong ? FontWeight.w600 : FontWeight.w400,
-            color: strong ? HaloColors.amber : HaloColors.text2,
+      // drawn small, taken at a finger's size
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 44, minWidth: 44),
+        child: Align(
+          alignment: AlignmentDirectional.centerStart,
+          widthFactor: 1,
+          heightFactor: 1,
+          child: Text(
+            text,
+            semanticsLabel: '',
+            style: HaloType.sans(
+              size: 12,
+              weight: strong ? FontWeight.w600 : FontWeight.w400,
+              color: strong ? HaloColors.amber : HaloColors.text2,
+            ),
           ),
         ),
       ),
