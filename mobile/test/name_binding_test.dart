@@ -666,6 +666,42 @@ void main() {
         false,
       ));
       expect(live.people.containsKey(shut), isFalse);
+      // their own card too: no everyday row, and their session stays
+      final before = await signalSession.sessionStore.loadSession(
+        SignalProtocolAddress(shut, 1),
+      );
+      final own = await card(shut, held);
+      expect(await linkKinOf(own, hidden: app.hiddenWhileShut), (
+        LinkKin.stranger,
+        shut,
+      ));
+      expect(await handleHaloUriAdded(own, hidden: app.hiddenWhileShut), (
+        l10n.appInvalidUri,
+        false,
+      ));
+      expect(live.people.containsKey(shut), isFalse);
+      expect(
+        (await signalSession.sessionStore.loadSession(
+          SignalProtocolAddress(shut, 1),
+        )).serialize(),
+        before.serialize(),
+      );
+      // a decoy holding them asks about them as about any of its own
+      final decoy = ArrivalRows(HaloContainer.decoy);
+      decoy.person(shut, onion: 'o-s', xpub: held.xPub);
+      decoy.person('decoy-only-friend', onion: 'o-d', xpub: held.xPub);
+      useDatabasesForTest(live, Session(decoy));
+      for (final id in [shut, 'decoy-only-friend']) {
+        expect(
+          await linkKinOf(
+            buildHaloUri(id, 'o', held.xPub),
+            hidden: app.hiddenWhileShut,
+          ),
+          (LinkKin.kept, id),
+          reason: id,
+        );
+      }
+      useDatabasesForTest(live, Session(live));
       // someone here on another key is still said to be
       expect(
         await handleHaloUriAdded(

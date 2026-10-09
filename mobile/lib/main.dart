@@ -6638,6 +6638,9 @@ Future<(String, bool)> handleHaloUriAdded(
   // @wren or the handle page link: ask the registry for the invite behind it
   // and carry on as if that had been pasted
   final h = handleFromInput(raw);
+  // a handle's card is the registry's, and a real one: one that will not
+  // take says so as a lookup that failed, which any lookup can
+  final viaHandle = h != null;
   if (h != null) {
     // a quiet session never reaches the registry
     if (sessionQuiet) return (l10n.handleRegistryFailed, false);
@@ -6713,17 +6716,26 @@ Future<(String, bool)> handleHaloUriAdded(
       ? _bundleIdentity(parsed['bundle']!)
       : _xIdentity(parsed['xpub']!.toLowerCase());
   if (cardKey == null) return (l10n.appInvalidUri, false);
+  // the signal store holds a shut vault's people too: a link of one of
+  // theirs reads as any link that does not take, on their key or another.
+  // an add would put an everyday row beside the hidden one and a fresh
+  // session over theirs. a vault closing hands its people over first. a
+  // decoy only keeps rows of its own
+  if (!sessionQuiet) {
+    await appState._afterClose();
+    if ((hidden ?? appState.hiddenWhileShut)(parsed['id']!)) {
+      return (
+        viaHandle ? l10n.handleRegistryFailed : l10n.appInvalidUri,
+        false,
+      );
+    }
+  }
   final bound = await _boundIdentity(
     parsed['id']!,
     ss: sessionQuiet ? null : signalSession,
     row: session.getContact,
   );
   if (bound != null && !_eqBytes(bound, cardKey)) {
-    // the signal store holds a shut vault's people too: one of theirs on
-    // another key reads as any link that does not take
-    if ((hidden ?? appState.hiddenWhileShut)(parsed['id']!)) {
-      return (l10n.appInvalidUri, false);
-    }
     return (l10n.appLinkOtherKey(parsed['id']!), false);
   }
   // someone blocked stays blocked: an add would say they can be written to
@@ -7044,9 +7056,13 @@ Future<(LinkKin, String)> linkKinOf(
   final id = parsed['id']!;
   try {
     // someone a shut vault holds is asked about as anyone else: the signal
-    // store, which knows their key, is the vault's as well
-    if ((hidden ?? appState.hiddenWhileShut)(id)) {
-      return (LinkKin.stranger, id);
+    // store, which knows their key, is the vault's as well. a decoy asks
+    // about its own rows alone
+    if (!sessionQuiet) {
+      await appState._afterClose();
+      if ((hidden ?? appState.hiddenWhileShut)(id)) {
+        return (LinkKin.stranger, id);
+      }
     }
     return await _linkKin(parsed, id);
   } catch (e) {
