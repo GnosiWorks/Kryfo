@@ -4493,21 +4493,21 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get qrYourLinkAsTyped =>
-      'ПОСИЛАННЯ ЯК Є · ЖОДНИХ ПЕРЕНАПРАВЛЕНЬ ДЛЯ СТЕЖЕННЯ';
+      'Посилання як є · жодних перенаправлень для стеження';
 
   @override
   String get qrText => 'Текст';
 
   @override
   String get qrStaysInTheCode =>
-      'ЛИШАЄТЬСЯ В КОДІ · ЖОДЕН СЕРВЕР ЙОГО НЕ ЗБЕРІГАЄ';
+      'Лишається в коді · жоден сервер його не зберігає';
 
   @override
   String get qrWiFi => 'Wi-Fi';
 
   @override
   String get qrMadeOnThisPhone =>
-      'СТВОРЕНО НА ЦЬОМУ ТЕЛЕФОНІ · ЖОДЕН САЙТ НЕ БАЧИВ ПАРОЛЯ';
+      'Створено на цьому телефоні · жоден сайт не бачив пароля';
 
   @override
   String get qrNetworkName => 'Назва мережі';
@@ -4520,7 +4520,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get qrOnlyWhatYouType =>
-      'ЛИШЕ ТЕ, ЩО ТИ ВВЕДЕШ · НІЧОГО З ТВОЇХ КОНТАКТІВ';
+      'Лише те, що ти введеш · нічого з твоїх контактів';
 
   @override
   String get qrName => 'Ім’я';
@@ -4533,7 +4533,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get qrOpensTheirMailApp =>
-      'ВІДКРИВАЄ ПОШТУ ТОГО, ХТО СКАНУЄ · ЗВІДСИ НІЧОГО НЕ НАДСИЛАЄТЬСЯ';
+      'Відкриває пошту того, хто сканує · звідси нічого не надсилається';
 
   @override
   String get qrTo => 'Кому';
@@ -4542,7 +4542,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get qrSubject => 'Тема';
 
   @override
-  String get qrANumberNothingElse => 'НОМЕР · БІЛЬШЕ НІЧОГО';
+  String get qrANumberNothingElse => 'Номер · більше нічого';
 
   @override
   String get qrNumber => 'Номер';
@@ -4552,7 +4552,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get qrOpensTheirMessagesApp =>
-      'ВІДКРИВАЄ ПОВІДОМЛЕННЯ ТОГО, ХТО СКАНУЄ · ЗВІДСИ НІЧОГО НЕ НАДСИЛАЄТЬСЯ';
+      'Відкриває повідомлення того, хто сканує · звідси нічого не надсилається';
 
   @override
   String get qrMessage => 'Повідомлення';
@@ -4562,7 +4562,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get qrCoordinatesOnlyNoMap =>
-      'ЛИШЕ КООРДИНАТИ · БЕЗ ЗАПИТІВ ДО СЕРВІСІВ МАП';
+      'Лише координати · без запитів до сервісів мап';
 
   @override
   String get qrLatitude => 'Широта';
@@ -4575,7 +4575,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get qrAddressAndAmountNo =>
-      'АДРЕСА Й СУМА · БЕЗ ПЛАТІЖНИХ САЙТІВ ПОСЕРЕДИНІ';
+      'Адреса й сума · без платіжних сайтів посередині';
 
   @override
   String get qrAddress => 'Адреса';
@@ -6378,7 +6378,7 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get kryfoLinkTextBurnerRoom => 'ОДНОРАЗОВА КІМНАТА';
+  String get kryfoLinkTextBurnerRoom => 'Одноразова кімната';
 
   @override
   String get kryfoLinkTextThisRoomHasClosed => 'Цю кімнату закрито';

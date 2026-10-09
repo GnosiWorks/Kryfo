@@ -7062,7 +7062,7 @@ abstract class AppLocalizations {
   /// screens/qr_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'YOUR LINK AS TYPED · NO TRACKING REDIRECT'**
+  /// **'Your link as typed · no tracking redirect'**
   String get qrYourLinkAsTyped;
 
   /// screens/qr_screen.dart
@@ -7074,7 +7074,7 @@ abstract class AppLocalizations {
   /// screens/qr_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'STAYS IN THE CODE · NO SERVER HOLDS IT'**
+  /// **'Stays in the code · no server holds it'**
   String get qrStaysInTheCode;
 
   /// screens/qr_screen.dart
@@ -7086,7 +7086,7 @@ abstract class AppLocalizations {
   /// screens/qr_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'MADE ON THIS PHONE · NO WEBSITE SAW THE PASSWORD'**
+  /// **'Made on this phone · no website saw the password'**
   String get qrMadeOnThisPhone;
 
   /// screens/qr_screen.dart
@@ -7110,7 +7110,7 @@ abstract class AppLocalizations {
   /// screens/qr_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'ONLY WHAT YOU TYPE · NOTHING FROM YOUR CONTACTS'**
+  /// **'Only what you type · nothing from your contacts'**
   String get qrOnlyWhatYouType;
 
   /// screens/qr_screen.dart
@@ -7134,7 +7134,7 @@ abstract class AppLocalizations {
   /// screens/qr_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'OPENS THEIR MAIL APP · NOTHING SENT FROM HERE'**
+  /// **'Opens their mail app · nothing sent from here'**
   String get qrOpensTheirMailApp;
 
   /// screens/qr_screen.dart
@@ -7152,7 +7152,7 @@ abstract class AppLocalizations {
   /// screens/qr_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'A NUMBER · NOTHING ELSE'**
+  /// **'A number · nothing else'**
   String get qrANumberNothingElse;
 
   /// screens/qr_screen.dart
@@ -7170,7 +7170,7 @@ abstract class AppLocalizations {
   /// screens/qr_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'OPENS THEIR MESSAGES APP · NOTHING SENT FROM HERE'**
+  /// **'Opens their messages app · nothing sent from here'**
   String get qrOpensTheirMessagesApp;
 
   /// screens/qr_screen.dart
@@ -7188,7 +7188,7 @@ abstract class AppLocalizations {
   /// screens/qr_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'COORDINATES ONLY · NO MAP SERVICE ASKED'**
+  /// **'Coordinates only · no map service asked'**
   String get qrCoordinatesOnlyNoMap;
 
   /// screens/qr_screen.dart
@@ -7212,7 +7212,7 @@ abstract class AppLocalizations {
   /// screens/qr_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'ADDRESS AND AMOUNT · NO PAYMENT SITE IN BETWEEN'**
+  /// **'Address and amount · no payment site in between'**
   String get qrAddressAndAmountNo;
 
   /// screens/qr_screen.dart
@@ -9984,7 +9984,7 @@ abstract class AppLocalizations {
   /// widgets/kryfo_link_text.dart
   ///
   /// In en, this message translates to:
-  /// **'BURNER ROOM'**
+  /// **'Burner room'**
   String get kryfoLinkTextBurnerRoom;
 
   /// widgets/kryfo_link_text.dart

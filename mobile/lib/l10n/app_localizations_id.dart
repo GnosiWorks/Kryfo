@@ -4406,21 +4406,21 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get qrYourLinkAsTyped =>
-      'TAUTANMU APA ADANYA · TANPA PENGALIHAN PELACAK';
+      'Tautanmu apa adanya · tanpa pengalihan pelacak';
 
   @override
   String get qrText => 'Teks';
 
   @override
   String get qrStaysInTheCode =>
-      'TETAP DI DALAM KODE · TIDAK ADA SERVER YANG MENYIMPANNYA';
+      'Tetap di dalam kode · tidak ada server yang menyimpannya';
 
   @override
   String get qrWiFi => 'Wi-Fi';
 
   @override
   String get qrMadeOnThisPhone =>
-      'DIBUAT DI PONSEL INI · TIDAK ADA SITUS YANG MELIHAT KATA SANDINYA';
+      'Dibuat di ponsel ini · tidak ada situs yang melihat kata sandinya';
 
   @override
   String get qrNetworkName => 'Nama jaringan';
@@ -4433,7 +4433,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get qrOnlyWhatYouType =>
-      'HANYA YANG KAMU KETIK · TIDAK ADA DARI KONTAKMU';
+      'Hanya yang kamu ketik · tidak ada dari kontakmu';
 
   @override
   String get qrName => 'Nama';
@@ -4446,7 +4446,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get qrOpensTheirMailApp =>
-      'MEMBUKA APLIKASI EMAIL-NYA · TIDAK ADA YANG DIKIRIM DARI SINI';
+      'Membuka aplikasi email-nya · tidak ada yang dikirim dari sini';
 
   @override
   String get qrTo => 'Kepada';
@@ -4455,7 +4455,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get qrSubject => 'Subjek';
 
   @override
-  String get qrANumberNothingElse => 'SEBUAH NOMOR · TIDAK LEBIH';
+  String get qrANumberNothingElse => 'Sebuah nomor · tidak lebih';
 
   @override
   String get qrNumber => 'Nomor';
@@ -4465,7 +4465,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get qrOpensTheirMessagesApp =>
-      'MEMBUKA APLIKASI PESANNYA · TIDAK ADA YANG DIKIRIM DARI SINI';
+      'Membuka aplikasi pesannya · tidak ada yang dikirim dari sini';
 
   @override
   String get qrMessage => 'Pesan';
@@ -4475,7 +4475,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get qrCoordinatesOnlyNoMap =>
-      'HANYA KOORDINAT · TANPA BERTANYA KE LAYANAN PETA';
+      'Hanya koordinat · tanpa bertanya ke layanan peta';
 
   @override
   String get qrLatitude => 'Lintang';
@@ -4488,7 +4488,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get qrAddressAndAmountNo =>
-      'ALAMAT DAN JUMLAH · TANPA SITUS PEMBAYARAN DI TENGAH';
+      'Alamat dan jumlah · tanpa situs pembayaran di tengah';
 
   @override
   String get qrAddress => 'Alamat';
@@ -6259,7 +6259,7 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get kryfoLinkTextBurnerRoom => 'RUANG SEKALI PAKAI';
+  String get kryfoLinkTextBurnerRoom => 'Ruang sekali pakai';
 
   @override
   String get kryfoLinkTextThisRoomHasClosed => 'Ruang ini sudah ditutup';

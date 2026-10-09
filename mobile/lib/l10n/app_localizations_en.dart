@@ -4403,20 +4403,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get qrLink => 'Link';
 
   @override
-  String get qrYourLinkAsTyped => 'YOUR LINK AS TYPED · NO TRACKING REDIRECT';
+  String get qrYourLinkAsTyped => 'Your link as typed · no tracking redirect';
 
   @override
   String get qrText => 'Text';
 
   @override
-  String get qrStaysInTheCode => 'STAYS IN THE CODE · NO SERVER HOLDS IT';
+  String get qrStaysInTheCode => 'Stays in the code · no server holds it';
 
   @override
   String get qrWiFi => 'Wi-Fi';
 
   @override
   String get qrMadeOnThisPhone =>
-      'MADE ON THIS PHONE · NO WEBSITE SAW THE PASSWORD';
+      'Made on this phone · no website saw the password';
 
   @override
   String get qrNetworkName => 'Network name';
@@ -4429,7 +4429,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get qrOnlyWhatYouType =>
-      'ONLY WHAT YOU TYPE · NOTHING FROM YOUR CONTACTS';
+      'Only what you type · nothing from your contacts';
 
   @override
   String get qrName => 'Name';
@@ -4442,7 +4442,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get qrOpensTheirMailApp =>
-      'OPENS THEIR MAIL APP · NOTHING SENT FROM HERE';
+      'Opens their mail app · nothing sent from here';
 
   @override
   String get qrTo => 'To';
@@ -4451,7 +4451,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get qrSubject => 'Subject';
 
   @override
-  String get qrANumberNothingElse => 'A NUMBER · NOTHING ELSE';
+  String get qrANumberNothingElse => 'A number · nothing else';
 
   @override
   String get qrNumber => 'Number';
@@ -4461,7 +4461,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get qrOpensTheirMessagesApp =>
-      'OPENS THEIR MESSAGES APP · NOTHING SENT FROM HERE';
+      'Opens their messages app · nothing sent from here';
 
   @override
   String get qrMessage => 'Message';
@@ -4471,7 +4471,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get qrCoordinatesOnlyNoMap =>
-      'COORDINATES ONLY · NO MAP SERVICE ASKED';
+      'Coordinates only · no map service asked';
 
   @override
   String get qrLatitude => 'Latitude';
@@ -4484,7 +4484,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get qrAddressAndAmountNo =>
-      'ADDRESS AND AMOUNT · NO PAYMENT SITE IN BETWEEN';
+      'Address and amount · no payment site in between';
 
   @override
   String get qrAddress => 'Address';
@@ -6256,7 +6256,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get kryfoLinkTextBurnerRoom => 'BURNER ROOM';
+  String get kryfoLinkTextBurnerRoom => 'Burner room';
 
   @override
   String get kryfoLinkTextThisRoomHasClosed => 'This room has closed';

@@ -4441,20 +4441,20 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get qrYourLinkAsTyped =>
-      'SEU LINK COMO FOI DIGITADO · SEM REDIRECIONAMENTO DE RASTREIO';
+      'Seu link como foi digitado · sem redirecionamento de rastreio';
 
   @override
   String get qrText => 'Texto';
 
   @override
-  String get qrStaysInTheCode => 'FICA NO CÓDIGO · NENHUM SERVIDOR GUARDA';
+  String get qrStaysInTheCode => 'Fica no código · nenhum servidor guarda';
 
   @override
   String get qrWiFi => 'Wi-Fi';
 
   @override
   String get qrMadeOnThisPhone =>
-      'FEITO NESTE CELULAR · NENHUM SITE VIU A SENHA';
+      'Feito neste celular · nenhum site viu a senha';
 
   @override
   String get qrNetworkName => 'Nome da rede';
@@ -4467,7 +4467,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get qrOnlyWhatYouType =>
-      'SÓ O QUE VOCÊ DIGITAR · NADA DOS SEUS CONTATOS';
+      'Só o que você digitar · nada dos seus contatos';
 
   @override
   String get qrName => 'Nome';
@@ -4480,7 +4480,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get qrOpensTheirMailApp =>
-      'ABRE O APP DE E-MAIL DA PESSOA · NADA É ENVIADO DAQUI';
+      'Abre o app de e-mail da pessoa · nada é enviado daqui';
 
   @override
   String get qrTo => 'Para';
@@ -4489,7 +4489,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get qrSubject => 'Assunto';
 
   @override
-  String get qrANumberNothingElse => 'UM NÚMERO · MAIS NADA';
+  String get qrANumberNothingElse => 'Um número · mais nada';
 
   @override
   String get qrNumber => 'Número';
@@ -4499,7 +4499,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get qrOpensTheirMessagesApp =>
-      'ABRE O APP DE MENSAGENS DA PESSOA · NADA É ENVIADO DAQUI';
+      'Abre o app de mensagens da pessoa · nada é enviado daqui';
 
   @override
   String get qrMessage => 'Mensagem';
@@ -4509,7 +4509,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get qrCoordinatesOnlyNoMap =>
-      'SÓ COORDENADAS · NENHUM SERVIÇO DE MAPA CONSULTADO';
+      'Só coordenadas · nenhum serviço de mapa consultado';
 
   @override
   String get qrLatitude => 'Latitude';
@@ -4522,7 +4522,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get qrAddressAndAmountNo =>
-      'ENDEREÇO E VALOR · NENHUM SITE DE PAGAMENTO NO MEIO';
+      'Endereço e valor · nenhum site de pagamento no meio';
 
   @override
   String get qrAddress => 'Endereço';
@@ -6308,7 +6308,7 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get kryfoLinkTextBurnerRoom => 'SALA TEMPORÁRIA';
+  String get kryfoLinkTextBurnerRoom => 'Sala temporária';
 
   @override
   String get kryfoLinkTextThisRoomHasClosed => 'Esta sala foi fechada';

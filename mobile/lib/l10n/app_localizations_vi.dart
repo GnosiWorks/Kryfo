@@ -4401,20 +4401,20 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get qrYourLinkAsTyped =>
-      'ĐÚNG LIÊN KẾT BẠN NHẬP · KHÔNG CHUYỂN HƯỚNG THEO DÕI';
+      'Đúng liên kết bạn nhập · không chuyển hướng theo dõi';
 
   @override
   String get qrText => 'Văn bản';
 
   @override
-  String get qrStaysInTheCode => 'NẰM TRONG MÃ · KHÔNG MÁY CHỦ NÀO GIỮ NÓ';
+  String get qrStaysInTheCode => 'Nằm trong mã · không máy chủ nào giữ nó';
 
   @override
   String get qrWiFi => 'Wi-Fi';
 
   @override
   String get qrMadeOnThisPhone =>
-      'TẠO TRÊN ĐIỆN THOẠI NÀY · KHÔNG TRANG WEB NÀO THẤY MẬT KHẨU';
+      'Tạo trên điện thoại này · không trang web nào thấy mật khẩu';
 
   @override
   String get qrNetworkName => 'Tên mạng';
@@ -4427,7 +4427,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get qrOnlyWhatYouType =>
-      'CHỈ NHỮNG GÌ BẠN NHẬP · KHÔNG LẤY GÌ TỪ DANH BẠ';
+      'Chỉ những gì bạn nhập · không lấy gì từ danh bạ';
 
   @override
   String get qrName => 'Tên';
@@ -4440,7 +4440,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get qrOpensTheirMailApp =>
-      'MỞ ỨNG DỤNG THƯ CỦA HỌ · KHÔNG GỬI GÌ TỪ ĐÂY';
+      'Mở ứng dụng thư của họ · không gửi gì từ đây';
 
   @override
   String get qrTo => 'Đến';
@@ -4449,7 +4449,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get qrSubject => 'Tiêu đề';
 
   @override
-  String get qrANumberNothingElse => 'MỘT CON SỐ · KHÔNG GÌ KHÁC';
+  String get qrANumberNothingElse => 'Một con số · không gì khác';
 
   @override
   String get qrNumber => 'Số điện thoại';
@@ -4459,7 +4459,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get qrOpensTheirMessagesApp =>
-      'MỞ ỨNG DỤNG TIN NHẮN CỦA HỌ · KHÔNG GỬI GÌ TỪ ĐÂY';
+      'Mở ứng dụng tin nhắn của họ · không gửi gì từ đây';
 
   @override
   String get qrMessage => 'Tin nhắn';
@@ -4469,7 +4469,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get qrCoordinatesOnlyNoMap =>
-      'CHỈ TỌA ĐỘ · KHÔNG HỎI DỊCH VỤ BẢN ĐỒ NÀO';
+      'Chỉ tọa độ · không hỏi dịch vụ bản đồ nào';
 
   @override
   String get qrLatitude => 'Vĩ độ';
@@ -4482,7 +4482,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get qrAddressAndAmountNo =>
-      'ĐỊA CHỈ VÀ SỐ TIỀN · KHÔNG QUA TRANG THANH TOÁN NÀO';
+      'Địa chỉ và số tiền · không qua trang thanh toán nào';
 
   @override
   String get qrAddress => 'Địa chỉ';
@@ -6249,7 +6249,7 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get kryfoLinkTextBurnerRoom => 'PHÒNG TẠM';
+  String get kryfoLinkTextBurnerRoom => 'Phòng tạm';
 
   @override
   String get kryfoLinkTextThisRoomHasClosed => 'Phòng này đã đóng';

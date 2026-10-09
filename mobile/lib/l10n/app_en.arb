@@ -5521,7 +5521,7 @@
   "@qrLink": {
     "description": "screens/qr_screen.dart"
   },
-  "qrYourLinkAsTyped": "YOUR LINK AS TYPED · NO TRACKING REDIRECT",
+  "qrYourLinkAsTyped": "Your link as typed · no tracking redirect",
   "@qrYourLinkAsTyped": {
     "description": "screens/qr_screen.dart"
   },
@@ -5529,7 +5529,7 @@
   "@qrText": {
     "description": "screens/qr_screen.dart"
   },
-  "qrStaysInTheCode": "STAYS IN THE CODE · NO SERVER HOLDS IT",
+  "qrStaysInTheCode": "Stays in the code · no server holds it",
   "@qrStaysInTheCode": {
     "description": "screens/qr_screen.dart"
   },
@@ -5537,7 +5537,7 @@
   "@qrWiFi": {
     "description": "screens/qr_screen.dart"
   },
-  "qrMadeOnThisPhone": "MADE ON THIS PHONE · NO WEBSITE SAW THE PASSWORD",
+  "qrMadeOnThisPhone": "Made on this phone · no website saw the password",
   "@qrMadeOnThisPhone": {
     "description": "screens/qr_screen.dart"
   },
@@ -5553,7 +5553,7 @@
   "@qrContact": {
     "description": "screens/qr_screen.dart"
   },
-  "qrOnlyWhatYouType": "ONLY WHAT YOU TYPE · NOTHING FROM YOUR CONTACTS",
+  "qrOnlyWhatYouType": "Only what you type · nothing from your contacts",
   "@qrOnlyWhatYouType": {
     "description": "screens/qr_screen.dart"
   },
@@ -5569,7 +5569,7 @@
   "@qrEmail": {
     "description": "screens/qr_screen.dart"
   },
-  "qrOpensTheirMailApp": "OPENS THEIR MAIL APP · NOTHING SENT FROM HERE",
+  "qrOpensTheirMailApp": "Opens their mail app · nothing sent from here",
   "@qrOpensTheirMailApp": {
     "description": "screens/qr_screen.dart"
   },
@@ -5581,7 +5581,7 @@
   "@qrSubject": {
     "description": "screens/qr_screen.dart"
   },
-  "qrANumberNothingElse": "A NUMBER · NOTHING ELSE",
+  "qrANumberNothingElse": "A number · nothing else",
   "@qrANumberNothingElse": {
     "description": "screens/qr_screen.dart"
   },
@@ -5593,7 +5593,7 @@
   "@qrSms": {
     "description": "screens/qr_screen.dart"
   },
-  "qrOpensTheirMessagesApp": "OPENS THEIR MESSAGES APP · NOTHING SENT FROM HERE",
+  "qrOpensTheirMessagesApp": "Opens their messages app · nothing sent from here",
   "@qrOpensTheirMessagesApp": {
     "description": "screens/qr_screen.dart"
   },
@@ -5605,7 +5605,7 @@
   "@qrLocation": {
     "description": "screens/qr_screen.dart"
   },
-  "qrCoordinatesOnlyNoMap": "COORDINATES ONLY · NO MAP SERVICE ASKED",
+  "qrCoordinatesOnlyNoMap": "Coordinates only · no map service asked",
   "@qrCoordinatesOnlyNoMap": {
     "description": "screens/qr_screen.dart"
   },
@@ -5621,7 +5621,7 @@
   "@qrBitcoin": {
     "description": "screens/qr_screen.dart"
   },
-  "qrAddressAndAmountNo": "ADDRESS AND AMOUNT · NO PAYMENT SITE IN BETWEEN",
+  "qrAddressAndAmountNo": "Address and amount · no payment site in between",
   "@qrAddressAndAmountNo": {
     "description": "screens/qr_screen.dart"
   },
@@ -7922,7 +7922,7 @@
       }
     }
   },
-  "kryfoLinkTextBurnerRoom": "BURNER ROOM",
+  "kryfoLinkTextBurnerRoom": "Burner room",
   "@kryfoLinkTextBurnerRoom": {
     "description": "widgets/kryfo_link_text.dart"
   },

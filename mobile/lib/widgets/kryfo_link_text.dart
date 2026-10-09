@@ -252,7 +252,7 @@ class RoomInviteCard extends StatelessWidget {
         children: [
           Text(
             l10n.kryfoLinkTextBurnerRoom,
-            style: HaloType.mono(size: 9.5, color: sub, letter: 0.9),
+            style: HaloType.mono(size: 9.5, color: sub, letter: 0.3),
           ),
           const SizedBox(height: 3),
           Text(
