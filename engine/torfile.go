@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package main
 
-// a file read over the services lane: the gif relay's pictures. the route
-// is the one people search takes, tor on the onion route, our server
-// directly on the others.
+// the gif relay: search, trending and the pictures. on a lane of its own,
+// tor on the onion route, our server directly on the others. every request
+// says it is the app's, which a web page cannot say for it.
 
 import "C"
 
@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -24,26 +25,86 @@ const torFileMax = 8 << 20
 // the kinds a picture may come as
 var torFileTypes = map[string]bool{"image/gif": true, "image/webp": true}
 
-// GET url into path, whole or not at all. "ok <bytes>" or "error: ...".
+// the client for the gif lane; tests stand their own in
+var gifClient = func() (*http.Client, error) { return torNostrClientFor(laneGifs) }
+
+// POST json to the gif relay. the body of a 2xx, or "error: ...".
 //
-//export HaloTorGetFile
-func HaloTorGetFile(cUrl, cPath *C.char) *C.char {
-	return C.CString(torGetFile(C.GoString(cUrl), C.GoString(cPath)))
+//export HaloGifPost
+func HaloGifPost(cUrl, cBody *C.char) *C.char {
+	return C.CString(gifAsk(http.MethodPost, C.GoString(cUrl), C.GoString(cBody)))
 }
 
-func torGetFile(url, path string) string {
+// GET from the gif relay. the body of a 2xx, or "error: ...".
+//
+//export HaloGifGet
+func HaloGifGet(cUrl *C.char) *C.char {
+	return C.CString(gifAsk(http.MethodGet, C.GoString(cUrl), ""))
+}
+
+// GET a picture from the gif relay into path, whole or not at all.
+// "ok <bytes>" or "error: ...".
+//
+//export HaloGifGetFile
+func HaloGifGetFile(cUrl, cPath *C.char) *C.char {
+	url, path := C.GoString(cUrl), C.GoString(cPath)
 	if url == "" || path == "" {
+		return C.CString("error: empty url")
+	}
+	c, err := gifClient()
+	if err != nil {
+		return C.CString(fmt.Sprintf("error: tor client: %v", err))
+	}
+	return C.CString(getFileWith(c, url, path))
+}
+
+func gifRequest(method, url, body string) (*http.Request, error) {
+	var r io.Reader
+	if method == http.MethodPost {
+		r = strings.NewReader(body)
+	}
+	req, err := http.NewRequest(method, url, r)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("X-Kryfo", "1")
+	if method == http.MethodPost {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	return req, nil
+}
+
+func gifAsk(method, url, body string) string {
+	if url == "" {
 		return "error: empty url"
 	}
-	client, err := torNostrClientFor(laneServices)
+	c, err := gifClient()
 	if err != nil {
 		return fmt.Sprintf("error: tor client: %v", err)
 	}
-	return getFileWith(client, url, path)
+	req, err := gifRequest(method, url, body)
+	if err != nil {
+		return fmt.Sprintf("error: req: %v", err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
+	defer cancel()
+	resp, err := c.Do(req.WithContext(ctx))
+	if err != nil {
+		return fmt.Sprintf("error: get: %v", err)
+	}
+	defer resp.Body.Close()
+	out, err := io.ReadAll(io.LimitReader(resp.Body, 256*1024))
+	if err != nil {
+		return fmt.Sprintf("error: read: %v", err)
+	}
+	if resp.StatusCode >= 300 {
+		return fmt.Sprintf("error: status %d", resp.StatusCode)
+	}
+	return string(out)
 }
 
 func getFileWith(c *http.Client, url, path string) string {
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	req, err := gifRequest(http.MethodGet, url, "")
 	if err != nil {
 		return fmt.Sprintf("error: req: %v", err)
 	}

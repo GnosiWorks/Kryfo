@@ -17,6 +17,10 @@ func TestGetFileWholeOrNothing(t *testing.T) {
 	var body []byte
 	var status int
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("X-Kryfo") != "1" {
+			http.Error(w, "app only", http.StatusForbidden)
+			return
+		}
 		w.Header().Set("Content-Type", ct)
 		if strings.HasSuffix(r.URL.Path, "/short") {
 			// says more than it sends
@@ -61,5 +65,38 @@ func TestGetFileWholeOrNothing(t *testing.T) {
 	left, _ := os.ReadDir(dir)
 	if len(left) != 0 {
 		t.Fatalf("parts left behind: %v", left)
+	}
+}
+
+// search and trending say they are the app's, on the gif lane and no other
+func TestGifAsksOnItsOwnLane(t *testing.T) {
+	var got []*http.Request
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		got = append(got, r.Clone(r.Context()))
+		if r.Header.Get("X-Kryfo") != "1" {
+			http.Error(w, "app only", http.StatusForbidden)
+			return
+		}
+		w.Write([]byte(`{"items":[]}`))
+	}))
+	defer srv.Close()
+	lanes := 0
+	old := gifClient
+	gifClient = func() (*http.Client, error) {
+		lanes++
+		return srv.Client(), nil
+	}
+	defer func() { gifClient = old }()
+	if out := gifAsk(http.MethodPost, srv.URL+"/gif/v1/search", `{"q":"seal"}`); out != `{"items":[]}` {
+		t.Fatalf("search: %q", out)
+	}
+	if out := gifAsk(http.MethodGet, srv.URL+"/gif/v1/trending", ""); out != `{"items":[]}` {
+		t.Fatalf("trending: %q", out)
+	}
+	if lanes != 2 || got[0].Header.Get("Content-Type") != "application/json" {
+		t.Fatalf("lanes %d, type %q", lanes, got[0].Header.Get("Content-Type"))
+	}
+	if laneName(laneGifs) == laneName(laneServices) {
+		t.Fatal("gifs and the services share a socks name")
 	}
 }

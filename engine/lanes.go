@@ -62,6 +62,10 @@ func mainLanes() []string {
 // their own, apart from the ones that carry the contacts' addresses.
 const laneServices = "services"
 
+// gif search and its pictures: apart from the services lane too, so the gif
+// relay cannot tie a search to a handle lookup or a badge receipt
+const laneGifs = "gifs"
+
 // a room is a name that exists only inside the room.
 func roomLane(pubHex string) string { return "room:" + pubHex }
 
