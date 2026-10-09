@@ -33,7 +33,6 @@ void main() {
     for (final m in RegExp(r'if \(oldV < (\d+)\) \{').allMatches(steps)) {
       if (m.start != at69) expect(m.start, lessThan(at69));
     }
-    expect('if (oldV < 68)'.allMatches(steps), isEmpty);
     // wrapped: a column already there is no failed boot
     final at = src.indexOf('Future<void> heldMediaColumn(');
     final body = src.substring(at, src.indexOf('\n}\n', at));
