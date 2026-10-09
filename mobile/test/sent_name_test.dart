@@ -59,8 +59,10 @@ void main() {
       expect(nameTellsTime(n), isTrue, reason: n);
       final out = sentFileName(n);
       expect(out, matches(_made), reason: n);
-      expect(out, isNot(contains('2026')), reason: n);
-      expect(out, isNot(contains('PXL')), reason: n);
+      // the random tag may hold any digits: the rest holds no date
+      final told = out.replaceAll(RegExp(r'_[0-9a-f]{8}(?=\.|$)'), '');
+      expect(told, isNot(contains('2026')), reason: n);
+      expect(told, isNot(contains('PXL')), reason: n);
       final ext = n.substring(n.lastIndexOf('.') + 1).toLowerCase();
       expect(out, endsWith('.$ext'), reason: n);
     }
