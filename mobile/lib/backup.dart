@@ -268,6 +268,22 @@ Future<void> restoreBackupBlob(
   return landV1Payload(await _openPayload(blob, passphrase), own: db);
 }
 
+/// a restore bound to the session open as it begins: it lands there, even
+/// when the other one is open by the time the file is read
+class RestoreHere {
+  RestoreHere() : _own = session.primary;
+  final HaloDb _own;
+
+  Future<void> file(
+    String path,
+    String passphrase, {
+    void Function(int done, int total)? onProgress,
+  }) => restoreBackupFile(path, passphrase, onProgress: onProgress, own: _own);
+
+  Future<void> blob(String blob, String passphrase) =>
+      restoreBackupBlob(blob, passphrase, own: _own);
+}
+
 /// the end of a v1 restore, once the text file is open. [own] is the
 /// database of the session it began in
 @visibleForTesting

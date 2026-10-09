@@ -4,7 +4,6 @@
 
 import 'dart:async';
 
-import '../container.dart';
 import '../lock_guard.dart';
 import '../lock_state.dart';
 import 'package:flutter/material.dart';
@@ -88,11 +87,11 @@ class _BackupScreenState extends State<BackupScreen> {
     // navigator
     final rev = navRevision.value;
     final decoy = lockState.inDecoy;
-    final vault = session.vault?.container;
+    final hidden = sessionBackupHasHidden;
     _notMadeGen++;
     void sayLater() {
       if (!mounted && navRevision.value != rev) {
-        unawaited(_sayNotMadeLater(decoy: decoy, vault: vault));
+        unawaited(_sayNotMadeLater(decoy: decoy, hidden: hidden));
       }
     }
 
@@ -544,14 +543,14 @@ int _notMadeGen = 0;
 
 Future<void> _sayNotMadeLater({
   required bool decoy,
-  required HaloContainer? vault,
+  required bool hidden,
 }) async {
   final gen = _notMadeGen;
   bool same() =>
       gen == _notMadeGen &&
       !lockGuard.isLocked() &&
       lockState.inDecoy == decoy &&
-      session.vault?.container == vault;
+      sessionBackupHasHidden == hidden;
   while (gen == _notMadeGen) {
     while (!same()) {
       if (gen != _notMadeGen) return;

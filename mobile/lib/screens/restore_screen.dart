@@ -15,8 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../backup.dart';
-import '../main.dart'
-    show appState, engine, navRevision, rootNavKey, session, shredFile;
+import '../main.dart' show appState, engine, navRevision, rootNavKey, shredFile;
 import '../picked.dart';
 import '../theme.dart';
 import '../widgets/confirm_sheet.dart';
@@ -294,7 +293,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
     _running = true;
     // the session the restore runs in, the one its end is shown in
     final decoy = lockState.inDecoy;
-    final own = session.primary;
+    final here = RestoreHere();
     final pw = _passCtrl.text.trim();
     if (mine != null && !sameIdentity) {
       setState(() {
@@ -352,17 +351,16 @@ class _RestoreScreenState extends State<RestoreScreen> {
       if (restoreForTest != null) {
         await restoreForTest!(pw);
       } else if (path != null) {
-        await restoreBackupFile(
+        await here.file(
           path,
           pw,
-          own: own,
           onProgress: (a, b) {
             if (mounted && b > 0) setState(() => _progress = a / b);
           },
         );
         await _dropOwnCopy();
       } else {
-        await restoreBackupBlob(blob!, pw, own: own);
+        await here.blob(blob!, pw);
       }
       // the same identity coming back, from a file made before handles or
       // the face were carried: the key still proves the handle, so keep the
