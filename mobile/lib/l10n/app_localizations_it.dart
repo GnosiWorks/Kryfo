@@ -458,6 +458,16 @@ class AppLocalizationsIt extends AppLocalizations {
   String get roomJoinMayHaveEnded => 'Potrebbe essere terminata.';
 
   @override
+  String get roomJoinFullShort => 'Stanza piena';
+
+  @override
+  String get roomJoinFull => 'Questa stanza è piena.';
+
+  @override
+  String get roomJoinFullLine =>
+      'Al momento non c’è posto. Riprova più tardi o chiedi a chi ha condiviso il link.';
+
+  @override
   String get appBooting => 'Avvio...';
 
   @override

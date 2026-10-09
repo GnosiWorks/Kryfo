@@ -291,6 +291,9 @@ class _SearchScreenState extends State<SearchScreen> {
                 g.expiresAt == null ? null : g.joiningAt,
                 now,
               )) {
+                RoomJoin.waiting || RoomJoin.silent
+                    when appState.roomFull(g.groupId) =>
+                  l10n.roomJoinFullShort,
                 RoomJoin.waiting => l10n.roomJoinWaitingToJoin,
                 RoomJoin.silent => l10n.roomJoinNotAnswering,
                 RoomJoin.live => l10n.homeMembers(g.memberCount),

@@ -552,6 +552,18 @@
   "@roomJoinMayHaveEnded": {
     "description": "widgets/room_join.dart"
   },
+  "roomJoinFullShort": "Room full",
+  "@roomJoinFullShort": {
+    "description": "widgets/room_join.dart, screens/search_screen.dart: on the chat list and in the header, a room whose creator said there is no seat for this join. short, like Not answering"
+  },
+  "roomJoinFull": "This room is full.",
+  "@roomJoinFull": {
+    "description": "widgets/room_join.dart: a room whose creator said there is no seat for this join"
+  },
+  "roomJoinFullLine": "No seat is free right now. Try again later, or ask whoever shared the link.",
+  "@roomJoinFullLine": {
+    "description": "widgets/room_join.dart: under This room is full, above Try again and Leave"
+  },
   "appBooting": "Booting...",
   "@appBooting": {
     "description": "main.dart"

@@ -474,6 +474,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get roomJoinMayHaveEnded => 'Возможно, она уже закончилась.';
 
   @override
+  String get roomJoinFullShort => 'Комната заполнена';
+
+  @override
+  String get roomJoinFull => 'Эта комната заполнена.';
+
+  @override
+  String get roomJoinFullLine =>
+      'Свободных мест сейчас нет. Попробуйте позже или спросите того, кто поделился ссылкой.';
+
+  @override
   String get appBooting => 'Запуск...';
 
   @override

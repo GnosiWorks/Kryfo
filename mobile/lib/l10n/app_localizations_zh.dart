@@ -442,6 +442,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get roomJoinMayHaveEnded => '它可能已经结束了。';
 
   @override
+  String get roomJoinFullShort => '聊天室已满';
+
+  @override
+  String get roomJoinFull => '这个聊天室已满。';
+
+  @override
+  String get roomJoinFullLine => '现在没有空位。请稍后再试，或问问分享链接的人。';
+
+  @override
   String get appBooting => '启动中…';
 
   @override
@@ -7824,6 +7833,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get roomJoinMayHaveEnded => '它可能已經結束了。';
+
+  @override
+  String get roomJoinFullShort => '聊天室已滿';
+
+  @override
+  String get roomJoinFull => '這個聊天室已滿。';
+
+  @override
+  String get roomJoinFullLine => '現在沒有空位。請稍後再試，或問問分享連結的人。';
 
   @override
   String get appBooting => '啟動中…';

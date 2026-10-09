@@ -447,6 +447,16 @@ class AppLocalizationsVi extends AppLocalizations {
   String get roomJoinMayHaveEnded => 'Có thể phòng đã kết thúc.';
 
   @override
+  String get roomJoinFullShort => 'Phòng đã đầy';
+
+  @override
+  String get roomJoinFull => 'Phòng này đã đầy.';
+
+  @override
+  String get roomJoinFullLine =>
+      'Hiện không còn chỗ trống. Hãy thử lại sau, hoặc hỏi người đã chia sẻ liên kết.';
+
+  @override
   String get appBooting => 'Đang khởi động...';
 
   @override

@@ -449,6 +449,16 @@ class AppLocalizationsId extends AppLocalizations {
   String get roomJoinMayHaveEnded => 'Mungkin sudah berakhir.';
 
   @override
+  String get roomJoinFullShort => 'Ruang penuh';
+
+  @override
+  String get roomJoinFull => 'Ruang ini penuh.';
+
+  @override
+  String get roomJoinFullLine =>
+      'Belum ada tempat kosong. Coba lagi nanti, atau tanya orang yang membagikan tautannya.';
+
+  @override
   String get appBooting => 'Memulai...';
 
   @override

@@ -333,16 +333,71 @@ void main() {
     expect(said, hasLength(1));
   });
 
-  test('a full room, or a creator gone, never lets it in', () async {
+  test('a full room never lets it in and says it is full, once a minute; '
+      'the wait says so until a knock again', () async {
     final me = await _Phone.make();
     final full = await _creatorPhone(cap: 2, others: [_other]);
     me.use();
     await me.app.joinRoom(_link());
     await _settle();
-    expect(await _creatorTakes(full, me.engine.knocks.single.msg), isEmpty);
+    final back = await _creatorTakes(full, me.engine.knocks.single.msg);
+    expect(back, hasLength(1));
+    final env = unwrapMessage(back.single);
+    expect(env.groupControl?.type, 'full');
+    expect(env.groupControl?.members, isNull);
+    expect(env.groupId, _room);
+    // the room key alone, as on every room frame
+    expect(env.senderHaloId, _creator);
+    expect(full.room!['member_cap'], 2);
+    expect(await full.rows.getGroupMembers(_room), [_creator, _other]);
+
     me.use();
+    expect(me.app.roomFull(_room), isFalse);
+    await _fromRoom(me, _creator, back.single);
+    expect(me.app.roomFull(_room), isTrue);
+    // still waiting to be let in, and nothing said
     expect(_stateOf(me), RoomJoin.waiting);
     expect(said, isEmpty);
+
+    // a knock again clears it, and within the minute is not answered again
+    await me.app.retryRoomJoin(_room);
+    expect(me.app.roomFull(_room), isFalse);
+    await _settle();
+    expect(await _creatorTakes(full, me.engine.knocks.last.msg), hasLength(1));
+
+    // a seat comes free: the next knock is let in
+    await full.rows.removeGroupMember(_room, _other);
+    me.use();
+    await me.app.retryRoomJoin(_room);
+    await _settle();
+    final later = await _creatorTakes(full, me.engine.knocks.last.msg);
+    expect(later, hasLength(2));
+    expect(unwrapMessage(later.last).groupControl?.type, 'create');
+    await _fromRoom(me, _creator, later.last);
+    expect(_stateOf(me), RoomJoin.live);
+    expect(me.app.roomFull(_room), isFalse);
+  });
+
+  test('full from anyone but the creator, or once let in, changes '
+      'nothing', () async {
+    final me = await _Phone.make();
+    await me.app.joinRoom(_link());
+    await _settle();
+    Future<String> fullFrom(String key) async => roomFrame(
+      await wrapMessage(
+        '',
+        groupId: _room,
+        groupControl: const GroupControl(type: 'full'),
+        sender: SenderInfo(haloId: key, edPub: '', onion: '', xPub: ''),
+      ),
+      key,
+    )!;
+    await _fromRoom(me, _other, await fullFrom(_other));
+    expect(me.app.roomFull(_room), isFalse);
+    await _fromRoom(me, _creator, await _roster([_creator, _mine], stamp: 5));
+    expect(_stateOf(me), RoomJoin.live);
+    await _fromRoom(me, _creator, await fullFrom(_creator));
+    expect(me.app.roomFull(_room), isFalse);
   });
 
   test('no roster within the wait: the room is not answering, and a late '

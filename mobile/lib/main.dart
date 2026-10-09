@@ -11396,6 +11396,15 @@ class AppState extends ChangeNotifier {
       case 'join':
         // only ever valid off a room drop box, handled there
         return;
+      case 'full':
+        // the creator found no seat for this phone's join: the wait says
+        // so instead of not answering. nothing else changes
+        if (!fromAdmin) return;
+        if ((await db.getGroup(groupId))?['joining_at'] == null) return;
+        if (!_roomsFull.add(groupId)) return;
+        _bumpChatRev('group:$groupId');
+        await refreshGroups();
+        return;
       case 'create':
         // someone added us to a new group. they are the admin; we are
         // a regular member. group.is_admin stays 0.
@@ -15596,6 +15605,7 @@ class AppState extends ChangeNotifier {
     if ((g['expires_at'] as int? ?? 0) <= now) return;
     // let in since the read above: it stays let in, and nothing is sent
     if (!await session.restartRoomJoining(groupId, now)) return;
+    _roomsFull.remove(groupId);
     _bumpChatRev('group:$groupId');
     await refreshGroups();
     if (sessionQuiet) return;
@@ -15617,6 +15627,7 @@ class AppState extends ChangeNotifier {
     final pub = g['room_pub'] as String?;
     if (pub == null || !roster.contains(pub)) return;
     await db.setRoomJoining(groupId, null);
+    _roomsFull.remove(groupId);
     _bumpChatRev('group:$groupId');
     await refreshGroups();
     if (identical(db, session.primary)) {
@@ -15635,6 +15646,40 @@ class AppState extends ChangeNotifier {
       engine.roomSubscribeBg(room.priv, m);
     }
   }
+
+  // the keys told a room is full, and when: once a minute each at most, so
+  // knocks again and again cost this phone one frame a minute
+  final Map<String, int> _toldFull = {};
+
+  // a join turned away for want of space hears so, and only that: a
+  // phone from before the word waits on as it did
+  Future<void> _sayRoomFull(String groupId, String who) async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final k = '$groupId $who';
+    final at = _toldFull[k];
+    if (at != null && now - at < 60000) return;
+    _toldFull.remove(k);
+    _toldFull[k] = now;
+    while (_toldFull.length > 256) {
+      _toldFull.remove(_toldFull.keys.first);
+    }
+    try {
+      final wrapped = await wrapMessage(
+        '',
+        groupId: groupId,
+        groupControl: const GroupControl(type: 'full'),
+        sender: _mySender(),
+      );
+      await _sendGroupEnvelope(groupId, who, wrapped);
+    } catch (e) {
+      dlog('room full: not said (${e.runtimeType})');
+    }
+  }
+
+  // rooms whose creator said this phone's join found no seat, until it
+  // knocks again, is let in or leaves
+  final Set<String> _roomsFull = {};
+  bool roomFull(String groupId) => _roomsFull.contains(groupId);
 
   // someone came in off the link. only the creator takes these, only for a
   // live room, only under the cap. then everyone gets the new roster and
@@ -15663,7 +15708,8 @@ class AppState extends ChangeNotifier {
     );
     if (!members.contains(who)) {
       if (members.length >= cap) {
-        dlog('room: full, ignoring join');
+        dlog('room: full, said so');
+        await _sayRoomFull(groupId, who);
         return;
       }
       await live.addGroupMember(groupId, who);

@@ -455,6 +455,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get roomJoinMayHaveEnded => 'It may have ended.';
 
   @override
+  String get roomJoinFullShort => 'Room full';
+
+  @override
+  String get roomJoinFull => 'This room is full.';
+
+  @override
+  String get roomJoinFullLine =>
+      'No seat is free right now. Try again later, or ask whoever shared the link.';
+
+  @override
   String get appBooting => 'Booting...';
 
   @override

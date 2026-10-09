@@ -2059,6 +2059,7 @@ class _GroupRow extends StatelessWidget {
                             ? RoomJoinLine(
                                 key: const ValueKey('joining'),
                                 joiningAt: g.joiningAt!,
+                                full: appState.roomFull(g.groupId),
                               )
                             : g.isRoom
                             ? RoomCountdown(
