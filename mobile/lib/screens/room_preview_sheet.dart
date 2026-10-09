@@ -88,6 +88,7 @@ class _RoomPreviewState extends State<_RoomPreview> {
             const SizedBox(height: 14),
             Text(
               link.name,
+              textDirection: writtenDir(link.name),
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -122,8 +123,9 @@ class _RoomPreviewState extends State<_RoomPreview> {
               PressScale(
                 scale: 0.96,
                 onTap: () => Navigator.pop(context, false),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
+                // a full finger's height, like the join above it
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 48),
                   child: Center(
                     child: Text(
                       l10n.kryfoLinkTextNotNow,

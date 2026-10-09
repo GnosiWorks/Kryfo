@@ -79,6 +79,7 @@ class _World {
         kinAsked.add(link);
         return kin;
       },
+      here: (_) async => false,
       selfId: selfId,
     ).then((r) {
       result = r;
@@ -100,6 +101,7 @@ class _World {
         kinAsked.add(link);
         return kin;
       },
+      here: (_) async => false,
     ).then((_) => finished = true);
     await t.pumpAndSettle();
   }

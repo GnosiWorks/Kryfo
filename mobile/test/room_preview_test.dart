@@ -11,11 +11,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_guard.dart';
-import 'package:kryfo/main.dart' show LinkKin;
+import 'package:kryfo/main.dart' show LinkKin, handleHaloUriAdded;
 import 'package:kryfo/rooms.dart';
 import 'package:kryfo/screens/room_preview_sheet.dart';
 import 'package:kryfo/theme.dart';
 import 'package:kryfo/widgets/kryfo_link_text.dart';
+import 'package:kryfo/widgets/press_scale.dart';
 
 RoomLink _link({
   Duration left = const Duration(hours: 3),
@@ -38,13 +39,36 @@ class _Door {
   }
 }
 
+// every sheet that goes up, and a hook on every pop
+class _Watch extends NavigatorObserver {
+  final sheets = <Route<dynamic>>[];
+  void Function()? onPop;
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (route is ModalBottomSheetRoute) sheets.add(route);
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) =>
+      onPop?.call();
+}
+
 class _World {
   var locked = false;
   late final guard = LockGuard(isLocked: () => locked);
   final door = _Door();
+  final watch = _Watch();
+  // the rooms this phone already holds
+  final held = <String>{};
+  final askedHere = <String>[];
   late BuildContext ctx;
   Object? result;
   var finished = false;
+
+  Future<bool> here(String id) async {
+    askedHere.add(id);
+    return held.contains(id);
+  }
 
   Future<void> start(WidgetTester t, {bool still = false}) async {
     t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
@@ -56,6 +80,7 @@ class _World {
         theme: buildHaloTheme(),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
+        navigatorObservers: [watch],
         builder: (c, child) => MediaQuery(
           data: MediaQuery.of(c).copyWith(disableAnimations: still),
           child: child!,
@@ -84,7 +109,7 @@ class _World {
   Future<void> own(WidgetTester t, String raw) async {
     finished = false;
     result = null;
-    takeOwnLink(ctx, raw, guard: guard, act: door.call).then((r) {
+    takeOwnLink(ctx, raw, guard: guard, act: door.call, here: here).then((r) {
       result = r;
       finished = true;
     });
@@ -101,12 +126,38 @@ class _World {
       guard: guard,
       act: door.call,
       kin: (_) async => (LinkKin.stranger, ''),
+      here: here,
     ).then((r) {
       result = r;
       finished = true;
     });
     await t.pumpAndSettle();
   }
+
+  // tapped in a chat
+  Future<void> tap(WidgetTester t, String link) async {
+    finished = false;
+    followKryfoLink(
+      ctx,
+      link,
+      guard: guard,
+      self: () => null,
+      act: door.call,
+      kin: (_) async => (LinkKin.stranger, ''),
+      here: here,
+    ).then((_) => finished = true);
+    await t.pumpAndSettle();
+  }
+}
+
+// a room link in every way but the shape of its start
+List<String> _misshapen() {
+  final good = _link().encode();
+  expect(good, startsWith('kryfo://room?'));
+  return [
+    good.replaceFirst('kryfo://room?', 'kryfo://room/?'),
+    good.replaceFirst('kryfo://room?', 'kryfo://roomx?'),
+  ];
 }
 
 void main() {
@@ -128,9 +179,7 @@ void main() {
     expect(w.result, isTrue);
   });
 
-  testWidgets('a room link carries no member count, and none is shown', (
-    t,
-  ) async {
+  testWidgets('no member count and no cap are shown', (t) async {
     final w = _World();
     await w.start(t);
     await w.sheet(t, _link(cap: 7));
@@ -271,6 +320,154 @@ void main() {
     expect(w.door.taken, isEmpty);
   });
 
+  test('a misshapen room link is no room link', () {
+    for (final bad in _misshapen()) {
+      expect(RoomLink.parse(bad), isNull, reason: bad);
+      expect(RoomLink.parse('join us $bad'), isNull, reason: bad);
+    }
+  });
+
+  test('the door turns a misshapen room link away and joins nothing', () async {
+    for (final bad in _misshapen()) {
+      expect(await handleHaloUriAdded(bad), (
+        l10n.appInvalidUri,
+        false,
+      ), reason: bad);
+      expect(await handleHaloUriAdded('come in $bad'), (
+        l10n.appInvalidUri,
+        false,
+      ), reason: bad);
+    }
+  });
+
+  testWidgets('a misshapen room link from outside or a chat is no link and '
+      'reaches no door', (t) async {
+    final w = _World();
+    await w.start(t);
+    for (final bad in _misshapen()) {
+      await w.outside(t, bad);
+      expect(w.result, l10n.kryfoLinkTextThatLinkIsNot, reason: bad);
+      await w.tap(t, bad);
+      expect(w.finished, isTrue, reason: bad);
+      await t.pump(const Duration(seconds: 10));
+      await t.pumpAndSettle();
+    }
+    expect(w.watch.sheets, isEmpty);
+    expect(w.door.taken, isEmpty);
+  });
+
+  testWidgets('a misshapen room link scanned or pasted goes to the door as '
+      'it was, which turns it away', (t) async {
+    final w = _World();
+    await w.start(t);
+    final links = _misshapen();
+    for (final bad in links) {
+      await w.own(t, bad);
+    }
+    expect(w.watch.sheets, isEmpty);
+    // the door gets the raw text, and reads it with the same parse
+    expect(w.door.taken, links);
+    for (final bad in w.door.taken) {
+      expect(RoomLink.parse(bad), isNull);
+    }
+  });
+
+  testWidgets('a room already here opens as it did, with no sheet, from '
+      'every way in', (t) async {
+    final w = _World()..held.add('room-one');
+    await w.start(t);
+    final link = _link().encode();
+    await w.own(t, link);
+    expect(w.result, 'done');
+    await w.outside(t, link);
+    expect(w.result, 'done');
+    await w.tap(t, link);
+    await t.pump(const Duration(seconds: 10));
+    await t.pumpAndSettle();
+    expect(w.watch.sheets, isEmpty);
+    expect(w.askedHere, ['room-one', 'room-one', 'room-one']);
+    expect(w.door.taken, [link, link, link]);
+  });
+
+  testWidgets('a room not here is asked about first', (t) async {
+    final w = _World()..held.add('another-room');
+    await w.start(t);
+    await w.own(t, _link().encode());
+    expect(w.askedHere, ['room-one']);
+    expect(w.watch.sheets, hasLength(1));
+    expect(w.door.taken, isEmpty);
+    await t.tap(find.text(l10n.kryfoLinkTextNotNow));
+    await t.pumpAndSettle();
+  });
+
+  testWidgets('under the lock no sheet is ever pushed', (t) async {
+    final w = _World();
+    await w.start(t);
+    w.locked = true;
+    final link = _link().encode();
+    await w.own(t, link);
+    await w.outside(t, link);
+    await w.tap(t, link);
+    expect(w.watch.sheets, isEmpty);
+    // not even this phone's own rooms are read
+    expect(w.askedHere, isEmpty);
+    expect(w.door.taken, isEmpty);
+  });
+
+  testWidgets('the lock coming up as join is tapped joins nothing', (t) async {
+    final w = _World();
+    await w.start(t);
+    final link = _link().encode();
+    for (final open in [w.own, w.outside]) {
+      await open(t, link);
+      expect(w.watch.sheets, isNotEmpty);
+      // locked in the same moment the sheet goes, before any pump
+      w.watch.onPop = () => w.locked = true;
+      await t.tap(find.text(l10n.kryfoLinkTextJoin2));
+      await t.pumpAndSettle();
+      expect(w.finished, isTrue);
+      expect(w.result, isNull);
+      expect(w.door.taken, isEmpty);
+      w.watch.onPop = null;
+      w.locked = false;
+    }
+  });
+
+  testWidgets('not now is a full finger high', (t) async {
+    final w = _World();
+    await w.start(t);
+    await w.sheet(t, _link());
+    final notNow = find.ancestor(
+      of: find.text(l10n.kryfoLinkTextNotNow),
+      matching: find.byType(PressScale),
+    );
+    expect(t.getSize(notNow.first).height, greaterThanOrEqualTo(48));
+    await t.tap(find.text(l10n.kryfoLinkTextNotNow));
+    await t.pumpAndSettle();
+  });
+
+  testWidgets('a room name keeps the direction it is written in, on the '
+      'sheet and the card in a chat', (t) async {
+    const name = 'شیفت شب';
+    final w = _World();
+    await w.start(t);
+    await w.sheet(t, _link(name: name));
+    expect(t.widget<Text>(find.text(name)).textDirection, TextDirection.rtl);
+    await t.tap(find.text(l10n.kryfoLinkTextNotNow));
+    await t.pumpAndSettle();
+
+    final link = _link(name: name);
+    await t.pumpWidget(
+      MaterialApp(
+        theme: buildHaloTheme(),
+        home: Scaffold(
+          body: RoomInviteCard(room: link, link: link.encode()),
+        ),
+      ),
+    );
+    expect(t.widget<Text>(find.text(name)).textDirection, TextDirection.rtl);
+  });
+
   test('the sheet reaches nothing: no engine, no session, no relay', () {
     final src = File('lib/screens/room_preview_sheet.dart').readAsStringSync();
     for (final word in [
@@ -296,6 +493,12 @@ void main() {
     expect(add, isNotNull);
     expect(add, contains('takeOwnLink('));
     expect(add, isNot(contains('handleHaloUri(')));
+    final dev = RegExp(
+      r'Future<void> _importPeer\(\) async \{([\s\S]*?)\n  \}\n',
+    ).firstMatch(app)?.group(1);
+    expect(dev, isNotNull);
+    expect(dev, contains('takeOwnLink('));
+    expect(dev, isNot(contains('handleHaloUri(')));
     for (final f in [
       'lib/screens/my_kryfo_screen.dart',
       'lib/screens/onboarding_screen.dart',
