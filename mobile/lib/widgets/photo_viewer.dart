@@ -116,9 +116,17 @@ class PhotoViewer extends StatefulWidget {
 }
 
 class _PhotoViewerState extends State<PhotoViewer>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   final _zoom = TransformationController();
+  final _viewer = GlobalKey();
   bool _zoomed = false;
+  // where a double tap landed, and the zoom easing in or out from it
+  Offset? _tapAt;
+  late final AnimationController _ease = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 260),
+  );
+  Animation<Matrix4>? _to;
   bool _closing = false;
   double _drag = 0;
   bool _pastClose = false;
@@ -131,11 +139,16 @@ class _PhotoViewerState extends State<PhotoViewer>
     super.initState();
     _settle = AnimationController.unbounded(vsync: this)
       ..addListener(() => setState(() => _drag = _settle.value));
+    _ease.addListener(() {
+      final to = _to;
+      if (to != null) _zoom.value = to.value;
+    });
   }
 
   @override
   void dispose() {
     _settle.dispose();
+    _ease.dispose();
     _zoom.dispose();
     super.dispose();
   }
@@ -146,6 +159,50 @@ class _PhotoViewerState extends State<PhotoViewer>
     // back to the whole photo first, so it flies home as it came
     _zoom.value = Matrix4.identity();
     Navigator.of(context).pop();
+  }
+
+  // eases the photo to [m], at once when motion is reduced
+  void _zoomTo(Matrix4 m) {
+    final z = m.getMaxScaleOnAxis() > 1.01;
+    if (z != _zoomed) setState(() => _zoomed = z);
+    if (motionStill(context)) {
+      _zoom.value = m;
+      return;
+    }
+    _to = Matrix4Tween(
+      begin: _zoom.value,
+      end: m,
+    ).animate(CurvedAnimation(parent: _ease, curve: Curves.easeOutCubic));
+    _ease.forward(from: 0);
+  }
+
+  // a tap while zoomed brings the whole photo back; one on the whole photo
+  // closes it
+  void _tap() {
+    if (_zoomed) {
+      _zoomTo(Matrix4.identity());
+    } else {
+      _close();
+    }
+  }
+
+  // a double tap zooms in on where it landed, or back out
+  void _doubleTap() {
+    if (_zoomed) {
+      _zoomTo(Matrix4.identity());
+      return;
+    }
+    final box = _viewer.currentContext?.findRenderObject() as RenderBox?;
+    final at = _tapAt;
+    if (box == null || at == null) return;
+    final p = _zoom.toScene(box.globalToLocal(at));
+    const s = 2.5;
+    HapticFeedback.selectionClick();
+    _zoomTo(
+      Matrix4.identity()
+        ..translateByDouble(-p.dx * (s - 1), -p.dy * (s - 1), 0, 1)
+        ..scaleByDouble(s, s, 1, 1),
+    );
   }
 
   void _zoomEnded(ScaleEndDetails _) {
@@ -185,6 +242,7 @@ class _PhotoViewerState extends State<PhotoViewer>
   Widget build(BuildContext context) {
     final pulled = (_drag.abs() / 420).clamp(0.0, 1.0);
     final photo = InteractiveViewer(
+      key: _viewer,
       transformationController: _zoom,
       minScale: 1,
       maxScale: 4,
@@ -197,7 +255,9 @@ class _PhotoViewerState extends State<PhotoViewer>
       animation: widget.route,
       builder: (context, child) => GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: _close,
+        onTap: _tap,
+        onDoubleTapDown: (d) => _tapAt = d.globalPosition,
+        onDoubleTap: _doubleTap,
         // a zoomed photo pans instead
         onVerticalDragUpdate: _zoomed ? null : _dragUpdate,
         onVerticalDragEnd: _zoomed ? null : _dragEnd,

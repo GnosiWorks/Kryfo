@@ -5,6 +5,7 @@
 // movement nothing flies.
 import 'dart:convert';
 
+import 'package:flutter/gestures.dart' show kDoubleTapTimeout;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -107,9 +108,75 @@ void main() {
       await open(t);
       await settles(t);
       await t.tapAt(const Offset(20, 20));
+      // a tap is a tap once no second one follows
+      await t.pump(kDoubleTapTimeout);
       await t.pump();
       await t.pump(const Duration(milliseconds: 100));
       expect(find.byType(PhotoViewer), findsOneWidget);
+      await settles(t);
+      expect(find.byType(PhotoViewer), findsNothing);
+    });
+
+    double scaleOf(WidgetTester t) => t
+        .widget<InteractiveViewer>(find.byType(InteractiveViewer))
+        .transformationController!
+        .value
+        .getMaxScaleOnAxis();
+
+    Future<void> doubleTap(WidgetTester t, Offset at) async {
+      await t.tapAt(at);
+      await t.pump(const Duration(milliseconds: 60));
+      await t.tapAt(at);
+      await t.pump();
+    }
+
+    for (final still in [false, true]) {
+      testWidgets('a double tap zooms in where it lands and out again '
+          '(still: $still)', (t) async {
+        await open(t, still: still);
+        await settles(t);
+        const at = Offset(260, 330);
+        await doubleTap(t, at);
+        if (!still) {
+          await t.pump(const Duration(milliseconds: 100));
+          final mid = scaleOf(t);
+          expect(mid, greaterThan(1));
+          expect(mid, lessThan(2.5));
+        }
+        await settles(t);
+        expect(scaleOf(t), closeTo(2.5, 0.01));
+        // the point it landed on stays under the finger
+        final box = t.renderObject<RenderBox>(find.byType(InteractiveViewer));
+        final c = t
+            .widget<InteractiveViewer>(find.byType(InteractiveViewer))
+            .transformationController!;
+        final local = box.globalToLocal(at);
+        expect(
+          (MatrixUtils.transformPoint(c.value, local) - local).distance,
+          lessThan(0.5),
+        );
+        await doubleTap(t, at);
+        await settles(t);
+        expect(scaleOf(t), closeTo(1, 0.001));
+        expect(find.byType(PhotoViewer), findsOneWidget);
+      });
+    }
+
+    testWidgets('zoomed, a tap brings the whole photo back and does not '
+        'close it', (t) async {
+      await open(t);
+      await settles(t);
+      await doubleTap(t, const Offset(200, 300));
+      await settles(t);
+      expect(scaleOf(t), greaterThan(2));
+      await t.tapAt(const Offset(200, 300));
+      await t.pump(const Duration(milliseconds: 400));
+      await settles(t);
+      expect(scaleOf(t), closeTo(1, 0.001));
+      expect(find.byType(PhotoViewer), findsOneWidget);
+      // and the next tap closes it
+      await t.tapAt(const Offset(20, 20));
+      await t.pump(const Duration(milliseconds: 400));
       await settles(t);
       expect(find.byType(PhotoViewer), findsNothing);
     });
@@ -153,6 +220,7 @@ void main() {
       expect(_drag(t), 0);
       expect(t.binding.transientCallbackCount, 0);
       await t.tapAt(const Offset(20, 20));
+      await t.pump(kDoubleTapTimeout);
       await t.pump();
       await t.pump();
       expect(find.byType(PhotoViewer), findsNothing);
@@ -167,6 +235,7 @@ void main() {
       await settles(t);
       expect(find.byType(PhotoViewer), findsOneWidget);
       await t.tapAt(const Offset(20, 20));
+      await t.pump(kDoubleTapTimeout);
       await settles(t);
       expect(find.byType(PhotoViewer), findsNothing);
     });
