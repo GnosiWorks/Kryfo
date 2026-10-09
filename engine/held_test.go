@@ -27,7 +27,7 @@ func TestAHeldIDIsPassedOverUntilLetGo(t *testing.T) {
 	if !s.claim(id) {
 		t.Fatal("claim")
 	}
-	if !s.hold(id, nostr.Timestamp(now.Unix()), now) {
+	if !s.hold(id, nostr.Timestamp(now.Unix()), "", now) {
 		t.Fatal("not held")
 	}
 	if s.claim(id) || s.handed(id) {
@@ -59,7 +59,7 @@ func TestADropTakesTheHeldAsKept(t *testing.T) {
 	s := loadSeen(path)
 	id := randomID(t)
 	s.claim(id)
-	s.hold(id, nostr.Timestamp(now.Unix()), now)
+	s.hold(id, nostr.Timestamp(now.Unix()), "", now)
 	markHeldFile(path, seenDropMark)
 	d := loadSeen(path)
 	if d.heldCount() != 0 || !d.handed(id) || d.claim(id) {
@@ -75,7 +75,7 @@ func TestHeldIDsAreBoundedAndExpire(t *testing.T) {
 	for i := 0; i < seenHeldKeep+50; i++ {
 		id := randomID(t)
 		s.claim(id)
-		if s.hold(id, nostr.Timestamp(now.Unix()), now) {
+		if s.hold(id, nostr.Timestamp(now.Unix()), "", now) {
 			held++
 		}
 	}
@@ -83,7 +83,7 @@ func TestHeldIDsAreBoundedAndExpire(t *testing.T) {
 		t.Fatalf("held %d, want %d", held, seenHeldKeep)
 	}
 	old := randomID(t)
-	if s.hold(old, nostr.Timestamp(now.Add(-seenHeldFor-time.Hour).Unix()), now) {
+	if s.hold(old, nostr.Timestamp(now.Add(-seenHeldFor-time.Hour).Unix()), "", now) {
 		t.Fatal("held one the relay no longer keeps")
 	}
 	if n := loadSeen(path).heldCount(); n != seenHeldKeep {
@@ -103,9 +103,9 @@ func TestCompactionKeepsWhatIsHeld(t *testing.T) {
 	for _, id := range []nostr.ID{free, still} {
 		s.claim(id)
 	}
-	s.hold(free, nostr.Timestamp(now.Unix()), now)
+	s.hold(free, nostr.Timestamp(now.Unix()), "", now)
 	markHeldFile(path, seenFreeMark)
-	s.hold(still, nostr.Timestamp(now.Unix()), now)
+	s.hold(still, nostr.Timestamp(now.Unix()), "", now)
 	// enough kept ids to rewrite the file
 	for i := 0; i < seenFileMax; i++ {
 		id := randomID(t)
@@ -161,17 +161,20 @@ func heldRun(t *testing.T, tag string, peer xid, rcv, ck string, how func(string
 	end := time.Now().Add(6 * time.Second)
 	for time.Now().Before(end) && time.Since(quiet) < 1500*time.Millisecond {
 		if b := pollRaw(t); b.K != "" {
-			var h []int
+			h, g := []int{}, []string{}
 			for i, e := range b.M {
 				if e.T == tag {
 					got[e.C] = true
-					if how(e.C) == "hold" {
+					// "hold", or "hold:group" for one held in a group
+					if w, group, _ := strings.Cut(how(e.C), ":"); w == "hold" {
 						h = append(h, i)
+						g = append(g, group)
 					}
 				}
 			}
 			hj, _ := json.Marshal(h)
-			nostrAck(b.K, fmt.Sprintf(`{"f":[],"h":%s}`, hj))
+			gj, _ := json.Marshal(g)
+			nostrAck(b.K, fmt.Sprintf(`{"f":[],"h":%s,"g":%s}`, hj, gj))
 			quiet = time.Now()
 		}
 		time.Sleep(30 * time.Millisecond)
@@ -257,5 +260,173 @@ func TestAHeldTextComesBackPastTheWindow(t *testing.T) {
 	}
 	if got := heldRun(t, tag, peer, rcv, ck, how); !got["old"] || got["new"] {
 		t.Fatalf("let go, the start after got %v", got)
+	}
+}
+
+func TestAFileIsOneGroupOfHeldIDs(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "seen")
+	now := time.Now()
+	stamp := nostr.Timestamp(now.Unix())
+	s := loadSeen(path)
+	hold := func(group string) bool {
+		id := randomID(t)
+		s.claim(id)
+		return s.hold(id, stamp, group, now)
+	}
+	// a file already held takes its slices with no group to spare
+	if !hold("file-a") {
+		t.Fatal("the first slice")
+	}
+	for i := 1; i < seenHeldKeep; i++ {
+		if !hold("") {
+			t.Fatalf("text %d", i)
+		}
+	}
+	if hold("") || hold("file-b") {
+		t.Fatal("a new group past the bound was held")
+	}
+	n := 1
+	for hold("file-a") {
+		n++
+	}
+	if n != seenHeldPerGroup {
+		t.Fatalf("the file held %d slices, want %d", n, seenHeldPerGroup)
+	}
+	if c := loadSeen(path).heldCount(); c != seenHeldKeep-1+seenHeldPerGroup {
+		t.Fatalf("a restart holds %d", c)
+	}
+}
+
+func TestHeldIDsHaveAHardMost(t *testing.T) {
+	now := time.Now()
+	s := loadSeen("")
+	held := 0
+	for f := 0; f < 10; f++ {
+		for i := 0; i < seenHeldPerGroup; i++ {
+			id := randomID(t)
+			s.claim(id)
+			if s.hold(id, nostr.Timestamp(now.Unix()), fmt.Sprintf("file-%d", f), now) {
+				held++
+			}
+		}
+	}
+	if held != seenHeldMost {
+		t.Fatalf("held %d ids, want %d", held, seenHeldMost)
+	}
+}
+
+// let go of after the poll handed it over: a hold from that batch would
+// pass the mark and wait two weeks. it goes to the app again instead
+func TestAHoldPastAFreeComesAgain(t *testing.T) {
+	pollAckReset(t)
+	set := loadSeen(filepath.Join(t.TempDir(), "seen"))
+	ids := pollAckPut(t, set, "a")
+	nostrMu.Lock()
+	nostrInboxDone[0].at = nostr.Timestamp(time.Now().Unix())
+	nostrMu.Unlock()
+	b := pollRaw(t)
+	markHeldFile(set.path, seenFreeMark)
+	if r := nostrAck(b.K, `{"f":[],"h":[0],"g":[""]}`); r != "ok" {
+		t.Fatal(r)
+	}
+	if set.heldCount() != 0 {
+		t.Fatal("held past the mark")
+	}
+	if got := pollRaw(t); bodies(got) != "a" {
+		t.Fatalf("not offered again: %q", bodies(got))
+	}
+	nostrAck(pollRaw(t).K, "")
+	_ = ids
+}
+
+func TestFreeAndMarkLeaveAnAddressWithNothingHeldAlone(t *testing.T) {
+	_, peer, tag, rcv, _ := heldSetUp(t)
+	_ = peer
+	seenPath, _ := addressFiles(rcv)
+	loadSeen(seenPath).handedOver([]nostr.ID{randomID(t)})
+	before, _ := os.ReadFile(seenPath)
+	for _, how := range []string{"mark", "free"} {
+		if err := nostrLetHeld(tag, how); err != nil {
+			t.Fatal(err)
+		}
+	}
+	after, _ := os.ReadFile(seenPath)
+	if string(before) != string(after) {
+		t.Fatalf("nothing held and the file changed: %q", after)
+	}
+	// with one held, a mark alone lets it go for the next start
+	s := loadSeen(seenPath)
+	id := randomID(t)
+	s.claim(id)
+	s.hold(id, nostr.Timestamp(time.Now().Unix()), "", time.Now())
+	if err := nostrLetHeld(tag, "mark"); err != nil {
+		t.Fatal(err)
+	}
+	if w := loadSeen(seenPath).wanted(time.Now()); len(w) != 1 || w[0] != id {
+		t.Fatalf("marked and not wanted: %v", w)
+	}
+}
+
+// a file of more slices than there are groups, then a text, both past the
+// shelf: let go, all of it comes
+func TestABigFileAndATextHeldBothComeBack(t *testing.T) {
+	relay, peer, tag, rcv, ck := heldSetUp(t)
+	now := time.Now()
+	n := 300
+	for i := 0; i < n; i++ {
+		relay.store(wrapToAt(t, peer, myXPub, fmt.Sprintf("s%d", i), now.Add(-2*time.Hour+time.Duration(i)*time.Second)))
+	}
+	relay.store(wrapToAt(t, peer, myXPub, "text", now.Add(-time.Hour)))
+	hold := func(c string) string {
+		if strings.HasPrefix(c, "s") {
+			return "hold:file-1"
+		}
+		return "hold"
+	}
+	keep := func(string) string { return "keep" }
+	if got := heldRun(t, tag, peer, rcv, ck, hold); len(got) != n+1 {
+		t.Fatalf("the first start offered %d", len(got))
+	}
+	if err := nostrLetHeld(tag, "free"); err != nil {
+		t.Fatal(err)
+	}
+	got := heldRun(t, tag, peer, rcv, ck, keep)
+	if len(got) != n+1 || !got["text"] || !got["s299"] {
+		t.Fatalf("let go and %d came back", len(got))
+	}
+}
+
+// a freed id the relay no longer has is asked for once
+func TestAFreedIDTheRelayLostIsForgotten(t *testing.T) {
+	relay, peer, tag, rcv, ck := heldSetUp(t)
+	now := time.Now()
+	gone := wrapToAt(t, peer, myXPub, "gone", now.Add(-30*time.Hour))
+	relay.store(gone, wrapToAt(t, peer, myXPub, "kept", now.Add(-29*time.Hour)),
+		wrapToAt(t, peer, myXPub, "new", now.Add(-time.Minute)))
+	how := func(c string) string {
+		if c == "new" {
+			return "keep"
+		}
+		return "hold"
+	}
+	heldRun(t, tag, peer, rcv, ck, how)
+	relay.mu.Lock()
+	var left []nostr.Event
+	for _, ev := range relay.events {
+		if ev.ID != gone.ID {
+			left = append(left, ev)
+		}
+	}
+	relay.events = left
+	relay.mu.Unlock()
+	if err := nostrLetHeld(tag, "free"); err != nil {
+		t.Fatal(err)
+	}
+	if got := heldRun(t, tag, peer, rcv, ck, how); !got["kept"] || len(got) != 1 {
+		t.Fatalf("let go, got %v", got)
+	}
+	seenPath, _ := addressFiles(rcv)
+	if w := loadSeen(seenPath).wanted(time.Now()); len(w) != 0 {
+		t.Fatalf("%d still asked for", len(w))
 	}
 }

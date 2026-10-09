@@ -8,6 +8,7 @@ package main
 // so what never reached the app, or did not go in, is fetched again.
 
 import (
+	"crypto/sha256"
 	"encoding/hex"
 	"os"
 	"strconv"
@@ -25,16 +26,21 @@ const (
 	// ids of events that did not open. kept apart, so the ids of events that
 	// opened stay whatever else arrives
 	seenUnopenedKeep = 500
-	// ids the app left on the relay for later, a full shelf's. past this an
-	// address's next one is taken as kept, so a flood costs a start nothing
+	// what the app left on the relay for later, a full shelf's, in groups:
+	// a text is one, a file one however many slices. past this an address's
+	// next one is taken as kept, so a flood costs a start nothing
 	seenHeldKeep = 200
+	// slices of one file held, the most the shelf keeps of a file
+	seenHeldPerGroup = 512
+	// ids held on an address, all groups together
+	seenHeldMost = 2000
 	// a relay keeps a wrap this long (its expiration tag), and no longer
 	seenHeldFor = 14 * 24 * time.Hour
 	// the file is rewritten to what is kept once it holds this many lines
-	seenFileMax = seenKeep + seenUnopenedKeep + seenHeldKeep + 100
+	seenFileMax = seenKeep + seenUnopenedKeep + seenHeldMost + 100
 )
 
-// a held id is written as "+id stamp". after a "!" line every id held
+// a held id is written as "+id stamp group". after a "!" line every id held
 // before it is fetched again, after a "~" line every one goes as kept
 const (
 	seenHeldMark = "+"
@@ -42,10 +48,56 @@ const (
 	seenDropMark = "~"
 )
 
-// an event left on the relay, and whether it is wanted back now
+// an event left on the relay, whether it is wanted back now, and the group
+// it is held in
 type heldAt struct {
-	at   nostr.Timestamp
-	free bool
+	at    nostr.Timestamp
+	free  bool
+	group string
+}
+
+// the group a held id is kept in: the app's name for it, hashed, or the id
+// itself for a text
+func heldGroup(id nostr.ID, name string) string {
+	if name == "" {
+		return id.Hex()[:16]
+	}
+	h := sha256.Sum256([]byte(name))
+	return hex.EncodeToString(h[:8])
+}
+
+// whether one more id of group fits beside what is held: a group already
+// there takes it up to its most, a new one only while there are fewer
+// groups than seenHeldKeep
+func heldRoom(held map[nostr.ID]heldAt, group string) bool {
+	if len(held) >= seenHeldMost {
+		return false
+	}
+	groups := map[string]bool{}
+	in := 0
+	for _, h := range held {
+		groups[h.group] = true
+		if h.group == group {
+			in++
+		}
+	}
+	if in > 0 {
+		return in < seenHeldPerGroup
+	}
+	return len(groups) < seenHeldKeep
+}
+
+// moves on each time an address's held ids are let go of, by its file. a
+// hold from a batch polled before that is not taken
+var (
+	heldFreedMu sync.Mutex
+	heldFreed   = map[string]uint64{}
+)
+
+func heldGen(path string) uint64 {
+	heldFreedMu.Lock()
+	defer heldFreedMu.Unlock()
+	return heldFreed[path]
 }
 
 // an unopened id is written with this in front, so a restart keeps the two
@@ -182,12 +234,12 @@ func (s *seenIDs) readLine(line string) {
 			delete(s.held, id)
 		}
 	case strings.HasPrefix(line, seenHeldMark):
-		id, at, ok := parseHeldLine(line)
+		id, at, group, ok := parseHeldLine(line)
 		if !ok {
 			return
 		}
-		if _, had := s.held[id]; had || len(s.held) < seenHeldKeep {
-			s.held[id] = heldAt{at: at}
+		if _, had := s.held[id]; had || heldRoom(s.held, group) {
+			s.held[id] = heldAt{at: at, group: group}
 		}
 	case strings.HasPrefix(line, seenUnopenedMark):
 		if id, ok := parseSeenID(line[len(seenUnopenedMark):]); ok {
@@ -202,21 +254,25 @@ func (s *seenIDs) readLine(line string) {
 	}
 }
 
-func parseHeldLine(line string) (nostr.ID, nostr.Timestamp, bool) {
-	h, ts, ok := strings.Cut(strings.TrimPrefix(line, seenHeldMark), " ")
-	if !ok {
-		return nostr.ID{}, 0, false
+func parseHeldLine(line string) (nostr.ID, nostr.Timestamp, string, bool) {
+	f := strings.Fields(strings.TrimPrefix(line, seenHeldMark))
+	if len(f) < 2 {
+		return nostr.ID{}, 0, "", false
 	}
-	id, ok := parseSeenID(h)
-	at, err := strconv.ParseInt(ts, 10, 64)
+	id, ok := parseSeenID(f[0])
+	at, err := strconv.ParseInt(f[1], 10, 64)
 	if !ok || err != nil {
-		return nostr.ID{}, 0, false
+		return nostr.ID{}, 0, "", false
 	}
-	return id, nostr.Timestamp(at), true
+	group := id.Hex()[:16]
+	if len(f) > 2 {
+		group = f[2]
+	}
+	return id, nostr.Timestamp(at), group, true
 }
 
-func heldLine(id nostr.ID, at nostr.Timestamp) string {
-	return seenHeldMark + id.Hex() + " " + strconv.FormatInt(int64(at), 10)
+func heldLine(id nostr.ID, h heldAt) string {
+	return seenHeldMark + id.Hex() + " " + strconv.FormatInt(int64(h.at), 10) + " " + h.group
 }
 
 // what the relays no longer keep is not waited for
@@ -261,23 +317,42 @@ func (s *seenIDs) claim(id nostr.ID) bool {
 	return true
 }
 
-// an event the app left on the relay until there is room for it: passed
-// over from here without being opened, and fetched by its id once let go.
-// false when the address holds its most already or the relay no longer
-// keeps it, and the caller takes it as kept
-func (s *seenIDs) hold(id nostr.ID, at nostr.Timestamp, now time.Time) bool {
+// an event the app left on the relay until there is room for it, in the
+// group the app names (a file's slices share one): passed over from here
+// without being opened, and fetched by its id once let go. false when the
+// address has no room for it or the relay no longer keeps it, and the
+// caller takes it as kept
+func (s *seenIDs) hold(id nostr.ID, at nostr.Timestamp, name string, now time.Time) bool {
+	group := heldGroup(id, name)
 	s.mu.Lock()
 	delete(s.queued, id)
 	s.pruneHeld(now)
 	_, had := s.held[id]
-	if heldGone(at, now) || (!had && len(s.held) >= seenHeldKeep) {
+	if heldGone(at, now) || (!had && !heldRoom(s.held, group)) {
 		s.mu.Unlock()
 		return false
 	}
-	s.held[id] = heldAt{at: at}
+	h := heldAt{at: at, group: group}
+	s.held[id] = h
 	s.mu.Unlock()
-	s.write([]string{heldLine(id, at)})
+	s.write([]string{heldLine(id, h)})
 	return true
+}
+
+// freed ids a relay answered for without them: it no longer has them, and
+// they are not asked for again
+func (s *seenIDs) notOnRelay(ids []nostr.ID) {
+	var lines []string
+	s.mu.Lock()
+	for _, id := range ids {
+		if h, ok := s.held[id]; ok && h.free {
+			delete(s.held, id)
+			s.opened.add(id)
+			lines = append(lines, id.Hex())
+		}
+	}
+	s.mu.Unlock()
+	s.write(lines)
 }
 
 // held events let go of, which a connection asks the relay for by id
@@ -396,17 +471,17 @@ func (s *seenIDs) compactLocked() {
 			}
 			order = nil
 		case strings.HasPrefix(line, seenHeldMark):
-			id, at, ok := parseHeldLine(line)
+			id, at, group, ok := parseHeldLine(line)
 			if !ok {
 				continue
 			}
 			if _, had := held[id]; !had {
-				if len(held) >= seenHeldKeep {
+				if !heldRoom(held, group) {
 					continue
 				}
 				order = append(order, id)
 			}
-			held[id] = heldAt{at: at}
+			held[id] = heldAt{at: at, group: group}
 		case strings.HasPrefix(line, seenUnopenedMark):
 			unopened = append(unopened, line)
 			if id, ok := parseSeenID(line[len(seenUnopenedMark):]); ok {
@@ -438,10 +513,10 @@ func (s *seenIDs) compactLocked() {
 		// once each, however often it was held
 		delete(held, id)
 		if h.free {
-			keep = append(keep, heldLine(id, h.at))
+			keep = append(keep, heldLine(id, h))
 			free = true
 		} else {
-			still = append(still, heldLine(id, h.at))
+			still = append(still, heldLine(id, h))
 		}
 	}
 	if free {
@@ -465,6 +540,11 @@ func (s *seenIDs) compactLocked() {
 func markHeldFile(path, mark string) {
 	if path == "" || engineHeld.Load() {
 		return
+	}
+	if mark == seenFreeMark {
+		heldFreedMu.Lock()
+		heldFreed[path]++
+		heldFreedMu.Unlock()
 	}
 	seenFileMu.Lock()
 	defer seenFileMu.Unlock()
@@ -494,6 +574,8 @@ type inboxDone struct {
 	resave func(int64)
 	// the stamp inside the wrap, the sender's own clock, for the app
 	sent int64
+	// heldGen of its file when the poll handed it over
+	freed uint64
 }
 
 // remembers every event of a batch the poll handed over, one write per file
