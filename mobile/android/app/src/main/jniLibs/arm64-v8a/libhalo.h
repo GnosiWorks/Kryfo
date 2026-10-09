@@ -435,6 +435,10 @@ extern char* HaloRoomUnsubscribe(char* cPub);
 //
 extern char* HaloSetTransportMode(char* cMode);
 extern char* HaloTransportMode(void);
+
+// GET url into path, whole or not at all. "ok <bytes>" or "error: ...".
+//
+extern char* HaloTorGetFile(char* cUrl, char* cPath);
 extern char* HaloTransportState(void);
 
 // {"pub": "age1...", "priv": "AGE-SECRET-KEY-1..."}
