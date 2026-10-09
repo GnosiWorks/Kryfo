@@ -4,7 +4,6 @@
 // so and waves: the pack's waving sticker, or the emoji, once, as the first
 // message of a request. the chat's own screen, with real signal over rows
 // kept in maps and a relay that answers when told
-import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' show max;
@@ -19,7 +18,6 @@ import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/main.dart'
     show
-        HaloEngine,
         appState,
         makePreKeyBundleB64,
         openAddedChatLater,
@@ -48,197 +46,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dev_chat_fakes.dart';
 import 'mem_db.dart';
 import 'narrow_settings.dart' show loadAppFonts;
+import 'say_hi_fakes.dart';
 import 'sticker_test_util.dart';
 
 const _peer = 'amber-new-river';
-
-// what the chat's screen reads and writes of its database, kept in maps
-class _Db extends DevTestDb {
-  _Db(super.mem, [super.container]);
-
-  Map<String, Object?>? _contact(String id) {
-    for (final r in mem.rows('contacts')) {
-      if (r['halo_id'] == id) return r;
-    }
-    return null;
-  }
-
-  Map<String, Object?>? _row(String uid) {
-    for (final r in mem.rows('messages')) {
-      if (r['msg_uid'] == uid) return r;
-    }
-    return null;
-  }
-
-  List<Map<String, Object?>> _thread(String peer) => [
-    for (final r in mem.rows('messages'))
-      if (r['peer_id'] == peer && r['group_id'] == null)
-        {...r, 'rowid': r['id']},
-  ];
-
-  bool _flag(String id, String col) => _contact(id)?[col] == 1;
-
-  @override
-  Future<Map<String, Object?>?> getContact(String haloId) async =>
-      _contact(haloId);
-  @override
-  Future<bool> isAccepted(String haloId) async => _flag(haloId, 'accepted');
-  @override
-  Future<bool> isBackPaired(String peerId) async =>
-      _flag(peerId, 'back_paired');
-  @override
-  Future<bool> isBlocked(String haloId) async => _flag(haloId, 'blocked');
-  @override
-  Future<bool> isMuted(String haloId) async => _flag(haloId, 'muted');
-  @override
-  Future<bool> isVerified(String haloId) async => _flag(haloId, 'verified');
-  @override
-  Future<bool> keyChanged(String haloId) async => false;
-  @override
-  Future<String?> getAtmosphere(String peerId) async => null;
-  @override
-  Future<void> clearUnread(String peerId) async {}
-  @override
-  Future<void> dropHeld(String peerId) async {}
-  @override
-  Future<int> countMessagesFrom(String peerId, {bool inGroups = false}) async =>
-      _thread(peerId).where((r) => r['direction'] == 'in').length;
-  @override
-  Future<int> countMessagesTo(String peerId) async =>
-      _thread(peerId).where((r) => r['direction'] == 'out').length;
-  @override
-  Future<List<Map<String, Object?>>> vouchesFor(String haloId) async => [];
-  @override
-  Future<Map<String, Object?>?> shieldFor(String haloId) async => null;
-  @override
-  Future<void> purgeExpiredBurns({
-    Future<Set<String>> Function()? blocked,
-  }) async {}
-  @override
-  Future<List<Map<String, Object?>>> messagesFor(String peerId) async =>
-      _thread(peerId);
-  @override
-  Future<List<Map<String, Object?>>> messagesPage(
-    String peerId, {
-    int? beforeRowid,
-    int limit = 60,
-  }) async {
-    final rows = [
-      for (final r in _thread(peerId))
-        if (beforeRowid == null || (r['id'] as int) < beforeRowid) r,
-    ];
-    return rows.length > limit ? rows.sublist(rows.length - limit) : rows;
-  }
-
-  @override
-  Future<List<Map<String, Object?>>> unsentOutbox({
-    Set<String> skip = const {},
-  }) async => [];
-  @override
-  Future<List<Map<String, Object?>>> messagesAfter(
-    String peerId,
-    int afterRowid,
-  ) async => [
-    for (final r in _thread(peerId))
-      if ((r['id'] as int) > afterRowid) r,
-  ];
-  @override
-  Future<Map<String, List<MapEntry<String, String>>>> loadReactionsFor(
-    List<String> msgUids,
-  ) async => {};
-  @override
-  Future<List<Map<String, Object?>>> pinnedIn({
-    String? peerId,
-    String? groupId,
-  }) async => [];
-  @override
-  Future<bool> messageExists(String msgUid) async => _row(msgUid) != null;
-  final nonces = <String, int>{};
-  @override
-  Future<void> setPowNonce(String msgUid, int nonce) async =>
-      nonces[msgUid] = nonce;
-  @override
-  Future<int?> powNonceOf(String msgUid) async => nonces[msgUid];
-  @override
-  Future<int?> lightBurn(String msgUid) async => null;
-  @override
-  Future<void> markSent(String msgUid) => mem.update(
-    'messages',
-    {'sent': 1},
-    where: 'msg_uid = ?',
-    whereArgs: [msgUid],
-  );
-  @override
-  Future<bool> isSent(String msgUid) async => _row(msgUid)?['sent'] == 1;
-  @override
-  Future<({bool sent, bool delivered})> sendState(String msgUid) async =>
-      (sent: _row(msgUid)?['sent'] == 1, delivered: false);
-
-  @override
-  Future<void> saveMessage(
-    String peerId,
-    String direction,
-    String plaintext, {
-    int? burnAt,
-    int? burnSecs,
-    String? msgUid,
-    String? replyTo,
-    String? groupId,
-    String? mediaPath,
-    String? filePath,
-    String? fileName,
-    bool voiceDisguised = false,
-    bool saved = false,
-    int sent = 1,
-    String? preview,
-    bool secure = false,
-    String? poll,
-    String? sticker,
-    int? sentAt,
-    bool viaDev = false,
-  }) async {
-    await mem.insert('messages', {
-      'peer_id': peerId,
-      'direction': direction,
-      'plaintext': plaintext,
-      'sent_at': sentAt ?? DateTime.now().millisecondsSinceEpoch,
-      'msg_uid': msgUid,
-      'reply_to': replyTo,
-      'sent': sent,
-      'sticker': sticker,
-    });
-  }
-}
-
-// the relay: every send waits for its answer
-class _Engine implements HaloEngine {
-  final sends = <Completer<String>>[];
-  final ciphers = <String>[];
-
-  @override
-  Future<String> nostrSend(String peerXPubHex, String b64Cipher) {
-    final c = Completer<String>();
-    sends.add(c);
-    ciphers.add(b64Cipher);
-    return c.future;
-  }
-
-  @override
-  String myEdPubkey() => 'ed-me';
-  @override
-  String myXPubkey() => 'x-me';
-  @override
-  void nostrSubscribeBg(String peerXPubHex) {}
-  @override
-  void nostrUnsubscribeBg(String peerXPubHex) {}
-  @override
-  dynamic noSuchMethod(Invocation i) =>
-      throw UnimplementedError('engine: ${i.memberName}');
-}
-
-void _mock(String channel, Future<Object?> Function(MethodCall c)? h) =>
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(MethodChannel(channel), h);
 
 // the app's root navigator, as a link's add pushes onto it
 Widget _app({
@@ -263,7 +74,7 @@ Widget _app({
 void main() {
   late SignalSession amber;
   late MemDb mem;
-  late _Engine relay;
+  late SayHiRelay relay;
   late Directory docs;
   late StickerLibrary packs;
   late List<String> ground;
@@ -304,11 +115,11 @@ void main() {
       'accepted': 1,
       'back_paired': knowsMe ? 1 : 0,
     });
-    final db = _Db(mem, container);
+    final db = SayHiDb(mem, container);
     if (container.quiet) {
       final everyday = MemDb();
       await devChatTables(everyday);
-      useDatabasesForTest(_Db(everyday), Session(db));
+      useDatabasesForTest(SayHiDb(everyday), Session(db));
     } else {
       useDatabasesForTest(db, Session(db));
     }
@@ -322,7 +133,7 @@ void main() {
     });
     FlutterSecureStorage.setMockInitialValues({'send_mode': 'balanced'});
     appState.sendModeForTest = 'balanced';
-    relay = _Engine();
+    relay = SayHiRelay();
     useEngineForTest(relay);
     ground = [];
     // the proof of work is ground for real, and noted
@@ -331,9 +142,9 @@ void main() {
       return grindPow(text, powBits);
     };
     docs = Directory.systemTemp.createTempSync('say_hi');
-    _mock('plugins.flutter.io/path_provider', (_) async => docs.path);
+    mockChannel('plugins.flutter.io/path_provider', (_) async => docs.path);
     // the mic's recorder is made with the composer and let go with it
-    _mock('com.llfbandit.record/messages', (_) async => null);
+    mockChannel('com.llfbandit.record/messages', (_) async => null);
     packs = useLibrary();
     await world();
   });
@@ -341,8 +152,8 @@ void main() {
   tearDown(() {
     grindPowForTest = null;
     StickerLibrary.use(null);
-    _mock('plugins.flutter.io/path_provider', null);
-    _mock('com.llfbandit.record/messages', null);
+    mockChannel('plugins.flutter.io/path_provider', null);
+    mockChannel('com.llfbandit.record/messages', null);
     docs.deleteSync(recursive: true);
   });
 
@@ -507,6 +318,35 @@ void main() {
     await devClose(t);
   });
 
+  testWidgets('two taps before the next frame wave once, and the sticker '
+      'leaves the card for its flight', (t) async {
+    final hi = wavingSticker(packs)!.$2;
+    final waves = <Rect>[];
+    await devOpen(
+      t,
+      Scaffold(
+        body: SayHiCard(sticker: hi, onWave: (from, _) => waves.add(from)),
+      ),
+    );
+    final art = find.byType(StickerView);
+    await t.tap(wave());
+    await t.tap(art);
+    await t.tap(wave());
+    expect(waves, hasLength(1));
+    // from where the sticker was drawn
+    expect(waves.single, t.getRect(art));
+    await t.pump();
+    expect(
+      t
+          .widget<Opacity>(
+            find.ancestor(of: art, matching: find.byType(Opacity)).first,
+          )
+          .opacity,
+      0,
+    );
+    await devClose(t);
+  });
+
   testWidgets('with no waving sticker the wave is the emoji, and what is '
       'typed stays', (t) async {
     StickerLibrary.use(StickerLibrary(const []));
@@ -636,8 +476,8 @@ void main() {
     ('en', true),
   ]) {
     testWidgets('on a 360x640 screen at 1.5x text in $code'
-        '${keyboard ? ' with the keyboard up' : ''}, the card fits and its '
-        'wave is in reach', (t) async {
+        '${keyboard ? ' with the keyboard up' : ''}, the card fits, its '
+        'wave is in reach, and the request line after it fits too', (t) async {
       t.view.physicalSize = const Size(720, 1280);
       t.view.devicePixelRatio = 2;
       if (keyboard) {
@@ -666,13 +506,14 @@ void main() {
         t.getRect(wave()).bottom,
         lessThanOrEqualTo(640 - (keyboard ? 280 : 0)),
       );
-      if (!keyboard) {
-        await t.tap(wave());
-        await settle(t);
-        expect(relay.ciphers, hasLength(1));
-        relay.sends.single.complete('ok');
-        await settle(t);
-      }
+      await t.tap(wave());
+      await settle(t);
+      expect(relay.ciphers, hasLength(1));
+      relay.sends.single.complete('ok');
+      await settle(t);
+      // the request's line has come in above the thread, and all of it fits
+      expect(find.text(l10n.chatMessageRequest), findsOneWidget);
+      expect(t.takeException(), isNull);
       setL10nLocale(const Locale('en'));
       await devClose(t);
     });
