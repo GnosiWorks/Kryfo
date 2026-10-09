@@ -128,6 +128,20 @@ void main() {
     await t.pump();
     expect(find.text(l10n.backupNotMade), findsNothing);
 
+    // the decoy's hidden chats PIN: nothing there either
+    lockState.lock();
+    final decoy = _Db(HaloContainer.decoy);
+    useDatabasesForTest(
+      live,
+      await Session.withVault(decoy, _Db(HaloContainer.decoyVault)),
+    );
+    renewRootNavigator();
+    lockState.openForTest(enabled: true);
+    lockState.inDecoy = true;
+    await t.pump();
+    await t.pump();
+    expect(find.text(l10n.backupNotMade), findsNothing);
+
     // the hidden chats PIN
     lockState.lock();
     useDatabasesForTest(live, hidden);
