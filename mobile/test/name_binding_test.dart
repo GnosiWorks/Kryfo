@@ -288,6 +288,34 @@ void main() {
     expect(live.people[id], row);
   });
 
+  test('a stranger\'s opener that opened and was not filed lands when it '
+      'comes again', () async {
+    final stray = await _phone();
+    final ed = _rndHex(32);
+    const id = 'stray-words-six';
+    _idOf[ed] = id;
+    final c = await _opener(stray, id, ed, _said, pow: pow);
+    final line = (peer: 'firstcontact', cipher: c);
+    live.beforeSave = () {
+      live.beforeSave = null;
+      throw StateError('the disk is full');
+    };
+    expect(await app.receiveRelay([line]), {0});
+    expect(live.msgs.where((m) => m['peer_id'] == id), isEmpty);
+    expect(live.seen, isEmpty);
+    // signal does not open it a second time
+    expect(await app.receiveRelay([line]), isEmpty);
+    await _settle();
+    expect(
+      [
+        for (final m in live.msgs)
+          if (m['peer_id'] == id) m['plaintext'],
+      ],
+      [_said],
+    );
+    expect(live.seen, hasLength(1));
+  });
+
   test('a copy of a turned-away stranger\'s opener leaves them turned '
       'away, and tells them nothing', () async {
     final stray = await _phone();

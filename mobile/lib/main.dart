@@ -13245,104 +13245,125 @@ class AppState extends ChangeNotifier {
   // sender's claimed identity (via envelope) and move the libsignal
   // session to the real HaloID. someone the router keeps is filed by the
   // router, never as an everyday request. the id and where it went
+  //
+  // signal spends the prekey on the open, so one that fails after it is
+  // kept as opened and throws: it goes on from there when it comes again
   Future<(String, RouteTo)?> backPairFromCipher(String cipher) async {
+    final epoch = _openedEpoch;
+    final k = 'fc:${sha256.convert(utf8.encode(cipher))}';
+    final before = _relayOpened[k];
+    final opened = before != null
+        ? (
+            haloId: before.id,
+            plain: before.plain,
+            env: unwrapMessage(before.plain),
+          )
+        : await _io.openFirstContact(cipher);
+    if (opened == null) return null;
+    _keepOpened(k, opened.haloId, opened.plain, epoch);
     try {
-      final opened = await _io.openFirstContact(cipher);
-      if (opened == null) return null;
-      var h = opened.haloId;
-      final env = opened.env;
-      // the developer never starts a chat this way, and no one else may
-      // claim to be him
-      if (devCardClaim(id: h, xPub: env.senderXPub)) return null;
-      await _afterClose();
-      if (_moveDone != null) await _afterMove(h, null);
-      // a hidden chat's name stays with its key as well
-      if (h == env.senderHaloId && await _hiddenKeyDiffers(h, env)) {
-        final at = await _refileFirstContact(h);
-        if (at == null) return null;
-        h = at;
-      }
-      final to = _routeOf(h, null);
-      // a copy of one here or one that went (off a relay's backlog, say):
-      // the row stays as it is, a request turned away stays turned away,
-      // and only someone accepted hears again that it came
-      final uid = env.msgUid;
-      if (uid != null && (to == RouteTo.everyday || to == RouteTo.vault)) {
-        final db = to == RouteTo.vault ? _openVault! : live;
-        final have = await db.messageExists(uid);
-        if (have || await db.goneFrom(h, uid)) {
-          if (have && await db.isAccepted(h)) {
-            unawaited(_sendDeliveryReceipt(h, uid));
-          }
-          return (h, RouteTo.dropped);
-        }
-      }
-      // persist contact + nostr sub. a stranger who back-paired to us lands
-      // unaccepted: their message waits in requests until we accept. while
-      // the vault is shut its people are filed when it opens
-      HaloDb? filed;
-      var fresh = false;
-      if (to == RouteTo.everyday || to == RouteTo.vault) {
-        final db = to == RouteTo.vault ? _openVault! : live;
-        filed = db;
-        fresh = await db.getContact(h) == null;
-        await db.upsertContact(
-          h,
-          env.senderOnion ?? '',
-          env.senderXPub ?? '',
-          accepted: 0,
-        );
-        // filed on its own: the request says the name it gave
-        final said = env.senderHaloId;
-        if (said != null && said != h) await _noteOtherKey(db, h, said);
-      }
-      final x = env.senderXPub;
-      final heardAs = x == null ? null : _xPubToHaloId[x];
-      if (to != RouteTo.dropped && x != null && x.isNotEmpty) {
-        _xPubToHaloId[x] = h;
-        _io.listen(x);
-      }
-      var went = to;
-      try {
-        went = await _applyIncomingPayload(
-          h,
-          env,
-          wire: opened.plain,
-          fromBackPair: true,
-        );
-      } on CapHeld catch (e) {
-        // the row exists now. kept as opened, let in on accept
-        final into = e is _HeldIn ? e.into : filed;
-        await into?.holdCipher(h, heldWire(opened.plain));
-      } on _NoProof {
-        // the session it opened goes, so nothing later from it opens
-        // without the proof, and a row it made goes with it
-        await _io.dropSession(h);
-        if (fresh) {
-          await filed?.forgetRequest(h);
-          // the address it was heard on goes too, unless someone here has it
-          if (x != null && x.isNotEmpty && _xPubToHaloId[x] == h) {
-            if (heardAs == null) {
-              _xPubToHaloId.remove(x);
-              _io.unlisten(x);
-            } else {
-              _xPubToHaloId[x] = heardAs;
-            }
-          }
+      final r = await _backPairOpened(opened);
+      _relayOpened.remove(k);
+      return r;
+    } catch (e) {
+      dlog('back-pair: kept as opened, not filed ($e)');
+      rethrow;
+    }
+  }
+
+  Future<(String, RouteTo)?> _backPairOpened(
+    ({String haloId, String plain, UnwrappedMessage env}) opened,
+  ) async {
+    var h = opened.haloId;
+    final env = opened.env;
+    // the developer never starts a chat this way, and no one else may
+    // claim to be him
+    if (devCardClaim(id: h, xPub: env.senderXPub)) return null;
+    await _afterClose();
+    if (_moveDone != null) await _afterMove(h, null);
+    // a hidden chat's name stays with its key as well
+    if (h == env.senderHaloId && await _hiddenKeyDiffers(h, env)) {
+      final at = await _refileFirstContact(h);
+      if (at == null) return null;
+      h = at;
+    }
+    final to = _routeOf(h, null);
+    // a copy of one here or one that went (off a relay's backlog, say):
+    // the row stays as it is, a request turned away stays turned away,
+    // and only someone accepted hears again that it came
+    final uid = env.msgUid;
+    if (uid != null && (to == RouteTo.everyday || to == RouteTo.vault)) {
+      final db = to == RouteTo.vault ? _openVault! : live;
+      final have = await db.messageExists(uid);
+      if (have || await db.goneFrom(h, uid)) {
+        if (have && await db.isAccepted(h)) {
+          unawaited(_sendDeliveryReceipt(h, uid));
         }
         return (h, RouteTo.dropped);
       }
-      if (_shown(went)) {
-        await refreshContacts();
-        notifyListeners();
-        await forgetPeerFc(h);
-      }
-      dlog('back-pair: done for $h');
-      return (h, went);
-    } catch (e) {
-      dlog('back-pair error: $e');
-      return null;
     }
+    // persist contact + nostr sub. a stranger who back-paired to us lands
+    // unaccepted: their message waits in requests until we accept. while
+    // the vault is shut its people are filed when it opens
+    HaloDb? filed;
+    var fresh = false;
+    if (to == RouteTo.everyday || to == RouteTo.vault) {
+      final db = to == RouteTo.vault ? _openVault! : live;
+      filed = db;
+      fresh = await db.getContact(h) == null;
+      await db.upsertContact(
+        h,
+        env.senderOnion ?? '',
+        env.senderXPub ?? '',
+        accepted: 0,
+      );
+      // filed on its own: the request says the name it gave
+      final said = env.senderHaloId;
+      if (said != null && said != h) await _noteOtherKey(db, h, said);
+    }
+    final x = env.senderXPub;
+    final heardAs = x == null ? null : _xPubToHaloId[x];
+    if (to != RouteTo.dropped && x != null && x.isNotEmpty) {
+      _xPubToHaloId[x] = h;
+      _io.listen(x);
+    }
+    var went = to;
+    try {
+      went = await _applyIncomingPayload(
+        h,
+        env,
+        wire: opened.plain,
+        fromBackPair: true,
+      );
+    } on CapHeld catch (e) {
+      // the row exists now. kept as opened, let in on accept
+      final into = e is _HeldIn ? e.into : filed;
+      await into?.holdCipher(h, heldWire(opened.plain));
+    } on _NoProof {
+      // the session it opened goes, so nothing later from it opens
+      // without the proof, and a row it made goes with it
+      await _io.dropSession(h);
+      if (fresh) {
+        await filed?.forgetRequest(h);
+        // the address it was heard on goes too, unless someone here has it
+        if (x != null && x.isNotEmpty && _xPubToHaloId[x] == h) {
+          if (heardAs == null) {
+            _xPubToHaloId.remove(x);
+            _io.unlisten(x);
+          } else {
+            _xPubToHaloId[x] = heardAs;
+          }
+        }
+      }
+      return (h, RouteTo.dropped);
+    }
+    if (_shown(went)) {
+      await refreshContacts();
+      notifyListeners();
+      await forgetPeerFc(h);
+    }
+    dlog('back-pair: done for $h');
+    return (h, went);
   }
 
   // whether a hidden chat holds [id] with a key other than the one this
@@ -13613,7 +13634,12 @@ class AppState extends ChangeNotifier {
         }
       }
       if (!handled && _isPreKeyWire(cipher)) {
-        final paired = await backPairFromCipher(cipher);
+        (String, RouteTo)? paired;
+        try {
+          paired = await backPairFromCipher(cipher);
+        } catch (_) {
+          // kept as opened: its copy on a relay goes on from there
+        }
         handled = paired != null;
         if (paired != null) shown = _shown(paired.$2);
         dlog('drain: back-pair ${paired != null ? "ok" : "failed"}');
