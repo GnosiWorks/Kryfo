@@ -1058,7 +1058,7 @@ class HaloDb implements GroupOwedStore {
   // whose database this is: its file, and where its key sits
   final HaloContainer container;
 
-  static const _storage = secureStoreEsp;
+  static const _storage = secureStore;
 
   Database? _db;
   String? _given;
