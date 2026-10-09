@@ -622,9 +622,12 @@ class GrowSwap extends StatelessWidget {
       switchOutCurve: Curves.easeInCubic,
       layoutBuilder: (current, previous) =>
           Stack(alignment: alignment, children: [...previous, ?current]),
+      // as wide as what it shows, so the stack puts it at [alignment]: a
+      // size transition alone spans the row and pins it to the start
       transitionBuilder: (child, a) => SizeTransition(
         sizeFactor: a,
         axisAlignment: -1,
+        fixedCrossAxisSizeFactor: 1,
         child: FadeTransition(opacity: a, child: child),
       ),
       child: child,
