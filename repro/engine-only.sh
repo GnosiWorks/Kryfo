@@ -11,10 +11,10 @@ mkdir -p "$OUT/arm64-v8a" "$OUT/armeabi-v7a" "$OUT/x86_64"
 # -buildid= clears go's random build id, -w -s drop the debug tables that
 # carry paths, and --build-id=none stops lld stamping a random note.
 # trimpath comes from GOFLAGS in the image.
-# anet, which snowflake uses for interfaces on android, reaches into net
-# with go:linkname, and go refuses that unless told not to check
-LDFLAGS="-buildid= -w -s -checklinkname=0"
+LDFLAGS="-buildid= -w -s"
 export CGO_LDFLAGS="-Wl,--build-id=none"
+# same as engine/build.sh, or the hashes differ from the shipped libs
+export CGO_CFLAGS="-O2 -g -fstack-protector-strong -D_FORTIFY_SOURCE=2"
 # no git stamp, same as engine/build.sh: the mounted tree has no .git and
 # the shipped engine must not carry a commit either
 export GOFLAGS="$GOFLAGS -buildvcs=false"
