@@ -479,23 +479,22 @@ func servePTConn(conn net.Conn, name string, factory base.ClientFactory, r *ptLi
 	}
 	log.Printf("bridges: %s connected", name)
 
-	var wg sync.WaitGroup
-	wg.Add(2)
+	// the first side to finish ends both. a snowflake stream never sees eof
+	// from its far end, so waiting for a half close would hold the
+	// transport open after tor has gone.
+	done := make(chan struct{}, 2)
 	go func() {
-		defer wg.Done()
 		_, _ = io.Copy(remote, conn)
-		if c, ok := remote.(interface{ CloseWrite() error }); ok {
-			_ = c.CloseWrite()
-		}
+		done <- struct{}{}
 	}()
 	go func() {
-		defer wg.Done()
 		_, _ = io.Copy(conn, remote)
-		if c, ok := conn.(interface{ CloseWrite() error }); ok {
-			_ = c.CloseWrite()
-		}
+		done <- struct{}{}
 	}()
-	wg.Wait()
+	<-done
+	conn.Close()
+	remote.Close()
+	<-done
 }
 
 // a dial error names the address it failed on, and logs never carry bridge
