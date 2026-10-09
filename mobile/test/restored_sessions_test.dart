@@ -716,11 +716,45 @@ void main() {
     final file = backUp(p);
     expect(await _atMe(p, await _fromPeer(p, 'after')), 'after');
     await restore(p, file);
-    await signalSession.markRestored(from: 4242);
+    const day = Duration.millisecondsPerDay;
+    await signalSession.markRestored(from: 20000 * day + 4242);
     await app.askAfreshForTest();
     final ask = jsonDecode(io.sent.last.$2) as Map;
     expect(ask['want'], isTrue);
-    expect(ask['since'], 4242);
+    // to the day, no closer
+    expect(ask['since'], 20000 * day);
+  });
+
+  test('someone whose session did not come back is asked without the '
+      'backup\'s date', () async {
+    final p = await _peer();
+    final q = await _peer();
+    await contact(p);
+    await contact(q);
+    await talk(p);
+    await talk(q);
+    await app.subscribeKnown();
+    final file = backUp(p);
+    expect(await _atMe(p, await _fromPeer(p, 'after')), 'after');
+    await restore(p, file);
+    await signalSession.markRestored(from: 5 * Duration.millisecondsPerDay);
+    // q's session is made again after the restore
+    await processPeerBundle(q.name, q.card);
+    expect(await signalSession.sealsOnRestored(q.name), isFalse);
+    expect(signalSession.restoredFrom, isNotNull);
+    // a text of theirs that does not open here
+    final junk = base64Encode([
+      CiphertextMessage.whisperType,
+      ...List.filled(60, 7),
+    ]);
+    await app.receiveRelay([(peer: q.xpub, cipher: junk)]);
+    await _settle();
+    final asks = [
+      for (final (to, c) in io.sent)
+        if (to == q.xpub && c.startsWith('{')) jsonDecode(c) as Map,
+    ];
+    expect(asks.single['want'], isTrue);
+    expect(asks.single.containsKey('since'), isFalse);
   });
 
   test('an ask with its backup\'s date puts out again what never came back '

@@ -15364,7 +15364,16 @@ class AppState extends ChangeNotifier {
       return false;
     }
     _wantHeal(peer);
-    final ok = await _sendBundleCtl(peer, want: true);
+    // their session came back with a restore: when the backup was made, to
+    // the day, so they put out again what never reached us since
+    final from = await signalSession.sealsOnRestored(peer)
+        ? signalSession.restoredFrom
+        : null;
+    final ok = await _sendBundleCtl(
+      peer,
+      want: true,
+      since: from == null ? null : utcDayOf(from),
+    );
     if (ok) {
       await signalSession.noteAsked(
         peer,
@@ -15401,7 +15410,11 @@ class AppState extends ChangeNotifier {
   // signal session needed, which is the point, since ours to them is broken.
   // want=true asks them to reset their session with us and send theirs back.
   // true once the relay took it
-  Future<bool> _sendBundleCtl(String memberId, {required bool want}) async {
+  Future<bool> _sendBundleCtl(
+    String memberId, {
+    required bool want,
+    int? since,
+  }) async {
     // the dev chat's bundle is pinned: nothing goes to him in the clear
     if (isDevId(memberId)) return false;
     final key = '$memberId:$want';
@@ -15422,9 +15435,7 @@ class AppState extends ChangeNotifier {
         'from': myId,
         'bundle': await makePreKeyBundleB64(),
         'want': want,
-        // a restored phone says when its backup was made: what never
-        // reached it since then goes again
-        if (want) 'since': ?signalSession.restoredFrom,
+        'since': ?since,
       });
       final r = await Future(() => _io.relaySend(xpub, payload));
       dlog('bundle ctl (want=$want) to $memberId: $r');
@@ -18760,3 +18771,6 @@ int resendFrom(
   if (since == null) return last;
   return min(last, max(since, now - most.inMilliseconds));
 }
+
+/// the start of the UTC day [ms] falls in
+int utcDayOf(int ms) => ms - ms % Duration.millisecondsPerDay;
