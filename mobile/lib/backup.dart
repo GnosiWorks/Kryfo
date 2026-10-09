@@ -460,18 +460,23 @@ bool restorableName(String name) {
 
 /// the prefs a restore takes from a file: the ones a backup ever carried
 /// that still mean something here
-const kRestorablePrefs = {'onboarding.complete', ...kSupporterPrefs};
+const kRestorablePrefs = {
+  'onboarding.complete',
+  ...kSupporterPrefs,
+  // an invoice not yet settled. one the file lacks stays: a paid one is
+  // never lost to a file older than it
+  'badge_open_invoice',
+};
 
-/// the supporter badge, the receipt that proves it, where it shows and an
-/// invoice not yet settled, as the restore sheet promises. one the file
-/// lacks goes: it was the identity's being replaced
+/// the supporter badge, the receipt that proves it and where it shows, as
+/// the restore sheet promises. one the file lacks goes: it was the
+/// identity's being replaced
 const kSupporterPrefs = {
   'supporter_tier',
   'supporter_receipt_payload',
   'supporter_receipt_sig',
   'supporter_show_self',
   'supporter_share_contacts',
-  'badge_open_invoice',
 };
 
 /// what a restore writes as onboarding_done: a file that says it was done
