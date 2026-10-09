@@ -22,7 +22,7 @@ your ip is hidden behind tor on the default private mode. relay mode and fast mo
 
 a handle (@name) is optional. without one, nothing about you sits anywhere central. if you claim one, the handle registry on relay.kryfo.app holds the handle, the invite it points to (already public), a bio if you write one, and the key that claimed it. anyone who knows the handle can open its page and message you.
 
-people search is a second choice on top of that, off by default. only handles whose owner turned on "Show me in search" come up, next to a name they picked. turning it off takes you out of search at once. releasing the handle deletes its entry, though a server backup can hold an older copy for a while.
+people search is a second choice on top of that, off by default. only handles whose owner turned on "Show me in search" come up, next to a name they picked. turning it off takes you out of search at once. releasing the handle deletes its entry at once. the server keeps one backup copy a day and deletes each copy once it is a week old, so no copy of a released handle is left after 8 days.
 
 the app reaches the registry the same way it sends messages, so over tor in private mode. the registry keeps no record of who looked anyone up or what was searched for.
 
