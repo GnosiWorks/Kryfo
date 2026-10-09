@@ -791,8 +791,9 @@ class HaloEngine {
   Future<String> nostrLetHeld(String peerXPubHex, String how) =>
       _roomFfiOnIsolate('HaloNostrLetHeld', [peerXPubHex, how]);
 
-  Future<String> nostrFreeHeld(List<String> peerXPubHexes) =>
-      _roomFfiOnIsolate('HaloNostrFreeHeld', [jsonEncode(peerXPubHexes)]);
+  // "mark" for each of the peers, in one call
+  Future<String> nostrMarkHeld(List<String> peerXPubHexes) =>
+      _roomFfiOnIsolate('HaloNostrMarkHeld', [jsonEncode(peerXPubHexes)]);
 
   // no more listening for a peer, and its address's files gone
   void nostrUnsubscribeBg(String peerXPubHex) => _background(
@@ -1359,8 +1360,8 @@ class HaloDb implements GroupOwedStore {
       },
       onUpgrade: (db, oldV, newV) async {
         // 62 runs after every older step, below: its index names columns
-        // they add. 66 runs after it: it reads what they all make. 67, and
-        // 69 last
+        // they add. 66 runs after it: it reads what they all make. 69 runs
+        // last
         if (oldV < 65) {
           // a room joined off a link and not let in yet: when the join went
           await roomJoiningColumn(db);
@@ -7775,8 +7776,8 @@ class AppIo {
   Future<String> letHeld(String xPub, String how) =>
       engine.nostrLetHeld(xPub, how);
 
-  // "free" for each of [xPubs], where anything is held
-  Future<String> freeHeld(List<String> xPubs) => engine.nostrFreeHeld(xPubs);
+  // "mark" for each of [xPubs] where anything is held: nothing restarts
+  Future<String> markHeld(List<String> xPubs) => engine.nostrMarkHeld(xPubs);
 
   Future<List<String>> sessionAddresses() =>
       signalSession.sessionStore.allSessionAddresses();
@@ -14816,6 +14817,7 @@ class AppState extends ChangeNotifier {
         dlog('dev lane: boot subscribe failed: $e');
       }
       unawaited(sweepCaptures());
+      await markHeldAtStart();
       await subscribeKnown();
     });
     // what the removed ntfy mode left behind in the prefs
@@ -15156,9 +15158,10 @@ class AppState extends ChangeNotifier {
   }
 
   // on a start or an unlock: what the relay still holds back for someone
-  // accepted since, an accept that died before its fetch. the engine
-  // passes over an address with nothing held
-  Future<void> _freeHeldOf(HaloDb db) async {
+  // accepted since, an accept that died before its fetch, comes when their
+  // runner next starts. one call, marks on the files of the addresses that
+  // hold something and nothing else: no runner and no lane starts again
+  Future<void> _markHeldOf(HaloDb db) async {
     if (sessionQuiet) return;
     final xs = <String>{};
     for (final r in await db.contacts()) {
@@ -15166,7 +15169,17 @@ class AppState extends ChangeNotifier {
       final x = await _xPubFor(r['halo_id'] as String, r['xpub'] as String?);
       if (x != null) xs.add(x);
     }
-    if (xs.isNotEmpty) await _io.freeHeld(xs.toList());
+    if (xs.isNotEmpty) await _io.markHeld(xs.toList());
+  }
+
+  // the everyday side's marks, before its runners start and read them
+  @visibleForTesting
+  Future<void> markHeldAtStart() async {
+    try {
+      await _markHeldOf(live);
+    } catch (e) {
+      dlog('held: not marked (${e.runtimeType})');
+    }
   }
 
   // one run over a person's shelf at a time, so an accept and the sweep
@@ -15239,13 +15252,15 @@ class AppState extends ChangeNotifier {
         final to = _routeOf(id, null);
         if (vault && to != RouteTo.vault && to != RouteTo.sealed) continue;
         any = true;
+        // what waits on the relay comes at their runner's next start: a
+        // start or an unlock makes nothing reconnect
         await _relayLeft(id, 'mark');
         await _letHeldIn(id, () => db.heldOf(id), db.forgetHeld, still: still);
-        await _relayLeft(id, 'free');
         _bumpChatRev(id);
       }
       if (any) await refreshContacts();
-      if (still()) await _freeHeldOf(db);
+      // the everyday side's are marked before its runners start
+      if (vault && still()) await _markHeldOf(db);
     } catch (e) {
       dlog('held: left for the next time ($e)');
     }

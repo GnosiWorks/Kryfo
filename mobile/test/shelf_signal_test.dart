@@ -206,7 +206,9 @@ void main() {
     await router.load();
     final app = AppState(io: io, router: router)..myId = _me;
     useDatabasesForTest(live, Session(live));
-    await app.letHeldIn(live);
-    expect(io.freed, [them.xPub]);
+    await app.markHeldAtStart();
+    expect(io.marked, [
+      [them.xPub],
+    ]);
   });
 }

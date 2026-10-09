@@ -289,7 +289,7 @@ class _Io implements AppIo {
   @override
   Future<String> letHeld(String xPub, String how) async => 'ok';
   @override
-  Future<String> freeHeld(List<String> xPubs) async => 'ok';
+  Future<String> markHeld(List<String> xPubs) async => 'ok';
   // sessions let go of, and addresses no longer listened on
   final dropped = <String>[];
   @override

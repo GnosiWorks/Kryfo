@@ -295,15 +295,52 @@ void main() {
     expect(told.first, [('x-$_s', 'mark')]);
   });
 
-  test(
-    'a start asks the relay for what it held of everyone accepted',
-    () async {
-      final w = await _World.make();
-      w.live.person('friend-one-here', onion: 'o', xpub: 'x-friend');
-      await w.app.letHeldIn(w.live);
-      expect(w.io.freed, ['x-friend']);
-    },
-  );
+  test('a start marks what is held for everyone accepted, once', () async {
+    final w = await _World.make();
+    for (var i = 0; i < 6; i++) {
+      w.live.person('friend-$i-here', onion: 'o', xpub: 'x-friend-$i');
+    }
+    await w.app.markHeldAtStart();
+    expect(w.io.marked, [
+      [for (var i = 0; i < 6; i++) 'x-friend-$i'],
+    ]);
+    // the sweep after it marks nothing more and starts nothing again
+    await w.app.letHeldIn(w.live);
+    expect(w.io.marked, hasLength(1));
+    expect(w.io.letGo, isEmpty);
+  });
+
+  test('an unlock makes nothing reconnect', () async {
+    const hs = 'hidden-friend-one';
+    final live = ArrivalRows(HaloContainer.everyday);
+    final vault = ArrivalRows(HaloContainer.vault);
+    final store = ArrivalStore();
+    final io = _OnceIo();
+    for (var i = 0; i < 6; i++) {
+      vault.person('vault-friend-$i', onion: 'o', xpub: 'x-vault-$i');
+    }
+    // accepted, with a shelf an accept left behind
+    vault.person(hs, onion: 'o-$hs', xpub: 'x-$hs');
+    await vault.holdCipher(hs, 'wire:{"held":0}');
+    await store.putHidden(
+      hs,
+      kHiddenPeer,
+      peerCard(RouterCard(hs, 'o-$hs', 'x-$hs', backPaired: true)),
+      1,
+    );
+    await store.putMeta('pub', 'pub-A');
+    final router = VaultRouter(store, ArrivalSeal());
+    await router.load();
+    useEngineForTest(_Engine());
+    final app = AppState(io: io, router: router)..myId = 'me';
+    useDatabasesForTest(live, await Session.withVault(live, vault));
+    await app.letHeldIn(vault);
+    expect(vault.heldCiphers[hs], isNull);
+    // marks on files alone, in one call for the lot
+    expect(io.letGo.where((l) => l.$2 != 'mark'), isEmpty);
+    expect(io.marked, hasLength(1));
+    expect(io.marked.single, contains('x-vault-0'));
+  });
 
   test('an onion copy past a full shelf is kept as it came', () async {
     final w = await _World.make();

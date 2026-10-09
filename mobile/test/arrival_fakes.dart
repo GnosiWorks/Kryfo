@@ -196,11 +196,11 @@ class ArrivalIo implements AppIo {
     return 'ok';
   }
 
-  // keys asked to fetch what is held, on a start
-  final freed = <String>[];
+  // each call marking what is held for these keys, on a start or unlock
+  final marked = <List<String>>[];
   @override
-  Future<String> freeHeld(List<String> xPubs) async {
-    freed.addAll(xPubs);
+  Future<String> markHeld(List<String> xPubs) async {
+    marked.add(xPubs);
     return 'ok';
   }
 
