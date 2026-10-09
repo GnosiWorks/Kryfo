@@ -61,11 +61,11 @@ void main() {
     await loadAppLocale();
     await t.pumpWidget(
       const MaterialApp(
-        home: Scaffold(body: Center(child: LanguageChip())),
+        home: Scaffold(body: Center(child: LanguageRow())),
       ),
     );
     expect(find.text(kLanguageNames[currentLanguage]!), findsOneWidget);
-    await t.tap(find.byType(LanguageChip));
+    await t.tap(find.byType(LanguageRow));
     await t.pumpAndSettle();
     expect(find.text('Language'), findsOneWidget);
     expect(find.text('Match phone'), findsOneWidget);

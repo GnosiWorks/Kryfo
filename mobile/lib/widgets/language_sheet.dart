@@ -479,50 +479,48 @@ const _phone = [
 
 const _tick = ['M5 12.5l4.5 4.5l9.5-10'];
 
-/// the small language button on the first onboarding screen: the language
-/// kryfo is in, by its own name
-class LanguageChip extends StatelessWidget {
-  const LanguageChip({super.key});
+/// the language, first thing on the first page: a whole row with the globe
+/// and the language's own name, so someone who cannot read this one still
+/// finds the way to theirs
+class LanguageRow extends StatelessWidget {
+  const LanguageRow({super.key});
 
   @override
   Widget build(BuildContext context) {
     final name = kLanguageNames[currentLanguage]!;
     return PressScale(
       label: l10n.languageButton(name),
+      scale: 0.97,
       onTap: () => pickLanguage(context, fromSettings: false),
-      // the chip is drawn small; the finger gets 48
       child: Container(
-        color: Colors.transparent,
-        padding: const EdgeInsets.all(9),
-        child: _chip(name),
-      ),
-    );
-  }
-
-  Widget _chip(String name) {
-    return Container(
-      padding: const EdgeInsetsDirectional.fromSTEB(10, 7, 12, 7),
-      decoration: BoxDecoration(
-        color: HaloColors.surface2,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: HaloColors.line, width: 0.5),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          StrokeIcon(_globe, size: 14, color: HaloColors.amber, stroke: 1.5),
-          const SizedBox(width: 6),
-          ExcludeSemantics(
-            child: Text(
-              name,
-              style: HaloType.sans(
-                size: 12,
-                weight: FontWeight.w500,
-                color: HaloColors.text2,
+        height: 46,
+        padding: const EdgeInsetsDirectional.fromSTEB(14, 0, 10, 0),
+        decoration: BoxDecoration(
+          color: HaloColors.surface2,
+          borderRadius: BorderRadius.circular(13),
+          border: Border.all(color: HaloColors.line, width: 0.5),
+        ),
+        child: Row(
+          children: [
+            StrokeIcon(_globe, size: 17, color: HaloColors.amber, stroke: 1.5),
+            const SizedBox(width: 10),
+            Expanded(
+              child: ExcludeSemantics(
+                child: Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: HaloType.sans(
+                    size: 14,
+                    weight: FontWeight.w500,
+                    color: HaloColors.text,
+                  ),
+                ),
               ),
             ),
-          ),
-        ],
+            Icon(Icons.expand_more_rounded, size: 20, color: HaloColors.text2),
+          ],
+        ),
       ),
     );
   }

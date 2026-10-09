@@ -182,8 +182,8 @@ class _StepFrame extends StatelessWidget {
   }
 }
 
-// back, the steps as a filling track, and the count. on the welcome step
-// only the language chip shows
+// back, the steps as a filling track, and the count. the welcome step
+// shows none of them: its language row is on the page
 class _StepBar extends StatelessWidget {
   final PageController pages;
   final int step;
@@ -256,26 +256,14 @@ class _StepBar extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 14),
-              Stack(
-                alignment: AlignmentDirectional.centerEnd,
-                children: [
-                  IgnorePointer(
-                    ignoring: shown >= 0.5,
-                    child: Opacity(
-                      opacity: 1 - (shown * 2).clamp(0.0, 1.0),
-                      child: const LanguageChip(),
-                    ),
+              IgnorePointer(
+                child: Opacity(
+                  opacity: shown,
+                  child: Padding(
+                    padding: const EdgeInsetsDirectional.only(end: 10),
+                    child: counter,
                   ),
-                  IgnorePointer(
-                    child: Opacity(
-                      opacity: (shown * 2 - 1).clamp(0.0, 1.0),
-                      child: Padding(
-                        padding: const EdgeInsetsDirectional.only(end: 10),
-                        child: counter,
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
               const SizedBox(width: 12),
             ],
@@ -405,6 +393,9 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // the language first, before a word has to be read
+              const LanguageRow(),
+              const SizedBox(height: 10),
               _Cta(label: l10n.onboardingBegin, onTap: widget.onContinue),
               const SizedBox(height: 2),
               Center(
@@ -478,7 +469,7 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
               textAlign: TextAlign.center,
               style: HaloType.mono(
                 size: 10,
-                color: HaloColors.text3,
+                color: HaloColors.text2,
               ).copyWith(letterSpacing: track(2)),
             ),
           ),
