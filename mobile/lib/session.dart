@@ -307,13 +307,23 @@ class Session {
       _ofGroup(groupId).setRoomJoining(groupId, at);
   Future<bool> restartRoomJoining(String groupId, int at) =>
       _ofGroup(groupId).restartRoomJoining(groupId, at);
-  Future<void> setRoomDoor(
+  Future<bool> resetRoomDoor(
     String groupId, {
     required String priv,
     required String pub,
     required String fcPk,
-  }) =>
-      _ofGroup(groupId).setRoomDoor(groupId, priv: priv, pub: pub, fcPk: fcPk);
+    String? was,
+    bool roster = false,
+    required int now,
+  }) => _ofGroup(groupId).resetRoomDoor(
+    groupId,
+    priv: priv,
+    pub: pub,
+    fcPk: fcPk,
+    was: was,
+    roster: roster,
+    now: now,
+  );
   Future<void> setRoomFc(String groupId, String fcPk) =>
       _ofGroup(groupId).setRoomFc(groupId, fcPk);
   Future<void> removeGroupMember(String groupId, String haloId) =>

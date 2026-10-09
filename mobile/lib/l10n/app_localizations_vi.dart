@@ -2737,11 +2737,11 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get groupInfoResetLinkLine =>
-      'Liên kết cũ sẽ không dùng được nữa. Những người đã ở trong phòng vẫn ở lại, và bạn chia sẻ liên kết mới.';
+      'Liên kết cũ sẽ không dùng được nữa. Những người trong phòng vẫn ở lại và nhận liên kết mới.';
 
   @override
   String get groupInfoRemoveRoomLine =>
-      'Họ có thể vào lại bằng liên kết phòng. Hãy đặt lại liên kết để giữ họ ở ngoài.';
+      'Họ có thể vào lại bằng liên kết phòng. Hãy đặt lại liên kết để giữ họ ở ngoài. Những người còn trong phòng sẽ nhận liên kết mới.';
 
   @override
   String get groupInfoRemoveAndResetLink => 'Gỡ và đặt lại liên kết';

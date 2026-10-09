@@ -2818,11 +2818,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get groupInfoResetLinkLine =>
-      'سيتوقف الرابط القديم عن العمل. يبقى من في الغرفة، وتشارك أنت الرابط الجديد.';
+      'سيتوقف الرابط القديم عن العمل. يبقى من في الغرفة ويصلهم الرابط الجديد.';
 
   @override
   String get groupInfoRemoveRoomLine =>
-      'يمكنه الانضمام مجددًا عبر رابط الغرفة. أعد تعيين الرابط لإبقائه خارجها.';
+      'يمكنه الانضمام مجددًا عبر رابط الغرفة. أعد تعيين الرابط لإبقائه خارجها. من بقي في الغرفة يصله الرابط الجديد.';
 
   @override
   String get groupInfoRemoveAndResetLink => 'إزالة وإعادة تعيين الرابط';

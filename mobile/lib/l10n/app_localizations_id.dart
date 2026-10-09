@@ -2741,11 +2741,11 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get groupInfoResetLinkLine =>
-      'Tautan lama tidak berfungsi lagi. Orang yang sudah ada di ruang tetap tinggal, dan kamu bagikan tautan baru.';
+      'Tautan lama tidak berfungsi lagi. Orang di ruang tetap tinggal dan dapat tautan baru.';
 
   @override
   String get groupInfoRemoveRoomLine =>
-      'Dia bisa masuk lagi lewat tautan ruang. Atur ulang tautannya agar dia tetap di luar.';
+      'Dia bisa masuk lagi lewat tautan ruang. Atur ulang tautannya agar dia tetap di luar. Yang masih di ruang akan dapat tautan baru.';
 
   @override
   String get groupInfoRemoveAndResetLink => 'Keluarkan dan atur ulang tautan';

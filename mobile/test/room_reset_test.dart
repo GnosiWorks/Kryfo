@@ -6,13 +6,17 @@
 // decoy's stays on the phone. only the maker is offered it, and taking
 // someone out says the link lets them back unless it is reset. the engine,
 // the relays and the databases are stand-ins
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/backup.dart';
+import 'package:kryfo/backup_stream.dart';
 import 'package:kryfo/container.dart';
+import 'package:kryfo/devchat/dev_chat.dart' show scrubDevAnon;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/main.dart'
@@ -62,12 +66,13 @@ final _late = 'e3' * 32;
 const _pubs = {
   'creatorpriv': 'c1',
   'doorpriv': 'd0',
+  'door2priv': 'd2',
   'otherpriv': 'b2',
   'apriv': 'a1',
   'bpriv': 'e3',
 };
 String _pubOf(String priv) => _pubs[priv]! * 32;
-const _fcs = {'creatorpriv': 'f0', 'doorpriv': 'f2'};
+const _fcs = {'creatorpriv': 'f0', 'doorpriv': 'f2', 'door2priv': 'f3'};
 
 // one phone's engine: what it listens to, what it sent and knocked
 class _Engine implements HaloEngine {
@@ -81,6 +86,10 @@ class _Engine implements HaloEngine {
   final forgot = <String>[];
   final sent = <({String priv, String to, String msg})>[];
   final knocks = <({String priv, String to, String fc, String msg})>[];
+  // a shut, or a forget of one key, that never ends: the app killed there
+  Completer<void>? shutGate;
+  String? forgetHangs;
+  final forgetFails = <String>{};
 
   void _shut(String pub) {
     unlistened.add(pub);
@@ -107,12 +116,21 @@ class _Engine implements HaloEngine {
   void roomUnsubscribeBg(String pub) => _shut(pub);
   @override
   Future<String> roomUnsubscribe(String pub) async {
+    await shutGate?.future;
     _shut(pub);
     return 'ok';
   }
 
   @override
   void roomForgetBg(String priv, List<String> members) => forgot.add(priv);
+  @override
+  Future<String> roomForget(String priv, List<String> members) async {
+    if (priv == forgetHangs) await Completer<void>().future;
+    if (forgetFails.contains(priv)) return 'error: busy';
+    forgot.add(priv);
+    return 'ok';
+  }
+
   @override
   Future<String> roomSend(String priv, String peerPub, String msg) async {
     sent.add((priv: priv, to: peerPub, msg: msg));
@@ -167,18 +185,20 @@ final _expires = DateTime.now().millisecondsSinceEpoch + 3600000;
 
 // the maker's rows: the room open with [_other] in it
 ArrivalRows _makerRows({HaloContainer box = HaloContainer.everyday}) =>
-    ArrivalRows(box)
-      ..group(_room, [_creator, _other], admin: _creator)
-      ..groupRows[_room]!.addAll({
-        'name': 'Friday',
-        'is_admin': 1,
-        'room_priv': 'creatorpriv',
-        'room_pub': _creator,
-        'expires_at': _expires,
-        'creator_pub': _creator,
-        'fc_pk': _fc,
-        'member_cap': 5,
-      });
+    _asMaker(ArrivalRows(box));
+
+T _asMaker<T extends ArrivalRows>(T rows) => rows
+  ..group(_room, [_creator, _other], admin: _creator)
+  ..groupRows[_room]!.addAll({
+    'name': 'Friday',
+    'is_admin': 1,
+    'room_priv': 'creatorpriv',
+    'room_pub': _creator,
+    'expires_at': _expires,
+    'creator_pub': _creator,
+    'fc_pk': _fc,
+    'member_cap': 5,
+  });
 
 // the maker's phone, listening as a start leaves it, a door key ready
 Future<_Phone> _maker({ArrivalRows? rows}) async {
@@ -438,8 +458,9 @@ void main() {
     expect(await again.rows.getGroupMembers(_room), [_creator, _other, _late]);
   });
 
-  test('a reset outlives a backup restore: the copy keeps the new door, '
-      'and the phone it lands on listens there', () async {
+  test('a reset outlives a backup and its restore: the file carries the '
+      'new door and the roster owed, and the phone it lands on listens '
+      'there and sends it', () async {
     final mem = MemDb();
     final db = _Rows(mem);
     await db.createRoom(
@@ -455,10 +476,47 @@ void main() {
     );
     // before a reset, the room's own key is its door
     expect((await db.roomByDoor(_creator))?['group_id'], _room);
-    await db.setRoomDoor(_room, priv: 'doorpriv', pub: _door, fcPk: _fc2);
+    expect(
+      await db.resetRoomDoor(
+        _room,
+        priv: 'doorpriv',
+        pub: _door,
+        fcPk: _fc2,
+        roster: true,
+        now: 1,
+      ),
+      isTrue,
+    );
 
-    // the backup carries the database whole
-    final back = _Rows(mem.copy());
+    // the phone's files, and the backup made of them as the app makes one
+    final stage = Directory('${docs.path}/stage')..createSync();
+    final other = Directory('${docs.path}/phone2')..createSync();
+    addTearDown(() {
+      for (final d in [stage, other]) {
+        d.deleteSync(recursive: true);
+      }
+      for (final f in ['halo.db', 'onion.key']) {
+        File('${docs.path}/$f').deleteSync();
+      }
+    });
+    File('${docs.path}/halo.db').writeAsStringSync(mem.dump());
+    File('${docs.path}/onion.key').writeAsBytesSync([1, 2, 3, 4]);
+    FlutterSecureStorage.setMockInitialValues({'halo.db.passphrase': 'pw'});
+    final draft = await draftBackup(stage.path, side: _Side(docs.path));
+    final out = '${stage.path}/x.kryfo';
+    await writeBackup(
+      outPath: out,
+      salt: Uint8List(16),
+      cipher: _Cipher(),
+      manifest: draft.manifest,
+      root: '',
+      source: (n) => draft.sources[n]!,
+    );
+    await unpackBackup(out, _Cipher(), root: other.path);
+
+    final back = _Rows(
+      MemDb.load(File('${other.path}/halo.db').readAsStringSync()),
+    );
     expect((await back.roomByDoor(_door))?['group_id'], _room);
     expect(await back.roomByDoor(_creator), isNull);
     // members' frames still find it by its own key
@@ -470,14 +528,23 @@ void main() {
     );
     expect(await back.getGroupMembers(_room), [_creator, _other]);
 
-    final restored = await _Phone.make(
-      rows: ArrivalRows(HaloContainer.everyday)
-        ..group(_room, await back.getGroupMembers(_room), admin: _creator)
-        ..groupRows[_room]!.addAll(g),
-    );
+    // the phone it lands on: those rows, started
+    final rows = ArrivalRows(HaloContainer.everyday)
+      ..group(_room, await back.getGroupMembers(_room), admin: _creator)
+      ..groupRows[_room]!.addAll(g);
+    rows.ctlOut.addAll(back.mem.rows('group_ctl_out'));
+    final restored = await _Phone.make(rows: rows);
     await restored.app.subscribeRoomsAtBoot();
     expect(restored.engine.dropBoxes, ['doorpriv']);
     expect((await restored.app.roomLinkFor(_room))!.fcPk, _fc2);
+    await restored.app.owedDueForTest(_other);
+    await restored.app.ctlPassForTest;
+    final sent = [
+      for (final s in restored.engine.sent)
+        if (s.to == _other) _gc(s.msg),
+    ];
+    expect(sent.single?.fc, _fc2);
+    expect(sent.single?.members, [_creator, _other]);
   });
 
   final sql = RealSqlite.open();
@@ -496,7 +563,7 @@ void main() {
     expect(table, contains('door_priv TEXT'));
     expect(table, contains('door_pub TEXT'));
     final v67 = table.replaceFirst(
-      RegExp(r',\s*door_priv TEXT,\s*door_pub TEXT'),
+      RegExp(r',\s*door_priv TEXT,\s*door_pub TEXT,\s*door_was TEXT'),
       '',
     );
     expect(v67, isNot(contains('door_')));
@@ -512,12 +579,14 @@ void main() {
     final cols = db.run('PRAGMA table_info(groups)').map((c) => c['name']);
     expect(cols.where((c) => c == 'door_priv'), hasLength(1));
     expect(cols.where((c) => c == 'door_pub'), hasLength(1));
+    expect(cols.where((c) => c == 'door_was'), hasLength(1));
     final row = db.run('SELECT * FROM groups').single;
     expect(row['room_pub'], _creator);
     expect(row['fc_pk'], _fc);
     // never reset: its link knocks on the room's own key
     expect(row['door_priv'], isNull);
     expect(row['door_pub'], isNull);
+    expect(row['door_was'], isNull);
     // the last step, after every older one
     expect(src, contains('version: 68,'));
     final upgrade = src.indexOf('onUpgrade: (db, oldV, newV) async {');
@@ -614,6 +683,184 @@ void main() {
     expect(maker.engine.doors, isEmpty);
     expect(maker.engine.unlistened, containsAll([_creator, _door]));
     expect(maker.engine.forgot, containsAll(['creatorpriv', 'doorpriv']));
+  });
+
+  group('a knock being let in when the reset comes', () {
+    // the knock of [_late] off the first door, under way on the maker's
+    // phone and held where it reads who left
+    Future<(_Phone, _Gated, Future<void>)> held() async {
+      final rows = _asMaker(_Gated());
+      final maker = await _maker(rows: rows);
+      final link = (await _linkOf(maker))!;
+      final b = await _joiner('bpriv');
+      await b.app.joinRoom(link);
+      await _settle();
+      maker.use();
+      final gate = rows.gate = Completer<void>();
+      final taking = maker.app.receiveRelay([
+        (peer: 'roomfc:$_creator', cipher: b.engine.knocks.single.msg),
+      ]);
+      await _settle();
+      expect(gate.isCompleted, isFalse);
+      return (maker, rows, taking);
+    }
+
+    List<GroupControl> rostersTo(_Phone p, String who) => [
+      for (final s in p.engine.sent)
+        if (s.to == who && _gc(s.msg)?.type == 'create') _gc(s.msg)!,
+    ];
+
+    test('the reset waits its turn: the knock is let in first, and the '
+        'roster after carries the new link to everyone', () async {
+      final (maker, rows, taking) = await held();
+      final resetting = maker.app.resetRoomLink(_room);
+      await _settle();
+      // nothing of the reset happened while the knock is under way
+      expect(maker.room!['door_pub'], isNull);
+      expect(maker.engine.doors, {'creatorpriv'});
+      rows.gate!.complete();
+      await taking;
+      expect((await resetting)!.fcPk, _fc2);
+      await _settle();
+      await maker.app.ctlPassForTest;
+      expect(await maker.rows.getGroupMembers(_room), [
+        _creator,
+        _other,
+        _late,
+      ]);
+      for (final who in [_other, _late]) {
+        final rs = rostersTo(maker, who)
+          ..sort((a, b) => a.stamp!.compareTo(b.stamp!));
+        expect(rs.last.fc, _fc2, reason: who);
+        expect(rs.last.members, [_creator, _other, _late], reason: who);
+      }
+    });
+
+    test('a door shut under it lets it in no more', () async {
+      final (maker, rows, taking) = await held();
+      // the door changes while it reads, by whatever way
+      rows.groupRows[_room]!['door_pub'] = _door;
+      rows.gate!.complete();
+      await taking;
+      await _settle();
+      await maker.app.ctlPassForTest;
+      expect(await maker.rows.getGroupMembers(_room), [_creator, _other]);
+      expect(maker.engine.sent.where((s) => s.to == _late), isEmpty);
+      expect(maker.rows.ctlOut, isEmpty);
+    });
+
+    test('its roster carries the link as it is when it goes', () async {
+      final (maker, rows, taking) = await held();
+      // a new row, as a write and a read again give: the one read stays
+      rows.groupRows[_room] = {...rows.groupRows[_room]!, 'fc_pk': _fc2};
+      rows.gate!.complete();
+      await taking;
+      await _settle();
+      await maker.app.ctlPassForTest;
+      expect(rostersTo(maker, _late).single.fc, _fc2);
+      expect(rostersTo(maker, _other).single.fc, _fc2);
+    });
+  });
+
+  test('two asks at once are one reset, and both get its link', () async {
+    final maker = await _maker();
+    maker.engine.keys.add((priv: 'door2priv', pub: _pubOf('door2priv')));
+    final both = await Future.wait([
+      maker.app.resetRoomLink(_room),
+      maker.app.resetRoomLink(_room),
+    ]);
+    expect(both.map((l) => l?.fcPk), [_fc2, _fc2]);
+    expect(maker.engine.keys, hasLength(1));
+  });
+
+  test('a room the sweep takes while it is reset is left alone', () async {
+    final rows = _asMaker(_Swept());
+    final maker = await _maker(rows: rows);
+    final before = {...maker.engine.listening};
+    rows.sweepOnRead = true;
+    expect(await maker.app.resetRoomLink(_room), isNull);
+    await _settle();
+    expect(rows.groupRows, isEmpty);
+    expect(maker.engine.doors, {'creatorpriv'});
+    expect(maker.engine.listening, before);
+    expect(maker.engine.unlistened, isEmpty);
+    expect(maker.engine.dropBoxes, ['creatorpriv']);
+    expect(maker.rows.ctlOut, isEmpty);
+
+    // on disk too: nothing changes and nothing is queued
+    final mem = MemDb();
+    expect(
+      await _Rows(mem).resetRoomDoor(
+        _room,
+        priv: 'doorpriv',
+        pub: _door,
+        fcPk: _fc2,
+        roster: true,
+        now: 1,
+      ),
+      isFalse,
+    );
+    expect(mem.rows('group_ctl_out'), isEmpty);
+  });
+
+  test('killed mid-reset: the roster with the new link was queued with it, '
+      'and the next start forgets the old door', () async {
+    final maker = await _maker();
+    // the app dies while the old door shuts
+    maker.engine.shutGate = Completer<void>();
+    unawaited(maker.app.resetRoomLink(_room));
+    await _settle();
+    expect(maker.room!['door_pub'], _door);
+    expect(maker.room!['door_was'], 'creatorpriv');
+    expect(maker.engine.sent, isEmpty);
+    expect(maker.engine.forgot, isEmpty);
+
+    final again = await _Phone.make(rows: maker.rows);
+    await again.app.subscribeRoomsAtBoot();
+    expect(again.engine.dropBoxes, ['doorpriv']);
+    expect(again.engine.forgot, ['creatorpriv']);
+    expect(again.room!['door_was'], isNull);
+    await again.app.owedDueForTest(_other);
+    await again.app.ctlPassForTest;
+    final roster = [
+      for (final s in again.engine.sent)
+        if (s.to == _other) _gc(s.msg),
+    ];
+    expect(roster.single?.fc, _fc2);
+  });
+
+  test('killed before a later reset forgets the door it replaced: the next '
+      'start does', () async {
+    final maker = await _maker();
+    maker.engine.keys.add((priv: 'door2priv', pub: _pubOf('door2priv')));
+    await maker.app.resetRoomLink(_room);
+    await _settle();
+    expect(maker.room!['door_was'], isNull);
+    maker.engine.forgetHangs = 'doorpriv';
+    unawaited(maker.app.resetRoomLink(_room));
+    await _settle();
+    expect(maker.room!['door_priv'], 'door2priv');
+    expect(maker.room!['door_was'], 'doorpriv');
+    expect(maker.engine.forgot, ['creatorpriv']);
+
+    final again = await _Phone.make(rows: maker.rows);
+    await again.app.subscribeRoomsAtBoot();
+    expect(again.engine.dropBoxes, ['door2priv']);
+    expect(again.engine.forgot, ['doorpriv']);
+    expect(again.room!['door_was'], isNull);
+  });
+
+  test('a door a reset could not forget is forgotten by the next', () async {
+    final maker = await _maker();
+    maker.engine.keys.add((priv: 'door2priv', pub: _pubOf('door2priv')));
+    maker.engine.forgetFails.add('creatorpriv');
+    await maker.app.resetRoomLink(_room);
+    expect(maker.room!['door_was'], 'creatorpriv');
+    expect(maker.engine.forgot, isEmpty);
+    maker.engine.forgetFails.clear();
+    await maker.app.resetRoomLink(_room);
+    expect(maker.engine.forgot, ['creatorpriv', 'doorpriv']);
+    expect(maker.room!['door_was'], isNull);
   });
 
   group('on screen', () {
@@ -722,6 +969,40 @@ void main() {
       await close(t);
     });
 
+    testWidgets('a reset under way shows on its row, a second tap waits '
+        'for it, and no failure is said', (t) async {
+      final rows = screenRows();
+      final engine = await open(t, rows);
+      final gate = engine.shutGate = Completer<void>();
+      final reset = find.text(l10n.groupInfoResetLink);
+      await t.ensureVisible(reset);
+      await t.pump(const Duration(milliseconds: 300));
+      expect(find.byIcon(Icons.refresh_rounded), findsOneWidget);
+      await t.tap(reset);
+      await t.pump();
+      await t.pump(const Duration(seconds: 1));
+      await t.tap(find.text(l10n.groupInfoResetLink).last);
+      await t.runAsync(_settle);
+      await t.pump();
+      await t.pump(const Duration(seconds: 1));
+      expect(find.byKey(const ValueKey('resetting')), findsOneWidget);
+      // a second tap asks nothing and says nothing while it runs
+      await t.tap(reset);
+      await t.pump();
+      await t.pump(const Duration(seconds: 1));
+      expect(find.text(l10n.groupInfoResetTheRoomLink), findsNothing);
+      expect(find.text(l10n.groupInfoCouldNotResetLink), findsNothing);
+      gate.complete();
+      await t.runAsync(_settle);
+      await t.pump();
+      await t.pump(const Duration(seconds: 1));
+      expect(find.text(l10n.groupInfoCouldNotResetLink), findsNothing);
+      expect(find.text(l10n.roomLinkNewLinkTheOld), findsOneWidget);
+      expect(find.byKey(const ValueKey('resetting')), findsNothing);
+      expect(engine.keys, isEmpty);
+      await close(t);
+    });
+
     testWidgets('remove in a room says the link lets them back unless it '
         'is reset, and can reset it too', (t) async {
       final rows = screenRows();
@@ -735,7 +1016,7 @@ void main() {
       expect(
         find.text(
           'They can join again with the room link. Reset the link to keep '
-          'them out.',
+          'them out. People still in the room get the new one.',
         ),
         findsOneWidget,
       );
@@ -789,4 +1070,88 @@ class _ScreenRows extends ArrivalRows {
       [];
   @override
   Future<String?> getGroupAtmosphere(String groupId) async => null;
+}
+
+// rows that hold a knock where it reads who left, until [gate] opens
+class _Gated extends ArrivalRows {
+  _Gated() : super(HaloContainer.everyday);
+  Completer<void>? gate;
+  @override
+  Future<Set<String>> rosterGone(String groupId) async {
+    await gate?.future;
+    return super.rosterGone(groupId);
+  }
+}
+
+// rows whose room the expiry sweep takes right after it is read
+class _Swept extends ArrivalRows {
+  _Swept() : super(HaloContainer.everyday);
+  bool sweepOnRead = false;
+  @override
+  Future<Map<String, Object?>?> getGroup(String groupId) async {
+    final g = await super.getGroup(groupId);
+    if (!sweepOnRead || g == null) return g;
+    sweepOnRead = false;
+    final read = {...g};
+    groupRows.remove(groupId);
+    return read;
+  }
+}
+
+Future<RoomLink?> _linkOf(_Phone p) {
+  p.use();
+  return p.app.roomLinkFor(_room);
+}
+
+// the backup's view of the phone: its identity, and its database copied
+// and scrubbed as a file of json, with the app's own scrubs
+class _Side extends BackupSide {
+  const _Side(this.docs);
+  final String docs;
+
+  @override
+  ({String ed, String x, String id}) identity() =>
+      (ed: 'everyday-ed', x: 'everyday-x', id: 'me-me-me');
+
+  @override
+  Future<void> copyEveryday(String to) => File('$docs/halo.db').copy(to);
+
+  Future<MemDb> _open(String copy) async =>
+      MemDb.load(await File(copy).readAsString());
+
+  @override
+  Future<Set<String>> scrub(String copy, String key) async {
+    final db = await _open(copy);
+    final people = await scrubHidden(db);
+    await File(copy).writeAsString(db.dump());
+    return people;
+  }
+
+  @override
+  Future<void> scrubDev(String copy, String key) async {
+    final db = await _open(copy);
+    await db.transaction(scrubDevAnon);
+    await File(copy).writeAsString(db.dump());
+  }
+
+  @override
+  Future<void> settleBurns(String copy, String key, int at) async {
+    final db = await _open(copy);
+    await db.transaction((t) => settleWaitingBurns(t, at));
+    await File(copy).writeAsString(db.dump());
+  }
+}
+
+// the engine's cipher bound to each record's place
+class _Cipher implements ChunkCipher {
+  @override
+  Uint8List seal(int index, int type, Uint8List plain) =>
+      Uint8List.fromList([index & 255, type, ...plain.map((b) => b ^ 7)]);
+  @override
+  Uint8List? open(int index, int type, Uint8List sealed) {
+    if (sealed.length < 2 || sealed[0] != (index & 255) || sealed[1] != type) {
+      return null;
+    }
+    return Uint8List.fromList(sealed.sublist(2).map((b) => b ^ 7).toList());
+  }
 }

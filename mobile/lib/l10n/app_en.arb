@@ -3455,11 +3455,11 @@
   "@groupInfoResetTheRoomLink": {
     "description": "screens/group_info_screen.dart"
   },
-  "groupInfoResetLinkLine": "The old link stops working. People already in the room stay, and you share the new link.",
+  "groupInfoResetLinkLine": "The old link stops working. People in the room stay and get the new link.",
   "@groupInfoResetLinkLine": {
     "description": "screens/group_info_screen.dart"
   },
-  "groupInfoRemoveRoomLine": "They can join again with the room link. Reset the link to keep them out.",
+  "groupInfoRemoveRoomLine": "They can join again with the room link. Reset the link to keep them out. People still in the room get the new one.",
   "@groupInfoRemoveRoomLine": {
     "description": "screens/group_info_screen.dart"
   },

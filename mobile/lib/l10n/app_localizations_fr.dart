@@ -2769,11 +2769,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get groupInfoResetLinkLine =>
-      'L’ancien lien ne fonctionnera plus. Les personnes déjà dans le salon restent, et vous partagez le nouveau lien.';
+      'L’ancien lien ne fonctionnera plus. Les personnes dans le salon restent et reçoivent le nouveau lien.';
 
   @override
   String get groupInfoRemoveRoomLine =>
-      'Cette personne peut revenir avec le lien du salon. Réinitialisez le lien pour la tenir à l’écart.';
+      'Cette personne peut revenir avec le lien du salon. Réinitialisez le lien pour la tenir à l’écart. Les personnes encore dans le salon reçoivent le nouveau.';
 
   @override
   String get groupInfoRemoveAndResetLink => 'Retirer et réinitialiser le lien';

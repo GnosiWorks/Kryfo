@@ -2738,11 +2738,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get groupInfoResetLinkLine =>
-      'The old link stops working. People already in the room stay, and you share the new link.';
+      'The old link stops working. People in the room stay and get the new link.';
 
   @override
   String get groupInfoRemoveRoomLine =>
-      'They can join again with the room link. Reset the link to keep them out.';
+      'They can join again with the room link. Reset the link to keep them out. People still in the room get the new one.';
 
   @override
   String get groupInfoRemoveAndResetLink => 'Remove and reset link';

@@ -63,6 +63,8 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
     (g) => g.groupId == widget.groupId && g.expiresAt != null,
   );
   List<String> _members = [];
+  // a link reset running from this page
+  bool _resetting = false;
   // the first read is in. until then the page draws from the chat list's
   // row, so the tile can fly in and only the members fill in
   bool _loaded = false;
@@ -239,6 +241,8 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
 
   // the maker's: the link anyone may hold stops working, a new one comes
   Future<void> _confirmResetLink() async {
+    // one is running: its row says so, and its link sheet is on its way
+    if (_resetting) return;
     final ok = await showConfirmSheet(
       context,
       title: l10n.groupInfoResetTheRoomLink,
@@ -249,7 +253,14 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   }
 
   Future<void> _resetLink() async {
-    final link = await appState.resetRoomLink(widget.groupId);
+    if (_resetting) return;
+    setState(() => _resetting = true);
+    final RoomLink? link;
+    try {
+      link = await appState.resetRoomLink(widget.groupId);
+    } finally {
+      if (mounted) setState(() => _resetting = false);
+    }
     if (!mounted) return;
     if (link == null) {
       showHaloToast(context, l10n.groupInfoCouldNotResetLink);
@@ -468,8 +479,26 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
               // there from the first frame
               if ((_isRoom || _roomAtOpen) && _isAdmin)
                 HaloRow(
-                  icon: Icons.link_off_rounded,
                   label: l10n.groupInfoResetLink,
+                  // the glyph turns into a spinner while the reset runs
+                  mark: FadeSwap(
+                    child: _resetting
+                        ? SizedBox(
+                            key: const ValueKey('resetting'),
+                            width: 15,
+                            height: 15,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: HaloColors.amber,
+                            ),
+                          )
+                        : Icon(
+                            Icons.refresh_rounded,
+                            key: const ValueKey('reset'),
+                            size: 17,
+                            color: HaloColors.amber,
+                          ),
+                  ),
                   onTap: _confirmResetLink,
                 ),
               // hidden chats open: out of the everyday list, or back in it

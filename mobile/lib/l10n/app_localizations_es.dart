@@ -2772,11 +2772,11 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get groupInfoResetLinkLine =>
-      'El enlace anterior deja de funcionar. Quienes ya están en la sala se quedan, y tú compartes el nuevo enlace.';
+      'El enlace anterior deja de funcionar. Quienes están en la sala se quedan y reciben el nuevo enlace.';
 
   @override
   String get groupInfoRemoveRoomLine =>
-      'Puede volver a entrar con el enlace de la sala. Restablece el enlace para que no vuelva.';
+      'Puede volver a entrar con el enlace de la sala. Restablece el enlace para que no vuelva. Quienes siguen en la sala reciben el nuevo.';
 
   @override
   String get groupInfoRemoveAndResetLink => 'Quitar y restablecer enlace';

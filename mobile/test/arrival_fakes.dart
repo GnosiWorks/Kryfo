@@ -1232,16 +1232,55 @@ class ArrivalRows implements HaloDb {
   }
 
   @override
-  Future<void> setRoomDoor(
+  Future<bool> resetRoomDoor(
     String groupId, {
     required String priv,
     required String pub,
     required String fcPk,
+    String? was,
+    bool roster = false,
+    required int now,
   }) async {
-    _hit('setRoomDoor', groupId, null);
+    _hit('resetRoomDoor', groupId, null);
     final g = groupRows[groupId];
-    if (g == null || g['is_admin'] != 1) return;
-    g.addAll({'door_priv': priv, 'door_pub': pub, 'fc_pk': fcPk});
+    if (g == null || g['is_admin'] != 1 || g['room_pub'] == null) return false;
+    g.addAll({
+      'door_priv': priv,
+      'door_pub': pub,
+      'fc_pk': fcPk,
+      'door_was': was,
+    });
+    if (!roster) return true;
+    final all = [...?members[groupId]];
+    final held = rosterStamps[groupId] ?? 0;
+    final stamp = rosterStamps[groupId] = held + 1 > now ? held + 1 : now;
+    final ctl = GroupControl(
+      type: 'create',
+      name: g['name'] as String,
+      members: all,
+      stamp: stamp,
+      fc: fcPk,
+    );
+    for (final m in all) {
+      if (m == g['room_pub']) continue;
+      ctlOut.add({
+        'id': ++_ctlId,
+        'group_id': groupId,
+        'member': m,
+        'ctl': jsonEncode(ctl.toWire()),
+        'since': now,
+        'tries': 0,
+        'next_at': now,
+      });
+    }
+    return true;
+  }
+
+  @override
+  Future<void> clearRoomDoorWas(String groupId, String priv) async {
+    _hit('clearRoomDoorWas', groupId, null);
+    final g = groupRows[groupId];
+    if (g != null && g['door_was'] == priv) g['door_was'] = null;
   }
 
   @override

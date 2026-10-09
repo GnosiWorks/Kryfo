@@ -4374,13 +4374,13 @@ abstract class AppLocalizations {
   /// screens/group_info_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'The old link stops working. People already in the room stay, and you share the new link.'**
+  /// **'The old link stops working. People in the room stay and get the new link.'**
   String get groupInfoResetLinkLine;
 
   /// screens/group_info_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'They can join again with the room link. Reset the link to keep them out.'**
+  /// **'They can join again with the room link. Reset the link to keep them out. People still in the room get the new one.'**
   String get groupInfoRemoveRoomLine;
 
   /// screens/group_info_screen.dart

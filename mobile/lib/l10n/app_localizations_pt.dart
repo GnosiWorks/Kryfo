@@ -2768,11 +2768,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get groupInfoResetLinkLine =>
-      'O link antigo para de funcionar. Quem já está na sala continua, e você compartilha o novo link.';
+      'O link antigo para de funcionar. Quem está na sala continua e recebe o novo link.';
 
   @override
   String get groupInfoRemoveRoomLine =>
-      'A pessoa pode entrar de novo com o link da sala. Redefina o link para deixá-la de fora.';
+      'A pessoa pode entrar de novo com o link da sala. Redefina o link para deixá-la de fora. Quem continua na sala recebe o novo.';
 
   @override
   String get groupInfoRemoveAndResetLink => 'Remover e redefinir link';

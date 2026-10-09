@@ -2636,10 +2636,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get groupInfoResetTheRoomLink => '要重置聊天室链接吗？';
 
   @override
-  String get groupInfoResetLinkLine => '旧链接将失效。已在聊天室里的人会留下，你再分享新链接即可。';
+  String get groupInfoResetLinkLine => '旧链接将失效。聊天室里的人会留下，并收到新链接。';
 
   @override
-  String get groupInfoRemoveRoomLine => '对方仍可通过聊天室链接重新加入。重置链接即可把对方挡在外面。';
+  String get groupInfoRemoveRoomLine =>
+      '对方仍可通过聊天室链接重新加入。重置链接即可把对方挡在外面。仍在聊天室里的人会收到新链接。';
 
   @override
   String get groupInfoRemoveAndResetLink => '移除并重置链接';
@@ -10180,10 +10181,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get groupInfoResetTheRoomLink => '要重設聊天室連結嗎？';
 
   @override
-  String get groupInfoResetLinkLine => '舊連結將失效。已在聊天室裡的人會留下，你再分享新連結即可。';
+  String get groupInfoResetLinkLine => '舊連結將失效。聊天室裡的人會留下，並收到新連結。';
 
   @override
-  String get groupInfoRemoveRoomLine => '對方仍可透過聊天室連結重新加入。重設連結即可把對方擋在外面。';
+  String get groupInfoRemoveRoomLine =>
+      '對方仍可透過聊天室連結重新加入。重設連結即可把對方擋在外面。仍在聊天室裡的人會收到新連結。';
 
   @override
   String get groupInfoRemoveAndResetLink => '移除並重設連結';

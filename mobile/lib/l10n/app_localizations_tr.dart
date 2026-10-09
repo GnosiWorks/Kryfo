@@ -2748,11 +2748,11 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get groupInfoResetLinkLine =>
-      'Eski bağlantı artık çalışmaz. Odada olanlar kalır, sen de yeni bağlantıyı paylaşırsın.';
+      'Eski bağlantı artık çalışmaz. Odadakiler kalır ve yeni bağlantıyı alır.';
 
   @override
   String get groupInfoRemoveRoomLine =>
-      'Oda bağlantısıyla yeniden katılabilir. Dışarıda kalması için bağlantıyı sıfırla.';
+      'Oda bağlantısıyla yeniden katılabilir. Dışarıda kalması için bağlantıyı sıfırla. Odada kalanlar yenisini alır.';
 
   @override
   String get groupInfoRemoveAndResetLink => 'Çıkar ve bağlantıyı sıfırla';

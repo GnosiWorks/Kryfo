@@ -1299,11 +1299,11 @@ void main() {
     expect(l.groupInfoResetTheRoomLink, "Reset the room link?");
     expect(
       l.groupInfoResetLinkLine,
-      "The old link stops working. People already in the room stay, and you share the new link.",
+      "The old link stops working. People in the room stay and get the new link.",
     );
     expect(
       l.groupInfoRemoveRoomLine,
-      "They can join again with the room link. Reset the link to keep them out.",
+      "They can join again with the room link. Reset the link to keep them out. People still in the room get the new one.",
     );
     expect(l.groupInfoRemoveAndResetLink, "Remove and reset link");
     expect(l.groupInfoCouldNotResetLink, "Could not reset the link");
