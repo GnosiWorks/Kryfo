@@ -22,6 +22,7 @@ import 'main.dart' show appState, engine, signalEncrypt;
 import 'media_progress.dart';
 import 'message_envelope.dart';
 import 'signal_session.dart';
+import 'text_send.dart' show kSendBlocked;
 
 // msgUid -> slices the peer has. dropped when the file is across, or when
 // the record is old enough that the peer may have restarted without it
@@ -104,6 +105,9 @@ Future<String> sendChunkedMediaTo({
   Set<int>? only,
   // the chat's key for the progress strip, its container's and its own
   required String progressKey,
+  // the sending container blocks them: a block in the other one only
+  // holds the file back
+  Future<bool> Function()? blockedHere,
 }) async {
   if (!mediaInflight.add(msgUid)) return 'busy';
   try {
@@ -126,6 +130,7 @@ Future<String> sendChunkedMediaTo({
       sender: sender,
       only: only,
       progressKey: progressKey,
+      blockedHere: blockedHere,
     );
   } finally {
     mediaCancelled.remove(msgUid);
@@ -154,6 +159,7 @@ Future<String> _sendChunkedMediaInner({
   required SenderInfo sender,
   Set<int>? only,
   required String progressKey,
+  Future<bool> Function()? blockedHere,
 }) async {
   var torWait = 0;
   while (!appState.torReady && torWait < 300000) {
@@ -215,6 +221,7 @@ Future<String> _sendChunkedMediaInner({
   var onionDead = false;
   String? failure;
   var parked = false;
+  var blocked = false;
   var next = 0;
 
   // a chunk that will not go through costs that chunk, not the transfer: it
@@ -236,14 +243,19 @@ Future<String> _sendChunkedMediaInner({
   }
 
   Future<void> worker() async {
-    while (failure == null && !parked) {
+    while (failure == null && !parked && !blocked) {
       if (mediaCancelled.contains(msgUid)) {
         failure = 'cancelled';
         return;
       }
-      // blocked part way: the rest waits with the row
+      // blocked part way, here: the rest is not sent, and waits for a tap.
+      // blocked in the other container: it waits with the row
       if (await appState.blockedAnywhere(peerId)) {
-        parked = true;
+        if (blockedHere != null && await blockedHere()) {
+          blocked = true;
+        } else {
+          parked = true;
+        }
         return;
       }
       final i = takeChunk();
@@ -373,6 +385,7 @@ Future<String> _sendChunkedMediaInner({
   await Future.wait([
     for (var w = 0; w < math.min(parallel, total); w++) worker(),
   ]);
+  if (blocked) return kSendBlocked;
   if (parked) return 'parked';
   if (failure != null) return failure!;
   if (only == null) {

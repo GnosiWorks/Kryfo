@@ -2,16 +2,21 @@
 // a block settles what was queued for them: an edit, a pin, a reaction or
 // a receipt goes, in the container that holds them and in the other one, a
 // decoy's own too, and in a vault opened later. a take-back only withdraws
-// and still goes. while it holds an edit or a pin stays here, nobody
-// blocked is introduced, and a text or a file waits and goes nowhere. the
-// queues read the block list in the database, never as a list of
-// variables. a receipt from them ticks only what went before the block,
-// and a back-pair leaves their row as the block left it but for a new
-// key's warning. the database methods are the real ones over rows kept in
-// maps; the wire and signal are stand-ins
+// and still goes. while it holds an edit or a pin stays here and nobody
+// blocked is introduced. our texts and files to them that have not gone
+// are not sent, in the container that blocked: the unblock sends none of
+// them, a tap does. a block in the other container only holds them back,
+// and they go once it is lifted. an edit, a pin or a reaction on a row a
+// block kept waits for its tap, and nothing it kept is finished off for
+// them. the queues read the block list in
+// the database, never as a list of variables. a receipt from them ticks
+// only what went before the block, and a back-pair leaves their row as the
+// block left it but for a new key's warning. the database methods are the
+// real ones over rows kept in maps; the wire and signal are stand-ins
 import 'dart:io';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -23,15 +28,18 @@ import 'package:kryfo/main.dart'
         HaloEngine,
         appState,
         kNotBlocked,
+        kNotSent,
         kFrameReaction,
         kFrameReceipt,
         kFrameUnsend,
         useDatabasesForTest,
         useEngineForTest;
+import 'package:kryfo/media_resend.dart' show NeedFrame;
 import 'package:kryfo/media_send.dart';
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
+import 'package:kryfo/text_send.dart' show kSendBlocked;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
@@ -137,15 +145,49 @@ List<String> _queued(MemDb mem, String peer) => [
       if (r['peer_id'] == peer) '$t ${r['msg_uid']}',
 ];
 
-Future<void> _out(MemDb mem, String uid, String peer, {int at = 1}) =>
-    mem.insert('messages', {
-      'peer_id': peer,
-      'direction': 'out',
-      'plaintext': 'text $uid',
-      'sent_at': at,
-      'msg_uid': uid,
-      'sent': 0,
-    });
+Future<void> _out(
+  MemDb mem,
+  String uid,
+  String peer, {
+  int at = 1,
+  int sent = 0,
+  String? file,
+  String? group,
+}) => mem.insert('messages', {
+  'peer_id': peer,
+  'direction': 'out',
+  'plaintext': 'text $uid',
+  'sent_at': at,
+  'msg_uid': uid,
+  'sent': sent,
+  'file_path': ?file,
+  'file_name': ?file,
+  'group_id': ?group,
+});
+
+// each row's sent, by its uid
+Map<Object?, Object?> _sent(MemDb mem) => {
+  for (final r in mem.rows('messages')) r['msg_uid']: r['sent'],
+};
+
+// a text and a file to [peer] not gone yet, one that went, one to amy and
+// one in a group
+Future<void> _rows(MemDb mem, String peer, String tag) async {
+  await _out(mem, 't$tag', peer);
+  await _out(mem, 'f$tag', peer, file: '/f$tag.bin');
+  await _out(mem, 's$tag', peer, sent: 1);
+  await _out(mem, 'a$tag', _amy);
+  await _out(mem, 'g$tag', peer, group: 'room');
+}
+
+// what a block leaves of [_rows]
+Map<String, int> _held(String tag) => {
+  't$tag': kNotSent,
+  'f$tag': kNotSent,
+  's$tag': 1,
+  'a$tag': 0,
+  'g$tag': 0,
+};
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -197,6 +239,63 @@ void main() {
       expect(hidden.rows('contacts').single['blocked'], 1);
       expect(_queued(hidden, _bob), ['frames_out u-$_bob']);
       expect(_queued(everyday, _bob), ['frames_out u-$_bob']);
+    });
+
+    for (final (name, c) in [
+      ('everyday', HaloContainer.everyday),
+      ('decoy', HaloContainer.decoy),
+    ]) {
+      test('a block in the $name leaves our texts and files to them not '
+          'sent, and the unblock leaves them so', () async {
+        final mem = MemDb();
+        final db = _Rows(mem, c);
+        await _person(mem, _bob);
+        await _person(mem, _amy);
+        await _rows(mem, _bob, '1');
+        await db.setBlocked(_bob, true);
+        expect(_sent(mem), _held('1'));
+        await db.setBlocked(_bob, false);
+        expect(_sent(mem), _held('1'));
+        expect([for (final r in await db.unsentOutbox()) r['msg_uid']], ['a1']);
+      });
+    }
+
+    for (final inVault in [true, false]) {
+      final where = inVault ? 'the vault' : 'the everyday side';
+      test('a block in $where leaves only its own rows not sent: the other '
+          'container\'s wait, and the unblock leaves both so', () async {
+        final everyday = MemDb();
+        final hidden = MemDb();
+        final live = _Rows(everyday);
+        final vault = _Rows(hidden, HaloContainer.vault);
+        final own = inVault ? hidden : everyday;
+        final other = inVault ? everyday : hidden;
+        await _person(own, _bob);
+        await _rows(own, _bob, '1');
+        await _rows(other, _bob, '2');
+        final waiting = _sent(other);
+        final s = await Session.withVault(live, vault);
+        await s.setBlocked(_bob, true);
+        expect(own.rows('contacts').single['blocked'], 1);
+        expect(_sent(own), _held('1'));
+        expect(_sent(other), waiting);
+        await s.setBlocked(_bob, false);
+        expect(_sent(own), _held('1'));
+        expect(_sent(other), waiting);
+      });
+    }
+
+    test('a tap puts a row a block held back in the outbox again, and only '
+        'that row', () async {
+      final mem = MemDb();
+      final db = _Rows(mem);
+      await _person(mem, _bob);
+      await _out(mem, 'n1', _bob, sent: kNotSent);
+      await _out(mem, 'n2', _bob, sent: kNotSent);
+      await _out(mem, 'w1', _bob, sent: 1);
+      await db.sendAgain('n1');
+      await db.sendAgain('w1');
+      expect(_sent(mem), {'n1': 0, 'n2': kNotSent, 'w1': 1});
     });
 
     test('the queues read the block list in the database, however long it '
@@ -308,8 +407,8 @@ void main() {
     ];
 
     test('while the block holds an edit or a pin stays here and is never '
-        'queued, a take-back goes at once, and a text waits for the '
-        'unblock', () async {
+        'queued, a take-back goes at once, and a text is not sent: the '
+        'unblock leaves it so, and a tap sends it', () async {
       await db.setBlocked(_bob, true);
       await _out(mem, 't1', _bob);
       await app.editInChat(_bob, 't0', 'changed');
@@ -328,9 +427,119 @@ void main() {
       await db.setBlocked(_bob, false);
       await app.drainOutbox();
       await settle();
+      expect(io.sent, isEmpty);
+      expect(_sent(mem)['t1'], kNotSent);
+
+      // the tap
+      await db.sendAgain('t1');
+      await app.drainOutbox();
+      await settle();
       final w = wire();
       expect([for (final m in w) m.msgUid], ['t1']);
       expect(w.any((m) => m.edit != null || m.pin != null), isFalse);
+      expect(_sent(mem)['t1'], 1);
+    });
+
+    test('blocked in the open vault, what the everyday side wrote to them '
+        'waits, and goes once the vault lifts the block', () async {
+      final hidden = MemDb();
+      final vault = _Rows(hidden, HaloContainer.vault);
+      await _person(hidden, _bob, blocked: true);
+      await _out(mem, 't1', _bob);
+      final s = await Session.withVault(db, vault);
+      useDatabasesForTest(db, s);
+      await app.drainOutbox();
+      await settle();
+      expect(io.sent, isEmpty);
+      expect(_sent(mem), {'t1': 0});
+      await s.setBlocked(_bob, false);
+      await app.drainOutbox();
+      await settle();
+      expect([for (final m in wire()) m.msgUid], ['t1']);
+      expect(_sent(mem), {'t1': 1});
+    });
+
+    test('a vault opened after the everyday side blocked them leaves what it '
+        'wrote to them waiting, and it goes after the unblock', () async {
+      await db.setBlocked(_bob, true);
+      final hidden = MemDb();
+      final vault = _Rows(hidden, HaloContainer.vault);
+      await _person(hidden, _bob);
+      await _out(hidden, 'v1', _bob);
+      useDatabasesForTest(db, await Session.withVault(db, vault));
+      await app.drainOutbox();
+      await settle();
+      expect(io.sent, isEmpty);
+      expect(_sent(hidden)['v1'], 0);
+      await db.setBlocked(_bob, false);
+      await app.drainOutbox();
+      await settle();
+      expect([for (final m in wire()) m.msgUid], ['v1']);
+    });
+
+    for (final (kind, said) in [
+      ('edit', 'an edit'),
+      ('pin', 'a pin'),
+      ('reaction', 'a reaction'),
+    ]) {
+      test('$said on a row a block kept from going waits after the '
+          'unblock, and goes once after the tap', () async {
+        await _out(mem, 'n1', _bob, sent: kNotSent);
+        switch (kind) {
+          case 'edit':
+            await app.editInChat(_bob, 'n1', 'changed');
+          case 'pin':
+            await app.pinInChat(_bob, 'n1', true);
+          default:
+            await app.reactInChat(_bob, 'n1', 'x');
+        }
+        await settle();
+        expect(_queued(mem, _bob), hasLength(1));
+        for (var i = 0; i < 2; i++) {
+          await age();
+          await app.drainOutbox();
+          await settle();
+        }
+        expect(io.sent, isEmpty);
+
+        // the tap
+        await db.sendAgain('n1');
+        for (var i = 0; i < 3; i++) {
+          await age();
+          await app.drainOutbox();
+          await settle();
+        }
+        final w = wire();
+        int count(bool Function(UnwrappedMessage) f) => w.where(f).length;
+        expect(switch (kind) {
+          'edit' => count((m) => m.edit?.targetUid == 'n1'),
+          'pin' => count((m) => m.pin?.targetUid == 'n1'),
+          _ => count((m) => m.reaction?.targetUid == 'n1'),
+        }, 1);
+        expect(_queued(mem, _bob), isEmpty);
+      });
+    }
+
+    test('their ask for the slices of a file a block kept from going is '
+        'not answered', () async {
+      final f = File('${docs.path}/f1.bin')..writeAsBytesSync([1, 2, 3]);
+      await _out(mem, 'f1', _bob, sent: kNotSent, file: f.path);
+      final said = <String>[];
+      final was = debugPrint;
+      debugPrint = (m, {wrapWidth}) => said.add(m ?? '');
+      addTearDown(() => debugPrint = was);
+      final ask = await wrapMessage(
+        '',
+        need: const NeedFrame('f1', [0]),
+        sender: asSender(_bob),
+      );
+      io.opens['need-1'] = (_bob, ask);
+      await app.receiveRelay([(peer: 'x-$_bob', cipher: 'need-1')]);
+      await settle();
+      debugPrint = was;
+      expect(said, contains('NEED f1: not answered'));
+      expect(io.sent, isEmpty);
+      expect(_sent(mem)['f1'], kNotSent);
     });
 
     test('a take-back queued before the block still goes while it '
@@ -403,24 +612,29 @@ void main() {
       expect(_queued(mem, _bob), isEmpty);
     });
 
-    test('a file to someone blocked stops before a slice goes', () async {
+    test('a file to someone blocked stops before a slice goes: not sent '
+        'when the sending container blocked them, waiting when the other '
+        'one did', () async {
       await db.setBlocked(_bob, true);
       useEngineForTest(_Engine());
       appState.sendModeForTest = 'fast';
       final f = File('${docs.path}/a.bin')..writeAsBytesSync([1, 2, 3]);
-      final r = await sendChunkedMediaTo(
-        peerId: _bob,
-        peerOnion: 'o-$_bob',
-        peerXPub: 'x-$_bob',
-        backPaired: true,
-        needPow: false,
-        path: f.path,
-        msgUid: 'f1',
-        fileName: 'a.bin',
-        sender: asSender('me'),
-        progressKey: _bob,
-      );
-      expect(r, 'parked');
+      for (final (here, said) in [(true, kSendBlocked), (false, 'parked')]) {
+        final r = await sendChunkedMediaTo(
+          peerId: _bob,
+          peerOnion: 'o-$_bob',
+          peerXPub: 'x-$_bob',
+          backPaired: true,
+          needPow: false,
+          path: f.path,
+          msgUid: 'f1',
+          fileName: 'a.bin',
+          sender: asSender('me'),
+          progressKey: _bob,
+          blockedHere: () async => here,
+        );
+        expect(r, said);
+      }
     });
   });
 }

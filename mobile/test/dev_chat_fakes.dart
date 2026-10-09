@@ -13,7 +13,13 @@ import 'package:kryfo/devchat/dev_key.dart';
 import 'package:kryfo/devchat/support.dart' show SupportChats;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
-    show HaloDb, appState, haloUriV3, kUnblockGrace, useDatabasesForTest;
+    show
+        HaloDb,
+        appState,
+        haloUriV3,
+        kNotSent,
+        kUnblockGrace,
+        useDatabasesForTest;
 import 'package:kryfo/screens/home_screen.dart';
 import 'package:kryfo/search.dart' show SearchKind;
 import 'package:kryfo/session.dart';
@@ -139,6 +145,12 @@ class DevTestDb implements HaloDb {
   Future<void> noteBlockedDrop(String haloId, String uid) async {}
   @override
   Future<bool> droppedWhileBlocked(String haloId, String uid) async => false;
+
+  // a row of ours a block kept from going
+  @override
+  Future<bool> heldBack(String msgUid) async => mem
+      .rows('messages')
+      .any((r) => r['msg_uid'] == msgUid && r['sent'] == kNotSent);
 
   @override
   dynamic noSuchMethod(Invocation i) =>

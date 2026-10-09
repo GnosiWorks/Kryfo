@@ -5,6 +5,9 @@
 // what a send says when its message was taken back before it left
 const kTextTakenBack = 'cancelled';
 
+// what a send says when a block holds it: not sent, and only a tap sends it
+const kSendBlocked = 'blocked';
+
 Future<String> wireWhenReady({
   required bool Function() ready,
   required Future<bool> Function() kept,

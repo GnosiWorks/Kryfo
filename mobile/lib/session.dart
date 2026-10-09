@@ -421,6 +421,12 @@ class Session {
       (await _ofUid(msgUid)).isSent(msgUid);
   Future<void> markSent(String msgUid) async =>
       (await _ofUid(msgUid)).markSent(msgUid);
+  Future<bool> heldBack(String msgUid) async =>
+      (await _ofUid(msgUid)).heldBack(msgUid);
+  Future<void> holdBack(String msgUid) async =>
+      (await _ofUid(msgUid)).holdBack(msgUid);
+  Future<void> sendAgain(String msgUid) async =>
+      (await _ofUid(msgUid)).sendAgain(msgUid);
   Future<int?> lightBurn(String msgUid) async =>
       (await _ofUid(msgUid)).lightBurn(msgUid);
   Future<bool> messageExists(String msgUid) async {

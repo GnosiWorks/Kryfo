@@ -97,6 +97,7 @@ import 'dart:isolate';
 import 'dlog.dart';
 import 'read_burn.dart' show burnStartBy, burnWaitsRow, burnWaitsSql, kBurnSkew;
 import 'stranger_gate.dart';
+import 'text_send.dart' show kSendBlocked;
 import 'fast_gate.dart';
 import 'mentions.dart';
 import 'gifs/gif_source.dart' show sweepGifParts;
@@ -2286,7 +2287,8 @@ class HaloDb implements GroupOwedStore {
 
   // a block starts the clocks of what they sent that waits to be read, in
   // their chat and in groups, and drops what was queued for them. an
-  // unblock leaves them counting
+  // unblock leaves them counting. what of ours waits for them is not sent,
+  // either way: an unblock sends nothing without a tap
   Future<void> setBlocked(String haloId, bool blocked) async {
     final db = await open();
     await db.transaction((t) async {
@@ -2300,6 +2302,7 @@ class HaloDb implements GroupOwedStore {
         await _lightFrom(t, haloId);
         await _dropQueuedTo(t, haloId);
       }
+      await _holdBackTo(t, haloId);
       await _markSpan(t, haloId, blocked);
     });
   }
@@ -4001,6 +4004,62 @@ class HaloDb implements GroupOwedStore {
         dlog('block: $table not dropped (${e.runtimeType})');
       }
     }
+  }
+
+  // a block here: our texts and files to them that have not gone are not
+  // sent. a tap sends each again, nothing else does. a group's rows are
+  // the group's
+  static Future<void> _holdBackTo(DatabaseExecutor db, String peerId) async {
+    for (final (where, args) in [
+      ('group_id IS NULL', const <Object?>[]),
+      ('group_id = ?', const <Object?>['']),
+    ]) {
+      try {
+        await db.update(
+          'messages',
+          {'sent': kNotSent},
+          where: 'peer_id = ? AND direction = ? AND sent = ? AND $where',
+          whereArgs: [peerId, 'out', 0, ...args],
+        );
+      } catch (e) {
+        dlog('block: rows not held back (${e.runtimeType})');
+      }
+    }
+  }
+
+  // a row of ours a block here kept from going
+  Future<bool> heldBack(String msgUid) async {
+    final db = await open();
+    final r = await db.query(
+      'messages',
+      columns: ['sent'],
+      where: 'msg_uid = ?',
+      whereArgs: [msgUid],
+      limit: 1,
+    );
+    return r.isNotEmpty && r.first['sent'] == kNotSent;
+  }
+
+  // one row a block kept from going
+  Future<void> holdBack(String msgUid) async {
+    final db = await open();
+    await db.update(
+      'messages',
+      {'sent': kNotSent},
+      where: 'msg_uid = ? AND direction = ? AND sent = ?',
+      whereArgs: [msgUid, 'out', 0],
+    );
+  }
+
+  // a tap on a row a block held back: it waits to go like any unsent row
+  Future<void> sendAgain(String msgUid) async {
+    final db = await open();
+    await db.update(
+      'messages',
+      {'sent': 0},
+      where: 'msg_uid = ? AND sent = ?',
+      whereArgs: [msgUid, kNotSent],
+    );
   }
 
   Future<void> queueEdit(String msgUid, String peerId, String newText) async {
@@ -6435,6 +6494,10 @@ const kRequestRows =
     'EXISTS (SELECT 1 FROM held_onion h WHERE h.peer_id = contacts.halo_id) OR '
     'EXISTS (SELECT 1 FROM vouches v WHERE v.halo_id = contacts.halo_id))';
 
+/// [sent] on a row of ours a block kept from going: not sent, and only a
+/// tap sends it, an unblock never does
+const kNotSent = -1;
+
 /// a queue's rows for no one blocked here: one list in the database, so
 /// however many there are none is a variable of its own
 @visibleForTesting
@@ -8047,6 +8110,10 @@ class AppState extends ChangeNotifier {
   // uids the drainer is mid-flight on, so a slow send isn't fired twice by
   // the next sweep.
   final Set<String> _outboxInflight = <String>{};
+
+  // a row the chat sends itself on a tap: the outbox leaves it be meanwhile
+  bool claimSend(String uid) => _outboxInflight.add(uid);
+  void releaseSend(String uid) => _outboxInflight.remove(uid);
   // re-fire count per uid this session. caps the loop so an unreachable peer
   // stops grinding; tap-to-retry in the chat still forces a send.
   final Map<String, int> _outboxTries = <String, int>{};
@@ -8249,8 +8316,10 @@ class AppState extends ChangeNotifier {
   Future<void> _answerNeed(String from, NeedFrame need, HaloDb db) async {
     final row = await db.sentMediaRow(need.mediaId);
     final now = DateTime.now().millisecondsSinceEpoch;
+    // a file a block kept from going is not finished off on their word
     final ok =
         row != null &&
+        row['sent'] != kNotSent &&
         resendAllowed(
           rowPeer: row['peer_id'] as String?,
           rowGroup: row['group_id'] as String?,
@@ -8353,6 +8422,7 @@ class AppState extends ChangeNotifier {
     _outboxTries.removeWhere((k, _) => !waiting.contains(k));
     _outboxNextAt.removeWhere((k, _) => !waiting.contains(k));
     _outboxPeer.removeWhere((k, _) => !waiting.contains(k));
+    final blocked = _blockedInPass();
     for (final (r, d, paired) in [
       for (final r in rows) (r, live, q.paired),
       if (v != null)
@@ -8360,6 +8430,22 @@ class AppState extends ChangeNotifier {
     ]) {
       final uid = r['msg_uid'] as String?;
       if (uid == null || _outboxInflight.contains(uid)) continue;
+      // to someone blocked in the row's own container: not sent, and it
+      // waits for a tap, never for the unblock. a block in the other one
+      // only holds it back, and it goes once that block is lifted
+      final to = r['peer_id'] as String?;
+      final g = r['group_id'] as String?;
+      if (to != null && (g == null || g.isEmpty) && await blocked(to)) {
+        try {
+          if (await d.isBlocked(to)) {
+            await d.holdBack(uid);
+            _bumpChatRev(to);
+          }
+        } catch (e) {
+          dlog('outbox: blocked row not held back (${e.runtimeType})');
+        }
+        continue;
+      }
       // held rows stay out of the window; one that came in anyway waits too
       if (held.contains(r['peer_id'])) continue;
       // a send fired seconds ago still has its own future running; leave it be.
@@ -8478,6 +8564,17 @@ class AppState extends ChangeNotifier {
   // the moment it is made; this is for the ones that did not get through.
   final Set<String> _editsInflight = {};
 
+  // a row of ours a block kept from going: what is queued for it waits for
+  // the tap. a read that fails says held, and the next pass reads again
+  Future<bool> _heldRow(HaloDb d, String uid) async {
+    try {
+      return await d.heldBack(uid);
+    } catch (e) {
+      dlog('held row: not read (${e.runtimeType})');
+      return true;
+    }
+  }
+
   // blockedAnywhere read once a person in one pass of a queue
   Future<bool> Function(String id) _blockedInPass() {
     final read = <String, Future<bool>>{};
@@ -8510,6 +8607,8 @@ class AppState extends ChangeNotifier {
         }
         if (age < 45000 || _editsInflight.contains(uid)) continue;
         if (held.contains(r['peer_id'])) continue;
+        // its row a block kept from going: the edit waits for the tap
+        if (await _heldRow(d, uid)) continue;
         _editsInflight.add(uid);
         unawaited(
           sendEdit(
@@ -8549,6 +8648,7 @@ class AppState extends ChangeNotifier {
         }
         if (age < 45000 || _pinsInflight.contains(uid)) continue;
         if (held.contains(r['peer_id'])) continue;
+        if (await _heldRow(d, uid)) continue;
         _pinsInflight.add(uid);
         unawaited(
           _sendPin(
@@ -8574,8 +8674,9 @@ class AppState extends ChangeNotifier {
     }
     await session.queuePin(uid, peer, pinned);
     notifyListeners();
-    // a quiet session keeps it queued here: nothing leaves
-    if (sessionQuiet) return;
+    // a quiet session keeps it queued here: nothing leaves. on a row a
+    // block kept from going it waits for the tap
+    if (sessionQuiet || await session.heldBack(uid)) return;
     _pinsInflight.add(uid);
     unawaited(
       _sendPin(peer, uid, pinned).whenComplete(() => _pinsInflight.remove(uid)),
@@ -8642,6 +8743,7 @@ class AppState extends ChangeNotifier {
           continue;
         }
         if (held.contains(peer)) continue;
+        if (kind == kFrameReaction && await _heldRow(d, uid)) continue;
         if (!_framesInflight.add('$kind $uid')) continue;
         unawaited(
           _sendFrame(
@@ -8666,20 +8768,23 @@ class AppState extends ChangeNotifier {
 
   // an edit in a 1:1 chat, once the row here has it. queued first, sent
   // now: if the route is down the outbox carries it. none for someone
-  // blocked: it stays here alone
+  // blocked: it stays here alone. on a row a block kept from going it is
+  // queued and waits for the tap: the row may be on a relay already
   Future<void> editInChat(String peer, String uid, String newText) async {
     if (await blockedAnywhere(peer)) return;
     await session.queueEdit(uid, peer, newText);
     // a quiet session keeps it queued here: nothing leaves
-    if (sessionQuiet) return;
+    if (sessionQuiet || await session.heldBack(uid)) return;
     unawaited(sendEdit(peer, uid, newText));
   }
 
   // a reaction in a 1:1 chat, empty to take it off. queued like a pin.
-  // none for someone blocked
+  // none for someone blocked. on a row a block kept from going it waits
+  // for the tap, as an edit does
   Future<void> reactInChat(String peer, String uid, String emoji) async {
     if (await blockedAnywhere(peer)) return;
     await session.queueReaction(uid, peer, emoji);
+    if (await session.heldBack(uid)) return;
     await _frameNow(peer, uid, kFrameReaction, emoji);
   }
 
@@ -9312,6 +9417,7 @@ class AppState extends ChangeNotifier {
       sender: _mySender(),
       only: only,
       progressKey: d.container.chatKey(peer),
+      blockedHere: () => d.isBlocked(peer),
     );
     if (only != null) {
       dlog('NEED $uid: resend ended $res');
@@ -9321,6 +9427,11 @@ class AppState extends ChangeNotifier {
       dlog('OUTBOX: media redelivered $uid');
       await d.markSent(uid);
       await _lightBurn(r, uid, d);
+      _bumpChatRev(peer);
+      notifyListeners();
+    } else if (res == kSendBlocked) {
+      // blocked part way: not sent, and it waits for a tap
+      await d.holdBack(uid);
       _bumpChatRev(peer);
       notifyListeners();
     } else if (res != 'busy') {
@@ -14650,6 +14761,8 @@ class AppState extends ChangeNotifier {
   // may name someone the everyday app has in the shade
   Future<void> block(String haloId) async {
     await session.setBlocked(haloId, true);
+    // an open chat reads its rows again: what waited is not sent now
+    _bumpChatRev(haloId);
     await session.dropHeld(haloId);
     if (!sessionQuiet) {
       await cancelWithRetry(() => _io.unnotify(haloId), 'block shade');
