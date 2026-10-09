@@ -16821,6 +16821,9 @@ void main() async {
   unawaited(
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]),
   );
+  // drawn under the bars on android 10 to 14 too, as 15 and later force.
+  // older versions ignore it
+  unawaited(SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge));
   // the periodic job knocks here every fifteen minutes. registered before
   // anything that could fail, and whether or not a screen is attached:
   // after a kill the system restarts the process for the service or the

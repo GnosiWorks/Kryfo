@@ -214,6 +214,31 @@ class HaloType {
   );
 }
 
+// transparent bars over the app on every version, with icons by theme.
+// [underNav] false: the app stops above the navigation bar (android 9 and
+// older are not edge to edge), which is then dark whatever the theme
+SystemUiOverlayStyle haloOverlayStyle({bool underNav = true}) {
+  final pale = HaloColors.isLight;
+  return SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    systemNavigationBarColor: Colors.transparent,
+    statusBarIconBrightness: pale ? Brightness.dark : Brightness.light,
+    statusBarBrightness: pale ? Brightness.light : Brightness.dark,
+    systemNavigationBarIconBrightness: pale && underNav
+        ? Brightness.dark
+        : Brightness.light,
+  );
+}
+
+/// light icons, for screens that are black in both themes
+const haloOverlayOnDark = SystemUiOverlayStyle(
+  statusBarColor: Colors.transparent,
+  systemNavigationBarColor: Colors.transparent,
+  statusBarIconBrightness: Brightness.light,
+  statusBarBrightness: Brightness.dark,
+  systemNavigationBarIconBrightness: Brightness.light,
+);
+
 ThemeData buildHaloTheme() {
   final base = HaloColors.isLight
       ? ThemeData.light(useMaterial3: true)
@@ -245,9 +270,10 @@ ThemeData buildHaloTheme() {
     highlightColor: Colors.transparent,
     // a page scrolled under a bar leaves it plain: material would tint it
     // with the amber and lift it
-    appBarTheme: const AppBarThemeData(
+    appBarTheme: AppBarThemeData(
       scrolledUnderElevation: 0,
       surfaceTintColor: Colors.transparent,
+      systemOverlayStyle: haloOverlayStyle(),
     ),
     // every app bar's back is the same chevron the custom bars draw
     actionIconTheme: ActionIconThemeData(

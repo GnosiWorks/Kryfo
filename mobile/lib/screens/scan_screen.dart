@@ -237,148 +237,152 @@ class _ScanScreenState extends State<ScanScreen>
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final boxSize = (size.width * 0.7).clamp(220.0, 320.0);
-    return Scaffold(
-      backgroundColor: HaloColors.ink,
-      body: Stack(
-        children: [
-          if (!_reader)
-            const SizedBox.shrink()
-          else
-            scanReaderForTest?.call(_onCreated, _onScan) ??
-                ReaderWidget(
-                  mayOpen: () => !lockGuard.isLocked(),
-                  onScan: _onScan,
-                  onControllerCreated: _onCreated,
-                  showScannerOverlay: false,
-                  showFlashlight: false,
-                  showGallery: false,
-                  showToggleCamera: false,
-                  // decode almost the whole frame: the default 50% crop
-                  // misses a qr that fills the screen. tryHarder and
-                  // tryInverted read it on the first pass in poorer light.
-                  cropPercent: 0.9,
-                  tryHarder: true,
-                  tryInverted: true,
-                  scanDelay: const Duration(milliseconds: 500),
-                ),
-          // dim mask with an even-odd cutout, so the eye goes to the
-          // viewfinder
-          IgnorePointer(
-            child: CustomPaint(
-              size: size,
-              painter: _MaskPainter(boxSize: boxSize),
+    // the camera under a dark mask, in both themes
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: haloOverlayOnDark,
+      child: Scaffold(
+        backgroundColor: HaloColors.ink,
+        body: Stack(
+          children: [
+            if (!_reader)
+              const SizedBox.shrink()
+            else
+              scanReaderForTest?.call(_onCreated, _onScan) ??
+                  ReaderWidget(
+                    mayOpen: () => !lockGuard.isLocked(),
+                    onScan: _onScan,
+                    onControllerCreated: _onCreated,
+                    showScannerOverlay: false,
+                    showFlashlight: false,
+                    showGallery: false,
+                    showToggleCamera: false,
+                    // decode almost the whole frame: the default 50% crop
+                    // misses a qr that fills the screen. tryHarder and
+                    // tryInverted read it on the first pass in poorer light.
+                    cropPercent: 0.9,
+                    tryHarder: true,
+                    tryInverted: true,
+                    scanDelay: const Duration(milliseconds: 500),
+                  ),
+            // dim mask with an even-odd cutout, so the eye goes to the
+            // viewfinder
+            IgnorePointer(
+              child: CustomPaint(
+                size: size,
+                painter: _MaskPainter(boxSize: boxSize),
+              ),
             ),
-          ),
-          // viewfinder frame (corner brackets + animated scan line)
-          Center(
-            child: ScanFrame(
-              size: boxSize,
-              success: _detectedSuccess,
-              failed: _error != null,
-              scanAnim: _scanAnim,
+            // viewfinder frame (corner brackets + animated scan line)
+            Center(
+              child: ScanFrame(
+                size: boxSize,
+                success: _detectedSuccess,
+                failed: _error != null,
+                scanAnim: _scanAnim,
+              ),
             ),
-          ),
-          // top bar - back + title + torch
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsetsDirectional.fromSTEB(4, 6, 12, 6),
-                child: Row(
-                  children: [
-                    IconButton(
-                      tooltip: l10n.commonBack,
-                      icon: const Icon(
-                        Icons.chevron_left,
-                        color: Colors.white,
-                        size: 28,
-                      ),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                    Expanded(
-                      child: Text(
-                        l10n.scanScanAKryfoQr,
-                        style: HaloType.pageTitle().copyWith(
+            // top bar - back + title + torch
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(4, 6, 12, 6),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        tooltip: l10n.commonBack,
+                        icon: const Icon(
+                          Icons.chevron_left,
                           color: Colors.white,
+                          size: 28,
+                        ),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                      Expanded(
+                        child: Text(
+                          l10n.scanScanAKryfoQr,
+                          style: HaloType.pageTitle().copyWith(
+                            color: Colors.white,
+                          ),
                         ),
                       ),
-                    ),
-                    IconButton(
-                      tooltip: l10n.scanFlash,
-                      onPressed: () async {
-                        final cam = _cam;
-                        if (cam == null) return;
-                        final on = !_torchOn;
-                        try {
-                          await cam.setFlashMode(
-                            on ? FlashMode.torch : FlashMode.off,
-                          );
-                          setState(() => _torchOn = on);
-                        } catch (_) {
-                          // no flash unit - leave the icon as-is
-                        }
-                      },
-                      icon: Icon(
-                        _torchOn
-                            ? Icons.flash_on_rounded
-                            : Icons.flash_off_rounded,
-                        color: _torchOn ? HaloColors.amber : Colors.white,
+                      IconButton(
+                        tooltip: l10n.scanFlash,
+                        onPressed: () async {
+                          final cam = _cam;
+                          if (cam == null) return;
+                          final on = !_torchOn;
+                          try {
+                            await cam.setFlashMode(
+                              on ? FlashMode.torch : FlashMode.off,
+                            );
+                            setState(() => _torchOn = on);
+                          } catch (_) {
+                            // no flash unit - leave the icon as-is
+                          }
+                        },
+                        icon: Icon(
+                          _torchOn
+                              ? Icons.flash_on_rounded
+                              : Icons.flash_off_rounded,
+                          color: _torchOn ? HaloColors.amber : Colors.white,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-          // bottom helper text - switches to a transient warning when a
-          // non-kryfo qr appears in frame.
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
-                child: AnimatedSwitcher(
-                  duration: motionStill(context)
-                      ? Duration.zero
-                      : const Duration(milliseconds: 220),
-                  child: _error != null
-                      ? _failCard()
-                      : Container(
-                          key: ValueKey(_hint ?? 'default'),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 12,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.65),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: _hint != null
-                                  ? HaloColors.amber.withValues(alpha: 0.6)
-                                  : Colors.white.withValues(alpha: 0.08),
-                              width: 0.7,
+            // bottom helper text - switches to a transient warning when a
+            // non-kryfo qr appears in frame.
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
+                  child: AnimatedSwitcher(
+                    duration: motionStill(context)
+                        ? Duration.zero
+                        : const Duration(milliseconds: 220),
+                    child: _error != null
+                        ? _failCard()
+                        : Container(
+                            key: ValueKey(_hint ?? 'default'),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.65),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: _hint != null
+                                    ? HaloColors.amber.withValues(alpha: 0.6)
+                                    : Colors.white.withValues(alpha: 0.08),
+                                width: 0.7,
+                              ),
+                            ),
+                            child: Text(
+                              _hint ?? l10n.scanPointAtAKryfo,
+                              textAlign: TextAlign.center,
+                              style: HaloType.sans(
+                                size: 12.5,
+                                color: _hint != null
+                                    ? HaloColors.amber
+                                    : Colors.white,
+                              ),
                             ),
                           ),
-                          child: Text(
-                            _hint ?? l10n.scanPointAtAKryfo,
-                            textAlign: TextAlign.center,
-                            style: HaloType.sans(
-                              size: 12.5,
-                              color: _hint != null
-                                  ? HaloColors.amber
-                                  : Colors.white,
-                            ),
-                          ),
-                        ),
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
