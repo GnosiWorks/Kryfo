@@ -13,6 +13,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -51,7 +52,21 @@ const (
 	maxQueryBytes = 200
 	// how long a trending page is kept: it holds nothing of anyone's
 	trendingFor = 5 * time.Minute
+	// a media link lasts two to three hours: made the same for everyone in
+	// the same hour, so a picture keeps one link while it is shown
+	tokenFor = 2 * time.Hour
 )
+
+// the time, for tests
+var clock = time.Now
+
+// the languages the app comes in, as results are asked in. anything else
+// is asked with none, so a trending page has one form per language
+var langs = map[string]bool{
+	"en": true, "de": true, "fr": true, "es": true, "pt": true, "it": true,
+	"ru": true, "uk": true, "tr": true, "zh-CN": true, "zh-TW": true,
+	"vi": true, "id": true, "fa": true, "ar": true,
+}
 
 // limits for everyone together: behind tor there is no caller to tell
 // apart. a page of results costs one api call and up to 24 previews
@@ -231,9 +246,9 @@ func newServer(addr string, r *relay) *http.Server {
 
 func (r *relay) routes() http.Handler {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/gif/v1/search", r.search)
-	mux.HandleFunc("/gif/v1/trending", r.trendingPage)
-	mux.HandleFunc("/gif/v1/m/", r.stream)
+	mux.HandleFunc("/gif/v1/search", fromApp(r.search))
+	mux.HandleFunc("/gif/v1/trending", fromApp(r.trendingPage))
+	mux.HandleFunc("/gif/v1/m/", fromApp(r.stream))
 	mux.HandleFunc("/gif/v1/health", func(w http.ResponseWriter, _ *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]any{"ok": true, "providers": r.order})
 	})
@@ -255,11 +270,27 @@ func refuse(w http.ResponseWriter, code int, msg string) {
 	writeJSON(w, code, map[string]string{"error": msg})
 }
 
+// only the app asks: it sends X-Kryfo, which a page in a browser cannot
+// send to us without a preflight we never answer, and it sends no Origin
+func fromApp(h http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		if req.Header.Get("X-Kryfo") != "1" || req.Header.Get("Origin") != "" {
+			refuse(w, http.StatusForbidden, "app only")
+			return
+		}
+		h(w, req)
+	}
+}
+
 // the question comes in the body, never in the url: a url can end up in a
 // proxy's log, a body does not
 func (r *relay) search(w http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodPost || req.URL.RawQuery != "" {
 		refuse(w, http.StatusMethodNotAllowed, "post the question in the body")
+		return
+	}
+	if ct, _, _ := mime.ParseMediaType(req.Header.Get("Content-Type")); ct != "application/json" {
+		refuse(w, http.StatusUnsupportedMediaType, "json only")
 		return
 	}
 	var body struct {
@@ -300,15 +331,13 @@ func (r *relay) trendingPage(w http.ResponseWriter, req *http.Request) {
 		}
 		return n
 	}
-	off, lim := 0, maxLimit
+	off := 0
 	if v.Has("offset") {
 		off = num("offset")
 	}
-	if v.Has("limit") {
-		lim = num("limit")
-	}
-	a, ok := asked(v.Get("lang"), off, lim)
-	if !ok {
+	// one page size and whole pages only, so a page is kept once for all
+	a, ok := asked(v.Get("lang"), off, maxLimit)
+	if !ok || off%maxLimit != 0 {
 		refuse(w, http.StatusBadRequest, "bad request")
 		return
 	}
@@ -316,9 +345,7 @@ func (r *relay) trendingPage(w http.ResponseWriter, req *http.Request) {
 	r.answer(w, req.Context(), a, v.Get("provider"))
 }
 
-var langOK = regexp.MustCompile(`^[a-z]{2}(-[A-Za-z]{2,4})?$`)
-
-// a language that is not one is left out rather than refused
+// a language that is not one of the app's is left out rather than refused
 func asked(lang string, offset, limit int) (ask, bool) {
 	if offset < 0 || offset > maxOffset || limit < 0 {
 		return ask{}, false
@@ -326,42 +353,58 @@ func asked(lang string, offset, limit int) (ask, bool) {
 	if limit == 0 || limit > maxLimit {
 		limit = maxLimit
 	}
-	if !langOK.MatchString(lang) {
+	if !langs[lang] {
 		lang = ""
 	}
 	return ask{lang: lang, offset: offset, limit: limit}, true
 }
 
-// the query as it goes upstream: spaces folded, letters, digits, marks,
-// emoji and a few signs only. no control or direction characters
+// the joiners persian, emoji and indic scripts are written with
+const (
+	zwnj = 0x200C
+	zwj  = 0x200D
+	vs16 = 0xFE0F
+)
+
+// the query as it goes upstream: letters, digits, marks, emoji, the
+// joiners and a few signs. other punctuation of any script becomes a space;
+// control and direction characters are refused. counted in code points,
+// as the app counts what it lets be typed
 func cleanQuery(raw string) (string, bool) {
-	q := strings.Join(strings.Fields(raw), " ")
-	if q == "" || len(q) > maxQueryBytes || !utf8.ValidString(q) ||
-		utf8.RuneCountInString(q) > maxQueryRunes {
+	if !utf8.ValidString(raw) || utf8.RuneCountInString(raw) > maxQueryRunes {
 		return "", false
 	}
+	var b strings.Builder
 	some := false
-	for _, c := range q {
+	for _, c := range raw {
 		switch {
 		case unicode.IsLetter(c), unicode.IsNumber(c), unicode.In(c, unicode.So, unicode.Sk):
 			some = true
-		case unicode.IsMark(c), c == ' ', c == 0x200D, c == 0xFE0F:
+			b.WriteRune(c)
+		case unicode.IsMark(c), c == zwnj, c == zwj, c == vs16:
+			b.WriteRune(c)
 		case strings.ContainsRune("'-_.,!?&#@:+", c):
+			b.WriteRune(c)
+		case unicode.IsSpace(c):
+			b.WriteRune(' ')
+		case unicode.IsPunct(c), unicode.In(c, unicode.Sm, unicode.Sc):
+			b.WriteRune(' ')
 		default:
+			// controls, bidi marks and other format characters
 			return "", false
 		}
 	}
-	return q, some
+	q := strings.Join(strings.Fields(b.String()), " ")
+	if !some || q == "" || len(q) > maxQueryBytes {
+		return "", false
+	}
+	return q, true
 }
 
 // giphy unless asked otherwise. a first page falls back to the other
 // provider when the first fails; a later one stays where it started, its
 // offsets mean nothing elsewhere
 func (r *relay) answer(w http.ResponseWriter, ctx context.Context, a ask, want string) {
-	if !apiLim.allow() {
-		refuse(w, http.StatusTooManyRequests, "slow down")
-		return
-	}
 	if want == "" {
 		want = "giphy"
 	}
@@ -380,6 +423,19 @@ func (r *relay) answer(w http.ResponseWriter, ctx context.Context, a ask, want s
 		refuse(w, http.StatusServiceUnavailable, "no gif service is set up")
 		return
 	}
+	// a kept trending page costs the providers nothing and is not counted
+	if a.trending {
+		for _, n := range tries {
+			if p, ok := r.kept(n, a); ok {
+				writeJSON(w, http.StatusOK, p)
+				return
+			}
+		}
+	}
+	if !apiLim.allow() {
+		refuse(w, http.StatusTooManyRequests, "slow down")
+		return
+	}
 	for _, n := range tries {
 		p, err := r.pageFrom(ctx, r.providers[n], a)
 		if err != nil {
@@ -392,17 +448,22 @@ func (r *relay) answer(w http.ResponseWriter, ctx context.Context, a ask, want s
 	refuse(w, http.StatusBadGateway, "the gif service did not answer")
 }
 
-func (r *relay) pageFrom(ctx context.Context, p provider, a ask) (page, error) {
-	key := ""
-	if a.trending {
-		key = fmt.Sprintf("%s|%s|%d|%d", p.name(), a.lang, a.offset, a.limit)
-		r.tmu.Lock()
-		c, ok := r.trending[key]
-		r.tmu.Unlock()
-		if ok && time.Since(c.at) < trendingFor {
-			return c.p, nil
-		}
+func trendingKey(provider string, a ask) string {
+	return fmt.Sprintf("%s|%s|%d", provider, a.lang, a.offset)
+}
+
+// a trending page fetched in the last few minutes
+func (r *relay) kept(provider string, a ask) (page, bool) {
+	r.tmu.Lock()
+	defer r.tmu.Unlock()
+	c, ok := r.trending[trendingKey(provider, a)]
+	if !ok || clock().Sub(c.at) >= trendingFor {
+		return page{}, false
 	}
+	return c.p, true
+}
+
+func (r *relay) pageFrom(ctx context.Context, p provider, a ask) (page, error) {
 	ctx, cancel := context.WithTimeout(ctx, 12*time.Second)
 	defer cancel()
 	items, more, err := p.fetch(ctx, a)
@@ -423,8 +484,9 @@ func (r *relay) pageFrom(ctx context.Context, p provider, a ask) (page, error) {
 		out.Next = &n
 	}
 	if a.trending {
+		key := trendingKey(p.name(), a)
 		r.tmu.Lock()
-		now := time.Now()
+		now := clock()
 		for k, c := range r.trending {
 			if now.Sub(c.at) >= trendingFor {
 				delete(r.trending, k)
@@ -448,15 +510,21 @@ func (r *relay) sign(m *media) bool {
 	return true
 }
 
-func (r *relay) mac(u string) []byte {
+func (r *relay) mac(payload []byte) []byte {
 	h := hmac.New(sha256.New, r.secret)
-	h.Write([]byte("kryfo-gif-media-v1\x00" + u))
+	h.Write([]byte("kryfo-gif-media-v2\x00"))
+	h.Write(payload)
 	return h.Sum(nil)[:16]
 }
 
+// the link's end and the provider's url, signed. the end is the start of
+// the next hour plus tokenFor, so a link made now lasts two to three hours
 func (r *relay) token(u string) string {
+	end := clock().Truncate(time.Hour).Add(time.Hour + tokenFor).Unix()
+	payload := binary.BigEndian.AppendUint64(nil, uint64(end))
+	payload = append(payload, u...)
 	b := base64.RawURLEncoding
-	return b.EncodeToString([]byte(u)) + "." + b.EncodeToString(r.mac(u))
+	return b.EncodeToString(payload) + "." + b.EncodeToString(r.mac(payload))
 }
 
 func (r *relay) untoken(t string) (string, bool) {
@@ -468,12 +536,16 @@ func (r *relay) untoken(t string) (string, bool) {
 		return "", false
 	}
 	b := base64.RawURLEncoding
-	u, err1 := b.DecodeString(a)
+	payload, err1 := b.DecodeString(a)
 	sum, err2 := b.DecodeString(s)
-	if err1 != nil || err2 != nil || !hmac.Equal(sum, r.mac(string(u))) {
+	if err1 != nil || err2 != nil || len(payload) < 9 || !hmac.Equal(sum, r.mac(payload)) {
 		return "", false
 	}
-	return string(u), true
+	end := int64(binary.BigEndian.Uint64(payload[:8]))
+	if clock().Unix() >= end {
+		return "", false
+	}
+	return string(payload[8:]), true
 }
 
 var kinds = map[string][]byte{

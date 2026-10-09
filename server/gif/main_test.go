@@ -3,6 +3,8 @@ package main
 
 import (
 	"bytes"
+	"encoding/base64"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -13,6 +15,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 )
 
 const (
@@ -50,6 +53,9 @@ type fake struct {
 	seen    *seen
 	giphyUp bool
 	klipyUp bool
+	// results each provider holds; every fifth klipy place is an ad
+	giphyTotal int
+	klipyTotal int
 	// what the media host answers: type and body
 	mediaType string
 	mediaBody []byte
@@ -58,7 +64,7 @@ type fake struct {
 func newFake(t *testing.T) *fake {
 	t.Helper()
 	apiLim, mediaLim = newLimiter(1000, 1000), newLimiter(1000, 1000)
-	f := &fake{t: t, seen: &seen{}, giphyUp: true, klipyUp: true, mediaType: "image/gif", mediaBody: gifBytes}
+	f := &fake{t: t, seen: &seen{}, giphyUp: true, klipyUp: true, giphyTotal: 60, klipyTotal: 40, mediaType: "image/gif", mediaBody: gifBytes}
 	f.media = httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		f.seen.add(r)
 		w.Header().Set("Content-Type", f.mediaType)
@@ -103,7 +109,7 @@ func (f *fake) serveGiphy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	off := atoi(q.Get("offset"))
-	n := atoi(q.Get("limit"))
+	n := min(atoi(q.Get("limit")), max(f.giphyTotal-off, 0))
 	var data []map[string]any
 	for i := 0; i < n; i++ {
 		id := fmt.Sprintf("g%d", off+i)
@@ -127,7 +133,7 @@ func (f *fake) serveGiphy(w http.ResponseWriter, r *http.Request) {
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"data":       data,
-		"pagination": map[string]int{"total_count": 60, "count": len(data), "offset": off},
+		"pagination": map[string]int{"total_count": f.giphyTotal, "count": len(data), "offset": off},
 	})
 }
 
@@ -140,16 +146,27 @@ func (f *fake) serveKlipy(w http.ResponseWriter, r *http.Request) {
 	file := func(id, ext string, w, h int) map[string]any {
 		return map[string]any{"url": f.media.URL + "/" + id + "." + ext, "width": w, "height": h, "size": 2000}
 	}
-	data := []map[string]any{
-		{"type": "ad", "content": "<html>", "width": 300, "height": 250},
-		{"id": 11, "type": "gif", "file": map[string]any{
-			"sm": map[string]any{"webp": file("k11", "webp", 220, 180), "gif": file("k11", "gif", 220, 180)},
-			"md": map[string]any{"gif": file("k11m", "gif", 480, 392)},
-		}},
+	q := r.URL.Query()
+	per, pg := atoi(q.Get("per_page")), atoi(q.Get("page"))
+	if per < 8 || per > 50 || pg < 1 {
+		http.Error(w, "bad page", http.StatusBadRequest)
+		return
+	}
+	var data []map[string]any
+	for p := (pg - 1) * per; p < pg*per && p < f.klipyTotal; p++ {
+		if p%5 == 0 {
+			data = append(data, map[string]any{"type": "ad", "content": "<html>", "width": 300, "height": 250})
+			continue
+		}
+		id := fmt.Sprintf("k%d", p)
+		data = append(data, map[string]any{"id": p, "type": "gif", "file": map[string]any{
+			"sm": map[string]any{"webp": file(id, "webp", 220, 180), "gif": file(id, "gif", 220, 180)},
+			"md": map[string]any{"gif": file(id+"m", "gif", 480, 392)},
+		}})
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"result": true,
-		"data":   map[string]any{"data": data, "current_page": 1, "per_page": 24, "has_next": true},
+		"data":   map[string]any{"data": data, "current_page": pg, "per_page": per, "has_next": pg*per < f.klipyTotal},
 	})
 }
 
@@ -158,6 +175,7 @@ func (f *fake) post(path string, body any, hdr ...string) (int, map[string]any) 
 	b, _ := json.Marshal(body)
 	req, _ := http.NewRequest(http.MethodPost, f.relay.URL+path, bytes.NewReader(b))
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Kryfo", "1")
 	for i := 0; i+1 < len(hdr); i += 2 {
 		req.Header.Set(hdr[i], hdr[i+1])
 	}
@@ -167,6 +185,7 @@ func (f *fake) post(path string, body any, hdr ...string) (int, map[string]any) 
 func (f *fake) get(path string) (int, map[string]any) {
 	f.t.Helper()
 	req, _ := http.NewRequest(http.MethodGet, f.relay.URL+path, nil)
+	req.Header.Set("X-Kryfo", "1")
 	return f.do(req)
 }
 
@@ -261,19 +280,50 @@ func TestQuestionOnlyInTheBody(t *testing.T) {
 	}
 }
 
-func TestQueriesThatAreRefused(t *testing.T) {
+func TestQueriesAsTheyGoUpstream(t *testing.T) {
 	f := newFake(t)
-	for _, q := range []string{
-		"", "   ", strings.Repeat("a", 51), "seal\x00", "seal\u202e", "a<b>", "%2e%2e",
-		"https://x.y/z",
-	} {
+	refused := []string{
+		"", "   ", strings.Repeat("a", 51), "seal\x00", "seal\u202e", "a\u2066b",
+		"seal\x07", "\x1b[31mseal", "“”", "!?",
+	}
+	for _, q := range refused {
 		if code, _ := f.post("/gif/v1/search", map[string]any{"q": q}); code != http.StatusBadRequest {
 			t.Errorf("%q: %d", q, code)
 		}
 	}
-	for _, q := range []string{"seal", "öl", "猫", "кот", "😂", "👍🏽", "rock & roll", "it's 5 o'clock", "قطة"} {
-		if code, p := f.post("/gif/v1/search", map[string]any{"q": q}); code != 200 {
-			t.Errorf("%q: %d %v", q, code, p)
+	// fifty code points is the most, as the app counts them
+	if code, _ := f.post("/gif/v1/search", map[string]any{"q": strings.Repeat("猫", 50)}); code != 200 {
+		t.Errorf("fifty: %d", code)
+	}
+	upstream := func(q string) string {
+		t.Helper()
+		code, p := f.post("/gif/v1/search", map[string]any{"q": q})
+		if code != 200 {
+			t.Fatalf("%q: %d %v", q, code, p)
+		}
+		reqs := f.seen.all()
+		return reqs[len(reqs)-1].URL.Query().Get("q")
+	}
+	for q, want := range map[string]string{
+		"seal":            "seal",
+		"happy  seal":     "happy seal",
+		"گربه\u200cها":    "گربه\u200cها",
+		"👩\u200d💻":        "👩\u200d💻",
+		"❤\ufe0f":         "❤\ufe0f",
+		"👍🏽":              "👍🏽",
+		"猫，狗！":            "猫 狗",
+		"「猫」。":            "猫",
+		"قطة؟":            "قطة",
+		"قطة، كلب":        "قطة كلب",
+		"“seal”":          "seal",
+		"(seal) [ok] {x}": "seal ok x",
+		"a<b>":            "a b",
+		"rock & roll":     "rock & roll",
+		"it's 5 o'clock":  "it's 5 o'clock",
+		"seal\tpup\n":     "seal pup",
+	} {
+		if got := upstream(q); got != want {
+			t.Errorf("%q went up as %q, want %q", q, got, want)
 		}
 	}
 	if code, _ := f.post("/gif/v1/search", map[string]any{"q": "seal", "offset": -1}); code != 400 {
@@ -282,11 +332,96 @@ func TestQueriesThatAreRefused(t *testing.T) {
 	if code, _ := f.post("/gif/v1/search", map[string]any{"q": "seal", "offset": 5000}); code != 400 {
 		t.Errorf("offset past the end: %d", code)
 	}
-	// a language that is not one is dropped, not passed on
+	// a language that is not one of the app's is dropped, not passed on
 	f.post("/gif/v1/search", map[string]any{"q": "seal", "lang": "de&x=1"})
 	reqs := f.seen.all()
 	if q := reqs[len(reqs)-1].URL.Query(); q.Has("lang") || q.Has("x") {
 		t.Errorf("lang went up: %v", q)
+	}
+}
+
+func TestOnlyTheAppAsks(t *testing.T) {
+	f := newFake(t)
+	body := map[string]any{"q": "seal"}
+	for name, hdr := range map[string][]string{
+		"no app header":     {"X-Kryfo", ""},
+		"another value":     {"X-Kryfo", "yes"},
+		"a page's origin":   {"Origin", "https://evil.example"},
+		"even our own site": {"Origin", "https://kryfo.app"},
+	} {
+		if code, _ := f.post("/gif/v1/search", body, hdr...); code != http.StatusForbidden {
+			t.Errorf("%s: %d", name, code)
+		}
+	}
+	if code, _ := f.post("/gif/v1/search", body, "Content-Type", "text/plain"); code != http.StatusUnsupportedMediaType {
+		t.Errorf("a form post: %d", code)
+	}
+	req, _ := http.NewRequest(http.MethodGet, f.relay.URL+"/gif/v1/trending", nil)
+	if code, _ := f.do(req); code != http.StatusForbidden {
+		t.Errorf("trending without the header: %d", code)
+	}
+	path := mediaURL(t, f, "full")
+	req, _ = http.NewRequest(http.MethodGet, f.relay.URL+path, nil)
+	if code, _ := f.do(req); code != http.StatusForbidden {
+		t.Errorf("media without the header: %d", code)
+	}
+	if n := len(f.seen.all()); n != 1 {
+		t.Errorf("%d upstream calls, want the one search", n)
+	}
+	if code, _ := f.get("/gif/v1/health"); code != 200 {
+		t.Errorf("health: %d", code)
+	}
+}
+
+func TestGiphyEndsOnAShortPage(t *testing.T) {
+	f := newFake(t)
+	f.giphyTotal = 30
+	_, p := f.post("/gif/v1/search", map[string]any{"q": "seal"})
+	if p["next"] != float64(24) {
+		t.Fatalf("first page: next %v", p["next"])
+	}
+	_, p = f.post("/gif/v1/search", map[string]any{"q": "seal", "offset": 24})
+	if len(items(t, p)) != 6 || p["next"] != nil {
+		t.Fatalf("short page: %d items, next %v", len(items(t, p)), p["next"])
+	}
+	// giphy's total can be generous: a short page still ends it
+	f.giphyTotal = 1000
+	_, p = f.post("/gif/v1/search", map[string]any{"q": "seal", "limit": 10})
+	if p["next"] != float64(10) {
+		t.Fatalf("full page of ten: next %v", p["next"])
+	}
+}
+
+func TestKlipyPagesByPlace(t *testing.T) {
+	f := newFake(t)
+	f.giphyUp = false
+	ids := func(p map[string]any) []string {
+		var out []string
+		for _, it := range items(t, p) {
+			out = append(out, it["id"].(string))
+		}
+		return out
+	}
+	// places 0..23, every fifth an ad
+	_, p := f.post("/gif/v1/search", map[string]any{"q": "seal", "provider": "klipy"})
+	got := ids(p)
+	if len(got) != 19 || got[0] != "1" || got[len(got)-1] != "23" || p["next"] != float64(24) {
+		t.Fatalf("page one: %v next %v", got, p["next"])
+	}
+	// a limit under klipy's floor of eight, and an offset inside a page
+	_, p = f.post("/gif/v1/search", map[string]any{"q": "seal", "provider": "klipy", "offset": 6, "limit": 5})
+	if got := ids(p); strings.Join(got, ",") != "6,7,8,9" || p["next"] != float64(11) {
+		t.Fatalf("places 6..10: %v next %v", got, p["next"])
+	}
+	// across klipy's pages
+	_, p = f.post("/gif/v1/search", map[string]any{"q": "seal", "provider": "klipy", "offset": 12, "limit": 10})
+	if got := ids(p); strings.Join(got, ",") != "12,13,14,16,17,18,19,21" || p["next"] != float64(22) {
+		t.Fatalf("places 12..21: %v next %v", got, p["next"])
+	}
+	// the end
+	_, p = f.post("/gif/v1/search", map[string]any{"q": "seal", "provider": "klipy", "offset": 24})
+	if got := ids(p); len(got) != 13 || p["next"] != nil {
+		t.Fatalf("last page: %v next %v", got, p["next"])
 	}
 }
 
@@ -298,8 +433,8 @@ func TestFirstPageFallsBackToKlipy(t *testing.T) {
 		t.Fatalf("%d %v", code, p)
 	}
 	its := items(t, p)
-	if len(its) != 1 || its[0]["id"] != "11" {
-		t.Fatalf("the ad was shown or the gif lost: %v", its)
+	if len(its) != 19 || its[0]["id"] != "1" {
+		t.Fatalf("an ad was shown or a gif lost: %v", its)
 	}
 	if its[0]["w"] != float64(480) {
 		t.Fatalf("size from the full gif: %v", its[0])
@@ -311,7 +446,8 @@ func TestFirstPageFallsBackToKlipy(t *testing.T) {
 			checkClean(t, r)
 		}
 	}
-	if kq.Get("rating") != "pg-13" || kq.Get("locale") != "pt_BR" || kq.Has("customer_id") {
+	if kq.Get("content_filter") != "low" || kq.Get("locale") != "br" || kq.Has("customer_id") ||
+		kq.Has("rating") || kq.Get("format_filter") != "gif,webp" {
 		t.Fatalf("klipy asked %v", kq)
 	}
 	// a later page stays with the provider it started on
@@ -359,6 +495,75 @@ func TestTrendingIsKeptAWhile(t *testing.T) {
 	if code, _ := f.get("/gif/v1/trending?offset=x"); code != 400 {
 		t.Fatalf("bad offset: %d", code)
 	}
+	// one form per page: no limit of the asker's, whole pages, the app's
+	// languages or none
+	if code, _ := f.get("/gif/v1/trending?offset=5"); code != 400 {
+		t.Fatalf("an offset inside a page: %d", code)
+	}
+	for _, q := range []string{"lang=en&limit=3", "lang=en&limit=24&x=1", "offset=0&lang=en"} {
+		if code, p := f.get("/gif/v1/trending?" + q); code != 200 || len(items(t, p)) != 24 {
+			t.Fatalf("%s: %d", q, code)
+		}
+	}
+	for _, q := range []string{"lang=xx", "lang=", "lang=en-GB", ""} {
+		f.get("/gif/v1/trending?" + q)
+	}
+	if n := len(f.seen.all()); n != 2 {
+		t.Fatalf("%d upstream calls, want en and none", n)
+	}
+}
+
+func TestKeptPagesCostNothing(t *testing.T) {
+	f := newFake(t)
+	f.get("/gif/v1/trending?lang=en")
+	apiLim = newLimiter(0.001, 1)
+	for i := 0; i < 5; i++ {
+		if code, _ := f.get("/gif/v1/trending?lang=en"); code != 200 {
+			t.Fatalf("a kept page was limited: %d", code)
+		}
+	}
+	if code, _ := f.get("/gif/v1/trending?lang=de"); code != 200 {
+		t.Fatalf("the first miss: %d", code)
+	}
+	if code, _ := f.get("/gif/v1/trending?lang=fr"); code != http.StatusTooManyRequests {
+		t.Fatalf("the second miss: %d", code)
+	}
+	// and a kept page goes after a while
+	now := time.Now()
+	clock = func() time.Time { return now.Add(trendingFor) }
+	defer func() { clock = time.Now }()
+	if code, _ := f.get("/gif/v1/trending?lang=en"); code != http.StatusTooManyRequests {
+		t.Fatalf("an old page was kept: %d", code)
+	}
+}
+
+func TestMediaLinksExpire(t *testing.T) {
+	f := newFake(t)
+	path := mediaURL(t, f, "full")
+	now := time.Now()
+	defer func() { clock = time.Now }()
+	clock = func() time.Time { return now.Add(tokenFor - time.Minute) }
+	if resp, _, _ := fetch(t, f, path); resp.StatusCode != 200 {
+		t.Fatalf("within its time: %d", resp.StatusCode)
+	}
+	clock = func() time.Time { return now.Add(tokenFor + time.Hour) }
+	if resp, _, _ := fetch(t, f, path); resp.StatusCode != http.StatusNotFound {
+		t.Fatalf("past its time: %d", resp.StatusCode)
+	}
+	// the same picture in the same hour has the same link
+	clock = time.Now
+	if f.r.token("https://x/y.gif") != f.r.token("https://x/y.gif") {
+		t.Fatal("a link changes within its hour")
+	}
+	// a later end written into the link breaks its signature
+	tok := strings.TrimPrefix(path, "/gif/v1/m/")
+	a, sig, _ := strings.Cut(tok, ".")
+	raw, _ := base64.RawURLEncoding.DecodeString(a)
+	binary.BigEndian.PutUint64(raw, uint64(now.Add(1000*time.Hour).Unix()))
+	forged := base64.RawURLEncoding.EncodeToString(raw) + "." + sig
+	if _, ok := f.r.untoken(forged); ok {
+		t.Fatal("a forged end was taken")
+	}
 }
 
 func mediaURL(t *testing.T, f *fake, which string) string {
@@ -369,7 +574,9 @@ func mediaURL(t *testing.T, f *fake, which string) string {
 
 func fetch(t *testing.T, f *fake, path string) (*http.Response, []byte, error) {
 	t.Helper()
-	resp, err := f.relay.Client().Get(f.relay.URL + path)
+	req, _ := http.NewRequest(http.MethodGet, f.relay.URL+path, nil)
+	req.Header.Set("X-Kryfo", "1")
+	resp, err := f.relay.Client().Do(req)
 	if err != nil {
 		t.Fatal(err)
 	}

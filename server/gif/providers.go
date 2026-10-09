@@ -111,8 +111,9 @@ func (g *giphy) fetch(ctx context.Context, a ask) ([]item, bool, error) {
 		pre.URL, full.URL = bare(pre.URL), bare(full.URL)
 		out = append(out, item{ID: d.ID, W: full.W, H: full.H, Preview: pre, Full: full})
 	}
+	// a short page is the last one, whatever the total says
 	p := r.Pagination
-	more := p.Count > 0 && p.Offset+p.Count < p.Total
+	more := p.Count == a.limit && p.Offset+p.Count < p.Total
 	return out, more, nil
 }
 
@@ -156,28 +157,58 @@ type klipyFormats struct {
 	Webp *klipyFile `json:"webp"`
 }
 
-// klipy takes a country with the language
+// klipy takes a country (iso 3166 alpha-2) where giphy takes a language
 var klipyLocales = map[string]string{
-	"en": "en_US", "de": "de_DE", "fr": "fr_FR", "es": "es_ES", "pt": "pt_BR",
-	"it": "it_IT", "ru": "ru_RU", "uk": "uk_UA", "tr": "tr_TR", "zh": "zh_CN",
-	"vi": "vi_VN", "id": "id_ID", "fa": "fa_IR", "ar": "ar_SA",
+	"en": "us", "de": "de", "fr": "fr", "es": "es", "pt": "br", "it": "it",
+	"ru": "ru", "uk": "ua", "tr": "tr", "zh-CN": "cn", "zh-TW": "tw",
+	"vi": "vn", "id": "id", "fa": "ir", "ar": "sa",
 }
 
-func klipyLocale(lang string) string {
-	if a, b, ok := strings.Cut(lang, "-"); ok && len(b) == 2 {
-		return a + "_" + strings.ToUpper(b)
-	}
-	return klipyLocales[lang]
-}
+// klipy's own scale (off, low, medium, high) has no pg-13 by name. low is
+// the step that lets pg-13 through and nothing past it
+const klipyFilter = "low"
 
+// klipy pages by number, 8 to 50 a page. an offset inside a page is read
+// from that page on, and the next page fills what the first leaves. an ad
+// or an item we cannot show keeps its place, so offsets stay klipy's
 func (k *klipy) fetch(ctx context.Context, a ask) ([]item, bool, error) {
-	// klipy pages by number and takes 8 to 50 a page
 	per := max(a.limit, 8)
+	page := a.offset/per + 1
+	skip := a.offset % per
+	var places []*item
+	for {
+		got, more, err := k.page(ctx, a, per, page)
+		if err != nil {
+			return nil, false, err
+		}
+		if skip < len(got) {
+			places = append(places, got[skip:]...)
+		}
+		skip = 0
+		if len(places) >= a.limit || !more || len(got) == 0 {
+			if len(places) > a.limit {
+				places, more = places[:a.limit], true
+			}
+			var out []item
+			for _, it := range places {
+				if it != nil {
+					out = append(out, *it)
+				}
+			}
+			return out, more, nil
+		}
+		page++
+	}
+}
+
+// one page as klipy numbers it, nil where nothing can be shown
+func (k *klipy) page(ctx context.Context, a ask, per, page int) ([]*item, bool, error) {
 	v := url.Values{}
 	v.Set("per_page", strconv.Itoa(per))
-	v.Set("page", strconv.Itoa(a.offset/per+1))
-	v.Set("rating", rating)
-	if l := klipyLocale(a.lang); l != "" {
+	v.Set("page", strconv.Itoa(page))
+	v.Set("content_filter", klipyFilter)
+	v.Set("format_filter", "gif,webp")
+	if l := klipyLocales[a.lang]; l != "" {
 		v.Set("locale", l)
 	}
 	kind := "trending"
@@ -203,20 +234,17 @@ func (k *klipy) fetch(ctx context.Context, a ask) ([]item, bool, error) {
 	if !r.Result {
 		return nil, false, errUpstream
 	}
-	var out []item
+	out := make([]*item, 0, len(r.Data.Data))
 	for _, d := range r.Data.Data {
-		// an ad is a web page, never shown
-		if d.Type != "" && d.Type != "gif" {
-			continue
-		}
 		pre := pick(d.File, []string{"sm", "xs", "md"}, true)
 		full := pick(d.File, []string{"md", "sm", "hd"}, false)
-		if pre == nil || full == nil {
+		// an ad is a web page, never shown
+		if (d.Type != "" && d.Type != "gif") || pre == nil || full == nil {
+			out = append(out, nil)
 			continue
 		}
-		id := strings.Trim(string(d.ID), `"`)
-		out = append(out, item{
-			ID: id, W: full.Width, H: full.Height,
+		out = append(out, &item{
+			ID: strings.Trim(string(d.ID), `"`), W: full.Width, H: full.Height,
 			Preview: media{URL: pre.URL, W: pre.Width, H: pre.Height, Bytes: pre.Size},
 			Full:    media{URL: full.URL, W: full.Width, H: full.Height, Bytes: full.Size},
 		})
