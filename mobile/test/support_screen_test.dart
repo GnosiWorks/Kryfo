@@ -8,7 +8,10 @@
 // deletes it, and the inbox's own menu puts every waiting chat away. with
 // nobody yet it says so. a notification's tap opens it or the chat it
 // names, never in a decoy. the reset link is off on his phone. less
-// movement and right to left are kept
+// movement and right to left are kept. a contact's message that came
+// through the developer chat says so, such a chat moves to the inbox from
+// its menu and an answered one back to Chats, and someone added whose
+// chat is in the inbox is asked where it goes
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -23,6 +26,7 @@ import 'package:kryfo/screens/home_screen.dart';
 import 'package:kryfo/screens/settings_screen.dart';
 import 'package:kryfo/screens/support_screen.dart';
 import 'package:kryfo/session.dart';
+import 'package:kryfo/theme.dart';
 import 'package:kryfo/widgets/count_badge.dart';
 import 'package:kryfo/widgets/kryfo_avatar.dart';
 import 'package:kryfo/widgets/motion.dart' show BreathDot;
@@ -35,6 +39,8 @@ import 'mem_db.dart';
 const _s = 'slow-amber-fox';
 const _t = 'tall-quiet-pine';
 const _r = 'plain-rust-door';
+// one of his own contacts
+const _c = 'close-old-friend';
 
 late DevKey _key;
 
@@ -144,6 +150,9 @@ class _ChatDb extends _Db {
   @override
   Future<({bool sent, bool delivered})> sendState(String msgUid) async =>
       (sent: true, delivered: false);
+  @override
+  Future<bool> hasViaDev(String haloId) async =>
+      _thread(haloId).any((r) => r['via_dev'] == 1);
 }
 
 late MemDb _mem;
@@ -636,6 +645,227 @@ void main() {
       await _settle(t);
       expect(find.byType(SupportScreen), findsNothing);
       expect(find.text('support chat $_s'), findsNothing);
+      await devClose(t);
+    });
+  });
+
+  group('one person, two ways in', () {
+    // C, a contact, wrote once through the developer chat and once not
+    Future<void> friend() async {
+      await _mem.insert('contacts', {
+        'halo_id': _c,
+        'onion': '',
+        'xpub': 'x-$_c',
+        'first_seen': 1,
+        'last_seen': 1,
+        'accepted': 1,
+      });
+      final now = DateTime.now().millisecondsSinceEpoch;
+      for (final (text, via) in const [('from the row', 1), ('just me', 0)]) {
+        await _mem.insert('messages', {
+          'peer_id': _c,
+          'direction': 'in',
+          'plaintext': text,
+          'sent_at': now,
+          'via_dev': via,
+        });
+      }
+      await appState.refreshContacts();
+    }
+
+    Widget chat(String id, {bool support = false}) => ChatScreen(
+      peerHaloId: id,
+      peerOnion: '',
+      peerXPub: 'x-$id',
+      avatarSeed: id,
+      support: support,
+    );
+
+    // a page under the chat, so leaving it has somewhere to go
+    Future<NavigatorState> host(WidgetTester t, {bool still = false}) async {
+      final nav = GlobalKey<NavigatorState>();
+      await devOpen(
+        t,
+        Navigator(
+          key: nav,
+          onGenerateRoute: (_) => MaterialPageRoute<void>(
+            builder: (_) => const Scaffold(body: Text('under')),
+          ),
+        ),
+        still: still,
+      );
+      return nav.currentState!;
+    }
+
+    Future<void> menu(WidgetTester t) async {
+      await t.tap(find.byTooltip(l10n.chatContactOptions));
+      await _settle(t);
+    }
+
+    Finder bubbleOf(String text) => find.ancestor(
+      of: find.text(text),
+      matching: find.byWidgetPredicate(
+        (w) => w.runtimeType.toString() == '_Bubble',
+      ),
+    );
+
+    testWidgets('the message that came through the developer chat says so, '
+        'the other does not', (t) async {
+      await _world();
+      await friend();
+      await devOpen(t, chat(_c));
+      expect(find.text(l10n.supportViaDev), findsOneWidget);
+      expect(
+        find.descendant(
+          of: bubbleOf('from the row'),
+          matching: find.text(l10n.supportViaDev),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: bubbleOf('just me'),
+          matching: find.text(l10n.supportViaDev),
+        ),
+        findsNothing,
+      );
+      // amber, never grey
+      final tag = t.widget<Text>(find.text(l10n.supportViaDev));
+      expect(tag.style?.color, HaloColors.amber);
+      await devClose(t);
+    });
+
+    testWidgets('the chat menu moves it to the inbox, and it leaves Chats '
+        'folding', (t) async {
+      await _world();
+      await friend();
+      expect([for (final c in appState.contacts) c.haloId], [_c]);
+      final nav = await host(t);
+      final open = nav.push(MaterialPageRoute<void>(builder: (_) => chat(_c)));
+      await _settle(t);
+      await menu(t);
+      await t.tap(find.text(l10n.supportMoveToInbox));
+      await _settle(t);
+      await open;
+      expect(find.text('under'), findsOneWidget);
+      expect(find.text(l10n.supportMovedToInbox), findsOneWidget);
+      expect(_state(_c), 'open');
+      expect(appState.contacts, isEmpty);
+      // answered: the inbox shows it there, and counts no one more waiting
+      expect(appState.supportWaiting, 1);
+      await t.pump(const Duration(seconds: 3));
+      await devClose(t);
+
+      // on home the row folds out rather than vanishing
+      await _world();
+      await friend();
+      await devOpen(t, _home());
+      expect(find.text(_c), findsOneWidget);
+      await appState.moveToInbox(_c);
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 60));
+      expect(find.text(_c), findsOneWidget);
+      await t.pump(const Duration(seconds: 1));
+      expect(find.text(_c), findsNothing);
+      await devClose(t);
+    });
+
+    testWidgets('no move for a contact who never came that way, nor on '
+        'anyone else\'s phone', (t) async {
+      await _world();
+      await friend();
+      await _mem.update('messages', {'via_dev': 0});
+      await devOpen(t, chat(_c));
+      await menu(t);
+      expect(find.text(l10n.chatArchiveChat), findsOneWidget);
+      expect(find.text(l10n.supportMoveToInbox), findsNothing);
+      await devClose(t);
+
+      await _world(dev: false);
+      await friend();
+      await devOpen(t, chat(_c));
+      await menu(t);
+      expect(find.text(l10n.supportMoveToInbox), findsNothing);
+      await devClose(t);
+    });
+
+    testWidgets('the inbox moves an answered chat to Chats; a waiting one '
+        'has no such row', (t) async {
+      await _world();
+      await devOpen(t, const SupportScreen());
+      await t.longPress(find.text(_s));
+      await _settle(t);
+      expect(find.text(l10n.supportMoveToChats), findsNothing);
+      await t.tapAt(const Offset(10, 10));
+      await _settle(t);
+      await t.longPress(find.text(_t));
+      await _settle(t);
+      await t.tap(find.text(l10n.supportMoveToChats));
+      await _settle(t);
+      expect(find.text(_t), findsNothing);
+      expect(_state(_t), 'out');
+      expect(find.text(l10n.supportMovedToChats), findsOneWidget);
+      expect([for (final c in appState.contacts) c.haloId], [_t]);
+      await t.pump(const Duration(seconds: 3));
+      await devClose(t);
+    });
+
+    Future<Future<bool>> ask(WidgetTester t, String id) async {
+      await devOpen(t, const Scaffold(body: Text('under')));
+      final going = askMoveIntoChats(t.element(find.text('under')), id);
+      // the sheet opens once the inbox has answered
+      await t.pump();
+      await _settle(t);
+      return going;
+    }
+
+    testWidgets('added: asked once, and Move puts the chat in Chats', (
+      t,
+    ) async {
+      await _world();
+      final going = await ask(t, _t);
+      expect(find.text(l10n.supportMoveAsk), findsOneWidget);
+      expect(find.text(l10n.supportMoveLine), findsOneWidget);
+      expect(find.text(l10n.supportKeepApart), findsOneWidget);
+      await t.tap(find.text(l10n.supportMove));
+      await _settle(t);
+      expect(await going, isTrue);
+      expect(_state(_t), 'out');
+      expect([for (final c in appState.contacts) c.haloId], [_t]);
+      expect(find.text(l10n.supportMovedToChats), findsOneWidget);
+      await t.pump(const Duration(seconds: 3));
+      await devClose(t);
+    });
+
+    testWidgets('Keep apart, or no answer at all, changes nothing', (t) async {
+      await _world();
+      var going = await ask(t, _t);
+      await t.tap(find.text(l10n.supportKeepApart));
+      await _settle(t);
+      expect(await going, isFalse);
+      expect(_state(_t), 'open');
+      expect(appState.contacts, isEmpty);
+      await devClose(t);
+      // dismissed: keep apart is the default
+      going = await ask(t, _t);
+      await t.tapAt(const Offset(10, 10));
+      await _settle(t);
+      expect(await going, isFalse);
+      expect(_state(_t), 'open');
+      await devClose(t);
+    });
+
+    testWidgets('nobody asks about a chat that is not in the inbox, or on '
+        'anyone else\'s phone', (t) async {
+      await _world();
+      var going = await ask(t, 'not-in-inbox');
+      expect(find.text(l10n.supportMoveAsk), findsNothing);
+      expect(await going, isFalse);
+      await devClose(t);
+      await _world(dev: false);
+      going = await ask(t, _t);
+      expect(find.text(l10n.supportMoveAsk), findsNothing);
+      expect(await going, isFalse);
       await devClose(t);
     });
   });

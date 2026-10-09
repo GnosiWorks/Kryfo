@@ -9616,6 +9616,42 @@
   "@supportResetPinned": {
     "description": "screens/settings_screen.dart: under Reset my invite link, which is off on the developer's own phone. Only the developer's own phone shows it, in English."
   },
+  "supportViaDev": "Via developer chat",
+  "@supportViaDev": {
+    "description": "screens/chat_screen.dart: a small tag under a contact's message that came through the developer chat. Only the developer's own phone shows it, in English."
+  },
+  "supportMoveAsk": "Move your inbox chat with them into this chat?",
+  "@supportMoveAsk": {
+    "description": "screens/support_screen.dart: asked once on adding someone whose chat is in the inbox. Only the developer's own phone shows it, in English."
+  },
+  "supportMoveLine": "It leaves the inbox and shows in Chats. Keep apart leaves both as they are.",
+  "@supportMoveLine": {
+    "description": "screens/support_screen.dart: under supportMoveAsk. Only the developer's own phone shows it, in English."
+  },
+  "supportMove": "Move",
+  "@supportMove": {
+    "description": "screens/support_screen.dart: the answer to supportMoveAsk that moves the chat. Only the developer's own phone shows it, in English."
+  },
+  "supportKeepApart": "Keep apart",
+  "@supportKeepApart": {
+    "description": "screens/support_screen.dart: the answer to supportMoveAsk that changes nothing. Only the developer's own phone shows it, in English."
+  },
+  "supportMoveToChats": "Move to Chats",
+  "@supportMoveToChats": {
+    "description": "screens/support_screen.dart: a menu row: the inbox chat leaves the inbox and shows in Chats. Only the developer's own phone shows it, in English."
+  },
+  "supportMovedToChats": "Moved to Chats",
+  "@supportMovedToChats": {
+    "description": "screens/support_screen.dart: a toast after supportMoveToChats or supportMove. Only the developer's own phone shows it, in English."
+  },
+  "supportMoveToInbox": "Move to inbox",
+  "@supportMoveToInbox": {
+    "description": "screens/chat_screen.dart: a chat's menu row: a contact's chat that came through the developer chat goes to the inbox. Only the developer's own phone shows it, in English."
+  },
+  "supportMovedToInbox": "Moved to inbox",
+  "@supportMovedToInbox": {
+    "description": "screens/chat_screen.dart: a toast after supportMoveToInbox. Only the developer's own phone shows it, in English."
+  },
   "settingsWriteToMarios": "Write to Marios",
   "@settingsWriteToMarios": {
     "description": "screens/settings_screen.dart: opens the chat with the developer, and brings it back after a delete"

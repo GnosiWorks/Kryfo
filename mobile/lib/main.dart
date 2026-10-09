@@ -82,7 +82,7 @@ import 'devchat/dev_gate.dart';
 import 'devchat/dev_key.dart';
 import 'devchat/dev_lane.dart';
 import 'devchat/support.dart';
-import 'screens/support_screen.dart' show openSupportTap;
+import 'screens/support_screen.dart' show askMoveIntoChats, openSupportTap;
 import 'stickers/sticker_pack.dart' show StickerLibrary;
 import 'stickers/sticker_wire.dart' show StickerWire, stickerText;
 import 'widgets/motion.dart';
@@ -1162,7 +1162,7 @@ class HaloDb implements GroupOwedStore {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 66,
+      version: 67,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -1227,6 +1227,7 @@ class HaloDb implements GroupOwedStore {
             poll TEXT,
             sticker TEXT,
             burn_unseen INTEGER NOT NULL DEFAULT 0,
+            via_dev INTEGER NOT NULL DEFAULT 0,
             FOREIGN KEY (peer_id) REFERENCES contacts(halo_id)
           )
         ''');
@@ -1315,7 +1316,7 @@ class HaloDb implements GroupOwedStore {
       },
       onUpgrade: (db, oldV, newV) async {
         // 62 runs after every older step, below: its index names columns
-        // they add. 66 runs after it: it reads what they all make
+        // they add. 66 runs after it: it reads what they all make. 67 last
         if (oldV < 65) {
           // a room joined off a link and not let in yet: when the join went
           await roomJoiningColumn(db);
@@ -1744,6 +1745,10 @@ class HaloDb implements GroupOwedStore {
           // signal store's peer_identities
           await verifiedKeyColumn(db);
         }
+        if (oldV < 67) {
+          // a contact's message that came through the developer chat
+          await viaDevColumn(db);
+        }
       },
     );
     // retired while it was opening
@@ -2113,6 +2118,24 @@ class HaloDb implements GroupOwedStore {
 
   // the developer's own phone: the chats people start from the Marios row
   SupportChats get support => SupportChats(open);
+
+  // a 1:1 chat with a message that came through the developer chat
+  Future<bool> hasViaDev(String haloId) async {
+    try {
+      final d = await open();
+      final r = await d.query(
+        'messages',
+        columns: ['id'],
+        where: 'peer_id = ? AND group_id IS NULL AND via_dev = ?',
+        whereArgs: [haloId, 1],
+        limit: 1,
+      );
+      return r.isNotEmpty;
+    } catch (e) {
+      dlog('via dev: ${e.runtimeType}');
+      return false;
+    }
+  }
 
   Future<void> deleteConversation(String haloId) async {
     final d = await open();
@@ -2667,6 +2690,8 @@ class HaloDb implements GroupOwedStore {
     String? sticker,
     // when it came, if not now: an arrival opened from the seal
     int? sentAt,
+    // a contact's, through the developer chat (viaDevChat)
+    bool viaDev = false,
   }) async {
     final db = await open();
     final id = await db.insert('messages', {
@@ -2695,6 +2720,7 @@ class HaloDb implements GroupOwedStore {
       'secure': secure ? 1 : 0,
       'poll': ?poll,
       'sticker': ?sticker,
+      if (viaDev) 'via_dev': 1,
     });
     try {
       await indexSearchRow(db, id, {
@@ -5881,6 +5907,13 @@ Future<void> acceptNewKeyIn(DatabaseExecutor db, String haloId) => db.update(
   whereArgs: [haloId],
 );
 
+// the upgrade to 67: a message a contact sent through the developer chat,
+// on his phone. none from before is known
+Future<void> viaDevColumn(DatabaseExecutor db) => addColumn(
+  db,
+  'ALTER TABLE messages ADD COLUMN via_dev INTEGER NOT NULL DEFAULT 0',
+);
+
 // the upgrade to 65: when a room joined off a link sent its join, until
 // its creator lets this phone in
 Future<void> roomJoiningColumn(DatabaseExecutor db) =>
@@ -6784,6 +6817,7 @@ Future<(String, bool)> handleHaloUriAdded(
     if (asked) await appState.afterAccept(id);
     // home, the pickers and the introductions show them now
     await appState.refreshContacts();
+    if (await appState.inboxChatOf(id)) askInboxMove(id);
     return (
       already
           ? l10n.appAlreadySaved('${parsed['id']}')
@@ -6798,6 +6832,7 @@ Future<(String, bool)> handleHaloUriAdded(
     await session.upsertContact(id, parsed['onion']!, parsed['xpub']!);
     if (!sessionQuiet) await appState.subscribePeer(id);
     if (asked && !sessionQuiet) await appState.afterAccept(id);
+    if (await appState.inboxChatOf(id)) askInboxMove(id);
     return (l10n.appPeerImportedV1(id), false);
   }
 }
@@ -7186,6 +7221,23 @@ void _openChatSoon(String chatId) {
   Future.delayed(
     const Duration(milliseconds: 450),
     () => openChatForHalo(chatId),
+  );
+}
+
+// someone added whose chat is in his inbox: a beat later, once the add's
+// own sheet or screen has closed, he is asked where it goes. tests watch
+// it here
+@visibleForTesting
+void Function(String haloId) askInboxMove = _askInboxMoveSoon;
+
+void _askInboxMoveSoon(String haloId) {
+  Future.delayed(
+    const Duration(milliseconds: 450),
+    () => lockGuard.afterUnlock(key: 'inbox-move:$haloId', () async {
+      final ctx = rootNavKey.currentContext;
+      if (ctx == null || !ctx.mounted) return;
+      await askMoveIntoChats(ctx, haloId);
+    }),
   );
 }
 
@@ -10901,6 +10953,17 @@ class AppState extends ChangeNotifier {
       poll: isGroup ? _arrivingPoll(env.poll) : null,
       sticker: sticker?.value,
       sentAt: arrivedAt,
+      // his phone: a contact who wrote through the developer chat keeps
+      // their chat, and the message says how it came
+      viaDev:
+          _devIdentity &&
+          identical(db, live) &&
+          viaDevChat(
+            env,
+            sender: senderHaloId,
+            filed: support.on,
+            accepted: senderAccepted,
+          ),
     );
     changed();
     // remember the face they picked. cheap, and it arrives with every
@@ -14115,6 +14178,38 @@ class AppState extends ChangeNotifier {
     await session.acceptRequest(haloId);
     await afterAccept(haloId);
     return true;
+  }
+
+  // a contact whose chat sits in the inbox: added by link, he is asked
+  // where the chat goes
+  Future<bool> inboxChatOf(String haloId) async =>
+      devMode && await session.support.has(haloId);
+
+  // a contact's chat in Chats that came through the developer chat, by a
+  // tagged message or a filing before. never by name or words
+  Future<bool> movableToInbox(String haloId) async {
+    if (!devMode || isDevChat(haloId) || session.isHidden(haloId)) {
+      return false;
+    }
+    final s = session.primary;
+    if (await s.support.has(haloId) || !await s.isAccepted(haloId)) {
+      return false;
+    }
+    return await s.hasViaDev(haloId) || await s.support.wasFiled(haloId);
+  }
+
+  // filed as an answered inbox chat: it leaves Chats
+  Future<void> moveToInbox(String haloId) async {
+    if (!await movableToInbox(haloId)) return;
+    await session.support.file(haloId);
+    await refreshContacts();
+  }
+
+  // the inbox chat shows in Chats instead
+  Future<void> moveToChats(String haloId) async {
+    if (!devMode) return;
+    await session.support.moveOut(haloId);
+    await refreshContacts();
   }
 
   // the support inbox is on screen: its summary has nothing left to say

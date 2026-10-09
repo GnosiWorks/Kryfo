@@ -12183,6 +12183,60 @@ abstract class AppLocalizations {
   /// **'This identity is pinned in Kryfo. A new link would cut off every chat with it.'**
   String get supportResetPinned;
 
+  /// screens/chat_screen.dart: a small tag under a contact's message that came through the developer chat. Only the developer's own phone shows it, in English.
+  ///
+  /// In en, this message translates to:
+  /// **'Via developer chat'**
+  String get supportViaDev;
+
+  /// screens/support_screen.dart: asked once on adding someone whose chat is in the inbox. Only the developer's own phone shows it, in English.
+  ///
+  /// In en, this message translates to:
+  /// **'Move your inbox chat with them into this chat?'**
+  String get supportMoveAsk;
+
+  /// screens/support_screen.dart: under supportMoveAsk. Only the developer's own phone shows it, in English.
+  ///
+  /// In en, this message translates to:
+  /// **'It leaves the inbox and shows in Chats. Keep apart leaves both as they are.'**
+  String get supportMoveLine;
+
+  /// screens/support_screen.dart: the answer to supportMoveAsk that moves the chat. Only the developer's own phone shows it, in English.
+  ///
+  /// In en, this message translates to:
+  /// **'Move'**
+  String get supportMove;
+
+  /// screens/support_screen.dart: the answer to supportMoveAsk that changes nothing. Only the developer's own phone shows it, in English.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep apart'**
+  String get supportKeepApart;
+
+  /// screens/support_screen.dart: a menu row: the inbox chat leaves the inbox and shows in Chats. Only the developer's own phone shows it, in English.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to Chats'**
+  String get supportMoveToChats;
+
+  /// screens/support_screen.dart: a toast after supportMoveToChats or supportMove. Only the developer's own phone shows it, in English.
+  ///
+  /// In en, this message translates to:
+  /// **'Moved to Chats'**
+  String get supportMovedToChats;
+
+  /// screens/chat_screen.dart: a chat's menu row: a contact's chat that came through the developer chat goes to the inbox. Only the developer's own phone shows it, in English.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to inbox'**
+  String get supportMoveToInbox;
+
+  /// screens/chat_screen.dart: a toast after supportMoveToInbox. Only the developer's own phone shows it, in English.
+  ///
+  /// In en, this message translates to:
+  /// **'Moved to inbox'**
+  String get supportMovedToInbox;
+
   /// screens/settings_screen.dart: opens the chat with the developer, and brings it back after a delete
   ///
   /// In en, this message translates to:
