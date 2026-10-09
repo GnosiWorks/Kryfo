@@ -576,6 +576,42 @@ void main() {
       await _close(t);
     });
 
+    testWidgets('a short reply under a long quote starts where its words '
+        'start', (t) async {
+      const long =
+          'that would be something to have, given that people '
+          'mostly install from the store';
+      Map<String, Object?> reply(int id, String dir, String text) => {
+        ..._in(id, dir == 'in' ? _anna : '', text),
+        'direction': dir,
+        'reply_to': 'uid-1',
+      };
+      _use(
+        t,
+        _Db(
+          rows: [
+            _in(1, _anna, long),
+            reply(2, 'out', 'ok'),
+            reply(3, 'in', 'Yeah'),
+          ],
+        ),
+      );
+      appState.contacts = [_contact(_anna, nick: 'Anna')];
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      for (final word in ['ok', 'Yeah']) {
+        final w = t.getRect(find.text(word));
+        final q = find
+            .text(long)
+            .evaluate()
+            .map((e) => t.getRect(find.byWidget(e.widget)))
+            .where((q) => q.bottom <= w.top + 1)
+            .reduce((a, b) => a.bottom > b.bottom ? a : b);
+        expect(w.left, lessThanOrEqualTo(q.left), reason: '$word $w under $q');
+      }
+      await _close(t);
+    });
+
     testWidgets('a long name and a big font stay on the sender line', (
       t,
     ) async {

@@ -4,6 +4,7 @@
 // and the sent tick. one place, so the two chats cannot drift apart.
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n.dart';
 import '../theme.dart';
 import 'count_badge.dart';
 import 'motion.dart';
@@ -716,3 +717,17 @@ List<BoxShadow>? searchGlow(bool current) => current
         ),
       ]
     : null;
+
+/// a message's words in a bubble made wider than them, by a quote or a
+/// link, start on the side they are written from
+Widget writtenStart(String text, Widget child) {
+  final dir = writtenDir(text);
+  return Align(
+    alignment: dir == null
+        ? AlignmentDirectional.centerStart
+        : dir == TextDirection.rtl
+        ? Alignment.centerRight
+        : Alignment.centerLeft,
+    child: child,
+  );
+}

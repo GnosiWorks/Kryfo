@@ -6783,9 +6783,12 @@ class _Bubble extends StatelessWidget {
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           if (msg.text.isNotEmpty)
-                                            _body(
-                                              isOut,
-                                              image: msg.mediaPath != null,
+                                            writtenStart(
+                                              msg.text,
+                                              _body(
+                                                isOut,
+                                                image: msg.mediaPath != null,
+                                              ),
                                             ),
                                           if (isOut &&
                                               msg.text.isEmpty &&
