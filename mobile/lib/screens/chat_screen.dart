@@ -700,8 +700,6 @@ class _ChatScreenState extends State<ChatScreen>
   // the pack's waving sticker, once the packs are read; null for the emoji
   (StickerPack, Sticker)? _hi;
   bool _hiKnown = false;
-  // the card's wave went: a second tap sends nothing
-  bool _waved = false;
   // at most six stickers play at once in the whole chat
   final _stickers = StickerBudget(6);
   // stickers flying in from the sheet, by message uid. a bubble stays
@@ -820,7 +818,8 @@ class _ChatScreenState extends State<ChatScreen>
   // a reaction says this phone read it: none in a request or a block
   bool get _canReact => !_blocked && !_incomingRequest;
   // someone added here who knows nothing of it: nothing went to them and
-  // nothing came, so they hear of this phone only with a first message
+  // nothing came (anything that came marks them engaged), so they hear of
+  // this phone only with a first message
   bool get _sayHi =>
       _loaded &&
       _barKnown &&
@@ -829,7 +828,6 @@ class _ChatScreenState extends State<ChatScreen>
       _accepted &&
       !_peerEngaged &&
       _sentCount == 0 &&
-      _recvCount == 0 &&
       !_blocked &&
       !_keyHeld &&
       !_isDev &&
@@ -2896,23 +2894,23 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   // the card's wave: the waving sticker, flying from the card to its row,
-  // or the emoji. a first message like any, by the same way out
-  Future<void> _wave(Rect from, double at) async {
-    if (_waved || !_sayHi) return;
-    _waved = true;
+  // or the emoji. a first message like any, by the same way out. its row is
+  // in before this returns, so the card is gone for a second tap
+  void _wave(Rect from, double at) {
+    if (!_sayHi) return;
     final hi = _hi;
     if (hi == null) {
-      await _sendBody(kWaveEmoji, fromComposer: false);
+      unawaited(_sendBody(kWaveEmoji, fromComposer: false));
     } else {
       final (pack, s) = hi;
-      await _sendBody(
-        s.emoji,
-        sticker: StickerWire.of(pack, s),
-        onRow: (m) => _fly(m, s, from, at),
+      unawaited(
+        _sendBody(
+          s.emoji,
+          sticker: StickerWire.of(pack, s),
+          onRow: (m) => _fly(m, s, from, at),
+        ),
       );
     }
-    // nothing left: the card stays, and waves again
-    if (mounted && _messages.isEmpty) _waved = false;
   }
 
   // the sticker flies from where it was drawn to the new row. under reduced
@@ -4934,6 +4932,11 @@ class _ChatScreenState extends State<ChatScreen>
     // and one that waits is read once this frame shows it
     _reads.look();
     final searchActive = _searching && _query.isNotEmpty;
+    // the height the chat has above the keyboard
+    final visible =
+        MediaQuery.sizeOf(context).height -
+        MediaQuery.viewInsetsOf(context).bottom;
+    final short = visible < 480;
     return Scaffold(
       backgroundColor: HaloColors.surface,
       body: SafeArea(
@@ -4982,44 +4985,66 @@ class _ChatScreenState extends State<ChatScreen>
                     ),
             ),
             // each line around the thread grows in and folds away, so the
-            // thread does not jump
-            _Fold(
-              // his chat is no request: its lock line says the rest
-              (_flag != null && !_accepted) || _isDev
-                  ? const SizedBox(key: ValueKey('top-none'), width: 0)
-                  : _vouched && !_accepted && _recvCount == 0
-                  ? _IntroBanner(
-                      key: const ValueKey('intro'),
-                      names: _voucherNames,
-                      seed: _voucherSeed!,
-                      avatar: _voucherAvatar,
-                      verified: _voucherVerified,
-                    )
-                  : _requestPending && _sentCount > 0
-                  ? const _RequestBanner(key: ValueKey('request'))
-                  : const SizedBox(key: ValueKey('top-none'), width: 0),
-            ),
-            // his key moved on: this chat still reads and writes
-            _Fold(
-              _devShown?.status == DevKeyStatus.previous
-                  ? NoticeBanner(
-                      key: const ValueKey('dev-moved'),
-                      glyph: NoticeGlyph.shield,
-                      text: l10n.devNewKey,
-                      color: HaloColors.amber,
-                      margin: const EdgeInsets.fromLTRB(14, 10, 14, 2),
-                    )
-                  : const SizedBox(key: ValueKey('dev-moved-none'), width: 0),
-            ),
-            _Fold(
-              _keyChanged && !_keyHeld && !_isDev
-                  ? _KeyChangedBanner(
-                      key: const ValueKey('key-changed'),
-                      peerName: _nickname ?? widget.peerHaloId,
-                      onVerify: _openKeyVerification,
-                      onDismiss: _dismissKeyChanged,
-                    )
-                  : const SizedBox(key: ValueKey('key-none'), width: 0),
+            // thread does not jump. a short room (keyboard up, big text)
+            // gets them tight, and at most a share of it: past that they
+            // scroll, never push the composer off
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: math.max(48, visible * 0.3),
+              ),
+              child: SingleChildScrollView(
+                primary: false,
+                physics: const ClampingScrollPhysics(),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _Fold(
+                      // his chat is no request: its lock line says the rest
+                      (_flag != null && !_accepted) || _isDev
+                          ? const SizedBox(key: ValueKey('top-none'), width: 0)
+                          : _vouched && !_accepted && _recvCount == 0
+                          ? _IntroBanner(
+                              key: const ValueKey('intro'),
+                              names: _voucherNames,
+                              seed: _voucherSeed!,
+                              avatar: _voucherAvatar,
+                              verified: _voucherVerified,
+                            )
+                          : _requestPending && _sentCount > 0
+                          ? _RequestBanner(
+                              key: const ValueKey('request'),
+                              compact: short,
+                            )
+                          : const SizedBox(key: ValueKey('top-none'), width: 0),
+                    ),
+                    // his key moved on: this chat still reads and writes
+                    _Fold(
+                      _devShown?.status == DevKeyStatus.previous
+                          ? NoticeBanner(
+                              key: const ValueKey('dev-moved'),
+                              glyph: NoticeGlyph.shield,
+                              text: l10n.devNewKey,
+                              color: HaloColors.amber,
+                              margin: const EdgeInsets.fromLTRB(14, 10, 14, 2),
+                            )
+                          : const SizedBox(
+                              key: ValueKey('dev-moved-none'),
+                              width: 0,
+                            ),
+                    ),
+                    _Fold(
+                      _keyChanged && !_keyHeld && !_isDev
+                          ? _KeyChangedBanner(
+                              key: const ValueKey('key-changed'),
+                              peerName: _nickname ?? widget.peerHaloId,
+                              onVerify: _openKeyVerification,
+                              onDismiss: _dismissKeyChanged,
+                            )
+                          : const SizedBox(key: ValueKey('key-none'), width: 0),
+                    ),
+                  ],
+                ),
+              ),
             ),
             Expanded(
               child: AtmoScope(
@@ -5711,13 +5736,19 @@ class _IntroBanner extends StatelessWidget {
 
 // shown above the thread when we're messaging someone who hasn't accepted us.
 class _RequestBanner extends StatelessWidget {
-  const _RequestBanner({super.key});
+  // little room: closer in, and the line under the title on one line
+  final bool compact;
+  const _RequestBanner({super.key, this.compact = false});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-      padding: const EdgeInsets.fromLTRB(13, 10, 13, 11),
+      margin: compact
+          ? const EdgeInsets.fromLTRB(16, 6, 16, 2)
+          : const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      padding: compact
+          ? const EdgeInsets.fromLTRB(12, 6, 12, 7)
+          : const EdgeInsets.fromLTRB(13, 10, 13, 11),
       decoration: BoxDecoration(
         color: HaloColors.amber.withValues(alpha: 0.08),
         border: Border.all(color: HaloColors.amber.withValues(alpha: 0.25)),
@@ -5738,9 +5769,11 @@ class _RequestBanner extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 5),
+          SizedBox(height: compact ? 2 : 5),
           Text(
             l10n.chatTheyNeedToAccept,
+            maxLines: compact ? 1 : null,
+            overflow: compact ? TextOverflow.ellipsis : null,
             style: HaloType.sans(
               size: 12.5,
               color: HaloColors.text2,
