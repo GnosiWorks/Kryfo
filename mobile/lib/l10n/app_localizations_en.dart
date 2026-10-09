@@ -5286,6 +5286,29 @@ class AppLocalizationsEn extends AppLocalizations {
       'Not independently audited. Alpha: good for testing, not yet for high-stakes use.';
 
   @override
+  String get settingsFollowTitle => 'Follow GnosiWorks (developer)';
+
+  @override
+  String get settingsFollowBrowserNote =>
+      'Opens in your browser, outside Kryfo.';
+
+  @override
+  String get settingsFollowNostrNote =>
+      'Opens your Nostr app, outside Kryfo. With none, the address is copied.';
+
+  @override
+  String get settingsFollowOpen => 'Open';
+
+  @override
+  String get settingsFollowNpubCopied =>
+      'No Nostr app here. The address is copied.';
+
+  @override
+  String settingsFollowOn(Object name) {
+    return 'Follow on $name, outside Kryfo';
+  }
+
+  @override
   String get settingsDangerZone => 'Danger zone';
 
   @override

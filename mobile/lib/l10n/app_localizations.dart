@@ -8577,6 +8577,42 @@ abstract class AppLocalizations {
   /// **'Not independently audited. Alpha: good for testing, not yet for high-stakes use.'**
   String get settingsNotIndependentlyAuditedPre;
 
+  /// screens/follow_section.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Follow GnosiWorks (developer)'**
+  String get settingsFollowTitle;
+
+  /// screens/follow_section.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Opens in your browser, outside Kryfo.'**
+  String get settingsFollowBrowserNote;
+
+  /// screens/follow_section.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Opens your Nostr app, outside Kryfo. With none, the address is copied.'**
+  String get settingsFollowNostrNote;
+
+  /// screens/follow_section.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get settingsFollowOpen;
+
+  /// screens/follow_section.dart
+  ///
+  /// In en, this message translates to:
+  /// **'No Nostr app here. The address is copied.'**
+  String get settingsFollowNpubCopied;
+
+  /// screens/follow_section.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Follow on {name}, outside Kryfo'**
+  String settingsFollowOn(Object name);
+
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:

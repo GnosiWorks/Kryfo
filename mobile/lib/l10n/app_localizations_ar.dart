@@ -5378,6 +5378,28 @@ class AppLocalizationsAr extends AppLocalizations {
       'لم يخضع لتدقيق مستقل. إصدار ألفا: صالح للتجربة، لا للاستخدام في المواقف عالية المخاطر بعد.';
 
   @override
+  String get settingsFollowTitle => 'متابعة GnosiWorks (المطوّر)';
+
+  @override
+  String get settingsFollowBrowserNote => 'يُفتح في متصفحك، خارج Kryfo.';
+
+  @override
+  String get settingsFollowNostrNote =>
+      'يفتح تطبيق Nostr لديك، خارج Kryfo. إن لم يوجد، يُنسخ العنوان.';
+
+  @override
+  String get settingsFollowOpen => 'فتح';
+
+  @override
+  String get settingsFollowNpubCopied =>
+      'لا يوجد تطبيق Nostr هنا. نُسخ العنوان.';
+
+  @override
+  String settingsFollowOn(Object name) {
+    return 'المتابعة على ⁨$name⁩، خارج Kryfo';
+  }
+
+  @override
   String get settingsDangerZone => 'منطقة الخطر';
 
   @override

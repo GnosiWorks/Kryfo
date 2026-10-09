@@ -5304,6 +5304,29 @@ class AppLocalizationsFa extends AppLocalizations {
       'به‌طور مستقل ممیزی نشده. آلفا: برای آزمایش خوب است، هنوز نه برای استفاده‌های پرمخاطره.';
 
   @override
+  String get settingsFollowTitle => 'دنبال کردن GnosiWorks (سازنده)';
+
+  @override
+  String get settingsFollowBrowserNote =>
+      'در مرورگر شما، بیرون از Kryfo باز می‌شود.';
+
+  @override
+  String get settingsFollowNostrNote =>
+      'برنامه‌ی Nostr شما را بیرون از Kryfo باز می‌کند. اگر نباشد، نشانی کپی می‌شود.';
+
+  @override
+  String get settingsFollowOpen => 'باز کردن';
+
+  @override
+  String get settingsFollowNpubCopied =>
+      'برنامه‌ی Nostr این‌جا نیست. نشانی کپی شد.';
+
+  @override
+  String settingsFollowOn(Object name) {
+    return 'دنبال کردن در ⁨$name⁩، بیرون از Kryfo';
+  }
+
+  @override
   String get settingsDangerZone => 'منطقه‌ی خطر';
 
   @override

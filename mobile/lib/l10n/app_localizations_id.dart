@@ -5294,6 +5294,29 @@ class AppLocalizationsId extends AppLocalizations {
       'Belum diaudit secara independen. Alfa: cocok untuk uji coba, belum untuk penggunaan berisiko tinggi.';
 
   @override
+  String get settingsFollowTitle => 'Ikuti GnosiWorks (pengembang)';
+
+  @override
+  String get settingsFollowBrowserNote =>
+      'Terbuka di browser-mu, di luar Kryfo.';
+
+  @override
+  String get settingsFollowNostrNote =>
+      'Membuka aplikasi Nostr-mu, di luar Kryfo. Kalau tidak ada, alamatnya disalin.';
+
+  @override
+  String get settingsFollowOpen => 'Buka';
+
+  @override
+  String get settingsFollowNpubCopied =>
+      'Tidak ada aplikasi Nostr. Alamatnya sudah disalin.';
+
+  @override
+  String settingsFollowOn(Object name) {
+    return 'Ikuti di $name, di luar Kryfo';
+  }
+
+  @override
   String get settingsDangerZone => 'Zona bahaya';
 
   @override
