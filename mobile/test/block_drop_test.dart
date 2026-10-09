@@ -55,12 +55,6 @@ class _Rows extends ArrivalRows {
 
   @override
   Future<void> dropHeld(String peerId) async => heldRows.remove(peerId);
-
-  @override
-  Future<Set<String>> blockedIds() async => {
-    for (final p in people.values)
-      if (p['blocked'] == 1) p['halo_id'] as String,
-  };
 }
 
 class _World {

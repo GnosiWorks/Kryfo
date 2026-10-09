@@ -209,7 +209,7 @@ class Session {
   Future<void> setAtmosphere(String peerId, String atmosphere) =>
       _ofPeer(peerId).setAtmosphere(peerId, atmosphere);
   // their timed messages in the other container's groups start counting
-  // too, and no receipt queued for them there goes. the block holds
+  // too, and nothing queued for them there goes. the block holds
   // whatever happens there: one shut meanwhile starts them a day after
   // they came, or at its next sweep
   Future<void> setBlocked(String haloId, bool blocked) async {
@@ -220,7 +220,7 @@ class Session {
       if (identical(d, own)) continue;
       try {
         await d.lightBurnsFrom(haloId);
-        await d.dropReceiptsTo(haloId);
+        await d.dropQueuedTo(haloId);
       } catch (e) {
         dlog('block: other container not lit (${e.runtimeType})');
       }

@@ -187,6 +187,7 @@ void main() {
 
   Future<void> world({
     bool blocked = false,
+    bool request = false,
     String text = 'are you there',
   }) async {
     mem = MemDb();
@@ -197,8 +198,8 @@ void main() {
       'xpub': 'ab' * 32,
       'first_seen': 1,
       'last_seen': 1,
-      'accepted': 1,
-      'back_paired': 1,
+      'accepted': request ? 0 : 1,
+      'back_paired': request ? 0 : 1,
       'blocked': blocked ? 1 : 0,
     });
     await mem.insert('contacts', {
@@ -397,6 +398,22 @@ void main() {
     );
     await devClose(t);
   });
+
+  for (final (kind, blocked) in [('blocked chat', true), ('request', false)]) {
+    testWidgets('a $kind takes no reaction from here, by the chip or the '
+        'menu', (t) async {
+      await world(blocked: blocked, request: !blocked);
+      db.reactions['u-in'] = [const MapEntry(_peer, '👍')];
+      await devOpen(t, chat());
+      await t.tap(find.byType(ReactionChip));
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 500));
+      expect(db.reactions['u-in']!.any((e) => e.key == ''), isFalse);
+      await openMenu(t, 'are you there');
+      expect(find.text('❤️'), findsNothing);
+      await devClose(t);
+    });
+  }
 
   testWidgets('a short tap on the mic says to hold it', (t) async {
     // a chat no other test types in, so no draft comes back with it

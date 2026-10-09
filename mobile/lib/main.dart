@@ -2236,7 +2236,7 @@ class HaloDb implements GroupOwedStore {
       acceptNewKeyIn(await open(), haloId);
 
   // a block starts the clocks of what they sent that waits to be read, in
-  // their chat and in groups, and drops the receipts queued for them. an
+  // their chat and in groups, and drops what was queued for them. an
   // unblock leaves them counting
   Future<void> setBlocked(String haloId, bool blocked) async {
     final db = await open();
@@ -2249,7 +2249,7 @@ class HaloDb implements GroupOwedStore {
       );
       if (blocked) {
         await _lightFrom(t, haloId);
-        await _dropReceiptsTo(t, haloId);
+        await _dropQueuedTo(t, haloId);
       }
       await _markSpan(t, haloId, blocked);
     });
@@ -3901,22 +3901,18 @@ class HaloDb implements GroupOwedStore {
     );
   }
 
-  // a block: no receipt queued for them goes after it
-  Future<void> dropReceiptsTo(String peerId) async =>
-      _dropReceiptsTo(await open(), peerId);
+  // a block: nothing queued for them goes after it, a receipt, an edit, a
+  // pin, a reaction or an unsend
+  Future<void> dropQueuedTo(String peerId) async =>
+      _dropQueuedTo(await open(), peerId);
 
-  static Future<void> _dropReceiptsTo(
-    DatabaseExecutor db,
-    String peerId,
-  ) async {
-    try {
-      await db.delete(
-        'frames_out',
-        where: 'peer_id = ? AND kind = ?',
-        whereArgs: [peerId, kFrameReceipt],
-      );
-    } catch (e) {
-      dlog('block: receipts not dropped (${e.runtimeType})');
+  static Future<void> _dropQueuedTo(DatabaseExecutor db, String peerId) async {
+    for (final table in const ['frames_out', 'edits_out', 'pins_out']) {
+      try {
+        await db.delete(table, where: 'peer_id = ?', whereArgs: [peerId]);
+      } catch (e) {
+        dlog('block: $table not dropped (${e.runtimeType})');
+      }
     }
   }
 
@@ -8024,7 +8020,10 @@ class AppState extends ChangeNotifier {
     // count first, wire or no wire: the strip and the rows say what is
     // waiting whether or not anything can move yet
     var held = await _heldOf(live);
-    final rows = await live.unsentOutbox(skip: held);
+    // nothing goes to someone blocked: their rows wait out of the window
+    final rows = await live.unsentOutbox(
+      skip: {...held, ...await live.blockedIds()},
+    );
     final q = await _queueOf(rows, live);
     // the open vault's rows go while it is open. shut, they wait in it for
     // the next open
@@ -8035,7 +8034,7 @@ class AppState extends ChangeNotifier {
       try {
         final vHeld = await _heldOf(v);
         held = {...held, ...vHeld};
-        vRows = await v.unsentOutbox(skip: vHeld);
+        vRows = await v.unsentOutbox(skip: {...vHeld, ...await v.blockedIds()});
         vq = await _queueOf(vRows, v);
       } catch (e) {
         vRows = const [];
@@ -8210,7 +8209,7 @@ class AppState extends ChangeNotifier {
       final Set<String> held;
       try {
         held = await _heldOf(d);
-        rows = await d.unsentEdits(skip: held);
+        rows = await d.unsentEdits(skip: {...held, ...await d.blockedIds()});
       } catch (e) {
         // the vault closed part way: its edits wait for the next open
         continue;
@@ -8241,7 +8240,7 @@ class AppState extends ChangeNotifier {
       final Set<String> held;
       try {
         held = await _heldOf(d);
-        rows = await d.unsentPins(skip: held);
+        rows = await d.unsentPins(skip: {...held, ...await d.blockedIds()});
       } catch (e) {
         continue;
       }
@@ -8359,8 +8358,10 @@ class AppState extends ChangeNotifier {
     await _frameNow(peer, uid, kFrameUnsend, '');
   }
 
-  // a reaction in a 1:1 chat, empty to take it off. queued like a pin
+  // a reaction in a 1:1 chat, empty to take it off. queued like a pin.
+  // none for someone blocked
   Future<void> reactInChat(String peer, String uid, String emoji) async {
+    if (await blockedAnywhere(peer)) return;
     await session.queueReaction(uid, peer, emoji);
     await _frameNow(peer, uid, kFrameReaction, emoji);
   }
@@ -15305,7 +15306,27 @@ class AppState extends ChangeNotifier {
   Future<bool> _blockedAt(String id, _Reach to) async =>
       to.on != null ? await to.on!.isBlocked(id) : _router.blocks(id);
 
-  Future<bool> _sendOneEnvelope(String memberId, String wrapped) async {
+  /// [id] is blocked in a container open now, or on the card a shut vault
+  /// keeps: nothing goes to them one to one. a read that fails says
+  /// blocked, and the next try reads again
+  Future<bool> blockedAnywhere(String id) async {
+    for (final d in [live, ?_openVault]) {
+      try {
+        if (await d.isBlocked(id)) return true;
+      } catch (e) {
+        dlog('block: not read (${e.runtimeType})');
+        return true;
+      }
+    }
+    return _router.blocks(id);
+  }
+
+  // [member]: a group's frame, which the group's own rules send
+  Future<bool> _sendOneEnvelope(
+    String memberId,
+    String wrapped, {
+    bool member = false,
+  }) async {
     // one attempt. the engine calls carry their own timeouts (onion 15s,
     // relay 60s), so retrying here only stacks them. a failed send is marked
     // failed and the user gets tap-to-retry.
@@ -15313,6 +15334,10 @@ class AppState extends ChangeNotifier {
       final to = await _reach(memberId);
       if (to == null) {
         dlog('send: no contact for $memberId');
+        return false;
+      }
+      if (!member && await blockedAnywhere(memberId)) {
+        dlog('send: $memberId is blocked');
         return false;
       }
       String cipher;
@@ -15512,7 +15537,7 @@ class AppState extends ChangeNotifier {
     String wrapped,
   ) async {
     final room = await _roomOf(groupId);
-    if (room == null) return _sendOneEnvelope(memberId, wrapped);
+    if (room == null) return _sendOneEnvelope(memberId, wrapped, member: true);
     if (memberId == room.pub) return false;
     if (room.expiresAt <= DateTime.now().millisecondsSinceEpoch) return false;
     int? number;

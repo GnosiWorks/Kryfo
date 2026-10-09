@@ -787,6 +787,8 @@ class _ChatScreenState extends State<ChatScreen>
       _requestPending && _sentCount >= (_isDev ? kDevCap : 2) && !_vouched;
   // receiver-side: a stranger has messaged us and we haven't accepted yet.
   bool get _incomingRequest => !_accepted && _recvCount > 0 && !widget.support;
+  // a reaction says this phone read it: none in a request or a block
+  bool get _canReact => !_blocked && !_incomingRequest;
   // friends vouched for this peer. no sender-side cap then: the other end
   // skips its gate for us, so locking ourselves would be the only lock left.
   List<String> _voucherNames = const [];
@@ -1662,7 +1664,7 @@ class _ChatScreenState extends State<ChatScreen>
                 ),
               ),
 
-              if (!welcome)
+              if (!welcome && _canReact)
                 PositionedDirectional(
                   top: reactTop,
                   start: alignRight ? null : 12,
@@ -2452,8 +2454,9 @@ class _ChatScreenState extends State<ChatScreen>
   // back-pair flow: they don't follow our xpub on nostr yet. on failure,
   // fall back to nostr store-and-forward.
   Future<String> _routeText(String cipher) async {
-    // a quiet session keeps it here, unsent
+    // a quiet session keeps it here, unsent, and so does a block
     if (sessionQuiet) return 'parked';
+    if (await appState.blockedAnywhere(widget.peerHaloId)) return 'parked';
     String? tor;
     if (!_backPaired && widget.peerOnion.isNotEmpty) {
       tor = await Future(() => engine.sendTo(widget.peerOnion, cipher));
@@ -3829,7 +3832,7 @@ class _ChatScreenState extends State<ChatScreen>
           },
           onLongPress: (ctx) => _showEmojiPickerAt(ctx, m),
           onAct: () => _touched(m),
-          onReact: m.welcome
+          onReact: m.welcome || !_canReact
               ? null
               : (e) {
                   final added = m.reactions[''] != e;

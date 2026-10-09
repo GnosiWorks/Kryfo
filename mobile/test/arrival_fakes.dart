@@ -479,6 +479,11 @@ class ArrivalRows implements HaloDb {
   @override
   Future<bool> isBlocked(String haloId) async =>
       _hit('isBlocked', haloId, people[haloId]?['blocked'] == 1);
+  @override
+  Future<Set<String>> blockedIds() async => {
+    for (final p in people.values)
+      if (p['blocked'] == 1) p['halo_id'] as String,
+  };
   // each block's span, and the uids of what came while one held, as the
   // real tables keep them
   final blockSpans = <String, List<(int, int?)>>{};
