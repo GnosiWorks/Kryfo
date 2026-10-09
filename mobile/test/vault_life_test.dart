@@ -242,8 +242,11 @@ class _Store implements RouterStore {
     for (final r in inbox) (r['id'] as int, (r['sealed'] as List<int>).length),
   ];
   @override
-  Future<List<Map<String, Object?>>> inboxOldest(int limit) async =>
-      inbox.take(limit).toList();
+  Future<List<Map<String, Object?>>> inboxOldest(
+    int limit, {
+    int after = 0,
+  }) async =>
+      inbox.where((r) => (r['id'] as num).toInt() > after).take(limit).toList();
   @override
   Future<void> inboxDelete(int id) async {
     w.step('unseal');

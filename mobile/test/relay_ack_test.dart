@@ -347,10 +347,10 @@ void main() {
 
   test('every hold goes to the container the cap named', () {
     final app = File('lib/main.dart').readAsStringSync();
-    final holds = RegExp(r'\.holdCipher\(').allMatches(app).toList();
+    final holds = RegExp(r'await _hold\(').allMatches(app).toList();
     expect(holds, hasLength(greaterThanOrEqualTo(5)));
     for (final h in holds) {
-      final before = app.substring(h.start - 200, h.start);
+      final before = app.substring(h.start - 200, h.start + 60);
       expect(
         before,
         contains('e is _HeldIn ? e.into'),
@@ -374,10 +374,12 @@ void main() {
     final at = app.indexOf('final batch = engine.nostrPoll();');
     expect(at, greaterThan(0));
     final loop = app.substring(at, app.indexOf('} finally {', at));
-    expect(
-      loop.indexOf('await receiveRelay(batch.msgs, written: batch.written)'),
-      lessThan(loop.indexOf('engine.nostrAck(batch.token, failedPlaces(')),
-    );
+    final ack = loop.indexOf('engine.nostrAck(');
+    expect(loop.indexOf('await receiveRelay('), lessThan(ack));
+    expect(ack, greaterThan(0));
+    final named = loop.substring(ack);
+    expect(named, contains('failedPlaces(batch, failed)'));
+    expect(named, contains('held: failedPlaces(batch, keys)'));
   });
 
   group('what was opened goes with the session it was opened under', () {

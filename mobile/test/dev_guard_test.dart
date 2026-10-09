@@ -37,6 +37,7 @@ import 'package:kryfo/main.dart'
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
 import 'package:kryfo/router.dart';
+import 'package:kryfo/stranger_gate.dart' show Shelved;
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
@@ -123,6 +124,17 @@ List<Map<String, Object?>> _kept(MemDb db, String table, String address) => [
 // signal and the engine as the receive side reaches them: what a cipher
 // opens to, and a note of every call
 class _Io implements AppIo {
+  @override
+  Future<String?> decryptIf(
+    String peer,
+    String cipher,
+    bool Function(String plain) keep, {
+    bool flagKeyChange = false,
+  }) => decrypt(peer, cipher, flagKeyChange: flagKeyChange);
+  @override
+  Future<String> letHeld(String xPub, String how) async => 'ok';
+  @override
+  Future<String> markHeld(List<String> xPubs) async => 'ok';
   // sessions let go of, and addresses no longer listened on
   final dropped = <String>[];
   @override
@@ -520,10 +532,21 @@ class _Mem implements HaloDb {
     List<Map<String, String>> lines,
   ) async => _hit('setShield', haloId, null);
   @override
-  Future<void> holdCipher(String peerId, String cipher) async {
+  Future<Shelved> holdCipher(
+    String peerId,
+    String cipher, {
+    String? mediaId,
+    int? chunk,
+    int? total,
+    bool overflow = false,
+  }) async {
     _hit('holdCipher', peerId, null);
     held.add(peerId);
+    return Shelved.kept;
   }
+
+  @override
+  Future<Map<String, Set<String>>> fullShelves({String? only}) async => {};
 
   @override
   Future<void> setPeerBundle(String haloId, String bundleB64) async =>

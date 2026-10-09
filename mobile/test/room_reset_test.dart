@@ -587,8 +587,8 @@ void main() {
     expect(row['door_priv'], isNull);
     expect(row['door_pub'], isNull);
     expect(row['door_was'], isNull);
-    // the last step, after every older one
-    expect(src, contains('version: 68,'));
+    // after every older step
+    expect(src, contains('version: 69,'));
     final upgrade = src.indexOf('onUpgrade: (db, oldV, newV) async {');
     final steps = src.substring(upgrade, src.indexOf('\n    );', upgrade));
     expect(

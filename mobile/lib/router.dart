@@ -180,7 +180,8 @@ abstract class RouterStore {
   // every row's id and size, oldest first, without what it holds
   Future<List<(int, int)>> inboxSizes();
   // oldest first
-  Future<List<Map<String, Object?>>> inboxOldest(int limit);
+  // past [after], by id
+  Future<List<Map<String, Object?>>> inboxOldest(int limit, {int after = 0});
   Future<void> inboxDelete(int id);
   // everything sealed, when the vault it was sealed to goes
   Future<void> inboxClear();
@@ -353,8 +354,16 @@ class SqlRouterStore implements RouterStore {
   ];
 
   @override
-  Future<List<Map<String, Object?>>> inboxOldest(int limit) async =>
-      (await _open()).query('vault_inbox', orderBy: 'id ASC', limit: limit);
+  Future<List<Map<String, Object?>>> inboxOldest(
+    int limit, {
+    int after = 0,
+  }) async => (await _open()).query(
+    'vault_inbox',
+    where: 'id > ?',
+    whereArgs: [after],
+    orderBy: 'id ASC',
+    limit: limit,
+  );
 
   @override
   Future<void> inboxDelete(int id) async {
@@ -719,16 +728,18 @@ class VaultRouter {
   // how many slices of one file are sealed
   Future<int> sealedParts(String uid) => _store.inboxParts(uid);
 
-  // the oldest sealed arrivals, opened. one that will not open comes back
-  // null, so its row goes with the rest
+  // the oldest sealed arrivals past [after], opened. one that will not open
+  // comes back null, so its row goes with the rest
   Future<List<(int, Unsealed?)>> openOldest(
     String priv, {
     int limit = 24,
+    int after = 0,
   }) async {
     final gen = _sealGen;
-    final rows = await _store.inboxOldest(limit);
+    final rows = await _store.inboxOldest(limit, after: after);
     if (rows.isEmpty) {
-      // nothing sealed since the look began: arrivals go straight in
+      // nothing sealed since the look began: arrivals go straight in. rows
+      // left for next time wait for the next load
       if (gen == _sealGen) _maybeSealed = false;
       return const [];
     }

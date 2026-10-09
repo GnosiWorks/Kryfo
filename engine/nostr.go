@@ -49,6 +49,8 @@ var (
 	nostrInbox     []string
 	nostrInboxDone []inboxDone
 	nostrSentIDs   = map[string]bool{}
+	// the counter the first-contact address was last watched on
+	fcCounterNow int
 )
 
 // a kick makes every relay runner drop its socket and reconnect now, with
@@ -710,6 +712,74 @@ func relayPage(ctx context.Context, r *nostr.Relay, rcvPk string, since, until n
 	}
 }
 
+// ids asked for in one filter
+const heldAskChunk = 100
+
+// the stored events with these ids, each handed to take as it comes, asked
+// for heldAskChunk at a time. a chunk answered in part is asked again for
+// the rest: a relay may cap what one filter brings. answered is true once
+// the relay went through all of them, and missing holds the ids an answer
+// that brought none of what it was asked for came back without
+func relayByIDs(ctx context.Context, r *nostr.Relay, rcvPk string, ids []nostr.ID, take func(nostr.Event) bool) (missing []nostr.ID, answered bool) {
+	for at := 0; at < len(ids); at += heldAskChunk {
+		left := ids[at:min(at+heldAskChunk, len(ids))]
+		for len(left) > 0 {
+			got, ok := relayIDsOnce(ctx, r, rcvPk, left, take)
+			if !ok {
+				return nil, false
+			}
+			var rest []nostr.ID
+			for _, id := range left {
+				if !got[id] {
+					rest = append(rest, id)
+				}
+			}
+			if len(rest) == len(left) {
+				missing = append(missing, rest...)
+				break
+			}
+			left = rest
+		}
+	}
+	return missing, true
+}
+
+// one filter of ids: those that came, and whether the relay said that was all
+func relayIDsOnce(ctx context.Context, r *nostr.Relay, rcvPk string, ids []nostr.ID, take func(nostr.Event) bool) (map[nostr.ID]bool, bool) {
+	pctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	sub, err := r.Subscribe(pctx, nostr.Filter{
+		IDs:   ids,
+		Kinds: []nostr.Kind{1059},
+		Tags:  nostr.TagMap{"p": []string{rcvPk}},
+		Limit: len(ids),
+	}, nostr.SubscriptionOptions{MaxWaitForEOSE: time.Duration(math.MaxInt64)})
+	if err != nil {
+		return nil, false
+	}
+	defer sub.Unsub()
+	got := map[nostr.ID]bool{}
+	quiet := time.NewTimer(pageQuiet())
+	defer quiet.Stop()
+	for {
+		select {
+		case ev, alive := <-sub.Events:
+			if !alive {
+				return nil, false
+			}
+			got[ev.ID] = true
+			take(ev)
+			quiet.Reset(pageQuiet())
+		case <-sub.EndOfStoredEvents:
+			return got, true
+		case <-quiet.C:
+			return nil, false
+		case <-ctx.Done():
+			return nil, false
+		}
+	}
+}
+
 // the cap cut a connection's first answer, see catchup.Book.KeepFirst
 func keepFirstAnswer(c catchup.Conn, oldest nostr.Timestamp, now time.Time) {
 	catchupMu.Lock()
@@ -1205,6 +1275,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 	ownKeys := ownCatchupKeys(urls, rcvPk)
 	catchupStart(ownKeys, nostr.Timestamp(lastSaved), nostr.Timestamp(time.Now().Unix()))
 	seen := loadSeen(seenPath)
+	seenWhileRunning(ctx, seen)
 	// runners share the anchor and read it back, or a relay that never sees
 	// a new event stays pinned to the launch window for the whole process.
 	loadLast := func() int64 {
@@ -1491,6 +1562,25 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				// the oldest: a full answer means there may be more behind it.
 				// the anchor is held back until that has been fetched too.
 				cctx, ccancel := context.WithCancel(conn)
+				// held events let go of come by their ids: the window has
+				// mostly moved past them. the poll keeps them together. asked
+				// on connecting, and on a probe this socket makes anyway
+				var asking atomic.Bool
+				askWanted := func() {
+					ids := seen.wanted(time.Now())
+					if len(ids) == 0 || !asking.CompareAndSwap(false, true) {
+						return
+					}
+					walkBegins(tag)
+					go func() {
+						defer asking.Store(false)
+						defer walkEnds(tag)
+						if missing, answered := relayByIDs(cctx, r, rcvPk, ids, dispatch); answered {
+							seen.notOnRelay(u, urls, missing)
+						}
+					}()
+				}
+				askWanted()
 				// counted while this connection is still fetching what it
 				// missed, so a check-in knows when it may stop tor again
 				atomic.AddInt32(&catchupActive, 1)
@@ -1671,6 +1761,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						// carries data.
 						if relayResponds(conn, r, rcvPk) {
 							markAlive()
+							askWanted()
 							idle.Reset(quietFor(deaf))
 							continue
 						}
@@ -1700,6 +1791,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						if relayResponds(conn, r, rcvPk) {
 							markAlive()
 							log.Printf("nostr: %s kicked but still answering, keeping the sub", u)
+							askWanted()
 							if !idle.Stop() {
 								select {
 								case <-idle.C:
@@ -1841,7 +1933,12 @@ func HaloNostrSubscribe(cPeerXPubHex *C.char) *C.char {
 	if err != nil {
 		return C.CString(fmt.Sprintf("error: derive: %v", err))
 	}
+	nostrSubscribeAt(peerHex, peerArr, rcvPk)
+	return C.CString("ok")
+}
 
+// a runner for the peer's address, in place of any running one
+func nostrSubscribeAt(peerHex string, peerArr [32]byte, rcvPk string) {
 	nostrMu.Lock()
 	if cancel, exists := nostrSubs[peerHex]; exists {
 		cancel()
@@ -1853,7 +1950,112 @@ func HaloNostrSubscribe(cPeerXPubHex *C.char) *C.char {
 
 	go nostrSubscribeRunner(ctx, peerHex, peerArr, rcvPk)
 	log.Printf("nostr: subscribed for peer %s... at addr %s...", peerHex[:12], rcvPk[:12])
+}
+
+// what a full shelf left on the relay for a peer: "mark" lets it go on
+// its own address alone, for its runner's next connection or probe;
+// "free", for an accept, does that and fetches it now, by id, the
+// first-contact address's too; "drop" takes it as kept. free and mark do
+// nothing where nothing is held
+//
+//export HaloNostrLetHeld
+func HaloNostrLetHeld(cPeerXPubHex, cHow *C.char) *C.char {
+	if err := nostrLetHeld(C.GoString(cPeerXPubHex), C.GoString(cHow)); err != nil {
+		return C.CString("error: " + err.Error())
+	}
 	return C.CString("ok")
+}
+
+// "mark" for each peer of a json list of x keys, on a start or an unlock:
+// an accept that died before its fetch goes on at the peer's runner's
+// next connection or probe. its own address only, where something is
+// held, and nothing restarts
+//
+//export HaloNostrMarkHeld
+func HaloNostrMarkHeld(cPeersJSON *C.char) *C.char {
+	var peers []string
+	if err := json.Unmarshal([]byte(C.GoString(cPeersJSON)), &peers); err != nil {
+		return C.CString("error: bad list")
+	}
+	nostrMarkHeld(peers)
+	return C.CString("ok")
+}
+
+func nostrMarkHeld(peers []string) {
+	for _, h := range peers {
+		peer, err := peerArr(h)
+		if err != nil {
+			continue
+		}
+		if _, rcvPk, err := nip17RcvAddress(peer); err == nil {
+			if p, _ := addressFiles(rcvPk); heldOnFile(p) > 0 {
+				markHeldFile(p, seenFreeMark)
+			}
+		}
+	}
+}
+
+// how many ids an address's file holds back. a file with no held line is
+// not read twice
+func heldOnFile(path string) int {
+	if path == "" {
+		return 0
+	}
+	b, err := os.ReadFile(path)
+	if err != nil || !(strings.HasPrefix(string(b), seenHeldMark) || strings.Contains(string(b), "\n"+seenHeldMark)) {
+		return 0
+	}
+	return loadSeen(path).heldCount()
+}
+
+func nostrLetHeld(peerHex, how string) error {
+	if how != "free" && how != "drop" && how != "mark" {
+		return errors.New("bad how")
+	}
+	peer, err := peerArr(peerHex)
+	if err != nil {
+		return err
+	}
+	_, rcvPk, err := nip17RcvAddress(peer)
+	if err != nil {
+		return err
+	}
+	seenPath, _ := addressFiles(rcvPk)
+	if how == "drop" {
+		markHeldFile(seenPath, seenDropMark)
+		return nil
+	}
+	nostrMu.Lock()
+	_, on := nostrSubs[peerHex]
+	_, fcOn := nostrSubs["firstcontact"]
+	fc := fcCounterNow
+	nostrMu.Unlock()
+	fcPath := ""
+	if fcOn && how == "free" {
+		if _, fcPk, err := nip17FirstContactKeys(fc); err == nil {
+			fcPath, _ = addressFiles(fcPk)
+		}
+	}
+	// that lane is everyone's: whoever else it held is asked for again and
+	// held again
+	own, lane := heldOnFile(seenPath) > 0, heldOnFile(fcPath) > 0
+	if own {
+		markHeldFile(seenPath, seenFreeMark)
+	}
+	if lane {
+		markHeldFile(fcPath, seenFreeMark)
+	}
+	if how == "mark" {
+		return nil
+	}
+	// a runner reads the mark as it starts
+	if own && on {
+		nostrSubscribeAt(peerHex, peer, rcvPk)
+	}
+	if lane {
+		return subscribeFirstContact(fc)
+	}
+	return nil
 }
 
 // stop listening for a peer, and take what its receive address kept on
@@ -1922,6 +2124,7 @@ func subscribeFirstContact(counter int) error {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	nostrSubs["firstcontact"] = cancel
+	fcCounterNow = counter
 	nostrMu.Unlock()
 	// the address that replaces it listens on a new circuit, so a relay
 	// cannot tie the two together
@@ -2023,7 +2226,8 @@ func HaloNostrPoll() *C.char {
 
 // the app has kept a batch from the poll: token is its "k", failed a json
 // array of the places in its "m" the app could not keep, which are offered
-// again. "ok", or "error: ..." with the batch left to come again.
+// again, or {"f": those, "h": the places it leaves on the relay until it
+// has room}. "ok", or "error: ..." with the batch left to come again.
 //
 //export HaloNostrAck
 func HaloNostrAck(cToken, cFailed *C.char) *C.char {
@@ -2098,11 +2302,9 @@ func nostrAck(token, failed string) string {
 	if err != nil {
 		return "error: bad token"
 	}
-	var bad []int
-	if failed != "" {
-		if err := json.Unmarshal([]byte(failed), &bad); err != nil {
-			return "error: bad list"
-		}
+	bad, later, groups, err := ackLists(failed)
+	if err != nil {
+		return "error: bad list"
 	}
 	nostrMu.Lock()
 	b, ok := pollInflight[tok]
@@ -2116,21 +2318,81 @@ func nostrAck(token, failed string) string {
 	for _, i := range bad {
 		again[i] = true
 	}
-	var kept []inboxDone
+	left := map[int]string{}
+	for j, i := range later {
+		g := ""
+		if j < len(groups) {
+			g = groups[j]
+		}
+		left[i] = g
+	}
+	var kept, held []inboxDone
+	var names []string
 	var backL []string
 	var backD []inboxDone
 	for i, l := range b.lines {
-		if again[i] {
+		d := b.done[i]
+		g, isHeld := left[i]
+		switch {
+		case again[i]:
 			backL = append(backL, l)
-			backD = append(backD, b.done[i])
-		} else {
-			kept = append(kept, b.done[i])
+			backD = append(backD, d)
+		// let go of since it was polled: it goes to the app again
+		case isHeld && d.set != nil && heldGen(d.set.path) != d.freed:
+			backL = append(backL, l)
+			backD = append(backD, d)
+		case isHeld:
+			held = append(held, d)
+			names = append(names, g)
+		default:
+			kept = append(kept, d)
 		}
 	}
 	pollRequeueLocked(backL, backD)
 	nostrMu.Unlock()
-	markHandedOver(kept)
+	markHandedOver(append(kept, markHeld(held, names, time.Now())...))
 	return "ok"
+}
+
+// the app's list of places it could not keep, "[...]", or that list, the
+// places it leaves on the relay until it has room and the group each of
+// those is held in, {"f":[...],"h":[...],"g":[...]}
+func ackLists(raw string) (failed, held []int, groups []string, err error) {
+	if raw == "" {
+		return nil, nil, nil, nil
+	}
+	if strings.HasPrefix(strings.TrimSpace(raw), "{") {
+		var o struct {
+			F []int    `json:"f"`
+			H []int    `json:"h"`
+			G []string `json:"g"`
+		}
+		err = json.Unmarshal([]byte(raw), &o)
+		return o.F, o.H, o.G, err
+	}
+	err = json.Unmarshal([]byte(raw), &failed)
+	return failed, nil, nil, err
+}
+
+// events the app left on the relay, each in the group named for it: held
+// where there is room, the rest returned to be taken as kept. the anchor
+// moves past them either way, a held one comes back by its id
+func markHeld(done []inboxDone, names []string, now time.Time) []inboxDone {
+	var kept []inboxDone
+	saves := map[*seenIDs]func(int64){}
+	for i, d := range done {
+		if d.set == nil || !d.set.hold(d.id, d.at, names[i], now) {
+			kept = append(kept, d)
+			continue
+		}
+		if d.resave != nil {
+			saves[d.set] = d.resave
+		}
+	}
+	for _, save := range saves {
+		save(0)
+	}
+	return kept
 }
 
 // a walk brings its stored wraps a page at a time, and each page is a random
@@ -2240,8 +2502,12 @@ func nostrPollAt(now time.Time) string {
 	at := 0
 	for i := range lines {
 		if at < len(took) && took[at] == i {
+			d := done[i]
+			if d.set != nil {
+				d.freed = heldGen(d.set.path)
+			}
 			b.lines = append(b.lines, lines[i])
-			b.done = append(b.done, done[i])
+			b.done = append(b.done, d)
 			at++
 		} else {
 			gone = append(gone, done[i])

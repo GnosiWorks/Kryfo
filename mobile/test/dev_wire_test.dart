@@ -37,6 +37,7 @@ import 'package:kryfo/main.dart'
         useEngineForTest;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
+import 'package:kryfo/stranger_gate.dart' show Shelved;
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
 import 'package:kryfo/signal_stores.dart';
@@ -118,8 +119,20 @@ class _Phone extends DevTestDb {
   // what the stranger cap held back, as held
   final held = <(String, String)>[];
   @override
-  Future<void> holdCipher(String peerId, String cipher) async =>
-      held.add((peerId, cipher));
+  Future<Shelved> holdCipher(
+    String peerId,
+    String cipher, {
+    String? mediaId,
+    int? chunk,
+    int? total,
+    bool overflow = false,
+  }) async {
+    held.add((peerId, cipher));
+    return Shelved.kept;
+  }
+
+  @override
+  Future<Map<String, Set<String>>> fullShelves({String? only}) async => {};
 
   Map<String, Object?>? _contact(String id) {
     for (final r in mem.rows('contacts')) {

@@ -537,10 +537,18 @@ class HaloEngine {
       .lookupFunction<TwoArgFn, TwoArgFnDart>('HaloNostrAck');
 
   // a batch from nostrPoll kept, but for the places in it at [failed]: the
-  // engine remembers the rest as seen and offers those again
-  String nostrAck(String token, List<int> failed) {
+  // engine remembers the rest as seen and offers those again. those at
+  // [held] stay on the relay until a full shelf has room
+  String nostrAck(
+    String token,
+    List<int> failed, {
+    List<int> held = const [],
+    List<String> groups = const [],
+  }) {
     final a = token.toNativeUtf8();
-    final b = jsonEncode(failed).toNativeUtf8();
+    final b = jsonEncode(
+      held.isEmpty ? failed : {'f': failed, 'h': held, 'g': groups},
+    ).toNativeUtf8();
     try {
       return engineTake(_nostrAck(a, b));
     } finally {
@@ -781,6 +789,16 @@ class HaloEngine {
   // the same, waited on: 'ok' once the files are gone
   Future<String> roomForget(String priv, List<String> members) =>
       _roomFfiOnIsolate('HaloRoomForget', [priv, jsonEncode(members)]);
+
+  // what a full shelf left on the peer's address: "mark" lets it go for the
+  // runner's next connection or probe, "free" fetches it by id now, "drop"
+  // takes it as kept
+  Future<String> nostrLetHeld(String peerXPubHex, String how) =>
+      _roomFfiOnIsolate('HaloNostrLetHeld', [peerXPubHex, how]);
+
+  // "mark" for each of the peers, in one call
+  Future<String> nostrMarkHeld(List<String> peerXPubHexes) =>
+      _roomFfiOnIsolate('HaloNostrMarkHeld', [jsonEncode(peerXPubHexes)]);
 
   // no more listening for a peer, and its address's files gone
   void nostrUnsubscribeBg(String peerXPubHex) => _background(
@@ -1198,7 +1216,7 @@ class HaloDb implements GroupOwedStore {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 68,
+      version: 69,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -1355,8 +1373,8 @@ class HaloDb implements GroupOwedStore {
       },
       onUpgrade: (db, oldV, newV) async {
         // 62 runs after every older step, below: its index names columns
-        // they add. 66 runs after it: it reads what they all make. 67 and
-        // 68 last
+        // they add. 66 runs after it: it reads what they all make. 67, 68
+        // and 69 last
         if (oldV < 65) {
           // a room joined off a link and not let in yet: when the join went
           await roomJoiningColumn(db);
@@ -1795,6 +1813,10 @@ class HaloDb implements GroupOwedStore {
         if (oldV < 68) {
           // a room whose maker reset its link: the key its new link knocks on
           await roomDoorColumns(db);
+        }
+        if (oldV < 69) {
+          // a held slice's file and its place in it
+          await heldMediaColumn(db);
         }
       },
     );
@@ -3954,29 +3976,106 @@ class HaloDb implements GroupOwedStore {
     ];
   }
 
-  Future<void> holdCipher(String peerId, String cipher) async {
+  // a stranger past the cap gets a small shelf, not a disk. [mediaId]
+  // names the file a slice is of and [chunk] its place in it, of [total]:
+  // a file takes one place and each of its slices one row. an [overflow]
+  // row is a cipher as it came, kept for its bytes alone
+  Future<Shelved> holdCipher(
+    String peerId,
+    String cipher, {
+    String? mediaId,
+    int? chunk,
+    int? total,
+    bool overflow = false,
+  }) async {
     final db = await open();
-    // a stranger past the cap gets a small shelf, not a disk
-    final n = Sqflite.firstIntValue(
-      await db.rawQuery('SELECT COUNT(*) FROM held_onion WHERE peer_id = ?', [
-        peerId,
-      ]),
-    );
-    if ((n ?? 0) >= 20) return;
     // a copy of one held already (off a relay's backlog) is held once
+    final slice = !overflow && mediaId != null && chunk != null;
     final had = await db.query(
       'held_onion',
       columns: ['id'],
-      where: 'peer_id = ? AND cipher = ?',
-      whereArgs: [peerId, cipher],
+      where: slice
+          ? 'peer_id = ? AND media_id = ? AND chunk = ?'
+          : 'peer_id = ? AND cipher = ?',
+      whereArgs: slice ? [peerId, mediaId, chunk] : [peerId, cipher],
       limit: 1,
     );
-    if (had.isNotEmpty) return;
+    if (had.isNotEmpty) return Shelved.kept;
+    final shelf = await shelfOf(peerId);
+    final v = shelfVerdict(
+      places: shelf.places,
+      files: shelf.files,
+      bytes: shelf.bytes,
+      size: cipher.length,
+      mediaId: mediaId,
+      chunk: chunk,
+      total: total,
+      overflow: overflow,
+    );
+    if (v != Shelved.kept) return v;
     await db.insert('held_onion', {
       'peer_id': peerId,
       'cipher': cipher,
       'at': DateTime.now().millisecondsSinceEpoch,
+      'media_id': overflow ? null : mediaId,
+      'chunk': overflow ? null : chunk,
     });
+    return Shelved.kept;
+  }
+
+  // the places their shelf takes, the slices of each file on it and the
+  // bytes it holds. a row as it came (overflow) takes no place
+  Future<({int places, Map<String, Set<int?>> files, int bytes})> shelfOf(
+    String peerId,
+  ) async {
+    final db = await open();
+    final texts =
+        Sqflite.firstIntValue(
+          await db.rawQuery(
+            'SELECT COUNT(*) n FROM held_onion WHERE peer_id = ? AND media_id IS NULL AND cipher LIKE ?',
+            [peerId, 'wire:%'],
+          ),
+        ) ??
+        0;
+    final files = <String, Set<int?>>{};
+    var bytes = 0;
+    for (final r in await db.query(
+      'held_onion',
+      columns: ['media_id', 'chunk', 'length(cipher) AS n'],
+      where: 'peer_id = ?',
+      whereArgs: [peerId],
+    )) {
+      bytes += (r['n'] as num?)?.toInt() ?? 0;
+      final m = r['media_id'] as String?;
+      if (m != null) (files[m] ??= {}).add((r['chunk'] as num?)?.toInt());
+    }
+    return (places: texts + files.length, files: files, bytes: bytes);
+  }
+
+  // strangers whose shelf is full, [only] or everyone's, with the files on
+  // it: what more they send waits on the relay
+  Future<Map<String, Set<String>>> fullShelves({String? only}) async {
+    final db = await open();
+    final out = <String, Set<String>>{};
+    final ids = only != null
+        ? [only]
+        : [
+            for (final r in await db.query(
+              'held_onion',
+              distinct: true,
+              columns: ['peer_id'],
+            ))
+              r['peer_id'] as String,
+          ];
+    for (final id in ids) {
+      final shelf = await shelfOf(id);
+      if (shelf.places < kShelfPlaces) continue;
+      if (await isAccepted(id) || await isBlocked(id) || await isVouched(id)) {
+        continue;
+      }
+      out[id] = shelf.files.keys.toSet();
+    }
+    return out;
   }
 
   // what the shelf holds for them, oldest first. a row goes with
@@ -6414,9 +6513,18 @@ Future<void> _heldTable(Database db) async {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       peer_id TEXT NOT NULL,
       cipher TEXT NOT NULL,
-      at INTEGER NOT NULL
+      at INTEGER NOT NULL,
+      media_id TEXT,
+      chunk INTEGER
     )
   ''');
+}
+
+// the upgrade to 69: the file a held slice is of and its place in it, so a
+// file takes one place and each slice one row
+Future<void> heldMediaColumn(DatabaseExecutor db) async {
+  await addColumn(db, 'ALTER TABLE held_onion ADD COLUMN media_id TEXT');
+  await addColumn(db, 'ALTER TABLE held_onion ADD COLUMN chunk INTEGER');
 }
 
 // a file coming in that is not whole yet: who is sending it, whether they
@@ -6875,13 +6983,20 @@ final _roomKeyShape = RegExp(r'^[0-9a-f]{1,64}$');
 String unboundIdOf(List<int> identityKey) =>
     sha256.convert(identityKey).toString().substring(0, 16);
 
+// [keep] sees what it opened to before signal stores anything: one it turns
+// down throws ShelfFull, and the keys it took stay unspent
 Future<String?> signalDecrypt(
   String peerId,
   String wireB64, {
   bool flagKeyChange = false,
+  bool Function(String plain)? keep,
 }) async {
   final ss = await signalFor(peerId);
   if (ss == null) return null;
+  void check(Uint8List p) {
+    if (keep != null && !keep(utf8.decode(p))) throw const ShelfFull();
+  }
+
   try {
     final wire = base64Decode(wireB64);
     if (wire.isEmpty) return null;
@@ -6898,7 +7013,10 @@ Future<String?> signalDecrypt(
     // opens share the per-peer queue with seals: both step the same record
     final plain = await ss.serial<Uint8List?>(peerId, () async {
       if (type != CiphertextMessage.prekeyType) {
-        return cipher.decryptFromSignal(SignalMessage.fromSerialized(body));
+        return cipher.decryptFromSignalWithCallback(
+          SignalMessage.fromSerialized(body),
+          check,
+        );
       }
       final pkm = PreKeySignalMessage(body);
       // trial decrypt: a prekey opens only under the name its identity is
@@ -6916,10 +7034,15 @@ Future<String?> signalDecrypt(
         // session exists: use it. rebuilding from the prekey record bad-macs
         // when the slot was refilled with a fresh key.
         try {
-          return await cipher.decryptFromSignal(pkm.getWhisperMessage());
+          return await cipher.decryptFromSignalWithCallback(
+            pkm.getWhisperMessage(),
+            check,
+          );
+        } on ShelfFull {
+          rethrow;
         } catch (e) {
           dlog('signalDecrypt: session path failed ($e), prekey fallback');
-          return cipher.decrypt(pkm);
+          return cipher.decryptWithCallback(pkm, check);
         }
       }
       final pkId = pkm.getPreKeyId();
@@ -6929,12 +7052,14 @@ Future<String?> signalDecrypt(
         dlog('signalDecrypt: prekey gone, no session for $peerId');
         return null;
       }
-      return cipher.decrypt(pkm);
+      return cipher.decryptWithCallback(pkm, check);
     });
     if (plain == null) return null;
     final text = utf8.decode(plain);
     _zeroBytes(plain); // cleartext decoded out, wipe the raw buffer
     return text;
+  } on ShelfFull {
+    rethrow;
   } on DuplicateMessageException catch (_) {
     dlog('signalDecrypt: duplicate from $peerId, dropped');
     // store-and-forward re-delivers, so a duplicate is expected. the
@@ -7776,6 +7901,23 @@ class AppIo {
     String cipher, {
     bool flagKeyChange = false,
   }) => signalDecrypt(peer, cipher, flagKeyChange: flagKeyChange);
+
+  // as decrypt, but an open [keep] turns down throws ShelfFull and spends
+  // no key: the same cipher opens again later
+  Future<String?> decryptIf(
+    String peer,
+    String cipher,
+    bool Function(String plain) keep, {
+    bool flagKeyChange = false,
+  }) => signalDecrypt(peer, cipher, flagKeyChange: flagKeyChange, keep: keep);
+
+  // what a full shelf left on the relay for [xPub]: "mark", "free" or
+  // "drop" (HaloNostrLetHeld)
+  Future<String> letHeld(String xPub, String how) =>
+      engine.nostrLetHeld(xPub, how);
+
+  // "mark" for each of [xPubs] where anything is held: nothing restarts
+  Future<String> markHeld(List<String> xPubs) => engine.nostrMarkHeld(xPubs);
 
   Future<List<String>> sessionAddresses() =>
       signalSession.sessionStore.allSessionAddresses();
@@ -11879,15 +12021,25 @@ class AppState extends ChangeNotifier {
   // arrived, and its row after it. if the vault closes part way, the rest
   // wait for the next time
   bool _unsealing = false;
+  // the last sealed row an open vault has been through, and that vault
+  int _sealedPast = 0;
+  HaloDb? _sealedPastOf;
   Future<void> drainSealed(HaloDb vault, String priv) async {
     if (_unsealing) return;
     _unsealing = true;
     try {
+      // past the rows left for next time, in this vault's open
+      if (!identical(_sealedPastOf, vault)) {
+        _sealedPastOf = vault;
+        _sealedPast = 0;
+      }
       while (!haloWiping && identical(_openVault, vault) && _moveDone == null) {
-        final batch = await _router.openOldest(priv);
+        final batch = await _router.openOldest(priv, after: _sealedPast);
         if (batch.isEmpty) break;
         for (final (id, u) in batch) {
           if (!identical(_openVault, vault) || _moveDone != null) return;
+          if (id > _sealedPast) _sealedPast = id;
+          var stays = false;
           if (u != null && u.resend) {
             try {
               await _resendTo(vault, u.from, since: u.resendSince);
@@ -11919,11 +12071,20 @@ class AppState extends ChangeNotifier {
               );
             } on CapHeld catch (e) {
               // past a stranger's two: on the shelf, let in on accept. a
-              // shelf that fails leaves the row for the next time
-              await (e is _HeldIn ? e.into : vault).holdCipher(
-                u.from,
-                heldWire(u.wire),
-              );
+              // shelf that is full or fails leaves the row for the next time
+              try {
+                stays =
+                    await _hold(
+                      e is _HeldIn ? e.into : vault,
+                      u.from,
+                      u.wire,
+                      unwrapMessage(u.wire),
+                    ) ==
+                    Shelved.full;
+              } catch (e) {
+                dlog('unseal: the shelf failed ($e)');
+                stays = true;
+              }
             } on _NoProof {
               await _io.dropSession(u.from);
             } catch (e) {
@@ -11931,7 +12092,7 @@ class AppState extends ChangeNotifier {
               dlog('unseal: one not applied ($e)');
             }
           }
-          await _router.forgetSealed(id);
+          if (!stays) await _router.forgetSealed(id);
         }
         await refreshContacts();
         await refreshGroups();
@@ -11953,6 +12114,8 @@ class AppState extends ChangeNotifier {
     if (v == null) {
       _sealKey = null;
       _sealKeyOf = null;
+      // the rows left for next time are tried at the next open
+      _sealedPastOf = null;
       return;
     }
     // rows moving between the vault and the everyday side go first
@@ -13793,7 +13956,7 @@ class AppState extends ChangeNotifier {
     } on CapHeld catch (e) {
       // the row exists now. kept as opened, let in on accept
       final into = e is _HeldIn ? e.into : filed;
-      await into?.holdCipher(h, heldWire(opened.plain));
+      if (into != null) await _hold(into, h, opened.plain, env);
     } on _NoProof {
       // the session it opened goes, so nothing later from it opens
       // without the proof, and a row it made goes with it
@@ -13861,6 +14024,7 @@ class AppState extends ChangeNotifier {
   Future<({String id, String plain})?> _openKnown(
     String cipher, {
     String? skip,
+    Map<String, Set<String>> full = const {},
   }) async {
     await _afterClose();
     final tried = <String>{?skip};
@@ -13868,7 +14032,7 @@ class AppState extends ChangeNotifier {
       for (final id in ids) {
         // never the dev chat: only its own lanes carry the developer
         if (isDevId(id) || !tried.add(id)) continue;
-        final p = await _io.decrypt(id, cipher);
+        final p = await _open(id, cipher, full);
         if (p != null) return (id: id, plain: p);
       }
       return null;
@@ -13881,6 +14045,51 @@ class AppState extends ChangeNotifier {
           for (final r in await live.pendingRequests()) r['halo_id'] as String,
         ]) ??
         await under(_keptIds());
+  }
+
+  // a stranger whose shelf is full in [full]: what they send that would want
+  // a place on it is turned down before signal spends its key, and waits on
+  // the relay (ShelfFull)
+  Future<String?> _open(
+    String id,
+    String cipher,
+    Map<String, Set<String>> full, {
+    bool flagKeyChange = false,
+  }) async {
+    final files = full[id];
+    if (files == null) {
+      return _io.decrypt(id, cipher, flagKeyChange: flagKeyChange);
+    }
+    UnwrappedMessage? env;
+    try {
+      return await _io.decryptIf(id, cipher, (p) {
+        env = unwrapMessage(p);
+        return !wantsShelfPlace(env!, files);
+      }, flagKeyChange: flagKeyChange);
+    } on ShelfFull {
+      // who sent it, and the file it is of, for the relay to hold it under
+      throw ShelfFull(peer: id, group: env?.mediaId ?? '');
+    }
+  }
+
+  // whether a frame from someone whose shelf is full would take a place on
+  // it: a message of its own, one to one, and no slice of a file on it
+  static bool wantsShelfPlace(UnwrappedMessage env, Set<String> files) =>
+      env.groupId == null &&
+      _dataFrame(env) &&
+      !(env.mediaId != null && files.contains(env.mediaId));
+
+  // strangers whose shelf is full, [only] or all, in the container their
+  // chat is in now. a shut vault is not read
+  Future<Map<String, Set<String>>> _fullShelves({String? only}) async {
+    final v = _openVault;
+    return {
+      for (final e in (await live.fullShelves(only: only)).entries)
+        if (_routeOf(e.key, null) == RouteTo.everyday) e.key: e.value,
+      if (v != null)
+        for (final e in (await v.fullShelves(only: only)).entries)
+          if (_routeOf(e.key, null) == RouteTo.vault) e.key: e.value,
+    };
   }
 
   // a peer we deleted keeps its session but loses its contact row, so the
@@ -14033,7 +14242,16 @@ class AppState extends ChangeNotifier {
       }
       var handled = false;
       var shown = true;
-      final known = await _openKnown(cipher);
+      final ({String id, String plain})? known;
+      try {
+        known = await _openKnown(cipher, full: await _fullShelves());
+      } on ShelfFull catch (e) {
+        // nothing waits on this lane: the copy is kept as it came, unopened
+        // and neither seen nor struck. its relay copy waits there
+        await _overflow(e.peer, cipher);
+        arrived();
+        continue;
+      }
       if (known != null) {
         final env = unwrapMessage(known.plain);
         try {
@@ -14042,10 +14260,7 @@ class AppState extends ChangeNotifier {
           );
         } on CapHeld catch (e) {
           // no relay to replay from: kept here, let in on accept
-          await (e is _HeldIn ? e.into : live).holdCipher(
-            known.id,
-            heldWire(known.plain),
-          );
+          await _hold(e is _HeldIn ? e.into : live, known.id, known.plain, env);
         }
         if (shown) notifyListeners();
         handled = true;
@@ -14075,10 +14290,7 @@ class AppState extends ChangeNotifier {
               fromBackPair: true,
             );
           } on CapHeld catch (e) {
-            await (e is _HeldIn ? e.into : live).holdCipher(
-              addr,
-              heldWire(parked.plain),
-            );
+            await _hold(e is _HeldIn ? e.into : live, addr, parked.plain, env);
           } on _NoProof {
             // dropped, as a cold stranger's opener is
           }
@@ -14118,6 +14330,9 @@ class AppState extends ChangeNotifier {
     List<({String peer, String cipher})> msgs, {
     // when each was wrapped, by the sender's clock, where the lane says
     List<int?> written = const [],
+    // filled with the places of those a full shelf leaves on the relay,
+    // each with the file it is a slice of, or empty
+    Map<int, String>? held,
   }) async {
     var noted = false;
     void arrived() {
@@ -14142,6 +14357,7 @@ class AppState extends ChangeNotifier {
       place: (m) => roomFramePlace(m.cipher),
     );
     final failed = <int>{};
+    final left = <int, ShelfFull>{};
     for (final m in ordered) {
       // each on its own: one that throws comes again, the rest stay kept
       try {
@@ -14152,9 +14368,26 @@ class AppState extends ChangeNotifier {
         );
       } on _KnockWaits {
         failed.add(m.at);
+      } on ShelfFull catch (e) {
+        dlog('relay: a full shelf leaves one on the relay');
+        left[m.at] = e;
       } catch (e, st) {
         dlog('relay: one not kept, it comes again ($e)\n$st');
         failed.add(m.at);
+      }
+    }
+    // an accept, a block or a cleared shelf while the batch ran: those come
+    // again now rather than wait on the relay
+    final still = <String, bool>{};
+    for (final e in left.entries) {
+      final p = e.value.peer;
+      final full =
+          p != null &&
+          (still[p] ??= (await _fullShelves(only: p)).containsKey(p));
+      if (full && held != null) {
+        held[e.key] = e.value.group;
+      } else {
+        failed.add(e.key);
       }
     }
     return failed;
@@ -14250,13 +14483,22 @@ class AppState extends ChangeNotifier {
     // skips the identity check and spends the one-time prekey. only a
     // real xpub mapping earns that.
     if (wrapped == null && haloId != null) {
-      wrapped = await _io.decrypt(haloId, m.cipher, flagKeyChange: true);
+      wrapped = await _open(
+        haloId,
+        m.cipher,
+        await _fullShelves(only: haloId),
+        flagKeyChange: true,
+      );
       if (wrapped != null) _keepOpened(h, haloId, wrapped, epoch);
     }
     // fallback: xpub not mapped yet (or it decrypted wrong). trial
     // against everyone known like the direct path, then remember it.
     if (wrapped == null) {
-      final known = await _openKnown(m.cipher, skip: haloId);
+      final known = await _openKnown(
+        m.cipher,
+        skip: haloId,
+        full: await _fullShelves(),
+      );
       if (known != null) {
         _keepOpened(h, known.id, known.plain, epoch);
         wrapped = known.plain;
@@ -14333,10 +14575,7 @@ class AppState extends ChangeNotifier {
       );
     } on CapHeld catch (e) {
       // kept as opened: signal has spent its keys, so accept lets it in
-      await (e is _HeldIn ? e.into : live).holdCipher(
-        haloId!,
-        heldWire(wrapped),
-      );
+      await _hold(e is _HeldIn ? e.into : live, haloId!, wrapped, env);
       await live.markSeen(h);
       _relayOpened.take(h);
       arrived();
@@ -14348,6 +14587,40 @@ class AppState extends ChangeNotifier {
       notifyListeners();
       arrived();
     }
+  }
+
+  // onto the shelf as it opened, its file named so a file takes one place.
+  // one past a full shelf had its key spent already and is not kept
+  // an onion copy past a full shelf, onto it as it came: its key unspent,
+  // its bytes counted, opened once they are accepted
+  Future<void> _overflow(String? from, String cipher) async {
+    if (from == null) return;
+    final to = _routeOf(from, null);
+    final db = to == RouteTo.vault ? _openVault : live;
+    if (db == null || (to != RouteTo.everyday && to != RouteTo.vault)) return;
+    try {
+      final v = await db.holdCipher(from, cipher, overflow: true);
+      if (v != Shelved.kept) dlog('held: an onion copy not kept (${v.name})');
+    } catch (e) {
+      dlog('held: an onion copy not kept (${e.runtimeType})');
+    }
+  }
+
+  Future<Shelved> _hold(
+    HaloDb into,
+    String from,
+    String plain,
+    UnwrappedMessage env,
+  ) async {
+    final v = await into.holdCipher(
+      from,
+      heldWire(plain),
+      mediaId: env.mediaId,
+      chunk: env.mediaId == null ? null : env.chunkIndex,
+      total: env.chunkTotal,
+    );
+    if (v != Shelved.kept) dlog('held: not on the shelf (${v.name})');
+    return v;
   }
 
   Future<void> _saveXPubCache(Map<String, String> cache) async {
@@ -14699,6 +14972,7 @@ class AppState extends ChangeNotifier {
         dlog('dev lane: boot subscribe failed: $e');
       }
       unawaited(sweepCaptures());
+      await markHeldAtStart();
       await subscribeKnown();
     });
     // what the removed ntfy mode left behind in the prefs
@@ -14737,8 +15011,19 @@ class AppState extends ChangeNotifier {
         final batch = engine.nostrPoll();
         if (batch.token.isEmpty) return;
         // not confirmed when this throws: the next poll offers it again
-        final failed = await receiveRelay(batch.msgs, written: batch.written);
-        final r = engine.nostrAck(batch.token, failedPlaces(batch, failed));
+        final held = <int, String>{};
+        final failed = await receiveRelay(
+          batch.msgs,
+          written: batch.written,
+          held: held,
+        );
+        final keys = held.keys.toList()..sort();
+        final r = engine.nostrAck(
+          batch.token,
+          failedPlaces(batch, failed),
+          held: failedPlaces(batch, keys),
+          groups: [for (final k in keys) held[k]!],
+        );
         if (r != 'ok') dlog('relay poll: ack $r');
       } finally {
         _polling = false;
@@ -14919,6 +15204,7 @@ class AppState extends ChangeNotifier {
     // an open chat reads its rows again: what waited is not sent now
     _bumpChatRev(haloId);
     await session.dropHeld(haloId);
+    await _relayLeft(haloId, 'drop');
     if (!sessionQuiet) {
       await cancelWithRetry(() => _io.unnotify(haloId), 'block shade');
     }
@@ -14989,14 +15275,66 @@ class AppState extends ChangeNotifier {
     unawaited(subscribePeer(haloId));
     unawaited(sendAcceptAck(haloId));
     final s = session;
+    // let go of on the relay's side before the shelf goes: a death in
+    // between would leave what waits there for two weeks
+    await _relayLeft(haloId, 'mark');
     await _letHeldIn(
       haloId,
       () => s.heldOf(haloId),
       (id) => s.forgetHeld(haloId, id),
     );
+    // what came past the shelf waited on the relay, and comes after it
+    await _relayLeft(haloId, 'free');
     _bumpChatRev(haloId);
     await refreshContacts();
     notifyListeners();
+  }
+
+  // what a full shelf left on the relay for them: let go of for the next
+  // start ("mark"), fetched again now ("free"), or taken as kept ("drop").
+  // a quiet session asks nothing of the engine
+  Future<void> _relayLeft(String haloId, String how) async {
+    if (sessionQuiet) return;
+    try {
+      final x = await _xPubFor(haloId, (await _reach(haloId))?.xpub);
+      if (x != null) await _io.letHeld(x, how);
+    } catch (e) {
+      dlog('held: the relay not told (${e.runtimeType})');
+    }
+  }
+
+  // the key someone is heard on: the row's, else signal's, as _listenKnown
+  // takes it
+  Future<String?> _xPubFor(String haloId, String? row) async {
+    if (row != null && row.isNotEmpty) return row;
+    if (!signalSession.ready) return null;
+    final x = await signalSession.peerXPubHex(haloId);
+    return x == null || x.isEmpty ? null : x;
+  }
+
+  // on a start or an unlock: what the relay still holds back for someone
+  // accepted since, an accept that died before its fetch, is asked for on
+  // their runner's next connection or probe. one call, marks on the
+  // addresses that hold something and nothing else: nothing reconnects
+  Future<void> _markHeldOf(HaloDb db) async {
+    if (sessionQuiet) return;
+    final xs = <String>{};
+    for (final r in await db.contacts()) {
+      if (r['accepted'] != 1) continue;
+      final x = await _xPubFor(r['halo_id'] as String, r['xpub'] as String?);
+      if (x != null) xs.add(x);
+    }
+    if (xs.isNotEmpty) await _io.markHeld(xs.toList());
+  }
+
+  // the everyday side's marks, before its runners start and read them
+  @visibleForTesting
+  Future<void> markHeldAtStart() async {
+    try {
+      await _markHeldOf(live);
+    } catch (e) {
+      dlog('held: not marked (${e.runtimeType})');
+    }
   }
 
   // one run over a person's shelf at a time, so an accept and the sweep
@@ -15024,13 +15362,20 @@ class AppState extends ChangeNotifier {
         if (still != null && !still()) return;
         try {
           final cipher = held.cipher;
-          final plain = heldWireOf(cipher) ?? await _io.decrypt(haloId, cipher);
+          final wire = heldWireOf(cipher);
+          final plain = wire ?? await _io.decrypt(haloId, cipher);
           if (plain != null) {
             await _applyIncomingPayload(
               haloId,
               unwrapMessage(plain),
               wire: plain,
             );
+            // one kept as it came: its relay copy is the same cipher
+            if (wire == null) {
+              await live.markSeen(
+                sha256.convert(utf8.encode(cipher)).toString(),
+              );
+            }
           }
           await forget(held.id);
         } catch (e) {
@@ -15062,10 +15407,15 @@ class AppState extends ChangeNotifier {
         final to = _routeOf(id, null);
         if (vault && to != RouteTo.vault && to != RouteTo.sealed) continue;
         any = true;
+        // what waits on the relay is asked for on their runner's next
+        // connection or probe: a start or an unlock makes nothing reconnect
+        await _relayLeft(id, 'mark');
         await _letHeldIn(id, () => db.heldOf(id), db.forgetHeld, still: still);
         _bumpChatRev(id);
       }
       if (any) await refreshContacts();
+      // the everyday side's are marked before its runners start
+      if (vault && still()) await _markHeldOf(db);
     } catch (e) {
       dlog('held: left for the next time ($e)');
     }
@@ -15463,7 +15813,12 @@ class AppState extends ChangeNotifier {
       went = await _applyIncomingPayload(id, unwrapMessage(plain), wire: plain);
     } on CapHeld catch (e) {
       // kept as opened, let in on accept
-      await (e is _HeldIn ? e.into : live).holdCipher(id, heldWire(plain));
+      await _hold(
+        e is _HeldIn ? e.into : live,
+        id,
+        plain,
+        unwrapMessage(plain),
+      );
       await live.markSeen(h);
       _relayOpened.take(h);
       return false;
