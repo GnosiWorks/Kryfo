@@ -13753,13 +13753,10 @@ class AppState extends ChangeNotifier {
       arrived();
       return;
     }
-    // a room frame: opened by the room key already, never signal
+    // a room frame: opened by the room key already, never signal. one that
+    // throws is not kept and comes again
     if (m.peer.startsWith('room:') || m.peer.startsWith('roomfc:')) {
-      try {
-        await _handleRoomFrame(m.peer, m.cipher);
-      } catch (e) {
-        dlog('room frame: $e');
-      }
+      await _handleRoomFrame(m.peer, m.cipher);
       await live.markSeen(h);
       notifyListeners();
       arrived();
@@ -14994,7 +14991,10 @@ class AppState extends ChangeNotifier {
     final RouteTo went;
     try {
       went = await _applyIncomingPayload(id, unwrapMessage(plain), wire: plain);
-    } on CapHeld {
+    } on CapHeld catch (e) {
+      // kept as opened, let in on accept
+      await (e is _HeldIn ? e.into : live).holdCipher(id, heldWire(plain));
+      await live.markSeen(h);
       _relayOpened.remove(h);
       return false;
     }

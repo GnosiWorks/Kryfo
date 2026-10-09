@@ -771,6 +771,35 @@ void main() {
     );
   });
 
+  test('a room frame that is not filed is not kept, and lands when it '
+      'comes again', () async {
+    final me = await _Phone.make();
+    await me.app.joinRoom(_link());
+    await _settle();
+    await _fromRoom(me, _creator, await _roster([_creator, _mine], stamp: 5));
+    final out = roomFrame(
+      await wrapMessage(
+        'hello again',
+        msgUid: 'rf1',
+        groupId: _room,
+        sender: SenderInfo(haloId: 'me', edPub: '', onion: '', xPub: ''),
+      ),
+      _creator,
+    )!;
+    final line = (peer: 'room:$_mine:$_creator', cipher: out);
+    me.rows.beforeSave = () {
+      me.rows.beforeSave = null;
+      throw StateError('the disk is full');
+    };
+    final seen = {...me.rows.seen};
+    expect(await me.app.receiveRelay([line]), {0});
+    expect(me.rows.msgs, isEmpty);
+    expect(me.rows.seen, seen);
+    expect(await me.app.receiveRelay([line]), isEmpty);
+    expect(me.rows.msgs.map((m) => m['plaintext']), ['hello again']);
+    expect(me.rows.seen, hasLength(seen.length + 1));
+  });
+
   test('a waiting room ends on time like any room', () async {
     final me = await _Phone.make();
     await me.app.joinRoom(_link());
