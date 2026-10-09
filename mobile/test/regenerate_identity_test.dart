@@ -56,7 +56,11 @@ class _Engine implements HaloEngine {
   @override
   String myEdPrivkey() => 'ed';
   @override
-  void subscribeFirstContactBg(int counter) => listened.add(counter);
+  Future<String> subscribeFirstContact(int counter) async {
+    listened.add(counter);
+    return 'ok';
+  }
+
   @override
   dynamic noSuchMethod(Invocation i) =>
       throw UnimplementedError('engine: ${i.memberName}');

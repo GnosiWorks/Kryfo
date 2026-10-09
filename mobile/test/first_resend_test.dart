@@ -1,0 +1,306 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// an opener of ours that never came back delivered is not left at one try.
+// while they have not added us back it goes again after ten minutes, an
+// hour, six hours and a day, by its first-contact address too, until a
+// receipt, a block, a new key or their add stops it. the moment they add
+// us back, what went to them with no receipt goes once more on the lane
+// they read now, its uid the same, a row a block kept back never. the
+// database methods are the real ones over rows kept in maps; the wire and
+// signal are stand-ins
+import 'dart:io';
+
+import 'package:flutter/services.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/container.dart';
+import 'package:kryfo/main.dart'
+    show
+        AppState,
+        HaloDb,
+        HaloEngine,
+        kNotSent,
+        useDatabasesForTest,
+        useEngineForTest;
+import 'package:kryfo/message_envelope.dart';
+import 'package:kryfo/router.dart';
+import 'package:kryfo/session.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
+
+import 'arrival_fakes.dart';
+import 'mem_db.dart';
+
+const _amy = 'amy-who-waits';
+const _min = 60000;
+
+class _Rows extends HaloDb {
+  _Rows(this.mem, [super.container]);
+  final MemDb mem;
+  @override
+  Future<Database> open() async => mem;
+  // its or-clause is past what the map rows read: the same rule, in dart
+  @override
+  Future<List<Map<String, Object?>>> unsentOutbox({
+    Set<String> skip = const {},
+  }) async {
+    final blocked = {
+      for (final c in mem.rows('contacts'))
+        if (c['blocked'] == 1) c['halo_id'],
+    };
+    return [
+      for (final r in mem.rows('messages'))
+        if (r['direction'] == 'out' &&
+            r['sent'] == 0 &&
+            r['msg_uid'] != null &&
+            r['group_id'] == null &&
+            !skip.contains(r['peer_id']) &&
+            !blocked.contains(r['peer_id']))
+          r,
+    ];
+  }
+
+  // a raw update, a join and an IFNULL the map rows do not read
+  @override
+  Future<void> bumpUnread(String peerId) async {}
+  @override
+  Future<Map<String, Map<String, Object?>>> lastMessages() async => {};
+  @override
+  Future<List<Map<String, Object?>>> pendingRequests() async => const [];
+}
+
+class _Engine implements HaloEngine {
+  @override
+  void nostrSubscribeBg(String peerXPubHex) {}
+  @override
+  dynamic noSuchMethod(Invocation i) =>
+      throw UnimplementedError('engine: ${i.memberName}');
+}
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  late Directory docs;
+  late MemDb mem;
+  late _Rows db;
+  late ArrivalIo io;
+  late AppState app;
+  late int now;
+  final pow = <String, int>{};
+
+  setUpAll(() {
+    docs = Directory.systemTemp.createTempSync('first_resend');
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+          const MethodChannel('plugins.flutter.io/path_provider'),
+          (call) async => docs.path,
+        );
+    useEngineForTest(_Engine());
+    for (final u in ['o1', 'o2', 'o3']) {
+      pow[u] = grindPow('text $u', powBits);
+    }
+  });
+
+  tearDownAll(() => docs.deleteSync(recursive: true));
+
+  Future<void> out(
+    String uid, {
+    int sent = 1,
+    int delivered = 0,
+    required int at,
+  }) => mem.insert('messages', {
+    'peer_id': _amy,
+    'direction': 'out',
+    'plaintext': 'text $uid',
+    'sent_at': at,
+    'msg_uid': uid,
+    'sent': sent,
+    'delivered': delivered,
+    'pow_nonce': pow[uid],
+  });
+
+  setUp(() async {
+    SharedPreferences.setMockInitialValues({});
+    FlutterSecureStorage.setMockInitialValues({});
+    now = DateTime.now().millisecondsSinceEpoch;
+    mem = MemDb();
+    db = _Rows(mem, HaloContainer.everyday);
+    io = ArrivalIo();
+    await mem.insert('contacts', {
+      'halo_id': _amy,
+      'onion': 'o-$_amy',
+      'xpub': 'x-$_amy',
+      'first_seen': 1,
+      'last_seen': 1,
+      'accepted': 1,
+      'back_paired': 0,
+    });
+    // two openers to her: one with no receipt, one a block kept back, and
+    // one that came back delivered
+    await out('o1', at: now - 11 * _min);
+    await out('o2', sent: kNotSent, at: now - 11 * _min);
+    await out('o3', delivered: 1, at: now - 11 * _min);
+    final router = VaultRouter(ArrivalStore(), ArrivalSeal());
+    await router.load();
+    app = AppState(io: io, router: router)
+      ..myId = 'me'
+      ..sendModeForTest = 'fast';
+    useDatabasesForTest(db, Session(db));
+    await app.rememberPeerFc(_amy, 'fc-$_amy');
+  });
+
+  Future<void> settle() =>
+      Future<void>.delayed(const Duration(milliseconds: 60));
+
+  // the routes each of our texts went by, in order
+  List<String> went(String uid) => [
+    for (final (to, c) in io.sent)
+      if (c.contains('"u":"$uid"')) to.split(' ').first,
+  ];
+
+  Future<void> lastWent(String uid, int at) => mem.update(
+    'opener_again',
+    {'last_at': at},
+    where: 'msg_uid = ?',
+    whereArgs: [uid],
+  );
+
+  Map<String, Object?>? again(String uid) {
+    for (final r in mem.rows('opener_again')) {
+      if (r['msg_uid'] == uid) return r;
+    }
+    return null;
+  }
+
+  group('an opener with no receipt', () {
+    test('goes again by its first-contact address too, as each wait ends, '
+        'four times at most', () async {
+      await app.sendOpenersAgain();
+      await settle();
+      expect(went('o1'), containsAll(['fc', 'onion']));
+      expect(went('o2'), isEmpty);
+      expect(went('o3'), isEmpty);
+      expect(again('o1')!['tries'], 1);
+      // not yet due: nothing
+      io.sent.clear();
+      await app.sendOpenersAgain();
+      await settle();
+      expect(went('o1'), isEmpty);
+      // an hour after it last went
+      for (final (tries, wait) in [
+        (1, 61),
+        (2, 6 * 60 + 1),
+        (3, 24 * 60 + 1),
+      ]) {
+        await lastWent('o1', now - wait * _min);
+        await app.sendOpenersAgain();
+        await settle();
+        expect(went('o1'), contains('fc'), reason: 'try ${tries + 1}');
+        expect(again('o1')!['tries'], tries + 1);
+        io.sent.clear();
+      }
+      // four times went: no more, however long it waits
+      await lastWent('o1', now - 2 * 24 * 60 * _min);
+      await app.sendOpenersAgain();
+      await settle();
+      expect(went('o1'), isEmpty);
+      expect(again('o1')!['tries'], 4);
+      // the row is left as it was: sent, waiting on its receipt
+      final row = mem.rows('messages').firstWhere((r) => r['msg_uid'] == 'o1');
+      expect((row['sent'], row['delivered']), (1, 0));
+    });
+
+    test('one written two weeks ago or more never goes again', () async {
+      await mem.update(
+        'messages',
+        {'sent_at': now - 14 * 24 * 60 * _min},
+        where: 'msg_uid = ?',
+        whereArgs: ['o1'],
+      );
+      await app.sendOpenersAgain();
+      await settle();
+      expect(went('o1'), isEmpty);
+      expect(again('o1'), isNull);
+    });
+
+    test('a receipt stops it', () async {
+      await app.sendOpenersAgain();
+      await settle();
+      await db.markDelivered('o1', from: _amy);
+      await lastWent('o1', now - 2 * 60 * _min);
+      io.sent.clear();
+      await app.sendOpenersAgain();
+      await settle();
+      expect(went('o1'), isEmpty);
+    });
+
+    test('a block, a new key or their add stops it', () async {
+      for (final (col, v) in [
+        ('blocked', 1),
+        ('key_changed', 1),
+        ('back_paired', 1),
+      ]) {
+        await mem.update(
+          'contacts',
+          {col: v},
+          where: 'halo_id = ?',
+          whereArgs: [_amy],
+        );
+        await app.sendOpenersAgain();
+        await settle();
+        expect(went('o1'), isEmpty, reason: col);
+        await mem.update(
+          'contacts',
+          {col: 0},
+          where: 'halo_id = ?',
+          whereArgs: [_amy],
+        );
+      }
+    });
+  });
+
+  group('their add', () {
+    // a message from her: the proof that she added us back
+    Future<void> hears(String cipher, String uid) async {
+      io.opens[cipher] = (
+        _amy,
+        await wrapMessage('hi', msgUid: uid, sender: asSender(_amy)),
+      );
+      await app.receiveRelay([(peer: 'x-$_amy', cipher: cipher)]);
+      await settle();
+    }
+
+    test('puts what went with no receipt out again once, on the lane she '
+        'reads now', () async {
+      await hears('p1', 'a1');
+      expect(await db.isBackPaired(_amy), isTrue);
+      expect(went('o1'), ['relay']);
+      expect(went('o2'), isEmpty);
+      expect(went('o3'), isEmpty);
+      final sent = {
+        for (final r in mem.rows('messages')) r['msg_uid']: r['sent'],
+      };
+      expect(sent, containsPair('o1', 1));
+      expect(sent, containsPair('o2', kNotSent));
+      expect(
+        [
+          for (final r in mem.rows('messages'))
+            if (r['peer_id'] == _amy && r['direction'] == 'in') r['msg_uid'],
+        ],
+        ['a1'],
+      );
+      // her next message changes nothing: it went once
+      await hears('p2', 'a2');
+      expect(went('o1'), ['relay']);
+    });
+
+    test('a new key of hers puts nothing out again', () async {
+      await mem.update(
+        'contacts',
+        {'key_changed': 1},
+        where: 'halo_id = ?',
+        whereArgs: [_amy],
+      );
+      await hears('p1', 'a1');
+      expect(went('o1'), isEmpty);
+    });
+  });
+}

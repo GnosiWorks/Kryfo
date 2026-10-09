@@ -316,6 +316,14 @@ Future<String> _sendChunkedMediaInner({
           if (tor == 'ok') {
             sent = true;
             route = 'onion';
+            // their door holds it in memory only: the first-contact copy
+            // goes too until they add us back
+            final fc = appState.peerFcFor(peerId);
+            xpub ??= await signalSession.peerXPubHex(peerId);
+            if (fc != null && fc.isNotEmpty && xpub != null) {
+              final f = await engine.sendFirstContact(xpub!, fc, cipher);
+              if (f != 'ok') dlog('MEDIA first-contact copy did not go: $f');
+            }
             break;
           }
           lastErr = tor;
