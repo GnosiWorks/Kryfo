@@ -2,6 +2,10 @@
 // makes an encrypted backup file and hands it to the system save dialog, or
 // to the share sheet when that is refused.
 
+import 'dart:async';
+
+import '../container.dart';
+import '../lock_guard.dart';
 import '../lock_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -23,6 +27,10 @@ import '../widgets/swap.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
 import '../dlog.dart';
+
+// a test's backup, in place of the engine's
+@visibleForTesting
+Future<void> Function(String path)? backupForTest;
 
 class BackupScreen extends StatefulWidget {
   // from the hidden chats setup: a copy to keep that holds the chats just
@@ -76,21 +84,37 @@ class _BackupScreenState extends State<BackupScreen> {
       _error = null;
       _busy = true;
     });
+    // where it began: a lock that takes the screen away is told by a new
+    // navigator
+    final rev = navRevision.value;
+    final decoy = lockState.inDecoy;
+    final vault = session.vault?.container;
+    _notMadeGen++;
+    void sayLater() {
+      if (!mounted && navRevision.value != rev) {
+        unawaited(_sayNotMadeLater(decoy: decoy, vault: vault));
+      }
+    }
+
     try {
       final tempDir = await getTemporaryDirectory();
       final ts = DateTime.now().millisecondsSinceEpoch ~/ 1000;
       final name = 'kryfo-backup-$ts.kryfo';
       final path = p.join(tempDir.path, name);
       final move = _move && !widget.withHiddenChats;
-      await createBackupFile(
-        pw,
-        path,
-        move: move,
-        withHiddenChats: widget.withHiddenChats,
-        onProgress: (a, b) {
-          if (mounted && b > 0) setState(() => _progress = a / b);
-        },
-      );
+      if (backupForTest case final make?) {
+        await make(path);
+      } else {
+        await createBackupFile(
+          pw,
+          path,
+          move: move,
+          withHiddenChats: widget.withHiddenChats,
+          onProgress: (a, b) {
+            if (mounted && b > 0) setState(() => _progress = a / b);
+          },
+        );
+      }
       var out = (handed: false, shared: false);
       try {
         out = await _handOver(path, name);
@@ -100,6 +124,7 @@ class _BackupScreenState extends State<BackupScreen> {
         // shreds the copy here
         if (!out.shared) await shredFile(path);
       }
+      if (!out.handed) sayLater();
       if (move && out.handed) {
         // the file is out of our hands: from here this phone is retired,
         // and the next screen says so. one never handed over, the screen
@@ -109,6 +134,7 @@ class _BackupScreenState extends State<BackupScreen> {
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       dlog('backup: not made (${e.runtimeType})');
+      sayLater();
       if (mounted) {
         HapticFeedback.heavyImpact();
         setState(() {
@@ -509,4 +535,43 @@ String backupFailLine(Object e) {
     return e.message;
   }
   return l10n.backupNotMade;
+}
+
+// a backup the lock took the screen from before the file was handed over
+// is not made. said once the same chats are open again and never elsewhere:
+// in the everyday app it would tell of hidden chats. a newer backup drops it
+int _notMadeGen = 0;
+
+Future<void> _sayNotMadeLater({
+  required bool decoy,
+  required HaloContainer? vault,
+}) async {
+  final gen = _notMadeGen;
+  bool same() =>
+      gen == _notMadeGen &&
+      !lockGuard.isLocked() &&
+      lockState.inDecoy == decoy &&
+      session.vault?.container == vault;
+  while (gen == _notMadeGen) {
+    while (!same()) {
+      if (gen != _notMadeGen) return;
+      final moved = Completer<void>();
+      void on() {
+        if (!moved.isCompleted) moved.complete();
+      }
+
+      lockState.addListener(on);
+      try {
+        await moved.future;
+      } finally {
+        lockState.removeListener(on);
+      }
+    }
+    // the session's navigator is built on the next frame
+    await WidgetsBinding.instance.endOfFrame;
+    final ctx = rootNavKey.currentState?.overlay?.context;
+    if (ctx == null || !ctx.mounted || !same()) continue;
+    showHaloToast(ctx, l10n.backupNotMade, still: same);
+    return;
+  }
 }
