@@ -1555,7 +1555,7 @@ void main() {
       'if (devCardClaim(id: h, xPub: env.senderXPub)) {',
     );
     expect(claim, isNonNegative);
-    expect(claim, lessThan(body.indexOf('storeSession(realAddr')));
+    expect(claim, lessThan(body.indexOf('keepOpenedSession(')));
     expect(
       body.substring(claim, body.indexOf('return null;', claim)),
       contains('deleteSession(tempAddr)'),

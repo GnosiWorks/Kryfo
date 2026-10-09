@@ -371,6 +371,79 @@ void main() {
     },
   );
 
+  test('a second opener held up on a relay while the chat moved on is '
+      'still read, and the session runs on both ways', () async {
+    final first = await _opener(amber, _amber, amberEd, 'one');
+    // sent before she heard back: the same start, the next number
+    final second = await amber.ss.encryptTo(
+      _me,
+      await wrapMessage(
+        'two, late',
+        msgUid: 'u-late',
+        sender: SenderInfo(
+          haloId: _amber,
+          edPub: amberEd,
+          onion: 'o-amber',
+          xPub: amber.xPub,
+        ),
+      ),
+    );
+    await app.receiveRelay([(peer: amber.xPub, cipher: first)]);
+    await _settle();
+    // turns each way, more than the chains a session keeps
+    for (var i = 0; i < 6; i++) {
+      expect(
+        await _reads(amber.ss, await signalSession.encryptTo(_amber, 'r$i')),
+        'r$i',
+      );
+      final back = await amber.ss.encryptTo(
+        _me,
+        await wrapMessage(
+          'b$i',
+          msgUid: 'u-b$i',
+          sender: SenderInfo(
+            haloId: _amber,
+            edPub: amberEd,
+            onion: 'o-amber',
+            xPub: amber.xPub,
+          ),
+        ),
+      );
+      await app.receiveRelay([(peer: amber.xPub, cipher: back)]);
+      await _settle();
+    }
+    await app.receiveRelay([(peer: amber.xPub, cipher: second)]);
+    await _settle();
+    expect(
+      live.msgs.where((m) => m['peer_id'] == _amber).map((m) => m['plaintext']),
+      contains('two, late'),
+    );
+    // and the session runs on both ways
+    expect(
+      await _reads(amber.ss, await signalSession.encryptTo(_amber, 'on')),
+      'on',
+    );
+    final after = await amber.ss.encryptTo(
+      _me,
+      await wrapMessage(
+        'still here',
+        msgUid: 'u-still',
+        sender: SenderInfo(
+          haloId: _amber,
+          edPub: amberEd,
+          onion: 'o-amber',
+          xPub: amber.xPub,
+        ),
+      ),
+    );
+    await app.receiveRelay([(peer: amber.xPub, cipher: after)]);
+    await _settle();
+    expect(
+      live.msgs.where((m) => m['peer_id'] == _amber).map((m) => m['plaintext']),
+      contains('still here'),
+    );
+  });
+
   test('a first message opens under a name only with the key bound to '
       'it', () async {
     final member = await _phone();

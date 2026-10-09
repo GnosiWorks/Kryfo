@@ -307,6 +307,8 @@ Future<void> landV1Payload(
     }
 
     await restorePrefs(payload['prefs']);
+    // a v1 file carries no catch-up: the relays are read again whole
+    await landCatchUpAnchors(docsDir.path, null);
     await _livesHereNow();
 
     // a v1 backup carries none of these; what is here is the old identity's
@@ -897,7 +899,7 @@ Future<BackupDraft> draftBackup(
     'secure': secure,
     'settings': settings,
     'onboardingDone': onboardingDone,
-    'caughtUpTo': await caughtUpTo(docs),
+    'catchUp': await catchUpAnchors(docs),
     'chunk': kBackupChunk,
     'files': [for (final f in files) f.toJson()],
     if (hidden) 'vault': {'key': key},
@@ -1662,7 +1664,7 @@ Future<void> restoreBackupFile(
       value: manifest['dbPassphrase'] as String,
     );
     await restorePrefs(manifest['prefs']);
-    await landCatchUpFloor(docs.path, manifest['caughtUpTo']);
+    await landCatchUpAnchors(docs.path, manifest['catchUp']);
     // in place before the restart reads them
     _restoredSettings = await landCarriedSettings(
       manifest['settings'],
@@ -1683,30 +1685,48 @@ Future<void> restoreBackupFile(
   dlog('backup: restored identity from a v2 file');
 }
 
-/// where this phone's relay catch-up has reached, in seconds: the oldest
-/// anchor the engine keeps for an address, or now when it keeps none
+/// the engine's catch-up anchors, by file: how far each address of this
+/// phone has read its relays, in seconds. one still owing its backlog (0)
+/// or not readable is left out, so the new phone reads that one whole
 @visibleForTesting
-Future<int> caughtUpTo(String docs, {int? now}) async {
-  final at = now ?? DateTime.now().millisecondsSinceEpoch ~/ 1000;
-  var low = at;
+Future<Map<String, int>> catchUpAnchors(String docs) async {
+  final out = <String, int>{};
   try {
     await for (final e in Directory(docs).list()) {
-      if (!p.basename(e.path).startsWith('nostr_last_')) continue;
+      final name = p.basename(e.path);
+      if (!_kAnchorName.hasMatch(name)) continue;
       final v = int.tryParse((await File(e.path).readAsString()).trim());
-      if (v != null && v > 0 && v < low) low = v;
+      if (v != null && v > 0) out[name] = v;
     }
   } catch (e) {
     dlog('backup: catch-up not read (${e.runtimeType})');
   }
-  return low;
+  return out;
 }
 
-/// a restore's relay catch-up starts where the phone the backup came from
-/// had reached, for every address without an anchor of its own: what came
-/// before, kept or deleted there, is not fetched again. a file from before
-/// it was carried leaves the walk as it was
+final _kAnchorName = RegExp(r'^nostr_last_[0-9a-f]{1,16}$');
+
+/// a restore's catch-up: what this folder held of the relays goes, the
+/// marks of what was read with it, and each address starts where the phone
+/// the backup came from had read it. one the file does not name, or a file
+/// from before this was carried, reads its relays whole: nothing is missed,
+/// and the uid checks take what comes twice
 @visibleForTesting
-Future<void> landCatchUpFloor(String docs, Object? from) async {
-  if (from is! int || from <= 0) return;
-  await File(p.join(docs, 'nostr_floor')).writeAsString('$from', flush: true);
+Future<void> landCatchUpAnchors(String docs, Object? carried) async {
+  try {
+    await for (final e in Directory(docs).list()) {
+      final name = p.basename(e.path);
+      if (name.startsWith('nostr_last_') || name.startsWith('nostr_seen_')) {
+        await e.delete();
+      }
+    }
+  } catch (e) {
+    dlog('backup: catch-up not cleared (${e.runtimeType})');
+  }
+  if (carried is! Map) return;
+  for (final MapEntry(:key, :value) in carried.entries) {
+    if (key is! String || !_kAnchorName.hasMatch(key)) continue;
+    if (value is! int || value <= 0) continue;
+    await File(p.join(docs, key)).writeAsString('$value', flush: true);
+  }
 }

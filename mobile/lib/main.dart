@@ -7510,29 +7510,10 @@ class AppIo {
         }
         dlog('back-pair: a name bound to another key, filed on its own');
       }
-      // move session from temp to where it is filed. one already there is
-      // kept: a copy of an opener it took before (off a relay's backlog
-      // after a restore, say) changes nothing, and a new one goes in front
-      // of it as a fresh start does, the states before it kept behind
-      final realAddr = SignalProtocolAddress(at, 1);
-      final store = signalSession.sessionStore;
-      if (await store.containsSession(realAddr)) {
-        final held = await store.loadSession(realAddr);
-        final st = record.sessionState;
-        if (held.hasSessionState(st.getSessionVersion(), st.aliceBaseKey)) {
-          throw SeenOpener(at);
-        }
-        held.promoteState(st);
-        await store.storeSession(realAddr, held);
-      } else {
-        await store.storeSession(realAddr, record);
-      }
-      await store.deleteSession(tempAddr);
-      return (haloId: at, plain: plain, env: env);
-    } on SeenOpener {
+      // move session from temp to where it is filed
+      await keepOpenedSession(SignalProtocolAddress(at, 1), record);
       await signalSession.sessionStore.deleteSession(tempAddr);
-      dlog('back-pair: an opener seen before, dropped');
-      rethrow;
+      return (haloId: at, plain: plain, env: env);
     } catch (e) {
       dlog('back-pair error: $e');
       try {
@@ -7588,11 +7569,30 @@ class AppIo {
       clearMessageNotification(msgUid);
 }
 
-// an opener whose session is held already: a copy, dropped as seen
-class SeenOpener implements Exception {
-  const SeenOpener(this.at);
-  // the name its session is filed under
-  final String at;
+// an opener's session filed at [addr]. a record already there is kept: an
+// opener it took before (a copy off a relay's backlog after a restore, or
+// a second one sent before they heard back) leaves it as it runs, its text
+// still handed on for the uid checks to know. a new one goes in front of it
+// as a fresh start does, the states before it kept behind
+Future<void> keepOpenedSession(
+  SignalProtocolAddress addr,
+  SessionRecord record,
+) async {
+  final store = signalSession.sessionStore;
+  await signalSession.serial<void>(addr.getName(), () async {
+    if (!await store.containsSession(addr)) {
+      await store.storeSession(addr, record);
+      return;
+    }
+    final held = await store.loadSession(addr);
+    final st = record.sessionState;
+    if (held.hasSessionState(st.getSessionVersion(), st.aliceBaseKey)) {
+      dlog('back-pair: an opener held already, the session kept');
+      return;
+    }
+    held.promoteState(st);
+    await store.storeSession(addr, held);
+  });
 }
 
 // a first contact's session moved off a name a hidden chat binds to
@@ -7613,10 +7613,8 @@ Future<String?> _refileFirstContact(String h) async {
       row: live.getContact,
     );
     if (held != null && !_eqBytes(held, key)) return null;
-    await signalSession.sessionStore.storeSession(
-      SignalProtocolAddress(at, 1),
-      record,
-    );
+    // kept as any opener's is: one held there already is not run over
+    await keepOpenedSession(SignalProtocolAddress(at, 1), record);
     return at;
   } catch (e) {
     dlog('back-pair: not refiled ($e)');
@@ -13003,13 +13001,7 @@ class AppState extends ChangeNotifier {
   // router, never as an everyday request. the id and where it went
   Future<(String, RouteTo)?> backPairFromCipher(String cipher) async {
     try {
-      final ({String haloId, String plain, UnwrappedMessage env})? opened;
-      try {
-        opened = await _io.openFirstContact(cipher);
-      } on SeenOpener catch (s) {
-        // taken before: nothing to show, nothing to ask about
-        return (s.at, RouteTo.dropped);
-      }
+      final opened = await _io.openFirstContact(cipher);
       if (opened == null) return null;
       var h = opened.haloId;
       final env = opened.env;
@@ -13564,9 +13556,16 @@ class AppState extends ChangeNotifier {
         // on the lane of someone we hold a session with: theirs and ours
         // have gone apart, a restore on one side say. they are asked to
         // start afresh, and they put again what never came back delivered.
-        // a copy of one opened before says nothing of the kind
-        if (haloId != null && !fcLane && !_takeOpenedBefore(m.cipher)) {
-          unawaited(_askToStartAfresh(haloId));
+        // a copy of one opened before is mostly a relay's backlog, so it
+        // asks at most every half hour: a phone from before the ask (0.4.2)
+        // that restored still heals, and a backlog does not ask on each
+        if (haloId != null && !fcLane) {
+          final now = DateTime.now().millisecondsSinceEpoch;
+          final copy = _takeOpenedBefore(m.cipher);
+          if (!copy || now - (_copyAskedAt[haloId] ?? 0) >= _kCopyAskGap) {
+            if (copy) _copyAskedAt[haloId] = now;
+            unawaited(_askToStartAfresh(haloId));
+          }
         }
       }
       if (shown) arrived();
@@ -15014,6 +15013,10 @@ class AppState extends ChangeNotifier {
           .whenComplete(() {
             _asking.remove(peer);
           });
+
+  // when a copy of a text opened before last asked someone to start afresh
+  final Map<String, int> _copyAskedAt = {};
+  static const _kCopyAskGap = 30 * 60 * 1000;
 
   // when a pass last looked for people to ask to start afresh with us. a
   // restore brought back sessions their side has gone past: ours is not

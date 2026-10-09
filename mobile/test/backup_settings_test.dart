@@ -342,39 +342,63 @@ void main() {
       );
     });
 
-    test('restored on a new phone, its relay catch-up starts where the old '
-        'one had reached', () async {
+    test('restored, each address reads its relays from where the old phone '
+        'had, and nothing of this phone\'s reading is left', () async {
       oldPhone();
-      // the engine's anchors on the old phone, one address behind
+      // the engine's anchors on the old phone, one still owing its backlog
       put('nostr_last_aaaaaaaaaaaaaaaa', '1791400000');
       put('nostr_last_bbbbbbbbbbbbbbbb', '1791500000\n');
-      put('nostr_seen_aaaaaaaaaaaaaaaa', 'not an anchor');
+      put('nostr_last_cccccccccccccccc', '0');
+      put('nostr_seen_aaaaaaaaaaaaaaaa', 'ids');
       final d = await draftBackup(stage, side: const _Side());
-      expect(d.manifest['caughtUpTo'], 1791400000);
+      expect(d.manifest['catchUp'], {
+        'nostr_last_aaaaaaaaaaaaaaaa': 1791400000,
+        'nostr_last_bbbbbbbbbbbbbbbb': 1791500000,
+      });
       final out = await write(d.manifest, d.sources);
       newPhone();
+      // what this phone had read, of another identity or a later time
       for (final f in Directory(docs).listSync()) {
         if (p.basename(f.path).startsWith('nostr_')) f.deleteSync();
       }
+      put('nostr_last_dddddddddddddddd', '1799999999');
+      put('nostr_seen_dddddddddddddddd', 'ids');
       await restore(out, inDecoy: false);
-      expect(
-        File(p.join(docs, 'nostr_floor')).readAsStringSync(),
-        '1791400000',
-      );
+      final left = {
+        for (final f in Directory(docs).listSync())
+          if (p.basename(f.path).startsWith('nostr_'))
+            p.basename(f.path): File(f.path).readAsStringSync(),
+      };
+      expect(left, {
+        'nostr_last_aaaaaaaaaaaaaaaa': '1791400000',
+        'nostr_last_bbbbbbbbbbbbbbbb': '1791500000',
+      });
     });
 
-    test('the catch-up point: the oldest anchor, now with none, and a file '
-        'without one leaves no floor', () async {
-      expect(await caughtUpTo(docs, now: 1800000000), 1800000000);
-      put('nostr_last_cccccccccccccccc', 'garbage');
-      put('nostr_last_dddddddddddddddd', '0');
-      expect(await caughtUpTo(docs, now: 1800000000), 1800000000);
+    test('a file without anchors, or with odd ones, leaves every address to '
+        'read its relays whole', () async {
       put('nostr_last_eeeeeeeeeeeeeeee', '1790000000');
-      expect(await caughtUpTo(docs, now: 1800000000), 1790000000);
-      await landCatchUpFloor(docs, null);
-      await landCatchUpFloor(docs, 'soon');
-      await landCatchUpFloor(docs, -1);
-      expect(File(p.join(docs, 'nostr_floor')).existsSync(), isFalse);
+      put('nostr_seen_eeeeeeeeeeeeeeee', 'ids');
+      await landCatchUpAnchors(docs, null);
+      expect(
+        Directory(
+          docs,
+        ).listSync().where((f) => p.basename(f.path).startsWith('nostr_')),
+        isEmpty,
+      );
+      await landCatchUpAnchors(docs, {
+        '../escape': 5,
+        'nostr_last_zz': 5,
+        'nostr_last_ffffffffffffffff': 'soon',
+        'nostr_last_9999999999999999': -1,
+      });
+      expect(
+        Directory(
+          docs,
+        ).listSync().where((f) => p.basename(f.path).startsWith('nostr_')),
+        isEmpty,
+      );
+      expect(File(p.join(root.path, 'escape')).existsSync(), isFalse);
     });
 
     test('restored on a new phone brings every setting back before the '
