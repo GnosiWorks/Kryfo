@@ -9,6 +9,8 @@ import '../lock_guard.dart';
 import '../lock_state.dart';
 
 import 'package:file_picker/file_picker.dart';
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -783,12 +785,14 @@ class _Step extends StatelessWidget {
         children: [
           _StepMark(n: n, done: done),
           const SizedBox(width: 10),
-          Text(
-            label,
-            style: HaloType.mono(
-              size: 10,
-              color: HaloColors.text2,
-              letter: 0.1,
+          Flexible(
+            child: Text(
+              label,
+              style: HaloType.mono(
+                size: 10,
+                color: HaloColors.text2,
+                letter: 0.1,
+              ),
             ),
           ),
         ],
@@ -808,9 +812,27 @@ class _StepMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // as big as the font: the number whole at any size, the tick in the
+    // same box so nothing moves when it swaps
+    final s = MediaQuery.textScalerOf(context);
+    final style = HaloType.mono(
+      size: 10,
+      color: HaloColors.amber,
+      letter: 0.2,
+      weight: FontWeight.w600,
+    );
+    final drawn = TextPainter(
+      text: TextSpan(text: '0$n', style: style),
+      textDirection: Directionality.of(context),
+      textScaler: s,
+      maxLines: 1,
+    )..layout();
+    final w = max(s.scale(18), drawn.width + 2);
+    final h = max(s.scale(14), drawn.height);
+    drawn.dispose();
     return SizedBox(
-      width: 18,
-      height: 14,
+      width: w,
+      height: h,
       child: AnimatedSwitcher(
         duration: motionStill(context)
             ? Duration.zero
@@ -829,19 +851,10 @@ class _StepMark extends StatelessWidget {
             ? Icon(
                 Icons.check_rounded,
                 key: const ValueKey('done'),
-                size: 14,
+                size: s.scale(14),
                 color: HaloColors.green,
               )
-            : Text(
-                '0$n',
-                key: const ValueKey('n'),
-                style: HaloType.mono(
-                  size: 10,
-                  color: HaloColors.amber,
-                  letter: 0.2,
-                  weight: FontWeight.w600,
-                ),
-              ),
+            : Text('0$n', key: const ValueKey('n'), style: style),
       ),
     );
   }
