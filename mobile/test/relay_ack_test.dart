@@ -84,6 +84,16 @@ class _Flaky extends ArrivalRows {
   var badgeFails = 0;
   // and on the next unparks, which come once its uid is claimed
   var unparkFails = 0;
+  // run once as the next accept is read
+  Future<void> Function()? onAccepted;
+  @override
+  Future<bool> isAccepted(String haloId) async {
+    final f = onAccepted;
+    onAccepted = null;
+    await f?.call();
+    return super.isAccepted(haloId);
+  }
+
   @override
   Future<void> unparkIfArchived(String haloId) async {
     if (unparkFails > 0) {
@@ -379,6 +389,48 @@ void main() {
       expect(w.kept(_v), isEmpty);
       return m;
     }
+
+    test('a frame early for its message, read across a switch to the '
+        'decoy, is not kept for it', () async {
+      final w = await _World.make();
+      await w.app.useDecoyForTest(
+        ArrivalRows(HaloContainer.decoy),
+        const QuietIdentity(
+          id: 'quiet',
+          edPub: 'ed-quiet',
+          xPub: 'x-quiet',
+          onion: '',
+          invite: '',
+        ),
+      );
+      w.app.revealGap = Duration.zero;
+      addTearDown(() => lockState.inDecoy = false);
+      w.io.opens['early-r'] = (
+        _v,
+        await wrapMessage(
+          '',
+          reaction: const ReactionFrame(targetUid: 'u9', emoji: '👍'),
+          sender: SenderInfo(
+            haloId: _v,
+            edPub: 'ed-$_v',
+            onion: 'o-$_v',
+            xPub: 'x-$_v',
+          ),
+        ),
+      );
+      w.live.onAccepted = () async {
+        await w.app.sessionFor(PinResult.decoy);
+        await w.app.sessionFor(PinResult.normal);
+      };
+      expect(
+        await w.app.receiveRelay([(peer: 'x-$_v', cipher: 'early-r')]),
+        isEmpty,
+      );
+      await _settle();
+      expect(await w.app.receiveRelay([await w.text(_v, 'u9')]), isEmpty);
+      expect(w.kept(_v), ['u9']);
+      expect(w.live.reactions['u9'], isNull);
+    });
 
     test('a switch to the decoy drops it', () async {
       final w = await _World.make();

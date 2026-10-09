@@ -51,6 +51,56 @@ class _Rows extends HaloDb {
   final MemDb mem;
   // the outbox read off the rows, for the tests that drain it
   var outbox = false;
+  // a full disk: nothing new is filed
+  var full = false;
+  @override
+  Future<void> saveMessage(
+    String peerId,
+    String direction,
+    String plaintext, {
+    int? burnAt,
+    int? burnSecs,
+    String? msgUid,
+    String? replyTo,
+    String? groupId,
+    String? mediaPath,
+    String? filePath,
+    String? fileName,
+    bool voiceDisguised = false,
+    bool saved = false,
+    int sent = 1,
+    String? preview,
+    bool secure = false,
+    String? poll,
+    String? sticker,
+    int? sentAt,
+    bool viaDev = false,
+  }) {
+    if (full) throw StateError('the disk is full');
+    return super.saveMessage(
+      peerId,
+      direction,
+      plaintext,
+      burnAt: burnAt,
+      burnSecs: burnSecs,
+      msgUid: msgUid,
+      replyTo: replyTo,
+      groupId: groupId,
+      mediaPath: mediaPath,
+      filePath: filePath,
+      fileName: fileName,
+      voiceDisguised: voiceDisguised,
+      saved: saved,
+      sent: sent,
+      preview: preview,
+      secure: secure,
+      poll: poll,
+      sticker: sticker,
+      sentAt: sentAt,
+      viaDev: viaDev,
+    );
+  }
+
   @override
   Future<Database> open() async => mem;
   @override
@@ -361,6 +411,40 @@ void main() {
             whereArgs: [p.name],
           )).single['record']
           as Uint8List;
+
+  test('a long run of texts that opened and were not filed all land when '
+      'they come again', () async {
+    final p = await _peer();
+    await contact(p);
+    await talk(p);
+    final lines = [
+      for (var i = 0; i < 100; i++)
+        (
+          peer: p.xpub,
+          cipher: await _fromPeer(
+            p,
+            await wrapMessage(
+              'late $i',
+              msgUid: 'late$i',
+              sender: SenderInfo(
+                haloId: p.name,
+                edPub: 'ed-${p.name}',
+                onion: '',
+                xPub: p.xpub,
+              ),
+            ),
+          ),
+        ),
+    ];
+    rows.full = true;
+    expect(await app.receiveRelay(lines), hasLength(lines.length));
+    rows.full = false;
+    expect(await app.receiveRelay(lines), isEmpty);
+    await _settle();
+    for (var i = 0; i < lines.length; i++) {
+      expect(row('late$i')?['plaintext'], 'late $i');
+    }
+  });
 
   test('the first text after a restore opens on the far side, and the '
       'chat goes on both ways', () async {

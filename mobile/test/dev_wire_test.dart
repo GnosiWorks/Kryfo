@@ -29,6 +29,7 @@ import 'package:kryfo/main.dart'
         AppIo,
         AppState,
         HaloEngine,
+        heldWireOf,
         makePreKeyBundleB64,
         processPeerBundle,
         signalEncrypt,
@@ -114,6 +115,11 @@ class _Phone extends DevTestDb {
   final roomsAsked = <String>[];
   // saves that fail next
   var saveFails = 0;
+  // what the stranger cap held back, as held
+  final held = <(String, String)>[];
+  @override
+  Future<void> holdCipher(String peerId, String cipher) async =>
+      held.add((peerId, cipher));
 
   Map<String, Object?>? _contact(String id) {
     for (final r in mem.rows('contacts')) {
@@ -887,6 +893,39 @@ void main() {
       await _settle();
       expect(_inbox(), ['on it']);
       expect(_io.tried, [_dev]);
+      expect(_live.seen, contains(_hash(answer)));
+    });
+
+    test('an answer the cap holds back is kept as it opened, and lets the '
+        'line go', () async {
+      final s = await started(false);
+      // the chat not accepted, two of his in already
+      await _mem.update(
+        'contacts',
+        {'accepted': 0},
+        where: 'halo_id = ?',
+        whereArgs: [_dev],
+      );
+      for (final t in ['one', 'two']) {
+        await _mem.insert('messages', {
+          'peer_id': _dev,
+          'direction': 'in',
+          'plaintext': t,
+          'sent_at': 1,
+        });
+      }
+      final answer = await _hisAnswer(s.who, 'held back', 'r4');
+      expect(
+        await _app.receiveRelay([(peer: s.tag!, cipher: answer)]),
+        isEmpty,
+      );
+      expect(_inbox(), ['one', 'two']);
+      expect(_live.held, hasLength(1));
+      expect(_live.held.single.$1, _dev);
+      expect(
+        unwrapMessage(heldWireOf(_live.held.single.$2)!).message,
+        'held back',
+      );
       expect(_live.seen, contains(_hash(answer)));
     });
 

@@ -7794,6 +7794,66 @@ String heldWire(String wire) => '$_kHeldWire$wire';
 String? heldWireOf(String held) =>
     held.startsWith(_kHeldWire) ? held.substring(_kHeldWire.length) : null;
 
+// what was opened and not filed yet, by its hash, the oldest going first
+// past [max] chars
+class _Kept<V> {
+  _Kept(this.max, this.size);
+  final int max;
+  final int Function(V) size;
+  final _m = <String, V>{};
+  var _chars = 0;
+
+  V? operator [](String k) => _m[k];
+
+  V? take(String k) {
+    final v = _m.remove(k);
+    if (v != null) _chars -= size(v);
+    return v;
+  }
+
+  void put(String k, V v) {
+    take(k);
+    _m[k] = v;
+    _chars += size(v);
+    while (_chars > max && _m.length > 1) {
+      take(_m.keys.first);
+    }
+  }
+
+  void clear() {
+    _m.clear();
+    _chars = 0;
+  }
+}
+
+// a first contact signal opened, and how far its filing got: a try after
+// one that failed goes on from there
+class _FirstOpen {
+  _FirstOpen(this.haloId, this.plain, this.env);
+  String haloId;
+  final String plain;
+  final UnwrappedMessage env;
+  // moved off a hidden chat's name already
+  bool refiled = false;
+  // whether its row was new on the first try
+  bool? fresh;
+  // who its address was heard as before it, once read
+  bool heard = false;
+  String? heardAs;
+}
+
+// a frame that came before the message it names, as it came
+typedef _Early = ({
+  String uid,
+  HaloDb db,
+  HaloDb? into,
+  String sender,
+  String wire,
+  int? arrivedAt,
+  int? wrappedAt,
+  int at,
+});
+
 // a stranger's cap held a message back, in the container it was going to
 class _HeldIn extends CapHeld {
   const _HeldIn(this.into);
@@ -7902,6 +7962,86 @@ class AppState extends ChangeNotifier {
     return at != null &&
         DateTime.now().millisecondsSinceEpoch - at <
             _kTakenBackFor.inMilliseconds;
+  }
+
+  // edits, reactions and pins that came before the message they name, in
+  // the order they came. each goes in once that message is filed in the
+  // container it was going to. memory only, under a size: the oldest go
+  // first, and past a share of one message or one sender theirs do
+  final _early = <_Early>[];
+  var _earlyChars = 0;
+  static const _kEarlyChars = 1 << 20;
+  static const _kEarlyPerUid = 32;
+  static const _kEarlyPerSender = 64;
+
+  void _unparkWhere(bool Function(_Early e) test) {
+    _early.removeWhere((e) {
+      if (!test(e)) return false;
+      _earlyChars -= e.wire.length;
+      return true;
+    });
+  }
+
+  // all but the last [keep] of those [of] picks
+  void _trimEarly(bool Function(_Early e) of, int keep) {
+    var over = _early.where(of).length - keep;
+    if (over > 0) _unparkWhere((e) => over > 0 && of(e) && over-- > 0);
+  }
+
+  void _parkEarly(_Early e) {
+    final cut = e.at - _kTakenBackFor.inMilliseconds;
+    _unparkWhere((x) => x.at < cut);
+    _early.add(e);
+    _earlyChars += e.wire.length;
+    _trimEarly((x) => x.uid == e.uid, _kEarlyPerUid);
+    _trimEarly((x) => x.sender == e.sender, _kEarlyPerSender);
+    while (_earlyChars > _kEarlyChars && _early.isNotEmpty) {
+      _earlyChars -= _early.removeAt(0).wire.length;
+    }
+  }
+
+  void _dropEarly() {
+    _early.clear();
+    _earlyChars = 0;
+  }
+
+  // what came early for a message just filed by [author]. the text of the
+  // last edit of theirs that went in, if any
+  Future<String?> _applyEarly(
+    String uid,
+    String author,
+    HaloDb db,
+    Set<String>? marks,
+  ) async {
+    if (_early.isEmpty) return null;
+    bool mine(_Early e) => e.uid == uid && identical(e.db, db);
+    final due = _early.where(mine).toList();
+    if (due.isEmpty) return null;
+    _unparkWhere(mine);
+    final cut =
+        DateTime.now().millisecondsSinceEpoch - _kTakenBackFor.inMilliseconds;
+    String? edited;
+    for (final e in due) {
+      if (e.at < cut) continue;
+      try {
+        final env = unwrapMessage(e.wire);
+        await _fileArrival(
+          e.sender,
+          env,
+          wire: e.wire,
+          into: e.into,
+          arrivedAt: e.arrivedAt,
+          marks: marks,
+          wrappedAt: e.wrappedAt,
+        );
+        if (e.sender == author && env.edit != null) {
+          edited = env.edit!.newText;
+        }
+      } catch (err) {
+        dlog('early: one did not go in ($err)');
+      }
+    }
+    return edited;
   }
 
   // uids the drainer is mid-flight on, so a slow send isn't fired twice by
@@ -10548,6 +10688,8 @@ class AppState extends ChangeNotifier {
     required List<String> claims,
     required int? wrappedAt,
   }) async {
+    // what is opened goes with the session it began in
+    final epoch = _openedEpoch;
     final RouteTo to;
     final HaloDb db;
     if (into != null) {
@@ -10675,19 +10817,42 @@ class AppState extends ChangeNotifier {
       await _answerNeed(senderHaloId, env.need!, db);
       return to;
     }
+    // a frame for a message not here yet waits for it, from a contact or a
+    // member of the group it names, and only in the session it came in
+    Future<void> early(String uid) async {
+      final ok = env.groupId == null
+          ? await db.isAccepted(senderHaloId)
+          : (await db.getGroupMembers(env.groupId!)).contains(senderHaloId);
+      if (!ok || epoch != _openedEpoch) return;
+      _parkEarly((
+        uid: uid,
+        db: db,
+        into: into,
+        sender: senderHaloId,
+        wire: wire,
+        arrivedAt: arrivedAt,
+        wrappedAt: wrappedAt,
+        at: DateTime.now().millisecondsSinceEpoch,
+      ));
+    }
+
     // shared pin: every member mirrors it. only from someone in the chat
     // the row lives in: the frame names a uid and nothing else, and it rides
     // in above the stranger gate like an edit does.
     if (env.pin != null) {
       final where = await db.chatOf(env.pin!.targetUid);
+      if (where == null) {
+        await early(env.pin!.targetUid);
+        return to;
+      }
       final ok = pinAllowed(
-        rowPeer: where?.$1,
-        rowGroup: where?.$2,
+        rowPeer: where.$1,
+        rowGroup: where.$2,
         sender: senderHaloId,
         frameGroup: env.groupId,
-        members: where?.$2 == null
+        members: where.$2 == null
             ? const []
-            : await db.getGroupMembers(where!.$2!),
+            : await db.getGroupMembers(where.$2!),
       );
       if (!ok) {
         dlog('pin: dropped, sender is not in that chat');
@@ -10696,7 +10861,7 @@ class AppState extends ChangeNotifier {
       // the sender counts before it pins, but that is their word. held
       // here too, or a member could fill the list from afar.
       if (env.pin!.pinned) {
-        final held = await db.pinnedIn(peerId: where!.$1, groupId: where.$2);
+        final held = await db.pinnedIn(peerId: where.$1, groupId: where.$2);
         if (held.length >= kMaxPins &&
             !held.any((r) => r['msg_uid'] == env.pin!.targetUid)) {
           dlog('pin: dropped, that chat is full');
@@ -10725,14 +10890,18 @@ class AppState extends ChangeNotifier {
       // the frame names a uid and nothing else, so only someone in the chat
       // that row lives in gets to react to it
       final where = await db.chatOf(r.targetUid);
+      if (where == null) {
+        await early(r.targetUid);
+        return to;
+      }
       final ok = pinAllowed(
-        rowPeer: where?.$1,
-        rowGroup: where?.$2,
+        rowPeer: where.$1,
+        rowGroup: where.$2,
         sender: senderHaloId,
         frameGroup: env.groupId,
-        members: where?.$2 == null
+        members: where.$2 == null
             ? const []
-            : await db.getGroupMembers(where!.$2!),
+            : await db.getGroupMembers(where.$2!),
       );
       if (!ok || r.emoji.length > 32) {
         dlog('reaction: dropped');
@@ -10756,6 +10925,8 @@ class AppState extends ChangeNotifier {
         // home's row shows the last line, and only a refresh rereads it
         await refreshContacts();
         notifyListeners();
+      } else if (!await db.messageExists(env.edit!.targetUid)) {
+        await early(env.edit!.targetUid);
       }
       return to;
     }
@@ -10937,6 +11108,7 @@ class AppState extends ChangeNotifier {
       dlog('recv: taken back before it came, dropped');
       return to;
     }
+    String? sliced;
     if (_sliced(env)) {
       final mid = env.mediaId!;
       final total = env.chunkTotal!;
@@ -10977,7 +11149,8 @@ class AppState extends ChangeNotifier {
           unawaited(_sendDeliveryReceipt(senderHaloId, mid));
         }
         unawaited(db.dropMediaWant(mid));
-        if (gone) await db.dropMediaChunks(mid, from: senderHaloId);
+        // slices a filed one left, if its drop did not get as far
+        await db.dropMediaChunks(mid, from: senderHaloId);
         return to;
       }
       // slices land on disk as they arrive and the count is over rows, so a
@@ -11040,13 +11213,16 @@ class AppState extends ChangeNotifier {
           unsaved = true;
         }
       }
-      await db.dropMediaChunks(mid);
       unawaited(db.dropMediaWant(mid));
       incomingMediaDone(progressKey);
       if (env.pvImg) {
+        await db.dropMediaChunks(mid);
         _inflightUids.remove(mid);
         return to;
       }
+      // the slices stay until the row is filed, so one that fails before
+      // that is put together again when it comes again
+      sliced = mid;
       // the slice in this envelope is on disk now; nothing below should
       // save it again
       imgB64 = null;
@@ -11208,6 +11384,7 @@ class AppState extends ChangeNotifier {
           ),
     );
     changed();
+    if (sliced != null) await db.dropMediaChunks(sliced);
     // remember the face they picked. cheap, and it arrives with every
     // message so it stays current if they change it.
     if (env.senderAvatar != null) {
@@ -11223,6 +11400,10 @@ class AppState extends ChangeNotifier {
     // saved now, messageExists covers dedup from here
     _inflightUids.removeAll(claims);
     claims.clear();
+    // an edit that came first is the text it shows
+    final edited = env.msgUid == null
+        ? null
+        : await _applyEarly(env.msgUid!, senderHaloId, db, marks);
     // send a delivery receipt back for 1:1 messages we just stored, so the
     // sender's tick means "on your phone" not "a relay took it". groups skip
     // this (N acks per message is noise); receipts themselves carry no uid of
@@ -11265,6 +11446,7 @@ class AppState extends ChangeNotifier {
     final String notifBody;
     final String notifPayload;
     final bool suppress;
+    final shownText = edited ?? env.message;
     // the name given to them here, as the chat list shows it
     final nickname =
         (await db.getContact(senderHaloId))?['nickname'] as String?;
@@ -11278,8 +11460,8 @@ class AppState extends ChangeNotifier {
           ? l10n.stickerLabel
           : env.poll != null && PollSpec.parse(env.poll) != null
           ? l10n.pollPreview(env.message)
-          : env.message.isNotEmpty
-          ? env.message
+          : shownText.isNotEmpty
+          ? shownText
           : notifMediaLine(fileName, mediaPath);
       final who = looksLikeRoomKey(senderHaloId)
           ? roomTag(senderHaloId)
@@ -11299,8 +11481,8 @@ class AppState extends ChangeNotifier {
       notifTitle = isDevChat(senderHaloId) ? l10n.devName : named;
       notifBody = sticker != null
           ? l10n.stickerLabel
-          : env.message.isNotEmpty
-          ? env.message
+          : shownText.isNotEmpty
+          ? shownText
           : notifMediaLine(fileName, mediaPath);
       notifPayload = senderHaloId;
       suppress = reading || await db.isMuted(senderHaloId);
@@ -13252,104 +13434,133 @@ class AppState extends ChangeNotifier {
   // sender's claimed identity (via envelope) and move the libsignal
   // session to the real HaloID. someone the router keeps is filed by the
   // router, never as an everyday request. the id and where it went
+  //
+  // signal spends the prekey on the open, so one that fails after it is
+  // kept as opened and throws: it goes on from there when it comes again
   Future<(String, RouteTo)?> backPairFromCipher(String cipher) async {
+    final epoch = _openedEpoch;
+    final k = sha256.convert(utf8.encode(cipher)).toString();
+    // one copy at a time: another is not kept now and comes again
+    if (!_firstInHand.add(k)) throw StateError('back-pair: a copy in hand');
+    _FirstOpen? o;
     try {
-      final opened = await _io.openFirstContact(cipher);
-      if (opened == null) return null;
-      var h = opened.haloId;
-      final env = opened.env;
-      // the developer never starts a chat this way, and no one else may
-      // claim to be him
-      if (devCardClaim(id: h, xPub: env.senderXPub)) return null;
-      await _afterClose();
-      if (_moveDone != null) await _afterMove(h, null);
-      // a hidden chat's name stays with its key as well
-      if (h == env.senderHaloId && await _hiddenKeyDiffers(h, env)) {
-        final at = await _refileFirstContact(h);
-        if (at == null) return null;
-        h = at;
+      o = _firstOpened.take(k);
+      if (o == null) {
+        final opened = await _io.openFirstContact(cipher);
+        if (opened == null) return null;
+        o = _FirstOpen(opened.haloId, opened.plain, opened.env);
       }
-      final to = _routeOf(h, null);
-      // a copy of one here or one that went (off a relay's backlog, say):
-      // the row stays as it is, a request turned away stays turned away,
-      // and only someone accepted hears again that it came
-      final uid = env.msgUid;
-      if (uid != null && (to == RouteTo.everyday || to == RouteTo.vault)) {
-        final db = to == RouteTo.vault ? _openVault! : live;
-        final have = await db.messageExists(uid);
-        if (have || await db.goneFrom(h, uid)) {
-          if (have && await db.isAccepted(h)) {
-            unawaited(_sendDeliveryReceipt(h, uid));
-          }
-          return (h, RouteTo.dropped);
-        }
+      return await _backPairOpened(o);
+    } catch (e) {
+      if (o != null && epoch == _openedEpoch) {
+        _firstOpened.put(k, o);
+        dlog('back-pair: kept as opened, not filed ($e)');
       }
-      // persist contact + nostr sub. a stranger who back-paired to us lands
-      // unaccepted: their message waits in requests until we accept. while
-      // the vault is shut its people are filed when it opens
-      HaloDb? filed;
-      var fresh = false;
-      if (to == RouteTo.everyday || to == RouteTo.vault) {
-        final db = to == RouteTo.vault ? _openVault! : live;
-        filed = db;
-        fresh = await db.getContact(h) == null;
-        await db.upsertContact(
-          h,
-          env.senderOnion ?? '',
-          env.senderXPub ?? '',
-          accepted: 0,
-        );
-        // filed on its own: the request says the name it gave
-        final said = env.senderHaloId;
-        if (said != null && said != h) await _noteOtherKey(db, h, said);
-      }
-      final x = env.senderXPub;
-      final heardAs = x == null ? null : _xPubToHaloId[x];
-      if (to != RouteTo.dropped && x != null && x.isNotEmpty) {
-        _xPubToHaloId[x] = h;
-        _io.listen(x);
-      }
-      var went = to;
-      try {
-        went = await _applyIncomingPayload(
-          h,
-          env,
-          wire: opened.plain,
-          fromBackPair: true,
-        );
-      } on CapHeld catch (e) {
-        // the row exists now. kept as opened, let in on accept
-        final into = e is _HeldIn ? e.into : filed;
-        await into?.holdCipher(h, heldWire(opened.plain));
-      } on _NoProof {
-        // the session it opened goes, so nothing later from it opens
-        // without the proof, and a row it made goes with it
-        await _io.dropSession(h);
-        if (fresh) {
-          await filed?.forgetRequest(h);
-          // the address it was heard on goes too, unless someone here has it
-          if (x != null && x.isNotEmpty && _xPubToHaloId[x] == h) {
-            if (heardAs == null) {
-              _xPubToHaloId.remove(x);
-              _io.unlisten(x);
-            } else {
-              _xPubToHaloId[x] = heardAs;
-            }
-          }
+      rethrow;
+    } finally {
+      _firstInHand.remove(k);
+    }
+  }
+
+  Future<(String, RouteTo)?> _backPairOpened(_FirstOpen opened) async {
+    var h = opened.haloId;
+    final env = opened.env;
+    // the developer never starts a chat this way, and no one else may
+    // claim to be him
+    if (devCardClaim(id: h, xPub: env.senderXPub)) return null;
+    await _afterClose();
+    if (_moveDone != null) await _afterMove(h, null);
+    // a hidden chat's name stays with its key as well
+    if (!opened.refiled &&
+        h == env.senderHaloId &&
+        await _hiddenKeyDiffers(h, env)) {
+      final at = await _refileFirstContact(h);
+      if (at == null) return null;
+      h = opened.haloId = at;
+      opened.refiled = true;
+    }
+    final to = _routeOf(h, null);
+    // a copy of one here or one that went (off a relay's backlog, say):
+    // the row stays as it is, a request turned away stays turned away,
+    // and only someone accepted hears again that it came
+    final uid = env.msgUid;
+    if (uid != null && (to == RouteTo.everyday || to == RouteTo.vault)) {
+      final db = to == RouteTo.vault ? _openVault! : live;
+      final have = await db.messageExists(uid);
+      if (have || await db.goneFrom(h, uid)) {
+        if (have && await db.isAccepted(h)) {
+          unawaited(_sendDeliveryReceipt(h, uid));
         }
         return (h, RouteTo.dropped);
       }
-      if (_shown(went)) {
-        await refreshContacts();
-        notifyListeners();
-        await forgetPeerFc(h);
-      }
-      dlog('back-pair: done for $h');
-      return (h, went);
-    } catch (e) {
-      dlog('back-pair error: $e');
-      return null;
     }
+    // persist contact + nostr sub. a stranger who back-paired to us lands
+    // unaccepted: their message waits in requests until we accept. while
+    // the vault is shut its people are filed when it opens
+    HaloDb? filed;
+    var fresh = false;
+    if (to == RouteTo.everyday || to == RouteTo.vault) {
+      final db = to == RouteTo.vault ? _openVault! : live;
+      filed = db;
+      // as the first try found it: a row it made is still its own
+      fresh = opened.fresh ??= await db.getContact(h) == null;
+      await db.upsertContact(
+        h,
+        env.senderOnion ?? '',
+        env.senderXPub ?? '',
+        accepted: 0,
+      );
+      // filed on its own: the request says the name it gave
+      final said = env.senderHaloId;
+      if (said != null && said != h) await _noteOtherKey(db, h, said);
+    }
+    final x = env.senderXPub;
+    if (!opened.heard) {
+      opened.heardAs = x == null ? null : _xPubToHaloId[x];
+      opened.heard = true;
+    }
+    final heardAs = opened.heardAs;
+    if (to != RouteTo.dropped && x != null && x.isNotEmpty) {
+      _xPubToHaloId[x] = h;
+      _io.listen(x);
+    }
+    var went = to;
+    try {
+      went = await _applyIncomingPayload(
+        h,
+        env,
+        wire: opened.plain,
+        fromBackPair: true,
+      );
+    } on CapHeld catch (e) {
+      // the row exists now. kept as opened, let in on accept
+      final into = e is _HeldIn ? e.into : filed;
+      await into?.holdCipher(h, heldWire(opened.plain));
+    } on _NoProof {
+      // the session it opened goes, so nothing later from it opens
+      // without the proof, and a row it made goes with it
+      await _io.dropSession(h);
+      if (fresh) {
+        await filed?.forgetRequest(h);
+        // the address it was heard on goes too, unless someone here has it
+        if (x != null && x.isNotEmpty && _xPubToHaloId[x] == h) {
+          if (heardAs == null) {
+            _xPubToHaloId.remove(x);
+            _io.unlisten(x);
+          } else {
+            _xPubToHaloId[x] = heardAs;
+          }
+        }
+      }
+      return (h, RouteTo.dropped);
+    }
+    if (_shown(went)) {
+      await refreshContacts();
+      notifyListeners();
+      await forgetPeerFc(h);
+    }
+    dlog('back-pair: done for $h');
+    return (h, went);
   }
 
   // whether a hidden chat holds [id] with a key other than the one this
@@ -13620,7 +13831,12 @@ class AppState extends ChangeNotifier {
         }
       }
       if (!handled && _isPreKeyWire(cipher)) {
-        final paired = await backPairFromCipher(cipher);
+        (String, RouteTo)? paired;
+        try {
+          paired = await backPairFromCipher(cipher);
+        } catch (_) {
+          // kept as opened: its copy on a relay goes on from there
+        }
         handled = paired != null;
         if (paired != null) shown = _shown(paired.$2);
         dlog('drain: back-pair ${paired != null ? "ok" : "failed"}');
@@ -13686,9 +13902,16 @@ class AppState extends ChangeNotifier {
 
   // what a relay delivery opened to, by its hash, until it is marked seen.
   // signal spends the keys on the first open, so one that fails after it and
-  // comes again would not open twice: it goes on from here. memory only
-  final _relayOpened = <String, ({String id, String plain, bool parked})>{};
-  static const _relayOpenedMax = 64;
+  // comes again would not open twice: it goes on from here. memory only,
+  // bounded by size rather than count so a failed batch fits whole
+  final _relayOpened = _Kept<({String id, String plain, bool parked})>(
+    8 << 20,
+    (o) => o.plain.length,
+  );
+  // first contacts the same way, with how far their filing got
+  final _firstOpened = _Kept<_FirstOpen>(1 << 20, (o) => o.plain.length);
+  // first contacts being filed right now, by the same key
+  final _firstInHand = <String>{};
   // moves on each time what was opened is dropped: an open begun before
   // that is not kept after it
   int _openedEpoch = 0;
@@ -13697,6 +13920,8 @@ class AppState extends ChangeNotifier {
   // wipe. whatever comes again after this is opened again or not at all
   void _dropOpened() {
     _relayOpened.clear();
+    _firstOpened.clear();
+    _dropEarly();
     _openedEpoch++;
   }
 
@@ -13708,11 +13933,7 @@ class AppState extends ChangeNotifier {
     bool parked = false,
   }) {
     if (epoch != _openedEpoch) return;
-    _relayOpened.remove(h);
-    _relayOpened[h] = (id: id, plain: plain, parked: parked);
-    while (_relayOpened.length > _relayOpenedMax) {
-      _relayOpened.remove(_relayOpened.keys.first);
-    }
+    _relayOpened.put(h, (id: id, plain: plain, parked: parked));
   }
 
   Future<void> _receiveRelayOne(
@@ -13734,13 +13955,10 @@ class AppState extends ChangeNotifier {
       arrived();
       return;
     }
-    // a room frame: opened by the room key already, never signal
+    // a room frame: opened by the room key already, never signal. one that
+    // throws is not kept and comes again
     if (m.peer.startsWith('room:') || m.peer.startsWith('roomfc:')) {
-      try {
-        await _handleRoomFrame(m.peer, m.cipher);
-      } catch (e) {
-        dlog('room frame: $e');
-      }
+      await _handleRoomFrame(m.peer, m.cipher);
       await live.markSeen(h);
       notifyListeners();
       arrived();
@@ -13854,12 +14072,12 @@ class AppState extends ChangeNotifier {
         heldWire(wrapped),
       );
       await live.markSeen(h);
-      _relayOpened.remove(h);
+      _relayOpened.take(h);
       arrived();
       return;
     }
     await live.markSeen(h);
-    _relayOpened.remove(h);
+    _relayOpened.take(h);
     if (_shown(went)) {
       notifyListeners();
       arrived();
@@ -14975,12 +15193,15 @@ class AppState extends ChangeNotifier {
     final RouteTo went;
     try {
       went = await _applyIncomingPayload(id, unwrapMessage(plain), wire: plain);
-    } on CapHeld {
-      _relayOpened.remove(h);
+    } on CapHeld catch (e) {
+      // kept as opened, let in on accept
+      await (e is _HeldIn ? e.into : live).holdCipher(id, heldWire(plain));
+      await live.markSeen(h);
+      _relayOpened.take(h);
       return false;
     }
     await live.markSeen(h);
-    _relayOpened.remove(h);
+    _relayOpened.take(h);
     return _shown(went);
   }
 
