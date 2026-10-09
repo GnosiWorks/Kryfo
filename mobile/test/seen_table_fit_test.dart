@@ -114,8 +114,9 @@ void main() {
           seen++;
           final w = p.size.width;
           final word = p.getMinIntrinsicWidth(double.infinity);
-          if (word > w + 0.5)
+          if (word > w + 0.5) {
             bad.add('broken (${word.round()} in ${w.round()}): $s');
+          }
           if (p.didExceedMaxLines) bad.add('cut short: $s');
           final left = p.localToGlobal(Offset.zero).dx;
           if (left < -0.5 || left + w > width + 0.5) bad.add('off: $s');
