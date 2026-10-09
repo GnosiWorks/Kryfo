@@ -7234,7 +7234,6 @@ class _Bubble extends StatelessWidget {
   }
 }
 
-// an emoji button in the reaction pill
 // how a contact's message came: through the developer chat. his phone only
 class _ViaDevTag extends StatelessWidget {
   const _ViaDevTag();
@@ -7266,6 +7265,7 @@ class _ViaDevTag extends StatelessWidget {
   }
 }
 
+// an emoji button in the reaction pill
 class _EmojiTap extends StatefulWidget {
   final String emoji;
   final bool selected;

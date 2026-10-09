@@ -6817,7 +6817,8 @@ Future<(String, bool)> handleHaloUriAdded(
     if (asked) await appState.afterAccept(id);
     // home, the pickers and the introductions show them now
     await appState.refreshContacts();
-    if (await appState.inboxChatOf(id)) askInboxMove(id);
+    // asked once, as they are taken in: a re-add asks nothing
+    if (!already && await appState.inboxChatOf(id)) askInboxMove(id);
     return (
       already
           ? l10n.appAlreadySaved('${parsed['id']}')
@@ -6827,12 +6828,12 @@ Future<(String, bool)> handleHaloUriAdded(
   } else {
     final id = parsed['id']!;
     // an old card is an add all the same, and takes in who asked
-    final asked =
-        !await session.isAccepted(id) && await session.askedBefore(id);
+    final wasIn = await session.isAccepted(id);
+    final asked = !wasIn && await session.askedBefore(id);
     await session.upsertContact(id, parsed['onion']!, parsed['xpub']!);
     if (!sessionQuiet) await appState.subscribePeer(id);
     if (asked && !sessionQuiet) await appState.afterAccept(id);
-    if (await appState.inboxChatOf(id)) askInboxMove(id);
+    if (!wasIn && await appState.inboxChatOf(id)) askInboxMove(id);
     return (l10n.appPeerImportedV1(id), false);
   }
 }
@@ -7231,14 +7232,19 @@ void _openChatSoon(String chatId) {
 void Function(String haloId) askInboxMove = _askInboxMoveSoon;
 
 void _askInboxMoveSoon(String haloId) {
-  Future.delayed(
-    const Duration(milliseconds: 450),
-    () => lockGuard.afterUnlock(key: 'inbox-move:$haloId', () async {
+  unawaited(() async {
+    // once the add's screen or sheet is gone: asked over it, its own close
+    // would close the question instead. a few seconds at most
+    for (var i = 0; i < 40; i++) {
+      await Future<void>.delayed(const Duration(milliseconds: 150));
+      if (!(rootNavKey.currentState?.canPop() ?? false)) break;
+    }
+    await lockGuard.afterUnlock(key: 'inbox-move:$haloId', () async {
       final ctx = rootNavKey.currentContext;
       if (ctx == null || !ctx.mounted) return;
       await askMoveIntoChats(ctx, haloId);
-    }),
-  );
+    });
+  }());
 }
 
 // what a room says once its creator lets this phone in. tests listen here
@@ -14202,13 +14208,18 @@ class AppState extends ChangeNotifier {
   Future<void> moveToInbox(String haloId) async {
     if (!await movableToInbox(haloId)) return;
     await session.support.file(haloId);
+    // what rang for it as a chat would open it as one
+    unawaited(clearNotificationsFor(haloId));
     await refreshContacts();
   }
 
-  // the inbox chat shows in Chats instead
+  // the inbox chat shows in Chats instead. only someone accepted has a
+  // place there
   Future<void> moveToChats(String haloId) async {
-    if (!devMode) return;
+    if (!devMode || !await session.isAccepted(haloId)) return;
     await session.support.moveOut(haloId);
+    // what rang for it in the inbox would open nothing now
+    unawaited(clearNotificationsFor('$kSupportPayload$haloId'));
     await refreshContacts();
   }
 

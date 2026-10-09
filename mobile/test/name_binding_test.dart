@@ -489,6 +489,9 @@ void main() {
       expect(appState.devMode, isTrue);
       expect((await handleHaloUriAdded(await card(inInbox))).$2, isTrue);
       expect(asked, [inInbox]);
+      // kept apart, and their card again: asked once, not on every add
+      expect((await handleHaloUriAdded(await card(inInbox))).$2, isTrue);
+      expect(asked, [inInbox]);
       expect((await handleHaloUriAdded(await card(other))).$2, isTrue);
       expect(asked, [inInbox]);
       // moved: nothing more to ask
