@@ -521,6 +521,9 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
   bool _live = false;
   String? _path;
   double _bottomInset = 0;
+  // the keyboard's height when the hold began: the bar is in the root
+  // overlay, which never sees the keyboard
+  double _keyboardInset = 0;
   // the mic's level while it records, newest last
   final List<double> _levels = [];
   StreamSubscription<Amplitude>? _level;
@@ -589,7 +592,13 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
         _ms += 100;
         _overlay?.rebuild();
       });
-      if (mounted) _bottomInset = MediaQuery.of(context).padding.bottom;
+      if (mounted) {
+        // the safe area and the scaffold strip both insets from the media
+        // query here, so they come from the view itself
+        final view = MediaQueryData.fromView(View.of(context));
+        _bottomInset = view.padding.bottom;
+        _keyboardInset = view.viewInsets.bottom;
+      }
       _overlay = RecordBarEntry(_bar);
       if (mounted) Overlay.of(context).insert(_overlay!.entry);
       // the lock stops the recording and throws it away
@@ -660,7 +669,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
     return Positioned(
       left: 0,
       right: 0,
-      bottom: 0,
+      bottom: _keyboardInset,
       child: VoiceRecordBar(
         time: _time,
         cancel: _willCancel,
