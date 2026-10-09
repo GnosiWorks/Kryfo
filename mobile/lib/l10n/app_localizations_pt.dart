@@ -7776,4 +7776,118 @@ class AppLocalizationsPt extends AppLocalizations {
   String lockTooManyTriesFor(Object left) {
     return 'Tentativas demais · $left';
   }
+
+  @override
+  String get gifBadge => 'GIF';
+
+  @override
+  String get gifPlay => 'Reproduzir GIF';
+
+  @override
+  String get gifSentInside => 'Enviado dentro da sua mensagem';
+
+  @override
+  String get gifOptInTitle => 'Busque GIFs com privacidade';
+
+  @override
+  String get gifOptInLead =>
+      'A busca de GIFs precisa da internet, então fica desligada até você querer.';
+
+  @override
+  String get gifOptInOverTor => 'Busca pelo Tor';
+
+  @override
+  String get gifOptInThroughKryfo => 'Busca pelo Kryfo';
+
+  @override
+  String get gifOptInAsksForYou =>
+      'O servidor do Kryfo pede ao serviço de GIFs por você. O serviço nunca vê você, e o servidor não guarda registro do que você buscou.';
+
+  @override
+  String get gifOptInLikeAPhoto =>
+      'O GIF viaja criptografado, como uma foto. O celular do seu amigo não baixa nada.';
+
+  @override
+  String get gifOptInOffWhenever => 'Desligue quando quiser';
+
+  @override
+  String get gifOptInWhereToTurnOff =>
+      'Configurações, Privacidade, Busca de GIFs. Os GIFs do seu celular sempre funcionam sem ela.';
+
+  @override
+  String get gifTurnOn => 'Ligar a busca de GIFs';
+
+  @override
+  String get gifNotNow => 'Agora não';
+
+  @override
+  String get gifTab => 'GIFs';
+
+  @override
+  String get gifPhoneTab => 'Neste celular';
+
+  @override
+  String get gifSearchHint => 'Buscar GIFs';
+
+  @override
+  String get gifClear => 'Limpar busca';
+
+  @override
+  String get gifServiceNeverSeesYou => 'O serviço de GIFs nunca vê você';
+
+  @override
+  String get gifTrending => 'Em alta';
+
+  @override
+  String get gifOffline =>
+      'O Tor ainda está conectando. Os GIFs chegam assim que ele estiver pronto.';
+
+  @override
+  String get gifBusy => 'Muitas buscas agora. Tente de novo daqui a pouco.';
+
+  @override
+  String get gifUnreachable =>
+      'Não foi possível falar com o serviço de GIFs do Kryfo.';
+
+  @override
+  String get gifNothingFound => 'Nenhum GIF encontrado. Tente outras palavras.';
+
+  @override
+  String get gifCouldNotLoadMore => 'Não foi possível carregar mais';
+
+  @override
+  String get gifLoading => 'Carregando GIFs';
+
+  @override
+  String get gifCouldNotGet =>
+      'Não foi possível pegar esse GIF. Tente de novo.';
+
+  @override
+  String gifPoweredBy(String brand) {
+    return 'Powered by $brand';
+  }
+
+  @override
+  String gifNeverSeesYou(String brand) {
+    return 'Buscado pelo Kryfo, $brand nunca vê você.';
+  }
+
+  @override
+  String gifTileA11y(String number) {
+    return 'GIF $number';
+  }
+
+  @override
+  String get gifPhoneLine =>
+      'GIFs salvos neste celular. Nada vai para a internet.';
+
+  @override
+  String get gifPhoneChoose => 'Escolher um GIF';
+
+  @override
+  String get settingsGifSearch => 'Busca de GIFs';
+
+  @override
+  String get settingsGifSearchHint =>
+      'Desligada até você ligar. O servidor do Kryfo busca por você, então o serviço de GIFs nunca vê você.';
 }

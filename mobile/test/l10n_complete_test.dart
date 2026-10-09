@@ -33,6 +33,8 @@ const _names = {
   'iptc',
   'png',
   'jpeg',
+  'gif',
+  'gifs',
   'heic',
   'mp4',
   'wi',

@@ -9747,5 +9747,152 @@
         "type": "Object"
       }
     }
+  },
+  "gifBadge": "GIF",
+  "@gifBadge": {
+    "description": "gifs/gif_picture.dart, gifs/gif_opt_in.dart: the small badge on a gif in a chat, and the opt-in sheet's mark. the format's name, the same in every language"
+  },
+  "gifPlay": "Play GIF",
+  "@gifPlay": {
+    "description": "gifs/gif_picture.dart: screen reader label of the play mark on a still gif, shown when the phone asks for less movement"
+  },
+  "gifSentInside": "Sent inside your message",
+  "@gifSentInside": {
+    "description": "gifs/gif_picture.dart, gifs/gif_opt_in.dart: under a gif you sent, and a point of the opt-in sheet: the gif went encrypted inside the message, nobody fetched it"
+  },
+  "gifOptInTitle": "Search GIFs, privately",
+  "@gifOptInTitle": {
+    "description": "gifs/gif_opt_in.dart: title of the sheet shown before gif search is turned on"
+  },
+  "gifOptInLead": "GIF search needs the internet, so it stays off until you want it.",
+  "@gifOptInLead": {
+    "description": "gifs/gif_opt_in.dart: under the title"
+  },
+  "gifOptInOverTor": "Searched over Tor",
+  "@gifOptInOverTor": {
+    "description": "gifs/gif_opt_in.dart: first point, on the onion route"
+  },
+  "gifOptInThroughKryfo": "Searched through Kryfo",
+  "@gifOptInThroughKryfo": {
+    "description": "gifs/gif_opt_in.dart: first point, on the relay and fast routes (no tor there)"
+  },
+  "gifOptInAsksForYou": "Kryfo's server asks the GIF service for you. The service never sees you, and the server keeps no record of what you searched.",
+  "@gifOptInAsksForYou": {
+    "description": "gifs/gif_opt_in.dart: under the first point"
+  },
+  "gifOptInLikeAPhoto": "The GIF travels encrypted, like a photo. Your friend's phone fetches nothing.",
+  "@gifOptInLikeAPhoto": {
+    "description": "gifs/gif_opt_in.dart: under the second point"
+  },
+  "gifOptInOffWhenever": "Off whenever you like",
+  "@gifOptInOffWhenever": {
+    "description": "gifs/gif_opt_in.dart: third point"
+  },
+  "gifOptInWhereToTurnOff": "Settings, Privacy, GIF search. GIFs on your phone always work without it.",
+  "@gifOptInWhereToTurnOff": {
+    "description": "gifs/gif_opt_in.dart: under the third point: where the switch is (the settings screen, its privacy section, the GIF search row: use the same words as those labels)"
+  },
+  "gifTurnOn": "Turn on GIF search",
+  "@gifTurnOn": {
+    "description": "gifs/gif_opt_in.dart: the main button"
+  },
+  "gifNotNow": "Not now",
+  "@gifNotNow": {
+    "description": "gifs/gif_opt_in.dart: the second button, leaves it off"
+  },
+  "gifTab": "GIFs",
+  "@gifTab": {
+    "description": "stickers/sticker_sheet.dart: a tab of the sticker picker"
+  },
+  "gifPhoneTab": "On this phone",
+  "@gifPhoneTab": {
+    "description": "stickers/sticker_sheet.dart: a tab of the sticker picker: gifs saved on the phone"
+  },
+  "gifSearchHint": "Search GIFs",
+  "@gifSearchHint": {
+    "description": "gifs/gif_panel.dart: the empty search field"
+  },
+  "gifClear": "Clear search",
+  "@gifClear": {
+    "description": "gifs/gif_panel.dart: tooltip and screen reader label of the x in the search field"
+  },
+  "gifServiceNeverSeesYou": "The GIF service never sees you",
+  "@gifServiceNeverSeesYou": {
+    "description": "gifs/gif_panel.dart: next to the route chip (Onion · 3 hops, Relay · 1 hop, Fast) under the search field"
+  },
+  "gifTrending": "Trending",
+  "@gifTrending": {
+    "description": "gifs/gif_panel.dart: header over the gifs shown while the search field is empty"
+  },
+  "gifOffline": "Tor is still connecting. GIFs come once it is up.",
+  "@gifOffline": {
+    "description": "gifs/gif_panel.dart: tor is not up yet"
+  },
+  "gifBusy": "A lot of searches right now. Try again in a moment.",
+  "@gifBusy": {
+    "description": "gifs/gif_panel.dart: the server is busy"
+  },
+  "gifUnreachable": "Couldn't reach Kryfo's GIF service.",
+  "@gifUnreachable": {
+    "description": "gifs/gif_panel.dart: the server did not answer"
+  },
+  "gifNothingFound": "No GIFs found. Try other words.",
+  "@gifNothingFound": {
+    "description": "gifs/gif_panel.dart: a search with no results"
+  },
+  "gifCouldNotLoadMore": "Couldn't load more",
+  "@gifCouldNotLoadMore": {
+    "description": "gifs/gif_panel.dart: at the end of the grid when the next page failed, followed by \"Try again\""
+  },
+  "gifLoading": "Loading GIFs",
+  "@gifLoading": {
+    "description": "gifs/gif_panel.dart: screen reader label of the spinner under the grid"
+  },
+  "gifCouldNotGet": "Couldn't get that GIF. Try again.",
+  "@gifCouldNotGet": {
+    "description": "gifs/gif_panel.dart: toast when the picked gif could not be downloaded"
+  },
+  "gifPoweredBy": "Powered by {brand}",
+  "@gifPoweredBy": {
+    "description": "gifs/gif_panel.dart: the provider's attribution, as its terms ask. kept in English in every language, like the provider's own mark. brand is GIPHY or Klipy",
+    "placeholders": {
+      "brand": {
+        "type": "String"
+      }
+    }
+  },
+  "gifNeverSeesYou": "Searched through Kryfo, {brand} never sees you.",
+  "@gifNeverSeesYou": {
+    "description": "gifs/gif_panel.dart: small line under the attribution. brand is GIPHY or Klipy",
+    "placeholders": {
+      "brand": {
+        "type": "String"
+      }
+    }
+  },
+  "gifTileA11y": "GIF {number}",
+  "@gifTileA11y": {
+    "description": "gifs/gif_panel.dart: screen reader label of a result in the grid. number is its place, already formatted",
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "gifPhoneLine": "GIFs saved on this phone. Nothing goes online.",
+  "@gifPhoneLine": {
+    "description": "gifs/gif_panel.dart: the On this phone tab"
+  },
+  "gifPhoneChoose": "Choose a GIF",
+  "@gifPhoneChoose": {
+    "description": "gifs/gif_panel.dart: button on the On this phone tab, opens the system file picker"
+  },
+  "settingsGifSearch": "GIF search",
+  "@settingsGifSearch": {
+    "description": "screens/settings_screen.dart: privacy section row with a switch"
+  },
+  "settingsGifSearchHint": "Off until you turn it on. Kryfo's server searches for you, so the GIF service never sees you.",
+  "@settingsGifSearchHint": {
+    "description": "screens/settings_screen.dart: under the GIF search row"
   }
 }

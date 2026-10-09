@@ -12350,6 +12350,204 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Too many tries · {left}'**
   String lockTooManyTriesFor(Object left);
+
+  /// gifs/gif_picture.dart, gifs/gif_opt_in.dart: the small badge on a gif in a chat, and the opt-in sheet's mark. the format's name, the same in every language
+  ///
+  /// In en, this message translates to:
+  /// **'GIF'**
+  String get gifBadge;
+
+  /// gifs/gif_picture.dart: screen reader label of the play mark on a still gif, shown when the phone asks for less movement
+  ///
+  /// In en, this message translates to:
+  /// **'Play GIF'**
+  String get gifPlay;
+
+  /// gifs/gif_picture.dart, gifs/gif_opt_in.dart: under a gif you sent, and a point of the opt-in sheet: the gif went encrypted inside the message, nobody fetched it
+  ///
+  /// In en, this message translates to:
+  /// **'Sent inside your message'**
+  String get gifSentInside;
+
+  /// gifs/gif_opt_in.dart: title of the sheet shown before gif search is turned on
+  ///
+  /// In en, this message translates to:
+  /// **'Search GIFs, privately'**
+  String get gifOptInTitle;
+
+  /// gifs/gif_opt_in.dart: under the title
+  ///
+  /// In en, this message translates to:
+  /// **'GIF search needs the internet, so it stays off until you want it.'**
+  String get gifOptInLead;
+
+  /// gifs/gif_opt_in.dart: first point, on the onion route
+  ///
+  /// In en, this message translates to:
+  /// **'Searched over Tor'**
+  String get gifOptInOverTor;
+
+  /// gifs/gif_opt_in.dart: first point, on the relay and fast routes (no tor there)
+  ///
+  /// In en, this message translates to:
+  /// **'Searched through Kryfo'**
+  String get gifOptInThroughKryfo;
+
+  /// gifs/gif_opt_in.dart: under the first point
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo\'s server asks the GIF service for you. The service never sees you, and the server keeps no record of what you searched.'**
+  String get gifOptInAsksForYou;
+
+  /// gifs/gif_opt_in.dart: under the second point
+  ///
+  /// In en, this message translates to:
+  /// **'The GIF travels encrypted, like a photo. Your friend\'s phone fetches nothing.'**
+  String get gifOptInLikeAPhoto;
+
+  /// gifs/gif_opt_in.dart: third point
+  ///
+  /// In en, this message translates to:
+  /// **'Off whenever you like'**
+  String get gifOptInOffWhenever;
+
+  /// gifs/gif_opt_in.dart: under the third point: where the switch is (the settings screen, its privacy section, the GIF search row: use the same words as those labels)
+  ///
+  /// In en, this message translates to:
+  /// **'Settings, Privacy, GIF search. GIFs on your phone always work without it.'**
+  String get gifOptInWhereToTurnOff;
+
+  /// gifs/gif_opt_in.dart: the main button
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on GIF search'**
+  String get gifTurnOn;
+
+  /// gifs/gif_opt_in.dart: the second button, leaves it off
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get gifNotNow;
+
+  /// stickers/sticker_sheet.dart: a tab of the sticker picker
+  ///
+  /// In en, this message translates to:
+  /// **'GIFs'**
+  String get gifTab;
+
+  /// stickers/sticker_sheet.dart: a tab of the sticker picker: gifs saved on the phone
+  ///
+  /// In en, this message translates to:
+  /// **'On this phone'**
+  String get gifPhoneTab;
+
+  /// gifs/gif_panel.dart: the empty search field
+  ///
+  /// In en, this message translates to:
+  /// **'Search GIFs'**
+  String get gifSearchHint;
+
+  /// gifs/gif_panel.dart: tooltip and screen reader label of the x in the search field
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get gifClear;
+
+  /// gifs/gif_panel.dart: next to the route chip (Onion · 3 hops, Relay · 1 hop, Fast) under the search field
+  ///
+  /// In en, this message translates to:
+  /// **'The GIF service never sees you'**
+  String get gifServiceNeverSeesYou;
+
+  /// gifs/gif_panel.dart: header over the gifs shown while the search field is empty
+  ///
+  /// In en, this message translates to:
+  /// **'Trending'**
+  String get gifTrending;
+
+  /// gifs/gif_panel.dart: tor is not up yet
+  ///
+  /// In en, this message translates to:
+  /// **'Tor is still connecting. GIFs come once it is up.'**
+  String get gifOffline;
+
+  /// gifs/gif_panel.dart: the server is busy
+  ///
+  /// In en, this message translates to:
+  /// **'A lot of searches right now. Try again in a moment.'**
+  String get gifBusy;
+
+  /// gifs/gif_panel.dart: the server did not answer
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t reach Kryfo\'s GIF service.'**
+  String get gifUnreachable;
+
+  /// gifs/gif_panel.dart: a search with no results
+  ///
+  /// In en, this message translates to:
+  /// **'No GIFs found. Try other words.'**
+  String get gifNothingFound;
+
+  /// gifs/gif_panel.dart: at the end of the grid when the next page failed, followed by "Try again"
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load more'**
+  String get gifCouldNotLoadMore;
+
+  /// gifs/gif_panel.dart: screen reader label of the spinner under the grid
+  ///
+  /// In en, this message translates to:
+  /// **'Loading GIFs'**
+  String get gifLoading;
+
+  /// gifs/gif_panel.dart: toast when the picked gif could not be downloaded
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t get that GIF. Try again.'**
+  String get gifCouldNotGet;
+
+  /// gifs/gif_panel.dart: the provider's attribution, as its terms ask. kept in English in every language, like the provider's own mark. brand is GIPHY or Klipy
+  ///
+  /// In en, this message translates to:
+  /// **'Powered by {brand}'**
+  String gifPoweredBy(String brand);
+
+  /// gifs/gif_panel.dart: small line under the attribution. brand is GIPHY or Klipy
+  ///
+  /// In en, this message translates to:
+  /// **'Searched through Kryfo, {brand} never sees you.'**
+  String gifNeverSeesYou(String brand);
+
+  /// gifs/gif_panel.dart: screen reader label of a result in the grid. number is its place, already formatted
+  ///
+  /// In en, this message translates to:
+  /// **'GIF {number}'**
+  String gifTileA11y(String number);
+
+  /// gifs/gif_panel.dart: the On this phone tab
+  ///
+  /// In en, this message translates to:
+  /// **'GIFs saved on this phone. Nothing goes online.'**
+  String get gifPhoneLine;
+
+  /// gifs/gif_panel.dart: button on the On this phone tab, opens the system file picker
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a GIF'**
+  String get gifPhoneChoose;
+
+  /// screens/settings_screen.dart: privacy section row with a switch
+  ///
+  /// In en, this message translates to:
+  /// **'GIF search'**
+  String get settingsGifSearch;
+
+  /// screens/settings_screen.dart: under the GIF search row
+  ///
+  /// In en, this message translates to:
+  /// **'Off until you turn it on. Kryfo\'s server searches for you, so the GIF service never sees you.'**
+  String get settingsGifSearchHint;
 }
 
 class _AppLocalizationsDelegate

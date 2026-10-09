@@ -7715,4 +7715,116 @@ class AppLocalizationsId extends AppLocalizations {
   String lockTooManyTriesFor(Object left) {
     return 'Terlalu banyak percobaan · $left';
   }
+
+  @override
+  String get gifBadge => 'GIF';
+
+  @override
+  String get gifPlay => 'Putar GIF';
+
+  @override
+  String get gifSentInside => 'Dikirim di dalam pesanmu';
+
+  @override
+  String get gifOptInTitle => 'Cari GIF secara privat';
+
+  @override
+  String get gifOptInLead =>
+      'Pencarian GIF butuh internet, jadi tetap mati sampai kamu mau.';
+
+  @override
+  String get gifOptInOverTor => 'Dicari lewat Tor';
+
+  @override
+  String get gifOptInThroughKryfo => 'Dicari lewat Kryfo';
+
+  @override
+  String get gifOptInAsksForYou =>
+      'Server Kryfo bertanya ke layanan GIF untukmu. Layanan itu tidak pernah melihatmu, dan server tidak menyimpan catatan apa yang kamu cari.';
+
+  @override
+  String get gifOptInLikeAPhoto =>
+      'GIF dikirim terenkripsi, seperti foto. Ponsel temanmu tidak mengunduh apa pun.';
+
+  @override
+  String get gifOptInOffWhenever => 'Matikan kapan saja';
+
+  @override
+  String get gifOptInWhereToTurnOff =>
+      'Pengaturan, Privasi, Pencarian GIF. GIF di ponselmu selalu bisa dipakai tanpa itu.';
+
+  @override
+  String get gifTurnOn => 'Nyalakan pencarian GIF';
+
+  @override
+  String get gifNotNow => 'Nanti saja';
+
+  @override
+  String get gifTab => 'GIF';
+
+  @override
+  String get gifPhoneTab => 'Di ponsel ini';
+
+  @override
+  String get gifSearchHint => 'Cari GIF';
+
+  @override
+  String get gifClear => 'Hapus pencarian';
+
+  @override
+  String get gifServiceNeverSeesYou => 'Layanan GIF tidak pernah melihatmu';
+
+  @override
+  String get gifTrending => 'Sedang tren';
+
+  @override
+  String get gifOffline => 'Tor masih menyambung. GIF muncul begitu Tor siap.';
+
+  @override
+  String get gifBusy =>
+      'Terlalu banyak pencarian saat ini. Coba lagi sebentar lagi.';
+
+  @override
+  String get gifUnreachable => 'Tidak bisa menghubungi layanan GIF Kryfo.';
+
+  @override
+  String get gifNothingFound => 'Tidak ada GIF. Coba kata lain.';
+
+  @override
+  String get gifCouldNotLoadMore => 'Tidak bisa memuat lagi';
+
+  @override
+  String get gifLoading => 'Memuat GIF';
+
+  @override
+  String get gifCouldNotGet => 'Tidak bisa mengambil GIF itu. Coba lagi.';
+
+  @override
+  String gifPoweredBy(String brand) {
+    return 'Powered by $brand';
+  }
+
+  @override
+  String gifNeverSeesYou(String brand) {
+    return 'Dicari lewat Kryfo, $brand tidak pernah melihatmu.';
+  }
+
+  @override
+  String gifTileA11y(String number) {
+    return 'GIF $number';
+  }
+
+  @override
+  String get gifPhoneLine =>
+      'GIF yang tersimpan di ponsel ini. Tidak ada yang online.';
+
+  @override
+  String get gifPhoneChoose => 'Pilih GIF';
+
+  @override
+  String get settingsGifSearch => 'Pencarian GIF';
+
+  @override
+  String get settingsGifSearchHint =>
+      'Mati sampai kamu menyalakannya. Server Kryfo mencarikan untukmu, jadi layanan GIF tidak pernah melihatmu.';
 }
