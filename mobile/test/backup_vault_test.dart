@@ -1216,6 +1216,7 @@ void main() {
         'secure',
         'settings',
         'onboardingDone',
+        'catchUp',
         'chunk',
         'files',
       });

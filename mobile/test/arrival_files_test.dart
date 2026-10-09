@@ -254,6 +254,32 @@ void main() {
     expect(await clip.readAsBytes(), [5, 5, 5, 6, 6, 6]);
   });
 
+  test('a sliced file deleted here does not come back slice by slice, and '
+      'is asked for no more', () async {
+    final w = await _World.make();
+    w.live.gone.add((_x, 'clip-gone'));
+    // a slice it had before it went, and the want to finish it
+    w.live.chunks['clip-gone'] = {0: 'AAAA'};
+    w.live.chunkFrom['clip-gone'] = _x;
+    w.live.wants['clip-gone'] = _x;
+    await w.from(
+      _x,
+      await wrapMessage(
+        '',
+        msgUid: 'clip-gone',
+        mediaId: 'clip-gone',
+        chunkIndex: 1,
+        chunkTotal: 2,
+        fileB64: base64Encode([6, 6, 6]),
+        fileName: 'clip.mp4',
+        sender: asSender(_x),
+      ),
+    );
+    expect(w.live.chunks['clip-gone'] ?? const {}, isEmpty);
+    expect(w.live.wants, isNot(contains('clip-gone')));
+    expect(w.live.msgs.where((m) => m['msg_uid'] == 'clip-gone'), isEmpty);
+  });
+
   test('a path stored under the older names keeps its file', () async {
     final w = await _World.make();
     final media = await HaloContainer.everyday.mediaDir();

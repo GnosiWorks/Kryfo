@@ -236,6 +236,73 @@ void main() {
     await world();
   });
 
+  // a stranger's next text, as their phone seals it
+  Future<String> strayNext(
+    _Phone p,
+    String says,
+    String ed,
+    String uid,
+  ) async => p.ss.encryptTo(
+    _me,
+    await wrapMessage(
+      _said,
+      msgUid: uid,
+      powNonce: pow,
+      powBitsUsed: powBits,
+      sender: SenderInfo(haloId: says, edPub: ed, onion: 'o-s', xPub: p.xPub),
+    ),
+  );
+
+  test('copies of a stranger\'s opener off a relay\'s backlog take no '
+      'place on their shelf and change nothing of the request', () async {
+    final stray = await _phone();
+    final ed = _rndHex(32);
+    const id = 'stray-words-here';
+    _idOf[ed] = id;
+    final c = await _opener(stray, id, ed, _said, pow: pow);
+    await app.receiveRelay([(peer: 'firstcontact', cipher: c)]);
+    await _settle();
+    await app.receiveRelay([
+      (peer: stray.xPub, cipher: await strayNext(stray, id, ed, 'u2')),
+    ]);
+    await _settle();
+    final held = live.heldRows[id]?.length ?? 0;
+    final row = {...?live.people[id]};
+    for (var i = 0; i < 2; i++) {
+      live.seen.clear();
+      await app.receiveRelay([(peer: 'firstcontact', cipher: c)]);
+      await _settle();
+    }
+    expect(live.heldRows[id]?.length ?? 0, held);
+    expect(live.people[id], row);
+  });
+
+  test('a copy of a turned-away stranger\'s opener leaves them turned '
+      'away, and tells them nothing', () async {
+    final stray = await _phone();
+    final ed = _rndHex(32);
+    const id = 'stray-words-two';
+    _idOf[ed] = id;
+    final c = await _opener(stray, id, ed, _said, pow: pow);
+    await app.receiveRelay([(peer: 'firstcontact', cipher: c)]);
+    await _settle();
+    final uid =
+        live.msgs.firstWhere((m) => m['peer_id'] == id)['msg_uid'] as String;
+    // declined: the text gone and kept as gone, the row parked
+    live.msgs.removeWhere((m) => m['peer_id'] == id);
+    live.gone.add((id, uid));
+    live.people[id]!['archived'] = 1;
+    live.people[id]!['accepted'] = 0;
+    final row = {...live.people[id]!};
+    live.seen.clear();
+    engineAsked.clear();
+    await app.receiveRelay([(peer: 'firstcontact', cipher: c)]);
+    await _settle();
+    expect(live.people[id], row);
+    expect(live.msgs.where((m) => m['peer_id'] == id), isEmpty);
+    expect(engineAsked.where(_sends.contains), isEmpty);
+  });
+
   test('a first contact under a contact\'s name with another key leaves '
       'the contact as it was', () async {
     final other = await _phone();
@@ -301,6 +368,146 @@ void main() {
     expect(
       live.msgs.where((m) => m['peer_id'] == _amber).single,
       containsPair('plaintext', 'from amber'),
+    );
+  });
+
+  test(
+    'an opener that comes again off a relay is a copy: the session '
+    'as it runs stays, nothing shows twice, and what follows opens',
+    () async {
+      final c = await _opener(amber, _amber, amberEd, 'opened once');
+      await app.receiveRelay([(peer: amber.xPub, cipher: c)]);
+      await _settle();
+      // a turn each way: the session moves on past the opener
+      expect(
+        await _reads(amber.ss, await signalSession.encryptTo(_amber, 'back')),
+        'back',
+      );
+      final turned = await amber.ss.encryptTo(
+        _me,
+        await wrapMessage(
+          'a turn',
+          msgUid: 'u-turn',
+          sender: SenderInfo(
+            haloId: _amber,
+            edPub: amberEd,
+            onion: 'o-amber',
+            xPub: amber.xPub,
+          ),
+        ),
+      );
+      await app.receiveRelay([(peer: amber.xPub, cipher: turned)]);
+      await _settle();
+      final mine = live.msgs.where((m) => m['peer_id'] == _amber).length;
+      final addr = SignalProtocolAddress(_amber, 1);
+      final before = (await signalSession.sessionStore.loadSession(
+        addr,
+      )).serialize();
+      // a fresh install walks the relay's backlog, its seen marks gone,
+      // and the opener comes again
+      live.seen.clear();
+      await app.receiveRelay([(peer: amber.xPub, cipher: c)]);
+      await _settle();
+      expect(
+        (await signalSession.sessionStore.loadSession(addr)).serialize(),
+        before,
+      );
+      expect(live.msgs.where((m) => m['peer_id'] == _amber).length, mine);
+      // what she writes next still opens
+      final next = await amber.ss.encryptTo(
+        _me,
+        await wrapMessage(
+          'after the copy',
+          msgUid: 'u-after',
+          sender: SenderInfo(
+            haloId: _amber,
+            edPub: amberEd,
+            onion: 'o-amber',
+            xPub: amber.xPub,
+          ),
+        ),
+      );
+      await app.receiveRelay([(peer: amber.xPub, cipher: next)]);
+      await _settle();
+      expect(
+        live.msgs
+            .where((m) => m['peer_id'] == _amber)
+            .map((m) => m['plaintext']),
+        contains('after the copy'),
+      );
+    },
+  );
+
+  test('a second opener held up on a relay while the chat moved on is '
+      'still read, and the session runs on both ways', () async {
+    final first = await _opener(amber, _amber, amberEd, 'one');
+    // sent before she heard back: the same start, the next number
+    final second = await amber.ss.encryptTo(
+      _me,
+      await wrapMessage(
+        'two, late',
+        msgUid: 'u-late',
+        sender: SenderInfo(
+          haloId: _amber,
+          edPub: amberEd,
+          onion: 'o-amber',
+          xPub: amber.xPub,
+        ),
+      ),
+    );
+    await app.receiveRelay([(peer: amber.xPub, cipher: first)]);
+    await _settle();
+    // turns each way, more than the chains a session keeps
+    for (var i = 0; i < 6; i++) {
+      expect(
+        await _reads(amber.ss, await signalSession.encryptTo(_amber, 'r$i')),
+        'r$i',
+      );
+      final back = await amber.ss.encryptTo(
+        _me,
+        await wrapMessage(
+          'b$i',
+          msgUid: 'u-b$i',
+          sender: SenderInfo(
+            haloId: _amber,
+            edPub: amberEd,
+            onion: 'o-amber',
+            xPub: amber.xPub,
+          ),
+        ),
+      );
+      await app.receiveRelay([(peer: amber.xPub, cipher: back)]);
+      await _settle();
+    }
+    await app.receiveRelay([(peer: amber.xPub, cipher: second)]);
+    await _settle();
+    expect(
+      live.msgs.where((m) => m['peer_id'] == _amber).map((m) => m['plaintext']),
+      contains('two, late'),
+    );
+    // and the session runs on both ways
+    expect(
+      await _reads(amber.ss, await signalSession.encryptTo(_amber, 'on')),
+      'on',
+    );
+    final after = await amber.ss.encryptTo(
+      _me,
+      await wrapMessage(
+        'still here',
+        msgUid: 'u-still',
+        sender: SenderInfo(
+          haloId: _amber,
+          edPub: amberEd,
+          onion: 'o-amber',
+          xPub: amber.xPub,
+        ),
+      ),
+    );
+    await app.receiveRelay([(peer: amber.xPub, cipher: after)]);
+    await _settle();
+    expect(
+      live.msgs.where((m) => m['peer_id'] == _amber).map((m) => m['plaintext']),
+      contains('still here'),
     );
   });
 

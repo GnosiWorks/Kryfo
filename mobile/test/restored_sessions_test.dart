@@ -22,6 +22,7 @@ import 'package:kryfo/main.dart'
         AppIo,
         AppState,
         HaloDb,
+        heldWire,
         kFrameReaction,
         kFrameReceipt,
         makePreKeyBundleB64,
@@ -696,7 +697,7 @@ void main() {
     expect(unwrapMessage(at.whereType<String>().last).message, 'waits');
   });
 
-  test('asked again within ten minutes, nothing goes again', () async {
+  test('asked again within two minutes, nothing goes again', () async {
     final p = await _peer();
     await contact(p);
     await talk(p);
@@ -836,15 +837,25 @@ void main() {
     var ss = await start();
     await processPeerBundle(p.name, p.card, into: ss);
     await ss.markRestored();
-    const hour = 3600 * 1000;
+    const minute = 60 * 1000;
+    const hour = 60 * minute;
     expect(await ss.askDue(p.name, 0), isTrue);
+    // soon at first: someone restoring in the same hour has their card
+    // out by the next ask
     await ss.noteAsked(p.name, 0);
     ss = await start();
-    expect(await ss.askDue(p.name, hour - 1), isFalse);
-    expect(await ss.askDue(p.name, hour), isTrue);
-    await ss.noteAsked(p.name, hour);
-    expect(await ss.askDue(p.name, 2 * hour), isFalse);
-    expect(await ss.askDue(p.name, 3 * hour), isTrue);
+    expect(await ss.askDue(p.name, 10 * minute - 1), isFalse);
+    expect(await ss.askDue(p.name, 10 * minute), isTrue);
+    await ss.noteAsked(p.name, 10 * minute);
+    expect(await ss.askDue(p.name, 40 * minute - 1), isFalse);
+    expect(await ss.askDue(p.name, 40 * minute), isTrue);
+    // then an hour doubling, never more than a week
+    await ss.noteAsked(p.name, 40 * minute);
+    expect(await ss.askDue(p.name, 100 * minute - 1), isFalse);
+    expect(await ss.askDue(p.name, 100 * minute), isTrue);
+    await ss.noteAsked(p.name, 100 * minute);
+    expect(await ss.askDue(p.name, 220 * minute), isTrue);
+    expect(SignalSession.askWait(30), const Duration(days: 7));
 
     expect(await ss.dropRestoredWhenDone(), isFalse);
     expect(ss.hasRestored, isTrue);
@@ -861,7 +872,7 @@ void main() {
   });
 
   test('a text waiting on their card asks once, and tries again as they '
-      'are asked again, an hour on', () async {
+      'are asked again, ten minutes on', () async {
     final p = await _peer();
     await contact(p, card: false);
     await talk(p);
@@ -884,8 +895,9 @@ void main() {
     expect(app.outboxTriesForTest('w1'), 0);
     expect(
       app.outboxNextAtForTest('w1'),
-      greaterThanOrEqualTo(t0 + 3600 * 1000),
+      greaterThanOrEqualTo(t0 + 10 * 60 * 1000),
     );
+    expect(app.outboxNextAtForTest('w1'), lessThan(t0 + 11 * 60 * 1000));
 
     // a start after this one tries at once, and asks nothing before it is due
     final again = AppState(io: io, router: router)
@@ -1121,6 +1133,66 @@ void main() {
     await rows.deleteMessage('twice');
     expect(await rows.goneFrom(p.name, 'twice'), isTrue);
     expect(await rows.goneFrom(q.name, 'twice'), isTrue);
+  });
+
+  test('what went here is known for as long as the relays keep it: a '
+      'deleted text, a turned-away request, a chat deleted whole', () async {
+    final p = await _peer();
+    final q = await _peer();
+    final now = DateTime.now().millisecondsSinceEpoch;
+    const day = 86400000;
+    Future<void> put(String peer, String uid, int ago) =>
+        mem.insert('messages', {
+          'peer_id': peer,
+          'direction': 'in',
+          'plaintext': uid,
+          'sent_at': now - ago,
+          'msg_uid': uid,
+          'sent': 1,
+        });
+    // ten days old: within the relays' fortnight
+    await put(p.name, 'old', 10 * day);
+    await rows.deleteMessage('old');
+    expect(await rows.goneFrom(p.name, 'old'), isTrue);
+    // a request turned away, with a text the cap held as it opened
+    await put(q.name, 'asked', day);
+    await mem.insert('held_onion', {
+      'peer_id': q.name,
+      'cipher': heldWire(
+        await wrapMessage(
+          'held',
+          msgUid: 'held-one',
+          sender: SenderInfo(haloId: q.name, edPub: '', onion: '', xPub: ''),
+        ),
+      ),
+      'at': now,
+    });
+    await rows.declineRequest(q.name);
+    expect(await rows.goneFrom(q.name, 'asked'), isTrue);
+    expect(await rows.goneFrom(q.name, 'held-one'), isTrue);
+    // a chat deleted whole
+    await put(p.name, 'whole', 12 * day);
+    await rows.deleteAllOf(p.name);
+    expect(await rows.goneFrom(p.name, 'whole'), isTrue);
+    // past the relays' fortnight and a day, nothing can bring one back
+    await put(p.name, 'ancient', 17 * day);
+    await rows.deleteMessage('ancient');
+    expect(await rows.goneFrom(p.name, 'ancient'), isFalse);
+    // a mark is good for the fortnight and a day, then goes
+    await mem.update(
+      'gone_in',
+      {'at': now - 14 * day},
+      where: 'msg_uid = ?',
+      whereArgs: ['old'],
+    );
+    expect(await rows.goneFrom(p.name, 'old'), isTrue);
+    await mem.update(
+      'gone_in',
+      {'at': now - 16 * day},
+      where: 'msg_uid = ?',
+      whereArgs: ['old'],
+    );
+    expect(await rows.goneFrom(p.name, 'old'), isFalse);
   });
 
   test('a verified contact whose key moved: their texts wait without a '

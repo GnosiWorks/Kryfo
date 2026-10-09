@@ -242,12 +242,26 @@ class SignalSession {
 
   /// [peer] holds a session that came back with a restore and is due an
   /// ask to start afresh: never asked, or the wait since the last ask is
-  /// over. the wait doubles from an hour up to a week for someone who
-  /// never answers
+  /// over. the wait grows to a week for someone who never answers
+  /// (askWait)
   Future<bool> askDue(String peer, int now) async {
     final at = await askDueAt(peer);
     return at != null && now >= at;
   }
+
+  /// how long after the [asks]th ask the next is due: soon at first, as
+  /// someone restoring in the same hour may not have their card out yet
+  /// when the first goes, then an hour doubling to a week
+  static Duration askWait(int asks) => switch (asks) {
+    <= 1 => const Duration(minutes: 10),
+    2 => const Duration(minutes: 30),
+    _ => Duration(
+      milliseconds: min(
+        const Duration(hours: 1).inMilliseconds << min(asks - 3, 8),
+        const Duration(days: 7).inMilliseconds,
+      ),
+    ),
+  };
 
   /// when [peer] is next due an ask to start afresh, 0 when never asked.
   /// null when no session of theirs came back with a restore
@@ -256,11 +270,7 @@ class SignalSession {
     if (base == null) return null;
     final a = _asks[base];
     if (a == null) return 0;
-    final wait = min(
-      const Duration(hours: 1).inMilliseconds << min(a[1] - 1, 8),
-      const Duration(days: 7).inMilliseconds,
-    );
-    return a[0] + wait;
+    return a[0] + askWait(a[1]).inMilliseconds;
   }
 
   /// [peer] was asked to start afresh at [now], written down so a start

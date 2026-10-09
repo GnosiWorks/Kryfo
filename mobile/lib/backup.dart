@@ -307,6 +307,9 @@ Future<void> landV1Payload(
     }
 
     await restorePrefs(payload['prefs']);
+    // a v1 file carries no catch-up: the relays are read again whole
+    await _holdRelays();
+    await landCatchUpAnchors(docsDir.path, null);
     await _livesHereNow();
 
     // a v1 backup carries none of these; what is here is the old identity's
@@ -829,6 +832,8 @@ Future<BackupDraft> draftBackup(
   final docs = (await getApplicationDocumentsDirectory()).path;
   final id = side.identity();
   if (id.ed.isEmpty || id.x.isEmpty) throw BackupError('identity not loaded');
+  // read before the database is copied: no anchor is past what it holds
+  var catchUp = await catchUpAnchors(docs);
   final dbKey = await _secureStorage.read(key: _kDbPassphrase);
   if (dbKey == null) throw BackupError('db passphrase missing');
   final prefs = await SharedPreferences.getInstance();
@@ -859,6 +864,9 @@ Future<BackupDraft> draftBackup(
   await side.settleBurns(dbCopy, dbKey, at);
   if (!hidden) {
     final people = await side.scrub(dbCopy, dbKey);
+    // a file without its hidden chats names none of their addresses: with
+    // any left out it carries no anchors, and the restore reads it all
+    if (people.isNotEmpty) catchUp = const {};
     final fc = secure['peer_fc'];
     if (fc != null && people.isNotEmpty) {
       try {
@@ -897,6 +905,7 @@ Future<BackupDraft> draftBackup(
     'secure': secure,
     'settings': settings,
     'onboardingDone': onboardingDone,
+    'catchUp': catchUp,
     'chunk': kBackupChunk,
     'files': [for (final f in files) f.toJson()],
     if (hidden) 'vault': {'key': key},
@@ -1062,6 +1071,8 @@ Future<BackupDraft> _draftQuiet(
     'secure': <String, String>{},
     // the decoy's own settings, and the phone's as the decoy sees them
     'settings': await readCarriedSettings(c),
+    // as an account's own file has it: a decoy reads no relays
+    'catchUp': const <String, int>{},
     'onboardingDone': 'true',
     'chunk': kBackupChunk,
     'files': [for (final f in files) f.toJson()],
@@ -1661,6 +1672,8 @@ Future<void> restoreBackupFile(
       value: manifest['dbPassphrase'] as String,
     );
     await restorePrefs(manifest['prefs']);
+    await _holdRelays();
+    await landCatchUpAnchors(docs.path, manifest['catchUp']);
     // in place before the restart reads them
     _restoredSettings = await landCarriedSettings(
       manifest['settings'],
@@ -1679,4 +1692,60 @@ Future<void> restoreBackupFile(
   });
   if (quiet) return;
   dlog('backup: restored identity from a v2 file');
+}
+
+/// the engine's catch-up anchors, by file: how far each address of this
+/// phone has read its relays, in seconds. one still owing its backlog (0)
+/// or not readable is left out, so the new phone reads that one whole
+@visibleForTesting
+Future<Map<String, int>> catchUpAnchors(String docs) async {
+  final out = <String, int>{};
+  try {
+    await for (final e in Directory(docs).list()) {
+      final name = p.basename(e.path);
+      if (!_kAnchorName.hasMatch(name)) continue;
+      final v = int.tryParse((await File(e.path).readAsString()).trim());
+      if (v != null && v > 0) out[name] = v;
+    }
+  } catch (e) {
+    dlog('backup: catch-up not read (${e.runtimeType})');
+  }
+  return out;
+}
+
+final _kAnchorName = RegExp(r'^nostr_last_[0-9a-f]{1,16}$');
+
+// the relays let go before a restore rewrites their anchors: a reader
+// still running would write its own back. the app starts again after
+Future<void> _holdRelays() async {
+  try {
+    await engine.wipeHold();
+  } catch (e) {
+    dlog('backup: relays not held (${e.runtimeType})');
+  }
+}
+
+/// a restore's catch-up: what this folder held of the relays goes, the
+/// marks of what was read with it, and each address starts where the phone
+/// the backup came from had read it. one the file does not name, or a file
+/// from before this was carried, reads its relays whole: nothing is missed,
+/// and the uid checks take what comes twice
+@visibleForTesting
+Future<void> landCatchUpAnchors(String docs, Object? carried) async {
+  try {
+    await for (final e in Directory(docs).list()) {
+      final name = p.basename(e.path);
+      if (name.startsWith('nostr_last_') || name.startsWith('nostr_seen_')) {
+        await e.delete();
+      }
+    }
+  } catch (e) {
+    dlog('backup: catch-up not cleared (${e.runtimeType})');
+  }
+  if (carried is! Map) return;
+  for (final MapEntry(:key, :value) in carried.entries) {
+    if (key is! String || !_kAnchorName.hasMatch(key)) continue;
+    if (value is! int || value <= 0) continue;
+    await File(p.join(docs, key)).writeAsString('$value', flush: true);
+  }
 }

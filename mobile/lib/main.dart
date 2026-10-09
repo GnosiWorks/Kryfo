@@ -2556,7 +2556,7 @@ class HaloDb implements GroupOwedStore {
     final files = await d.transaction((t) async {
       final rows = await t.query(
         'messages',
-        columns: ['msg_uid', ..._kFileCols],
+        columns: [..._kFileCols, ..._kUnreadCols, ..._kGoneCols],
         where: _kOneToOne,
         whereArgs: [haloId],
       );
@@ -2566,6 +2566,26 @@ class HaloDb implements GroupOwedStore {
           await t.delete('reactions', where: 'msg_uid = ?', whereArgs: [uid]);
         }
       }
+      // turned away, they stay away: a resend or the relays bring none
+      // back, the ones the cap held either
+      final held = await t.query(
+        'held_onion',
+        columns: ['cipher', 'at'],
+        where: 'peer_id = ?',
+        whereArgs: [haloId],
+      );
+      await _noteGone(t, [
+        ...rows,
+        for (final h in held)
+          if (heldWireOf(h['cipher'] as String) case final w?)
+            if (unwrapMessage(w).msgUid case final uid?)
+              {
+                'msg_uid': uid,
+                'peer_id': haloId,
+                'direction': 'in',
+                'sent_at': h['at'],
+              },
+      ]);
       await t.delete('messages', where: _kOneToOne, whereArgs: [haloId]);
       await t.delete('held_onion', where: 'peer_id = ?', whereArgs: [haloId]);
       await _dropFilesComingFrom(t, haloId);
@@ -3304,6 +3324,7 @@ class HaloDb implements GroupOwedStore {
           await t.delete('reactions', where: 'msg_uid = ?', whereArgs: [uid]);
         }
       }
+      await _noteGone(t, rows);
       await t.delete('messages', where: _kOneToOne, whereArgs: [chatId]);
     });
     await _scrubMedia(rows);
@@ -3336,8 +3357,9 @@ class HaloDb implements GroupOwedStore {
   static const _kGoneCols = ['msg_uid', 'sent_at'];
 
   // how long one that came in and went is known by its uid: as far back
-  // as a resend reaches
-  static const kGoneFor = Duration(days: 7);
+  // as a resend reaches, and our relay's fortnight, which a fresh install
+  // after a restore reads again. other relays keep what they choose
+  static const kGoneFor = Duration(days: 15);
 
   // the 1:1 rows of these that came in, kept by uid as they go. only what
   // a resend could still bring: sent within kGoneFor and a day for clocks
@@ -3724,6 +3746,15 @@ class HaloDb implements GroupOwedStore {
       ]),
     );
     if ((n ?? 0) >= 20) return;
+    // a copy of one held already (off a relay's backlog) is held once
+    final had = await db.query(
+      'held_onion',
+      columns: ['id'],
+      where: 'peer_id = ? AND cipher = ?',
+      whereArgs: [peerId, cipher],
+      limit: 1,
+    );
+    if (had.isNotEmpty) return;
     await db.insert('held_onion', {
       'peer_id': peerId,
       'cipher': cipher,
@@ -6074,7 +6105,7 @@ Future<void> upgradeTo64(DatabaseExecutor db, int oldV) async {
   if (oldV >= 64) return;
   // what someone blocked sent while it held, and when it held
   await blockTables(db, seed: true);
-  // what came in and went, known by its uid and sender for a week
+  // what came in and went, known by its uid and sender (kGoneFor)
   await _goneTable(db);
 }
 
@@ -6156,7 +6187,7 @@ String? groupUnsendOf(Object? ctl) {
   }
 }
 
-// a 1:1 message that came in and burned or was deleted here, for a week.
+// a 1:1 message that came in and burned or was deleted here (kGoneFor).
 // a copy sent again, after a restore on the far side say, is known by its
 // uid and sender: acked again and never shown again
 Future<void> _goneTable(DatabaseExecutor db) async {
@@ -6597,6 +6628,7 @@ Future<String?> signalDecrypt(
     dlog('signalDecrypt: duplicate from $peerId, dropped');
     // store-and-forward re-delivers, so a duplicate is expected. the
     // original already decrypted.
+    _noteOpenedBefore(wireB64);
     return null;
   } on UntrustedIdentityException catch (_) {
     // known peer's identity key no longer matches: reinstall or mitm. only
@@ -6621,6 +6653,20 @@ Future<String?> signalDecrypt(
     return null;
   }
 }
+
+// wires a decrypt found opened before: a copy is no sign the sessions went
+// apart, and nobody is asked to start afresh over one
+final _openedBefore = <String>{};
+
+void _noteOpenedBefore(String wireB64) {
+  _openedBefore.add(sha256.convert(utf8.encode(wireB64)).toString());
+  while (_openedBefore.length > 64) {
+    _openedBefore.remove(_openedBefore.first);
+  }
+}
+
+bool _takeOpenedBefore(String wireB64) =>
+    _openedBefore.remove(sha256.convert(utf8.encode(wireB64)).toString());
 
 int _outboxGrind(String seed) => grindPow(seed, powBits);
 
@@ -7474,8 +7520,7 @@ class AppIo {
         dlog('back-pair: a name bound to another key, filed on its own');
       }
       // move session from temp to where it is filed
-      final realAddr = SignalProtocolAddress(at, 1);
-      await signalSession.sessionStore.storeSession(realAddr, record);
+      await keepOpenedSession(SignalProtocolAddress(at, 1), record);
       await signalSession.sessionStore.deleteSession(tempAddr);
       return (haloId: at, plain: plain, env: env);
     } catch (e) {
@@ -7533,6 +7578,32 @@ class AppIo {
       clearMessageNotification(msgUid);
 }
 
+// an opener's session filed at [addr]. a record already there is kept: an
+// opener it took before (a copy off a relay's backlog after a restore, or
+// a second one sent before they heard back) leaves it as it runs, its text
+// still handed on for the uid checks to know. a new one goes in front of it
+// as a fresh start does, the states before it kept behind
+Future<void> keepOpenedSession(
+  SignalProtocolAddress addr,
+  SessionRecord record,
+) async {
+  final store = signalSession.sessionStore;
+  await signalSession.serial<void>(addr.getName(), () async {
+    if (!await store.containsSession(addr)) {
+      await store.storeSession(addr, record);
+      return;
+    }
+    final held = await store.loadSession(addr);
+    final st = record.sessionState;
+    if (held.hasSessionState(st.getSessionVersion(), st.aliceBaseKey)) {
+      dlog('back-pair: an opener held already, the session kept');
+      return;
+    }
+    held.promoteState(st);
+    await store.storeSession(addr, held);
+  });
+}
+
 // a first contact's session moved off a name a hidden chat binds to
 // another key, onto the sender's own id. a name with a trusted key was
 // settled when it opened, and stays. null when it cannot be moved
@@ -7551,10 +7622,8 @@ Future<String?> _refileFirstContact(String h) async {
       row: live.getContact,
     );
     if (held != null && !_eqBytes(held, key)) return null;
-    await signalSession.sessionStore.storeSession(
-      SignalProtocolAddress(at, 1),
-      record,
-    );
+    // kept as any opener's is: one held there already is not run over
+    await keepOpenedSession(SignalProtocolAddress(at, 1), record);
     return at;
   } catch (e) {
     dlog('back-pair: not refiled ($e)');
@@ -7849,6 +7918,12 @@ class AppState extends ChangeNotifier {
         await d.dropMediaWant(mid);
         continue;
       }
+      // one that went here is asked for no more
+      if (await d.goneFrom(peer, mid)) {
+        await d.dropMediaWant(mid);
+        await d.dropMediaChunks(mid, from: peer);
+        continue;
+      }
       final have = await d.heldSlices(mid);
       final ask = shouldAskNow(
         now: now,
@@ -8039,8 +8114,8 @@ class AppState extends ChangeNotifier {
       unawaited(
         _drainOne(r, d).whenComplete(() async {
           // waiting on their card is no failed try: it goes the moment the
-          // card is here, and until then it tries as they are asked again,
-          // an hour apart doubling to a week
+          // card is here, and until then it tries as they are asked again
+          // (SignalSession.askWait)
           if (peer != null && _waitingCard.contains(peer)) {
             var due = 0;
             try {
@@ -10675,8 +10750,10 @@ class AppState extends ChangeNotifier {
       if (_inflightUids.contains(mid)) return to;
       // a slice of a file already put together: the sender went round
       // again. buffering it would start a copy that never finishes. one
-      // receipt per pass, on the first slice, so the sender can stop.
-      if (await db.messageExists(mid)) {
+      // receipt per pass, on the first slice, so the sender can stop. one
+      // that went here, deleted or burned, stays gone the same way
+      final gone = !isGroup && await db.goneFrom(senderHaloId, mid);
+      if (gone || await db.messageExists(mid)) {
         if (!isGroup &&
             !unsealing &&
             (env.chunkIndex ?? 0) == 0 &&
@@ -10684,6 +10761,7 @@ class AppState extends ChangeNotifier {
           unawaited(_sendDeliveryReceipt(senderHaloId, mid));
         }
         unawaited(db.dropMediaWant(mid));
+        if (gone) await db.dropMediaChunks(mid, from: senderHaloId);
         return to;
       }
       // slices land on disk as they arrive and the count is over rows, so a
@@ -12866,8 +12944,10 @@ class AppState extends ChangeNotifier {
   // how far back an ask to start afresh puts undelivered texts out again
   static const _kResendWindow = Duration(days: 7);
   // and how often, per person: each ask is a fresh wrap, and a phone that
-  // cannot open what we send asks again on every text
-  static const _kResendGap = Duration(minutes: 10);
+  // cannot open what we send asks again on every text, a minute apart at
+  // most. short, so a text written just after the first ask goes with the
+  // next one rather than ten minutes on
+  static const _kResendGap = Duration(minutes: 2);
   final Map<String, int> _resentAt = {};
   final Map<String, int> _owedSealedAt = {};
 
@@ -12959,6 +13039,20 @@ class AppState extends ChangeNotifier {
         h = at;
       }
       final to = _routeOf(h, null);
+      // a copy of one here or one that went (off a relay's backlog, say):
+      // the row stays as it is, a request turned away stays turned away,
+      // and only someone accepted hears again that it came
+      final uid = env.msgUid;
+      if (uid != null && (to == RouteTo.everyday || to == RouteTo.vault)) {
+        final db = to == RouteTo.vault ? _openVault! : live;
+        final have = await db.messageExists(uid);
+        if (have || await db.goneFrom(h, uid)) {
+          if (have && await db.isAccepted(h)) {
+            unawaited(_sendDeliveryReceipt(h, uid));
+          }
+          return (h, RouteTo.dropped);
+        }
+      }
       // persist contact + nostr sub. a stranger who back-paired to us lands
       // unaccepted: their message waits in requests until we accept. while
       // the vault is shut its people are filed when it opens
@@ -13497,8 +13591,18 @@ class AppState extends ChangeNotifier {
         _strikeUndecryptable(h, 'nostr');
         // on the lane of someone we hold a session with: theirs and ours
         // have gone apart, a restore on one side say. they are asked to
-        // start afresh, and they put again what never came back delivered
-        if (haloId != null && !fcLane) unawaited(_askToStartAfresh(haloId));
+        // start afresh, and they put again what never came back delivered.
+        // a copy of one opened before is mostly a relay's backlog, so it
+        // asks at most every half hour: a phone from before the ask (0.4.2)
+        // that restored still heals, and a backlog does not ask on each
+        if (haloId != null && !fcLane) {
+          final now = DateTime.now().millisecondsSinceEpoch;
+          final copy = _takeOpenedBefore(m.cipher);
+          if (!copy || now - (_copyAskedAt[haloId] ?? 0) >= _kCopyAskGap) {
+            if (copy) _copyAskedAt[haloId] = now;
+            unawaited(_askToStartAfresh(haloId));
+          }
+        }
       }
       if (shown) arrived();
       return;
@@ -14923,7 +15027,7 @@ class AppState extends ChangeNotifier {
       }
     }
     _waitingCard.add(peer);
-    // asked as the pass asks, an hour apart doubling to a week: a seal
+    // asked as the pass asks (SignalSession.askWait): a seal
     // tried again in between asks nothing
     final now = DateTime.now().millisecondsSinceEpoch;
     if (!_asking.containsKey(peer) && await signalSession.askDue(peer, now)) {
@@ -14947,6 +15051,10 @@ class AppState extends ChangeNotifier {
           .whenComplete(() {
             _asking.remove(peer);
           });
+
+  // when a copy of a text opened before last asked someone to start afresh
+  final Map<String, int> _copyAskedAt = {};
+  static const _kCopyAskGap = 30 * 60 * 1000;
 
   // when a pass last looked for people to ask to start afresh with us. a
   // restore brought back sessions their side has gone past: ours is not

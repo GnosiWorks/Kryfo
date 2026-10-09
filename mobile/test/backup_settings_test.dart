@@ -185,6 +185,13 @@ const _defaults = {
   Carried.delivery: 'always',
 };
 
+// a phone with hidden chats, backed up without them
+class _HiddenLeftOut extends _Side {
+  const _HiddenLeftOut();
+  @override
+  Future<Set<String>> scrub(String copy, String key) async => {'kept-apart'};
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late Directory root;
@@ -340,6 +347,75 @@ void main() {
         (m['settings'] as Map).keys.toSet(),
         _everydaySettings.keys.toSet(),
       );
+    });
+
+    test('restored, each address reads its relays from where the old phone '
+        'had, and nothing of this phone\'s reading is left', () async {
+      oldPhone();
+      // the engine's anchors on the old phone, one still owing its backlog
+      put('nostr_last_aaaaaaaaaaaaaaaa', '1791400000');
+      put('nostr_last_bbbbbbbbbbbbbbbb', '1791500000\n');
+      put('nostr_last_cccccccccccccccc', '0');
+      put('nostr_seen_aaaaaaaaaaaaaaaa', 'ids');
+      final d = await draftBackup(stage, side: const _Side());
+      expect(d.manifest['catchUp'], {
+        'nostr_last_aaaaaaaaaaaaaaaa': 1791400000,
+        'nostr_last_bbbbbbbbbbbbbbbb': 1791500000,
+      });
+      final out = await write(d.manifest, d.sources);
+      newPhone();
+      // what this phone had read, of another identity or a later time
+      for (final f in Directory(docs).listSync()) {
+        if (p.basename(f.path).startsWith('nostr_')) f.deleteSync();
+      }
+      put('nostr_last_dddddddddddddddd', '1799999999');
+      put('nostr_seen_dddddddddddddddd', 'ids');
+      await restore(out, inDecoy: false);
+      final left = {
+        for (final f in Directory(docs).listSync())
+          if (p.basename(f.path).startsWith('nostr_'))
+            p.basename(f.path): File(f.path).readAsStringSync(),
+      };
+      expect(left, {
+        'nostr_last_aaaaaaaaaaaaaaaa': '1791400000',
+        'nostr_last_bbbbbbbbbbbbbbbb': '1791500000',
+      });
+    });
+
+    test('a file that leaves hidden chats out names none of their '
+        'addresses: it carries no anchors', () async {
+      oldPhone();
+      put('nostr_last_aaaaaaaaaaaaaaaa', '1791400000');
+      final d = await draftBackup(stage, side: const _HiddenLeftOut());
+      expect(d.manifest['catchUp'], isEmpty);
+      final with_ = await draftBackup(stage, side: const _Side());
+      expect(with_.manifest['catchUp'], isNotEmpty);
+    });
+
+    test('a file without anchors, or with odd ones, leaves every address to '
+        'read its relays whole', () async {
+      put('nostr_last_eeeeeeeeeeeeeeee', '1790000000');
+      put('nostr_seen_eeeeeeeeeeeeeeee', 'ids');
+      await landCatchUpAnchors(docs, null);
+      expect(
+        Directory(
+          docs,
+        ).listSync().where((f) => p.basename(f.path).startsWith('nostr_')),
+        isEmpty,
+      );
+      await landCatchUpAnchors(docs, {
+        '../escape': 5,
+        'nostr_last_zz': 5,
+        'nostr_last_ffffffffffffffff': 'soon',
+        'nostr_last_9999999999999999': -1,
+      });
+      expect(
+        Directory(
+          docs,
+        ).listSync().where((f) => p.basename(f.path).startsWith('nostr_')),
+        isEmpty,
+      );
+      expect(File(p.join(root.path, 'escape')).existsSync(), isFalse);
     });
 
     test('restored on a new phone brings every setting back before the '
