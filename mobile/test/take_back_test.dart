@@ -243,6 +243,61 @@ void main() {
       expect(live.reactions['g9'], {_eve: '🎉'});
     });
 
+    Future<String> edit(String who, String uid, String text) => wrapMessage(
+      '',
+      edit: EditFrame(targetUid: uid, newText: text),
+      sender: asSender(who),
+    );
+    Future<String> react(String who, String uid, String emoji) => wrapMessage(
+      '',
+      reaction: ReactionFrame(targetUid: uid, emoji: emoji),
+      sender: asSender(who),
+    );
+
+    test('the last of a burst of early edits is the one that shows, in the '
+        'chat and the shade', () async {
+      for (var i = 0; i < 40; i++) {
+        await from(_bob, await edit(_bob, 'b1', 'take $i'));
+      }
+      await from(_bob, await said(_bob, 'b1'));
+      expect(live.msg('b1')!['plaintext'], 'take 39');
+      expect(io.shown.last.$2, 'take 39');
+    });
+
+    test('early frames keep to a size, and one sender keeps to a share of '
+        'it', () async {
+      await from(_eve, await react(_eve, 'e0', '👍'));
+      for (var i = 0; i < 70; i++) {
+        await from(_bob, await react(_bob, 'r$i', '🎉'));
+      }
+      for (final uid in ['e0', 'r0', 'r69']) {
+        await from(
+          uid == 'e0' ? _eve : _bob,
+          await said(uid == 'e0' ? _eve : _bob, uid),
+        );
+      }
+      expect(live.reactions['e0'], {_eve: '👍'});
+      expect(live.reactions['r0'], isNull);
+      expect(live.reactions['r69'], {_bob: '🎉'});
+      // big ones: the oldest go first
+      final big = 'x' * 20000;
+      for (var i = 0; i < 60; i++) {
+        await from(_eve, await edit(_eve, 'big$i', '$big $i'));
+      }
+      await from(_eve, await said(_eve, 'big0'));
+      await from(_eve, await said(_eve, 'big59'));
+      expect(live.msg('big0')!['plaintext'], 'call me');
+      expect(live.msg('big59')!['plaintext'], '$big 59');
+    });
+
+    test('a stranger\'s early frame is not kept for their message', () async {
+      live.person('stray-one-here', accepted: 0, backPaired: 0);
+      await from('stray-one-here', await react('stray-one-here', 's1', '👍'));
+      await from('stray-one-here', await said('stray-one-here', 's1'));
+      expect(live.msg('s1'), isNotNull);
+      expect(live.reactions['s1'], isNull);
+    });
+
     test('in a group: one taken back late goes, one taken back before it '
         'came never lands, and only its sender takes it back', () async {
       live.group(_g, ['me', _bob, _eve]);

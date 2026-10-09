@@ -7840,10 +7840,10 @@ class _FirstOpen {
 
 // a frame that came before the message it names, as it came
 typedef _Early = ({
+  String uid,
   HaloDb db,
   HaloDb? into,
   String sender,
-  UnwrappedMessage env,
   String wire,
   int? arrivedAt,
   int? wrappedAt,
@@ -7960,46 +7960,84 @@ class AppState extends ChangeNotifier {
             _kTakenBackFor.inMilliseconds;
   }
 
-  // edits, reactions and pins that came before the message they name, by
-  // its uid, in the order they came. each goes in once that message is
-  // filed in the container it was going to. memory only
-  final Map<String, List<_Early>> _early = {};
+  // edits, reactions and pins that came before the message they name, in
+  // the order they came. each goes in once that message is filed in the
+  // container it was going to. memory only, under a size: the oldest go
+  // first, and past a share of one message or one sender theirs do
+  final _early = <_Early>[];
+  var _earlyChars = 0;
+  static const _kEarlyChars = 1 << 20;
+  static const _kEarlyPerUid = 32;
+  static const _kEarlyPerSender = 64;
 
-  void _parkEarly(String uid, _Early e) {
-    final cut = e.at - _kTakenBackFor.inMilliseconds;
-    _early.removeWhere((_, l) => l.last.at < cut);
-    final l = _early.remove(uid) ?? [];
-    if (l.length < 32) l.add(e);
-    _early[uid] = l;
-    if (_early.length > 1000) _early.remove(_early.keys.first);
+  void _unparkWhere(bool Function(_Early e) test) {
+    _early.removeWhere((e) {
+      if (!test(e)) return false;
+      _earlyChars -= e.wire.length;
+      return true;
+    });
   }
 
-  Future<void> _applyEarly(String uid, HaloDb db, Set<String>? marks) async {
-    final l = _early.remove(uid);
-    if (l == null) return;
-    final rest = [
-      for (final e in l)
-        if (!identical(e.db, db)) e,
-    ];
-    if (rest.isNotEmpty) _early[uid] = rest;
+  // all but the last [keep] of those [of] picks
+  void _trimEarly(bool Function(_Early e) of, int keep) {
+    var over = _early.where(of).length - keep;
+    if (over > 0) _unparkWhere((e) => over > 0 && of(e) && over-- > 0);
+  }
+
+  void _parkEarly(_Early e) {
+    final cut = e.at - _kTakenBackFor.inMilliseconds;
+    _unparkWhere((x) => x.at < cut);
+    _early.add(e);
+    _earlyChars += e.wire.length;
+    _trimEarly((x) => x.uid == e.uid, _kEarlyPerUid);
+    _trimEarly((x) => x.sender == e.sender, _kEarlyPerSender);
+    while (_earlyChars > _kEarlyChars && _early.isNotEmpty) {
+      _earlyChars -= _early.removeAt(0).wire.length;
+    }
+  }
+
+  void _dropEarly() {
+    _early.clear();
+    _earlyChars = 0;
+  }
+
+  // what came early for a message just filed by [author]. the text of the
+  // last edit of theirs that went in, if any
+  Future<String?> _applyEarly(
+    String uid,
+    String author,
+    HaloDb db,
+    Set<String>? marks,
+  ) async {
+    if (_early.isEmpty) return null;
+    bool mine(_Early e) => e.uid == uid && identical(e.db, db);
+    final due = _early.where(mine).toList();
+    if (due.isEmpty) return null;
+    _unparkWhere(mine);
     final cut =
         DateTime.now().millisecondsSinceEpoch - _kTakenBackFor.inMilliseconds;
-    for (final e in l) {
-      if (!identical(e.db, db) || e.at < cut) continue;
+    String? edited;
+    for (final e in due) {
+      if (e.at < cut) continue;
       try {
+        final env = unwrapMessage(e.wire);
         await _fileArrival(
           e.sender,
-          e.env,
+          env,
           wire: e.wire,
           into: e.into,
           arrivedAt: e.arrivedAt,
           marks: marks,
           wrappedAt: e.wrappedAt,
         );
+        if (e.sender == author && env.edit != null) {
+          edited = env.edit!.newText;
+        }
       } catch (err) {
         dlog('early: one did not go in ($err)');
       }
     }
+    return edited;
   }
 
   // uids the drainer is mid-flight on, so a slow send isn't fired twice by
@@ -10646,6 +10684,8 @@ class AppState extends ChangeNotifier {
     required List<String> claims,
     required int? wrappedAt,
   }) async {
+    // what is opened goes with the session it began in
+    final epoch = _openedEpoch;
     final RouteTo to;
     final HaloDb db;
     if (into != null) {
@@ -10773,24 +10813,32 @@ class AppState extends ChangeNotifier {
       await _answerNeed(senderHaloId, env.need!, db);
       return to;
     }
-    // a frame for a message not here yet waits for it
-    void early(String uid) => _parkEarly(uid, (
-      db: db,
-      into: into,
-      sender: senderHaloId,
-      env: env,
-      wire: wire,
-      arrivedAt: arrivedAt,
-      wrappedAt: wrappedAt,
-      at: DateTime.now().millisecondsSinceEpoch,
-    ));
+    // a frame for a message not here yet waits for it, from a contact or a
+    // member of the group it names, and only in the session it came in
+    Future<void> early(String uid) async {
+      final ok = env.groupId == null
+          ? await db.isAccepted(senderHaloId)
+          : (await db.getGroupMembers(env.groupId!)).contains(senderHaloId);
+      if (!ok || epoch != _openedEpoch) return;
+      _parkEarly((
+        uid: uid,
+        db: db,
+        into: into,
+        sender: senderHaloId,
+        wire: wire,
+        arrivedAt: arrivedAt,
+        wrappedAt: wrappedAt,
+        at: DateTime.now().millisecondsSinceEpoch,
+      ));
+    }
+
     // shared pin: every member mirrors it. only from someone in the chat
     // the row lives in: the frame names a uid and nothing else, and it rides
     // in above the stranger gate like an edit does.
     if (env.pin != null) {
       final where = await db.chatOf(env.pin!.targetUid);
       if (where == null) {
-        early(env.pin!.targetUid);
+        await early(env.pin!.targetUid);
         return to;
       }
       final ok = pinAllowed(
@@ -10839,7 +10887,7 @@ class AppState extends ChangeNotifier {
       // that row lives in gets to react to it
       final where = await db.chatOf(r.targetUid);
       if (where == null) {
-        early(r.targetUid);
+        await early(r.targetUid);
         return to;
       }
       final ok = pinAllowed(
@@ -10874,7 +10922,7 @@ class AppState extends ChangeNotifier {
         await refreshContacts();
         notifyListeners();
       } else if (!await db.messageExists(env.edit!.targetUid)) {
-        early(env.edit!.targetUid);
+        await early(env.edit!.targetUid);
       }
       return to;
     }
@@ -11347,7 +11395,10 @@ class AppState extends ChangeNotifier {
     // saved now, messageExists covers dedup from here
     _inflightUids.removeAll(claims);
     claims.clear();
-    if (env.msgUid != null) await _applyEarly(env.msgUid!, db, marks);
+    // an edit that came first is the text it shows
+    final edited = env.msgUid == null
+        ? null
+        : await _applyEarly(env.msgUid!, senderHaloId, db, marks);
     // send a delivery receipt back for 1:1 messages we just stored, so the
     // sender's tick means "on your phone" not "a relay took it". groups skip
     // this (N acks per message is noise); receipts themselves carry no uid of
@@ -11390,6 +11441,7 @@ class AppState extends ChangeNotifier {
     final String notifBody;
     final String notifPayload;
     final bool suppress;
+    final shownText = edited ?? env.message;
     // the name given to them here, as the chat list shows it
     final nickname =
         (await db.getContact(senderHaloId))?['nickname'] as String?;
@@ -11403,8 +11455,8 @@ class AppState extends ChangeNotifier {
           ? l10n.stickerLabel
           : env.poll != null && PollSpec.parse(env.poll) != null
           ? l10n.pollPreview(env.message)
-          : env.message.isNotEmpty
-          ? env.message
+          : shownText.isNotEmpty
+          ? shownText
           : notifMediaLine(fileName, mediaPath);
       final who = looksLikeRoomKey(senderHaloId)
           ? roomTag(senderHaloId)
@@ -11424,8 +11476,8 @@ class AppState extends ChangeNotifier {
       notifTitle = isDevChat(senderHaloId) ? l10n.devName : named;
       notifBody = sticker != null
           ? l10n.stickerLabel
-          : env.message.isNotEmpty
-          ? env.message
+          : shownText.isNotEmpty
+          ? shownText
           : notifMediaLine(fileName, mediaPath);
       notifPayload = senderHaloId;
       suppress = reading || await db.isMuted(senderHaloId);
@@ -13861,7 +13913,7 @@ class AppState extends ChangeNotifier {
   void _dropOpened() {
     _relayOpened.clear();
     _firstOpened.clear();
-    _early.clear();
+    _dropEarly();
     _openedEpoch++;
   }
 
