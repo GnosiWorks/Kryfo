@@ -191,7 +191,8 @@ class MemDb implements Database, Transaction {
   }
 
   // a AND b AND ...: col = ? or a literal, col != ?, col < ?, col LIKE ?,
-  // col [NOT] IN (?, ...), col IS [NOT] NULL
+  // col [NOT] IN (?, ...), col [NOT] IN (SELECT c FROM t WHERE <literals>),
+  // col IS [NOT] NULL
   bool Function(Map<String, Object?>) _where(
     _Table t,
     String table,
@@ -203,6 +204,22 @@ class MemDb implements Database, Transaction {
     var at = 0;
     for (final clause in where.split(' AND ')) {
       final c = clause.trim();
+      final sub = RegExp(
+        r'^(\w+) (NOT IN|IN) \(SELECT (\w+) FROM (\w+) WHERE (.*)\)$',
+      ).firstMatch(c);
+      if (sub != null) {
+        final col = sub.group(1)!;
+        _known(t, table, [col]);
+        final from = _t(sub.group(4)!);
+        final inner = _where(from, sub.group(4)!, sub.group(5), null);
+        final vs = [
+          for (final r in from.rows)
+            if (inner(r)) _get(from, r, sub.group(3)!),
+        ];
+        final out = sub.group(2) == 'NOT IN';
+        tests.add((r) => vs.any((v) => _same(_get(t, r, col), v)) != out);
+        continue;
+      }
       final m = RegExp(
         r'^(\w+) (=|!=|<|LIKE|NOT IN|IN|IS NULL|IS NOT NULL)(.*)$',
       ).firstMatch(c);

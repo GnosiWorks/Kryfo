@@ -929,6 +929,30 @@ void main() {
     expect(await record(p), was);
   });
 
+  test('blocked in the open vault, someone the everyday side also knows is '
+      'sent nothing when they ask', () async {
+    final p = await _peer();
+    await contact(p, card: false);
+    await talk(p);
+    final vmem = MemDb();
+    final vault = _Rows(vmem, HaloContainer.vault);
+    await vmem.insert('contacts', {
+      'halo_id': p.name,
+      'onion': '',
+      'xpub': p.xpub,
+      'first_seen': 1,
+      'last_seen': 1,
+      'back_paired': 1,
+      'accepted': 1,
+      'blocked': 1,
+    });
+    useDatabasesForTest(rows, await Session.withVault(rows, vault));
+    final was = await record(p);
+    await card(p, want: true);
+    expect(io.asksTo(p.xpub), isEmpty);
+    expect(await record(p), was);
+  });
+
   test('someone a shut vault holds as blocked is sent nothing when they '
       'ask', () async {
     final p = await _peer();

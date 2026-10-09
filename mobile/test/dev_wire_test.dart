@@ -174,7 +174,11 @@ class _Phone extends DevTestDb {
   @override
   Future<void> markSeenLong(String hash) async => seen.add(hash);
   @override
-  Future<void> markDelivered(String msgUid, {required String from}) async {}
+  Future<void> markDelivered(
+    String msgUid, {
+    required String from,
+    int? before,
+  }) async {}
   // what the outbox took as sent
   final marked = <String>[];
   @override

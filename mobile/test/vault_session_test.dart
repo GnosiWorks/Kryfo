@@ -673,8 +673,11 @@ class _Db implements HaloDb {
   }
 
   @override
-  Future<void> markDelivered(String msgUid, {required String from}) async =>
-      _hit('markDelivered', msgUid, null);
+  Future<void> markDelivered(
+    String msgUid, {
+    required String from,
+    int? before,
+  }) async => _hit('markDelivered', msgUid, null);
 
   // ---- messages ----
   @override

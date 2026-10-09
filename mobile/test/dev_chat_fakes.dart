@@ -46,6 +46,11 @@ class DevTestDb implements HaloDb {
   Future<bool> keyHeld(String haloId) async => false;
   @override
   Future<Set<String>> heldPeers() async => const {};
+  @override
+  Future<Set<String>> blockedIds() async => {
+    for (final r in mem.rows('contacts'))
+      if (r['blocked'] == 1) r['halo_id'] as String,
+  };
 
   DevTestDb(this.mem, [this.container = HaloContainer.everyday]);
 

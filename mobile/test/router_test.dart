@@ -419,6 +419,11 @@ class _Mem implements HaloDb {
   Future<bool> isBlocked(String haloId) async =>
       _hit('isBlocked', haloId, people[haloId]?['blocked'] == 1);
   @override
+  Future<Set<String>> blockedIds() async => {
+    for (final p in people.values)
+      if (p['blocked'] == 1) p['halo_id'] as String,
+  };
+  @override
   Future<bool> isMuted(String haloId) async =>
       _hit('isMuted', haloId, people[haloId]?['muted'] == 1);
   @override
@@ -538,7 +543,11 @@ class _Mem implements HaloDb {
   }
 
   @override
-  Future<void> markDelivered(String msgUid, {required String from}) async {
+  Future<void> markDelivered(
+    String msgUid, {
+    required String from,
+    int? before,
+  }) async {
     _hit('markDelivered', msgUid, null);
     delivered.add(msgUid);
   }

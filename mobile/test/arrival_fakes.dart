@@ -479,6 +479,11 @@ class ArrivalRows implements HaloDb {
   @override
   Future<bool> isBlocked(String haloId) async =>
       _hit('isBlocked', haloId, people[haloId]?['blocked'] == 1);
+  @override
+  Future<Set<String>> blockedIds() async => {
+    for (final p in people.values)
+      if (p['blocked'] == 1) p['halo_id'] as String,
+  };
   // each block's span, and the uids of what came while one held, as the
   // real tables keep them
   final blockSpans = <String, List<(int, int?)>>{};
@@ -506,6 +511,14 @@ class ArrivalRows implements HaloDb {
     return [...?blockSpans[haloId]].any(
       (s) => s.$1 <= (a[1] as int) && s.$2 != null && s.$2! > (a[2] as int),
     );
+  }
+
+  @override
+  Future<int?> blockedSince(String haloId) async {
+    for (final s in [...?blockSpans[haloId]]) {
+      if (s.$2 == null) return s.$1;
+    }
+    return null;
   }
 
   @override
@@ -701,10 +714,18 @@ class ArrivalRows implements HaloDb {
   }
 
   @override
-  Future<void> markDelivered(String msgUid, {required String from}) async {
+  Future<void> markDelivered(
+    String msgUid, {
+    required String from,
+    int? before,
+  }) async {
     _hit('markDelivered', msgUid, null);
     delivered.add('$msgUid from $from');
+    if (before != null) deliveredBefore[msgUid] = before;
   }
+
+  // a receipt that ticks only what was written before then
+  final deliveredBefore = <String, int>{};
 
   @override
   Future<List<Map<String, Object?>>> unsentOutbox({

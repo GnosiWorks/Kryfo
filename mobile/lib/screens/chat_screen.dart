@@ -791,6 +791,8 @@ class _ChatScreenState extends State<ChatScreen>
       _requestPending && _sentCount >= (_isDev ? kDevCap : 2) && !_vouched;
   // receiver-side: a stranger has messaged us and we haven't accepted yet.
   bool get _incomingRequest => !_accepted && _recvCount > 0 && !widget.support;
+  // a reaction says this phone read it: none in a request or a block
+  bool get _canReact => !_blocked && !_incomingRequest;
   // friends vouched for this peer. no sender-side cap then: the other end
   // skips its gate for us, so locking ourselves would be the only lock left.
   List<String> _voucherNames = const [];
@@ -1667,7 +1669,7 @@ class _ChatScreenState extends State<ChatScreen>
                 ),
               ),
 
-              if (!welcome)
+              if (!welcome && _canReact)
                 PositionedDirectional(
                   top: reactTop,
                   start: alignRight ? null : 12,
@@ -2090,19 +2092,17 @@ class _ChatScreenState extends State<ChatScreen>
       m.edited = true;
     });
     await session.editMessage(m.msgUid!, newText);
-    // queued first, sent now: if the route is down the outbox carries it,
-    // the way it carries a message. the home row shows the new text too.
-    await session.queueEdit(m.msgUid!, widget.peerHaloId, newText);
+    await appState.editInChat(widget.peerHaloId, m.msgUid!, newText);
+    // the home row shows the new text too
     unawaited(appState.refreshContacts());
-    // a quiet session keeps the edit queued here: nothing leaves
-    if (!sessionQuiet) {
-      unawaited(appState.sendEdit(widget.peerHaloId, m.msgUid!, newText));
-    }
   }
 
   // toggle a reaction on a message. tap same emoji again to remove.
   // tap a different emoji to replace.
   Future<void> _toggleReaction(_Msg m, String emoji) async {
+    // read before anything is written: a block this screen has not seen yet
+    // keeps the reaction off both sides
+    if (await appState.blockedAnywhere(widget.peerHaloId)) return;
     if (m.msgUid == null) {
       final uid = newMsgUid();
       m.msgUid = uid;
@@ -2458,8 +2458,9 @@ class _ChatScreenState extends State<ChatScreen>
   // back-pair flow: they don't follow our xpub on nostr yet. on failure,
   // fall back to nostr store-and-forward.
   Future<String> _routeText(String cipher) async {
-    // a quiet session keeps it here, unsent
+    // a quiet session keeps it here, unsent, and so does a block
     if (sessionQuiet) return 'parked';
+    if (await appState.blockedAnywhere(widget.peerHaloId)) return 'parked';
     String? tor;
     if (!_backPaired && widget.peerOnion.isNotEmpty) {
       tor = await Future(() => engine.sendTo(widget.peerOnion, cipher));
@@ -3835,7 +3836,7 @@ class _ChatScreenState extends State<ChatScreen>
           },
           onLongPress: (ctx) => _showEmojiPickerAt(ctx, m),
           onAct: () => _touched(m),
-          onReact: m.welcome
+          onReact: m.welcome || !_canReact
               ? null
               : (e) {
                   final added = m.reactions[''] != e;
@@ -4087,13 +4088,14 @@ class _ChatScreenState extends State<ChatScreen>
                 ),
                 // greyed with a reason while the contact is still a
                 // request: you cannot vouch for someone you have not
-                // accepted yourself
-                MenuSheetRow(
-                  icon: Icons.people_outline,
-                  label: l10n.chatIntroduceTo,
-                  sub: _accepted ? null : l10n.chatAcceptThemFirst,
-                  onTap: _accepted ? () => pick('introduce') : null,
-                ),
+                // accepted yourself. someone blocked is not offered
+                if (!_blocked)
+                  MenuSheetRow(
+                    icon: Icons.people_outline,
+                    label: l10n.chatIntroduceTo,
+                    sub: _accepted ? null : l10n.chatAcceptThemFirst,
+                    onTap: _accepted ? () => pick('introduce') : null,
+                  ),
                 MenuSheetRow(
                   icon: Icons.photo_library_outlined,
                   label: l10n.chatSharedPhotos,

@@ -241,6 +241,11 @@ Future<String> _sendChunkedMediaInner({
         failure = 'cancelled';
         return;
       }
+      // blocked part way: the rest waits with the row
+      if (await appState.blockedAnywhere(peerId)) {
+        parked = true;
+        return;
+      }
       final i = takeChunk();
       if (i == null) return;
       final t0 = DateTime.now();
