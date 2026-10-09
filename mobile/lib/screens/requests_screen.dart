@@ -460,7 +460,6 @@ class _RequestCard extends StatelessWidget {
             // line in a longer language or a bigger font
             Wrap(
               spacing: 8,
-              runSpacing: 8,
               children: [
                 _Answer(
                   label: l10n.commonAccept,
@@ -502,16 +501,22 @@ class _Answer extends StatelessWidget {
       onTap: onTap,
       scale: 0.94,
       haptic: false,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-        decoration: BoxDecoration(
-          color: filled ? HaloColors.amber : Colors.transparent,
-          borderRadius: BorderRadius.circular(999),
-          border: filled ? null : Border.all(color: HaloColors.line),
-        ),
-        child: Text(
-          label,
-          style: HaloType.sans(size: 12.5, weight: FontWeight.w600, color: c),
+      // the pill drawn, a finger's height taken around it
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 5),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 34),
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+          decoration: BoxDecoration(
+            color: filled ? HaloColors.amber : Colors.transparent,
+            borderRadius: BorderRadius.circular(999),
+            border: filled ? null : Border.all(color: HaloColors.line),
+          ),
+          child: Text(
+            label,
+            style: HaloType.sans(size: 12.5, weight: FontWeight.w600, color: c),
+          ),
         ),
       ),
     );
