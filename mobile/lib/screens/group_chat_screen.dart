@@ -4974,70 +4974,41 @@ class _GroupBubble extends StatelessWidget {
                                             m.mediaPath != null)
                                           GifSentLine(path: m.mediaPath!),
                                         if (m.text.isNotEmpty)
-                                          Padding(
-                                            padding: m.mediaPath != null
-                                                ? const EdgeInsets.fromLTRB(
-                                                    4,
-                                                    6,
-                                                    4,
-                                                    0,
-                                                  )
-                                                : EdgeInsets.zero,
-                                            // a search marks its hits; else
-                                            // a kryfo link is drawn as one,
-                                            // otherwise @three-words in amber
-                                            child: query.isNotEmpty
-                                                ? Text.rich(
-                                                    TextSpan(
-                                                      style: _bodyStyle(isOut),
-                                                      children: searchLit(
-                                                        m.text,
-                                                        query,
-                                                        onAmber: onAmberText,
+                                          writtenStart(
+                                            m.text,
+                                            Padding(
+                                              padding: m.mediaPath != null
+                                                  ? const EdgeInsets.fromLTRB(
+                                                      4,
+                                                      6,
+                                                      4,
+                                                      0,
+                                                    )
+                                                  : EdgeInsets.zero,
+                                              // a search marks its hits; else
+                                              // a kryfo link is drawn as one,
+                                              // otherwise @three-words in amber
+                                              child: query.isNotEmpty
+                                                  ? Text.rich(
+                                                      TextSpan(
+                                                        style: _bodyStyle(
+                                                          isOut,
+                                                        ),
+                                                        children: searchLit(
+                                                          m.text,
+                                                          query,
+                                                          onAmber: onAmberText,
+                                                        ),
                                                       ),
-                                                    ),
-                                                    textDirection: writtenDir(
-                                                      m.text,
-                                                    ),
-                                                  )
-                                                : m.text.contains('kryfo://')
-                                                ? KryfoLinkText(
-                                                    text: m.text,
-                                                    style: HaloType.sans(
-                                                      size: 14,
-                                                      color:
-                                                          (isOut &&
-                                                              m.mediaPath ==
-                                                                  null)
-                                                          ? HaloColors.onAmber
-                                                          : HaloColors.text,
-                                                      height: 1.35,
-                                                    ),
-                                                    onAmber:
-                                                        isOut &&
-                                                        m.mediaPath == null,
-                                                    linkColor:
-                                                        (isOut &&
-                                                            m.mediaPath == null)
-                                                        ? HaloColors.onAmber
-                                                        : HaloColors.amber,
-                                                  )
-                                                : Text.rich(
-                                                    mentionRich(
-                                                      m.text,
-                                                      HaloType.sans(
+                                                      textDirection: writtenDir(
+                                                        m.text,
+                                                      ),
+                                                    )
+                                                  : m.text.contains('kryfo://')
+                                                  ? KryfoLinkText(
+                                                      text: m.text,
+                                                      style: HaloType.sans(
                                                         size: 14,
-                                                        // captions get more
-                                                        // weight to read over
-                                                        // busy images
-                                                        weight:
-                                                            m.mediaPath != null
-                                                            ? FontWeight.w600
-                                                            : FontWeight.w400,
-                                                        // a photo caption sits
-                                                        // on a transparent
-                                                        // bubble, where onAmber
-                                                        // is invisible
                                                         color:
                                                             (isOut &&
                                                                 m.mediaPath ==
@@ -5046,17 +5017,54 @@ class _GroupBubble extends StatelessWidget {
                                                             : HaloColors.text,
                                                         height: 1.35,
                                                       ),
-                                                      accent:
+                                                      onAmber:
+                                                          isOut &&
+                                                          m.mediaPath == null,
+                                                      linkColor:
                                                           (isOut &&
                                                               m.mediaPath ==
                                                                   null)
                                                           ? HaloColors.onAmber
-                                                          : null,
+                                                          : HaloColors.amber,
+                                                    )
+                                                  : Text.rich(
+                                                      mentionRich(
+                                                        m.text,
+                                                        HaloType.sans(
+                                                          size: 14,
+                                                          // captions get more
+                                                          // weight to read over
+                                                          // busy images
+                                                          weight:
+                                                              m.mediaPath !=
+                                                                  null
+                                                              ? FontWeight.w600
+                                                              : FontWeight.w400,
+                                                          // a photo caption sits
+                                                          // on a transparent
+                                                          // bubble, where onAmber
+                                                          // is invisible
+                                                          color:
+                                                              (isOut &&
+                                                                  m.mediaPath ==
+                                                                      null)
+                                                              ? HaloColors
+                                                                    .onAmber
+                                                              : HaloColors.text,
+                                                          height: 1.35,
+                                                        ),
+                                                        accent:
+                                                            (isOut &&
+                                                                m.mediaPath ==
+                                                                    null)
+                                                            ? HaloColors.onAmber
+                                                            : null,
+                                                      ),
+                                                      textDirection: writtenDir(
+                                                        m.text,
+                                                      ),
                                                     ),
-                                                    textDirection: writtenDir(
-                                                      m.text,
-                                                    ),
-                                                  ),
+                                            ),
                                           ),
                                         if (firstUrl(m.text) case final u?) ...[
                                           const SizedBox(height: 6),

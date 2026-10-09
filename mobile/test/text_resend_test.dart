@@ -473,6 +473,67 @@ void main() {
   );
 
   // written offline, a typo fixed with edit, then the retry comes round
+  testWidgets('a short reply under a long quote starts where its words '
+      'start', (t) async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    const long =
+        'that would be something to have, given that people mostly '
+        'install from the store';
+    await mem.insert('messages', {
+      'peer_id': _peer,
+      'direction': 'out',
+      'plaintext': long,
+      'msg_uid': 'q-long',
+      'sent': 1,
+      'sent_at': now - 4000,
+    });
+    for (final (i, dir, text) in [
+      (1, 'in', 'Yeah'),
+      (2, 'out', 'ok'),
+      (3, 'in', 'نعم'),
+    ]) {
+      await mem.insert('messages', {
+        'peer_id': _peer,
+        'direction': dir,
+        'plaintext': text,
+        'msg_uid': 'r$i',
+        'reply_to': 'q-long',
+        'sent': 1,
+        'sent_at': now - 3000 + i * 100,
+      });
+    }
+    await devOpen(
+      t,
+      ChatScreen(
+        peerHaloId: _peer,
+        peerOnion: '',
+        peerXPub: 'ab' * 32,
+        avatarSeed: _peer,
+      ),
+    );
+    await settle(t);
+    // each reply's quote is the widest thing in its bubble
+    Rect quoteAbove(String text) {
+      final r = t.getRect(find.text(text));
+      return find
+          .text(long)
+          .evaluate()
+          .map((e) => t.getRect(find.byWidget(e.widget)))
+          .where((q) => q.bottom <= r.top + 1)
+          .reduce((a, b) => a.bottom > b.bottom ? a : b);
+    }
+
+    for (final word in ['Yeah', 'ok']) {
+      final w = t.getRect(find.text(word));
+      final q = quoteAbove(word);
+      expect(w.left, lessThanOrEqualTo(q.left), reason: '$word $w under $q');
+    }
+    final ar = t.getRect(find.text('نعم'));
+    final q = quoteAbove('نعم');
+    expect(ar.right, greaterThan(q.right - 4), reason: '$ar under $q');
+    await devClose(t);
+  });
+
   testWidgets('a retry of an edited opener grinds again for its new words', (
     t,
   ) async {
