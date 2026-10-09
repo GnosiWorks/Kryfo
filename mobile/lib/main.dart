@@ -18097,9 +18097,10 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
   }
 
   void _explain() {
+    // capped and scrolling: on a small phone the words run taller than the
+    // room above the navigation bar
     showHaloSheet(
       context,
-      scroll: true,
       builder: (_) => AnimatedBuilder(
         animation: appState,
         builder: (context, _) {
@@ -18125,58 +18126,61 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
               : s == TorStatus.bootstrapped
               ? l10n.appReadyToSendFinishing
               : l10n.appConnecting(percent(pct / 100));
-          return Padding(
-            padding: const EdgeInsets.fromLTRB(22, 0, 22, 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SheetHandle(),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.appTor,
-                  style: HaloType.serif(
-                    size: 20,
-                    italic: true,
-                    color: HaloColors.text,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TorWarmupGraph(status: s, bootstrapPct: pct),
-                const SizedBox(height: 16),
-                Text(
-                  line,
-                  style: HaloType.mono(size: 12, color: HaloColors.text),
-                ),
-                if (s != TorStatus.reachable ||
-                    !appState.torUsable ||
-                    offline) ...[
-                  const SizedBox(height: 16),
-                  // past starting with no relay through, the first connection
-                  // line would promise a wait that is already over
+          return SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(22, 0, 22, 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SheetHandle(),
+                  const SizedBox(height: 8),
                   Text(
-                    s == TorStatus.off
-                        ? l10n.appTorIsOffTurn
-                        : offline
-                        ? l10n.onboardingKryfoBuildsAPrivateRouteBefore
-                        : !appState.torUsable && s != TorStatus.starting
-                        ? l10n.appTorNoRelayYet
-                        : l10n.appTheFirstConnectionTakes,
-                    style: HaloType.sans(
-                      size: 12.5,
+                    l10n.appTor,
+                    style: HaloType.serif(
+                      size: 20,
+                      italic: true,
                       color: HaloColors.text,
-                    ).copyWith(height: 1.5),
-                  ),
-                  // another send mode is no way out of having no network
-                  if (!offline) ...[
-                    const SizedBox(height: 10),
-                    Text(
-                      l10n.appRelayAndFastModes,
-                      style: HaloType.sans(size: 11, color: HaloColors.text2),
                     ),
+                  ),
+                  const SizedBox(height: 16),
+                  TorWarmupGraph(status: s, bootstrapPct: pct),
+                  const SizedBox(height: 16),
+                  Text(
+                    line,
+                    style: HaloType.mono(size: 12, color: HaloColors.text),
+                  ),
+                  if (s != TorStatus.reachable ||
+                      !appState.torUsable ||
+                      offline) ...[
+                    const SizedBox(height: 16),
+                    // past starting with no relay through, the first connection
+                    // line would promise a wait that is already over
+                    Text(
+                      s == TorStatus.off
+                          ? l10n.appTorIsOffTurn
+                          : offline
+                          ? l10n.onboardingKryfoBuildsAPrivateRouteBefore
+                          : !appState.torUsable && s != TorStatus.starting
+                          ? l10n.appTorNoRelayYet
+                          : l10n.appTheFirstConnectionTakes,
+                      style: HaloType.sans(
+                        size: 12.5,
+                        color: HaloColors.text,
+                      ).copyWith(height: 1.5),
+                    ),
+                    // another send mode is no way out of having no network
+                    if (!offline) ...[
+                      const SizedBox(height: 10),
+                      Text(
+                        l10n.appRelayAndFastModes,
+                        style: HaloType.sans(size: 11, color: HaloColors.text2),
+                      ),
+                    ],
                   ],
                 ],
-              ],
+              ),
             ),
           );
         },

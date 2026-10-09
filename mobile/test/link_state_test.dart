@@ -196,6 +196,26 @@ void main() {
       await closeSheet(t);
     });
 
+    testWidgets('the tor sheet clears a three-button bar', (t) async {
+      _set('private', TorStatus.bootstrapped);
+      t.view.padding = const FakeViewPadding(top: 72, bottom: 144);
+      t.view.viewPadding = const FakeViewPadding(top: 72, bottom: 144);
+      await openSheet(t);
+      expect(t.takeException(), isNull);
+      // stops below the status bar, and its end scrolls above the 48 of the
+      // navigation bar
+      final sheet = t.getRect(find.byType(BottomSheet));
+      expect(sheet.top, greaterThanOrEqualTo(24));
+      final words = find.descendant(
+        of: find.byType(BottomSheet),
+        matching: find.byType(Text),
+      );
+      await t.ensureVisible(words.last);
+      await t.pump(const Duration(milliseconds: 300));
+      expect(t.getRect(words.last).bottom, lessThanOrEqualTo(780 - 48 - 16));
+      await closeSheet(t);
+    });
+
     testWidgets('getting messages says connected in relay mode', (t) async {
       phone(t);
       _set('balanced', TorStatus.starting);
