@@ -687,6 +687,24 @@ abstract class AppLocalizations {
   /// **'It may have ended.'**
   String get roomJoinMayHaveEnded;
 
+  /// widgets/room_join.dart, screens/search_screen.dart: on the chat list and in the header, a room whose creator said there is no seat for this join. short, like Not answering
+  ///
+  /// In en, this message translates to:
+  /// **'Room full'**
+  String get roomJoinFullShort;
+
+  /// widgets/room_join.dart: a room whose creator said there is no seat for this join
+  ///
+  /// In en, this message translates to:
+  /// **'This room is full.'**
+  String get roomJoinFull;
+
+  /// widgets/room_join.dart: under This room is full, above Try again and Leave
+  ///
+  /// In en, this message translates to:
+  /// **'No seat is free right now. Try again later, or ask whoever shared the link.'**
+  String get roomJoinFullLine;
+
   /// main.dart
   ///
   /// In en, this message translates to:

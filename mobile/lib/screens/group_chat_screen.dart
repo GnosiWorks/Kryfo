@@ -948,7 +948,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   bool _wasReady = appState.torReady;
   bool _deadLookDue = false;
 
+  // the creator found no seat for this phone's join
+  late bool _full = appState.roomFull(widget.groupId);
+
   void _onAppStateChanged() {
+    final full = appState.roomFull(widget.groupId);
+    if (full != _full && mounted) setState(() => _full = full);
     // a verdict landed after its message did: refresh the marks alone
     if (appState.shieldRev != _seenShieldRev && !_loading) {
       unawaited(_loadShieldFlags());
@@ -3477,6 +3482,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                               key: const ValueKey('joining'),
                               name: _groupName,
                               joiningAt: _joiningAt!,
+                              full: _full,
                               onTryAgain: _knockAgain,
                               onLeave: _leaveWaiting,
                             )
@@ -3848,6 +3854,7 @@ class _Header extends StatelessWidget {
                                 ? RoomJoinLine(
                                     key: const ValueKey('joining'),
                                     joiningAt: joiningAt!,
+                                    full: appState.roomFull(groupId),
                                   )
                                 : expiresAt != null
                                 ? SlotLine(

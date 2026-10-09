@@ -3,7 +3,8 @@
 // joiner in by sending its roster; until then nobody reads the joiner's
 // key, so the room waits instead of taking messages that go nowhere. after
 // kRoomJoinWait it says the room is not answering, and offers to knock
-// again or leave. the waiting ring breathes on, still with less movement.
+// again or leave. a creator who found no seat says so, and the room says it
+// is full. the waiting ring breathes on, still with less movement.
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -54,7 +55,14 @@ mixin _JoinClock<T extends StatefulWidget> on State<T> {
 class RoomJoinLine extends StatefulWidget {
   final int joiningAt;
   final double size;
-  const RoomJoinLine({super.key, required this.joiningAt, this.size = 10});
+  // the creator found no seat for this join
+  final bool full;
+  const RoomJoinLine({
+    super.key,
+    required this.joiningAt,
+    this.size = 10,
+    this.full = false,
+  });
 
   @override
   State<RoomJoinLine> createState() => _RoomJoinLineState();
@@ -79,14 +87,17 @@ class _RoomJoinLineState extends State<RoomJoinLine>
 
   @override
   Widget build(BuildContext context) {
-    final waiting = join == RoomJoin.waiting;
-    final label = waiting
+    final full = widget.full;
+    final waiting = !full && join == RoomJoin.waiting;
+    final label = full
+        ? l10n.roomJoinFullShort
+        : waiting
         ? l10n.roomJoinWaitingToJoin
         : l10n.roomJoinNotAnswering;
     return RiseSwap(
       child: Text(
         label,
-        key: ValueKey(waiting),
+        key: ValueKey((waiting, full)),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: HaloType.mono(
@@ -104,12 +115,15 @@ class RoomJoinPanel extends StatefulWidget {
   final int joiningAt;
   final VoidCallback onTryAgain;
   final VoidCallback onLeave;
+  // the creator found no seat for this join
+  final bool full;
   const RoomJoinPanel({
     super.key,
     required this.name,
     required this.joiningAt,
     required this.onTryAgain,
     required this.onLeave,
+    this.full = false,
   });
 
   @override
@@ -135,7 +149,8 @@ class _RoomJoinPanelState extends State<RoomJoinPanel>
 
   @override
   Widget build(BuildContext context) {
-    final waiting = join == RoomJoin.waiting;
+    final full = widget.full;
+    final waiting = !full && join == RoomJoin.waiting;
     // rises in once, as an empty chat does
     return Center(
       child: TweenAnimationBuilder<double>(
@@ -154,8 +169,20 @@ class _RoomJoinPanelState extends State<RoomJoinPanel>
           child: FadeSwap(
             child: waiting
                 ? _Waiting(key: const ValueKey('waiting'), name: widget.name)
-                : _Silent(
+                : full
+                ? _Stopped(
+                    key: const ValueKey('full'),
+                    icon: Icons.event_seat_outlined,
+                    title: l10n.roomJoinFull,
+                    line: l10n.roomJoinFullLine,
+                    onTryAgain: widget.onTryAgain,
+                    onLeave: widget.onLeave,
+                  )
+                : _Stopped(
                     key: const ValueKey('silent'),
+                    icon: Icons.no_meeting_room_outlined,
+                    title: l10n.roomJoinNoAnswer,
+                    line: l10n.roomJoinMayHaveEnded,
                     onTryAgain: widget.onTryAgain,
                     onLeave: widget.onLeave,
                   ),
@@ -202,10 +229,21 @@ class _Waiting extends StatelessWidget {
   }
 }
 
-class _Silent extends StatelessWidget {
+// the wait over: a room that did not answer, or one with no seat
+class _Stopped extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String line;
   final VoidCallback onTryAgain;
   final VoidCallback onLeave;
-  const _Silent({super.key, required this.onTryAgain, required this.onLeave});
+  const _Stopped({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.line,
+    required this.onTryAgain,
+    required this.onLeave,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -214,14 +252,10 @@ class _Silent extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _Knock(
-            color: HaloColors.amber,
-            icon: Icons.no_meeting_room_outlined,
-            still: true,
-          ),
+          _Knock(color: HaloColors.amber, icon: icon, still: true),
           const SizedBox(height: 22),
           Text(
-            l10n.roomJoinNoAnswer,
+            title,
             textAlign: TextAlign.center,
             style: HaloType.serif(
               size: 22,
@@ -233,7 +267,7 @@ class _Silent extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            l10n.roomJoinMayHaveEnded,
+            line,
             textAlign: TextAlign.center,
             style: HaloType.sans(size: 13, color: HaloColors.text2),
           ),

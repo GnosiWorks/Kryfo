@@ -973,7 +973,8 @@ void main() {
         await _knock(app, _hexKey(901));
         expect(live.members[_room], hasLength(AppState.kGroupMemberCap));
         expect(live.members[_room], isNot(contains(_hexKey(901))));
-        expect(_engine.roomSent, isEmpty);
+        // only the one turned away hears, and only that it is full
+        expect(_engine.roomSent, [_hexKey(901)]);
       },
     );
   });

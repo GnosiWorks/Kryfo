@@ -473,6 +473,16 @@ class AppLocalizationsUk extends AppLocalizations {
   String get roomJoinMayHaveEnded => 'Можливо, вона вже закінчилася.';
 
   @override
+  String get roomJoinFullShort => 'Кімната заповнена';
+
+  @override
+  String get roomJoinFull => 'Ця кімната заповнена.';
+
+  @override
+  String get roomJoinFullLine =>
+      'Вільних місць зараз немає. Спробуй пізніше або спитай того, хто поділився посиланням.';
+
+  @override
   String get appBooting => 'Запуск...';
 
   @override

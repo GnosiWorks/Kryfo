@@ -455,6 +455,16 @@ class AppLocalizationsFa extends AppLocalizations {
   String get roomJoinMayHaveEnded => 'شاید به پایان رسیده باشد.';
 
   @override
+  String get roomJoinFullShort => 'اتاق پر است';
+
+  @override
+  String get roomJoinFull => 'این اتاق پر است.';
+
+  @override
+  String get roomJoinFullLine =>
+      'فعلاً جای خالی نیست. بعداً دوباره امتحان کنید، یا از کسی که پیوند را فرستاد بپرسید.';
+
+  @override
   String get appBooting => 'راه‌اندازی...';
 
   @override

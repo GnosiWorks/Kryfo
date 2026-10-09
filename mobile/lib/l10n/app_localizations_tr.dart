@@ -455,6 +455,16 @@ class AppLocalizationsTr extends AppLocalizations {
   String get roomJoinMayHaveEnded => 'Sona ermiş olabilir.';
 
   @override
+  String get roomJoinFullShort => 'Oda dolu';
+
+  @override
+  String get roomJoinFull => 'Bu oda dolu.';
+
+  @override
+  String get roomJoinFullLine =>
+      'Şu an boş yer yok. Daha sonra yeniden dene ya da bağlantıyı paylaşan kişiye sor.';
+
+  @override
   String get appBooting => 'Açılıyor...';
 
   @override
