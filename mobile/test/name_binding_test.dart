@@ -686,6 +686,22 @@ void main() {
         )).serialize(),
         before.serialize(),
       );
+      // a decoy holding them asks about them as about any of its own
+      final decoy = ArrivalRows(HaloContainer.decoy);
+      decoy.person(shut, onion: 'o-s', xpub: held.xPub);
+      decoy.person('decoy-only-friend', onion: 'o-d', xpub: held.xPub);
+      useDatabasesForTest(live, Session(decoy));
+      for (final id in [shut, 'decoy-only-friend']) {
+        expect(
+          await linkKinOf(
+            buildHaloUri(id, 'o', held.xPub),
+            hidden: app.hiddenWhileShut,
+          ),
+          (LinkKin.kept, id),
+          reason: id,
+        );
+      }
+      useDatabasesForTest(live, Session(live));
       // someone here on another key is still said to be
       expect(
         await handleHaloUriAdded(
