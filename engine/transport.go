@@ -182,6 +182,8 @@ type transportView struct {
 	// timeouts when tor stopped answering one. both flat is a healthy tor.
 	CtrlDials    int64 `json:"ctrl_dials"`
 	CtrlTimeouts int64 `json:"ctrl_timeouts"`
+	// calls in a row nothing answered: two or more is a control port gone
+	CtrlSilent int64 `json:"ctrl_silent"`
 	// how the check after the last network change ended
 	NetCheck string `json:"net_check"`
 }
@@ -198,6 +200,7 @@ func transportSnapshot() transportView {
 	v.Mode = currentMode()
 	v.CtrlDials = ctrlDialCount()
 	v.CtrlTimeouts = ctrlTimeoutCount()
+	v.CtrlSilent = ctrlSilentCount()
 	v.NetCheck = lastNetCheck()
 
 	mu.Lock()

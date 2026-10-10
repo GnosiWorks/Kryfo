@@ -193,3 +193,42 @@ func TestOutcomeSaysRunningWhileRunning(t *testing.T) {
 		t.Fatalf("want a running line naming the step, got %q", got)
 	}
 }
+
+// calls in a row that nothing answered are counted across redials, and one
+// answer clears the count: the app restarts the process on two or more
+func TestControlSilentCountsInARow(t *testing.T) {
+	old := ctrlDeadline
+	ctrlDeadline = 300 * time.Millisecond
+	defer func() { ctrlDeadline = old; ctrlReset(); atomic.StoreInt64(&ctrlSilent, 0) }()
+	ctrlReset()
+	atomic.StoreInt64(&ctrlSilent, 0)
+
+	d := newDeadControl(t)
+	defer d.close()
+	node := &tor.Tor{ControlPort: d.port()}
+	set := func() error {
+		return ctrlDo(node, "SETCONF", func(c *control.Conn) error {
+			return c.SetConf(control.KeyVals("DisableNetwork", "1")...)
+		})
+	}
+
+	for i := 1; i <= 3; i++ {
+		if err := set(); err == nil {
+			t.Fatalf("call %d on a silent port succeeded", i)
+		}
+		if got := ctrlSilentCount(); got != int64(i) {
+			t.Fatalf("after %d silent calls the count is %d", i, got)
+		}
+	}
+	if got := transportSnapshot().CtrlSilent; got != 3 {
+		t.Fatalf("transport state shows %d silent calls, want 3", got)
+	}
+
+	d.answers(true)
+	if err := set(); err != nil {
+		t.Fatalf("an answering port failed: %v", err)
+	}
+	if got := ctrlSilentCount(); got != 0 {
+		t.Fatalf("an answer left the count at %d", got)
+	}
+}
