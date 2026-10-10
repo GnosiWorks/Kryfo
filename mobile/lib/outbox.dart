@@ -59,5 +59,7 @@ Future<String> wrapRedelivery(
     // when the row was written, not now: a block that held then still
     // holds for the retry
     writtenAt: (row['sent_at'] as num?)?.toInt(),
+    // or the far side screenshots what was sent as not to be
+    secure: (row['secure'] as num?)?.toInt() == 1,
   );
 }

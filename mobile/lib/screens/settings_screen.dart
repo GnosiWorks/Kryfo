@@ -39,6 +39,7 @@ import '../widgets/halo_sheet.dart';
 import '../l10n/l10n.dart';
 import '../widgets/language_sheet.dart';
 import '../wipe_word.dart';
+import '../first_contact.dart' show firstFails;
 
 // one protection: a ring that fills on the house spring and ticks, and its
 // state, which rises in when it changes. turning on washes the line amber
@@ -796,11 +797,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 }
 
+// what a mailed report carries of this phone: why the last first contacts
+// failed, as codes and minutes ago, never who, what or a key. nothing from
+// a quiet session: an empty phone has nothing to say
+@visibleForTesting
+String reportCodes() {
+  if (sessionQuiet) return '';
+  final fc = firstFails.summary();
+  return fc.isEmpty ? '' : '&body=${Uri.encodeComponent('first contact: $fc')}';
+}
+
 // a report goes where it is read soonest: the chat with Marios first, then
 // mail. on his own phone, or with no key pinned, mail is the only way
 Future<void> reportAnIssue(BuildContext context) async {
   void mail() => launchUrl(
-    Uri.parse('mailto:gnosiworks@proton.me?subject=Kryfo%20report'),
+    Uri.parse(
+      'mailto:gnosiworks@proton.me?subject=Kryfo%20report${reportCodes()}',
+    ),
     mode: LaunchMode.externalApplication,
   );
   if (!devChatOffered) {

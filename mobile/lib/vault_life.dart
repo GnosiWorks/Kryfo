@@ -283,6 +283,9 @@ const _peerRows = {
   'shield': 'halo_id = ?1',
   'vouches': 'halo_id = ?1 OR voucher_id = ?1',
   'gone_in': 'peer_id = ?1',
+  // an opener of theirs kept to be tried again, and ours gone out again
+  'first_kept': 'peer = ?1',
+  'opener_again': 'msg_uid IN {uids}',
 };
 // a person's block rows, by peer_id, which go with a group's people
 const _blockRows = ['block_spans', 'blocked_drops'];

@@ -7,9 +7,11 @@ import 'dart:typed_data';
 
 import 'package:kryfo/container.dart';
 import 'package:kryfo/group_media_send.dart' show groupOwedGap;
+import 'package:kryfo/first_contact.dart' show firstKeepFits, firstRetryGap;
 import 'package:kryfo/main.dart'
     show
         AppIo,
+        FirstKept,
         HaloDb,
         blockedAtArgs,
         groupUnsendOf,
@@ -815,6 +817,87 @@ class ArrivalRows implements HaloDb {
   Future<void> markSeenLong(String hash) async {
     _hit('markSeenLong', null, null);
     seen.add(hash);
+  }
+
+  // openers kept to be tried again, by hash, as keepFirst keeps them
+  final kept = <String, FirstKept>{};
+  // and the uid each carries
+  final keptUid = <String, String?>{};
+  @override
+  Future<bool> keepFirst(
+    String hash,
+    String cipher, {
+    String peer = '',
+    String? uid,
+    required int now,
+  }) async {
+    _hit('keepFirst', null, null);
+    if (kept.containsKey(hash)) return true;
+    var bytes = 0;
+    var mine = 0;
+    for (final r in kept.values) {
+      bytes += r.cipher.length;
+      if (r.peer == peer) mine++;
+    }
+    if (!firstKeepFits(
+      rows: kept.length,
+      mine: mine,
+      bytes: bytes,
+      size: cipher.length,
+      named: peer.isNotEmpty,
+    )) {
+      return false;
+    }
+    keptUid[hash] = uid;
+    kept[hash] = (
+      hash: hash,
+      cipher: cipher,
+      peer: peer,
+      at: now,
+      tries: 0,
+      nextAt: now + firstRetryGap(0).inMilliseconds,
+    );
+    return true;
+  }
+
+  @override
+  Future<List<FirstKept>> firstKept() async =>
+      kept.values.toList()..sort((a, b) => a.at.compareTo(b.at));
+  @override
+  Future<void> retryFirstAt(String hash, int tries, int nextAt) async {
+    final r = kept[hash];
+    if (r == null) return;
+    kept[hash] = (
+      hash: r.hash,
+      cipher: r.cipher,
+      peer: r.peer,
+      at: r.at,
+      tries: tries,
+      nextAt: nextAt,
+    );
+  }
+
+  @override
+  Future<void> forgetFirst(String hash) async => kept.remove(hash);
+  @override
+  Future<void> forgetFirstOf(String peer, {String? uid}) async =>
+      kept.removeWhere(
+        (h, r) => r.peer == peer && (uid == null || keptUid[h] == uid),
+      );
+  @override
+  Future<void> forgetAllFirst() async => kept.clear();
+  @override
+  Future<void> forgetFirstBefore(int cut) async =>
+      kept.removeWhere((_, r) => r.at < cut);
+  @override
+  Future<bool> firstKeptHas(String peer, String uid) async => kept.entries.any(
+    (e) =>
+        keptUid[e.key] == uid && (e.value.peer == peer || e.value.peer == ''),
+  );
+  @override
+  Future<void> noteTakenBack(String peer, String uid) async {
+    _hit('noteTakenBack', uid, null);
+    gone.add((peer, uid));
   }
 
   @override

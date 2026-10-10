@@ -129,6 +129,7 @@ import '../widgets/written_field.dart';
 import '../bidi_safe.dart';
 import '../back_on_top.dart';
 import '../forward.dart';
+import '../first_contact.dart' show routeText, waitsForReceipt;
 import '../text_send.dart';
 import '../lock_guard.dart' show LockDropped, lockGuard, onScreen;
 
@@ -399,6 +400,40 @@ Widget _mediaStamp(_Msg msg) {
     ),
   );
 }
+
+// the tick on a text of ours, or a clock while it is sent and not delivered
+// yet to someone who has not added us back
+Widget _outMark(
+  BuildContext context,
+  _Msg msg, {
+  required bool unconfirmed,
+  required Color color,
+}) => AnimatedSwitcher(
+  duration: motionStill(context)
+      ? Duration.zero
+      : const Duration(milliseconds: 200),
+  child: unconfirmed
+      ? Icon(
+          Icons.schedule_rounded,
+          key: const ValueKey('unconfirmed'),
+          size: 10,
+          color: color,
+        )
+      : SentTick(
+          key: const ValueKey('sent'),
+          delivered: msg.delivered,
+          deliveredLabel: l10n.chatDelivered,
+          color: color,
+          labelStyle: TextStyle(
+            fontFamily: HaloType.monoFamily,
+            fontFamilyFallback: HaloType.monoFallbackNow,
+            fontSize: 8.5,
+            fontWeight: FontWeight.w600,
+            color: color,
+            letterSpacing: track(0.3),
+          ),
+        ),
+);
 
 // the corner of a photo or a video: its time and tick once it is there, a
 // mark when it failed or waits, so the picture itself carries the state
@@ -2522,13 +2557,12 @@ class _ChatScreenState extends State<ChatScreen>
   Future<String> _wireText(String? uid, String cipher) => wireWhenReady(
     ready: _torReadyToSend,
     kept: () async => uid == null || await session.messageExists(uid),
-    send: () => _routeText(cipher),
+    send: () => _routeText(cipher, uid),
   );
 
   // before the peer back-pairs, direct onion first so their drain runs the
-  // back-pair flow: they don't follow our xpub on nostr yet. on failure,
-  // fall back to nostr store-and-forward.
-  Future<String> _routeText(String cipher) async {
+  // back-pair flow, with the first-contact copy beside it (routeText)
+  Future<String> _routeText(String cipher, [String? uid]) async {
     // a quiet session keeps it here, waiting. a block here keeps it not
     // sent, one in the other container only waits
     if (sessionQuiet) return 'parked';
@@ -2537,35 +2571,32 @@ class _ChatScreenState extends State<ChatScreen>
           ? kSendBlocked
           : 'parked';
     }
-    String? tor;
-    if (!_backPaired && widget.peerOnion.isNotEmpty) {
-      tor = await Future(() => engine.sendTo(widget.peerOnion, cipher));
-      if (tor == 'ok') return 'ok';
-      dlog('chat send: tor direct failed ($tor), trying nostr');
-    }
-    // the xpub may be null on a fresh back-pair or reconnect. re-fetch it
-    // from the session before giving up on the relay route.
-    var xpub = _peerXPub;
-    xpub ??= widget.peerXPub.isEmpty ? null : widget.peerXPub;
-    xpub ??= await signalSession.peerXPubHex(widget.peerHaloId);
-    if (xpub != null) {
-      _peerXPub = xpub;
-      // before they back-pair, the pair address is one they cannot
-      // derive yet. their first-contact address is the only relay
-      // route that reaches them.
-      final fcPk = appState.peerFcFor(widget.peerHaloId);
-      if (!_backPaired && fcPk != null && fcPk.isNotEmpty) {
-        final fr = await engine.sendFirstContact(xpub, fcPk, cipher);
-        if (fr == 'ok') return 'ok';
-        dlog('chat send: first-contact failed ($fr)');
-      }
-      final r = await Future(() => engine.nostrSend(xpub!, cipher));
-      // the pair address is a drop box they read only once they add us
-      // back. stored there is not delivered.
-      if (r == 'ok' && !_backPaired) return 'parked';
-      return r;
-    }
-    return tor ?? 'error: no transport';
+    return routeText(
+      backPaired: _backPaired,
+      onion: widget.peerOnion,
+      viaOnion: () => Future(() => engine.sendTo(widget.peerOnion, cipher)),
+      // the xpub may be null on a fresh back-pair or reconnect: from the
+      // session then
+      xPub: () async {
+        var xpub = _peerXPub;
+        xpub ??= widget.peerXPub.isEmpty ? null : widget.peerXPub;
+        xpub ??= await signalSession.peerXPubHex(widget.peerHaloId);
+        if (xpub != null) _peerXPub = xpub;
+        return xpub;
+      },
+      fc: appState.peerFcFor(widget.peerHaloId),
+      viaFirst: (x, fc) => engine.sendFirstContact(x, fc, cipher),
+      viaRelay: (x) => Future(() => engine.nostrSend(x, cipher)),
+      log: (l) => dlog('chat send: $l'),
+      // both its copies went: past their two it waits held, not lost
+      bothWent: uid == null
+          ? null
+          : () => unawaited(
+              session.noteOpenerBoth(uid).catchError((Object e) {
+                dlog('chat send: not noted (${e.runtimeType})');
+              }),
+            ),
+    );
   }
 
   // the verdict goes to every row drawn for this message: a reload since
@@ -3684,6 +3715,12 @@ class _ChatScreenState extends State<ChatScreen>
           sticker: sticker?.value,
           writtenAt: msg.when.millisecondsSinceEpoch,
         );
+        // an opener goes again as these very words (sendOpenersAgain)
+        if (!_backPaired) {
+          await session.keepOpenerWire(msgUid, wrapped).catchError((Object e) {
+            dlog('send: opener not kept (${e.runtimeType})');
+          });
+        }
         final prev = _encryptGate;
         final gate = Completer<void>();
         _encryptGate = gate.future;
@@ -3965,6 +4002,15 @@ class _ChatScreenState extends State<ChatScreen>
           ripple:
               m.msgUid != null &&
               (m.msgUid == _rippleUid || identical(m, _replyFlash)),
+          unconfirmed:
+              !m.welcome &&
+              m.msgUid != null &&
+              waitsForReceipt(
+                out: m.direction == 'out',
+                sent: !m.sending && !m.failed && !m.parked,
+                delivered: m.delivered,
+                backPaired: _backPaired,
+              ),
         ),
       ),
     );
@@ -6244,6 +6290,8 @@ class _Bubble extends StatelessWidget {
   final StickerLanding? landing;
   // the quoted message is a sticker
   final StickerWire? quotedSticker;
+  // sent, with no receipt yet, to someone who has not added us back
+  final bool unconfirmed;
   const _Bubble({
     super.key,
     required this.msg,
@@ -6269,6 +6317,7 @@ class _Bubble extends StatelessWidget {
     this.linkBySender = false,
     this.firstInGroup = true,
     this.lastInGroup = true,
+    this.unconfirmed = false,
   });
 
   // builds the message body, underlining query matches in amber. plain
@@ -6871,26 +6920,12 @@ class _Bubble extends StatelessWidget {
                                                           width: 3,
                                                         ),
                                                         if (isOut)
-                                                          SentTick(
-                                                            delivered:
-                                                                msg.delivered,
-                                                            deliveredLabel: l10n
-                                                                .chatDelivered,
+                                                          _outMark(
+                                                            context,
+                                                            msg,
+                                                            unconfirmed:
+                                                                unconfirmed,
                                                             color: metaColor,
-                                                            labelStyle: TextStyle(
-                                                              fontFamily: HaloType
-                                                                  .monoFamily,
-                                                              fontFamilyFallback:
-                                                                  HaloType
-                                                                      .monoFallbackNow,
-                                                              fontSize: 8.5,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w600,
-                                                              color: metaColor,
-                                                              letterSpacing:
-                                                                  track(0.3),
-                                                            ),
                                                           ),
                                                         if (msg.burnAt !=
                                                             null) ...[
@@ -7221,7 +7256,7 @@ class _Bubble extends StatelessWidget {
                                 ? null
                                 : StickerStamp(
                                     time: _fmtTime(msg.when),
-                                    sent: showMeta,
+                                    sent: showMeta && !unconfirmed,
                                     delivered: showMeta && msg.delivered
                                         ? l10n.chatDelivered
                                         : null,

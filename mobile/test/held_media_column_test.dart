@@ -14,9 +14,9 @@ void main() {
   final upgrade = src.indexOf('onUpgrade: (db, oldV, newV) async {');
   final steps = src.substring(upgrade, src.indexOf('\n    );', upgrade));
 
-  test('made on create, and on the upgrade to 69 after every other step', () {
+  test('made on create, and on the upgrade to 69 after every older step', () {
     final version = RegExp(r'version: (\d+),').firstMatch(src)!.group(1)!;
-    expect(int.parse(version), 69);
+    expect(int.parse(version), 70);
     final table = src.substring(
       src.indexOf('CREATE TABLE IF NOT EXISTS held_onion ('),
     );
@@ -31,7 +31,7 @@ void main() {
     );
     final at69 = steps.indexOf('if (oldV < 69) {');
     for (final m in RegExp(r'if \(oldV < (\d+)\) \{').allMatches(steps)) {
-      if (m.start != at69) expect(m.start, lessThan(at69));
+      if (int.parse(m.group(1)!) < 69) expect(m.start, lessThan(at69));
     }
     // wrapped: a column already there is no failed boot
     final at = src.indexOf('Future<void> heldMediaColumn(');
