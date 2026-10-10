@@ -2,10 +2,10 @@
 // android's half of a shared text, read from its source: the app has no
 // kotlin test setup, and a pumped screen cannot reach the manifest. kryfo is
 // offered for text/plain in a filter of its own, beside the photo and video
-// one, under the app's own name. the words are read from the intent's
-// extras only, held in memory until dart lets them go, kept across a
-// process that went in the saved state, and offered warm and cold. the
-// photo and video path reads as it did
+// one, under the app's own name. the words come from the intent's extras,
+// or a small text file sent alone, cut whole, held in the process's memory
+// until dart lets them go and never in a saved state, and offered warm and
+// cold. the photo and video path reads as it did
 import 'package:flutter_test/flutter_test.dart';
 
 import 'source_body.dart';
@@ -67,18 +67,59 @@ void main() {
     final take = bodyOf(bridge, 'private fun offerText(');
     expect(take, contains('getCharSequenceExtra(Intent.EXTRA_TEXT)'));
     expect(take, contains('getCharSequenceExtra(Intent.EXTRA_SUBJECT)'));
-    expect(take, contains('take(TEXT_MOST)'));
-    expect(take, contains('invokeMethod("sharedText", null)'));
+    final keep = bodyOf(bridge, 'private fun keepText(');
+    expect(keep, contains('cut(text, TEXT_MOST)'));
+    expect(keep, contains('cut(subject, TEXT_MOST)'));
+    expect(keep, contains('invokeMethod("sharedText", null)'));
+    expect(bridge, contains('const val TEXT_MOST = 2 * 4096'));
+    // a pair's halves stay together at the cut
+    expect(
+      bodyOf(bridge, 'fun cut('),
+      contains('if (Character.isHighSurrogate(s[end - 1])) end--'),
+    );
     for (final body in [
       take,
-      bodyOf(bridge, 'fun saveText('),
-      bodyOf(bridge, 'fun restoreText('),
+      keep,
+      bodyOf(bridge, 'private fun readSmallText('),
     ]) {
-      expect(body, isNot(contains('EXTRA_STREAM')));
       expect(body, isNot(contains('File(')));
       expect(body, isNot(contains('SharedPreferences')));
       expect(body, isNot(contains('openOutputStream')));
     }
+  });
+
+  test('a text file shared alone is read when small and really text, never '
+      'by its name', () {
+    final take = bodyOf(bridge, 'private fun offerText(');
+    // only when the extras say nothing
+    expect(
+      take.indexOf('Intent.EXTRA_STREAM'),
+      greaterThan(take.indexOf('keepText(text, subject)')),
+    );
+    expect(take, contains('if (uri == null || !acceptable(uri)) return'));
+    expect(take, isNot(contains('describe(')));
+    expect(take, isNot(contains('DISPLAY_NAME')));
+    final read = bodyOf(bridge, 'private fun readSmallText(');
+    expect(bridge, contains('const val TEXT_FILE_MOST = 64 * 1024'));
+    expect(read, contains('if (buf.size() > TEXT_FILE_MOST) return null'));
+    expect(read, contains('textOfBytes('));
+    expect(read, isNot(contains('DISPLAY_NAME')));
+    final text = bodyOf(bridge, 'fun textOfBytes(');
+    expect(text, contains('CodingErrorAction.REPORT'));
+    expect(text, contains("it < ' '"));
+  });
+
+  test('nothing of a share goes into a saved state', () {
+    // the words live in the process alone: one that went takes them along
+    expect(activity, isNot(contains('onSaveInstanceState')));
+    expect(
+      bodyOf(activity, 'override fun onCreate('),
+      isNot(contains('tools.')),
+    );
+    expect(bridge, isNot(contains('Bundle')));
+    expect(bridge, isNot(contains('saveText')));
+    expect(bridge, isNot(contains('restoreText')));
+    expect(bridge, contains('private var sharedText: SharedWords? = null'));
   });
 
   test('dart peeks, marks and drops; only its own id goes', () {
@@ -95,8 +136,7 @@ void main() {
     expect(
       drop,
       contains(
-        'if (sharedText?.getString("id") == call.argument<String>("id")) '
-        'sharedText = null',
+        'if (sharedText?.id == call.argument<String>("id")) sharedText = null',
       ),
     );
     // a restored one is told about once dart can hear
@@ -115,21 +155,13 @@ void main() {
     }
   });
 
-  test('warm and cold, and back after the process went', () {
+  test('warm and cold, and never from a rebuilt screen', () {
     expect(
       bodyOf(activity, 'override fun onNewIntent('),
       contains('tools.offer(intent)'),
     );
-    final create = bodyOf(activity, 'override fun onCreate(');
-    expect(
-      create.indexOf('tools.restoreText(savedInstanceState)'),
-      allOf(greaterThan(0), lessThan(create.indexOf('super.onCreate('))),
-    );
-    expect(
-      bodyOf(activity, 'override fun onSaveInstanceState('),
-      contains('tools.saveText(outState)'),
-    );
-    // a screen rebuilt or opened from recents offers no stale intent
+    // a screen rebuilt after the process went, or opened from recents,
+    // offers no stale intent
     expect(
       bodyOf(activity, 'override fun configureFlutterEngine('),
       contains(
@@ -137,6 +169,17 @@ void main() {
         'Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) == 0) {\n'
         '            tools.offer(intent)',
       ),
+    );
+  });
+
+  test('both mics count as recording while they record', () {
+    expect(
+      sourceOf('lib/screens/chat_screen.dart'),
+      contains('_recUnguard = recordingUntil(lockGuard.closeOnLock(_abort));'),
+    );
+    expect(
+      sourceOf('lib/widgets/media_bubbles.dart'),
+      contains('_unguard = recordingUntil(lockGuard.closeOnLock(_abort));'),
     );
   });
 }

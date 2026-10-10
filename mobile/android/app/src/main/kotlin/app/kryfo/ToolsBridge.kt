@@ -8,7 +8,6 @@ import android.content.ContentValues
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
-import android.os.Bundle
 import android.os.ParcelFileDescriptor
 import android.provider.DocumentsContract
 import android.os.StatFs
@@ -33,8 +32,39 @@ class ToolsBridge(private val activity: Activity) {
         private const val MAX_AGE_MS = 15 * 60 * 1000L
         // dart cuts the words to a message's size. this only bounds what
         // crosses over
-        const val TEXT_MOST = 32 * 1024
-        const val STATE_TEXT = "kryfo_shared_text"
+        const val TEXT_MOST = 2 * 4096
+        // a text file shared as a stream is read up to this, else let go
+        const val TEXT_FILE_MOST = 64 * 1024
+
+        // words shared from another app: in this process's memory only, so
+        // a screen rebuilt keeps them and a process that went takes them
+        // along. never in a saved state
+        @Volatile
+        private var sharedText: SharedWords? = null
+
+        // [s] cut to [most] chars, never between the halves of a pair
+        fun cut(s: String?, most: Int): String? {
+            if (s == null || s.length <= most) return s
+            var end = most
+            if (Character.isHighSurrogate(s[end - 1])) end--
+            return s.substring(0, end)
+        }
+
+        // a file's bytes as text: utf-8 that decodes cleanly, with no
+        // control a text never holds
+        fun textOfBytes(bytes: ByteArray): String? {
+            val text = try {
+                java.nio.charset.StandardCharsets.UTF_8.newDecoder()
+                    .onMalformedInput(java.nio.charset.CodingErrorAction.REPORT)
+                    .onUnmappableCharacter(java.nio.charset.CodingErrorAction.REPORT)
+                    .decode(java.nio.ByteBuffer.wrap(bytes))
+                    .toString()
+            } catch (e: java.nio.charset.CharacterCodingException) {
+                return null
+            }
+            val odd = text.any { it < ' ' && it != '\n' && it != '\r' && it != '\t' }
+            return if (odd) null else text
+        }
 
         fun isText(type: String) =
             type.substringBefore(';').trim().lowercase() == "text/plain"
@@ -58,9 +88,6 @@ class ToolsBridge(private val activity: Activity) {
     private var channel: MethodChannel? = null
     private var shared: Uri? = null
     private var sharedMime: String? = null
-    // words shared from another app, in memory only, until dart says a chat
-    // took them or they were let go
-    private var sharedText: Bundle? = null
     private var pendingPick: MethodChannel.Result? = null
     private var pendingDelete: MethodChannel.Result? = null
     private var pendingSaveAs: MethodChannel.Result? = null
@@ -72,7 +99,7 @@ class ToolsBridge(private val activity: Activity) {
     fun attach(ch: MethodChannel) {
         channel = ch
         ch.setMethodCallHandler { call, result -> handle(call, result) }
-        // words a screen rebuilt after the process went still holds
+        // words this process holds for a screen made again over it
         if (sharedText != null) ch.invokeMethod("sharedText", null)
     }
 
@@ -97,7 +124,8 @@ class ToolsBridge(private val activity: Activity) {
     }
 
     // a newer share takes the place of one not used yet. a text file sent
-    // as a stream has no words to take
+    // as a stream is read when it is small and really text; its name alone
+    // is never taken
     private fun offerText(intent: Intent) {
         val (text, subject) = try {
             Pair(
@@ -107,33 +135,49 @@ class ToolsBridge(private val activity: Activity) {
         } catch (e: Exception) {
             return
         }
-        if (text.isNullOrBlank() && subject.isNullOrBlank()) return
+        if (!text.isNullOrBlank() || !subject.isNullOrBlank()) {
+            keepText(text, subject)
+            return
+        }
+        val uri: Uri? = try {
+            if (Build.VERSION.SDK_INT >= 33) {
+                intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                intent.getParcelableExtra(Intent.EXTRA_STREAM)
+            }
+        } catch (e: Exception) {
+            null
+        }
+        if (uri == null || !acceptable(uri)) return
+        Thread {
+            val read = readSmallText(uri) ?: return@Thread
+            activity.runOnUiThread { keepText(read, null) }
+        }.start()
+    }
+
+    private fun readSmallText(uri: Uri): String? = try {
+        activity.contentResolver.openInputStream(uri)?.use { i ->
+            val buf = java.io.ByteArrayOutputStream()
+            val chunk = ByteArray(8 * 1024)
+            while (true) {
+                val n = i.read(chunk)
+                if (n < 0) break
+                buf.write(chunk, 0, n)
+                if (buf.size() > TEXT_FILE_MOST) return null
+            }
+            textOfBytes(buf.toByteArray())?.takeIf { it.isNotBlank() }
+        }
+    } catch (e: Exception) {
+        null
+    }
+
+    private fun keepText(text: String?, subject: String?) {
         val id = ByteArray(8).also { SecureRandom().nextBytes(it) }
             .joinToString("") { "%02x".format(it) }
-        sharedText = Bundle().apply {
-            putString("id", id)
-            putString("text", text?.take(TEXT_MOST))
-            putString("subject", subject?.take(TEXT_MOST))
-        }
+        sharedText = SharedWords(id, cut(text, TEXT_MOST), cut(subject, TEXT_MOST))
         activity.runOnUiThread { channel?.invokeMethod("sharedText", null) }
     }
-
-    // android keeps a saved state in memory and hands it back to a screen
-    // rebuilt after the process went. nothing of it reaches the disk
-    fun saveText(out: Bundle) {
-        sharedText?.let { out.putBundle(STATE_TEXT, Bundle(it)) }
-    }
-
-    fun restoreText(state: Bundle?) {
-        if (sharedText == null) sharedText = state?.getBundle(STATE_TEXT)
-    }
-
-    private fun textOf(b: Bundle): Map<String, String?> = mapOf(
-        "id" to b.getString("id"),
-        "text" to b.getString("text"),
-        "subject" to b.getString("subject"),
-        "seen" to b.getString("seen")
-    )
 
     private fun acceptable(uri: Uri): Boolean {
         if (uri.scheme != "content") return false
@@ -192,16 +236,18 @@ class ToolsBridge(private val activity: Activity) {
                 sharedMime = null
                 result.success(if (u == null) null else describe(u, m))
             }
-            "takeSharedText" -> result.success(sharedText?.let { textOf(it) })
+            "takeSharedText" -> result.success(sharedText?.let {
+                mapOf("id" to it.id, "text" to it.text, "subject" to it.subject, "seen" to it.seen)
+            })
             "seenSharedText" -> {
-                val b = sharedText
-                if (b != null && b.getString("id") == call.argument<String>("id")) {
-                    b.putString("seen", call.argument<String>("where"))
+                val w = sharedText
+                if (w != null && w.id == call.argument<String>("id")) {
+                    sharedText = w.copy(seen = call.argument<String>("where"))
                 }
                 result.success(true)
             }
             "dropSharedText" -> {
-                if (sharedText?.getString("id") == call.argument<String>("id")) sharedText = null
+                if (sharedText?.id == call.argument<String>("id")) sharedText = null
                 result.success(true)
             }
             "pick" -> pick(call.argument<String>("kind") ?: "image", result)
@@ -608,3 +654,10 @@ class ToolsBridge(private val activity: Activity) {
         return false
     }
 }
+
+data class SharedWords(
+    val id: String,
+    val text: String?,
+    val subject: String?,
+    val seen: String? = null
+)
