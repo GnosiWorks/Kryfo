@@ -154,6 +154,7 @@ class Unsealed {
     this.resend = false,
     this.resendSince,
     this.wrapped,
+    this.keyChanged = false,
   });
 
   final String from;
@@ -171,6 +172,9 @@ class Unsealed {
   final int? resendSince;
   // when the sender wrapped it, by their clock, where the lane said
   final int? wrapped;
+  // no arrival: [from]'s key changed while the vault was shut, and their
+  // chat shows it as the vault opens
+  final bool keyChanged;
 }
 
 // the tables, behind a seam so the router runs on a stand-in
@@ -694,6 +698,7 @@ class VaultRouter {
         'bp': a.backPair ? 1 : 0,
         'at': a.at,
         if (a.resend) 'rs': 1,
+        if (a.keyChanged) 'kc': 1,
         'rf': ?a.resendSince,
         'a': ?a.wrapped,
       }),
@@ -779,6 +784,7 @@ class VaultRouter {
         resend: j['rs'] == 1,
         resendSince: rf is int ? rf : null,
         wrapped: a is int ? a : null,
+        keyChanged: j['kc'] == 1,
       );
     } catch (_) {
       return null;

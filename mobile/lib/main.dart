@@ -92,7 +92,7 @@ import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:app_links/app_links.dart';
 import 'signal_session.dart';
 import 'signal_stores.dart'
-    show invitePreKeyId, kDevSignalPrefix, onPeerKeyChanged;
+    show invitePreKeyId, kDevSignalPrefix, onPeerKeyChanged, onPeerKeyMismatch;
 import 'dart:isolate';
 import 'dlog.dart';
 import 'read_burn.dart' show burnStartBy, burnWaitsRow, burnWaitsSql, kBurnSkew;
@@ -7408,8 +7408,7 @@ Future<String?> signalDecrypt(
     // never sets it.
     // the dev chat never warns: a key that is not the pinned one is dropped
     if (flagKeyChange && !isDevChat(peerId)) {
-      await live.setKeyChanged(peerId, true);
-      appState.keyChanged();
+      await appState.flagKeyChanged(peerId);
     }
     return null;
   } on InvalidKeyIdException catch (_) {
@@ -9179,6 +9178,37 @@ class AppState extends ChangeNotifier {
         (Object e) => dlog('vault: cards not read (${e.runtimeType})'),
       ),
     );
+  }
+
+  // a known peer's key moved: the banner goes on their row wherever it is.
+  // one a shut vault holds is sealed to it and lands as it opens, so the
+  // everyday side shows nothing
+  final Set<String> _keyChangeSealed = {};
+  Future<void> flagKeyChanged(String peer) async {
+    if (isDevId(peer)) return;
+    try {
+      await live.setKeyChanged(peer, true);
+      final v = _openVault;
+      if (v != null) {
+        await v.setKeyChanged(peer, true);
+      } else if (_router.cardOf(peer) != null &&
+          !_router.blocks(peer) &&
+          _keyChangeSealed.add(peer)) {
+        final kept = await _router.seal(
+          Unsealed(
+            peer,
+            '',
+            false,
+            DateTime.now().millisecondsSinceEpoch,
+            keyChanged: true,
+          ),
+        );
+        if (!kept) _keyChangeSealed.remove(peer);
+      }
+    } catch (e) {
+      dlog('key change: not kept (${e.runtimeType})');
+    }
+    keyChanged();
   }
 
   // every held contact of one database, read once per pass: their queued
@@ -12600,7 +12630,16 @@ class AppState extends ChangeNotifier {
           if (!identical(_openVault, vault) || _moveDone != null) return;
           if (id > _sealedPast) _sealedPast = id;
           var stays = false;
-          if (u != null && u.resend) {
+          if (u != null && u.keyChanged) {
+            _keyChangeSealed.remove(u.from);
+            try {
+              await vault.setKeyChanged(u.from, true);
+              keyChanged();
+            } catch (e) {
+              if (!identical(_openVault, vault)) return;
+              dlog('unseal: a key change not kept (${e.runtimeType})');
+            }
+          } else if (u != null && u.resend) {
             try {
               await _resendTo(vault, u.from, since: u.resendSince);
             } catch (e) {
@@ -19086,6 +19125,7 @@ void main() async {
   // a key saved for someone that is not the one held before: open pages that
   // show it read again
   onPeerKeyChanged = appState.keyChanged;
+  onPeerKeyMismatch = (peer) => unawaited(appState.flagKeyChanged(peer));
   // a toast shown while the lock is up waits for it to lift
   haloWhenOpen = (act) => lockGuard.afterUnlock(act);
   // toasts live in the root overlay, over every route and sheet

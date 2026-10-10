@@ -25,6 +25,10 @@ const kDevSignalPrefix = 'dev_';
 // number reads it again
 void Function()? onPeerKeyChanged;
 
+// called when a known peer comes with another key than the one held: the
+// banner goes on their chat wherever it is kept, this database or another
+void Function(String address)? onPeerKeyMismatch;
+
 class HaloIdentityKeyStore implements IdentityKeyStore {
   final Database _db;
   final IdentityKeyPair _idPair;
@@ -109,6 +113,9 @@ class HaloIdentityKeyStore implements IdentityKeyStore {
       where: 'halo_id = ?',
       whereArgs: [address.getName()],
     );
+    if (address.getName() != '_pending_back_pair_') {
+      onPeerKeyMismatch?.call(address.getName());
+    }
     return true;
   }
 
