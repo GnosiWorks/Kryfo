@@ -2343,8 +2343,11 @@ class HaloDb implements GroupOwedStore {
     return (c?['verified'] as int? ?? 0) == 1;
   }
 
-  Future<String?> heldKey(String haloId) async =>
-      heldKeyHex(await open(), haloId, identity: _keySource);
+  // no key when it could not be read: no number shows
+  Future<String?> heldKey(String haloId) async {
+    final k = await heldKeyHex(await open(), haloId, identity: _keySource);
+    return k == kKeyUnread ? null : k;
+  }
 
   Future<bool> keyHeld(String haloId) async =>
       keyHeldIn(await open(), haloId, identity: _keySource);
@@ -6427,9 +6430,28 @@ String _keyHex(List<int> b) {
 // identity's keys: the decoy goes nowhere, and their cards are all it knows.
 // the everyday and the decoy database read their own tables
 Future<String?> Function(String haloId)? keySourceFor(HaloContainer c) =>
-    identical(c, HaloContainer.vault)
-    ? (id) async => peerIdentityHex(await live.open(), id)
-    : null;
+    identical(c, HaloContainer.vault) ? _everydayKeyOf : null;
+
+// what a key reads as when the everyday database cannot be read, a restore
+// putting another file in its place say. it is no key, so it matches no mark
+const kKeyUnread = 'unread';
+
+Future<String?> _everydayKeyOf(String haloId) async {
+  try {
+    final rows = await (await live.open()).query(
+      'peer_identities',
+      columns: ['identity_key'],
+      where: 'address = ?',
+      whereArgs: [haloId],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return _keyHex(rows.first['identity_key'] as List<int>);
+  } catch (e) {
+    dlog('held key: everyday not read (${e.runtimeType})');
+    return kKeyUnread;
+  }
+}
 
 // the key a database's signal tables hold for someone, null when none
 Future<String?> peerIdentityHex(DatabaseExecutor db, String haloId) async {
@@ -6506,7 +6528,16 @@ Future<bool> markVerified(
     where: 'halo_id = ?',
     whereArgs: [haloId],
   );
-  return true;
+  // read again: a key that moved during the write keeps its banner, and the
+  // mark stays on the old key, so the hold stands
+  if (await heldKeyHex(db, haloId, identity: identity) == held) return true;
+  await db.update(
+    'contacts',
+    {'verified': 0, 'key_changed': 1},
+    where: 'halo_id = ? AND verified_key = ?',
+    whereArgs: [haloId, held],
+  );
+  return false;
 }
 
 // verified under one key, holding another now: the mark stays on the old key
