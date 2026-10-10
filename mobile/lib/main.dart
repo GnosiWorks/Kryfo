@@ -18616,6 +18616,8 @@ class AppState extends ChangeNotifier {
     // a retry passes when its row was written
     int? writtenAt,
   }) async {
+    // a group that ended, or was left or taken out of: nothing is kept
+    if (!await session.groupExists(groupId)) return false;
     // a room not let in yet: nobody reads this phone's key, nothing is kept
     if (await _roomWaiting(session.getGroup(groupId))) return false;
     // a retry of a poll passes only its uid: the options come off the row

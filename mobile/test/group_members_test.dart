@@ -853,6 +853,13 @@ void main() {
       },
     );
 
+    test('a send into a group no longer here keeps nothing', () async {
+      final w = await _World.make();
+      await w.live.deleteGroup(_g);
+      expect(await w.app.sendToGroup(_g, 'anyone?'), isFalse);
+      expect(w.live.msgs, isEmpty);
+    });
+
     test('the creator taking my room key out ends the room here', () async {
       final io = ArrivalIo();
       final (live, app) = await _roomWorld(io: io);

@@ -1059,8 +1059,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       // no new rows: reactions, edits, unsends and burns need a full reload,
       // except while one of our own sends is in flight. a reload then
       // orphans the optimistic row and freezes its send pill, so it waits.
+      // a group that ended or was left meanwhile closes the screen anyway
       final sendInFlight = _messages.any((m) => m.sending);
-      if (!sendInFlight) _load();
+      if (!sendInFlight || !await session.groupExists(widget.groupId)) {
+        if (mounted) _load();
+      }
       return;
     }
     final nickById = <String, String>{};
@@ -1484,6 +1487,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       m.failed = false;
       m.sending = true;
     });
+    // the group is gone: nothing goes, and the screen closes
+    if (!await session.groupExists(widget.groupId)) {
+      if (mounted) _load();
+      return;
+    }
     final mediaSrc = m.mediaPath ?? m.filePath;
     if (mediaSrc != null) {
       final f = File(mediaSrc);
