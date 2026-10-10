@@ -8028,10 +8028,11 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
     _willCancel = cancel;
     _overlay?.leave();
     _overlay = null;
-    final path = await _rec.stop();
-    // handed on or shredded below: dispose has nothing left to shred
-    final take = path ?? _path;
+    // handed on or shredded below, before the stop is awaited: a dispose
+    // meanwhile has nothing of it to shred
+    final mine = _path;
     _path = null;
+    final take = await _rec.stop() ?? mine;
     if (cancel) {
       // a cancelled note is still a recording of a voice: shredded
       if (take != null) await shredFile(take);

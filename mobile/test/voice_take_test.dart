@@ -63,11 +63,14 @@ void main() {
       final dispose = bodyOf(mic, 'void dispose(');
       expect(dispose, contains('final take = _path;'), reason: f);
       expect(dispose, contains('shredFile(take)'), reason: f);
-      // a take handed on is the sender's to shred, not dispose's
+      // a take handed on is the sender's to shred, not dispose's: it is
+      // let go before the stop is awaited, so a dispose meanwhile cannot
+      // shred it under the sender
       final end = bodyOf(mic, 'Future<void> _end(');
+      expect(end.indexOf('_path = null;'), greaterThan(0), reason: f);
       expect(
         end.indexOf('_path = null;'),
-        lessThan(end.indexOf('widget.onComplete(take')),
+        lessThan(end.indexOf('await _rec.stop()')),
         reason: f,
       );
     }
