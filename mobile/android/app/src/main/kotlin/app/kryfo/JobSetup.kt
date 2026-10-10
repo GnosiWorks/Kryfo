@@ -10,6 +10,7 @@ import android.content.Context
 // back without the app being opened.
 object JobSetup {
     const val PERIODIC_JOB_ID = 2001
+    const val COPY_SWEEP_JOB_ID = 2002
     private const val EVERY_MS = 15 * 60 * 1000L
     // a window of the last five minutes of each period, the least android
     // allows. with the whole period as its window two runs could land back
@@ -29,6 +30,20 @@ object JobSetup {
             .setPeriodic(EVERY_MS, FLEX_MS)
             .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
             .setPersisted(true)
+            .build()
+        scheduler.schedule(jobInfo)
+    }
+
+    // a copy handed to another app is looked at again once its grace is
+    // over. a job, not a timer: it runs even when the process was frozen or
+    // killed meanwhile
+    fun scheduleCopySweep(context: Context) {
+        if (!KryfoState.hasData(context)) return
+        val scheduler = context.getSystemService(JobScheduler::class.java) ?: return
+        val component = ComponentName(context, CopySweepJobService::class.java)
+        val jobInfo = JobInfo.Builder(COPY_SWEEP_JOB_ID, component)
+            .setMinimumLatency(Shred.GRACE_MS + 30_000L)
+            .setOverrideDeadline(Shred.GRACE_MS + 5 * 60_000L)
             .build()
         scheduler.schedule(jobInfo)
     }

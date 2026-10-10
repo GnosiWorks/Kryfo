@@ -27,7 +27,7 @@ class HaloApplication : Application() {
         // still be reading it after this process was restarted, so one is
         // shredded only once past the grace, as on resume
         Thread {
-            Shred.handed(cacheDir)
+            if (Shred.handed(cacheDir)) JobSetup.scheduleCopySweep(this)
             ToolsBridge.sweep(cacheDir, true)
         }.start()
     }

@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import 'package:share_plus/share_plus.dart';
+import 'open_file.dart' show shareFileOut;
 
 import 'theme.dart';
 import 'l10n/l10n.dart';
@@ -152,11 +152,9 @@ Future<void> shareContactCard({
     await file.writeAsBytes(bytes.buffer.asUint8List(), flush: true);
 
     await lockState.hold(
-      () => SharePlus.instance.share(
-        ShareParams(
-          files: [XFile(file.path)],
-          text: l10n.contactCardMessageMeOnKryfo(haloId),
-        ),
+      () => shareFileOut(
+        file.path,
+        text: l10n.contactCardMessageMeOnKryfo(haloId),
       ),
     );
   } finally {
@@ -180,7 +178,5 @@ Future<void> shareContactVcf({
   final dir = await getTemporaryDirectory();
   final file = File('${dir.path}/kryfo-$haloId.vcf');
   await file.writeAsString(vcf, flush: true);
-  await lockState.hold(
-    () => SharePlus.instance.share(ShareParams(files: [XFile(file.path)])),
-  );
+  await lockState.hold(() => shareFileOut(file.path));
 }

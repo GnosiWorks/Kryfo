@@ -7805,37 +7805,48 @@ Future<void> sweepCaptures() async {
   }
 }
 
-// a file handed to the share sheet is a plain copy in the share plugin's
-// folder. the app it went to may read it only once this one is back, so a
-// copy younger than the grace stays, as on the native side (Shred.kt),
-// which looks again on resume
+// a file handed to the share sheet is a plain copy in cache/share/, or the
+// share plugin's folder from before. the app it went to may read it only
+// once this one is back, so a copy younger than the grace stays, as on the
+// native side (Shred.kt), whose job looks again. a time far ahead is a clock
+// that moved, and counts as old
 const kShareGrace = Duration(minutes: 10);
+const _clockSkew = Duration(minutes: 1);
 
 @visibleForTesting
 Future<void> sweepShareCopies(Directory cache, {DateTime? now}) async {
-  final dir = Directory('${cache.path}/share_plus');
-  if (!await dir.exists()) return;
-  final cutoff = (now ?? DateTime.now()).subtract(kShareGrace);
-  final folders = <Directory>[];
-  await for (final e in dir.list(recursive: true, followLinks: false)) {
-    if (e is Directory) {
-      folders.add(e);
-      continue;
+  final at = now ?? DateTime.now();
+  final cutoff = at.subtract(kShareGrace);
+  final ahead = at.add(_clockSkew);
+  bool old(DateTime t) => t.isBefore(cutoff) || t.isAfter(ahead);
+  for (final name in const ['share', 'share_plus']) {
+    final dir = Directory('${cache.path}/$name');
+    if (!await dir.exists()) continue;
+    // a folder's time moves as its files go, so it is read first
+    final folders = <(Directory, DateTime)>[];
+    await for (final e in dir.list(recursive: true, followLinks: false)) {
+      try {
+        if (e is Directory) {
+          folders.add((e, (await e.stat()).modified));
+        } else if (e is Link) {
+          await e.delete();
+        } else if (e is File && old(await e.lastModified())) {
+          await shredFile(e.path);
+        }
+      } on FileSystemException {
+        // gone meanwhile
+      }
     }
-    if (e is! File) continue;
-    try {
-      if ((await e.lastModified()).isBefore(cutoff)) await shredFile(e.path);
-    } on FileSystemException {
-      // gone meanwhile
-    }
-  }
-  // only an emptied folder goes, the deepest first
-  folders.sort((a, b) => b.path.length.compareTo(a.path.length));
-  for (final d in [...folders, dir]) {
-    try {
-      await d.delete();
-    } on FileSystemException {
-      // a young copy is still in it
+    // only an emptied folder goes, and only one old itself, the deepest
+    // first
+    folders.sort((a, b) => b.$1.path.length.compareTo(a.$1.path.length));
+    for (final (d, t) in [...folders, (dir, cutoff)]) {
+      if (!identical(d, dir) && !old(t)) continue;
+      try {
+        await d.delete();
+      } on FileSystemException {
+        // a young copy is still in it
+      }
     }
   }
 }
@@ -13897,6 +13908,8 @@ class AppState extends ChangeNotifier {
   // an unlock's outcome, under the lock screen before it lifts: the screens
   // get the session the pin opened, and every screen of the other one goes
   Future<void> sessionFor(PinResult r, {String? vaultKey}) async {
+    // nothing opened under one pin is left for another
+    await shredOpenCopies();
     // a vault left open by a lock that never reached the screen shuts first
     _shutVault();
     // and what home shows after one shut is read again before anything
@@ -14116,6 +14129,8 @@ class AppState extends ChangeNotifier {
   // the lock is going up: a vault session shuts at once, and the key of a
   // vault made by a setup that did not finish goes
   void lockingUp() {
+    // a file opened with another app goes with the session that opened it
+    unawaited(shredOpenCopies());
     unawaited(
       vaultSetupDone().catchError((Object e) {
         dlog('vault: setup key (${e.runtimeType})');

@@ -511,7 +511,11 @@ class MainActivity : FlutterFragmentActivity() {
                         val bytes = call.argument<ByteArray>("bytes")
                         val maxEdge = call.argument<Int>("maxEdge") ?: 1280
                         val quality = call.argument<Int>("quality") ?: 70
-                        result.success(if (bytes == null) null else shrinkJpeg(bytes, maxEdge, quality))
+                        // a decode of a big frame takes long enough to freeze the ui
+                        Thread {
+                            val out = if (bytes == null) null else shrinkJpeg(bytes, maxEdge, quality)
+                            runOnUiThread { result.success(out) }
+                        }.start()
                     }
                     "saveToPictures" -> {
                         val bytes = call.argument<ByteArray>("bytes")
@@ -523,6 +527,20 @@ class MainActivity : FlutterFragmentActivity() {
                         val path = call.argument<String>("path")
                         val name = call.argument<String>("name")
                         if (path == null) result.success(false) else openFile(path, name, result)
+                    }
+                    "shareFile" -> {
+                        val path = call.argument<String>("path")
+                        if (path == null) {
+                            result.success(false)
+                        } else {
+                            shareFile(
+                                path,
+                                call.argument<String>("name"),
+                                call.argument<String>("text"),
+                                call.argument<String>("subject"),
+                                result
+                            )
+                        }
                     }
                     "videoInfo" -> {
                         val path = call.argument<String>("path")
@@ -543,57 +561,68 @@ class MainActivity : FlutterFragmentActivity() {
             }
     }
 
-    // "open with". another app cannot read our files, and must not be able
-    // to: the file is copied to cache/open/, the only folder the provider
-    // serves, and the uri is granted to the one app that gets the intent.
-    // the share sheet's copies sit in share_plus/. some apps read theirs only
-    // after this one is back, or keep reading in the background, so a copy
-    // is given a while first and shredded once it is older. whatever is left
-    // young is looked at again then, and at the next start.
-    private val shareGraceMs = Shred.GRACE_MS
-    private val shareTimer = android.os.Handler(android.os.Looper.getMainLooper())
-    private val shareSweep = Runnable { clearOpenCopies() }
-
+    // "open with" and share. another app cannot read our files, and must
+    // not be able to: the file is copied to cache/open/ or cache/share/,
+    // folders the provider serves, and the uri is granted to the one app
+    // that gets the intent. some apps read theirs only after this one is
+    // back, or keep reading in the background, so a copy is given a while
+    // first and shredded once it is older, by a job that comes back while
+    // one is young. an open copy goes with a lock too (dart's lockingUp).
     private fun clearOpenCopies() {
         Thread {
-            if (Shred.handed(cacheDir)) {
-                shareTimer.removeCallbacks(shareSweep)
-                shareTimer.postDelayed(shareSweep, shareGraceMs)
-            }
+            if (Shred.handed(cacheDir)) JobSetup.scheduleCopySweep(this)
         }.start()
+    }
+
+    private fun mimeOf(f: File): String {
+        val ext = f.extension.lowercase()
+        return MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext)
+            ?: when (ext) {
+                "mov" -> "video/quicktime"
+                "mkv" -> "video/x-matroska"
+                "m4v" -> "video/mp4"
+                "3g2" -> "video/3gpp2"
+                "opus" -> "audio/ogg"
+                else -> "application/octet-stream"
+            }
+    }
+
+    // [src] copied into a folder of its own under cache/[into], so a
+    // younger copy of the same name that an app may still be reading is
+    // never written over. a copy cut short is shredded, and null comes back
+    private fun handOut(src: File, name: String?, into: String): File? {
+        val top = File(cacheDir, into)
+        Shred.aged(top, System.currentTimeMillis() - Shred.GRACE_MS)
+        val rnd = ByteArray(8).also { java.security.SecureRandom().nextBytes(it) }
+            .joinToString("") { "%02x".format(it) }
+        val dir = File(top, rnd)
+        val safe = (name ?: src.name).replace(Regex("[^A-Za-z0-9._ -]"), "_").takeLast(80)
+        val dst = File(dir, if (safe.isBlank()) "file" else safe)
+        return try {
+            dir.mkdirs()
+            src.inputStream().use { i -> dst.outputStream().use { o -> i.copyTo(o) } }
+            JobSetup.scheduleCopySweep(this)
+            dst
+        } catch (e: Exception) {
+            Shred.tree(dir)
+            null
+        }
     }
 
     private fun openFile(path: String, name: String?, result: MethodChannel.Result) {
         Thread {
-            var ok = false
+            val dst = handOut(File(path), name, "open")
+            if (dst == null) {
+                runOnUiThread { result.success(false) }
+                return@Thread
+            }
+            var started = false
             try {
-                val src = File(path)
-                val open = File(cacheDir, "open")
-                Shred.aged(open, System.currentTimeMillis() - Shred.GRACE_MS)
-                // a folder of its own, so a younger copy of the same name
-                // that an app may still be reading is never written over
-                val rnd = ByteArray(8).also { java.security.SecureRandom().nextBytes(it) }
-                    .joinToString("") { "%02x".format(it) }
-                val dir = File(open, rnd)
-                dir.mkdirs()
-                val safe = (name ?: src.name).replace(Regex("[^A-Za-z0-9._ -]"), "_").takeLast(80)
-                val dst = File(dir, if (safe.isBlank()) "file" else safe)
-                src.inputStream().use { i -> dst.outputStream().use { o -> i.copyTo(o) } }
                 val uri = androidx.core.content.FileProvider.getUriForFile(
                     this, "$packageName.open", dst
                 )
-                val ext = dst.extension.lowercase()
-                val mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext)
-                    ?: when (ext) {
-                        "mov" -> "video/quicktime"
-                        "mkv" -> "video/x-matroska"
-                        "m4v" -> "video/mp4"
-                        "3g2" -> "video/3gpp2"
-                        "opus" -> "audio/ogg"
-                        else -> "application/octet-stream"
-                    }
                 val view = Intent(Intent.ACTION_VIEW).apply {
-                    setDataAndType(uri, mime)
+                    setDataAndType(uri, mimeOf(dst))
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
                 runOnUiThread {
@@ -601,17 +630,72 @@ class MainActivity : FlutterFragmentActivity() {
                         startActivity(view)
                         result.success(true)
                     } catch (e: ActivityNotFoundException) {
-                        // nothing on this phone opens that kind of file
+                        // nothing on this phone opens that kind of file: no
+                        // app was handed the copy
+                        Thread { Shred.tree(dst.parentFile!!) }.start()
                         result.success(false)
                     } catch (e: Exception) {
+                        Thread { Shred.tree(dst.parentFile!!) }.start()
                         result.success(false)
                     }
                 }
-                ok = true
+                started = true
             } catch (e: Exception) {
                 // fall through
             }
-            if (!ok) runOnUiThread { result.success(false) }
+            if (!started) {
+                Shred.tree(dst.parentFile!!)
+                runOnUiThread { result.success(false) }
+            }
+        }.start()
+    }
+
+    // the share sheet with a copy of ours, not the share plugin's: that one
+    // drops its folder whole, unzeroed, at every next share, also while an
+    // app may still be reading it
+    private fun shareFile(
+        path: String,
+        name: String?,
+        text: String?,
+        subject: String?,
+        result: MethodChannel.Result
+    ) {
+        Thread {
+            val dst = handOut(File(path), name, "share")
+            if (dst == null) {
+                runOnUiThread { result.success(false) }
+                return@Thread
+            }
+            var started = false
+            try {
+                val uri = androidx.core.content.FileProvider.getUriForFile(
+                    this, "$packageName.open", dst
+                )
+                val send = Intent(Intent.ACTION_SEND).apply {
+                    type = mimeOf(dst)
+                    putExtra(Intent.EXTRA_STREAM, uri)
+                    if (!text.isNullOrBlank()) putExtra(Intent.EXTRA_TEXT, text)
+                    if (!subject.isNullOrBlank()) putExtra(Intent.EXTRA_SUBJECT, subject)
+                    clipData = android.content.ClipData.newRawUri("", uri)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                runOnUiThread {
+                    try {
+                        startActivity(Intent.createChooser(send, null))
+                        result.success(true)
+                    } catch (e: Exception) {
+                        Thread { Shred.tree(dst.parentFile!!) }.start()
+                        result.success(false)
+                    }
+                }
+                started = true
+            } catch (e: Exception) {
+                // fall through
+            }
+            if (!started) {
+                Shred.tree(dst.parentFile!!)
+                runOnUiThread { result.success(false) }
+            }
         }.start()
     }
 

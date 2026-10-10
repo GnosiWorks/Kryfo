@@ -16,6 +16,7 @@ import 'package:path_provider/path_provider.dart';
 import 'main.dart' show engine, session, sessionQuiet;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dlog.dart';
+import 'shred.dart' show shredOpenCopies;
 
 // everything still running checks this before touching the database. the
 // timers outlive the widget tree and cannot all be cancelled from here.
@@ -105,6 +106,9 @@ Future<void> _erase({Set<String> keep = const {}}) async {
     await secureStore.deleteAll();
     final prefs0 = await SharedPreferences.getInstance();
     await prefs0.clear();
+    // a file opened with another app is a decrypted copy: zeroed, not just
+    // left to the clear-data call
+    await shredOpenCopies();
     // empty every app storage dir, so the wal/shm sidecars and media/ go
     // with halo.db
     final docs = await getApplicationDocumentsDirectory();

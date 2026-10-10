@@ -13,7 +13,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import '../picked.dart';
 import '../sent_name.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:record/record.dart';
 import 'dart:io';
 import 'dart:convert';
@@ -1903,10 +1902,9 @@ class _ChatScreenState extends State<ChatScreen>
                             : () {
                                 dismiss(now: true);
                                 lockState.hold(
-                                  () => SharePlus.instance.share(
-                                    ShareParams(
-                                      files: [XFile(target.filePath!)],
-                                    ),
+                                  () => shareFileOut(
+                                    target.filePath!,
+                                    name: target.fileName,
                                   ),
                                 );
                               },

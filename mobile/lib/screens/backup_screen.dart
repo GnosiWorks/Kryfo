@@ -10,7 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
+import '../open_file.dart' show shareFileOut;
 import '../backup.dart';
 import '../main.dart' hide live;
 import '../theme.dart';
@@ -114,17 +114,16 @@ class _BackupScreenState extends State<BackupScreen> {
           },
         );
       }
-      var out = (handed: false, shared: false);
+      var handed = false;
       try {
-        out = await _handOver(path, name);
+        handed = await _handOver(path, name);
       } finally {
-        // a shared file is read by the other app after share() returns,
-        // so that one is left for the boot sweep. every other way out
-        // shreds the copy here
-        if (!out.shared) await shredFile(path);
+        // the share sheet is handed a copy of its own, so this one goes
+        // whichever way out it was
+        await shredFile(path);
       }
-      if (!out.handed) sayLater();
-      if (move && out.handed) {
+      if (!handed) sayLater();
+      if (move && handed) {
         // the file is out of our hands: from here this phone is retired,
         // and the next screen says so. one never handed over, the screen
         // gone under a lock, retires nothing
@@ -145,15 +144,9 @@ class _BackupScreenState extends State<BackupScreen> {
   }
 
   // the system save dialog first, the share sheet when that is refused.
-  // neither reads the file into memory. shared when the share sheet took
-  // it: that app reads the file after we return, so the copy is left for
-  // the boot sweep.
-  Future<({bool handed, bool shared})> _handOver(
-    String path,
-    String name,
-  ) async {
-    const none = (handed: false, shared: false);
-    if (!mounted) return none;
+  // neither reads the file into memory
+  Future<bool> _handOver(String path, String name) async {
+    if (!mounted) return false;
     var saved = false;
     try {
       saved = await lockState.hold(
@@ -169,21 +162,19 @@ class _BackupScreenState extends State<BackupScreen> {
     }
     if (saved) {
       if (mounted) showHaloToast(context, l10n.backupBackupSavedKeepThe);
-      return (handed: true, shared: false);
+      return true;
     }
-    if (!mounted) return none;
+    if (!mounted) return false;
     await _share(path);
-    return (handed: true, shared: true);
+    return true;
   }
 
   Future<void> _share(String path) async {
     await lockState.hold(
-      () => SharePlus.instance.share(
-        ShareParams(
-          files: [XFile(path)],
-          subject: l10n.backupKryfoBackup,
-          text: l10n.backupYourEncryptedKryfoBackup,
-        ),
+      () => shareFileOut(
+        path,
+        subject: l10n.backupKryfoBackup,
+        text: l10n.backupYourEncryptedKryfoBackup,
       ),
     );
   }

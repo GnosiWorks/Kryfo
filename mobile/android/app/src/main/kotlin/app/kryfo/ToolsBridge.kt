@@ -40,7 +40,7 @@ class ToolsBridge(private val activity: Activity) {
                 val dir = File(cacheDir, name)
                 val kids = dir.listFiles() ?: continue
                 for (f in kids) {
-                    val old = now - f.lastModified() > MAX_AGE_MS
+                    val old = Shred.old(f.lastModified(), now - MAX_AGE_MS, now)
                     if (old || (all && name == IN_DIR)) Shred.tree(f)
                 }
             }
@@ -167,8 +167,12 @@ class ToolsBridge(private val activity: Activity) {
             "dropCreated" -> dropCreated(call.argument<String>("uri"), result)
             "openCacheOut" -> openCacheOut(call.argument<String>("name"), result)
             "sweep" -> {
-                sweep(activity.cacheDir, call.argument<Boolean>("all") ?: false)
-                result.success(true)
+                // a shred of a big video takes a while: never on the ui thread
+                val all = call.argument<Boolean>("all") ?: false
+                Thread {
+                    sweep(activity.cacheDir, all)
+                    activity.runOnUiThread { result.success(true) }
+                }.start()
             }
             "sdk" -> result.success(Build.VERSION.SDK_INT)
             else -> result.notImplemented()

@@ -14,7 +14,6 @@ import '../forward.dart';
 import '../widgets/key_held.dart';
 import '../picked.dart';
 import '../sent_name.dart';
-import 'package:share_plus/share_plus.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/pins.dart';
@@ -2654,9 +2653,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
               : () {
                   dismiss();
                   lockState.hold(
-                    () => SharePlus.instance.share(
-                      ShareParams(files: [XFile(target.filePath!)]),
-                    ),
+                    () => shareFileOut(target.filePath!, name: target.fileName),
                   );
                 },
         ),
