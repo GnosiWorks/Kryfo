@@ -1,0 +1,25 @@
+{
+  "country": "tm",
+  "settings": [
+    {
+      "bridges": {
+        "bridge_strings": [
+          "snowflake 192.0.2.5:80 573060D8F2B4A926708A8904D6DB40AEDDC237C6 fingerprint=573060D8F2B4A926708A8904D6DB40AEDDC237C6 url=https://snowflake-broker.torproject.net/ ampcache=https://cdn.ampproject.org/ front=www.google.com ice=stun:stun.antisip.com:3478,stun:stun.epygi.com:3478,stun:stun.uls.co.za:3478,stun:stun.voipgate.com:3478,stun:stun.mixvoip.com:3478,stun:stun.telnyx.com:3478,stun:stun.hot-chilli.net:3478,stun:stun.fitauto.ru:3478,stun:stun.m-online.net:3478 utls-imitate=hellorandomizedalpn",
+          "snowflake 192.0.2.6:80 72AF075E62A96FF83E25846BCC9524E29E1024D3 fingerprint=72AF075E62A96FF83E25846BCC9524E29E1024D3 url=https://snowflake-broker.torproject.net/ ampcache=https://cdn.ampproject.org/ front=www.google.com ice=stun:stun.antisip.com:3478,stun:stun.epygi.com:3478,stun:stun.uls.co.za:3478,stun:stun.voipgate.com:3478,stun:stun.mixvoip.com:3478,stun:stun.telnyx.com:3478,stun:stun.hot-chilli.net:3478,stun:stun.fitauto.ru:3478,stun:stun.m-online.net:3478 utls-imitate=hellorandomizedalpn"
+        ],
+        "source": "bridgedb",
+        "type": "snowflake"
+      }
+    },
+    {
+      "bridges": {
+        "bridge_strings": [
+          "obfs4 192.0.2.141:60368 77A3CC80C5E43AA1347BA2BAF93E9CD32A41D0E4 cert=kZ9Sn9BAj+M223QP0RE1EgPGjqX9WcUx0kjHwZ3DHmz0Ib3keXpyQL6Hzpp6l7H7t+J+Jy iat-mode=0",
+          "obfs4 192.0.2.142:16633 9E39E36A74053491022D37E217B2B9A15BF37DB4 cert=jCUZGpg9Lhn6ow2dfRNexc2qQgLeIDoOGIf/XkIpwNOSCCGOqo8yYji9PplMBvX75lZJaD iat-mode=2"
+        ],
+        "source": "bridgedb",
+        "type": "obfs4"
+      }
+    }
+  ]
+}

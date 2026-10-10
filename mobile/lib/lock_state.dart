@@ -194,6 +194,22 @@ class PlatformLockBio implements LockBio {
       'error';
 }
 
+// tells the engine whether a decoy session is open. it asks the tor
+// project for nothing while one is, or before it has been told. without
+// the engine, as in tests, there is no one to tell.
+void tellEngineDecoy(bool on) {
+  try {
+    final fn = FfiPinEngine._lib()
+        .lookupFunction<
+          Pointer<Utf8> Function(Int32),
+          Pointer<Utf8> Function(int)
+        >('HaloSetDecoy');
+    engineTake(fn(on ? 1 : 0));
+  } on ArgumentError {
+    // no engine loaded here
+  }
+}
+
 class FfiPinEngine implements PinEngine {
   static DynamicLibrary _lib() => Platform.isAndroid
       ? DynamicLibrary.open('libhalo.so')
@@ -594,6 +610,7 @@ class LockState extends ChangeNotifier {
   bool get inDecoy => _inDecoy;
   set inDecoy(bool v) {
     _inDecoy = v;
+    tellEngineDecoy(v);
     notifyListeners();
   }
 

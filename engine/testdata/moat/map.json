@@ -1,0 +1,196 @@
+{
+  "by": {
+    "settings": [
+      {
+        "bridges": {
+          "bridge_strings": [
+            "snowflake 192.0.2.3:80 8AAD908EE1A010B678C3E69CF5609228AEBC88D0 fingerprint=8AAD908EE1A010B678C3E69CF5609228AEBC88D0 url=https://1098762253.rsc.cdn77.org/ fronts=app.datapacket.com,www.datapacket.com ice=stun:stun.epygi.com:3478,stun:stun.uls.co.za:3478,stun:stun.telnyx.com:3478,stun:stun.hot-chilli.net:3478,stun:stun.fitauto.ru:3478,stun:stun.m-online.net:3478 utls-imitate=hellorandomizedalpn",
+            "snowflake 192.0.2.4:80 12B18A7D645746AA47BCEF97B627C6CDAF838E94 fingerprint=12B18A7D645746AA47BCEF97B627C6CDAF838E94 url=https://1098762253.rsc.cdn77.org/ fronts=app.datapacket.com,www.datapacket.com ice=stun:stun.epygi.com:3478,stun:stun.uls.co.za:3478,stun:stun.telnyx.com:3478,stun:stun.hot-chilli.net:3478,stun:stun.fitauto.ru:3478,stun:stun.m-online.net:3478 utls-imitate=hellorandomizedalpn"
+          ],
+          "source": "bridgedb",
+          "type": "snowflake"
+        }
+      },
+      {
+        "bridges": {
+          "source": "bridgedb",
+          "type": "webtunnel"
+        }
+      }
+    ]
+  },
+  "cn": {
+    "settings": [
+      {
+        "bridges": {
+          "source": "bridgedb",
+          "type": "webtunnel"
+        }
+      },
+      {
+        "bridges": {
+          "bridge_strings": [
+            "snowflake 192.0.2.3:80 E08887800114EC2CCCD9F04B53C397BEFDA5C179 fingerprint=E08887800114EC2CCCD9F04B53C397BEFDA5C179 url=https://1098762253.rsc.cdn77.org fronts=www.phpmyadmin.net,cdn.zk.mk ice=stun:stun.antisip.com:3478,stun:stun.epygi.com:3478,stun:stun.uls.co.za:3478,stun:stun.telnyx.com:3478,stun:stun.hot-chilli.net:3478,stun:stun.fitauto.ru:3478,stun:stun.m-online.net:3478 utls-imitate=hellorandomizedalpn",
+            "snowflake 192.0.2.4:80 4F75A1A0B204F18F6E6DF71B2CECF6C9896C4DD8 fingerprint=4F75A1A0B204F18F6E6DF71B2CECF6C9896C4DD8 url=https://1098762253.rsc.cdn77.org fronts=www.phpmyadmin.net,cdn.zk.mk ice=stun:stun.antisip.com:3478,stun:stun.epygi.com:3478,stun:stun.uls.co.za:3478,stun:stun.telnyx.com:3478,stun:stun.hot-chilli.net:3478,stun:stun.fitauto.ru:3478,stun:stun.m-online.net:3478 utls-imitate=hellorandomizedalpn",
+            "snowflake 192.0.2.5:80 7EED61FB8698DFC03A5BE6EEC12ECB3CDDC87A87 fingerprint=7EED61FB8698DFC03A5BE6EEC12ECB3CDDC87A87 sqsqueue=https://sqs.us-east-2.amazonaws.com/000000000000/snowflake-broker sqscreds=RD8hAAfiFzPTj4zqPjU1Hw4nGcyqN0oaao0aiNPe0xqM6TULT5uBBxTei+N5jLoVS/gYsOxUM5CIbSpnpFuWgkeA9oaeuTm76DiKJ6D1YIDrN01AUVc9eGWKfo+74dDKzT77xsPpv/Km ice=stun:stun.antisip.com:3478,stun:stun.epygi.com:3478,stun:stun.uls.co.za:3478,stun:stun.telnyx.com:3478,stun:stun.hot-chilli.net:3478,stun:stun.fitauto.ru:3478,stun:stun.m-online.net:3478 utls-imitate=hellorandomizedalpn",
+            "snowflake 192.0.2.6:80 635F39192C92A6112718411CB74F99526DDAA7A1 fingerprint=635F39192C92A6112718411CB74F99526DDAA7A1 sqsqueue=https://sqs.us-east-2.amazonaws.com/000000000000/snowflake-broker sqscreds=jiG+IFShyFPvPTLuiF1+R8G1sQNbYO2241uVUA259SFrE/kA37xn5j8nUZmGVvZqNeVV3wq5FQHrmAbjgRCjhvsGoJNL3hy2Uuu/cQDDH0t4IIWu42nvhabvjVfRsAx/bTjVHc3VBaNd ice=stun:stun.antisip.com:3478,stun:stun.epygi.com:3478,stun:stun.uls.co.za:3478,stun:stun.telnyx.com:3478,stun:stun.hot-chilli.net:3478,stun:stun.fitauto.ru:3478,stun:stun.m-online.net:3478 utls-imitate=hellorandomizedalpn"
+          ],
+          "source": "bridgedb",
+          "type": "snowflake"
+        }
+      },
+      {
+        "bridges": {
+          "source": "bridgedb",
+          "type": "obfs4"
+        }
+      }
+    ]
+  },
+  "eg": {
+    "settings": [
+      {
+        "bridges": {
+          "source": "bridgedb",
+          "type": "obfs4"
+        }
+      },
+      {
+        "bridges": {
+          "source": "builtin",
+          "type": "snowflake"
+        }
+      }
+    ]
+  },
+  "hk": {
+    "settings": [
+      {
+        "bridges": {
+          "source": "bridgedb",
+          "type": "obfs4"
+        }
+      },
+      {
+        "bridges": {
+          "source": "builtin",
+          "type": "snowflake"
+        }
+      }
+    ]
+  },
+  "ir": {
+    "settings": [
+      {
+        "bridges": {
+          "source": "bridgedb",
+          "type": "webtunnel"
+        }
+      },
+      {
+        "bridges": {
+          "bridge_strings": [
+            "snowflake 192.0.2.3:80 C214EA573340F541FC8A893153FE91445C81A823 fingerprint=C214EA573340F541FC8A893153FE91445C81A823 url=https://1098762253.rsc.cdn77.org front=www.phpmyadmin.net,cdn.zk.mk ice=stun:stun.antisip.com:3478,stun:stun.epygi.com:3478,stun:stun.uls.co.za:3478,stun:stun.voipgate.com:3478,stun:stun.mixvoip.com:3478,stun:stun.telnyx.com:3478,stun:stun.hot-chilli.net:3478,stun:stun.fitauto.ru:3478,stun:stun.m-online.net:3478 utls-imitate=hellorandomizedalpn",
+            "snowflake 192.0.2.4:80 7C6C188450ADEF8B3266CBF7992BC6BE34BEA1B1 fingerprint=7C6C188450ADEF8B3266CBF7992BC6BE34BEA1B1 url=https://1098762253.rsc.cdn77.org front=www.phpmyadmin.net,cdn.zk.mk ice=stun:stun.antisip.com:3478,stun:stun.epygi.com:3478,stun:stun.uls.co.za:3478,stun:stun.voipgate.com:3478,stun:stun.mixvoip.com:3478,stun:stun.telnyx.com:3478,stun:stun.hot-chilli.net:3478,stun:stun.fitauto.ru:3478,stun:stun.m-online.net:3478 utls-imitate=hellorandomizedalpn"
+          ],
+          "source": "bridgedb",
+          "type": "snowflake"
+        }
+      },
+      {
+        "bridges": {
+          "source": "bridgedb",
+          "type": "obfs4"
+        }
+      }
+    ]
+  },
+  "mm": {
+    "settings": [
+      {
+        "bridges": {
+          "source": "bridgedb",
+          "type": "webtunnel"
+        }
+      },
+      {
+        "bridges": {
+          "source": "bridgedb",
+          "type": "obfs4"
+        }
+      },
+      {
+        "bridges": {
+          "source": "builtin",
+          "type": "snowflake"
+        }
+      }
+    ]
+  },
+  "ru": {
+    "settings": [
+      {
+        "bridges": {
+          "bridge_strings": [
+            "snowflake 192.0.2.3:80 25B52237BC7332B0055F8E5E35EA4507B8176AE8 fingerprint=25B52237BC7332B0055F8E5E35EA4507B8176AE8 url=https://1098762253.rsc.cdn77.org fronts=cdn.zk.mk,img.icons8.com,cdn.kde.org ice=stun:stun.antisip.com:3478,stun:stun.epygi.com:3478,stun:stun.uls.co.za:3478,stun:stun.telnyx.com:3478,stun:stun.hot-chilli.net:3478,stun:stun.fitauto.ru:3478,stun:stun.m-online.net:3478 utls-imitate=hellorandomizedalpn",
+            "snowflake 192.0.2.4:80 0AA3A332C70F76FDEECEBCC0462FE02B5532F44F fingerprint=0AA3A332C70F76FDEECEBCC0462FE02B5532F44F url=https://1098762253.rsc.cdn77.org fronts=cdn.zk.mk,img.icons8.com,cdn.kde.org ice=stun:stun.antisip.com:3478,stun:stun.epygi.com:3478,stun:stun.uls.co.za:3478,stun:stun.telnyx.com:3478,stun:stun.hot-chilli.net:3478,stun:stun.fitauto.ru:3478,stun:stun.m-online.net:3478 utls-imitate=hellorandomizedalpn",
+            "snowflake 192.0.2.5:80 EE0FB1DF6F530FFF2729672CB329968A175518E4 fingerprint=EE0FB1DF6F530FFF2729672CB329968A175518E4 url=https://snowflake-broker.torproject.net/ ampcache=https://cdn.ampproject.org/ front=www.google.com ice=stun:stun.antisip.com:3478,stun:stun.epygi.com:3478,stun:stun.uls.co.za:3478,stun:stun.telnyx.com:3478,stun:stun.hot-chilli.net:3478,stun:stun.fitauto.ru:3478,stun:stun.m-online.net:3478 utls-imitate=hellorandomizedalpn",
+            "snowflake 192.0.2.6:80 000B4BEF4AC85FFE101202F9C26123C1F88EF563 fingerprint=000B4BEF4AC85FFE101202F9C26123C1F88EF563 url=https://snowflake-broker.torproject.net/ ampcache=https://cdn.ampproject.org/ front=www.google.com ice=stun:stun.antisip.com:3478,stun:stun.epygi.com:3478,stun:stun.uls.co.za:3478,stun:stun.telnyx.com:3478,stun:stun.hot-chilli.net:3478,stun:stun.fitauto.ru:3478,stun:stun.m-online.net:3478 utls-imitate=hellorandomizedalpn"
+          ],
+          "source": "bridgedb",
+          "type": "snowflake"
+        }
+      },
+      {
+        "bridges": {
+          "source": "bridgedb",
+          "type": "webtunnel"
+        }
+      },
+      {
+        "bridges": {
+          "source": "bridgedb",
+          "type": "obfs4"
+        }
+      }
+    ]
+  },
+  "tm": {
+    "settings": [
+      {
+        "bridges": {
+          "bridge_strings": [
+            "snowflake 192.0.2.5:80 8B2218D0782FA87F467391D8BB25006B97708076 fingerprint=8B2218D0782FA87F467391D8BB25006B97708076 url=https://snowflake-broker.torproject.net/ ampcache=https://cdn.ampproject.org/ front=www.google.com ice=stun:stun.antisip.com:3478,stun:stun.epygi.com:3478,stun:stun.uls.co.za:3478,stun:stun.voipgate.com:3478,stun:stun.mixvoip.com:3478,stun:stun.telnyx.com:3478,stun:stun.hot-chilli.net:3478,stun:stun.fitauto.ru:3478,stun:stun.m-online.net:3478 utls-imitate=hellorandomizedalpn",
+            "snowflake 192.0.2.6:80 B0826B64E5F1835D860263FC7B1BEC95763AB245 fingerprint=B0826B64E5F1835D860263FC7B1BEC95763AB245 url=https://snowflake-broker.torproject.net/ ampcache=https://cdn.ampproject.org/ front=www.google.com ice=stun:stun.antisip.com:3478,stun:stun.epygi.com:3478,stun:stun.uls.co.za:3478,stun:stun.voipgate.com:3478,stun:stun.mixvoip.com:3478,stun:stun.telnyx.com:3478,stun:stun.hot-chilli.net:3478,stun:stun.fitauto.ru:3478,stun:stun.m-online.net:3478 utls-imitate=hellorandomizedalpn"
+          ],
+          "source": "bridgedb",
+          "type": "snowflake"
+        }
+      },
+      {
+        "bridges": {
+          "source": "bridgedb",
+          "type": "obfs4"
+        }
+      },
+      {
+        "bridges": {
+          "bridge_strings": [
+            "meek_lite 192.0.2.20:80 url=https://1603026938.rsc.cdn77.org front=www.phpmyadmin.net utls=HelloRandomizedALPN"
+          ],
+          "source": "bridgedb",
+          "type": "meek"
+        }
+      },
+      {
+        "bridges": {
+          "bridge_strings": [
+            "meek_lite 192.0.2.20:80 url=https://1603026938.rsc.cdn77.org front=www.phpmyadmin.net utls=HelloRandomizedALPN"
+          ],
+          "source": "bridgedb",
+          "type": "meek-azure"
+        }
+      }
+    ]
+  }
+}

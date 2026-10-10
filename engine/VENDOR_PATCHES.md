@@ -172,3 +172,17 @@ lyrebird 0.8.1's own go.mod replaces utls with a temporary fork for the
 chrome120 profile. go ignores replaces in dependencies, so the engine gets
 utls v1.8.2 through snowflake, which dropped the same backport when it
 moved to that utls.
+
+### meek_lite: a recover and a way out
+
+moat runs meek_lite inside the engine, where a panic in its worker
+goroutine would end the app. `vendor-patches/meeklite.patch` puts a recover
+in `ioWorker`, which then closes the channels and the conn on every way out,
+and makes the worker give up handing a reply to a reader once the conn is
+closed, so a moat call that ends early leaves no goroutine behind. vendor.sh
+applies it after anet's.
+
+    diff -u "$(go env GOMODCACHE)/gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/lyrebird@<version>/transports/meeklite/meek.go" \
+        vendor/gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/lyrebird/transports/meeklite/meek.go
+
+to move to a newer lyrebird: redo the patch against its `meek.go`.

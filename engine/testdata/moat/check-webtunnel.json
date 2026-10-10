@@ -1,0 +1,14 @@
+{
+  "data": [
+    {
+      "bridges": [
+        "webtunnel [2001:db8::12f]:14903 36C64C7518C3A6B2908E79D6D831F4FB45E45E50 url=https://wt47.example.net/2ddcb9cbcef179e8f051b318 ver=0.0.5",
+        "webtunnel [2001:db8::130]:29258 2B3C7F09B30F94EEAB9AC033A59618D320BD8B3A url=https://wt48.example.net/e35e4fd9839cedbda75daaee ver=0.0.5"
+      ],
+      "id": "1",
+      "qrcode": null,
+      "type": "moat-bridges",
+      "version": "0.1.0"
+    }
+  ]
+}

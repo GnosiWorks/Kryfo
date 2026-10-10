@@ -1,0 +1,37 @@
+{
+  "country": "cn",
+  "settings": [
+    {
+      "bridges": {
+        "bridge_strings": [
+          "webtunnel [2001:db8::117]:54689 4E23150ABFEA546DBDC90788B21B6F8CBF72A6DA url=https://wt23.example.net/4673fd6b36580d93a4c4ecd8 ver=0.0.5",
+          "webtunnel [2001:db8::118]:45902 B18B32E7AC379991EE2892654A9E950F9ED191DC url=https://wt24.example.net/5d40943914c9b2fdafafd66f ver=0.0.5"
+        ],
+        "source": "bridgedb",
+        "type": "webtunnel"
+      }
+    },
+    {
+      "bridges": {
+        "bridge_strings": [
+          "snowflake 192.0.2.3:80 6A2704732625CE32EBF04D7ABF2191CFCBCA0BC9 fingerprint=6A2704732625CE32EBF04D7ABF2191CFCBCA0BC9 url=https://1098762253.rsc.cdn77.org fronts=www.phpmyadmin.net,cdn.zk.mk ice=stun:stun.antisip.com:3478,stun:stun.epygi.com:3478,stun:stun.uls.co.za:3478,stun:stun.telnyx.com:3478,stun:stun.hot-chilli.net:3478,stun:stun.fitauto.ru:3478,stun:stun.m-online.net:3478 utls-imitate=hellorandomizedalpn",
+          "snowflake 192.0.2.4:80 BF5B6EFD7A9A115490240F156DC480A560E293AE fingerprint=BF5B6EFD7A9A115490240F156DC480A560E293AE url=https://1098762253.rsc.cdn77.org fronts=www.phpmyadmin.net,cdn.zk.mk ice=stun:stun.antisip.com:3478,stun:stun.epygi.com:3478,stun:stun.uls.co.za:3478,stun:stun.telnyx.com:3478,stun:stun.hot-chilli.net:3478,stun:stun.fitauto.ru:3478,stun:stun.m-online.net:3478 utls-imitate=hellorandomizedalpn",
+          "snowflake 192.0.2.5:80 3394863E49464F0A8CF7B5EFA8760CBEFE21A9A0 fingerprint=3394863E49464F0A8CF7B5EFA8760CBEFE21A9A0 sqsqueue=https://sqs.us-east-2.amazonaws.com/000000000000/snowflake-broker sqscreds=v+VIu2koujdwdLuxs0t44wjsC1KEh6APr/KtIJMOoP1gkh2+EQobS4Ias14IkrfAQ0HyTrA+OTcTWPqIyGVSGrkxtpa29bM2n74sD6xvBhGpO3Jl0BEQxVri/d4daOIHcf9QCHeA38TS ice=stun:stun.antisip.com:3478,stun:stun.epygi.com:3478,stun:stun.uls.co.za:3478,stun:stun.telnyx.com:3478,stun:stun.hot-chilli.net:3478,stun:stun.fitauto.ru:3478,stun:stun.m-online.net:3478 utls-imitate=hellorandomizedalpn",
+          "snowflake 192.0.2.6:80 C1260D1F716548EC67603B8E53E919D51577E425 fingerprint=C1260D1F716548EC67603B8E53E919D51577E425 sqsqueue=https://sqs.us-east-2.amazonaws.com/000000000000/snowflake-broker sqscreds=94/4OTjssK9e77xBYrr0PRZPpqCLmVbZFohss/JwSBWkZ5OPCHlRHSZTeXRG7Ai+2G/bQlU4zC2z9CQh1rJRAcYnX9fDoM4yzrGXVgPG53OhEpK+MqFidC21Uk+n3wK5ByCl/mngZLr5 ice=stun:stun.antisip.com:3478,stun:stun.epygi.com:3478,stun:stun.uls.co.za:3478,stun:stun.telnyx.com:3478,stun:stun.hot-chilli.net:3478,stun:stun.fitauto.ru:3478,stun:stun.m-online.net:3478 utls-imitate=hellorandomizedalpn"
+        ],
+        "source": "bridgedb",
+        "type": "snowflake"
+      }
+    },
+    {
+      "bridges": {
+        "bridge_strings": [
+          "obfs4 192.0.2.129:42792 90B418A7A3684BC14B4C75791E1DB1FC0C9E1302 cert=zKbGuYOxy+2gmR2sBIln568W3zI6oT43EvCMsi/3F6TVWGChycuNU/5ZlBEMXRehT3xqy8 iat-mode=0",
+          "obfs4 192.0.2.130:29269 AE90FB5EB273674C4F432EB78E22106863C95B18 cert=SODvv7fnLLZGzGRQHVJ1G2SI5EPx/MAY1KKXlJFQhqctCiSsRpCcz4TjEWid+/uGCdQ3d4 iat-mode=2"
+        ],
+        "source": "bridgedb",
+        "type": "obfs4"
+      }
+    }
+  ]
+}

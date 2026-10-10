@@ -274,6 +274,11 @@ func checkBridgeLine(s string) (bridgeLine, error) {
 		if fp, ok := b.args.Get("fingerprint"); !ok || !strings.EqualFold(fp, b.fp) || b.fp == "" {
 			return b, fmt.Errorf("snowflake: fingerprints missing or apart")
 		}
+		// the broker is reached outside tor, so only over https to a host
+		raw, _ := b.args.Get("url")
+		if u, err := url.Parse(raw); err != nil || u.Scheme != "https" || u.Hostname() == "" {
+			return b, fmt.Errorf("snowflake: broker url is not https")
+		}
 		if ice, ok := b.args.Get("ice"); ok {
 			stun := false
 			for _, s := range splitList(ice) {

@@ -306,6 +306,15 @@ func (c *meekConn) roundTrip(sndBuf []byte) (recvBuf []byte, err error) {
 }
 
 func (c *meekConn) ioWorker() {
+	// kryfo: in-process, a panic here would end the whole app. the
+	// channels close and the conn shuts whichever way the loop ends.
+	defer func() {
+		_ = recover()
+		close(c.workerRdChan)
+		close(c.workerWrChan)
+		_ = c.Close()
+	}()
+
 	interval := initPollInterval
 	var sndBuf, leftBuf []byte
 
@@ -352,7 +361,12 @@ loop:
 		// Determine the next poll interval.
 		if len(rdBuf) > 0 {
 			// Received data, enqueue the read.
-			c.workerRdChan <- rdBuf
+			// kryfo: or give up once closed, a reader may never come.
+			select {
+			case c.workerRdChan <- rdBuf:
+			case <-c.workerCloseChan:
+				break loop
+			}
 
 			// And poll immediately.
 			interval = 0
@@ -375,11 +389,7 @@ loop:
 
 	// Unblock callers waiting in Read() for data that will never arrive,
 	// and callers waiting in Write() for data that will never get sent.
-	close(c.workerRdChan)
-	close(c.workerWrChan)
-
-	// Close the connection (extra calls to Close() are harmless).
-	_ = c.Close()
+	// kryfo: done in the deferred func above.
 }
 
 func newMeekConn(network, addr string, dialFn base.DialFunc, ca *meekClientArgs) (net.Conn, error) {

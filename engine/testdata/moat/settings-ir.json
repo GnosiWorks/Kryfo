@@ -1,0 +1,35 @@
+{
+  "country": "ir",
+  "settings": [
+    {
+      "bridges": {
+        "bridge_strings": [
+          "webtunnel [2001:db8::101]:49526 9D8035CE8449F2E2B05E945289FAA40D10959C7F url=https://wt1.example.net/095a40d5541c0e42cceaa2be ver=0.0.5",
+          "webtunnel [2001:db8::102]:47401 10A880914EE82BCAAB2F692A7FD64B5EA50F757E url=https://wt2.example.net/10deec4332ffe05809e38ef9 ver=0.0.5"
+        ],
+        "source": "bridgedb",
+        "type": "webtunnel"
+      }
+    },
+    {
+      "bridges": {
+        "bridge_strings": [
+          "snowflake 192.0.2.3:80 7147C062970946E5704B1CF2A3AF019132C4E57A fingerprint=7147C062970946E5704B1CF2A3AF019132C4E57A url=https://1098762253.rsc.cdn77.org front=www.phpmyadmin.net,cdn.zk.mk ice=stun:stun.antisip.com:3478,stun:stun.epygi.com:3478,stun:stun.uls.co.za:3478,stun:stun.voipgate.com:3478,stun:stun.mixvoip.com:3478,stun:stun.telnyx.com:3478,stun:stun.hot-chilli.net:3478,stun:stun.fitauto.ru:3478,stun:stun.m-online.net:3478 utls-imitate=hellorandomizedalpn",
+          "snowflake 192.0.2.4:80 DE8721975C0E45CF6239E42F726E6BE2B9E18889 fingerprint=DE8721975C0E45CF6239E42F726E6BE2B9E18889 url=https://1098762253.rsc.cdn77.org front=www.phpmyadmin.net,cdn.zk.mk ice=stun:stun.antisip.com:3478,stun:stun.epygi.com:3478,stun:stun.uls.co.za:3478,stun:stun.voipgate.com:3478,stun:stun.mixvoip.com:3478,stun:stun.telnyx.com:3478,stun:stun.hot-chilli.net:3478,stun:stun.fitauto.ru:3478,stun:stun.m-online.net:3478 utls-imitate=hellorandomizedalpn"
+        ],
+        "source": "bridgedb",
+        "type": "snowflake"
+      }
+    },
+    {
+      "bridges": {
+        "bridge_strings": [
+          "obfs4 192.0.2.105:31382 F1406DD0F9B53840988DFAC1599925E6D11311F6 cert=gM+CxnYBTTkim/e0SpE9t7uP3gzT9bCa678mG1nsDnbJK+NCQ+4XS2zohwrkMd6MpMZRf3 iat-mode=0",
+          "obfs4 192.0.2.106:17249 7C51E1E76202FCBCB5A8F5D54EA673783943F6F2 cert=Z26LTy05jKc5dNJQF6yEUfkQtFeBZzRb2qob89D/bHv+Yt0PwhvpMGM0d59KkDpjPsZxar iat-mode=2"
+        ],
+        "source": "bridgedb",
+        "type": "obfs4"
+      }
+    }
+  ]
+}

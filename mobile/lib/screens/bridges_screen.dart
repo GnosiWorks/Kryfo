@@ -81,8 +81,8 @@ class _BridgesScreenState extends State<BridgesScreen> {
   int get _lineCount =>
       _ctrl.text.split('\n').where((l) => l.trim().isNotEmpty).length;
 
-  // ask bridges.torproject.org for a fresh set. this is plain https, not tor:
-  // tor being unreachable is the whole reason someone is on this screen.
+  // ask bridges.torproject.org for a fresh set. this goes through meek, not
+  // tor: tor being unreachable is the whole reason someone is on this screen.
   // a note (a wrong answer) stays up over the new puzzle
   Future<void> _request({String? note}) async {
     setState(() {
@@ -106,7 +106,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
     setState(() {
       _asking = false;
       _captcha = parts[0];
-      _challenge = parts.length > 1 ? parts[1] : null;
+      _challenge = parts.length > 1 ? parts.sublist(1).join('|') : null;
       _answer.clear();
     });
   }

@@ -1,0 +1,14 @@
+{
+  "data": [
+    {
+      "bridges": [
+        "obfs4 192.0.2.121:51078 211FC586C5FEBA3075AA3F38D4C50661B323AA2D cert=VqwgcLuRmanOfbUmvf+MVPWNAHAPUv19yNS55ArmwuHNuyc1+RAiCGdPlYb1OMQzQjVX2Q iat-mode=0",
+        "obfs4 192.0.2.122:17940 BC5D0C63F9A140BF5108FFD6AAC687FF8F8B0682 cert=5p+E/n+caolUgQ93yubik7mTroQyTLnr793CqSFl8gL0VavrAouDHoZfGuiLWV3SLrI1hN iat-mode=2"
+      ],
+      "id": "1",
+      "qrcode": null,
+      "type": "moat-bridges",
+      "version": "0.1.0"
+    }
+  ]
+}

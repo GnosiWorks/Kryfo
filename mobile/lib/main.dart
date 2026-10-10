@@ -427,8 +427,9 @@ class HaloEngine {
   }
 
   // both moat calls block on a network round trip, so they run off the ui
-  // isolate. the request is plain https on purpose: tor being unreachable is
-  // why someone is asking for bridges at all.
+  // isolate. they go outside tor, through meek: tor being unreachable is why
+  // someone is asking for bridges at all. a tap is the consent the engine
+  // wants. "ok|<image>|<challenge>" and "ok|<lines>", "wrong" or "error: ".
   Future<String> moatFetch() => _moatOnIsolate(null, null).timeout(
     const Duration(seconds: 60),
     onTimeout: () => 'error: timed out reaching the bridge service',
@@ -916,19 +917,30 @@ Future<String> _moatOnIsolate(String? challenge, String? answer) {
     final lib = Platform.isAndroid
         ? DynamicLibrary.open('libhalo.so')
         : DynamicLibrary.process();
-    if (challenge == null) {
-      final fn = lib.lookupFunction<CStrFn, CStrFnDart>('HaloMoatFetch');
-      return engineTake(fn());
+    final opts = <String, Object>{
+      'consent': true,
+      'via': 'meek',
+      'transport': 'obfs4',
+    };
+    if (challenge != null) {
+      opts['challenge'] = challenge;
+      opts['solution'] = answer ?? '';
     }
-    final fn = lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloMoatSolve');
-    final a = challenge.toNativeUtf8();
-    final b = (answer ?? '').toNativeUtf8();
+    final fn = lib.lookupFunction<OneArgFn, OneArgFnDart>(
+      challenge == null ? 'HaloMoatCaptcha' : 'HaloMoatAnswer',
+    );
+    final p = jsonEncode(opts).toNativeUtf8();
+    final Map<String, dynamic> r;
     try {
-      return engineTake(fn(a, b));
+      r = jsonDecode(engineTake(fn(p))) as Map<String, dynamic>;
     } finally {
-      malloc.free(a);
-      malloc.free(b);
+      malloc.free(p);
     }
+    if (r['ok'] != true) {
+      return r['error'] == 'moat_wrong' ? 'wrong' : 'error: ${r['error']}';
+    }
+    if (challenge == null) return 'ok|${r['image']}|${r['challenge']}';
+    return 'ok|${(r['lines'] as List).join('\n')}';
   });
 }
 
@@ -11356,6 +11368,9 @@ class AppState extends ChangeNotifier {
   String get bridgeLines => _bridgeLines;
 
   Future<void> _loadBridges() async {
+    // the session can change while storage is read, so it is read after
+    final quiet = await quietNow();
+    tellEngineDecoy(lockState.inDecoy || quiet);
     const st = secureStore;
     _bridgeLines = await st.read(key: 'bridge_lines') ?? '';
     _bridgesOn = (await st.read(key: 'bridges_on')) == '1';

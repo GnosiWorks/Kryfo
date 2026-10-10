@@ -42,4 +42,6 @@ find vendor -type d -empty -delete
 patch -s -p1 -d vendor/github.com/alexballas/go-libtor \
   < vendor-patches/go-libtor.patch
 patch -s -p1 -d vendor/github.com/wlynxg/anet < vendor-patches/anet.patch
+patch -s -p1 -d vendor/gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/lyrebird \
+  < vendor-patches/meeklite.patch
 echo "vendor rebuilt"

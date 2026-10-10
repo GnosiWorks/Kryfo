@@ -1,0 +1,37 @@
+{
+  "country": "ru",
+  "settings": [
+    {
+      "bridges": {
+        "bridge_strings": [
+          "snowflake 192.0.2.3:80 3701CDBA2439127B8766E27031448E4062A99D02 fingerprint=3701CDBA2439127B8766E27031448E4062A99D02 url=https://1098762253.rsc.cdn77.org fronts=cdn.zk.mk,img.icons8.com,cdn.kde.org ice=stun:stun.antisip.com:3478,stun:stun.epygi.com:3478,stun:stun.uls.co.za:3478,stun:stun.telnyx.com:3478,stun:stun.hot-chilli.net:3478,stun:stun.fitauto.ru:3478,stun:stun.m-online.net:3478 utls-imitate=hellorandomizedalpn",
+          "snowflake 192.0.2.4:80 BAA193BF91DC2538AF4C1D63FFA4FFEC0D9C510A fingerprint=BAA193BF91DC2538AF4C1D63FFA4FFEC0D9C510A url=https://1098762253.rsc.cdn77.org fronts=cdn.zk.mk,img.icons8.com,cdn.kde.org ice=stun:stun.antisip.com:3478,stun:stun.epygi.com:3478,stun:stun.uls.co.za:3478,stun:stun.telnyx.com:3478,stun:stun.hot-chilli.net:3478,stun:stun.fitauto.ru:3478,stun:stun.m-online.net:3478 utls-imitate=hellorandomizedalpn",
+          "snowflake 192.0.2.5:80 D7B6A5E7F45C109694F9366217D5DF6FA4F3AFD3 fingerprint=D7B6A5E7F45C109694F9366217D5DF6FA4F3AFD3 url=https://snowflake-broker.torproject.net/ ampcache=https://cdn.ampproject.org/ front=www.google.com ice=stun:stun.antisip.com:3478,stun:stun.epygi.com:3478,stun:stun.uls.co.za:3478,stun:stun.telnyx.com:3478,stun:stun.hot-chilli.net:3478,stun:stun.fitauto.ru:3478,stun:stun.m-online.net:3478 utls-imitate=hellorandomizedalpn",
+          "snowflake 192.0.2.6:80 868E35183ECEB47B6F10E66102C968B1FFE43A05 fingerprint=868E35183ECEB47B6F10E66102C968B1FFE43A05 url=https://snowflake-broker.torproject.net/ ampcache=https://cdn.ampproject.org/ front=www.google.com ice=stun:stun.antisip.com:3478,stun:stun.epygi.com:3478,stun:stun.uls.co.za:3478,stun:stun.telnyx.com:3478,stun:stun.hot-chilli.net:3478,stun:stun.fitauto.ru:3478,stun:stun.m-online.net:3478 utls-imitate=hellorandomizedalpn"
+        ],
+        "source": "bridgedb",
+        "type": "snowflake"
+      }
+    },
+    {
+      "bridges": {
+        "bridge_strings": [
+          "webtunnel [2001:db8::123]:24434 61B4AB9B6BFADE19E531584843DCB1850DC7B89E url=https://wt35.example.net/ac16eb323f1ff330212d3aaf ver=0.0.5",
+          "webtunnel [2001:db8::124]:26453 9A5C5A83D7835E57F7688BE1D792345B2E8B764F url=https://wt36.example.net/7b30da229a1fbffa14c5d134 ver=0.0.5"
+        ],
+        "source": "bridgedb",
+        "type": "webtunnel"
+      }
+    },
+    {
+      "bridges": {
+        "bridge_strings": [
+          "obfs4 192.0.2.137:48688 192B07ACF5CA8E1FDE747A24E9685E7D5BAB4B7E cert=f+S7bvAVb9NX43wbOzg9kTjmlmw2iRyJpnNzv8Tgwgc6z9D8L2abIjGC0pwPOmEQCYltvo iat-mode=0",
+          "obfs4 192.0.2.138:13874 318B2778DB679BA5DDB0F4F0C22FC71C8942A082 cert=pd6Y6DryOKObpeiUrxlqS6wiyhPfat1ic8yW8+gTQvGLzmuavRwBNkiJA+KFd5ltlL4JfK iat-mode=2"
+        ],
+        "source": "bridgedb",
+        "type": "obfs4"
+      }
+    }
+  ]
+}
