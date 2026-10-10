@@ -66,6 +66,26 @@ class Session {
   // container that holds it and its id
   String chatKey(String chatId) => _ofChat(chatId).container.chatKey(chatId);
 
+  // the tags a chat's notifications went under, in each container open
+  Future<Set<String>> notifTagsOf(String chat) async {
+    final v = vault;
+    return {
+      ?await primary.notifTagOf(chat),
+      if (v != null && v.isOpen) ?await v.notifTagOf(chat),
+    };
+  }
+
+  // the chat a tapped notification's tag stands for, in the container that
+  // made it. a shut vault's tags name nothing here
+  Future<String?> chatOfNotifTag(String tag) async {
+    final v = vault;
+    if (v != null && v.isOpen) {
+      final c = await v.notifChatOf(tag);
+      if (c != null) return c;
+    }
+    return primary.notifChatOf(tag);
+  }
+
   // the people whose chats the vault holds: receiving tries them too, and
   // never files them as everyday requests
   Set<String> get hiddenPeople => vault == null ? const {} : _people;

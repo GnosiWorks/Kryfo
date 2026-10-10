@@ -49,6 +49,8 @@ Future<void> _tables(SqliteMem db, String s) async {
     'CREATE TABLE $s.media_wants (media_id TEXT, peer_id TEXT)',
     'CREATE TABLE $s.vouches (halo_id TEXT, voucher_id TEXT)',
     'CREATE TABLE $s.shield (halo_id TEXT PRIMARY KEY)',
+    'CREATE TABLE $s.notif_tags (chat TEXT PRIMARY KEY, tag TEXT NOT NULL '
+        'UNIQUE)',
   ]) {
     await db.execute(t);
   }
@@ -154,5 +156,28 @@ void main() {
     expect(await _rows(db, 'v', _f), isEmpty);
     // her own rows are not doubled by the way back
     expect(await _rows(db, 'main', _f), ['span 20-30', 'drop f-drop']);
+  }, skip: skip);
+
+  Future<List<String>> tags(SqliteMem db, String s) async => [
+    for (final r in await db.rawQuery(
+      'SELECT chat, tag FROM $s.notif_tags ORDER BY chat',
+    ))
+      '${r['chat']} ${r['tag']}',
+  ];
+
+  test('a moved chat\'s notification tag goes with nothing copied', () async {
+    final db = await _world();
+    await db.execute(
+      "INSERT INTO main.notif_tags VALUES ('group:$_g', 'aa'), "
+      "('$_f', 'bb')",
+    );
+    final mover = SqlChatMover(_NoDb(), _NoDb());
+    await mover.moveRowsOn(db, group, intoVault: true);
+    expect(await tags(db, 'main'), ['$_f bb']);
+    expect(await tags(db, 'v'), isEmpty);
+    await db.execute("INSERT INTO v.notif_tags VALUES ('group:$_g', 'cc')");
+    await mover.moveRowsOn(db, group, intoVault: false);
+    expect(await tags(db, 'v'), isEmpty);
+    expect(await tags(db, 'main'), ['$_f bb']);
   }, skip: skip);
 }

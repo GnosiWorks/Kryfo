@@ -350,6 +350,7 @@ class _Io implements AppIo {
     required String title,
     required String body,
     String? payload,
+    Object? on,
     String? msgUid,
     int? burnAt,
   }) async => rang.add('$title|$body|$payload');
@@ -383,9 +384,16 @@ class _Bell implements SupportBell {
   @override
   Future<void> chat({
     required String chatId,
+    required String tag,
     required String title,
     required String body,
-  }) async => calls.add('chat $chatId $title: $body');
+  }) async {
+    calls.add('chat $chatId $title: $body');
+    tags.add(tag);
+  }
+
+  // what android was given for each chat ring
+  final tags = <String>[];
 
   @override
   Future<void> clear() async => calls.add('clear');
@@ -1025,6 +1033,11 @@ void main() {
         ['chat $_s $_s: thanks', 'chat $_s $_s: it works now'],
       );
       expect(w.io.rang, isEmpty);
+      // one random tag for the chat, never its id
+      expect(w.bell.tags, hasLength(2));
+      expect(w.bell.tags.toSet(), hasLength(1));
+      expect(w.bell.tags.first, matches(RegExp(r'^[0-9a-f]{32}$')));
+      expect(w.bell.tags.first, isNot(contains(_s)));
     });
 
     test(

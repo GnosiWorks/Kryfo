@@ -380,7 +380,8 @@ void main() {
       () => showMessageNotification(
         title: _peer,
         body: 'while away',
-        payload: _peer,
+        chat: _peer,
+        tag: 'a1b2c3',
         msgUid: 'away1',
       ),
     );

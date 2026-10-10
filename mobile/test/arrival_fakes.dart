@@ -260,6 +260,7 @@ class ArrivalIo implements AppIo {
     required String title,
     required String body,
     String? payload,
+    Object? on,
     String? msgUid,
     int? burnAt,
   }) async {
@@ -289,6 +290,22 @@ class ArrivalIo implements AppIo {
 // a database in memory: the rows the receive side reads and writes, and a
 // note of every call. anything else it is asked fails the test
 class ArrivalRows implements HaloDb {
+  // the tag each chat's notifications go under
+  final notifTags = <String, String>{};
+  var _tagNo = 0;
+  @override
+  Future<String> notifTag(String chat) async =>
+      notifTags[chat] ??= '${_container.dbFile}-tag-${++_tagNo}';
+  @override
+  Future<String?> notifTagOf(String chat) async => notifTags[chat];
+  @override
+  Future<String?> notifChatOf(String tag) async {
+    for (final e in notifTags.entries) {
+      if (e.value == tag) return e.key;
+    }
+    return null;
+  }
+
   // nobody verified under another key: nothing is held
   @override
   Future<bool> keyHeld(String haloId) async => false;

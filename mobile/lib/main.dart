@@ -1257,7 +1257,7 @@ class HaloDb implements GroupOwedStore {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 70,
+      version: 71,
       onConfigure: eraseFreedPages,
       onCreate: (db, _) async {
         await db.execute('''
@@ -1413,6 +1413,7 @@ class HaloDb implements GroupOwedStore {
         await _goneTable(db);
         await blockTables(db);
         await firstContactTables(db);
+        await notifTagTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
         // 62 runs after every older step, below: its index names columns
@@ -1864,6 +1865,10 @@ class HaloDb implements GroupOwedStore {
         if (oldV < 70) {
           // openers that did not file, and openers sent with no receipt
           await firstContactTables(db);
+        }
+        if (oldV < 71) {
+          // the random tag each chat's notifications go under
+          await notifTagTables(db);
         }
       },
     );
@@ -3177,6 +3182,11 @@ class HaloDb implements GroupOwedStore {
       'group_members',
       where: 'group_id = ?',
       whereArgs: [groupId],
+    );
+    await db.delete(
+      'notif_tags',
+      where: 'chat = ?',
+      whereArgs: ['group:$groupId'],
     );
     await db.delete('groups', where: 'group_id = ?', whereArgs: [groupId]);
   }
@@ -6105,6 +6115,17 @@ class HaloDb implements GroupOwedStore {
     return n;
   }
 
+  // the tag [chat]'s notifications go under, made on its first one
+  Future<String> notifTag(String chat) async => notifTagIn(await open(), chat);
+
+  Future<String?> notifTagOf(String chat) async =>
+      notifTagOfIn(await open(), chat);
+
+  // the chat a tapped notification's tag stands for, when it is this
+  // container's
+  Future<String?> notifChatOf(String tag) async =>
+      notifChatIn(await open(), tag);
+
   Future<void> markSent(String msgUid) async {
     final db = await open();
     await db.update(
@@ -6947,6 +6968,51 @@ Future<void> firstContactTables(DatabaseExecutor db) async {
       both_went INTEGER NOT NULL DEFAULT 0
     )
   ''');
+}
+
+// a chat's notifications go under a random tag kept here, in the
+// container that holds the chat. chat is a contact's id, 'group:' and a
+// group's, or a support chat's payload
+Future<void> notifTagTables(DatabaseExecutor db) async {
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS notif_tags (
+      chat TEXT PRIMARY KEY,
+      tag TEXT NOT NULL UNIQUE
+    )
+  ''');
+}
+
+Future<String?> notifTagOfIn(DatabaseExecutor db, String chat) async {
+  final r = await db.query(
+    'notif_tags',
+    columns: ['tag'],
+    where: 'chat = ?',
+    whereArgs: [chat],
+    limit: 1,
+  );
+  return r.isEmpty ? null : r.first['tag'] as String;
+}
+
+// made once: a second caller at the same moment takes the first one's
+Future<String> notifTagIn(DatabaseExecutor db, String chat) async {
+  final had = await notifTagOfIn(db, chat);
+  if (had != null) return had;
+  await db.insert('notif_tags', {
+    'chat': chat,
+    'tag': newNotifTag(),
+  }, conflictAlgorithm: ConflictAlgorithm.ignore);
+  return (await notifTagOfIn(db, chat))!;
+}
+
+Future<String?> notifChatIn(DatabaseExecutor db, String tag) async {
+  final r = await db.query(
+    'notif_tags',
+    columns: ['chat'],
+    where: 'tag = ?',
+    whereArgs: [tag],
+    limit: 1,
+  );
+  return r.isEmpty ? null : r.first['chat'] as String;
 }
 
 // the upgrade to 69: the file a held slice is of and its place in it, so a
@@ -8219,6 +8285,28 @@ void _sayLinkResult(String result) {
 Future<void> openChatForHalo(String? haloId) =>
     lockGuard.afterUnlock(() => _openChatFor(haloId), key: 'chat:$haloId');
 
+// a tapped notification names its chat by tag only. the tag is read once
+// the app lock is open, in the containers of the session it opened to
+Future<void> openChatForNotif(String? tag) async {
+  if (tag == null || tag.isEmpty) return;
+  await lockGuard.afterUnlock(() async {
+    final chat = await notifChatFor(tag);
+    if (chat != null) await _openChatFor(chat);
+  }, key: 'notif:$tag');
+}
+
+// the support summary's payload is the inbox itself, the same on every post
+@visibleForTesting
+Future<String?> notifChatFor(String tag) async {
+  if (tag == kSupportPayload) return tag;
+  try {
+    return await session.chatOfNotifTag(tag);
+  } catch (e) {
+    dlog('notif tap: not read (${e.runtimeType})');
+    return null;
+  }
+}
+
 // a group asked to hold more than the cap. its message is read when shown,
 // in the language of that moment
 class GroupFull implements Exception {
@@ -8547,19 +8635,26 @@ class AppIo {
   Future<String> firstContactSend(String xPub, String fc, String cipher) =>
       engine.sendFirstContact(xPub, fc, cipher);
 
+  // [payload] names the chat here only: android gets the tag [on] keeps
+  // for it
   Future<void> notify({
     required String title,
     required String body,
-    String? payload,
+    required String payload,
+    required HaloDb on,
     String? msgUid,
     int? burnAt,
-  }) => showMessageNotification(
-    title: title,
-    body: body,
-    payload: payload,
-    msgUid: msgUid,
-    burnAt: burnAt,
-  );
+  }) async {
+    if (await quietNow()) return;
+    await showMessageNotification(
+      title: title,
+      body: body,
+      chat: payload,
+      tag: await on.notifTag(payload),
+      msgUid: msgUid,
+      burnAt: burnAt,
+    );
+  }
 
   // what this process showed for a chat leaves the shade
   Future<void> unnotify(String payload) => clearNotificationsFor(payload);
@@ -12708,6 +12803,7 @@ class AppState extends ChangeNotifier {
         title: notifTitle,
         body: notifBody,
         payload: notifPayload,
+        on: db,
         msgUid: env.msgUid,
         burnAt: burnFromArrival,
       );
@@ -12746,7 +12842,12 @@ class AppState extends ChangeNotifier {
   }) async {
     try {
       if (answered) {
-        await _bell.chat(chatId: id, title: title, body: body);
+        await _bell.chat(
+          chatId: id,
+          tag: await db.notifTag('$kSupportPayload$id'),
+          title: title,
+          body: body,
+        );
       } else if (!readingIn(kSupportPayload, db.container)) {
         // the inbox on screen says it already. a chat is new with its
         // first message kept, whatever came before it and was not
@@ -16029,7 +16130,10 @@ class AppState extends ChangeNotifier {
     await loadScreenshotPref();
     await loadHeartbeat();
     startMemoryLog();
-    await initNotifications(onTap: openChatForHalo);
+    await initNotifications(
+      onTap: openChatForNotif,
+      tagsOf: (chat) => session.notifTagsOf(chat),
+    );
     // the first call into android's notification service after a start is
     // slow, a tenth of a second or more. every start pays it here, so
     // nothing later pays it where it could be timed
@@ -18430,10 +18534,10 @@ class AppState extends ChangeNotifier {
     for (final path in await d.groupFilePaths(groupId)) {
       await shredFile(path);
     }
+    // what it put in the shade goes with it, while its tag is still here
+    await _io.unnotify('group:$groupId');
     await d.deleteGroupMessages(groupId);
     await d.deleteGroup(groupId);
-    // what it put in the shade goes with it
-    await _io.unnotify('group:$groupId');
     // the line in the list is only for a room of the session on screen: an
     // everyday room ending while the decoy is open says nothing there
     if (expired && identical(d, session.primary)) {
@@ -19275,6 +19379,7 @@ class AppState extends ChangeNotifier {
     final members = sessionQuiet
         ? const <String>[]
         : await d.getGroupMembers(groupId);
+    await _io.unnotify('group:$groupId');
     await session.clearGroupConversation(groupId);
     await session.deleteGroup(groupId);
     // a quiet session keeps it on this phone: nothing leaves
@@ -19286,7 +19391,6 @@ class AppState extends ChangeNotifier {
         on: d,
       );
     }
-    await _io.unnotify('group:$groupId');
     _bumpChatRev('group:$groupId');
     await refreshGroups();
   }
@@ -19294,9 +19398,9 @@ class AppState extends ChangeNotifier {
   // a group this phone was taken out of: its messages, files and row, and
   // what it left in the shade
   Future<void> _dropGroup(String groupId, HaloDb db) async {
+    await _io.unnotify('group:$groupId');
     await db.clearGroupConversation(groupId);
     await db.deleteGroup(groupId);
-    await _io.unnotify('group:$groupId');
   }
 
   // groups this phone was taken out of, by name, until the open screen of
@@ -19523,7 +19627,7 @@ Future<void> _openFromNotif() async {
       final payload = details?.notificationResponse?.payload;
       Future.delayed(
         const Duration(milliseconds: 500),
-        () => openChatForHalo(payload),
+        () => openChatForNotif(payload),
       );
     }
   } catch (e) {
