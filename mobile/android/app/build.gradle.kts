@@ -94,6 +94,11 @@ android {
         }
     }
     buildTypes {
+        debug {
+            // HALO_TEST_ID=1 installs a debug build beside the real app, with
+            // its own data, for tests on a phone that keeps its kryfo
+            if (System.getenv("HALO_TEST_ID") == "1") applicationIdSuffix = ".bridgetest"
+        }
         release {
             // HALO_UNSIGNED=1 leaves the apk unsigned for the repro container,
             // repro/release.sh signs it outside. otherwise the real key when
