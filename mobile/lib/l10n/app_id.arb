@@ -2071,5 +2071,8 @@
   "settingsGifSearchHint": "Mati sampai kamu menyalakannya. Server Kryfo mencarikan untukmu, jadi layanan GIF tidak pernah melihatmu.",
   "shareChooseChat": "Pilih obrolan",
   "shareNoChats": "Belum ada obrolan",
-  "shareNoOne": "Tidak ada yang bisa diajak berbagi"
+  "shareNoOne": "Tidak ada yang bisa diajak berbagi",
+  "valveStillConnecting": "Masih menyambung… Pesanmu akan terkirim begitu koneksi kembali.",
+  "valveCouldNotReconnect": "Kryfo tidak bisa menyambung ulang. Memulai ulang akan memperbaikinya dan pesanmu tetap tersimpan.",
+  "valveRestartKryfo": "Mulai ulang Kryfo"
 }

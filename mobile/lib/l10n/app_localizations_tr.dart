@@ -7940,4 +7940,15 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get shareNoOne => 'Paylaşılacak kimse yok';
+
+  @override
+  String get valveStillConnecting =>
+      'Hâlâ bağlanıyor… Bağlantı geri gelir gelmez mesajların gidecek.';
+
+  @override
+  String get valveCouldNotReconnect =>
+      'Kryfo yeniden bağlanamadı. Yeniden başlatmak bunu düzeltir, mesajların korunur.';
+
+  @override
+  String get valveRestartKryfo => 'Kryfo’yu yeniden başlat';
 }

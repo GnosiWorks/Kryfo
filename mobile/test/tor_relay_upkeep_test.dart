@@ -11,9 +11,11 @@
 // bridges, a reconnect, a mode or a network the person changed start a try
 // of their own, and no card shows while it climbs.
 // the engine and the rows are stand-ins
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -44,9 +46,12 @@ class _Engine implements HaloEngine {
   bool paused = false;
   // what each resume answers, the last one repeating
   List<String> resumes = ['ok'];
+  // a stop that takes its time, as one over a slow control port
+  Completer<void>? stopGate;
   @override
   Future<String> torStop() async {
     log.add('stop');
+    await stopGate?.future;
     paused = true;
     return 'ok';
   }
@@ -90,7 +95,14 @@ class _Engine implements HaloEngine {
   @override
   void restartTor() => log.add('restart');
   @override
-  void networkChanged() => log.add('network');
+  void networkChanged({bool online = true}) =>
+      log.add(online ? 'network' : 'offline');
+  @override
+  Future<String> reconnectNow() async {
+    log.add('now');
+    return 'ok';
+  }
+
   @override
   (int, int) catchupState() => (0, 1);
 
@@ -519,6 +531,127 @@ void main() {
       poll(app, 'bootstrapped|100|0|1|0', 131, 140);
       expect(app.suggestBridgesAt(at(140)), isFalse);
       expect(told, 1);
+    });
+  });
+  // doze, or a network android never reported, can leave tor on a route
+  // that is gone. coming back to the app with nothing carried is taken as a
+  // network change, and the way out of a stuck send reconnects for real
+  group('back in front', () {
+    final t0 = DateTime(2026, 10, 10, 12);
+    AppState app0() {
+      final app = AppState()
+        ..sendModeForTest = 'private'
+        ..deliveryModeForTest = DeliveryMode.always;
+      app.noteOnline(true);
+      return app;
+    }
+
+    test('tor off: the engine hears of it as a network change', () {
+      final app = app0();
+      app.takeTorStatus('off|0|0|0|3', now: t0);
+      app.backInFront(now: t0.add(const Duration(seconds: 10)));
+      expect(log, ['network']);
+    });
+
+    test('starting while online and climbing: left alone', () {
+      final app = app0();
+      app.takeTorStatus('starting|30|0|0|3', now: t0);
+      app.takeTorStatus(
+        'starting|60|0|0|3',
+        now: t0.add(const Duration(minutes: 3)),
+      );
+      app.backInFront(now: t0.add(const Duration(minutes: 5)));
+      expect(log, isEmpty);
+    });
+
+    test('stuck at one percentage for minutes: a network change', () {
+      final app = app0();
+      app.takeTorStatus('starting|30|0|0|3', now: t0);
+      app.backInFront(now: t0.add(const Duration(minutes: 5)));
+      expect(log, ['network']);
+    });
+
+    test('not when tor is fine, offline, outside onion, or in a decoy', () {
+      final app = app0();
+      app.takeTorStatus('publishing|100|0|1|3', now: t0);
+      app.backInFront(now: t0.add(const Duration(minutes: 9)));
+      app.takeTorStatus('off|0|0|0|3', now: t0);
+      app.noteOnline(false);
+      app.backInFront(now: t0.add(const Duration(minutes: 9)));
+      app.noteOnline(true);
+      app.sendModeForTest = 'balanced';
+      app.backInFront(now: t0.add(const Duration(minutes: 9)));
+      app.sendModeForTest = 'private';
+      final decoy = ArrivalRows(HaloContainer.decoy);
+      useDatabasesForTest(decoy, Session(decoy));
+      app.backInFront(now: t0.add(const Duration(minutes: 9)));
+      final live = ArrivalRows(HaloContainer.everyday);
+      useDatabasesForTest(live, Session(live));
+      expect(log, isEmpty);
+    });
+
+    test('the way out reconnects through the engine, waited on', () async {
+      final app = AppState()..sendModeForTest = 'private';
+      expect(await app.reconnectNow(), 'ok');
+      expect(log, ['now']);
+    });
+  });
+
+  // check-ins: a wake that crosses a sleep still going waits its turn, so
+  // the app and the engine end up agreeing
+  test(
+    'a wake behind a slow sleep leaves tor awake, and the app knows',
+    () async {
+      final app = AppState()
+        ..sendModeForTest = 'private'
+        ..deliveryModeForTest = DeliveryMode.checkins;
+      eng.stopGate = Completer<void>();
+      final sleep = app.torSleepForTest();
+      await Future<void>.delayed(Duration.zero);
+      app.appInFront(true);
+      await Future<void>.delayed(Duration.zero);
+      eng.stopGate!.complete();
+      await sleep;
+      await app.torWakeForTest();
+      expect(eng.paused, isFalse);
+      expect(app.torHeld, isFalse);
+    },
+  );
+
+  // a flight: wifi to mobile, airplane on and off, a vpn up and down,
+  // offline and back. the engine hears every one, and settles them itself
+  group('every network change', () {
+    const wifi = ConnectivityResult.wifi;
+    const mobile = ConnectivityResult.mobile;
+    const vpn = ConnectivityResult.vpn;
+    const none = ConnectivityResult.none;
+
+    test('reaches the engine, and nothing that is not a change does', () {
+      final app = AppState()..sendModeForTest = 'private';
+      app.connectivityEvent([wifi]); // offline to online
+      app.connectivityEvent([wifi]); // the same again: no change
+      app.connectivityEvent([mobile]); // wifi to mobile
+      app.connectivityEvent([wifi]); // mobile to wifi
+      app.connectivityEvent([none]); // airplane on
+      app.connectivityEvent([none]);
+      app.connectivityEvent([wifi]); // airplane off
+      app.connectivityEvent([wifi, vpn]); // vpn up
+      app.connectivityEvent([wifi]); // vpn down
+      expect(log.where((e) => e == 'network').length, 6);
+      // airplane on says there is no network, so the engine waits for one
+      expect(log.where((e) => e == 'offline').length, 1);
+      expect(app.online, isTrue);
+    });
+
+    test('a burst of airplane toggles is passed on as it comes', () {
+      final app = AppState()..sendModeForTest = 'private';
+      app.connectivityEvent([mobile]);
+      for (var i = 0; i < 10; i++) {
+        app.connectivityEvent([none]);
+        app.connectivityEvent([mobile]);
+      }
+      expect(log.where((e) => e == 'network').length, 11);
+      expect(log.where((e) => e == 'offline').length, 10);
     });
   });
 }

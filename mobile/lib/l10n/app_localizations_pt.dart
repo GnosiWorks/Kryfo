@@ -7975,4 +7975,15 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get shareNoOne => 'Ninguém com quem compartilhar';
+
+  @override
+  String get valveStillConnecting =>
+      'Ainda conectando… Suas mensagens saem assim que a conexão voltar.';
+
+  @override
+  String get valveCouldNotReconnect =>
+      'O Kryfo não conseguiu se reconectar. Reiniciar resolve isso e suas mensagens continuam guardadas.';
+
+  @override
+  String get valveRestartKryfo => 'Reiniciar o Kryfo';
 }

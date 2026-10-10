@@ -7586,6 +7586,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get shareNoOne => '没有可以分享的人';
+
+  @override
+  String get valveStillConnecting => '仍在连接…连接恢复后，你的消息会立刻发出。';
+
+  @override
+  String get valveCouldNotReconnect => 'Kryfo 无法重新连接。重启即可解决，你的消息会保留。';
+
+  @override
+  String get valveRestartKryfo => '重启 Kryfo';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -15050,4 +15059,13 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get shareNoOne => '沒有可以分享的人';
+
+  @override
+  String get valveStillConnecting => '仍在連線…連線恢復後，你的訊息會立刻送出。';
+
+  @override
+  String get valveCouldNotReconnect => 'Kryfo 無法重新連線。重新啟動就能解決，你的訊息會保留。';
+
+  @override
+  String get valveRestartKryfo => '重新啟動 Kryfo';
 }

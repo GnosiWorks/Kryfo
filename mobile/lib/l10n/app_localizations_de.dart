@@ -8004,4 +8004,15 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get shareNoOne => 'Niemand zum Teilen';
+
+  @override
+  String get valveStillConnecting =>
+      'Verbindung wird noch aufgebaut… Deine Nachrichten gehen raus, sobald die Verbindung wieder da ist.';
+
+  @override
+  String get valveCouldNotReconnect =>
+      'Kryfo konnte sich nicht neu verbinden. Ein Neustart behebt das, deine Nachrichten bleiben erhalten.';
+
+  @override
+  String get valveRestartKryfo => 'Kryfo neu starten';
 }

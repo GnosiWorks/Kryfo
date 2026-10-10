@@ -7914,4 +7914,15 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get shareNoOne => 'Tidak ada yang bisa diajak berbagi';
+
+  @override
+  String get valveStillConnecting =>
+      'Masih menyambung… Pesanmu akan terkirim begitu koneksi kembali.';
+
+  @override
+  String get valveCouldNotReconnect =>
+      'Kryfo tidak bisa menyambung ulang. Memulai ulang akan memperbaikinya dan pesanmu tetap tersimpan.';
+
+  @override
+  String get valveRestartKryfo => 'Mulai ulang Kryfo';
 }

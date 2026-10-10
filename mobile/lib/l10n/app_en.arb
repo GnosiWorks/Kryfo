@@ -9997,5 +9997,17 @@
   "shareNoOne": "No one to share with",
   "@shareNoOne": {
     "description": "screens/share_sheet.dart: the same picker when everyone there is blocked"
+  },
+  "valveStillConnecting": "Still connecting… Your messages go out as soon as the connection is back.",
+  "@valveStillConnecting": {
+    "description": "widgets/reconnect_valve.dart: a send has waited on tor a minute"
+  },
+  "valveCouldNotReconnect": "Kryfo could not reconnect. Restarting it fixes this and keeps your messages.",
+  "@valveCouldNotReconnect": {
+    "description": "widgets/reconnect_valve.dart: a reconnect by hand did not bring tor back"
+  },
+  "valveRestartKryfo": "Restart Kryfo",
+  "@valveRestartKryfo": {
+    "description": "widgets/reconnect_valve.dart: button that restarts the app, queue kept"
   }
 }

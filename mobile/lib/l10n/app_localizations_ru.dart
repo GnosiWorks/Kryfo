@@ -8065,4 +8065,15 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get shareNoOne => 'Не с кем поделиться';
+
+  @override
+  String get valveStillConnecting =>
+      'Всё ещё подключаемся… Твои сообщения уйдут, как только связь вернётся.';
+
+  @override
+  String get valveCouldNotReconnect =>
+      'Kryfo не смог переподключиться. Перезапуск это исправит, а сообщения сохранятся.';
+
+  @override
+  String get valveRestartKryfo => 'Перезапустить Kryfo';
 }

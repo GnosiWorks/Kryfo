@@ -2071,5 +2071,8 @@
   "settingsGifSearchHint": "متوقف حتى تشغّله. خادم Kryfo يبحث نيابة عنك، فلا تراك خدمة GIF أبدًا.",
   "shareChooseChat": "اختر محادثة",
   "shareNoChats": "لا توجد محادثات بعد",
-  "shareNoOne": "لا يوجد من تشارك معه"
+  "shareNoOne": "لا يوجد من تشارك معه",
+  "valveStillConnecting": "ما زال الاتصال جاريًا… ستُرسَل رسائلك فور عودة الاتصال.",
+  "valveCouldNotReconnect": "تعذّر على Kryfo إعادة الاتصال. إعادة تشغيله تحل المشكلة وتحتفظ برسائلك.",
+  "valveRestartKryfo": "إعادة تشغيل Kryfo"
 }

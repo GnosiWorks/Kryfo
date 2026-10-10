@@ -8,10 +8,13 @@ import 'dlog.dart';
 const _channel = MethodChannel('halo/platform');
 
 // android starts the first screen again in a new process and ends this one
-Future<void> reopenApp() async {
+// false when android would not take it, and this process stays
+Future<bool> reopenApp() async {
   try {
     await _channel.invokeMethod<void>('reopen');
+    return true;
   } catch (e) {
     dlog('reopen: ${e.runtimeType}');
+    return false;
   }
 }

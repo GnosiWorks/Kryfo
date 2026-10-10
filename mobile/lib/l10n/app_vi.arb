@@ -2071,5 +2071,8 @@
   "settingsGifSearchHint": "Tắt cho đến khi bạn bật. Máy chủ của Kryfo tìm thay bạn, nên dịch vụ GIF không bao giờ thấy bạn.",
   "shareChooseChat": "Chọn một cuộc trò chuyện",
   "shareNoChats": "Chưa có cuộc trò chuyện nào",
-  "shareNoOne": "Không có ai để chia sẻ"
+  "shareNoOne": "Không có ai để chia sẻ",
+  "valveStillConnecting": "Vẫn đang kết nối… Tin nhắn của bạn sẽ được gửi ngay khi có kết nối lại.",
+  "valveCouldNotReconnect": "Kryfo không thể kết nối lại. Khởi động lại sẽ khắc phục và giữ nguyên tin nhắn của bạn.",
+  "valveRestartKryfo": "Khởi động lại Kryfo"
 }

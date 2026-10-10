@@ -7999,4 +7999,15 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get shareNoOne => 'Personne avec qui partager';
+
+  @override
+  String get valveStillConnecting =>
+      'Toujours en connexion… Vos messages partiront dès que la connexion sera revenue.';
+
+  @override
+  String get valveCouldNotReconnect =>
+      'Kryfo n’a pas pu se reconnecter. Un redémarrage règle le problème et garde vos messages.';
+
+  @override
+  String get valveRestartKryfo => 'Redémarrer Kryfo';
 }

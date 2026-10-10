@@ -2071,5 +2071,8 @@
   "settingsGifSearchHint": "在你开启前一直关闭。Kryfo 的服务器替你搜索，所以 GIF 服务永远看不到你。",
   "shareChooseChat": "选择聊天",
   "shareNoChats": "还没有聊天",
-  "shareNoOne": "没有可以分享的人"
+  "shareNoOne": "没有可以分享的人",
+  "valveStillConnecting": "仍在连接…连接恢复后，你的消息会立刻发出。",
+  "valveCouldNotReconnect": "Kryfo 无法重新连接。重启即可解决，你的消息会保留。",
+  "valveRestartKryfo": "重启 Kryfo"
 }

@@ -12710,6 +12710,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No one to share with'**
   String get shareNoOne;
+
+  /// widgets/reconnect_valve.dart: a send has waited on tor a minute
+  ///
+  /// In en, this message translates to:
+  /// **'Still connecting… Your messages go out as soon as the connection is back.'**
+  String get valveStillConnecting;
+
+  /// widgets/reconnect_valve.dart: a reconnect by hand did not bring tor back
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo could not reconnect. Restarting it fixes this and keeps your messages.'**
+  String get valveCouldNotReconnect;
+
+  /// widgets/reconnect_valve.dart: button that restarts the app, queue kept
+  ///
+  /// In en, this message translates to:
+  /// **'Restart Kryfo'**
+  String get valveRestartKryfo;
 }
 
 class _AppLocalizationsDelegate

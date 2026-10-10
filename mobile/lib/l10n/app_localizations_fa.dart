@@ -7933,4 +7933,15 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get shareNoOne => 'کسی برای هم‌رسانی نیست';
+
+  @override
+  String get valveStillConnecting =>
+      'هنوز در حال اتصال… پیام‌های شما به محض برگشتن اتصال فرستاده می‌شوند.';
+
+  @override
+  String get valveCouldNotReconnect =>
+      'Kryfo نتوانست دوباره وصل شود. راه‌اندازی دوباره این را درست می‌کند و پیام‌هایتان می‌مانند.';
+
+  @override
+  String get valveRestartKryfo => 'راه‌اندازی دوبارهٔ Kryfo';
 }

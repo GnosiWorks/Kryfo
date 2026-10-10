@@ -2071,5 +2071,8 @@
   "settingsGifSearchHint": "Apagada hasta que la actives. El servidor de Kryfo busca por ti, así el servicio de GIFs nunca te ve.",
   "shareChooseChat": "Elegir un chat",
   "shareNoChats": "Aún no hay chats",
-  "shareNoOne": "No hay nadie con quien compartir"
+  "shareNoOne": "No hay nadie con quien compartir",
+  "valveStillConnecting": "Todavía conectando… Tus mensajes saldrán en cuanto vuelva la conexión.",
+  "valveCouldNotReconnect": "Kryfo no pudo reconectarse. Un reinicio lo arregla y tus mensajes se conservan.",
+  "valveRestartKryfo": "Reiniciar Kryfo"
 }

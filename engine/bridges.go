@@ -513,6 +513,9 @@ func bridgeLines() []string {
 	return append([]string(nil), bridgeList...)
 }
 
+// tests route tor through a proxy they can cut, as airplane mode does
+var torArgsExtra []string
+
 // every argument tor starts with. the scheduler is here rather than in
 // bridgeTorArgs because that one returns nothing when bridges are off.
 //
@@ -522,6 +525,7 @@ func bridgeLines() []string {
 // each attempt writes a kernel audit line. vanilla is its fallback anyway.
 func torArgs() []string {
 	a := []string{"--Schedulers", "Vanilla"}
+	a = append(a, torArgsExtra...)
 	// an explicit socks port, so a DisableNetwork bounce reopens the same one
 	// and a dialer built before it keeps working. see socksport.go.
 	if p := socksPin(); p != 0 {
@@ -914,18 +918,31 @@ func bridgeLineChecks() string {
 //
 //export HaloRestartTor
 func HaloRestartTor() *C.char {
-	// asked for by hand, so the loop guard does not apply
-	atomic.StoreInt64(&lastTorRestart, 0)
-	routeBump()
-	go reconnectTor()
+	// asked for by hand, so no guard applies, and the new config must not
+	// wait behind a reconnect that is still handing tor the old one
+	go reconnectNow()
 	return C.CString("ok")
 }
+
+// the same, waited on: "ok", or why tor would not take it. it can take as
+// long as three control deadlines, so the app calls it off the ui isolate
+//
+//export HaloReconnectNow
+func HaloReconnectNow() *C.char { return C.CString(reconnectNow()) }
 
 // android says the default network changed. see networkChanged.
 //
 //export HaloNetworkChanged
 func HaloNetworkChanged() *C.char {
 	networkChanged()
+	return C.CString("ok")
+}
+
+// the same, saying whether a network is there after the change
+//
+//export HaloNetworkState
+func HaloNetworkState(on C.int) *C.char {
+	networkChangedTo(on != 0)
 	return C.CString("ok")
 }
 

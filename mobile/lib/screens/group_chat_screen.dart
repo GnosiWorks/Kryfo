@@ -30,6 +30,7 @@ import 'dev_about_sheet.dart' show devForwardTarget;
 import 'chat_screen.dart'
     show disguiseWav, SearchHead, Atmo, AtmosphereWash, atmoFromName, firstUrl;
 import 'package:flutter/material.dart';
+import '../drafts.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import '../stickers/sticker_bubble.dart';
@@ -50,7 +51,9 @@ import '../main.dart'
         releaseChat,
         newMsgUid,
         torStrictGetOnIsolate,
+        torValve,
         shredFile;
+import '../widgets/reconnect_valve.dart';
 import '../theme.dart';
 import '../media_progress.dart';
 import '../group_send_watch.dart';
@@ -113,10 +116,6 @@ import '../widgets/written_field.dart';
 import '../bidi_safe.dart';
 import '../lock_guard.dart' show LockDropped, lockGuard, onScreen;
 
-// unsent drafts per group, keyed by session.chatKey: each container keeps
-// its own
-final Map<String, String> _draftPerGroup = {};
-
 // our nickname for a member, or nothing so the id shows. a room member is a
 // key, not a person we know, so it gets the short tag instead.
 String? _senderLabel(Map<String, String> nickById, String peer) =>
@@ -157,6 +156,24 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   List<MentionCandidate> _mentionable = const [];
   final _scrollCtrl = ScrollController();
   final List<_GMsg> _messages = [];
+
+  // when the oldest of ours still going was written. a file that is
+  // plainly moving is not waiting, and neither is a row that already reads
+  // as failed
+  DateTime? _waitingSince() {
+    DateTime? oldest;
+    for (final m in _messages) {
+      if (m.direction != 'out' || !m.pending) continue;
+      if (appState.linkUp &&
+          m.msgUid != null &&
+          mediaInflight.contains(m.msgUid)) {
+        continue;
+      }
+      if (oldest == null || m.when.isBefore(oldest)) oldest = m.when;
+    }
+    return oldest;
+  }
+
   bool _showScrollDown = false;
   // others' messages that came in while reading back, for the jump button.
   // counted as they arrive: older pages and reloads add none
@@ -351,15 +368,15 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     // opened under the lock: marked read once it lifts
     lockGuard.isLocked() ? _underLock = true : _markRead();
     // restore a draft left behind last time this group was open.
-    _msgCtrl.text = _draftPerGroup[_memo] ?? '';
+    _msgCtrl.text = draftPerGroup[_memo] ?? '';
     // save it live on every keystroke so it survives leaving regardless of
     // when dispose runs.
     _msgCtrl.addListener(() {
       final t = _msgCtrl.text;
       if (t.trim().isEmpty) {
-        _draftPerGroup.remove(_memo);
+        draftPerGroup.remove(_memo);
       } else {
-        _draftPerGroup[_memo] = t;
+        draftPerGroup[_memo] = t;
       }
     });
     _scrollCtrl.addListener(_updateSticky);
@@ -3286,9 +3303,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     // persist the draft one more time on the way out.
     final draft = _msgCtrl.text;
     if (draft.trim().isEmpty) {
-      _draftPerGroup.remove(_memo);
+      draftPerGroup.remove(_memo);
     } else {
-      _draftPerGroup[_memo] = draft;
+      draftPerGroup[_memo] = draft;
     }
     _menuClose?.call();
     _searchCtrl.dispose();
@@ -3370,6 +3387,16 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                       delay: const Duration(milliseconds: 160),
                     )
                   : const SizedBox(width: double.infinity, height: 0),
+            ),
+            // a send that has waited on tor a minute gets a way out
+            ReconnectValve(
+              valve: torValve,
+              waitingSince: _waitingSince(),
+              private: appState.sendMode == 'private',
+              quiet: sessionQuiet,
+              online: appState.online,
+              linkUp: appState.linkUp,
+              margin: const EdgeInsets.fromLTRB(12, 6, 12, 4),
             ),
             Divider(height: 0.5, color: HaloColors.line, thickness: 0.5),
             Expanded(

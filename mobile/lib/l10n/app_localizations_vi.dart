@@ -7904,4 +7904,15 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get shareNoOne => 'Không có ai để chia sẻ';
+
+  @override
+  String get valveStillConnecting =>
+      'Vẫn đang kết nối… Tin nhắn của bạn sẽ được gửi ngay khi có kết nối lại.';
+
+  @override
+  String get valveCouldNotReconnect =>
+      'Kryfo không thể kết nối lại. Khởi động lại sẽ khắc phục và giữ nguyên tin nhắn của bạn.';
+
+  @override
+  String get valveRestartKryfo => 'Khởi động lại Kryfo';
 }

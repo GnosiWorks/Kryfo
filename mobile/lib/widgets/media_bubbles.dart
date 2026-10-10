@@ -6,6 +6,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import '../tor_valve.dart' show restartHolds;
 import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:record/record.dart';
@@ -534,6 +535,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
   @override
   void dispose() {
     _unguard?.call();
+    restartHolds.remove(this);
     _ticker?.cancel();
     _level?.cancel();
     _overlay?.remove();
@@ -608,6 +610,8 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
       if (mounted) Overlay.of(context).insert(_overlay!.entry);
       // the lock stops the recording and throws it away
       _unguard = recordingUntil(lockGuard.closeOnLock(_abort));
+      // a restart now would cut the note off
+      restartHolds.add(this);
     } catch (e) {
       dlog('voice: could not start: $e');
       _ticker?.cancel();
@@ -630,6 +634,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
     // still starting: _start sees the finger is gone and cleans up itself
     if (_busy) return;
     _unguard?.call();
+    restartHolds.remove(this);
     _unguard = null;
     if (_ticker == null && _overlay == null) return;
     _ticker?.cancel();

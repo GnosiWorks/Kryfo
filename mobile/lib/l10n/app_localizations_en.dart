@@ -7907,4 +7907,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shareNoOne => 'No one to share with';
+
+  @override
+  String get valveStillConnecting =>
+      'Still connecting… Your messages go out as soon as the connection is back.';
+
+  @override
+  String get valveCouldNotReconnect =>
+      'Kryfo could not reconnect. Restarting it fixes this and keeps your messages.';
+
+  @override
+  String get valveRestartKryfo => 'Restart Kryfo';
 }

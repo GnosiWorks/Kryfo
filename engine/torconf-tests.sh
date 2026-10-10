@@ -23,6 +23,9 @@ tests=(
 	TestPluginSwitching
 	TestBridgeBackoff
 	TestSnowflakeBackoff
+	TestLateNetworkOffIsRescued
+	TestAirplaneThenLand
+	TestFlipStormSettles
 )
 [ $# -gt 0 ] && tests=("$@")
 failed=()

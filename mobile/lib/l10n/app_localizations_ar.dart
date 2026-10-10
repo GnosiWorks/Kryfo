@@ -8044,4 +8044,15 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get shareNoOne => 'لا يوجد من تشارك معه';
+
+  @override
+  String get valveStillConnecting =>
+      'ما زال الاتصال جاريًا… ستُرسَل رسائلك فور عودة الاتصال.';
+
+  @override
+  String get valveCouldNotReconnect =>
+      'تعذّر على Kryfo إعادة الاتصال. إعادة تشغيله تحل المشكلة وتحتفظ برسائلك.';
+
+  @override
+  String get valveRestartKryfo => 'إعادة تشغيل Kryfo';
 }

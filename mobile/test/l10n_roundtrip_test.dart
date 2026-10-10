@@ -3380,5 +3380,14 @@ void main() {
     expect(l.shareChooseChat, "Choose a chat");
     expect(l.shareNoChats, "No chats yet");
     expect(l.shareNoOne, "No one to share with");
+    expect(
+      l.valveStillConnecting,
+      "Still connecting… Your messages go out as soon as the connection is back.",
+    );
+    expect(
+      l.valveCouldNotReconnect,
+      "Kryfo could not reconnect. Restarting it fixes this and keeps your messages.",
+    );
+    expect(l.valveRestartKryfo, "Restart Kryfo");
   });
 }
