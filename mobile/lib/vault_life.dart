@@ -845,9 +845,9 @@ Future<String?> hiddenCard(DatabaseExecutor t, ChatRef c) async {
     blockedFrom: r['block_from'] as int?,
     verifiedKey: r['verified_key'] as String?,
   );
-  // when the open span began
+  // when the open span began, or a seeded one is listened on from
   const from =
-      '(SELECT s.from_at FROM v.block_spans s '
+      '(SELECT COALESCE(s.listen_from, s.from_at) FROM v.block_spans s '
       'WHERE s.peer_id = c.halo_id AND s.to_at IS NULL '
       'ORDER BY s.from_at DESC LIMIT 1) AS block_from';
   if (!c.group) {

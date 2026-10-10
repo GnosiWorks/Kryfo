@@ -1245,7 +1245,7 @@ class HaloDb implements GroupOwedStore {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 70,
+      version: 71,
       onConfigure: eraseFreedPages,
       onCreate: (db, _) async {
         await db.execute('''
@@ -1405,7 +1405,7 @@ class HaloDb implements GroupOwedStore {
       onUpgrade: (db, oldV, newV) async {
         // 62 runs after every older step, below: its index names columns
         // they add. 66 runs after it: it reads what they all make. 67, 68,
-        // 69 and 70 last
+        // 69, 70 and 71 last
         if (oldV < 65) {
           // a room joined off a link and not let in yet: when the join went
           await roomJoiningColumn(db);
@@ -1852,6 +1852,10 @@ class HaloDb implements GroupOwedStore {
         if (oldV < 70) {
           // openers that did not file, and openers sent with no receipt
           await firstContactTables(db);
+        }
+        if (oldV < 71) {
+          // when a span seeded at 64 is listened on from
+          await blockListenColumn(db);
         }
       },
     );
@@ -6713,16 +6717,20 @@ Future<void> _supportTables(Database db) async {
 }
 
 // someone blocked before the spans were kept counts as blocked from the
-// start. one with a span open already keeps that one
+// start, and is listened on from now. one with a span open already keeps
+// that one
 const kSeedBlockSpans =
-    'INSERT INTO block_spans (peer_id, from_at) '
-    'SELECT halo_id, 0 FROM contacts WHERE blocked = 1 AND halo_id NOT IN '
+    'INSERT INTO block_spans (peer_id, from_at, listen_from) '
+    "SELECT halo_id, 0, CAST(strftime('%s', 'now') AS INTEGER) * 1000 "
+    'FROM contacts WHERE blocked = 1 AND halo_id NOT IN '
     '(SELECT peer_id FROM block_spans WHERE to_at IS NULL)';
 
-// every blocked row, and whether its open span began after the argument
+// every blocked row, and whether its open span is listened on from after
+// the argument: from its start, or from when a seeded one was made
 const kBlockedRowsSql =
     'SELECT c.*, EXISTS (SELECT 1 FROM block_spans s WHERE '
-    's.peer_id = c.halo_id AND s.to_at IS NULL AND s.from_at > ?) AS listen '
+    's.peer_id = c.halo_id AND s.to_at IS NULL AND '
+    'COALESCE(s.listen_from, s.from_at) > ?) AS listen '
     'FROM contacts c WHERE c.blocked = 1';
 
 // whether a copy from someone not blocked now may be what a block of
@@ -6816,7 +6824,8 @@ Future<void> blockTables(DatabaseExecutor db, {bool seed = false}) async {
       CREATE TABLE IF NOT EXISTS block_spans (
         peer_id TEXT NOT NULL,
         from_at INTEGER NOT NULL,
-        to_at INTEGER
+        to_at INTEGER,
+        listen_from INTEGER
       )
     ''');
     await db.execute(
@@ -6838,6 +6847,25 @@ Future<void> blockTables(DatabaseExecutor db, {bool seed = false}) async {
     if (seed) await db.execute(kSeedBlockSpans);
   } catch (e) {
     dlog('block tables: $e');
+  }
+}
+
+// the upgrade to 71: when a seeded span is listened on from. one seeded
+// before is listened on from now, for as long as a new block would be
+@visibleForTesting
+Future<void> blockListenColumn(DatabaseExecutor db) async {
+  try {
+    await addColumn(
+      db,
+      'ALTER TABLE block_spans ADD COLUMN listen_from INTEGER',
+    );
+    await db.execute(
+      "UPDATE block_spans SET listen_from = CAST(strftime('%s', 'now') AS "
+      'INTEGER) * 1000 WHERE from_at = 0 AND to_at IS NULL AND '
+      'listen_from IS NULL',
+    );
+  } catch (e) {
+    dlog('block listen column: $e');
   }
 }
 

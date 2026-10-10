@@ -90,7 +90,8 @@ class RouterCard {
   final String xpub;
   final bool backPaired;
   final bool blocked;
-  // when the block began. null on a card written before cards kept it
+  // when the block began, or when a span seeded without a start is
+  // listened on from. null on a card written before cards kept it
   final int? blockedFrom;
   // the key the vault verified them under: while it is shut, another key
   // held for them holds what goes to them, as their row would
