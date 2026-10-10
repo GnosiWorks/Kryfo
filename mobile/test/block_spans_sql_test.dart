@@ -11,12 +11,12 @@ import 'package:kryfo/main.dart'
         blockTables,
         droppedIn,
         heldBySpans,
-        kBlockListenFor,
         kBlockedDropsKept,
         kBlockedRowsSql,
         kSeedBlockSpans,
         noteBlockedDropIn,
         upgradeTo64;
+import 'package:kryfo/router.dart' show kBlockListenFor;
 
 import 'sqlite_ffi.dart';
 

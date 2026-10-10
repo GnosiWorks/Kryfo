@@ -9,13 +9,7 @@ import 'package:kryfo/container.dart';
 import 'package:kryfo/group_media_send.dart' show groupOwedGap;
 import 'package:kryfo/first_contact.dart' show firstKeepFits, firstRetryGap;
 import 'package:kryfo/main.dart'
-    show
-        AppIo,
-        FirstKept,
-        HaloDb,
-        groupUnsendOf,
-        groupUnsendRow,
-        kBlockListenFor;
+    show AppIo, FirstKept, HaloDb, groupUnsendOf, groupUnsendRow;
 import 'package:kryfo/media_resend.dart';
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';

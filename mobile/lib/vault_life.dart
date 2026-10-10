@@ -842,19 +842,25 @@ Future<String?> hiddenCard(DatabaseExecutor t, ChatRef c) async {
     r['xpub'] as String? ?? '',
     backPaired: r['back_paired'] == 1,
     blocked: r['blocked'] == 1,
+    blockedFrom: r['block_from'] as int?,
     verifiedKey: r['verified_key'] as String?,
   );
+  // when the open span began
+  const from =
+      '(SELECT s.from_at FROM v.block_spans s '
+      'WHERE s.peer_id = c.halo_id AND s.to_at IS NULL '
+      'ORDER BY s.from_at DESC LIMIT 1) AS block_from';
   if (!c.group) {
     final r = await t.rawQuery(
-      'SELECT halo_id, onion, xpub, back_paired, blocked, verified_key '
-      'FROM v.contacts WHERE halo_id = ?1',
+      'SELECT c.halo_id, c.onion, c.xpub, c.back_paired, c.blocked, '
+      'c.verified_key, $from FROM v.contacts c WHERE c.halo_id = ?1',
       [c.id],
     );
     return r.isEmpty ? null : peerCard(card(r.first));
   }
   final r = await t.rawQuery(
     'SELECT c.halo_id, c.onion, c.xpub, c.back_paired, c.blocked, '
-    'c.verified_key '
+    'c.verified_key, $from '
     'FROM v.group_members gm JOIN v.contacts c ON c.halo_id = gm.halo_id '
     'WHERE gm.group_id = ?1 AND NOT EXISTS '
     '(SELECT 1 FROM main.contacts x WHERE x.halo_id = gm.halo_id) '

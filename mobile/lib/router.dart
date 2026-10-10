@@ -30,6 +30,10 @@ const kHiddenGroup = 'group';
 // dropped. a group's card says so with g
 const kHiddenGone = 'gone';
 
+// relays keep a wrap fourteen days (nip17.go). a block is listened on a
+// day past that, so nothing it held is left there
+const kBlockListenFor = 15 * 86400000;
+
 // what may wait sealed while the vault is shut, in arrivals and in bytes.
 // past either the oldest go first
 const kMaxSealed = 5000;
@@ -76,6 +80,7 @@ class RouterCard {
     this.xpub, {
     this.backPaired = false,
     this.blocked = false,
+    this.blockedFrom,
     this.verifiedKey,
     this.markRead = true,
   });
@@ -85,6 +90,8 @@ class RouterCard {
   final String xpub;
   final bool backPaired;
   final bool blocked;
+  // when the block began. null on a card written before cards kept it
+  final int? blockedFrom;
   // the key the vault verified them under: while it is shut, another key
   // held for them holds what goes to them, as their row would
   final String? verifiedKey;
@@ -98,6 +105,7 @@ class RouterCard {
     'x': xpub,
     if (backPaired) 'bp': 1,
     if (blocked) 'bl': 1,
+    if (blocked) 'bs': ?blockedFrom,
     'vk': verifiedKey ?? '',
   };
 
@@ -108,12 +116,14 @@ class RouterCard {
     final o = j['o'];
     final x = j['x'];
     final vk = j['vk'];
+    final bs = j['bs'];
     return RouterCard(
       h,
       o is String ? o : '',
       x is String ? x : '',
       backPaired: j['bp'] == 1,
       blocked: j['bl'] == 1,
+      blockedFrom: j['bl'] == 1 && bs is int ? bs : null,
       verifiedKey: vk is String && vk.isNotEmpty ? vk.toLowerCase() : null,
       markRead: vk is String,
     );
@@ -698,12 +708,19 @@ class VaultRouter {
   // no tick for someone the vault blocked
   bool blocks(String id) => cardOf(id)?.blocked ?? false;
 
-  // the keys to listen on, each to its person. the vault's blocked too:
-  // what they send while it holds is dropped as it comes
-  Map<String, String> get listenFor => {
-    for (final c in [..._members.values, ..._peers.values])
-      if (c.xpub.isNotEmpty) c.xpub: c.id,
-  };
+  // the keys to listen on, each to its person. the vault's blocked too,
+  // while the block is young: what they send while it holds is dropped as
+  // it comes. one whose card does not say when it began is listened on
+  // until the vault opens and says
+  Map<String, String> get listenFor {
+    final old = DateTime.now().millisecondsSinceEpoch - kBlockListenFor;
+    return {
+      for (final c in [..._members.values, ..._peers.values])
+        if (c.xpub.isNotEmpty &&
+            !(c.blocked && c.blockedFrom != null && c.blockedFrom! <= old))
+          c.xpub: c.id,
+    };
+  }
 
   // an arrival sealed to the vault. false when there is nothing to seal to,
   // or when it alone is past the cap

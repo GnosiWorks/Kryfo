@@ -6725,10 +6725,6 @@ const kBlockedRowsSql =
     's.peer_id = c.halo_id AND s.to_at IS NULL AND s.from_at > ?) AS listen '
     'FROM contacts c WHERE c.blocked = 1';
 
-// relays keep a wrap fourteen days (nip17.go). a block is listened on a
-// day past that, so nothing it held is left there
-const kBlockListenFor = 15 * 86400000;
-
 // whether a copy from someone not blocked now may be what a block of
 // theirs held back. [ended]: their spans that ended, from and to. it is
 // let in only if it reached the relay, or this phone, after each of them,
@@ -9327,6 +9323,17 @@ class AppState extends ChangeNotifier {
   Future<void> acceptNewKey(String peer) async {
     await session.acceptNewKey(peer);
     _recardFor(peer);
+  }
+
+  // a block in the open vault on someone its cards name: the cards say so
+  // while it is shut, and since when
+  Future<void> _recardBlock(String haloId) async {
+    if (_openVault == null || !_router.keeps(haloId)) return;
+    try {
+      await refreshHiddenCards();
+    } catch (e) {
+      dlog('vault: cards not read (${e.runtimeType})');
+    }
   }
 
   void _recardFor(String peer) {
@@ -15252,7 +15259,9 @@ class AppState extends ChangeNotifier {
   }
 
   // a block older than kBlockListenFor is listened on no more: the relays
-  // hold nothing from its time now. a key someone else is heard on stays
+  // hold nothing from its time now. a key someone else is heard on stays.
+  // the vault's blocked go by their cards, on the same sweep whether it is
+  // open or shut
   @visibleForTesting
   Future<void> unlistenOldBlocks() async {
     if (sessionQuiet) return;
@@ -15262,9 +15271,13 @@ class AppState extends ChangeNotifier {
         for (final r in await live.blockedRows(now: now))
           if (r['listen'] != 1) r['halo_id'] as String,
       };
-      if (old.isEmpty) return;
+      final hidden = _router.listenFor;
       for (final e in _xPubToHaloId.entries.toList()) {
-        if (!old.contains(e.value) || _router.keeps(e.value)) continue;
+        final kept = _router.keeps(e.value);
+        final gone = kept
+            ? _router.blocks(e.value) && hidden[e.key] != e.value
+            : old.contains(e.value);
+        if (!gone) continue;
         _xPubToHaloId.remove(e.key);
         _io.unlisten(e.key);
       }
@@ -16363,6 +16376,7 @@ class AppState extends ChangeNotifier {
   // may name someone the everyday app has in the shade
   Future<void> block(String haloId) async {
     await session.setBlocked(haloId, true);
+    await _recardBlock(haloId);
     // an open chat reads its rows again: what waited is not sent now
     _bumpChatRev(haloId);
     await session.dropHeld(haloId);
@@ -16590,6 +16604,9 @@ class AppState extends ChangeNotifier {
   // an unblock listens for them, if nothing did yet
   Future<void> unblock(String haloId) async {
     await session.setBlocked(haloId, false);
+    // the card says so before the vault can shut: one still saying blocked
+    // would turn them away
+    await _recardBlock(haloId);
     if (!sessionQuiet) await subscribePeer(haloId);
     await refreshContacts();
   }

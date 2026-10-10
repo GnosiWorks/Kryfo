@@ -1176,6 +1176,51 @@ void main() {
     expect(w.router.blocks('blocked-hidden-one'), isTrue);
   });
 
+  test('someone the vault blocked longer ago than the relays keep anything '
+      'is listened for no more, and a card that does not say since when '
+      'is', () async {
+    final w = await _World.make();
+    final now = DateTime.now().millisecondsSinceEpoch;
+    for (final (id, from) in [
+      ('blocked-young-one', now - kBlockListenFor + 86400000),
+      ('blocked-old-one', now - kBlockListenFor - 1000),
+      ('blocked-unsaid-one', null),
+    ]) {
+      await w.store.putHidden(
+        id,
+        kHiddenPeer,
+        peerCard(
+          RouterCard(id, 'o', 'x-$id', blocked: true, blockedFrom: from),
+        ),
+        1,
+      );
+    }
+    await w.router.load();
+    expect(w.router.listenFor, {
+      'x-$_h': _h,
+      'x-blocked-young-one': 'blocked-young-one',
+      'x-blocked-unsaid-one': 'blocked-unsaid-one',
+    });
+    // still kept from the everyday side, and still turned away
+    expect(w.router.keeps('blocked-old-one'), isTrue);
+    expect(w.router.blocks('blocked-old-one'), isTrue);
+    // the start rides the card only while the block holds
+    final card = jsonDecode(
+      peerCard(const RouterCard('p', 'o', 'x', blockedFrom: 5)),
+    );
+    expect((card as Map).containsKey('bs'), isFalse);
+    expect(
+      RouterCard.fromJson(
+        jsonDecode(
+          peerCard(
+            const RouterCard('p', 'o', 'x', blocked: true, blockedFrom: 5),
+          ),
+        ),
+      )!.blockedFrom,
+      5,
+    );
+  });
+
   group('while the vault is shut', () {
     test('a message changes nothing and is sealed once', () async {
       final w = await _World.make();
