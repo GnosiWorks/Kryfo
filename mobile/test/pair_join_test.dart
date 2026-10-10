@@ -66,7 +66,11 @@ double _scale(WidgetTester t) => t
     .value;
 
 void main() {
-  tearDown(() => setL10nLocale(const Locale('en')));
+  setUp(() => pairNow = () => TestWidgetsFlutterBinding.instance.clock.now());
+  tearDown(() {
+    setL10nLocale(const Locale('en'));
+    forgetPairRefusals();
+  });
 
   test('the words come from the invite, and only real ones', () {
     expect(pairInviteWords(_invite), _words);
@@ -398,5 +402,52 @@ void main() {
       expect(p.looked, ['482913'], reason: typed);
       expect(find.byType(PairConfirm), findsOneWidget);
     }
+  });
+
+  testWidgets('a code turned away with not them is not offered again', (
+    t,
+  ) async {
+    phone(t);
+    final p = _Pair([_invite]);
+    await t.pumpWidget(app(p.widget()));
+    await _look(t);
+    await t.pumpAndSettle();
+    await t.tap(find.text(l10n.pairCodeNotThem));
+    await t.pumpAndSettle();
+
+    // the same code again, here or on the screen opened anew
+    for (final w in [
+      p.widget(),
+      _Pair([_invite]).widget(),
+    ]) {
+      await t.pumpWidget(app(w));
+      await t.pumpAndSettle();
+      await _look(t);
+      await t.pumpAndSettle();
+      expect(find.byType(PairConfirm), findsNothing);
+      expect(find.text(l10n.pairCodeNotAdded), findsOneWidget);
+      expect(
+        t.widget<Text>(find.text(l10n.pairCodeNotAdded)).style!.color,
+        HaloColors.rose,
+      );
+    }
+    expect(p.added, isEmpty);
+
+    // the new code they were asked for works
+    final q = _Pair([_invite]);
+    await t.pumpWidget(app(q.widget()));
+    await t.pumpAndSettle();
+    await _look(t, '113 355');
+    await t.pumpAndSettle();
+    expect(find.byType(PairConfirm), findsOneWidget);
+
+    // and once the code has burned it is the relays' answer again
+    await t.pump(kPairCodeLife);
+    final r = _Pair([_invite]);
+    await t.pumpWidget(app(r.widget()));
+    await t.pumpAndSettle();
+    await _look(t);
+    await t.pumpAndSettle();
+    expect(find.byType(PairConfirm), findsOneWidget);
   });
 }

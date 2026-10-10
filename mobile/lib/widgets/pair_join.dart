@@ -4,7 +4,9 @@
 // words against the other phone's screen. a code that points at more than
 // one invite is refused outright.
 import 'dart:async';
+import 'dart:convert';
 
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -12,6 +14,7 @@ import '../l10n/l10n.dart';
 import '../theme.dart';
 import 'kryfo_avatar.dart';
 import 'motion.dart' show kHouseCurve, kHouseTime, motionStill;
+import 'pair_code_panel.dart' show kPairCodeLife;
 import 'halo_buttons.dart';
 import 'press_scale.dart';
 
@@ -35,6 +38,9 @@ String? pairInviteWords(String invite) {
   }
 }
 
+/// the clock codes are counted on. tests set it to the fake one
+DateTime Function() pairNow = DateTime.now;
+
 /// typed digits as 0-9: persian and arabic-indic ones count, the rest goes
 String pairDigits(String typed) {
   final b = StringBuffer();
@@ -49,6 +55,23 @@ String pairDigits(String typed) {
   }
   return b.toString();
 }
+
+// an invite turned away with not them, until its code burns: the joiner
+// cannot burn the code, so the same code is not offered again here. kept
+// as a hash of code and invite, never in the clear
+final _refused = <String, DateTime>{};
+
+String _refusal(String code, String invite) =>
+    sha256.convert(utf8.encode('$code\n$invite')).toString();
+
+bool _wasRefused(String code, String invite) {
+  final now = pairNow();
+  _refused.removeWhere((_, until) => !until.isAfter(now));
+  return _refused.containsKey(_refusal(code, invite));
+}
+
+@visibleForTesting
+void forgetPairRefusals() => _refused.clear();
 
 class PairJoin extends StatefulWidget {
   // the engine's answer for a code: an invite, "empty", "twice",
@@ -80,6 +103,7 @@ class _PairJoinState extends State<PairJoin> {
   bool _adding = false;
   String? _invite;
   String? _words;
+  String? _code;
 
   @override
   void dispose() {
@@ -124,12 +148,19 @@ class _PairJoinState extends State<PairJoin> {
           _say(l10n.pairCodeNothingAtThatCode);
           return;
         }
+        if (_wasRefused(code, res)) {
+          HapticFeedback.heavyImpact();
+          _ctrl.clear();
+          _say(l10n.pairCodeNotAdded, warn: true);
+          return;
+        }
         HapticFeedback.lightImpact();
         setState(() {
           _busy = false;
           _status = '';
           _invite = res;
           _words = words;
+          _code = code;
         });
         return;
       }
@@ -164,10 +195,15 @@ class _PairJoinState extends State<PairJoin> {
   }
 
   void _notThem() {
+    final code = _code, invite = _invite;
+    if (code != null && invite != null) {
+      _refused[_refusal(code, invite)] = pairNow().add(kPairCodeLife);
+    }
     _ctrl.clear();
     setState(() {
       _invite = null;
       _words = null;
+      _code = null;
       _status = l10n.pairCodeNotAdded;
       _warn = false;
     });
