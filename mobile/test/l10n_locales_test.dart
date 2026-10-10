@@ -2708,6 +2708,7 @@ final _calls = <_Call>[
     [],
     (l) => l.linkStubFetchedOverTorByTheirDevice,
   ),
+  ('placeStubLocation', [], (l) => l.placeStubLocation),
   ('mediaBubblesB', ["⟨bytes⟩"], (l) => l.mediaBubblesB("⟨bytes⟩")),
   ('mediaBubblesKb', ["⟨bytes⟩"], (l) => l.mediaBubblesKb("⟨bytes⟩")),
   ('mediaBubblesMb', ["⟨bytes⟩"], (l) => l.mediaBubblesMb("⟨bytes⟩")),

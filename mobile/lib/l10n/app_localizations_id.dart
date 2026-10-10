@@ -3494,6 +3494,9 @@ class AppLocalizationsId extends AppLocalizations {
       'Tidak ada aplikasi di ponsel ini yang bisa membuka tautan ini.';
 
   @override
+  String get placeStubLocation => 'Lokasi';
+
+  @override
   String get lockFileSaved => 'Disimpan';
 
   @override

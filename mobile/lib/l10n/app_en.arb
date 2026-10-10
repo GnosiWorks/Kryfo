@@ -4367,6 +4367,10 @@
   "@linkNoAppOpens": {
     "description": "toast when tapping a link in a message and no app on the phone takes it"
   },
+  "placeStubLocation": "Location",
+  "@placeStubLocation": {
+    "description": "widgets/place_stub.dart: title of a shared map location that carries no name"
+  },
   "@lockFileNoAppOnThis": {
     "description": "screens/lock_file_screen.dart"
   },

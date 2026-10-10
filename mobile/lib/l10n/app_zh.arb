@@ -890,6 +890,7 @@
   "lockFileWriteItDownBefore": "锁定文件之前，先把它写下来",
   "lockFileNoAppOnThis": "这部手机上没有应用接收这个文件。",
   "linkNoAppOpens": "这台手机上没有可以打开此链接的应用。",
+  "placeStubLocation": "位置",
   "lockFileSaved": "已保存",
   "lockFileCouldNotSaveIt": "无法保存到那里。请换个文件夹。",
   "lockFileLocked": "已锁定",

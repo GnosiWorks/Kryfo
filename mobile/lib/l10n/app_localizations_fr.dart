@@ -3535,6 +3535,9 @@ class AppLocalizationsFr extends AppLocalizations {
       'Aucune application de ce téléphone n\'ouvre ce lien.';
 
   @override
+  String get placeStubLocation => 'Position';
+
+  @override
   String get lockFileSaved => 'Enregistré';
 
   @override

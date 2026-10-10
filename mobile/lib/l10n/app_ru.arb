@@ -890,6 +890,7 @@
   "lockFileWriteItDownBefore": "Запиши его, прежде чем запирать файл",
   "lockFileNoAppOnThis": "Ни одно приложение на этом телефоне не приняло файл.",
   "linkNoAppOpens": "На этом телефоне нет приложения, которое откроет эту ссылку.",
+  "placeStubLocation": "Геопозиция",
   "lockFileSaved": "Сохранено",
   "lockFileCouldNotSaveIt": "Не удалось сохранить туда. Попробуй другую папку.",
   "lockFileLocked": "Заперт",

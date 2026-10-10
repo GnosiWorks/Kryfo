@@ -890,6 +890,7 @@
   "lockFileWriteItDownBefore": "دوّنها قبل أن تقفل الملف",
   "lockFileNoAppOnThis": "لم يستلم أي تطبيق على هذا الهاتف الملف.",
   "linkNoAppOpens": "لا يوجد تطبيق على هذا الهاتف يفتح هذا الرابط.",
+  "placeStubLocation": "الموقع",
   "lockFileSaved": "حُفظ",
   "lockFileCouldNotSaveIt": "تعذّر حفظه هناك. جرّب مجلدًا آخر.",
   "lockFileLocked": "مقفل",

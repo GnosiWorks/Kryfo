@@ -890,6 +890,7 @@
   "lockFileWriteItDownBefore": "پیش از قفل کردن فایل، آن را یادداشت کنید",
   "lockFileNoAppOnThis": "هیچ برنامه‌ای روی این گوشی فایل را نگرفت.",
   "linkNoAppOpens": "هیچ برنامه‌ای روی این گوشی این پیوند را باز نمی‌کند.",
+  "placeStubLocation": "موقعیت",
   "lockFileSaved": "ذخیره شد",
   "lockFileCouldNotSaveIt": "آن‌جا ذخیره نشد. پوشه‌ی دیگری را امتحان کنید.",
   "lockFileLocked": "قفل شد",

@@ -890,6 +890,7 @@
   "lockFileWriteItDownBefore": "Anótala antes de bloquear el archivo",
   "lockFileNoAppOnThis": "Ninguna app de este teléfono aceptó el archivo.",
   "linkNoAppOpens": "Ninguna app de este teléfono abre este enlace.",
+  "placeStubLocation": "Ubicación",
   "lockFileSaved": "Guardado",
   "lockFileCouldNotSaveIt": "No se pudo guardar ahí. Prueba otra carpeta.",
   "lockFileLocked": "Bloqueado",

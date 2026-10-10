@@ -3489,6 +3489,9 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không có ứng dụng nào trên điện thoại này mở được liên kết này.';
 
   @override
+  String get placeStubLocation => 'Vị trí';
+
+  @override
   String get lockFileSaved => 'Đã lưu';
 
   @override

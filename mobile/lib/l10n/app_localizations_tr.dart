@@ -3511,6 +3511,9 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bu telefonda bu bağlantıyı açan bir uygulama yok.';
 
   @override
+  String get placeStubLocation => 'Konum';
+
+  @override
   String get lockFileSaved => 'Kaydedildi';
 
   @override

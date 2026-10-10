@@ -890,6 +890,7 @@
   "lockFileWriteItDownBefore": "Hãy ghi lại trước khi khóa tệp",
   "lockFileNoAppOnThis": "Không ứng dụng nào trên điện thoại này nhận tệp.",
   "linkNoAppOpens": "Không có ứng dụng nào trên điện thoại này mở được liên kết này.",
+  "placeStubLocation": "Vị trí",
   "lockFileSaved": "Đã lưu",
   "lockFileCouldNotSaveIt": "Không lưu được vào đó. Hãy thử thư mục khác.",
   "lockFileLocked": "Đã khóa",

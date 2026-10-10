@@ -3534,6 +3534,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get linkNoAppOpens => 'Ninguna app de este teléfono abre este enlace.';
 
   @override
+  String get placeStubLocation => 'Ubicación';
+
+  @override
   String get lockFileSaved => 'Guardado';
 
   @override

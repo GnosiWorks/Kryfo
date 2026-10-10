@@ -3582,6 +3582,9 @@ class AppLocalizationsUk extends AppLocalizations {
       'На цьому телефоні немає застосунку, який відкриє це посилання.';
 
   @override
+  String get placeStubLocation => 'Геопозиція';
+
+  @override
   String get lockFileSaved => 'Збережено';
 
   @override

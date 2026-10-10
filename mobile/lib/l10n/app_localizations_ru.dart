@@ -3595,6 +3595,9 @@ class AppLocalizationsRu extends AppLocalizations {
       'На этом телефоне нет приложения, которое откроет эту ссылку.';
 
   @override
+  String get placeStubLocation => 'Геопозиция';
+
+  @override
   String get lockFileSaved => 'Сохранено';
 
   @override

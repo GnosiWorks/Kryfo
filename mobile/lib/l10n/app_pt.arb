@@ -890,6 +890,7 @@
   "lockFileWriteItDownBefore": "Anote antes de trancar o arquivo",
   "lockFileNoAppOnThis": "Nenhum app neste celular aceitou o arquivo.",
   "linkNoAppOpens": "Nenhum app neste celular abre este link.",
+  "placeStubLocation": "Localização",
   "lockFileSaved": "Salvo",
   "lockFileCouldNotSaveIt": "Não deu para salvar aí. Tente outra pasta.",
   "lockFileLocked": "Trancado",

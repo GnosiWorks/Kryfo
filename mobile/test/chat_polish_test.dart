@@ -6,7 +6,8 @@
 // how it works and the group mic takes a tap off its icon, unsend can be
 // kept, the forward sheet shows real faces, a blocked chat never shows the
 // composer first, a dismissed banner folds, the send button only fades with
-// less movement, and the record bar slides back down before it goes
+// less movement, the record bar slides back down before it goes, and a
+// map link opens in a maps app
 import 'dart:io';
 
 import 'package:flutter/material.dart' hide Curve;
@@ -18,12 +19,15 @@ import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/main.dart'
     show HaloEngine, appState, useDatabasesForTest, useEngineForTest;
+import 'package:kryfo/open_outside.dart';
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/widgets/chat_parts.dart' show ReactionChip;
 import 'package:kryfo/widgets/kryfo_avatar.dart';
+import 'package:kryfo/widgets/link_stub.dart';
 import 'package:kryfo/widgets/media_bubbles.dart' show HoldToTalkMic;
 import 'package:kryfo/widgets/menu_backdrop.dart';
+import 'package:kryfo/widgets/place_stub.dart';
 import 'package:kryfo/widgets/voice_parts.dart'
     show RecordBarEntry, VoiceRecordBar;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -641,5 +645,44 @@ void main() {
     expect(find.byType(VoiceRecordBar), findsOneWidget);
     await t.pump(const Duration(milliseconds: 300));
     expect(find.byType(VoiceRecordBar), findsNothing);
+  });
+
+  // a link inside the place's name is part of the place, not a web link
+  const geo = 'meet me geo:0,0?q=48.858093,2.294694(see%20https://x.example/a)';
+  final place = Uri.parse(
+    'geo:48.858093,2.294694?q=48.858093,2.294694(see%20https%3A%2F%2Fx.example%2Fa)',
+  );
+
+  testWidgets('a map link opens in a maps app', (t) async {
+    await world(text: geo);
+    final asked = <Uri>[];
+    openOutsideForTest = (u) async {
+      asked.add(u);
+      return true;
+    };
+    addTearDown(() => openOutsideForTest = null);
+    await devOpen(t, chat());
+    expect(find.byType(PlaceStub), findsOneWidget);
+    expect(find.byType(LinkStub), findsNothing);
+    expect(find.text('48.85809, 2.29469'), findsOneWidget);
+    await t.tap(find.byType(PlaceStub));
+    await t.pump();
+    await t.pump(const Duration(milliseconds: 300));
+    expect(asked, [place]);
+    expect(find.text(l10n.linkNoAppOpens), findsNothing);
+    await devClose(t);
+  });
+
+  testWidgets('a map link no app takes says so', (t) async {
+    await world(text: geo);
+    openOutsideForTest = (u) async => false;
+    addTearDown(() => openOutsideForTest = null);
+    await devOpen(t, chat());
+    await t.tap(find.byType(PlaceStub));
+    await t.pump();
+    await t.pump(const Duration(milliseconds: 300));
+    expect(find.text(l10n.linkNoAppOpens), findsOneWidget);
+    await t.pump(const Duration(seconds: 5));
+    await devClose(t);
   });
 }

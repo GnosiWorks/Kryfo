@@ -3362,6 +3362,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get linkNoAppOpens => '这台手机上没有可以打开此链接的应用。';
 
   @override
+  String get placeStubLocation => '位置';
+
+  @override
   String get lockFileSaved => '已保存';
 
   @override
@@ -10933,6 +10936,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get linkNoAppOpens => '這支手機上沒有可以開啟此連結的應用程式。';
+
+  @override
+  String get placeStubLocation => '位置';
 
   @override
   String get lockFileSaved => '已儲存';
