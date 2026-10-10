@@ -2,6 +2,8 @@
 // one place for a person. the face and the three words, our name for them,
 // how far we trust them, the media we shared, and the things you can do to
 // the chat.
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -26,6 +28,7 @@ import '../widgets/swap.dart';
 import 'home_screen.dart' show ContactPreview;
 import 'chat_screen.dart' show MediaGalleryScreen;
 import 'key_verification_screen.dart';
+import '../widgets/key_held.dart';
 import 'vouchers_sheet.dart';
 import '../widgets/confirm_sheet.dart';
 import '../l10n/l10n.dart';
@@ -64,6 +67,8 @@ class _ContactScreenState extends State<ContactScreen> {
   // a switch moves on the tap; the write follows behind it
   bool? _mutedNow;
   bool? _pinnedNow;
+  // verified under one key, holding another now: nothing goes to them
+  bool _held = false;
 
   @override
   void initState() {
@@ -83,11 +88,13 @@ class _ContactScreenState extends State<ContactScreen> {
       session.vouchesFor(widget.haloId),
       session.mediaFor(widget.haloId),
       session.firstMessageAt(widget.haloId),
+      keyHeldShown(widget.haloId),
     ]);
     final c = results[0] as Map<String, Object?>?;
     final since = results[3] as int?;
     final vs = results[1] as List<Map<String, Object?>>;
     final rows = results[2] as List<Map<String, Object?>>;
+    final held = results[4] as bool;
     // a file that went missing draws as nothing; no stat per file up front
     final paths = [for (final r in rows) r['media_path'] as String];
     final secure = {
@@ -105,6 +112,7 @@ class _ContactScreenState extends State<ContactScreen> {
       _secure = secure;
       _mediaCount = paths.length;
       _since = since;
+      _held = held;
       _loaded = true;
     });
   }
@@ -233,6 +241,27 @@ class _ContactScreenState extends State<ContactScreen> {
     await _load();
   }
 
+  Future<void> _checkNumber(bool verified) async {
+    await Navigator.of(context).push(
+      haloRoute(
+        KeyVerificationScreen(
+          peerHaloId: widget.haloId,
+          peerName: _name,
+          myXpub: appState.sessionXPub,
+          peerXpub: widget.peerXPub,
+          initialVerified: verified,
+        ),
+      ),
+    );
+    await _load();
+    if (!_held) unawaited(appState.drainOutbox());
+  }
+
+  Future<void> _acceptNewKey() async {
+    if (!await acceptNewKeyAsked(context, widget.haloId, _name)) return;
+    await _load();
+  }
+
   @override
   Widget build(BuildContext context) {
     final c = _c;
@@ -285,20 +314,7 @@ class _ContactScreenState extends State<ContactScreen> {
                   label: verified
                       ? l10n.contactKeysVerified
                       : l10n.contactVerifyKeys,
-                  onTap: () async {
-                    await Navigator.of(context).push(
-                      haloRoute(
-                        KeyVerificationScreen(
-                          peerHaloId: widget.haloId,
-                          peerName: _name,
-                          myXpub: appState.sessionXPub,
-                          peerXpub: widget.peerXPub,
-                          initialVerified: verified,
-                        ),
-                      ),
-                    );
-                    _load();
-                  },
+                  onTap: () => _checkNumber(verified),
                 ),
               ),
             ],
@@ -400,6 +416,17 @@ class _ContactScreenState extends State<ContactScreen> {
                 ],
               ),
             ),
+          ),
+          // held: the notice and its two ways out, under the status
+          EaseSize(
+            child: _held && !blocked
+                ? KeyHeldCard(
+                    peerName: _name,
+                    margin: const EdgeInsets.only(top: 18),
+                    onCheck: () => _checkNumber(verified),
+                    onAccept: _acceptNewKey,
+                  )
+                : const SizedBox(width: double.infinity),
           ),
           const SizedBox(height: 22),
           // the cards ease in once there is something to put on them

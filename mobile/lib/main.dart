@@ -1235,6 +1235,7 @@ class HaloDb implements GroupOwedStore {
       path,
       password: pw,
       version: 70,
+      onConfigure: eraseFreedPages,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -1848,7 +1849,18 @@ class HaloDb implements GroupOwedStore {
       await close();
       throw StateError('${container.dbFile} was replaced');
     }
-    return _db!;
+    final db = _db!;
+    unawaited(
+      Future<void>.delayed(const Duration(seconds: 30), () async {
+        if (_retired || !identical(_db, db)) return;
+        try {
+          await wipeFreedOnce(db);
+        } catch (e) {
+          dlog('freed pages: not wiped (${e.runtimeType})');
+        }
+      }),
+    );
+    return db;
   }
 
   Future<Map<String, String>?> loadIdentity() async {
@@ -1979,23 +1991,34 @@ class HaloDb implements GroupOwedStore {
     // the dev chat never warns: a key that is not the pinned one is dropped
     if (isDevId(haloId)) return;
     final db = await open();
-    await db.update(
-      'contacts',
-      {'key_changed': changed ? 1 : 0},
-      where: 'halo_id = ?',
-      whereArgs: [haloId],
+    await _inLane(
+      haloId,
+      () => db.update(
+        'contacts',
+        {'key_changed': changed ? 1 : 0},
+        where: 'halo_id = ?',
+        whereArgs: [haloId],
+      ),
     );
   }
 
   Future<void> clearKeyChanged(String haloId) async {
     final db = await open();
-    await db.update(
-      'contacts',
-      {'key_changed': 0},
-      where: 'halo_id = ?',
-      whereArgs: [haloId],
+    await _inLane(
+      haloId,
+      () => db.update(
+        'contacts',
+        {'key_changed': 0},
+        where: 'halo_id = ?',
+        whereArgs: [haloId],
+      ),
     );
   }
+
+  // in their signal lane: an open that fails puts back only what was there
+  // before it, never a write made since
+  static Future<T> _inLane<T>(String haloId, Future<T> Function() work) =>
+      isDevId(haloId) ? work() : signalSession.serial(haloId, work);
 
   Future<String?> contactXPub(String haloId) async {
     final db = await open();
@@ -2329,28 +2352,34 @@ class HaloDb implements GroupOwedStore {
     return (rows.first['muted'] as int? ?? 0) == 1;
   }
 
-  Future<bool> setVerified(String haloId, bool verified, {String? key}) async =>
-      markVerified(
-        await open(),
-        haloId,
-        verified,
-        key: key,
-        identity: _keySource,
-      );
+  // in their signal lane: an open that saves a new key for them lands
+  // wholly before the mark or after it
+  Future<bool> setVerified(String haloId, bool verified, {String? key}) async {
+    final db = await open();
+    return _inLane(
+      haloId,
+      () => markVerified(db, haloId, verified, key: key, identity: _keySource),
+    );
+  }
 
   Future<bool> isVerified(String haloId) async {
     final c = await getContact(haloId);
     return (c?['verified'] as int? ?? 0) == 1;
   }
 
-  Future<String?> heldKey(String haloId) async =>
-      heldKeyHex(await open(), haloId, identity: _keySource);
+  // no key when it could not be read: no number shows
+  Future<String?> heldKey(String haloId) async {
+    final k = await heldKeyHex(await open(), haloId, identity: _keySource);
+    return k == kKeyUnread ? null : k;
+  }
 
   Future<bool> keyHeld(String haloId) async =>
       keyHeldIn(await open(), haloId, identity: _keySource);
 
-  Future<void> acceptNewKey(String haloId) async =>
-      acceptNewKeyIn(await open(), haloId);
+  Future<void> acceptNewKey(String haloId) async {
+    final db = await open();
+    await _inLane(haloId, () => acceptNewKeyIn(db, haloId));
+  }
 
   // a block starts the clocks of what they sent that waits to be read, in
   // their chat and in groups, and drops what was queued for them. an
@@ -6426,10 +6455,43 @@ String _keyHex(List<int> b) {
 // on the signal store. the decoy and its hidden chats never read the everyday
 // identity's keys: the decoy goes nowhere, and their cards are all it knows.
 // the everyday and the decoy database read their own tables
+// freed pages are zeroed, so a row deleted or rewritten does not linger in
+// the file. the cost is a few percent on writes
+Future<void> eraseFreedPages(DatabaseExecutor db) async {
+  await db.rawQuery('PRAGMA secure_delete = 1');
+}
+
+// pages freed before that held old rows: one vacuum per database rewrites
+// them, off the start
+Future<void> wipeFreedOnce(DatabaseExecutor db) async {
+  if (await RouterRows.meta(db, 'freed_wiped') != null) return;
+  await db.execute('VACUUM');
+  await RouterRows.putMeta(db, 'freed_wiped', '1');
+}
+
 Future<String?> Function(String haloId)? keySourceFor(HaloContainer c) =>
-    identical(c, HaloContainer.vault)
-    ? (id) async => peerIdentityHex(await live.open(), id)
-    : null;
+    identical(c, HaloContainer.vault) ? _everydayKeyOf : null;
+
+// what a key reads as when the everyday database cannot be read, a restore
+// putting another file in its place say. it is no key, so it matches no mark
+const kKeyUnread = 'unread';
+
+Future<String?> _everydayKeyOf(String haloId) async {
+  try {
+    final rows = await (await live.open()).query(
+      'peer_identities',
+      columns: ['identity_key'],
+      where: 'address = ?',
+      whereArgs: [haloId],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return _keyHex(rows.first['identity_key'] as List<int>);
+  } catch (e) {
+    dlog('held key: everyday not read (${e.runtimeType})');
+    return kKeyUnread;
+  }
+}
 
 // the key a database's signal tables hold for someone, null when none
 Future<String?> peerIdentityHex(DatabaseExecutor db, String haloId) async {
@@ -6500,13 +6562,42 @@ Future<bool> markVerified(
   if (held == null || key == null || key.trim().toLowerCase() != held) {
     return false;
   }
+  final was = await db.query(
+    'contacts',
+    columns: ['verified', 'verified_key', 'key_changed'],
+    where: 'halo_id = ?',
+    whereArgs: [haloId],
+    limit: 1,
+  );
   await db.update(
     'contacts',
     {'verified': 1, 'verified_key': held, 'key_changed': 0},
     where: 'halo_id = ?',
     whereArgs: [haloId],
   );
-  return true;
+  // read again: a key that moved during the write keeps its banner, and the
+  // mark stays on the old key, so the hold stands
+  final now = await heldKeyHex(db, haloId, identity: identity);
+  if (now == held) return true;
+  if (now == kKeyUnread) {
+    // a key not read is not a key changed: the row goes back as it was
+    if (was.isNotEmpty) {
+      await db.update(
+        'contacts',
+        was.first,
+        where: 'halo_id = ? AND verified_key = ?',
+        whereArgs: [haloId, held],
+      );
+    }
+    return false;
+  }
+  await db.update(
+    'contacts',
+    {'verified': 0, 'key_changed': 1},
+    where: 'halo_id = ? AND verified_key = ?',
+    whereArgs: [haloId, held],
+  );
+  return false;
 }
 
 // verified under one key, holding another now: the mark stays on the old key
@@ -7178,6 +7269,8 @@ Future<String> signalEncrypt(String peerId, String plaintext) async {
     afresh: from == null ? null : () => from(peerId),
     // a read that fails seals nothing
     held: () => appState.keyHeld(peerId, strict: true),
+    // a card naming another key: flagged as on an open, once out of the lane
+    keyMoved: () => unawaited(_keyMoved?.call(peerId)),
   );
 }
 
@@ -7315,50 +7408,50 @@ Future<String?> signalDecrypt(
       ss.identityStore,
       addr,
     );
+    // a prekey open checks and saves their key before its mac: what it
+    // changed goes back unless the open goes through, and a new key is
+    // flagged only once it has
+    final guard =
+        type == CiphertextMessage.prekeyType &&
+        !isDevId(peerId) &&
+        peerId != '_pending_back_pair_';
+    var moved = false;
     // opens share the per-peer queue with seals: both step the same record
     final plain = await ss.serial<Uint8List?>(peerId, () async {
-      if (type != CiphertextMessage.prekeyType) {
-        return cipher.decryptFromSignalWithCallback(
-          SignalMessage.fromSerialized(body),
+      if (!guard) {
+        return _open(ss, cipher, peerId, type, body, check, flagKeyChange);
+      }
+      final before = await ss.marksOf(peerId);
+      final was = await _sessionIdentity(ss, addr);
+      try {
+        final out = await _open(
+          ss,
+          cipher,
+          peerId,
+          type,
+          body,
           check,
+          flagKeyChange,
         );
-      }
-      final pkm = PreKeySignalMessage(body);
-      // trial decrypt: a prekey opens only under the name its identity is
-      // bound to. another identity, or a name with none yet, arrives as a
-      // first contact and is checked there. targeted decrypts
-      // (flagKeyChange) skip this and keep deliver-and-warn for mitm.
-      if (!flagKeyChange && peerId != '_pending_back_pair_') {
-        final known = await _storedIdentity(ss, addr);
-        if (known == null ||
-            !_eqBytes(known, pkm.getIdentityKey().serialize())) {
-          return null;
+        if (out == null) {
+          await ss.restoreMarks(peerId, before);
+        } else {
+          moved = before.movedTo(await ss.marksOf(peerId));
         }
-      }
-      if (await ss.sessionStore.containsSession(addr)) {
-        // session exists: use it. rebuilding from the prekey record bad-macs
-        // when the slot was refilled with a fresh key.
-        try {
-          return await cipher.decryptFromSignalWithCallback(
-            pkm.getWhisperMessage(),
-            check,
-          );
-        } on ShelfFull {
-          rethrow;
-        } catch (e) {
-          dlog('signalDecrypt: session path failed ($e), prekey fallback');
-          return cipher.decryptWithCallback(pkm, check);
+        return out;
+      } catch (_) {
+        // a session stored on the new key before a later step threw is
+        // theirs: the key stays with it
+        final now = await _sessionIdentity(ss, addr);
+        if (now != null && (was == null || !_eqBytes(was, now))) {
+          moved = before.movedTo(await ss.marksOf(peerId));
+        } else {
+          await ss.restoreMarks(peerId, before);
         }
+        rethrow;
       }
-      final pkId = pkm.getPreKeyId();
-      final havePk =
-          !pkId.isPresent || await ss.preKeyStore.containsPreKey(pkId.value);
-      if (!havePk) {
-        dlog('signalDecrypt: prekey gone, no session for $peerId');
-        return null;
-      }
-      return cipher.decryptWithCallback(pkm, check);
     });
+    if (moved) await _keyMoved?.call(peerId);
     if (plain == null) return null;
     final text = utf8.decode(plain);
     _zeroBytes(plain); // cleartext decoded out, wipe the raw buffer
@@ -7372,14 +7465,8 @@ Future<String?> signalDecrypt(
     _noteOpenedBefore(wireB64);
     return null;
   } on UntrustedIdentityException catch (_) {
-    // known peer's identity key no longer matches: reinstall or mitm. only
-    // flagged on a targeted decrypt, so a trial against the wrong contact
-    // never sets it.
-    // the dev chat never warns: a key that is not the pinned one is dropped
-    if (flagKeyChange && !isDevChat(peerId)) {
-      await live.setKeyChanged(peerId, true);
-      appState.keyChanged();
-    }
+    // nothing opened, so nothing is flagged. the dev chat drops a key that
+    // is not the pinned one here
     return null;
   } on InvalidKeyIdException catch (_) {
     // one-time prekey already used. with a session, an earlier copy set it
@@ -7393,6 +7480,73 @@ Future<String?> signalDecrypt(
     dlog('signalDecrypt: $e');
     return null;
   }
+}
+
+// the identity the session held for [addr] was built with, null with none
+Future<List<int>?> _sessionIdentity(
+  SignalSession ss,
+  SignalProtocolAddress addr,
+) async {
+  if (!await ss.sessionStore.containsSession(addr)) return null;
+  final record = await ss.sessionStore.loadSession(addr);
+  return record.sessionState.getRemoteIdentityKey()?.serialize();
+}
+
+// where a key that moved after an open is flagged: the app state, as it is
+// made
+Future<void> Function(String peer)? _keyMoved;
+
+// one open in the peer's lane
+Future<Uint8List?> _open(
+  SignalSession ss,
+  SessionCipher cipher,
+  String peerId,
+  int type,
+  Uint8List body,
+  void Function(Uint8List) check,
+  bool flagKeyChange,
+) async {
+  final addr = SignalProtocolAddress(peerId, 1);
+  if (type != CiphertextMessage.prekeyType) {
+    return cipher.decryptFromSignalWithCallback(
+      SignalMessage.fromSerialized(body),
+      check,
+    );
+  }
+  final pkm = PreKeySignalMessage(body);
+  // trial decrypt: a prekey opens only under the name its identity is
+  // bound to. another identity, or a name with none yet, arrives as a
+  // first contact and is checked there. targeted decrypts
+  // (flagKeyChange) skip this and keep deliver-and-warn for mitm.
+  if (!flagKeyChange && peerId != '_pending_back_pair_') {
+    final known = await _storedIdentity(ss, addr);
+    if (known == null || !_eqBytes(known, pkm.getIdentityKey().serialize())) {
+      return null;
+    }
+  }
+  if (await ss.sessionStore.containsSession(addr)) {
+    // session exists: use it. rebuilding from the prekey record bad-macs
+    // when the slot was refilled with a fresh key.
+    try {
+      return await cipher.decryptFromSignalWithCallback(
+        pkm.getWhisperMessage(),
+        check,
+      );
+    } on ShelfFull {
+      rethrow;
+    } catch (e) {
+      dlog('signalDecrypt: session path failed ($e), prekey fallback');
+      return cipher.decryptWithCallback(pkm, check);
+    }
+  }
+  final pkId = pkm.getPreKeyId();
+  final havePk =
+      !pkId.isPresent || await ss.preKeyStore.containsPreKey(pkId.value);
+  if (!havePk) {
+    dlog('signalDecrypt: prekey gone, no session for $peerId');
+    return null;
+  }
+  return cipher.decryptWithCallback(pkm, check);
 }
 
 // wires a decrypt found opened before: a copy is no sign the sessions went
@@ -8581,6 +8735,7 @@ class AppState extends ChangeNotifier {
     // a vault's: only the everyday identity goes online. its seal and its
     // store read the same row
     devGate.chat = () => live.devChat.load();
+    _keyMoved = flagKeyChanged;
     devLane.chat = () => live.devChat.load();
     devLane.open = () => live.open();
     wipeForget = _dropOpened;
@@ -9099,15 +9254,98 @@ class AppState extends ChangeNotifier {
   // a contact verified under another key than they hold now: nothing goes
   // to them until the new number is checked or the new key accepted. the
   // queues pass them by without using a try. a read that fails says nothing
-  // about their key: the queues go on, and the seal ([strict]) waits
+  // about their key: the queues go on, and the seal ([strict]) waits. the
+  // seal is the everyday identity's, so its rows judge whichever session
+  // is open: the everyday one, the open vault's, else a shut vault's card
   Future<bool> keyHeld(String peer, {bool strict = false}) async {
     if (isDevId(peer)) return false;
     try {
-      return await session.keyHeld(peer);
+      if (await live.keyHeld(peer)) return true;
+      final v = _openVault;
+      if (v != null) return await v.keyHeld(peer);
+      return await _cardHeld(peer);
     } catch (e) {
       dlog('key hold: not read (${e.runtimeType})');
       return strict;
     }
+  }
+
+  // someone a shut vault holds, by the mark its card keeps. only theirs
+  // waits for a vault shutting now to write its cards
+  Future<bool> _cardHeld(String peer) async {
+    if (_router.cardOf(peer) == null) return false;
+    if (_closeDone != null) {
+      await _afterClose().timeout(const Duration(seconds: 30));
+    }
+    final card = _router.cardOf(peer);
+    if (card == null) return false;
+    final held = await heldKeyHex(await live.open(), peer, xpub: card.xpub);
+    if (held == null) return false;
+    if (card.markRead) {
+      final mark = card.verifiedKey;
+      return mark != null && held != mark;
+    }
+    // a card from before marks were kept: any key but the one it was made
+    // with holds, until the vault opens and writes them
+    final paired = card.xpub.trim().toLowerCase();
+    return paired.isNotEmpty && held != paired;
+  }
+
+  // a vault shutting, for the tests
+  @visibleForTesting
+  set closingForTest(Completer<void>? c) => _closeDone = c;
+
+  // a mark set or taken off, or a new key accepted. one in the open vault
+  // reaches its card now, not only at the close
+  Future<bool> setVerified(String peer, bool verified, {String? key}) async {
+    final ok = await session.setVerified(peer, verified, key: key);
+    _recardFor(peer);
+    return ok;
+  }
+
+  Future<void> acceptNewKey(String peer) async {
+    await session.acceptNewKey(peer);
+    _recardFor(peer);
+  }
+
+  void _recardFor(String peer) {
+    if (_openVault == null || !_session.isHidden(peer)) return;
+    unawaited(
+      refreshHiddenCards().catchError(
+        (Object e) => dlog('vault: cards not read (${e.runtimeType})'),
+      ),
+    );
+  }
+
+  // a known peer's key moved: the banner goes on their row wherever it is.
+  // one a shut vault holds is sealed to it and lands as it opens, so the
+  // everyday side shows nothing
+  final Set<String> _keyChangeSealed = {};
+  Future<void> flagKeyChanged(String peer) async {
+    if (isDevId(peer)) return;
+    try {
+      await live.setKeyChanged(peer, true);
+      final v = _openVault;
+      if (v != null) {
+        await v.setKeyChanged(peer, true);
+      } else if (_router.cardOf(peer) != null &&
+          !_router.blocks(peer) &&
+          _keyChangeSealed.add(peer)) {
+        final kept = await _router.seal(
+          Unsealed(
+            peer,
+            '',
+            false,
+            DateTime.now().millisecondsSinceEpoch,
+            keyChanged: true,
+          ),
+        );
+        if (!kept) _keyChangeSealed.remove(peer);
+      }
+    } catch (e) {
+      dlog('key change: not kept (${e.runtimeType})');
+    }
+    keyChanged();
   }
 
   // every held contact of one database, read once per pass: their queued
@@ -9693,6 +9931,9 @@ class AppState extends ChangeNotifier {
   @visibleForTesting
   Future<void> get owedPassForTest => _owedPass ?? Future<void>.value();
 
+  @visibleForTesting
+  Future<void> owedRoundForTest() => _owedRound();
+
   Future<void> _owedRound() async {
     for (final d in [live, ?_openVault]) {
       // a quiet session sends nothing, and a wipe takes the rows with it
@@ -9703,6 +9944,8 @@ class AppState extends ChangeNotifier {
           now: DateTime.now().millisecondsSinceEpoch,
           send: (uid, groupId, have, total) =>
               _sendOwed(d, uid, groupId, have, total),
+          // a read that fails holds: it uses no try
+          held: (m) => keyHeld(m, strict: true),
         );
       } catch (e) {
         dlog('GRP MEDIA owed: ${e.runtimeType}');
@@ -12529,7 +12772,24 @@ class AppState extends ChangeNotifier {
           if (!identical(_openVault, vault) || _moveDone != null) return;
           if (id > _sealedPast) _sealedPast = id;
           var stays = false;
-          if (u != null && u.resend) {
+          final rc = u?.receipt;
+          if (u != null && rc != null) {
+            try {
+              await vault.queueFrame(rc, kFrameReceipt, u.from, '');
+            } catch (e) {
+              if (!identical(_openVault, vault)) return;
+              dlog('unseal: a receipt not kept (${e.runtimeType})');
+            }
+          } else if (u != null && u.keyChanged) {
+            _keyChangeSealed.remove(u.from);
+            try {
+              await vault.setKeyChanged(u.from, true);
+              keyChanged();
+            } catch (e) {
+              if (!identical(_openVault, vault)) return;
+              dlog('unseal: a key change not kept (${e.runtimeType})');
+            }
+          } else if (u != null && u.resend) {
             try {
               await _resendTo(vault, u.from, since: u.resendSince);
             } catch (e) {
@@ -13723,6 +13983,14 @@ class AppState extends ChangeNotifier {
     try {
       // a move a crash cut short is put right before ownership is read
       await settleVault(v);
+      // cards from before they kept the mark are written again first
+      if (!decoy && _router.marksUnread) {
+        try {
+          await _serial(() => _attached(v, _recard));
+        } catch (e) {
+          dlog('vault: cards not read (${e.runtimeType})');
+        }
+      }
       await _dropGroupLeftovers(v);
       if (!decoy) await trimFirstIn(v);
       s = await Session.withVault(primary, v);
@@ -16827,6 +17095,10 @@ class AppState extends ChangeNotifier {
 
   // tiny ack: tells the original sender their message landed. reuses the
   // gift-wrap transport; carries only the uid, no body, no sender bundle.
+  @visibleForTesting
+  Future<void> receiptForTest(String to, String uid) =>
+      _sendDeliveryReceipt(to, uid);
+
   Future<void> _sendDeliveryReceipt(String toHaloId, String uid) async {
     // a relay replaying its backlog hands us the same message many times
     // over. re-acking still matters (the first receipt may have died), so
@@ -16848,9 +17120,21 @@ class AppState extends ChangeNotifier {
       // the seal waits on their card: the receipt waits with it, where
       // their chat's rows are, and goes once the session is fresh
       if (_waitingCard.contains(toHaloId) || await keyHeld(toHaloId)) {
-        await (await _reach(
-          toHaloId,
-        ))?.on?.queueFrame(uid, kFrameReceipt, toHaloId, '');
+        final on = (await _reach(toHaloId))?.on;
+        if (on != null) {
+          await on.queueFrame(uid, kFrameReceipt, toHaloId, '');
+        } else if (_openVault == null && _router.cardOf(toHaloId) != null) {
+          // a shut vault's chat: the receipt is sealed to it, and waits in
+          // it from its open as an everyday one waits here
+          // one row per receipt, however often a relay replays it
+          final rc = 'rc:$uid';
+          if (!await _router.sealedHas(rc, null)) {
+            await _router.seal(
+              Unsealed(toHaloId, '', false, now, receipt: uid),
+              uid: rc,
+            );
+          }
+        }
       }
     } catch (e) {
       dlog('receipt for $uid failed: $e');

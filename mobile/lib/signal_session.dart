@@ -222,6 +222,7 @@ class SignalSession {
     String plain, {
     Future<PreKeyBundle?> Function()? afresh,
     Future<bool> Function()? held,
+    void Function()? keyMoved,
   }) => serial(peer, () async {
     // asked in the lane, right before the seal: a key that came in a frame
     // opened ahead of this one is the key this one would go to
@@ -229,6 +230,7 @@ class SignalSession {
     if (await sealsOnRestored(peer)) {
       final card = afresh == null ? null : await afresh();
       if (card == null) throw StartingAfresh(peer);
+      final before = await marksOf(peer);
       await SessionBuilder(
         sessionStore,
         preKeyStore,
@@ -237,9 +239,60 @@ class SignalSession {
         SignalProtocolAddress(peer, 1),
       ).processPreKeyBundle(card);
       dlog('signal: started afresh after a restore');
+      if (before.movedTo(await marksOf(peer))) keyMoved?.call();
+      // the card may name another key than the one checked above
+      if (held != null && await held()) throw KeyHeld(peer);
     }
     return _seal(peer, plain);
   });
+
+  /// what a prekey open may change of [peer] before it is known to be
+  /// theirs: the key held, and their contact's marks
+  Future<IdentityMarks> marksOf(String peer) async {
+    final k = await _db.query(
+      '${_prefix}peer_identities',
+      columns: ['identity_key'],
+      where: 'address = ?',
+      whereArgs: [peer],
+      limit: 1,
+    );
+    final c = await _db.query(
+      'contacts',
+      columns: ['verified', 'key_changed'],
+      where: 'halo_id = ?',
+      whereArgs: [peer],
+      limit: 1,
+    );
+    return IdentityMarks(
+      k.isEmpty ? null : k.first['identity_key'] as List<int>,
+      c.isEmpty ? null : c.first['verified'] as int?,
+      c.isEmpty ? null : c.first['key_changed'] as int?,
+    );
+  }
+
+  /// [m] back in place, after an open that did not go through
+  Future<void> restoreMarks(String peer, IdentityMarks m) async {
+    final key = m.key;
+    if (key == null) {
+      await _db.delete(
+        '${_prefix}peer_identities',
+        where: 'address = ?',
+        whereArgs: [peer],
+      );
+    } else {
+      await _db.insert('${_prefix}peer_identities', {
+        'address': peer,
+        'identity_key': Uint8List.fromList(key),
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+    }
+    if (m.verified == null) return;
+    await _db.update(
+      'contacts',
+      {'verified': m.verified, 'key_changed': m.keyChanged ?? 0},
+      where: 'halo_id = ?',
+      whereArgs: [peer],
+    );
+  }
 
   /// whether the session a seal to [peer] would use came back with a restore
   Future<bool> sealsOnRestored(String peer) async =>
@@ -494,6 +547,26 @@ const kSessionsRestoredPref = 'signal.restored';
 
 /// and when the backup was made, which an ask to start afresh carries
 const kRestoredFromPref = 'signal.restored_from';
+
+// a peer's key and their contact's marks as they were before an open
+class IdentityMarks {
+  const IdentityMarks(this.key, this.verified, this.keyChanged);
+  final List<int>? key;
+  final int? verified;
+  final int? keyChanged;
+
+  // another key than this one is held now
+  bool movedTo(IdentityMarks now) {
+    final a = key;
+    final b = now.key;
+    if (a == null || b == null) return false;
+    if (a.length != b.length) return true;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return true;
+    }
+    return false;
+  }
+}
 
 // someone verified under one key who holds another now: nothing is sealed
 // for them until the new number is checked or the new key accepted

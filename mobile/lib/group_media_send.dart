@@ -141,9 +141,15 @@ Future<void> resendGroupOwed(
     int total,
   )
   send,
+  // a member whose key is held: what they are owed waits, using no try
+  Future<bool> Function(String member)? held,
 }) async {
   final byFile = <String, List<GroupOwed>>{};
+  final heldNow = <String, bool>{};
   for (final o in await store.dueGroupOwed(now)) {
+    if (held != null && (heldNow[o.member] ??= await held(o.member))) {
+      continue;
+    }
     byFile.putIfAbsent(o.msgUid, () => []).add(o);
   }
   for (final MapEntry(key: uid, value: owed) in byFile.entries) {

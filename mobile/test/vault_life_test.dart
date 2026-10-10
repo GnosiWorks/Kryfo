@@ -1116,10 +1116,12 @@ void main() {
         'o': 'o-$_h',
         'x': 'x-$_h',
         'bp': 1,
+        // no mark: they were not verified
+        'vk': '',
       });
       expect(jsonDecode(cards[_g2]!['card'] as String), {
         'm': [
-          {'h': _m, 'o': 'o-$_m', 'x': 'x-$_m', 'bp': 1},
+          {'h': _m, 'o': 'o-$_m', 'x': 'x-$_m', 'bp': 1, 'vk': ''},
         ],
       });
       // the everyday home without them

@@ -11,6 +11,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import '../back_on_top.dart';
 import '../forward.dart';
+import '../widgets/key_held.dart';
 import '../picked.dart';
 import '../sent_name.dart';
 import 'package:share_plus/share_plus.dart';
@@ -3027,6 +3028,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   Future<void> _forwardGroupMessage(_GMsg m) async {
     final targets = appState.contacts.where((c) => !c.blocked).toList();
+    // who is held is marked, and picked asks for the way out first
+    final held = await keysHeldShown();
+    if (!mounted) return;
     // the developer chat, once it has started
     final dev = devForwardTarget;
     final devAt = dev == null ? -1 : devSlot(dev, targets);
@@ -3086,14 +3090,21 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                             ),
                             const SizedBox(width: 12),
                             Expanded(
-                              child: Text(
-                                c.nickname ?? c.haloId,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: HaloType.sans(
-                                  size: 14,
-                                  weight: FontWeight.w500,
-                                ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    c.nickname ?? c.haloId,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: HaloType.sans(
+                                      size: 14,
+                                      weight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  KeyHeldMark(on: held.contains(c.haloId)),
+                                ],
                               ),
                             ),
                           ],
@@ -3115,6 +3126,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (isDevChat(haloId)) {
       Navigator.of(context).push(devChatRoute(haloId, initialText: m.text));
       return;
+    }
+    if (held.contains(haloId)) {
+      final c = targets.where((c) => c.haloId == haloId).firstOrNull;
+      final name = c?.nickname ?? haloId;
+      if (!await showKeyHeldSheet(context, haloId, name) || !mounted) return;
     }
     final row = await session.getContact(haloId);
     if (row == null || !mounted) return;

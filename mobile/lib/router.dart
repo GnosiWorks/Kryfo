@@ -74,6 +74,8 @@ class RouterCard {
     this.xpub, {
     this.backPaired = false,
     this.blocked = false,
+    this.verifiedKey,
+    this.markRead = true,
   });
 
   final String id;
@@ -81,6 +83,12 @@ class RouterCard {
   final String xpub;
   final bool backPaired;
   final bool blocked;
+  // the key the vault verified them under: while it is shut, another key
+  // held for them holds what goes to them, as their row would
+  final String? verifiedKey;
+  // false on a card written before cards kept the mark: whether they were
+  // verified is not known until the vault opens
+  final bool markRead;
 
   Map<String, Object> toJson() => {
     'h': id,
@@ -88,6 +96,7 @@ class RouterCard {
     'x': xpub,
     if (backPaired) 'bp': 1,
     if (blocked) 'bl': 1,
+    'vk': verifiedKey ?? '',
   };
 
   static RouterCard? fromJson(Object? j, {String? id}) {
@@ -96,12 +105,15 @@ class RouterCard {
     if (h is! String || h.isEmpty) return null;
     final o = j['o'];
     final x = j['x'];
+    final vk = j['vk'];
     return RouterCard(
       h,
       o is String ? o : '',
       x is String ? x : '',
       backPaired: j['bp'] == 1,
       blocked: j['bl'] == 1,
+      verifiedKey: vk is String && vk.isNotEmpty ? vk.toLowerCase() : null,
+      markRead: vk is String,
     );
   }
 }
@@ -147,6 +159,8 @@ class Unsealed {
     this.resend = false,
     this.resendSince,
     this.wrapped,
+    this.keyChanged = false,
+    this.receipt,
   });
 
   final String from;
@@ -164,6 +178,12 @@ class Unsealed {
   final int? resendSince;
   // when the sender wrapped it, by their clock, where the lane said
   final int? wrapped;
+  // no arrival: [from]'s key changed while the vault was shut, and their
+  // chat shows it as the vault opens
+  final bool keyChanged;
+  // no arrival: a delivery receipt for this uid was held for [from] while
+  // the vault was shut, and waits in it from its open
+  final String? receipt;
 }
 
 // the tables, behind a seam so the router runs on a stand-in
@@ -665,6 +685,11 @@ class VaultRouter {
 
   RouterCard? cardOf(String id) => _peers[id] ?? _members[id];
 
+  // a card written before cards kept the mark: the vault's rows are read
+  // again as it opens
+  bool get marksUnread =>
+      [..._peers.values, ..._members.values].any((c) => !c.markRead);
+
   // no tick for someone the vault blocked
   bool blocks(String id) => cardOf(id)?.blocked ?? false;
 
@@ -687,6 +712,8 @@ class VaultRouter {
         'bp': a.backPair ? 1 : 0,
         'at': a.at,
         if (a.resend) 'rs': 1,
+        if (a.keyChanged) 'kc': 1,
+        'rc': ?a.receipt,
         'rf': ?a.resendSince,
         'a': ?a.wrapped,
       }),
@@ -772,6 +799,8 @@ class VaultRouter {
         resend: j['rs'] == 1,
         resendSince: rf is int ? rf : null,
         wrapped: a is int ? a : null,
+        keyChanged: j['kc'] == 1,
+        receipt: j['rc'] is String ? j['rc'] as String : null,
       );
     } catch (_) {
       return null;

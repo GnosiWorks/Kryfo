@@ -131,6 +131,7 @@ import '../widgets/written_field.dart';
 import '../bidi_safe.dart';
 import '../back_on_top.dart';
 import '../forward.dart';
+import '../widgets/key_held.dart';
 import '../first_contact.dart' show routeText, waitsForReceipt;
 import '../text_send.dart';
 import '../lock_guard.dart' show LockDropped, lockGuard, onScreen;
@@ -794,7 +795,7 @@ class _ChatScreenState extends State<ChatScreen>
     try {
       final changed = await session.keyChanged(widget.peerHaloId);
       final verified = await session.isVerified(widget.peerHaloId);
-      final held = await appState.keyHeld(widget.peerHaloId);
+      final held = await session.keyHeld(widget.peerHaloId);
       if (!mounted) return;
       if (changed != _keyChanged || verified != _verified || held != _keyHeld) {
         setState(() {
@@ -817,19 +818,8 @@ class _ChatScreenState extends State<ChatScreen>
   // the new key taken as it is: the mark and the banner go, sending goes on
   Future<void> _acceptNewKey() async {
     final name = _nickname ?? widget.peerHaloId;
-    final ok = await showConfirmSheet(
-      context,
-      title: l10n.chatAcceptNewKeyTitle,
-      line: l10n.chatAcceptNewKeyLine(name),
-      yes: l10n.chatAcceptNewKey,
-      rose: false,
-    );
-    if (!ok || !mounted) return;
-    await session.acceptNewKey(widget.peerHaloId);
-    HapticFeedback.mediumImpact();
+    if (!await acceptNewKeyAsked(context, widget.peerHaloId, name)) return;
     await _readKeyState();
-    unawaited(appState.refreshContacts());
-    unawaited(appState.drainOutbox());
   }
 
   Future<void> _dismissKeyChanged() async {
@@ -4739,6 +4729,9 @@ class _ChatScreenState extends State<ChatScreen>
 
   Future<void> _forwardMessage(_Msg m) async {
     final targets = appState.contacts.where((c) => !c.blocked).toList();
+    // who is held is marked, and picked asks for the way out first
+    final held = await keysHeldShown();
+    if (!mounted) return;
     // the developer chat, once it has started, and not from itself
     final dev = _isDev ? null : devForwardTarget;
     final devAt = dev == null ? -1 : devSlot(dev, targets);
@@ -4799,12 +4792,19 @@ class _ChatScreenState extends State<ChatScreen>
                             ),
                             const SizedBox(width: 12),
                             Expanded(
-                              child: Text(
-                                c.nickname ?? c.haloId,
-                                style: HaloType.sans(
-                                  size: 14,
-                                  weight: FontWeight.w500,
-                                ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    c.nickname ?? c.haloId,
+                                    style: HaloType.sans(
+                                      size: 14,
+                                      weight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  KeyHeldMark(on: held.contains(c.haloId)),
+                                ],
                               ),
                             ),
                           ],
@@ -4826,6 +4826,11 @@ class _ChatScreenState extends State<ChatScreen>
     if (isDevChat(haloId)) {
       Navigator.of(context).push(devChatRoute(haloId, initialText: m.text));
       return;
+    }
+    if (held.contains(haloId)) {
+      final c = targets.where((c) => c.haloId == haloId).firstOrNull;
+      final name = c?.nickname ?? haloId;
+      if (!await showKeyHeldSheet(context, haloId, name) || !mounted) return;
     }
     final row = await session.getContact(haloId);
     if (row == null || !mounted) return;
@@ -5386,7 +5391,7 @@ class _ChatScreenState extends State<ChatScreen>
                     : _requestLocked
                     ? _RequestLockBar(line: _isDev ? l10n.devLockLine : null)
                     : _keyHeld && !_isDev
-                    ? _KeyHeldBar(
+                    ? KeyHeldCard(
                         peerName: _nickname ?? widget.peerHaloId,
                         onCheck: _openKeyVerification,
                         onAccept: _acceptNewKey,
@@ -5653,81 +5658,6 @@ Widget _barBtn(
       ),
     ),
   );
-}
-
-// in place of the composer while a verified contact's key is not the one
-// they were verified under: their messages still come in, nothing goes out
-// until the new number is checked or the new key accepted
-class _KeyHeldBar extends StatelessWidget {
-  final String peerName;
-  final VoidCallback onCheck;
-  final VoidCallback onAccept;
-  const _KeyHeldBar({
-    required this.peerName,
-    required this.onCheck,
-    required this.onAccept,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(14, 8, 14, 12),
-      padding: const EdgeInsets.fromLTRB(14, 13, 14, 14),
-      decoration: BoxDecoration(
-        color: HaloColors.amber.withValues(alpha: 0.10),
-        border: Border.all(color: HaloColors.amber.withValues(alpha: 0.45)),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.gpp_maybe_outlined, size: 16, color: HaloColors.amber),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  l10n.chatSecurityCodeChanged,
-                  style: HaloType.serif(size: 14.5, color: HaloColors.text),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(
-            l10n.chatKeyHeldLine(peerName),
-            style: HaloType.sans(size: 13, color: HaloColors.text, height: 1.5),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                flex: 2,
-                child: _barBtn(
-                  l10n.chatAcceptNewKey,
-                  HaloColors.text,
-                  HaloColors.surface2,
-                  onAccept,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                flex: 3,
-                child: _barBtn(
-                  l10n.chatCheckTheNumber,
-                  HaloColors.onAmber,
-                  HaloColors.amber,
-                  onCheck,
-                  bold: true,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 // shown above the thread when a friend introduced this peer and neither side
