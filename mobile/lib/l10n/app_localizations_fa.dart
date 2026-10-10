@@ -7924,4 +7924,13 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get settingsGifSearchHint =>
       'تا وقتی روشنش نکنید خاموش است. سرور Kryfo برای شما جست‌وجو می‌کند، پس سرویس گیف هرگز شما را نمی‌بیند.';
+
+  @override
+  String get shareChooseChat => 'انتخاب گفت‌وگو';
+
+  @override
+  String get shareNoChats => 'هنوز گفت‌وگویی نیست';
+
+  @override
+  String get shareNoOne => 'کسی برای هم‌رسانی نیست';
 }

@@ -78,6 +78,7 @@ import 'search_bench.dart';
 import 'session.dart';
 import 'router.dart';
 import 'vault_life.dart';
+import 'tools/tools_bridge.dart' show ToolsBridge;
 import 'devchat/dev_chat.dart';
 import 'devchat/dev_frame.dart' show DevSelf, devInFrame;
 import 'devchat/dev_gate.dart';
@@ -19322,6 +19323,10 @@ class AppState extends ChangeNotifier {
   Future<void> markOnboardingComplete() async {
     onboardingComplete = true;
     await secureStore.write(key: 'onboarding_done', value: 'true');
+    // words shared while the app was being set up are let go, not held for
+    // the home that comes next
+    final shared = await ToolsBridge.instance.peekSharedText();
+    if (shared != null) await ToolsBridge.instance.dropSharedText(shared.id);
     notifyListeners();
   }
 }

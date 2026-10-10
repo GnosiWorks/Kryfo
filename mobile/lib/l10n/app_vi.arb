@@ -2068,5 +2068,8 @@
   "gifPhoneLine": "GIF đã lưu trên điện thoại này. Không có gì lên mạng.",
   "gifPhoneChoose": "Chọn một GIF",
   "settingsGifSearch": "Tìm GIF",
-  "settingsGifSearchHint": "Tắt cho đến khi bạn bật. Máy chủ của Kryfo tìm thay bạn, nên dịch vụ GIF không bao giờ thấy bạn."
+  "settingsGifSearchHint": "Tắt cho đến khi bạn bật. Máy chủ của Kryfo tìm thay bạn, nên dịch vụ GIF không bao giờ thấy bạn.",
+  "shareChooseChat": "Chọn một cuộc trò chuyện",
+  "shareNoChats": "Chưa có cuộc trò chuyện nào",
+  "shareNoOne": "Không có ai để chia sẻ"
 }

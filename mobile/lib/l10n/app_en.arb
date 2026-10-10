@@ -9985,5 +9985,17 @@
   "settingsGifSearchHint": "Off until you turn it on. Kryfo's server searches for you, so the GIF service never sees you.",
   "@settingsGifSearchHint": {
     "description": "screens/settings_screen.dart: under the GIF search row"
+  },
+  "shareChooseChat": "Choose a chat",
+  "@shareChooseChat": {
+    "description": "screens/share_sheet.dart: title of the picker for words shared from another app"
+  },
+  "shareNoChats": "No chats yet",
+  "@shareNoChats": {
+    "description": "screens/share_sheet.dart: the same picker with no chats at all yet"
+  },
+  "shareNoOne": "No one to share with",
+  "@shareNoOne": {
+    "description": "screens/share_sheet.dart: the same picker when everyone there is blocked"
   }
 }

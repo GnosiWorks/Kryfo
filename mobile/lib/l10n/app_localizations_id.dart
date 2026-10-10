@@ -7905,4 +7905,13 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get settingsGifSearchHint =>
       'Mati sampai kamu menyalakannya. Server Kryfo mencarikan untukmu, jadi layanan GIF tidak pernah melihatmu.';
+
+  @override
+  String get shareChooseChat => 'Pilih obrolan';
+
+  @override
+  String get shareNoChats => 'Belum ada obrolan';
+
+  @override
+  String get shareNoOne => 'Tidak ada yang bisa diajak berbagi';
 }

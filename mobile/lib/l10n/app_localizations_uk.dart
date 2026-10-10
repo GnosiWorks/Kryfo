@@ -8047,4 +8047,13 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get settingsGifSearchHint =>
       'Вимкнений, доки ти його не ввімкнеш. Сервер Kryfo шукає замість тебе, тож GIF-сервіс ніколи тебе не бачить.';
+
+  @override
+  String get shareChooseChat => 'Вибрати чат';
+
+  @override
+  String get shareNoChats => 'Чатів поки немає';
+
+  @override
+  String get shareNoOne => 'Немає з ким поділитися';
 }

@@ -7895,4 +7895,13 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get settingsGifSearchHint =>
       'Tắt cho đến khi bạn bật. Máy chủ của Kryfo tìm thay bạn, nên dịch vụ GIF không bao giờ thấy bạn.';
+
+  @override
+  String get shareChooseChat => 'Chọn một cuộc trò chuyện';
+
+  @override
+  String get shareNoChats => 'Chưa có cuộc trò chuyện nào';
+
+  @override
+  String get shareNoOne => 'Không có ai để chia sẻ';
 }

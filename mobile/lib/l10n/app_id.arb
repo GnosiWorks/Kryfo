@@ -2068,5 +2068,8 @@
   "gifPhoneLine": "GIF yang tersimpan di ponsel ini. Tidak ada yang online.",
   "gifPhoneChoose": "Pilih GIF",
   "settingsGifSearch": "Pencarian GIF",
-  "settingsGifSearchHint": "Mati sampai kamu menyalakannya. Server Kryfo mencarikan untukmu, jadi layanan GIF tidak pernah melihatmu."
+  "settingsGifSearchHint": "Mati sampai kamu menyalakannya. Server Kryfo mencarikan untukmu, jadi layanan GIF tidak pernah melihatmu.",
+  "shareChooseChat": "Pilih obrolan",
+  "shareNoChats": "Belum ada obrolan",
+  "shareNoOne": "Tidak ada yang bisa diajak berbagi"
 }

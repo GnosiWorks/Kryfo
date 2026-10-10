@@ -2068,5 +2068,8 @@
   "gifPhoneLine": "صور GIF المحفوظة على هذا الهاتف. لا شيء يتصل بالإنترنت.",
   "gifPhoneChoose": "اختر صورة GIF",
   "settingsGifSearch": "البحث عن GIF",
-  "settingsGifSearchHint": "متوقف حتى تشغّله. خادم Kryfo يبحث نيابة عنك، فلا تراك خدمة GIF أبدًا."
+  "settingsGifSearchHint": "متوقف حتى تشغّله. خادم Kryfo يبحث نيابة عنك، فلا تراك خدمة GIF أبدًا.",
+  "shareChooseChat": "اختر محادثة",
+  "shareNoChats": "لا توجد محادثات بعد",
+  "shareNoOne": "لا يوجد من تشارك معه"
 }

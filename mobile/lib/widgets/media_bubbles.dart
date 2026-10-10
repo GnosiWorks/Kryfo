@@ -11,6 +11,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../voice_live.dart';
 import '../main.dart' show shredFile;
 import '../theme.dart';
 import 'decode_px.dart';
@@ -606,7 +607,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
       _overlay = RecordBarEntry(_bar);
       if (mounted) Overlay.of(context).insert(_overlay!.entry);
       // the lock stops the recording and throws it away
-      _unguard = lockGuard.closeOnLock(_abort);
+      _unguard = recordingUntil(lockGuard.closeOnLock(_abort));
     } catch (e) {
       dlog('voice: could not start: $e');
       _ticker?.cancel();

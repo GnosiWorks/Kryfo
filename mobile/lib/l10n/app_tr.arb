@@ -2068,5 +2068,8 @@
   "gifPhoneLine": "Bu telefonda kayıtlı GIF’ler. Hiçbir şey internete çıkmaz.",
   "gifPhoneChoose": "GIF seç",
   "settingsGifSearch": "GIF arama",
-  "settingsGifSearchHint": "Sen açana kadar kapalı. Kryfo’nun sunucusu senin için arar, böylece GIF servisi seni asla görmez."
+  "settingsGifSearchHint": "Sen açana kadar kapalı. Kryfo’nun sunucusu senin için arar, böylece GIF servisi seni asla görmez.",
+  "shareChooseChat": "Sohbet seç",
+  "shareNoChats": "Henüz sohbet yok",
+  "shareNoOne": "Paylaşılacak kimse yok"
 }

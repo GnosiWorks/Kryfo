@@ -2068,5 +2068,8 @@
   "gifPhoneLine": "GIFs, die auf diesem Handy gespeichert sind. Nichts geht online.",
   "gifPhoneChoose": "GIF auswählen",
   "settingsGifSearch": "GIF-Suche",
-  "settingsGifSearchHint": "Aus, bis du sie einschaltest. Der Server von Kryfo sucht für dich, so sieht dich der GIF-Dienst nie."
+  "settingsGifSearchHint": "Aus, bis du sie einschaltest. Der Server von Kryfo sucht für dich, so sieht dich der GIF-Dienst nie.",
+  "shareChooseChat": "Chat auswählen",
+  "shareNoChats": "Noch keine Chats",
+  "shareNoOne": "Niemand zum Teilen"
 }
