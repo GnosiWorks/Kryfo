@@ -104,6 +104,22 @@ func waitDial(name string, since time.Time, limit time.Duration) (time.Duration,
 	return 0, false
 }
 
+// what tor says about its connections, for a test that failed
+func torState(t *testing.T) {
+	t.Helper()
+	for _, k := range []string{"status/bootstrap-phase", "orconn-status", "entry-guards",
+		"status/circuit-established", "network-liveness"} {
+		v, err := node(t).Control.GetInfo(k)
+		if err != nil {
+			t.Logf("%s: %v", k, err)
+			continue
+		}
+		for _, kv := range v {
+			t.Logf("%s: %s", kv.Key, kv.Val)
+		}
+	}
+}
+
 func checkConf(t *testing.T, what string, on bool, line string) {
 	t.Helper()
 	got := conf(t, "UseBridges", "Bridge", "ClientTransportPlugin", "DisableNetwork")
@@ -234,6 +250,7 @@ func TestPluginSwitching(t *testing.T) {
 	bootDirect(t)
 	first := node(t)
 	goFirst := runtime.NumGoroutine()
+	var slow []string
 	for round := 1; round <= 3; round++ {
 		for _, n := range []string{"obfs4", "webtunnel", "snowflake", "obfs4", ""} {
 			what := fmt.Sprintf("round %d, %q", round, n)
@@ -251,12 +268,22 @@ func TestPluginSwitching(t *testing.T) {
 			t0 := time.Now()
 			took := switchTor(t, what)
 			checkConf(t, what, true, line)
-			d, ok := waitDial(n, t0, 60*time.Second)
+			// tor now and then waits about two minutes before its first dial
+			// to a newly set line. slow, not stuck: it is logged, and only a
+			// switch tor never acts on fails the test.
+			d, ok := waitDial(n, t0, 4*time.Minute)
 			if !ok {
-				t.Fatalf("%s: tor never dialled the %s listener", what, n)
+				torState(t)
+				t.Fatalf("%s: tor never dialled the %s listener in 4 minutes", what, n)
+			}
+			if d > time.Minute {
+				slow = append(slow, fmt.Sprintf("%s %ds", what, int(d.Seconds())))
 			}
 			t.Logf("%s: switch %dms, first dial after %dms", what, took.Milliseconds(), d.Milliseconds())
 		}
+	}
+	if len(slow) > 0 {
+		t.Logf("slow first dials: %s", strings.Join(slow, "; "))
 	}
 	if node(t) != first {
 		t.Fatal("tor was replaced")
@@ -266,7 +293,7 @@ func TestPluginSwitching(t *testing.T) {
 	}
 	// snowflake clients wind down on their own timers
 	time.Sleep(10 * time.Second)
-	if n := runtime.NumGoroutine(); n > goFirst+40 {
+	if n := runtime.NumGoroutine(); n > goFirst+10 {
 		pprof.Lookup("goroutine").WriteTo(os.Stderr, 1)
 		t.Fatalf("goroutines climbed: %d -> %d", goFirst, n)
 	} else {
