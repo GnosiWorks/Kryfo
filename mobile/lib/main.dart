@@ -4613,9 +4613,26 @@ class HaloDb implements GroupOwedStore {
     );
   }
 
-  Future<void> dropEdit(String msgUid) async {
+  // with [newText], only the wording that went: a newer one queued
+  // meanwhile stays
+  Future<void> dropEdit(String msgUid, {String? newText}) async {
     final db = await open();
-    await db.delete('edits_out', where: 'msg_uid = ?', whereArgs: [msgUid]);
+    await db.delete(
+      'edits_out',
+      where: newText == null ? 'msg_uid = ?' : 'msg_uid = ? AND new_text = ?',
+      whereArgs: [msgUid, ?newText],
+    );
+  }
+
+  Future<Map<String, Object?>?> queuedEdit(String msgUid) async {
+    final db = await open();
+    final r = await db.query(
+      'edits_out',
+      where: 'msg_uid = ?',
+      whereArgs: [msgUid],
+      limit: 1,
+    );
+    return r.isEmpty ? null : r.first;
   }
 
   /// the sticker on a row, as it goes on the wire
@@ -9494,18 +9511,56 @@ class AppState extends ChangeNotifier {
         if (held.contains(r['peer_id'])) continue;
         // its row a block kept from going: the edit waits for the tap
         if (await _heldRow(d, uid)) continue;
-        _editsInflight.add(uid);
-        unawaited(
-          sendEdit(
-            r['peer_id'] as String,
-            uid,
-            r['new_text'] as String,
-            on: d,
-            writtenAt: r['at'] as int,
-          ).whenComplete(() => _editsInflight.remove(uid)),
+        _editGo(
+          r['peer_id'] as String,
+          uid,
+          r['new_text'] as String,
+          on: d,
+          writtenAt: r['at'] as int,
         );
       }
     }
+  }
+
+  // asked for while one is in flight: the queued wording goes after it
+  final Set<String> _editAgain = {};
+
+  // one edit send per message at a time, so an older wording can never
+  // land after a newer one
+  void _editGo(
+    String peer,
+    String uid,
+    String newText, {
+    HaloDb? on,
+    int? writtenAt,
+  }) {
+    if (!_editsInflight.add(uid)) {
+      _editAgain.add(uid);
+      return;
+    }
+    unawaited(
+      sendEdit(peer, uid, newText, on: on, writtenAt: writtenAt).whenComplete(
+        () async {
+          _editsInflight.remove(uid);
+          if (!_editAgain.remove(uid) || sessionQuiet) return;
+          try {
+            final d = on ?? _ownerOf(peer);
+            final q = await d.queuedEdit(uid);
+            if (q == null || q['new_text'] == newText) return;
+            if (await blockedAnywhere(peer) || await _heldRow(d, uid)) return;
+            _editGo(
+              peer,
+              uid,
+              q['new_text'] as String,
+              on: d,
+              writtenAt: q['at'] as int,
+            );
+          } catch (e) {
+            dlog('edit: next one waits (${e.runtimeType})');
+          }
+        },
+      ),
+    );
   }
 
   final Set<String> _pinsInflight = {};
@@ -9660,7 +9715,7 @@ class AppState extends ChangeNotifier {
     await session.queueEdit(uid, peer, newText);
     // a quiet session keeps it queued here: nothing leaves
     if (sessionQuiet || await session.heldBack(uid)) return;
-    unawaited(sendEdit(peer, uid, newText));
+    _editGo(peer, uid, newText);
   }
 
   // a reaction in a 1:1 chat, empty to take it off. queued like a pin.
@@ -9754,7 +9809,7 @@ class AppState extends ChangeNotifier {
         writtenAt: writtenAt,
       );
       final ok = await _sendOneEnvelope(peer, wrapped);
-      if (ok) await (on ?? _ownerOf(peer)).dropEdit(uid);
+      if (ok) await (on ?? _ownerOf(peer)).dropEdit(uid, newText: newText);
       return ok;
     } catch (e) {
       dlog('edit: $uid still stuck ($e)');

@@ -4,6 +4,7 @@
 // lands. an unsend or a reaction made with no route queues like an edit
 // and goes once one is back. the database methods are the real ones over
 // rows kept in maps; the wire and signal are stand-ins
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
@@ -35,6 +36,24 @@ class _Rows extends HaloDb {
   Future<List<Map<String, Object?>>> unsentOutbox({
     Set<String> skip = const {},
   }) async => const [];
+}
+
+// a route that counts what it is asked, and answers when told while slow
+class _SlowIo extends ArrivalIo {
+  final waits = <Completer<String>>[];
+  var asked = 0;
+  var slow = false;
+
+  @override
+  Future<String> relaySend(String xPub, String cipher) async {
+    asked++;
+    if (!slow) return super.relaySend(xPub, cipher);
+    final c = Completer<String>();
+    waits.add(c);
+    final r = await c.future;
+    if (r == 'ok') sent.add(('relay $xPub', cipher));
+    return r;
+  }
 }
 
 int _unread(MemDb mem, String table, String key, String id) =>
@@ -333,13 +352,13 @@ void main() {
   group('queued', () {
     late MemDb mem;
     late _Rows db;
-    late ArrivalIo io;
+    late _SlowIo io;
     late AppState app;
 
     setUp(() async {
       mem = MemDb();
       db = _Rows(mem);
-      io = ArrivalIo()..down = true;
+      io = _SlowIo()..down = true;
       await mem.insert('contacts', {
         'halo_id': _bob,
         'onion': '',
@@ -403,6 +422,39 @@ void main() {
       await settle();
       expect(wire().single.reaction!.emoji, '');
       expect(mem.rows('frames_out'), isEmpty);
+    });
+
+    test('an edit made while the one before still goes waits for it, and '
+        'the older one landing leaves it queued', () async {
+      io
+        ..down = false
+        ..slow = true;
+      await app.editInChat(_bob, 'u7', 'one');
+      await settle();
+      expect(io.waits, hasLength(1));
+      await app.editInChat(_bob, 'u7', 'two');
+      await settle();
+      // nothing alongside it
+      expect(io.waits, hasLength(1));
+      expect(mem.rows('edits_out').single['new_text'], 'two');
+      io.waits.single.complete('ok');
+      await settle();
+      expect(mem.rows('edits_out').single['new_text'], 'two');
+      // and the newer one goes right after
+      expect(io.waits, hasLength(2));
+      io.waits.last.complete('ok');
+      await settle();
+      expect([for (final m in wire()) m.edit!.newText], ['one', 'two']);
+      expect(mem.rows('edits_out'), isEmpty);
+    });
+
+    test('an older wording that lands leaves a newer one queued', () async {
+      await db.queueEdit('u8', _bob, 'one');
+      await db.queueEdit('u8', _bob, 'two');
+      await db.dropEdit('u8', newText: 'one');
+      expect(mem.rows('edits_out').single['new_text'], 'two');
+      await db.dropEdit('u8', newText: 'two');
+      expect(mem.rows('edits_out'), isEmpty);
     });
 
     test('a word sent leaves a newer one queued', () async {
