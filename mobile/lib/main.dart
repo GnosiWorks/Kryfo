@@ -5641,6 +5641,8 @@ class HaloDb implements GroupOwedStore {
     final db = await open();
     await db.transaction((t) async {
       for (final m in members) {
+        // taken back, its edit or reaction has nothing left to change
+        await _dropGroupFrames(t, groupId, m, uid);
         final held = await t.query(
           'group_ctl_out',
           columns: ['id'],
@@ -5659,6 +5661,56 @@ class HaloDb implements GroupOwedStore {
         });
       }
     });
+  }
+
+  /// a group edit or reaction ([groupEditRow], [groupReactRow]) for each
+  /// of [members]. one of the same kind for the same message still waiting
+  /// for a member goes: only the newest word is sent
+  Future<void> queueGroupFrame(
+    String groupId,
+    Iterable<String> members,
+    Map<String, String> row, {
+    required int now,
+  }) async {
+    final body = jsonEncode(row);
+    final f = groupFrameOf(body);
+    if (f == null) return;
+    final db = await open();
+    await db.transaction((t) async {
+      for (final m in members) {
+        await _dropGroupFrames(t, groupId, m, f.uid, edits: f.edit != null);
+        await t.insert('group_ctl_out', {
+          'group_id': groupId,
+          'member': m,
+          'ctl': body,
+          'since': now,
+          'tries': 0,
+          'next_at': now,
+        });
+      }
+    });
+  }
+
+  // [member]'s queued edits ([edits]) or reactions of [uid], or both when
+  // null
+  static Future<void> _dropGroupFrames(
+    DatabaseExecutor t,
+    String groupId,
+    String member,
+    String uid, {
+    bool? edits,
+  }) async {
+    for (final r in await t.query(
+      'group_ctl_out',
+      columns: ['id', 'ctl'],
+      where: 'group_id = ? AND member = ?',
+      whereArgs: [groupId, member],
+    )) {
+      final o = groupFrameOf(r['ctl']);
+      if (o == null || o.uid != uid) continue;
+      if (edits != null && (o.edit != null) != edits) continue;
+      await t.delete('group_ctl_out', where: 'id = ?', whereArgs: [r['id']]);
+    }
   }
 
   /// every control still to go, oldest first
@@ -7043,6 +7095,34 @@ String? groupUnsendOf(Object? ctl) {
   } catch (_) {
     return null;
   }
+}
+
+// a group edit or reaction of ours waits in each member's control lane too,
+// one of each a message: a newer word replaces the one still waiting
+Map<String, String> groupEditRow(String uid, String text) => {
+  'ed': uid,
+  't': text,
+};
+Map<String, String> groupReactRow(String uid, String emoji) => {
+  're': uid,
+  'e': emoji,
+};
+
+({String uid, String? edit, String? emoji})? groupFrameOf(Object? ctl) {
+  if (ctl is! String) return null;
+  if (!ctl.startsWith('{"ed":') && !ctl.startsWith('{"re":')) return null;
+  try {
+    final raw = jsonDecode(ctl);
+    if (raw is! Map) return null;
+    final ed = raw['ed'], t = raw['t'], re = raw['re'], e = raw['e'];
+    if (ed is String && ed.isNotEmpty && t is String) {
+      return (uid: ed, edit: t, emoji: null);
+    }
+    if (re is String && re.isNotEmpty && e is String) {
+      return (uid: re, edit: null, emoji: e);
+    }
+  } catch (_) {}
+  return null;
 }
 
 // a 1:1 message that came in and burned or was deleted here (kGoneFor).
@@ -10286,13 +10366,18 @@ class AppState extends ChangeNotifier {
         final now = DateTime.now().millisecondsSinceEpoch;
         if (!force && (r['next_at'] as int? ?? 0) > now) return false;
         final un = groupUnsendOf(r['ctl']);
-        final gc = un != null ? null : GroupControl.fromWire(_jsonOf(r['ctl']));
+        final fr = un != null ? null : groupFrameOf(r['ctl']);
+        final gc = un != null || fr != null
+            ? null
+            : GroupControl.fromWire(_jsonOf(r['ctl']));
         // no longer theirs to get: the next one goes. a take-back is kept
         // only where it can still go: members who left, were taken out, or
         // saw us leave or be taken out may hold the message yet, and act
-        // on it without the group
+        // on it without the group. an edit or reaction only to a member
+        // still in it, of a message still here
         final owed =
             un != null ||
+            fr != null && await _frameStillOwed(d, groupId, member, fr.uid) ||
             gc != null && await _ctlStillOwed(d, groupId, member, gc);
         if (!owed) {
           await d.dropGroupCtl(id);
@@ -10321,17 +10406,28 @@ class AppState extends ChangeNotifier {
         // stamped before it goes, so a send cut short is not a free retry
         if (!force && await keyHeld(member)) return sent;
         if (!force) await d.triedGroupCtl(id, now);
+        final edit = fr?.edit;
+        final emoji = fr?.emoji;
         final wrapped = await wrapMessage(
           '',
           groupId: groupId,
           groupControl: gc,
           unsend: un,
+          edit: edit == null
+              ? null
+              : EditFrame(targetUid: fr!.uid, newText: edit),
+          reaction: emoji == null
+              ? null
+              : ReactionFrame(targetUid: fr!.uid, emoji: emoji),
           sender: _mySender(),
           // when it was queued
           writtenAt: (r['since'] as num?)?.toInt(),
         );
         if (!await _sendGroupEnvelope(groupId, member, wrapped)) {
-          dlog('group ctl ${gc?.type ?? 'unsend'} to $member: waits');
+          final what =
+              gc?.type ??
+              (un != null ? 'unsend' : (edit != null ? 'edit' : 'reaction'));
+          dlog('group ctl $what to $member: waits');
           return false;
         }
         await d.dropGroupCtl(id);
@@ -10359,6 +10455,17 @@ class AppState extends ChangeNotifier {
     } catch (_) {
       return null;
     }
+  }
+
+  Future<bool> _frameStillOwed(
+    HaloDb d,
+    String groupId,
+    String member,
+    String uid,
+  ) async {
+    if (!await d.groupExists(groupId)) return false;
+    if (!(await d.getGroupMembers(groupId)).contains(member)) return false;
+    return d.messageExists(uid);
   }
 
   // a leave goes once the group went from here; a remove to the member it
@@ -18977,24 +19084,26 @@ class AppState extends ChangeNotifier {
     // show it now, not after the tor multicast
     notifyListeners();
     // a quiet session keeps it on this phone: nothing leaves
-    if (sessionQuiet) {
-      notifyListeners();
-      return;
+    if (sessionQuiet) return;
+    await _queueGroupFrame(groupId, groupReactRow(targetMsgUid, emoji));
+  }
+
+  // an edit or a reaction of ours in a group: each member's lane keeps it
+  // until they have it, behind what they are still to get of the group.
+  // the first try goes now and costs none of its tries
+  Future<void> _queueGroupFrame(String groupId, Map<String, String> row) async {
+    final d = _ownerOf(groupId);
+    final to = await _othersIn(d, groupId);
+    await d.queueGroupFrame(
+      groupId,
+      to,
+      row,
+      now: DateTime.now().millisecondsSinceEpoch,
+    );
+    if (haloWiping || sessionQuiet) return;
+    for (final m in to) {
+      unawaited(_ctlLane(d, groupId, m, force: true));
     }
-    final wrapped = await wrapMessage(
-      '',
-      groupId: groupId,
-      reaction: ReactionFrame(targetUid: targetMsgUid, emoji: emoji),
-      sender: _mySender(),
-    );
-    final members = await session.getGroupMembers(groupId);
-    // fan out in the background; the reaction is already on screen.
-    unawaited(
-      Future.wait([
-        for (final memberId in members)
-          if (memberId != myId) _sendGroupEnvelope(groupId, memberId, wrapped),
-      ]),
-    );
   }
 
   // ---- polls ----
@@ -19178,23 +19287,10 @@ class AppState extends ChangeNotifier {
     String newText,
   ) async {
     await session.editMessage(targetMsgUid, newText);
-    // a quiet session keeps it on this phone: nothing leaves
-    if (sessionQuiet) {
-      notifyListeners();
-      return;
-    }
-    final wrapped = await wrapMessage(
-      '',
-      groupId: groupId,
-      edit: EditFrame(targetUid: targetMsgUid, newText: newText),
-      sender: _mySender(),
-    );
-    final members = await session.getGroupMembers(groupId);
-    await Future.wait([
-      for (final memberId in members)
-        if (memberId != myId) _sendGroupEnvelope(groupId, memberId, wrapped),
-    ]);
     notifyListeners();
+    // a quiet session keeps it on this phone: nothing leaves
+    if (sessionQuiet) return;
+    await _queueGroupFrame(groupId, groupEditRow(targetMsgUid, newText));
   }
 
   // build participant info {h,o,x} for each halo_id we have as a contact
