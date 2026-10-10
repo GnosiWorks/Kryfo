@@ -22,6 +22,32 @@ Future<bool> openWithAnotherApp(String path, {String? name}) async {
   }
 }
 
+/// the share sheet with a copy of [path] the app keeps and shreds itself,
+/// not the share plugin's, which goes unzeroed at the next share. false
+/// when the copy was not made or the sheet did not open. a [backup] is
+/// ciphertext, kept until the next one or a day
+Future<bool> shareFileOut(
+  String path, {
+  String? name,
+  String? text,
+  String? subject,
+  bool backup = false,
+}) async {
+  try {
+    return await _channel.invokeMethod<bool>('shareFile', {
+          'path': path,
+          'name': name,
+          'text': text,
+          'subject': subject,
+          'backup': backup,
+        }) ??
+        false;
+  } catch (e) {
+    dlog('share: ${e.runtimeType}');
+    return false;
+  }
+}
+
 const _videoExts = {'mp4', 'm4v', 'mov', '3gp', '3g2', 'mkv', 'webm'};
 
 /// a file the chat draws as a video. by the name alone, the way the file

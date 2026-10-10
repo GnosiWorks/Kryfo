@@ -9,6 +9,8 @@ import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'dart:ffi';
 import 'dart:io';
+import 'shred.dart';
+export 'shred.dart' show shredFile, shredTree;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
@@ -5053,6 +5055,14 @@ class HaloDb implements GroupOwedStore {
   }) async {
     final db = await open();
     final now = DateTime.now().millisecondsSinceEpoch;
+    // a file sent again in another number of slices is other bytes, a photo
+    // cleaned since say: what was held of it no longer fits
+    final stale = await db.delete(
+      'media_chunks',
+      where: 'media_id = ? AND total != ?',
+      whereArgs: [mediaId, total],
+    );
+    if (stale > 0 && _unfinished != null) await _reweigh(mediaId);
     // a slice sent again replaces the one held, and weighs only once
     final held = _unfinished;
     final was = held == null
@@ -5250,6 +5260,7 @@ class HaloDb implements GroupOwedStore {
 
   // a slice of an unfinished file just came in. can_resend only ever goes
   // up: one slice from a sender that can answer is enough to know it can.
+  // the count of slices is the latest one's, as with the slices held
   Future<void> noteMediaWant(
     String mediaId,
     String peerId,
@@ -5262,6 +5273,7 @@ class HaloDb implements GroupOwedStore {
       'INSERT INTO media_wants (media_id, peer_id, total, can_resend, last_at) '
       'VALUES (?, ?, ?, ?, ?) '
       'ON CONFLICT(media_id) DO UPDATE SET last_at = excluded.last_at, '
+      'total = excluded.total, '
       'can_resend = MAX(can_resend, excluded.can_resend)',
       [mediaId, peerId, total, canResend ? 1 : 0, now],
     );
@@ -7745,33 +7757,6 @@ Future<(String, bool)> handleHaloUriAdded(
   }
 }
 
-// overwrite with zeros, then unlink. best effort: flash wear levelling can
-// keep an old block, but the easy read is gone.
-Future<void> shredFile(String path) async {
-  try {
-    final f = File(path);
-    if (!await f.exists()) return;
-    final len = await f.length();
-    final raf = await f.open(mode: FileMode.writeOnly);
-    try {
-      const chunk = 64 * 1024;
-      final zeros = Uint8List(chunk);
-      var left = len;
-      while (left > 0) {
-        final n = left < chunk ? left : chunk;
-        await raf.writeFrom(zeros, 0, n);
-        left -= n;
-      }
-      await raf.flush();
-    } finally {
-      await raf.close();
-    }
-    await f.delete();
-  } catch (e) {
-    dlog('shred: $e');
-  }
-}
-
 // a copy of a capture into the phone's photos, only when asked for. the
 // phone's own media store does the writing; below android 10 it says no.
 Future<bool> exportToPictures(Uint8List bytes, String name, String mime) async {
@@ -7820,17 +7805,58 @@ Future<void> sweepCaptures() async {
   }
 }
 
-// a file handed to the share sheet is a plain copy in the share plugin's
-// folder, kept there until the next share. the native side clears it on
-// resume once it is a few minutes old; this is the start's turn
+/// the side an unlock's outcome opens, as sessionFor reads it
+HaloContainer containerFor(PinResult r, {String? vaultKey}) => switch (r) {
+  PinResult.vault when vaultKey != null => HaloContainer.vault,
+  PinResult.decoy when vaultKey != null => HaloContainer.decoyVault,
+  PinResult.decoy => HaloContainer.decoy,
+  _ => HaloContainer.everyday,
+};
+
+// a file handed to the share sheet is a plain copy in cache/share/, or the
+// share plugin's folder from before. the app it went to may read it only
+// once this one is back, so a copy younger than the grace stays, as on the
+// native side (Shred.kt), whose job looks again. a time far ahead is a clock
+// that moved, and counts as old
+const kShareGrace = kHandedGrace;
+const _clockSkew = Duration(minutes: 1);
+
 @visibleForTesting
-Future<void> sweepShareCopies(Directory cache) async {
-  final dir = Directory('${cache.path}/share_plus');
-  if (!await dir.exists()) return;
-  await for (final f in dir.list(recursive: true)) {
-    if (f is File) await shredFile(f.path);
+Future<void> sweepShareCopies(Directory cache, {DateTime? now}) async {
+  final at = now ?? DateTime.now();
+  final cutoff = at.subtract(kShareGrace);
+  final ahead = at.add(_clockSkew);
+  bool old(DateTime t) => t.isBefore(cutoff) || t.isAfter(ahead);
+  for (final name in const ['share', 'share_plus']) {
+    final dir = Directory('${cache.path}/$name');
+    if (!await dir.exists()) continue;
+    // a folder's time moves as its files go, so it is read first
+    final folders = <(Directory, DateTime)>[];
+    await for (final e in dir.list(recursive: true, followLinks: false)) {
+      try {
+        if (e is Directory) {
+          folders.add((e, (await e.stat()).modified));
+        } else if (e is Link) {
+          await e.delete();
+        } else if (e is File && old(await e.lastModified())) {
+          await shredFile(e.path);
+        }
+      } on FileSystemException {
+        // gone meanwhile
+      }
+    }
+    // only an emptied folder goes, and only one old itself, the deepest
+    // first
+    folders.sort((a, b) => b.$1.path.length.compareTo(a.$1.path.length));
+    for (final (d, t) in [...folders, (dir, cutoff)]) {
+      if (!identical(d, dir) && !old(t)) continue;
+      try {
+        await d.delete();
+      } on FileSystemException {
+        // a young copy is still in it
+      }
+    }
   }
-  await dir.delete(recursive: true);
 }
 
 String _safeLeaf(String s) => s.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
@@ -7906,11 +7932,8 @@ Future<String> saveSlices(
     } catch (_) {
       // the sink broke with the write: the error passed on is the first
     }
-    try {
-      await file.delete();
-    } catch (e) {
-      dlog('slices: half file left (${e.runtimeType})');
-    }
+    // part of a received file: zeroed, not just unlinked
+    await shredFile(file.path);
     rethrow;
   }
   return file.path;
@@ -13890,9 +13913,18 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  // the side the lock came down on, until the next unlock
+  HaloContainer? _lockedIn;
+
   // an unlock's outcome, under the lock screen before it lifts: the screens
   // get the session the pin opened, and every screen of the other one goes
   Future<void> sessionFor(PinResult r, {String? vaultKey}) async {
+    // nothing opened under one pin is left for another, not even unlinked
+    final from = _lockedIn;
+    _lockedIn = null;
+    await dropOpenCopies(
+      all: from != null && from != containerFor(r, vaultKey: vaultKey),
+    );
     // a vault left open by a lock that never reached the screen shuts first
     _shutVault();
     // and what home shows after one shut is read again before anything
@@ -14112,6 +14144,9 @@ class AppState extends ChangeNotifier {
   // the lock is going up: a vault session shuts at once, and the key of a
   // vault made by a setup that did not finish goes
   void lockingUp() {
+    // a file opened with another app goes with the session that opened it
+    _lockedIn = (_session.vault ?? _session.primary).container;
+    unawaited(dropOpenCopies());
     unawaited(
       vaultSetupDone().catchError((Object e) {
         dlog('vault: setup key (${e.runtimeType})');
@@ -20832,7 +20867,7 @@ Future<void> _sweepPlaintextLeftovers() async {
 }
 
 // every raw recording in [dir]: one that will not go is logged and the
-// rest still go. [drop] stands in for the delete in tests
+// rest still go. [drop] stands in for the shred in tests
 @visibleForTesting
 Future<void> sweepVoiceLeftovers(
   Directory dir, {
@@ -20844,7 +20879,7 @@ Future<void> sweepVoiceLeftovers(
       continue;
     }
     try {
-      await (drop ?? (f) => f.delete())(e);
+      await (drop ?? (f) => shredFile(f.path))(e);
     } catch (err) {
       dlog('sweep: a voice leftover stayed (${err.runtimeType})');
     }

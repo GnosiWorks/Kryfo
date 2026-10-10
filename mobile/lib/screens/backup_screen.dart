@@ -10,7 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
+import '../open_file.dart' show shareFileOut;
 import '../backup.dart';
 import '../main.dart' hide live;
 import '../theme.dart';
@@ -114,17 +114,18 @@ class _BackupScreenState extends State<BackupScreen> {
           },
         );
       }
-      var out = (handed: false, shared: false);
+      var out = (tried: false, handed: false);
       try {
         out = await _handOver(path, name);
       } finally {
-        // a shared file is read by the other app after share() returns,
-        // so that one is left for the boot sweep. every other way out
-        // shreds the copy here
-        if (!out.shared) await shredFile(path);
+        // saved, or the share sheet has a copy of its own: this one goes,
+        // as does one the lock took the screen from before it was offered.
+        // one whose hand-over failed is kept until the next start's sweep
+        if (out.handed || !out.tried) await shredFile(path);
       }
-      if (!out.handed) sayLater();
-      if (move && out.handed) {
+      final handed = out.handed;
+      if (!handed) sayLater();
+      if (move && handed) {
         // the file is out of our hands: from here this phone is retired,
         // and the next screen says so. one never handed over, the screen
         // gone under a lock, retires nothing
@@ -145,14 +146,12 @@ class _BackupScreenState extends State<BackupScreen> {
   }
 
   // the system save dialog first, the share sheet when that is refused.
-  // neither reads the file into memory. shared when the share sheet took
-  // it: that app reads the file after we return, so the copy is left for
-  // the boot sweep.
-  Future<({bool handed, bool shared})> _handOver(
+  // neither reads the file into memory. tried once either was offered
+  Future<({bool tried, bool handed})> _handOver(
     String path,
     String name,
   ) async {
-    const none = (handed: false, shared: false);
+    const none = (tried: false, handed: false);
     if (!mounted) return none;
     var saved = false;
     try {
@@ -169,24 +168,21 @@ class _BackupScreenState extends State<BackupScreen> {
     }
     if (saved) {
       if (mounted) showHaloToast(context, l10n.backupBackupSavedKeepThe);
-      return (handed: true, shared: false);
+      return (tried: true, handed: true);
     }
-    if (!mounted) return none;
-    await _share(path);
-    return (handed: true, shared: true);
+    if (!mounted) return (tried: true, handed: false);
+    return (tried: true, handed: await _share(path));
   }
 
-  Future<void> _share(String path) async {
-    await lockState.hold(
-      () => SharePlus.instance.share(
-        ShareParams(
-          files: [XFile(path)],
-          subject: l10n.backupKryfoBackup,
-          text: l10n.backupYourEncryptedKryfoBackup,
-        ),
-      ),
-    );
-  }
+  // true only once the copy is made and the sheet is up
+  Future<bool> _share(String path) => lockState.hold(
+    () => shareFileOut(
+      path,
+      backup: true,
+      subject: l10n.backupKryfoBackup,
+      text: l10n.backupYourEncryptedKryfoBackup,
+    ),
+  );
 
   @override
   void dispose() {

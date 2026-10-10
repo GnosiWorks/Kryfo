@@ -11,6 +11,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'dlog.dart';
+import 'shred.dart';
 
 enum Binding {
   // the engine keeps this identity online
@@ -188,7 +189,8 @@ class HaloContainer {
         p.join((await getApplicationDocumentsDirectory()).path, '$name$suffix'),
       );
       try {
-        if (await d.exists()) await d.delete(recursive: true);
+        // its pictures and voice notes, in the clear: zeroed first
+        await shredTree(d.path);
       } catch (e) {
         // the boot sweep takes it once nothing could open it
         dlog('container: a folder stayed (${e.runtimeType})');

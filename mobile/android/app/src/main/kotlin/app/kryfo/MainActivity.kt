@@ -165,10 +165,9 @@ class MainActivity : FlutterFragmentActivity() {
         super.onResume()
         stoppedSinceResume = false
         // a file opened or shared with another app is a decrypted copy in
-        // cache/open or cache/share_plus. coming back here is the only sign
-        // that app is done with it, and a resume also follows every start.
-        // an app that still holds it open keeps its descriptor; the name is
-        // gone. a shared copy is given a while longer, see clearShareCopies.
+        // cache/open or cache/share_plus. coming back here is the first sign
+        // that app may be done with it, and a resume also follows every
+        // start. each copy is given a while first, see clearOpenCopies.
         clearOpenCopies()
         // dart asks for notifications (askNotifications) once the lock is
         // down, so android's dialog never opens over the pin pad. one that
@@ -512,7 +511,11 @@ class MainActivity : FlutterFragmentActivity() {
                         val bytes = call.argument<ByteArray>("bytes")
                         val maxEdge = call.argument<Int>("maxEdge") ?: 1280
                         val quality = call.argument<Int>("quality") ?: 70
-                        result.success(if (bytes == null) null else shrinkJpeg(bytes, maxEdge, quality))
+                        // a decode of a big frame takes long enough to freeze the ui
+                        Thread {
+                            val out = if (bytes == null) null else shrinkJpeg(bytes, maxEdge, quality)
+                            runOnUiThread { result.success(out) }
+                        }.start()
                     }
                     "saveToPictures" -> {
                         val bytes = call.argument<ByteArray>("bytes")
@@ -524,6 +527,21 @@ class MainActivity : FlutterFragmentActivity() {
                         val path = call.argument<String>("path")
                         val name = call.argument<String>("name")
                         if (path == null) result.success(false) else openFile(path, name, result)
+                    }
+                    "shareFile" -> {
+                        val path = call.argument<String>("path")
+                        if (path == null) {
+                            result.success(false)
+                        } else {
+                            shareFile(
+                                path,
+                                call.argument<String>("name"),
+                                call.argument<String>("text"),
+                                call.argument<String>("subject"),
+                                call.argument<Boolean>("backup") == true,
+                                result
+                            )
+                        }
                     }
                     "videoInfo" -> {
                         val path = call.argument<String>("path")
@@ -544,79 +562,75 @@ class MainActivity : FlutterFragmentActivity() {
             }
     }
 
-    // "open with". another app cannot read our files, and must not be able
-    // to: the file is copied to cache/open/, the only folder the provider
-    // serves, and the uri is granted to the one app that gets the intent.
-    // the folder holds one file; the last one goes before the next arrives.
+    // "open with" and share. another app cannot read our files, and must
+    // not be able to: the file is copied to cache/open/ or cache/share/,
+    // folders the provider serves, and the uri is granted to the one app
+    // that gets the intent. some apps read theirs only after this one is
+    // back, or keep reading in the background, so a copy is given a while
+    // first and shredded once it is older, by a job that comes back while
+    // one is young. a lock unlinks an open copy (dart's lockingUp).
     private fun clearOpenCopies() {
-        Thread { File(cacheDir, "open").deleteRecursively() }.start()
-        clearShareCopies()
-    }
-
-    // the share sheet's copies sit in share_plus/ until the next share. some
-    // targets read theirs only after their dialog has closed and this app is
-    // back, so a copy is given a while first, and whatever is left goes at
-    // the next start.
-    private val shareGraceMs = 10 * 60 * 1000L
-    private val shareTimer = android.os.Handler(android.os.Looper.getMainLooper())
-    private val shareSweep = Runnable { clearShareCopies() }
-
-    private fun clearShareCopies() {
         Thread {
-            if (clearAgedShareCopies()) {
-                shareTimer.removeCallbacks(shareSweep)
-                shareTimer.postDelayed(shareSweep, shareGraceMs)
-            }
+            if (Shred.handed(cacheDir)) JobSetup.scheduleCopySweep(this)
         }.start()
     }
 
-    // true while a copy is still too young to go
-    private fun clearAgedShareCopies(): Boolean {
-        val dir = File(cacheDir, "share_plus")
-        if (!dir.exists()) return false
-        val cutoff = System.currentTimeMillis() - shareGraceMs
-        var young = false
-        for (f in dir.walkBottomUp()) {
-            if (f.isFile) {
-                if (f.lastModified() < cutoff) {
-                    f.delete()
-                } else {
-                    young = true
-                }
-            } else if (f != dir) {
-                // only an emptied folder goes
-                f.delete()
+    private fun mimeOf(f: File): String {
+        val ext = f.extension.lowercase()
+        return MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext)
+            ?: when (ext) {
+                "mov" -> "video/quicktime"
+                "mkv" -> "video/x-matroska"
+                "m4v" -> "video/mp4"
+                "3g2" -> "video/3gpp2"
+                "opus" -> "audio/ogg"
+                else -> "application/octet-stream"
             }
+    }
+
+    // [src] copied into a folder of its own under cache/[into], so a
+    // younger copy of the same name that an app may still be reading is
+    // never written over. a copy cut short is shredded, and null comes back.
+    // a backup is ciphertext with a rule of its own (Shred.BACKUP_OUT): the
+    // last one goes when the next goes out
+    private fun handOut(src: File, name: String?, into: String): File? {
+        val top = File(cacheDir, into)
+        val backup = into == Shred.BACKUP_OUT
+        if (backup) {
+            Shred.dropBackups(cacheDir, true)
+        } else {
+            Shred.aged(top, System.currentTimeMillis() - Shred.GRACE_MS)
         }
-        return young
+        val rnd = ByteArray(8).also { java.security.SecureRandom().nextBytes(it) }
+            .joinToString("") { "%02x".format(it) }
+        val dir = File(top, rnd)
+        val safe = (name ?: src.name).replace(Regex("[^A-Za-z0-9._ -]"), "_").takeLast(80)
+        val dst = File(dir, if (safe.isBlank()) "file" else safe)
+        return try {
+            dir.mkdirs()
+            src.inputStream().use { i -> dst.outputStream().use { o -> i.copyTo(o) } }
+            if (!backup) JobSetup.scheduleCopySweep(this)
+            dst
+        } catch (e: Exception) {
+            Shred.tree(dir)
+            null
+        }
     }
 
     private fun openFile(path: String, name: String?, result: MethodChannel.Result) {
         Thread {
-            var ok = false
+            val dst = handOut(File(path), name, "open")
+            if (dst == null) {
+                runOnUiThread { result.success(false) }
+                return@Thread
+            }
+            var started = false
             try {
-                val src = File(path)
-                val dir = File(cacheDir, "open")
-                dir.deleteRecursively()
-                dir.mkdirs()
-                val safe = (name ?: src.name).replace(Regex("[^A-Za-z0-9._ -]"), "_").takeLast(80)
-                val dst = File(dir, if (safe.isBlank()) "file" else safe)
-                src.inputStream().use { i -> dst.outputStream().use { o -> i.copyTo(o) } }
                 val uri = androidx.core.content.FileProvider.getUriForFile(
                     this, "$packageName.open", dst
                 )
-                val ext = dst.extension.lowercase()
-                val mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext)
-                    ?: when (ext) {
-                        "mov" -> "video/quicktime"
-                        "mkv" -> "video/x-matroska"
-                        "m4v" -> "video/mp4"
-                        "3g2" -> "video/3gpp2"
-                        "opus" -> "audio/ogg"
-                        else -> "application/octet-stream"
-                    }
                 val view = Intent(Intent.ACTION_VIEW).apply {
-                    setDataAndType(uri, mime)
+                    setDataAndType(uri, mimeOf(dst))
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
                 runOnUiThread {
@@ -624,17 +638,73 @@ class MainActivity : FlutterFragmentActivity() {
                         startActivity(view)
                         result.success(true)
                     } catch (e: ActivityNotFoundException) {
-                        // nothing on this phone opens that kind of file
+                        // nothing on this phone opens that kind of file: no
+                        // app was handed the copy
+                        Thread { Shred.tree(dst.parentFile!!) }.start()
                         result.success(false)
                     } catch (e: Exception) {
+                        Thread { Shred.tree(dst.parentFile!!) }.start()
                         result.success(false)
                     }
                 }
-                ok = true
+                started = true
             } catch (e: Exception) {
                 // fall through
             }
-            if (!ok) runOnUiThread { result.success(false) }
+            if (!started) {
+                Shred.tree(dst.parentFile!!)
+                runOnUiThread { result.success(false) }
+            }
+        }.start()
+    }
+
+    // the share sheet with a copy of ours, not the share plugin's: that one
+    // drops its folder whole, unzeroed, at every next share, also while an
+    // app may still be reading it
+    private fun shareFile(
+        path: String,
+        name: String?,
+        text: String?,
+        subject: String?,
+        backup: Boolean,
+        result: MethodChannel.Result
+    ) {
+        Thread {
+            val dst = handOut(File(path), name, if (backup) Shred.BACKUP_OUT else "share")
+            if (dst == null) {
+                runOnUiThread { result.success(false) }
+                return@Thread
+            }
+            var started = false
+            try {
+                val uri = androidx.core.content.FileProvider.getUriForFile(
+                    this, "$packageName.open", dst
+                )
+                val send = Intent(Intent.ACTION_SEND).apply {
+                    type = mimeOf(dst)
+                    putExtra(Intent.EXTRA_STREAM, uri)
+                    if (!text.isNullOrBlank()) putExtra(Intent.EXTRA_TEXT, text)
+                    if (!subject.isNullOrBlank()) putExtra(Intent.EXTRA_SUBJECT, subject)
+                    clipData = android.content.ClipData.newRawUri("", uri)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                runOnUiThread {
+                    try {
+                        startActivity(Intent.createChooser(send, null))
+                        result.success(true)
+                    } catch (e: Exception) {
+                        Thread { Shred.tree(dst.parentFile!!) }.start()
+                        result.success(false)
+                    }
+                }
+                started = true
+            } catch (e: Exception) {
+                // fall through
+            }
+            if (!started) {
+                Shred.tree(dst.parentFile!!)
+                runOnUiThread { result.success(false) }
+            }
         }.start()
     }
 

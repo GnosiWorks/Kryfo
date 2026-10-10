@@ -271,6 +271,8 @@ Future<String> _send({
   } catch (e) {
     return 'error: read';
   }
+  // an empty file has nothing to send, and is not a send that went
+  if (total == 0) return 'error: empty';
   final showProgress = total > 1 && progressKey != null;
   if (showProgress) mediaProgressStart(msgUid, chatKey: progressKey);
   final Map<String, Set<int>> done;

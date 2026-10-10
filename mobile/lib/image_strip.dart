@@ -72,6 +72,15 @@ const _heifBrands = {
   'avis',
 };
 
+/// the extension a picture's bytes call for; jpg for one not known here
+String pictureExt(Uint8List b) => switch (pictureKind(b)) {
+  PictureKind.png => 'png',
+  PictureKind.gif => 'gif',
+  PictureKind.webp => 'webp',
+  PictureKind.heif => 'heic',
+  _ => 'jpg',
+};
+
 /// cleans the file at [path] in place. see the contract at the top.
 Future<bool?> stripPictureFile(String path) async {
   final f = File(path);

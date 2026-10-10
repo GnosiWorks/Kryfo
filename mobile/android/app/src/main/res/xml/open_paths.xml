@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- the one folder OpenFileProvider can serve. a file is copied in when the
-     person opens it with another app, and the folder is emptied before the
-     next one and at every start. the app's own media folder is never
+<!-- the folders OpenFileProvider can serve. a file is copied into open/ or
+     share/ when the person opens or shares it with another app, and
+     shredded once it is a few minutes old. a backup goes to backup_out/,
+     kept until the next one or a day. the app's own media folder is never
      reachable from outside. -->
 <paths>
     <cache-path name="open" path="open/" />
+    <cache-path name="share" path="share/" />
+    <cache-path name="backup_out" path="backup_out/" />
     <cache-path name="tools_out" path="tools_out/" />
 </paths>

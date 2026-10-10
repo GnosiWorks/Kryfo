@@ -6,8 +6,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
-import 'package:share_plus/share_plus.dart';
-
 import '../lock_state.dart';
 import '../open_file.dart';
 import '../theme.dart';
@@ -31,9 +29,7 @@ Future<void> openReceivedFile(
   );
   if (opened || !context.mounted) return;
   showHaloToast(context, l10n.videoBubbleNothingHereOpensThat);
-  await lockState.hold(
-    () => SharePlus.instance.share(ShareParams(files: [XFile(path)])),
-  );
+  await lockState.hold(() => shareFileOut(path, name: name));
 }
 
 class VideoBubble extends StatefulWidget {

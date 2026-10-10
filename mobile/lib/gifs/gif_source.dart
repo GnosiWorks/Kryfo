@@ -19,6 +19,7 @@ import '../dlog.dart';
 import '../handle_lookup.dart' show kHandleRegistry;
 import '../l10n/l10n.dart';
 import '../lock_guard.dart';
+import '../shred.dart';
 
 /// our server, the same host the handle registry answers on
 const kGifRelay = kHandleRegistry;
@@ -265,7 +266,7 @@ const _lateWrite = Duration(seconds: 120);
 
 Future<void> _drop(File f) async {
   try {
-    if (await f.exists()) await f.delete();
+    await shredFile(f.path);
   } catch (_) {
     // swept at the next start
   }
@@ -291,7 +292,7 @@ Future<File> _partFile() async {
 Future<void> sweepGifParts() async {
   try {
     final d = await gifPartsDir();
-    if (await d.exists()) await d.delete(recursive: true);
+    await shredTree(d.path);
   } catch (e) {
     dlog('sweep: gif parts (${e.runtimeType})');
   }

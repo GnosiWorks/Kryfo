@@ -183,6 +183,8 @@ Future<String> _sendChunkedMediaInner({
   } catch (e) {
     return 'error: read';
   }
+  // an empty file has nothing to send, and is not a send that went
+  if (total == 0) return 'error: empty';
   // a voice note is a couple of seconds of audio. the strip is for photos
   // and files, where the wait is long enough to wonder about.
   final showProgress = total > 1 && !voice && only == null;

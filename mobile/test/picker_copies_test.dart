@@ -133,17 +133,24 @@ void main() {
     );
     final chat = sourceOf('lib/screens/chat_screen.dart');
     final group = sourceOf('lib/screens/group_chat_screen.dart');
+    final picked = sourceOf('lib/picked.dart');
     for (final (src, fn) in [
       (chat, 'Future<void> _pickAndSendVideo('),
-      (chat, 'Future<void> _pickAndSendMultiple('),
       (chat, 'Future<void> _pickWallpaperImage('),
       (group, 'Future<void> _pickGroupVideo('),
-      (group, 'Future<void> _pickGroupMultiple('),
+      (picked, 'Future<List<Uint8List>> readPickedPhotos('),
     ]) {
       final body = bodyOf(src, fn);
       expect(body, contains('} finally {'), reason: fn);
-      expect(body, contains('await shredPickedImages('), reason: fn);
+      expect(body, contains('shredPickedImages'), reason: fn);
       expect(body, isNot(contains('shredFile(')), reason: fn);
+    }
+    // several at a time go through readPickedPhotos
+    for (final (src, fn) in [
+      (chat, 'Future<void> _pickAndSendMultiple('),
+      (group, 'Future<void> _pickGroupMultiple('),
+    ]) {
+      expect(bodyOf(src, fn), contains('await readPickedPhotos('), reason: fn);
     }
   });
 }

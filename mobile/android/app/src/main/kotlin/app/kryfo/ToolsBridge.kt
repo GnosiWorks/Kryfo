@@ -31,13 +31,17 @@ class ToolsBridge(private val activity: Activity) {
         const val OUT_DIR = "tools_out"
         private const val MAX_AGE_MS = 15 * 60 * 1000L
 
+        // [all] at start: no copy in is being read then. a result may have
+        // been shared with another app that still reads it, so it waits out
+        // its age either way
         fun sweep(cacheDir: File, all: Boolean) {
             val now = System.currentTimeMillis()
             for (name in listOf(IN_DIR, OUT_DIR)) {
                 val dir = File(cacheDir, name)
                 val kids = dir.listFiles() ?: continue
                 for (f in kids) {
-                    if (all || now - f.lastModified() > MAX_AGE_MS) f.deleteRecursively()
+                    val old = Shred.old(f.lastModified(), now - MAX_AGE_MS, now)
+                    if (old || (all && name == IN_DIR)) Shred.tree(f)
                 }
             }
         }
@@ -163,8 +167,12 @@ class ToolsBridge(private val activity: Activity) {
             "dropCreated" -> dropCreated(call.argument<String>("uri"), result)
             "openCacheOut" -> openCacheOut(call.argument<String>("name"), result)
             "sweep" -> {
-                sweep(activity.cacheDir, call.argument<Boolean>("all") ?: false)
-                result.success(true)
+                // a shred of a big video takes a while: never on the ui thread
+                val all = call.argument<Boolean>("all") ?: false
+                Thread {
+                    sweep(activity.cacheDir, all)
+                    activity.runOnUiThread { result.success(true) }
+                }.start()
             }
             "sdk" -> result.success(Build.VERSION.SDK_INT)
             else -> result.notImplemented()
@@ -254,10 +262,10 @@ class ToolsBridge(private val activity: Activity) {
                 val path = out.absolutePath
                 activity.runOnUiThread { result.success(path) }
             } catch (e: InterruptedException) {
-                out?.parentFile?.deleteRecursively()
+                out?.parentFile?.let { Shred.tree(it) }
                 activity.runOnUiThread { result.error("cancelled", "stopped", null) }
             } catch (e: Exception) {
-                out?.parentFile?.deleteRecursively()
+                out?.parentFile?.let { Shred.tree(it) }
                 val code = if (e.message == "full") "full" else "read"
                 activity.runOnUiThread { result.error(code, "could not read that file", null) }
             }

@@ -23,11 +23,12 @@ class HaloApplication : Application() {
         FlutterEngineCache.getInstance().put(ENGINE_ID, engine)
         JobSetup.schedule(this)
         // a file handed to another app to open is a copy in cache/open/,
-        // one shared a copy in cache/share_plus/. nothing needs either past
-        // the session that made it.
+        // one shared a copy in cache/share_plus/. the app it went to may
+        // still be reading it after this process was restarted, so one is
+        // shredded only once past the grace, as on resume
         Thread {
-            java.io.File(cacheDir, "open").deleteRecursively()
-            java.io.File(cacheDir, "share_plus").deleteRecursively()
+            if (Shred.handed(cacheDir)) JobSetup.scheduleCopySweep(this)
+            Shred.dropBackups(cacheDir, false)
             ToolsBridge.sweep(cacheDir, true)
         }.start()
     }

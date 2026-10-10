@@ -13,6 +13,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../jpeg_strip.dart';
 import '../main.dart' show shredFile, exportToPictures;
+import '../picked.dart' show shrinkPhoto;
 import 'package:permission_handler/permission_handler.dart'
     show openAppSettings;
 
@@ -66,21 +67,6 @@ class _CameraScreenState extends State<CameraScreen>
   bool _retried = false;
   // the review step
   Uint8List? _shot;
-
-  static const _platform = MethodChannel('halo/platform');
-  Future<Uint8List> _shrink(Uint8List b) async {
-    try {
-      final r = await _platform.invokeMethod<Uint8List>('shrinkJpeg', {
-        'bytes': b,
-        'maxEdge': 1280,
-        'quality': 70,
-      });
-      if (r != null && r.isNotEmpty) return r;
-    } catch (e) {
-      dlog('shrink: $e');
-    }
-    return b;
-  }
 
   String? _clip;
   int _clipBytes = 0;
@@ -260,7 +246,7 @@ class _CameraScreenState extends State<CameraScreen>
       // the orientation tag and writes a jpeg with no tags at all. the strip
       // after it is the belt to that brace. same size and quality as a
       // gallery pick.
-      final small = await _shrink(raw);
+      final small = await shrinkPhoto(raw);
       final stripped = stripJpegMetadata(small);
       final clean = stripped;
       if (!mounted) return;

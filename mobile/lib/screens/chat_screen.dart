@@ -13,7 +13,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import '../picked.dart';
 import '../sent_name.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:record/record.dart';
 import 'dart:io';
 import 'dart:convert';
@@ -1905,10 +1904,9 @@ class _ChatScreenState extends State<ChatScreen>
                             : () {
                                 dismiss(now: true);
                                 lockState.hold(
-                                  () => SharePlus.instance.share(
-                                    ShareParams(
-                                      files: [XFile(target.filePath!)],
-                                    ),
+                                  () => shareFileOut(
+                                    target.filePath!,
+                                    name: target.fileName,
                                   ),
                                 );
                               },
@@ -3032,7 +3030,7 @@ class _ChatScreenState extends State<ChatScreen>
     if (cancelled) {
       // the raw recording, undisguised. nothing else will ever delete it.
       // one that will not go is swept at the next start
-      File(path).delete().ignore();
+      shredFile(path).ignore();
       return;
     }
     _sendVoice(path, ms);
@@ -3042,7 +3040,7 @@ class _ChatScreenState extends State<ChatScreen>
     final src = File(srcPath);
     if (_requestLocked) {
       // one that will not go is swept at the next start
-      src.delete().ignore();
+      shredFile(srcPath).ignore();
       return;
     }
     if (!await src.exists()) return;
@@ -3053,12 +3051,11 @@ class _ChatScreenState extends State<ChatScreen>
     // read after the start: an anonymous chat is disguised whatever the
     // toggle says
     final disguise = _voiceDisguise;
-    if (_requestPending) setState(() => _sentCount++);
-    var bytes = await src.readAsBytes();
     // the recorder's own file is the voice before any disguise, so it goes
-    // now. the copy kept with the message is below. one that will not go is
-    // swept at the next start
-    src.delete().ignore();
+    // once read. the copy kept with the message is below
+    var bytes = await takeRecording(srcPath);
+    if (bytes == null) return;
+    if (_requestPending) setState(() => _sentCount++);
     if (disguise) bytes = disguiseWav(bytes);
     final msgUid = newMsgUid();
     final mediaDir = await session.mediaDirOf(widget.peerHaloId);
@@ -3210,6 +3207,11 @@ class _ChatScreenState extends State<ChatScreen>
       if (mounted) showHaloToast(context, l10n.chatCouldNotReadThat);
       return;
     }
+    // an empty file would read as sent with nothing gone
+    if (size == 0) {
+      if (mounted) showHaloToast(context, l10n.chatCouldNotReadThat);
+      return;
+    }
     if (size > 8 * 1024 * 1024) {
       if (mounted) showHaloToast(context, l10n.chatFileTooBig8);
       return;
@@ -3236,11 +3238,7 @@ class _ChatScreenState extends State<ChatScreen>
       final ok = await stripMp4Metadata(dest.path);
       final left = ok == null ? null : await mp4MetadataCount(dest.path);
       if (ok == null || left != 0) {
-        try {
-          await dest.delete();
-        } catch (_) {
-          // not sent either way, and the original is still where it was
-        }
+        await shredFile(dest.path);
         giveBack();
         if (mounted) showHaloToast(context, l10n.chatCouldNotCleanThat);
         return;
@@ -3251,11 +3249,7 @@ class _ChatScreenState extends State<ChatScreen>
     // app cannot read through is not sent; the photo button re-encodes and
     // will take it.
     else if (await stripPictureFileOffUi(dest.path) == null) {
-      try {
-        await dest.delete();
-      } catch (_) {
-        // not sent either way, and the original is still where it was
-      }
+      await shredFile(dest.path);
       giveBack();
       if (mounted) {
         showHaloToast(context, l10n.chatCouldNotCleanThatPictureSend);
@@ -3443,7 +3437,7 @@ class _ChatScreenState extends State<ChatScreen>
       return;
     }
     // send raw through the image path - Image.memory animates gifs by the bytes,
-    // the .jpg filename doesn't matter.
+    // the name follows the bytes.
     await _sendOneImage(clean, '');
   }
 
@@ -3462,7 +3456,8 @@ class _ChatScreenState extends State<ChatScreen>
     if (_requestPending) setState(() => _sentCount++);
     final msgUid = newMsgUid();
     final mediaDir = await session.mediaDirOf(widget.peerHaloId);
-    final mediaFile = File('${mediaDir.path}/$msgUid.jpg');
+    // a png, gif, webp or heic keeps its own kind, and its name says so
+    final mediaFile = File('${mediaDir.path}/$msgUid.${pictureExt(bytes)}');
     await mediaFile.writeAsBytes(bytes);
     final mediaPath = mediaFile.path;
     // read it once - the toggle is cleared below and the save reads it after.
@@ -3535,22 +3530,11 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _pickAndSendMultiple() async {
-    final picked = await lockState.hold(
-      () => ImagePicker().pickMultiImage(
-        maxWidth: 1280,
-        maxHeight: 1280,
-        imageQuality: 70,
-      ),
-    );
+    // whole, each in a folder of its own: see readPickedPhotos
+    final picked = await lockState.hold(() => ImagePicker().pickMultiImage());
     if (picked.isEmpty) return;
-    // the bytes are all that is kept; what the picker left goes even when
-    // a read fails
-    final List<Uint8List> bytesOf;
-    try {
-      bytesOf = [for (final x in picked) await x.readAsBytes()];
-    } finally {
-      await shredPickedImages(picked);
-    }
+    // the bytes are all that is kept
+    final bytesOf = await readPickedPhotos(picked);
     // one photo picked: same preview + caption screen the camera path gets.
     if (bytesOf.length == 1) {
       if (!mounted) return;
@@ -7948,7 +7932,11 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
     _ticker?.cancel();
     _level?.cancel();
     _overlay?.remove();
-    _rec.dispose();
+    // a take still recording when the chat goes is never sent
+    final take = _path;
+    _path = null;
+    final stopped = _rec.dispose();
+    if (take != null) stopped.whenComplete(() => shredFile(take)).ignore();
     super.dispose();
   }
 
@@ -8048,19 +8036,20 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
     _willCancel = cancel;
     _overlay?.leave();
     _overlay = null;
-    final path = await _rec.stop();
+    // handed on or shredded below, before the stop is awaited: a dispose
+    // meanwhile has nothing of it to shred
+    final mine = _path;
+    _path = null;
+    final take = await _rec.stop() ?? mine;
     if (cancel) {
-      final p = path ?? _path;
-      if (p != null) {
-        // a cancelled note is still a recording of a voice: shredded
-        await shredFile(p);
-      }
+      // a cancelled note is still a recording of a voice: shredded
+      if (take != null) await shredFile(take);
       HapticFeedback.lightImpact();
       widget.onComplete('', 0, true);
       return;
     }
     HapticFeedback.mediumImpact();
-    widget.onComplete(path ?? _path ?? '', ms, false);
+    widget.onComplete(take ?? '', ms, false);
   }
 
   VoidCallback? _recUnguard;

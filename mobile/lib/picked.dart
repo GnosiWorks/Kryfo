@@ -6,10 +6,13 @@ import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:flutter/services.dart' show MethodChannel;
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'main.dart' show shredFile;
+import 'dlog.dart';
+import 'image_strip.dart' show PictureKind, pictureKind;
+import 'shred.dart';
 
 // only a path inside the app's own cache is ours to destroy. a picker that
 // hands back the real file, as the desktop ones do, gets left alone
@@ -97,6 +100,50 @@ Future<void> sweepPickerLeftovers(Directory cache) async {
     } else if (e is File && p.basename(e.path).startsWith(_scaled)) {
       await shredFile(e.path);
     }
+  }
+}
+
+const _platform = MethodChannel('halo/platform');
+
+// a photo brought to what a gallery pick gets: 1280 on the long edge, jpeg
+// 70, upright. decoded pixels carry no metadata. the bytes as they came when
+// the platform cannot
+Future<Uint8List> shrinkPhoto(Uint8List b) async {
+  try {
+    final r = await _platform.invokeMethod<Uint8List>('shrinkJpeg', {
+      'bytes': b,
+      'maxEdge': 1280,
+      'quality': 70,
+    });
+    if (r != null && r.isNotEmpty) return r;
+  } catch (e) {
+    dlog('shrink: $e');
+  }
+  return b;
+}
+
+// the gallery's picks, asked for whole and shrunk here: the picker's own
+// shrink writes cache/scaled_<name>, so two picks of one name came back as
+// the last of them twice. a jpeg is shrunk; a png, gif, webp or heic keeps
+// its own format, which the send lane cleans as it is; anything else is
+// drawn again as a jpeg. what the picker left goes even when a read fails.
+// [shrink] and [drop] stand in for the platform and the shred in tests
+Future<List<Uint8List>> readPickedPhotos(
+  List<XFile> picked, {
+  Future<Uint8List> Function(Uint8List b)? shrink,
+  Future<void> Function(List<XFile> x)? drop,
+}) async {
+  Future<Uint8List> fit(Uint8List b) async => switch (pictureKind(b)) {
+    PictureKind.jpeg || PictureKind.other => (shrink ?? shrinkPhoto)(b),
+    _ => b,
+  };
+  try {
+    return [
+      for (final path in {for (final x in picked) x.path})
+        await fit(await File(path).readAsBytes()),
+    ];
+  } finally {
+    await (drop ?? shredPickedImages)(picked);
   }
 }
 

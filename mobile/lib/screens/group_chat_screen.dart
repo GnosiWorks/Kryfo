@@ -14,7 +14,6 @@ import '../forward.dart';
 import '../widgets/key_held.dart';
 import '../picked.dart';
 import '../sent_name.dart';
-import 'package:share_plus/share_plus.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/pins.dart';
@@ -1792,22 +1791,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   Future<void> _pickGroupMultiple() async {
-    final picked = await lockState.hold(
-      () => ImagePicker().pickMultiImage(
-        maxWidth: 1280,
-        maxHeight: 1280,
-        imageQuality: 70,
-      ),
-    );
+    // whole, each in a folder of its own: see readPickedPhotos
+    final picked = await lockState.hold(() => ImagePicker().pickMultiImage());
     if (picked.isEmpty) return;
-    // the bytes are all that is kept; what the picker left goes even when
-    // a read fails
-    final List<Uint8List> bytesOf;
-    try {
-      bytesOf = [for (final x in picked) await x.readAsBytes()];
-    } finally {
-      await shredPickedImages(picked);
-    }
+    // the bytes are all that is kept
+    final bytesOf = await readPickedPhotos(picked);
     if (bytesOf.length == 1) {
       if (!mounted) return;
       final caption = await Navigator.of(context).push<String?>(
@@ -1868,7 +1856,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     }
     final uid = newMsgUid();
     final mediaDir = await session.mediaDirOf(widget.groupId);
-    final f = File('${mediaDir.path}/$uid.jpg');
+    // a png, gif, webp or heic keeps its own kind, and its name says so
+    final f = File('${mediaDir.path}/$uid.${pictureExt(bytes)}');
     await f.writeAsBytes(bytes);
     final burn = _ghost ? _burnSeconds : null;
     final m = _GMsg(
@@ -2023,6 +2012,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       if (mounted) showHaloToast(context, l10n.groupChatCouldNotReadThat);
       return;
     }
+    // an empty file would read as sent with nothing gone
+    if (size == 0) {
+      if (mounted) showHaloToast(context, l10n.groupChatCouldNotReadThat);
+      return;
+    }
     if (size > 8 * 1024 * 1024) {
       if (mounted) showHaloToast(context, l10n.groupChatFileTooBig8);
       return;
@@ -2039,11 +2033,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       final ok = await stripMp4Metadata(dest.path);
       final left = ok == null ? null : await mp4MetadataCount(dest.path);
       if (ok == null || left != 0) {
-        try {
-          await dest.delete();
-        } catch (_) {
-          // not sent either way, and the original is still where it was
-        }
+        await shredFile(dest.path);
         if (mounted) {
           showHaloToast(context, l10n.groupChatCouldNotCleanThatVideo);
         }
@@ -2055,11 +2045,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     // app cannot read through is not sent; the photo button re-encodes and
     // will take it.
     else if (await stripPictureFileOffUi(dest.path) == null) {
-      try {
-        await dest.delete();
-      } catch (_) {
-        // not sent either way, and the original is still where it was
-      }
+      await shredFile(dest.path);
       if (mounted) {
         showHaloToast(context, l10n.groupChatCouldNotCleanThatPictureSend);
       }
@@ -2670,9 +2656,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
               : () {
                   dismiss();
                   lockState.hold(
-                    () => SharePlus.instance.share(
-                      ShareParams(files: [XFile(target.filePath!)]),
-                    ),
+                    () => shareFileOut(target.filePath!, name: target.fileName),
                   );
                 },
         ),
