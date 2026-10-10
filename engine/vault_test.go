@@ -209,3 +209,50 @@ func TestVaultAndPinLogNothing(t *testing.T) {
 		t.Fatalf("logged %q, printed %q", logged.String(), printed)
 	}
 }
+
+// a marker and a short message seal to the same size, and nothing past the
+// bucket says how long the plain text was
+func TestVaultSealPadsToBuckets(t *testing.T) {
+	a := mustKeys(t)
+	size := func(msg string) int {
+		sealed, err := vaultSealB64(a.Pub, b64(msg))
+		if err != nil {
+			t.Fatal(err)
+		}
+		raw, _ := base64.StdEncoding.DecodeString(sealed)
+		opened, err := vaultOpenB64(a.Priv, sealed)
+		if err != nil || opened != b64(msg) {
+			t.Fatalf("round trip: %v", err)
+		}
+		return len(raw)
+	}
+	marker := size(`{"f":"a-b-c","w":"","bp":0,"at":1,"kc":1}`)
+	text := size(`{"f":"a-b-c","w":"` + strings.Repeat("x", 600) + `","bp":0,"at":1}`)
+	if marker != text {
+		t.Fatalf("a marker seals to %d bytes, a text to %d", marker, text)
+	}
+	if size("") != marker {
+		t.Fatal("an empty row is not padded")
+	}
+	big := size(strings.Repeat("y", 70_000))
+	if big <= text {
+		t.Fatalf("a large row: %d", big)
+	}
+	for n, want := range map[int]int{1: 1024, 1016: 1024, 1017: 2048, 64 << 10: 128 << 10, 200_000: 256 << 10} {
+		if got := vaultBucket(n + vaultPadHead); got != want {
+			t.Fatalf("bucket of %d: %d, want %d", n, got, want)
+		}
+	}
+}
+
+// a header that claims more than the row holds does not open
+func TestVaultUnpadRefusesShortRows(t *testing.T) {
+	bad := append(append([]byte{}, vaultPadMagic...), 0, 0, 1, 0, 'x')
+	if _, err := vaultUnpad(bad); !errors.Is(err, errVaultOpen) {
+		t.Fatalf("a short padded row: %v", err)
+	}
+	old := []byte(`{"f":"a"}`)
+	if got, _ := vaultUnpad(old); !bytes.Equal(got, old) {
+		t.Fatal("a row sealed before the padding changed")
+	}
+}

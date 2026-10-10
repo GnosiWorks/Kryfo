@@ -14,6 +14,7 @@ import "C"
 import (
 	"bytes"
 	"encoding/base64"
+	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"io"
@@ -58,13 +59,58 @@ func vaultIdentity(priv string) (*age.X25519Identity, error) {
 	return id, nil
 }
 
+// sealed rows are padded to a bucket, so a short marker reads like a short
+// message. a row sealed before carries no header and opens as it was
+var vaultPadMagic = []byte{0, 'K', 'V', '1'}
+
+const (
+	vaultPadHead = 8
+	vaultPadMin  = 1 << 10
+	vaultPadStep = 64 << 10
+)
+
+// the size a padded row of n bytes takes: powers of two up to the step,
+// whole steps past it
+func vaultBucket(n int) int {
+	b := vaultPadMin
+	for b < n && b < vaultPadStep {
+		b <<= 1
+	}
+	if b >= n {
+		return b
+	}
+	return (n + vaultPadStep - 1) / vaultPadStep * vaultPadStep
+}
+
+func vaultPad(plain []byte) []byte {
+	out := make([]byte, vaultBucket(vaultPadHead+len(plain)))
+	copy(out, vaultPadMagic)
+	binary.BigEndian.PutUint32(out[4:vaultPadHead], uint32(len(plain)))
+	copy(out[vaultPadHead:], plain)
+	return out
+}
+
+// the bytes a padded row carries, or the row itself when it has no header
+func vaultUnpad(b []byte) ([]byte, error) {
+	if len(b) < vaultPadHead || !bytes.Equal(b[:4], vaultPadMagic) {
+		return b, nil
+	}
+	n := int(binary.BigEndian.Uint32(b[4:vaultPadHead]))
+	if n > len(b)-vaultPadHead {
+		return nil, errVaultOpen
+	}
+	return b[vaultPadHead : vaultPadHead+n], nil
+}
+
 func vaultSeal(r *age.X25519Recipient, plain []byte) ([]byte, error) {
 	var out bytes.Buffer
 	w, err := age.Encrypt(&out, r)
 	if err != nil {
 		return nil, errVaultSeal
 	}
-	if _, err := w.Write(plain); err != nil {
+	padded := vaultPad(plain)
+	defer zero(padded)
+	if _, err := w.Write(padded); err != nil {
 		return nil, errVaultSeal
 	}
 	if err := w.Close(); err != nil {
@@ -78,9 +124,14 @@ func vaultOpen(id *age.X25519Identity, sealed []byte) ([]byte, error) {
 	if err != nil {
 		return nil, errVaultOpen
 	}
-	plain, err := io.ReadAll(r)
+	padded, err := io.ReadAll(r)
 	if err != nil {
 		return nil, errVaultOpen
+	}
+	plain, err := vaultUnpad(padded)
+	if err != nil {
+		zero(padded)
+		return nil, err
 	}
 	return plain, nil
 }
