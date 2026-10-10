@@ -468,7 +468,8 @@ func TestSnowflakeOneClientPerLine(t *testing.T) {
 	dropSnowflakeClients()
 }
 
-// the fork logs nothing: its lines would carry the broker, fronts and stun
+// the fork logs nothing: its lines would carry the broker, fronts and stun.
+// the engine's own lines say which phase snowflake is in, no more.
 func TestSnowflakeLogsNothing(t *testing.T) {
 	var buf bytes.Buffer
 	old := log.Writer()
@@ -485,7 +486,53 @@ func TestSnowflakeLogsNothing(t *testing.T) {
 	conn.Close()
 	dropSnowflakeClients()
 	log.SetOutput(old)
-	if out := buf.String(); out != "" {
-		t.Fatalf("logged:\n%s", out)
+	// the engine's own event lines name a phase and nothing else
+	for _, ln := range strings.Split(strings.TrimSpace(buf.String()), "\n") {
+		if ln == "" {
+			continue
+		}
+		if i := strings.Index(ln, "snowflake: "); i < 0 || strings.ContainsAny(ln[i+len("snowflake: "):], " :./") {
+			t.Fatalf("logged: %q", ln)
+		}
 	}
+}
+
+// snowflake's events reach the engine: a broker that cannot be reached
+// shows as a failed rendezvous, with nothing about it in the log line
+func TestSnowflakeEventsArrive(t *testing.T) {
+	front, _ := knocks(t)
+	f, _ := ptClientFactory("snowflake")
+	got, err := f.ParseArgs(lineArgs(fmt.Sprintf(
+		"snowflake 192.0.2.3:80 %s fingerprint=%s url=https://broker.invalid/ front=%s ice=stun:%s",
+		testFP, testFP, front.Addr(), closedAddr(t))))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var buf bytes.Buffer
+	old := log.Writer()
+	log.SetOutput(&buf)
+	t.Cleanup(func() { log.SetOutput(old) })
+	dropSnowflakeClients()
+	_, _, before := snowflakeStatus()
+	conn, err := f.Dial("tcp", "192.0.2.3:80", nil, got)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Close()
+	deadline := time.Now().Add(20 * time.Second)
+	for time.Now().Before(deadline) {
+		if _, _, now := snowflakeStatus(); now["broker_failed"] > before["broker_failed"] {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	phase, at, now := snowflakeStatus()
+	if now["broker_failed"] <= before["broker_failed"] || time.Since(at) > time.Minute {
+		t.Fatalf("no failed rendezvous seen: %q %v", phase, now)
+	}
+	log.SetOutput(old)
+	if out := buf.String(); strings.Contains(out, front.Addr().String()) || !strings.Contains(out, "snowflake: broker_failed") {
+		t.Fatalf("log:\n%s", out)
+	}
+	dropSnowflakeClients()
 }

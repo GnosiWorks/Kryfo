@@ -9,11 +9,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	pt "gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/goptlib"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/lyrebird/transports/base"
@@ -22,6 +24,7 @@ import (
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/lyrebird/transports/webtunnel"
 	utlsutil "gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/ptutil/utls"
 	sf "gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/client/lib"
+	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/event"
 )
 
 // goptlib writes pt protocol lines to stdout for a parent process that is
@@ -136,9 +139,66 @@ func snowflakeFor(c sf.ClientConfig) (*sf.Transport, error) {
 	if err != nil {
 		return nil, err
 	}
+	t.AddSnowflakeEventListener(sfListener{})
 	sfMade.Add(1)
 	sfClients[key] = t
 	return t, nil
+}
+
+// what snowflake said last, and when, for the status line. the events come
+// from snowflake's own goroutines.
+var (
+	sfStatMu sync.Mutex
+	sfPhase  string
+	sfAt     time.Time
+	sfCounts = map[string]int{}
+)
+
+type sfListener struct{}
+
+func (sfListener) OnNewSnowflakeEvent(e event.SnowflakeEvent) {
+	// a panic here would take the app down from a goroutine that is not ours
+	defer func() {
+		if p := recover(); p != nil {
+			log.Printf("snowflake: event panicked")
+		}
+	}()
+	var phase string
+	switch e := e.(type) {
+	case event.EventOnOfferCreated:
+		phase = "offer"
+		if e.Error != nil {
+			phase = "offer_failed"
+		}
+	case event.EventOnBrokerRendezvous:
+		phase = "broker"
+		if e.Error != nil {
+			phase = "broker_failed"
+		}
+	case event.EventOnSnowflakeConnected:
+		phase = "connected"
+	case event.EventOnSnowflakeConnectionFailed:
+		phase = "proxy_failed"
+	default:
+		return
+	}
+	sfStatMu.Lock()
+	sfPhase, sfAt = phase, time.Now()
+	sfCounts[phase]++
+	sfStatMu.Unlock()
+	// the kind only: an event's own text can carry an address
+	log.Printf("snowflake: %s", phase)
+}
+
+// the last phase, when it came, and how many times each phase has come
+func snowflakeStatus() (string, time.Time, map[string]int) {
+	sfStatMu.Lock()
+	defer sfStatMu.Unlock()
+	counts := map[string]int{}
+	for k, v := range sfCounts {
+		counts[k] = v
+	}
+	return sfPhase, sfAt, counts
 }
 
 func dropSnowflakeClients() {
