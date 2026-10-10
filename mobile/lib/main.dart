@@ -2309,9 +2309,11 @@ class HaloDb implements GroupOwedStore {
       await _dropFilesComingFrom(t, haloId);
       // the row stays: it carries the xpub our nostr subscription is built
       // from. archived + unaccepted = invisible everywhere until they write.
+      // the name given them goes with the chat. the verified mark stays on
+      // its key, so a re-add on another key is still held
       await t.update(
         'contacts',
-        {'accepted': 0, 'archived': 1, 'unread': 0},
+        {'accepted': 0, 'archived': 1, 'unread': 0, 'nickname': null},
         where: 'halo_id = ?',
         whereArgs: [haloId],
       );
