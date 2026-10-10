@@ -93,6 +93,7 @@ import 'stickers/sticker_pack.dart' show StickerLibrary;
 import 'stickers/sticker_wire.dart' show StickerWire, stickerText;
 import 'widgets/motion.dart';
 import 'widgets/pair_join.dart' show pairUnreached;
+import 'widgets/pair_code_panel.dart' show PairCodes;
 import 'widgets/kryfo_link_text.dart' show takeOutsideLink, takeOwnLink;
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:app_links/app_links.dart';
@@ -13711,6 +13712,11 @@ class AppState extends ChangeNotifier {
       sessionQuiet ? (_quiet?.xPub ?? '') : engine.myXPubkey();
   String get sessionEdPub =>
       sessionQuiet ? (_quiet?.edPub ?? '') : engine.myEdPubkey();
+  // the pairing code each container has live, kept past its panel, and
+  // the container a code made now belongs to: the open vault's, else the
+  // session's
+  final pairCodes = PairCodes();
+  String get pairBox => (_session.vault ?? _session.primary).container.id;
   // the link and QR code that say who you are
   Future<String> sessionInvite() async =>
       sessionQuiet ? (_quiet?.invite ?? '') : _everydayInvite();
