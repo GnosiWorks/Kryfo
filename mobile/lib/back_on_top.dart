@@ -42,3 +42,16 @@ mixin BackOnTop<T extends StatefulWidget> on State<T> implements RouteAware {
   @override
   void didPushNext() {}
 }
+
+/// pops [nav] back to the page of the first of [states] it shows. false
+/// when none of them is a page there
+bool backToPage(NavigatorState nav, Iterable<State> states) {
+  for (final s in states) {
+    if (!s.mounted) continue;
+    final r = ModalRoute.of(s.context);
+    if (r == null || !r.isActive || r.navigator != nav) continue;
+    if (!r.isCurrent) nav.popUntil((x) => x == r);
+    return true;
+  }
+  return false;
+}

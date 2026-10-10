@@ -45,7 +45,7 @@ import 'screens/new_group_screen.dart';
 import 'screens/room_create_sheet.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'screens/group_chat_screen.dart';
-import 'screens/requests_screen.dart' show RequestsScreen;
+import 'screens/requests_screen.dart' show RequestsScreen, backToRequests;
 import 'screens/chat_screen.dart';
 import 'screens/dev_about_sheet.dart' show devChatRoute;
 import 'devchat/dev_start.dart' show DevKeyCheckFailed, DevStart;
@@ -8526,6 +8526,7 @@ void openRoomSoon(String groupId) {
       () async {
         final nav = rootNavKey.currentState;
         if (nav == null || !await session.groupExists(groupId)) return;
+        if (backToOpenGroup(nav, groupId)) return;
         nav.push(haloRoute(GroupChatScreen(groupId: groupId)));
       },
     ),
@@ -8629,6 +8630,8 @@ Future<NotifTarget?> notifTargetFor(String payload) async {
   // a request is read and answered on its own screen, where the shield is
   final c = await session.getContact(payload);
   if (c == null || (c['blocked'] as int? ?? 0) == 1) return null;
+  // a deleted chat is in no list until they write again
+  if ((c['archived'] as int? ?? 0) == 1) return null;
   if ((c['accepted'] as int? ?? 0) != 1) return const NotifRequests();
   return null;
 }
@@ -8652,11 +8655,14 @@ Future<void> _openChatFor(String? haloId) async {
   if (target == null) return;
   final Map<String, Object?> row;
   switch (target) {
+    // one already open is gone back to, never stacked twice
     case NotifGroup(:final groupId):
-      nav.push(haloRoute(GroupChatScreen(groupId: groupId)));
+      if (!backToOpenGroup(nav, groupId)) {
+        nav.push(haloRoute(GroupChatScreen(groupId: groupId)));
+      }
       return;
     case NotifRequests():
-      nav.push(haloRoute(const RequestsScreen()));
+      if (!backToRequests(nav)) nav.push(haloRoute(const RequestsScreen()));
       return;
     case NotifChat(row: final r):
       row = r;
