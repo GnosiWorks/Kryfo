@@ -51,6 +51,26 @@ void main() {
     expect(dropped, [a.path, b.path]);
   });
 
+  test('a jpeg is shrunk, a png or a gif keeps its own format', () async {
+    const jpeg = [0xFF, 0xD8, 0xFF, 0xE0, 1];
+    const png = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 2];
+    const gif = [0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 3];
+    final out = await readPickedPhotos(
+      [
+        pick('ffe32de1-5e01-47ec-a829-0f6c560e27b4', 'a.jpg', jpeg),
+        pick('2767e4fe-a67c-43f8-bd24-682f8ae06129', 'b.png', png),
+        pick('3767e4fe-a67c-43f8-bd24-682f8ae06129', 'c.gif', gif),
+      ],
+      shrink: shrink,
+      drop: (_) async {},
+    );
+    expect(out, [
+      [0xAA, ...jpeg],
+      png,
+      gif,
+    ]);
+  });
+
   test('one file handed back twice is read once', () async {
     final a = pick('ffe32de1-5e01-47ec-a829-0f6c560e27b4', 'IMG_0001.jpg', [1]);
     final out = await readPickedPhotos(
