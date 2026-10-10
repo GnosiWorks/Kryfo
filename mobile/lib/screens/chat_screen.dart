@@ -3529,22 +3529,11 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _pickAndSendMultiple() async {
-    final picked = await lockState.hold(
-      () => ImagePicker().pickMultiImage(
-        maxWidth: 1280,
-        maxHeight: 1280,
-        imageQuality: 70,
-      ),
-    );
+    // whole, each in a folder of its own: see readPickedPhotos
+    final picked = await lockState.hold(() => ImagePicker().pickMultiImage());
     if (picked.isEmpty) return;
-    // the bytes are all that is kept; what the picker left goes even when
-    // a read fails
-    final List<Uint8List> bytesOf;
-    try {
-      bytesOf = [for (final x in picked) await x.readAsBytes()];
-    } finally {
-      await shredPickedImages(picked);
-    }
+    // the bytes are all that is kept
+    final bytesOf = await readPickedPhotos(picked);
     // one photo picked: same preview + caption screen the camera path gets.
     if (bytesOf.length == 1) {
       if (!mounted) return;
