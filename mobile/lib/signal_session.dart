@@ -222,6 +222,7 @@ class SignalSession {
     String plain, {
     Future<PreKeyBundle?> Function()? afresh,
     Future<bool> Function()? held,
+    void Function()? keyMoved,
   }) => serial(peer, () async {
     // asked in the lane, right before the seal: a key that came in a frame
     // opened ahead of this one is the key this one would go to
@@ -229,6 +230,7 @@ class SignalSession {
     if (await sealsOnRestored(peer)) {
       final card = afresh == null ? null : await afresh();
       if (card == null) throw StartingAfresh(peer);
+      final before = await marksOf(peer);
       await SessionBuilder(
         sessionStore,
         preKeyStore,
@@ -237,6 +239,7 @@ class SignalSession {
         SignalProtocolAddress(peer, 1),
       ).processPreKeyBundle(card);
       dlog('signal: started afresh after a restore');
+      if (before.movedTo(await marksOf(peer))) keyMoved?.call();
       // the card may name another key than the one checked above
       if (held != null && await held()) throw KeyHeld(peer);
     }
