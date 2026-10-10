@@ -22,6 +22,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -276,6 +277,60 @@ func sortBridgeLines(raw string) (good, bad []string) {
 	return good, bad
 }
 
+// the addresses, names and fingerprints of every bridge line used in this
+// process. tor's own log lines name the bridge they are about, and those
+// pass through scrubBridges before they reach a log.
+var (
+	bridgeSecretMu sync.Mutex
+	bridgeSecrets  = map[string]bool{}
+)
+
+func noteBridgeSecrets(lines []string) {
+	bridgeSecretMu.Lock()
+	defer bridgeSecretMu.Unlock()
+	for _, ln := range lines {
+		b, err := parseBridgeLine(ln)
+		if err != nil {
+			continue
+		}
+		var words []string
+		if host, _, err := net.SplitHostPort(b.addr); err == nil {
+			words = append(words, host)
+			if ip := net.ParseIP(host); ip != nil {
+				words = append(words, ip.String())
+			}
+		}
+		words = append(words, b.fp)
+		if fp, ok := b.args.Get("fingerprint"); ok {
+			words = append(words, strings.ToUpper(fp))
+		}
+		for _, k := range []string{"url", "servername", "addr"} {
+			if v, ok := b.args.Get(k); ok {
+				if u, err := url.Parse(v); err == nil && u.Host != "" {
+					words = append(words, u.Hostname())
+				} else {
+					words = append(words, v)
+				}
+			}
+		}
+		for _, w := range words {
+			if len(w) >= 4 {
+				bridgeSecrets[w] = true
+			}
+		}
+	}
+}
+
+func scrubBridges(s string) string {
+	noteBridgeSecrets(bridgeLines())
+	bridgeSecretMu.Lock()
+	defer bridgeSecretMu.Unlock()
+	for w := range bridgeSecrets {
+		s = strings.ReplaceAll(s, w, "[bridge]")
+	}
+	return s
+}
+
 // host:port the way the socks handshake gives it, so a bridge line and a
 // target compare whatever brackets or case they were written with
 func bridgeAddrKey(addr string) string {
@@ -524,6 +579,7 @@ func dialErrKind(err error) string {
 func HaloSetBridges(cLines *C.char, on C.int) *C.char {
 	good, bad := sortBridgeLines(C.GoString(cLines))
 
+	noteBridgeSecrets(good)
 	bridgeMu.Lock()
 	bridgeList = good
 	bridgeOn = on != 0 && len(good) > 0

@@ -84,7 +84,10 @@ func (g *gatedWriter) Write(p []byte) (int, error) {
 	if atomic.LoadInt32(&g.on) == 0 {
 		return len(p), nil
 	}
-	return log.Writer().Write(p)
+	if _, err := log.Writer().Write([]byte(scrubBridges(string(p)))); err != nil {
+		return 0, err
+	}
+	return len(p), nil
 }
 
 var debugTorWriter *gatedWriter
@@ -579,10 +582,9 @@ func watchPublishedOn(t *tor.Tor, hsCh chan control.Event, hsSubbed bool, onionI
 
 // hands tor the bridge configuration it should be using right now. the
 // plugin lines, UseBridges and the whole set of Bridge lines go in one
-// SETCONF every time bridges are on, the plugins included even when
-// unchanged: turning bridges off drops tor's registration of the
-// transports, and without it tor has bridge lines and no way to reach them.
-// replacing the whole set means tor never mixes a dead set with a new one.
+// SETCONF every time bridges are on. naming the plugins again never hangs
+// and costs nothing (tor_plugin_test.go), and replacing the whole set means
+// tor never mixes a dead set with a new one.
 func applyBridgeConf(t *tor.Tor) error {
 	if t == nil || t.Control == nil {
 		return fmt.Errorf("no control connection")

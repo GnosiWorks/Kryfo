@@ -393,3 +393,25 @@ func TestBridgeAddressesCompareWhateverTheirSpelling(t *testing.T) {
 		t.Error("an address without a port has a key")
 	}
 }
+
+// tor's own log lines name bridges by address and fingerprint
+func TestTorLogLinesLoseBridgeAddresses(t *testing.T) {
+	var buf bytes.Buffer
+	old := log.Writer()
+	log.SetOutput(&buf)
+	t.Cleanup(func() { log.SetOutput(old) })
+	useBridges(t, true, tbObfs4, testWebtunnel)
+	g := &gatedWriter{on: 1}
+	g.Write([]byte("[warn] Proxy Client: unable to connect OR connection (handshaking (proxy)) " +
+		"with 37.218.245.14:38224 ID=<none> RSA_ID=D9A82D2F9C2F65A18407B1D2B764F130847F8B5D\n"))
+	g.Write([]byte("[notice] new bridge descriptor at [2001:db8::1]:443 for " + testFP + " via example.com\n"))
+	out := buf.String()
+	for _, w := range []string{"37.218.245.14", "D9A82D2F9C2F65A18407B1D2B764F130847F8B5D", "2001:db8::1", testFP, "example.com"} {
+		if strings.Contains(out, w) {
+			t.Errorf("%q in %q", w, out)
+		}
+	}
+	if !strings.Contains(out, "unable to connect") {
+		t.Fatalf("the line itself is gone: %q", out)
+	}
+}
