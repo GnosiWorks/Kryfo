@@ -377,4 +377,26 @@ void main() {
       await t.pumpWidget(const SizedBox());
     }
   });
+
+  test('persian and arabic-indic digits count as digits', () {
+    expect(pairDigits('۴۸۲ ۹۱۳'), '482913');
+    expect(pairDigits('٤٨٢ ٩١٣'), '482913');
+    expect(pairDigits('48٢-۹13'), '482913');
+    expect(pairDigits('a b'), '');
+  });
+
+  testWidgets('a code typed in persian or arabic digits is looked up', (
+    t,
+  ) async {
+    phone(t);
+    for (final typed in const ['۴۸۲ ۹۱۳', '٤٨٢٩١٣']) {
+      final p = _Pair([_invite]);
+      await t.pumpWidget(app(p.widget()));
+      await t.pumpAndSettle();
+      await _look(t, typed);
+      await t.pumpAndSettle();
+      expect(p.looked, ['482913'], reason: typed);
+      expect(find.byType(PairConfirm), findsOneWidget);
+    }
+  });
 }

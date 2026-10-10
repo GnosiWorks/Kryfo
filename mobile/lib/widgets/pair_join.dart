@@ -35,6 +35,21 @@ String? pairInviteWords(String invite) {
   }
 }
 
+/// typed digits as 0-9: persian and arabic-indic ones count, the rest goes
+String pairDigits(String typed) {
+  final b = StringBuffer();
+  for (final r in typed.runes) {
+    if (r >= 0x30 && r <= 0x39) {
+      b.writeCharCode(r);
+    } else if (r >= 0x6F0 && r <= 0x6F9) {
+      b.writeCharCode(0x30 + r - 0x6F0);
+    } else if (r >= 0x660 && r <= 0x669) {
+      b.writeCharCode(0x30 + r - 0x660);
+    }
+  }
+  return b.toString();
+}
+
 class PairJoin extends StatefulWidget {
   // the engine's answer for a code: an invite, "empty", "twice",
   // [pairUnreached] or another error
@@ -79,7 +94,7 @@ class _PairJoinState extends State<PairJoin> {
   });
 
   Future<void> _join() async {
-    final code = _ctrl.text.replaceAll(RegExp(r'\D'), '');
+    final code = pairDigits(_ctrl.text);
     if (code.length != 6) {
       _say(l10n.pairCodeSixDigits);
       return;
