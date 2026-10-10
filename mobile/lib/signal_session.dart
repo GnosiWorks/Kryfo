@@ -237,6 +237,8 @@ class SignalSession {
         SignalProtocolAddress(peer, 1),
       ).processPreKeyBundle(card);
       dlog('signal: started afresh after a restore');
+      // the card may name another key than the one checked above
+      if (held != null && await held()) throw KeyHeld(peer);
     }
     return _seal(peer, plain);
   });
