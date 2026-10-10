@@ -17,19 +17,21 @@ class ReconnectValve extends StatefulWidget {
   const ReconnectValve({
     super.key,
     required this.valve,
-    required this.waiting,
+    required this.waitingSince,
     required this.private,
     required this.quiet,
+    required this.online,
     required this.linkUp,
     this.margin = const EdgeInsets.fromLTRB(12, 0, 12, 8),
   });
 
   final TorValve valve;
 
-  /// a send is going and has not gone yet
-  final bool waiting;
+  /// when the oldest send still going was written, null when none is
+  final DateTime? waitingSince;
   final bool private;
   final bool quiet;
+  final bool online;
   final bool linkUp;
   final EdgeInsetsGeometry margin;
 
@@ -38,7 +40,6 @@ class ReconnectValve extends StatefulWidget {
 }
 
 class _ReconnectValveState extends State<ReconnectValve> {
-  DateTime? _since;
   Timer? _tick;
 
   @override
@@ -69,17 +70,14 @@ class _ReconnectValveState extends State<ReconnectValve> {
     if (mounted) setState(() {});
   }
 
-  // the wait is timed from when this screen first saw it, and a clock runs
-  // only while something waits: the stage moves on time alone
+  // a clock runs only while something waits: the stage moves on time alone
   void _follow() {
     widget.valve.sawLink(widget.linkUp);
-    if (!widget.waiting) {
-      _since = null;
+    if (widget.waitingSince == null) {
       _tick?.cancel();
       _tick = null;
       return;
     }
-    _since ??= widget.valve.now();
     _tick ??= Timer.periodic(const Duration(seconds: 5), (_) => _changed());
   }
 
@@ -89,11 +87,13 @@ class _ReconnectValveState extends State<ReconnectValve> {
     final stage = v.stageFor(
       private: widget.private,
       quiet: widget.quiet,
-      waitingSince: _since,
+      online: widget.online,
+      waitingSince: widget.waitingSince,
       linkUp: widget.linkUp,
     );
     // working only shows where the strip already was
-    final shown = stage != ValveStage.hidden && (_since != null || v.busy);
+    final shown =
+        stage != ValveStage.hidden && (widget.waitingSince != null || v.busy);
     return GrowSwap(
       alignment: Alignment.topCenter,
       child: !shown
@@ -104,7 +104,8 @@ class _ReconnectValveState extends State<ReconnectValve> {
 
   Widget _card(BuildContext context, ValveStage stage) {
     final restart = stage == ValveStage.restart;
-    final busy = stage == ValveStage.working;
+    // working, or resting after a reconnect tor took: not again yet
+    final busy = stage == ValveStage.working || stage == ValveStage.cooling;
     final tint = restart ? HaloColors.rose : HaloColors.amber;
     final still = motionStill(context);
     final line = restart

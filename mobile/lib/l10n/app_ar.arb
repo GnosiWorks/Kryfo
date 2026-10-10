@@ -2067,7 +2067,7 @@
   "gifPhoneChoose": "اختر صورة GIF",
   "settingsGifSearch": "البحث عن GIF",
   "settingsGifSearchHint": "متوقف حتى تشغّله. خادم Kryfo يبحث نيابة عنك، فلا تراك خدمة GIF أبدًا.",
-  "valveStillConnecting": "ما زال الاتصال جاريًا. ستُرسَل رسائلك فور عودة الاتصال.",
+  "valveStillConnecting": "ما زال الاتصال جاريًا… ستُرسَل رسائلك فور عودة الاتصال.",
   "valveCouldNotReconnect": "تعذّر على Kryfo إعادة الاتصال. إعادة تشغيله تحل المشكلة وتحتفظ برسائلك.",
   "valveRestartKryfo": "إعادة تشغيل Kryfo"
 }

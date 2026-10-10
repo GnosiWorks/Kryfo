@@ -7920,7 +7920,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get valveStillConnecting =>
-      'هنوز در حال اتصال است. پیام‌های شما به محض برگشتن اتصال فرستاده می‌شوند.';
+      'هنوز در حال اتصال… پیام‌های شما به محض برگشتن اتصال فرستاده می‌شوند.';
 
   @override
   String get valveCouldNotReconnect =>

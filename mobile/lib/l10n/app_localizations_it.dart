@@ -7976,11 +7976,11 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get valveStillConnecting =>
-      'Connessione in corso. I tuoi messaggi partono appena la connessione torna.';
+      'Ancora in connessione… I tuoi messaggi partono appena torna la connessione.';
 
   @override
   String get valveCouldNotReconnect =>
-      'Kryfo non è riuscito a riconnettersi. Riavviarlo risolve il problema e tiene i tuoi messaggi.';
+      'Kryfo non è riuscito a riconnettersi. Un riavvio risolve il problema e i tuoi messaggi restano.';
 
   @override
   String get valveRestartKryfo => 'Riavvia Kryfo';

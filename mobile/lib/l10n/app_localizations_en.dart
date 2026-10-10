@@ -7895,7 +7895,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get valveStillConnecting =>
-      'Still connecting. Your messages go out as soon as the connection is back.';
+      'Still connecting… Your messages go out as soon as the connection is back.';
 
   @override
   String get valveCouldNotReconnect =>

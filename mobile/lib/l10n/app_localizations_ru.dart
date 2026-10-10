@@ -8052,7 +8052,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get valveStillConnecting =>
-      'Всё ещё подключаемся. Твои сообщения уйдут, как только связь вернётся.';
+      'Всё ещё подключаемся… Твои сообщения уйдут, как только связь вернётся.';
 
   @override
   String get valveCouldNotReconnect =>

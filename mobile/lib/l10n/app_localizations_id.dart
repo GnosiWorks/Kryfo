@@ -7901,7 +7901,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get valveStillConnecting =>
-      'Masih menyambung. Pesanmu terkirim begitu koneksi kembali.';
+      'Masih menyambung… Pesanmu akan terkirim begitu koneksi kembali.';
 
   @override
   String get valveCouldNotReconnect =>

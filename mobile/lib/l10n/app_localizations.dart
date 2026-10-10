@@ -12684,7 +12684,7 @@ abstract class AppLocalizations {
   /// widgets/reconnect_valve.dart: a send has waited on tor a minute
   ///
   /// In en, this message translates to:
-  /// **'Still connecting. Your messages go out as soon as the connection is back.'**
+  /// **'Still connecting… Your messages go out as soon as the connection is back.'**
   String get valveStillConnecting;
 
   /// widgets/reconnect_valve.dart: a reconnect by hand did not bring tor back

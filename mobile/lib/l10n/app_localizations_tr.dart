@@ -7927,7 +7927,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get valveStillConnecting =>
-      'Hâlâ bağlanıyor. Bağlantı geri gelir gelmez mesajların gider.';
+      'Hâlâ bağlanıyor… Bağlantı geri gelir gelmez mesajların gidecek.';
 
   @override
   String get valveCouldNotReconnect =>

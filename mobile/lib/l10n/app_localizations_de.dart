@@ -7992,7 +7992,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get valveStillConnecting =>
-      'Verbinde noch. Deine Nachrichten gehen raus, sobald die Verbindung wieder da ist.';
+      'Verbindung wird noch aufgebaut… Deine Nachrichten gehen raus, sobald die Verbindung wieder da ist.';
 
   @override
   String get valveCouldNotReconnect =>

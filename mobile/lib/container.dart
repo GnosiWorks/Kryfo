@@ -269,6 +269,8 @@ const containerKeys = {
   'kryfo.gif.on',
   'notif_hide_content',
   'sticker_recents',
+  // drafts written down for a restart the person asked for, read back once
+  'kept_drafts',
 };
 
 // the phone's, and the everyday identity's working keys that only the

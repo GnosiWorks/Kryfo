@@ -7573,7 +7573,7 @@ class AppLocalizationsZh extends AppLocalizations {
       '在你开启前一直关闭。Kryfo 的服务器替你搜索，所以 GIF 服务永远看不到你。';
 
   @override
-  String get valveStillConnecting => '仍在连接。连接恢复后，你的消息会立刻发出。';
+  String get valveStillConnecting => '仍在连接…连接恢复后，你的消息会立刻发出。';
 
   @override
   String get valveCouldNotReconnect => 'Kryfo 无法重新连接。重启即可解决，你的消息会保留。';
@@ -15031,7 +15031,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '在你開啟前都會關閉。Kryfo 的伺服器替你搜尋，所以 GIF 服務永遠看不到你。';
 
   @override
-  String get valveStillConnecting => '仍在連線。連線恢復後，你的訊息會立刻送出。';
+  String get valveStillConnecting => '仍在連線…連線恢復後，你的訊息會立刻送出。';
 
   @override
   String get valveCouldNotReconnect => 'Kryfo 無法重新連線。重新啟動就能解決，你的訊息會保留。';

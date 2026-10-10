@@ -2067,7 +2067,7 @@
   "gifPhoneChoose": "Выбрать GIF",
   "settingsGifSearch": "Поиск GIF",
   "settingsGifSearchHint": "Выключен, пока ты его не включишь. Сервер Kryfo ищет за тебя, поэтому GIF-сервис никогда тебя не видит.",
-  "valveStillConnecting": "Всё ещё подключаемся. Твои сообщения уйдут, как только связь вернётся.",
+  "valveStillConnecting": "Всё ещё подключаемся… Твои сообщения уйдут, как только связь вернётся.",
   "valveCouldNotReconnect": "Kryfo не смог переподключиться. Перезапуск это исправит, а сообщения сохранятся.",
   "valveRestartKryfo": "Перезапустить Kryfo"
 }

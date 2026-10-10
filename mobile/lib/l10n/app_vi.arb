@@ -2067,7 +2067,7 @@
   "gifPhoneChoose": "Chọn một GIF",
   "settingsGifSearch": "Tìm GIF",
   "settingsGifSearchHint": "Tắt cho đến khi bạn bật. Máy chủ của Kryfo tìm thay bạn, nên dịch vụ GIF không bao giờ thấy bạn.",
-  "valveStillConnecting": "Vẫn đang kết nối. Tin nhắn của bạn sẽ được gửi ngay khi có kết nối lại.",
+  "valveStillConnecting": "Vẫn đang kết nối… Tin nhắn của bạn sẽ được gửi ngay khi có kết nối lại.",
   "valveCouldNotReconnect": "Kryfo không thể kết nối lại. Khởi động lại sẽ khắc phục và giữ nguyên tin nhắn của bạn.",
   "valveRestartKryfo": "Khởi động lại Kryfo"
 }

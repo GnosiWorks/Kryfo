@@ -8043,7 +8043,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get valveStillConnecting =>
-      'Ще підключаємося. Твої повідомлення підуть, щойно зв’язок повернеться.';
+      'Ще підключаємося… Твої повідомлення підуть, щойно зв’язок повернеться.';
 
   @override
   String get valveCouldNotReconnect =>

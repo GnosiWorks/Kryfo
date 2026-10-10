@@ -2067,7 +2067,7 @@
   "gifPhoneChoose": "Scegli una GIF",
   "settingsGifSearch": "Ricerca GIF",
   "settingsGifSearchHint": "Spenta finché non la attivi. Il server di Kryfo cerca per te, così il servizio di GIF non ti vede mai.",
-  "valveStillConnecting": "Connessione in corso. I tuoi messaggi partono appena la connessione torna.",
-  "valveCouldNotReconnect": "Kryfo non è riuscito a riconnettersi. Riavviarlo risolve il problema e tiene i tuoi messaggi.",
+  "valveStillConnecting": "Ancora in connessione… I tuoi messaggi partono appena torna la connessione.",
+  "valveCouldNotReconnect": "Kryfo non è riuscito a riconnettersi. Un riavvio risolve il problema e i tuoi messaggi restano.",
   "valveRestartKryfo": "Riavvia Kryfo"
 }

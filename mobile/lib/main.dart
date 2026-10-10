@@ -35,6 +35,7 @@ import 'offline_gate.dart';
 import 'in_front.dart';
 import 'reopen.dart';
 import 'tor_valve.dart';
+import 'drafts.dart' show keepDrafts, restoreKeptDrafts;
 import 'helper_push.dart';
 import 'screens/getting_messages_screen.dart';
 import 'screens/home_screen.dart';
@@ -385,11 +386,13 @@ class HaloEngine {
 
   // android reports a new default network: tor is bounced once it has been
   // quiet a few seconds. looked up on first use so older engines still load.
-  late final CStrFnDart _networkChanged = _lib
-      .lookupFunction<CStrFn, CStrFnDart>('HaloNetworkChanged');
-  void networkChanged() {
+  late final CounterFnDart _networkState = _lib
+      .lookupFunction<CounterFn, CounterFnDart>('HaloNetworkState');
+  // [online]: whether there is a network after the change. with none the
+  // engine resets its floors and waits for one before it bounces
+  void networkChanged({bool online = true}) {
     try {
-      _take(_networkChanged());
+      _take(_networkState(online ? 1 : 0));
     } catch (_) {
       // an older engine without the call: tor keeps its own schedule
     }
@@ -11040,8 +11043,28 @@ class AppState extends ChangeNotifier {
     });
   }
 
-  Future<void> _torSleep() async {
-    if (haloWiping) return;
+  // sleep and wake one at a time, in the order they were asked for: a wake
+  // that crossed a sleep still running left tor asleep while the app
+  // thought it awake
+  Future<void> _torGate = Future.value();
+  Future<T> _torInTurn<T>(Future<T> Function() f) {
+    final run = _torGate.then((_) => f());
+    _torGate = run.then((_) {}, onError: (_) {});
+    return run;
+  }
+
+  @visibleForTesting
+  Future<void> torSleepForTest() => _torSleep();
+  @visibleForTesting
+  Future<bool> torWakeForTest() => _torWake();
+
+  Future<void> _torSleep() => _torInTurn(_torSleepNow);
+
+  Future<bool> _torWake() => _torInTurn(_torWakeNow);
+
+  Future<void> _torSleepNow() async {
+    // back in front while it waited its turn: the wake behind it wins
+    if (haloWiping || _inFront) return;
     _wakeAgain?.cancel();
     // held is only the app's word: a wake that failed half way has let the
     // engine run again, and then it is stopped once more
@@ -11052,7 +11075,7 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> _torWake() async {
+  Future<bool> _torWakeNow() async {
     _wakeAgain?.cancel();
     if (!_torHeld) return true;
     // 'ok': tor was asleep and is waking. 'start': there is no tor in this
@@ -14310,12 +14333,24 @@ class AppState extends ChangeNotifier {
     return engine.reconnectNow();
   }
 
-  // back in front with tor not carrying anything: doze or a network android
-  // never reported may have left it on a route that is gone. the engine
-  // takes it as a network change, which is cheap and debounced
+  // back in front with tor off, or stuck at one percentage for minutes:
+  // doze or a network android never reported may have left it on a route
+  // that is gone. the engine takes it as a network change, which is cheap
+  // and debounced. a bootstrap still climbing is left alone, and a decoy
+  // never asks for anything
+  static const backInFrontStall = Duration(minutes: 4);
+
   @visibleForTesting
-  void backInFront() {
-    if (_sendMode != 'private' || _torHeld || !_online || torReady) return;
+  void backInFront({DateTime? now}) {
+    if (_sendMode != 'private' || _torHeld || !_online || sessionQuiet) return;
+    if (torReady) return;
+    final at = now ?? DateTime.now();
+    final moved = _pctMovedAt ?? _torTryingSince;
+    final stalled =
+        _torStatus != TorStatus.off &&
+        moved != null &&
+        at.difference(moved) >= backInFrontStall;
+    if (_torStatus != TorStatus.off && !stalled) return;
     engine.networkChanged();
     _newTorTry();
   }
@@ -15862,6 +15897,10 @@ class AppState extends ChangeNotifier {
     // drop week-old partial transfers nobody ever completed.
     unawaited(live.sweepMediaChunks());
     _deliveryMode = await loadDeliveryMode();
+    // drafts written down by a restart the person asked for
+    await restoreKeptDrafts().catchError((Object e) {
+      dlog('drafts: not restored (${e.runtimeType})');
+    });
     // read now, so settings shows it whole from the first frame
     unawaited(loadHideNotifContent());
     // in front means resumed, not that a view exists: android hands every
@@ -16103,7 +16142,7 @@ class AppState extends ChangeNotifier {
     );
     _lastKinds = kinds;
     if (flip == true) networkMoved();
-    if (flip == false) engine.networkChanged();
+    if (flip == false) engine.networkChanged(online: false);
     noteOnline(on);
   }
 
@@ -19336,6 +19375,10 @@ final appState = AppState();
 final torValve = TorValve(
   reconnect: () => appState.reconnectNow(),
   restart: reopenApp,
+  beforeRestart: keepDrafts,
+  busyElsewhere: () =>
+      mediaInflight.isNotEmpty ||
+      incomingMediaProgress.keys.any((k) => !incomingMediaStalled.contains(k)),
 );
 
 void main() async {

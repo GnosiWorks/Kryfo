@@ -7891,7 +7891,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get valveStillConnecting =>
-      'Vẫn đang kết nối. Tin nhắn của bạn sẽ được gửi ngay khi có kết nối lại.';
+      'Vẫn đang kết nối… Tin nhắn của bạn sẽ được gửi ngay khi có kết nối lại.';
 
   @override
   String get valveCouldNotReconnect =>

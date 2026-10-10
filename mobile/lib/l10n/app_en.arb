@@ -9978,7 +9978,7 @@
   "@settingsGifSearchHint": {
     "description": "screens/settings_screen.dart: under the GIF search row"
   },
-  "valveStillConnecting": "Still connecting. Your messages go out as soon as the connection is back.",
+  "valveStillConnecting": "Still connecting… Your messages go out as soon as the connection is back.",
   "@valveStillConnecting": {
     "description": "widgets/reconnect_valve.dart: a send has waited on tor a minute"
   },

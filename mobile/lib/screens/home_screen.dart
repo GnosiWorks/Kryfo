@@ -42,6 +42,7 @@ import '../widgets/row_motion.dart';
 import '../widgets/count_badge.dart';
 import '../widgets/chat_parts.dart' show GrowSwap;
 import '../widgets/swap.dart';
+import '../widgets/card_action.dart';
 import '../widgets/message_menu.dart' show MenuSheet, MenuSheetRow;
 import '../widgets/confirm_sheet.dart';
 import '../widgets/hidden_mark.dart';
@@ -440,7 +441,7 @@ class _ChatsTab extends StatelessWidget {
           const _BridgeHint(),
           const _BridgeStuckHint(),
           const _RelayDownHint(),
-          const _OfflineCard(),
+          const OfflineCard(),
           const _KeepsStoppingCard(),
           const _NotificationsBlockedHint(),
           StaggerIn(
@@ -852,75 +853,6 @@ class _HomeCard extends StatelessWidget {
   }
 }
 
-// an answer on a home card: a filled pill for the one the card is for, or
-// quiet words beside it. each dips under the finger with a click
-class _CardAction extends StatelessWidget {
-  final String label;
-  final VoidCallback? onTap;
-  // the pill's fill; null draws quiet words in [ink]
-  final Color? fill;
-  final Color ink;
-  final bool bold;
-  // a label that changes while its action runs rises in
-  final bool swap;
-  const _CardAction({
-    required this.label,
-    required this.onTap,
-    required this.ink,
-    this.fill,
-    this.bold = false,
-    this.swap = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final text = Text(
-      label,
-      key: ValueKey(label),
-      style: HaloType.mono(
-        size: 11.5,
-        color: ink,
-        weight: fill != null || bold ? FontWeight.w600 : FontWeight.w400,
-      ),
-    );
-    final f = fill;
-    return PressScale(
-      label: label,
-      onTap: onTap,
-      child: ExcludeSemantics(
-        child: f == null
-            ? Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                child: text,
-              )
-            : AnimatedContainer(
-                duration: Duration(
-                  milliseconds: motionStill(context) ? 0 : 200,
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 15,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: onTap == null ? f.withValues(alpha: 0.45) : f,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: AnimatedSize(
-                  duration: Duration(
-                    milliseconds: motionStill(context) ? 0 : 200,
-                  ),
-                  curve: Curves.easeOutCubic,
-                  child: swap ? RiseSwap(child: text) : text,
-                ),
-              ),
-      ),
-    );
-  }
-}
-
 // android is not letting kryfo put a notification up, so nothing arrives
 // while the app is closed. the android 13 permission dialog does not come
 // back once the answer is final, so the only way out is the page this opens.
@@ -936,14 +868,14 @@ class _NotificationsBlockedHint extends StatefulWidget {
 // to be connected: say so plainly and offer the one useful button. it keeps
 // its own timer because the status poll only wakes listeners when the status
 // changes, and staying off is the absence of a change.
-class _OfflineCard extends StatefulWidget {
-  const _OfflineCard();
+class OfflineCard extends StatefulWidget {
+  const OfflineCard({super.key});
 
   @override
-  State<_OfflineCard> createState() => _OfflineCardState();
+  State<OfflineCard> createState() => _OfflineCardState();
 }
 
-class _OfflineCardState extends State<_OfflineCard> {
+class _OfflineCardState extends State<OfflineCard> {
   // its "for how long" moves on while the card is seen
   final _timers = SeenTimers();
 
@@ -983,16 +915,19 @@ class _OfflineCardState extends State<_OfflineCard> {
       builder: (context, _) {
         final since = appState.offlineFor ?? Duration.zero;
         torValve.sawLink(appState.linkUp);
+        // a decoy has no network: nothing to say, nothing to restart
+        final quiet = sessionQuiet;
         final stage = torValve.stageFor(
           private: appState.sendMode == 'private',
-          quiet: false,
+          quiet: quiet,
+          online: appState.online,
           waitingSince: DateTime.now().subtract(since),
           linkUp: appState.linkUp,
         );
-        final busy = stage == ValveStage.working;
+        final busy = stage == ValveStage.working || stage == ValveStage.cooling;
         final restart = stage == ValveStage.restart;
         return _HomeCard(
-          show: appState.looksOffline,
+          show: appState.looksOffline && !quiet,
           id: 'offline',
           tint: HaloColors.rose,
           title: l10n.homeKryfoIsOffline,
@@ -1001,7 +936,7 @@ class _OfflineCardState extends State<_OfflineCard> {
           actions: [
             // a reconnect first, and a restart that keeps the queue when tor
             // would not take it
-            _CardAction(
+            CardAction(
               label: busy
                   ? l10n.homeReconnecting
                   : restart
@@ -1016,7 +951,7 @@ class _OfflineCardState extends State<_OfflineCard> {
               ink: HaloColors.amberInk,
               swap: true,
             ),
-            _CardAction(
+            CardAction(
               label: l10n.homeWhatIsWrong,
               onTap: () => Navigator.of(
                 context,
@@ -1065,13 +1000,13 @@ class _KeepsStoppingCardState extends State<_KeepsStoppingCard> {
         line: l10n.homeItHasClosedKryfo,
         lineColor: HaloColors.warm,
         actions: [
-          _CardAction(
+          CardAction(
             label: l10n.homeSwitchToCheckIns,
             onTap: _switch,
             fill: HaloColors.amber,
             ink: HaloColors.onAmber,
           ),
-          _CardAction(
+          CardAction(
             label: l10n.homeNotNow,
             onTap: () => appState.nudgeAnswered(),
             ink: HaloColors.warm,
@@ -1121,7 +1056,7 @@ class _NotificationsBlockedHintState extends State<_NotificationsBlockedHint>
       title: l10n.homeNotificationsAreOff,
       line: l10n.homeAndroidIsBlockingThem,
       actions: [
-        _CardAction(
+        CardAction(
           label: l10n.homeTurnThemOn,
           onTap: () async {
             final opened = await openNotificationSettings();
@@ -1132,7 +1067,7 @@ class _NotificationsBlockedHintState extends State<_NotificationsBlockedHint>
           fill: HaloColors.amber,
           ink: HaloColors.onAmber,
         ),
-        _CardAction(
+        CardAction(
           label: l10n.homeLeaveThemOff,
           onTap: () async {
             await dismissNotifHint();
@@ -1159,7 +1094,7 @@ class _RelayDownHint extends StatelessWidget {
         title: l10n.homeOurRelayIsQuiet,
         line: l10n.homeRelayModeUsesOnly,
         actions: [
-          _CardAction(
+          CardAction(
             label: l10n.homeUseFastMode,
             onTap: () async {
               // same warning as the modes screen: fast mode shows your
@@ -1174,7 +1109,7 @@ class _RelayDownHint extends StatelessWidget {
             fill: HaloColors.amber,
             ink: HaloColors.onAmber,
           ),
-          _CardAction(
+          CardAction(
             label: l10n.homeKeepWaiting,
             onTap: () => appState.dismissRelayHint(),
             ink: HaloColors.text2,
@@ -1199,7 +1134,7 @@ class _BridgeStuckHint extends StatelessWidget {
         title: l10n.homeNotConnecting,
         line: l10n.homeBridgesAreOnAnd,
         actions: [
-          _CardAction(
+          CardAction(
             label: l10n.homeTurnBridgesOff,
             onTap: () async {
               await appState.applyBridges(appState.bridgeLines, false);
@@ -1232,7 +1167,7 @@ class _BridgeHint extends StatelessWidget {
         title: l10n.homeStillTrying,
         line: l10n.homeTorIsNotGetting,
         actions: [
-          _CardAction(
+          CardAction(
             label: l10n.homeUseOurRelay,
             onTap: () async {
               await appState.setSendMode('balanced');
@@ -1243,14 +1178,14 @@ class _BridgeHint extends StatelessWidget {
             fill: kCyan,
             ink: HaloColors.amberInk,
           ),
-          _CardAction(
+          CardAction(
             label: l10n.homeBridges,
             onTap: () =>
                 Navigator.of(context).push(haloRoute(const BridgesScreen())),
             ink: HaloColors.violet,
             bold: true,
           ),
-          _CardAction(
+          CardAction(
             label: l10n.homeKeepWaiting,
             onTap: () => appState.dismissBridgeHint(),
             ink: HaloColors.text2,

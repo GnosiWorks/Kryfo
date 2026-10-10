@@ -3378,7 +3378,7 @@ void main() {
     );
     expect(
       l.valveStillConnecting,
-      "Still connecting. Your messages go out as soon as the connection is back.",
+      "Still connecting… Your messages go out as soon as the connection is back.",
     );
     expect(
       l.valveCouldNotReconnect,

@@ -8032,7 +8032,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get valveStillConnecting =>
-      'ما زال الاتصال جاريًا. ستُرسَل رسائلك فور عودة الاتصال.';
+      'ما زال الاتصال جاريًا… ستُرسَل رسائلك فور عودة الاتصال.';
 
   @override
   String get valveCouldNotReconnect =>

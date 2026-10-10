@@ -7967,11 +7967,11 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get valveStillConnecting =>
-      'Todavía conectando. Tus mensajes saldrán en cuanto vuelva la conexión.';
+      'Todavía conectando… Tus mensajes saldrán en cuanto vuelva la conexión.';
 
   @override
   String get valveCouldNotReconnect =>
-      'Kryfo no pudo reconectarse. Reiniciarlo lo arregla y conserva tus mensajes.';
+      'Kryfo no pudo reconectarse. Un reinicio lo arregla y tus mensajes se conservan.';
 
   @override
   String get valveRestartKryfo => 'Reiniciar Kryfo';

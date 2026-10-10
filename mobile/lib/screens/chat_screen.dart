@@ -6,6 +6,8 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../tor_valve.dart' show restartHolds;
+import '../drafts.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
@@ -138,10 +140,8 @@ import '../first_contact.dart' show routeText, waitsForReceipt;
 import '../text_send.dart';
 import '../lock_guard.dart' show LockDropped, lockGuard, onScreen;
 
-// unsent drafts per chat, so text survives leaving it. keyed by
-// session.chatKey: each container keeps its own
-final Map<String, String> _draftPerPeer = {};
-// newest message ms seen when the chat was last left, keyed the same way
+// newest message ms seen when the chat was last left, keyed by
+// session.chatKey like the drafts
 final Map<String, int> _lastReadPerPeer = {};
 // texts whose send is still running, by uid. a reload keeps them sending
 // and a retry leaves them be, so none goes twice
@@ -1025,18 +1025,15 @@ class _ChatScreenState extends State<ChatScreen>
     lockGuard.isLocked() ? _underLock = true : _markRead();
     _unreadAfterMs =
         _lastReadPerPeer[_memo] ?? DateTime.now().millisecondsSinceEpoch;
-    _msgCtrl.text = composerWith(
-      _draftPerPeer[_memo] ?? '',
-      widget.initialText,
-    );
+    _msgCtrl.text = composerWith(draftPerPeer[_memo] ?? '', widget.initialText);
     // save the draft live on every keystroke so it survives leaving the chat
     // regardless of when dispose runs.
     _msgCtrl.addListener(() {
       final t = _msgCtrl.text;
       if (t.trim().isEmpty) {
-        _draftPerPeer.remove(_memo);
+        draftPerPeer.remove(_memo);
       } else {
-        _draftPerPeer[_memo] = t;
+        draftPerPeer[_memo] = t;
       }
     });
     session.getContact(widget.peerHaloId).then((c) {
@@ -3567,16 +3564,25 @@ class _ChatScreenState extends State<ChatScreen>
     }
   }
 
-  // one of ours is still going: a file that is plainly moving is not
-  // waiting, and neither is a row that already reads as failed
-  bool _sendWaiting() => _messages.any(
-    (m) =>
-        m.direction == 'out' &&
-        (m.sending || (m.failed && !_sendLooksFailed(m))) &&
-        !(appState.linkUp &&
-            m.msgUid != null &&
-            mediaInflight.contains(m.msgUid)),
-  );
+  // when the oldest of ours still going was written. a file that is
+  // plainly moving is not waiting, and neither is a row that already reads
+  // as failed
+  DateTime? _waitingSince() {
+    DateTime? oldest;
+    for (final m in _messages) {
+      if (m.direction != 'out' ||
+          !(m.sending || (m.failed && !_sendLooksFailed(m)))) {
+        continue;
+      }
+      if (appState.linkUp &&
+          m.msgUid != null &&
+          mediaInflight.contains(m.msgUid)) {
+        continue;
+      }
+      if (oldest == null || m.when.isBefore(oldest)) oldest = m.when;
+    }
+    return oldest;
+  }
 
   bool _torReadyToSend() {
     // outside onion nothing is routed through tor, so there is nothing to
@@ -4142,9 +4148,9 @@ class _ChatScreenState extends State<ChatScreen>
         : 0;
     final draft = _msgCtrl.text;
     if (draft.trim().isEmpty) {
-      _draftPerPeer.remove(_memo);
+      draftPerPeer.remove(_memo);
     } else {
-      _draftPerPeer[_memo] = draft;
+      draftPerPeer[_memo] = draft;
     }
     _msgCtrl.dispose();
     _composerFocus.dispose();
@@ -5303,9 +5309,10 @@ class _ChatScreenState extends State<ChatScreen>
             // a send that has waited on tor a minute gets a way out
             ReconnectValve(
               valve: torValve,
-              waiting: !appState.movedAway && _sendWaiting(),
+              waitingSince: appState.movedAway ? null : _waitingSince(),
               private: appState.sendMode == 'private',
               quiet: sessionQuiet,
+              online: appState.online,
               linkUp: appState.linkUp,
               margin: const EdgeInsets.fromLTRB(14, 0, 14, 8),
             ),
@@ -7960,6 +7967,7 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
   @override
   void dispose() {
     _recUnguard?.call();
+    restartHolds.remove(this);
     _ticker?.cancel();
     _level?.cancel();
     _overlay?.remove();
@@ -8029,6 +8037,8 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
       if (mounted) Overlay.of(context).insert(_overlay!.entry);
       // the lock stops the recording and throws it away
       _recUnguard = lockGuard.closeOnLock(_abort);
+      // a restart now would cut the note off
+      restartHolds.add(this);
     } catch (e) {
       dlog('voice: could not start: $e');
       _ticker?.cancel();
@@ -8051,6 +8061,7 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
     // still starting: _start sees the finger is gone and cleans up itself
     if (_busy) return;
     _recUnguard?.call();
+    restartHolds.remove(this);
     _recUnguard = null;
     if (_ticker == null && _overlay == null) return;
     _ticker?.cancel();

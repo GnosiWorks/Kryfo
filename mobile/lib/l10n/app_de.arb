@@ -2067,7 +2067,7 @@
   "gifPhoneChoose": "GIF auswählen",
   "settingsGifSearch": "GIF-Suche",
   "settingsGifSearchHint": "Aus, bis du sie einschaltest. Der Server von Kryfo sucht für dich, so sieht dich der GIF-Dienst nie.",
-  "valveStillConnecting": "Verbinde noch. Deine Nachrichten gehen raus, sobald die Verbindung wieder da ist.",
+  "valveStillConnecting": "Verbindung wird noch aufgebaut… Deine Nachrichten gehen raus, sobald die Verbindung wieder da ist.",
   "valveCouldNotReconnect": "Kryfo konnte sich nicht neu verbinden. Ein Neustart behebt das, deine Nachrichten bleiben erhalten.",
   "valveRestartKryfo": "Kryfo neu starten"
 }
