@@ -12,7 +12,11 @@ import (
 	"unsafe"
 
 	"fiatjaf.com/nostr"
+	"github.com/halo/engine/cstr"
 )
+
+// every c string from dart goes through this, never C.GoString
+func goStr(p *C.char) string { return cstr.String(unsafe.Pointer(p)) }
 
 // every string the engine returns is malloc'd here by C.CString. dart copies
 // it and hands it back through this, so the allocator that made it frees it.

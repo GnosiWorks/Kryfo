@@ -141,8 +141,8 @@ func HaloRestoreIdentity(cEdPriv *C.char, cXPriv *C.char) *C.char {
 	mu.Lock()
 	defer mu.Unlock()
 
-	edPrivHex := C.GoString(cEdPriv)
-	xPrivHex := C.GoString(cXPriv)
+	edPrivHex := goStr(cEdPriv)
+	xPrivHex := goStr(cXPriv)
 
 	edPrivBytes, err := hex.DecodeString(edPrivHex)
 	if err != nil || len(edPrivBytes) != ed25519.PrivateKeySize {
@@ -210,7 +210,7 @@ func HaloMyXPrivkey() *C.char {
 
 //export HaloIdFromPubkey
 func HaloIdFromPubkey(cHex *C.char) *C.char {
-	pubHex := C.GoString(cHex)
+	pubHex := goStr(cHex)
 	pub, err := hex.DecodeString(pubHex)
 	if err != nil {
 		return C.CString(fmt.Sprintf("error: bad hex: %v", err))
@@ -247,8 +247,8 @@ func deriveSharedKey(peerXPubHex string) ([32]byte, error) {
 
 //export HaloEncryptFor
 func HaloEncryptFor(cPeerPub *C.char, cPlain *C.char) *C.char {
-	peerPub := C.GoString(cPeerPub)
-	plain := C.GoString(cPlain)
+	peerPub := goStr(cPeerPub)
+	plain := goStr(cPlain)
 
 	key, err := deriveSharedKey(peerPub)
 	if err != nil {
@@ -274,8 +274,8 @@ func HaloEncryptFor(cPeerPub *C.char, cPlain *C.char) *C.char {
 
 //export HaloDecryptFrom
 func HaloDecryptFrom(cPeerPub *C.char, cB64 *C.char) *C.char {
-	peerPub := C.GoString(cPeerPub)
-	b64 := C.GoString(cB64)
+	peerPub := goStr(cPeerPub)
+	b64 := goStr(cB64)
 
 	key, err := deriveSharedKey(peerPub)
 	if err != nil {
@@ -308,7 +308,7 @@ func HaloDecryptFrom(cPeerPub *C.char, cB64 *C.char) *C.char {
 
 //export HaloStartListener
 func HaloStartListener(cDataDir *C.char) *C.char {
-	return C.CString(startListener(C.GoString(cDataDir)))
+	return C.CString(startListener(goStr(cDataDir)))
 }
 
 // the onion address, or a line starting with "error:". plain go so the
@@ -991,8 +991,8 @@ func HaloDrainInbox() *C.char {
 
 //export HaloSendTo
 func HaloSendTo(cAddr *C.char, cMsg *C.char) *C.char {
-	addr := C.GoString(cAddr)
-	msg := C.GoString(cMsg)
+	addr := goStr(cAddr)
+	msg := goStr(cMsg)
 
 	mu.Lock()
 	t := torNode
@@ -1030,7 +1030,7 @@ func main() {}
 //
 //export HaloIdFromEdPub
 func HaloIdFromEdPub(cHexPub *C.char) *C.char {
-	hexPub := C.GoString(cHexPub)
+	hexPub := goStr(cHexPub)
 	pub, err := hex.DecodeString(hexPub)
 	if err != nil || len(pub) != 32 {
 		return C.CString("")
@@ -1044,8 +1044,8 @@ func HaloIdFromEdPub(cHexPub *C.char) *C.char {
 //
 //export HaloDecryptBackup
 func HaloDecryptBackup(cBlob, cPassphrase *C.char) *C.char {
-	blob := C.GoString(cBlob)
-	passphrase := C.GoString(cPassphrase)
+	blob := goStr(cBlob)
+	passphrase := goStr(cPassphrase)
 	prefix := "halo-backup:v1:"
 	if !strings.HasPrefix(blob, prefix) {
 		return C.CString("error: not a halo backup")
@@ -1094,7 +1094,7 @@ func HaloDecryptBackup(cBlob, cPassphrase *C.char) *C.char {
 //export HaloBackupKey
 func HaloBackupKey(cPassphrase *C.char, cSalt *C.uchar) *C.char {
 	salt := C.GoBytes(unsafe.Pointer(cSalt), 16)
-	key, err := scrypt.Key([]byte(C.GoString(cPassphrase)), salt, 32768, 8, 1, 32)
+	key, err := scrypt.Key([]byte(goStr(cPassphrase)), salt, 32768, 8, 1, 32)
 	if err != nil {
 		return C.CString("error: scrypt: " + err.Error())
 	}
@@ -1129,7 +1129,7 @@ func backupNonce(index uint64) []byte {
 //
 //export HaloSealChunk
 func HaloSealChunk(cKey *C.char, index C.ulonglong, typ C.uchar, in *C.uchar, inLen C.int, out *C.uchar) C.int {
-	gcm, err := backupGCM(C.GoString(cKey))
+	gcm, err := backupGCM(goStr(cKey))
 	if err != nil || inLen < 0 {
 		return -1
 	}
@@ -1146,7 +1146,7 @@ func HaloSealChunk(cKey *C.char, index C.ulonglong, typ C.uchar, in *C.uchar, in
 //
 //export HaloOpenChunk
 func HaloOpenChunk(cKey *C.char, index C.ulonglong, typ C.uchar, in *C.uchar, inLen C.int, out *C.uchar) C.int {
-	gcm, err := backupGCM(C.GoString(cKey))
+	gcm, err := backupGCM(goStr(cKey))
 	if err != nil || inLen < 16 {
 		return -1
 	}

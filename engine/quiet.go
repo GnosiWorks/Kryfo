@@ -90,9 +90,9 @@ func HaloQuietIdentity() *C.char {
 //
 //export HaloQuietDescribe
 func HaloQuietDescribe(cEd, cX, cOnion *C.char) *C.char {
-	ed, err1 := hex.DecodeString(C.GoString(cEd))
-	x, err2 := hex.DecodeString(C.GoString(cX))
-	onion, err3 := hex.DecodeString(C.GoString(cOnion))
+	ed, err1 := hex.DecodeString(goStr(cEd))
+	x, err2 := hex.DecodeString(goStr(cX))
+	onion, err3 := hex.DecodeString(goStr(cOnion))
 	if err := errors.Join(err1, err2, err3); err != nil {
 		return C.CString("error: bad hex")
 	}
@@ -103,7 +103,7 @@ func HaloQuietDescribe(cEd, cX, cOnion *C.char) *C.char {
 //
 //export HaloQuietFirstContactPk
 func HaloQuietFirstContactPk(cX *C.char, counter C.int) *C.char {
-	x, err := hex.DecodeString(C.GoString(cX))
+	x, err := hex.DecodeString(goStr(cX))
 	if err != nil || len(x) != 32 {
 		return C.CString("error: bad x priv")
 	}

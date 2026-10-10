@@ -46,10 +46,10 @@ func HaloPinNewTable(logN C.int) *C.char {
 func pinArgs(cTable, cLegacy *C.char) (pinTable, pinLegacy, *C.char) {
 	var t pinTable
 	var old pinLegacy
-	if json.Unmarshal([]byte(C.GoString(cTable)), &t) != nil {
+	if json.Unmarshal([]byte(goStr(cTable)), &t) != nil {
 		return t, old, C.CString("error: bad table")
 	}
-	if s := C.GoString(cLegacy); s != "" && json.Unmarshal([]byte(s), &old) != nil {
+	if s := goStr(cLegacy); s != "" && json.Unmarshal([]byte(s), &old) != nil {
 		return t, old, C.CString("error: bad legacy")
 	}
 	return t, old, nil
@@ -85,11 +85,11 @@ func HaloPinSetup(cPin, cTable, cLegacy *C.char, index, kind C.int, cContainer, 
 	if bad != nil {
 		return bad
 	}
-	container, err := hex.DecodeString(C.GoString(cContainer))
+	container, err := hex.DecodeString(goStr(cContainer))
 	if err != nil {
 		return C.CString("error: bad container")
 	}
-	plain, err := hex.DecodeString(C.GoString(cWrapPlain))
+	plain, err := hex.DecodeString(goStr(cWrapPlain))
 	defer zero(plain)
 	if err != nil {
 		return C.CString("error: bad key")
@@ -127,7 +127,7 @@ func HaloPinRewrap(cOld, cNew, cTable, cLegacy *C.char, index C.int) *C.char {
 //export HaloPinUpgrade
 func HaloPinUpgrade(cTable *C.char) *C.char {
 	var t pinTable
-	if json.Unmarshal([]byte(C.GoString(cTable)), &t) != nil {
+	if json.Unmarshal([]byte(goStr(cTable)), &t) != nil {
 		return C.CString("error: bad table")
 	}
 	out, err := t.upgrade()
@@ -140,7 +140,7 @@ func HaloPinUpgrade(cTable *C.char) *C.char {
 //export HaloPinClear
 func HaloPinClear(cTable *C.char, index C.int) *C.char {
 	var t pinTable
-	if json.Unmarshal([]byte(C.GoString(cTable)), &t) != nil {
+	if json.Unmarshal([]byte(goStr(cTable)), &t) != nil {
 		return C.CString("error: bad table")
 	}
 	out, err := pinClear(t, int(index))

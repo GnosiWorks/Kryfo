@@ -32,14 +32,14 @@ var gifClient = func() (*http.Client, error) { return torNostrClientFor(laneGifs
 //
 //export HaloGifPost
 func HaloGifPost(cUrl, cBody *C.char) *C.char {
-	return C.CString(gifAsk(http.MethodPost, C.GoString(cUrl), C.GoString(cBody)))
+	return C.CString(gifAsk(http.MethodPost, goStr(cUrl), goStr(cBody)))
 }
 
 // GET from the gif relay. the body of a 2xx, or "error: ...".
 //
 //export HaloGifGet
 func HaloGifGet(cUrl *C.char) *C.char {
-	return C.CString(gifAsk(http.MethodGet, C.GoString(cUrl), ""))
+	return C.CString(gifAsk(http.MethodGet, goStr(cUrl), ""))
 }
 
 // GET a picture from the gif relay into path, whole or not at all.
@@ -47,7 +47,7 @@ func HaloGifGet(cUrl *C.char) *C.char {
 //
 //export HaloGifGetFile
 func HaloGifGetFile(cUrl, cPath *C.char) *C.char {
-	url, path := C.GoString(cUrl), C.GoString(cPath)
+	url, path := goStr(cUrl), goStr(cPath)
 	if url == "" || path == "" {
 		return C.CString("error: empty url")
 	}

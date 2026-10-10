@@ -86,7 +86,7 @@ func HaloAgeLock(inFd C.int, outFd C.int, cPass *C.char) *C.char {
 	atomic.StoreInt64(&ageDone, 0)
 	atomic.StoreInt32(&ageStop, 0)
 	w := bufio.NewWriterSize(out, 256*1024)
-	err := agefile.Lock(in, w, C.GoString(cPass), &ageDone, &ageStop, memAvailable)
+	err := agefile.Lock(in, w, goStr(cPass), &ageDone, &ageStop, memAvailable)
 	if err == nil && w.Flush() != nil {
 		err = agefile.ErrIO
 	}
@@ -108,7 +108,7 @@ func HaloAgeOpenBegin(inFd C.int, cPass *C.char) *C.char {
 	if in == nil {
 		return ageResult(agefile.ErrIO)
 	}
-	s, err := agefile.Begin(in, C.GoString(cPass), memAvailable)
+	s, err := agefile.Begin(in, goStr(cPass), memAvailable)
 	if err != nil {
 		in.Close()
 		return ageResult(err)

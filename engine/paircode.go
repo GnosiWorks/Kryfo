@@ -57,7 +57,7 @@ func pairCodeKeys(code string) (sk, pk string, err error) {
 //
 //export HaloPairCodePublish
 func HaloPairCodePublish(cCode, cPayload *C.char) *C.char {
-	return C.CString(pairCodePublish(C.GoString(cCode), C.GoString(cPayload)))
+	return C.CString(pairCodePublish(goStr(cCode), goStr(cPayload)))
 }
 
 // how long an invite stays at a code: the expiration the sharer stamps on it
@@ -324,7 +324,7 @@ func pairCodeLive(ev nostr.Event, now time.Time) bool {
 //
 //export HaloPairCodeFetch
 func HaloPairCodeFetch(cCode *C.char) *C.char {
-	return C.CString(pairCodeFetch(C.GoString(cCode)))
+	return C.CString(pairCodeFetch(goStr(cCode)))
 }
 
 func pairCodeFetch(code string) string {

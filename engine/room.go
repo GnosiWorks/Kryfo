@@ -80,7 +80,7 @@ func HaloRoomKeygen() *C.char {
 //
 //export HaloRoomFcPk
 func HaloRoomFcPk(cPriv *C.char) *C.char {
-	me, err := roomKey(C.GoString(cPriv))
+	me, err := roomKey(goStr(cPriv))
 	if err != nil {
 		return C.CString("error: " + err.Error())
 	}
@@ -93,15 +93,15 @@ func HaloRoomFcPk(cPriv *C.char) *C.char {
 
 //export HaloRoomSend
 func HaloRoomSend(cPriv, cPeer, cMsg *C.char) *C.char {
-	me, err := roomKey(C.GoString(cPriv))
+	me, err := roomKey(goStr(cPriv))
 	if err != nil {
 		return C.CString("error: " + err.Error())
 	}
-	peer, err := peerArr(C.GoString(cPeer))
+	peer, err := peerArr(goStr(cPeer))
 	if err != nil {
 		return C.CString("error: " + err.Error())
 	}
-	gw, err := nip17WrapAs(me, peer, C.GoString(cMsg))
+	gw, err := nip17WrapAs(me, peer, goStr(cMsg))
 	if err != nil {
 		return C.CString(fmt.Sprintf("error: wrap: %v", err))
 	}
@@ -115,19 +115,19 @@ func HaloRoomSend(cPriv, cPeer, cMsg *C.char) *C.char {
 
 //export HaloRoomSendFirstContact
 func HaloRoomSendFirstContact(cPriv, cPeer, cFcPk, cMsg *C.char) *C.char {
-	me, err := roomKey(C.GoString(cPriv))
+	me, err := roomKey(goStr(cPriv))
 	if err != nil {
 		return C.CString("error: " + err.Error())
 	}
-	peer, err := peerArr(C.GoString(cPeer))
+	peer, err := peerArr(goStr(cPeer))
 	if err != nil {
 		return C.CString("error: " + err.Error())
 	}
-	fcPk := C.GoString(cFcPk)
+	fcPk := goStr(cFcPk)
 	if len(fcPk) != 64 {
 		return C.CString("error: bad first-contact pubkey")
 	}
-	gw, err := nip17WrapFirstContactAs(me, peer, fcPk, C.GoString(cMsg))
+	gw, err := nip17WrapFirstContactAs(me, peer, fcPk, goStr(cMsg))
 	if err != nil {
 		return C.CString(fmt.Sprintf("error: wrap: %v", err))
 	}
@@ -161,11 +161,11 @@ func startSub(key string, run func(ctx context.Context)) {
 //
 //export HaloRoomSubscribe
 func HaloRoomSubscribe(cPriv, cPeer *C.char) *C.char {
-	me, err := roomKey(C.GoString(cPriv))
+	me, err := roomKey(goStr(cPriv))
 	if err != nil {
 		return C.CString("error: " + err.Error())
 	}
-	peerHex := C.GoString(cPeer)
+	peerHex := goStr(cPeer)
 	peer, err := peerArr(peerHex)
 	if err != nil {
 		return C.CString("error: " + err.Error())
@@ -191,7 +191,7 @@ func HaloRoomSubscribe(cPriv, cPeer *C.char) *C.char {
 //
 //export HaloRoomSubscribeFirstContact
 func HaloRoomSubscribeFirstContact(cPriv *C.char) *C.char {
-	me, err := roomKey(C.GoString(cPriv))
+	me, err := roomKey(goStr(cPriv))
 	if err != nil {
 		return C.CString("error: " + err.Error())
 	}
@@ -218,10 +218,10 @@ func HaloRoomSubscribeFirstContact(cPriv *C.char) *C.char {
 //export HaloRoomForget
 func HaloRoomForget(cPriv, cPeers *C.char) *C.char {
 	var peers []string
-	if err := json.Unmarshal([]byte(C.GoString(cPeers)), &peers); err != nil {
+	if err := json.Unmarshal([]byte(goStr(cPeers)), &peers); err != nil {
 		return C.CString("error: bad members")
 	}
-	if err := roomForget(C.GoString(cPriv), peers); err != nil {
+	if err := roomForget(goStr(cPriv), peers); err != nil {
 		return C.CString("error: " + err.Error())
 	}
 	return C.CString("ok")
@@ -252,7 +252,7 @@ func roomForget(privHex string, peers []string) error {
 //
 //export HaloRoomUnsubscribe
 func HaloRoomUnsubscribe(cPub *C.char) *C.char {
-	pub := C.GoString(cPub)
+	pub := goStr(cPub)
 	n := 0
 	nostrMu.Lock()
 	for key, cancel := range nostrSubs {

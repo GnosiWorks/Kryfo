@@ -122,8 +122,8 @@ func HaloMoatFetch() *C.char {
 //
 //export HaloMoatSolve
 func HaloMoatSolve(cChallenge, cSolution *C.char) *C.char {
-	challenge := C.GoString(cChallenge)
-	solution := strings.TrimSpace(C.GoString(cSolution))
+	challenge := goStr(cChallenge)
+	solution := strings.TrimSpace(goStr(cSolution))
 	if challenge == "" || solution == "" {
 		return C.CString("error: missing challenge or answer")
 	}
