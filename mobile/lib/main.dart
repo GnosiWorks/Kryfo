@@ -6999,6 +6999,13 @@ Future<void> _editsTable(Database db) async {
   ''');
 }
 
+// the wait after [tries] tries of a queued row or frame: doubling from
+// 45 s up to ten minutes, so a peer out of reach gets few copies
+int queueGap(int tries) {
+  final g = 45000 << (tries < 4 ? tries : 4);
+  return g < 600000 ? g : 600000;
+}
+
 const kFrameUnsend = 'unsend';
 const kFrameReaction = 'reaction';
 // a receipt that could not be sealed while a session waits on their card
@@ -8903,13 +8910,13 @@ class AppState extends ChangeNotifier {
     return edited;
   }
 
-  // uids the drainer is mid-flight on, so a slow send isn't fired twice by
-  // the next sweep.
+  // uids with a send running, the outbox's and the chat's alike: whoever
+  // claims one first sends it, and nobody else does until it is let go
   final Set<String> _outboxInflight = <String>{};
 
-  // a row the chat sends itself on a tap: the outbox leaves it be meanwhile
   bool claimSend(String uid) => _outboxInflight.add(uid);
   void releaseSend(String uid) => _outboxInflight.remove(uid);
+  bool sendInflight(String uid) => _outboxInflight.contains(uid);
   // re-fire count per uid this session. caps the loop so an unreachable peer
   // stops grinding; tap-to-retry in the chat still forces a send.
   final Map<String, int> _outboxTries = <String, int>{};
@@ -9257,15 +9264,12 @@ class AppState extends ChangeNotifier {
       final now = DateTime.now().millisecondsSinceEpoch;
       final nextAt = _outboxNextAt[uid];
       if (nextAt != null && now < nextAt) continue;
-      // doubling gap, capped at ten minutes: eight tries cover about an hour
-      // and leave few copies on the relays
-      var gap = 45000 << tries;
-      if (gap > 600000) gap = 600000;
-      _outboxNextAt[uid] = now + gap;
+      // the chat may have taken it while this pass read
+      if (!_outboxInflight.add(uid)) continue;
+      _outboxNextAt[uid] = now + queueGap(tries);
       _outboxTries[uid] = tries + 1;
       final peer = r['peer_id'] as String?;
       if (peer != null) _outboxPeer[uid] = peer;
-      _outboxInflight.add(uid);
       unawaited(
         _drainOne(r, d).whenComplete(() async {
           // waiting on their card is no failed try: it goes the moment the
@@ -9285,6 +9289,8 @@ class AppState extends ChangeNotifier {
             }
           }
           _outboxInflight.remove(uid);
+          // an open chat that kept its pill while this ran reads it again
+          if (peer != null && (g == null || g.isEmpty)) chatChanged(peer);
         }),
       );
     }
@@ -9868,9 +9874,14 @@ class AppState extends ChangeNotifier {
               tries: tries,
             );
             if (due == null || due > now) continue;
-            // noted before it goes: a death half way is a try, not a loop
-            await d.noteOpenerAgain(uid, tries + 1, now);
-            await _openerAgain(r, peer, d, wire: was?.wire);
+            if (!_outboxInflight.add(uid)) continue;
+            try {
+              // noted before it goes: a death half way is a try, not a loop
+              await d.noteOpenerAgain(uid, tries + 1, now);
+              await _openerAgain(r, peer, d, wire: was?.wire);
+            } finally {
+              _outboxInflight.remove(uid);
+            }
           }
         }
       } catch (e) {
@@ -9889,7 +9900,6 @@ class AppState extends ChangeNotifier {
     String? wire,
   }) async {
     final uid = r['msg_uid'] as String;
-    _outboxInflight.add(uid);
     try {
       var row = r;
       if (wire == null && redeliveryNeedsPow(r, backPaired: false)) {
@@ -9908,8 +9918,6 @@ class AppState extends ChangeNotifier {
       dlog('openers: $uid ${ok ? "went again" : "did not go again"}');
     } catch (e) {
       dlog('openers: $uid did not go again ($e)');
-    } finally {
-      _outboxInflight.remove(uid);
     }
   }
 
