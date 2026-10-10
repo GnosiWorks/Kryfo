@@ -2103,7 +2103,9 @@ func HaloFirstContactPk(counter C.int) *C.char {
 }
 
 // relay loops the first-contact listener runs now, old and new together
-// for a moment while it is replaced
+// for a moment while it is replaced. loops, not sockets: a loop dials its
+// relay again by itself, so only a missing loop needs a new listener, and
+// a phone offline would otherwise start one every minute
 var fcRelaysLive atomic.Int32
 
 // how many relays the first-contact listener is on, -1 when there is none.

@@ -2557,12 +2557,12 @@ class _ChatScreenState extends State<ChatScreen>
   Future<String> _wireText(String? uid, String cipher) => wireWhenReady(
     ready: _torReadyToSend,
     kept: () async => uid == null || await session.messageExists(uid),
-    send: () => _routeText(cipher),
+    send: () => _routeText(cipher, uid),
   );
 
   // before the peer back-pairs, direct onion first so their drain runs the
   // back-pair flow, with the first-contact copy beside it (routeText)
-  Future<String> _routeText(String cipher) async {
+  Future<String> _routeText(String cipher, [String? uid]) async {
     // a quiet session keeps it here, waiting. a block here keeps it not
     // sent, one in the other container only waits
     if (sessionQuiet) return 'parked';
@@ -2588,6 +2588,14 @@ class _ChatScreenState extends State<ChatScreen>
       viaFirst: (x, fc) => engine.sendFirstContact(x, fc, cipher),
       viaRelay: (x) => Future(() => engine.nostrSend(x, cipher)),
       log: (l) => dlog('chat send: $l'),
+      // both its copies went: past their two it waits held, not lost
+      bothWent: uid == null
+          ? null
+          : () => unawaited(
+              session.noteOpenerBoth(uid).catchError((Object e) {
+                dlog('chat send: not noted (${e.runtimeType})');
+              }),
+            ),
     );
   }
 
@@ -3707,6 +3715,12 @@ class _ChatScreenState extends State<ChatScreen>
           sticker: sticker?.value,
           writtenAt: msg.when.millisecondsSinceEpoch,
         );
+        // an opener goes again as these very words (sendOpenersAgain)
+        if (!_backPaired) {
+          await session.keepOpenerWire(msgUid, wrapped).catchError((Object e) {
+            dlog('send: opener not kept (${e.runtimeType})');
+          });
+        }
         final prev = _encryptGate;
         final gate = Completer<void>();
         _encryptGate = gate.future;

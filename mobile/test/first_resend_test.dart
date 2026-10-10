@@ -106,6 +106,7 @@ void main() {
     int sent = 1,
     int delivered = 0,
     required int at,
+    bool secure = false,
   }) => mem.insert('messages', {
     'peer_id': _amy,
     'direction': 'out',
@@ -115,7 +116,15 @@ void main() {
     'sent': sent,
     'delivered': delivered,
     'pow_nonce': pow[uid],
+    'secure': secure ? 1 : 0,
   });
+
+  Future<void> secure(String uid) => mem.update(
+    'messages',
+    {'secure': 1},
+    where: 'msg_uid = ?',
+    whereArgs: [uid],
+  );
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
@@ -149,6 +158,13 @@ void main() {
 
   Future<void> settle() =>
       Future<void>.delayed(const Duration(milliseconds: 60));
+
+  // what each of our texts went as, by its uid
+  List<UnwrappedMessage> wires(String uid) => [
+    for (final (_, c) in io.sent)
+      if (c.contains('"u":"$uid"'))
+        unwrapMessage(c.substring('to $_amy '.length)),
+  ];
 
   // the routes each of our texts went by, in order
   List<String> went(String uid) => [
@@ -221,6 +237,50 @@ void main() {
       expect(again('o1'), isNull);
     });
 
+    test('a secure one goes again secure', () async {
+      await secure('o1');
+      await app.sendOpenersAgain();
+      await settle();
+      expect(wires('o1'), isNotEmpty);
+      expect(wires('o1').every((w) => w.secure), isTrue);
+    });
+
+    test('it goes again as the very words it first went as', () async {
+      final first = await wrapMessage(
+        'text o1',
+        msgUid: 'o1',
+        powNonce: pow['o1'],
+        powBitsUsed: powBits,
+        supporterBadge: 'a badge since let go of',
+        sender: asSender('me'),
+        writtenAt: now - 11 * _min + 5,
+      );
+      await db.keepOpenerWire('o1', first);
+      await app.sendOpenersAgain();
+      await settle();
+      final went = [
+        for (final (_, c) in io.sent)
+          if (c.contains('"u":"o1"')) c,
+      ];
+      expect(went, isNotEmpty);
+      expect(went.toSet(), {'to $_amy $first'});
+    });
+
+    test('past their two, once its onion and relay copies both went, it '
+        'waits held and goes no more', () async {
+      await out('e1', delivered: 1, at: now - 30 * _min);
+      await out('e2', delivered: 1, at: now - 20 * _min);
+      await db.noteOpenerBoth('o1');
+      await app.sendOpenersAgain();
+      await settle();
+      expect(went('o1'), isEmpty);
+      // one of their first two still goes again
+      await mem.delete('messages', where: 'msg_uid = ?', whereArgs: ['e1']);
+      await app.sendOpenersAgain();
+      await settle();
+      expect(went('o1'), contains('fc'));
+    });
+
     test('a receipt stops it', () async {
       await app.sendOpenersAgain();
       await settle();
@@ -257,6 +317,17 @@ void main() {
     });
   });
 
+  test('a request that goes takes what of theirs was kept', () async {
+    for (final (h, peer) in [('h1', _amy), ('h2', 'bo'), ('h3', _amy)]) {
+      await db.keepFirst(h, 'c-$h', peer: peer, uid: 'u-$h', now: now);
+    }
+    await db.forgetRequest(_amy);
+    expect([for (final r in await db.firstKept()) r.hash], ['h2']);
+    await db.keepFirst('h4', 'c-h4', peer: 'bo', uid: 'u-h4', now: now);
+    await db.forgetFirstOf('bo', uid: 'u-h4');
+    expect([for (final r in await db.firstKept()) r.hash], ['h2']);
+  });
+
   group('their add', () {
     // a message from her: the proof that she added us back
     Future<void> hears(String cipher, String uid) async {
@@ -290,6 +361,21 @@ void main() {
       // her next message changes nothing: it went once
       await hears('p2', 'a2');
       expect(went('o1'), ['relay']);
+    });
+
+    test('reaches no further back than a copy is known as gone', () async {
+      const day = 24 * 60 * _min;
+      await out('old16', at: now - 16 * day);
+      await out('old14', at: now - 14 * day);
+      await hears('p1', 'a1');
+      expect(went('old14'), ['relay']);
+      expect(went('old16'), isEmpty);
+    });
+
+    test('a secure one goes again secure', () async {
+      await secure('o1');
+      await hears('p1', 'a1');
+      expect(wires('o1').single.secure, isTrue);
     });
 
     test('a new key of hers puts nothing out again', () async {

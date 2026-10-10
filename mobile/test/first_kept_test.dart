@@ -30,6 +30,7 @@ import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
+import 'package:kryfo/stranger_gate.dart' show ShelfFull;
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -87,10 +88,24 @@ class _Engine implements HaloEngine {
 // store fails it
 class _Io extends AppIo {
   var failOpens = 0;
+  var opens = 0;
+  // a stranger whose shelf is full: what is theirs waits on it
+  String? shelfFull;
   final sent = <(String, String)>[];
+  @override
+  Future<String?> decrypt(
+    String peer,
+    String cipher, {
+    bool flagKeyChange = false,
+  }) async {
+    if (peer == shelfFull) throw ShelfFull(peer: peer);
+    return super.decrypt(peer, cipher, flagKeyChange: flagKeyChange);
+  }
+
   @override
   Future<({String haloId, String plain, UnwrappedMessage env})?>
   openFirstContact(String cipher) async {
+    opens++;
     if (failOpens > 0) {
       failOpens--;
       return null;
@@ -242,6 +257,10 @@ void main() {
     throw StateError('the disk is full');
   };
 
+  void failSaves(int n) => live.beforeSave = () {
+    if (n-- > 0) throw StateError('the disk is full');
+  };
+
   group('off the onion door', () {
     test('one that did not file is kept on disk, never struck, and files '
         'once from there', () async {
@@ -280,7 +299,7 @@ void main() {
         'its tries', () async {
       final s = await stranger('stray-onion-three');
       final c = await s.p.ss.encryptTo(_me, await wrap(s, 'u-on3'));
-      io.failOpens = 2 + kFirstKeptTries;
+      failSaves(1000);
       await app.receiveOnion([c]);
       final h = _hash(c);
       expect(live.kept[h]!.tries, 0);
@@ -304,27 +323,84 @@ void main() {
       expect(live.kept, isEmpty);
       expect(firstFails.codes.last, 'gave up');
       expect(rowsOf(s.id), isEmpty);
+      // given up for good: a copy that comes again is not opened again
+      expect(live.seen, contains(h));
+    });
+
+    test('one past the relays\' two weeks is let go of for good', () async {
+      live.kept['old'] = (
+        hash: 'old',
+        cipher: 'c-old',
+        peer: '',
+        at: DateTime.now().millisecondsSinceEpoch - 15 * 86400000,
+        tries: 0,
+        nextAt: 0,
+      );
+      await app.retryFirsts();
+      expect(live.kept, isEmpty);
+      expect(live.seen, contains('old'));
+    });
+
+    test('a full shelf in a try uses none of them', () async {
+      final s = await stranger('stray-onion-four');
+      final c = await s.p.ss.encryptTo(_me, await wrap(s, 'u-on4'));
+      failOnce();
+      await app.receiveOnion([c]);
+      final h = _hash(c);
+      io.shelfFull = s.id;
+      await live.retryFirstAt(h, 3, 0);
+      await app.retryFirsts();
+      expect(live.kept[h]!.tries, 3);
+      expect(
+        live.kept[h]!.nextAt,
+        greaterThan(DateTime.now().millisecondsSinceEpoch),
+      );
     });
   });
 
   group('off the first-contact lane', () {
-    test('one that may file later is kept and not acked; it is acked once '
-        'it files', () async {
+    test('one that never opened is struck and acked as before, never '
+        'kept', () async {
       final s = await stranger('stray-lane-one');
       final c = await s.p.ss.encryptTo(_me, await wrap(s, 'u-ln1'));
       final line = (peer: 'firstcontact', cipher: c);
       io.failOpens = 1;
-      expect(await app.receiveRelay([line]), {0});
-      expect(live.kept.keys, [_hash(c)]);
+      expect(await app.receiveRelay([line]), isEmpty);
+      expect(live.kept, isEmpty);
       expect(live.seen, isEmpty);
-      // offered again by the engine: it files now and is acked
+      // a copy that comes again files
       expect(await app.receiveRelay([line]), isEmpty);
       await _settle();
       expect(rowsOf(s.id), [_said]);
-      // the kept copy goes, and files nothing twice
-      await app.retryFirsts(all: true);
+    });
+
+    test('a flood of junk is struck, buried after its strikes and costs '
+        'nothing after, and a real opener is still kept', () async {
+      final rnd = Random(7);
+      final junk = [
+        for (var i = 0; i < kFirstKeptMost + 6; i++)
+          base64Encode([3, for (var j = 0; j < 90; j++) rnd.nextInt(256)]),
+      ];
+      final lines = [for (final c in junk) (peer: 'firstcontact', cipher: c)];
+      // the engine offers each again while a relay still has it
+      for (var pass = 0; pass < 3; pass++) {
+        expect(await app.receiveRelay(lines), isEmpty);
+      }
       expect(live.kept, isEmpty);
-      expect(rowsOf(s.id), [_said]);
+      expect(live.seen, containsAll(junk.map(_hash)));
+      final before = io.opens;
+      expect(before, junk.length * 3);
+      // a start later the relays bring it all again: nothing is opened
+      final next = await start();
+      expect(await next.receiveRelay(lines), isEmpty);
+      await next.receiveOnion(junk);
+      expect(io.opens, before);
+      // and a real one that did not file still has its place
+      final s = await stranger('stray-after-junk');
+      final c = await s.p.ss.encryptTo(_me, await wrap(s, 'u-aj'));
+      failOnce();
+      expect(await next.receiveRelay([(peer: 'firstcontact', cipher: c)]), {0});
+      expect(live.kept.keys, [_hash(c)]);
     });
 
     test('a failed filing is not acked either', () async {
@@ -409,6 +485,43 @@ void main() {
     expect(invite, isNot(contains('fc=')));
   });
 
+  test('taken back before it filed, it never shows, after a restart '
+      'too', () async {
+    final s = await stranger('stray-takes-back');
+    const uid = 'u-tb';
+    final c = await s.p.ss.encryptTo(_me, await wrap(s, uid));
+    failOnce();
+    expect(await app.receiveRelay([(peer: 'firstcontact', cipher: c)]), {0});
+    expect(live.kept, hasLength(1));
+    // their take-back, on the session the opener started
+    final back = await s.p.ss.encryptTo(
+      _me,
+      await wrapMessage(
+        '',
+        unsend: uid,
+        sender: SenderInfo(
+          haloId: s.id,
+          edPub: s.ed,
+          onion: 'o-${s.id}',
+          xPub: s.p.xPub,
+        ),
+      ),
+    );
+    await app.receiveRelay([(peer: 'firstcontact', cipher: back)]);
+    await _settle();
+    expect(live.gone, contains((s.id, uid)));
+    expect(live.kept, isEmpty);
+    // a restart, and the relays bring the opener again
+    final next = await start();
+    await next.retryFirsts(all: true);
+    expect(
+      await next.receiveRelay([(peer: 'firstcontact', cipher: c)]),
+      isEmpty,
+    );
+    await _settle();
+    expect(rowsOf(s.id), isEmpty);
+  });
+
   test('two phones: the onion acks, the first filing fails, and the '
       'message still arrives once and comes back delivered', () async {
     final s = await stranger('stray-both-ways');
@@ -417,6 +530,7 @@ void main() {
     // the sending phone's own route: its onion acks and its copy goes
     final door = <String>[];
     final lane = <String>[];
+    Future<void>? copy;
     final r = await routeText(
       backPaired: false,
       onion: 'o-me',
@@ -431,8 +545,10 @@ void main() {
         return 'ok';
       },
       viaRelay: (x) async => 'ok',
+      copied: (f) => copy = f,
     );
     expect(r, 'ok');
+    await copy;
     expect(door, [c]);
     expect(lane, [c]);
     // the door's copy does not file
@@ -456,5 +572,19 @@ void main() {
       for (final (_, x) in io.sent) await _reads(s.p.ss, x),
     ].nonNulls.map(unwrapMessage);
     expect(read.where((m) => m.deliveredUid == uid), hasLength(1));
+  });
+
+  test('a new invite link lets go of what was kept: nothing opens it '
+      'after', () async {
+    FlutterSecureStorage.setMockInitialValues({'fc_counter': '1'});
+    await app.loadFirstContact();
+    final s = await stranger('stray-old-link');
+    final c = await s.p.ss.encryptTo(_me, await wrap(s, 'u-ol'));
+    failSaves(1000);
+    await app.receiveOnion([c]);
+    expect(live.kept, hasLength(1));
+    await app.resetInviteAddress();
+    expect(live.kept, isEmpty);
+    expect(app.fcCounter, 2);
   });
 }

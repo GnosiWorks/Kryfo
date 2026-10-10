@@ -821,11 +821,14 @@ class ArrivalRows implements HaloDb {
 
   // openers kept to be tried again, by hash, as keepFirst keeps them
   final kept = <String, FirstKept>{};
+  // and the uid each carries
+  final keptUid = <String, String?>{};
   @override
   Future<bool> keepFirst(
     String hash,
     String cipher, {
     String peer = '',
+    String? uid,
     required int now,
   }) async {
     _hit('keepFirst', null, null);
@@ -838,12 +841,14 @@ class ArrivalRows implements HaloDb {
     }
     if (!firstKeepFits(
       rows: kept.length,
-      mine: peer.isEmpty ? kept.length : mine,
+      mine: mine,
       bytes: bytes,
       size: cipher.length,
+      named: peer.isNotEmpty,
     )) {
       return false;
     }
+    keptUid[hash] = uid;
     kept[hash] = (
       hash: hash,
       cipher: cipher,
@@ -874,6 +879,18 @@ class ArrivalRows implements HaloDb {
 
   @override
   Future<void> forgetFirst(String hash) async => kept.remove(hash);
+  @override
+  Future<void> forgetFirstOf(String peer, {String? uid}) async =>
+      kept.removeWhere(
+        (h, r) => r.peer == peer && (uid == null || keptUid[h] == uid),
+      );
+  @override
+  Future<void> forgetAllFirst() async => kept.clear();
+  @override
+  Future<void> noteTakenBack(String peer, String uid) async {
+    _hit('noteTakenBack', uid, null);
+    gone.add((peer, uid));
+  }
 
   @override
   Future<void> markSent(String msgUid) async => _hit('markSent', msgUid, null);

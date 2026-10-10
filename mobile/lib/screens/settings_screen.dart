@@ -798,9 +798,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
 }
 
 // what a mailed report carries of this phone: why the last first contacts
-// failed, as codes and minutes ago, never who, what or a key
+// failed, as codes and minutes ago, never who, what or a key. nothing from
+// a quiet session: an empty phone has nothing to say
 @visibleForTesting
 String reportCodes() {
+  if (sessionQuiet) return '';
   final fc = firstFails.summary();
   return fc.isEmpty ? '' : '&body=${Uri.encodeComponent('first contact: $fc')}';
 }

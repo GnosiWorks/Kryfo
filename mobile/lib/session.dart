@@ -501,6 +501,10 @@ class Session {
       (await _ofUid(msgUid)).setPinned(msgUid, pinned);
   Future<void> setPowNonce(String msgUid, int nonce) async =>
       (await _ofUid(msgUid)).setPowNonce(msgUid, nonce);
+  Future<void> keepOpenerWire(String msgUid, String wire) async =>
+      (await _ofUid(msgUid)).keepOpenerWire(msgUid, wire);
+  Future<void> noteOpenerBoth(String msgUid) async =>
+      (await _ofUid(msgUid)).noteOpenerBoth(msgUid);
   Future<void> setSaved(String msgUid, bool saved) async =>
       (await _ofUid(msgUid)).setSaved(msgUid, saved);
   Future<String?> stickerOf(String uid) async =>

@@ -19,6 +19,9 @@ class FirstRefused implements Exception {
 // as long as the relays keep their copy, inside a stranger shelf's limits
 const kFirstKeptMost = 64;
 const kFirstKeptPerSender = kShelfPlaces;
+// those whose sender is not named on the everyday side, together: a hidden
+// chat's, few enough that they never crowd out anyone named
+const kFirstKeptUnnamed = 8;
 const kFirstKeptBytes = kShelfBytes;
 const kFirstKeptFor = Duration(days: 14);
 const kFirstKeptTries = 12;
@@ -28,16 +31,17 @@ Duration firstRetryGap(int tries) =>
     Duration(minutes: min(360, 1 << min(tries, 9)));
 
 /// whether a kept opener of [size] bytes fits beside [rows] kept ones that
-/// take [bytes], [mine] of them its sender's. an unknown sender's count is
-/// the whole lot's
+/// take [bytes], [mine] of them its sender's, or of the unnamed ones when
+/// its sender is not [named]
 bool firstKeepFits({
   required int rows,
   required int mine,
   required int bytes,
   required int size,
+  bool named = true,
 }) =>
     rows < kFirstKeptMost &&
-    mine < kFirstKeptPerSender &&
+    mine < (named ? kFirstKeptPerSender : kFirstKeptUnnamed) &&
     bytes + size <= kFirstKeptBytes;
 
 /// a sent opener with no receipt goes again this long after it last went,
@@ -115,7 +119,8 @@ bool waitsForReceipt({
 /// a 1:1 text's way out. before they add us back the onion goes first, so
 /// their drain runs the back-pair, and their first-contact address is the
 /// relay route that reaches them. an onion ack is only their engine
-/// holding it in memory: the relay copy goes as well, and they keep one
+/// holding it in memory: the relay copy goes as well, behind the ok, and
+/// [bothWent] hears when it did. [copied] is that copy, for whoever waits
 Future<String> routeText({
   required bool backPaired,
   required String onion,
@@ -125,6 +130,8 @@ Future<String> routeText({
   required Future<String> Function(String xPub, String fc) viaFirst,
   required Future<String> Function(String xPub) viaRelay,
   void Function(String line)? log,
+  void Function()? bothWent,
+  void Function(Future<void> copy)? copied,
 }) async {
   final first = !backPaired && fc != null && fc.isNotEmpty;
   String? tor;
@@ -132,12 +139,22 @@ Future<String> routeText({
     tor = await viaOnion();
     if (tor == 'ok') {
       if (first) {
-        final x = await xPub();
-        final f = x == null ? 'error: no key' : await viaFirst(x, fc);
-        if (f != 'ok') {
-          firstFails.note('copy');
-          log?.call('first-contact copy did not go ($f)');
-        }
+        final copy = () async {
+          try {
+            final x = await xPub();
+            final f = x == null ? 'error: no key' : await viaFirst(x, fc);
+            if (f == 'ok') {
+              bothWent?.call();
+              return;
+            }
+            firstFails.note('copy');
+            log?.call('first-contact copy did not go ($f)');
+          } catch (e) {
+            firstFails.note('copy');
+            log?.call('first-contact copy did not go ($e)');
+          }
+        }();
+        copied?.call(copy);
       }
       return 'ok';
     }

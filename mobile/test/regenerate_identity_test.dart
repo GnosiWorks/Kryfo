@@ -77,6 +77,9 @@ class _Live implements HaloDb {
   @override
   Future<void> saveIdentity(String id, String edPriv, String xPriv) async =>
       saved.add(id);
+  var keptGone = 0;
+  @override
+  Future<void> forgetAllFirst() async => keptGone++;
   @override
   dynamic noSuchMethod(Invocation i) =>
       throw UnimplementedError('live: ${i.memberName}');
@@ -120,6 +123,8 @@ void main() {
     await app.regenerateIdentity();
 
     expect(live.saved, ['second-words-now']);
+    // openers kept for the old key open no more
+    expect(live.keptGone, 1);
     final now = _bundle(await makePreKeyBundleB64());
     // the invite names the key every envelope is now sent under
     final key = IdentityKey.fromBytes(

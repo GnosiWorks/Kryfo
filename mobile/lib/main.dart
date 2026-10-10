@@ -2260,7 +2260,8 @@ class HaloDb implements GroupOwedStore {
     await _scrubMedia(files);
   }
 
-  // a request that never became one: its row and its shield line
+  // a request that never became one: its row, its shield line and what
+  // of theirs waited to be tried again
   Future<void> forgetRequest(String haloId) async {
     final db = await open();
     await db.delete(
@@ -2269,6 +2270,7 @@ class HaloDb implements GroupOwedStore {
       whereArgs: [haloId, 0],
     );
     await db.delete('shield', where: 'halo_id = ?', whereArgs: [haloId]);
+    await db.delete('first_kept', where: 'peer = ?', whereArgs: [haloId]);
   }
 
   // they wrote after we deleted them: bring the row back as a request.
@@ -2723,6 +2725,7 @@ class HaloDb implements GroupOwedStore {
       ]);
       await t.delete('messages', where: _kOneToOne, whereArgs: [haloId]);
       await t.delete('held_onion', where: 'peer_id = ?', whereArgs: [haloId]);
+      await t.delete('first_kept', where: 'peer = ?', whereArgs: [haloId]);
       await _dropFilesComingFrom(t, haloId);
       // park, don't delete: the row carries the xpub the relay subscription
       // is built from. if they write again, unparkIfArchived surfaces them as
@@ -4135,13 +4138,15 @@ class HaloDb implements GroupOwedStore {
     await db.delete('held_onion', where: 'peer_id = ?', whereArgs: [peerId]);
   }
 
-  // a stranger's opener that did not file, kept as it came to be tried
-  // again: [peer] is who it opened to, empty when it did not open. false
-  // when there is no room for it (firstKeepFits)
+  // a stranger's opener that opened and did not file, kept as it came to be
+  // tried again: [peer] is who it opened to, empty for someone the everyday
+  // side does not name, and [uid] the message it carries. false when there
+  // is no room for it (firstKeepFits)
   Future<bool> keepFirst(
     String hash,
     String cipher, {
     String peer = '',
+    String? uid,
     required int now,
   }) async {
     final db = await open();
@@ -4158,9 +4163,10 @@ class HaloDb implements GroupOwedStore {
     }
     if (!firstKeepFits(
       rows: rows.length,
-      mine: peer.isEmpty ? rows.length : mine,
+      mine: mine,
       bytes: bytes,
       size: cipher.length,
+      named: peer.isNotEmpty,
     )) {
       return false;
     }
@@ -4168,6 +4174,7 @@ class HaloDb implements GroupOwedStore {
       'hash': hash,
       'cipher': cipher,
       'peer': peer,
+      'uid': uid,
       'at': now,
       'tries': 0,
       'next_at': now + firstRetryGap(0).inMilliseconds,
@@ -4207,6 +4214,50 @@ class HaloDb implements GroupOwedStore {
     await db.delete('first_kept', where: 'hash = ?', whereArgs: [hash]);
   }
 
+  // what [peer] has kept here: their request went, or they took [uid] back
+  Future<void> forgetFirstOf(String peer, {String? uid}) async {
+    final db = await open();
+    await db.delete(
+      'first_kept',
+      where: uid == null ? 'peer = ?' : 'peer = ? AND uid = ?',
+      whereArgs: [peer, ?uid],
+    );
+  }
+
+  // every kept opener: none of them opens under a new invite key
+  Future<void> forgetAllFirst() async {
+    final db = await open();
+    await db.delete('first_kept');
+  }
+
+  // [uid] taken back by [peer] before it came: known as gone, so a copy
+  // that comes later, after a restart too, is never shown
+  Future<void> noteTakenBack(String peer, String uid) async {
+    final db = await open();
+    await db.insert('gone_in', {
+      'msg_uid': uid,
+      'peer_id': peer,
+      'at': DateTime.now().millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  // our 1:1 texts and files to [peer] that went, oldest first: past their
+  // stranger cap, theirs are held rather than shown
+  Future<List<String>> sentUidsTo(String peer) async {
+    final db = await open();
+    final rows = await db.query(
+      'messages',
+      columns: ['msg_uid'],
+      where: "$_kOneToOne AND direction = 'out' AND sent = 1",
+      whereArgs: [peer],
+      orderBy: 'sent_at ASC',
+    );
+    return [
+      for (final r in rows)
+        if (r['msg_uid'] case final String u) u,
+    ];
+  }
+
   // our sent texts to [peer] with no receipt yet, the openers among them
   // while they have not added us back
   Future<List<Map<String, Object?>>> sentUnconfirmed(String peer) async {
@@ -4233,8 +4284,11 @@ class HaloDb implements GroupOwedStore {
     return [for (final r in rows) r['halo_id'] as String];
   }
 
-  // how often an opener of ours went again and when it last did
-  Future<({int tries, int lastAt})?> openerAgain(String uid) async {
+  // how often an opener of ours went again, when it last did, the words it
+  // first went as and whether its onion and relay copies both went
+  Future<({int tries, int lastAt, String? wire, bool both})?> openerAgain(
+    String uid,
+  ) async {
     final db = await open();
     final rows = await db.query(
       'opener_again',
@@ -4243,20 +4297,41 @@ class HaloDb implements GroupOwedStore {
       limit: 1,
     );
     if (rows.isEmpty) return null;
+    final r = rows.first;
     return (
-      tries: (rows.first['tries'] as num).toInt(),
-      lastAt: (rows.first['last_at'] as num).toInt(),
+      tries: (r['tries'] as num).toInt(),
+      lastAt: (r['last_at'] as num).toInt(),
+      wire: r['wire'] as String?,
+      both: r['both_went'] == 1,
     );
   }
 
-  Future<void> noteOpenerAgain(String uid, int tries, int at) async {
+  Future<void> _openerRow(String uid, Map<String, Object?> v) async {
     final db = await open();
+    final n = await db.update(
+      'opener_again',
+      v,
+      where: 'msg_uid = ?',
+      whereArgs: [uid],
+    );
+    if (n > 0) return;
     await db.insert('opener_again', {
       'msg_uid': uid,
-      'tries': tries,
-      'last_at': at,
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
+      'last_at': DateTime.now().millisecondsSinceEpoch,
+      ...v,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
   }
+
+  Future<void> noteOpenerAgain(String uid, int tries, int at) =>
+      _openerRow(uid, {'tries': tries, 'last_at': at});
+
+  // an opener's words as they first went: what goes again is the same, so
+  // a gate that held it holds no second copy
+  Future<void> keepOpenerWire(String uid, String wire) =>
+      _openerRow(uid, {'wire': wire});
+
+  // its onion took it and its relay copy went too
+  Future<void> noteOpenerBoth(String uid) => _openerRow(uid, {'both_went': 1});
 
   // what went again before [cut] is past the relays' keeping
   Future<void> forgetOpenersBefore(int cut) async {
@@ -6677,6 +6752,14 @@ Future<void> _heldTable(Database db) async {
 Future<String?> Function() readFcCounter = () =>
     secureStore.read(key: 'fc_counter');
 
+const kOpenerGoesWithRow = '''
+  CREATE TRIGGER IF NOT EXISTS opener_again_row_gone
+  AFTER DELETE ON messages
+  BEGIN
+    DELETE FROM opener_again WHERE msg_uid = OLD.msg_uid;
+  END
+''';
+
 // an opener kept to be tried again (HaloDb.keepFirst)
 typedef FirstKept = ({
   String hash,
@@ -6687,9 +6770,10 @@ typedef FirstKept = ({
   int nextAt,
 });
 
-// a stranger's opener that did not file here, kept as it came under its
-// hash and tried again; and an opener of ours with no receipt yet, how
-// often it went again and when it last did
+// a stranger's opener that opened and did not file here, kept as it came
+// under its hash, with its sender and uid, and tried again; and an opener
+// of ours with no receipt yet: how often it went again, when it last did,
+// the words it went as, and whether its onion and relay copies both went
 @visibleForTesting
 Future<void> firstContactTables(DatabaseExecutor db) async {
   await db.execute('''
@@ -6697,16 +6781,21 @@ Future<void> firstContactTables(DatabaseExecutor db) async {
       hash TEXT PRIMARY KEY,
       cipher TEXT NOT NULL,
       peer TEXT NOT NULL DEFAULT '',
+      uid TEXT,
       at INTEGER NOT NULL,
       tries INTEGER NOT NULL DEFAULT 0,
       next_at INTEGER NOT NULL
     )
   ''');
+  // the words an opener went as go with it, however it goes
+  await db.execute(kOpenerGoesWithRow);
   await db.execute('''
     CREATE TABLE IF NOT EXISTS opener_again (
       msg_uid TEXT PRIMARY KEY,
       tries INTEGER NOT NULL DEFAULT 0,
-      last_at INTEGER NOT NULL
+      last_at INTEGER NOT NULL,
+      wire TEXT,
+      both_went INTEGER NOT NULL DEFAULT 0
     )
   ''');
 }
@@ -9447,22 +9536,30 @@ class AppState extends ChangeNotifier {
         for (final peer in await d.notBackPaired()) {
           if (isDevId(peer)) continue;
           if (await blockedAnywhere(peer) || await keyHeld(peer)) continue;
+          List<String>? order;
           for (final r in await d.sentUnconfirmed(peer)) {
             final uid = r['msg_uid'] as String;
             final sentAt = (r['sent_at'] as num).toInt();
             if (now - sentAt >= kOpenerAgainFor.inMilliseconds) continue;
             if (_outboxInflight.contains(uid)) continue;
             final was = await d.openerAgain(uid);
+            // past their two its copies went to be held, by their onion
+            // and on the relay: no receipt comes until they accept
+            if (was != null && was.both) {
+              order ??= await d.sentUidsTo(peer);
+              if (order.indexOf(uid) >= 2) continue;
+            }
             final tries = was?.tries ?? 0;
+            // a row made as it first went counts from when it was written
             final due = openerAgainAt(
               sentAt: sentAt,
-              lastAt: was?.lastAt,
+              lastAt: tries == 0 ? null : was?.lastAt,
               tries: tries,
             );
             if (due == null || due > now) continue;
             // noted before it goes: a death half way is a try, not a loop
             await d.noteOpenerAgain(uid, tries + 1, now);
-            await _openerAgain(r, peer, d);
+            await _openerAgain(r, peer, d, wire: was?.wire);
           }
         }
       } catch (e) {
@@ -9471,27 +9568,31 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  // one opener again, as the outbox puts a text out: its nonce, its uid and
-  // the time it was written, sealed on the session as it is now
+  // one opener again: the very words it first went as when they were kept,
+  // so a gate that holds it holds one copy, or as the outbox puts a text
+  // out, its nonce, uid and time written. sealed on the session as it is
   Future<void> _openerAgain(
     Map<String, Object?> r,
     String peer,
-    HaloDb d,
-  ) async {
+    HaloDb d, {
+    String? wire,
+  }) async {
     final uid = r['msg_uid'] as String;
     _outboxInflight.add(uid);
     try {
       var row = r;
-      if (redeliveryNeedsPow(r, backPaired: false)) {
+      if (wire == null && redeliveryNeedsPow(r, backPaired: false)) {
         final nonce = await compute(_outboxGrind, r['plaintext'] as String);
         await d.setPowNonce(uid, nonce);
         row = {...r, 'pow_nonce': nonce};
       }
-      final wrapped = await wrapRedelivery(
-        row,
-        sender: _mySender(),
-        badge: await sharedBadge(),
-      );
+      final wrapped =
+          wire ??
+          await wrapRedelivery(
+            row,
+            sender: _mySender(),
+            badge: await sharedBadge(),
+          );
       final ok = await _sendOneEnvelope(peer, wrapped);
       dlog('openers: $uid ${ok ? "went again" : "did not go again"}');
     } catch (e) {
@@ -11054,6 +11155,8 @@ class AppState extends ChangeNotifier {
   // that started on an empty list, or lost every relay, starts again
   @visibleForTesting
   void checkFirstListener() {
+    // a quiet session starts nothing of the everyday side's
+    if (sessionQuiet) return;
     if (!_fcLoaded) {
       if (_fcUnread && _fcCounterTimer == null) unawaited(_loadFirstContact());
       return;
@@ -11141,9 +11244,12 @@ class AppState extends ChangeNotifier {
     // and never on the developer's own phone, whose card every install pins
     // a counter that did not read is never moved past
     if (sessionQuiet || _devIdentity || _fcUnread) return;
+    // what was kept goes in now if it can: nothing opens it after this
+    await retryFirsts(all: true);
     // the key first: moving only the relay address leaves every old link
     // able to open a session and dial the onion directly
     await signalSession.rotateInvitePreKey();
+    await _forgetAllFirst();
     _fcCounter++;
     await secureStore.write(key: 'fc_counter', value: '$_fcCounter');
     unawaited(_listenFirstContact());
@@ -11501,8 +11607,12 @@ class AppState extends ChangeNotifier {
         // and what went to them as a stranger with no receipt back goes
         // again, once, on the lane they read now (resendUndelivered)
         if (!db.container.quiet && env.groupId == null) {
+          // no further back than a copy is known as gone there
+          final floor =
+              DateTime.now().millisecondsSinceEpoch -
+              HaloDb.kGoneFor.inMilliseconds;
           unawaited(
-            _resendTo(db, senderHaloId, since: 0).catchError((Object e) {
+            _resendTo(db, senderHaloId, floor: floor).catchError((Object e) {
               dlog('resend: not on their add (${e.runtimeType})');
             }),
           );
@@ -11671,6 +11781,12 @@ class AppState extends ChangeNotifier {
         return to;
       }
       _noteTakenBack(senderHaloId, env.unsend!);
+      // one not here yet, kept to be tried again say, stays away after a
+      // restart too
+      if (env.groupId == null && !await db.messageExists(env.unsend!)) {
+        await db.noteTakenBack(senderHaloId, env.unsend!);
+        await db.forgetFirstOf(senderHaloId, uid: env.unsend!);
+      }
       await db.deleteMessage(env.unsend!);
       changed();
       // the delete took its unread mark; its notification goes too
@@ -14136,7 +14252,13 @@ class AppState extends ChangeNotifier {
   // from [on], the container their chat is in: since their backup was made
   // ([since]) when the ask says, never less than the window. not while
   // their key is flagged as changed: that one is checked first
-  Future<void> _resendTo(HaloDb on, String peer, {int? since}) async {
+  Future<void> _resendTo(
+    HaloDb on,
+    String peer, {
+    int? since,
+    // from here exactly, past the window
+    int? floor,
+  }) async {
     final now = DateTime.now().millisecondsSinceEpoch;
     if (now - (_resentAt[peer] ?? 0) < _kResendGap.inMilliseconds) return;
     // someone blocked is sent nothing again, asked or owed, whichever
@@ -14149,7 +14271,9 @@ class AppState extends ChangeNotifier {
     _resentAt[peer] = now;
     final again = await on.resendUndelivered(
       peer,
-      since: resendFrom(now, since, window: _kResendWindow, most: _kResendMost),
+      since:
+          floor ??
+          resendFrom(now, since, window: _kResendWindow, most: _kResendMost),
     );
     if (again > 0) {
       dlog('resend: $again undelivered to $peer go again');
@@ -14184,15 +14308,23 @@ class AppState extends ChangeNotifier {
 
   final Map<String, int> _decryptFails = {};
 
-  // a stranger's opener that did not file, onto disk as it came, to be
-  // tried again. the sender it opened to counts it in their share, unless
-  // they are someone a vault hides. false when it was not kept
+  // a stranger's opener that signal opened and that did not file, onto disk
+  // as it came, to be tried again. one that never opened is struck as any
+  // other. the sender counts it in their share, or in the unnamed ones'
+  // when a vault hides them. false when it was not kept
   Future<bool> _keepFirst(String h, String cipher) async {
-    var peer = _firstOpened[h]?.haloId ?? '';
-    if (peer.isNotEmpty && _routeOf(peer, null) != RouteTo.everyday) peer = '';
+    final o = _firstOpened[h];
+    if (o == null) return false;
+    final peer = _routeOf(o.haloId, null) == RouteTo.everyday ? o.haloId : '';
     try {
       final now = DateTime.now().millisecondsSinceEpoch;
-      if (!await live.keepFirst(h, cipher, peer: peer, now: now)) {
+      if (!await live.keepFirst(
+        h,
+        cipher,
+        peer: peer,
+        uid: o.env.msgUid,
+        now: now,
+      )) {
         firstFails.note('full');
         return false;
       }
@@ -14251,6 +14383,8 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> _firstRound({required bool all}) async {
+    // a quiet session runs nothing of the everyday side's
+    if (sessionQuiet) return;
     int? soonest;
     // a chat hidden while its opener waited took it into the vault
     for (final d in [live, ?_openVault]) {
@@ -14279,9 +14413,10 @@ class AppState extends ChangeNotifier {
           await _forgetFirst(d, r.hash);
           continue;
         }
-        // the relays let go of it by now, and so does this phone
+        // the relays let go of it by now, and so does this phone, for good
         if (now - r.at >= kFirstKeptFor.inMilliseconds) {
           firstFails.note('expired');
+          await live.markSeenLong(r.hash);
           await _forgetFirst(d, r.hash);
           continue;
         }
@@ -14298,11 +14433,12 @@ class AppState extends ChangeNotifier {
         await _forgetFirst(d, r.hash);
         dlog('first contact: a kept opener went in');
       } catch (e) {
-        // a full shelf waits for an accept like any other try. one asked
-        // for ahead of its time by an add or a start uses none of them
-        final tries = r.nextAt > now ? r.tries : r.tries + 1;
+        // a full shelf waits for an accept, and one asked for ahead of its
+        // time by an add or a start: neither uses a try
+        final tries = e is ShelfFull || r.nextAt > now ? r.tries : r.tries + 1;
         if (tries >= kFirstKeptTries) {
           firstFails.note('gave up');
+          await live.markSeenLong(r.hash);
           await _forgetFirst(d, r.hash);
           continue;
         }
@@ -14316,6 +14452,14 @@ class AppState extends ChangeNotifier {
       }
     }
     return soonest;
+  }
+
+  Future<void> _forgetAllFirst() async {
+    try {
+      await live.forgetAllFirst();
+    } catch (e) {
+      dlog('first contact: kept ones not let go (${e.runtimeType})');
+    }
   }
 
   Future<void> _forgetFirst(HaloDb d, String h) async {
@@ -14919,6 +15063,9 @@ class AppState extends ChangeNotifier {
   void _dropOpened() {
     _relayOpened.clear();
     _firstOpened.clear();
+    // and why the last first contacts failed: a report from the next one
+    // says nothing of this one
+    firstFails.clear();
     _dropEarly();
     _openedEpoch++;
   }
@@ -15054,11 +15201,14 @@ class AppState extends ChangeNotifier {
           return;
         } catch (e) {
           if (!fcLane) rethrow;
-          // a stranger's opener that may file later: kept, not acked
+          // opened and not filed: kept, and not acked. a copy in hand, or
+          // one that threw before it opened, comes again as any failed line
           dlog('nostr: back-pair threw ($e)');
           firstFails.note('file');
-          if (!again) await _keepFirst(h, m.cipher);
-          throw const _FirstWaits();
+          if (again || await _keepFirst(h, m.cipher)) {
+            throw const _FirstWaits();
+          }
+          rethrow;
         }
         dlog('nostr: back-pair ${paired != null ? "ok" : "failed"}');
         if (paired != null) {
@@ -15069,9 +15219,11 @@ class AppState extends ChangeNotifier {
         }
       }
       if (!landed && fcLane && opener) {
-        // never struck: a later key, accept or session change may open it
-        if (!again) await _keepFirst(h, m.cipher);
-        throw const _FirstWaits();
+        // one that opened and did not file is kept and not acked; one that
+        // never opened is struck below as any other
+        if (again || await _keepFirst(h, m.cipher)) {
+          throw const _FirstWaits();
+        }
       }
       if (!landed) {
         _strikeUndecryptable(h, 'nostr');
@@ -18709,6 +18861,8 @@ class AppState extends ChangeNotifier {
     myXPub = engine.myXPubkey();
     restored = false;
     if (signalSession.ready) await _rekeySignal();
+    // kept openers were made for the old key and open no more
+    await _forgetAllFirst();
     // the invite address is derived from the key too
     if (_fcLoaded) unawaited(_listenFirstContact());
     notifyListeners();

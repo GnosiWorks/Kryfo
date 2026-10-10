@@ -5,12 +5,22 @@
 // it; a kept one fits inside a stranger's shelf; the invite address is
 // listened on again until an answer says ok, and a counter that does not
 // read is read again rather than taken as 0
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/first_contact.dart';
+import 'package:kryfo/container.dart';
 import 'package:kryfo/main.dart'
-    show AppState, HaloEngine, readFcCounter, useEngineForTest;
+    show
+        AppState,
+        HaloEngine,
+        readFcCounter,
+        useDatabasesForTest,
+        useEngineForTest;
+import 'package:kryfo/session.dart';
+import 'package:kryfo/wipe.dart' show wipeForget;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/screens/settings_screen.dart' show reportCodes;
 import 'package:kryfo/stranger_gate.dart' show kShelfBytes, kShelfPlaces;
@@ -25,6 +35,20 @@ class _Wire {
   var first = 'ok';
   var relay = 'ok';
   String? xPub = 'x-them';
+  // the first-contact copy, when it is held back
+  Completer<String>? firstWaits;
+  var both = 0;
+  final copies = <Future<void>>[];
+
+  // the send, and the copy that goes behind its ok
+  Future<String> sendAll({
+    required bool backPaired,
+    String? fc = 'fc-them',
+  }) async {
+    final r = await send(backPaired: backPaired, fc: fc);
+    await Future.wait(copies);
+    return r;
+  }
 
   Future<String> send({
     required bool backPaired,
@@ -32,6 +56,8 @@ class _Wire {
     String? fc = 'fc-them',
     String cipher = 'c1',
   }) => routeText(
+    bothWent: () => both++,
+    copied: copies.add,
     backPaired: backPaired,
     onion: onionAt,
     viaOnion: () async {
@@ -42,7 +68,7 @@ class _Wire {
     fc: fc,
     viaFirst: (x, f) async {
       went.add('fc $x $f $cipher');
-      return first;
+      return firstWaits?.future ?? first;
     },
     viaRelay: (x) async {
       went.add('relay $x $cipher');
@@ -77,17 +103,28 @@ void main() {
     test('an onion ack still sends the first-contact copy of the same '
         'cipher', () async {
       final w = _Wire();
-      expect(await w.send(backPaired: false), 'ok');
+      expect(await w.sendAll(backPaired: false), 'ok');
       expect(w.went, ['onion c1', 'fc x-them fc-them c1']);
+      expect(w.both, 1);
+    });
+
+    test('the ok does not wait on the copy', () async {
+      final w = _Wire()..firstWaits = Completer<String>();
+      expect(await w.send(backPaired: false), 'ok');
+      expect(w.both, 0);
+      w.firstWaits!.complete('ok');
+      await Future.wait(w.copies);
+      expect(w.both, 1);
     });
 
     test('a copy that does not go leaves the onion\'s ok, and says '
         'why', () async {
       firstFails.clear();
       final w = _Wire()..first = 'error: no relays accepted';
-      expect(await w.send(backPaired: false), 'ok');
+      expect(await w.sendAll(backPaired: false), 'ok');
       expect(w.went, ['onion c1', 'fc x-them fc-them c1']);
       expect(firstFails.codes, ['copy']);
+      expect(w.both, 0);
     });
 
     test('once they added us back, the pair lane alone', () async {
@@ -100,6 +137,7 @@ void main() {
       final w = _Wire()..onion = 'error: timeout';
       expect(await w.send(backPaired: false), 'ok');
       expect(w.went, ['onion c1', 'fc x-them fc-them c1']);
+      expect(w.copies, isEmpty);
     });
 
     test('with no first-contact address the pair address only parks '
@@ -185,6 +223,16 @@ void main() {
         firstKeepFits(rows: kFirstKeptMost, mine: 0, bytes: 0, size: 1),
         isFalse,
       );
+    });
+
+    test('those from someone not named here share a few places, and never '
+        'crowd out anyone named', () {
+      bool fits(int mine, {required bool named}) =>
+          firstKeepFits(rows: 30, mine: mine, bytes: 0, size: 1, named: named);
+      expect(fits(kFirstKeptUnnamed - 1, named: false), isTrue);
+      expect(fits(kFirstKeptUnnamed, named: false), isFalse);
+      expect(fits(kFirstKeptUnnamed, named: true), isTrue);
+      expect(kFirstKeptMost - kFirstKeptUnnamed, greaterThan(2 * kShelfPlaces));
     });
 
     test('is tried again later each time, six hours apart at most', () {
@@ -281,6 +329,40 @@ void main() {
       e.relays = -1;
       app.checkFirstListener();
       expect(e.asked, [3, 3, 3]);
+    });
+
+    testWidgets('a quiet session says nothing of first contacts, and starts '
+        'nothing of theirs', (tester) async {
+      await app.loadFirstContact();
+      final everyday = ArrivalRows(HaloContainer.everyday);
+      final decoy = ArrivalRows(HaloContainer.decoy);
+      useDatabasesForTest(everyday, Session(decoy));
+      addTearDown(() => useDatabasesForTest(everyday, Session(everyday)));
+      final kept = (
+        hash: 'h1',
+        cipher: 'c1',
+        peer: '',
+        at: DateTime.now().millisecondsSinceEpoch,
+        tries: 0,
+        nextAt: 0,
+      );
+      everyday.kept['h1'] = kept;
+      firstFails
+        ..clear()
+        ..note('decrypt');
+      expect(reportCodes(), isEmpty);
+      e.relays = 0;
+      app.checkFirstListener();
+      await app.retryFirsts(all: true);
+      expect(e.asked, [3]);
+      expect(everyday.kept['h1'], kept);
+      expect(everyday.calls, isEmpty);
+    });
+
+    test('a session change leaves no reasons behind', () {
+      firstFails.note('decrypt');
+      wipeForget();
+      expect(firstFails.codes, isEmpty);
     });
   });
 }
