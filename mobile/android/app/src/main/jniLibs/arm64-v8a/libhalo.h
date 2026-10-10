@@ -434,6 +434,11 @@ extern char* HaloRoomSubscribeFirstContact(char* cPriv);
 //
 extern char* HaloRoomForget(char* cPriv, char* cPeers);
 
+// one member of a room no longer listened to, and what its address kept on
+// disk gone: they left or were taken out. the room's other lanes stay
+//
+extern char* HaloRoomUnsubscribeMember(char* cPriv, char* cPeer);
+
 // stop every subscription a room key holds. called on expiry and on leave;
 // after this nothing addressed to the room can arrive.
 //
