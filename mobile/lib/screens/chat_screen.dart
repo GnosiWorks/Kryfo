@@ -80,7 +80,9 @@ import '../main.dart'
         releaseChat,
         shredFile,
         torStrictGetOnIsolate,
+        torValve,
         TorHalo;
+import '../widgets/reconnect_valve.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/say_hi_card.dart';
 import '../stickers/sticker_bubble.dart';
@@ -3565,6 +3567,17 @@ class _ChatScreenState extends State<ChatScreen>
     }
   }
 
+  // one of ours is still going: a file that is plainly moving is not
+  // waiting, and neither is a row that already reads as failed
+  bool _sendWaiting() => _messages.any(
+    (m) =>
+        m.direction == 'out' &&
+        (m.sending || (m.failed && !_sendLooksFailed(m))) &&
+        !(appState.linkUp &&
+            m.msgUid != null &&
+            mediaInflight.contains(m.msgUid)),
+  );
+
   bool _torReadyToSend() {
     // outside onion nothing is routed through tor, so there is nothing to
     // wait for, and the relay still works where tor is blocked
@@ -5286,6 +5299,15 @@ class _ChatScreenState extends State<ChatScreen>
                       ),
                     )
                   : const SizedBox(key: ValueKey('tor-none'), width: 0),
+            ),
+            // a send that has waited on tor a minute gets a way out
+            ReconnectValve(
+              valve: torValve,
+              waiting: !appState.movedAway && _sendWaiting(),
+              private: appState.sendMode == 'private',
+              quiet: sessionQuiet,
+              linkUp: appState.linkUp,
+              margin: const EdgeInsets.fromLTRB(14, 0, 14, 8),
             ),
             _Fold(
               _flag != null && !_accepted && !_blocked

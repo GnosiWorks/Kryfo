@@ -3376,5 +3376,14 @@ void main() {
       l.settingsGifSearchHint,
       "Off until you turn it on. Kryfo's server searches for you, so the GIF service never sees you.",
     );
+    expect(
+      l.valveStillConnecting,
+      "Still connecting. Your messages go out as soon as the connection is back.",
+    );
+    expect(
+      l.valveCouldNotReconnect,
+      "Kryfo could not reconnect. Restarting it fixes this and keeps your messages.",
+    );
+    expect(l.valveRestartKryfo, "Restart Kryfo");
   });
 }

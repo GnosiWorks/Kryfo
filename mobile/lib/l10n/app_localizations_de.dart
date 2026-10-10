@@ -7989,4 +7989,15 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get settingsGifSearchHint =>
       'Aus, bis du sie einschaltest. Der Server von Kryfo sucht für dich, so sieht dich der GIF-Dienst nie.';
+
+  @override
+  String get valveStillConnecting =>
+      'Verbinde noch. Deine Nachrichten gehen raus, sobald die Verbindung wieder da ist.';
+
+  @override
+  String get valveCouldNotReconnect =>
+      'Kryfo konnte sich nicht neu verbinden. Ein Neustart behebt das, deine Nachrichten bleiben erhalten.';
+
+  @override
+  String get valveRestartKryfo => 'Kryfo neu starten';
 }

@@ -2066,5 +2066,8 @@
   "gifPhoneLine": "Bu telefonda kayıtlı GIF’ler. Hiçbir şey internete çıkmaz.",
   "gifPhoneChoose": "GIF seç",
   "settingsGifSearch": "GIF arama",
-  "settingsGifSearchHint": "Sen açana kadar kapalı. Kryfo’nun sunucusu senin için arar, böylece GIF servisi seni asla görmez."
+  "settingsGifSearchHint": "Sen açana kadar kapalı. Kryfo’nun sunucusu senin için arar, böylece GIF servisi seni asla görmez.",
+  "valveStillConnecting": "Hâlâ bağlanıyor. Bağlantı geri gelir gelmez mesajların gider.",
+  "valveCouldNotReconnect": "Kryfo yeniden bağlanamadı. Yeniden başlatmak bunu düzeltir, mesajların korunur.",
+  "valveRestartKryfo": "Kryfo’yu yeniden başlat"
 }

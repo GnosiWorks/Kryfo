@@ -7898,4 +7898,15 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get settingsGifSearchHint =>
       'Mati sampai kamu menyalakannya. Server Kryfo mencarikan untukmu, jadi layanan GIF tidak pernah melihatmu.';
+
+  @override
+  String get valveStillConnecting =>
+      'Masih menyambung. Pesanmu terkirim begitu koneksi kembali.';
+
+  @override
+  String get valveCouldNotReconnect =>
+      'Kryfo tidak bisa menyambung ulang. Memulai ulang akan memperbaikinya dan pesanmu tetap tersimpan.';
+
+  @override
+  String get valveRestartKryfo => 'Mulai ulang Kryfo';
 }

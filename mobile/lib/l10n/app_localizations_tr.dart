@@ -7924,4 +7924,15 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get settingsGifSearchHint =>
       'Sen açana kadar kapalı. Kryfo’nun sunucusu senin için arar, böylece GIF servisi seni asla görmez.';
+
+  @override
+  String get valveStillConnecting =>
+      'Hâlâ bağlanıyor. Bağlantı geri gelir gelmez mesajların gider.';
+
+  @override
+  String get valveCouldNotReconnect =>
+      'Kryfo yeniden bağlanamadı. Yeniden başlatmak bunu düzeltir, mesajların korunur.';
+
+  @override
+  String get valveRestartKryfo => 'Kryfo’yu yeniden başlat';
 }

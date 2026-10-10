@@ -34,6 +34,7 @@ import 'delivery_mode.dart';
 import 'offline_gate.dart';
 import 'in_front.dart';
 import 'reopen.dart';
+import 'tor_valve.dart';
 import 'helper_push.dart';
 import 'screens/getting_messages_screen.dart';
 import 'screens/home_screen.dart';
@@ -377,6 +378,10 @@ class HaloEngine {
   String bridgeState() => engineTake(_bridgeState());
 
   void restartTor() => _take(_restartTor());
+
+  // tor reconnected now, past the floor and any reconnect still running.
+  // 'ok' or why not. off the ui thread: it waits on tor's control port
+  Future<String> reconnectNow() => _torCtlOnIsolate('HaloReconnectNow');
 
   // android reports a new default network: tor is bounced once it has been
   // quiet a few seconds. looked up on first use so older engines still load.
@@ -14296,6 +14301,12 @@ class AppState extends ChangeNotifier {
     _newTorTry();
   }
 
+  // the same, waited on, for the way out a stuck send offers
+  Future<String> reconnectNow() {
+    _newTorTry();
+    return engine.reconnectNow();
+  }
+
   // tor's status as the poll reads it each second. the bridge cards turn on
   // by time alone, so a change in them is announced too
   @visibleForTesting
@@ -19292,6 +19303,12 @@ class AppState extends ChangeNotifier {
 }
 
 final appState = AppState();
+
+// the way out of a send stuck on tor, shared by every chat and the home card
+final torValve = TorValve(
+  reconnect: () => appState.reconnectNow(),
+  restart: reopenApp,
+);
 
 void main() async {
   dlog('LAUNCH main');

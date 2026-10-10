@@ -8040,4 +8040,15 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get settingsGifSearchHint =>
       'Вимкнений, доки ти його не ввімкнеш. Сервер Kryfo шукає замість тебе, тож GIF-сервіс ніколи тебе не бачить.';
+
+  @override
+  String get valveStillConnecting =>
+      'Ще підключаємося. Твої повідомлення підуть, щойно зв’язок повернеться.';
+
+  @override
+  String get valveCouldNotReconnect =>
+      'Kryfo не зміг перепідключитися. Перезапуск це виправить, а повідомлення збережуться.';
+
+  @override
+  String get valveRestartKryfo => 'Перезапустити Kryfo';
 }

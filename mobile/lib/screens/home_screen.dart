@@ -33,6 +33,7 @@ import 'bridges_screen.dart';
 import 'archived_screen.dart';
 import '../miui_autostart.dart';
 import '../main.dart' hide live;
+import '../tor_valve.dart' show ValveStage;
 import '../widgets/motion.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/shift_in_place.dart';
@@ -945,7 +946,6 @@ class _OfflineCard extends StatefulWidget {
 class _OfflineCardState extends State<_OfflineCard> {
   // its "for how long" moves on while the card is seen
   final _timers = SeenTimers();
-  bool _busy = false;
 
   @override
   void initState() {
@@ -967,16 +967,6 @@ class _OfflineCardState extends State<_OfflineCard> {
     super.dispose();
   }
 
-  Future<void> _reconnect() async {
-    if (_busy) return;
-    setState(() => _busy = true);
-    appState.restartTor();
-    // the bounce reports itself through the status poll; this only stops the
-    // button being hammered while it runs.
-    await Future<void>.delayed(const Duration(seconds: 6));
-    if (mounted) setState(() => _busy = false);
-  }
-
   String _howLong(Duration d) {
     if (d.inHours >= 1) {
       final h = d.inHours;
@@ -988,9 +978,19 @@ class _OfflineCardState extends State<_OfflineCard> {
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: appState,
+      // the way out is the chats' too: a reconnect done there counts here
+      animation: Listenable.merge([appState, torValve]),
       builder: (context, _) {
         final since = appState.offlineFor ?? Duration.zero;
+        torValve.sawLink(appState.linkUp);
+        final stage = torValve.stageFor(
+          private: appState.sendMode == 'private',
+          quiet: false,
+          waitingSince: DateTime.now().subtract(since),
+          linkUp: appState.linkUp,
+        );
+        final busy = stage == ValveStage.working;
+        final restart = stage == ValveStage.restart;
         return _HomeCard(
           show: appState.looksOffline,
           id: 'offline',
@@ -999,9 +999,19 @@ class _OfflineCardState extends State<_OfflineCard> {
           line: l10n.homeTorHasNotBeen(_howLong(since)),
           lineColor: HaloColors.warm,
           actions: [
+            // a reconnect first, and a restart that keeps the queue when tor
+            // would not take it
             _CardAction(
-              label: _busy ? l10n.homeReconnecting : l10n.homeReconnect,
-              onTap: _busy ? null : _reconnect,
+              label: busy
+                  ? l10n.homeReconnecting
+                  : restart
+                  ? l10n.valveRestartKryfo
+                  : l10n.homeReconnect,
+              onTap: busy
+                  ? null
+                  : restart
+                  ? torValve.tryRestart
+                  : torValve.tryReconnect,
               fill: HaloColors.rose,
               ink: HaloColors.amberInk,
               swap: true,

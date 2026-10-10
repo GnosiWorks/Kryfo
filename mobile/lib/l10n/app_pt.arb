@@ -2066,5 +2066,8 @@
   "gifPhoneLine": "GIFs salvos neste celular. Nada vai para a internet.",
   "gifPhoneChoose": "Escolher um GIF",
   "settingsGifSearch": "Busca de GIFs",
-  "settingsGifSearchHint": "Desligada até você ligar. O servidor do Kryfo busca por você, então o serviço de GIFs nunca vê você."
+  "settingsGifSearchHint": "Desligada até você ligar. O servidor do Kryfo busca por você, então o serviço de GIFs nunca vê você.",
+  "valveStillConnecting": "Ainda conectando. Suas mensagens saem assim que a conexão voltar.",
+  "valveCouldNotReconnect": "O Kryfo não conseguiu se reconectar. Reiniciar resolve isso e mantém suas mensagens.",
+  "valveRestartKryfo": "Reiniciar o Kryfo"
 }

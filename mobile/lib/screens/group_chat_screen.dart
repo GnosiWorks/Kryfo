@@ -60,7 +60,9 @@ import '../main.dart'
         releaseChat,
         newMsgUid,
         torStrictGetOnIsolate,
+        torValve,
         shredFile;
+import '../widgets/reconnect_valve.dart';
 import '../theme.dart';
 import '../media_progress.dart';
 import '../group_send_watch.dart';
@@ -165,6 +167,17 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   List<MentionCandidate> _mentionable = const [];
   final _scrollCtrl = ScrollController();
   final List<_GMsg> _messages = [];
+
+  // one of ours is still going: a file that is plainly moving is not waiting
+  bool _sendWaiting() => _messages.any(
+    (m) =>
+        m.direction == 'out' &&
+        m.pending &&
+        !(appState.linkUp &&
+            m.msgUid != null &&
+            mediaInflight.contains(m.msgUid)),
+  );
+
   bool _showScrollDown = false;
   // others' messages that came in while reading back, for the jump button.
   // counted as they arrive: older pages and reloads add none
@@ -3501,6 +3514,15 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                       delay: const Duration(milliseconds: 160),
                     )
                   : const SizedBox(width: double.infinity, height: 0),
+            ),
+            // a send that has waited on tor a minute gets a way out
+            ReconnectValve(
+              valve: torValve,
+              waiting: _sendWaiting(),
+              private: appState.sendMode == 'private',
+              quiet: sessionQuiet,
+              linkUp: appState.linkUp,
+              margin: const EdgeInsets.fromLTRB(12, 6, 12, 4),
             ),
             Divider(height: 0.5, color: HaloColors.line, thickness: 0.5),
             Expanded(

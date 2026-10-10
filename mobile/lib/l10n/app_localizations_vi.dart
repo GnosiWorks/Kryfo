@@ -7888,4 +7888,15 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get settingsGifSearchHint =>
       'Tắt cho đến khi bạn bật. Máy chủ của Kryfo tìm thay bạn, nên dịch vụ GIF không bao giờ thấy bạn.';
+
+  @override
+  String get valveStillConnecting =>
+      'Vẫn đang kết nối. Tin nhắn của bạn sẽ được gửi ngay khi có kết nối lại.';
+
+  @override
+  String get valveCouldNotReconnect =>
+      'Kryfo không thể kết nối lại. Khởi động lại sẽ khắc phục và giữ nguyên tin nhắn của bạn.';
+
+  @override
+  String get valveRestartKryfo => 'Khởi động lại Kryfo';
 }
