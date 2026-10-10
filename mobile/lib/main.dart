@@ -1849,7 +1849,18 @@ class HaloDb implements GroupOwedStore {
       await close();
       throw StateError('${container.dbFile} was replaced');
     }
-    return _db!;
+    final db = _db!;
+    unawaited(
+      Future<void>.delayed(const Duration(seconds: 30), () async {
+        if (_retired || !identical(_db, db)) return;
+        try {
+          await wipeFreedOnce(db);
+        } catch (e) {
+          dlog('freed pages: not wiped (${e.runtimeType})');
+        }
+      }),
+    );
+    return db;
   }
 
   Future<Map<String, String>?> loadIdentity() async {
@@ -1980,23 +1991,34 @@ class HaloDb implements GroupOwedStore {
     // the dev chat never warns: a key that is not the pinned one is dropped
     if (isDevId(haloId)) return;
     final db = await open();
-    await db.update(
-      'contacts',
-      {'key_changed': changed ? 1 : 0},
-      where: 'halo_id = ?',
-      whereArgs: [haloId],
+    await _inLane(
+      haloId,
+      () => db.update(
+        'contacts',
+        {'key_changed': changed ? 1 : 0},
+        where: 'halo_id = ?',
+        whereArgs: [haloId],
+      ),
     );
   }
 
   Future<void> clearKeyChanged(String haloId) async {
     final db = await open();
-    await db.update(
-      'contacts',
-      {'key_changed': 0},
-      where: 'halo_id = ?',
-      whereArgs: [haloId],
+    await _inLane(
+      haloId,
+      () => db.update(
+        'contacts',
+        {'key_changed': 0},
+        where: 'halo_id = ?',
+        whereArgs: [haloId],
+      ),
     );
   }
+
+  // in their signal lane: an open that fails puts back only what was there
+  // before it, never a write made since
+  static Future<T> _inLane<T>(String haloId, Future<T> Function() work) =>
+      isDevId(haloId) ? work() : signalSession.serial(haloId, work);
 
   Future<String?> contactXPub(String haloId) async {
     final db = await open();
@@ -2334,9 +2356,10 @@ class HaloDb implements GroupOwedStore {
   // wholly before the mark or after it
   Future<bool> setVerified(String haloId, bool verified, {String? key}) async {
     final db = await open();
-    Future<bool> mark() =>
-        markVerified(db, haloId, verified, key: key, identity: _keySource);
-    return isDevId(haloId) ? mark() : signalSession.serial(haloId, mark);
+    return _inLane(
+      haloId,
+      () => markVerified(db, haloId, verified, key: key, identity: _keySource),
+    );
   }
 
   Future<bool> isVerified(String haloId) async {
@@ -2353,8 +2376,10 @@ class HaloDb implements GroupOwedStore {
   Future<bool> keyHeld(String haloId) async =>
       keyHeldIn(await open(), haloId, identity: _keySource);
 
-  Future<void> acceptNewKey(String haloId) async =>
-      acceptNewKeyIn(await open(), haloId);
+  Future<void> acceptNewKey(String haloId) async {
+    final db = await open();
+    await _inLane(haloId, () => acceptNewKeyIn(db, haloId));
+  }
 
   // a block starts the clocks of what they sent that waits to be read, in
   // their chat and in groups, and drops what was queued for them. an
@@ -6436,6 +6461,14 @@ Future<void> eraseFreedPages(DatabaseExecutor db) async {
   await db.rawQuery('PRAGMA secure_delete = 1');
 }
 
+// pages freed before that held old rows: one vacuum per database rewrites
+// them, off the start
+Future<void> wipeFreedOnce(DatabaseExecutor db) async {
+  if (await RouterRows.meta(db, 'freed_wiped') != null) return;
+  await db.execute('VACUUM');
+  await RouterRows.putMeta(db, 'freed_wiped', '1');
+}
+
 Future<String?> Function(String haloId)? keySourceFor(HaloContainer c) =>
     identical(c, HaloContainer.vault) ? _everydayKeyOf : null;
 
@@ -7236,6 +7269,8 @@ Future<String> signalEncrypt(String peerId, String plaintext) async {
     afresh: from == null ? null : () => from(peerId),
     // a read that fails seals nothing
     held: () => appState.keyHeld(peerId, strict: true),
+    // a card naming another key: flagged as on an open, once out of the lane
+    keyMoved: () => unawaited(_keyMoved?.call(peerId)),
   );
 }
 
@@ -7387,6 +7422,7 @@ Future<String?> signalDecrypt(
         return _open(ss, cipher, peerId, type, body, check, flagKeyChange);
       }
       final before = await ss.marksOf(peerId);
+      final was = await _sessionIdentity(ss, addr);
       try {
         final out = await _open(
           ss,
@@ -7404,7 +7440,14 @@ Future<String?> signalDecrypt(
         }
         return out;
       } catch (_) {
-        await ss.restoreMarks(peerId, before);
+        // a session stored on the new key before a later step threw is
+        // theirs: the key stays with it
+        final now = await _sessionIdentity(ss, addr);
+        if (now != null && (was == null || !_eqBytes(was, now))) {
+          moved = before.movedTo(await ss.marksOf(peerId));
+        } else {
+          await ss.restoreMarks(peerId, before);
+        }
         rethrow;
       }
     });
@@ -7437,6 +7480,16 @@ Future<String?> signalDecrypt(
     dlog('signalDecrypt: $e');
     return null;
   }
+}
+
+// the identity the session held for [addr] was built with, null with none
+Future<List<int>?> _sessionIdentity(
+  SignalSession ss,
+  SignalProtocolAddress addr,
+) async {
+  if (!await ss.sessionStore.containsSession(addr)) return null;
+  final record = await ss.sessionStore.loadSession(addr);
+  return record.sessionState.getRemoteIdentityKey()?.serialize();
 }
 
 // where a key that moved after an open is flagged: the app state, as it is
@@ -17073,7 +17126,14 @@ class AppState extends ChangeNotifier {
         } else if (_openVault == null && _router.cardOf(toHaloId) != null) {
           // a shut vault's chat: the receipt is sealed to it, and waits in
           // it from its open as an everyday one waits here
-          await _router.seal(Unsealed(toHaloId, '', false, now, receipt: uid));
+          // one row per receipt, however often a relay replays it
+          final rc = 'rc:$uid';
+          if (!await _router.sealedHas(rc, null)) {
+            await _router.seal(
+              Unsealed(toHaloId, '', false, now, receipt: uid),
+              uid: rc,
+            );
+          }
         }
       }
     } catch (e) {

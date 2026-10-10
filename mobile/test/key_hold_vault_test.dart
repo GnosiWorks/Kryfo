@@ -19,6 +19,8 @@ import 'package:kryfo/main.dart'
         AppState,
         HaloDb,
         eraseFreedPages,
+        signalEncrypt,
+        wipeFreedOnce,
         kFrameReceipt,
         kKeyUnread,
         keyHeldIn,
@@ -32,6 +34,7 @@ import 'package:kryfo/main.dart'
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
+import 'package:kryfo/signal_stores.dart' show invitePreKeyId;
 import 'package:kryfo/vault_life.dart'
     show ChatMover, ChatRef, VaultHost, hiddenCard;
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
@@ -100,6 +103,26 @@ class _Racing extends MemDb {
       values,
       where: where,
       whereArgs: whereArgs,
+      conflictAlgorithm: conflictAlgorithm,
+    );
+  }
+}
+
+// this phone's signal store, with a look at what is written as it is
+class _Store extends MemDb {
+  void Function(String table)? onInsert;
+  @override
+  Future<int> insert(
+    String table,
+    Map<String, Object?> values, {
+    String? nullColumnHack,
+    ConflictAlgorithm? conflictAlgorithm,
+  }) {
+    onInsert?.call(table);
+    return super.insert(
+      table,
+      values,
+      nullColumnHack: nullColumnHack,
       conflictAlgorithm: conflictAlgorithm,
     );
   }
@@ -291,7 +314,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   // this phone's signal store and its everyday rows: one database, as on
   // a phone
-  final store = MemDb();
+  final store = _Store();
   late _Rows rows;
   late AppState app;
   late VaultRouter router;
@@ -774,6 +797,99 @@ void main() {
       await _settle();
       expect(row()['key_changed'], 0);
     });
+
+    test(
+      'that fails while their contact is accepted leaves the accept',
+      () async {
+        await store.update(
+          'contacts',
+          {'key_changed': 1},
+          where: 'halo_id = ?',
+          whereArgs: [bob.name],
+        );
+        final again = await _phone(name: bob.name);
+        final wire = base64Decode(await _opener(again, 'forged'));
+        final pkm = PreKeySignalMessage(Uint8List.fromList(wire.sublist(1)));
+        final inner = Uint8List.fromList(pkm.getWhisperMessage().serialize());
+        inner[inner.length - 1] ^= 1;
+        final bad = PreKeySignalMessage.from(
+          pkm.getMessageVersion(),
+          pkm.getRegistrationId(),
+          pkm.getPreKeyId(),
+          pkm.getSignedPreKeyId(),
+          pkm.getBaseKey(),
+          pkm.getIdentityKey(),
+          SignalMessage.fromSerialized(inner),
+        );
+        Future<void>? accepted;
+        store.onInsert = (t) {
+          if (t == 'peer_identities') accepted ??= rows.acceptNewKey(bob.name);
+        };
+        addTearDown(() => store.onInsert = null);
+        expect(
+          await signalDecrypt(
+            bob.name,
+            base64Encode([wire[0], ...bad.serialize()]),
+            flagKeyChange: true,
+          ),
+          isNull,
+        );
+        await accepted;
+        expect(row()['key_changed'], 0);
+        expect(row()['verified'], 0);
+        expect(row()['verified_key'], isNull);
+      },
+    );
+
+    test(
+      'whose session is kept before a later step fails keeps its key',
+      () async {
+        final again = await _phone(name: bob.name);
+        // a one-time prekey of this phone's, which the open then lets go of
+        final id = store
+            .rows('prekeys')
+            .map((r) => r['id'] as int)
+            .firstWhere((i) => i != invitePreKeyId);
+        final pk = await signalSession.preKeyStore.loadPreKey(id);
+        final spk = await signalSession.signedPreKeyStore.loadSignedPreKey(1);
+        await SessionBuilder(
+          again.ss.sessionStore,
+          again.ss.preKeyStore,
+          again.ss.signedPreKeyStore,
+          again.ss.identityStore,
+          SignalProtocolAddress('me', 1),
+        ).processPreKeyBundle(
+          PreKeyBundle(
+            signalSession.registrationId,
+            1,
+            id,
+            pk.getKeyPair().publicKey,
+            spk.id,
+            spk.getKeyPair().publicKey,
+            spk.signature,
+            signalSession.identityKeyPair.getPublicKey(),
+          ),
+        );
+        final wire = await again.ss.encryptTo('me', 'new phone');
+        store.failOn = 'delete:prekeys';
+        addTearDown(() => store.failOn = null);
+        await signalDecrypt(bob.name, wire, flagKeyChange: true);
+        store.failOn = null;
+        await _settle();
+        // the key the stored session is on, and the banner for it
+        expect(_hex(key()), again.xpub);
+        expect(row()['key_changed'], 1);
+        expect(await app.keyHeld(bob.name, strict: true), isTrue);
+        expect(
+          await signalDecrypt(
+            bob.name,
+            await again.ss.encryptTo('me', 'and again'),
+            flagKeyChange: true,
+          ),
+          'and again',
+        );
+      },
+    );
   });
 
   test(
@@ -812,4 +928,72 @@ void main() {
       );
     },
   );
+
+  test('a receipt replayed for a held hidden chat is sealed once', () async {
+    const id = 'replayed-receipt';
+    await _identity(store, id, _keyB);
+    await hide(id, _hex(_keyA), mark: _hex(_keyA));
+    await app.receiptForTest(id, 'uid-r2');
+    // a restart in between: the throttle in memory is gone
+    final next = AppState(io: _Io(), router: router)..myId = 'me';
+    await next.receiptForTest(id, 'uid-r2');
+    expect(vaultList.inbox, hasLength(1));
+  });
+
+  test(
+    'freed pages are rewritten once per database',
+    () async {
+      final db = SqliteMem.open()!;
+      await db.execute('CREATE TABLE vault_meta (k TEXT PRIMARY KEY, v TEXT)');
+      await db.execute('CREATE TABLE t (b TEXT)');
+      Future<int> free() async {
+        await db.execute(
+          "INSERT INTO t SELECT printf('%.4000c', 'x') FROM "
+          '(WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n '
+          'WHERE i < 200) SELECT i FROM n)',
+        );
+        await db.execute('DELETE FROM t');
+        return pages(db);
+      }
+
+      expect(await free(), greaterThan(0));
+      await wipeFreedOnce(db);
+      expect(await pages(db), 0);
+      expect(await free(), greaterThan(0));
+      await wipeFreedOnce(db);
+      expect(await pages(db), greaterThan(0));
+    },
+    skip: SqliteMem.open() == null ? 'no sqlite on this host' : null,
+  );
+
+  // last: it marks this phone's sessions as come back with a restore
+  test('a card naming another key on the sending side raises a hidden '
+      "chat's banner", () async {
+    final bob = await _phone();
+    await processPeerBundle(bob.name, bob.card);
+    final again = await _phone(name: bob.name);
+    await _identity(store, bob.name, _unhex(again.xpub));
+    final vmem = MemDb();
+    await vmem.insert('contacts', {
+      'halo_id': bob.name,
+      'onion': '',
+      'xpub': bob.xpub,
+      'first_seen': 1,
+      'last_seen': 1,
+      'back_paired': 1,
+      'accepted': 1,
+      'peer_bundle': bob.card,
+    });
+    final vault = _Rows(vmem, HaloContainer.vault);
+    await hide(bob.name, bob.xpub);
+    useDatabasesForTest(rows, await Session.withVault(rows, vault));
+    await signalSession.markRestored();
+    await signalEncrypt(bob.name, 'hi');
+    await _settle();
+    expect(vmem.rows('contacts').single['key_changed'], 1);
+  });
 }
+
+Future<int> pages(SqliteMem db) async => int.parse(
+  (await db.rawQuery('PRAGMA freelist_count')).single.values.single.toString(),
+);
