@@ -20826,7 +20826,7 @@ Future<void> _sweepPlaintextLeftovers() async {
 }
 
 // every raw recording in [dir]: one that will not go is logged and the
-// rest still go. [drop] stands in for the delete in tests
+// rest still go. [drop] stands in for the shred in tests
 @visibleForTesting
 Future<void> sweepVoiceLeftovers(
   Directory dir, {
@@ -20838,7 +20838,7 @@ Future<void> sweepVoiceLeftovers(
       continue;
     }
     try {
-      await (drop ?? (f) => f.delete())(e);
+      await (drop ?? (f) => shredFile(f.path))(e);
     } catch (err) {
       dlog('sweep: a voice leftover stayed (${err.runtimeType})');
     }

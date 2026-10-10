@@ -536,7 +536,11 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
     _ticker?.cancel();
     _level?.cancel();
     _overlay?.remove();
-    _rec.dispose();
+    // a take still recording when the chat goes is never sent
+    final take = _path;
+    _path = null;
+    final stopped = _rec.dispose();
+    if (take != null) stopped.whenComplete(() => shredFile(take)).ignore();
     super.dispose();
   }
 
@@ -638,18 +642,18 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
     _overlay?.leave();
     _overlay = null;
     final path = await _rec.stop();
+    // handed on or shredded below: dispose has nothing left to shred
+    final take = path ?? _path;
+    _path = null;
     if (cancel) {
-      final p = path ?? _path;
-      if (p != null) {
-        // a cancelled note is still a recording of a voice: shredded
-        await shredFile(p);
-      }
+      // a cancelled note is still a recording of a voice: shredded
+      if (take != null) await shredFile(take);
       HapticFeedback.lightImpact();
       widget.onComplete('', 0, true);
       return;
     }
     HapticFeedback.mediumImpact();
-    widget.onComplete(path ?? _path ?? '', ms, false);
+    widget.onComplete(take ?? '', ms, false);
   }
 
   // kill the recording from the bar itself - covers any state where the
