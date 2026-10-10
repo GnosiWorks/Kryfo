@@ -219,6 +219,12 @@ extern int HaloOpenChunk(char* cKey, unsigned long long index, unsigned char typ
 //
 extern char* HaloSetBridges(char* cLines, int on);
 
+// a json list with one entry per line of the last HaloSetBridges, in the
+// order given: {"i":0,"state":"ok|fixed|broken","why":"..."}. it never
+// repeats a line, the app has them.
+//
+extern char* HaloBridgeLineChecks(void);
+
 // hand tor the new bridge config and bounce its network so it takes. tor is
 // never restarted for this: see reconnectTor for why it cannot be.
 //
@@ -227,6 +233,9 @@ extern char* HaloRestartTor(void);
 // android says the default network changed. see networkChanged.
 //
 extern char* HaloNetworkChanged(void);
+
+// on|count|port, the port being obfs4's listener, 0 before any
+//
 extern char* HaloBridgeState(void);
 
 // every string the engine returns is malloc'd here by C.CString. dart copies

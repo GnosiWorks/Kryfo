@@ -2,8 +2,8 @@
 # rebuilds ./vendor from go.mod and go.sum, use it instead of `go mod vendor`.
 # go mod vendor copies only go package dirs, while go-libtor and a few others
 # compile c and asm from dirs next to them, and it knows nothing of the
-# 32-bit header fix in vendor-patches/ (see VENDOR_PATCHES.md). this copies
-# those modules whole from the module cache and applies the patch.
+# patches in vendor-patches/ (see VENDOR_PATCHES.md). this copies
+# those modules whole from the module cache and applies the patches.
 # modules missing from the cache are downloaded. after it: git status should
 # show only what the go.mod change meant, then HALO_FULL=1 ./build.sh
 set -euo pipefail
@@ -41,4 +41,5 @@ find vendor -type d -empty -delete
 
 patch -s -p1 -d vendor/github.com/alexballas/go-libtor \
   < vendor-patches/go-libtor.patch
+patch -s -p1 -d vendor/github.com/wlynxg/anet < vendor-patches/anet.patch
 echo "vendor rebuilt"

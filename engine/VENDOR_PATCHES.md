@@ -3,10 +3,10 @@
 vendor/ is rebuilt with `./vendor.sh`, never with a bare `go mod vendor`.
 go mod vendor copies go package dirs only, while go-libtor, sonic, base64x
 and golang-asm compile c and asm from the dirs next to them, and it knows
-nothing of the go-libtor patch below. vendor.sh copies those modules whole
-from the module cache, drops what the repo does not keep and applies
-`vendor-patches/go-libtor.patch`. after it, `git status` shows only what the
-go.mod change meant. go's build cache doesn't track the c headers, so build
+nothing of the patches below. vendor.sh copies those modules whole from the
+module cache, drops what the repo does not keep and applies
+`vendor-patches/go-libtor.patch` and `vendor-patches/anet.patch`. after it,
+`git status` shows only what the go.mod change meant. go's build cache doesn't track the c headers, so build
 with `HALO_FULL=1 ./build.sh` after any change there.
 
 ## go-libtor: 32-bit headers
@@ -118,3 +118,57 @@ the new go.mod moves any dependency it is a full update: `./vendor.sh`.
 
 the engine's embedded module list names the replacement,
 `=> ./third_party/nostr`, the same on every machine.
+
+## snowflake: a client-only fork without sqs
+
+snowflake v2.14.1 (cd33fc638ac0) lives in `third_party/snowflake` and go.mod
+points at it with a `replace`, like nostr above. it holds upstream's
+LICENSE, go.mod, `client/lib` and the `common` packages it imports, tests
+left out. it differs from upstream in:
+
+- `client/lib/rendezvous_sqs.go` is gone, and the aws sdk with it. the
+  broker is reached through cdn fronting only. upstream has no build tag
+  for it.
+- `client/lib/rendezvous.go`: a config that asks for sqs, or for no
+  rendezvous at all, gets an error back instead of `log.Fatal`, which would
+  end the app the engine runs in. marked `kryfo:`.
+- `go.mod`: the aws and golang/mock requirements are dropped.
+- a `log.go` in each package that logs gives it a `log` that writes to
+  io.Discard, and those files no longer import the log package. the lines
+  carry broker urls, fronts, stun servers and sdp.
+
+vendor/gitlab.torproject.org/.../snowflake/v2 is a copy of it:
+
+    diff -r third_party/snowflake vendor/gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2    # only go.mod
+
+to move to a newer upstream: copy the new tag's LICENSE, go.mod and the
+non-test files of the same packages over `third_party/snowflake`, delete
+`rendezvous_sqs.go`, redo the edits above, then `./vendor.sh`.
+
+## anet: no linkname into net
+
+snowflake lists network interfaces on android through wlynxg/anet v0.0.5.
+its `interface_android.go` refreshes net's and x/net's private ipv6 zone
+caches through `go:linkname`, which go 1.23 and later refuse to link unless
+the check is turned off for the whole build. `vendor-patches/anet.patch`
+makes both caches anet's own, so the check stays on. net then does not
+learn the zone names of ipv6 link-local addresses from anet. vendor.sh
+applies the patch after go-libtor's.
+
+    diff -u "$(go env GOMODCACHE)/github.com/wlynxg/anet@v0.0.5/interface_android.go" \
+        vendor/github.com/wlynxg/anet/interface_android.go
+
+to move to a newer anet: check its android file still linknames the same two
+vars, redo the patch against it, then `./vendor.sh`.
+
+## lyrebird
+
+lyrebird-0.8.1, commit 0b10edbb61e0. its tags are not go semver tags, so
+go.mod names the tag's commit as a pseudo-version. 0.9.0 asks for go
+1.26.0 and the engine builds with 1.25.14. the engine imports the obfs4,
+webtunnel and meek_lite transports one by one, never `transports.Init()`.
+
+lyrebird 0.8.1's own go.mod replaces utls with a temporary fork for the
+chrome120 profile. go ignores replaces in dependencies, so the engine gets
+utls v1.8.2 through snowflake, which dropped the same backport when it
+moved to that utls.

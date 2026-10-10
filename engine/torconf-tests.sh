@@ -18,6 +18,11 @@ tests=(
 	TestControlPortNeverAnswers
 	TestReconnectOutcomeDoesNotNest
 	TestOutcomeSaysRunningWhileRunning
+	TestPluginResetNeverHangs
+	TestPluginAfterOff
+	TestPluginSwitching
+	TestBridgeBackoff
+	TestSnowflakeBackoff
 )
 [ $# -gt 0 ] && tests=("$@")
 failed=()

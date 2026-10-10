@@ -84,7 +84,10 @@ func (g *gatedWriter) Write(p []byte) (int, error) {
 	if atomic.LoadInt32(&g.on) == 0 {
 		return len(p), nil
 	}
-	return log.Writer().Write(p)
+	if _, err := log.Writer().Write([]byte(scrubBridges(string(p)))); err != nil {
+		return 0, err
+	}
+	return len(p), nil
 }
 
 var debugTorWriter *gatedWriter
@@ -577,10 +580,11 @@ func watchPublishedOn(t *tor.Tor, hsCh chan control.Event, hsSubbed bool, onionI
 	statusMu.Unlock()
 }
 
-// hands tor the bridge configuration it should be using right now. all three
-// are set every time bridges are turned on, ClientTransportPlugin included
-// even when unchanged: turning bridges off drops tor's registration of the
-// transport, and without it tor has bridge lines and no way to reach them.
+// hands tor the bridge configuration it should be using right now. the
+// plugin lines, UseBridges and the whole set of Bridge lines go in one
+// SETCONF every time bridges are on. naming the plugins again never hangs
+// and costs nothing (tor_plugin_test.go), and replacing the whole set means
+// tor never mixes a dead set with a new one.
 func applyBridgeConf(t *tor.Tor) error {
 	if t == nil || t.Control == nil {
 		return fmt.Errorf("no control connection")
@@ -598,26 +602,20 @@ func applyBridgeConf(t *tor.Tor) error {
 			return c.ResetConf(&control.KeyVal{Key: "Bridge"})
 		})
 	}
-	noteStep("pt listener")
-	if err := startPTListener(); err != nil {
+	noteStep("pt listeners")
+	if err := startPTListeners(); err != nil {
 		return err
 	}
-	bridgeMu.RLock()
-	port := ptPort
-	bridgeMu.RUnlock()
-	if port == 0 {
-		return fmt.Errorf("no pt listener")
+	var kv []*control.KeyVal
+	for _, p := range ptPlugins() {
+		kv = append(kv, control.NewKeyVal("ClientTransportPlugin", p))
 	}
-	kv := []*control.KeyVal{
-		control.NewKeyVal("ClientTransportPlugin",
-			fmt.Sprintf("obfs4 socks5 127.0.0.1:%d", port)),
-		control.NewKeyVal("UseBridges", "1"),
-	}
-	lines := bridgeLines()
+	kv = append(kv, control.NewKeyVal("UseBridges", "1"))
+	lines := torBridgeLines()
 	for _, b := range lines {
 		kv = append(kv, control.NewKeyVal("Bridge", b))
 	}
-	log.Printf("bridges: handing tor %d bridge lines via 127.0.0.1:%d", len(lines), port)
+	log.Printf("bridges: handing tor %d bridge lines", len(lines))
 	noteStep("setconf plugin+bridges")
 	return ctrlDo(t, "ClientTransportPlugin+Bridge", func(c *control.Conn) error {
 		return c.SetConf(kv...)

@@ -247,6 +247,8 @@ var (
 )
 
 func networkChanged() {
+	// a snowflake client keeps the nat type it found on the old network
+	dropSnowflakeClients()
 	netMu.Lock()
 	netChangedAt = time.Now()
 	if netWorker {

@@ -34,9 +34,10 @@ func (w *androidLogWriter) Write(p []byte) (int, error) {
 	if atomic.LoadInt32(&debugOn) == 0 {
 		return len(p), nil
 	}
-	// free both C strings, tor's debug output comes through here
+	// free both C strings, tor's debug output comes through here. bridge
+	// addresses, fronts and stun hosts are scrubbed on the way.
 	tag := C.CString("halo-engine")
-	msg := C.CString(string(p))
+	msg := C.CString(scrubBridges(string(p)))
 	C.log_to_android(tag, msg)
 	C.free(unsafe.Pointer(tag))
 	C.free(unsafe.Pointer(msg))
