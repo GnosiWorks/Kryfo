@@ -9,6 +9,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:kryfo/image_strip.dart' show pictureExt;
 import 'package:kryfo/picked.dart';
 
 import 'source_body.dart';
@@ -69,6 +70,49 @@ void main() {
       png,
       gif,
     ]);
+  });
+
+  test('a picture kept in its own format is named for it', () {
+    Uint8List b(List<int> x) => Uint8List.fromList(x);
+    expect(pictureExt(b([0xFF, 0xD8, 0xFF, 0xE0])), 'jpg');
+    expect(
+      pictureExt(b([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])),
+      'png',
+    );
+    expect(pictureExt(b([0x47, 0x49, 0x46, 0x38, 0x39, 0x61])), 'gif');
+    expect(
+      pictureExt(b([...'RIFF'.codeUnits, 0, 0, 0, 0, ...'WEBP'.codeUnits])),
+      'webp',
+    );
+    expect(
+      pictureExt(
+        b([
+          0,
+          0,
+          0,
+          24,
+          ...'ftypheic'.codeUnits,
+          0,
+          0,
+          0,
+          0,
+          ...'mif1'.codeUnits,
+          0,
+          0,
+          0,
+          0,
+        ]),
+      ),
+      'heic',
+    );
+    for (final (file, sig) in [
+      ('lib/screens/chat_screen.dart', 'Future<void> _sendOneImage('),
+      ('lib/screens/group_chat_screen.dart', 'Future<void> _sendGroupImage('),
+    ]) {
+      final body = bodyOf(sourceOf(file), sig);
+      expect(body, contains(r'.${pictureExt(bytes)}'), reason: file);
+      expect(body, isNot(contains(".jpg'")), reason: file);
+    }
   });
 
   test('one file handed back twice is read once', () async {

@@ -3435,7 +3435,7 @@ class _ChatScreenState extends State<ChatScreen>
       return;
     }
     // send raw through the image path - Image.memory animates gifs by the bytes,
-    // the .jpg filename doesn't matter.
+    // the name follows the bytes.
     await _sendOneImage(clean, '');
   }
 
@@ -3454,7 +3454,8 @@ class _ChatScreenState extends State<ChatScreen>
     if (_requestPending) setState(() => _sentCount++);
     final msgUid = newMsgUid();
     final mediaDir = await session.mediaDirOf(widget.peerHaloId);
-    final mediaFile = File('${mediaDir.path}/$msgUid.jpg');
+    // a png, gif, webp or heic keeps its own kind, and its name says so
+    final mediaFile = File('${mediaDir.path}/$msgUid.${pictureExt(bytes)}');
     await mediaFile.writeAsBytes(bytes);
     final mediaPath = mediaFile.path;
     // read it once - the toggle is cleared below and the save reads it after.

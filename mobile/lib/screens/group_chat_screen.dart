@@ -1854,7 +1854,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     }
     final uid = newMsgUid();
     final mediaDir = await session.mediaDirOf(widget.groupId);
-    final f = File('${mediaDir.path}/$uid.jpg');
+    // a png, gif, webp or heic keeps its own kind, and its name says so
+    final f = File('${mediaDir.path}/$uid.${pictureExt(bytes)}');
     await f.writeAsBytes(bytes);
     final burn = _ghost ? _burnSeconds : null;
     final m = _GMsg(
