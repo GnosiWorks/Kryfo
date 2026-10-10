@@ -114,14 +114,16 @@ class _BackupScreenState extends State<BackupScreen> {
           },
         );
       }
-      var handed = false;
+      var out = (tried: false, handed: false);
       try {
-        handed = await _handOver(path, name);
+        out = await _handOver(path, name);
       } finally {
-        // the share sheet is handed a copy of its own, so this one goes
-        // whichever way out it was
-        await shredFile(path);
+        // saved, or the share sheet has a copy of its own: this one goes,
+        // as does one the lock took the screen from before it was offered.
+        // one whose hand-over failed is kept until the next start's sweep
+        if (out.handed || !out.tried) await shredFile(path);
       }
+      final handed = out.handed;
       if (!handed) sayLater();
       if (move && handed) {
         // the file is out of our hands: from here this phone is retired,
@@ -144,9 +146,13 @@ class _BackupScreenState extends State<BackupScreen> {
   }
 
   // the system save dialog first, the share sheet when that is refused.
-  // neither reads the file into memory
-  Future<bool> _handOver(String path, String name) async {
-    if (!mounted) return false;
+  // neither reads the file into memory. tried once either was offered
+  Future<({bool tried, bool handed})> _handOver(
+    String path,
+    String name,
+  ) async {
+    const none = (tried: false, handed: false);
+    if (!mounted) return none;
     var saved = false;
     try {
       saved = await lockState.hold(
@@ -162,22 +168,21 @@ class _BackupScreenState extends State<BackupScreen> {
     }
     if (saved) {
       if (mounted) showHaloToast(context, l10n.backupBackupSavedKeepThe);
-      return true;
+      return (tried: true, handed: true);
     }
-    if (!mounted) return false;
-    await _share(path);
-    return true;
+    if (!mounted) return (tried: true, handed: false);
+    return (tried: true, handed: await _share(path));
   }
 
-  Future<void> _share(String path) async {
-    await lockState.hold(
-      () => shareFileOut(
-        path,
-        subject: l10n.backupKryfoBackup,
-        text: l10n.backupYourEncryptedKryfoBackup,
-      ),
-    );
-  }
+  // true only once the copy is made and the sheet is up
+  Future<bool> _share(String path) => lockState.hold(
+    () => shareFileOut(
+      path,
+      backup: true,
+      subject: l10n.backupKryfoBackup,
+      text: l10n.backupYourEncryptedKryfoBackup,
+    ),
+  );
 
   @override
   void dispose() {

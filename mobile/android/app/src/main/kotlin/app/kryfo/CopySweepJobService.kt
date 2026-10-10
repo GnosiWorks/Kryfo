@@ -10,6 +10,7 @@ class CopySweepJobService : JobService() {
     override fun onStartJob(params: JobParameters?): Boolean {
         Thread {
             val young = Shred.handed(cacheDir)
+            Shred.dropBackups(cacheDir, false)
             jobFinished(params, false)
             if (young) JobSetup.scheduleCopySweep(this)
         }.start()

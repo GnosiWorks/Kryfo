@@ -28,6 +28,7 @@ class HaloApplication : Application() {
         // shredded only once past the grace, as on resume
         Thread {
             if (Shred.handed(cacheDir)) JobSetup.scheduleCopySweep(this)
+            Shred.dropBackups(cacheDir, false)
             ToolsBridge.sweep(cacheDir, true)
         }.start()
     }

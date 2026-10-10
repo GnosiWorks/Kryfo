@@ -92,6 +92,20 @@ object Shred {
         return young
     }
 
+    // a backup handed out is ciphertext: it is kept until the next one goes
+    // out or a day has passed, and a plain delete does
+    const val BACKUP_OUT = "backup_out"
+    const val BACKUP_KEEP_MS = 24 * 60 * 60 * 1000L
+
+    fun dropBackups(cacheDir: File, all: Boolean, now: Long = System.currentTimeMillis()) {
+        val kids = File(cacheDir, BACKUP_OUT).listFiles() ?: return
+        for (f in kids) {
+            if (all || old(f.lastModified(), now - BACKUP_KEEP_MS, now)) {
+                for (e in bottomUp(f)) e.delete()
+            }
+        }
+    }
+
     // the copies handed out from [cacheDir]; true while one is too young
     fun handed(cacheDir: File, now: Long = System.currentTimeMillis()): Boolean {
         var young = false

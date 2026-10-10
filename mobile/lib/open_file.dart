@@ -24,12 +24,14 @@ Future<bool> openWithAnotherApp(String path, {String? name}) async {
 
 /// the share sheet with a copy of [path] the app keeps and shreds itself,
 /// not the share plugin's, which goes unzeroed at the next share. false
-/// when the sheet did not open
+/// when the copy was not made or the sheet did not open. a [backup] is
+/// ciphertext, kept until the next one or a day
 Future<bool> shareFileOut(
   String path, {
   String? name,
   String? text,
   String? subject,
+  bool backup = false,
 }) async {
   try {
     return await _channel.invokeMethod<bool>('shareFile', {
@@ -37,6 +39,7 @@ Future<bool> shareFileOut(
           'name': name,
           'text': text,
           'subject': subject,
+          'backup': backup,
         }) ??
         false;
   } catch (e) {

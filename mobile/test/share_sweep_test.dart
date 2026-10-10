@@ -8,7 +8,10 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kryfo/main.dart' show kShareGrace, sweepShareCopies;
+import 'package:kryfo/container.dart';
+import 'package:kryfo/lock_state.dart' show PinResult;
+import 'package:kryfo/main.dart'
+    show containerFor, kShareGrace, sweepShareCopies;
 
 import 'shred_twin.dart';
 import 'source_body.dart';
@@ -129,16 +132,65 @@ void main() {
     }
   });
 
-  test('an open copy goes on a lock, a switch of pin and a wipe', () {
+  test('a lock and an unlock unlink an open copy; a switch of pin and a '
+      'wipe shred it', () {
     final main = sourceOf('lib/main.dart');
-    expect(bodyOf(main, 'void lockingUp('), contains('shredOpenCopies()'));
+    final lock = bodyOf(main, 'void lockingUp(');
+    expect(lock, contains('unawaited(dropOpenCopies());'));
     expect(
-      bodyOf(main, 'Future<void> sessionFor('),
-      contains('await shredOpenCopies();'),
+      lock,
+      contains('_lockedIn = (_session.vault ?? _session.primary).container;'),
+    );
+    final unlock = bodyOf(main, 'Future<void> sessionFor(');
+    expect(
+      unlock,
+      contains(
+        'all: from != null && from != containerFor(r, vaultKey: vaultKey)',
+      ),
     );
     expect(
       bodyOf(sourceOf('lib/wipe.dart'), 'Future<void> _erase('),
-      contains('await shredOpenCopies();'),
+      contains('await dropOpenCopies(all: true);'),
+    );
+  });
+
+  test('an unlock knows the side it opens', () {
+    expect(containerFor(PinResult.normal), HaloContainer.everyday);
+    expect(containerFor(PinResult.decoy), HaloContainer.decoy);
+    expect(containerFor(PinResult.vault, vaultKey: 'k'), HaloContainer.vault);
+    expect(
+      containerFor(PinResult.decoy, vaultKey: 'k'),
+      HaloContainer.decoyVault,
+    );
+  });
+
+  test('a backup goes out on a rule of its own', () {
+    const kt = 'android/app/src/main/kotlin/app/kryfo';
+    final shred = sourceOf('$kt/Shred.kt');
+    expect(shred, contains('const val BACKUP_OUT = "backup_out"'));
+    expect(shred, contains('const val BACKUP_KEEP_MS = 24 * 60 * 60 * 1000L'));
+    final drop = bodyOf(shred, 'fun dropBackups(');
+    expect(drop, contains('for (e in bottomUp(f)) e.delete()'));
+    expect(drop, isNot(contains('file(')));
+    final act = sourceOf('$kt/MainActivity.kt');
+    final out = bodyOf(act, 'private fun handOut(');
+    expect(out, contains('Shred.dropBackups(cacheDir, true)'));
+    expect(out, contains('if (!backup) JobSetup.scheduleCopySweep(this)'));
+    expect(
+      bodyOf(act, 'private fun shareFile('),
+      contains('if (backup) Shred.BACKUP_OUT else "share"'),
+    );
+    expect(
+      sourceOf('$kt/HaloApplication.kt'),
+      contains('Shred.dropBackups(cacheDir, false)'),
+    );
+    expect(
+      sourceOf('android/app/src/main/res/xml/open_paths.xml'),
+      contains('<cache-path name="backup_out" path="backup_out/" />'),
+    );
+    expect(
+      sourceOf('lib/screens/backup_screen.dart'),
+      contains('backup: true,'),
     );
   });
 

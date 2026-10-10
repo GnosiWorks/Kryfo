@@ -538,6 +538,7 @@ class MainActivity : FlutterFragmentActivity() {
                                 call.argument<String>("name"),
                                 call.argument<String>("text"),
                                 call.argument<String>("subject"),
+                                call.argument<Boolean>("backup") == true,
                                 result
                             )
                         }
@@ -567,7 +568,7 @@ class MainActivity : FlutterFragmentActivity() {
     // that gets the intent. some apps read theirs only after this one is
     // back, or keep reading in the background, so a copy is given a while
     // first and shredded once it is older, by a job that comes back while
-    // one is young. an open copy goes with a lock too (dart's lockingUp).
+    // one is young. a lock unlinks an open copy (dart's lockingUp).
     private fun clearOpenCopies() {
         Thread {
             if (Shred.handed(cacheDir)) JobSetup.scheduleCopySweep(this)
@@ -589,10 +590,17 @@ class MainActivity : FlutterFragmentActivity() {
 
     // [src] copied into a folder of its own under cache/[into], so a
     // younger copy of the same name that an app may still be reading is
-    // never written over. a copy cut short is shredded, and null comes back
+    // never written over. a copy cut short is shredded, and null comes back.
+    // a backup is ciphertext with a rule of its own (Shred.BACKUP_OUT): the
+    // last one goes when the next goes out
     private fun handOut(src: File, name: String?, into: String): File? {
         val top = File(cacheDir, into)
-        Shred.aged(top, System.currentTimeMillis() - Shred.GRACE_MS)
+        val backup = into == Shred.BACKUP_OUT
+        if (backup) {
+            Shred.dropBackups(cacheDir, true)
+        } else {
+            Shred.aged(top, System.currentTimeMillis() - Shred.GRACE_MS)
+        }
         val rnd = ByteArray(8).also { java.security.SecureRandom().nextBytes(it) }
             .joinToString("") { "%02x".format(it) }
         val dir = File(top, rnd)
@@ -601,7 +609,7 @@ class MainActivity : FlutterFragmentActivity() {
         return try {
             dir.mkdirs()
             src.inputStream().use { i -> dst.outputStream().use { o -> i.copyTo(o) } }
-            JobSetup.scheduleCopySweep(this)
+            if (!backup) JobSetup.scheduleCopySweep(this)
             dst
         } catch (e: Exception) {
             Shred.tree(dir)
@@ -658,10 +666,11 @@ class MainActivity : FlutterFragmentActivity() {
         name: String?,
         text: String?,
         subject: String?,
+        backup: Boolean,
         result: MethodChannel.Result
     ) {
         Thread {
-            val dst = handOut(File(path), name, "share")
+            val dst = handOut(File(path), name, if (backup) Shred.BACKUP_OUT else "share")
             if (dst == null) {
                 runOnUiThread { result.success(false) }
                 return@Thread
