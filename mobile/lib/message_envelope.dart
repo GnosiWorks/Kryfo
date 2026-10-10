@@ -59,6 +59,9 @@ class UnwrappedMessage {
   // every retry, so a copy wrapped again still says when it was written.
   // null from a version without it
   final int? writtenAt;
+  // 'rn' - a room frame's place on its sender's lane, from one. null off
+  // a room or from a version without it
+  final int? roomNumber;
   // 'm' as it was sent, before the direction controls came out: the
   // proof of work was done over these characters
   final String? powText;
@@ -105,6 +108,7 @@ class UnwrappedMessage {
     this.sticker,
     this.supportMarker,
     this.writtenAt,
+    this.roomNumber,
   });
 }
 
@@ -123,6 +127,11 @@ class GroupControl {
   // on a room's 'create': the address its link knocks on now, so the link
   // a member shares is the one the maker last reset to
   final String? fc;
+  // on a room's 'remove': each key taken out with the number of the last
+  // frame the admin took from it. members let in that key's frames up to
+  // it, sent before the remove and landing after it. older versions ignore
+  // it and let none in
+  final Map<String, int>? lastFrames;
   const GroupControl({
     required this.type,
     this.name,
@@ -130,6 +139,7 @@ class GroupControl {
     this.participants,
     this.stamp,
     this.fc,
+    this.lastFrames,
   });
 
   Map<String, dynamic> toWire() => {
@@ -139,6 +149,7 @@ class GroupControl {
     'p': ?participants,
     'v': ?stamp,
     'fc': ?fc,
+    'rn': ?lastFrames,
   };
 
   static GroupControl? fromWire(Object? raw) {
@@ -156,6 +167,13 @@ class GroupControl {
     }
     final stamp = raw['v'];
     final fc = raw['fc'];
+    final rn = raw['rn'];
+    final last = <String, int>{
+      if (rn is Map)
+        for (final e in rn.entries)
+          if (e.key is String && e.value is int && (e.value as int) > 0)
+            e.key as String: e.value as int,
+    };
     return GroupControl(
       type: (raw['t'] as String?) ?? '',
       name: raw['n'] as String?,
@@ -165,6 +183,7 @@ class GroupControl {
       participants: parts,
       stamp: stamp is int && stamp > 0 ? stamp : null,
       fc: fc is String ? fc : null,
+      lastFrames: last.isEmpty ? null : last,
     );
   }
 }
@@ -528,6 +547,10 @@ UnwrappedMessage unwrapMessage(String wrapped) {
       },
       writtenAt: switch (json['w']) {
         final num n when n.isFinite && n > 0 => n.toInt(),
+        _ => null,
+      },
+      roomNumber: switch (json['rn']) {
+        final int n when n > 0 => n,
         _ => null,
       },
     );
