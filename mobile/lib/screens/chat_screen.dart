@@ -104,6 +104,8 @@ import '../widgets/chat_parts.dart';
 import '../widgets/message_menu.dart';
 import '../widgets/attach_grid.dart';
 import '../widgets/link_stub.dart';
+import '../widgets/place_stub.dart';
+import '../place_link.dart' show firstPlace;
 import '../widgets/preview_strip.dart';
 import 'camera_screen.dart';
 import '../link_preview.dart' show titleFromHtml, firstUrl, senderPreview;
@@ -6933,6 +6935,11 @@ class _Bubble extends StatelessWidget {
                                               title: linkTitle,
                                               bySender: linkBySender,
                                             ),
+                                          ],
+                                          if (firstPlace(msg.text)
+                                              case final p?) ...[
+                                            const SizedBox(height: 6),
+                                            PlaceStub(place: p, isOut: isOut),
                                           ],
                                           // the time and tick grow in as the
                                           // sending pill under the bubble folds

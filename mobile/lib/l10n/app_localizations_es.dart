@@ -3531,6 +3531,12 @@ class AppLocalizationsEs extends AppLocalizations {
       'Ninguna app de este teléfono aceptó el archivo.';
 
   @override
+  String get linkNoAppOpens => 'Ninguna app de este teléfono abre este enlace.';
+
+  @override
+  String get placeStubLocation => 'Ubicación';
+
+  @override
   String get lockFileSaved => 'Guardado';
 
   @override

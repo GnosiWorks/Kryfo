@@ -889,6 +889,8 @@
   "lockFileCouldNotMakeOne": "無法產生。請自己輸入。",
   "lockFileWriteItDownBefore": "鎖定檔案前，請先把密碼寫下來",
   "lockFileNoAppOnThis": "這支手機上沒有任何應用程式接收這個檔案。",
+  "linkNoAppOpens": "這支手機上沒有可以開啟此連結的應用程式。",
+  "placeStubLocation": "位置",
   "lockFileSaved": "已儲存",
   "lockFileCouldNotSaveIt": "無法儲存到那裡。請換一個資料夾。",
   "lockFileLocked": "已鎖定",

@@ -889,6 +889,8 @@
   "lockFileCouldNotMakeOne": "Impossibile generarla. Scrivine una tua.",
   "lockFileWriteItDownBefore": "Annotala da qualche parte prima di proteggere il file",
   "lockFileNoAppOnThis": "Nessuna app su questo telefono ha preso il file.",
+  "linkNoAppOpens": "Nessuna app su questo telefono apre questo link.",
+  "placeStubLocation": "Posizione",
   "lockFileSaved": "Salvato",
   "lockFileCouldNotSaveIt": "Impossibile salvarlo lì. Prova un'altra cartella.",
   "lockFileLocked": "Protetto",

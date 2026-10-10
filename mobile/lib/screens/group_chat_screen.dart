@@ -97,6 +97,8 @@ import '../widgets/sheet_handle.dart';
 import '../widgets/menu_backdrop.dart';
 import '../mentions.dart';
 import '../widgets/link_stub.dart';
+import '../widgets/place_stub.dart';
+import '../place_link.dart' show firstPlace;
 import 'camera_screen.dart';
 import '../link_preview.dart' show titleFromHtml, senderPreview;
 import '../widgets/preview_strip.dart';
@@ -5090,6 +5092,11 @@ class _GroupBubble extends StatelessWidget {
                                             title: linkTitle,
                                             bySender: linkBySender,
                                           ),
+                                        ],
+                                        if (firstPlace(m.text)
+                                            case final p?) ...[
+                                          const SizedBox(height: 6),
+                                          PlaceStub(place: p, isOut: isOut),
                                         ],
                                         const SizedBox(height: 2),
                                         Row(

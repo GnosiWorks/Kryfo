@@ -3,9 +3,8 @@
 // title when the sender fetched one over tor and shipped it inside the
 // message. the reader's phone never asks the network for anything here.
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
-
 import '../link_preview.dart';
+import '../open_outside.dart';
 import '../theme.dart';
 import '../l10n/l10n.dart';
 import 'ease_size.dart';
@@ -35,9 +34,8 @@ class LinkStub extends StatelessWidget {
       scale: 0.97,
       onTap: () async {
         final u = Uri.tryParse(url);
-        if (u != null && await canLaunchUrl(u)) {
-          await launchUrl(u, mode: LaunchMode.externalApplication);
-        }
+        final ok = u != null && await openOutside(u);
+        if (!ok && context.mounted) showHaloToast(context, l10n.linkNoAppOpens);
       },
       child: Container(
         padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),

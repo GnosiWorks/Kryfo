@@ -3086,6 +3086,7 @@ void main() {
       l.linkStubFetchedOverTorByTheirDevice,
       "Fetched over tor · by their device",
     );
+    expect(l.placeStubLocation, "Location");
     expect(l.mediaBubblesB("<bytes>"), "<bytes> b");
     expect(l.mediaBubblesKb("<bytes>"), "<bytes> kb");
     expect(l.mediaBubblesMb("<bytes>"), "<bytes> mb");

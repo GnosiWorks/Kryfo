@@ -3602,6 +3602,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get lockFileNoAppOnThis => 'لم يستلم أي تطبيق على هذا الهاتف الملف.';
 
   @override
+  String get linkNoAppOpens => 'لا يوجد تطبيق على هذا الهاتف يفتح هذا الرابط.';
+
+  @override
+  String get placeStubLocation => 'الموقع';
+
+  @override
   String get lockFileSaved => 'حُفظ';
 
   @override

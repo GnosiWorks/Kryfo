@@ -3539,6 +3539,12 @@ class AppLocalizationsDe extends AppLocalizations {
       'Keine App auf diesem Handy hat die Datei angenommen.';
 
   @override
+  String get linkNoAppOpens => 'Keine App auf diesem Handy öffnet diesen Link.';
+
+  @override
+  String get placeStubLocation => 'Standort';
+
+  @override
   String get lockFileSaved => 'Gespeichert';
 
   @override

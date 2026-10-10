@@ -889,6 +889,8 @@
   "lockFileCouldNotMakeOne": "Gagal membuatnya. Ketik sendiri.",
   "lockFileWriteItDownBefore": "Catat dulu sebelum kamu mengunci file",
   "lockFileNoAppOnThis": "Tidak ada aplikasi di ponsel ini yang menerima file itu.",
+  "linkNoAppOpens": "Tidak ada aplikasi di ponsel ini yang bisa membuka tautan ini.",
+  "placeStubLocation": "Lokasi",
   "lockFileSaved": "Disimpan",
   "lockFileCouldNotSaveIt": "Gagal menyimpannya di sana. Coba folder lain.",
   "lockFileLocked": "Terkunci",

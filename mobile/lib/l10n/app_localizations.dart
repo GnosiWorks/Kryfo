@@ -5457,6 +5457,18 @@ abstract class AppLocalizations {
   /// **'No app on this phone took the file.'**
   String get lockFileNoAppOnThis;
 
+  /// toast when tapping a link in a message and no app on the phone takes it
+  ///
+  /// In en, this message translates to:
+  /// **'No app on this phone opens this link.'**
+  String get linkNoAppOpens;
+
+  /// widgets/place_stub.dart: title of a shared map location that carries no name
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get placeStubLocation;
+
   /// screens/lock_file_screen.dart
   ///
   /// In en, this message translates to:

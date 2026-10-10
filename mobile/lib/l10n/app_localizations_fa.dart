@@ -3509,6 +3509,13 @@ class AppLocalizationsFa extends AppLocalizations {
   String get lockFileNoAppOnThis => 'هیچ برنامه‌ای روی این گوشی فایل را نگرفت.';
 
   @override
+  String get linkNoAppOpens =>
+      'هیچ برنامه‌ای روی این گوشی این پیوند را باز نمی‌کند.';
+
+  @override
+  String get placeStubLocation => 'موقعیت';
+
+  @override
   String get lockFileSaved => 'ذخیره شد';
 
   @override

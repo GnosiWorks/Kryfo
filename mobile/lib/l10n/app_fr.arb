@@ -889,6 +889,8 @@
   "lockFileCouldNotMakeOne": "Impossible d’en créer un. Tapez le vôtre.",
   "lockFileWriteItDownBefore": "Notez-le avant de verrouiller le fichier",
   "lockFileNoAppOnThis": "Aucune appli de ce téléphone n’a pris le fichier.",
+  "linkNoAppOpens": "Aucune application de ce téléphone n'ouvre ce lien.",
+  "placeStubLocation": "Position",
   "lockFileSaved": "Enregistré",
   "lockFileCouldNotSaveIt": "Impossible de l’enregistrer là. Essayez un autre dossier.",
   "lockFileLocked": "Verrouillé",

@@ -3,8 +3,8 @@
 // right from the first frame, faces as everywhere else, timed messages that
 // come on when a time is picked, a composer that moves like the 1:1 one and
 // a message menu that leaves instead of vanishing. its info page, a contact
-// page and the safety number open in their real state, and a member you
-// know is one tap away
+// page and the safety number open in their real state, a member you know
+// is one tap away, and a map link opens in a maps app without a preview
 import 'dart:async';
 import 'dart:io';
 
@@ -24,6 +24,7 @@ import 'package:kryfo/main.dart'
         appState,
         useDatabasesForTest,
         useEngineForTest;
+import 'package:kryfo/open_outside.dart';
 import 'package:kryfo/polls.dart' show PollVote;
 import 'package:kryfo/rooms.dart' show kRoomJoinWait;
 import 'package:kryfo/screens/chat_screen.dart' show SearchHead;
@@ -40,6 +41,8 @@ import 'package:kryfo/widgets/chat_parts.dart' show ReactionChip, kChipRoom;
 import 'package:kryfo/widgets/empty_chat.dart';
 import 'package:kryfo/widgets/halo_switch.dart';
 import 'package:kryfo/widgets/kryfo_avatar.dart';
+import 'package:kryfo/widgets/link_stub.dart';
+import 'package:kryfo/widgets/place_stub.dart';
 import 'package:kryfo/widgets/media_bubbles.dart' show HoldToTalkMic;
 import 'package:kryfo/widgets/motion.dart' show TorStatus;
 import 'package:kryfo/widgets/room_countdown.dart';
@@ -1548,5 +1551,63 @@ void main() {
     await t.pump(const Duration(seconds: 1));
     expect(find.text(l10n.keyVerificationMarkAsVerified), findsNothing);
     await _close(t);
+  });
+
+  group('map links', () {
+    // a link inside the place's name is part of the place, not a web link
+    const geo = 'geo:0,0?q=48.858093,2.294694(see%20https://x.example/a)';
+    final place = Uri.parse(
+      'geo:48.858093,2.294694?q=48.858093,2.294694(see%20https%3A%2F%2Fx.example%2Fa)',
+    );
+
+    tearDown(() => openOutsideForTest = null);
+
+    testWidgets('a map link opens in a maps app', (t) async {
+      final asked = <Uri>[];
+      openOutsideForTest = (u) async {
+        asked.add(u);
+        return true;
+      };
+      _use(t, _Db(rows: [_in(1, _anna, 'meet me $geo')]));
+      appState.contacts = [_contact(_anna, nick: 'Anna')];
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      expect(find.byType(PlaceStub), findsOneWidget);
+      expect(find.byType(LinkStub), findsNothing);
+      await t.tap(find.byType(PlaceStub));
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 300));
+      expect(asked, [place]);
+      expect(find.text(l10n.linkNoAppOpens), findsNothing);
+      await _close(t);
+    });
+
+    testWidgets('a map link no app takes says so', (t) async {
+      openOutsideForTest = (u) async => false;
+      _use(t, _Db(rows: [_in(1, _anna, geo)]));
+      appState.contacts = [_contact(_anna, nick: 'Anna')];
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      await t.tap(find.byType(PlaceStub));
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 300));
+      expect(find.text(l10n.linkNoAppOpens), findsOneWidget);
+      await t.pump(const Duration(seconds: 5));
+      await _close(t);
+    });
+
+    testWidgets('a typed map link offers no preview', (t) async {
+      _use(t, _Db());
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      // a web link does, so the strip is there to offer it
+      await t.enterText(find.byType(TextField), 'https://x.example/a');
+      await t.pump(const Duration(milliseconds: 400));
+      expect(find.text(l10n.previewStripAddPreview), findsOneWidget);
+      await t.enterText(find.byType(TextField), geo);
+      await t.pump(const Duration(milliseconds: 400));
+      expect(find.text(l10n.previewStripAddPreview), findsNothing);
+      await _close(t);
+    });
   });
 }

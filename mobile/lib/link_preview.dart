@@ -4,11 +4,17 @@
 // no image is ever loaded. these are the pure parts.
 
 import 'bidi_safe.dart';
+import 'place_link.dart';
 
 // the first http(s) url in a message, scheme lowercased. keyboards
 // capitalise the first letter of a message, so "Https://" has to count.
+// a link inside a geo: label is part of the place and is never fetched
 String? firstUrl(String text) {
-  final m = RegExp(r'https?://[^\s]+', caseSensitive: false).firstMatch(text);
+  final geo = geoSpans(text).toList();
+  final m = RegExp(r'https?://[^\s]+', caseSensitive: false)
+      .allMatches(text)
+      .where((m) => !geo.any((g) => m.start >= g.$1 && m.start < g.$2))
+      .firstOrNull;
   if (m == null) return null;
   var raw = m.group(0)!;
   // a sentence's own punctuation after the link: "see https://x.y/z."
