@@ -18,6 +18,8 @@ import 'package:kryfo/main.dart'
         AppIo,
         AppState,
         HaloDb,
+        eraseFreedPages,
+        kFrameReceipt,
         kKeyUnread,
         keyHeldIn,
         keySourceFor,
@@ -30,8 +32,8 @@ import 'package:kryfo/main.dart'
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
-import 'package:kryfo/signal_stores.dart' show onPeerKeyMismatch;
-import 'package:kryfo/vault_life.dart' show ChatRef, hiddenCard;
+import 'package:kryfo/vault_life.dart'
+    show ChatMover, ChatRef, VaultHost, hiddenCard;
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart'
@@ -39,7 +41,6 @@ import 'package:sqflite_sqlcipher/sqflite.dart'
 
 import 'arrival_fakes.dart' show ArrivalSeal, ArrivalStore;
 import 'mem_db.dart';
-import 'source_body.dart';
 import 'sqlite_ffi.dart';
 
 const _peer = 'calm-orbit-lantern';
@@ -47,6 +48,10 @@ final _keyA = List<int>.generate(32, (i) => i + 1);
 final _keyB = List<int>.generate(32, (i) => 200 - i);
 String _hex(List<int> b) =>
     b.map((x) => x.toRadixString(16).padLeft(2, '0')).join();
+List<int> _unhex(String h) => [
+  for (var i = 0; i < h.length; i += 2)
+    int.parse(h.substring(i, i + 2), radix: 16),
+];
 
 Future<void> _contact(MemDb db, String id, {String xpub = '', String? mark}) =>
     db.insert('contacts', {
@@ -222,6 +227,65 @@ GroupOwed _owed(String member) => GroupOwed(
   since: 1,
   tries: 0,
 );
+
+// a database whose key reads fail, with one member owed a file
+class _OwedRows extends _Rows {
+  _OwedRows(super.mem);
+  final due = <GroupOwed>[];
+  final tried = <String>[];
+  @override
+  Future<bool> keyHeld(String haloId) async => throw StateError('not read');
+  @override
+  Future<List<GroupOwed>> dueGroupOwed(int now) async => due;
+  @override
+  Future<void> triedGroupOwed(
+    String msgUid,
+    Iterable<String> members,
+    int now,
+  ) async => tried.addAll(members);
+  @override
+  Future<Map<String, Object?>?> sentMediaRow(String uid) async => null;
+  @override
+  Future<void> dropGroupOwed(String msgUid) async {}
+}
+
+// the vault's cards, read off its rows as the real mover reads them
+class _Mover implements ChatMover {
+  _Mover(this.vault);
+  final MemDb vault;
+  @override
+  Future<void> attach() async {}
+  @override
+  Future<void> detach() async {}
+  @override
+  Future<Map<String, (String, String)>> vaultCards() async => {
+    for (final r in vault.rows('contacts'))
+      r['halo_id'] as String: (
+        kHiddenPeer,
+        peerCard(
+          RouterCard(
+            r['halo_id'] as String,
+            '',
+            r['xpub'] as String,
+            verifiedKey: r['verified_key'] as String?,
+          ),
+        ),
+      ),
+  };
+  @override
+  dynamic noSuchMethod(Invocation i) =>
+      throw UnimplementedError('${i.memberName}');
+}
+
+class _Host implements VaultHost {
+  _Host(this.vault);
+  final MemDb vault;
+  @override
+  ChatMover mover(HaloDb primary, HaloDb? vault) => _Mover(this.vault);
+  @override
+  dynamic noSuchMethod(Invocation i) =>
+      throw UnimplementedError('${i.memberName}');
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -411,12 +475,10 @@ void main() {
   group('a hidden chat whose key changes', () {
     late _Peer bob;
     setUp(() async {
-      onPeerKeyMismatch = (p) => unawaited(app.flagKeyChanged(p));
       bob = await _phone();
       // paired: this phone holds their first key
       await processPeerBundle(bob.name, bob.card);
     });
-    tearDown(() => onPeerKeyMismatch = null);
 
     Future<_Rows> vaultWithBob() async {
       final vmem = MemDb();
@@ -468,19 +530,6 @@ void main() {
     });
   });
 
-  test('the store and the open both route a changed key by its owner', () {
-    final src = sourceOf('lib/main.dart');
-    expect(
-      src,
-      contains(
-        'onPeerKeyMismatch = (peer) => unawaited(appState.flagKeyChanged(peer));',
-      ),
-    );
-    final open = bodyOf(src, 'Future<String?> signalDecrypt(');
-    expect(open, contains('appState.flagKeyChanged(peerId)'));
-    expect(open, isNot(contains('live.setKeyChanged')));
-  });
-
   group('a group\'s owed sends', () {
     test('pass a held member by, using none of their tries', () async {
       final store = _Owed([_owed('held-one'), _owed('free-one')]);
@@ -498,12 +547,269 @@ void main() {
       expect(sent, ['free-one']);
     });
 
-    test('ask the app who is held', () {
-      final round = bodyOf(
-        sourceOf('lib/main.dart'),
-        'Future<void> _owedRound(',
-      );
-      expect(round, contains('held: keyHeld'));
+    test('take a key that cannot be read as held, using no try', () async {
+      final d = _OwedRows(store)..due.add(_owed('unread-one'));
+      useDatabasesForTest(d, Session(d));
+      await app.owedRoundForTest();
+      expect(d.tried, isEmpty);
     });
   });
+
+  group('a vault shutting', () {
+    test('keeps no one but its own people waiting', () async {
+      const id = 'closing-hidden';
+      await _identity(store, id, _keyB);
+      await hide(id, _hex(_keyA), mark: _hex(_keyA));
+      final closing = Completer<void>();
+      app.closingForTest = closing;
+      // an everyday contact is read at once
+      expect(
+        await app
+            .keyHeld('plain-everyday', strict: true)
+            .timeout(const Duration(milliseconds: 200)),
+        isFalse,
+      );
+      // a hidden one waits for the cards the close writes
+      var done = false;
+      final hidden = app.keyHeld(id, strict: true).then((v) {
+        done = true;
+        return v;
+      });
+      await _settle();
+      expect(done, isFalse);
+      closing.complete();
+      app.closingForTest = null;
+      expect(await hidden, isTrue);
+    });
+  });
+
+  group('a card from before cards kept the mark', () {
+    Future<void> oldCard(String id, List<int> paired) async {
+      await vaultList.putMeta('pub', 'pub-A');
+      await vaultList.putHidden(
+        id,
+        kHiddenPeer,
+        jsonEncode({'h': id, 'o': '', 'x': _hex(paired)}),
+        1,
+      );
+      await router.load();
+    }
+
+    test('holds once the key moved from the one it was made with', () async {
+      const moved = 'old-card-moved';
+      const same = 'old-card-same';
+      await _identity(store, moved, _keyB);
+      await _identity(store, same, _keyA);
+      await oldCard(moved, _keyA);
+      await oldCard(same, _keyA);
+      expect(router.marksUnread, isTrue);
+      expect(await app.keyHeld(moved, strict: true), isTrue);
+      expect(await app.keyHeld(same, strict: true), isFalse);
+    });
+
+    test('and a card written now says what it knows', () async {
+      await hide('new-card', _hex(_keyA));
+      final c = router.cardOf('new-card')!;
+      expect(c.markRead, isTrue);
+      expect(c.verifiedKey, isNull);
+    });
+  });
+
+  test('a mark set in the open vault reaches its card at once', () async {
+    const id = 'refresh-on-mark';
+    await _identity(store, id, _keyA);
+    await hide(id, _hex(_keyA));
+    final vmem = MemDb();
+    await _contact(vmem, id, xpub: _hex(_keyA));
+    final vault = _Rows(vmem, HaloContainer.vault);
+    final withHost = AppState(io: _Io(), router: router, host: _Host(vmem))
+      ..myId = 'me';
+    useDatabasesForTest(rows, await Session.withVault(rows, vault));
+    expect(await withHost.setVerified(id, true, key: _hex(_keyA)), isTrue);
+    await _settle();
+    expect(router.cardOf(id)!.verifiedKey, _hex(_keyA));
+  });
+
+  test('a mark waits for an open in their lane to land', () async {
+    const id = 'lane-mark';
+    await _contact(store, id);
+    await _identity(store, id, _keyA);
+    final gate = Completer<void>();
+    final open = signalSession.serial(id, () async {
+      await gate.future;
+      await _identity(store, id, _keyB);
+    });
+    final marked = rows.setVerified(id, true, key: _hex(_keyA));
+    await _settle();
+    gate.complete();
+    await open;
+    expect(await marked, isFalse);
+    final row = store.rows('contacts').singleWhere((r) => r['halo_id'] == id);
+    expect(row['verified_key'], isNull);
+  });
+
+  test('a key the everyday side cannot read raises no banner', () async {
+    final vault = MemDb();
+    await _contact(vault, _peer, xpub: _hex(_keyA));
+    var reads = 0;
+    Future<String?> everyday(String id) async =>
+        reads++ == 0 ? _hex(_keyA) : kKeyUnread;
+    expect(
+      await markVerified(
+        vault,
+        _peer,
+        true,
+        key: _hex(_keyA),
+        identity: everyday,
+      ),
+      isFalse,
+    );
+    final row = vault.rows('contacts').single;
+    expect(row['key_changed'], 0);
+    expect(row['verified'], 0);
+    expect(row['verified_key'], isNull);
+  });
+
+  test('a receipt for a held hidden chat waits in its vault', () async {
+    const id = 'held-receipt';
+    await _identity(store, id, _keyB);
+    await hide(id, _hex(_keyA), mark: _hex(_keyA));
+    await app.receiptForTest(id, 'uid-r1');
+    expect(vaultList.inbox, hasLength(1));
+    final vmem = MemDb();
+    await _contact(vmem, id, xpub: _hex(_keyA), mark: _hex(_keyA));
+    final vault = _Rows(vmem, HaloContainer.vault);
+    useDatabasesForTest(rows, await Session.withVault(rows, vault));
+    await app.drainSealed(vault, 'priv-A');
+    expect(vaultList.inbox, isEmpty);
+    expect(vmem.rows('frames_out').single, {
+      ...vmem.rows('frames_out').single,
+      'msg_uid': 'uid-r1',
+      'kind': kFrameReceipt,
+      'peer_id': id,
+    });
+  });
+
+  test(
+    'freed pages are zeroed',
+    () async {
+      final db = SqliteMem.open()!;
+      await eraseFreedPages(db);
+      final r = await db.rawQuery('PRAGMA secure_delete');
+      expect(r.single.values.single.toString(), '1');
+    },
+    skip: SqliteMem.open() == null ? 'no sqlite on this host' : null,
+  );
+
+  group('a prekey frame', () {
+    late _Peer bob;
+    setUp(() async {
+      bob = await _phone();
+      await _contact(store, bob.name, xpub: bob.xpub, mark: bob.xpub);
+      await processPeerBundle(bob.name, bob.card);
+    });
+
+    Map<String, Object?> row() =>
+        store.rows('contacts').singleWhere((r) => r['halo_id'] == bob.name);
+    List<int> key() =>
+        (store
+                    .rows('peer_identities')
+                    .singleWhere(
+                      (r) => r['address'] == bob.name,
+                    )['identity_key']
+                as List<int>)
+            .sublist(1);
+
+    test('that fails its mac after the key check changes nothing', () async {
+      final again = await _phone(name: bob.name);
+      final wire = base64Decode(await _opener(again, 'forged'));
+      final pkm = PreKeySignalMessage(Uint8List.fromList(wire.sublist(1)));
+      final inner = Uint8List.fromList(pkm.getWhisperMessage().serialize());
+      inner[inner.length - 1] ^= 1;
+      final bad = PreKeySignalMessage.from(
+        pkm.getMessageVersion(),
+        pkm.getRegistrationId(),
+        pkm.getPreKeyId(),
+        pkm.getSignedPreKeyId(),
+        pkm.getBaseKey(),
+        pkm.getIdentityKey(),
+        SignalMessage.fromSerialized(inner),
+      );
+      final forged = base64Encode([wire[0], ...bad.serialize()]);
+      expect(
+        await signalDecrypt(bob.name, forged, flagKeyChange: true),
+        isNull,
+      );
+      await _settle();
+      expect(_hex(key()), bob.xpub);
+      expect(row()['verified'], 1);
+      expect(row()['key_changed'], 0);
+      expect(await app.keyHeld(bob.name, strict: true), isFalse);
+    });
+
+    test('from a real new key raises it, once', () async {
+      final again = await _phone(name: bob.name);
+      expect(
+        await signalDecrypt(
+          bob.name,
+          await _opener(again, 'new phone'),
+          flagKeyChange: true,
+        ),
+        'new phone',
+      );
+      await _settle();
+      expect(_hex(key()), again.xpub);
+      expect(row()['key_changed'], 1);
+      expect(await app.keyHeld(bob.name, strict: true), isTrue);
+      // seen and put away: the next frame on the same key says nothing
+      await rows.setKeyChanged(bob.name, false);
+      expect(
+        await signalDecrypt(
+          bob.name,
+          await again.ss.encryptTo('me', 'still new'),
+          flagKeyChange: true,
+        ),
+        'still new',
+      );
+      await _settle();
+      expect(row()['key_changed'], 0);
+    });
+  });
+
+  test(
+    'a session started afresh on an old card is held before it seals',
+    () async {
+      final db = MemDb();
+      final pair = Curve.generateKeyPair();
+      final me = SignalSession();
+      await me.bootstrap(
+        database: db,
+        xPubBytes: pair.publicKey.serialize().sublist(1),
+        xPrivBytes: pair.privateKey.serialize(),
+      );
+      final bob = await _phone();
+      await SessionBuilder(
+        me.sessionStore,
+        me.preKeyStore,
+        me.signedPreKeyStore,
+        me.identityStore,
+        SignalProtocolAddress(bob.name, 1),
+      ).processPreKeyBundle(preKeyBundleOf(bob.card));
+      await me.markRestored();
+      // they came back on a new phone, and its number was checked
+      final again = await _phone(name: bob.name);
+      await _identity(db, bob.name, _unhex(again.xpub));
+      await _contact(db, bob.name, xpub: bob.xpub, mark: again.xpub);
+      await expectLater(
+        me.encryptTo(
+          bob.name,
+          'hi',
+          // the card kept from the first pairing
+          afresh: () async => preKeyBundleOf(bob.card),
+          held: () => keyHeldIn(db, bob.name),
+        ),
+        throwsA(isA<KeyHeld>()),
+      );
+    },
+  );
 }

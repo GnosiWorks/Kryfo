@@ -1424,6 +1424,24 @@ void main() {
       expect(w.log, containsAllInOrder(['open', 'attach', 'cards']));
     });
 
+    test('cards from before they kept the mark are written again at the '
+        'unlock, before the reveal', () async {
+      final w = await _World.make();
+      w.store.rows[_h] = {
+        'chat_id': _h,
+        'kind': kHiddenPeer,
+        'card': '{"h":"$_h","o":"o-$_h","x":"x-$_h","bp":1}',
+        'at': 1,
+      };
+      await w.router.load();
+      expect(w.router.marksUnread, isTrue);
+      // nothing after the reveal runs here
+      w.app.revealGap = const Duration(hours: 1);
+      await w.app.sessionFor(PinResult.vault, vaultKey: vaultKey);
+      expect(w.router.marksUnread, isFalse);
+      expect(w.router.cardOf(_h)!.markRead, isTrue);
+    });
+
     test('a vault that will not open gives the everyday app', () async {
       final w = await _World.make();
       w.host.broken = true;
