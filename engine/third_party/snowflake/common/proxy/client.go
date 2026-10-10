@@ -3,7 +3,6 @@ package proxy
 import (
 	"context"
 	"errors"
-	"log"
 	"net"
 	"net/url"
 	"strconv"

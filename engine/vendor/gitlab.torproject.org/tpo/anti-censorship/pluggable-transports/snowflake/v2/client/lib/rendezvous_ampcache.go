@@ -3,7 +3,6 @@ package snowflake_client
 import (
 	"errors"
 	"io"
-	"log"
 	"math/rand"
 	"net/http"
 	"net/url"

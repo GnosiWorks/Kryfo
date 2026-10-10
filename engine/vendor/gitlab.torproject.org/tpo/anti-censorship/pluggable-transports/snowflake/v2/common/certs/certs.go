@@ -2,7 +2,6 @@ package certs
 
 import (
 	"crypto/x509"
-	"log"
 )
 
 // https://crt.sh/?id=9314791

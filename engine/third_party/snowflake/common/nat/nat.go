@@ -17,7 +17,6 @@ import (
 	"errors"
 	"fmt"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/proxy"
-	"log"
 	"net"
 	"net/url"
 	"time"

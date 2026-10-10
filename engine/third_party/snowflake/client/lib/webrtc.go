@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"io"
-	"log"
 	"net"
 	"net/url"
 	"sync"

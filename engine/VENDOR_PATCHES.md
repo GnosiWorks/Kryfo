@@ -133,6 +133,9 @@ left out. it differs from upstream in:
   rendezvous at all, gets an error back instead of `log.Fatal`, which would
   end the app the engine runs in. marked `kryfo:`.
 - `go.mod`: the aws and golang/mock requirements are dropped.
+- a `log.go` in each package that logs gives it a `log` that writes to
+  io.Discard, and those files no longer import the log package. the lines
+  carry broker urls, fronts, stun servers and sdp.
 
 vendor/gitlab.torproject.org/.../snowflake/v2 is a copy of it:
 
@@ -140,7 +143,7 @@ vendor/gitlab.torproject.org/.../snowflake/v2 is a copy of it:
 
 to move to a newer upstream: copy the new tag's LICENSE, go.mod and the
 non-test files of the same packages over `third_party/snowflake`, delete
-`rendezvous_sqs.go`, redo the two edits, then `./vendor.sh`.
+`rendezvous_sqs.go`, redo the edits above, then `./vendor.sh`.
 
 ## anet: no linkname into net
 

@@ -28,7 +28,6 @@ package snowflake_client
 import (
 	"context"
 	"errors"
-	"log"
 	"math/rand"
 	"net"
 	"net/url"

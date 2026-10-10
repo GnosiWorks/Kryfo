@@ -1,7 +1,6 @@
 package snowflake_client
 
 import (
-	"log"
 	"time"
 )
 

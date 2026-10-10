@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"io"
-	"log"
 	"math/rand"
 	"net/http"
 	"net/url"
