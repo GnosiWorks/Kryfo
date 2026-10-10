@@ -7931,4 +7931,10 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get settingsGifSearchHint =>
       'Sen açana kadar kapalı. Kryfo’nun sunucusu senin için arar, böylece GIF servisi seni asla görmez.';
+
+  @override
+  String get shareChooseChat => 'Sohbet seç';
+
+  @override
+  String get shareNoChats => 'Henüz sohbet yok';
 }

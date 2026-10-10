@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 
 import '../lock_state.dart';
+import '../share_text.dart';
 
 class PickedFile {
   final String uri;
@@ -54,14 +55,18 @@ class ToolsBridge {
 
   static const _ch = MethodChannel('halo/tools');
   final _shared = StreamController<void>.broadcast();
+  final _sharedText = StreamController<void>.broadcast();
   final _progress = StreamController<CopyProgress>.broadcast();
 
   Stream<void> get shared => _shared.stream;
+  Stream<void> get sharedText => _sharedText.stream;
   Stream<CopyProgress> get progress => _progress.stream;
 
   Future<Object?> _onCall(MethodCall call) async {
     if (call.method == 'shared') {
       _shared.add(null);
+    } else if (call.method == 'sharedText') {
+      _sharedText.add(null);
     } else if (call.method == 'copyProgress') {
       final a = call.arguments;
       if (a is Map) {
@@ -83,6 +88,35 @@ class ToolsBridge {
       return null;
     } on MissingPluginException {
       return null;
+    }
+  }
+
+  // the words shared last, kept on the android side until dropped
+  Future<SharedText?> peekSharedText() async {
+    try {
+      return SharedText.from(await _ch.invokeMethod('takeSharedText'));
+    } on PlatformException {
+      return null;
+    } on MissingPluginException {
+      return null;
+    }
+  }
+
+  // the session they were shown in, so a screen rebuilt after the process
+  // went keeps them there
+  Future<void> sawSharedText(String id, String where) =>
+      _quiet('seenSharedText', {'id': id, 'where': where});
+
+  Future<void> dropSharedText(String id) =>
+      _quiet('dropSharedText', {'id': id});
+
+  Future<void> _quiet(String method, Map<String, Object?> args) async {
+    try {
+      await _ch.invokeMethod(method, args);
+    } on PlatformException {
+      return;
+    } on MissingPluginException {
+      return;
     }
   }
 

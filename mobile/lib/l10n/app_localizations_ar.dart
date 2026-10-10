@@ -8035,4 +8035,10 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get settingsGifSearchHint =>
       'متوقف حتى تشغّله. خادم Kryfo يبحث نيابة عنك، فلا تراك خدمة GIF أبدًا.';
+
+  @override
+  String get shareChooseChat => 'اختر محادثة';
+
+  @override
+  String get shareNoChats => 'لا محادثات بعد';
 }

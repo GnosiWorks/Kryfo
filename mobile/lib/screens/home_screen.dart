@@ -18,6 +18,7 @@ import 'photo_knows_screen.dart';
 import 'qr_screen.dart';
 import 'lock_file_screen.dart';
 import 'open_locked_screen.dart';
+import 'share_sheet.dart';
 import '../tools/tools_bridge.dart';
 import '../lock_guard.dart' show lockGuard;
 import '../lock_state.dart';
@@ -106,6 +107,8 @@ class _HomeScreenState extends State<HomeScreen> {
   HaloTab _tab = HaloTab.chats;
   final Set<HaloTab> _seen = {HaloTab.chats};
   StreamSubscription<void>? _sharedSub;
+  StreamSubscription<void>? _sharedTextSub;
+  final _texts = ShareTexts();
   // tool leftovers, swept every few minutes while kryfo is in front. away,
   // the timer does not wake the phone; back, a sweep that fell due runs
   final _sweeper = SeenTimers();
@@ -119,6 +122,9 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _sharedSub = ToolsBridge.instance.shared.listen((_) => _takeShared());
+    _sharedTextSub = ToolsBridge.instance.sharedText.listen((_) {
+      if (mounted) _texts.arrived(context, () => mounted);
+    });
     lockState.addListener(_onLock);
     // a tab opened once stays in the tree behind an Offstage, so a theme
     // switch has to repaint the tabs behind this one too
@@ -128,12 +134,16 @@ class _HomeScreenState extends State<HomeScreen> {
       const Duration(minutes: 5),
       () => ToolsBridge.instance.sweep(),
     );
-    WidgetsBinding.instance.addPostFrameCallback((_) => _takeShared());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _takeShared();
+      if (mounted) _texts.take(context, () => mounted);
+    });
   }
 
   @override
   void dispose() {
     _sharedSub?.cancel();
+    _sharedTextSub?.cancel();
     lockState.removeListener(_onLock);
     themeRevision.removeListener(_repaint);
     _sweeper.dispose();

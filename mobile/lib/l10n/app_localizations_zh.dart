@@ -7577,6 +7577,12 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get settingsGifSearchHint =>
       '在你开启前一直关闭。Kryfo 的服务器替你搜索，所以 GIF 服务永远看不到你。';
+
+  @override
+  String get shareChooseChat => '选择聊天';
+
+  @override
+  String get shareNoChats => '还没有聊天';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -15032,4 +15038,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get settingsGifSearchHint =>
       '在你開啟前都會關閉。Kryfo 的伺服器替你搜尋，所以 GIF 服務永遠看不到你。';
+
+  @override
+  String get shareChooseChat => '選擇聊天';
+
+  @override
+  String get shareNoChats => '還沒有聊天';
 }

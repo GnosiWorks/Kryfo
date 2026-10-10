@@ -2068,5 +2068,7 @@
   "gifPhoneLine": "GIF, сохранённые на этом телефоне. Ничего не уходит в сеть.",
   "gifPhoneChoose": "Выбрать GIF",
   "settingsGifSearch": "Поиск GIF",
-  "settingsGifSearchHint": "Выключен, пока ты его не включишь. Сервер Kryfo ищет за тебя, поэтому GIF-сервис никогда тебя не видит."
+  "settingsGifSearchHint": "Выключен, пока ты его не включишь. Сервер Kryfo ищет за тебя, поэтому GIF-сервис никогда тебя не видит.",
+  "shareChooseChat": "Выбрать чат",
+  "shareNoChats": "Чатов пока нет"
 }

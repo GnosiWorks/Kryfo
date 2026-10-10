@@ -7980,4 +7980,10 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get settingsGifSearchHint =>
       'Spenta finché non la attivi. Il server di Kryfo cerca per te, così il servizio di GIF non ti vede mai.';
+
+  @override
+  String get shareChooseChat => 'Scegli una chat';
+
+  @override
+  String get shareNoChats => 'Ancora nessuna chat';
 }

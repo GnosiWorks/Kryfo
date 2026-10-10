@@ -99,6 +99,12 @@ class MainActivity : FlutterFragmentActivity() {
     // again before a new intent reaches it, so the lifecycle cannot say
     private var stoppedSinceResume = false
 
+    // shared words not used yet outlive the process going
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        tools.saveText(outState)
+    }
+
     override fun onNewIntent(intent: Intent) {
         // an intent from outside while something else covered this screen:
         // the person went somewhere first. dart hears it before the intent
@@ -279,6 +285,7 @@ class MainActivity : FlutterFragmentActivity() {
     // covered before dart runs
     override fun onCreate(savedInstanceState: android.os.Bundle?) {
         restored = savedInstanceState != null
+        tools.restoreText(savedInstanceState)
         if (getSharedPreferences("kryfo_window", MODE_PRIVATE).getBoolean("secure", false)) {
             window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
             if (android.os.Build.VERSION.SDK_INT >= 33) setRecentsScreenshotEnabled(false)

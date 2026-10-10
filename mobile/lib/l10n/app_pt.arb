@@ -2068,5 +2068,7 @@
   "gifPhoneLine": "GIFs salvos neste celular. Nada vai para a internet.",
   "gifPhoneChoose": "Escolher um GIF",
   "settingsGifSearch": "Busca de GIFs",
-  "settingsGifSearchHint": "Desligada até você ligar. O servidor do Kryfo busca por você, então o serviço de GIFs nunca vê você."
+  "settingsGifSearchHint": "Desligada até você ligar. O servidor do Kryfo busca por você, então o serviço de GIFs nunca vê você.",
+  "shareChooseChat": "Escolher uma conversa",
+  "shareNoChats": "Ainda não há conversas"
 }

@@ -140,6 +140,22 @@ import '../lock_guard.dart' show LockDropped, lockGuard, onScreen;
 // session.chatKey: each container keeps its own
 final Map<String, String> _draftPerPeer = {};
 
+// the chats open in the stack, by id: shared words land in the one open
+// rather than in a second copy of it
+final Map<String, _ChatScreenState> _openChats = {};
+
+/// [words] under what [id]'s open chat holds in its composer, its route
+/// brought back to the top. false when no chat of theirs is open
+bool landInOpenChat(String id, String words) {
+  final s = _openChats[id];
+  if (s == null || !s.mounted) return false;
+  final route = ModalRoute.of(s.context);
+  if (route == null || !route.isActive) return false;
+  Navigator.of(s.context).popUntil((r) => r == route);
+  s._takeWords(words);
+  return true;
+}
+
 // newest message ms seen when the chat was last left, keyed the same way
 final Map<String, int> _lastReadPerPeer = {};
 // texts whose send is still running, by uid. a reload keeps them sending
@@ -1020,6 +1036,7 @@ class _ChatScreenState extends State<ChatScreen>
     appState.loadSendMode();
     lockState.addListener(_lockLifted);
     claimChat(widget.peerHaloId);
+    _openChats[widget.peerHaloId] = this;
     // opened under the lock: marked read once it lifts
     lockGuard.isLocked() ? _underLock = true : _markRead();
     _unreadAfterMs =
@@ -4105,6 +4122,9 @@ class _ChatScreenState extends State<ChatScreen>
     _timers.dispose();
     _reads.dispose();
     releaseChat(widget.peerHaloId);
+    if (identical(_openChats[widget.peerHaloId], this)) {
+      _openChats.remove(widget.peerHaloId);
+    }
     lockState.removeListener(_lockLifted);
     appState.removeListener(_onAppStateChanged);
     _devOpening
@@ -4725,6 +4745,15 @@ class _ChatScreenState extends State<ChatScreen>
     final route = await wordsRoute(id, m.text);
     if (route == null || !mounted) return;
     Navigator.of(context).push(route);
+  }
+
+  // words shared from another app, under what the composer holds
+  void _takeWords(String words) {
+    final t = composerWith(_msgCtrl.text, words);
+    _msgCtrl.value = TextEditingValue(
+      text: t,
+      selection: TextSelection.collapsed(offset: t.length),
+    );
   }
 
   void _onScroll() {

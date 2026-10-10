@@ -12692,6 +12692,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Off until you turn it on. Kryfo\'s server searches for you, so the GIF service never sees you.'**
   String get settingsGifSearchHint;
+
+  /// screens/share_sheet.dart: title of the picker for words shared from another app
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a chat'**
+  String get shareChooseChat;
+
+  /// screens/share_sheet.dart: the same picker with no chats to pick
+  ///
+  /// In en, this message translates to:
+  /// **'No chats yet'**
+  String get shareNoChats;
 }
 
 class _AppLocalizationsDelegate

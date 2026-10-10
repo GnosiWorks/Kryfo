@@ -3377,5 +3377,7 @@ void main() {
       l.settingsGifSearchHint,
       "Off until you turn it on. Kryfo's server searches for you, so the GIF service never sees you.",
     );
+    expect(l.shareChooseChat, "Choose a chat");
+    expect(l.shareNoChats, "No chats yet");
   });
 }

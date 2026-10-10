@@ -8,6 +8,7 @@ import android.content.ContentValues
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.os.ParcelFileDescriptor
 import android.provider.DocumentsContract
 import android.os.StatFs
@@ -30,6 +31,13 @@ class ToolsBridge(private val activity: Activity) {
         const val IN_DIR = "tools_in"
         const val OUT_DIR = "tools_out"
         private const val MAX_AGE_MS = 15 * 60 * 1000L
+        // dart cuts the words to a message's size. this only bounds what
+        // crosses over
+        const val TEXT_MOST = 32 * 1024
+        const val STATE_TEXT = "kryfo_shared_text"
+
+        fun isText(type: String) =
+            type.substringBefore(';').trim().lowercase() == "text/plain"
 
         // [all] at start: no copy in is being read then. a result may have
         // been shared with another app that still reads it, so it waits out
@@ -50,6 +58,9 @@ class ToolsBridge(private val activity: Activity) {
     private var channel: MethodChannel? = null
     private var shared: Uri? = null
     private var sharedMime: String? = null
+    // words shared from another app, in memory only, until dart says a chat
+    // took them or they were let go
+    private var sharedText: Bundle? = null
     private var pendingPick: MethodChannel.Result? = null
     private var pendingDelete: MethodChannel.Result? = null
     private var pendingSaveAs: MethodChannel.Result? = null
@@ -61,11 +72,17 @@ class ToolsBridge(private val activity: Activity) {
     fun attach(ch: MethodChannel) {
         channel = ch
         ch.setMethodCallHandler { call, result -> handle(call, result) }
+        // words a screen rebuilt after the process went still holds
+        if (sharedText != null) ch.invokeMethod("sharedText", null)
     }
 
     fun offer(intent: Intent?) {
         if (intent?.action != Intent.ACTION_SEND) return
         val type = intent.type ?: return
+        if (isText(type)) {
+            offerText(intent)
+            return
+        }
         if (!type.startsWith("image/") && !type.startsWith("video/")) return
         val uri: Uri? = if (Build.VERSION.SDK_INT >= 33) {
             intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
@@ -78,6 +95,45 @@ class ToolsBridge(private val activity: Activity) {
         sharedMime = type
         activity.runOnUiThread { channel?.invokeMethod("shared", null) }
     }
+
+    // a newer share takes the place of one not used yet. a text file sent
+    // as a stream has no words to take
+    private fun offerText(intent: Intent) {
+        val (text, subject) = try {
+            Pair(
+                intent.getCharSequenceExtra(Intent.EXTRA_TEXT)?.toString(),
+                intent.getCharSequenceExtra(Intent.EXTRA_SUBJECT)?.toString()
+            )
+        } catch (e: Exception) {
+            return
+        }
+        if (text.isNullOrBlank() && subject.isNullOrBlank()) return
+        val id = ByteArray(8).also { SecureRandom().nextBytes(it) }
+            .joinToString("") { "%02x".format(it) }
+        sharedText = Bundle().apply {
+            putString("id", id)
+            putString("text", text?.take(TEXT_MOST))
+            putString("subject", subject?.take(TEXT_MOST))
+        }
+        activity.runOnUiThread { channel?.invokeMethod("sharedText", null) }
+    }
+
+    // android keeps a saved state in memory and hands it back to a screen
+    // rebuilt after the process went. nothing of it reaches the disk
+    fun saveText(out: Bundle) {
+        sharedText?.let { out.putBundle(STATE_TEXT, Bundle(it)) }
+    }
+
+    fun restoreText(state: Bundle?) {
+        if (sharedText == null) sharedText = state?.getBundle(STATE_TEXT)
+    }
+
+    private fun textOf(b: Bundle): Map<String, String?> = mapOf(
+        "id" to b.getString("id"),
+        "text" to b.getString("text"),
+        "subject" to b.getString("subject"),
+        "seen" to b.getString("seen")
+    )
 
     private fun acceptable(uri: Uri): Boolean {
         if (uri.scheme != "content") return false
@@ -135,6 +191,18 @@ class ToolsBridge(private val activity: Activity) {
                 shared = null
                 sharedMime = null
                 result.success(if (u == null) null else describe(u, m))
+            }
+            "takeSharedText" -> result.success(sharedText?.let { textOf(it) })
+            "seenSharedText" -> {
+                val b = sharedText
+                if (b != null && b.getString("id") == call.argument<String>("id")) {
+                    b.putString("seen", call.argument<String>("where"))
+                }
+                result.success(true)
+            }
+            "dropSharedText" -> {
+                if (sharedText?.getString("id") == call.argument<String>("id")) sharedText = null
+                result.success(true)
             }
             "pick" -> pick(call.argument<String>("kind") ?: "image", result)
             "copyIn" -> copyIn(call.argument<String>("uri"), result)

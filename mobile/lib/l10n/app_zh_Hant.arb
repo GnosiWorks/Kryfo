@@ -2068,5 +2068,7 @@
   "gifPhoneLine": "儲存在這支手機上的 GIF。不會連網。",
   "gifPhoneChoose": "選擇 GIF",
   "settingsGifSearch": "GIF 搜尋",
-  "settingsGifSearchHint": "在你開啟前都會關閉。Kryfo 的伺服器替你搜尋，所以 GIF 服務永遠看不到你。"
+  "settingsGifSearchHint": "在你開啟前都會關閉。Kryfo 的伺服器替你搜尋，所以 GIF 服務永遠看不到你。",
+  "shareChooseChat": "選擇聊天",
+  "shareNoChats": "還沒有聊天"
 }

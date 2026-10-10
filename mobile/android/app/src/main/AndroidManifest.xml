@@ -65,6 +65,13 @@
                 <data android:mimeType="image/*" />
                 <data android:mimeType="video/*" />
             </intent-filter>
+            <!-- words and links from another app: they wait in memory for a
+                 chat to be picked, and land in its composer unsent -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
         </activity>
         <service
             android:name=".HaloListenerService"

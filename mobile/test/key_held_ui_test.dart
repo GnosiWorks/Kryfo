@@ -226,7 +226,7 @@ void main() {
   });
 
   test('the forward picker marks the held and asks before it forwards, '
-      'for both forwards', () {
+      'for both forwards and for shared words', () {
     final body = bodyOf(
       sourceOf('lib/screens/forward_sheet.dart'),
       'Future<String?> pickWordsChat(',
@@ -240,6 +240,7 @@ void main() {
         'lib/screens/group_chat_screen.dart',
         'Future<void> _forwardGroupMessage(',
       ),
+      ('lib/screens/share_sheet.dart', 'Future<void> take('),
     ]) {
       expect(bodyOf(sourceOf(file), fn), contains('pickWordsChat('));
     }

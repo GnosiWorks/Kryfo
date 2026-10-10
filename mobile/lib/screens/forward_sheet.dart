@@ -153,6 +153,17 @@ Future<Route<void>?> wordsRoute(String id, String words) async {
   );
 }
 
+/// [words] in [id]'s composer: its chat brought back to the top when it is
+/// open, else opened over home
+Future<void> landWords(BuildContext context, String id, String words) async {
+  if (landInOpenChat(id, words)) return;
+  final route = await wordsRoute(id, words);
+  if (route == null || !context.mounted) return;
+  final nav = Navigator.of(context);
+  nav.popUntil((r) => r.isFirst);
+  nav.push(route);
+}
+
 // what was shared, as it will land: a few lines, in its own direction
 class _WordsCard extends StatelessWidget {
   const _WordsCard({required this.words});
