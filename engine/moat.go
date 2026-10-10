@@ -165,6 +165,7 @@ func HaloMoatSolve(cChallenge, cSolution *C.char) *C.char {
 		if !strings.HasPrefix(strings.ToLower(b), "obfs4 ") {
 			b = "obfs4 " + b
 		}
+		b, _ = normaliseBridgeLine(b)
 		if validBridgeLine(b) {
 			good = append(good, b)
 		}
