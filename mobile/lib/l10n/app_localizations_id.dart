@@ -1844,12 +1844,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get chatHoldToRecord => 'Tahan untuk merekam pesan suara';
 
   @override
-  String get chatSendPhoto => 'Kirim foto';
-
-  @override
-  String get chatAddACaption => 'Tambah keterangan…';
-
-  @override
   String get chatSecurityCodeChanged => 'Kode keamanan berubah';
 
   @override
@@ -3221,9 +3215,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get homeSupporter => 'Pendukung';
 
   @override
-  String get homeArchivedChats => 'Obrolan diarsipkan';
-
-  @override
   String get homeUnmute => 'Bunyikan';
 
   @override
@@ -4361,9 +4352,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get pinsChangeWipePin => 'Ganti PIN penghapus';
 
   @override
-  String get pinsSetAWipePin => 'Buat PIN penghapus';
-
-  @override
   String get pinsRemove => 'Hapus';
 
   @override
@@ -5214,12 +5202,6 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get settingsWholeAppHiddenFromRecentsAnd =>
       'Seluruh aplikasi disembunyikan dari aplikasi terbaru dan tangkapan layar';
-
-  @override
-  String get settingsOnNextStart => 'Aktif · mulai berikutnya';
-
-  @override
-  String get settingsOffNextStart => 'Mati · mulai berikutnya';
 
   @override
   String get settingsLightTheme => 'Tema terang';
@@ -6614,6 +6596,15 @@ class AppLocalizationsId extends AppLocalizations {
   String get torBootSplashTakingLonger => 'Ini lebih lama dari biasanya';
 
   @override
+  String get torBootSplashHopEntry => 'Masuk';
+
+  @override
+  String get torBootSplashHopMiddle => 'Tengah';
+
+  @override
+  String get torBootSplashHopExit => 'Keluar';
+
+  @override
   String get videoBubbleNothingHereOpensThat =>
       'Tidak ada yang bisa membukanya di sini · dibagikan saja';
 
@@ -7070,9 +7061,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get pollPickSeveral => 'Pilih satu atau lebih';
 
   @override
-  String get searchOpen => 'Cari';
-
-  @override
   String get searchHint => 'Cari di obrolan dan pesan';
 
   @override
@@ -7256,9 +7244,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get pinsDecoyLine => 'Membuka Kryfo kosong, seperti baru dipasang.';
-
-  @override
-  String get pinsSetADecoyPin => 'Buat PIN umpan';
 
   @override
   String get pinsChangeDecoyPin => 'Ganti PIN umpan';

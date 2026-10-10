@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'secure_store.dart';
 import 'widgets/boot_failed.dart';
+import 'widgets/fade_over.dart';
 import 'widgets/tor_boot_splash.dart';
 import 'dart:convert';
 import 'dart:math';
@@ -21128,6 +21129,10 @@ class _OnboardingGateState extends State<_OnboardingGate> {
   // boot is quick enough that the onion is gone before it registers. hold
   // the splash a beat on cold start so it gets seen. warm reopens skip it.
   bool _hold = false;
+  // keeps the onboarding's state while it fades out over home
+  var _onboardingKey = GlobalKey();
+  Widget? _last;
+  Widget? _leaving;
 
   @override
   void initState() {
@@ -21167,13 +21172,22 @@ class _OnboardingGateState extends State<_OnboardingGate> {
           before = const MovedScreen(key: ValueKey('moved'));
         } else if (!appState.onboardingComplete) {
           before = OnboardingScreen(
-            key: const ValueKey('onboarding'),
+            key: _onboardingKey,
             appState: appState,
             onComplete: () => appState.markOnboardingComplete(),
           );
         } else {
-          return widget.child;
+          // the onboarding fades out over home, once
+          if (_last?.key == _onboardingKey) _leaving = _last;
+          _last = null;
+          return FadeOver(leaving: _leaving, child: widget.child);
         }
+        // an onboarding gone another way may still be fading in the switcher
+        if (_last?.key == _onboardingKey && before.key != _onboardingKey) {
+          _onboardingKey = GlobalKey();
+        }
+        _last = before;
+        _leaving = null;
         // the splash goes out first, then the next screen comes up: no
         // cut, and never both at once
         return AnimatedSwitcher(

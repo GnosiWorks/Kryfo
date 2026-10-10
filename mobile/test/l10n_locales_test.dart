@@ -785,8 +785,6 @@ final _calls = <_Call>[
   ('chatDisguiseVoice', [], (l) => l.chatDisguiseVoice),
   ('commonSend', [], (l) => l.commonSend),
   ('chatNoPhotosInThis', [], (l) => l.chatNoPhotosInThis),
-  ('chatSendPhoto', [], (l) => l.chatSendPhoto),
-  ('chatAddACaption', [], (l) => l.chatAddACaption),
   ('chatSecurityCodeChanged', [], (l) => l.chatSecurityCodeChanged),
   (
     'chatMayHaveReinstalledOr',
@@ -1331,7 +1329,6 @@ final _calls = <_Call>[
   ('homeMembers', [], (l) => l.homeMembers(21)),
   ('homeMembers', [], (l) => l.homeMembers(1000)),
   ('homeSupporter', [], (l) => l.homeSupporter),
-  ('homeArchivedChats', [], (l) => l.homeArchivedChats),
   ('homeUnmute', [], (l) => l.homeUnmute),
   ('homeMute', [], (l) => l.homeMute),
   ('homeArchive', [], (l) => l.homeArchive),
@@ -1822,7 +1819,6 @@ final _calls = <_Call>[
   ('pinsNeedsAPinFirst', [], (l) => l.pinsNeedsAPinFirst),
   ('pinsSet', [], (l) => l.pinsSet),
   ('pinsChangeWipePin', [], (l) => l.pinsChangeWipePin),
-  ('pinsSetAWipePin', [], (l) => l.pinsSetAWipePin),
   ('pinsRemove', [], (l) => l.pinsRemove),
   ('pinsRemoveTheWipePin', [], (l) => l.pinsRemoveTheWipePin),
   ('pinsTheLockScreenKeeps', [], (l) => l.pinsTheLockScreenKeeps),
@@ -2166,8 +2162,6 @@ final _calls = <_Call>[
     [],
     (l) => l.settingsWholeAppHiddenFromRecentsAnd,
   ),
-  ('settingsOnNextStart', [], (l) => l.settingsOnNextStart),
-  ('settingsOffNextStart', [], (l) => l.settingsOffNextStart),
   ('settingsLightTheme', [], (l) => l.settingsLightTheme),
   (
     'settingsSameProtectionBrighter',
@@ -2643,6 +2637,9 @@ final _calls = <_Call>[
   ('bootFailedKeysDidNotAnswer', [], (l) => l.bootFailedKeysDidNotAnswer),
   ('bootFailedCloseAndReopen', [], (l) => l.bootFailedCloseAndReopen),
   ('torBootSplashTakingLonger', [], (l) => l.torBootSplashTakingLonger),
+  ('torBootSplashHopEntry', [], (l) => l.torBootSplashHopEntry),
+  ('torBootSplashHopMiddle', [], (l) => l.torBootSplashHopMiddle),
+  ('torBootSplashHopExit', [], (l) => l.torBootSplashHopExit),
   ('kryfoLinkTextThatLinkIsNot', [], (l) => l.kryfoLinkTextThatLinkIsNot),
   ('kryfoLinkTextAdd', ["⟨who⟩"], (l) => l.kryfoLinkTextAdd("⟨who⟩")),
   (

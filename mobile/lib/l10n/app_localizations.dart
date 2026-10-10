@@ -2988,18 +2988,6 @@ abstract class AppLocalizations {
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Send photo'**
-  String get chatSendPhoto;
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Add a caption…'**
-  String get chatAddACaption;
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Security code changed'**
   String get chatSecurityCodeChanged;
 
@@ -5064,12 +5052,6 @@ abstract class AppLocalizations {
   /// screens/home_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Archived chats'**
-  String get homeArchivedChats;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Unmute'**
   String get homeUnmute;
 
@@ -6990,12 +6972,6 @@ abstract class AppLocalizations {
   /// screens/pins_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Set a wipe PIN'**
-  String get pinsSetAWipePin;
-
-  /// screens/pins_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Remove'**
   String get pinsRemove;
 
@@ -8432,18 +8408,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Whole app hidden from recents and screenshots'**
   String get settingsWholeAppHiddenFromRecentsAnd;
-
-  /// screens/settings_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'On · next start'**
-  String get settingsOnNextStart;
-
-  /// screens/settings_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Off · next start'**
-  String get settingsOffNextStart;
 
   /// screens/settings_screen.dart
   ///
@@ -10569,6 +10533,24 @@ abstract class AppLocalizations {
   /// **'This is taking longer than usual'**
   String get torBootSplashTakingLonger;
 
+  /// widgets/tor_boot_splash.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Entry'**
+  String get torBootSplashHopEntry;
+
+  /// widgets/tor_boot_splash.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Middle'**
+  String get torBootSplashHopMiddle;
+
+  /// widgets/tor_boot_splash.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Exit'**
+  String get torBootSplashHopExit;
+
   /// widgets/video_bubble.dart
   ///
   /// In en, this message translates to:
@@ -11349,12 +11331,6 @@ abstract class AppLocalizations {
   /// **'Pick one or more'**
   String get pollPickSeveral;
 
-  /// the search button on home, and its name for a screen reader
-  ///
-  /// In en, this message translates to:
-  /// **'Search'**
-  String get searchOpen;
-
   /// hint in the search field on home and in search
   ///
   /// In en, this message translates to:
@@ -11648,12 +11624,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Opens an empty Kryfo, as if just installed.'**
   String get pinsDecoyLine;
-
-  /// button
-  ///
-  /// In en, this message translates to:
-  /// **'Set a decoy PIN'**
-  String get pinsSetADecoyPin;
 
   /// button
   ///

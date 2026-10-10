@@ -1858,12 +1858,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get chatHoldToRecord => 'Sesli mesaj kaydetmek için basılı tut';
 
   @override
-  String get chatSendPhoto => 'Fotoğraf gönder';
-
-  @override
-  String get chatAddACaption => 'Açıklama ekle…';
-
-  @override
   String get chatSecurityCodeChanged => 'Güvenlik kodu değişti';
 
   @override
@@ -3236,9 +3230,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get homeSupporter => 'Destekçi';
 
   @override
-  String get homeArchivedChats => 'Arşivlenen sohbetler';
-
-  @override
   String get homeUnmute => 'Sesi aç';
 
   @override
@@ -4381,9 +4372,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get pinsChangeWipePin => 'Silme PIN’ini değiştir';
 
   @override
-  String get pinsSetAWipePin => 'Silme PIN’i belirle';
-
-  @override
   String get pinsRemove => 'Kaldır';
 
   @override
@@ -5231,12 +5219,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get settingsWholeAppHiddenFromRecentsAnd =>
       'Tüm uygulama son uygulamalardan ve ekran görüntülerinden gizlenir';
-
-  @override
-  String get settingsOnNextStart => 'Açık · sonraki açılışta';
-
-  @override
-  String get settingsOffNextStart => 'Kapalı · sonraki açılışta';
 
   @override
   String get settingsLightTheme => 'Açık tema';
@@ -6636,6 +6618,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get torBootSplashTakingLonger => 'Bu, her zamankinden uzun sürüyor';
 
   @override
+  String get torBootSplashHopEntry => 'Giriş';
+
+  @override
+  String get torBootSplashHopMiddle => 'Orta';
+
+  @override
+  String get torBootSplashHopExit => 'Çıkış';
+
+  @override
   String get videoBubbleNothingHereOpensThat =>
       'Burada bunu açan bir şey yok · onun yerine paylaşılıyor';
 
@@ -7094,9 +7085,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get pollPickSeveral => 'Bir veya daha fazlasını seç';
 
   @override
-  String get searchOpen => 'Ara';
-
-  @override
   String get searchHint => 'Sohbetlerde ve mesajlarda ara';
 
   @override
@@ -7283,9 +7271,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get pinsDecoyLine => 'Yeni kurulmuş gibi boş bir Kryfo açar.';
-
-  @override
-  String get pinsSetADecoyPin => 'Yem PIN’i belirle';
 
   @override
   String get pinsChangeDecoyPin => 'Yem PIN’ini değiştir';

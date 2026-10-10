@@ -1891,12 +1891,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get chatHoldToRecord => 'Утримуй, щоб записати голосове повідомлення';
 
   @override
-  String get chatSendPhoto => 'Надіслати фото';
-
-  @override
-  String get chatAddACaption => 'Додай підпис…';
-
-  @override
   String get chatSecurityCodeChanged => 'Код безпеки змінився';
 
   @override
@@ -3303,9 +3297,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get homeSupporter => 'Прихильник';
 
   @override
-  String get homeArchivedChats => 'Архівовані чати';
-
-  @override
   String get homeUnmute => 'Увімкнути звук';
 
   @override
@@ -4447,9 +4438,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get pinsChangeWipePin => 'Змінити PIN для стирання';
 
   @override
-  String get pinsSetAWipePin => 'Задати PIN для стирання';
-
-  @override
   String get pinsRemove => 'Прибрати';
 
   @override
@@ -5302,12 +5290,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get settingsWholeAppHiddenFromRecentsAnd =>
       'Увесь застосунок прихований у недавніх і на знімках екрана';
-
-  @override
-  String get settingsOnNextStart => 'Увімкнеться при запуску';
-
-  @override
-  String get settingsOffNextStart => 'Вимкнеться при запуску';
 
   @override
   String get settingsLightTheme => 'Світла тема';
@@ -6736,6 +6718,15 @@ class AppLocalizationsUk extends AppLocalizations {
   String get torBootSplashTakingLonger => 'Це триває довше, ніж зазвичай';
 
   @override
+  String get torBootSplashHopEntry => 'Вхід';
+
+  @override
+  String get torBootSplashHopMiddle => 'Середина';
+
+  @override
+  String get torBootSplashHopExit => 'Вихід';
+
+  @override
   String get videoBubbleNothingHereOpensThat =>
       'Тут це нема чим відкрити · пропонуємо поділитися';
 
@@ -7198,9 +7189,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get pollPickSeveral => 'Вибери один або кілька';
 
   @override
-  String get searchOpen => 'Пошук';
-
-  @override
   String get searchHint => 'Шукати в чатах і повідомленнях';
 
   @override
@@ -7390,9 +7378,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get pinsDecoyLine =>
       'Відкриває порожній Kryfo, наче його щойно встановили.';
-
-  @override
-  String get pinsSetADecoyPin => 'Задати PIN-приманку';
 
   @override
   String get pinsChangeDecoyPin => 'Змінити PIN-приманку';

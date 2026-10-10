@@ -2356,14 +2356,6 @@
   "@chatHoldToRecord": {
     "description": "screens/chat_screen.dart"
   },
-  "chatSendPhoto": "Send photo",
-  "@chatSendPhoto": {
-    "description": "screens/chat_screen.dart"
-  },
-  "chatAddACaption": "Add a caption…",
-  "@chatAddACaption": {
-    "description": "screens/chat_screen.dart"
-  },
   "chatSecurityCodeChanged": "Security code changed",
   "@chatSecurityCodeChanged": {
     "description": "screens/chat_screen.dart"
@@ -4009,10 +4001,6 @@
   "@homeSupporter": {
     "description": "screens/home_screen.dart"
   },
-  "homeArchivedChats": "Archived chats",
-  "@homeArchivedChats": {
-    "description": "screens/home_screen.dart"
-  },
   "homeUnmute": "Unmute",
   "@homeUnmute": {
     "description": "screens/home_screen.dart"
@@ -5458,10 +5446,6 @@
   "@pinsChangeWipePin": {
     "description": "screens/pins_screen.dart"
   },
-  "pinsSetAWipePin": "Set a wipe PIN",
-  "@pinsSetAWipePin": {
-    "description": "screens/pins_screen.dart"
-  },
   "pinsRemove": "Remove",
   "@pinsRemove": {
     "description": "screens/pins_screen.dart"
@@ -6534,14 +6518,6 @@
   },
   "settingsWholeAppHiddenFromRecentsAnd": "Whole app hidden from recents and screenshots",
   "@settingsWholeAppHiddenFromRecentsAnd": {
-    "description": "screens/settings_screen.dart"
-  },
-  "settingsOnNextStart": "On · next start",
-  "@settingsOnNextStart": {
-    "description": "screens/settings_screen.dart"
-  },
-  "settingsOffNextStart": "Off · next start",
-  "@settingsOffNextStart": {
     "description": "screens/settings_screen.dart"
   },
   "settingsLightTheme": "Light theme",
@@ -8389,6 +8365,18 @@
   "@torBootSplashTakingLonger": {
     "description": "widgets/tor_boot_splash.dart"
   },
+  "torBootSplashHopEntry": "Entry",
+  "@torBootSplashHopEntry": {
+    "description": "widgets/tor_boot_splash.dart"
+  },
+  "torBootSplashHopMiddle": "Middle",
+  "@torBootSplashHopMiddle": {
+    "description": "widgets/tor_boot_splash.dart"
+  },
+  "torBootSplashHopExit": "Exit",
+  "@torBootSplashHopExit": {
+    "description": "widgets/tor_boot_splash.dart"
+  },
   "videoBubbleNothingHereOpensThat": "Nothing here opens that · sharing instead",
   "@videoBubbleNothingHereOpensThat": {
     "description": "widgets/video_bubble.dart"
@@ -8981,10 +8969,6 @@
   "@pollPickSeveral": {
     "description": "hint on a poll before voting: one or more answers"
   },
-  "searchOpen": "Search",
-  "@searchOpen": {
-    "description": "the search button on home, and its name for a screen reader"
-  },
   "searchHint": "Search chats and messages",
   "@searchHint": {
     "description": "hint in the search field on home and in search"
@@ -9220,10 +9204,6 @@
   "pinsDecoyLine": "Opens an empty Kryfo, as if just installed.",
   "@pinsDecoyLine": {
     "description": "App lock: one line on the decoy PIN row"
-  },
-  "pinsSetADecoyPin": "Set a decoy PIN",
-  "@pinsSetADecoyPin": {
-    "description": "button"
   },
   "pinsChangeDecoyPin": "Change decoy PIN",
   "@pinsChangeDecoyPin": {
