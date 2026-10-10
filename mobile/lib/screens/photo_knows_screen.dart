@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../meta/meta_reader.dart';
+import '../shred.dart';
 import '../theme.dart';
 import '../tools/cleaner.dart';
 import '../tools/geo.dart';
@@ -99,11 +100,8 @@ class _PhotoKnowsScreenState extends State<PhotoKnowsScreen>
   void _dropInput() {
     final p = _inPath;
     if (p == null) return;
-    try {
-      File(p).parent.deleteSync(recursive: true);
-    } on FileSystemException {
-      // the sweep takes it
-    }
+    // the sweep takes what will not go
+    shredTree(File(p).parent.path).ignore();
   }
 
   Future<void> _run() async {

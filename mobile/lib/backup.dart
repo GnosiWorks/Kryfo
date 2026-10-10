@@ -30,7 +30,8 @@ import 'main.dart'
         session,
         sessionQuiet,
         engine,
-        shredFile;
+        shredFile,
+        shredTree;
 import 'router.dart' show scrubHidden;
 import 'signal_session.dart' show kRestoredFromPref, kSessionsRestoredPref;
 import 'devchat/dev_chat.dart' show scrubDevAnon;
@@ -82,7 +83,7 @@ Future<void> _sweepLeftovers() async {
         if (e is File) {
           await shredFile(e.path);
         } else {
-          await e.delete(recursive: true);
+          await shredTree(e.path);
         }
       } catch (err) {
         dlog('backup: a leftover stayed (${err.runtimeType})');
@@ -423,7 +424,7 @@ Future<void> _landV1InDecoy(
   final root = Directory(
     p.join((await getApplicationSupportDirectory()).path, _kRestoreQuiet),
   );
-  if (await root.exists()) await root.delete(recursive: true);
+  await shredTree(root.path);
   await root.create(recursive: true);
   final files = <Map<String, dynamic>>[];
   Future<void> stage(String name, String b64) async {
@@ -1022,7 +1023,7 @@ Future<void> createBackupFile(
   final stage = Directory(
     p.join((await getApplicationSupportDirectory()).path, _kBackupStage),
   );
-  if (await stage.exists()) await stage.delete(recursive: true);
+  await shredTree(stage.path);
   await stage.create(recursive: true);
   try {
     final shape = backupShape(
@@ -1047,7 +1048,7 @@ Future<void> createBackupFile(
       // shredFile logs its own failure; the delete below still runs
     }
     try {
-      await stage.delete(recursive: true);
+      await shredTree(stage.path);
     } catch (_) {
       // the next start sweeps what is left
     }
@@ -1326,7 +1327,7 @@ Future<Map<String, dynamic>> unpackBackup(
   var staged = false;
   try {
     for (final d in [stage, ?keep]) {
-      if (await d.exists()) await d.delete(recursive: true);
+      await shredTree(d.path);
       await d.create(recursive: true);
     }
     final m = await readBackupManifest(path, cipher);
@@ -1384,7 +1385,7 @@ Future<void> _landStaged(
   // whole. now, and only now, the phone's own files go
   for (final folder in ['media', 'wallpapers']) {
     final d = Directory(p.join(root, folder));
-    if (await d.exists()) await d.delete(recursive: true);
+    await shredTree(d.path);
   }
   // a rollback journal left by the open database would be replayed
   // over the restored one on the next open
@@ -1407,7 +1408,7 @@ Future<void> _landStaged(
 Future<void> _dropKept(Directory? keep) async {
   try {
     if (keep != null && await keep.exists()) {
-      await keep.delete(recursive: true);
+      await shredTree(keep.path);
     }
   } catch (_) {
     // the next start sweeps what is left
@@ -1416,7 +1417,7 @@ Future<void> _dropKept(Directory? keep) async {
 
 Future<void> _dropStage(Directory stage) async {
   try {
-    if (await stage.exists()) await stage.delete(recursive: true);
+    await shredTree(stage.path);
   } catch (_) {
     // the next start sweeps what is left
   }
@@ -1503,9 +1504,7 @@ Future<void> landHidden(
     _restoredInto = c;
   } finally {
     try {
-      if (from != null && await Directory(from).exists()) {
-        await Directory(from).delete(recursive: true);
-      }
+      if (from != null) await shredTree(from);
     } catch (_) {
       // the next start sweeps what is left
     }
@@ -1536,7 +1535,7 @@ Future<void> _landInDecoy(
   }
   for (final folder in ['media', 'wallpapers']) {
     final d = Directory(p.join(docs, '$folder${c.suffix}'));
-    if (await d.exists()) await d.delete(recursive: true);
+    await shredTree(d.path);
   }
   for (final f in manifest['files'] as List) {
     final name = (f as Map<String, dynamic>)['name'] as String;
@@ -1566,7 +1565,7 @@ Future<void> _landInDecoy(
   // the decoy's own settings. the phone's stay as the everyday side has them
   await landCarriedSettings(manifest['settings'], c, phone: false);
   try {
-    await Directory(from).delete(recursive: true);
+    await shredTree(from);
   } catch (_) {
     // the next start sweeps what is left
   }

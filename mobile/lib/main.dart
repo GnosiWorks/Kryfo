@@ -9,6 +9,8 @@ import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'dart:ffi';
 import 'dart:io';
+import 'shred.dart';
+export 'shred.dart' show shredFile, shredTree;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
@@ -7745,33 +7747,6 @@ Future<(String, bool)> handleHaloUriAdded(
   }
 }
 
-// overwrite with zeros, then unlink. best effort: flash wear levelling can
-// keep an old block, but the easy read is gone.
-Future<void> shredFile(String path) async {
-  try {
-    final f = File(path);
-    if (!await f.exists()) return;
-    final len = await f.length();
-    final raf = await f.open(mode: FileMode.writeOnly);
-    try {
-      const chunk = 64 * 1024;
-      final zeros = Uint8List(chunk);
-      var left = len;
-      while (left > 0) {
-        final n = left < chunk ? left : chunk;
-        await raf.writeFrom(zeros, 0, n);
-        left -= n;
-      }
-      await raf.flush();
-    } finally {
-      await raf.close();
-    }
-    await f.delete();
-  } catch (e) {
-    dlog('shred: $e');
-  }
-}
-
 // a copy of a capture into the phone's photos, only when asked for. the
 // phone's own media store does the writing; below android 10 it says no.
 Future<bool> exportToPictures(Uint8List bytes, String name, String mime) async {
@@ -7906,11 +7881,8 @@ Future<String> saveSlices(
     } catch (_) {
       // the sink broke with the write: the error passed on is the first
     }
-    try {
-      await file.delete();
-    } catch (e) {
-      dlog('slices: half file left (${e.runtimeType})');
-    }
+    // part of a received file: zeroed, not just unlinked
+    await shredFile(file.path);
     rethrow;
   }
   return file.path;

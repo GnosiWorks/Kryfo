@@ -7,6 +7,7 @@ import '../image_strip.dart';
 import '../meta/file_source.dart';
 import '../meta/meta_reader.dart';
 import '../mp4_strip.dart';
+import '../shred.dart';
 import '../l10n/l10n.dart';
 
 const kMaxPictureBytes = 64 << 20;
@@ -134,7 +135,7 @@ Future<CleanResult> cleanFileHere(
     dir.createSync(recursive: true);
     File(inPath).copySync(out.path);
   } on FileSystemException {
-    _drop(dir);
+    await _drop(dir);
     return fail(CleanFailure.disk);
   }
 
@@ -143,16 +144,16 @@ Future<CleanResult> cleanFileHere(
         ? await stripMp4Metadata(out.path)
         : await stripPictureFile(out.path);
     if (ok != true) {
-      _drop(dir);
+      await _drop(dir);
       return fail(CleanFailure.unreadable);
     }
     final after = readFile(out.path);
     if (after.status != MetaStatus.nothing || after.kind != before.kind) {
-      _drop(dir);
+      await _drop(dir);
       return fail(CleanFailure.notClean);
     }
   } on FileSystemException {
-    _drop(dir);
+    await _drop(dir);
     return fail(CleanFailure.disk);
   }
 
@@ -165,9 +166,10 @@ Future<CleanResult> cleanFileHere(
   );
 }
 
-void _drop(Directory dir) {
+// the copy is the person's picture, cleaned or not: zeroed, not unlinked
+Future<void> _drop(Directory dir) async {
   try {
-    if (dir.existsSync()) dir.deleteSync(recursive: true);
+    await shredTree(dir.path);
   } on FileSystemException {
     return;
   }

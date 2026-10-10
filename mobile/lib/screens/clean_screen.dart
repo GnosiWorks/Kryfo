@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../meta/meta_reader.dart';
+import '../shred.dart';
 import '../theme.dart';
 import '../tools/cleaner.dart';
 import '../tools/tools_bridge.dart';
@@ -151,7 +152,7 @@ class _CleanScreenState extends State<CleanScreen>
     } finally {
       if (inPath != null) {
         try {
-          File(inPath).parent.deleteSync(recursive: true);
+          await shredTree(File(inPath).parent.path);
         } on FileSystemException {
           // the sweep takes it
         }
