@@ -9437,6 +9437,7 @@ class AppState extends ChangeNotifier {
       _outboxTries.remove(uid);
       _outboxNextAt.remove(uid);
     }
+    _frameNextAt.removeWhere((k, _) => k.split(' ')[2] == peer);
     if (was || uids.isNotEmpty) {
       _bumpChatRev(peer);
       unawaited(drainOutbox());
@@ -9648,8 +9649,17 @@ class AppState extends ChangeNotifier {
   }
 
   final Set<String> _framesInflight = {};
+  // per queued frame, this session: tries so far and the earliest next one.
+  // keyed with its time, so a newer word queued over it starts afresh
+  final Map<String, int> _frameTries = {};
+  final Map<String, int> _frameNextAt = {};
+
+  @visibleForTesting
+  void frameWaitsUpForTest() => _frameNextAt.clear();
+
   Future<void> _drainFrames() async {
     final blocked = _blockedInPass();
+    final seen = <String>{};
     for (final d in [live, ?_openVault]) {
       final List<Map<String, Object?>> rows;
       final Set<String> held;
@@ -9684,7 +9694,14 @@ class AppState extends ChangeNotifier {
         }
         if (held.contains(peer)) continue;
         if (kind == kFrameReaction && await _heldRow(d, uid)) continue;
+        final key = '$kind $uid $peer ${r['at']}';
+        seen.add(key);
+        final now = DateTime.now().millisecondsSinceEpoch;
+        if (now < (_frameNextAt[key] ?? 0)) continue;
         if (!_framesInflight.add('$kind $uid')) continue;
+        final tries = _frameTries[key] ?? 0;
+        _frameTries[key] = tries + 1;
+        _frameNextAt[key] = now + queueGap(tries);
         unawaited(
           _sendFrame(
             peer,
@@ -9697,6 +9714,9 @@ class AppState extends ChangeNotifier {
         );
       }
     }
+    // what went, or is no longer queued, needs no count
+    _frameTries.removeWhere((k, _) => !seen.contains(k));
+    _frameNextAt.removeWhere((k, _) => !seen.contains(k));
   }
 
   // take a message back in a 1:1 chat. queued first, so one taken back

@@ -12,7 +12,13 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/main.dart'
-    show AppState, HaloDb, kFrameReaction, kFrameUnsend, useDatabasesForTest;
+    show
+        AppState,
+        HaloDb,
+        kFrameReaction,
+        kFrameUnsend,
+        queueGap,
+        useDatabasesForTest;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
@@ -422,6 +428,41 @@ void main() {
       await settle();
       expect(wire().single.reaction!.emoji, '');
       expect(mem.rows('frames_out'), isEmpty);
+    });
+
+    test('one that keeps failing waits longer each time, not every '
+        'pass', () async {
+      await app.unsendInChat(_bob, 'u6');
+      await settle();
+      await age();
+      final before = io.asked;
+      await app.drainOutbox();
+      await settle();
+      final once = io.asked;
+      expect(once, greaterThan(before));
+      for (var i = 0; i < 4; i++) {
+        await app.drainOutbox();
+        await settle();
+      }
+      expect(io.asked, once);
+      // a route back: it still waits its turn, then goes
+      io.down = false;
+      await app.drainOutbox();
+      await settle();
+      expect(io.sent, isEmpty);
+      app.frameWaitsUpForTest();
+      await app.drainOutbox();
+      await settle();
+      expect(wire().single.unsend, 'u6');
+      expect(mem.rows('frames_out'), isEmpty);
+    });
+
+    test('the wait doubles from 45 seconds up to ten minutes', () {
+      expect(
+        [for (var i = 0; i < 7; i++) queueGap(i)],
+        [45000, 90000, 180000, 360000, 600000, 600000, 600000],
+      );
+      expect(queueGap(70), 600000);
     });
 
     test('an edit made while the one before still goes waits for it, and '
