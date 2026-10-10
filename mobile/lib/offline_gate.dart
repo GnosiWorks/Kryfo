@@ -19,3 +19,15 @@ Duration? offlineDurationFor({
   final d = now.difference(tryingSince);
   return d.isNegative ? Duration.zero : d;
 }
+
+/// what a connectivity event means for the route: null when nothing
+/// changed, true for a new network to use, false for none left
+bool? networkFlip({
+  required bool wasOnline,
+  required String lastKinds,
+  required bool on,
+  required String kinds,
+}) {
+  if (on == wasOnline && kinds == lastKinds) return null;
+  return on;
+}

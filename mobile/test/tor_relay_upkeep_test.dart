@@ -14,6 +14,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -91,6 +92,12 @@ class _Engine implements HaloEngine {
   void restartTor() => log.add('restart');
   @override
   void networkChanged() => log.add('network');
+  @override
+  Future<String> reconnectNow() async {
+    log.add('now');
+    return 'ok';
+  }
+
   @override
   (int, int) catchupState() => (0, 1);
 
@@ -519,6 +526,75 @@ void main() {
       poll(app, 'bootstrapped|100|0|1|0', 131, 140);
       expect(app.suggestBridgesAt(at(140)), isFalse);
       expect(told, 1);
+    });
+  });
+  // doze, or a network android never reported, can leave tor on a route
+  // that is gone. coming back to the app with nothing carried is taken as a
+  // network change, and the way out of a stuck send reconnects for real
+  group('back in front', () {
+    test('with tor not carrying anything, the engine hears of it', () {
+      final app = AppState()
+        ..sendModeForTest = 'private'
+        ..deliveryModeForTest = DeliveryMode.always;
+      app.noteOnline(true);
+      app.takeTorStatus('publishing|100|0|0|3');
+      app.appInFront(true);
+      expect(log, ['network']);
+    });
+
+    test('not when tor is fine, offline, or outside onion', () {
+      final app = AppState()
+        ..sendModeForTest = 'private'
+        ..deliveryModeForTest = DeliveryMode.always;
+      app.noteOnline(true);
+      app.takeTorStatus('publishing|100|0|1|3');
+      app.appInFront(true);
+      app.takeTorStatus('starting|10|0|0|3');
+      app.noteOnline(false);
+      app.appInFront(true);
+      app.noteOnline(true);
+      app.sendModeForTest = 'balanced';
+      app.appInFront(true);
+      expect(log, isEmpty);
+    });
+
+    test('the way out reconnects through the engine, waited on', () async {
+      final app = AppState()..sendModeForTest = 'private';
+      expect(await app.reconnectNow(), 'ok');
+      expect(log, ['now']);
+    });
+  });
+  // a flight: wifi to mobile, airplane on and off, a vpn up and down,
+  // offline and back. the engine hears every one, and settles them itself
+  group('every network change', () {
+    const wifi = ConnectivityResult.wifi;
+    const mobile = ConnectivityResult.mobile;
+    const vpn = ConnectivityResult.vpn;
+    const none = ConnectivityResult.none;
+
+    test('reaches the engine, and nothing that is not a change does', () {
+      final app = AppState()..sendModeForTest = 'private';
+      app.connectivityEvent([wifi]); // offline to online
+      app.connectivityEvent([wifi]); // the same again: no change
+      app.connectivityEvent([mobile]); // wifi to mobile
+      app.connectivityEvent([wifi]); // mobile to wifi
+      app.connectivityEvent([none]); // airplane on
+      app.connectivityEvent([none]);
+      app.connectivityEvent([wifi]); // airplane off
+      app.connectivityEvent([wifi, vpn]); // vpn up
+      app.connectivityEvent([wifi]); // vpn down
+      expect(log.where((e) => e == 'network').length, 7);
+      expect(app.online, isTrue);
+    });
+
+    test('a burst of airplane toggles is passed on as it comes', () {
+      final app = AppState()..sendModeForTest = 'private';
+      app.connectivityEvent([mobile]);
+      for (var i = 0; i < 10; i++) {
+        app.connectivityEvent([none]);
+        app.connectivityEvent([mobile]);
+      }
+      expect(log.where((e) => e == 'network').length, 21);
     });
   });
 }

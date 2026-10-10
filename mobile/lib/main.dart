@@ -11009,7 +11009,10 @@ class AppState extends ChangeNotifier {
   // the window came to the front, or left it
   void appInFront(bool front) {
     _inFront = front;
-    if (_deliveryMode == DeliveryMode.always) return;
+    if (_deliveryMode == DeliveryMode.always) {
+      if (front) backInFront();
+      return;
+    }
     if (front) {
       _sleepTimer?.cancel();
       unawaited(_torWake());
@@ -14307,6 +14310,16 @@ class AppState extends ChangeNotifier {
     return engine.reconnectNow();
   }
 
+  // back in front with tor not carrying anything: doze or a network android
+  // never reported may have left it on a route that is gone. the engine
+  // takes it as a network change, which is cheap and debounced
+  @visibleForTesting
+  void backInFront() {
+    if (_sendMode != 'private' || _torHeld || !_online || torReady) return;
+    engine.networkChanged();
+    _newTorTry();
+  }
+
   // tor's status as the poll reads it each second. the bridge cards turn on
   // by time alone, so a change in them is announced too
   @visibleForTesting
@@ -16066,17 +16079,32 @@ class AppState extends ChangeNotifier {
     } catch (e) {
       dlog('connectivity init: $e');
     }
-    Connectivity().onConnectivityChanged.listen((results) {
-      final on = results.any((r) => r != ConnectivityResult.none);
-      final kinds = (results.map((r) => r.name).toList()..sort()).join(',');
-      // back online, or a different kind of network while online (wifi to
-      // mobile data): tor's open connections belong to the network that went.
-      // the engine waits for the network to settle before it bounces, so a
-      // flapping one is not bounced on every flap.
-      if (on && (!_online || kinds != lastKinds)) networkMoved();
-      lastKinds = kinds;
-      noteOnline(on);
-    });
+    _lastKinds = lastKinds;
+    Connectivity().onConnectivityChanged.listen(connectivityEvent);
+  }
+
+  // the kinds of network the last event named, sorted: "mobile,vpn"
+  String _lastKinds = '';
+
+  // every change reaches the engine: wifi and mobile data either way, a vpn
+  // up or down, airplane mode on and off, offline and back. tor's open
+  // connections belong to the network that went, and each change re-arms
+  // the engine's rescue. the engine waits for the network to settle before
+  // it bounces, so a burst of flips is one reconnect after the last
+  @visibleForTesting
+  void connectivityEvent(List<ConnectivityResult> results) {
+    final on = results.any((r) => r != ConnectivityResult.none);
+    final kinds = (results.map((r) => r.name).toList()..sort()).join(',');
+    final flip = networkFlip(
+      wasOnline: _online,
+      lastKinds: _lastKinds,
+      on: on,
+      kinds: kinds,
+    );
+    _lastKinds = kinds;
+    if (flip == true) networkMoved();
+    if (flip == false) engine.networkChanged();
+    noteOnline(on);
   }
 
   // tor's connections belong to the network that went
