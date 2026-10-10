@@ -1148,8 +1148,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesTypeWhatYouSee => '输入你看到的内容。小写也可以。';
 
   @override
-  String get bridgesThisOneRequestDoes =>
-      '只有这一次请求不经过 tor——也不可能经过，因为用不了的正是 tor。管理你所在网络的人会看到你在联系 tor 项目。如果单是这一点在你那里就有问题，请从别处获取网桥，再粘贴到下面。';
+  String get bridgesWhenYouAskFor =>
+      '你请求网桥时，Tor 项目会看到你的 IP 地址。这很正常：Tor Browser 和所有 Tor 应用都是这样获取网桥的，他们从中只能知道有人请求了网桥，对你的聊天一无所知。';
 
   @override
   String get bridgesCouldNotDrawThe => '无法显示谜题';
@@ -8741,8 +8741,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesTypeWhatYouSee => '輸入你看到的內容。小寫也可以。';
 
   @override
-  String get bridgesThisOneRequestDoes =>
-      '只有這一個請求不經過 tor，也不可能經過，因為無法運作的正是 tor。管理你所在網路的人會看到你在聯絡 tor 專案。如果光是這樣在你那裡就會出問題，請從別的地方取得橋接，再貼到下方。';
+  String get bridgesWhenYouAskFor =>
+      '你請求橋接時，Tor 專案會看到你的 IP 位址。這很正常：Tor Browser 和所有 Tor 應用程式都是這樣取得橋接的，他們從中只能知道有人請求了橋接，對你的聊天一無所知。';
 
   @override
   String get bridgesCouldNotDrawThe => '無法顯示謎題';

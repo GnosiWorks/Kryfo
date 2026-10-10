@@ -293,7 +293,7 @@
   "bridgesGetBridges": "Obtenir des ponts",
   "bridgesAskTheTorProject": "Demandez directement au projet tor. Vous déchiffrez une image, pour que des robots ne puissent pas vider la réserve.",
   "bridgesTypeWhatYouSee": "Tapez ce que vous voyez. Minuscules acceptées.",
-  "bridgesThisOneRequestDoes": "Cette seule demande ne passe pas par tor - elle ne le peut pas, puisque c’est justement tor qui ne marche pas. Quiconque gère votre réseau vous verra contacter le projet tor. Si cela seul pose problème là où vous êtes, procurez-vous des ponts ailleurs et collez-les ci-dessous.",
+  "bridgesWhenYouAskFor": "Quand vous demandez des ponts, le Projet Tor voit votre adresse IP. C’est normal : c’est ainsi que Tor Browser et toutes les applis Tor obtiennent des ponts, et tout ce que cela leur apprend, c’est que quelqu’un a demandé des ponts. Rien sur vos discussions.",
   "bridgesCouldNotDrawThe": "Impossible d’afficher l’image",
   "bridgesAnswer": "Réponse",
   "bridgesAsking": "Demande…",

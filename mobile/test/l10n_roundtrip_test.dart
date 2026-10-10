@@ -610,8 +610,8 @@ void main() {
     );
     expect(l.bridgesTypeWhatYouSee, "Type what you see. Lowercase is fine.");
     expect(
-      l.bridgesThisOneRequestDoes,
-      "This one request does not go through tor - it cannot, since tor is what is not working. Whoever runs your network will see you contacting the tor project. If that alone is a problem where you are, get bridges somewhere else and paste them below.",
+      l.bridgesWhenYouAskFor,
+      "When you ask for bridges, the Tor Project sees your address. That's normal: it's how Tor Browser and every Tor app get bridges, and all it tells them is that someone asked for bridges. Nothing about your chats.",
     );
     expect(l.bridgesCouldNotDrawThe, "Could not draw the puzzle");
     expect(l.bridgesAnswer, "Answer");

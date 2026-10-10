@@ -293,7 +293,7 @@
   "bridgesGetBridges": "取得橋接",
   "bridgesAskTheTorProject": "直接向 tor 專案索取。你需要解一道謎題，這樣機器人才無法把橋接拿光。",
   "bridgesTypeWhatYouSee": "輸入你看到的內容。小寫也可以。",
-  "bridgesThisOneRequestDoes": "只有這一個請求不經過 tor，也不可能經過，因為無法運作的正是 tor。管理你所在網路的人會看到你在聯絡 tor 專案。如果光是這樣在你那裡就會出問題，請從別的地方取得橋接，再貼到下方。",
+  "bridgesWhenYouAskFor": "你請求橋接時，Tor 專案會看到你的 IP 位址。這很正常：Tor Browser 和所有 Tor 應用程式都是這樣取得橋接的，他們從中只能知道有人請求了橋接，對你的聊天一無所知。",
   "bridgesCouldNotDrawThe": "無法顯示謎題",
   "bridgesAnswer": "答案",
   "bridgesAsking": "索取中…",

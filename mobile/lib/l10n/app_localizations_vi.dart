@@ -1181,8 +1181,8 @@ class AppLocalizationsVi extends AppLocalizations {
       'Nhập những gì bạn thấy. Chữ thường cũng được.';
 
   @override
-  String get bridgesThisOneRequestDoes =>
-      'Riêng yêu cầu này không đi qua tor - nó không thể, vì chính tor đang không hoạt động. Người vận hành mạng bạn đang dùng sẽ thấy bạn liên hệ với dự án tor. Nếu chỉ riêng điều đó đã là vấn đề ở nơi bạn ở, hãy lấy cầu nối ở chỗ khác rồi dán vào bên dưới.';
+  String get bridgesWhenYouAskFor =>
+      'Khi bạn xin cầu nối, Dự án Tor sẽ thấy địa chỉ IP của bạn. Điều đó là bình thường: Tor Browser và mọi ứng dụng Tor đều lấy cầu nối theo cách này, và tất cả những gì họ biết được là có ai đó đã xin cầu nối. Không có gì về các cuộc trò chuyện của bạn.';
 
   @override
   String get bridgesCouldNotDrawThe => 'Không hiển thị được câu đố';

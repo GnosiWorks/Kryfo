@@ -878,13 +878,14 @@ class _RequestBlock extends StatelessWidget {
                           color: HaloColors.violet,
                         ),
                       )
+                    // what the tor project sees: said plainly, not as a warning
                     : Container(
                         padding: const EdgeInsets.fromLTRB(12, 10, 12, 11),
                         decoration: BoxDecoration(
-                          color: HaloColors.rose.withValues(alpha: 0.10),
+                          color: HaloColors.violet.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                            color: HaloColors.rose.withValues(alpha: 0.3),
+                            color: HaloColors.violet.withValues(alpha: 0.25),
                           ),
                         ),
                         child: Row(
@@ -893,12 +894,12 @@ class _RequestBlock extends StatelessWidget {
                             Icon(
                               Icons.visibility_outlined,
                               size: 15,
-                              color: HaloColors.rose,
+                              color: HaloColors.violet,
                             ),
                             const SizedBox(width: 9),
                             Expanded(
                               child: Text(
-                                l10n.bridgesThisOneRequestDoes,
+                                l10n.bridgesWhenYouAskFor,
                                 style: HaloType.sans(
                                   size: 12,
                                   color: HaloColors.text2,

@@ -1201,8 +1201,8 @@ class AppLocalizationsDe extends AppLocalizations {
       'Tippe ab, was du siehst. Kleinschreibung ist okay.';
 
   @override
-  String get bridgesThisOneRequestDoes =>
-      'Diese eine Anfrage läuft nicht über tor - das geht nicht, denn tor ist ja genau das, was nicht funktioniert. Wer dein Netzwerk betreibt, sieht, dass du das tor-Projekt kontaktierst. Wenn schon das bei dir ein Problem ist, hol dir Brücken woanders und füge sie unten ein.';
+  String get bridgesWhenYouAskFor =>
+      'Wenn du Brücken anforderst, sieht das Tor-Projekt deine IP-Adresse. Das ist normal: So bekommen Tor Browser und jede Tor-App ihre Brücken, und alles, was sie dadurch erfahren, ist, dass jemand Brücken angefragt hat. Nichts über deine Chats.';
 
   @override
   String get bridgesCouldNotDrawThe => 'Rätsel konnte nicht angezeigt werden';

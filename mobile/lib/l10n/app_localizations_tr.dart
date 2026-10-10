@@ -1197,8 +1197,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get bridgesTypeWhatYouSee => 'Gördüğünü yaz. Küçük harf de olur.';
 
   @override
-  String get bridgesThisOneRequestDoes =>
-      'Bu tek istek tor üzerinden gitmez - gidemez, çünkü çalışmayan zaten tor. Ağını kim işletiyorsa tor projesiyle bağlantı kurduğunu görecek. Bulunduğun yerde tek başına bu bile sorunsa, köprüleri başka bir yerden al ve aşağıya yapıştır.';
+  String get bridgesWhenYouAskFor =>
+      'Köprü istediğinde Tor Projesi IP adresini görür. Bu normal: Tor Browser ve tüm Tor uygulamaları köprüleri böyle alır ve bu onlara yalnızca birinin köprü istediğini söyler. Sohbetlerin hakkında hiçbir şey söylemez.';
 
   @override
   String get bridgesCouldNotDrawThe => 'Bulmaca çizilemedi';

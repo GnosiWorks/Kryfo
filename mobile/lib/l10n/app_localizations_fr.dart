@@ -1200,8 +1200,8 @@ class AppLocalizationsFr extends AppLocalizations {
       'Tapez ce que vous voyez. Minuscules acceptées.';
 
   @override
-  String get bridgesThisOneRequestDoes =>
-      'Cette seule demande ne passe pas par tor - elle ne le peut pas, puisque c’est justement tor qui ne marche pas. Quiconque gère votre réseau vous verra contacter le projet tor. Si cela seul pose problème là où vous êtes, procurez-vous des ponts ailleurs et collez-les ci-dessous.';
+  String get bridgesWhenYouAskFor =>
+      'Quand vous demandez des ponts, le Projet Tor voit votre adresse IP. C’est normal : c’est ainsi que Tor Browser et toutes les applis Tor obtiennent des ponts, et tout ce que cela leur apprend, c’est que quelqu’un a demandé des ponts. Rien sur vos discussions.';
 
   @override
   String get bridgesCouldNotDrawThe => 'Impossible d’afficher l’image';

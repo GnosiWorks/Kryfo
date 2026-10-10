@@ -1191,8 +1191,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bridgesTypeWhatYouSee => 'Type what you see. Lowercase is fine.';
 
   @override
-  String get bridgesThisOneRequestDoes =>
-      'This one request does not go through tor - it cannot, since tor is what is not working. Whoever runs your network will see you contacting the tor project. If that alone is a problem where you are, get bridges somewhere else and paste them below.';
+  String get bridgesWhenYouAskFor =>
+      'When you ask for bridges, the Tor Project sees your address. That\'s normal: it\'s how Tor Browser and every Tor app get bridges, and all it tells them is that someone asked for bridges. Nothing about your chats.';
 
   @override
   String get bridgesCouldNotDrawThe => 'Could not draw the puzzle';

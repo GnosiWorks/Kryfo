@@ -1183,8 +1183,8 @@ class AppLocalizationsId extends AppLocalizations {
       'Ketik yang kamu lihat. Huruf kecil tidak masalah.';
 
   @override
-  String get bridgesThisOneRequestDoes =>
-      'Permintaan yang satu ini tidak lewat tor - memang tidak bisa, karena tor-lah yang sedang tidak jalan. Siapa pun yang mengelola jaringanmu akan melihat kamu menghubungi tor project. Kalau itu saja sudah jadi masalah di tempatmu, cari jembatan di tempat lain dan tempel di bawah.';
+  String get bridgesWhenYouAskFor =>
+      'Saat kamu meminta jembatan, Tor Project melihat alamat IP-mu. Itu wajar: begitulah Tor Browser dan semua aplikasi Tor mendapatkan jembatan, dan yang mereka ketahui hanyalah ada seseorang yang meminta jembatan. Tidak ada apa pun tentang obrolanmu.';
 
   @override
   String get bridgesCouldNotDrawThe => 'Gagal menampilkan teka-teki';

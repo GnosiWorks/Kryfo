@@ -1235,8 +1235,8 @@ class AppLocalizationsAr extends AppLocalizations {
       'اكتب ما تراه. الأحرف الصغيرة لا بأس بها.';
 
   @override
-  String get bridgesThisOneRequestDoes =>
-      'هذا الطلب وحده لا يمر عبر tor - ولا يمكنه ذلك، فـ tor هو ما لا يعمل. سيرى من يدير شبكتك أنك تتصل بمشروع tor. إن كان ذلك وحده مشكلة حيث أنت، فاحصل على الجسور من مكان آخر والصقها أدناه.';
+  String get bridgesWhenYouAskFor =>
+      'عندما تطلب جسورًا، يرى مشروع Tor عنوان IP الخاص بك. هذا أمر عادي: هكذا يحصل Tor Browser وكل تطبيقات Tor على الجسور، وكل ما يعرفونه من ذلك أن أحدًا طلب جسورًا. لا شيء عن محادثاتك.';
 
   @override
   String get bridgesCouldNotDrawThe => 'تعذّر رسم اللغز';

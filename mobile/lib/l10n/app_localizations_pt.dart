@@ -1201,8 +1201,8 @@ class AppLocalizationsPt extends AppLocalizations {
       'Digite o que você vê. Minúsculas servem.';
 
   @override
-  String get bridgesThisOneRequestDoes =>
-      'Esta única solicitação não passa pelo tor - nem pode, já que o tor é o que não está funcionando. Quem administra sua rede vai ver você contatando o projeto tor. Se só isso já é um problema onde você está, consiga pontes em outro lugar e cole abaixo.';
+  String get bridgesWhenYouAskFor =>
+      'Quando você pede pontes, o Projeto Tor vê seu endereço IP. Isso é normal: é assim que o Tor Browser e todo app do Tor conseguem pontes, e tudo o que isso diz a eles é que alguém pediu pontes. Nada sobre suas conversas.';
 
   @override
   String get bridgesCouldNotDrawThe => 'Não foi possível desenhar o desafio';

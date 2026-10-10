@@ -1224,8 +1224,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get bridgesTypeWhatYouSee => 'Введи то, что видишь. Можно строчными.';
 
   @override
-  String get bridgesThisOneRequestDoes =>
-      'Этот единственный запрос идёт не через tor — иначе никак, ведь не работает как раз tor. Тот, кто управляет твоей сетью, увидит, что ты обращаешься к проекту tor. Если там, где ты, уже одно это — проблема, возьми мосты в другом месте и вставь их ниже.';
+  String get bridgesWhenYouAskFor =>
+      'Когда ты запрашиваешь мосты, проект Tor видит твой IP-адрес. Это нормально: так мосты получают Tor Browser и любое приложение Tor, и всё, что он из этого узнаёт, — что кто-то запросил мосты. Ничего о твоих чатах.';
 
   @override
   String get bridgesCouldNotDrawThe => 'Не удалось показать головоломку';
