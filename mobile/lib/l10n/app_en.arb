@@ -4363,6 +4363,10 @@
     "description": "screens/lock_file_screen.dart"
   },
   "lockFileNoAppOnThis": "No app on this phone took the file.",
+  "linkNoAppOpens": "No app on this phone opens this link.",
+  "@linkNoAppOpens": {
+    "description": "toast when tapping a link in a message and no app on the phone takes it"
+  },
   "@lockFileNoAppOnThis": {
     "description": "screens/lock_file_screen.dart"
   },

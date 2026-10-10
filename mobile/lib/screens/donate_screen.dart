@@ -8,7 +8,6 @@ import '../theme.dart';
 import '../supporter.dart';
 import '../badge_client.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../widgets/copied_mark.dart';
 import '../widgets/ease_size.dart';
 import '../widgets/halo_buttons.dart';
@@ -16,6 +15,7 @@ import '../widgets/press_scale.dart';
 import '../widgets/motion.dart' show haloRoute;
 import '../widgets/qr_wipe.dart';
 import '../address_text.dart';
+import '../open_outside.dart';
 import '../dlog.dart';
 import '../main.dart' show appState, session;
 import 'modes_screen.dart';
@@ -1022,17 +1022,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
               Expanded(
                 child: _fillButton(l10n.donateOpenWallet, () async {
                   final uri = Uri.parse(inv.uri);
-                  var opened = false;
-                  try {
-                    opened =
-                        await canLaunchUrl(uri) &&
-                        await launchUrl(
-                          uri,
-                          mode: LaunchMode.externalApplication,
-                        );
-                  } catch (e) {
-                    dlog('donate: wallet (${e.runtimeType})');
-                  }
+                  final opened = await openOutside(uri);
                   // no wallet takes the link: the address still works
                   if (!opened && mounted) {
                     showHaloToast(context, l10n.donateNoWallet);

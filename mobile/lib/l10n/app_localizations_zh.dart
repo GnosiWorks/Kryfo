@@ -3359,6 +3359,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get lockFileNoAppOnThis => '这部手机上没有应用接收这个文件。';
 
   @override
+  String get linkNoAppOpens => '这台手机上没有可以打开此链接的应用。';
+
+  @override
   String get lockFileSaved => '已保存';
 
   @override
@@ -10927,6 +10930,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get lockFileNoAppOnThis => '這支手機上沒有任何應用程式接收這個檔案。';
+
+  @override
+  String get linkNoAppOpens => '這支手機上沒有可以開啟此連結的應用程式。';
 
   @override
   String get lockFileSaved => '已儲存';

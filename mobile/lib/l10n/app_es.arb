@@ -889,6 +889,7 @@
   "lockFileCouldNotMakeOne": "No se pudo crear una. Escribe la tuya.",
   "lockFileWriteItDownBefore": "Anótala antes de bloquear el archivo",
   "lockFileNoAppOnThis": "Ninguna app de este teléfono aceptó el archivo.",
+  "linkNoAppOpens": "Ninguna app de este teléfono abre este enlace.",
   "lockFileSaved": "Guardado",
   "lockFileCouldNotSaveIt": "No se pudo guardar ahí. Prueba otra carpeta.",
   "lockFileLocked": "Bloqueado",

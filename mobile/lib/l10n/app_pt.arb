@@ -889,6 +889,7 @@
   "lockFileCouldNotMakeOne": "Não deu para criar uma. Digite a sua.",
   "lockFileWriteItDownBefore": "Anote antes de trancar o arquivo",
   "lockFileNoAppOnThis": "Nenhum app neste celular aceitou o arquivo.",
+  "linkNoAppOpens": "Nenhum app neste celular abre este link.",
   "lockFileSaved": "Salvo",
   "lockFileCouldNotSaveIt": "Não deu para salvar aí. Tente outra pasta.",
   "lockFileLocked": "Trancado",

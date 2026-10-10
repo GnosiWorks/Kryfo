@@ -3578,6 +3578,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Жоден застосунок на цьому телефоні не прийняв файл.';
 
   @override
+  String get linkNoAppOpens =>
+      'На цьому телефоні немає застосунку, який відкриє це посилання.';
+
+  @override
   String get lockFileSaved => 'Збережено';
 
   @override

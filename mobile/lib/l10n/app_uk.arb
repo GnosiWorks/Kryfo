@@ -889,6 +889,7 @@
   "lockFileCouldNotMakeOne": "Не вдалося створити. Введи свій.",
   "lockFileWriteItDownBefore": "Запиши його, перш ніж замкнути файл",
   "lockFileNoAppOnThis": "Жоден застосунок на цьому телефоні не прийняв файл.",
+  "linkNoAppOpens": "На цьому телефоні немає застосунку, який відкриє це посилання.",
   "lockFileSaved": "Збережено",
   "lockFileCouldNotSaveIt": "Не вдалося зберегти туди. Спробуй іншу папку.",
   "lockFileLocked": "Замкнено",

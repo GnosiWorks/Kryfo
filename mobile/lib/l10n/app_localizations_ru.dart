@@ -3591,6 +3591,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Ни одно приложение на этом телефоне не приняло файл.';
 
   @override
+  String get linkNoAppOpens =>
+      'На этом телефоне нет приложения, которое откроет эту ссылку.';
+
+  @override
   String get lockFileSaved => 'Сохранено';
 
   @override

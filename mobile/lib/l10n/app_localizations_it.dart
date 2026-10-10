@@ -3535,6 +3535,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Nessuna app su questo telefono ha preso il file.';
 
   @override
+  String get linkNoAppOpens =>
+      'Nessuna app su questo telefono apre questo link.';
+
+  @override
   String get lockFileSaved => 'Salvato';
 
   @override

@@ -3491,6 +3491,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lockFileNoAppOnThis => 'No app on this phone took the file.';
 
   @override
+  String get linkNoAppOpens => 'No app on this phone opens this link.';
+
+  @override
   String get lockFileSaved => 'Saved';
 
   @override

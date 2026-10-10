@@ -3524,6 +3524,9 @@ class AppLocalizationsPt extends AppLocalizations {
       'Nenhum app neste celular aceitou o arquivo.';
 
   @override
+  String get linkNoAppOpens => 'Nenhum app neste celular abre este link.';
+
+  @override
   String get lockFileSaved => 'Salvo';
 
   @override

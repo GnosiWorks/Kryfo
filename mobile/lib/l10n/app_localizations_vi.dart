@@ -3485,6 +3485,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không ứng dụng nào trên điện thoại này nhận tệp.';
 
   @override
+  String get linkNoAppOpens =>
+      'Không có ứng dụng nào trên điện thoại này mở được liên kết này.';
+
+  @override
   String get lockFileSaved => 'Đã lưu';
 
   @override

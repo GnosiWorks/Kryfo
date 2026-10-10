@@ -889,6 +889,7 @@
   "lockFileCouldNotMakeOne": "Konnte keins erstellen. Gib selbst eins ein.",
   "lockFileWriteItDownBefore": "Schreib es auf, bevor du die Datei verschließt",
   "lockFileNoAppOnThis": "Keine App auf diesem Handy hat die Datei angenommen.",
+  "linkNoAppOpens": "Keine App auf diesem Handy öffnet diesen Link.",
   "lockFileSaved": "Gespeichert",
   "lockFileCouldNotSaveIt": "Konnte sie dort nicht speichern. Versuche einen anderen Ordner.",
   "lockFileLocked": "Verschlossen",

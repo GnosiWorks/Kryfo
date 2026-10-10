@@ -3490,6 +3490,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Tidak ada aplikasi di ponsel ini yang menerima file itu.';
 
   @override
+  String get linkNoAppOpens =>
+      'Tidak ada aplikasi di ponsel ini yang bisa membuka tautan ini.';
+
+  @override
   String get lockFileSaved => 'Disimpan';
 
   @override
