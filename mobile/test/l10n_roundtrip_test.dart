@@ -100,7 +100,6 @@ void main() {
     expect(l.appInvalidUri, "Invalid uri");
     expect(l.appBundleError("<e>"), "Bundle error: <e>");
     expect(l.appAlreadySaved("<parsed>"), "Already saved: <parsed>");
-    expect(l.appPeerImportedV1("<parsed>"), "Peer imported (v1): <parsed>");
     expect(l.appLongWindow("<line>"), "<line> long window");
     expect(
       l.appOf("<line>", 0, 0, "<c>", 0, 0),

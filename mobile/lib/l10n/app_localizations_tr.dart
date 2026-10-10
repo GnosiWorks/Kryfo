@@ -265,11 +265,6 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String appPeerImportedV1(Object parsed) {
-    return 'Eş içe aktarıldı (v1): $parsed';
-  }
-
-  @override
   String appLongWindow(Object line) {
     return '$line uzun aralık';
   }

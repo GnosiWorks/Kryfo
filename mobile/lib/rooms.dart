@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart' show Digest, sha256;
+import 'package:flutter/foundation.dart' show ChangeNotifier, visibleForTesting;
 import 'package:flutter/widgets.dart' show StringCharacters;
 
 import 'dlog.dart';
@@ -328,3 +329,28 @@ class _Digest implements Sink<Digest> {
   @override
   void close() {}
 }
+
+/// rooms this phone made and then left, by container id, until they would
+/// have closed: its maker's leave ends a room, and its link says so. kept
+/// in memory alone, so a left room leaves nothing on disk
+class EndedRooms extends ChangeNotifier {
+  final Map<String, Map<String, int>> _by = {};
+
+  void note(String container, String roomId, int expiresAt) {
+    (_by[container] ??= {})[roomId] = expiresAt;
+    notifyListeners();
+  }
+
+  bool ended(String container, String roomId, {int? now}) {
+    final m = _by[container];
+    if (m == null) return false;
+    final at = now ?? DateTime.now().millisecondsSinceEpoch;
+    m.removeWhere((_, until) => until <= at);
+    return m.containsKey(roomId);
+  }
+
+  @visibleForTesting
+  void clear() => _by.clear();
+}
+
+final endedRooms = EndedRooms();

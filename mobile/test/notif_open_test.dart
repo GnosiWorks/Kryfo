@@ -43,6 +43,11 @@ void main() {
     expect(await notifTargetFor('new-face-here'), isA<NotifRequests>());
   });
 
+  test('a deleted chat opens nothing until they write again', () async {
+    live.person('let-go-before', accepted: 0, archived: 1);
+    expect(await notifTargetFor('let-go-before'), isNull);
+  });
+
   test('an accepted chat opens as itself', () async {
     final t = await notifTargetFor('friend-of-mine');
     expect(t, isA<NotifChat>());

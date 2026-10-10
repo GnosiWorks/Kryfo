@@ -58,7 +58,6 @@
   "appInvalidUri": "نشانی نامعتبر",
   "appBundleError": "خطای بسته: ⁨{e}⁩",
   "appAlreadySaved": "از قبل ذخیره شده: ⁨{parsed}⁩",
-  "appPeerImportedV1": "همتای v1 وارد شد: ⁨{parsed}⁩",
   "appLongWindow": "⁨{line}⁩، بازه‌ی طولانی",
   "appOf": "⁨{line}⁩ (⁨{held}⁩ از ⁨{subs}⁩، اتصال ⁨{c}⁩ ثانیه، {p, plural, one{⁨{p}⁩ صفحه} other{⁨{p}⁩ صفحه}}، {e, plural, one{⁨{e}⁩ رویداد} other{⁨{e}⁩ رویداد}})",
   "appConnectSPagesEvents": "⁨{line}⁩ (اتصال ⁨{c}⁩ ثانیه، {p, plural, one{⁨{p}⁩ صفحه} other{⁨{p}⁩ صفحه}}، {e, plural, one{⁨{e}⁩ رویداد} other{⁨{e}⁩ رویداد}})",

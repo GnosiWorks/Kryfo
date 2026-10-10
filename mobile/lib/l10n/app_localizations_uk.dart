@@ -273,11 +273,6 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String appPeerImportedV1(Object parsed) {
-    return 'Контакт імпортовано (v1): $parsed';
-  }
-
-  @override
   String appLongWindow(Object line) {
     return '$line довге вікно';
   }

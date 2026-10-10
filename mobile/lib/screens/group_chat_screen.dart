@@ -156,6 +156,15 @@ bool closeGoneGroup(
   return true;
 }
 
+// the groups open in the stack, by id: a tap for one goes back to it
+// rather than stacking a second copy whose draft would win
+final Map<String, List<_GroupChatScreenState>> _openGroups = {};
+
+/// pops [nav] back to [groupId]'s open screen. false when it is not open
+/// there
+bool backToOpenGroup(NavigatorState nav, String groupId) =>
+    backToPage(nav, [...?_openGroups[groupId]]);
+
 class GroupChatScreen extends StatefulWidget {
   final String groupId;
   // open at this message, lit for a moment (from search)
@@ -358,6 +367,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     }
 
     claimChat('group:${widget.groupId}');
+    (_openGroups[widget.groupId] ??= []).add(this);
     WidgetsBinding.instance.addObserver(this);
     // read once, before the first sticker row asks for it. a failure here is
     // the row's to show when it loads again
@@ -3347,6 +3357,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   @override
   void dispose() {
+    final open = _openGroups[widget.groupId]?..remove(this);
+    if (open != null && open.isEmpty) _openGroups.remove(widget.groupId);
     for (final land in List.of(_flights)) {
       land();
     }

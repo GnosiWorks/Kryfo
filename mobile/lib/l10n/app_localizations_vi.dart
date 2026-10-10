@@ -259,11 +259,6 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String appPeerImportedV1(Object parsed) {
-    return 'Đã nhập peer (v1): $parsed';
-  }
-
-  @override
   String appLongWindow(Object line) {
     return '$line khung thời gian dài';
   }

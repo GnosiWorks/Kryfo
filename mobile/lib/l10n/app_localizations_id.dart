@@ -261,11 +261,6 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String appPeerImportedV1(Object parsed) {
-    return 'Rekan diimpor (v1): $parsed';
-  }
-
-  @override
   String appLongWindow(Object line) {
     return '$line rentang panjang';
   }

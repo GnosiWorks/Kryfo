@@ -280,11 +280,6 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String appPeerImportedV1(Object parsed) {
-    return 'تم استيراد النظير (v1): ⁨$parsed⁩';
-  }
-
-  @override
   String appLongWindow(Object line) {
     return '⁨$line⁩ (فترة طويلة)';
   }

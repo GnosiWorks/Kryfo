@@ -58,7 +58,6 @@
   "appInvalidUri": "Geçersiz uri",
   "appBundleError": "Paket hatası: {e}",
   "appAlreadySaved": "Zaten kayıtlı: {parsed}",
-  "appPeerImportedV1": "Eş içe aktarıldı (v1): {parsed}",
   "appLongWindow": "{line} uzun aralık",
   "appOf": "{line} ({held}/{subs}, bağlanma {c} sn, {p, plural, one{{p} sayfa} other{{p} sayfa}}, {e, plural, one{{e} olay} other{{e} olay}})",
   "appConnectSPagesEvents": "{line} (bağlanma {c} sn, {p, plural, one{{p} sayfa} other{{p} sayfa}}, {e, plural, one{{e} olay} other{{e} olay}})",

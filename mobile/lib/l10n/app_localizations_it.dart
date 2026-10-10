@@ -266,11 +266,6 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String appPeerImportedV1(Object parsed) {
-    return 'Peer importato (v1): $parsed';
-  }
-
-  @override
   String appLongWindow(Object line) {
     return '$line finestra lunga';
   }

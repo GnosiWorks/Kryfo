@@ -58,7 +58,6 @@
   "appInvalidUri": "無效的 uri",
   "appBundleError": "資料包錯誤：{e}",
   "appAlreadySaved": "已儲存過：{parsed}",
-  "appPeerImportedV1": "已匯入對等端（v1）：{parsed}",
   "appLongWindow": "{line} 長時段",
   "appOf": "{line}（{held}/{subs}，連線 {c} 秒，{p, plural, other{{p} 頁}}，{e, plural, other{{e} 個事件}}）",
   "appConnectSPagesEvents": "{line}（連線 {c} 秒，{p, plural, other{{p} 頁}}，{e, plural, other{{e} 個事件}}）",

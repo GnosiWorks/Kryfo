@@ -310,15 +310,6 @@
       }
     }
   },
-  "appPeerImportedV1": "Peer imported (v1): {parsed}",
-  "@appPeerImportedV1": {
-    "description": "main.dart",
-    "placeholders": {
-      "parsed": {
-        "type": "Object"
-      }
-    }
-  },
   "appLongWindow": "{line} long window",
   "@appLongWindow": {
     "description": "main.dart: after a relay's catch-up time, when it was asked for a longer stretch than usual",

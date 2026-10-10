@@ -58,7 +58,6 @@
   "appInvalidUri": "Uri không hợp lệ",
   "appBundleError": "Lỗi gói: {e}",
   "appAlreadySaved": "Đã lưu rồi: {parsed}",
-  "appPeerImportedV1": "Đã nhập peer (v1): {parsed}",
   "appLongWindow": "{line} khung thời gian dài",
   "appOf": "{line} ({held} trên {subs}, kết nối {c}s, {p, plural, other{{p} trang}}, {e, plural, other{{e} sự kiện}})",
   "appConnectSPagesEvents": "{line} (kết nối {c}s, {p, plural, other{{p} trang}}, {e, plural, other{{e} sự kiện}})",

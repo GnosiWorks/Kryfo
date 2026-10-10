@@ -2,8 +2,11 @@
 // message requests from people not in your contacts. accept, decline or
 // block on the card, or tap it to read the conversation first. an answered
 // card folds away and the ones under it glide up.
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../back_on_top.dart' show backToPage;
 import '../lock_guard.dart' show lockGuard;
 import '../main.dart' show session, appState;
 import '../theme.dart';
@@ -24,6 +27,31 @@ import 'shield_sheet.dart';
 import '../scam_shield.dart' show requestTitle;
 import '../widgets/motion.dart' show haloRoute;
 import '../l10n/l10n.dart';
+
+// the requests screens open in the stack: a request's tap goes back to one
+// rather than stacking another
+final List<_RequestsScreenState> _openRequests = [];
+
+/// pops [nav] back to an open requests screen. false when none is open
+/// there
+bool backToRequests(NavigatorState nav) => backToPage(nav, [..._openRequests]);
+
+/// the chat a request opens in, from its row. tests stand a page in
+@visibleForTesting
+Route<void> Function(Map<String, Object?> row) requestChatRoute = _chatRoute;
+
+Route<void> _chatRoute(Map<String, Object?> row) {
+  final id = row['halo_id'] as String;
+  return haloRoute(
+    ChatScreen(
+      peerHaloId: id,
+      peerOnion: (row['onion'] as String?) ?? '',
+      peerXPub: (row['xpub'] as String?) ?? '',
+      avatarSeed: id,
+      avatarChoice: (row['avatar'] as num?)?.toInt(),
+    ),
+  );
+}
 
 class RequestsScreen extends StatefulWidget {
   const RequestsScreen({super.key});
@@ -54,10 +82,14 @@ class _RequestsScreenState extends State<RequestsScreen> {
   final Map<String, ShieldFlag> _flags = {};
   final Set<String> _clean = {};
   bool _loading = true;
+  // the requests waiting as last read, without the folding ones
+  int _pending = 0;
 
   @override
   void initState() {
     super.initState();
+    _openRequests.add(this);
+    appState.addListener(_changed);
     _load();
   }
 
@@ -65,12 +97,49 @@ class _RequestsScreenState extends State<RequestsScreen> {
 
   @override
   void dispose() {
+    _openRequests.remove(this);
+    appState.removeListener(_changed);
+    _soon?.cancel();
     _rows.dispose();
     _scroll.dispose();
     super.dispose();
   }
 
+  // a request that comes or goes while the screen is up shows here, read
+  // once for a burst of changes
+  Timer? _soon;
+
+  void _changed() {
+    _soon?.cancel();
+    _soon = Timer(const Duration(milliseconds: 250), () {
+      if (mounted) _load();
+    });
+  }
+
+  // one read at a time: one asked for meanwhile runs after it
+  Future<void>? _reading;
+  bool _again = false;
+
   Future<void> _load() async {
+    if (_reading case final r?) {
+      _again = true;
+      return r;
+    }
+    final run = () async {
+      do {
+        _again = false;
+        await _read();
+      } while (_again && mounted);
+    }();
+    _reading = run;
+    try {
+      await run;
+    } finally {
+      _reading = null;
+    }
+  }
+
+  Future<void> _read() async {
     // support chats have their own inbox
     final rows = await session.requestsInbox();
     final previews = <String, String>{};
@@ -111,6 +180,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
     }
     if (!mounted) return;
     setState(() {
+      _pending = rows.length;
       if (_loading) {
         _rows.start(rows);
       } else {
@@ -138,18 +208,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
   }
 
   Future<void> _open(Map<String, Object?> row) async {
-    final id = row['halo_id'] as String;
-    await Navigator.of(context).push(
-      haloRoute(
-        ChatScreen(
-          peerHaloId: id,
-          peerOnion: (row['onion'] as String?) ?? '',
-          peerXPub: (row['xpub'] as String?) ?? '',
-          avatarSeed: id,
-          avatarChoice: (row['avatar'] as num?)?.toInt(),
-        ),
-      ),
-    );
+    await Navigator.of(context).push(requestChatRoute(row));
     // coming back: the request may have been accepted/declined/blocked in-chat,
     // so refresh the list + the home pin count.
     await appState.refreshContacts();
@@ -163,11 +222,21 @@ class _RequestsScreenState extends State<RequestsScreen> {
   Future<void> _accept(String id) async {
     if (!_answering.add(id)) return;
     HapticFeedback.selectionClick();
+    final row = _rows.rows.where((r) => r['halo_id'] == id).firstOrNull;
     await session.acceptRequest(id);
     await appState.afterAccept(id);
     _answering.remove(id);
     if (mounted) showHaloToast(context, l10n.requestsAccepted);
     await _load();
+    // their chat opens, in place of this screen when no one else waits.
+    // not under the lock, nor once they went somewhere else
+    if (row == null || !mounted || lockGuard.isLocked()) return;
+    if (!(ModalRoute.of(context)?.isCurrent ?? false)) return;
+    if (_pending == 0) {
+      unawaited(Navigator.of(context).pushReplacement(requestChatRoute(row)));
+      return;
+    }
+    await _open(row);
   }
 
   Future<void> _decline(String id) async {

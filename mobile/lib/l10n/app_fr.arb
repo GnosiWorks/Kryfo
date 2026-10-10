@@ -58,7 +58,6 @@
   "appInvalidUri": "Uri invalide",
   "appBundleError": "Erreur de bundle : {e}",
   "appAlreadySaved": "Déjà enregistré : {parsed}",
-  "appPeerImportedV1": "Pair importé (v1) : {parsed}",
   "appLongWindow": "{line} fenêtre longue",
   "appOf": "{line} ({held} sur {subs}, connexion {c} s, {p, plural, one{{p} page} other{{p} pages}}, {e, plural, one{{e} événement} other{{e} événements}})",
   "appConnectSPagesEvents": "{line} (connexion {c} s, {p, plural, one{{p} page} other{{p} pages}}, {e, plural, one{{e} événement} other{{e} événements}})",

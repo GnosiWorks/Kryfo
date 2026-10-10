@@ -273,11 +273,6 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String appPeerImportedV1(Object parsed) {
-    return 'Собеседник импортирован (v1): $parsed';
-  }
-
-  @override
   String appLongWindow(Object line) {
     return '$line длинное окно';
   }

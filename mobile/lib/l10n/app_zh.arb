@@ -58,7 +58,6 @@
   "appInvalidUri": "Uri 无效",
   "appBundleError": "密钥包错误：{e}",
   "appAlreadySaved": "已经保存过：{parsed}",
-  "appPeerImportedV1": "已导入对端（v1）：{parsed}",
   "appLongWindow": "{line}，长时段",
   "appOf": "{line}（{held}/{subs}，连接 {c} 秒，{p, plural, other{{p} 页}}，{e, plural, other{{e} 个事件}}）",
   "appConnectSPagesEvents": "{line}（连接 {c} 秒，{p, plural, other{{p} 页}}，{e, plural, other{{e} 个事件}}）",
