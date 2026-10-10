@@ -19026,7 +19026,23 @@ class AppState extends ChangeNotifier {
   // rooms on their way out: off the list at once, while the leave goes
   final Set<String> _leavingRooms = {};
 
+  // a room this phone made ends as it leaves: its link reads closed here
+  // until its own end
+  Future<void> _noteEnded(HaloDb d, String groupId) async {
+    try {
+      final g = await d.getGroup(groupId);
+      final until = (g?['expires_at'] as num?)?.toInt();
+      if (g?['room_pub'] == null || g?['is_admin'] != 1 || until == null) {
+        return;
+      }
+      endedRooms.note(d.container.id, groupId, until);
+    } catch (e) {
+      dlog('room end not noted (${e.runtimeType})');
+    }
+  }
+
   Future<void> leaveRoom(String groupId) async {
+    await _noteEnded(sessionQuiet ? session.primary : live, groupId);
     if (sessionQuiet) return _destroyRoom(groupId, on: session.primary);
     _leavingRooms.add(groupId);
     await refreshGroups();
