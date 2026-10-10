@@ -295,6 +295,16 @@ var (
 	netGap   = 20 * time.Second
 )
 
+// the app said there is no network at all: airplane mode, or nothing in
+// range. a bounce then proves nothing, so it waits for the network to come
+var netOffline atomic.Bool
+
+// a change the app saw, and whether a network is there after it
+func networkChangedTo(online bool) {
+	netOffline.Store(!online)
+	networkChanged()
+}
+
 func networkChanged() {
 	// a snowflake client keeps the nat type it found on the old network
 	dropSnowflakeClients()
@@ -327,7 +337,9 @@ func netBounceWorker() {
 		netWorker = false
 		netMu.Unlock()
 
-		if !modeNeedsTor() || torIsPaused() {
+		// floors and back-offs were reset with the change. offline, the
+		// bounce and its check wait for the change that brings a network
+		if !modeNeedsTor() || torIsPaused() || netOffline.Load() {
 			return
 		}
 		netBounce()
@@ -386,7 +398,7 @@ func netCheck(epoch int64) string {
 	for try := 1; ; try++ {
 		end := time.Now().Add(netProof)
 		for time.Now().Before(end) {
-			if netEpoch.Load() != epoch || !modeNeedsTor() || torIsPaused() {
+			if netEpoch.Load() != epoch || !modeNeedsTor() || torIsPaused() || netOffline.Load() {
 				return "superseded"
 			}
 			if routeProven() {

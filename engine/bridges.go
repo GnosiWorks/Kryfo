@@ -938,6 +938,14 @@ func HaloNetworkChanged() *C.char {
 	return C.CString("ok")
 }
 
+// the same, saying whether a network is there after the change
+//
+//export HaloNetworkState
+func HaloNetworkState(on C.int) *C.char {
+	networkChangedTo(on != 0)
+	return C.CString("ok")
+}
+
 // on|count|port, the port being obfs4's listener, 0 before any
 //
 //export HaloBridgeState

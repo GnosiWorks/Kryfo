@@ -140,10 +140,12 @@ func TestNewChangeSupersedesTheCheck(t *testing.T) {
 // is for watchdogs: neither holds back the one a network change asks for
 func TestNetworkChangeTakesOverARunningReconnect(t *testing.T) {
 	f := newFakeControl(t, 100)
+	f.slow.Store(int64(400 * time.Millisecond))
 	fakeTor(t, f.port())
 	resetRoute(t, "publishing", 100)
-	atomic.StoreInt32(&torRestarting, 1)
-	atomic.StoreInt64(&reconnectSince, time.Now().UnixNano())
+	running := make(chan string, 1)
+	go func() { running <- reconnectTor() }()
+	time.Sleep(100 * time.Millisecond)
 	atomic.StoreInt64(&lastTorRestart, time.Now().Unix())
 	before := reconnectRuns.Load()
 	if r := netReconnect(); r != "ok" {
@@ -151,5 +153,47 @@ func TestNetworkChangeTakesOverARunningReconnect(t *testing.T) {
 	}
 	if reconnectRuns.Load() != before+1 {
 		t.Fatal("no reconnect ran")
+	}
+	if r := <-running; r != "error: superseded" {
+		t.Fatalf("the reconnect from the old network said %q", r)
+	}
+}
+
+// airplane mode on: the floors reset, but no bounce and no check while
+// there is no network. they come with the change that brings one
+func TestNoBounceWhileOffline(t *testing.T) {
+	r := rigFlips(t, 10*time.Millisecond, 30*time.Millisecond, 100*time.Millisecond)
+	defer netOffline.Store(false)
+	r.prove.Store(true)
+	routeMu.Lock()
+	rescues = 4
+	routeMu.Unlock()
+	for i := 0; i < 3; i++ {
+		networkChangedTo(false)
+		time.Sleep(5 * time.Millisecond)
+	}
+	time.Sleep(200 * time.Millisecond)
+	if got := r.n(); got != 0 {
+		t.Fatalf("%d reconnects with no network", got)
+	}
+	routeMu.Lock()
+	n := rescues
+	routeMu.Unlock()
+	if n != 0 {
+		t.Fatal("the back-off was not reset by going offline")
+	}
+	networkChangedTo(true)
+	if got := waitCalls(r, 1, time.Second); got != 1 {
+		t.Fatalf("%d reconnects on coming back online, want 1", got)
+	}
+
+	// offline during the check: it stands down instead of bouncing again
+	r.prove.Store(false)
+	networkChangedTo(true)
+	waitCalls(r, 2, time.Second)
+	netOffline.Store(true)
+	time.Sleep(400 * time.Millisecond)
+	if got := r.n(); got != 2 {
+		t.Fatalf("%d reconnects: the check bounced with no network", got)
 	}
 }

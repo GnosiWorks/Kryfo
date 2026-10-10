@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/textproto"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -24,6 +25,19 @@ import (
 type fakeControl struct {
 	ln  net.Listener
 	pct atomic.Int32
+	// how long a bridge command takes to answer, nanoseconds
+	slow atomic.Int64
+	// how many times the bootstrap phase was asked for
+	polls atomic.Int64
+	mu    sync.Mutex
+	cmds  []string
+}
+
+// the setconf and resetconf lines it was sent, in order
+func (f *fakeControl) sent() []string {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return append([]string(nil), f.cmds...)
 }
 
 func newFakeControl(t *testing.T, pct int) *fakeControl {
@@ -60,8 +74,17 @@ func (f *fakeControl) handle(c net.Conn) {
 		case strings.HasPrefix(cmd, "PROTOCOLINFO"):
 			fmt.Fprint(c, "250-PROTOCOLINFO 1\r\n250-AUTH METHODS=NULL\r\n250-VERSION Tor=\"0.4.9.5\"\r\n250 OK\r\n")
 		case strings.HasPrefix(cmd, "GETINFO STATUS/BOOTSTRAP-PHASE"):
+			f.polls.Add(1)
 			fmt.Fprintf(c, "250-status/bootstrap-phase=NOTICE BOOTSTRAP PROGRESS=%d TAG=x SUMMARY=\"x\"\r\n250 OK\r\n", f.pct.Load())
 		default:
+			if strings.HasPrefix(cmd, "SETCONF") || strings.HasPrefix(cmd, "RESETCONF") {
+				f.mu.Lock()
+				f.cmds = append(f.cmds, cmd)
+				f.mu.Unlock()
+			}
+			if strings.Contains(cmd, "BRIDGE") {
+				time.Sleep(time.Duration(f.slow.Load()))
+			}
 			fmt.Fprint(c, "250 OK\r\n")
 		}
 	}
@@ -186,27 +209,40 @@ func TestLandingIsNotHeldByTheFlightsBackoff(t *testing.T) {
 	}
 }
 
-// a reconnect stuck for minutes holds the flag, and every later one, the
+// a reconnect stuck for minutes holds the slot, and every later one, the
 // button's included, said "one already running" until five minutes had
 // passed. the watch never got that far: it skips while one runs
 func TestStuckReconnectTakenOver(t *testing.T) {
 	f := newFakeControl(t, 100)
+	f.slow.Store(int64(600 * time.Millisecond))
 	fakeTor(t, f.port())
 	resetRoute(t, "publishing", 100)
+	old := stuckAfter
+	stuckAfter = 200 * time.Millisecond
+	defer func() { stuckAfter = old }()
 
-	atomic.StoreInt32(&torRestarting, 1)
-	atomic.StoreInt64(&reconnectSince, time.Now().Add(-3*time.Minute).UnixNano())
+	first := make(chan string, 1)
+	go func() { first <- reconnectNow() }()
+	time.Sleep(50 * time.Millisecond)
+	if r := reconnectTor(); r != "error: one already running" {
+		t.Fatalf("a watchdog got past a reconnect that runs fine: %s", r)
+	}
+	time.Sleep(250 * time.Millisecond)
+	atomic.StoreInt64(&lastTorRestart, 0)
 	if r := reconnectTor(); r != "ok" {
-		t.Fatalf("a reconnect stuck for three minutes was not taken over: %s", r)
+		t.Fatalf("a reconnect stuck past the limit was not taken over: %s", r)
+	}
+	if r := <-first; r != "error: superseded" {
+		t.Fatalf("the replaced reconnect said %q", r)
 	}
 
-	// by hand it goes at once, however recent the running one, past the
-	// floor of the one that just finished
-	atomic.StoreInt32(&torRestarting, 1)
-	atomic.StoreInt64(&reconnectSince, time.Now().Add(-time.Second).UnixNano())
+	// by hand it goes at once, however recent the running one
+	go func() { first <- reconnectTor() }()
+	time.Sleep(50 * time.Millisecond)
 	if r := reconnectNow(); r != "ok" {
 		t.Fatalf("the button did not take over: %s", r)
 	}
+	<-first
 	if atomic.LoadInt32(&torRestarting) != 0 {
 		t.Fatal("the flag stayed set after the reconnect that took over")
 	}
@@ -274,4 +310,50 @@ func statusNow() string {
 	statusMu.RLock()
 	defer statusMu.RUnlock()
 	return torStatus
+}
+
+// a bounce puts the percentage to 0 and tor says the same number as
+// before: the watcher has to write it back, not take it for old news
+func TestBootstrapWatchAfterABounce(t *testing.T) {
+	oldP, oldS, oldF := bootPoll, bootPollSlow, bootFast
+	defer func() { bootPoll, bootPollSlow, bootFast = oldP, oldS, oldF }()
+	bootPoll, bootPollSlow, bootFast = 5*time.Millisecond, 5*time.Millisecond, time.Hour
+	f := newFakeControl(t, 50)
+	n := fakeTor(t, f.port())
+	resetRoute(t, "starting", 0)
+	go watchBootstrap(n)
+	defer f.pct.Store(100)
+	time.Sleep(100 * time.Millisecond)
+	statusMu.Lock()
+	bootstrapPct = 0
+	statusMu.Unlock()
+	routeBump()
+	time.Sleep(200 * time.Millisecond)
+	if p := bootPctNow(); p != 50 {
+		t.Fatalf("after the bounce the watcher shows %d%%, tor says 50%%", p)
+	}
+}
+
+// with no network there is nothing to climb, so it asks far less often
+func TestBootstrapWatchSlowsOffline(t *testing.T) {
+	oldP, oldS, oldF := bootPoll, bootPollSlow, bootFast
+	defer func() {
+		bootPoll, bootPollSlow, bootFast = oldP, oldS, oldF
+		netOffline.Store(false)
+	}()
+	bootPoll, bootPollSlow, bootFast = 5*time.Millisecond, 200*time.Millisecond, time.Hour
+	f := newFakeControl(t, 50)
+	n := fakeTor(t, f.port())
+	resetRoute(t, "starting", 0)
+	go watchBootstrap(n)
+	defer f.pct.Store(100)
+	time.Sleep(50 * time.Millisecond)
+	netOffline.Store(true)
+	time.Sleep(250 * time.Millisecond)
+	a := f.polls.Load()
+	time.Sleep(500 * time.Millisecond)
+	offline := f.polls.Load() - a
+	if offline > 4 {
+		t.Fatalf("%d polls in half a second with no network", offline)
+	}
 }
