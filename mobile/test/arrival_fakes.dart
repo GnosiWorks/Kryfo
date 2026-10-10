@@ -13,11 +13,9 @@ import 'package:kryfo/main.dart'
         AppIo,
         FirstKept,
         HaloDb,
-        blockedAtArgs,
         groupUnsendOf,
         groupUnsendRow,
-        kBlockListenFor,
-        kUnblockGrace;
+        kBlockListenFor;
 import 'package:kryfo/media_resend.dart';
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
@@ -314,7 +312,7 @@ class ArrivalRows implements HaloDb {
   final seen = <String>{};
   final held = <String>[];
   // what was held, row by row, as heldOf hands it back
-  final heldRows = <String, List<({int id, String cipher})>>{};
+  final heldRows = <String, List<({int id, String cipher, int at})>>{};
   var _heldId = 0;
   Map<String, List<String>> get heldCiphers => {
     for (final e in heldRows.entries)
@@ -545,19 +543,10 @@ class ArrivalRows implements HaloDb {
     if (!blocked && open >= 0) spans[open] = (spans[open].$1, now);
   }
 
-  // as kBlockedAtWhere reads its arguments: an ended span, from its start
-  // to its end less the grace
   @override
-  Future<bool> blockedAt(
-    String haloId,
-    int at, {
-    int slack = kUnblockGrace,
-  }) async {
-    final a = blockedAtArgs(haloId, at, slack: slack);
-    return [...?blockSpans[haloId]].any(
-      (s) => s.$1 <= (a[1] as int) && s.$2 != null && s.$2! > (a[2] as int),
-    );
-  }
+  Future<List<(int, int?)>> blockSpansOf(String haloId) async => [
+    ...?blockSpans[haloId],
+  ];
 
   @override
   Future<int?> blockedSince(String haloId) async {
@@ -725,7 +714,11 @@ class ArrivalRows implements HaloDb {
     );
     if (v != Shelved.kept) return v;
     held.add(peerId);
-    rows.add((id: ++_heldId, cipher: cipher));
+    rows.add((
+      id: ++_heldId,
+      cipher: cipher,
+      at: DateTime.now().millisecondsSinceEpoch,
+    ));
     if (mediaId != null && !overflow) {
       heldMedia[_heldId] = mediaId;
       heldChunk[_heldId] = chunk;
@@ -775,7 +768,7 @@ class ArrivalRows implements HaloDb {
   }
 
   @override
-  Future<List<({int id, String cipher})>> heldOf(String peerId) async =>
+  Future<List<({int id, String cipher, int at})>> heldOf(String peerId) async =>
       _hit('heldOf', peerId, [...?heldRows[peerId]]);
 
   @override

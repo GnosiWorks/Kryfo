@@ -259,7 +259,7 @@ class Session {
   // safe or not, whatever it said while it ran
   Future<Map<String, Object?>?> shownShieldFor(String haloId) async =>
       await loadScamShieldOn(container) ? shieldFor(haloId) : null;
-  Future<List<({int id, String cipher})>> heldOf(String peerId) =>
+  Future<List<({int id, String cipher, int at})>> heldOf(String peerId) =>
       _ofPeer(peerId).heldOf(peerId);
   Future<void> forgetHeld(String peerId, int id) =>
       _ofPeer(peerId).forgetHeld(id);

@@ -1,23 +1,20 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // a block's spans and what it dropped, on real sqlite over the app's own
-// statements: an ended span holds from its start to its end less the
-// grace for a slow clock, an open one adds nothing, a contact row that goes
-// ends its open span, someone blocked before the spans were kept holds
-// from the start, and the drops are swept by age at most once a day and
-// held to a count per person. a block is listened on while it is young.
-// the system's sqlite library is used; with none the tests are skipped
+// statements: a contact row that goes ends its open span, someone blocked
+// before the spans were kept holds from the start, and the drops are swept
+// by age at most once a day and held to a count per person. a block is
+// listened on while it is young. the system's sqlite library is used; with
+// none the tests are skipped
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/main.dart'
     show
         blockTables,
-        blockedAtArgs,
         droppedIn,
+        heldBySpans,
         kBlockListenFor,
-        kBlockedAtWhere,
         kBlockedDropsKept,
         kBlockedRowsSql,
         kSeedBlockSpans,
-        kUnblockGrace,
         noteBlockedDropIn,
         upgradeTo64;
 
@@ -35,11 +32,15 @@ Future<SqliteMem> _db() async {
   return db;
 }
 
-Future<bool> _held(SqliteMem db, String peer, int at) async =>
-    (await db.rawQuery(
-      'SELECT 1 FROM block_spans WHERE $kBlockedAtWhere',
-      blockedAtArgs(peer, at),
-    )).isNotEmpty;
+// their ended spans as the app reads them
+Future<List<(int, int)>> _ended(SqliteMem db, String peer) async => [
+  for (final r in await db.rawQuery(
+    'SELECT from_at, to_at FROM block_spans WHERE peer_id = ? AND to_at IS '
+    'NOT NULL',
+    [peer],
+  ))
+    (r['from_at'] as int, r['to_at'] as int),
+];
 
 Future<void> _span(SqliteMem db, String peer, int from, int? to) => db.execute(
   'INSERT INTO block_spans (peer_id, from_at, to_at) VALUES (?, ?, ?)',
@@ -48,31 +49,6 @@ Future<void> _span(SqliteMem db, String peer, int from, int? to) => db.execute(
 
 void main() {
   final skip = SqliteMem.open() == null ? 'no sqlite on this host' : null;
-
-  test('an ended block holds from its start to its end, less the grace a '
-      'slow clock is given', () async {
-    final db = await _db();
-    const from = 1000000;
-    const to = from + 3 * 3600000;
-    await _span(db, 'was-blocked', from, to);
-    expect(await _held(db, 'was-blocked', from - 1), isFalse);
-    expect(await _held(db, 'was-blocked', from), isTrue);
-    expect(await _held(db, 'was-blocked', to - kUnblockGrace - 1), isTrue);
-    // wrapped in the last ten minutes by their clock: let in
-    expect(await _held(db, 'was-blocked', to - kUnblockGrace), isFalse);
-    expect(await _held(db, 'was-blocked', to - 5 * 60000), isFalse);
-    expect(await _held(db, 'was-blocked', to), isFalse);
-    expect(await _held(db, 'someone-else-here', from + 1), isFalse);
-  }, skip: skip);
-
-  test('an open span holds nothing: the block itself answers while it '
-      'lasts, and one left open must not hold over a later add', () async {
-    final db = await _db();
-    await _span(db, 'left-open-span', 100, null);
-    for (final at in [100, 5000, DateTime.now().millisecondsSinceEpoch]) {
-      expect(await _held(db, 'left-open-span', at), isFalse, reason: '$at');
-    }
-  }, skip: skip);
 
   test('a contact row that goes ends its open span, and leaves the ended '
       'ones as they were', () async {
@@ -120,8 +96,16 @@ void main() {
       "UPDATE block_spans SET to_at = ? WHERE peer_id = 'long-blocked'",
       [_day],
     );
-    expect(await _held(db, 'long-blocked', 5), isTrue);
-    expect(await _held(db, 'free-one-here', 5), isFalse);
+    // what came at any time is judged as held back by it
+    expect(
+      heldBySpans(
+        await _ended(db, 'long-blocked'),
+        reached: (from: 5, until: 5),
+        came: 5,
+      ),
+      isTrue,
+    );
+    expect(await _ended(db, 'free-one-here'), isEmpty);
   }, skip: skip);
 
   test('a uid is kept once per person, and what has not come again in sixty '

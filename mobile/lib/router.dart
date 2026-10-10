@@ -9,6 +9,8 @@ import 'dart:typed_data';
 
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
+import 'relay_poll.dart' show Reached;
+
 // where an arrival goes
 enum RouteTo {
   // the everyday database
@@ -161,6 +163,7 @@ class Unsealed {
     this.wrapped,
     this.keyChanged = false,
     this.receipt,
+    this.reached,
   });
 
   final String from;
@@ -178,6 +181,8 @@ class Unsealed {
   final int? resendSince;
   // when the sender wrapped it, by their clock, where the lane said
   final int? wrapped;
+  // when it reached the relay, by this clock, where the lane said
+  final Reached? reached;
   // no arrival: [from]'s key changed while the vault was shut, and their
   // chat shows it as the vault opens
   final bool keyChanged;
@@ -716,6 +721,7 @@ class VaultRouter {
         'rc': ?a.receipt,
         'rf': ?a.resendSince,
         'a': ?a.wrapped,
+        if (a.reached case final r?) ...{'rl': r.from, 'rh': r.until},
       }),
     );
     final sealed = _sealer.seal(pub, base64Encode(plain));
@@ -791,6 +797,8 @@ class VaultRouter {
       if (f is! String || w is! String || at is! int) return null;
       final a = j['a'];
       final rf = j['rf'];
+      final rl = j['rl'];
+      final rh = j['rh'];
       return Unsealed(
         f,
         w,
@@ -801,6 +809,9 @@ class VaultRouter {
         wrapped: a is int ? a : null,
         keyChanged: j['kc'] == 1,
         receipt: j['rc'] is String ? j['rc'] as String : null,
+        reached: rl is int && rh is int && rl <= rh
+            ? (from: rl, until: rh)
+            : null,
       );
     } catch (_) {
       return null;

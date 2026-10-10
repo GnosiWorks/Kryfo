@@ -11,13 +11,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/main.dart'
-    show
-        AppIo,
-        AppState,
-        HaloDb,
-        blockedAtArgs,
-        kUnblockGrace,
-        useDatabasesForTest;
+    show AppIo, AppState, HaloDb, useDatabasesForTest;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
 import 'package:kryfo/router.dart';
@@ -905,18 +899,12 @@ class _Mem implements HaloDb {
   Future<void> dropMediaWant(String mediaId) async =>
       _hit('dropMediaWant', mediaId, null);
 
-  // a block that held and ended, by person, read as the real table is
-  final spans = <String, (int, int)>{};
+  // a block's span, by person, read as the real table is
+  final spans = <String, (int, int?)>{};
   @override
-  Future<bool> blockedAt(
-    String haloId,
-    int at, {
-    int slack = kUnblockGrace,
-  }) async {
-    final s = spans[haloId];
-    final a = blockedAtArgs(haloId, at, slack: slack);
-    return s != null && s.$1 <= (a[1] as int) && s.$2 > (a[2] as int);
-  }
+  Future<List<(int, int?)>> blockSpansOf(String haloId) async => [
+    ?spans[haloId],
+  ];
 
   @override
   Future<void> noteBlockedDrop(String haloId, String uid) async {}
@@ -1581,22 +1569,29 @@ void main() {
       expect(w.app.contacts.map((c) => c.haloId), contains(_h));
     });
 
-    test('what came while it was shut is judged by when it was wrapped, as '
-        'it would have been on arrival', () async {
+    test('what came while it was shut is judged by when it reached the '
+        'relay, as it would have been on arrival', () async {
       final w = await _World.make();
       final now = DateTime.now().millisecondsSinceEpoch;
       // blocked in the vault for two hours, until an hour ago
       w.vault.spans[_h] = (now - 3 * 3600000, now - 3600000);
-      for (final (uid, at) in [
-        ('during', now - 2 * 3600000),
-        ('since', now - 60000),
+      for (final (uid, reached) in [
+        // stored, and the relay took it before the unblock
+        ('during', (from: now - 2 * 3600000, until: now - 90 * 60000)),
+        // live, a minute ago
+        ('since', (from: now - 60000, until: now - 60000)),
       ]) {
         final c = 'relay-$uid';
         w.io.opens[c] = (
           _h,
           await wrapMessage('hi $uid', msgUid: uid, sender: _as(_h)),
         );
-        await w.app.receiveRelay([(peer: 'x-$_h', cipher: c)], written: [at]);
+        // stamped as now by their clock: not what judges it
+        await w.app.receiveRelay(
+          [(peer: 'x-$_h', cipher: c)],
+          written: [now],
+          reached: [reached],
+        );
       }
       await _settle();
       expect(w.store.inbox, hasLength(2));
@@ -1627,10 +1622,12 @@ void main() {
             writtenAt: written,
           ),
         );
-        // both wrapped again half a minute ago, long after the block
+        // both wrapped again half a minute ago, long after the block, and
+        // came live
         await w.app.receiveRelay(
           [(peer: 'x-$_h', cipher: c)],
           written: [now - 30000],
+          reached: [(from: now - 30000, until: now - 30000)],
         );
       }
       await _settle();
