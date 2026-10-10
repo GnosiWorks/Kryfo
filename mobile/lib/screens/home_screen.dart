@@ -1941,7 +1941,9 @@ class _EnterState extends State<_Enter> with SingleTickerProviderStateMixin {
 
   @override
   void dispose() {
-    _c.dispose();
+    // a row past its entrance never made one, and a ticker is not made on
+    // the way out
+    if (_animate) _c.dispose();
     super.dispose();
   }
 
