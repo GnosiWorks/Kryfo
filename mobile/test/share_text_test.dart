@@ -59,6 +59,32 @@ void main() {
       expect(sharedWords(text: 'one\n\n\n\n\ntwo'), 'one\n\ntwo');
     });
 
+    test('a subject inside a word is still said; one the text starts with '
+        'or holds as a line is not', () {
+      expect(
+        sharedWords(subject: 'Hi', text: 'History of Vienna'),
+        'Hi\nHistory of Vienna',
+      );
+      expect(
+        sharedWords(subject: 'map', text: 'see the roadmap'),
+        'map\nsee the roadmap',
+      );
+      expect(
+        sharedWords(subject: 'Café Sperl', text: 'Café Sperl, Vienna'),
+        'Café Sperl, Vienna',
+      );
+      expect(
+        sharedWords(subject: 'Café Sperl', text: 'a pin\n Café Sperl \nlink'),
+        'a pin\n Café Sperl \nlink',
+      );
+    });
+
+    test('c1 controls go, unicode line breaks become plain ones', () {
+      expect(sharedWords(text: 'a\u0085b\u009Bc\u0080d'), 'abcd');
+      expect(sharedWords(text: 'one\u2028two\u2029three'), 'one\ntwo\nthree');
+      expect(sharedWords(subject: 'title\u0090', text: 'x'), 'title\nx');
+    });
+
     test('cut to what a message holds', () {
       expect(kShareTextMax, 4096);
       final long = sharedWords(text: 'a' * 5000);

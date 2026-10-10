@@ -12,19 +12,35 @@ import 'lock_guard.dart';
 // the most a shared text puts in the composer
 const kShareTextMax = 4096;
 
-// controls nobody types, line breaks and tabs aside
-final _controls = RegExp('[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]');
+// controls nobody types, line breaks and tabs aside, the c1 set too
+final _controls = RegExp(
+  '[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]',
+);
+// unicode's own line and paragraph breaks read as plain ones
+final _breaks = RegExp('\r\n|[\r\u2028\u2029]');
 
 String _clean(String? s) => unmarked(
-  (s ?? '').replaceAll('\r\n', '\n').replaceAll('\r', '\n'),
+  (s ?? '').replaceAll(_breaks, '\n'),
 ).replaceAll(_controls, '').trim();
 
+final _wordy = RegExp(r'[\p{L}\p{N}\p{M}]', unicode: true);
+
+// the text says the subject already: it starts with it, up to a word's
+// end, or holds it as a line of its own. a subject inside a word is still
+// said
+bool _says(String text, String subject) {
+  final starts =
+      text.startsWith(subject) &&
+      (text.length == subject.length || !_wordy.hasMatch(text[subject.length]));
+  return starts || text.split('\n').any((l) => l.trim() == subject);
+}
+
 /// the words to land: the subject over the text, unless the text already
-/// says it. empty when neither says anything
+/// says it (see _says). empty when neither says anything
 String sharedWords({String? subject, String? text, int max = kShareTextMax}) {
   final s = _clean(subject);
   final t = _clean(text);
-  var words = s.isEmpty || t.contains(s)
+  var words = s.isEmpty || _says(t, s)
       ? t
       : t.isEmpty
       ? s
