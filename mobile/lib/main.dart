@@ -7796,16 +7796,38 @@ Future<void> sweepCaptures() async {
 }
 
 // a file handed to the share sheet is a plain copy in the share plugin's
-// folder, kept there until the next share. the native side clears it on
-// resume once it is a few minutes old; this is the start's turn
+// folder. the app it went to may read it only once this one is back, so a
+// copy younger than the grace stays, as on the native side (Shred.kt),
+// which looks again on resume
+const kShareGrace = Duration(minutes: 10);
+
 @visibleForTesting
-Future<void> sweepShareCopies(Directory cache) async {
+Future<void> sweepShareCopies(Directory cache, {DateTime? now}) async {
   final dir = Directory('${cache.path}/share_plus');
   if (!await dir.exists()) return;
-  await for (final f in dir.list(recursive: true)) {
-    if (f is File) await shredFile(f.path);
+  final cutoff = (now ?? DateTime.now()).subtract(kShareGrace);
+  final folders = <Directory>[];
+  await for (final e in dir.list(recursive: true, followLinks: false)) {
+    if (e is Directory) {
+      folders.add(e);
+      continue;
+    }
+    if (e is! File) continue;
+    try {
+      if ((await e.lastModified()).isBefore(cutoff)) await shredFile(e.path);
+    } on FileSystemException {
+      // gone meanwhile
+    }
   }
-  await dir.delete(recursive: true);
+  // only an emptied folder goes, the deepest first
+  folders.sort((a, b) => b.path.length.compareTo(a.path.length));
+  for (final d in [...folders, dir]) {
+    try {
+      await d.delete();
+    } on FileSystemException {
+      // a young copy is still in it
+    }
+  }
 }
 
 String _safeLeaf(String s) => s.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
