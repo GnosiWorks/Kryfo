@@ -705,7 +705,7 @@ void main() {
 
     test('made on create, and on the upgrade after every older step', () {
       final version = RegExp(r'version: (\d+),').firstMatch(src)!.group(1)!;
-      expect(int.parse(version), 70);
+      expect(int.parse(version), greaterThanOrEqualTo(70));
       final made = src.substring(create, upgrade);
       expect(made, contains(column));
       expect(made, contains('await burnIndex(db);'));

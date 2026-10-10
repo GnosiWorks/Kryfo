@@ -55,6 +55,7 @@ class _Engine implements HaloEngine {
   final listens = <String>[];
   final dropBoxes = <String>[];
   final unlistened = <String>[];
+  final unlistenedKeys = <String>[];
   final forgot = <String>[];
   final sent = <({String priv, String to, String msg})>[];
   final knocks = <({String priv, String to, String fc, String msg})>[];
@@ -72,6 +73,9 @@ class _Engine implements HaloEngine {
   void roomSubscribeFcBg(String priv) => dropBoxes.add(priv);
   @override
   void roomUnsubscribeBg(String pub) => unlistened.add(pub);
+  @override
+  void roomUnlistenBg(String priv, String peerPub) =>
+      unlistenedKeys.add(peerPub);
   @override
   void roomForgetBg(String priv, List<String> members) => forgot.add(priv);
   @override

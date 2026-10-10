@@ -121,6 +121,22 @@ import '../lock_guard.dart' show LockDropped, lockGuard, onScreen;
 String? _senderLabel(Map<String, String> nickById, String peer) =>
     nickById[peer] ?? (looksLikeRoomKey(peer) ? roomTag(peer) : null);
 
+/// the row of a file of this phone's, kept by [save] only with its group
+/// still here. a group that ended under the picker, the camera or the
+/// recorder, or a row that could not be kept, takes the file at [path]
+/// with it: nothing of it stays on the phone. false then
+@visibleForTesting
+Future<bool> keepOwnGroupFile(String path, Future<bool> Function() save) async {
+  var kept = false;
+  try {
+    kept = await save();
+  } catch (e) {
+    dlog('group file: row not kept (${e.runtimeType})');
+  }
+  if (!kept) await shredFile(path);
+  return kept;
+}
+
 // a group gone from here closes its screen. in front it simply goes; under
 // other screens only when this phone was taken out, since a leave from the
 // info screen pops both itself and one more pop would close the app
@@ -1059,8 +1075,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       // no new rows: reactions, edits, unsends and burns need a full reload,
       // except while one of our own sends is in flight. a reload then
       // orphans the optimistic row and freezes its send pill, so it waits.
+      // a group that ended or was left meanwhile closes the screen anyway
       final sendInFlight = _messages.any((m) => m.sending);
-      if (!sendInFlight) _load();
+      if (!sendInFlight || !await session.groupExists(widget.groupId)) {
+        if (mounted) _load();
+      }
       return;
     }
     final nickById = <String, String>{};
@@ -1484,6 +1503,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       m.failed = false;
       m.sending = true;
     });
+    // the group is gone: nothing goes, and the screen closes
+    if (!await session.groupExists(widget.groupId)) {
+      if (mounted) _load();
+      return;
+    }
     final mediaSrc = m.mediaPath ?? m.filePath;
     if (mediaSrc != null) {
       final f = File(mediaSrc);
@@ -1862,6 +1886,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       if (mounted) showHaloToast(context, l10n.cameraCouldNotStripThat);
       return;
     }
+    // ended while it was picked: nothing is written
+    if (!await _stillHere()) return;
     final uid = newMsgUid();
     final mediaDir = await session.mediaDirOf(widget.groupId);
     // a png, gif, webp or heic keeps its own kind, and its name says so
@@ -1885,16 +1911,18 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     });
     _scrollToEnd();
     HapticFeedback.lightImpact();
-    await session.saveMessage(
-      appState.sessionId,
-      'out',
-      caption,
-      groupId: widget.groupId,
-      msgUid: uid,
-      mediaPath: f.path,
-      burnSecs: burn,
-      sent: 0,
+    final kept = await keepOwnGroupFile(
+      f.path,
+      () => session.saveInGroup(
+        appState.sessionId,
+        caption,
+        groupId: widget.groupId,
+        msgUid: uid,
+        mediaPath: f.path,
+        burnSecs: burn,
+      ),
     );
+    if (!kept) return _unkept(m);
     unawaited(
       _sendGroupMedia(
         m,
@@ -1914,6 +1942,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     var bytes = await takeRecording(srcPath);
     if (bytes == null) return;
     if (_disguise) bytes = disguiseWav(bytes);
+    // ended while it was recorded: nothing is written
+    if (!await _stillHere()) return;
     final uid = newMsgUid();
     final mediaDir = await session.mediaDirOf(widget.groupId);
     final dest = File('${mediaDir.path}/vn_$uid.wav');
@@ -1938,18 +1968,20 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     });
     _scrollToEnd();
     HapticFeedback.lightImpact();
-    await session.saveMessage(
-      appState.sessionId,
-      'out',
-      '',
-      groupId: widget.groupId,
-      msgUid: uid,
-      filePath: dest.path,
-      fileName: 'voice.wav',
-      voiceDisguised: _disguise,
-      burnSecs: burn,
-      sent: 0,
+    final kept = await keepOwnGroupFile(
+      dest.path,
+      () => session.saveInGroup(
+        appState.sessionId,
+        '',
+        groupId: widget.groupId,
+        msgUid: uid,
+        filePath: dest.path,
+        fileName: 'voice.wav',
+        voiceDisguised: _disguise,
+        burnSecs: burn,
+      ),
     );
+    if (!kept) return _unkept(m);
     unawaited(
       _sendGroupMedia(
         m,
@@ -2029,6 +2061,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       if (mounted) showHaloToast(context, l10n.groupChatFileTooBig8);
       return;
     }
+    // ended while it was picked: nothing is copied
+    if (!await _stillHere()) return;
     final uid = newMsgUid();
     final mediaDir = await session.mediaDirOf(widget.groupId);
     final safe = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
@@ -2078,17 +2112,19 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     });
     _scrollToEnd();
     HapticFeedback.lightImpact();
-    await session.saveMessage(
-      appState.sessionId,
-      'out',
-      '',
-      groupId: widget.groupId,
-      msgUid: uid,
-      filePath: dest.path,
-      fileName: name,
-      burnSecs: burn,
-      sent: 0,
+    final kept = await keepOwnGroupFile(
+      dest.path,
+      () => session.saveInGroup(
+        appState.sessionId,
+        '',
+        groupId: widget.groupId,
+        msgUid: uid,
+        filePath: dest.path,
+        fileName: name,
+        burnSecs: burn,
+      ),
     );
+    if (!kept) return _unkept(m);
     unawaited(
       _sendGroupMedia(
         m,
@@ -2101,6 +2137,21 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         ),
       ),
     );
+  }
+
+  // the group is still here to send into. one gone closes the screen
+  Future<bool> _stillHere() async {
+    if (await session.groupExists(widget.groupId)) return true;
+    if (mounted) _load();
+    return false;
+  }
+
+  // a row of ours that was not kept: off the screen, and the screen reads
+  // the group again, closing when it is gone
+  void _unkept(_GMsg m) {
+    if (!mounted) return;
+    setState(() => _messages.remove(m));
+    _load();
   }
 
   String? _badgeFor(String id) {
