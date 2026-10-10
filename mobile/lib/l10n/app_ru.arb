@@ -58,7 +58,6 @@
   "appInvalidUri": "Неверный uri",
   "appBundleError": "Ошибка пакета: {e}",
   "appAlreadySaved": "Уже сохранено: {parsed}",
-  "appPeerImportedV1": "Собеседник импортирован (v1): {parsed}",
   "appLongWindow": "{line} длинное окно",
   "appOf": "{line} ({held} из {subs}, подключение {c} с, {p, plural, one{{p} страница} few{{p} страницы} many{{p} страниц} other{{p} страницы}}, {e, plural, one{{e} событие} few{{e} события} many{{e} событий} other{{e} события}})",
   "appConnectSPagesEvents": "{line} (подключение {c} с, {p, plural, one{{p} страница} few{{p} страницы} many{{p} страниц} other{{p} страницы}}, {e, plural, one{{e} событие} few{{e} события} many{{e} событий} other{{e} события}})",

@@ -58,7 +58,6 @@
   "appInvalidUri": "Uri tidak valid",
   "appBundleError": "Kesalahan bundel: {e}",
   "appAlreadySaved": "Sudah tersimpan: {parsed}",
-  "appPeerImportedV1": "Rekan diimpor (v1): {parsed}",
   "appLongWindow": "{line} rentang panjang",
   "appOf": "{line} ({held} dari {subs}, sambung {c} dtk, {p, plural, other{{p} halaman}}, {e, plural, other{{e} event}})",
   "appConnectSPagesEvents": "{line} (sambung {c} dtk, {p, plural, other{{p} halaman}}, {e, plural, other{{e} event}})",

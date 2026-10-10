@@ -125,7 +125,6 @@ final _calls = <_Call>[
   ('appInvalidUri', [], (l) => l.appInvalidUri),
   ('appBundleError', ["⟨e⟩"], (l) => l.appBundleError("⟨e⟩")),
   ('appAlreadySaved', ["⟨parsed⟩"], (l) => l.appAlreadySaved("⟨parsed⟩")),
-  ('appPeerImportedV1', ["⟨parsed⟩"], (l) => l.appPeerImportedV1("⟨parsed⟩")),
   ('appLongWindow', ["⟨line⟩"], (l) => l.appLongWindow("⟨line⟩")),
   ('appOf', ["⟨line⟩", "⟨c⟩"], (l) => l.appOf("⟨line⟩", 7, 7, "⟨c⟩", 0, 0)),
   ('appOf', ["⟨line⟩", "⟨c⟩"], (l) => l.appOf("⟨line⟩", 7, 7, "⟨c⟩", 0, 1)),

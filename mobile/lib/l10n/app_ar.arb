@@ -58,7 +58,6 @@
   "appInvalidUri": "رابط غير صالح",
   "appBundleError": "خطأ في الحزمة: ⁨{e}⁩",
   "appAlreadySaved": "محفوظ مسبقًا: ⁨{parsed}⁩",
-  "appPeerImportedV1": "تم استيراد النظير (v1): ⁨{parsed}⁩",
   "appLongWindow": "⁨{line}⁩ (فترة طويلة)",
   "appOf": "⁨{line}⁩ (⁨{held}⁩ من ⁨{subs}⁩، اتصال ⁨{c}⁩ ث، {p, plural, zero{⁨{p}⁩ صفحة} one{صفحة واحدة} two{صفحتان} few{⁨{p}⁩ صفحات} many{⁨{p}⁩ صفحة} other{⁨{p}⁩ صفحة}}، {e, plural, zero{⁨{e}⁩ حدث} one{حدث واحد} two{حدثان} few{⁨{e}⁩ أحداث} many{⁨{e}⁩ حدثًا} other{⁨{e}⁩ حدث}})",
   "appConnectSPagesEvents": "⁨{line}⁩ (اتصال ⁨{c}⁩ ث، {p, plural, zero{⁨{p}⁩ صفحة} one{صفحة واحدة} two{صفحتان} few{⁨{p}⁩ صفحات} many{⁨{p}⁩ صفحة} other{⁨{p}⁩ صفحة}}، {e, plural, zero{⁨{e}⁩ حدث} one{حدث واحد} two{حدثان} few{⁨{e}⁩ أحداث} many{⁨{e}⁩ حدثًا} other{⁨{e}⁩ حدث}})",

@@ -58,7 +58,6 @@
   "appInvalidUri": "Uri no válida",
   "appBundleError": "Error del paquete: {e}",
   "appAlreadySaved": "Ya guardado: {parsed}",
-  "appPeerImportedV1": "Contacto importado (v1): {parsed}",
   "appLongWindow": "{line} ventana larga",
   "appOf": "{line} ({held} de {subs}, conexión {c}s, {p, plural, one{{p} página} other{{p} páginas}}, {e, plural, one{{e} evento} other{{e} eventos}})",
   "appConnectSPagesEvents": "{line} (conexión {c}s, {p, plural, one{{p} página} other{{p} páginas}}, {e, plural, one{{e} evento} other{{e} eventos}})",

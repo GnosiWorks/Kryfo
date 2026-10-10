@@ -264,11 +264,6 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
-  String appPeerImportedV1(Object parsed) {
-    return 'همتای v1 وارد شد: ⁨$parsed⁩';
-  }
-
-  @override
   String appLongWindow(Object line) {
     return '⁨$line⁩، بازه‌ی طولانی';
   }

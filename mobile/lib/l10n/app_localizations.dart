@@ -471,12 +471,6 @@ abstract class AppLocalizations {
   /// **'Already saved: {parsed}'**
   String appAlreadySaved(Object parsed);
 
-  /// main.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Peer imported (v1): {parsed}'**
-  String appPeerImportedV1(Object parsed);
-
   /// main.dart: after a relay's catch-up time, when it was asked for a longer stretch than usual
   ///
   /// In en, this message translates to:

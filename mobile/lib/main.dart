@@ -8141,8 +8141,15 @@ Future<(String, bool)> handleHaloUriAdded(
     await session.upsertContact(id, parsed['onion']!, parsed['xpub']!);
     if (!sessionQuiet) await appState.subscribePeer(id);
     if (asked && !sessionQuiet) await appState.afterAccept(id);
-    if (!wasIn && await appState.inboxChatOf(id)) askInboxMove(id);
-    return (l10n.appPeerImportedV1(id), false);
+    // home and the pickers show them now, and their chat opens as a v2
+    // add's does
+    await appState.refreshContacts();
+    if (!wasIn && await appState.inboxChatOf(id)) {
+      askInboxMove(id);
+    } else {
+      openAddedChatLater(id);
+    }
+    return (wasIn ? l10n.appAlreadySaved(id) : '', true);
   }
 }
 

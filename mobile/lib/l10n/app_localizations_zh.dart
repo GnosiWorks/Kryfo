@@ -257,11 +257,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String appPeerImportedV1(Object parsed) {
-    return '已导入对端（v1）：$parsed';
-  }
-
-  @override
   String appLongWindow(Object line) {
     return '$line，长时段';
   }
@@ -7847,11 +7842,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String appAlreadySaved(Object parsed) {
     return '已儲存過：$parsed';
-  }
-
-  @override
-  String appPeerImportedV1(Object parsed) {
-    return '已匯入對等端（v1）：$parsed';
   }
 
   @override
