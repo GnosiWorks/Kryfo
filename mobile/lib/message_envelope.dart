@@ -124,7 +124,7 @@ class GroupControl {
   // a member shares is the one the maker last reset to
   final String? fc;
   // on a room's 'remove': each key taken out with the hashes of the last
-  // messages the admin took from it (roomUidHash). members still take
+  // messages the admin took from it (roomEntry). members still take
   // those, sent before the remove and landing after it, and no other.
   // older versions ignore it and take none
   final Map<String, List<String>>? lateUids;
@@ -189,7 +189,7 @@ class GroupControl {
   // what a remove may name: a room's cap of keys, kRoomRecent hashes each
   static const _kLateKeys = 64;
   static const _kLateUids = 32;
-  static final _lateHash = RegExp(r'^[0-9a-f]{16}$');
+  static final _lateHash = RegExp(r'^[0-9a-f]{32}$');
 }
 
 /// a reaction added or removed on an earlier message

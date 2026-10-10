@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// a room's remove names, by hash, the last messages the admin took from
-// each key it takes out. a phone from 0.5.0 reads the same remove as it
+// a room's remove names, by a hash of each one's uid and content, the last
+// messages the admin took from each key it takes out. a phone from 0.5.0 reads the same remove as it
 // always did, and its own remove reads here as one that lets nothing more
 // in. the 0.5.0 side is its decoder and encoder as they shipped
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/message_envelope.dart';
-import 'package:kryfo/rooms.dart' show roomUidHash;
+import 'package:kryfo/rooms.dart' show roomEntry, roomTextBody;
+
+String _e(String uid) =>
+    roomEntry('room00000001', uid, roomTextBody(message: uid));
 
 // GroupControl as it shipped in v0.5.0, frozen
 class _Old {
@@ -65,7 +68,7 @@ Object? _overTheWire(Map<String, dynamic> w) => jsonDecode(jsonEncode(w));
 
 void main() {
   final named = {
-    _k: [roomUidHash('u1'), roomUidHash('u2')],
+    _k: [_e('u1'), _e('u2')],
   };
 
   test('a remove keeps the messages it names over the wire', () {
@@ -105,7 +108,7 @@ void main() {
     );
     expect(
       read({
-        _k: ['u1', 7, roomUidHash('u1').toUpperCase()],
+        _k: ['u1', 7, _e('u1').toUpperCase()],
         _j: 'x',
       })!.lateUids,
       isNull,
@@ -113,23 +116,23 @@ void main() {
     expect(read([_k])!.lateUids, isNull);
     // at most 32 a key
     final many = read({
-      _k: [for (var i = 0; i < 40; i++) roomUidHash('m$i')],
+      _k: [for (var i = 0; i < 40; i++) _e('m$i')],
     })!.lateUids!;
     expect(many[_k], hasLength(32));
     // and no more keys than a group holds
     expect(
       read({
-        for (var i = 0; i < 65; i++) 'k$i': [roomUidHash('u1')],
+        for (var i = 0; i < 65; i++) 'k$i': [_e('u1')],
       })!.lateUids,
       isNull,
     );
   });
 
-  test('the hash of a uid is short, and not the uid', () {
-    final h = roomUidHash('u1');
-    expect(h, hasLength(16));
+  test('a name is short, and holds neither the uid nor the words', () {
+    final h = _e('u1');
+    expect(h, hasLength(32));
     expect(h, isNot(contains('u1')));
-    expect(roomUidHash('u1'), h);
-    expect(roomUidHash('u2'), isNot(h));
+    expect(_e('u1'), h);
+    expect(_e('u2'), isNot(h));
   });
 }

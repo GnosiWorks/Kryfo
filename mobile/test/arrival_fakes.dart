@@ -22,7 +22,7 @@ import 'package:kryfo/main.dart'
 import 'package:kryfo/media_resend.dart';
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
-import 'package:kryfo/rooms.dart' show kRoomJoinWait, kRoomRecent, roomUidHash;
+import 'package:kryfo/rooms.dart' show kRoomJoinWait, kRoomRecent, roomUidPart;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/stranger_gate.dart'
     show ShelfFull, Shelved, kShelfPlaces, shelfVerdict;
@@ -1401,10 +1401,9 @@ class ArrivalRows implements HaloDb {
   }
 
   @override
-  Future<void> noteRoomUid(String groupId, String key, String uid) async {
+  Future<void> noteRoomEntry(String groupId, String key, String h) async {
     if (!groupRows.containsKey(groupId)) return;
     final had = _key(groupId, key);
-    final h = roomUidHash(uid);
     final recent = [...had.recent.where((x) => x != h), h];
     _putKey(groupId, key, (
       recent: recent.length > kRoomRecent
@@ -1441,12 +1440,19 @@ class ArrivalRows implements HaloDb {
   }
 
   @override
-  Future<bool> roomOwes(String groupId, String key, String uid) async =>
-      _key(groupId, key).owed.contains(roomUidHash(uid));
+  Future<bool> roomOwes(String groupId, String key, String entry) async =>
+      _key(groupId, key).owed.contains(entry);
+  @override
+  Future<bool> roomOwesUid(String groupId, String key, String uid) async {
+    final part = roomUidPart(groupId, uid);
+    return _key(groupId, key).owed.any((h) => h.startsWith(part));
+  }
+
   @override
   Future<int> roomOwedIn(String groupId, String key, String uid) async {
     final had = _key(groupId, key);
-    final owed = {...had.owed}..remove(roomUidHash(uid));
+    final part = roomUidPart(groupId, uid);
+    final owed = {...had.owed}..removeWhere((h) => h.startsWith(part));
     _putKey(groupId, key, (recent: had.recent, owed: owed, out: had.out));
     return owed.length;
   }

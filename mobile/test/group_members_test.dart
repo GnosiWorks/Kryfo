@@ -18,7 +18,14 @@ import 'package:kryfo/main.dart'
     show AppState, HaloEngine, useDatabasesForTest, useEngineForTest;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
-import 'package:kryfo/rooms.dart' show roomFrame, roomFramePlace, roomUidHash;
+import 'package:kryfo/rooms.dart'
+    show
+        roomEntry,
+        roomFileBody,
+        roomFrame,
+        roomFramePlace,
+        roomSliceDigest,
+        roomTextBody;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -1026,15 +1033,15 @@ void main() {
         if (m['group_id'] == _room) m['plaintext'] as String,
     ];
 
+    // how a remove names a message whole in one frame
+    String said1(String uid, String words) =>
+        roomEntry(_room, uid, roomTextBody(message: words));
+
     // the creator's remove of [_m1], naming the messages it had from them
-    GroupControl remove(List<String> uids) => GroupControl(
+    GroupControl remove(List<String> entries) => GroupControl(
       type: 'remove',
       members: const [_m1],
-      lateUids: uids.isEmpty
-          ? null
-          : {
-              _m1: [for (final u in uids) roomUidHash(u)],
-            },
+      lateUids: entries.isEmpty ? null : {_m1: entries},
     );
 
     test('one that leaves is no longer listened to, and the room\'s end '
@@ -1064,7 +1071,7 @@ void main() {
       final (live, app) = await _roomWorld();
       await app.subscribeRoomsAtBoot();
       await take(app, await frame(_m1, text: 'hi', uid: 'u1'));
-      await take(app, await frame(_creator, gc: remove(['u1'])));
+      await take(app, await frame(_creator, gc: remove([said1('u1', 'hi')])));
       expect(_engine.unlistenedKeys, [_m1]);
       expect(live.roomKeys[_room]![_m1]!.owed, isEmpty);
     });
@@ -1074,7 +1081,17 @@ void main() {
       final (live, app) = await _roomWorld();
       await app.subscribeRoomsAtBoot();
       await take(app, await frame(_m1, text: 'one', uid: 'u1'));
-      await take(app, await frame(_creator, gc: remove(['u1', 'u2', 'u3'])));
+      await take(
+        app,
+        await frame(
+          _creator,
+          gc: remove([
+            said1('u1', 'one'),
+            said1('u2', 'two'),
+            said1('u3', 'three'),
+          ]),
+        ),
+      );
       expect(live.members[_room], [_roomPub, _creator]);
       expect(await live.rosterGone(_room), {_m1});
       // two of theirs are still on the way: still listened to
@@ -1093,6 +1110,9 @@ void main() {
         ),
       );
       expect(_engine.unlistenedKeys, isEmpty);
+      // a named uid with other words, before the real one came
+      await take(app, await frame(_m1, text: 'not two', uid: 'u2'));
+      expect(said(live), ['one', 'three']);
       await take(app, await frame(_m1, text: 'two', uid: 'u2'));
       expect(said(live), ['one', 'three', 'two']);
       expect(live.members[_room], [_roomPub, _creator]);
@@ -1101,6 +1121,66 @@ void main() {
       // and once stopped nothing more comes, a named one neither
       await take(app, await frame(_m1, text: 'late', uid: 'u2'));
       expect(said(live), ['one', 'three', 'two']);
+    });
+
+    test('a file the creator had from one taken out still lands as it was, '
+        'and one under a named uid with other bytes does not', () async {
+      final (live, app) = await _roomWorld();
+      await app.subscribeRoomsAtBoot();
+      final real = [
+        base64Encode([1, 2, 3]),
+        base64Encode([4, 5, 6]),
+      ];
+      final other = [
+        real[0],
+        base64Encode([6, 6, 6]),
+      ];
+      Future<String> named(String uid) async => roomEntry(
+        _room,
+        uid,
+        roomFileBody(
+          total: 2,
+          slices: await roomSliceDigest(2, (i) async => real[i]),
+          caption: '',
+        ),
+      );
+      Future<void> slices(String uid, List<String> b64) async {
+        for (var i = 0; i < 2; i++) {
+          await take(app, (
+            peer: 'room:$_roomPub:$_m1',
+            cipher: roomFrame(
+              await wrapMessage(
+                '',
+                groupId: _room,
+                msgUid: uid,
+                mediaId: uid,
+                chunkIndex: i,
+                chunkTotal: 2,
+                imageB64: b64[i],
+                sender: SenderInfo(haloId: _m1, edPub: '', onion: '', xPub: ''),
+              ),
+              _m1,
+            )!,
+          ));
+        }
+      }
+
+      await take(
+        app,
+        await frame(
+          _creator,
+          gc: remove([await named('f1'), await named('f2')]),
+        ),
+      );
+      // f2 again with one slice changed: held until whole, then not taken
+      await slices('f2', other);
+      expect(live.msg('f2'), isNull);
+      expect(live.chunks['f2'] ?? const {}, isEmpty);
+      await slices('f1', real);
+      expect(live.msg('f1'), isNotNull);
+      // and once filed, the same again is not a second one
+      await slices('f1', real);
+      expect(live.msgs.where((m) => m['msg_uid'] == 'f1'), hasLength(1));
     });
 
     test('a remove from a version before it lets nothing more in', () async {
@@ -1118,7 +1198,7 @@ void main() {
       final (live, app) = await _roomWorld();
       app.roomLateWait = const Duration(milliseconds: 50);
       await app.subscribeRoomsAtBoot();
-      await take(app, await frame(_creator, gc: remove(['u5'])));
+      await take(app, await frame(_creator, gc: remove([said1('u5', 'five')])));
       expect(_engine.unlistenedKeys, isEmpty);
       await Future<void>.delayed(const Duration(milliseconds: 120));
       await _settle();
@@ -1133,7 +1213,10 @@ void main() {
       () async {
         final (live, app) = await _roomWorld();
         await app.subscribeRoomsAtBoot();
-        await take(app, await frame(_creator, gc: remove(['u5'])));
+        await take(
+          app,
+          await frame(_creator, gc: remove([said1('u5', 'five')])),
+        );
         expect(_engine.unlistenedKeys, isEmpty);
         // the app stopped before the wait ended, and starts again
         final router = VaultRouter(ArrivalStore(), ArrivalSeal());
@@ -1168,7 +1251,10 @@ void main() {
           expect(gc.type, 'remove');
           // a key nothing was taken from names nothing
           expect(gc.lateUids, {
-            _hexKey(0): [for (var n = 1; n <= 4; n++) roomUidHash('k$n')],
+            _hexKey(0): [
+              for (var n = 1; n <= 4; n++)
+                roomEntry(_room, 'k$n', roomTextBody(message: 'm$n')),
+            ],
           });
         }
         expect(await live.rosterGone(_room), {_hexKey(0), _hexKey(1)});
@@ -1203,7 +1289,9 @@ void main() {
       expect(live.msg('k9'), isNotNull);
       expect(gcs, isNotEmpty);
       final gc = gcs.first;
-      expect(gc.lateUids?[_hexKey(0)], [roomUidHash('k9')]);
+      expect(gc.lateUids?[_hexKey(0)], [
+        roomEntry(_room, 'k9', roomTextBody(message: 'last')),
+      ]);
     });
   });
 }

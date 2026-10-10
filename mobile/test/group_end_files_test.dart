@@ -13,7 +13,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/main.dart' show HaloDb, roomTeardownTables;
 import 'package:kryfo/media_progress.dart';
-import 'package:kryfo/rooms.dart' show roomUidHash;
+import 'package:kryfo/rooms.dart'
+    show roomEntry, roomFileBody, roomSliceDigest, roomTextBody;
 import 'package:kryfo/screens/group_chat_screen.dart' show keepOwnGroupFile;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
@@ -139,7 +140,11 @@ void main() {
     expect(mem.rows('room_keys'), isEmpty);
     // a room no longer here notes nothing
     expect(await db.noteRoomKeys(_room, [_k1]), isFalse);
-    await db.noteRoomUid(_room, _k1, 'u1');
+    await db.noteRoomEntry(
+      _room,
+      _k1,
+      roomEntry(_room, 'u1', roomTextBody(message: 'hi')),
+    );
     expect(await db.noteRoomKeyOut(_room, _k1), isEmpty);
     expect(mem.rows('room_keys'), isEmpty);
   });
@@ -164,43 +169,71 @@ void main() {
   test('a key taken out owes what the admin had from it and this phone has '
       'not, each once, until its lane stops', () async {
     await group(_room, [_mine, _k1], roomPub: _mine);
+    String e(String uid, [String words = 'hi']) =>
+        roomEntry(_room, uid, roomTextBody(message: words));
     for (var i = 0; i < 40; i++) {
-      await db.noteRoomUid(_room, _k1, 'm$i');
+      await db.noteRoomEntry(_room, _k1, e('m$i'));
     }
-    // the last ones, oldest first, a uid taken again moved to the end
-    await db.noteRoomUid(_room, _k1, 'm20');
+    // the last ones, oldest first, one taken again moved to the end
+    await db.noteRoomEntry(_room, _k1, e('m20'));
     final recent = await db.roomRecent(_room, _k1);
     expect(recent, hasLength(32));
-    expect(recent.first, roomUidHash('m8'));
-    expect(recent.last, roomUidHash('m20'));
+    expect(recent.first, e('m8'));
+    expect(recent.last, e('m20'));
     final owed = await db.noteRoomKeyOut(
       _room,
       _k1,
-      listed: [roomUidHash('m39'), roomUidHash('x1'), roomUidHash('x2')],
+      listed: [e('m39'), e('x1'), e('x2')],
     );
-    expect(owed, {roomUidHash('x1'), roomUidHash('x2')});
-    expect(await db.roomOwes(_room, _k1, 'x2'), isTrue);
-    expect(await db.roomOwes(_room, _k1, 'm39'), isFalse);
-    expect(await db.roomOwes(_room, _k1, 'never-named'), isFalse);
+    expect(owed, {e('x1'), e('x2')});
+    expect(await db.roomOwes(_room, _k1, e('x2')), isTrue);
+    // the same uid with other words is not owed
+    expect(await db.roomOwes(_room, _k1, e('x2', 'other')), isFalse);
+    expect(await db.roomOwesUid(_room, _k1, 'x2'), isTrue);
+    expect(await db.roomOwes(_room, _k1, e('m39')), isFalse);
+    expect(await db.roomOwes(_room, _k1, e('never-named')), isFalse);
+    expect(await db.roomOwesUid(_room, _k1, 'never-named'), isFalse);
     expect(await db.roomKeysGoing(_room), {_k1});
     // in any order
     expect(await db.roomOwedIn(_room, _k1, 'x2'), 1);
-    expect(await db.roomOwes(_room, _k1, 'x2'), isFalse);
+    expect(await db.roomOwes(_room, _k1, e('x2')), isFalse);
     // a second remove takes nothing back in
-    await db.noteRoomKeyOut(
-      _room,
-      _k1,
-      listed: [roomUidHash('x1'), roomUidHash('x2'), roomUidHash('x3')],
-    );
-    expect(await db.roomOwes(_room, _k1, 'x1'), isTrue);
-    expect(await db.roomOwes(_room, _k1, 'x2'), isFalse);
-    expect(await db.roomOwes(_room, _k1, 'x3'), isFalse);
+    await db.noteRoomKeyOut(_room, _k1, listed: [e('x1'), e('x2'), e('x3')]);
+    expect(await db.roomOwes(_room, _k1, e('x1')), isTrue);
+    expect(await db.roomOwes(_room, _k1, e('x2')), isFalse);
+    expect(await db.roomOwes(_room, _k1, e('x3')), isFalse);
     await db.roomKeyStopped(_room, _k1);
-    expect(await db.roomOwes(_room, _k1, 'x1'), isFalse);
+    expect(await db.roomOwes(_room, _k1, e('x1')), isFalse);
     expect(await db.roomKeysGoing(_room), isEmpty);
     // one that left on its own owes nothing
     expect(await db.noteRoomKeyOut(_room, _left), isEmpty);
     expect(await db.roomKeysGoing(_room), {_left});
+  });
+
+  test('a message is named by its room, its uid and what it holds', () async {
+    String text(String room, String uid, String words) =>
+        roomEntry(room, uid, roomTextBody(message: words));
+    final named = text(_room, 'u1', 'hi');
+    expect(named, hasLength(32));
+    expect(text(_room, 'u1', 'hi'), named);
+    expect(text(_room, 'u1', 'hi!'), isNot(named));
+    expect(text(_other, 'u1', 'hi'), isNot(named));
+    // the uid half alone holds a file's slices till it is whole
+    expect(text(_room, 'u1', 'other').substring(0, 16), named.substring(0, 16));
+    Future<String> file(List<String> slices) async => roomEntry(
+      _room,
+      'f1',
+      roomFileBody(
+        total: slices.length,
+        slices: await roomSliceDigest(slices.length, (i) async => slices[i]),
+        caption: '',
+      ),
+    );
+    final f = await file(['AAAA', 'BBBB']);
+    expect(await file(['AAAA', 'BBBB']), f);
+    expect(await file(['AAAA', 'BBBC']), isNot(f));
+    // slices are not run together: a split elsewhere is other bytes
+    expect(await file(['AAAAB', 'BBB']), isNot(f));
   });
 
   test('a row of ours in a group is kept only while the group is, and a '
@@ -261,14 +294,26 @@ void main() {
       "INSERT INTO media_chunks (media_id, idx, slice, total, at, sender) "
       "VALUES ('m', 0, 'AAAA', 2, 1, '$_bob')",
     );
+    // a room_keys of the shape an unreleased build made
+    real.run(
+      'CREATE TABLE room_keys (group_id TEXT NOT NULL, member TEXT NOT NULL, '
+      'heard INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (group_id, member))',
+    );
+    real.run("INSERT INTO room_keys VALUES ('r', 'k', 3)");
     await roomTeardownTables(RealExecutor(real));
     await roomTeardownTables(RealExecutor(real));
+    final keyCols = {
+      for (final c in real.run('PRAGMA table_info(room_keys)')) c['name'],
+    };
+    expect(keyCols, containsAll(['recent', 'owed', 'out']));
     final cols = real
         .run('PRAGMA table_info(media_chunks)')
         .map((c) => c['name']);
     expect(cols.where((c) => c == 'group_id'), hasLength(1));
     expect(real.run('SELECT * FROM media_chunks').single['group_id'], isNull);
-    expect(real.run('SELECT * FROM room_keys'), isEmpty);
+    // the old row reads as a key listened to and nothing more
+    final row = real.run('SELECT * FROM room_keys').single;
+    expect([row['recent'], row['owed'], row['out']], ['', '', '0']);
     final upgrade = src.indexOf('onUpgrade: (db, oldV, newV) async {');
     final steps = src.substring(upgrade, src.indexOf('\n    );', upgrade));
     expect(

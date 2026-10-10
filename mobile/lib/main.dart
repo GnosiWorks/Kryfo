@@ -5949,11 +5949,11 @@ class HaloDb implements GroupOwedStore {
         }
       });
 
-  /// a message of [key]'s, by its uid, taken in room [groupId]: the last
-  /// [kRoomRecent] are what a remove of [key] lets the others still take
-  Future<void> noteRoomUid(String groupId, String key, String uid) =>
+  /// a message of [key]'s taken in room [groupId], as [roomEntry] names
+  /// it: the last [kRoomRecent] are what a remove of [key] lets the others
+  /// still take
+  Future<void> noteRoomEntry(String groupId, String key, String h) =>
       _inRoom(groupId, (t) async {
-        final h = roomUidHash(uid);
         final had = await _roomKey(t, groupId, key);
         final recent = [
           for (final x in _hashes(had?['recent']))
@@ -5968,8 +5968,8 @@ class HaloDb implements GroupOwedStore {
         }, had: had != null);
       });
 
-  /// the hashes of [key]'s last messages taken in room [groupId], oldest
-  /// first
+  /// [key]'s last messages taken in room [groupId] as [roomEntry] names
+  /// them, oldest first
   Future<List<String>> roomRecent(String groupId, String key) async {
     final db = await open();
     return _hashes((await _roomKey(db, groupId, key))?['recent']);
@@ -6003,12 +6003,21 @@ class HaloDb implements GroupOwedStore {
     return owed;
   }
 
-  /// whether a message by [uid] from [key], out of room [groupId], is one
-  /// still owed from before it went
-  Future<bool> roomOwes(String groupId, String key, String uid) async {
+  /// whether the message [entry] names ([roomEntry]) from [key], out of
+  /// room [groupId], is one still owed from before it went
+  Future<bool> roomOwes(String groupId, String key, String entry) async {
     final db = await open();
     final had = await _roomKey(db, groupId, key);
-    return _hashes(had?['owed']).contains(roomUidHash(uid));
+    return _hashes(had?['owed']).contains(entry);
+  }
+
+  /// whether a message by [uid] from [key] may be owed, its words or bytes
+  /// not read yet: a file's slices, held until the file is whole
+  Future<bool> roomOwesUid(String groupId, String key, String uid) async {
+    final db = await open();
+    final had = await _roomKey(db, groupId, key);
+    final part = roomUidPart(groupId, uid);
+    return _hashes(had?['owed']).any((h) => h.startsWith(part));
   }
 
   /// [uid] from [key] is in: how many of its owed are left
@@ -6017,10 +6026,10 @@ class HaloDb implements GroupOwedStore {
     await _inRoom(groupId, (t) async {
       final had = await _roomKey(t, groupId, key);
       if (had == null) return;
-      final h = roomUidHash(uid);
+      final part = roomUidPart(groupId, uid);
       final owed = [
         for (final x in _hashes(had['owed']))
-          if (x != h) x,
+          if (!x.startsWith(part)) x,
       ];
       left = owed.length;
       await _putRoomKey(t, groupId, key, {'owed': owed.join(',')}, had: true);
@@ -6999,7 +7008,7 @@ Future<void> roomJoiningColumn(DatabaseExecutor db) =>
     addColumn(db, 'ALTER TABLE groups ADD COLUMN joining_at INTEGER');
 
 // every member key a room ever listened to, so its end forgets each one's
-// address. recent: hashes of the last messages taken from it. once it is
+// address. recent: the last messages taken from it (roomEntry). once it is
 // out (1, its lane still to stop; 2, stopped), owed: the hashes of those
 // still let in, sent before it went
 Future<void> roomKeysTable(DatabaseExecutor db) => db.execute('''
@@ -7013,10 +7022,18 @@ Future<void> roomKeysTable(DatabaseExecutor db) => db.execute('''
   )
 ''');
 
-// the upgrade to 71: the group a file's slices are for, and the room keys
+// the upgrade to 71: the group a file's slices are for, and the room keys.
+// a room_keys from a build before 71 settled gets the columns it lacks
 Future<void> roomTeardownTables(DatabaseExecutor db) async {
   await addColumn(db, 'ALTER TABLE media_chunks ADD COLUMN group_id TEXT');
   await roomKeysTable(db);
+  for (final col in const [
+    "recent TEXT NOT NULL DEFAULT ''",
+    "owed TEXT NOT NULL DEFAULT ''",
+    'out INTEGER NOT NULL DEFAULT 0',
+  ]) {
+    await addColumn(db, 'ALTER TABLE room_keys ADD COLUMN $col');
+  }
 }
 
 // the upgrade to 68: the key a reset room link knocks on, none until a
@@ -12725,6 +12742,14 @@ class AppState extends ChangeNotifier {
       if (await burnedWhileSealed()) {
         await db.dropMediaChunks(mid);
         unawaited(db.dropMediaWant(mid));
+        incomingMediaDone(progressKey);
+        return to;
+      }
+      // a room's file is told by its bytes once whole: one the remove of
+      // its sender did not name goes, slices and all
+      if (isGroup && !await _roomFileTaken(senderHaloId, env, db, late: late)) {
+        dlog('room: a file not named, dropped');
+        await db.dropMediaChunks(mid);
         incomingMediaDone(progressKey);
         return to;
       }
@@ -18757,19 +18782,25 @@ class AppState extends ChangeNotifier {
     if (env.senderHaloId != from) return;
     final uid = env.msgUid ?? (_sliced(env) ? env.mediaId : null);
     final data = _dataFrame(env) && uid != null;
+    // a message whole in this frame is named by its uid and what it says.
+    // a file's slices only once the file is whole (_roomFileTaken)
+    final entry = !data || _sliced(env)
+        ? null
+        : roomEntry(groupId, uid, _roomTextBodyOf(env));
     // the take and its note in one go: a remove reads the notes in the
     // same line, so what this phone shows the others are told of
     final late = await _roomTake(groupId, () async {
       if ((await live.getGroupMembers(groupId)).contains(from)) {
-        if (data) await live.noteRoomUid(groupId, from, uid);
+        if (entry != null) await live.noteRoomEntry(groupId, from, entry);
         return false;
       }
       // taken out: a message the admin had from them before that still
-      // lands, once, and nothing else
-      if (data &&
-          !await live.messageExists(uid) &&
-          await live.roomOwes(groupId, from, uid)) {
-        return true;
+      // lands, once, as it was, and nothing else
+      if (data && !await live.messageExists(uid)) {
+        final owed = entry != null
+            ? await live.roomOwes(groupId, from, entry)
+            : await live.roomOwesUid(groupId, from, uid);
+        if (owed) return true;
       }
       return null;
     });
@@ -18789,6 +18820,49 @@ class AppState extends ChangeNotifier {
       await _unlistenNow(groupId, [from]);
     }
     if (env.groupControl != null) await _subscribeRoomMembers(groupId);
+  }
+
+  static String _roomTextBodyOf(UnwrappedMessage env) => roomTextBody(
+    message: env.message,
+    sticker: env.sticker,
+    poll: env.poll,
+    fileName: env.fileName,
+    image: env.imageB64,
+    file: env.fileB64,
+    replyTo: env.replyTo,
+  );
+
+  // a room's file, all its slices in: named by its uid and its bytes, and
+  // noted as taken in line with the remove that reads the notes. one from
+  // a key taken out goes in only as its remove named it. true for a file
+  // of no room
+  Future<bool> _roomFileTaken(
+    String from,
+    UnwrappedMessage env,
+    HaloDb db, {
+    required bool late,
+  }) async {
+    final groupId = env.groupId!;
+    if (await _roomOf(groupId, db) == null) return true;
+    final mid = env.mediaId!;
+    final total = env.chunkTotal!;
+    final entry = roomEntry(
+      groupId,
+      mid,
+      roomFileBody(
+        total: total,
+        slices: await roomSliceDigest(total, (i) => db.mediaChunkSlice(mid, i)),
+        fileName: env.fileName,
+        caption: env.message,
+      ),
+    );
+    return _roomTake(groupId, () async {
+      if ((await db.getGroupMembers(groupId)).contains(from)) {
+        await db.noteRoomEntry(groupId, from, entry);
+        return true;
+      }
+      return late && await db.roomOwes(groupId, from, entry);
+    });
   }
 
   // how long a key taken out is still heard while messages it sent before
