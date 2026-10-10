@@ -7904,4 +7904,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shareNoChats => 'No chats yet';
+
+  @override
+  String get shareNoOne => 'No one to share with';
 }

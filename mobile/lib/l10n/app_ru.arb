@@ -2070,5 +2070,6 @@
   "settingsGifSearch": "Поиск GIF",
   "settingsGifSearchHint": "Выключен, пока ты его не включишь. Сервер Kryfo ищет за тебя, поэтому GIF-сервис никогда тебя не видит.",
   "shareChooseChat": "Выбрать чат",
-  "shareNoChats": "Чатов пока нет"
+  "shareNoChats": "Чатов пока нет",
+  "shareNoOne": "Не с кем поделиться"
 }

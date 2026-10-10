@@ -8040,5 +8040,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get shareChooseChat => 'اختر محادثة';
 
   @override
-  String get shareNoChats => 'لا محادثات بعد';
+  String get shareNoChats => 'لا توجد محادثات بعد';
+
+  @override
+  String get shareNoOne => 'لا يوجد من تشارك معه';
 }

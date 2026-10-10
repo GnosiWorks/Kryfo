@@ -2070,5 +2070,6 @@
   "settingsGifSearch": "Tìm GIF",
   "settingsGifSearchHint": "Tắt cho đến khi bạn bật. Máy chủ của Kryfo tìm thay bạn, nên dịch vụ GIF không bao giờ thấy bạn.",
   "shareChooseChat": "Chọn một cuộc trò chuyện",
-  "shareNoChats": "Chưa có cuộc trò chuyện nào"
+  "shareNoChats": "Chưa có cuộc trò chuyện nào",
+  "shareNoOne": "Không có ai để chia sẻ"
 }

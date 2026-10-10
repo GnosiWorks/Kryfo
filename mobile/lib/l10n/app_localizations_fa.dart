@@ -7930,4 +7930,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get shareNoChats => 'هنوز گفت‌وگویی نیست';
+
+  @override
+  String get shareNoOne => 'کسی برای هم‌رسانی نیست';
 }

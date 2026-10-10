@@ -8053,4 +8053,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get shareNoChats => 'Чатів поки немає';
+
+  @override
+  String get shareNoOne => 'Немає з ким поділитися';
 }

@@ -12699,11 +12699,17 @@ abstract class AppLocalizations {
   /// **'Choose a chat'**
   String get shareChooseChat;
 
-  /// screens/share_sheet.dart: the same picker with no chats to pick
+  /// screens/share_sheet.dart: the same picker with no chats at all yet
   ///
   /// In en, this message translates to:
   /// **'No chats yet'**
   String get shareNoChats;
+
+  /// screens/share_sheet.dart: the same picker when everyone there is blocked
+  ///
+  /// In en, this message translates to:
+  /// **'No one to share with'**
+  String get shareNoOne;
 }
 
 class _AppLocalizationsDelegate

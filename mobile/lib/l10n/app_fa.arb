@@ -2070,5 +2070,6 @@
   "settingsGifSearch": "جست‌وجوی گیف",
   "settingsGifSearchHint": "تا وقتی روشنش نکنید خاموش است. سرور Kryfo برای شما جست‌وجو می‌کند، پس سرویس گیف هرگز شما را نمی‌بیند.",
   "shareChooseChat": "انتخاب گفت‌وگو",
-  "shareNoChats": "هنوز گفت‌وگویی نیست"
+  "shareNoChats": "هنوز گفت‌وگویی نیست",
+  "shareNoOne": "کسی برای هم‌رسانی نیست"
 }

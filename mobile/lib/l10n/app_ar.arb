@@ -2070,5 +2070,6 @@
   "settingsGifSearch": "البحث عن GIF",
   "settingsGifSearchHint": "متوقف حتى تشغّله. خادم Kryfo يبحث نيابة عنك، فلا تراك خدمة GIF أبدًا.",
   "shareChooseChat": "اختر محادثة",
-  "shareNoChats": "لا محادثات بعد"
+  "shareNoChats": "لا توجد محادثات بعد",
+  "shareNoOne": "لا يوجد من تشارك معه"
 }

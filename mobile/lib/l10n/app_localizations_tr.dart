@@ -7937,4 +7937,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get shareNoChats => 'Henüz sohbet yok';
+
+  @override
+  String get shareNoOne => 'Paylaşılacak kimse yok';
 }

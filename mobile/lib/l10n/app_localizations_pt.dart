@@ -7972,4 +7972,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get shareNoChats => 'Ainda não há conversas';
+
+  @override
+  String get shareNoOne => 'Ninguém com quem compartilhar';
 }

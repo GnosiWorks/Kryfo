@@ -2070,5 +2070,6 @@
   "settingsGifSearch": "Pencarian GIF",
   "settingsGifSearchHint": "Mati sampai kamu menyalakannya. Server Kryfo mencarikan untukmu, jadi layanan GIF tidak pernah melihatmu.",
   "shareChooseChat": "Pilih obrolan",
-  "shareNoChats": "Belum ada obrolan"
+  "shareNoChats": "Belum ada obrolan",
+  "shareNoOne": "Tidak ada yang bisa diajak berbagi"
 }

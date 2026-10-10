@@ -8001,4 +8001,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get shareNoChats => 'Noch keine Chats';
+
+  @override
+  String get shareNoOne => 'Niemand zum Teilen';
 }

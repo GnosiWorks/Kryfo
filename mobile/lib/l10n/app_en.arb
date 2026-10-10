@@ -9992,6 +9992,10 @@
   },
   "shareNoChats": "No chats yet",
   "@shareNoChats": {
-    "description": "screens/share_sheet.dart: the same picker with no chats to pick"
+    "description": "screens/share_sheet.dart: the same picker with no chats at all yet"
+  },
+  "shareNoOne": "No one to share with",
+  "@shareNoOne": {
+    "description": "screens/share_sheet.dart: the same picker when everyone there is blocked"
   }
 }

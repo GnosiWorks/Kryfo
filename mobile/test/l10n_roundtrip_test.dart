@@ -3379,5 +3379,6 @@ void main() {
     );
     expect(l.shareChooseChat, "Choose a chat");
     expect(l.shareNoChats, "No chats yet");
+    expect(l.shareNoOne, "No one to share with");
   });
 }

@@ -7901,4 +7901,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get shareNoChats => 'Chưa có cuộc trò chuyện nào';
+
+  @override
+  String get shareNoOne => 'Không có ai để chia sẻ';
 }

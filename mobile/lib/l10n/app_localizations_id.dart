@@ -7911,4 +7911,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get shareNoChats => 'Belum ada obrolan';
+
+  @override
+  String get shareNoOne => 'Tidak ada yang bisa diajak berbagi';
 }

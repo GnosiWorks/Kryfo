@@ -7583,6 +7583,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get shareNoChats => '还没有聊天';
+
+  @override
+  String get shareNoOne => '没有可以分享的人';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -15044,4 +15047,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get shareNoChats => '還沒有聊天';
+
+  @override
+  String get shareNoOne => '沒有可以分享的人';
 }

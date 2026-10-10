@@ -2070,5 +2070,6 @@
   "settingsGifSearch": "Recherche de GIF",
   "settingsGifSearchHint": "Désactivée jusqu’à ce que vous l’activiez. Le serveur de Kryfo cherche pour vous, le service de GIF ne vous voit donc jamais.",
   "shareChooseChat": "Choisir une discussion",
-  "shareNoChats": "Aucune discussion pour l’instant"
+  "shareNoChats": "Aucune discussion pour l’instant",
+  "shareNoOne": "Personne avec qui partager"
 }

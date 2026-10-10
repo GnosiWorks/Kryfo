@@ -8062,4 +8062,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get shareNoChats => 'Чатов пока нет';
+
+  @override
+  String get shareNoOne => 'Не с кем поделиться';
 }
