@@ -205,6 +205,8 @@ class _PairCodePanelState extends State<PairCodePanel> {
           },
           child: Text(
             '${_code!.substring(0, 3)} ${_code!.substring(3)}',
+            // digits read out in order, whatever the language
+            textDirection: TextDirection.ltr,
             style: HaloType.mono(
               size: widget.compact ? 34 : 40,
               weight: FontWeight.w600,

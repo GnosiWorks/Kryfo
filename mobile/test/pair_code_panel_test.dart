@@ -7,6 +7,7 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart' hide Curve;
+import 'package:flutter/rendering.dart' show RenderParagraph;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/l10n/l10n.dart';
@@ -181,5 +182,40 @@ void main() {
       findsNothing,
     );
     expect(t.hasRunningAnimations, isFalse);
+  });
+
+  // the live code as the panel draws it
+  String drawn(String code) => '${code.substring(0, 3)} ${code.substring(3)}';
+
+  Future<void> settle(WidgetTester t) async {
+    for (var i = 0; i < 10; i++) {
+      await t.runAsync(() => Future<void>.delayed(Duration.zero));
+      await t.pump();
+    }
+  }
+
+  testWidgets('right to left, the code still reads in the order it is said', (
+    t,
+  ) async {
+    phone(t);
+    e.answer = 'ok';
+    setL10nLocale(const Locale('ar'));
+    addTearDown(() => setL10nLocale(const Locale('en')));
+    await t.pumpWidget(
+      app(const Scaffold(body: PairCodePanel()), locale: const Locale('ar')),
+    );
+    await t.pumpAndSettle();
+    await t.tap(find.text(l10n.pairCodePanelOrMakeASix));
+    await settle(t);
+    final code = find.text(drawn(e.shared.last));
+    expect(code, findsOneWidget);
+    expect(Directionality.of(t.element(code)), TextDirection.rtl);
+    expect(t.widget<Text>(code).textDirection, TextDirection.ltr);
+    // the first three digits are drawn left of the last three
+    final p = t.renderObject<RenderParagraph>(code);
+    final first = p.getOffsetForCaret(const TextPosition(offset: 0), Rect.zero);
+    final last = p.getOffsetForCaret(const TextPosition(offset: 4), Rect.zero);
+    expect(first.dx, lessThan(last.dx));
+    await t.pumpWidget(const SizedBox());
   });
 }
