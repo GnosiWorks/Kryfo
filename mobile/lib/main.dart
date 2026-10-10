@@ -5055,6 +5055,14 @@ class HaloDb implements GroupOwedStore {
   }) async {
     final db = await open();
     final now = DateTime.now().millisecondsSinceEpoch;
+    // a file sent again in another number of slices is other bytes, a photo
+    // cleaned since say: what was held of it no longer fits
+    final stale = await db.delete(
+      'media_chunks',
+      where: 'media_id = ? AND total != ?',
+      whereArgs: [mediaId, total],
+    );
+    if (stale > 0 && _unfinished != null) await _reweigh(mediaId);
     // a slice sent again replaces the one held, and weighs only once
     final held = _unfinished;
     final was = held == null
@@ -5252,6 +5260,7 @@ class HaloDb implements GroupOwedStore {
 
   // a slice of an unfinished file just came in. can_resend only ever goes
   // up: one slice from a sender that can answer is enough to know it can.
+  // the count of slices is the latest one's, as with the slices held
   Future<void> noteMediaWant(
     String mediaId,
     String peerId,
@@ -5264,6 +5273,7 @@ class HaloDb implements GroupOwedStore {
       'INSERT INTO media_wants (media_id, peer_id, total, can_resend, last_at) '
       'VALUES (?, ?, ?, ?, ?) '
       'ON CONFLICT(media_id) DO UPDATE SET last_at = excluded.last_at, '
+      'total = excluded.total, '
       'can_resend = MAX(can_resend, excluded.can_resend)',
       [mediaId, peerId, total, canResend ? 1 : 0, now],
     );
