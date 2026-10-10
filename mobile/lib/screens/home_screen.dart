@@ -144,6 +144,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _sharedSub?.cancel();
     _sharedTextSub?.cancel();
+    _texts.dispose();
     lockState.removeListener(_onLock);
     themeRevision.removeListener(_repaint);
     _sweeper.dispose();

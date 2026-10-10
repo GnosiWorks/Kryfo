@@ -9,6 +9,7 @@ import '../devchat/dev_key.dart' show isDevChat;
 import '../l10n/l10n.dart';
 import '../main.dart' show appState, session;
 import '../theme.dart';
+import '../voice_live.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/key_held.dart';
 import '../widgets/kryfo_avatar.dart';
@@ -153,15 +154,15 @@ Future<Route<void>?> wordsRoute(String id, String words) async {
   );
 }
 
-/// [words] in [id]'s composer: its chat brought back to the top when it is
-/// open, else opened over home
+/// [words] in [id]'s composer: the chat on top takes them in place, else
+/// it opens over whatever is open, which stays. a voice note being
+/// recorded is waited out first
 Future<void> landWords(BuildContext context, String id, String words) async {
-  if (landInOpenChat(id, words)) return;
+  await voiceNotesDone();
+  if (!context.mounted || landInOpenChat(id, words)) return;
   final route = await wordsRoute(id, words);
   if (route == null || !context.mounted) return;
-  final nav = Navigator.of(context);
-  nav.popUntil((r) => r.isFirst);
-  nav.push(route);
+  Navigator.of(context).push(route);
 }
 
 // what was shared, as it will land: a few lines, in its own direction

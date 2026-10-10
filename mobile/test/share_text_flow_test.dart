@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/back_on_top.dart' show pageRoutes;
 import 'package:kryfo/container.dart';
 import 'package:kryfo/devchat/dev_chat.dart' show devChatTables;
 import 'package:kryfo/l10n/l10n.dart';
@@ -24,7 +25,10 @@ import 'package:kryfo/main.dart'
         useEngineForTest;
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/screens/clean_screen.dart';
+import 'package:kryfo/screens/share_sheet.dart';
 import 'package:kryfo/session.dart';
+import 'package:kryfo/theme.dart' show buildHaloTheme;
+import 'package:kryfo/voice_live.dart';
 import 'package:kryfo/widgets/key_held.dart' show KeyHeldCard, KeyHeldMark;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -310,6 +314,7 @@ void main() {
     expect(android.dropped, ['s1']);
     await settle(t, 20);
     nothingSent();
+    await t.enterText(find.byType(TextField).last, '');
     await devClose(t);
   });
 
@@ -536,5 +541,185 @@ void main() {
     expect(find.byType(CleanScreen), findsOneWidget);
     expect(android.dropped, ['s12']);
     await devClose(t);
+  });
+
+  testWidgets('words land over a cleaner left open, which stays', (t) async {
+    await home(t);
+    android.image = {
+      'uri': 'content://media/external/images/1',
+      'mime': 'image/jpeg',
+      'name': 'p.jpg',
+      'size': 10,
+    };
+    await android.say(t, 'shared');
+    await settle(t);
+    expect(find.byType(CleanScreen), findsOneWidget);
+    await android.share(t, 's13', words: 'over the cleaner');
+    await settle(t);
+    await pick(t, _cedar);
+    expect(composer(t), 'over the cleaner');
+    await t.enterText(find.byType(TextField).last, '');
+    await leave(t);
+    expect(find.byType(ChatScreen), findsNothing);
+    expect(find.byType(CleanScreen), findsOneWidget);
+    await devClose(t);
+  });
+
+  testWidgets('the same chat under another page gets the words in a copy '
+      'on top, and keeps them once it shows again', (t) async {
+    // the app's navigator tells a page when the one over it goes
+    await devOpen(t, devHome());
+    await t.pumpWidget(
+      MaterialApp(
+        theme: buildHaloTheme(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        navigatorObservers: [pageRoutes],
+        home: devHome(),
+      ),
+    );
+    await settle(t, 3);
+    final nav = Navigator.of(t.element(find.byType(Scaffold).first));
+    nav.push(
+      MaterialPageRoute<void>(
+        builder: (_) => const ChatScreen(
+          peerHaloId: _amber,
+          peerOnion: '',
+          peerXPub: '',
+          avatarSeed: _amber,
+        ),
+      ),
+    );
+    await settle(t);
+    await t.enterText(find.byType(TextField).last, 'mine');
+    await settle(t, 2);
+    nav.push(
+      MaterialPageRoute<void>(
+        builder: (_) => const Scaffold(body: Text('page')),
+      ),
+    );
+    await settle(t);
+    await android.share(t, 's14', words: 'shared');
+    await settle(t);
+    await pick(t, _amber);
+    // the page between is still there under the copy
+    expect(find.text('page', skipOffstage: false), findsOneWidget);
+    expect(composer(t), 'mine\nshared');
+    await leave(t);
+    nav.pop();
+    await settle(t);
+    expect(find.byType(ChatScreen), findsOneWidget);
+    expect(composer(t), 'mine\nshared');
+    await t.enterText(find.byType(TextField).last, '');
+    await devClose(t);
+  });
+
+  testWidgets('a voice note being recorded keeps the screen until it ends', (
+    t,
+  ) async {
+    await home(t);
+    final stop = recordingUntil(() {});
+    addTearDown(stop);
+    await android.share(t, 's15', words: 'after the note');
+    await settle(t);
+    expect(find.text(l10n.shareChooseChat), findsNothing);
+    stop();
+    await settle(t);
+    expect(find.text(l10n.shareChooseChat), findsOneWidget);
+    // one that starts while the picker is up holds the landing too
+    final again = recordingUntil(() {});
+    addTearDown(again);
+    await pick(t, _cedar);
+    expect(find.byType(ChatScreen), findsNothing);
+    again();
+    await settle(t);
+    expect(composer(t), 'after the note');
+    await t.enterText(find.byType(TextField).last, '');
+    await devClose(t);
+  });
+
+  testWidgets('a newer share before the picker is up takes its place', (
+    t,
+  ) async {
+    await home(t);
+    await android.share(t, 's16', words: 'the older words');
+    // the older one is marked shown, its sheet not built yet
+    for (var i = 0; i < 100 && android.seen.isEmpty; i++) {
+      await t.pump(Duration.zero);
+    }
+    expect(android.seen, ['s16:everyday']);
+    expect(find.text(l10n.shareChooseChat), findsNothing);
+    await android.share(t, 's17', words: 'the newer words');
+    await settle(t);
+    expect(find.text('the older words'), findsNothing);
+    expect(find.text('the newer words'), findsOneWidget);
+    expect(find.text(l10n.shareChooseChat), findsOneWidget);
+    await pick(t, _cedar);
+    expect(composer(t), 'the newer words');
+    await t.enterText(find.byType(TextField).last, '');
+    await devClose(t);
+  });
+
+  testWidgets('a home that goes ends its wait, the words kept for the next', (
+    t,
+  ) async {
+    await home(t);
+    late BuildContext ctx;
+    await t.pumpWidget(
+      devApp(
+        Builder(
+          builder: (c) {
+            ctx = c;
+            return const Scaffold();
+          },
+        ),
+      ),
+    );
+    var alive = true;
+    final texts = ShareTexts();
+    android.text = {'id': 's18', 'text': 'kept', 'subject': null};
+    var ended = false;
+    texts.take(ctx, () => alive).whenComplete(() => ended = true);
+    await settle(t);
+    expect(find.text(l10n.shareChooseChat), findsOneWidget);
+    alive = false;
+    texts.dispose();
+    await t.pumpWidget(const SizedBox());
+    await settle(t, 2);
+    expect(ended, isTrue);
+    expect(android.dropped, isEmpty);
+    expect(android.text?['id'], 's18');
+  });
+
+  testWidgets('no one to share with: blocked all, or none yet', (t) async {
+    await mem.update('contacts', {'blocked': 1});
+    await appState.refreshContacts();
+    await home(t);
+    await android.share(t, 's19', words: 'nobody');
+    await settle(t);
+    expect(find.text(l10n.shareNoOne), findsOneWidget);
+    await t.tapAt(const Offset(20, 20));
+    await settle(t);
+    await devClose(t);
+
+    final none = MemDb(except: {'devchat'});
+    await devChatTables(none, now: 1);
+    final empty = _Db(none);
+    useDatabasesForTest(empty, Session(empty));
+    await appState.refreshContacts();
+    await home(t);
+    await android.share(t, 's20', words: 'nobody yet');
+    await settle(t);
+    expect(find.text(l10n.shareNoChats), findsOneWidget);
+    await t.tapAt(const Offset(20, 20));
+    await settle(t);
+    await devClose(t);
+  });
+
+  test('a share during the setup is let go once it is done', () async {
+    android.text = {'id': 's21', 'text': 'too early', 'subject': null};
+    await appState.markOnboardingComplete();
+    expect(android.dropped, ['s21']);
+    expect(android.text, isNull);
   });
 }

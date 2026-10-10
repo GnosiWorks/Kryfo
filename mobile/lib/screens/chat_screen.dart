@@ -131,6 +131,7 @@ import '../bidi_safe.dart';
 import '../back_on_top.dart';
 import '../forward.dart';
 import 'forward_sheet.dart';
+import '../voice_live.dart';
 import '../widgets/key_held.dart';
 import '../first_contact.dart' show routeText, waitsForReceipt;
 import '../text_send.dart';
@@ -140,20 +141,20 @@ import '../lock_guard.dart' show LockDropped, lockGuard, onScreen;
 // session.chatKey: each container keeps its own
 final Map<String, String> _draftPerPeer = {};
 
-// the chats open in the stack, by id: shared words land in the one open
+// the chats open in the stack, by id: shared words land in the one on top
 // rather than in a second copy of it
-final Map<String, _ChatScreenState> _openChats = {};
+final Map<String, List<_ChatScreenState>> _openChats = {};
 
-/// [words] under what [id]'s open chat holds in its composer, its route
-/// brought back to the top. false when no chat of theirs is open
+/// [words] under what [id]'s chat holds in its composer, when that chat
+/// is the page on top. false otherwise: nothing above it is ever closed
 bool landInOpenChat(String id, String words) {
-  final s = _openChats[id];
-  if (s == null || !s.mounted) return false;
-  final route = ModalRoute.of(s.context);
-  if (route == null || !route.isActive) return false;
-  Navigator.of(s.context).popUntil((r) => r == route);
-  s._takeWords(words);
-  return true;
+  for (final s in _openChats[id] ?? const <_ChatScreenState>[]) {
+    if (s.mounted && (ModalRoute.of(s.context)?.isCurrent ?? false)) {
+      s._takeWords(words);
+      return true;
+    }
+  }
+  return false;
 }
 
 // newest message ms seen when the chat was last left, keyed the same way
@@ -1036,7 +1037,7 @@ class _ChatScreenState extends State<ChatScreen>
     appState.loadSendMode();
     lockState.addListener(_lockLifted);
     claimChat(widget.peerHaloId);
-    _openChats[widget.peerHaloId] = this;
+    (_openChats[widget.peerHaloId] ??= []).add(this);
     // opened under the lock: marked read once it lifts
     lockGuard.isLocked() ? _underLock = true : _markRead();
     _unreadAfterMs =
@@ -3852,6 +3853,9 @@ class _ChatScreenState extends State<ChatScreen>
   // a chat pushed over this one closed: this is the one being read again
   @override
   void backOnTop() {
+    // a copy of this chat opened over it may have changed the draft
+    final draft = _draftPerPeer[_memo] ?? '';
+    if (draft.trim() != _msgCtrl.text.trim()) _takeDraft(draft);
     if (lockGuard.isLocked()) {
       _underLock = true;
       return;
@@ -4122,9 +4126,8 @@ class _ChatScreenState extends State<ChatScreen>
     _timers.dispose();
     _reads.dispose();
     releaseChat(widget.peerHaloId);
-    if (identical(_openChats[widget.peerHaloId], this)) {
-      _openChats.remove(widget.peerHaloId);
-    }
+    final open = _openChats[widget.peerHaloId]?..remove(this);
+    if (open != null && open.isEmpty) _openChats.remove(widget.peerHaloId);
     lockState.removeListener(_lockLifted);
     appState.removeListener(_onAppStateChanged);
     _devOpening
@@ -4748,8 +4751,10 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   // words shared from another app, under what the composer holds
-  void _takeWords(String words) {
-    final t = composerWith(_msgCtrl.text, words);
+  void _takeWords(String words) =>
+      _takeDraft(composerWith(_msgCtrl.text, words));
+
+  void _takeDraft(String t) {
     _msgCtrl.value = TextEditingValue(
       text: t,
       selection: TextSelection.collapsed(offset: t.length),
@@ -7923,7 +7928,7 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
       _overlay = RecordBarEntry(_bar);
       if (mounted) Overlay.of(context).insert(_overlay!.entry);
       // the lock stops the recording and throws it away
-      _recUnguard = lockGuard.closeOnLock(_abort);
+      _recUnguard = recordingUntil(lockGuard.closeOnLock(_abort));
     } catch (e) {
       dlog('voice: could not start: $e');
       _ticker?.cancel();
