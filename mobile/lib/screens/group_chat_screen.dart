@@ -2021,6 +2021,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       if (mounted) showHaloToast(context, l10n.groupChatCouldNotReadThat);
       return;
     }
+    // an empty file would read as sent with nothing gone
+    if (size == 0) {
+      if (mounted) showHaloToast(context, l10n.groupChatCouldNotReadThat);
+      return;
+    }
     if (size > 8 * 1024 * 1024) {
       if (mounted) showHaloToast(context, l10n.groupChatFileTooBig8);
       return;
@@ -2037,11 +2042,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       final ok = await stripMp4Metadata(dest.path);
       final left = ok == null ? null : await mp4MetadataCount(dest.path);
       if (ok == null || left != 0) {
-        try {
-          await dest.delete();
-        } catch (_) {
-          // not sent either way, and the original is still where it was
-        }
+        await shredFile(dest.path);
         if (mounted) {
           showHaloToast(context, l10n.groupChatCouldNotCleanThatVideo);
         }
@@ -2053,11 +2054,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     // app cannot read through is not sent; the photo button re-encodes and
     // will take it.
     else if (await stripPictureFileOffUi(dest.path) == null) {
-      try {
-        await dest.delete();
-      } catch (_) {
-        // not sent either way, and the original is still where it was
-      }
+      await shredFile(dest.path);
       if (mounted) {
         showHaloToast(context, l10n.groupChatCouldNotCleanThatPictureSend);
       }
