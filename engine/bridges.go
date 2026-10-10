@@ -301,7 +301,7 @@ var _ = pt.Args{}
 //
 //export HaloSetBridges
 func HaloSetBridges(cLines *C.char, on C.int) *C.char {
-	raw := C.GoString(cLines)
+	raw := goStr(cLines)
 	var good, bad []string
 	for _, ln := range strings.Split(raw, "\n") {
 		ln = strings.TrimSpace(ln)

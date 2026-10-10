@@ -89,7 +89,7 @@ func handleHTTP() (*http.Client, error) { return torNostrClientFor(laneServices)
 //
 //export HaloHandleCheck
 func HaloHandleCheck(cHandle *C.char) *C.char {
-	return C.CString(handleCheck(C.GoString(cHandle)))
+	return C.CString(handleCheck(goStr(cHandle)))
 }
 
 func handleCheck(raw string) string {
@@ -128,7 +128,7 @@ func handleCheck(raw string) string {
 //
 //export HaloHandleClaim
 func HaloHandleClaim(cHandle *C.char, cInvite *C.char, cBio *C.char) *C.char {
-	return C.CString(handleClaim(C.GoString(cHandle), C.GoString(cInvite), C.GoString(cBio)))
+	return C.CString(handleClaim(goStr(cHandle), goStr(cInvite), goStr(cBio)))
 }
 
 func handleClaim(raw, invite, bio string) string {
@@ -153,7 +153,7 @@ func handleClaim(raw, invite, bio string) string {
 //
 //export HaloHandleRelease
 func HaloHandleRelease(cHandle *C.char) *C.char {
-	return C.CString(handleRelease(C.GoString(cHandle)))
+	return C.CString(handleRelease(goStr(cHandle)))
 }
 
 func handleRelease(raw string) string {
@@ -229,14 +229,14 @@ func handleListingMsg(h string, listed bool, ts int64, name string) string {
 //
 //export HaloHandleListing
 func HaloHandleListing(cHandle *C.char, cListed *C.char, cName *C.char) *C.char {
-	h := strings.ToLower(strings.TrimSpace(C.GoString(cHandle)))
+	h := strings.ToLower(strings.TrimSpace(goStr(cHandle)))
 	if !handleOK.MatchString(h) {
 		return C.CString("error: 3-20 characters, letters numbers underscore")
 	}
-	listed := C.GoString(cListed) == "1"
+	listed := goStr(cListed) == "1"
 	name := ""
 	if listed {
-		r := []rune(strings.TrimSpace(C.GoString(cName)))
+		r := []rune(strings.TrimSpace(goStr(cName)))
 		if len(r) > 40 {
 			r = r[:40]
 		}

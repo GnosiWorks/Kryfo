@@ -1851,7 +1851,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 
 //export HaloNostrInit
 func HaloNostrInit(cRelaysCSV *C.char) *C.char {
-	csv := C.GoString(cRelaysCSV)
+	csv := goStr(cRelaysCSV)
 	if csv == "" {
 		return C.CString("error: empty relay list")
 	}
@@ -1873,7 +1873,7 @@ func HaloNostrInit(cRelaysCSV *C.char) *C.char {
 
 //export HaloNostrSend
 func HaloNostrSend(cPeerXPubHex, cMsg *C.char) *C.char {
-	return C.CString(nostrSend(C.GoString(cPeerXPubHex), C.GoString(cMsg)))
+	return C.CString(nostrSend(goStr(cPeerXPubHex), goStr(cMsg)))
 }
 
 func nostrSend(peerHex, msg string) string {
@@ -1921,7 +1921,7 @@ func nostrSend(peerHex, msg string) string {
 
 //export HaloNostrSubscribe
 func HaloNostrSubscribe(cPeerXPubHex *C.char) *C.char {
-	peerHex := C.GoString(cPeerXPubHex)
+	peerHex := goStr(cPeerXPubHex)
 	peerBytes, err := hex.DecodeString(peerHex)
 	if err != nil || len(peerBytes) != 32 {
 		return C.CString("error: bad peer pubkey")
@@ -1960,7 +1960,7 @@ func nostrSubscribeAt(peerHex string, peerArr [32]byte, rcvPk string) {
 //
 //export HaloNostrLetHeld
 func HaloNostrLetHeld(cPeerXPubHex, cHow *C.char) *C.char {
-	if err := nostrLetHeld(C.GoString(cPeerXPubHex), C.GoString(cHow)); err != nil {
+	if err := nostrLetHeld(goStr(cPeerXPubHex), goStr(cHow)); err != nil {
 		return C.CString("error: " + err.Error())
 	}
 	return C.CString("ok")
@@ -1974,7 +1974,7 @@ func HaloNostrLetHeld(cPeerXPubHex, cHow *C.char) *C.char {
 //export HaloNostrMarkHeld
 func HaloNostrMarkHeld(cPeersJSON *C.char) *C.char {
 	var peers []string
-	if err := json.Unmarshal([]byte(C.GoString(cPeersJSON)), &peers); err != nil {
+	if err := json.Unmarshal([]byte(goStr(cPeersJSON)), &peers); err != nil {
 		return C.CString("error: bad list")
 	}
 	nostrMarkHeld(peers)
@@ -2063,7 +2063,7 @@ func nostrLetHeld(peerHex, how string) error {
 //
 //export HaloNostrUnsubscribe
 func HaloNostrUnsubscribe(cPeerXPubHex *C.char) *C.char {
-	if err := nostrUnsubscribe(C.GoString(cPeerXPubHex)); err != nil {
+	if err := nostrUnsubscribe(goStr(cPeerXPubHex)); err != nil {
 		return C.CString("error: " + err.Error())
 	}
 	return C.CString("ok")
@@ -2144,7 +2144,7 @@ func subscribeFirstContact(counter int) error {
 //
 //export HaloNostrSendFirstContact
 func HaloNostrSendFirstContact(cPeerXPubHex, cFcPk, cMsg *C.char) *C.char {
-	return C.CString(nostrSendFirstContact(C.GoString(cPeerXPubHex), C.GoString(cFcPk), C.GoString(cMsg)))
+	return C.CString(nostrSendFirstContact(goStr(cPeerXPubHex), goStr(cFcPk), goStr(cMsg)))
 }
 
 func nostrSendFirstContact(peerHex, fcPk, msg string) string {
@@ -2231,7 +2231,7 @@ func HaloNostrPoll() *C.char {
 //
 //export HaloNostrAck
 func HaloNostrAck(cToken, cFailed *C.char) *C.char {
-	return C.CString(nostrAck(C.GoString(cToken), C.GoString(cFailed)))
+	return C.CString(nostrAck(goStr(cToken), goStr(cFailed)))
 }
 
 func nostrPoll() string {
@@ -2643,7 +2643,7 @@ func torOnlyHTTP() (*http.Client, error) {
 //
 //export HaloTorGetStrict
 func HaloTorGetStrict(cUrl *C.char) *C.char {
-	url := C.GoString(cUrl)
+	url := goStr(cUrl)
 	if url == "" {
 		return C.CString("error: empty url")
 	}
@@ -2680,7 +2680,7 @@ func HaloTorGetStrict(cUrl *C.char) *C.char {
 //
 //export HaloTorPost
 func HaloTorPost(cUrl *C.char, cBody *C.char) *C.char {
-	return C.CString(torPost(C.GoString(cUrl), C.GoString(cBody)))
+	return C.CString(torPost(goStr(cUrl), goStr(cBody)))
 }
 
 // the app's only callers are people search and the badge service, so the
@@ -2720,7 +2720,7 @@ func torPost(url, body string) string {
 //
 //export HaloTorGetJSON
 func HaloTorGetJSON(cUrl *C.char) *C.char {
-	return C.CString(torGetJSON(C.GoString(cUrl)))
+	return C.CString(torGetJSON(goStr(cUrl)))
 }
 
 // handle lookups and badge receipts: the services lane, as above

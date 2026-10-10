@@ -70,7 +70,7 @@ func directNostrClient() *http.Client {
 //
 //export HaloSetTransportMode
 func HaloSetTransportMode(cMode *C.char) *C.char {
-	m := C.GoString(cMode)
+	m := goStr(cMode)
 	switch m {
 	case modePrivate, modeBalanced, modeFast:
 	default:

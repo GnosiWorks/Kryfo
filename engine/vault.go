@@ -171,14 +171,14 @@ func HaloVaultKeys() *C.char {
 //
 //export HaloVaultSeal
 func HaloVaultSeal(cPub, cB64 *C.char) *C.char {
-	return vaultOut(vaultSealB64(C.GoString(cPub), C.GoString(cB64)))
+	return vaultOut(vaultSealB64(goStr(cPub), goStr(cB64)))
 }
 
 // what HaloVaultSeal sealed, as base64
 //
 //export HaloVaultOpen
 func HaloVaultOpen(cPriv, cB64 *C.char) *C.char {
-	return vaultOut(vaultOpenB64(C.GoString(cPriv), C.GoString(cB64)))
+	return vaultOut(vaultOpenB64(goStr(cPriv), goStr(cB64)))
 }
 
 // a json list of sealed base64 items, opened in one call: a list of base64,
@@ -186,5 +186,5 @@ func HaloVaultOpen(cPriv, cB64 *C.char) *C.char {
 //
 //export HaloVaultOpenMany
 func HaloVaultOpenMany(cPriv, cJSON *C.char) *C.char {
-	return vaultOut(vaultOpenManyJSON(C.GoString(cPriv), C.GoString(cJSON)))
+	return vaultOut(vaultOpenManyJSON(goStr(cPriv), goStr(cJSON)))
 }
