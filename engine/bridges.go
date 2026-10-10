@@ -74,9 +74,13 @@ type ptListen struct {
 	ln      net.Listener
 	port    int
 	factory base.ClientFactory
-	// one token per connection being served
-	slots chan struct{}
-	// socks requests tor made here, and when the last one came, unix nanos
+	// connections still in the socks handshake, oldest first, and how many
+	// that passed the token check are being served
+	pendMu  sync.Mutex
+	pending []net.Conn
+	active  atomic.Int64
+	// socks requests tor made here, and when the last one came, unix nanos.
+	// connections without the token are not counted.
 	requests atomic.Int64
 	lastReq  atomic.Int64
 }
@@ -425,6 +429,8 @@ func noteBridgeSecrets(lines []string) {
 
 // takes no lock but its own, so any log writer may call it
 func scrubBridges(s string) string {
+	// bine logs tor's whole command line, the Bridge lines' token with it
+	s = strings.ReplaceAll(s, ptToken, "[token]")
 	bridgeSecretMu.Lock()
 	defer bridgeSecretMu.Unlock()
 	for w := range bridgeSecrets {
@@ -593,13 +599,44 @@ func startPTListeners() error {
 	return nil
 }
 
-// connections served at once per listener. tor opens one or two per
-// bridge; more only comes from something else on the phone.
-const ptMaxConns = 16
+// connections tor may have open at once per listener. tor opens one or
+// two per bridge, so the cap grows with the lines and a long own set never
+// meets it.
+func ptConnLimit() int64 {
+	return int64(2*len(bridgeLines()) + 8)
+}
+
+// handshakes waiting for their token at once per listener, and how long one
+// may take. anything on the phone can open these, so they have their own
+// small pool: when it is full the oldest goes, and a connection that
+// passed the token check is never counted in it.
+const ptMaxPending = 8
+
+var ptHandshakeTimeout = 2 * time.Second
 
 func newPTListen(name string, ln net.Listener, f base.ClientFactory) *ptListen {
-	return &ptListen{name: name, ln: ln, port: ln.Addr().(*net.TCPAddr).Port,
-		factory: f, slots: make(chan struct{}, ptMaxConns)}
+	return &ptListen{name: name, ln: ln, port: ln.Addr().(*net.TCPAddr).Port, factory: f}
+}
+
+func (r *ptListen) addPending(c net.Conn) {
+	r.pendMu.Lock()
+	defer r.pendMu.Unlock()
+	if len(r.pending) >= ptMaxPending {
+		r.pending[0].Close()
+		r.pending = r.pending[1:]
+	}
+	r.pending = append(r.pending, c)
+}
+
+func (r *ptListen) donePending(c net.Conn) {
+	r.pendMu.Lock()
+	defer r.pendMu.Unlock()
+	for i, p := range r.pending {
+		if p == c {
+			r.pending = append(r.pending[:i:i], r.pending[i+1:]...)
+			return
+		}
+	}
 }
 
 // a failed accept, out of file descriptors say, waits a little and goes
@@ -622,15 +659,8 @@ func (r *ptListen) accept() {
 			continue
 		}
 		wait = 0
-		select {
-		case r.slots <- struct{}{}:
-			go func() {
-				defer func() { <-r.slots }()
-				r.serve(conn)
-			}()
-		default:
-			conn.Close()
-		}
+		r.addPending(conn)
+		go r.serve(conn)
 	}
 }
 
@@ -652,20 +682,37 @@ var ptDialTimeout = 30 * time.Second
 // for the token that says tor sent them.
 func servePTConn(conn net.Conn, name string, factory base.ClientFactory, r *ptListen) {
 	defer conn.Close()
+	if r != nil {
+		defer r.donePending(conn)
+	}
 
+	// a timer, not a deadline: the handshake sets its own, longer one
+	cut := time.AfterFunc(ptHandshakeTimeout, func() { conn.Close() })
 	req, err := socks5.Handshake(conn)
 	if err != nil {
+		cut.Stop()
 		log.Printf("bridges: %s socks handshake: %v", name, err)
 		return
 	}
-	if r != nil {
-		r.requests.Add(1)
-		r.lastReq.Store(time.Now().UnixNano())
-	}
 	if !hasPTToken(req.Args) {
+		cut.Stop()
 		// no reply at all: every answer would say something
 		log.Printf("bridges: %s: a connection without the token, closed", name)
 		return
+	}
+	if !cut.Stop() {
+		return
+	}
+	if r != nil {
+		r.donePending(conn)
+		if r.active.Add(1) > ptConnLimit() {
+			r.active.Add(-1)
+			log.Printf("bridges: %s: too many connections, closed", name)
+			return
+		}
+		defer r.active.Add(-1)
+		r.requests.Add(1)
+		r.lastReq.Store(time.Now().UnixNano())
 	}
 	line, ok := bridgeFor(name, req.Target)
 	if !ok {

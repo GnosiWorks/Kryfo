@@ -24,7 +24,12 @@ import (
 // reads until the far end closes: no reply byte may come first
 func expectNoReply(t *testing.T, c net.Conn) {
 	t.Helper()
-	c.SetReadDeadline(time.Now().Add(5 * time.Second))
+	expectClosedWithin(t, c, 5*time.Second)
+}
+
+func expectClosedWithin(t *testing.T, c net.Conn, d time.Duration) {
+	t.Helper()
+	c.SetReadDeadline(time.Now().Add(d))
 	b := make([]byte, 1)
 	n, err := c.Read(b)
 	if n != 0 || !errors.Is(err, io.EOF) && !errors.Is(err, io.ErrClosedPipe) {
@@ -60,43 +65,150 @@ func TestNormaliseDropsOldTokens(t *testing.T) {
 	}
 }
 
-func TestListenerCapsConnections(t *testing.T) {
+// tor's side of the socks5 exchange over a real connection, with the token
+func torConnect(t *testing.T, addr, target string) (net.Conn, byte) {
+	t.Helper()
+	c, err := net.Dial("tcp", addr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	c.SetDeadline(time.Now().Add(10 * time.Second))
+	args := ptTokenArg + "=" + ptToken
+	host, port, _ := net.SplitHostPort(target)
+	var p int
+	fmt.Sscanf(port, "%d", &p)
+	req := append(append([]byte{5, 1, 0, 1}, net.ParseIP(host).To4()...), byte(p>>8), byte(p))
+	b := make([]byte, 10)
+	for _, out := range [][]byte{{5, 1, 2}, append(append(append([]byte{1, byte(len(args))}, args...), 1), 0)} {
+		if _, err := c.Write(out); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := io.ReadFull(c, b[:2]); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := c.Write(req); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := io.ReadFull(c, b); err != nil {
+		return c, 0xff
+	}
+	return c, b[1]
+}
+
+func listenOn(t *testing.T, name string) (*ptListen, string) {
+	t.Helper()
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatal(err)
 	}
-	f, _ := ptClientFactory("obfs4")
-	r := newPTListen("obfs4", ln, f)
-	stopped := make(chan struct{})
-	go func() { r.accept(); close(stopped) }()
-	var held []net.Conn
+	t.Cleanup(func() { ln.Close() })
+	f, _ := ptClientFactory(name)
+	r := newPTListen(name, ln, f)
+	go r.accept()
+	return r, ln.Addr().String()
+}
+
+// idle connections without the token, more than any cap, cannot keep tor
+// out, are not counted as tor's, and go away on their own
+func TestIdleForeignConnsCannotStarveTor(t *testing.T) {
+	bridge, toBridge := knocks(t)
+	useBridges(t, true, fmt.Sprintf("obfs4 %s %s cert=%s iat-mode=0", bridge.Addr(), testFP, randomCert()))
+	r, addr := listenOn(t, "obfs4")
+	var idle []net.Conn
 	defer func() {
-		for _, c := range held {
+		for _, c := range idle {
 			c.Close()
 		}
 	}()
-	for i := 0; i < ptMaxConns; i++ {
-		c, err := net.Dial("tcp", ln.Addr().String())
+	for i := 0; i < 24; i++ {
+		c, err := net.Dial("tcp", addr)
 		if err != nil {
 			t.Fatal(err)
 		}
-		held = append(held, c)
+		idle = append(idle, c)
 	}
-	deadline := time.Now().Add(5 * time.Second)
-	for len(r.slots) < ptMaxConns && time.Now().Before(deadline) {
-		time.Sleep(10 * time.Millisecond)
+	time.Sleep(200 * time.Millisecond)
+	c, _ := torConnect(t, addr, bridge.Addr().String())
+	defer c.Close()
+	select {
+	case <-toBridge:
+	case <-time.After(5 * time.Second):
+		t.Fatal("tor's connection did not get through")
 	}
-	extra, err := net.Dial("tcp", ln.Addr().String())
-	if err != nil {
+	if n := r.requests.Load(); n != 1 {
+		t.Fatalf("%d requests counted, want tor's one", n)
+	}
+	// the handshake's own deadline is 5s, the pool's is shorter
+	for _, ic := range idle {
+		expectClosedWithin(t, ic, 3*time.Second)
+	}
+}
+
+// the cap counts only connections that passed the token check, and grows
+// with the lines
+func TestConnCapFollowsLines(t *testing.T) {
+	var lines []string
+	for i := 0; i < 20; i++ {
+		lines = append(lines, fmt.Sprintf("obfs4 192.0.2.%d:443 %s cert=%s iat-mode=0", 100+i, testFP, randomCert()))
+	}
+	useBridges(t, true, lines...)
+	if n := ptConnLimit(); n < 2*20 {
+		t.Fatalf("cap %d for 20 lines", n)
+	}
+	bridge, toBridge := knocks(t)
+	useBridges(t, true, fmt.Sprintf("obfs4 %s %s cert=%s iat-mode=0", bridge.Addr(), testFP, randomCert()))
+	r, addr := listenOn(t, "obfs4")
+	r.active.Store(ptConnLimit())
+	c, _ := torConnect(t, addr, bridge.Addr().String())
+	c.Close()
+	select {
+	case <-toBridge:
+		t.Fatal("dialled past the cap")
+	case <-time.After(500 * time.Millisecond):
+	}
+	r.active.Store(0)
+	c, _ = torConnect(t, addr, bridge.Addr().String())
+	defer c.Close()
+	select {
+	case <-toBridge:
+	case <-time.After(5 * time.Second):
+		t.Fatal("not dialled under the cap")
+	}
+}
+
+func TestTokenScrubbed(t *testing.T) {
+	if out := scrubBridges("Starting tor with args --Bridge obfs4 1.2.3.4:443 kryfo=" + ptToken); strings.Contains(out, ptToken) {
+		t.Fatalf("%q", out)
+	}
+}
+
+func TestNetworkChangeDropsSnowflakeClients(t *testing.T) {
+	oldBounce, oldQuiet, oldGap := netBounce, netQuiet, netGap
+	netBounce, netQuiet, netGap = func() {}, time.Millisecond, time.Millisecond
+	t.Cleanup(func() {
+		// the debounce worker finishes before the real bounce is back
+		for {
+			netMu.Lock()
+			busy := netWorker
+			netMu.Unlock()
+			if !busy {
+				break
+			}
+			time.Sleep(5 * time.Millisecond)
+		}
+		netBounce, netQuiet, netGap = oldBounce, oldQuiet, oldGap
+	})
+	dropSnowflakeClients()
+	if _, err := snowflakeFor(snowflakeTestConfig(t)); err != nil {
 		t.Fatal(err)
 	}
-	defer extra.Close()
-	expectNoReply(t, extra)
-	ln.Close()
-	select {
-	case <-stopped:
-	case <-time.After(5 * time.Second):
-		t.Fatal("accept outlived its listener")
+	networkChanged()
+	sfMu.Lock()
+	n := len(sfClients)
+	sfMu.Unlock()
+	if n != 0 {
+		t.Fatalf("%d snowflake clients outlived the network", n)
 	}
 }
 

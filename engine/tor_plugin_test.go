@@ -223,7 +223,8 @@ func TestPluginAfterOff(t *testing.T) {
 	t0 := time.Now()
 	timed(t, "network off", func() error { return c.SetConf(control.KeyVals("DisableNetwork", "1")...) })
 	timed(t, "UseBridges 1 + Bridge, no plugin", func() error {
-		return c.SetConf(control.NewKeyVal("UseBridges", "1"), control.NewKeyVal("Bridge", line))
+		return c.SetConf(control.NewKeyVal("UseBridges", "1"),
+			control.NewKeyVal("Bridge", line+" "+ptTokenArg+"="+ptToken))
 	})
 	timed(t, "network on", func() error { return c.SetConf(control.KeyVals("DisableNetwork", "0")...) })
 	if d, ok := waitDial("obfs4", t0, 45*time.Second); ok {
