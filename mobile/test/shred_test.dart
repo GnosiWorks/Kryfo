@@ -87,13 +87,42 @@ void main() {
     expect(kt, isNot(contains('FileOutputStream')));
   });
 
-  test('open copies go with the session', () async {
-    final f = File('${tmp.path}/open/ab12/statement.pdf')
-      ..createSync(recursive: true)
-      ..writeAsStringSync('a decrypted file');
-    final twin = twinOf(f.path, twins);
-    await shredOpenCopies(tmp);
-    expect(Directory('${tmp.path}/open').existsSync(), isFalse);
-    expect(zeroed(twin), isTrue);
+  group('open copies', () {
+    File copy(String rel, String what, Duration age) {
+      final f = File('${tmp.path}/open/$rel')
+        ..createSync(recursive: true)
+        ..writeAsStringSync(what, flush: true)
+        ..setLastModifiedSync(DateTime.now().subtract(age));
+      return f;
+    }
+
+    test(
+      'a lock unlinks one still being read: the reader keeps its bytes',
+      () async {
+        final f = copy('ab12/statement.pdf', 'a decrypted file', Duration.zero);
+        final reader = f.openSync();
+        addTearDown(reader.closeSync);
+        await dropOpenCopies(cache: tmp);
+        expect(f.existsSync(), isFalse);
+        expect(Directory('${tmp.path}/open').existsSync(), isFalse);
+        expect(String.fromCharCodes(reader.readSync(64)), 'a decrypted file');
+      },
+    );
+
+    test('a lock shreds one past its grace', () async {
+      final f = copy('cd34/old.pdf', 'read long ago', kHandedGrace * 2);
+      final twin = twinOf(f.path, twins);
+      await dropOpenCopies(cache: tmp);
+      expect(f.existsSync(), isFalse);
+      expect(zeroed(twin), isTrue);
+    });
+
+    test('a switch of pin or a wipe shreds every one', () async {
+      final f = copy('ef56/now.pdf', 'just opened', Duration.zero);
+      final twin = twinOf(f.path, twins);
+      await dropOpenCopies(all: true, cache: tmp);
+      expect(Directory('${tmp.path}/open').existsSync(), isFalse);
+      expect(zeroed(twin), isTrue);
+    });
   });
 }

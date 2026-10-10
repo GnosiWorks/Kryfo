@@ -7805,12 +7805,20 @@ Future<void> sweepCaptures() async {
   }
 }
 
+/// the side an unlock's outcome opens, as sessionFor reads it
+HaloContainer containerFor(PinResult r, {String? vaultKey}) => switch (r) {
+  PinResult.vault when vaultKey != null => HaloContainer.vault,
+  PinResult.decoy when vaultKey != null => HaloContainer.decoyVault,
+  PinResult.decoy => HaloContainer.decoy,
+  _ => HaloContainer.everyday,
+};
+
 // a file handed to the share sheet is a plain copy in cache/share/, or the
 // share plugin's folder from before. the app it went to may read it only
 // once this one is back, so a copy younger than the grace stays, as on the
 // native side (Shred.kt), whose job looks again. a time far ahead is a clock
 // that moved, and counts as old
-const kShareGrace = Duration(minutes: 10);
+const kShareGrace = kHandedGrace;
 const _clockSkew = Duration(minutes: 1);
 
 @visibleForTesting
@@ -13905,11 +13913,18 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  // the side the lock came down on, until the next unlock
+  HaloContainer? _lockedIn;
+
   // an unlock's outcome, under the lock screen before it lifts: the screens
   // get the session the pin opened, and every screen of the other one goes
   Future<void> sessionFor(PinResult r, {String? vaultKey}) async {
-    // nothing opened under one pin is left for another
-    await shredOpenCopies();
+    // nothing opened under one pin is left for another, not even unlinked
+    final from = _lockedIn;
+    _lockedIn = null;
+    await dropOpenCopies(
+      all: from != null && from != containerFor(r, vaultKey: vaultKey),
+    );
     // a vault left open by a lock that never reached the screen shuts first
     _shutVault();
     // and what home shows after one shut is read again before anything
@@ -14130,7 +14145,8 @@ class AppState extends ChangeNotifier {
   // vault made by a setup that did not finish goes
   void lockingUp() {
     // a file opened with another app goes with the session that opened it
-    unawaited(shredOpenCopies());
+    _lockedIn = (_session.vault ?? _session.primary).container;
+    unawaited(dropOpenCopies());
     unawaited(
       vaultSetupDone().catchError((Object e) {
         dlog('vault: setup key (${e.runtimeType})');

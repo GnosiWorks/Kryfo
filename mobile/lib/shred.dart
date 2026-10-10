@@ -74,12 +74,42 @@ Future<void> shredTree(String path) async {
   await d.delete(recursive: true);
 }
 
-/// what was handed to another app to open: it goes with the session that
-/// opened it, on a lock, a switch to another pin's side or a wipe
-Future<void> shredOpenCopies([Directory? cache]) async {
+/// how long a copy handed to another app is given to be read
+const kHandedGrace = Duration(minutes: 10);
+const _clockSkew = Duration(minutes: 1);
+
+/// what was handed to another app to open goes with the session that
+/// opened it. on a lock or an unlock a copy still in its grace is only
+/// unlinked: an app still reading it keeps its handle and the bytes, and
+/// the name is gone. one past it is shredded. [all], for a switch to
+/// another pin's side or a wipe, shreds every one
+Future<void> dropOpenCopies({
+  bool all = false,
+  Directory? cache,
+  DateTime? now,
+}) async {
   try {
     final c = cache ?? await getTemporaryDirectory();
-    await shredTree('${c.path}/open');
+    final open = '${c.path}/open';
+    if (all) {
+      await shredTree(open);
+      return;
+    }
+    final dir = Directory(open);
+    if (!await dir.exists()) return;
+    final at = now ?? DateTime.now();
+    final cutoff = at.subtract(kHandedGrace);
+    final ahead = at.add(_clockSkew);
+    await for (final e in dir.list(recursive: true, followLinks: false)) {
+      if (e is! File) continue;
+      final t = await e.lastModified();
+      if (t.isBefore(cutoff) || t.isAfter(ahead)) {
+        await shredFile(e.path);
+      } else {
+        await _unlink(e);
+      }
+    }
+    await dir.delete(recursive: true);
   } catch (e) {
     dlog('shred: open copies (${e.runtimeType})');
   }
