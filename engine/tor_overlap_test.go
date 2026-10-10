@@ -157,3 +157,71 @@ func TestReconnectLeavesASleepingTorAsleep(t *testing.T) {
 		}
 	}
 }
+
+// three claims at once: each run gets its own done channel and closes only
+// that one. a run that read the slot after another claim took the next
+// run's channel, closed it under it, and the next run closed it again
+func TestThreeClaimsEachCloseTheirOwn(t *testing.T) {
+	for round := 0; round < 500; round++ {
+		var wg sync.WaitGroup
+		seen := make(chan chan struct{}, 3)
+		for i := 0; i < 3; i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				me, prev, done, why := reconnectClaim(true)
+				if why != "" || done == nil {
+					t.Errorf("claim: %q", why)
+					return
+				}
+				seen <- done
+				if prev != nil {
+					select {
+					case <-prev:
+					case <-time.After(2 * time.Second):
+						t.Errorf("round %d: waited on a run that was not the one before", round)
+					}
+				}
+				reconnectRelease(me, done)
+			}()
+		}
+		wg.Wait()
+		close(seen)
+		got := map[chan struct{}]bool{}
+		for c := range seen {
+			if got[c] {
+				t.Fatalf("round %d: two runs were handed one channel", round)
+			}
+			got[c] = true
+		}
+		if t.Failed() {
+			return
+		}
+	}
+	if atomic.LoadInt32(&torRestarting) != 0 {
+		t.Fatal("the slot stayed taken")
+	}
+}
+
+// the same through the whole reconnect: three forced at once, round after
+// round, never a panic and never a minute's wait on someone else's channel
+func TestThreeForcedReconnectsAtOnce(t *testing.T) {
+	f := overlapRig(t)
+	f.slow.Store(0)
+	old, oldWait := bounceSettle, supersedeWait
+	bounceSettle, supersedeWait = time.Millisecond, 5*time.Second
+	defer func() { bounceSettle, supersedeWait = old, oldWait }()
+	for round := 0; round < 30; round++ {
+		began := time.Now()
+		var wg sync.WaitGroup
+		for i := 0; i < 3; i++ {
+			wg.Add(1)
+			go func() { defer wg.Done(); reconnectNow() }()
+		}
+		wg.Wait()
+		if d := time.Since(began); d > 4*time.Second {
+			t.Fatalf("round %d took %s: a run waited on a channel not its own", round, d)
+		}
+	}
+	endsOnTheNetwork(t, f)
+}

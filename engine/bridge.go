@@ -687,6 +687,9 @@ var (
 // step of that one is bounded, so this is only reached by something new
 var supersedeWait = time.Minute
 
+// how long tor gets to drop what it had between network off and the config
+var bounceSettle = 500 * time.Millisecond
+
 // tests watch each step a reconnect takes, and which reconnect took it
 var reconnectStepHook func(owner int64, step string)
 
@@ -706,23 +709,26 @@ func reconnectNow() string {
 // takes the running slot, or says why not. force, or a running one stuck
 // past stuckAfter, replaces the running one; what comes back is then the
 // done channel to wait on before touching tor
-func reconnectClaim(force bool) (me int64, prev chan struct{}, err string) {
+// and the new run's own done channel, all taken under the one lock: it
+// closes that channel and no other
+func reconnectClaim(force bool) (me int64, prev, done chan struct{}, err string) {
 	reconnectMu.Lock()
 	defer reconnectMu.Unlock()
 	if reconnectDone != nil {
 		since := atomic.LoadInt64(&reconnectSince)
 		if !force && (since == 0 || time.Since(time.Unix(0, since)) < stuckAfter) {
-			return 0, nil, "error: one already running"
+			return 0, nil, nil, "error: one already running"
 		}
 		log.Printf("halo: replacing a reconnect at %q", lastReconnectStep())
 		prev = reconnectDone
 	}
 	reconnectOwner++
 	me = reconnectOwner
-	reconnectDone = make(chan struct{})
+	done = make(chan struct{})
+	reconnectDone = done
 	atomic.StoreInt32(&torRestarting, 1)
 	reconnectRuns.Add(1)
-	return me, prev, ""
+	return me, prev, done, ""
 }
 
 func reconnectMine(me int64) bool {
@@ -752,13 +758,10 @@ func reconnectTorAs(force bool) string {
 		log.Println("halo: reconnect skipped - tor is asleep on purpose")
 		return "error: tor is asleep"
 	}
-	me, prev, why := reconnectClaim(force)
+	me, prev, done, why := reconnectClaim(force)
 	if why != "" {
 		return why
 	}
-	reconnectMu.Lock()
-	done := reconnectDone
-	reconnectMu.Unlock()
 	defer reconnectRelease(me, done)
 	if prev != nil {
 		select {
@@ -874,7 +877,7 @@ func reconnectOn(t *tor.Tor, addr string, me int64) string {
 		return "error: " + err.Error()
 	}
 	// let it drop what it had before it is told anything else
-	time.Sleep(500 * time.Millisecond)
+	time.Sleep(bounceSettle)
 	if !step("bridge config") {
 		return superseded
 	}
