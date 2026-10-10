@@ -1259,9 +1259,10 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 	if savedDataDir != "" {
 		seenPath, lastPath = addressFiles(rcvPk)
 		// a subscription on an address let go of before keeps files again
-		for _, p := range []string{seenPath, seenPath + ".tmp", lastPath} {
+		for _, p := range []string{seenPath, seenPath + ".tmp", lastPath, heardFile(rcvPk)} {
 			goneFiles.Delete(p)
 		}
+		loadHeard(rcvPk)
 		if b, err := os.ReadFile(lastPath); err == nil {
 			if v, perr := strconv.ParseInt(strings.TrimSpace(string(b)), 10, 64); perr == nil {
 				lastOnDisk = v
@@ -1323,8 +1324,10 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 	// it is still finding things. opened: it unwrapped and went to the inbox,
 	// now or on an earlier pass, and only that may move the anchor. the
 	// relay library has already checked that the id is the event's own, so
-	// an id that opened once comes with the stamp it opened with.
-	take := func(ev nostr.Event) (fresh, opened bool) {
+	// an id that opened once comes with the stamp it opened with. from and
+	// until: when it reached the relay, in ms by this clock, as far as the
+	// way it came tells (inboxDone)
+	take := func(ev nostr.Event, from, until int64) (fresh, opened bool) {
 		id := ev.ID.Hex()
 		nostrMu.Lock()
 		mine := nostrSentIDs[id]
@@ -1357,7 +1360,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 		noteRecv()
 		nostrMu.Lock()
 		nostrInbox = append(nostrInbox, tag+"|"+content)
-		nostrInboxDone = append(nostrInboxDone, inboxDone{set: seen, id: ev.ID, at: ev.CreatedAt, sent: int64(sent), resave: saveLast})
+		nostrInboxDone = append(nostrInboxDone, inboxDone{set: seen, id: ev.ID, at: ev.CreatedAt, sent: int64(sent), resave: saveLast, from: from, until: until})
 		nostrMu.Unlock()
 		short := tag
 		if len(short) > 12 {
@@ -1366,8 +1369,14 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 		log.Printf("nostr: received event %s for %s...", id[:12], short)
 		return true, true
 	}
-	dispatch := func(ev nostr.Event) bool {
-		fresh, _ := take(ev)
+	// what an ask by ids brings was held: it reached the relay when it
+	// first came, as far as that was known, or at any time before now
+	byIDs := func(ev nostr.Event) bool {
+		from, until := seen.heldReach(ev.ID)
+		if until <= 0 {
+			from, until = 0, time.Now().UnixMilli()
+		}
+		fresh, _ := take(ev, from, until)
 		return fresh
 	}
 
@@ -1530,6 +1539,9 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						f.Since = since
 					}
 				}
+				// what comes before the eose reached the relay before this
+				// moment, and after what it is known to have handed over
+				subAt := time.Now().UnixMilli()
 				// the library fakes an eose after 7s of silence. a hundred
 				// slices over tor take longer than that, and a fake one would
 				// end the count below before the relay was done.
@@ -1544,6 +1556,24 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				// our own relay's successes clear its failure count too
 				relayOK(u)
 				markAlive()
+				// set once the catch-up ran to its end: from then on each
+				// sign of life says the relay handed over all it took
+				var covered atomic.Bool
+				aliveNow := func() {
+					markAlive()
+					if covered.Load() {
+						noteHeard(conn, u, rcvPk, time.Now())
+					}
+				}
+				caught := func() {
+					covered.Store(true)
+					noteHeard(conn, u, rcvPk, time.Now())
+				}
+				// a walk's pages reach back below the first answer
+				walked := func(ev nostr.Event) bool {
+					fresh, _ := take(ev, heardOf(ck), time.Now().UnixMilli())
+					return fresh
+				}
 				log.Printf("nostr: listening on %s for addr %s...", u, rcvPk[:12])
 				// a dead tor circuit leaves the websocket open but mute: no
 				// error, no channel close. quiet too long gets a probe, and a
@@ -1579,7 +1609,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 					go func() {
 						defer asking.Store(false)
 						defer walkEnds(tag)
-						if missing, answered := relayByIDs(cctx, r, rcvPk, ids, dispatch); answered {
+						if missing, answered := relayByIDs(cctx, r, rcvPk, ids, byIDs); answered {
 							seen.notOnRelay(u, urls, missing)
 						}
 					}()
@@ -1663,7 +1693,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 							}
 							goto reconnect
 						}
-						markAlive()
+						aliveNow()
 						if ev.ID.Hex() != "" {
 							if eose != nil {
 								brought()
@@ -1674,7 +1704,12 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 									oldest = ev.CreatedAt
 								}
 							}
-							fresh, opened := take(ev)
+							from, until := heardOf(ck), subAt
+							if eose == nil {
+								now := time.Now().UnixMilli()
+								from, until = now, now
+							}
+							fresh, opened := take(ev, from, until)
 							if fresh && opened && eose == nil {
 								liveCame(tag)
 							}
@@ -1705,6 +1740,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 							// stretches walked before included
 							catchupDone(cc, false)
 							atomic.StoreInt32(&caughtUp, 1)
+							caught()
 							saveLast(atomic.LoadInt64(&pending))
 							noteCatchupPages(ck, 0, stored)
 							settled()
@@ -1727,7 +1763,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 								return relayPage(pc, r, rcvPk, s, t, n)
 							}, since, from, catchupPage, catchupMaxPages, func(ev nostr.Event) bool {
 								brought()
-								return dispatch(ev)
+								return walked(ev)
 							}, m)
 							if res.Complete {
 								catchupDone(cc, m.Started())
@@ -1754,6 +1790,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 								return
 							}
 							atomic.StoreInt32(&caughtUp, 1)
+							caught()
 							saveLast(atomic.LoadInt64(&pending))
 						}(oldest)
 					case <-idle.C:
@@ -1764,7 +1801,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						// and an eose, and a real eose proves the circuit still
 						// carries data.
 						if relayResponds(conn, r, rcvPk) {
-							markAlive()
+							aliveNow()
 							askWanted()
 							idle.Reset(quietFor(deaf))
 							continue
@@ -1793,7 +1830,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						// on every contact and every relay, so ask before
 						// tearing down.
 						if relayResponds(conn, r, rcvPk) {
-							markAlive()
+							aliveNow()
 							log.Printf("nostr: %s kicked but still answering, keeping the sub", u)
 							askWanted()
 							if !idle.Stop() {
@@ -2407,7 +2444,7 @@ func markHeld(done []inboxDone, names []string, now time.Time) []inboxDone {
 	var kept []inboxDone
 	saves := map[*seenIDs]func(int64){}
 	for i, d := range done {
-		if d.set == nil || !d.set.hold(d.id, d.at, names[i], now) {
+		if d.set == nil || !d.set.hold(d.id, d.at, names[i], now, d.from, d.until) {
 			kept = append(kept, d)
 			continue
 		}
@@ -2521,6 +2558,8 @@ func nostrPollAt(now time.Time) string {
 	entries, took := pollEntriesOf(lines)
 	for j, n := range took {
 		entries[j].A = done[n].sent
+		entries[j].F = done[n].from
+		entries[j].U = done[n].until
 	}
 	// what cannot go over never will: remembered now, as before
 	var gone []inboxDone
@@ -2581,6 +2620,12 @@ type pollEntry struct {
 	// when the sender wrapped it, by their clock, in seconds: each send
 	// wraps anew, so a retry has its own. 0 when the lane has no such stamp
 	A int64 `json:"a,omitempty"`
+	// when it reached the relay, in ms by this phone's clock: no earlier
+	// than f and no later than u. live after the eose both are when it came;
+	// a stored one is between what the relay was known to have handed over
+	// and the subscribe. 0 for what is not known
+	F int64 `json:"f,omitempty"`
+	U int64 `json:"u,omitempty"`
 }
 
 // content with a line break or a nul is dropped: nothing the app sends

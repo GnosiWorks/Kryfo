@@ -27,7 +27,7 @@ func TestAHeldIDIsPassedOverUntilLetGo(t *testing.T) {
 	if !s.claim(id) {
 		t.Fatal("claim")
 	}
-	if !s.hold(id, nostr.Timestamp(now.Unix()), "", now) {
+	if !s.hold(id, nostr.Timestamp(now.Unix()), "", now, 0, 0) {
 		t.Fatal("not held")
 	}
 	if s.claim(id) || s.handed(id) {
@@ -59,7 +59,7 @@ func TestADropTakesTheHeldAsKept(t *testing.T) {
 	s := loadSeen(path)
 	id := randomID(t)
 	s.claim(id)
-	s.hold(id, nostr.Timestamp(now.Unix()), "", now)
+	s.hold(id, nostr.Timestamp(now.Unix()), "", now, 0, 0)
 	markHeldFile(path, seenDropMark)
 	d := loadSeen(path)
 	if d.heldCount() != 0 || !d.handed(id) || d.claim(id) {
@@ -75,7 +75,7 @@ func TestHeldIDsAreBoundedAndExpire(t *testing.T) {
 	for i := 0; i < seenHeldKeep+50; i++ {
 		id := randomID(t)
 		s.claim(id)
-		if s.hold(id, nostr.Timestamp(now.Unix()), "", now) {
+		if s.hold(id, nostr.Timestamp(now.Unix()), "", now, 0, 0) {
 			held++
 		}
 	}
@@ -83,7 +83,7 @@ func TestHeldIDsAreBoundedAndExpire(t *testing.T) {
 		t.Fatalf("held %d, want %d", held, seenHeldKeep)
 	}
 	old := randomID(t)
-	if s.hold(old, nostr.Timestamp(now.Add(-seenHeldFor-time.Hour).Unix()), "", now) {
+	if s.hold(old, nostr.Timestamp(now.Add(-seenHeldFor-time.Hour).Unix()), "", now, 0, 0) {
 		t.Fatal("held one the relay no longer keeps")
 	}
 	if n := loadSeen(path).heldCount(); n != seenHeldKeep {
@@ -103,9 +103,9 @@ func TestCompactionKeepsWhatIsHeld(t *testing.T) {
 	for _, id := range []nostr.ID{free, still} {
 		s.claim(id)
 	}
-	s.hold(free, nostr.Timestamp(now.Unix()), "", now)
+	s.hold(free, nostr.Timestamp(now.Unix()), "", now, 0, 0)
 	markHeldFile(path, seenFreeMark)
-	s.hold(still, nostr.Timestamp(now.Unix()), "", now)
+	s.hold(still, nostr.Timestamp(now.Unix()), "", now, 0, 0)
 	// enough kept ids to rewrite the file
 	for i := 0; i < seenFileMax; i++ {
 		id := randomID(t)
@@ -271,7 +271,7 @@ func TestAFileIsOneGroupOfHeldIDs(t *testing.T) {
 	hold := func(group string) bool {
 		id := randomID(t)
 		s.claim(id)
-		return s.hold(id, stamp, group, now)
+		return s.hold(id, stamp, group, now, 0, 0)
 	}
 	// a file already held takes its slices with no group to spare
 	if !hold("file-a") {
@@ -305,7 +305,7 @@ func TestHeldIDsHaveAHardMost(t *testing.T) {
 		for i := 0; i < seenHeldPerGroup; i++ {
 			id := randomID(t)
 			s.claim(id)
-			if s.hold(id, nostr.Timestamp(now.Unix()), fmt.Sprintf("file-%d", f), now) {
+			if s.hold(id, nostr.Timestamp(now.Unix()), fmt.Sprintf("file-%d", f), now, 0, 0) {
 				held++
 			}
 		}
@@ -358,7 +358,7 @@ func TestFreeAndMarkLeaveAnAddressWithNothingHeldAlone(t *testing.T) {
 	s := loadSeen(seenPath)
 	id := randomID(t)
 	s.claim(id)
-	s.hold(id, nostr.Timestamp(time.Now().Unix()), "", time.Now())
+	s.hold(id, nostr.Timestamp(time.Now().Unix()), "", time.Now(), 0, 0)
 	if err := nostrLetHeld(tag, "mark"); err != nil {
 		t.Fatal(err)
 	}
@@ -522,7 +522,7 @@ func TestAStartMarkRestartsNothing(t *testing.T) {
 		s := loadSeen(path)
 		id := randomID(t)
 		s.claim(id)
-		if !s.hold(id, nostr.Timestamp(now.Unix()), "", now) {
+		if !s.hold(id, nostr.Timestamp(now.Unix()), "", now, 0, 0) {
 			t.Fatal("not held")
 		}
 	}
