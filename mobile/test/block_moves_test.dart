@@ -47,6 +47,9 @@ Future<void> _tables(SqliteMem db, String s) async {
     'CREATE TABLE $s.group_roster (group_id TEXT PRIMARY KEY)',
     'CREATE TABLE $s.held_onion (id INTEGER PRIMARY KEY, peer_id TEXT)',
     'CREATE TABLE $s.media_wants (media_id TEXT, peer_id TEXT)',
+    'CREATE TABLE $s.media_chunks (media_id TEXT, idx INTEGER, '
+        'sender TEXT, group_id TEXT)',
+    'CREATE TABLE $s.room_keys (group_id TEXT, member TEXT)',
     'CREATE TABLE $s.vouches (halo_id TEXT, voucher_id TEXT)',
     'CREATE TABLE $s.shield (halo_id TEXT PRIMARY KEY)',
   ]) {
@@ -138,6 +141,25 @@ void main() {
     // carries the same
     expect(await _rows(db, 'main', _f), ['span 20-30', 'drop f-drop']);
     expect(await _rows(db, 'v', _f), ['span 20-30', 'drop f-drop']);
+  }, skip: skip);
+
+  test('the files still coming in a group go with it, its members\' own '
+      'stay', () async {
+    final db = await _world();
+    await db.execute(
+      'INSERT INTO main.media_chunks (media_id, idx, sender, group_id) '
+      "VALUES ('in-group', 0, '$_m', '$_g'), ('her-own', 0, '$_f', NULL)",
+    );
+    final mover = SqlChatMover(_NoDb(), _NoDb());
+    await mover.moveRowsOn(db, group, intoVault: true);
+    Future<List<Object?>> ids(String s) async => [
+      for (final r in await db.rawQuery(
+        'SELECT media_id FROM $s.media_chunks ORDER BY media_id',
+      ))
+        r['media_id'],
+    ];
+    expect(await ids('v'), ['in-group']);
+    expect(await ids('main'), ['her-own']);
   }, skip: skip);
 
   test('and back out again, the same the other way', () async {

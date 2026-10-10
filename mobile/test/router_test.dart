@@ -848,6 +848,7 @@ class _Mem implements HaloDb {
     int total,
     int? burn, {
     required String from,
+    String? group,
   }) async {
     _hit('putMediaChunk', mediaId, null);
     chunkFrom[mediaId] = from;

@@ -102,6 +102,8 @@ class _Engine implements HaloEngine {
   final listens = <String>[];
   final dropBoxes = <String>[];
   final unlistened = <String>[];
+  final unlistenedKeys = <String>[];
+  final forgotKeys = <String>[];
   final roomSent = <String>[];
   // what went into the room, by member key
   final roomMsgs = <(String, String)>[];
@@ -113,7 +115,11 @@ class _Engine implements HaloEngine {
   @override
   void roomUnsubscribeBg(String pub) => unlistened.add(pub);
   @override
-  void roomForgetBg(String priv, List<String> members) {}
+  void roomUnlistenBg(String priv, String peerPub) =>
+      unlistenedKeys.add(peerPub);
+  @override
+  void roomForgetBg(String priv, List<String> members) =>
+      forgotKeys.addAll(members);
   @override
   Future<String> roomSend(String priv, String peerPub, String msg) async {
     roomSent.add(peerPub);
@@ -329,6 +335,8 @@ void main() {
       expect(w.live.msg('k1'), isNotNull);
       expect(w.live.msg('k2')?['poll'], isNotNull);
       expect(w.live.chunks.keys, ['k3']);
+      // filed under its group, so the group's end takes it
+      expect(w.live.chunkGroup['k3'], _g);
     });
 
     test('a sealed one is kept, once its vault opens, only from a '
@@ -982,6 +990,204 @@ void main() {
         expect(live.members[_room], isNot(contains(_hexKey(901))));
         // only the one turned away hears, and only that it is full
         expect(_engine.roomSent, [_hexKey(901)]);
+      },
+    );
+  });
+  group('a room key gone', () {
+    // a frame as it comes off [from]'s lane, numbered [n] by its sender
+    Future<({String peer, String cipher})> frame(
+      String from,
+      int? n, {
+      String text = '',
+      String? uid,
+      GroupControl? gc,
+      String room = _roomPub,
+    }) async => (
+      peer: 'room:$room:$from',
+      cipher: roomFrame(
+        await wrapMessage(
+          text,
+          groupId: _room,
+          msgUid: uid,
+          groupControl: gc,
+          sender: SenderInfo(haloId: from, edPub: '', onion: '', xPub: ''),
+        ),
+        from,
+        number: n,
+      )!,
+    );
+
+    Future<void> take(AppState app, ({String peer, String cipher}) f) async {
+      await app.receiveRelay([f]);
+      await _settle();
+    }
+
+    List<String> said(ArrivalRows live) => [
+      for (final m in live.msgs)
+        if (m['group_id'] == _room) m['plaintext'] as String,
+    ];
+
+    test('one that leaves is no longer listened to, and the room\'s end '
+        'forgets every key it listened to', () async {
+      final (live, app) = await _roomWorld();
+      await app.subscribeRoomsAtBoot();
+      expect(_engine.listens, [_creator, _m1]);
+      await take(
+        app,
+        await frame(_m1, 1, gc: const GroupControl(type: 'leave')),
+      );
+      expect(live.members[_room], [_roomPub, _creator]);
+      expect(_engine.unlistenedKeys, [_m1]);
+      // the creator ends it here: the key that left is forgotten too
+      await take(
+        app,
+        await frame(
+          _creator,
+          1,
+          gc: const GroupControl(type: 'remove', members: [_roomPub]),
+        ),
+      );
+      expect(live.groupRows.containsKey(_room), isFalse);
+      expect(_engine.forgotKeys.toSet(), containsAll([_creator, _m1]));
+      expect(live.roomKeys[_room], isNull);
+    });
+
+    test(
+      'one taken out with nothing owed is no longer listened to at once',
+      () async {
+        final (live, app) = await _roomWorld();
+        await app.subscribeRoomsAtBoot();
+        await take(app, await frame(_m1, 1, text: 'hi', uid: 'u1'));
+        await take(
+          app,
+          await frame(
+            _creator,
+            1,
+            gc: const GroupControl(
+              type: 'remove',
+              members: [_m1],
+              lastFrames: {_m1: 1},
+            ),
+          ),
+        );
+        expect(_engine.unlistenedKeys, [_m1]);
+        expect(live.rosterCutsOf[_room], {_m1: 2});
+      },
+    );
+
+    test('what one taken out sent before that still lands, each number '
+        'once, and nothing after', () async {
+      final (live, app) = await _roomWorld();
+      await app.subscribeRoomsAtBoot();
+      await take(app, await frame(_m1, 1, text: 'one', uid: 'u1'));
+      // the creator had taken three frames of theirs when it took them out
+      await take(
+        app,
+        await frame(
+          _creator,
+          1,
+          gc: const GroupControl(
+            type: 'remove',
+            members: [_m1],
+            lastFrames: {_m1: 3},
+          ),
+        ),
+      );
+      expect(live.members[_room], [_roomPub, _creator]);
+      expect(await live.rosterGone(_room), {_m1});
+      // two of theirs are still on the way: still listened to
+      expect(_engine.unlistenedKeys, isEmpty);
+      await take(app, await frame(_m1, 2, text: 'two', uid: 'u2'));
+      // the same number again, a new message: not let in
+      await take(app, await frame(_m1, 2, text: 'again', uid: 'u2b'));
+      // past the cut, or with no number
+      await take(app, await frame(_m1, 4, text: 'four', uid: 'u4'));
+      await take(app, await frame(_m1, null, text: 'plain', uid: 'u5'));
+      // only messages: a control of theirs changes nothing
+      await take(
+        app,
+        await frame(
+          _m1,
+          3,
+          gc: const GroupControl(type: 'rename', name: 'x'),
+        ),
+      );
+      expect(_engine.unlistenedKeys, isEmpty);
+      await take(app, await frame(_m1, 3, text: 'three', uid: 'u3'));
+      expect(said(live), ['one', 'two', 'three']);
+      expect(live.members[_room], [_roomPub, _creator]);
+      // the last one owed is in
+      expect(_engine.unlistenedKeys, [_m1]);
+    });
+
+    test(
+      'a remove from a version that numbers nothing lets nothing more in',
+      () async {
+        final (live, app) = await _roomWorld();
+        await app.subscribeRoomsAtBoot();
+        await take(app, await frame(_m1, 1, text: 'one', uid: 'u1'));
+        await take(
+          app,
+          await frame(
+            _creator,
+            1,
+            gc: const GroupControl(type: 'remove', members: [_m1]),
+          ),
+        );
+        expect(_engine.unlistenedKeys, [_m1]);
+        await take(app, await frame(_m1, 2, text: 'two', uid: 'u2'));
+        expect(said(live), ['one']);
+      },
+    );
+
+    test('frames owed that never come are not waited on for long', () async {
+      final (_, app) = await _roomWorld();
+      app.roomLateWait = const Duration(milliseconds: 50);
+      await app.subscribeRoomsAtBoot();
+      await take(
+        app,
+        await frame(
+          _creator,
+          1,
+          gc: const GroupControl(
+            type: 'remove',
+            members: [_m1],
+            lastFrames: {_m1: 5},
+          ),
+        ),
+      );
+      expect(_engine.unlistenedKeys, isEmpty);
+      await Future<void>.delayed(const Duration(milliseconds: 120));
+      await _settle();
+      expect(_engine.unlistenedKeys, [_m1]);
+    });
+
+    test(
+      'the creator\'s remove says the last frame it took from each key',
+      () async {
+        final (live, app) = await _myRoom(2);
+        await app.subscribeRoomsAtBoot();
+        for (var n = 1; n <= 4; n++) {
+          await take(
+            app,
+            await frame(_hexKey(0), n, text: 'm$n', uid: 'k$n', room: _mine),
+          );
+        }
+        await app.removeMembersFromGroup(_room, [_hexKey(0), _hexKey(1)]);
+        final sent = [
+          for (final r in live.ctlOut)
+            GroupControl.fromWire(jsonDecode(r['ctl'] as String))!,
+        ];
+        expect(sent, isNotEmpty);
+        for (final gc in sent) {
+          expect(gc.type, 'remove');
+          // a key nothing was taken from has no number, and none let in
+          expect(gc.lastFrames, {_hexKey(0): 4});
+        }
+        expect(live.rosterCutsOf[_room], {_hexKey(0): 5});
+        expect(await live.rosterGone(_room), {_hexKey(0), _hexKey(1)});
+        // nothing owed here: both stop at once
+        expect(_engine.unlistenedKeys, [_hexKey(0), _hexKey(1)]);
       },
     );
   });

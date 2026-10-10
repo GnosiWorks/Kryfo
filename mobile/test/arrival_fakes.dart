@@ -310,6 +310,8 @@ class ArrivalRows implements HaloDb {
   // who sent each file's slices, and when its last one came
   final chunkFrom = <String, String>{};
   final chunkAt = <String, int>{};
+  // the group each file's slices came in, null for none
+  final chunkGroup = <String, String?>{};
   var _clock = 0;
   final seen = <String>{};
   final held = <String>[];
@@ -1186,6 +1188,8 @@ class ArrivalRows implements HaloDb {
     );
     rosterStamps.remove(groupId);
     rosterGoneKeys.remove(groupId);
+    rosterCutsOf.remove(groupId);
+    roomKeys.remove(groupId);
     roomSeqs.remove(groupId);
   }
 
@@ -1323,8 +1327,66 @@ class ArrivalRows implements HaloDb {
     ...?rosterGoneKeys[groupId],
   };
   @override
-  Future<void> noteRosterGone(String groupId, Iterable<String> keys) async =>
-      rosterGoneKeys.putIfAbsent(groupId, () => {}).addAll(keys);
+  Future<void> noteRosterGone(
+    String groupId,
+    Iterable<String> keys, {
+    Map<String, int> cuts = const {},
+  }) async {
+    final gone = rosterGoneKeys.putIfAbsent(groupId, () => {});
+    final cut = rosterCutsOf.putIfAbsent(groupId, () => {});
+    for (final k in keys) {
+      final n = cuts[k];
+      if (!gone.add(k)) {
+        final had = cut[k];
+        if (had == null || n == null) {
+          cut.remove(k);
+        } else if (n < had) {
+          cut[k] = n;
+        }
+      } else if (n != null) {
+        cut[k] = n;
+      }
+    }
+  }
+
+  // ---- what each room key was cut at, listened to and heard from ----
+  final rosterCutsOf = <String, Map<String, int>>{};
+  final roomKeys = <String, Map<String, int>>{};
+
+  @override
+  Future<Map<String, int>> rosterCuts(String groupId) async => {
+    ...?rosterCutsOf[groupId],
+  };
+  @override
+  Future<Set<String>> roomKeysOf(String groupId) async => {
+    ...?roomKeys[groupId]?.keys,
+  };
+  @override
+  Future<bool> noteRoomKeys(String groupId, Iterable<String> keys) async {
+    if (!groupRows.containsKey(groupId)) return false;
+    final m = roomKeys.putIfAbsent(groupId, () => {});
+    for (final k in keys) {
+      m.putIfAbsent(k, () => 0);
+    }
+    return true;
+  }
+
+  @override
+  Future<void> noteRoomHeard(String groupId, String key, int n) async {
+    if (!groupRows.containsKey(groupId)) return;
+    final m = roomKeys.putIfAbsent(groupId, () => {});
+    if ((m[key] ?? 0) < n) m[key] = n;
+  }
+
+  @override
+  Future<int> roomHeard(String groupId, String key) async =>
+      roomKeys[groupId]?[key] ?? 0;
+  @override
+  Future<bool> lateRoomFrame(String groupId, String key, int? n) async {
+    final cut = rosterCutsOf[groupId]?[key];
+    if (n == null || n <= 0 || cut == null || n >= cut) return false;
+    return n > await roomHeard(groupId, key);
+  }
 
   @override
   Future<List<Map<String, Object?>>> rooms() async => _hit('rooms', null, [
@@ -1523,9 +1585,11 @@ class ArrivalRows implements HaloDb {
     int total,
     int? burn, {
     required String from,
+    String? group,
   }) async {
     _hit('putMediaChunk', mediaId, null);
     chunkFrom[mediaId] = from;
+    chunkGroup[mediaId] = group;
     chunkAt[mediaId] = ++_clock;
     (chunks[mediaId] ??= {})[idx] = slice;
     if (burn != null) chunkBurn[mediaId] = burn;

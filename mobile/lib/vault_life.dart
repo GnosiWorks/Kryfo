@@ -300,6 +300,9 @@ const _groupRows = {
   // and so do the controls they are still to get, and its roster stamp
   'group_ctl_out': 'group_id = ?1',
   'group_roster': 'group_id = ?1',
+  // the files still coming in it, and a room's keys
+  'media_chunks': 'group_id = ?1',
+  'room_keys': 'group_id = ?1',
 };
 
 // every table a chat's rows sit in. msg_fts and polls_gone follow its
