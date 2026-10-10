@@ -310,15 +310,6 @@
       }
     }
   },
-  "appAddedYouCanMessage": "Added {parsed} · you can message them now",
-  "@appAddedYouCanMessage": {
-    "description": "main.dart",
-    "placeholders": {
-      "parsed": {
-        "type": "Object"
-      }
-    }
-  },
   "appPeerImportedV1": "Peer imported (v1): {parsed}",
   "@appPeerImportedV1": {
     "description": "main.dart",
@@ -2287,6 +2278,18 @@
   "chatJustTheTwoOf": "Just the two of you, end-to-end encrypted.",
   "@chatJustTheTwoOf": {
     "description": "screens/chat_screen.dart"
+  },
+  "chatSayHiSoThey": "Say hi so they see you",
+  "@chatSayHiSoThey": {
+    "description": "widgets/say_hi_card.dart: the card in a chat with someone just added, while nothing has gone to them"
+  },
+  "chatTheyWonTKnow": "They won't know you added them until your first message arrives.",
+  "@chatTheyWonTKnow": {
+    "description": "widgets/say_hi_card.dart: under the card's title. nothing reaches them before a first message does"
+  },
+  "chatWave": "Wave",
+  "@chatWave": {
+    "description": "widgets/say_hi_card.dart: the card's button, sends a waving hand as the first message"
   },
   "chatMicPermissionNeeded": "Mic permission needed",
   "@chatMicPermissionNeeded": {

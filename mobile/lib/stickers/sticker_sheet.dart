@@ -402,7 +402,7 @@ class StickerSheetState extends State<StickerSheet>
   // a cell tap names its cell; send in the preview names none
   void _pick(StickerRef ref, {String? cell}) {
     HapticFeedback.lightImpact();
-    final drawn = _drawn(
+    final drawn = drawnSticker(
       cell == null ? _previewKey.currentContext : _keys[cell]?.currentContext,
       _lib?.sticker(ref),
     );
@@ -421,26 +421,6 @@ class StickerSheetState extends State<StickerSheet>
       }),
     );
     if (mounted) Navigator.of(context).pop(pick);
-  }
-
-  // the sticker as drawn under [c], found in its render tree
-  RenderSticker? _drawn(BuildContext? c, Sticker? s) {
-    if (s == null) return null;
-    RenderSticker? found;
-    void visit(RenderObject o) {
-      if (found != null) return;
-      if (o is RenderSticker && identical(o.sticker, s)) {
-        found = o;
-        return;
-      }
-      o.visitChildren(visit);
-    }
-
-    final root = c?.findRenderObject();
-    if (root != null) visit(root);
-    final box = found;
-    if (box == null || !box.attached || !box.hasSize) return null;
-    return box;
   }
 
   Future<void> _removeRecent(StickerRef ref) async {

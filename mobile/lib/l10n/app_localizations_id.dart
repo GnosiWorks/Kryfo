@@ -261,11 +261,6 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String appAddedYouCanMessage(Object parsed) {
-    return '$parsed ditambahkan · sekarang kamu bisa mengiriminya pesan';
-  }
-
-  @override
   String appPeerImportedV1(Object parsed) {
     return 'Rekan diimpor (v1): $parsed';
   }
@@ -1790,6 +1785,16 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get chatJustTheTwoOf =>
       'Hanya kalian berdua, terenkripsi ujung ke ujung.';
+
+  @override
+  String get chatSayHiSoThey => 'Sapa dulu biar dia tahu kamu ada';
+
+  @override
+  String get chatTheyWonTKnow =>
+      'Dia tidak akan tahu kamu menambahkannya sampai pesan pertamamu sampai.';
+
+  @override
+  String get chatWave => 'Melambai';
 
   @override
   String get chatMicPermissionNeeded => 'Perlu izin mikrofon';

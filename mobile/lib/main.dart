@@ -7416,7 +7416,8 @@ Future<String> handleHaloUri(String raw) async =>
 
 // the result line, and whether the link left the person in the contacts
 // (added now, or already there). a caller that acts on that asks this; the
-// line is in the app's language and is not compared with anything.
+// line is in the app's language and is not compared with anything, and
+// empty when a chat opening is the answer.
 // [hidden] says who a shut vault holds, the app's state when not given
 Future<(String, bool)> handleHaloUriAdded(
   String raw, {
@@ -7547,14 +7548,12 @@ Future<(String, bool)> handleHaloUriAdded(
     }
     await session.upsertContact(parsed['id']!, parsed['onion']!, '');
     await session.setPeerBundle(parsed['id']!, parsed['bundle']!);
+    // nothing reaches them until a first message does: their chat opens,
+    // and says so while it is empty
     if (sessionQuiet) {
       await appState.refreshContacts();
-      return (
-        already
-            ? l10n.appAlreadySaved('${parsed['id']}')
-            : l10n.appAddedYouCanMessage('${parsed['id']}'),
-        true,
-      );
+      openAddedChatLater(id);
+      return (already ? l10n.appAlreadySaved(id) : '', true);
     }
     final fc = parsed['fc'];
     dlog(
@@ -7571,14 +7570,14 @@ Future<(String, bool)> handleHaloUriAdded(
     if (asked) await appState.afterAccept(id);
     // home, the pickers and the introductions show them now
     await appState.refreshContacts();
-    // asked once, as they are taken in: a re-add asks nothing
-    if (!already && await appState.inboxChatOf(id)) askInboxMove(id);
-    return (
-      already
-          ? l10n.appAlreadySaved('${parsed['id']}')
-          : l10n.appAddedYouCanMessage('${parsed['id']}'),
-      true,
-    );
+    // asked once, as they are taken in: a re-add asks nothing. the
+    // question is the answer then, and their chat stays where it is
+    if (!already && await appState.inboxChatOf(id)) {
+      askInboxMove(id);
+    } else {
+      openAddedChatLater(id);
+    }
+    return (already ? l10n.appAlreadySaved(id) : '', true);
   } else {
     final id = parsed['id']!;
     // an old card is an add all the same, and takes in who asked
@@ -7971,6 +7970,11 @@ void openRoomSoon(String groupId) {
 // room link does. tests watch it here
 @visibleForTesting
 void Function(String chatId) openDevChatLater = _openChatSoon;
+
+// someone added from a link or a code: their chat opens a beat later, as
+// his does. tests watch it here
+@visibleForTesting
+void Function(String haloId) openAddedChatLater = _openChatSoon;
 
 void _openChatSoon(String chatId) {
   Future.delayed(

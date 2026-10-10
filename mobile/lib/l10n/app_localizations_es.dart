@@ -267,11 +267,6 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String appAddedYouCanMessage(Object parsed) {
-    return '$parsed añadido · ya puedes escribirle';
-  }
-
-  @override
   String appPeerImportedV1(Object parsed) {
     return 'Contacto importado (v1): $parsed';
   }
@@ -1813,6 +1808,16 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get chatJustTheTwoOf =>
       'Solo entre los dos, con cifrado de extremo a extremo.';
+
+  @override
+  String get chatSayHiSoThey => 'Saluda para que te vea';
+
+  @override
+  String get chatTheyWonTKnow =>
+      'Tu contacto no sabrá nada hasta que le llegue tu primer mensaje.';
+
+  @override
+  String get chatWave => 'Saludar';
 
   @override
   String get chatMicPermissionNeeded => 'Se necesita permiso del micrófono';

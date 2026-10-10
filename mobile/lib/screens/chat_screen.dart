@@ -82,9 +82,11 @@ import '../main.dart'
         torStrictGetOnIsolate,
         TorHalo;
 import '../widgets/press_scale.dart';
+import '../widgets/say_hi_card.dart';
 import '../stickers/sticker_bubble.dart';
 import '../stickers/sticker_flight.dart';
-import '../stickers/sticker_pack.dart' show Sticker, StickerLibrary;
+import '../stickers/sticker_pack.dart'
+    show Sticker, StickerLibrary, StickerPack;
 import '../stickers/sticker_sheet.dart'
     show GifPick, PhoneGifPick, StickerButton, StickerPick, showStickerSheet;
 import '../gifs/gif_engine.dart' show appGifTabs;
@@ -727,8 +729,12 @@ class _ChatScreenState extends State<ChatScreen>
   bool _loading = false;
   bool _reloadPending = false;
   bool _sending = false;
-  // stickers being sealed. the composer does not wait for them, a retry does
+  // stickers and waves being sealed. the composer does not wait for them,
+  // a retry does
   int _stickerSends = 0;
+  // the pack's waving sticker, once the packs are read; null for the emoji
+  (StickerPack, Sticker)? _hi;
+  bool _hiKnown = false;
   // at most six stickers play at once in the whole chat
   final _stickers = StickerBudget(6);
   // stickers flying in from the sheet, by message uid. a bubble stays
@@ -846,6 +852,21 @@ class _ChatScreenState extends State<ChatScreen>
   bool get _incomingRequest => !_accepted && _recvCount > 0 && !widget.support;
   // a reaction says this phone read it: none in a request or a block
   bool get _canReact => !_blocked && !_incomingRequest;
+  // someone added here who knows nothing of it: nothing went to them and
+  // nothing came (anything that came marks them engaged), so they hear of
+  // this phone only with a first message
+  bool get _sayHi =>
+      _loaded &&
+      _barKnown &&
+      _hiKnown &&
+      _messages.isEmpty &&
+      _accepted &&
+      !_peerEngaged &&
+      _sentCount == 0 &&
+      !_blocked &&
+      !_keyHeld &&
+      !_isDev &&
+      !widget.support;
   // friends vouched for this peer. no sender-side cap then: the other end
   // skips its gate for us, so locking ourselves would be the only lock left.
   List<String> _voucherNames = const [];
@@ -975,8 +996,21 @@ class _ChatScreenState extends State<ChatScreen>
     _applySecureContent();
     WidgetsBinding.instance.addObserver(this);
     // read once, before the first sticker row asks for it. a failure here is
-    // the row's to show when it loads again
-    StickerLibrary.load().ignore();
+    // the row's to show when it loads again, and the card waves the emoji
+    final ready = StickerLibrary.ready;
+    if (ready != null) {
+      _hi = wavingSticker(ready);
+      _hiKnown = true;
+    } else {
+      StickerLibrary.load()
+          .then<void>(
+            (lib) => _hi = wavingSticker(lib),
+            onError: (Object e) => dlog('sticker pack: $e'),
+          )
+          .whenComplete(() {
+            if (mounted) setState(() => _hiKnown = true);
+          });
+    }
     _reconcileSending();
     appState.loadGhostPref().then((p) {
       if (mounted) {
@@ -2886,15 +2920,35 @@ class _ChatScreenState extends State<ChatScreen>
     await _sendBody(
       s.emoji,
       sticker: StickerWire.of(pack, s),
-      onRow: (m) => _fly(m, s, pick),
+      onRow: (m) => _fly(m, s, pick.from, pick.at),
     );
   }
 
-  // the sticker flies from its cell to the new row. under reduced motion
-  // there is no flight and the bubble fades in
-  void _fly(_Msg m, Sticker s, StickerPick pick) {
+  // the card's wave: the waving sticker, flying from the card to its row,
+  // or the emoji. a first message like any, by the same way out. its row is
+  // in before this returns, so the card is gone for a second tap
+  void _wave(Rect from, double at) {
+    if (!_sayHi) return;
+    final hi = _hi;
+    if (hi == null) {
+      unawaited(_sendBody(kWaveEmoji, fromComposer: false));
+    } else {
+      final (pack, s) = hi;
+      unawaited(
+        _sendBody(
+          s.emoji,
+          sticker: StickerWire.of(pack, s),
+          onRow: (m) => _fly(m, s, from, at),
+        ),
+      );
+    }
+  }
+
+  // the sticker flies from where it was drawn to the new row. under reduced
+  // motion there is no flight and the bubble fades in
+  void _fly(_Msg m, Sticker s, Rect from, double at) {
     final uid = m.msgUid;
-    if (uid == null || pick.from.isEmpty) return;
+    if (uid == null || from.isEmpty) return;
     if (MediaQuery.disableAnimationsOf(context)) return;
     final rtl = Directionality.of(context) == TextDirection.rtl;
     final landing = _landings[uid] = StickerLanding();
@@ -2903,10 +2957,10 @@ class _ChatScreenState extends State<ChatScreen>
     land = flySticker(
       context,
       sticker: s,
-      from: pick.from,
-      at: pick.at,
+      from: from,
+      at: at,
       landing: landing,
-      fallback: () => _landingGuess(rtl) ?? pick.from,
+      fallback: () => _landingGuess(rtl) ?? from,
       onGone: () {
         unguard?.call();
         _flights.remove(land);
@@ -3584,17 +3638,19 @@ class _ChatScreenState extends State<ChatScreen>
 
   // the one way out for words: a sticker rides it with its emoji as the
   // words, so it gets the same save, proof of work, seal, route, ticks and
-  // retry. [onRow] sees the row before it is on screen.
+  // retry. [onRow] sees the row before it is on screen. words from
+  // elsewhere than the composer leave what is typed there as it is
   Future<void> _sendBody(
     String text, {
     StickerWire? sticker,
     void Function(_Msg)? onRow,
+    bool fromComposer = true,
   }) async {
     // a stranger gets 2 messages, then the chat locks until they accept. the
     // input bar shows it; this guards the send itself.
     if (_requestLocked) return;
     if (_isDev && !await _ensureDevStarted()) return;
-    final typed = sticker == null;
+    final typed = sticker == null && fromComposer;
     final msgUid = newMsgUid();
     // claimed from the start: a reload while it grinds or seals keeps it
     // sending, and no retry sends it alongside
@@ -3620,7 +3676,8 @@ class _ChatScreenState extends State<ChatScreen>
       );
       msg.preview = preview;
       onRow?.call(msg);
-      // a sticker leaves the composer as it is: what was typed stays typed
+      // a sticker or a wave leaves the composer as it is: what was typed
+      // stays typed
       void sealing(bool on) {
         if (typed) {
           _sending = on;
@@ -3639,7 +3696,7 @@ class _ChatScreenState extends State<ChatScreen>
       });
       if (typed) _msgCtrl.clear();
       _scrollToEnd();
-      // the sheet already fired it for a sticker
+      // the sheet or the card already fired it
       if (typed) HapticFeedback.lightImpact();
 
       await _answerSupport();
@@ -4921,6 +4978,11 @@ class _ChatScreenState extends State<ChatScreen>
     // and one that waits is read once this frame shows it
     _reads.look();
     final searchActive = _searching && _query.isNotEmpty;
+    // the height the chat has above the keyboard
+    final visible =
+        MediaQuery.sizeOf(context).height -
+        MediaQuery.viewInsetsOf(context).bottom;
+    final short = visible < 480;
     return Scaffold(
       backgroundColor: HaloColors.surface,
       body: SafeArea(
@@ -4969,44 +5031,66 @@ class _ChatScreenState extends State<ChatScreen>
                     ),
             ),
             // each line around the thread grows in and folds away, so the
-            // thread does not jump
-            _Fold(
-              // his chat is no request: its lock line says the rest
-              (_flag != null && !_accepted) || _isDev
-                  ? const SizedBox(key: ValueKey('top-none'), width: 0)
-                  : _vouched && !_accepted && _recvCount == 0
-                  ? _IntroBanner(
-                      key: const ValueKey('intro'),
-                      names: _voucherNames,
-                      seed: _voucherSeed!,
-                      avatar: _voucherAvatar,
-                      verified: _voucherVerified,
-                    )
-                  : _requestPending && _sentCount > 0
-                  ? const _RequestBanner(key: ValueKey('request'))
-                  : const SizedBox(key: ValueKey('top-none'), width: 0),
-            ),
-            // his key moved on: this chat still reads and writes
-            _Fold(
-              _devShown?.status == DevKeyStatus.previous
-                  ? NoticeBanner(
-                      key: const ValueKey('dev-moved'),
-                      glyph: NoticeGlyph.shield,
-                      text: l10n.devNewKey,
-                      color: HaloColors.amber,
-                      margin: const EdgeInsets.fromLTRB(14, 10, 14, 2),
-                    )
-                  : const SizedBox(key: ValueKey('dev-moved-none'), width: 0),
-            ),
-            _Fold(
-              _keyChanged && !_keyHeld && !_isDev
-                  ? _KeyChangedBanner(
-                      key: const ValueKey('key-changed'),
-                      peerName: _nickname ?? widget.peerHaloId,
-                      onVerify: _openKeyVerification,
-                      onDismiss: _dismissKeyChanged,
-                    )
-                  : const SizedBox(key: ValueKey('key-none'), width: 0),
+            // thread does not jump. a short room (keyboard up, big text)
+            // gets them tight, and at most a share of it: past that they
+            // scroll, never push the composer off
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: math.max(48, visible * 0.3),
+              ),
+              child: SingleChildScrollView(
+                primary: false,
+                physics: const ClampingScrollPhysics(),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _Fold(
+                      // his chat is no request: its lock line says the rest
+                      (_flag != null && !_accepted) || _isDev
+                          ? const SizedBox(key: ValueKey('top-none'), width: 0)
+                          : _vouched && !_accepted && _recvCount == 0
+                          ? _IntroBanner(
+                              key: const ValueKey('intro'),
+                              names: _voucherNames,
+                              seed: _voucherSeed!,
+                              avatar: _voucherAvatar,
+                              verified: _voucherVerified,
+                            )
+                          : _requestPending && _sentCount > 0
+                          ? _RequestBanner(
+                              key: const ValueKey('request'),
+                              compact: short,
+                            )
+                          : const SizedBox(key: ValueKey('top-none'), width: 0),
+                    ),
+                    // his key moved on: this chat still reads and writes
+                    _Fold(
+                      _devShown?.status == DevKeyStatus.previous
+                          ? NoticeBanner(
+                              key: const ValueKey('dev-moved'),
+                              glyph: NoticeGlyph.shield,
+                              text: l10n.devNewKey,
+                              color: HaloColors.amber,
+                              margin: const EdgeInsets.fromLTRB(14, 10, 14, 2),
+                            )
+                          : const SizedBox(
+                              key: ValueKey('dev-moved-none'),
+                              width: 0,
+                            ),
+                    ),
+                    _Fold(
+                      _keyChanged && !_keyHeld && !_isDev
+                          ? _KeyChangedBanner(
+                              key: const ValueKey('key-changed'),
+                              peerName: _nickname ?? widget.peerHaloId,
+                              onVerify: _openKeyVerification,
+                              onDismiss: _dismissKeyChanged,
+                            )
+                          : const SizedBox(key: ValueKey('key-none'), width: 0),
+                    ),
+                  ],
+                ),
+              ),
             ),
             Expanded(
               child: AtmoScope(
@@ -5034,10 +5118,19 @@ class _ChatScreenState extends State<ChatScreen>
                       Positioned.fill(child: AtmosphereWash(_atmosphere)),
                     // a slow first read fades the thread up, not a cut
                     FadeSwap(
-                      child: !_loaded
+                      // an empty chat waits for what its card depends on,
+                      // so the card never follows the plain empty state
+                      child:
+                          !_loaded ||
+                              (_messages.isEmpty && !(_barKnown && _hiKnown))
                           ? const SizedBox.shrink(key: ValueKey('wait'))
                           : _messages.isEmpty
-                          ? const _EmptyConversation(key: ValueKey('empty'))
+                          ? _sayHi
+                                // holds the room the card sits over
+                                ? const SizedBox.expand(key: ValueKey('hi'))
+                                : const _EmptyConversation(
+                                    key: ValueKey('empty'),
+                                  )
                           : ListView.builder(
                               key: const ValueKey('list'),
                               controller: _scrollCtrl,
@@ -5084,6 +5177,22 @@ class _ChatScreenState extends State<ChatScreen>
                                 }
                               },
                             ),
+                    ),
+                    // over the thread, so its first row comes in under it
+                    // as it goes
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        ignoring: !_sayHi,
+                        child: _SayHiSwap(
+                          child: _sayHi
+                              ? SayHiCard(
+                                  key: const ValueKey('say-hi'),
+                                  sticker: _hi?.$2,
+                                  onWave: _wave,
+                                )
+                              : const SizedBox.shrink(key: ValueKey('no-hi')),
+                        ),
+                      ),
                     ),
                     Positioned(
                       left: 0,
@@ -5342,6 +5451,40 @@ class _ChatScreenState extends State<ChatScreen>
           ],
         ),
       ),
+    );
+  }
+}
+
+// the say hi card comes in on its own rise. it goes as its wave leaves:
+// held a beat while the hand waves, then shrinking away as the first row
+// comes in. nothing moves when the phone asks for no movement
+class _SayHiSwap extends StatelessWidget {
+  final Widget child;
+  const _SayHiSwap({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final still = motionStill(context);
+    return AnimatedSwitcher(
+      duration: Duration.zero,
+      reverseDuration: still
+          ? Duration.zero
+          : const Duration(milliseconds: 380),
+      switchOutCurve: const Interval(0, 0.7, curve: Curves.easeOutCubic),
+      layoutBuilder: (top, gone) =>
+          Stack(fit: StackFit.passthrough, children: [...gone, ?top]),
+      transitionBuilder: (c, a) => AnimatedBuilder(
+        animation: a,
+        builder: (_, c) {
+          final v = a.value.clamp(0.0, 1.0);
+          return Opacity(
+            opacity: v,
+            child: Transform.scale(scale: 0.92 + 0.08 * v, child: c),
+          );
+        },
+        child: c,
+      ),
+      child: child,
     );
   }
 }
@@ -5639,13 +5782,19 @@ class _IntroBanner extends StatelessWidget {
 
 // shown above the thread when we're messaging someone who hasn't accepted us.
 class _RequestBanner extends StatelessWidget {
-  const _RequestBanner({super.key});
+  // little room: closer in, and the line under the title on one line
+  final bool compact;
+  const _RequestBanner({super.key, this.compact = false});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-      padding: const EdgeInsets.fromLTRB(13, 10, 13, 11),
+      margin: compact
+          ? const EdgeInsets.fromLTRB(16, 6, 16, 2)
+          : const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      padding: compact
+          ? const EdgeInsets.fromLTRB(12, 6, 12, 7)
+          : const EdgeInsets.fromLTRB(13, 10, 13, 11),
       decoration: BoxDecoration(
         color: HaloColors.amber.withValues(alpha: 0.08),
         border: Border.all(color: HaloColors.amber.withValues(alpha: 0.25)),
@@ -5666,9 +5815,11 @@ class _RequestBanner extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 5),
+          SizedBox(height: compact ? 2 : 5),
           Text(
             l10n.chatTheyNeedToAccept,
+            maxLines: compact ? 1 : null,
+            overflow: compact ? TextOverflow.ellipsis : null,
             style: HaloType.sans(
               size: 12.5,
               color: HaloColors.text2,

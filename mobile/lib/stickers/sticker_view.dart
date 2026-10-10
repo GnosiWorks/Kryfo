@@ -75,6 +75,27 @@ class StickerBudget {
   }
 }
 
+/// [s] as drawn under [c], found in its render tree: where it is and how
+/// far into its loop, for a flight that takes over from it
+RenderSticker? drawnSticker(BuildContext? c, Sticker? s) {
+  if (s == null) return null;
+  RenderSticker? found;
+  void visit(RenderObject o) {
+    if (found != null) return;
+    if (o is RenderSticker && identical(o.sticker, s)) {
+      found = o;
+      return;
+    }
+    o.visitChildren(visit);
+  }
+
+  final root = c?.findRenderObject();
+  if (root != null) visit(root);
+  final box = found;
+  if (box == null || !box.attached || !box.hasSize) return null;
+  return box;
+}
+
 class StickerView extends StatefulWidget {
   const StickerView({
     super.key,
