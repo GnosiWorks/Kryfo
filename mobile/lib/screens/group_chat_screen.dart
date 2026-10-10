@@ -11,7 +11,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import '../back_on_top.dart';
 import '../forward.dart';
-import '../widgets/key_held.dart';
+import 'forward_sheet.dart';
 import '../picked.dart';
 import '../sent_name.dart';
 import '../widgets/press_scale.dart';
@@ -26,18 +26,9 @@ import '../widgets/decode_px.dart';
 import '../atmosphere.dart';
 import 'shield_sheet.dart';
 import '../notifications.dart' show clearNotificationsFor;
-import '../devchat/dev_key.dart' show isDevChat;
-import 'dev_about_sheet.dart'
-    show DevForwardTile, devChatRoute, devForwardTarget, devSlot;
+import 'dev_about_sheet.dart' show devForwardTarget;
 import 'chat_screen.dart'
-    show
-        disguiseWav,
-        ChatScreen,
-        SearchHead,
-        Atmo,
-        AtmosphereWash,
-        atmoFromName,
-        firstUrl;
+    show disguiseWav, SearchHead, Atmo, AtmosphereWash, atmoFromName, firstUrl;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -3013,125 +3004,17 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   Future<void> _forwardGroupMessage(_GMsg m) async {
-    final targets = appState.contacts.where((c) => !c.blocked).toList();
-    // who is held is marked, and picked asks for the way out first
-    final held = await keysHeldShown();
-    if (!mounted) return;
-    // the developer chat, once it has started
-    final dev = devForwardTarget;
-    final devAt = dev == null ? -1 : devSlot(dev, targets);
-    final haloId = await showHaloSheet<String>(
+    final id = await pickWordsChat(
       context,
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SheetHandle(),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
-              child: Text(
-                l10n.groupChatForwardTo,
-                style: HaloType.serif(
-                  size: 18,
-                  italic: true,
-                  color: HaloColors.text,
-                ),
-              ),
-            ),
-            if (targets.isEmpty && dev == null)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
-                child: Text(
-                  l10n.groupChatNoContactsToForward,
-                  style: HaloType.sans(size: 13, color: HaloColors.text2),
-                ),
-              )
-            else
-              // the sheet scrolls as one, so the list is laid out in full
-              // and does not scroll on its own
-              ListView(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                padding: const EdgeInsets.only(bottom: 8),
-                children: [
-                  for (final (i, c) in targets.indexed) ...[
-                    if (i == devAt)
-                      DevForwardTile(
-                        onTap: () => Navigator.pop(ctx, dev!.chatId),
-                      ),
-                    InkWell(
-                      onTap: () => Navigator.pop(ctx, c.haloId),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 12,
-                        ),
-                        child: Row(
-                          children: [
-                            KryfoAvatar(
-                              seed: c.avatarSeed,
-                              size: 32,
-                              choice: c.avatar,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    c.nickname ?? c.haloId,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: HaloType.sans(
-                                      size: 14,
-                                      weight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  KeyHeldMark(on: held.contains(c.haloId)),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                  if (devAt == targets.length)
-                    DevForwardTile(
-                      onTap: () => Navigator.pop(ctx, dev!.chatId),
-                    ),
-                ],
-              ),
-          ],
-        ),
-      ),
+      title: l10n.groupChatForwardTo,
+      empty: l10n.groupChatNoContactsToForward,
+      // the developer chat, once it has started
+      dev: devForwardTarget,
     );
-    if (haloId == null || !mounted) return;
-    if (isDevChat(haloId)) {
-      Navigator.of(context).push(devChatRoute(haloId, initialText: m.text));
-      return;
-    }
-    if (held.contains(haloId)) {
-      final c = targets.where((c) => c.haloId == haloId).firstOrNull;
-      final name = c?.nickname ?? haloId;
-      if (!await showKeyHeldSheet(context, haloId, name) || !mounted) return;
-    }
-    final row = await session.getContact(haloId);
-    if (row == null || !mounted) return;
-    Navigator.of(context).push(
-      haloRoute(
-        ChatScreen(
-          peerHaloId: haloId,
-          peerOnion: (row['onion'] as String?) ?? '',
-          peerXPub: (row['xpub'] as String?) ?? '',
-          avatarSeed: haloId,
-          avatarChoice: (row['avatar'] as num?)?.toInt(),
-          initialText: m.text,
-        ),
-      ),
-    );
+    if (id == null || !mounted) return;
+    final route = await wordsRoute(id, m.text);
+    if (route == null || !mounted) return;
+    Navigator.of(context).push(route);
   }
 
   Future<void> _editGroupMessage(_GMsg m) async {

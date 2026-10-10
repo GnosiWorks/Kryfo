@@ -225,7 +225,15 @@ void main() {
     expect(fade.opacity.value, 1);
   });
 
-  test('both forward pickers mark the held and ask before they forward', () {
+  test('the forward picker marks the held and asks before it forwards, '
+      'for both forwards', () {
+    final body = bodyOf(
+      sourceOf('lib/screens/forward_sheet.dart'),
+      'Future<String?> pickWordsChat(',
+    );
+    expect(body, contains('await keysHeldShown()'));
+    expect(body, contains('KeyHeldMark(on: held.contains(c.haloId))'));
+    expect(body, contains('showKeyHeldSheet(context, id, name)'));
     for (final (file, fn) in [
       ('lib/screens/chat_screen.dart', 'Future<void> _forwardMessage('),
       (
@@ -233,10 +241,7 @@ void main() {
         'Future<void> _forwardGroupMessage(',
       ),
     ]) {
-      final body = bodyOf(sourceOf(file), fn);
-      expect(body, contains('await keysHeldShown()'));
-      expect(body, contains('KeyHeldMark(on: held.contains(c.haloId))'));
-      expect(body, contains('showKeyHeldSheet(context, haloId, name)'));
+      expect(bodyOf(sourceOf(file), fn), contains('pickWordsChat('));
     }
   });
 
