@@ -1789,12 +1789,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatHoldToRecord => '按住录制语音消息';
 
   @override
-  String get chatSendPhoto => '发送照片';
-
-  @override
-  String get chatAddACaption => '添加说明…';
-
-  @override
   String get chatSecurityCodeChanged => '安全码已变更';
 
   @override
@@ -3106,9 +3100,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeSupporter => '支持者';
 
   @override
-  String get homeArchivedChats => '已归档的聊天';
-
-  @override
   String get homeUnmute => '取消静音';
 
   @override
@@ -4180,9 +4171,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pinsChangeWipePin => '更改抹掉 PIN';
 
   @override
-  String get pinsSetAWipePin => '设置抹掉 PIN';
-
-  @override
   String get pinsRemove => '移除';
 
   @override
@@ -4997,12 +4985,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsWholeAppHiddenFromRecentsAnd => '整个应用不出现在最近任务和截屏中';
-
-  @override
-  String get settingsOnNextStart => '开 · 下次启动';
-
-  @override
-  String get settingsOffNextStart => '关 · 下次启动';
 
   @override
   String get settingsLightTheme => '浅色主题';
@@ -6790,9 +6772,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pollPickSeveral => '选一项或多项';
 
   @override
-  String get searchOpen => '搜索';
-
-  @override
   String get searchHint => '搜索聊天和消息';
 
   @override
@@ -6965,9 +6944,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pinsDecoyLine => '打开一个空的 Kryfo，就像刚装好一样。';
-
-  @override
-  String get pinsSetADecoyPin => '设置伪装 PIN';
 
   @override
   String get pinsChangeDecoyPin => '更改伪装 PIN';
@@ -9381,12 +9357,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatHoldToRecord => '按住即可錄製語音訊息';
 
   @override
-  String get chatSendPhoto => '傳送照片';
-
-  @override
-  String get chatAddACaption => '加上說明…';
-
-  @override
   String get chatSecurityCodeChanged => '安全碼已變更';
 
   @override
@@ -10700,9 +10670,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get homeSupporter => '支持者';
 
   @override
-  String get homeArchivedChats => '封存的聊天';
-
-  @override
   String get homeUnmute => '取消靜音';
 
   @override
@@ -11774,9 +11741,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get pinsChangeWipePin => '變更清除 PIN';
 
   @override
-  String get pinsSetAWipePin => '設定清除 PIN';
-
-  @override
   String get pinsRemove => '移除';
 
   @override
@@ -12590,12 +12554,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsWholeAppHiddenFromRecentsAnd => '在最近使用畫面和截圖中隱藏整個應用程式';
-
-  @override
-  String get settingsOnNextStart => '開啟 · 下次啟動';
-
-  @override
-  String get settingsOffNextStart => '關閉 · 下次啟動';
 
   @override
   String get settingsLightTheme => '淺色主題';
@@ -14383,9 +14341,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get pollPickSeveral => '選一項或多項';
 
   @override
-  String get searchOpen => '搜尋';
-
-  @override
   String get searchHint => '搜尋聊天和訊息';
 
   @override
@@ -14558,9 +14513,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get pinsDecoyLine => '開啟一個空的 Kryfo，就像剛安裝好一樣。';
-
-  @override
-  String get pinsSetADecoyPin => '設定偽裝 PIN';
 
   @override
   String get pinsChangeDecoyPin => '變更偽裝 PIN';

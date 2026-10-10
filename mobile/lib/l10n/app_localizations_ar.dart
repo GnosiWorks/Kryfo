@@ -1903,12 +1903,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatHoldToRecord => 'اضغط مطولًا لتسجيل رسالة صوتية';
 
   @override
-  String get chatSendPhoto => 'إرسال الصورة';
-
-  @override
-  String get chatAddACaption => 'أضف تعليقًا…';
-
-  @override
   String get chatSecurityCodeChanged => 'تغيّر رمز الأمان';
 
   @override
@@ -3326,9 +3320,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get homeSupporter => 'داعم';
 
   @override
-  String get homeArchivedChats => 'المحادثات المؤرشفة';
-
-  @override
   String get homeUnmute => 'إلغاء الكتم';
 
   @override
@@ -4458,9 +4449,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pinsChangeWipePin => 'تغيير رمز PIN للمسح';
 
   @override
-  String get pinsSetAWipePin => 'تعيين رمز PIN للمسح';
-
-  @override
   String get pinsRemove => 'إزالة';
 
   @override
@@ -5296,12 +5284,6 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get settingsWholeAppHiddenFromRecentsAnd =>
       'التطبيق كله مخفي من التطبيقات الأخيرة ولقطات الشاشة';
-
-  @override
-  String get settingsOnNextStart => 'مفعّل · التشغيل التالي';
-
-  @override
-  String get settingsOffNextStart => 'معطّل · التشغيل التالي';
 
   @override
   String get settingsLightTheme => 'المظهر الفاتح';
@@ -7194,9 +7176,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pollPickSeveral => 'اختر إجابة أو أكثر';
 
   @override
-  String get searchOpen => 'بحث';
-
-  @override
   String get searchHint => 'ابحث في المحادثات والرسائل';
 
   @override
@@ -7386,9 +7365,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get pinsDecoyLine => 'يفتح Kryfo فارغًا، كأنه مثبت للتو.';
-
-  @override
-  String get pinsSetADecoyPin => 'تعيين رمز PIN للتمويه';
 
   @override
   String get pinsChangeDecoyPin => 'تغيير رمز PIN للتمويه';

@@ -1843,12 +1843,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatHoldToRecord => 'Nhấn giữ để ghi tin nhắn thoại';
 
   @override
-  String get chatSendPhoto => 'Gửi ảnh';
-
-  @override
-  String get chatAddACaption => 'Thêm chú thích…';
-
-  @override
   String get chatSecurityCodeChanged => 'Mã bảo mật đã thay đổi';
 
   @override
@@ -3218,9 +3212,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get homeSupporter => 'Người ủng hộ';
 
   @override
-  String get homeArchivedChats => 'Trò chuyện đã lưu trữ';
-
-  @override
   String get homeUnmute => 'Bật tiếng';
 
   @override
@@ -4356,9 +4347,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pinsChangeWipePin => 'Đổi mã PIN xóa sạch';
 
   @override
-  String get pinsSetAWipePin => 'Đặt mã PIN xóa sạch';
-
-  @override
   String get pinsRemove => 'Gỡ bỏ';
 
   @override
@@ -5211,12 +5199,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get settingsWholeAppHiddenFromRecentsAnd =>
       'Toàn bộ ứng dụng được ẩn khỏi danh sách gần đây và ảnh chụp màn hình';
-
-  @override
-  String get settingsOnNextStart => 'Bật · lần mở tới';
-
-  @override
-  String get settingsOffNextStart => 'Tắt · lần mở tới';
 
   @override
   String get settingsLightTheme => 'Giao diện sáng';
@@ -7061,9 +7043,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pollPickSeveral => 'Chọn một hoặc nhiều';
 
   @override
-  String get searchOpen => 'Tìm kiếm';
-
-  @override
   String get searchHint => 'Tìm trong cuộc trò chuyện và tin nhắn';
 
   @override
@@ -7244,9 +7223,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get pinsDecoyLine => 'Mở một Kryfo trống, như vừa mới cài.';
-
-  @override
-  String get pinsSetADecoyPin => 'Đặt mã PIN ngụy trang';
 
   @override
   String get pinsChangeDecoyPin => 'Đổi mã PIN ngụy trang';
