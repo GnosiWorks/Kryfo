@@ -16,7 +16,7 @@ void main() {
 
   test('made on create, and on the upgrade to 69 after every older step', () {
     final version = RegExp(r'version: (\d+),').firstMatch(src)!.group(1)!;
-    expect(int.parse(version), 71);
+    expect(int.parse(version), 72);
     final table = src.substring(
       src.indexOf('CREATE TABLE IF NOT EXISTS held_onion ('),
     );

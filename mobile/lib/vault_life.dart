@@ -300,6 +300,8 @@ const _groupRows = {
   // and so do the controls they are still to get, and its roster stamp
   'group_ctl_out': 'group_id = ?1',
   'group_roster': 'group_id = ?1',
+  // which of its texts went again to a member after their restore
+  'group_resent': 'group_id = ?1',
 };
 
 // every table a chat's rows sit in. msg_fts and polls_gone follow its

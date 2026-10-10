@@ -51,6 +51,8 @@ Future<void> _tables(SqliteMem db, String s) async {
     'CREATE TABLE $s.shield (halo_id TEXT PRIMARY KEY)',
     'CREATE TABLE $s.notif_tags (chat TEXT PRIMARY KEY, tag TEXT NOT NULL '
         'UNIQUE)',
+    'CREATE TABLE $s.group_resent (group_id TEXT, member TEXT, since '
+        'INTEGER, at INTEGER, PRIMARY KEY (group_id, member, since))',
   ]) {
     await db.execute(t);
   }
@@ -180,4 +182,29 @@ void main() {
     expect(await tags(db, 'v'), isEmpty);
     expect(await tags(db, 'main'), ['$_f bb']);
   }, skip: skip);
+
+  test(
+    'a group\'s marks of what went again after a restore move with it',
+    () async {
+      final db = await _world();
+      await db.execute(
+        "INSERT INTO main.group_resent VALUES ('$_g', '$_f', 0, 5), "
+        "('other-group1', '$_f', 0, 5)",
+      );
+      final mover = SqlChatMover(_NoDb(), _NoDb());
+      await mover.moveRowsOn(db, group, intoVault: true);
+      Future<List<Object?>> marks(String s) async => [
+        for (final r in await db.rawQuery(
+          'SELECT group_id FROM $s.group_resent ORDER BY group_id',
+        ))
+          r['group_id'],
+      ];
+      expect(await marks('main'), ['other-group1']);
+      expect(await marks('v'), [_g]);
+      await mover.moveRowsOn(db, group, intoVault: false);
+      expect(await marks('main'), [_g, 'other-group1']);
+      expect(await marks('v'), isEmpty);
+    },
+    skip: skip,
+  );
 }

@@ -1257,7 +1257,7 @@ class HaloDb implements GroupOwedStore {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 71,
+      version: 72,
       onConfigure: eraseFreedPages,
       onCreate: (db, _) async {
         await db.execute('''
@@ -1414,6 +1414,7 @@ class HaloDb implements GroupOwedStore {
         await blockTables(db);
         await firstContactTables(db);
         await notifTagTables(db);
+        await groupResentTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
         // 62 runs after every older step, below: its index names columns
@@ -1869,6 +1870,10 @@ class HaloDb implements GroupOwedStore {
         if (oldV < 71) {
           // the random tag each chat's notifications go under
           await notifTagTables(db);
+        }
+        if (oldV < 72) {
+          // which groups' texts went again to a member after a restore
+          await groupResentTables(db);
         }
       },
     );
@@ -3163,7 +3168,11 @@ class HaloDb implements GroupOwedStore {
   Future<void> deleteGroup(String groupId) async {
     final db = await open();
     final room = (await getGroup(groupId))?['room_pub'] != null;
-    for (final table in const ['group_media_owed', 'group_roster']) {
+    for (final table in const [
+      'group_media_owed',
+      'group_roster',
+      'group_resent',
+    ]) {
       await db.delete(table, where: 'group_id = ?', whereArgs: [groupId]);
     }
     // a take-back still goes to members who may hold the message, after
@@ -5532,6 +5541,107 @@ class HaloDb implements GroupOwedStore {
     });
   }
 
+  // a restore's mark outlives any window it could still stop
+  static const _kResentKeep = Duration(days: 16);
+
+  /// our group texts since [from], owed again to [member] as texts they
+  /// missed are: in each group here they are in, only what went since they
+  /// joined, never one that burned. once per [restore] and group. a room's
+  /// members are keys of its own, never a restored phone. how many
+  Future<int> oweGroupTextsAfterRestore(
+    String member, {
+    required String me,
+    required int from,
+    required int restore,
+    required int now,
+  }) async {
+    final db = await open();
+    return db.transaction((t) async {
+      await t.delete(
+        'group_resent',
+        where: 'at < ?',
+        whereArgs: [now - _kResentKeep.inMilliseconds],
+      );
+      var n = 0;
+      for (final m in await t.query(
+        'group_members',
+        columns: ['group_id', 'joined_at'],
+        where: 'halo_id = ?',
+        whereArgs: [member],
+      )) {
+        final g = m['group_id'] as String;
+        final group = await t.query(
+          'groups',
+          columns: ['room_pub'],
+          where: 'group_id = ?',
+          whereArgs: [g],
+          limit: 1,
+        );
+        if (group.isEmpty || group.first['room_pub'] != null) continue;
+        final marked = await t.query(
+          'group_resent',
+          columns: ['at'],
+          where: 'group_id = ? AND member = ? AND since = ?',
+          whereArgs: [g, member, restore],
+          limit: 1,
+        );
+        if (marked.isNotEmpty) continue;
+        await t.insert('group_resent', {
+          'group_id': g,
+          'member': member,
+          'since': restore,
+          'at': now,
+        });
+        final start = max(from, (m['joined_at'] as num?)?.toInt() ?? now);
+        final others = [
+          for (final r in await t.query(
+            'group_members',
+            columns: ['halo_id'],
+            where: 'group_id = ?',
+            whereArgs: [g],
+          ))
+            if (r['halo_id'] != me) r,
+        ].length;
+        // kNotSent is a block's: those wait for a tap
+        for (final r in await t.query(
+          'messages',
+          columns: ['msg_uid', 'sent_at', 'burn_at'],
+          where:
+              'group_id = ? AND direction = ? AND sent = ? AND msg_uid IS NOT '
+              'NULL AND media_path IS NULL AND file_path IS NULL',
+          whereArgs: [g, 'out', 1],
+        )) {
+          final at = (r['sent_at'] as num?)?.toInt() ?? 0;
+          final burn = (r['burn_at'] as num?)?.toInt();
+          if (at < start || (burn != null && burn <= now)) continue;
+          final uid = r['msg_uid'] as String;
+          // one owed already, past its tries or not, starts over
+          final again = await t.update(
+            'group_media_owed',
+            {'tries': 0, 'next_at': now},
+            where: 'msg_uid = ? AND member = ?',
+            whereArgs: [uid, member],
+          );
+          if (again == 0) {
+            await t.insert('group_media_owed', {
+              'msg_uid': uid,
+              'group_id': g,
+              'member': member,
+              'total': 1,
+              'have': '',
+              'sent_to': max(others, 1),
+              'since': now,
+              'tries': 0,
+              'next_at': now,
+            });
+          }
+          n++;
+        }
+      }
+      return n;
+    });
+  }
+
   /// a group's messages some members still lack, by uid: how many of the
   /// members each went to have it, and how many of the rest are past their
   /// tries
@@ -6978,6 +7088,20 @@ Future<void> notifTagTables(DatabaseExecutor db) async {
     CREATE TABLE IF NOT EXISTS notif_tags (
       chat TEXT PRIMARY KEY,
       tag TEXT NOT NULL UNIQUE
+    )
+  ''');
+}
+
+// a group's texts sent again to a member who restored a backup: once per
+// restore, known by its backup's day (0 when the ask had none)
+Future<void> groupResentTables(DatabaseExecutor db) async {
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS group_resent (
+      group_id TEXT NOT NULL,
+      member TEXT NOT NULL,
+      since INTEGER NOT NULL,
+      at INTEGER NOT NULL,
+      PRIMARY KEY (group_id, member, since)
     )
   ''');
 }
@@ -10145,6 +10269,11 @@ class AppState extends ChangeNotifier {
     String groupId,
     Iterable<String> owed,
   ) async {
+    // its time ran out here: it is never sent again
+    final burn = (r['burn_at'] as num?)?.toInt();
+    if (burn != null && burn <= DateTime.now().millisecondsSinceEpoch) {
+      return 'gone';
+    }
     final members = await d.getGroupMembers(groupId);
     await d.keepGroupOwedTo(groupId, members);
     final to = [
@@ -12967,6 +13096,12 @@ class AppState extends ChangeNotifier {
               if (!identical(_openVault, vault)) return;
               dlog('unseal: an owed resend not run ($e)');
             }
+            try {
+              await _resendGroupTextsTo(vault, u.from, since: u.resendSince);
+            } catch (e) {
+              if (!identical(_openVault, vault)) return;
+              dlog('unseal: owed group texts not run (${e.runtimeType})');
+            }
           } else if (u != null) {
             try {
               final env = unwrapMessage(u.wire);
@@ -14806,6 +14941,51 @@ class AppState extends ChangeNotifier {
       Unsealed(peer, '', false, now, resend: true, resendSince: since),
     );
     if (kept) _owedSealedAt[peer] = now;
+  }
+
+  // our group texts since their backup, owed again to a member who
+  // restored one, from [d], the container the groups are in. the marks in
+  // [d] keep it to once per restore
+  Future<void> _resendGroupTextsTo(
+    HaloDb d,
+    String member, {
+    int? since,
+  }) async {
+    if (d.container.quiet) return;
+    if (await d.isBlocked(member) || await blockedAnywhere(member)) return;
+    if (await d.keyChanged(member)) return;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final n = await d.oweGroupTextsAfterRestore(
+      member,
+      me: myId,
+      from: max(since ?? 0, now - HaloDb.kGoneFor.inMilliseconds),
+      restore: since ?? 0,
+      now: now,
+    );
+    if (n == 0) return;
+    dlog('resend: $n group texts owed again');
+    groupOwedTick.value++;
+    if (torReady) unawaited(_drainGroupOwed());
+  }
+
+  // a restore's ask, for the groups: each container open now, and a shut
+  // vault that knows them gets it sealed, to run as it opens. [sealed]: the
+  // one to one ask already was
+  Future<void> _resendGroupsAfterRestore(
+    String member, {
+    int? since,
+    required bool sealed,
+  }) async {
+    for (final d in [live, ?_openVault]) {
+      try {
+        await _resendGroupTextsTo(d, member, since: since);
+      } catch (e) {
+        dlog('resend: group texts not owed (${e.runtimeType})');
+      }
+    }
+    if (!sealed && hiddenWhileShut(member)) {
+      await _oweResend(member, since: since);
+    }
   }
 
   void _pruneHeal() {
@@ -17648,6 +17828,8 @@ class AppState extends ChangeNotifier {
         } else {
           await _oweResend(from, since: since);
         }
+        // and our group texts since then, which no receipt says reached them
+        await _resendGroupsAfterRestore(from, since: since, sealed: on == null);
       }
     } catch (e) {
       dlog('bundle ctl handle failed: $e');
