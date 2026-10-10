@@ -174,6 +174,7 @@ class Unsealed {
     this.wrapped,
     this.keyChanged = false,
     this.receipt,
+    this.blockedDrop,
     this.reached,
   });
 
@@ -200,6 +201,9 @@ class Unsealed {
   // no arrival: a delivery receipt for this uid was held for [from] while
   // the vault was shut, and waits in it from its open
   final String? receipt;
+  // no arrival: [from], whom the vault blocked, sent this uid while it was
+  // shut. the vault notes it as it would have on arrival
+  final String? blockedDrop;
 }
 
 // the tables, behind a seam so the router runs on a stand-in
@@ -739,6 +743,7 @@ class VaultRouter {
         'rc': ?a.receipt,
         'rf': ?a.resendSince,
         'a': ?a.wrapped,
+        'bd': ?a.blockedDrop,
         if (a.reached case final r?) ...{'rl': r.from, 'rh': r.until},
       }),
     );
@@ -827,6 +832,7 @@ class VaultRouter {
         wrapped: a is int ? a : null,
         keyChanged: j['kc'] == 1,
         receipt: j['rc'] is String ? j['rc'] as String : null,
+        blockedDrop: j['bd'] is String ? j['bd'] as String : null,
         reached: rl is int && rh is int && rl <= rh
             ? (from: rl, until: rh)
             : null,

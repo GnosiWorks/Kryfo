@@ -906,8 +906,11 @@ class _Mem implements HaloDb {
     ?spans[haloId],
   ];
 
+  // the uids noted as sent while a block held, by person
+  final drops = <String, Set<String>>{};
   @override
-  Future<void> noteBlockedDrop(String haloId, String uid) async {}
+  Future<void> noteBlockedDrop(String haloId, String uid) async =>
+      (drops[haloId] ??= {}).add(uid);
   @override
   Future<bool> droppedWhileBlocked(String haloId, String uid) async => false;
 
@@ -1250,7 +1253,8 @@ void main() {
       expect(w.live.seen, hasLength(1));
     });
 
-    test('nothing from someone the vault blocked is sealed', () async {
+    test('from someone the vault blocked only the uid is sealed, once, and '
+        'the vault notes it as it opens while that block holds', () async {
       final w = await _World.make();
       const b = 'blocked-hidden-one';
       await w.store.putHidden(
@@ -1260,14 +1264,57 @@ void main() {
         1,
       );
       await w.router.load();
+      w.vault.person(b, onion: 'o-b', xpub: 'x-b');
+      w.vault.spans[b] = (DateTime.now().millisecondsSinceEpoch - 60000, null);
+      for (var i = 0; i < 2; i++) {
+        await w.onion(
+          b,
+          await wrapMessage('let me back in', msgUid: 'b1', sender: _as(b)),
+        );
+      }
+      // a receipt of theirs says nothing to keep
       await w.onion(
         b,
-        await wrapMessage('let me back in', msgUid: 'b1', sender: _as(b)),
+        await wrapMessage('', deliveredUid: 'mine', sender: _as(b)),
       );
-      // nothing waits for the vault to open, and no tick goes back
-      expect(w.store.inbox, isEmpty);
+      // what they wrote is not what waits: the uid alone does, sealed like
+      // any arrival, and no tick goes back
+      expect(w.store.inbox, hasLength(1));
+      expect(w.store.inbox.single['uid'], 'b1');
+      final opened = w.seal.openMany('priv-A', [
+        base64Encode(w.store.inbox.single['sealed'] as List<int>),
+      ]).single!;
+      expect(utf8.decode(base64Decode(opened)), isNot(contains('back in')));
       expect(w.io.ticksFor('b1'), isEmpty);
       expect(w.io.rang, isEmpty);
+      await w.open();
+      await w.app.drainSealed(w.vault, 'priv-A');
+      expect(w.vault.drops[b], {'b1'});
+      expect(w.vault.msg('b1'), isNull);
+      expect(w.store.inbox, isEmpty);
+    });
+
+    test('a card that still says blocked after the vault let them go notes '
+        'nothing', () async {
+      final w = await _World.make();
+      const b = 'blocked-hidden-one';
+      await w.store.putHidden(
+        b,
+        kHiddenPeer,
+        peerCard(const RouterCard(b, 'o-b', 'x-b', blocked: true)),
+        1,
+      );
+      await w.router.load();
+      final now = DateTime.now().millisecondsSinceEpoch;
+      w.vault.spans[b] = (now - 3600000, now - 60000);
+      await w.onion(
+        b,
+        await wrapMessage('back again', msgUid: 'b2', sender: _as(b)),
+      );
+      await w.open();
+      await w.app.drainSealed(w.vault, 'priv-A');
+      expect(w.vault.drops[b] ?? const {}, isEmpty);
+      expect(w.store.inbox, isEmpty);
     });
 
     test('the tick goes as for a visible message, to the card', () async {

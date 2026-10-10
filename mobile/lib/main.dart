@@ -12793,8 +12793,20 @@ class AppState extends ChangeNotifier {
     int? wrappedAt,
     Reached? reached,
   }) async {
-    // someone the vault blocked: nothing is sealed to wait for it
-    if (_router.blocks(sender)) return;
+    // someone the vault blocked: nothing of it waits, and nothing is
+    // answered. what they wrote is noted by its uid alone, for the vault to
+    // keep as it would have on arrival, so a copy after an unblock stays
+    // out. sealed like any arrival, the same size as a short one
+    if (_router.blocks(sender)) {
+      _lastSealAt = DateTime.now().millisecondsSinceEpoch;
+      final key = _dataFrame(env) ? env.msgUid ?? env.mediaId : null;
+      if (key == null || await _router.sealedHas(key, null)) return;
+      await _router.seal(
+        Unsealed(sender, '', false, _lastSealAt, blockedDrop: key),
+        uid: key,
+      );
+      return;
+    }
     _lastSealAt = DateTime.now().millisecondsSinceEpoch;
     final uid = env.msgUid;
     final total = env.chunkTotal;
@@ -12841,6 +12853,11 @@ class AppState extends ChangeNotifier {
     if (ticks && await whole()) unawaited(_sendDeliveryReceipt(sender, uid));
   }
 
+  // whether a block on [haloId] in [db] held at [at], by this clock
+  static Future<bool> _blockedThen(HaloDb db, String haloId, int at) async => [
+    ...await db.blockSpansOf(haloId),
+  ].any((s) => s.$1 <= at && (s.$2 == null || s.$2! > at));
+
   // what came for the hidden chats while the vault was shut, oldest first:
   // a batch, a breath, the next. each goes into the vault as if it had just
   // arrived, and its row after it. if the vault closes part way, the rest
@@ -12872,6 +12889,17 @@ class AppState extends ChangeNotifier {
             } catch (e) {
               if (!identical(_openVault, vault)) return;
               dlog('unseal: a receipt not kept (${e.runtimeType})');
+            }
+          } else if (u != null && u.blockedDrop != null) {
+            // kept only while a block of theirs here held when it came: a
+            // card that still said blocked after an unblock notes nothing
+            try {
+              if (await _blockedThen(vault, u.from, u.at)) {
+                await vault.noteBlockedDrop(u.from, u.blockedDrop!);
+              }
+            } catch (e) {
+              if (!identical(_openVault, vault)) return;
+              dlog('unseal: a blocked uid not kept (${e.runtimeType})');
             }
           } else if (u != null && u.keyChanged) {
             _keyChangeSealed.remove(u.from);
@@ -16633,7 +16661,7 @@ class AppState extends ChangeNotifier {
   Future<void> unblock(String haloId) async {
     await session.setBlocked(haloId, false);
     // the card says so before the vault can shut: one still saying blocked
-    // would turn them away
+    // would turn them away, and note what they send as sent while it held
     await _recardBlock(haloId);
     if (!sessionQuiet) await subscribePeer(haloId);
     await refreshContacts();
