@@ -1,88 +1,135 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// a room's remove carries the last frame the admin took from each key it
-// takes out. a phone from before reads the same remove without it, and a
-// remove from such a phone reads here as one that lets nothing more in
+// a room's remove names, by hash, the last messages the admin took from
+// each key it takes out. a phone from 0.5.0 reads the same remove as it
+// always did, and its own remove reads here as one that lets nothing more
+// in. the 0.5.0 side is its decoder and encoder as they shipped
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/message_envelope.dart';
-import 'package:kryfo/rooms.dart' show roomFrame;
+import 'package:kryfo/rooms.dart' show roomUidHash;
+
+// GroupControl as it shipped in v0.5.0, frozen
+class _Old {
+  final String type;
+  final String? name;
+  final List<String>? members;
+  final List<Map<String, String>>? participants;
+  final int? stamp;
+  const _Old({
+    required this.type,
+    this.name,
+    this.members,
+    this.participants,
+    this.stamp,
+  });
+
+  Map<String, dynamic> toWire() => {
+    't': type,
+    'n': ?name,
+    'm': ?members,
+    'p': ?participants,
+    'v': ?stamp,
+  };
+
+  static _Old? fromWire(Object? raw) {
+    if (raw is! Map) return null;
+    final membersRaw = raw['m'];
+    final partsRaw = raw['p'];
+    List<Map<String, String>>? parts;
+    if (partsRaw is List) {
+      parts = [];
+      for (final e in partsRaw) {
+        if (e is Map) {
+          parts.add(e.map((k, v) => MapEntry(k.toString(), v.toString())));
+        }
+      }
+    }
+    final stamp = raw['v'];
+    return _Old(
+      type: (raw['t'] as String?) ?? '',
+      name: raw['n'] as String?,
+      members: membersRaw is List
+          ? membersRaw.map((e) => e.toString()).toList()
+          : null,
+      participants: parts,
+      stamp: stamp is int && stamp > 0 ? stamp : null,
+    );
+  }
+}
 
 final _k = 'b2' * 32;
 final _j = 'c3' * 32;
 
-GroupControl? _overTheWire(Map<String, dynamic> w) =>
-    GroupControl.fromWire(jsonDecode(jsonEncode(w)));
+Object? _overTheWire(Map<String, dynamic> w) => jsonDecode(jsonEncode(w));
 
 void main() {
-  test('a remove keeps the last frame of each key over the wire', () {
-    final gc = GroupControl(
-      type: 'remove',
-      members: [_k, _j],
-      lastFrames: {_k: 7},
-    );
-    final back = _overTheWire(gc.toWire())!;
+  final named = {
+    _k: [roomUidHash('u1'), roomUidHash('u2')],
+  };
+
+  test('a remove keeps the messages it names over the wire', () {
+    final gc = GroupControl(type: 'remove', members: [_k, _j], lateUids: named);
+    final back = GroupControl.fromWire(_overTheWire(gc.toWire()))!;
     expect(back.type, 'remove');
     expect(back.members, [_k, _j]);
-    expect(back.lastFrames, {_k: 7});
+    expect(back.lateUids, named);
   });
 
-  test('a remove from a phone before it has no numbers', () {
-    final old = {
+  test('0.5.0 reads a new remove as the remove it always was', () {
+    final gc = GroupControl(type: 'remove', members: [_k], lateUids: named);
+    final old = _Old.fromWire(_overTheWire(gc.toWire()))!;
+    expect(old.type, 'remove');
+    expect(old.members, [_k]);
+    expect(old.toWire(), {
       't': 'remove',
       'm': [_k],
-    };
-    final back = _overTheWire(old)!;
-    expect(back.members, [_k]);
-    expect(back.lastFrames, isNull);
+    });
   });
 
-  test('a phone before it reads every field it knows as before', () {
-    final plain = GroupControl(type: 'remove', members: [_k]);
-    final carried = GroupControl(
-      type: 'remove',
-      members: [_k],
-      lastFrames: {_k: 3},
-    );
-    // the one key added, every other as an older version writes it
-    expect(plain.toWire().containsKey('rn'), isFalse);
-    expect(Map.of(carried.toWire())..remove('rn'), plain.toWire());
-    // and a field it does not know is passed over, as here
-    final unknown = _overTheWire({...plain.toWire(), 'zz': 1})!;
-    expect(unknown.type, 'remove');
-    expect(unknown.members, [_k]);
+  test('a remove from 0.5.0 names nothing, so nothing more comes in', () {
+    const old = _Old(type: 'remove', members: ['k']);
+    final back = GroupControl.fromWire(_overTheWire(old.toWire()))!;
+    expect(back.type, 'remove');
+    expect(back.members, ['k']);
+    expect(back.lateUids, isNull);
   });
 
-  test('numbers that are not whole and above none are not read', () {
-    final back = _overTheWire({
-      't': 'remove',
-      'm': [_k],
-      'rn': {_k: '7', _j: -1, 'x': 3.5, 'y': 0},
-    })!;
-    expect(back.lastFrames, isNull);
-    expect(
+  test('what is not a short hash, or past the bounds, is not read', () {
+    GroupControl? read(Object? lu) => GroupControl.fromWire(
       _overTheWire({
         't': 'remove',
         'm': [_k],
-        'rn': [_k, 7],
-      })!.lastFrames,
+        'lu': lu,
+      }),
+    );
+    expect(
+      read({
+        _k: ['u1', 7, roomUidHash('u1').toUpperCase()],
+        _j: 'x',
+      })!.lateUids,
+      isNull,
+    );
+    expect(read([_k])!.lateUids, isNull);
+    // at most 32 a key
+    final many = read({
+      _k: [for (var i = 0; i < 40; i++) roomUidHash('m$i')],
+    })!.lateUids!;
+    expect(many[_k], hasLength(32));
+    // and no more keys than a group holds
+    expect(
+      read({
+        for (var i = 0; i < 65; i++) 'k$i': [roomUidHash('u1')],
+      })!.lateUids,
       isNull,
     );
   });
 
-  test('a room frame says its number, and nothing else reads as one', () async {
-    final wrapped = await wrapMessage(
-      'hi',
-      groupId: 'room00000001',
-      sender: SenderInfo(haloId: _k, edPub: '', onion: '', xPub: ''),
-    );
-    expect(unwrapMessage(wrapped).roomNumber, isNull);
-    expect(unwrapMessage(roomFrame(wrapped, _k, number: 4)!).roomNumber, 4);
-    expect(unwrapMessage(roomFrame(wrapped, _k)!).roomNumber, isNull);
-    final j = jsonDecode(wrapped.substring('halo/1:'.length)) as Map;
-    for (final bad in ['4', -2, 0, 1.5]) {
-      final w = 'halo/1:${jsonEncode({...j, 'rn': bad})}';
-      expect(unwrapMessage(w).roomNumber, isNull, reason: '$bad');
-    }
+  test('the hash of a uid is short, and not the uid', () {
+    final h = roomUidHash('u1');
+    expect(h, hasLength(16));
+    expect(h, isNot(contains('u1')));
+    expect(roomUidHash('u1'), h);
+    expect(roomUidHash('u2'), isNot(h));
   });
 }

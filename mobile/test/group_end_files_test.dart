@@ -2,9 +2,10 @@
 // a group cleared, left or taken out of, and a room that ends, take the
 // files still coming in them: a group file's slices are kept under their
 // group, and a room's under its members' keys, those that left too. a key
-// taken out of a room keeps the first frame number of theirs no longer let
-// in. the real database methods over rows kept in maps, and the upgrade
-// over the system's sqlite
+// taken out of a room owes only what its admin had from it, and a row of
+// ours goes in only while its group is here, or its file goes. the real
+// database methods over rows kept in maps, and the upgrade over the
+// system's sqlite
 import 'dart:io';
 
 import 'package:flutter/services.dart';
@@ -12,7 +13,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/main.dart' show HaloDb, roomTeardownTables;
 import 'package:kryfo/media_progress.dart';
-import 'package:kryfo/rooms.dart' show goneKeys, goneText;
+import 'package:kryfo/rooms.dart' show roomUidHash;
+import 'package:kryfo/screens/group_chat_screen.dart' show keepOwnGroupFile;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
@@ -123,63 +125,119 @@ void main() {
   test('a room that ends takes what its keys were still sending, a key '
       'that left too, and slices kept before their group was noted', () async {
     await group(_room, [_mine, _k1], roomPub: _mine);
+    await group(_other, ['me', _bob]);
     expect(await db.noteRoomKeys(_room, [_k1, _left]), isTrue);
     await half('from-member', _k1);
     await half('from-one-who-left', _left);
     await half('posted-in-room', _k1, group: _room);
     await half('from-elsewhere', _stranger);
+    // filed under another group: not the room's to take
+    await half('member-key-elsewhere', _k1, group: _other);
     await db.deleteGroupMessages(_room);
     await db.deleteGroup(_room);
-    expect(chunksLeft(), {'from-elsewhere'});
+    expect(chunksLeft(), {'from-elsewhere', 'member-key-elsewhere'});
     expect(mem.rows('room_keys'), isEmpty);
     // a room no longer here notes nothing
     expect(await db.noteRoomKeys(_room, [_k1]), isFalse);
-    await db.noteRoomHeard(_room, _k1, 3);
+    await db.noteRoomUid(_room, _k1, 'u1');
+    expect(await db.noteRoomKeyOut(_room, _k1), isEmpty);
     expect(mem.rows('room_keys'), isEmpty);
   });
 
-  test('a key taken out keeps its cut, a key that left none, and the roster '
-      'still reads both as gone', () async {
-    await group(_room, [_mine, _k1, _left], roomPub: _mine);
-    await db.noteRosterGone(_room, [_k1], cuts: {_k1: 4});
-    await db.noteRosterGone(_room, [_left]);
-    expect(await db.rosterGone(_room), {_k1, _left});
-    expect(await db.rosterCuts(_room), {_k1: 4});
-    // the frames below the cut, each number once it is heard
-    await db.noteRoomHeard(_room, _k1, 1);
-    expect(await db.lateRoomFrame(_room, _k1, 1), isFalse);
-    expect(await db.lateRoomFrame(_room, _k1, 2), isTrue);
-    expect(await db.lateRoomFrame(_room, _k1, 3), isTrue);
-    await db.noteRoomHeard(_room, _k1, 3);
-    expect(await db.lateRoomFrame(_room, _k1, 2), isFalse);
-    expect(await db.lateRoomFrame(_room, _k1, 4), isFalse);
-    expect(await db.lateRoomFrame(_room, _k1, null), isFalse);
-    expect(await db.lateRoomFrame(_room, _left, 1), isFalse);
-    // heard only goes up
-    await db.noteRoomHeard(_room, _k1, 2);
-    expect(await db.roomHeard(_room, _k1), 3);
-    // a second note keeps the stricter: a lower cut, or none at all
-    await db.noteRosterGone(_room, [_k1], cuts: {_k1: 9});
-    expect(await db.rosterCuts(_room), {_k1: 4});
-    await db.noteRosterGone(_room, [_k1], cuts: {_k1: 2});
-    expect(await db.rosterCuts(_room), {_k1: 2});
-    await db.noteRosterGone(_room, [_k1]);
-    expect(await db.rosterCuts(_room), isEmpty);
-    expect(await db.rosterGone(_room), {_k1, _left});
+  test('a clear takes the slices a message of the group left from before '
+      'slices named their group', () async {
+    await group(_g, ['me', _bob]);
+    await mem.insert('messages', {
+      'peer_id': _bob,
+      'direction': 'in',
+      'plaintext': '',
+      'sent_at': 1,
+      'msg_uid': 'old-file',
+      'group_id': _g,
+    });
+    await half('old-file', _bob);
+    await half('unknown', _bob);
+    await db.clearGroupConversation(_g);
+    expect(chunksLeft(), {'unknown'});
   });
 
-  test('the gone list reads what an older version wrote, and writes keys '
-      'with their cut', () {
-    expect(goneKeys(null), isEmpty);
-    expect(goneKeys('$_k1,$_left'), {_k1: null, _left: null});
-    expect(goneKeys('$_k1@4,$_left'), {_k1: 4, _left: null});
-    // one not read is no cut at all
-    expect(goneKeys('$_k1@x,$_left@0,@3'), {_k1: null, _left: null});
-    // the same key twice keeps the stricter
-    expect(goneKeys('$_k1@4,$_k1@2'), {_k1: 2});
-    expect(goneKeys('$_k1@4,$_k1'), {_k1: null});
-    expect(goneText({_k1: 4, _left: null}), '$_k1@4,$_left');
-    expect(goneKeys(goneText({_k1: 4, _left: null})), {_k1: 4, _left: null});
+  test('a key taken out owes what the admin had from it and this phone has '
+      'not, each once, until its lane stops', () async {
+    await group(_room, [_mine, _k1], roomPub: _mine);
+    for (var i = 0; i < 40; i++) {
+      await db.noteRoomUid(_room, _k1, 'm$i');
+    }
+    // the last ones, oldest first, a uid taken again moved to the end
+    await db.noteRoomUid(_room, _k1, 'm20');
+    final recent = await db.roomRecent(_room, _k1);
+    expect(recent, hasLength(32));
+    expect(recent.first, roomUidHash('m8'));
+    expect(recent.last, roomUidHash('m20'));
+    final owed = await db.noteRoomKeyOut(
+      _room,
+      _k1,
+      listed: [roomUidHash('m39'), roomUidHash('x1'), roomUidHash('x2')],
+    );
+    expect(owed, {roomUidHash('x1'), roomUidHash('x2')});
+    expect(await db.roomOwes(_room, _k1, 'x2'), isTrue);
+    expect(await db.roomOwes(_room, _k1, 'm39'), isFalse);
+    expect(await db.roomOwes(_room, _k1, 'never-named'), isFalse);
+    expect(await db.roomKeysGoing(_room), {_k1});
+    // in any order
+    expect(await db.roomOwedIn(_room, _k1, 'x2'), 1);
+    expect(await db.roomOwes(_room, _k1, 'x2'), isFalse);
+    // a second remove takes nothing back in
+    await db.noteRoomKeyOut(
+      _room,
+      _k1,
+      listed: [roomUidHash('x1'), roomUidHash('x2'), roomUidHash('x3')],
+    );
+    expect(await db.roomOwes(_room, _k1, 'x1'), isTrue);
+    expect(await db.roomOwes(_room, _k1, 'x2'), isFalse);
+    expect(await db.roomOwes(_room, _k1, 'x3'), isFalse);
+    await db.roomKeyStopped(_room, _k1);
+    expect(await db.roomOwes(_room, _k1, 'x1'), isFalse);
+    expect(await db.roomKeysGoing(_room), isEmpty);
+    // one that left on its own owes nothing
+    expect(await db.noteRoomKeyOut(_room, _left), isEmpty);
+    expect(await db.roomKeysGoing(_room), {_left});
+  });
+
+  test('a row of ours in a group is kept only while the group is, and a '
+      'file whose row is not kept goes', () async {
+    await group(_g, ['me', _bob]);
+    Future<bool> save(String uid, String path) => db.saveInGroup(
+      'me',
+      '',
+      groupId: _g,
+      msgUid: uid,
+      filePath: path,
+      fileName: 'voice.wav',
+    );
+    Future<String> written(String name) async {
+      final f = File('${docs.path}/$name');
+      await f.writeAsBytes(List.filled(64, 7));
+      return f.path;
+    }
+
+    final kept = await written('kept.wav');
+    expect(await keepOwnGroupFile(kept, () => save('k1', kept)), isTrue);
+    expect(File(kept).existsSync(), isTrue);
+    expect(mem.rows('messages').single['msg_uid'], 'k1');
+    // the group ends while the recorder or the picker is open
+    await db.clearGroupConversation(_g);
+    await db.deleteGroup(_g);
+    final late = await written('late.wav');
+    expect(await keepOwnGroupFile(late, () => save('k2', late)), isFalse);
+    expect(File(late).existsSync(), isFalse);
+    expect(mem.rows('messages'), isEmpty);
+    // a row that could not be kept takes its file too
+    final failed = await written('failed.wav');
+    expect(
+      await keepOwnGroupFile(failed, () async => throw StateError('full')),
+      isFalse,
+    );
+    expect(File(failed).existsSync(), isFalse);
   });
 
   final sql = RealSqlite.open();

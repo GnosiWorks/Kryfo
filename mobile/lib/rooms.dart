@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:crypto/crypto.dart' show sha256;
 import 'package:flutter/widgets.dart' show StringCharacters;
 
 import 'dlog.dart';
@@ -257,27 +258,11 @@ String? firstKryfoLink(String text) => _kryfoLink.firstMatch(text)?.group(0);
 /// every kryfo link in [text] with where it sits, for drawing them tappable
 Iterable<RegExpMatch> kryfoLinksIn(String text) => _kryfoLink.allMatches(text);
 
-/// a room roster's gone list as kept: each key, and after an '@' the first
-/// frame number of theirs no longer let in, for a key taken out. a key on
-/// its own, as an older version wrote them all, lets nothing more in
-Map<String, int?> goneKeys(String? text) {
-  final out = <String, int?>{};
-  for (final e in (text ?? '').split(',')) {
-    final at = e.indexOf('@');
-    final k = at < 0 ? e : e.substring(0, at);
-    if (k.isEmpty) continue;
-    final n = at < 0 ? null : int.tryParse(e.substring(at + 1));
-    // the same key twice keeps the stricter
-    final had = out[k];
-    out[k] = !out.containsKey(k)
-        ? (n != null && n > 0 ? n : null)
-        : had == null || n == null || n <= 0
-        ? null
-        : (n < had ? n : had);
-  }
-  return out;
-}
+// a remove names at most this many of a key's last messages, by hash, as
+// the ones the others still take after it
+const kRoomRecent = 32;
 
-String goneText(Map<String, int?> gone) => [
-  for (final e in gone.entries) e.value == null ? e.key : '${e.key}@${e.value}',
-].join(',');
+/// a message uid as a remove names it: short, and the uid itself stays off
+/// the wire for a member who never had it
+String roomUidHash(String uid) =>
+    sha256.convert(utf8.encode('room-late:$uid')).toString().substring(0, 16);

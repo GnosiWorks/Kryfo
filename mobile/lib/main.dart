@@ -2948,6 +2948,71 @@ class HaloDb implements GroupOwedStore {
     }
   }
 
+  /// a row of this phone's own in group [groupId], kept in the same go as
+  /// a look that the group is still here: one that ended, was left or was
+  /// taken out of keeps nothing. false then
+  Future<bool> saveInGroup(
+    String peerId,
+    String plaintext, {
+    required String groupId,
+    required String msgUid,
+    int? burnSecs,
+    String? replyTo,
+    String? mediaPath,
+    String? filePath,
+    String? fileName,
+    bool voiceDisguised = false,
+    int sent = 0,
+    String? preview,
+    String? poll,
+    String? sticker,
+  }) async {
+    final db = await open();
+    final id = await db.transaction((t) async {
+      final there = await t.query(
+        'groups',
+        columns: ['group_id'],
+        where: 'group_id = ?',
+        whereArgs: [groupId],
+        limit: 1,
+      );
+      if (there.isEmpty) return null;
+      return t.insert('messages', {
+        'peer_id': peerId,
+        'direction': 'out',
+        'plaintext': unmarked(plaintext),
+        'sent_at': DateTime.now().millisecondsSinceEpoch,
+        'burn_secs': burnSecs,
+        'msg_uid': msgUid,
+        'reply_to': replyTo,
+        'group_id': groupId,
+        'media_path': mediaPath,
+        'file_path': filePath,
+        'file_name': fileName == null ? null : unmarked(fileName),
+        'voice_disguised': voiceDisguised ? 1 : 0,
+        'preview': preview,
+        'saved': 0,
+        'sent': sent,
+        'secure': 0,
+        'poll': ?poll,
+        'sticker': ?sticker,
+      });
+    });
+    if (id == null) return false;
+    try {
+      await indexSearchRow(db, id, {
+        'plaintext': plaintext,
+        'poll': poll,
+        'file_name': fileName,
+        'preview': preview,
+        'sticker': sticker,
+      });
+    } catch (e) {
+      dlog('search: not indexed now: $e');
+    }
+    return true;
+  }
+
   // the same message can come via tor and nostr, plus retries. a duplicate
   // crashes on the used-up prekey, so it is dropped before any decrypt.
   Future<bool> alreadySeen(String hash) async {
@@ -4053,8 +4118,8 @@ class HaloDb implements GroupOwedStore {
       where: 'group_id = ?',
       whereArgs: [groupId],
     );
-    await db.delete('messages', where: 'group_id = ?', whereArgs: [groupId]);
     await _dropGroupFiles(db, groupId);
+    await db.delete('messages', where: 'group_id = ?', whereArgs: [groupId]);
     await _scrubMedia(media);
   }
 
@@ -5377,9 +5442,10 @@ class HaloDb implements GroupOwedStore {
     incomingMediaDone(container.chatKey(peerId));
   }
 
-  // a group gone or cleared takes the files still coming in it. a room's
-  // member keys are its own, so what they sent goes too, slices kept before
-  // the group was noted on them included
+  // a group gone or cleared takes the files still coming in it. slices
+  // kept before the group was noted on them go too where they can be told:
+  // left by a message of the group, or sent by a room's member keys, which
+  // are the room's own. run before the group's messages go
   Future<void> _dropGroupFiles(
     DatabaseExecutor t,
     String groupId, {
@@ -5390,13 +5456,29 @@ class HaloDb implements GroupOwedStore {
       where: 'group_id = ?',
       whereArgs: [groupId],
     );
-    final from = keys.toSet().toList();
-    if (from.isNotEmpty) {
-      n += await t.delete(
-        'media_chunks',
-        where: 'sender IN (${List.filled(from.length, '?').join(', ')})',
-        whereArgs: from,
-      );
+    final uids = [
+      for (final r in await t.query(
+        'messages',
+        columns: ['msg_uid'],
+        where: 'group_id = ? AND msg_uid IS NOT NULL',
+        whereArgs: [groupId],
+      ))
+        r['msg_uid'] as String,
+    ];
+    for (final (col, ids) in [
+      ('media_id', uids),
+      ('sender', keys.toSet().toList()),
+    ]) {
+      for (var i = 0; i < ids.length; i += 400) {
+        final part = ids.sublist(i, min(i + 400, ids.length));
+        n += await t.delete(
+          'media_chunks',
+          where:
+              'group_id IS NULL AND '
+              '$col IN (${List.filled(part.length, '?').join(', ')})',
+          whereArgs: part,
+        );
+      }
     }
     if (n == 0) return;
     // weighed again from what is left
@@ -5820,46 +5902,24 @@ class HaloDb implements GroupOwedStore {
   /// the room keys that left [groupId] or were taken out
   Future<Set<String>> rosterGone(String groupId) async {
     final db = await open();
-    return goneKeys(
-      (await _rosterRow(db, groupId))?['gone'] as String?,
-    ).keys.toSet();
-  }
-
-  /// the keys taken out of room [groupId] with the first frame number of
-  /// theirs no longer let in. a key that left on its own has none
-  Future<Map<String, int>> rosterCuts(String groupId) async {
-    final db = await open();
+    final held = await _rosterRow(db, groupId);
     return {
-      for (final e in goneKeys(
-        (await _rosterRow(db, groupId))?['gone'] as String?,
-      ).entries)
-        if (e.value != null) e.key: e.value!,
+      for (final k in ((held?['gone'] as String?) ?? '').split(','))
+        if (k.isNotEmpty) k,
     };
   }
 
-  /// [keys] gone from room [groupId]. one in [cuts] still has its frames
-  /// below that number let in, sent before it was taken out. a key gone
-  /// already keeps the lower of the two, none being lowest
-  Future<void> noteRosterGone(
-    String groupId,
-    Iterable<String> keys, {
-    Map<String, int> cuts = const {},
-  }) async {
+  Future<void> noteRosterGone(String groupId, Iterable<String> keys) async {
     final db = await open();
     await db.transaction((t) async {
       final held = await _rosterRow(t, groupId);
-      final gone = goneKeys(held?['gone'] as String?);
-      for (final k in keys) {
-        if (k.isEmpty || k.contains(',') || k.contains('@')) continue;
-        final cut = cuts[k];
-        final had = gone[k];
-        gone[k] = !gone.containsKey(k)
-            ? cut
-            : had == null || cut == null
-            ? null
-            : (cut < had ? cut : had);
-      }
-      await _putRoster(t, groupId, gone: goneText(gone), had: held != null);
+      final gone = {
+        for (final k in ((held?['gone'] as String?) ?? '').split(','))
+          if (k.isNotEmpty) k,
+        for (final k in keys)
+          if (k.isNotEmpty && !k.contains(',')) k,
+      };
+      await _putRoster(t, groupId, gone: gone.join(','), had: held != null);
     });
   }
 
@@ -5879,7 +5939,126 @@ class HaloDb implements GroupOwedStore {
 
   /// room [groupId] listens to [keys] from now on. false for a room no
   /// longer here, which listens to nothing
-  Future<bool> noteRoomKeys(String groupId, Iterable<String> keys) async {
+  Future<bool> noteRoomKeys(String groupId, Iterable<String> keys) =>
+      _inRoom(groupId, (t) async {
+        for (final k in keys) {
+          await t.insert('room_keys', {
+            'group_id': groupId,
+            'member': k,
+          }, conflictAlgorithm: ConflictAlgorithm.ignore);
+        }
+      });
+
+  /// a message of [key]'s, by its uid, taken in room [groupId]: the last
+  /// [kRoomRecent] are what a remove of [key] lets the others still take
+  Future<void> noteRoomUid(String groupId, String key, String uid) =>
+      _inRoom(groupId, (t) async {
+        final h = roomUidHash(uid);
+        final had = await _roomKey(t, groupId, key);
+        final recent = [
+          for (final x in _hashes(had?['recent']))
+            if (x != h) x,
+          h,
+        ];
+        final keep = recent.length > kRoomRecent
+            ? recent.sublist(recent.length - kRoomRecent)
+            : recent;
+        await _putRoomKey(t, groupId, key, {
+          'recent': keep.join(','),
+        }, had: had != null);
+      });
+
+  /// the hashes of [key]'s last messages taken in room [groupId], oldest
+  /// first
+  Future<List<String>> roomRecent(String groupId, String key) async {
+    final db = await open();
+    return _hashes((await _roomKey(db, groupId, key))?['recent']);
+  }
+
+  /// [key] is out of room [groupId]. of [listed], its messages the admin
+  /// took before that, the ones not taken here are owed: only they still
+  /// come in. a second remove keeps what both list
+  Future<Set<String>> noteRoomKeyOut(
+    String groupId,
+    String key, {
+    Iterable<String> listed = const [],
+  }) async {
+    Set<String> owed = const {};
+    await _inRoom(groupId, (t) async {
+      final had = await _roomKey(t, groupId, key);
+      final here = _hashes(had?['recent']).toSet();
+      final was = (had?['out'] as int? ?? 0) == 0
+          ? null
+          : _hashes(had?['owed']).toSet();
+      owed = {
+        for (final h in listed)
+          if (!here.contains(h) && (was == null || was.contains(h))) h,
+      };
+      await _putRoomKey(t, groupId, key, {
+        'owed': owed.join(','),
+        // a lane stopped already stays stopped
+        if ((had?['out'] as int? ?? 0) != 2) 'out': 1,
+      }, had: had != null);
+    });
+    return owed;
+  }
+
+  /// whether a message by [uid] from [key], out of room [groupId], is one
+  /// still owed from before it went
+  Future<bool> roomOwes(String groupId, String key, String uid) async {
+    final db = await open();
+    final had = await _roomKey(db, groupId, key);
+    return _hashes(had?['owed']).contains(roomUidHash(uid));
+  }
+
+  /// [uid] from [key] is in: how many of its owed are left
+  Future<int> roomOwedIn(String groupId, String key, String uid) async {
+    var left = 0;
+    await _inRoom(groupId, (t) async {
+      final had = await _roomKey(t, groupId, key);
+      if (had == null) return;
+      final h = roomUidHash(uid);
+      final owed = [
+        for (final x in _hashes(had['owed']))
+          if (x != h) x,
+      ];
+      left = owed.length;
+      await _putRoomKey(t, groupId, key, {'owed': owed.join(',')}, had: true);
+    });
+    return left;
+  }
+
+  /// the keys out of room [groupId] whose lane is still to stop
+  Future<Set<String>> roomKeysGoing(String groupId) async {
+    final db = await open();
+    return {
+      for (final r in await db.query(
+        'room_keys',
+        columns: ['member'],
+        where: 'group_id = ? AND out = ?',
+        whereArgs: [groupId, 1],
+      ))
+        r['member'] as String,
+    };
+  }
+
+  /// [key]'s lane in room [groupId] stopped and its files gone: nothing
+  /// more of it comes in
+  Future<void> roomKeyStopped(String groupId, String key) =>
+      _inRoom(groupId, (t) async {
+        final had = await _roomKey(t, groupId, key);
+        await _putRoomKey(t, groupId, key, {
+          'owed': '',
+          'out': 2,
+        }, had: had != null);
+      });
+
+  // [run] in one go with room [groupId] still here. false when it is not:
+  // a row of a room gone would outlive it
+  Future<bool> _inRoom(
+    String groupId,
+    Future<void> Function(Transaction t) run,
+  ) async {
     final db = await open();
     return db.transaction((t) async {
       final there = await t.query(
@@ -5890,78 +6069,41 @@ class HaloDb implements GroupOwedStore {
         limit: 1,
       );
       if (there.isEmpty) return false;
-      for (final k in keys) {
-        await t.insert('room_keys', {
-          'group_id': groupId,
-          'member': k,
-        }, conflictAlgorithm: ConflictAlgorithm.ignore);
-      }
+      await run(t);
       return true;
     });
   }
 
-  /// a frame numbered [n] taken from [key] in room [groupId]. the highest
-  /// one is kept. none for a room no longer here: its row would outlive it
-  Future<void> noteRoomHeard(String groupId, String key, int n) async {
-    final db = await open();
-    await db.transaction((t) async {
-      final there = await t.query(
-        'groups',
-        columns: ['group_id'],
-        where: 'group_id = ?',
-        whereArgs: [groupId],
-        limit: 1,
-      );
-      if (there.isEmpty) return;
-      final had = await _heard(t, groupId, key);
-      if (had != null && had >= n) return;
-      await _putHeard(t, groupId, key, n, had: had != null);
-    });
-  }
+  static List<String> _hashes(Object? text) => [
+    for (final h in ((text as String?) ?? '').split(','))
+      if (h.isNotEmpty) h,
+  ];
 
-  /// the highest frame number taken from [key] in room [groupId], 0 for none
-  Future<int> roomHeard(String groupId, String key) async {
-    final db = await open();
-    return await _heard(db, groupId, key) ?? 0;
-  }
-
-  /// whether a frame numbered [n] from [key], taken out of room [groupId],
-  /// was sent before that and comes in now: below the cut the remove gave,
-  /// and above every number taken from them, so each number comes in once
-  /// once it is noted heard (noteRoomHeard)
-  Future<bool> lateRoomFrame(String groupId, String key, int? n) async {
-    if (n == null || n <= 0) return false;
-    final cut = (await rosterCuts(groupId))[key];
-    if (cut == null || n >= cut) return false;
-    return n > await roomHeard(groupId, key);
-  }
-
-  static Future<int?> _heard(
+  static Future<Map<String, Object?>?> _roomKey(
     DatabaseExecutor t,
     String groupId,
     String key,
   ) async {
     final r = await t.query(
       'room_keys',
-      columns: ['heard'],
       where: 'group_id = ? AND member = ?',
       whereArgs: [groupId, key],
       limit: 1,
     );
-    return r.isEmpty ? null : (r.first['heard'] as num).toInt();
+    return r.isEmpty ? null : r.first;
   }
 
-  static Future<void> _putHeard(
+  static Future<void> _putRoomKey(
     DatabaseExecutor t,
     String groupId,
     String key,
-    int n, {
+    Map<String, Object?> cols, {
     required bool had,
   }) async {
     if (had) {
       await t.update(
         'room_keys',
-        {'heard': n},
+        cols,
         where: 'group_id = ? AND member = ?',
         whereArgs: [groupId, key],
       );
@@ -5969,7 +6111,7 @@ class HaloDb implements GroupOwedStore {
       await t.insert('room_keys', {
         'group_id': groupId,
         'member': key,
-        'heard': n,
+        ...cols,
       });
     }
   }
@@ -6857,12 +6999,16 @@ Future<void> roomJoiningColumn(DatabaseExecutor db) =>
     addColumn(db, 'ALTER TABLE groups ADD COLUMN joining_at INTEGER');
 
 // every member key a room ever listened to, so its end forgets each one's
-// address, and the highest frame number taken from each
+// address. recent: hashes of the last messages taken from it. once it is
+// out (1, its lane still to stop; 2, stopped), owed: the hashes of those
+// still let in, sent before it went
 Future<void> roomKeysTable(DatabaseExecutor db) => db.execute('''
   CREATE TABLE IF NOT EXISTS room_keys (
     group_id TEXT NOT NULL,
     member TEXT NOT NULL,
-    heard INTEGER NOT NULL DEFAULT 0,
+    recent TEXT NOT NULL DEFAULT '',
+    owed TEXT NOT NULL DEFAULT '',
+    out INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (group_id, member)
   )
 ''');
@@ -11917,7 +12063,7 @@ class AppState extends ChangeNotifier {
     // send wraps anew, so a retry carries its own. when it was written
     // rides in the envelope (blockStamp)
     int? wrappedAt,
-    // a room frame from a key taken out, sent before that (lateRoomFrame)
+    // a room message from a key taken out, owed from before that (roomOwes)
     bool late = false,
   }) async {
     // the dev chat takes a frame only while it runs, and only what his
@@ -13443,17 +13589,19 @@ class AppState extends ChangeNotifier {
             for (final h in gc.members!)
               if (h != me) h,
           ];
-          // what each sent before the remove still lands: below the cut
-          final last = gc.lastFrames ?? const <String, int>{};
-          await db.noteRosterGone(
-            groupId,
-            out,
-            cuts: {
-              for (final h in out)
-                if (last[h] != null) h: last[h]! + 1,
-            },
-          );
-          if (!gc.members!.contains(me)) await _unlistenGone(groupId, out, db);
+          await db.noteRosterGone(groupId, out);
+          // the messages the admin had from each before the remove still
+          // land here, those not here yet, and no others
+          final late = gc.lateUids ?? const <String, List<String>>{};
+          final owed = {
+            for (final h in out)
+              h: await db.noteRoomKeyOut(
+                groupId,
+                h,
+                listed: late[h] ?? const [],
+              ),
+          };
+          if (!gc.members!.contains(me)) await _unlistenGone(groupId, owed, db);
         }
         // taken out: the group goes from here with everything in it, as a
         // leave does, and an open screen says why it closed
@@ -13479,7 +13627,8 @@ class AppState extends ChangeNotifier {
         // a room key never comes back once it left, nor is listened for
         if (await _roomOf(groupId, db) != null) {
           await db.noteRosterGone(groupId, [senderHaloId]);
-          await _unlistenGone(groupId, [senderHaloId], db);
+          await db.noteRoomKeyOut(groupId, senderHaloId);
+          await _unlistenGone(groupId, {senderHaloId: const {}}, db);
         }
         await refreshGroups();
         break;
@@ -18118,14 +18267,27 @@ class AppState extends ChangeNotifier {
   // knocks and resets of one room, one at a time, by room id
   final Map<String, Future<void>> _roomTurns = {};
 
-  Future<T> _roomTurn<T>(String groupId, Future<T> Function() run) {
-    final mine = (_roomTurns[groupId] ?? Future<void>.value()).then(
-      (_) => run(),
-    );
+  Future<T> _roomTurn<T>(String groupId, Future<T> Function() run) =>
+      _inLine(_roomTurns, groupId, run);
+
+  // a member's message taken and noted, and a remove's read of what was
+  // taken, one at a time by room id. apart from the turn above: a reset
+  // that is stuck holds no message up
+  final Map<String, Future<void>> _roomTakes = {};
+
+  Future<T> _roomTake<T>(String groupId, Future<T> Function() run) =>
+      _inLine(_roomTakes, groupId, run);
+
+  static Future<T> _inLine<T>(
+    Map<String, Future<void>> line,
+    String groupId,
+    Future<T> Function() run,
+  ) {
+    final mine = (line[groupId] ?? Future<void>.value()).then((_) => run());
     final done = mine.then<void>((_) {}, onError: (_) {});
-    _roomTurns[groupId] = done;
+    line[groupId] = done;
     done.then((_) {
-      if (identical(_roomTurns[groupId], done)) _roomTurns.remove(groupId);
+      if (identical(line[groupId], done)) line.remove(groupId);
     });
     return mine;
   }
@@ -18593,13 +18755,25 @@ class AppState extends ChangeNotifier {
     if (parts.length < 3) return;
     final from = parts[2];
     if (env.senderHaloId != from) return;
-    final member = (await live.getGroupMembers(groupId)).contains(from);
-    // taken out: a message sent before that still lands, nothing after
-    final late =
-        !member &&
-        _dataFrame(env) &&
-        await live.lateRoomFrame(groupId, from, env.roomNumber);
-    if (!member && !late) {
+    final uid = env.msgUid ?? (_sliced(env) ? env.mediaId : null);
+    final data = _dataFrame(env) && uid != null;
+    // the take and its note in one go: a remove reads the notes in the
+    // same line, so what this phone shows the others are told of
+    final late = await _roomTake(groupId, () async {
+      if ((await live.getGroupMembers(groupId)).contains(from)) {
+        if (data) await live.noteRoomUid(groupId, from, uid);
+        return false;
+      }
+      // taken out: a message the admin had from them before that still
+      // lands, once, and nothing else
+      if (data &&
+          !await live.messageExists(uid) &&
+          await live.roomOwes(groupId, from, uid)) {
+        return true;
+      }
+      return null;
+    });
+    if (late == null) {
       dlog('room: frame from a key not in the roster, dropped');
       return;
     }
@@ -18608,58 +18782,74 @@ class AppState extends ChangeNotifier {
     } on CapHeld {
       // rooms are never strangers; here for completeness
     }
-    final n = env.roomNumber;
-    if (n != null) await live.noteRoomHeard(groupId, from, n);
     // the last one owed is in: nothing more of theirs is listened for
-    if (late && n! >= ((await live.rosterCuts(groupId))[from] ?? 0) - 1) {
-      await _unlistenNow(groupId, [from], live);
+    if (late &&
+        await live.messageExists(uid!) &&
+        await live.roomOwedIn(groupId, from, uid) == 0) {
+      await _unlistenNow(groupId, [from]);
     }
     if (env.groupControl != null) await _subscribeRoomMembers(groupId);
   }
 
-  // how long a key taken out is still heard while frames it sent before
+  // how long a key taken out is still heard while messages it sent before
   // that are owed
   @visibleForTesting
   Duration roomLateWait = const Duration(minutes: 2);
 
   // keys gone from a room stop being listened to, and what their addresses
-  // kept goes. one taken out with frames still owed below its cut is heard
-  // a while longer, or until the last of them is in
+  // kept goes. one taken out with messages still owed is heard a while
+  // longer, or until the last of them is in
   Future<void> _unlistenGone(
     String groupId,
-    Iterable<String> keys,
+    Map<String, Set<String>> owed,
     HaloDb d,
   ) async {
     if (d.container.quiet) return;
-    final cuts = await d.rosterCuts(groupId);
     final now = <String>[];
-    for (final k in keys) {
-      final cut = cuts[k];
-      if (cut != null && await d.roomHeard(groupId, k) < cut - 1) {
-        Timer(roomLateWait, () => unawaited(_unlistenNow(groupId, [k], d)));
-      } else {
-        now.add(k);
+    for (final e in owed.entries) {
+      if (e.value.isEmpty) {
+        now.add(e.key);
+        continue;
       }
+      Timer(roomLateWait, () => unawaited(_unlistenNow(groupId, [e.key])));
     }
-    if (now.isNotEmpty) await _unlistenNow(groupId, now, d);
+    if (now.isNotEmpty) await _unlistenNow(groupId, now);
   }
 
-  // in the room's turn, off the row as it is then. a key back on the
-  // roster meanwhile keeps its lane
-  Future<void> _unlistenNow(String groupId, List<String> keys, HaloDb d) =>
+  // in the room's turn, off the room's database and row as they are then:
+  // the room may have been hidden or ended meanwhile
+  Future<void> _unlistenNow(String groupId, List<String> keys) =>
       _roomTurn(groupId, () async {
-        if (d.container.quiet) return;
-        final g = await d.getGroup(groupId);
-        final priv = g?['room_priv'] as String?;
-        final pub = g?['room_pub'] as String?;
-        if (priv == null || pub == null) return;
-        final members = await d.getGroupMembers(groupId);
-        for (final k in keys) {
-          if (k == pub || members.contains(k)) continue;
-          _roomSubs[pub]?.remove(k);
-          engine.roomUnlistenBg(priv, k);
+        for (final d in {_ownerOf(groupId), ..._roomHomes}) {
+          if (!identical(d, live) && !d.isOpen) continue;
+          final g = await d.getGroup(groupId);
+          if (g == null) continue;
+          await _unlistenIn(d, groupId, g, keys);
+          return;
         }
       });
+
+  // [keys] off room [g]'s roster stop being listened to, and their
+  // addresses' files go. a key back on the roster meanwhile keeps its lane.
+  // in the room's turn
+  Future<void> _unlistenIn(
+    HaloDb d,
+    String groupId,
+    Map<String, Object?> g,
+    Iterable<String> keys,
+  ) async {
+    if (d.container.quiet) return;
+    final priv = g['room_priv'] as String?;
+    final pub = g['room_pub'] as String?;
+    if (priv == null || pub == null) return;
+    final members = await d.getGroupMembers(groupId);
+    for (final k in keys) {
+      if (k == pub || members.contains(k)) continue;
+      _roomSubs[pub]?.remove(k);
+      engine.roomUnlistenBg(priv, k);
+      await d.roomKeyStopped(groupId, k);
+    }
+  }
 
   // the room is over: every message, every file, the row, the key, the
   // subscriptions. the wipe goes through the same shred the burn timer
@@ -18887,6 +19077,9 @@ class AppState extends ChangeNotifier {
           await _forgetDoor(gid, g['door_was'] as String?);
         }
         await _subscribeRoomMembers(gid);
+        // keys gone before the last stop whose lanes were still open: their
+        // files go now, and what they still owed is not waited for
+        await _unlistenIn(live, gid, g, await live.roomKeysGoing(gid));
       });
     }
     return rooms.length;
@@ -18935,23 +19128,24 @@ class AppState extends ChangeNotifier {
     // save the local row up front so the chat list shows it at once.
     // peer_id = self so we render it as outgoing. a retry passes the same
     // uid, and a second row breaks every uid-keyed widget key.
-    if (!await session.messageExists(msgUid)) {
-      await session.saveMessage(
-        sessionId,
-        'out',
-        plain,
-        groupId: groupId,
-        msgUid: msgUid,
-        replyTo: replyTo,
-        // a retry after a reload reads the timer back from the row
-        burnSecs: burnSecs,
-        // born unsent, or a dead send reloads as a ticked message nobody
-        // ever received
-        sent: 0,
-        preview: preview == null ? null : jsonEncode(preview),
-        poll: poll?.toRow(),
-        sticker: sticker,
-      );
+    // kept only with the group still here, in the same go
+    if (!await session.messageExists(msgUid) &&
+        !await session.saveInGroup(
+          sessionId,
+          plain,
+          groupId: groupId,
+          msgUid: msgUid,
+          replyTo: replyTo,
+          // a retry after a reload reads the timer back from the row
+          burnSecs: burnSecs,
+          // born unsent, or a dead send reloads as a ticked message nobody
+          // ever received
+          sent: 0,
+          preview: preview == null ? null : jsonEncode(preview),
+          poll: poll?.toRow(),
+          sticker: sticker,
+        )) {
+      return false;
     }
     // a quiet session keeps the row here, unsent: nothing leaves
     if (sessionQuiet) {
@@ -19517,27 +19711,48 @@ class AppState extends ChangeNotifier {
     final group = await session.getGroup(groupId);
     if (group == null) return;
     if ((group['is_admin'] as int? ?? 0) != 1) return;
-    final allMembers = await session.getGroupMembers(groupId);
-    for (final h in removedHaloIds) {
-      await session.removeGroupMember(groupId, h);
-    }
-    // a room key taken out does not join again. the last frame taken from
-    // each, read once it is off the roster, goes with the remove: the
-    // members let in what it sent up to there
     final d = _ownerOf(groupId);
     final room = await _roomOf(groupId, d) != null;
-    final last = <String, int>{};
-    if (room) {
+    // in a room, in line with each message taken and noted as it is taken:
+    // the remove names every one this phone shows
+    Future<(List<String>, GroupControl)> take() async {
+      final allMembers = await session.getGroupMembers(groupId);
       for (final h in removedHaloIds) {
-        final n = await d.roomHeard(groupId, h);
-        if (n > 0) last[h] = n;
+        await session.removeGroupMember(groupId, h);
       }
-      await d.noteRosterGone(
-        groupId,
-        removedHaloIds,
-        cuts: {for (final e in last.entries) e.key: e.value + 1},
+      if (!room) {
+        return (
+          allMembers,
+          GroupControl(type: 'remove', members: removedHaloIds),
+        );
+      }
+      // a room key taken out does not join again. the last messages taken
+      // from each go with the remove: the members still take those
+      await d.noteRosterGone(groupId, removedHaloIds);
+      final late = <String, List<String>>{};
+      for (final h in removedHaloIds) {
+        final recent = await d.roomRecent(groupId, h);
+        await d.noteRoomKeyOut(groupId, h);
+        if (recent.isNotEmpty) late[h] = recent;
+      }
+      return (
+        allMembers,
+        GroupControl(
+          type: 'remove',
+          members: removedHaloIds,
+          lateUids: late.isEmpty ? null : late,
+        ),
       );
-      await _unlistenGone(groupId, removedHaloIds, d);
+    }
+
+    final (allMembers, gc) = room
+        ? await _roomTake(groupId, take)
+        : await take();
+    // nothing is owed here: this phone had all it shows
+    if (room) {
+      await _unlistenGone(groupId, {
+        for (final h in removedHaloIds) h: const <String>{},
+      }, d);
     }
     // a quiet session keeps it on this phone: nothing leaves
     if (sessionQuiet) {
@@ -19545,11 +19760,6 @@ class AppState extends ChangeNotifier {
       return;
     }
     // the ones taken out hear it too, so they drop the group
-    final gc = GroupControl(
-      type: 'remove',
-      members: removedHaloIds,
-      lastFrames: last.isEmpty ? null : last,
-    );
     await _queueControl(groupId, gc, to: allMembers);
     await refreshGroups();
   }

@@ -378,6 +378,37 @@ class Session {
     poll: poll,
     sticker: sticker,
   );
+  Future<bool> saveInGroup(
+    String peerId,
+    String plaintext, {
+    required String groupId,
+    required String msgUid,
+    int? burnSecs,
+    String? replyTo,
+    String? mediaPath,
+    String? filePath,
+    String? fileName,
+    bool voiceDisguised = false,
+    int sent = 0,
+    String? preview,
+    String? poll,
+    String? sticker,
+  }) => _ofGroup(groupId).saveInGroup(
+    peerId,
+    plaintext,
+    groupId: groupId,
+    msgUid: msgUid,
+    burnSecs: burnSecs,
+    replyTo: replyTo,
+    mediaPath: mediaPath,
+    filePath: filePath,
+    fileName: fileName,
+    voiceDisguised: voiceDisguised,
+    sent: sent,
+    preview: preview,
+    poll: poll,
+    sticker: sticker,
+  );
   Future<List<Map<String, Object?>>> pinnedIn({
     String? peerId,
     String? groupId,
