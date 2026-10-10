@@ -887,6 +887,14 @@ class ArrivalRows implements HaloDb {
   @override
   Future<void> forgetAllFirst() async => kept.clear();
   @override
+  Future<void> forgetFirstBefore(int cut) async =>
+      kept.removeWhere((_, r) => r.at < cut);
+  @override
+  Future<bool> firstKeptHas(String peer, String uid) async => kept.entries.any(
+    (e) =>
+        keptUid[e.key] == uid && (e.value.peer == peer || e.value.peer == ''),
+  );
+  @override
   Future<void> noteTakenBack(String peer, String uid) async {
     _hit('noteTakenBack', uid, null);
     gone.add((peer, uid));

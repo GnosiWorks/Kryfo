@@ -4230,6 +4230,24 @@ class HaloDb implements GroupOwedStore {
     await db.delete('first_kept');
   }
 
+  // and those kept before [cut], in a vault that was shut as the key moved
+  Future<void> forgetFirstBefore(int cut) async {
+    final db = await open();
+    await db.delete('first_kept', where: 'at < ?', whereArgs: [cut]);
+  }
+
+  // whether an opener of [peer]'s, or of someone unnamed, with [uid] is kept
+  Future<bool> firstKeptHas(String peer, String uid) async {
+    final db = await open();
+    final rows = await db.query(
+      'first_kept',
+      columns: ['peer'],
+      where: 'uid = ?',
+      whereArgs: [uid],
+    );
+    return rows.any((r) => r['peer'] == peer || r['peer'] == '');
+  }
+
   // [uid] taken back by [peer] before it came: known as gone, so a copy
   // that comes later, after a restart too, is never shown
   Future<void> noteTakenBack(String peer, String uid) async {
@@ -4745,6 +4763,13 @@ class HaloDb implements GroupOwedStore {
       {'plaintext': unmarked(newText), 'edited': 1},
       // a sticker has no words to edit: its text stays its emoji
       where: 'msg_uid = ? AND sticker IS NULL',
+      whereArgs: [msgUid],
+    );
+    // an opener that goes again goes as it reads now
+    await db.update(
+      'opener_again',
+      {'wire': null},
+      where: 'msg_uid = ?',
       whereArgs: [msgUid],
     );
     // the old words must not find it any more
@@ -11781,9 +11806,13 @@ class AppState extends ChangeNotifier {
         return to;
       }
       _noteTakenBack(senderHaloId, env.unsend!);
-      // one not here yet, kept to be tried again say, stays away after a
-      // restart too
-      if (env.groupId == null && !await db.messageExists(env.unsend!)) {
+      // one not here yet stays away after a restart too, when it is kept
+      // to be tried again or they are someone accepted. a stranger's word
+      // on any other uid is noted in memory only, so it fills no disk
+      if (env.groupId == null &&
+          !await db.messageExists(env.unsend!) &&
+          (await db.isAccepted(senderHaloId) ||
+              await db.firstKeptHas(senderHaloId, env.unsend!))) {
         await db.noteTakenBack(senderHaloId, env.unsend!);
         await db.forgetFirstOf(senderHaloId, uid: env.unsend!);
       }
@@ -13691,6 +13720,7 @@ class AppState extends ChangeNotifier {
       // a move a crash cut short is put right before ownership is read
       await settleVault(v);
       await _dropGroupLeftovers(v);
+      if (!decoy) await trimFirstIn(v);
       s = await Session.withVault(primary, v);
       home = await _contactsOf(s);
       gs = await _groupsOf(s);
@@ -14457,8 +14487,28 @@ class AppState extends ChangeNotifier {
   Future<void> _forgetAllFirst() async {
     try {
       await live.forgetAllFirst();
+      await _openVault?.forgetAllFirst();
+      // a shut vault lets go of its own as it next opens (trimFirstIn)
+      await secureStore.write(
+        key: _kFirstCut,
+        value: '${DateTime.now().millisecondsSinceEpoch}',
+      );
     } catch (e) {
       dlog('first contact: kept ones not let go (${e.runtimeType})');
+    }
+  }
+
+  static const _kFirstCut = 'first_kept_cut';
+
+  // a vault opening: what it kept from before the invite key last moved
+  // opens no more
+  @visibleForTesting
+  Future<void> trimFirstIn(HaloDb v) async {
+    try {
+      final cut = int.tryParse(await secureStore.read(key: _kFirstCut) ?? '');
+      if (cut != null) await v.forgetFirstBefore(cut);
+    } catch (e) {
+      dlog('first contact: vault kept ones not read (${e.runtimeType})');
     }
   }
 

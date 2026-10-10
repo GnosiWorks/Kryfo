@@ -6,6 +6,7 @@
 // owes its proof of work, is dropped for good. one that comes twice, by the
 // onion and by its relay copy, or sealed again under its uid, is filed
 // once. real libsignal on both phones over rows kept in maps
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
@@ -21,11 +22,13 @@ import 'package:kryfo/main.dart'
         AppIo,
         AppState,
         HaloEngine,
+        appState,
         makePreKeyBundleB64,
         processPeerBundle,
         readFcCounter,
         useDatabasesForTest,
         useEngineForTest;
+import 'package:kryfo/media_send.dart' show sendChunkedMediaTo;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
@@ -80,9 +83,22 @@ class _Engine implements HaloEngine {
   @override
   Future<String> subscribeFirstContact(int counter) async => 'ok';
   @override
+  Future<String> sendTo(String addr, String msg) async => 'ok';
+  // the first-contact copies, and when they may answer
+  final firsts = <String>[];
+  Completer<String>? firstGate;
+  @override
+  Future<String> sendFirstContact(String x, String fc, String c) {
+    firsts.add(c);
+    return firstGate?.future ?? Future.value('ok');
+  }
+
+  @override
   dynamic noSuchMethod(Invocation i) =>
       throw UnimplementedError('engine: ${i.memberName}');
 }
+
+late _Engine _engine;
 
 // signal as it is; the network stands in, and an open can fail as a busy
 // store fails it
@@ -197,9 +213,8 @@ void main() {
           (call) async => docs.path,
         );
     final me = Curve.generateKeyPair();
-    useEngineForTest(
-      _Engine(_hex(me.publicKey.serialize().sublist(1)), _rndHex(32)),
-    );
+    _engine = _Engine(_hex(me.publicKey.serialize().sublist(1)), _rndHex(32));
+    useEngineForTest(_engine);
     await signalSession.bootstrap(
       database: MemDb(),
       xPubBytes: me.publicKey.serialize().sublist(1),
@@ -522,6 +537,74 @@ void main() {
     expect(rowsOf(s.id), isEmpty);
   });
 
+  test('a stranger\'s take-backs of uids not here fill no disk; one '
+      'accepted is kept to', () async {
+    final s = await stranger('stray-takes-many');
+    await app.receiveRelay([
+      (
+        peer: 'firstcontact',
+        cipher: await s.p.ss.encryptTo(_me, await wrap(s, 'u-tm')),
+      ),
+    ]);
+    await _settle();
+    expect(rowsOf(s.id), [_said]);
+    Future<String> back(String uid) async => s.p.ss.encryptTo(
+      _me,
+      await wrapMessage(
+        '',
+        unsend: uid,
+        sender: SenderInfo(
+          haloId: s.id,
+          edPub: s.ed,
+          onion: 'o-${s.id}',
+          xPub: s.p.xPub,
+        ),
+      ),
+    );
+    await app.receiveRelay([
+      for (var i = 0; i < 40; i++)
+        (peer: 'firstcontact', cipher: await back('junk-$i')),
+    ]);
+    await _settle();
+    expect(live.gone, isEmpty);
+    // once accepted, their word on one still to come is kept
+    live.people[s.id]!['accepted'] = 1;
+    await app.receiveRelay([(peer: s.p.xPub, cipher: await back('later'))]);
+    await _settle();
+    expect(live.gone, {(s.id, 'later')});
+  });
+
+  test('a file\'s slice reports ok on the onion\'s ack, its relay copy '
+      'behind it', () async {
+    final s = await stranger('stray-gets-a-file');
+    await app.receiveOnion([
+      await s.p.ss.encryptTo(_me, await wrap(s, 'u-gf')),
+    ]);
+    await _settle();
+    appState.sendModeForTest = 'fast';
+    await appState.rememberPeerFc(s.id, 'fc-${s.id}');
+    final f = File('${docs.path}/slice.bin')..writeAsBytesSync([1, 2, 3]);
+    _engine
+      ..firsts.clear()
+      ..firstGate = Completer<String>();
+    addTearDown(() => _engine.firstGate = null);
+    final r = await sendChunkedMediaTo(
+      peerId: s.id,
+      peerOnion: 'o-${s.id}',
+      peerXPub: s.p.xPub,
+      backPaired: false,
+      needPow: false,
+      path: f.path,
+      msgUid: 'f-gf',
+      fileName: 'slice.bin',
+      sender: SenderInfo(haloId: _me, edPub: 'ed', onion: 'o', xPub: 'x'),
+      progressKey: s.id,
+    ).timeout(const Duration(seconds: 10));
+    expect(r, 'ok');
+    expect(_engine.firsts, hasLength(1));
+    _engine.firstGate!.complete('ok');
+  });
+
   test('two phones: the onion acks, the first filing fails, and the '
       'message still arrives once and comes back delivered', () async {
     final s = await stranger('stray-both-ways');
@@ -583,9 +666,25 @@ void main() {
     failSaves(1000);
     await app.receiveOnion([c]);
     expect(live.kept, hasLength(1));
+    // a shut vault took one of them along with its chat
+    final vault = ArrivalRows(HaloContainer.vault);
+    final now = DateTime.now().millisecondsSinceEpoch;
+    for (final (h, at) in [('before', now - 1000), ('after', now + 60000)]) {
+      vault.kept[h] = (
+        hash: h,
+        cipher: 'c-$h',
+        peer: '',
+        at: at,
+        tries: 0,
+        nextAt: 0,
+      );
+    }
     await app.resetInviteAddress();
     expect(live.kept, isEmpty);
     expect(app.fcCounter, 2);
+    // and lets go of it as it next opens
+    await app.trimFirstIn(vault);
+    expect(vault.kept.keys, ['after']);
   });
 
   group('someone deleted here who writes on in the old chat', () {

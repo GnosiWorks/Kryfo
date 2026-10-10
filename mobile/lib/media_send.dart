@@ -317,12 +317,21 @@ Future<String> _sendChunkedMediaInner({
             sent = true;
             route = 'onion';
             // their door holds it in memory only: the first-contact copy
-            // goes too until they add us back
+            // goes too until they add us back, behind the slice's ok
             final fc = appState.peerFcFor(peerId);
             xpub ??= await signalSession.peerXPubHex(peerId);
             if (fc != null && fc.isNotEmpty && xpub != null) {
-              final f = await engine.sendFirstContact(xpub!, fc, cipher);
-              if (f != 'ok') dlog('MEDIA first-contact copy did not go: $f');
+              unawaited(
+                engine.sendFirstContact(xpub!, fc, cipher).then(
+                  (f) {
+                    if (f != 'ok') {
+                      dlog('MEDIA first-contact copy did not go: $f');
+                    }
+                  },
+                  onError: (Object e) =>
+                      dlog('MEDIA first-contact copy did not go: $e'),
+                ),
+              );
             }
             break;
           }

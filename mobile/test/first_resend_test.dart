@@ -266,6 +266,33 @@ void main() {
       expect(went.toSet(), {'to $_amy $first'});
     });
 
+    test('edited since it first went, it goes again as it reads now, after '
+        'a restart too', () async {
+      final first = await wrapMessage(
+        'text o1',
+        msgUid: 'o1',
+        powNonce: pow['o1'],
+        powBitsUsed: powBits,
+        sender: asSender('me'),
+      );
+      await db.keepOpenerWire('o1', first);
+      await db.editMessage('o1', 'text o1, put better');
+      final router = VaultRouter(ArrivalStore(), ArrivalSeal());
+      await router.load();
+      final next = AppState(io: io, router: router)
+        ..myId = 'me'
+        ..sendModeForTest = 'fast';
+      await next.sendOpenersAgain();
+      await settle();
+      final w = wires('o1');
+      expect(w, isNotEmpty);
+      for (final m in w) {
+        expect(m.message, 'text o1, put better');
+        // and its proof is over the words it carries, or their gate drops it
+        expect(verifyPow(m.powText ?? m.message, m.powNonce!, powBits), isTrue);
+      }
+    });
+
     test('past their two, once its onion and relay copies both went, it '
         'waits held and goes no more', () async {
       await out('e1', delivered: 1, at: now - 30 * _min);
