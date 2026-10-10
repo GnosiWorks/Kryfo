@@ -246,6 +246,11 @@ class Session {
 
   Future<bool> keyHeld(String haloId) => _ofPeer(haloId).keyHeld(haloId);
 
+  // everyone held in either container, for a list
+  Future<Set<String>> heldPeers() async => {
+    for (final d in [primary, ?vault]) ...await d.heldPeers(),
+  };
+
   Future<void> acceptNewKey(String haloId) =>
       _ofPeer(haloId).acceptNewKey(haloId);
   Future<Map<String, Object?>?> shieldFor(String haloId) =>

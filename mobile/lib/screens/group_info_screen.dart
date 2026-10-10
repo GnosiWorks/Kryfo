@@ -27,6 +27,7 @@ import '../widgets/press_scale.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/hidden_mark.dart';
+import '../widgets/key_held.dart';
 import '../lock_guard.dart' show lockGuard;
 import '../widgets/burn_fade.dart' show FadeFold;
 import '../widgets/row_motion.dart';
@@ -63,6 +64,8 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
     (g) => g.groupId == widget.groupId && g.expiresAt != null,
   );
   List<String> _members = [];
+  // members verified under one key who hold another now
+  Set<String> _held = const {};
   // a link reset running from this page
   bool _resetting = false;
   // the first read is in. until then the page draws from the chat list's
@@ -96,8 +99,10 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   Future<void> _load() async {
     final g = await session.getGroup(widget.groupId);
     final members = await session.getGroupMembers(widget.groupId);
+    final held = await keysHeldShown();
     if (!mounted) return;
     setState(() {
+      _held = held;
       _name = (g?['name'] as String?) ?? l10n.groupInfoGroup;
       _isAdmin = ((g?['is_admin'] as int?) ?? 0) == 1;
       _roomPub = g?['room_pub'] as String?;
@@ -142,6 +147,13 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
       if (c.haloId == id) return c;
     }
     return null;
+  }
+
+  // a held member: the notice and its two ways out
+  Future<void> _openHeld(String id) async {
+    final name = _contactOf(id)?.nickname ?? memberLabel(id);
+    await showKeyHeldSheet(context, id, name);
+    await _load();
   }
 
   // a member you know opens as anyone you know does
@@ -553,6 +565,8 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                       onRemove: _confirmRemove,
                       contactOf: _contactOf,
                       onOpen: _openMember,
+                      held: _held,
+                      onHeld: _openHeld,
                     )
                   : _MembersWaiting(
                       key: const ValueKey('members-waiting'),
@@ -672,6 +686,9 @@ class MembersCard extends StatefulWidget {
   final ContactPreview? Function(String id)? contactOf;
   // a tap on someone you know
   final void Function(String id)? onOpen;
+  // members whose key is held, and a tap on one of them
+  final Set<String> held;
+  final void Function(String id)? onHeld;
   const MembersCard({
     super.key,
     required this.members,
@@ -681,6 +698,8 @@ class MembersCard extends StatefulWidget {
     this.quiet = false,
     this.contactOf,
     this.onOpen,
+    this.held = const {},
+    this.onHeld,
   });
 
   @override
@@ -759,7 +778,13 @@ class _MembersCardState extends State<MembersCard> {
     final c = me || room ? null : widget.contactOf?.call(m);
     final nick = c?.nickname;
     final name = nick != null && nick.isNotEmpty ? nick : null;
-    final open = c == null ? null : widget.onOpen;
+    final held = !me && !room && widget.held.contains(m);
+    final onHeld = widget.onHeld;
+    final open = held && onHeld != null
+        ? onHeld
+        : c == null
+        ? null
+        : widget.onOpen;
     final row = Padding(
       padding: const EdgeInsetsDirectional.fromSTEB(12, 10, 4, 10),
       child: Row(
@@ -789,6 +814,7 @@ class _MembersCardState extends State<MembersCard> {
                     overflow: TextOverflow.ellipsis,
                     style: HaloType.mono(size: 10, color: HaloColors.text3),
                   ),
+                KeyHeldMark(on: held),
                 if (me)
                   Text(
                     l10n.groupInfoYou,
