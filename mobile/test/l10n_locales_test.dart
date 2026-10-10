@@ -2637,6 +2637,9 @@ final _calls = <_Call>[
   ('bootFailedKeysDidNotAnswer', [], (l) => l.bootFailedKeysDidNotAnswer),
   ('bootFailedCloseAndReopen', [], (l) => l.bootFailedCloseAndReopen),
   ('torBootSplashTakingLonger', [], (l) => l.torBootSplashTakingLonger),
+  ('torBootSplashHopEntry', [], (l) => l.torBootSplashHopEntry),
+  ('torBootSplashHopMiddle', [], (l) => l.torBootSplashHopMiddle),
+  ('torBootSplashHopExit', [], (l) => l.torBootSplashHopExit),
   ('kryfoLinkTextThatLinkIsNot', [], (l) => l.kryfoLinkTextThatLinkIsNot),
   ('kryfoLinkTextAdd', ["⟨who⟩"], (l) => l.kryfoLinkTextAdd("⟨who⟩")),
   (

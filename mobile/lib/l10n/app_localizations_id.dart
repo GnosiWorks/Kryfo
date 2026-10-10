@@ -6596,6 +6596,15 @@ class AppLocalizationsId extends AppLocalizations {
   String get torBootSplashTakingLonger => 'Ini lebih lama dari biasanya';
 
   @override
+  String get torBootSplashHopEntry => 'Masuk';
+
+  @override
+  String get torBootSplashHopMiddle => 'Tengah';
+
+  @override
+  String get torBootSplashHopExit => 'Keluar';
+
+  @override
   String get videoBubbleNothingHereOpensThat =>
       'Tidak ada yang bisa membukanya di sini · dibagikan saja';
 

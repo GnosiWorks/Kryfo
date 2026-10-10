@@ -3040,6 +3040,9 @@ void main() {
     );
     expect(l.bootFailedCloseAndReopen, "Close and reopen Kryfo");
     expect(l.torBootSplashTakingLonger, "This is taking longer than usual");
+    expect(l.torBootSplashHopEntry, "Entry");
+    expect(l.torBootSplashHopMiddle, "Middle");
+    expect(l.torBootSplashHopExit, "Exit");
     expect(l.kryfoLinkTextThatLinkIsNot, "That link is not one Kryfo can read");
     expect(l.kryfoLinkTextAdd("<who>"), "Add <who>?");
     expect(

@@ -10533,6 +10533,24 @@ abstract class AppLocalizations {
   /// **'This is taking longer than usual'**
   String get torBootSplashTakingLonger;
 
+  /// widgets/tor_boot_splash.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Entry'**
+  String get torBootSplashHopEntry;
+
+  /// widgets/tor_boot_splash.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Middle'**
+  String get torBootSplashHopMiddle;
+
+  /// widgets/tor_boot_splash.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Exit'**
+  String get torBootSplashHopExit;
+
   /// widgets/video_bubble.dart
   ///
   /// In en, this message translates to:

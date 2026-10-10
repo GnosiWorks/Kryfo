@@ -6589,6 +6589,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get torBootSplashTakingLonger => 'This is taking longer than usual';
 
   @override
+  String get torBootSplashHopEntry => 'Entry';
+
+  @override
+  String get torBootSplashHopMiddle => 'Middle';
+
+  @override
+  String get torBootSplashHopExit => 'Exit';
+
+  @override
   String get videoBubbleNothingHereOpensThat =>
       'Nothing here opens that · sharing instead';
 

@@ -6587,6 +6587,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get torBootSplashTakingLonger => 'Việc này lâu hơn bình thường';
 
   @override
+  String get torBootSplashHopEntry => 'Vào';
+
+  @override
+  String get torBootSplashHopMiddle => 'Giữa';
+
+  @override
+  String get torBootSplashHopExit => 'Ra';
+
+  @override
   String get videoBubbleNothingHereOpensThat =>
       'Không có gì ở đây mở được tệp đó · chuyển sang chia sẻ';
 

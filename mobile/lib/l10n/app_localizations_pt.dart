@@ -6646,6 +6646,15 @@ class AppLocalizationsPt extends AppLocalizations {
       'Isso está demorando mais que o normal';
 
   @override
+  String get torBootSplashHopEntry => 'Entrada';
+
+  @override
+  String get torBootSplashHopMiddle => 'Meio';
+
+  @override
+  String get torBootSplashHopExit => 'Saída';
+
+  @override
   String get videoBubbleNothingHereOpensThat =>
       'Nada aqui abre isso · compartilhando no lugar';
 

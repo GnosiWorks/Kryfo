@@ -6327,6 +6327,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get torBootSplashTakingLonger => '这比平时要久一些';
 
   @override
+  String get torBootSplashHopEntry => '入口';
+
+  @override
+  String get torBootSplashHopMiddle => '中间';
+
+  @override
+  String get torBootSplashHopExit => '出口';
+
+  @override
   String get videoBubbleNothingHereOpensThat => '这里打不开它 · 改为分享';
 
   @override
@@ -13894,6 +13903,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get torBootSplashTakingLonger => '這比平常久一些';
+
+  @override
+  String get torBootSplashHopEntry => '入口';
+
+  @override
+  String get torBootSplashHopMiddle => '中間';
+
+  @override
+  String get torBootSplashHopExit => '出口';
 
   @override
   String get videoBubbleNothingHereOpensThat => '這裡打不開它 · 改用分享';

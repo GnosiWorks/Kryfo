@@ -6610,6 +6610,15 @@ class AppLocalizationsFa extends AppLocalizations {
   String get torBootSplashTakingLonger => 'این بیشتر از معمول طول می‌کشد';
 
   @override
+  String get torBootSplashHopEntry => 'ورودی';
+
+  @override
+  String get torBootSplashHopMiddle => 'میانی';
+
+  @override
+  String get torBootSplashHopExit => 'خروجی';
+
+  @override
   String get videoBubbleNothingHereOpensThat =>
       'این‌جا چیزی آن را باز نمی‌کند · به‌جایش هم‌رسانی می‌شود';
 

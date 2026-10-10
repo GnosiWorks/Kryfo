@@ -6718,6 +6718,15 @@ class AppLocalizationsUk extends AppLocalizations {
   String get torBootSplashTakingLonger => 'Це триває довше, ніж зазвичай';
 
   @override
+  String get torBootSplashHopEntry => 'Вхід';
+
+  @override
+  String get torBootSplashHopMiddle => 'Середина';
+
+  @override
+  String get torBootSplashHopExit => 'Вихід';
+
+  @override
   String get videoBubbleNothingHereOpensThat =>
       'Тут це нема чим відкрити · пропонуємо поділитися';
 

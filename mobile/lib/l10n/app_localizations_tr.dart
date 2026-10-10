@@ -6618,6 +6618,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get torBootSplashTakingLonger => 'Bu, her zamankinden uzun sürüyor';
 
   @override
+  String get torBootSplashHopEntry => 'Giriş';
+
+  @override
+  String get torBootSplashHopMiddle => 'Orta';
+
+  @override
+  String get torBootSplashHopExit => 'Çıkış';
+
+  @override
   String get videoBubbleNothingHereOpensThat =>
       'Burada bunu açan bir şey yok · onun yerine paylaşılıyor';
 

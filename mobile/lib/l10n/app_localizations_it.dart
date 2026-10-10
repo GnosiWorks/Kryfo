@@ -6665,6 +6665,15 @@ class AppLocalizationsIt extends AppLocalizations {
   String get torBootSplashTakingLonger => 'Ci sta mettendo più del solito';
 
   @override
+  String get torBootSplashHopEntry => 'Ingresso';
+
+  @override
+  String get torBootSplashHopMiddle => 'Centro';
+
+  @override
+  String get torBootSplashHopExit => 'Uscita';
+
+  @override
   String get videoBubbleNothingHereOpensThat =>
       'Qui niente può aprirlo · lo condivido';
 

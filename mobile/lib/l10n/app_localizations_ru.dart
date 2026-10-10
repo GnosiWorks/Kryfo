@@ -6726,6 +6726,15 @@ class AppLocalizationsRu extends AppLocalizations {
       'Это занимает больше времени, чем обычно';
 
   @override
+  String get torBootSplashHopEntry => 'Вход';
+
+  @override
+  String get torBootSplashHopMiddle => 'Середина';
+
+  @override
+  String get torBootSplashHopExit => 'Выход';
+
+  @override
   String get videoBubbleNothingHereOpensThat =>
       'Здесь это не открыть · открываем «Поделиться»';
 
