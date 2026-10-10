@@ -664,7 +664,33 @@ func lastReconnectOutcome() string {
 func HaloLastReconnect() *C.char { return C.CString(lastReconnectOutcome()) }
 
 // the bounce itself. "ok", or a line starting with "error:".
-func reconnectTor() string {
+func reconnectTor() string { return reconnectTorAs(false) }
+
+// how long a reconnect may run before the next one takes over. every control
+// command in one carries a deadline, so a healthy one is done well inside it
+var stuckAfter = 2 * time.Minute
+
+// how many reconnects got past the guards, for the tests that count storms
+var reconnectRuns atomic.Int64
+
+// which reconnect owns the running flag. one that was taken over must not
+// clear the flag of the one that took it
+var reconnectOwner int64
+
+// asked for by hand: no floor, no back-off, and a reconnect still running is
+// taken over at once. the result says whether tor took it; an error naming
+// the control port means tor is not answering and only a new process helps
+func reconnectNow() string {
+	if torIsPaused() {
+		return "error: tor is asleep"
+	}
+	routeFreshNetwork()
+	atomic.StoreInt64(&lastTorRestart, 0)
+	routeBump()
+	return reconnectTorAs(true)
+}
+
+func reconnectTorAs(force bool) string {
 	// asleep on purpose: the check-in mode takes tor off the network between
 	// checks, and every watchdog that finds it quiet comes through here. none
 	// of them may bring it back: that is the app's call, not a watchdog's.
@@ -673,24 +699,28 @@ func reconnectTor() string {
 		return "error: tor is asleep"
 	}
 	if !atomic.CompareAndSwapInt32(&torRestarting, 0, 1) {
-		// one that has run for five minutes is stuck, and "one already
-		// running" for ever leaves the offline card's button dead. take the
-		// flag over; the stuck one clears it again if it ever returns, which
-		// is harmless.
+		// one that has run this long is stuck, and "one already running"
+		// for ever leaves every button dead. take the flag over
 		since := atomic.LoadInt64(&reconnectSince)
-		if since == 0 || time.Since(time.Unix(0, since)) < 5*time.Minute {
+		if !force && (since == 0 || time.Since(time.Unix(0, since)) < stuckAfter) {
 			return "error: one already running"
 		}
-		log.Printf("halo: a reconnect has sat at %q for %s - abandoning it",
-			lastReconnectStep(), time.Since(time.Unix(0, since)).Round(time.Second))
-		noteOutcome("abandoned at " + lastReconnectStep())
+		log.Printf("halo: taking over a reconnect at %q", lastReconnectStep())
+		noteOutcome("taken over at " + lastReconnectStep())
 	}
-	defer atomic.StoreInt32(&torRestarting, 0)
+	me := atomic.AddInt64(&reconnectOwner, 1)
+	reconnectRuns.Add(1)
+	mine := func() bool { return atomic.LoadInt64(&reconnectOwner) == me }
+	defer func() {
+		if mine() {
+			atomic.StoreInt32(&torRestarting, 0)
+		}
+	}()
 
 	// a quiet-but-alive relay should not drive a loop. a bounce is cheap, so
 	// the floor is a minute.
 	now := time.Now().Unix()
-	if prev := atomic.LoadInt64(&lastTorRestart); prev != 0 && now-prev < 60 {
+	if prev := atomic.LoadInt64(&lastTorRestart); !force && prev != 0 && now-prev < 60 {
 		log.Printf("halo: reconnect skipped - %ds since the last (floor 60s)", now-prev)
 		return "error: too soon"
 	}
@@ -725,9 +755,11 @@ func reconnectTor() string {
 	atomic.StoreInt64(&reconnectSince, started.UnixNano())
 	atomic.StoreInt32(&reconnectRunning, 1)
 	r := reconnectOn(t, addr)
-	atomic.StoreInt32(&reconnectRunning, 0)
-	atomic.StoreInt64(&reconnectSince, 0)
-	noteOutcome(fmt.Sprintf("%s after %s", r, time.Since(started).Round(time.Millisecond)))
+	if mine() {
+		atomic.StoreInt32(&reconnectRunning, 0)
+		atomic.StoreInt64(&reconnectSince, 0)
+		noteOutcome(fmt.Sprintf("%s after %s", r, time.Since(started).Round(time.Millisecond)))
+	}
 	return r
 }
 
@@ -1214,11 +1246,27 @@ func watchHSDirUpload(t *tor.Tor, ch chan control.Event, subbed bool, onionID st
 
 // polls tor for real bootstrap progress. tor.Start only means the process
 // is up; the network comes alive inside Listen, so this is the only true
-// progress signal. stops at 100% or after about ten minutes.
+// progress signal. it stops at 100%, when tor is put to sleep, or when the
+// tor it watches is not this process's any more. never on a clock: a
+// watcher that gave up left the status at starting for good after a long
+// spell with no network.
+var (
+	bootPoll     = 2 * time.Second
+	bootPollSlow = 15 * time.Second
+	bootFast     = 10 * time.Minute
+)
+
 func watchBootstrap(t *tor.Tor) {
 	lastPct := -1
-	for i := 0; i < 300; i++ {
+	began := time.Now()
+	for {
 		if t == nil || t.Control == nil || torIsPaused() {
+			return
+		}
+		mu.Lock()
+		cur := torNode
+		mu.Unlock()
+		if cur != t {
 			return
 		}
 		var kv []*control.KeyVal
@@ -1248,7 +1296,11 @@ func watchBootstrap(t *tor.Tor) {
 				return
 			}
 		}
-		time.Sleep(2 * time.Second)
+		wait := bootPoll
+		if time.Since(began) > bootFast {
+			wait = bootPollSlow
+		}
+		time.Sleep(wait)
 	}
 }
 

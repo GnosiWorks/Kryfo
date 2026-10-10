@@ -2,6 +2,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"strconv"
 	"sync"
@@ -33,6 +34,8 @@ var (
 	// the bootstrap percentage when it last moved, and when that was
 	stallPct   = -1
 	stallSince time.Time
+	// when tor was first seen off while nobody asked for it to be
+	offSince time.Time
 )
 
 // a relay connect worked. the route carries traffic, whatever came before.
@@ -73,7 +76,9 @@ func correctStaleStart() {
 		return
 	}
 	statusMu.Lock()
-	stale := torStatus == "starting"
+	// off too: a reconnect that gave up half way says off while the tor
+	// under it carries relays
+	stale := torStatus == "starting" || torStatus == "off"
 	if stale {
 		bootstrapPct = 100
 	}
@@ -187,12 +192,17 @@ func routeNeedsRescue(now time.Time) string {
 	statusMu.RLock()
 	st, pct := torStatus, bootstrapPct
 	statusMu.RUnlock()
+	// before routeMu: it takes mu
+	up := st == "off" && torUp()
 
 	routeMu.Lock()
 	defer routeMu.Unlock()
 
 	if st != "starting" {
 		stallPct = -1
+	}
+	if st != "off" {
+		offSince = time.Time{}
 	}
 	switch {
 	case st == "bootstrapped" || st == "publishing" || st == "reachable":
@@ -221,9 +231,48 @@ func routeNeedsRescue(now time.Time) string {
 		lastRescue = now
 		stallPct = -1
 		return why
+	case up:
+		// a tor this process started is off and nobody paused it: a
+		// reconnect gave up half way, and tor may have taken the network
+		// off after it gave up. the app's watchdog only does first starts
+		if offSince.IsZero() {
+			offSince = now
+			return ""
+		}
+		if now.Sub(offSince) < offFor {
+			return ""
+		}
+		if !lastRescue.IsZero() && now.Sub(lastRescue) < rescueGap(rescues) {
+			return ""
+		}
+		why := "tor has been off for " + now.Sub(offSince).Round(time.Second).String()
+		rescues++
+		lastRescue = now
+		return why
 	}
-	// "off" is the app's watchdog: it restarts the listener itself
+	// an off tor that never started is the app's watchdog: it starts it
 	return ""
+}
+
+// how long tor may sit off before the watch brings it back
+const offFor = 15 * time.Second
+
+// a tor runs in this process and has an address
+func torUp() bool {
+	mu.Lock()
+	defer mu.Unlock()
+	return torNode != nil && myAddr != ""
+}
+
+// a new network is a fresh start. the back-off grown while there was none,
+// a flight's worth of rescues, must not hold off the first one on the ground
+func routeFreshNetwork() {
+	routeMu.Lock()
+	rescues = 0
+	lastRescue = time.Time{}
+	stallPct = -1
+	offSince = time.Time{}
+	routeMu.Unlock()
 }
 
 // android says the network changed. tor's open connections belong to the
@@ -249,6 +298,8 @@ var (
 func networkChanged() {
 	// a snowflake client keeps the nat type it found on the old network
 	dropSnowflakeClients()
+	routeFreshNetwork()
+	netEpoch.Add(1)
 	netMu.Lock()
 	netChangedAt = time.Now()
 	if netWorker {
@@ -287,12 +338,69 @@ func netBounceWorker() {
 // a var so the debounce can be tested without a tor.
 var netBounce = func() {
 	log.Println("halo: network changed, bouncing tor")
-	atomic.StoreInt64(&lastTorRestart, 0)
-	if r := reconnectTor(); r == "error: one already running" {
-		// the running one may be past the point where it would have
-		// helped. one more, once it is done.
-		time.Sleep(10 * time.Second)
-		atomic.StoreInt64(&lastTorRestart, 0)
-		go reconnectTor()
+	epoch := netEpoch.Load()
+	netReconnect()
+	netCheck(epoch)
+}
+
+// every change counted, so the check for a network that has gone already
+// stands down for the check of the one that came
+var netEpoch atomic.Int64
+
+// the reconnect a network change gets: past the floor, the back-off and any
+// reconnect still running, which began on the network that went
+var netReconnect = func() string {
+	routeFreshNetwork()
+	return reconnectTorAs(true)
+}
+
+// how long tor gets to prove itself on a new network, and how many bounces
+// it gets to do it in. after that the route watch has it
+var (
+	netProof      = 90 * time.Second
+	netProofTries = 2
+	netProofStep  = 2 * time.Second
+)
+
+// a relay connected through the route the last bounce built
+func routeProven() bool {
+	routeMu.Lock()
+	defer routeMu.Unlock()
+	return okGen == routeGen
+}
+
+var netCheckOutcome atomic.Value // string, for the transport screen
+
+func lastNetCheck() string {
+	if v, ok := netCheckOutcome.Load().(string); ok {
+		return v
+	}
+	return ""
+}
+
+// whether tor really works on the new network, bounded. no probe of its own:
+// the relays the bounce kicked are the proof. "ok", "unproven", or
+// "superseded" when a newer change took over
+func netCheck(epoch int64) string {
+	began := time.Now()
+	for try := 1; ; try++ {
+		end := time.Now().Add(netProof)
+		for time.Now().Before(end) {
+			if netEpoch.Load() != epoch || !modeNeedsTor() || torIsPaused() {
+				return "superseded"
+			}
+			if routeProven() {
+				netCheckOutcome.Store(fmt.Sprintf("ok after %s", time.Since(began).Round(time.Second)))
+				return "ok"
+			}
+			time.Sleep(netProofStep)
+		}
+		if try >= netProofTries {
+			netCheckOutcome.Store(fmt.Sprintf("no relay through tor in %s", time.Since(began).Round(time.Second)))
+			log.Printf("halo: tor not proven on the new network after %d bounces", try)
+			return "unproven"
+		}
+		log.Printf("halo: no relay through tor %s after the bounce, bouncing again", netProof)
+		netReconnect()
 	}
 }
