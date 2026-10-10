@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -348,7 +349,7 @@ func TestPTArgsLenCountsEscapes(t *testing.T) {
 func TestSortBridgeLines(t *testing.T) {
 	cert := randomCert()
 	dup := "obfs4 [2001:DB8::1]:443 " + testFP + " cert=" + cert + " iat-mode=0"
-	good, bad := sortBridgeLines(strings.Join([]string{
+	good, bad, _ := sortBridgeLines(strings.Join([]string{
 		tbObfs4, "", "  ", tbSnowflake, tbSnowflake2, testWebtunnel,
 		"obfs4 [2001:db8::1]:443 " + testFP + " cert=" + cert + " iat-mode=0",
 		dup, "nonsense",
@@ -414,4 +415,71 @@ func TestTorLogLinesLoseBridgeAddresses(t *testing.T) {
 	if !strings.Contains(out, "unable to connect") {
 		t.Fatalf("the line itself is gone: %q", out)
 	}
+}
+
+// lines saved by 0.5.0: no iat-mode, a transport in capitals, no
+// fingerprint. they load, come out the way tor and lyrebird read them, and
+// the listener dials them.
+func TestStoredLinesFrom050SurviveBoot(t *testing.T) {
+	useBridges(t, false)
+	bridge, toBridge := knocks(t)
+	cert := randomCert()
+	stored := strings.Join([]string{
+		fmt.Sprintf("obfs4 %s %s cert=%s", bridge.Addr(), testFP, cert),
+		"OBFS4 192.0.2.50:443 cert=" + randomCert() + " iat-mode=1",
+		tbObfs4,
+	}, "\n")
+	if r := setBridges(stored, true); r != "ok: 3 bridges" {
+		t.Fatalf("boot: %s", r)
+	}
+	if got := bridgeLineChecks(); got != `[{"i":0,"state":"fixed"},{"i":1,"state":"fixed"},{"i":2,"state":"ok"}]` {
+		t.Fatalf("checks: %s", got)
+	}
+	lines := bridgeLines()
+	if !strings.HasSuffix(lines[0], " iat-mode=0") || !strings.HasPrefix(lines[1], "obfs4 ") || lines[2] != tbObfs4 {
+		t.Fatalf("lines: %q", lines)
+	}
+	socksConnect(t, "obfs4", bridge.Addr().String(), "x=y")
+	select {
+	case <-toBridge:
+	case <-time.After(10 * time.Second):
+		t.Fatal("a stored 0.5.0 line was never dialled")
+	}
+}
+
+// a stored line that cannot be used is kept and marked, by its place in
+// the list, without its contents in the reason
+func TestBrokenStoredLineKeptAndMarked(t *testing.T) {
+	useBridges(t, false)
+	stored := strings.Join([]string{
+		tbObfs4,
+		"obfs4 198.51.100.7:443 cert=tooshort iat-mode=0",
+		"",
+		"webtunnel 198.51.100.8:443 " + testFP + " url=http://plain.example/x",
+		"nonsense",
+	}, "\n")
+	if r := setBridges(stored, true); r != "ok: 1 accepted, 3 not understood" {
+		t.Fatalf("boot: %s", r)
+	}
+	if !bridgesEnabled() || len(bridgeLines()) != 1 {
+		t.Fatalf("the good line was not kept on: %q", bridgeLines())
+	}
+	var checks []lineCheck
+	if err := json.Unmarshal([]byte(bridgeLineChecks()), &checks); err != nil {
+		t.Fatal(err)
+	}
+	if len(checks) != 4 || checks[0].State != "ok" {
+		t.Fatalf("checks: %+v", checks)
+	}
+	for _, c := range checks[1:] {
+		if c.State != "broken" || c.Why == "" {
+			t.Fatalf("line %d: %+v", c.I, c)
+		}
+		for _, w := range []string{"198.51.100", "tooshort", "plain.example"} {
+			if strings.Contains(c.Why, w) {
+				t.Fatalf("line %d's reason quotes it: %q", c.I, c.Why)
+			}
+		}
+	}
+	t.Logf("%+v", checks)
 }

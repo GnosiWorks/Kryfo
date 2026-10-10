@@ -17,6 +17,7 @@ package main
 import "C"
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -122,6 +123,7 @@ type bridgeLine struct {
 var (
 	errLineUnknown = errors.New("not a bridge line kryfo understands")
 	errLineLong    = errors.New("arguments too long for tor")
+	errLineArgs    = errors.New("arguments not usable")
 )
 
 // tor sends a line's arguments as the socks5 username and password, at
@@ -240,8 +242,9 @@ func checkBridgeLine(s string) (bridgeLine, error) {
 	if err != nil {
 		return b, err
 	}
+	// the parser's own words can quote an argument, so they stay here
 	if _, err := f.ParseArgs(&b.args); err != nil {
-		return b, fmt.Errorf("%s: %w", b.transport, err)
+		return b, fmt.Errorf("%s: %w", b.transport, errLineArgs)
 	}
 	return b, nil
 }
@@ -251,30 +254,74 @@ func validBridgeLine(s string) bool {
 	return err == nil
 }
 
-// splits pasted text into lines tor can use and lines it cannot. a line
-// whose transport and address repeat an earlier one is refused too: the
-// listener finds a line by its address, and two would be ambiguous.
-func sortBridgeLines(raw string) (good, bad []string) {
+// what became of one line handed to HaloSetBridges, in the order given.
+// a line that cannot be used is kept here with its reason, so the app can
+// show it as broken instead of it quietly going missing.
+type lineCheck struct {
+	I     int    `json:"i"`
+	State string `json:"state"` // ok, fixed or broken
+	Why   string `json:"why,omitempty"`
+}
+
+var (
+	lineChecksMu sync.Mutex
+	lineChecks   []lineCheck
+)
+
+// fills in what an older line can safely leave out, and writes the
+// transport in lower case as tor names it. lines saved by 0.5.0 have no
+// iat-mode at times, and 0 is what obfs4 means without one.
+func normaliseBridgeLine(s string) (string, bool) {
+	b, err := parseBridgeLine(s)
+	if err != nil {
+		return s, false
+	}
+	kv := b.kv
+	if _, ok := b.args.Get("iat-mode"); b.transport == "obfs4" && !ok {
+		kv = append(append([]string(nil), kv...), "iat-mode=0")
+	}
+	f := []string{b.transport, b.addr}
+	if b.fp != "" {
+		f = append(f, b.fp)
+	}
+	out := strings.Join(append(f, kv...), " ")
+	return out, out != strings.Join(strings.Fields(s), " ")
+}
+
+// splits pasted or stored text into lines tor can use and lines it cannot,
+// with a check per non-empty line. a line whose transport and address
+// repeat an earlier one is refused too: the listener finds a line by its
+// address, and two would be ambiguous.
+func sortBridgeLines(raw string) (good, bad []string, checks []lineCheck) {
 	seen := map[string]bool{}
+	i := 0
 	for _, ln := range strings.Split(raw, "\n") {
 		ln = strings.TrimSpace(ln)
 		if ln == "" {
 			continue
 		}
-		b, err := checkBridgeLine(ln)
-		if err != nil {
+		c := lineCheck{I: i, State: "ok"}
+		i++
+		fixed, changed := normaliseBridgeLine(ln)
+		b, err := checkBridgeLine(fixed)
+		switch {
+		case err != nil:
+			// checkBridgeLine's reasons are fixed text, no values in them
+			c.State, c.Why = "broken", err.Error()
 			bad = append(bad, ln)
-			continue
-		}
-		key := b.transport + " " + bridgeAddrKey(b.addr)
-		if seen[key] {
+		case seen[b.transport+" "+bridgeAddrKey(b.addr)]:
+			c.State, c.Why = "broken", "repeats an earlier line"
 			bad = append(bad, ln)
-			continue
+		default:
+			seen[b.transport+" "+bridgeAddrKey(b.addr)] = true
+			if changed {
+				c.State = "fixed"
+			}
+			good = append(good, fixed)
 		}
-		seen[key] = true
-		good = append(good, ln)
+		checks = append(checks, c)
 	}
-	return good, bad
+	return good, bad, checks
 }
 
 // the addresses, names and fingerprints of every bridge line used in this
@@ -577,18 +624,26 @@ func dialErrKind(err error) string {
 //
 //export HaloSetBridges
 func HaloSetBridges(cLines *C.char, on C.int) *C.char {
-	good, bad := sortBridgeLines(C.GoString(cLines))
+	return C.CString(setBridges(C.GoString(cLines), on != 0))
+}
+
+// HaloSetBridges in plain go, for the tests
+func setBridges(raw string, on bool) string {
+	good, bad, checks := sortBridgeLines(raw)
+	lineChecksMu.Lock()
+	lineChecks = checks
+	lineChecksMu.Unlock()
 
 	noteBridgeSecrets(good)
 	bridgeMu.Lock()
 	bridgeList = good
-	bridgeOn = on != 0 && len(good) > 0
+	bridgeOn = on && len(good) > 0
 	enabled := bridgeOn
 	bridgeMu.Unlock()
 
 	if enabled {
 		if err := startPTListeners(); err != nil {
-			return C.CString(fmt.Sprintf("error: %v", err))
+			return fmt.Sprintf("error: %v", err)
 		}
 	}
 	// turning bridges off leaves the listeners up: tor keeps the ports it
@@ -596,9 +651,25 @@ func HaloSetBridges(cLines *C.char, on C.int) *C.char {
 	// dials costs nothing.
 
 	if len(bad) > 0 {
-		return C.CString(fmt.Sprintf("ok: %d accepted, %d not understood", len(good), len(bad)))
+		return fmt.Sprintf("ok: %d accepted, %d not understood", len(good), len(bad))
 	}
-	return C.CString(fmt.Sprintf("ok: %d bridges", len(good)))
+	return fmt.Sprintf("ok: %d bridges", len(good))
+}
+
+// a json list with one entry per line of the last HaloSetBridges, in the
+// order given: {"i":0,"state":"ok|fixed|broken","why":"..."}. it never
+// repeats a line, the app has them.
+//
+//export HaloBridgeLineChecks
+func HaloBridgeLineChecks() *C.char {
+	return C.CString(bridgeLineChecks())
+}
+
+func bridgeLineChecks() string {
+	lineChecksMu.Lock()
+	defer lineChecksMu.Unlock()
+	b, _ := json.Marshal(append([]lineCheck{}, lineChecks...))
+	return string(b)
 }
 
 // hand tor the new bridge config and bounce its network so it takes. tor is
