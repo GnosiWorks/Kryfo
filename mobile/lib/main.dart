@@ -9804,6 +9804,7 @@ class AppState extends ChangeNotifier {
           now: DateTime.now().millisecondsSinceEpoch,
           send: (uid, groupId, have, total) =>
               _sendOwed(d, uid, groupId, have, total),
+          held: keyHeld,
         );
       } catch (e) {
         dlog('GRP MEDIA owed: ${e.runtimeType}');
