@@ -74,6 +74,7 @@ class RouterCard {
     this.xpub, {
     this.backPaired = false,
     this.blocked = false,
+    this.verifiedKey,
   });
 
   final String id;
@@ -81,6 +82,9 @@ class RouterCard {
   final String xpub;
   final bool backPaired;
   final bool blocked;
+  // the key the vault verified them under: while it is shut, another key
+  // held for them holds what goes to them, as their row would
+  final String? verifiedKey;
 
   Map<String, Object> toJson() => {
     'h': id,
@@ -88,6 +92,7 @@ class RouterCard {
     'x': xpub,
     if (backPaired) 'bp': 1,
     if (blocked) 'bl': 1,
+    'vk': ?verifiedKey,
   };
 
   static RouterCard? fromJson(Object? j, {String? id}) {
@@ -96,12 +101,14 @@ class RouterCard {
     if (h is! String || h.isEmpty) return null;
     final o = j['o'];
     final x = j['x'];
+    final vk = j['vk'];
     return RouterCard(
       h,
       o is String ? o : '',
       x is String ? x : '',
       backPaired: j['bp'] == 1,
       blocked: j['bl'] == 1,
+      verifiedKey: vk is String && vk.isNotEmpty ? vk.toLowerCase() : null,
     );
   }
 }

@@ -110,7 +110,7 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
     // new key is already trusted and the session rebuilt on the inbound
     // message (deliver-and-warn), so the mark also ends the banner, in the
     // same write. a session teardown here would break sending.
-    if (!await session.setVerified(widget.peerHaloId, next, key: _key)) {
+    if (!await appState.setVerified(widget.peerHaloId, next, key: _key)) {
       await _read();
       if (mounted) showHaloToast(context, l10n.keyVerificationKeyMoved);
       return;

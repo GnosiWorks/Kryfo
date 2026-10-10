@@ -724,34 +724,7 @@ class SqlChatMover implements ChatMover {
     return out;
   }
 
-  // what receiving needs of a hidden chat, from the vault's rows: its
-  // person, or a group's members no everyday row holds
-  Future<String?> _card(DatabaseExecutor t, ChatRef c) async {
-    RouterCard card(Map<String, Object?> r) => RouterCard(
-      r['halo_id'] as String,
-      r['onion'] as String? ?? '',
-      r['xpub'] as String? ?? '',
-      backPaired: r['back_paired'] == 1,
-      blocked: r['blocked'] == 1,
-    );
-    if (!c.group) {
-      final r = await t.rawQuery(
-        'SELECT halo_id, onion, xpub, back_paired, blocked '
-        'FROM v.contacts WHERE halo_id = ?1',
-        [c.id],
-      );
-      return r.isEmpty ? null : peerCard(card(r.first));
-    }
-    final r = await t.rawQuery(
-      'SELECT c.halo_id, c.onion, c.xpub, c.back_paired, c.blocked '
-      'FROM v.group_members gm JOIN v.contacts c ON c.halo_id = gm.halo_id '
-      'WHERE gm.group_id = ?1 AND NOT EXISTS '
-      '(SELECT 1 FROM main.contacts x WHERE x.halo_id = gm.halo_id) '
-      'ORDER BY c.halo_id',
-      [c.id],
-    );
-    return groupCard([for (final x in r) card(x)]);
-  }
+  Future<String?> _card(DatabaseExecutor t, ChatRef c) => hiddenCard(t, c);
 
   @override
   Future<MoveMarks> marks() async =>
@@ -858,4 +831,35 @@ class SqlChatMover implements ChatMover {
           c.id: (c.group ? kHiddenGroup : kHiddenPeer, card),
     };
   }
+}
+
+// what receiving needs of a hidden chat, from the vault's rows attached as
+// v: its person, or a group's members no everyday row holds
+Future<String?> hiddenCard(DatabaseExecutor t, ChatRef c) async {
+  RouterCard card(Map<String, Object?> r) => RouterCard(
+    r['halo_id'] as String,
+    r['onion'] as String? ?? '',
+    r['xpub'] as String? ?? '',
+    backPaired: r['back_paired'] == 1,
+    blocked: r['blocked'] == 1,
+    verifiedKey: r['verified_key'] as String?,
+  );
+  if (!c.group) {
+    final r = await t.rawQuery(
+      'SELECT halo_id, onion, xpub, back_paired, blocked, verified_key '
+      'FROM v.contacts WHERE halo_id = ?1',
+      [c.id],
+    );
+    return r.isEmpty ? null : peerCard(card(r.first));
+  }
+  final r = await t.rawQuery(
+    'SELECT c.halo_id, c.onion, c.xpub, c.back_paired, c.blocked, '
+    'c.verified_key '
+    'FROM v.group_members gm JOIN v.contacts c ON c.halo_id = gm.halo_id '
+    'WHERE gm.group_id = ?1 AND NOT EXISTS '
+    '(SELECT 1 FROM main.contacts x WHERE x.halo_id = gm.halo_id) '
+    'ORDER BY c.halo_id',
+    [c.id],
+  );
+  return groupCard([for (final x in r) card(x)]);
 }

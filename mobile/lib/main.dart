@@ -9130,15 +9130,55 @@ class AppState extends ChangeNotifier {
   // a contact verified under another key than they hold now: nothing goes
   // to them until the new number is checked or the new key accepted. the
   // queues pass them by without using a try. a read that fails says nothing
-  // about their key: the queues go on, and the seal ([strict]) waits
+  // about their key: the queues go on, and the seal ([strict]) waits. the
+  // seal is the everyday identity's, so its rows judge whichever session
+  // is open: the everyday one, the open vault's, else a shut vault's card
   Future<bool> keyHeld(String peer, {bool strict = false}) async {
     if (isDevId(peer)) return false;
     try {
-      return await session.keyHeld(peer);
+      if (await live.keyHeld(peer)) return true;
+      final v = _openVault;
+      if (v != null) return await v.keyHeld(peer);
+      return await _cardHeld(peer);
     } catch (e) {
       dlog('key hold: not read (${e.runtimeType})');
       return strict;
     }
+  }
+
+  // someone a shut vault holds, by the mark its card keeps. a vault shutting
+  // now writes its cards first
+  Future<bool> _cardHeld(String peer) async {
+    if (_closeDone != null) {
+      await _afterClose().timeout(const Duration(seconds: 30));
+    }
+    final card = _router.cardOf(peer);
+    final mark = card?.verifiedKey;
+    if (card == null || mark == null) return false;
+    final held = await heldKeyHex(await live.open(), peer, xpub: card.xpub);
+    return held != null && held != mark;
+  }
+
+  // a mark set or taken off, or a new key accepted. one in the open vault
+  // reaches its card now, not only at the close
+  Future<bool> setVerified(String peer, bool verified, {String? key}) async {
+    final ok = await session.setVerified(peer, verified, key: key);
+    _recardFor(peer);
+    return ok;
+  }
+
+  Future<void> acceptNewKey(String peer) async {
+    await session.acceptNewKey(peer);
+    _recardFor(peer);
+  }
+
+  void _recardFor(String peer) {
+    if (_openVault == null || !_session.isHidden(peer)) return;
+    unawaited(
+      refreshHiddenCards().catchError(
+        (Object e) => dlog('vault: cards not read (${e.runtimeType})'),
+      ),
+    );
   }
 
   // every held contact of one database, read once per pass: their queued
