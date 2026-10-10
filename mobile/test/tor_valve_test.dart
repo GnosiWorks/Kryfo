@@ -176,6 +176,28 @@ void main() {
     },
   );
 
+  test(
+    'a restart that does not happen takes the drafts back off disk',
+    () async {
+      FlutterSecureStorage.setMockInitialValues({});
+      final every = '${HaloContainer.everyday.id}|alice';
+      draftPerPeer
+        ..clear()
+        ..[every] = 'half a thought';
+      draftPerGroup.clear();
+      await restartKeepingDrafts(() async => false);
+      draftPerPeer.clear();
+      await restoreKeptDrafts();
+      expect(draftPerPeer, isEmpty);
+      // one that happens leaves them for the next start
+      draftPerPeer[every] = 'half a thought';
+      await restartKeepingDrafts(() async => true);
+      draftPerPeer.clear();
+      await restoreKeptDrafts();
+      expect(draftPerPeer, {every: 'half a thought'});
+    },
+  );
+
   Widget strip(
     TorValve v, {
     DateTime? since,

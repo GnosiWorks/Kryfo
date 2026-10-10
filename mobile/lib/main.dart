@@ -35,7 +35,7 @@ import 'offline_gate.dart';
 import 'in_front.dart';
 import 'reopen.dart';
 import 'tor_valve.dart';
-import 'drafts.dart' show keepDrafts, restoreKeptDrafts;
+import 'drafts.dart' show restartKeepingDrafts, restoreKeptDrafts;
 import 'helper_push.dart';
 import 'screens/getting_messages_screen.dart';
 import 'screens/home_screen.dart';
@@ -19374,8 +19374,7 @@ final appState = AppState();
 // the way out of a send stuck on tor, shared by every chat and the home card
 final torValve = TorValve(
   reconnect: () => appState.reconnectNow(),
-  restart: reopenApp,
-  beforeRestart: keepDrafts,
+  restart: () => restartKeepingDrafts(reopenApp),
   busyElsewhere: () =>
       mediaInflight.isNotEmpty ||
       incomingMediaProgress.keys.any((k) => !incomingMediaStalled.contains(k)),

@@ -55,3 +55,17 @@ Future<void> restoreKeptDrafts({
     // a copy that will not read is gone all the same
   }
 }
+
+Future<void> dropKeptDrafts({FlutterSecureStorage store = secureStore}) =>
+    store.delete(key: _kept);
+
+/// the drafts written down, then the restart. one that does not happen
+/// takes the written copy back at once: nothing waits on disk for a boot
+/// that is not coming
+Future<void> restartKeepingDrafts(
+  Future<bool> Function() reopen, {
+  FlutterSecureStorage store = secureStore,
+}) async {
+  await keepDrafts(store: store);
+  if (!await reopen()) await dropKeptDrafts(store: store);
+}
