@@ -611,7 +611,7 @@ func applyBridgeConf(t *tor.Tor) error {
 		kv = append(kv, control.NewKeyVal("ClientTransportPlugin", p))
 	}
 	kv = append(kv, control.NewKeyVal("UseBridges", "1"))
-	lines := bridgeLines()
+	lines := torBridgeLines()
 	for _, b := range lines {
 		kv = append(kv, control.NewKeyVal("Bridge", b))
 	}

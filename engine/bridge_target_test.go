@@ -13,14 +13,13 @@ import (
 	"io"
 	"log"
 	"net"
-	"net/http"
-	"net/http/httptest"
 	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
 
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/lyrebird/common/socks5"
+	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/lyrebird/transports/base"
 )
 
 // a listener that counts what reaches it
@@ -69,14 +68,25 @@ func udpKnocks(t *testing.T) (net.PacketConn, *atomic.Int64) {
 	return pc, &n
 }
 
-// a socks5 request to servePTConn, as tor makes it: arguments in the
-// username. the client end comes back without waiting for the reply, and
-// stays open until the test ends.
+// a socks5 request to servePTConn, as tor makes it: arguments and the
+// token in the username. the client end comes back without waiting for the
+// reply, and stays open until the test ends.
 func socksSend(t *testing.T, transport, target, args string) net.Conn {
 	t.Helper()
-	factory, err := ptClientFactory(transport)
-	if err != nil {
-		t.Fatal(err)
+	if args != "" {
+		args += ";"
+	}
+	return socksSendAs(t, transport, nil, target, args+ptTokenArg+"="+ptToken)
+}
+
+// the same with exactly these arguments and, if given, this factory
+func socksSendAs(t *testing.T, transport string, factory base.ClientFactory, target, args string) net.Conn {
+	t.Helper()
+	if factory == nil {
+		var err error
+		if factory, err = ptClientFactory(transport); err != nil {
+			t.Fatal(err)
+		}
 	}
 	c, s := net.Pipe()
 	t.Cleanup(func() { c.Close() })
@@ -128,7 +138,7 @@ func useBridges(t *testing.T, on bool, lines ...string) {
 	t.Helper()
 	bridgeMu.Lock()
 	oldList, oldOn, oldFails := bridgeList, bridgeOn, bridgeFails
-	bridgeList, bridgeOn, bridgeFails = lines, on, map[string]int{}
+	bridgeList, bridgeOn, bridgeFails = lines, on, map[string]bridgeFail{}
 	bridgeMu.Unlock()
 	t.Cleanup(func() {
 		bridgeMu.Lock()
@@ -208,40 +218,42 @@ func TestForeignClientCannotSteerWebtunnel(t *testing.T) {
 }
 
 func TestForeignClientCannotSteerSnowflake(t *testing.T) {
-	var ourBroker, theirBroker atomic.Int64
-	ob := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ourBroker.Add(1)
-		http.Error(w, "no", http.StatusServiceUnavailable)
-	}))
-	defer ob.Close()
-	tb := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		theirBroker.Add(1)
-		http.Error(w, "no", http.StatusServiceUnavailable)
-	}))
-	defer tb.Close()
+	ourFront, toOurFront := knocks(t)
+	theirFront, toTheirFront := knocks(t)
 	ourStun, toOurStun := udpKnocks(t)
 	theirStun, toTheirStun := udpKnocks(t)
 	useBridges(t, true, fmt.Sprintf(
-		"snowflake 192.0.2.3:80 %s fingerprint=%s url=%s/ ice=stun:%s",
-		testFP, testFP, ob.URL, ourStun.LocalAddr()))
+		"snowflake 192.0.2.3:80 %s fingerprint=%s url=https://broker.invalid/ front=%s ice=stun:%s",
+		testFP, testFP, ourFront.Addr(), ourStun.LocalAddr()))
 
-	args := fmt.Sprintf("fingerprint=%s;url=%s/;front=evil.example;ice=stun:%s",
-		testFP, tb.URL, theirStun.LocalAddr())
+	args := fmt.Sprintf("fingerprint=%s;url=https://evil.invalid/;front=%s;ice=stun:%s",
+		testFP, theirFront.Addr(), theirStun.LocalAddr())
 	if code := socksConnect(t, "snowflake", "192.0.2.9:80", args); code != byte(socks5.ReplyConnectionNotAllowed) {
 		t.Fatalf("a foreign placeholder answered %d", code)
 	}
 	socksSend(t, "snowflake", "192.0.2.3:80", args)
 	deadline := time.Now().Add(20 * time.Second)
-	for ourBroker.Load() == 0 && toOurStun.Load() == 0 && time.Now().Before(deadline) {
-		time.Sleep(100 * time.Millisecond)
+	used := false
+	for !used && time.Now().Before(deadline) {
+		select {
+		case <-toOurFront:
+			used = true
+		default:
+			used = toOurStun.Load() > 0
+			time.Sleep(100 * time.Millisecond)
+		}
 	}
-	if ourBroker.Load() == 0 && toOurStun.Load() == 0 {
-		t.Fatal("neither the line's broker nor its stun server was used")
+	if !used {
+		t.Fatal("neither the line's front nor its stun server was used")
 	}
 	time.Sleep(2 * time.Second)
-	if theirBroker.Load() != 0 || toTheirStun.Load() != 0 {
-		t.Fatalf("the handshake's broker or stun was used: %d %d",
-			theirBroker.Load(), toTheirStun.Load())
+	select {
+	case <-toTheirFront:
+		t.Fatal("the handshake's front was dialled")
+	default:
+	}
+	if n := toTheirStun.Load(); n != 0 {
+		t.Fatalf("the handshake's stun server got %d packets", n)
 	}
 }
 
@@ -304,10 +316,20 @@ func TestBridgeLineChecks(t *testing.T) {
 		{"webtunnel [2001:db8::1]:443 url=https://example.com/x", false},
 		{"webtunnel [2001:db8::1]:443 " + testFP + " url=http://example.com/x", false},
 		{"webtunnel [2001:db8::1]:443 " + testFP + " ver=0.0.1", false},
+		{"obfs4 bridge.example.net:443 " + testFP + " cert=" + cert + " iat-mode=0", false},
+		{"webtunnel example.net:443 " + testFP + " url=https://example.com/x", false},
 		{tbSnowflake, true},
 		{tbSnowflake2, true},
 		{strings.Replace(tbSnowflake, " ice=", " x=", 1), true},
 		{strings.Replace(tbSnowflake, " fingerprint=", " fp=", 1), false},
+		{strings.Replace(tbSnowflake, "fingerprint=2B28", "fingerprint=3B28", 1), false},
+		{strings.Replace(tbSnowflake, " 2B280B23E1107BB62ABFC40DDCC8824814F80A72 fingerprint", " fingerprint", 1), false},
+		{strings.Replace(tbSnowflake, "url=https://", "url=http://", 1), false},
+		{strings.Replace(tbSnowflake, " fronts=app.datapacket.com,www.datapacket.com", "", 1), false},
+		{strings.Replace(tbSnowflake, " fronts=", " front=", 1), true},
+		{strings.Replace(tbSnowflake, "hellorandomizedalpn", "hellobogus", 1), false},
+		{tbSnowflake + " max=3", true},
+		{tbSnowflake + " max=4", false},
 		{strings.Replace(tbSnowflake, "stun:", "turn:", -1), false},
 		{strings.Replace(tbSnowflake, " url=https://1098762253.rsc.cdn77.org/", "", 1), false},
 		{tbSnowflake + " sqsqueue=https://sqs.us-east-1.amazonaws.com/1/q", false},
@@ -325,6 +347,16 @@ func TestBridgeLineChecks(t *testing.T) {
 	}
 	if _, err := checkBridgeLine(long); err != errLineLong {
 		t.Errorf("a long line: %v", err)
+	}
+	// fits on its own, not with the token tor gets on every line
+	plain := "obfs4 1.2.3.4:443 " + testFP + " cert=" + cert + " iat-mode=0"
+	pad := ptArgsMax - ptArgsLen(mustParse(t, plain).kv) - 1 - len("x=")
+	nearly := plain + " x=" + strings.Repeat("a", pad)
+	if n := ptArgsLen(mustParse(t, nearly).kv); n != ptArgsMax {
+		t.Fatalf("padding came to %d", n)
+	}
+	if _, err := checkBridgeLine(nearly); err != errLineLong {
+		t.Errorf("the token was not counted: %v", err)
 	}
 	if n := ptArgsLen(mustParse(t, tbSnowflake).kv); n > ptArgsMax {
 		t.Errorf("tor browser's snowflake line is %d bytes of arguments", n)
@@ -401,13 +433,16 @@ func TestTorLogLinesLoseBridgeAddresses(t *testing.T) {
 	old := log.Writer()
 	log.SetOutput(&buf)
 	t.Cleanup(func() { log.SetOutput(old) })
-	useBridges(t, true, tbObfs4, testWebtunnel)
+	useBridges(t, true, tbObfs4, testWebtunnel, tbSnowflake)
+	noteBridgeSecrets(bridgeLines())
 	g := &gatedWriter{on: 1}
 	g.Write([]byte("[warn] Proxy Client: unable to connect OR connection (handshaking (proxy)) " +
 		"with 37.218.245.14:38224 ID=<none> RSA_ID=D9A82D2F9C2F65A18407B1D2B764F130847F8B5D\n"))
 	g.Write([]byte("[notice] new bridge descriptor at [2001:db8::1]:443 for " + testFP + " via example.com\n"))
+	g.Write([]byte("rendezvous through www.datapacket.com, stun stun.telnyx.com:3478\n"))
 	out := buf.String()
-	for _, w := range []string{"37.218.245.14", "D9A82D2F9C2F65A18407B1D2B764F130847F8B5D", "2001:db8::1", testFP, "example.com"} {
+	for _, w := range []string{"37.218.245.14", "D9A82D2F9C2F65A18407B1D2B764F130847F8B5D", "2001:db8::1",
+		testFP, "example.com", "www.datapacket.com", "stun.telnyx.com"} {
 		if strings.Contains(out, w) {
 			t.Errorf("%q in %q", w, out)
 		}
@@ -457,8 +492,9 @@ func TestBrokenStoredLineKeptAndMarked(t *testing.T) {
 		"",
 		"webtunnel 198.51.100.8:443 " + testFP + " url=http://plain.example/x",
 		"nonsense",
+		"obfs4 bridge.example.net:443 cert=" + randomCert() + " iat-mode=0",
 	}, "\n")
-	if r := setBridges(stored, true); r != "ok: 1 accepted, 3 not understood" {
+	if r := setBridges(stored, true); r != "ok: 1 accepted, 4 not understood" {
 		t.Fatalf("boot: %s", r)
 	}
 	if !bridgesEnabled() || len(bridgeLines()) != 1 {
@@ -468,14 +504,14 @@ func TestBrokenStoredLineKeptAndMarked(t *testing.T) {
 	if err := json.Unmarshal([]byte(bridgeLineChecks()), &checks); err != nil {
 		t.Fatal(err)
 	}
-	if len(checks) != 4 || checks[0].State != "ok" {
+	if len(checks) != 5 || checks[0].State != "ok" {
 		t.Fatalf("checks: %+v", checks)
 	}
 	for _, c := range checks[1:] {
 		if c.State != "broken" || c.Why == "" {
 			t.Fatalf("line %d: %+v", c.I, c)
 		}
-		for _, w := range []string{"198.51.100", "tooshort", "plain.example"} {
+		for _, w := range []string{"198.51.100", "tooshort", "plain.example", "bridge.example"} {
 			if strings.Contains(c.Why, w) {
 				t.Fatalf("line %d's reason quotes it: %q", c.I, c.Why)
 			}

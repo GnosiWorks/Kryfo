@@ -11,6 +11,7 @@ require (
 	github.com/nbd-wtf/go-nostr v0.52.3
 	github.com/tyler-smith/go-bip39 v1.1.0
 	gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/lyrebird v0.0.0-20260115133752-0b10edbb61e0
+	gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/ptutil v0.0.0-20250815012447-418f76dcf315
 	gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2 v2.14.1
 	golang.org/x/crypto v0.55.0
 )
@@ -48,7 +49,6 @@ require (
 	github.com/wlynxg/anet v0.0.5 // indirect
 	github.com/xtaci/kcp-go/v5 v5.6.24 // indirect
 	github.com/xtaci/smux v1.5.56 // indirect
-	gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/ptutil v0.0.0-20250815012447-418f76dcf315 // indirect
 	gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/webtunnel v0.0.3-0.20250724131018-aab00213ba56 // indirect
 	golang.org/x/mod v0.39.0 // indirect
 	golang.org/x/sync v0.22.0 // indirect

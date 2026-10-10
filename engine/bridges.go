@@ -17,6 +17,9 @@ package main
 import "C"
 
 import (
+	"crypto/rand"
+	"crypto/subtle"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -46,10 +49,19 @@ var (
 	// failed in a row. a list usually contains one or two that no longer
 	// work, which is normal and must not look like tor being broken.
 	lastBridgeOK time.Time
-	bridgeFails  = map[string]int{}
+	bridgeFails  = map[string]bridgeFail{}
 )
 
+// a run of failed dials to one bridge, and when the last one was
+type bridgeFail struct {
+	n    int
+	last time.Time
+}
+
 const bridgeDeadAfter = 4
+
+// how long a bridge that kept failing is skipped before it gets a try again
+var bridgeDeadFor = 10 * time.Minute
 
 // the transports tor gets a listener for, in the order the plugin lines are
 // handed over. meek_lite only reaches moat and has no listener.
@@ -62,6 +74,8 @@ type ptListen struct {
 	ln      net.Listener
 	port    int
 	factory base.ClientFactory
+	// one token per connection being served
+	slots chan struct{}
 	// socks requests tor made here, and when the last one came, unix nanos
 	requests atomic.Int64
 	lastReq  atomic.Int64
@@ -87,23 +101,49 @@ func noteBridgeOK(key string) {
 	bridgeMu.Unlock()
 }
 
-func noteBridgeFail(key string) {
+func noteBridgeFail(key string, err error) {
+	if ownNetworkDown(err) {
+		return
+	}
 	bridgeMu.Lock()
-	bridgeFails[key]++
-	n := bridgeFails[key]
+	f := bridgeFails[key]
+	if time.Since(f.last) > bridgeDeadFor {
+		f.n = 0
+	}
+	f.n++
+	f.last = time.Now()
+	bridgeFails[key] = f
 	bridgeMu.Unlock()
-	if n == bridgeDeadAfter {
-		log.Printf("bridges: a %s bridge has failed %d times, skipping it",
-			strings.Fields(key)[0], n)
+	if f.n == bridgeDeadAfter {
+		log.Printf("bridges: a %s bridge has failed %d times, skipping it for a while",
+			strings.Fields(key)[0], f.n)
 	}
 }
 
-// a bridge that has failed this many times in a row is not coming back this
-// session. tor still has the line, but we stop wasting dials on it.
+// a bridge that has failed this many times in a row gets no dials for a
+// while. tor still has the line, but we stop wasting dials on it.
 func bridgeIsDead(key string) bool {
 	bridgeMu.RLock()
 	defer bridgeMu.RUnlock()
-	return bridgeFails[key] >= bridgeDeadAfter
+	f := bridgeFails[key]
+	return f.n >= bridgeDeadAfter && time.Since(f.last) < bridgeDeadFor
+}
+
+// errors that say this phone has no way out rather than that the bridge is
+// gone. a refused or unreachable dial right after the network changed is
+// the same: the old network is going and the new one is not there yet.
+func ownNetworkDown(err error) bool {
+	switch {
+	case errors.Is(err, syscall.ENETUNREACH), errors.Is(err, syscall.ENETDOWN),
+		errors.Is(err, syscall.EADDRNOTAVAIL):
+		return true
+	case errors.Is(err, syscall.ECONNREFUSED), errors.Is(err, syscall.EHOSTUNREACH):
+		netMu.Lock()
+		changed := netChangedAt
+		netMu.Unlock()
+		return time.Since(changed) < 30*time.Second
+	}
+	return false
 }
 
 // one bridge line taken apart:
@@ -151,8 +191,10 @@ func parseBridgeLine(s string) (bridgeLine, error) {
 	if p, err := strconv.Atoi(port); err != nil || p < 1 || p > 65535 {
 		return b, fmt.Errorf("bad port")
 	}
-	if strings.Contains(host, ":") && net.ParseIP(host) == nil {
-		return b, fmt.Errorf("bad address")
+	// tor takes an ip literal and nothing else. one host name in the set
+	// fails the whole SETCONF, or tor's start.
+	if net.ParseIP(host) == nil {
+		return b, fmt.Errorf("address is not an ip")
 	}
 	b.addr = f[1]
 	rest := f[2:]
@@ -208,7 +250,7 @@ func checkBridgeLine(s string) (bridgeLine, error) {
 	if err != nil {
 		return b, err
 	}
-	if ptArgsLen(b.kv) > ptArgsMax {
+	if ptArgsLen(append(append([]string(nil), b.kv...), ptTokenArg+"="+ptToken)) > ptArgsMax {
 		return b, errLineLong
 	}
 	switch b.transport {
@@ -225,8 +267,8 @@ func checkBridgeLine(s string) (bridgeLine, error) {
 			return b, fmt.Errorf("webtunnel: url is not https")
 		}
 	case "snowflake":
-		if fp, ok := b.args.Get("fingerprint"); !ok || !isFingerprint(fp) {
-			return b, fmt.Errorf("snowflake: no fingerprint")
+		if fp, ok := b.args.Get("fingerprint"); !ok || !strings.EqualFold(fp, b.fp) || b.fp == "" {
+			return b, fmt.Errorf("snowflake: fingerprints missing or apart")
 		}
 		if ice, ok := b.args.Get("ice"); ok {
 			stun := false
@@ -276,7 +318,14 @@ func normaliseBridgeLine(s string) (string, bool) {
 	if err != nil {
 		return s, false
 	}
-	kv := b.kv
+	// a token from another run, say from a line copied out of tor, means
+	// nothing and would double the one added for tor
+	var kv []string
+	for _, a := range b.kv {
+		if !strings.HasPrefix(a, ptTokenArg+"=") {
+			kv = append(kv, a)
+		}
+	}
 	if _, ok := b.args.Get("iat-mode"); b.transport == "obfs4" && !ok {
 		kv = append(append([]string(nil), kv...), "iat-mode=0")
 	}
@@ -351,12 +400,18 @@ func noteBridgeSecrets(lines []string) {
 		if fp, ok := b.args.Get("fingerprint"); ok {
 			words = append(words, strings.ToUpper(fp))
 		}
-		for _, k := range []string{"url", "servername", "addr"} {
-			if v, ok := b.args.Get(k); ok {
-				if u, err := url.Parse(v); err == nil && u.Host != "" {
+		for _, k := range []string{"url", "servername", "addr", "fronts", "front", "ice"} {
+			v, ok := b.args.Get(k)
+			if !ok {
+				continue
+			}
+			for _, one := range splitList(v) {
+				if u, err := url.Parse(one); err == nil && u.Host != "" {
 					words = append(words, u.Hostname())
+				} else if h, _, err := net.SplitHostPort(strings.TrimPrefix(one, "stun:")); err == nil {
+					words = append(words, h)
 				} else {
-					words = append(words, v)
+					words = append(words, one)
 				}
 			}
 		}
@@ -368,8 +423,8 @@ func noteBridgeSecrets(lines []string) {
 	}
 }
 
+// takes no lock but its own, so any log writer may call it
 func scrubBridges(s string) string {
-	noteBridgeSecrets(bridgeLines())
 	bridgeSecretMu.Lock()
 	defer bridgeSecretMu.Unlock()
 	for w := range bridgeSecrets {
@@ -405,6 +460,39 @@ func bridgeFor(transport, target string) (bridgeLine, bool) {
 		}
 	}
 	return bridgeLine{}, false
+}
+
+// a random argument on every Bridge line handed to tor. tor sends it back
+// in each socks handshake, and a connection without it is closed before
+// any reply: another app on the phone can neither use the listeners nor
+// learn from them which bridges are set.
+const ptTokenArg = "kryfo"
+
+var ptToken = func() string {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		panic(err)
+	}
+	return hex.EncodeToString(b)
+}()
+
+func hasPTToken(args pt.Args) bool {
+	for _, v := range args[ptTokenArg] {
+		if subtle.ConstantTimeCompare([]byte(v), []byte(ptToken)) == 1 {
+			return true
+		}
+	}
+	return false
+}
+
+// the active lines the way tor gets them, with the token
+func torBridgeLines() []string {
+	lines := bridgeLines()
+	noteBridgeSecrets(lines)
+	for i, ln := range lines {
+		lines[i] = ln + " " + ptTokenArg + "=" + ptToken
+	}
+	return lines
 }
 
 func bridgesEnabled() bool {
@@ -448,7 +536,7 @@ func bridgeTorArgs() []string {
 	for _, p := range ptPlugins() {
 		args = append(args, "--ClientTransportPlugin", p)
 	}
-	lines := bridgeLines()
+	lines := torBridgeLines()
 	for _, b := range lines {
 		args = append(args, "--Bridge", b)
 	}
@@ -497,7 +585,7 @@ func startPTListeners() error {
 		if err != nil {
 			return fmt.Errorf("pt listen: %w", err)
 		}
-		r := &ptListen{name: n, ln: ln, port: ln.Addr().(*net.TCPAddr).Port, factory: f}
+		r := newPTListen(n, ln, f)
 		ptRegs[n] = r
 		log.Printf("bridges: %s socks5 listening on 127.0.0.1:%d", n, r.port)
 		go r.accept()
@@ -505,18 +593,44 @@ func startPTListeners() error {
 	return nil
 }
 
+// connections served at once per listener. tor opens one or two per
+// bridge; more only comes from something else on the phone.
+const ptMaxConns = 16
+
+func newPTListen(name string, ln net.Listener, f base.ClientFactory) *ptListen {
+	return &ptListen{name: name, ln: ln, port: ln.Addr().(*net.TCPAddr).Port,
+		factory: f, slots: make(chan struct{}, ptMaxConns)}
+}
+
+// a failed accept, out of file descriptors say, waits a little and goes
+// on. only a closed listener ends the loop.
 func (r *ptListen) accept() {
+	var wait time.Duration
 	for {
 		conn, err := r.ln.Accept()
 		if err != nil {
-			var ne net.Error
-			if errors.As(err, &ne) && ne.Timeout() {
-				continue
+			if errors.Is(err, net.ErrClosed) {
+				return
 			}
-			log.Printf("bridges: %s accept: %v", r.name, err)
-			return
+			if wait == 0 {
+				log.Printf("bridges: %s accept: %v", r.name, err)
+				wait = 5 * time.Millisecond
+			} else if wait *= 2; wait > time.Second {
+				wait = time.Second
+			}
+			time.Sleep(wait)
+			continue
 		}
-		go r.serve(conn)
+		wait = 0
+		select {
+		case r.slots <- struct{}{}:
+			go func() {
+				defer func() { <-r.slots }()
+				r.serve(conn)
+			}()
+		default:
+			conn.Close()
+		}
 	}
 }
 
@@ -529,9 +643,13 @@ func (r *ptListen) serve(conn net.Conn) {
 	servePTConn(conn, r.name, r.factory, r)
 }
 
+// how long a dial and its handshake may take, tls and http upgrade included
+var ptDialTimeout = 30 * time.Second
+
 // one connection from tor: read the socks request, find the bridge line its
 // target belongs to, dial that bridge with the line's own arguments, then
-// copy bytes both ways. the arguments in the handshake are never used.
+// copy bytes both ways. the arguments in the handshake are never used, but
+// for the token that says tor sent them.
 func servePTConn(conn net.Conn, name string, factory base.ClientFactory, r *ptListen) {
 	defer conn.Close()
 
@@ -543,6 +661,11 @@ func servePTConn(conn net.Conn, name string, factory base.ClientFactory, r *ptLi
 	if r != nil {
 		r.requests.Add(1)
 		r.lastReq.Store(time.Now().UnixNano())
+	}
+	if !hasPTToken(req.Args) {
+		// no reply at all: every answer would say something
+		log.Printf("bridges: %s: a connection without the token, closed", name)
+		return
 	}
 	line, ok := bridgeFor(name, req.Target)
 	if !ok {
@@ -562,13 +685,13 @@ func servePTConn(conn net.Conn, name string, factory base.ClientFactory, r *ptLi
 		_ = req.Reply(socks5.ReplyGeneralFailure)
 		return
 	}
-	dial := func(network, addr string) (net.Conn, error) {
-		return net.Dial(network, addr)
+	remote, err := dialWatched(conn, factory, req.Target, args)
+	if errors.Is(err, errTorGone) {
+		return
 	}
-	remote, err := factory.Dial("tcp", req.Target, dial, args)
 	if err != nil {
 		log.Printf("bridges: %s dial failed: %s", name, dialErrKind(err))
-		noteBridgeFail(key)
+		noteBridgeFail(key, err)
 		_ = req.Reply(socks5.ErrorToReplyCode(err))
 		return
 	}
@@ -585,18 +708,83 @@ func servePTConn(conn net.Conn, name string, factory base.ClientFactory, r *ptLi
 	// from its far end, so waiting for a half close would hold the
 	// transport open after tor has gone.
 	done := make(chan struct{}, 2)
-	go func() {
-		_, _ = io.Copy(remote, conn)
-		done <- struct{}{}
-	}()
-	go func() {
-		_, _ = io.Copy(conn, remote)
-		done <- struct{}{}
-	}()
+	pipe := func(dst io.Writer, src io.Reader) {
+		defer func() {
+			if p := recover(); p != nil {
+				log.Printf("bridges: %s copy panicked: %v", name, p)
+			}
+			done <- struct{}{}
+		}()
+		_, _ = io.Copy(dst, src)
+	}
+	go pipe(remote, conn)
+	go pipe(conn, remote)
 	<-done
 	conn.Close()
 	remote.Close()
 	<-done
+}
+
+var errTorGone = errors.New("tor closed the connection")
+
+// dials with a time limit on the tcp connect and a deadline on the raw
+// connection through every handshake on top of it, cleared once it is up.
+// tor sends nothing before the reply, so a read that returns while the dial
+// runs means tor has gone, and the dial is dropped with it.
+func dialWatched(conn net.Conn, factory base.ClientFactory, target string, args interface{}) (net.Conn, error) {
+	var (
+		mu   sync.Mutex
+		raw  net.Conn
+		gone bool
+	)
+	dial := func(network, addr string) (net.Conn, error) {
+		c, err := (&net.Dialer{Timeout: ptDialTimeout}).Dial(network, addr)
+		if err != nil {
+			return nil, err
+		}
+		_ = c.SetDeadline(time.Now().Add(ptDialTimeout))
+		mu.Lock()
+		defer mu.Unlock()
+		if gone {
+			c.Close()
+			return nil, errTorGone
+		}
+		raw = c
+		return c, nil
+	}
+	watched := make(chan struct{})
+	go func() {
+		defer close(watched)
+		var b [1]byte
+		if _, err := conn.Read(b[:]); errors.Is(err, os.ErrDeadlineExceeded) {
+			return
+		}
+		mu.Lock()
+		gone = true
+		if raw != nil {
+			raw.Close()
+		}
+		mu.Unlock()
+	}()
+	remote, err := factory.Dial("tcp", target, dial, args)
+	_ = conn.SetReadDeadline(time.Now())
+	<-watched
+	_ = conn.SetReadDeadline(time.Time{})
+	mu.Lock()
+	defer mu.Unlock()
+	if gone {
+		if remote != nil {
+			remote.Close()
+		}
+		return nil, errTorGone
+	}
+	if err != nil {
+		return nil, err
+	}
+	if raw != nil {
+		_ = raw.SetDeadline(time.Time{})
+	}
+	return remote, nil
 }
 
 // a dial error names the address it failed on, and logs never carry bridge
@@ -635,8 +823,10 @@ func setBridges(raw string, on bool) string {
 	lineChecksMu.Unlock()
 
 	noteBridgeSecrets(good)
+	dropSnowflakeClients()
 	bridgeMu.Lock()
 	bridgeList = good
+	bridgeFails = map[string]bridgeFail{}
 	bridgeOn = on && len(good) > 0
 	enabled := bridgeOn
 	bridgeMu.Unlock()

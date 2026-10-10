@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package main
 
-// the pluggable transports built into the engine. tor reaches them through
-// local socks5 listeners (bridges.go). only obfs4 is handed to tor so far.
+// the pluggable transports built into the engine. tor reaches obfs4,
+// webtunnel and snowflake through local socks5 listeners (bridges.go).
+// meek_lite has no listener, it is there for moat.
 
 import (
 	"errors"
@@ -11,12 +12,15 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"sync"
+	"sync/atomic"
 
 	pt "gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/goptlib"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/lyrebird/transports/base"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/lyrebird/transports/meeklite"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/lyrebird/transports/obfs4"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/lyrebird/transports/webtunnel"
+	utlsutil "gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/ptutil/utls"
 	sf "gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/client/lib"
 )
 
@@ -76,29 +80,71 @@ func (snowflakeClient) ParseArgs(args *pt.Args) (interface{}, error) {
 	}
 	var c sf.ClientConfig
 	c.BrokerURL, _ = args.Get("url")
-	if c.BrokerURL == "" {
-		return nil, errors.New("snowflake: no url")
+	if !strings.HasPrefix(strings.ToLower(c.BrokerURL), "https://") {
+		return nil, errors.New("snowflake: broker url is not https")
 	}
 	fronts, ok := args.Get("fronts")
 	if !ok {
 		fronts, _ = args.Get("front")
 	}
-	c.FrontDomains = splitList(fronts)
+	if c.FrontDomains = splitList(fronts); len(c.FrontDomains) == 0 {
+		return nil, errors.New("snowflake: no front")
+	}
 	c.ICEAddresses = snowflakeICE
 	if ice, ok := args.Get("ice"); ok {
 		c.ICEAddresses = splitList(ice)
 	}
 	c.UTLSClientID, _ = args.Get("utls-imitate")
+	if c.UTLSClientID != "" {
+		if _, err := utlsutil.NameToUTLSID(c.UTLSClientID); err != nil {
+			return nil, errors.New("snowflake: unknown utls-imitate")
+		}
+	}
 	c.BridgeFingerprint, _ = args.Get("fingerprint")
 	c.Max = 1
 	if m, ok := args.Get("max"); ok {
 		n, err := strconv.Atoi(m)
-		if err != nil || n < 1 {
+		if err != nil || n < 1 || n > snowflakeMaxPeers {
 			return nil, errors.New("snowflake: bad max")
 		}
 		c.Max = n
 	}
 	return c, nil
+}
+
+// proxies one connection may gather at once. each is a webrtc peer, and a
+// line asking for many would only burn battery.
+const snowflakeMaxPeers = 3
+
+// one snowflake client per line, kept until the lines change: its nat check
+// and broker channel are set up once, not for every connection tor makes
+var (
+	sfMu      sync.Mutex
+	sfClients = map[string]*sf.Transport{}
+	sfMade    atomic.Int64
+)
+
+func snowflakeFor(c sf.ClientConfig) (*sf.Transport, error) {
+	key := fmt.Sprintf("%q %q %q %q %q %d", c.BrokerURL, c.FrontDomains,
+		c.ICEAddresses, c.UTLSClientID, c.BridgeFingerprint, c.Max)
+	sfMu.Lock()
+	defer sfMu.Unlock()
+	if t := sfClients[key]; t != nil {
+		return t, nil
+	}
+	t, err := sf.NewSnowflakeClient(c)
+	if err != nil {
+		return nil, err
+	}
+	sfMade.Add(1)
+	sfClients[key] = t
+	return t, nil
+}
+
+func dropSnowflakeClients() {
+	sfMu.Lock()
+	sfClients = map[string]*sf.Transport{}
+	sfMu.Unlock()
 }
 
 // the target address is a placeholder, the line's url and fronts say where
@@ -108,7 +154,7 @@ func (snowflakeClient) Dial(_, _ string, _ base.DialFunc, args interface{}) (net
 	if !ok {
 		return nil, errors.New("snowflake: bad args")
 	}
-	t, err := sf.NewSnowflakeClient(c)
+	t, err := snowflakeFor(c)
 	if err != nil {
 		return nil, err
 	}

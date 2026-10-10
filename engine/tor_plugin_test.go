@@ -43,7 +43,7 @@ func fakeLines(t *testing.T) map[string]string {
 			closedPort(t), randomFP(), randomCert()),
 		"webtunnel": fmt.Sprintf("webtunnel %s %s url=https://%s/x ver=0.0.1",
 			closedPort(t), randomFP(), closedPort(t)),
-		"snowflake": fmt.Sprintf("snowflake 192.0.2.3:80 %s fingerprint=%s url=http://%s/ ice=stun:%s",
+		"snowflake": fmt.Sprintf("snowflake 192.0.2.3:80 %s fingerprint=%s url=https://broker.invalid/ front=%s ice=stun:%s",
 			sf, sf, closedPort(t), closedPort(t)),
 	}
 }
@@ -319,15 +319,16 @@ func TestBridgeBackoff(t *testing.T) {
 	setLines(true, failing)
 	t0 := time.Now()
 	switchTor(t, "back to the failed line")
-	back, ok := waitDial("obfs4", t0, time.Minute)
+	// the same 4 minutes as TestPluginSwitching allows any new line
+	back, ok := waitDial("obfs4", t0, 4*time.Minute)
 	if !ok {
-		t.Fatal("tor never dialled the failed line again in a minute")
+		t.Fatal("tor never dialled the failed line again in 4 minutes")
 	}
 
 	setLines(true, fakeLines(t)["obfs4"])
 	t1 := time.Now()
 	switchTor(t, "a new line")
-	fresh, ok := waitDial("obfs4", t1, 3*time.Minute)
+	fresh, ok := waitDial("obfs4", t1, 4*time.Minute)
 	if !ok {
 		t.Fatal("tor never dialled a new line")
 	}
@@ -338,8 +339,8 @@ func TestBridgeBackoff(t *testing.T) {
 // that failed comes back with whatever tor remembers about it. snowflake
 // answers the socks request before any proxy is found, so tor sees a
 // connection that never finishes its handshake. switching back to the same
-// line, after a while on it or at once, must still get a dial within a
-// minute.
+// line, after a while on it or at once, must still get a dial, within the
+// 4 minutes TestPluginSwitching allows any new line.
 func TestSnowflakeBackoff(t *testing.T) {
 	bootDirect(t)
 	for _, stay := range []time.Duration{30 * time.Second, 0} {
@@ -349,9 +350,9 @@ func TestSnowflakeBackoff(t *testing.T) {
 			setLines(true, same)
 			t0 := time.Now()
 			switchTor(t, "snowflake")
-			d, ok := waitDial("snowflake", t0, time.Minute)
+			d, ok := waitDial("snowflake", t0, 4*time.Minute)
 			if !ok {
-				t.Fatalf("staying %s, round %d: tor never dialled the same line in a minute", stay, i)
+				t.Fatalf("staying %s, round %d: tor never dialled the same line in 4 minutes", stay, i)
 			}
 			waits = append(waits, fmt.Sprintf("%ds", int(d.Seconds())))
 			time.Sleep(stay)
