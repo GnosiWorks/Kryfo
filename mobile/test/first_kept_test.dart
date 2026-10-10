@@ -183,8 +183,8 @@ void main() {
   late AppState app;
   late int pow;
 
-  Future<AppState> start() async {
-    final router = VaultRouter(ArrivalStore(), ArrivalSeal());
+  Future<AppState> start({ArrivalStore? store}) async {
+    final router = VaultRouter(store ?? ArrivalStore(), ArrivalSeal());
     await router.load();
     return AppState(io: io, router: router)..myId = _me;
   }
@@ -586,5 +586,88 @@ void main() {
     await app.resetInviteAddress();
     expect(live.kept, isEmpty);
     expect(app.fcCounter, 2);
+  });
+
+  group('someone deleted here who writes on in the old chat', () {
+    // their opener, filed as a request and then the chat deleted: the row
+    // parked, the rows gone and known as gone, the session kept
+    Future<({_Phone p, String id, String ed})> deleted(String id) async {
+      final s = await stranger(id);
+      await app.receiveOnion([
+        await s.p.ss.encryptTo(_me, await wrap(s, '$id-1')),
+      ]);
+      await _settle();
+      expect(rowsOf(s.id), [_said]);
+      live.people[s.id]!
+        ..['archived'] = 1
+        ..['accepted'] = 0;
+      live.msgs.removeWhere((m) => m['peer_id'] == s.id);
+      live.gone.add((s.id, '$id-1'));
+      return s;
+    }
+
+    // a text on the old session, with no proof of work
+    Future<String> plain(
+      ({_Phone p, String id, String ed}) s,
+      String text,
+      String uid,
+    ) async => s.p.ss.encryptTo(
+      _me,
+      await wrapMessage(
+        text,
+        msgUid: uid,
+        sender: SenderInfo(
+          haloId: s.id,
+          edPub: s.ed,
+          onion: 'o-${s.id}',
+          xPub: s.p.xPub,
+        ),
+      ),
+    );
+
+    test('comes back as a request, the deleted chat still gone, within '
+        'the request cap', () async {
+      final s = await deleted('stray-deleted-one');
+      await app.receiveOnion([await plain(s, 'still here', 'd2')]);
+      await _settle();
+      expect(live.people[s.id]!['archived'], 0);
+      expect(live.people[s.id]!['accepted'], 0);
+      expect(rowsOf(s.id), ['still here']);
+      // what was deleted stays deleted
+      await app.receiveOnion([
+        await s.p.ss.encryptTo(_me, await wrap(s, '${s.id}-1')),
+      ]);
+      await _settle();
+      expect(rowsOf(s.id), ['still here']);
+      // two into requests, and the third waits on their shelf
+      await app.receiveOnion([await plain(s, 'two', 'd3')]);
+      await app.receiveOnion([await plain(s, 'three', 'd4')]);
+      await _settle();
+      expect(rowsOf(s.id), ['still here', 'two']);
+      expect(live.heldRows[s.id], hasLength(1));
+    });
+
+    test(
+      'a hidden chat\'s person is never filed on the everyday side',
+      () async {
+        final s = await deleted('stray-hidden-one');
+        // their chat hidden since: the everyday side keeps nothing of them
+        live.people.remove(s.id);
+        final store = ArrivalStore();
+        await store.putHidden(
+          s.id,
+          kHiddenPeer,
+          peerCard(RouterCard(s.id, 'o-${s.id}', s.p.xPub)),
+          1,
+        );
+        await store.putMeta('pub', 'pub-A');
+        final shut = await start(store: store);
+        await shut.receiveOnion([await plain(s, 'for the vault', 'h2')]);
+        await _settle();
+        expect(live.people[s.id], isNull);
+        expect(rowsOf(s.id), isEmpty);
+        expect(store.inbox, hasLength(1));
+      },
+    );
   });
 }

@@ -14915,19 +14915,13 @@ class AppState extends ChangeNotifier {
             _xPubToHaloId[env.senderXPub!] = addr;
           }
           try {
-            // an opener from someone we let go: the same proof a cold
-            // stranger owes. their client grinds for any fresh
-            // session, so an honest re-add still lands.
-            await _applyIncomingPayload(
-              addr,
-              env,
-              wire: parked.plain,
-              fromBackPair: true,
-            );
+            // someone we let go who writes on in the old chat: their session
+            // proves them, and their client grinds nothing for it. a request
+            // again, under the cap and the shelf as any other, as the relay
+            // lane has it. only a block keeps them out
+            await _applyIncomingPayload(addr, env, wire: parked.plain);
           } on CapHeld catch (e) {
             await _hold(e is _HeldIn ? e.into : live, addr, parked.plain, env);
-          } on _NoProof {
-            // dropped, as a cold stranger's opener is
           }
           await refreshContacts();
           notifyListeners();
