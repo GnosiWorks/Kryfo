@@ -235,9 +235,11 @@ func builtinBackingOff() bool {
 	return !builtinFailedAt.IsZero() && time.Since(builtinFailedAt) < builtinRetryAfter
 }
 
-// asks moat for the built-ins through tor and keeps what passes
+// asks moat for the built-ins through tor and keeps what passes. through
+// tor it shows moat no address, so it needs no consent; every other gate
+// still holds.
 func refreshBuiltin(o moatOpts) (int, int, error) {
-	o.Via, o.Automatic, o.Transports = viaTor, true, nil
+	o.Via, o.Automatic, o.Transports, o.Consent = viaTor, true, nil, true
 	fresh, err := moatBuiltinCall(o)
 	switch err {
 	case nil:
@@ -278,8 +280,8 @@ func builtinBridgesJSON(transport string) string {
 }
 
 // refreshes the built-ins through tor, at most once a week unless opts has
-// "force", and never within hours of a failed try. opts as moatOpts,
-// consent included; via is always tor.
+// "force", and never within hours of a failed try. opts as moatOpts; via
+// is always tor and no consent is asked.
 // {"ok":true,"kept":n,"ignored":n} or {"ok":true,"skipped":true}
 //
 //export HaloBuiltinRefresh
