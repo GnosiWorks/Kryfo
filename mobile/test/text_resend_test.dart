@@ -834,6 +834,22 @@ void main() {
     await devClose(t);
   });
 
+  testWidgets('an outbox pass reads the chat again once, not once a '
+      'row', (t) async {
+    for (final uid in ['p1', 'p2', 'p3']) {
+      await failed(uid, 'text $uid');
+    }
+    final before = appState.chatRevOf(_peer);
+    await t.runAsync(appState.drainOutbox);
+    await settle(t);
+    expect(relay.sends, hasLength(3));
+    for (final s in relay.sends) {
+      s.complete('error: timeout');
+    }
+    await settle(t);
+    expect(appState.chatRevOf(_peer) - before, 1);
+  });
+
   testWidgets('a block in the vault leaves a text here waiting, not '
       'failed, and nothing goes', (t) async {
     final hidden = MemDb();

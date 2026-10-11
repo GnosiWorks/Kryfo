@@ -3146,9 +3146,20 @@ class HaloDb implements GroupOwedStore {
       where: 'group_id = ? AND halo_id = ?',
       whereArgs: [groupId, haloId],
     );
-    await db.transaction(
-      (t) => _owedGone(t, 'group_id = ? AND member = ?', [groupId, haloId]),
-    );
+    await db.transaction((t) async {
+      await _owedGone(t, 'group_id = ? AND member = ?', [groupId, haloId]);
+      // our edits and reactions are no longer theirs to get. take-backs
+      // and controls stay: they may hold the message yet
+      for (final r in await t.query(
+        'group_ctl_out',
+        columns: ['id', 'ctl'],
+        where: 'group_id = ? AND member = ?',
+        whereArgs: [groupId, haloId],
+      )) {
+        if (groupFrameOf(r['ctl']) == null) continue;
+        await t.delete('group_ctl_out', where: 'id = ?', whereArgs: [r['id']]);
+      }
+    });
   }
 
   Future<void> renameGroup(String groupId, String name) async {
@@ -9493,6 +9504,9 @@ class AppState extends ChangeNotifier {
     _outboxNextAt.removeWhere((k, _) => !waiting.contains(k));
     _outboxPeer.removeWhere((k, _) => !waiting.contains(k));
     final blocked = _blockedInPass();
+    // the sends this pass starts, and the 1:1 chats they are in
+    final going = <Future<void>>[];
+    final chats = <String>{};
     for (final (r, d, paired) in [
       for (final r in rows) (r, live, q.paired),
       if (v != null)
@@ -9537,7 +9551,8 @@ class AppState extends ChangeNotifier {
       _outboxTries[uid] = tries + 1;
       final peer = r['peer_id'] as String?;
       if (peer != null) _outboxPeer[uid] = peer;
-      unawaited(
+      if (peer != null && (g == null || g.isEmpty)) chats.add(peer);
+      going.add(
         _drainOne(r, d).whenComplete(() async {
           // waiting on their card is no failed try: it goes the moment the
           // card is here, and until then it tries as they are asked again
@@ -9556,11 +9571,23 @@ class AppState extends ChangeNotifier {
             }
           }
           _outboxInflight.remove(uid);
-          // an open chat that kept its pill while this ran reads it again
-          if (peer != null && (g == null || g.isEmpty)) chatChanged(peer);
         }),
       );
     }
+    // an open chat that kept its pills while they ran reads them again,
+    // once the pass is done
+    if (going.isEmpty) return;
+    unawaited(
+      Future.wait(going)
+          .then((_) {}, onError: (Object e) => dlog('OUTBOX: ${e.runtimeType}'))
+          .whenComplete(() {
+            if (chats.isEmpty) return;
+            for (final p in chats) {
+              _bumpChatRev(p);
+            }
+            notifyListeners();
+          }),
+    );
   }
 
   // people a seal to waits on their card, after a restore: the outbox and
@@ -19287,8 +19314,7 @@ class AppState extends ChangeNotifier {
   }
 
   // an edit or a reaction of ours in a group: each member's lane keeps it
-  // until they have it, behind what they are still to get of the group.
-  // the first try goes now and costs none of its tries
+  // until they have it, behind what they are still to get of the group
   Future<void> _queueGroupFrame(String groupId, Map<String, String> row) async {
     final d = _ownerOf(groupId);
     final to = await _othersIn(d, groupId);
@@ -19298,10 +19324,10 @@ class AppState extends ChangeNotifier {
       row,
       now: DateTime.now().millisecondsSinceEpoch,
     );
+    // due now, behind what each lane still waits out: a lane backing off
+    // keeps its gap
     if (haloWiping || sessionQuiet) return;
-    for (final m in to) {
-      unawaited(_ctlLane(d, groupId, m, force: true));
-    }
+    unawaited(_drainGroupCtl());
   }
 
   // ---- polls ----

@@ -981,6 +981,46 @@ void main() {
       expect(mem.rows('group_ctl_out'), isEmpty);
     });
 
+    test(
+      'a lane still waiting out its gap is not forced by a new one',
+      () async {
+        io.cut.add('carol');
+        await db.queueGroupCtl(
+          g,
+          ['carol'],
+          const GroupControl(type: 'rename', name: 'x'),
+          now: 1,
+        );
+        await tick(app);
+        expect(queued('carol'), hasLength(1));
+        expect(mem.rows('group_ctl_out').single['tries'], 1);
+        // the route is back, but the lane's gap is not up
+        io.cut.clear();
+        await app.editInGroup(g, 'u1', 'new words');
+        await app.reactInGroup(g, 'u1', 'x');
+        await app.ctlPassForTest;
+        expect(io.got('carol'), isEmpty);
+        expect(words('bob'), ['edit:u1:new words', 'react:u1:x']);
+        await due();
+        await tick(app);
+        expect(io.got('carol').first, 'ctl:rename');
+        expect(words('carol'), ['edit:u1:new words', 'react:u1:x']);
+      },
+    );
+
+    test('a member taken out loses what waits of ours to change, not a '
+        'take-back', () async {
+      await mine(mem, 'u2');
+      io.cut.add('carol');
+      await app.editInGroup(g, 'u1', 'new words');
+      await app.reactInGroup(g, 'u1', 'x');
+      await app.unsendInGroup(g, 'u2');
+      await app.ctlPassForTest;
+      expect(queued('carol'), hasLength(3));
+      await db.removeGroupMember(g, 'carol');
+      expect(queued('carol'), [jsonEncode(groupUnsendRow('u2'))]);
+    });
+
     test('a hidden group\'s waits in the vault, never here', () async {
       const hidden = 'grp00000000h';
       final vmem = MemDb();

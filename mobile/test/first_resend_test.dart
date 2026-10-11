@@ -66,6 +66,14 @@ class _Rows extends HaloDb {
   Future<Map<String, Map<String, Object?>>> lastMessages() async => {};
   @override
   Future<List<Map<String, Object?>>> pendingRequests() async => const [];
+
+  // called as a try is noted, before the opener goes
+  void Function(String uid)? onNote;
+  @override
+  Future<void> noteOpenerAgain(String uid, int tries, int at) {
+    onNote?.call(uid);
+    return super.noteOpenerAgain(uid, tries, at);
+  }
 }
 
 class _Engine implements HaloEngine {
@@ -222,6 +230,28 @@ void main() {
       // the row is left as it was: sent, waiting on its receipt
       final row = mem.rows('messages').firstWhere((r) => r['msg_uid'] == 'o1');
       expect((row['sent'], row['delivered']), (1, 0));
+    });
+
+    test('one going again is claimed before its try is noted: the chat '
+        'cannot send it alongside, and the claim is let go after', () async {
+      bool? chatGot;
+      db.onNote = (uid) => chatGot ??= app.claimSend(uid);
+      await app.sendOpenersAgain();
+      await settle();
+      expect(chatGot, isFalse);
+      expect(went('o1'), containsAll(['fc', 'onion']));
+      expect(app.sendInflight('o1'), isFalse);
+      // one the chat holds is left to it, and costs no try
+      db.onNote = null;
+      await lastWent('o1', now - 61 * _min);
+      io.sent.clear();
+      expect(app.claimSend('o1'), isTrue);
+      await app.sendOpenersAgain();
+      await settle();
+      expect(went('o1'), isEmpty);
+      expect(again('o1')!['tries'], 1);
+      expect(app.sendInflight('o1'), isTrue);
+      app.releaseSend('o1');
     });
 
     test('one written two weeks ago or more never goes again', () async {
