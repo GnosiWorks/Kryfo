@@ -250,6 +250,11 @@ Future<String> _sendChunkedMediaInner({
         failure = 'cancelled';
         return;
       }
+      // a decoy opened part way: the rest waits with the row
+      if (appState.everydayHeld) {
+        parked = true;
+        return;
+      }
       // blocked part way, here: the rest is not sent, and waits for a tap.
       // blocked in the other container: it waits with the row
       if (await appState.blockedAnywhere(peerId)) {
