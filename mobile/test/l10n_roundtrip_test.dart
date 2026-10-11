@@ -3494,5 +3494,52 @@ void main() {
       l.handleStillReaching,
       "Still reaching the registry. Over Tor this can take up to a minute.",
     );
+    expect(l.supportTitle, "Inbox");
+    expect(l.supportWaiting(0), "No one waiting");
+    expect(l.supportWaiting(1), "1 waiting");
+    expect(l.supportWaiting(2), "2 waiting");
+    expect(l.supportWaiting(5), "5 waiting");
+    expect(l.supportSectionWaiting, "Waiting");
+    expect(l.supportSectionAnswered, "Answered");
+    expect(l.supportSectionDone, "Done");
+    expect(l.supportEmpty, "No one has written yet");
+    expect(
+      l.supportEmptyLine,
+      "Chats people start from the Marios row land here, not in requests.",
+    );
+    expect(l.supportMarkDone, "Done");
+    expect(l.supportReopen, "Reopen");
+    expect(l.supportMarkAllDone, "Mark all waiting as done");
+    expect(l.supportMenu, "Inbox options");
+    expect(
+      l.supportDeleteLine,
+      "Every message in this chat goes from this phone. If they write again, it comes back here.",
+    );
+    expect(l.supportNotifNewChats(0), "0 new chats");
+    expect(l.supportNotifNewChats(1), "1 new chat");
+    expect(l.supportNotifNewChats(2), "2 new chats");
+    expect(l.supportNotifNewChats(5), "5 new chats");
+    expect(l.supportNotifNewMessages(0), "0 new messages");
+    expect(l.supportNotifNewMessages(1), "1 new message");
+    expect(l.supportNotifNewMessages(2), "2 new messages");
+    expect(l.supportNotifNewMessages(5), "5 new messages");
+    expect(l.supportChannelName, "Inbox");
+    expect(l.supportChannelLine, "Chats people start from the Marios row");
+    expect(
+      l.supportResetPinned,
+      "This identity is pinned in Kryfo. A new link would cut off every chat with it.",
+    );
+    expect(l.supportViaDev, "Via developer chat");
+    expect(l.supportMoveAsk, "Move your inbox chat with them into this chat?");
+    expect(
+      l.supportMoveLine,
+      "It leaves the inbox and shows in Chats. Keep apart leaves both as they are.",
+    );
+    expect(l.supportMove, "Move");
+    expect(l.supportKeepApart, "Keep apart");
+    expect(l.supportMoveToChats, "Move to Chats");
+    expect(l.supportMovedToChats, "Moved to Chats");
+    expect(l.supportMoveToInbox, "Move to inbox");
+    expect(l.supportMovedToInbox, "Moved to inbox");
   });
 }

@@ -65,36 +65,6 @@ const _names = {
   // the developer's name, in Latin letters everywhere
   'marios',
 };
-// what only the developer's own phone shows stays in english there, in
-// every language
-const _devPhoneOnly = {
-  'supportTitle',
-  'supportWaiting',
-  'supportSectionWaiting',
-  'supportSectionAnswered',
-  'supportSectionDone',
-  'supportEmpty',
-  'supportEmptyLine',
-  'supportMarkDone',
-  'supportReopen',
-  'supportMarkAllDone',
-  'supportMenu',
-  'supportDeleteLine',
-  'supportNotifNewChats',
-  'supportNotifNewMessages',
-  'supportChannelName',
-  'supportChannelLine',
-  'supportResetPinned',
-  'supportViaDev',
-  'supportMoveAsk',
-  'supportMoveLine',
-  'supportMove',
-  'supportKeepApart',
-  'supportMoveToChats',
-  'supportMovedToChats',
-  'supportMoveToInbox',
-  'supportMovedToInbox',
-};
 // read and kept: the word is the same in that language
 // (test/l10n_same_as_english.json, key lists per language)
 final _same = {
@@ -110,20 +80,13 @@ Map<String, dynamic> _arb(String f) =>
 
 void main() {
   final en = _arb('app_en.arb');
-  final keys = en.keys
-      .where((k) => !k.startsWith('@') && !_devPhoneOnly.contains(k))
-      .toList();
+  final keys = en.keys.where((k) => !k.startsWith('@')).toList();
   final files = Directory('lib/l10n')
       .listSync()
       .map((f) => f.uri.pathSegments.last)
       .where(
         (f) => f.startsWith('app_') && f.endsWith('.arb') && f != 'app_en.arb',
       );
-  test('the developer phone keeps its english', () {
-    for (final k in _devPhoneOnly) {
-      expect(en[k], isA<String>(), reason: k);
-    }
-  });
   for (final f in files) {
     final lang = f.substring(4, f.length - 4);
     test('$lang has every key and nothing left in english', () {

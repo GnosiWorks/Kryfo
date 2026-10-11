@@ -7408,7 +7408,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get devDeleteFailed => '没能删除这个聊天。请再试一次。';
 
   @override
-  String get supportTitle => 'Inbox';
+  String get supportTitle => '收件箱';
 
   @override
   String supportWaiting(int count) {
@@ -7419,44 +7419,41 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString waiting',
-      one: '1 waiting',
-      zero: 'No one waiting',
+      other: '$countString 人在等',
+      zero: '没有人在等',
     );
     return '$_temp0';
   }
 
   @override
-  String get supportSectionWaiting => 'Waiting';
+  String get supportSectionWaiting => '等待中';
 
   @override
-  String get supportSectionAnswered => 'Answered';
+  String get supportSectionAnswered => '已回复';
 
   @override
-  String get supportSectionDone => 'Done';
+  String get supportSectionDone => '已完成';
 
   @override
-  String get supportEmpty => 'No one has written yet';
+  String get supportEmpty => '还没有人发来消息';
 
   @override
-  String get supportEmptyLine =>
-      'Chats people start from the Marios row land here, not in requests.';
+  String get supportEmptyLine => '别人从 Marios 这一行发起的聊天会来到这里，而不是进入请求。';
 
   @override
-  String get supportMarkDone => 'Done';
+  String get supportMarkDone => '完成';
 
   @override
-  String get supportReopen => 'Reopen';
+  String get supportReopen => '重新打开';
 
   @override
-  String get supportMarkAllDone => 'Mark all waiting as done';
+  String get supportMarkAllDone => '将所有等待中的标记为已完成';
 
   @override
-  String get supportMenu => 'Inbox options';
+  String get supportMenu => '收件箱选项';
 
   @override
-  String get supportDeleteLine =>
-      'Every message in this chat goes from this phone. If they write again, it comes back here.';
+  String get supportDeleteLine => '这个聊天的所有消息都会从这部手机上删除。如果对方再发消息，聊天会回到这里。';
 
   @override
   String supportNotifNewChats(int count) {
@@ -7467,8 +7464,7 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString new chats',
-      one: '1 new chat',
+      other: '$countString 个新聊天',
     );
     return '$_temp0';
   }
@@ -7482,49 +7478,46 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString new messages',
-      one: '1 new message',
+      other: '$countString 条新消息',
     );
     return '$_temp0';
   }
 
   @override
-  String get supportChannelName => 'Inbox';
+  String get supportChannelName => '收件箱';
 
   @override
-  String get supportChannelLine => 'Chats people start from the Marios row';
+  String get supportChannelLine => '别人从 Marios 这一行发起的聊天';
 
   @override
-  String get supportResetPinned =>
-      'This identity is pinned in Kryfo. A new link would cut off every chat with it.';
+  String get supportResetPinned => '这个身份内置于 Kryfo。新链接会切断与它的所有聊天。';
 
   @override
-  String get supportViaDev => 'Via developer chat';
+  String get supportViaDev => '来自开发者聊天';
 
   @override
-  String get supportMoveAsk => 'Move your inbox chat with them into this chat?';
+  String get supportMoveAsk => '要把收件箱里和对方的聊天移到这个聊天吗？';
 
   @override
-  String get supportMoveLine =>
-      'It leaves the inbox and shows in Chats. Keep apart leaves both as they are.';
+  String get supportMoveLine => '它会离开收件箱，出现在“聊天”中。“保持分开”会让两边保持原样。';
 
   @override
-  String get supportMove => 'Move';
+  String get supportMove => '移动';
 
   @override
-  String get supportKeepApart => 'Keep apart';
+  String get supportKeepApart => '保持分开';
 
   @override
-  String get supportMoveToChats => 'Move to Chats';
+  String get supportMoveToChats => '移到“聊天”';
 
   @override
-  String get supportMovedToChats => 'Moved to Chats';
+  String get supportMovedToChats => '已移到“聊天”';
 
   @override
-  String get supportMoveToInbox => 'Move to inbox';
+  String get supportMoveToInbox => '移到收件箱';
 
   @override
-  String get supportMovedToInbox => 'Moved to inbox';
+  String get supportMovedToInbox => '已移到收件箱';
 
   @override
   String get settingsWriteToMarios => '给 Marios 发消息';
@@ -15193,6 +15186,118 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get devDeleteFailed => '沒能刪除這個聊天。請再試一次。';
+
+  @override
+  String get supportTitle => '收件匣';
+
+  @override
+  String supportWaiting(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 人在等',
+      zero: '沒有人在等',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get supportSectionWaiting => '等待中';
+
+  @override
+  String get supportSectionAnswered => '已回覆';
+
+  @override
+  String get supportSectionDone => '已完成';
+
+  @override
+  String get supportEmpty => '還沒有人傳來訊息';
+
+  @override
+  String get supportEmptyLine => '別人從 Marios 這一列發起的聊天會來到這裡，而不是進入請求。';
+
+  @override
+  String get supportMarkDone => '完成';
+
+  @override
+  String get supportReopen => '重新開啟';
+
+  @override
+  String get supportMarkAllDone => '將所有等待中的標記為已完成';
+
+  @override
+  String get supportMenu => '收件匣選項';
+
+  @override
+  String get supportDeleteLine => '這個聊天的所有訊息都會從這支手機上刪除。如果對方再傳訊息，聊天會回到這裡。';
+
+  @override
+  String supportNotifNewChats(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 個新聊天',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String supportNotifNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 則新訊息',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get supportChannelName => '收件匣';
+
+  @override
+  String get supportChannelLine => '別人從 Marios 這一列發起的聊天';
+
+  @override
+  String get supportResetPinned => '這個身分內建於 Kryfo。新連結會切斷與它的所有聊天。';
+
+  @override
+  String get supportViaDev => '來自開發者聊天';
+
+  @override
+  String get supportMoveAsk => '要把收件匣裡和對方的聊天移到這個聊天嗎？';
+
+  @override
+  String get supportMoveLine => '它會離開收件匣，出現在「聊天」中。「保持分開」會讓兩邊維持原樣。';
+
+  @override
+  String get supportMove => '移動';
+
+  @override
+  String get supportKeepApart => '保持分開';
+
+  @override
+  String get supportMoveToChats => '移到「聊天」';
+
+  @override
+  String get supportMovedToChats => '已移到「聊天」';
+
+  @override
+  String get supportMoveToInbox => '移到收件匣';
+
+  @override
+  String get supportMovedToInbox => '已移到收件匣';
 
   @override
   String get settingsWriteToMarios => '傳訊息給 Marios';

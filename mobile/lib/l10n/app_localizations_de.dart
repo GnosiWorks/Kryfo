@@ -7828,7 +7828,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Der Chat konnte nicht gelöscht werden. Versuch es noch mal.';
 
   @override
-  String get supportTitle => 'Inbox';
+  String get supportTitle => 'Posteingang';
 
   @override
   String supportWaiting(int count) {
@@ -7839,44 +7839,44 @@ class AppLocalizationsDe extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString waiting',
-      one: '1 waiting',
-      zero: 'No one waiting',
+      other: '$countString warten',
+      one: '$countString wartet',
+      zero: 'Niemand wartet',
     );
     return '$_temp0';
   }
 
   @override
-  String get supportSectionWaiting => 'Waiting';
+  String get supportSectionWaiting => 'Wartend';
 
   @override
-  String get supportSectionAnswered => 'Answered';
+  String get supportSectionAnswered => 'Beantwortet';
 
   @override
-  String get supportSectionDone => 'Done';
+  String get supportSectionDone => 'Erledigt';
 
   @override
-  String get supportEmpty => 'No one has written yet';
+  String get supportEmpty => 'Noch hat niemand geschrieben';
 
   @override
   String get supportEmptyLine =>
-      'Chats people start from the Marios row land here, not in requests.';
+      'Chats, die jemand über die Marios-Zeile beginnt, landen hier statt in den Anfragen.';
 
   @override
-  String get supportMarkDone => 'Done';
+  String get supportMarkDone => 'Erledigt';
 
   @override
-  String get supportReopen => 'Reopen';
+  String get supportReopen => 'Wieder öffnen';
 
   @override
-  String get supportMarkAllDone => 'Mark all waiting as done';
+  String get supportMarkAllDone => 'Alle wartenden als erledigt markieren';
 
   @override
-  String get supportMenu => 'Inbox options';
+  String get supportMenu => 'Posteingang-Optionen';
 
   @override
   String get supportDeleteLine =>
-      'Every message in this chat goes from this phone. If they write again, it comes back here.';
+      'Jede Nachricht in diesem Chat wird von diesem Handy gelöscht. Schreibt die Person wieder, kommt der Chat hierher zurück.';
 
   @override
   String supportNotifNewChats(int count) {
@@ -7887,8 +7887,8 @@ class AppLocalizationsDe extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString new chats',
-      one: '1 new chat',
+      other: '$countString neue Chats',
+      one: '$countString neuer Chat',
     );
     return '$_temp0';
   }
@@ -7902,49 +7902,50 @@ class AppLocalizationsDe extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString new messages',
-      one: '1 new message',
+      other: '$countString neue Nachrichten',
+      one: '$countString neue Nachricht',
     );
     return '$_temp0';
   }
 
   @override
-  String get supportChannelName => 'Inbox';
+  String get supportChannelName => 'Posteingang';
 
   @override
-  String get supportChannelLine => 'Chats people start from the Marios row';
+  String get supportChannelLine => 'Chats, die über die Marios-Zeile beginnen';
 
   @override
   String get supportResetPinned =>
-      'This identity is pinned in Kryfo. A new link would cut off every chat with it.';
+      'Diese Identität ist fest in Kryfo eingebaut. Ein neuer Link würde jeden Chat mit ihr abschneiden.';
 
   @override
-  String get supportViaDev => 'Via developer chat';
+  String get supportViaDev => 'Über den Entwickler-Chat';
 
   @override
-  String get supportMoveAsk => 'Move your inbox chat with them into this chat?';
+  String get supportMoveAsk =>
+      'Deinen Posteingang-Chat mit der Person in diesen Chat verschieben?';
 
   @override
   String get supportMoveLine =>
-      'It leaves the inbox and shows in Chats. Keep apart leaves both as they are.';
+      'Er verlässt den Posteingang und erscheint unter Chats. „Getrennt lassen“ lässt beide, wie sie sind.';
 
   @override
-  String get supportMove => 'Move';
+  String get supportMove => 'Verschieben';
 
   @override
-  String get supportKeepApart => 'Keep apart';
+  String get supportKeepApart => 'Getrennt lassen';
 
   @override
-  String get supportMoveToChats => 'Move to Chats';
+  String get supportMoveToChats => 'In Chats verschieben';
 
   @override
-  String get supportMovedToChats => 'Moved to Chats';
+  String get supportMovedToChats => 'In Chats verschoben';
 
   @override
-  String get supportMoveToInbox => 'Move to inbox';
+  String get supportMoveToInbox => 'In den Posteingang verschieben';
 
   @override
-  String get supportMovedToInbox => 'Moved to inbox';
+  String get supportMovedToInbox => 'In den Posteingang verschoben';
 
   @override
   String get settingsWriteToMarios => 'Marios schreiben';
