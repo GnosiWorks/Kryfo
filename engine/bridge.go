@@ -842,7 +842,7 @@ func reconnectTorBy(force, auto bool) string {
 		atomic.StoreInt32(&reconnectRunning, 1)
 	}
 	reconnectMu.Unlock()
-	r := reconnectOn(t, addr, me)
+	r := reconnectOn(t, addr, me, auto)
 	if reconnectMine(me) {
 		noteOutcome(fmt.Sprintf("%s after %s", r, time.Since(started).Round(time.Millisecond)))
 	}
@@ -854,7 +854,9 @@ func reconnectTorBy(force, auto bool) string {
 // asks whether it is still the reconnect that owns the slot, and one that
 // was replaced stops there and touches nothing more: not tor, not the
 // status. against other control users ctrlDo's own bounded lock serializes.
-func reconnectOn(t *tor.Tor, addr string, me int64) string {
+// for automatic the relay side is redone in the background: it waits on
+// dialers that can take half a minute, and a switch is judged by tor alone.
+func reconnectOn(t *tor.Tor, addr string, me int64, auto bool) string {
 	step := func(name string) bool {
 		if !reconnectMine(me) {
 			log.Printf("halo: reconnect replaced before %q", name)
@@ -923,6 +925,9 @@ func reconnectOn(t *tor.Tor, addr string, me int64) string {
 		atomic.StoreInt32(&bounceOff, 0)
 		return "error: tor is asleep"
 	}
+	// what tor says from here on is about the switch an attempt waits on
+	obsArm()
+	bounceEpoch.Store(netEpoch.Load())
 	if err := ctrlDo(t, "DisableNetwork 0", func(c *control.Conn) error {
 		return c.SetConf(control.KeyVals("DisableNetwork", "0")...)
 	}); err != nil {
@@ -946,9 +951,17 @@ func reconnectOn(t *tor.Tor, addr string, me int64) string {
 	// during the bounce (relay runners loop through torNostrClientFor()
 	// throughout) holds a client bound to the old port. the relays heal
 	// through relaysAllDead(), a one-shot request does not.
-	nostrResetClient()
-	relayClearBenches()
-	kickRelays()
+	if auto {
+		go func() {
+			nostrResetClient()
+			relayClearBenches()
+			kickRelays()
+		}()
+	} else {
+		nostrResetClient()
+		relayClearBenches()
+		kickRelays()
+	}
 	goWatchBootstrap(t)
 	goWatchPublished(t, strings.TrimSuffix(addr, ".onion"))
 	log.Println("halo: tor reconnected")

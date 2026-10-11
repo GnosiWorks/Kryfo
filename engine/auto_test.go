@@ -26,6 +26,8 @@ type fakeAuto struct {
 	moatOut  []moatSetting
 	moatErr  error
 	proven   bool
+	settled  bool
+	up       func() bool
 }
 
 type fakeEvent struct {
@@ -34,6 +36,9 @@ type fakeEvent struct {
 }
 
 func (f *fakeAuto) sleep(d time.Duration) {
+	// a moment of real time, so a call on its own goroutine can answer
+	// before the clock runs away from it
+	time.Sleep(20 * time.Microsecond)
 	f.now = f.now.Add(d)
 	var left []fakeEvent
 	for _, e := range f.events {
@@ -63,7 +68,7 @@ func worksAfter(d time.Duration) func(a *attemptSeen, el time.Duration) {
 			a.firstDial = a.since
 		}
 		if el >= d {
-			a.circ("BUILT", a.since.Add(el))
+			a.circ("BUILT", nil, a.since.Add(el))
 		}
 	}
 }
@@ -98,7 +103,14 @@ func useFakeAuto(t *testing.T, n netInfo) *fakeAuto {
 				sc(a, f.now.Sub(a.since))
 			}
 		},
-		close:  func() {},
+		close:   func() {},
+		settled: func() bool { return f.settled },
+		torUp: func() bool {
+			if f.up != nil {
+				return f.up()
+			}
+			return true
+		},
 		proven: func(int64) bool { return f.proven },
 		moat: func(o moatOpts) ([]moatSetting, error) {
 			f.moatOpts = append(f.moatOpts, o)
@@ -109,7 +121,7 @@ func useFakeAuto(t *testing.T, n netInfo) *fakeAuto {
 	resetRoute(t, "publishing", 100)
 	setNetInfo(n)
 	t.Cleanup(func() {
-		autoNow, autoSleep, autoW = oldNow, oldSleep, oldW
+		autoNow, autoSleep, autoW, autoRunPass = oldNow, oldSleep, oldW, runPass
 		resetAuto(t)
 	})
 	return f
@@ -128,7 +140,7 @@ func resetAuto(t *testing.T) {
 		autoSt.phase, autoSt.method, autoSt.source, autoSt.since = "", "", "", time.Time{}
 		autoSt.blocked, autoSt.limited, autoSt.errCode, autoSt.askConsent = false, false, "", false
 	})
-	gateRelease()
+	gateDrop()
 	checkInMu.Lock()
 	checkInUntil = time.Time{}
 	checkInMu.Unlock()
@@ -343,7 +355,7 @@ func TestAutoFirstDialLateIsNotAFailure(t *testing.T) {
 			a.firstDial = a.since.Add(el)
 		}
 		if el >= 170*time.Second {
-			a.circ("BUILT", a.since.Add(el))
+			a.circ("BUILT", nil, a.since.Add(el))
 		}
 	}
 	if r := pass(t, modeOpts{}); r != seenOK || len(f.applied) != 1 {
