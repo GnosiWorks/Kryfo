@@ -27,6 +27,9 @@ import (
 
 const censorBuild = true
 
+// release.sh looks for this in the shipped engine and refuses it
+const censorMarker = "kryfo test censor build"
+
 // reset, stall, or mixed: each relay gets one of the two, the same every time
 var censorHow = "mixed"
 
@@ -52,7 +55,7 @@ func censorStart() string {
 		return ""
 	}
 	censorAddr = ln.Addr().String()
-	log.Printf("censor: tor is cut off (%s)", censorHow)
+	log.Printf("censor: %s, tor is cut off (%s)", censorMarker, censorHow)
 	go func() {
 		for {
 			c, err := ln.Accept()

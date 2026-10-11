@@ -192,6 +192,14 @@ fi
 rm -f out/app-*.apk
 cp "$WORK/out/"app-*.apk out/
 
+# a test engine that acts as if tor were blocked never ships
+for f in out/app-*.apk; do
+  if unzip -p "$f" 'lib/*/libhalo.so' | grep -aq 'kryfo test censor build'; then
+    echo "$f carries the test censor, not releasing" >&2
+    exit 1
+  fi
+done
+
 if [ -z "$SIGN" ]; then
   echo
   ( cd out && sha256sum app-*.apk )

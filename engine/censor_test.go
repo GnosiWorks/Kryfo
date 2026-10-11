@@ -48,6 +48,13 @@ func TestCensorNeverInRelease(t *testing.T) {
 			t.Errorf("%s asks for the censor", f)
 		}
 	}
+	// release.sh refuses an engine that carries the censor's marker
+	on, _ := os.ReadFile("censor_on.go")
+	rel, _ := os.ReadFile("../repro/release.sh")
+	const marker = `censorMarker = "kryfo test censor build"`
+	if !strings.Contains(string(on), marker) || !strings.Contains(string(rel), "grep -aq 'kryfo test censor build'") {
+		t.Error("release.sh does not look for the censor's marker")
+	}
 	// build.sh says no before it looks for anything
 	sh, _ := filepath.Abs("build.sh")
 	cmd := exec.Command("bash", sh)
