@@ -11,7 +11,11 @@ a feature goes into a release finished or not at all.
   new column is in each `CREATE TABLE` (test/schema_parity_test.dart)
 - no logging outside dlog: `grep -rn "print(" mobile/lib | grep -v dlog` is empty
 - the engine builds from clean: `cd engine && ulimit -n 65536 && HALO_FULL=1 ./build.sh`
-- the tor tests pass: `cd engine && ./torconf-tests.sh` (needs the network, ~30 min)
+- the tor tests pass: `cd engine && ./torconf-tests.sh` (needs the network, ~30 min).
+  the two blocked tests build with the test censor on their own
+- jniLibs holds a normal engine, not the test censor build: gradle and
+  release.sh refuse that one (engine/censor-scan.sh). after a
+  HALO_TOR_BLOCKED build, `cd engine && ./build.sh` again
 - after a plugin change, read the merged manifest in
   build/app/intermediates/merged_manifests/, plugins add permissions
 - a fresh clone resolves the lockfile: `flutter pub get --enforce-lockfile`
@@ -22,6 +26,8 @@ a feature goes into a release finished or not at all.
 - `version: X.Y.Z+N` in mobile/pubspec.yaml, then `flutter pub get`
 - the version string in mobile/lib/screens/settings_screen.dart
 - a section in CHANGELOG.md
+- the built-in bridges are current: `scripts/builtin-bridges.sh`, read the
+  diff it shows before committing engine/builtin.json
 - fastlane changelogs, one per abi, same text:
   `mobile/fastlane/metadata/android/en-US/changelogs/<N*10+1>.txt`, `+2`, `+3`
 
