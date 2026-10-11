@@ -12503,14 +12503,24 @@ class AppState extends ChangeNotifier {
   // the window came to the front, or left it
   void appInFront(bool front) {
     _inFront = front;
-    if (front) retryStuckAuto();
+    if (front) {
+      // tor may be asleep or the status a beat old: automatic is looked at
+      // again as the status comes in, for a little while
+      _stuckLookUntil = DateTime.now().add(stuckLookFor);
+      retryStuckAuto();
+    }
     if (_deliveryMode == DeliveryMode.always) {
       if (front) backInFront();
       return;
     }
     if (front) {
       _sleepTimer?.cancel();
-      unawaited(_torWake());
+      // awake, automatic is looked at again: held, it was passed over above
+      unawaited(
+        _torWake().then((up) {
+          if (up) retryStuckAuto();
+        }),
+      );
     } else {
       _scheduleSleep();
     }
@@ -13326,7 +13336,9 @@ class AppState extends ChangeNotifier {
   // place: it tries again, as it would on a tap. at most once a minute, so
   // flicking between apps does not restart its passes. a decoy never asks
   static const stuckRetryGap = Duration(minutes: 1);
+  static const stuckLookFor = Duration(seconds: 30);
   DateTime? _stuckRetryAt;
+  DateTime? _stuckLookUntil;
 
   @visibleForTesting
   void retryStuckAuto({DateTime? now}) {
@@ -13342,6 +13354,7 @@ class AppState extends ChangeNotifier {
     final last = _stuckRetryAt;
     if (last != null && at.difference(last) < stuckRetryGap) return;
     _stuckRetryAt = at;
+    _stuckLookUntil = null;
     dlog('bridges: stuck on coming back, trying again');
     bridgeRetry();
   }
@@ -13413,6 +13426,14 @@ class AppState extends ChangeNotifier {
     // what automatic learnt is kept once something gets through
     if (s.phase == 'connected' && was.phase != 'connected') {
       unawaited(_keepBridgeMemory());
+    }
+    final look = _stuckLookUntil;
+    if (look != null) {
+      if (DateTime.now().isAfter(look)) {
+        _stuckLookUntil = null;
+      } else {
+        retryStuckAuto();
+      }
     }
     notifyListeners();
   }
