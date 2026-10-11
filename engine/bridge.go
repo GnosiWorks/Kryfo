@@ -1386,6 +1386,7 @@ func watchBootstrap(t *tor.Tor) {
 				log.Printf("halo: tor bootstrap %d%%", pct)
 			}
 			if pct >= 100 {
+				noteTorUp(t)
 				statusMu.Lock()
 				cur := torStatus
 				statusMu.Unlock()
