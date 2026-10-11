@@ -67,10 +67,20 @@ func TestDirectBlockedByStuckTag(t *testing.T) {
 	// warnings that keep coming
 	c := newSeen(t0)
 	for i := 1; i <= 3; i++ {
-		c.bootstrap(bootPhase{Progress: 10, Tag: "conn_done", Count: i, Warn: true}, true, t0.Add(time.Duration(i)*time.Second))
+		c.bootstrap(bootPhase{Progress: 10, Tag: "conn_done", Count: i, Warn: true, Reason: "CONNECTRESET"}, true, t0.Add(time.Duration(i)*time.Second))
 	}
 	if v, why := judgeDirect(c, true, t0.Add(5*time.Second)); v != seenBlocked || why != "tor warns" {
 		t.Fatalf("rising warnings: %s %s", v, why)
+	}
+	// a skewed clock warns as loudly, and is no censor
+	for _, r := range []string{"MISC", "CLOCK_SKEW", ""} {
+		e := newSeen(t0)
+		for i := 1; i <= 4; i++ {
+			e.bootstrap(bootPhase{Progress: 80, Tag: "ap_handshake_done", Count: i, Warn: true, Reason: r}, true, t0.Add(time.Duration(i)*time.Second))
+		}
+		if v, why := judgeDirect(e, true, t0.Add(10*time.Second)); v == seenBlocked {
+			t.Fatalf("warnings with reason %q judged blocked: %s", r, why)
+		}
 	}
 	// a handshake with no circuit after it
 	d := newSeen(t0)
@@ -106,9 +116,26 @@ func TestSlowOpenNetworkIsNotBlocked(t *testing.T) {
 	if v, _ := judgeDirect(a, true, t0.Add(directLimit+attemptExtend)); v != seenFailed {
 		t.Fatalf("after the extension: %s, want failed and not blocked", v)
 	}
-	a.circ("BUILT", t0.Add(70*time.Second))
+	a.circ("BUILT", nil, t0.Add(70*time.Second))
 	if v, _ := judgeDirect(a, true, t0.Add(70*time.Second)); v != seenOK {
 		t.Fatalf("a built circuit: %s", v)
+	}
+}
+
+// tor's own one-hop directory circuits and onion circuits say less than an
+// ordinary circuit, so they prove nothing
+func TestOnlyOrdinaryCircuitsCount(t *testing.T) {
+	t0 := time.Unix(1000, 0)
+	a := newSeen(t0)
+	a.circ("BUILT", []string{"ONEHOP_TUNNEL", "IS_INTERNAL", "NEED_CAPACITY"}, t0)
+	a.circ("BUILT", []string{"IS_INTERNAL", "NEED_CAPACITY"}, t0)
+	a.circ("LAUNCHED", nil, t0)
+	if a.circuit {
+		t.Fatal("a one-hop or internal circuit counted")
+	}
+	a.circ("BUILT", []string{"NEED_CAPACITY"}, t0)
+	if !a.circuit {
+		t.Fatal("an ordinary circuit did not count")
 	}
 }
 

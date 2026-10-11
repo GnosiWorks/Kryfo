@@ -102,7 +102,10 @@ var censorReasons = map[string]bool{
 // what one attempt has seen since tor went back on the network. targets
 // are kept as hashes only.
 type attemptSeen struct {
-	since    time.Time
+	since time.Time
+	// events count once tor is back on the network after the switch; the
+	// listener is on before it, so none are missed
+	armed    bool
 	orOK     bool
 	fails    map[uint64]bool
 	failAt   time.Time
@@ -147,10 +150,18 @@ func (a *attemptSeen) orconn(target, status, reason string, now time.Time) {
 	}
 }
 
-func (a *attemptSeen) circ(status string, now time.Time) {
-	if status == "BUILT" && !a.circuit {
-		a.circuit, a.circAt = true, now
+// a circuit tor built for its own directory fetches or an onion service
+// says less than one of its ordinary three-hop circuits, so only those count
+func (a *attemptSeen) circ(status string, flags []string, now time.Time) {
+	if status != "BUILT" || a.circuit {
+		return
 	}
+	for _, f := range flags {
+		if f == "ONEHOP_TUNNEL" || f == "IS_INTERNAL" {
+			return
+		}
+	}
+	a.circuit, a.circAt = true, now
 }
 
 func (a *attemptSeen) bootstrap(p bootPhase, fresh bool, now time.Time) {
@@ -204,7 +215,8 @@ func (a *attemptSeen) blockedWhy(now time.Time) string {
 		if connTags[a.phase.Tag] && now.Sub(a.tagSince) >= directTagStuck {
 			return "stuck connecting"
 		}
-		if a.phase.Warn && a.countUp >= 2 {
+		// only a censor's reason: a skewed clock or the like warns too
+		if a.phase.Warn && a.countUp >= 2 && censorReasons[a.phase.Reason] {
 			return "tor warns"
 		}
 		if !a.hsDoneAt.IsZero() && now.Sub(a.hsDoneAt) >= directNoCircuit {
@@ -295,12 +307,12 @@ func obsReader() {
 		now := time.Now()
 		obsMu.Lock()
 		a := obsCur
-		if a != nil {
+		if a != nil && a.armed {
 			switch e := ev.(type) {
 			case *control.ORConnEvent:
 				a.orconn(e.Target, e.Status, e.Reason, now)
 			case *control.CircuitEvent:
-				a.circ(e.Status, now)
+				a.circ(e.Status, e.BuildFlags, now)
 			}
 		}
 		obsMu.Unlock()
@@ -346,6 +358,16 @@ func obsSubscribe(t *tor.Tor) {
 	}
 	obsMu.Lock()
 	obsOn, obsGen = true, gen
+	obsMu.Unlock()
+}
+
+// tor is back on the network for the attempt that is open: its events
+// count from here
+func obsArm() {
+	obsMu.Lock()
+	if obsCur != nil {
+		obsCur.armed = true
+	}
 	obsMu.Unlock()
 }
 
