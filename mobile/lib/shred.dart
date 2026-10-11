@@ -78,39 +78,58 @@ Future<void> shredTree(String path) async {
 const kHandedGrace = Duration(minutes: 10);
 const _clockSkew = Duration(minutes: 1);
 
-/// what was handed to another app to open goes with the session that
-/// opened it. on a lock or an unlock a copy still in its grace is only
-/// unlinked: an app still reading it keeps its handle and the bytes, and
-/// the name is gone. one past it is shredded. [all], for a switch to
-/// another pin's side or a wipe, shreds every one
+/// the cache's folders of copies handed to another app: to open with it,
+/// to share, and the share plugin's from before
+const kHandedFolders = ['open', 'share', 'share_plus'];
+
+/// what was handed to another app, to open or to share, goes with the
+/// session that handed it. on a lock or an unlock a copy still in its grace
+/// is only unlinked: an app still reading it keeps its handle and the
+/// bytes, and the name is gone. one past it is shredded. [all], for a
+/// switch to another pin's side or a wipe, shreds every one
 Future<void> dropOpenCopies({
   bool all = false,
   Directory? cache,
   DateTime? now,
 }) async {
+  final Directory c;
   try {
-    final c = cache ?? await getTemporaryDirectory();
-    final open = '${c.path}/open';
-    if (all) {
-      await shredTree(open);
-      return;
-    }
-    final dir = Directory(open);
-    if (!await dir.exists()) return;
-    final at = now ?? DateTime.now();
-    final cutoff = at.subtract(kHandedGrace);
-    final ahead = at.add(_clockSkew);
-    await for (final e in dir.list(recursive: true, followLinks: false)) {
-      if (e is! File) continue;
-      final t = await e.lastModified();
-      if (t.isBefore(cutoff) || t.isAfter(ahead)) {
-        await shredFile(e.path);
-      } else {
-        await _unlink(e);
-      }
-    }
-    await dir.delete(recursive: true);
+    c = cache ?? await getTemporaryDirectory();
   } catch (e) {
-    dlog('shred: open copies (${e.runtimeType})');
+    dlog('shred: no cache (${e.runtimeType})');
+    return;
   }
+  final at = now ?? DateTime.now();
+  for (final name in kHandedFolders) {
+    try {
+      await _dropHanded('${c.path}/$name', all: all, at: at);
+    } catch (e) {
+      dlog('shred: handed copies (${e.runtimeType})');
+    }
+  }
+}
+
+Future<void> _dropHanded(
+  String path, {
+  required bool all,
+  required DateTime at,
+}) async {
+  if (all) {
+    await shredTree(path);
+    return;
+  }
+  final dir = Directory(path);
+  if (!await dir.exists()) return;
+  final cutoff = at.subtract(kHandedGrace);
+  final ahead = at.add(_clockSkew);
+  await for (final e in dir.list(recursive: true, followLinks: false)) {
+    if (e is! File) continue;
+    final t = await e.lastModified();
+    if (t.isBefore(cutoff) || t.isAfter(ahead)) {
+      await shredFile(e.path);
+    } else {
+      await _unlink(e);
+    }
+  }
+  await dir.delete(recursive: true);
 }

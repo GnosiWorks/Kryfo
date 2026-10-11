@@ -16351,7 +16351,8 @@ class AppState extends ChangeNotifier {
   // the lock is going up: a vault session shuts at once, and the key of a
   // vault made by a setup that did not finish goes
   void lockingUp() {
-    // a file opened with another app goes with the session that opened it
+    // a file opened or shared with another app goes with the session that
+    // handed it
     _lockedIn = (_session.vault ?? _session.primary).container;
     unawaited(dropOpenCopies());
     unawaited(

@@ -572,7 +572,7 @@ class MainActivity : FlutterFragmentActivity() {
     // that gets the intent. some apps read theirs only after this one is
     // back, or keep reading in the background, so a copy is given a while
     // first and shredded once it is older, by a job that comes back while
-    // one is young. a lock unlinks an open copy (dart's lockingUp).
+    // one is young. a lock unlinks an open or shared copy (dart's lockingUp).
     private fun clearOpenCopies() {
         Thread {
             if (Shred.handed(cacheDir)) JobSetup.scheduleCopySweep(this)
