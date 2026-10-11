@@ -117,6 +117,7 @@ import 'handle_lookup.dart';
 import 'handle_repoint.dart';
 import 'widgets/sheet_handle.dart';
 import 'widgets/halo_sheet.dart';
+import 'widgets/owned_text.dart';
 import 'bidi_safe.dart';
 import 'engine_strings.dart';
 import 'net_detail.dart';
@@ -22423,6 +22424,82 @@ class DevScreen extends StatefulWidget {
   State<DevScreen> createState() => _DevScreenState();
 }
 
+/// scan, pairing code or a pasted link: the choice and the words pasted.
+/// null when cancelled or dismissed
+@visibleForTesting
+Future<(String, String)?> showImportPeerDialog(BuildContext context) =>
+    showDialog<(String, String)>(
+      context: context,
+      builder: (_) => OwnedText(
+        builder: (ctx, ctrl) => AlertDialog(
+          backgroundColor: HaloColors.surface2,
+          title: Text(
+            l10n.appAddAKryfo,
+            style: HaloType.sans(color: HaloColors.amber),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: double.maxFinite,
+                child: ElevatedButton.icon(
+                  onPressed: () => Navigator.pop(ctx, ('scan', ctrl.text)),
+                  icon: const Icon(Icons.qr_code_scanner),
+                  label: Text(l10n.appScanQr),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: HaloColors.amber,
+                    foregroundColor: HaloColors.onAmber,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.maxFinite,
+                child: OutlinedButton.icon(
+                  onPressed: () => Navigator.pop(ctx, ('code', ctrl.text)),
+                  icon: const Icon(Icons.dialpad, size: 18),
+                  label: Text(l10n.appPairingCode),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: HaloColors.text2,
+                    side: BorderSide(color: HaloColors.line),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                l10n.appOrPaste,
+                style: HaloType.sans(size: 11, color: HaloColors.text3),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                textDirection: TextDirection.ltr,
+                controller: ctrl,
+                maxLines: 4,
+                style: HaloType.mono(size: 11, color: HaloColors.text),
+                decoration: InputDecoration(
+                  hintText: 'kryfo://share?...',
+                  hintStyle: HaloType.mono(size: 11, color: HaloColors.text3),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l10n.commonCancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, ('paste', ctrl.text)),
+              child: Text(
+                l10n.appImport,
+                style: HaloType.sans(color: HaloColors.amber),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
 class _DevScreenState extends State<DevScreen> {
   final _msgCtrl = TextEditingController(text: l10n.appHelloFromTheOther);
   String _myAddr = '';
@@ -22585,76 +22662,8 @@ class _DevScreenState extends State<DevScreen> {
   }
 
   Future<void> _importPeer() async {
-    final ctrl = TextEditingController();
-    final action = await showDialog<String>(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: HaloColors.surface2,
-        title: Text(
-          l10n.appAddAKryfo,
-          style: HaloType.sans(color: HaloColors.amber),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: double.maxFinite,
-              child: ElevatedButton.icon(
-                onPressed: () => Navigator.pop(context, 'scan'),
-                icon: const Icon(Icons.qr_code_scanner),
-                label: Text(l10n.appScanQr),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: HaloColors.amber,
-                  foregroundColor: HaloColors.onAmber,
-                ),
-              ),
-            ),
-            const SizedBox(height: 10),
-            SizedBox(
-              width: double.maxFinite,
-              child: OutlinedButton.icon(
-                onPressed: () => Navigator.pop(context, 'code'),
-                icon: const Icon(Icons.dialpad, size: 18),
-                label: Text(l10n.appPairingCode),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: HaloColors.text2,
-                  side: BorderSide(color: HaloColors.line),
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
-            Text(
-              l10n.appOrPaste,
-              style: HaloType.sans(size: 11, color: HaloColors.text3),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              textDirection: TextDirection.ltr,
-              controller: ctrl,
-              maxLines: 4,
-              style: HaloType.mono(size: 11, color: HaloColors.text),
-              decoration: InputDecoration(
-                hintText: 'kryfo://share?...',
-                hintStyle: HaloType.mono(size: 11, color: HaloColors.text3),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, null),
-            child: Text(l10n.commonCancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, 'paste'),
-            child: Text(
-              l10n.appImport,
-              style: HaloType.sans(color: HaloColors.amber),
-            ),
-          ),
-        ],
-      ),
-    );
+    final picked = await showImportPeerDialog(context);
+    final action = picked?.$1;
     if (action == null || !mounted) return;
 
     if (action == 'code') {
@@ -22671,7 +22680,7 @@ class _DevScreenState extends State<DevScreen> {
       if (result == null) return;
       uri = result;
     } else {
-      uri = ctrl.text;
+      uri = picked!.$2;
     }
 
     if (!mounted) return;

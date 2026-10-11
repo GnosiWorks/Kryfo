@@ -31,7 +31,91 @@ import 'key_verification_screen.dart';
 import '../widgets/key_held.dart';
 import 'vouchers_sheet.dart';
 import '../widgets/confirm_sheet.dart';
+import '../widgets/owned_text.dart';
 import '../l10n/l10n.dart';
+
+/// the name we give a contact. '' to clear it, null when dismissed
+@visibleForTesting
+Future<String?> showRenameSheet(
+  BuildContext context, {
+  required String initial,
+  required String haloId,
+}) => showHaloSheet<String>(
+  context,
+  scroll: true,
+  builder: (_) => OwnedText(
+    initial: initial,
+    builder: (ctx, ctrl) => Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SheetHandle(),
+              const SizedBox(height: 12),
+              Text(
+                l10n.contactYourNameForThem,
+                style: HaloType.serif(size: 20, color: HaloColors.text),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                l10n.contactStaysOnThisPhone,
+                style: HaloType.sans(size: 12.5, color: HaloColors.text2),
+              ),
+              const SizedBox(height: 14),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 2,
+                ),
+                decoration: BoxDecoration(
+                  color: HaloColors.surface3,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: HaloColors.line, width: 0.5),
+                ),
+                child: TextField(
+                  controller: ctrl,
+                  autofocus: true,
+                  textCapitalization: TextCapitalization.none,
+                  onSubmitted: (s) => Navigator.pop(ctx, s),
+                  style: HaloType.sans(size: 15, color: HaloColors.text),
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    hintText: haloId,
+                    hintStyle: HaloType.mono(size: 13, color: HaloColors.text3),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: HaloGhostButton(
+                      quiet: true,
+                      label: l10n.contactClear,
+                      onTap: () => Navigator.pop(ctx, ''),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    flex: 2,
+                    child: HaloPrimaryButton(
+                      label: l10n.commonSave,
+                      onTap: () => Navigator.pop(ctx, ctrl.text),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  ),
+);
 
 class ContactScreen extends StatefulWidget {
   final String haloId;
@@ -156,82 +240,10 @@ class _ContactScreenState extends State<ContactScreen> {
   }
 
   Future<void> _rename() async {
-    final ctrl = TextEditingController(text: _c?['nickname'] as String? ?? '');
-    final v = await showHaloSheet<String>(
+    final v = await showRenameSheet(
       context,
-      scroll: true,
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SheetHandle(),
-                const SizedBox(height: 12),
-                Text(
-                  l10n.contactYourNameForThem,
-                  style: HaloType.serif(size: 20, color: HaloColors.text),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  l10n.contactStaysOnThisPhone,
-                  style: HaloType.sans(size: 12.5, color: HaloColors.text2),
-                ),
-                const SizedBox(height: 14),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: HaloColors.surface3,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: HaloColors.line, width: 0.5),
-                  ),
-                  child: TextField(
-                    controller: ctrl,
-                    autofocus: true,
-                    textCapitalization: TextCapitalization.none,
-                    onSubmitted: (s) => Navigator.pop(ctx, s),
-                    style: HaloType.sans(size: 15, color: HaloColors.text),
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      hintText: widget.haloId,
-                      hintStyle: HaloType.mono(
-                        size: 13,
-                        color: HaloColors.text3,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: HaloGhostButton(
-                        quiet: true,
-                        label: l10n.contactClear,
-                        onTap: () => Navigator.pop(ctx, ''),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      flex: 2,
-                      child: HaloPrimaryButton(
-                        label: l10n.commonSave,
-                        onTap: () => Navigator.pop(ctx, ctrl.text),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      initial: _c?['nickname'] as String? ?? '',
+      haloId: widget.haloId,
     );
     if (v == null) return;
     final t = v.trim();

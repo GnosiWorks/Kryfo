@@ -8,6 +8,7 @@ import '../bidi_safe.dart';
 import '../lock_guard.dart';
 import '../theme.dart';
 import 'halo_sheet.dart';
+import 'owned_text.dart';
 import 'press_scale.dart';
 import 'sheet_handle.dart';
 import 'written_field.dart';
@@ -259,62 +260,11 @@ Future<String?> showInputSheet(
 }) => showHaloSheet<String>(
   context,
   scroll: true,
-  builder: (ctx) => _InputSheet(
-    title: title,
-    line: line,
-    initial: initial,
-    hint: hint,
-    save: save,
-    mono: mono,
-    rose: rose,
-    maxLength: maxLength,
-    multiline: multiline,
-  ),
-);
-
-// owns its controller: the field is still drawn while the sheet slides
-// away, so the controller goes only when the route does
-class _InputSheet extends StatefulWidget {
-  const _InputSheet({
-    required this.title,
-    required this.line,
-    required this.initial,
-    required this.hint,
-    required this.save,
-    required this.mono,
-    required this.rose,
-    required this.maxLength,
-    required this.multiline,
-  });
-  final String title;
-  final String? line;
-  final String? initial;
-  final String? hint;
-  final String? save;
-  final bool mono;
-  final bool rose;
-  final int maxLength;
-  final bool multiline;
-
-  @override
-  State<_InputSheet> createState() => _InputSheetState();
-}
-
-class _InputSheetState extends State<_InputSheet> {
-  late final _ctrl = TextEditingController(text: widget.initial ?? '');
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final w = widget;
-    return _frame(context, [
-      _title(w.title),
-      if (w.line != null) ...[const SizedBox(height: 6), _line(w.line!)],
+  builder: (_) => OwnedText(
+    initial: initial ?? '',
+    builder: (ctx, ctrl) => _frame(ctx, [
+      _title(title),
+      if (line != null) ...[const SizedBox(height: 6), _line(line)],
       const SizedBox(height: 14),
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
@@ -324,27 +274,27 @@ class _InputSheetState extends State<_InputSheet> {
           border: Border.all(color: HaloColors.line, width: 0.5),
         ),
         child: WrittenDir(
-          controller: _ctrl,
+          controller: ctrl,
           builder: (dir) => TextField(
-            controller: _ctrl,
+            controller: ctrl,
             textDirection: dir,
             inputFormatters: const [UnmarkedInput()],
             autofocus: true,
-            maxLength: w.multiline ? null : w.maxLength,
+            maxLength: multiline ? null : maxLength,
             minLines: 1,
-            maxLines: w.multiline ? 6 : 1,
-            keyboardType: w.multiline ? TextInputType.multiline : null,
-            autocorrect: !w.mono,
-            enableSuggestions: !w.mono,
+            maxLines: multiline ? 6 : 1,
+            keyboardType: multiline ? TextInputType.multiline : null,
+            autocorrect: !mono,
+            enableSuggestions: !mono,
             cursorColor: HaloColors.amber,
-            onSubmitted: w.multiline ? null : (s) => Navigator.pop(context, s),
-            style: w.mono
+            onSubmitted: multiline ? null : (s) => Navigator.pop(ctx, s),
+            style: mono
                 ? HaloType.mono(size: 14, color: HaloColors.text)
                 : HaloType.sans(size: 15, color: HaloColors.text),
             decoration: InputDecoration(
               border: InputBorder.none,
               counterText: '',
-              hintText: w.hint,
+              hintText: hint,
               hintStyle: HaloType.mono(size: 13, color: HaloColors.text3),
             ),
           ),
@@ -352,15 +302,15 @@ class _InputSheetState extends State<_InputSheet> {
       ),
       const SizedBox(height: 12),
       _primary(
-        w.save ?? l10n.confirmSheetSave,
-        () => Navigator.pop(context, _ctrl.text),
-        rose: w.rose,
+        save ?? l10n.confirmSheetSave,
+        () => Navigator.pop(ctx, ctrl.text),
+        rose: rose,
       ),
       const SizedBox(height: 6),
-      _quiet(l10n.confirmSheetCancel, () => Navigator.pop(context)),
-    ]);
-  }
-}
+      _quiet(l10n.confirmSheetCancel, () => Navigator.pop(ctx)),
+    ]),
+  ),
+);
 
 class SheetChoice<T> {
   final T value;
