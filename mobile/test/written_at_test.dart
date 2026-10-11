@@ -7,9 +7,10 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kryfo/main.dart' show heldBySpans;
+import 'package:kryfo/main.dart' show heldBySpans, kUnblockGrace, stampHeld;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/outbox.dart';
+import 'package:kryfo/relay_poll.dart' show Reached;
 import 'package:shared_preferences/shared_preferences.dart';
 
 const _sender = SenderInfo(
@@ -100,15 +101,24 @@ void main() {
     const from = 1791393419000;
     const to = from + 2 * h;
     const ended = [(from, to)];
+    const now = to + 3 * h;
+
+    bool held(Reached? reached, {int? written, int? wrapped, int? came}) =>
+        heldBySpans(
+          ended,
+          reached: reached,
+          came: came ?? reached?.until ?? now,
+          now: now,
+          written: written,
+          wrapped: wrapped,
+        );
 
     test('what came live after the unblock is let in whatever their clock '
         'reads: hours slow, or a day ahead', () {
       for (final skew in [-5 * h, -20 * 60000, 0, 24 * h]) {
         expect(
-          heldBySpans(
-            ended,
-            reached: (from: to + 1000, until: to + 1000),
-            came: to + 1000,
+          held(
+            (from: to + 1000, until: to + 1000),
             written: to + 500 + skew,
             wrapped: to + 900 + skew,
           ),
@@ -118,43 +128,48 @@ void main() {
       }
     });
 
-    test('a stored copy that may have reached the relay while the block held '
-        'stays out, whatever its stamps say', () {
+    test('a copy the relay took before the unblock, while the block held, '
+        'stays out whatever its stamps say', () {
       for (final w in [from + h, to + 60000, to + 24 * h]) {
-        expect(
-          heldBySpans(
-            ended,
-            reached: (from: to - 60000, until: to + 5000),
-            came: to + 6000,
-            written: w,
-            wrapped: w,
-          ),
-          isTrue,
-          reason: '$w',
-        );
+        for (final r in [
+          (from: to - 60000, until: to - 1000),
+          (from: 0, until: to),
+        ]) {
+          expect(
+            held(r, written: w, wrapped: w),
+            isTrue,
+            reason: '$w $r',
+          );
+        }
       }
-      // nothing known of when it reached it: any time before it came
-      expect(
-        heldBySpans(ended, reached: (from: 0, until: to + 5000), came: 0),
-        isTrue,
-      );
-      expect(heldBySpans(ended, came: to + 5000), isTrue);
+    });
+
+    test('a stored copy whose window runs past the unblock, or whose relay '
+        'was never heard before, is judged by its stamps: an hour after the '
+        'unblock comes in, an hour before stays out', () {
+      for (final r in [
+        (from: to - 180000, until: to + 2 * h),
+        (from: 0, until: to + 2 * h),
+      ]) {
+        expect(
+          held(r, written: to + h, wrapped: to + h),
+          isFalse,
+          reason: '$r',
+        );
+        expect(
+          held(r, written: to - h, wrapped: to - h),
+          isTrue,
+          reason: '$r',
+        );
+        // a version that says nothing: nothing to keep it out by
+        expect(held(r), isFalse, reason: '$r');
+      }
     });
 
     test('a stored copy the relay took after the unblock, or before the '
         'block, is let in', () {
-      expect(
-        heldBySpans(ended, reached: (from: to, until: to + h), came: to + h),
-        isFalse,
-      );
-      expect(
-        heldBySpans(
-          ended,
-          reached: (from: from - h, until: from - 1000),
-          came: to + h,
-        ),
-        isFalse,
-      );
+      expect(held((from: to, until: to + h)), isFalse);
+      expect(held((from: from - h, until: from - 1000), came: to + h), isFalse);
     });
 
     test('a copy sent again after the unblock of what was written while it '
@@ -164,10 +179,8 @@ void main() {
       const wrote = from + 30 * 60000;
       const went = to + 60000;
       expect(
-        heldBySpans(
-          ended,
-          reached: (from: went, until: went),
-          came: went,
+        held(
+          (from: went, until: went),
           written: wrote + skew,
           wrapped: went + skew,
         ),
@@ -176,10 +189,8 @@ void main() {
       // written ten seconds after the unblock and sent again two minutes
       // on, on the same slow clock: let in
       expect(
-        heldBySpans(
-          ended,
-          reached: (from: to + 120000, until: to + 120000),
-          came: to + 120000,
+        held(
+          (from: to + 120000, until: to + 120000),
           written: to + 10000 + skew,
           wrapped: to + 120000 + skew,
         ),
@@ -187,27 +198,28 @@ void main() {
       );
     });
 
-    test('with no wrap time, or a written time past it, it counts as '
-        'written when it went', () {
+    test('with no wrap time, as on the onion lane, the written stamp and '
+        'the grace judge it', () {
+      const live = (from: to + 1000, until: to + 1000);
+      expect(held(live, written: from + h), isTrue);
+      expect(held(live, written: to - kUnblockGrace - 1000), isTrue);
+      // the last minutes before the unblock are given to a slow clock
+      expect(held(live, written: to - 5 * 60000), isFalse);
+      expect(held(live, written: to + 500), isFalse);
+      expect(held(live), isFalse);
+    });
+
+    test('with no lane to say when it reached the relay, its stamps judge '
+        'it as before, and it is not taken as held back', () {
+      expect(held(null, written: to + h, wrapped: to + h, came: now), isFalse);
+      expect(held(null), isFalse);
       expect(
-        heldBySpans(
-          ended,
-          reached: (from: to + 1000, until: to + 1000),
-          came: to + 1000,
-          written: from + h,
-        ),
-        isFalse,
+        held(null, written: from + h, wrapped: from + h, came: now),
+        isTrue,
       );
-      expect(
-        heldBySpans(
-          ended,
-          reached: (from: to + 1000, until: to + 1000),
-          came: to + 1000,
-          written: to + 9 * h,
-          wrapped: from + h,
-        ),
-        isFalse,
-      );
+      // one far ahead is taken as now
+      expect(held(null, written: now + 24 * h, came: now), isFalse);
+      expect(stampHeld(ended, written: from + h, came: now, now: now), isTrue);
     });
   });
 }

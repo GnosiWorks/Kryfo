@@ -14,6 +14,7 @@ import 'package:kryfo/media_resend.dart';
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
 import 'package:kryfo/rooms.dart' show kRoomJoinWait;
+import 'package:kryfo/relay_poll.dart' show Reached;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/stranger_gate.dart'
     show ShelfFull, Shelved, kShelfPlaces, shelfVerdict;
@@ -817,6 +818,7 @@ class ArrivalRows implements HaloDb {
     String peer = '',
     String? uid,
     required int now,
+    Reached? reached,
   }) async {
     _hit('keepFirst', null, null);
     if (kept.containsKey(hash)) return true;
@@ -843,6 +845,7 @@ class ArrivalRows implements HaloDb {
       at: now,
       tries: 0,
       nextAt: now + firstRetryGap(0).inMilliseconds,
+      reached: reached,
     );
     return true;
   }
@@ -861,6 +864,7 @@ class ArrivalRows implements HaloDb {
       at: r.at,
       tries: tries,
       nextAt: nextAt,
+      reached: r.reached,
     );
   }
 

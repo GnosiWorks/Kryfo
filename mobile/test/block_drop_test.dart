@@ -210,9 +210,8 @@ void main() {
         'comes live after it is let in, from a clock hours slow too', () async {
       final (w, from, to) = await blockedAWhile();
       final now = DateTime.now().millisecondsSinceEpoch;
-      // listening again, the relay hands over what it stored: all of it
-      // reached the relay after it last handed over everything, ten minutes
-      // before the unblock, and none of it was seen here
+      // the relay took all of it before the unblock, after it last handed
+      // over everything, and none of it was seen here
       await w.app.receiveRelay(
         [
           await w.copy(who, 'req3b', written: from + 3600000),
@@ -220,7 +219,9 @@ void main() {
           await w.copy(who, 'after', written: to + 60000),
         ],
         written: [from + 3600000, now + 86400000, to + 60000],
-        reached: [for (var i = 0; i < 3; i++) (from: to - 600000, until: now)],
+        reached: [
+          for (var i = 0; i < 3; i++) (from: to - 600000, until: to - 1000),
+        ],
       );
       expect(w.kept(who), isEmpty);
       expect(w.live.blockedDrops[who] ?? const {}, isEmpty);
@@ -313,16 +314,48 @@ void main() {
     test('$kind blocked: from a version that does not say when it was '
         'written, when it reached the relay judges it', () async {
       final (w, _, to) = await blockedAWhile();
-      final now = DateTime.now().millisecondsSinceEpoch;
       await w.app.receiveRelay(
         [
           await w.copy(who, 'old-during', old: true),
           await w.copy(who, 'old-after', old: true),
         ],
         written: [to - 60000, to + 30000],
-        reached: [(from: to - 120000, until: now), _World.liveNow()],
+        reached: [(from: to - 120000, until: to - 1000), _World.liveNow()],
       );
       expect(w.kept(who), ['old-after']);
+    });
+
+    test('$kind blocked: unblocked, then the app killed, a reply sent an '
+        'hour later comes in on the next start, though the relay was last '
+        'heard minutes before the unblock', () async {
+      final w = await _World.make();
+      await w.app.block(who);
+      await w.app.unblock(who);
+      final now = DateTime.now().millisecondsSinceEpoch;
+      // blocked two hours, unblocked three hours ago, killed right after
+      const h = 3600000;
+      final to = now - 3 * h;
+      w.live.blockSpans[who] = [(to - 2 * h, to)];
+      // on the next start the relay hands over the reply, stored: it was
+      // last heard three minutes before the unblock
+      await w.app.receiveRelay(
+        [await w.copy(who, 'reply', written: to + h)],
+        written: [to + h],
+        reached: [(from: to - 180000, until: now)],
+      );
+      // and what it held from while the block did stays out by its stamps
+      await w.app.receiveRelay(
+        [await w.copy(who, 'during', written: to - h)],
+        written: [to - h],
+        reached: [(from: to - 180000, until: now)],
+      );
+      // as on a relay never heard before
+      await w.app.receiveRelay(
+        [await w.copy(who, 'fresh', written: to + 2 * h)],
+        written: [to + 2 * h],
+        reached: [(from: 0, until: now)],
+      );
+      expect(w.kept(who), ['reply', 'fresh']);
     });
 
     test('$kind blocked: a stamp far ahead of this clock gets nothing the '
@@ -332,7 +365,7 @@ void main() {
       await w.app.receiveRelay(
         [await w.copy(who, 'ahead', written: now + 86400000)],
         written: [now + 86400000],
-        reached: [(from: to - 1000, until: now)],
+        reached: [(from: to - 5000, until: to - 1000)],
       );
       expect(w.kept(who), isEmpty);
       await w.app.receiveOnion([]);
@@ -345,10 +378,9 @@ void main() {
     test('$kind blocked: what an ended block alone turns away is not noted, '
         'so a copy that comes again live is let in', () async {
       final (w, _, to) = await blockedAWhile();
-      final now = DateTime.now().millisecondsSinceEpoch;
       await w.app.receiveRelay(
         [await w.copy(who, 'skewed')],
-        reached: [(from: to - 1000, until: now)],
+        reached: [(from: to - 5000, until: to - 1000)],
       );
       expect(w.kept(who), isEmpty);
       expect(w.live.blockedDrops[who] ?? const {}, isEmpty);

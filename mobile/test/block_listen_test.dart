@@ -167,7 +167,8 @@ void main() {
     await w.app.unlistenOldBlocks();
     expect(w.io.unheard, isEmpty);
     // a day on, as the card says once the vault has been opened
-    await card(now - kBlockListenFor - 1000);
+    // a card says the day, rounded up
+    await card(now - kBlockListenFor - kDay - 1000);
     await router.load();
     await w.app.unlistenOldBlocks();
     expect(w.io.unheard, ['x-h']);

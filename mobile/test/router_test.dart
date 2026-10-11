@@ -1186,7 +1186,8 @@ void main() {
     final now = DateTime.now().millisecondsSinceEpoch;
     for (final (id, from) in [
       ('blocked-young-one', now - kBlockListenFor + 86400000),
-      ('blocked-old-one', now - kBlockListenFor - 1000),
+      // a card says the day, rounded up: a day more
+      ('blocked-old-one', now - kBlockListenFor - kDay - 1000),
       ('blocked-unsaid-one', null),
     ]) {
       await w.store.putHidden(
@@ -1207,21 +1208,21 @@ void main() {
     // still kept from the everyday side, and still turned away
     expect(w.router.keeps('blocked-old-one'), isTrue);
     expect(w.router.blocks('blocked-old-one'), isTrue);
-    // the start rides the card only while the block holds
+    // the start rides the card only while the block holds, to the day
     final card = jsonDecode(
       peerCard(const RouterCard('p', 'o', 'x', blockedFrom: 5)),
     );
     expect((card as Map).containsKey('bs'), isFalse);
-    expect(
-      RouterCard.fromJson(
-        jsonDecode(
-          peerCard(
-            const RouterCard('p', 'o', 'x', blocked: true, blockedFrom: 5),
+    for (final (at, day) in [(5, kDay), (kDay, kDay), (kDay + 1, 2 * kDay)]) {
+      expect(
+        RouterCard.fromJson(
+          jsonDecode(
+            peerCard(RouterCard('p', 'o', 'x', blocked: true, blockedFrom: at)),
           ),
-        ),
-      )!.blockedFrom,
-      5,
-    );
+        )!.blockedFrom,
+        day,
+      );
+    }
   });
 
   group('while the vault is shut', () {

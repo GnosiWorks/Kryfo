@@ -492,7 +492,7 @@ void main() {
           jsonDecode((await hiddenCard(db, const ChatRef(_peer)))!),
         )!;
         expect(blocked.blocked, isTrue);
-        expect(blocked.blockedFrom, 70);
+        expect(blocked.blockedFrom, kDay);
         final seeded = jsonDecode(
           (await hiddenCard(db, const ChatRef('g1', group: true)))!,
         );
@@ -501,7 +501,7 @@ void main() {
             for (final m in (seeded as Map)['m'] as List)
               RouterCard.fromJson(m)!.id: RouterCard.fromJson(m)!.blockedFrom,
           },
-          {_peer: 70, 'member-two': 80},
+          {_peer: kDay, 'member-two': kDay},
         );
       },
       skip: SqliteMem.open() == null ? 'no sqlite on this host' : null,

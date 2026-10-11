@@ -259,6 +259,47 @@ void main() {
     );
   }, skip: skip);
 
+  test('a seed on a span table made before the column was adds it first, '
+      'and the upgrade to 75 gives kept openers when they came', () async {
+    final db = SqliteMem.open()!;
+    await db.execute(
+      'CREATE TABLE contacts (halo_id TEXT PRIMARY KEY, '
+      'blocked INTEGER NOT NULL DEFAULT 0)',
+    );
+    await db.execute(
+      "INSERT INTO contacts (halo_id, blocked) VALUES ('long-blocked', 1)",
+    );
+    await db.execute(
+      'CREATE TABLE block_spans (peer_id TEXT NOT NULL, '
+      'from_at INTEGER NOT NULL, to_at INTEGER)',
+    );
+    await blockTables(db, seed: true);
+    final rows = await db.rawQuery(
+      'SELECT peer_id, from_at, listen_from FROM block_spans',
+    );
+    expect(rows, hasLength(1));
+    expect(rows.single['from_at'], 0);
+    expect(rows.single['listen_from'], isNotNull);
+    // first_kept as 70 to 74 made it
+    await db.execute(
+      'CREATE TABLE first_kept (hash TEXT PRIMARY KEY, cipher TEXT NOT NULL, '
+      "peer TEXT NOT NULL DEFAULT '', uid TEXT, at INTEGER NOT NULL, "
+      'tries INTEGER NOT NULL DEFAULT 0, next_at INTEGER NOT NULL)',
+    );
+    await blockListenColumn(db);
+    await blockListenColumn(db);
+    await db.execute(
+      'INSERT INTO first_kept (hash, cipher, at, next_at, reached_from, '
+      "reached_until) VALUES ('h', 'c', 1, 2, 3, 4)",
+    );
+    expect(
+      await db.rawQuery('SELECT reached_from, reached_until FROM first_kept'),
+      [
+        {'reached_from': 3, 'reached_until': 4},
+      ],
+    );
+  }, skip: skip);
+
   test('the steps to 64 make both tables from 63 whichever it held, and run '
       'again they open no second span', () async {
     final db = SqliteMem.open()!;

@@ -345,6 +345,7 @@ void main() {
         at: DateTime.now().millisecondsSinceEpoch,
         tries: 0,
         nextAt: 0,
+        reached: null,
       );
       everyday.kept['h1'] = kept;
       firstFails

@@ -32,7 +32,8 @@ const kHiddenGone = 'gone';
 
 // relays keep a wrap fourteen days (nip17.go). a block is listened on a
 // day past that, so nothing it held is left there
-const kBlockListenFor = 15 * 86400000;
+const kBlockListenFor = 15 * kDay;
+const kDay = 86400000;
 
 // what may wait sealed while the vault is shut, in arrivals and in bytes.
 // past either the oldest go first
@@ -106,7 +107,10 @@ class RouterCard {
     'x': xpub,
     if (backPaired) 'bp': 1,
     if (blocked) 'bl': 1,
-    if (blocked) 'bs': ?blockedFrom,
+    // to the day, rounded up: when the vault blocked them says no more than
+    // that on the everyday side
+    if (blocked && blockedFrom != null)
+      'bs': (blockedFrom! + kDay - 1) ~/ kDay * kDay,
     'vk': verifiedKey ?? '',
   };
 
