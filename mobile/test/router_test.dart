@@ -81,13 +81,19 @@ class _Store implements RouterStore {
   @override
   Future<int> inboxParts(String uid) async => {
     for (final r in inbox)
-      if (r['uid'] == uid && r['part'] != null) r['part'],
+      if (r['uid'] == uid && r['part'] is int && (r['part'] as int) >= 0)
+        r['part'],
   }.length;
   @override
   Future<int> inboxCount() async => inbox.length;
   @override
-  Future<List<(int, int)>> inboxSizes() async => [
-    for (final r in inbox) (r['id'] as int, (r['sealed'] as List<int>).length),
+  Future<List<(int, int, bool)>> inboxSizes() async => [
+    for (final r in inbox)
+      (
+        r['id'] as int,
+        (r['sealed'] as List<int>).length,
+        r['part'] == kNotePart,
+      ),
   ];
   @override
   Future<List<Map<String, Object?>>> inboxOldest(
@@ -1108,6 +1114,20 @@ void main() {
       return r;
     }
 
+    test('at the cap a note goes before any arrival, however old', () async {
+      final w = await _World.make();
+      final r = await capped(w, n: 3);
+      await r.seal(Unsealed(_h, 'real-0', false, 0), uid: 'r0');
+      for (var i = 0; i < 3; i++) {
+        await r.seal(
+          Unsealed('blocked-one', '', false, i + 1, blockedDrop: 'n$i'),
+          uid: 'n$i',
+        );
+      }
+      await r.seal(Unsealed(_h, 'real-1', false, 9), uid: 'r1');
+      expect([for (final x in w.store.inbox) x['uid']], ['r0', 'n2', 'r1']);
+    });
+
     test('keeps at most the cap, the oldest going first', () async {
       final w = await _World.make();
       final r = await capped(w);
@@ -1282,6 +1302,7 @@ void main() {
       // any arrival, and no tick goes back
       expect(w.store.inbox, hasLength(1));
       expect(w.store.inbox.single['uid'], 'b1');
+      expect(w.store.inbox.single['part'], kNotePart);
       final opened = w.seal.openMany('priv-A', [
         base64Encode(w.store.inbox.single['sealed'] as List<int>),
       ]).single!;
@@ -1293,6 +1314,44 @@ void main() {
       expect(w.vault.drops[b], {'b1'});
       expect(w.vault.msg('b1'), isNull);
       expect(w.store.inbox, isEmpty);
+    });
+
+    test('a flood from someone the vault blocked never pushes out a real '
+        'arrival: their notes are capped and go first', () async {
+      final w = await _World.make();
+      const b = 'blocked-hidden-one';
+      await w.store.putHidden(
+        b,
+        kHiddenPeer,
+        peerCard(const RouterCard(b, 'o-b', 'x-b', blocked: true)),
+        1,
+      );
+      await w.router.load();
+      await w.onion(
+        _h,
+        await wrapMessage('real', msgUid: 'r1', sender: _as(_h)),
+      );
+      for (var i = 0; i < kMaxSealed; i++) {
+        final c = 'flood-$i';
+        w.io.opens[c] = (
+          b,
+          await wrapMessage('x', msgUid: 'f$i', sender: _as(b)),
+        );
+        await w.app.receiveOnion([c]);
+      }
+      await w.onion(
+        _h,
+        await wrapMessage('real', msgUid: 'r2', sender: _as(_h)),
+      );
+      final notes = w.store.inbox.where((r) => r['part'] == kNotePart);
+      expect(notes, hasLength(kMaxSealedNotes));
+      // the newest kept, the oldest gone
+      expect(notes.last['uid'], 'f${kMaxSealed - 1}');
+      final real = [
+        for (final r in w.store.inbox)
+          if (r['part'] != kNotePart) r['uid'],
+      ];
+      expect(real, ['r1', 'r2']);
     });
 
     test('a card that still says blocked after the vault let them go notes '

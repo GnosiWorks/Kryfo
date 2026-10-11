@@ -40,6 +40,12 @@ const kDay = 86400000;
 const kMaxSealed = 5000;
 const kMaxSealedBytes = 100 << 20;
 
+// a uid noted from someone the vault blocked waits under this part. they
+// go first when the cap is reached, and no more than this many wait, so
+// what they send never pushes out a real arrival
+const kNotePart = -1;
+const kMaxSealedNotes = 2000;
+
 // the three tables, in every container. the vault's are unused but for
 // vault_meta, which holds its own key
 Future<void> routerTables(Database db) async {
@@ -221,8 +227,9 @@ abstract class RouterStore {
   Future<bool> inboxHas(String uid, int? part);
   Future<int> inboxParts(String uid);
   Future<int> inboxCount();
-  // every row's id and size, oldest first, without what it holds
-  Future<List<(int, int)>> inboxSizes();
+  // every row's id and size, oldest first, without what it holds, and
+  // whether it is a note (kNotePart)
+  Future<List<(int, int, bool)>> inboxSizes();
   // oldest first
   // past [after], by id
   Future<List<Map<String, Object?>>> inboxOldest(int limit, {int after = 0});
@@ -375,7 +382,7 @@ class SqlRouterStore implements RouterStore {
   Future<int> inboxParts(String uid) async {
     final r = await (await _open()).rawQuery(
       'SELECT COUNT(DISTINCT part) c FROM vault_inbox '
-      'WHERE uid = ? AND part IS NOT NULL',
+      'WHERE uid = ? AND part >= 0',
       [uid],
     );
     return (r.first['c'] as int?) ?? 0;
@@ -390,11 +397,15 @@ class SqlRouterStore implements RouterStore {
   }
 
   @override
-  Future<List<(int, int)>> inboxSizes() async => [
+  Future<List<(int, int, bool)>> inboxSizes() async => [
     for (final r in await (await _open()).rawQuery(
-      'SELECT id, length(sealed) n FROM vault_inbox ORDER BY id ASC',
+      'SELECT id, length(sealed) n, part FROM vault_inbox ORDER BY id ASC',
     ))
-      ((r['id'] as num).toInt(), (r['n'] as num? ?? 0).toInt()),
+      (
+        (r['id'] as num).toInt(),
+        (r['n'] as num? ?? 0).toInt(),
+        r['part'] == kNotePart,
+      ),
   ];
 
   @override
@@ -753,32 +764,51 @@ class VaultRouter {
     );
     final sealed = _sealer.seal(pub, base64Encode(plain));
     if (sealed == null) return false;
-    await _store.inboxAdd(uid, part, base64Decode(sealed), a.at);
+    await _store.inboxAdd(
+      uid,
+      a.blockedDrop != null ? kNotePart : part,
+      base64Decode(sealed),
+      a.at,
+    );
     _sealGen++;
     _maybeSealed = true;
     return _trim();
   }
 
-  // what waits sealed held to the cap, the oldest going first. false when
-  // the newest is past it on its own: it goes, and takes nothing with it
+  // what waits sealed held to the cap, notes first and then the oldest.
+  // false when the newest is past it on its own: it goes, and takes
+  // nothing with it
   Future<bool> _trim() async {
     final rows = await _store.inboxSizes();
     if (rows.isEmpty) return false;
-    final (newest, size) = rows.last;
+    final (newest, size, _) = rows.last;
     if (size > maxSealedBytes) {
       await _store.inboxDelete(newest);
       return false;
     }
     var n = rows.length;
     var bytes = 0;
-    for (final (_, size) in rows) {
+    var notes = 0;
+    for (final (_, size, note) in rows) {
       bytes += size;
+      if (note) notes++;
     }
-    for (final (id, size) in rows) {
-      if (n <= maxSealed && bytes <= maxSealedBytes) break;
+    for (final (id, size, note) in [
+      for (final r in rows)
+        if (r.$3) r,
+      for (final r in rows)
+        if (!r.$3) r,
+    ]) {
+      if (n <= maxSealed &&
+          bytes <= maxSealedBytes &&
+          (!note || notes <= kMaxSealedNotes)) {
+        if (note) continue;
+        break;
+      }
       await _store.inboxDelete(id);
       n--;
       bytes -= size;
+      if (note) notes--;
     }
     return true;
   }

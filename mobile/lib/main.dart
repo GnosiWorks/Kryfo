@@ -12885,11 +12885,12 @@ class AppState extends ChangeNotifier {
     // someone the vault blocked: nothing of it waits, and nothing is
     // answered. what they wrote is noted by its uid alone, for the vault to
     // keep as it would have on arrival, so a copy after an unblock stays
-    // out. sealed like any arrival, the same size as a short one
+    // out. sealed like any arrival, the same size as a short one, and gone
+    // first when the cap is reached (kMaxSealedNotes)
     if (_router.blocks(sender)) {
       _lastSealAt = DateTime.now().millisecondsSinceEpoch;
       final key = _dataFrame(env) ? env.msgUid ?? env.mediaId : null;
-      if (key == null || await _router.sealedHas(key, null)) return;
+      if (key == null || await _router.sealedHas(key, kNotePart)) return;
       await _router.seal(
         Unsealed(sender, '', false, _lastSealAt, blockedDrop: key),
         uid: key,

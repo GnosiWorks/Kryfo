@@ -238,8 +238,13 @@ class _Store implements RouterStore {
   }
 
   @override
-  Future<List<(int, int)>> inboxSizes() async => [
-    for (final r in inbox) (r['id'] as int, (r['sealed'] as List<int>).length),
+  Future<List<(int, int, bool)>> inboxSizes() async => [
+    for (final r in inbox)
+      (
+        r['id'] as int,
+        (r['sealed'] as List<int>).length,
+        r['part'] == kNotePart,
+      ),
   ];
   @override
   Future<List<Map<String, Object?>>> inboxOldest(

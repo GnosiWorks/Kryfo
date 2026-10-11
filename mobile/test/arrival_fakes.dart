@@ -75,13 +75,19 @@ class ArrivalStore implements RouterStore {
   @override
   Future<int> inboxParts(String uid) async => {
     for (final r in inbox)
-      if (r['uid'] == uid && r['part'] != null) r['part'],
+      if (r['uid'] == uid && r['part'] is int && (r['part'] as int) >= 0)
+        r['part'],
   }.length;
   @override
   Future<int> inboxCount() async => inbox.length;
   @override
-  Future<List<(int, int)>> inboxSizes() async => [
-    for (final r in inbox) (r['id'] as int, (r['sealed'] as List<int>).length),
+  Future<List<(int, int, bool)>> inboxSizes() async => [
+    for (final r in inbox)
+      (
+        r['id'] as int,
+        (r['sealed'] as List<int>).length,
+        r['part'] == kNotePart,
+      ),
   ];
   @override
   Future<List<Map<String, Object?>>> inboxOldest(
