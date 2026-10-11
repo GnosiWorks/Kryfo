@@ -640,39 +640,63 @@ func TestProbeLooksLikeTheSocketsOwnRequest(t *testing.T) {
 	defer func() { kickSpread = old }()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	l := startLanes(t, ctx, 3, 1)
-	subs := l.subs()
-	waitFor(t, "every subscription connected", 15*time.Second, func() bool {
-		n := 0
-		for _, c := range relay.snapshot() {
-			if c.closed.IsZero() && len(c.reqs) > 0 {
-				n++
-			}
-		}
-		return n == subs
-	})
-	kicked := time.Now()
-	kickRelays()
-	waitFor(t, "every socket asked", 15*time.Second, func() bool {
-		for _, c := range relay.snapshot() {
-			if c.closed.IsZero() && len(c.reqs) < 2 {
+	// fifteen sockets: their own delays all falling inside the bound below
+	// is about one run in five billion, six made it one in fifteen hundred
+	l := startLanes(t, ctx, 10, 2)
+	addrs := append([]string{l.fc}, l.contacts...)
+	for _, r := range l.rooms {
+		addrs = append(addrs, r...)
+	}
+	if len(addrs) != l.subs() {
+		t.Fatalf("%d addresses for %d subscriptions", len(addrs), l.subs())
+	}
+	// every runner past its first answer: it is in its loop and hears a kick
+	waitFor(t, "every subscription caught up", 15*time.Second, func() bool {
+		catchupMu.Lock()
+		defer catchupMu.Unlock()
+		for _, a := range addrs {
+			if _, done := catchupLast[catchupKey(relay.url(), a)]; !done {
 				return false
 			}
 		}
 		return true
 	})
+	// each address's first request since the kick, whichever socket asked it
+	since := func(kicked time.Time) map[string]siReq {
+		got := map[string]siReq{}
+		for _, c := range relay.snapshot() {
+			if len(c.reqs) == 0 || len(c.reqs[0].filter.Tags["p"]) != 1 {
+				continue
+			}
+			own := c.reqs[0].filter.Tags["p"][0]
+			for _, q := range c.reqs[1:] {
+				if q.at.Before(kicked) {
+					continue
+				}
+				if p, ok := got[own]; !ok || q.at.Before(p.at) {
+					got[own] = q
+				}
+			}
+		}
+		return got
+	}
+	kicked := time.Now()
+	var got map[string]siReq
+	// kicked again while it waits: a socket with its delay running keeps
+	// it, one that was between two selects hears the next
+	waitFor(t, "every socket asked", 15*time.Second, func() bool {
+		kickRelays()
+		got = since(kicked)
+		return len(got) == len(addrs)
+	})
 	var first, last time.Time
-	for _, c := range relay.snapshot() {
-		if len(c.reqs) < 2 {
-			continue
+	for _, a := range addrs {
+		p, ok := got[a]
+		if !ok {
+			t.Fatalf("nothing asked for %s since the kick", a)
 		}
-		own := c.reqs[0].filter.Tags["p"]
-		p := c.reqs[1]
-		if !p.filter.LimitZero || len(p.filter.IDs) > 0 || !reflect.DeepEqual(p.filter.Tags["p"], own) {
-			t.Errorf("a probe asked %v on a socket that listens for %v", p.filter, own)
-		}
-		if p.at.Before(kicked) {
-			continue
+		if !p.filter.LimitZero || len(p.filter.IDs) > 0 || !reflect.DeepEqual(p.filter.Tags["p"], []string{a}) {
+			t.Errorf("a probe asked %v on a socket that listens for %s", p.filter, a)
 		}
 		if first.IsZero() || p.at.Before(first) {
 			first = p.at
@@ -682,7 +706,7 @@ func TestProbeLooksLikeTheSocketsOwnRequest(t *testing.T) {
 		}
 	}
 	if spread := last.Sub(first); spread < 500*time.Millisecond {
-		t.Fatalf("%d sockets answered a kick within %s", subs, spread)
+		t.Fatalf("%d sockets answered a kick within %s", len(addrs), spread)
 	}
 }
 

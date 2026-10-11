@@ -3,6 +3,7 @@
 // the file was handed over is not made, and says so once the same hidden
 // chats are open again. the everyday app in between hears nothing of it
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -23,6 +24,43 @@ import 'package:kryfo/session.dart';
 import 'package:kryfo/theme.dart' show haloToastOverlay;
 
 import 'pin_flow_fakes.dart' show phone, press;
+
+// the backup file, so the test knows when the shred's unlink is back: the
+// disk works outside the test's clock and each step needs a pump
+class _Watched implements File {
+  _Watched(this._real, this._unlinked);
+  final File _real;
+  final Completer<void> _unlinked;
+  @override
+  String get path => _real.path;
+  @override
+  void writeAsStringSync(
+    String contents, {
+    FileMode mode = FileMode.write,
+    Encoding encoding = utf8,
+    bool flush = false,
+  }) => _real.writeAsStringSync(
+    contents,
+    mode: mode,
+    encoding: encoding,
+    flush: flush,
+  );
+  @override
+  Future<RandomAccessFile> open({FileMode mode = FileMode.read}) =>
+      _real.open(mode: mode);
+  @override
+  Future<FileSystemEntity> delete({bool recursive = false}) async {
+    try {
+      return await _real.delete(recursive: recursive);
+    } finally {
+      if (!_unlinked.isCompleted) _unlinked.complete();
+    }
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation i) =>
+      throw UnimplementedError('the backup file was asked for ${i.memberName}');
+}
 
 class _Db implements HaloDb {
   _Db(this.container);
@@ -98,7 +136,17 @@ void main() {
     for (final f in find.byType(TextField).evaluate().toList()) {
       await t.enterText(find.byWidget(f.widget), 'a long passphrase');
     }
-    await press(t, find.text(l10n.backupCreateBackup));
+    final unlinked = Completer<void>();
+    // the real calls run in the root zone, which has no overrides. the
+    // sdk's own type lookup under overrides drops the path's terminating
+    // zero and finds nothing
+    await IOOverrides.runZoned(
+      () => press(t, find.text(l10n.backupCreateBackup)),
+      createFile: (path) => _Watched(Zone.root.run(() => File(path)), unlinked),
+      fseGetType: (path, follow) async => Zone.root.run(
+        () => FileSystemEntity.typeSync(path, followLinks: follow),
+      ),
+    );
     await t.pump();
 
     // the screen goes dark: the lock comes up and the hidden chats close
@@ -110,10 +158,12 @@ void main() {
     running.complete();
     await t.pump();
     expect(tmp.listSync().whereType<File>(), hasLength(1));
-    // the file is shredded on the disk, outside the test's clock
-    for (var i = 0; i < 10; i++) {
+    // the file is shredded on the disk, outside the test's clock, one step
+    // per pump. the pump that brings the unlink back runs the rest too
+    for (var i = 0; !unlinked.isCompleted; i++) {
+      expect(i, lessThan(3000), reason: 'the shred never finished');
       await t.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 20)),
+        () => Future<void>.delayed(const Duration(milliseconds: 5)),
       );
       await t.pump();
     }
