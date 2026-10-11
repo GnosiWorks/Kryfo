@@ -20,7 +20,11 @@ your ip is hidden behind tor on the default private mode. relay mode and fast mo
 
 ## bridges
 
-bridges help tor start when your network blocks it. when you ask Kryfo to get bridges, it asks the tor project for them. the request goes through a cdn, so your network sees a connection to the cdn, not to the tor project. the tor project sees your ip address, and from it roughly where you are. that is normal: it is how tor browser and every tor app get bridges, and all it tells them is that someone asked for bridges. nothing about your chats, your contacts or who you talk to. Kryfo only asks after you say yes.
+bridges help tor start when your network blocks it. on automatic, where new installs start, Kryfo first tries tor the usual way and only tries a bridge when that is blocked. you can also pick a bridge yourself, or pick direct, and then Kryfo makes none of the connections below on its own.
+
+when a bridge is used, some connections leave your phone outside tor so that tor can start. an obfs4 bridge, built in or from a friend, is reached directly at its address. a webtunnel bridge is reached at its web address. snowflake asks public stun servers for your address, reaches the tor project's broker through a cdn, and connects through a volunteer's computer. these see your ip address and when you connect.
+
+when you ask Kryfo to get bridges, it asks the tor project for them. the request goes through a cdn, so your network sees a connection to the cdn, not to the tor project. the tor project sees your ip address, and from it roughly where you are. that is normal: it is how tor browser and every tor app get bridges, and all it tells them is that someone asked for bridges. nothing about your chats, your contacts or who you talk to. Kryfo only asks after you say yes.
 
 once tor is connected, Kryfo checks about once a week for changes to the tor project's built-in bridges. that request goes through tor, so it shows nobody your ip address.
 
@@ -48,7 +52,7 @@ there is no push service. the app checks for messages itself, over the same rout
 
 ## third parties
 
-Kryfo talks to tor relays and nostr relays, and to the tor project when you ask it for bridges. these are infrastructure for moving sealed data, not partners we share anything with. we do not sell, rent, or trade data, because we do not have any to give.
+Kryfo talks to tor relays and nostr relays, to the tor project when you ask it for bridges, and, while a bridge is in use, to that bridge and what it needs: snowflake volunteers, public stun servers and the cdn in front of the tor project. these are infrastructure for moving sealed data, not partners we share anything with. we do not sell, rent, or trade data, because we do not have any to give.
 
 ## law enforcement and data requests
 
