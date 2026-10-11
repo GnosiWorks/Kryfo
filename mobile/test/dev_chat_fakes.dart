@@ -153,6 +153,25 @@ class DevTestDb implements HaloDb {
       .any((r) => r['msg_uid'] == msgUid && r['sent'] == kNotSent);
 
   @override
+  Future<bool?> voiceDisguiseOf(String chatId, {bool group = false}) async {
+    for (final r in mem.rows(group ? 'groups' : 'contacts')) {
+      if (r[group ? 'group_id' : 'halo_id'] != chatId) continue;
+      final v = r['voice_disguise'];
+      return v is int ? v == 1 : null;
+    }
+    return null;
+  }
+
+  @override
+  Future<void> setVoiceDisguise(String chatId, bool on, {bool group = false}) =>
+      mem.update(
+        group ? 'groups' : 'contacts',
+        {'voice_disguise': on ? 1 : 0},
+        where: group ? 'group_id = ?' : 'halo_id = ?',
+        whereArgs: [chatId],
+      );
+
+  @override
   dynamic noSuchMethod(Invocation i) =>
       throw UnimplementedError('${i.memberName}');
 }
