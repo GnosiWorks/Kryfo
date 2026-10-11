@@ -345,6 +345,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get appOkNoRelayBegan => 'OK, không relay nào trả lời';
 
   @override
+  String get appNoRelayReached => 'Không liên lạc được relay nào';
+
+  @override
   String get appOkCapped => 'OK, bị cắt ngang';
 
   @override
@@ -636,6 +639,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get appConnecting2 => 'Đang kết nối';
+
+  @override
+  String get appWaitingForARelay => 'Đang chờ relay';
 
   @override
   String mediaProgressSendingKeepTheApp(Object v) {
@@ -3504,6 +3510,9 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get modesEveryRelayYouUse =>
       'Mọi relay bạn dùng đều biết địa chỉ bạn kết nối từ đó, không chỉ relay của chúng tôi. Tin nhắn vẫn được mã hóa kín, nhưng việc bạn đã gửi tin thì không được che giấu. Mặc định tắt, và tắt lại sau khi cài đặt lại.';
+
+  @override
+  String get modesNotChanged => 'Chế độ chưa đổi. Hãy thử lại.';
 
   @override
   String get modesSpeed => 'Tốc độ';
@@ -7312,6 +7321,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get handleRegistryFailed =>
       'Không liên lạc được với nơi đăng ký. Hãy thử lại sau một phút.';
+
+  @override
+  String get handleStillReaching =>
+      'Vẫn đang liên lạc với nơi đăng ký. Qua Tor việc này có thể mất đến một phút.';
 
   @override
   String get handleCheckClock =>

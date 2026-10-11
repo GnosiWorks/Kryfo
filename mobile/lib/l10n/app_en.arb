@@ -411,6 +411,10 @@
   "@appOkNoRelayBegan": {
     "description": "main.dart: a check-in that brought tor up but no relay started answering in 45s"
   },
+  "appNoRelayReached": "No relay reached",
+  "@appNoRelayReached": {
+    "description": "delivery_mode.dart. a check-in where no relay could be reached, most often with no network"
+  },
   "appOkCapped": "OK, capped",
   "@appOkCapped": {
     "description": "main.dart: a check-in that was cut off at 90s"
@@ -791,6 +795,10 @@
   "appConnecting2": "Connecting",
   "@appConnecting2": {
     "description": "main.dart"
+  },
+  "appWaitingForARelay": "Waiting for a relay",
+  "@appWaitingForARelay": {
+    "description": "main.dart. the home pill, when tor is up but no relay has answered for a while. keep it short"
   },
   "mediaProgressSendingKeepTheApp": "Sending · {v} · keep the app open",
   "@mediaProgressSendingKeepTheApp": {
@@ -4394,6 +4402,10 @@
   "modesEveryRelayYouUse": "Every relay you use knows the address you connect from, not only ours. Messages are still sealed, but the fact that you sent one is not. Off by default, and off again after a reinstall.",
   "@modesEveryRelayYouUse": {
     "description": "screens/modes_screen.dart"
+  },
+  "modesNotChanged": "The mode didn't change. Try again.",
+  "@modesNotChanged": {
+    "description": "toast when a mode could not be saved and nothing changed"
   },
   "modesSpeed": "Speed",
   "@modesSpeed": {
@@ -9295,6 +9307,10 @@
   "handleRegistryFailed": "Couldn't reach the registry. Try again in a minute.",
   "@handleRegistryFailed": {
     "description": "toast when the registry did not answer"
+  },
+  "handleStillReaching": "Still reaching the registry. Over Tor this can take up to a minute.",
+  "@handleStillReaching": {
+    "description": "handle page, while a registry call has taken more than a few seconds"
   },
   "handleCheckClock": "Check the phone's date and time, then try again.",
   "@handleCheckClock": {

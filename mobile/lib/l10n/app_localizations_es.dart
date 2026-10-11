@@ -357,6 +357,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get appOkNoRelayBegan => 'OK, ningún repetidor empezó';
 
   @override
+  String get appNoRelayReached => 'No se alcanzó ningún repetidor';
+
+  @override
   String get appOkCapped => 'OK, al límite';
 
   @override
@@ -647,6 +650,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get appConnecting2 => 'Conectando';
+
+  @override
+  String get appWaitingForARelay => 'Esperando un repetidor';
 
   @override
   String mediaProgressSendingKeepTheApp(Object v) {
@@ -3550,6 +3556,9 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get modesEveryRelayYouUse =>
       'Cada repetidor que usas conoce la dirección desde la que te conectas, no solo el nuestro. Los mensajes siguen sellados, pero el hecho de haber enviado uno no lo está. Desactivado por defecto, y desactivado de nuevo tras reinstalar.';
+
+  @override
+  String get modesNotChanged => 'El modo no cambió. Inténtalo de nuevo.';
 
   @override
   String get modesSpeed => 'Velocidad';
@@ -7383,6 +7392,10 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get handleRegistryFailed =>
       'No se pudo contactar con el registro. Inténtalo en un minuto.';
+
+  @override
+  String get handleStillReaching =>
+      'Todavía contactando con el registro. Por Tor puede tardar hasta un minuto.';
 
   @override
   String get handleCheckClock =>

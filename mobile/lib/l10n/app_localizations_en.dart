@@ -354,6 +354,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appOkNoRelayBegan => 'OK, no relay began';
 
   @override
+  String get appNoRelayReached => 'No relay reached';
+
+  @override
   String get appOkCapped => 'OK, capped';
 
   @override
@@ -642,6 +645,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appConnecting2 => 'Connecting';
+
+  @override
+  String get appWaitingForARelay => 'Waiting for a relay';
 
   @override
   String mediaProgressSendingKeepTheApp(Object v) {
@@ -3512,6 +3518,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get modesEveryRelayYouUse =>
       'Every relay you use knows the address you connect from, not only ours. Messages are still sealed, but the fact that you sent one is not. Off by default, and off again after a reinstall.';
+
+  @override
+  String get modesNotChanged => 'The mode didn\'t change. Try again.';
 
   @override
   String get modesSpeed => 'Speed';
@@ -7318,6 +7327,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get handleRegistryFailed =>
       'Couldn\'t reach the registry. Try again in a minute.';
+
+  @override
+  String get handleStillReaching =>
+      'Still reaching the registry. Over Tor this can take up to a minute.';
 
   @override
   String get handleCheckClock =>

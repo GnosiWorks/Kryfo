@@ -356,6 +356,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get appOkNoRelayBegan => 'OK, kein Relais antwortete';
 
   @override
+  String get appNoRelayReached => 'Kein Relais erreicht';
+
+  @override
   String get appOkCapped => 'OK, gekappt';
 
   @override
@@ -647,6 +650,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get appConnecting2 => 'Verbinde';
+
+  @override
+  String get appWaitingForARelay => 'Warte auf Relais';
 
   @override
   String mediaProgressSendingKeepTheApp(Object v) {
@@ -3557,6 +3563,10 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get modesEveryRelayYouUse =>
       'Jedes Relais, das du nutzt, kennt die Adresse, von der aus du dich verbindest, nicht nur unseres. Nachrichten bleiben versiegelt, aber dass du eine gesendet hast, nicht. Standardmäßig aus, und nach einer Neuinstallation wieder aus.';
+
+  @override
+  String get modesNotChanged =>
+      'Der Modus hat sich nicht geändert. Versuch es noch mal.';
 
   @override
   String get modesSpeed => 'Tempo';
@@ -7403,6 +7413,10 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get handleRegistryFailed =>
       'Das Verzeichnis war nicht erreichbar. Versuch es gleich noch mal.';
+
+  @override
+  String get handleStillReaching =>
+      'Das Verzeichnis wird noch erreicht. Über Tor kann das bis zu einer Minute dauern.';
 
   @override
   String get handleCheckClock =>

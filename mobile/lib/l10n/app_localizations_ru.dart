@@ -371,6 +371,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get appOkNoRelayBegan => 'ОК, ретрансляторы молчат';
 
   @override
+  String get appNoRelayReached => 'Ретрансляторы недоступны';
+
+  @override
   String get appOkCapped => 'ОК, прервано';
 
   @override
@@ -663,6 +666,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get appConnecting2 => 'Подключение';
+
+  @override
+  String get appWaitingForARelay => 'Ждём ретранслятор';
 
   @override
   String mediaProgressSendingKeepTheApp(Object v) {
@@ -3609,6 +3615,9 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get modesEveryRelayYouUse =>
       'Каждый ретранслятор, которым ты пользуешься, знает адрес, с которого ты подключаешься, — не только наш. Сообщения по-прежнему зашифрованы, а вот сам факт отправки — нет. По умолчанию выключено и снова выключается после переустановки.';
+
+  @override
+  String get modesNotChanged => 'Режим не сменился. Попробуй ещё раз.';
 
   @override
   String get modesSpeed => 'Скорость';
@@ -7465,6 +7474,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get handleRegistryFailed =>
       'Реестр не ответил. Попробуй через минуту.';
+
+  @override
+  String get handleStillReaching =>
+      'Связываемся с реестром. Через Tor это может занять до минуты.';
 
   @override
   String get handleCheckClock =>

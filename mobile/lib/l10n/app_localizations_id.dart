@@ -347,6 +347,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get appOkNoRelayBegan => 'OK, tak ada relay mulai';
 
   @override
+  String get appNoRelayReached => 'Tak ada relay terjangkau';
+
+  @override
   String get appOkCapped => 'OK, dibatasi';
 
   @override
@@ -636,6 +639,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get appConnecting2 => 'Menghubungkan';
+
+  @override
+  String get appWaitingForARelay => 'Menunggu relay';
 
   @override
   String mediaProgressSendingKeepTheApp(Object v) {
@@ -3509,6 +3515,9 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get modesEveryRelayYouUse =>
       'Setiap relay yang kamu pakai tahu alamat asal koneksimu, bukan hanya relay kami. Pesan tetap tersegel, tapi fakta bahwa kamu mengirimnya tidak. Mati secara bawaan, dan mati lagi setelah instal ulang.';
+
+  @override
+  String get modesNotChanged => 'Mode tidak berubah. Coba lagi.';
 
   @override
   String get modesSpeed => 'Kecepatan';
@@ -7318,6 +7327,10 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get handleRegistryFailed =>
       'Tidak bisa menghubungi registri. Coba lagi semenit lagi.';
+
+  @override
+  String get handleStillReaching =>
+      'Masih menghubungi registri. Lewat Tor ini bisa makan waktu hingga semenit.';
 
   @override
   String get handleCheckClock =>
