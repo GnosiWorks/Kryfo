@@ -6,7 +6,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/scheduler.dart';
 
 class EaseSize extends StatelessWidget {
   final Widget child;
@@ -44,8 +43,9 @@ class _HeldHeight extends SingleChildRenderObjectWidget {
 }
 
 class _RenderHeldHeight extends RenderProxyBox {
+  // the height laid out last. an answer a frame old is at most one eased
+  // step off, and the last step of an ease out is next to nothing
   double _last = 0;
-  bool _recheck = false;
 
   @override
   double computeMinIntrinsicHeight(double width) =>
@@ -58,14 +58,6 @@ class _RenderHeldHeight extends RenderProxyBox {
   @override
   void performLayout() {
     super.performLayout();
-    if (size.height == _last) return;
     _last = size.height;
-    // the answer given this frame was the old height: ask again once more
-    if (_recheck) return;
-    _recheck = true;
-    SchedulerBinding.instance.addPostFrameCallback((_) {
-      _recheck = false;
-      if (attached) markNeedsLayout();
-    });
   }
 }
