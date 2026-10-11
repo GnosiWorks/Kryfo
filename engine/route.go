@@ -186,6 +186,11 @@ func routeNeedsRescue(now time.Time) string {
 	if !modeNeedsTor() || torIsPaused() {
 		return ""
 	}
+	// no network: nothing can get through, and a rescue then only spends
+	// tor's guards and the back-off. the change that brings one bounces
+	if netOffline.Load() {
+		return ""
+	}
 	// automatic owns the bounces while it tries: not counted as a rescue
 	if autoGateHeld() {
 		return ""
@@ -305,9 +310,41 @@ var netOffline atomic.Bool
 
 // a change the app saw, and whether a network is there after it
 func networkChangedTo(online bool) {
-	netOffline.Store(!online)
+	was := netOffline.Swap(!online)
 	networkChanged()
+	if !online {
+		// at once, not after the quiet window: every guard tor tries with
+		// no network is marked down, and tor waits ten minutes before it
+		// tries a primary guard again
+		go netPark()
+		return
+	}
+	if was {
+		// runners that slept through the outage dial again
+		kickRelays()
+	}
 }
+
+// tor off the network while there is none. reconnectOn leaves it off and
+// the network-change bounce puts it back on. a var for the tests
+var netPark = func() {
+	if !modeNeedsTor() || torIsPaused() || torParked.Load() {
+		return
+	}
+	mu.Lock()
+	up := torNode != nil && torNode.Control != nil
+	mu.Unlock()
+	if !up {
+		return
+	}
+	log.Println("halo: no network, taking tor off it")
+	// past automatic's gate: going off the network is safe in any mode, and
+	// an attempt under way is stopped by the outage anyway
+	reconnectTorBy(true, true)
+}
+
+// tor was left off the network because there was none
+var torParked atomic.Bool
 
 func networkChanged() {
 	// direct was welcome on the old network, maybe not on this one. a

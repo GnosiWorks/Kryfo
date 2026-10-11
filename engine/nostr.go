@@ -169,11 +169,15 @@ func kickChan() chan struct{} {
 
 // sleep that a kick ends early. true when it was kicked. a runner waiting
 // out a failed dial still hears the job's kick this way.
-func sleepOrKick(d time.Duration) bool {
+func sleepOrKick(d time.Duration) bool { return sleepOrKickOn(kickChan(), d) }
+
+// as sleepOrKick, on a kick channel taken before the check that led here, so
+// a kick between the two is not missed
+func sleepOrKickOn(kc chan struct{}, d time.Duration) bool {
 	select {
 	case <-time.After(d):
 		return false
-	case <-kickChan():
+	case <-kc:
 		return true
 	}
 }
@@ -1432,10 +1436,12 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 					}
 					return
 				}
-				// tor is down because it was asked to be. do not poll for it
-				// every ten seconds: the kick that follows a resume wakes this.
-				if modeNeedsTor() && torIsPaused() {
-					sleepOrKick(15 * time.Minute)
+				// tor is down because it was asked to be, or there is no
+				// network. do not poll for it every ten seconds: the kick that
+				// follows a resume or the network coming back wakes this.
+				kc := kickChan()
+				if modeNeedsTor() && (torIsPaused() || netOffline.Load()) {
+					sleepOrKickOn(kc, 15*time.Minute)
 					continue
 				}
 				client, err := torNostrClientFor(lane)

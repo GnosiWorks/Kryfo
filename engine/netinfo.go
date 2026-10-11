@@ -51,7 +51,10 @@ func setNetInfo(n netInfo) {
 	prev := netInfoNow
 	netInfoNow = n
 	netInfoMu.Unlock()
-	netOffline.Store(!n.On)
+	// runners asleep through an outage dial again, whichever call says so first
+	if netOffline.Swap(!n.On) && n.On {
+		kickRelays()
+	}
 	// signed in past a portal, or android got its answer at last: what
 	// failed before may get through now
 	if prev.known && n.On && n.Validated && !n.Limited && (!prev.Validated || prev.Limited) {

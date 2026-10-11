@@ -36,6 +36,7 @@ const (
 	errPTDown   = "error: bridges could not start"
 	errNoConf   = "error: bridges not applied"
 	errAutoWait = "error: automatic has no way in yet"
+	errOffline  = "error: no network"
 	codePTDown  = "pt_failed"
 	codeNoMode  = "no_mode"
 	codeNoConf  = "not_applied"

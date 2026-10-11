@@ -459,11 +459,18 @@ func networkOnAtStart(t *tor.Tor) {
 		}
 		return
 	}
+	if netOffline.Load() {
+		log.Println("halo: tor stays off the network until there is one")
+		torParked.Store(true)
+		return
+	}
 	if err := ctrlDo(t, "DisableNetwork 0", func(c *control.Conn) error {
 		return c.SetConf(control.KeyVals("DisableNetwork", "0")...)
 	}); err != nil {
 		log.Printf("halo: enable network: %v", err)
+		return
 	}
+	torParked.Store(false)
 }
 
 // bine writes a fresh torrc and control-port file per run and does not always
@@ -955,6 +962,14 @@ func reconnectOn(t *tor.Tor, addr string, me int64, auto bool) string {
 		atomic.StoreInt32(&bounceOff, 0)
 		return "error: tor is asleep"
 	}
+	// no network: tor holds its config and stays off until one comes, so it
+	// does not mark every guard down trying to reach them
+	if netOffline.Load() {
+		log.Println("halo: leaving tor off the network (no network)")
+		torParked.Store(true)
+		atomic.StoreInt32(&bounceOff, 0)
+		return errOffline
+	}
 	// an unknown mode is never direct, and neither are bridges tor did not
 	// take: it would go out on whatever it had before
 	why := networkHold()
@@ -980,6 +995,7 @@ func reconnectOn(t *tor.Tor, addr string, me int64, auto bool) string {
 		setStatus("off")
 		return "error: " + err.Error()
 	}
+	torParked.Store(false)
 	if !step("watchers") {
 		return superseded
 	}
@@ -1105,12 +1121,21 @@ func torResume() string {
 		atomic.StoreInt32(&torPaused, was)
 		return why
 	}
+	// awake, but off the network until there is one: the change that
+	// brings it bounces tor on
+	if netOffline.Load() {
+		log.Println("halo: awake, off the network until there is one")
+		torParked.Store(true)
+		setStatus("starting")
+		return "ok"
+	}
 	if err := ctrlDo(t, "DisableNetwork 0", func(c *control.Conn) error {
 		return c.SetConf(control.KeyVals("DisableNetwork", "0")...)
 	}); err != nil {
 		log.Printf("halo: tor would not come back: %v", err)
 		return "error: " + err.Error()
 	}
+	torParked.Store(false)
 	statusMu.Lock()
 	hsdirUploads = 0
 	statusMu.Unlock()
