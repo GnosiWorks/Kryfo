@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -12,18 +13,21 @@ import io.flutter.plugin.common.MethodChannel
 import org.json.JSONObject
 
 // which network is the default one, from the callbacks in the order android
-// sends them. a new default arrives with onAvailable, and android 7 sends
-// no capabilities after it, so they are asked for there. the old default's
-// onLost can come after the new one is up, and then it changes nothing.
+// sends them. a new default arrives with onAvailable. android 7 sends no
+// capabilities after it, so there they are asked for; later androids send
+// them, and a read of our own could race them with an older answer. the
+// old default's onLost can come after the new one is up, and then it
+// changes nothing.
 class NetTracker<N>(
     private val describe: (N?) -> String,
     private val report: (String) -> Unit,
+    private val capsFollow: Boolean,
 ) {
     private var current: N? = null
 
     fun available(n: N) {
         current = n
-        report(describe(n))
+        if (!capsFollow) report(describe(n))
     }
 
     fun changed(n: N, state: String) {
@@ -60,6 +64,7 @@ object NetWatch {
         val tracker = NetTracker<Network>(
             describe = { n -> describe(n?.let { cm.getNetworkCapabilities(it) }) },
             report = { report(it) },
+            capsFollow = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O,
         )
         try {
             last = describe(cm.getNetworkCapabilities(cm.activeNetwork))
