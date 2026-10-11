@@ -3848,9 +3848,10 @@ class HaloDb implements GroupOwedStore {
       );
       final n = newest.where((r) => ids.contains(r['id'])).length;
       if (n == 0) continue;
+      // nothing left unread in a group: no mention is left in it either
       await db.update(
         table,
-        {'unread': unread - n},
+        {'unread': unread - n, if (group && unread - n <= 0) 'mentioned': 0},
         where: key,
         whereArgs: [chat],
       );
@@ -4906,9 +4907,25 @@ class HaloDb implements GroupOwedStore {
 
   Future<void> editMessage(String msgUid, String newText) async {
     final db = await open();
+    // a page title belongs to the link it was fetched for
+    final was = await db.query(
+      'messages',
+      columns: ['plaintext'],
+      where: 'msg_uid = ?',
+      whereArgs: [msgUid],
+      limit: 1,
+    );
+    final linkMoved =
+        was.isNotEmpty &&
+        firstUrl(was.first['plaintext'] as String? ?? '') !=
+            firstUrl(unmarked(newText));
     await db.update(
       'messages',
-      {'plaintext': unmarked(newText), 'edited': 1},
+      {
+        'plaintext': unmarked(newText),
+        'edited': 1,
+        if (linkMoved) 'preview': null,
+      },
       // a sticker has no words to edit: its text stays its emoji
       where: 'msg_uid = ? AND sticker IS NULL',
       whereArgs: [msgUid],
@@ -8686,6 +8703,7 @@ Future<void> _openChatFor(String? haloId) async {
         peerXPub: row['xpub'] as String,
         avatarSeed: haloId,
         avatarChoice: (row['avatar'] as num?)?.toInt(),
+        nickname: row['nickname'] as String?,
       ),
     ),
   );
@@ -20286,6 +20304,7 @@ class _RootShellState extends State<RootShell> {
               peerXPub: row['xpub'] as String,
               avatarSeed: id,
               avatarChoice: (row['avatar'] as num?)?.toInt(),
+              nickname: row['nickname'] as String?,
             ),
           ),
         );
