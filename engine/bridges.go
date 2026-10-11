@@ -531,6 +531,7 @@ var torArgsExtra []string
 func torArgs() []string {
 	a := []string{"--Schedulers", "Vanilla"}
 	a = append(a, torArgsExtra...)
+	a = append(a, censorTorArgs()...)
 	// an explicit socks port, so a DisableNetwork bounce reopens the same one
 	// and a dialer built before it keeps working. see socksport.go.
 	if p := socksPin(); p != 0 {
@@ -733,6 +734,12 @@ func servePTConn(conn net.Conn, name string, factory base.ClientFactory, r *ptLi
 	if bridgeIsDead(key) {
 		// fail fast rather than making tor wait out another timeout
 		_ = req.Reply(socks5.ReplyHostUnreachable)
+		return
+	}
+	// a test build's censor; nothing in any other build
+	if err := censorPTDial(name, req.Target); err != nil {
+		noteBridgeFail(key, err)
+		_ = req.Reply(socks5.ErrorToReplyCode(err))
 		return
 	}
 	args, err := factory.ParseArgs(&line.args)
