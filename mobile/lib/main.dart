@@ -16567,6 +16567,9 @@ class AppState extends ChangeNotifier {
   // blocks tor looks exactly like a slow one for the first
   // minute or two, so we wait before suggesting anything.
   DateTime? _torTryingSince;
+  DateTime? get torTryingSince => _torTryingSince;
+  @visibleForTesting
+  set torTryingSinceForTest(DateTime? t) => _torTryingSince = t;
   bool _bridgeHintOff = false;
   // when the bootstrap percentage last moved. a climbing bar is a slow
   // network; a stuck one under half way is a blocked one.
@@ -23163,8 +23166,46 @@ class TorHalo extends StatefulWidget {
   State<TorHalo> createState() => TorHaloState();
 }
 
+/// how long a bare connecting may stand before the pill says what it waits
+/// for
+const pillPatience = Duration(seconds: 30);
+
+/// what the home pill says, and which kind of line it is: the words change
+/// in place within a kind and cross over between kinds. offline is offline
+/// in every mode. a decoy hears connected, connecting or offline
+@visibleForTesting
+({String text, String kind}) pillWords({
+  required String mode,
+  required TorStatus status,
+  required bool online,
+  required bool ready,
+  required int pct,
+  required Duration waited,
+  required bool decoy,
+}) {
+  final off = status == TorStatus.off;
+  if (!online && !(mode == 'private' && off)) {
+    return (text: l10n.appOffline, kind: 'offline');
+  }
+  if (mode == 'balanced') return (text: l10n.appViaRelay, kind: 'relay');
+  if (mode == 'fast') return (text: l10n.appFast, kind: 'fast');
+  if (off) return (text: l10n.appTorOff, kind: 'off');
+  if (ready) return (text: l10n.appTorReady, kind: 'ready');
+  if (decoy || waited < pillPatience) {
+    return (text: l10n.appConnecting2, kind: 'connecting');
+  }
+  // still building its route: how far along. up with no relay through:
+  // that it waits for one
+  if (status == TorStatus.starting) {
+    return (text: l10n.appConnecting(percent(pct / 100)), kind: 'climbing');
+  }
+  return (text: l10n.appWaitingForARelay, kind: 'relay-wait');
+}
+
 class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
   late final AnimationController _c;
+  // wakes the pill when a bare connecting has stood long enough
+  Timer? _patience;
 
   // pulses only while tor is still coming up. once it is usable the chip
   // says so and rests, even when the onion is never confirmed reachable
@@ -23192,7 +23233,35 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
   bool _pulsed = false;
   int _attempt = 0;
 
+  // how long tor has been trying, as the app keeps it
+  Duration get _waited {
+    final t = appState.torTryingSince;
+    return t == null ? Duration.zero : DateTime.now().difference(t);
+  }
+
+  void _armPatience() {
+    final waiting =
+        appState.sendMode == 'private' &&
+        appState.online &&
+        appState.torStatus != TorStatus.off &&
+        !appState.torUsable;
+    final left = pillPatience - _waited;
+    if (!waiting || left <= Duration.zero) {
+      _patience?.cancel();
+      _patience = null;
+      return;
+    }
+    if (_patience?.isActive ?? false) return;
+    _patience = Timer(left + const Duration(milliseconds: 50), () {
+      _patience = null;
+      if (!mounted) return;
+      setState(() {});
+      _armPatience();
+    });
+  }
+
   void _sync() {
+    _armPatience();
     if (!_isConnecting) {
       _pulsed = false;
       if (_c.isAnimating) _c.stop();
@@ -23222,6 +23291,7 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
   @override
   void dispose() {
     appState.removeListener(_sync);
+    _patience?.cancel();
     _c.dispose();
     super.dispose();
   }
@@ -23344,9 +23414,21 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
           final ready = appState.torUsable;
           final secured = ready && s == TorStatus.reachable;
           final connecting = _isConnecting;
+          final still = motionStill(context);
+          final said = pillWords(
+            mode: appState.sendMode,
+            status: s,
+            online: appState.online,
+            ready: ready,
+            pct: appState.bootstrapPct,
+            waited: _waited,
+            decoy: appState.inDecoyView,
+          );
           const torGreen = Color(0xFF34D399);
           final accent = off
-              ? HaloColors.text3
+              ? HaloColors.text2
+              : said.kind == 'offline'
+              ? HaloColors.amber
               // one route, one colour. onion stays violet whether tor is
               // merely usable or fully published.
               : appState.sendMode == 'balanced'
@@ -23395,7 +23477,9 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
           Widget tinted(Widget Function(Color) build) =>
               TweenAnimationBuilder<Color?>(
                 tween: ColorTween(end: accent),
-                duration: const Duration(milliseconds: 260),
+                duration: still
+                    ? Duration.zero
+                    : const Duration(milliseconds: 260),
                 curve: Curves.easeOutCubic,
                 builder: (_, c, _) => build(c ?? accent),
               );
@@ -23405,16 +23489,6 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
                   SizedBox(width: 20, height: 20, child: Center(child: dot(c))),
             );
           }
-          final mode = appState.sendMode;
-          final txt = mode == 'balanced'
-              ? (appState.linkUp ? l10n.appViaRelay : l10n.appOffline)
-              : mode == 'fast'
-              ? (appState.linkUp ? l10n.appFast : l10n.appOffline)
-              : off
-              ? l10n.appTorOff
-              : ready
-              ? l10n.appTorReady
-              : l10n.appConnecting2;
           return tinted(
             (c) => Row(
               mainAxisSize: MainAxisSize.min,
@@ -23422,7 +23496,9 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
                 dot(c),
                 const SizedBox(width: 6),
                 AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 220),
+                  duration: still
+                      ? Duration.zero
+                      : const Duration(milliseconds: 220),
                   switchInCurve: Curves.easeOutCubic,
                   switchOutCurve: Curves.easeIn,
                   transitionBuilder: (child, anim) => FadeTransition(
@@ -23436,8 +23512,8 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
                     ),
                   ),
                   child: Text(
-                    txt,
-                    key: ValueKey(txt),
+                    said.text,
+                    key: ValueKey(said.kind),
                     style: HaloType.mono(size: 11, color: c),
                   ),
                 ),
