@@ -264,11 +264,6 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
-  String appPeerImportedV1(Object parsed) {
-    return 'همتای v1 وارد شد: ⁨$parsed⁩';
-  }
-
-  @override
   String appLongWindow(Object line) {
     return '⁨$line⁩، بازه‌ی طولانی';
   }
@@ -1860,12 +1855,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get chatHoldToRecord => 'برای ضبط پیام صوتی نگه دارید';
 
   @override
-  String get chatSendPhoto => 'ارسال عکس';
-
-  @override
-  String get chatAddACaption => 'افزودن توضیح…';
-
-  @override
   String get chatSecurityCodeChanged => 'کد امنیتی تغییر کرد';
 
   @override
@@ -3239,9 +3228,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get homeSupporter => 'هوادار';
 
   @override
-  String get homeArchivedChats => 'گفت‌وگوهای بایگانی‌شده';
-
-  @override
   String get homeUnmute => 'باصدا کردن';
 
   @override
@@ -4377,9 +4363,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get pinsChangeWipePin => 'تغییر PIN پاک‌سازی';
 
   @override
-  String get pinsSetAWipePin => 'تعیین PIN پاک‌سازی';
-
-  @override
   String get pinsRemove => 'حذف';
 
   @override
@@ -5225,12 +5208,6 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get settingsWholeAppHiddenFromRecentsAnd =>
       'کل برنامه از فهرست اخیر و اسکرین‌شات‌ها پنهان می‌شود';
-
-  @override
-  String get settingsOnNextStart => 'روشن · اجرای بعدی';
-
-  @override
-  String get settingsOffNextStart => 'خاموش · اجرای بعدی';
 
   @override
   String get settingsLightTheme => 'پوسته‌ی روشن';
@@ -6628,6 +6605,15 @@ class AppLocalizationsFa extends AppLocalizations {
   String get torBootSplashTakingLonger => 'این بیشتر از معمول طول می‌کشد';
 
   @override
+  String get torBootSplashHopEntry => 'ورودی';
+
+  @override
+  String get torBootSplashHopMiddle => 'میانی';
+
+  @override
+  String get torBootSplashHopExit => 'خروجی';
+
+  @override
   String get videoBubbleNothingHereOpensThat =>
       'این‌جا چیزی آن را باز نمی‌کند · به‌جایش هم‌رسانی می‌شود';
 
@@ -7085,9 +7071,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get pollPickSeveral => 'یک یا چند گزینه را انتخاب کنید';
 
   @override
-  String get searchOpen => 'جست‌وجو';
-
-  @override
   String get searchHint => 'جست‌وجو در گفت‌وگوها و پیام‌ها';
 
   @override
@@ -7273,9 +7256,6 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get pinsDecoyLine => 'یک Kryfo خالی باز می‌کند، انگار تازه نصب شده.';
-
-  @override
-  String get pinsSetADecoyPin => 'تعیین PIN فریب';
 
   @override
   String get pinsChangeDecoyPin => 'تغییر PIN فریب';

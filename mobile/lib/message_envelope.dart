@@ -123,6 +123,11 @@ class GroupControl {
   // on a room's 'create': the address its link knocks on now, so the link
   // a member shares is the one the maker last reset to
   final String? fc;
+  // on a room's 'remove': each key taken out with the hashes of the last
+  // messages the admin took from it (roomEntry). members still take
+  // those, sent before the remove and landing after it, and no other.
+  // older versions ignore it and take none
+  final Map<String, List<String>>? lateUids;
   const GroupControl({
     required this.type,
     this.name,
@@ -130,6 +135,7 @@ class GroupControl {
     this.participants,
     this.stamp,
     this.fc,
+    this.lateUids,
   });
 
   Map<String, dynamic> toWire() => {
@@ -139,6 +145,7 @@ class GroupControl {
     'p': ?participants,
     'v': ?stamp,
     'fc': ?fc,
+    'lu': ?lateUids,
   };
 
   static GroupControl? fromWire(Object? raw) {
@@ -156,6 +163,16 @@ class GroupControl {
     }
     final stamp = raw['v'];
     final fc = raw['fc'];
+    final lu = raw['lu'];
+    final late = <String, List<String>>{
+      if (lu is Map && lu.length <= _kLateKeys)
+        for (final e in lu.entries)
+          if (e.key is String && e.value is List)
+            e.key as String: [
+              for (final h in (e.value as List).take(_kLateUids))
+                if (h is String && _lateHash.hasMatch(h)) h,
+            ],
+    }..removeWhere((_, v) => v.isEmpty);
     return GroupControl(
       type: (raw['t'] as String?) ?? '',
       name: raw['n'] as String?,
@@ -165,8 +182,14 @@ class GroupControl {
       participants: parts,
       stamp: stamp is int && stamp > 0 ? stamp : null,
       fc: fc is String ? fc : null,
+      lateUids: late.isEmpty ? null : late,
     );
   }
+
+  // what a remove may name: a room's cap of keys, kRoomRecent hashes each
+  static const _kLateKeys = 64;
+  static const _kLateUids = 32;
+  static final _lateHash = RegExp(r'^[0-9a-f]{32}$');
 }
 
 /// a reaction added or removed on an earlier message

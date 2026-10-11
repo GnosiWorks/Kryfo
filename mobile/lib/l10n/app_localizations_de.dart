@@ -266,11 +266,6 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String appPeerImportedV1(Object parsed) {
-    return 'Peer importiert (v1): $parsed';
-  }
-
-  @override
   String appLongWindow(Object line) {
     return '$line langes Fenster';
   }
@@ -1867,12 +1862,6 @@ class AppLocalizationsDe extends AppLocalizations {
       'Gedrückt halten, um eine Sprachnachricht aufzunehmen';
 
   @override
-  String get chatSendPhoto => 'Foto senden';
-
-  @override
-  String get chatAddACaption => 'Beschriftung…';
-
-  @override
   String get chatSecurityCodeChanged => 'Sicherheitscode geändert';
 
   @override
@@ -3266,9 +3255,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get homeSupporter => 'Unterstützer';
 
   @override
-  String get homeArchivedChats => 'Archivierte Chats';
-
-  @override
   String get homeUnmute => 'Stummschaltung aufheben';
 
   @override
@@ -4418,9 +4404,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get pinsChangeWipePin => 'Lösch-PIN ändern';
 
   @override
-  String get pinsSetAWipePin => 'Lösch-PIN festlegen';
-
-  @override
   String get pinsRemove => 'Entfernen';
 
   @override
@@ -5275,12 +5258,6 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get settingsWholeAppHiddenFromRecentsAnd =>
       'Ganze App in „Zuletzt verwendet“ und auf Screenshots verborgen';
-
-  @override
-  String get settingsOnNextStart => 'An · nächster Start';
-
-  @override
-  String get settingsOffNextStart => 'Aus · nächster Start';
 
   @override
   String get settingsLightTheme => 'Helles Design';
@@ -6690,6 +6667,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get torBootSplashTakingLonger => 'Das dauert länger als sonst';
 
   @override
+  String get torBootSplashHopEntry => 'Eingang';
+
+  @override
+  String get torBootSplashHopMiddle => 'Mitte';
+
+  @override
+  String get torBootSplashHopExit => 'Ausgang';
+
+  @override
   String get videoBubbleNothingHereOpensThat =>
       'Hier kann das nichts öffnen · wird stattdessen geteilt';
 
@@ -7148,9 +7134,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get pollPickSeveral => 'Wähle eine oder mehrere';
 
   @override
-  String get searchOpen => 'Suchen';
-
-  @override
   String get searchHint => 'Chats und Nachrichten durchsuchen';
 
   @override
@@ -7339,9 +7322,6 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get pinsDecoyLine =>
       'Öffnet ein leeres Kryfo, wie frisch installiert.';
-
-  @override
-  String get pinsSetADecoyPin => 'Tarn-PIN festlegen';
 
   @override
   String get pinsChangeDecoyPin => 'Tarn-PIN ändern';

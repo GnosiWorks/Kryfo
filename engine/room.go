@@ -247,6 +247,42 @@ func roomForget(privHex string, peers []string) error {
 	return nil
 }
 
+// one member of a room no longer listened to, and what its address kept on
+// disk gone: they left or were taken out. the room's other lanes stay
+//
+//export HaloRoomUnsubscribeMember
+func HaloRoomUnsubscribeMember(cPriv, cPeer *C.char) *C.char {
+	if err := roomUnsubscribeMember(goStr(cPriv), goStr(cPeer)); err != nil {
+		return C.CString("error: " + err.Error())
+	}
+	return C.CString("ok")
+}
+
+func roomUnsubscribeMember(privHex, peerHex string) error {
+	me, err := roomKey(privHex)
+	if err != nil {
+		return err
+	}
+	peer, err := peerArr(peerHex)
+	if err != nil {
+		return err
+	}
+	key := roomSubKey(me, peerHex)
+	nostrMu.Lock()
+	if cancel, ok := nostrSubs[key]; ok {
+		cancel()
+		delete(nostrSubs, key)
+	}
+	nostrMu.Unlock()
+	if peer == me.pub {
+		return nil
+	}
+	if _, rcvPk, err := nip17RcvAddressAs(me, peer); err == nil {
+		dropAddressFiles(rcvPk)
+	}
+	return nil
+}
+
 // stop every subscription a room key holds. called on expiry and on leave;
 // after this nothing addressed to the room can arrive.
 //

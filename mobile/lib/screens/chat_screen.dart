@@ -172,6 +172,9 @@ class ChatScreen extends StatefulWidget {
   // the face they picked, handed over so the hero never lands on the
   // letter fallback while the row is still loading
   final int? avatarChoice;
+  // the name given them, from the row tapped, so the header never opens on
+  // their three words while the row loads
+  final String? nickname;
   final String? initialText;
   final String? jumpToUid;
   // a support chat on the developer's own phone: the composer instead of
@@ -185,6 +188,7 @@ class ChatScreen extends StatefulWidget {
     required this.peerXPub,
     required this.avatarSeed,
     this.avatarChoice,
+    this.nickname,
     this.initialText,
     this.jumpToUid,
     this.support = false,
@@ -551,7 +555,9 @@ class _ChatScreenState extends State<ChatScreen>
   // a reply raises the keyboard at once, like a tap on the field
   final _composerFocus = FocusNode();
   int _unreadAfterMs = 0;
-  int _firstUnreadIndex = -1;
+  // the row the new messages divider sits above, by its key: an index
+  // would slip as older pages come in above it
+  String? _firstUnreadKey;
   bool _unreadResolved = false;
   bool _ghost = _lastGhost; // restored from last use this session.
   // marks the next message so the other phone blocks screenshots of it. off
@@ -784,7 +790,7 @@ class _ChatScreenState extends State<ChatScreen>
   Set<int> _matchSet = {};
   int _matchPos = 0;
   final Map<int, GlobalKey> _matchKeys = {};
-  String? _nickname;
+  late String? _nickname = widget.nickname;
   late int? _peerFace = widget.avatarChoice;
   bool _blocked = false;
   // the bottom bar is drawn once blocked and request state are read, the
@@ -2424,12 +2430,12 @@ class _ChatScreenState extends State<ChatScreen>
       ..clear()
       ..addAll(newSeen);
     if (!_unreadResolved) {
-      _firstUnreadIndex = -1;
+      _firstUnreadKey = null;
       for (var i = 0; i < loaded.length; i++) {
         if (loaded[i].direction != 'out' &&
             !loaded[i].welcome &&
             loaded[i].when.millisecondsSinceEpoch > _unreadAfterMs) {
-          _firstUnreadIndex = i;
+          _firstUnreadKey = _rowKey(loaded[i]);
           break;
         }
       }
@@ -3661,7 +3667,20 @@ class _ChatScreenState extends State<ChatScreen>
     // a stranger gets 2 messages, then the chat locks until they accept. the
     // input bar shows it; this guards the send itself.
     if (_requestLocked) return;
-    if (_isDev && !await _ensureDevStarted()) return;
+    // the slot is taken before any await, so a sticker and a text sent side
+    // by side cannot both pass the check above. one that does not go gives
+    // it back
+    final slot = _requestPending;
+    if (slot) setState(() => _sentCount++);
+    void giveBack() {
+      if (slot && mounted) setState(() => _sentCount--);
+    }
+
+    if (_isDev && !await _ensureDevStarted()) {
+      giveBack();
+      return;
+    }
+    if (!mounted) return;
     final typed = sticker == null && fromComposer;
     final msgUid = newMsgUid();
     // claimed from the start: a reload while it grinds or seals keeps it
@@ -3730,6 +3749,7 @@ class _ChatScreenState extends State<ChatScreen>
         // and the auto retry until the chat is reopened
         dlog('send: save failed: $e');
         if (!mounted) return;
+        giveBack();
         setState(() {
           msg.sending = false;
           msg.failed = true;
@@ -3809,6 +3829,7 @@ class _ChatScreenState extends State<ChatScreen>
           if (e is StartingAfresh || e is KeyHeld) return;
           msg.sending = false;
           msg.failed = true;
+          if (slot) _sentCount--;
           if (devKeyFailed(e)) {
             _devKeyFailed = true;
           } else {
@@ -3817,13 +3838,15 @@ class _ChatScreenState extends State<ChatScreen>
         });
         return;
       }
-      // fire and forget: a failure marks the row for retry
-      setState(() {
+      // fire and forget: a failure marks the row for retry. left while it
+      // ground or sealed, it still goes from here
+      void sealed() {
         sealing(false);
         _status = '';
         _devKeyFailed = false;
-        if (_requestPending) _sentCount++;
-      });
+      }
+
+      mounted ? setState(sealed) : sealed();
       handed = true;
       Future<String>(() => _wireText(msgUid, cipher))
           .whenComplete(() => _textInflight.remove(msgUid))
@@ -3949,6 +3972,13 @@ class _ChatScreenState extends State<ChatScreen>
     super.deactivate();
   }
 
+  // a page title only while the words still lead with its link: an edit
+  // to another link leaves it behind
+  static Map<String, String>? _linkPreview(_Msg m) {
+    final pv = m.preview;
+    return pv != null && pv['url'] == firstUrl(m.text) ? pv : null;
+  }
+
   static String _rowKey(_Msg m) =>
       m.welcome ? 'welcome' : (m.msgUid ?? 'r${m.rowid}');
 
@@ -4017,7 +4047,8 @@ class _ChatScreenState extends State<ChatScreen>
         !o.removing &&
         _sameDay(o.when, m.when) &&
         (m.when.difference(o.when).inSeconds).abs() < 120;
-    final firstInGroup = !sameRun(prevMsg) || ix == _firstUnreadIndex;
+    final firstUnread = _rowKey(m) == _firstUnreadKey;
+    final firstInGroup = !sameRun(prevMsg) || firstUnread;
     final lastInGroup = !sameRun(nextMsg);
     final bubble = SizedBox(
       width: double.infinity,
@@ -4034,8 +4065,8 @@ class _ChatScreenState extends State<ChatScreen>
           stickerOrder: i,
           landing: m.msgUid == null ? null : _landings[m.msgUid],
           quotedSticker: quotedSticker,
-          linkTitle: m.preview?['title'],
-          linkBySender: m.preview?['by'] == 'sender',
+          linkTitle: _linkPreview(m)?['title'],
+          linkBySender: _linkPreview(m)?['by'] == 'sender',
           firstInGroup: firstInGroup,
           lastInGroup: lastInGroup,
           revealed: m.msgUid != null && m.msgUid == _revealedUid,
@@ -4091,7 +4122,7 @@ class _ChatScreenState extends State<ChatScreen>
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (showDate) _dateDivider(m.when, m.msgUid ?? 'r${m.rowid}'),
-          if (ix == _firstUnreadIndex) _newMessagesDivider(),
+          if (firstUnread) _newMessagesDivider(),
           // the bubble alone: what says it has been read
           RowAnchor(
             anchors: _readAnchors,
@@ -4763,6 +4794,12 @@ class _ChatScreenState extends State<ChatScreen>
       dev: _isDev ? null : devForwardTarget,
     );
     if (id == null || !mounted) return;
+    // to this very chat: under what its composer holds, never a second
+    // copy of it on top
+    if (id == widget.peerHaloId) {
+      _takeWords(m.text);
+      return;
+    }
     final route = await wordsRoute(id, m.text);
     if (route == null || !mounted) return;
     Navigator.of(context).push(route);

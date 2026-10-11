@@ -347,6 +347,10 @@ class _Engine implements HaloEngine {
   }
 
   @override
+  void roomUnlistenBg(String priv, String peerPub) =>
+      calls.add('roomUnlistenBg');
+
+  @override
   void roomUnsubscribeBg(String pub) {
     calls.add('roomUnsubscribeBg');
     dropped.add(pub);

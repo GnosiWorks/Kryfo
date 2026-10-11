@@ -9,6 +9,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/container.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_guard.dart';
 import 'package:kryfo/main.dart' show LinkKin, handleHaloUriAdded;
@@ -214,6 +215,37 @@ void main() {
     await t.pumpAndSettle();
     expect(w.finished, isTrue);
     expect(w.result, isFalse);
+  });
+
+  testWidgets('a room this phone made and left reads closed on its card and '
+      'its sheet, with no join', (t) async {
+    addTearDown(endedRooms.clear);
+    final link = _link();
+    await t.pumpWidget(
+      MaterialApp(
+        theme: buildHaloTheme(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: RoomInviteCard(room: link, link: link.encode()),
+        ),
+      ),
+    );
+    expect(find.text(l10n.kryfoLinkTextJoin2), findsOne);
+    endedRooms.note(HaloContainer.everyday.id, link.roomId, link.expiresAt);
+    await t.pump();
+    expect(find.text(l10n.kryfoLinkTextThisRoomHasClosed), findsOne);
+    expect(find.text(l10n.kryfoLinkTextJoin2), findsNothing);
+
+    final w = _World();
+    await w.start(t);
+    await w.own(t, link.encode());
+    expect(find.text(l10n.kryfoLinkTextThisRoomHasClosed), findsOne);
+    expect(find.text(l10n.kryfoLinkTextJoin2), findsNothing);
+    await t.tap(find.text(l10n.appOk));
+    await t.pumpAndSettle();
+    expect(w.result, isNull);
+    expect(w.door.taken, isEmpty);
   });
 
   testWidgets('a room that closes while the sheet is up loses its join', (

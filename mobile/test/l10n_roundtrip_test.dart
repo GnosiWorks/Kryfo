@@ -100,7 +100,6 @@ void main() {
     expect(l.appInvalidUri, "Invalid uri");
     expect(l.appBundleError("<e>"), "Bundle error: <e>");
     expect(l.appAlreadySaved("<parsed>"), "Already saved: <parsed>");
-    expect(l.appPeerImportedV1("<parsed>"), "Peer imported (v1): <parsed>");
     expect(l.appLongWindow("<line>"), "<line> long window");
     expect(
       l.appOf("<line>", 0, 0, "<c>", 0, 0),
@@ -879,8 +878,6 @@ void main() {
     expect(l.chatDisguiseVoice, "Disguise voice");
     expect(l.commonSend, "Send");
     expect(l.chatNoPhotosInThis, "No photos in this chat yet");
-    expect(l.chatSendPhoto, "Send photo");
-    expect(l.chatAddACaption, "Add a caption…");
     expect(l.chatSecurityCodeChanged, "Security code changed");
     expect(
       l.chatMayHaveReinstalledOr("<peerName>"),
@@ -1507,7 +1504,6 @@ void main() {
     expect(l.homeMembers(2), "2 members");
     expect(l.homeMembers(5), "5 members");
     expect(l.homeSupporter, "Supporter");
-    expect(l.homeArchivedChats, "Archived chats");
     expect(l.homeUnmute, "Unmute");
     expect(l.homeMute, "Mute");
     expect(l.homeArchive, "Archive");
@@ -2150,7 +2146,6 @@ void main() {
     expect(l.pinsNeedsAPinFirst, "Needs a PIN first");
     expect(l.pinsSet, "Set");
     expect(l.pinsChangeWipePin, "Change wipe PIN");
-    expect(l.pinsSetAWipePin, "Set a wipe PIN");
     expect(l.pinsRemove, "Remove");
     expect(l.pinsRemoveTheWipePin, "Remove the wipe PIN?");
     expect(
@@ -2592,8 +2587,6 @@ void main() {
       l.settingsWholeAppHiddenFromRecentsAnd,
       "Whole app hidden from recents and screenshots",
     );
-    expect(l.settingsOnNextStart, "On · next start");
-    expect(l.settingsOffNextStart, "Off · next start");
     expect(l.settingsLightTheme, "Light theme");
     expect(l.settingsSameProtectionBrighter, "Same protection, brighter");
     expect(l.settingsAppLock2, "App lock");
@@ -3046,6 +3039,9 @@ void main() {
     );
     expect(l.bootFailedCloseAndReopen, "Close and reopen Kryfo");
     expect(l.torBootSplashTakingLonger, "This is taking longer than usual");
+    expect(l.torBootSplashHopEntry, "Entry");
+    expect(l.torBootSplashHopMiddle, "Middle");
+    expect(l.torBootSplashHopExit, "Exit");
     expect(l.kryfoLinkTextThatLinkIsNot, "That link is not one Kryfo can read");
     expect(l.kryfoLinkTextAdd("<who>"), "Add <who>?");
     expect(

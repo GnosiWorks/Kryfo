@@ -52,6 +52,9 @@ const _plain = [
 
 final _made = RegExp(r'^(photo|video|audio|file)_[0-9a-f]{8}(\.[a-z0-9]+)?$');
 
+// the random tag may hold any digits: the rest holds no date
+String _told(String out) => out.replaceAll(RegExp(r'_[0-9a-f]{8}(?=\.|$)'), '');
+
 void main() {
   test('a name that tells when it was made is replaced, its kind and '
       'extension kept', () {
@@ -59,8 +62,7 @@ void main() {
       expect(nameTellsTime(n), isTrue, reason: n);
       final out = sentFileName(n);
       expect(out, matches(_made), reason: n);
-      // the random tag may hold any digits: the rest holds no date
-      final told = out.replaceAll(RegExp(r'_[0-9a-f]{8}(?=\.|$)'), '');
+      final told = _told(out);
       expect(told, isNot(contains('2026')), reason: n);
       expect(told, isNot(contains('PXL')), reason: n);
       final ext = n.substring(n.lastIndexOf('.') + 1).toLowerCase();
@@ -69,6 +71,14 @@ void main() {
     expect(sentFileName('VID_20261001_101502.mp4'), startsWith('video_'));
     expect(sentFileName('IMG_20261001_101502.jpg'), startsWith('photo_'));
     expect(sentFileName('Scan 01.10.2026.pdf'), startsWith('file_'));
+  });
+
+  test('a random tag that happens to hold 2026 is not read as a date', () {
+    const unlucky = 'photo_a2026b3c.jpg';
+    expect(unlucky, matches(_made));
+    expect(unlucky, contains('2026'));
+    expect(_told(unlucky), 'photo.jpg');
+    expect(_told('file_2026abcd'), 'file');
   });
 
   test('a name chosen by hand stays as it is', () {

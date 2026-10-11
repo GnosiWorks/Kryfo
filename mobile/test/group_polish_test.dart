@@ -124,6 +124,14 @@ class _Db implements HaloDb {
   }) async => [];
   @override
   Future<int> nextRoomSeq(String groupId) async => knocks.length;
+  // the keys a room listens to, noted before it does
+  final listened = <String>{};
+  @override
+  Future<bool> noteRoomKeys(String groupId, Iterable<String> keys) async {
+    listened.addAll(keys);
+    return true;
+  }
+
   @override
   Future<String?> getGroupAtmosphere(String groupId) async => null;
   @override

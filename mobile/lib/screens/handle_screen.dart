@@ -20,6 +20,7 @@ import '../widgets/motion.dart' show motionStill;
 import '../widgets/press_scale.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/swap.dart';
+import '../widgets/written_field.dart';
 import '../l10n/l10n.dart';
 
 class HandleScreen extends StatefulWidget {
@@ -589,6 +590,7 @@ class _FieldState extends State<_Field> {
 
   @override
   Widget build(BuildContext context) {
+    final ltr = widget.prefix != null;
     return Focus(
       onFocusChange: (v) => setState(() => _lit = v),
       child: AnimatedContainer(
@@ -606,41 +608,45 @@ class _FieldState extends State<_Field> {
                 : HaloColors.line,
           ),
         ),
-        // the text is latin left to right, so the @ leads it in every language
-        child: Row(
-          textDirection: TextDirection.ltr,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (widget.prefix != null)
-              Padding(
-                padding: const EdgeInsetsDirectional.only(top: 14, end: 2),
-                child: Text(
-                  widget.prefix!,
-                  style: HaloType.mono(
-                    size: 14,
-                    color: _lit ? HaloColors.amber : HaloColors.text3,
+        // a handle is latin left to right, so the @ leads it in every
+        // language. other text runs the way it is written
+        child: WrittenDir(
+          controller: widget.ctrl,
+          builder: (dir) => Row(
+            textDirection: ltr ? TextDirection.ltr : null,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (widget.prefix != null)
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(top: 14, end: 2),
+                  child: Text(
+                    widget.prefix!,
+                    style: HaloType.mono(
+                      size: 14,
+                      color: _lit ? HaloColors.amber : HaloColors.text3,
+                    ),
+                  ),
+                ),
+              Expanded(
+                child: TextField(
+                  textDirection: ltr ? TextDirection.ltr : dir,
+                  controller: widget.ctrl,
+                  onChanged: widget.onChanged,
+                  maxLength: widget.max,
+                  minLines: widget.lines,
+                  maxLines: widget.lines,
+                  cursorColor: HaloColors.amber,
+                  style: HaloType.mono(size: 14, color: HaloColors.text),
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    counterText: '',
+                    hintText: widget.hint,
+                    hintStyle: HaloType.mono(size: 14, color: HaloColors.text3),
                   ),
                 ),
               ),
-            Expanded(
-              child: TextField(
-                textDirection: TextDirection.ltr,
-                controller: widget.ctrl,
-                onChanged: widget.onChanged,
-                maxLength: widget.max,
-                minLines: widget.lines,
-                maxLines: widget.lines,
-                cursorColor: HaloColors.amber,
-                style: HaloType.mono(size: 14, color: HaloColors.text),
-                decoration: InputDecoration(
-                  border: InputBorder.none,
-                  counterText: '',
-                  hintText: widget.hint,
-                  hintStyle: HaloType.mono(size: 14, color: HaloColors.text3),
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

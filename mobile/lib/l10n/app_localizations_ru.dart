@@ -273,11 +273,6 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String appPeerImportedV1(Object parsed) {
-    return 'Собеседник импортирован (v1): $parsed';
-  }
-
-  @override
   String appLongWindow(Object line) {
     return '$line длинное окно';
   }
@@ -1896,12 +1891,6 @@ class AppLocalizationsRu extends AppLocalizations {
       'Удерживай, чтобы записать голосовое сообщение';
 
   @override
-  String get chatSendPhoto => 'Отправить фото';
-
-  @override
-  String get chatAddACaption => 'Добавь подпись…';
-
-  @override
   String get chatSecurityCodeChanged => 'Код безопасности изменился';
 
   @override
@@ -3315,9 +3304,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get homeSupporter => 'Сторонник';
 
   @override
-  String get homeArchivedChats => 'Чаты в архиве';
-
-  @override
   String get homeUnmute => 'Включить звук';
 
   @override
@@ -4463,9 +4449,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get pinsChangeWipePin => 'Сменить PIN для стирания';
 
   @override
-  String get pinsSetAWipePin => 'Задать PIN для стирания';
-
-  @override
   String get pinsRemove => 'Удалить';
 
   @override
@@ -5317,12 +5300,6 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get settingsWholeAppHiddenFromRecentsAnd =>
       'Приложение целиком скрыто из недавних и скриншотов';
-
-  @override
-  String get settingsOnNextStart => 'Вкл. · после перезапуска';
-
-  @override
-  String get settingsOffNextStart => 'Выкл. · после перезапуска';
 
   @override
   String get settingsLightTheme => 'Светлая тема';
@@ -6744,6 +6721,15 @@ class AppLocalizationsRu extends AppLocalizations {
       'Это занимает больше времени, чем обычно';
 
   @override
+  String get torBootSplashHopEntry => 'Вход';
+
+  @override
+  String get torBootSplashHopMiddle => 'Середина';
+
+  @override
+  String get torBootSplashHopExit => 'Выход';
+
+  @override
   String get videoBubbleNothingHereOpensThat =>
       'Здесь это не открыть · открываем «Поделиться»';
 
@@ -7206,9 +7192,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get pollPickSeveral => 'Выбери один или несколько';
 
   @override
-  String get searchOpen => 'Поиск';
-
-  @override
   String get searchHint => 'Искать в чатах и сообщениях';
 
   @override
@@ -7399,9 +7382,6 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get pinsDecoyLine =>
       'Открывает пустой Kryfo, как будто его только что установили.';
-
-  @override
-  String get pinsSetADecoyPin => 'Задать PIN-приманку';
 
   @override
   String get pinsChangeDecoyPin => 'Сменить PIN-приманку';

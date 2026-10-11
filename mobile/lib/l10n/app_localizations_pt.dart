@@ -265,11 +265,6 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String appPeerImportedV1(Object parsed) {
-    return 'Contato importado (v1): $parsed';
-  }
-
-  @override
   String appLongWindow(Object line) {
     return '$line janela longa';
   }
@@ -1864,12 +1859,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get chatHoldToRecord => 'Segure para gravar uma mensagem de voz';
 
   @override
-  String get chatSendPhoto => 'Enviar foto';
-
-  @override
-  String get chatAddACaption => 'Adicionar uma legenda…';
-
-  @override
   String get chatSecurityCodeChanged => 'O código de segurança mudou';
 
   @override
@@ -3254,9 +3243,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get homeSupporter => 'Apoiador';
 
   @override
-  String get homeArchivedChats => 'Conversas arquivadas';
-
-  @override
   String get homeUnmute => 'Ativar som';
 
   @override
@@ -4394,9 +4380,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get pinsChangeWipePin => 'Mudar PIN de apagamento';
 
   @override
-  String get pinsSetAWipePin => 'Novo PIN de apagamento';
-
-  @override
   String get pinsRemove => 'Remover';
 
   @override
@@ -5246,12 +5229,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get settingsWholeAppHiddenFromRecentsAnd =>
       'App inteiro oculto dos recentes e das capturas de tela';
-
-  @override
-  String get settingsOnNextStart => 'Ativado · ao reiniciar';
-
-  @override
-  String get settingsOffNextStart => 'Desativado · ao reiniciar';
 
   @override
   String get settingsLightTheme => 'Tema claro';
@@ -6664,6 +6641,15 @@ class AppLocalizationsPt extends AppLocalizations {
       'Isso está demorando mais que o normal';
 
   @override
+  String get torBootSplashHopEntry => 'Entrada';
+
+  @override
+  String get torBootSplashHopMiddle => 'Meio';
+
+  @override
+  String get torBootSplashHopExit => 'Saída';
+
+  @override
   String get videoBubbleNothingHereOpensThat =>
       'Nada aqui abre isso · compartilhando no lugar';
 
@@ -7122,9 +7108,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get pollPickSeveral => 'Escolha uma ou mais';
 
   @override
-  String get searchOpen => 'Pesquisar';
-
-  @override
   String get searchHint => 'Pesquisar conversas e mensagens';
 
   @override
@@ -7311,9 +7294,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get pinsDecoyLine =>
       'Abre um Kryfo vazio, como se acabasse de ser instalado.';
-
-  @override
-  String get pinsSetADecoyPin => 'Definir PIN de disfarce';
 
   @override
   String get pinsChangeDecoyPin => 'Mudar PIN de disfarce';

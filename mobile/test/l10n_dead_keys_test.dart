@@ -7,18 +7,6 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-// older ones still waiting for their own change
-const _known = {
-  'chatSendPhoto',
-  'chatAddACaption',
-  'homeArchivedChats',
-  'pinsSetAWipePin',
-  'pinsSetADecoyPin',
-  'settingsOnNextStart',
-  'settingsOffNextStart',
-  'searchOpen',
-};
-
 void main() {
   test('every message in app_en.arb is said somewhere', () {
     final en =
@@ -36,7 +24,6 @@ void main() {
       for (final k in en.keys)
         if (!k.startsWith('@') &&
             !k.startsWith('android') &&
-            !_known.contains(k) &&
             !RegExp('\\b$k\\b').hasMatch(said))
           k,
     ];
