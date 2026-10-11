@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the voice disguise: as many samples out as in, so the speed stays; the
 // pitch moves; the same seed gives the same note and each note draws its
-// own; nothing clips
+// own; the hiss of a consonant is kept; nothing clips
 import 'dart:math' as math;
 import 'dart:typed_data';
 
@@ -39,7 +39,11 @@ Uint8List wav(double secs, {double hz = 160, double loud = 9000}) {
     for (var h = 1; h <= 6; h++) {
       v += math.sin(2 * math.pi * hz * h * t) / h;
     }
-    b.setInt16(44 + i * 2, (loud * v / 2).round().clamp(-32768, 32767));
+    b.setInt16(
+      44 + i * 2,
+      (loud * v / 2).round().clamp(-32768, 32767),
+      Endian.little,
+    );
   }
   return b.buffer.asUint8List();
 }
@@ -47,20 +51,70 @@ Uint8List wav(double secs, {double hz = 160, double loud = 9000}) {
 Int16List samples(Uint8List w) =>
     Int16List.fromList(w.buffer.asInt16List(w.offsetInBytes + 44));
 
-// the strongest period, by autocorrelation, as a frequency
+// the period, by autocorrelation, as a frequency. the shortest lag near
+// the strongest: a periodic sound scores as high at twice its period
 double pitchOf(Int16List s, {int from = 4000, int len = 8000}) {
-  var best = 0.0, at = 0;
+  final sums = <double>[];
+  var best = 0.0;
   for (var lag = 40; lag <= 320; lag++) {
     var sum = 0.0;
     for (var i = from; i < from + len; i++) {
       sum += s[i] * s[i + lag];
     }
-    if (sum > best) {
-      best = sum;
-      at = lag;
+    sums.add(sum);
+    if (sum > best) best = sum;
+  }
+  final at = sums.indexWhere((v) => v >= best * 0.95);
+  return 16000 / (40 + at);
+}
+
+// a voice with a hiss bursting on and off, like an s, little-endian as
+// the recorder writes it
+Uint8List _hissy(double secs) {
+  const rate = 16000;
+  final n = (secs * rate).round();
+  final w = wav(secs);
+  final d = ByteData.sublistView(w);
+  final r = math.Random(1);
+  for (var i = 0; i < n; i++) {
+    final t = i / rate;
+    var v = 0.0;
+    for (var h = 1; h <= 6; h++) {
+      v += math.sin(2 * math.pi * 160 * h * t) / h;
+    }
+    final hiss = (t * 4).floor().isEven ? r.nextDouble() - 0.5 : 0.0;
+    d.setInt16(44 + 2 * i, (3000 * v + 6000 * hiss).round(), Endian.little);
+  }
+  return w;
+}
+
+// the share of a take's energy between [lo] and [hi] hz, over a few
+// windows, by a plain dft
+double _share(Uint8List w, double lo, double hi) {
+  const n = 1024, rate = 16000;
+  final d = ByteData.sublistView(w);
+  var part = 0.0, all = 0.0;
+  for (var f = 0; f < 4; f++) {
+    final at = 44 + 2 * (2000 + f * 8000);
+    final x = [
+      for (var i = 0; i < n; i++)
+        d.getInt16(at + 2 * i, Endian.little) *
+            (0.5 - 0.5 * math.cos(2 * math.pi * i / n)),
+    ];
+    for (var k = 1; k < n ~/ 2; k++) {
+      var re = 0.0, im = 0.0;
+      for (var i = 0; i < n; i++) {
+        final a = 2 * math.pi * k * i / n;
+        re += x[i] * math.cos(a);
+        im -= x[i] * math.sin(a);
+      }
+      final p = re * re + im * im;
+      all += p;
+      final hz = k * rate / n;
+      if (hz >= lo && hz < hi) part += p;
     }
   }
-  return 16000 / at;
+  return part / all;
 }
 
 void main() {
@@ -114,13 +168,24 @@ void main() {
         d.pitch,
         inInclusiveRange(math.pow(2, 3 / 12), math.pow(2, 4.2 / 12)),
       );
-      expect(d.formant, inInclusiveRange(1.12, 1.17));
+      expect(d.formant, inInclusiveRange(1.15, 1.2));
       pitches.add(d.pitch);
       formants.add(d.formant);
     }
     // and they do vary
     expect(pitches.length, greaterThan(300));
     expect(formants.length, greaterThan(300));
+  });
+
+  test('the hiss of a consonant is kept, up to 7 khz', () {
+    // a voice with an s bursting on and off
+    final w = _hissy(2.2);
+    final before = _share(w, 5500, 7000);
+    expect(before, greaterThan(0.02));
+    for (final seed in [1, 2, 3]) {
+      final after = _share(maskWav(w, seed: seed)!, 5500, 7000);
+      expect(after, greaterThan(before * 0.3), reason: 'seed $seed');
+    }
   });
 
   test('a loud take never clips', () {
