@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // generated from lib/l10n/app_en.arb by the l10n tools: every key renders
 // in every language, and prints what the english prints.
+import 'package:flutter/widgets.dart' show Locale;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/app_localizations.dart';
 
@@ -2978,7 +2979,12 @@ final _calls = <_Call>[
   ('bridgesTooLongForTor', [], (l) => l.bridgesTooLongForTor),
   ('bridgesPasteABridgeLine', [], (l) => l.bridgesPasteABridgeLine),
   ('bridgesScanACode', [], (l) => l.bridgesScanACode),
-  ('bridgesUseThisBridge', [], (l) => l.bridgesUseThisBridge(1000)),
+  ('bridgesUseThisBridge', [], (l) => l.bridgesUseThisBridge),
+  ('bridgesUseTheseBridges', [], (l) => l.bridgesUseTheseBridges(2)),
+  ('bridgesUseTheseBridges', [], (l) => l.bridgesUseTheseBridges(3)),
+  ('bridgesUseTheseBridges', [], (l) => l.bridgesUseTheseBridges(5)),
+  ('bridgesUseTheseBridges', [], (l) => l.bridgesUseTheseBridges(21)),
+  ('bridgesUseTheseBridges', [], (l) => l.bridgesUseTheseBridges(1000)),
   ('bridgesNoneOfTheseAre', [], (l) => l.bridgesNoneOfTheseAre),
   ('bridgesThisLineIsTooLong', [], (l) => l.bridgesThisLineIsTooLong),
   ('bridgesKryfoCouldNotRead', [], (l) => l.bridgesKryfoCouldNotRead(1000)),
@@ -3089,6 +3095,61 @@ void main() {
         }
       }
       expect(bad, isEmpty);
+    });
+  }
+
+  // words a review settled: "this bridge" at one, the number from two on
+  // (gen-l10n reads =1 as one, so ru and uk 21 would say "this")
+  final pinned = <String, List<(String Function(AppLocalizations), String)>>{
+    'ru': [
+      ((l) => l.bridgesUseThisBridge, 'Использовать этот мост'),
+      ((l) => l.bridgesUseTheseBridges(2), 'Использовать эти 2 моста'),
+      ((l) => l.bridgesUseTheseBridges(5), 'Использовать эти 5 мостов'),
+      ((l) => l.bridgesUseTheseBridges(21), 'Использовать эти 21 мост'),
+    ],
+    'uk': [
+      ((l) => l.bridgesUseThisBridge, 'Використати цей міст'),
+      ((l) => l.bridgesUseTheseBridges(2), 'Використати ці 2 мости'),
+      ((l) => l.bridgesUseTheseBridges(5), 'Використати ці 5 мостів'),
+      ((l) => l.bridgesUseTheseBridges(21), 'Використати ці 21 міст'),
+      ((l) => l.bridgesAskTorProject, 'Запитати проєкт Tor'),
+    ],
+    'ar': [
+      ((l) => l.bridgesUseThisBridge, 'استخدام هذا الجسر'),
+      ((l) => l.bridgesUseTheseBridges(2), 'استخدام هذين الجسرين'),
+    ],
+    'fr': [
+      ((l) => l.bridgesUseThisBridge, 'Utiliser ce pont'),
+      ((l) => l.bridgesAskTorProject, 'Demander au Projet Tor'),
+      ((l) => l.bridgesFromTheTorProjectLower, 'du Projet Tor'),
+    ],
+    'it': [
+      ((l) => l.bridgesAskTorProject, 'Chiedi al Progetto Tor'),
+      ((l) => l.bridgesFromTheTorProjectLower, 'dal Progetto Tor'),
+    ],
+    'tr': [
+      ((l) => l.bridgesFromTheTorProject, 'Tor Projesinden'),
+      ((l) => l.bridgesAskTorProject, 'Tor Projesine sor'),
+    ],
+    'zh': [
+      ((l) => l.bridgesUseThisBridge, '使用这个网桥'),
+      ((l) => l.bridgesAskTorProject, '询问 Tor 项目'),
+    ],
+    'zh_Hant': [((l) => l.bridgesAskTorProject, '詢問 Tor 專案')],
+    'vi': [((l) => l.bridgesAskTorProject, 'Hỏi Dự án Tor')],
+  };
+  for (final e in pinned.entries) {
+    test('settled words in ${e.key}', () {
+      final parts = e.key.split('_');
+      final l = lookupAppLocalizations(
+        Locale.fromSubtags(
+          languageCode: parts[0],
+          scriptCode: parts.length > 1 ? parts[1] : null,
+        ),
+      );
+      for (final (call, want) in e.value) {
+        expect(call(l), want);
+      }
     });
   }
 }

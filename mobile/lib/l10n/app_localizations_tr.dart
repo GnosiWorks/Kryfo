@@ -6970,7 +6970,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Aktarıcımız tek ve sıradan bir bağlantıdır, genelde geçer. Ya da yolu Kryfo kendisi bulsun.';
 
   @override
-  String bridgesUseThisBridge(int count) {
+  String get bridgesUseThisBridge => 'Bu köprüyü kullan';
+
+  @override
+  String bridgesUseTheseBridges(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
@@ -6979,7 +6982,6 @@ class AppLocalizationsTr extends AppLocalizations {
       count,
       locale: localeName,
       other: 'Bu $countString köprüyü kullan',
-      one: 'Bu köprüyü kullan',
     );
     return '$_temp0';
   }

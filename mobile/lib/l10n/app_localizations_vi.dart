@@ -6939,7 +6939,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Relay của chúng tôi chỉ là một kết nối thông thường và thường vẫn đi qua được. Hoặc để Kryfo tự tìm cách.';
 
   @override
-  String bridgesUseThisBridge(int count) {
+  String get bridgesUseThisBridge => 'Dùng cầu nối này';
+
+  @override
+  String bridgesUseTheseBridges(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
@@ -6948,7 +6951,6 @@ class AppLocalizationsVi extends AppLocalizations {
       count,
       locale: localeName,
       other: 'Dùng $countString cầu nối này',
-      one: 'Dùng cầu nối này',
     );
     return '$_temp0';
   }

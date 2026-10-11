@@ -7072,7 +7072,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Наш ретранслятор працює через одне звичайне з’єднання і зазвичай пробивається. Або хай Kryfo сам знайде шлях.';
 
   @override
-  String bridgesUseThisBridge(int count) {
+  String get bridgesUseThisBridge => 'Використати цей міст';
+
+  @override
+  String bridgesUseTheseBridges(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
@@ -7080,10 +7083,10 @@ class AppLocalizationsUk extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Використати $countString моста',
-      many: 'Використати $countString мостів',
-      few: 'Використати $countString мости',
-      one: 'Використати $countString міст',
+      other: 'Використати ці $countString моста',
+      many: 'Використати ці $countString мостів',
+      few: 'Використати ці $countString мости',
+      one: 'Використати ці $countString міст',
     );
     return '$_temp0';
   }

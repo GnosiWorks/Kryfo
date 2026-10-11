@@ -402,7 +402,9 @@ class _FriendSheetState extends State<_FriendSheet> {
             ),
             const SizedBox(height: 12),
             HaloPrimaryButton(
-              label: l10n.bridgesUseThisBridge(n == 0 ? 1 : n),
+              label: n < 2
+                  ? l10n.bridgesUseThisBridge
+                  : l10n.bridgesUseTheseBridges(n),
               busy: _busy,
               onTap: n == 0 ? null : _use,
             ),

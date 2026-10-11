@@ -6752,7 +6752,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bridgesCouldNotReachTheTor =>
-      'Impossible de joindre le projet Tor';
+      'Impossible de joindre le Projet Tor';
 
   @override
   String get torBootSplashConnect => 'Se connecter';
@@ -6768,7 +6768,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bridgesKryfoCanAskThe =>
-      'Kryfo peut demander un pont au projet Tor pour contourner le blocage.';
+      'Kryfo peut demander un pont au Projet Tor pour contourner le blocage.';
 
   @override
   String get bridgesNotNeededRightNow => 'Pas nécessaire pour l’instant';
@@ -6791,7 +6791,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bridgesAskingTheTorProject =>
-      'Kryfo demande au projet Tor ce qui marche ici…';
+      'Kryfo demande au Projet Tor ce qui marche ici…';
 
   @override
   String get bridgesNoneOfTheseAre =>
@@ -6942,7 +6942,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Passe par l’ordinateur d’un bénévole. Difficile à bloquer, lent à démarrer.';
 
   @override
-  String get bridgesLetTheTorProject => 'Laisser le projet Tor deviner';
+  String get bridgesLetTheTorProject => 'Laisser le Projet Tor deviner';
 
   @override
   String get bridgesTorSeemsBlocked => 'Tor semble bloqué sur ce réseau';
@@ -6974,14 +6974,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bridgesTheTorProjectKnows =>
-      'Le projet Tor a ses propres conseils pour ces pays.';
+      'Le Projet Tor a ses propres conseils pour ces pays.';
 
   @override
   String get bridgesThisBridgeIsnTGetting => 'Ce pont ne passe pas';
 
   @override
   String get bridgesBridgesTheTorProject =>
-      'Ponts que le projet Tor vous a donnés plus tôt.';
+      'Ponts que le Projet Tor vous a donnés plus tôt.';
 
   @override
   String get bridgesConnectingDots => 'Connexion…';
@@ -7012,14 +7012,17 @@ class AppLocalizationsFr extends AppLocalizations {
   String get bridgesAlmostThere => 'On y est presque';
 
   @override
-  String get bridgesTheTorProjectSGuess => 'Deviné par le projet Tor';
+  String get bridgesTheTorProjectSGuess => 'Deviné par le Projet Tor';
 
   @override
   String get bridgesOurRelayUsuallyGets =>
       'Notre relais est une simple connexion et passe en général. Ou laissez Kryfo trouver un moyen tout seul.';
 
   @override
-  String bridgesUseThisBridge(int count) {
+  String get bridgesUseThisBridge => 'Utiliser ce pont';
+
+  @override
+  String bridgesUseTheseBridges(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
@@ -7028,7 +7031,6 @@ class AppLocalizationsFr extends AppLocalizations {
       count,
       locale: localeName,
       other: 'Utiliser ces $countString ponts',
-      one: 'Utiliser ce pont',
     );
     return '$_temp0';
   }
@@ -7051,10 +7053,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bridgesAutomaticFindsAWay =>
-      'Le mode Automatique trouve un moyen tout seul quand Tor est bloqué. Pour trouver un pont, Kryfo peut s’adresser au projet Tor, avec votre accord. Beaucoup de gens utilisent des ponts chaque jour.';
+      'Le mode Automatique trouve un moyen tout seul quand Tor est bloqué. Pour trouver un pont, Kryfo peut s’adresser au Projet Tor, avec votre accord. Beaucoup de gens utilisent des ponts chaque jour.';
 
   @override
-  String get bridgesFromTheTorProjectLower => 'du projet Tor';
+  String get bridgesFromTheTorProjectLower => 'du Projet Tor';
 
   @override
   String get bridgesBridgesGoDeadWithout =>
@@ -7065,10 +7067,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bridgesWhenTorIsBlockedAutomatic =>
-      'Quand Tor est bloqué, le mode Automatique demande au projet Tor ce qui marche dans votre pays.';
+      'Quand Tor est bloqué, le mode Automatique demande au Projet Tor ce qui marche dans votre pays.';
 
   @override
-  String get bridgesAskTorProject => 'Demander au projet Tor';
+  String get bridgesAskTorProject => 'Demander au Projet Tor';
 
   @override
   String get bridgesTooLongForTor => 'Trop longue pour Tor';

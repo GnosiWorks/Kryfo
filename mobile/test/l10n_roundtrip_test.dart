@@ -3385,7 +3385,10 @@ void main() {
     expect(l.bridgesTooLongForTor, "Too long for Tor to use");
     expect(l.bridgesPasteABridgeLine, "Paste a bridge line");
     expect(l.bridgesScanACode, "Scan a code");
-    expect(l.bridgesUseThisBridge(5), "Use these 5 bridges");
+    expect(l.bridgesUseThisBridge, "Use this bridge");
+    expect(l.bridgesUseTheseBridges(2), "Use these 2 bridges");
+    expect(l.bridgesUseTheseBridges(5), "Use these 5 bridges");
+    expect(l.bridgesUseTheseBridges(21), "Use these 21 bridges");
     expect(
       l.bridgesNoneOfTheseAre,
       "None of these are bridge lines Kryfo understands.",

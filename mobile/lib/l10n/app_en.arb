@@ -8809,13 +8809,7 @@
     "description": "screens/bridges_screen.dart"
   },
   "@bridgesUseThisBridge": {
-    "description": "screens/bridges_screen.dart",
-    "placeholders": {
-      "count": {
-        "type": "int",
-        "format": "decimalPattern"
-      }
-    }
+    "description": "screens/bridge_sheets.dart: the button when one bridge line is pasted or scanned"
   },
   "bridgesCheckingForMessages": "Checking for messages…",
   "bridgesSavedLines": "Saved lines",
@@ -8841,7 +8835,17 @@
   "@bridgesFastestWhereTorIsnt": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesUseThisBridge": "{count, plural, one{Use this bridge} other{Use these {count} bridges}}",
+  "bridgesUseThisBridge": "Use this bridge",
+  "bridgesUseTheseBridges": "{count, plural, other{Use these {count} bridges}}",
+  "@bridgesUseTheseBridges": {
+    "description": "screens/bridge_sheets.dart: the button when two or more bridge lines are pasted or scanned; count is 2 or more",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
   "@bridgesLookingForAVolunteer": {
     "description": "screens/bridges_screen.dart"
   },

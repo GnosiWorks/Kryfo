@@ -495,7 +495,7 @@ void main() {
         ..answer = 'error: lines_bad'
         ..checks = '[{"i":0,"state":"broken","why":"bad port"}]';
       await paste(t, 'obfs4 1.2.3.4:99999 AAAA cert=x');
-      await t.tap(find.text(l10n.bridgesUseThisBridge(1)));
+      await t.tap(find.text(l10n.bridgesUseThisBridge));
       await _in(t);
       expect(_eng.calls.single, startsWith('own '));
       expect(find.text(l10n.bridgesNoneOfTheseAre), findsOneWidget);
@@ -511,7 +511,7 @@ void main() {
         t,
         'Bridge obfs4 192.0.2.1:443 AAAA cert=x\nobfs4 192.0.2.2:99999 BB',
       );
-      await t.tap(find.text(l10n.bridgesUseThisBridge(2)));
+      await t.tap(find.text(l10n.bridgesUseTheseBridges(2)));
       await _in(t);
       // the torrc word goes before the engine sees it
       expect(_eng.calls.single, contains('"obfs4 192.0.2.1:443 AAAA cert=x"'));
@@ -1152,7 +1152,7 @@ void main() {
       await _in(t);
       await t.tap(find.text(l10n.bridgesPasteFromClipboard));
       await _in(t);
-      await t.tap(find.text(l10n.bridgesUseThisBridge(1)));
+      await t.tap(find.text(l10n.bridgesUseThisBridge));
       await _in(t);
       expect(appState.bridgeChoice, BridgeChoice.friend);
       expect(clip, '');

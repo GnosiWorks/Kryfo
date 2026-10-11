@@ -7080,7 +7080,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Наш ретранслятор использует одно простое подключение и обычно пробивается. Или пусть Kryfo сам найдёт путь.';
 
   @override
-  String bridgesUseThisBridge(int count) {
+  String get bridgesUseThisBridge => 'Использовать этот мост';
+
+  @override
+  String bridgesUseTheseBridges(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
@@ -7088,10 +7091,10 @@ class AppLocalizationsRu extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Использовать $countString моста',
-      many: 'Использовать $countString мостов',
-      few: 'Использовать $countString моста',
-      one: 'Использовать $countString мост',
+      other: 'Использовать эти $countString моста',
+      many: 'Использовать эти $countString мостов',
+      few: 'Использовать эти $countString моста',
+      one: 'Использовать эти $countString мост',
     );
     return '$_temp0';
   }

@@ -7065,7 +7065,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'مُرحِّلنا اتصال عادي واحد وغالبًا ما يعبر. أو دع Kryfo يجد طريقة بنفسه.';
 
   @override
-  String bridgesUseThisBridge(int count) {
+  String get bridgesUseThisBridge => 'استخدام هذا الجسر';
+
+  @override
+  String bridgesUseTheseBridges(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
@@ -7077,8 +7080,6 @@ class AppLocalizationsAr extends AppLocalizations {
       many: 'استخدام هذه الجسور (⁨$countString⁩)',
       few: 'استخدام هذه الجسور (⁨$countString⁩)',
       two: 'استخدام هذين الجسرين',
-      one: 'استخدام هذا الجسر',
-      zero: 'استخدام هذه الجسور (⁨$countString⁩)',
     );
     return '$_temp0';
   }

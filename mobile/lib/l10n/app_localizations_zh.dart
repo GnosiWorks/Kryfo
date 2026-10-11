@@ -6660,7 +6660,10 @@ class AppLocalizationsZh extends AppLocalizations {
       '我们的中继只是一条普通连接，通常都能连通。也可以让 Kryfo 自己找办法。';
 
   @override
-  String bridgesUseThisBridge(int count) {
+  String get bridgesUseThisBridge => '使用这个网桥';
+
+  @override
+  String bridgesUseTheseBridges(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
@@ -6669,7 +6672,6 @@ class AppLocalizationsZh extends AppLocalizations {
       count,
       locale: localeName,
       other: '使用这 $countString 个网桥',
-      one: '使用这个网桥',
     );
     return '$_temp0';
   }
@@ -14446,7 +14448,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '我們的中繼只是一條普通連線，通常都能連通。也可以讓 Kryfo 自己找辦法。';
 
   @override
-  String bridgesUseThisBridge(int count) {
+  String get bridgesUseThisBridge => '使用這個橋接';
+
+  @override
+  String bridgesUseTheseBridges(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
@@ -14455,7 +14460,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       count,
       locale: localeName,
       other: '使用這 $countString 個橋接',
-      one: '使用這個橋接',
     );
     return '$_temp0';
   }

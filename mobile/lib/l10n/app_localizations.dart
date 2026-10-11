@@ -11163,11 +11163,17 @@ abstract class AppLocalizations {
   /// **'Our relay is one plain connection and usually gets through. Or let Kryfo find a way by itself.'**
   String get bridgesOurRelayUsuallyGets;
 
-  /// screens/bridges_screen.dart
+  /// screens/bridge_sheets.dart: the button when one bridge line is pasted or scanned
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, one{Use this bridge} other{Use these {count} bridges}}'**
-  String bridgesUseThisBridge(int count);
+  /// **'Use this bridge'**
+  String get bridgesUseThisBridge;
+
+  /// screens/bridge_sheets.dart: the button when two or more bridge lines are pasted or scanned; count is 2 or more
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, other{Use these {count} bridges}}'**
+  String bridgesUseTheseBridges(int count);
 
   /// screens/bridges_screen.dart
   ///

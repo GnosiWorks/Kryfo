@@ -7026,7 +7026,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Unser Relais ist eine einfache Verbindung und kommt meistens durch. Oder lass Kryfo selbst einen Weg finden.';
 
   @override
-  String bridgesUseThisBridge(int count) {
+  String get bridgesUseThisBridge => 'Diese Brücke nutzen';
+
+  @override
+  String bridgesUseTheseBridges(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
@@ -7035,7 +7038,6 @@ class AppLocalizationsDe extends AppLocalizations {
       count,
       locale: localeName,
       other: 'Diese $countString Brücken nutzen',
-      one: 'Diese Brücke nutzen',
     );
     return '$_temp0';
   }
