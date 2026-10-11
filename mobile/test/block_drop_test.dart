@@ -129,6 +129,17 @@ class _World {
       if (s.$1.endsWith('-$who')) s,
   ];
 
+  // the unblock, and this clock moved past its millisecond: a copy that
+  // comes live after this came after it. one that came in that millisecond
+  // reached the relay while the block held (heldBySpans)
+  Future<void> unblock(String who) async {
+    await app.unblock(who);
+    final end = live.blockSpans[who]!.last.$2!;
+    while (DateTime.now().millisecondsSinceEpoch <= end) {
+      await Future<void>.delayed(const Duration(milliseconds: 1));
+    }
+  }
+
   // came live just now, after the relay's end of what it stored
   static Reached liveNow() {
     final t = DateTime.now().millisecondsSinceEpoch;
@@ -169,7 +180,7 @@ void main() {
       expect(w.io.rang, isEmpty);
       expect(w.io.ticksFor('req3b'), isEmpty, reason: 'no tick while blocked');
 
-      await w.app.unblock(who);
+      await w.unblock(who);
       // a drain that found nothing
       await w.app.receiveOnion([]);
       // their phone sends each again, as a retry does: a new cipher, the
@@ -198,7 +209,7 @@ void main() {
     Future<(_World, int, int)> blockedAWhile() async {
       final w = await _World.make();
       await w.app.block(who);
-      await w.app.unblock(who);
+      await w.unblock(who);
       final now = DateTime.now().millisecondsSinceEpoch;
       final to = now - 60000;
       w.live.blockSpans[who] = [(to - 2 * 3600000, to)];
@@ -244,7 +255,7 @@ void main() {
     Future<(_World, int, int, int)> blockedMinutes() async {
       final w = await _World.make();
       await w.app.block(who);
-      await w.app.unblock(who);
+      await w.unblock(who);
       final now = DateTime.now().millisecondsSinceEpoch;
       final to = now - 40000;
       final from = to - 170000;
@@ -330,7 +341,7 @@ void main() {
         'heard minutes before the unblock', () async {
       final w = await _World.make();
       await w.app.block(who);
-      await w.app.unblock(who);
+      await w.unblock(who);
       final now = DateTime.now().millisecondsSinceEpoch;
       // blocked two hours, unblocked three hours ago, killed right after
       const h = 3600000;
@@ -474,7 +485,7 @@ void main() {
         written: [x],
       );
       expect(w.live.blockedDrops[who], {'x3'});
-      await w.app.unblock(who);
+      await w.unblock(who);
       w.live.blockSpans[who] = [(x - 60000, to)];
       // the sender's retry and a restore's resend, each a cipher of its own
       // and live, stamped as if just written
@@ -576,7 +587,15 @@ void main() {
     expect(w.sentTo(_f), isEmpty);
 
     // the same reaction once unblocked is theirs to make
-    await w.app.unblock(_f);
+    await w.unblock(_f);
+    // one that came in the unblock's own millisecond reached the relay
+    // while the block held
+    final end = w.live.blockSpans[_f]!.single.$2!;
+    await w.app.receiveRelay(
+      [w.frame(_f, frames.first)],
+      reached: [(from: end, until: end)],
+    );
+    expect(w.live.calls.where((a) => a.startsWith('addReaction')), isEmpty);
     await w.app.receiveRelay(
       [w.frame(_f, frames.first)],
       reached: [_World.liveNow()],
@@ -607,7 +626,7 @@ void main() {
     expect(w.sentTo(_f), isEmpty);
     expect(w.io.rang, [_f, _s]);
 
-    await w.app.unblock(_f);
+    await w.unblock(_f);
     await w.app.receiveRelay(
       [await w.copy(_f, 't1')],
       reached: [_World.liveNow()],
@@ -655,7 +674,7 @@ void main() {
     const g = 'grp-block-span';
     w.live.group(g, ['me', _f], admin: _f);
     await w.app.block(_f);
-    await w.app.unblock(_f);
+    await w.unblock(_f);
     final now = DateTime.now().millisecondsSinceEpoch;
     final to = now - 60000;
     final from = to - 2 * 3600000;
@@ -681,7 +700,7 @@ void main() {
       final w = await _World.make();
       await w.app.receiveRelay([await w.copy(_f, 'u1')]);
       await w.app.block(_f);
-      await w.app.unblock(_f);
+      await w.unblock(_f);
       // a copy of one that came before the block is the one already here
       await w.app.receiveRelay(
         [await w.copy(_f, 'u1')],
