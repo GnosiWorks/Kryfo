@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // a deleted chat takes what was set for it along, so when they write again
 // they come back as a new person: no disguise, wallpaper, note, mute or pin,
-// a fresh shield check and a new notification tag. the block, the verified
-// mark on its key and the vouches for them stay
+// a fresh shield check and a new notification tag, and nothing queued for
+// the old chat goes. the block, the verified mark on its key, the vouches
+// for them and a take-back stay
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/drafts.dart';
-import 'package:kryfo/main.dart' show HaloDb, session;
+import 'package:kryfo/main.dart'
+    show HaloDb, kFrameReaction, kFrameReceipt, kFrameUnsend, session;
 import 'package:kryfo/screens/chat_screen.dart' show dropChatDraft;
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
@@ -123,6 +125,30 @@ void main() {
         .rows('contacts')
         .singleWhere((r) => r['halo_id'] == _friend);
     expect(friend['accepted'], 1);
+  });
+
+  test('delete chat drops what was queued for them but a take-back', () async {
+    final db = await _seeded();
+    for (final who in [_peer, _friend]) {
+      await db.queueEdit('e-$who', who, 'edited');
+      await db.queuePin('p-$who', who, true);
+      await db.queueFrame('r-$who', kFrameReaction, who, 'x');
+      await db.queueFrame('c-$who', kFrameReceipt, who, '');
+    }
+    // the unsend goes out before the chat does, as a take-back for both
+    await db.queueFrame('u-$_peer', kFrameUnsend, _peer, '');
+    await db.deleteConversation(_peer);
+    List<Object?> of(String table, String who) => [
+      for (final r in db.mem.rows(table))
+        if (r['peer_id'] == who) r['msg_uid'],
+    ];
+    expect(of('edits_out', _peer), isEmpty);
+    expect(of('pins_out', _peer), isEmpty);
+    expect(of('frames_out', _peer), ['u-$_peer']);
+    // the other chat's queue is untouched
+    expect(of('edits_out', _friend), ['e-$_friend']);
+    expect(of('pins_out', _friend), ['p-$_friend']);
+    expect(of('frames_out', _friend), ['r-$_friend', 'c-$_friend']);
   });
 
   test('a deleted chat leaves no draft behind', () {

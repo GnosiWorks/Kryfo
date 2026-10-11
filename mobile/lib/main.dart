@@ -2486,6 +2486,9 @@ class HaloDb implements GroupOwedStore {
       // new tag the shade never ties to the old chat
       await t.delete('shield', where: 'halo_id = ?', whereArgs: [haloId]);
       await t.delete('notif_tags', where: 'chat = ?', whereArgs: [haloId]);
+      // nothing queued for the old chat goes after it. a take-back still
+      // goes, it only withdraws
+      await _dropQueuedTo(t, haloId);
       return rows;
     });
     await _scrubMedia(files);
