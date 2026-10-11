@@ -173,12 +173,15 @@ void main() {
   });
 
   test('both mics count as recording while they record', () {
+    // chats and groups share one mic
+    for (final f in [
+      'lib/screens/chat_screen.dart',
+      'lib/screens/group_chat_screen.dart',
+    ]) {
+      expect(sourceOf(f), contains('HoldToTalkMic('), reason: f);
+    }
     expect(
-      sourceOf('lib/screens/chat_screen.dart'),
-      contains('_recUnguard = recordingUntil(lockGuard.closeOnLock(_abort));'),
-    );
-    expect(
-      sourceOf('lib/widgets/media_bubbles.dart'),
+      sourceOf('lib/widgets/voice_mic.dart'),
       contains('_unguard = recordingUntil(lockGuard.closeOnLock(_abort));'),
     );
   });
