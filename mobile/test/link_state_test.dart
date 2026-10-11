@@ -2,7 +2,9 @@
 // one meaning of connected: the home pill, getting messages and the settings
 // card agree, in relay mode where tor never matters and in onion mode where
 // tor's word is not enough while no relay gets through. a send left
-// 'sending' settles by the same rule in a group as in a 1:1 chat
+// 'sending' settles by the same rule in a group as in a 1:1 chat. the home
+// pill says offline in every mode, holds still with less movement, and a
+// long connecting says what it waits for
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -11,6 +13,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/delivery_mode.dart';
 import 'package:kryfo/l10n/l10n.dart';
+import 'package:kryfo/l10n/numbers.dart' show percent;
+import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/main.dart' show TorHalo, appState;
 import 'package:kryfo/media_send.dart' show mediaInflight;
 import 'package:kryfo/screens/getting_messages_screen.dart';
@@ -234,6 +238,77 @@ void main() {
       await t.pump(const Duration(seconds: 2));
       expect(find.text(l10n.deliveryModeConnected), findsNothing);
       expect(find.text(l10n.deliveryModeConnecting), findsOneWidget);
+    });
+  });
+
+  group('the home pill', () {
+    Future<void> pill(WidgetTester t) async {
+      await t.pumpWidget(
+        app(const Center(child: TorHalo(label: true)), still: true),
+      );
+      await t.pump(const Duration(milliseconds: 400));
+    }
+
+    Future<void> gone(WidgetTester t) async {
+      await t.pumpWidget(const SizedBox());
+      await t.pump(const Duration(seconds: 1));
+    }
+
+    testWidgets('onion with no network says offline, not tor ready', (t) async {
+      addTearDown(() => appState.noteOnline(true));
+      _set('private', TorStatus.publishing);
+      appState.noteOnline(false);
+      await pill(t);
+      expect(find.text(l10n.appOffline), findsOneWidget);
+      expect(find.text(l10n.appTorReady), findsNothing);
+      await gone(t);
+    });
+
+    testWidgets('with less movement a new state shows at once', (t) async {
+      addTearDown(() => appState.noteOnline(true));
+      _set('private', TorStatus.publishing);
+      await pill(t);
+      expect(find.text(l10n.appTorReady), findsOneWidget);
+      appState.noteOnline(false);
+      await t.pump();
+      expect(t.hasRunningAnimations, isFalse);
+      expect(find.text(l10n.appTorReady), findsNothing);
+      expect(find.text(l10n.appOffline), findsOneWidget);
+      await gone(t);
+    });
+
+    testWidgets('a long connecting says what it waits for, a decoy only '
+        'that it connects', (t) async {
+      addTearDown(() {
+        appState.torTryingSinceForTest = null;
+        lockState.inDecoy = false;
+      });
+      DateTime ago(int s) => DateTime.now().subtract(Duration(seconds: s));
+      _set('private', TorStatus.starting, route: false);
+      appState.takeTorStatus('starting|45|0|0|0');
+      appState.torTryingSinceForTest = ago(5);
+      await pill(t);
+      expect(find.text(l10n.appConnecting2), findsOneWidget);
+
+      // still building its route: how far along
+      appState.torTryingSinceForTest = ago(40);
+      appState.setRouteOKForTest(false);
+      await t.pump();
+      expect(find.text(l10n.appConnecting(percent(0.45))), findsOneWidget);
+
+      // tor up, no relay through: that it waits for one
+      appState.takeTorStatus('publishing|100|0|0|0');
+      appState.torTryingSinceForTest = ago(40);
+      appState.setRouteOKForTest(false);
+      await t.pump();
+      expect(find.text(l10n.appWaitingForARelay), findsOneWidget);
+
+      lockState.inDecoy = true;
+      appState.setRouteOKForTest(false);
+      await t.pump();
+      expect(find.text(l10n.appConnecting2), findsOneWidget);
+      expect(find.text(l10n.appWaitingForARelay), findsNothing);
+      await gone(t);
     });
   });
 

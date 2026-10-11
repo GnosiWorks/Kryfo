@@ -343,6 +343,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appOkNoRelayBegan => '正常，没有中继响应';
 
   @override
+  String get appNoRelayReached => '未能连上任何中继';
+
+  @override
   String get appOkCapped => '正常，已截止';
 
   @override
@@ -623,6 +626,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get appConnecting2 => '正在连接';
+
+  @override
+  String get appWaitingForARelay => '正在等待中继';
 
   @override
   String mediaProgressSendingKeepTheApp(Object v) {
@@ -3374,6 +3380,12 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get modesEveryRelayYouUse =>
       '你用到的每个中继都知道你连接时的地址，而不只是我们的中继。消息仍然是加密的，但你发过消息这件事并没有被加密。默认关闭，重装后也会重新关闭。';
+
+  @override
+  String get modesNotChanged => '模式没有更改，请重试。';
+
+  @override
+  String get modesSwitching => '正在切换…';
 
   @override
   String get modesSpeed => '速度';
@@ -7025,6 +7037,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get handleRegistryFailed => '联系不上登记处。请一分钟后再试。';
 
   @override
+  String get handleStillReaching => '仍在联系登记处。通过 Tor 可能需要一分钟左右。';
+
+  @override
   String get handleCheckClock => '请检查手机的日期和时间，然后再试一次。';
 
   @override
@@ -8114,6 +8129,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get appOkNoRelayBegan => '正常，沒有中繼開始回應';
 
   @override
+  String get appNoRelayReached => '未能連上任何中繼';
+
+  @override
   String get appOkCapped => '正常，已達時限';
 
   @override
@@ -8394,6 +8412,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get appConnecting2 => '連線中';
+
+  @override
+  String get appWaitingForARelay => '正在等待中繼';
 
   @override
   String mediaProgressSendingKeepTheApp(Object v) {
@@ -11146,6 +11167,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get modesEveryRelayYouUse =>
       '你使用的每個中繼都會知道你連線的來源位址，不只是我們的中繼。訊息仍然是密封的，但「你傳了訊息」這件事不是。預設關閉，重新安裝後也會再次關閉。';
+
+  @override
+  String get modesNotChanged => '模式沒有變更，請再試一次。';
+
+  @override
+  String get modesSwitching => '切換中…';
 
   @override
   String get modesSpeed => '速度';
@@ -14794,6 +14821,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get handleRegistryFailed => '聯絡不上註冊處。請一分鐘後再試。';
+
+  @override
+  String get handleStillReaching => '仍在聯絡註冊處。透過 Tor 可能需要約一分鐘。';
 
   @override
   String get handleCheckClock => '請檢查手機的日期和時間，然後再試一次。';

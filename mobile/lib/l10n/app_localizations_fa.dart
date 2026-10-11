@@ -354,6 +354,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get appOkNoRelayBegan => 'موفق، هیچ رله‌ای پاسخ نداد';
 
   @override
+  String get appNoRelayReached => 'به هیچ رله‌ای وصل نشد';
+
+  @override
   String get appOkCapped => 'موفق، سقف زمان';
 
   @override
@@ -642,6 +645,9 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get appConnecting2 => 'در حال اتصال';
+
+  @override
+  String get appWaitingForARelay => 'در انتظار رله';
 
   @override
   String mediaProgressSendingKeepTheApp(Object v) {
@@ -3525,6 +3531,12 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get modesEveryRelayYouUse =>
       'هر رله‌ای که استفاده می‌کنید نشانی‌ای را که از آن وصل می‌شوید می‌داند، نه فقط رله‌ی ما. پیام‌ها همچنان مهروموم‌شده‌اند، اما اینکه پیامی فرستاده‌اید، نه. به‌طور پیش‌فرض خاموش است و بعد از نصب دوباره هم خاموش می‌شود.';
+
+  @override
+  String get modesNotChanged => 'حالت تغییر نکرد. دوباره امتحان کنید.';
+
+  @override
+  String get modesSwitching => 'در حال تغییر…';
 
   @override
   String get modesSpeed => 'سرعت';
@@ -7335,6 +7347,10 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get handleRegistryFailed =>
       'دفتر ثبت پاسخ نداد. یک دقیقهٔ دیگر دوباره امتحان کنید.';
+
+  @override
+  String get handleStillReaching =>
+      'هنوز در حال رسیدن به دفتر ثبت است. از طریق Tor ممکن است تا یک دقیقه طول بکشد.';
 
   @override
   String get handleCheckClock =>

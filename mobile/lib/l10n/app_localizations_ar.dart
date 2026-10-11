@@ -386,6 +386,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get appOkNoRelayBegan => 'تم، لم يبدأ أي مُرحِّل';
 
   @override
+  String get appNoRelayReached => 'تعذّر الوصول إلى أي مُرحِّل';
+
+  @override
   String get appOkCapped => 'تم، قُطع عند الحد';
 
   @override
@@ -670,6 +673,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get appConnecting2 => 'جارٍ الاتصال';
+
+  @override
+  String get appWaitingForARelay => 'بانتظار مُرحِّل';
 
   @override
   String mediaProgressSendingKeepTheApp(Object v) {
@@ -3619,6 +3625,12 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get modesEveryRelayYouUse =>
       'كل مُرحِّل تستخدمه يعرف العنوان الذي تتصل منه، لا مُرحِّلنا وحده. تبقى الرسائل مختومة، لكن حقيقة أنك أرسلت رسالة ليست كذلك. معطّل افتراضيًا، ويعود معطّلًا بعد إعادة التثبيت.';
+
+  @override
+  String get modesNotChanged => 'لم يتغيّر الوضع. حاول مجددًا.';
+
+  @override
+  String get modesSwitching => 'جارٍ التبديل…';
 
   @override
   String get modesSpeed => 'السرعة';
@@ -7453,6 +7465,10 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get handleRegistryFailed =>
       'تعذّر الوصول إلى السجل. حاول مجددًا بعد دقيقة.';
+
+  @override
+  String get handleStillReaching =>
+      'ما زال الاتصال بالسجل جاريًا. عبر Tor قد يستغرق ذلك حتى دقيقة.';
 
   @override
   String get handleCheckClock => 'تحقّق من تاريخ الهاتف ووقته، ثم حاول مجددًا.';

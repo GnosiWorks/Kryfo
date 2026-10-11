@@ -82,8 +82,35 @@ func handleKey() ed25519.PrivateKey {
 	return myEdPriv
 }
 
-// the registry's own lane, apart from the circuits that carry the contacts
-func handleHTTP() (*http.Client, error) { return torNostrClientFor(laneServices) }
+// the registry's own lane, apart from the circuits that carry the contacts.
+// a var so the tests can stand in for it
+var handleHTTP = func() (*http.Client, error) { return torNostrClientFor(laneServices) }
+
+// a cold circuit can take most of a minute to answer. one bound for the
+// whole call, from before the client is fetched: building it can wait on
+// tor's locks. the app waits a little longer than this (main.dart,
+// registryWait). a var for the tests
+var handleWait = 60 * time.Second
+
+// the lane's client, or the call's own deadline if that comes first. a
+// client still being built is kept for the next call
+func handleClient(ctx context.Context) (*http.Client, error) {
+	type got struct {
+		c   *http.Client
+		err error
+	}
+	ch := make(chan got, 1)
+	go func() {
+		c, err := handleHTTP()
+		ch <- got{c, err}
+	}()
+	select {
+	case g := <-ch:
+		return g.c, g.err
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	}
+}
 
 // is this handle free? returns "free", "taken", or an error string.
 //
@@ -97,7 +124,9 @@ func handleCheck(raw string) string {
 	if !handleOK.MatchString(h) {
 		return "error: 3-20 characters, letters numbers underscore"
 	}
-	client, err := handleHTTP()
+	ctx, cancel := context.WithTimeout(context.Background(), handleWait)
+	defer cancel()
+	client, err := handleClient(ctx)
 	if err != nil {
 		return "error: " + err.Error()
 	}
@@ -105,7 +134,7 @@ func handleCheck(raw string) string {
 	req, _ := http.NewRequest("POST", handleBase+"/handle/check", bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("User-Agent", "")
-	resp, err := client.Do(req)
+	resp, err := client.Do(req.WithContext(ctx))
 	if err != nil {
 		return "error: " + err.Error()
 	}
@@ -180,7 +209,9 @@ func handleRefusal(msg string) string {
 }
 
 func handlePost(path string, body []byte) string {
-	client, err := handleHTTP()
+	ctx, cancel := context.WithTimeout(context.Background(), handleWait)
+	defer cancel()
+	client, err := handleClient(ctx)
 	if err != nil {
 		return "error: " + err.Error()
 	}
@@ -192,8 +223,6 @@ func handlePost(path string, body []byte) string {
 	// nothing identifying in the headers: the body already says who we are,
 	// and only because it has to.
 	req.Header.Set("User-Agent", "")
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
 	resp, err := client.Do(req.WithContext(ctx))
 	if err != nil {
 		return "error: " + err.Error()

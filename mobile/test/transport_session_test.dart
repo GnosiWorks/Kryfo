@@ -3,7 +3,8 @@
 // a new install would: no subscriptions, nothing sent or received, no
 // message in and no night's record of the everyday side. with hidden chats
 // shut, their subscriptions are not counted and an arrival sealed for them
-// moves no time; with them open, everything counts
+// moves no time; with them open, everything counts. the bootstrap reads the
+// language's way, and can send needs a network as the outbox does
 import 'dart:io';
 
 import 'package:flutter/services.dart';
@@ -13,8 +14,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/delivery_mode.dart' show kLastCheckRelaysKey;
 import 'package:kryfo/l10n/l10n.dart';
+import 'package:kryfo/l10n/numbers.dart' show percent;
 import 'package:kryfo/main.dart'
-    show AppState, HaloEngine, useDatabasesForTest, useEngineForTest;
+    show AppState, HaloEngine, appState, useDatabasesForTest, useEngineForTest;
+import 'package:kryfo/widgets/motion.dart' show TorStatus;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/screens/transport_screen.dart';
@@ -181,6 +184,42 @@ void main() {
       _valueOf(t, l10n.transportLastMessageIn),
       isNot(l10n.transportNever),
     );
+    await devClose(t);
+  });
+
+  testWidgets('the bootstrap reads the language\'s way, and can send needs '
+      'a network', (t) async {
+    everydayRecord();
+    t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      const MethodChannel('halo/platform'),
+      (_) async => null,
+    );
+    useEngineForTest(_Engine());
+    await devWorld();
+    addTearDown(() {
+      setL10nLocale(const Locale('en'));
+      appState.noteOnline(true);
+      appState.setTorStatusForTest(TorStatus.off);
+      appState.setRouteOKForTest(true);
+      appState.sendModeForTest = 'private';
+    });
+    appState.sendModeForTest = 'private';
+    appState.takeTorStatus('starting|45|0|0|0');
+    await devOpen(
+      t,
+      const TransportScreen(),
+      size: const Size(1000, 12000),
+      locale: const Locale('fr'),
+    );
+    await t.pump(const Duration(seconds: 1));
+    expect(_valueOf(t, l10n.transportBootstrap), percent(0.45));
+    expect(percent(0.45), isNot('45%'));
+
+    appState.takeTorStatus('publishing|100|1|1|0');
+    appState.noteOnline(false);
+    await t.pump(const Duration(seconds: 1));
+    expect(appState.torUsable, isTrue);
+    expect(_valueOf(t, l10n.transportCanSend), l10n.transportNotYet);
     await devClose(t);
   });
 

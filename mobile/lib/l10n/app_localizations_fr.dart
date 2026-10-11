@@ -355,6 +355,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get appOkNoRelayBegan => 'OK, aucun relais n’a démarré';
 
   @override
+  String get appNoRelayReached => 'Aucun relais joint';
+
+  @override
   String get appOkCapped => 'OK, écourté';
 
   @override
@@ -646,6 +649,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get appConnecting2 => 'Connexion';
+
+  @override
+  String get appWaitingForARelay => 'En attente d’un relais';
 
   @override
   String mediaProgressSendingKeepTheApp(Object v) {
@@ -3551,6 +3557,12 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get modesEveryRelayYouUse =>
       'Chaque relais que vous utilisez connaît l’adresse d’où vous vous connectez, pas seulement le nôtre. Les messages restent scellés, mais le fait que vous en ayez envoyé un ne l’est pas. Désactivé par défaut, et de nouveau désactivé après une réinstallation.';
+
+  @override
+  String get modesNotChanged => 'Le mode n’a pas changé. Réessayez.';
+
+  @override
+  String get modesSwitching => 'Changement…';
 
   @override
   String get modesSpeed => 'Vitesse';
@@ -7396,6 +7408,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get handleRegistryFailed =>
       'Le registre n’a pas répondu. Réessayez dans une minute.';
+
+  @override
+  String get handleStillReaching =>
+      'Le registre n’a pas encore répondu. Via Tor, cela peut prendre jusqu’à une minute.';
 
   @override
   String get handleCheckClock =>
