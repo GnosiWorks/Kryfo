@@ -82,8 +82,14 @@ func handleKey() ed25519.PrivateKey {
 	return myEdPriv
 }
 
-// the registry's own lane, apart from the circuits that carry the contacts
-func handleHTTP() (*http.Client, error) { return torNostrClientFor(laneServices) }
+// the registry's own lane, apart from the circuits that carry the contacts.
+// a var so the tests can stand in for it
+var handleHTTP = func() (*http.Client, error) { return torNostrClientFor(laneServices) }
+
+// a cold circuit can take most of a minute to answer. every registry call
+// gets the lane client's own bound, so none is cut short of it; the app
+// waits a little longer than this (main.dart, registryWait)
+const handleWait = 60 * time.Second
 
 // is this handle free? returns "free", "taken", or an error string.
 //
@@ -105,7 +111,9 @@ func handleCheck(raw string) string {
 	req, _ := http.NewRequest("POST", handleBase+"/handle/check", bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("User-Agent", "")
-	resp, err := client.Do(req)
+	ctx, cancel := context.WithTimeout(context.Background(), handleWait)
+	defer cancel()
+	resp, err := client.Do(req.WithContext(ctx))
 	if err != nil {
 		return "error: " + err.Error()
 	}
@@ -192,7 +200,7 @@ func handlePost(path string, body []byte) string {
 	// nothing identifying in the headers: the body already says who we are,
 	// and only because it has to.
 	req.Header.Set("User-Agent", "")
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), handleWait)
 	defer cancel()
 	resp, err := client.Do(req.WithContext(ctx))
 	if err != nil {

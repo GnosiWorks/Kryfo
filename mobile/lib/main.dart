@@ -545,16 +545,21 @@ class HaloEngine {
   static String _take(Pointer<Utf8> p) => engineTake(p);
 
   // the registry is a request over tor, so it runs off the ui thread
-  Future<String> handleCheck(String h) => _ffiOnIsolate('HaloHandleCheck', [h]);
+  Future<String> handleCheck(String h) =>
+      _ffiOnIsolate('HaloHandleCheck', [h], wait: registryWait);
 
   Future<String> handleClaim(String h, String invite, String bio) =>
-      _ffiOnIsolate('HaloHandleClaim', [h, invite, bio]);
+      _ffiOnIsolate('HaloHandleClaim', [h, invite, bio], wait: registryWait);
 
   Future<String> handleRelease(String h) =>
-      _ffiOnIsolate('HaloHandleRelease', [h]);
+      _ffiOnIsolate('HaloHandleRelease', [h], wait: registryWait);
 
   Future<String> handleListing(String h, bool listed, String name) =>
-      _ffiOnIsolate('HaloHandleListing', [h, listed ? '1' : '0', name]);
+      _ffiOnIsolate('HaloHandleListing', [
+        h,
+        listed ? '1' : '0',
+        name,
+      ], wait: registryWait);
 
   // tell the engine whether to route through tor. it decides the route; the
   // relay list for each mode is chosen below.
@@ -1149,6 +1154,11 @@ Future<String> _startListenerOnIsolate(String dataDir) {
 
 // one, two or three strings in, one string out, on a background isolate
 // with a ceiling so a registry that never answers cannot hold a screen
+/// past the engine's own bound on a registry call (engine/handle.go,
+/// handleWait): the engine's answer comes back, never a give-up here while
+/// a claim may still land
+const registryWait = Duration(seconds: 75);
+
 Future<String> _ffiOnIsolate(
   String symbol,
   List<String> args, {
