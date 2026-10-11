@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../theme.dart';
+import 'halo_switch.dart';
 import 'motion.dart';
 import 'sheet_handle.dart';
 
@@ -198,6 +199,8 @@ class MenuSheetRow {
   final bool danger;
   // the tile's colour when it is not amber: violet for hidden chats
   final Color? tint;
+  // a switch at the row's end, for a row that turns something on or off
+  final bool? toggled;
   const MenuSheetRow({
     required this.icon,
     required this.label,
@@ -205,6 +208,7 @@ class MenuSheetRow {
     this.sub,
     this.danger = false,
     this.tint,
+    this.toggled,
   });
 }
 
@@ -221,7 +225,8 @@ class MenuSheet extends StatefulWidget {
 class _MenuSheetState extends State<MenuSheet>
     with SingleTickerProviderStateMixin {
   static const _beat = 35;
-  late final List<List<MenuSheetRow>> _groups = [
+  // read each build: a switch in a row flips in place
+  List<List<MenuSheetRow>> get _groups => [
     for (final g in widget.groups)
       if (g.isNotEmpty) g,
   ];
@@ -318,7 +323,7 @@ class _SheetRow extends StatelessWidget {
         : row.danger
         ? HaloColors.rose
         : HaloColors.text;
-    return Material(
+    final tile = Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: on
@@ -371,10 +376,21 @@ class _SheetRow extends StatelessWidget {
                   ],
                 ),
               ),
+              if (row.toggled != null) ...[
+                const SizedBox(width: 10),
+                ExcludeSemantics(
+                  child: HaloSwitch(
+                    value: row.toggled!,
+                    onChanged: on ? (_) => row.onTap!() : null,
+                  ),
+                ),
+              ],
             ],
           ),
         ),
       ),
     );
+    if (row.toggled == null) return tile;
+    return Semantics(toggled: row.toggled, child: tile);
   }
 }

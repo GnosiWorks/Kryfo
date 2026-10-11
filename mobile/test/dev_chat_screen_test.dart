@@ -43,7 +43,8 @@ import 'package:kryfo/widgets/dev_avatar.dart';
 import 'package:kryfo/widgets/dev_note.dart';
 import 'package:kryfo/widgets/kryfo_avatar.dart';
 import 'package:kryfo/widgets/swipe_to_reply.dart';
-import 'package:kryfo/widgets/voice_parts.dart' show DisguiseToggle;
+import 'package:kryfo/widgets/voice_mic.dart'
+    show HoldToTalkMic, MicGlyph, VoiceTake;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'dev_chat_fakes.dart';
@@ -390,8 +391,11 @@ Future<void> _chooseAnon(WidgetTester t) async {
   await _beat(t, 400);
 }
 
-DisguiseToggle _toggle(WidgetTester t) =>
-    t.widget<DisguiseToggle>(find.byType(DisguiseToggle));
+HoldToTalkMic _mic(WidgetTester t) =>
+    t.widget<HoldToTalkMic>(find.byType(HoldToTalkMic));
+
+bool _masked(WidgetTester t) =>
+    t.widget<MicGlyph>(find.byType(MicGlyph)).disguise;
 
 void _mock(String channel, Future<Object?> Function(MethodCall c)? h) =>
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -463,15 +467,7 @@ var _notes = 0;
 // second of a tone, where the recorder writes
 Future<void> _speak(WidgetTester t, bool Function() done) async {
   final path = _file('vn_${_notes++}.wav', _wav());
-  final mic = t.widget(
-    find.ancestor(
-      of: find.byIcon(Icons.mic_none_rounded),
-      matching: find.byWidgetPredicate(
-        (w) => w.runtimeType.toString() == '_HoldToTalkMic',
-      ),
-    ),
-  );
-  (mic as dynamic).onComplete(path, 1200, false);
+  _mic(t).onSend(VoiceTake(path: path, ms: 1200, disguise: false));
   await _io(t, done);
 }
 
@@ -903,7 +899,7 @@ void main() {
       await _beat(t);
       expect(find.byType(DevAnonChip), findsOneWidget);
       expect(find.byType(DevNote), findsNothing);
-      expect(_toggle(t).locked, isTrue);
+      expect(_mic(t).disguiseLocked, isTrue);
       await _type(t, 'and one more');
       await _send(t);
       expect(_begun, [true]);
@@ -1091,27 +1087,21 @@ void main() {
   });
 
   group('voice in an anonymous chat', () {
-    testWidgets('the disguise shows on and locked, and a tap only says so', (
+    testWidgets('the mic wears the mask, locked on, while anonymous', (
       t,
     ) async {
       await _world();
       await _open(t);
-      expect(_toggle(t).on, isFalse);
-      expect(_toggle(t).locked, isFalse);
+      expect(_masked(t), isFalse);
+      expect(_mic(t).disguiseLocked, isFalse);
       await _chooseAnon(t);
-      expect(_toggle(t).on, isTrue);
-      expect(_toggle(t).locked, isTrue);
-      expect(_toggle(t).label, l10n.devVoiceDisguised);
-      expect(find.byIcon(Icons.lock_rounded), findsOneWidget);
-      await t.tap(find.byType(DisguiseToggle));
-      await _beat(t, 300);
-      expect(find.text(l10n.devVoiceDisguised), findsOneWidget);
-      expect(_toggle(t).on, isTrue);
-      // the three words again: the toggle is the person's own once more
+      expect(_masked(t), isTrue);
+      expect(_mic(t).disguiseLocked, isTrue);
+      // the three words again: the chat's own choice once more
       await t.tap(find.text(l10n.devUseMyWords));
       await _beat(t);
-      expect(_toggle(t).locked, isFalse);
-      expect(_toggle(t).on, isFalse);
+      expect(_mic(t).disguiseLocked, isFalse);
+      expect(_masked(t), isFalse);
       expect(_begun, isEmpty);
       await _close(t);
     });

@@ -25,7 +25,8 @@ import 'package:kryfo/session.dart';
 import 'package:kryfo/widgets/chat_parts.dart' show ReactionChip;
 import 'package:kryfo/widgets/kryfo_avatar.dart';
 import 'package:kryfo/widgets/link_stub.dart';
-import 'package:kryfo/widgets/media_bubbles.dart' show HoldToTalkMic;
+import 'package:kryfo/widgets/halo_switch.dart';
+import 'package:kryfo/widgets/voice_mic.dart' show HoldToTalkMic, MicGlyph;
 import 'package:kryfo/widgets/menu_backdrop.dart';
 import 'package:kryfo/widgets/place_stub.dart';
 import 'package:kryfo/widgets/voice_parts.dart'
@@ -472,23 +473,60 @@ void main() {
     await devClose(t);
   });
 
+  // the chat's own switch: in its menu, flipped in place, kept in its row,
+  // and the mic wears the mask while it is on
+  testWidgets('the menu disguises the voice in this chat alone', (t) async {
+    await devOpen(t, chat());
+    // a draft an earlier test left would show the send button
+    await t.enterText(find.byType(TextField), '');
+    await t.pump(const Duration(milliseconds: 400));
+    expect(t.widget<MicGlyph>(find.byType(MicGlyph)).disguise, isFalse);
+    await t.tap(find.byTooltip(l10n.chatContactOptions));
+    await t.pump();
+    await t.pump(const Duration(milliseconds: 500));
+    final row = find.text(l10n.voiceDisguiseHere);
+    expect(row, findsOneWidget);
+    HaloSwitch flip() => t.widget<HaloSwitch>(
+      find.descendant(
+        of: find.ancestor(of: row, matching: find.byType(InkWell)),
+        matching: find.byType(HaloSwitch),
+      ),
+    );
+    expect(flip().value, isFalse);
+    await t.tap(row);
+    await t.pump();
+    await t.pump(const Duration(milliseconds: 400));
+    // the sheet stays, its switch on
+    expect(row, findsOneWidget);
+    expect(flip().value, isTrue);
+    Object? kept(String id) => mem
+        .rows('contacts')
+        .firstWhere((r) => r['halo_id'] == id)['voice_disguise'];
+    expect(kept(_peer), 1);
+    expect(kept(_friend), isNull);
+    await t.tapAt(const Offset(250, 60));
+    await t.pump(const Duration(milliseconds: 600));
+    expect(t.widget<MicGlyph>(find.byType(MicGlyph)).disguise, isTrue);
+    // and opened again, it is still on
+    await devClose(t);
+    await devOpen(t, chat());
+    await t.enterText(find.byType(TextField), '');
+    await t.pump(const Duration(milliseconds: 400));
+    expect(t.widget<MicGlyph>(find.byType(MicGlyph)).disguise, isTrue);
+    await devClose(t);
+  });
+
   // the group composer's mic: a finger-sized target, not the bare icon
   testWidgets('the group mic takes a tap beside its icon', (t) async {
     await devOpen(
       t,
       Scaffold(
-        body: Center(
-          child: HoldToTalkMic(
-            disguise: false,
-            onToggleDisguise: () {},
-            onComplete: (_, _, _) {},
-          ),
-        ),
+        body: Center(child: HoldToTalkMic(disguise: false, onSend: (_) {})),
       ),
     );
     final mic = find.byType(HoldToTalkMic);
-    expect(t.getSize(mic).width, greaterThanOrEqualTo(36));
-    expect(t.getSize(mic).height, greaterThanOrEqualTo(40));
+    expect(t.getSize(mic).width, greaterThanOrEqualTo(48));
+    expect(t.getSize(mic).height, greaterThanOrEqualTo(48));
     // off the icon, toward the start and the top
     await t.tapAt(t.getTopLeft(mic) + const Offset(4, 4));
     await t.pump();

@@ -3,19 +3,15 @@
 
 import '../lock_state.dart';
 import 'dart:math' as math;
-import 'dart:typed_data';
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../tor_valve.dart' show restartHolds;
 import '../drafts.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import '../picked.dart';
 import '../sent_name.dart';
-import 'package:record/record.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'key_verification_screen.dart';
@@ -26,7 +22,8 @@ import 'shield_sheet.dart';
 import '../vouch_text.dart';
 import '../widgets/intro_chip.dart';
 import '../widgets/media_bubbles.dart' show ImageCaptionScreen, VoiceBubble;
-import '../widgets/voice_parts.dart';
+import '../widgets/voice_mic.dart';
+import '../voice_mask.dart' show maskWavOff;
 import '../widgets/confirm_sheet.dart';
 import '../widgets/hidden_mark.dart';
 import '../widgets/pins.dart';
@@ -135,7 +132,6 @@ import '../bidi_safe.dart';
 import '../back_on_top.dart';
 import '../forward.dart';
 import 'forward_sheet.dart';
-import '../voice_live.dart';
 import '../widgets/key_held.dart';
 import '../first_contact.dart' show routeText, waitsForReceipt;
 import '../text_send.dart';
@@ -557,6 +553,7 @@ class _ChatScreenState extends State<ChatScreen>
   // marks the next message so the other phone blocks screenshots of it. off
   // by default, since then neither side can screenshot the chat.
   bool _secureNext = false;
+  // this chat's voice notes go out disguised
   bool _disguise = false;
   int _burnSeconds = _lastBurnSeconds; // restored from last use this session.
   // the burn, the inbox poll and the auto retry run only while the chat is
@@ -981,13 +978,6 @@ class _ChatScreenState extends State<ChatScreen>
 
   void _chooseDevName(bool anon) => _devOpening?.choose(anon: anon);
 
-  // said instead of switched: an anonymous chat never carries a voice as
-  // it is
-  void _sayVoiceDisguised() {
-    HapticFeedback.selectionClick();
-    showHaloToast(context, l10n.devVoiceDisguised);
-  }
-
   @override
   void initState() {
     super.initState();
@@ -1031,7 +1021,7 @@ class _ChatScreenState extends State<ChatScreen>
         });
       }
     });
-    appState.loadDisguisePref().then((d) {
+    appState.loadChatDisguise(widget.peerHaloId).then((d) {
       if (mounted) setState(() => _disguise = d);
     });
     appState.addListener(_onAppStateChanged);
@@ -3035,24 +3025,14 @@ class _ChatScreenState extends State<ChatScreen>
     );
   }
 
-  void _toggleDisguise() {
-    setState(() => _disguise = !_disguise);
-    appState.saveDisguisePref(_disguise);
-    HapticFeedback.selectionClick();
+  // remembered in the container that holds the chat
+  Future<void> _setDisguise(bool on) async {
+    setState(() => _disguise = on);
+    await appState.saveChatDisguise(widget.peerHaloId, on);
   }
 
-  void _onVoiceComplete(String path, int ms, bool cancelled) {
-    if (path.isEmpty) return;
-    if (cancelled) {
-      // the raw recording, undisguised. nothing else will ever delete it.
-      // one that will not go is swept at the next start
-      shredFile(path).ignore();
-      return;
-    }
-    _sendVoice(path, ms);
-  }
-
-  Future<void> _sendVoice(String srcPath, int ms) async {
+  Future<void> _sendVoice(VoiceTake take) async {
+    final srcPath = take.path;
     final src = File(srcPath);
     if (_requestLocked) {
       // one that will not go is swept at the next start
@@ -3065,14 +3045,21 @@ class _ChatScreenState extends State<ChatScreen>
       return;
     }
     // read after the start: an anonymous chat is disguised whatever the
-    // toggle says
-    final disguise = _voiceDisguise;
+    // note says
+    final disguise = take.disguise || _devAnon;
     // the recorder's own file is the voice before any disguise, so it goes
     // once read. the copy kept with the message is below
-    var bytes = await takeRecording(srcPath);
-    if (bytes == null) return;
+    final raw = await takeRecording(srcPath);
+    if (raw == null) return;
+    final bytes = disguise ? take.masked ?? await maskWavOff(raw) : raw;
+    // never sent as recorded when it was to go disguised
+    if (bytes == null) {
+      if (mounted) showHaloToast(context, l10n.voiceNotDisguised);
+      return;
+    }
+    if (!identical(bytes, raw)) raw.fillRange(0, raw.length, 0);
+    if (!mounted) return;
     if (_requestPending) setState(() => _sentCount++);
-    if (disguise) bytes = disguiseWav(bytes);
     final msgUid = newMsgUid();
     final mediaDir = await session.mediaDirOf(widget.peerHaloId);
     final dest = File('${mediaDir.path}/vn_$msgUid.wav');
@@ -4297,103 +4284,135 @@ class _ChatScreenState extends State<ChatScreen>
     final action = await showHaloSheet<String>(
       context,
       scroll: true,
-      builder: (ctx) {
-        void pick(String a) => Navigator.pop(ctx, a);
-        return SingleChildScrollView(
-          child: MenuSheet(
-            groups: [
-              // the person themselves: name, verification, vouches, media
-              [
-                MenuSheetRow(
-                  icon: Icons.person_outline,
-                  label: l10n.chatViewContact,
-                  onTap: () => pick('contact'),
-                ),
-                // greyed with a reason while the contact is still a
-                // request: you cannot vouch for someone you have not
-                // accepted yourself. someone blocked is not offered
-                if (!_blocked)
-                  MenuSheetRow(
-                    icon: Icons.people_outline,
-                    label: l10n.chatIntroduceTo,
-                    sub: _accepted ? null : l10n.chatAcceptThemFirst,
-                    onTap: _accepted ? () => pick('introduce') : null,
-                  ),
-                MenuSheetRow(
-                  icon: Icons.photo_library_outlined,
-                  label: l10n.chatSharedPhotos,
-                  onTap: () => pick('photos'),
-                ),
-              ],
-              [
-                MenuSheetRow(
-                  icon: _muted
-                      ? Icons.notifications_active_outlined
-                      : Icons.notifications_off_outlined,
-                  label: _muted
-                      ? l10n.chatUnmuteNotifications
-                      : l10n.chatMuteNotifications,
-                  onTap: () => pick('mute'),
-                ),
-                MenuSheetRow(
-                  icon: pinned ? Icons.push_pin : Icons.push_pin_outlined,
-                  label: pinned ? l10n.chatUnpin : l10n.chatPinToTop,
-                  onTap: () => pick('pin'),
-                ),
-                MenuSheetRow(
-                  icon: Icons.archive_outlined,
-                  label: l10n.chatArchiveChat,
-                  onTap: () => pick('archive'),
-                ),
-                if (toInbox)
-                  MenuSheetRow(
-                    icon: Icons.support_agent,
-                    label: l10n.supportMoveToInbox,
-                    onTap: () => pick('inbox'),
-                  ),
-                // hidden chats open: out of the everyday list, or back in it
-                if (hideable)
-                  MenuSheetRow(
-                    icon: hidden
-                        ? Icons.visibility_outlined
-                        : Icons.visibility_off_outlined,
-                    label: hidden ? l10n.chatShowInList : l10n.chatHide,
-                    tint: HaloColors.violet,
-                    onTap: () => pick('hide'),
-                  ),
-              ],
-              [
-                MenuSheetRow(
-                  icon: Icons.palette_outlined,
-                  label: l10n.chatWallpaper,
-                  onTap: () => pick('atmosphere'),
-                ),
-                MenuSheetRow(
-                  icon: Icons.sticky_note_2_outlined,
-                  label: l10n.chatNoteOnThisContact,
-                  onTap: () => pick('note'),
-                ),
-              ],
-              [
-                MenuSheetRow(
-                  icon: Icons.delete_sweep_outlined,
-                  label: l10n.chatClearConversation,
-                  danger: true,
-                  onTap: () => pick('clear'),
-                ),
-                MenuSheetRow(
-                  icon: Icons.block,
-                  label: l10n.chatBlockContact,
-                  danger: true,
-                  onTap: () => pick('block'),
-                ),
-              ],
-            ],
-          ),
-        );
-      },
+      // the disguise switch flips in place, the sheet stays
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheet) => _chatMenu(
+          ctx,
+          hidden: hidden,
+          hideable: hideable,
+          toInbox: toInbox,
+          pinned: pinned,
+          onDisguise: () async {
+            await _setDisguise(!_disguise);
+            setSheet(() {});
+          },
+        ),
+      ),
     );
     if (!mounted) return;
+    await _onChatAction(action, hidden: hidden);
+  }
+
+  Widget _chatMenu(
+    BuildContext ctx, {
+    required bool hidden,
+    required bool hideable,
+    required bool toInbox,
+    required bool pinned,
+    required VoidCallback onDisguise,
+  }) {
+    void pick(String a) => Navigator.pop(ctx, a);
+    return SingleChildScrollView(
+      child: MenuSheet(
+        groups: [
+          // the person themselves: name, verification, vouches, media
+          [
+            MenuSheetRow(
+              icon: Icons.person_outline,
+              label: l10n.chatViewContact,
+              onTap: () => pick('contact'),
+            ),
+            // greyed with a reason while the contact is still a
+            // request: you cannot vouch for someone you have not
+            // accepted yourself. someone blocked is not offered
+            if (!_blocked)
+              MenuSheetRow(
+                icon: Icons.people_outline,
+                label: l10n.chatIntroduceTo,
+                sub: _accepted ? null : l10n.chatAcceptThemFirst,
+                onTap: _accepted ? () => pick('introduce') : null,
+              ),
+            MenuSheetRow(
+              icon: Icons.photo_library_outlined,
+              label: l10n.chatSharedPhotos,
+              onTap: () => pick('photos'),
+            ),
+          ],
+          [
+            MenuSheetRow(
+              icon: _muted
+                  ? Icons.notifications_active_outlined
+                  : Icons.notifications_off_outlined,
+              label: _muted
+                  ? l10n.chatUnmuteNotifications
+                  : l10n.chatMuteNotifications,
+              onTap: () => pick('mute'),
+            ),
+            MenuSheetRow(
+              icon: pinned ? Icons.push_pin : Icons.push_pin_outlined,
+              label: pinned ? l10n.chatUnpin : l10n.chatPinToTop,
+              onTap: () => pick('pin'),
+            ),
+            MenuSheetRow(
+              icon: Icons.archive_outlined,
+              label: l10n.chatArchiveChat,
+              onTap: () => pick('archive'),
+            ),
+            if (toInbox)
+              MenuSheetRow(
+                icon: Icons.support_agent,
+                label: l10n.supportMoveToInbox,
+                onTap: () => pick('inbox'),
+              ),
+            // hidden chats open: out of the everyday list, or back in it
+            if (hideable)
+              MenuSheetRow(
+                icon: hidden
+                    ? Icons.visibility_outlined
+                    : Icons.visibility_off_outlined,
+                label: hidden ? l10n.chatShowInList : l10n.chatHide,
+                tint: HaloColors.violet,
+                onTap: () => pick('hide'),
+              ),
+          ],
+          [
+            MenuSheetRow(
+              icon: Icons.theater_comedy_outlined,
+              label: l10n.voiceDisguiseHere,
+              toggled: _disguise,
+              onTap: onDisguise,
+            ),
+            MenuSheetRow(
+              icon: Icons.palette_outlined,
+              label: l10n.chatWallpaper,
+              onTap: () => pick('atmosphere'),
+            ),
+            MenuSheetRow(
+              icon: Icons.sticky_note_2_outlined,
+              label: l10n.chatNoteOnThisContact,
+              onTap: () => pick('note'),
+            ),
+          ],
+          [
+            MenuSheetRow(
+              icon: Icons.delete_sweep_outlined,
+              label: l10n.chatClearConversation,
+              danger: true,
+              onTap: () => pick('clear'),
+            ),
+            MenuSheetRow(
+              icon: Icons.block,
+              label: l10n.chatBlockContact,
+              danger: true,
+              onTap: () => pick('block'),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Future<void> _onChatAction(String? action, {required bool hidden}) async {
     if (action == 'contact') {
       _openContact();
     } else if (action == 'introduce') {
@@ -5385,10 +5404,7 @@ class _ChatScreenState extends State<ChatScreen>
                             onSend: _send,
                             disguise: _voiceDisguise,
                             disguiseLocked: _devAnon,
-                            onToggleDisguise: _devAnon
-                                ? _sayVoiceDisguised
-                                : _toggleDisguise,
-                            onVoiceComplete: _onVoiceComplete,
+                            onVoice: _sendVoice,
                           ),
                         ],
                       ),
@@ -7805,296 +7821,6 @@ class _EmptyConversation extends StatelessWidget {
   }
 }
 
-// pitch-shift a 16-bit pcm wav so the voice is harder to recognize.
-// resamples the body by a fixed ratio then plays it back at the original
-// rate. moves pitch and formants together (not formant-preserving), so
-// label it "harder to recognize", never "anonymous".
-Uint8List disguiseWav(Uint8List wav) {
-  if (wav.length < 44) return wav;
-  // wav header is 44 bytes; samples are 16-bit little-endian after it.
-  const headerLen = 44;
-  final header = wav.sublist(0, headerLen);
-  final body = wav.buffer.asInt16List(
-    wav.offsetInBytes + headerLen,
-    (wav.length - headerLen) ~/ 2,
-  );
-  // ratio < 1 keeps more samples = lower, slower-sounding voice once
-  // played at the original rate. 0.76 is a clear drop that still reads as
-  // speech.
-  const ratio = 0.76;
-  final outLen = (body.length / ratio).floor();
-  final out = Int16List(outLen);
-  for (var i = 0; i < outLen; i++) {
-    final srcF = i * ratio;
-    final i0 = srcF.floor();
-    final i1 = (i0 + 1 < body.length) ? i0 + 1 : i0;
-    final frac = srcF - i0;
-    out[i] = (body[i0] * (1 - frac) + body[i1] * frac).round();
-  }
-  final outBytes = out.buffer.asUint8List();
-  // patch the two little-endian length fields in the header to match.
-  final result = Uint8List(headerLen + outBytes.length);
-  result.setRange(0, headerLen, header);
-  result.setRange(headerLen, result.length, outBytes);
-  final dataLen = outBytes.length;
-  final riffLen = 36 + dataLen;
-  result[4] = riffLen & 0xff;
-  result[5] = (riffLen >> 8) & 0xff;
-  result[6] = (riffLen >> 16) & 0xff;
-  result[7] = (riffLen >> 24) & 0xff;
-  result[40] = dataLen & 0xff;
-  result[41] = (dataLen >> 8) & 0xff;
-  result[42] = (dataLen >> 16) & 0xff;
-  result[43] = (dataLen >> 24) & 0xff;
-  return result;
-}
-
-class _HoldToTalkMic extends StatefulWidget {
-  final bool disguise;
-  final VoidCallback onToggleDisguise;
-  final void Function(String path, int ms, bool cancelled) onComplete;
-  const _HoldToTalkMic({
-    required this.disguise,
-    required this.onToggleDisguise,
-    required this.onComplete,
-  });
-  @override
-  State<_HoldToTalkMic> createState() => _HoldToTalkMicState();
-}
-
-class _HoldToTalkMicState extends State<_HoldToTalkMic> {
-  final _rec = AudioRecorder();
-  RecordBarEntry? _overlay;
-  Timer? _ticker;
-  int _ms = 0;
-  bool _willCancel = false;
-  // how far the finger went toward the start side
-  double _dragDx = 0;
-  // the mic's level while it records, newest last
-  final List<double> _levels = [];
-  StreamSubscription<Amplitude>? _level;
-  bool _busy = false;
-  bool _live = false;
-  String? _path;
-  double _bottomInset = 0;
-  // the keyboard's height when the hold began: the bar is in the root
-  // overlay, which never sees the keyboard
-  double _keyboardInset = 0;
-
-  @override
-  void dispose() {
-    _recUnguard?.call();
-    restartHolds.remove(this);
-    _ticker?.cancel();
-    _level?.cancel();
-    _overlay?.remove();
-    // a take still recording when the chat goes is never sent
-    final take = _path;
-    _path = null;
-    final stopped = _rec.dispose();
-    if (take != null) stopped.whenComplete(() => shredFile(take)).ignore();
-    super.dispose();
-  }
-
-  Future<void> _start() async {
-    if (_busy) return;
-    _busy = true;
-    // _busy is cleared in finally: a throw that left it set would kill the
-    // mic until the chat is reopened
-    try {
-      if (!await _rec.hasPermission()) {
-        if (mounted) showHaloToast(context, l10n.chatMicPermissionNeeded);
-        return;
-      }
-      // the permission prompt eats the long-press: by the time the user
-      // grants, the finger is gone and nothing would ever stop the
-      // recording. bail out and let them hold again.
-      if (!_live) return;
-      final dir = await getTemporaryDirectory();
-      final path =
-          '${dir.path}/vn_${DateTime.now().millisecondsSinceEpoch}.wav';
-      await _rec.start(
-        const RecordConfig(
-          encoder: AudioEncoder.wav,
-          sampleRate: 16000,
-          numChannels: 1,
-        ),
-        path: path,
-      );
-      _path = path;
-      // the finger came up while the recorder was starting. _end already ran
-      // and found nothing to stop, so without this the mic would keep going
-      // with no hold behind it.
-      if (!_live) {
-        final p = await _rec.stop();
-        await shredFile(p ?? path);
-        _path = null;
-        return;
-      }
-      _ms = 0;
-      _willCancel = false;
-      _dragDx = 0;
-      _levels.clear();
-      // the level meter only: an error on it leaves the recording going
-      _level = _rec
-          .onAmplitudeChanged(const Duration(milliseconds: 100))
-          .listen((a) {
-            _levels.add(micLevel(a.current));
-            if (_levels.length > 40) _levels.removeAt(0);
-          }, onError: (_) {});
-      HapticFeedback.mediumImpact();
-      _ticker = Timer.periodic(const Duration(milliseconds: 100), (_) {
-        _ms += 100;
-        _overlay?.rebuild();
-      });
-      if (mounted) {
-        // the scaffold strips the keyboard inset from its body's media
-        // query, so it has to come from the view itself or it reads as zero
-        final view = MediaQueryData.fromView(View.of(context));
-        _bottomInset = view.padding.bottom;
-        _keyboardInset = view.viewInsets.bottom;
-      }
-      _overlay = RecordBarEntry(_bar);
-      if (mounted) Overlay.of(context).insert(_overlay!.entry);
-      // the lock stops the recording and throws it away
-      _recUnguard = recordingUntil(lockGuard.closeOnLock(_abort));
-      // a restart now would cut the note off
-      restartHolds.add(this);
-    } catch (e) {
-      dlog('voice: could not start: $e');
-      _ticker?.cancel();
-      _ticker = null;
-      _level?.cancel();
-      _level = null;
-      _overlay?.remove();
-      _overlay = null;
-      final p = _path;
-      _path = null;
-      // shredFile logs its own failure
-      if (p != null) shredFile(p).ignore();
-      if (mounted) showHaloToast(context, l10n.chatTheMicWouldNot);
-    } finally {
-      _busy = false;
-    }
-  }
-
-  Future<void> _end() async {
-    // still starting: _start sees the finger is gone and cleans up itself
-    if (_busy) return;
-    _recUnguard?.call();
-    restartHolds.remove(this);
-    _recUnguard = null;
-    if (_ticker == null && _overlay == null) return;
-    _ticker?.cancel();
-    _ticker = null;
-    _level?.cancel();
-    _level = null;
-    final ms = _ms;
-    final cancel = _willCancel || ms < 400;
-    // a note thrown away leaves in the rose of a cancel
-    _willCancel = cancel;
-    _overlay?.leave();
-    _overlay = null;
-    // handed on or shredded below, before the stop is awaited: a dispose
-    // meanwhile has nothing of it to shred
-    final mine = _path;
-    _path = null;
-    final take = await _rec.stop() ?? mine;
-    if (cancel) {
-      // a cancelled note is still a recording of a voice: shredded
-      if (take != null) await shredFile(take);
-      HapticFeedback.lightImpact();
-      widget.onComplete('', 0, true);
-      return;
-    }
-    HapticFeedback.mediumImpact();
-    widget.onComplete(take ?? '', ms, false);
-  }
-
-  VoidCallback? _recUnguard;
-
-  // kill the recording from the bar itself - covers any state where the
-  // finger isn't down anymore but the mic is still going.
-  void _abort() {
-    _willCancel = true;
-    _end();
-  }
-
-  String get _time {
-    final s = _ms ~/ 1000;
-    final m = s ~/ 60;
-    return '${whole(m)}:${twoDigits(s % 60)}';
-  }
-
-  Widget _bar(bool leaving) {
-    return Positioned(
-      left: 0,
-      right: 0,
-      bottom: _keyboardInset,
-      child: VoiceRecordBar(
-        time: _time,
-        cancel: _willCancel,
-        drag: -_dragDx,
-        disguise: widget.disguise,
-        levels: List.of(_levels),
-        releaseLabel: l10n.chatReleaseToCancel,
-        slideLabel: l10n.chatSlideToCancel,
-        hiddenLabel: l10n.chatVoiceHiddenSlideTo,
-        closeLabel: l10n.commonClose,
-        onClose: _abort,
-        bottom: _bottomInset,
-        leaving: leaving,
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onLongPressStart: (_) {
-        _live = true;
-        _start();
-      },
-      onLongPressMoveUpdate: (d) {
-        // toward the start side cancels: left, or right in a right-to-left
-        // language, where the mic sits on the left
-        final rtl = Directionality.of(context) == TextDirection.rtl;
-        final along = d.offsetFromOrigin.dx * (rtl ? -1 : 1);
-        _dragDx = along.clamp(-160.0, 0.0);
-        final wc = along < -VoiceRecordBar.cancelAt;
-        if (wc != _willCancel) {
-          _willCancel = wc;
-          if (wc) HapticFeedback.mediumImpact();
-        }
-        _overlay?.rebuild();
-      },
-      onLongPressEnd: (_) {
-        _live = false;
-        _end();
-      },
-      // a short tap says how it works instead of doing nothing
-      onTap: () {
-        HapticFeedback.selectionClick();
-        showHaloToast(context, l10n.chatHoldToRecord);
-      },
-      // a finger-sized target; the icon keeps its place at the row's end
-      child: SizedBox(
-        width: 36,
-        height: 40,
-        child: Align(
-          alignment: AlignmentDirectional.centerEnd,
-          child: Icon(
-            Icons.mic_none_rounded,
-            size: 22,
-            color: HaloColors.text2,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _Composer extends StatelessWidget {
   final TextEditingController controller;
   final FocusNode? focusNode;
@@ -8112,8 +7838,7 @@ class _Composer extends StatelessWidget {
   final bool disguise;
   // on for good in this chat: the anonymous dev chat
   final bool disguiseLocked;
-  final VoidCallback onToggleDisguise;
-  final void Function(String path, int ms, bool cancelled) onVoiceComplete;
+  final void Function(VoiceTake take) onVoice;
 
   const _Composer({
     required this.controller,
@@ -8131,8 +7856,7 @@ class _Composer extends StatelessWidget {
     required this.onCamera,
     required this.disguise,
     this.disguiseLocked = false,
-    required this.onToggleDisguise,
-    required this.onVoiceComplete,
+    required this.onVoice,
   });
 
   @override
@@ -8343,23 +8067,10 @@ class _Composer extends StatelessWidget {
                   final Widget end = (!hasText && !sending)
                       ? KeyedSubtree(
                           key: const ValueKey('mic'),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              DisguiseToggle(
-                                on: disguise,
-                                locked: disguiseLocked,
-                                label: disguiseLocked
-                                    ? l10n.devVoiceDisguised
-                                    : l10n.chatDisguiseVoice,
-                                onTap: onToggleDisguise,
-                              ),
-                              _HoldToTalkMic(
-                                disguise: disguise,
-                                onToggleDisguise: onToggleDisguise,
-                                onComplete: onVoiceComplete,
-                              ),
-                            ],
+                          child: HoldToTalkMic(
+                            disguise: disguise,
+                            disguiseLocked: disguiseLocked,
+                            onSend: onVoice,
                           ),
                         )
                       : KeyedSubtree(

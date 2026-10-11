@@ -46,18 +46,17 @@ void main() {
     expect(send, contains('await takeRecording(srcPath)'));
     expect(send, isNot(contains('readAsBytes')));
     expect(send, isNot(contains('.delete(')));
-    // a send a request holds back, and a cancel, shred it too
+    // a send a request holds back shreds it too
     expect(send, contains('shredFile(srcPath)'));
-    final done = bodyOf(src, 'void _onVoiceComplete(');
-    expect(done, contains('shredFile(path)'));
-    expect(done, isNot(contains('.delete(')));
+    // and the mic shreds a cancelled one itself
+    final mic = sourceOf('lib/widgets/voice_mic.dart');
+    final end = bodyOf(mic, 'Future<void> _end(');
+    expect(end, contains('if (take != null) await shredFile(take);'));
+    expect(end, isNot(contains('.delete(')));
   });
 
   test('a take still recording when the chat goes is shredded', () {
-    for (final f in [
-      'lib/screens/chat_screen.dart',
-      'lib/widgets/media_bubbles.dart',
-    ]) {
+    for (final f in ['lib/widgets/voice_mic.dart']) {
       final src = sourceOf(f);
       final mic = src.substring(src.indexOf('HoldToTalkMicState extends'));
       final dispose = bodyOf(mic, 'void dispose(');

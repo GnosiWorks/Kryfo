@@ -1854,9 +1854,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get chatMessage => 'Message';
 
   @override
-  String get chatDisguiseVoice => 'Déguiser la voix';
-
-  @override
   String get commonSend => 'Envoyer';
 
   @override
@@ -2682,9 +2679,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get groupChatMessage => 'Message';
-
-  @override
-  String get groupChatDisguiseVoice => 'Déguiser la voix';
 
   @override
   String get groupChatSupporter => 'Soutien';
@@ -5302,13 +5296,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsReplaceCurrent => 'Remplace l’actuelle';
 
   @override
-  String get settingsDisguiseVoice => 'Déguiser la voix';
-
-  @override
-  String get settingsShiftsYourPitchBefore =>
-      'Change la hauteur de votre voix avant qu’une note vocale parte';
-
-  @override
   String get settingsWhyKryfo => 'Pourquoi Kryfo';
 
   @override
@@ -6443,19 +6430,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get mediaBubblesPlaying => 'Lecture en cours';
-
-  @override
-  String get mediaBubblesMicPermissionNeeded => 'Accès au micro requis';
-
-  @override
-  String get mediaBubblesReleaseToCancel => 'Relâchez pour annuler';
-
-  @override
-  String get mediaBubblesVoiceHiddenSlideTo =>
-      'Voix déguisée · glissez pour annuler';
-
-  @override
-  String get mediaBubblesSlideToCancel => 'Glissez pour annuler';
 
   @override
   String get mediaBubblesSendPhoto => 'Envoyer la photo';
@@ -8010,4 +7984,40 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get valveRestartKryfo => 'Redémarrer Kryfo';
+
+  @override
+  String get voiceDisguiseHere => 'Déguiser ma voix ici';
+
+  @override
+  String get voiceDisguisedHere =>
+      'Votre voix est déguisée dans cette discussion';
+
+  @override
+  String get voiceSlideUpToLock => 'Glissez vers le haut pour verrouiller';
+
+  @override
+  String get voiceStopRecording => 'Arrêter l’enregistrement';
+
+  @override
+  String get voiceDeleteNote => 'Supprimer la note vocale';
+
+  @override
+  String get voiceDisguised => 'Déguisée';
+
+  @override
+  String get voiceYourVoice => 'Votre voix';
+
+  @override
+  String get voiceDisguiseThisNote => 'Déguiser cette note';
+
+  @override
+  String get voiceNotDisguised =>
+      'Cette note n’a pas pu être déguisée, elle n’a donc pas été envoyée';
+
+  @override
+  String get settingsDisguiseByDefault => 'Déguiser ma voix par défaut';
+
+  @override
+  String get settingsDisguiseByDefaultHint =>
+      'Chaque discussion peut le changer dans son menu';
 }

@@ -1837,9 +1837,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatMessage => 'Message';
 
   @override
-  String get chatDisguiseVoice => 'Disguise voice';
-
-  @override
   String get commonSend => 'Send';
 
   @override
@@ -2651,9 +2648,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get groupChatMessage => 'Message';
-
-  @override
-  String get groupChatDisguiseVoice => 'Disguise voice';
 
   @override
   String get groupChatSupporter => 'Supporter';
@@ -5241,13 +5235,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsReplaceCurrent => 'Replace current';
 
   @override
-  String get settingsDisguiseVoice => 'Disguise voice';
-
-  @override
-  String get settingsShiftsYourPitchBefore =>
-      'Shifts your pitch before a voice note leaves';
-
-  @override
   String get settingsWhyKryfo => 'Why Kryfo';
 
   @override
@@ -6369,18 +6356,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mediaBubblesPlaying => 'Playing';
-
-  @override
-  String get mediaBubblesMicPermissionNeeded => 'Mic permission needed';
-
-  @override
-  String get mediaBubblesReleaseToCancel => 'Release to cancel';
-
-  @override
-  String get mediaBubblesVoiceHiddenSlideTo => 'Voice hidden · slide to cancel';
-
-  @override
-  String get mediaBubblesSlideToCancel => 'Slide to cancel';
 
   @override
   String get mediaBubblesSendPhoto => 'Send photo';
@@ -7918,4 +7893,39 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get valveRestartKryfo => 'Restart Kryfo';
+
+  @override
+  String get voiceDisguiseHere => 'Disguise my voice here';
+
+  @override
+  String get voiceDisguisedHere => 'Your voice is disguised in this chat';
+
+  @override
+  String get voiceSlideUpToLock => 'Slide up to lock';
+
+  @override
+  String get voiceStopRecording => 'Stop recording';
+
+  @override
+  String get voiceDeleteNote => 'Delete voice note';
+
+  @override
+  String get voiceDisguised => 'Disguised';
+
+  @override
+  String get voiceYourVoice => 'Your voice';
+
+  @override
+  String get voiceDisguiseThisNote => 'Disguise this note';
+
+  @override
+  String get voiceNotDisguised =>
+      'This note could not be disguised, so it was not sent';
+
+  @override
+  String get settingsDisguiseByDefault => 'Disguise my voice by default';
+
+  @override
+  String get settingsDisguiseByDefaultHint =>
+      'Each chat can change it in its menu';
 }

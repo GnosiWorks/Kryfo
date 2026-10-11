@@ -1848,9 +1848,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get chatMessage => 'پیام';
 
   @override
-  String get chatDisguiseVoice => 'تغییر صدا';
-
-  @override
   String get commonSend => 'ارسال';
 
   @override
@@ -2665,9 +2662,6 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get groupChatMessage => 'پیام';
-
-  @override
-  String get groupChatDisguiseVoice => 'تغییر صدا';
 
   @override
   String get groupChatSupporter => 'هوادار';
@@ -5260,13 +5254,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get settingsReplaceCurrent => 'جایگزینی حساب فعلی';
 
   @override
-  String get settingsDisguiseVoice => 'تغییر صدا';
-
-  @override
-  String get settingsShiftsYourPitchBefore =>
-      'پیش از ارسال پیام صوتی، زیر و بمی صدایتان را تغییر می‌دهد';
-
-  @override
   String get settingsWhyKryfo => 'چرا Kryfo';
 
   @override
@@ -6388,19 +6375,6 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get mediaBubblesPlaying => 'در حال پخش';
-
-  @override
-  String get mediaBubblesMicPermissionNeeded => 'اجازه‌ی میکروفون لازم است';
-
-  @override
-  String get mediaBubblesReleaseToCancel => 'برای لغو رها کنید';
-
-  @override
-  String get mediaBubblesVoiceHiddenSlideTo =>
-      'صدا تغییر کرده · برای لغو بکشید';
-
-  @override
-  String get mediaBubblesSlideToCancel => 'برای لغو بکشید';
 
   @override
   String get mediaBubblesSendPhoto => 'ارسال عکس';
@@ -7944,4 +7918,38 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get valveRestartKryfo => 'راه‌اندازی دوبارهٔ Kryfo';
+
+  @override
+  String get voiceDisguiseHere => 'تغییر صدای من در اینجا';
+
+  @override
+  String get voiceDisguisedHere => 'صدای شما در این گفت‌وگو تغییر داده می‌شود';
+
+  @override
+  String get voiceSlideUpToLock => 'برای قفل کردن به بالا بکشید';
+
+  @override
+  String get voiceStopRecording => 'توقف ضبط';
+
+  @override
+  String get voiceDeleteNote => 'حذف پیام صوتی';
+
+  @override
+  String get voiceDisguised => 'تغییریافته';
+
+  @override
+  String get voiceYourVoice => 'صدای شما';
+
+  @override
+  String get voiceDisguiseThisNote => 'تغییر صدای این پیام';
+
+  @override
+  String get voiceNotDisguised => 'صدای این پیام تغییر داده نشد، پس ارسال نشد';
+
+  @override
+  String get settingsDisguiseByDefault => 'تغییر صدای من به‌طور پیش‌فرض';
+
+  @override
+  String get settingsDisguiseByDefaultHint =>
+      'هر گفت‌وگو می‌تواند آن را از منوی خودش تغییر دهد';
 }

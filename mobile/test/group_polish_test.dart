@@ -43,7 +43,7 @@ import 'package:kryfo/widgets/halo_switch.dart';
 import 'package:kryfo/widgets/kryfo_avatar.dart';
 import 'package:kryfo/widgets/link_stub.dart';
 import 'package:kryfo/widgets/place_stub.dart';
-import 'package:kryfo/widgets/media_bubbles.dart' show HoldToTalkMic;
+import 'package:kryfo/widgets/voice_mic.dart' show HoldToTalkMic, MicGlyph;
 import 'package:kryfo/widgets/motion.dart' show TorStatus;
 import 'package:kryfo/widgets/room_countdown.dart';
 import 'package:kryfo/widgets/voice_parts.dart' show VoiceRecordBar;
@@ -473,6 +473,26 @@ void main() {
   });
 
   group('group chat', () {
+    for (final room in [true, false]) {
+      testWidgets(
+        room
+            ? 'a burner room disguises the voice from the start'
+            : 'a plain group keeps the voice as it is',
+        (t) async {
+          _use(t, _Db(room: room, members: ['me', _anna]));
+          await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+          await t.pump(const Duration(seconds: 1));
+          await t.pump(const Duration(milliseconds: 500));
+          expect(t.widget<MicGlyph>(find.byType(MicGlyph)).disguise, room);
+          expect(
+            t.widget<HoldToTalkMic>(find.byType(HoldToTalkMic)).disguise,
+            room,
+          );
+          await _close(t);
+        },
+      );
+    }
+
     testWidgets('no empty state while it loads; an empty group gets one', (
       t,
     ) async {

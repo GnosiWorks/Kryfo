@@ -1853,9 +1853,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get chatMessage => 'Messaggio';
 
   @override
-  String get chatDisguiseVoice => 'Camuffa la voce';
-
-  @override
   String get commonSend => 'Invia';
 
   @override
@@ -2685,9 +2682,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get groupChatMessage => 'Messaggio';
-
-  @override
-  String get groupChatDisguiseVoice => 'Camuffa la voce';
 
   @override
   String get groupChatSupporter => 'Sostenitore';
@@ -5299,13 +5293,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settingsReplaceCurrent => 'Sostituisce l\'attuale';
 
   @override
-  String get settingsDisguiseVoice => 'Camuffa la voce';
-
-  @override
-  String get settingsShiftsYourPitchBefore =>
-      'Cambia il tono della voce prima che una nota vocale parta';
-
-  @override
   String get settingsWhyKryfo => 'Perché Kryfo';
 
   @override
@@ -6440,20 +6427,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get mediaBubblesPlaying => 'In riproduzione';
-
-  @override
-  String get mediaBubblesMicPermissionNeeded =>
-      'Serve il permesso del microfono';
-
-  @override
-  String get mediaBubblesReleaseToCancel => 'Rilascia per annullare';
-
-  @override
-  String get mediaBubblesVoiceHiddenSlideTo =>
-      'Voce nascosta · scorri per annullare';
-
-  @override
-  String get mediaBubblesSlideToCancel => 'Scorri per annullare';
 
   @override
   String get mediaBubblesSendPhoto => 'Invia foto';
@@ -8000,4 +7973,39 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get valveRestartKryfo => 'Riavvia Kryfo';
+
+  @override
+  String get voiceDisguiseHere => 'Camuffa la mia voce qui';
+
+  @override
+  String get voiceDisguisedHere => 'La tua voce è camuffata in questa chat';
+
+  @override
+  String get voiceSlideUpToLock => 'Scorri in alto per bloccare';
+
+  @override
+  String get voiceStopRecording => 'Interrompi la registrazione';
+
+  @override
+  String get voiceDeleteNote => 'Elimina la nota vocale';
+
+  @override
+  String get voiceDisguised => 'Camuffata';
+
+  @override
+  String get voiceYourVoice => 'La tua voce';
+
+  @override
+  String get voiceDisguiseThisNote => 'Camuffa questa nota';
+
+  @override
+  String get voiceNotDisguised =>
+      'Non è stato possibile camuffare questa nota, quindi non è stata inviata';
+
+  @override
+  String get settingsDisguiseByDefault => 'Camuffa la mia voce di default';
+
+  @override
+  String get settingsDisguiseByDefaultHint =>
+      'Ogni chat può cambiarlo nel suo menu';
 }

@@ -1846,9 +1846,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get chatMessage => 'Mesaj';
 
   @override
-  String get chatDisguiseVoice => 'Sesi gizle';
-
-  @override
   String get commonSend => 'Gönder';
 
   @override
@@ -2661,9 +2658,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get groupChatMessage => 'Mesaj';
-
-  @override
-  String get groupChatDisguiseVoice => 'Sesi gizle';
 
   @override
   String get groupChatSupporter => 'Destekçi';
@@ -5266,13 +5260,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsReplaceCurrent => 'Mevcudun yerine geçer';
 
   @override
-  String get settingsDisguiseVoice => 'Sesi gizle';
-
-  @override
-  String get settingsShiftsYourPitchBefore =>
-      'Sesli not gönderilmeden önce ses tonunu değiştirir';
-
-  @override
   String get settingsWhyKryfo => 'Neden Kryfo';
 
   @override
@@ -6398,18 +6385,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get mediaBubblesPlaying => 'Oynatılıyor';
-
-  @override
-  String get mediaBubblesMicPermissionNeeded => 'Mikrofon izni gerekli';
-
-  @override
-  String get mediaBubblesReleaseToCancel => 'İptal için bırak';
-
-  @override
-  String get mediaBubblesVoiceHiddenSlideTo => 'Ses gizli · iptal için kaydır';
-
-  @override
-  String get mediaBubblesSlideToCancel => 'İptal için kaydır';
 
   @override
   String get mediaBubblesSendPhoto => 'Fotoğraf gönder';
@@ -7951,4 +7926,39 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get valveRestartKryfo => 'Kryfo’yu yeniden başlat';
+
+  @override
+  String get voiceDisguiseHere => 'Burada sesimi gizle';
+
+  @override
+  String get voiceDisguisedHere => 'Bu sohbette sesin gizleniyor';
+
+  @override
+  String get voiceSlideUpToLock => 'Kilitlemek için yukarı kaydır';
+
+  @override
+  String get voiceStopRecording => 'Kaydı durdur';
+
+  @override
+  String get voiceDeleteNote => 'Sesli notu sil';
+
+  @override
+  String get voiceDisguised => 'Gizli';
+
+  @override
+  String get voiceYourVoice => 'Kendi sesin';
+
+  @override
+  String get voiceDisguiseThisNote => 'Bu notta sesi gizle';
+
+  @override
+  String get voiceNotDisguised =>
+      'Bu notta ses gizlenemedi, bu yüzden gönderilmedi';
+
+  @override
+  String get settingsDisguiseByDefault => 'Sesimi varsayılan olarak gizle';
+
+  @override
+  String get settingsDisguiseByDefaultHint =>
+      'Her sohbet bunu kendi menüsünden değiştirebilir';
 }

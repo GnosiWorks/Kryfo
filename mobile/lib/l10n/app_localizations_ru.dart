@@ -1883,9 +1883,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chatMessage => 'Сообщение';
 
   @override
-  String get chatDisguiseVoice => 'Изменить голос';
-
-  @override
   String get commonSend => 'Отправить';
 
   @override
@@ -2724,9 +2721,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get groupChatMessage => 'Сообщение';
-
-  @override
-  String get groupChatDisguiseVoice => 'Изменить голос';
 
   @override
   String get groupChatSupporter => 'Сторонник';
@@ -5352,13 +5346,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsReplaceCurrent => 'Заменит текущий';
 
   @override
-  String get settingsDisguiseVoice => 'Изменить голос';
-
-  @override
-  String get settingsShiftsYourPitchBefore =>
-      'Меняет высоту голоса, прежде чем голосовое уйдёт';
-
-  @override
   String get settingsWhyKryfo => 'Почему Kryfo';
 
   @override
@@ -6503,19 +6490,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get mediaBubblesPlaying => 'Воспроизводится';
-
-  @override
-  String get mediaBubblesMicPermissionNeeded => 'Нужен доступ к микрофону';
-
-  @override
-  String get mediaBubblesReleaseToCancel => 'Отпусти, чтобы отменить';
-
-  @override
-  String get mediaBubblesVoiceHiddenSlideTo =>
-      'Голос скрыт · смахни для отмены';
-
-  @override
-  String get mediaBubblesSlideToCancel => 'Смахни для отмены';
 
   @override
   String get mediaBubblesSendPhoto => 'Отправить фото';
@@ -8076,4 +8050,39 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get valveRestartKryfo => 'Перезапустить Kryfo';
+
+  @override
+  String get voiceDisguiseHere => 'Изменять мой голос здесь';
+
+  @override
+  String get voiceDisguisedHere => 'Твой голос в этом чате изменён';
+
+  @override
+  String get voiceSlideUpToLock => 'Смахни вверх, чтобы закрепить';
+
+  @override
+  String get voiceStopRecording => 'Остановить запись';
+
+  @override
+  String get voiceDeleteNote => 'Удалить голосовое';
+
+  @override
+  String get voiceDisguised => 'Изменён';
+
+  @override
+  String get voiceYourVoice => 'Твой голос';
+
+  @override
+  String get voiceDisguiseThisNote => 'Изменить голос в этом сообщении';
+
+  @override
+  String get voiceNotDisguised =>
+      'Не удалось изменить голос, поэтому сообщение не отправлено';
+
+  @override
+  String get settingsDisguiseByDefault => 'Изменять мой голос по умолчанию';
+
+  @override
+  String get settingsDisguiseByDefaultHint =>
+      'В каждом чате это можно изменить в его меню';
 }

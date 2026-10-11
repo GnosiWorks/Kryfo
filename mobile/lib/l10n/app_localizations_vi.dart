@@ -1831,9 +1831,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatMessage => 'Tin nhắn';
 
   @override
-  String get chatDisguiseVoice => 'Đổi giọng';
-
-  @override
   String get commonSend => 'Gửi';
 
   @override
@@ -2652,9 +2649,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get groupChatMessage => 'Tin nhắn';
-
-  @override
-  String get groupChatDisguiseVoice => 'Đổi giọng';
 
   @override
   String get groupChatSupporter => 'Người ủng hộ';
@@ -5246,13 +5240,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsReplaceCurrent => 'Thay thế hiện tại';
 
   @override
-  String get settingsDisguiseVoice => 'Đổi giọng';
-
-  @override
-  String get settingsShiftsYourPitchBefore =>
-      'Đổi cao độ giọng bạn trước khi tin nhắn thoại được gửi đi';
-
-  @override
   String get settingsWhyKryfo => 'Vì sao chọn Kryfo';
 
   @override
@@ -6365,19 +6352,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get mediaBubblesPlaying => 'Đang phát';
-
-  @override
-  String get mediaBubblesMicPermissionNeeded => 'Cần quyền micrô';
-
-  @override
-  String get mediaBubblesReleaseToCancel => 'Thả tay để hủy';
-
-  @override
-  String get mediaBubblesVoiceHiddenSlideTo =>
-      'Giọng đã được che · trượt để hủy';
-
-  @override
-  String get mediaBubblesSlideToCancel => 'Trượt để hủy';
 
   @override
   String get mediaBubblesSendPhoto => 'Gửi ảnh';
@@ -7915,4 +7889,40 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get valveRestartKryfo => 'Khởi động lại Kryfo';
+
+  @override
+  String get voiceDisguiseHere => 'Đổi giọng của tôi ở đây';
+
+  @override
+  String get voiceDisguisedHere =>
+      'Giọng của bạn được đổi trong cuộc trò chuyện này';
+
+  @override
+  String get voiceSlideUpToLock => 'Trượt lên để khóa';
+
+  @override
+  String get voiceStopRecording => 'Dừng ghi âm';
+
+  @override
+  String get voiceDeleteNote => 'Xóa tin nhắn thoại';
+
+  @override
+  String get voiceDisguised => 'Đã đổi giọng';
+
+  @override
+  String get voiceYourVoice => 'Giọng của bạn';
+
+  @override
+  String get voiceDisguiseThisNote => 'Đổi giọng cho tin này';
+
+  @override
+  String get voiceNotDisguised =>
+      'Không thể đổi giọng cho tin này nên tin chưa được gửi';
+
+  @override
+  String get settingsDisguiseByDefault => 'Mặc định đổi giọng của tôi';
+
+  @override
+  String get settingsDisguiseByDefaultHint =>
+      'Mỗi cuộc trò chuyện có thể đổi điều này trong menu của nó';
 }

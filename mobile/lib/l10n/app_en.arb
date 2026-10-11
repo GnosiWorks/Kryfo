@@ -2340,10 +2340,6 @@
   "@chatMessage": {
     "description": "screens/chat_screen.dart"
   },
-  "chatDisguiseVoice": "Disguise voice",
-  "@chatDisguiseVoice": {
-    "description": "screens/chat_screen.dart"
-  },
   "commonSend": "Send",
   "@commonSend": {
     "description": "screens/chat_screen.dart, screens/group_chat_screen.dart, widgets/media_bubbles.dart"
@@ -3359,10 +3355,6 @@
   },
   "groupChatMessage": "Message",
   "@groupChatMessage": {
-    "description": "screens/group_chat_screen.dart"
-  },
-  "groupChatDisguiseVoice": "Disguise voice",
-  "@groupChatDisguiseVoice": {
     "description": "screens/group_chat_screen.dart"
   },
   "groupChatSupporter": "Supporter",
@@ -6580,14 +6572,6 @@
   "@settingsReplaceCurrent": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsDisguiseVoice": "Disguise voice",
-  "@settingsDisguiseVoice": {
-    "description": "screens/settings_screen.dart"
-  },
-  "settingsShiftsYourPitchBefore": "Shifts your pitch before a voice note leaves",
-  "@settingsShiftsYourPitchBefore": {
-    "description": "screens/settings_screen.dart"
-  },
   "settingsWhyKryfo": "Why Kryfo",
   "@settingsWhyKryfo": {
     "description": "screens/settings_screen.dart"
@@ -8065,22 +8049,6 @@
   "mediaBubblesPlaying": "Playing",
   "@mediaBubblesPlaying": {
     "description": "widgets/media_bubbles.dart: what a screen reader says of a voice note while it plays"
-  },
-  "mediaBubblesMicPermissionNeeded": "Mic permission needed",
-  "@mediaBubblesMicPermissionNeeded": {
-    "description": "widgets/media_bubbles.dart"
-  },
-  "mediaBubblesReleaseToCancel": "Release to cancel",
-  "@mediaBubblesReleaseToCancel": {
-    "description": "widgets/media_bubbles.dart"
-  },
-  "mediaBubblesVoiceHiddenSlideTo": "Voice hidden · slide to cancel",
-  "@mediaBubblesVoiceHiddenSlideTo": {
-    "description": "widgets/media_bubbles.dart"
-  },
-  "mediaBubblesSlideToCancel": "Slide to cancel",
-  "@mediaBubblesSlideToCancel": {
-    "description": "widgets/media_bubbles.dart"
   },
   "mediaBubblesSendPhoto": "Send photo",
   "@mediaBubblesSendPhoto": {
@@ -10009,5 +9977,49 @@
   "valveRestartKryfo": "Restart Kryfo",
   "@valveRestartKryfo": {
     "description": "widgets/reconnect_valve.dart: button that restarts the app, queue kept"
+  },
+  "voiceDisguiseHere": "Disguise my voice here",
+  "@voiceDisguiseHere": {
+    "description": "a chat's menu: the switch that disguises your voice notes in this chat, remembered per chat"
+  },
+  "voiceDisguisedHere": "Your voice is disguised in this chat",
+  "@voiceDisguisedHere": {
+    "description": "the mic's screen reader hint while voice notes in this chat go out disguised"
+  },
+  "voiceSlideUpToLock": "Slide up to lock",
+  "@voiceSlideUpToLock": {
+    "description": "the lock above the mic while a voice note is held: slide up and the recording goes on hands free"
+  },
+  "voiceStopRecording": "Stop recording",
+  "@voiceStopRecording": {
+    "description": "a locked voice note: stops the recording and shows it to hear before sending"
+  },
+  "voiceDeleteNote": "Delete voice note",
+  "@voiceDeleteNote": {
+    "description": "a locked voice note: throws it away unsent"
+  },
+  "voiceDisguised": "Disguised",
+  "@voiceDisguised": {
+    "description": "the chip on a voice note before it is sent, while it goes out disguised"
+  },
+  "voiceYourVoice": "Your voice",
+  "@voiceYourVoice": {
+    "description": "the chip on a voice note before it is sent, while it goes out as recorded"
+  },
+  "voiceDisguiseThisNote": "Disguise this note",
+  "@voiceDisguiseThisNote": {
+    "description": "the chip's screen reader name: switches this note between your voice and a disguised one"
+  },
+  "voiceNotDisguised": "This note could not be disguised, so it was not sent",
+  "@voiceNotDisguised": {
+    "description": "a voice note that was to go out disguised and could not be: it is not sent as it was recorded"
+  },
+  "settingsDisguiseByDefault": "Disguise my voice by default",
+  "@settingsDisguiseByDefault": {
+    "description": "settings: voice notes go out disguised in every chat that has not chosen for itself"
+  },
+  "settingsDisguiseByDefaultHint": "Each chat can change it in its menu",
+  "@settingsDisguiseByDefaultHint": {
+    "description": "settings: under the default voice disguise switch"
   }
 }

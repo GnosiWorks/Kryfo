@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the pieces of a voice note: its wave, read once from the note's own
-// samples; the bar that shows while one is recorded, with the mic's level;
-// and the mask that disguises the voice. nothing here moves while the app
-// is away, and with less movement nothing moves at all.
+// samples, and the bar that shows while one is recorded, with the mic's
+// level. nothing here moves while the app is away, and with less movement
+// nothing moves at all.
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -486,13 +486,13 @@ class VoiceRecordBar extends StatelessWidget {
             ),
           ]
         : [
-            Icon(Icons.chevron_left, size: 16, color: HaloColors.text3),
+            Icon(Icons.chevron_left, size: 16, color: HaloColors.text2),
             Flexible(
               child: Text(
                 slideLabel,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: HaloType.mono(size: 11, color: HaloColors.text3),
+                style: HaloType.mono(size: 11, color: HaloColors.text2),
               ),
             ),
           ];
@@ -622,121 +622,5 @@ class RecordBarEntry {
     if (_gone) return;
     _gone = true;
     entry.remove();
-  }
-}
-
-/// the mask beside the mic: on, the next note goes out in a disguised
-/// voice. it turns over with a small pop when switched. locked, it is on
-/// for good in this chat and carries a small lock
-class DisguiseToggle extends StatelessWidget {
-  final bool on;
-  final String label;
-  final VoidCallback onTap;
-  final bool locked;
-  const DisguiseToggle({
-    super.key,
-    required this.on,
-    required this.label,
-    required this.onTap,
-    this.locked = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final still = motionStill(context);
-    final on = this.on || locked;
-    return Semantics(
-      label: label,
-      button: true,
-      toggled: on,
-      child: PressScale(
-        onTap: onTap,
-        scale: 0.86,
-        // the toggle clicks on its own
-        haptic: false,
-        child: Padding(
-          padding: const EdgeInsetsDirectional.only(end: 12),
-          child: SizedBox(
-            width: 20,
-            height: 20,
-            child: Stack(
-              clipBehavior: Clip.none,
-              alignment: Alignment.center,
-              children: [
-                // a soft amber ground while it is on
-                Positioned(
-                  left: -5,
-                  top: -5,
-                  width: 30,
-                  height: 30,
-                  child: AnimatedScale(
-                    scale: on ? 1 : (still ? 1 : 0.4),
-                    duration: still ? Duration.zero : kHouseTime,
-                    curve: kHouseCurve,
-                    child: AnimatedOpacity(
-                      opacity: on ? 1 : 0,
-                      duration: const Duration(milliseconds: 180),
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: HaloColors.amberSoft,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                AnimatedSwitcher(
-                  duration: Duration(milliseconds: still ? 140 : 260),
-                  switchInCurve: kHouseCurve,
-                  switchOutCurve: Curves.easeInCubic,
-                  transitionBuilder: (child, a) => FadeTransition(
-                    opacity: a,
-                    child: still
-                        ? child
-                        : ScaleTransition(
-                            scale: Tween(begin: 0.5, end: 1.0).animate(a),
-                            child: child,
-                          ),
-                  ),
-                  child: Icon(
-                    on ? Icons.record_voice_over : Icons.voice_over_off,
-                    key: ValueKey(on),
-                    size: 20,
-                    color: on ? HaloColors.amber : HaloColors.text3,
-                  ),
-                ),
-                if (locked)
-                  PositionedDirectional(
-                    end: -5,
-                    bottom: -4,
-                    // the lock pops on as the chat turns anonymous
-                    child: TweenAnimationBuilder<double>(
-                      tween: Tween(begin: still ? 1 : 0.3, end: 1),
-                      duration: still ? Duration.zero : kHouseTime,
-                      curve: Curves.easeOutBack,
-                      builder: (_, s, child) =>
-                          Transform.scale(scale: s, child: child),
-                      child: Container(
-                        width: 12,
-                        height: 12,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: HaloColors.surface,
-                        ),
-                        child: Icon(
-                          Icons.lock_rounded,
-                          size: 8.5,
-                          color: HaloColors.amber,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }

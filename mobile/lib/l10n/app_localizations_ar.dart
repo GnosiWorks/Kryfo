@@ -1891,9 +1891,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatMessage => 'رسالة';
 
   @override
-  String get chatDisguiseVoice => 'تمويه الصوت';
-
-  @override
   String get commonSend => 'إرسال';
 
   @override
@@ -2723,9 +2720,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get groupChatMessage => 'رسالة';
-
-  @override
-  String get groupChatDisguiseVoice => 'تمويه الصوت';
 
   @override
   String get groupChatSupporter => 'داعم';
@@ -5331,13 +5325,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsReplaceCurrent => 'استبدال الحالية';
 
   @override
-  String get settingsDisguiseVoice => 'تمويه الصوت';
-
-  @override
-  String get settingsShiftsYourPitchBefore =>
-      'يغيّر طبقة صوتك قبل أن تغادر الرسالة الصوتية';
-
-  @override
   String get settingsWhyKryfo => 'لماذا Kryfo';
 
   @override
@@ -6494,18 +6481,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get mediaBubblesPlaying => 'قيد التشغيل';
-
-  @override
-  String get mediaBubblesMicPermissionNeeded => 'يلزم إذن الميكروفون';
-
-  @override
-  String get mediaBubblesReleaseToCancel => 'أفلت للإلغاء';
-
-  @override
-  String get mediaBubblesVoiceHiddenSlideTo => 'الصوت مموّه · اسحب للإلغاء';
-
-  @override
-  String get mediaBubblesSlideToCancel => 'اسحب للإلغاء';
 
   @override
   String get mediaBubblesSendPhoto => 'إرسال الصورة';
@@ -8055,4 +8030,38 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get valveRestartKryfo => 'إعادة تشغيل Kryfo';
+
+  @override
+  String get voiceDisguiseHere => 'تمويه صوتي هنا';
+
+  @override
+  String get voiceDisguisedHere => 'صوتك مموّه في هذه المحادثة';
+
+  @override
+  String get voiceSlideUpToLock => 'اسحب لأعلى للقفل';
+
+  @override
+  String get voiceStopRecording => 'إيقاف التسجيل';
+
+  @override
+  String get voiceDeleteNote => 'حذف الرسالة الصوتية';
+
+  @override
+  String get voiceDisguised => 'مموّه';
+
+  @override
+  String get voiceYourVoice => 'صوتك';
+
+  @override
+  String get voiceDisguiseThisNote => 'تمويه هذه الرسالة';
+
+  @override
+  String get voiceNotDisguised => 'تعذّر تمويه هذه الرسالة، لذا لم تُرسل';
+
+  @override
+  String get settingsDisguiseByDefault => 'تمويه صوتي افتراضيًا';
+
+  @override
+  String get settingsDisguiseByDefaultHint =>
+      'يمكن لكل محادثة تغييره من قائمتها';
 }
