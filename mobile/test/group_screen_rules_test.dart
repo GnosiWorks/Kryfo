@@ -6,9 +6,27 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kryfo/screens/group_chat_screen.dart' show closeGoneGroup;
+import 'package:kryfo/back_on_top.dart';
+import 'package:kryfo/screens/group_chat_screen.dart'
+    show closeGoneGroup, startsSenderRun;
+import 'package:kryfo/screens/home_screen.dart'
+    show GroupSummary, groupMenuHides;
 
 final _src = File('lib/screens/group_chat_screen.dart').readAsStringSync();
+
+// a chat's own page, as the 1:1 and group screens are
+class _Chat extends StatefulWidget {
+  const _Chat();
+  @override
+  State<_Chat> createState() => _ChatState();
+}
+
+class _ChatState extends State<_Chat> with BackOnTop<_Chat> {
+  @override
+  void backOnTop() {}
+  @override
+  Widget build(BuildContext context) => const Text('chat');
+}
 
 String _body(String from, String to) {
   final a = _src.indexOf(from);
@@ -69,12 +87,103 @@ void main() {
       expect(group.isActive, isFalse);
     });
 
+    testWidgets('taken out under a chat opened from elsewhere, the chat '
+        'stays', (t) async {
+      final key = GlobalKey<NavigatorState>();
+      final stack = RouteStack();
+      await t.pumpWidget(
+        MaterialApp(
+          navigatorKey: key,
+          navigatorObservers: [stack],
+          home: const Text('home'),
+        ),
+      );
+      final nav = key.currentState!;
+      final group = MaterialPageRoute<void>(builder: (_) => const Text('g'));
+      final info = MaterialPageRoute<void>(builder: (_) => const Text('info'));
+      final chat = MaterialPageRoute<void>(builder: (_) => const _Chat());
+      final sheet = MaterialPageRoute<void>(builder: (_) => const Text('s'));
+      nav.push(group);
+      nav.push(info);
+      nav.push(chat);
+      nav.push(sheet);
+      await t.pumpAndSettle();
+      expect(
+        closeGoneGroup(nav, group, removed: true, above: stack.above(group)),
+        isTrue,
+      );
+      await t.pumpAndSettle();
+      expect(group.isActive, isFalse);
+      expect(info.isActive, isFalse);
+      expect(chat.isActive, isTrue);
+      expect(sheet.isCurrent, isTrue);
+      nav.pop();
+      await t.pumpAndSettle();
+      expect(find.text('chat'), findsOneWidget);
+      nav.pop();
+      await t.pumpAndSettle();
+      expect(find.text('home'), findsOneWidget);
+    });
+
     testWidgets('a leave from its info closes nothing here', (t) async {
       final (nav, group) = await stack(t, 1);
       expect(closeGoneGroup(nav, group, removed: false), isFalse);
       await t.pumpAndSettle();
       expect(find.text('info 0'), findsOneWidget);
       expect(group.isActive, isTrue);
+    });
+  });
+
+  test('only a group hides from the list, never a room', () {
+    const group = GroupSummary(groupId: 'g', name: 'g', memberCount: 2);
+    const room = GroupSummary(
+      groupId: 'r',
+      name: 'r',
+      memberCount: 2,
+      expiresAt: 1,
+    );
+    expect(groupMenuHides(group, inVault: true), isTrue);
+    expect(groupMenuHides(group, inVault: false), isFalse);
+    expect(groupMenuHides(room, inVault: true), isFalse);
+  });
+
+  group('the sender line', () {
+    final night = DateTime(2026, 10, 10, 23, 58);
+    final morning = DateTime(2026, 10, 11, 0, 2);
+    bool after(String sender, DateTime when, {bool inbound = true}) =>
+        startsSenderRun(
+          sender: 'ada',
+          when: morning,
+          prev: (sender: sender, inbound: inbound, when: when),
+        );
+
+    test('starts a run: first, after someone else, after one of ours', () {
+      expect(startsSenderRun(sender: 'ada', when: morning, prev: null), isTrue);
+      expect(after('bo', morning), isTrue);
+      expect(after('ada', morning, inbound: false), isTrue);
+    });
+
+    test('a run goes on the same day without the name', () {
+      expect(
+        after('ada', morning.subtract(const Duration(minutes: 1))),
+        isFalse,
+      );
+    });
+
+    test('a new day under its chip names the sender again', () {
+      expect(after('ada', night), isTrue);
+    });
+
+    test('a flagged member is named on every bubble', () {
+      expect(
+        startsSenderRun(
+          sender: 'ada',
+          when: morning,
+          flagged: true,
+          prev: (sender: 'ada', inbound: true, when: morning),
+        ),
+        isTrue,
+      );
     });
   });
 }

@@ -10348,6 +10348,7 @@ class AppState extends ChangeNotifier {
         fileName: fileName,
         voice: fileName == 'voice.wav',
         voiceDisguised: ((r['voice_disguised'] as int?) ?? 0) == 1,
+        replyTo: r['reply_to'] as String?,
         burnSeconds: (r['burn_secs'] as num?)?.toInt(),
         writtenAt: (r['sent_at'] as num?)?.toInt(),
       );
@@ -10439,6 +10440,7 @@ class AppState extends ChangeNotifier {
       fileName: fileName,
       voice: fileName == 'voice.wav',
       voiceDisguised: ((r['voice_disguised'] as int?) ?? 0) == 1,
+      replyTo: r['reply_to'] as String?,
       burnSeconds: (r['burn_secs'] as num?)?.toInt(),
       writtenAt: (r['sent_at'] as num?)?.toInt(),
       owed: {for (final m in to) m: fresh ? <int>{} : have[m]!},
@@ -13618,6 +13620,8 @@ class AppState extends ChangeNotifier {
             }
           }
         }
+        // an open info page reads the roster again
+        _bumpChatRev('group:$groupId');
         await refreshContacts();
         await refreshGroups();
         break;
@@ -13648,6 +13652,8 @@ class AppState extends ChangeNotifier {
             }
           }
         }
+        // an open info page reads the roster again
+        _bumpChatRev('group:$groupId');
         await refreshContacts();
         await refreshGroups();
         break;
@@ -13688,13 +13694,14 @@ class AppState extends ChangeNotifier {
             await _dropGroup(groupId, db);
           }
           if (name != null) _removedFrom[groupId] = name;
-          _bumpChatRev('group:$groupId');
         }
+        _bumpChatRev('group:$groupId');
         await refreshGroups();
         break;
       case 'rename':
         if (gc.name == null || !fromAdmin) return;
         await db.renameGroup(groupId, gc.name!);
+        _bumpChatRev('group:$groupId');
         await refreshGroups();
         break;
       case 'leave':
@@ -13705,6 +13712,7 @@ class AppState extends ChangeNotifier {
           await db.noteRoomKeyOut(groupId, senderHaloId);
           await _unlistenGone(groupId, {senderHaloId: const {}}, db);
         }
+        _bumpChatRev('group:$groupId');
         await refreshGroups();
         break;
     }
@@ -19348,6 +19356,8 @@ class AppState extends ChangeNotifier {
     String? fileName,
     bool voice = false,
     bool voiceDisguised = false,
+    // the message it answers, on every slice
+    String? replyTo,
     int? burnSeconds,
     // when its row was written, on every slice. now when not given
     int? writtenAt,
@@ -19465,6 +19475,7 @@ class AppState extends ChangeNotifier {
           chunkIndex: total > 1 ? i : null,
           chunkTotal: total > 1 ? total : null,
           burnSeconds: burnSeconds,
+          replyTo: replyTo,
           groupId: groupId,
           roster: ids,
           rosterParticipants: parts,

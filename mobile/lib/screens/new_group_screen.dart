@@ -100,7 +100,11 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final contacts = appState.contacts;
+    // someone blocked is never offered
+    final contacts = [
+      for (final c in appState.contacts)
+        if (!c.blocked) c,
+    ];
     return Scaffold(
       backgroundColor: HaloColors.surface,
       body: SafeArea(

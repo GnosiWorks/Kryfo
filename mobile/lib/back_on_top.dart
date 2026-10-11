@@ -6,6 +6,12 @@ import 'package:flutter/widgets.dart';
 // on the app's navigator
 final pageRoutes = RouteObserver<PageRoute<dynamic>>();
 
+// the routes a chat page stands on: a 1:1 chat or a group's
+final Set<Route<dynamic>> _chatRoutes = {};
+
+/// true when [r] is a chat's own page
+bool isChatPage(Route<dynamic> r) => _chatRoutes.contains(r);
+
 mixin BackOnTop<T extends StatefulWidget> on State<T> implements RouteAware {
   PageRoute<dynamic>? _route;
 
@@ -17,14 +23,19 @@ mixin BackOnTop<T extends StatefulWidget> on State<T> implements RouteAware {
     super.didChangeDependencies();
     final r = ModalRoute.of(context);
     if (r is! PageRoute<dynamic> || identical(r, _route)) return;
-    if (_route != null) pageRoutes.unsubscribe(this);
+    if (_route != null) {
+      pageRoutes.unsubscribe(this);
+      _chatRoutes.remove(_route);
+    }
     _route = r;
+    _chatRoutes.add(r);
     pageRoutes.subscribe(this, r);
   }
 
   @override
   void dispose() {
     pageRoutes.unsubscribe(this);
+    _chatRoutes.remove(_route);
     super.dispose();
   }
 
@@ -55,3 +66,36 @@ bool backToPage(NavigatorState nav, Iterable<State> states) {
   }
   return false;
 }
+
+/// the app navigator's routes, oldest first, sheets and dialogs too
+class RouteStack extends NavigatorObserver {
+  final List<Route<dynamic>> _routes = [];
+
+  /// the routes over [r], nearest first. none when [r] is not here
+  List<Route<dynamic>> above(Route<dynamic> r) {
+    final i = _routes.indexOf(r);
+    return i < 0 ? const [] : _routes.sublist(i + 1);
+  }
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) =>
+      _routes.add(route);
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) =>
+      _routes.remove(route);
+
+  @override
+  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) =>
+      _routes.remove(route);
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    final i = oldRoute == null ? -1 : _routes.indexOf(oldRoute);
+    if (i < 0 || newRoute == null) return;
+    _routes[i] = newRoute;
+  }
+}
+
+// on the app's navigator
+final routeStack = RouteStack();
