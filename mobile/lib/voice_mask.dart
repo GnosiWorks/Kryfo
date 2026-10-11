@@ -29,20 +29,20 @@ class MaskDraw {
   factory MaskDraw.from(math.Random r) => MaskDraw(
     // 3 to 4.2 semitones up, and a smaller throat to match
     pitch: math.pow(2, (3.0 + 1.2 * r.nextDouble()) / 12).toDouble(),
-    formant: 1.12 + 0.05 * r.nextDouble(),
+    formant: 1.15 + 0.05 * r.nextDouble(),
     drift: 0.18 + 0.2 * r.nextDouble(),
     phase: 2 * math.pi * r.nextDouble(),
   );
 }
 
 // how far the pitch and the envelope wander around the draw
-const _pitchWander = 0.015;
-const _formantWander = 0.01;
+const _pitchWander = 0.005;
+const _formantWander = 0.003;
 // the band the voice is rebuilt in
 const _lowHz = 90.0, _lowFull = 160.0;
-const _highFull = 4200.0, _highHz = 5200.0;
+const _highFull = 6500.0, _highHz = 7600.0;
 // the envelope keeps this much of the cepstrum: below any voice's pitch
-const _lifterSecs = 0.0019;
+const _lifterSecs = 0.0016;
 // the loudest sample the output may reach
 const _peak = 0.95 * 32767;
 
