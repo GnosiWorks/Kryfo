@@ -10,10 +10,12 @@
 // alone, and a route torn down that climbs back to where it stuck keeps it.
 // bridges, a reconnect, a mode or a network the person changed start a try
 // of their own, and no card shows while it climbs. a mode that does not
-// save moves nothing, the app takes a mode once the engine has it, and a
-// tap on the modes page is never undone by a read still on its way. a stop
-// tor refuses is tried again, a check-in no relay answered is not taken for
-// one, and automatic stuck is asked again on coming back, once a minute.
+// save moves nothing, runners that did not move go on the next try, the
+// app takes a mode once the engine has it, and a tap on the modes page is
+// never undone by a read still on its way or a tap before it. a stop tor
+// refuses is tried again, further apart each time, a check-in no relay
+// answered is not taken for one and a slow wake leaves the relays their
+// time, and automatic stuck is asked again on coming back, once a minute.
 // the engine and the rows are stand-ins
 import 'dart:async';
 import 'dart:collection';
@@ -36,6 +38,7 @@ import 'package:kryfo/router.dart';
 import 'package:kryfo/screens/modes_screen.dart';
 import 'package:kryfo/bridge_mode.dart';
 import 'package:kryfo/session.dart';
+import 'package:kryfo/widgets/motion.dart' show TorStatus;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'arrival_fakes.dart';
@@ -116,8 +119,20 @@ class _Engine implements HaloEngine {
     return 'ok';
   }
 
+  // the route the engine says it is on, '' for an engine that cannot say
+  String engineMode = '';
   @override
-  (int, int) catchupState() => (0, 1);
+  String transportMode() => engineMode;
+
+  // (walking, begun) of the relays' catch-up
+  (int, int) catchup = (0, 1);
+  @override
+  (int, int) catchupState() => catchup;
+  @override
+  String nostrKick() {
+    log.add('kick');
+    return 'ok';
+  }
 
   @override
   dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
@@ -148,11 +163,13 @@ class _Rows extends ArrivalRows {
 class _Store extends MapBase<String, String> {
   final _m = <String, String>{};
   bool refuse = false;
+  // a mode it will not take
+  String? refuseMode;
   @override
   String? operator [](Object? key) => _m[key];
   @override
   void operator []=(String key, String value) {
-    if (refuse && key == 'send_mode') {
+    if (key == 'send_mode' && (refuse || value == refuseMode)) {
       throw PlatformException(code: 'keystore');
     }
     _m[key] = value;
@@ -164,6 +181,21 @@ class _Store extends MapBase<String, String> {
   Iterable<String> get keys => _m.keys;
   @override
   String? remove(Object? key) => _m.remove(key);
+}
+
+// rows whose contact list can fail, or wait until let go
+class _Flaky extends ArrivalRows {
+  _Flaky() : super(HaloContainer.everyday);
+  bool down = false;
+  Completer<void>? gate;
+  @override
+  Future<List<Map<String, Object?>>> mediaWants() async => [];
+  @override
+  Future<List<Map<String, Object?>>> contacts() async {
+    await gate?.future;
+    if (down) throw StateError('db');
+    return super.contacts();
+  }
 }
 
 const _failing = [
@@ -438,6 +470,43 @@ void main() {
       expect(store['send_mode'], 'balanced');
     });
 
+    test('runners that did not move are moved by the next try, and the '
+        'switch is not told as failed', () async {
+      final live = _Flaky()..person(c, onion: 'o-$c', xpub: 'x-$c');
+      final router = VaultRouter(ArrivalStore(), ArrivalSeal());
+      await router.load();
+      final app = AppState(io: _Io(log), router: router)..myId = 'me';
+      useDatabasesForTest(live, Session(live));
+      live.down = true;
+      await app.setSendMode('balanced');
+      expect(app.sendMode, 'balanced');
+      expect(log.first, 'mode:balanced');
+      expect(log.where((l) => l.startsWith('listen:')), isEmpty);
+
+      live.down = false;
+      log.clear();
+      await app.setSendMode('balanced');
+      expect(log, contains('listen:x-$c'));
+      expect(log.where((l) => l.startsWith('mode:')), isEmpty);
+      // moved, a tap on the same mode does nothing more
+      log.clear();
+      await app.setSendMode('balanced');
+      expect(log, isEmpty);
+    });
+
+    test(
+      'the engine is asked which route it is on, not assumed on onion',
+      (() async {
+        eng.engineMode = 'balanced';
+        final app = await world();
+        await app.setSendMode('balanced');
+        expect(log.where((l) => l.startsWith('mode:')), isEmpty);
+        expect(app.sendMode, 'balanced');
+        await app.setSendMode('private');
+        expect(log.first, 'mode:private');
+      }),
+    );
+
     test('the app takes the new mode once the engine has it', () async {
       final app = await world();
       final told = <String>[];
@@ -481,8 +550,66 @@ void main() {
       await t.pump(const Duration(seconds: 1));
       expect(log.lastWhere((l) => l.startsWith('mode:')), 'mode:balanced');
       expect(appState.sendMode, 'balanced');
+      // the switch's runners finish off the test's clock
+      await t.runAsync(() => appState.setSendMode('balanced'));
       await t.pumpWidget(const SizedBox());
       await t.pump(const Duration(seconds: 1));
+    });
+
+    testWidgets('taps queued behind a switch: the picked card says it is '
+        'switching, and the last one done shows the mode in use', (t) async {
+      final store = _Store()..['send_mode'] = 'fast';
+      FlutterSecureStorage.setMockInitialValues(store);
+      appState.sendModeForTest = 'fast';
+      addTearDown(() => appState.sendModeForTest = 'private');
+      final live = _Flaky()..gate = Completer<void>();
+      useDatabasesForTest(live, Session(live));
+      t.view.physicalSize = const Size(1000, 2400);
+      t.view.devicePixelRatio = 2;
+      addTearDown(t.view.reset);
+      await t.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const ModesScreen(),
+        ),
+      );
+      await t.pump(const Duration(seconds: 1));
+      // a switch already under way holds the queue
+      final first = appState.setSendMode('balanced');
+      await t.pump();
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+      );
+      await t.pump();
+      expect(appState.sendMode, 'balanced');
+      // the next save of relay is refused, onion's goes
+      store.refuseMode = 'balanced';
+      await t.tap(find.text(l10n.modesRelay));
+      await t.pump(const Duration(milliseconds: 300));
+      expect(find.text(l10n.modesSwitching), findsOneWidget);
+      await t.tap(find.text(l10n.modesOnion));
+      await t.pump(const Duration(milliseconds: 300));
+      await t.pump(const Duration(milliseconds: 300));
+      expect(find.text(l10n.modesSwitching), findsOneWidget);
+      live.gate!.complete();
+      await first;
+      await t.pump();
+      await t.pump(const Duration(seconds: 1));
+      expect(appState.sendMode, 'private');
+      expect(find.text(l10n.modesSwitching), findsNothing);
+      Finder chosen(String name) => find.ancestor(
+        of: find.text(name),
+        matching: find.byWidgetPredicate(
+          (w) => w is Semantics && w.properties.selected == true,
+        ),
+      );
+      expect(chosen(l10n.modesOnion), findsOneWidget);
+      expect(chosen(l10n.modesRelay), findsNothing);
+      // the refused tap says so
+      expect(find.text(l10n.modesNotChanged), findsOneWidget);
+      await t.pumpWidget(const SizedBox());
+      await t.pump(const Duration(seconds: 4));
     });
 
     test('the boot sets the list before the invite address listens', () {
@@ -509,6 +636,30 @@ void main() {
       // asleep for real: nothing more
       await t.pump(const Duration(minutes: 3));
       expect(log, ['stop', 'stop']);
+    });
+
+    testWidgets('waits twice as long each time it is refused', (t) async {
+      eng.stops = ['error: timeout'];
+      final app = AppState()..deliveryModeForTest = DeliveryMode.checkins;
+      app.appInFront(false);
+      int stops() => log.where((l) => l == 'stop').length;
+      await t.pump(const Duration(seconds: 95));
+      expect(stops(), 1);
+      await t.pump(const Duration(seconds: 30));
+      expect(stops(), 2);
+      await t.pump(const Duration(seconds: 60));
+      expect(stops(), 3);
+      await t.pump(const Duration(seconds: 60));
+      expect(stops(), 3);
+      await t.pump(const Duration(seconds: 60));
+      expect(stops(), 4);
+      // never more than ten minutes apart
+      await t.pump(const Duration(minutes: 30));
+      final later = stops();
+      await t.pump(const Duration(minutes: 10, seconds: 1));
+      expect(stops(), later + 1);
+      app.appInFront(true);
+      await t.pump();
     });
 
     testWidgets('is not tried again once the app is back', (t) async {
@@ -540,6 +691,45 @@ void main() {
       expect(app.lastCheckAt, 0);
       expect(checkInOk(app.lastCheckHow), isFalse);
       expect(checkInLine(app.lastCheckHow), contains(l10n.appNoRelayReached));
+    });
+  });
+
+  group('a check-in on a slow wake', () {
+    testWidgets('gives the relays their own time from the kick', (t) async {
+      final live = _Flaky();
+      useDatabasesForTest(live, Session(live));
+      final app = AppState()
+        ..sendModeForTest = 'private'
+        ..deliveryModeForTest = DeliveryMode.checkins;
+      app.setTorStatusForTest(TorStatus.starting);
+      app.setRouteOKForTest(false);
+      addTearDown(() {
+        app.setTorStatusForTest(TorStatus.off);
+        app.setRouteOKForTest(true);
+      });
+      var at = DateTime(2026, 10, 11, 12);
+      app.checkClockForTest = () => at;
+      var n = -1;
+      Object? err;
+      unawaited(
+        app.checkIn(why: 'job').then((v) => n = v, onError: (e) => err = e),
+      );
+      int? kicked;
+      for (var i = 0; i < 150 && n < 0; i++) {
+        // tor takes most of a minute to carry anything
+        if (i == 50) {
+          app.setTorStatusForTest(TorStatus.publishing);
+          app.setRouteOKForTest(true);
+        }
+        if (kicked == null && log.contains('kick')) kicked = i;
+        // the first relay gets going ten seconds after the kick
+        if (kicked != null && i == kicked + 10) eng.catchup = (0, 2);
+        at = at.add(const Duration(seconds: 1));
+        await t.pump(const Duration(seconds: 1));
+      }
+      expect(n, isNot(-1), reason: '$err');
+      expect(checkInOk(app.lastCheckHow), isTrue, reason: app.lastCheckHow);
+      expect(app.lastCheckAt, isNot(0));
     });
   });
 
@@ -577,6 +767,32 @@ void main() {
         );
         expect(retries(), 2, reason: s.phase);
       }
+    });
+
+    testWidgets('in check-ins, once tor is awake and says it is stuck', (
+      t,
+    ) async {
+      final app = AppState()
+        ..sendModeForTest = 'private'
+        ..deliveryModeForTest = DeliveryMode.checkins
+        ..bridgeSetupForTest = const BridgeSetup(choice: BridgeChoice.auto);
+      app.noteOnline(true);
+      app.appInFront(false);
+      await t.pump(const Duration(seconds: 95));
+      expect(app.torHeld, isTrue);
+      app.setBridgeStatusForTest(
+        const BridgeStatus(mode: 'auto', phase: 'paused'),
+      );
+      app.appInFront(true);
+      await t.pump();
+      expect(app.torHeld, isFalse);
+      expect(retries(), 0);
+      // awake, the engine's next word is that automatic is out of ways
+      app.takeBridgeStatus('{"mode":"auto","phase":"exhausted"}');
+      expect(retries(), 1);
+      app.takeBridgeStatus('{"mode":"auto","phase":"trying"}');
+      app.takeBridgeStatus('{"mode":"auto","phase":"exhausted"}');
+      expect(retries(), 1);
     });
 
     test('not while it gets somewhere, not off onion, never in a decoy', () {
