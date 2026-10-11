@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/badge_client.dart' show kBadgeTiersShown;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
     show HaloEngine, appState, showAddContact, useEngineForTest;
@@ -153,7 +154,7 @@ void main() {
       await t.pump(const Duration(milliseconds: 500));
       expect(t.hasRunningAnimations, isFalse);
       await t.pumpWidget(const SizedBox());
-    });
+    }, skip: !kBadgeTiersShown);
 
     testWidgets('reduced motion: picks are instant and nothing grows', (
       t,
@@ -161,7 +162,7 @@ void main() {
       phone(t);
       await t.pumpWidget(framed(const DonateScreen(), still: true));
       await t.pump(const Duration(seconds: 1));
-      await t.tap(find.text(l10n.donateTierGuardian));
+      if (kBadgeTiersShown) await t.tap(find.text(l10n.donateTierGuardian));
       await t.tap(find.text(l10n.donateSolana));
       await t.pump();
       expect(t.hasRunningAnimations, isFalse);
@@ -201,7 +202,7 @@ void main() {
       expect(find.text(l10n.donateIPaidCheckAgain), findsOneWidget);
       await t.pumpWidget(const SizedBox());
       await t.pump(const Duration(seconds: 61));
-    });
+    }, skip: !kBadgeTiersShown);
 
     testWidgets('copying the address ticks the button', (t) async {
       phone(t);

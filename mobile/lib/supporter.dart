@@ -3,7 +3,7 @@
 // and to contacts. all local; nothing here tracks who donated.
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'badge_client.dart' show fetchReceipt, ReceiptState;
+import 'badge_client.dart' show fetchReceipt, kBadgeTiersShown, ReceiptState;
 import 'container.dart';
 import 'l10n/l10n.dart';
 
@@ -156,6 +156,8 @@ Future<void> clearOpenInvoice([
 Future<SupporterTier?> settleOpenInvoice([
   HaloContainer c = HaloContainer.everyday,
 ]) async {
+  // kept for when the tiers are back
+  if (!kBadgeTiersShown) return null;
   final prefs = await SharedPreferences.getInstance();
   final raw = prefs.getString(c.key(_openInvoiceKey));
   if (raw == null) return null;

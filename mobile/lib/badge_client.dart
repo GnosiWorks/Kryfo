@@ -14,6 +14,10 @@ const String kBadgeOnion =
     'http://ez33yxbb2ao4wphhv4zpm6hra367fahkia3tjdbiw73h2ntkx7gpuyyd.onion';
 const String kBadgePubKeyB64 = 'FQPd_T9fMWs-5RvSeGwDqiKe28eOvsQ1EG1jZvJnf0Q';
 
+// the paid tiers and the invoice flow. off: support shows the addresses only
+// and nothing asks the badge service. earned badges show either way
+const bool kBadgeTiersShown = false;
+
 class BadgeInvoice {
   final String id;
   final String tier;
@@ -43,6 +47,7 @@ class BadgeReceipt {
 /// null when tor or the service is unreachable: the caller shows the
 /// manual address instead
 Future<BadgeInvoice?> createInvoice(String tier) async {
+  if (!kBadgeTiersShown) return null;
   final raw = await engine.torPost(
     '$kBadgeOnion/invoice',
     jsonEncode({'tier': tier}),
