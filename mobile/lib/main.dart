@@ -19543,11 +19543,23 @@ class AppState extends ChangeNotifier {
   // the count after it is what still waits once the sends are done: the
   // pass counts before it sends
   Future<void> flushOutboxNow() async {
-    _outboxNextAt.clear();
-    _outboxTries.clear();
-    await drainOutbox(wait: true);
-    await _countOutbox();
+    // one at a time: a second tap while it waits would only stack passes
+    if (_flushing) return;
+    _flushing = true;
+    notifyListeners();
+    try {
+      _outboxNextAt.clear();
+      _outboxTries.clear();
+      await drainOutbox(wait: true);
+      await _countOutbox();
+    } finally {
+      _flushing = false;
+      notifyListeners();
+    }
   }
+
+  bool _flushing = false;
+  bool get flushing => _flushing;
 
   // tiny ack: tells the original sender their message landed. reuses the
   // gift-wrap transport; carries only the uid, no body, no sender bundle.

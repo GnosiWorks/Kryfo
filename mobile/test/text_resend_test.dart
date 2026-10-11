@@ -863,8 +863,17 @@ void main() {
     });
     expect(relay.sends, hasLength(1));
     expect(done, isFalse);
+    // a second tap while it waits adds nothing
+    expect(appState.flushing, isTrue);
+    var second = false;
+    await t.runAsync(
+      () => appState.flushOutboxNow().whenComplete(() => second = true),
+    );
+    expect(second, isTrue);
+    expect(done, isFalse);
     relay.sends.single.complete('ok');
     await t.runAsync(() => flush);
+    expect(appState.flushing, isFalse);
     expect(sentOf('s1'), 1);
     expect(appState.queued, 0);
   });
