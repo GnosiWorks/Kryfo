@@ -372,6 +372,64 @@ func TestBuiltinRefreshNeedsTor(t *testing.T) {
 	}
 }
 
+// through tor the refresh shows moat no address, so it goes out without
+// consent. the decoy gate, the tor-only path and the back-off still hold.
+func TestBuiltinRefreshNeedsNoConsent(t *testing.T) {
+	moat, _ := useMoatStandIns(t)
+	resetBuiltinState(t)
+	defer func() { builtinMu.Lock(); builtinFailedAt = time.Time{}; builtinMu.Unlock() }()
+	var vias []string
+	moatTransport = func(via string, d *moatDials) (*http.Transport, error) {
+		vias = append(vias, via)
+		tr, _ := moatTransportFor(viaPlain, d)
+		tr.DialContext = func(ctx context.Context, network, _ string) (net.Conn, error) {
+			c, err := (&net.Dialer{}).DialContext(ctx, network, moat.srv.Listener.Addr().String())
+			if err != nil {
+				return nil, err
+			}
+			return d.keep(c)
+		}
+		return tr, nil
+	}
+
+	// a decoy open: refused, nothing out, no back-off
+	setDecoy(true)
+	if r := reply(t, builtinRefreshJSON(`{"force":true}`)); r["error"] != "decoy" {
+		t.Fatalf("in a decoy: %v", r)
+	}
+	if moat.hits.Load() != 0 || builtinBackingOff() {
+		t.Fatal("a refused refresh went out")
+	}
+
+	setDecoy(false)
+	r := reply(t, builtinRefreshJSON(`{"via":"plain"}`))
+	if r["ok"] != true || r["kept"] == nil {
+		t.Fatalf("refresh without consent: %v", r)
+	}
+	if moat.hits.Load() != 1 || len(vias) != 1 || vias[0] != viaTor {
+		t.Fatalf("refresh went %v, %d hits", vias, moat.hits.Load())
+	}
+	// the other moat calls still want consent
+	if r := reply(t, moatSettingsJSON(`{"via":"tor"}`)); r["error"] != "no_consent" {
+		t.Errorf("settings without consent: %v", r)
+	}
+
+	// a failed try still holds the next one off, forced or not
+	builtinMu.Lock()
+	builtinFreshAt = time.Time{}
+	builtinMu.Unlock()
+	moat.srv.Close()
+	if r := reply(t, builtinRefreshJSON(`{}`)); r["error"] != "moat_unreachable" {
+		t.Fatalf("with moat gone: %v", r)
+	}
+	if r := reply(t, builtinRefreshJSON(`{"force":true}`)); r["skipped"] != true {
+		t.Errorf("right after a failure: %v", r)
+	}
+	if len(vias) != 2 {
+		t.Errorf("%d tries, want 2", len(vias))
+	}
+}
+
 func TestMoatSettingsFixtures(t *testing.T) {
 	for _, name := range []string{"settings-ir", "settings-cn", "settings-ru", "settings-tm", "defaults"} {
 		out, err := readMoatSettings(fixture(t, name), 200)

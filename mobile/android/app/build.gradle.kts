@@ -120,6 +120,7 @@ dependencies {
     // the camera shrink reads the orientation tag. the platform class is
     // banned by lint for old security bugs; this one is the maintained copy
     implementation("androidx.exifinterface:exifinterface:1.4.2")
+    testImplementation("junit:junit:4.13.2")
 }
 
 // libhalo.so is gitignored, and an apk without it dies on launch with
@@ -136,6 +137,29 @@ tasks.named("preBuild") {
                     "    cd engine && ./build.sh\n" +
                     "see BUILDING.md."
             )
+        }
+    }
+}
+
+// the test engine that acts as if tor were blocked (HALO_TOR_BLOCKED=1) is
+// for the bridgetest debug app only. any other build refuses it.
+android.applicationVariants.configureEach {
+    val variant = this
+    variant.preBuildProvider.configure {
+        doFirst {
+            if (variant.buildType.name != "debug" || System.getenv("HALO_TEST_ID") != "1") {
+                val libs = listOf("arm64-v8a", "armeabi-v7a", "x86_64").map {
+                    file("src/main/jniLibs/$it/libhalo.so").path
+                }
+                val scan = rootProject.file("../../engine/censor-scan.sh").path
+                val p = ProcessBuilder(listOf("bash", scan) + libs).inheritIO().start()
+                if (p.waitFor() != 0) {
+                    throw GradleException(
+                        "the engine in jniLibs is a test build. rebuild it with\n" +
+                            "    cd engine && ./build.sh"
+                    )
+                }
+            }
         }
     }
 }

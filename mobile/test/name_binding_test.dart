@@ -125,6 +125,7 @@ class _Io extends AppIo {
     required String title,
     required String body,
     String? payload,
+    Object? on,
     String? msgUid,
     int? burnAt,
   }) async {}
@@ -758,7 +759,7 @@ void main() {
     // the same card with her own key still reads
     expect(
       await handleHaloUriAdded(buildHaloUri(_amber, 'o-amber', amber.xPub)),
-      (l10n.appPeerImportedV1(_amber), false),
+      (l10n.appAlreadySaved(_amber), true),
     );
   });
 
@@ -868,6 +869,23 @@ void main() {
       expect(engineAsked.where(_sends.contains), isEmpty);
     });
 
+    test('an old card adds as a new one does: home shows them and their '
+        'chat opens', () async {
+      const fresh = 'fresh-old-card';
+      final them = await _phone();
+      final card = buildHaloUri(fresh, 'o-fresh', them.xPub);
+      expect(appState.contacts.where((c) => c.haloId == fresh), isEmpty);
+      expect(await handleHaloUriAdded(card), ('', true));
+      expect(appState.contacts.where((c) => c.haloId == fresh), hasLength(1));
+      expect(opened, [fresh]);
+      // again: the line says so, and the chat opens again
+      expect(await handleHaloUriAdded(card), (
+        l10n.appAlreadySaved(fresh),
+        true,
+      ));
+      expect(opened, [fresh, fresh]);
+    });
+
     test('in the decoy someone added stays on this phone, and their chat '
         'opens as it would anywhere', () async {
       const fresh = 'fresh-decoy-face';
@@ -973,7 +991,7 @@ void main() {
         engineAsked.clear();
         expect(
           await handleHaloUriAdded(buildHaloUri(asker, 'o-old', them.xPub)),
-          (l10n.appPeerImportedV1(asker), false),
+          ('', true),
         );
         await _settle();
         expect(live.people[asker], containsPair('accepted', 1));

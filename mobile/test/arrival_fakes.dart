@@ -2,6 +2,7 @@
 // stand-ins for what the receive side reaches: the router's store and seal,
 // signal and the engine as the app calls them, and a database kept in maps
 // that notes every call. anything else they are asked fails the test
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -9,19 +10,12 @@ import 'package:kryfo/container.dart';
 import 'package:kryfo/group_media_send.dart' show groupOwedGap;
 import 'package:kryfo/first_contact.dart' show firstKeepFits, firstRetryGap;
 import 'package:kryfo/main.dart'
-    show
-        AppIo,
-        FirstKept,
-        HaloDb,
-        blockedAtArgs,
-        groupUnsendOf,
-        groupUnsendRow,
-        kBlockListenFor,
-        kUnblockGrace;
+    show AppIo, FirstKept, HaloDb, groupUnsendOf, groupUnsendRow;
 import 'package:kryfo/media_resend.dart';
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
-import 'package:kryfo/rooms.dart' show kRoomJoinWait;
+import 'package:kryfo/relay_poll.dart' show Reached;
+import 'package:kryfo/rooms.dart' show kRoomJoinWait, kRoomRecent, roomUidPart;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/stranger_gate.dart'
     show ShelfFull, Shelved, kShelfPlaces, shelfVerdict;
@@ -82,13 +76,19 @@ class ArrivalStore implements RouterStore {
   @override
   Future<int> inboxParts(String uid) async => {
     for (final r in inbox)
-      if (r['uid'] == uid && r['part'] != null) r['part'],
+      if (r['uid'] == uid && r['part'] is int && (r['part'] as int) >= 0)
+        r['part'],
   }.length;
   @override
   Future<int> inboxCount() async => inbox.length;
   @override
-  Future<List<(int, int)>> inboxSizes() async => [
-    for (final r in inbox) (r['id'] as int, (r['sealed'] as List<int>).length),
+  Future<List<(int, int, bool)>> inboxSizes() async => [
+    for (final r in inbox)
+      (
+        r['id'] as int,
+        (r['sealed'] as List<int>).length,
+        r['part'] == kNotePart,
+      ),
   ];
   @override
   Future<List<Map<String, Object?>>> inboxOldest(
@@ -260,6 +260,7 @@ class ArrivalIo implements AppIo {
     required String title,
     required String body,
     String? payload,
+    Object? on,
     String? msgUid,
     int? burnAt,
   }) async {
@@ -289,6 +290,22 @@ class ArrivalIo implements AppIo {
 // a database in memory: the rows the receive side reads and writes, and a
 // note of every call. anything else it is asked fails the test
 class ArrivalRows implements HaloDb {
+  // the tag each chat's notifications go under
+  final notifTags = <String, String>{};
+  static var _tagNo = 0;
+  @override
+  Future<String> notifTag(String chat) async =>
+      notifTags[chat] ??= '${_container.dbFile}-tag-${++_tagNo}';
+  @override
+  Future<String?> notifTagOf(String chat) async => notifTags[chat];
+  @override
+  Future<String?> notifChatOf(String tag) async {
+    for (final e in notifTags.entries) {
+      if (e.value == tag) return e.key;
+    }
+    return null;
+  }
+
   // nobody verified under another key: nothing is held
   @override
   Future<bool> keyHeld(String haloId) async => false;
@@ -310,11 +327,13 @@ class ArrivalRows implements HaloDb {
   // who sent each file's slices, and when its last one came
   final chunkFrom = <String, String>{};
   final chunkAt = <String, int>{};
+  // the group each file's slices came in, null for none
+  final chunkGroup = <String, String?>{};
   var _clock = 0;
   final seen = <String>{};
   final held = <String>[];
   // what was held, row by row, as heldOf hands it back
-  final heldRows = <String, List<({int id, String cipher})>>{};
+  final heldRows = <String, List<({int id, String cipher, int at})>>{};
   var _heldId = 0;
   Map<String, List<String>> get heldCiphers => {
     for (final e in heldRows.entries)
@@ -330,6 +349,8 @@ class ArrivalRows implements HaloDb {
   void Function()? onSave;
   // called as a message is about to be kept
   void Function()? beforeSave;
+  // a message waits here, about to be kept, until it completes
+  Completer<void>? saveGate;
 
   // calls that leave a row behind. the seen marks are the receive side's
   // own bookkeeping and say nothing of anyone
@@ -545,19 +566,10 @@ class ArrivalRows implements HaloDb {
     if (!blocked && open >= 0) spans[open] = (spans[open].$1, now);
   }
 
-  // as kBlockedAtWhere reads its arguments: an ended span, from its start
-  // to its end less the grace
   @override
-  Future<bool> blockedAt(
-    String haloId,
-    int at, {
-    int slack = kUnblockGrace,
-  }) async {
-    final a = blockedAtArgs(haloId, at, slack: slack);
-    return [...?blockSpans[haloId]].any(
-      (s) => s.$1 <= (a[1] as int) && s.$2 != null && s.$2! > (a[2] as int),
-    );
-  }
+  Future<List<(int, int?)>> blockSpansOf(String haloId) async => [
+    ...?blockSpans[haloId],
+  ];
 
   @override
   Future<int?> blockedSince(String haloId) async {
@@ -725,7 +737,11 @@ class ArrivalRows implements HaloDb {
     );
     if (v != Shelved.kept) return v;
     held.add(peerId);
-    rows.add((id: ++_heldId, cipher: cipher));
+    rows.add((
+      id: ++_heldId,
+      cipher: cipher,
+      at: DateTime.now().millisecondsSinceEpoch,
+    ));
     if (mediaId != null && !overflow) {
       heldMedia[_heldId] = mediaId;
       heldChunk[_heldId] = chunk;
@@ -775,7 +791,7 @@ class ArrivalRows implements HaloDb {
   }
 
   @override
-  Future<List<({int id, String cipher})>> heldOf(String peerId) async =>
+  Future<List<({int id, String cipher, int at})>> heldOf(String peerId) async =>
       _hit('heldOf', peerId, [...?heldRows[peerId]]);
 
   @override
@@ -830,6 +846,7 @@ class ArrivalRows implements HaloDb {
     String peer = '',
     String? uid,
     required int now,
+    Reached? reached,
   }) async {
     _hit('keepFirst', null, null);
     if (kept.containsKey(hash)) return true;
@@ -856,6 +873,7 @@ class ArrivalRows implements HaloDb {
       at: now,
       tries: 0,
       nextAt: now + firstRetryGap(0).inMilliseconds,
+      reached: reached,
     );
     return true;
   }
@@ -874,6 +892,7 @@ class ArrivalRows implements HaloDb {
       at: r.at,
       tries: tries,
       nextAt: nextAt,
+      reached: r.reached,
     );
   }
 
@@ -963,6 +982,8 @@ class ArrivalRows implements HaloDb {
     bool viaDev = false,
   }) async {
     beforeSave?.call();
+    final gate = saveGate;
+    if (gate != null) await gate.future;
     _hit('saveMessage', msgUid ?? peerId, null);
     msgs.add({
       'peer_id': peerId,
@@ -982,6 +1003,44 @@ class ArrivalRows implements HaloDb {
       'edited': 0,
     });
     onSave?.call();
+  }
+
+  @override
+  Future<bool> saveInGroup(
+    String peerId,
+    String plaintext, {
+    required String groupId,
+    required String msgUid,
+    int? burnSecs,
+    String? replyTo,
+    String? mediaPath,
+    String? filePath,
+    String? fileName,
+    bool voiceDisguised = false,
+    int sent = 0,
+    String? preview,
+    String? poll,
+    String? sticker,
+  }) async {
+    if (!groupRows.containsKey(groupId)) return false;
+    await saveMessage(
+      peerId,
+      'out',
+      plaintext,
+      groupId: groupId,
+      msgUid: msgUid,
+      burnSecs: burnSecs,
+      replyTo: replyTo,
+      mediaPath: mediaPath,
+      filePath: filePath,
+      fileName: fileName,
+      voiceDisguised: voiceDisguised,
+      sent: sent,
+      preview: preview,
+      poll: poll,
+      sticker: sticker,
+    );
+    return true;
   }
 
   @override
@@ -1038,6 +1097,21 @@ class ArrivalRows implements HaloDb {
     _hit('addReaction', msgUid, null);
     reactions.putIfAbsent(msgUid, () => {})[reactor] = emoji;
     reactedAt['$msgUid $reactor'] = at;
+  }
+
+  // the sender's time on the last edit and reaction taken, as frame_order
+  final order = <String, int>{};
+  @override
+  Future<bool> takeFrameOrder(
+    String msgUid,
+    String sender,
+    String kind,
+    int w,
+  ) async {
+    final k = '$msgUid $sender $kind';
+    if ((order[k] ?? w) > w) return false;
+    order[k] = w;
+    return true;
   }
 
   @override
@@ -1186,6 +1260,7 @@ class ArrivalRows implements HaloDb {
     );
     rosterStamps.remove(groupId);
     rosterGoneKeys.remove(groupId);
+    roomKeys.remove(groupId);
     roomSeqs.remove(groupId);
   }
 
@@ -1325,6 +1400,106 @@ class ArrivalRows implements HaloDb {
   @override
   Future<void> noteRosterGone(String groupId, Iterable<String> keys) async =>
       rosterGoneKeys.putIfAbsent(groupId, () => {}).addAll(keys);
+
+  // ---- each room key: listened to, its last messages, what it owes ----
+  final roomKeys =
+      <
+        String,
+        Map<String, ({List<String> recent, Set<String> owed, int out})>
+      >{};
+
+  ({List<String> recent, Set<String> owed, int out}) _key(String g, String k) =>
+      roomKeys[g]?[k] ?? (recent: const [], owed: const {}, out: 0);
+  void _putKey(
+    String g,
+    String k,
+    ({List<String> recent, Set<String> owed, int out}) v,
+  ) => roomKeys.putIfAbsent(g, () => {})[k] = v;
+
+  @override
+  Future<Set<String>> roomKeysOf(String groupId) async => {
+    ...?roomKeys[groupId]?.keys,
+  };
+  @override
+  Future<bool> noteRoomKeys(String groupId, Iterable<String> keys) async {
+    if (!groupRows.containsKey(groupId)) return false;
+    for (final k in keys) {
+      _putKey(groupId, k, _key(groupId, k));
+    }
+    return true;
+  }
+
+  @override
+  Future<void> noteRoomEntry(String groupId, String key, String h) async {
+    if (!groupRows.containsKey(groupId)) return;
+    final had = _key(groupId, key);
+    final recent = [...had.recent.where((x) => x != h), h];
+    _putKey(groupId, key, (
+      recent: recent.length > kRoomRecent
+          ? recent.sublist(recent.length - kRoomRecent)
+          : recent,
+      owed: had.owed,
+      out: had.out,
+    ));
+  }
+
+  @override
+  Future<List<String>> roomRecent(String groupId, String key) async => [
+    ..._key(groupId, key).recent,
+  ];
+  @override
+  Future<Set<String>> noteRoomKeyOut(
+    String groupId,
+    String key, {
+    Iterable<String> listed = const [],
+  }) async {
+    if (!groupRows.containsKey(groupId)) return const {};
+    final had = _key(groupId, key);
+    final owed = {
+      for (final h in listed)
+        if (!had.recent.contains(h) && (had.out == 0 || had.owed.contains(h)))
+          h,
+    };
+    _putKey(groupId, key, (
+      recent: had.recent,
+      owed: owed,
+      out: had.out == 2 ? 2 : 1,
+    ));
+    return owed;
+  }
+
+  @override
+  Future<bool> roomOwes(String groupId, String key, String entry) async =>
+      _key(groupId, key).owed.contains(entry);
+  @override
+  Future<bool> roomOwesUid(String groupId, String key, String uid) async {
+    final part = roomUidPart(groupId, uid);
+    return _key(groupId, key).owed.any((h) => h.startsWith(part));
+  }
+
+  @override
+  Future<int> roomOwedIn(String groupId, String key, String uid) async {
+    final had = _key(groupId, key);
+    final part = roomUidPart(groupId, uid);
+    final owed = {...had.owed}..removeWhere((h) => h.startsWith(part));
+    _putKey(groupId, key, (recent: had.recent, owed: owed, out: had.out));
+    return owed.length;
+  }
+
+  @override
+  Future<Set<String>> roomKeysGoing(String groupId) async => {
+    for (final e in (roomKeys[groupId] ?? const {}).entries)
+      if (e.value.out == 1) e.key,
+  };
+  @override
+  Future<void> roomKeyStopped(String groupId, String key) async {
+    if (!groupRows.containsKey(groupId)) return;
+    _putKey(groupId, key, (
+      recent: _key(groupId, key).recent,
+      owed: const {},
+      out: 2,
+    ));
+  }
 
   @override
   Future<List<Map<String, Object?>>> rooms() async => _hit('rooms', null, [
@@ -1523,9 +1698,11 @@ class ArrivalRows implements HaloDb {
     int total,
     int? burn, {
     required String from,
+    String? group,
   }) async {
     _hit('putMediaChunk', mediaId, null);
     chunkFrom[mediaId] = from;
+    chunkGroup[mediaId] = group;
     chunkAt[mediaId] = ++_clock;
     (chunks[mediaId] ??= {})[idx] = slice;
     if (burn != null) chunkBurn[mediaId] = burn;

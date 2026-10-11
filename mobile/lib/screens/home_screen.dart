@@ -63,6 +63,7 @@ import 'dev_about_sheet.dart';
 import 'search_screen.dart';
 import 'group_info_screen.dart' show leaveLine;
 import 'support_screen.dart' show SupportPin, supportRoute;
+import '../widgets/update_card.dart' show UpdateHint;
 
 bool _miuiPromptChecked = false;
 
@@ -472,6 +473,7 @@ class _ChatsTab extends StatelessWidget {
           const OfflineCard(),
           const _KeepsStoppingCard(),
           const _NotificationsBlockedHint(),
+          const UpdateHint(),
           StaggerIn(
             index: 1,
             child: _QuickTiles(
@@ -2294,6 +2296,12 @@ void _chatMenu(BuildContext context, ContactPreview c) {
   });
 }
 
+/// a group hides while hidden chats are open. a room cannot: it ends with
+/// its clock, and its rows never move
+@visibleForTesting
+bool groupMenuHides(GroupSummary g, {required bool inVault}) =>
+    inVault && !g.isRoom;
+
 // a group's or a room's menu: hide it while hidden chats are open, or
 // leave it, after saying what leaving costs
 void _groupMenu(BuildContext context, GroupSummary g) {
@@ -2306,7 +2314,7 @@ void _groupMenu(BuildContext context, GroupSummary g) {
       return SingleChildScrollView(
         child: MenuSheet(
           groups: [
-            if (lockState.inVault)
+            if (groupMenuHides(g, inVault: lockState.inVault))
               [
                 MenuSheetRow(
                   icon: g.hidden

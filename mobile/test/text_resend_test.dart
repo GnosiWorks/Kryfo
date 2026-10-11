@@ -786,6 +786,70 @@ void main() {
     await devClose(t);
   });
 
+  testWidgets('a text the chat is still sending is left to it by the '
+      'outbox', (t) async {
+    await openChat(t);
+    await t.enterText(find.byType(TextField).last, 'on my way');
+    await t.pump();
+    await t.pump(const Duration(seconds: 1));
+    await t.tap(find.byIcon(Icons.arrow_upward));
+    await settle(t);
+    expect(relay.sends, hasLength(1));
+    // the relay is slow: the row is old enough for the outbox to take
+    await mem.update(
+      'messages',
+      {'sent_at': DateTime.now().millisecondsSinceEpoch - 120000},
+      where: 'direction = ?',
+      whereArgs: ['out'],
+    );
+    await t.runAsync(appState.drainOutbox);
+    await settle(t);
+    expect(relay.sends, hasLength(1));
+    relay.sends.single.complete('ok');
+    await settle(t);
+    expect(sentRow()['sent'], 1);
+    await devClose(t);
+  });
+
+  testWidgets('the retry on reconnect leaves a text the outbox is '
+      'sending', (t) async {
+    await failed('o1', 'see you there');
+    appState.noteOnline(false);
+    await openChat(t);
+    await settle(t);
+    expect(relay.sends, isEmpty);
+    // the outbox took it while the chat was offline
+    expect(appState.claimSend('o1'), isTrue);
+    appState.noteOnline(true);
+    await settle(t);
+    await halfMinutes(t, 2);
+    expect(relay.sends, isEmpty);
+    // let go, the chat's own retries take it again
+    appState.releaseSend('o1');
+    await halfMinutes(t, 1);
+    expect(relay.sends, hasLength(1));
+    relay.sends.single.complete('ok');
+    await settle(t);
+    expect(sentOf('o1'), 1);
+    await devClose(t);
+  });
+
+  testWidgets('an outbox pass reads the chat again once, not once a '
+      'row', (t) async {
+    for (final uid in ['p1', 'p2', 'p3']) {
+      await failed(uid, 'text $uid');
+    }
+    final before = appState.chatRevOf(_peer);
+    await t.runAsync(appState.drainOutbox);
+    await settle(t);
+    expect(relay.sends, hasLength(3));
+    for (final s in relay.sends) {
+      s.complete('error: timeout');
+    }
+    await settle(t);
+    expect(appState.chatRevOf(_peer) - before, 1);
+  });
+
   testWidgets('a block in the vault leaves a text here waiting, not '
       'failed, and nothing goes', (t) async {
     final hidden = MemDb();

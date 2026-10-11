@@ -156,6 +156,7 @@ class _Io extends AppIo {
     required String title,
     required String body,
     String? payload,
+    Object? on,
     String? msgUid,
     int? burnAt,
   }) async {}
@@ -342,6 +343,44 @@ void main() {
       expect(live.seen, contains(h));
     });
 
+    test('one kept keeps when it came, and its try is judged by that: one '
+        'that came while a block held does not file once it ends', () async {
+      final s = await stranger('stray-onion-held');
+      final c = await s.p.ss.encryptTo(_me, await wrap(s, 'u-onh'));
+      failOnce();
+      await app.receiveOnion([c]);
+      final r = live.kept[_hash(c)]!.reached!;
+      expect(r.until, greaterThanOrEqualTo(r.from));
+      // blocked from before it came until just after, and let go of
+      live.blockSpans[s.id] = [(r.from - 3600000, r.until + 1)];
+      await app.retryFirsts(all: true);
+      await _settle();
+      expect(rowsOf(s.id), isEmpty);
+    });
+
+    test(
+      'one kept before when it came was kept is judged by its stamps',
+      () async {
+        final s = await stranger('stray-onion-old');
+        final c = await s.p.ss.encryptTo(_me, await wrap(s, 'u-ono'));
+        final now = DateTime.now().millisecondsSinceEpoch;
+        live.kept[_hash(c)] = (
+          hash: _hash(c),
+          cipher: c,
+          peer: '',
+          at: now,
+          tries: 0,
+          nextAt: 0,
+          reached: null,
+        );
+        // a block that ended an hour before it was written
+        live.blockSpans[s.id] = [(now - 3 * 3600000, now - 3600000)];
+        await app.retryFirsts(all: true);
+        await _settle();
+        expect(rowsOf(s.id), [_said]);
+      },
+    );
+
     test('one past the relays\' two weeks is let go of for good', () async {
       live.kept['old'] = (
         hash: 'old',
@@ -350,6 +389,7 @@ void main() {
         at: DateTime.now().millisecondsSinceEpoch - 15 * 86400000,
         tries: 0,
         nextAt: 0,
+        reached: null,
       );
       await app.retryFirsts();
       expect(live.kept, isEmpty);
@@ -677,6 +717,7 @@ void main() {
         at: at,
         tries: 0,
         nextAt: 0,
+        reached: null,
       );
     }
     await app.resetInviteAddress();

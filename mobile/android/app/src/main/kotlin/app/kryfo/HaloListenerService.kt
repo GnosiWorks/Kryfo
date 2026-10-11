@@ -76,14 +76,23 @@ class HaloListenerService : Service() {
             .build()
         // android 14+ refuses a typed foreground service unless the type
         // is passed here too, and the service dies on start.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            startForeground(
-                NOTIFICATION_ID,
-                notification,
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
-            )
-        } else {
-            startForeground(NOTIFICATION_ID, notification)
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                startForeground(
+                    NOTIFICATION_ID,
+                    notification,
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+                )
+            } else {
+                startForeground(NOTIFICATION_ID, notification)
+            }
+        } catch (e: Exception) {
+            // a sticky restart android will not let into the front goes
+            // rather than taking the process down. the job still runs
+            if (intent != null) throw e
+            running = false
+            stopSelf()
+            return START_NOT_STICKY
         }
         // wiped, or never opened: nothing to stay connected for. a foreground
         // service that stops before startForeground takes the process down,

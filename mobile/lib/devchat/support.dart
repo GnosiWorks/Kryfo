@@ -426,9 +426,10 @@ class SupportBell {
   // an answered chat's message, as any contact's would ring
   Future<void> chat({
     required String chatId,
+    required String tag,
     required String title,
     required String body,
-  }) => showSupportMessage(chatId: chatId, title: title, body: body);
+  }) => showSupportMessage(chatId: chatId, tag: tag, title: title, body: body);
 
   Future<void> clear() => clearSupportSummary();
 }

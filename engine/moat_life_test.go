@@ -230,7 +230,9 @@ func TestBuiltinRefreshBacksOff(t *testing.T) {
 	builtinMu.Lock()
 	builtinFailedAt = time.Time{}
 	builtinMu.Unlock()
-	builtinRefreshJSON(`{}`)
+	setDecoy(true)
+	builtinRefreshJSON(`{"force":true}`)
+	setDecoy(false)
 	if builtinBackingOff() {
 		t.Error("a refusal started the back-off")
 	}

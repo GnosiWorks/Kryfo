@@ -269,6 +269,7 @@ const containerKeys = {
   'kryfo.intro.sent',
   'kryfo.scamshield.on',
   'kryfo.gif.on',
+  'kryfo.update.on',
   'notif_hide_content',
   'sticker_recents',
   // drafts written down for a restart the person asked for, read back once
@@ -296,6 +297,7 @@ const deviceKeys = {
   'hb.gaps',
   'hb.jobs',
   'hb.jobAt',
+  'auto_restart.at',
   'send_mode',
   'block_screenshots',
   'theme_light',
@@ -318,4 +320,7 @@ const deviceKeys = {
   'xpub_cache',
   'helper_endpoints',
   'helper_slots',
+  'kryfo.update.checked',
+  'kryfo.update.latest',
+  'kryfo.update.dismissed',
 };

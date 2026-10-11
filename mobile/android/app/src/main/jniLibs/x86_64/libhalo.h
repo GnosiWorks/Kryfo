@@ -434,6 +434,11 @@ extern char* HaloRoomSubscribeFirstContact(char* cPriv);
 //
 extern char* HaloRoomForget(char* cPriv, char* cPeers);
 
+// one member of a room no longer listened to, and what its address kept on
+// disk gone: they left or were taken out. the room's other lanes stay
+//
+extern char* HaloRoomUnsubscribeMember(char* cPriv, char* cPeer);
+
 // stop every subscription a room key holds. called on expiry and on leave;
 // after this nothing addressed to the room can arrive.
 //
@@ -458,6 +463,12 @@ extern char* HaloGifGet(char* cUrl);
 //
 extern char* HaloGifGetFile(char* cUrl, char* cPath);
 extern char* HaloTransportState(void);
+
+// GET a file of kryfo.app over tor, on the update lane. the body of a 200,
+// capped at 4kb, or "error: ...": "error: status" and "error: read" when
+// the site answered, "error: tor" and "error: get" when it was not reached.
+//
+extern char* HaloUpdateGet(char* cUrl);
 
 // {"pub": "age1...", "priv": "AGE-SECRET-KEY-1..."}
 //

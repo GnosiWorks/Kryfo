@@ -2,11 +2,10 @@
 // what someone blocked sends while the block holds is dropped for good: a
 // copy of it after the unblock, sent again or held by the relays, never
 // lands in requests or the chat. what they send after the unblock does.
-// what an ended block alone turns away by its stamp is not noted, so a
-// copy sent again lands, and the last ten minutes before the unblock are
-// given to a slow clock. a span judges by when it was written, which the
-// envelope carries on every retry, so a copy wrapped again after the
-// unblock stays out; a sender without it is judged by the wrap time. the
+// an ended block keeps out what may have reached the relay while it held,
+// by this clock, whatever its stamps say, and what their own two stamps
+// say was written while it held, however slow or fast their clock is.
+// what it alone turns away is not noted, so a copy sent again lands. the
 // block takes what of theirs is in the shade with it, outside the decoy.
 // signal and the database are the app's stand-ins
 import 'dart:convert';
@@ -19,6 +18,7 @@ import 'package:kryfo/container.dart';
 import 'package:kryfo/main.dart'
     show AppState, HaloEngine, useDatabasesForTest, useEngineForTest;
 import 'package:kryfo/message_envelope.dart';
+import 'package:kryfo/relay_poll.dart' show Reached;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -129,6 +129,12 @@ class _World {
       if (s.$1.endsWith('-$who')) s,
   ];
 
+  // came live just now, after the relay's end of what it stored
+  static Reached liveNow() {
+    final t = DateTime.now().millisecondsSinceEpoch;
+    return (from: t, until: t);
+  }
+
   List<Object?> kept(String from) => [
     for (final m in live.msgs)
       if (m['peer_id'] == from && m['direction'] == 'in') m['msg_uid'],
@@ -164,16 +170,27 @@ void main() {
       expect(w.io.ticksFor('req3b'), isEmpty, reason: 'no tick while blocked');
 
       await w.app.unblock(who);
+      // a drain that found nothing
+      await w.app.receiveOnion([]);
       // their phone sends each again, as a retry does: a new cipher, the
-      // same message
-      await w.app.receiveRelay([await w.copy(who, 'req3b')]);
+      // same message, live
+      await w.app.receiveRelay(
+        [await w.copy(who, 'req3b')],
+        reached: [_World.liveNow()],
+      );
       await w.app.receiveOnion([(await w.copy(who, 'req3c')).cipher]);
-      await w.app.receiveRelay([await w.copy(who, 'req3c')]);
+      await w.app.receiveRelay(
+        [await w.copy(who, 'req3c')],
+        reached: [_World.liveNow()],
+      );
       expect(w.kept(who), isEmpty);
       expect(w.io.rang, isEmpty);
 
       // and what they write now comes in
-      await w.app.receiveRelay([await w.copy(who, 'req4')]);
+      await w.app.receiveRelay(
+        [await w.copy(who, 'req4')],
+        reached: [_World.liveNow()],
+      );
       expect(w.kept(who), ['req4']);
     });
 
@@ -189,20 +206,38 @@ void main() {
     }
 
     test('$kind blocked: what the relays held back while the block held '
-        'stays out after the unblock, and a clock a few minutes slow loses '
-        'nothing sent after it', () async {
+        'stays out after the unblock whatever its stamps say, and what '
+        'comes live after it is let in, from a clock hours slow too', () async {
       final (w, from, to) = await blockedAWhile();
-      // listening again, the relay hands over what it kept for them: none
-      // of it was ever seen here. a stranger's two are kept, so three
+      final now = DateTime.now().millisecondsSinceEpoch;
+      // the relay took all of it before the unblock, after it last handed
+      // over everything, and none of it was seen here
       await w.app.receiveRelay(
         [
-          await w.copy(who, 'req3b'),
-          await w.copy(who, 'late'),
-          await w.copy(who, 'req4'),
+          await w.copy(who, 'req3b', written: from + 3600000),
+          await w.copy(who, 'ahead', written: now + 86400000),
+          await w.copy(who, 'after', written: to + 60000),
         ],
-        written: [from + 3600000, to - 5 * 60000, to + 60000],
+        written: [from + 3600000, now + 86400000, to + 60000],
+        reached: [
+          for (var i = 0; i < 3; i++) (from: to - 600000, until: to - 1000),
+        ],
       );
-      expect(w.kept(who), unorderedEquals(['late', 'req4']));
+      expect(w.kept(who), isEmpty);
+      expect(w.live.blockedDrops[who] ?? const {}, isEmpty);
+      // their phone sends again what got no tick, live now, on a clock five
+      // hours slow: what was written after the unblock comes in, what was
+      // written while it held does not
+      const slow = -5 * 3600000;
+      await w.app.receiveRelay(
+        [
+          await w.copy(who, 'after', written: to + 60000 + slow),
+          await w.copy(who, 'req3b', written: from + 3600000 + slow),
+        ],
+        written: [now + slow, now + slow],
+        reached: [_World.liveNow(), _World.liveNow()],
+      );
+      expect(w.kept(who), ['after']);
     });
 
     // a block of under three minutes that ended forty seconds ago
@@ -222,7 +257,7 @@ void main() {
         'wrapped anew', () async {
       final (w, from, _, now) = await blockedMinutes();
       final x = from + 30000;
-      // a retry the relay held from while the block held, and one wrapped
+      // a retry the relay took while the block held, and one sent live
       // after the unblock: both say when X was written
       await w.app.receiveRelay(
         [
@@ -230,6 +265,10 @@ void main() {
           await w.copy(who, 'req3b', written: x),
         ],
         written: [from + 120000, now - 1000],
+        reached: [
+          (from: from + 100000, until: from + 120000),
+          (from: now - 1000, until: now - 1000),
+        ],
       );
       expect(w.kept(who), isEmpty);
       expect(w.io.rang, isEmpty);
@@ -238,57 +277,98 @@ void main() {
       await w.app.receiveRelay(
         [await w.copy(who, 'req4b', written: now - 2000)],
         written: [now - 2000],
+        reached: [_World.liveNow()],
       );
       expect(w.kept(who), ['req4b']);
     });
 
-    test('$kind blocked: a retry wrapped after a long block ended stays out '
-        'by when it was written', () async {
-      final (w, from, _) = await blockedAWhile();
-      final now = DateTime.now().millisecondsSinceEpoch;
-      await w.app.receiveRelay(
-        [await w.copy(who, 'held', written: from + 3600000)],
-        written: [now],
-      );
-      expect(w.kept(who), isEmpty);
-      // their clock five minutes slow, written after the unblock and sent
-      // at once: its own wrap time says how slow, and it comes in
-      await w.app.receiveRelay(
-        [await w.copy(who, 'slow', written: now - 5 * 60000)],
-        written: [now - 5 * 60000],
-      );
-      // written before the block on a phone that was offline, sent while
-      // it held: written outside it, so it comes in
-      await w.app.receiveRelay(
-        [await w.copy(who, 'offline', written: from - 600000)],
-        written: [from + 3600000],
-      );
-      expect(w.kept(who), ['slow', 'offline']);
-    });
+    test(
+      '$kind blocked: a retry sent after a long block ended stays out by '
+      'when it was written, and one written before the block comes in',
+      () async {
+        final (w, from, _) = await blockedAWhile();
+        final now = DateTime.now().millisecondsSinceEpoch;
+        await w.app.receiveRelay(
+          [await w.copy(who, 'held', written: from + 3600000)],
+          written: [now],
+          reached: [_World.liveNow()],
+        );
+        expect(w.kept(who), isEmpty);
+        // their clock five minutes slow, written after the unblock and sent
+        // at once: in
+        await w.app.receiveRelay(
+          [await w.copy(who, 'slow', written: now - 5 * 60000)],
+          written: [now - 5 * 60000],
+          reached: [_World.liveNow()],
+        );
+        // written before the block on a phone that was offline, sent now
+        await w.app.receiveRelay(
+          [await w.copy(who, 'offline', written: from - 600000)],
+          written: [now],
+          reached: [_World.liveNow()],
+        );
+        expect(w.kept(who), ['slow', 'offline']);
+      },
+    );
 
     test('$kind blocked: from a version that does not say when it was '
-        'written, the wrap time is judged as before', () async {
-      final (w, from, to) = await blockedAWhile();
+        'written, when it reached the relay judges it', () async {
+      final (w, _, to) = await blockedAWhile();
       await w.app.receiveRelay(
         [
           await w.copy(who, 'old-during', old: true),
           await w.copy(who, 'old-after', old: true),
         ],
-        written: [from + 3600000, to + 30000],
+        written: [to - 60000, to + 30000],
+        reached: [(from: to - 120000, until: to - 1000), _World.liveNow()],
       );
       expect(w.kept(who), ['old-after']);
     });
 
-    test('$kind blocked: a written time past the wrap is not believed, and '
-        'one far ahead of this clock is taken as now', () async {
-      final (w, from, _) = await blockedAWhile();
+    test('$kind blocked: unblocked, then the app killed, a reply sent an '
+        'hour later comes in on the next start, though the relay was last '
+        'heard minutes before the unblock', () async {
+      final w = await _World.make();
+      await w.app.block(who);
+      await w.app.unblock(who);
+      final now = DateTime.now().millisecondsSinceEpoch;
+      // blocked two hours, unblocked three hours ago, killed right after
+      const h = 3600000;
+      final to = now - 3 * h;
+      w.live.blockSpans[who] = [(to - 2 * h, to)];
+      // on the next start the relay hands over the reply, stored: it was
+      // last heard three minutes before the unblock
+      await w.app.receiveRelay(
+        [await w.copy(who, 'reply', written: to + h)],
+        written: [to + h],
+        reached: [(from: to - 180000, until: now)],
+      );
+      // and what it held from while the block did stays out by its stamps
+      await w.app.receiveRelay(
+        [await w.copy(who, 'during', written: to - h)],
+        written: [to - h],
+        reached: [(from: to - 180000, until: now)],
+      );
+      // as on a relay never heard before
+      await w.app.receiveRelay(
+        [await w.copy(who, 'fresh', written: to + 2 * h)],
+        written: [to + 2 * h],
+        reached: [(from: 0, until: now)],
+      );
+      expect(w.kept(who), ['reply', 'fresh']);
+    });
+
+    test('$kind blocked: a stamp far ahead of this clock gets nothing the '
+        'relay held in, and the onion lane brings what came after', () async {
+      final (w, _, to) = await blockedAWhile();
       final now = DateTime.now().millisecondsSinceEpoch;
       await w.app.receiveRelay(
         [await w.copy(who, 'ahead', written: now + 86400000)],
-        written: [from + 3600000],
+        written: [now + 86400000],
+        reached: [(from: to - 5000, until: to - 1000)],
       );
       expect(w.kept(who), isEmpty);
-      // with no wrap time from the lane, a stamp a day ahead is now
+      await w.app.receiveOnion([]);
       await w.app.receiveOnion([
         (await w.copy(who, 'ahead2', written: now + 86400000)).cipher,
       ]);
@@ -296,17 +376,28 @@ void main() {
     });
 
     test('$kind blocked: what an ended block alone turns away is not noted, '
-        'so a copy that comes again without a stamp is let in', () async {
-      final (w, from, _) = await blockedAWhile();
+        'so a copy that comes again live is let in', () async {
+      final (w, _, to) = await blockedAWhile();
       await w.app.receiveRelay(
         [await w.copy(who, 'skewed')],
-        written: [from + 3600000],
+        reached: [(from: to - 5000, until: to - 1000)],
       );
       expect(w.kept(who), isEmpty);
       expect(w.live.blockedDrops[who] ?? const {}, isEmpty);
-      // their clock may be what put it there: sent again, it comes in
+      // it may have been sent after the unblock: sent again, it comes in
+      await w.app.receiveOnion([]);
       await w.app.receiveOnion([(await w.copy(who, 'skewed')).cipher]);
       expect(w.kept(who), ['skewed']);
+    });
+
+    test('$kind blocked: what came in before the unblock and was read after '
+        'it stays out, though it is unblocked when it is read', () async {
+      final (w, _, to) = await blockedAWhile();
+      await w.app.receiveRelay(
+        [await w.copy(who, 'queued')],
+        reached: [(from: to - 5000, until: to - 5000)],
+      );
+      expect(w.kept(who), isEmpty);
     });
   }
 
@@ -386,11 +477,16 @@ void main() {
       await w.app.unblock(who);
       w.live.blockSpans[who] = [(x - 60000, to)];
       // the sender's retry and a restore's resend, each a cipher of its own
+      // and live, stamped as if just written
+      await w.app.receiveOnion([]);
       await w.app.receiveRelay(
-        [await w.copy(who, 'x3', written: x)],
-        written: [x],
+        [await w.copy(who, 'x3', written: now)],
+        written: [now],
+        reached: [_World.liveNow()],
       );
-      await w.app.receiveOnion([(await w.copy(who, 'x3', written: x)).cipher]);
+      await w.app.receiveOnion([
+        (await w.copy(who, 'x3', written: now)).cipher,
+      ]);
       expect(w.kept(who), isEmpty);
       expect(w.io.rang, isEmpty);
       expect(w.io.ticksFor('x3'), isEmpty);
@@ -400,6 +496,7 @@ void main() {
       await w.app.receiveRelay(
         [await w.copy(who, 'after', written: now)],
         written: [now],
+        reached: [_World.liveNow()],
       );
       await pumpEventQueue();
       expect(w.kept(who), ['after']);
@@ -480,7 +577,10 @@ void main() {
 
     // the same reaction once unblocked is theirs to make
     await w.app.unblock(_f);
-    await w.app.receiveRelay([w.frame(_f, frames.first)]);
+    await w.app.receiveRelay(
+      [w.frame(_f, frames.first)],
+      reached: [_World.liveNow()],
+    );
     expect(w.live.calls.where((a) => a.startsWith('addReaction')), isNotEmpty);
   });
 
@@ -508,7 +608,10 @@ void main() {
     expect(w.io.rang, [_f, _s]);
 
     await w.app.unblock(_f);
-    await w.app.receiveRelay([await w.copy(_f, 't1')]);
+    await w.app.receiveRelay(
+      [await w.copy(_f, 't1')],
+      reached: [_World.liveNow()],
+    );
     expect(w.kept(_f), isEmpty);
   });
 
@@ -563,6 +666,7 @@ void main() {
         await w.copy(_f, 'g-after', written: to + 30000, group: g),
       ],
       written: [now - 1000, now - 1000],
+      reached: [_World.liveNow(), _World.liveNow()],
     );
     final inGroup = [
       for (final m in w.live.msgs)
@@ -579,8 +683,14 @@ void main() {
       await w.app.block(_f);
       await w.app.unblock(_f);
       // a copy of one that came before the block is the one already here
-      await w.app.receiveRelay([await w.copy(_f, 'u1')]);
-      await w.app.receiveRelay([await w.copy(_f, 'u2')]);
+      await w.app.receiveRelay(
+        [await w.copy(_f, 'u1')],
+        reached: [_World.liveNow()],
+      );
+      await w.app.receiveRelay(
+        [await w.copy(_f, 'u2')],
+        reached: [_World.liveNow()],
+      );
       expect(w.kept(_f), ['u1', 'u2']);
     },
   );

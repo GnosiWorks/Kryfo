@@ -66,6 +66,26 @@ class Session {
   // container that holds it and its id
   String chatKey(String chatId) => _ofChat(chatId).container.chatKey(chatId);
 
+  // the tags a chat's notifications went under, in each container open
+  Future<Set<String>> notifTagsOf(String chat) async {
+    final v = vault;
+    return {
+      ?await primary.notifTagOf(chat),
+      if (v != null && v.isOpen) ?await v.notifTagOf(chat),
+    };
+  }
+
+  // the chat a tapped notification's tag stands for, in the container that
+  // made it. a shut vault's tags name nothing here
+  Future<String?> chatOfNotifTag(String tag) async {
+    final v = vault;
+    if (v != null && v.isOpen) {
+      final c = await v.notifChatOf(tag);
+      if (c != null) return c;
+    }
+    return primary.notifChatOf(tag);
+  }
+
   // the people whose chats the vault holds: receiving tries them too, and
   // never files them as everyday requests
   Set<String> get hiddenPeople => vault == null ? const {} : _people;
@@ -259,7 +279,7 @@ class Session {
   // safe or not, whatever it said while it ran
   Future<Map<String, Object?>?> shownShieldFor(String haloId) async =>
       await loadScamShieldOn(container) ? shieldFor(haloId) : null;
-  Future<List<({int id, String cipher})>> heldOf(String peerId) =>
+  Future<List<({int id, String cipher, int at})>> heldOf(String peerId) =>
       _ofPeer(peerId).heldOf(peerId);
   Future<void> forgetHeld(String peerId, int id) =>
       _ofPeer(peerId).forgetHeld(id);
@@ -375,6 +395,37 @@ class Session {
     sent: sent,
     preview: preview,
     secure: secure,
+    poll: poll,
+    sticker: sticker,
+  );
+  Future<bool> saveInGroup(
+    String peerId,
+    String plaintext, {
+    required String groupId,
+    required String msgUid,
+    int? burnSecs,
+    String? replyTo,
+    String? mediaPath,
+    String? filePath,
+    String? fileName,
+    bool voiceDisguised = false,
+    int sent = 0,
+    String? preview,
+    String? poll,
+    String? sticker,
+  }) => _ofGroup(groupId).saveInGroup(
+    peerId,
+    plaintext,
+    groupId: groupId,
+    msgUid: msgUid,
+    burnSecs: burnSecs,
+    replyTo: replyTo,
+    mediaPath: mediaPath,
+    filePath: filePath,
+    fileName: fileName,
+    voiceDisguised: voiceDisguised,
+    sent: sent,
+    preview: preview,
     poll: poll,
     sticker: sticker,
   );

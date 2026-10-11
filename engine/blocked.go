@@ -94,6 +94,23 @@ var connTags = map[string]bool{
 // tags past the handshake with the first hop
 var handshakeDoneTags = map[string]bool{"handshake_done": true, "ap_handshake_done": true}
 
+// a stall at these after a handshake is a censor letting the handshake
+// through and cutting what follows. requesting_status is one of them: a
+// consensus request that never gets a byte back is cut, not slow
+var noCircuitTags = map[string]bool{
+	"handshake_done": true, "onehop_create": true, "requesting_status": true,
+}
+
+// the same for the path with a cached consensus, which goes straight from
+// its handshake to the first circuit. after a directory download they are
+// only a slow first circuit
+var cachedNoCircuitTags = map[string]bool{"ap_handshake_done": true, "circuit_create": true}
+
+// tags of a directory download under way
+var dirTags = map[string]bool{
+	"loading_status": true, "loading_keys": true, "requesting_descriptors": true, "loading_descriptors": true,
+}
+
 // the ways a censor ends a connection to a relay
 var censorReasons = map[string]bool{
 	"CONNECTRESET": true, "TIMEOUT": true, "NOROUTE": true, "CONNECTREFUSED": true, "IOERROR": true,
@@ -102,7 +119,10 @@ var censorReasons = map[string]bool{
 // what one attempt has seen since tor went back on the network. targets
 // are kept as hashes only.
 type attemptSeen struct {
-	since    time.Time
+	since time.Time
+	// events count once tor is back on the network after the switch; the
+	// listener is on before it, so none are missed
+	armed    bool
 	orOK     bool
 	fails    map[uint64]bool
 	failAt   time.Time
@@ -115,6 +135,8 @@ type attemptSeen struct {
 	countAt  time.Time // when COUNT last rose
 	countUp  int       // how many times it rose
 	hsDoneAt time.Time
+	// tor got bytes of the directory in this attempt
+	dirSeen bool
 	// a transport listener's first request after the switch, and the last
 	// time its snowflake reported progress
 	firstDial time.Time
@@ -147,22 +169,38 @@ func (a *attemptSeen) orconn(target, status, reason string, now time.Time) {
 	}
 }
 
-func (a *attemptSeen) circ(status string, now time.Time) {
-	if status == "BUILT" && !a.circuit {
-		a.circuit, a.circAt = true, now
+// a circuit tor built for its own directory fetches or an onion service
+// says less than one of its ordinary three-hop circuits, so only those count
+func (a *attemptSeen) circ(status string, flags []string, now time.Time) {
+	if status != "BUILT" || a.circuit {
+		return
 	}
+	for _, f := range flags {
+		if f == "ONEHOP_TUNNEL" || f == "IS_INTERNAL" {
+			return
+		}
+	}
+	a.circuit, a.circAt = true, now
 }
 
 func (a *attemptSeen) bootstrap(p bootPhase, fresh bool, now time.Time) {
 	if !fresh || p.Progress >= 100 {
+		// getting to the end is progress too
+		if fresh && a.phaseOK && p.Progress > a.phase.Progress {
+			a.tagMoved = now
+		}
 		a.phaseOK = false
 		return
 	}
+	if dirTags[p.Tag] || (p.Progress >= 30 && p.Progress < 75) {
+		a.dirSeen = true
+	}
 	if !a.phaseOK || p.Tag != a.phase.Tag {
 		a.tagSince = now
-		if a.phaseOK {
-			a.tagMoved = now
-		}
+	}
+	// a new phase or a higher percent is progress
+	if a.phaseOK && (p.Tag != a.phase.Tag || p.Progress > a.phase.Progress) {
+		a.tagMoved = now
 	}
 	if a.phaseOK && p.Count > a.phase.Count {
 		a.countAt = now
@@ -189,7 +227,9 @@ var (
 	directTagStuck  = 60 * time.Second
 	directNoCircuit = 90 * time.Second
 	directLimit     = 90 * time.Second
-	attemptExtend   = 30 * time.Second
+	// an attempt that keeps moving forward runs on, up to this from its
+	// start, and ends only once it has stalled for its own limit
+	attemptCap = 4 * time.Minute
 	// tor at times waits over two minutes before the first dial to a line
 	// it was just given. the clock of a bridge starts at that dial.
 	firstDialWait = 160 * time.Second
@@ -204,21 +244,40 @@ func (a *attemptSeen) blockedWhy(now time.Time) string {
 		if connTags[a.phase.Tag] && now.Sub(a.tagSince) >= directTagStuck {
 			return "stuck connecting"
 		}
-		if a.phase.Warn && a.countUp >= 2 {
+		// only a censor's reason: a skewed clock or the like warns too
+		if a.phase.Warn && a.countUp >= 2 && censorReasons[a.phase.Reason] {
 			return "tor warns"
 		}
-		if !a.hsDoneAt.IsZero() && now.Sub(a.hsDoneAt) >= directNoCircuit {
-			return "no circuit"
+		// past the handshake and no further: a censor that lets the
+		// handshake through and cuts what follows. a bootstrap that got
+		// on to the consensus is no such thing
+		stuck := noCircuitTags[a.phase.Tag] || (cachedNoCircuitTags[a.phase.Tag] && !a.dirSeen)
+		if from := a.hsDoneAt; !from.IsZero() && stuck {
+			if a.tagMoved.After(from) {
+				from = a.tagMoved
+			}
+			if now.Sub(from) >= directNoCircuit {
+				return "no circuit"
+			}
 		}
 	}
 	return ""
 }
 
-// whether tor showed any movement in the last stretch: a new tag, or a
-// snowflake step
-func (a *attemptSeen) movedSince(t time.Time) bool {
-	return (!a.tagMoved.IsZero() && !a.tagMoved.Before(t)) ||
-		(!a.sfMoved.IsZero() && !a.sfMoved.Before(t))
+// whether an attempt that began at start is over: nothing moved forward
+// for its limit, a new phase, a higher percent or a snowflake step, or it
+// reached the cap however it moves
+func (a *attemptSeen) ranOut(start time.Time, limit time.Duration, now time.Time) bool {
+	if now.Sub(start) >= attemptCap {
+		return true
+	}
+	from := start
+	for _, m := range []time.Time{a.tagMoved, a.sfMoved} {
+		if m.After(from) {
+			from = m
+		}
+	}
+	return now.Sub(from) >= limit
 }
 
 // the verdict on a direct attempt. on a network android could not check,
@@ -233,11 +292,7 @@ func judgeDirect(a *attemptSeen, validated bool, now time.Time) (string, string)
 			return seenBlocked, why
 		}
 	}
-	end := a.since.Add(limit)
-	if now.Before(end) {
-		return seenTrying, ""
-	}
-	if a.movedSince(end.Add(-attemptExtend)) && now.Before(end.Add(attemptExtend)) {
+	if !a.ranOut(a.since, limit, now) {
 		return seenTrying, ""
 	}
 	if !validated {
@@ -266,11 +321,7 @@ func judgeBridge(a *attemptSeen, limit time.Duration, now time.Time) (string, st
 		}
 		return seenTrying, ""
 	}
-	end := a.firstDial.Add(limit)
-	if now.Before(end) {
-		return seenTrying, ""
-	}
-	if a.movedSince(end.Add(-attemptExtend)) && now.Before(end.Add(attemptExtend)) {
+	if !a.ranOut(a.firstDial, limit, now) {
 		return seenTrying, ""
 	}
 	return seenFailed, "ran out"
@@ -295,12 +346,12 @@ func obsReader() {
 		now := time.Now()
 		obsMu.Lock()
 		a := obsCur
-		if a != nil {
+		if a != nil && a.armed {
 			switch e := ev.(type) {
 			case *control.ORConnEvent:
 				a.orconn(e.Target, e.Status, e.Reason, now)
 			case *control.CircuitEvent:
-				a.circ(e.Status, now)
+				a.circ(e.Status, e.BuildFlags, now)
 			}
 		}
 		obsMu.Unlock()
@@ -346,6 +397,16 @@ func obsSubscribe(t *tor.Tor) {
 	}
 	obsMu.Lock()
 	obsOn, obsGen = true, gen
+	obsMu.Unlock()
+}
+
+// tor is back on the network for the attempt that is open: its events
+// count from here
+func obsArm() {
+	obsMu.Lock()
+	if obsCur != nil {
+		obsCur.armed = true
+	}
 	obsMu.Unlock()
 }
 

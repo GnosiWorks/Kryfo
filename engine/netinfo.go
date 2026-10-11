@@ -48,9 +48,15 @@ func setNetInfo(n netInfo) {
 	}
 	n.known = true
 	netInfoMu.Lock()
+	prev := netInfoNow
 	netInfoNow = n
 	netInfoMu.Unlock()
 	netOffline.Store(!n.On)
+	// signed in past a portal, or android got its answer at last: what
+	// failed before may get through now
+	if prev.known && n.On && n.Validated && !n.Limited && (!prev.Validated || prev.Limited) {
+		autoValidFlips.Add(1)
+	}
 	autoKick()
 }
 
@@ -62,7 +68,8 @@ func currentNet() netInfo {
 	if netOffline.Load() {
 		n.On, n.Validated, n.Limited = false, false, false
 	} else if !n.On {
-		n.On, n.Validated = true, true
+		// a network after all, of which android has said nothing yet
+		n.On = true
 	}
 	return n
 }

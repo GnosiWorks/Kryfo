@@ -261,11 +261,6 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String appPeerImportedV1(Object parsed) {
-    return 'Rekan diimpor (v1): $parsed';
-  }
-
-  @override
   String appLongWindow(Object line) {
     return '$line rentang panjang';
   }
@@ -748,6 +743,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get notificationsNewMessage2 => 'Pesan baru';
 
   @override
+  String get notificationsSomeone => 'Seseorang';
+
+  @override
   String get notificationsEncrypted => 'Terenkripsi';
 
   @override
@@ -1060,7 +1058,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get bridgesConnected => 'Terhubung';
 
   @override
-  String get bridgesFromTheTorProject => 'Dari tor project';
+  String get bridgesFromTheTorProject => 'Dari Tor Project';
 
   @override
   String get bridgesPasteFromClipboard => 'Tempel dari papan klip';
@@ -1078,6 +1076,10 @@ class AppLocalizationsId extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get bridgesWhenYouAskFor =>
+      'Saat kamu meminta jembatan, Tor Project melihat alamat IP-mu. Itu wajar: begitulah Tor Browser dan semua aplikasi Tor mendapatkan jembatan, dan yang mereka ketahui hanyalah ada seseorang yang meminta jembatan. Tidak ada apa pun tentang obrolanmu.';
 
   @override
   String get bridgesAsking => 'Meminta…';
@@ -1723,12 +1725,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get chatHoldToRecord => 'Tahan untuk merekam pesan suara';
-
-  @override
-  String get chatSendPhoto => 'Kirim foto';
-
-  @override
-  String get chatAddACaption => 'Tambah keterangan…';
 
   @override
   String get chatSecurityCodeChanged => 'Kode keamanan berubah';
@@ -3079,9 +3075,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get homeSupporter => 'Pendukung';
 
   @override
-  String get homeArchivedChats => 'Obrolan diarsipkan';
-
-  @override
   String get homeUnmute => 'Bunyikan';
 
   @override
@@ -3795,6 +3788,15 @@ class AppLocalizationsId extends AppLocalizations {
   String get notesDeleteAllYes => 'Hapus semua';
 
   @override
+  String get notesThisWeek => 'Minggu ini';
+
+  @override
+  String get notesShowMore => 'Lihat selengkapnya';
+
+  @override
+  String get notesShowLess => 'Lihat lebih sedikit';
+
+  @override
   String get notesGoneFromThisPhone =>
       'Catatan ini terhapus dari ponsel ini untuk selamanya.';
 
@@ -4217,9 +4219,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get pinsChangeWipePin => 'Ganti PIN penghapus';
-
-  @override
-  String get pinsSetAWipePin => 'Buat PIN penghapus';
 
   @override
   String get pinsRemove => 'Hapus';
@@ -5065,12 +5064,6 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get settingsWholeAppHiddenFromRecentsAnd =>
       'Seluruh aplikasi disembunyikan dari aplikasi terbaru dan tangkapan layar';
-
-  @override
-  String get settingsOnNextStart => 'Aktif · mulai berikutnya';
-
-  @override
-  String get settingsOffNextStart => 'Mati · mulai berikutnya';
 
   @override
   String get settingsLightTheme => 'Tema terang';
@@ -6465,6 +6458,15 @@ class AppLocalizationsId extends AppLocalizations {
   String get torBootSplashTakingLonger => 'Ini lebih lama dari biasanya';
 
   @override
+  String get torBootSplashHopEntry => 'Masuk';
+
+  @override
+  String get torBootSplashHopMiddle => 'Tengah';
+
+  @override
+  String get torBootSplashHopExit => 'Keluar';
+
+  @override
   String get videoBubbleNothingHereOpensThat =>
       'Tidak ada yang bisa membukanya di sini · dibagikan saja';
 
@@ -6681,53 +6683,72 @@ class AppLocalizationsId extends AppLocalizations {
   String get confirmSheetCancel => 'Batal';
 
   @override
-  String get bridgesConnection => 'Koneksi';
+  String get bridgesFoundAVolunteer => 'Relawan ditemukan, menghubungkan';
 
   @override
-  String get bridgesAutomatic => 'Otomatis';
+  String get bridgesScanABridgeCode => 'Pindai kode jembatan';
 
   @override
-  String get bridgesKryfoFindsAWay =>
-      'Kryfo mencari cara yang berhasil di tempatmu.';
+  String get settingsBridgesForNetworksThat =>
+      'Jembatan, untuk jaringan yang memblokir Tor';
 
   @override
-  String get bridgesDirect => 'Langsung';
+  String get bridgesCouldNotReachTheTor => 'Tidak bisa menghubungi Tor Project';
 
   @override
-  String get bridgesFastestWhereTorIsnt =>
-      'Paling cepat kalau Tor tidak diblokir. Kryfo tidak pernah terhubung di luar Tor.';
+  String get torBootSplashConnect => 'Hubungkan';
+
+  @override
+  String get bridgesOffline => 'Offline';
+
+  @override
+  String get bridgesNothingGotThrough => 'Tidak ada yang tembus';
 
   @override
   String get bridgesBridgeFromAFriend => 'Jembatan dari teman';
 
   @override
-  String get bridgesPasteOrScanALine =>
-      'Tempel atau pindai baris dari orang yang kamu percaya.';
+  String get bridgesKryfoCanAskThe =>
+      'Kryfo bisa meminta jembatan ke Tor Project untuk menembus blokir itu.';
 
   @override
-  String get bridgesMore => 'Selengkapnya';
+  String get bridgesNotNeededRightNow => 'Tidak perlu sekarang';
 
   @override
-  String get bridgesConnectingDots => 'Menghubungkan…';
+  String get bridgesBuiltInBridges => 'Jembatan bawaan';
 
   @override
-  String get bridgesAlmostThere => 'Sebentar lagi';
+  String get bridgesKryfoCanGetAround => 'Kryfo kini bisa menembus blokir Tor';
+
+  @override
+  String get bridgesThatSNotABridge => 'Itu bukan baris jembatan';
+
+  @override
+  String get transportBridgeError => 'Error terakhir';
+
+  @override
+  String get bridgesDirect => 'Langsung';
+
+  @override
+  String get bridgesAskingTheTorProject =>
+      'Menanyakan ke Tor Project apa yang berhasil di sini…';
+
+  @override
+  String get bridgesNoneOfTheseAre =>
+      'Tidak ada satu pun baris jembatan yang dimengerti Kryfo.';
+
+  @override
+  String get bridgesAutomatic => 'Otomatis';
 
   @override
   String get bridgesStraightToTor => 'Langsung ke Tor, tanpa perlu jembatan';
 
   @override
-  String get bridgesThroughABridge => 'Lewat jembatan';
+  String get bridgesKryfoConnectsAsSoon =>
+      'Kryfo langsung terhubung begitu kamu online lagi.';
 
   @override
-  String get bridgesTorSeemsBlocked =>
-      'Tor sepertinya diblokir di jaringan ini';
-
-  @override
-  String get bridgesYourNetworkMayBe => 'Jaringanmu mungkin dibatasi';
-
-  @override
-  String get bridgesTryingAnotherWay => 'Mencoba cara lain…';
+  String get bridgesMore => 'Selengkapnya';
 
   @override
   String bridgesTryingAnotherWayOf(String attempt, String attempts) {
@@ -6735,175 +6756,164 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get bridgesAskingTheTorProject =>
-      'Menanyakan ke Tor Project apa yang berhasil di sini…';
-
-  @override
   String get bridgesLookingForAVolunteer => 'Mencari relawan';
 
   @override
-  String get bridgesFoundAVolunteer => 'Relawan ditemukan, menghubungkan';
+  String get bridgesFastestWhereTorIsnt =>
+      'Paling cepat kalau Tor tidak diblokir. Kryfo tidak pernah terhubung di luar Tor.';
 
   @override
-  String get bridgesCouldNotReachTheTor => 'Tidak bisa menghubungi Tor Project';
-
-  @override
-  String get bridgesConnectingThroughYourBridge =>
-      'Menghubungkan lewat jembatanmu…';
-
-  @override
-  String get bridgesNothingGotThrough => 'Tidak ada yang tembus';
-
-  @override
-  String get bridgesKryfoTriesAgainBy =>
-      'Kryfo mencoba lagi sendiri sesekali. Jembatan dari teman bisa membantu.';
-
-  @override
-  String get bridgesNoInternet => 'Tidak ada internet';
-
-  @override
-  String get bridgesKryfoConnectsAsSoon =>
-      'Kryfo langsung terhubung begitu kamu online lagi.';
+  String get transportBridgePhase => 'Fase';
 
   @override
   String get bridgesAsleepBetweenCheckIns => 'Tidur di antara pengecekan';
 
   @override
-  String get bridgesCheckingForMessages => 'Memeriksa pesan…';
-
-  @override
-  String get bridgesNotNeededRightNow => 'Tidak perlu sekarang';
-
-  @override
-  String get bridgesYouReOnAMode =>
-      'Modemu tidak memakai Tor. Pilihan ini berlaku saat kamu kembali ke mode itu.';
-
-  @override
-  String get bridgesOffline => 'Offline';
-
-  @override
-  String get bridgesGetABridge => 'Dapatkan jembatan';
-
-  @override
-  String get bridgesNotNow => 'Nanti saja';
-
-  @override
-  String get bridgesTorIsBlockedOnThis => 'Tor diblokir di jaringan ini';
-
-  @override
-  String get bridgesKryfoCanAskThe =>
-      'Kryfo bisa meminta jembatan ke Tor Project untuk menembus blokir itu.';
-
-  @override
-  String get bridgesKryfoCanGetAround => 'Kryfo kini bisa menembus blokir Tor';
-
-  @override
-  String get bridgesAutomaticFindsAWay =>
-      'Otomatis mencari cara sendiri saat Tor diblokir. Untuk itu, mode ini mungkin menghubungi jembatan di luar Tor.';
-
-  @override
-  String get bridgesTurnOnAutomatic => 'Aktifkan otomatis';
-
-  @override
-  String get bridgesInUse => 'Dipakai';
-
-  @override
-  String get bridgesNothingYet => 'Belum ada';
-
-  @override
-  String get bridgesTorNoBridge => 'Tor, tanpa jembatan';
+  String get bridgesThroughABridge => 'Lewat jembatan';
 
   @override
   String get bridgesBuiltIn => 'bawaan';
 
   @override
-  String get bridgesFromTheTorProjectLower => 'dari Tor Project';
+  String get bridgesDetails => 'Detail';
 
   @override
-  String get bridgesFromAFriendLower => 'dari teman';
-
-  @override
-  String bridgesMethodFrom(String method, String from) {
-    return '$method, $from';
-  }
-
-  @override
-  String get bridgesBuiltInBridges => 'Jembatan bawaan';
-
-  @override
-  String get bridgesObfs4BridgesThatCome =>
-      'Jembatan bawaan Kryfo (obfs4). Cepat dicoba, sering diblokir.';
-
-  @override
-  String get bridgesGoesThroughAVolunteer =>
-      'Lewat komputer relawan. Sulit diblokir, lambat di awal.';
-
-  @override
-  String get bridgesBridgesTheTorProject =>
-      'Jembatan yang sebelumnya kamu dapat dari Tor Project.';
-
-  @override
-  String get bridgesAskTorProject => 'Tanya Tor Project';
-
-  @override
-  String get bridgesWhenTorIsBlockedAutomatic =>
-      'Saat Tor diblokir, Otomatis menanyakan ke Tor Project apa yang berhasil di negaramu.';
-
-  @override
-  String get bridgesCountry => 'Negara';
-
-  @override
-  String get bridgesLetTheTorProject => 'Biar Tor Project yang menebak';
-
-  @override
-  String get bridgesTheTorProjectKnows =>
-      'Tor Project punya saran sendiri untuk negara-negara ini.';
-
-  @override
-  String get bridgesTheTorProjectSGuess => 'Tebakan Tor Project';
-
-  @override
-  String get bridgesBelarus => 'Belarus';
-
-  @override
-  String get bridgesChina => 'Tiongkok';
+  String get transportBridgeMode => 'Jembatan';
 
   @override
   String get bridgesEgypt => 'Mesir';
 
   @override
-  String get bridgesHongKong => 'Hong Kong';
-
-  @override
   String get bridgesIran => 'Iran';
 
   @override
-  String get bridgesMyanmar => 'Myanmar';
+  String get bridgesTurnOnAutomatic => 'Aktifkan otomatis';
 
   @override
-  String get bridgesRussia => 'Rusia';
+  String get bridgesPasteABridgeLine => 'Tempel baris jembatan';
 
   @override
-  String get bridgesTurkmenistan => 'Turkmenistan';
-
-  @override
-  String get bridgesSavedLines => 'Baris tersimpan';
-
-  @override
-  String get bridgesKryfoCanTUseThis => 'Kryfo tidak bisa memakai baris ini';
-
-  @override
-  String get bridgesTooLongForTor => 'Terlalu panjang untuk Tor';
+  String get bridgesInUse => 'Dipakai';
 
   @override
   String get bridgesPasteTheLineThey =>
       'Tempel baris yang mereka kirim, atau pindai kodenya. Pengelola jembatan bisa melihat kapan kamu memakai Tor, jadi ambil baris hanya dari orang yang kamu percaya.';
 
   @override
-  String get bridgesPasteABridgeLine => 'Tempel baris jembatan';
+  String get bridgesYouReOnAMode =>
+      'Modemu tidak memakai Tor. Pilihan ini berlaku saat kamu kembali ke mode itu.';
+
+  @override
+  String get bridgesPasteOrScanALine =>
+      'Tempel atau pindai baris dari orang yang kamu percaya.';
+
+  @override
+  String get bridgesNothingYet => 'Belum ada';
+
+  @override
+  String get torBootSplashIfTorIsBlocked =>
+      'Kalau Tor diblokir atau berisiko di tempatmu, Kryfo bisa mulai lewat jembatan.';
 
   @override
   String get bridgesScanACode => 'Pindai kode';
+
+  @override
+  String get bridgesMyanmar => 'Myanmar';
+
+  @override
+  String get bridgesSwitchToAutomatic => 'Ganti ke otomatis';
+
+  @override
+  String get torBootSplashTorIsBlockedOr =>
+      'Tor diblokir atau berisiko di sini';
+
+  @override
+  String get bridgesTryingAnotherWay => 'Mencoba cara lain…';
+
+  @override
+  String get bridgesGoesThroughAVolunteer =>
+      'Lewat komputer relawan. Sulit diblokir, lambat di awal.';
+
+  @override
+  String get bridgesLetTheTorProject => 'Biar Tor Project yang menebak';
+
+  @override
+  String get bridgesTorSeemsBlocked =>
+      'Tor sepertinya diblokir di jaringan ini';
+
+  @override
+  String get bridgesTorIsBlockedOnThis => 'Tor diblokir di jaringan ini';
+
+  @override
+  String bridgesKryfoCouldNotRead(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Kryfo tidak bisa membaca $countString baris di antaranya',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get bridgesTorNoBridge => 'Tor, tanpa jembatan';
+
+  @override
+  String get bridgesKryfoFindsAWay =>
+      'Kryfo mencari cara yang berhasil di tempatmu.';
+
+  @override
+  String get bridgesTheTorProjectKnows =>
+      'Tor Project punya saran sendiri untuk negara-negara ini.';
+
+  @override
+  String get bridgesThisBridgeIsnTGetting => 'Jembatan ini tidak tembus';
+
+  @override
+  String get bridgesBridgesTheTorProject =>
+      'Jembatan yang sebelumnya kamu dapat dari Tor Project.';
+
+  @override
+  String get bridgesConnectingDots => 'Menghubungkan…';
+
+  @override
+  String get bridgesNotNow => 'Nanti saja';
+
+  @override
+  String get bridgesRussia => 'Rusia';
+
+  @override
+  String get bridgesObfs4BridgesThatCome =>
+      'Jembatan bawaan Kryfo (obfs4). Cepat dicoba, sering diblokir.';
+
+  @override
+  String get bridgesKryfoTriesAgainBy =>
+      'Kryfo mencoba lagi sendiri sesekali. Jembatan dari teman bisa membantu.';
+
+  @override
+  String get bridgesYourNetworkMayBe => 'Jaringanmu mungkin dibatasi';
+
+  @override
+  String get bridgesCheckingForMessages => 'Memeriksa pesan…';
+
+  @override
+  String get bridgesSavedLines => 'Baris tersimpan';
+
+  @override
+  String get bridgesFromAFriendLower => 'dari teman';
+
+  @override
+  String get bridgesAlmostThere => 'Sebentar lagi';
+
+  @override
+  String get bridgesTheTorProjectSGuess => 'Tebakan Tor Project';
+
+  @override
+  String get bridgesOurRelayUsuallyGets =>
+      'Relay kami cukup satu koneksi biasa dan biasanya tembus. Atau biarkan Kryfo mencari cara sendiri.';
 
   @override
   String bridgesUseThisBridge(int count) {
@@ -6921,85 +6931,73 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get bridgesNoneOfTheseAre =>
-      'Tidak ada satu pun baris jembatan yang dimengerti Kryfo.';
+  String get bridgesTurkmenistan => 'Turkmenistan';
 
   @override
-  String get bridgesThisLineIsTooLong => 'Baris ini terlalu panjang untuk Tor.';
-
-  @override
-  String bridgesKryfoCouldNotRead(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Kryfo tidak bisa membaca $countString baris di antaranya',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get bridgesScanABridgeCode => 'Pindai kode jembatan';
+  String get transportBridgeMethod => 'Metode';
 
   @override
   String get bridgesPointAtTheBridge => 'Arahkan ke kode QR jembatan';
 
   @override
-  String get bridgesThatSNotABridge => 'Itu bukan baris jembatan';
+  String get bridgesConnectingThroughYourBridge =>
+      'Menghubungkan lewat jembatanmu…';
 
   @override
-  String get bridgesDetails => 'Detail';
+  String get bridgesThisLineIsTooLong => 'Baris ini terlalu panjang untuk Tor.';
 
   @override
-  String get bridgesThisBridgeIsnTGetting => 'Jembatan ini tidak tembus';
+  String get bridgesAutomaticFindsAWay =>
+      'Otomatis mencari cara sendiri saat Tor diblokir. Untuk itu, mode ini mungkin menghubungi jembatan di luar Tor.';
+
+  @override
+  String get bridgesFromTheTorProjectLower => 'dari Tor Project';
 
   @override
   String get bridgesBridgesGoDeadWithout =>
       'Jembatan bisa berhenti bekerja tanpa peringatan. Otomatis bisa mencari cara lain.';
 
   @override
-  String get bridgesSwitchToAutomatic => 'Ganti ke otomatis';
+  String get bridgesHongKong => 'Hong Kong';
 
   @override
-  String get bridgesOurRelayUsuallyGets =>
-      'Relay kami cukup satu koneksi biasa dan biasanya tembus. Atau biarkan Kryfo mencari cara sendiri.';
+  String get bridgesWhenTorIsBlockedAutomatic =>
+      'Saat Tor diblokir, Otomatis menanyakan ke Tor Project apa yang berhasil di negaramu.';
+
+  @override
+  String get bridgesAskTorProject => 'Tanya Tor Project';
+
+  @override
+  String get bridgesTooLongForTor => 'Terlalu panjang untuk Tor';
+
+  @override
+  String get bridgesCountry => 'Negara';
+
+  @override
+  String bridgesMethodFrom(String method, String from) {
+    return '$method, $from';
+  }
+
+  @override
+  String get bridgesChina => 'Tiongkok';
+
+  @override
+  String get bridgesBelarus => 'Belarus';
+
+  @override
+  String get bridgesKryfoCanTUseThis => 'Kryfo tidak bisa memakai baris ini';
 
   @override
   String get bridgesTryAutomatic => 'Coba otomatis';
 
   @override
-  String get settingsBridgesForNetworksThat =>
-      'Jembatan, untuk jaringan yang memblokir Tor';
+  String get bridgesNoInternet => 'Tidak ada internet';
 
   @override
-  String get torBootSplashIfTorIsBlocked =>
-      'Kalau Tor diblokir atau berisiko di tempatmu, Kryfo bisa mulai lewat jembatan.';
+  String get bridgesConnection => 'Koneksi';
 
   @override
-  String get torBootSplashConnect => 'Hubungkan';
-
-  @override
-  String get torBootSplashTorIsBlockedOr =>
-      'Tor diblokir atau berisiko di sini';
-
-  @override
-  String get transportBridgeMode => 'Jembatan';
-
-  @override
-  String get transportBridgePhase => 'Fase';
-
-  @override
-  String get transportBridgeMethod => 'Metode';
-
-  @override
-  String get transportBridgeError => 'Error terakhir';
-
-  @override
-  String get bridgesWhenYouAskFor =>
-      'Saat kamu meminta jembatan, Tor Project melihat alamat IP-mu. Itu wajar: begitulah Tor Browser dan semua aplikasi Tor mendapatkan jembatan, dan yang mereka ketahui hanyalah ada seseorang yang meminta jembatan. Tidak ada apa pun tentang obrolanmu.';
+  String get bridgesGetABridge => 'Dapatkan jembatan';
 
   @override
   String get languageTitle => 'Bahasa';
@@ -7203,9 +7201,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get pollPickSeveral => 'Pilih satu atau lebih';
 
   @override
-  String get searchOpen => 'Cari';
-
-  @override
   String get searchHint => 'Cari di obrolan dan pesan';
 
   @override
@@ -7389,9 +7384,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get pinsDecoyLine => 'Membuka Kryfo kosong, seperti baru dipasang.';
-
-  @override
-  String get pinsSetADecoyPin => 'Buat PIN umpan';
 
   @override
   String get pinsChangeDecoyPin => 'Ganti PIN umpan';
@@ -8058,4 +8050,19 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get valveRestartKryfo => 'Mulai ulang Kryfo';
+
+  @override
+  String get updateAvailable => 'Pembaruan tersedia';
+
+  @override
+  String updateReady(String version) {
+    return 'Kryfo $version siap diunduh';
+  }
+
+  @override
+  String get settingsCheckForUpdates => 'Periksa pembaruan';
+
+  @override
+  String get settingsCheckForUpdatesHint =>
+      'Sekali sehari lewat Tor. Hanya menanyakan versi terbaru ke kryfo.app dan tidak mengirim apa pun tentang kamu.';
 }

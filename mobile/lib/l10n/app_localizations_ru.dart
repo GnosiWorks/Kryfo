@@ -273,11 +273,6 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String appPeerImportedV1(Object parsed) {
-    return 'Собеседник импортирован (v1): $parsed';
-  }
-
-  @override
   String appLongWindow(Object line) {
     return '$line длинное окно';
   }
@@ -773,6 +768,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get notificationsNewMessage2 => 'Новое сообщение';
 
   @override
+  String get notificationsSomeone => 'Кто-то';
+
+  @override
   String get notificationsEncrypted => 'Зашифровано';
 
   @override
@@ -1098,7 +1096,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get bridgesConnected => 'Подключено';
 
   @override
-  String get bridgesFromTheTorProject => 'От проекта tor';
+  String get bridgesFromTheTorProject => 'От проекта Tor';
 
   @override
   String get bridgesPasteFromClipboard => 'Вставить из буфера';
@@ -1119,6 +1117,10 @@ class AppLocalizationsRu extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get bridgesWhenYouAskFor =>
+      'Когда ты запрашиваешь мосты, проект Tor видит твой IP-адрес. Это нормально: так мосты получают Tor Browser и любое приложение Tor, и всё, что он из этого узнаёт, — что кто-то запросил мосты. Ничего о твоих чатах.';
 
   @override
   String get bridgesAsking => 'Запрашиваем…';
@@ -1775,12 +1777,6 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get chatHoldToRecord =>
       'Удерживай, чтобы записать голосовое сообщение';
-
-  @override
-  String get chatSendPhoto => 'Отправить фото';
-
-  @override
-  String get chatAddACaption => 'Добавь подпись…';
 
   @override
   String get chatSecurityCodeChanged => 'Код безопасности изменился';
@@ -3173,9 +3169,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get homeSupporter => 'Сторонник';
 
   @override
-  String get homeArchivedChats => 'Чаты в архиве';
-
-  @override
   String get homeUnmute => 'Включить звук';
 
   @override
@@ -3896,6 +3889,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get notesDeleteAllYes => 'Удалить все';
 
   @override
+  String get notesThisWeek => 'На этой неделе';
+
+  @override
+  String get notesShowMore => 'Показать полностью';
+
+  @override
+  String get notesShowLess => 'Свернуть';
+
+  @override
   String get notesGoneFromThisPhone =>
       'Она будет стёрта с этого телефона навсегда.';
 
@@ -4319,9 +4321,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get pinsChangeWipePin => 'Сменить PIN для стирания';
-
-  @override
-  String get pinsSetAWipePin => 'Задать PIN для стирания';
 
   @override
   String get pinsRemove => 'Удалить';
@@ -5169,12 +5168,6 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get settingsWholeAppHiddenFromRecentsAnd =>
       'Приложение целиком скрыто из недавних и скриншотов';
-
-  @override
-  String get settingsOnNextStart => 'Вкл. · после перезапуска';
-
-  @override
-  String get settingsOffNextStart => 'Выкл. · после перезапуска';
 
   @override
   String get settingsLightTheme => 'Светлая тема';
@@ -6596,6 +6589,15 @@ class AppLocalizationsRu extends AppLocalizations {
       'Это занимает больше времени, чем обычно';
 
   @override
+  String get torBootSplashHopEntry => 'Вход';
+
+  @override
+  String get torBootSplashHopMiddle => 'Середина';
+
+  @override
+  String get torBootSplashHopExit => 'Выход';
+
+  @override
   String get videoBubbleNothingHereOpensThat =>
       'Здесь это не открыть · открываем «Поделиться»';
 
@@ -6812,52 +6814,74 @@ class AppLocalizationsRu extends AppLocalizations {
   String get confirmSheetCancel => 'Отмена';
 
   @override
-  String get bridgesConnection => 'Подключение';
+  String get bridgesFoundAVolunteer => 'Волонтёр найден, подключаемся';
 
   @override
-  String get bridgesAutomatic => 'Авто';
+  String get bridgesScanABridgeCode => 'Сканировать код моста';
 
   @override
-  String get bridgesKryfoFindsAWay =>
-      'Kryfo сам находит способ, который работает там, где ты.';
+  String get settingsBridgesForNetworksThat =>
+      'Мосты для сетей, блокирующих Tor';
 
   @override
-  String get bridgesDirect => 'Напрямую';
+  String get bridgesCouldNotReachTheTor =>
+      'Не удалось связаться с проектом Tor';
 
   @override
-  String get bridgesFastestWhereTorIsnt =>
-      'Быстрее всего, если Tor не заблокирован. Kryfo никогда не подключается в обход Tor.';
+  String get torBootSplashConnect => 'Подключиться';
+
+  @override
+  String get bridgesOffline => 'Не в сети';
+
+  @override
+  String get bridgesNothingGotThrough => 'Пробиться не удалось';
 
   @override
   String get bridgesBridgeFromAFriend => 'Мост от друга';
 
   @override
-  String get bridgesPasteOrScanALine =>
-      'Вставь или отсканируй строку, которую тебе дал тот, кому ты доверяешь.';
+  String get bridgesKryfoCanAskThe =>
+      'Kryfo может попросить у проекта Tor мост, чтобы обойти блокировку.';
 
   @override
-  String get bridgesMore => 'Ещё';
+  String get bridgesNotNeededRightNow => 'Сейчас не нужно';
 
   @override
-  String get bridgesConnectingDots => 'Подключение…';
+  String get bridgesBuiltInBridges => 'Встроенные мосты';
 
   @override
-  String get bridgesAlmostThere => 'Почти готово';
+  String get bridgesKryfoCanGetAround =>
+      'Kryfo теперь умеет обходить блокировки Tor';
+
+  @override
+  String get bridgesThatSNotABridge => 'Это не строка моста';
+
+  @override
+  String get transportBridgeError => 'Последняя ошибка';
+
+  @override
+  String get bridgesDirect => 'Напрямую';
+
+  @override
+  String get bridgesAskingTheTorProject =>
+      'Спрашиваем у проекта Tor, что здесь работает…';
+
+  @override
+  String get bridgesNoneOfTheseAre =>
+      'Среди этих строк нет мостов, которые понимает Kryfo.';
+
+  @override
+  String get bridgesAutomatic => 'Авто';
 
   @override
   String get bridgesStraightToTor => 'Напрямую к Tor, мост не нужен';
 
   @override
-  String get bridgesThroughABridge => 'Через мост';
+  String get bridgesKryfoConnectsAsSoon =>
+      'Kryfo подключится, как только ты снова будешь в сети.';
 
   @override
-  String get bridgesTorSeemsBlocked => 'Похоже, Tor заблокирован в этой сети';
-
-  @override
-  String get bridgesYourNetworkMayBe => 'Возможно, твоя сеть ограничена';
-
-  @override
-  String get bridgesTryingAnotherWay => 'Пробуем другой способ…';
+  String get bridgesMore => 'Ещё';
 
   @override
   String bridgesTryingAnotherWayOf(String attempt, String attempts) {
@@ -6865,202 +6889,91 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get bridgesAskingTheTorProject =>
-      'Спрашиваем у проекта Tor, что здесь работает…';
-
-  @override
   String get bridgesLookingForAVolunteer => 'Ищем волонтёра';
 
   @override
-  String get bridgesFoundAVolunteer => 'Волонтёр найден, подключаемся';
+  String get bridgesFastestWhereTorIsnt =>
+      'Быстрее всего, если Tor не заблокирован. Kryfo никогда не подключается в обход Tor.';
 
   @override
-  String get bridgesCouldNotReachTheTor =>
-      'Не удалось связаться с проектом Tor';
-
-  @override
-  String get bridgesConnectingThroughYourBridge =>
-      'Подключаемся через твой мост…';
-
-  @override
-  String get bridgesNothingGotThrough => 'Пробиться не удалось';
-
-  @override
-  String get bridgesKryfoTriesAgainBy =>
-      'Kryfo время от времени сам пробует снова. Может помочь мост от друга.';
-
-  @override
-  String get bridgesNoInternet => 'Нет интернета';
-
-  @override
-  String get bridgesKryfoConnectsAsSoon =>
-      'Kryfo подключится, как только ты снова будешь в сети.';
+  String get transportBridgePhase => 'Этап';
 
   @override
   String get bridgesAsleepBetweenCheckIns => 'Спит между проверками';
 
   @override
-  String get bridgesCheckingForMessages => 'Проверяем сообщения…';
-
-  @override
-  String get bridgesNotNeededRightNow => 'Сейчас не нужно';
-
-  @override
-  String get bridgesYouReOnAMode =>
-      'Твой режим не использует Tor. Эти настройки заработают, когда ты переключишься обратно.';
-
-  @override
-  String get bridgesOffline => 'Не в сети';
-
-  @override
-  String get bridgesGetABridge => 'Получить мост';
-
-  @override
-  String get bridgesNotNow => 'Не сейчас';
-
-  @override
-  String get bridgesTorIsBlockedOnThis => 'Tor заблокирован в этой сети';
-
-  @override
-  String get bridgesKryfoCanAskThe =>
-      'Kryfo может попросить у проекта Tor мост, чтобы обойти блокировку.';
-
-  @override
-  String get bridgesKryfoCanGetAround =>
-      'Kryfo теперь умеет обходить блокировки Tor';
-
-  @override
-  String get bridgesAutomaticFindsAWay =>
-      'Режим «Авто» сам находит путь, когда Tor заблокирован. Для этого он может связаться с мостом не через Tor.';
-
-  @override
-  String get bridgesTurnOnAutomatic => 'Включить «Авто»';
-
-  @override
-  String get bridgesInUse => 'Используется';
-
-  @override
-  String get bridgesNothingYet => 'Пока ничего';
-
-  @override
-  String get bridgesTorNoBridge => 'Tor, без моста';
+  String get bridgesThroughABridge => 'Через мост';
 
   @override
   String get bridgesBuiltIn => 'встроенный';
 
   @override
-  String get bridgesFromTheTorProjectLower => 'от проекта Tor';
+  String get bridgesDetails => 'Подробнее';
 
   @override
-  String get bridgesFromAFriendLower => 'от друга';
-
-  @override
-  String bridgesMethodFrom(String method, String from) {
-    return '$method, $from';
-  }
-
-  @override
-  String get bridgesBuiltInBridges => 'Встроенные мосты';
-
-  @override
-  String get bridgesObfs4BridgesThatCome =>
-      'Мосты, которые идут вместе с Kryfo (obfs4). Быстро попробовать, но часто заблокированы.';
-
-  @override
-  String get bridgesGoesThroughAVolunteer =>
-      'Идёт через компьютер волонтёра. Трудно заблокировать, но долго запускается.';
-
-  @override
-  String get bridgesBridgesTheTorProject =>
-      'Мосты, которые проект Tor дал тебе раньше.';
-
-  @override
-  String get bridgesAskTorProject => 'Спросить проект Tor';
-
-  @override
-  String get bridgesWhenTorIsBlockedAutomatic =>
-      'Когда Tor заблокирован, режим «Авто» спрашивает у проекта Tor, что работает в твоей стране.';
-
-  @override
-  String get bridgesCountry => 'Страна';
-
-  @override
-  String get bridgesLetTheTorProject => 'Пусть определит проект Tor';
-
-  @override
-  String get bridgesTheTorProjectKnows =>
-      'У проекта Tor есть свои советы для этих стран.';
-
-  @override
-  String get bridgesTheTorProjectSGuess => 'По версии проекта Tor';
-
-  @override
-  String get bridgesBelarus => 'Беларусь';
-
-  @override
-  String get bridgesChina => 'Китай';
+  String get transportBridgeMode => 'Мосты';
 
   @override
   String get bridgesEgypt => 'Египет';
 
   @override
-  String get bridgesHongKong => 'Гонконг';
-
-  @override
   String get bridgesIran => 'Иран';
 
   @override
-  String get bridgesMyanmar => 'Мьянма';
+  String get bridgesTurnOnAutomatic => 'Включить «Авто»';
 
   @override
-  String get bridgesRussia => 'Россия';
+  String get bridgesPasteABridgeLine => 'Вставь строку моста';
 
   @override
-  String get bridgesTurkmenistan => 'Туркменистан';
-
-  @override
-  String get bridgesSavedLines => 'Сохранённые строки';
-
-  @override
-  String get bridgesKryfoCanTUseThis =>
-      'Kryfo не может использовать эту строку';
-
-  @override
-  String get bridgesTooLongForTor => 'Слишком длинная для Tor';
+  String get bridgesInUse => 'Используется';
 
   @override
   String get bridgesPasteTheLineThey =>
       'Вставь строку, которую тебе прислали, или отсканируй её код. Тот, кто управляет мостом, может видеть, когда ты пользуешься Tor, поэтому бери строки только у тех, кому доверяешь.';
 
   @override
-  String get bridgesPasteABridgeLine => 'Вставь строку моста';
+  String get bridgesYouReOnAMode =>
+      'Твой режим не использует Tor. Эти настройки заработают, когда ты переключишься обратно.';
+
+  @override
+  String get bridgesPasteOrScanALine =>
+      'Вставь или отсканируй строку, которую тебе дал тот, кому ты доверяешь.';
+
+  @override
+  String get bridgesNothingYet => 'Пока ничего';
+
+  @override
+  String get torBootSplashIfTorIsBlocked =>
+      'Если там, где ты, Tor заблокирован или опасен, Kryfo может запуститься через мост.';
 
   @override
   String get bridgesScanACode => 'Сканировать код';
 
   @override
-  String bridgesUseThisBridge(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Использовать $countString моста',
-      many: 'Использовать $countString мостов',
-      few: 'Использовать $countString моста',
-      one: 'Использовать $countString мост',
-    );
-    return '$_temp0';
-  }
+  String get bridgesMyanmar => 'Мьянма';
 
   @override
-  String get bridgesNoneOfTheseAre =>
-      'Среди этих строк нет мостов, которые понимает Kryfo.';
+  String get bridgesSwitchToAutomatic => 'Перейти на «Авто»';
 
   @override
-  String get bridgesThisLineIsTooLong => 'Эта строка слишком длинная для Tor.';
+  String get torBootSplashTorIsBlockedOr => 'Tor здесь заблокирован или опасен';
+
+  @override
+  String get bridgesTryingAnotherWay => 'Пробуем другой способ…';
+
+  @override
+  String get bridgesGoesThroughAVolunteer =>
+      'Идёт через компьютер волонтёра. Трудно заблокировать, но долго запускается.';
+
+  @override
+  String get bridgesLetTheTorProject => 'Пусть определит проект Tor';
+
+  @override
+  String get bridgesTorSeemsBlocked => 'Похоже, Tor заблокирован в этой сети';
+
+  @override
+  String get bridgesTorIsBlockedOnThis => 'Tor заблокирован в этой сети';
 
   @override
   String bridgesKryfoCouldNotRead(int count) {
@@ -7080,63 +6993,148 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get bridgesScanABridgeCode => 'Сканировать код моста';
+  String get bridgesTorNoBridge => 'Tor, без моста';
 
   @override
-  String get bridgesPointAtTheBridge => 'Наведи камеру на QR-код моста';
+  String get bridgesKryfoFindsAWay =>
+      'Kryfo сам находит способ, который работает там, где ты.';
 
   @override
-  String get bridgesThatSNotABridge => 'Это не строка моста';
-
-  @override
-  String get bridgesDetails => 'Подробнее';
+  String get bridgesTheTorProjectKnows =>
+      'У проекта Tor есть свои советы для этих стран.';
 
   @override
   String get bridgesThisBridgeIsnTGetting => 'Через этот мост не пробиться';
 
   @override
-  String get bridgesBridgesGoDeadWithout =>
-      'Мосты могут перестать работать без предупреждения. Режим «Авто» может найти другой путь.';
+  String get bridgesBridgesTheTorProject =>
+      'Мосты, которые проект Tor дал тебе раньше.';
 
   @override
-  String get bridgesSwitchToAutomatic => 'Перейти на «Авто»';
+  String get bridgesConnectingDots => 'Подключение…';
+
+  @override
+  String get bridgesNotNow => 'Не сейчас';
+
+  @override
+  String get bridgesRussia => 'Россия';
+
+  @override
+  String get bridgesObfs4BridgesThatCome =>
+      'Мосты, которые идут вместе с Kryfo (obfs4). Быстро попробовать, но часто заблокированы.';
+
+  @override
+  String get bridgesKryfoTriesAgainBy =>
+      'Kryfo время от времени сам пробует снова. Может помочь мост от друга.';
+
+  @override
+  String get bridgesYourNetworkMayBe => 'Возможно, твоя сеть ограничена';
+
+  @override
+  String get bridgesCheckingForMessages => 'Проверяем сообщения…';
+
+  @override
+  String get bridgesSavedLines => 'Сохранённые строки';
+
+  @override
+  String get bridgesFromAFriendLower => 'от друга';
+
+  @override
+  String get bridgesAlmostThere => 'Почти готово';
+
+  @override
+  String get bridgesTheTorProjectSGuess => 'По версии проекта Tor';
 
   @override
   String get bridgesOurRelayUsuallyGets =>
       'Наш ретранслятор использует одно простое подключение и обычно пробивается. Или пусть Kryfo сам найдёт путь.';
 
   @override
-  String get bridgesTryAutomatic => 'Попробовать «Авто»';
+  String bridgesUseThisBridge(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Использовать $countString моста',
+      many: 'Использовать $countString мостов',
+      few: 'Использовать $countString моста',
+      one: 'Использовать $countString мост',
+    );
+    return '$_temp0';
+  }
 
   @override
-  String get settingsBridgesForNetworksThat =>
-      'Мосты для сетей, блокирующих Tor';
-
-  @override
-  String get torBootSplashIfTorIsBlocked =>
-      'Если там, где ты, Tor заблокирован или опасен, Kryfo может запуститься через мост.';
-
-  @override
-  String get torBootSplashConnect => 'Подключиться';
-
-  @override
-  String get torBootSplashTorIsBlockedOr => 'Tor здесь заблокирован или опасен';
-
-  @override
-  String get transportBridgeMode => 'Мосты';
-
-  @override
-  String get transportBridgePhase => 'Этап';
+  String get bridgesTurkmenistan => 'Туркменистан';
 
   @override
   String get transportBridgeMethod => 'Способ';
 
   @override
-  String get transportBridgeError => 'Последняя ошибка';
+  String get bridgesPointAtTheBridge => 'Наведи камеру на QR-код моста';
 
   @override
-  String get bridgesWhenYouAskFor =>
-      'Когда ты запрашиваешь мосты, проект Tor видит твой IP-адрес. Это нормально: так мосты получают Tor Browser и любое приложение Tor, и всё, что он из этого узнаёт, — что кто-то запросил мосты. Ничего о твоих чатах.';
+  String get bridgesConnectingThroughYourBridge =>
+      'Подключаемся через твой мост…';
+
+  @override
+  String get bridgesThisLineIsTooLong => 'Эта строка слишком длинная для Tor.';
+
+  @override
+  String get bridgesAutomaticFindsAWay =>
+      'Режим «Авто» сам находит путь, когда Tor заблокирован. Для этого он может связаться с мостом не через Tor.';
+
+  @override
+  String get bridgesFromTheTorProjectLower => 'от проекта Tor';
+
+  @override
+  String get bridgesBridgesGoDeadWithout =>
+      'Мосты могут перестать работать без предупреждения. Режим «Авто» может найти другой путь.';
+
+  @override
+  String get bridgesHongKong => 'Гонконг';
+
+  @override
+  String get bridgesWhenTorIsBlockedAutomatic =>
+      'Когда Tor заблокирован, режим «Авто» спрашивает у проекта Tor, что работает в твоей стране.';
+
+  @override
+  String get bridgesAskTorProject => 'Спросить проект Tor';
+
+  @override
+  String get bridgesTooLongForTor => 'Слишком длинная для Tor';
+
+  @override
+  String get bridgesCountry => 'Страна';
+
+  @override
+  String bridgesMethodFrom(String method, String from) {
+    return '$method, $from';
+  }
+
+  @override
+  String get bridgesChina => 'Китай';
+
+  @override
+  String get bridgesBelarus => 'Беларусь';
+
+  @override
+  String get bridgesKryfoCanTUseThis =>
+      'Kryfo не может использовать эту строку';
+
+  @override
+  String get bridgesTryAutomatic => 'Попробовать «Авто»';
+
+  @override
+  String get bridgesNoInternet => 'Нет интернета';
+
+  @override
+  String get bridgesConnection => 'Подключение';
+
+  @override
+  String get bridgesGetABridge => 'Получить мост';
 
   @override
   String get languageTitle => 'Язык';
@@ -7343,9 +7341,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get pollPickSeveral => 'Выбери один или несколько';
 
   @override
-  String get searchOpen => 'Поиск';
-
-  @override
   String get searchHint => 'Искать в чатах и сообщениях';
 
   @override
@@ -7536,9 +7531,6 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get pinsDecoyLine =>
       'Открывает пустой Kryfo, как будто его только что установили.';
-
-  @override
-  String get pinsSetADecoyPin => 'Задать PIN-приманку';
 
   @override
   String get pinsChangeDecoyPin => 'Сменить PIN-приманку';
@@ -8213,4 +8205,19 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get valveRestartKryfo => 'Перезапустить Kryfo';
+
+  @override
+  String get updateAvailable => 'Доступно обновление';
+
+  @override
+  String updateReady(String version) {
+    return 'Kryfo $version можно скачать';
+  }
+
+  @override
+  String get settingsCheckForUpdates => 'Проверять обновления';
+
+  @override
+  String get settingsCheckForUpdatesHint =>
+      'Раз в день через Tor. Спрашивает у kryfo.app номер новой версии и ничего не отправляет о тебе.';
 }

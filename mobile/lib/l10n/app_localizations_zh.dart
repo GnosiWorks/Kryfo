@@ -257,11 +257,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String appPeerImportedV1(Object parsed) {
-    return '已导入对端（v1）：$parsed';
-  }
-
-  @override
   String appLongWindow(Object line) {
     return '$line，长时段';
   }
@@ -730,6 +725,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notificationsNewMessage2 => '新消息';
 
   @override
+  String get notificationsSomeone => '某人';
+
+  @override
   String get notificationsEncrypted => '已加密';
 
   @override
@@ -1029,7 +1027,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesConnected => '已连接';
 
   @override
-  String get bridgesFromTheTorProject => '来自 tor 项目';
+  String get bridgesFromTheTorProject => '来自 Tor 项目';
 
   @override
   String get bridgesPasteFromClipboard => '从剪贴板粘贴';
@@ -1047,6 +1045,10 @@ class AppLocalizationsZh extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get bridgesWhenYouAskFor =>
+      '你请求网桥时，Tor 项目会看到你的 IP 地址。这很正常：Tor Browser 和所有 Tor 应用都是这样获取网桥的，他们从中只能知道有人请求了网桥，对你的聊天一无所知。';
 
   @override
   String get bridgesAsking => '正在请求…';
@@ -1672,12 +1674,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get chatHoldToRecord => '按住录制语音消息';
-
-  @override
-  String get chatSendPhoto => '发送照片';
-
-  @override
-  String get chatAddACaption => '添加说明…';
 
   @override
   String get chatSecurityCodeChanged => '安全码已变更';
@@ -2968,9 +2964,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeSupporter => '支持者';
 
   @override
-  String get homeArchivedChats => '已归档的聊天';
-
-  @override
   String get homeUnmute => '取消静音';
 
   @override
@@ -3647,6 +3640,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notesDeleteAllYes => '全部删除';
 
   @override
+  String get notesThisWeek => '本周';
+
+  @override
+  String get notesShowMore => '展开';
+
+  @override
+  String get notesShowLess => '收起';
+
+  @override
   String get notesGoneFromThisPhone => '它会从这部手机上永久清除。';
 
   @override
@@ -4040,9 +4042,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pinsChangeWipePin => '更改抹掉 PIN';
-
-  @override
-  String get pinsSetAWipePin => '设置抹掉 PIN';
 
   @override
   String get pinsRemove => '移除';
@@ -4853,12 +4852,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsWholeAppHiddenFromRecentsAnd => '整个应用不出现在最近任务和截屏中';
-
-  @override
-  String get settingsOnNextStart => '开 · 下次启动';
-
-  @override
-  String get settingsOffNextStart => '关 · 下次启动';
 
   @override
   String get settingsLightTheme => '浅色主题';
@@ -6201,6 +6194,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get torBootSplashTakingLonger => '这比平时要久一些';
 
   @override
+  String get torBootSplashHopEntry => '入口';
+
+  @override
+  String get torBootSplashHopMiddle => '中间';
+
+  @override
+  String get torBootSplashHopExit => '出口';
+
+  @override
   String get videoBubbleNothingHereOpensThat => '这里打不开它 · 改为分享';
 
   @override
@@ -6413,50 +6415,67 @@ class AppLocalizationsZh extends AppLocalizations {
   String get confirmSheetCancel => '取消';
 
   @override
-  String get bridgesConnection => '连接';
+  String get bridgesFoundAVolunteer => '找到志愿者，正在连接';
 
   @override
-  String get bridgesAutomatic => '自动';
+  String get bridgesScanABridgeCode => '扫描网桥 QR 码';
 
   @override
-  String get bridgesKryfoFindsAWay => 'Kryfo 会找出在你那里能用的方式。';
+  String get settingsBridgesForNetworksThat => '网桥，用于封锁 Tor 的网络';
 
   @override
-  String get bridgesDirect => '直连';
+  String get bridgesCouldNotReachTheTor => '联系不上 Tor 项目';
 
   @override
-  String get bridgesFastestWhereTorIsnt =>
-      '在 Tor 没被封锁的地方最快。Kryfo 从不在 Tor 之外建立连接。';
+  String get torBootSplashConnect => '连接';
+
+  @override
+  String get bridgesOffline => '离线';
+
+  @override
+  String get bridgesNothingGotThrough => '都没能连上';
 
   @override
   String get bridgesBridgeFromAFriend => '朋友给的网桥';
 
   @override
-  String get bridgesPasteOrScanALine => '粘贴或扫描你信任的人给你的网桥地址。';
+  String get bridgesKryfoCanAskThe => 'Kryfo 可以向 Tor 项目索取网桥，绕过封锁。';
 
   @override
-  String get bridgesMore => '更多';
+  String get bridgesNotNeededRightNow => '现在用不到';
 
   @override
-  String get bridgesConnectingDots => '正在连接…';
+  String get bridgesBuiltInBridges => '内置网桥';
 
   @override
-  String get bridgesAlmostThere => '快好了';
+  String get bridgesKryfoCanGetAround => 'Kryfo 现在能绕过 Tor 封锁了';
+
+  @override
+  String get bridgesThatSNotABridge => '这不是网桥地址';
+
+  @override
+  String get transportBridgeError => '上次错误';
+
+  @override
+  String get bridgesDirect => '直连';
+
+  @override
+  String get bridgesAskingTheTorProject => '正在询问 Tor 项目这里什么方式能用…';
+
+  @override
+  String get bridgesNoneOfTheseAre => '这些都不是 Kryfo 能识别的网桥地址。';
+
+  @override
+  String get bridgesAutomatic => '自动';
 
   @override
   String get bridgesStraightToTor => '直连 Tor，无需网桥';
 
   @override
-  String get bridgesThroughABridge => '经由网桥';
+  String get bridgesKryfoConnectsAsSoon => '你一恢复联网，Kryfo 就会连接。';
 
   @override
-  String get bridgesTorSeemsBlocked => '这个网络似乎封锁了 Tor';
-
-  @override
-  String get bridgesYourNetworkMayBe => '你的网络可能受到限制';
-
-  @override
-  String get bridgesTryingAnotherWay => '正在尝试其他方式…';
+  String get bridgesMore => '更多';
 
   @override
   String bridgesTryingAnotherWayOf(String attempt, String attempts) {
@@ -6464,165 +6483,154 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get bridgesAskingTheTorProject => '正在询问 Tor 项目这里什么方式能用…';
-
-  @override
   String get bridgesLookingForAVolunteer => '正在寻找志愿者';
 
   @override
-  String get bridgesFoundAVolunteer => '找到志愿者，正在连接';
+  String get bridgesFastestWhereTorIsnt =>
+      '在 Tor 没被封锁的地方最快。Kryfo 从不在 Tor 之外建立连接。';
 
   @override
-  String get bridgesCouldNotReachTheTor => '联系不上 Tor 项目';
-
-  @override
-  String get bridgesConnectingThroughYourBridge => '正在通过你的网桥连接…';
-
-  @override
-  String get bridgesNothingGotThrough => '都没能连上';
-
-  @override
-  String get bridgesKryfoTriesAgainBy => 'Kryfo 会时不时自己重试。朋友给的网桥可能会有帮助。';
-
-  @override
-  String get bridgesNoInternet => '没有网络';
-
-  @override
-  String get bridgesKryfoConnectsAsSoon => '你一恢复联网，Kryfo 就会连接。';
+  String get transportBridgePhase => '阶段';
 
   @override
   String get bridgesAsleepBetweenCheckIns => '两次查收之间休眠中';
 
   @override
-  String get bridgesCheckingForMessages => '正在查收消息…';
-
-  @override
-  String get bridgesNotNeededRightNow => '现在用不到';
-
-  @override
-  String get bridgesYouReOnAMode => '你当前的模式不使用 Tor。切换回来后，这些选择才会生效。';
-
-  @override
-  String get bridgesOffline => '离线';
-
-  @override
-  String get bridgesGetABridge => '获取网桥';
-
-  @override
-  String get bridgesNotNow => '暂不';
-
-  @override
-  String get bridgesTorIsBlockedOnThis => '这个网络封锁了 Tor';
-
-  @override
-  String get bridgesKryfoCanAskThe => 'Kryfo 可以向 Tor 项目索取网桥，绕过封锁。';
-
-  @override
-  String get bridgesKryfoCanGetAround => 'Kryfo 现在能绕过 Tor 封锁了';
-
-  @override
-  String get bridgesAutomaticFindsAWay =>
-      'Tor 被封锁时，“自动”会自己找到办法。为此，它可能会在 Tor 之外连接网桥。';
-
-  @override
-  String get bridgesTurnOnAutomatic => '开启自动';
-
-  @override
-  String get bridgesInUse => '正在使用';
-
-  @override
-  String get bridgesNothingYet => '暂无';
-
-  @override
-  String get bridgesTorNoBridge => 'Tor，无网桥';
+  String get bridgesThroughABridge => '经由网桥';
 
   @override
   String get bridgesBuiltIn => '内置';
 
   @override
-  String get bridgesFromTheTorProjectLower => '来自 Tor 项目';
+  String get bridgesDetails => '详情';
 
   @override
-  String get bridgesFromAFriendLower => '来自朋友';
-
-  @override
-  String bridgesMethodFrom(String method, String from) {
-    return '$method，$from';
-  }
-
-  @override
-  String get bridgesBuiltInBridges => '内置网桥';
-
-  @override
-  String get bridgesObfs4BridgesThatCome => 'Kryfo 自带的网桥（obfs4）。试起来快，但常被封锁。';
-
-  @override
-  String get bridgesGoesThroughAVolunteer => '经由志愿者的电脑连接。很难封锁，但启动慢。';
-
-  @override
-  String get bridgesBridgesTheTorProject => 'Tor 项目之前给你的网桥。';
-
-  @override
-  String get bridgesAskTorProject => '询问 Tor 项目';
-
-  @override
-  String get bridgesWhenTorIsBlockedAutomatic =>
-      'Tor 被封锁时，“自动”会询问 Tor 项目，在你所在的国家或地区什么方式能用。';
-
-  @override
-  String get bridgesCountry => '国家/地区';
-
-  @override
-  String get bridgesLetTheTorProject => '让 Tor 项目判断';
-
-  @override
-  String get bridgesTheTorProjectKnows => 'Tor 项目对这些国家和地区有专门的建议。';
-
-  @override
-  String get bridgesTheTorProjectSGuess => 'Tor 项目的判断';
-
-  @override
-  String get bridgesBelarus => '白俄罗斯';
-
-  @override
-  String get bridgesChina => '中国';
+  String get transportBridgeMode => '网桥';
 
   @override
   String get bridgesEgypt => '埃及';
 
   @override
-  String get bridgesHongKong => '香港';
-
-  @override
   String get bridgesIran => '伊朗';
 
   @override
-  String get bridgesMyanmar => '缅甸';
+  String get bridgesTurnOnAutomatic => '开启自动';
 
   @override
-  String get bridgesRussia => '俄罗斯';
+  String get bridgesPasteABridgeLine => '粘贴网桥地址';
 
   @override
-  String get bridgesTurkmenistan => '土库曼斯坦';
-
-  @override
-  String get bridgesSavedLines => '已保存的地址';
-
-  @override
-  String get bridgesKryfoCanTUseThis => 'Kryfo 用不了这条地址';
-
-  @override
-  String get bridgesTooLongForTor => '太长，Tor 用不了';
+  String get bridgesInUse => '正在使用';
 
   @override
   String get bridgesPasteTheLineThey =>
       '粘贴对方发给你的地址，或者扫码。架设网桥的人能看到你什么时候在用 Tor，所以只用你信任的人给的地址。';
 
   @override
-  String get bridgesPasteABridgeLine => '粘贴网桥地址';
+  String get bridgesYouReOnAMode => '你当前的模式不使用 Tor。切换回来后，这些选择才会生效。';
+
+  @override
+  String get bridgesPasteOrScanALine => '粘贴或扫描你信任的人给你的网桥地址。';
+
+  @override
+  String get bridgesNothingYet => '暂无';
+
+  @override
+  String get torBootSplashIfTorIsBlocked =>
+      '如果你那里封锁了 Tor，或者用 Tor 有风险，Kryfo 可以改为通过网桥启动。';
 
   @override
   String get bridgesScanACode => '扫码';
+
+  @override
+  String get bridgesMyanmar => '缅甸';
+
+  @override
+  String get bridgesSwitchToAutomatic => '切换到自动';
+
+  @override
+  String get torBootSplashTorIsBlockedOr => '这里 Tor 被封锁或有风险';
+
+  @override
+  String get bridgesTryingAnotherWay => '正在尝试其他方式…';
+
+  @override
+  String get bridgesGoesThroughAVolunteer => '经由志愿者的电脑连接。很难封锁，但启动慢。';
+
+  @override
+  String get bridgesLetTheTorProject => '让 Tor 项目判断';
+
+  @override
+  String get bridgesTorSeemsBlocked => '这个网络似乎封锁了 Tor';
+
+  @override
+  String get bridgesTorIsBlockedOnThis => '这个网络封锁了 Tor';
+
+  @override
+  String bridgesKryfoCouldNotRead(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Kryfo 无法读取其中 $countString 条地址',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get bridgesTorNoBridge => 'Tor，无网桥';
+
+  @override
+  String get bridgesKryfoFindsAWay => 'Kryfo 会找出在你那里能用的方式。';
+
+  @override
+  String get bridgesTheTorProjectKnows => 'Tor 项目对这些国家和地区有专门的建议。';
+
+  @override
+  String get bridgesThisBridgeIsnTGetting => '这个网桥连不出去';
+
+  @override
+  String get bridgesBridgesTheTorProject => 'Tor 项目之前给你的网桥。';
+
+  @override
+  String get bridgesConnectingDots => '正在连接…';
+
+  @override
+  String get bridgesNotNow => '暂不';
+
+  @override
+  String get bridgesRussia => '俄罗斯';
+
+  @override
+  String get bridgesObfs4BridgesThatCome => 'Kryfo 自带的网桥（obfs4）。试起来快，但常被封锁。';
+
+  @override
+  String get bridgesKryfoTriesAgainBy => 'Kryfo 会时不时自己重试。朋友给的网桥可能会有帮助。';
+
+  @override
+  String get bridgesYourNetworkMayBe => '你的网络可能受到限制';
+
+  @override
+  String get bridgesCheckingForMessages => '正在查收消息…';
+
+  @override
+  String get bridgesSavedLines => '已保存的地址';
+
+  @override
+  String get bridgesFromAFriendLower => '来自朋友';
+
+  @override
+  String get bridgesAlmostThere => '快好了';
+
+  @override
+  String get bridgesTheTorProjectSGuess => 'Tor 项目的判断';
+
+  @override
+  String get bridgesOurRelayUsuallyGets =>
+      '我们的中继只是一条普通连接，通常都能连通。也可以让 Kryfo 自己找办法。';
 
   @override
   String bridgesUseThisBridge(int count) {
@@ -6640,81 +6648,71 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get bridgesNoneOfTheseAre => '这些都不是 Kryfo 能识别的网桥地址。';
-
-  @override
-  String get bridgesThisLineIsTooLong => '这条地址太长，Tor 用不了。';
-
-  @override
-  String bridgesKryfoCouldNotRead(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Kryfo 无法读取其中 $countString 条地址',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get bridgesScanABridgeCode => '扫描网桥 QR 码';
-
-  @override
-  String get bridgesPointAtTheBridge => '对准网桥的 QR 码';
-
-  @override
-  String get bridgesThatSNotABridge => '这不是网桥地址';
-
-  @override
-  String get bridgesDetails => '详情';
-
-  @override
-  String get bridgesThisBridgeIsnTGetting => '这个网桥连不出去';
-
-  @override
-  String get bridgesBridgesGoDeadWithout => '网桥可能会毫无预兆地失效。“自动”能找到别的办法。';
-
-  @override
-  String get bridgesSwitchToAutomatic => '切换到自动';
-
-  @override
-  String get bridgesOurRelayUsuallyGets =>
-      '我们的中继只是一条普通连接，通常都能连通。也可以让 Kryfo 自己找办法。';
-
-  @override
-  String get bridgesTryAutomatic => '试试自动';
-
-  @override
-  String get settingsBridgesForNetworksThat => '网桥，用于封锁 Tor 的网络';
-
-  @override
-  String get torBootSplashIfTorIsBlocked =>
-      '如果你那里封锁了 Tor，或者用 Tor 有风险，Kryfo 可以改为通过网桥启动。';
-
-  @override
-  String get torBootSplashConnect => '连接';
-
-  @override
-  String get torBootSplashTorIsBlockedOr => '这里 Tor 被封锁或有风险';
-
-  @override
-  String get transportBridgeMode => '网桥';
-
-  @override
-  String get transportBridgePhase => '阶段';
+  String get bridgesTurkmenistan => '土库曼斯坦';
 
   @override
   String get transportBridgeMethod => '方式';
 
   @override
-  String get transportBridgeError => '上次错误';
+  String get bridgesPointAtTheBridge => '对准网桥的 QR 码';
 
   @override
-  String get bridgesWhenYouAskFor =>
-      '你请求网桥时，Tor 项目会看到你的 IP 地址。这很正常：Tor Browser 和所有 Tor 应用都是这样获取网桥的，他们从中只能知道有人请求了网桥，对你的聊天一无所知。';
+  String get bridgesConnectingThroughYourBridge => '正在通过你的网桥连接…';
+
+  @override
+  String get bridgesThisLineIsTooLong => '这条地址太长，Tor 用不了。';
+
+  @override
+  String get bridgesAutomaticFindsAWay =>
+      'Tor 被封锁时，“自动”会自己找到办法。为此，它可能会在 Tor 之外连接网桥。';
+
+  @override
+  String get bridgesFromTheTorProjectLower => '来自 Tor 项目';
+
+  @override
+  String get bridgesBridgesGoDeadWithout => '网桥可能会毫无预兆地失效。“自动”能找到别的办法。';
+
+  @override
+  String get bridgesHongKong => '香港';
+
+  @override
+  String get bridgesWhenTorIsBlockedAutomatic =>
+      'Tor 被封锁时，“自动”会询问 Tor 项目，在你所在的国家或地区什么方式能用。';
+
+  @override
+  String get bridgesAskTorProject => '询问 Tor 项目';
+
+  @override
+  String get bridgesTooLongForTor => '太长，Tor 用不了';
+
+  @override
+  String get bridgesCountry => '国家/地区';
+
+  @override
+  String bridgesMethodFrom(String method, String from) {
+    return '$method，$from';
+  }
+
+  @override
+  String get bridgesChina => '中国';
+
+  @override
+  String get bridgesBelarus => '白俄罗斯';
+
+  @override
+  String get bridgesKryfoCanTUseThis => 'Kryfo 用不了这条地址';
+
+  @override
+  String get bridgesTryAutomatic => '试试自动';
+
+  @override
+  String get bridgesNoInternet => '没有网络';
+
+  @override
+  String get bridgesConnection => '连接';
+
+  @override
+  String get bridgesGetABridge => '获取网桥';
 
   @override
   String get languageTitle => '语言';
@@ -6913,9 +6911,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pollPickSeveral => '选一项或多项';
 
   @override
-  String get searchOpen => '搜索';
-
-  @override
   String get searchHint => '搜索聊天和消息';
 
   @override
@@ -7088,9 +7083,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pinsDecoyLine => '打开一个空的 Kryfo，就像刚装好一样。';
-
-  @override
-  String get pinsSetADecoyPin => '设置伪装 PIN';
 
   @override
   String get pinsChangeDecoyPin => '更改伪装 PIN';
@@ -7718,6 +7710,21 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get valveRestartKryfo => '重启 Kryfo';
+
+  @override
+  String get updateAvailable => '有可用更新';
+
+  @override
+  String updateReady(String version) {
+    return 'Kryfo $version 已可下载';
+  }
+
+  @override
+  String get settingsCheckForUpdates => '检查更新';
+
+  @override
+  String get settingsCheckForUpdatesHint =>
+      '每天一次，通过 Tor。只向 kryfo.app 询问最新版本，不发送任何关于你的信息。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -7970,11 +7977,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String appAlreadySaved(Object parsed) {
     return '已儲存過：$parsed';
-  }
-
-  @override
-  String appPeerImportedV1(Object parsed) {
-    return '已匯入對等端（v1）：$parsed';
   }
 
   @override
@@ -8446,6 +8448,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get notificationsNewMessage2 => '新訊息';
 
   @override
+  String get notificationsSomeone => '某人';
+
+  @override
   String get notificationsEncrypted => '已加密';
 
   @override
@@ -8745,7 +8750,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesConnected => '已連線';
 
   @override
-  String get bridgesFromTheTorProject => '來自 tor 專案';
+  String get bridgesFromTheTorProject => '來自 Tor 專案';
 
   @override
   String get bridgesPasteFromClipboard => '從剪貼簿貼上';
@@ -8763,6 +8768,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
     );
     return '$_temp0';
   }
+
+  @override
+  String get bridgesWhenYouAskFor =>
+      '你請求橋接時，Tor 專案會看到你的 IP 位址。這很正常：Tor Browser 和所有 Tor 應用程式都是這樣取得橋接的，他們從中只能知道有人請求了橋接，對你的聊天一無所知。';
 
   @override
   String get bridgesAsking => '索取中…';
@@ -9387,12 +9396,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get chatHoldToRecord => '按住即可錄製語音訊息';
-
-  @override
-  String get chatSendPhoto => '傳送照片';
-
-  @override
-  String get chatAddACaption => '加上說明…';
 
   @override
   String get chatSecurityCodeChanged => '安全碼已變更';
@@ -10685,9 +10688,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get homeSupporter => '支持者';
 
   @override
-  String get homeArchivedChats => '封存的聊天';
-
-  @override
   String get homeUnmute => '取消靜音';
 
   @override
@@ -11364,6 +11364,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get notesDeleteAllYes => '全部刪除';
 
   @override
+  String get notesThisWeek => '本週';
+
+  @override
+  String get notesShowMore => '展開';
+
+  @override
+  String get notesShowLess => '收合';
+
+  @override
   String get notesGoneFromThisPhone => '它會從這支手機上永久抹除。';
 
   @override
@@ -11757,9 +11766,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get pinsChangeWipePin => '變更清除 PIN';
-
-  @override
-  String get pinsSetAWipePin => '設定清除 PIN';
 
   @override
   String get pinsRemove => '移除';
@@ -12569,12 +12575,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsWholeAppHiddenFromRecentsAnd => '在最近使用畫面和截圖中隱藏整個應用程式';
-
-  @override
-  String get settingsOnNextStart => '開啟 · 下次啟動';
-
-  @override
-  String get settingsOffNextStart => '關閉 · 下次啟動';
 
   @override
   String get settingsLightTheme => '淺色主題';
@@ -13917,6 +13917,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get torBootSplashTakingLonger => '這比平常久一些';
 
   @override
+  String get torBootSplashHopEntry => '入口';
+
+  @override
+  String get torBootSplashHopMiddle => '中間';
+
+  @override
+  String get torBootSplashHopExit => '出口';
+
+  @override
   String get videoBubbleNothingHereOpensThat => '這裡打不開它 · 改用分享';
 
   @override
@@ -14129,50 +14138,67 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get confirmSheetCancel => '取消';
 
   @override
-  String get bridgesConnection => '連線';
+  String get bridgesFoundAVolunteer => '找到志願者，連線中';
 
   @override
-  String get bridgesAutomatic => '自動';
+  String get bridgesScanABridgeCode => '掃描橋接 QR 碼';
 
   @override
-  String get bridgesKryfoFindsAWay => 'Kryfo 會找出在你那裡行得通的方式。';
+  String get settingsBridgesForNetworksThat => '橋接，適用於封鎖 Tor 的網路';
 
   @override
-  String get bridgesDirect => '直接連線';
+  String get bridgesCouldNotReachTheTor => '聯絡不上 Tor 專案';
 
   @override
-  String get bridgesFastestWhereTorIsnt =>
-      '在 Tor 沒被封鎖的地方最快。Kryfo 從不在 Tor 之外建立連線。';
+  String get torBootSplashConnect => '連線';
+
+  @override
+  String get bridgesOffline => '離線';
+
+  @override
+  String get bridgesNothingGotThrough => '都沒能連上';
 
   @override
   String get bridgesBridgeFromAFriend => '朋友給的橋接';
 
   @override
-  String get bridgesPasteOrScanALine => '貼上或掃描你信任的人給你的橋接設定。';
+  String get bridgesKryfoCanAskThe => 'Kryfo 可以向 Tor 專案索取橋接，繞過封鎖。';
 
   @override
-  String get bridgesMore => '更多';
+  String get bridgesNotNeededRightNow => '現在用不到';
 
   @override
-  String get bridgesConnectingDots => '連線中…';
+  String get bridgesBuiltInBridges => '內建橋接';
 
   @override
-  String get bridgesAlmostThere => '快好了';
+  String get bridgesKryfoCanGetAround => 'Kryfo 現在能繞過 Tor 封鎖了';
+
+  @override
+  String get bridgesThatSNotABridge => '這不是橋接設定';
+
+  @override
+  String get transportBridgeError => '上次錯誤';
+
+  @override
+  String get bridgesDirect => '直接連線';
+
+  @override
+  String get bridgesAskingTheTorProject => '正在詢問 Tor 專案這裡什麼方式可用…';
+
+  @override
+  String get bridgesNoneOfTheseAre => '這些都不是 Kryfo 看得懂的橋接設定。';
+
+  @override
+  String get bridgesAutomatic => '自動';
 
   @override
   String get bridgesStraightToTor => '直接連到 Tor，不需要橋接';
 
   @override
-  String get bridgesThroughABridge => '透過橋接';
+  String get bridgesKryfoConnectsAsSoon => '你一恢復連網，Kryfo 就會連線。';
 
   @override
-  String get bridgesTorSeemsBlocked => '這個網路似乎封鎖了 Tor';
-
-  @override
-  String get bridgesYourNetworkMayBe => '你的網路可能受到限制';
-
-  @override
-  String get bridgesTryingAnotherWay => '正在嘗試其他方式…';
+  String get bridgesMore => '更多';
 
   @override
   String bridgesTryingAnotherWayOf(String attempt, String attempts) {
@@ -14180,165 +14206,154 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get bridgesAskingTheTorProject => '正在詢問 Tor 專案這裡什麼方式可用…';
-
-  @override
   String get bridgesLookingForAVolunteer => '正在尋找志願者';
 
   @override
-  String get bridgesFoundAVolunteer => '找到志願者，連線中';
+  String get bridgesFastestWhereTorIsnt =>
+      '在 Tor 沒被封鎖的地方最快。Kryfo 從不在 Tor 之外建立連線。';
 
   @override
-  String get bridgesCouldNotReachTheTor => '聯絡不上 Tor 專案';
-
-  @override
-  String get bridgesConnectingThroughYourBridge => '正在透過你的橋接連線…';
-
-  @override
-  String get bridgesNothingGotThrough => '都沒能連上';
-
-  @override
-  String get bridgesKryfoTriesAgainBy => 'Kryfo 會不時自己重試。朋友給的橋接可能會有幫助。';
-
-  @override
-  String get bridgesNoInternet => '沒有網路';
-
-  @override
-  String get bridgesKryfoConnectsAsSoon => '你一恢復連網，Kryfo 就會連線。';
+  String get transportBridgePhase => '階段';
 
   @override
   String get bridgesAsleepBetweenCheckIns => '兩次查收之間休眠中';
 
   @override
-  String get bridgesCheckingForMessages => '正在查收訊息…';
-
-  @override
-  String get bridgesNotNeededRightNow => '現在用不到';
-
-  @override
-  String get bridgesYouReOnAMode => '你目前的模式不使用 Tor。切換回去後，這些選擇才會生效。';
-
-  @override
-  String get bridgesOffline => '離線';
-
-  @override
-  String get bridgesGetABridge => '取得橋接';
-
-  @override
-  String get bridgesNotNow => '以後再說';
-
-  @override
-  String get bridgesTorIsBlockedOnThis => '這個網路封鎖了 Tor';
-
-  @override
-  String get bridgesKryfoCanAskThe => 'Kryfo 可以向 Tor 專案索取橋接，繞過封鎖。';
-
-  @override
-  String get bridgesKryfoCanGetAround => 'Kryfo 現在能繞過 Tor 封鎖了';
-
-  @override
-  String get bridgesAutomaticFindsAWay =>
-      'Tor 被封鎖時，「自動」會自己找到辦法。為此，它可能會在 Tor 之外連到橋接。';
-
-  @override
-  String get bridgesTurnOnAutomatic => '開啟自動';
-
-  @override
-  String get bridgesInUse => '使用中';
-
-  @override
-  String get bridgesNothingYet => '還沒有';
-
-  @override
-  String get bridgesTorNoBridge => 'Tor，無橋接';
+  String get bridgesThroughABridge => '透過橋接';
 
   @override
   String get bridgesBuiltIn => '內建';
 
   @override
-  String get bridgesFromTheTorProjectLower => '來自 Tor 專案';
+  String get bridgesDetails => '詳情';
 
   @override
-  String get bridgesFromAFriendLower => '來自朋友';
-
-  @override
-  String bridgesMethodFrom(String method, String from) {
-    return '$method，$from';
-  }
-
-  @override
-  String get bridgesBuiltInBridges => '內建橋接';
-
-  @override
-  String get bridgesObfs4BridgesThatCome => 'Kryfo 內建的橋接（obfs4）。試起來快，但常被封鎖。';
-
-  @override
-  String get bridgesGoesThroughAVolunteer => '經由志願者的電腦連線。很難封鎖，但啟動較慢。';
-
-  @override
-  String get bridgesBridgesTheTorProject => 'Tor 專案之前給你的橋接。';
-
-  @override
-  String get bridgesAskTorProject => '詢問 Tor 專案';
-
-  @override
-  String get bridgesWhenTorIsBlockedAutomatic =>
-      'Tor 被封鎖時，「自動」會詢問 Tor 專案，在你所在的國家或地區什麼方式可用。';
-
-  @override
-  String get bridgesCountry => '國家/地區';
-
-  @override
-  String get bridgesLetTheTorProject => '讓 Tor 專案判斷';
-
-  @override
-  String get bridgesTheTorProjectKnows => 'Tor 專案對這些國家和地區有專門的建議。';
-
-  @override
-  String get bridgesTheTorProjectSGuess => 'Tor 專案的判斷';
-
-  @override
-  String get bridgesBelarus => '白俄羅斯';
-
-  @override
-  String get bridgesChina => '中國';
+  String get transportBridgeMode => '橋接';
 
   @override
   String get bridgesEgypt => '埃及';
 
   @override
-  String get bridgesHongKong => '香港';
-
-  @override
   String get bridgesIran => '伊朗';
 
   @override
-  String get bridgesMyanmar => '緬甸';
+  String get bridgesTurnOnAutomatic => '開啟自動';
 
   @override
-  String get bridgesRussia => '俄羅斯';
+  String get bridgesPasteABridgeLine => '貼上橋接設定';
 
   @override
-  String get bridgesTurkmenistan => '土庫曼';
-
-  @override
-  String get bridgesSavedLines => '已儲存的設定';
-
-  @override
-  String get bridgesKryfoCanTUseThis => 'Kryfo 無法使用這行設定';
-
-  @override
-  String get bridgesTooLongForTor => '太長，Tor 無法使用';
+  String get bridgesInUse => '使用中';
 
   @override
   String get bridgesPasteTheLineThey =>
       '貼上對方傳給你的設定，或掃描它的 QR 碼。架設橋接的人看得到你何時在用 Tor，所以只用你信任的人給的設定。';
 
   @override
-  String get bridgesPasteABridgeLine => '貼上橋接設定';
+  String get bridgesYouReOnAMode => '你目前的模式不使用 Tor。切換回去後，這些選擇才會生效。';
+
+  @override
+  String get bridgesPasteOrScanALine => '貼上或掃描你信任的人給你的橋接設定。';
+
+  @override
+  String get bridgesNothingYet => '還沒有';
+
+  @override
+  String get torBootSplashIfTorIsBlocked =>
+      '如果你那裡封鎖了 Tor，或使用 Tor 有風險，Kryfo 可以改為透過橋接啟動。';
 
   @override
   String get bridgesScanACode => '掃描 QR 碼';
+
+  @override
+  String get bridgesMyanmar => '緬甸';
+
+  @override
+  String get bridgesSwitchToAutomatic => '改用自動';
+
+  @override
+  String get torBootSplashTorIsBlockedOr => '這裡 Tor 被封鎖或有風險';
+
+  @override
+  String get bridgesTryingAnotherWay => '正在嘗試其他方式…';
+
+  @override
+  String get bridgesGoesThroughAVolunteer => '經由志願者的電腦連線。很難封鎖，但啟動較慢。';
+
+  @override
+  String get bridgesLetTheTorProject => '讓 Tor 專案判斷';
+
+  @override
+  String get bridgesTorSeemsBlocked => '這個網路似乎封鎖了 Tor';
+
+  @override
+  String get bridgesTorIsBlockedOnThis => '這個網路封鎖了 Tor';
+
+  @override
+  String bridgesKryfoCouldNotRead(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Kryfo 無法讀取其中 $countString 行設定',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get bridgesTorNoBridge => 'Tor，無橋接';
+
+  @override
+  String get bridgesKryfoFindsAWay => 'Kryfo 會找出在你那裡行得通的方式。';
+
+  @override
+  String get bridgesTheTorProjectKnows => 'Tor 專案對這些國家和地區有專門的建議。';
+
+  @override
+  String get bridgesThisBridgeIsnTGetting => '這個橋接連不出去';
+
+  @override
+  String get bridgesBridgesTheTorProject => 'Tor 專案之前給你的橋接。';
+
+  @override
+  String get bridgesConnectingDots => '連線中…';
+
+  @override
+  String get bridgesNotNow => '以後再說';
+
+  @override
+  String get bridgesRussia => '俄羅斯';
+
+  @override
+  String get bridgesObfs4BridgesThatCome => 'Kryfo 內建的橋接（obfs4）。試起來快，但常被封鎖。';
+
+  @override
+  String get bridgesKryfoTriesAgainBy => 'Kryfo 會不時自己重試。朋友給的橋接可能會有幫助。';
+
+  @override
+  String get bridgesYourNetworkMayBe => '你的網路可能受到限制';
+
+  @override
+  String get bridgesCheckingForMessages => '正在查收訊息…';
+
+  @override
+  String get bridgesSavedLines => '已儲存的設定';
+
+  @override
+  String get bridgesFromAFriendLower => '來自朋友';
+
+  @override
+  String get bridgesAlmostThere => '快好了';
+
+  @override
+  String get bridgesTheTorProjectSGuess => 'Tor 專案的判斷';
+
+  @override
+  String get bridgesOurRelayUsuallyGets =>
+      '我們的中繼只是一條普通連線，通常都能連通。也可以讓 Kryfo 自己找辦法。';
 
   @override
   String bridgesUseThisBridge(int count) {
@@ -14356,81 +14371,71 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get bridgesNoneOfTheseAre => '這些都不是 Kryfo 看得懂的橋接設定。';
-
-  @override
-  String get bridgesThisLineIsTooLong => '這行設定太長，Tor 無法使用。';
-
-  @override
-  String bridgesKryfoCouldNotRead(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Kryfo 無法讀取其中 $countString 行設定',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get bridgesScanABridgeCode => '掃描橋接 QR 碼';
-
-  @override
-  String get bridgesPointAtTheBridge => '對準橋接的 QR 碼';
-
-  @override
-  String get bridgesThatSNotABridge => '這不是橋接設定';
-
-  @override
-  String get bridgesDetails => '詳情';
-
-  @override
-  String get bridgesThisBridgeIsnTGetting => '這個橋接連不出去';
-
-  @override
-  String get bridgesBridgesGoDeadWithout => '橋接可能會無預警失效。「自動」能找到別的辦法。';
-
-  @override
-  String get bridgesSwitchToAutomatic => '改用自動';
-
-  @override
-  String get bridgesOurRelayUsuallyGets =>
-      '我們的中繼只是一條普通連線，通常都能連通。也可以讓 Kryfo 自己找辦法。';
-
-  @override
-  String get bridgesTryAutomatic => '試試自動';
-
-  @override
-  String get settingsBridgesForNetworksThat => '橋接，適用於封鎖 Tor 的網路';
-
-  @override
-  String get torBootSplashIfTorIsBlocked =>
-      '如果你那裡封鎖了 Tor，或使用 Tor 有風險，Kryfo 可以改為透過橋接啟動。';
-
-  @override
-  String get torBootSplashConnect => '連線';
-
-  @override
-  String get torBootSplashTorIsBlockedOr => '這裡 Tor 被封鎖或有風險';
-
-  @override
-  String get transportBridgeMode => '橋接';
-
-  @override
-  String get transportBridgePhase => '階段';
+  String get bridgesTurkmenistan => '土庫曼';
 
   @override
   String get transportBridgeMethod => '方式';
 
   @override
-  String get transportBridgeError => '上次錯誤';
+  String get bridgesPointAtTheBridge => '對準橋接的 QR 碼';
 
   @override
-  String get bridgesWhenYouAskFor =>
-      '你請求橋接時，Tor 專案會看到你的 IP 位址。這很正常：Tor Browser 和所有 Tor 應用程式都是這樣取得橋接的，他們從中只能知道有人請求了橋接，對你的聊天一無所知。';
+  String get bridgesConnectingThroughYourBridge => '正在透過你的橋接連線…';
+
+  @override
+  String get bridgesThisLineIsTooLong => '這行設定太長，Tor 無法使用。';
+
+  @override
+  String get bridgesAutomaticFindsAWay =>
+      'Tor 被封鎖時，「自動」會自己找到辦法。為此，它可能會在 Tor 之外連到橋接。';
+
+  @override
+  String get bridgesFromTheTorProjectLower => '來自 Tor 專案';
+
+  @override
+  String get bridgesBridgesGoDeadWithout => '橋接可能會無預警失效。「自動」能找到別的辦法。';
+
+  @override
+  String get bridgesHongKong => '香港';
+
+  @override
+  String get bridgesWhenTorIsBlockedAutomatic =>
+      'Tor 被封鎖時，「自動」會詢問 Tor 專案，在你所在的國家或地區什麼方式可用。';
+
+  @override
+  String get bridgesAskTorProject => '詢問 Tor 專案';
+
+  @override
+  String get bridgesTooLongForTor => '太長，Tor 無法使用';
+
+  @override
+  String get bridgesCountry => '國家/地區';
+
+  @override
+  String bridgesMethodFrom(String method, String from) {
+    return '$method，$from';
+  }
+
+  @override
+  String get bridgesChina => '中國';
+
+  @override
+  String get bridgesBelarus => '白俄羅斯';
+
+  @override
+  String get bridgesKryfoCanTUseThis => 'Kryfo 無法使用這行設定';
+
+  @override
+  String get bridgesTryAutomatic => '試試自動';
+
+  @override
+  String get bridgesNoInternet => '沒有網路';
+
+  @override
+  String get bridgesConnection => '連線';
+
+  @override
+  String get bridgesGetABridge => '取得橋接';
 
   @override
   String get languageTitle => '語言';
@@ -14629,9 +14634,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get pollPickSeveral => '選一項或多項';
 
   @override
-  String get searchOpen => '搜尋';
-
-  @override
   String get searchHint => '搜尋聊天和訊息';
 
   @override
@@ -14804,9 +14806,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get pinsDecoyLine => '開啟一個空的 Kryfo，就像剛安裝好一樣。';
-
-  @override
-  String get pinsSetADecoyPin => '設定偽裝 PIN';
 
   @override
   String get pinsChangeDecoyPin => '變更偽裝 PIN';
@@ -15314,4 +15313,19 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get valveRestartKryfo => '重新啟動 Kryfo';
+
+  @override
+  String get updateAvailable => '有可用的更新';
+
+  @override
+  String updateReady(String version) {
+    return 'Kryfo $version 已可下載';
+  }
+
+  @override
+  String get settingsCheckForUpdates => '檢查更新';
+
+  @override
+  String get settingsCheckForUpdatesHint =>
+      '每天一次，透過 Tor。只向 kryfo.app 詢問最新版本，不傳送任何關於你的資訊。';
 }

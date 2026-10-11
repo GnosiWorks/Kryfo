@@ -11,13 +11,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/main.dart'
-    show
-        AppIo,
-        AppState,
-        HaloDb,
-        blockedAtArgs,
-        kUnblockGrace,
-        useDatabasesForTest;
+    show AppIo, AppState, HaloDb, useDatabasesForTest;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
 import 'package:kryfo/router.dart';
@@ -87,13 +81,19 @@ class _Store implements RouterStore {
   @override
   Future<int> inboxParts(String uid) async => {
     for (final r in inbox)
-      if (r['uid'] == uid && r['part'] != null) r['part'],
+      if (r['uid'] == uid && r['part'] is int && (r['part'] as int) >= 0)
+        r['part'],
   }.length;
   @override
   Future<int> inboxCount() async => inbox.length;
   @override
-  Future<List<(int, int)>> inboxSizes() async => [
-    for (final r in inbox) (r['id'] as int, (r['sealed'] as List<int>).length),
+  Future<List<(int, int, bool)>> inboxSizes() async => [
+    for (final r in inbox)
+      (
+        r['id'] as int,
+        (r['sealed'] as List<int>).length,
+        r['part'] == kNotePart,
+      ),
   ];
   @override
   Future<List<Map<String, Object?>>> inboxOldest(
@@ -227,9 +227,16 @@ class _Io implements AppIo {
     required String title,
     required String body,
     String? payload,
+    Object? on,
     String? msgUid,
     int? burnAt,
-  }) async => rang.add(payload ?? title);
+  }) async {
+    rang.add(payload ?? title);
+    ons.add(on);
+  }
+
+  // the database each ring's tag is kept in
+  final ons = <Object?>[];
 
   @override
   Future<void> unnotifyMessage(String msgUid) async {}
@@ -848,6 +855,7 @@ class _Mem implements HaloDb {
     int total,
     int? burn, {
     required String from,
+    String? group,
   }) async {
     _hit('putMediaChunk', mediaId, null);
     chunkFrom[mediaId] = from;
@@ -905,21 +913,18 @@ class _Mem implements HaloDb {
   Future<void> dropMediaWant(String mediaId) async =>
       _hit('dropMediaWant', mediaId, null);
 
-  // a block that held and ended, by person, read as the real table is
-  final spans = <String, (int, int)>{};
+  // a block's span, by person, read as the real table is
+  final spans = <String, (int, int?)>{};
   @override
-  Future<bool> blockedAt(
-    String haloId,
-    int at, {
-    int slack = kUnblockGrace,
-  }) async {
-    final s = spans[haloId];
-    final a = blockedAtArgs(haloId, at, slack: slack);
-    return s != null && s.$1 <= (a[1] as int) && s.$2 > (a[2] as int);
-  }
+  Future<List<(int, int?)>> blockSpansOf(String haloId) async => [
+    ?spans[haloId],
+  ];
 
+  // the uids noted as sent while a block held, by person
+  final drops = <String, Set<String>>{};
   @override
-  Future<void> noteBlockedDrop(String haloId, String uid) async {}
+  Future<void> noteBlockedDrop(String haloId, String uid) async =>
+      (drops[haloId] ??= {}).add(uid);
   @override
   Future<bool> droppedWhileBlocked(String haloId, String uid) async => false;
 
@@ -1117,6 +1122,20 @@ void main() {
       return r;
     }
 
+    test('at the cap a note goes before any arrival, however old', () async {
+      final w = await _World.make();
+      final r = await capped(w, n: 3);
+      await r.seal(Unsealed(_h, 'real-0', false, 0), uid: 'r0');
+      for (var i = 0; i < 3; i++) {
+        await r.seal(
+          Unsealed('blocked-one', '', false, i + 1, blockedDrop: 'n$i'),
+          uid: 'n$i',
+        );
+      }
+      await r.seal(Unsealed(_h, 'real-1', false, 9), uid: 'r1');
+      expect([for (final x in w.store.inbox) x['uid']], ['r0', 'n2', 'r1']);
+    });
+
     test('keeps at most the cap, the oldest going first', () async {
       final w = await _World.make();
       final r = await capped(w);
@@ -1188,6 +1207,52 @@ void main() {
     expect(w.router.blocks('blocked-hidden-one'), isTrue);
   });
 
+  test('someone the vault blocked longer ago than the relays keep anything '
+      'is listened for no more, and a card that does not say since when '
+      'is', () async {
+    final w = await _World.make();
+    final now = DateTime.now().millisecondsSinceEpoch;
+    for (final (id, from) in [
+      ('blocked-young-one', now - kBlockListenFor + 86400000),
+      // a card says the day, rounded up: a day more
+      ('blocked-old-one', now - kBlockListenFor - kDay - 1000),
+      ('blocked-unsaid-one', null),
+    ]) {
+      await w.store.putHidden(
+        id,
+        kHiddenPeer,
+        peerCard(
+          RouterCard(id, 'o', 'x-$id', blocked: true, blockedFrom: from),
+        ),
+        1,
+      );
+    }
+    await w.router.load();
+    expect(w.router.listenFor, {
+      'x-$_h': _h,
+      'x-blocked-young-one': 'blocked-young-one',
+      'x-blocked-unsaid-one': 'blocked-unsaid-one',
+    });
+    // still kept from the everyday side, and still turned away
+    expect(w.router.keeps('blocked-old-one'), isTrue);
+    expect(w.router.blocks('blocked-old-one'), isTrue);
+    // the start rides the card only while the block holds, to the day
+    final card = jsonDecode(
+      peerCard(const RouterCard('p', 'o', 'x', blockedFrom: 5)),
+    );
+    expect((card as Map).containsKey('bs'), isFalse);
+    for (final (at, day) in [(5, kDay), (kDay, kDay), (kDay + 1, 2 * kDay)]) {
+      expect(
+        RouterCard.fromJson(
+          jsonDecode(
+            peerCard(RouterCard('p', 'o', 'x', blocked: true, blockedFrom: at)),
+          ),
+        )!.blockedFrom,
+        day,
+      );
+    }
+  });
+
   group('while the vault is shut', () {
     test('a message changes nothing and is sealed once', () async {
       final w = await _World.make();
@@ -1217,7 +1282,50 @@ void main() {
       expect(w.live.seen, hasLength(1));
     });
 
-    test('nothing from someone the vault blocked is sealed', () async {
+    test('from someone the vault blocked only the uid is sealed, once, and '
+        'the vault notes it as it opens while that block holds', () async {
+      final w = await _World.make();
+      const b = 'blocked-hidden-one';
+      await w.store.putHidden(
+        b,
+        kHiddenPeer,
+        peerCard(const RouterCard(b, 'o-b', 'x-b', blocked: true)),
+        1,
+      );
+      await w.router.load();
+      w.vault.person(b, onion: 'o-b', xpub: 'x-b');
+      w.vault.spans[b] = (DateTime.now().millisecondsSinceEpoch - 60000, null);
+      for (var i = 0; i < 2; i++) {
+        await w.onion(
+          b,
+          await wrapMessage('let me back in', msgUid: 'b1', sender: _as(b)),
+        );
+      }
+      // a receipt of theirs says nothing to keep
+      await w.onion(
+        b,
+        await wrapMessage('', deliveredUid: 'mine', sender: _as(b)),
+      );
+      // what they wrote is not what waits: the uid alone does, sealed like
+      // any arrival, and no tick goes back
+      expect(w.store.inbox, hasLength(1));
+      expect(w.store.inbox.single['uid'], 'b1');
+      expect(w.store.inbox.single['part'], kNotePart);
+      final opened = w.seal.openMany('priv-A', [
+        base64Encode(w.store.inbox.single['sealed'] as List<int>),
+      ]).single!;
+      expect(utf8.decode(base64Decode(opened)), isNot(contains('back in')));
+      expect(w.io.ticksFor('b1'), isEmpty);
+      expect(w.io.rang, isEmpty);
+      await w.open();
+      await w.app.drainSealed(w.vault, 'priv-A');
+      expect(w.vault.drops[b], {'b1'});
+      expect(w.vault.msg('b1'), isNull);
+      expect(w.store.inbox, isEmpty);
+    });
+
+    test('a flood from someone the vault blocked never pushes out a real '
+        'arrival: their notes are capped and go first', () async {
       final w = await _World.make();
       const b = 'blocked-hidden-one';
       await w.store.putHidden(
@@ -1228,13 +1336,53 @@ void main() {
       );
       await w.router.load();
       await w.onion(
-        b,
-        await wrapMessage('let me back in', msgUid: 'b1', sender: _as(b)),
+        _h,
+        await wrapMessage('real', msgUid: 'r1', sender: _as(_h)),
       );
-      // nothing waits for the vault to open, and no tick goes back
+      for (var i = 0; i < kMaxSealed; i++) {
+        final c = 'flood-$i';
+        w.io.opens[c] = (
+          b,
+          await wrapMessage('x', msgUid: 'f$i', sender: _as(b)),
+        );
+        await w.app.receiveOnion([c]);
+      }
+      await w.onion(
+        _h,
+        await wrapMessage('real', msgUid: 'r2', sender: _as(_h)),
+      );
+      final notes = w.store.inbox.where((r) => r['part'] == kNotePart);
+      expect(notes, hasLength(kMaxSealedNotes));
+      // the newest kept, the oldest gone
+      expect(notes.last['uid'], 'f${kMaxSealed - 1}');
+      final real = [
+        for (final r in w.store.inbox)
+          if (r['part'] != kNotePart) r['uid'],
+      ];
+      expect(real, ['r1', 'r2']);
+    });
+
+    test('a card that still says blocked after the vault let them go notes '
+        'nothing', () async {
+      final w = await _World.make();
+      const b = 'blocked-hidden-one';
+      await w.store.putHidden(
+        b,
+        kHiddenPeer,
+        peerCard(const RouterCard(b, 'o-b', 'x-b', blocked: true)),
+        1,
+      );
+      await w.router.load();
+      final now = DateTime.now().millisecondsSinceEpoch;
+      w.vault.spans[b] = (now - 3600000, now - 60000);
+      await w.onion(
+        b,
+        await wrapMessage('back again', msgUid: 'b2', sender: _as(b)),
+      );
+      await w.open();
+      await w.app.drainSealed(w.vault, 'priv-A');
+      expect(w.vault.drops[b] ?? const {}, isEmpty);
       expect(w.store.inbox, isEmpty);
-      expect(w.io.ticksFor('b1'), isEmpty);
-      expect(w.io.rang, isEmpty);
     });
 
     test('the tick goes as for a visible message, to the card', () async {
@@ -1581,22 +1729,29 @@ void main() {
       expect(w.app.contacts.map((c) => c.haloId), contains(_h));
     });
 
-    test('what came while it was shut is judged by when it was wrapped, as '
-        'it would have been on arrival', () async {
+    test('what came while it was shut is judged by when it reached the '
+        'relay, as it would have been on arrival', () async {
       final w = await _World.make();
       final now = DateTime.now().millisecondsSinceEpoch;
       // blocked in the vault for two hours, until an hour ago
       w.vault.spans[_h] = (now - 3 * 3600000, now - 3600000);
-      for (final (uid, at) in [
-        ('during', now - 2 * 3600000),
-        ('since', now - 60000),
+      for (final (uid, reached) in [
+        // stored, and the relay took it before the unblock
+        ('during', (from: now - 2 * 3600000, until: now - 90 * 60000)),
+        // live, a minute ago
+        ('since', (from: now - 60000, until: now - 60000)),
       ]) {
         final c = 'relay-$uid';
         w.io.opens[c] = (
           _h,
           await wrapMessage('hi $uid', msgUid: uid, sender: _as(_h)),
         );
-        await w.app.receiveRelay([(peer: 'x-$_h', cipher: c)], written: [at]);
+        // stamped as now by their clock: not what judges it
+        await w.app.receiveRelay(
+          [(peer: 'x-$_h', cipher: c)],
+          written: [now],
+          reached: [reached],
+        );
       }
       await _settle();
       expect(w.store.inbox, hasLength(2));
@@ -1627,10 +1782,12 @@ void main() {
             writtenAt: written,
           ),
         );
-        // both wrapped again half a minute ago, long after the block
+        // both wrapped again half a minute ago, long after the block, and
+        // came live
         await w.app.receiveRelay(
           [(peer: 'x-$_h', cipher: c)],
           written: [now - 30000],
+          reached: [(from: now - 30000, until: now - 30000)],
         );
       }
       await _settle();
@@ -1956,6 +2113,11 @@ void main() {
       expect(w.live.msg('v'), isNotNull);
       expect(w.io.rang, [_h, 'group:$_g2', _v]);
       expect(w.io.ticksFor('v'), ['relay x-$_v']);
+      // each rings under a tag its own container keeps
+      expect(w.io.ons, hasLength(3));
+      expect(identical(w.io.ons[0], w.vault), isTrue);
+      expect(identical(w.io.ons[1], w.vault), isTrue);
+      expect(identical(w.io.ons[2], w.live), isTrue);
     });
   });
 

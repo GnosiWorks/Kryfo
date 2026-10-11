@@ -4,12 +4,43 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import org.json.JSONObject
+
+// which network is the default one, from the callbacks in the order android
+// sends them. a new default arrives with onAvailable. android 7 sends no
+// capabilities after it, so there they are asked for; later androids send
+// them, and a read of our own could race them with an older answer. the
+// old default's onLost can come after the new one is up, and then it
+// changes nothing.
+class NetTracker<N>(
+    private val describe: (N?) -> String,
+    private val report: (String) -> Unit,
+    private val capsFollow: Boolean,
+) {
+    private var current: N? = null
+
+    fun available(n: N) {
+        current = n
+        if (!capsFollow) report(describe(n))
+    }
+
+    fun changed(n: N, state: String) {
+        current = n
+        report(state)
+    }
+
+    fun lost(n: N) {
+        if (n != current) return
+        current = null
+        report(describe(null))
+    }
+}
 
 // the default network as android sees it: whether there is one, its type,
 // whether android validated it, whether a captive portal sits in front and
@@ -30,15 +61,24 @@ object NetWatch {
         }
         channel = ch
         val cm = context.getSystemService(ConnectivityManager::class.java) ?: return
+        val tracker = NetTracker<Network>(
+            describe = { n -> describe(n?.let { cm.getNetworkCapabilities(it) }) },
+            report = { report(it) },
+            capsFollow = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O,
+        )
         try {
             last = describe(cm.getNetworkCapabilities(cm.activeNetwork))
             cm.registerDefaultNetworkCallback(object : ConnectivityManager.NetworkCallback() {
+                override fun onAvailable(network: Network) {
+                    tracker.available(network)
+                }
+
                 override fun onCapabilitiesChanged(network: Network, caps: NetworkCapabilities) {
-                    report(describe(caps))
+                    tracker.changed(network, describe(caps))
                 }
 
                 override fun onLost(network: Network) {
-                    report(describe(null))
+                    tracker.lost(network)
                 }
             })
         } catch (e: Exception) {
@@ -47,6 +87,7 @@ object NetWatch {
         }
     }
 
+    @Synchronized
     private fun report(state: String) {
         if (state == last) return
         last = state

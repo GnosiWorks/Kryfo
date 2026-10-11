@@ -471,12 +471,6 @@ abstract class AppLocalizations {
   /// **'Already saved: {parsed}'**
   String appAlreadySaved(Object parsed);
 
-  /// main.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Peer imported (v1): {parsed}'**
-  String appPeerImportedV1(Object parsed);
-
   /// main.dart: after a relay's catch-up time, when it was asked for a longer stretch than usual
   ///
   /// In en, this message translates to:
@@ -1221,6 +1215,12 @@ abstract class AppLocalizations {
   /// **'New message'**
   String get notificationsNewMessage2;
 
+  /// notifications: the name on a notification from someone with no name given here, never their id
+  ///
+  /// In en, this message translates to:
+  /// **'Someone'**
+  String get notificationsSomeone;
+
   /// notifications.dart
   ///
   /// In en, this message translates to:
@@ -1700,6 +1700,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, one{{count} line saved} other{{count} lines saved}}'**
   String bridges1LineSaved(int count);
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'When you ask for bridges, the Tor Project sees your address. That\'s normal: it\'s how Tor Browser and every Tor app get bridges, and all it tells them is that someone asked for bridges. Nothing about your chats.'**
+  String get bridgesWhenYouAskFor;
 
   /// screens/bridges_screen.dart
   ///
@@ -2774,18 +2780,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hold to record a voice note'**
   String get chatHoldToRecord;
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Send photo'**
-  String get chatSendPhoto;
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Add a caption…'**
-  String get chatAddACaption;
 
   /// screens/chat_screen.dart
   ///
@@ -4812,12 +4806,6 @@ abstract class AppLocalizations {
   /// screens/home_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Archived chats'**
-  String get homeArchivedChats;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Unmute'**
   String get homeUnmute;
 
@@ -5982,6 +5970,24 @@ abstract class AppLocalizations {
   /// screens/notes_screen.dart
   ///
   /// In en, this message translates to:
+  /// **'This week'**
+  String get notesThisWeek;
+
+  /// screens/notes_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Show more'**
+  String get notesShowMore;
+
+  /// screens/notes_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Show less'**
+  String get notesShowLess;
+
+  /// screens/notes_screen.dart
+  ///
+  /// In en, this message translates to:
   /// **'It is gone from this phone for good.'**
   String get notesGoneFromThisPhone;
 
@@ -6734,12 +6740,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Change wipe PIN'**
   String get pinsChangeWipePin;
-
-  /// screens/pins_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Set a wipe PIN'**
-  String get pinsSetAWipePin;
 
   /// screens/pins_screen.dart
   ///
@@ -8168,18 +8168,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Whole app hidden from recents and screenshots'**
   String get settingsWholeAppHiddenFromRecentsAnd;
-
-  /// screens/settings_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'On · next start'**
-  String get settingsOnNextStart;
-
-  /// screens/settings_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Off · next start'**
-  String get settingsOffNextStart;
 
   /// screens/settings_screen.dart
   ///
@@ -10305,6 +10293,24 @@ abstract class AppLocalizations {
   /// **'This is taking longer than usual'**
   String get torBootSplashTakingLonger;
 
+  /// widgets/tor_boot_splash.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Entry'**
+  String get torBootSplashHopEntry;
+
+  /// widgets/tor_boot_splash.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Middle'**
+  String get torBootSplashHopMiddle;
+
+  /// widgets/tor_boot_splash.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Exit'**
+  String get torBootSplashHopExit;
+
   /// widgets/video_bubble.dart
   ///
   /// In en, this message translates to:
@@ -10704,116 +10710,20 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Connection'**
-  String get bridgesConnection;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Automatic'**
-  String get bridgesAutomatic;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Kryfo finds a way that works where you are.'**
-  String get bridgesKryfoFindsAWay;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Direct'**
-  String get bridgesDirect;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Fastest where Tor isn\'t blocked. Kryfo never connects outside Tor.'**
-  String get bridgesFastestWhereTorIsnt;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Bridge from a friend'**
-  String get bridgesBridgeFromAFriend;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Paste or scan a line someone you trust gave you.'**
-  String get bridgesPasteOrScanALine;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'More'**
-  String get bridgesMore;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Connecting…'**
-  String get bridgesConnectingDots;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Almost there'**
-  String get bridgesAlmostThere;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Straight to Tor, no bridge needed'**
-  String get bridgesStraightToTor;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Through a bridge'**
-  String get bridgesThroughABridge;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Tor seems blocked on this network'**
-  String get bridgesTorSeemsBlocked;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Your network may be limited'**
-  String get bridgesYourNetworkMayBe;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Trying another way…'**
-  String get bridgesTryingAnotherWay;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Trying another way… ({attempt} of {attempts})'**
-  String bridgesTryingAnotherWayOf(String attempt, String attempts);
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Asking the Tor Project what works here…'**
-  String get bridgesAskingTheTorProject;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Looking for a volunteer'**
-  String get bridgesLookingForAVolunteer;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Found a volunteer, connecting'**
   String get bridgesFoundAVolunteer;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Scan a bridge code'**
+  String get bridgesScanABridgeCode;
+
+  /// screens/settings_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Bridges, for networks that block Tor'**
+  String get settingsBridgesForNetworksThat;
 
   /// screens/bridges_screen.dart
   ///
@@ -10821,59 +10731,11 @@ abstract class AppLocalizations {
   /// **'Couldn\'t reach the Tor Project'**
   String get bridgesCouldNotReachTheTor;
 
-  /// screens/bridges_screen.dart
+  /// widgets/tor_boot_splash.dart
   ///
   /// In en, this message translates to:
-  /// **'Connecting through your bridge…'**
-  String get bridgesConnectingThroughYourBridge;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Nothing got through'**
-  String get bridgesNothingGotThrough;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Kryfo tries again by itself now and then. A bridge from a friend can help.'**
-  String get bridgesKryfoTriesAgainBy;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'No internet'**
-  String get bridgesNoInternet;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Kryfo connects as soon as you\'re back online.'**
-  String get bridgesKryfoConnectsAsSoon;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Asleep between check-ins'**
-  String get bridgesAsleepBetweenCheckIns;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Checking for messages…'**
-  String get bridgesCheckingForMessages;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Not needed right now'**
-  String get bridgesNotNeededRightNow;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Your mode doesn\'t use Tor. These choices apply when you switch back.'**
-  String get bridgesYouReOnAMode;
+  /// **'Connect'**
+  String get torBootSplashConnect;
 
   /// screens/bridges_screen.dart
   ///
@@ -10884,20 +10746,14 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Get a bridge'**
-  String get bridgesGetABridge;
+  /// **'Nothing got through'**
+  String get bridgesNothingGotThrough;
 
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Not now'**
-  String get bridgesNotNow;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Tor is blocked on this network'**
-  String get bridgesTorIsBlockedOnThis;
+  /// **'Bridge from a friend'**
+  String get bridgesBridgeFromAFriend;
 
   /// screens/bridges_screen.dart
   ///
@@ -10908,62 +10764,8 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Kryfo can get around Tor blocks now'**
-  String get bridgesKryfoCanGetAround;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Automatic finds a way by itself when Tor is blocked. It may reach a bridge outside Tor to do it.'**
-  String get bridgesAutomaticFindsAWay;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Turn on automatic'**
-  String get bridgesTurnOnAutomatic;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'In use'**
-  String get bridgesInUse;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Nothing yet'**
-  String get bridgesNothingYet;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Tor, no bridge'**
-  String get bridgesTorNoBridge;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'built-in'**
-  String get bridgesBuiltIn;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'from the Tor Project'**
-  String get bridgesFromTheTorProjectLower;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'from a friend'**
-  String get bridgesFromAFriendLower;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'{method}, {from}'**
-  String bridgesMethodFrom(String method, String from);
+  /// **'Not needed right now'**
+  String get bridgesNotNeededRightNow;
 
   /// screens/bridges_screen.dart
   ///
@@ -10974,260 +10776,14 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Bridges that come with Kryfo (obfs4). Quick to try, often blocked.'**
-  String get bridgesObfs4BridgesThatCome;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Goes through a volunteer\'s computer. Hard to block, slow to start.'**
-  String get bridgesGoesThroughAVolunteer;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Bridges the Tor Project gave you earlier.'**
-  String get bridgesBridgesTheTorProject;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Ask the Tor Project'**
-  String get bridgesAskTorProject;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'When Tor is blocked, Automatic asks the Tor Project what works in your country.'**
-  String get bridgesWhenTorIsBlockedAutomatic;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Country'**
-  String get bridgesCountry;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Let the Tor Project guess'**
-  String get bridgesLetTheTorProject;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'The Tor Project has its own advice for these countries.'**
-  String get bridgesTheTorProjectKnows;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'The Tor Project\'s guess'**
-  String get bridgesTheTorProjectSGuess;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Belarus'**
-  String get bridgesBelarus;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'China'**
-  String get bridgesChina;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Egypt'**
-  String get bridgesEgypt;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Hong Kong'**
-  String get bridgesHongKong;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Iran'**
-  String get bridgesIran;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Myanmar'**
-  String get bridgesMyanmar;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Russia'**
-  String get bridgesRussia;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Turkmenistan'**
-  String get bridgesTurkmenistan;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Saved lines'**
-  String get bridgesSavedLines;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Kryfo can\'t use this line'**
-  String get bridgesKryfoCanTUseThis;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Too long for Tor to use'**
-  String get bridgesTooLongForTor;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Paste the line they sent you, or scan its code. Whoever runs a bridge can see when you use Tor, so take lines only from people you trust.'**
-  String get bridgesPasteTheLineThey;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Paste a bridge line'**
-  String get bridgesPasteABridgeLine;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Scan a code'**
-  String get bridgesScanACode;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, one{Use this bridge} other{Use these {count} bridges}}'**
-  String bridgesUseThisBridge(int count);
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'None of these are bridge lines Kryfo understands.'**
-  String get bridgesNoneOfTheseAre;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'This line is too long for Tor to use.'**
-  String get bridgesThisLineIsTooLong;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, one{Kryfo couldn\'t read {count} of these lines} other{Kryfo couldn\'t read {count} of these lines}}'**
-  String bridgesKryfoCouldNotRead(int count);
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Scan a bridge code'**
-  String get bridgesScanABridgeCode;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Point at the bridge\'s QR code'**
-  String get bridgesPointAtTheBridge;
+  /// **'Kryfo can get around Tor blocks now'**
+  String get bridgesKryfoCanGetAround;
 
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
   /// **'That\'s not a bridge line'**
   String get bridgesThatSNotABridge;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Details'**
-  String get bridgesDetails;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'This bridge isn\'t getting through'**
-  String get bridgesThisBridgeIsnTGetting;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Bridges can stop working without warning. Automatic can find another way.'**
-  String get bridgesBridgesGoDeadWithout;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Switch to automatic'**
-  String get bridgesSwitchToAutomatic;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Our relay is one plain connection and usually gets through. Or let Kryfo find a way by itself.'**
-  String get bridgesOurRelayUsuallyGets;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Try automatic'**
-  String get bridgesTryAutomatic;
-
-  /// screens/settings_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Bridges, for networks that block Tor'**
-  String get settingsBridgesForNetworksThat;
-
-  /// widgets/tor_boot_splash.dart
-  ///
-  /// In en, this message translates to:
-  /// **'If Tor is blocked or risky where you are, Kryfo can start through a bridge instead.'**
-  String get torBootSplashIfTorIsBlocked;
-
-  /// widgets/tor_boot_splash.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Connect'**
-  String get torBootSplashConnect;
-
-  /// widgets/tor_boot_splash.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Tor is blocked or risky here'**
-  String get torBootSplashTorIsBlockedOr;
-
-  /// screens/transport_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Bridges'**
-  String get transportBridgeMode;
-
-  /// screens/transport_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Phase'**
-  String get transportBridgePhase;
-
-  /// screens/transport_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Method'**
-  String get transportBridgeMethod;
 
   /// screens/transport_screen.dart
   ///
@@ -11238,8 +10794,452 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'When you ask for bridges, the Tor Project sees your address. That\'s normal: it\'s how Tor Browser and every Tor app get bridges, and all it tells them is that someone asked for bridges. Nothing about your chats.'**
-  String get bridgesWhenYouAskFor;
+  /// **'Direct'**
+  String get bridgesDirect;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Asking the Tor Project what works here…'**
+  String get bridgesAskingTheTorProject;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'None of these are bridge lines Kryfo understands.'**
+  String get bridgesNoneOfTheseAre;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get bridgesAutomatic;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Straight to Tor, no bridge needed'**
+  String get bridgesStraightToTor;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo connects as soon as you\'re back online.'**
+  String get bridgesKryfoConnectsAsSoon;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get bridgesMore;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Trying another way… ({attempt} of {attempts})'**
+  String bridgesTryingAnotherWayOf(String attempt, String attempts);
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Looking for a volunteer'**
+  String get bridgesLookingForAVolunteer;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Fastest where Tor isn\'t blocked. Kryfo never connects outside Tor.'**
+  String get bridgesFastestWhereTorIsnt;
+
+  /// screens/transport_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Phase'**
+  String get transportBridgePhase;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Asleep between check-ins'**
+  String get bridgesAsleepBetweenCheckIns;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Through a bridge'**
+  String get bridgesThroughABridge;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'built-in'**
+  String get bridgesBuiltIn;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get bridgesDetails;
+
+  /// screens/transport_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Bridges'**
+  String get transportBridgeMode;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Egypt'**
+  String get bridgesEgypt;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Iran'**
+  String get bridgesIran;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on automatic'**
+  String get bridgesTurnOnAutomatic;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Paste a bridge line'**
+  String get bridgesPasteABridgeLine;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'In use'**
+  String get bridgesInUse;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Paste the line they sent you, or scan its code. Whoever runs a bridge can see when you use Tor, so take lines only from people you trust.'**
+  String get bridgesPasteTheLineThey;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Your mode doesn\'t use Tor. These choices apply when you switch back.'**
+  String get bridgesYouReOnAMode;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Paste or scan a line someone you trust gave you.'**
+  String get bridgesPasteOrScanALine;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing yet'**
+  String get bridgesNothingYet;
+
+  /// widgets/tor_boot_splash.dart
+  ///
+  /// In en, this message translates to:
+  /// **'If Tor is blocked or risky where you are, Kryfo can start through a bridge instead.'**
+  String get torBootSplashIfTorIsBlocked;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Scan a code'**
+  String get bridgesScanACode;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Myanmar'**
+  String get bridgesMyanmar;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to automatic'**
+  String get bridgesSwitchToAutomatic;
+
+  /// widgets/tor_boot_splash.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Tor is blocked or risky here'**
+  String get torBootSplashTorIsBlockedOr;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Trying another way…'**
+  String get bridgesTryingAnotherWay;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Goes through a volunteer\'s computer. Hard to block, slow to start.'**
+  String get bridgesGoesThroughAVolunteer;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Let the Tor Project guess'**
+  String get bridgesLetTheTorProject;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Tor seems blocked on this network'**
+  String get bridgesTorSeemsBlocked;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Tor is blocked on this network'**
+  String get bridgesTorIsBlockedOnThis;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{Kryfo couldn\'t read {count} of these lines} other{Kryfo couldn\'t read {count} of these lines}}'**
+  String bridgesKryfoCouldNotRead(int count);
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Tor, no bridge'**
+  String get bridgesTorNoBridge;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo finds a way that works where you are.'**
+  String get bridgesKryfoFindsAWay;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'The Tor Project has its own advice for these countries.'**
+  String get bridgesTheTorProjectKnows;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'This bridge isn\'t getting through'**
+  String get bridgesThisBridgeIsnTGetting;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Bridges the Tor Project gave you earlier.'**
+  String get bridgesBridgesTheTorProject;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting…'**
+  String get bridgesConnectingDots;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get bridgesNotNow;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Russia'**
+  String get bridgesRussia;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Bridges that come with Kryfo (obfs4). Quick to try, often blocked.'**
+  String get bridgesObfs4BridgesThatCome;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo tries again by itself now and then. A bridge from a friend can help.'**
+  String get bridgesKryfoTriesAgainBy;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Your network may be limited'**
+  String get bridgesYourNetworkMayBe;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Checking for messages…'**
+  String get bridgesCheckingForMessages;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Saved lines'**
+  String get bridgesSavedLines;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'from a friend'**
+  String get bridgesFromAFriendLower;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Almost there'**
+  String get bridgesAlmostThere;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'The Tor Project\'s guess'**
+  String get bridgesTheTorProjectSGuess;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Our relay is one plain connection and usually gets through. Or let Kryfo find a way by itself.'**
+  String get bridgesOurRelayUsuallyGets;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{Use this bridge} other{Use these {count} bridges}}'**
+  String bridgesUseThisBridge(int count);
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Turkmenistan'**
+  String get bridgesTurkmenistan;
+
+  /// screens/transport_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Method'**
+  String get transportBridgeMethod;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Point at the bridge\'s QR code'**
+  String get bridgesPointAtTheBridge;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting through your bridge…'**
+  String get bridgesConnectingThroughYourBridge;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'This line is too long for Tor to use.'**
+  String get bridgesThisLineIsTooLong;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic finds a way by itself when Tor is blocked. It may reach a bridge outside Tor to do it.'**
+  String get bridgesAutomaticFindsAWay;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'from the Tor Project'**
+  String get bridgesFromTheTorProjectLower;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Bridges can stop working without warning. Automatic can find another way.'**
+  String get bridgesBridgesGoDeadWithout;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Hong Kong'**
+  String get bridgesHongKong;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'When Tor is blocked, Automatic asks the Tor Project what works in your country.'**
+  String get bridgesWhenTorIsBlockedAutomatic;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Ask the Tor Project'**
+  String get bridgesAskTorProject;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Too long for Tor to use'**
+  String get bridgesTooLongForTor;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Country'**
+  String get bridgesCountry;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'{method}, {from}'**
+  String bridgesMethodFrom(String method, String from);
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'China'**
+  String get bridgesChina;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Belarus'**
+  String get bridgesBelarus;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo can\'t use this line'**
+  String get bridgesKryfoCanTUseThis;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Try automatic'**
+  String get bridgesTryAutomatic;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'No internet'**
+  String get bridgesNoInternet;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Connection'**
+  String get bridgesConnection;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Get a bridge'**
+  String get bridgesGetABridge;
 
   /// widgets/language_sheet.dart: the sheet title and the settings row
   ///
@@ -11595,12 +11595,6 @@ abstract class AppLocalizations {
   /// **'Pick one or more'**
   String get pollPickSeveral;
 
-  /// the search button on home, and its name for a screen reader
-  ///
-  /// In en, this message translates to:
-  /// **'Search'**
-  String get searchOpen;
-
   /// hint in the search field on home and in search
   ///
   /// In en, this message translates to:
@@ -11894,12 +11888,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Opens an empty Kryfo, as if just installed.'**
   String get pinsDecoyLine;
-
-  /// button
-  ///
-  /// In en, this message translates to:
-  /// **'Set a decoy PIN'**
-  String get pinsSetADecoyPin;
 
   /// button
   ///
@@ -12974,6 +12962,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Restart Kryfo'**
   String get valveRestartKryfo;
+
+  /// widgets/update_card.dart: card title, a newer Kryfo is on the site
+  ///
+  /// In en, this message translates to:
+  /// **'Update available'**
+  String get updateAvailable;
+
+  /// widgets/update_card.dart: the line under the title, tap opens the download page
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo {version} is ready to download'**
+  String updateReady(String version);
+
+  /// screens/settings_screen.dart: switch for the daily update check
+  ///
+  /// In en, this message translates to:
+  /// **'Check for updates'**
+  String get settingsCheckForUpdates;
+
+  /// screens/settings_screen.dart: what the update check does
+  ///
+  /// In en, this message translates to:
+  /// **'Once a day over Tor. Asks kryfo.app for the newest version and sends nothing about you.'**
+  String get settingsCheckForUpdatesHint;
 }
 
 class _AppLocalizationsDelegate

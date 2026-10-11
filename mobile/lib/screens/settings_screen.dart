@@ -41,6 +41,7 @@ import '../l10n/l10n.dart';
 import '../widgets/language_sheet.dart';
 import '../wipe_word.dart';
 import '../first_contact.dart' show firstFails;
+import '../update_check.dart' show updateNotice;
 
 // one protection: a ring that fills on the house spring and ticks, and its
 // state, which rises in when it changes. turning on washes the line amber
@@ -293,6 +294,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool? _acceptIntros;
   bool? _shieldOn;
   bool? _gifOn;
+  // only for copies from the site or github
+  bool _updateOffered = false;
+  bool? _updateOn;
   // asked once a visit, not on every rebuild
   late final Future<bool> _notifs = notificationsEnabled();
 
@@ -314,6 +318,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
     loadGifSearchOn(session.container).then((v) {
       if (mounted) setState(() => _gifOn = v);
     });
+    _readUpdateOn();
+  }
+
+  Future<void> _readUpdateOn() async {
+    await updateNotice.ready();
+    if (!updateNotice.eligible) return;
+    final v = await updateNotice.isOn();
+    if (mounted) {
+      setState(() {
+        _updateOffered = true;
+        _updateOn = v;
+      });
+    }
   }
 
   void _readHidePreview() {
@@ -723,6 +740,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 label: l10n.settingsVersion,
                 value: l10n.settings030Alpha,
               ),
+              // f-droid and play keep their copies updated, and a quiet
+              // session asks nothing
+              if (_updateOffered && !sessionQuiet)
+                HaloRow(
+                  icon: Icons.system_update_outlined,
+                  label: l10n.settingsCheckForUpdates,
+                  hint: l10n.settingsCheckForUpdatesHint,
+                  toggled: _updateOn ?? true,
+                  pending: _updateOn == null,
+                  onTap: () async {
+                    final v = !(_updateOn ?? true);
+                    setState(() => _updateOn = v);
+                    await updateNotice.setOn(v);
+                  },
+                ),
               // the chat with the developer: the way back after a delete.
               // none on his own phone, none with no key pinned
               if (devChatOffered)

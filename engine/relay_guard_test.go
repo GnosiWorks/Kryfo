@@ -230,7 +230,11 @@ func TestPollCarriesEachEventUnderItsOwnTag(t *testing.T) {
 		if e.A < now-60 || e.A > now+5 {
 			t.Fatalf("%s came stamped %d, not when it was wrapped (%d)", e.T, e.A, now)
 		}
-		got[i].A = 0
+		// stored, so no later than the subscribe and after nothing known
+		if e.U <= 0 || e.U > time.Now().UnixMilli() || e.F != 0 {
+			t.Fatalf("%s says it reached the relay from %d until %d", e.T, e.F, e.U)
+		}
+		got[i].A, got[i].F, got[i].U = 0, 0, 0
 	}
 	want := []pollEntry{{T: friendTag, C: "from a friend"}, {T: "firstcontact", C: "hello"}}
 	sort.Slice(want, func(i, j int) bool { return want[i].T < want[j].T })

@@ -20,6 +20,7 @@ import 'package:kryfo/main.dart'
     show
         HaloEngine,
         appState,
+        currentChatPeer,
         makePreKeyBundleB64,
         processPeerBundle,
         useDatabasesForTest,
@@ -28,7 +29,8 @@ import 'package:kryfo/notifications.dart' show showMessageNotification;
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
-import 'package:kryfo/widgets/chat_parts.dart' show JumpDownButton;
+import 'package:kryfo/widgets/chat_parts.dart'
+    show JumpDownButton, UnreadDivider;
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart'
     show Curve;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -380,7 +382,8 @@ void main() {
       () => showMessageNotification(
         title: _peer,
         body: 'while away',
-        payload: _peer,
+        chat: _peer,
+        tag: 'a1b2c3',
         msgUid: 'away1',
       ),
     );
@@ -466,6 +469,134 @@ void main() {
     expect(find.bySemanticsLabel(RegExp(l10n.appPhoto)), findsOneWidget);
     await devClose(t);
     sem.dispose();
+  });
+
+  testWidgets('a forward to the chat it is in lands in its own composer, '
+      'with no second copy on top, and the chat stays the one read', (t) async {
+    lockState.openForTest();
+    await devOpen(t, chat());
+    await settle(t);
+    await t.longPress(find.text('note 399', findRichText: true));
+    await settle(t);
+    await t.tap(find.text(l10n.chatForward));
+    await settle(t);
+    // the sheet's row for this very chat, over the header's name
+    await t.tap(find.text(_peer).last);
+    await settle(t, 20);
+    expect(find.byType(ChatScreen, skipOffstage: false), findsOneWidget);
+    expect(
+      t.widget<TextField>(find.byType(TextField).last).controller!.text,
+      'note 399',
+    );
+    expect(currentChatPeer, _peer);
+    await devClose(t);
+  });
+
+  testWidgets('a link edited to another link no longer shows the old '
+      'page\'s title', (t) async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    Future<void> linked(String uid, String text, String title, int at) =>
+        mem.insert('messages', {
+          'peer_id': _peer,
+          'direction': 'out',
+          'plaintext': text,
+          'sent_at': at,
+          'msg_uid': uid,
+          'sent': 1,
+          'preview': jsonEncode({
+            'url': 'https://a.example/one',
+            'title': title,
+            'by': 'sender',
+          }),
+        });
+    await linked('kept', 'see https://a.example/one', 'Still this page', now);
+    await linked('moved', 'see https://b.example/two', 'An old page', now + 1);
+    await devOpen(t, chat());
+    await settle(t);
+    expect(find.textContaining('Still this page'), findsOneWidget);
+    expect(find.textContaining('An old page'), findsNothing);
+    await devClose(t);
+  });
+
+  testWidgets('the header opens on the name given them, never on their '
+      'three words first', (t) async {
+    await mem.update(
+      'contacts',
+      {'nickname': 'Mira'},
+      where: 'halo_id = ?',
+      whereArgs: [_peer],
+    );
+    t.view.physicalSize = const Size(1000, 1800);
+    t.view.devicePixelRatio = 2;
+    addTearDown(t.view.reset);
+    await t.pumpWidget(
+      devApp(
+        ChatScreen(
+          peerHaloId: _peer,
+          peerOnion: '',
+          peerXPub: 'ab' * 32,
+          avatarSeed: _peer,
+          nickname: 'Mira',
+        ),
+        still: true,
+      ),
+    );
+    // the name line: the three words stay only as the small line under it
+    for (var i = 0; i < 12; i++) {
+      expect(find.byKey(const ValueKey<String>('Mira')), findsOneWidget);
+      expect(find.byKey(const ValueKey<String>(_peer)), findsNothing);
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 5)),
+      );
+      await t.pump(const Duration(milliseconds: 16));
+    }
+    await devClose(t);
+  });
+
+  testWidgets('the new messages line stays above the first new one as '
+      'older pages come in', (t) async {
+    // read up to the newest, then left
+    await devOpen(t, chat());
+    await settle(t);
+    await devClose(t);
+    for (var n = 1; n <= 2; n++) {
+      await mem.insert('messages', {
+        'peer_id': _peer,
+        'direction': 'in',
+        'plaintext': 'new $n',
+        'sent_at': DateTime.now().millisecondsSinceEpoch + n,
+        'msg_uid': 'new$n',
+        'sent': 1,
+      });
+    }
+    await devOpen(t, chat());
+    await settle(t);
+    // the row the line is drawn in
+    Finder lineRow() => find
+        .ancestor(
+          of: find.byType(UnreadDivider),
+          matching: find.byType(RepaintBoundary),
+        )
+        .first;
+    bool aboveFirstNew() =>
+        find.byType(UnreadDivider).evaluate().length == 1 &&
+        find
+            .descendant(
+              of: lineRow(),
+              matching: find.text('new 1', findRichText: true),
+            )
+            .evaluate()
+            .isNotEmpty;
+    expect(aboveFirstNew(), isTrue);
+    for (var i = 0; i < 2; i++) {
+      thread(t).jumpTo(thread(t).maxScrollExtent);
+      await settle(t);
+    }
+    expect(db.olderPages, greaterThan(0));
+    thread(t).jumpTo(0);
+    await settle(t);
+    expect(aboveFirstNew(), isTrue);
+    await devClose(t);
   });
 
   testWidgets('a reload with nothing new keeps the place and the pages', (

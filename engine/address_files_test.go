@@ -132,3 +132,64 @@ func TestPeerUnsubscribeTakesItsFilesAndNothingWritesThemAgain(t *testing.T) {
 		return strings.Contains(string(b), ev.ID.Hex())
 	})
 }
+
+func TestRoomMemberUnsubscribeTakesOnlyThatMember(t *testing.T) {
+	useStandIns(t, modeFast, nil)
+	me, a, b := newXid(t), newXid(t), newXid(t)
+	aHex, bHex := hex.EncodeToString(a.pub[:]), hex.EncodeToString(b.pub[:])
+	files := func(peer xid) []string {
+		_, rcv, err := nip17RcvAddressAs(me, peer.pub)
+		if err != nil {
+			t.Fatal(err)
+		}
+		s, l := addressFiles(rcv)
+		return []string{s, l}
+	}
+	_, fcPk, err := fcKeysFrom(me.priv, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fs, fl := addressFiles(fcPk)
+	gone, kept := files(a), append(files(b), fs, fl)
+	put(t, append(gone, kept...)...)
+	ctxA, cancelA := context.WithCancel(context.Background())
+	ctxB, cancelB := context.WithCancel(context.Background())
+	defer cancelA()
+	defer cancelB()
+	nostrMu.Lock()
+	nostrSubs[roomSubKey(me, aHex)] = cancelA
+	nostrSubs[roomSubKey(me, bHex)] = cancelB
+	nostrMu.Unlock()
+	defer func() {
+		nostrMu.Lock()
+		delete(nostrSubs, roomSubKey(me, bHex))
+		nostrMu.Unlock()
+	}()
+
+	if err := roomUnsubscribeMember(hex.EncodeToString(me.priv[:]), aHex); err != nil {
+		t.Fatal(err)
+	}
+	nostrMu.Lock()
+	_, stillA := nostrSubs[roomSubKey(me, aHex)]
+	_, stillB := nostrSubs[roomSubKey(me, bHex)]
+	nostrMu.Unlock()
+	if stillA || ctxA.Err() == nil {
+		t.Fatal("the member who went is still listened to")
+	}
+	if !stillB || ctxB.Err() != nil {
+		t.Fatal("another member stopped being listened to")
+	}
+	for _, p := range gone {
+		if there(p) {
+			t.Errorf("%s left", p)
+		}
+	}
+	for _, p := range kept {
+		if !there(p) {
+			t.Errorf("%s gone", p)
+		}
+	}
+	if err := roomUnsubscribeMember(hex.EncodeToString(me.priv[:]), "not a key"); err == nil {
+		t.Fatal("a bad key taken")
+	}
+}

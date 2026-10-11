@@ -48,6 +48,22 @@ func TestCensorNeverInRelease(t *testing.T) {
 			t.Errorf("%s asks for the censor", f)
 		}
 	}
+	// release.sh and every gradle build but the test app's look for the
+	// censor's marker, with one script that says no when unsure
+	on, _ := os.ReadFile("censor_on.go")
+	scanSrc, _ := os.ReadFile("censor-scan.sh")
+	rel, _ := os.ReadFile("../repro/release.sh")
+	gradle, _ := os.ReadFile("../mobile/android/app/build.gradle.kts")
+	if !strings.Contains(string(on), `censorMarker = "kryfo test censor build"`) ||
+		!strings.Contains(string(scanSrc), "grep -aq 'kryfo test censor build'") {
+		t.Error("the scan does not look for the censor's marker")
+	}
+	if !strings.Contains(string(rel), "censor-scan.sh") || !strings.Contains(string(rel), "unzip -l") {
+		t.Error("release.sh does not scan the engines it ships")
+	}
+	if !strings.Contains(string(gradle), "censor-scan.sh") {
+		t.Error("gradle does not scan the engine it packs")
+	}
 	// build.sh says no before it looks for anything
 	sh, _ := filepath.Abs("build.sh")
 	cmd := exec.Command("bash", sh)
@@ -55,5 +71,29 @@ func TestCensorNeverInRelease(t *testing.T) {
 	out, err := cmd.CombinedOutput()
 	if err == nil || !strings.Contains(string(out), "HALO_TOR_BLOCKED needs HALO_TEST_ID=1") {
 		t.Fatalf("build.sh took the censor outside the test app: %v %s", err, out)
+	}
+}
+
+// the scan says no to a test engine, to a missing one, and to none at all
+func TestCensorScan(t *testing.T) {
+	dir := t.TempDir()
+	clean := filepath.Join(dir, "clean.so")
+	dirty := filepath.Join(dir, "dirty.so")
+	os.WriteFile(clean, []byte("\x7fELF an engine"), 0o644)
+	os.WriteFile(dirty, []byte("\x7fELF censor: kryfo test censor build, tor is cut off"), 0o644)
+	sh, _ := filepath.Abs("censor-scan.sh")
+	for _, c := range []struct {
+		files []string
+		ok    bool
+	}{
+		{[]string{clean}, true},
+		{[]string{clean, dirty}, false},
+		{[]string{clean, filepath.Join(dir, "gone.so")}, false},
+		{nil, false},
+	} {
+		err := exec.Command("bash", append([]string{sh}, c.files...)...).Run()
+		if (err == nil) != c.ok {
+			t.Errorf("%v: passed %v, want %v", c.files, err == nil, c.ok)
+		}
 	}
 }

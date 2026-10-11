@@ -4,6 +4,7 @@
 // lands. an unsend or a reaction made with no route queues like an edit
 // and goes once one is back. the database methods are the real ones over
 // rows kept in maps; the wire and signal are stand-ins
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
@@ -11,7 +12,13 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/main.dart'
-    show AppState, HaloDb, kFrameReaction, kFrameUnsend, useDatabasesForTest;
+    show
+        AppState,
+        HaloDb,
+        kFrameReaction,
+        kFrameUnsend,
+        queueGap,
+        useDatabasesForTest;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
@@ -35,6 +42,24 @@ class _Rows extends HaloDb {
   Future<List<Map<String, Object?>>> unsentOutbox({
     Set<String> skip = const {},
   }) async => const [];
+}
+
+// a route that counts what it is asked, and answers when told while slow
+class _SlowIo extends ArrivalIo {
+  final waits = <Completer<String>>[];
+  var asked = 0;
+  var slow = false;
+
+  @override
+  Future<String> relaySend(String xPub, String cipher) async {
+    asked++;
+    if (!slow) return super.relaySend(xPub, cipher);
+    final c = Completer<String>();
+    waits.add(c);
+    final r = await c.future;
+    if (r == 'ok') sent.add(('relay $xPub', cipher));
+    return r;
+  }
 }
 
 int _unread(MemDb mem, String table, String key, String id) =>
@@ -111,6 +136,24 @@ void main() {
       await db.deleteMessage('g1');
       expect(_unread(mem, 'groups', 'group_id', _g), 0);
       expect(_unread(mem, 'contacts', 'halo_id', _bob), 2);
+    });
+
+    test('a group\'s last unread one taken back takes its mention too, one '
+        'of several leaves it', () async {
+      await mem.update(
+        'groups',
+        {'unread': 2, 'mentioned': 1},
+        where: 'group_id = ?',
+        whereArgs: [_g],
+      );
+      await came('g2', group: _g);
+      await db.deleteMessage('g2');
+      expect(_unread(mem, 'groups', 'group_id', _g), 1);
+      int mentioned() => mem.rows('groups').single['mentioned'] as int? ?? 0;
+      expect(mentioned(), 1);
+      await db.deleteMessage('g1');
+      expect(_unread(mem, 'groups', 'group_id', _g), 0);
+      expect(mentioned(), 0);
     });
 
     test('one that burns unread takes its mark and says which', () async {
@@ -333,13 +376,13 @@ void main() {
   group('queued', () {
     late MemDb mem;
     late _Rows db;
-    late ArrivalIo io;
+    late _SlowIo io;
     late AppState app;
 
     setUp(() async {
       mem = MemDb();
       db = _Rows(mem);
-      io = ArrivalIo()..down = true;
+      io = _SlowIo()..down = true;
       await mem.insert('contacts', {
         'halo_id': _bob,
         'onion': '',
@@ -365,9 +408,30 @@ void main() {
       for (final r in mem.rows('frames_out')) {
         await mem.update(
           'frames_out',
-          {'at': 1},
+          {'at': DateTime.now().millisecondsSinceEpoch - 60000},
           where: 'msg_uid = ? AND kind = ?',
           whereArgs: [r['msg_uid'], r['kind']],
+        );
+      }
+    }
+
+    // a restart: nothing in memory, the rows on disk
+    Future<AppState> restart() async {
+      final router = VaultRouter(ArrivalStore(), ArrivalSeal());
+      await router.load();
+      return AppState(io: io, router: router)
+        ..myId = 'me'
+        ..sendModeForTest = 'fast';
+    }
+
+    // every queued row's turn has come
+    Future<void> turnsUp(String table) async {
+      for (final r in mem.rows(table)) {
+        await mem.update(
+          table,
+          {'next_at': 0},
+          where: 'msg_uid = ?',
+          whereArgs: [r['msg_uid']],
         );
       }
     }
@@ -403,6 +467,180 @@ void main() {
       await settle();
       expect(wire().single.reaction!.emoji, '');
       expect(mem.rows('frames_out'), isEmpty);
+    });
+
+    test('one that keeps failing waits longer each time, not every '
+        'pass', () async {
+      await app.unsendInChat(_bob, 'u6');
+      await settle();
+      await age();
+      final before = io.asked;
+      await app.drainOutbox();
+      await settle();
+      final once = io.asked;
+      expect(once, greaterThan(before));
+      for (var i = 0; i < 4; i++) {
+        await app.drainOutbox();
+        await settle();
+      }
+      expect(io.asked, once);
+      // its turn is on disk: a restart keeps it
+      final row = mem.rows('frames_out').single;
+      expect(row['tries'], 1);
+      expect(
+        row['next_at'] as int,
+        greaterThan(DateTime.now().millisecondsSinceEpoch + 30000),
+      );
+      app = await restart();
+      io.down = false;
+      await app.drainOutbox();
+      await settle();
+      expect(io.sent, isEmpty);
+      await turnsUp('frames_out');
+      await app.drainOutbox();
+      await settle();
+      expect(wire().single.unsend, 'u6');
+      expect(mem.rows('frames_out'), isEmpty);
+    });
+
+    test('frames still waiting out their gap leave the window to newer '
+        'ones', () async {
+      const gone = 'dan-long-gone';
+      final now = DateTime.now().millisecondsSinceEpoch;
+      for (var i = 0; i < 45; i++) {
+        await mem.insert('frames_out', {
+          'msg_uid': 'old$i',
+          'kind': kFrameUnsend,
+          'peer_id': gone,
+          'body': '',
+          'at': now - 600000 + i,
+          'tries': 9,
+          'next_at': now + 600000,
+        });
+      }
+      await db.queueFrame('u9', kFrameUnsend, _bob, '');
+      await mem.update(
+        'frames_out',
+        {'at': now - 60000},
+        where: 'msg_uid = ?',
+        whereArgs: ['u9'],
+      );
+      io.down = false;
+      await app.drainOutbox();
+      await settle();
+      expect(wire().single.unsend, 'u9');
+      // a take-back is kept however long it waits
+      expect(mem.rows('frames_out'), hasLength(45));
+    });
+
+    test('a reaction past its tries or a week old is let go, a take-back '
+        'is not', () async {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      Map<String, Object?> row(String uid, String kind, int at, int tries) => {
+        'msg_uid': uid,
+        'kind': kind,
+        'peer_id': _bob,
+        'body': kind == kFrameReaction ? 'x' : '',
+        'at': at,
+        'tries': tries,
+        'next_at': now + 600000,
+      };
+      await mem.insert('frames_out', row('r1', kFrameReaction, now, 150));
+      await mem.insert(
+        'frames_out',
+        row('r2', kFrameReaction, now - 8 * 86400000, 0),
+      );
+      await mem.insert('frames_out', row('r3', kFrameReaction, now, 149));
+      await mem.insert(
+        'frames_out',
+        row('t1', kFrameUnsend, now - 30 * 86400000, 500),
+      );
+      await db.unsentFrames();
+      expect([
+        for (final r in mem.rows('frames_out')) r['msg_uid'],
+      ], unorderedEquals(['r3', 't1']));
+    });
+
+    test('a queued edit and pin wait out their gaps too, on disk', () async {
+      await db.queueEdit('u10', _bob, 'fixed');
+      await db.queuePin('u10', _bob, true);
+      for (final t in ['edits_out', 'pins_out']) {
+        for (final r in mem.rows(t)) {
+          await mem.update(
+            t,
+            {'at': DateTime.now().millisecondsSinceEpoch - 60000},
+            where: 'msg_uid = ?',
+            whereArgs: [r['msg_uid']],
+          );
+        }
+      }
+      final before = io.asked;
+      await app.drainOutbox();
+      await settle();
+      final once = io.asked;
+      expect(once - before, 2);
+      for (var i = 0; i < 3; i++) {
+        await app.drainOutbox();
+        await settle();
+      }
+      expect(io.asked, once);
+      for (final t in ['edits_out', 'pins_out']) {
+        expect(mem.rows(t).single['tries'], 1, reason: t);
+      }
+      app = await restart();
+      io.down = false;
+      await app.drainOutbox();
+      await settle();
+      expect(io.sent, isEmpty);
+      await turnsUp('edits_out');
+      await turnsUp('pins_out');
+      await app.drainOutbox();
+      await settle();
+      expect(wire().where((m) => m.edit != null).single.edit!.newText, 'fixed');
+      expect(wire().where((m) => m.pin != null).single.pin!.pinned, isTrue);
+      expect(mem.rows('edits_out'), isEmpty);
+      expect(mem.rows('pins_out'), isEmpty);
+    });
+
+    test('the wait doubles from 45 seconds up to ten minutes', () {
+      expect(
+        [for (var i = 0; i < 7; i++) queueGap(i)],
+        [45000, 90000, 180000, 360000, 600000, 600000, 600000],
+      );
+      expect(queueGap(70), 600000);
+    });
+
+    test('an edit made while the one before still goes waits for it, and '
+        'the older one landing leaves it queued', () async {
+      io
+        ..down = false
+        ..slow = true;
+      await app.editInChat(_bob, 'u7', 'one');
+      await settle();
+      expect(io.waits, hasLength(1));
+      await app.editInChat(_bob, 'u7', 'two');
+      await settle();
+      // nothing alongside it
+      expect(io.waits, hasLength(1));
+      expect(mem.rows('edits_out').single['new_text'], 'two');
+      io.waits.single.complete('ok');
+      await settle();
+      expect(mem.rows('edits_out').single['new_text'], 'two');
+      // and the newer one goes right after
+      expect(io.waits, hasLength(2));
+      io.waits.last.complete('ok');
+      await settle();
+      expect([for (final m in wire()) m.edit!.newText], ['one', 'two']);
+      expect(mem.rows('edits_out'), isEmpty);
+    });
+
+    test('an older wording that lands leaves a newer one queued', () async {
+      await db.queueEdit('u8', _bob, 'one');
+      await db.queueEdit('u8', _bob, 'two');
+      await db.dropEdit('u8', newText: 'one');
+      expect(mem.rows('edits_out').single['new_text'], 'two');
+      await db.dropEdit('u8', newText: 'two');
+      expect(mem.rows('edits_out'), isEmpty);
     });
 
     test('a word sent leaves a newer one queued', () async {

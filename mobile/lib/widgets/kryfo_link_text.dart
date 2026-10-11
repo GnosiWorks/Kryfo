@@ -66,8 +66,17 @@ Future<bool> _roomGoes(
 ) async {
   if (await here(room.roomId)) return true;
   if (!context.mounted || g.isLocked()) return false;
-  return showRoomPreviewSheet(context, room, shutOnLock: g);
+  return showRoomPreviewSheet(
+    context,
+    room,
+    shutOnLock: g,
+    ended: _endedHere(room),
+  );
 }
+
+// a room this phone made and left: over, whatever its link says
+bool _endedHere(RoomLink room) =>
+    endedRooms.ended(session.container.id, room.roomId);
 
 Future<bool> _askAdd(
   BuildContext context,
@@ -276,10 +285,17 @@ class RoomInviteCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: endedRooms,
+    builder: (context, _) => _card(context),
+  );
+
+  Widget _card(BuildContext context) {
     final fg = onAmber ? HaloColors.onAmber : HaloColors.text;
     final sub = onAmber ? HaloColors.onAmber : HaloColors.text2;
-    final closed = room.expiresAt <= DateTime.now().millisecondsSinceEpoch;
+    final closed =
+        room.expiresAt <= DateTime.now().millisecondsSinceEpoch ||
+        _endedHere(room);
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 250),
       child: Column(

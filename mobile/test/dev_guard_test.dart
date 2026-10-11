@@ -29,7 +29,6 @@ import 'package:kryfo/main.dart'
         HaloDb,
         handleHaloUriAdded,
         haloUriV3,
-        kUnblockGrace,
         makePreKeyBundleB64,
         openDevChatLater,
         signalDecrypt,
@@ -208,6 +207,7 @@ class _Io implements AppIo {
     required String title,
     required String body,
     String? payload,
+    Object? on,
     String? msgUid,
     int? burnAt,
   }) async => rang.add(payload ?? title);
@@ -850,6 +850,7 @@ class _Mem implements HaloDb {
     int total,
     int? burn, {
     required String from,
+    String? group,
   }) async {
     _hit('putMediaChunk', mediaId, null);
     chunkFrom[mediaId] = from;
@@ -909,11 +910,7 @@ class _Mem implements HaloDb {
 
   // no block here ever held
   @override
-  Future<bool> blockedAt(
-    String haloId,
-    int at, {
-    int slack = kUnblockGrace,
-  }) async => false;
+  Future<List<(int, int?)>> blockSpansOf(String haloId) async => const [];
   @override
   Future<void> noteBlockedDrop(String haloId, String uid) async {}
   @override

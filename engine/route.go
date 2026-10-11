@@ -313,6 +313,8 @@ func networkChanged() {
 	// a snowflake client keeps the nat type it found on the old network
 	dropSnowflakeClients()
 	routeFreshNetwork()
+	// what proved the old network proves nothing about this one
+	routeBump()
 	netEpoch.Add(1)
 	netMu.Lock()
 	netChangedAt = time.Now()

@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:crypto/crypto.dart' show Digest, sha256;
+import 'package:flutter/foundation.dart' show ChangeNotifier, visibleForTesting;
 import 'package:flutter/widgets.dart' show StringCharacters;
 
 import 'dlog.dart';
@@ -256,3 +258,99 @@ String? firstKryfoLink(String text) => _kryfoLink.firstMatch(text)?.group(0);
 
 /// every kryfo link in [text] with where it sits, for drawing them tappable
 Iterable<RegExpMatch> kryfoLinksIn(String text) => _kryfoLink.allMatches(text);
+
+// a remove names at most this many of a key's last messages, as the ones
+// the others still take after it
+const kRoomRecent = 32;
+
+String _h16(String what) =>
+    sha256.convert(utf8.encode(what)).toString().substring(0, 16);
+
+/// the first half of how a remove names a message: its uid, salted with
+/// the room's id. enough to hold a file's slices until the file is whole
+String roomUidPart(String room, String uid) =>
+    _h16(jsonEncode(['room-late-uid', room, uid]));
+
+/// how a remove names a message: its uid and what it says, each salted
+/// with the room's id. a message sent again with other words or other
+/// bytes under the same uid is named by none. [body] from roomTextBody or
+/// roomFileBody
+String roomEntry(String room, String uid, String body) =>
+    roomUidPart(room, uid) +
+    _h16(jsonEncode(['room-late-body', room, uid, body]));
+
+/// a message whole in one frame, as it reads: words, sticker, poll, a
+/// small picture or file and its name, the message it answers
+String roomTextBody({
+  required String message,
+  String? sticker,
+  Object? poll,
+  String? fileName,
+  String? image,
+  String? file,
+  String? replyTo,
+}) => sha256
+    .convert(
+      utf8.encode(
+        jsonEncode([message, sticker, poll, fileName, image, file, replyTo]),
+      ),
+    )
+    .toString();
+
+/// a file sent in [total] slices, once all are in: [slices] its slices'
+/// digest in order (roomSliceDigest), with its name and caption
+String roomFileBody({
+  required int total,
+  required String slices,
+  String? fileName,
+  required String caption,
+}) => jsonEncode(['file', total, fileName, caption, slices]);
+
+/// the digest of a file's slices as they came, in order
+Future<String> roomSliceDigest(
+  int total,
+  Future<String?> Function(int i) slice,
+) async {
+  final out = _Digest();
+  final sink = sha256.startChunkedConversion(out);
+  for (var i = 0; i < total; i++) {
+    final s = await slice(i);
+    sink.add(utf8.encode('${s?.length ?? -1}:'));
+    if (s != null) sink.add(utf8.encode(s));
+  }
+  sink.close();
+  return out.value.toString();
+}
+
+class _Digest implements Sink<Digest> {
+  late Digest value;
+  @override
+  void add(Digest data) => value = data;
+  @override
+  void close() {}
+}
+
+/// rooms this phone made and then left, by container id, until they would
+/// have closed: its maker's leave ends a room, and its link says so. kept
+/// in memory alone, so a left room leaves nothing on disk
+class EndedRooms extends ChangeNotifier {
+  final Map<String, Map<String, int>> _by = {};
+
+  void note(String container, String roomId, int expiresAt) {
+    (_by[container] ??= {})[roomId] = expiresAt;
+    notifyListeners();
+  }
+
+  bool ended(String container, String roomId, {int? now}) {
+    final m = _by[container];
+    if (m == null) return false;
+    final at = now ?? DateTime.now().millisecondsSinceEpoch;
+    m.removeWhere((_, until) => until <= at);
+    return m.containsKey(roomId);
+  }
+
+  @visibleForTesting
+  void clear() => _by.clear();
+}
+
+final endedRooms = EndedRooms();

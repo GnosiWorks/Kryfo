@@ -23,6 +23,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/cretz/bine/control"
 )
 
 // the bridge modes the app picks from. legacy is HaloSetBridges driving,
@@ -124,6 +126,16 @@ func memRemember(kind string, s autoStep, today int64) {
 	autoMem.Worked[kind][s.Method] = u
 	if s.Method == "direct" {
 		delete(autoMem.Blocked, kind)
+	}
+}
+
+// a method that did not get through here is no longer one that worked
+func memForget(kind, method string) {
+	memMu.Lock()
+	defer memMu.Unlock()
+	delete(autoMem.Worked[kind], method)
+	if u, ok := autoMem.Last[kind]; ok && u.Method == method {
+		delete(autoMem.Last, kind)
 	}
 }
 
@@ -327,9 +339,9 @@ func stepBudget(s autoStep) time.Duration {
 	case "moat":
 		return moatTimeout + 15*time.Second
 	case "direct":
-		return directLimit + attemptExtend + autoSetconfWait
+		return attemptCap + autoSetconfWait
 	}
-	return firstDialWait + s.Limit + attemptExtend + autoSetconfWait
+	return firstDialWait + attemptCap + autoSetconfWait
 }
 
 func passBudget(steps []autoStep) time.Duration {
@@ -349,33 +361,54 @@ var autoGate struct {
 	sync.Mutex
 	held  bool
 	until time.Time
+	id    int64 // the pass that holds it
+	next  int64
 }
 
-// takes the gate for a pass of this mode, unless a newer mode took over
-func gateHold(gen int64, budget time.Duration) bool {
+// takes the gate for a pass of this mode, unless a newer mode took over.
+// the pass's id, 0 when refused.
+func gateHold(gen int64, budget time.Duration) int64 {
 	autoMu.Lock()
 	defer autoMu.Unlock()
 	if autoGenN != gen {
-		return false
+		return 0
 	}
 	autoGate.Lock()
-	autoGate.held, autoGate.until = true, autoNow().Add(budget+autoGateSlack)
-	autoGate.Unlock()
-	return true
+	defer autoGate.Unlock()
+	autoGate.next++
+	autoGate.held, autoGate.until, autoGate.id = true, autoNow().Add(budget+autoGateSlack), autoGate.next
+	return autoGate.id
 }
 
-func gateExtend(d time.Duration) {
+func gateExtend(id int64, d time.Duration) {
 	autoGate.Lock()
-	if autoGate.held {
+	if autoGate.held && autoGate.id == id {
 		autoGate.until = autoGate.until.Add(d)
 	}
 	autoGate.Unlock()
 }
 
-func gateRelease() {
+// a pass gives the gate back, unless a newer one holds it by now
+func gateRelease(id int64) {
+	autoGate.Lock()
+	if autoGate.id == id {
+		autoGate.held = false
+	}
+	autoGate.Unlock()
+}
+
+// a mode change takes the gate from whichever pass has it
+func gateDrop() {
 	autoGate.Lock()
 	autoGate.held = false
 	autoGate.Unlock()
+}
+
+// whether this pass still holds the gate and is inside its cap
+func gateOwned(id int64) bool {
+	autoGate.Lock()
+	defer autoGate.Unlock()
+	return autoGate.held && autoGate.id == id && !autoNow().After(autoGate.until)
 }
 
 // true while a pass owns the bounces. a pass past its cap owns nothing,
@@ -424,18 +457,23 @@ var (
 	autoSleep = time.Sleep
 	// how often an attempt looks at tor
 	autoPoll = time.Second
-	// how long a bounce may take before the attempt counts as failed
+	// how long tor may take to answer the SETCONF of a switch before the
+	// attempt counts as failed
 	autoSetconfWait = 20 * time.Second
 )
 
 type autoWorld struct {
 	started func() bool
+	// tor holds a built circuit since its last bounce, on this network
+	settled func() bool
 	apply   func(s autoStep) string
 	open    func() *attemptSeen
 	poll    func(a *attemptSeen, s autoStep)
 	close   func()
 	proven  func(gen int64) bool
 	moat    func(o moatOpts) ([]moatSetting, error)
+	// tor itself can build a circuit, whatever the relays do
+	torUp func() bool
 }
 
 var autoW = liveWorld()
@@ -485,22 +523,56 @@ func torStarted() bool {
 // what the last bounce's bridge SETCONF said, "" when it took
 var bridgeConfErr atomic.Value
 
+// the network change the last bounce happened on
+var bounceEpoch atomic.Int64
+
+// tor's own word on whether it has built a circuit. DisableNetwork clears
+// it, so after a bounce it speaks of the network that came back.
+func circuitEstablished() bool {
+	mu.Lock()
+	t := torNode
+	mu.Unlock()
+	if t == nil || t.Control == nil {
+		return false
+	}
+	var kv []*control.KeyVal
+	err := ctrlDo(t, "GETINFO circuit-established", func(c *control.Conn) error {
+		var gerr error
+		kv, gerr = c.GetInfo("status/circuit-established")
+		return gerr
+	})
+	return err == nil && len(kv) > 0 && strings.TrimSpace(kv[0].Val) == "1"
+}
+
+// the steps of a reconnect after tor has its config
+var bounceTookConfig = map[string]bool{"network on": true, "watchers": true}
+
 func liveWorld() autoWorld {
 	return autoWorld{
 		started: torStarted,
+		settled: func() bool {
+			return bounceEpoch.Load() == netEpoch.Load() && circuitEstablished()
+		},
 		apply: func(s autoStep) string {
 			done := make(chan string, 1)
 			go func() { done <- reconnectAuto() }()
+			conf := func() string {
+				if e, _ := bridgeConfErr.Load().(string); e != "" {
+					return "error: " + e
+				}
+				return "ok"
+			}
 			select {
 			case r := <-done:
 				if r != "ok" {
 					return r
 				}
-				if e, _ := bridgeConfErr.Load().(string); e != "" {
-					return "error: " + e
-				}
-				return "ok"
+				return conf()
 			case <-time.After(autoSetconfWait):
+				// tor took the config and the rest is slow: not a failure
+				if bounceTookConfig[lastReconnectStep()] {
+					return conf()
+				}
 				return "error: tor did not take the change in time"
 			}
 		},
@@ -521,6 +593,7 @@ func liveWorld() autoWorld {
 			}
 			return out.Settings, err
 		},
+		torUp: circuitEstablished,
 	}
 }
 
@@ -529,11 +602,19 @@ func livePoll(a *attemptSeen, s autoStep) {
 	t := torNode
 	mu.Unlock()
 	p, ok := readBootPhase(t)
+	obsMu.Lock()
+	armed := a.armed
+	obsMu.Unlock()
+	// a circuit event can be missed; tor's own flag cannot
+	circ := armed && circuitEstablished()
 	now := autoNow()
 	obsMu.Lock()
 	defer obsMu.Unlock()
 	if ok {
 		a.bootstrap(p, !torWasUp(t), now)
+	}
+	if circ {
+		a.circ("BUILT", nil, now)
 	}
 	if s.Method == "direct" {
 		return
@@ -553,9 +634,14 @@ func livePoll(a *attemptSeen, s autoStep) {
 	}
 	a.allDead = dead
 	if s.Method == "snowflake" {
-		if _, at, _ := snowflakeStatus(); at.After(a.since) {
-			a.sfMoved = at
-		}
+		noteSnowflake(a)
+	}
+}
+
+// snowflake getting further than before counts as progress, and nothing else
+func noteSnowflake(a *attemptSeen) {
+	if _, at := snowflakeForward(); at.After(a.since) {
+		a.sfMoved = at
 	}
 }
 
@@ -578,7 +664,8 @@ func inCheckIn() bool {
 	return !checkInUntil.IsZero() && autoNow().Before(checkInUntil)
 }
 
-// why a pass cannot run now, or ""
+// why a pass cannot run now, or "". behind a captive portal nothing gets
+// out until someone signs in, so nothing is tried and nothing is learned.
 func autoIdleWhy() string {
 	switch {
 	case !modeNeedsTor():
@@ -587,19 +674,35 @@ func autoIdleWhy() string {
 		return "paused"
 	case !currentNet().On:
 		return "no_internet"
+	case currentNet().Limited:
+		return "captive"
 	}
 	return ""
 }
 
-func autoInterrupted(gen, epoch int64) string {
-	if autoGen() != gen {
+// one pass and what it began with
+type passCtx struct {
+	gen   int64
+	epoch int64
+	id    int64 // its hold on the gate
+	valid int64 // the validation flips it began with
+}
+
+func autoInterrupted(p passCtx) string {
+	if autoGen() != p.gen {
 		return "stopped"
 	}
 	if why := autoIdleWhy(); why != "" {
 		return why
 	}
-	if netEpoch.Load() != epoch {
+	if netEpoch.Load() != p.epoch {
 		return "network"
+	}
+	if autoValidFlips.Load() != p.valid {
+		return "validated"
+	}
+	if p.id != 0 && !gateOwned(p.id) {
+		return "capped"
 	}
 	return ""
 }
@@ -616,10 +719,24 @@ func runPass(gen, epoch int64, why string) string {
 	today := dayOf(autoNow())
 	steps := planPass(kind, memSnapshot(), opts, today)
 	log.Printf("auto: pass (%s) on %s, %d steps", why, kind, len(steps))
-	if !gateHold(gen, passBudget(steps)) {
+	p := passCtx{gen: gen, epoch: epoch, valid: autoValidFlips.Load()}
+	if p.id = gateHold(gen, passBudget(steps)); p.id == 0 {
 		return passInterrupted
 	}
-	defer gateRelease()
+	defer gateRelease(p.id)
+	r := runSteps(p, kind, n.Validated, opts, steps, today)
+	if r == passInterrupted && !gateOwned(p.id) && autoGen() == gen {
+		log.Println("auto: the pass ran past its cap")
+		stSet(func() {
+			autoSt.phase, autoSt.method, autoSt.source = "exhausted", "", ""
+			autoSt.errCode = "exhausted"
+		})
+		return "exhausted"
+	}
+	return r
+}
+
+func runSteps(p passCtx, kind string, validated bool, opts modeOpts, steps []autoStep, today int64) string {
 	stSet(func() {
 		autoSt.blocked, autoSt.limited, autoSt.errCode, autoSt.askConsent = false, false, "", false
 		autoSt.attempt, autoSt.attempts = 0, attemptCount(steps)
@@ -638,12 +755,12 @@ func runPass(gen, epoch int64, why string) string {
 			moatAt = i
 			if !moatDone && consentNow() == "yes" {
 				moatDone = true
-				extra, r := autoAskMoat(gen, epoch, opts)
+				extra, r := autoAskMoat(p, opts)
 				if r != "" {
 					return r
 				}
 				steps = spliceMoat(steps, i, extra)
-				gateExtend(passBudget(extra))
+				gateExtend(p.id, passBudget(extra))
 				stSet(func() { autoSt.attempts = autoSt.attempt + attemptCount(steps[i+1:]) })
 			} else if consentNow() == "ask" && blocked {
 				stSet(func() { autoSt.askConsent = true })
@@ -651,7 +768,7 @@ func runPass(gen, epoch int64, why string) string {
 			continue
 		}
 		stSet(func() { autoSt.attempt++ })
-		v := runAttempt(gen, epoch, s, n.Validated)
+		v := runAttempt(p, s, validated)
 		switch v {
 		case seenOK:
 			memRemember(kind, s, dayOf(autoNow()))
@@ -679,10 +796,14 @@ func runPass(gen, epoch int64, why string) string {
 		case passInterrupted:
 			return passInterrupted
 		}
+		// a bridge that did not get through here is not one to check in by
+		if v == seenFailed && s.Method != "direct" {
+			memForget(kind, s.Method)
+		}
 		// consent came while this pass was past the ask: ask now
 		if !moatDone && moatAt >= 0 && moatAt < i && consentNow() == "yes" {
 			steps = append(steps[:i+1], append([]autoStep{{Method: "moat"}}, steps[i+1:]...)...)
-			gateExtend(stepBudget(autoStep{Method: "moat"}))
+			gateExtend(p.id, stepBudget(autoStep{Method: "moat"}))
 		}
 	}
 	stSet(func() {
@@ -695,7 +816,7 @@ func runPass(gen, epoch int64, why string) string {
 
 // moat's settings, from the week's cache or asked for over meek. the
 // plain path is never taken here: moatGate refuses it for automatic.
-func autoAskMoat(gen, epoch int64, opts modeOpts) ([]autoStep, string) {
+func autoAskMoat(p passCtx, opts modeOpts) ([]autoStep, string) {
 	if s := moatSettingsCached(); len(s) > 0 {
 		return moatSteps(s), ""
 	}
@@ -724,7 +845,8 @@ func autoAskMoat(gen, epoch int64, opts modeOpts) ([]autoStep, string) {
 			return moatSteps(r.s), ""
 		default:
 		}
-		if why := autoInterrupted(gen, epoch); why != "" {
+		if why := autoInterrupted(p); why != "" {
+			log.Printf("auto: moat call stopped: %s", why)
 			cancelMoatCalls()
 			return nil, passInterrupted
 		}
@@ -758,43 +880,50 @@ func spliceMoat(steps []autoStep, at int, extra []autoStep) []autoStep {
 	return out
 }
 
-func runAttempt(gen, epoch int64, s autoStep, validated bool) string {
+func runAttempt(p passCtx, s autoStep, validated bool) string {
 	stSet(func() {
 		autoSt.phase, autoSt.method, autoSt.source, autoSt.since = "trying", s.Method, s.Source, autoNow()
 	})
-	ok, changed := autoUseLines(gen, s.Lines)
+	ok, changed := autoUseLines(p.gen, s.Lines)
 	if !ok {
 		return passInterrupted
 	}
+	// listening before the bounce, so nothing it brings is missed
+	a := autoW.open()
+	defer autoW.close()
 	switch {
-	case !changed && autoW.started() && routeProven():
-		// these lines carry relays already: no bounce, the proof below
-		// takes it at once
+	case !changed && autoW.started() && autoW.settled():
+		// these lines already carry tor on this network: no bounce
+		obsArm()
 	case autoW.started():
 		r := autoW.apply(s)
-		if why := autoInterrupted(gen, epoch); why != "" {
+		if why := autoInterrupted(p); why != "" {
 			return passInterrupted
 		}
 		if r != "ok" {
 			log.Printf("auto: %s not applied: %s", s.Method, r)
 			return seenFailed
 		}
+		obsArm()
 	default:
 		// no tor yet: the app's start takes these lines, and the clock
 		// starts with it
 		for !autoW.started() {
-			if why := autoInterrupted(gen, epoch); why != "" {
+			if why := autoInterrupted(p); why != "" {
 				return passInterrupted
 			}
 			autoSleep(autoPoll)
 		}
-		stSet(func() { autoSt.since = autoNow() })
+		now := autoNow()
+		obsMu.Lock()
+		a.since = now
+		obsMu.Unlock()
+		obsArm()
+		stSet(func() { autoSt.since = now })
 	}
 	gen0 := routeGeneration()
-	a := autoW.open()
-	defer autoW.close()
 	for {
-		if why := autoInterrupted(gen, epoch); why != "" {
+		if why := autoInterrupted(p); why != "" {
 			log.Printf("auto: %s attempt stopped: %s", s.Method, why)
 			return passInterrupted
 		}
@@ -826,14 +955,22 @@ func runAttempt(gen, epoch int64, s autoStep, validated bool) string {
 
 var (
 	autoKickCh = make(chan struct{}, 1)
-	// how often the loop looks around, and how long a route may stay dead
-	// after a pass worked before a new pass begins
-	autoTick      = 10 * time.Second
+	// how often the loop looks around
+	autoTick = 10 * time.Second
+	// how long tor may be without a circuit after a pass worked before a
+	// new pass begins; it doubles with every such pass, up to an hour, and
+	// starts over once tor has kept a circuit for half an hour
 	autoLostAfter = 5 * time.Minute
+	autoLostMax   = time.Hour
+	autoUpFor     = 30 * time.Minute
+	// the least time between two passes
+	autoPassFloor = 20 * time.Second
 	autoRetryBase = 15 * time.Minute
 	autoRetryMax  = 2 * time.Hour
 	autoRetryNow  atomic.Bool
 	autoLoopRuns  atomic.Int32
+	// bumped when android validates a network it could not before
+	autoValidFlips atomic.Int64
 )
 
 func autoKick() {
@@ -851,6 +988,14 @@ func autoRetryGap(n int) time.Duration {
 	return d
 }
 
+func autoLostGap(n int) time.Duration {
+	d := autoLostAfter << uint(n)
+	if n > 6 || d > autoLostMax {
+		return autoLostMax
+	}
+	return d
+}
+
 func autoStart(gen int64) {
 	autoLoopRuns.Add(1)
 	go func() {
@@ -859,21 +1004,28 @@ func autoStart(gen int64) {
 	}()
 }
 
+// passes are started here and nowhere else
+var autoRunPass = runPass
+
 func autoLoop(gen int64) {
 	var (
 		result    string
 		kind      string
-		epoch     int64
+		epoch     = netEpoch.Load()
 		retryAt   time.Time
 		fails     int
 		downSince time.Time
+		upSince   time.Time
+		lost      int
+		lastPass  time.Time
 		consent   = consentNow()
+		valid     = autoValidFlips.Load()
 	)
 	for autoGen() == gen {
 		now := autoNow()
 		start := ""
 		if why := autoIdleWhy(); why != "" {
-			downSince = time.Time{}
+			downSince, upSince = time.Time{}, time.Time{}
 			if result != seenOK && result != "exhausted" {
 				result = passInterrupted
 			}
@@ -881,24 +1033,38 @@ func autoLoop(gen int64) {
 			n := currentNet()
 			ep := netEpoch.Load()
 			c := consentNow()
+			v := autoValidFlips.Load()
 			switch {
-			case result == "" || result == passInterrupted:
+			case result == "":
 				start = "start"
 			case ep != epoch && (result != seenOK || n.Kind != kind):
 				start = "network"
+			case result == passInterrupted:
+				start = "again"
+			case v != valid && result != seenOK:
+				start = "validated"
 			case result == "exhausted" && (autoRetryNow.Swap(false) || !now.Before(retryAt) || (c == "yes" && consent != "yes")):
 				start = "retry"
 			case result == seenOK:
 				epoch = ep
-				if routeOK() {
+				if autoW.torUp() {
 					downSince = time.Time{}
-				} else if downSince.IsZero() {
-					downSince = now
-				} else if now.Sub(downSince) >= autoLostAfter {
-					start = "lost"
+					if upSince.IsZero() {
+						upSince = now
+					} else if now.Sub(upSince) >= autoUpFor {
+						lost = 0
+					}
+				} else {
+					upSince = time.Time{}
+					if downSince.IsZero() {
+						downSince = now
+					} else if now.Sub(downSince) >= autoLostGap(lost) {
+						start = "lost"
+						lost++
+					}
 				}
 			}
-			consent = c
+			consent, valid = c, v
 		}
 		if start != "" {
 			if start == "network" {
@@ -910,10 +1076,17 @@ func autoLoop(gen int64) {
 					}
 				}
 			}
+			if wait := lastPass.Add(autoPassFloor).Sub(autoNow()); !lastPass.IsZero() && wait > 0 {
+				autoSleep(wait)
+			}
+			if autoGen() != gen {
+				return
+			}
 			epoch = netEpoch.Load()
 			kind = currentNet().Kind
-			result = runPass(gen, epoch, start)
-			downSince = time.Time{}
+			lastPass = autoNow()
+			result = autoRunPass(gen, epoch, start)
+			downSince, upSince = time.Time{}, time.Time{}
 			switch result {
 			case "exhausted":
 				retryAt = autoNow().Add(autoRetryGap(fails))
@@ -1010,7 +1183,7 @@ func applyBridgeMode(mode, raw string) string {
 		}
 		return "ok"
 	}
-	gateRelease()
+	gateDrop()
 	if mode == bmAuto {
 		stSet(func() { autoSt.phase, autoSt.method, autoSt.source = "trying", "", "" })
 		autoStart(gen)
@@ -1032,15 +1205,20 @@ func optsEqual(a, b modeOpts) bool {
 	return string(x) == string(y)
 }
 
-// HaloSetBridges hands the lines over the old way, and automatic stops
-func legacyMode() {
-	autoMu.Lock()
-	if bmMode != bmLegacy {
-		autoGenN++
-		bmMode, bmOpts = bmLegacy, modeOpts{}
+// HaloSetBridges hands the lines over the old way. a decoy changes
+// nothing, and neither does the old call once the app has picked a mode:
+// the upgrade moves the old setting to a mode, see HaloSetBridgeMode.
+// "" when the old call may go on, else why not.
+func legacyMode() string {
+	if decoyState.Load() == decoyOn {
+		return "error: decoy"
 	}
-	autoMu.Unlock()
-	gateRelease()
+	autoMu.Lock()
+	defer autoMu.Unlock()
+	if bmMode != bmLegacy {
+		return "error: a mode is set"
+	}
+	return ""
 }
 
 // the method a check-in uses: the one that worked here last. if that is
@@ -1054,6 +1232,7 @@ func checkInStep(kind string, mem autoMemory, opts modeOpts, today int64) (autoS
 	}
 	if u.Method == "snowflake" {
 		for _, m := range []string{"webtunnel", "obfs4"} {
+			// one that failed in a pass since was forgotten there
 			if w, ok := mem.Worked[kind][m]; ok && fresh(w.Day, today) {
 				if lines := linesFor(w, opts); len(lines) > 0 {
 					return autoStep{Method: w.Method, Source: w.Source, Lines: lines}, true
@@ -1176,6 +1355,8 @@ func bridgeStatus() bridgeStatusView {
 	switch why := autoIdleWhy(); {
 	case why == "not_tor_mode", why == "no_internet":
 		phase, v.ErrorCode = why, why
+	case why == "captive":
+		phase, v.ErrorCode = "captive", "limited"
 	case why == "paused" && inCheckIn():
 		phase = "checkin"
 	case why == "paused":
@@ -1201,10 +1382,19 @@ func bridgeStatus() bridgeStatusView {
 	if u, ok := memSnapshot().Last[n.Kind]; ok && fresh(u.Day, dayOf(autoNow())) {
 		v.LastOK, v.LastOKDay = u.Method, u.Day
 	}
-	// a decoy sees automatic at work, and nothing of how
+	// a decoy sees automatic at work, and nothing of how: connected,
+	// trying or offline, and no more
 	if !decoyClosed() {
-		v.Mode, v.Method, v.Source, v.Snowflake = bmAuto, "", "", ""
-		v.LastOK, v.LastOKDay, v.AskConsent = "", 0, false
+		d := bridgeStatusView{Mode: bmAuto, Progress: v.Progress, CanSend: v.CanSend, Network: v.Network, VPN: v.VPN}
+		switch v.Phase {
+		case "connected":
+			d.Phase = "connected"
+		case "trying", "asking":
+			d.Phase = "trying"
+		default:
+			d.Phase = "offline"
+		}
+		return d
 	}
 	return v
 }
@@ -1254,6 +1444,15 @@ func HaloAutoMemory() *C.char {
 	return C.CString(autoMemoryJSON())
 }
 
+// the store gives back only what HaloAutoMemory gave, never in a decoy
+func setAutoMemory(s string) string {
+	if !decoyClosed() {
+		return moatReply(nil, errMoatDecoy)
+	}
+	memIn(s, dayOf(autoNow()))
+	return "ok"
+}
+
 func autoMemoryJSON() string {
 	if !decoyClosed() {
 		return moatReply(nil, errMoatDecoy)
@@ -1266,8 +1465,7 @@ func autoMemoryJSON() string {
 //
 //export HaloSetAutoMemory
 func HaloSetAutoMemory(cJSON *C.char) *C.char {
-	memIn(goStr(cJSON), dayOf(autoNow()))
-	return C.CString("ok")
+	return C.CString(setAutoMemory(goStr(cJSON)))
 }
 
 // a check-in begins (1) or ends (0)

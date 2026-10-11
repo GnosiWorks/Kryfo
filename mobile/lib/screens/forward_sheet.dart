@@ -149,6 +149,7 @@ Future<Route<void>?> wordsRoute(String id, String words) async {
       peerXPub: (row['xpub'] as String?) ?? '',
       avatarSeed: id,
       avatarChoice: (row['avatar'] as num?)?.toInt(),
+      nickname: row['nickname'] as String?,
       initialText: words,
     ),
   );

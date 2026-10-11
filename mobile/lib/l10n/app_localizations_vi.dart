@@ -259,11 +259,6 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String appPeerImportedV1(Object parsed) {
-    return 'Đã nhập peer (v1): $parsed';
-  }
-
-  @override
   String appLongWindow(Object line) {
     return '$line khung thời gian dài';
   }
@@ -746,6 +741,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get notificationsNewMessage2 => 'Tin nhắn mới';
 
   @override
+  String get notificationsSomeone => 'Ai đó';
+
+  @override
   String get notificationsEncrypted => 'Được mã hóa';
 
   @override
@@ -1059,7 +1057,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get bridgesConnected => 'Đã kết nối';
 
   @override
-  String get bridgesFromTheTorProject => 'Từ dự án tor';
+  String get bridgesFromTheTorProject => 'Từ Dự án Tor';
 
   @override
   String get bridgesPasteFromClipboard => 'Dán từ bộ nhớ tạm';
@@ -1077,6 +1075,10 @@ class AppLocalizationsVi extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get bridgesWhenYouAskFor =>
+      'Khi bạn xin cầu nối, Dự án Tor sẽ thấy địa chỉ IP của bạn. Điều đó là bình thường: Tor Browser và mọi ứng dụng Tor đều lấy cầu nối theo cách này, và tất cả những gì họ biết được là có ai đó đã xin cầu nối. Không có gì về các cuộc trò chuyện của bạn.';
 
   @override
   String get bridgesAsking => 'Đang hỏi…';
@@ -1723,12 +1725,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get chatHoldToRecord => 'Nhấn giữ để ghi tin nhắn thoại';
-
-  @override
-  String get chatSendPhoto => 'Gửi ảnh';
-
-  @override
-  String get chatAddACaption => 'Thêm chú thích…';
 
   @override
   String get chatSecurityCodeChanged => 'Mã bảo mật đã thay đổi';
@@ -3076,9 +3072,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get homeSupporter => 'Người ủng hộ';
 
   @override
-  String get homeArchivedChats => 'Trò chuyện đã lưu trữ';
-
-  @override
   String get homeUnmute => 'Bật tiếng';
 
   @override
@@ -3790,6 +3783,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get notesDeleteAllYes => 'Xóa tất cả';
 
   @override
+  String get notesThisWeek => 'Tuần này';
+
+  @override
+  String get notesShowMore => 'Xem thêm';
+
+  @override
+  String get notesShowLess => 'Thu gọn';
+
+  @override
   String get notesGoneFromThisPhone =>
       'Ghi chú sẽ bị xóa vĩnh viễn khỏi điện thoại này.';
 
@@ -4212,9 +4214,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get pinsChangeWipePin => 'Đổi mã PIN xóa sạch';
-
-  @override
-  String get pinsSetAWipePin => 'Đặt mã PIN xóa sạch';
 
   @override
   String get pinsRemove => 'Gỡ bỏ';
@@ -5063,12 +5062,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get settingsWholeAppHiddenFromRecentsAnd =>
       'Toàn bộ ứng dụng được ẩn khỏi danh sách gần đây và ảnh chụp màn hình';
-
-  @override
-  String get settingsOnNextStart => 'Bật · lần mở tới';
-
-  @override
-  String get settingsOffNextStart => 'Tắt · lần mở tới';
 
   @override
   String get settingsLightTheme => 'Giao diện sáng';
@@ -6457,6 +6450,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get torBootSplashTakingLonger => 'Việc này lâu hơn bình thường';
 
   @override
+  String get torBootSplashHopEntry => 'Vào';
+
+  @override
+  String get torBootSplashHopMiddle => 'Giữa';
+
+  @override
+  String get torBootSplashHopExit => 'Ra';
+
+  @override
   String get videoBubbleNothingHereOpensThat =>
       'Không có gì ở đây mở được tệp đó · chuyển sang chia sẻ';
 
@@ -6673,52 +6675,74 @@ class AppLocalizationsVi extends AppLocalizations {
   String get confirmSheetCancel => 'Hủy';
 
   @override
-  String get bridgesConnection => 'Kết nối';
+  String get bridgesFoundAVolunteer =>
+      'Đã tìm được tình nguyện viên, đang kết nối';
 
   @override
-  String get bridgesAutomatic => 'Tự động';
+  String get bridgesScanABridgeCode => 'Quét mã cầu nối';
 
   @override
-  String get bridgesKryfoFindsAWay =>
-      'Kryfo tự tìm cách dùng được ở nơi bạn đang ở.';
+  String get settingsBridgesForNetworksThat =>
+      'Cầu nối, dành cho mạng chặn Tor';
 
   @override
-  String get bridgesDirect => 'Trực tiếp';
+  String get bridgesCouldNotReachTheTor => 'Không liên lạc được với Dự án Tor';
 
   @override
-  String get bridgesFastestWhereTorIsnt =>
-      'Nhanh nhất khi Tor không bị chặn. Kryfo không bao giờ kết nối bên ngoài Tor.';
+  String get torBootSplashConnect => 'Kết nối';
+
+  @override
+  String get bridgesOffline => 'Ngoại tuyến';
+
+  @override
+  String get bridgesNothingGotThrough => 'Không cách nào kết nối được';
 
   @override
   String get bridgesBridgeFromAFriend => 'Cầu nối từ bạn bè';
 
   @override
-  String get bridgesPasteOrScanALine =>
-      'Dán hoặc quét một dòng do người bạn tin tưởng đưa cho bạn.';
+  String get bridgesKryfoCanAskThe =>
+      'Kryfo có thể xin Dự án Tor một cầu nối để vượt qua việc chặn.';
 
   @override
-  String get bridgesMore => 'Thêm';
+  String get bridgesNotNeededRightNow => 'Hiện chưa cần';
 
   @override
-  String get bridgesConnectingDots => 'Đang kết nối…';
+  String get bridgesBuiltInBridges => 'Cầu nối có sẵn';
 
   @override
-  String get bridgesAlmostThere => 'Sắp xong rồi';
+  String get bridgesKryfoCanGetAround =>
+      'Giờ Kryfo có thể vượt qua việc chặn Tor';
+
+  @override
+  String get bridgesThatSNotABridge => 'Đây không phải dòng cầu nối';
+
+  @override
+  String get transportBridgeError => 'Lỗi gần nhất';
+
+  @override
+  String get bridgesDirect => 'Trực tiếp';
+
+  @override
+  String get bridgesAskingTheTorProject =>
+      'Đang hỏi Dự án Tor cách nào dùng được ở đây…';
+
+  @override
+  String get bridgesNoneOfTheseAre =>
+      'Không dòng nào ở đây là cầu nối mà Kryfo hiểu được.';
+
+  @override
+  String get bridgesAutomatic => 'Tự động';
 
   @override
   String get bridgesStraightToTor => 'Thẳng tới Tor, không cần cầu nối';
 
   @override
-  String get bridgesThroughABridge => 'Qua cầu nối';
+  String get bridgesKryfoConnectsAsSoon =>
+      'Kryfo sẽ kết nối ngay khi bạn có mạng trở lại.';
 
   @override
-  String get bridgesTorSeemsBlocked => 'Có vẻ Tor bị chặn trên mạng này';
-
-  @override
-  String get bridgesYourNetworkMayBe => 'Mạng của bạn có thể bị hạn chế';
-
-  @override
-  String get bridgesTryingAnotherWay => 'Đang thử cách khác…';
+  String get bridgesMore => 'Thêm';
 
   @override
   String bridgesTryingAnotherWayOf(String attempt, String attempts) {
@@ -6726,177 +6750,162 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get bridgesAskingTheTorProject =>
-      'Đang hỏi Dự án Tor cách nào dùng được ở đây…';
-
-  @override
   String get bridgesLookingForAVolunteer => 'Đang tìm tình nguyện viên';
 
   @override
-  String get bridgesFoundAVolunteer =>
-      'Đã tìm được tình nguyện viên, đang kết nối';
+  String get bridgesFastestWhereTorIsnt =>
+      'Nhanh nhất khi Tor không bị chặn. Kryfo không bao giờ kết nối bên ngoài Tor.';
 
   @override
-  String get bridgesCouldNotReachTheTor => 'Không liên lạc được với Dự án Tor';
-
-  @override
-  String get bridgesConnectingThroughYourBridge =>
-      'Đang kết nối qua cầu nối của bạn…';
-
-  @override
-  String get bridgesNothingGotThrough => 'Không cách nào kết nối được';
-
-  @override
-  String get bridgesKryfoTriesAgainBy =>
-      'Thỉnh thoảng Kryfo sẽ tự thử lại. Cầu nối từ bạn bè có thể giúp được.';
-
-  @override
-  String get bridgesNoInternet => 'Không có internet';
-
-  @override
-  String get bridgesKryfoConnectsAsSoon =>
-      'Kryfo sẽ kết nối ngay khi bạn có mạng trở lại.';
+  String get transportBridgePhase => 'Giai đoạn';
 
   @override
   String get bridgesAsleepBetweenCheckIns => 'Đang nghỉ giữa các lần kiểm tra';
 
   @override
-  String get bridgesCheckingForMessages => 'Đang kiểm tra tin nhắn…';
-
-  @override
-  String get bridgesNotNeededRightNow => 'Hiện chưa cần';
-
-  @override
-  String get bridgesYouReOnAMode =>
-      'Chế độ của bạn không dùng Tor. Các lựa chọn này sẽ áp dụng khi bạn chuyển lại.';
-
-  @override
-  String get bridgesOffline => 'Ngoại tuyến';
-
-  @override
-  String get bridgesGetABridge => 'Lấy cầu nối';
-
-  @override
-  String get bridgesNotNow => 'Để sau';
-
-  @override
-  String get bridgesTorIsBlockedOnThis => 'Tor bị chặn trên mạng này';
-
-  @override
-  String get bridgesKryfoCanAskThe =>
-      'Kryfo có thể xin Dự án Tor một cầu nối để vượt qua việc chặn.';
-
-  @override
-  String get bridgesKryfoCanGetAround =>
-      'Giờ Kryfo có thể vượt qua việc chặn Tor';
-
-  @override
-  String get bridgesAutomaticFindsAWay =>
-      'Chế độ Tự động tự tìm đường khi Tor bị chặn. Để làm vậy, nó có thể kết nối tới một cầu nối bên ngoài Tor.';
-
-  @override
-  String get bridgesTurnOnAutomatic => 'Bật tự động';
-
-  @override
-  String get bridgesInUse => 'Đang dùng';
-
-  @override
-  String get bridgesNothingYet => 'Chưa có';
-
-  @override
-  String get bridgesTorNoBridge => 'Tor, không cầu nối';
+  String get bridgesThroughABridge => 'Qua cầu nối';
 
   @override
   String get bridgesBuiltIn => 'có sẵn';
 
   @override
-  String get bridgesFromTheTorProjectLower => 'từ Dự án Tor';
+  String get bridgesDetails => 'Chi tiết';
 
   @override
-  String get bridgesFromAFriendLower => 'từ bạn bè';
-
-  @override
-  String bridgesMethodFrom(String method, String from) {
-    return '$method, $from';
-  }
-
-  @override
-  String get bridgesBuiltInBridges => 'Cầu nối có sẵn';
-
-  @override
-  String get bridgesObfs4BridgesThatCome =>
-      'Cầu nối đi kèm Kryfo (obfs4). Thử nhanh, nhưng hay bị chặn.';
-
-  @override
-  String get bridgesGoesThroughAVolunteer =>
-      'Đi qua máy tính của một tình nguyện viên. Khó bị chặn, nhưng khởi động chậm.';
-
-  @override
-  String get bridgesBridgesTheTorProject =>
-      'Các cầu nối Dự án Tor đã đưa cho bạn trước đây.';
-
-  @override
-  String get bridgesAskTorProject => 'Hỏi Dự án Tor';
-
-  @override
-  String get bridgesWhenTorIsBlockedAutomatic =>
-      'Khi Tor bị chặn, chế độ Tự động sẽ hỏi Dự án Tor cách nào dùng được ở nước bạn.';
-
-  @override
-  String get bridgesCountry => 'Quốc gia';
-
-  @override
-  String get bridgesLetTheTorProject => 'Để Dự án Tor đoán';
-
-  @override
-  String get bridgesTheTorProjectKnows =>
-      'Dự án Tor có lời khuyên riêng cho những nước này.';
-
-  @override
-  String get bridgesTheTorProjectSGuess => 'Dự án Tor đoán';
-
-  @override
-  String get bridgesBelarus => 'Belarus';
-
-  @override
-  String get bridgesChina => 'Trung Quốc';
+  String get transportBridgeMode => 'Cầu nối';
 
   @override
   String get bridgesEgypt => 'Ai Cập';
 
   @override
-  String get bridgesHongKong => 'Hồng Kông';
-
-  @override
   String get bridgesIran => 'Iran';
 
   @override
-  String get bridgesMyanmar => 'Myanmar';
+  String get bridgesTurnOnAutomatic => 'Bật tự động';
 
   @override
-  String get bridgesRussia => 'Nga';
+  String get bridgesPasteABridgeLine => 'Dán một dòng cầu nối';
 
   @override
-  String get bridgesTurkmenistan => 'Turkmenistan';
-
-  @override
-  String get bridgesSavedLines => 'Dòng đã lưu';
-
-  @override
-  String get bridgesKryfoCanTUseThis => 'Kryfo không dùng được dòng này';
-
-  @override
-  String get bridgesTooLongForTor => 'Quá dài để Tor dùng được';
+  String get bridgesInUse => 'Đang dùng';
 
   @override
   String get bridgesPasteTheLineThey =>
       'Dán dòng họ gửi cho bạn, hoặc quét mã của nó. Người vận hành cầu nối có thể thấy khi nào bạn dùng Tor, nên chỉ nhận dòng từ người bạn tin tưởng.';
 
   @override
-  String get bridgesPasteABridgeLine => 'Dán một dòng cầu nối';
+  String get bridgesYouReOnAMode =>
+      'Chế độ của bạn không dùng Tor. Các lựa chọn này sẽ áp dụng khi bạn chuyển lại.';
+
+  @override
+  String get bridgesPasteOrScanALine =>
+      'Dán hoặc quét một dòng do người bạn tin tưởng đưa cho bạn.';
+
+  @override
+  String get bridgesNothingYet => 'Chưa có';
+
+  @override
+  String get torBootSplashIfTorIsBlocked =>
+      'Nếu ở nơi bạn đang ở Tor bị chặn hoặc có rủi ro, Kryfo có thể khởi động qua một cầu nối.';
 
   @override
   String get bridgesScanACode => 'Quét mã';
+
+  @override
+  String get bridgesMyanmar => 'Myanmar';
+
+  @override
+  String get bridgesSwitchToAutomatic => 'Chuyển sang tự động';
+
+  @override
+  String get torBootSplashTorIsBlockedOr => 'Tor bị chặn hoặc có rủi ro ở đây';
+
+  @override
+  String get bridgesTryingAnotherWay => 'Đang thử cách khác…';
+
+  @override
+  String get bridgesGoesThroughAVolunteer =>
+      'Đi qua máy tính của một tình nguyện viên. Khó bị chặn, nhưng khởi động chậm.';
+
+  @override
+  String get bridgesLetTheTorProject => 'Để Dự án Tor đoán';
+
+  @override
+  String get bridgesTorSeemsBlocked => 'Có vẻ Tor bị chặn trên mạng này';
+
+  @override
+  String get bridgesTorIsBlockedOnThis => 'Tor bị chặn trên mạng này';
+
+  @override
+  String bridgesKryfoCouldNotRead(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Kryfo không đọc được $countString dòng trong số này',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get bridgesTorNoBridge => 'Tor, không cầu nối';
+
+  @override
+  String get bridgesKryfoFindsAWay =>
+      'Kryfo tự tìm cách dùng được ở nơi bạn đang ở.';
+
+  @override
+  String get bridgesTheTorProjectKnows =>
+      'Dự án Tor có lời khuyên riêng cho những nước này.';
+
+  @override
+  String get bridgesThisBridgeIsnTGetting => 'Cầu nối này không kết nối được';
+
+  @override
+  String get bridgesBridgesTheTorProject =>
+      'Các cầu nối Dự án Tor đã đưa cho bạn trước đây.';
+
+  @override
+  String get bridgesConnectingDots => 'Đang kết nối…';
+
+  @override
+  String get bridgesNotNow => 'Để sau';
+
+  @override
+  String get bridgesRussia => 'Nga';
+
+  @override
+  String get bridgesObfs4BridgesThatCome =>
+      'Cầu nối đi kèm Kryfo (obfs4). Thử nhanh, nhưng hay bị chặn.';
+
+  @override
+  String get bridgesKryfoTriesAgainBy =>
+      'Thỉnh thoảng Kryfo sẽ tự thử lại. Cầu nối từ bạn bè có thể giúp được.';
+
+  @override
+  String get bridgesYourNetworkMayBe => 'Mạng của bạn có thể bị hạn chế';
+
+  @override
+  String get bridgesCheckingForMessages => 'Đang kiểm tra tin nhắn…';
+
+  @override
+  String get bridgesSavedLines => 'Dòng đã lưu';
+
+  @override
+  String get bridgesFromAFriendLower => 'từ bạn bè';
+
+  @override
+  String get bridgesAlmostThere => 'Sắp xong rồi';
+
+  @override
+  String get bridgesTheTorProjectSGuess => 'Dự án Tor đoán';
+
+  @override
+  String get bridgesOurRelayUsuallyGets =>
+      'Relay của chúng tôi chỉ là một kết nối thông thường và thường vẫn đi qua được. Hoặc để Kryfo tự tìm cách.';
 
   @override
   String bridgesUseThisBridge(int count) {
@@ -6914,84 +6923,73 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get bridgesNoneOfTheseAre =>
-      'Không dòng nào ở đây là cầu nối mà Kryfo hiểu được.';
+  String get bridgesTurkmenistan => 'Turkmenistan';
 
   @override
-  String get bridgesThisLineIsTooLong => 'Dòng này quá dài để Tor dùng được.';
-
-  @override
-  String bridgesKryfoCouldNotRead(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Kryfo không đọc được $countString dòng trong số này',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get bridgesScanABridgeCode => 'Quét mã cầu nối';
+  String get transportBridgeMethod => 'Phương thức';
 
   @override
   String get bridgesPointAtTheBridge => 'Hướng camera vào mã QR của cầu nối';
 
   @override
-  String get bridgesThatSNotABridge => 'Đây không phải dòng cầu nối';
+  String get bridgesConnectingThroughYourBridge =>
+      'Đang kết nối qua cầu nối của bạn…';
 
   @override
-  String get bridgesDetails => 'Chi tiết';
+  String get bridgesThisLineIsTooLong => 'Dòng này quá dài để Tor dùng được.';
 
   @override
-  String get bridgesThisBridgeIsnTGetting => 'Cầu nối này không kết nối được';
+  String get bridgesAutomaticFindsAWay =>
+      'Chế độ Tự động tự tìm đường khi Tor bị chặn. Để làm vậy, nó có thể kết nối tới một cầu nối bên ngoài Tor.';
+
+  @override
+  String get bridgesFromTheTorProjectLower => 'từ Dự án Tor';
 
   @override
   String get bridgesBridgesGoDeadWithout =>
       'Cầu nối có thể ngừng hoạt động mà không báo trước. Chế độ Tự động có thể tìm cách khác.';
 
   @override
-  String get bridgesSwitchToAutomatic => 'Chuyển sang tự động';
+  String get bridgesHongKong => 'Hồng Kông';
 
   @override
-  String get bridgesOurRelayUsuallyGets =>
-      'Relay của chúng tôi chỉ là một kết nối thông thường và thường vẫn đi qua được. Hoặc để Kryfo tự tìm cách.';
+  String get bridgesWhenTorIsBlockedAutomatic =>
+      'Khi Tor bị chặn, chế độ Tự động sẽ hỏi Dự án Tor cách nào dùng được ở nước bạn.';
+
+  @override
+  String get bridgesAskTorProject => 'Hỏi Dự án Tor';
+
+  @override
+  String get bridgesTooLongForTor => 'Quá dài để Tor dùng được';
+
+  @override
+  String get bridgesCountry => 'Quốc gia';
+
+  @override
+  String bridgesMethodFrom(String method, String from) {
+    return '$method, $from';
+  }
+
+  @override
+  String get bridgesChina => 'Trung Quốc';
+
+  @override
+  String get bridgesBelarus => 'Belarus';
+
+  @override
+  String get bridgesKryfoCanTUseThis => 'Kryfo không dùng được dòng này';
 
   @override
   String get bridgesTryAutomatic => 'Thử tự động';
 
   @override
-  String get settingsBridgesForNetworksThat =>
-      'Cầu nối, dành cho mạng chặn Tor';
+  String get bridgesNoInternet => 'Không có internet';
 
   @override
-  String get torBootSplashIfTorIsBlocked =>
-      'Nếu ở nơi bạn đang ở Tor bị chặn hoặc có rủi ro, Kryfo có thể khởi động qua một cầu nối.';
+  String get bridgesConnection => 'Kết nối';
 
   @override
-  String get torBootSplashConnect => 'Kết nối';
-
-  @override
-  String get torBootSplashTorIsBlockedOr => 'Tor bị chặn hoặc có rủi ro ở đây';
-
-  @override
-  String get transportBridgeMode => 'Cầu nối';
-
-  @override
-  String get transportBridgePhase => 'Giai đoạn';
-
-  @override
-  String get transportBridgeMethod => 'Phương thức';
-
-  @override
-  String get transportBridgeError => 'Lỗi gần nhất';
-
-  @override
-  String get bridgesWhenYouAskFor =>
-      'Khi bạn xin cầu nối, Dự án Tor sẽ thấy địa chỉ IP của bạn. Điều đó là bình thường: Tor Browser và mọi ứng dụng Tor đều lấy cầu nối theo cách này, và tất cả những gì họ biết được là có ai đó đã xin cầu nối. Không có gì về các cuộc trò chuyện của bạn.';
+  String get bridgesGetABridge => 'Lấy cầu nối';
 
   @override
   String get languageTitle => 'Ngôn ngữ';
@@ -7195,9 +7193,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pollPickSeveral => 'Chọn một hoặc nhiều';
 
   @override
-  String get searchOpen => 'Tìm kiếm';
-
-  @override
   String get searchHint => 'Tìm trong cuộc trò chuyện và tin nhắn';
 
   @override
@@ -7378,9 +7373,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get pinsDecoyLine => 'Mở một Kryfo trống, như vừa mới cài.';
-
-  @override
-  String get pinsSetADecoyPin => 'Đặt mã PIN ngụy trang';
 
   @override
   String get pinsChangeDecoyPin => 'Đổi mã PIN ngụy trang';
@@ -8049,4 +8041,19 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get valveRestartKryfo => 'Khởi động lại Kryfo';
+
+  @override
+  String get updateAvailable => 'Có bản cập nhật';
+
+  @override
+  String updateReady(String version) {
+    return 'Kryfo $version đã sẵn sàng để tải về';
+  }
+
+  @override
+  String get settingsCheckForUpdates => 'Kiểm tra cập nhật';
+
+  @override
+  String get settingsCheckForUpdatesHint =>
+      'Mỗi ngày một lần qua Tor. Chỉ hỏi kryfo.app phiên bản mới nhất và không gửi gì về bạn.';
 }

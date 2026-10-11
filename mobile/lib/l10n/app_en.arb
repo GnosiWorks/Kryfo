@@ -310,15 +310,6 @@
       }
     }
   },
-  "appPeerImportedV1": "Peer imported (v1): {parsed}",
-  "@appPeerImportedV1": {
-    "description": "main.dart",
-    "placeholders": {
-      "parsed": {
-        "type": "Object"
-      }
-    }
-  },
   "appLongWindow": "{line} long window",
   "@appLongWindow": {
     "description": "main.dart: after a relay's catch-up time, when it was asked for a longer stretch than usual",
@@ -951,6 +942,10 @@
   "@notificationsNewMessage2": {
     "description": "notifications.dart"
   },
+  "notificationsSomeone": "Someone",
+  "@notificationsSomeone": {
+    "description": "notifications: the name on a notification from someone with no name given here, never their id"
+  },
   "notificationsEncrypted": "Encrypted",
   "@notificationsEncrypted": {
     "description": "notifications.dart"
@@ -1356,6 +1351,10 @@
         "format": "decimalPattern"
       }
     }
+  },
+  "bridgesWhenYouAskFor": "When you ask for bridges, the Tor Project sees your address. That's normal: it's how Tor Browser and every Tor app get bridges, and all it tells them is that someone asked for bridges. Nothing about your chats.",
+  "@bridgesWhenYouAskFor": {
+    "description": "screens/bridges_screen.dart"
   },
   "bridgesAsking": "Asking…",
   "@bridgesAsking": {
@@ -2204,14 +2203,6 @@
   },
   "chatHoldToRecord": "Hold to record a voice note",
   "@chatHoldToRecord": {
-    "description": "screens/chat_screen.dart"
-  },
-  "chatSendPhoto": "Send photo",
-  "@chatSendPhoto": {
-    "description": "screens/chat_screen.dart"
-  },
-  "chatAddACaption": "Add a caption…",
-  "@chatAddACaption": {
     "description": "screens/chat_screen.dart"
   },
   "chatSecurityCodeChanged": "Security code changed",
@@ -3831,10 +3822,6 @@
   "@homeSupporter": {
     "description": "screens/home_screen.dart"
   },
-  "homeArchivedChats": "Archived chats",
-  "@homeArchivedChats": {
-    "description": "screens/home_screen.dart"
-  },
   "homeUnmute": "Unmute",
   "@homeUnmute": {
     "description": "screens/home_screen.dart"
@@ -4753,6 +4740,18 @@
   "@notesDeleteAllYes": {
     "description": "screens/notes_screen.dart"
   },
+  "notesThisWeek": "This week",
+  "@notesThisWeek": {
+    "description": "screens/notes_screen.dart"
+  },
+  "notesShowMore": "Show more",
+  "@notesShowMore": {
+    "description": "screens/notes_screen.dart"
+  },
+  "notesShowLess": "Show less",
+  "@notesShowLess": {
+    "description": "screens/notes_screen.dart"
+  },
   "notesGoneFromThisPhone": "It is gone from this phone for good.",
   "@notesGoneFromThisPhone": {
     "description": "screens/notes_screen.dart"
@@ -5278,10 +5277,6 @@
   },
   "pinsChangeWipePin": "Change wipe PIN",
   "@pinsChangeWipePin": {
-    "description": "screens/pins_screen.dart"
-  },
-  "pinsSetAWipePin": "Set a wipe PIN",
-  "@pinsSetAWipePin": {
     "description": "screens/pins_screen.dart"
   },
   "pinsRemove": "Remove",
@@ -6348,14 +6343,6 @@
   },
   "settingsWholeAppHiddenFromRecentsAnd": "Whole app hidden from recents and screenshots",
   "@settingsWholeAppHiddenFromRecentsAnd": {
-    "description": "screens/settings_screen.dart"
-  },
-  "settingsOnNextStart": "On · next start",
-  "@settingsOnNextStart": {
-    "description": "screens/settings_screen.dart"
-  },
-  "settingsOffNextStart": "Off · next start",
-  "@settingsOffNextStart": {
     "description": "screens/settings_screen.dart"
   },
   "settingsLightTheme": "Light theme",
@@ -8203,6 +8190,18 @@
   "@torBootSplashTakingLonger": {
     "description": "widgets/tor_boot_splash.dart"
   },
+  "torBootSplashHopEntry": "Entry",
+  "@torBootSplashHopEntry": {
+    "description": "widgets/tor_boot_splash.dart"
+  },
+  "torBootSplashHopMiddle": "Middle",
+  "@torBootSplashHopMiddle": {
+    "description": "widgets/tor_boot_splash.dart"
+  },
+  "torBootSplashHopExit": "Exit",
+  "@torBootSplashHopExit": {
+    "description": "widgets/tor_boot_splash.dart"
+  },
   "videoBubbleNothingHereOpensThat": "Nothing here opens that · sharing instead",
   "@videoBubbleNothingHereOpensThat": {
     "description": "widgets/video_bubble.dart"
@@ -8490,187 +8489,6 @@
   "@confirmSheetCancel": {
     "description": "widgets/confirm_sheet.dart"
   },
-  "bridgesConnection": "Connection",
-  "@bridgesConnection": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesAutomatic": "Automatic",
-  "@bridgesAutomatic": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesKryfoFindsAWay": "Kryfo finds a way that works where you are.",
-  "@bridgesKryfoFindsAWay": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesDirect": "Direct",
-  "@bridgesDirect": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesFastestWhereTorIsnt": "Fastest where Tor isn't blocked. Kryfo never connects outside Tor.",
-  "@bridgesFastestWhereTorIsnt": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesBridgeFromAFriend": "Bridge from a friend",
-  "@bridgesBridgeFromAFriend": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesPasteOrScanALine": "Paste or scan a line someone you trust gave you.",
-  "@bridgesPasteOrScanALine": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesMore": "More",
-  "@bridgesMore": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesConnectingDots": "Connecting…",
-  "@bridgesConnectingDots": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesAlmostThere": "Almost there",
-  "@bridgesAlmostThere": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesStraightToTor": "Straight to Tor, no bridge needed",
-  "@bridgesStraightToTor": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesThroughABridge": "Through a bridge",
-  "@bridgesThroughABridge": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesTorSeemsBlocked": "Tor seems blocked on this network",
-  "@bridgesTorSeemsBlocked": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesYourNetworkMayBe": "Your network may be limited",
-  "@bridgesYourNetworkMayBe": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesTryingAnotherWay": "Trying another way…",
-  "@bridgesTryingAnotherWay": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesTryingAnotherWayOf": "Trying another way… ({attempt} of {attempts})",
-  "@bridgesTryingAnotherWayOf": {
-    "description": "screens/bridges_screen.dart",
-    "placeholders": {
-      "attempt": {
-        "type": "String"
-      },
-      "attempts": {
-        "type": "String"
-      }
-    }
-  },
-  "bridgesAskingTheTorProject": "Asking the Tor Project what works here…",
-  "@bridgesAskingTheTorProject": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesLookingForAVolunteer": "Looking for a volunteer",
-  "@bridgesLookingForAVolunteer": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesFoundAVolunteer": "Found a volunteer, connecting",
-  "@bridgesFoundAVolunteer": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesCouldNotReachTheTor": "Couldn't reach the Tor Project",
-  "@bridgesCouldNotReachTheTor": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesConnectingThroughYourBridge": "Connecting through your bridge…",
-  "@bridgesConnectingThroughYourBridge": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesNothingGotThrough": "Nothing got through",
-  "@bridgesNothingGotThrough": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesKryfoTriesAgainBy": "Kryfo tries again by itself now and then. A bridge from a friend can help.",
-  "@bridgesKryfoTriesAgainBy": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesNoInternet": "No internet",
-  "@bridgesNoInternet": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesKryfoConnectsAsSoon": "Kryfo connects as soon as you're back online.",
-  "@bridgesKryfoConnectsAsSoon": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesAsleepBetweenCheckIns": "Asleep between check-ins",
-  "@bridgesAsleepBetweenCheckIns": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesCheckingForMessages": "Checking for messages…",
-  "@bridgesCheckingForMessages": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesNotNeededRightNow": "Not needed right now",
-  "@bridgesNotNeededRightNow": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesYouReOnAMode": "Your mode doesn't use Tor. These choices apply when you switch back.",
-  "@bridgesYouReOnAMode": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesOffline": "Offline",
-  "@bridgesOffline": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesGetABridge": "Get a bridge",
-  "@bridgesGetABridge": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesNotNow": "Not now",
-  "@bridgesNotNow": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesTorIsBlockedOnThis": "Tor is blocked on this network",
-  "@bridgesTorIsBlockedOnThis": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesKryfoCanAskThe": "Kryfo can ask the Tor Project for a bridge to get around it.",
-  "@bridgesKryfoCanAskThe": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesKryfoCanGetAround": "Kryfo can get around Tor blocks now",
-  "@bridgesKryfoCanGetAround": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesAutomaticFindsAWay": "Automatic finds a way by itself when Tor is blocked. It may reach a bridge outside Tor to do it.",
-  "@bridgesAutomaticFindsAWay": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesTurnOnAutomatic": "Turn on automatic",
-  "@bridgesTurnOnAutomatic": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesInUse": "In use",
-  "@bridgesInUse": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesNothingYet": "Nothing yet",
-  "@bridgesNothingYet": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesTorNoBridge": "Tor, no bridge",
-  "@bridgesTorNoBridge": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesBuiltIn": "built-in",
-  "@bridgesBuiltIn": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesFromTheTorProjectLower": "from the Tor Project",
-  "@bridgesFromTheTorProjectLower": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesFromAFriendLower": "from a friend",
-  "@bridgesFromAFriendLower": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesMethodFrom": "{method}, {from}",
   "@bridgesMethodFrom": {
     "description": "screens/bridges_screen.dart",
     "placeholders": {
@@ -8682,121 +8500,249 @@
       }
     }
   },
+  "@bridgesBelarus": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "@bridgesThatSNotABridge": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "@bridgesTryingAnotherWayOf": {
+    "description": "screens/bridges_screen.dart",
+    "placeholders": {
+      "attempt": {
+        "type": "String"
+      },
+      "attempts": {
+        "type": "String"
+      }
+    }
+  },
+  "@bridgesFromAFriendLower": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "@bridgesAutomaticFindsAWay": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesFoundAVolunteer": "Found a volunteer, connecting",
+  "@bridgesKryfoFindsAWay": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesScanABridgeCode": "Scan a bridge code",
+  "@transportBridgeError": {
+    "description": "screens/transport_screen.dart"
+  },
+  "settingsBridgesForNetworksThat": "Bridges, for networks that block Tor",
+  "bridgesCouldNotReachTheTor": "Couldn't reach the Tor Project",
+  "@bridgesScanACode": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "@bridgesAutomatic": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "torBootSplashConnect": "Connect",
+  "bridgesOffline": "Offline",
+  "@bridgesTheTorProjectKnows": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "@bridgesTorNoBridge": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "@bridgesBuiltIn": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesNothingGotThrough": "Nothing got through",
+  "bridgesBridgeFromAFriend": "Bridge from a friend",
+  "bridgesKryfoCanAskThe": "Kryfo can ask the Tor Project for a bridge to get around it.",
+  "bridgesNotNeededRightNow": "Not needed right now",
+  "@bridgesTheTorProjectSGuess": {
+    "description": "screens/bridges_screen.dart"
+  },
   "bridgesBuiltInBridges": "Built-in bridges",
-  "@bridgesBuiltInBridges": {
+  "@bridgesRussia": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesObfs4BridgesThatCome": "Bridges that come with Kryfo (obfs4). Quick to try, often blocked.",
-  "@bridgesObfs4BridgesThatCome": {
+  "bridgesKryfoCanGetAround": "Kryfo can get around Tor blocks now",
+  "bridgesThatSNotABridge": "That's not a bridge line",
+  "@bridgesTorIsBlockedOnThis": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesGoesThroughAVolunteer": "Goes through a volunteer's computer. Hard to block, slow to start.",
-  "@bridgesGoesThroughAVolunteer": {
+  "@bridgesThisLineIsTooLong": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesBridgesTheTorProject": "Bridges the Tor Project gave you earlier.",
-  "@bridgesBridgesTheTorProject": {
+  "@bridgesOurRelayUsuallyGets": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesAskTorProject": "Ask the Tor Project",
-  "@bridgesAskTorProject": {
+  "transportBridgeError": "Last error",
+  "bridgesDirect": "Direct",
+  "bridgesAskingTheTorProject": "Asking the Tor Project what works here…",
+  "bridgesNoneOfTheseAre": "None of these are bridge lines Kryfo understands.",
+  "bridgesAutomatic": "Automatic",
+  "bridgesStraightToTor": "Straight to Tor, no bridge needed",
+  "@bridgesKryfoCanTUseThis": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesWhenTorIsBlockedAutomatic": "When Tor is blocked, Automatic asks the Tor Project what works in your country.",
+  "bridgesKryfoConnectsAsSoon": "Kryfo connects as soon as you're back online.",
+  "@bridgesYouReOnAMode": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesMore": "More",
+  "@bridgesThisBridgeIsnTGetting": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "@bridgesGetABridge": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "@bridgesDirect": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "@bridgesAlmostThere": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesTryingAnotherWayOf": "Trying another way… ({attempt} of {attempts})",
+  "@bridgesChina": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "@bridgesConnectingDots": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesLookingForAVolunteer": "Looking for a volunteer",
+  "bridgesFastestWhereTorIsnt": "Fastest where Tor isn't blocked. Kryfo never connects outside Tor.",
+  "@bridgesPointAtTheBridge": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "transportBridgePhase": "Phase",
+  "bridgesAsleepBetweenCheckIns": "Asleep between check-ins",
+  "@torBootSplashConnect": {
+    "description": "widgets/tor_boot_splash.dart"
+  },
+  "bridgesThroughABridge": "Through a bridge",
+  "bridgesBuiltIn": "built-in",
+  "@bridgesPasteOrScanALine": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "@bridgesTryAutomatic": {
+    "description": "screens/bridges_screen.dart"
+  },
   "@bridgesWhenTorIsBlockedAutomatic": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesCountry": "Country",
+  "bridgesDetails": "Details",
+  "transportBridgeMode": "Bridges",
+  "bridgesEgypt": "Egypt",
+  "@bridgesIran": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "@bridgesStraightToTor": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "@bridgesKryfoConnectsAsSoon": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "@bridgesFromTheTorProjectLower": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesIran": "Iran",
+  "@bridgesAskTorProject": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "@settingsBridgesForNetworksThat": {
+    "description": "screens/settings_screen.dart"
+  },
   "@bridgesCountry": {
     "description": "screens/bridges_screen.dart"
   },
+  "@transportBridgeMethod": {
+    "description": "screens/transport_screen.dart"
+  },
+  "@bridgesConnectingThroughYourBridge": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "@bridgesTorSeemsBlocked": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesTurnOnAutomatic": "Turn on automatic",
+  "@bridgesKryfoCanAskThe": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesPasteABridgeLine": "Paste a bridge line",
+  "@bridgesObfs4BridgesThatCome": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "@bridgesBridgeFromAFriend": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesInUse": "In use",
+  "bridgesPasteTheLineThey": "Paste the line they sent you, or scan its code. Whoever runs a bridge can see when you use Tor, so take lines only from people you trust.",
+  "bridgesYouReOnAMode": "Your mode doesn't use Tor. These choices apply when you switch back.",
+  "@bridgesKryfoCanGetAround": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesPasteOrScanALine": "Paste or scan a line someone you trust gave you.",
+  "bridgesNothingYet": "Nothing yet",
+  "@bridgesThroughABridge": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "torBootSplashIfTorIsBlocked": "If Tor is blocked or risky where you are, Kryfo can start through a bridge instead.",
+  "bridgesScanACode": "Scan a code",
+  "bridgesMyanmar": "Myanmar",
+  "bridgesSwitchToAutomatic": "Switch to automatic",
+  "@bridgesNoInternet": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "@bridgesNoneOfTheseAre": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "@bridgesNothingYet": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "torBootSplashTorIsBlockedOr": "Tor is blocked or risky here",
+  "bridgesTryingAnotherWay": "Trying another way…",
+  "@bridgesFoundAVolunteer": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "@bridgesAsleepBetweenCheckIns": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "@bridgesGoesThroughAVolunteer": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesGoesThroughAVolunteer": "Goes through a volunteer's computer. Hard to block, slow to start.",
   "bridgesLetTheTorProject": "Let the Tor Project guess",
+  "@torBootSplashTorIsBlockedOr": {
+    "description": "widgets/tor_boot_splash.dart"
+  },
+  "bridgesTorSeemsBlocked": "Tor seems blocked on this network",
+  "@bridgesInUse": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesTorIsBlockedOnThis": "Tor is blocked on this network",
+  "@bridgesPasteABridgeLine": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "@bridgesBridgesTheTorProject": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "@bridgesYourNetworkMayBe": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesKryfoCouldNotRead": "{count, plural, one{Kryfo couldn't read {count} of these lines} other{Kryfo couldn't read {count} of these lines}}",
+  "bridgesTorNoBridge": "Tor, no bridge",
+  "bridgesKryfoFindsAWay": "Kryfo finds a way that works where you are.",
+  "@bridgesKryfoTriesAgainBy": {
+    "description": "screens/bridges_screen.dart"
+  },
   "@bridgesLetTheTorProject": {
     "description": "screens/bridges_screen.dart"
   },
   "bridgesTheTorProjectKnows": "The Tor Project has its own advice for these countries.",
-  "@bridgesTheTorProjectKnows": {
+  "@bridgesTryingAnotherWay": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesTheTorProjectSGuess": "The Tor Project's guess",
-  "@bridgesTheTorProjectSGuess": {
+  "bridgesThisBridgeIsnTGetting": "This bridge isn't getting through",
+  "bridgesBridgesTheTorProject": "Bridges the Tor Project gave you earlier.",
+  "@bridgesBridgesGoDeadWithout": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesBelarus": "Belarus",
-  "@bridgesBelarus": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesChina": "China",
-  "@bridgesChina": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesEgypt": "Egypt",
-  "@bridgesEgypt": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesHongKong": "Hong Kong",
-  "@bridgesHongKong": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesIran": "Iran",
-  "@bridgesIran": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesMyanmar": "Myanmar",
-  "@bridgesMyanmar": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesRussia": "Russia",
-  "@bridgesRussia": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesTurkmenistan": "Turkmenistan",
-  "@bridgesTurkmenistan": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesSavedLines": "Saved lines",
-  "@bridgesSavedLines": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesKryfoCanTUseThis": "Kryfo can't use this line",
-  "@bridgesKryfoCanTUseThis": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesTooLongForTor": "Too long for Tor to use",
-  "@bridgesTooLongForTor": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesPasteTheLineThey": "Paste the line they sent you, or scan its code. Whoever runs a bridge can see when you use Tor, so take lines only from people you trust.",
-  "@bridgesPasteTheLineThey": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesPasteABridgeLine": "Paste a bridge line",
-  "@bridgesPasteABridgeLine": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesScanACode": "Scan a code",
-  "@bridgesScanACode": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesUseThisBridge": "{count, plural, one{Use this bridge} other{Use these {count} bridges}}",
-  "@bridgesUseThisBridge": {
-    "description": "screens/bridges_screen.dart",
-    "placeholders": {
-      "count": {
-        "type": "int",
-        "format": "decimalPattern"
-      }
-    }
-  },
-  "bridgesNoneOfTheseAre": "None of these are bridge lines Kryfo understands.",
-  "@bridgesNoneOfTheseAre": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesThisLineIsTooLong": "This line is too long for Tor to use.",
-  "@bridgesThisLineIsTooLong": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesKryfoCouldNotRead": "{count, plural, one{Kryfo couldn't read {count} of these lines} other{Kryfo couldn't read {count} of these lines}}",
   "@bridgesKryfoCouldNotRead": {
     "description": "screens/bridges_screen.dart",
     "placeholders": {
@@ -8806,78 +8752,127 @@
       }
     }
   },
-  "bridgesScanABridgeCode": "Scan a bridge code",
-  "@bridgesScanABridgeCode": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesPointAtTheBridge": "Point at the bridge's QR code",
-  "@bridgesPointAtTheBridge": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesThatSNotABridge": "That's not a bridge line",
-  "@bridgesThatSNotABridge": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesDetails": "Details",
-  "@bridgesDetails": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesThisBridgeIsnTGetting": "This bridge isn't getting through",
-  "@bridgesThisBridgeIsnTGetting": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesBridgesGoDeadWithout": "Bridges can stop working without warning. Automatic can find another way.",
-  "@bridgesBridgesGoDeadWithout": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesSwitchToAutomatic": "Switch to automatic",
-  "@bridgesSwitchToAutomatic": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesOurRelayUsuallyGets": "Our relay is one plain connection and usually gets through. Or let Kryfo find a way by itself.",
-  "@bridgesOurRelayUsuallyGets": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesTryAutomatic": "Try automatic",
-  "@bridgesTryAutomatic": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "settingsBridgesForNetworksThat": "Bridges, for networks that block Tor",
-  "@settingsBridgesForNetworksThat": {
-    "description": "screens/settings_screen.dart"
-  },
-  "torBootSplashIfTorIsBlocked": "If Tor is blocked or risky where you are, Kryfo can start through a bridge instead.",
+  "bridgesConnectingDots": "Connecting…",
+  "bridgesNotNow": "Not now",
   "@torBootSplashIfTorIsBlocked": {
     "description": "widgets/tor_boot_splash.dart"
   },
-  "torBootSplashConnect": "Connect",
-  "@torBootSplashConnect": {
-    "description": "widgets/tor_boot_splash.dart"
-  },
-  "torBootSplashTorIsBlockedOr": "Tor is blocked or risky here",
-  "@torBootSplashTorIsBlockedOr": {
-    "description": "widgets/tor_boot_splash.dart"
-  },
-  "transportBridgeMode": "Bridges",
+  "bridgesRussia": "Russia",
   "@transportBridgeMode": {
     "description": "screens/transport_screen.dart"
   },
-  "transportBridgePhase": "Phase",
+  "bridgesObfs4BridgesThatCome": "Bridges that come with Kryfo (obfs4). Quick to try, often blocked.",
+  "bridgesKryfoTriesAgainBy": "Kryfo tries again by itself now and then. A bridge from a friend can help.",
+  "bridgesYourNetworkMayBe": "Your network may be limited",
+  "@bridgesCouldNotReachTheTor": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "@bridgesUseThisBridge": {
+    "description": "screens/bridges_screen.dart",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "bridgesCheckingForMessages": "Checking for messages…",
+  "bridgesSavedLines": "Saved lines",
+  "@bridgesBuiltInBridges": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "@bridgesNotNow": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "@bridgesPasteTheLineThey": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesFromAFriendLower": "from a friend",
+  "bridgesAlmostThere": "Almost there",
+  "bridgesTheTorProjectSGuess": "The Tor Project's guess",
+  "@bridgesNothingGotThrough": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesOurRelayUsuallyGets": "Our relay is one plain connection and usually gets through. Or let Kryfo find a way by itself.",
+  "@bridgesSavedLines": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "@bridgesFastestWhereTorIsnt": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesUseThisBridge": "{count, plural, one{Use this bridge} other{Use these {count} bridges}}",
+  "@bridgesLookingForAVolunteer": {
+    "description": "screens/bridges_screen.dart"
+  },
   "@transportBridgePhase": {
     "description": "screens/transport_screen.dart"
   },
-  "transportBridgeMethod": "Method",
-  "@transportBridgeMethod": {
-    "description": "screens/transport_screen.dart"
-  },
-  "transportBridgeError": "Last error",
-  "@transportBridgeError": {
-    "description": "screens/transport_screen.dart"
-  },
-  "bridgesWhenYouAskFor": "When you ask for bridges, the Tor Project sees your address. That's normal: it's how Tor Browser and every Tor app get bridges, and all it tells them is that someone asked for bridges. Nothing about your chats.",
-  "@bridgesWhenYouAskFor": {
+  "bridgesTurkmenistan": "Turkmenistan",
+  "@bridgesCheckingForMessages": {
     "description": "screens/bridges_screen.dart"
   },
+  "@bridgesSwitchToAutomatic": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "transportBridgeMethod": "Method",
+  "bridgesPointAtTheBridge": "Point at the bridge's QR code",
+  "bridgesConnectingThroughYourBridge": "Connecting through your bridge…",
+  "@bridgesTurkmenistan": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesThisLineIsTooLong": "This line is too long for Tor to use.",
+  "@bridgesMore": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "@bridgesMyanmar": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesAutomaticFindsAWay": "Automatic finds a way by itself when Tor is blocked. It may reach a bridge outside Tor to do it.",
+  "@bridgesScanABridgeCode": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesFromTheTorProjectLower": "from the Tor Project",
+  "@bridgesOffline": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesBridgesGoDeadWithout": "Bridges can stop working without warning. Automatic can find another way.",
+  "@bridgesNotNeededRightNow": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesHongKong": "Hong Kong",
+  "@bridgesHongKong": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "@bridgesAskingTheTorProject": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "@bridgesTurnOnAutomatic": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesWhenTorIsBlockedAutomatic": "When Tor is blocked, Automatic asks the Tor Project what works in your country.",
+  "@bridgesEgypt": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesAskTorProject": "Ask the Tor Project",
+  "bridgesTooLongForTor": "Too long for Tor to use",
+  "bridgesCountry": "Country",
+  "bridgesMethodFrom": "{method}, {from}",
+  "bridgesChina": "China",
+  "bridgesBelarus": "Belarus",
+  "bridgesKryfoCanTUseThis": "Kryfo can't use this line",
+  "@bridgesTooLongForTor": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesTryAutomatic": "Try automatic",
+  "bridgesNoInternet": "No internet",
+  "@bridgesConnection": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesConnection": "Connection",
+  "@bridgesDetails": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesGetABridge": "Get a bridge",
   "languageTitle": "Language",
   "@languageTitle": {
     "description": "widgets/language_sheet.dart: the sheet title and the settings row"
@@ -9147,10 +9142,6 @@
   "@pollPickSeveral": {
     "description": "hint on a poll before voting: one or more answers"
   },
-  "searchOpen": "Search",
-  "@searchOpen": {
-    "description": "the search button on home, and its name for a screen reader"
-  },
   "searchHint": "Search chats and messages",
   "@searchHint": {
     "description": "hint in the search field on home and in search"
@@ -9386,10 +9377,6 @@
   "pinsDecoyLine": "Opens an empty Kryfo, as if just installed.",
   "@pinsDecoyLine": {
     "description": "App lock: one line on the decoy PIN row"
-  },
-  "pinsSetADecoyPin": "Set a decoy PIN",
-  "@pinsSetADecoyPin": {
-    "description": "button"
   },
   "pinsChangeDecoyPin": "Change decoy PIN",
   "@pinsChangeDecoyPin": {
@@ -10175,5 +10162,27 @@
   "valveRestartKryfo": "Restart Kryfo",
   "@valveRestartKryfo": {
     "description": "widgets/reconnect_valve.dart: button that restarts the app, queue kept"
+  },
+  "updateAvailable": "Update available",
+  "@updateAvailable": {
+    "description": "widgets/update_card.dart: card title, a newer Kryfo is on the site"
+  },
+  "updateReady": "Kryfo {version} is ready to download",
+  "@updateReady": {
+    "description": "widgets/update_card.dart: the line under the title, tap opens the download page",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "0.5.1"
+      }
+    }
+  },
+  "settingsCheckForUpdates": "Check for updates",
+  "@settingsCheckForUpdates": {
+    "description": "screens/settings_screen.dart: switch for the daily update check"
+  },
+  "settingsCheckForUpdatesHint": "Once a day over Tor. Asks kryfo.app for the newest version and sends nothing about you.",
+  "@settingsCheckForUpdatesHint": {
+    "description": "screens/settings_screen.dart: what the update check does"
   }
 }

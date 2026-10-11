@@ -11,8 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
-import 'package:kryfo/main.dart'
-    show AppState, kBlockListenFor, useDatabasesForTest;
+import 'package:kryfo/main.dart' show AppState, useDatabasesForTest;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -138,6 +137,44 @@ void main() {
     // an unblock hears them again
     await w.app.unblock(_c);
     expect(w.io.listened, ['x-$_o', 'x-$_c']);
+  });
+
+  test('someone the vault blocked is listened on while the block is young, '
+      'on the same sweep as the everyday side, and not taken up again once '
+      'it is old', () async {
+    final store = ArrivalStore();
+    const h = 'hidden-blocked-one';
+    final now = DateTime.now().millisecondsSinceEpoch;
+    Future<VaultRouter> card(int from) async {
+      await store.putHidden(
+        h,
+        kHiddenPeer,
+        peerCard(RouterCard(h, 'o-h', 'x-h', blocked: true, blockedFrom: from)),
+        1,
+      );
+      final r = VaultRouter(store, ArrivalSeal());
+      await r.load();
+      return r;
+    }
+
+    final router = await card(now - kBlockListenFor + 86400000);
+    final w = _World();
+    w.live.person(_c, onion: 'o-$_c', xpub: 'x-$_c');
+    w.app = AppState(io: w.io, router: router)..myId = 'me';
+    useDatabasesForTest(w.live, Session(w.live));
+    await w.app.resubscribe();
+    expect(w.io.listened, contains('x-h'));
+    await w.app.unlistenOldBlocks();
+    expect(w.io.unheard, isEmpty);
+    // a day on, as the card says once the vault has been opened
+    // a card says the day, rounded up
+    await card(now - kBlockListenFor - kDay - 1000);
+    await router.load();
+    await w.app.unlistenOldBlocks();
+    expect(w.io.unheard, ['x-h']);
+    w.io.listened.clear();
+    await w.app.resubscribe();
+    expect(w.io.listened, ['x-$_c']);
   });
 
   test('a blocked row never takes a key someone else is heard on', () async {

@@ -286,6 +286,8 @@ const _peerRows = {
   // an opener of theirs kept to be tried again, and ours gone out again
   'first_kept': 'peer = ?1',
   'opener_again': 'msg_uid IN {uids}',
+  // the order of edits and reactions taken in
+  'frame_order': 'msg_uid IN {uids}',
 };
 // a person's block rows, by peer_id, which go with a group's people
 const _blockRows = ['block_spans', 'blocked_drops'];
@@ -295,21 +297,32 @@ const _groupRows = {
   'poll_votes': 'poll_uid IN {uids}',
   'pins_out': 'msg_uid IN {uids}',
   'edits_out': 'msg_uid IN {uids}',
+  'frame_order': 'msg_uid IN {uids}',
   // a file some members still lack keeps going to them from where it is
   'group_media_owed': 'group_id = ?1',
   // and so do the controls they are still to get, and its roster stamp
   'group_ctl_out': 'group_id = ?1',
   'group_roster': 'group_id = ?1',
+  // the files still coming in it, those kept before slices named their
+  // group by the message they belong to, and a room's keys
+  'media_chunks':
+      'group_id = ?1 OR (group_id IS NULL AND media_id IN '
+      '(SELECT msg_uid FROM {s}.messages WHERE group_id = ?1))',
+  'room_keys': 'group_id = ?1',
+  // which of its texts went again to a member after their restore
+  'group_resent': 'group_id = ?1',
 };
 
 // every table a chat's rows sit in. msg_fts and polls_gone follow its
-// messages. the rest are the phone's or the identity's, and stay
+// messages. notif_tags is dropped, never copied. the rest are the
+// phone's or the identity's, and stay
 Set<String> get chatTables => {
   'contacts',
   'groups',
   'messages',
   'msg_fts',
   'polls_gone',
+  'notif_tags',
   ..._peerRows.keys,
   ..._groupRows.keys,
 };
@@ -579,6 +592,11 @@ class SqlChatMover implements ChatMover {
       ]);
     }
     await t.execute('DELETE FROM $s.messages WHERE ${_chatMsgs(c)}', [c.id]);
+    // its notification tag stays behind with nothing: the other side makes
+    // its own, so the shade's history never ties the two
+    await t.execute('DELETE FROM $s.notif_tags WHERE chat = ?1', [
+      c.group ? 'group:${c.id}' : c.id,
+    ]);
     // the delete marked its polls as just gone: nothing of them stays
     for (var i = 0; i < polls.length; i += 400) {
       final part = polls.sublist(i, min(i + 400, polls.length));
@@ -599,6 +617,8 @@ class SqlChatMover implements ChatMover {
         }
         await t.execute('DELETE FROM $s.contacts WHERE halo_id = ?1', [who]);
         await t.execute('DELETE FROM $s.shield WHERE halo_id = ?1', [who]);
+        // a request of theirs rang under a tag here once
+        await t.execute('DELETE FROM $s.notif_tags WHERE chat = ?1', [who]);
       }
       return;
     }
@@ -842,19 +862,25 @@ Future<String?> hiddenCard(DatabaseExecutor t, ChatRef c) async {
     r['xpub'] as String? ?? '',
     backPaired: r['back_paired'] == 1,
     blocked: r['blocked'] == 1,
+    blockedFrom: r['block_from'] as int?,
     verifiedKey: r['verified_key'] as String?,
   );
+  // when the open span began, or a seeded one is listened on from
+  const from =
+      '(SELECT COALESCE(s.listen_from, s.from_at) FROM v.block_spans s '
+      'WHERE s.peer_id = c.halo_id AND s.to_at IS NULL '
+      'ORDER BY s.from_at DESC LIMIT 1) AS block_from';
   if (!c.group) {
     final r = await t.rawQuery(
-      'SELECT halo_id, onion, xpub, back_paired, blocked, verified_key '
-      'FROM v.contacts WHERE halo_id = ?1',
+      'SELECT c.halo_id, c.onion, c.xpub, c.back_paired, c.blocked, '
+      'c.verified_key, $from FROM v.contacts c WHERE c.halo_id = ?1',
       [c.id],
     );
     return r.isEmpty ? null : peerCard(card(r.first));
   }
   final r = await t.rawQuery(
     'SELECT c.halo_id, c.onion, c.xpub, c.back_paired, c.blocked, '
-    'c.verified_key '
+    'c.verified_key, $from '
     'FROM v.group_members gm JOIN v.contacts c ON c.halo_id = gm.halo_id '
     'WHERE gm.group_id = ?1 AND NOT EXISTS '
     '(SELECT 1 FROM main.contacts x WHERE x.halo_id = gm.halo_id) '

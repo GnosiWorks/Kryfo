@@ -139,7 +139,7 @@ func snowflakeFor(c sf.ClientConfig) (*sf.Transport, error) {
 	if err != nil {
 		return nil, err
 	}
-	t.AddSnowflakeEventListener(sfListener{})
+	t.AddSnowflakeEventListener(sfListener{gen: sfGen.Load()})
 	sfMade.Add(1)
 	sfClients[key] = t
 	return t, nil
@@ -152,11 +152,28 @@ var (
 	sfPhase  string
 	sfAt     time.Time
 	sfCounts = map[string]int{}
+	// the furthest the current clients got, offer < broker < connected,
+	// and when. a failed step and a retry after it are not progress
+	sfBest   int
+	sfBestAt time.Time
+	// bumped when the clients are dropped. a client dropped while it still
+	// retries keeps its own number, and what it says goes nowhere
+	sfGen atomic.Int64
+	sfNow = time.Now
 )
 
-type sfListener struct{}
+var sfRank = map[string]int{"offer": 1, "broker": 2, "connected": 3}
 
-func (sfListener) OnNewSnowflakeEvent(e event.SnowflakeEvent) {
+type sfListener struct{ gen int64 }
+
+// how far the current clients got, and when they last got further
+func snowflakeForward() (int, time.Time) {
+	sfStatMu.Lock()
+	defer sfStatMu.Unlock()
+	return sfBest, sfBestAt
+}
+
+func (l sfListener) OnNewSnowflakeEvent(e event.SnowflakeEvent) {
 	// a panic here would take the app down from a goroutine that is not ours
 	defer func() {
 		if p := recover(); p != nil {
@@ -182,8 +199,14 @@ func (sfListener) OnNewSnowflakeEvent(e event.SnowflakeEvent) {
 	default:
 		return
 	}
+	now := sfNow()
 	sfStatMu.Lock()
-	sfPhase, sfAt = phase, time.Now()
+	if l.gen == sfGen.Load() {
+		sfPhase, sfAt = phase, now
+		if r := sfRank[phase]; r > sfBest {
+			sfBest, sfBestAt = r, now
+		}
+	}
 	sfCounts[phase]++
 	sfStatMu.Unlock()
 	// the kind only: an event's own text can carry an address
@@ -204,7 +227,11 @@ func snowflakeStatus() (string, time.Time, map[string]int) {
 func dropSnowflakeClients() {
 	sfMu.Lock()
 	sfClients = map[string]*sf.Transport{}
+	sfGen.Add(1)
 	sfMu.Unlock()
+	sfStatMu.Lock()
+	sfBest, sfBestAt = 0, time.Time{}
+	sfStatMu.Unlock()
 }
 
 // the target address is a placeholder, the line's url and fronts say where

@@ -188,18 +188,22 @@ class _TorBootSplashState extends State<TorBootSplash>
               0.4,
               1,
               ExcludeSemantics(
-                child: AnimatedBuilder(
-                  animation: _c,
-                  builder: (_, _) => Row(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _hopDot('guard', 0.0),
-                      _link(0.0),
-                      _hopDot('relay', 0.33),
-                      _link(0.33),
-                      _hopDot('exit', 0.66),
-                    ],
+                // long hop names at a large text size shrink, never spill
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: AnimatedBuilder(
+                    animation: _c,
+                    builder: (_, _) => Row(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _hopDot(l10n.torBootSplashHopEntry, 0.0),
+                        _link(0.0),
+                        _hopDot(l10n.torBootSplashHopMiddle, 0.33),
+                        _link(0.33),
+                        _hopDot(l10n.torBootSplashHopExit, 0.66),
+                      ],
+                    ),
                   ),
                 ),
               ),
