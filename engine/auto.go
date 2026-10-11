@@ -339,9 +339,9 @@ func stepBudget(s autoStep) time.Duration {
 	case "moat":
 		return moatTimeout + 15*time.Second
 	case "direct":
-		return directLimit + attemptExtend + autoSetconfWait
+		return attemptCap + autoSetconfWait
 	}
-	return firstDialWait + s.Limit + attemptExtend + autoSetconfWait
+	return firstDialWait + attemptCap + autoSetconfWait
 }
 
 func passBudget(steps []autoStep) time.Duration {

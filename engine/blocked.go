@@ -94,6 +94,11 @@ var connTags = map[string]bool{
 // tags past the handshake with the first hop
 var handshakeDoneTags = map[string]bool{"handshake_done": true, "ap_handshake_done": true}
 
+// the tags between a finished handshake and a first circuit
+var noCircuitTags = map[string]bool{
+	"handshake_done": true, "onehop_create": true, "ap_handshake_done": true, "circuit_create": true,
+}
+
 // the ways a censor ends a connection to a relay
 var censorReasons = map[string]bool{
 	"CONNECTRESET": true, "TIMEOUT": true, "NOROUTE": true, "CONNECTREFUSED": true, "IOERROR": true,
@@ -171,9 +176,10 @@ func (a *attemptSeen) bootstrap(p bootPhase, fresh bool, now time.Time) {
 	}
 	if !a.phaseOK || p.Tag != a.phase.Tag {
 		a.tagSince = now
-		if a.phaseOK {
-			a.tagMoved = now
-		}
+	}
+	// a new phase or a higher percent is progress
+	if a.phaseOK && (p.Tag != a.phase.Tag || p.Progress > a.phase.Progress) {
+		a.tagMoved = now
 	}
 	if a.phaseOK && p.Count > a.phase.Count {
 		a.countAt = now
@@ -200,7 +206,9 @@ var (
 	directTagStuck  = 60 * time.Second
 	directNoCircuit = 90 * time.Second
 	directLimit     = 90 * time.Second
-	attemptExtend   = 30 * time.Second
+	// an attempt that keeps moving forward runs on, up to this from its
+	// start, and ends only once it has stalled for its own limit
+	attemptCap = 4 * time.Minute
 	// tor at times waits over two minutes before the first dial to a line
 	// it was just given. the clock of a bridge starts at that dial.
 	firstDialWait = 160 * time.Second
@@ -219,18 +227,35 @@ func (a *attemptSeen) blockedWhy(now time.Time) string {
 		if a.phase.Warn && a.countUp >= 2 && censorReasons[a.phase.Reason] {
 			return "tor warns"
 		}
-		if !a.hsDoneAt.IsZero() && now.Sub(a.hsDoneAt) >= directNoCircuit {
-			return "no circuit"
+		// past the handshake and no further: a censor that lets the
+		// handshake through and cuts what follows. a bootstrap that got
+		// on to the consensus is no such thing
+		if from := a.hsDoneAt; !from.IsZero() && noCircuitTags[a.phase.Tag] {
+			if a.tagMoved.After(from) {
+				from = a.tagMoved
+			}
+			if now.Sub(from) >= directNoCircuit {
+				return "no circuit"
+			}
 		}
 	}
 	return ""
 }
 
-// whether tor showed any movement in the last stretch: a new tag, or a
-// snowflake step
-func (a *attemptSeen) movedSince(t time.Time) bool {
-	return (!a.tagMoved.IsZero() && !a.tagMoved.Before(t)) ||
-		(!a.sfMoved.IsZero() && !a.sfMoved.Before(t))
+// whether an attempt that began at start is over: nothing moved forward
+// for its limit, a new phase, a higher percent or a snowflake step, or it
+// reached the cap however it moves
+func (a *attemptSeen) ranOut(start time.Time, limit time.Duration, now time.Time) bool {
+	if now.Sub(start) >= attemptCap {
+		return true
+	}
+	from := start
+	for _, m := range []time.Time{a.tagMoved, a.sfMoved} {
+		if m.After(from) {
+			from = m
+		}
+	}
+	return now.Sub(from) >= limit
 }
 
 // the verdict on a direct attempt. on a network android could not check,
@@ -245,11 +270,7 @@ func judgeDirect(a *attemptSeen, validated bool, now time.Time) (string, string)
 			return seenBlocked, why
 		}
 	}
-	end := a.since.Add(limit)
-	if now.Before(end) {
-		return seenTrying, ""
-	}
-	if a.movedSince(end.Add(-attemptExtend)) && now.Before(end.Add(attemptExtend)) {
+	if !a.ranOut(a.since, limit, now) {
 		return seenTrying, ""
 	}
 	if !validated {
@@ -278,11 +299,7 @@ func judgeBridge(a *attemptSeen, limit time.Duration, now time.Time) (string, st
 		}
 		return seenTrying, ""
 	}
-	end := a.firstDial.Add(limit)
-	if now.Before(end) {
-		return seenTrying, ""
-	}
-	if a.movedSince(end.Add(-attemptExtend)) && now.Before(end.Add(attemptExtend)) {
+	if !a.ranOut(a.firstDial, limit, now) {
 		return seenTrying, ""
 	}
 	return seenFailed, "ran out"

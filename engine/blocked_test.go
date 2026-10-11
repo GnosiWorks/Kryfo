@@ -86,7 +86,10 @@ func TestDirectBlockedByStuckTag(t *testing.T) {
 	d := newSeen(t0)
 	d.bootstrap(bootPhase{Progress: 15, Tag: "handshake_done"}, true, t0.Add(time.Second))
 	d.bootstrap(bootPhase{Progress: 20, Tag: "onehop_create"}, true, t0.Add(3*time.Second))
-	if v, why := judgeDirect(d, true, t0.Add(time.Second+directNoCircuit)); v != seenBlocked || why != "no circuit" {
+	if v, _ := judgeDirect(d, true, t0.Add(time.Second+directNoCircuit)); v == seenBlocked {
+		t.Fatal("the clock ran from the handshake, not from the last step")
+	}
+	if v, why := judgeDirect(d, true, t0.Add(3*time.Second+directNoCircuit)); v != seenBlocked || why != "no circuit" {
 		t.Fatalf("no circuit after the handshake: %s %s", v, why)
 	}
 }
@@ -109,12 +112,12 @@ func TestSlowOpenNetworkIsNotBlocked(t *testing.T) {
 			t.Fatalf("at %ds: %s %s", s, v, why)
 		}
 	}
-	// the tag moved in the last 30 s, so it gets its extension
-	if v, _ := judgeDirect(a, true, t0.Add(100*time.Second)); v != seenTrying {
-		t.Fatalf("no extension for a moving tag: %s", v)
+	// the tag last moved at 90 s, so it runs until 90 s after that
+	if v, _ := judgeDirect(a, true, t0.Add(170*time.Second)); v != seenTrying {
+		t.Fatalf("a moving bootstrap was cut short: %s", v)
 	}
-	if v, _ := judgeDirect(a, true, t0.Add(directLimit+attemptExtend)); v != seenFailed {
-		t.Fatalf("after the extension: %s, want failed and not blocked", v)
+	if v, _ := judgeDirect(a, true, t0.Add(90*time.Second+directLimit)); v != seenFailed {
+		t.Fatalf("after the stall: %s, want failed and not blocked", v)
 	}
 	a.circ("BUILT", nil, t0.Add(70*time.Second))
 	if v, _ := judgeDirect(a, true, t0.Add(70*time.Second)); v != seenOK {
@@ -180,7 +183,7 @@ func TestBridgeTimeStartsAtTheFirstDial(t *testing.T) {
 	if v, why := judgeBridge(b, limit, t0.Add(firstDialWait)); v != seenFailed || why != "tor never dialled" {
 		t.Fatalf("never dialled: %s %s", v, why)
 	}
-	// snowflake moving gets its extension
+	// snowflake moving runs on, up to the cap
 	c := newSeen(t0)
 	c.firstDial = t0
 	sl := methodLimit["snowflake"]
@@ -188,12 +191,71 @@ func TestBridgeTimeStartsAtTheFirstDial(t *testing.T) {
 	if v, _ := judgeBridge(c, sl, t0.Add(sl+10*time.Second)); v != seenTrying {
 		t.Fatalf("snowflake still moving: %s", v)
 	}
-	if v, _ := judgeBridge(c, sl, t0.Add(sl+attemptExtend)); v != seenFailed {
-		t.Fatalf("one extension only: %s", v)
+	if v, _ := judgeBridge(c, sl, t0.Add(attemptCap)); v != seenFailed {
+		t.Fatalf("past the cap: %s", v)
 	}
 	d := newSeen(t0)
 	d.allDead = true
 	if v, _ := judgeBridge(d, limit, t0.Add(time.Second)); v != seenFailed {
 		t.Fatalf("every line dead: %s", v)
+	}
+}
+
+// a slow bootstrap that keeps moving keeps its method, whatever the method,
+// a stalled one fails at its own limit, and none runs past the cap
+func TestSteadyProgressKeepsAMethod(t *testing.T) {
+	t0 := time.Unix(1000, 0)
+	for _, m := range []string{"obfs4", "webtunnel", "snowflake", "direct"} {
+		limit := methodLimit[m]
+		judge := func(a *attemptSeen, now time.Time) string {
+			if m == "direct" {
+				v, _ := judgeDirect(a, true, now)
+				return v
+			}
+			v, _ := judgeBridge(a, limit, now)
+			return v
+		}
+		if m == "direct" {
+			limit = directLimit
+		}
+		// a step every two thirds of the limit, a circuit at 3:50
+		a := newSeen(t0)
+		a.firstDial = t0
+		a.orOK = true
+		step := limit * 2 / 3
+		pct := 10
+		for at := time.Duration(0); at < 230*time.Second; at += step {
+			a.bootstrap(bootPhase{Progress: pct, Tag: "loading_descriptors"}, true, t0.Add(at))
+			pct += 5
+			if v := judge(a, t0.Add(at)); v != seenTrying {
+				t.Fatalf("%s: steady progress judged %s at %s", m, v, at)
+			}
+		}
+		a.circ("BUILT", nil, t0.Add(230*time.Second))
+		if v := judge(a, t0.Add(230*time.Second)); v != seenOK {
+			t.Fatalf("%s: %s", m, v)
+		}
+		// a stall after one step fails at the limit from that step
+		b := newSeen(t0)
+		b.firstDial = t0
+		b.orOK = true
+		b.bootstrap(bootPhase{Progress: 10, Tag: "conn_done"}, true, t0)
+		b.bootstrap(bootPhase{Progress: 20, Tag: "loading_status"}, true, t0.Add(20*time.Second))
+		if v := judge(b, t0.Add(20*time.Second+limit-time.Second)); v != seenTrying {
+			t.Fatalf("%s: failed before the stall reached its limit: %s", m, v)
+		}
+		if v := judge(b, t0.Add(20*time.Second+limit)); v != seenFailed {
+			t.Fatalf("%s: a stall judged %s", m, v)
+		}
+		// moving forever still ends at the cap
+		c := newSeen(t0)
+		c.firstDial = t0
+		c.orOK = true
+		for at := time.Duration(0); at <= attemptCap; at += 10 * time.Second {
+			c.bootstrap(bootPhase{Progress: 10 + int(at/time.Second)/10, Tag: "loading_descriptors"}, true, t0.Add(at))
+		}
+		if v := judge(c, t0.Add(attemptCap)); v != seenFailed {
+			t.Fatalf("%s: past the cap %s", m, v)
+		}
 	}
 }
