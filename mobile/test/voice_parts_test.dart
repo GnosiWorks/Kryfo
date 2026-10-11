@@ -291,47 +291,4 @@ void main() {
       expect(t.binding.transientCallbackCount, 0);
     });
   });
-
-  group('the mask', () {
-    Widget mask(bool on, {bool still = false}) => host(
-      DisguiseToggle(on: on, label: 'Disguise voice', onTap: () {}),
-      still: still,
-    );
-
-    testWidgets('turns over with a pop and says it is on', (t) async {
-      final h = t.ensureSemantics();
-      await t.pumpWidget(mask(false));
-      expect(find.byIcon(Icons.voice_over_off), findsOneWidget);
-      await t.pumpWidget(mask(true));
-      await t.pump(const Duration(milliseconds: 60));
-      expect(t.binding.transientCallbackCount, greaterThan(0));
-      await settles(t);
-      expect(find.byIcon(Icons.record_voice_over), findsOneWidget);
-      expect(
-        t.getSemantics(find.byType(DisguiseToggle)),
-        isSemantics(
-          label: 'Disguise voice',
-          isButton: true,
-          hasToggledState: true,
-          isToggled: true,
-          hasTapAction: true,
-        ),
-      );
-      h.dispose();
-    });
-
-    testWidgets('reduced motion: a quick fade, no pop', (t) async {
-      await t.pumpWidget(mask(false, still: true));
-      await t.pumpWidget(mask(true, still: true));
-      await t.pump(const Duration(milliseconds: 30));
-      expect(
-        find.descendant(
-          of: find.byType(AnimatedSwitcher),
-          matching: find.byType(ScaleTransition),
-        ),
-        findsNothing,
-      );
-      await settles(t);
-    });
-  });
 }

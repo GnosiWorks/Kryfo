@@ -1775,9 +1775,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatMessage => '消息';
 
   @override
-  String get chatDisguiseVoice => '变声';
-
-  @override
   String get commonSend => '发送';
 
   @override
@@ -2544,9 +2541,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get groupChatMessage => '消息';
-
-  @override
-  String get groupChatDisguiseVoice => '变声';
 
   @override
   String get groupChatSupporter => '支持者';
@@ -5021,12 +5015,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsReplaceCurrent => '替换当前身份';
 
   @override
-  String get settingsDisguiseVoice => '变声';
-
-  @override
-  String get settingsShiftsYourPitchBefore => '语音发出前改变你的音调';
-
-  @override
   String get settingsWhyKryfo => '为什么选 Kryfo';
 
   @override
@@ -6107,18 +6095,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get mediaBubblesPlaying => '正在播放';
-
-  @override
-  String get mediaBubblesMicPermissionNeeded => '需要麦克风权限';
-
-  @override
-  String get mediaBubblesReleaseToCancel => '松开取消';
-
-  @override
-  String get mediaBubblesVoiceHiddenSlideTo => '已变声 · 滑动取消';
-
-  @override
-  String get mediaBubblesSlideToCancel => '滑动取消';
 
   @override
   String get mediaBubblesSendPhoto => '发送照片';
@@ -7602,6 +7578,39 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get settingsCheckForUpdatesHint =>
       '每天一次，通过 Tor。只向 kryfo.app 询问最新版本，不发送任何关于你的信息。';
+
+  @override
+  String get voiceDisguiseHere => '在这里给我的语音变声';
+
+  @override
+  String get voiceDisguisedHere => '在这个聊天里，你的语音会变声';
+
+  @override
+  String get voiceSlideUpToLock => '上滑锁定';
+
+  @override
+  String get voiceStopRecording => '停止录音';
+
+  @override
+  String get voiceDeleteNote => '删除语音';
+
+  @override
+  String get voiceDisguised => '已变声';
+
+  @override
+  String get voiceYourVoice => '原声';
+
+  @override
+  String get voiceDisguiseThisNote => '给这条语音变声';
+
+  @override
+  String get voiceNotDisguised => '这条语音无法变声，所以没有发出';
+
+  @override
+  String get settingsDisguiseByDefault => '默认给我的语音变声';
+
+  @override
+  String get settingsDisguiseByDefaultHint => '每个聊天都可以在自己的菜单里更改';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -9374,9 +9383,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatMessage => '訊息';
 
   @override
-  String get chatDisguiseVoice => '變聲';
-
-  @override
   String get commonSend => '傳送';
 
   @override
@@ -10144,9 +10150,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get groupChatMessage => '訊息';
-
-  @override
-  String get groupChatDisguiseVoice => '變聲';
 
   @override
   String get groupChatSupporter => '支持者';
@@ -12621,12 +12624,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsReplaceCurrent => '取代目前的';
 
   @override
-  String get settingsDisguiseVoice => '變聲';
-
-  @override
-  String get settingsShiftsYourPitchBefore => '在語音送出前改變你的音調';
-
-  @override
   String get settingsWhyKryfo => '為什麼選 Kryfo';
 
   @override
@@ -13707,18 +13704,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get mediaBubblesPlaying => '正在播放';
-
-  @override
-  String get mediaBubblesMicPermissionNeeded => '需要麥克風權限';
-
-  @override
-  String get mediaBubblesReleaseToCancel => '放開即可取消';
-
-  @override
-  String get mediaBubblesVoiceHiddenSlideTo => '聲音已隱藏 · 滑動以取消';
-
-  @override
-  String get mediaBubblesSlideToCancel => '滑動以取消';
 
   @override
   String get mediaBubblesSendPhoto => '傳送照片';
@@ -15082,4 +15067,37 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get settingsCheckForUpdatesHint =>
       '每天一次，透過 Tor。只向 kryfo.app 詢問最新版本，不傳送任何關於你的資訊。';
+
+  @override
+  String get voiceDisguiseHere => '在這裡給我的語音變聲';
+
+  @override
+  String get voiceDisguisedHere => '在這個聊天裡，你的語音會變聲';
+
+  @override
+  String get voiceSlideUpToLock => '上滑以鎖定';
+
+  @override
+  String get voiceStopRecording => '停止錄音';
+
+  @override
+  String get voiceDeleteNote => '刪除語音';
+
+  @override
+  String get voiceDisguised => '已變聲';
+
+  @override
+  String get voiceYourVoice => '原聲';
+
+  @override
+  String get voiceDisguiseThisNote => '給這則語音變聲';
+
+  @override
+  String get voiceNotDisguised => '這則語音無法變聲，所以沒有送出';
+
+  @override
+  String get settingsDisguiseByDefault => '預設給我的語音變聲';
+
+  @override
+  String get settingsDisguiseByDefaultHint => '每個聊天都可以在自己的選單裡更改';
 }

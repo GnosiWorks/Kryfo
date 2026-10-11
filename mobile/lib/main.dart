@@ -82,6 +82,7 @@ import 'search_bench.dart';
 import 'session.dart';
 import 'router.dart';
 import 'vault_life.dart';
+import 'voice_choice.dart';
 import 'tools/tools_bridge.dart' show ToolsBridge;
 import 'devchat/dev_chat.dart';
 import 'devchat/dev_frame.dart' show DevSelf, devInFrame;
@@ -1312,7 +1313,7 @@ class HaloDb implements GroupOwedStore {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 75,
+      version: 76,
       onConfigure: eraseFreedPages,
       onCreate: (db, _) async {
         await db.execute('''
@@ -1347,7 +1348,8 @@ class HaloDb implements GroupOwedStore {
             supporter_badge TEXT,
             avatar INTEGER,
             vouched_by TEXT,
-            vouched_at INTEGER
+            vouched_at INTEGER,
+            voice_disguise INTEGER
           )
         ''');
         await db.execute('''
@@ -1419,7 +1421,8 @@ class HaloDb implements GroupOwedStore {
             joining_at INTEGER,
             door_priv TEXT,
             door_pub TEXT,
-            door_was TEXT
+            door_was TEXT,
+            voice_disguise INTEGER
           )
         ''');
         await db.execute('''
@@ -1476,7 +1479,7 @@ class HaloDb implements GroupOwedStore {
       },
       onUpgrade: (db, oldV, newV) async {
         // 62 runs after every older step, below: its index names columns
-        // they add. 66 runs after it: it reads what they all make. 67 to 75
+        // they add. 66 runs after it: it reads what they all make. 67 to 76
         // last
         if (oldV < 65) {
           // a room joined off a link and not let in yet: when the join went
@@ -1888,7 +1891,8 @@ class HaloDb implements GroupOwedStore {
               joining_at INTEGER,
               door_priv TEXT,
               door_pub TEXT,
-              door_was TEXT
+              door_was TEXT,
+              voice_disguise INTEGER
             )
           ''');
           await db.execute('''
@@ -1946,6 +1950,10 @@ class HaloDb implements GroupOwedStore {
         if (oldV < 75) {
           // when a span seeded at 64 is listened on from
           await blockListenColumn(db);
+        }
+        if (oldV < 76) {
+          // a chat's own choice to disguise the voice
+          await voiceDisguiseColumns(db);
         }
       },
     );
@@ -4167,6 +4175,35 @@ class HaloDb implements GroupOwedStore {
       {'atmosphere': atmosphere},
       where: 'halo_id = ?',
       whereArgs: [peerId],
+    );
+  }
+
+  // a chat's own voice disguise choice, null until one is made here
+  Future<bool?> voiceDisguiseOf(String chatId, {bool group = false}) async {
+    final db = await open();
+    final rows = await db.query(
+      group ? 'groups' : 'contacts',
+      columns: ['voice_disguise'],
+      where: group ? 'group_id = ?' : 'halo_id = ?',
+      whereArgs: [chatId],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    final v = rows.first['voice_disguise'];
+    return v is int ? v == 1 : null;
+  }
+
+  Future<void> setVoiceDisguise(
+    String chatId,
+    bool on, {
+    bool group = false,
+  }) async {
+    final db = await open();
+    await db.update(
+      group ? 'groups' : 'contacts',
+      {'voice_disguise': on ? 1 : 0},
+      where: group ? 'group_id = ?' : 'halo_id = ?',
+      whereArgs: [chatId],
     );
   }
 
@@ -7420,6 +7457,13 @@ Future<void> viaDevColumn(DatabaseExecutor db) => addColumn(
   db,
   'ALTER TABLE messages ADD COLUMN via_dev INTEGER NOT NULL DEFAULT 0',
 );
+
+// the upgrade to 71: whether a chat's voice notes go out disguised, null
+// until it is chosen there
+Future<void> voiceDisguiseColumns(DatabaseExecutor db) async {
+  await addColumn(db, 'ALTER TABLE contacts ADD COLUMN voice_disguise INTEGER');
+  await addColumn(db, 'ALTER TABLE groups ADD COLUMN voice_disguise INTEGER');
+}
 
 // the upgrade to 65: when a room joined off a link sent its join, until
 // its creator lets this phone in
@@ -11651,10 +11695,36 @@ class AppState extends ChangeNotifier {
     return (on, secs);
   }
 
+  // the identity's default for chats with no choice of their own. it was
+  // the one switch for every chat before each chat had its own
   Future<bool> loadDisguisePref() async {
     const s = secureStore;
     return (await s.read(key: session.container.key('disguise_on'))) == '1';
   }
+
+  // whether a chat's notes go out disguised: its own choice, else on in a
+  // burner room, else the identity's default
+  Future<bool> loadChatDisguise(
+    String chatId, {
+    bool group = false,
+    bool burner = false,
+  }) async {
+    bool? own;
+    try {
+      own = await session.voiceDisguiseOf(chatId, group: group);
+    } catch (e) {
+      // unread, the chat takes the default
+      dlog('voice choice: not read (${e.runtimeType})');
+    }
+    return chatDisguise(
+      own: own,
+      burner: burner,
+      fallback: own == null && !burner && await loadDisguisePref(),
+    );
+  }
+
+  Future<void> saveChatDisguise(String chatId, bool on, {bool group = false}) =>
+      session.setVoiceDisguise(chatId, on, group: group);
 
   Future<void> saveDisguisePref(bool on) async {
     const s = secureStore;

@@ -671,8 +671,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               HaloRow(
                 icon: Icons.record_voice_over,
-                label: l10n.settingsDisguiseVoice,
-                hint: l10n.settingsShiftsYourPitchBefore,
+                label: l10n.settingsDisguiseByDefault,
+                hint: l10n.settingsDisguiseByDefaultHint,
                 toggled: _disguise ?? false,
                 pending: _disguise == null,
                 onTap: () async {

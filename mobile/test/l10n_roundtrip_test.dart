@@ -875,7 +875,6 @@ void main() {
     expect(l.chatOpenTheCamera, "Open the camera");
     expect(l.chatAttachAPhoto, "Attach a photo");
     expect(l.chatMessage, "Message");
-    expect(l.chatDisguiseVoice, "Disguise voice");
     expect(l.commonSend, "Send");
     expect(l.chatNoPhotosInThis, "No photos in this chat yet");
     expect(l.chatSecurityCodeChanged, "Security code changed");
@@ -1276,7 +1275,6 @@ void main() {
     expect(l.groupChatOpenTheCamera, "Open the camera");
     expect(l.groupChatAttachAPhoto, "Attach a photo");
     expect(l.groupChatMessage, "Message");
-    expect(l.groupChatDisguiseVoice, "Disguise voice");
     expect(l.groupChatSupporter, "Supporter");
     expect(l.groupChatEdited, "Edited");
     expect(l.groupChatTapToRetry, "! Tap to retry");
@@ -2596,11 +2594,6 @@ void main() {
     expect(l.settingsEncryptedFile, "Encrypted file");
     expect(l.settingsRestoreFromBackup, "Restore from backup");
     expect(l.settingsReplaceCurrent, "Replace current");
-    expect(l.settingsDisguiseVoice, "Disguise voice");
-    expect(
-      l.settingsShiftsYourPitchBefore,
-      "Shifts your pitch before a voice note leaves",
-    );
     expect(l.settingsWhyKryfo, "Why Kryfo");
     expect(l.settingsHowItProtectsYou, "How it protects you");
     expect(l.settingsResetMyInviteLink, "Reset my invite link");
@@ -3089,10 +3082,6 @@ void main() {
     expect(l.mediaBubblesFile, "FILE");
     expect(l.mediaBubblesAudioUnavailable, "Audio unavailable");
     expect(l.mediaBubblesHidden, "Hidden");
-    expect(l.mediaBubblesMicPermissionNeeded, "Mic permission needed");
-    expect(l.mediaBubblesReleaseToCancel, "Release to cancel");
-    expect(l.mediaBubblesVoiceHiddenSlideTo, "Voice hidden · slide to cancel");
-    expect(l.mediaBubblesSlideToCancel, "Slide to cancel");
     expect(l.mediaBubblesSendPhoto, "Send photo");
     expect(l.mediaBubblesAddACaption, "Add a caption…");
     expect(l.motionStandby, "STANDBY");
@@ -3395,5 +3384,22 @@ void main() {
     expect(l.notesThisWeek, "This week");
     expect(l.notesShowMore, "Show more");
     expect(l.notesShowLess, "Show less");
+    expect(l.voiceDisguiseHere, "Disguise my voice here");
+    expect(l.voiceDisguisedHere, "Your voice is disguised in this chat");
+    expect(l.voiceSlideUpToLock, "Slide up to lock");
+    expect(l.voiceStopRecording, "Stop recording");
+    expect(l.voiceDeleteNote, "Delete voice note");
+    expect(l.voiceDisguised, "Disguised");
+    expect(l.voiceYourVoice, "Your voice");
+    expect(l.voiceDisguiseThisNote, "Disguise this note");
+    expect(
+      l.voiceNotDisguised,
+      "This note could not be disguised, so it was not sent",
+    );
+    expect(l.settingsDisguiseByDefault, "Disguise my voice by default");
+    expect(
+      l.settingsDisguiseByDefaultHint,
+      "Each chat can change it in its menu",
+    );
   });
 }

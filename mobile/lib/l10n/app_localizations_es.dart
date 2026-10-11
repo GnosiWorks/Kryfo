@@ -1854,9 +1854,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get chatMessage => 'Mensaje';
 
   @override
-  String get chatDisguiseVoice => 'Disfrazar la voz';
-
-  @override
   String get commonSend => 'Enviar';
 
   @override
@@ -2677,9 +2674,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get groupChatMessage => 'Mensaje';
-
-  @override
-  String get groupChatDisguiseVoice => 'Disfrazar la voz';
 
   @override
   String get groupChatSupporter => 'Colaborador';
@@ -5281,13 +5275,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsReplaceCurrent => 'Reemplaza la actual';
 
   @override
-  String get settingsDisguiseVoice => 'Disfrazar la voz';
-
-  @override
-  String get settingsShiftsYourPitchBefore =>
-      'Cambia tu tono antes de que salga una nota de voz';
-
-  @override
   String get settingsWhyKryfo => 'Por qué Kryfo';
 
   @override
@@ -6420,20 +6407,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get mediaBubblesPlaying => 'Reproduciendo';
-
-  @override
-  String get mediaBubblesMicPermissionNeeded =>
-      'Se necesita permiso del micrófono';
-
-  @override
-  String get mediaBubblesReleaseToCancel => 'Suelta para cancelar';
-
-  @override
-  String get mediaBubblesVoiceHiddenSlideTo =>
-      'Voz oculta · desliza para cancelar';
-
-  @override
-  String get mediaBubblesSlideToCancel => 'Desliza para cancelar';
 
   @override
   String get mediaBubblesSendPhoto => 'Enviar foto';
@@ -7997,4 +7970,39 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get settingsCheckForUpdatesHint =>
       'Una vez al día por Tor. Pide a kryfo.app la versión más reciente y no envía nada sobre ti.';
+
+  @override
+  String get voiceDisguiseHere => 'Disfrazar mi voz aquí';
+
+  @override
+  String get voiceDisguisedHere => 'Tu voz va disfrazada en este chat';
+
+  @override
+  String get voiceSlideUpToLock => 'Desliza hacia arriba para bloquear';
+
+  @override
+  String get voiceStopRecording => 'Detener la grabación';
+
+  @override
+  String get voiceDeleteNote => 'Borrar la nota de voz';
+
+  @override
+  String get voiceDisguised => 'Disfrazada';
+
+  @override
+  String get voiceYourVoice => 'Tu voz';
+
+  @override
+  String get voiceDisguiseThisNote => 'Disfrazar esta nota';
+
+  @override
+  String get voiceNotDisguised =>
+      'No se pudo disfrazar esta nota, así que no se envió';
+
+  @override
+  String get settingsDisguiseByDefault => 'Disfrazar mi voz por defecto';
+
+  @override
+  String get settingsDisguiseByDefaultHint =>
+      'Cada chat puede cambiarlo en su menú';
 }

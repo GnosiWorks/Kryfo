@@ -198,6 +198,19 @@ class Session {
       _ofPeer(peerId).firstMessageAt(peerId);
   Future<String?> getAtmosphere(String peerId) =>
       _ofPeer(peerId).getAtmosphere(peerId);
+  // a chat's own choice, in the container that holds the chat, so a hidden
+  // chat's never lands on the everyday side
+  Future<bool?> voiceDisguiseOf(String chatId, {bool group = false}) =>
+      (group ? _ofGroup(chatId) : _ofPeer(chatId)).voiceDisguiseOf(
+        chatId,
+        group: group,
+      );
+  Future<void> setVoiceDisguise(String chatId, bool on, {bool group = false}) =>
+      (group ? _ofGroup(chatId) : _ofPeer(chatId)).setVoiceDisguise(
+        chatId,
+        on,
+        group: group,
+      );
   Future<Map<String, Object?>?> getContact(String haloId) =>
       _ofPeer(haloId).getContact(haloId);
   Future<bool> askedBefore(String haloId) =>

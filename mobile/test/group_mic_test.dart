@@ -12,7 +12,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart' show lockState;
-import 'package:kryfo/widgets/media_bubbles.dart' show HoldToTalkMic;
+import 'package:kryfo/widgets/voice_mic.dart' show HoldToTalkMic;
 import 'package:kryfo/widgets/voice_parts.dart' show VoiceRecordBar;
 
 import 'dev_chat_fakes.dart';
@@ -74,11 +74,7 @@ void main() {
     t,
     Scaffold(
       body: Center(
-        child: HoldToTalkMic(
-          disguise: false,
-          onToggleDisguise: () {},
-          onComplete: (_, _, cancelled) => done.add(cancelled),
-        ),
+        child: HoldToTalkMic(disguise: false, onSend: (_) => done.add(false)),
       ),
     ),
   );
@@ -91,11 +87,7 @@ void main() {
       body: SafeArea(
         child: Align(
           alignment: Alignment.bottomCenter,
-          child: HoldToTalkMic(
-            disguise: false,
-            onToggleDisguise: () {},
-            onComplete: (_, _, _) {},
-          ),
+          child: HoldToTalkMic(disguise: false, onSend: (_) {}),
         ),
       ),
     ),

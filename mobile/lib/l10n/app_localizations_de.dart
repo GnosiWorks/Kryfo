@@ -1852,9 +1852,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chatMessage => 'Nachricht';
 
   @override
-  String get chatDisguiseVoice => 'Stimme verfremden';
-
-  @override
   String get commonSend => 'Senden';
 
   @override
@@ -2679,9 +2676,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get groupChatMessage => 'Nachricht';
-
-  @override
-  String get groupChatDisguiseVoice => 'Stimme verfremden';
 
   @override
   String get groupChatSupporter => 'Unterstützer';
@@ -5299,13 +5293,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsReplaceCurrent => 'Ersetzt die aktuelle';
 
   @override
-  String get settingsDisguiseVoice => 'Stimme verfremden';
-
-  @override
-  String get settingsShiftsYourPitchBefore =>
-      'Verschiebt deine Tonhöhe, bevor eine Sprachnachricht rausgeht';
-
-  @override
   String get settingsWhyKryfo => 'Warum Kryfo';
 
   @override
@@ -6436,19 +6423,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get mediaBubblesPlaying => 'Wird abgespielt';
-
-  @override
-  String get mediaBubblesMicPermissionNeeded => 'Mikrofonzugriff nötig';
-
-  @override
-  String get mediaBubblesReleaseToCancel => 'Loslassen zum Abbrechen';
-
-  @override
-  String get mediaBubblesVoiceHiddenSlideTo =>
-      'Stimme verfremdet · zum Abbrechen wischen';
-
-  @override
-  String get mediaBubblesSlideToCancel => 'Zum Abbrechen wischen';
 
   @override
   String get mediaBubblesSendPhoto => 'Foto senden';
@@ -8022,4 +7996,41 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get settingsCheckForUpdatesHint =>
       'Einmal am Tag über Tor. Fragt kryfo.app nach der neuesten Version und sendet nichts über dich.';
+
+  @override
+  String get voiceDisguiseHere => 'Meine Stimme hier verfremden';
+
+  @override
+  String get voiceDisguisedHere =>
+      'Deine Stimme wird in diesem Chat verfremdet';
+
+  @override
+  String get voiceSlideUpToLock => 'Zum Sperren nach oben wischen';
+
+  @override
+  String get voiceStopRecording => 'Aufnahme beenden';
+
+  @override
+  String get voiceDeleteNote => 'Sprachnachricht löschen';
+
+  @override
+  String get voiceDisguised => 'Verfremdet';
+
+  @override
+  String get voiceYourVoice => 'Deine Stimme';
+
+  @override
+  String get voiceDisguiseThisNote => 'Diese Nachricht verfremden';
+
+  @override
+  String get voiceNotDisguised =>
+      'Diese Nachricht ließ sich nicht verfremden und wurde nicht gesendet';
+
+  @override
+  String get settingsDisguiseByDefault =>
+      'Meine Stimme standardmäßig verfremden';
+
+  @override
+  String get settingsDisguiseByDefaultHint =>
+      'Jeder Chat kann das in seinem Menü ändern';
 }

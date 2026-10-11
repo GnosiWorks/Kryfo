@@ -1830,9 +1830,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get chatMessage => 'Pesan';
 
   @override
-  String get chatDisguiseVoice => 'Samarkan suara';
-
-  @override
   String get commonSend => 'Kirim';
 
   @override
@@ -2648,9 +2645,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get groupChatMessage => 'Pesan';
-
-  @override
-  String get groupChatDisguiseVoice => 'Samarkan suara';
 
   @override
   String get groupChatSupporter => 'Pendukung';
@@ -5239,13 +5233,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get settingsReplaceCurrent => 'Ganti yang sekarang';
 
   @override
-  String get settingsDisguiseVoice => 'Samarkan suara';
-
-  @override
-  String get settingsShiftsYourPitchBefore =>
-      'Mengubah nada suaramu sebelum pesan suara dikirim';
-
-  @override
   String get settingsWhyKryfo => 'Kenapa Kryfo';
 
   @override
@@ -6363,19 +6350,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get mediaBubblesPlaying => 'Sedang diputar';
-
-  @override
-  String get mediaBubblesMicPermissionNeeded => 'Perlu izin mikrofon';
-
-  @override
-  String get mediaBubblesReleaseToCancel => 'Lepas untuk batal';
-
-  @override
-  String get mediaBubblesVoiceHiddenSlideTo =>
-      'Suara disamarkan · geser untuk batal';
-
-  @override
-  String get mediaBubblesSlideToCancel => 'Geser untuk batal';
 
   @override
   String get mediaBubblesSendPhoto => 'Kirim foto';
@@ -7932,4 +7906,39 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get settingsCheckForUpdatesHint =>
       'Sekali sehari lewat Tor. Hanya menanyakan versi terbaru ke kryfo.app dan tidak mengirim apa pun tentang kamu.';
+
+  @override
+  String get voiceDisguiseHere => 'Samarkan suaraku di sini';
+
+  @override
+  String get voiceDisguisedHere => 'Suaramu disamarkan di obrolan ini';
+
+  @override
+  String get voiceSlideUpToLock => 'Geser ke atas untuk mengunci';
+
+  @override
+  String get voiceStopRecording => 'Hentikan rekaman';
+
+  @override
+  String get voiceDeleteNote => 'Hapus pesan suara';
+
+  @override
+  String get voiceDisguised => 'Disamarkan';
+
+  @override
+  String get voiceYourVoice => 'Suaramu';
+
+  @override
+  String get voiceDisguiseThisNote => 'Samarkan pesan ini';
+
+  @override
+  String get voiceNotDisguised =>
+      'Pesan ini tidak bisa disamarkan, jadi tidak dikirim';
+
+  @override
+  String get settingsDisguiseByDefault => 'Samarkan suaraku secara bawaan';
+
+  @override
+  String get settingsDisguiseByDefaultHint =>
+      'Setiap obrolan bisa mengubahnya di menunya';
 }

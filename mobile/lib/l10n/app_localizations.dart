@@ -2961,12 +2961,6 @@ abstract class AppLocalizations {
   /// **'Message'**
   String get chatMessage;
 
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Disguise voice'**
-  String get chatDisguiseVoice;
-
   /// screens/chat_screen.dart, screens/group_chat_screen.dart, widgets/media_bubbles.dart
   ///
   /// In en, this message translates to:
@@ -4256,12 +4250,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Message'**
   String get groupChatMessage;
-
-  /// screens/group_chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Disguise voice'**
-  String get groupChatDisguiseVoice;
 
   /// screens/group_chat_screen.dart
   ///
@@ -8484,18 +8472,6 @@ abstract class AppLocalizations {
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Disguise voice'**
-  String get settingsDisguiseVoice;
-
-  /// screens/settings_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Shifts your pitch before a voice note leaves'**
-  String get settingsShiftsYourPitchBefore;
-
-  /// screens/settings_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Why Kryfo'**
   String get settingsWhyKryfo;
 
@@ -10142,30 +10118,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Playing'**
   String get mediaBubblesPlaying;
-
-  /// widgets/media_bubbles.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Mic permission needed'**
-  String get mediaBubblesMicPermissionNeeded;
-
-  /// widgets/media_bubbles.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Release to cancel'**
-  String get mediaBubblesReleaseToCancel;
-
-  /// widgets/media_bubbles.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Voice hidden · slide to cancel'**
-  String get mediaBubblesVoiceHiddenSlideTo;
-
-  /// widgets/media_bubbles.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Slide to cancel'**
-  String get mediaBubblesSlideToCancel;
 
   /// widgets/media_bubbles.dart
   ///
@@ -12740,6 +12692,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Once a day over Tor. Asks kryfo.app for the newest version and sends nothing about you.'**
   String get settingsCheckForUpdatesHint;
+
+  /// a chat's menu: the switch that disguises your voice notes in this chat, remembered per chat
+  ///
+  /// In en, this message translates to:
+  /// **'Disguise my voice here'**
+  String get voiceDisguiseHere;
+
+  /// the mic's screen reader hint while voice notes in this chat go out disguised
+  ///
+  /// In en, this message translates to:
+  /// **'Your voice is disguised in this chat'**
+  String get voiceDisguisedHere;
+
+  /// the lock above the mic while a voice note is held: slide up and the recording goes on hands free
+  ///
+  /// In en, this message translates to:
+  /// **'Slide up to lock'**
+  String get voiceSlideUpToLock;
+
+  /// a locked voice note: stops the recording and shows it to hear before sending
+  ///
+  /// In en, this message translates to:
+  /// **'Stop recording'**
+  String get voiceStopRecording;
+
+  /// a locked voice note: throws it away unsent
+  ///
+  /// In en, this message translates to:
+  /// **'Delete voice note'**
+  String get voiceDeleteNote;
+
+  /// the chip on a voice note before it is sent, while it goes out disguised
+  ///
+  /// In en, this message translates to:
+  /// **'Disguised'**
+  String get voiceDisguised;
+
+  /// the chip on a voice note before it is sent, while it goes out as recorded
+  ///
+  /// In en, this message translates to:
+  /// **'Your voice'**
+  String get voiceYourVoice;
+
+  /// the chip's screen reader name: switches this note between your voice and a disguised one
+  ///
+  /// In en, this message translates to:
+  /// **'Disguise this note'**
+  String get voiceDisguiseThisNote;
+
+  /// a voice note that was to go out disguised and could not be: it is not sent as it was recorded
+  ///
+  /// In en, this message translates to:
+  /// **'This note could not be disguised, so it was not sent'**
+  String get voiceNotDisguised;
+
+  /// settings: voice notes go out disguised in every chat that has not chosen for itself
+  ///
+  /// In en, this message translates to:
+  /// **'Disguise my voice by default'**
+  String get settingsDisguiseByDefault;
+
+  /// settings: under the default voice disguise switch
+  ///
+  /// In en, this message translates to:
+  /// **'Each chat can change it in its menu'**
+  String get settingsDisguiseByDefaultHint;
 }
 
 class _AppLocalizationsDelegate

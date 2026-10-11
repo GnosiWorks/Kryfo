@@ -28,7 +28,7 @@ import 'shield_sheet.dart';
 import '../notifications.dart' show clearNotificationsFor;
 import 'dev_about_sheet.dart' show devForwardTarget;
 import 'chat_screen.dart'
-    show disguiseWav, SearchHead, Atmo, AtmosphereWash, atmoFromName, firstUrl;
+    show SearchHead, Atmo, AtmosphereWash, atmoFromName, firstUrl;
 import 'package:flutter/material.dart';
 import '../drafts.dart';
 import 'package:flutter/rendering.dart';
@@ -106,7 +106,8 @@ import '../l10n/marked.dart';
 import '../l10n/numbers.dart';
 import '../widgets/video_viewer.dart';
 import '../widgets/photo_viewer.dart' show photoHeroTag;
-import '../widgets/voice_parts.dart' show DisguiseToggle;
+import '../widgets/voice_mic.dart';
+import '../voice_mask.dart' show maskWavOff;
 import '../polls.dart';
 import '../widgets/attach_grid.dart';
 import '../widgets/new_poll_sheet.dart';
@@ -357,6 +358,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // ghost mode, kept as the 1:1 chats keep it. when on, new messages carry
   // a burn timer; receivers compute the burn deadline locally.
   bool _ghost = false;
+  // this group's voice notes go out disguised
   bool _disguise = false;
   int _burnSeconds = 300; // 5 min default, same as 1:1
   // the burn and the auto retry run only while the group is in view, and
@@ -439,9 +441,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       if (mounted) _suppressSticky = false;
     });
     _load();
-    appState.loadDisguisePref().then((d) {
-      if (mounted) setState(() => _disguise = d);
-    });
+    _loadDisguise();
     appState.loadGhostPref().then((p) {
       if (mounted) {
         setState(() {
@@ -1619,20 +1619,30 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     }
   }
 
-  void _toggleDisguise() {
-    setState(() => _disguise = !_disguise);
-    appState.saveDisguisePref(_disguise);
-    HapticFeedback.selectionClick();
+  // its own choice, else on in a burner room, else the default. read again
+  // when the group's page closes, where it is switched
+  Future<void> _loadDisguise() async {
+    final g = await session.getGroup(widget.groupId);
+    final d = await appState.loadChatDisguise(
+      widget.groupId,
+      group: true,
+      burner: g?['room_pub'] != null,
+    );
+    if (mounted) setState(() => _disguise = d);
   }
 
-  void _onVoiceComplete(String path, int ms, bool cancelled) {
-    if (cancelled || path.isEmpty) return;
-    // the last one left while it recorded: the raw voice goes, unsent
-    if (_nobodyToRead()) {
-      unawaited(shredFile(path));
+  void _onVoice(VoiceTake take) {
+    // the chat went while the note was made: the raw voice goes, unsent
+    if (!mounted) {
+      unawaited(shredFile(take.path));
       return;
     }
-    _sendGroupVoice(path, ms);
+    // the last one left while it recorded: the raw voice goes, unsent
+    if (_nobodyToRead()) {
+      unawaited(shredFile(take.path));
+      return;
+    }
+    _sendGroupVoice(take);
   }
 
   Future<void> _showStickers() async {
@@ -1998,11 +2008,19 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     return r;
   }
 
-  Future<void> _sendGroupVoice(String srcPath, int ms) async {
+  Future<void> _sendGroupVoice(VoiceTake take) async {
+    final srcPath = take.path;
+    final disguise = take.disguise;
     // the recorder's file is the voice before any disguise: it goes once read
-    var bytes = await takeRecording(srcPath);
-    if (bytes == null) return;
-    if (_disguise) bytes = disguiseWav(bytes);
+    final raw = await takeRecording(srcPath);
+    if (raw == null) return;
+    final bytes = disguise ? take.masked ?? await maskWavOff(raw) : raw;
+    // never sent as recorded when it was to go disguised
+    if (bytes == null) {
+      if (mounted) showHaloToast(context, l10n.voiceNotDisguised);
+      return;
+    }
+    if (!identical(bytes, raw)) raw.fillRange(0, raw.length, 0);
     // ended while it was recorded: nothing is written
     if (!await _stillHere()) return;
     final uid = newMsgUid();
@@ -2021,7 +2039,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       sending: true,
       filePath: dest.path,
       fileName: 'voice.wav',
-      voiceDisguised: _disguise,
+      voiceDisguised: disguise,
       burnSecs: burn,
     );
     m.fresh = true;
@@ -2041,7 +2059,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         replyTo: reply,
         filePath: dest.path,
         fileName: 'voice.wav',
-        voiceDisguised: _disguise,
+        voiceDisguised: disguise,
         burnSecs: burn,
       ),
     );
@@ -2056,7 +2074,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           replyTo: reply,
           fileName: 'voice.wav',
           voice: true,
-          voiceDisguised: _disguise,
+          voiceDisguised: disguise,
           burnSeconds: burn,
         ),
       ),
@@ -3486,6 +3504,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                           haloRoute(GroupInfoScreen(groupId: widget.groupId)),
                         );
                         _load();
+                        _loadDisguise();
                       },
                     ),
             ),
@@ -3683,8 +3702,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                         onAttach: _showAttachSheet,
                         onStickers: _showStickers,
                         onCamera: _openGroupCamera,
-                        onToggleDisguise: _toggleDisguise,
-                        onVoiceComplete: _onVoiceComplete,
+                        onVoice: _onVoice,
                         mayRecord: () => !_nobodyToRead(),
                       ),
                     ),
@@ -4046,8 +4064,7 @@ class _Composer extends StatelessWidget {
   final VoidCallback onAttach;
   final VoidCallback onStickers;
   final VoidCallback onCamera;
-  final VoidCallback onToggleDisguise;
-  final void Function(String path, int ms, bool cancelled) onVoiceComplete;
+  final void Function(VoiceTake take) onVoice;
   final bool Function() mayRecord;
   // who @ can offer
   final List<MentionCandidate> members;
@@ -4064,8 +4081,7 @@ class _Composer extends StatelessWidget {
     required this.onAttach,
     required this.onStickers,
     required this.onCamera,
-    required this.onToggleDisguise,
-    required this.onVoiceComplete,
+    required this.onVoice,
     required this.mayRecord,
   });
   @override
@@ -4279,21 +4295,10 @@ class _Composer extends StatelessWidget {
                     child: !hasText && !sending
                         ? KeyedSubtree(
                             key: const ValueKey('mic'),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                DisguiseToggle(
-                                  on: disguise,
-                                  label: l10n.groupChatDisguiseVoice,
-                                  onTap: onToggleDisguise,
-                                ),
-                                HoldToTalkMic(
-                                  disguise: disguise,
-                                  onToggleDisguise: onToggleDisguise,
-                                  onComplete: onVoiceComplete,
-                                  mayRecord: mayRecord,
-                                ),
-                              ],
+                            child: HoldToTalkMic(
+                              disguise: disguise,
+                              onSend: onVoice,
+                              mayRecord: mayRecord,
                             ),
                           )
                         : KeyedSubtree(

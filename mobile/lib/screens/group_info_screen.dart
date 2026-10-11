@@ -75,6 +75,8 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   List<String> _media = const [];
   bool _mediaLoaded = false;
   Set<String> _secure = const {};
+  // this group's voice notes go out disguised. null while it is read
+  bool? _disguise;
 
   @override
   void initState() {
@@ -127,6 +129,19 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
       _members = members;
       _loaded = true;
     });
+    final d = await appState.loadChatDisguise(
+      widget.groupId,
+      group: true,
+      burner: g?['room_pub'] != null,
+    );
+    if (mounted) setState(() => _disguise = d);
+  }
+
+  // remembered in the container that holds the group
+  Future<void> _flipDisguise() async {
+    final on = !(_disguise ?? false);
+    setState(() => _disguise = on);
+    await appState.saveChatDisguise(widget.groupId, on, group: true);
   }
 
   // apart from the members, so a long history never holds the list back.
@@ -501,6 +516,13 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
           const SizedBox(height: 18),
           HaloGroup(
             children: [
+              HaloRow(
+                icon: Icons.theater_comedy_outlined,
+                label: l10n.voiceDisguiseHere,
+                toggled: _disguise ?? false,
+                pending: _disguise == null,
+                onTap: _flipDisguise,
+              ),
               HaloRow(
                 icon: Icons.palette_outlined,
                 label: l10n.groupInfoWallpaper,

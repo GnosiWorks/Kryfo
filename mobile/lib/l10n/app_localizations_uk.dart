@@ -1877,9 +1877,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get chatMessage => 'Повідомлення';
 
   @override
-  String get chatDisguiseVoice => 'Змінити голос';
-
-  @override
   String get commonSend => 'Надіслати';
 
   @override
@@ -2705,9 +2702,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get groupChatMessage => 'Повідомлення';
-
-  @override
-  String get groupChatDisguiseVoice => 'Змінити голос';
 
   @override
   String get groupChatSupporter => 'Прихильник';
@@ -5326,13 +5320,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settingsReplaceCurrent => 'Замінює поточну';
 
   @override
-  String get settingsDisguiseVoice => 'Змінити голос';
-
-  @override
-  String get settingsShiftsYourPitchBefore =>
-      'Змінює висоту голосу, перш ніж голосове буде надіслано';
-
-  @override
   String get settingsWhyKryfo => 'Чому Kryfo';
 
   @override
@@ -6484,19 +6471,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get mediaBubblesPlaying => 'Відтворюється';
-
-  @override
-  String get mediaBubblesMicPermissionNeeded => 'Потрібен дозвіл на мікрофон';
-
-  @override
-  String get mediaBubblesReleaseToCancel => 'Відпусти, щоб скасувати';
-
-  @override
-  String get mediaBubblesVoiceHiddenSlideTo =>
-      'Голос приховано · проведи, щоб скасувати';
-
-  @override
-  String get mediaBubblesSlideToCancel => 'Проведи, щоб скасувати';
 
   @override
   String get mediaBubblesSendPhoto => 'Надіслати фото';
@@ -8074,4 +8048,40 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get settingsCheckForUpdatesHint =>
       'Раз на день через Tor. Питає в kryfo.app номер нової версії й нічого не надсилає про тебе.';
+
+  @override
+  String get voiceDisguiseHere => 'Змінювати мій голос тут';
+
+  @override
+  String get voiceDisguisedHere => 'Твій голос у цьому чаті змінено';
+
+  @override
+  String get voiceSlideUpToLock => 'Проведи вгору, щоб закріпити';
+
+  @override
+  String get voiceStopRecording => 'Зупинити запис';
+
+  @override
+  String get voiceDeleteNote => 'Видалити голосове';
+
+  @override
+  String get voiceDisguised => 'Змінено';
+
+  @override
+  String get voiceYourVoice => 'Твій голос';
+
+  @override
+  String get voiceDisguiseThisNote => 'Змінити голос у цьому повідомленні';
+
+  @override
+  String get voiceNotDisguised =>
+      'Не вдалося змінити голос, тому повідомлення не надіслано';
+
+  @override
+  String get settingsDisguiseByDefault =>
+      'Змінювати мій голос за замовчуванням';
+
+  @override
+  String get settingsDisguiseByDefaultHint =>
+      'У кожному чаті це можна змінити в його меню';
 }
