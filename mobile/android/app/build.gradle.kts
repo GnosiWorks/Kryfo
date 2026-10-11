@@ -141,6 +141,29 @@ tasks.named("preBuild") {
     }
 }
 
+// the test engine that acts as if tor were blocked (HALO_TOR_BLOCKED=1) is
+// for the bridgetest debug app only. any other build refuses it.
+android.applicationVariants.configureEach {
+    val variant = this
+    variant.preBuildProvider.configure {
+        doFirst {
+            if (variant.buildType.name != "debug" || System.getenv("HALO_TEST_ID") != "1") {
+                val libs = listOf("arm64-v8a", "armeabi-v7a", "x86_64").map {
+                    file("src/main/jniLibs/$it/libhalo.so").path
+                }
+                val scan = rootProject.file("../../engine/censor-scan.sh").path
+                val p = ProcessBuilder(listOf("bash", scan) + libs).inheritIO().start()
+                if (p.waitFor() != 0) {
+                    throw GradleException(
+                        "the engine in jniLibs is a test build. rebuild it with\n" +
+                            "    cd engine && ./build.sh"
+                    )
+                }
+            }
+        }
+    }
+}
+
 // one apk per abi, each with its own version code. f-droid needs to tell
 // them apart, and a shared code means only one of them is ever offered.
 val abiCodes = mapOf("armeabi-v7a" to 1, "arm64-v8a" to 2, "x86_64" to 3)
