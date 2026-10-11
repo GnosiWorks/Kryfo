@@ -648,7 +648,7 @@ func applyBridgeConf(t *tor.Tor) error {
 		return err
 	}
 	// tor holds these now, unless they changed while it was told
-	linesApplied.Store(gen)
+	noteLinesApplied(gen)
 	return nil
 }
 
@@ -928,6 +928,13 @@ func reconnectOn(t *tor.Tor, addr string, me int64, auto bool) string {
 	}
 	// let it drop what it had before it is told anything else
 	time.Sleep(bounceSettle)
+	// no bridge wanted and none allowed out: nothing to configure, and
+	// the network stays off
+	if why := networkHold(); why == errNoMode || why == errAutoWait {
+		log.Printf("halo: leaving tor off the network (%s)", why)
+		atomic.StoreInt32(&bounceOff, 0)
+		return why
+	}
 	if !step("bridge config") {
 		return superseded
 	}
@@ -1002,6 +1009,12 @@ func reconnectOn(t *tor.Tor, addr string, me int64, auto bool) string {
 	return "ok"
 }
 
+// how long a wake waits for a reconnect under way, and how often it looks
+var (
+	resumeWait = stuckAfter
+	resumeStep = 200 * time.Millisecond
+)
+
 // set while tor is quiet because the app asked for it to be: the check-in
 // mode runs tor for a minute at a time and wants it silent in between.
 var torPaused int32
@@ -1064,10 +1077,14 @@ func torResume() string {
 	if t == nil || t.Control == nil {
 		return "start"
 	}
-	// a reconnect under way puts the network back itself, with its config
-	if atomic.LoadInt32(&torRestarting) == 1 {
-		atomic.StoreInt32(&torPaused, was)
-		return "error: a reconnect is running"
+	// a reconnect under way puts the network back itself, with its config:
+	// waited for, as long as one may run, then refused
+	for t0 := time.Now(); atomic.LoadInt32(&torRestarting) == 1; {
+		if time.Since(t0) >= resumeWait {
+			atomic.StoreInt32(&torPaused, was)
+			return "error: a reconnect is running"
+		}
+		time.Sleep(resumeStep)
 	}
 	// bridges wanted that tor does not hold yet: told first, as a check-in
 	// does, and never woken without them
@@ -1077,6 +1094,13 @@ func torResume() string {
 		}
 	}
 	if why := networkHold(); why != "" {
+		// automatic is awake now and finds its way in: its pass puts a
+		// step in place, and the hold keeps tor off until then
+		if mode, _, _ := bridgeMode(); mode == bmAuto && why != errNoMode {
+			log.Printf("halo: awake, off the network until automatic has a way (%s)", why)
+			autoKick()
+			return "ok"
+		}
 		log.Printf("halo: tor stays asleep (%s)", why)
 		atomic.StoreInt32(&torPaused, was)
 		return why

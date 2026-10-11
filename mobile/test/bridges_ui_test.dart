@@ -766,6 +766,20 @@ void main() {
       expect(app.bridge.skipDirect, isTrue);
     });
 
+    test('a restore already asked for is no refusal', () {
+      for (final r in ['error: restore used', 'error: mode already set']) {
+        _eng.restoreAnswer = r;
+        final app = AppState()
+          ..bridgeSetupForTest = const BridgeSetup(
+            choice: BridgeChoice.friend,
+            friendLines: 'obfs4 192.0.2.1:443 A cert=x',
+          );
+        app.restoreBridgeAtBoot();
+        expect(app.bridgeChoice, BridgeChoice.friend, reason: r);
+        expect(app.bridge.skipDirect, isFalse, reason: r);
+      }
+    });
+
     test('the fallback is kept at once, the yes and country with it', () async {
       _eng.restoreAnswer = 'error: lines_bad';
       final app = AppState()

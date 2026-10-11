@@ -491,7 +491,19 @@ func autoUseLines(gen int64, lines []string) (bool, bool) {
 
 // puts a set of lines in place, or none for direct. the same set again
 // changes nothing. true when something changed.
+func hasDirect(steps []autoStep) bool {
+	for _, s := range steps {
+		if s.Method == "direct" {
+			return true
+		}
+	}
+	return false
+}
+
 func useLines(lines []string) bool {
+	if h := useLinesHook; h != nil {
+		h()
+	}
 	good, _, _ := sortBridgeLines(strings.Join(lines, "\n"))
 	on := len(good) > 0
 	bridgeMu.Lock()
@@ -754,6 +766,12 @@ func runSteps(p passCtx, kind string, validated bool, opts modeOpts, steps []aut
 			moatAt = i
 			if !moatDone && consentNow() == "yes" {
 				moatDone = true
+				// tor still out on its own, and this pass has no direct step:
+				// off the network before the tor project is asked
+				if torStarted() && !torIsPaused() && !bridgesEnabled() && !hasDirect(steps) {
+					autoDirectOK.Store(false)
+					_ = reconnectAuto()
+				}
 				extra, r := autoAskMoat(p, opts)
 				if r != "" {
 					return r

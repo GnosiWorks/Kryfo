@@ -51,6 +51,21 @@ func noteLinesChanged() {
 
 func bridgesApplied() bool { return linesApplied.Load() == linesGen.Load() }
 
+// tor holds the lines of gen now. a late answer for older lines never
+// takes the place of a newer one
+func noteLinesApplied(gen int64) {
+	for {
+		cur := linesApplied.Load()
+		if gen <= cur || linesApplied.CompareAndSwap(cur, gen) {
+			return
+		}
+	}
+}
+
+// a check that useLines is never seen with the mode already known, for the
+// tests
+var useLinesHook func()
+
 // why tor may not go on the network now, "" when it may. without bridges
 // only when the mode is direct, or automatic's own direct step runs, and
 // with bridges only once tor really holds them

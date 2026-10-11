@@ -561,7 +561,7 @@ func bridgeTorArgs() []string {
 	}
 	log.Printf("bridges: handing tor %d bridge lines", len(lines))
 	// tor starts holding these, unless they changed while read
-	linesApplied.Store(gen)
+	noteLinesApplied(gen)
 	return args
 }
 

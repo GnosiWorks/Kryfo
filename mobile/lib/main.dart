@@ -12817,7 +12817,10 @@ class AppState extends ChangeNotifier {
       m = _bridge.engineMode();
     }
     final r = engine.restoreBridgeMode(m!.$1, m.$2);
-    if (r.startsWith('error') && r != 'error: mode already set') {
+    // already set, or the restore already asked for: the engine has a
+    // mode, not a refusal
+    const taken = {'error: mode already set', 'error: restore used'};
+    if (r.startsWith('error') && !taken.contains(r)) {
       dlog('bridges: kept mode refused ($r)');
       // kept at once, the yes and the country with it, as the engine does
       _bridge = _bridge.copyWith(choice: BridgeChoice.auto, skipDirect: true);
