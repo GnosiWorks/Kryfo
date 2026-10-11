@@ -12567,14 +12567,22 @@ class AppState extends ChangeNotifier {
     dlog('delivery: tor stopped ($r)');
     // a stop the control port refused leaves tor on the network, and the
     // watchdog leaves a held tor alone: the stop is tried again
-    if (r.startsWith('error')) _sleepLater();
+    if (r.startsWith('error')) {
+      _sleepLater();
+    } else {
+      _sleepTries = 0;
+    }
     notifyListeners();
   }
 
-  // for as long as tor is meant to sleep
+  // for as long as tor is meant to sleep, half a minute and then twice as
+  // long each time, up to ten minutes
+  int _sleepTries = 0;
   void _sleepLater() {
     _sleepAgain?.cancel();
-    _sleepAgain = Timer(const Duration(seconds: 30), () {
+    final wait = Duration(seconds: min(600, 30 << min(_sleepTries, 5)));
+    _sleepTries++;
+    _sleepAgain = Timer(wait, () {
       if (!_torHeld || haloWiping || _inFront) return;
       if (_deliveryMode == DeliveryMode.always) return;
       unawaited(_torSleep());
@@ -12584,6 +12592,7 @@ class AppState extends ChangeNotifier {
   Future<bool> _torWakeNow() async {
     _wakeAgain?.cancel();
     _sleepAgain?.cancel();
+    _sleepTries = 0;
     if (!_torHeld) return true;
     // 'ok': tor was asleep and is waking. 'start': there is no tor in this
     // process yet. either way the start call below hands back the address
