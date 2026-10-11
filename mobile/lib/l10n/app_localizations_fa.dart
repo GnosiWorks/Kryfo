@@ -5144,7 +5144,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get settingsVersion => 'نسخه';
 
   @override
-  String get settings030Alpha => '0.5.0 · آلفا';
+  String get settings030Alpha => '0.5.1 · آلفا';
 
   @override
   String get settingsReportAnIssue => 'گزارش مشکل';
