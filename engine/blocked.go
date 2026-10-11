@@ -94,9 +94,21 @@ var connTags = map[string]bool{
 // tags past the handshake with the first hop
 var handshakeDoneTags = map[string]bool{"handshake_done": true, "ap_handshake_done": true}
 
-// the tags between a finished handshake and a first circuit
+// a stall at these after a handshake is a censor letting the handshake
+// through and cutting what follows. requesting_status is one of them: a
+// consensus request that never gets a byte back is cut, not slow
 var noCircuitTags = map[string]bool{
-	"handshake_done": true, "onehop_create": true, "ap_handshake_done": true, "circuit_create": true,
+	"handshake_done": true, "onehop_create": true, "requesting_status": true,
+}
+
+// the same for the path with a cached consensus, which goes straight from
+// its handshake to the first circuit. after a directory download they are
+// only a slow first circuit
+var cachedNoCircuitTags = map[string]bool{"ap_handshake_done": true, "circuit_create": true}
+
+// tags of a directory download under way
+var dirTags = map[string]bool{
+	"loading_status": true, "loading_keys": true, "requesting_descriptors": true, "loading_descriptors": true,
 }
 
 // the ways a censor ends a connection to a relay
@@ -123,6 +135,8 @@ type attemptSeen struct {
 	countAt  time.Time // when COUNT last rose
 	countUp  int       // how many times it rose
 	hsDoneAt time.Time
+	// tor got bytes of the directory in this attempt
+	dirSeen bool
 	// a transport listener's first request after the switch, and the last
 	// time its snowflake reported progress
 	firstDial time.Time
@@ -171,8 +185,15 @@ func (a *attemptSeen) circ(status string, flags []string, now time.Time) {
 
 func (a *attemptSeen) bootstrap(p bootPhase, fresh bool, now time.Time) {
 	if !fresh || p.Progress >= 100 {
+		// getting to the end is progress too
+		if fresh && a.phaseOK && p.Progress > a.phase.Progress {
+			a.tagMoved = now
+		}
 		a.phaseOK = false
 		return
+	}
+	if dirTags[p.Tag] || (p.Progress >= 30 && p.Progress < 75) {
+		a.dirSeen = true
 	}
 	if !a.phaseOK || p.Tag != a.phase.Tag {
 		a.tagSince = now
@@ -230,7 +251,8 @@ func (a *attemptSeen) blockedWhy(now time.Time) string {
 		// past the handshake and no further: a censor that lets the
 		// handshake through and cuts what follows. a bootstrap that got
 		// on to the consensus is no such thing
-		if from := a.hsDoneAt; !from.IsZero() && noCircuitTags[a.phase.Tag] {
+		stuck := noCircuitTags[a.phase.Tag] || (cachedNoCircuitTags[a.phase.Tag] && !a.dirSeen)
+		if from := a.hsDoneAt; !from.IsZero() && stuck {
 			if a.tagMoved.After(from) {
 				from = a.tagMoved
 			}

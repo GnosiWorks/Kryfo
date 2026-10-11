@@ -259,3 +259,50 @@ func TestSteadyProgressKeepsAMethod(t *testing.T) {
 		}
 	}
 }
+
+// a fresh bootstrap that got the directory and then waits long for its
+// first circuit is slow, not blocked. the same wait with a cached
+// consensus, or a consensus request that never gets a byte, is a censor
+func TestSlowFirstCircuitIsNotBlocked(t *testing.T) {
+	t0 := time.Unix(1000, 0)
+	fresh := []bootPhase{
+		{Progress: 5, Tag: "conn"}, {Progress: 14, Tag: "handshake"}, {Progress: 15, Tag: "handshake_done"},
+		{Progress: 20, Tag: "onehop_create"}, {Progress: 25, Tag: "requesting_status"},
+		{Progress: 30, Tag: "loading_status"}, {Progress: 45, Tag: "requesting_descriptors"},
+		{Progress: 50, Tag: "loading_descriptors"}, {Progress: 75, Tag: "enough_dirinfo"},
+		{Progress: 80, Tag: "ap_conn"}, {Progress: 89, Tag: "ap_handshake_done"}, {Progress: 90, Tag: "circuit_create"},
+	}
+	a := newSeen(t0)
+	a.orOK = true
+	for i, p := range fresh {
+		a.bootstrap(p, true, t0.Add(time.Duration(i)*5*time.Second))
+	}
+	last := t0.Add(time.Duration(len(fresh)-1) * 5 * time.Second)
+	if v, why := judgeDirect(a, true, last.Add(directNoCircuit)); v == seenBlocked {
+		t.Fatalf("a slow first circuit after the directory judged blocked: %s", why)
+	}
+	// the cached path: handshake, then nothing
+	b := newSeen(t0)
+	b.orOK = true
+	b.bootstrap(bootPhase{Progress: 80, Tag: "ap_conn"}, true, t0)
+	b.bootstrap(bootPhase{Progress: 89, Tag: "ap_handshake_done"}, true, t0.Add(time.Second))
+	if v, why := judgeDirect(b, true, t0.Add(time.Second+directNoCircuit)); v != seenBlocked || why != "no circuit" {
+		t.Fatalf("cached path stalled after its handshake: %s %s", v, why)
+	}
+	// the consensus request after the handshake gets nothing back
+	c := newSeen(t0)
+	c.orOK = true
+	for i, p := range fresh[:5] {
+		c.bootstrap(p, true, t0.Add(time.Duration(i)*time.Second))
+	}
+	if v, why := judgeDirect(c, true, t0.Add(4*time.Second+directNoCircuit)); v != seenBlocked || why != "no circuit" {
+		t.Fatalf("consensus request cut after the handshake: %s %s", v, why)
+	}
+	// reaching 100% is progress
+	d := newSeen(t0)
+	d.bootstrap(bootPhase{Progress: 90, Tag: "circuit_create"}, true, t0)
+	d.bootstrap(bootPhase{Progress: 100, Tag: "done"}, true, t0.Add(10*time.Second))
+	if !d.tagMoved.Equal(t0.Add(10 * time.Second)) {
+		t.Fatal("reaching 100% was not progress")
+	}
+}
