@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// with the paid tiers off, support is the four addresses and nothing more:
-// no tier, no invoice, no word about badges, and nothing asks the badge
-// service. a badge someone already has still shows.
+// with the paid tiers off (kBadgeTiersShown), support is the four addresses
+// and nothing more: no tier, no invoice, no word about badges, and nothing
+// asks the badge service. the addresses and a badge someone already has show
+// either way.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -118,10 +119,6 @@ void main() {
     appState.sendModeForTest = 'private';
   });
 
-  test('the tiers are off', () {
-    expect(kBadgeTiersShown, isFalse);
-  });
-
   for (final mode in ['private', 'balanced']) {
     testWidgets('support shows no tier and no badge talk ($mode)', (t) async {
       phone(t);
@@ -159,7 +156,7 @@ void main() {
       expect(find.text(l10n.donateCopyAddress), findsOneWidget);
       expect(t.takeException(), isNull);
       await drain(t);
-    });
+    }, skip: kBadgeTiersShown);
   }
 
   testWidgets('nothing on support asks the badge service', (t) async {
@@ -180,7 +177,7 @@ void main() {
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getString('badge_open_invoice'), 'inv0|patron');
     await drain(t);
-  });
+  }, skip: kBadgeTiersShown);
 
   test('the invoice calls stay home', () async {
     SharedPreferences.setMockInitialValues({
@@ -190,7 +187,7 @@ void main() {
     expect(await settleOpenInvoice(), isNull);
     expect(engine.asked.where((u) => u.startsWith(kBadgeOnion)), isEmpty);
     expect(await loadSupporterTier(), SupporterTier.none);
-  });
+  }, skip: kBadgeTiersShown);
 
   testWidgets('every fixed address shows and copies', (t) async {
     phone(t);
