@@ -11511,9 +11511,13 @@ class AppState extends ChangeNotifier {
     final cache = await st.read(key: 'bridge_cache');
     if (cache != null) engine.setBridgeCache(cache);
     if (_firstRunAsk) {
+      // tor waits for the answer, so the splash does not say it starts
+      final phase = bootPhase;
+      bootPhase = '';
       _firstRunPick = Completer<void>();
       notifyListeners();
       await _firstRunPick!.future;
+      bootPhase = phase;
     }
     final r = applyBridgeNow();
     dlog('bridges: ${_bridge.choice.id}: $r');

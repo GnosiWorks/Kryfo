@@ -744,7 +744,9 @@ class _InfoRow extends StatelessWidget {
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     child: Row(
       children: [
-        Flexible(
+        // a long label wraps; the value keeps the rest of the row
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 130),
           child: Text(
             label,
             style: HaloType.sans(size: 14, color: HaloColors.text),
@@ -931,7 +933,8 @@ class _CountryRowState extends State<_CountryRow> {
           padding: const EdgeInsetsDirectional.fromSTEB(16, 14, 12, 14),
           child: Row(
             children: [
-              Flexible(
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 130),
                 child: Text(
                   l10n.bridgesCountry,
                   style: HaloType.sans(size: 14, color: HaloColors.text),
