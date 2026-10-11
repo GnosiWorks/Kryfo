@@ -1986,7 +1986,7 @@
   "flowWipeDoneLine": "Auf dem Sperrbildschirm deutet nichts auf sie hin.",
   "flowDecoyTitle": "Eine Tarn-PIN",
   "flowDecoy1": "Öffnet ein leeres Kryfo, wie frisch installiert.",
-  "flowDecoyFingerOff": "Das Entsperren mit Fingerabdruck ist aus, solange eine Tarn-PIN gesetzt ist.",
+  "flowDecoyFinger": "Solange eine Tarn-PIN gesetzt ist, öffnet sich diese App nur mit deiner PIN. Ist in der Tarnung der Fingerabdruck an, öffnet ein Finger die Tarnung, nie diese App.",
   "flowDecoyDigits": "Nimm genauso viele Ziffern wie bei deiner PIN, denn wer zusieht, kann die Punkte zählen.",
   "flowDecoyShade": "Benachrichtigungen, die schon in der Leiste sind, wurden schon gesehen. Solange die Tarnung offen ist, kommen keine neuen.",
   "flowDecoyChoose": "Wähle eine Tarn-PIN",

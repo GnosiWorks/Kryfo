@@ -7608,8 +7608,8 @@ class AppLocalizationsUk extends AppLocalizations {
       'Відкриває порожній Kryfo, наче його щойно встановили.';
 
   @override
-  String get flowDecoyFingerOff =>
-      'Розблокування відбитком вимикається, поки встановлено PIN-приманку.';
+  String get flowDecoyFinger =>
+      'Поки встановлено PIN-приманку, цей застосунок відкривається лише за PIN-кодом. Якщо в приманці ввімкнено відбиток, палець відкриє приманку, але ніколи не цей застосунок.';
 
   @override
   String get flowDecoyDigits =>

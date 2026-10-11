@@ -12039,11 +12039,11 @@ abstract class AppLocalizations {
   /// **'Opens an empty Kryfo, as if just installed.'**
   String get flowDecoy1;
 
-  /// decoy PIN setup and the how App lock works sheet, only on phones with fingerprint unlock
+  /// decoy PIN setup and the how App lock works sheet, only on phones with fingerprint unlock: while a decoy PIN is set the real app takes its PIN only, and a fingerprint opens only the decoy, if fingerprint was turned on inside the decoy
   ///
   /// In en, this message translates to:
-  /// **'Fingerprint unlock turns off while a decoy PIN is set.'**
-  String get flowDecoyFingerOff;
+  /// **'While a decoy PIN is set, this app opens with your PIN only. If fingerprint is on in the decoy, a finger opens the decoy, never this app.'**
+  String get flowDecoyFinger;
 
   /// decoy PIN setup; also under the pad when choosing it
   ///

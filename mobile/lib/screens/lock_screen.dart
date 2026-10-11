@@ -98,8 +98,9 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
   }
 
   // fingerprint is on, but a finger added since (or an update) put it to
-  // sleep until the PIN is typed once
-  bool get _fingerOn => _lock.biometric && _lock.bioSupported;
+  // sleep until the PIN is typed once. the same screen whatever a finger
+  // opens
+  bool get _fingerOn => _lock.fingerUnlock && _lock.bioSupported;
   bool get _fingerReady => _fingerOn && !_lock.bioStale;
 
   void _onLock() {

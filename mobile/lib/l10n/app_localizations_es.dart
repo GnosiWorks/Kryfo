@@ -7533,8 +7533,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get flowDecoy1 => 'Abre un Kryfo vacío, como recién instalado.';
 
   @override
-  String get flowDecoyFingerOff =>
-      'El desbloqueo con huella se desactiva mientras haya un PIN señuelo.';
+  String get flowDecoyFinger =>
+      'Mientras haya un PIN señuelo, esta app se abre solo con tu PIN. Si la huella está activada en el señuelo, un dedo abre el señuelo, nunca esta app.';
 
   @override
   String get flowDecoyDigits =>

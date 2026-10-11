@@ -2057,8 +2057,8 @@ void main() {
     );
     expect(l.pinsUnlockWithFingerprint, "Unlock with fingerprint");
     expect(
-      l.flowDecoyFingerOff,
-      "Fingerprint unlock turns off while a decoy PIN is set.",
+      l.flowDecoyFinger,
+      "While a decoy PIN is set, this app opens with your PIN only. If fingerprint is on in the decoy, a finger opens the decoy, never this app.",
     );
     expect(l.pinsWipePin, "Wipe PIN");
     expect(l.pinsNeedsAPinFirst, "Needs a PIN first");

@@ -7459,8 +7459,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get flowDecoy1 => 'Mở một Kryfo trống, như vừa mới cài.';
 
   @override
-  String get flowDecoyFingerOff =>
-      'Mở khóa bằng vân tay sẽ tắt khi đã đặt mã PIN ngụy trang.';
+  String get flowDecoyFinger =>
+      'Khi đã đặt mã PIN ngụy trang, ứng dụng này chỉ mở bằng mã PIN của bạn. Nếu phần ngụy trang bật vân tay, ngón tay sẽ mở phần ngụy trang, không bao giờ mở ứng dụng này.';
 
   @override
   String get flowDecoyDigits =>

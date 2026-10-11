@@ -3,6 +3,7 @@
 // engine kept in memory, and the app side as a list of chats that a hide
 // moves and a remove brings back
 import 'dart:convert';
+import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart' hide LockState;
@@ -141,11 +142,63 @@ class NoBio implements LockBio {
   @override
   Future<String> state() async => 'none';
   @override
-  Future<bool> enable() async => false;
+  Future<String?> seal(String opens) async => null;
   @override
   Future<void> disable() async {}
   @override
-  Future<String> unlock(String title, String cancel) async => 'none';
+  Future<BioOpened> unlock(String title, String cancel, String seal) async =>
+      const BioOpened('none');
+}
+
+// a phone with a finger, as BioKey.kt answers: a new key for each seal, a
+// seal opens only with the key it was made for, and every seal has the same
+// length whatever it holds. [answer] is what the prompt ends with
+class SealBio implements LockBio {
+  final calls = <String>[];
+  String key = 'none';
+  String answer = 'ok';
+  // the seals the key opens, and to what
+  final _opens = <String, String>{};
+  final _rnd = Random(3);
+
+  @override
+  Future<bool> ready() async => true;
+  @override
+  Future<String> state() async => key;
+  @override
+  Future<String?> seal(String opens) async {
+    calls.add('seal');
+    _opens.clear();
+    key = 'ok';
+    final s = List.generate(
+      257,
+      (_) => _rnd.nextInt(256).toRadixString(16).padLeft(2, '0'),
+    ).join();
+    _opens[s] = opens;
+    return s;
+  }
+
+  @override
+  Future<void> disable() async {
+    calls.add('disable');
+    _opens.clear();
+    key = 'none';
+  }
+
+  // a finger added: the phone drops the key
+  void addFinger() {
+    _opens.clear();
+    key = 'invalidated';
+  }
+
+  @override
+  Future<BioOpened> unlock(String title, String cancel, String seal) async {
+    calls.add('unlock');
+    if (key != 'ok') return BioOpened(key);
+    if (answer != 'ok') return BioOpened(answer);
+    final o = _opens[seal];
+    return o == null ? const BioOpened('none') : BioOpened('ok', o);
+  }
 }
 
 const appPin = '1234';
