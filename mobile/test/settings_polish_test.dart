@@ -299,27 +299,33 @@ void main() {
 
   group('gif search row', () {
     for (final quiet in [false, true]) {
-      testWidgets(quiet ? 'a decoy has none' : 'the everyday app has it', (
-        t,
-      ) async {
-        SharedPreferences.setMockInitialValues({
-          'battery_opt_prompt_seen': true,
-          'miui_autostart_prompt_seen': true,
-        });
-        await devWorld(
-          container: quiet ? HaloContainer.decoy : HaloContainer.everyday,
-        );
-        t.view.physicalSize = const Size(1000, 6000);
-        t.view.devicePixelRatio = 2;
-        addTearDown(t.view.reset);
-        await t.pumpWidget(devApp(const SettingsScreen()));
-        await t.pump(const Duration(seconds: 1));
-        expect(
-          find.text(l10n.settingsGifSearch),
-          quiet ? findsNothing : findsOneWidget,
-        );
-        await devClose(t);
-      });
+      testWidgets(
+        quiet
+            ? 'a decoy has it too, its own switch'
+            : 'the everyday app has it',
+        (t) async {
+          SharedPreferences.setMockInitialValues({
+            'battery_opt_prompt_seen': true,
+            'miui_autostart_prompt_seen': true,
+          });
+          final c = quiet ? HaloContainer.decoy : HaloContainer.everyday;
+          await devWorld(container: c);
+          t.view.physicalSize = const Size(1000, 6000);
+          t.view.devicePixelRatio = 2;
+          addTearDown(t.view.reset);
+          await t.pumpWidget(devApp(const SettingsScreen()));
+          await t.pump(const Duration(seconds: 1));
+          expect(find.text(l10n.settingsGifSearch), findsOneWidget);
+          await t.tap(find.text(l10n.settingsGifSearch));
+          await rest(t);
+          await t.tap(find.text(l10n.gifTurnOn));
+          await rest(t);
+          final prefs = await SharedPreferences.getInstance();
+          expect(prefs.getBool(c.key('kryfo.gif.on')), isTrue);
+          if (quiet) expect(prefs.getBool('kryfo.gif.on'), isNull);
+          await devClose(t);
+        },
+      );
     }
   });
 

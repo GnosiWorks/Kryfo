@@ -11,12 +11,16 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
+import 'package:kryfo/gifs/gif_engine.dart';
 import 'package:kryfo/gifs/gif_opt_in.dart';
 import 'package:kryfo/gifs/gif_panel.dart';
 import 'package:kryfo/gifs/gif_picture.dart';
 import 'package:kryfo/gifs/gif_source.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/l10n/numbers.dart';
+import 'package:kryfo/main.dart'
+    show HaloDb, HaloEngine, appState, useDatabasesForTest, useEngineForTest;
+import 'package:kryfo/session.dart';
 import 'package:kryfo/stickers/sticker_pack.dart';
 import 'package:kryfo/stickers/sticker_recents.dart';
 import 'package:kryfo/stickers/sticker_sheet.dart';
@@ -75,6 +79,31 @@ class _FakeGifs implements GifSource {
   }
 }
 
+// the engine's gif lane, counted: a quiet session calls none of it
+class _GifLane implements HaloEngine {
+  final calls = <String>[];
+  @override
+  Future<String> gifPost(String url, String body) async {
+    calls.add(url);
+    return 'error: wire';
+  }
+
+  @override
+  Future<String> gifGet(String url) async {
+    calls.add(url);
+    return 'error: wire';
+  }
+
+  @override
+  Future<String> gifGetFile(String url, String path) async {
+    calls.add(url);
+    return 'error: wire';
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
+}
+
 class _Harness {
   _Harness(this.t, this.lib);
   final WidgetTester t;
@@ -120,7 +149,8 @@ class _Harness {
     );
   }
 
-  Future<void> open({bool quiet = false}) async {
+  // [tabs]: the app's own, as a chat hands them in
+  Future<void> open({GifTabs? tabs}) async {
     closed = false;
     picked = null;
     showHaloSheet<SheetPick>(
@@ -129,15 +159,17 @@ class _Harness {
       builder: (_) => StickerSheet(
         recents: StickerRecents(HaloContainer.everyday),
         library: lib,
-        gifs: GifTabs(
-          source: quiet ? null : gifs,
-          route: GifRoute.onion,
-          loadOn: () async => on,
-          saveOn: (v) async {
-            on = v;
-            saved.add(v);
-          },
-        ),
+        gifs:
+            tabs ??
+            GifTabs(
+              source: gifs,
+              route: GifRoute.onion,
+              loadOn: () async => on,
+              saveOn: (v) async {
+                on = v;
+                saved.add(v);
+              },
+            ),
       ),
     ).then((r) {
       picked = r;
@@ -407,25 +439,52 @@ void main() {
   });
 
   group('the picker', () {
-    testWidgets('tabs: stickers, gifs, on this phone; a quiet session has '
-        'no gifs', (t) async {
+    testWidgets('tabs: stickers, gifs, on this phone', (t) async {
       final h = _Harness(t, lib);
       await h.pump();
       await h.open();
       expect(find.text('Stickers'), findsOneWidget);
       expect(find.text('GIFs'), findsOneWidget);
       expect(find.text('On this phone'), findsOneWidget);
-      Navigator.of(h.home).pop();
-      await h.frames(20);
-
-      await h.open(quiet: true);
-      expect(find.text('GIFs'), findsNothing);
-      expect(find.text('On this phone'), findsOneWidget);
       await h.tab('On this phone');
       await t.tap(find.text('Choose a GIF'));
       await h.frames(20);
       expect(h.picked, isA<PhoneGifPick>());
       expect(h.gifs.asked, isEmpty);
+    });
+
+    testWidgets('a decoy has the gifs tab and its own switch, and its '
+        'search reaches nothing', (t) async {
+      final wire = _GifLane();
+      useEngineForTest(wire);
+      appState.sendModeForTest = 'private';
+      final decoy = HaloDb(HaloContainer.decoy);
+      useDatabasesForTest(HaloDb(), Session(decoy));
+      addTearDown(() {
+        final e = HaloDb();
+        useDatabasesForTest(e, Session(e));
+      });
+      final h = _Harness(t, lib);
+      await h.pump();
+      await h.open(tabs: appGifTabs());
+      expect(find.text('Stickers'), findsOneWidget);
+      expect(find.text('GIFs'), findsOneWidget);
+      expect(find.text('On this phone'), findsOneWidget);
+      await h.tab('GIFs');
+      expect(find.text('Search GIFs, privately'), findsOneWidget);
+      await h.reveal('Turn on GIF search');
+      await t.tap(find.text('Turn on GIF search'));
+      await h.frames(30);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getBool('d.kryfo.gif.on'), isTrue);
+      expect(prefs.getBool('kryfo.gif.on'), isNull);
+      expect(find.text("Couldn't reach Kryfo's GIF service."), findsOneWidget);
+      await t.enterText(find.byType(TextField), 'cats');
+      await h.frames(40);
+      expect(find.text("Couldn't reach Kryfo's GIF service."), findsOneWidget);
+      expect(wire.calls, isEmpty);
+      Navigator.of(h.home).pop();
+      await h.frames(20);
     });
 
     testWidgets('off: the opt-in first, nothing asked until it is on', (
