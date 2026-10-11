@@ -1070,74 +1070,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get commonUnblock => 'Engeli kaldır';
 
   @override
-  String get bridgesThatWasNotIt => 'Olmadı. İşte bir tane daha.';
-
-  @override
-  String get bridgesMoatFailed =>
-      'tor projesine ulaşılamadı. Bir dakika sonra tekrar dene ya da aşağıya bir köprü satırı yapıştır.';
-
-  @override
-  String get bridgesGotBridgesSaveTo =>
-      'Köprüler alındı · kullanmak için kaydet';
-
-  @override
   String get bridgesConnected => 'Bağlı';
-
-  @override
-  String get bridgesNotThroughYetTor =>
-      'Henüz geçemedi. Tor denemeye devam ediyor';
-
-  @override
-  String get bridgesBridges => 'Köprüler';
-
-  @override
-  String get bridgesTorIsBlockedWhere => 'Bulunduğun yerde tor engelli mi?';
-
-  @override
-  String get bridgesBridgesDisguiseYourConnection =>
-      'Köprüler bağlantını kamufle eder, böylece dışarı çıkabilir. Bir giriş yolu seç, kaydet; tor onun üzerinden yeniden bağlanır.';
-
-  @override
-  String get bridgesBridgesOnlyChangeHow =>
-      'Köprüler yalnızca tor’un nasıl bağlandığını değiştirir ve şu an Onion modunda değilsin. Burada ayarladığın kaydedilir, sadece geri geçene kadar bir işe yaramaz.';
 
   @override
   String get bridgesFromTheTorProject => 'Tor projesinden';
 
   @override
-  String get bridgesNoise => 'Gürültü';
-
-  @override
-  String get bridgesGood => 'İyi';
-
-  @override
-  String get bridgesMakesTorTrafficLook =>
-      'Tor trafiğini belirli hiçbir şeye benzemeyecek hale getirir. Engellenen çoğu ağ için en iyi varsayılan. Bir captcha çözersin, ardından sana birkaç satır verilir.';
-
-  @override
-  String get bridgesPrivateBridge => 'Özel köprü';
-
-  @override
-  String get bridgesALineFromA => 'Bir arkadaştan gelen satır';
-
-  @override
-  String get bridgesWhateverTheLineSays => 'Satır ne diyorsa';
-
-  @override
-  String get bridgesDepends => 'Duruma göre';
-
-  @override
-  String get bridgesGotABridgeLine =>
-      'Güvendiğin birinden ya da bridges.torproject.org sitesinden bir köprü satırı mı aldın? Buraya yapıştır. Yalnızca obfs4 satırları; Kryfo diğerlerini henüz desteklemiyor.';
-
-  @override
   String get bridgesPasteFromClipboard => 'Panodan yapıştır';
-
-  @override
-  String get bridgesUseBridges => 'Köprü kullan';
-
-  @override
-  String get bridgesNoLinesYet => 'Henüz satır yok';
 
   @override
   String bridges1LineSaved(int count) {
@@ -1155,65 +1094,7 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get bridgesRestartingTor => 'Tor yeniden başlıyor…';
-
-  @override
-  String bridgesFindingABridgeS(Object elapsed) {
-    return 'Köprü aranıyor… $elapsed sn';
-  }
-
-  @override
-  String bridgesStillTryingS(Object elapsed) {
-    return 'Hâlâ deneniyor… $elapsed sn';
-  }
-
-  @override
-  String get bridgesApplying => 'Uygulanıyor…';
-
-  @override
-  String get bridgesSaveAndReconnect => 'Kaydet ve yeniden bağlan';
-
-  @override
-  String get bridgesWhatABridgeIs => 'Köprü nedir';
-
-  @override
-  String get bridgesATorEntryPoint =>
-      'Kimsenin yayımlamadığı bir tor giriş noktası; bağlantı tor’a benzemesin diye bir sarmalayıcı üzerinden ulaşılır. Rotanın geri kalanı her zamanki üç atlamadır.';
-
-  @override
-  String get bridgesLooksLike => 'Görünüşü';
-
-  @override
-  String get bridgesSpeed => 'Hız';
-
-  @override
-  String get bridgesGetBridges => 'Köprü al';
-
-  @override
-  String get bridgesAskTheTorProject =>
-      'Doğrudan tor projesinden iste. Botlar stoku tüketemesin diye bir bulmaca çözersin.';
-
-  @override
-  String get bridgesTypeWhatYouSee => 'Gördüğünü yaz. Küçük harf de olur.';
-
-  @override
-  String get bridgesThisOneRequestDoes =>
-      'Bu tek istek tor üzerinden gitmez - gidemez, çünkü çalışmayan zaten tor. Ağını kim işletiyorsa tor projesiyle bağlantı kurduğunu görecek. Bulunduğun yerde tek başına bu bile sorunsa, köprüleri başka bir yerden al ve aşağıya yapıştır.';
-
-  @override
-  String get bridgesCouldNotDrawThe => 'Bulmaca çizilemedi';
-
-  @override
-  String get bridgesAnswer => 'Cevap';
-
-  @override
   String get bridgesAsking => 'İsteniyor…';
-
-  @override
-  String get bridgesRequestBridges => 'Köprü iste';
-
-  @override
-  String get bridgesDifferentPuzzle => 'Başka bulmaca';
 
   @override
   String get cameraNoCameraOnThis => 'Bu telefonda kamera yok';
@@ -3087,33 +2968,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get homeKeepWaiting => 'Beklemeye devam et';
 
   @override
-  String get homeNotConnecting => 'Bağlanamıyor';
-
-  @override
-  String get homeBridgesAreOnAnd =>
-      'Köprüler açık ama tor hâlâ geçemedi. Köprüler daha yavaştır ve bazıları haber vermeden ölür. Ağın tor’u engellemiyorsa doğrudan bağlanmak daha hızlı ve daha güvenilirdir.';
-
-  @override
-  String get homeGoingDirectReconnecting => 'Köprüsüz · yeniden bağlanıyor';
-
-  @override
-  String get homeTurnBridgesOff => 'Köprüleri kapat';
-
-  @override
-  String get homeStillTrying => 'Hâlâ deneniyor';
-
-  @override
-  String get homeTorIsNotGetting =>
-      'Tor geçemiyor. Bazı ağlar onu bilerek engeller. Kendi aktarıcımız tek ve sıradan bir bağlantıdır, genelde yine de çalışır - ya da köprüler, ama onları kurmak daha uzun sürer.';
-
-  @override
   String get homeSwitchedToRelay => 'Aktarıcıya geçildi';
 
   @override
   String get homeUseOurRelay => 'Aktarıcımızı kullan';
-
-  @override
-  String get homeBridges => 'Köprüler';
 
   @override
   String get homeOffline => 'Çevrimdışı';
@@ -5174,12 +5032,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsOnion3Hops => 'Onion · 3 atlama';
 
   @override
-  String get settingsBridges => 'Köprüler';
-
-  @override
-  String get settingsForNetworksThatBlock => 'Tor’u engelleyen ağlar için';
-
-  @override
   String get settingsGettingMessages => 'Mesaj alma';
 
   @override
@@ -6704,9 +6556,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get bridgesConnecting => 'Bağlanıyor';
 
   @override
-  String get bridgesSavedTag => 'Kaydedildi';
-
-  @override
   String get restoreMade => 'Oluşturuldu';
 
   @override
@@ -6855,7 +6704,232 @@ class AppLocalizationsTr extends AppLocalizations {
   String get confirmSheetCancel => 'İptal';
 
   @override
-  String bridgesSaved(int count) {
+  String get bridgesConnection => 'Bağlantı';
+
+  @override
+  String get bridgesAutomatic => 'Otomatik';
+
+  @override
+  String get bridgesKryfoFindsAWay =>
+      'Kryfo bulunduğun yerde işe yarayan bir yol bulur.';
+
+  @override
+  String get bridgesDirect => 'Doğrudan';
+
+  @override
+  String get bridgesFastestWhereTorIsnt =>
+      'Tor’un engellenmediği yerde en hızlısı. Kryfo asla Tor dışından bağlanmaz.';
+
+  @override
+  String get bridgesBridgeFromAFriend => 'Arkadaştan köprü';
+
+  @override
+  String get bridgesPasteOrScanALine =>
+      'Güvendiğin birinin verdiği bir satırı yapıştır ya da tara.';
+
+  @override
+  String get bridgesMore => 'Daha fazla';
+
+  @override
+  String get bridgesConnectingDots => 'Bağlanıyor…';
+
+  @override
+  String get bridgesAlmostThere => 'Az kaldı';
+
+  @override
+  String get bridgesStraightToTor => 'Doğrudan Tor’a, köprüye gerek yok';
+
+  @override
+  String get bridgesThroughABridge => 'Bir köprü üzerinden';
+
+  @override
+  String get bridgesTorSeemsBlocked => 'Tor bu ağda engellenmiş gibi';
+
+  @override
+  String get bridgesYourNetworkMayBe => 'Ağın kısıtlı olabilir';
+
+  @override
+  String get bridgesTryingAnotherWay => 'Başka bir yol deneniyor…';
+
+  @override
+  String bridgesTryingAnotherWayOf(String attempt, String attempts) {
+    return 'Başka bir yol deneniyor… ($attempt/$attempts)';
+  }
+
+  @override
+  String get bridgesAskingTheTorProject =>
+      'Tor projesine burada neyin işe yaradığı soruluyor…';
+
+  @override
+  String get bridgesLookingForAVolunteer => 'Gönüllü aranıyor';
+
+  @override
+  String get bridgesFoundAVolunteer => 'Gönüllü bulundu, bağlanıyor';
+
+  @override
+  String get bridgesCouldNotReachTheTor => 'Tor projesine ulaşılamadı';
+
+  @override
+  String get bridgesConnectingThroughYourBridge =>
+      'Köprün üzerinden bağlanıyor…';
+
+  @override
+  String get bridgesNothingGotThrough => 'Hiçbiri geçemedi';
+
+  @override
+  String get bridgesKryfoTriesAgainBy =>
+      'Kryfo ara sıra kendiliğinden yeniden dener. Bir arkadaştan alacağın köprü işe yarayabilir.';
+
+  @override
+  String get bridgesNoInternet => 'İnternet yok';
+
+  @override
+  String get bridgesKryfoConnectsAsSoon =>
+      'Kryfo yeniden çevrimiçi olduğun anda bağlanır.';
+
+  @override
+  String get bridgesAsleepBetweenCheckIns => 'Kontroller arasında uykuda';
+
+  @override
+  String get bridgesCheckingForMessages => 'Mesajlara bakılıyor…';
+
+  @override
+  String get bridgesNotNeededRightNow => 'Şu an gerekmiyor';
+
+  @override
+  String get bridgesYouReOnAMode =>
+      'Modun Tor kullanmıyor. Bu seçimler geri geçtiğinde geçerli olur.';
+
+  @override
+  String get bridgesOffline => 'Çevrimdışı';
+
+  @override
+  String get bridgesGetABridge => 'Köprü al';
+
+  @override
+  String get bridgesNotNow => 'Şimdi değil';
+
+  @override
+  String get bridgesTorIsBlockedOnThis => 'Tor bu ağda engelli';
+
+  @override
+  String get bridgesKryfoCanAskThe =>
+      'Kryfo bunu aşmak için Tor projesinden bir köprü isteyebilir.';
+
+  @override
+  String get bridgesKryfoCanGetAround =>
+      'Kryfo artık Tor engellerini aşabiliyor';
+
+  @override
+  String get bridgesAutomaticFindsAWay =>
+      'Tor engellendiğinde Otomatik kendiliğinden bir yol bulur. Bunun için Tor dışından bir köprüye bağlanabilir.';
+
+  @override
+  String get bridgesTurnOnAutomatic => 'Otomatiği aç';
+
+  @override
+  String get bridgesInUse => 'Kullanılan';
+
+  @override
+  String get bridgesNothingYet => 'Henüz yok';
+
+  @override
+  String get bridgesTorNoBridge => 'Tor, köprüsüz';
+
+  @override
+  String get bridgesBuiltIn => 'yerleşik';
+
+  @override
+  String get bridgesFromTheTorProjectLower => 'Tor projesinden';
+
+  @override
+  String get bridgesFromAFriendLower => 'bir arkadaştan';
+
+  @override
+  String bridgesMethodFrom(String method, String from) {
+    return '$method, $from';
+  }
+
+  @override
+  String get bridgesBuiltInBridges => 'Yerleşik köprüler';
+
+  @override
+  String get bridgesObfs4BridgesThatCome =>
+      'Kryfo ile gelen köprüler (obfs4). Denemesi hızlı, sık sık engellenir.';
+
+  @override
+  String get bridgesGoesThroughAVolunteer =>
+      'Bir gönüllünün bilgisayarından geçer. Engellemesi zor, başlaması yavaş.';
+
+  @override
+  String get bridgesBridgesTheTorProject =>
+      'Tor projesinin sana daha önce verdiği köprüler.';
+
+  @override
+  String get bridgesAskTorProject => 'Tor projesine sor';
+
+  @override
+  String get bridgesWhenTorIsBlockedAutomatic =>
+      'Tor engellendiğinde Otomatik, Tor projesine ülkende neyin işe yaradığını sorar.';
+
+  @override
+  String get bridgesCountry => 'Ülke';
+
+  @override
+  String get bridgesLetTheTorProject => 'Tor projesi tahmin etsin';
+
+  @override
+  String get bridgesTheTorProjectKnows =>
+      'Tor projesinin bu ülkeler için kendi önerileri var.';
+
+  @override
+  String get bridgesTheTorProjectSGuess => 'Tor projesinin tahmini';
+
+  @override
+  String get bridgesBelarus => 'Belarus';
+
+  @override
+  String get bridgesChina => 'Çin';
+
+  @override
+  String get bridgesEgypt => 'Mısır';
+
+  @override
+  String get bridgesHongKong => 'Hong Kong';
+
+  @override
+  String get bridgesIran => 'İran';
+
+  @override
+  String get bridgesMyanmar => 'Myanmar';
+
+  @override
+  String get bridgesRussia => 'Rusya';
+
+  @override
+  String get bridgesTurkmenistan => 'Türkmenistan';
+
+  @override
+  String get bridgesSavedLines => 'Kayıtlı satırlar';
+
+  @override
+  String get bridgesKryfoCanTUseThis => 'Kryfo bu satırı kullanamıyor';
+
+  @override
+  String get bridgesTooLongForTor => 'Tor’un kullanması için fazla uzun';
+
+  @override
+  String get bridgesPasteTheLineThey =>
+      'Sana gönderdiği satırı yapıştır ya da kodunu tara. Bir köprüyü işleten kişi Tor’u ne zaman kullandığını görebilir, bu yüzden satırları yalnızca güvendiğin kişilerden al.';
+
+  @override
+  String get bridgesPasteABridgeLine => 'Bir köprü satırı yapıştır';
+
+  @override
+  String get bridgesScanACode => 'Kod tara';
+
+  @override
+  String bridgesUseThisBridge(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
@@ -6863,33 +6937,93 @@ class AppLocalizationsTr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString köprü',
-      one: '$countString köprü',
+      other: 'Bu $countString köprüyü kullan',
+      one: 'Bu köprüyü kullan',
     );
     return '$_temp0';
   }
 
   @override
-  String bridgesSavedSomeBad(int good, int bad) {
-    final intl.NumberFormat goodNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
-    final String goodString = goodNumberFormat.format(good);
-    final intl.NumberFormat badNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
-    final String badString = badNumberFormat.format(bad);
+  String get bridgesNoneOfTheseAre =>
+      'Bunların hiçbiri Kryfo’nun anladığı bir köprü satırı değil.';
 
-    return '$goodString kabul edildi, $badString anlaşılmadı';
+  @override
+  String get bridgesThisLineIsTooLong =>
+      'Bu satır, Tor’un kullanması için fazla uzun.';
+
+  @override
+  String bridgesKryfoCouldNotRead(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Kryfo bu satırlardan $countString tanesini okuyamadı',
+      one: 'Kryfo bu satırlardan $countString tanesini okuyamadı',
+    );
+    return '$_temp0';
   }
 
   @override
-  String get bridgesNoneUsable =>
-      'Bu satırların hiçbiri kullanılabilir bir köprü değil, bu yüzden köprüler kapalı kalıyor';
+  String get bridgesScanABridgeCode => 'Köprü kodu tara';
 
   @override
-  String get bridgesCouldNotApply =>
-      'Köprüler uygulanamadı. Yeniden kaydetmeyi dene.';
+  String get bridgesPointAtTheBridge => 'Kamerayı köprünün QR koduna tut';
+
+  @override
+  String get bridgesThatSNotABridge => 'Bu bir köprü satırı değil';
+
+  @override
+  String get bridgesDetails => 'Ayrıntılar';
+
+  @override
+  String get bridgesThisBridgeIsnTGetting => 'Bu köprü geçemiyor';
+
+  @override
+  String get bridgesBridgesGoDeadWithout =>
+      'Köprüler haber vermeden çalışmayı bırakabilir. Otomatik başka bir yol bulabilir.';
+
+  @override
+  String get bridgesSwitchToAutomatic => 'Otomatiğe geç';
+
+  @override
+  String get bridgesOurRelayUsuallyGets =>
+      'Aktarıcımız tek ve sıradan bir bağlantıdır, genelde geçer. Ya da yolu Kryfo kendisi bulsun.';
+
+  @override
+  String get bridgesTryAutomatic => 'Otomatiği dene';
+
+  @override
+  String get settingsBridgesForNetworksThat =>
+      'Köprüler, Tor’u engelleyen ağlar için';
+
+  @override
+  String get torBootSplashIfTorIsBlocked =>
+      'Bulunduğun yerde Tor engelliyse ya da riskliyse, Kryfo bunun yerine bir köprü üzerinden başlayabilir.';
+
+  @override
+  String get torBootSplashConnect => 'Bağlan';
+
+  @override
+  String get torBootSplashTorIsBlockedOr => 'Tor burada engelli ya da riskli';
+
+  @override
+  String get transportBridgeMode => 'Köprüler';
+
+  @override
+  String get transportBridgePhase => 'Aşama';
+
+  @override
+  String get transportBridgeMethod => 'Yöntem';
+
+  @override
+  String get transportBridgeError => 'Son hata';
+
+  @override
+  String get bridgesWhenYouAskFor =>
+      'Köprü istediğinde Tor Projesi IP adresini görür. Bu normal: Tor Browser ve tüm Tor uygulamaları köprüleri böyle alır ve bu onlara yalnızca birinin köprü istediğini söyler. Sohbetlerin hakkında hiçbir şey söylemez.';
 
   @override
   String get languageTitle => 'Dil';

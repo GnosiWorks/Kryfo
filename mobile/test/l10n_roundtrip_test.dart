@@ -544,80 +544,13 @@ void main() {
     expect(l.blockedBlocked, "Blocked");
     expect(l.blockedNoOneIsBlocked, "No one is blocked");
     expect(l.commonUnblock, "Unblock");
-    expect(l.bridgesThatWasNotIt, "That was not it. Here is another.");
-    expect(
-      l.bridgesMoatFailed,
-      "Couldn't reach the tor project. Try again in a minute, or paste a bridge line below.",
-    );
-    expect(
-      l.bridgesCouldNotApply,
-      "The bridges could not be applied. Try saving again.",
-    );
-    expect(l.bridgesGotBridgesSaveTo, "Got bridges · save to use them");
     expect(l.bridgesConnected, "Connected");
-    expect(l.bridgesNotThroughYetTor, "Not through yet. Tor keeps trying");
-    expect(l.bridgesBridges, "Bridges");
-    expect(l.bridgesTorIsBlockedWhere, "Tor is blocked where you are?");
-    expect(
-      l.bridgesBridgesDisguiseYourConnection,
-      "Bridges disguise your connection so it can get out. Pick one way in, save, and tor reconnects through it.",
-    );
-    expect(
-      l.bridgesBridgesOnlyChangeHow,
-      "Bridges only change how tor connects, and you are not on onion mode right now. What you set here is saved, it just does nothing until you switch back.",
-    );
-    expect(l.bridgesFromTheTorProject, "From the tor project");
-    expect(l.bridgesNoise, "Noise");
-    expect(l.bridgesGood, "Good");
-    expect(
-      l.bridgesMakesTorTrafficLook,
-      "Makes tor traffic look like nothing in particular. The best default for most blocked networks. Answers a captcha, then hands you a few lines.",
-    );
-    expect(l.bridgesPrivateBridge, "Private bridge");
-    expect(l.bridgesALineFromA, "A line from a friend");
-    expect(l.bridgesWhateverTheLineSays, "Whatever the line says");
-    expect(l.bridgesDepends, "Depends");
-    expect(
-      l.bridgesGotABridgeLine,
-      "Got a bridge line from someone you trust, or from bridges.torproject.org? Paste it here. Obfs4 lines only, Kryfo does not speak the others yet.",
-    );
     expect(l.bridgesPasteFromClipboard, "Paste from clipboard");
-    expect(l.bridgesUseBridges, "Use bridges");
-    expect(l.bridgesNoLinesYet, "No lines yet");
     expect(l.bridges1LineSaved(0), "0 lines saved");
     expect(l.bridges1LineSaved(1), "1 line saved");
     expect(l.bridges1LineSaved(2), "2 lines saved");
     expect(l.bridges1LineSaved(5), "5 lines saved");
-    expect(l.bridgesRestartingTor, "Restarting tor…");
-    expect(
-      l.bridgesFindingABridgeS("<elapsed>"),
-      "Finding a bridge… <elapsed>s",
-    );
-    expect(l.bridgesStillTryingS("<elapsed>"), "Still trying… <elapsed>s");
-    expect(l.bridgesApplying, "Applying…");
-    expect(l.bridgesSaveAndReconnect, "Save and reconnect");
-    expect(l.bridgesWhatABridgeIs, "What a bridge is");
-    expect(
-      l.bridgesATorEntryPoint,
-      "A tor entry point nobody has published, reached through a wrapper so the connection does not look like tor. The rest of the route is the usual three hops.",
-    );
-    expect(l.bridgesLooksLike, "Looks like");
-    expect(l.bridgesSpeed, "Speed");
-    expect(l.bridgesGetBridges, "Get bridges");
-    expect(
-      l.bridgesAskTheTorProject,
-      "Ask the tor project directly. You solve a puzzle so bots cannot drain the supply.",
-    );
-    expect(l.bridgesTypeWhatYouSee, "Type what you see. Lowercase is fine.");
-    expect(
-      l.bridgesThisOneRequestDoes,
-      "This one request does not go through tor - it cannot, since tor is what is not working. Whoever runs your network will see you contacting the tor project. If that alone is a problem where you are, get bridges somewhere else and paste them below.",
-    );
-    expect(l.bridgesCouldNotDrawThe, "Could not draw the puzzle");
-    expect(l.bridgesAnswer, "Answer");
     expect(l.bridgesAsking, "Asking…");
-    expect(l.bridgesRequestBridges, "Request bridges");
-    expect(l.bridgesDifferentPuzzle, "Different puzzle");
     expect(l.cameraNoCameraOnThis, "No camera on this phone");
     expect(l.cameraCameraNotAvailable, "Camera not available");
     expect(l.cameraCameraPermissionIsOff, "Camera permission is off");
@@ -1452,21 +1385,8 @@ void main() {
     expect(l.homeSwitchedToFast, "Switched to fast");
     expect(l.homeUseFastMode, "Use fast mode");
     expect(l.homeKeepWaiting, "Keep waiting");
-    expect(l.homeNotConnecting, "Not connecting");
-    expect(
-      l.homeBridgesAreOnAnd,
-      "Bridges are on and tor still is not through. Bridges are slower, and some go dead without warning. If your network does not block tor, going direct is faster and more reliable.",
-    );
-    expect(l.homeGoingDirectReconnecting, "Going direct · reconnecting");
-    expect(l.homeTurnBridgesOff, "Turn bridges off");
-    expect(l.homeStillTrying, "Still trying");
-    expect(
-      l.homeTorIsNotGetting,
-      "Tor is not getting through. Some networks block it on purpose. Our own relay is one plain connection and usually works anyway - or bridges, which take longer to set up.",
-    );
     expect(l.homeSwitchedToRelay, "Switched to relay");
     expect(l.homeUseOurRelay, "Use our relay");
-    expect(l.homeBridges, "Bridges");
     expect(l.homeOffline, "Offline");
     expect(l.homeWaiting, "Waiting");
     expect(l.homeNothingWaitingToSend, "Nothing waiting to send");
@@ -2557,8 +2477,6 @@ void main() {
     expect(l.settingsFast, "Fast");
     expect(l.settingsRelay1Hop, "Relay · 1 hop");
     expect(l.settingsOnion3Hops, "Onion · 3 hops");
-    expect(l.settingsBridges, "Bridges");
-    expect(l.settingsForNetworksThatBlock, "For networks that block tor");
     expect(l.settingsGettingMessages, "Getting messages");
     expect(
       l.settingsPreviewHidden("<deliveryModeName>"),
@@ -3227,7 +3145,6 @@ void main() {
     expect(l.chatDecline, "Decline");
     expect(l.chatAccept, "Accept");
     expect(l.bridgesConnecting, "Connecting");
-    expect(l.bridgesSavedTag, "Saved");
     expect(l.restoreMade, "Made");
     expect(l.restoreContacts, "Contacts");
     expect(l.restoreMessages, "Messages");
@@ -3267,26 +3184,6 @@ void main() {
     expect(l.confirmSheetKeep, "Keep");
     expect(l.confirmSheetSave, "Save");
     expect(l.confirmSheetCancel, "Cancel");
-    expect(l.bridgesSaved(0), "0 bridges");
-    expect(l.bridgesSaved(1), "1 bridge");
-    expect(l.bridgesSaved(2), "2 bridges");
-    expect(l.bridgesSaved(5), "5 bridges");
-    expect(l.bridgesSavedSomeBad(0, 0), "0 accepted, 0 not understood");
-    expect(l.bridgesSavedSomeBad(0, 1), "0 accepted, 1 not understood");
-    expect(l.bridgesSavedSomeBad(0, 2), "0 accepted, 2 not understood");
-    expect(l.bridgesSavedSomeBad(0, 5), "0 accepted, 5 not understood");
-    expect(l.bridgesSavedSomeBad(1, 0), "1 accepted, 0 not understood");
-    expect(l.bridgesSavedSomeBad(1, 1), "1 accepted, 1 not understood");
-    expect(l.bridgesSavedSomeBad(1, 2), "1 accepted, 2 not understood");
-    expect(l.bridgesSavedSomeBad(1, 5), "1 accepted, 5 not understood");
-    expect(l.bridgesSavedSomeBad(2, 0), "2 accepted, 0 not understood");
-    expect(l.bridgesSavedSomeBad(2, 1), "2 accepted, 1 not understood");
-    expect(l.bridgesSavedSomeBad(2, 2), "2 accepted, 2 not understood");
-    expect(l.bridgesSavedSomeBad(2, 5), "2 accepted, 5 not understood");
-    expect(l.bridgesSavedSomeBad(5, 0), "5 accepted, 0 not understood");
-    expect(l.bridgesSavedSomeBad(5, 1), "5 accepted, 1 not understood");
-    expect(l.bridgesSavedSomeBad(5, 2), "5 accepted, 2 not understood");
-    expect(l.bridgesSavedSomeBad(5, 5), "5 accepted, 5 not understood");
     expect(l.languageTitle, "Language");
     expect(l.languageMatchPhone, "Match phone");
     expect(l.languageMatchPhoneValue("<language>"), "Match phone (<language>)");
@@ -3377,6 +3274,169 @@ void main() {
       l.settingsGifSearchHint,
       "Off until you turn it on. Kryfo's server searches for you, so the GIF service never sees you.",
     );
+    expect(l.bridgesConnection, "Connection");
+    expect(l.bridgesAutomatic, "Automatic");
+    expect(
+      l.bridgesKryfoFindsAWay,
+      "Kryfo finds a way that works where you are.",
+    );
+    expect(l.bridgesDirect, "Direct");
+    expect(
+      l.bridgesFastestWhereTorIsnt,
+      "Fastest where Tor isn't blocked. Kryfo never connects outside Tor.",
+    );
+    expect(l.bridgesBridgeFromAFriend, "Bridge from a friend");
+    expect(
+      l.bridgesPasteOrScanALine,
+      "Paste or scan a line someone you trust gave you.",
+    );
+    expect(l.bridgesMore, "More");
+    expect(l.bridgesConnectingDots, "Connecting…");
+    expect(l.bridgesAlmostThere, "Almost there");
+    expect(l.bridgesStraightToTor, "Straight to Tor, no bridge needed");
+    expect(l.bridgesThroughABridge, "Through a bridge");
+    expect(l.bridgesTorSeemsBlocked, "Tor seems blocked on this network");
+    expect(l.bridgesYourNetworkMayBe, "Your network may be limited");
+    expect(l.bridgesTryingAnotherWay, "Trying another way…");
+    expect(
+      l.bridgesTryingAnotherWayOf("<attempt>", "<attempts>"),
+      "Trying another way… (<attempt> of <attempts>)",
+    );
+    expect(
+      l.bridgesAskingTheTorProject,
+      "Asking the Tor Project what works here…",
+    );
+    expect(l.bridgesLookingForAVolunteer, "Looking for a volunteer");
+    expect(l.bridgesFoundAVolunteer, "Found a volunteer, connecting");
+    expect(l.bridgesCouldNotReachTheTor, "Couldn't reach the Tor Project");
+    expect(
+      l.bridgesConnectingThroughYourBridge,
+      "Connecting through your bridge…",
+    );
+    expect(l.bridgesNothingGotThrough, "Nothing got through");
+    expect(
+      l.bridgesKryfoTriesAgainBy,
+      "Kryfo tries again by itself now and then. A bridge from a friend can help.",
+    );
+    expect(l.bridgesNoInternet, "No internet");
+    expect(
+      l.bridgesKryfoConnectsAsSoon,
+      "Kryfo connects as soon as you're back online.",
+    );
+    expect(l.bridgesAsleepBetweenCheckIns, "Asleep between check-ins");
+    expect(l.bridgesCheckingForMessages, "Checking for messages…");
+    expect(l.bridgesNotNeededRightNow, "Not needed right now");
+    expect(
+      l.bridgesYouReOnAMode,
+      "Your mode doesn't use Tor. These choices apply when you switch back.",
+    );
+    expect(l.bridgesOffline, "Offline");
+    expect(l.bridgesGetABridge, "Get a bridge");
+    expect(l.bridgesNotNow, "Not now");
+    expect(l.bridgesTorIsBlockedOnThis, "Tor is blocked on this network");
+    expect(
+      l.bridgesKryfoCanAskThe,
+      "Kryfo can ask the Tor Project for a bridge to get around it.",
+    );
+    expect(l.bridgesKryfoCanGetAround, "Kryfo can get around Tor blocks now");
+    expect(
+      l.bridgesAutomaticFindsAWay,
+      "Automatic finds a way by itself when Tor is blocked. It may reach a bridge outside Tor to do it.",
+    );
+    expect(l.bridgesTurnOnAutomatic, "Turn on automatic");
+    expect(l.bridgesInUse, "In use");
+    expect(l.bridgesNothingYet, "Nothing yet");
+    expect(l.bridgesTorNoBridge, "Tor, no bridge");
+    expect(l.bridgesBuiltIn, "built-in");
+    expect(l.bridgesFromTheTorProjectLower, "from the Tor Project");
+    expect(l.bridgesFromAFriendLower, "from a friend");
+    expect(l.bridgesMethodFrom("<method>", "<from>"), "<method>, <from>");
+    expect(l.bridgesBuiltInBridges, "Built-in bridges");
+    expect(
+      l.bridgesObfs4BridgesThatCome,
+      "Bridges that come with Kryfo (obfs4). Quick to try, often blocked.",
+    );
+    expect(
+      l.bridgesGoesThroughAVolunteer,
+      "Goes through a volunteer's computer. Hard to block, slow to start.",
+    );
+    expect(
+      l.bridgesBridgesTheTorProject,
+      "Bridges the Tor Project gave you earlier.",
+    );
+    expect(l.bridgesAskTorProject, "Ask the Tor Project");
+    expect(
+      l.bridgesWhenTorIsBlockedAutomatic,
+      "When Tor is blocked, Automatic asks the Tor Project what works in your country.",
+    );
+    expect(l.bridgesCountry, "Country");
+    expect(l.bridgesLetTheTorProject, "Let the Tor Project guess");
+    expect(
+      l.bridgesTheTorProjectKnows,
+      "The Tor Project has its own advice for these countries.",
+    );
+    expect(l.bridgesTheTorProjectSGuess, "The Tor Project's guess");
+    expect(l.bridgesBelarus, "Belarus");
+    expect(l.bridgesChina, "China");
+    expect(l.bridgesEgypt, "Egypt");
+    expect(l.bridgesHongKong, "Hong Kong");
+    expect(l.bridgesIran, "Iran");
+    expect(l.bridgesMyanmar, "Myanmar");
+    expect(l.bridgesRussia, "Russia");
+    expect(l.bridgesTurkmenistan, "Turkmenistan");
+    expect(l.bridgesSavedLines, "Saved lines");
+    expect(l.bridgesKryfoCanTUseThis, "Kryfo can't use this line");
+    expect(l.bridgesTooLongForTor, "Too long for Tor to use");
+    expect(
+      l.bridgesPasteTheLineThey,
+      "Paste the line they sent you, or scan its code. Whoever runs a bridge can see when you use Tor, so take lines only from people you trust.",
+    );
+    expect(l.bridgesPasteABridgeLine, "Paste a bridge line");
+    expect(l.bridgesScanACode, "Scan a code");
+    expect(l.bridgesUseThisBridge(5), "Use these 5 bridges");
+    expect(
+      l.bridgesNoneOfTheseAre,
+      "None of these are bridge lines Kryfo understands.",
+    );
+    expect(l.bridgesThisLineIsTooLong, "This line is too long for Tor to use.");
+    expect(
+      l.bridgesKryfoCouldNotRead(5),
+      "Kryfo couldn't read 5 of these lines",
+    );
+    expect(l.bridgesScanABridgeCode, "Scan a bridge code");
+    expect(l.bridgesPointAtTheBridge, "Point at the bridge's QR code");
+    expect(l.bridgesThatSNotABridge, "That's not a bridge line");
+    expect(l.bridgesDetails, "Details");
+    expect(l.bridgesThisBridgeIsnTGetting, "This bridge isn't getting through");
+    expect(
+      l.bridgesBridgesGoDeadWithout,
+      "Bridges can stop working without warning. Automatic can find another way.",
+    );
+    expect(l.bridgesSwitchToAutomatic, "Switch to automatic");
+    expect(
+      l.bridgesOurRelayUsuallyGets,
+      "Our relay is one plain connection and usually gets through. Or let Kryfo find a way by itself.",
+    );
+    expect(l.bridgesTryAutomatic, "Try automatic");
+    expect(
+      l.settingsBridgesForNetworksThat,
+      "Bridges, for networks that block Tor",
+    );
+    expect(
+      l.torBootSplashIfTorIsBlocked,
+      "If Tor is blocked or risky where you are, Kryfo can start through a bridge instead.",
+    );
+    expect(l.torBootSplashConnect, "Connect");
+    expect(l.torBootSplashTorIsBlockedOr, "Tor is blocked or risky here");
+    expect(l.transportBridgeMode, "Bridges");
+    expect(l.transportBridgePhase, "Phase");
+    expect(l.transportBridgeMethod, "Method");
+    expect(l.transportBridgeError, "Last error");
+    expect(
+      l.bridgesWhenYouAskFor,
+      "When you ask for bridges, the Tor Project sees your address. That's normal: it's how Tor Browser and every Tor app get bridges, and all it tells them is that someone asked for bridges. Nothing about your chats.",
+    );
+    expect(l.bridgesFromTheTorProject, "From the Tor Project");
     expect(l.shareChooseChat, "Choose a chat");
     expect(l.shareNoChats, "No chats yet");
     expect(l.shareNoOne, "No one to share with");

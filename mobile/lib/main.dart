@@ -33,6 +33,8 @@ import 'media_send.dart';
 import 'send_order.dart';
 import 'media_resend.dart';
 import 'delivery_mode.dart';
+import 'bridge_mode.dart';
+import 'screens/bridges_screen.dart' show BridgesScreen;
 import 'offline_gate.dart';
 import 'in_front.dart';
 import 'reopen.dart';
@@ -173,8 +175,6 @@ class HaloEngine {
   late final CStrFnDart _nostrPoll;
   late final CounterFnDart _fcPk;
   late final CStrFnDart _txState;
-  late final TwoArgFnDart _setBridges;
-  late final CStrFnDart _bridgeState;
   late final int Function() _torPaused;
   late final CStrFnDart _restartTor;
   late final OneArgFnDart _setMode;
@@ -217,8 +217,6 @@ class HaloEngine {
     _nostrPoll = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloNostrPoll');
     _fcPk = _lib.lookupFunction<CounterFn, CounterFnDart>('HaloFirstContactPk');
     _txState = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloTransportState');
-    _setBridges = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloSetBridges');
-    _bridgeState = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloBridgeState');
     _torPaused = _lib.lookupFunction<Int32 Function(), int Function()>(
       'HaloTorPaused',
     );
@@ -366,21 +364,112 @@ class HaloEngine {
     );
   }
 
-  // bridge lines in, a summary out. tor only reads its config at startup, so
-  // callers restart it after changing this or nothing happens.
-  String setBridges(String lines, bool on) {
-    final a = lines.toNativeUtf8();
-    final b = (on ? '1' : '0').toNativeUtf8();
+  // how tor connects: auto, direct, snowflake, webtunnel, moat or own,
+  // with its options as json. "ok" or "error: <code>". the engine applies
+  // it itself. looked up on first use so an older engine still loads
+  late final TwoArgFnDart _setBridgeMode = _lib
+      .lookupFunction<TwoArgFn, TwoArgFnDart>('HaloSetBridgeMode');
+  String setBridgeMode(String mode, String opts) {
     try {
-      return engineTake(_setBridges(a, b));
-    } finally {
-      malloc.free(a);
-      malloc.free(b);
+      final a = mode.toNativeUtf8();
+      final b = opts.toNativeUtf8();
+      try {
+        return engineTake(_setBridgeMode(a, b));
+      } finally {
+        malloc.free(a);
+        malloc.free(b);
+      }
+    } on ArgumentError {
+      return 'error: no engine';
     }
   }
 
-  // "on|count|port"
-  String bridgeState() => engineTake(_bridgeState());
+  // the status line's facts as json, never a line or an address
+  late final CStrFnDart _bridgeStatus = _lib.lookupFunction<CStrFn, CStrFnDart>(
+    'HaloBridgeStatus',
+  );
+  String bridgeStatus() {
+    try {
+      return engineTake(_bridgeStatus());
+    } on ArgumentError {
+      return '{}';
+    }
+  }
+
+  // automatic tries again now, after it gave up
+  late final CStrFnDart _bridgeRetry = _lib.lookupFunction<CStrFn, CStrFnDart>(
+    'HaloBridgeRetry',
+  );
+  void bridgeRetry() {
+    try {
+      _take(_bridgeRetry());
+    } on ArgumentError {
+      // an older engine: tor keeps its own schedule
+    }
+  }
+
+  // a check per line of the last lines handed over, as json
+  late final CStrFnDart _lineChecks = _lib.lookupFunction<CStrFn, CStrFnDart>(
+    'HaloBridgeLineChecks',
+  );
+  String bridgeLineChecks() {
+    try {
+      return engineTake(_lineChecks());
+    } on ArgumentError {
+      return '[]';
+    }
+  }
+
+  // what automatic remembers, and the built-in and tor project lines the
+  // engine refreshed: json for the store, an error while a decoy is open
+  String autoMemory() => _keep('HaloAutoMemory');
+  String bridgeCache() => _keep('HaloBridgeCache');
+  void setAutoMemory(String json) => _give('HaloSetAutoMemory', json);
+  void setBridgeCache(String json) => _give('HaloSetBridgeCache', json);
+
+  String _keep(String symbol) {
+    try {
+      return engineTake(_lib.lookupFunction<CStrFn, CStrFnDart>(symbol)());
+    } on ArgumentError {
+      return '{"error":"no engine"}';
+    }
+  }
+
+  void _give(String symbol, String json) {
+    try {
+      final a = json.toNativeUtf8();
+      try {
+        _take(_lib.lookupFunction<OneArgFn, OneArgFnDart>(symbol)(a));
+      } finally {
+        malloc.free(a);
+      }
+    } on ArgumentError {
+      // an older engine
+    }
+  }
+
+  // the bridges that come with kryfo for one transport
+  List<String> builtinBridges(String transport) {
+    try {
+      final a = transport.toNativeUtf8();
+      try {
+        final r =
+            jsonDecode(
+                  engineTake(
+                    _lib.lookupFunction<OneArgFn, OneArgFnDart>(
+                      'HaloBuiltinBridges',
+                    )(a),
+                  ),
+                )
+                as Map<String, dynamic>;
+        return [for (final l in (r['lines'] as List? ?? const [])) '$l'];
+      } finally {
+        malloc.free(a);
+      }
+    } catch (_) {
+      return const [];
+    }
+  }
 
   void restartTor() => _take(_restartTor());
 
@@ -455,20 +544,21 @@ class HaloEngine {
     }
   }
 
-  // both moat calls block on a network round trip, so they run off the ui
-  // isolate. they go outside tor, through meek: tor being unreachable is why
-  // someone is asking for bridges at all. a tap is the consent the engine
-  // wants. "ok|<image>|<challenge>" and "ok|<lines>", "wrong" or "error: ".
-  Future<String> moatFetch() => _moatOnIsolate(null, null).timeout(
-    const Duration(seconds: 60),
-    onTimeout: () => 'error: timed out reaching the bridge service',
+  // what the tor project advises for a country, and the country it
+  // guesses from the address it sees. outside tor, through meek, and only
+  // with the person's yes. off the ui isolate: a network round trip
+  Future<String> moatSettings(String country) => _ffiOnIsolate(
+    'HaloMoatSettings',
+    [
+      jsonEncode({
+        'consent': true,
+        'via': 'meek',
+        if (country.isNotEmpty) 'country': country,
+      }),
+    ],
+    wait: const Duration(seconds: 60),
+    what: 'moat',
   );
-
-  Future<String> moatSolve(String challenge, String answer) =>
-      _moatOnIsolate(challenge, answer).timeout(
-        const Duration(seconds: 60),
-        onTimeout: () => 'error: timed out sending the answer',
-      );
 
   // everything the transport knows, in one read. no inference on this side.
   Map<String, dynamic> transportState() {
@@ -938,38 +1028,6 @@ Future<String> _fcSendOnIsolate(String peerXPub, String fcPk, String msg) {
       malloc.free(b);
       malloc.free(c);
     }
-  });
-}
-
-Future<String> _moatOnIsolate(String? challenge, String? answer) {
-  return Isolate.run(() {
-    final lib = Platform.isAndroid
-        ? DynamicLibrary.open('libhalo.so')
-        : DynamicLibrary.process();
-    final opts = <String, Object>{
-      'consent': true,
-      'via': 'meek',
-      'transport': 'obfs4',
-    };
-    if (challenge != null) {
-      opts['challenge'] = challenge;
-      opts['solution'] = answer ?? '';
-    }
-    final fn = lib.lookupFunction<OneArgFn, OneArgFnDart>(
-      challenge == null ? 'HaloMoatCaptcha' : 'HaloMoatAnswer',
-    );
-    final p = jsonEncode(opts).toNativeUtf8();
-    final Map<String, dynamic> r;
-    try {
-      r = jsonDecode(engineTake(fn(p))) as Map<String, dynamic>;
-    } finally {
-      malloc.free(p);
-    }
-    if (r['ok'] != true) {
-      return r['error'] == 'moat_wrong' ? 'wrong' : 'error: ${r['error']}';
-    }
-    if (challenge == null) return 'ok|${r['image']}|${r['challenge']}';
-    return 'ok|${(r['lines'] as List).join('\n')}';
   });
 }
 
@@ -11393,52 +11451,322 @@ class AppState extends ChangeNotifier {
     await secureStore.write(key: 'theme_light', value: v.toString());
   }
 
-  // bridges are off by default: they are slower and most people are not
-  // being filtered
-  bool _bridgesOn = false;
-  String _bridgeLines = '';
-  bool get bridgesOn => _bridgesOn;
-  String get bridgeLines => _bridgeLines;
+  // ---- how tor gets out ----
+
+  BridgeSetup _bridge = const BridgeSetup();
+  BridgeSetup get bridge => _bridge;
+  BridgeChoice get bridgeChoice => _bridge.choice;
+  BridgeStatus _bridgeStatus = BridgeStatus.none;
+  BridgeStatus get bridgeStatus => _bridgeStatus;
+  // the engine's checks of the lines last handed over, and whose they were
+  List<BridgeLineCheck> _lineChecks = const [];
+  BridgeChoice? _checksOf;
+  List<BridgeLineCheck> lineChecksFor(BridgeChoice c) =>
+      _checksOf == c ? _lineChecks : const [];
+
+  // a decoy sees automatic and the status line, and nothing of how
+  bool get inDecoyView => lockState.inDecoy || sessionQuiet;
+
+  // the status line every screen shows
+  BridgeLine get bridgeLine => bridgeStatusLine(
+    _bridgeStatus,
+    decoy: inDecoyView,
+    consent: _bridge.consent,
+  );
+
+  // a bridge picked by hand, not automatic and not tor alone
+  bool get manualBridge =>
+      _bridge.choice != BridgeChoice.auto &&
+      _bridge.choice != BridgeChoice.direct;
+
+  // a choice reaches the engine this long after the last tap, so a few
+  // quick taps bounce tor once
+  static const bridgeApplyAfter = Duration(milliseconds: 900);
+  Timer? _bridgeApply;
+
+  // a new install is asked how to connect before tor starts
+  bool _firstRunAsk = false;
+  bool get firstRunAsk => _firstRunAsk;
+  Completer<void>? _firstRunPick;
+
+  @visibleForTesting
+  set bridgeSetupForTest(BridgeSetup b) => _bridge = b;
+
+  @visibleForTesting
+  void setBridgeStatusForTest(BridgeStatus s) {
+    _bridgeStatus = s;
+    notifyListeners();
+  }
 
   Future<void> _loadBridges() async {
     // the session can change while storage is read, so it is read after
     final quiet = await quietNow();
     tellEngineDecoy(lockState.inDecoy || quiet);
     const st = secureStore;
-    _bridgeLines = await st.read(key: 'bridge_lines') ?? '';
-    _bridgesOn = (await st.read(key: 'bridges_on')) == '1';
     _bridgeHintOff = (await st.read(key: 'bridge_hint_off')) == '1';
-    if (_bridgesOn && _bridgeLines.isNotEmpty) {
-      final r = engine.setBridges(_bridgeLines, true);
-      _bridgesOn = _bridgesTaken(true);
-      dlog('bridges: $r');
+    _bridge = await readBridgeSetup(firstStart: !onboardingComplete);
+    // what automatic learnt and the lines the engine refreshed, back in
+    final mem = await st.read(key: 'bridge_auto_mem');
+    if (mem != null) engine.setAutoMemory(mem);
+    final cache = await st.read(key: 'bridge_cache');
+    if (cache != null) engine.setBridgeCache(cache);
+    if (_firstRunAsk) {
+      _firstRunPick = Completer<void>();
+      notifyListeners();
+      await _firstRunPick!.future;
     }
+    final r = applyBridgeNow();
+    dlog('bridges: ${_bridge.choice.id}: $r');
     notifyListeners();
   }
 
-  // whether the engine is using bridges now. lines it could not read leave
-  // them off even with the switch on, and every hint and card goes by this
-  bool _bridgesTaken(bool asked) {
-    try {
-      final on = engine.bridgeState().split('|').first;
-      if (on == 'true' || on == 'false') return asked && on == 'true';
-    } catch (e) {
-      dlog('bridges: state unreadable ($e)');
+  // the setup as kept, or, on the first start of this version, what 0.5.0
+  // kept, moved over once. the old keys go after the new ones are written
+  @visibleForTesting
+  Future<BridgeSetup> readBridgeSetup({required bool firstStart}) async {
+    const st = secureStore;
+    final mode = BridgeChoice.parse(await st.read(key: 'bridge_mode'));
+    if (mode != null) {
+      return BridgeSetup(
+        choice: mode,
+        friendLines: await st.read(key: 'bridge_lines') ?? '',
+        torProjectLines: await st.read(key: 'bridge_moat_lines') ?? '',
+        consent: await st.read(key: 'bridge_consent') ?? 'no',
+        skipDirect: (await st.read(key: 'bridge_skip_direct')) == '1',
+        country: await st.read(key: 'bridge_country') ?? '',
+        offerAuto: (await st.read(key: 'bridge_offer_auto')) == '1',
+      );
     }
-    return asked;
+    final on = await st.read(key: 'bridges_on');
+    final lines = await st.read(key: 'bridge_lines');
+    final source = await st.read(key: 'bridge_source');
+    final upgrade = !firstStart || on != null || (lines ?? '').isNotEmpty;
+    final b = migrateBridges(
+      upgrade: upgrade,
+      on: on,
+      lines: lines,
+      source: source,
+    );
+    await _writeBridgeSetup(b);
+    await st.delete(key: 'bridges_on');
+    await st.delete(key: 'bridge_source');
+    if (b.friendLines.isEmpty) await st.delete(key: 'bridge_lines');
+    // asked only with a window to ask in
+    _firstRunAsk =
+        !upgrade &&
+        WidgetsBinding.instance.lifecycleState != AppLifecycleState.paused;
+    return b;
   }
 
-  // returns the engine's summary so the ui can say how many lines it liked.
-  Future<String> applyBridges(String lines, bool on) async {
-    _bridgeLines = lines;
-    final r = engine.setBridges(lines, on);
-    _bridgesOn = _bridgesTaken(on);
+  Future<void> _writeBridgeSetup(BridgeSetup b) async {
     const st = secureStore;
-    await st.write(key: 'bridge_lines', value: lines);
-    await st.write(key: 'bridges_on', value: _bridgesOn ? '1' : '0');
+    await st.write(key: 'bridge_lines', value: b.friendLines);
+    await st.write(key: 'bridge_moat_lines', value: b.torProjectLines);
+    await st.write(key: 'bridge_consent', value: b.consent);
+    await st.write(key: 'bridge_skip_direct', value: b.skipDirect ? '1' : '0');
+    await st.write(key: 'bridge_country', value: b.country);
+    await st.write(key: 'bridge_offer_auto', value: b.offerAuto ? '1' : '0');
+    // the mode last: a setup without it is read as not moved over yet
+    await st.write(key: 'bridge_mode', value: b.choice.id);
+  }
+
+  /// the first-run answer: connect as usual, or tor is blocked or risky
+  /// here and automatic starts without trying it
+  Future<void> pickFirstRun({required bool risky}) async {
+    _bridge = _bridge.copyWith(skipDirect: risky);
+    await _writeBridgeSetup(_bridge);
+    _firstRunAsk = false;
+    notifyListeners();
+    final p = _firstRunPick;
+    if (p != null && !p.isCompleted) p.complete();
+  }
+
+  /// hands the choice to the engine now. "ok" or why not
+  String applyBridgeNow() {
+    _bridgeApply?.cancel();
+    _bridgeApply = null;
+    // a decoy changes nothing underneath
+    if (inDecoyView) return 'error: decoy';
+    final m = _bridge.engineMode(
+      builtin: _bridge.choice == BridgeChoice.builtin
+          ? engine.builtinBridges('obfs4')
+          : const [],
+    );
+    if (m == null) return 'error: nothing to use';
+    final r = engine.setBridgeMode(m.$1, m.$2);
+    if (m.$1 != 'auto' && m.$2.contains('"lines"')) {
+      _lineChecks = BridgeLineCheck.parse(engine.bridgeLineChecks());
+      _checksOf = _bridge.choice;
+    }
+    _newTorTry();
+    return r;
+  }
+
+  /// a card or a row was picked: it shows at once and reaches the engine a
+  /// moment after the last tap
+  Future<void> chooseBridge(BridgeChoice c) async {
+    if (inDecoyView) return;
+    final was = _bridge.choice;
+    _bridge = _bridge.copyWith(choice: c, offerAuto: false);
+    notifyListeners();
+    _bridgeApply?.cancel();
+    if (c != was) _bridgeApply = Timer(bridgeApplyAfter, applyBridgeNow);
+    await _writeBridgeSetup(_bridge);
+  }
+
+  /// lines from a friend: the engine reads them, and when one is good they
+  /// are kept and used at once. what it made of each line comes back
+  Future<FriendLines> useFriendLines(String text) async {
+    final lines = bridgeLinesFrom(text);
+    if (lines.isEmpty || inDecoyView) return FriendLines.none(lines.length);
+    final r = engine.setBridgeMode('own', jsonEncode({'lines': lines}));
+    final checks = BridgeLineCheck.parse(engine.bridgeLineChecks());
+    if (r != 'ok') {
+      dlog('bridges: friend lines: $r');
+      return FriendLines(false, lines.length, checks);
+    }
+    _bridgeApply?.cancel();
+    _lineChecks = checks;
+    _checksOf = BridgeChoice.friend;
+    _bridge = _bridge.copyWith(
+      choice: BridgeChoice.friend,
+      friendLines: lines.join('\n'),
+      offerAuto: false,
+    );
     _newTorTry();
     notifyListeners();
-    return r;
+    await _writeBridgeSetup(_bridge);
+    return FriendLines(true, lines.length, checks);
+  }
+
+  /// one kept line goes. with none left the friend's card hands over to
+  /// automatic
+  Future<void> removeBridgeLine(BridgeChoice from, int i) async {
+    final ls = splitBridgeLines(
+      from == BridgeChoice.friend
+          ? _bridge.friendLines
+          : _bridge.torProjectLines,
+    );
+    if (i < 0 || i >= ls.length) return;
+    ls.removeAt(i);
+    _bridge = from == BridgeChoice.friend
+        ? _bridge.copyWith(friendLines: ls.join('\n'))
+        : _bridge.copyWith(torProjectLines: ls.join('\n'));
+    if (_checksOf == from) _lineChecks = const [];
+    if (_bridge.choice == from) {
+      if (ls.isEmpty) _bridge = _bridge.copyWith(choice: BridgeChoice.auto);
+      applyBridgeNow();
+    }
+    notifyListeners();
+    await _writeBridgeSetup(_bridge);
+  }
+
+  /// may automatic ask the tor project: yes or no
+  Future<void> setBridgeConsent(bool yes) async {
+    if (inDecoyView) return;
+    _bridge = _bridge.copyWith(consent: yes ? 'yes' : 'no');
+    if (_bridge.choice == BridgeChoice.auto) applyBridgeNow();
+    notifyListeners();
+    await _writeBridgeSetup(_bridge);
+  }
+
+  Future<void> setBridgeCountry(String cc) async {
+    if (inDecoyView) return;
+    _bridge = _bridge.copyWith(country: cc);
+    if (_bridge.choice == BridgeChoice.auto) applyBridgeNow();
+    notifyListeners();
+    await _writeBridgeSetup(_bridge);
+  }
+
+  Future<void> dismissAutoOffer() async {
+    _bridge = _bridge.copyWith(offerAuto: false);
+    notifyListeners();
+    await _writeBridgeSetup(_bridge);
+  }
+
+  /// automatic gave up: try again now
+  void bridgeRetry() {
+    if (inDecoyView) return;
+    engine.bridgeRetry();
+    _newTorTry();
+  }
+
+  // the tor-is-blocked sheet is wanted: automatic found tor blocked on a
+  // new install that was never asked. once a process
+  bool _askDue = false;
+  bool _askShown = false;
+  bool get bridgeAskDue => _askDue && !_askShown && !inDecoyView;
+  void bridgeAskTaken() => _askShown = true;
+
+  /// the answer on the tor-is-blocked sheet. yes lets automatic ask the
+  /// tor project and puts automatic on; a no on the one-time sheet is final
+  Future<void> answerBridgeAsk(bool yes, {bool asked = false}) async {
+    if (inDecoyView) return;
+    if (!yes) {
+      if (asked && _bridge.consent == 'ask') {
+        _bridge = _bridge.copyWith(consent: 'no');
+        await _writeBridgeSetup(_bridge);
+      }
+      return;
+    }
+    _bridge = _bridge.copyWith(
+      consent: 'yes',
+      choice: BridgeChoice.auto,
+      offerAuto: false,
+    );
+    applyBridgeNow();
+    if (_bridgeStatus.exhausted) engine.bridgeRetry();
+    notifyListeners();
+    await _writeBridgeSetup(_bridge);
+  }
+
+  // the country the tor project guessed from the address it saw, for the
+  // picker. kept for this run only
+  String? _moatGuess;
+  String? get moatGuess => _moatGuess;
+
+  Future<String?> askMoatGuess() async {
+    if (inDecoyView || _bridge.consent != 'yes') return null;
+    try {
+      final m = jsonDecode(await engine.moatSettings(''));
+      final cc = m is Map ? m['country'] : null;
+      if (m is Map && m['ok'] == true && cc is String) {
+        _moatGuess = kBridgeCountries.contains(cc.toLowerCase())
+            ? cc.toLowerCase()
+            : null;
+      }
+    } catch (e) {
+      dlog('bridges: no country guess (${e.runtimeType})');
+    }
+    return _moatGuess;
+  }
+
+  /// the engine's status line facts, read with tor's status each second
+  @visibleForTesting
+  void takeBridgeStatus(String raw) {
+    final s = BridgeStatus.parse(raw);
+    if (s == _bridgeStatus) return;
+    final was = _bridgeStatus;
+    _bridgeStatus = s;
+    if (s.askConsent && _bridge.consent == 'ask') _askDue = true;
+    // what automatic learnt is kept once something gets through
+    if (s.phase == 'connected' && was.phase != 'connected') {
+      unawaited(_keepBridgeMemory());
+    }
+    notifyListeners();
+  }
+
+  Future<void> _keepBridgeMemory() async {
+    if (inDecoyView) return;
+    const st = secureStore;
+    final mem = engine.autoMemory();
+    if (!mem.contains('"error"')) {
+      await st.write(key: 'bridge_auto_mem', value: mem);
+    }
+    final cache = engine.bridgeCache();
+    if (!cache.contains('"error"')) {
+      await st.write(key: 'bridge_cache', value: cache);
+    }
   }
 
   // which first-contact address our invites currently point at. an invite can
@@ -14559,11 +14887,21 @@ class AppState extends ChangeNotifier {
 
   bool get suggestBridges => suggestBridgesAt(DateTime.now());
 
+  // tor alone is not getting through. automatic says so itself, and a
+  // bridge picked by hand has its own card
   @visibleForTesting
   bool suggestBridgesAt(DateTime now) {
-    if (_bridgeHintOff || _bridgesOn || !_online) return false;
+    if (_bridgeHintOff || !_online || inDecoyView) return false;
+    if (_bridge.choice != BridgeChoice.direct) return false;
     return _torLooksBlockedAt(now);
   }
+
+  // automatic is past the usual way, or gave up: the home shows its line
+  bool get autoStruggling =>
+      _bridge.choice == BridgeChoice.auto &&
+      !inDecoyView &&
+      _sendMode == 'private' &&
+      (_bridgeStatus.tryingAnother || _bridgeStatus.exhausted);
 
   // our relay is not answering and it is the only one relay mode uses.
   DateTime? _relayDownSince;
@@ -14637,7 +14975,7 @@ class AppState extends ChangeNotifier {
 
   @visibleForTesting
   bool suggestBridgesOffAt(DateTime now) {
-    if (!_bridgesOn || !_online) return false;
+    if (!manualBridge || !_online || inDecoyView) return false;
     return _torLooksBlockedAt(now);
   }
 
@@ -16024,6 +16362,7 @@ class AppState extends ChangeNotifier {
       if (haloWiping) return;
       if (_sendMode == 'balanced' && ++ticks % 5 == 0) sampleRelayHealth();
       final st = takeTorStatus(engine.getStatus());
+      takeBridgeStatus(engine.bridgeStatus());
       flushOnRouteUp();
       // tor died or never came up in this process. nothing else
       // restarts it, so we do. throttled: a start takes a while.
@@ -20595,7 +20934,7 @@ class _OnboardingGateState extends State<_OnboardingGate> {
             },
             onReopen: appState.bootStuck ? reopenApp : null,
           );
-        } else if (!appState.ready || _hold) {
+        } else if (!appState.ready || _hold || appState.firstRunAsk) {
           before = const TorBootSplash(key: ValueKey('splash'));
         } else if (appState.movedAway && !appState.movedReadOnly) {
           before = const MovedScreen(key: ValueKey('moved'));
@@ -20749,8 +21088,10 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
   }
 
   // a few pulses each time tor starts, then still: where tor is blocked it
-  // can sit in starting for minutes, and nothing here may run that long
+  // can sit in starting for minutes, and nothing here may run that long.
+  // each new way automatic tries gets a few more
   bool _pulsed = false;
+  int _attempt = 0;
 
   void _sync() {
     if (!_isConnecting) {
@@ -20758,10 +21099,25 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
       if (_c.isAnimating) _c.stop();
       return;
     }
+    final a = appState.bridgeStatus.attempt;
+    if (a != _attempt) {
+      _attempt = a;
+      if (a > 1) _pulsed = false;
+    }
     if (_pulsed || _c.isAnimating) return;
     _pulsed = true;
     if (mounted && motionStill(context)) return;
-    _c.repeat(count: 8);
+    _c.repeat(count: _attempt > 1 ? 3 : 8);
+  }
+
+  // tor blocked or nothing got through: the way out is the bridges page
+  void _tap() {
+    final s = appState.bridgeStatus;
+    if (!appState.inDecoyView && (s.exhausted || s.tryingAnother)) {
+      Navigator.of(context).push(haloRoute(const BridgesScreen()));
+      return;
+    }
+    _explain();
   }
 
   @override
@@ -20877,7 +21233,7 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
     return GestureDetector(
       // nothing to explain outside onion: no bootstrap, no circuit, no
       // descriptor
-      onTap: appState.sendMode == 'private' ? _explain : null,
+      onTap: appState.sendMode == 'private' ? _tap : null,
       behavior: HitTestBehavior.opaque,
       child: AnimatedBuilder(
         animation: Listenable.merge([appState, _c]),

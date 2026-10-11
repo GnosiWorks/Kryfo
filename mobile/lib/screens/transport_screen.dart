@@ -52,6 +52,10 @@ class TransportScreen extends StatelessWidget {
           final sx = shown.secsSinceSend;
           final uploads = tx['hsdir_uploads'] as int? ?? 0;
           final pubFor = tx['publishing_secs'] as int? ?? -1;
+          // the engine's own words for how tor gets out: codes, never a
+          // line or an address. a decoy sees automatic and the phase
+          final bs = appState.bridgeStatus;
+          final decoy = appState.inDecoyView;
 
           return ListView(
             padding: EdgeInsets.fromLTRB(
@@ -87,6 +91,28 @@ class TransportScreen extends StatelessWidget {
                 appState.torReady ? l10n.commonYes : l10n.transportNotYet,
                 appState.torReady ? HaloColors.green : HaloColors.rose,
               ),
+              _Line(
+                l10n.transportBridgeMode,
+                decoy ? 'auto' : _code(bs.mode),
+                HaloColors.violet,
+              ),
+              _Line(
+                l10n.transportBridgePhase,
+                _code(bs.phase),
+                HaloColors.violet,
+              ),
+              if (!decoy) ...[
+                _Line(
+                  l10n.transportBridgeMethod,
+                  _code(bs.method),
+                  HaloColors.violet,
+                ),
+                _Line(
+                  l10n.transportBridgeError,
+                  _code(bs.errorCode),
+                  bs.errorCode.isEmpty ? HaloColors.green : HaloColors.amber,
+                ),
+              ],
 
               const SizedBox(height: 20),
               _Head(l10n.transportNetwork),
@@ -232,6 +258,8 @@ class _Head extends StatelessWidget {
     ),
   );
 }
+
+String _code(String c) => c.isEmpty ? '-' : c;
 
 class _Line extends StatelessWidget {
   const _Line(this.label, this.value, this.tint, {this.indent = false});

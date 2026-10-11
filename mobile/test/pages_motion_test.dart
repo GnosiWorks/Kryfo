@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the settings pages of this pass: a handle's answer rising in as it is
 // typed and its field lighting, a pin's state rising in when it changes,
-// a backup's error easing in, a bridge card's state. each rests, and with
+// a backup's error easing in, a bridge card picked. each rests, and with
 // less movement each change is simply there.
 import 'package:flutter/material.dart' hide LockState;
 import 'package:flutter/services.dart';
@@ -9,7 +9,9 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/l10n/l10n.dart';
-import 'package:kryfo/main.dart' show HaloDb, appState, useDatabasesForTest;
+import 'package:kryfo/bridge_mode.dart';
+import 'package:kryfo/main.dart'
+    show HaloDb, HaloEngine, appState, useDatabasesForTest, useEngineForTest;
 import 'package:kryfo/screens/backup_screen.dart';
 import 'package:kryfo/screens/bridges_screen.dart';
 import 'package:kryfo/screens/handle_screen.dart';
@@ -17,6 +19,7 @@ import 'package:kryfo/screens/pins_screen.dart';
 import 'package:kryfo/screens/restore_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/theme.dart';
+import 'package:kryfo/widgets/motion.dart' show kHouseCurve;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'pin_flow_fakes.dart' show FakeHost, appOnly, makeLock, wipePin;
@@ -31,6 +34,24 @@ class _QuietDb implements HaloDb {
 }
 
 final _theme = buildHaloTheme();
+
+// the everyday session, where the bridges page shows every card
+class _LiveDb implements HaloDb {
+  @override
+  HaloContainer get container => HaloContainer.everyday;
+  @override
+  dynamic noSuchMethod(Invocation i) =>
+      throw UnimplementedError('the stand-in was asked for ${i.memberName}');
+}
+
+// the engine takes any mode
+class _ModeEngine implements HaloEngine {
+  @override
+  String setBridgeMode(String mode, String opts) => 'ok';
+  @override
+  dynamic noSuchMethod(Invocation i) =>
+      throw UnimplementedError('${i.memberName}');
+}
 
 Widget framed(
   Widget home, {
@@ -237,44 +258,63 @@ void main() {
   });
 
   group('bridges', () {
-    const line = 'obfs4 1.2.3.4:443 ABCDEF cert=xyz iat-mode=0';
+    setUp(() {
+      final db = _LiveDb();
+      useDatabasesForTest(db, Session(db));
+    });
 
-    // tall enough that the paste field is built
-    void tall(WidgetTester t) {
+    // tor through, so nothing on the page breathes while it rests
+    void through(WidgetTester t) {
       phone(t);
       t.view.physicalSize = const Size(1000, 3600);
+      useEngineForTest(_ModeEngine());
+      appState.bridgeSetupForTest = const BridgeSetup();
+      appState.setBridgeStatusForTest(
+        const BridgeStatus(
+          mode: 'auto',
+          phase: 'connected',
+          method: 'direct',
+          canSend: true,
+        ),
+      );
+      addTearDown(() {
+        appState.bridgeSetupForTest = const BridgeSetup();
+        appState.setBridgeStatusForTest(BridgeStatus.none);
+      });
     }
 
-    testWidgets('a pasted line marks its card saved, and it rests', (t) async {
-      tall(t);
+    testWidgets('a card picked springs its mark in, and it rests', (t) async {
+      through(t);
       await t.pumpWidget(framed(const BridgesScreen()));
       await rest(t);
       expect(t.hasRunningAnimations, isFalse);
-      expect(find.text(l10n.bridgesSavedTag), findsNothing);
-      await t.enterText(find.byType(TextField).first, line);
+      await t.tap(find.text(l10n.bridgesDirect));
       await t.pump();
       await t.pump(const Duration(milliseconds: 60));
-      expect(find.text(l10n.bridgesSavedTag), findsOneWidget);
       expect(t.hasRunningAnimations, isTrue);
       await rest(t);
       expect(t.hasRunningAnimations, isFalse);
       await drain(t);
     });
 
-    testWidgets('reduced motion: the tag is simply there', (t) async {
-      tall(t);
+    testWidgets('reduced motion: the pick is simply there', (t) async {
+      through(t);
       await t.pumpWidget(framed(const BridgesScreen(), still: true));
       await t.pump();
-      await t.enterText(find.byType(TextField).first, line);
+      await t.tap(find.text(l10n.bridgesDirect));
       await t.pump();
-      expect(find.text(l10n.bridgesSavedTag), findsOneWidget);
-      // only the card's edge changes colour, and briefly
-      await t.pump(const Duration(milliseconds: 400));
       expect(t.hasRunningAnimations, isFalse);
+      // the picked card's mark, whole at once
+      final scales = t.widgetList<AnimatedScale>(find.byType(AnimatedScale));
+      expect(scales.every((s) => s.duration == Duration.zero), isTrue);
+      expect(
+        scales.where((s) => s.curve == kHouseCurve && s.scale == 1),
+        hasLength(1),
+      );
+      await t.pump(const Duration(seconds: 1));
       await drain(t);
     });
   });
-
   group('restore', () {
     testWidgets('the page comes in and rests, its steps numbered', (t) async {
       phone(t);

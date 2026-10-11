@@ -1057,73 +1057,13 @@ class AppLocalizationsId extends AppLocalizations {
   String get commonUnblock => 'Buka blokir';
 
   @override
-  String get bridgesThatWasNotIt => 'Bukan itu. Ini yang lain.';
-
-  @override
-  String get bridgesMoatFailed =>
-      'Tidak bisa menghubungi tor project. Coba lagi sebentar lagi, atau tempel baris jembatan di bawah.';
-
-  @override
-  String get bridgesGotBridgesSaveTo =>
-      'Dapat jembatan · simpan untuk memakainya';
-
-  @override
   String get bridgesConnected => 'Terhubung';
-
-  @override
-  String get bridgesNotThroughYetTor => 'Belum tembus. Tor terus mencoba';
-
-  @override
-  String get bridgesBridges => 'Jembatan';
-
-  @override
-  String get bridgesTorIsBlockedWhere => 'Tor diblokir di tempatmu?';
-
-  @override
-  String get bridgesBridgesDisguiseYourConnection =>
-      'Jembatan menyamarkan koneksimu agar bisa lolos keluar. Pilih satu jalan masuk, simpan, lalu tor tersambung ulang lewat jalan itu.';
-
-  @override
-  String get bridgesBridgesOnlyChangeHow =>
-      'Jembatan hanya mengubah cara tor terhubung, dan saat ini kamu tidak di mode onion. Pengaturan di sini tetap disimpan, hanya saja tidak berpengaruh sampai kamu kembali ke mode itu.';
 
   @override
   String get bridgesFromTheTorProject => 'Dari tor project';
 
   @override
-  String get bridgesNoise => 'Derau';
-
-  @override
-  String get bridgesGood => 'Bagus';
-
-  @override
-  String get bridgesMakesTorTrafficLook =>
-      'Membuat lalu lintas tor tidak tampak seperti apa pun. Pilihan bawaan terbaik untuk kebanyakan jaringan yang diblokir. Jawab captcha, lalu kamu dapat beberapa baris.';
-
-  @override
-  String get bridgesPrivateBridge => 'Jembatan pribadi';
-
-  @override
-  String get bridgesALineFromA => 'Baris dari teman';
-
-  @override
-  String get bridgesWhateverTheLineSays => 'Sesuai isi barisnya';
-
-  @override
-  String get bridgesDepends => 'Tergantung';
-
-  @override
-  String get bridgesGotABridgeLine =>
-      'Punya baris jembatan dari orang yang kamu percaya, atau dari bridges.torproject.org? Tempel di sini. Hanya baris obfs4, Kryfo belum mendukung yang lain.';
-
-  @override
   String get bridgesPasteFromClipboard => 'Tempel dari papan klip';
-
-  @override
-  String get bridgesUseBridges => 'Pakai jembatan';
-
-  @override
-  String get bridgesNoLinesYet => 'Belum ada baris';
 
   @override
   String bridges1LineSaved(int count) {
@@ -1140,66 +1080,7 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get bridgesRestartingTor => 'Memulai ulang tor…';
-
-  @override
-  String bridgesFindingABridgeS(Object elapsed) {
-    return 'Mencari jembatan… $elapsed dtk';
-  }
-
-  @override
-  String bridgesStillTryingS(Object elapsed) {
-    return 'Masih mencoba… $elapsed dtk';
-  }
-
-  @override
-  String get bridgesApplying => 'Menerapkan…';
-
-  @override
-  String get bridgesSaveAndReconnect => 'Simpan dan sambung ulang';
-
-  @override
-  String get bridgesWhatABridgeIs => 'Apa itu jembatan';
-
-  @override
-  String get bridgesATorEntryPoint =>
-      'Pintu masuk tor yang tidak dipublikasikan siapa pun, dicapai lewat pembungkus agar koneksinya tidak tampak seperti tor. Sisa rutenya tetap tiga lompatan seperti biasa.';
-
-  @override
-  String get bridgesLooksLike => 'Terlihat seperti';
-
-  @override
-  String get bridgesSpeed => 'Kecepatan';
-
-  @override
-  String get bridgesGetBridges => 'Dapatkan jembatan';
-
-  @override
-  String get bridgesAskTheTorProject =>
-      'Minta langsung ke tor project. Kamu memecahkan teka-teki agar bot tidak bisa menghabiskan persediaannya.';
-
-  @override
-  String get bridgesTypeWhatYouSee =>
-      'Ketik yang kamu lihat. Huruf kecil tidak masalah.';
-
-  @override
-  String get bridgesThisOneRequestDoes =>
-      'Permintaan yang satu ini tidak lewat tor - memang tidak bisa, karena tor-lah yang sedang tidak jalan. Siapa pun yang mengelola jaringanmu akan melihat kamu menghubungi tor project. Kalau itu saja sudah jadi masalah di tempatmu, cari jembatan di tempat lain dan tempel di bawah.';
-
-  @override
-  String get bridgesCouldNotDrawThe => 'Gagal menampilkan teka-teki';
-
-  @override
-  String get bridgesAnswer => 'Jawab';
-
-  @override
   String get bridgesAsking => 'Meminta…';
-
-  @override
-  String get bridgesRequestBridges => 'Minta jembatan';
-
-  @override
-  String get bridgesDifferentPuzzle => 'Teka-teki lain';
 
   @override
   String get cameraNoCameraOnThis => 'Tidak ada kamera di ponsel ini';
@@ -3077,33 +2958,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get homeKeepWaiting => 'Tunggu lagi';
 
   @override
-  String get homeNotConnecting => 'Belum tersambung';
-
-  @override
-  String get homeBridgesAreOnAnd =>
-      'Jembatan aktif dan tor masih belum tembus. Jembatan lebih lambat, dan sebagian bisa mati tanpa peringatan. Kalau jaringanmu tidak memblokir tor, terhubung langsung lebih cepat dan lebih andal.';
-
-  @override
-  String get homeGoingDirectReconnecting => 'Langsung · menyambung ulang';
-
-  @override
-  String get homeTurnBridgesOff => 'Matikan jembatan';
-
-  @override
-  String get homeStillTrying => 'Masih mencoba';
-
-  @override
-  String get homeTorIsNotGetting =>
-      'Tor belum juga tembus. Sebagian jaringan sengaja memblokirnya. Relay milik kami cukup satu koneksi biasa dan biasanya tetap berhasil - atau pakai jembatan, yang lebih lama disiapkan.';
-
-  @override
   String get homeSwitchedToRelay => 'Beralih ke relay';
 
   @override
   String get homeUseOurRelay => 'Pakai relay kami';
-
-  @override
-  String get homeBridges => 'Jembatan';
 
   @override
   String get homeOffline => 'Offline';
@@ -5156,13 +5014,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get settingsOnion3Hops => 'Onion · 3 lompatan';
 
   @override
-  String get settingsBridges => 'Jembatan';
-
-  @override
-  String get settingsForNetworksThatBlock =>
-      'Untuk jaringan yang memblokir tor';
-
-  @override
   String get settingsGettingMessages => 'Menerima pesan';
 
   @override
@@ -6682,9 +6533,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get bridgesConnecting => 'Menghubungkan';
 
   @override
-  String get bridgesSavedTag => 'Tersimpan';
-
-  @override
   String get restoreMade => 'Dibuat';
 
   @override
@@ -6833,7 +6681,232 @@ class AppLocalizationsId extends AppLocalizations {
   String get confirmSheetCancel => 'Batal';
 
   @override
-  String bridgesSaved(int count) {
+  String get bridgesConnection => 'Koneksi';
+
+  @override
+  String get bridgesAutomatic => 'Otomatis';
+
+  @override
+  String get bridgesKryfoFindsAWay =>
+      'Kryfo mencari cara yang berhasil di tempatmu.';
+
+  @override
+  String get bridgesDirect => 'Langsung';
+
+  @override
+  String get bridgesFastestWhereTorIsnt =>
+      'Paling cepat kalau Tor tidak diblokir. Kryfo tidak pernah terhubung di luar Tor.';
+
+  @override
+  String get bridgesBridgeFromAFriend => 'Jembatan dari teman';
+
+  @override
+  String get bridgesPasteOrScanALine =>
+      'Tempel atau pindai baris dari orang yang kamu percaya.';
+
+  @override
+  String get bridgesMore => 'Selengkapnya';
+
+  @override
+  String get bridgesConnectingDots => 'Menghubungkan…';
+
+  @override
+  String get bridgesAlmostThere => 'Sebentar lagi';
+
+  @override
+  String get bridgesStraightToTor => 'Langsung ke Tor, tanpa perlu jembatan';
+
+  @override
+  String get bridgesThroughABridge => 'Lewat jembatan';
+
+  @override
+  String get bridgesTorSeemsBlocked =>
+      'Tor sepertinya diblokir di jaringan ini';
+
+  @override
+  String get bridgesYourNetworkMayBe => 'Jaringanmu mungkin dibatasi';
+
+  @override
+  String get bridgesTryingAnotherWay => 'Mencoba cara lain…';
+
+  @override
+  String bridgesTryingAnotherWayOf(String attempt, String attempts) {
+    return 'Mencoba cara lain… ($attempt dari $attempts)';
+  }
+
+  @override
+  String get bridgesAskingTheTorProject =>
+      'Menanyakan ke Tor Project apa yang berhasil di sini…';
+
+  @override
+  String get bridgesLookingForAVolunteer => 'Mencari relawan';
+
+  @override
+  String get bridgesFoundAVolunteer => 'Relawan ditemukan, menghubungkan';
+
+  @override
+  String get bridgesCouldNotReachTheTor => 'Tidak bisa menghubungi Tor Project';
+
+  @override
+  String get bridgesConnectingThroughYourBridge =>
+      'Menghubungkan lewat jembatanmu…';
+
+  @override
+  String get bridgesNothingGotThrough => 'Tidak ada yang tembus';
+
+  @override
+  String get bridgesKryfoTriesAgainBy =>
+      'Kryfo mencoba lagi sendiri sesekali. Jembatan dari teman bisa membantu.';
+
+  @override
+  String get bridgesNoInternet => 'Tidak ada internet';
+
+  @override
+  String get bridgesKryfoConnectsAsSoon =>
+      'Kryfo langsung terhubung begitu kamu online lagi.';
+
+  @override
+  String get bridgesAsleepBetweenCheckIns => 'Tidur di antara pengecekan';
+
+  @override
+  String get bridgesCheckingForMessages => 'Memeriksa pesan…';
+
+  @override
+  String get bridgesNotNeededRightNow => 'Tidak perlu sekarang';
+
+  @override
+  String get bridgesYouReOnAMode =>
+      'Modemu tidak memakai Tor. Pilihan ini berlaku saat kamu kembali ke mode itu.';
+
+  @override
+  String get bridgesOffline => 'Offline';
+
+  @override
+  String get bridgesGetABridge => 'Dapatkan jembatan';
+
+  @override
+  String get bridgesNotNow => 'Nanti saja';
+
+  @override
+  String get bridgesTorIsBlockedOnThis => 'Tor diblokir di jaringan ini';
+
+  @override
+  String get bridgesKryfoCanAskThe =>
+      'Kryfo bisa meminta jembatan ke Tor Project untuk menembus blokir itu.';
+
+  @override
+  String get bridgesKryfoCanGetAround => 'Kryfo kini bisa menembus blokir Tor';
+
+  @override
+  String get bridgesAutomaticFindsAWay =>
+      'Otomatis mencari cara sendiri saat Tor diblokir. Untuk itu, mode ini mungkin menghubungi jembatan di luar Tor.';
+
+  @override
+  String get bridgesTurnOnAutomatic => 'Aktifkan otomatis';
+
+  @override
+  String get bridgesInUse => 'Dipakai';
+
+  @override
+  String get bridgesNothingYet => 'Belum ada';
+
+  @override
+  String get bridgesTorNoBridge => 'Tor, tanpa jembatan';
+
+  @override
+  String get bridgesBuiltIn => 'bawaan';
+
+  @override
+  String get bridgesFromTheTorProjectLower => 'dari Tor Project';
+
+  @override
+  String get bridgesFromAFriendLower => 'dari teman';
+
+  @override
+  String bridgesMethodFrom(String method, String from) {
+    return '$method, $from';
+  }
+
+  @override
+  String get bridgesBuiltInBridges => 'Jembatan bawaan';
+
+  @override
+  String get bridgesObfs4BridgesThatCome =>
+      'Jembatan bawaan Kryfo (obfs4). Cepat dicoba, sering diblokir.';
+
+  @override
+  String get bridgesGoesThroughAVolunteer =>
+      'Lewat komputer relawan. Sulit diblokir, lambat di awal.';
+
+  @override
+  String get bridgesBridgesTheTorProject =>
+      'Jembatan yang sebelumnya kamu dapat dari Tor Project.';
+
+  @override
+  String get bridgesAskTorProject => 'Tanya Tor Project';
+
+  @override
+  String get bridgesWhenTorIsBlockedAutomatic =>
+      'Saat Tor diblokir, Otomatis menanyakan ke Tor Project apa yang berhasil di negaramu.';
+
+  @override
+  String get bridgesCountry => 'Negara';
+
+  @override
+  String get bridgesLetTheTorProject => 'Biar Tor Project yang menebak';
+
+  @override
+  String get bridgesTheTorProjectKnows =>
+      'Tor Project punya saran sendiri untuk negara-negara ini.';
+
+  @override
+  String get bridgesTheTorProjectSGuess => 'Tebakan Tor Project';
+
+  @override
+  String get bridgesBelarus => 'Belarus';
+
+  @override
+  String get bridgesChina => 'Tiongkok';
+
+  @override
+  String get bridgesEgypt => 'Mesir';
+
+  @override
+  String get bridgesHongKong => 'Hong Kong';
+
+  @override
+  String get bridgesIran => 'Iran';
+
+  @override
+  String get bridgesMyanmar => 'Myanmar';
+
+  @override
+  String get bridgesRussia => 'Rusia';
+
+  @override
+  String get bridgesTurkmenistan => 'Turkmenistan';
+
+  @override
+  String get bridgesSavedLines => 'Baris tersimpan';
+
+  @override
+  String get bridgesKryfoCanTUseThis => 'Kryfo tidak bisa memakai baris ini';
+
+  @override
+  String get bridgesTooLongForTor => 'Terlalu panjang untuk Tor';
+
+  @override
+  String get bridgesPasteTheLineThey =>
+      'Tempel baris yang mereka kirim, atau pindai kodenya. Pengelola jembatan bisa melihat kapan kamu memakai Tor, jadi ambil baris hanya dari orang yang kamu percaya.';
+
+  @override
+  String get bridgesPasteABridgeLine => 'Tempel baris jembatan';
+
+  @override
+  String get bridgesScanACode => 'Pindai kode';
+
+  @override
+  String bridgesUseThisBridge(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
@@ -6841,32 +6914,92 @@ class AppLocalizationsId extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString jembatan',
+      other: 'Pakai $countString jembatan ini',
+      one: 'Pakai jembatan ini',
     );
     return '$_temp0';
   }
 
   @override
-  String bridgesSavedSomeBad(int good, int bad) {
-    final intl.NumberFormat goodNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
-    final String goodString = goodNumberFormat.format(good);
-    final intl.NumberFormat badNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
-    final String badString = badNumberFormat.format(bad);
+  String get bridgesNoneOfTheseAre =>
+      'Tidak ada satu pun baris jembatan yang dimengerti Kryfo.';
 
-    return '$goodString diterima, $badString tidak dikenali';
+  @override
+  String get bridgesThisLineIsTooLong => 'Baris ini terlalu panjang untuk Tor.';
+
+  @override
+  String bridgesKryfoCouldNotRead(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Kryfo tidak bisa membaca $countString baris di antaranya',
+    );
+    return '$_temp0';
   }
 
   @override
-  String get bridgesNoneUsable =>
-      'Tidak ada baris yang bisa dipakai sebagai jembatan, jadi jembatan tetap mati';
+  String get bridgesScanABridgeCode => 'Pindai kode jembatan';
 
   @override
-  String get bridgesCouldNotApply =>
-      'Jembatan tidak bisa diterapkan. Coba simpan lagi.';
+  String get bridgesPointAtTheBridge => 'Arahkan ke kode QR jembatan';
+
+  @override
+  String get bridgesThatSNotABridge => 'Itu bukan baris jembatan';
+
+  @override
+  String get bridgesDetails => 'Detail';
+
+  @override
+  String get bridgesThisBridgeIsnTGetting => 'Jembatan ini tidak tembus';
+
+  @override
+  String get bridgesBridgesGoDeadWithout =>
+      'Jembatan bisa berhenti bekerja tanpa peringatan. Otomatis bisa mencari cara lain.';
+
+  @override
+  String get bridgesSwitchToAutomatic => 'Ganti ke otomatis';
+
+  @override
+  String get bridgesOurRelayUsuallyGets =>
+      'Relay kami cukup satu koneksi biasa dan biasanya tembus. Atau biarkan Kryfo mencari cara sendiri.';
+
+  @override
+  String get bridgesTryAutomatic => 'Coba otomatis';
+
+  @override
+  String get settingsBridgesForNetworksThat =>
+      'Jembatan, untuk jaringan yang memblokir Tor';
+
+  @override
+  String get torBootSplashIfTorIsBlocked =>
+      'Kalau Tor diblokir atau berisiko di tempatmu, Kryfo bisa mulai lewat jembatan.';
+
+  @override
+  String get torBootSplashConnect => 'Hubungkan';
+
+  @override
+  String get torBootSplashTorIsBlockedOr =>
+      'Tor diblokir atau berisiko di sini';
+
+  @override
+  String get transportBridgeMode => 'Jembatan';
+
+  @override
+  String get transportBridgePhase => 'Fase';
+
+  @override
+  String get transportBridgeMethod => 'Metode';
+
+  @override
+  String get transportBridgeError => 'Error terakhir';
+
+  @override
+  String get bridgesWhenYouAskFor =>
+      'Saat kamu meminta jembatan, Tor Project melihat alamat IP-mu. Itu wajar: begitulah Tor Browser dan semua aplikasi Tor mendapatkan jembatan, dan yang mereka ketahui hanyalah ada seseorang yang meminta jembatan. Tidak ada apa pun tentang obrolanmu.';
 
   @override
   String get languageTitle => 'Bahasa';

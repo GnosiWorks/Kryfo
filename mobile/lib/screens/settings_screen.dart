@@ -14,6 +14,7 @@ import '../widgets/motion.dart' show haloRoute, houseSpring;
 import 'why_kryfo_screen.dart';
 import 'transport_screen.dart';
 import 'bridges_screen.dart';
+import '../bridge_mode.dart' show BridgeChoice, bridgeChoiceName;
 import 'seen_screen.dart';
 import '../theme.dart';
 import '../notif_permission.dart';
@@ -464,9 +465,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               HaloRow(
                 icon: Icons.vpn_lock_outlined,
-                label: l10n.settingsBridges,
-                hint: l10n.settingsForNetworksThatBlock,
-                value: appState.bridgesOn ? l10n.commonOn : l10n.commonOff,
+                label: l10n.bridgesConnection,
+                hint: l10n.settingsBridgesForNetworksThat,
+                // a decoy sees automatic, whatever runs underneath
+                value: bridgeChoiceName(
+                  appState.inDecoyView
+                      ? BridgeChoice.auto
+                      : appState.bridgeChoice,
+                ),
                 onTap: () async {
                   await Navigator.push(
                     context,

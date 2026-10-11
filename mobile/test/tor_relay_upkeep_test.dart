@@ -5,7 +5,7 @@
 // engine already lets run is put to sleep again. a mode switch sets its
 // relay list before anything subscribes, one switch at a time, and moves
 // everyone listened for. a spell offline or another mode's outage never
-// shows as our relay's. bridges count as on only when the engine took one.
+// shows as our relay's. a friend's lines count only when the engine took one.
 // a tor stuck on a network that blocks it brings up the bridges card on time
 // alone, and a route torn down that climbs back to where it stuck keeps it.
 // bridges, a reconnect, a mode or a network the person changed start a try
@@ -21,13 +21,11 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/delivery_mode.dart';
-import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/main.dart'
     show AppState, HaloEngine, useDatabasesForTest, useEngineForTest;
 import 'package:kryfo/router.dart';
-import 'package:kryfo/screens/bridges_screen.dart'
-    show bridgesResultBad, bridgesResultLine;
+import 'package:kryfo/bridge_mode.dart';
 import 'package:kryfo/session.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -84,13 +82,13 @@ class _Engine implements HaloEngine {
     return 'ok';
   }
 
-  // the answer to a save, and what the engine then holds
-  String saved = 'ok: 1 bridges';
-  String state = 'true|1|0';
+  // the answer to a mode, and its checks of the lines
+  String mode = 'ok';
+  String checks = '[]';
   @override
-  String setBridges(String lines, bool on) => saved;
+  String setBridgeMode(String m, String opts) => mode;
   @override
-  String bridgeState() => state;
+  String bridgeLineChecks() => checks;
 
   @override
   void restartTor() => log.add('restart');
@@ -393,28 +391,25 @@ void main() {
   });
 
   group('bridges', () {
-    test('lines the engine could not read leave them off', () async {
+    test('lines the engine could not read are not used', () async {
       final app = AppState();
       eng
-        ..saved = 'ok: 0 accepted, 3 not understood'
-        ..state = 'false|0|0';
-      final r = await app.applyBridges('obfs4 mangled\nwrapped\nhalf', true);
-      expect(app.bridgesOn, isFalse);
-      expect(bridgesResultBad(r), isTrue);
-      expect(bridgesResultLine(r), l10n.bridgesNoneUsable);
+        ..mode = 'error: lines_bad'
+        ..checks = '[{"i":0,"state":"broken"},{"i":1,"state":"broken"}]';
+      final r = await app.useFriendLines('obfs4 mangled\nwrapped');
+      expect(r.used, isFalse);
+      expect(r.broken, 2);
+      expect(app.bridgeChoice, BridgeChoice.auto);
+      expect(app.manualBridge, isFalse);
 
       eng
-        ..saved = 'ok: 2 accepted, 1 not understood'
-        ..state = 'true|2|41234';
-      final s = await app.applyBridges('a\nb\nc', true);
-      expect(app.bridgesOn, isTrue);
-      expect(bridgesResultBad(s), isFalse);
-      expect(bridgesResultLine(s), l10n.bridgesSavedSomeBad(2, 1));
-
-      // off is off, whatever the engine holds
-      eng.state = 'true|2|41234';
-      await app.applyBridges('a\nb', false);
-      expect(app.bridgesOn, isFalse);
+        ..mode = 'ok'
+        ..checks = '[{"i":0,"state":"ok"},{"i":1,"state":"broken"}]';
+      final s = await app.useFriendLines('a\nb');
+      expect(s.used, isTrue);
+      expect(s.broken, 1);
+      expect(app.bridgeChoice, BridgeChoice.friend);
+      expect(app.manualBridge, isTrue);
     });
   });
 
@@ -430,7 +425,9 @@ void main() {
     }
 
     test('a tor stuck under half way shows it by time alone', () {
-      final app = AppState()..sendModeForTest = 'private';
+      final app = AppState()
+        ..sendModeForTest = 'private'
+        ..bridgeSetupForTest = const BridgeSetup(choice: BridgeChoice.direct);
       var told = 0;
       app.addListener(() => told++);
       poll(app, 'starting|5|0|0|0', 0, 119);
@@ -443,7 +440,9 @@ void main() {
     });
 
     test('a route torn down that climbs back to where it stuck keeps it', () {
-      final app = AppState()..sendModeForTest = 'private';
+      final app = AppState()
+        ..sendModeForTest = 'private'
+        ..bridgeSetupForTest = const BridgeSetup(choice: BridgeChoice.direct);
       poll(app, 'starting|5|0|0|0', 0, 130);
       expect(app.suggestBridgesAt(at(130)), isTrue);
       // the engine's rescue: down to nothing and back to the same place
@@ -469,11 +468,13 @@ void main() {
     }
 
     test('bridges turned on get a try of their own', () async {
-      final app = AppState()..sendModeForTest = 'private';
+      final app = AppState()
+        ..sendModeForTest = 'private'
+        ..bridgeSetupForTest = const BridgeSetup(choice: BridgeChoice.direct);
       poll(app, 'starting|30|0|0|0', 0, 130);
       expect(app.suggestBridgesAt(at(130)), isTrue);
-      await app.applyBridges('a\nb', true);
-      expect(app.bridgesOn, isTrue);
+      await app.useFriendLines('a\nb');
+      expect(app.manualBridge, isTrue);
       climb(app, 131);
       // stuck from here on, it is the bridges that are not working
       poll(app, 'starting|25|0|0|1', 191, 300);
@@ -481,12 +482,14 @@ void main() {
     });
 
     test('bridges turned off do not bring the other card back', () async {
-      final app = AppState()..sendModeForTest = 'private';
-      await app.applyBridges('a\nb', true);
+      final app = AppState()
+        ..sendModeForTest = 'private'
+        ..bridgeSetupForTest = const BridgeSetup(choice: BridgeChoice.direct);
+      await app.useFriendLines('a\nb');
       poll(app, 'starting|30|0|0|0', 0, 130);
       expect(app.suggestBridgesOffAt(at(130)), isTrue);
-      eng.state = 'false|1|0';
-      await app.applyBridges('a\nb', false);
+      await app.chooseBridge(BridgeChoice.direct);
+      app.applyBridgeNow();
       app.restartTor();
       expect(log, ['restart']);
       climb(app, 131);
@@ -494,7 +497,9 @@ void main() {
 
     test('a reconnect or another network is a try of its own', () {
       for (final change in ['reconnect', 'network']) {
-        final app = AppState()..sendModeForTest = 'private';
+        final app = AppState()
+          ..sendModeForTest = 'private'
+          ..bridgeSetupForTest = const BridgeSetup(choice: BridgeChoice.direct);
         poll(app, 'starting|30|0|0|0', 0, 130);
         expect(app.suggestBridgesAt(at(130)), isTrue);
         if (change == 'reconnect') {
@@ -513,7 +518,8 @@ void main() {
       await router.load();
       final app = AppState(io: _Io(log), router: router)
         ..myId = 'me'
-        ..sendModeForTest = 'private';
+        ..sendModeForTest = 'private'
+        ..bridgeSetupForTest = const BridgeSetup(choice: BridgeChoice.direct);
       useDatabasesForTest(live, Session(live));
       poll(app, 'starting|30|0|0|0', 0, 130);
       expect(app.suggestBridgesAt(at(130)), isTrue);
@@ -524,7 +530,9 @@ void main() {
     });
 
     test('nothing to say once tor carries traffic', () {
-      final app = AppState()..sendModeForTest = 'private';
+      final app = AppState()
+        ..sendModeForTest = 'private'
+        ..bridgeSetupForTest = const BridgeSetup(choice: BridgeChoice.direct);
       var told = 0;
       poll(app, 'starting|5|0|0|0', 0, 130);
       app.addListener(() => told++);

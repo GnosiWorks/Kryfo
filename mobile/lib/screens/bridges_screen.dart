@@ -1,26 +1,24 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// bridges. a direct tor connection is recognisable, and in the places where
-// kryfo matters most that is enough to get it blocked. a bridge is an entry
-// point that is not published anywhere, reached through obfs4, which makes
-// the traffic look like nothing in particular.
-import 'dart:convert';
-import '../secure_store.dart';
-
+// how tor gets out. one choice, applied at once: automatic finds a way by
+// itself, direct is tor alone, and a friend's bridge is a line someone
+// gave you. the details, transport names and all, wait behind "more".
+// a decoy sees automatic and the status line, nothing else.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../dlog.dart';
+
+import '../bridge_mode.dart';
+import '../l10n/l10n.dart';
 import '../main.dart' hide live;
-import '../seen_timers.dart';
 import '../theme.dart';
 import '../widgets/ease_size.dart';
 import '../widgets/halo_bar.dart';
+import '../widgets/halo_buttons.dart';
+import '../widgets/halo_switch.dart';
 import '../widgets/motion.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/stagger_in.dart';
-import '../widgets/halo_switch.dart';
 import '../widgets/swap.dart';
-import '../l10n/l10n.dart';
-import '../l10n/numbers.dart';
+import 'bridge_sheets.dart';
 
 class BridgesScreen extends StatefulWidget {
   const BridgesScreen({super.key});
@@ -30,1013 +28,1002 @@ class BridgesScreen extends StatefulWidget {
 }
 
 class _BridgesScreenState extends State<BridgesScreen> {
-  late final TextEditingController _ctrl;
-  late bool _on;
-  bool _busy = false;
-  String? _result;
-  bool _asking = false;
-  bool _reconnecting = false;
-  int _elapsed = 0;
-  // when the reconnect began, and the route before it
-  int _since = 0;
-  int _genBefore = 0;
-  // the last save asked for bridges and the engine took none of its lines.
-  // tor still reconnects, without bridges, and that is no success to report
-  bool _noneTaken = false;
-  // the reconnect is watched once a second while the page is seen. away or
-  // under the lock nothing ticks; back, it looks at once
-  final _timers = SeenTimers();
-  late final SeenJob _tick = _timers.until(
-    () => _reconnecting ? const Duration(seconds: 1) : null,
-    (_) => _watch(),
-  );
-  String? _captcha;
-  String? _challenge;
-  String? _askError;
-  final _answer = TextEditingController();
+  bool _more = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = TextEditingController(text: appState.bridgeLines);
-    _on = appState.bridgesOn;
-    _ctrl.addListener(() => setState(() {}));
-    _loadSource();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _timers.watch(context);
-  }
-
-  @override
-  void dispose() {
-    _timers.dispose();
-    _ctrl.dispose();
-    _answer.dispose();
-    super.dispose();
-  }
-
-  int get _lineCount =>
-      _ctrl.text.split('\n').where((l) => l.trim().isNotEmpty).length;
-
-  // ask bridges.torproject.org for a fresh set. this goes through meek, not
-  // tor: tor being unreachable is the whole reason someone is on this screen.
-  // a note (a wrong answer) stays up over the new puzzle
-  Future<void> _request({String? note}) async {
-    setState(() {
-      _asking = true;
-      _captcha = null;
-      _challenge = null;
-      _askError = note;
-    });
-    final r = await engine.moatFetch();
-    if (!mounted) return;
-    if (!r.startsWith('ok|')) {
-      // a fixed line, whatever the network said
-      dlog('bridges: moat fetch: $r');
-      setState(() {
-        _asking = false;
-        _askError = l10n.bridgesMoatFailed;
-      });
+  Future<void> _pick(BridgeChoice c) async {
+    if (c == BridgeChoice.friend &&
+        splitBridgeLines(appState.bridge.friendLines).isEmpty) {
+      await showFriendLinesSheet(context);
       return;
     }
-    final parts = r.substring(3).split('|');
-    setState(() {
-      _asking = false;
-      _captcha = parts[0];
-      _challenge = parts.length > 1 ? parts.sublist(1).join('|') : null;
-      _answer.clear();
-    });
-  }
-
-  Future<void> _sendAnswer() async {
-    final ch = _challenge;
-    if (ch == null || _answer.text.trim().isEmpty) return;
-    setState(() {
-      _asking = true;
-      _askError = null;
-    });
-    final r = await engine.moatSolve(ch, _answer.text.trim());
-    if (!mounted) return;
-    if (r == 'wrong') {
-      // a wrong or stale captcha is a normal outcome, not a failure. fetch a
-      // new one rather than making them tap again.
-      await _request(note: l10n.bridgesThatWasNotIt);
-      return;
-    }
-    if (!r.startsWith('ok|')) {
-      dlog('bridges: moat solve: $r');
-      setState(() {
-        _asking = false;
-        _askError = l10n.bridgesMoatFailed;
-      });
-      return;
-    }
-    final lines = r.substring(3);
-    setState(() {
-      _asking = false;
-      _captcha = null;
-      _challenge = null;
-      _on = true;
-      _ctrl.text = _ctrl.text.trim().isEmpty
-          ? lines
-          : '${_ctrl.text.trim()}\n$lines';
-    });
-    HapticFeedback.mediumImpact();
-    if (mounted) {
-      showHaloToast(context, l10n.bridgesGotBridgesSaveTo);
-    }
-  }
-
-  Future<void> _save() async {
-    setState(() => _busy = true);
-    HapticFeedback.mediumImpact();
-    final lines = _ctrl.text.trim();
-    final asked = _on && lines.isNotEmpty;
-    final r = await appState.applyBridges(lines, asked);
-    // the route generation before the reconnect. the reconnect happens after
-    // restartTor returns, so a "ready" in the next second or two is the old
-    // tor. connected means a newer route that a relay has connected through.
-    _genBefore = appState.routeGen;
-    appState.restartTor();
-    if (!mounted) return;
-    setState(() {
-      _result = r;
-      // the switch shows what the engine took, not what was asked
-      _on = appState.bridgesOn;
-      _noneTaken = asked && !appState.bridgesOn;
-      _reconnecting = true;
-      _elapsed = 0;
-      _since = DateTime.now().millisecondsSinceEpoch;
-    });
-    // a dead button for minutes looks broken. count, and stop when tor can
-    // carry traffic again.
-    _tick.poke();
-  }
-
-  void _watch() {
-    if (!mounted || !_reconnecting) return;
-    final through = appState.routeGen > _genBefore && appState.torReady;
-    setState(
-      () => _elapsed = (DateTime.now().millisecondsSinceEpoch - _since) ~/ 1000,
-    );
-    if (!through && _elapsed <= 240) return;
-    setState(() {
-      _reconnecting = false;
-      _busy = false;
-    });
-    if (through) {
-      if (_noneTaken) return;
-      HapticFeedback.mediumImpact();
-      showHaloToast(context, l10n.bridgesConnected);
-    } else {
-      showHaloToast(context, l10n.bridgesNotThroughYetTor);
-    }
-  }
-
-  // which card the saved lines came from. the connected state sits on that
-  // one. remembered so it survives reopening the screen.
-  String _source = 'moat';
-
-  Future<void> _loadSource() async {
-    final v = await secureStore.read(key: 'bridge_source');
-    if (mounted && v != null) setState(() => _source = v);
-  }
-
-  Future<void> _setSource(String v) async {
-    setState(() => _source = v);
-    await secureStore.write(key: 'bridge_source', value: v);
+    if (c == appState.bridgeChoice) return;
+    HapticFeedback.selectionClick();
+    await appState.chooseBridge(c);
   }
 
   @override
   Widget build(BuildContext context) {
-    final n = _lineCount;
-    final live = _on && n > 0;
-    // connected: bridges are saved, on, and a relay has connected through
-    // them. never while a reconnect this screen started is still settling.
-    final connected =
-        live && appState.bridgesOn && appState.torReady && !_reconnecting;
-    return Scaffold(
-      backgroundColor: HaloColors.surface,
-      appBar: AppBar(
-        backgroundColor: HaloColors.surface,
-        elevation: 0,
-        iconTheme: IconThemeData(color: HaloColors.text2),
-        title: Text(
-          l10n.bridgesBridges,
-          style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
-        ),
-      ),
-      body: ListView(
-        padding: EdgeInsets.fromLTRB(
-          20,
-          0,
-          20,
-          40 + MediaQuery.paddingOf(context).bottom,
-        ),
-        children: staggerAll([
-          Text(
-            l10n.bridgesTorIsBlockedWhere,
-            style: HaloType.serif(size: 26, color: HaloColors.text),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            l10n.bridgesBridgesDisguiseYourConnection,
-            style: HaloType.sans(
-              size: 13,
-              color: HaloColors.text2,
-              height: 1.45,
-            ),
-          ),
-          if (appState.sendMode != 'private') ...[
-            const SizedBox(height: 14),
-            Container(
-              padding: const EdgeInsets.fromLTRB(14, 12, 14, 13),
-              decoration: BoxDecoration(
-                color: HaloColors.surface2,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: HaloColors.line),
-              ),
-              child: Text(
-                l10n.bridgesBridgesOnlyChangeHow,
-                style: HaloType.sans(size: 12.5, color: HaloColors.text2),
+    return ListenableBuilder(
+      listenable: appState,
+      builder: (context, _) {
+        final decoy = appState.inDecoyView;
+        final b = appState.bridge;
+        final s = appState.bridgeStatus;
+        final line = appState.bridgeLine;
+        // decoy: automatic, whatever runs underneath
+        final chosen = decoy ? BridgeChoice.auto : b.choice;
+        String? tag(BridgeChoice c) {
+          if (c != chosen || line.tone == BridgeTone.quiet) return null;
+          if (line.tone == BridgeTone.green) return l10n.bridgesConnected;
+          if (line.tone == BridgeTone.amber) return l10n.bridgesConnecting;
+          return null;
+        }
+
+        final friendCount = splitBridgeLines(b.friendLines).length;
+        return Scaffold(
+          backgroundColor: HaloColors.surface,
+          appBar: AppBar(
+            backgroundColor: HaloColors.surface,
+            elevation: 0,
+            iconTheme: IconThemeData(color: HaloColors.text2),
+            title: Text(
+              l10n.bridgesConnection,
+              style: HaloType.serif(
+                size: 18,
+                italic: true,
+                color: HaloColors.text,
               ),
             ),
-          ],
-          const SizedBox(height: 20),
-
-          // card one: obfs4 from the tor project, through the moat
-          _BridgeCard(
-            name: 'obfs4',
-            from: l10n.bridgesFromTheTorProject,
-            looksLike: l10n.bridgesNoise,
-            speed: l10n.bridgesGood,
-            body: l10n.bridgesMakesTorTrafficLook,
-            active: _source == 'moat' && n > 0,
-            connected: connected && _source == 'moat',
-            reconnecting: _reconnecting && _source == 'moat',
-            child: _RequestBlock(
-              asking: _asking,
-              captcha: _captcha,
-              error: _askError,
-              answer: _answer,
-              onRequest: () {
-                _setSource('moat');
-                _request();
-              },
-              onSend: _sendAnswer,
-            ),
           ),
-          const SizedBox(height: 12),
-
-          // card two: a line someone gave you
-          _BridgeCard(
-            name: l10n.bridgesPrivateBridge,
-            from: l10n.bridgesALineFromA,
-            looksLike: l10n.bridgesWhateverTheLineSays,
-            speed: l10n.bridgesDepends,
-            body: l10n.bridgesGotABridgeLine,
-            active: _source == 'paste' && n > 0,
-            connected: connected && _source == 'paste',
-            reconnecting: _reconnecting && _source == 'paste',
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color: HaloColors.surface3,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: n > 0 && _source == 'paste'
-                          ? HaloColors.violet.withValues(alpha: 0.3)
-                          : HaloColors.line,
-                      width: 0.5,
-                    ),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 4,
-                  ),
-                  child: TextField(
-                    textDirection: TextDirection.ltr,
-                    controller: _ctrl,
-                    maxLines: 5,
-                    minLines: 3,
-                    onChanged: (_) {
-                      if (_source != 'paste') _setSource('paste');
-                    },
-                    style: HaloType.mono(size: 11, color: HaloColors.text),
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      hintText:
-                          'obfs4 1.2.3.4:443 FINGERPRINT cert=… iat-mode=0',
-                      hintStyle: HaloType.mono(
-                        size: 10.5,
-                        color: HaloColors.text3,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                _Ghost(
-                  icon: Icons.content_paste_rounded,
-                  label: l10n.bridgesPasteFromClipboard,
-                  onTap: () async {
-                    final d = await Clipboard.getData('text/plain');
-                    final t = d?.text?.trim();
-                    if (t == null || t.isEmpty || !mounted) return;
-                    HapticFeedback.selectionClick();
-                    setState(() {
-                      _ctrl.text = _ctrl.text.trim().isEmpty
-                          ? t
-                          : '${_ctrl.text.trim()}\n$t';
-                    });
-                    _setSource('paste');
-                  },
-                ),
-              ],
+          body: ListView(
+            padding: EdgeInsetsDirectional.fromSTEB(
+              20,
+              4,
+              20,
+              40 + MediaQuery.paddingOf(context).bottom,
             ),
-          ),
-          const SizedBox(height: 18),
-
-          // the switch, and the lines it applies to, as one switch to a
-          // screen reader
-          MergeSemantics(
-            child: PressScale(
-              scale: 0.98,
-              onTap: () => setState(() => _on = !_on),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
+            children: staggerAll([
+              BridgeStatusView(
+                line: line,
+                onAction: decoy ? null : (a) => _act(a),
+              ),
+              const SizedBox(height: 18),
+              if (!decoy)
+                EaseSize(
+                  child: b.offerAuto
+                      ? Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _OfferCard(
+                            onYes: () => _pick(BridgeChoice.auto),
+                            onNo: appState.dismissAutoOffer,
+                          ),
+                        )
+                      : const SizedBox(width: double.infinity),
                 ),
-                decoration: BoxDecoration(
-                  color: HaloColors.surface2,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: _on
-                        ? HaloColors.violet.withValues(alpha: 0.4)
-                        : HaloColors.line,
-                  ),
-                ),
-                child: Row(
+              Semantics(
+                container: true,
+                explicitChildNodes: true,
+                child: Column(
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.bridgesUseBridges,
-                            style: HaloType.sans(
-                              size: 14.5,
-                              color: HaloColors.text,
-                            ),
-                          ),
-                          Text(
-                            n == 0
-                                ? l10n.bridgesNoLinesYet
-                                : l10n.bridges1LineSaved(n),
-                            style: HaloType.mono(
-                              size: 10.5,
-                              color: n > 0
-                                  ? HaloColors.violet
-                                  : HaloColors.text3,
-                            ),
-                          ),
-                        ],
+                    _ChoiceCard(
+                      title: l10n.bridgesAutomatic,
+                      body: l10n.bridgesKryfoFindsAWay,
+                      selected: chosen == BridgeChoice.auto,
+                      tag: tag(BridgeChoice.auto),
+                      onTap: decoy ? null : () => _pick(BridgeChoice.auto),
+                    ),
+                    if (!decoy) ...[
+                      const SizedBox(height: 10),
+                      _ChoiceCard(
+                        title: l10n.bridgesDirect,
+                        body: l10n.bridgesFastestWhereTorIsnt,
+                        selected: chosen == BridgeChoice.direct,
+                        tag: tag(BridgeChoice.direct),
+                        onTap: () => _pick(BridgeChoice.direct),
                       ),
-                    ),
-                    // the switch clicks on its own
-                    HaloSwitch(
-                      value: _on,
-                      onChanged: (v) => setState(() => _on = v),
-                    ),
+                      const SizedBox(height: 10),
+                      _ChoiceCard(
+                        title: l10n.bridgesBridgeFromAFriend,
+                        body: l10n.bridgesPasteOrScanALine,
+                        selected: chosen == BridgeChoice.friend,
+                        tag: tag(BridgeChoice.friend),
+                        onTap: () => _pick(BridgeChoice.friend),
+                        extra: friendCount == 0
+                            ? null
+                            : _FriendLinesRow(
+                                count: friendCount,
+                                onEdit: () => showFriendLinesSheet(context),
+                              ),
+                      ),
+                    ],
                   ],
                 ),
               ),
+              if (!decoy) ...[
+                const SizedBox(height: 8),
+                _MoreToggle(
+                  open: _more,
+                  onTap: () => setState(() => _more = !_more),
+                ),
+                EaseSize(
+                  child: _more
+                      ? _MoreSection(status: s, setup: b)
+                      : const SizedBox(width: double.infinity),
+                ),
+              ],
+            ]),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _act(BridgeAction a) async {
+    switch (a) {
+      case BridgeAction.tryAgain:
+        HapticFeedback.mediumImpact();
+        appState.bridgeRetry();
+      case BridgeAction.getBridge:
+        await showTorBlockedSheet(context);
+    }
+  }
+}
+
+Color bridgeToneColor(BridgeTone t) => switch (t) {
+  BridgeTone.green => HaloColors.green,
+  BridgeTone.amber => HaloColors.amber,
+  BridgeTone.rose => HaloColors.rose,
+  BridgeTone.quiet => HaloColors.violet,
+};
+
+String bridgeActionLabel(BridgeAction a) => switch (a) {
+  BridgeAction.tryAgain => l10n.commonTryAgain,
+  BridgeAction.getBridge => l10n.bridgesGetABridge,
+};
+
+/// the live status line: a dot, the state in plain words, how far along,
+/// and the one thing to do when stuck. a new state rises in; a percent or
+/// a count changes in place
+class BridgeStatusView extends StatelessWidget {
+  const BridgeStatusView({super.key, required this.line, this.onAction});
+  final BridgeLine line;
+  final void Function(BridgeAction a)? onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    final tint = bridgeToneColor(line.tone);
+    final still = motionStill(context);
+    final action = onAction == null ? null : line.action;
+    return AnimatedContainer(
+      duration: still ? Duration.zero : const Duration(milliseconds: 300),
+      curve: Curves.easeOutCubic,
+      padding: const EdgeInsetsDirectional.fromSTEB(16, 14, 16, 16),
+      decoration: BoxDecoration(
+        color: Color.alphaBlend(
+          tint.withValues(alpha: 0.07),
+          HaloColors.surface2,
+        ),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: tint.withValues(alpha: 0.32)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              // the dot breathes only while something is at work
+              SizedBox(
+                width: 10,
+                child: line.moving
+                    ? BreathDot(key: ValueKey(tint), color: tint, size: 8)
+                    : AnimatedContainer(
+                        duration: still
+                            ? Duration.zero
+                            : const Duration(milliseconds: 300),
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: tint,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Semantics(
+                  liveRegion: true,
+                  child: RiseSwap(
+                    child: Text(
+                      line.head,
+                      key: ValueKey(line.head),
+                      style: HaloType.serif(size: 20, color: HaloColors.text),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          EaseSize(
+            child: line.detail == null
+                ? const SizedBox(width: double.infinity)
+                : Padding(
+                    padding: const EdgeInsetsDirectional.only(
+                      start: 20,
+                      top: 5,
+                    ),
+                    child: RiseSwap(
+                      child: Text(
+                        line.detail!,
+                        key: ValueKey(line.detailKind),
+                        style: HaloType.mono(
+                          size: 12,
+                          color: HaloColors.text2,
+                        ).copyWith(height: 1.45),
+                      ),
+                    ),
+                  ),
+          ),
+          EaseSize(
+            child: line.moving
+                ? Padding(
+                    padding: const EdgeInsetsDirectional.only(
+                      start: 20,
+                      top: 12,
+                    ),
+                    child: HaloBar(
+                      value: line.progress,
+                      height: 3,
+                      color: tint,
+                    ),
+                  )
+                : const SizedBox(width: double.infinity),
+          ),
+          EaseSize(
+            child: action == null
+                ? const SizedBox(width: double.infinity)
+                : Padding(
+                    padding: const EdgeInsets.only(top: 14),
+                    child: HaloPrimaryButton(
+                      label: bridgeActionLabel(action),
+                      onTap: () => onAction!(action),
+                    ),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// the round mark of a choice: its centre springs in when picked
+class _Mark extends StatelessWidget {
+  const _Mark({required this.on});
+  final bool on;
+
+  @override
+  Widget build(BuildContext context) {
+    final still = motionStill(context);
+    return AnimatedContainer(
+      duration: still ? Duration.zero : const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      width: 22,
+      height: 22,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: on ? HaloColors.violet : HaloColors.line2,
+          width: on ? 2 : 1.5,
+        ),
+      ),
+      alignment: Alignment.center,
+      child: AnimatedScale(
+        scale: on ? 1 : 0,
+        duration: still ? Duration.zero : kHouseTime,
+        curve: kHouseCurve,
+        child: Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: HaloColors.violet,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ChoiceCard extends StatelessWidget {
+  const _ChoiceCard({
+    required this.title,
+    required this.body,
+    required this.selected,
+    required this.onTap,
+    this.tag,
+    this.extra,
+  });
+  final String title;
+  final String body;
+  final bool selected;
+  final VoidCallback? onTap;
+  // connected or connecting, on the one in use
+  final String? tag;
+  final Widget? extra;
+
+  @override
+  Widget build(BuildContext context) {
+    final still = motionStill(context);
+    final t = tag;
+    return Semantics(
+      selected: selected,
+      inMutuallyExclusiveGroup: true,
+      button: onTap != null,
+      child: PressScale(
+        scale: 0.98,
+        haptic: false,
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: still ? Duration.zero : const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          padding: const EdgeInsetsDirectional.fromSTEB(14, 14, 16, 14),
+          decoration: BoxDecoration(
+            color: selected
+                ? Color.alphaBlend(
+                    HaloColors.violet.withValues(alpha: 0.08),
+                    HaloColors.surface2,
+                  )
+                : HaloColors.surface2,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: selected
+                  ? HaloColors.violet.withValues(alpha: 0.6)
+                  : HaloColors.line,
+              width: selected ? 1.2 : 1,
             ),
           ),
-          const SizedBox(height: 20),
-          PressScale(
-            scale: 0.97,
-            haptic: false,
-            onTap: _busy ? null : _save,
-            child: AnimatedContainer(
-              duration: motionStill(context)
-                  ? Duration.zero
-                  : const Duration(milliseconds: 180),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                gradient: (_busy || _reconnecting)
-                    ? null
-                    : LinearGradient(
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                        colors: live
-                            ? [HaloColors.violet, HaloColors.amber]
-                            : [HaloColors.amber, HaloColors.amber],
-                      ),
-                color: _busy ? HaloColors.surface2 : null,
-                border: _reconnecting
-                    ? Border.all(
-                        color: HaloColors.violet.withValues(alpha: 0.5),
-                      )
-                    : null,
-                borderRadius: BorderRadius.circular(16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 1),
+                child: _Mark(on: selected),
               ),
-              child: _reconnecting
-                  ? Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       children: [
-                        // an arc that turns while tor comes back, held
-                        // still with less movement
-                        SizedBox(
-                          width: 13,
-                          height: 13,
-                          child: CircularProgressIndicator(
-                            value: motionStill(context) ? 0.3 : null,
-                            strokeWidth: 2,
-                            color: HaloColors.violet,
-                          ),
-                        ),
-                        const SizedBox(width: 11),
-                        Flexible(
+                        Expanded(
                           child: Text(
-                            _elapsed < 20
-                                ? l10n.bridgesRestartingTor
-                                : _elapsed < 60
-                                ? l10n.bridgesFindingABridgeS(whole(_elapsed))
-                                : l10n.bridgesStillTryingS(whole(_elapsed)),
-                            textAlign: TextAlign.center,
-                            style: HaloType.mono(
-                              size: 12.5,
-                              color: HaloColors.text2,
-                              weight: FontWeight.w600,
+                            title,
+                            style: HaloType.serif(
+                              size: 18,
+                              color: HaloColors.text,
                             ),
                           ),
+                        ),
+                        RiseSwap(
+                          alignment: AlignmentDirectional.centerEnd,
+                          child: t == null
+                              ? const SizedBox.shrink(key: ValueKey('none'))
+                              : Padding(
+                                  key: ValueKey(t),
+                                  padding: const EdgeInsetsDirectional.only(
+                                    start: 8,
+                                  ),
+                                  child: Text(
+                                    t,
+                                    style: HaloType.mono(
+                                      size: 10.5,
+                                      weight: FontWeight.w600,
+                                      color: t == l10n.bridgesConnected
+                                          ? HaloColors.green
+                                          : HaloColors.amber,
+                                    ),
+                                  ),
+                                ),
                         ),
                       ],
-                    )
-                  : Text(
-                      _busy
-                          ? l10n.bridgesApplying
-                          : l10n.bridgesSaveAndReconnect,
-                      style: HaloType.mono(
-                        size: 12.5,
-                        color: HaloColors.onAmber,
-                        weight: FontWeight.w600,
-                        letter: 0.06,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      body,
+                      style: HaloType.sans(
+                        size: 13,
+                        color: HaloColors.text2,
+                        height: 1.4,
                       ),
                     ),
-            ),
+                    ?extra,
+                  ],
+                ),
+              ),
+            ],
           ),
-          // the engine answers "ok: 3 bridges", never a bare ok
-          EaseSize(
-            child: _result == null
-                ? const SizedBox(width: double.infinity)
-                : Padding(
-                    padding: const EdgeInsets.only(top: 10),
-                    child: RiseSwap(
-                      child: Text(
-                        bridgesResultLine(_result!),
-                        key: ValueKey(_result),
-                        style: HaloType.mono(
-                          size: 11,
-                          color: bridgesResultBad(_result!)
-                              ? HaloColors.rose
-                              : HaloColors.text2,
-                        ),
-                      ),
-                    ),
-                  ),
-          ),
-          const SizedBox(height: 22),
-          _Note(l10n.bridgesWhatABridgeIs, l10n.bridgesATorEntryPoint),
-        ]),
+        ),
       ),
     );
   }
 }
 
-// one way in. what it looks like on the wire, how fast it tends to be, and
-// the state of things when it is the one in use.
-class _BridgeCard extends StatelessWidget {
-  final String name;
-  final String from;
-  final String looksLike;
-  final String speed;
-  final String body;
-  final bool active;
-  final bool connected;
-  final bool reconnecting;
-  final Widget child;
-  const _BridgeCard({
-    required this.name,
-    required this.from,
-    required this.looksLike,
-    required this.speed,
-    required this.body,
-    required this.active,
-    required this.connected,
-    required this.reconnecting,
-    required this.child,
-  });
+class _FriendLinesRow extends StatelessWidget {
+  const _FriendLinesRow({required this.count, required this.onEdit});
+  final int count;
+  final VoidCallback onEdit;
 
   @override
-  Widget build(BuildContext context) {
-    final tint = connected ? HaloColors.green : HaloColors.violet;
-    return AnimatedContainer(
-      duration: motionStill(context)
-          ? Duration.zero
-          : const Duration(milliseconds: 220),
-      curve: Curves.easeOutCubic,
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-      decoration: BoxDecoration(
-        color: HaloColors.surface2,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: active ? tint.withValues(alpha: 0.5) : HaloColors.line,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              // one run of text, so on a narrow screen the source wraps
-              // under the name instead of pushing the tag off the edge
-              Expanded(
-                child: Text.rich(
-                  TextSpan(
-                    children: [
-                      TextSpan(
-                        text: name,
-                        style: HaloType.serif(size: 20, color: HaloColors.text),
-                      ),
-                      const TextSpan(text: '  '),
-                      TextSpan(
-                        text: from,
-                        style: HaloType.sans(size: 12, color: HaloColors.text2),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              RiseSwap(
-                alignment: AlignmentDirectional.centerEnd,
-                child: connected
-                    ? Row(
-                        key: const ValueKey('on'),
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          BreathDot(
-                            color: HaloColors.green,
-                            size: 6,
-                            breaths: 3,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            l10n.bridgesConnected,
-                            style: HaloType.mono(
-                              size: 10,
-                              color: HaloColors.green,
-                              weight: FontWeight.w600,
-                              letter: 0.1,
-                            ),
-                          ),
-                        ],
-                      )
-                    : reconnecting
-                    ? Text(
-                        key: const ValueKey('re'),
-                        l10n.bridgesConnecting,
-                        style: HaloType.mono(
-                          size: 10,
-                          color: HaloColors.violet,
-                          letter: 0.1,
-                        ),
-                      )
-                    : active
-                    ? Text(
-                        key: const ValueKey('saved'),
-                        l10n.bridgesSavedTag,
-                        style: HaloType.mono(
-                          size: 10,
-                          color: HaloColors.violet,
-                          letter: 0.1,
-                        ),
-                      )
-                    : const SizedBox.shrink(key: ValueKey('off')),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          // wraps rather than overflowing in a long language
-          Wrap(
-            spacing: 18,
-            runSpacing: 6,
-            children: [
-              _Meta(k: l10n.bridgesLooksLike, v: looksLike),
-              _Meta(k: l10n.bridgesSpeed, v: speed),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            body,
-            style: HaloType.sans(
-              size: 12.5,
-              color: HaloColors.text2,
-              height: 1.45,
-            ),
-          ),
-          const SizedBox(height: 12),
-          child,
-        ],
-      ),
-    );
-  }
-}
-
-class _Meta extends StatelessWidget {
-  final String k;
-  final String v;
-  const _Meta({required this.k, required this.v});
-  @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        k,
-        style: HaloType.mono(size: 9.5, color: HaloColors.text3, letter: 0.1),
-      ),
-      const SizedBox(height: 2),
-      Text(
-        v,
-        style: HaloType.mono(
-          size: 11,
-          color: HaloColors.text,
-          weight: FontWeight.w600,
-        ),
-      ),
-    ],
-  );
-}
-
-class _RequestBlock extends StatelessWidget {
-  const _RequestBlock({
-    required this.asking,
-    required this.captcha,
-    required this.error,
-    required this.answer,
-    required this.onRequest,
-    required this.onSend,
-  });
-  final bool asking;
-  final String? captcha;
-  final String? error;
-  final TextEditingController answer;
-  final VoidCallback onRequest;
-  final VoidCallback onSend;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-      decoration: BoxDecoration(
-        color: HaloColors.surface2,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: HaloColors.violet.withValues(alpha: 0.28)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.download_rounded, size: 16, color: HaloColors.violet),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  l10n.bridgesGetBridges,
-                  style: HaloType.sans(
-                    size: 14.5,
-                    color: HaloColors.text,
-                    weight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 5),
-          Text(
-            captcha == null
-                ? l10n.bridgesAskTheTorProject
-                : l10n.bridgesTypeWhatYouSee,
-            style: HaloType.sans(size: 12.5, color: HaloColors.text2),
-          ),
-          const SizedBox(height: 12),
-          // the note, a placeholder while the puzzle is fetched, then the
-          // puzzle: each fades over the last as the block eases to its height
-          EaseSize(
-            child: FadeSwap(
-              child: KeyedSubtree(
-                key: ValueKey(
-                  captcha != null
-                      ? 'puzzle'
-                      : asking
-                      ? 'wait'
-                      : 'note',
-                ),
-                child: captcha != null
-                    ? Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const SizedBox(height: 2),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: Image.memory(
-                              base64Decode(captcha!),
-                              fit: BoxFit.contain,
-                              height: 90,
-                              errorBuilder: (_, _, _) => Text(
-                                l10n.bridgesCouldNotDrawThe,
-                                style: HaloType.mono(
-                                  size: 11,
-                                  color: HaloColors.rose,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: HaloColors.ink,
-                                    borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(color: HaloColors.line),
-                                  ),
-                                  child: TextField(
-                                    textDirection: TextDirection.ltr,
-                                    controller: answer,
-                                    autocorrect: false,
-                                    enableSuggestions: false,
-                                    textCapitalization: TextCapitalization.none,
-                                    style: HaloType.mono(
-                                      size: 13,
-                                      color: HaloColors.text,
-                                    ),
-                                    decoration: InputDecoration(
-                                      border: InputBorder.none,
-                                      hintText: l10n.bridgesAnswer,
-                                      hintStyle: HaloType.mono(
-                                        size: 12,
-                                        color: HaloColors.text3,
-                                      ),
-                                    ),
-                                    onSubmitted: (_) => onSend(),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              PressScale(
-                                scale: 0.95,
-                                onTap: asking ? null : onSend,
-                                child: AnimatedContainer(
-                                  duration: motionStill(context)
-                                      ? Duration.zero
-                                      : const Duration(milliseconds: 180),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 13,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: asking
-                                        ? HaloColors.surface3
-                                        : HaloColors.violet,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  // the word keeps its room under the arc
-                                  child: Stack(
-                                    alignment: Alignment.center,
-                                    children: [
-                                      AnimatedOpacity(
-                                        opacity: asking ? 0 : 1,
-                                        duration: motionStill(context)
-                                            ? Duration.zero
-                                            : const Duration(milliseconds: 150),
-                                        child: Text(
-                                          l10n.commonSend,
-                                          style: HaloType.mono(
-                                            size: 12,
-                                            color: HaloColors.onAmber,
-                                            weight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ),
-                                      if (asking)
-                                        SizedBox(
-                                          width: 13,
-                                          height: 13,
-                                          child: CircularProgressIndicator(
-                                            value: motionStill(context)
-                                                ? 0.3
-                                                : null,
-                                            strokeWidth: 2,
-                                            color: HaloColors.violet,
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      )
-                    : asking
-                    ? Container(
-                        height: 90,
-                        alignment: Alignment.center,
-                        padding: const EdgeInsets.symmetric(horizontal: 40),
-                        decoration: BoxDecoration(
-                          color: HaloColors.surface3,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: HaloBar(
-                          value: null,
-                          height: 3,
-                          color: HaloColors.violet,
-                        ),
-                      )
-                    : Container(
-                        padding: const EdgeInsets.fromLTRB(12, 10, 12, 11),
-                        decoration: BoxDecoration(
-                          color: HaloColors.rose.withValues(alpha: 0.10),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: HaloColors.rose.withValues(alpha: 0.3),
-                          ),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(
-                              Icons.visibility_outlined,
-                              size: 15,
-                              color: HaloColors.rose,
-                            ),
-                            const SizedBox(width: 9),
-                            Expanded(
-                              child: Text(
-                                l10n.bridgesThisOneRequestDoes,
-                                style: HaloType.sans(
-                                  size: 12,
-                                  color: HaloColors.text2,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-              ),
-            ),
-          ),
-          EaseSize(
-            child: error == null
-                ? const SizedBox(width: double.infinity)
-                : Padding(
-                    padding: const EdgeInsets.only(top: 10),
-                    child: RiseSwap(
-                      child: Text(
-                        error!,
-                        key: ValueKey(error),
-                        style: HaloType.mono(
-                          size: 11.5,
-                          color: HaloColors.rose,
-                        ),
-                      ),
-                    ),
-                  ),
-          ),
-          const SizedBox(height: 2),
-          _Ghost(
-            icon: Icons.refresh_rounded,
-            label: asking
-                ? l10n.bridgesAsking
-                : captcha == null
-                ? l10n.bridgesRequestBridges
-                : l10n.bridgesDifferentPuzzle,
-            onTap: asking ? null : onRequest,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Ghost extends StatelessWidget {
-  const _Ghost({required this.icon, required this.label, required this.onTap});
-  final IconData icon;
-  final String label;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) => PressScale(
-    scale: 0.97,
-    haptic: false,
-    onTap: onTap,
-    // a finger's height, however short the line
-    child: ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: 48),
-      child: Row(
-        children: [
-          Icon(icon, size: 15, color: HaloColors.amber),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              label,
-              style: HaloType.mono(
-                size: 12,
-                color: HaloColors.amber,
-                weight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
-class _Note extends StatelessWidget {
-  const _Note(this.head, this.body);
-  final String head;
-  final String body;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    width: double.infinity,
-    padding: const EdgeInsets.fromLTRB(16, 14, 16, 15),
-    decoration: BoxDecoration(
-      color: HaloColors.surface2.withValues(alpha: 0.5),
-      borderRadius: BorderRadius.circular(14),
-      border: BorderDirectional(
-        start: BorderSide(
-          color: HaloColors.amber.withValues(alpha: 0.5),
-          width: 2,
-        ),
-      ),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(top: 4),
+    child: Row(
       children: [
-        Text(
-          head,
-          style: HaloType.mono(
-            size: 10.5,
-            color: HaloColors.amber,
-            weight: FontWeight.w600,
-            letter: 0.14,
+        Expanded(
+          child: Text(
+            l10n.bridges1LineSaved(count),
+            style: HaloType.mono(size: 11, color: HaloColors.violet),
           ),
         ),
-        const SizedBox(height: 6),
-        Text(body, style: HaloType.sans(size: 13, color: HaloColors.text)),
+        PressScale(
+          scale: 0.95,
+          onTap: onEdit,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
+            child: Center(
+              child: Text(
+                l10n.commonEdit,
+                style: HaloType.mono(
+                  size: 12,
+                  weight: FontWeight.w600,
+                  color: HaloColors.amber,
+                ),
+              ),
+            ),
+          ),
+        ),
       ],
     ),
   );
 }
 
-// the engine's answer to a save, for the line under the button
-@visibleForTesting
-String bridgesResultLine(String r) {
-  final some = RegExp(
-    r'^ok: (\d+) accepted, (\d+) not understood',
-  ).firstMatch(r);
-  if (some != null && some.group(1) == '0') return l10n.bridgesNoneUsable;
-  if (some != null) {
-    return l10n.bridgesSavedSomeBad(
-      int.parse(some.group(1)!),
-      int.parse(some.group(2)!),
-    );
-  }
-  final all = RegExp(r'^ok: (\d+) bridges').firstMatch(r);
-  if (all != null) return l10n.bridgesSaved(int.parse(all.group(1)!));
-  // the engine's own words are for the log, not the screen
-  dlog('bridges: save: $r');
-  return l10n.bridgesCouldNotApply;
+// an upgrade from before automatic: offered once, never switched on alone
+class _OfferCard extends StatelessWidget {
+  const _OfferCard({required this.onYes, required this.onNo});
+  final VoidCallback onYes;
+  final VoidCallback onNo;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsetsDirectional.fromSTEB(16, 14, 16, 14),
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        begin: AlignmentDirectional.topStart,
+        end: AlignmentDirectional.bottomEnd,
+        colors: [
+          HaloColors.violet.withValues(alpha: 0.16),
+          HaloColors.violet.withValues(alpha: 0.05),
+        ],
+      ),
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(color: HaloColors.violet.withValues(alpha: 0.35)),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          l10n.bridgesKryfoCanGetAround,
+          style: HaloType.sans(
+            size: 14.5,
+            weight: FontWeight.w600,
+            color: HaloColors.text,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          l10n.bridgesAutomaticFindsAWay,
+          style: HaloType.sans(size: 13, color: HaloColors.text2, height: 1.4),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: HaloPrimaryButton(
+                label: l10n.bridgesTurnOnAutomatic,
+                onTap: onYes,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: HaloGhostButton(
+                label: l10n.bridgesNotNow,
+                onTap: onNo,
+                quiet: true,
+              ),
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
 }
 
-// a save that left no bridge in use, said in the warning colour
-@visibleForTesting
-bool bridgesResultBad(String r) =>
-    !r.startsWith('ok') || r.startsWith('ok: 0 accepted');
+class _MoreToggle extends StatelessWidget {
+  const _MoreToggle({required this.open, required this.onTap});
+  final bool open;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    expanded: open,
+    child: PressScale(
+      scale: 0.97,
+      onTap: onTap,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 48),
+        child: Row(
+          children: [
+            Flexible(
+              child: Text(
+                l10n.bridgesMore,
+                style: HaloType.mono(
+                  size: 12.5,
+                  weight: FontWeight.w600,
+                  color: HaloColors.amber,
+                ),
+              ),
+            ),
+            const SizedBox(width: 4),
+            AnimatedRotation(
+              turns: open ? 0.5 : 0,
+              duration: motionStill(context)
+                  ? Duration.zero
+                  : const Duration(milliseconds: 240),
+              curve: Curves.easeOutCubic,
+              child: Icon(
+                Icons.expand_more_rounded,
+                size: 18,
+                color: HaloColors.amber,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+// the details: what is in use, the other ways in, the tor project, and the
+// lines kept on this phone
+class _MoreSection extends StatelessWidget {
+  const _MoreSection({required this.status, required this.setup});
+  final BridgeStatus status;
+  final BridgeSetup setup;
+
+  @override
+  Widget build(BuildContext context) {
+    final asks = setup.consent == 'yes';
+    final friend = splitBridgeLines(setup.friendLines);
+    final project = splitBridgeLines(setup.torProjectLines);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _Box(
+          children: [
+            _InfoRow(
+              label: l10n.bridgesInUse,
+              value: bridgeMethodWords(status),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        _Box(
+          children: [
+            _RowChoice(
+              title: l10n.bridgesBuiltInBridges,
+              body: l10n.bridgesObfs4BridgesThatCome,
+              selected: setup.choice == BridgeChoice.builtin,
+              onTap: () => _pick(BridgeChoice.builtin),
+            ),
+            _RowChoice(
+              title: 'Snowflake',
+              body: l10n.bridgesGoesThroughAVolunteer,
+              selected: setup.choice == BridgeChoice.snowflake,
+              onTap: () => _pick(BridgeChoice.snowflake),
+            ),
+            if (project.isNotEmpty)
+              _RowChoice(
+                title: l10n.bridgesFromTheTorProject,
+                body: l10n.bridgesBridgesTheTorProject,
+                selected: setup.choice == BridgeChoice.torProject,
+                onTap: () => _pick(BridgeChoice.torProject),
+              ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        _Box(
+          children: [
+            _SwitchRow(
+              title: l10n.bridgesAskTorProject,
+              body: l10n.bridgesWhenTorIsBlockedAutomatic,
+              value: asks,
+              onChanged: (v) async {
+                if (!v) return appState.setBridgeConsent(false);
+                await showTorProjectConsentSheet(context);
+              },
+            ),
+            EaseSize(
+              child: asks
+                  ? _CountryRow(country: setup.country)
+                  : const SizedBox(width: double.infinity),
+            ),
+          ],
+        ),
+        if (friend.isNotEmpty || project.isNotEmpty) ...[
+          const SizedBox(height: 18),
+          Padding(
+            padding: const EdgeInsetsDirectional.only(start: 4, bottom: 8),
+            child: Text(
+              l10n.bridgesSavedLines,
+              style: HaloType.mono(
+                size: 11,
+                weight: FontWeight.w600,
+                color: HaloColors.amber,
+              ),
+            ),
+          ),
+          _Box(
+            children: [
+              for (var i = 0; i < friend.length; i++)
+                _LineRow(
+                  line: friend[i],
+                  from: l10n.bridgesFromAFriendLower,
+                  check: _check(BridgeChoice.friend, i),
+                  onRemove: () =>
+                      appState.removeBridgeLine(BridgeChoice.friend, i),
+                ),
+              for (var i = 0; i < project.length; i++)
+                _LineRow(
+                  line: project[i],
+                  from: l10n.bridgesFromTheTorProjectLower,
+                  check: _check(BridgeChoice.torProject, i),
+                  onRemove: () =>
+                      appState.removeBridgeLine(BridgeChoice.torProject, i),
+                ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  BridgeLineCheck? _check(BridgeChoice of, int i) {
+    for (final c in appState.lineChecksFor(of)) {
+      if (c.i == i) return c;
+    }
+    return null;
+  }
+
+  void _pick(BridgeChoice c) {
+    if (c == appState.bridgeChoice) return;
+    HapticFeedback.selectionClick();
+    appState.chooseBridge(c);
+  }
+}
+
+class _Box extends StatelessWidget {
+  const _Box({required this.children});
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    decoration: BoxDecoration(
+      color: HaloColors.surface2,
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(color: HaloColors.line),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var i = 0; i < children.length; i++) ...[
+          if (i > 0) Divider(height: 1, thickness: 0.5, color: HaloColors.line),
+          children[i],
+        ],
+      ],
+    ),
+  );
+}
+
+class _InfoRow extends StatelessWidget {
+  const _InfoRow({required this.label, required this.value});
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    child: Row(
+      children: [
+        Flexible(
+          child: Text(
+            label,
+            style: HaloType.sans(size: 14, color: HaloColors.text),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: RiseSwap(
+            alignment: AlignmentDirectional.centerEnd,
+            child: Text(
+              value,
+              key: ValueKey(value),
+              textAlign: TextAlign.end,
+              style: HaloType.mono(size: 12, color: HaloColors.violet),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+class _RowChoice extends StatelessWidget {
+  const _RowChoice({
+    required this.title,
+    required this.body,
+    required this.selected,
+    required this.onTap,
+  });
+  final String title;
+  final String body;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    selected: selected,
+    inMutuallyExclusiveGroup: true,
+    button: true,
+    child: PressScale(
+      scale: 0.98,
+      haptic: false,
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsetsDirectional.fromSTEB(14, 13, 16, 13),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _Mark(on: selected),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: HaloType.sans(
+                      size: 14.5,
+                      weight: FontWeight.w600,
+                      color: HaloColors.text,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    body,
+                    style: HaloType.sans(
+                      size: 12.5,
+                      color: HaloColors.text2,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+class _SwitchRow extends StatelessWidget {
+  const _SwitchRow({
+    required this.title,
+    required this.body,
+    required this.value,
+    required this.onChanged,
+  });
+  final String title;
+  final String body;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) => MergeSemantics(
+    child: PressScale(
+      scale: 0.98,
+      haptic: false,
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onChanged(!value);
+      },
+      child: Padding(
+        padding: const EdgeInsetsDirectional.fromSTEB(16, 13, 14, 13),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: HaloType.sans(
+                      size: 14.5,
+                      weight: FontWeight.w600,
+                      color: HaloColors.text,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    body,
+                    style: HaloType.sans(
+                      size: 12.5,
+                      color: HaloColors.text2,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            HaloSwitch(value: value, onChanged: onChanged),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+// the country the tor project advises for. its own guess comes first
+class _CountryRow extends StatefulWidget {
+  const _CountryRow({required this.country});
+  final String country;
+
+  @override
+  State<_CountryRow> createState() => _CountryRowState();
+}
+
+class _CountryRowState extends State<_CountryRow> {
+  bool _asking = false;
+
+  Future<void> _open() async {
+    if (_asking) return;
+    var guess = appState.moatGuess;
+    if (widget.country.isEmpty && guess == null) {
+      setState(() => _asking = true);
+      guess = await appState.askMoatGuess();
+      if (!mounted) return;
+      setState(() => _asking = false);
+    }
+    if (!mounted) return;
+    final picked = await showCountrySheet(
+      context,
+      current: widget.country.isNotEmpty ? widget.country : (guess ?? ''),
+      guess: guess,
+    );
+    if (picked != null) await appState.setBridgeCountry(picked);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cc = widget.country;
+    final value = _asking
+        ? l10n.bridgesAsking
+        : cc.isEmpty
+        ? l10n.bridgesLetTheTorProject
+        : bridgeCountryName(cc);
+    return Semantics(
+      button: true,
+      child: PressScale(
+        scale: 0.98,
+        onTap: _open,
+        child: Padding(
+          padding: const EdgeInsetsDirectional.fromSTEB(16, 14, 12, 14),
+          child: Row(
+            children: [
+              Flexible(
+                child: Text(
+                  l10n.bridgesCountry,
+                  style: HaloType.sans(size: 14, color: HaloColors.text),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: RiseSwap(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: Text(
+                    value,
+                    key: ValueKey(value),
+                    textAlign: TextAlign.end,
+                    style: HaloType.mono(size: 12, color: HaloColors.violet),
+                  ),
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 18,
+                color: HaloColors.text2,
+                textDirection: Directionality.of(context),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// one kept line: its transport and address, never more of it, and whether
+// kryfo can use it
+class _LineRow extends StatelessWidget {
+  const _LineRow({
+    required this.line,
+    required this.from,
+    required this.check,
+    required this.onRemove,
+  });
+  final String line;
+  final String from;
+  final BridgeLineCheck? check;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final f = line.split(RegExp(r'\s+'));
+    final name = bridgeTransport(line) ?? f.first;
+    final where = f.length > 1 ? f[1] : '';
+    final c = check;
+    final bad = c != null && c.broken;
+    return Padding(
+      padding: const EdgeInsetsDirectional.fromSTEB(16, 10, 4, 10),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '$name  $where',
+                  textDirection: TextDirection.ltr,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: HaloType.mono(size: 12, color: HaloColors.text),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  bad
+                      ? (c.tooLong
+                            ? l10n.bridgesTooLongForTor
+                            : l10n.bridgesKryfoCanTUseThis)
+                      : from,
+                  style: HaloType.sans(
+                    size: 12,
+                    color: bad ? HaloColors.rose : HaloColors.text2,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            tooltip: l10n.commonRemove,
+            onPressed: () {
+              HapticFeedback.selectionClick();
+              onRemove();
+            },
+            icon: Icon(Icons.close_rounded, size: 18, color: HaloColors.text2),
+          ),
+        ],
+      ),
+    );
+  }
+}

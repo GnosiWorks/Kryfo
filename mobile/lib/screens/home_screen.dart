@@ -31,6 +31,8 @@ import '../widgets/room_join.dart';
 import '../widgets/kryfo_avatar.dart';
 import 'notes_screen.dart';
 import 'bridges_screen.dart';
+import 'bridge_sheets.dart' show showTorBlockedSheet;
+import '../bridge_mode.dart';
 import 'archived_screen.dart';
 import '../miui_autostart.dart';
 import '../main.dart' hide live;
@@ -128,6 +130,8 @@ class _HomeScreenState extends State<HomeScreen> {
       if (mounted) _texts.arrived(context, () => mounted);
     });
     lockState.addListener(_onLock);
+    appState.addListener(_maybeAskBridge);
+    lockState.addListener(_maybeAskBridge);
     // a tab opened once stays in the tree behind an Offstage, so a theme
     // switch has to repaint the tabs behind this one too
     themeRevision.addListener(_repaint);
@@ -148,6 +152,8 @@ class _HomeScreenState extends State<HomeScreen> {
     _sharedTextSub?.cancel();
     _texts.dispose();
     lockState.removeListener(_onLock);
+    appState.removeListener(_maybeAskBridge);
+    lockState.removeListener(_maybeAskBridge);
     themeRevision.removeListener(_repaint);
     _sweeper.dispose();
     super.dispose();
@@ -155,6 +161,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _repaint() {
     if (mounted) setState(() {});
+  }
+
+  // automatic found tor blocked on a new install: the sheet comes up over
+  // whatever is open, once, never under the lock
+  void _maybeAskBridge() {
+    if (!mounted || !appState.bridgeAskDue || lockState.locked) return;
+    final ctx = rootNavKey.currentState?.overlay?.context ?? context;
+    appState.bridgeAskTaken();
+    showTorBlockedSheet(ctx, asked: true);
   }
 
   Future<void> _takeShared() async {
@@ -449,6 +464,8 @@ class _ChatsTab extends StatelessWidget {
             ),
           ),
           const _OfflineStrip(),
+          const _AutoStrip(),
+          const _AutoOffer(),
           const _BridgeHint(),
           const _BridgeStuckHint(),
           const _RelayDownHint(),
@@ -1131,6 +1148,91 @@ class _RelayDownHint extends StatelessWidget {
   }
 }
 
+// automatic is past the usual way or gave up: its own line, and the way
+// to the details
+class _AutoStrip extends StatelessWidget {
+  const _AutoStrip();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: appState,
+      builder: (context, _) {
+        final line = appState.bridgeLine;
+        final a = line.action;
+        return _HomeCard(
+          show: appState.autoStruggling,
+          id: 'auto',
+          tint: line.tone == BridgeTone.rose
+              ? HaloColors.rose
+              : HaloColors.amber,
+          title: line.head,
+          line: line.detail ?? '',
+          actions: [
+            if (a != null)
+              CardAction(
+                label: bridgeActionLabel(a),
+                onTap: () async {
+                  if (a == BridgeAction.tryAgain) return appState.bridgeRetry();
+                  await showTorBlockedSheet(context);
+                },
+                fill: HaloColors.amber,
+                ink: HaloColors.onAmber,
+              ),
+            CardAction(
+              label: l10n.bridgesDetails,
+              onTap: () =>
+                  Navigator.of(context).push(haloRoute(const BridgesScreen())),
+              ink: HaloColors.amber,
+              bold: true,
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+// an upgrade from before automatic, on tor alone: offered once
+class _AutoOffer extends StatelessWidget {
+  const _AutoOffer();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: appState,
+      builder: (context, _) => _HomeCard(
+        show:
+            appState.bridge.offerAuto &&
+            !appState.inDecoyView &&
+            appState.sendMode == 'private',
+        id: 'auto-offer',
+        tint: HaloColors.violet,
+        wash: true,
+        title: l10n.bridgesKryfoCanGetAround,
+        line: l10n.bridgesAutomaticFindsAWay,
+        actions: [
+          CardAction(
+            label: l10n.bridgesTurnOnAutomatic,
+            onTap: () async {
+              HapticFeedback.selectionClick();
+              await appState.chooseBridge(BridgeChoice.auto);
+            },
+            fill: HaloColors.violet,
+            ink: HaloColors.amberInk,
+          ),
+          CardAction(
+            label: l10n.bridgesNotNow,
+            onTap: () => appState.dismissAutoOffer(),
+            ink: HaloColors.text2,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// a bridge picked by hand is not getting through
 class _BridgeStuckHint extends StatelessWidget {
   const _BridgeStuckHint();
 
@@ -1142,17 +1244,14 @@ class _BridgeStuckHint extends StatelessWidget {
         show: appState.suggestBridgesOff,
         id: 'bridges-stuck',
         tint: HaloColors.rose,
-        title: l10n.homeNotConnecting,
-        line: l10n.homeBridgesAreOnAnd,
+        title: l10n.bridgesThisBridgeIsnTGetting,
+        line: l10n.bridgesBridgesGoDeadWithout,
         actions: [
           CardAction(
-            label: l10n.homeTurnBridgesOff,
+            label: l10n.bridgesSwitchToAutomatic,
             onTap: () async {
-              await appState.applyBridges(appState.bridgeLines, false);
-              appState.restartTor();
-              if (context.mounted) {
-                showHaloToast(context, l10n.homeGoingDirectReconnecting);
-              }
+              await appState.chooseBridge(BridgeChoice.auto);
+              appState.applyBridgeNow();
             },
             fill: HaloColors.rose,
             ink: HaloColors.amberInk,
@@ -1163,6 +1262,7 @@ class _BridgeStuckHint extends StatelessWidget {
   }
 }
 
+// tor alone is not getting through: our relay, or let kryfo find a way
 class _BridgeHint extends StatelessWidget {
   const _BridgeHint();
 
@@ -1175,8 +1275,8 @@ class _BridgeHint extends StatelessWidget {
         id: 'bridges',
         tint: HaloColors.violet,
         wash: true,
-        title: l10n.homeStillTrying,
-        line: l10n.homeTorIsNotGetting,
+        title: l10n.bridgesTorSeemsBlocked,
+        line: l10n.bridgesOurRelayUsuallyGets,
         actions: [
           CardAction(
             label: l10n.homeUseOurRelay,
@@ -1190,9 +1290,11 @@ class _BridgeHint extends StatelessWidget {
             ink: HaloColors.amberInk,
           ),
           CardAction(
-            label: l10n.homeBridges,
-            onTap: () =>
-                Navigator.of(context).push(haloRoute(const BridgesScreen())),
+            label: l10n.bridgesTryAutomatic,
+            onTap: () async {
+              await appState.chooseBridge(BridgeChoice.auto);
+              appState.applyBridgeNow();
+            },
             ink: HaloColors.violet,
             bold: true,
           ),

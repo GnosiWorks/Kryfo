@@ -1073,74 +1073,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get commonUnblock => 'Freigeben';
 
   @override
-  String get bridgesThatWasNotIt => 'Das war es nicht. Hier ist ein anderes.';
-
-  @override
-  String get bridgesMoatFailed =>
-      'Das tor-Projekt war nicht erreichbar. Versuch es gleich noch mal oder füge unten eine Brückenzeile ein.';
-
-  @override
-  String get bridgesGotBridgesSaveTo =>
-      'Brücken erhalten · speichere, um sie zu nutzen';
-
-  @override
   String get bridgesConnected => 'Verbunden';
-
-  @override
-  String get bridgesNotThroughYetTor =>
-      'Noch nicht durch. Tor versucht es weiter';
-
-  @override
-  String get bridgesBridges => 'Brücken';
-
-  @override
-  String get bridgesTorIsBlockedWhere => 'Tor ist bei dir blockiert?';
-
-  @override
-  String get bridgesBridgesDisguiseYourConnection =>
-      'Brücken tarnen deine Verbindung, damit sie hinauskommt. Wähle einen Zugang, speichere, und tor verbindet sich darüber neu.';
-
-  @override
-  String get bridgesBridgesOnlyChangeHow =>
-      'Brücken ändern nur, wie tor sich verbindet, und du bist gerade nicht im Onion-Modus. Was du hier einstellst, wird gespeichert, es bewirkt nur nichts, bis du zurückwechselst.';
 
   @override
   String get bridgesFromTheTorProject => 'Vom tor-Projekt';
 
   @override
-  String get bridgesNoise => 'Rauschen';
-
-  @override
-  String get bridgesGood => 'Gut';
-
-  @override
-  String get bridgesMakesTorTrafficLook =>
-      'Lässt tor-Verkehr nach nichts Bestimmtem aussehen. Die beste Wahl für die meisten gesperrten Netze. Du löst ein Captcha und bekommst ein paar Zeilen.';
-
-  @override
-  String get bridgesPrivateBridge => 'Private Brücke';
-
-  @override
-  String get bridgesALineFromA => 'Eine Zeile von Freunden';
-
-  @override
-  String get bridgesWhateverTheLineSays => 'Was die Zeile sagt';
-
-  @override
-  String get bridgesDepends => 'Je nachdem';
-
-  @override
-  String get bridgesGotABridgeLine =>
-      'Du hast eine Brückenzeile von jemandem, dem du vertraust, oder von bridges.torproject.org? Füge sie hier ein. Nur obfs4-Zeilen, die anderen versteht Kryfo noch nicht.';
-
-  @override
   String get bridgesPasteFromClipboard => 'Aus Zwischenablage einfügen';
-
-  @override
-  String get bridgesUseBridges => 'Brücken nutzen';
-
-  @override
-  String get bridgesNoLinesYet => 'Noch keine Zeilen';
 
   @override
   String bridges1LineSaved(int count) {
@@ -1158,66 +1097,7 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get bridgesRestartingTor => 'Tor startet neu…';
-
-  @override
-  String bridgesFindingABridgeS(Object elapsed) {
-    return 'Suche eine Brücke… ${elapsed}s';
-  }
-
-  @override
-  String bridgesStillTryingS(Object elapsed) {
-    return 'Versuche es weiter… ${elapsed}s';
-  }
-
-  @override
-  String get bridgesApplying => 'Wird angewendet…';
-
-  @override
-  String get bridgesSaveAndReconnect => 'Speichern und neu verbinden';
-
-  @override
-  String get bridgesWhatABridgeIs => 'Was eine Brücke ist';
-
-  @override
-  String get bridgesATorEntryPoint =>
-      'Ein tor-Eingang, den niemand veröffentlicht hat, erreicht über eine Hülle, damit die Verbindung nicht nach tor aussieht. Der Rest der Route sind die üblichen drei Stationen.';
-
-  @override
-  String get bridgesLooksLike => 'Sieht aus wie';
-
-  @override
-  String get bridgesSpeed => 'Tempo';
-
-  @override
-  String get bridgesGetBridges => 'Brücken holen';
-
-  @override
-  String get bridgesAskTheTorProject =>
-      'Frag direkt beim tor-Projekt. Du löst ein Rätsel, damit Bots den Vorrat nicht leerräumen können.';
-
-  @override
-  String get bridgesTypeWhatYouSee =>
-      'Tippe ab, was du siehst. Kleinschreibung ist okay.';
-
-  @override
-  String get bridgesThisOneRequestDoes =>
-      'Diese eine Anfrage läuft nicht über tor - das geht nicht, denn tor ist ja genau das, was nicht funktioniert. Wer dein Netzwerk betreibt, sieht, dass du das tor-Projekt kontaktierst. Wenn schon das bei dir ein Problem ist, hol dir Brücken woanders und füge sie unten ein.';
-
-  @override
-  String get bridgesCouldNotDrawThe => 'Rätsel konnte nicht angezeigt werden';
-
-  @override
-  String get bridgesAnswer => 'Antwort';
-
-  @override
   String get bridgesAsking => 'Frage an…';
-
-  @override
-  String get bridgesRequestBridges => 'Brücken anfordern';
-
-  @override
-  String get bridgesDifferentPuzzle => 'Anderes Rätsel';
 
   @override
   String get cameraNoCameraOnThis => 'Dieses Handy hat keine Kamera';
@@ -3117,33 +2997,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get homeKeepWaiting => 'Weiter warten';
 
   @override
-  String get homeNotConnecting => 'Keine Verbindung';
-
-  @override
-  String get homeBridgesAreOnAnd =>
-      'Brücken sind an, und tor kommt immer noch nicht durch. Brücken sind langsamer, und manche fallen ohne Vorwarnung aus. Wenn dein Netzwerk tor nicht blockiert, ist eine direkte Verbindung schneller und zuverlässiger.';
-
-  @override
-  String get homeGoingDirectReconnecting => 'Direkte Verbindung · verbinde neu';
-
-  @override
-  String get homeTurnBridgesOff => 'Brücken ausschalten';
-
-  @override
-  String get homeStillTrying => 'Versuche es weiter';
-
-  @override
-  String get homeTorIsNotGetting =>
-      'Tor kommt nicht durch. Manche Netzwerke blockieren es absichtlich. Unser eigenes Relais ist eine einfache Verbindung und klappt meistens trotzdem - oder Brücken, die länger zum Einrichten brauchen.';
-
-  @override
   String get homeSwitchedToRelay => 'Zu Relais gewechselt';
 
   @override
   String get homeUseOurRelay => 'Unser Relais nutzen';
-
-  @override
-  String get homeBridges => 'Brücken';
 
   @override
   String get homeOffline => 'Offline';
@@ -5217,13 +5074,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsOnion3Hops => 'Onion · 3 Stationen';
 
   @override
-  String get settingsBridges => 'Brücken';
-
-  @override
-  String get settingsForNetworksThatBlock =>
-      'Für Netzwerke, die tor blockieren';
-
-  @override
   String get settingsGettingMessages => 'Nachrichten empfangen';
 
   @override
@@ -6758,9 +6608,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get bridgesConnecting => 'Verbinde';
 
   @override
-  String get bridgesSavedTag => 'Gespeichert';
-
-  @override
   String get restoreMade => 'Erstellt';
 
   @override
@@ -6909,7 +6756,236 @@ class AppLocalizationsDe extends AppLocalizations {
   String get confirmSheetCancel => 'Abbrechen';
 
   @override
-  String bridgesSaved(int count) {
+  String get bridgesConnection => 'Verbindung';
+
+  @override
+  String get bridgesAutomatic => 'Automatisch';
+
+  @override
+  String get bridgesKryfoFindsAWay =>
+      'Kryfo findet einen Weg, der dort funktioniert, wo du bist.';
+
+  @override
+  String get bridgesDirect => 'Direkt';
+
+  @override
+  String get bridgesFastestWhereTorIsnt =>
+      'Am schnellsten, wo Tor nicht blockiert ist. Kryfo verbindet sich nie außerhalb von Tor.';
+
+  @override
+  String get bridgesBridgeFromAFriend => 'Brücke von Freunden';
+
+  @override
+  String get bridgesPasteOrScanALine =>
+      'Füge eine Zeile von jemandem ein, dem du vertraust, oder scanne sie.';
+
+  @override
+  String get bridgesMore => 'Mehr';
+
+  @override
+  String get bridgesConnectingDots => 'Verbinde…';
+
+  @override
+  String get bridgesAlmostThere => 'Gleich geschafft';
+
+  @override
+  String get bridgesStraightToTor => 'Direkt zu Tor, keine Brücke nötig';
+
+  @override
+  String get bridgesThroughABridge => 'Über eine Brücke';
+
+  @override
+  String get bridgesTorSeemsBlocked =>
+      'Tor scheint in diesem Netzwerk blockiert zu sein';
+
+  @override
+  String get bridgesYourNetworkMayBe =>
+      'Dein Netzwerk ist vielleicht eingeschränkt';
+
+  @override
+  String get bridgesTryingAnotherWay => 'Versuche einen anderen Weg…';
+
+  @override
+  String bridgesTryingAnotherWayOf(String attempt, String attempts) {
+    return 'Versuche einen anderen Weg… ($attempt von $attempts)';
+  }
+
+  @override
+  String get bridgesAskingTheTorProject =>
+      'Frage das Tor-Projekt, was hier funktioniert…';
+
+  @override
+  String get bridgesLookingForAVolunteer => 'Suche einen Freiwilligen';
+
+  @override
+  String get bridgesFoundAVolunteer => 'Freiwilligen gefunden, verbinde';
+
+  @override
+  String get bridgesCouldNotReachTheTor =>
+      'Das Tor-Projekt war nicht erreichbar';
+
+  @override
+  String get bridgesConnectingThroughYourBridge =>
+      'Verbinde über deine Brücke…';
+
+  @override
+  String get bridgesNothingGotThrough => 'Nichts kam durch';
+
+  @override
+  String get bridgesKryfoTriesAgainBy =>
+      'Kryfo versucht es ab und zu von selbst wieder. Eine Brücke von Freunden kann helfen.';
+
+  @override
+  String get bridgesNoInternet => 'Kein Internet';
+
+  @override
+  String get bridgesKryfoConnectsAsSoon =>
+      'Kryfo verbindet sich, sobald du wieder online bist.';
+
+  @override
+  String get bridgesAsleepBetweenCheckIns => 'Schläft zwischen den Check-ins';
+
+  @override
+  String get bridgesCheckingForMessages => 'Suche nach Nachrichten…';
+
+  @override
+  String get bridgesNotNeededRightNow => 'Gerade nicht nötig';
+
+  @override
+  String get bridgesYouReOnAMode =>
+      'Dein Modus nutzt Tor nicht. Diese Einstellungen gelten, wenn du zurückwechselst.';
+
+  @override
+  String get bridgesOffline => 'Offline';
+
+  @override
+  String get bridgesGetABridge => 'Brücke holen';
+
+  @override
+  String get bridgesNotNow => 'Nicht jetzt';
+
+  @override
+  String get bridgesTorIsBlockedOnThis =>
+      'Tor ist in diesem Netzwerk blockiert';
+
+  @override
+  String get bridgesKryfoCanAskThe =>
+      'Kryfo kann das Tor-Projekt nach einer Brücke fragen, um die Sperre zu umgehen.';
+
+  @override
+  String get bridgesKryfoCanGetAround =>
+      'Kryfo kommt jetzt um Tor-Sperren herum';
+
+  @override
+  String get bridgesAutomaticFindsAWay =>
+      '„Automatisch“ findet von selbst einen Weg, wenn Tor blockiert ist. Dafür kann es eine Brücke außerhalb von Tor erreichen.';
+
+  @override
+  String get bridgesTurnOnAutomatic => 'Automatisch einschalten';
+
+  @override
+  String get bridgesInUse => 'Aktiv';
+
+  @override
+  String get bridgesNothingYet => 'Noch nichts';
+
+  @override
+  String get bridgesTorNoBridge => 'Tor, ohne Brücke';
+
+  @override
+  String get bridgesBuiltIn => 'eingebaut';
+
+  @override
+  String get bridgesFromTheTorProjectLower => 'vom Tor-Projekt';
+
+  @override
+  String get bridgesFromAFriendLower => 'von Freunden';
+
+  @override
+  String bridgesMethodFrom(String method, String from) {
+    return '$method, $from';
+  }
+
+  @override
+  String get bridgesBuiltInBridges => 'Eingebaute Brücken';
+
+  @override
+  String get bridgesObfs4BridgesThatCome =>
+      'Brücken, die Kryfo mitbringt (obfs4). Schnell ausprobiert, oft blockiert.';
+
+  @override
+  String get bridgesGoesThroughAVolunteer =>
+      'Läuft über den Computer eines Freiwilligen. Schwer zu blockieren, startet langsam.';
+
+  @override
+  String get bridgesBridgesTheTorProject =>
+      'Brücken, die du früher vom Tor-Projekt bekommen hast.';
+
+  @override
+  String get bridgesAskTorProject => 'Tor-Projekt fragen';
+
+  @override
+  String get bridgesWhenTorIsBlockedAutomatic =>
+      'Wenn Tor blockiert ist, fragt „Automatisch“ das Tor-Projekt, was in deinem Land funktioniert.';
+
+  @override
+  String get bridgesCountry => 'Land';
+
+  @override
+  String get bridgesLetTheTorProject => 'Das Tor-Projekt schätzen lassen';
+
+  @override
+  String get bridgesTheTorProjectKnows =>
+      'Das Tor-Projekt hat für diese Länder eigene Empfehlungen.';
+
+  @override
+  String get bridgesTheTorProjectSGuess => 'Schätzung des Tor-Projekts';
+
+  @override
+  String get bridgesBelarus => 'Belarus';
+
+  @override
+  String get bridgesChina => 'China';
+
+  @override
+  String get bridgesEgypt => 'Ägypten';
+
+  @override
+  String get bridgesHongKong => 'Hongkong';
+
+  @override
+  String get bridgesIran => 'Iran';
+
+  @override
+  String get bridgesMyanmar => 'Myanmar';
+
+  @override
+  String get bridgesRussia => 'Russland';
+
+  @override
+  String get bridgesTurkmenistan => 'Turkmenistan';
+
+  @override
+  String get bridgesSavedLines => 'Gespeicherte Zeilen';
+
+  @override
+  String get bridgesKryfoCanTUseThis => 'Kryfo kann diese Zeile nicht nutzen';
+
+  @override
+  String get bridgesTooLongForTor => 'Zu lang für Tor';
+
+  @override
+  String get bridgesPasteTheLineThey =>
+      'Füge die Zeile ein, die man dir geschickt hat, oder scanne ihren Code. Wer eine Brücke betreibt, sieht, wann du Tor nutzt, also nimm Zeilen nur von Leuten an, denen du vertraust.';
+
+  @override
+  String get bridgesPasteABridgeLine => 'Brückenzeile einfügen';
+
+  @override
+  String get bridgesScanACode => 'Code scannen';
+
+  @override
+  String bridgesUseThisBridge(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
@@ -6917,33 +6993,94 @@ class AppLocalizationsDe extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString Brücken',
-      one: '$countString Brücke',
+      other: 'Diese $countString Brücken nutzen',
+      one: 'Diese Brücke nutzen',
     );
     return '$_temp0';
   }
 
   @override
-  String bridgesSavedSomeBad(int good, int bad) {
-    final intl.NumberFormat goodNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
-    final String goodString = goodNumberFormat.format(good);
-    final intl.NumberFormat badNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
-    final String badString = badNumberFormat.format(bad);
+  String get bridgesNoneOfTheseAre =>
+      'Keine dieser Zeilen ist eine Brückenzeile, die Kryfo versteht.';
 
-    return '$goodString übernommen, $badString nicht verstanden';
+  @override
+  String get bridgesThisLineIsTooLong => 'Diese Zeile ist zu lang für Tor.';
+
+  @override
+  String bridgesKryfoCouldNotRead(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Kryfo konnte $countString dieser Zeilen nicht lesen',
+      one: 'Kryfo konnte $countString dieser Zeilen nicht lesen',
+    );
+    return '$_temp0';
   }
 
   @override
-  String get bridgesNoneUsable =>
-      'Keine dieser Zeilen ist eine brauchbare Brücke, also bleiben Brücken aus';
+  String get bridgesScanABridgeCode => 'Brückencode scannen';
 
   @override
-  String get bridgesCouldNotApply =>
-      'Die Brücken ließen sich nicht übernehmen. Speichere noch mal.';
+  String get bridgesPointAtTheBridge =>
+      'Richte die Kamera auf den QR-Code der Brücke';
+
+  @override
+  String get bridgesThatSNotABridge => 'Das ist keine Brückenzeile';
+
+  @override
+  String get bridgesDetails => 'Details';
+
+  @override
+  String get bridgesThisBridgeIsnTGetting => 'Diese Brücke kommt nicht durch';
+
+  @override
+  String get bridgesBridgesGoDeadWithout =>
+      'Brücken können ohne Vorwarnung ausfallen. „Automatisch“ kann einen anderen Weg finden.';
+
+  @override
+  String get bridgesSwitchToAutomatic => 'Auf Automatisch umstellen';
+
+  @override
+  String get bridgesOurRelayUsuallyGets =>
+      'Unser Relais ist eine einfache Verbindung und kommt meistens durch. Oder lass Kryfo selbst einen Weg finden.';
+
+  @override
+  String get bridgesTryAutomatic => 'Automatisch ausprobieren';
+
+  @override
+  String get settingsBridgesForNetworksThat =>
+      'Brücken für Netzwerke, die Tor blockieren';
+
+  @override
+  String get torBootSplashIfTorIsBlocked =>
+      'Wenn Tor bei dir blockiert oder riskant ist, kann Kryfo stattdessen über eine Brücke starten.';
+
+  @override
+  String get torBootSplashConnect => 'Verbinden';
+
+  @override
+  String get torBootSplashTorIsBlockedOr =>
+      'Tor ist hier blockiert oder riskant';
+
+  @override
+  String get transportBridgeMode => 'Brücken';
+
+  @override
+  String get transportBridgePhase => 'Phase';
+
+  @override
+  String get transportBridgeMethod => 'Methode';
+
+  @override
+  String get transportBridgeError => 'Letzter Fehler';
+
+  @override
+  String get bridgesWhenYouAskFor =>
+      'Wenn du Brücken anforderst, sieht das Tor-Projekt deine IP-Adresse. Das ist normal: So bekommen Tor Browser und jede Tor-App ihre Brücken, und alles, was sie dadurch erfahren, ist, dass jemand Brücken angefragt hat. Nichts über deine Chats.';
 
   @override
   String get languageTitle => 'Sprache';

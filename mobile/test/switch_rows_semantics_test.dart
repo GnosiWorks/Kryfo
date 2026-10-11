@@ -12,7 +12,9 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart';
-import 'package:kryfo/main.dart' show AppState, HaloEngine, useEngineForTest;
+import 'package:kryfo/bridge_mode.dart' show BridgeSetup;
+import 'package:kryfo/main.dart'
+    show AppState, HaloEngine, appState, useEngineForTest;
 import 'package:kryfo/rooms.dart' show roomDefaultCap;
 import 'package:kryfo/screens/bridges_screen.dart';
 import 'package:kryfo/screens/getting_messages_screen.dart';
@@ -43,7 +45,7 @@ class _Bio implements LockBio {
 
 class _Engine implements HaloEngine {
   @override
-  String bridgeState() => 'false|0|0';
+  String setBridgeMode(String mode, String opts) => 'ok';
   @override
   dynamic noSuchMethod(Invocation i) =>
       throw UnimplementedError('${i.memberName}');
@@ -275,11 +277,19 @@ void main() {
     await done(t);
   });
 
-  testWidgets('bridges: use bridges', (t) async {
+  testWidgets('bridges: ask the tor project', (t) async {
     phone(t);
     useEngineForTest(_Engine());
+    appState.bridgeSetupForTest = const BridgeSetup(consent: 'yes');
+    addTearDown(() => appState.bridgeSetupForTest = const BridgeSetup());
     await _open(t, _page(const BridgesScreen()));
-    await _flips(t, l10n.bridgesUseBridges, line: l10n.bridgesNoLinesYet);
+    await t.tap(find.text(l10n.bridgesMore));
+    await _rest(t);
+    await _flips(
+      t,
+      l10n.bridgesAskTorProject,
+      line: l10n.bridgesWhenTorIsBlockedAutomatic,
+    );
     await done(t);
   });
 
