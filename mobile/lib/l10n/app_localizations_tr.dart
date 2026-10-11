@@ -3947,6 +3947,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get notesDeleteAllYes => 'Tümünü sil';
 
   @override
+  String get notesThisWeek => 'Bu hafta';
+
+  @override
+  String get notesShowMore => 'Daha fazla göster';
+
+  @override
+  String get notesShowLess => 'Daha az göster';
+
+  @override
   String get notesGoneFromThisPhone => 'Bu telefondan kalıcı olarak silinir.';
 
   @override

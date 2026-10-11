@@ -4914,6 +4914,18 @@
   "@notesDeleteAllYes": {
     "description": "screens/notes_screen.dart"
   },
+  "notesThisWeek": "This week",
+  "@notesThisWeek": {
+    "description": "screens/notes_screen.dart"
+  },
+  "notesShowMore": "Show more",
+  "@notesShowMore": {
+    "description": "screens/notes_screen.dart"
+  },
+  "notesShowLess": "Show less",
+  "@notesShowLess": {
+    "description": "screens/notes_screen.dart"
+  },
   "notesGoneFromThisPhone": "It is gone from this phone for good.",
   "@notesGoneFromThisPhone": {
     "description": "screens/notes_screen.dart"

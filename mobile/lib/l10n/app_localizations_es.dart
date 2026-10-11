@@ -3968,6 +3968,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get notesDeleteAllYes => 'Borrar todo';
 
   @override
+  String get notesThisWeek => 'Esta semana';
+
+  @override
+  String get notesShowMore => 'Mostrar más';
+
+  @override
+  String get notesShowLess => 'Mostrar menos';
+
+  @override
   String get notesGoneFromThisPhone =>
       'Se borra de este teléfono para siempre.';
 

@@ -4013,6 +4013,15 @@ class AppLocalizationsUk extends AppLocalizations {
   String get notesDeleteAllYes => 'Видалити все';
 
   @override
+  String get notesThisWeek => 'Цього тижня';
+
+  @override
+  String get notesShowMore => 'Показати повністю';
+
+  @override
+  String get notesShowLess => 'Згорнути';
+
+  @override
   String get notesGoneFromThisPhone =>
       'Її буде стерто з цього телефону назавжди.';
 

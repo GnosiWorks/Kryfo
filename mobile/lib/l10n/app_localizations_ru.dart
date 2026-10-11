@@ -4027,6 +4027,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get notesDeleteAllYes => 'Удалить все';
 
   @override
+  String get notesThisWeek => 'На этой неделе';
+
+  @override
+  String get notesShowMore => 'Показать полностью';
+
+  @override
+  String get notesShowLess => 'Свернуть';
+
+  @override
   String get notesGoneFromThisPhone =>
       'Она будет стёрта с этого телефона навсегда.';
 

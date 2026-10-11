@@ -3944,6 +3944,15 @@ class AppLocalizationsFa extends AppLocalizations {
   String get notesDeleteAllYes => 'حذف همه';
 
   @override
+  String get notesThisWeek => 'این هفته';
+
+  @override
+  String get notesShowMore => 'نمایش بیشتر';
+
+  @override
+  String get notesShowLess => 'نمایش کمتر';
+
+  @override
   String get notesGoneFromThisPhone => 'برای همیشه از این گوشی پاک می‌شود.';
 
   @override

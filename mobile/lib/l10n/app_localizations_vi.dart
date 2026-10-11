@@ -3921,6 +3921,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get notesDeleteAllYes => 'Xóa tất cả';
 
   @override
+  String get notesThisWeek => 'Tuần này';
+
+  @override
+  String get notesShowMore => 'Xem thêm';
+
+  @override
+  String get notesShowLess => 'Thu gọn';
+
+  @override
   String get notesGoneFromThisPhone =>
       'Ghi chú sẽ bị xóa vĩnh viễn khỏi điện thoại này.';
 

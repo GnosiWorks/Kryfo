@@ -3958,6 +3958,15 @@ class AppLocalizationsPt extends AppLocalizations {
   String get notesDeleteAllYes => 'Apagar tudo';
 
   @override
+  String get notesThisWeek => 'Esta semana';
+
+  @override
+  String get notesShowMore => 'Mostrar mais';
+
+  @override
+  String get notesShowLess => 'Mostrar menos';
+
+  @override
   String get notesGoneFromThisPhone =>
       'Ela é apagada deste celular para sempre.';
 

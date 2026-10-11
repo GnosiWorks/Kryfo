@@ -6216,6 +6216,24 @@ abstract class AppLocalizations {
   /// screens/notes_screen.dart
   ///
   /// In en, this message translates to:
+  /// **'This week'**
+  String get notesThisWeek;
+
+  /// screens/notes_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Show more'**
+  String get notesShowMore;
+
+  /// screens/notes_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Show less'**
+  String get notesShowLess;
+
+  /// screens/notes_screen.dart
+  ///
+  /// In en, this message translates to:
   /// **'It is gone from this phone for good.'**
   String get notesGoneFromThisPhone;
 
