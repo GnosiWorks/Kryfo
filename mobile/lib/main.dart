@@ -1266,7 +1266,7 @@ class HaloDb implements GroupOwedStore {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 71,
+      version: 72,
       onConfigure: eraseFreedPages,
       onCreate: (db, _) async {
         await db.execute('''
@@ -1424,10 +1424,11 @@ class HaloDb implements GroupOwedStore {
         await blockTables(db);
         await firstContactTables(db);
         await roomKeysTable(db);
+        await frameOrderTable(db);
       },
       onUpgrade: (db, oldV, newV) async {
         // 62 runs after every older step, below: its index names columns
-        // they add. 66 runs after it: it reads what they all make. 67 to 71
+        // they add. 66 runs after it: it reads what they all make. 67 to 72
         // last
         if (oldV < 65) {
           // a room joined off a link and not let in yet: when the join went
@@ -1880,6 +1881,11 @@ class HaloDb implements GroupOwedStore {
         if (oldV < 71) {
           // a group file's slices by group, and every key a room listened to
           await roomTeardownTables(db);
+        }
+        if (oldV < 72) {
+          // tries on disk for queued edits, pins and frames, and the order
+          // of edits and reactions taken in
+          await queueTurnColumns(db);
         }
       },
     );
@@ -3223,9 +3229,20 @@ class HaloDb implements GroupOwedStore {
       where: 'group_id = ? AND halo_id = ?',
       whereArgs: [groupId, haloId],
     );
-    await db.transaction(
-      (t) => _owedGone(t, 'group_id = ? AND member = ?', [groupId, haloId]),
-    );
+    await db.transaction((t) async {
+      await _owedGone(t, 'group_id = ? AND member = ?', [groupId, haloId]);
+      // our edits and reactions are no longer theirs to get. take-backs
+      // and controls stay: they may hold the message yet
+      for (final r in await t.query(
+        'group_ctl_out',
+        columns: ['id', 'ctl'],
+        where: 'group_id = ? AND member = ?',
+        whereArgs: [groupId, haloId],
+      )) {
+        if (groupFrameOf(r['ctl']) == null) continue;
+        await t.delete('group_ctl_out', where: 'id = ?', whereArgs: [r['id']]);
+      }
+    });
   }
 
   Future<void> renameGroup(String groupId, String name) async {
@@ -4517,17 +4534,47 @@ class HaloDb implements GroupOwedStore {
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
+  // the oldest rows whose turn has come: one still waiting out its gap
+  // keeps no other out of the window
   Future<List<Map<String, Object?>>> unsentPins({
     Set<String> skip = const {},
+    int? now,
   }) async {
     final db = await open();
     final s = skip.toList();
     return db.query(
       'pins_out',
-      where: '$kNotBlocked${_notIn(s)}',
-      whereArgs: s.isEmpty ? null : s,
+      where: '$kNotBlocked AND next_at < ?${_notIn(s)}',
+      whereArgs: [(now ?? DateTime.now().millisecondsSinceEpoch) + 1, ...s],
       orderBy: 'at ASC',
       limit: 40,
+    );
+  }
+
+  /// a drain's try of a queued pin is starting: counted, and the next one
+  /// waits its gap. a newer word queued meanwhile is not touched
+  Future<void> triedPin(String msgUid, bool pinned, int tries, int now) =>
+      _tried(
+        'pins_out',
+        'msg_uid = ? AND pinned = ?',
+        [msgUid, pinned ? 1 : 0],
+        tries,
+        now,
+      );
+
+  Future<void> _tried(
+    String table,
+    String where,
+    List<Object?> args,
+    int tries,
+    int now,
+  ) async {
+    final db = await open();
+    await db.update(
+      table,
+      {'tries': tries + 1, 'next_at': now + queueGap(tries)},
+      where: where,
+      whereArgs: args,
     );
   }
 
@@ -4570,30 +4617,82 @@ class HaloDb implements GroupOwedStore {
   }
 
   // the oldest rows that can go now: none of the [waiting] peers', whose
-  // seals wait on their card. a receipt a week old has no one left
-  // waiting on it, and goes
+  // seals wait on their card, and none still waiting out its gap. a
+  // receipt or a reaction a week old, or a reaction past its tries, has
+  // no one left to reach, and goes. a take-back stays
   Future<List<Map<String, Object?>>> unsentFrames({
     Iterable<String> waiting = const [],
+    int? now,
   }) async {
     final db = await open();
+    final at = now ?? DateTime.now().millisecondsSinceEpoch;
+    final old = at - kReceiptKeptFor.inMilliseconds;
+    for (final kind in const [kFrameReceipt, kFrameReaction]) {
+      await db.delete(
+        'frames_out',
+        where: 'kind = ? AND at < ?',
+        whereArgs: [kind, old],
+      );
+    }
     await db.delete(
       'frames_out',
-      where: 'kind = ? AND at < ?',
-      whereArgs: [
-        kFrameReceipt,
-        DateTime.now().millisecondsSinceEpoch - kReceiptKeptFor.inMilliseconds,
-      ],
+      where: 'kind = ? AND tries > ?',
+      whereArgs: [kFrameReaction, kFrameTries - 1],
     );
     final skip = waiting.toList();
     return db.query(
       'frames_out',
-      where: skip.isEmpty
-          ? null
-          : 'peer_id NOT IN (${List.filled(skip.length, '?').join(', ')})',
-      whereArgs: skip.isEmpty ? null : skip,
+      where:
+          'next_at < ?'
+          '${skip.isEmpty ? '' : ' AND peer_id NOT IN (${List.filled(skip.length, '?').join(', ')})'}',
+      whereArgs: [at + 1, ...skip],
       orderBy: 'at ASC',
       limit: 40,
     );
+  }
+
+  Future<void> triedFrame(
+    String msgUid,
+    String kind,
+    String peerId,
+    String body,
+    int tries,
+    int now,
+  ) => _tried(
+    'frames_out',
+    'msg_uid = ? AND kind = ? AND peer_id = ? AND body = ?',
+    [msgUid, kind, peerId, body],
+    tries,
+    now,
+  );
+
+  /// [w], the sender's time on an edit or reaction of [msgUid], is no
+  /// older than the last one taken from them: noted, and true. false for
+  /// a late copy
+  Future<bool> takeFrameOrder(
+    String msgUid,
+    String sender,
+    String kind,
+    int w,
+  ) async {
+    final db = await open();
+    return db.transaction((t) async {
+      final r = await t.query(
+        'frame_order',
+        columns: ['w'],
+        where: 'msg_uid = ? AND sender = ? AND kind = ?',
+        whereArgs: [msgUid, sender, kind],
+        limit: 1,
+      );
+      if (r.isNotEmpty && (r.first['w'] as int) > w) return false;
+      await t.insert('frame_order', {
+        'msg_uid': msgUid,
+        'sender': sender,
+        'kind': kind,
+        'w': w,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+      return true;
+    });
   }
 
   // only the word that was sent: a newer one queued meanwhile stays
@@ -4698,21 +4797,48 @@ class HaloDb implements GroupOwedStore {
 
   Future<List<Map<String, Object?>>> unsentEdits({
     Set<String> skip = const {},
+    int? now,
   }) async {
     final db = await open();
     final s = skip.toList();
     return db.query(
       'edits_out',
-      where: '$kNotBlocked${_notIn(s)}',
-      whereArgs: s.isEmpty ? null : s,
+      where: '$kNotBlocked AND next_at < ?${_notIn(s)}',
+      whereArgs: [(now ?? DateTime.now().millisecondsSinceEpoch) + 1, ...s],
       orderBy: 'at ASC',
       limit: 40,
     );
   }
 
-  Future<void> dropEdit(String msgUid) async {
+  Future<void> triedEdit(String msgUid, String newText, int tries, int now) =>
+      _tried(
+        'edits_out',
+        'msg_uid = ? AND new_text = ?',
+        [msgUid, newText],
+        tries,
+        now,
+      );
+
+  // with [newText], only the wording that went: a newer one queued
+  // meanwhile stays
+  Future<void> dropEdit(String msgUid, {String? newText}) async {
     final db = await open();
-    await db.delete('edits_out', where: 'msg_uid = ?', whereArgs: [msgUid]);
+    await db.delete(
+      'edits_out',
+      where: newText == null ? 'msg_uid = ?' : 'msg_uid = ? AND new_text = ?',
+      whereArgs: [msgUid, ?newText],
+    );
+  }
+
+  Future<Map<String, Object?>?> queuedEdit(String msgUid) async {
+    final db = await open();
+    final r = await db.query(
+      'edits_out',
+      where: 'msg_uid = ?',
+      whereArgs: [msgUid],
+      limit: 1,
+    );
+    return r.isEmpty ? null : r.first;
   }
 
   /// the sticker on a row, as it goes on the wire
@@ -5782,6 +5908,8 @@ class HaloDb implements GroupOwedStore {
     final db = await open();
     await db.transaction((t) async {
       for (final m in members) {
+        // taken back, its edit or reaction has nothing left to change
+        await _dropGroupFrames(t, groupId, m, uid);
         final held = await t.query(
           'group_ctl_out',
           columns: ['id'],
@@ -5800,6 +5928,56 @@ class HaloDb implements GroupOwedStore {
         });
       }
     });
+  }
+
+  /// a group edit or reaction ([groupEditRow], [groupReactRow]) for each
+  /// of [members]. one of the same kind for the same message still waiting
+  /// for a member goes: only the newest word is sent
+  Future<void> queueGroupFrame(
+    String groupId,
+    Iterable<String> members,
+    Map<String, String> row, {
+    required int now,
+  }) async {
+    final body = jsonEncode(row);
+    final f = groupFrameOf(body);
+    if (f == null) return;
+    final db = await open();
+    await db.transaction((t) async {
+      for (final m in members) {
+        await _dropGroupFrames(t, groupId, m, f.uid, edits: f.edit != null);
+        await t.insert('group_ctl_out', {
+          'group_id': groupId,
+          'member': m,
+          'ctl': body,
+          'since': now,
+          'tries': 0,
+          'next_at': now,
+        });
+      }
+    });
+  }
+
+  // [member]'s queued edits ([edits]) or reactions of [uid], or both when
+  // null
+  static Future<void> _dropGroupFrames(
+    DatabaseExecutor t,
+    String groupId,
+    String member,
+    String uid, {
+    bool? edits,
+  }) async {
+    for (final r in await t.query(
+      'group_ctl_out',
+      columns: ['id', 'ctl'],
+      where: 'group_id = ? AND member = ?',
+      whereArgs: [groupId, member],
+    )) {
+      final o = groupFrameOf(r['ctl']);
+      if (o == null || o.uid != uid) continue;
+      if (edits != null && (o.edit != null) != edits) continue;
+      await t.delete('group_ctl_out', where: 'id = ?', whereArgs: [r['id']]);
+    }
   }
 
   /// every control still to go, oldest first
@@ -7370,7 +7548,9 @@ Future<void> _pinsTable(Database db) async {
       msg_uid TEXT PRIMARY KEY,
       peer_id TEXT NOT NULL,
       pinned INTEGER NOT NULL,
-      at INTEGER NOT NULL
+      at INTEGER NOT NULL,
+      tries INTEGER NOT NULL DEFAULT 0,
+      next_at INTEGER NOT NULL DEFAULT 0
     )
   ''');
 }
@@ -7383,9 +7563,58 @@ Future<void> _editsTable(Database db) async {
       msg_uid TEXT PRIMARY KEY,
       peer_id TEXT NOT NULL,
       new_text TEXT NOT NULL,
-      at INTEGER NOT NULL
+      at INTEGER NOT NULL,
+      tries INTEGER NOT NULL DEFAULT 0,
+      next_at INTEGER NOT NULL DEFAULT 0
     )
   ''');
+}
+
+// the upgrade to 72: a queued edit, pin or frame keeps its tries and its
+// next turn on disk, and the time of the last edit and reaction taken from
+// each sender is kept for each message
+Future<void> queueTurnColumns(DatabaseExecutor db) async {
+  for (final t in const ['edits_out', 'pins_out', 'frames_out']) {
+    await addColumn(
+      db,
+      'ALTER TABLE $t ADD COLUMN tries INTEGER NOT NULL DEFAULT 0',
+    );
+    await addColumn(
+      db,
+      'ALTER TABLE $t ADD COLUMN next_at INTEGER NOT NULL DEFAULT 0',
+    );
+  }
+  await frameOrderTable(db);
+}
+
+// per message, sender and kind (edit or reaction): the sender's time on
+// the last one taken. an older copy that comes after it is left out
+Future<void> frameOrderTable(DatabaseExecutor db) async {
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS frame_order (
+      msg_uid TEXT NOT NULL,
+      sender TEXT NOT NULL,
+      kind TEXT NOT NULL,
+      w INTEGER NOT NULL,
+      PRIMARY KEY (msg_uid, sender, kind)
+    )
+  ''');
+  await db.execute(
+    'CREATE TRIGGER IF NOT EXISTS frame_order_follow AFTER DELETE ON '
+    'messages WHEN old.msg_uid IS NOT NULL BEGIN '
+    'DELETE FROM frame_order WHERE msg_uid = old.msg_uid; END',
+  );
+}
+
+// tries a queued reaction gets before it is let go: about a day at the
+// longest wait
+const kFrameTries = 150;
+
+// the wait after [tries] tries of a queued row or frame: doubling from
+// 45 s up to ten minutes, so a peer out of reach gets few copies
+int queueGap(int tries) {
+  final g = 45000 << (tries < 4 ? tries : 4);
+  return g < 600000 ? g : 600000;
 }
 
 const kFrameUnsend = 'unsend';
@@ -7408,6 +7637,34 @@ String? groupUnsendOf(Object? ctl) {
   } catch (_) {
     return null;
   }
+}
+
+// a group edit or reaction of ours waits in each member's control lane too,
+// one of each a message: a newer word replaces the one still waiting
+Map<String, String> groupEditRow(String uid, String text) => {
+  'ed': uid,
+  't': text,
+};
+Map<String, String> groupReactRow(String uid, String emoji) => {
+  're': uid,
+  'e': emoji,
+};
+
+({String uid, String? edit, String? emoji})? groupFrameOf(Object? ctl) {
+  if (ctl is! String) return null;
+  if (!ctl.startsWith('{"ed":') && !ctl.startsWith('{"re":')) return null;
+  try {
+    final raw = jsonDecode(ctl);
+    if (raw is! Map) return null;
+    final ed = raw['ed'], t = raw['t'], re = raw['re'], e = raw['e'];
+    if (ed is String && ed.isNotEmpty && t is String) {
+      return (uid: ed, edit: t, emoji: null);
+    }
+    if (re is String && re.isNotEmpty && e is String) {
+      return (uid: re, edit: null, emoji: e);
+    }
+  } catch (_) {}
+  return null;
 }
 
 // a 1:1 message that came in and burned or was deleted here (kGoneFor).
@@ -7437,6 +7694,8 @@ Future<void> _framesTable(Database db) async {
       peer_id TEXT NOT NULL,
       body TEXT NOT NULL,
       at INTEGER NOT NULL,
+      tries INTEGER NOT NULL DEFAULT 0,
+      next_at INTEGER NOT NULL DEFAULT 0,
       PRIMARY KEY (msg_uid, kind, peer_id)
     )
   ''');
@@ -9262,6 +9521,28 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  // an edit or a reaction older, by its sender's clock, than the last one
+  // taken from them for that message is a late copy (an onion copy may
+  // beat the relay's): left out. one with no time goes in as it always did
+  Future<bool> _inOrder(
+    HaloDb db,
+    String uid,
+    String sender,
+    String kind,
+    UnwrappedMessage env,
+  ) async {
+    final w = env.writtenAt;
+    if (w == null) return true;
+    try {
+      if (await db.takeFrameOrder(uid, sender, kind, w)) return true;
+      dlog('$kind: an older one, left out');
+      return false;
+    } catch (e) {
+      dlog('$kind: order not read (${e.runtimeType})');
+      return true;
+    }
+  }
+
   void _dropEarly() {
     _early.clear();
     _earlyChars = 0;
@@ -9283,6 +9564,7 @@ class AppState extends ChangeNotifier {
     final cut =
         DateTime.now().millisecondsSinceEpoch - _kTakenBackFor.inMilliseconds;
     String? edited;
+    var editedAt = -1;
     for (final e in due) {
       if (e.at < cut) continue;
       try {
@@ -9296,8 +9578,11 @@ class AppState extends ChangeNotifier {
           marks: marks,
           wrappedAt: e.wrappedAt,
         );
-        if (e.sender == author && env.edit != null) {
+        // the newest by their clock, whichever came last
+        final w = env.writtenAt ?? editedAt;
+        if (e.sender == author && env.edit != null && w >= editedAt) {
           edited = env.edit!.newText;
+          editedAt = w;
         }
       } catch (err) {
         dlog('early: one did not go in ($err)');
@@ -9306,13 +9591,13 @@ class AppState extends ChangeNotifier {
     return edited;
   }
 
-  // uids the drainer is mid-flight on, so a slow send isn't fired twice by
-  // the next sweep.
+  // uids with a send running, the outbox's and the chat's alike: whoever
+  // claims one first sends it, and nobody else does until it is let go
   final Set<String> _outboxInflight = <String>{};
 
-  // a row the chat sends itself on a tap: the outbox leaves it be meanwhile
   bool claimSend(String uid) => _outboxInflight.add(uid);
   void releaseSend(String uid) => _outboxInflight.remove(uid);
+  bool sendInflight(String uid) => _outboxInflight.contains(uid);
   // re-fire count per uid this session. caps the loop so an unreachable peer
   // stops grinding; tap-to-retry in the chat still forces a send.
   final Map<String, int> _outboxTries = <String, int>{};
@@ -9622,6 +9907,9 @@ class AppState extends ChangeNotifier {
     _outboxNextAt.removeWhere((k, _) => !waiting.contains(k));
     _outboxPeer.removeWhere((k, _) => !waiting.contains(k));
     final blocked = _blockedInPass();
+    // the sends this pass starts, and the 1:1 chats they are in
+    final going = <Future<void>>[];
+    final chats = <String>{};
     for (final (r, d, paired) in [
       for (final r in rows) (r, live, q.paired),
       if (v != null)
@@ -9660,16 +9948,14 @@ class AppState extends ChangeNotifier {
       final now = DateTime.now().millisecondsSinceEpoch;
       final nextAt = _outboxNextAt[uid];
       if (nextAt != null && now < nextAt) continue;
-      // doubling gap, capped at ten minutes: eight tries cover about an hour
-      // and leave few copies on the relays
-      var gap = 45000 << tries;
-      if (gap > 600000) gap = 600000;
-      _outboxNextAt[uid] = now + gap;
+      // the chat may have taken it while this pass read
+      if (!_outboxInflight.add(uid)) continue;
+      _outboxNextAt[uid] = now + queueGap(tries);
       _outboxTries[uid] = tries + 1;
       final peer = r['peer_id'] as String?;
       if (peer != null) _outboxPeer[uid] = peer;
-      _outboxInflight.add(uid);
-      unawaited(
+      if (peer != null && (g == null || g.isEmpty)) chats.add(peer);
+      going.add(
         _drainOne(r, d).whenComplete(() async {
           // waiting on their card is no failed try: it goes the moment the
           // card is here, and until then it tries as they are asked again
@@ -9691,6 +9977,20 @@ class AppState extends ChangeNotifier {
         }),
       );
     }
+    // an open chat that kept its pills while they ran reads them again,
+    // once the pass is done
+    if (going.isEmpty) return;
+    unawaited(
+      Future.wait(going)
+          .then((_) {}, onError: (Object e) => dlog('OUTBOX: ${e.runtimeType}'))
+          .whenComplete(() {
+            if (chats.isEmpty) return;
+            for (final p in chats) {
+              _bumpChatRev(p);
+            }
+            notifyListeners();
+          }),
+    );
   }
 
   // people a seal to waits on their card, after a restore: the outbox and
@@ -9891,18 +10191,67 @@ class AppState extends ChangeNotifier {
         if (held.contains(r['peer_id'])) continue;
         // its row a block kept from going: the edit waits for the tap
         if (await _heldRow(d, uid)) continue;
-        _editsInflight.add(uid);
-        unawaited(
-          sendEdit(
-            r['peer_id'] as String,
+        // stamped before it goes: a send cut short is a try too
+        try {
+          await d.triedEdit(
             uid,
             r['new_text'] as String,
-            on: d,
-            writtenAt: r['at'] as int,
-          ).whenComplete(() => _editsInflight.remove(uid)),
+            (r['tries'] as int?) ?? 0,
+            DateTime.now().millisecondsSinceEpoch,
+          );
+        } catch (e) {
+          continue;
+        }
+        _editGo(
+          r['peer_id'] as String,
+          uid,
+          r['new_text'] as String,
+          on: d,
+          writtenAt: r['at'] as int,
         );
       }
     }
+  }
+
+  // asked for while one is in flight: the queued wording goes after it
+  final Set<String> _editAgain = {};
+
+  // one edit send per message at a time, so an older wording can never
+  // land after a newer one
+  void _editGo(
+    String peer,
+    String uid,
+    String newText, {
+    HaloDb? on,
+    int? writtenAt,
+  }) {
+    if (!_editsInflight.add(uid)) {
+      _editAgain.add(uid);
+      return;
+    }
+    unawaited(
+      sendEdit(peer, uid, newText, on: on, writtenAt: writtenAt).whenComplete(
+        () async {
+          _editsInflight.remove(uid);
+          if (!_editAgain.remove(uid) || sessionQuiet) return;
+          try {
+            final d = on ?? _ownerOf(peer);
+            final q = await d.queuedEdit(uid);
+            if (q == null || q['new_text'] == newText) return;
+            if (await blockedAnywhere(peer) || await _heldRow(d, uid)) return;
+            _editGo(
+              peer,
+              uid,
+              q['new_text'] as String,
+              on: d,
+              writtenAt: q['at'] as int,
+            );
+          } catch (e) {
+            dlog('edit: next one waits (${e.runtimeType})');
+          }
+        },
+      ),
+    );
   }
 
   final Set<String> _pinsInflight = {};
@@ -9931,7 +10280,18 @@ class AppState extends ChangeNotifier {
         if (age < 45000 || _pinsInflight.contains(uid)) continue;
         if (held.contains(r['peer_id'])) continue;
         if (await _heldRow(d, uid)) continue;
-        _pinsInflight.add(uid);
+        if (!_pinsInflight.add(uid)) continue;
+        try {
+          await d.triedPin(
+            uid,
+            (r['pinned'] as int) == 1,
+            (r['tries'] as int?) ?? 0,
+            DateTime.now().millisecondsSinceEpoch,
+          );
+        } catch (e) {
+          _pinsInflight.remove(uid);
+          continue;
+        }
         unawaited(
           _sendPin(
             r['peer_id'] as String,
@@ -10027,6 +10387,20 @@ class AppState extends ChangeNotifier {
         if (held.contains(peer)) continue;
         if (kind == kFrameReaction && await _heldRow(d, uid)) continue;
         if (!_framesInflight.add('$kind $uid')) continue;
+        // stamped before it goes: its next turn waits its gap, on disk
+        try {
+          await d.triedFrame(
+            uid,
+            kind,
+            peer,
+            r['body'] as String,
+            (r['tries'] as int?) ?? 0,
+            DateTime.now().millisecondsSinceEpoch,
+          );
+        } catch (e) {
+          _framesInflight.remove('$kind $uid');
+          continue;
+        }
         unawaited(
           _sendFrame(
             peer,
@@ -10057,7 +10431,7 @@ class AppState extends ChangeNotifier {
     await session.queueEdit(uid, peer, newText);
     // a quiet session keeps it queued here: nothing leaves
     if (sessionQuiet || await session.heldBack(uid)) return;
-    unawaited(sendEdit(peer, uid, newText));
+    _editGo(peer, uid, newText);
   }
 
   // a reaction in a 1:1 chat, empty to take it off. queued like a pin.
@@ -10151,7 +10525,7 @@ class AppState extends ChangeNotifier {
         writtenAt: writtenAt,
       );
       final ok = await _sendOneEnvelope(peer, wrapped);
-      if (ok) await (on ?? _ownerOf(peer)).dropEdit(uid);
+      if (ok) await (on ?? _ownerOf(peer)).dropEdit(uid, newText: newText);
       return ok;
     } catch (e) {
       dlog('edit: $uid still stuck ($e)');
@@ -10271,9 +10645,14 @@ class AppState extends ChangeNotifier {
               tries: tries,
             );
             if (due == null || due > now) continue;
-            // noted before it goes: a death half way is a try, not a loop
-            await d.noteOpenerAgain(uid, tries + 1, now);
-            await _openerAgain(r, peer, d, wire: was?.wire);
+            if (!_outboxInflight.add(uid)) continue;
+            try {
+              // noted before it goes: a death half way is a try, not a loop
+              await d.noteOpenerAgain(uid, tries + 1, now);
+              await _openerAgain(r, peer, d, wire: was?.wire);
+            } finally {
+              _outboxInflight.remove(uid);
+            }
           }
         }
       } catch (e) {
@@ -10292,7 +10671,6 @@ class AppState extends ChangeNotifier {
     String? wire,
   }) async {
     final uid = r['msg_uid'] as String;
-    _outboxInflight.add(uid);
     try {
       var row = r;
       if (wire == null && redeliveryNeedsPow(r, backPaired: false)) {
@@ -10311,8 +10689,6 @@ class AppState extends ChangeNotifier {
       dlog('openers: $uid ${ok ? "went again" : "did not go again"}');
     } catch (e) {
       dlog('openers: $uid did not go again ($e)');
-    } finally {
-      _outboxInflight.remove(uid);
     }
   }
 
@@ -10608,13 +10984,18 @@ class AppState extends ChangeNotifier {
         final now = DateTime.now().millisecondsSinceEpoch;
         if (!force && (r['next_at'] as int? ?? 0) > now) return false;
         final un = groupUnsendOf(r['ctl']);
-        final gc = un != null ? null : GroupControl.fromWire(_jsonOf(r['ctl']));
+        final fr = un != null ? null : groupFrameOf(r['ctl']);
+        final gc = un != null || fr != null
+            ? null
+            : GroupControl.fromWire(_jsonOf(r['ctl']));
         // no longer theirs to get: the next one goes. a take-back is kept
         // only where it can still go: members who left, were taken out, or
         // saw us leave or be taken out may hold the message yet, and act
-        // on it without the group
+        // on it without the group. an edit or reaction only to a member
+        // still in it, of a message still here
         final owed =
             un != null ||
+            fr != null && await _frameStillOwed(d, groupId, member, fr.uid) ||
             gc != null && await _ctlStillOwed(d, groupId, member, gc);
         if (!owed) {
           await d.dropGroupCtl(id);
@@ -10643,17 +11024,28 @@ class AppState extends ChangeNotifier {
         // stamped before it goes, so a send cut short is not a free retry
         if (!force && await keyHeld(member)) return sent;
         if (!force) await d.triedGroupCtl(id, now);
+        final edit = fr?.edit;
+        final emoji = fr?.emoji;
         final wrapped = await wrapMessage(
           '',
           groupId: groupId,
           groupControl: gc,
           unsend: un,
+          edit: edit == null
+              ? null
+              : EditFrame(targetUid: fr!.uid, newText: edit),
+          reaction: emoji == null
+              ? null
+              : ReactionFrame(targetUid: fr!.uid, emoji: emoji),
           sender: _mySender(),
           // when it was queued
           writtenAt: (r['since'] as num?)?.toInt(),
         );
         if (!await _sendGroupEnvelope(groupId, member, wrapped)) {
-          dlog('group ctl ${gc?.type ?? 'unsend'} to $member: waits');
+          final what =
+              gc?.type ??
+              (un != null ? 'unsend' : (edit != null ? 'edit' : 'reaction'));
+          dlog('group ctl $what to $member: waits');
           return false;
         }
         await d.dropGroupCtl(id);
@@ -10681,6 +11073,17 @@ class AppState extends ChangeNotifier {
     } catch (_) {
       return null;
     }
+  }
+
+  Future<bool> _frameStillOwed(
+    HaloDb d,
+    String groupId,
+    String member,
+    String uid,
+  ) async {
+    if (!await d.groupExists(groupId)) return false;
+    if (!(await d.getGroupMembers(groupId)).contains(member)) return false;
+    return d.messageExists(uid);
   }
 
   // a leave goes once the group went from here; a remove to the member it
@@ -12502,6 +12905,9 @@ class AppState extends ChangeNotifier {
         dlog('reaction: dropped');
         return to;
       }
+      if (!await _inOrder(db, r.targetUid, senderHaloId, 'reaction', env)) {
+        return to;
+      }
       if (r.emoji.isEmpty) {
         await db.removeReaction(r.targetUid, senderHaloId);
       } else {
@@ -12515,6 +12921,15 @@ class AppState extends ChangeNotifier {
       // only the author. these frames ride in above the stranger gate, so
       // anyone who can reach us could rewrite any row by uid otherwise.
       if (await db.isTheirs(env.edit!.targetUid, senderHaloId)) {
+        if (!await _inOrder(
+          db,
+          env.edit!.targetUid,
+          senderHaloId,
+          'edit',
+          env,
+        )) {
+          return to;
+        }
         await db.editMessage(env.edit!.targetUid, env.edit!.newText);
         changed();
         // home's row shows the last line, and only a refresh rereads it
@@ -19528,24 +19943,25 @@ class AppState extends ChangeNotifier {
     // show it now, not after the tor multicast
     notifyListeners();
     // a quiet session keeps it on this phone: nothing leaves
-    if (sessionQuiet) {
-      notifyListeners();
-      return;
-    }
-    final wrapped = await wrapMessage(
-      '',
-      groupId: groupId,
-      reaction: ReactionFrame(targetUid: targetMsgUid, emoji: emoji),
-      sender: _mySender(),
+    if (sessionQuiet) return;
+    await _queueGroupFrame(groupId, groupReactRow(targetMsgUid, emoji));
+  }
+
+  // an edit or a reaction of ours in a group: each member's lane keeps it
+  // until they have it, behind what they are still to get of the group
+  Future<void> _queueGroupFrame(String groupId, Map<String, String> row) async {
+    final d = _ownerOf(groupId);
+    final to = await _othersIn(d, groupId);
+    await d.queueGroupFrame(
+      groupId,
+      to,
+      row,
+      now: DateTime.now().millisecondsSinceEpoch,
     );
-    final members = await session.getGroupMembers(groupId);
-    // fan out in the background; the reaction is already on screen.
-    unawaited(
-      Future.wait([
-        for (final memberId in members)
-          if (memberId != myId) _sendGroupEnvelope(groupId, memberId, wrapped),
-      ]),
-    );
+    // due now, behind what each lane still waits out: a lane backing off
+    // keeps its gap
+    if (haloWiping || sessionQuiet) return;
+    unawaited(_drainGroupCtl());
   }
 
   // ---- polls ----
@@ -19729,23 +20145,10 @@ class AppState extends ChangeNotifier {
     String newText,
   ) async {
     await session.editMessage(targetMsgUid, newText);
-    // a quiet session keeps it on this phone: nothing leaves
-    if (sessionQuiet) {
-      notifyListeners();
-      return;
-    }
-    final wrapped = await wrapMessage(
-      '',
-      groupId: groupId,
-      edit: EditFrame(targetUid: targetMsgUid, newText: newText),
-      sender: _mySender(),
-    );
-    final members = await session.getGroupMembers(groupId);
-    await Future.wait([
-      for (final memberId in members)
-        if (memberId != myId) _sendGroupEnvelope(groupId, memberId, wrapped),
-    ]);
     notifyListeners();
+    // a quiet session keeps it on this phone: nothing leaves
+    if (sessionQuiet) return;
+    await _queueGroupFrame(groupId, groupEditRow(targetMsgUid, newText));
   }
 
   // build participant info {h,o,x} for each halo_id we have as a contact

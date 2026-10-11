@@ -1085,6 +1085,21 @@ class ArrivalRows implements HaloDb {
     reactedAt['$msgUid $reactor'] = at;
   }
 
+  // the sender's time on the last edit and reaction taken, as frame_order
+  final order = <String, int>{};
+  @override
+  Future<bool> takeFrameOrder(
+    String msgUid,
+    String sender,
+    String kind,
+    int w,
+  ) async {
+    final k = '$msgUid $sender $kind';
+    if ((order[k] ?? w) > w) return false;
+    order[k] = w;
+    return true;
+  }
+
   @override
   Future<void> removeReaction(String msgUid, String reactor) async {
     _hit('removeReaction', msgUid, null);

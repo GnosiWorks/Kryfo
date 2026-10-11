@@ -160,9 +160,6 @@ bool landInOpenChat(String id, String words) {
 // newest message ms seen when the chat was last left, keyed by
 // session.chatKey like the drafts
 final Map<String, int> _lastReadPerPeer = {};
-// texts whose send is still running, by uid. a reload keeps them sending
-// and a retry leaves them be, so none goes twice
-final Set<String> _textInflight = {};
 
 class ChatScreen extends StatefulWidget {
   final String peerHaloId;
@@ -1370,7 +1367,7 @@ class _ChatScreenState extends State<ChatScreen>
       await session.sendAgain(uid);
       if (!mounted) return;
       m.notSent = false;
-      await _retryAny(m);
+      await _retryAny(m, claimed: true);
     } finally {
       appState.releaseSend(uid);
     }
@@ -1391,11 +1388,11 @@ class _ChatScreenState extends State<ChatScreen>
     return true;
   }
 
-  // done once the send has its verdict
-  Future<void> _retryAny(_Msg m) {
+  // done once the send has its verdict. [claimed]: the caller holds its uid
+  Future<void> _retryAny(_Msg m, {bool claimed = false}) {
     if (m.mediaPath != null) return _retryImage(m);
     if (m.filePath != null) return _retryMedia(m);
-    return _retry(m);
+    return _retry(m, claimed: claimed);
   }
 
   // online, a failed send goes again on its own: half a minute apart, six
@@ -1421,7 +1418,8 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   // when tor comes back, re-fire what failed while offline, never rows still
-  // sending. the _wasReachable edge makes it once per reconnect.
+  // sending, here or in the outbox. the _wasReachable edge makes it once
+  // per reconnect.
   void _retryFailedOnReconnect() {
     final reachable = _torReadyToSend();
     if (reachable && !_wasReachable) {
@@ -1431,14 +1429,9 @@ class _ChatScreenState extends State<ChatScreen>
         if (m.direction == 'out' &&
             m.failed &&
             !m.notSent &&
-            m.msgUid != null) {
-          if (m.mediaPath != null) {
-            _retryImage(m);
-          } else if (m.filePath != null) {
-            _retryMedia(m);
-          } else {
-            _retry(m);
-          }
+            m.msgUid != null &&
+            !appState.sendInflight(m.msgUid!)) {
+          _retryAny(m);
         }
       }
     }
@@ -2450,7 +2443,7 @@ class _ChatScreenState extends State<ChatScreen>
     for (final m in loaded) {
       // a text this screen is still sending keeps its pill: a failed mark
       // would make the retry send it twice. files are sendLooksDead's
-      if (m.msgUid != null && _textInflight.contains(m.msgUid)) continue;
+      if (m.msgUid != null && appState.sendInflight(m.msgUid!)) continue;
       if (waits && m.mediaPath == null && m.filePath == null) continue;
       if (m.direction == 'out' &&
           m.sending &&
@@ -2690,12 +2683,14 @@ class _ChatScreenState extends State<ChatScreen>
     });
   }
 
-  Future<void> _retry(_Msg msg) async {
+  Future<void> _retry(_Msg msg, {bool claimed = false}) async {
     if (_sending || _stickerSends > 0) return;
     if (await _stillHeld(msg)) return;
-    // still going, or it went after all: a second copy is only a duplicate
+    // still going, here or in the outbox, or it went after all: a second
+    // copy is only a duplicate
     final uid = msg.msgUid;
-    if (uid != null && !_textInflight.add(uid)) return;
+    final own = !claimed && uid != null;
+    if (own && !appState.claimSend(uid)) return;
     var handed = false;
     try {
       if (uid != null && await session.isSent(uid)) {
@@ -2775,11 +2770,11 @@ class _ChatScreenState extends State<ChatScreen>
       handed = true;
       await Future<String>(() => _wireText(uid, cipher))
           .whenComplete(() {
-            if (uid != null) _textInflight.remove(uid);
+            if (own) appState.releaseSend(uid);
           })
           .then((result) => _finishTextSend(msg, result));
     } finally {
-      if (!handed && uid != null) _textInflight.remove(uid);
+      if (!handed && own) appState.releaseSend(uid);
     }
   }
 
@@ -3686,7 +3681,7 @@ class _ChatScreenState extends State<ChatScreen>
     final msgUid = newMsgUid();
     // claimed from the start: a reload while it grinds or seals keeps it
     // sending, and no retry sends it alongside
-    _textInflight.add(msgUid);
+    appState.claimSend(msgUid);
     var handed = false;
     try {
       final replyToUid = _replyTo?.msgUid;
@@ -3850,10 +3845,10 @@ class _ChatScreenState extends State<ChatScreen>
       mounted ? setState(sealed) : sealed();
       handed = true;
       Future<String>(() => _wireText(msgUid, cipher))
-          .whenComplete(() => _textInflight.remove(msgUid))
+          .whenComplete(() => appState.releaseSend(msgUid))
           .then((result) => _finishTextSend(msg, result));
     } finally {
-      if (!handed) _textInflight.remove(msgUid);
+      if (!handed) appState.releaseSend(msgUid);
     }
   }
 
