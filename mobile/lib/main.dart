@@ -37,6 +37,7 @@ import 'offline_gate.dart';
 import 'in_front.dart';
 import 'reopen.dart';
 import 'tor_valve.dart';
+import 'auto_restart.dart';
 import 'drafts.dart' show restartKeepingDrafts, restoreKeptDrafts;
 import 'helper_push.dart';
 import 'screens/getting_messages_screen.dart';
@@ -14384,6 +14385,31 @@ class AppState extends ChangeNotifier {
     return engine.reconnectNow();
   }
 
+  // what the restart out of sight reads. the engine is asked only out of
+  // sight, in always-on, with tor meant to be up and not
+  @visibleForTesting
+  AutoView autoView() {
+    final ready = torReady;
+    final always = _deliveryMode == DeliveryMode.always;
+    final private = _sendMode == 'private';
+    var silent = 0;
+    if (!_inFront && always && private && !_torHeld && _online && !ready) {
+      silent = (engine.transportState()['ctrl_silent'] as num?)?.toInt() ?? 0;
+    }
+    return AutoView(
+      inFront: _inFront,
+      alwaysOn: always,
+      private: private,
+      quiet: sessionQuiet,
+      online: _online,
+      held: haloWiping || torValve.restartBlocked || lockState.holding,
+      torHeld: _torHeld,
+      torReady: ready,
+      ctrlSilent: silent,
+      stuckSince: ready ? null : (_pctMovedAt ?? _torTryingSince),
+    );
+  }
+
   // back in front with tor off, or stuck at one percentage for minutes:
   // doze or a network android never reported may have left it on a route
   // that is gone. the engine takes it as a network change, which is cheap
@@ -15948,7 +15974,7 @@ class AppState extends ChangeNotifier {
     // drop week-old partial transfers nobody ever completed.
     unawaited(live.sweepMediaChunks());
     _deliveryMode = await loadDeliveryMode();
-    // drafts written down by a restart the person asked for
+    // drafts written down by a restart, asked for or not
     await restoreKeptDrafts().catchError((Object e) {
       dlog('drafts: not restored (${e.runtimeType})');
     });
@@ -15987,11 +16013,13 @@ class AppState extends ChangeNotifier {
     // it runs for the life of the app and doubles as the watchdog.
     var torKickedAt = DateTime.now();
     var ticks = 0;
+    var autoTicks = 0;
     Timer.periodic(const Duration(seconds: 1), (t) {
       if (haloWiping) return;
       if (_sendMode == 'balanced' && ++ticks % 5 == 0) sampleRelayHealth();
       final st = takeTorStatus(engine.getStatus());
       flushOnRouteUp();
+      if (++autoTicks % 15 == 0) unawaited(autoRestart.tick());
       // tor died or never came up in this process. nothing else
       // restarts it, so we do. throttled: a start takes a while.
       if (st == TorStatus.off &&
@@ -19433,6 +19461,13 @@ final torValve = TorValve(
   busyElsewhere: () =>
       mediaInflight.isNotEmpty ||
       incomingMediaProgress.keys.any((k) => !incomingMediaStalled.contains(k)),
+);
+
+// a tor dead in this process, out of sight: a new process, now and then
+final autoRestart = AutoRestart(
+  view: appState.autoView,
+  reconnect: () => appState.reconnectNow(),
+  restart: restartQuietly,
 );
 
 void main() async {

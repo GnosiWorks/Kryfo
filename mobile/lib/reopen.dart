@@ -18,3 +18,17 @@ Future<bool> reopenApp() async {
     return false;
   }
 }
+
+const _restart = MethodChannel('halo/restart');
+
+// the process ends with nothing on screen, and the always-on service brings
+// it back as after any kill. false when android would not: no service up,
+// the app in front, or one too recent
+Future<bool> restartQuietly() async {
+  try {
+    return await _restart.invokeMethod<bool>('quiet') ?? false;
+  } catch (e) {
+    dlog('restart: ${e.runtimeType}');
+    return false;
+  }
+}

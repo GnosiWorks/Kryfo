@@ -11,6 +11,7 @@ import android.content.Context
 object JobSetup {
     const val PERIODIC_JOB_ID = 2001
     const val COPY_SWEEP_JOB_ID = 2002
+    const val COME_BACK_JOB_ID = 2003
     private const val EVERY_MS = 15 * 60 * 1000L
     // a window of the last five minutes of each period, the least android
     // allows. with the whole period as its window two runs could land back
@@ -44,6 +45,18 @@ object JobSetup {
         val jobInfo = JobInfo.Builder(COPY_SWEEP_JOB_ID, component)
             .setMinimumLatency(Shred.GRACE_MS + 30_000L)
             .setOverrideDeadline(Shred.GRACE_MS + 5 * 60_000L)
+            .build()
+        scheduler.schedule(jobInfo)
+    }
+
+    // after a restart out of sight: the process back within minutes, should
+    // android not start the sticky service again
+    fun scheduleComeBack(context: Context) {
+        val scheduler = context.getSystemService(JobScheduler::class.java) ?: return
+        val component = ComponentName(context, HaloPeriodicJobService::class.java)
+        val jobInfo = JobInfo.Builder(COME_BACK_JOB_ID, component)
+            .setMinimumLatency(60_000L)
+            .setOverrideDeadline(5 * 60_000L)
             .build()
         scheduler.schedule(jobInfo)
     }
