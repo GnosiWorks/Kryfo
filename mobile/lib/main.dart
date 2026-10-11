@@ -1830,7 +1830,8 @@ class HaloDb implements GroupOwedStore {
               joining_at INTEGER,
               door_priv TEXT,
               door_pub TEXT,
-              door_was TEXT
+              door_was TEXT,
+              voice_disguise INTEGER
             )
           ''');
           await db.execute('''
