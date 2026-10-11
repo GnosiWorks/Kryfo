@@ -2,6 +2,9 @@
 // the note under "get bridges" says what the tor project sees, plainly and
 // not as a warning. the request goes over meek, so it no longer says the
 // request leaves without tor.
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -55,5 +58,25 @@ void main() {
       ),
     );
     expect(icon.color, isNot(HaloColors.rose));
+  });
+
+  // tor and the tor project are names: capitalised in every language
+  test('the bridges screen writes Tor with a capital', () {
+    final keys = RegExp(r'l10n\.(\w+)')
+        .allMatches(File('lib/screens/bridges_screen.dart').readAsStringSync())
+        .map((m) => m.group(1)!)
+        .toSet();
+    final lower = RegExp(r'(?<![A-Za-z])tor(?![A-Za-z])');
+    final bad = <String>[];
+    for (final f in Directory('lib/l10n').listSync()) {
+      if (!f.path.endsWith('.arb')) continue;
+      final arb = jsonDecode((f as File).readAsStringSync()) as Map;
+      for (final k in keys) {
+        final v = arb[k];
+        if (v is String && lower.hasMatch(v)) bad.add('${f.path} $k');
+      }
+    }
+    expect(keys, contains('bridgesAskTheTorProject'));
+    expect(bad, isEmpty);
   });
 }

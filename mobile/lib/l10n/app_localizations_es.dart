@@ -1078,7 +1078,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get bridgesMoatFailed =>
-      'No se pudo contactar con el proyecto tor. Inténtalo en un minuto o pega una línea de puente abajo.';
+      'No se pudo contactar con el Proyecto Tor. Inténtalo en un minuto o pega una línea de puente abajo.';
 
   @override
   String get bridgesGotBridgesSaveTo =>
@@ -1098,14 +1098,14 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get bridgesBridgesDisguiseYourConnection =>
-      'Los puentes disfrazan tu conexión para que pueda salir. Elige una forma de entrar, guarda, y tor se reconecta a través de ella.';
+      'Los puentes disfrazan tu conexión para que pueda salir. Elige una forma de entrar, guarda, y Tor se reconecta a través de ella.';
 
   @override
   String get bridgesBridgesOnlyChangeHow =>
-      'Los puentes solo cambian cómo se conecta tor, y ahora mismo no estás en modo Onion. Lo que configures aquí se guarda, pero no hace nada hasta que vuelvas a ese modo.';
+      'Los puentes solo cambian cómo se conecta Tor, y ahora mismo no estás en modo Onion. Lo que configures aquí se guarda, pero no hace nada hasta que vuelvas a ese modo.';
 
   @override
-  String get bridgesFromTheTorProject => 'Del proyecto tor';
+  String get bridgesFromTheTorProject => 'Del Proyecto Tor';
 
   @override
   String get bridgesNoise => 'Ruido';
@@ -1115,7 +1115,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get bridgesMakesTorTrafficLook =>
-      'Hace que el tráfico de tor no parezca nada en concreto. La mejor opción para la mayoría de las redes bloqueadas. Resuelves un captcha y te da unas cuantas líneas.';
+      'Hace que el tráfico de Tor no parezca nada en concreto. La mejor opción para la mayoría de las redes bloqueadas. Resuelves un captcha y te da unas cuantas líneas.';
 
   @override
   String get bridgesPrivateBridge => 'Puente privado';
@@ -1158,7 +1158,7 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get bridgesRestartingTor => 'Reiniciando tor…';
+  String get bridgesRestartingTor => 'Reiniciando Tor…';
 
   @override
   String bridgesFindingABridgeS(Object elapsed) {
@@ -1181,7 +1181,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get bridgesATorEntryPoint =>
-      'Una entrada a tor que nadie ha publicado, a la que se llega a través de un envoltorio para que la conexión no parezca tor. El resto de la ruta son los tres saltos de siempre.';
+      'Una entrada a Tor que nadie ha publicado, a la que se llega a través de un envoltorio para que la conexión no parezca Tor. El resto de la ruta son los tres saltos de siempre.';
 
   @override
   String get bridgesLooksLike => 'Parece';
@@ -1194,7 +1194,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get bridgesAskTheTorProject =>
-      'Pídelos directamente al proyecto tor. Resuelves un acertijo para que los bots no puedan agotar la reserva.';
+      'Pídelos directamente al Proyecto Tor. Resuelves un acertijo para que los bots no puedan agotar la reserva.';
 
   @override
   String get bridgesTypeWhatYouSee =>

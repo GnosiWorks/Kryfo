@@ -1060,7 +1060,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get bridgesMoatFailed =>
-      'Không liên lạc được với dự án tor. Thử lại sau một phút, hoặc dán một dòng cầu nối bên dưới.';
+      'Không liên lạc được với Dự án Tor. Thử lại sau một phút, hoặc dán một dòng cầu nối bên dưới.';
 
   @override
   String get bridgesGotBridgesSaveTo => 'Đã có cầu nối · lưu lại để dùng';
@@ -1079,14 +1079,14 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get bridgesBridgesDisguiseYourConnection =>
-      'Cầu nối ngụy trang kết nối của bạn để nó thoát ra được. Chọn một lối vào, lưu lại, và tor sẽ kết nối lại qua đó.';
+      'Cầu nối ngụy trang kết nối của bạn để nó thoát ra được. Chọn một lối vào, lưu lại, và Tor sẽ kết nối lại qua đó.';
 
   @override
   String get bridgesBridgesOnlyChangeHow =>
-      'Cầu nối chỉ thay đổi cách tor kết nối, mà hiện bạn không ở chế độ onion. Những gì bạn đặt ở đây vẫn được lưu, chỉ là không có tác dụng cho đến khi bạn chuyển lại.';
+      'Cầu nối chỉ thay đổi cách Tor kết nối, mà hiện bạn không ở chế độ onion. Những gì bạn đặt ở đây vẫn được lưu, chỉ là không có tác dụng cho đến khi bạn chuyển lại.';
 
   @override
-  String get bridgesFromTheTorProject => 'Từ dự án tor';
+  String get bridgesFromTheTorProject => 'Từ Dự án Tor';
 
   @override
   String get bridgesNoise => 'Nhiễu';
@@ -1096,7 +1096,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get bridgesMakesTorTrafficLook =>
-      'Làm lưu lượng tor trông chẳng giống thứ gì cụ thể. Lựa chọn mặc định tốt nhất cho hầu hết các mạng bị chặn. Trả lời một captcha, rồi nhận về vài dòng.';
+      'Làm lưu lượng Tor trông chẳng giống thứ gì cụ thể. Lựa chọn mặc định tốt nhất cho hầu hết các mạng bị chặn. Trả lời một captcha, rồi nhận về vài dòng.';
 
   @override
   String get bridgesPrivateBridge => 'Cầu nối riêng';
@@ -1138,7 +1138,7 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get bridgesRestartingTor => 'Đang khởi động lại tor…';
+  String get bridgesRestartingTor => 'Đang khởi động lại Tor…';
 
   @override
   String bridgesFindingABridgeS(Object elapsed) {
@@ -1161,7 +1161,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get bridgesATorEntryPoint =>
-      'Một điểm vào tor chưa ai công bố, được kết nối qua một lớp bọc để kết nối trông không giống tor. Phần còn lại của tuyến đường vẫn là ba chặng như thường lệ.';
+      'Một điểm vào Tor chưa ai công bố, được kết nối qua một lớp bọc để kết nối trông không giống Tor. Phần còn lại của tuyến đường vẫn là ba chặng như thường lệ.';
 
   @override
   String get bridgesLooksLike => 'Trông giống';
@@ -1174,7 +1174,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get bridgesAskTheTorProject =>
-      'Hỏi thẳng dự án tor. Bạn giải một câu đố để bot không thể vét cạn nguồn cầu nối.';
+      'Hỏi thẳng Dự án Tor. Bạn giải một câu đố để bot không thể vét cạn nguồn cầu nối.';
 
   @override
   String get bridgesTypeWhatYouSee =>

@@ -1071,7 +1071,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get bridgesMoatFailed =>
-      'دسترسی به پروژه‌ی tor ممکن نشد. یک دقیقه‌ی دیگر دوباره امتحان کنید، یا یک خط پل را پایین جای‌گذاری کنید.';
+      'دسترسی به پروژه‌ی Tor ممکن نشد. یک دقیقه‌ی دیگر دوباره امتحان کنید، یا یک خط پل را پایین جای‌گذاری کنید.';
 
   @override
   String get bridgesGotBridgesSaveTo =>
@@ -1092,14 +1092,14 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get bridgesBridgesDisguiseYourConnection =>
-      'پل‌ها اتصال شما را استتار می‌کنند تا بتواند به بیرون راه پیدا کند. یک راه ورود انتخاب کنید، ذخیره کنید، و tor از راه آن دوباره وصل می‌شود.';
+      'پل‌ها اتصال شما را استتار می‌کنند تا بتواند به بیرون راه پیدا کند. یک راه ورود انتخاب کنید، ذخیره کنید، و Tor از راه آن دوباره وصل می‌شود.';
 
   @override
   String get bridgesBridgesOnlyChangeHow =>
-      'پل‌ها فقط شیوه‌ی اتصال tor را تغییر می‌دهند، و شما الان در حالت onion نیستید. آنچه این‌جا تنظیم کنید ذخیره می‌شود، فقط تا وقتی برنگردید کاری نمی‌کند.';
+      'پل‌ها فقط شیوه‌ی اتصال Tor را تغییر می‌دهند، و شما الان در حالت onion نیستید. آنچه این‌جا تنظیم کنید ذخیره می‌شود، فقط تا وقتی برنگردید کاری نمی‌کند.';
 
   @override
-  String get bridgesFromTheTorProject => 'از پروژه‌ی tor';
+  String get bridgesFromTheTorProject => 'از پروژه‌ی Tor';
 
   @override
   String get bridgesNoise => 'نویز';
@@ -1109,7 +1109,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get bridgesMakesTorTrafficLook =>
-      'ترافیک tor را شبیه هیچ چیز خاصی نشان می‌دهد. بهترین پیش‌فرض برای بیشتر شبکه‌های مسدود. یک کپچا حل می‌کنید، بعد چند خط به شما داده می‌شود.';
+      'ترافیک Tor را شبیه هیچ چیز خاصی نشان می‌دهد. بهترین پیش‌فرض برای بیشتر شبکه‌های مسدود. یک کپچا حل می‌کنید، بعد چند خط به شما داده می‌شود.';
 
   @override
   String get bridgesPrivateBridge => 'پل خصوصی';
@@ -1152,7 +1152,7 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
-  String get bridgesRestartingTor => 'راه‌اندازی دوباره‌ی tor…';
+  String get bridgesRestartingTor => 'راه‌اندازی دوباره‌ی Tor…';
 
   @override
   String bridgesFindingABridgeS(Object elapsed) {
@@ -1175,7 +1175,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get bridgesATorEntryPoint =>
-      'یک نقطه‌ی ورود به tor که هیچ‌کس منتشرش نکرده، و از پشت یک پوشش به آن می‌رسید تا اتصال شبیه tor نباشد. بقیه‌ی مسیر همان سه گام همیشگی است.';
+      'یک نقطه‌ی ورود به Tor که هیچ‌کس منتشرش نکرده، و از پشت یک پوشش به آن می‌رسید تا اتصال شبیه Tor نباشد. بقیه‌ی مسیر همان سه گام همیشگی است.';
 
   @override
   String get bridgesLooksLike => 'ظاهر';
@@ -1188,7 +1188,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get bridgesAskTheTorProject =>
-      'مستقیم از پروژه‌ی tor بخواهید. یک معما حل می‌کنید تا ربات‌ها نتوانند موجودی را ته بکشند.';
+      'مستقیم از پروژه‌ی Tor بخواهید. یک معما حل می‌کنید تا ربات‌ها نتوانند موجودی را ته بکشند.';
 
   @override
   String get bridgesTypeWhatYouSee =>
