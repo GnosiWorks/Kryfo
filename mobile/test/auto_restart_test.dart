@@ -154,6 +154,11 @@ void main() {
       );
       // set back since: still too close
       expect(autoStepAt(dead, now: at(60), restartedAt: at(80)), AutoStep.none);
+      // set back past the half hour: once more, never stuck for good
+      expect(
+        autoStepAt(dead, now: at(60), restartedAt: at(200)),
+        AutoStep.restart,
+      );
     });
 
     test('what counts as a reconnect that failed', () {
@@ -312,9 +317,11 @@ void main() {
     test('on screen, offline or holding a voice note it does not', () {
       eng.silent = 2;
       final front = stuck()..appInFront(true);
+      expect(front.autoView().inFront, isTrue);
       expect(autoStepAt(front.autoView(), now: at(1)), AutoStep.none);
 
       final off = stuck()..noteOnline(false, now: t0);
+      expect(off.autoView().online, isFalse);
       expect(autoStepAt(off.autoView(), now: at(1)), AutoStep.none);
 
       final rec = Object();
@@ -327,6 +334,7 @@ void main() {
     test('check-ins never restart', () {
       eng.silent = 2;
       final app = stuck()..deliveryModeForTest = DeliveryMode.checkins;
+      expect(app.autoView().alwaysOn, isFalse);
       expect(autoStepAt(app.autoView(), now: at(1)), AutoStep.none);
     });
   });
