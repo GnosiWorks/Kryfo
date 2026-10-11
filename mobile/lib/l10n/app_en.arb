@@ -3743,16 +3743,6 @@
       }
     }
   },
-  "homeWaitingSendingNow": "{count, plural, other{{count} waiting · sending now}}",
-  "@homeWaitingSendingNow": {
-    "description": "screens/home_screen.dart",
-    "placeholders": {
-      "count": {
-        "type": "int",
-        "format": "decimalPattern"
-      }
-    }
-  },
   "commonRetry": "Retry",
   "@commonRetry": {
     "description": "screens/home_screen.dart"

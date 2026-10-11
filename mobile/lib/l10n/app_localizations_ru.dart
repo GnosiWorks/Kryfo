@@ -3085,20 +3085,6 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String homeWaitingSendingNow(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString в очереди · отправляем',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get commonRetry => 'Повторить';
 
   @override

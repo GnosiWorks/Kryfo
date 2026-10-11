@@ -3011,20 +3011,6 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
-  String homeWaitingSendingNow(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '⁨$countString⁩ در انتظار · در حال ارسال',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get commonRetry => 'تلاش دوباره';
 
   @override

@@ -2887,20 +2887,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String homeWaitingSendingNow(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString 条待发送 · 正在发送',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get commonRetry => '重试';
 
   @override
@@ -10664,20 +10650,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       count,
       locale: localeName,
       other: '$countString 則等待中 · tor 仍在連線',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String homeWaitingSendingNow(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString 則等待中 · 正在傳送',
     );
     return '$_temp0';
   }

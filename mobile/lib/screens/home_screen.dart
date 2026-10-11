@@ -1349,7 +1349,7 @@ class _OfflineStrip extends StatelessWidget {
           child: show
               ? KeyedSubtree(
                   key: const ValueKey('strip'),
-                  child: _strip(context, n, offline, torDown),
+                  child: _strip(context, n, offline),
                 )
               : const SizedBox(key: ValueKey('no-strip'), width: 1),
         );
@@ -1357,17 +1357,16 @@ class _OfflineStrip extends StatelessWidget {
     );
   }
 
-  Widget _strip(BuildContext context, int n, bool offline, bool torDown) {
+  Widget _strip(BuildContext context, int n, bool offline) {
     final tint = offline ? HaloColors.rose : HaloColors.amber;
     final head = offline ? l10n.homeOffline : l10n.homeWaiting;
-    // say whether anything is queued, not only that the phone is offline
+    // say whether anything is queued, not only that the phone is offline.
+    // it only shows when the phone cannot send, so it offers no retry
     final tail = n == 0
         ? l10n.homeNothingWaitingToSend
         : offline
         ? l10n.homeWaitingSendsWhenYou(n)
-        : torDown
-        ? l10n.homeWaitingTorIsStill(n)
-        : l10n.homeWaitingSendingNow(n);
+        : l10n.homeWaitingTorIsStill(n);
 
     return Container(
       width: double.infinity,
@@ -1404,41 +1403,6 @@ class _OfflineStrip extends StatelessWidget {
               maxLines: 2,
             ),
           ),
-          if (n > 0 && !offline && !torDown) ...[
-            const SizedBox(width: 8),
-            // dimmed and still while a send now is under way
-            AnimatedOpacity(
-              opacity: appState.flushing ? 0.45 : 1,
-              duration: motionStill(context)
-                  ? Duration.zero
-                  : const Duration(milliseconds: 180),
-              child: PressScale(
-                label: l10n.commonRetry,
-                onTap: appState.flushing
-                    ? null
-                    : () => appState.flushOutboxNow(),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 7,
-                  ),
-                  decoration: BoxDecoration(
-                    color: tint.withValues(alpha: 0.18),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    l10n.commonRetry,
-                    style: HaloType.mono(
-                      size: 11,
-                      color: tint,
-                      weight: FontWeight.w600,
-                      letter: 0.06,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
         ],
       ),
     );

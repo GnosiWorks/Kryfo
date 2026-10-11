@@ -869,7 +869,6 @@
   "homeNothingWaitingToSend": "Nichts wartet aufs Senden",
   "homeWaitingSendsWhenYou": "{count, plural, one{{count} wartet · geht raus, sobald du zurück bist} other{{count} warten · gehen raus, sobald du zurück bist}}",
   "homeWaitingTorIsStill": "{count, plural, one{{count} wartet · tor verbindet noch} other{{count} warten · tor verbindet noch}}",
-  "homeWaitingSendingNow": "{count, plural, one{{count} wartet · wird gerade gesendet} other{{count} warten · werden gerade gesendet}}",
   "commonRetry": "Wiederholen",
   "homeNoKryfosYet": "Noch keine Kryfos.",
   "homeScanTheirCodeSend": "Scanne den Code der Person, schick ihr einen Link oder gib den @Benutzernamen ein, den sie dir gegeben hat.",

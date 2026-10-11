@@ -1393,10 +1393,6 @@ void main() {
     expect(l.homeWaitingTorIsStill(1), "1 waiting · tor is still connecting");
     expect(l.homeWaitingTorIsStill(2), "2 waiting · tor is still connecting");
     expect(l.homeWaitingTorIsStill(5), "5 waiting · tor is still connecting");
-    expect(l.homeWaitingSendingNow(0), "0 waiting · sending now");
-    expect(l.homeWaitingSendingNow(1), "1 waiting · sending now");
-    expect(l.homeWaitingSendingNow(2), "2 waiting · sending now");
-    expect(l.homeWaitingSendingNow(5), "5 waiting · sending now");
     expect(l.commonRetry, "Retry");
     expect(l.homeNoKryfosYet, "No Kryfos yet.");
     expect(

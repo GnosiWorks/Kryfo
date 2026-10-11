@@ -869,7 +869,6 @@
   "homeNothingWaitingToSend": "لا شيء ينتظر الإرسال",
   "homeWaitingSendsWhenYou": "{count, plural, other{⁨{count}⁩ في الانتظار · تُرسل عند عودتك}}",
   "homeWaitingTorIsStill": "{count, plural, other{⁨{count}⁩ في الانتظار · ما زال tor يتصل}}",
-  "homeWaitingSendingNow": "{count, plural, other{⁨{count}⁩ في الانتظار · جارٍ الإرسال الآن}}",
   "commonRetry": "أعد المحاولة",
   "homeNoKryfosYet": "لا جهات اتصال بعد.",
   "homeScanTheirCodeSend": "اقرأ رمزه بالكاميرا، أو أرسل له رابطًا، أو اكتب اسم المستخدم الذي أعطاك إياه.",

@@ -4722,12 +4722,6 @@ abstract class AppLocalizations {
   /// screens/home_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, other{{count} waiting · sending now}}'**
-  String homeWaitingSendingNow(int count);
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Retry'**
   String get commonRetry;
 

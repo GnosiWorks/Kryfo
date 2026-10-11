@@ -869,7 +869,6 @@
   "homeNothingWaitingToSend": "Rien en attente d’envoi",
   "homeWaitingSendsWhenYou": "{count, plural, other{{count} en attente · envoi dès votre retour}}",
   "homeWaitingTorIsStill": "{count, plural, other{{count} en attente · tor se connecte encore}}",
-  "homeWaitingSendingNow": "{count, plural, other{{count} en attente · envoi en cours}}",
   "commonRetry": "Réessayer",
   "homeNoKryfosYet": "Pas encore de Kryfos.",
   "homeScanTheirCodeSend": "Scannez son code, envoyez-lui un lien, ou tapez le @pseudo qu’on vous a donné.",

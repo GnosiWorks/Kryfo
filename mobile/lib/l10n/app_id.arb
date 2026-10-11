@@ -869,7 +869,6 @@
   "homeNothingWaitingToSend": "Tidak ada yang menunggu dikirim",
   "homeWaitingSendsWhenYou": "{count, plural, other{{count} menunggu · terkirim saat kamu online lagi}}",
   "homeWaitingTorIsStill": "{count, plural, other{{count} menunggu · tor masih menghubungkan}}",
-  "homeWaitingSendingNow": "{count, plural, other{{count} menunggu · sedang dikirim}}",
   "commonRetry": "Coba lagi",
   "homeNoKryfosYet": "Belum ada Kryfo.",
   "homeScanTheirCodeSend": "Pindai kodenya, kirimi dia tautan, atau ketik @nama pengguna yang dia berikan.",

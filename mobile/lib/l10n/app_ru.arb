@@ -869,7 +869,6 @@
   "homeNothingWaitingToSend": "Ничего не ждёт отправки",
   "homeWaitingSendsWhenYou": "{count, plural, other{{count} в очереди · отправка, когда снова будешь в сети}}",
   "homeWaitingTorIsStill": "{count, plural, other{{count} в очереди · tor ещё подключается}}",
-  "homeWaitingSendingNow": "{count, plural, other{{count} в очереди · отправляем}}",
   "commonRetry": "Повторить",
   "homeNoKryfosYet": "Пока ни одного Kryfo.",
   "homeScanTheirCodeSend": "Отсканируй код, отправь ссылку или введи @имя пользователя, которое тебе дали.",
