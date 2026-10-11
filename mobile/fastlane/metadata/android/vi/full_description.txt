@@ -1,31 +1,31 @@
-ứng dụng nhắn tin riêng tư. không số điện thoại, không email, không tài
-khoản. bạn là một cặp khóa được tạo trên thiết bị của bạn. không ai, kể cả
+Ứng dụng nhắn tin riêng tư. Không số điện thoại, không email, không tài
+khoản. Bạn là một cặp khóa được tạo trên thiết bị của bạn. Không ai, kể cả
 chúng tôi, có thể gắn các cuộc trò chuyện của bạn với một danh tính thật,
 và chỉ khi bạn đăng ký tên người dùng công khai, người khác mới tìm được
 bạn.
 
-theo mặc định, mọi thứ đều đi qua tor. nội dung được mã hóa đầu cuối bằng
-giao thức signal. khi một liên hệ đang ngoại tuyến, tin nhắn chờ trên các
+Theo mặc định, mọi thứ đều đi qua Tor. Nội dung được mã hóa đầu cuối bằng
+giao thức Signal. Khi một liên hệ đang ngoại tuyến, tin nhắn chờ trên các
 relay, được mã hóa kín để relay không biết gì về việc ai đang nói chuyện hay
-nói gì. không bao giờ tải danh bạ lên.
+nói gì. Không bao giờ tải danh bạ lên.
 
-tính năng:
+Tính năng:
 
-* đăng ký không cần số điện thoại hay email
-* mã hóa đầu cuối (giao thức signal)
-* theo mặc định, mọi lưu lượng đi qua một tor client tích hợp sẵn
-* gửi trực tiếp qua onion, dùng relay dự phòng khi người kia ngoại tuyến
-* nhóm với ảnh, tệp, tin nhắn thoại, trả lời, bày tỏ cảm xúc, ghim và bình chọn
-* nhãn dán động được gửi đi dưới dạng một cái tên, nên không có hình ảnh nào rời khỏi điện thoại
-* tìm kiếm trong mọi cuộc trò chuyện, chỉ mục nằm trong cơ sở dữ liệu được mã hóa
-* tin nhắn tự hủy: tự biến mất sau một khoảng thời gian định sẵn
-* cơ sở dữ liệu trên máy được mã hóa và bản sao lưu được mã hóa
-* khóa ứng dụng bằng mã PIN hoặc sinh trắc học, mã PIN ngụy trang mở ra một Kryfo trống, và các cuộc trò chuyện ẩn sau một mã PIN riêng
-* xóa sạch khẩn cấp, gỡ bỏ mọi thứ, kể cả tệp đa phương tiện trong bộ nhớ
-* một cuộc trò chuyện với người làm ra Kryfo, ẩn danh nếu bạn muốn
+* Đăng ký không cần số điện thoại hay email
+* Mã hóa đầu cuối (giao thức Signal)
+* Theo mặc định, mọi lưu lượng đi qua một Tor client tích hợp sẵn
+* Gửi trực tiếp qua onion, dùng relay dự phòng khi người kia ngoại tuyến
+* Nhóm với ảnh, tệp, tin nhắn thoại, trả lời, bày tỏ cảm xúc, ghim và bình chọn
+* Nhãn dán động được gửi đi dưới dạng một cái tên, nên không có hình ảnh nào rời khỏi điện thoại
+* Tìm kiếm trong mọi cuộc trò chuyện, chỉ mục nằm trong cơ sở dữ liệu được mã hóa
+* Tin nhắn tự hủy: tự biến mất sau một khoảng thời gian định sẵn
+* Cơ sở dữ liệu trên máy được mã hóa và bản sao lưu được mã hóa
+* Khóa ứng dụng bằng mã PIN hoặc sinh trắc học, mã PIN ngụy trang mở ra một Kryfo trống, và các cuộc trò chuyện ẩn sau một mã PIN riêng
+* Xóa sạch khẩn cấp, gỡ bỏ mọi thứ, kể cả tệp đa phương tiện trong bộ nhớ
+* Một cuộc trò chuyện với người làm ra Kryfo, ẩn danh nếu bạn muốn
 * 15 ngôn ngữ
-* không phân tích, không đo lường từ xa, không quảng cáo
+* Không phân tích, không đo lường từ xa, không quảng cáo
 
-kinh phí: không quảng cáo, không nhà đầu tư. Kryfo sống nhờ những gì người
-ủng hộ đóng góp. việc ủng hộ là tùy chọn và ẩn danh, và mọi tính năng đều
+Kinh phí: không quảng cáo, không nhà đầu tư. Kryfo sống nhờ những gì người
+ủng hộ đóng góp. Việc ủng hộ là tùy chọn và ẩn danh, và mọi tính năng đều
 hoạt động như nhau dù bạn có ủng hộ hay không.

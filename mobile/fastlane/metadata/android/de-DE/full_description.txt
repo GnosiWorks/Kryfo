@@ -1,30 +1,30 @@
-ein privater Messenger. keine Telefonnummer, keine E-Mail, kein Konto. du bist
-ein Schlüsselpaar, erzeugt auf deinem Gerät. niemand, auch wir nicht, kann
+Ein privater Messenger. Keine Telefonnummer, keine E-Mail, kein Konto. Du bist
+ein Schlüsselpaar, erzeugt auf deinem Gerät. Niemand, auch wir nicht, kann
 deine Chats mit einer echten Identität verknüpfen, und suchen kann man dich
 nur, wenn du dir einen öffentlichen Benutzernamen sicherst.
 
-standardmäßig läuft alles über tor. Inhalte sind mit dem Signal-Protokoll
-Ende-zu-Ende-verschlüsselt. ist ein Kontakt offline, warten Nachrichten auf
+Standardmäßig läuft alles über Tor. Inhalte sind mit dem Signal-Protokoll
+Ende-zu-Ende-verschlüsselt. Ist ein Kontakt offline, warten Nachrichten auf
 Relais, versiegelt, sodass das Relais nichts darüber erfährt, wer spricht oder
-was gesagt wird. kein Hochladen des Adressbuchs, niemals.
+was gesagt wird. Kein Hochladen des Adressbuchs, niemals.
 
 Funktionen:
 
-* keine Telefonnummer oder E-Mail zur Anmeldung
+* Keine Telefonnummer oder E-Mail zur Anmeldung
 * Ende-zu-Ende-Verschlüsselung (Signal-Protokoll)
-* aller Datenverkehr standardmäßig über einen eingebauten tor-Client
-* direkte Onion-Zustellung, Relais als Ausweichweg, wenn ein Kontakt offline ist
+* Aller Datenverkehr standardmäßig über einen eingebauten Tor-Client
+* Direkte Onion-Zustellung, Relais als Ausweichweg, wenn ein Kontakt offline ist
 * Gruppen mit Fotos, Dateien, Sprachnachrichten, Antworten, Reaktionen, angehefteten Nachrichten und Umfragen
-* animierte Sticker, die nur als Name verschickt werden, sodass kein Bild das Handy verlässt
+* Animierte Sticker, die nur als Name verschickt werden, sodass kein Bild das Handy verlässt
 * Suche in allen deinen Chats, der Index liegt in der verschlüsselten Datenbank
-* befristete Nachrichten: sie verschwinden nach einer festgelegten Zeit
-* verschlüsselte lokale Datenbank und verschlüsselte Backups
+* Befristete Nachrichten: Sie verschwinden nach einer festgelegten Zeit
+* Verschlüsselte lokale Datenbank und verschlüsselte Backups
 * App-Sperre mit PIN oder Biometrie, eine Tarn-PIN, die ein leeres Kryfo öffnet, und versteckte Chats hinter einer eigenen PIN
 * Panik-Löschen, das alles entfernt, auch Medien im Speicher
-* ein Chat mit dem Menschen, der Kryfo baut, auf Wunsch anonym
+* Ein Chat mit dem Menschen, der Kryfo baut, auf Wunsch anonym
 * 15 Sprachen
-* keine Analyse, keine Telemetrie, keine Werbung
+* Keine Analyse, keine Telemetrie, keine Werbung
 
-Finanzierung: keine Werbung, keine Investoren. es läuft mit dem, was Leute
+Finanzierung: keine Werbung, keine Investoren. Es läuft mit dem, was Leute
 beisteuern. Unterstützung ist freiwillig und anonym, und jede Funktion
 arbeitet so oder so genau gleich.

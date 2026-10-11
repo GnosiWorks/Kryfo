@@ -1,31 +1,31 @@
-aplikasi pesan privat. tanpa nomor telepon, tanpa email, tanpa akun. kamu
-adalah sepasang kunci yang dibuat di perangkatmu. tidak ada seorang pun,
+Aplikasi pesan privat. Tanpa nomor telepon, tanpa email, tanpa akun. Kamu
+adalah sepasang kunci yang dibuat di perangkatmu. Tidak ada seorang pun,
 termasuk kami, yang bisa mengaitkan obrolanmu dengan identitas asli, dan
 kamu hanya bisa dicari kalau kamu mengklaim nama pengguna publik.
 
-secara bawaan, semuanya berjalan lewat tor. isi pesan terenkripsi ujung
-ke ujung dengan protokol Signal. saat kontak sedang offline, pesan
+Secara bawaan, semuanya berjalan lewat Tor. Isi pesan terenkripsi ujung
+ke ujung dengan protokol Signal. Saat kontak sedang offline, pesan
 menunggu di relay, tersegel sehingga relay tidak tahu apa pun tentang
-siapa yang bicara atau apa yang dikatakan. buku alamat tidak pernah
+siapa yang bicara atau apa yang dikatakan. Buku alamat tidak pernah
 diunggah.
 
-fitur:
+Fitur:
 
-* tanpa nomor telepon atau email untuk mendaftar
-* enkripsi ujung ke ujung (protokol Signal)
-* secara bawaan, semua lalu lintas lewat klien tor yang tertanam
-* pengiriman onion langsung, relay sebagai jalur pengganti saat kontak offline
-* grup dengan foto, file, pesan suara, balasan, reaksi, sematan, dan polling
-* stiker animasi yang dikirim sebagai nama, jadi tidak ada gambar yang meninggalkan ponsel
-* pencarian di semua obrolanmu, indeksnya disimpan di database terenkripsi
-* pesan berwaktu: pesan yang hilang setelah waktu yang ditentukan
-* database lokal terenkripsi dan cadangan terenkripsi
-* kunci aplikasi dengan PIN atau biometrik, PIN umpan yang membuka Kryfo kosong, dan obrolan tersembunyi di balik PIN tersendiri
-* hapus total darurat yang menghapus semuanya, termasuk media yang tersimpan di perangkat
-* obrolan dengan orang yang membuat Kryfo, secara anonim kalau kamu mau
+* Tanpa nomor telepon atau email untuk mendaftar
+* Enkripsi ujung ke ujung (protokol Signal)
+* Secara bawaan, semua lalu lintas lewat klien Tor yang tertanam
+* Pengiriman onion langsung, relay sebagai jalur pengganti saat kontak offline
+* Grup dengan foto, file, pesan suara, balasan, reaksi, sematan, dan polling
+* Stiker animasi yang dikirim sebagai nama, jadi tidak ada gambar yang meninggalkan ponsel
+* Pencarian di semua obrolanmu, indeksnya disimpan di database terenkripsi
+* Pesan berwaktu: pesan yang hilang setelah waktu yang ditentukan
+* Database lokal terenkripsi dan cadangan terenkripsi
+* Kunci aplikasi dengan PIN atau biometrik, PIN umpan yang membuka Kryfo kosong, dan obrolan tersembunyi di balik PIN tersendiri
+* Hapus total darurat yang menghapus semuanya, termasuk media yang tersimpan di perangkat
+* Obrolan dengan orang yang membuat Kryfo, secara anonim kalau kamu mau
 * 15 bahasa
-* tanpa analitik, tanpa telemetri, tanpa iklan
+* Tanpa analitik, tanpa telemetri, tanpa iklan
 
-pendanaan: tanpa iklan, tanpa investor. Kryfo hidup dari pemberian para
-penyokong. sokongan bersifat opsional dan anonim, dan setiap fitur tetap
+Pendanaan: tanpa iklan, tanpa investor. Kryfo hidup dari pemberian para
+penyokong. Sokongan bersifat opsional dan anonim, dan setiap fitur tetap
 bekerja sama, menyokong atau tidak.
