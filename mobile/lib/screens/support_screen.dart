@@ -588,7 +588,7 @@ class _SectionHead extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: HaloType.mono(
                 size: 10,
-                color: HaloColors.text3,
+                color: HaloColors.text2,
                 weight: FontWeight.w500,
                 letter: 0.14,
               ),
@@ -597,7 +597,7 @@ class _SectionHead extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             whole(count),
-            style: HaloType.mono(size: 10, color: HaloColors.text3),
+            style: HaloType.mono(size: 10, color: HaloColors.text2),
           ),
         ],
       ),
@@ -675,7 +675,7 @@ class _DoneHeadState extends State<_DoneHead>
                     overflow: TextOverflow.ellipsis,
                     style: HaloType.mono(
                       size: 10,
-                      color: HaloColors.text3,
+                      color: HaloColors.text2,
                       weight: FontWeight.w500,
                       letter: 0.14,
                     ),
@@ -876,7 +876,7 @@ class _Tile extends StatelessWidget {
                           _when(DateTime.fromMillisecondsSinceEpoch(c.at)),
                           style: HaloType.mono(
                             size: 10.5,
-                            color: unread ? HaloColors.amber : HaloColors.text3,
+                            color: unread ? HaloColors.amber : HaloColors.text2,
                             weight: unread ? FontWeight.w600 : FontWeight.w400,
                           ),
                         ),

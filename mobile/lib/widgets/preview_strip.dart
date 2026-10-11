@@ -75,7 +75,7 @@ class PreviewStrip extends StatelessWidget {
                                   overflow: TextOverflow.ellipsis,
                                   style: HaloType.mono(
                                     size: 9.5,
-                                    color: HaloColors.text3,
+                                    color: HaloColors.text2,
                                   ),
                                 ),
                               ],

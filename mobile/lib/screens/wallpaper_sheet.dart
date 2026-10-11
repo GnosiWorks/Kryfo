@@ -191,7 +191,7 @@ class _Head extends StatelessWidget {
     t,
     style: HaloType.mono(
       size: 10,
-      color: HaloColors.text3,
+      color: HaloColors.text2,
       letter: 0.14,
       weight: FontWeight.w600,
     ),
@@ -207,7 +207,7 @@ double _cellWidth(BuildContext context) {
     final p = TextPainter(
       text: TextSpan(
         text: atmoLabel(a),
-        style: _Swatch.label(HaloColors.text3),
+        style: _Swatch.label(HaloColors.text2),
       ),
       textDirection: dir,
       textScaler: scaler,

@@ -806,7 +806,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               l10n.settingsNotIndependentlyAuditedPre,
               style: HaloType.sans(
                 size: 12,
-                color: HaloColors.text3,
+                color: HaloColors.text2,
                 height: 1.4,
               ),
             ),

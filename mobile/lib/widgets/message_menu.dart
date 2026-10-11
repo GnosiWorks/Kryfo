@@ -370,7 +370,7 @@ class _SheetRow extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         row.sub!,
-                        style: HaloType.sans(size: 12, color: HaloColors.text3),
+                        style: HaloType.sans(size: 12, color: HaloColors.text2),
                       ),
                     ],
                   ],

@@ -207,7 +207,7 @@ class _PinsSheetState extends State<_PinsSheet> {
                   if (pins != null && pins.isNotEmpty)
                     Text(
                       l10n.pinsOf(whole(pins.length), whole(kMaxPins)),
-                      style: HaloType.mono(size: 10, color: HaloColors.text3),
+                      style: HaloType.mono(size: 10, color: HaloColors.text2),
                     ),
                 ],
               ),
@@ -322,7 +322,7 @@ class _PinCard extends StatelessWidget {
                           _pinDate(e.when),
                           style: HaloType.mono(
                             size: 9.5,
-                            color: HaloColors.text3,
+                            color: HaloColors.text2,
                           ),
                         ),
                       ],

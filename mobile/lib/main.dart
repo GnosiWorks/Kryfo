@@ -22805,7 +22805,7 @@ class _DevScreenState extends State<DevScreen> {
             const SizedBox(height: 14),
             Text(
               l10n.appOrPaste,
-              style: HaloType.sans(size: 11, color: HaloColors.text3),
+              style: HaloType.sans(size: 11, color: HaloColors.text2),
             ),
             const SizedBox(height: 10),
             TextField(
@@ -22908,7 +22908,7 @@ class _DevScreenState extends State<DevScreen> {
               const SizedBox(height: 4),
               Text(
                 engine.version(),
-                style: HaloType.sans(size: 11, color: HaloColors.text3),
+                style: HaloType.sans(size: 11, color: HaloColors.text2),
               ),
               const SizedBox(height: 16),
               Text(

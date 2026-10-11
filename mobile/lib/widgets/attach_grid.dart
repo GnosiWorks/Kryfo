@@ -103,7 +103,7 @@ class _AttachGridState extends State<AttachGrid>
                           textAlign: TextAlign.center,
                           style: HaloType.sans(
                             size: 11.5,
-                            color: HaloColors.text3,
+                            color: HaloColors.text2,
                           ),
                         ),
                       ),

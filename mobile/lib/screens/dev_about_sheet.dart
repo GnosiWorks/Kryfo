@@ -397,7 +397,7 @@ class _KeyCard extends StatelessWidget {
             l10n.devKeyLabel,
             style: HaloType.mono(
               size: 10,
-              color: HaloColors.text3,
+              color: HaloColors.text2,
               letter: 0.14,
             ),
           ),

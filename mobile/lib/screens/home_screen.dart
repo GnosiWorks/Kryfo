@@ -753,7 +753,7 @@ class _HomeHead extends StatelessWidget {
                   l10n.homeYourKryfo,
                   style: HaloType.mono(
                     size: 9.5,
-                    color: HaloColors.text3,
+                    color: HaloColors.text2,
                     letter: 0.14,
                   ),
                 ),
@@ -1913,7 +1913,7 @@ class _SectionHead extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: HaloType.mono(
                 size: 10,
-                color: HaloColors.text3,
+                color: HaloColors.text2,
                 weight: FontWeight.w500,
                 letter: 0.14,
               ),
@@ -2170,7 +2170,7 @@ class _GroupRow extends StatelessWidget {
                                 overflow: TextOverflow.ellipsis,
                                 style: HaloType.mono(
                                   size: 10,
-                                  color: HaloColors.text3,
+                                  color: HaloColors.text2,
                                 ),
                               ),
                       ),
@@ -2585,7 +2585,7 @@ class _DevRowTile extends StatelessWidget {
                               size: 10.5,
                               color: unread
                                   ? HaloColors.amber
-                                  : HaloColors.text3,
+                                  : HaloColors.text2,
                               weight: unread
                                   ? FontWeight.w600
                                   : FontWeight.w400,
@@ -2752,7 +2752,7 @@ class _Row extends StatelessWidget {
                                   size: 10.5,
                                   color: c.unread > 0
                                       ? HaloColors.amber
-                                      : HaloColors.text3,
+                                      : HaloColors.text2,
                                   weight: c.unread > 0
                                       ? FontWeight.w600
                                       : FontWeight.w400,
@@ -2911,7 +2911,7 @@ class _QuickTile extends StatelessWidget {
                     line,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: HaloType.sans(size: 10.5, color: HaloColors.text3),
+                    style: HaloType.sans(size: 10.5, color: HaloColors.text2),
                   ),
                 ],
               ),

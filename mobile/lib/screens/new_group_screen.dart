@@ -169,7 +169,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                   hintStyle: HaloType.serif(
                     size: 16,
                     italic: true,
-                    color: HaloColors.text3,
+                    color: HaloColors.text2,
                   ),
                   filled: true,
                   fillColor: HaloColors.surface2,
@@ -192,7 +192,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                     l10n.newGroupMembers,
                     style: HaloType.mono(
                       size: 10,
-                      color: HaloColors.text3,
+                      color: HaloColors.text2,
                       letter: 0.14,
                     ),
                   ),
@@ -203,7 +203,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                         : l10n.newGroupSelected(_selected.length),
                     style: HaloType.mono(
                       size: 10,
-                      color: HaloColors.text3,
+                      color: HaloColors.text2,
                       letter: 0.14,
                     ),
                   ),

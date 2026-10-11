@@ -186,7 +186,7 @@ class _RoomLinkSheetState extends State<_RoomLinkSheet> {
                       expiresAt: widget.link.expiresAt,
                       size: 10,
                     ),
-                    style: HaloType.mono(size: 10, color: HaloColors.text3),
+                    style: HaloType.mono(size: 10, color: HaloColors.text2),
                   )
                 : Row(
                     children: [

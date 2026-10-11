@@ -104,7 +104,7 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
                   hintStyle: HaloType.serif(
                     size: 16,
                     italic: true,
-                    color: HaloColors.text3,
+                    color: HaloColors.text2,
                   ),
                   counterText: '',
                   filled: true,
@@ -124,7 +124,7 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
                 l10n.roomCreateEndsAfter,
                 style: HaloType.mono(
                   size: 10,
-                  color: HaloColors.text3,
+                  color: HaloColors.text2,
                   letter: 0.14,
                 ),
               ),
@@ -168,7 +168,7 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
                                   ),
                             style: HaloType.mono(
                               size: 9.5,
-                              color: HaloColors.text3,
+                              color: HaloColors.text2,
                             ),
                           ),
                         ],
