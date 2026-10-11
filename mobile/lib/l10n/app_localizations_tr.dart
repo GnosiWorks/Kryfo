@@ -7931,4 +7931,19 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get valveRestartKryfo => 'Kryfo’yu yeniden başlat';
+
+  @override
+  String get updateAvailable => 'Güncelleme var';
+
+  @override
+  String updateReady(String version) {
+    return 'Kryfo $version indirilmeye hazır';
+  }
+
+  @override
+  String get settingsCheckForUpdates => 'Güncellemeleri denetle';
+
+  @override
+  String get settingsCheckForUpdatesHint =>
+      'Günde bir kez Tor üzerinden en yeni sürümü kryfo.app’e sorar. Senin hakkında hiçbir şey göndermez.';
 }

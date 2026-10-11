@@ -12692,6 +12692,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Restart Kryfo'**
   String get valveRestartKryfo;
+
+  /// widgets/update_card.dart: card title, a newer Kryfo is on the site
+  ///
+  /// In en, this message translates to:
+  /// **'Update available'**
+  String get updateAvailable;
+
+  /// widgets/update_card.dart: the line under the title, tap opens the download page
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo {version} is ready to download'**
+  String updateReady(String version);
+
+  /// screens/settings_screen.dart: switch for the daily update check
+  ///
+  /// In en, this message translates to:
+  /// **'Check for updates'**
+  String get settingsCheckForUpdates;
+
+  /// screens/settings_screen.dart: what the update check does
+  ///
+  /// In en, this message translates to:
+  /// **'Once a day over Tor. Asks kryfo.app for the newest version and sends nothing about you.'**
+  String get settingsCheckForUpdatesHint;
 }
 
 class _AppLocalizationsDelegate

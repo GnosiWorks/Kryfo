@@ -360,6 +360,7 @@ class MainActivity : FlutterFragmentActivity() {
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "isMiui" -> result.success(isMiuiDevice())
+                    "installSource" -> result.success(installSource())
                     "askNotifications" -> {
                         askForNotificationsOnce()
                         result.success(null)
@@ -830,6 +831,47 @@ class MainActivity : FlutterFragmentActivity() {
         } catch (e: Exception) {
             false
         }
+    }
+
+    // who installed us and who keeps us updated, for the update notice: an
+    // f-droid copy is the same bytes as ours, so only the installer tells
+    private fun installSource(): Map<String, String?> {
+        var installer: String? = null
+        var initiator: String? = null
+        var owner: String? = null
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                val s = packageManager.getInstallSourceInfo(packageName)
+                installer = s.installingPackageName
+                initiator = s.initiatingPackageName
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    owner = s.updateOwnerPackageName
+                }
+            } else {
+                @Suppress("DEPRECATION")
+                installer = packageManager.getInstallerPackageName(packageName)
+            }
+        } catch (e: Exception) {
+            // unknown: the notice decides as for a sideloaded copy
+        }
+        val version = try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                packageManager.getPackageInfo(
+                    packageName, PackageManager.PackageInfoFlags.of(0)
+                ).versionName
+            } else {
+                @Suppress("DEPRECATION")
+                packageManager.getPackageInfo(packageName, 0).versionName
+            }
+        } catch (e: Exception) {
+            null
+        }
+        return mapOf(
+            "installer" to installer,
+            "initiator" to initiator,
+            "owner" to owner,
+            "version" to version,
+        )
     }
 
     private fun isMiuiDevice(): Boolean {

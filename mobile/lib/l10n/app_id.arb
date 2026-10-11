@@ -2068,5 +2068,9 @@
   "shareNoOne": "Tidak ada yang bisa diajak berbagi",
   "valveStillConnecting": "Masih menyambung… Pesanmu akan terkirim begitu koneksi kembali.",
   "valveCouldNotReconnect": "Kryfo tidak bisa menyambung ulang. Memulai ulang akan memperbaikinya dan pesanmu tetap tersimpan.",
-  "valveRestartKryfo": "Mulai ulang Kryfo"
+  "valveRestartKryfo": "Mulai ulang Kryfo",
+  "updateAvailable": "Pembaruan tersedia",
+  "updateReady": "Kryfo {version} siap diunduh",
+  "settingsCheckForUpdates": "Periksa pembaruan",
+  "settingsCheckForUpdatesHint": "Sekali sehari lewat Tor. Hanya menanyakan versi terbaru ke kryfo.app dan tidak mengirim apa pun tentang kamu."
 }

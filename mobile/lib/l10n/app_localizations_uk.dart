@@ -8047,4 +8047,19 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get valveRestartKryfo => 'Перезапустити Kryfo';
+
+  @override
+  String get updateAvailable => 'Доступне оновлення';
+
+  @override
+  String updateReady(String version) {
+    return 'Kryfo $version можна завантажити';
+  }
+
+  @override
+  String get settingsCheckForUpdates => 'Перевіряти оновлення';
+
+  @override
+  String get settingsCheckForUpdatesHint =>
+      'Раз на день через Tor. Питає в kryfo.app номер нової версії й нічого не надсилає про тебе.';
 }

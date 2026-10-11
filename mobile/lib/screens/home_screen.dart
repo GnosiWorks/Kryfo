@@ -61,6 +61,7 @@ import 'dev_about_sheet.dart';
 import 'search_screen.dart';
 import 'group_info_screen.dart' show leaveLine;
 import 'support_screen.dart' show SupportPin, supportRoute;
+import '../widgets/update_card.dart' show UpdateHint;
 
 bool _miuiPromptChecked = false;
 
@@ -455,6 +456,7 @@ class _ChatsTab extends StatelessWidget {
           const OfflineCard(),
           const _KeepsStoppingCard(),
           const _NotificationsBlockedHint(),
+          const UpdateHint(),
           StaggerIn(
             index: 1,
             child: _QuickTiles(

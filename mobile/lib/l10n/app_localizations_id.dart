@@ -7905,4 +7905,19 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get valveRestartKryfo => 'Mulai ulang Kryfo';
+
+  @override
+  String get updateAvailable => 'Pembaruan tersedia';
+
+  @override
+  String updateReady(String version) {
+    return 'Kryfo $version siap diunduh';
+  }
+
+  @override
+  String get settingsCheckForUpdates => 'Periksa pembaruan';
+
+  @override
+  String get settingsCheckForUpdatesHint =>
+      'Sekali sehari lewat Tor. Hanya menanyakan versi terbaru ke kryfo.app dan tidak mengirim apa pun tentang kamu.';
 }

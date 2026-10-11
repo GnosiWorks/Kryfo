@@ -3385,5 +3385,12 @@ void main() {
       "Kryfo could not reconnect. Restarting it fixes this and keeps your messages.",
     );
     expect(l.valveRestartKryfo, "Restart Kryfo");
+    expect(l.updateAvailable, "Update available");
+    expect(l.updateReady("<version>"), "Kryfo <version> is ready to download");
+    expect(l.settingsCheckForUpdates, "Check for updates");
+    expect(
+      l.settingsCheckForUpdatesHint,
+      "Once a day over Tor. Asks kryfo.app for the newest version and sends nothing about you.",
+    );
   });
 }

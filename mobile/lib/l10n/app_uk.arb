@@ -2068,5 +2068,9 @@
   "shareNoOne": "Немає з ким поділитися",
   "valveStillConnecting": "Ще підключаємося… Твої повідомлення підуть, щойно зв’язок повернеться.",
   "valveCouldNotReconnect": "Kryfo не зміг перепідключитися. Перезапуск це виправить, а повідомлення збережуться.",
-  "valveRestartKryfo": "Перезапустити Kryfo"
+  "valveRestartKryfo": "Перезапустити Kryfo",
+  "updateAvailable": "Доступне оновлення",
+  "updateReady": "Kryfo {version} можна завантажити",
+  "settingsCheckForUpdates": "Перевіряти оновлення",
+  "settingsCheckForUpdatesHint": "Раз на день через Tor. Питає в kryfo.app номер нової версії й нічого не надсилає про тебе."
 }
