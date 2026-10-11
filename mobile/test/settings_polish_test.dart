@@ -4,7 +4,6 @@
 // switch opens where it was left, a public handle is only let go after a
 // yes, an engine's own words never reach the screen, long values go under
 // their label, and a refusal is felt.
-import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show RenderParagraph;
@@ -21,7 +20,6 @@ import 'package:kryfo/main.dart'
 import 'package:kryfo/notifications.dart'
     show loadHideNotifContent, setHideNotifContent;
 import 'package:kryfo/screens/backup_screen.dart' show backupFailLine;
-import 'package:kryfo/screens/bridges_screen.dart';
 import 'package:kryfo/screens/handle_screen.dart';
 import 'package:kryfo/screens/modes_screen.dart';
 import 'package:kryfo/screens/my_kryfo_screen.dart';
@@ -31,7 +29,6 @@ import 'package:kryfo/screens/transport_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/theme.dart';
 import 'package:kryfo/tools/tools_bridge.dart';
-import 'package:kryfo/widgets/halo_bar.dart';
 import 'package:kryfo/widgets/halo_rows.dart';
 import 'package:kryfo/widgets/halo_switch.dart';
 import 'package:kryfo/widgets/unfold.dart';
@@ -85,22 +82,6 @@ class _QuietDb implements HaloDb {
   @override
   dynamic noSuchMethod(Invocation i) =>
       throw UnimplementedError('the stand-in was asked for ${i.memberName}');
-}
-
-// the bridge service, answering as a network that is down does
-class _MoatEngine implements HaloEngine {
-  _MoatEngine(this.answer, {this.solve});
-  final Future<String> Function() answer;
-  final Future<String> Function()? solve;
-  @override
-  Future<String> moatFetch() => answer();
-  @override
-  Future<String> moatSolve(String challenge, String answer) => solve!();
-  @override
-  String bridgeState() => 'false|0|0';
-  @override
-  dynamic noSuchMethod(Invocation i) =>
-      throw UnimplementedError('${i.memberName}');
 }
 
 // the developer world's database, with nothing waiting to go
@@ -429,130 +410,6 @@ void main() {
       final field = t.getCenter(find.byType(TextField).first).dx;
       expect(at, lessThan(field));
       await drain(t);
-    });
-  });
-
-  group('bridges', () {
-    Future<void> open(
-      WidgetTester t,
-      Future<String> Function() moat, {
-      Future<String> Function()? solve,
-      bool still = false,
-    }) async {
-      t.view.physicalSize = const Size(1800, 9000);
-      t.view.devicePixelRatio = 3;
-      addTearDown(t.view.reset);
-      final m = t.binding.defaultBinaryMessenger;
-      m.setMockMethodCallHandler(SystemChannels.platform, (_) async => null);
-      addTearDown(
-        () => m.setMockMethodCallHandler(SystemChannels.platform, null),
-      );
-      useEngineForTest(_MoatEngine(moat, solve: solve));
-      await t.pumpWidget(framed(const BridgesScreen(), still: still));
-      await rest(t, 1);
-    }
-
-    testWidgets('a failed ask says what to do, never the engine\'s words', (
-      t,
-    ) async {
-      await open(t, () async => 'error: dial tcp 1.2.3.4:443: i/o timeout');
-      await t.tap(find.text(l10n.bridgesRequestBridges));
-      await rest(t, 1);
-      expect(find.text(l10n.bridgesMoatFailed), findsOneWidget);
-      expect(find.textContaining('dial tcp'), findsNothing);
-      await drain(t);
-    });
-
-    testWidgets('while asking, a placeholder holds the puzzle\'s place', (
-      t,
-    ) async {
-      final wait = <Future<String>>[];
-      await open(t, () {
-        final f = Future<String>.delayed(
-          const Duration(seconds: 3),
-          () => 'error: timed out',
-        );
-        wait.add(f);
-        return f;
-      });
-      expect(find.byType(HaloBar), findsNothing);
-      await t.tap(find.text(l10n.bridgesRequestBridges));
-      await t.pump();
-      await t.pump(const Duration(milliseconds: 300));
-      expect(find.byType(HaloBar), findsOneWidget);
-      // a second tap while asking asks nothing more
-      await t.tap(find.text(l10n.bridgesAsking));
-      await t.pump();
-      expect(wait, hasLength(1));
-      await rest(t, 4);
-      expect(find.byType(HaloBar), findsNothing);
-      await drain(t);
-    });
-
-    testWidgets('a wrong answer says so over the next puzzle', (t) async {
-      var asked = 0;
-      await open(
-        t,
-        () async => 'ok|captcha${++asked}|challenge',
-        solve: () async => 'wrong',
-      );
-      await t.tap(find.text(l10n.bridgesRequestBridges));
-      await rest(t, 1);
-      await t.enterText(
-        find.widgetWithText(TextField, l10n.bridgesAnswer),
-        'guess',
-      );
-      await t.tap(find.text(l10n.commonSend));
-      await rest(t, 1);
-      expect(asked, 2);
-      expect(find.text(l10n.bridgesThatWasNotIt), findsOneWidget);
-      await drain(t);
-    });
-
-    testWidgets('reduced motion: the send button turns at once', (t) async {
-      final solving = Completer<String>();
-      await open(
-        t,
-        () async => 'ok|captcha1|challenge',
-        solve: () => solving.future,
-        still: true,
-      );
-      await t.tap(find.text(l10n.bridgesRequestBridges));
-      await rest(t, 1);
-      await t.enterText(
-        find.widgetWithText(TextField, l10n.bridgesAnswer),
-        'guess',
-      );
-      await t.tap(find.text(l10n.commonSend));
-      await t.pump();
-      // the nearest of each, the send button's own
-      final send = find
-          .ancestor(
-            of: find.text(l10n.commonSend),
-            matching: find.byType(AnimatedOpacity),
-          )
-          .first;
-      expect(t.widget<AnimatedOpacity>(send).duration, Duration.zero);
-      expect(
-        t
-            .widget<AnimatedContainer>(
-              find
-                  .ancestor(of: send, matching: find.byType(AnimatedContainer))
-                  .first,
-            )
-            .duration,
-        Duration.zero,
-      );
-      solving.complete('error: gone');
-      await drain(t);
-    });
-
-    test('a save the engine refused reads as a fixed line', () {
-      expect(
-        bridgesResultLine('error: listen tcp 127.0.0.1:0: bind refused'),
-        l10n.bridgesCouldNotApply,
-      );
-      expect(bridgesResultLine('ok: 2 bridges'), l10n.bridgesSaved(2));
     });
   });
 

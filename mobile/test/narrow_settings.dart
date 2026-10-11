@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the pages off settings on a small phone, 360 wide: each language, text
 // size and theme asked for, and nothing runs off the edge. the bridges page
-// also keeps its switch on screen and its text buttons a finger high
+// also keeps its switch on screen and its text buttons a finger high, with
+// "more" open and lines saved
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/bridge_mode.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
     show HaloEngine, appState, useDatabasesForTest, useEngineForTest;
@@ -71,7 +73,9 @@ class _Db extends DevTestDb {
 
 class _Engine implements HaloEngine {
   @override
-  String bridgeState() => 'false|0|0';
+  String setBridgeMode(String mode, String opts) => 'ok';
+  @override
+  String bridgeLineChecks() => '[]';
   @override
   Map<String, dynamic> transportState() => {
     'relays': [
@@ -188,10 +192,7 @@ void narrowSettings({
       expect(r.left, greaterThanOrEqualTo(0));
       expect(r.right, lessThanOrEqualTo(360));
     }
-    for (final label in [
-      l10n.bridgesPasteFromClipboard,
-      l10n.bridgesRequestBridges,
-    ]) {
+    for (final label in [l10n.bridgesMore, l10n.commonEdit]) {
       final b = find.ancestor(
         of: find.text(label),
         matching: find.byType(PressScale),
@@ -218,17 +219,23 @@ void narrowSettings({
     await sweep(t, () async => const BridgesScreen(), check: bridgesReachable);
   });
 
-  testWidgets('bridges, a line saved', (t) async {
+  testWidgets('bridges, lines saved and more open', (t) async {
+    appState.bridgeSetupForTest = const BridgeSetup(
+      choice: BridgeChoice.friend,
+      friendLines: 'obfs4 1.2.3.4:443 ABCDEF cert=abc iat-mode=0',
+      torProjectLines: 'webtunnel [2001:db8::1]:443 ABCDEF url=https://a.b/c',
+      consent: 'yes',
+      country: 'ir',
+      offerAuto: true,
+    );
+    addTearDown(() => appState.bridgeSetupForTest = const BridgeSetup());
     await sweep(
       t,
       () async => const BridgesScreen(),
       after: (t) async {
-        final field = find.byType(TextField);
-        await _reach(t, field);
-        await t.enterText(
-          field.first,
-          'obfs4 1.2.3.4:443 ABCDEF cert=abc iat-mode=0',
-        );
+        final more = find.text(l10n.bridgesMore);
+        await _reach(t, more);
+        await t.tap(more);
       },
       check: bridgesReachable,
     );

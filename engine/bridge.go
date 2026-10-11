@@ -413,12 +413,9 @@ func startListener(dataDir string) string {
 	hsCh, hsSubbed := listenForUploads(t)
 	// tor starts with the network off. bine turns it on inside Listen, but
 	// only on the branch NoWait skips, so turn it on here, over the engine's
-	// own connection (see control_events.go).
-	if eerr := ctrlDo(t, "DisableNetwork 0", func(c *control.Conn) error {
-		return c.SetConf(control.KeyVals("DisableNetwork", "0")...)
-	}); eerr != nil {
-		log.Printf("halo: enable network: %v", eerr)
-	}
+	// own connection (see control_events.go). with no bridge mode yet it
+	// stays off: the bounce that sets the mode turns it on.
+	networkOnAtStart(t)
 
 	listenStart := time.Now()
 	onion, err := t.Listen(ctx, &tor.ListenConf{
@@ -449,6 +446,24 @@ func startListener(dataDir string) string {
 
 	log.Printf("halo: listening on %s", addr)
 	return addr
+}
+
+// the first time a new tor goes on the network. held, a picked mode is put
+// in place by a bounce of its own; automatic's pass does it for automatic,
+// and an unknown mode waits for the bounce that sets it
+func networkOnAtStart(t *tor.Tor) {
+	if why := networkHold(); why != "" {
+		log.Printf("halo: tor stays off the network (%s)", why)
+		if mode, _, _ := bridgeMode(); why != errNoMode && mode != bmAuto {
+			go reconnectNow()
+		}
+		return
+	}
+	if err := ctrlDo(t, "DisableNetwork 0", func(c *control.Conn) error {
+		return c.SetConf(control.KeyVals("DisableNetwork", "0")...)
+	}); err != nil {
+		log.Printf("halo: enable network: %v", err)
+	}
 }
 
 // bine writes a fresh torrc and control-port file per run and does not always
@@ -614,6 +629,7 @@ func applyBridgeConf(t *tor.Tor) error {
 	if err := startPTListeners(); err != nil {
 		return err
 	}
+	gen := linesGen.Load()
 	var kv []*control.KeyVal
 	for _, p := range ptPlugins() {
 		kv = append(kv, control.NewKeyVal("ClientTransportPlugin", p))
@@ -626,9 +642,14 @@ func applyBridgeConf(t *tor.Tor) error {
 	}
 	log.Printf("bridges: handing tor %d bridge lines", len(lines))
 	noteStep("setconf plugin+bridges")
-	return ctrlDo(t, "ClientTransportPlugin+Bridge", func(c *control.Conn) error {
+	if err := ctrlDo(t, "ClientTransportPlugin+Bridge", func(c *control.Conn) error {
 		return c.SetConf(kv...)
-	})
+	}); err != nil {
+		return err
+	}
+	// tor holds these now, unless they changed while it was told
+	noteLinesApplied(gen)
+	return nil
 }
 
 // where the last reconnect got to, and how it ended. a bounce that stalls
@@ -907,12 +928,21 @@ func reconnectOn(t *tor.Tor, addr string, me int64, auto bool) string {
 	}
 	// let it drop what it had before it is told anything else
 	time.Sleep(bounceSettle)
+	// no bridge wanted and none allowed out: nothing to configure, and
+	// the network stays off
+	if why := networkHold(); why == errNoMode || why == errAutoWait {
+		log.Printf("halo: leaving tor off the network (%s)", why)
+		atomic.StoreInt32(&bounceOff, 0)
+		return why
+	}
 	if !step("bridge config") {
 		return superseded
 	}
+	confOK := true
 	if err := applyBridgeConf(t); err != nil {
-		log.Printf("halo: bridge config not applied: %v", err)
+		log.Println("halo: bridge config not applied")
 		bridgeConfErr.Store(err.Error())
+		confOK = false
 	} else {
 		bridgeConfErr.Store("")
 	}
@@ -924,6 +954,17 @@ func reconnectOn(t *tor.Tor, addr string, me int64, auto bool) string {
 		log.Println("halo: tor was put to sleep during the reconnect, leaving it off")
 		atomic.StoreInt32(&bounceOff, 0)
 		return "error: tor is asleep"
+	}
+	// an unknown mode is never direct, and neither are bridges tor did not
+	// take: it would go out on whatever it had before
+	why := networkHold()
+	if why == "" && !confOK && bridgesEnabled() {
+		why = errNoConf
+	}
+	if why != "" {
+		log.Printf("halo: leaving tor off the network (%s)", why)
+		atomic.StoreInt32(&bounceOff, 0)
+		return why
 	}
 	// what tor says from here on is about the switch an attempt waits on
 	obsArm()
@@ -967,6 +1008,12 @@ func reconnectOn(t *tor.Tor, addr string, me int64, auto bool) string {
 	log.Println("halo: tor reconnected")
 	return "ok"
 }
+
+// how long a wake waits for a reconnect under way, and how often it looks
+var (
+	resumeWait = stuckAfter
+	resumeStep = 200 * time.Millisecond
+)
 
 // set while tor is quiet because the app asked for it to be: the check-in
 // mode runs tor for a minute at a time and wants it silent in between.
@@ -1021,13 +1068,42 @@ func torStop() string {
 func HaloTorResume() *C.char { return C.CString(torResume()) }
 
 func torResume() string {
-	atomic.StoreInt32(&torPaused, 0)
+	// put back as it was if the wake is refused
+	was := atomic.SwapInt32(&torPaused, 0)
 	mu.Lock()
 	t := torNode
 	addr := myAddr
 	mu.Unlock()
 	if t == nil || t.Control == nil {
 		return "start"
+	}
+	// a reconnect under way puts the network back itself, with its config:
+	// waited for, as long as one may run, then refused
+	for t0 := time.Now(); atomic.LoadInt32(&torRestarting) == 1; {
+		if time.Since(t0) >= resumeWait {
+			atomic.StoreInt32(&torPaused, was)
+			return "error: a reconnect is running"
+		}
+		time.Sleep(resumeStep)
+	}
+	// bridges wanted that tor does not hold yet: told first, as a check-in
+	// does, and never woken without them
+	if bridgesEnabled() && !bridgesApplied() && bridgeModeKnown() {
+		if err := applyBridgeConf(t); err != nil {
+			log.Println("halo: bridge config not applied before the wake")
+		}
+	}
+	if why := networkHold(); why != "" {
+		// automatic is awake now and finds its way in: its pass puts a
+		// step in place, and the hold keeps tor off until then
+		if mode, _, _ := bridgeMode(); mode == bmAuto && why != errNoMode {
+			log.Printf("halo: awake, off the network until automatic has a way (%s)", why)
+			autoKick()
+			return "ok"
+		}
+		log.Printf("halo: tor stays asleep (%s)", why)
+		atomic.StoreInt32(&torPaused, was)
+		return why
 	}
 	if err := ctrlDo(t, "DisableNetwork 0", func(c *control.Conn) error {
 		return c.SetConf(control.KeyVals("DisableNetwork", "0")...)

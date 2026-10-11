@@ -4,10 +4,13 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../dlog.dart';
 import '../main.dart' show appState;
+import '../screens/bridges_screen.dart';
 import '../reopen.dart';
 import '../secure_store.dart';
 import '../theme.dart';
 import 'fit_column.dart';
+import 'halo_buttons.dart';
+import 'motion.dart' show haloRoute;
 import 'onion_loader.dart';
 import '../l10n/l10n.dart';
 
@@ -212,10 +215,13 @@ class _TorBootSplashState extends State<TorBootSplash>
               1,
               // a key store call that has not answered for a while: the way
               // out is a new process, offered before boot gives up on it
-              ValueListenableBuilder<bool>(
-                valueListenable: keyStoreSlow,
-                builder: (_, slow, _) {
-                  final line = slow
+              ListenableBuilder(
+                listenable: Listenable.merge([keyStoreSlow, appState]),
+                builder: (_, _) {
+                  final slow = keyStoreSlow.value;
+                  final line = appState.firstRunAsk
+                      ? _firstRun()
+                      : slow
                       ? _slow()
                       : Text(
                           l10n.torBootSplashFirstLaunchTakesA,
@@ -241,6 +247,35 @@ class _TorBootSplashState extends State<TorBootSplash>
       ),
     );
   }
+
+  // a new install, before tor has made a single connection: where trying
+  // tor is risky, kryfo starts through a bridge instead
+  Widget _firstRun() => Column(
+    key: const ValueKey('ask'),
+    mainAxisSize: MainAxisSize.min,
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Text(
+        l10n.torBootSplashIfTorIsBlocked,
+        textAlign: TextAlign.center,
+        style: HaloType.sans(size: 12.5, color: HaloColors.text2, height: 1.5),
+      ),
+      const SizedBox(height: 14),
+      HaloPrimaryButton(
+        label: l10n.torBootSplashConnect,
+        onTap: () => appState.pickFirstRun(risky: false),
+      ),
+      const SizedBox(height: 8),
+      HaloGhostButton(
+        label: l10n.torBootSplashTorIsBlockedHere,
+        onTap: () async {
+          final nav = Navigator.of(context);
+          await appState.pickFirstRun(risky: true);
+          nav.push(haloRoute(const BridgesScreen()));
+        },
+      ),
+    ],
+  );
 
   Widget _slow() => Column(
     key: const ValueKey('slow'),

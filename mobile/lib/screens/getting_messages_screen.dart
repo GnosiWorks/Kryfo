@@ -95,6 +95,16 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
       lastWakeMs: appState.lastWakeAt,
       nowMs: DateTime.now().millisecondsSinceEpoch,
     );
+    // how tor gets out, when it is not the usual way. never in a decoy
+    final bs = appState.bridgeStatus;
+    final String? bridgeNote =
+        appState.inDecoyView || appState.sendMode != 'private'
+        ? null
+        : bs.throughBridge && appState.linkUp
+        ? l10n.bridgesThroughABridge
+        : appState.autoStruggling
+        ? appState.bridgeLine.head
+        : null;
     return Scaffold(
       backgroundColor: HaloColors.surface,
       body: SafeArea(
@@ -270,6 +280,19 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
                       ),
                     ),
                   ],
+                ),
+              ),
+              Unfold(
+                open: bridgeNote != null,
+                child: Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(37, 4, 22, 0),
+                  child: RiseSwap(
+                    child: Text(
+                      bridgeNote ?? '',
+                      key: ValueKey(bridgeNote),
+                      style: HaloType.mono(size: 11.5, color: HaloColors.text2),
+                    ),
+                  ),
                 ),
               ),
               // the check-ins note grows in and folds away, so the page

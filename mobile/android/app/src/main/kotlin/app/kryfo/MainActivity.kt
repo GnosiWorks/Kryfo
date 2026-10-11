@@ -449,6 +449,9 @@ class MainActivity : FlutterFragmentActivity() {
                     "openNotificationSettings" -> {
                         result.success(openNotificationSettings())
                     }
+                    "openWifiSettings" -> {
+                        result.success(openWifiSettings())
+                    }
                     "openAutostartSettings" -> {
                         result.success(openAutostartSettings())
                     }
@@ -914,6 +917,16 @@ class MainActivity : FlutterFragmentActivity() {
             )
         } catch (e: Exception) {
             null
+        }
+    }
+
+    // android's wi-fi page, where a network that wants a sign-in offers it
+    private fun openWifiSettings(): Boolean {
+        return try {
+            startActivity(Intent(Settings.ACTION_WIFI_SETTINGS))
+            true
+        } catch (e: Exception) {
+            false
         }
     }
 

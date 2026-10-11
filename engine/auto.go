@@ -489,9 +489,31 @@ func autoUseLines(gen int64, lines []string) (bool, bool) {
 	return true, useLines(lines)
 }
 
+// a step's lines, and whether it is automatic's own direct step, in one
+// go under the mode's lock: a new mode can never land between the two
+func autoUseStep(gen int64, s autoStep) (bool, bool) {
+	autoMu.Lock()
+	defer autoMu.Unlock()
+	if autoGenN != gen {
+		return false, false
+	}
+	changed := useLines(s.Lines)
+	if h := autoStepHook; h != nil {
+		h()
+	}
+	autoDirectOK.Store(s.Method == "direct")
+	return true, changed
+}
+
+// called between a step's lines and its direct mark, for the tests
+var autoStepHook func()
+
 // puts a set of lines in place, or none for direct. the same set again
 // changes nothing. true when something changed.
 func useLines(lines []string) bool {
+	if h := useLinesHook; h != nil {
+		h()
+	}
 	good, _, _ := sortBridgeLines(strings.Join(lines, "\n"))
 	on := len(good) > 0
 	bridgeMu.Lock()
@@ -504,12 +526,11 @@ func useLines(lines []string) bool {
 	if same {
 		return false
 	}
+	noteLinesChanged()
 	noteBridgeSecrets(good)
 	dropSnowflakeClients()
 	if on {
-		if err := startPTListeners(); err != nil {
-			log.Printf("auto: %v", err)
-		}
+		_ = startPTListeners()
 	}
 	return true
 }
@@ -755,6 +776,13 @@ func runSteps(p passCtx, kind string, validated bool, opts modeOpts, steps []aut
 			moatAt = i
 			if !moatDone && consentNow() == "yes" {
 				moatDone = true
+				// tor still out on its own while direct is not welcome, failed
+				// or never in this pass: off the network before the tor
+				// project is asked
+				if torStarted() && !torIsPaused() && !bridgesEnabled() && !autoDirectOK.Load() {
+					autoDirectOK.Store(false)
+					_ = reconnectAuto()
+				}
 				extra, r := autoAskMoat(p, opts)
 				if r != "" {
 					return r
@@ -769,6 +797,10 @@ func runSteps(p passCtx, kind string, validated bool, opts modeOpts, steps []aut
 		}
 		stSet(func() { autoSt.attempt++ })
 		v := runAttempt(p, s, validated)
+		// direct that did not get through is no longer welcome out
+		if s.Method == "direct" && v != seenOK {
+			autoDirectOK.Store(false)
+		}
 		switch v {
 		case seenOK:
 			memRemember(kind, s, dayOf(autoNow()))
@@ -884,7 +916,9 @@ func runAttempt(p passCtx, s autoStep, validated bool) string {
 	stSet(func() {
 		autoSt.phase, autoSt.method, autoSt.source, autoSt.since = "trying", s.Method, s.Source, autoNow()
 	})
-	ok, changed := autoUseLines(p.gen, s.Lines)
+	// automatic's own direct step is the one time it goes out without
+	// bridges
+	ok, changed := autoUseStep(p.gen, s)
 	if !ok {
 		return passInterrupted
 	}
@@ -892,7 +926,9 @@ func runAttempt(p passCtx, s autoStep, validated bool) string {
 	a := autoW.open()
 	defer autoW.close()
 	switch {
-	case !changed && autoW.started() && autoW.settled():
+	// held off the network all the same: put in place again, which clears
+	// the hold or fails on to the next way
+	case !changed && autoW.started() && autoW.settled() && networkHold() == "":
 		// these lines already carry tor on this network: no bounce
 		obsArm()
 	case autoW.started():
@@ -913,6 +949,18 @@ func runAttempt(p passCtx, s autoStep, validated bool) string {
 				return passInterrupted
 			}
 			autoSleep(autoPoll)
+		}
+		// tor came up without this way in place, the listeners down or the
+		// lines changed while it started: put it in place now
+		if networkHold() != "" {
+			r := autoW.apply(s)
+			if why := autoInterrupted(p); why != "" {
+				return passInterrupted
+			}
+			if r != "ok" {
+				log.Printf("auto: %s not applied: %s", s.Method, r)
+				return seenFailed
+			}
 		}
 		now := autoNow()
 		obsMu.Lock()
@@ -1017,6 +1065,8 @@ func autoLoop(gen int64) {
 		downSince time.Time
 		upSince   time.Time
 		lost      int
+		heldN     int
+		heldAt    time.Time
 		lastPass  time.Time
 		consent   = consentNow()
 		valid     = autoValidFlips.Load()
@@ -1037,16 +1087,27 @@ func autoLoop(gen int64) {
 			switch {
 			case result == "":
 				start = "start"
-			case ep != epoch && (result != seenOK || n.Kind != kind):
+			// a new network, or one that left tor held off it, as a change
+			// of the same kind can: a pass puts a way back in place
+			case ep != epoch && (result != seenOK || n.Kind != kind || networkHold() != ""):
 				start = "network"
 			case result == passInterrupted:
 				start = "again"
+			// awake with no way in place, as after a wake: a pass finds one,
+			// and one that keeps finding the hold backs off
+			case result == seenOK && networkHold() != "" && !now.Before(heldAt):
+				start = "held"
+				heldAt = now.Add(autoLostGap(heldN))
+				heldN++
 			case v != valid && result != seenOK:
 				start = "validated"
 			case result == "exhausted" && (autoRetryNow.Swap(false) || !now.Before(retryAt) || (c == "yes" && consent != "yes")):
 				start = "retry"
 			case result == seenOK:
 				epoch = ep
+				if networkHold() == "" {
+					heldN, heldAt = 0, time.Time{}
+				}
 				if autoW.torUp() {
 					downSince = time.Time{}
 					if upSince.IsZero() {
@@ -1110,6 +1171,13 @@ func setBridgeMode(mode, raw string) string {
 		// a decoy shows automatic and changes nothing underneath
 		return "error: decoy"
 	}
+	modeMu.Lock()
+	defer modeMu.Unlock()
+	return applyBridgeMode(mode, raw)
+}
+
+// a mode, whoever hands it over: the app's pick or the boot restore
+func applyBridgeMode(mode, raw string) string {
 	var o modeOpts
 	if strings.TrimSpace(raw) != "" && json.Unmarshal([]byte(raw), &o) != nil {
 		return "error: bad json"
@@ -1167,6 +1235,13 @@ func setBridgeMode(mode, raw string) string {
 	if mode != bmAuto && !same {
 		changed = useLines(lines)
 	}
+	if !same && !consentOnly {
+		// a new mode: whatever direct step automatic had is over
+		autoDirectOK.Store(false)
+	}
+	// known from here on, with its lines in place, before any bounce below
+	// wants the network
+	modeSet.Store(true)
 	autoMu.Unlock()
 	if same || consentOnly {
 		if mode == bmAuto {
@@ -1201,7 +1276,8 @@ func optsEqual(a, b modeOpts) bool {
 // the upgrade moves the old setting to a mode, see HaloSetBridgeMode.
 // "" when the old call may go on, else why not.
 func legacyMode() string {
-	if decoyState.Load() == decoyOn {
+	// a decoy open, or not yet known to be closed
+	if !decoyClosed() {
 		return "error: decoy"
 	}
 	autoMu.Lock()
@@ -1220,6 +1296,12 @@ func checkInStep(kind string, mem autoMemory, opts modeOpts, today int64) (autoS
 	u, ok := mem.Last[kind]
 	if !ok || !fresh(u.Day, today) {
 		return autoStep{}, false
+	}
+	// direct only where it is still welcome: not risky, not blocked lately
+	if u.Method == "direct" {
+		if d, blocked := mem.Blocked[kind]; opts.SkipDirect || (blocked && fresh(d, today)) {
+			return autoStep{}, false
+		}
 	}
 	if u.Method == "snowflake" {
 		for _, m := range []string{"webtunnel", "obfs4"} {
@@ -1248,18 +1330,33 @@ func checkIn(on bool) string {
 		checkInUntil = time.Time{}
 	}
 	checkInMu.Unlock()
-	mode, opts, gen := bridgeMode()
-	if !on || mode != bmAuto {
+	if mode, _, _ := bridgeMode(); !on || mode != bmAuto {
 		autoKick()
 		return "ok"
 	}
-	s, ok := checkInStep(currentNet().Kind, memSnapshot(), opts, dayOf(autoNow()))
-	if !ok {
+	return putCheckInStep()
+}
+
+// the check-in's way in for this network, in place while tor sleeps; a
+// network change inside the check-in puts the new network's back
+func putCheckInStep() string {
+	mode, opts, gen := bridgeMode()
+	if mode != bmAuto {
 		return "ok"
+	}
+	kind, mem, today := currentNet().Kind, memSnapshot(), dayOf(autoNow())
+	s, ok := checkInStep(kind, mem, opts, today)
+	if !ok {
+		// nothing remembered here: tor alone where that is welcome, else
+		// the built-in bridges, never direct
+		s = autoStep{Method: "direct"}
+		if d, b := mem.Blocked[kind]; opts.SkipDirect || (b && fresh(d, today)) {
+			s = autoStep{Method: "obfs4", Source: "builtin", Lines: builtinLines("obfs4")}
+		}
 	}
 	// these lines are what tor has from now on, whatever ran before
 	stSet(func() { autoSt.method, autoSt.source = s.Method, s.Source })
-	if ok, _ := autoUseLines(gen, s.Lines); !ok {
+	if ok, _ := autoUseStep(gen, s); !ok {
 		return "ok"
 	}
 	mu.Lock()
@@ -1342,6 +1439,15 @@ func bridgeStatus() bridgeStatusView {
 			phase = "connected"
 		}
 		since = time.Time{}
+		// no mode yet is no method yet, never direct
+		if !bridgeModeKnown() {
+			method = ""
+		}
+	}
+	// tor held off the network: why, in its own code. a bridge whose
+	// listeners would not start, one tor refused, or no mode yet
+	if c := holdCode(); c != "" && phase != "connected" && v.ErrorCode == "" {
+		v.ErrorCode = c
 	}
 	switch why := autoIdleWhy(); {
 	case why == "not_tor_mode", why == "no_internet":
@@ -1422,9 +1528,17 @@ func HaloBridgeStatus() *C.char {
 //
 //export HaloBridgeRetry
 func HaloBridgeRetry() *C.char {
+	bridgeRetry()
+	return C.CString("ok")
+}
+
+// a picked bridge also gets its listeners tried again
+func bridgeRetry() {
 	autoRetryNow.Store(true)
 	autoKick()
-	return C.CString("ok")
+	if mode, _, _ := bridgeMode(); mode != bmAuto && torStarted() && !torIsPaused() {
+		go reconnectNow()
+	}
 }
 
 // what automatic remembers, as json for the secure store, or

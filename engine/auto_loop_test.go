@@ -99,6 +99,13 @@ func TestNetworkChangeDropsTheProof(t *testing.T) {
 // with tor still up is no reason for one
 func TestLostPassesBackOff(t *testing.T) {
 	f := useFakeAuto(t, wifi())
+	// the way the first pass found, in place and held by tor: no hold, so
+	// what follows is tor losing its circuits on it
+	useLines([]string{tbObfs4})
+	noteLinesApplied(linesGen.Load())
+	if why := networkHold(); why != "" {
+		t.Fatalf("hold: %q", why)
+	}
 	up := false
 	f.up = func() bool {
 		f.sleep(time.Minute)

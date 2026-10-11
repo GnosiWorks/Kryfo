@@ -1065,74 +1065,13 @@ class AppLocalizationsFa extends AppLocalizations {
   String get commonUnblock => 'رفع مسدودیت';
 
   @override
-  String get bridgesThatWasNotIt => 'درست نبود. این هم یکی دیگر.';
-
-  @override
-  String get bridgesMoatFailed =>
-      'دسترسی به پروژه‌ی Tor ممکن نشد. یک دقیقه‌ی دیگر دوباره امتحان کنید، یا یک خط پل را پایین جای‌گذاری کنید.';
-
-  @override
-  String get bridgesGotBridgesSaveTo =>
-      'پل‌ها رسید · برای استفاده ذخیره‌شان کنید';
-
-  @override
   String get bridgesConnected => 'متصل';
-
-  @override
-  String get bridgesNotThroughYetTor =>
-      'هنوز راه باز نشده. Tor همچنان تلاش می‌کند';
-
-  @override
-  String get bridgesBridges => 'پل‌ها';
-
-  @override
-  String get bridgesTorIsBlockedWhere => 'Tor جایی که هستید مسدود است؟';
-
-  @override
-  String get bridgesBridgesDisguiseYourConnection =>
-      'پل‌ها اتصال شما را استتار می‌کنند تا بتواند به بیرون راه پیدا کند. یک راه ورود انتخاب کنید، ذخیره کنید، و Tor از راه آن دوباره وصل می‌شود.';
-
-  @override
-  String get bridgesBridgesOnlyChangeHow =>
-      'پل‌ها فقط شیوه‌ی اتصال Tor را تغییر می‌دهند، و شما الان در حالت onion نیستید. آنچه این‌جا تنظیم کنید ذخیره می‌شود، فقط تا وقتی برنگردید کاری نمی‌کند.';
 
   @override
   String get bridgesFromTheTorProject => 'از پروژه‌ی Tor';
 
   @override
-  String get bridgesNoise => 'نویز';
-
-  @override
-  String get bridgesGood => 'خوب';
-
-  @override
-  String get bridgesMakesTorTrafficLook =>
-      'ترافیک Tor را شبیه هیچ چیز خاصی نشان می‌دهد. بهترین پیش‌فرض برای بیشتر شبکه‌های مسدود. یک کپچا حل می‌کنید، بعد چند خط به شما داده می‌شود.';
-
-  @override
-  String get bridgesPrivateBridge => 'پل خصوصی';
-
-  @override
-  String get bridgesALineFromA => 'خطی از یک دوست';
-
-  @override
-  String get bridgesWhateverTheLineSays => 'هر چه آن خط بگوید';
-
-  @override
-  String get bridgesDepends => 'بستگی دارد';
-
-  @override
-  String get bridgesGotABridgeLine =>
-      'خط پلی از کسی که به او اعتماد دارید، یا از bridges.torproject.org، گرفته‌اید؟ این‌جا جای‌گذاری‌اش کنید. فقط خط‌های obfs4؛ Kryfo هنوز با بقیه کار نمی‌کند.';
-
-  @override
   String get bridgesPasteFromClipboard => 'جای‌گذاری از بریده‌دان';
-
-  @override
-  String get bridgesUseBridges => 'استفاده از پل‌ها';
-
-  @override
-  String get bridgesNoLinesYet => 'هنوز خطی نیست';
 
   @override
   String bridges1LineSaved(int count) {
@@ -1150,66 +1089,11 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
-  String get bridgesRestartingTor => 'راه‌اندازی دوباره‌ی Tor…';
-
-  @override
-  String bridgesFindingABridgeS(Object elapsed) {
-    return 'یافتن پل… ⁨$elapsed⁩ ثانیه';
-  }
-
-  @override
-  String bridgesStillTryingS(Object elapsed) {
-    return 'هنوز در تلاش… ⁨$elapsed⁩ ثانیه';
-  }
-
-  @override
-  String get bridgesApplying => 'در حال اعمال…';
-
-  @override
-  String get bridgesSaveAndReconnect => 'ذخیره و اتصال دوباره';
-
-  @override
-  String get bridgesWhatABridgeIs => 'پل چیست';
-
-  @override
-  String get bridgesATorEntryPoint =>
-      'یک نقطه‌ی ورود به Tor که هیچ‌کس منتشرش نکرده، و از پشت یک پوشش به آن می‌رسید تا اتصال شبیه Tor نباشد. بقیه‌ی مسیر همان سه گام همیشگی است.';
-
-  @override
-  String get bridgesLooksLike => 'ظاهر';
-
-  @override
-  String get bridgesSpeed => 'سرعت';
-
-  @override
-  String get bridgesGetBridges => 'گرفتن پل';
-
-  @override
-  String get bridgesAskTheTorProject =>
-      'مستقیم از پروژه‌ی Tor بخواهید. یک معما حل می‌کنید تا ربات‌ها نتوانند موجودی را ته بکشند.';
-
-  @override
-  String get bridgesTypeWhatYouSee =>
-      'آنچه می‌بینید را تایپ کنید. حروف کوچک هم قبول است.';
-
-  @override
   String get bridgesWhenYouAskFor =>
       'وقتی پل درخواست می‌کنید، پروژه‌ی Tor نشانی IP شما را می‌بیند. این عادی است: Tor Browser و همه‌ی برنامه‌های Tor همین‌طور پل می‌گیرند، و تنها چیزی که از این می‌فهمند این است که کسی پل خواسته است. چیزی درباره‌ی گفت‌وگوهای شما نمی‌فهمند.';
 
   @override
-  String get bridgesCouldNotDrawThe => 'معما نمایش داده نشد';
-
-  @override
-  String get bridgesAnswer => 'پاسخ';
-
-  @override
   String get bridgesAsking => 'در حال درخواست…';
-
-  @override
-  String get bridgesRequestBridges => 'درخواست پل';
-
-  @override
-  String get bridgesDifferentPuzzle => 'معمای دیگر';
 
   @override
   String get cameraNoCameraOnThis => 'این گوشی دوربین ندارد';
@@ -3078,34 +2962,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get homeKeepWaiting => 'منتظر ماندن';
 
   @override
-  String get homeNotConnecting => 'وصل نمی‌شود';
-
-  @override
-  String get homeBridgesAreOnAnd =>
-      'پل‌ها روشن‌اند و tor هنوز راه پیدا نکرده. پل‌ها کندترند و بعضی‌شان بی‌خبر از کار می‌افتند. اگر شبکه‌ی شما tor را مسدود نمی‌کند، اتصال مستقیم سریع‌تر و مطمئن‌تر است.';
-
-  @override
-  String get homeGoingDirectReconnecting =>
-      'اتصال مستقیم · در حال اتصال دوباره';
-
-  @override
-  String get homeTurnBridgesOff => 'خاموش کردن پل‌ها';
-
-  @override
-  String get homeStillTrying => 'هنوز در تلاش';
-
-  @override
-  String get homeTorIsNotGetting =>
-      'Tor راه پیدا نمی‌کند. بعضی شبکه‌ها عمداً آن را مسدود می‌کنند. رله‌ی خود ما یک اتصال ساده است و معمولاً باز هم کار می‌کند - یا پل‌ها، که راه‌اندازی‌شان بیشتر طول می‌کشد.';
-
-  @override
   String get homeSwitchedToRelay => 'حالت رله فعال شد';
 
   @override
   String get homeUseOurRelay => 'استفاده از رله‌ی ما';
-
-  @override
-  String get homeBridges => 'پل‌ها';
 
   @override
   String get homeOffline => 'آفلاین';
@@ -5156,13 +5016,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get settingsOnion3Hops => 'Onion · سه گام';
 
   @override
-  String get settingsBridges => 'پل‌ها';
-
-  @override
-  String get settingsForNetworksThatBlock =>
-      'برای شبکه‌هایی که tor را مسدود می‌کنند';
-
-  @override
   String get settingsGettingMessages => 'دریافت پیام‌ها';
 
   @override
@@ -6668,9 +6521,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get bridgesConnecting => 'در حال اتصال';
 
   @override
-  String get bridgesSavedTag => 'ذخیره‌شده';
-
-  @override
   String get restoreMade => 'ساخته‌شده';
 
   @override
@@ -6819,7 +6669,217 @@ class AppLocalizationsFa extends AppLocalizations {
   String get confirmSheetCancel => 'لغو';
 
   @override
-  String bridgesSaved(int count) {
+  String get bridgesFoundAVolunteer => 'داوطلبی پیدا شد، در حال اتصال';
+
+  @override
+  String get bridgesScanABridgeCode => 'اسکن کد پل';
+
+  @override
+  String get settingsBridgesForNetworksThat =>
+      'پل‌ها، برای شبکه‌هایی که Tor را مسدود می‌کنند';
+
+  @override
+  String get bridgesCouldNotReachTheTor => 'دسترسی به پروژه‌ی Tor ممکن نشد';
+
+  @override
+  String get torBootSplashConnect => 'اتصال';
+
+  @override
+  String get bridgesOffline => 'آفلاین';
+
+  @override
+  String get bridgesNothingGotThrough => 'هیچ راهی جواب نداد';
+
+  @override
+  String get bridgesBridgeFromAFriend => 'پل از یک دوست';
+
+  @override
+  String get bridgesKryfoCanAskThe =>
+      'Kryfo می‌تواند از پروژه‌ی Tor پلی بخواهد تا این سد را دور بزند.';
+
+  @override
+  String get bridgesNotNeededRightNow => 'فعلاً لازم نیست';
+
+  @override
+  String get bridgesBuiltInBridges => 'پل‌های داخلی';
+
+  @override
+  String get bridgesKryfoCanGetAround =>
+      'Kryfo حالا می‌تواند مسدودسازی Tor را دور بزند';
+
+  @override
+  String get bridgesThatSNotABridge => 'این خط پل نیست';
+
+  @override
+  String get transportBridgeError => 'آخرین خطا';
+
+  @override
+  String get bridgesDirect => 'مستقیم';
+
+  @override
+  String get bridgesAskingTheTorProject =>
+      'در حال پرسیدن از پروژه‌ی Tor که این‌جا چه جواب می‌دهد…';
+
+  @override
+  String get bridgesNoneOfTheseAre =>
+      'هیچ‌کدام از این‌ها خط پلی نیست که Kryfo بفهمد.';
+
+  @override
+  String get bridgesAutomatic => 'خودکار';
+
+  @override
+  String get bridgesStraightToTor => 'مستقیم به Tor، بدون نیاز به پل';
+
+  @override
+  String get bridgesKryfoConnectsAsSoon =>
+      'Kryfo به محض این‌که دوباره آنلاین شوید وصل می‌شود.';
+
+  @override
+  String get bridgesMore => 'بیشتر';
+
+  @override
+  String bridgesTryingAnotherWayOf(String attempt, String attempts) {
+    return 'در حال امتحان راهی دیگر… (⁨$attempt⁩ از ⁨$attempts⁩)';
+  }
+
+  @override
+  String get bridgesLookingForAVolunteer => 'در جست‌وجوی یک داوطلب';
+
+  @override
+  String get bridgesFastestWhereTorIsnt =>
+      'سریع‌ترین راه، جایی که Tor مسدود نیست. Kryfo هرگز بیرون از Tor وصل نمی‌شود.';
+
+  @override
+  String get transportBridgePhase => 'مرحله';
+
+  @override
+  String get bridgesAsleepBetweenCheckIns => 'در خواب، بین سرکشی‌ها';
+
+  @override
+  String get bridgesThroughABridge => 'از راه یک پل';
+
+  @override
+  String get bridgesBuiltIn => 'داخلی';
+
+  @override
+  String get bridgesDetails => 'جزئیات';
+
+  @override
+  String get transportBridgeMode => 'پل‌ها';
+
+  @override
+  String get bridgesEgypt => 'مصر';
+
+  @override
+  String get bridgesYourBridgeCouldNot => 'پل شما راه‌اندازی نشد';
+
+  @override
+  String get bridgesKryfoStaysOfflineRather =>
+      'Kryfo آفلاین می‌ماند تا بدون آن وصل نشود.';
+
+  @override
+  String get bridgesSignInToThisWifi => 'به این Wi-Fi وارد شوید';
+
+  @override
+  String get bridgesThisNetworkWantsA =>
+      'این شبکه اول ورود می‌خواهد. وقتی وارد شدید، Kryfo وصل می‌شود.';
+
+  @override
+  String get bridgesWaitingForWifiSignIn => 'در انتظار ورود به Wi-Fi';
+
+  @override
+  String get bridgesOpenWifiSettings => 'باز کردن تنظیمات Wi-Fi';
+
+  @override
+  String get bridgesUsingBuiltIn => 'از راه پل‌های داخلی';
+
+  @override
+  String get bridgesUsingSnowflake => 'از راه Snowflake';
+
+  @override
+  String get bridgesUsingTorProject => 'از راه پل‌های پروژه‌ی Tor';
+
+  @override
+  String get bridgesKryfoTriesAgainOnItsOwn =>
+      'Kryfo هر از گاهی خودش دوباره تلاش می‌کند.';
+
+  @override
+  String get bridgesTheTorProjectCanSuggest =>
+      'پروژه‌ی Tor می‌تواند پلی پیشنهاد کند که این‌جا کار کند.';
+
+  @override
+  String get bridgesBridgeRemoved => 'پل حذف شد';
+
+  @override
+  String get bridgesUndo => 'واگرد';
+
+  @override
+  String bridgesRemoveBridgeN(String n) {
+    return 'حذف پل ⁨$n⁩';
+  }
+
+  @override
+  String get bridgesIran => 'ایران';
+
+  @override
+  String get bridgesTurnOnAutomatic => 'روشن کردن حالت خودکار';
+
+  @override
+  String get bridgesPasteABridgeLine => 'یک خط پل جای‌گذاری کنید';
+
+  @override
+  String get bridgesInUse => 'در حال استفاده';
+
+  @override
+  String get bridgesPasteTheLineThey =>
+      'خطی را که برایتان فرستاده جای‌گذاری کنید، یا کدش را اسکن کنید. خط‌های پل را از کسانی بگیرید که می‌شناسید.';
+
+  @override
+  String get bridgesYouReOnAMode =>
+      'حالت فعلی شما از Tor استفاده نمی‌کند. این انتخاب‌ها وقتی برگردید اعمال می‌شوند.';
+
+  @override
+  String get bridgesPasteOrScanALine =>
+      'خطی را که کسی مورد اعتمادتان به شما داده جای‌گذاری یا اسکن کنید.';
+
+  @override
+  String get bridgesNothingYet => 'هنوز هیچ';
+
+  @override
+  String get torBootSplashIfTorIsBlocked =>
+      'اگر جایی که هستید Tor مسدود است، Kryfo می‌تواند به‌جایش از راه یک پل شروع کند.';
+
+  @override
+  String get bridgesScanACode => 'اسکن کد';
+
+  @override
+  String get bridgesMyanmar => 'میانمار';
+
+  @override
+  String get bridgesSwitchToAutomatic => 'رفتن به حالت خودکار';
+
+  @override
+  String get torBootSplashTorIsBlockedHere => 'Tor این‌جا مسدود است';
+
+  @override
+  String get bridgesTryingAnotherWay => 'در حال امتحان راهی دیگر…';
+
+  @override
+  String get bridgesGoesThroughAVolunteer =>
+      'از رایانه‌ی یک داوطلب می‌گذرد. مسدود کردنش سخت است و شروعش کند.';
+
+  @override
+  String get bridgesLetTheTorProject => 'بگذارید پروژه‌ی Tor حدس بزند';
+
+  @override
+  String get bridgesTorSeemsBlocked =>
+      'به نظر می‌رسد Tor در این شبکه مسدود است';
+
+  @override
+  String get bridgesTorIsBlockedOnThis => 'Tor در این شبکه مسدود است';
+
+  @override
+  String bridgesKryfoCouldNotRead(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
@@ -6827,32 +6887,148 @@ class AppLocalizationsFa extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '⁨$countString⁩ پل',
-      one: '⁨$countString⁩ پل',
+      other: 'Kryfo نتوانست ⁨$countString⁩ مورد از این خط‌ها را بخواند',
+      one: 'Kryfo نتوانست ⁨$countString⁩ مورد از این خط‌ها را بخواند',
     );
     return '$_temp0';
   }
 
   @override
-  String bridgesSavedSomeBad(int good, int bad) {
-    final intl.NumberFormat goodNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
-    final String goodString = goodNumberFormat.format(good);
-    final intl.NumberFormat badNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
-    final String badString = badNumberFormat.format(bad);
+  String get bridgesTorNoBridge => 'Tor، بدون پل';
 
-    return '⁨$goodString⁩ پذیرفته شد، ⁨$badString⁩ فهمیده نشد';
+  @override
+  String get bridgesKryfoFindsAWay =>
+      'Kryfo راهی پیدا می‌کند که جایی که هستید جواب بدهد.';
+
+  @override
+  String get bridgesTheTorProjectKnows =>
+      'پروژه‌ی Tor برای این کشورها توصیه‌های خودش را دارد.';
+
+  @override
+  String get bridgesThisBridgeIsnTGetting => 'این پل راه پیدا نمی‌کند';
+
+  @override
+  String get bridgesBridgesTheTorProject =>
+      'پل‌هایی که پروژه‌ی Tor قبلاً به شما داده.';
+
+  @override
+  String get bridgesConnectingDots => 'در حال اتصال…';
+
+  @override
+  String get bridgesNotNow => 'فعلاً نه';
+
+  @override
+  String get bridgesRussia => 'روسیه';
+
+  @override
+  String get bridgesObfs4BridgesThatCome =>
+      'پل‌هایی که همراه Kryfo می‌آیند (obfs4). امتحانشان سریع است، ولی اغلب مسدودند.';
+
+  @override
+  String get bridgesYourNetworkMayBe => 'ممکن است شبکه‌ی شما محدود باشد';
+
+  @override
+  String get bridgesCheckingForMessages => 'در حال بررسی پیام‌ها…';
+
+  @override
+  String get bridgesSavedLines => 'خط‌های ذخیره‌شده';
+
+  @override
+  String get bridgesFromAFriendLower => 'از یک دوست';
+
+  @override
+  String get bridgesAlmostThere => 'چیزی نمانده';
+
+  @override
+  String get bridgesTheTorProjectSGuess => 'حدس پروژه‌ی Tor';
+
+  @override
+  String get bridgesOurRelayUsuallyGets =>
+      'رله‌ی ما یک اتصال ساده است و معمولاً راه پیدا می‌کند. یا بگذارید Kryfo خودش راهی پیدا کند.';
+
+  @override
+  String bridgesUseThisBridge(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'استفاده از این ⁨$countString⁩ پل',
+      one: 'استفاده از این پل',
+    );
+    return '$_temp0';
   }
 
   @override
-  String get bridgesNoneUsable =>
-      'هیچ‌کدام از این خط‌ها پل قابل‌استفاده‌ای نیست، پس پل‌ها خاموش می‌مانند';
+  String get bridgesTurkmenistan => 'ترکمنستان';
 
   @override
-  String get bridgesCouldNotApply => 'پل‌ها اعمال نشدند. دوباره ذخیره کنید.';
+  String get transportBridgeMethod => 'روش';
+
+  @override
+  String get bridgesPointAtTheBridge => 'دوربین را رو به کد QR پل بگیرید';
+
+  @override
+  String get bridgesConnectingThroughYourBridge =>
+      'در حال اتصال از راه پل شما…';
+
+  @override
+  String get bridgesThisLineIsTooLong => 'این خط برای Tor بیش از حد بلند است.';
+
+  @override
+  String get bridgesAutomaticFindsAWay =>
+      'وقتی Tor مسدود است، «خودکار» خودش راهی پیدا می‌کند. برای پیدا کردن پل، اگر موافق باشید، ممکن است Kryfo از پروژه‌ی Tor بپرسد. هر روز آدم‌های زیادی از پل استفاده می‌کنند.';
+
+  @override
+  String get bridgesFromTheTorProjectLower => 'از پروژه‌ی Tor';
+
+  @override
+  String get bridgesBridgesGoDeadWithout =>
+      'پل‌ها ممکن است بی‌خبر از کار بیفتند. «خودکار» می‌تواند راه دیگری پیدا کند.';
+
+  @override
+  String get bridgesHongKong => 'هنگ کنگ';
+
+  @override
+  String get bridgesWhenTorIsBlockedAutomatic =>
+      'وقتی Tor مسدود است، «خودکار» از پروژه‌ی Tor می‌پرسد در کشور شما چه جواب می‌دهد.';
+
+  @override
+  String get bridgesAskTorProject => 'پرسیدن از پروژه‌ی Tor';
+
+  @override
+  String get bridgesTooLongForTor => 'برای Tor بیش از حد بلند است';
+
+  @override
+  String get bridgesCountry => 'کشور';
+
+  @override
+  String bridgesMethodFrom(String method, String from) {
+    return '⁨$method⁩، ⁨$from⁩';
+  }
+
+  @override
+  String get bridgesChina => 'چین';
+
+  @override
+  String get bridgesBelarus => 'بلاروس';
+
+  @override
+  String get bridgesKryfoCanTUseThis => 'Kryfo نمی‌تواند از این خط استفاده کند';
+
+  @override
+  String get bridgesTryAutomatic => 'امتحان حالت خودکار';
+
+  @override
+  String get bridgesNoInternet => 'بدون اینترنت';
+
+  @override
+  String get bridgesConnection => 'اتصال';
+
+  @override
+  String get bridgesGetABridge => 'گرفتن پل';
 
   @override
   String get languageTitle => 'زبان';

@@ -10,6 +10,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter_zxing/flutter_zxing.dart';
 import 'package:permission_handler/permission_handler.dart'
     show openAppSettings;
+import '../bridge_mode.dart' show looksLikeBridges;
 import '../theme.dart';
 import '../l10n/l10n.dart';
 import '../lock_guard.dart' show lockGuard;
@@ -31,7 +32,10 @@ bool cameraDenied(Object? e) =>
     (e.code.contains('Access') || e.code.toLowerCase().contains('permission'));
 
 class ScanScreen extends StatefulWidget {
-  const ScanScreen({super.key});
+  // true: bridge lines, a plain one or the tor project's list, in place of
+  // a kryfo link
+  final bool bridges;
+  const ScanScreen({super.key, this.bridges = false});
 
   @override
   State<ScanScreen> createState() => _ScanScreenState();
@@ -153,7 +157,7 @@ class _ScanScreenState extends State<ScanScreen>
     if (_handled || !_inFront) return;
     final raw = code.text;
     if (raw == null || raw.isEmpty) return;
-    if (!raw.startsWith('kryfo://')) {
+    if (widget.bridges ? !looksLikeBridges(raw) : !raw.startsWith('kryfo://')) {
       // the warning stays while that code is in frame and goes a little
       // after it leaves
       _hintOff?.cancel();
@@ -162,7 +166,11 @@ class _ScanScreenState extends State<ScanScreen>
       });
       if (_hint == null) {
         HapticFeedback.selectionClick();
-        setState(() => _hint = l10n.scanThatSNotA);
+        setState(
+          () => _hint = widget.bridges
+              ? l10n.bridgesThatSNotABridge
+              : l10n.scanThatSNotA,
+        );
       }
       return;
     }
@@ -302,7 +310,9 @@ class _ScanScreenState extends State<ScanScreen>
                       ),
                       Expanded(
                         child: Text(
-                          l10n.scanScanAKryfoQr,
+                          widget.bridges
+                              ? l10n.bridgesScanABridgeCode
+                              : l10n.scanScanAKryfoQr,
                           style: HaloType.pageTitle().copyWith(
                             color: Colors.white,
                           ),
@@ -367,7 +377,10 @@ class _ScanScreenState extends State<ScanScreen>
                               ),
                             ),
                             child: Text(
-                              _hint ?? l10n.scanPointAtAKryfo,
+                              _hint ??
+                                  (widget.bridges
+                                      ? l10n.bridgesPointAtTheBridge
+                                      : l10n.scanPointAtAKryfo),
                               textAlign: TextAlign.center,
                               style: HaloType.sans(
                                 size: 12.5,
