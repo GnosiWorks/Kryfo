@@ -3579,15 +3579,10 @@ class _ChatScreenState extends State<ChatScreen>
     return oldest;
   }
 
-  bool _torReadyToSend() {
-    // outside onion nothing is routed through tor, so there is nothing to
-    // wait for, and the relay still works where tor is blocked
-    if (appState.sendMode != 'private') return appState.online;
-    final s = appState.torStatus;
-    return s == TorStatus.bootstrapped ||
-        s == TorStatus.publishing ||
-        s == TorStatus.reachable;
-  }
+  // the outbox's own test: a network, and in onion a tor a relay has got
+  // through since the route was last torn down. tor's word alone can say
+  // ready while nothing gets through
+  bool _torReadyToSend() => appState.linkUp;
 
   // the sender side: a preview fetched over tor by this phone, waiting to
   // ride inside the next message. null when nothing is attached
@@ -5249,7 +5244,7 @@ class _ChatScreenState extends State<ChatScreen>
             // phone whose identity has moved, where tor is off on purpose.
             _Fold(
               appState.sendMode == 'private' &&
-                      !_torReadyToSend() &&
+                      !appState.torUsable &&
                       !appState.movedAway
                   ? Padding(
                       key: const ValueKey('tor-warm'),

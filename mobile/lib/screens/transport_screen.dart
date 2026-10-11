@@ -82,14 +82,15 @@ class TransportScreen extends StatelessWidget {
                 open: tor == TorStatus.starting,
                 child: _Line(
                   l10n.transportBootstrap,
-                  '${whole(pct)}%',
+                  percent(pct / 100),
                   HaloColors.amber,
                 ),
               ),
+              // the test the outbox and the chats send by: a network too
               _Line(
                 l10n.transportCanSend,
-                appState.torReady ? l10n.commonYes : l10n.transportNotYet,
-                appState.torReady ? HaloColors.green : HaloColors.rose,
+                appState.linkUp ? l10n.commonYes : l10n.transportNotYet,
+                appState.linkUp ? HaloColors.green : HaloColors.rose,
               ),
               _Line(
                 l10n.transportBridgeMode,

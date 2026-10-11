@@ -4,7 +4,8 @@
 // verdict reaches the bubble drawn now. one a block held back is shown
 // failed and goes on a tap alone, never while the block holds. the chat's
 // own screen, with real signal over rows kept in maps and a relay that
-// answers when told
+// answers when told. send now counts what is left after its sends, and in
+// onion a text waits for a route a relay got through, not tor's word
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -28,7 +29,7 @@ import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
-import 'package:kryfo/widgets/motion.dart' show SendPill;
+import 'package:kryfo/widgets/motion.dart' show SendPill, TorStatus;
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart'
     show
         CiphertextMessage,
@@ -848,6 +849,53 @@ void main() {
     }
     await settle(t);
     expect(appState.chatRevOf(_peer) - before, 1);
+  });
+
+  testWidgets('send now says what is left once its sends are done', (t) async {
+    await failed('s1', 'see you there');
+    var done = false;
+    late Future<void> flush;
+    await t.runAsync(() async {
+      flush = appState.flushOutboxNow().whenComplete(() => done = true);
+      for (var i = 0; i < 300 && relay.sends.isEmpty; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+      }
+    });
+    expect(relay.sends, hasLength(1));
+    expect(done, isFalse);
+    relay.sends.single.complete('ok');
+    await t.runAsync(() => flush);
+    expect(sentOf('s1'), 1);
+    expect(appState.queued, 0);
+  });
+
+  testWidgets('in onion a text waits while tor says ready and nothing gets '
+      'through, and goes once a relay does', (t) async {
+    appState.sendModeForTest = 'private';
+    appState.setTorStatusForTest(TorStatus.bootstrapped);
+    appState.setRouteOKForTest(false);
+    addTearDown(() {
+      appState.setTorStatusForTest(TorStatus.off);
+      appState.setRouteOKForTest(true);
+      appState.sendModeForTest = 'balanced';
+    });
+    await openChat(t);
+    await t.enterText(find.byType(TextField).last, 'on my way');
+    await t.pump();
+    await t.pump(const Duration(seconds: 1));
+    await t.tap(find.byIcon(Icons.arrow_upward));
+    await settle(t);
+    await t.pump(const Duration(seconds: 2));
+    await settle(t);
+    expect(relay.sends, isEmpty);
+
+    appState.setRouteOKForTest(true);
+    await t.pump(const Duration(seconds: 1));
+    await settle(t);
+    expect(relay.sends, hasLength(1));
+    relay.sends.single.complete('ok');
+    await settle(t);
+    await devClose(t);
   });
 
   testWidgets('a block in the vault leaves a text here waiting, not '
