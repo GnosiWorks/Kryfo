@@ -458,6 +458,15 @@ void main() {
       }
       setL10nLocale(const Locale('fa'));
       expect(line(_another).detail, contains('۲'));
+      // a middle dot next to their digits reads as a zero: their comma
+      for (final lang in ['ar', 'fa']) {
+        setL10nLocale(Locale(lang));
+        expect(line(_another).detail, isNot(contains('·')));
+        expect(line(_another).detail, contains('، '));
+      }
+      setL10nLocale(const Locale('de'));
+      expect(line(_another).detail, contains(' · '));
+      setL10nLocale(const Locale('en'));
     });
   });
 

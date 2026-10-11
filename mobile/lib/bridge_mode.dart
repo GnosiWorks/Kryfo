@@ -378,6 +378,11 @@ String bridgeClock(int ms) {
   return '${whole(s ~/ 60)}:${twoDigits(s % 60)}';
 }
 
+/// what goes between the parts of the status line. next to arabic and
+/// persian digits a middle dot reads as a zero, so those use their comma
+String get bridgeSep =>
+    const {'ar', 'fa'}.contains(l10nLocale.languageCode) ? '، ' : ' · ';
+
 /// the status line for [s]. a decoy hears only connected, connecting or
 /// offline: no counts, no asking, no codes. [consent] is whether automatic
 /// may ask the tor project, which decides the way out when nothing got
@@ -533,7 +538,7 @@ BridgeLine bridgeStatusLine(
   if (pct != null) parts.add(percent(pct / 100));
   return BridgeLine(
     head: head,
-    detail: parts.isEmpty ? null : parts.join(' · '),
+    detail: parts.isEmpty ? null : parts.join(bridgeSep),
     detailKind: kind,
     tone: BridgeTone.amber,
     moving: true,
