@@ -1,0 +1,5 @@
+Baru: jembatan yang otomatis turun tangan saat Tor diblokir, penyamaran suara yang diatur per obrolan, lambaian untuk menyapa setelah menambahkan seseorang, berbagi teks dan tautan ke Kryfo, pencarian GIF privat, dan catatan yang dikelompokkan per hari.
+
+Diperbaiki: pesan pertama ke orang baru bisa hilang, Tor bisa macet setelah jaringan berganti, dan aplikasi mogok saat dibuka di beberapa ponsel baru.
+
+Peningkatan stabilitas dan privasi di seluruh aplikasi. Perbarui kalau sempat.

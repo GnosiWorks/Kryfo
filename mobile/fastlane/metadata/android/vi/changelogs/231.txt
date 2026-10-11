@@ -1,0 +1,5 @@
+Mới: cầu nối tự động hoạt động khi Tor bị chặn, đổi giọng thiết lập riêng cho từng cuộc trò chuyện, vẫy tay chào sau khi thêm ai đó, chia sẻ văn bản và liên kết vào Kryfo, tìm GIF riêng tư, và ghi chú xếp theo ngày.
+
+Đã sửa: tin nhắn đầu tiên gửi cho người mới có thể bị mất, Tor có thể bị kẹt sau khi đổi mạng, và ứng dụng bị văng khi mở trên một số điện thoại mới.
+
+Cải thiện độ ổn định và quyền riêng tư ở khắp nơi. Hãy cập nhật khi có thể.

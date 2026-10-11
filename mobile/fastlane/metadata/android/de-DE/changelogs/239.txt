@@ -1,0 +1,5 @@
+Neu: Brücken, die von selbst einspringen, wenn Tor blockiert ist, Stimmverfremdung pro Chat, ein Winken als Hallo für neue Kontakte, Text und Links mit Kryfo teilen, private GIF-Suche und Notizen nach Tagen gruppiert.
+
+Behoben: Erste Nachrichten an neue Kontakte konnten verloren gehen, Tor konnte nach einem Netzwechsel hängen bleiben, und die App stürzte auf einigen neueren Handys beim Start ab.
+
+Verbesserungen bei Stabilität und Privatsphäre überall. Aktualisiere, wenn du kannst.

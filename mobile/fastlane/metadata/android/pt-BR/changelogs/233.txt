@@ -1,0 +1,5 @@
+Novo: pontes que entram em ação sozinhas quando o Tor está bloqueado, disfarce de voz por conversa, um aceno de oi depois de adicionar alguém, compartilhar texto e links com o Kryfo, busca privada de GIFs e notas agrupadas por dia.
+
+Corrigido: as primeiras mensagens para alguém novo podiam se perder, o Tor podia travar depois de uma troca de rede, e o app fechava ao abrir em alguns celulares mais novos.
+
+Melhorias de estabilidade e privacidade em todo o app. Atualize quando puder.

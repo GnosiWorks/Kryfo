@@ -1,0 +1,5 @@
+Yeni: Tor engellendiğinde kendiliğinden devreye giren köprüler, sohbet başına ayarlanan ses gizleme, yeni eklediğin kişiye el sallayarak selam verme, Kryfo’ya metin ve bağlantı paylaşma, gizli GIF arama ve güne göre gruplanan notlar.
+
+Düzeltildi: yeni birine giden ilk mesajlar kaybolabiliyordu, Tor bir ağ değişikliğinden sonra takılı kalabiliyordu ve bazı yeni telefonlarda uygulama açılışta çöküyordu.
+
+Her yerde kararlılık ve gizlilik iyileştirmeleri. Fırsat bulunca güncelle.
