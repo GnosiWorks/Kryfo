@@ -28,7 +28,7 @@ const kVersionKeyPlaceholder = 'PLACEHOLDER-run-scripts/make-version-key.sh';
 
 /// the public half of the version key, base64 of the raw 32 bytes, as
 /// scripts/make-version-key.sh prints it
-const kVersionPubKeyB64 = '8H2Vy3EwJLKdegHiVRIvs6SNFQlPolimDzPfbEquY/o=';
+const kVersionPubKeyB64 = '7NTpSi6woVpRCXa/IGuLOOYwipaRMbtWbIMHQPdzjFE=';
 
 /// installers that keep the app up to date themselves: f-droid and its
 /// clients. their copies are the same bytes, so only the installer tells
