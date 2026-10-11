@@ -527,3 +527,104 @@ func TestAppliedNeverGoesBack(t *testing.T) {
 		t.Fatalf("applied went back to %d", linesApplied.Load())
 	}
 }
+
+// on direct, then a network change of the same kind: tor is held off the
+// new network, so the loop starts a pass at once instead of waiting for a
+// lost pass minutes on
+func TestSameKindNetworkChangeStartsAPass(t *testing.T) {
+	f := useFakeAuto(t, wifi())
+	calls := runLoop(t, f, func(n int, why string) string {
+		if n == 1 {
+			autoDirectOK.Store(true)
+			// the change, as networkChanged makes it
+			netEpoch.Add(1)
+			autoDirectOK.Store(false)
+			return seenOK
+		}
+		stopLoop()
+		return seenOK
+	})
+	if len(calls) != 2 || calls[1].why != "network" {
+		t.Fatalf("passes %v", calls)
+	}
+}
+
+// awake with no way in place and nothing else changed, as after a wake:
+// a pass runs
+func TestAWakeWithNoWayInStartsAPass(t *testing.T) {
+	f := useFakeAuto(t, wifi())
+	calls := runLoop(t, f, func(n int, why string) string {
+		if n == 1 {
+			autoDirectOK.Store(false)
+			return seenOK
+		}
+		stopLoop()
+		return seenOK
+	})
+	if len(calls) != 2 || calls[1].why != "held" {
+		t.Fatalf("passes %v", calls)
+	}
+}
+
+// a check-in on a remembered direct that sees the network change inside
+// its minute puts its step back
+func TestCheckInKeepsItsStepAcrossANetworkChange(t *testing.T) {
+	resetAuto(t)
+	t.Cleanup(func() { resetAuto(t) })
+	oldB, oldQ := netBounce, netQuiet
+	netBounce, netQuiet = func() {}, time.Millisecond
+	t.Cleanup(func() {
+		time.Sleep(50 * time.Millisecond)
+		netBounce, netQuiet = oldB, oldQ
+	})
+	setNetInfo(wifi())
+	today := dayOf(autoNow())
+	memMu.Lock()
+	autoMem.Last = map[string]autoUse{"wifi": {Method: "direct", Day: today}}
+	memMu.Unlock()
+	autoMu.Lock()
+	bmMode, bmOpts = bmAuto, modeOpts{Consent: "no"}
+	autoMu.Unlock()
+	checkIn(true)
+	t.Cleanup(func() { checkIn(false) })
+	networkChanged()
+	if why := networkHold(); why != "" {
+		t.Fatalf("a check-in left held by a network change: %q", why)
+	}
+}
+
+// direct reset by the censor, then the tor project asked: tor is off the
+// network by then
+func TestFailedDirectIsOffBeforeAsking(t *testing.T) {
+	fa := useFakeAuto(t, wifi())
+	f := overlapRig(t)
+	f.slow.Store(0)
+	fa.script["direct"] = resetByCensor
+	var asked, offAtAsk atomic.Bool
+	fa.moatOut = nil
+	w := autoW
+	w.moat = func(o moatOpts) ([]moatSetting, error) {
+		last := ""
+		for _, c := range f.sent() {
+			if strings.Contains(c, "DISABLENETWORK") {
+				last = c
+			}
+		}
+		asked.Store(true)
+		offAtAsk.Store(strings.Contains(last, "DISABLENETWORK=1") && networkHold() != "")
+		return nil, nil
+	}
+	autoW = w
+	autoMu.Lock()
+	autoGenN++
+	bmMode, bmOpts = bmAuto, modeOpts{Consent: "yes"}
+	gen := autoGenN
+	autoMu.Unlock()
+	runPass(gen, netEpoch.Load(), "start")
+	if !asked.Load() {
+		t.Fatal("the tor project was never asked")
+	}
+	if !offAtAsk.Load() {
+		t.Fatalf("still out direct when asking: %v", f.sent())
+	}
+}

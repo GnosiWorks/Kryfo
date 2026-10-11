@@ -104,10 +104,12 @@ func TestLostPassesBackOff(t *testing.T) {
 		f.sleep(time.Minute)
 		return up
 	}
+	// each pass leaves its way in place, as a direct step that got through
 	calls := runLoop(t, f, func(n int, why string) string {
 		if n == 3 {
 			stopLoop()
 		}
+		autoDirectOK.Store(true)
 		return seenOK
 	})
 	if len(calls) != 3 || calls[1].why != "lost" || calls[2].why != "lost" {
@@ -129,7 +131,10 @@ func TestLostPassesBackOff(t *testing.T) {
 		}
 		return true
 	}
-	calls = runLoop(t, f, func(n int, why string) string { return seenOK })
+	calls = runLoop(t, f, func(n int, why string) string {
+		autoDirectOK.Store(true)
+		return seenOK
+	})
 	if len(calls) != 1 || routeOK() {
 		t.Fatalf("passes %v with tor up and the relays down", calls)
 	}

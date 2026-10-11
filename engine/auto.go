@@ -491,15 +491,6 @@ func autoUseLines(gen int64, lines []string) (bool, bool) {
 
 // puts a set of lines in place, or none for direct. the same set again
 // changes nothing. true when something changed.
-func hasDirect(steps []autoStep) bool {
-	for _, s := range steps {
-		if s.Method == "direct" {
-			return true
-		}
-	}
-	return false
-}
-
 func useLines(lines []string) bool {
 	if h := useLinesHook; h != nil {
 		h()
@@ -766,9 +757,10 @@ func runSteps(p passCtx, kind string, validated bool, opts modeOpts, steps []aut
 			moatAt = i
 			if !moatDone && consentNow() == "yes" {
 				moatDone = true
-				// tor still out on its own, and this pass has no direct step:
-				// off the network before the tor project is asked
-				if torStarted() && !torIsPaused() && !bridgesEnabled() && !hasDirect(steps) {
+				// tor still out on its own while direct is not welcome, failed
+				// or never in this pass: off the network before the tor
+				// project is asked
+				if torStarted() && !torIsPaused() && !bridgesEnabled() && !autoDirectOK.Load() {
 					autoDirectOK.Store(false)
 					_ = reconnectAuto()
 				}
@@ -786,6 +778,10 @@ func runSteps(p passCtx, kind string, validated bool, opts modeOpts, steps []aut
 		}
 		stSet(func() { autoSt.attempt++ })
 		v := runAttempt(p, s, validated)
+		// direct that did not get through is no longer welcome out
+		if s.Method == "direct" && v != seenOK {
+			autoDirectOK.Store(false)
+		}
 		switch v {
 		case seenOK:
 			memRemember(kind, s, dayOf(autoNow()))
@@ -1068,10 +1064,15 @@ func autoLoop(gen int64) {
 			switch {
 			case result == "":
 				start = "start"
-			case ep != epoch && (result != seenOK || n.Kind != kind):
+			// a new network, or one that left tor held off it, as a change
+			// of the same kind can: a pass puts a way back in place
+			case ep != epoch && (result != seenOK || n.Kind != kind || networkHold() != ""):
 				start = "network"
 			case result == passInterrupted:
 				start = "again"
+			// awake with no way in place, as after a wake: a pass finds one
+			case result == seenOK && networkHold() != "":
+				start = "held"
 			case v != valid && result != seenOK:
 				start = "validated"
 			case result == "exhausted" && (autoRetryNow.Swap(false) || !now.Before(retryAt) || (c == "yes" && consent != "yes")):
@@ -1300,9 +1301,18 @@ func checkIn(on bool) string {
 		checkInUntil = time.Time{}
 	}
 	checkInMu.Unlock()
-	mode, opts, gen := bridgeMode()
-	if !on || mode != bmAuto {
+	if mode, _, _ := bridgeMode(); !on || mode != bmAuto {
 		autoKick()
+		return "ok"
+	}
+	return putCheckInStep()
+}
+
+// the check-in's way in for this network, in place while tor sleeps; a
+// network change inside the check-in puts the new network's back
+func putCheckInStep() string {
+	mode, opts, gen := bridgeMode()
+	if mode != bmAuto {
 		return "ok"
 	}
 	kind, mem, today := currentNet().Kind, memSnapshot(), dayOf(autoNow())

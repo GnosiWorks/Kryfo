@@ -310,8 +310,12 @@ func networkChangedTo(online bool) {
 }
 
 func networkChanged() {
-	// direct was welcome on the old network, maybe not on this one
+	// direct was welcome on the old network, maybe not on this one. a
+	// check-in under way puts this network's way back at once
 	autoDirectOK.Store(false)
+	if inCheckIn() {
+		putCheckInStep()
+	}
 	// a snowflake client keeps the nat type it found on the old network
 	dropSnowflakeClients()
 	routeFreshNetwork()
