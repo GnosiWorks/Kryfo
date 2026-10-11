@@ -848,6 +848,9 @@ class MainActivity : FlutterFragmentActivity() {
                     owner = s.updateOwnerPackageName
                 }
             } else {
+                // known gap: below android 11, a client's legacy install
+                // (droid-ify's, say) names the system installer, so that
+                // copy gets the notice too
                 @Suppress("DEPRECATION")
                 installer = packageManager.getInstallerPackageName(packageName)
             }

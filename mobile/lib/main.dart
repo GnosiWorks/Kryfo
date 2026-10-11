@@ -1129,6 +1129,22 @@ String? shippedPreview(Map<String, String>? pv, {required bool accepted}) {
   });
 }
 
+// the update check's GET: kryfo.app only, on a tor circuit of its own
+Future<String> updateGetOnIsolate(String url) {
+  return Isolate.run(() {
+    final lib = Platform.isAndroid
+        ? DynamicLibrary.open('libhalo.so')
+        : DynamicLibrary.process();
+    final fn = lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloUpdateGet');
+    final p = url.toNativeUtf8();
+    try {
+      return engineTake(fn(p));
+    } finally {
+      malloc.free(p);
+    }
+  });
+}
+
 Future<String> torStrictGetOnIsolate(String url) {
   return Isolate.run(() {
     final lib = Platform.isAndroid

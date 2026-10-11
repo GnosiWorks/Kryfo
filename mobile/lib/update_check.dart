@@ -5,6 +5,7 @@
 // and nothing installs by itself
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:ed25519_edwards/ed25519_edwards.dart' as ed;
 import 'package:flutter/foundation.dart';
@@ -14,7 +15,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'container.dart';
 import 'dlog.dart';
 import 'main.dart'
-    show appState, engine, session, sessionQuiet, torStrictGetOnIsolate;
+    show appState, engine, session, sessionQuiet, updateGetOnIsolate;
 import 'store.dart' show kPlayBuild;
 import 'widgets/motion.dart' show TorStatus;
 import 'wipe.dart' show haloWiping;
@@ -43,6 +44,12 @@ const kStoreInstallers = {
 };
 
 const kCheckEvery = Duration(days: 1);
+
+/// how long a due check waits after tor comes up or the app comes back:
+/// one to five minutes, so the request is not timed to either
+Duration updatePause([Random? r]) =>
+    Duration(seconds: 60 + (r ?? Random.secure()).nextInt(241));
+
 // a try that never reached the site waits this long, not a day
 const kRetryAfter = Duration(hours: 1);
 
@@ -168,9 +175,11 @@ class UpdateNotice extends ChangeNotifier {
     required this.playBuild,
     Future<InstallInfo> Function()? install,
     DateTime Function()? now,
+    Future<void> Function()? pause,
     this.pubKeyB64 = kVersionPubKeyB64,
   }) : _install = install ?? _installFromPlatform,
-       _now = now ?? DateTime.now;
+       _now = now ?? DateTime.now,
+       _pause = pause ?? (() => Future<void>.delayed(updatePause()));
 
   // a GET over tor alone: the body, or "error: ..."
   final Future<String> Function(String url) get;
@@ -181,12 +190,14 @@ class UpdateNotice extends ChangeNotifier {
   final String pubKeyB64;
   final Future<InstallInfo> Function() _install;
   final DateTime Function() _now;
+  final Future<void> Function() _pause;
 
   Future<void>? _ready;
   bool _eligible = false;
   String? _running;
   String? _latest;
   String? _dismissed;
+  bool _on = true;
   bool _busy = false;
   DateTime? _lastTry;
 
@@ -195,7 +206,7 @@ class UpdateNotice extends ChangeNotifier {
 
   /// the version the card offers, null when there is none to show
   String? get shown {
-    if (!_eligible || quiet()) return null;
+    if (!_eligible || !_on || quiet()) return null;
     final v = _latest;
     if (v == null || v == _dismissed || !isNewer(v, _running)) return null;
     return v;
@@ -212,6 +223,7 @@ class UpdateNotice extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     _latest = prefs.getString(_latestKey);
     _dismissed = prefs.getString(_dismissedKey);
+    _on = prefs.getBool(container().key(_onKey)) ?? true;
     notifyListeners();
   }
 
@@ -223,6 +235,8 @@ class UpdateNotice extends ChangeNotifier {
   Future<void> setOn(bool on) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(container().key(_onKey), on);
+    _on = on;
+    notifyListeners();
     if (on) unawaited(check());
   }
 
@@ -244,17 +258,21 @@ class UpdateNotice extends ChangeNotifier {
       final ms = prefs.getInt(_checkedKey);
       final last = ms == null ? null : DateTime.fromMillisecondsSinceEpoch(ms);
       if (!checkDue(last, now)) return false;
+      await _pause();
+      // the wait is long enough for any of it to change
+      if (quiet() || !torUp() || !await isOn()) return false;
       _lastTry = now;
       final body = await _fetch(kVersionUrl);
       final sig = body.startsWith('error:')
           ? body
           : await _fetch(kVersionSigUrl);
-      // a refusal from the site counts as an answer, a dead route does not
-      final reached =
-          !body.startsWith('error: tor') &&
-          !body.startsWith('error: get') &&
-          !sig.startsWith('error: tor') &&
-          !sig.startsWith('error: get');
+      // any answer from the site counts as the day's check, whatever it
+      // says: only a route that never reached it is tried again sooner
+      final reached = ![
+        'error: tor',
+        'error: get',
+        'error: req',
+      ].any(body.startsWith);
       if (reached) await prefs.setInt(_checkedKey, now.millisecondsSinceEpoch);
       if (body.startsWith('error:') || sig.startsWith('error:')) {
         dlog('update: no answer');
@@ -265,7 +283,8 @@ class UpdateNotice extends ChangeNotifier {
         dlog('update: refused the version file');
         return true;
       }
-      if (isNewer(v, _running) && v != _latest) {
+      // kept even when not newer: a release taken back takes the card
+      if (v != _latest) {
         _latest = v;
         await prefs.setString(_latestKey, v);
         notifyListeners();
@@ -302,7 +321,7 @@ const _torLive = {
 };
 
 UpdateNotice _live() => UpdateNotice(
-  get: torStrictGetOnIsolate,
+  get: updateGetOnIsolate,
   torUp: () =>
       !haloWiping &&
       _torLive.contains(appState.torStatus) &&

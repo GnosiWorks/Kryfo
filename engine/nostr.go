@@ -1028,6 +1028,7 @@ func nostrResetClient() {
 	torOnlyMu.Lock()
 	torOnlyClient = nil
 	torOnlyMu.Unlock()
+	updateResetClient()
 	dropSocksAddr()
 	// kept sockets and door streams dialled the old way go with it
 	pubCloseAll("")

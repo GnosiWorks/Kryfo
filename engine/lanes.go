@@ -66,6 +66,10 @@ const laneServices = "services"
 // relay cannot tie a search to a handle lookup or a badge receipt
 const laneGifs = "gifs"
 
+// the update check: apart from link previews and every other lane, so the
+// site sees a check and nothing it could tie to it
+const laneUpdate = "update"
+
 // a room is a name that exists only inside the room.
 func roomLane(pubHex string) string { return "room:" + pubHex }
 

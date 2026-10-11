@@ -464,6 +464,12 @@ extern char* HaloGifGet(char* cUrl);
 extern char* HaloGifGetFile(char* cUrl, char* cPath);
 extern char* HaloTransportState(void);
 
+// GET a file of kryfo.app over tor, on the update lane. the body of a 200,
+// capped at 4kb, or "error: ...": "error: status" and "error: read" when
+// the site answered, "error: tor" and "error: get" when it was not reached.
+//
+extern char* HaloUpdateGet(char* cUrl);
+
 // {"pub": "age1...", "priv": "AGE-SECRET-KEY-1..."}
 //
 extern char* HaloVaultKeys(void);

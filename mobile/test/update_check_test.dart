@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the update check: who gets it, what it accepts, how often it asks, and
 // that it asks nothing with the switch off, in a decoy or without tor
+import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:ed25519_edwards/ed25519_edwards.dart' as ed;
 import 'package:flutter_test/flutter_test.dart';
@@ -192,6 +194,7 @@ void main() {
       bool play = false,
       String running = '0.5.0',
       String Function(String url)? answer,
+      Future<void> Function()? pause,
     }) => UpdateNotice(
       get: (url) async {
         asked.add(url);
@@ -205,6 +208,7 @@ void main() {
       playBuild: play,
       install: () async => InstallInfo(installer: installer, version: running),
       now: () => now,
+      pause: pause ?? () async {},
       pubKeyB64: s.pub,
     );
 
@@ -280,6 +284,73 @@ void main() {
       up = true;
       now = now.add(const Duration(minutes: 31));
       expect(await n.check(), isTrue);
+      expect(n.shown, '0.5.1');
+    });
+
+    test('a release taken back takes the card', () async {
+      final n = make();
+      await n.check();
+      expect(n.shown, '0.5.1');
+      served = '0.5.0';
+      now = now.add(const Duration(days: 1));
+      await n.check();
+      expect(n.shown, isNull);
+      final later = make();
+      await later.ready();
+      expect(later.shown, isNull);
+    });
+
+    test('any answer from the site is the day\'s check', () async {
+      final n = make(
+        answer: (url) =>
+            url == kVersionUrl ? 'not a version file' : 'error: get: timeout',
+      );
+      await n.check();
+      expect(asked, hasLength(2));
+      now = now.add(const Duration(hours: 3));
+      expect(await n.check(), isFalse);
+      expect(asked, hasLength(2));
+    });
+
+    test('a due check waits a few minutes first', () async {
+      final gate = Completer<void>();
+      final n = make(pause: () => gate.future);
+      final going = n.check();
+      await pumpEventQueue();
+      expect(asked, isEmpty);
+      gate.complete();
+      expect(await going, isTrue);
+      expect(asked, hasLength(2));
+    });
+
+    test('tor gone during the wait: no request', () async {
+      final gate = Completer<void>();
+      final n = make(pause: () => gate.future);
+      final going = n.check();
+      await pumpEventQueue();
+      tor = false;
+      gate.complete();
+      expect(await going, isFalse);
+      expect(asked, isEmpty);
+    });
+
+    test('the wait is one to five minutes', () {
+      final r = Random(7);
+      for (var i = 0; i < 500; i++) {
+        final d = updatePause(r);
+        expect(d.inSeconds, inInclusiveRange(60, 300));
+      }
+    });
+
+    test('the switch turned off takes the card', () async {
+      final n = make();
+      await n.check();
+      var told = 0;
+      n.addListener(() => told++);
+      await n.setOn(false);
+      expect(n.shown, isNull);
+      expect(told, greaterThan(0));
+      await n.setOn(true);
       expect(n.shown, '0.5.1');
     });
 

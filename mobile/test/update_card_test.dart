@@ -49,6 +49,7 @@ void main() {
     playBuild: false,
     install: () async => const InstallInfo(version: '0.5.0'),
     now: () => now,
+    pause: () async {},
     pubKeyB64: base64.encode(k.publicKey.bytes),
   );
 
