@@ -22,6 +22,8 @@ import 'package:kryfo/screens/room_create_sheet.dart';
 import 'package:kryfo/theme.dart';
 import 'package:kryfo/tools/lock_words.dart' show neutralLockedName;
 import 'package:kryfo/tools/tools_bridge.dart' show PickedFile;
+import 'package:kryfo/widgets/halo_sheet.dart';
+import 'package:kryfo/widgets/message_menu.dart';
 import 'package:kryfo/widgets/new_poll_sheet.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -214,6 +216,40 @@ void main() {
     await done(t);
   });
 
+  testWidgets('chat menu: disguise my voice here', (t) async {
+    phone(t);
+    var on = false;
+    await _open(
+      t,
+      _app(
+        (ctx) => showHaloSheet<void>(
+          ctx,
+          scroll: true,
+          // flips in place, as the chat's menu does
+          builder: (ctx) => StatefulBuilder(
+            builder: (ctx, setSheet) => SingleChildScrollView(
+              child: MenuSheet(
+                groups: [
+                  [
+                    MenuSheetRow(
+                      icon: Icons.theater_comedy_outlined,
+                      label: l10n.voiceDisguiseHere,
+                      toggled: on,
+                      onTap: () => setSheet(() => on = !on),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await _flips(t, l10n.voiceDisguiseHere);
+    expect(on, isTrue);
+    await done(t);
+  });
+
   testWidgets('getting messages: hide message preview', (t) async {
     phone(t);
     await _open(t, _page(const GettingMessagesScreen()));
@@ -299,6 +335,7 @@ void main() {
       'halo_rows.dart',
       'handle_screen.dart',
       'lock_file_screen.dart',
+      'message_menu.dart',
       'new_poll_sheet.dart',
       'pins_screen.dart',
       'room_create_sheet.dart',

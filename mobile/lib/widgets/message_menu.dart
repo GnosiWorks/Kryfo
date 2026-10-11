@@ -391,6 +391,6 @@ class _SheetRow extends StatelessWidget {
       ),
     );
     if (row.toggled == null) return tile;
-    return Semantics(toggled: row.toggled, child: tile);
+    return Semantics(toggled: row.toggled, enabled: on, child: tile);
   }
 }
