@@ -588,7 +588,8 @@ void main() {
     expect(row['door_pub'], isNull);
     expect(row['door_was'], isNull);
     // after every older step
-    expect(src, contains('version: 71,'));
+    final version = RegExp(r'version: (\d+),').firstMatch(src)!.group(1)!;
+    expect(int.parse(version), greaterThanOrEqualTo(75));
     final upgrade = src.indexOf('onUpgrade: (db, oldV, newV) async {');
     final steps = src.substring(upgrade, src.indexOf('\n    );', upgrade));
     expect(

@@ -1245,7 +1245,7 @@ class HaloDb implements GroupOwedStore {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 71,
+      version: 75,
       onConfigure: eraseFreedPages,
       onCreate: (db, _) async {
         await db.execute('''
@@ -1405,7 +1405,7 @@ class HaloDb implements GroupOwedStore {
       onUpgrade: (db, oldV, newV) async {
         // 62 runs after every older step, below: its index names columns
         // they add. 66 runs after it: it reads what they all make. 67, 68,
-        // 69, 70 and 71 last
+        // 69, 70 and 75 last
         if (oldV < 65) {
           // a room joined off a link and not let in yet: when the join went
           await roomJoiningColumn(db);
@@ -1853,7 +1853,7 @@ class HaloDb implements GroupOwedStore {
           // openers that did not file, and openers sent with no receipt
           await firstContactTables(db);
         }
-        if (oldV < 71) {
+        if (oldV < 75) {
           // when a span seeded at 64 is listened on from
           await blockListenColumn(db);
         }
@@ -6850,7 +6850,7 @@ Future<void> blockTables(DatabaseExecutor db, {bool seed = false}) async {
   }
 }
 
-// the upgrade to 71: when a seeded span is listened on from. one seeded
+// the upgrade to 75: when a seeded span is listened on from. one seeded
 // before is listened on from now, for as long as a new block would be
 @visibleForTesting
 Future<void> blockListenColumn(DatabaseExecutor db) async {

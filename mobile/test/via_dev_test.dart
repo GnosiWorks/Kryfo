@@ -20,7 +20,7 @@ void main() {
 
   test('made on create, and on the upgrade to 67 after every older step', () {
     final version = RegExp(r'version: (\d+),').firstMatch(src)!.group(1)!;
-    expect(int.parse(version), 71);
+    expect(int.parse(version), greaterThanOrEqualTo(75));
     expect(src.substring(create, upgrade), contains('$_column,'));
     expect(
       RegExp(

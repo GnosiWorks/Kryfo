@@ -123,7 +123,7 @@ void main() {
     expect(await _ended(db, 'free-one-here'), isEmpty);
   }, skip: skip);
 
-  test('the upgrade to 71 listens on a span seeded at 64 from now, leaves '
+  test('the upgrade to 75 listens on a span seeded at 64 from now, leaves '
       'every other span alone, and runs again without harm', () async {
     final db = SqliteMem.open()!;
     // block_spans as 64 to 70 made it
