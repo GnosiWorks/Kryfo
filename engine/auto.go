@@ -937,6 +937,13 @@ func setBridgeMode(mode, raw string) string {
 		// a decoy shows automatic and changes nothing underneath
 		return "error: decoy"
 	}
+	modeMu.Lock()
+	defer modeMu.Unlock()
+	return applyBridgeMode(mode, raw)
+}
+
+// a mode, whoever hands it over: the app's pick or the boot restore
+func applyBridgeMode(mode, raw string) string {
 	var o modeOpts
 	if strings.TrimSpace(raw) != "" && json.Unmarshal([]byte(raw), &o) != nil {
 		return "error: bad json"
@@ -974,6 +981,8 @@ func setBridgeMode(mode, raw string) string {
 	default:
 		return "error: unknown mode"
 	}
+	// known from here on, before any bounce below wants the network
+	modeSet.Store(true)
 
 	autoMu.Lock()
 	prevMode, prevOpts := bmMode, bmOpts

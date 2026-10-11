@@ -36,6 +36,14 @@ class _Engine implements HaloEngine {
     return answer;
   }
 
+  // what the boot restore was handed
+  final restores = <String>[];
+  @override
+  String restoreBridgeMode(String mode, String opts) {
+    restores.add('$mode $opts');
+    return 'ok';
+  }
+
   @override
   String bridgeLineChecks() => checks;
   @override
@@ -534,6 +542,47 @@ void main() {
       await t.pump(const Duration(seconds: 2));
       expect(_eng.calls, isEmpty);
       await _done(t);
+    });
+  });
+
+  // a start straight into a decoy: tor keeps the person's pick, handed over
+  // by the restore, which a decoy does not refuse. a pick would be
+  group('a cold start into a decoy', () {
+    Future<void> start(Map<String, String> kept) async {
+      FlutterSecureStorage.setMockInitialValues({
+        'halo.lock.state': '{"q":true}',
+        ...kept,
+      });
+      lockState.inDecoy = true;
+      await AppState().loadBridgesForTest();
+    }
+
+    test('bridges on stay on', () async {
+      await start({
+        'bridge_mode': 'own',
+        'bridge_lines': 'obfs4 192.0.2.1:443 AAAA cert=x',
+      });
+      expect(_eng.restores, [
+        'own {"lines":["obfs4 192.0.2.1:443 AAAA cert=x"]}',
+      ]);
+      expect(_eng.calls, isEmpty);
+    });
+
+    test('automatic stays automatic, without tor alone if risky', () async {
+      await start({
+        'bridge_mode': 'auto',
+        'bridge_consent': 'ask',
+        'bridge_skip_direct': '1',
+      });
+      expect(_eng.restores.single, startsWith('auto '));
+      expect(_eng.restores.single, contains('"skip_direct":true'));
+      expect(_eng.calls, isEmpty);
+    });
+
+    test('nothing to use is never direct', () async {
+      await start({'bridge_mode': 'own', 'bridge_lines': ''});
+      expect(_eng.restores.single, startsWith('auto '));
+      expect(_eng.restores.single, contains('"skip_direct":true'));
     });
   });
 

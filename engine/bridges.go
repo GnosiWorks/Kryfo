@@ -881,6 +881,8 @@ func HaloSetBridges(cLines *C.char, on C.int) *C.char {
 // HaloSetBridges in plain go, for the tests
 func setBridges(raw string, on bool) string {
 	legacyMode()
+	// the old way says it outright too: these lines, or none
+	modeSet.Store(true)
 	good, bad, checks := sortBridgeLines(raw)
 	lineChecksMu.Lock()
 	lineChecks = checks

@@ -384,6 +384,25 @@ class HaloEngine {
     }
   }
 
+  // the kept mode, handed over once at start before tor runs. taken with a
+  // decoy open too, where a pick is refused
+  late final TwoArgFnDart _restoreBridgeMode = _lib
+      .lookupFunction<TwoArgFn, TwoArgFnDart>('HaloRestoreBridgeMode');
+  String restoreBridgeMode(String mode, String opts) {
+    try {
+      final a = mode.toNativeUtf8();
+      final b = opts.toNativeUtf8();
+      try {
+        return engineTake(_restoreBridgeMode(a, b));
+      } finally {
+        malloc.free(a);
+        malloc.free(b);
+      }
+    } on ArgumentError {
+      return 'error: no engine';
+    }
+  }
+
   // the status line's facts as json, never a line or an address
   late final CStrFnDart _bridgeStatus = _lib.lookupFunction<CStrFn, CStrFnDart>(
     'HaloBridgeStatus',
@@ -11519,9 +11538,33 @@ class AppState extends ChangeNotifier {
       await _firstRunPick!.future;
       bootPhase = phase;
     }
-    final r = applyBridgeNow();
+    final r = restoreBridgeAtBoot();
     dlog('bridges: ${_bridge.choice.id}: $r');
     notifyListeners();
+  }
+
+  @visibleForTesting
+  Future<void> loadBridgesForTest() => _loadBridges();
+
+  /// the kept mode, to the engine before tor starts. a decoy open or not:
+  /// it shows automatic, and tor keeps what the person picked. with nothing
+  /// to use, automatic without tor alone, never direct
+  @visibleForTesting
+  String restoreBridgeAtBoot() {
+    var m = _bridge.engineMode(
+      builtin: _bridge.choice == BridgeChoice.builtin
+          ? engine.builtinBridges('obfs4')
+          : const [],
+    );
+    m ??= _bridge
+        .copyWith(choice: BridgeChoice.auto, skipDirect: true)
+        .engineMode();
+    final r = engine.restoreBridgeMode(m!.$1, m.$2);
+    if (m.$1 != 'auto' && m.$2.contains('"lines"')) {
+      _lineChecks = BridgeLineCheck.parse(engine.bridgeLineChecks());
+      _checksOf = _bridge.choice;
+    }
+    return r;
   }
 
   // the setup as kept, or, on the first start of this version, what 0.5.0

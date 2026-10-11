@@ -413,8 +413,11 @@ func startListener(dataDir string) string {
 	hsCh, hsSubbed := listenForUploads(t)
 	// tor starts with the network off. bine turns it on inside Listen, but
 	// only on the branch NoWait skips, so turn it on here, over the engine's
-	// own connection (see control_events.go).
-	if eerr := ctrlDo(t, "DisableNetwork 0", func(c *control.Conn) error {
+	// own connection (see control_events.go). with no bridge mode yet it
+	// stays off: the bounce that sets the mode turns it on.
+	if !bridgeModeKnown() {
+		log.Println("halo: no bridge mode yet, tor stays off the network")
+	} else if eerr := ctrlDo(t, "DisableNetwork 0", func(c *control.Conn) error {
 		return c.SetConf(control.KeyVals("DisableNetwork", "0")...)
 	}); eerr != nil {
 		log.Printf("halo: enable network: %v", eerr)
@@ -923,6 +926,12 @@ func reconnectOn(t *tor.Tor, addr string, me int64) string {
 		atomic.StoreInt32(&bounceOff, 0)
 		return "error: tor is asleep"
 	}
+	// an unknown mode is never direct
+	if !bridgeModeKnown() {
+		log.Println("halo: no bridge mode yet, leaving tor off the network")
+		atomic.StoreInt32(&bounceOff, 0)
+		return errNoMode
+	}
 	if err := ctrlDo(t, "DisableNetwork 0", func(c *control.Conn) error {
 		return c.SetConf(control.KeyVals("DisableNetwork", "0")...)
 	}); err != nil {
@@ -1015,6 +1024,10 @@ func torResume() string {
 	mu.Unlock()
 	if t == nil || t.Control == nil {
 		return "start"
+	}
+	if !bridgeModeKnown() {
+		log.Println("halo: no bridge mode yet, tor stays asleep")
+		return errNoMode
 	}
 	if err := ctrlDo(t, "DisableNetwork 0", func(c *control.Conn) error {
 		return c.SetConf(control.KeyVals("DisableNetwork", "0")...)
