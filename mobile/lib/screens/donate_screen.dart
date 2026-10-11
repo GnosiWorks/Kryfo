@@ -43,28 +43,28 @@ List<_Coin> get _coins => [
     'btc',
     l10n.donateBitcoin,
     l10n.donateText,
-    l10n.donateBadgeUnlocks,
+    kBadgeTiersShown ? l10n.donateBadgeUnlocks : '',
     Color(0xFFF7931A),
   ),
   _Coin(
     'xmr',
     l10n.donateMonero,
     '\u0271',
-    l10n.donateManualNoBadge,
+    kBadgeTiersShown ? l10n.donateManualNoBadge : '',
     Color(0xFFFF6600),
   ),
   _Coin(
     'sol',
     l10n.donateSolana,
     '\u25CE',
-    l10n.donateManualNoBadge,
+    kBadgeTiersShown ? l10n.donateManualNoBadge : '',
     Color(0xFF9945FF),
   ),
   _Coin(
     'eth',
     l10n.donateEthereum,
     l10n.donateText2,
-    l10n.donateManualNoBadge,
+    kBadgeTiersShown ? l10n.donateManualNoBadge : '',
     Color(0xFF8AA0F0),
   ),
 ];
@@ -145,8 +145,7 @@ class _DonateScreenState extends State<DonateScreen> {
             children: [
               _hero(),
               const SizedBox(height: 22),
-              _tiers(),
-              const SizedBox(height: 22),
+              if (kBadgeTiersShown) ...[_tiers(), const SizedBox(height: 22)],
               // todo: card payments, once a processor is behind them
               _cryptoPane(),
               const SizedBox(height: 26),
@@ -201,25 +200,27 @@ class _DonateScreenState extends State<DonateScreen> {
           textAlign: TextAlign.center,
           style: HaloType.sans(size: 13, color: HaloColors.text, height: 1.5),
         ),
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: HaloColors.surface,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: HaloColors.line),
-          ),
-          child: Text.rich(
-            TextSpan(
-              children: markedSpans(
-                l10n.donateBackItAnonymouslyBadge,
-                HaloType.mono(size: 11, color: HaloColors.amber),
-              ),
+        if (kBadgeTiersShown) ...[
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: HaloColors.surface,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: HaloColors.line),
             ),
-            textAlign: TextAlign.center,
-            style: HaloType.mono(size: 11, color: HaloColors.text2),
+            child: Text.rich(
+              TextSpan(
+                children: markedSpans(
+                  l10n.donateBackItAnonymouslyBadge,
+                  HaloType.mono(size: 11, color: HaloColors.amber),
+                ),
+              ),
+              textAlign: TextAlign.center,
+              style: HaloType.mono(size: 11, color: HaloColors.text2),
+            ),
           ),
-        ),
+        ],
       ],
     );
   }
@@ -518,90 +519,93 @@ class _DonateScreenState extends State<DonateScreen> {
             },
             child: _CopyButton(label: l10n.donateCopyAddress, copies: _copies),
           ),
-          const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
-            decoration: BoxDecoration(
-              color: HaloColors.ink,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: HaloColors.line),
-            ),
-            child: Text(
-              _coin == 'btc'
-                  ? l10n.donateBitcoinIsVerifiedBy
-                  : l10n.donateWeCanTVerify,
-              style: HaloType.mono(
-                size: 11,
-                color: HaloColors.text2,
-              ).copyWith(height: 1.45),
-            ),
-          ),
-          // only bitcoin has a next step: our node watches for it. the other
-          // coins end here, since a button anyone can press proves nothing.
-          if (_coin == 'btc' && !_onOnion) ...[
+          // the notes and the invoice steps are about badges
+          if (kBadgeTiersShown) ...[
             const SizedBox(height: 10),
-            Text(
-              l10n.donateBitcoinBadgesNeedOnion,
-              textAlign: TextAlign.center,
-              style: HaloType.sans(size: 13, color: HaloColors.text2),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+              decoration: BoxDecoration(
+                color: HaloColors.ink,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: HaloColors.line),
+              ),
+              child: Text(
+                _coin == 'btc'
+                    ? l10n.donateBitcoinIsVerifiedBy
+                    : l10n.donateWeCanTVerify,
+                style: HaloType.mono(
+                  size: 11,
+                  color: HaloColors.text2,
+                ).copyWith(height: 1.45),
+              ),
             ),
-            const SizedBox(height: 8),
-            PressScale(
-              onTap: () async {
-                HapticFeedback.selectionClick();
-                await Navigator.of(
-                  context,
-                ).push(haloRoute(const ModesScreen()));
-                if (mounted) setState(() {});
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: HaloColors.line),
-                ),
-                child: Text(
-                  l10n.donateSwitchToOnion,
-                  style: HaloType.sans(
-                    size: 13,
-                    weight: FontWeight.w600,
-                    color: HaloColors.text,
+            // only bitcoin has a next step: our node watches for it. the other
+            // coins end here, since a button anyone can press proves nothing.
+            if (_coin == 'btc' && !_onOnion) ...[
+              const SizedBox(height: 10),
+              Text(
+                l10n.donateBitcoinBadgesNeedOnion,
+                textAlign: TextAlign.center,
+                style: HaloType.sans(size: 13, color: HaloColors.text2),
+              ),
+              const SizedBox(height: 8),
+              PressScale(
+                onTap: () async {
+                  HapticFeedback.selectionClick();
+                  await Navigator.of(
+                    context,
+                  ).push(haloRoute(const ModesScreen()));
+                  if (mounted) setState(() {});
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: HaloColors.line),
+                  ),
+                  child: Text(
+                    l10n.donateSwitchToOnion,
+                    style: HaloType.sans(
+                      size: 13,
+                      weight: FontWeight.w600,
+                      color: HaloColors.text,
+                    ),
                   ),
                 ),
               ),
-            ),
-          ] else if (_coin == 'btc') ...[
-            const SizedBox(height: 10),
-            Builder(
-              builder: (_) {
-                final can = _tierFor(_amount) != SupporterTier.none;
-                return PressScale(
-                  onTap: can ? _openBitcoinInvoice : null,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: can ? HaloColors.amber : HaloColors.line,
-                        width: 1,
+            ] else if (_coin == 'btc') ...[
+              const SizedBox(height: 10),
+              Builder(
+                builder: (_) {
+                  final can = _tierFor(_amount) != SupporterTier.none;
+                  return PressScale(
+                    onTap: can ? _openBitcoinInvoice : null,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: can ? HaloColors.amber : HaloColors.line,
+                          width: 1,
+                        ),
+                      ),
+                      child: Text(
+                        can
+                            ? l10n.donatePayWithBitcoin
+                            : l10n.donateBadgesStartAt20,
+                        style: HaloType.sans(
+                          size: 13,
+                          weight: FontWeight.w600,
+                          color: can ? HaloColors.amber : HaloColors.text3,
+                        ),
                       ),
                     ),
-                    child: Text(
-                      can
-                          ? l10n.donatePayWithBitcoin
-                          : l10n.donateBadgesStartAt20,
-                      style: HaloType.sans(
-                        size: 13,
-                        weight: FontWeight.w600,
-                        color: can ? HaloColors.amber : HaloColors.text3,
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
+                  );
+                },
+              ),
+            ],
           ],
         ],
       ),
