@@ -64,3 +64,40 @@ func TestHandleCallsWaitForAColdCircuit(t *testing.T) {
 		}
 	}
 }
+
+// fetching the client can wait on tor's locks. that wait comes out of the
+// same bound, so every call answers inside it
+func TestHandleCallsAnswerInTimeOnASlowClient(t *testing.T) {
+	was, wasWait := handleHTTP, handleWait
+	handleHTTP = func() (*http.Client, error) {
+		time.Sleep(2 * time.Second)
+		return &http.Client{Transport: &deadlineTrip{}}, nil
+	}
+	handleWait = 200 * time.Millisecond
+	defer func() { handleHTTP, handleWait = was, wasWait }()
+	_, priv, _ := ed25519.GenerateKey(nil)
+	mu.Lock()
+	key := myEdPriv
+	myEdPriv = priv
+	mu.Unlock()
+	defer func() {
+		mu.Lock()
+		myEdPriv = key
+		mu.Unlock()
+	}()
+
+	for name, call := range map[string]func() string{
+		"check":   func() string { return handleCheck("wren") },
+		"claim":   func() string { return handleClaim("wren", "kryfo://x", "") },
+		"release": func() string { return handleRelease("wren") },
+	} {
+		start := time.Now()
+		r := call()
+		if !strings.HasPrefix(r, "error") {
+			t.Fatalf("%s: %s", name, r)
+		}
+		if took := time.Since(start); took > time.Second {
+			t.Fatalf("%s took %s", name, took)
+		}
+	}
+}
