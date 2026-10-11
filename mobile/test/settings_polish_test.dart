@@ -29,6 +29,7 @@ import 'package:kryfo/screens/transport_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/theme.dart';
 import 'package:kryfo/tools/tools_bridge.dart';
+import 'package:kryfo/update_check.dart';
 import 'package:kryfo/widgets/halo_rows.dart';
 import 'package:kryfo/widgets/halo_switch.dart';
 import 'package:kryfo/widgets/unfold.dart';
@@ -323,6 +324,60 @@ void main() {
           final prefs = await SharedPreferences.getInstance();
           expect(prefs.getBool(c.key('kryfo.gif.on')), isTrue);
           if (quiet) expect(prefs.getBool('kryfo.gif.on'), isNull);
+          await devClose(t);
+        },
+      );
+    }
+  });
+
+  group('update row', () {
+    tearDown(() => updateNoticeForTest = null);
+
+    for (final quiet in [false, true]) {
+      testWidgets(
+        quiet
+            ? 'a decoy has it too, its own switch, and asks nothing'
+            : 'the everyday app has it',
+        (t) async {
+          SharedPreferences.setMockInitialValues({
+            'battery_opt_prompt_seen': true,
+            'miui_autostart_prompt_seen': true,
+          });
+          final c = quiet ? HaloContainer.decoy : HaloContainer.everyday;
+          await devWorld(container: c);
+          final asked = <String>[];
+          updateNoticeForTest = UpdateNotice(
+            get: (url) async {
+              asked.add(url);
+              return 'error: get';
+            },
+            torUp: () => true,
+            quiet: () => quiet,
+            container: () => c,
+            playBuild: false,
+            install: () async => const InstallInfo(version: '0.5.0'),
+            pause: () async {},
+          );
+          t.view.physicalSize = const Size(1000, 6000);
+          t.view.devicePixelRatio = 2;
+          addTearDown(t.view.reset);
+          await t.pumpWidget(devApp(const SettingsScreen()));
+          await t.pump(const Duration(seconds: 1));
+          final row = find.text(l10n.settingsCheckForUpdates);
+          expect(row, findsOneWidget);
+          await t.ensureVisible(row);
+          await t.tap(row);
+          await rest(t);
+          final prefs = await SharedPreferences.getInstance();
+          expect(prefs.getBool(c.key('kryfo.update.on')), isFalse);
+          if (quiet) {
+            expect(prefs.getBool('kryfo.update.on'), isNull);
+            // on again in the decoy: still nothing goes out
+            await t.tap(row);
+            await rest(t);
+            expect(prefs.getBool(c.key('kryfo.update.on')), isTrue);
+            expect(asked, isEmpty);
+          }
           await devClose(t);
         },
       );

@@ -392,6 +392,30 @@ void main() {
       expect(await n.isOn(), isTrue);
     });
 
+    test('the card follows the open session\'s switch, whichever was open '
+        'first', () async {
+      SharedPreferences.setMockInitialValues({'d.kryfo.update.on': false});
+      // first read with the decoy open, its switch off
+      c = HaloContainer.decoy;
+      quiet = true;
+      final n = make();
+      await n.ready();
+      c = HaloContainer.everyday;
+      quiet = false;
+      expect(await n.check(), isTrue);
+      expect(n.shown, '0.5.1');
+      // and the decoy's own switch, turned on there, changes nothing here
+      c = HaloContainer.decoy;
+      quiet = true;
+      await n.setOn(true);
+      c = HaloContainer.everyday;
+      quiet = false;
+      await n.setOn(false);
+      expect(n.shown, isNull);
+      c = HaloContainer.decoy;
+      expect(await n.isOn(), isTrue);
+    });
+
     test('no request from an f-droid copy or a play build', () async {
       final f = make(installer: 'org.fdroid.fdroid');
       expect(await f.check(), isFalse);

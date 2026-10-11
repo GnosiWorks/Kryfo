@@ -739,9 +739,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 label: l10n.settingsVersion,
                 value: l10n.settings030Alpha,
               ),
-              // f-droid and play keep their copies updated, and a quiet
-              // session asks nothing
-              if (_updateOffered && !sessionQuiet)
+              // f-droid and play keep their copies updated. a quiet
+              // session keeps a switch of its own and asks nothing
+              if (_updateOffered)
                 HaloRow(
                   icon: Icons.system_update_outlined,
                   label: l10n.settingsCheckForUpdates,
