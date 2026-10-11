@@ -367,6 +367,7 @@ func TestAutoMoatConsent(t *testing.T) {
 	}
 	// yes: over meek, marked automatic, never plain
 	resetAuto(t)
+	setNetInfo(wifi())
 	f.applied = nil
 	if r := pass(t, modeOpts{Consent: "yes", Country: "ir"}); r != seenOK {
 		t.Fatalf("pass with moat: %s, tried %v", r, f.applied)
