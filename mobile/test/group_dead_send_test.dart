@@ -34,16 +34,17 @@ class _GroupDb implements HaloDb {
   final List<Map<String, Object?>> rows;
   final asked = <String>[];
   Completer<void>? hold;
+  // the group ended, or was left, under the open screen
+  var gone = false;
 
   @override
   HaloContainer get container => HaloContainer.everyday;
 
   @override
-  Future<Map<String, Object?>?> getGroup(String groupId) async => {
-    'group_id': _group,
-    'name': 'Friends',
-    'is_admin': 0,
-  };
+  Future<Map<String, Object?>?> getGroup(String groupId) async =>
+      gone ? null : {'group_id': _group, 'name': 'Friends', 'is_admin': 0};
+  @override
+  Future<bool> groupExists(String groupId) async => !gone;
   @override
   Future<String?> getGroupAtmosphere(String groupId) async => null;
   @override
@@ -178,6 +179,58 @@ void main() {
     await t.pump(const Duration(seconds: 31));
     expect(db.asked, contains(_stale));
     expect(db.asked, isNot(contains(_file)));
+    await _close(t);
+  });
+
+  testWidgets('a group gone while a send of it is on its way closes its '
+      'screen', (t) async {
+    phone(t);
+    final db = _GroupDb([_out(1, _stale)]);
+    useDatabasesForTest(db, Session(db));
+    appState.sendModeForTest = 'private';
+    appState.setRouteOKForTest(true);
+    appState.setTorStatusForTest(TorStatus.publishing);
+    final m = t.binding.defaultBinaryMessenger;
+    m.setMockMethodCallHandler(SystemChannels.platform, (_) async => null);
+    addTearDown(
+      () => m.setMockMethodCallHandler(SystemChannels.platform, null),
+    );
+    await t.pumpWidget(
+      app(
+        Scaffold(
+          body: Builder(
+            builder: (ctx) => TextButton(
+              onPressed: () => Navigator.of(ctx).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const GroupChatScreen(groupId: _group),
+                ),
+              ),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await t.tap(find.text('open'));
+    await t.pump();
+    await t.pump(const Duration(seconds: 1));
+    expect(find.byType(GroupChatScreen), findsOneWidget);
+    db.hold = Completer<void>();
+    await t.enterText(find.byType(TextField), 'one more');
+    await t.pump();
+    await t.pump(const Duration(milliseconds: 250));
+    await t.tap(find.bySemanticsLabel(l10n.commonSend));
+    await t.pump(const Duration(milliseconds: 300));
+    expect(db.asked, hasLength(1));
+
+    // the group ends here while the send waits
+    db.gone = true;
+    appState.chatChanged('group:$_group');
+    await t.pump(const Duration(milliseconds: 300));
+    await t.pump(const Duration(seconds: 1));
+    expect(find.byType(GroupChatScreen), findsNothing);
+    db.hold!.complete();
+    await t.pump(const Duration(seconds: 1));
     await _close(t);
   });
 

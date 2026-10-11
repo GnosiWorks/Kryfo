@@ -393,7 +393,8 @@ void main() {
         for (final r in m.rows(t)) {
           await m.update(
             t,
-            {'at': 1},
+            // old enough to go again, newer than a week
+            {'at': DateTime.now().millisecondsSinceEpoch - 60000},
             where: 'msg_uid = ?',
             whereArgs: [r['msg_uid']],
           );

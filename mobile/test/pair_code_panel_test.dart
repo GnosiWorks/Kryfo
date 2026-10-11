@@ -7,6 +7,7 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart' hide Curve;
+import 'package:flutter/rendering.dart' show RenderParagraph;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/l10n/l10n.dart';
@@ -15,7 +16,7 @@ import 'package:kryfo/main.dart'
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart' show signalSession;
 import 'package:kryfo/widgets/pair_code_panel.dart';
-import 'package:kryfo/widgets/pair_join.dart' show pairUnreached;
+import 'package:kryfo/widgets/pair_join.dart' show pairNow, pairUnreached;
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 
 import 'arrival_fakes.dart';
@@ -44,6 +45,7 @@ class _Engine implements HaloEngine {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   final e = _Engine();
+  final live = ArrivalRows(HaloContainer.everyday);
 
   setUpAll(() async {
     final pair = Curve.generateKeyPair();
@@ -53,11 +55,15 @@ void main() {
       xPrivBytes: pair.privateKey.serialize(),
     );
     useEngineForTest(e);
-    final live = ArrivalRows(HaloContainer.everyday);
     useDatabasesForTest(live, Session(live));
     appState
       ..myId = 'my-own-words'
       ..myOnion = 'mine.onion';
+  });
+
+  setUp(() {
+    pairNow = () => TestWidgetsFlutterBinding.instance.clock.now();
+    appState.pairCodes.clear();
   });
 
   Future<void> share(WidgetTester t) async {
@@ -147,9 +153,7 @@ void main() {
     await t.pump(const Duration(seconds: 1));
   });
 
-  testWidgets('a code whose ten minutes are over goes, and says so', (
-    t,
-  ) async {
+  testWidgets('a code whose ten minutes are over goes, and says so', (t) async {
     phone(t);
     e.answer = 'ok';
     await share(t);
@@ -181,5 +185,129 @@ void main() {
       findsNothing,
     );
     expect(t.hasRunningAnimations, isFalse);
+  });
+
+  // the live code as the panel draws it
+  String drawn(String code) => '${code.substring(0, 3)} ${code.substring(3)}';
+
+  Future<void> settle(WidgetTester t) async {
+    for (var i = 0; i < 10; i++) {
+      await t.runAsync(() => Future<void>.delayed(Duration.zero));
+      await t.pump();
+    }
+  }
+
+  testWidgets('right to left, the code still reads in the order it is said', (
+    t,
+  ) async {
+    phone(t);
+    e.answer = 'ok';
+    setL10nLocale(const Locale('ar'));
+    addTearDown(() => setL10nLocale(const Locale('en')));
+    await t.pumpWidget(
+      app(const Scaffold(body: PairCodePanel()), locale: const Locale('ar')),
+    );
+    await t.pumpAndSettle();
+    await t.tap(find.text(l10n.pairCodePanelOrMakeASix));
+    await settle(t);
+    final code = find.text(drawn(e.shared.last));
+    expect(code, findsOneWidget);
+    expect(Directionality.of(t.element(code)), TextDirection.rtl);
+    expect(t.widget<Text>(code).textDirection, TextDirection.ltr);
+    // the first three digits are drawn left of the last three
+    final p = t.renderObject<RenderParagraph>(code);
+    final first = p.getOffsetForCaret(const TextPosition(offset: 0), Rect.zero);
+    final last = p.getOffsetForCaret(const TextPosition(offset: 4), Rect.zero);
+    expect(first.dx, lessThan(last.dx));
+    await t.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('a live code is still there when its card is opened again', (
+    t,
+  ) async {
+    phone(t);
+    e.answer = 'ok';
+    await share(t);
+    final code = e.shared.last;
+    expect(find.text(drawn(code)), findsOneWidget);
+    // the card or tab is left, and the invite stays at the code
+    await t.pumpWidget(const SizedBox());
+    await t.pump(const Duration(seconds: 30));
+    await t.pumpWidget(app(const Scaffold(body: PairCodePanel())));
+    await t.pump();
+    expect(find.text(drawn(code)), findsOneWidget);
+    expect(find.text(l10n.pairCodePanelBurnsIn('9', '30')), findsOneWidget);
+    expect(find.text(l10n.pairCodePanelOrMakeASix), findsNothing);
+    // and it still counts down
+    await t.pump(const Duration(seconds: 1));
+    expect(find.text(l10n.pairCodePanelBurnsIn('9', '29')), findsOneWidget);
+    await t.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('a code left before the engine answered comes up live', (
+    t,
+  ) async {
+    phone(t);
+    e.answer = 'ok';
+    final hold = Completer<void>();
+    e.hold = hold;
+    addTearDown(() => e.hold = null);
+    await share(t);
+    final code = e.shared.last;
+    await t.pumpWidget(const SizedBox());
+    hold.complete();
+    await settle(t);
+    await t.pumpWidget(app(const Scaffold(body: PairCodePanel())));
+    await t.pump();
+    expect(find.text(drawn(code)), findsOneWidget);
+    await t.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('a code that burned while away says so once', (t) async {
+    phone(t);
+    e.answer = 'ok';
+    await share(t);
+    await t.pumpWidget(const SizedBox());
+    await t.pump(kPairCodeLife);
+    await t.pumpWidget(app(const Scaffold(body: PairCodePanel())));
+    await t.pump();
+    expect(find.text(l10n.pairCodePanelBurned), findsOneWidget);
+    expect(find.text(l10n.pairCodePanelOrMakeASix), findsOneWidget);
+    await t.pumpWidget(const SizedBox());
+    await t.pumpWidget(app(const Scaffold(body: PairCodePanel())));
+    await t.pump();
+    expect(find.text(l10n.pairCodePanelBurned), findsNothing);
+    await t.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('a container never shows another container\'s code', (t) async {
+    phone(t);
+    e.answer = 'ok';
+    await share(t);
+    final code = e.shared.last;
+    await t.pumpWidget(const SizedBox());
+    addTearDown(() => useDatabasesForTest(live, Session(live)));
+    for (final c in [HaloContainer.decoy, HaloContainer.decoyVault]) {
+      final other = ArrivalRows(c);
+      useDatabasesForTest(live, Session(other));
+      await t.pumpWidget(app(const Scaffold(body: PairCodePanel())));
+      await t.pump();
+      expect(find.text(drawn(code)), findsNothing, reason: c.id);
+      expect(find.text(l10n.pairCodePanelOrMakeASix), findsOneWidget);
+      await t.pumpWidget(const SizedBox());
+    }
+    // the everyday side's hidden chats are their own container too
+    final vault = ArrivalRows(HaloContainer.vault);
+    useDatabasesForTest(live, await Session.withVault(live, vault));
+    await t.pumpWidget(app(const Scaffold(body: PairCodePanel())));
+    await t.pump();
+    expect(find.text(drawn(code)), findsNothing);
+    await t.pumpWidget(const SizedBox());
+    // back on the everyday side, it is there again
+    useDatabasesForTest(live, Session(live));
+    await t.pumpWidget(app(const Scaffold(body: PairCodePanel())));
+    await t.pump();
+    expect(find.text(drawn(code)), findsOneWidget);
+    await t.pumpWidget(const SizedBox());
   });
 }

@@ -81,6 +81,40 @@ void main() {
     await t.pump(const Duration(seconds: 1));
   });
 
+  testWidgets('someone blocked is not offered', (t) async {
+    listen(t);
+    appState.contacts = [
+      ContactPreview(
+        haloId: 'wren-velvet-march',
+        nickname: 'Ada',
+        avatarSeed: 'w',
+      ),
+      ContactPreview(
+        haloId: 'moss-tide-lamp',
+        nickname: 'Bo',
+        avatarSeed: 'm',
+        blocked: true,
+      ),
+    ];
+    await t.pumpWidget(framed());
+    await t.pump(const Duration(seconds: 1));
+    expect(find.text('Ada'), findsOneWidget);
+    expect(find.text('Bo'), findsNothing);
+    expect(find.text('moss-tide-lamp'), findsNothing);
+    await t.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('only blocked people: the ring and one line', (t) async {
+    listen(t);
+    appState.contacts = [
+      ContactPreview(haloId: 'moss-tide-lamp', avatarSeed: 'm', blocked: true),
+    ];
+    await t.pumpWidget(framed());
+    await t.pump(const Duration(seconds: 1));
+    expect(find.byType(BreathingRing), findsOneWidget);
+    await t.pumpWidget(const SizedBox());
+  });
+
   testWidgets('nobody to pick: the ring and one line', (t) async {
     listen(t);
     appState.contacts = [];

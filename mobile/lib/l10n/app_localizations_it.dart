@@ -266,11 +266,6 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String appPeerImportedV1(Object parsed) {
-    return 'Peer importato (v1): $parsed';
-  }
-
-  @override
   String appLongWindow(Object line) {
     return '$line finestra lunga';
   }
@@ -758,6 +753,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get notificationsNewMessage2 => 'Nuovo messaggio';
 
   @override
+  String get notificationsSomeone => 'Qualcuno';
+
+  @override
   String get notificationsEncrypted => 'Cifrato';
 
   @override
@@ -1075,7 +1073,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get bridgesMoatFailed =>
-      'Il progetto tor non risponde. Riprova tra un minuto, o incolla una riga bridge qui sotto.';
+      'Il Progetto Tor non risponde. Riprova tra un minuto, o incolla una riga bridge qui sotto.';
 
   @override
   String get bridgesGotBridgesSaveTo => 'Bridge ricevuti · salva per usarli';
@@ -1095,14 +1093,14 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get bridgesBridgesDisguiseYourConnection =>
-      'I bridge camuffano la tua connessione così può uscire. Scegli una via d\'accesso, salva, e tor si riconnette attraverso quella.';
+      'I bridge camuffano la tua connessione così può uscire. Scegli una via d\'accesso, salva, e Tor si riconnette attraverso quella.';
 
   @override
   String get bridgesBridgesOnlyChangeHow =>
-      'I bridge cambiano solo il modo in cui tor si connette, e ora non sei in modalità onion. Quello che imposti qui viene salvato, solo che non ha effetto finché non torni alla modalità onion.';
+      'I bridge cambiano solo il modo in cui Tor si connette, e ora non sei in modalità onion. Quello che imposti qui viene salvato, solo che non ha effetto finché non torni alla modalità onion.';
 
   @override
-  String get bridgesFromTheTorProject => 'Dal progetto tor';
+  String get bridgesFromTheTorProject => 'Dal Progetto Tor';
 
   @override
   String get bridgesNoise => 'Rumore';
@@ -1112,7 +1110,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get bridgesMakesTorTrafficLook =>
-      'Fa sembrare il traffico tor nulla di particolare. La scelta migliore per la maggior parte delle reti bloccate. Rispondi a un captcha, poi ti dà qualche riga.';
+      'Fa sembrare il traffico Tor nulla di particolare. La scelta migliore per la maggior parte delle reti bloccate. Rispondi a un captcha, poi ti dà qualche riga.';
 
   @override
   String get bridgesPrivateBridge => 'Bridge privato';
@@ -1155,7 +1153,7 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String get bridgesRestartingTor => 'Riavvio di tor…';
+  String get bridgesRestartingTor => 'Riavvio di Tor…';
 
   @override
   String bridgesFindingABridgeS(Object elapsed) {
@@ -1178,7 +1176,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get bridgesATorEntryPoint =>
-      'Un punto d\'ingresso a tor che nessuno ha pubblicato, raggiunto attraverso un involucro perché la connessione non sembri tor. Il resto del percorso sono i soliti tre salti.';
+      'Un punto d\'ingresso a Tor che nessuno ha pubblicato, raggiunto attraverso un involucro perché la connessione non sembri Tor. Il resto del percorso sono i soliti tre salti.';
 
   @override
   String get bridgesLooksLike => 'Sembra';
@@ -1191,15 +1189,15 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get bridgesAskTheTorProject =>
-      'Chiedili direttamente al progetto tor. Risolvi un rompicapo, così i bot non possono esaurire la scorta.';
+      'Chiedili direttamente al Progetto Tor. Risolvi un rompicapo, così i bot non possono esaurire la scorta.';
 
   @override
   String get bridgesTypeWhatYouSee =>
       'Scrivi quello che vedi. Vanno bene le minuscole.';
 
   @override
-  String get bridgesThisOneRequestDoes =>
-      'Questa sola richiesta non passa per tor - non può, visto che è proprio tor a non funzionare. Chi gestisce la tua rete vedrà che contatti il progetto tor. Se già questo è un problema dove ti trovi, procurati i bridge altrove e incollali qui sotto.';
+  String get bridgesWhenYouAskFor =>
+      'Quando chiedi dei bridge, il Progetto Tor vede il tuo indirizzo IP. È normale: è così che Tor Browser e ogni app Tor ottengono i bridge, e tutto ciò che ne ricavano è che qualcuno ha chiesto dei bridge. Niente sulle tue chat.';
 
   @override
   String get bridgesCouldNotDrawThe => 'Impossibile disegnare il rompicapo';
@@ -1861,12 +1859,6 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get chatHoldToRecord =>
       'Tieni premuto per registrare un messaggio vocale';
-
-  @override
-  String get chatSendPhoto => 'Invia foto';
-
-  @override
-  String get chatAddACaption => 'Aggiungi didascalia…';
 
   @override
   String get chatSecurityCodeChanged => 'Codice di sicurezza cambiato';
@@ -3255,9 +3247,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get homeSupporter => 'Sostenitore';
 
   @override
-  String get homeArchivedChats => 'Chat archiviate';
-
-  @override
   String get homeUnmute => 'Riattiva';
 
   @override
@@ -4402,9 +4391,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get pinsChangeWipePin => 'Cambia PIN di cancellazione';
 
   @override
-  String get pinsSetAWipePin => 'Imposta PIN di cancellazione';
-
-  @override
   String get pinsRemove => 'Rimuovi';
 
   @override
@@ -5257,12 +5243,6 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get settingsWholeAppHiddenFromRecentsAnd =>
       'Tutta l\'app nascosta dalle app recenti e dagli screenshot';
-
-  @override
-  String get settingsOnNextStart => 'Attivo · dal riavvio';
-
-  @override
-  String get settingsOffNextStart => 'Disattivato · dal riavvio';
 
   @override
   String get settingsLightTheme => 'Tema chiaro';
@@ -6656,6 +6636,15 @@ class AppLocalizationsIt extends AppLocalizations {
   String get torBootSplashTakingLonger => 'Ci sta mettendo più del solito';
 
   @override
+  String get torBootSplashHopEntry => 'Ingresso';
+
+  @override
+  String get torBootSplashHopMiddle => 'Centro';
+
+  @override
+  String get torBootSplashHopExit => 'Uscita';
+
+  @override
   String get videoBubbleNothingHereOpensThat =>
       'Qui niente può aprirlo · lo condivido';
 
@@ -7114,9 +7103,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get pollPickSeveral => 'Scegline una o più';
 
   @override
-  String get searchOpen => 'Cerca';
-
-  @override
   String get searchHint => 'Cerca in chat e messaggi';
 
   @override
@@ -7302,9 +7288,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get pinsDecoyLine => 'Apre un Kryfo vuoto, come appena installato.';
-
-  @override
-  String get pinsSetADecoyPin => 'Imposta un PIN esca';
 
   @override
   String get pinsChangeDecoyPin => 'Cambia PIN esca';

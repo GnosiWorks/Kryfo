@@ -265,11 +265,6 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String appPeerImportedV1(Object parsed) {
-    return 'Eş içe aktarıldı (v1): $parsed';
-  }
-
-  @override
   String appLongWindow(Object line) {
     return '$line uzun aralık';
   }
@@ -756,6 +751,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get notificationsNewMessage2 => 'Yeni mesaj';
 
   @override
+  String get notificationsSomeone => 'Birisi';
+
+  @override
   String get notificationsEncrypted => 'Şifreli';
 
   @override
@@ -1074,7 +1072,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bridgesMoatFailed =>
-      'tor projesine ulaşılamadı. Bir dakika sonra tekrar dene ya da aşağıya bir köprü satırı yapıştır.';
+      'Tor Projesine ulaşılamadı. Bir dakika sonra tekrar dene ya da aşağıya bir köprü satırı yapıştır.';
 
   @override
   String get bridgesGotBridgesSaveTo =>
@@ -1091,18 +1089,18 @@ class AppLocalizationsTr extends AppLocalizations {
   String get bridgesBridges => 'Köprüler';
 
   @override
-  String get bridgesTorIsBlockedWhere => 'Bulunduğun yerde tor engelli mi?';
+  String get bridgesTorIsBlockedWhere => 'Bulunduğun yerde Tor engelli mi?';
 
   @override
   String get bridgesBridgesDisguiseYourConnection =>
-      'Köprüler bağlantını kamufle eder, böylece dışarı çıkabilir. Bir giriş yolu seç, kaydet; tor onun üzerinden yeniden bağlanır.';
+      'Köprüler bağlantını kamufle eder, böylece dışarı çıkabilir. Bir giriş yolu seç, kaydet; Tor onun üzerinden yeniden bağlanır.';
 
   @override
   String get bridgesBridgesOnlyChangeHow =>
-      'Köprüler yalnızca tor’un nasıl bağlandığını değiştirir ve şu an Onion modunda değilsin. Burada ayarladığın kaydedilir, sadece geri geçene kadar bir işe yaramaz.';
+      'Köprüler yalnızca Tor’un nasıl bağlandığını değiştirir ve şu an Onion modunda değilsin. Burada ayarladığın kaydedilir, sadece geri geçene kadar bir işe yaramaz.';
 
   @override
-  String get bridgesFromTheTorProject => 'Tor projesinden';
+  String get bridgesFromTheTorProject => 'Tor Projesinden';
 
   @override
   String get bridgesNoise => 'Gürültü';
@@ -1178,7 +1176,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bridgesATorEntryPoint =>
-      'Kimsenin yayımlamadığı bir tor giriş noktası; bağlantı tor’a benzemesin diye bir sarmalayıcı üzerinden ulaşılır. Rotanın geri kalanı her zamanki üç atlamadır.';
+      'Kimsenin yayımlamadığı bir Tor giriş noktası; bağlantı Tor’a benzemesin diye bir sarmalayıcı üzerinden ulaşılır. Rotanın geri kalanı her zamanki üç atlamadır.';
 
   @override
   String get bridgesLooksLike => 'Görünüşü';
@@ -1191,14 +1189,14 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bridgesAskTheTorProject =>
-      'Doğrudan tor projesinden iste. Botlar stoku tüketemesin diye bir bulmaca çözersin.';
+      'Doğrudan Tor Projesinden iste. Botlar stoku tüketemesin diye bir bulmaca çözersin.';
 
   @override
   String get bridgesTypeWhatYouSee => 'Gördüğünü yaz. Küçük harf de olur.';
 
   @override
-  String get bridgesThisOneRequestDoes =>
-      'Bu tek istek tor üzerinden gitmez - gidemez, çünkü çalışmayan zaten tor. Ağını kim işletiyorsa tor projesiyle bağlantı kurduğunu görecek. Bulunduğun yerde tek başına bu bile sorunsa, köprüleri başka bir yerden al ve aşağıya yapıştır.';
+  String get bridgesWhenYouAskFor =>
+      'Köprü istediğinde Tor Projesi IP adresini görür. Bu normal: Tor Browser ve tüm Tor uygulamaları köprüleri böyle alır ve bu onlara yalnızca birinin köprü istediğini söyler. Sohbetlerin hakkında hiçbir şey söylemez.';
 
   @override
   String get bridgesCouldNotDrawThe => 'Bulmaca çizilemedi';
@@ -1853,12 +1851,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get chatHoldToRecord => 'Sesli mesaj kaydetmek için basılı tut';
-
-  @override
-  String get chatSendPhoto => 'Fotoğraf gönder';
-
-  @override
-  String get chatAddACaption => 'Açıklama ekle…';
 
   @override
   String get chatSecurityCodeChanged => 'Güvenlik kodu değişti';
@@ -3230,9 +3222,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get homeSupporter => 'Destekçi';
 
   @override
-  String get homeArchivedChats => 'Arşivlenen sohbetler';
-
-  @override
   String get homeUnmute => 'Sesi aç';
 
   @override
@@ -4375,9 +4364,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get pinsChangeWipePin => 'Silme PIN’ini değiştir';
 
   @override
-  String get pinsSetAWipePin => 'Silme PIN’i belirle';
-
-  @override
   String get pinsRemove => 'Kaldır';
 
   @override
@@ -5225,12 +5211,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get settingsWholeAppHiddenFromRecentsAnd =>
       'Tüm uygulama son uygulamalardan ve ekran görüntülerinden gizlenir';
-
-  @override
-  String get settingsOnNextStart => 'Açık · sonraki açılışta';
-
-  @override
-  String get settingsOffNextStart => 'Kapalı · sonraki açılışta';
 
   @override
   String get settingsLightTheme => 'Açık tema';
@@ -6611,6 +6591,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get torBootSplashTakingLonger => 'Bu, her zamankinden uzun sürüyor';
 
   @override
+  String get torBootSplashHopEntry => 'Giriş';
+
+  @override
+  String get torBootSplashHopMiddle => 'Orta';
+
+  @override
+  String get torBootSplashHopExit => 'Çıkış';
+
+  @override
   String get videoBubbleNothingHereOpensThat =>
       'Burada bunu açan bir şey yok · onun yerine paylaşılıyor';
 
@@ -7069,9 +7058,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get pollPickSeveral => 'Bir veya daha fazlasını seç';
 
   @override
-  String get searchOpen => 'Ara';
-
-  @override
   String get searchHint => 'Sohbetlerde ve mesajlarda ara';
 
   @override
@@ -7258,9 +7244,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get pinsDecoyLine => 'Yeni kurulmuş gibi boş bir Kryfo açar.';
-
-  @override
-  String get pinsSetADecoyPin => 'Yem PIN’i belirle';
 
   @override
   String get pinsChangeDecoyPin => 'Yem PIN’ini değiştir';

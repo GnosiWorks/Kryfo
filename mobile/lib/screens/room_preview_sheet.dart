@@ -21,17 +21,19 @@ import '../widgets/room_countdown.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/swap.dart';
 
-/// true only when they tapped join. a room that has closed has no join.
+/// true only when they tapped join. a room that has closed has no join,
+/// nor one [ended] before its time.
 /// with [shutOnLock] the sheet goes as that lock comes up, and that is a no
 Future<bool> showRoomPreviewSheet(
   BuildContext context,
   RoomLink link, {
   LockGuard? shutOnLock,
+  bool ended = false,
 }) async {
   final r = await showHaloSheet<bool>(
     context,
     builder: (ctx) {
-      final body = _RoomPreview(link: link);
+      final body = _RoomPreview(link: link, ended: ended);
       return shutOnLock == null
           ? body
           : ShutOnLock(guard: shutOnLock, child: body);
@@ -42,7 +44,8 @@ Future<bool> showRoomPreviewSheet(
 
 class _RoomPreview extends StatefulWidget {
   final RoomLink link;
-  const _RoomPreview({required this.link});
+  final bool ended;
+  const _RoomPreview({required this.link, this.ended = false});
   @override
   State<_RoomPreview> createState() => _RoomPreviewState();
 }
@@ -50,7 +53,7 @@ class _RoomPreview extends StatefulWidget {
 class _RoomPreviewState extends State<_RoomPreview> {
   // the room closing while the sheet is up takes the join away
   Timer? _end;
-  late bool _closed = _left <= Duration.zero;
+  late bool _closed = widget.ended || _left <= Duration.zero;
 
   Duration get _left => Duration(
     milliseconds: widget.link.expiresAt - DateTime.now().millisecondsSinceEpoch,

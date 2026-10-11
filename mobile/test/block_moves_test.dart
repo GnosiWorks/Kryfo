@@ -42,13 +42,22 @@ Future<void> _tables(SqliteMem db, String s) async {
     'CREATE TABLE $s.poll_votes (poll_uid TEXT, voter TEXT)',
     'CREATE TABLE $s.pins_out (msg_uid TEXT PRIMARY KEY)',
     'CREATE TABLE $s.edits_out (msg_uid TEXT PRIMARY KEY)',
+    'CREATE TABLE $s.frame_order (msg_uid TEXT, sender TEXT, kind TEXT, '
+        'w INTEGER)',
     'CREATE TABLE $s.group_media_owed (group_id TEXT, member TEXT)',
     'CREATE TABLE $s.group_ctl_out (id INTEGER PRIMARY KEY, group_id TEXT)',
     'CREATE TABLE $s.group_roster (group_id TEXT PRIMARY KEY)',
     'CREATE TABLE $s.held_onion (id INTEGER PRIMARY KEY, peer_id TEXT)',
     'CREATE TABLE $s.media_wants (media_id TEXT, peer_id TEXT)',
+    'CREATE TABLE $s.media_chunks (media_id TEXT, idx INTEGER, '
+        'sender TEXT, group_id TEXT)',
+    'CREATE TABLE $s.room_keys (group_id TEXT, member TEXT)',
     'CREATE TABLE $s.vouches (halo_id TEXT, voucher_id TEXT)',
     'CREATE TABLE $s.shield (halo_id TEXT PRIMARY KEY)',
+    'CREATE TABLE $s.notif_tags (chat TEXT PRIMARY KEY, tag TEXT NOT NULL '
+        'UNIQUE)',
+    'CREATE TABLE $s.group_resent (group_id TEXT, member TEXT, since '
+        'INTEGER, at INTEGER, PRIMARY KEY (group_id, member, since))',
   ]) {
     await db.execute(t);
   }
@@ -140,6 +149,25 @@ void main() {
     expect(await _rows(db, 'v', _f), ['span 20-30', 'drop f-drop']);
   }, skip: skip);
 
+  test('the files still coming in a group go with it, its members\' own '
+      'stay', () async {
+    final db = await _world();
+    await db.execute(
+      'INSERT INTO main.media_chunks (media_id, idx, sender, group_id) '
+      "VALUES ('in-group', 0, '$_m', '$_g'), ('her-own', 0, '$_f', NULL)",
+    );
+    final mover = SqlChatMover(_NoDb(), _NoDb());
+    await mover.moveRowsOn(db, group, intoVault: true);
+    Future<List<Object?>> ids(String s) async => [
+      for (final r in await db.rawQuery(
+        'SELECT media_id FROM $s.media_chunks ORDER BY media_id',
+      ))
+        r['media_id'],
+    ];
+    expect(await ids('v'), ['in-group']);
+    expect(await ids('main'), ['her-own']);
+  }, skip: skip);
+
   test('and back out again, the same the other way', () async {
     final db = await _world();
     final mover = SqlChatMover(_NoDb(), _NoDb());
@@ -155,4 +183,53 @@ void main() {
     // her own rows are not doubled by the way back
     expect(await _rows(db, 'main', _f), ['span 20-30', 'drop f-drop']);
   }, skip: skip);
+
+  Future<List<String>> tags(SqliteMem db, String s) async => [
+    for (final r in await db.rawQuery(
+      'SELECT chat, tag FROM $s.notif_tags ORDER BY chat',
+    ))
+      '${r['chat']} ${r['tag']}',
+  ];
+
+  test('a moved chat\'s notification tag goes with nothing copied', () async {
+    final db = await _world();
+    await db.execute(
+      "INSERT INTO main.notif_tags VALUES ('group:$_g', 'aa'), "
+      "('$_f', 'bb'), ('$_m', 'dd')",
+    );
+    final mover = SqlChatMover(_NoDb(), _NoDb());
+    await mover.moveRowsOn(db, group, intoVault: true);
+    // the member the group took out of here takes their request's tag too
+    expect(await tags(db, 'main'), ['$_f bb']);
+    expect(await tags(db, 'v'), isEmpty);
+    await db.execute("INSERT INTO v.notif_tags VALUES ('group:$_g', 'cc')");
+    await mover.moveRowsOn(db, group, intoVault: false);
+    expect(await tags(db, 'v'), isEmpty);
+    expect(await tags(db, 'main'), ['$_f bb']);
+  }, skip: skip);
+
+  test(
+    'a group\'s marks of what went again after a restore move with it',
+    () async {
+      final db = await _world();
+      await db.execute(
+        "INSERT INTO main.group_resent VALUES ('$_g', '$_f', 0, 5), "
+        "('other-group1', '$_f', 0, 5)",
+      );
+      final mover = SqlChatMover(_NoDb(), _NoDb());
+      await mover.moveRowsOn(db, group, intoVault: true);
+      Future<List<Object?>> marks(String s) async => [
+        for (final r in await db.rawQuery(
+          'SELECT group_id FROM $s.group_resent ORDER BY group_id',
+        ))
+          r['group_id'],
+      ];
+      expect(await marks('main'), ['other-group1']);
+      expect(await marks('v'), [_g]);
+      await mover.moveRowsOn(db, group, intoVault: false);
+      expect(await marks('main'), [_g, 'other-group1']);
+      expect(await marks('v'), isEmpty);
+    },
+    skip: skip,
+  );
 }

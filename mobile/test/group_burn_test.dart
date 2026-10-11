@@ -12,7 +12,7 @@ void main() {
   final app = sourceOf('lib/main.dart');
 
   test('every row the group chat saves for a send keeps the timer', () {
-    final saves = callsOf(screen, 'session.saveMessage(');
+    final saves = callsOf(screen, 'session.saveInGroup(');
     // a photo, a voice note, a file
     expect(saves.length, 3);
     for (final s in saves) {
@@ -22,7 +22,7 @@ void main() {
 
   test('so does the one sendToGroup saves for a text, sticker or poll', () {
     final body = bodyOf(app, 'Future<bool> sendToGroup(');
-    final saves = callsOf(body, 'session.saveMessage(');
+    final saves = callsOf(body, 'session.saveInGroup(');
     expect(saves.length, 1);
     expect(saves.single, contains('burnSecs:'));
   });

@@ -324,6 +324,7 @@ class _Io extends AppIo {
     required String title,
     required String body,
     String? payload,
+    Object? on,
     String? msgUid,
     int? burnAt,
   }) async => rang.add((title, payload));
@@ -344,6 +345,10 @@ class _Engine implements HaloEngine {
     calls.add('quietIdentity');
     return makes();
   }
+
+  @override
+  void roomUnlistenBg(String priv, String peerPub) =>
+      calls.add('roomUnlistenBg');
 
   @override
   void roomUnsubscribeBg(String pub) {

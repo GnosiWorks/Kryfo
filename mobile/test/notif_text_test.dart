@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // what a notification says, with its content shown: a contact goes by the
-// name given to them here, in a chat and in a group, and a voice note or a
+// name given to them here, in a chat and in a group, someone unnamed as
+// someone and never by their id, and a voice note or a
 // camera clip says what it is, never the name of its file. the databases,
 // signal and the engine are stand-ins
 import 'dart:convert';
@@ -96,11 +97,13 @@ void main() {
         sender: asSender(_plain),
       ),
     );
-    expect(w.io.shown, [(_plain, l10n.chatVideo)]);
+    expect(w.io.shown, [(l10n.notificationsSomeone, l10n.chatVideo)]);
+    // android keeps titles in its history: never their id
+    expect(w.io.shown.single.$1, isNot(contains(_plain)));
   });
 
   test('in a group the line opens with the name given here, and an unnamed '
-      'member with their words', () async {
+      'member as someone, never their id', () async {
     final w = await _World.make();
     await w.from(_mum, await _voice(_mum, 'voice0002', groupId: _g));
     await w.from(
@@ -114,7 +117,7 @@ void main() {
     );
     expect(w.io.shown, [
       (_g, 'Mum: ${l10n.appVoiceMessage}'),
-      (_g, '$_plain: see you there'),
+      (_g, '${l10n.notificationsSomeone}: see you there'),
     ]);
   });
   test('a text from a named contact rings under their name', () async {

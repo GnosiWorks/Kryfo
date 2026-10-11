@@ -124,6 +124,14 @@ class _Db implements HaloDb {
   }) async => [];
   @override
   Future<int> nextRoomSeq(String groupId) async => knocks.length;
+  // the keys a room listens to, noted before it does
+  final listened = <String>{};
+  @override
+  Future<bool> noteRoomKeys(String groupId, Iterable<String> keys) async {
+    listened.addAll(keys);
+    return true;
+  }
+
   @override
   Future<String?> getGroupAtmosphere(String groupId) async => null;
   @override
@@ -1330,6 +1338,76 @@ void main() {
       await t.pump(const Duration(seconds: 1));
       expect(find.byType(ContactScreen), findsOneWidget);
       await _close(t);
+    });
+
+    testWidgets('a roster change from elsewhere shows while it is open', (
+      t,
+    ) async {
+      final db = _use(t, _Db());
+      appState.contacts = [
+        _contact(_anna, nick: 'Anna'),
+        _contact(_bo, nick: 'Bo'),
+      ];
+      await t.pumpWidget(app(const GroupInfoScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      expect(find.text('Bo'), findsNothing);
+      db.members = const ['me', _anna, _bo];
+      // another app change reads nothing again
+      appState.chatChanged(_anna);
+      await t.pump(const Duration(seconds: 1));
+      expect(find.text('Bo'), findsNothing);
+      appState.chatChanged('group:$_group');
+      await t.pump(const Duration(seconds: 1));
+      await t.scrollUntilVisible(
+        find.text('Bo'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.text('Bo'), findsOneWidget);
+      await _close(t);
+    });
+
+    Future<void> hidePage(WidgetTester t, {required bool room}) async {
+      final db = _use(t, _Db(room: room))..gate = Completer<void>();
+      lockState.inVault = true;
+      addTearDown(() => lockState.inVault = false);
+      appState.groups = [
+        GroupPreview(
+          groupId: _group,
+          name: 'Friends',
+          memberCount: 2,
+          isAdmin: true,
+          createdAt: DateTime(2026),
+          expiresAt: room
+              ? DateTime.now()
+                    .add(const Duration(hours: 24))
+                    .millisecondsSinceEpoch
+              : null,
+        ),
+      ];
+      await t.pumpWidget(app(const GroupInfoScreen(groupId: _group)));
+      await t.pump();
+      await t.scrollUntilVisible(
+        find.text(l10n.groupInfoMembers2),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await t.pump(const Duration(milliseconds: 300));
+      expect(find.text(l10n.groupHide), room ? findsNothing : findsOneWidget);
+      db.gate!.complete();
+      await t.pump(const Duration(seconds: 1));
+      expect(find.text(l10n.groupHide), room ? findsNothing : findsOneWidget);
+      await _close(t);
+    }
+
+    testWidgets('a group hides while hidden chats are open', (t) async {
+      await hidePage(t, room: false);
+    });
+
+    testWidgets('a room never offers to hide, not even before its read', (
+      t,
+    ) async {
+      await hidePage(t, room: true);
     });
 
     testWidgets('adding: names, no one blocked, and the count on the button', (

@@ -242,6 +242,7 @@ class _Io implements AppIo {
     required String title,
     required String body,
     String? payload,
+    Object? on,
     String? msgUid,
     int? burnAt,
   }) async => rang.add(payload ?? title);
@@ -564,10 +565,12 @@ class _Db implements HaloDb {
   @override
   Future<List<Map<String, Object?>>> unsentEdits({
     Set<String> skip = const {},
+    int? now,
   }) async => _hit('unsentEdits', null, const []);
   @override
   Future<List<Map<String, Object?>>> unsentPins({
     Set<String> skip = const {},
+    int? now,
   }) async => _hit('unsentPins', null, const []);
   @override
   Future<List<Map<String, Object?>>> mediaWants() async =>

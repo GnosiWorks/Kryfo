@@ -156,15 +156,21 @@ void main() {
         'ALTER TABLE groups ADD COLUMN voice_disguise INTEGER',
       ]);
       final src = File('lib/main.dart').readAsStringSync();
-      expect(src, contains('version: 71,'));
+      final version = RegExp(r'version: (\d+),').firstMatch(src)!.group(1)!;
+      expect(int.parse(version), greaterThanOrEqualTo(76));
       expect(
         src,
         contains(
-          'if (oldV < 71) {\n'
+          'if (oldV < 76) {\n'
           '          // a chat\'s own choice to disguise the voice\n'
           '          await voiceDisguiseColumns(db);',
         ),
       );
+      // after every older step
+      final at = src.indexOf('if (oldV < 76) {');
+      for (final m in RegExp(r'if \(oldV < (\d+)\) \{').allMatches(src)) {
+        if (int.parse(m.group(1)!) < 76) expect(m.start, lessThan(at));
+      }
     });
   });
 
