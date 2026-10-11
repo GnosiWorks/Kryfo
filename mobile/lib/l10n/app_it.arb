@@ -182,6 +182,7 @@
   "notificationsNewMessage": "Nuovo messaggio",
   "notificationsNewEncryptedMessagesFromYourContacts": "Nuovi messaggi cifrati dai tuoi contatti",
   "notificationsNewMessage2": "Nuovo messaggio",
+  "notificationsSomeone": "Qualcuno",
   "notificationsEncrypted": "Cifrato",
   "rooms24h": "24 h",
   "roomsD": "{inDays} g",

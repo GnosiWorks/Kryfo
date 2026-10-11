@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // each chat's notifications go under a random tag kept in the chat's own
-// container, made on create and on the upgrade to 72. one tag per chat,
+// container, made on create and on the upgrade to 73. one tag per chat,
 // stable, and read back to the chat on a tap. a group that goes takes its
 // tag, after its notifications are taken down by it
 import 'dart:io';
@@ -27,19 +27,19 @@ void main() {
     upgrade,
   );
 
-  test('made on create, and on the upgrade to 72 after every older step', () {
+  test('made on create, and on the upgrade to 73 after every older step', () {
     final version = RegExp(r'version: (\d+),').firstMatch(src)!.group(1)!;
-    expect(int.parse(version), greaterThanOrEqualTo(72));
+    expect(int.parse(version), greaterThanOrEqualTo(73));
     expect(create, contains('await notifTagTables(db);'));
     expect(
       RegExp(
-        r'if \(oldV < 72\) \{[^}]*await notifTagTables\(db\);',
+        r'if \(oldV < 73\) \{[^}]*await notifTagTables\(db\);',
       ).hasMatch(steps),
       isTrue,
     );
-    final at72 = steps.indexOf('if (oldV < 72) {');
+    final at73 = steps.indexOf('if (oldV < 73) {');
     for (final m in RegExp(r'if \(oldV < (\d+)\) \{').allMatches(steps)) {
-      if (int.parse(m.group(1)!) < 72) expect(m.start, lessThan(at72));
+      if (int.parse(m.group(1)!) < 73) expect(m.start, lessThan(at73));
     }
   });
 

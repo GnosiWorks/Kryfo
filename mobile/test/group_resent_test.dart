@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // which groups' texts went again to a member after their restore, made on
-// create and on the upgrade to 73, the last step. a phone from before gets
+// create and on the upgrade to 74, the last step. a phone from before gets
 // the table and keeps its rows; a group that goes takes its marks
 import 'dart:io';
 
@@ -19,19 +19,19 @@ void main() {
     upgrade,
   );
 
-  test('made on create, and on the upgrade to 73 after every older step', () {
+  test('made on create, and on the upgrade to 74 after every older step', () {
     final version = RegExp(r'version: (\d+),').firstMatch(src)!.group(1)!;
-    expect(int.parse(version), 73);
+    expect(int.parse(version), 74);
     expect(create, contains('await groupResentTables(db);'));
     expect(
       RegExp(
-        r'if \(oldV < 73\) \{[^}]*await groupResentTables\(db\);',
+        r'if \(oldV < 74\) \{[^}]*await groupResentTables\(db\);',
       ).hasMatch(steps),
       isTrue,
     );
-    final at73 = steps.indexOf('if (oldV < 73) {');
+    final at74 = steps.indexOf('if (oldV < 74) {');
     for (final m in RegExp(r'if \(oldV < (\d+)\) \{').allMatches(steps)) {
-      if (int.parse(m.group(1)!) < 73) expect(m.start, lessThan(at73));
+      if (int.parse(m.group(1)!) < 74) expect(m.start, lessThan(at74));
     }
   });
 

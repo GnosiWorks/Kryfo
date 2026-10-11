@@ -322,6 +322,6 @@ void main() {
       ).hasMatch(steps),
       isTrue,
     );
-    expect(src, contains('version: 73,'));
+    expect(src, contains('version: 74,'));
   }, skip: sql == null ? 'no sqlite library here' : null);
 }

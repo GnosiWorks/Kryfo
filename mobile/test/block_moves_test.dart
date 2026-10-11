@@ -193,10 +193,11 @@ void main() {
     final db = await _world();
     await db.execute(
       "INSERT INTO main.notif_tags VALUES ('group:$_g', 'aa'), "
-      "('$_f', 'bb')",
+      "('$_f', 'bb'), ('$_m', 'dd')",
     );
     final mover = SqlChatMover(_NoDb(), _NoDb());
     await mover.moveRowsOn(db, group, intoVault: true);
+    // the member the group took out of here takes their request's tag too
     expect(await tags(db, 'main'), ['$_f bb']);
     expect(await tags(db, 'v'), isEmpty);
     await db.execute("INSERT INTO v.notif_tags VALUES ('group:$_g', 'cc')");

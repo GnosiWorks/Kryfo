@@ -768,6 +768,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get notificationsNewMessage2 => 'Новое сообщение';
 
   @override
+  String get notificationsSomeone => 'Кто-то';
+
+  @override
   String get notificationsEncrypted => 'Зашифровано';
 
   @override

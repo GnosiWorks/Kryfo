@@ -31,6 +31,7 @@ import 'package:kryfo/main.dart'
         processPeerBundle,
         resendFrom,
         session,
+        utcDayOf,
         signalDecrypt,
         signalEncrypt,
         useDatabasesForTest;
@@ -1632,21 +1633,32 @@ void main() {
         0,
       );
       expect(owedTo(p.name), isEmpty);
-      // another restore owes them again
+      // another restore the same day: one a day per member
       expect(
         await rows.oweGroupTextsAfterRestore(
           p.name,
           me: 'me',
           from: now - 12 * day,
           restore: now - 5 * day,
-          now: now,
+          now: now + 3600 * 1000,
         ),
-        4,
+        0,
       );
-      expect(mem.rows('group_media_owed'), hasLength(4));
+      // a day on, another restore owes them again
+      expect(
+        await rows.oweGroupTextsAfterRestore(
+          p.name,
+          me: 'me',
+          from: now - 12 * day,
+          restore: now - 5 * day,
+          now: now + day,
+        ),
+        3,
+      );
+      expect(mem.rows('group_media_owed'), hasLength(3));
     });
 
-    test('one owed already, past its tries, starts over', () async {
+    test('one owed already keeps its tries, whatever the ask', () async {
       final p = await _peer();
       final now = DateTime.now().millisecondsSinceEpoch;
       await groupWith(p, g);
@@ -1670,8 +1682,8 @@ void main() {
         now: now,
       );
       final r = mem.rows('group_media_owed').single;
-      expect(r['tries'], 0);
-      expect(r['next_at'], now);
+      expect(r['tries'], 99);
+      expect(r['next_at'], now + day);
     });
 
     test('an ask to start afresh puts our group texts since the backup out '
@@ -1726,6 +1738,154 @@ void main() {
       await _settle();
       expect(await groupTextsAt(p), ['kept']);
       expect(owedTo(p.name), isEmpty);
+    });
+
+    test('an ask with no backup date is no restore: nothing of the group '
+        'goes again', () async {
+      final p = await _peer();
+      await contact(p);
+      await talk(p);
+      await groupWith(p, g);
+      await said('hour');
+      await card(p, want: true);
+      await app.owedPassForTest;
+      await _settle();
+      expect(owedTo(p.name), isEmpty);
+      expect(await groupTextsAt(p), isEmpty);
+      expect(mem.rows('group_resent'), isEmpty);
+    });
+
+    test('an undated ask sealed for a shut vault owes none of its groups\' '
+        'texts as it opens', () async {
+      final p = await _peer();
+      await processPeerBundle(p.name, p.card);
+      await vaultList.putMeta('pub', 'pub-A');
+      await vaultList.putHidden(
+        p.name,
+        kHiddenPeer,
+        peerCard(RouterCard(p.name, '', p.xpub, backPaired: true)),
+        1,
+      );
+      await router.load();
+      await card(p, want: true);
+      expect(vaultList.inbox, isNotEmpty);
+      final vmem = MemDb();
+      final vault = _Rows(vmem, HaloContainer.vault);
+      await groupWith(p, g, into: vmem);
+      await said('hidden hour', into: vmem);
+      useDatabasesForTest(rows, await Session.withVault(rows, vault));
+      app.sendModeForTest = 'private';
+      await app.drainSealed(vault, 'priv-A');
+      expect(vaultList.inbox, isEmpty);
+      expect(owedTo(p.name, vmem), isEmpty);
+      expect(vmem.rows('group_resent'), isEmpty);
+    });
+
+    test('a backup dated in the future is no restore', () async {
+      final p = await _peer();
+      await contact(p);
+      await talk(p);
+      await groupWith(p, g);
+      await said('hour');
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await card(p, want: true, since: now + day);
+      await app.owedPassForTest;
+      await _settle();
+      expect(await groupTextsAt(p), isEmpty);
+      expect(mem.rows('group_resent'), isEmpty);
+    });
+
+    test('asks within two minutes go once, and a backup older than the '
+        'window is the same restore all day', () async {
+      final p = await _peer();
+      await contact(p);
+      await talk(p);
+      await groupWith(p, g);
+      await said('hour');
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await card(p, want: true, since: now - 2 * day);
+      await app.owedPassForTest;
+      await _settle();
+      expect(await groupTextsAt(p), ['hour']);
+      expect(mem.rows('group_resent'), hasLength(1));
+      // even with its mark gone, the next ask within two minutes is not
+      // looked at
+      await mem.delete('group_resent');
+      await card(p, want: true, since: now - 3 * day, n: 1);
+      await app.owedPassForTest;
+      await _settle();
+      expect(await groupTextsAt(p), ['hour']);
+      expect(mem.rows('group_resent'), isEmpty);
+      // past the two minutes, as a later start: two old backups clamp to
+      // the same day, so the second is the first restore again
+      await mem.delete('group_resent');
+      final later = AppState(io: io, router: router)
+        ..myId = 'me'
+        ..sendModeForTest = 'private';
+      for (final (i, back) in [40, 50].indexed) {
+        await later.receiveRelay([
+          (
+            peer: p.xpub,
+            cipher: jsonEncode({
+              'halo_ctl': 'bundle',
+              'from': p.name,
+              'bundle': p.card,
+              'want': true,
+              'n': 10 + i,
+              'since': now - back * day,
+            }),
+          ),
+        ]);
+        await _settle();
+      }
+      final marks = mem.rows('group_resent');
+      expect(marks, hasLength(1));
+      expect(marks.single['since'], utcDayOf(now - 15 * day));
+    });
+
+    test('a roster that comes again keeps when each member joined, and one '
+        'taken out and added back joins anew', () async {
+      final p = await _peer();
+      await groupWith(p, g, joined: 30 * day);
+      final before = {
+        for (final r in mem.rows('group_members')) r['halo_id']: r['joined_at'],
+      };
+      await rows.syncGroupMembers(g, ['me', p.name, 'new-one-here']);
+      final after = {
+        for (final r in mem.rows('group_members')) r['halo_id']: r['joined_at'],
+      };
+      expect(after.keys.toSet(), {'me', p.name, 'new-one-here'});
+      expect(after['me'], before['me']);
+      expect(after[p.name], before[p.name]);
+      expect(after['new-one-here'] as int, greaterThan(before[p.name] as int));
+      // taken out, then back
+      await rows.syncGroupMembers(g, ['me', 'new-one-here']);
+      await rows.syncGroupMembers(g, ['me', 'new-one-here', p.name]);
+      final back = {
+        for (final r in mem.rows('group_members')) r['halo_id']: r['joined_at'],
+      };
+      expect(back[p.name] as int, greaterThan(before[p.name] as int));
+      expect(back['me'], before['me']);
+      // an empty roster takes everyone out
+      await rows.syncGroupMembers(g, const []);
+      expect(mem.rows('group_members'), isEmpty);
+    });
+
+    test('a request forgotten takes its notification tag', () async {
+      final p = await _peer();
+      await mem.insert('contacts', {
+        'halo_id': p.name,
+        'onion': '',
+        'xpub': p.xpub,
+        'first_seen': 1,
+        'last_seen': 1,
+        'accepted': 0,
+      });
+      await rows.notifTag(p.name);
+      await rows.notifTag('someone-who-stays');
+      await rows.forgetRequest(p.name);
+      expect(await rows.notifTagOf(p.name), isNull);
+      expect(await rows.notifTagOf('someone-who-stays'), isNotNull);
     });
 
     test('someone blocked who asks gets none of the group\'s texts', () async {

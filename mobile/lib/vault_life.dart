@@ -614,6 +614,8 @@ class SqlChatMover implements ChatMover {
         }
         await t.execute('DELETE FROM $s.contacts WHERE halo_id = ?1', [who]);
         await t.execute('DELETE FROM $s.shield WHERE halo_id = ?1', [who]);
+        // a request of theirs rang under a tag here once
+        await t.execute('DELETE FROM $s.notif_tags WHERE chat = ?1', [who]);
       }
       return;
     }

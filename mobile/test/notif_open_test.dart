@@ -105,6 +105,18 @@ void main() {
       expect(await notifChatFor(tag), isNull);
     });
 
+    test('a shut vault is never asked for a tag', () async {
+      final vault = ArrivalRows(HaloContainer.vault)
+        ..person('hidden-friend-one');
+      final tag = await vault.notifTag('hidden-friend-one');
+      final s = await Session.withVault(live, vault);
+      vault.shut = true;
+      expect(await s.chatOfNotifTag(tag), isNull);
+      expect(await s.notifTagsOf('hidden-friend-one'), isEmpty);
+      vault.shut = false;
+      expect(await s.chatOfNotifTag(tag), 'hidden-friend-one');
+    });
+
     test('a chat\'s tags in each container open', () async {
       final vault = ArrivalRows(HaloContainer.vault);
       final a = await live.notifTag('friend-of-mine');

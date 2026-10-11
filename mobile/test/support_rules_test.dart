@@ -1030,7 +1030,10 @@ void main() {
           for (final c in w.bell.calls)
             if (c.startsWith('chat')) c,
         ],
-        ['chat $_s $_s: thanks', 'chat $_s $_s: it works now'],
+        [
+          'chat $_s ${l10n.notificationsSomeone}: thanks',
+          'chat $_s ${l10n.notificationsSomeone}: it works now',
+        ],
       );
       expect(w.io.rang, isEmpty);
       // one random tag for the chat, never its id

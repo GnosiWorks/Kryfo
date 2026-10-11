@@ -748,6 +748,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get notificationsNewMessage2 => 'پیام جدید';
 
   @override
+  String get notificationsSomeone => 'یک نفر';
+
+  @override
   String get notificationsEncrypted => 'رمزگذاری‌شده';
 
   @override

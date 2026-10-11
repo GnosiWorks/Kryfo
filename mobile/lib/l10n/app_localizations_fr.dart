@@ -753,6 +753,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get notificationsNewMessage2 => 'Nouveau message';
 
   @override
+  String get notificationsSomeone => 'Quelqu\'un';
+
+  @override
   String get notificationsEncrypted => 'Chiffré';
 
   @override

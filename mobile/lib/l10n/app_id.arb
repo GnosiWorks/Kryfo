@@ -182,6 +182,7 @@
   "notificationsNewMessage": "Pesan baru",
   "notificationsNewEncryptedMessagesFromYourContacts": "Pesan terenkripsi baru dari kontakmu",
   "notificationsNewMessage2": "Pesan baru",
+  "notificationsSomeone": "Seseorang",
   "notificationsEncrypted": "Terenkripsi",
   "rooms24h": "24 j",
   "roomsD": "{inDays} hr",

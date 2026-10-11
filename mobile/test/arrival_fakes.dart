@@ -293,7 +293,7 @@ class ArrivalIo implements AppIo {
 class ArrivalRows implements HaloDb {
   // the tag each chat's notifications go under
   final notifTags = <String, String>{};
-  var _tagNo = 0;
+  static var _tagNo = 0;
   @override
   Future<String> notifTag(String chat) async =>
       notifTags[chat] ??= '${_container.dbFile}-tag-${++_tagNo}';

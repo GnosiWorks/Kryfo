@@ -754,6 +754,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get notificationsNewMessage2 => 'Nuevo mensaje';
 
   @override
+  String get notificationsSomeone => 'Alguien';
+
+  @override
   String get notificationsEncrypted => 'Cifrado';
 
   @override

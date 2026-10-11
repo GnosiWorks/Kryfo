@@ -768,6 +768,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get notificationsNewMessage2 => 'Нове повідомлення';
 
   @override
+  String get notificationsSomeone => 'Хтось';
+
+  @override
   String get notificationsEncrypted => 'Зашифровано';
 
   @override

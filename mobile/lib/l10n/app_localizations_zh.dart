@@ -725,6 +725,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notificationsNewMessage2 => '新消息';
 
   @override
+  String get notificationsSomeone => '某人';
+
+  @override
   String get notificationsEncrypted => '已加密';
 
   @override
@@ -8296,6 +8299,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get notificationsNewMessage2 => '新訊息';
+
+  @override
+  String get notificationsSomeone => '某人';
 
   @override
   String get notificationsEncrypted => '已加密';
