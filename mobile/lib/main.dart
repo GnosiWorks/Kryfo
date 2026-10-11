@@ -7458,7 +7458,7 @@ Future<void> viaDevColumn(DatabaseExecutor db) => addColumn(
   'ALTER TABLE messages ADD COLUMN via_dev INTEGER NOT NULL DEFAULT 0',
 );
 
-// the upgrade to 71: whether a chat's voice notes go out disguised, null
+// the upgrade to 76: whether a chat's voice notes go out disguised, null
 // until it is chosen there
 Future<void> voiceDisguiseColumns(DatabaseExecutor db) async {
   await addColumn(db, 'ALTER TABLE contacts ADD COLUMN voice_disguise INTEGER');
