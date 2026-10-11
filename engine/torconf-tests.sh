@@ -27,11 +27,19 @@ tests=(
 	TestAirplaneThenLand
 	TestFlipStormSettles
 )
+# these need the test build's censor as well
+blocked=(
+	TestBlockedDirectIsJudged
+	TestBlockedAutomaticMovesOn
+)
+tests+=("${blocked[@]}")
 [ $# -gt 0 ] && tests=("$@")
 failed=()
 for t in "${tests[@]}"; do
 	echo "== $t"
-	go test -tags torconf -count=1 -timeout 25m -run "^${t}\$" -v . 2>&1 |
+	tags=torconf
+	[[ " ${blocked[*]} " == *" $t "* ]] && tags="torconf torblocked"
+	go test -tags "$tags" -count=1 -timeout 25m -run "^${t}\$" -v . 2>&1 |
 		grep -E '^(=== |--- |ok|FAIL|panic)|_test\.go:[0-9]+:'
 	[ "${PIPESTATUS[0]}" -eq 0 ] || failed+=("$t")
 done

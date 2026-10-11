@@ -531,6 +531,7 @@ var torArgsExtra []string
 func torArgs() []string {
 	a := []string{"--Schedulers", "Vanilla"}
 	a = append(a, torArgsExtra...)
+	a = append(a, censorTorArgs()...)
 	// an explicit socks port, so a DisableNetwork bounce reopens the same one
 	// and a dialer built before it keeps working. see socksport.go.
 	if p := socksPin(); p != 0 {
@@ -735,6 +736,12 @@ func servePTConn(conn net.Conn, name string, factory base.ClientFactory, r *ptLi
 		_ = req.Reply(socks5.ReplyHostUnreachable)
 		return
 	}
+	// a test build's censor; nothing in any other build
+	if err := censorPTDial(name, req.Target); err != nil {
+		noteBridgeFail(key, err)
+		_ = req.Reply(socks5.ErrorToReplyCode(err))
+		return
+	}
 	args, err := factory.ParseArgs(&line.args)
 	if err != nil {
 		log.Printf("bridges: %s line not usable", name)
@@ -873,6 +880,9 @@ func HaloSetBridges(cLines *C.char, on C.int) *C.char {
 
 // HaloSetBridges in plain go, for the tests
 func setBridges(raw string, on bool) string {
+	if why := legacyMode(); why != "" {
+		return why
+	}
 	good, bad, checks := sortBridgeLines(raw)
 	lineChecksMu.Lock()
 	lineChecks = checks

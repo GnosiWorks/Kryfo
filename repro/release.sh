@@ -198,6 +198,20 @@ fi
 rm -f out/app-*.apk
 cp "$WORK/out/"app-*.apk out/
 
+# a test engine that acts as if tor were blocked never ships. an apk
+# without an engine is refused too, so this cannot pass by finding nothing
+for f in out/app-*.apk; do
+  unzip -l "$f" | grep -q 'lib/[^/]*/libhalo\.so' || { echo "$f has no engine" >&2; exit 1; }
+  scan=$(mktemp -d)
+  unzip -q -o "$f" 'lib/*/libhalo.so' -d "$scan"
+  if ! ../engine/censor-scan.sh "$scan"/lib/*/libhalo.so; then
+    rm -rf "$scan"
+    echo "$f carries the test censor, not releasing" >&2
+    exit 1
+  fi
+  rm -rf "$scan"
+done
+
 if [ -z "$SIGN" ]; then
   echo
   ( cd out && sha256sum app-*.apk )

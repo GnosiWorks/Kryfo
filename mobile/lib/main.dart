@@ -116,6 +116,7 @@ import 'widgets/sheet_handle.dart';
 import 'widgets/halo_sheet.dart';
 import 'bidi_safe.dart';
 import 'engine_strings.dart';
+import 'net_detail.dart';
 import 'relay_poll.dart';
 import 'l10n/l10n.dart';
 import 'l10n/numbers.dart';
@@ -401,6 +402,34 @@ class HaloEngine {
       _take(_networkState(online ? 1 : 0));
     } catch (_) {
       // an older engine without the call: tor keeps its own schedule
+    }
+  }
+
+  // android's word on the default network as json (validated, captive
+  // portal, vpn, type), for automatic bridges. looked up on first use
+  late final OneArgFnDart _networkDetail = _lib
+      .lookupFunction<OneArgFn, OneArgFnDart>('HaloNetworkDetail');
+  void networkDetail(String json) {
+    try {
+      final a = json.toNativeUtf8();
+      try {
+        _take(_networkDetail(a));
+      } finally {
+        malloc.free(a);
+      }
+    } catch (_) {
+      // an older engine without the call
+    }
+  }
+
+  // a check-in begins or ends: automatic starts no pass inside one
+  late final CounterFnDart _checkInWindow = _lib
+      .lookupFunction<CounterFn, CounterFnDart>('HaloCheckIn');
+  void checkInWindow(bool on) {
+    try {
+      _take(_checkInWindow(on ? 1 : 0));
+    } catch (_) {
+      // an older engine without the call
     }
   }
 
@@ -12342,6 +12371,9 @@ class AppState extends ChangeNotifier {
     final started = DateTime.now();
     final drainBefore = _lastDrainAt;
     final wasHeld = _torHeld;
+    // tor asleep in the background: a check-in proper, not the app in use
+    final window = wasHeld && !_inFront;
+    if (window) engine.checkInWindow(true);
     var how = 'started';
     try {
       if (!await _torWake()) {
@@ -12437,6 +12469,7 @@ class AppState extends ChangeNotifier {
       if (wasHeld && !_inFront && _deliveryMode != DeliveryMode.always) {
         await _torSleep();
       }
+      if (window) engine.checkInWindow(false);
       notifyListeners();
     }
   }
@@ -17607,6 +17640,7 @@ class AppState extends ChangeNotifier {
     }
     _lastKinds = lastKinds;
     Connectivity().onConnectivityChanged.listen(connectivityEvent);
+    unawaited(listenNetDetail(engine.networkDetail));
   }
 
   // the kinds of network the last event named, sorted: "mobile,vpn"

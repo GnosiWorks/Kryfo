@@ -13,6 +13,17 @@ set -e
 cd "$(dirname "$0")"
 ENGINE_DIR="$(pwd)"
 
+# HALO_TOR_BLOCKED=1 builds a test engine that acts as if tor were blocked
+# (censor_on.go). only for the test app, never a release.
+TAGS=""
+if [ "${HALO_TOR_BLOCKED:-}" = 1 ]; then
+  if [ "${HALO_TEST_ID:-}" != 1 ]; then
+    echo "error: HALO_TOR_BLOCKED needs HALO_TEST_ID=1"
+    exit 1
+  fi
+  TAGS="-tags torblocked"
+fi
+
 # ── locate the ndk ──
 NDK_ROOT="${ANDROID_NDK_HOME:-${ANDROID_NDK_ROOT:-${NDK_HOME:-}}}"
 if [ -z "$NDK_ROOT" ]; then
@@ -49,7 +60,7 @@ LDFLAGS="-buildid= -w -s"
 BUILD_FLAGS="${HALO_FULL:+-a}"
 # no vcs stamp: the commit and dirty flag differ between machines, so the
 # build would not reproduce
-BUILD_FLAGS="$BUILD_FLAGS -buildvcs=false"
+BUILD_FLAGS="$BUILD_FLAGS -buildvcs=false $TAGS"
 
 echo "ndk: $NDK_ROOT"
 echo "out: $JNI"

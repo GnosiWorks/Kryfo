@@ -598,9 +598,17 @@ func applyBridgeConf(t *tor.Tor) error {
 		}
 		// the lines go too, or a later UseBridges 1 would quietly use the
 		// list from last time
-		return ctrlDo(t, "RESETCONF Bridge", func(c *control.Conn) error {
+		if err := ctrlDo(t, "RESETCONF Bridge", func(c *control.Conn) error {
 			return c.ResetConf(&control.KeyVal{Key: "Bridge"})
-		})
+		}); err != nil {
+			return err
+		}
+		if kv := censorConf(false); kv != nil {
+			return ctrlDo(t, "SETCONF censor", func(c *control.Conn) error {
+				return c.SetConf(kv...)
+			})
+		}
+		return nil
 	}
 	noteStep("pt listeners")
 	if err := startPTListeners(); err != nil {
@@ -610,6 +618,7 @@ func applyBridgeConf(t *tor.Tor) error {
 	for _, p := range ptPlugins() {
 		kv = append(kv, control.NewKeyVal("ClientTransportPlugin", p))
 	}
+	kv = append(kv, censorConf(true)...)
 	kv = append(kv, control.NewKeyVal("UseBridges", "1"))
 	lines := torBridgeLines()
 	for _, b := range lines {
@@ -666,6 +675,10 @@ func HaloLastReconnect() *C.char { return C.CString(lastReconnectOutcome()) }
 // the bounce itself. "ok", or a line starting with "error:".
 func reconnectTor() string { return reconnectTorAs(false) }
 
+// automatic's own bounce: past the gate and the floor, and it replaces a
+// reconnect still running
+func reconnectAuto() string { return reconnectTorBy(true, true) }
+
 // how long a reconnect may run before the next one takes over. every control
 // command in one carries a deadline, so a healthy one is done well inside it
 var stuckAfter = 2 * time.Minute
@@ -699,6 +712,10 @@ var reconnectStepHook func(owner int64, step string)
 func reconnectNow() string {
 	if torIsPaused() {
 		return "error: tor is asleep"
+	}
+	if autoGateHeld() {
+		log.Println("halo: reconnect deferred - automatic is trying a way in")
+		return "error: automatic is connecting"
 	}
 	routeFreshNetwork()
 	atomic.StoreInt64(&lastTorRestart, 0)
@@ -750,13 +767,23 @@ func reconnectRelease(me int64, done chan struct{}) {
 	close(done)
 }
 
-func reconnectTorAs(force bool) string {
+func reconnectTorAs(force bool) string { return reconnectTorBy(force, false) }
+
+// the one gate for every bounce. while automatic tries a way in, it alone
+// bounces tor: a rescue, the network bounce, the relay watchdog, a mode
+// switch or a manual restart would cut its attempt short. the gate has a
+// lifetime cap, see autoGateHeld.
+func reconnectTorBy(force, auto bool) string {
 	// asleep on purpose: the check-in mode takes tor off the network between
 	// checks, and every watchdog that finds it quiet comes through here. none
 	// of them may bring it back: that is the app's call, not a watchdog's.
 	if torIsPaused() {
 		log.Println("halo: reconnect skipped - tor is asleep on purpose")
 		return "error: tor is asleep"
+	}
+	if !auto && autoGateHeld() {
+		log.Println("halo: reconnect deferred - automatic is trying a way in")
+		return "error: automatic is connecting"
 	}
 	me, prev, done, why := reconnectClaim(force)
 	if why != "" {
@@ -777,7 +804,7 @@ func reconnectTorAs(force bool) string {
 	// a quiet-but-alive relay should not drive a loop. a bounce is cheap, so
 	// the floor is a minute.
 	now := time.Now().Unix()
-	if prev := atomic.LoadInt64(&lastTorRestart); !force && prev != 0 && now-prev < 60 {
+	if prev := atomic.LoadInt64(&lastTorRestart); !force && !auto && prev != 0 && now-prev < 60 {
 		log.Printf("halo: reconnect skipped - %ds since the last (floor 60s)", now-prev)
 		return "error: too soon"
 	}
@@ -815,7 +842,7 @@ func reconnectTorAs(force bool) string {
 		atomic.StoreInt32(&reconnectRunning, 1)
 	}
 	reconnectMu.Unlock()
-	r := reconnectOn(t, addr, me)
+	r := reconnectOn(t, addr, me, auto)
 	if reconnectMine(me) {
 		noteOutcome(fmt.Sprintf("%s after %s", r, time.Since(started).Round(time.Millisecond)))
 	}
@@ -827,7 +854,9 @@ func reconnectTorAs(force bool) string {
 // asks whether it is still the reconnect that owns the slot, and one that
 // was replaced stops there and touches nothing more: not tor, not the
 // status. against other control users ctrlDo's own bounded lock serializes.
-func reconnectOn(t *tor.Tor, addr string, me int64) string {
+// for automatic the relay side is redone in the background: it waits on
+// dialers that can take half a minute, and a switch is judged by tor alone.
+func reconnectOn(t *tor.Tor, addr string, me int64, auto bool) string {
 	step := func(name string) bool {
 		if !reconnectMine(me) {
 			log.Printf("halo: reconnect replaced before %q", name)
@@ -883,6 +912,9 @@ func reconnectOn(t *tor.Tor, addr string, me int64) string {
 	}
 	if err := applyBridgeConf(t); err != nil {
 		log.Printf("halo: bridge config not applied: %v", err)
+		bridgeConfErr.Store(err.Error())
+	} else {
+		bridgeConfErr.Store("")
 	}
 	if !step("network on") {
 		return superseded
@@ -893,6 +925,9 @@ func reconnectOn(t *tor.Tor, addr string, me int64) string {
 		atomic.StoreInt32(&bounceOff, 0)
 		return "error: tor is asleep"
 	}
+	// what tor says from here on is about the switch an attempt waits on
+	obsArm()
+	bounceEpoch.Store(netEpoch.Load())
 	if err := ctrlDo(t, "DisableNetwork 0", func(c *control.Conn) error {
 		return c.SetConf(control.KeyVals("DisableNetwork", "0")...)
 	}); err != nil {
@@ -916,9 +951,17 @@ func reconnectOn(t *tor.Tor, addr string, me int64) string {
 	// during the bounce (relay runners loop through torNostrClientFor()
 	// throughout) holds a client bound to the old port. the relays heal
 	// through relaysAllDead(), a one-shot request does not.
-	nostrResetClient()
-	relayClearBenches()
-	kickRelays()
+	if auto {
+		go func() {
+			nostrResetClient()
+			relayClearBenches()
+			kickRelays()
+		}()
+	} else {
+		nostrResetClient()
+		relayClearBenches()
+		kickRelays()
+	}
 	goWatchBootstrap(t)
 	goWatchPublished(t, strings.TrimSuffix(addr, ".onion"))
 	log.Println("halo: tor reconnected")
@@ -1386,6 +1429,7 @@ func watchBootstrap(t *tor.Tor) {
 				log.Printf("halo: tor bootstrap %d%%", pct)
 			}
 			if pct >= 100 {
+				noteTorUp(t)
 				statusMu.Lock()
 				cur := torStatus
 				statusMu.Unlock()

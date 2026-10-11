@@ -29,8 +29,10 @@ type fakeControl struct {
 	slow atomic.Int64
 	// how many times the bootstrap phase was asked for
 	polls atomic.Int64
-	mu    sync.Mutex
-	cmds  []string
+	// what status/circuit-established says
+	circ atomic.Int32
+	mu   sync.Mutex
+	cmds []string
 }
 
 // the setconf and resetconf lines it was sent, in order
@@ -73,6 +75,8 @@ func (f *fakeControl) handle(c net.Conn) {
 		switch {
 		case strings.HasPrefix(cmd, "PROTOCOLINFO"):
 			fmt.Fprint(c, "250-PROTOCOLINFO 1\r\n250-AUTH METHODS=NULL\r\n250-VERSION Tor=\"0.4.9.5\"\r\n250 OK\r\n")
+		case strings.HasPrefix(cmd, "GETINFO STATUS/CIRCUIT-ESTABLISHED"):
+			fmt.Fprintf(c, "250-status/circuit-established=%d\r\n250 OK\r\n", f.circ.Load())
 		case strings.HasPrefix(cmd, "GETINFO STATUS/BOOTSTRAP-PHASE"):
 			f.polls.Add(1)
 			fmt.Fprintf(c, "250-status/bootstrap-phase=NOTICE BOOTSTRAP PROGRESS=%d TAG=x SUMMARY=\"x\"\r\n250 OK\r\n", f.pct.Load())
