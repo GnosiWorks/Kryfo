@@ -29,16 +29,30 @@ class _ModesScreenState extends State<ModesScreen> {
       ? 'private'
       : appState.sendMode;
 
+  // taps still in the queue. the picked card says it is switching until
+  // the last of them is done, then the page shows the mode in use
+  int _going = 0;
+
   Future<void> _pick(String m) async {
-    setState(() => _mode = m);
+    setState(() {
+      _mode = m;
+      _going++;
+    });
+    var saved = true;
     try {
       await appState.setSendMode(m);
     } catch (_) {
-      // not saved, so nothing moved: the card goes back to the mode in use
-      if (!mounted) return;
-      setState(() => _mode = appState.sendMode);
-      showHaloToast(context, l10n.modesNotChanged);
+      saved = false;
     }
+    if (!mounted) return;
+    setState(() {
+      _going--;
+      // a tap behind this one may have moved it since: only the last done
+      // says which card is in use
+      if (_going == 0) _mode = appState.sendMode;
+    });
+    // not saved, so nothing moved for this tap
+    if (!saved) showHaloToast(context, l10n.modesNotChanged);
   }
 
   // fast is the one mode that costs something, so it says so first
@@ -72,6 +86,7 @@ class _ModesScreenState extends State<ModesScreen> {
                 name: l10n.modesOnion,
                 accent: '·',
                 active: _mode == 'private',
+                switching: _going > 0 && _mode == 'private',
                 desc: l10n.modesFullOnionRoutingThree,
                 speed: l10n.modesSlower,
                 hops: '3',
@@ -81,6 +96,7 @@ class _ModesScreenState extends State<ModesScreen> {
               _ModeCard(
                 name: l10n.modesRelay,
                 active: _mode == 'balanced',
+                switching: _going > 0 && _mode == 'balanced',
                 desc: l10n.modesOneSealedConnectionTo,
                 speed: l10n.modesQuick,
                 hops: '1',
@@ -92,6 +108,7 @@ class _ModesScreenState extends State<ModesScreen> {
               _ModeCard(
                 name: l10n.modesFast,
                 active: _mode == 'fast',
+                switching: _going > 0 && _mode == 'fast',
                 desc: l10n.modesPlainConnectionsToEvery,
                 speed: l10n.modesInstant,
                 hops: '0',
@@ -180,6 +197,8 @@ class _ModeCard extends StatelessWidget {
   final String name;
   final String? accent;
   final bool active;
+  // picked, and the app still moving onto it
+  final bool switching;
   final bool soon = false;
   final String desc;
   final String speed;
@@ -194,6 +213,7 @@ class _ModeCard extends StatelessWidget {
     required this.name,
     this.accent,
     required this.active,
+    this.switching = false,
     required this.desc,
     required this.speed,
     required this.hops,
@@ -301,7 +321,7 @@ class _ModeCard extends StatelessWidget {
                       ),
                       child: active
                           ? Container(
-                              key: const ValueKey('on'),
+                              key: ValueKey(switching ? 'going' : 'on'),
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 8,
                                 vertical: 2,
@@ -311,7 +331,9 @@ class _ModeCard extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(999),
                               ),
                               child: Text(
-                                l10n.modesActive,
+                                switching
+                                    ? l10n.modesSwitching
+                                    : l10n.modesActive,
                                 style: HaloType.mono(
                                   size: 10,
                                   weight: FontWeight.w500,

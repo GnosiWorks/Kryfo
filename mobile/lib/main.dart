@@ -419,6 +419,17 @@ class HaloEngine {
     }
   }
 
+  // the route the engine is on now
+  late final CStrFnDart _transportMode = _lib
+      .lookupFunction<CStrFn, CStrFnDart>('HaloTransportMode');
+  String transportMode() {
+    try {
+      return engineTake(_transportMode());
+    } on ArgumentError {
+      return '';
+    }
+  }
+
   // automatic tries again now, after it gave up
   late final CStrFnDart _bridgeRetry = _lib.lookupFunction<CStrFn, CStrFnDart>(
     'HaloBridgeRetry',
@@ -11791,9 +11802,20 @@ class AppState extends ChangeNotifier {
   // is the default; 'normal' is an old name for it, migrated on load.
   String _sendMode = 'private';
   String get sendMode => _sendMode;
-  // the mode the engine was last told. it starts on private, as the engine
-  // does
-  String _engineMode = 'private';
+  // the mode the engine routes by, asked of it once and then kept as it is
+  // told. private when it cannot say, as the engine starts
+  String? _engineModeKept;
+  String get _engineMode => _engineModeKept ??= _askEngineMode();
+  set _engineMode(String m) => _engineModeKept = m;
+  String _askEngineMode() {
+    try {
+      final m = engine.transportMode();
+      return const {'private', 'balanced', 'fast'}.contains(m) ? m : 'private';
+    } catch (_) {
+      return 'private';
+    }
+  }
+
   @visibleForTesting
   set sendModeForTest(String m) => _sendMode = _engineMode = m;
 
@@ -12032,6 +12054,7 @@ class AppState extends ChangeNotifier {
         _sendMode = m;
         notifyListeners();
       }
+      if (_resubscribeDue) await _moveListeners(m);
       return;
     }
     // an outage seen on another mode is not this one's
@@ -12049,11 +12072,25 @@ class AppState extends ChangeNotifier {
     // engine still routes the old way
     _sendMode = m;
     notifyListeners();
-    await resubscribe();
+    await _moveListeners(m);
+  }
+
+  // the runners onto the new mode's relays. the mode has landed whatever
+  // happens here: a failure is kept for the next switch to the same mode,
+  // and never told as a mode not saved
+  bool _resubscribeDue = false;
+  Future<void> _moveListeners(String m) async {
+    try {
+      await resubscribe();
+      _resubscribeDue = false;
+      dlog('mode: $m, relays rebuilt');
+    } catch (e) {
+      _resubscribeDue = true;
+      dlog('mode: $m, runners not moved (${e.runtimeType})');
+    }
     // the first-contact runner keeps the relay list it started with; it
     // has to follow the switch or strangers' openers go unread
     if (_fcLoaded) unawaited(_listenFirstContact());
-    dlog('mode: $m, relays rebuilt');
   }
 
   // every key listened on, never the screen's list, on the relays of a new
