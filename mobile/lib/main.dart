@@ -12151,6 +12151,8 @@ class AppState extends ChangeNotifier {
   @visibleForTesting
   set deliveryModeForTest(DeliveryMode m) => _deliveryMode = m;
   String _docsPath = '';
+  @visibleForTesting
+  set docsPathForTest(String p) => _docsPath = p;
   // tor is down because this side took it down
   bool _torHeld = false;
   bool get torHeld => _torHeld;
@@ -12540,6 +12542,7 @@ class AppState extends ChangeNotifier {
         dlog('checkin($why): tor never became ready');
         return 0;
       }
+      await _listenedFirst();
       final begunBefore = engine.catchupState().$2;
       _needRouteUp();
       try {
@@ -12646,6 +12649,7 @@ class AppState extends ChangeNotifier {
       dlog('drainNow: listening all along, nothing to do');
       return 0;
     }
+    await _listenedFirst();
     final before = _lastDrainAt;
     _needRouteUp();
     try {
@@ -17273,6 +17277,67 @@ class AppState extends ChangeNotifier {
     return null;
   }
 
+  // what a start listens on, once a process: after the first frame, so the
+  // first paint is not held up, or after [noFrameWait] when none comes. a
+  // process the service or the job started has no surface and draws no
+  // frame until a window opens
+  final _listened = Completer<void>();
+  bool _listenArmed = false;
+  @visibleForTesting
+  Duration noFrameWait = const Duration(seconds: 2);
+  @visibleForTesting
+  Future<void> get listenedAtStart => _listened.future;
+
+  @visibleForTesting
+  void listenAtStart() {
+    if (_listenArmed) return;
+    _listenArmed = true;
+    void go() {
+      if (_listened.isCompleted) return;
+      _listened.complete(_listenNow());
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => Timer(const Duration(milliseconds: 300), go),
+    );
+    Timer(noFrameWait, go);
+  }
+
+  // a job's kick asks the relays for what they hold on the keys listened
+  // on, so those are all in first
+  Future<void> _listenedFirst() async {
+    if (!_listenArmed) return;
+    await _listened.future.timeout(
+      const Duration(seconds: 30),
+      onTimeout: () => dlog('listen: not done before the kick'),
+    );
+  }
+
+  Future<void> _listenNow() async {
+    // rooms first, on their own: a hang anywhere in the contact loop
+    // below must not leave a live room deaf after a restart.
+    try {
+      await _subscribeRooms();
+    } catch (e) {
+      dlog('rooms: boot subscribe failed: $e');
+    }
+    // the dev chat's lane, only once it has started
+    try {
+      await subscribeDevLane();
+    } catch (e) {
+      dlog('dev lane: boot subscribe failed: $e');
+    }
+    unawaited(sweepCaptures());
+    await markHeldAtStart();
+    try {
+      await subscribeKnown();
+    } catch (e) {
+      dlog('contacts: boot subscribe failed: $e');
+    }
+    // openers kept from before this start
+    unawaited(retryFirsts(all: true));
+  }
+
   // listen for everyone who can write: accepted contacts, people a friend
   // introduced and strangers in requests, and the people of the hidden
   // chats. those never go into the cache on disk
@@ -18201,30 +18266,7 @@ class AppState extends ChangeNotifier {
         }
       }
     });
-    // warm up signal sessions + nostr subs after the first frame. a cached
-    // xpub→haloId map (encrypted) lets returning users skip the per-contact
-    // crypto entirely; only uncached contacts hit the heavy lookup.
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await Future.delayed(const Duration(milliseconds: 300));
-      // rooms first, on their own: a hang anywhere in the contact loop
-      // below must not leave a live room deaf after a restart.
-      try {
-        await _subscribeRooms();
-      } catch (e) {
-        dlog('rooms: boot subscribe failed: $e');
-      }
-      // the dev chat's lane, only once it has started
-      try {
-        await subscribeDevLane();
-      } catch (e) {
-        dlog('dev lane: boot subscribe failed: $e');
-      }
-      unawaited(sweepCaptures());
-      await markHeldAtStart();
-      await subscribeKnown();
-      // openers kept from before this start
-      unawaited(retryFirsts(all: true));
-    });
+    listenAtStart();
     // what the removed ntfy mode left behind in the prefs
     unawaited(forgetNtfy());
 
