@@ -4031,6 +4031,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notesDeleteAllYes => 'حذف الكل';
 
   @override
+  String get notesThisWeek => 'هذا الأسبوع';
+
+  @override
+  String get notesShowMore => 'عرض المزيد';
+
+  @override
+  String get notesShowLess => 'عرض أقل';
+
+  @override
   String get notesGoneFromThisPhone => 'ستُمحى من هذا الهاتف نهائيًا.';
 
   @override

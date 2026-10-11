@@ -3774,6 +3774,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notesDeleteAllYes => '全部删除';
 
   @override
+  String get notesThisWeek => '本周';
+
+  @override
+  String get notesShowMore => '展开';
+
+  @override
+  String get notesShowLess => '收起';
+
+  @override
   String get notesGoneFromThisPhone => '它会从这部手机上永久清除。';
 
   @override
@@ -11364,6 +11373,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get notesDeleteAllYes => '全部刪除';
+
+  @override
+  String get notesThisWeek => '本週';
+
+  @override
+  String get notesShowMore => '展開';
+
+  @override
+  String get notesShowLess => '收合';
 
   @override
   String get notesGoneFromThisPhone => '它會從這支手機上永久抹除。';

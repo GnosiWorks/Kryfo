@@ -3392,5 +3392,8 @@ void main() {
       l.settingsCheckForUpdatesHint,
       "Once a day over Tor. Asks kryfo.app for the newest version and sends nothing about you.",
     );
+    expect(l.notesThisWeek, "This week");
+    expect(l.notesShowMore, "Show more");
+    expect(l.notesShowLess, "Show less");
   });
 }

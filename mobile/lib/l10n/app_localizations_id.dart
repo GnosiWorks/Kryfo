@@ -3926,6 +3926,15 @@ class AppLocalizationsId extends AppLocalizations {
   String get notesDeleteAllYes => 'Hapus semua';
 
   @override
+  String get notesThisWeek => 'Minggu ini';
+
+  @override
+  String get notesShowMore => 'Lihat selengkapnya';
+
+  @override
+  String get notesShowLess => 'Lihat lebih sedikit';
+
+  @override
   String get notesGoneFromThisPhone =>
       'Catatan ini terhapus dari ponsel ini untuk selamanya.';
 

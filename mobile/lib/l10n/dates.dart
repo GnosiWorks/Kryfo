@@ -54,6 +54,25 @@ String dayMonthYear(DateTime d) => DateFormat.yMMMd(_locale).format(d);
 String dayMonthMaybeYear(DateTime d, {DateTime? now}) =>
     d.year == (now ?? DateTime.now()).year ? dayMonth(d) : dayMonthYear(d);
 
+/// "October 2026", for a heading: the language's own order, its first
+/// letter a capital where the language writes months small
+String monthYear(DateTime d) {
+  final s = DateFormat.yMMMM(_locale).format(d);
+  if (s.isEmpty) return s;
+  final first = String.fromCharCode(s.runes.first);
+  return dateCaps(first) + s.substring(first.length);
+}
+
+/// the day the language's week starts on, as [DateTime.weekday]: monday
+/// for british english, sunday for brazil, saturday for persian
+int weekStartDay() => DateFormat.yMMMM(_locale).dateSymbols.FIRSTDAYOFWEEK + 1;
+
+/// "Wed 15:19"
+String weekdayTime(DateTime d) => DateFormat.E(_locale).add_Hm().format(d);
+
+/// "23 Sep 15:19"
+String dayMonthTime(DateTime d) => DateFormat.MMMd(_locale).add_Hm().format(d);
+
 /// "23 September"
 String dayMonthLong(DateTime d) => DateFormat.MMMMd(_locale).format(d);
 
