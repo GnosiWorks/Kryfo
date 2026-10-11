@@ -1,29 +1,29 @@
-a private messenger. no phone number, no email, no account. you are a key
-pair generated on your device. nobody, including us, can tie your chats to
+A private messenger. No phone number, no email, no account. You are a key
+pair generated on your device. Nobody, including us, can tie your chats to
 a real identity, and no one can look you up unless you claim a public
 handle.
 
-by default everything travels over tor. content is end to end encrypted with
-the signal protocol. when a contact is offline, messages wait on relays,
-sealed so the relay learns nothing about who is talking or what is said. no
+By default everything travels over Tor. Content is end to end encrypted with
+the Signal protocol. When a contact is offline, messages wait on relays,
+sealed so the relay learns nothing about who is talking or what is said. No
 address book upload, ever.
 
-features:
+Features:
 
-* no phone number or email to sign up
-* end to end encryption (signal protocol)
-* all traffic through an embedded tor client by default
-* direct onion delivery, relay fallback when a peer is offline
-* groups with photos, files, voice messages, replies, reactions, pins and polls
-* animated stickers that travel as a name, so no picture leaves the phone
-* search across all your chats, kept in the encrypted database
-* timed messages that burn after a set time
-* encrypted local database and encrypted backups
-* app lock with pin or biometrics, a decoy pin that opens an empty kryfo, and hidden chats behind a pin of their own
-* panic wipe that removes everything, including media on disk
-* a chat with the person who builds kryfo, anonymous if you like
+* No phone number or email to sign up
+* End to end encryption (Signal protocol)
+* All traffic through an embedded Tor client by default
+* Direct onion delivery, relay fallback when a peer is offline
+* Groups with photos, files, voice messages, replies, reactions, pins and polls
+* Animated stickers that travel as a name, so no picture leaves the phone
+* Search across all your chats, kept in the encrypted database
+* Timed messages that burn after a set time
+* Encrypted local database and encrypted backups
+* App lock with PIN or biometrics, a decoy PIN that opens an empty Kryfo, and hidden chats behind a PIN of their own
+* Panic wipe that removes everything, including media on disk
+* A chat with the person who builds Kryfo, anonymous if you like
 * 15 languages
-* no analytics, no telemetry, no ads
+* No analytics, no telemetry, no ads
 
-funding: no ads, no investors. it runs on what backers give. backing is
+Funding: no ads, no investors. It runs on what backers give. Backing is
 optional and anonymous, and every feature works the same either way.
