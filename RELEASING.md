@@ -38,7 +38,9 @@ once, to make the key (outside any git tree, under a passphrase):
 
 it prints the public key: put it in `kVersionPubKeyB64` in
 mobile/lib/update_check.dart, in place of `kVersionKeyPlaceholder`.
-release.sh refuses to sign while the placeholder is in.
+release.sh refuses to sign while the placeholder is in
+(scripts/check-version-key.sh), and sign-version.sh refuses any key but the
+pinned one.
 
 each release, after site/release.py has the new version in release.json:
 

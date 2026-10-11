@@ -52,11 +52,11 @@ if [ -n "$(git -C "$REPO" status --porcelain --untracked-files=no)" ]; then
   echo "the working tree has uncommitted changes. commit them first." >&2
   exit 2
 fi
-# a signed release pins the key that signs version.json
-if [ -n "$SIGN" ] && git -C "$REPO" show "$COMMIT:mobile/lib/update_check.dart" |
-    grep -q 'kVersionPubKeyB64 = kVersionKeyPlaceholder'; then
-  echo "the update key is the placeholder: see RELEASING.md, update notice" >&2
-  exit 2
+# a signed release pins the key that signs version.json: 32 bytes, not the
+# placeholder
+if [ -n "$SIGN" ]; then
+  git -C "$REPO" show "$COMMIT:mobile/lib/update_check.dart" |
+    "$REPO/scripts/check-version-key.sh" - >/dev/null || exit 2
 fi
 echo "== release build of $REF ($COMMIT)"
 

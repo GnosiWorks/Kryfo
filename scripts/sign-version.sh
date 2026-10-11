@@ -4,7 +4,7 @@
 # kryfo.app. writes version.json and version.json.sig (base64 of the raw
 # ed25519 signature) into the site's static/ folder, which site/build.py
 # copies to the root of public/. the version has to be the one in
-# site/l10n/release.json.
+# site/l10n/release.json, and the key the one the app pins.
 #
 #   scripts/sign-version.sh 0.5.1 ~/offline/kryfo-version.pem [site folder]
 #   scripts/sign-version.sh --pubkey ~/offline/kryfo-version.pem
@@ -56,7 +56,12 @@ if [ -f "$REL" ]; then
     echo "release.json is at $HAVE, not $VERSION: run site/release.py first" >&2; exit 2; }
 fi
 
+# the key the app in this checkout pins, never another
+PIN=$("$(dirname "$0")/check-version-key.sh") || exit 2
 passphrase "$KEY"
+KEYPUB=$(pubkey "$KEY")
+[ "$KEYPUB" = "$PIN" ] || {
+  echo "this key ($KEYPUB) is not the one the app pins ($PIN): nothing written" >&2; exit 2; }
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 printf '{"app":"kryfo","version":"%s"}\n' "$VERSION" > "$WORK/version.json"
