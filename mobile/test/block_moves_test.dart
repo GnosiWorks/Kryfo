@@ -42,6 +42,8 @@ Future<void> _tables(SqliteMem db, String s) async {
     'CREATE TABLE $s.poll_votes (poll_uid TEXT, voter TEXT)',
     'CREATE TABLE $s.pins_out (msg_uid TEXT PRIMARY KEY)',
     'CREATE TABLE $s.edits_out (msg_uid TEXT PRIMARY KEY)',
+    'CREATE TABLE $s.frame_order (msg_uid TEXT, sender TEXT, kind TEXT, '
+        'w INTEGER)',
     'CREATE TABLE $s.group_media_owed (group_id TEXT, member TEXT)',
     'CREATE TABLE $s.group_ctl_out (id INTEGER PRIMARY KEY, group_id TEXT)',
     'CREATE TABLE $s.group_roster (group_id TEXT PRIMARY KEY)',
