@@ -1024,7 +1024,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesThatWasNotIt => '不对。换一道给你。';
 
   @override
-  String get bridgesMoatFailed => '联系不上 tor 项目。请一分钟后再试，或者在下面粘贴网桥地址。';
+  String get bridgesMoatFailed => '联系不上 Tor 项目。请一分钟后再试，或者在下面粘贴网桥地址。';
 
   @override
   String get bridgesGotBridgesSaveTo => '已拿到网桥 · 保存后即可使用';
@@ -1039,18 +1039,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesBridges => '网桥';
 
   @override
-  String get bridgesTorIsBlockedWhere => '你那里封锁了 tor？';
+  String get bridgesTorIsBlockedWhere => '你那里封锁了 Tor？';
 
   @override
   String get bridgesBridgesDisguiseYourConnection =>
-      '网桥会把你的连接伪装起来，让它能连出去。选一个入口，保存，tor 就会通过它重新连接。';
+      '网桥会把你的连接伪装起来，让它能连出去。选一个入口，保存，Tor 就会通过它重新连接。';
 
   @override
   String get bridgesBridgesOnlyChangeHow =>
-      '网桥只改变 tor 的连接方式，而你现在没有用 onion 模式。你在这里的设置会保存下来，只是在你切换回去之前不起作用。';
+      '网桥只改变 Tor 的连接方式，而你现在没有用 onion 模式。你在这里的设置会保存下来，只是在你切换回去之前不起作用。';
 
   @override
-  String get bridgesFromTheTorProject => '来自 tor 项目';
+  String get bridgesFromTheTorProject => '来自 Tor 项目';
 
   @override
   String get bridgesNoise => '噪声';
@@ -1060,7 +1060,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get bridgesMakesTorTrafficLook =>
-      '让 tor 流量看起来不像任何特定的东西。对大多数被封锁的网络来说是最好的默认选择。先回答一个验证码，然后它会给你几条网桥地址。';
+      '让 Tor 流量看起来不像任何特定的东西。对大多数被封锁的网络来说是最好的默认选择。先回答一个验证码，然后它会给你几条网桥地址。';
 
   @override
   String get bridgesPrivateBridge => '私人网桥';
@@ -1102,7 +1102,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get bridgesRestartingTor => '正在重启 tor…';
+  String get bridgesRestartingTor => '正在重启 Tor…';
 
   @override
   String bridgesFindingABridgeS(Object elapsed) {
@@ -1125,7 +1125,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get bridgesATorEntryPoint =>
-      '一个没有任何人公开过的 tor 入口，通过一层包装连接，让连接看起来不像 tor。路线的其余部分还是通常的 3 跳。';
+      '一个没有任何人公开过的 Tor 入口，通过一层包装连接，让连接看起来不像 Tor。路线的其余部分还是通常的 3 跳。';
 
   @override
   String get bridgesLooksLike => '看起来像';
@@ -1137,14 +1137,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesGetBridges => '获取网桥';
 
   @override
-  String get bridgesAskTheTorProject => '直接向 tor 项目索取。你要解一道谜题，这样机器人就没法把网桥领光。';
+  String get bridgesAskTheTorProject => '直接向 Tor 项目索取。你要解一道谜题，这样机器人就没法把网桥领光。';
 
   @override
   String get bridgesTypeWhatYouSee => '输入你看到的内容。小写也可以。';
 
   @override
-  String get bridgesThisOneRequestDoes =>
-      '只有这一次请求不经过 tor——也不可能经过，因为用不了的正是 tor。管理你所在网络的人会看到你在联系 tor 项目。如果单是这一点在你那里就有问题，请从别处获取网桥，再粘贴到下面。';
+  String get bridgesWhenYouAskFor =>
+      '你请求网桥时，Tor 项目会看到你的 IP 地址。这很正常：Tor Browser 和所有 Tor 应用都是这样获取网桥的，他们从中只能知道有人请求了网桥，对你的聊天一无所知。';
 
   @override
   String get bridgesCouldNotDrawThe => '无法显示谜题';
@@ -8597,7 +8597,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesThatWasNotIt => '答案不對。換一題給你。';
 
   @override
-  String get bridgesMoatFailed => '聯絡不上 tor 專案。請一分鐘後再試，或在下方貼上橋接設定。';
+  String get bridgesMoatFailed => '聯絡不上 Tor 專案。請一分鐘後再試，或在下方貼上橋接設定。';
 
   @override
   String get bridgesGotBridgesSaveTo => '已取得橋接 · 儲存後即可使用';
@@ -8616,14 +8616,14 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get bridgesBridgesDisguiseYourConnection =>
-      '橋接會掩飾你的連線，讓它連得出去。選一種連入方式並儲存，tor 就會透過它重新連線。';
+      '橋接會掩飾你的連線，讓它連得出去。選一種連入方式並儲存，Tor 就會透過它重新連線。';
 
   @override
   String get bridgesBridgesOnlyChangeHow =>
-      '橋接只會改變 tor 的連線方式，而你現在沒有使用 Onion 模式。這裡的設定會保存下來，只是在你切換回去之前不會有作用。';
+      '橋接只會改變 Tor 的連線方式，而你現在沒有使用 Onion 模式。這裡的設定會保存下來，只是在你切換回去之前不會有作用。';
 
   @override
-  String get bridgesFromTheTorProject => '來自 tor 專案';
+  String get bridgesFromTheTorProject => '來自 Tor 專案';
 
   @override
   String get bridgesNoise => '雜訊';
@@ -8633,7 +8633,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get bridgesMakesTorTrafficLook =>
-      '讓 tor 流量看起來不像任何特定的東西。對大多數被封鎖的網路來說，這是最好的預設選擇。先回答一個驗證碼，就會拿到幾行設定。';
+      '讓 Tor 流量看起來不像任何特定的東西。對大多數被封鎖的網路來說，這是最好的預設選擇。先回答一個驗證碼，就會拿到幾行設定。';
 
   @override
   String get bridgesPrivateBridge => '私人橋接';
@@ -8675,7 +8675,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get bridgesRestartingTor => '正在重新啟動 tor…';
+  String get bridgesRestartingTor => '正在重新啟動 Tor…';
 
   @override
   String bridgesFindingABridgeS(Object elapsed) {
@@ -8698,7 +8698,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get bridgesATorEntryPoint =>
-      '一個沒有人公開過的 tor 入口，透過一層包裝連上，讓連線看起來不像 tor。其餘路線還是一般的 3 跳。';
+      '一個沒有人公開過的 Tor 入口，透過一層包裝連上，讓連線看起來不像 Tor。其餘路線還是一般的 3 跳。';
 
   @override
   String get bridgesLooksLike => '看起來像';
@@ -8710,14 +8710,14 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesGetBridges => '取得橋接';
 
   @override
-  String get bridgesAskTheTorProject => '直接向 tor 專案索取。你需要解一道謎題，這樣機器人才無法把橋接拿光。';
+  String get bridgesAskTheTorProject => '直接向 Tor 專案索取。你需要解一道謎題，這樣機器人才無法把橋接拿光。';
 
   @override
   String get bridgesTypeWhatYouSee => '輸入你看到的內容。小寫也可以。';
 
   @override
-  String get bridgesThisOneRequestDoes =>
-      '只有這一個請求不經過 tor，也不可能經過，因為無法運作的正是 tor。管理你所在網路的人會看到你在聯絡 tor 專案。如果光是這樣在你那裡就會出問題，請從別的地方取得橋接，再貼到下方。';
+  String get bridgesWhenYouAskFor =>
+      '你請求橋接時，Tor 專案會看到你的 IP 位址。這很正常：Tor Browser 和所有 Tor 應用程式都是這樣取得橋接的，他們從中只能知道有人請求了橋接，對你的聊天一無所知。';
 
   @override
   String get bridgesCouldNotDrawThe => '無法顯示謎題';

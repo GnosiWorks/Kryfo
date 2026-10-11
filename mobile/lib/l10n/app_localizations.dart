@@ -1680,7 +1680,7 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Couldn\'t reach the tor project. Try again in a minute, or paste a bridge line below.'**
+  /// **'Couldn\'t reach the Tor Project. Try again in a minute, or paste a bridge line below.'**
   String get bridgesMoatFailed;
 
   /// screens/bridges_screen.dart
@@ -1716,19 +1716,19 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Bridges disguise your connection so it can get out. Pick one way in, save, and tor reconnects through it.'**
+  /// **'Bridges disguise your connection so it can get out. Pick one way in, save, and Tor reconnects through it.'**
   String get bridgesBridgesDisguiseYourConnection;
 
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Bridges only change how tor connects, and you are not on onion mode right now. What you set here is saved, it just does nothing until you switch back.'**
+  /// **'Bridges only change how Tor connects, and you are not on onion mode right now. What you set here is saved, it just does nothing until you switch back.'**
   String get bridgesBridgesOnlyChangeHow;
 
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'From the tor project'**
+  /// **'From the Tor Project'**
   String get bridgesFromTheTorProject;
 
   /// screens/bridges_screen.dart
@@ -1746,7 +1746,7 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Makes tor traffic look like nothing in particular. The best default for most blocked networks. Answers a captcha, then hands you a few lines.'**
+  /// **'Makes Tor traffic look like nothing in particular. The best default for most blocked networks. Answers a captcha, then hands you a few lines.'**
   String get bridgesMakesTorTrafficLook;
 
   /// screens/bridges_screen.dart
@@ -1806,7 +1806,7 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Restarting tor…'**
+  /// **'Restarting Tor…'**
   String get bridgesRestartingTor;
 
   /// screens/bridges_screen.dart
@@ -1842,7 +1842,7 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'A tor entry point nobody has published, reached through a wrapper so the connection does not look like tor. The rest of the route is the usual three hops.'**
+  /// **'A Tor entry point nobody has published, reached through a wrapper so the connection does not look like Tor. The rest of the route is the usual three hops.'**
   String get bridgesATorEntryPoint;
 
   /// screens/bridges_screen.dart
@@ -1866,7 +1866,7 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Ask the tor project directly. You solve a puzzle so bots cannot drain the supply.'**
+  /// **'Ask the Tor Project directly. You solve a puzzle so bots cannot drain the supply.'**
   String get bridgesAskTheTorProject;
 
   /// screens/bridges_screen.dart
@@ -1878,8 +1878,8 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'This one request does not go through tor - it cannot, since tor is what is not working. Whoever runs your network will see you contacting the tor project. If that alone is a problem where you are, get bridges somewhere else and paste them below.'**
-  String get bridgesThisOneRequestDoes;
+  /// **'When you ask for bridges, the Tor Project sees your address. That\'s normal: it\'s how Tor Browser and every Tor app get bridges, and all it tells them is that someone asked for bridges. Nothing about your chats.'**
+  String get bridgesWhenYouAskFor;
 
   /// screens/bridges_screen.dart
   ///
