@@ -1000,6 +1000,7 @@
   "modesInstant": "Istantaneo",
   "modesEveryRelayYouUse": "Ogni relay che usi conosce l'indirizzo da cui ti connetti, non solo il nostro. I messaggi restano sigillati, ma il fatto che tu ne abbia inviato uno no. Disattivata di default, e di nuovo disattivata dopo una reinstallazione.",
   "modesNotChanged": "La modalità non è cambiata. Riprova.",
+  "modesSwitching": "Cambio…",
   "modesSpeed": "Velocità",
   "modesPrivacy": "e privacy",
   "modesChangeGloballyOrPer": "Cambiala per tutte le chat o per una sola",

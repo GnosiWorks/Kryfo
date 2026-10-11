@@ -1000,6 +1000,7 @@
   "modesInstant": "Seketika",
   "modesEveryRelayYouUse": "Setiap relay yang kamu pakai tahu alamat asal koneksimu, bukan hanya relay kami. Pesan tetap tersegel, tapi fakta bahwa kamu mengirimnya tidak. Mati secara bawaan, dan mati lagi setelah instal ulang.",
   "modesNotChanged": "Mode tidak berubah. Coba lagi.",
+  "modesSwitching": "Mengganti…",
   "modesSpeed": "Kecepatan",
   "modesPrivacy": "& privasi",
   "modesChangeGloballyOrPer": "Ubah untuk semua, atau per obrolan",

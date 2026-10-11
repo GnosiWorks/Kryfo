@@ -3536,6 +3536,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get modesNotChanged => 'حالت تغییر نکرد. دوباره امتحان کنید.';
 
   @override
+  String get modesSwitching => 'در حال تغییر…';
+
+  @override
   String get modesSpeed => 'سرعت';
 
   @override

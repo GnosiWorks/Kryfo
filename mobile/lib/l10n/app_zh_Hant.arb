@@ -1000,6 +1000,7 @@
   "modesInstant": "即時",
   "modesEveryRelayYouUse": "你使用的每個中繼都會知道你連線的來源位址，不只是我們的中繼。訊息仍然是密封的，但「你傳了訊息」這件事不是。預設關閉，重新安裝後也會再次關閉。",
   "modesNotChanged": "模式沒有變更，請再試一次。",
+  "modesSwitching": "切換中…",
   "modesSpeed": "速度",
   "modesPrivacy": "與隱私",
   "modesChangeGloballyOrPer": "可全域變更，或依聊天個別設定",

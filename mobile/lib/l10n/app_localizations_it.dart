@@ -3564,6 +3564,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get modesNotChanged => 'La modalità non è cambiata. Riprova.';
 
   @override
+  String get modesSwitching => 'Cambio…';
+
+  @override
   String get modesSpeed => 'Velocità';
 
   @override

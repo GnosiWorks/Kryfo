@@ -5511,6 +5511,12 @@ abstract class AppLocalizations {
   /// **'The mode didn\'t change. Try again.'**
   String get modesNotChanged;
 
+  /// the pill on a mode card while the app moves onto it
+  ///
+  /// In en, this message translates to:
+  /// **'Switching…'**
+  String get modesSwitching;
+
   /// screens/modes_screen.dart
   ///
   /// In en, this message translates to:

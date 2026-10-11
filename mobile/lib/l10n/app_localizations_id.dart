@@ -3520,6 +3520,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get modesNotChanged => 'Mode tidak berubah. Coba lagi.';
 
   @override
+  String get modesSwitching => 'Mengganti…';
+
+  @override
   String get modesSpeed => 'Kecepatan';
 
   @override

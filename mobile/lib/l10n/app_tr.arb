@@ -1000,6 +1000,7 @@
   "modesInstant": "Anında",
   "modesEveryRelayYouUse": "Kullandığın her aktarıcı, yalnızca bizimki değil, bağlandığın adresi bilir. Mesajlar yine mühürlüdür, ama mesaj gönderdiğin gerçeği değil. Varsayılan olarak kapalı, yeniden kurulumdan sonra da yine kapalı.",
   "modesNotChanged": "Mod değişmedi. Yeniden dene.",
+  "modesSwitching": "Değiştiriliyor…",
   "modesSpeed": "Hız",
   "modesPrivacy": "ve gizlilik",
   "modesChangeGloballyOrPer": "Genel olarak ya da sohbet başına değiştir",

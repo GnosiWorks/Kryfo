@@ -1000,6 +1000,7 @@
   "modesInstant": "Tức thì",
   "modesEveryRelayYouUse": "Mọi relay bạn dùng đều biết địa chỉ bạn kết nối từ đó, không chỉ relay của chúng tôi. Tin nhắn vẫn được mã hóa kín, nhưng việc bạn đã gửi tin thì không được che giấu. Mặc định tắt, và tắt lại sau khi cài đặt lại.",
   "modesNotChanged": "Chế độ chưa đổi. Hãy thử lại.",
+  "modesSwitching": "Đang chuyển…",
   "modesSpeed": "Tốc độ",
   "modesPrivacy": "& riêng tư",
   "modesChangeGloballyOrPer": "Đổi cho tất cả, hoặc cho từng cuộc trò chuyện",

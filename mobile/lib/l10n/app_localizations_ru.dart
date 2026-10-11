@@ -3620,6 +3620,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get modesNotChanged => 'Режим не сменился. Попробуй ещё раз.';
 
   @override
+  String get modesSwitching => 'Переключаем…';
+
+  @override
   String get modesSpeed => 'Скорость';
 
   @override

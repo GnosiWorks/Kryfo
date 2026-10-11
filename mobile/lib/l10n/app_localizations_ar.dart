@@ -3630,6 +3630,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get modesNotChanged => 'لم يتغيّر الوضع. حاول مجددًا.';
 
   @override
+  String get modesSwitching => 'جارٍ التبديل…';
+
+  @override
   String get modesSpeed => 'السرعة';
 
   @override

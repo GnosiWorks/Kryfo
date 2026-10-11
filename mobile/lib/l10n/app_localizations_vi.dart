@@ -3515,6 +3515,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get modesNotChanged => 'Chế độ chưa đổi. Hãy thử lại.';
 
   @override
+  String get modesSwitching => 'Đang chuyển…';
+
+  @override
   String get modesSpeed => 'Tốc độ';
 
   @override

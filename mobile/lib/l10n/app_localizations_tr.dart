@@ -3539,6 +3539,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get modesNotChanged => 'Mod değişmedi. Yeniden dene.';
 
   @override
+  String get modesSwitching => 'Değiştiriliyor…';
+
+  @override
   String get modesSpeed => 'Hız';
 
   @override

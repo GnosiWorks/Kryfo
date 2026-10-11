@@ -1000,6 +1000,7 @@
   "modesInstant": "Instantâneo",
   "modesEveryRelayYouUse": "Cada retransmissor que você usa sabe o endereço de onde você se conecta, não só o nosso. As mensagens continuam lacradas, mas o fato de você ter enviado uma, não. Desativado por padrão, e desativado de novo depois de reinstalar.",
   "modesNotChanged": "O modo não mudou. Tente de novo.",
+  "modesSwitching": "Mudando…",
   "modesSpeed": "Velocidade",
   "modesPrivacy": "e privacidade",
   "modesChangeGloballyOrPer": "Mude para tudo ou por conversa",

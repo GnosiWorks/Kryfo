@@ -1000,6 +1000,7 @@
   "modesInstant": "Instantané",
   "modesEveryRelayYouUse": "Chaque relais que vous utilisez connaît l’adresse d’où vous vous connectez, pas seulement le nôtre. Les messages restent scellés, mais le fait que vous en ayez envoyé un ne l’est pas. Désactivé par défaut, et de nouveau désactivé après une réinstallation.",
   "modesNotChanged": "Le mode n’a pas changé. Réessayez.",
+  "modesSwitching": "Changement…",
   "modesSpeed": "Vitesse",
   "modesPrivacy": "& confidentialité",
   "modesChangeGloballyOrPer": "Pour tout, ou discussion par discussion",

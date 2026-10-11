@@ -4407,6 +4407,10 @@
   "@modesNotChanged": {
     "description": "toast when a mode could not be saved and nothing changed"
   },
+  "modesSwitching": "Switching…",
+  "@modesSwitching": {
+    "description": "the pill on a mode card while the app moves onto it"
+  },
   "modesSpeed": "Speed",
   "@modesSpeed": {
     "description": "screens/modes_screen.dart"

@@ -3484,6 +3484,7 @@ void main() {
       "Each chat can change it in its menu",
     );
     expect(l.modesNotChanged, "The mode didn't change. Try again.");
+    expect(l.modesSwitching, "Switching…");
     expect(l.appNoRelayReached, "No relay reached");
     expect(l.appWaitingForARelay, "Waiting for a relay");
     expect(

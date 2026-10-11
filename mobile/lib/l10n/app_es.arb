@@ -1000,6 +1000,7 @@
   "modesInstant": "Instantáneo",
   "modesEveryRelayYouUse": "Cada repetidor que usas conoce la dirección desde la que te conectas, no solo el nuestro. Los mensajes siguen sellados, pero el hecho de haber enviado uno no lo está. Desactivado por defecto, y desactivado de nuevo tras reinstalar.",
   "modesNotChanged": "El modo no cambió. Inténtalo de nuevo.",
+  "modesSwitching": "Cambiando…",
   "modesSpeed": "Velocidad",
   "modesPrivacy": "y privacidad",
   "modesChangeGloballyOrPer": "Cámbialo para todo o por chat",

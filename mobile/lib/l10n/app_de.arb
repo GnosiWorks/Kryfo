@@ -1000,6 +1000,7 @@
   "modesInstant": "Sofort",
   "modesEveryRelayYouUse": "Jedes Relais, das du nutzt, kennt die Adresse, von der aus du dich verbindest, nicht nur unseres. Nachrichten bleiben versiegelt, aber dass du eine gesendet hast, nicht. Standardmäßig aus, und nach einer Neuinstallation wieder aus.",
   "modesNotChanged": "Der Modus hat sich nicht geändert. Versuch es noch mal.",
+  "modesSwitching": "Wechsle…",
   "modesSpeed": "Tempo",
   "modesPrivacy": "& Privatsphäre",
   "modesChangeGloballyOrPer": "Global ändern oder pro Chat",

@@ -3606,6 +3606,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get modesNotChanged => 'Режим не змінився. Спробуй ще раз.';
 
   @override
+  String get modesSwitching => 'Перемикаємо…';
+
+  @override
   String get modesSpeed => 'Швидкість';
 
   @override

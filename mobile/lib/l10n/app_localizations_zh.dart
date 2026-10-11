@@ -3385,6 +3385,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get modesNotChanged => '模式没有更改，请重试。';
 
   @override
+  String get modesSwitching => '正在切换…';
+
+  @override
   String get modesSpeed => '速度';
 
   @override
@@ -11167,6 +11170,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get modesNotChanged => '模式沒有變更，請再試一次。';
+
+  @override
+  String get modesSwitching => '切換中…';
 
   @override
   String get modesSpeed => '速度';

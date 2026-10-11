@@ -3063,6 +3063,7 @@ final _calls = <_Call>[
   ('settingsDisguiseByDefault', [], (l) => l.settingsDisguiseByDefault),
   ('settingsDisguiseByDefaultHint', [], (l) => l.settingsDisguiseByDefaultHint),
   ('modesNotChanged', [], (l) => l.modesNotChanged),
+  ('modesSwitching', [], (l) => l.modesSwitching),
   ('appNoRelayReached', [], (l) => l.appNoRelayReached),
   ('appWaitingForARelay', [], (l) => l.appWaitingForARelay),
   ('handleStillReaching', ["Tor"], (l) => l.handleStillReaching),

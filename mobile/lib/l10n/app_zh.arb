@@ -1000,6 +1000,7 @@
   "modesInstant": "即时",
   "modesEveryRelayYouUse": "你用到的每个中继都知道你连接时的地址，而不只是我们的中继。消息仍然是加密的，但你发过消息这件事并没有被加密。默认关闭，重装后也会重新关闭。",
   "modesNotChanged": "模式没有更改，请重试。",
+  "modesSwitching": "正在切换…",
   "modesSpeed": "速度",
   "modesPrivacy": "与隐私",
   "modesChangeGloballyOrPer": "全局更改，或按聊天单独设置",
