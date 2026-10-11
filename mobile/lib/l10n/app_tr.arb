@@ -182,6 +182,7 @@
   "notificationsNewMessage": "Yeni mesaj",
   "notificationsNewEncryptedMessagesFromYourContacts": "Kişilerinden yeni şifreli mesajlar",
   "notificationsNewMessage2": "Yeni mesaj",
+  "notificationsSomeone": "Birisi",
   "notificationsEncrypted": "Şifreli",
   "rooms24h": "24 sa",
   "roomsD": "{inDays} g",

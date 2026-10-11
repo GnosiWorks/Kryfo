@@ -754,6 +754,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get notificationsNewMessage2 => 'Nova mensagem';
 
   @override
+  String get notificationsSomeone => 'Alguém';
+
+  @override
   String get notificationsEncrypted => 'Criptografada';
 
   @override

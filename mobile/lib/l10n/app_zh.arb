@@ -182,6 +182,7 @@
   "notificationsNewMessage": "新消息",
   "notificationsNewEncryptedMessagesFromYourContacts": "来自联系人的新加密消息",
   "notificationsNewMessage2": "新消息",
+  "notificationsSomeone": "某人",
   "notificationsEncrypted": "已加密",
   "rooms24h": "24 小时",
   "roomsD": "{inDays} 天",

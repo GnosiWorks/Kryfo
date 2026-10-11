@@ -227,9 +227,16 @@ class _Io implements AppIo {
     required String title,
     required String body,
     String? payload,
+    Object? on,
     String? msgUid,
     int? burnAt,
-  }) async => rang.add(payload ?? title);
+  }) async {
+    rang.add(payload ?? title);
+    ons.add(on);
+  }
+
+  // the database each ring's tag is kept in
+  final ons = <Object?>[];
 
   @override
   Future<void> unnotifyMessage(String msgUid) async {}
@@ -1957,6 +1964,11 @@ void main() {
       expect(w.live.msg('v'), isNotNull);
       expect(w.io.rang, [_h, 'group:$_g2', _v]);
       expect(w.io.ticksFor('v'), ['relay x-$_v']);
+      // each rings under a tag its own container keeps
+      expect(w.io.ons, hasLength(3));
+      expect(identical(w.io.ons[0], w.vault), isTrue);
+      expect(identical(w.io.ons[1], w.vault), isTrue);
+      expect(identical(w.io.ons[2], w.live), isTrue);
     });
   });
 

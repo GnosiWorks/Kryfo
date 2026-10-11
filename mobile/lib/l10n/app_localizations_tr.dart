@@ -751,6 +751,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get notificationsNewMessage2 => 'Yeni mesaj';
 
   @override
+  String get notificationsSomeone => 'Birisi';
+
+  @override
   String get notificationsEncrypted => 'Şifreli';
 
   @override

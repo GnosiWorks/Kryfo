@@ -182,6 +182,7 @@
   "notificationsNewMessage": "Tin nhắn mới",
   "notificationsNewEncryptedMessagesFromYourContacts": "Tin nhắn mới từ các liên hệ của bạn, được mã hóa",
   "notificationsNewMessage2": "Tin nhắn mới",
+  "notificationsSomeone": "Ai đó",
   "notificationsEncrypted": "Được mã hóa",
   "rooms24h": "24 giờ",
   "roomsD": "{inDays} ngày",

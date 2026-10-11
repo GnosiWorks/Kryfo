@@ -177,6 +177,7 @@ class _Io extends AppIo {
     required String title,
     required String body,
     String? payload,
+    Object? on,
     String? msgUid,
     int? burnAt,
   }) async {}

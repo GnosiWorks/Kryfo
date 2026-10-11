@@ -741,6 +741,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get notificationsNewMessage2 => 'Tin nhắn mới';
 
   @override
+  String get notificationsSomeone => 'Ai đó';
+
+  @override
   String get notificationsEncrypted => 'Được mã hóa';
 
   @override

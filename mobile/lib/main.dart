@@ -1266,7 +1266,7 @@ class HaloDb implements GroupOwedStore {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 72,
+      version: 74,
       onConfigure: eraseFreedPages,
       onCreate: (db, _) async {
         await db.execute('''
@@ -1425,6 +1425,8 @@ class HaloDb implements GroupOwedStore {
         await firstContactTables(db);
         await roomKeysTable(db);
         await frameOrderTable(db);
+        await notifTagTables(db);
+        await groupResentTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
         // 62 runs after every older step, below: its index names columns
@@ -1887,6 +1889,14 @@ class HaloDb implements GroupOwedStore {
           // of edits and reactions taken in
           await queueTurnColumns(db);
         }
+        if (oldV < 73) {
+          // the random tag each chat's notifications go under
+          await notifTagTables(db);
+        }
+        if (oldV < 74) {
+          // which groups' texts went again to a member after a restore
+          await groupResentTables(db);
+        }
       },
     );
     // retired while it was opening
@@ -2341,6 +2351,7 @@ class HaloDb implements GroupOwedStore {
     );
     await db.delete('shield', where: 'halo_id = ?', whereArgs: [haloId]);
     await db.delete('first_kept', where: 'peer = ?', whereArgs: [haloId]);
+    await db.delete('notif_tags', where: 'chat = ?', whereArgs: [haloId]);
   }
 
   // they wrote after we deleted them: bring the row back as a request.
@@ -3205,12 +3216,20 @@ class HaloDb implements GroupOwedStore {
   }
 
   // the authoritative list from a create or reconcile control replaces the
-  // whole member set
+  // whole member set. one still in it keeps when they joined: what went
+  // before it never went to them
   Future<void> syncGroupMembers(String groupId, List<String> members) async {
     await keepGroupOwedTo(groupId, members);
     final db = await open();
     final batch = db.batch();
-    batch.delete('group_members', where: 'group_id = ?', whereArgs: [groupId]);
+    batch.delete(
+      'group_members',
+      where: members.isEmpty
+          ? 'group_id = ?'
+          : 'group_id = ? AND halo_id NOT IN '
+                '(${List.filled(members.length, '?').join(', ')})',
+      whereArgs: [groupId, ...members],
+    );
     final now = DateTime.now().millisecondsSinceEpoch;
     for (final h in members) {
       batch.insert('group_members', {
@@ -3270,6 +3289,7 @@ class HaloDb implements GroupOwedStore {
       'group_media_owed',
       'group_roster',
       'room_keys',
+      'group_resent',
     ]) {
       await db.delete(table, where: 'group_id = ?', whereArgs: [groupId]);
     }
@@ -3289,6 +3309,11 @@ class HaloDb implements GroupOwedStore {
       'group_members',
       where: 'group_id = ?',
       whereArgs: [groupId],
+    );
+    await db.delete(
+      'notif_tags',
+      where: 'chat = ?',
+      whereArgs: ['group:$groupId'],
     );
     await db.delete('groups', where: 'group_id = ?', whereArgs: [groupId]);
   }
@@ -5806,6 +5831,123 @@ class HaloDb implements GroupOwedStore {
     });
   }
 
+  // a restore's mark outlives any window it could still stop
+  static const _kResentKeep = Duration(days: 16);
+  // one restore per member a day: each ask names its own date
+  static const _kResentEvery = Duration(days: 1);
+
+  /// our group texts since [from], owed again to [member] as texts they
+  /// missed are: in each group here they are in, only what went since they
+  /// joined, never one that burned. once per [restore] and group, and one
+  /// [restore] per member a day. one owed already is left as it is. a
+  /// room's members are keys of its own, never a restored phone. how many
+  Future<int> oweGroupTextsAfterRestore(
+    String member, {
+    required String me,
+    required int from,
+    required int restore,
+    required int now,
+  }) async {
+    final db = await open();
+    return db.transaction((t) async {
+      await t.delete(
+        'group_resent',
+        where: 'at < ?',
+        whereArgs: [now - _kResentKeep.inMilliseconds],
+      );
+      // another restore of theirs marked within the day: not this one too
+      for (final r in await t.query(
+        'group_resent',
+        columns: ['since', 'at'],
+        where: 'member = ?',
+        whereArgs: [member],
+      )) {
+        final at = (r['at'] as num).toInt();
+        if (r['since'] != restore && now - at < _kResentEvery.inMilliseconds) {
+          return 0;
+        }
+      }
+      var n = 0;
+      for (final m in await t.query(
+        'group_members',
+        columns: ['group_id', 'joined_at'],
+        where: 'halo_id = ?',
+        whereArgs: [member],
+      )) {
+        final g = m['group_id'] as String;
+        final group = await t.query(
+          'groups',
+          columns: ['room_pub'],
+          where: 'group_id = ?',
+          whereArgs: [g],
+          limit: 1,
+        );
+        if (group.isEmpty || group.first['room_pub'] != null) continue;
+        final marked = await t.query(
+          'group_resent',
+          columns: ['at'],
+          where: 'group_id = ? AND member = ? AND since = ?',
+          whereArgs: [g, member, restore],
+          limit: 1,
+        );
+        if (marked.isNotEmpty) continue;
+        await t.insert('group_resent', {
+          'group_id': g,
+          'member': member,
+          'since': restore,
+          'at': now,
+        });
+        final start = max(from, (m['joined_at'] as num?)?.toInt() ?? now);
+        final others = [
+          for (final r in await t.query(
+            'group_members',
+            columns: ['halo_id'],
+            where: 'group_id = ?',
+            whereArgs: [g],
+          ))
+            if (r['halo_id'] != me) r,
+        ].length;
+        // kNotSent is a block's: those wait for a tap
+        for (final r in await t.query(
+          'messages',
+          columns: ['msg_uid', 'sent_at', 'burn_at'],
+          where:
+              'group_id = ? AND direction = ? AND sent = ? AND msg_uid IS NOT '
+              'NULL AND media_path IS NULL AND file_path IS NULL '
+              'AND sent_at >= ?',
+          whereArgs: [g, 'out', 1, start],
+        )) {
+          final at = (r['sent_at'] as num?)?.toInt() ?? 0;
+          final burn = (r['burn_at'] as num?)?.toInt();
+          if (at < start || (burn != null && burn <= now)) continue;
+          final uid = r['msg_uid'] as String;
+          // one owed already keeps its own tries
+          final had = await t.query(
+            'group_media_owed',
+            columns: ['tries'],
+            where: 'msg_uid = ? AND member = ?',
+            whereArgs: [uid, member],
+            limit: 1,
+          );
+          if (had.isNotEmpty) continue;
+          await t.insert('group_media_owed', {
+            'msg_uid': uid,
+            'group_id': g,
+            'member': member,
+            'total': 1,
+            'have': '',
+            'sent_to': max(others, 1),
+            'since': now,
+            'tries': 0,
+            'next_at': now,
+          });
+          n++;
+        }
+      }
+      return n;
+    });
+  }
+
   /// a group's messages some members still lack, by uid: how many of the
   /// members each went to have it, and how many of the rest are past their
   /// tries
@@ -6642,6 +6784,17 @@ class HaloDb implements GroupOwedStore {
     }
     return n;
   }
+
+  // the tag [chat]'s notifications go under, made on its first one
+  Future<String> notifTag(String chat) async => notifTagIn(await open(), chat);
+
+  Future<String?> notifTagOf(String chat) async =>
+      notifTagOfIn(await open(), chat);
+
+  // the chat a tapped notification's tag stands for, when it is this
+  // container's
+  Future<String?> notifChatOf(String tag) async =>
+      notifChatIn(await open(), tag);
 
   Future<void> markSent(String msgUid) async {
     final db = await open();
@@ -7514,6 +7667,65 @@ Future<void> firstContactTables(DatabaseExecutor db) async {
       both_went INTEGER NOT NULL DEFAULT 0
     )
   ''');
+}
+
+// a chat's notifications go under a random tag kept here, in the
+// container that holds the chat. chat is a contact's id, 'group:' and a
+// group's, or a support chat's payload
+Future<void> notifTagTables(DatabaseExecutor db) async {
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS notif_tags (
+      chat TEXT PRIMARY KEY,
+      tag TEXT NOT NULL UNIQUE
+    )
+  ''');
+}
+
+// a group's texts sent again to a member who restored a backup: once per
+// restore, known by its backup's day (0 when the ask had none)
+Future<void> groupResentTables(DatabaseExecutor db) async {
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS group_resent (
+      group_id TEXT NOT NULL,
+      member TEXT NOT NULL,
+      since INTEGER NOT NULL,
+      at INTEGER NOT NULL,
+      PRIMARY KEY (group_id, member, since)
+    )
+  ''');
+}
+
+Future<String?> notifTagOfIn(DatabaseExecutor db, String chat) async {
+  final r = await db.query(
+    'notif_tags',
+    columns: ['tag'],
+    where: 'chat = ?',
+    whereArgs: [chat],
+    limit: 1,
+  );
+  return r.isEmpty ? null : r.first['tag'] as String;
+}
+
+// made once: a second caller at the same moment takes the first one's
+Future<String> notifTagIn(DatabaseExecutor db, String chat) async {
+  final had = await notifTagOfIn(db, chat);
+  if (had != null) return had;
+  await db.insert('notif_tags', {
+    'chat': chat,
+    'tag': newNotifTag(),
+  }, conflictAlgorithm: ConflictAlgorithm.ignore);
+  return (await notifTagOfIn(db, chat))!;
+}
+
+Future<String?> notifChatIn(DatabaseExecutor db, String tag) async {
+  final r = await db.query(
+    'notif_tags',
+    columns: ['chat'],
+    where: 'tag = ?',
+    whereArgs: [tag],
+    limit: 1,
+  );
+  return r.isEmpty ? null : r.first['chat'] as String;
 }
 
 // the upgrade to 69: the file a held slice is of and its place in it, so a
@@ -8875,6 +9087,32 @@ void _sayLinkResult(String result) {
 Future<void> openChatForHalo(String? haloId) =>
     lockGuard.afterUnlock(() => _openChatFor(haloId), key: 'chat:$haloId');
 
+// a tapped notification names its chat by tag only. the tag is read once
+// the app lock is open, in the containers of the session it opened to
+Future<void> openChatForNotif(String? tag) async {
+  if (tag == null || tag.isEmpty) return;
+  await lockGuard.afterUnlock(() async {
+    final chat = await notifChatFor(tag);
+    if (chat != null) await openNotifChat(chat);
+  }, key: 'notif:$tag');
+}
+
+// what a resolved tap opens. tests watch it here
+@visibleForTesting
+Future<void> Function(String chat) openNotifChat = _openChatFor;
+
+// the support summary's payload is the inbox itself, the same on every post
+@visibleForTesting
+Future<String?> notifChatFor(String tag) async {
+  if (tag == kSupportPayload) return tag;
+  try {
+    return await session.chatOfNotifTag(tag);
+  } catch (e) {
+    dlog('notif tap: not read (${e.runtimeType})');
+    return null;
+  }
+}
+
 // a group asked to hold more than the cap. its message is read when shown,
 // in the language of that moment
 class GroupFull implements Exception {
@@ -9209,19 +9447,26 @@ class AppIo {
   Future<String> firstContactSend(String xPub, String fc, String cipher) =>
       engine.sendFirstContact(xPub, fc, cipher);
 
+  // [payload] names the chat here only: android gets the tag [on] keeps
+  // for it
   Future<void> notify({
     required String title,
     required String body,
-    String? payload,
+    required String payload,
+    required HaloDb on,
     String? msgUid,
     int? burnAt,
-  }) => showMessageNotification(
-    title: title,
-    body: body,
-    payload: payload,
-    msgUid: msgUid,
-    burnAt: burnAt,
-  );
+  }) async {
+    if (await quietNow()) return;
+    await showMessageNotification(
+      title: title,
+      body: body,
+      chat: payload,
+      tag: await on.notifTag(payload),
+      msgUid: msgUid,
+      burnAt: burnAt,
+    );
+  }
 
   // what this process showed for a chat leaves the shade
   Future<void> unnotify(String payload) => clearNotificationsFor(payload);
@@ -10831,6 +11076,11 @@ class AppState extends ChangeNotifier {
     String groupId,
     Iterable<String> owed,
   ) async {
+    // its time ran out here: it is never sent again
+    final burn = (r['burn_at'] as num?)?.toInt();
+    if (burn != null && burn <= DateTime.now().millisecondsSinceEpoch) {
+      return 'gone';
+    }
     final members = await d.getGroupMembers(groupId);
     await d.keepGroupOwedTo(groupId, members);
     final to = [
@@ -13479,11 +13729,12 @@ class AppState extends ChangeNotifier {
     final String notifPayload;
     final bool suppress;
     final shownText = edited ?? env.message;
-    // the name given to them here, as the chat list shows it
+    // the name given to them here. android keeps titles in its history, so
+    // with none given it says someone, never their id
     final nickname =
         (await db.getContact(senderHaloId))?['nickname'] as String?;
     final named = nickname == null || nickname.isEmpty
-        ? senderHaloId
+        ? l10n.notificationsSomeone
         : nickname;
     if (isGroup) {
       final g = await db.getGroup(env.groupId!);
@@ -13495,8 +13746,9 @@ class AppState extends ChangeNotifier {
           : shownText.isNotEmpty
           ? shownText
           : notifMediaLine(fileName, mediaPath);
+      // a room member's tag is cut from their key: someone too
       final who = looksLikeRoomKey(senderHaloId)
-          ? roomTag(senderHaloId)
+          ? l10n.notificationsSomeone
           : named;
       notifBody = '$who: $gBody';
       notifPayload = 'group:${env.groupId}';
@@ -13545,6 +13797,7 @@ class AppState extends ChangeNotifier {
         title: notifTitle,
         body: notifBody,
         payload: notifPayload,
+        on: db,
         msgUid: env.msgUid,
         burnAt: burnFromArrival,
       );
@@ -13583,7 +13836,12 @@ class AppState extends ChangeNotifier {
   }) async {
     try {
       if (answered) {
-        await _bell.chat(chatId: id, title: title, body: body);
+        await _bell.chat(
+          chatId: id,
+          tag: await db.notifTag('$kSupportPayload$id'),
+          title: title,
+          body: body,
+        );
       } else if (!readingIn(kSupportPayload, db.container)) {
         // the inbox on screen says it already. a chat is new with its
         // first message kept, whatever came before it and was not
@@ -13702,6 +13960,15 @@ class AppState extends ChangeNotifier {
             } catch (e) {
               if (!identical(_openVault, vault)) return;
               dlog('unseal: an owed resend not run ($e)');
+            }
+            try {
+              final since = u.resendSince;
+              if (since != null) {
+                await _resendGroupTextsTo(vault, u.from, since: since);
+              }
+            } catch (e) {
+              if (!identical(_openVault, vault)) return;
+              dlog('unseal: owed group texts not run (${e.runtimeType})');
             }
           } else if (u != null) {
             try {
@@ -15521,6 +15788,8 @@ class AppState extends ChangeNotifier {
   // next one rather than ten minutes on
   static const _kResendGap = Duration(minutes: 2);
   final Map<String, int> _resentAt = {};
+  // the same for group texts, per container and member
+  final Map<String, int> _groupResentAt = {};
   final Map<String, int> _owedSealedAt = {};
 
   // what we sent [peer] lately and never came back delivered, put out again
@@ -15568,6 +15837,58 @@ class AppState extends ChangeNotifier {
       Unsealed(peer, '', false, now, resend: true, resendSince: since),
     );
     if (kept) _owedSealedAt[peer] = now;
+  }
+
+  // our group texts since their backup, owed again to a member who
+  // restored one, from [d], the container the groups are in. the marks in
+  // [d] keep it to once per restore
+  Future<void> _resendGroupTextsTo(
+    HaloDb d,
+    String member, {
+    required int since,
+  }) async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    // a backup from the future is no restore
+    if (since > now || d.container.quiet) return;
+    final gap = '${d.container.dbFile}|$member';
+    if (now - (_groupResentAt[gap] ?? 0) < _kResendGap.inMilliseconds) return;
+    if (await d.isBlocked(member) || await blockedAnywhere(member)) return;
+    if (await d.keyChanged(member)) return;
+    _groupResentAt[gap] = now;
+    // no further back than gone texts are known, by the day: an older
+    // backup is the same restore all day long
+    final from = max(since, now - HaloDb.kGoneFor.inMilliseconds);
+    final n = await d.oweGroupTextsAfterRestore(
+      member,
+      me: myId,
+      from: from,
+      restore: utcDayOf(from),
+      now: now,
+    );
+    if (n == 0) return;
+    dlog('resend: $n group texts owed again');
+    groupOwedTick.value++;
+    if (torReady) unawaited(_drainGroupOwed());
+  }
+
+  // a restore's ask, for the groups: each container open now, and a shut
+  // vault that knows them gets it sealed, to run as it opens. [sealed]: the
+  // one to one ask already was
+  Future<void> _resendGroupsAfterRestore(
+    String member, {
+    required int since,
+    required bool sealed,
+  }) async {
+    for (final d in [live, ?_openVault]) {
+      try {
+        await _resendGroupTextsTo(d, member, since: since);
+      } catch (e) {
+        dlog('resend: group texts not owed (${e.runtimeType})');
+      }
+    }
+    if (!sealed && hiddenWhileShut(member)) {
+      await _oweResend(member, since: since);
+    }
   }
 
   void _pruneHeal() {
@@ -16892,7 +17213,10 @@ class AppState extends ChangeNotifier {
     await loadScreenshotPref();
     await loadHeartbeat();
     startMemoryLog();
-    await initNotifications(onTap: openChatForHalo);
+    await initNotifications(
+      onTap: openChatForNotif,
+      tagsOf: (chat) => session.notifTagsOf(chat),
+    );
     // the first call into android's notification service after a start is
     // slow, a tenth of a second or more. every start pays it here, so
     // nothing later pays it where it could be timed
@@ -18407,6 +18731,15 @@ class AppState extends ChangeNotifier {
         } else {
           await _oweResend(from, since: since);
         }
+        // and our group texts since their backup, which no receipt says
+        // reached them. an ask with no backup date is no restore
+        if (since != null) {
+          await _resendGroupsAfterRestore(
+            from,
+            since: since,
+            sealed: on == null,
+          );
+        }
       }
     } catch (e) {
       dlog('bundle ctl handle failed: $e');
@@ -19454,10 +19787,10 @@ class AppState extends ChangeNotifier {
     for (final path in await d.groupFilePaths(groupId)) {
       await shredFile(path);
     }
+    // what it put in the shade goes with it, while its tag is still here
+    await _io.unnotify('group:$groupId');
     await d.deleteGroupMessages(groupId);
     await d.deleteGroup(groupId);
-    // what it put in the shade goes with it
-    await _io.unnotify('group:$groupId');
     // the line in the list is only for a room of the session on screen: an
     // everyday room ending while the decoy is open says nothing there
     if (expired && identical(d, session.primary)) {
@@ -20345,6 +20678,7 @@ class AppState extends ChangeNotifier {
     final members = sessionQuiet
         ? const <String>[]
         : await d.getGroupMembers(groupId);
+    await _io.unnotify('group:$groupId');
     await session.clearGroupConversation(groupId);
     await session.deleteGroup(groupId);
     // a quiet session keeps it on this phone: nothing leaves
@@ -20356,7 +20690,6 @@ class AppState extends ChangeNotifier {
         on: d,
       );
     }
-    await _io.unnotify('group:$groupId');
     _bumpChatRev('group:$groupId');
     await refreshGroups();
   }
@@ -20364,9 +20697,9 @@ class AppState extends ChangeNotifier {
   // a group this phone was taken out of: its messages, files and row, and
   // what it left in the shade
   Future<void> _dropGroup(String groupId, HaloDb db) async {
+    await _io.unnotify('group:$groupId');
     await db.clearGroupConversation(groupId);
     await db.deleteGroup(groupId);
-    await _io.unnotify('group:$groupId');
   }
 
   // groups this phone was taken out of, by name, until the open screen of
@@ -20586,6 +20919,9 @@ void main() async {
   WidgetsBinding.instance.addPostFrameCallback((_) => _openFromNotif());
 }
 
+@visibleForTesting
+Future<void> openFromNotifForTest() => _openFromNotif();
+
 Future<void> _openFromNotif() async {
   try {
     final details = await notifPlugin.getNotificationAppLaunchDetails();
@@ -20593,7 +20929,7 @@ Future<void> _openFromNotif() async {
       final payload = details?.notificationResponse?.payload;
       Future.delayed(
         const Duration(milliseconds: 500),
-        () => openChatForHalo(payload),
+        () => openChatForNotif(payload),
       );
     }
   } catch (e) {

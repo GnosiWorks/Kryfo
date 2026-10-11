@@ -776,6 +776,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notificationsNewMessage2 => 'رسالة جديدة';
 
   @override
+  String get notificationsSomeone => 'شخص ما';
+
+  @override
   String get notificationsEncrypted => 'مشفّرة';
 
   @override

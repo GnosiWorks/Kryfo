@@ -182,6 +182,7 @@
   "notificationsNewMessage": "Новое сообщение",
   "notificationsNewEncryptedMessagesFromYourContacts": "Новые зашифрованные сообщения от твоих контактов",
   "notificationsNewMessage2": "Новое сообщение",
+  "notificationsSomeone": "Кто-то",
   "notificationsEncrypted": "Зашифровано",
   "rooms24h": "24 ч",
   "roomsD": "{inDays} д",

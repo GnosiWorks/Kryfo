@@ -1215,6 +1215,12 @@ abstract class AppLocalizations {
   /// **'New message'**
   String get notificationsNewMessage2;
 
+  /// notifications: the name on a notification from someone with no name given here, never their id
+  ///
+  /// In en, this message translates to:
+  /// **'Someone'**
+  String get notificationsSomeone;
+
   /// notifications.dart
   ///
   /// In en, this message translates to:

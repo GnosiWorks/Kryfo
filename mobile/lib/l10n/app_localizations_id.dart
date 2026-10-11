@@ -743,6 +743,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get notificationsNewMessage2 => 'Pesan baru';
 
   @override
+  String get notificationsSomeone => 'Seseorang';
+
+  @override
   String get notificationsEncrypted => 'Terenkripsi';
 
   @override

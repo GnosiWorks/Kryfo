@@ -24,12 +24,14 @@ import 'package:kryfo/main.dart'
         HaloDb,
         heldWire,
         kFrameReaction,
+        kNotSent,
         kFrameReceipt,
         makePreKeyBundleB64,
         openSignalStore,
         processPeerBundle,
         resendFrom,
         session,
+        utcDayOf,
         signalDecrypt,
         signalEncrypt,
         useDatabasesForTest;
@@ -165,6 +167,7 @@ class _Io extends AppIo {
     required String title,
     required String body,
     String? payload,
+    Object? on,
     String? msgUid,
     int? burnAt,
   }) async {}
@@ -1506,5 +1509,432 @@ void main() {
     await _settle();
     expect(row('goes')?['sent'], 1);
     expect(row('held0')?['sent'], 0);
+  });
+
+  group('group texts after a restore', () {
+    const day = 24 * 3600 * 1000;
+    const g = 'grp000000001';
+
+    // a group with them in it, joined [joined] ago, and someone else
+    Future<void> groupWith(
+      _Peer p,
+      String id, {
+      MemDb? into,
+      int joined = 60 * day,
+      String? roomPub,
+      bool member = true,
+    }) async {
+      final db = into ?? mem;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await db.insert('groups', {
+        'group_id': id,
+        'name': id,
+        'created_at': 1,
+        'is_admin': 1,
+        'room_pub': ?roomPub,
+      });
+      for (final (who, at) in [
+        ('me', now - 90 * day),
+        if (member) (p.name, now - joined),
+        ('someone-else-in-it', now - 90 * day),
+      ]) {
+        await db.insert('group_members', {
+          'group_id': id,
+          'halo_id': who,
+          'joined_at': at,
+        });
+      }
+    }
+
+    // a group text of ours, [ago] back
+    Future<void> said(
+      String uid, {
+      String group = g,
+      MemDb? into,
+      int ago = 3600 * 1000,
+      int sent = 1,
+      int? burnAt,
+      String direction = 'out',
+      String? media,
+    }) => (into ?? mem).insert('messages', {
+      'peer_id': direction == 'out' ? 'me' : 'someone-else-in-it',
+      'group_id': group,
+      'direction': direction,
+      'plaintext': uid,
+      'sent_at': DateTime.now().millisecondsSinceEpoch - ago,
+      'msg_uid': uid,
+      'sent': sent,
+      'delivered': 0,
+      'burn_at': ?burnAt,
+      'media_path': ?media,
+    });
+
+    // what of ours is owed to [who], by uid
+    Set<String> owedTo(String who, [MemDb? db]) => {
+      for (final r in (db ?? mem).rows('group_media_owed'))
+        if (r['member'] == who) r['msg_uid'] as String,
+    };
+
+    // the group texts that reached them, by uid
+    Future<List<String>> groupTextsAt(_Peer p) async => [
+      for (final w in await atThem(p))
+        if (w != null && unwrapMessage(w).groupId == g)
+          unwrapMessage(w).msgUid!,
+    ];
+
+    test('only ours since the backup, in groups they are in, since they '
+        'joined, sent, and not burned', () async {
+      final p = await _peer();
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await groupWith(p, g);
+      await groupWith(p, 'grp000000002', joined: 2 * day);
+      await groupWith(p, 'roomburner01', roomPub: 'room-pub');
+      await groupWith(p, 'grp000000003', member: false);
+      await said('hour');
+      await said('ten days', ago: 10 * day);
+      await said('fourteen days', ago: 14 * day);
+      await said('twenty days', ago: 20 * day);
+      await said('burning', burnAt: now + day);
+      await said('burned', burnAt: now - 1000);
+      await said('waiting', sent: 0);
+      await said('held by a block', sent: kNotSent);
+      await said('theirs', direction: 'in');
+      await said('a photo', media: '/m/photo.jpg');
+      await said('before they came', group: 'grp000000002', ago: 3 * day);
+      await said('after they came', group: 'grp000000002', ago: day);
+      await said('in a room', group: 'roomburner01');
+      await said('not theirs', group: 'grp000000003');
+      final n = await rows.oweGroupTextsAfterRestore(
+        p.name,
+        me: 'me',
+        from: now - 12 * day,
+        restore: now - 12 * day,
+        now: now,
+      );
+      expect(owedTo(p.name), {
+        'hour',
+        'ten days',
+        'burning',
+        'after they came',
+      });
+      expect(n, 4);
+      // nobody else is owed anything for it
+      expect(owedTo('someone-else-in-it'), isEmpty);
+      // the same restore again: nothing more, nothing twice
+      await mem.delete('group_media_owed');
+      expect(
+        await rows.oweGroupTextsAfterRestore(
+          p.name,
+          me: 'me',
+          from: now - 12 * day,
+          restore: now - 12 * day,
+          now: now,
+        ),
+        0,
+      );
+      expect(owedTo(p.name), isEmpty);
+      // another restore the same day: one a day per member
+      expect(
+        await rows.oweGroupTextsAfterRestore(
+          p.name,
+          me: 'me',
+          from: now - 12 * day,
+          restore: now - 5 * day,
+          now: now + 3600 * 1000,
+        ),
+        0,
+      );
+      // a day on, another restore owes them again
+      expect(
+        await rows.oweGroupTextsAfterRestore(
+          p.name,
+          me: 'me',
+          from: now - 12 * day,
+          restore: now - 5 * day,
+          now: now + day,
+        ),
+        3,
+      );
+      expect(mem.rows('group_media_owed'), hasLength(3));
+    });
+
+    test('one owed already keeps its tries, whatever the ask', () async {
+      final p = await _peer();
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await groupWith(p, g);
+      await said('hour');
+      await mem.insert('group_media_owed', {
+        'msg_uid': 'hour',
+        'group_id': g,
+        'member': p.name,
+        'total': 1,
+        'have': '',
+        'sent_to': 2,
+        'since': 1,
+        'tries': 99,
+        'next_at': now + day,
+      });
+      await rows.oweGroupTextsAfterRestore(
+        p.name,
+        me: 'me',
+        from: now - day,
+        restore: 0,
+        now: now,
+      );
+      final r = mem.rows('group_media_owed').single;
+      expect(r['tries'], 99);
+      expect(r['next_at'], now + day);
+    });
+
+    test('an ask to start afresh puts our group texts since the backup out '
+        'to them again, once', () async {
+      final p = await _peer();
+      await contact(p);
+      await talk(p);
+      await groupWith(p, g);
+      await said('hour');
+      await said('ten days', ago: 10 * day);
+      await said('sixteen days', ago: 16 * day);
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await card(p, want: true, since: now - 30 * day);
+      await app.owedPassForTest;
+      await _settle();
+      // the window: their backup, no further back than gone texts are known
+      expect((await groupTextsAt(p))..sort(), ['hour', 'ten days']);
+      expect(owedTo(p.name), isEmpty);
+      expect(owedTo('someone-else-in-it'), isEmpty);
+      // asked again for the same restore, past the two minutes: nothing
+      await card(p, want: true, since: now - 30 * day, n: 1);
+      await app.owedPassForTest;
+      await _settle();
+      expect(await groupTextsAt(p), hasLength(2));
+    });
+
+    test('one whose time ran out before it went again is never sent, and '
+        'is owed no more', () async {
+      final p = await _peer();
+      await contact(p);
+      await talk(p);
+      await groupWith(p, g);
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await said('timed', burnAt: now + day);
+      await said('kept');
+      await rows.oweGroupTextsAfterRestore(
+        p.name,
+        me: 'me',
+        from: now - day,
+        restore: 0,
+        now: now,
+      );
+      expect(owedTo(p.name), {'timed', 'kept'});
+      // its time runs out before the sweep comes by
+      await mem.update(
+        'messages',
+        {'burn_at': now - 1},
+        where: 'msg_uid = ?',
+        whereArgs: ['timed'],
+      );
+      await app.owedRoundForTest();
+      await _settle();
+      expect(await groupTextsAt(p), ['kept']);
+      expect(owedTo(p.name), isEmpty);
+    });
+
+    test('an ask with no backup date is no restore: nothing of the group '
+        'goes again', () async {
+      final p = await _peer();
+      await contact(p);
+      await talk(p);
+      await groupWith(p, g);
+      await said('hour');
+      await card(p, want: true);
+      await app.owedPassForTest;
+      await _settle();
+      expect(owedTo(p.name), isEmpty);
+      expect(await groupTextsAt(p), isEmpty);
+      expect(mem.rows('group_resent'), isEmpty);
+    });
+
+    test('an undated ask sealed for a shut vault owes none of its groups\' '
+        'texts as it opens', () async {
+      final p = await _peer();
+      await processPeerBundle(p.name, p.card);
+      await vaultList.putMeta('pub', 'pub-A');
+      await vaultList.putHidden(
+        p.name,
+        kHiddenPeer,
+        peerCard(RouterCard(p.name, '', p.xpub, backPaired: true)),
+        1,
+      );
+      await router.load();
+      await card(p, want: true);
+      expect(vaultList.inbox, isNotEmpty);
+      final vmem = MemDb();
+      final vault = _Rows(vmem, HaloContainer.vault);
+      await groupWith(p, g, into: vmem);
+      await said('hidden hour', into: vmem);
+      useDatabasesForTest(rows, await Session.withVault(rows, vault));
+      app.sendModeForTest = 'private';
+      await app.drainSealed(vault, 'priv-A');
+      expect(vaultList.inbox, isEmpty);
+      expect(owedTo(p.name, vmem), isEmpty);
+      expect(vmem.rows('group_resent'), isEmpty);
+    });
+
+    test('a backup dated in the future is no restore', () async {
+      final p = await _peer();
+      await contact(p);
+      await talk(p);
+      await groupWith(p, g);
+      await said('hour');
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await card(p, want: true, since: now + day);
+      await app.owedPassForTest;
+      await _settle();
+      expect(await groupTextsAt(p), isEmpty);
+      expect(mem.rows('group_resent'), isEmpty);
+    });
+
+    test('asks within two minutes go once, and a backup older than the '
+        'window is the same restore all day', () async {
+      final p = await _peer();
+      await contact(p);
+      await talk(p);
+      await groupWith(p, g);
+      await said('hour');
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await card(p, want: true, since: now - 2 * day);
+      await app.owedPassForTest;
+      await _settle();
+      expect(await groupTextsAt(p), ['hour']);
+      expect(mem.rows('group_resent'), hasLength(1));
+      // even with its mark gone, the next ask within two minutes is not
+      // looked at
+      await mem.delete('group_resent');
+      await card(p, want: true, since: now - 3 * day, n: 1);
+      await app.owedPassForTest;
+      await _settle();
+      expect(await groupTextsAt(p), ['hour']);
+      expect(mem.rows('group_resent'), isEmpty);
+      // past the two minutes, as a later start: two old backups clamp to
+      // the same day, so the second is the first restore again
+      await mem.delete('group_resent');
+      final later = AppState(io: io, router: router)
+        ..myId = 'me'
+        ..sendModeForTest = 'private';
+      for (final (i, back) in [40, 50].indexed) {
+        await later.receiveRelay([
+          (
+            peer: p.xpub,
+            cipher: jsonEncode({
+              'halo_ctl': 'bundle',
+              'from': p.name,
+              'bundle': p.card,
+              'want': true,
+              'n': 10 + i,
+              'since': now - back * day,
+            }),
+          ),
+        ]);
+        await _settle();
+      }
+      final marks = mem.rows('group_resent');
+      expect(marks, hasLength(1));
+      expect(marks.single['since'], utcDayOf(now - 15 * day));
+    });
+
+    test('a roster that comes again keeps when each member joined, and one '
+        'taken out and added back joins anew', () async {
+      final p = await _peer();
+      await groupWith(p, g, joined: 30 * day);
+      final before = {
+        for (final r in mem.rows('group_members')) r['halo_id']: r['joined_at'],
+      };
+      await rows.syncGroupMembers(g, ['me', p.name, 'new-one-here']);
+      final after = {
+        for (final r in mem.rows('group_members')) r['halo_id']: r['joined_at'],
+      };
+      expect(after.keys.toSet(), {'me', p.name, 'new-one-here'});
+      expect(after['me'], before['me']);
+      expect(after[p.name], before[p.name]);
+      expect(after['new-one-here'] as int, greaterThan(before[p.name] as int));
+      // taken out, then back
+      await rows.syncGroupMembers(g, ['me', 'new-one-here']);
+      await rows.syncGroupMembers(g, ['me', 'new-one-here', p.name]);
+      final back = {
+        for (final r in mem.rows('group_members')) r['halo_id']: r['joined_at'],
+      };
+      expect(back[p.name] as int, greaterThan(before[p.name] as int));
+      expect(back['me'], before['me']);
+      // an empty roster takes everyone out
+      await rows.syncGroupMembers(g, const []);
+      expect(mem.rows('group_members'), isEmpty);
+    });
+
+    test('a request forgotten takes its notification tag', () async {
+      final p = await _peer();
+      await mem.insert('contacts', {
+        'halo_id': p.name,
+        'onion': '',
+        'xpub': p.xpub,
+        'first_seen': 1,
+        'last_seen': 1,
+        'accepted': 0,
+      });
+      await rows.notifTag(p.name);
+      await rows.notifTag('someone-who-stays');
+      await rows.forgetRequest(p.name);
+      expect(await rows.notifTagOf(p.name), isNull);
+      expect(await rows.notifTagOf('someone-who-stays'), isNotNull);
+    });
+
+    test('someone blocked who asks gets none of the group\'s texts', () async {
+      final p = await _peer();
+      await contact(p);
+      await talk(p);
+      await mem.update(
+        'contacts',
+        {'blocked': 1},
+        where: 'halo_id = ?',
+        whereArgs: [p.name],
+      );
+      await groupWith(p, g);
+      await said('hour');
+      await card(p, want: true);
+      await app.owedPassForTest;
+      expect(owedTo(p.name), isEmpty);
+      expect(await groupTextsAt(p), isEmpty);
+    });
+
+    test('a hidden group while its vault is shut owes them its texts as the '
+        'vault opens', () async {
+      final p = await _peer();
+      await contact(p);
+      await processPeerBundle(p.name, p.card);
+      await vaultList.putMeta('pub', 'pub-A');
+      await vaultList.putHidden(
+        g,
+        kHiddenGroup,
+        groupCard([RouterCard(p.name, '', p.xpub, backPaired: true)]),
+        1,
+      );
+      await router.load();
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await card(p, want: true, since: now - 3 * day);
+      // nothing of the vault's is read, and the ask waits sealed for it
+      expect(vaultList.inbox, isNotEmpty);
+
+      final vmem = MemDb();
+      final vault = _Rows(vmem, HaloContainer.vault);
+      await groupWith(p, g, into: vmem);
+      await said('hidden hour', into: vmem);
+      await said('hidden week', into: vmem, ago: 7 * day);
+      useDatabasesForTest(rows, await Session.withVault(rows, vault));
+      // the drain sends nothing here: the rows are what this test reads
+      app.sendModeForTest = 'private';
+      await app.drainSealed(vault, 'priv-A');
+      expect(owedTo(p.name, vmem), {'hidden hour'});
+      expect(vaultList.inbox, isEmpty);
+    });
   });
 }

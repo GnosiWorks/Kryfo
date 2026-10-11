@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:async';
-import 'dart:math' show max;
+import 'dart:math' show Random, max;
 import 'dart:typed_data';
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -17,7 +17,11 @@ import 'lock_state.dart' show quietNow;
 final FlutterLocalNotificationsPlugin notifPlugin =
     FlutterLocalNotificationsPlugin();
 
-Future<void> initNotifications({void Function(String? payload)? onTap}) async {
+Future<void> initNotifications({
+  void Function(String? payload)? onTap,
+  Future<Set<String>> Function(String chat)? tagsOf,
+}) async {
+  if (tagsOf != null) notifTagsOf = tagsOf;
   const androidInit = AndroidInitializationSettings('ic_halo_notification');
   const initSettings = InitializationSettings(android: androidInit);
   await notifPlugin.initialize(
@@ -35,6 +39,7 @@ Future<void> initNotifications({void Function(String? payload)? onTap}) async {
   // 'halo_messages' channel, below heads-up level, makes way for a v2 at max
   await android?.deleteNotificationChannel(channelId: 'halo_messages');
   await nameNotificationChannel();
+  await clearUntaggedShade();
   // android 13+ denies notifications until asked, and nothing is delivered.
   // the ask is android's own dialog, so it waits for the lock to lift. the
   // activity asks at most once (askForNotificationsOnce)
@@ -61,7 +66,7 @@ Future<void> nameNotificationChannel() async {
       >();
   await android?.createNotificationChannel(
     AndroidNotificationChannel(
-      'halo_messages_v2',
+      _messagesChannel,
       l10n.notificationsChannelName,
       description: l10n.notificationsNewEncryptedMessagesFrom,
       importance: Importance.max,
@@ -70,6 +75,8 @@ Future<void> nameNotificationChannel() async {
     ),
   );
 }
+
+const _messagesChannel = 'halo_messages_v2';
 
 // the developer's own phone: people writing from the Marios row, on a
 // channel of their own. made the first time it is needed, so no other
@@ -97,10 +104,12 @@ Future<void> _makeSupportChannel() async {
 
 AndroidNotificationDetails _supportDetails({
   required bool alert,
+  String? tag,
   String? ticker,
   StyleInformation? style,
 }) => AndroidNotificationDetails(
   _supportChannel,
+  tag: tag,
   l10n.supportChannelName,
   channelDescription: l10n.supportChannelLine,
   importance: Importance.defaultImportance,
@@ -152,6 +161,7 @@ Future<void> clearSupportSummary() async {
 // support channel. opening the chat takes it down
 Future<void> showSupportMessage({
   required String chatId,
+  required String tag,
   required String title,
   required String body,
 }) async {
@@ -163,7 +173,7 @@ Future<void> showSupportMessage({
     body = l10n.notificationsNewMessage;
   }
   final id = DateTime.now().microsecondsSinceEpoch & 0x7fffffff;
-  (_shownFor[chatId] ??= []).add(id);
+  (_shownFor[chatId] ??= []).add((id, tag));
   await notifPlugin.show(
     id: id,
     title: title,
@@ -171,11 +181,12 @@ Future<void> showSupportMessage({
     notificationDetails: NotificationDetails(
       android: _supportDetails(
         alert: true,
+        tag: tag,
         ticker: hidden ? l10n.notificationsNewMessage2 : '$title: $body',
         style: BigTextStyleInformation(body, contentTitle: title),
       ),
     ),
-    payload: '$kSupportPayload$chatId',
+    payload: tag,
   );
 }
 
@@ -210,26 +221,53 @@ Future<void> setHideNotifContent(
   hideNotifRevision.value++;
 }
 
-// ids by chat, so opening the chat by hand takes its notifications down
-final Map<String, List<int>> _shownFor = {};
-// the chat and id each message rang under, so a message taken back or
-// burned takes its own one down
-final Map<String, (String, int)> _shownForMsg = {};
+// what a chat's notifications go under on android: its tag, random, made
+// once per chat and kept only in the container that holds the chat. android
+// keeps tags and payloads in its logs and its history, so nothing there
+// names a chat or the container it is in
+String newNotifTag() {
+  final r = Random.secure();
+  return [
+    for (var i = 0; i < 16; i++)
+      r.nextInt(256).toRadixString(16).padLeft(2, '0'),
+  ].join();
+}
 
-Future<void> clearNotificationsFor(String payload) async {
-  _shownForMsg.removeWhere((_, v) => v.$1 == payload);
-  final ids = _shownFor.remove(payload) ?? const <int>[];
-  for (final id in ids) {
-    await cancelWithRetry(() => notifPlugin.cancel(id: id), 'shade');
+// the tags a chat's notifications went under, in the containers open now.
+// set as notifications start; only this process's are known before that
+Future<Set<String>> Function(String chat) notifTagsOf = (_) async => const {};
+
+// ids and tags by chat, so opening the chat by hand takes its
+// notifications down
+final Map<String, List<(int, String?)>> _shownFor = {};
+// the chat, id and tag each message rang under, so a message taken back or
+// burned takes its own one down
+final Map<String, (String, int, String?)> _shownForMsg = {};
+
+Future<void> clearNotificationsFor(String chat) async {
+  _shownForMsg.removeWhere((_, v) => v.$1 == chat);
+  final shown = _shownFor.remove(chat) ?? const <(int, String?)>[];
+  for (final (id, tag) in shown) {
+    await cancelWithRetry(() => notifPlugin.cancel(id: id, tag: tag), 'shade');
   }
-  // what an earlier run or the receiving job showed, only the shade knows
+  // what an earlier run or the receiving job showed: the shade gives back
+  // tags, never payloads
+  final tags = <String>{for (final (_, tag) in shown) ?tag};
+  try {
+    tags.addAll(await notifTagsOf(chat));
+  } catch (e) {
+    dlog('shade: tags not read (${e.runtimeType})');
+  }
+  if (tags.isEmpty) return;
   try {
     final active = await notifPlugin.getActiveNotifications();
     for (final a in active) {
       final id = a.id;
-      if (a.payload != payload || id == null || ids.contains(id)) continue;
+      final tag = a.tag;
+      if (id == null || tag == null || !tags.contains(tag)) continue;
+      if (shown.contains((id, tag))) continue;
       await cancelWithRetry(
-        () => notifPlugin.cancel(id: id, tag: a.tag),
+        () => notifPlugin.cancel(id: id, tag: tag),
         'shade',
       );
     }
@@ -238,21 +276,43 @@ Future<void> clearNotificationsFor(String payload) async {
   }
 }
 
+// the foreground service's own notification (HaloListenerService)
+const _kServiceNotifId = 1;
+
+// an older version posted with no tag and named the chat in the payload,
+// which the shade never gives back: those go at start, once there are none
+Future<void> clearUntaggedShade() async {
+  try {
+    final active = await notifPlugin.getActiveNotifications();
+    for (final a in active) {
+      final id = a.id;
+      if (id == null || a.tag != null) continue;
+      if (id == _supportSummaryId || id == _kServiceNotifId) continue;
+      final ch = a.channelId;
+      if (ch != null && ch != _messagesChannel && ch != _supportChannel) {
+        continue;
+      }
+      await cancelWithRetry(() => notifPlugin.cancel(id: id), 'old shade');
+    }
+  } catch (e) {
+    dlog('old shade: not read (${e.runtimeType})');
+  }
+}
+
 Future<void> clearMessageNotification(String msgUid) async {
   final shown = _shownForMsg.remove(msgUid);
   if (shown == null) return;
-  final (payload, id) = shown;
-  final ids = _shownFor[payload];
-  ids?.remove(id);
-  if (ids != null && ids.isEmpty) _shownFor.remove(payload);
-  await cancelWithRetry(() => notifPlugin.cancel(id: id), 'shade');
+  final (chat, id, tag) = shown;
+  final ids = _shownFor[chat];
+  ids?.remove((id, tag));
+  if (ids != null && ids.isEmpty) _shownFor.remove(chat);
+  await cancelWithRetry(() => notifPlugin.cancel(id: id, tag: tag), 'shade');
 }
 
-void _noteShown(String? payload, String? msgUid, int id) {
-  if (payload == null) return;
-  (_shownFor[payload] ??= []).add(id);
+void _noteShown(String chat, String tag, String? msgUid, int id) {
+  (_shownFor[chat] ??= []).add((id, tag));
   if (msgUid == null) return;
-  _shownForMsg[msgUid] = (payload, id);
+  _shownForMsg[msgUid] = (chat, id, tag);
   // the oldest go first: a shade that full has been cleared long since
   if (_shownForMsg.length > 500) _shownForMsg.remove(_shownForMsg.keys.first);
 }
@@ -278,10 +338,12 @@ Future<void> cancelWithRetry(
   }
 }
 
+// [chat] is what this process knows it by; android sees only [tag]
 Future<void> showMessageNotification({
   required String title,
   required String body,
-  String? payload,
+  required String chat,
+  required String tag,
   String? msgUid,
   int? burnAt,
 }) async {
@@ -299,8 +361,9 @@ Future<void> showMessageNotification({
       ? null
       : max(1, burnAt - DateTime.now().millisecondsSinceEpoch);
   final details = AndroidNotificationDetails(
-    'halo_messages_v2',
+    _messagesChannel,
     l10n.notificationsChannelName,
+    tag: tag,
     channelDescription: l10n.notificationsNewEncryptedMessagesFromYourContacts,
     importance: Importance.max,
     priority: Priority.high,
@@ -331,12 +394,12 @@ Future<void> showMessageNotification({
   // unique per message: android never re-alerts when a notification is
   // updated in place
   final id = DateTime.now().microsecondsSinceEpoch & 0x7fffffff;
-  _noteShown(payload, msgUid, id);
+  _noteShown(chat, tag, msgUid, id);
   await notifPlugin.show(
     id: id,
     title: title,
     body: body,
     notificationDetails: NotificationDetails(android: details),
-    payload: payload,
+    payload: tag,
   );
 }
