@@ -277,6 +277,23 @@ bool get restoreRunning => _restoreRunning;
 @visibleForTesting
 set restoreRunningForTest(bool v) => _restoreRunning = v;
 
+// backups being written: a restart would cut the file short
+var _backupsRunning = 0;
+
+/// a backup file is being written
+bool get backupRunning => _backupsRunning > 0;
+
+/// [run] counted as a backup being written for as long as it runs
+@visibleForTesting
+Future<T> whileBackingUp<T>(Future<T> Function() run) async {
+  _backupsRunning++;
+  try {
+    return await run();
+  } finally {
+    _backupsRunning--;
+  }
+}
+
 /// what a second restore meets while one runs
 class RestoreBusy implements Exception {
   const RestoreBusy();
@@ -1014,6 +1031,22 @@ Future<void> createBackupFile(
   String outPath, {
   bool move = false,
   bool withHiddenChats = false,
+  void Function(int done, int total)? onProgress,
+}) => whileBackingUp(
+  () => _createBackupFile(
+    passphrase,
+    outPath,
+    move: move,
+    withHiddenChats: withHiddenChats,
+    onProgress: onProgress,
+  ),
+);
+
+Future<void> _createBackupFile(
+  String passphrase,
+  String outPath, {
+  required bool move,
+  required bool withHiddenChats,
   void Function(int done, int total)? onProgress,
 }) async {
   if (passphrase.length < kBackupMinPassphrase) {

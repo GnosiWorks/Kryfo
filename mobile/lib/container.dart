@@ -297,6 +297,7 @@ const deviceKeys = {
   'hb.gaps',
   'hb.jobs',
   'hb.jobAt',
+  'auto_restart.at',
   'send_mode',
   'block_screenshots',
   'theme_light',

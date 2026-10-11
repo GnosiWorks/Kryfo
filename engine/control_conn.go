@@ -37,6 +37,10 @@ var (
 	// "stuck" on the transport screen is worth a look when it climbs.
 	ctrlTimeouts int64
 	ctrlDials    int64
+
+	// calls in a row that tor left unanswered, back to 0 on any reply. a
+	// redial between them does not count: past two, only a new process helps
+	ctrlSilent int64
 )
 
 // how long any one control command may take: far past anything healthy and
@@ -46,6 +50,7 @@ var ctrlDeadline = 10 * time.Second
 
 func ctrlTimeoutCount() int64 { return atomic.LoadInt64(&ctrlTimeouts) }
 func ctrlDialCount() int64    { return atomic.LoadInt64(&ctrlDials) }
+func ctrlSilentCount() int64  { return atomic.LoadInt64(&ctrlSilent) }
 
 // dials and authenticates a fresh control connection. ctrlMu must be held.
 func ctrlOpen(t *tor.Tor) error {
@@ -119,10 +124,12 @@ func ctrlDo(t *tor.Tor, what string, f func(*control.Conn) error) error {
 	err := f(ctrlConn)
 	if err == nil {
 		_ = ctrlSock.SetDeadline(time.Time{})
+		atomic.StoreInt64(&ctrlSilent, 0)
 		return nil
 	}
 	if isTimeout(err) {
 		atomic.AddInt64(&ctrlTimeouts, 1)
+		atomic.AddInt64(&ctrlSilent, 1)
 		log.Printf("halo: control port did not answer %s within %s - dropping the connection",
 			what, ctrlDeadline)
 		ctrlDrop()
@@ -134,6 +141,7 @@ func ctrlDo(t *tor.Tor, what string, f func(*control.Conn) error) error {
 	var te *textproto.Error
 	if errors.As(err, &te) {
 		_ = ctrlSock.SetDeadline(time.Time{})
+		atomic.StoreInt64(&ctrlSilent, 0)
 		return err
 	}
 	log.Printf("halo: control connection broke on %s: %v", what, err)
@@ -153,9 +161,14 @@ func ctrlFallback(t *tor.Tor, what string, f func(*control.Conn) error) error {
 	go func() { done <- f(t.Control) }()
 	select {
 	case err := <-done:
+		var te *textproto.Error
+		if err == nil || errors.As(err, &te) {
+			atomic.StoreInt64(&ctrlSilent, 0)
+		}
 		return err
 	case <-time.After(ctrlDeadline):
 		atomic.AddInt64(&ctrlTimeouts, 1)
+		atomic.AddInt64(&ctrlSilent, 1)
 		log.Printf("halo: control port did not answer %s within %s (no socket of our own to close)",
 			what, ctrlDeadline)
 		return fmt.Errorf("control port timeout on %s", what)

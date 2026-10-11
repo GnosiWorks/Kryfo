@@ -4,6 +4,7 @@ import android.app.Application
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.engine.FlutterEngineCache
 import io.flutter.embedding.engine.dart.DartExecutor
+import io.flutter.plugin.common.MethodChannel
 
 // one flutter engine for the life of the process, not the life of a screen,
 // so tor and the poll timer keep running while the app is in the background.
@@ -21,6 +22,16 @@ class HaloApplication : Application() {
             DartExecutor.DartEntrypoint.createDefault()
         )
         FlutterEngineCache.getInstance().put(ENGINE_ID, engine)
+        // here, not on a screen: a process the service started has none
+        MethodChannel(engine.dartExecutor.binaryMessenger, "halo/restart")
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "clock" -> result.success(QuietRestart.clock(this))
+                    "arm" -> result.success(QuietRestart.arm(this))
+                    "end" -> result.success(QuietRestart.end())
+                    else -> result.notImplemented()
+                }
+            }
         JobSetup.schedule(this)
         // a file handed to another app to open is a copy in cache/open/,
         // one shared a copy in cache/share_plus/. the app it went to may
