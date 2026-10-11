@@ -120,6 +120,7 @@ dependencies {
     // the camera shrink reads the orientation tag. the platform class is
     // banned by lint for old security bugs; this one is the maintained copy
     implementation("androidx.exifinterface:exifinterface:1.4.2")
+    testImplementation("junit:junit:4.13.2")
 }
 
 // libhalo.so is gitignored, and an apk without it dies on launch with

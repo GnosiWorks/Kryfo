@@ -19,7 +19,7 @@ import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'notifications.dart';
-import 'backup.dart' show sweepBackupLeftovers;
+import 'backup.dart' show backupRunning, restoreRunning, sweepBackupLeftovers;
 import 'picked.dart'
     show dropPickerCopies, sweepFilePickerCopies, sweepPickerLeftovers;
 import 'package:qr_flutter/qr_flutter.dart';
@@ -14402,7 +14402,12 @@ class AppState extends ChangeNotifier {
       private: private,
       quiet: sessionQuiet,
       online: _online,
-      held: haloWiping || torValve.restartBlocked || lockState.holding,
+      held:
+          haloWiping ||
+          torValve.restartBlocked ||
+          lockState.holding ||
+          backupRunning ||
+          restoreRunning,
       torHeld: _torHeld,
       torReady: ready,
       ctrlSilent: silent,
@@ -19468,7 +19473,29 @@ final autoRestart = AutoRestart(
   view: appState.autoView,
   reconnect: () => appState.reconnectNow(),
   restart: restartQuietly,
+  clock: bootTime,
 );
+
+// android says yes first, then every database is shut, then the process
+// ends: a write cut half way is worse than one not begun. one the end did
+// not take opens again on its next use
+@visibleForTesting
+Future<bool> restartQuietly() async {
+  if (!await armQuietRestart()) return false;
+  await _shutDatabases();
+  return endQuietly();
+}
+
+Future<void> _shutDatabases() async {
+  final open = <HaloDb>{live, session.primary, ?session.vault};
+  for (final d in open) {
+    try {
+      await d.close();
+    } catch (e) {
+      dlog('restart: a database would not close (${e.runtimeType})');
+    }
+  }
+}
 
 void main() async {
   dlog('LAUNCH main');

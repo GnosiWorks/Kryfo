@@ -25,8 +25,12 @@ class HaloApplication : Application() {
         // here, not on a screen: a process the service started has none
         MethodChannel(engine.dartExecutor.binaryMessenger, "halo/restart")
             .setMethodCallHandler { call, result ->
-                if (call.method == "quiet") result.success(QuietRestart.go(this))
-                else result.notImplemented()
+                when (call.method) {
+                    "clock" -> result.success(QuietRestart.clock(this))
+                    "arm" -> result.success(QuietRestart.arm(this))
+                    "end" -> result.success(QuietRestart.end())
+                    else -> result.notImplemented()
+                }
             }
         JobSetup.schedule(this)
         // a file handed to another app to open is a copy in cache/open/,
