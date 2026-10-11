@@ -286,6 +286,8 @@ const _peerRows = {
   // an opener of theirs kept to be tried again, and ours gone out again
   'first_kept': 'peer = ?1',
   'opener_again': 'msg_uid IN {uids}',
+  // the order of edits and reactions taken in
+  'frame_order': 'msg_uid IN {uids}',
 };
 // a person's block rows, by peer_id, which go with a group's people
 const _blockRows = ['block_spans', 'blocked_drops'];
@@ -295,6 +297,7 @@ const _groupRows = {
   'poll_votes': 'poll_uid IN {uids}',
   'pins_out': 'msg_uid IN {uids}',
   'edits_out': 'msg_uid IN {uids}',
+  'frame_order': 'msg_uid IN {uids}',
   // a file some members still lack keeps going to them from where it is
   'group_media_owed': 'group_id = ?1',
   // and so do the controls they are still to get, and its roster stamp

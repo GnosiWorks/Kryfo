@@ -390,9 +390,30 @@ void main() {
       for (final r in mem.rows('frames_out')) {
         await mem.update(
           'frames_out',
-          {'at': 1},
+          {'at': DateTime.now().millisecondsSinceEpoch - 60000},
           where: 'msg_uid = ? AND kind = ?',
           whereArgs: [r['msg_uid'], r['kind']],
+        );
+      }
+    }
+
+    // a restart: nothing in memory, the rows on disk
+    Future<AppState> restart() async {
+      final router = VaultRouter(ArrivalStore(), ArrivalSeal());
+      await router.load();
+      return AppState(io: io, router: router)
+        ..myId = 'me'
+        ..sendModeForTest = 'fast';
+    }
+
+    // every queued row's turn has come
+    Future<void> turnsUp(String table) async {
+      for (final r in mem.rows(table)) {
+        await mem.update(
+          table,
+          {'next_at': 0},
+          where: 'msg_uid = ?',
+          whereArgs: [r['msg_uid']],
         );
       }
     }
@@ -445,16 +466,122 @@ void main() {
         await settle();
       }
       expect(io.asked, once);
-      // a route back: it still waits its turn, then goes
+      // its turn is on disk: a restart keeps it
+      final row = mem.rows('frames_out').single;
+      expect(row['tries'], 1);
+      expect(
+        row['next_at'] as int,
+        greaterThan(DateTime.now().millisecondsSinceEpoch + 30000),
+      );
+      app = await restart();
       io.down = false;
       await app.drainOutbox();
       await settle();
       expect(io.sent, isEmpty);
-      app.frameWaitsUpForTest();
+      await turnsUp('frames_out');
       await app.drainOutbox();
       await settle();
       expect(wire().single.unsend, 'u6');
       expect(mem.rows('frames_out'), isEmpty);
+    });
+
+    test('frames still waiting out their gap leave the window to newer '
+        'ones', () async {
+      const gone = 'dan-long-gone';
+      final now = DateTime.now().millisecondsSinceEpoch;
+      for (var i = 0; i < 45; i++) {
+        await mem.insert('frames_out', {
+          'msg_uid': 'old$i',
+          'kind': kFrameUnsend,
+          'peer_id': gone,
+          'body': '',
+          'at': now - 600000 + i,
+          'tries': 9,
+          'next_at': now + 600000,
+        });
+      }
+      await db.queueFrame('u9', kFrameUnsend, _bob, '');
+      await mem.update(
+        'frames_out',
+        {'at': now - 60000},
+        where: 'msg_uid = ?',
+        whereArgs: ['u9'],
+      );
+      io.down = false;
+      await app.drainOutbox();
+      await settle();
+      expect(wire().single.unsend, 'u9');
+      // a take-back is kept however long it waits
+      expect(mem.rows('frames_out'), hasLength(45));
+    });
+
+    test('a reaction past its tries or a week old is let go, a take-back '
+        'is not', () async {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      Map<String, Object?> row(String uid, String kind, int at, int tries) => {
+        'msg_uid': uid,
+        'kind': kind,
+        'peer_id': _bob,
+        'body': kind == kFrameReaction ? 'x' : '',
+        'at': at,
+        'tries': tries,
+        'next_at': now + 600000,
+      };
+      await mem.insert('frames_out', row('r1', kFrameReaction, now, 150));
+      await mem.insert(
+        'frames_out',
+        row('r2', kFrameReaction, now - 8 * 86400000, 0),
+      );
+      await mem.insert('frames_out', row('r3', kFrameReaction, now, 149));
+      await mem.insert(
+        'frames_out',
+        row('t1', kFrameUnsend, now - 30 * 86400000, 500),
+      );
+      await db.unsentFrames();
+      expect([
+        for (final r in mem.rows('frames_out')) r['msg_uid'],
+      ], unorderedEquals(['r3', 't1']));
+    });
+
+    test('a queued edit and pin wait out their gaps too, on disk', () async {
+      await db.queueEdit('u10', _bob, 'fixed');
+      await db.queuePin('u10', _bob, true);
+      for (final t in ['edits_out', 'pins_out']) {
+        for (final r in mem.rows(t)) {
+          await mem.update(
+            t,
+            {'at': DateTime.now().millisecondsSinceEpoch - 60000},
+            where: 'msg_uid = ?',
+            whereArgs: [r['msg_uid']],
+          );
+        }
+      }
+      final before = io.asked;
+      await app.drainOutbox();
+      await settle();
+      final once = io.asked;
+      expect(once - before, 2);
+      for (var i = 0; i < 3; i++) {
+        await app.drainOutbox();
+        await settle();
+      }
+      expect(io.asked, once);
+      for (final t in ['edits_out', 'pins_out']) {
+        expect(mem.rows(t).single['tries'], 1, reason: t);
+      }
+      app = await restart();
+      io.down = false;
+      await app.drainOutbox();
+      await settle();
+      expect(io.sent, isEmpty);
+      await turnsUp('edits_out');
+      await turnsUp('pins_out');
+      await app.drainOutbox();
+      await settle();
+      expect(wire().where((m) => m.edit != null).single.edit!.newText, 'fixed');
+      expect(wire().where((m) => m.pin != null).single.pin!.pinned, isTrue);
+      expect(mem.rows('edits_out'), isEmpty);
+      expect(mem.rows('pins_out'), isEmpty);
     });
 
     test('the wait doubles from 45 seconds up to ten minutes', () {

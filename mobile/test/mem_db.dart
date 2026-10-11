@@ -210,7 +210,8 @@ class MemDb implements Database, Transaction {
     return a == b;
   }
 
-  // a AND b AND ...: col = ? or a literal, col != ?, col < ?, col LIKE ?,
+  // a AND b AND ...: col = ? or a literal, col != ?, col < ?, col > ?,
+  // col LIKE ?,
   // col [NOT] IN (?, ...), col [NOT] IN (SELECT c FROM t WHERE <literals>),
   // col IS [NOT] NULL
   bool Function(Map<String, Object?>) _where(
@@ -241,7 +242,7 @@ class MemDb implements Database, Transaction {
         continue;
       }
       final m = RegExp(
-        r'^(\w+) (=|!=|<|LIKE|NOT IN|IN|IS NULL|IS NOT NULL)(.*)$',
+        r'^(\w+) (=|!=|<|>|LIKE|NOT IN|IN|IS NULL|IS NOT NULL)(.*)$',
       ).firstMatch(c);
       if (m == null) throw UnimplementedError('where: $c');
       final col = m.group(1)!;
@@ -262,6 +263,12 @@ class MemDb implements Database, Transaction {
           tests.add((r) {
             final x = _get(t, r, col);
             return x is num && v is num && x < v;
+          });
+        case '>':
+          final v = args![at++];
+          tests.add((r) {
+            final x = _get(t, r, col);
+            return x is num && v is num && x > v;
           });
         case 'LIKE':
           final p = (args![at++] as String).toLowerCase();
