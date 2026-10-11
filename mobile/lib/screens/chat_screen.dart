@@ -3036,12 +3036,14 @@ class _ChatScreenState extends State<ChatScreen>
   Future<void> _sendVoice(VoiceTake take) async {
     final srcPath = take.path;
     final src = File(srcPath);
-    if (_requestLocked) {
+    // the chat went while the note was made: the raw voice goes, unsent
+    if (!mounted || _requestLocked) {
       // one that will not go is swept at the next start
       shredFile(srcPath).ignore();
       return;
     }
     if (!await src.exists()) return;
+    if (!mounted) return shredFile(srcPath);
     if (_isDev && !await _ensureDevStarted()) {
       await shredFile(srcPath);
       return;

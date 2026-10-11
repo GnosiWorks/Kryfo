@@ -1632,6 +1632,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   void _onVoice(VoiceTake take) {
+    // the chat went while the note was made: the raw voice goes, unsent
+    if (!mounted) {
+      unawaited(shredFile(take.path));
+      return;
+    }
     // the last one left while it recorded: the raw voice goes, unsent
     if (_nobodyToRead()) {
       unawaited(shredFile(take.path));

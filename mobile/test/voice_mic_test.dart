@@ -6,6 +6,7 @@
 // still with less movement, mirrored in a right-to-left language, and whole
 // on a small phone with large text. the recorder is a stand-in over its
 // channel
+import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
@@ -15,8 +16,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
+import 'package:kryfo/lock_guard.dart' show lockGuard;
 import 'package:kryfo/lock_state.dart' show lockState;
-import 'package:kryfo/voice_mask.dart' show LiveMask, maskWav;
+import 'package:kryfo/voice_mask.dart' show LiveMask;
 import 'package:kryfo/widgets/voice_mic.dart';
 import 'package:kryfo/widgets/voice_parts.dart' show VoiceRecordBar;
 
@@ -61,17 +63,70 @@ Uint8List _wav() {
   return b.buffer.asUint8List();
 }
 
+// the live disguise as the mic uses it, with what was asked of it
+class _Spy implements LiveMask {
+  _Spy(this.real, this.log);
+  final LiveMask real;
+  final List<String> log;
+  // held shut, the finish waits for it
+  Completer<void>? gate;
+  Uint8List? made;
+
+  @override
+  Future<Uint8List?> finish() async {
+    log.add('finish');
+    await gate?.future;
+    return made = await real.finish();
+  }
+
+  @override
+  void cancel() {
+    log.add('cancel');
+    real.cancel();
+  }
+
+  @override
+  Stream<int> get progress => real.progress;
+
+  @override
+  Future<void> get exited => real.exited;
+}
+
 void main() {
   late Directory tmp;
   late List<String> asked;
   String? recording;
   late List<VoiceTake> sent;
+  late bool stopThrows;
+  // what the mic asked of its live disguises
+  final live = <String>[];
+  final spies = <_Spy>[];
+
+  void spyLive() {
+    HoldToTalkMicState.startLive = (p) async {
+      final m = await LiveMask.start(p);
+      if (m == null) return null;
+      final s = _Spy(m, live);
+      spies.add(s);
+      return s;
+    };
+  }
+
+  // every live disguise's isolate has ended
+  Future<void> ended(WidgetTester t) => t.runAsync(
+    () => Future.wait([
+      for (final s in spies) s.exited,
+    ]).timeout(const Duration(seconds: 10)),
+  );
 
   setUp(() {
     tmp = Directory.systemTemp.createTempSync('voice_mic');
     asked = [];
     recording = null;
     sent = [];
+    stopThrows = false;
+    live.clear();
+    spies.clear();
     lockState.openForTest();
     _mock('plugins.flutter.io/path_provider', (_) async => tmp.path);
     _mock(_rec, (c) async {
@@ -87,6 +142,7 @@ void main() {
           File(recording!).writeAsBytesSync(_wav());
           return null;
         case 'stop':
+          if (stopThrows) throw PlatformException(code: 'stop');
           return recording;
       }
       return null;
@@ -377,27 +433,132 @@ void main() {
       await t.tap(find.bySemanticsLabel(l10n.commonSend));
       await settle(t);
       final raw = File(recording!).readAsBytesSync();
-      expect(sent.single.masked, isNotNull);
-      expect(sent.single.masked!.length, raw.length);
-      expect(maskWav(raw), isNot(raw));
+      final masked = sent.single.masked!;
+      expect(masked.length, raw.length);
+      // a wav like the take, its samples not the take's
+      expect(masked.sublist(0, 44), raw.sublist(0, 44));
+      expect(masked.sublist(44), isNot(raw.sublist(44)));
       await close(t);
     });
 
     testWidgets(
       'a disguised chat locked: the live disguise is heard and goes',
       (t) async {
+        spyLive();
         await open(t, disguise: true);
         await toPreview(t);
         await until(t, () => mic(t).heard);
         final raw = File(recording!).readAsBytesSync();
         await t.tap(find.bySemanticsLabel(l10n.commonSend));
         await settle(t);
+        // finished once, and what it made is what goes
+        expect(live, ['finish']);
         expect(sent.single.disguise, isTrue);
-        expect(sent.single.masked!.length, raw.length);
+        expect(sent.single.masked, isNotNull);
+        expect(sent.single.masked, spies.single.made);
         expect(sent.single.masked, isNot(raw));
+        await ended(t);
         await close(t);
       },
     );
+
+    testWidgets('slid toward the start: the live disguise ends', (t) async {
+      spyLive();
+      await open(t, disguise: true);
+      final g = await hold(t);
+      await g.moveBy(const Offset(-60, 0));
+      await t.pump();
+      await g.moveBy(const Offset(-60, 0));
+      await t.pump();
+      await g.up();
+      await settle(t);
+      expect(sent, isEmpty);
+      expect(live, ['cancel']);
+      await ended(t);
+      await close(t);
+    });
+
+    testWidgets('let go under 400 ms: the live disguise ends', (t) async {
+      spyLive();
+      await open(t, disguise: true);
+      final g = await t.startGesture(t.getCenter(find.byType(HoldToTalkMic)));
+      await t.pump(kLongPressTimeout + const Duration(milliseconds: 50));
+      await settle(t, turns: 2);
+      expect(mic(t).stage, VoiceStage.holding);
+      await g.up();
+      await settle(t);
+      expect(sent, isEmpty);
+      expect(live, ['cancel']);
+      await ended(t);
+      await close(t);
+    });
+
+    testWidgets('the app lock: the note and its live disguise end', (t) async {
+      spyLive();
+      await open(t, disguise: true);
+      final g = await hold(t);
+      lockGuard.locking();
+      await settle(t);
+      expect(live, ['cancel']);
+      expect(File(recording!).existsSync(), isFalse);
+      await g.up();
+      await settle(t);
+      expect(sent, isEmpty);
+      await ended(t);
+      await close(t);
+    });
+
+    testWidgets('the chat closing while it records ends the live disguise', (
+      t,
+    ) async {
+      spyLive();
+      await open(t, disguise: true);
+      await hold(t);
+      await close(t);
+      expect(live, ['cancel']);
+      await ended(t);
+    });
+
+    testWidgets('the chat closing while the disguise is finished: the take is '
+        'shredded and nothing goes', (t) async {
+      spyLive();
+      await open(t, disguise: true);
+      final g = await hold(t);
+      spies.single.gate = Completer<void>();
+      await g.up();
+      await settle(t, turns: 4);
+      expect(live, ['finish']);
+      await close(t);
+      spies.single.gate!.complete();
+      await settle(t);
+      expect(sent, isEmpty);
+      expect(File(recording!).existsSync(), isFalse);
+      await ended(t);
+    });
+
+    testWidgets('a recorder that will not stop: the live disguise ends', (
+      t,
+    ) async {
+      spyLive();
+      await open(t, disguise: true);
+      final g = await hold(t);
+      stopThrows = true;
+      await g.up();
+      await settle(t);
+      expect(sent, isEmpty);
+      expect(live, ['cancel']);
+      expect(File(recording!).existsSync(), isFalse);
+      await ended(t);
+      // the next note starts clean
+      stopThrows = false;
+      final again = await hold(t);
+      await again.up();
+      await until(t, () => sent.isNotEmpty);
+      expect(live, ['cancel', 'finish']);
+      expect(sent.single.masked, spies.last.made);
+      await ended(t);
+      await close(t);
+    });
 
     testWidgets('thrown away, both takes are shredded', (t) async {
       await open(t);

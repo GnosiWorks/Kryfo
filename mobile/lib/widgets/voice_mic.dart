@@ -140,24 +140,25 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
     super.dispose();
   }
 
-  // the disguise made while recording is not wanted: zeroed and ended
-  void _dropStream() {
-    final s = _streaming;
-    _streaming = null;
-    s?.then((m) => m?.cancel()).ignore();
-  }
+  // a live disguise not wanted: it zeroes what it holds and ends
+  static void _cancelLive(Future<LiveMask?>? s) =>
+      s?.then((m) => m?.cancel()).ignore();
 
-  // the disguise made while recording, finished: null when there was none
-  // or it failed, and the take is disguised whole
-  Future<Uint8List?> _streamed() async {
-    final s = _streaming;
-    _streaming = null;
+  // a live disguise finished: null when there was none or it failed, and
+  // the take is disguised whole
+  static Future<Uint8List?> _finishLive(Future<LiveMask?>? s) async {
     try {
       return await (await s)?.finish();
     } catch (e) {
       dlog('voice: the live disguise failed (${e.runtimeType})');
       return null;
     }
+  }
+
+  void _dropStream() {
+    final s = _streaming;
+    _streaming = null;
+    _cancelLive(s);
   }
 
   // the note no longer holds a restart back or counts as recording
@@ -173,6 +174,8 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
     // cleared in finally: a throw that left it set would kill the mic until
     // the chat is reopened
     try {
+      // one left from a note that never stopped cleanly
+      _dropStream();
       if (!await _rec.hasPermission()) {
         if (mounted) showHaloToast(context, l10n.chatMicPermissionNeeded);
         return;
@@ -283,21 +286,40 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
     // meanwhile has nothing of it to shred
     final mine = _path;
     _path = null;
-    final take = await _rec.stop() ?? mine;
-    if (cancel || take == null) _dropStream();
-    if (cancel) {
-      // a cancelled note is still a recording of a voice: shredded
-      if (take != null) await shredFile(take);
-      HapticFeedback.lightImpact();
-      return;
-    }
-    HapticFeedback.mediumImpact();
-    if (take != null) {
+    // the live disguise is this take's: finished with it, or ended below
+    final live = _streaming;
+    _streaming = null;
+    var handed = false;
+    try {
+      final String? take;
+      try {
+        take = await _rec.stop() ?? mine;
+      } catch (e) {
+        dlog('voice: the recorder did not stop (${e.runtimeType})');
+        if (mine != null) await shredFile(mine);
+        return;
+      }
+      if (cancel) {
+        // a cancelled note is still a recording of a voice: shredded
+        if (take != null) await shredFile(take);
+        HapticFeedback.lightImpact();
+        return;
+      }
+      HapticFeedback.mediumImpact();
+      if (take == null) return;
       final chip = _chip;
-      final masked = chip ? await _streamed() : null;
+      handed = chip;
+      final masked = chip ? await _finishLive(live) : null;
+      // the chat went while it was made: the raw take goes, unsent
+      if (!mounted) {
+        await shredFile(take);
+        return;
+      }
       widget.onSend(
         VoiceTake(path: take, ms: ms, disguise: chip, masked: masked),
       );
+    } finally {
+      if (!handed) _cancelLive(live);
     }
   }
 
@@ -327,15 +349,35 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
     _level = null;
     final mine = _path;
     _path = null;
-    final take = await _rec.stop() ?? mine;
-    _stopping = false;
-    if (take == null) return _abort();
-    // the disguise made while it recorded goes with this take
+    // the live disguise is this take's: the preview finishes it, or it is
+    // ended below
     final live = _streaming;
     _streaming = null;
-    void dropLive() => live?.then((m) => m?.cancel()).ignore();
+    var handed = false;
+    try {
+      await _toPreview(mine, live, () => handed = true);
+    } finally {
+      if (!handed) _cancelLive(live);
+    }
+  }
+
+  Future<void> _toPreview(
+    String? mine,
+    Future<LiveMask?>? live,
+    void Function() handed,
+  ) async {
+    final String? take;
+    try {
+      take = await _rec.stop() ?? mine;
+    } catch (e) {
+      dlog('voice: the recorder did not stop (${e.runtimeType})');
+      _stopping = false;
+      if (mine != null) await shredFile(mine);
+      return _abort();
+    }
+    _stopping = false;
+    if (take == null) return _abort();
     if (!mounted || _stage != VoiceStage.locked) {
-      dropLive();
       await shredFile(take);
       return;
     }
@@ -350,13 +392,13 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
       dlog('voice: the take did not read (${e.runtimeType})');
     }
     if (raw == null || _held != take) {
-      dropLive();
       raw?.fillRange(0, raw.length, 0);
       return;
     }
     _peaks = wavPeaks(raw, kVoiceBars);
     _overlay?.rebuild();
     // made at once, so the chip has it by the time it is touched
+    handed();
     _maskJob = _makeMask(raw, take, live);
   }
 

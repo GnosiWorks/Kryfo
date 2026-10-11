@@ -94,9 +94,12 @@ Uint8List _put(
   return res;
 }
 
-/// [maskWav] off the calling isolate
-Future<Uint8List?> maskWavOff(Uint8List wav, {int? seed}) =>
-    Isolate.run(() => maskWav(wav, seed: seed));
+/// [maskWav] off the calling isolate. the copy it takes there is zeroed
+Future<Uint8List?> maskWavOff(Uint8List wav, {int? seed}) => Isolate.run(() {
+  final m = maskWav(wav, seed: seed);
+  wav.fillRange(0, wav.length, 0);
+  return m;
+});
 
 // where the samples are: start, length in bytes, channels and rate
 (int, int, int, int)? _pcmAt(Uint8List b) {
@@ -202,6 +205,11 @@ Float64List maskSamples(Float64List x, int rate, MaskDraw draw) {
   for (var i = 0; i < total; i++) {
     out[i] *= gain;
   }
+  // what held the voice on the way, zeroed
+  v.zero();
+  for (final b in [re, im, aRe, aIm, bRe, bIm, yr, yi, acc]) {
+    b.fillRange(0, b.length, 0);
+  }
   return out;
 }
 
@@ -306,6 +314,10 @@ class MaskStreamer {
   void clear() {
     _x.fillRange(0, _x.length, 0);
     _acc.fillRange(0, _acc.length, 0);
+    _v.zero();
+    for (final b in [_re, _im, _aRe, _aIm, _bRe, _bIm, _yr, _yi]) {
+      b.fillRange(0, b.length, 0);
+    }
     _out = Float64List(0);
     _xLen = 0;
     _outLen = 0;
@@ -426,25 +438,38 @@ class LiveMask {
   SendPort? _to;
   final _port = Completer<SendPort?>();
   final _result = Completer<Object?>();
+  final _exited = Completer<void>();
   bool _ended = false;
 
   /// how far the isolate is, in samples made: for tests
   final _made = StreamController<int>.broadcast();
   Stream<int> get progress => _made.stream;
 
+  /// done once the isolate has ended, whatever ended it
+  Future<void> get exited => _exited.future;
+
   /// null when the isolate does not start: the take is disguised whole on
-  /// release instead. [every] is how often the file is read
+  /// release instead. [every] is how often the file is read. the isolate
+  /// ends by itself once the file is gone for a while, or after [life]
   static Future<LiveMask?> start(
     String path, {
     int rate = 16000,
     int? seed,
     Duration every = const Duration(milliseconds: 200),
+    Duration life = const Duration(hours: 3),
   }) async {
     final from = ReceivePort();
     try {
       await Isolate.spawn(
         _liveMain,
-        (from.sendPort, path, rate, seed, every.inMilliseconds),
+        (
+          from.sendPort,
+          path,
+          rate,
+          seed,
+          every.inMilliseconds,
+          life.inMilliseconds,
+        ),
         onError: from.sendPort,
         onExit: from.sendPort,
       );
@@ -462,25 +487,29 @@ class LiveMask {
       _to = msg;
       if (!_port.isCompleted) _port.complete(msg);
     } else if (msg is int) {
-      _made.add(msg);
+      if (!_made.isClosed) _made.add(msg);
     } else if (msg is Uint8List || msg is _Failed) {
       if (!_result.isCompleted) _result.complete(msg);
     } else {
-      // an error or the isolate's exit with nothing sent
+      // an error, then the exit; or the exit with nothing sent
       if (!_port.isCompleted) _port.complete(null);
       if (!_result.isCompleted) _result.complete(null);
+      if (msg == null) {
+        _from.close();
+        _made.close();
+        if (!_exited.isCompleted) _exited.complete();
+      }
     }
   }
 
   /// the disguised take, a wav as [maskWav] makes it. null when the isolate
-  /// failed: the caller disguises the take whole
+  /// failed or ended: the caller disguises the take whole
   Future<Uint8List?> finish() async {
     if (_ended) return null;
     _ended = true;
     final to = _to ?? await _port.future;
     to?.send('finish');
     final r = await _result.future;
-    _close();
     return r is Uint8List ? r : null;
   }
 
@@ -491,17 +520,9 @@ class LiveMask {
     final to = _to;
     if (to != null) {
       to.send('cancel');
-      _result.future.whenComplete(_close).ignore();
     } else {
-      _port.future.then((p) => p?.send('cancel')).whenComplete(() {
-        _result.future.whenComplete(_close).ignore();
-      }).ignore();
+      _port.future.then((p) => p?.send('cancel')).ignore();
     }
-  }
-
-  void _close() {
-    _from.close();
-    _made.close();
   }
 }
 
@@ -510,9 +531,22 @@ class _Failed {
 }
 
 const _wavHead = 44;
+// reads in a row with the file gone before the isolate gives up on it
+const _goneTurns = 25;
 
-void _liveMain((SendPort, String, int, int?, int) a) {
-  final (out, path, rate, seed, every) = a;
+// a running hash of 16-bit samples, to tell the file read from the file
+// at the end
+int _hash16(int h, Int16List v) {
+  for (var i = 0; i < v.length; i++) {
+    h = ((h ^ (v[i] & 0xFFFF)) * 16777619) & 0xFFFFFFFF;
+  }
+  return h;
+}
+
+const _hashSeed = 2166136261;
+
+void _liveMain((SendPort, String, int, int?, int, int) a) {
+  final (out, path, rate, seed, every, life) = a;
   final inbox = ReceivePort();
   out.send(inbox.sendPort);
   final draw = MaskDraw.from(
@@ -521,10 +555,31 @@ void _liveMain((SendPort, String, int, int?, int) a) {
   final s = MaskStreamer(rate, draw);
   RandomAccessFile? file;
   var at = _wavHead;
+  var hash = _hashSeed;
+  var gone = 0;
   // at most two seconds a turn, so a finish never waits long behind one
   final turn = rate * 2 * 2;
+  late final Timer tick, cap;
+
+  // the samples zeroed, the file let go, and the isolate ended
+  Never quit(Object msg) {
+    tick.cancel();
+    cap.cancel();
+    try {
+      file?.closeSync();
+    } catch (_) {}
+    s.clear();
+    inbox.close();
+    Isolate.exit(out, msg);
+  }
 
   void pull() {
+    if (!File(path).existsSync()) {
+      // shredded, or never there: nothing will come
+      if (++gone >= _goneTurns) quit(const _Failed());
+      return;
+    }
+    gone = 0;
     try {
       file ??= File(path).openSync();
       final f = file!;
@@ -535,26 +590,22 @@ void _liveMain((SendPort, String, int, int?, int) a) {
       f.setPositionSync(at);
       final b = f.readSync(want);
       final got = b.length - (b.length & 1);
+      hash = _hash16(hash, Int16List.sublistView(b, 0, got));
       s.addPcm16(Uint8List.sublistView(b, 0, got));
       b.fillRange(0, b.length, 0);
       at += got;
       out.send(s.made);
     } catch (_) {
-      // not there yet, or gone: the finish reads it whole
+      // not readable now: the finish reads it whole
     }
   }
 
-  final tick = Timer.periodic(Duration(milliseconds: every), (_) => pull());
+  tick = Timer.periodic(Duration(milliseconds: every), (_) => pull());
+  cap = Timer(Duration(milliseconds: life), () => quit(const _Failed()));
   inbox.listen((msg) {
+    if (msg != 'finish') quit(const _Failed());
     tick.cancel();
-    try {
-      file?.closeSync();
-    } catch (_) {}
-    if (msg != 'finish') {
-      s.clear();
-      inbox.close();
-      Isolate.exit(out, const _Failed());
-    }
+    cap.cancel();
     Uint8List? done;
     Uint8List? wav;
     try {
@@ -565,7 +616,8 @@ void _liveMain((SendPort, String, int, int?, int) a) {
         if (start == _wavHead &&
             channels == 1 &&
             r == rate &&
-            at <= start + len) {
+            at <= start + len &&
+            _hash16(_hashSeed, Int16List.sublistView(wav, start, at)) == hash) {
           // the rest of the take, then its end
           s.addPcm16(Uint8List.sublistView(wav, at, start + len));
           // the take's samples written over with the disguised ones
@@ -579,9 +631,7 @@ void _liveMain((SendPort, String, int, int?, int) a) {
       done = null;
     }
     if (!identical(done, wav)) wav?.fillRange(0, wav.length, 0);
-    s.clear();
-    inbox.close();
-    Isolate.exit(out, done ?? const _Failed());
+    quit(done ?? const _Failed());
   });
 }
 
@@ -646,6 +696,15 @@ class _Vocoder {
   late final Float64List lastRe, lastIm, mag, env, logc, envc, cep, yr, yi;
   late Float64List turn, lastTurn;
   late final Int32List peaks;
+
+  // what it kept of the last frames, zeroed
+  void zero() {
+    for (final b in [lastRe, lastIm, mag, env, logc, envc, cep, yr, yi]) {
+      b.fillRange(0, b.length, 0);
+    }
+    turn.fillRange(0, turn.length, 0);
+    lastTurn.fillRange(0, lastTurn.length, 0);
+  }
 
   // [envelope] false keeps the one before: it moves slower than a hop
   void frame(Float64List re, Float64List im, int at, {required bool envelope}) {
