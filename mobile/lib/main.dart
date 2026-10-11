@@ -12209,6 +12209,7 @@ class AppState extends ChangeNotifier {
   bool _inFront = false;
   Timer? _sleepTimer;
   Timer? _wakeAgain;
+  Timer? _sleepAgain;
   int _lastCheckAt = 0;
   int _lastWakeAt = 0;
   // how the last check-in ended, for the transport screen, including one
@@ -12519,17 +12520,32 @@ class AppState extends ChangeNotifier {
     // back in front while it waited its turn: the wake behind it wins
     if (haloWiping || _inFront) return;
     _wakeAgain?.cancel();
+    _sleepAgain?.cancel();
     // held is only the app's word: a wake that failed half way has let the
     // engine run again, and then it is stopped once more
     if (_torHeld && engine.torPaused()) return;
     _torHeld = true;
     final r = await engine.torStop();
     dlog('delivery: tor stopped ($r)');
+    // a stop the control port refused leaves tor on the network, and the
+    // watchdog leaves a held tor alone: the stop is tried again
+    if (r.startsWith('error')) _sleepLater();
     notifyListeners();
+  }
+
+  // for as long as tor is meant to sleep
+  void _sleepLater() {
+    _sleepAgain?.cancel();
+    _sleepAgain = Timer(const Duration(seconds: 30), () {
+      if (!_torHeld || haloWiping || _inFront) return;
+      if (_deliveryMode == DeliveryMode.always) return;
+      unawaited(_torSleep());
+    });
   }
 
   Future<bool> _torWakeNow() async {
     _wakeAgain?.cancel();
+    _sleepAgain?.cancel();
     if (!_torHeld) return true;
     // 'ok': tor was asleep and is waking. 'start': there is no tor in this
     // process yet. either way the start call below hands back the address
@@ -12566,10 +12582,15 @@ class AppState extends ChangeNotifier {
   // one check-in: tor up, every relay asked for what it holds, tor down.
   // returns how many drains brought something. bounded all the way: the job
   // that calls this is given under three minutes.
+  // the check-in's clock, which a test moves on its own
+  DateTime Function() _checkClock = DateTime.now;
+  @visibleForTesting
+  set checkClockForTest(DateTime Function() c) => _checkClock = c;
+
   Future<int> checkIn({String why = 'job'}) async {
     if (_checking) return 0;
     _checking = true;
-    final started = DateTime.now();
+    final started = _checkClock();
     final drainBefore = _lastDrainAt;
     final wasHeld = _torHeld;
     // tor asleep in the background: a check-in proper, not the app in use
@@ -12605,7 +12626,7 @@ class AppState extends ChangeNotifier {
       var began = false;
       var tail = '';
       while (true) {
-        final secs = DateTime.now().difference(started).inSeconds;
+        final secs = _checkClock().difference(started).inSeconds;
         final (active, begun) = engine.catchupState();
         if (begun > begunBefore) began = true;
         if (began && active == 0) {
@@ -12628,6 +12649,12 @@ class AppState extends ChangeNotifier {
         await Future.delayed(const Duration(seconds: 1));
       }
       _lastCheckRelays = _relayCatchupData();
+      // no relay ever got going, most often no network: nothing was
+      // checked, and the last check-in stays the one that was
+      if (tail == '_norelay') {
+        how = 'norelay';
+        return 0;
+      }
       // what came in is drained by the one-second poll. let it finish, and
       // let receipts and slice requests that answer it get out.
       await Future.delayed(const Duration(seconds: 3));
