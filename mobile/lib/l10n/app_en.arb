@@ -8646,6 +8646,51 @@
   "@bridgesKryfoStaysOfflineRather": {
     "description": "screens/bridges_screen.dart"
   },
+  "bridgesSignInToThisWifi": "Sign in to this Wi-Fi",
+  "@bridgesSignInToThisWifi": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesThisNetworkWantsA": "This network wants a sign-in first. Open your browser, then Kryfo connects.",
+  "@bridgesThisNetworkWantsA": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesUsingBuiltIn": "Using built-in bridges",
+  "@bridgesUsingBuiltIn": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesUsingSnowflake": "Using Snowflake",
+  "@bridgesUsingSnowflake": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesUsingTorProject": "Using bridges from the Tor Project",
+  "@bridgesUsingTorProject": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesKryfoTriesAgainOnItsOwn": "Kryfo tries again by itself now and then.",
+  "@bridgesKryfoTriesAgainOnItsOwn": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesTheTorProjectCanSuggest": "The Tor Project can suggest a bridge that works here.",
+  "@bridgesTheTorProjectCanSuggest": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesBridgeRemoved": "Bridge removed",
+  "@bridgesBridgeRemoved": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesUndo": "Undo",
+  "@bridgesUndo": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesRemoveBridgeN": "Remove bridge {n}",
+  "@bridgesRemoveBridgeN": {
+    "description": "screens/bridges_screen.dart",
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
   "@bridgesFromTheTorProjectLower": {
     "description": "screens/bridges_screen.dart"
   },
@@ -8680,7 +8725,7 @@
     "description": "screens/bridges_screen.dart"
   },
   "bridgesInUse": "In use",
-  "bridgesPasteTheLineThey": "Paste the line they sent you, or scan its code. Whoever runs a bridge can see when you use Tor, so take lines only from people you trust.",
+  "bridgesPasteTheLineThey": "Paste the line they sent you, or scan its code. Take bridge lines from people you know.",
   "bridgesYouReOnAMode": "Your mode doesn't use Tor. These choices apply when you switch back.",
   "@bridgesKryfoCanGetAround": {
     "description": "screens/bridges_screen.dart"
@@ -8690,7 +8735,7 @@
   "@bridgesThroughABridge": {
     "description": "screens/bridges_screen.dart"
   },
-  "torBootSplashIfTorIsBlocked": "If Tor is blocked or risky where you are, Kryfo can start through a bridge instead.",
+  "torBootSplashIfTorIsBlocked": "If Tor is blocked where you are, Kryfo can start through a bridge instead.",
   "bridgesScanACode": "Scan a code",
   "bridgesMyanmar": "Myanmar",
   "bridgesSwitchToAutomatic": "Switch to automatic",
@@ -8703,7 +8748,7 @@
   "@bridgesNothingYet": {
     "description": "screens/bridges_screen.dart"
   },
-  "torBootSplashTorIsBlockedOr": "Tor is blocked or risky here",
+  "torBootSplashTorIsBlockedOr": "Tor is blocked here",
   "bridgesTryingAnotherWay": "Trying another way…",
   "@bridgesFoundAVolunteer": {
     "description": "screens/bridges_screen.dart"
@@ -8736,9 +8781,6 @@
   "bridgesKryfoCouldNotRead": "{count, plural, one{Kryfo couldn't read {count} of these lines} other{Kryfo couldn't read {count} of these lines}}",
   "bridgesTorNoBridge": "Tor, no bridge",
   "bridgesKryfoFindsAWay": "Kryfo finds a way that works where you are.",
-  "@bridgesKryfoTriesAgainBy": {
-    "description": "screens/bridges_screen.dart"
-  },
   "@bridgesLetTheTorProject": {
     "description": "screens/bridges_screen.dart"
   },
@@ -8770,7 +8812,6 @@
     "description": "screens/transport_screen.dart"
   },
   "bridgesObfs4BridgesThatCome": "Bridges that come with Kryfo (obfs4). Quick to try, often blocked.",
-  "bridgesKryfoTriesAgainBy": "Kryfo tries again by itself now and then. A bridge from a friend can help.",
   "bridgesYourNetworkMayBe": "Your network may be limited",
   "@bridgesCouldNotReachTheTor": {
     "description": "screens/bridges_screen.dart"
@@ -8835,7 +8876,7 @@
   "@bridgesMyanmar": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesAutomaticFindsAWay": "Automatic finds a way by itself when Tor is blocked. It may reach a bridge outside Tor to do it.",
+  "bridgesAutomaticFindsAWay": "Automatic finds a way by itself when Tor is blocked. To do that, Kryfo may reach a bridge directly. Lots of people use bridges every day.",
   "@bridgesScanABridgeCode": {
     "description": "screens/bridges_screen.dart"
   },

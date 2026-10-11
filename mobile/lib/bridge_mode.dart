@@ -295,7 +295,6 @@ class BridgeStatus {
       other.progress == progress &&
       other.attempt == attempt &&
       other.attempts == attempts &&
-      other.sinceMs ~/ 1000 == sinceMs ~/ 1000 &&
       other.canSend == canSend &&
       other.blocked == blocked &&
       other.limited == limited &&
@@ -311,7 +310,6 @@ class BridgeStatus {
     progress,
     attempt,
     attempts,
-    sinceMs ~/ 1000,
     canSend,
     blocked,
     limited,
@@ -340,6 +338,9 @@ class BridgeLine {
   // 0 to 1, where tor says how far it is
   final double? progress;
   final BridgeAction? action;
+  // how long this way has been tried, in ms, when tor gives no percent:
+  // the view counts on from it, so nothing else rebuilds each second
+  final int? clockMs;
 
   const BridgeLine({
     required this.head,
@@ -349,10 +350,12 @@ class BridgeLine {
     this.moving = false,
     this.progress,
     this.action,
+    this.clockMs,
   });
 }
 
-String _clock(int ms) {
+/// m:ss in the person's digits
+String bridgeClock(int ms) {
   final s = ms ~/ 1000;
   return '${whole(s ~/ 60)}:${twoDigits(s % 60)}';
 }
@@ -367,7 +370,13 @@ BridgeLine bridgeStatusLine(
   String consent = 'no',
 }) {
   if (decoy) {
-    if (s.phase == 'no_internet' || s.phase == 'paused') {
+    // the engine says connected, trying or offline in a decoy
+    if (const {
+      'offline',
+      'no_internet',
+      'paused',
+      'captive',
+    }.contains(s.phase)) {
       return BridgeLine(head: l10n.bridgesOffline, tone: BridgeTone.rose);
     }
     if (s.canSend || s.phase == 'not_tor_mode') {
@@ -405,19 +414,30 @@ BridgeLine bridgeStatusLine(
         tone: BridgeTone.amber,
         moving: true,
       );
+    case 'captive':
+      return BridgeLine(
+        head: l10n.bridgesSignInToThisWifi,
+        detail: l10n.bridgesThisNetworkWantsA,
+        detailKind: 'captive',
+        tone: BridgeTone.amber,
+      );
     case 'exhausted':
+      // the words go with the button under them
+      final ask = consent != 'yes';
       return BridgeLine(
         head: l10n.bridgesNothingGotThrough,
-        detail: l10n.bridgesKryfoTriesAgainBy,
-        detailKind: 'exhausted',
+        detail: ask
+            ? l10n.bridgesTheTorProjectCanSuggest
+            : l10n.bridgesKryfoTriesAgainOnItsOwn,
+        detailKind: ask ? 'exhausted-ask' : 'exhausted',
         tone: BridgeTone.rose,
-        action: consent == 'yes'
-            ? BridgeAction.tryAgain
-            : BridgeAction.getBridge,
+        action: ask ? BridgeAction.getBridge : BridgeAction.tryAgain,
       );
   }
-  // a picked bridge whose listeners would not start: tor waits offline
-  if (s.errorCode == 'pt_failed') {
+  // a picked bridge tor cannot use, its listeners down or its lines
+  // refused: tor waits offline. automatic moves on by itself
+  if (s.mode != 'auto' &&
+      (s.errorCode == 'pt_failed' || s.errorCode == 'not_applied')) {
     return BridgeLine(
       head: l10n.bridgesYourBridgeCouldNot,
       detail: l10n.bridgesKryfoStaysOfflineRather,
@@ -483,11 +503,7 @@ BridgeLine bridgeStatusLine(
     parts.add(l10n.bridgesCouldNotReachTheTor);
     kind += '+moat';
   }
-  if (pct != null) {
-    parts.add(percent(pct / 100));
-  } else if (s.sinceMs >= 1000) {
-    parts.add(_clock(s.sinceMs));
-  }
+  if (pct != null) parts.add(percent(pct / 100));
   return BridgeLine(
     head: head,
     detail: parts.isEmpty ? null : parts.join(' · '),
@@ -495,6 +511,7 @@ BridgeLine bridgeStatusLine(
     tone: BridgeTone.amber,
     moving: true,
     progress: pct == null ? null : pct / 100,
+    clockMs: pct == null && s.sinceMs >= 1000 ? s.sinceMs : null,
   );
 }
 
@@ -510,10 +527,12 @@ String bridgeChoiceName(BridgeChoice c) => switch (c) {
 
 /// the method in use, in the words "more" uses. transport names are kept
 /// left to right in a right-to-left language
-String bridgeMethodWords(BridgeStatus s) {
+String bridgeMethodWords(BridgeStatus s, {BridgeChoice? choice}) {
   if (s.method.isEmpty) return l10n.bridgesNothingYet;
   if (s.method == 'direct') return l10n.bridgesTorNoBridge;
-  final from = switch (s.source) {
+  // built-in bridges go to the engine as a picked set: named by the pick
+  final source = choice == BridgeChoice.builtin ? 'builtin' : s.source;
+  final from = switch (source) {
     'builtin' => l10n.bridgesBuiltIn,
     'moat' => l10n.bridgesFromTheTorProjectLower,
     'own' => l10n.bridgesFromAFriendLower,

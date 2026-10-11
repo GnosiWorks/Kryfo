@@ -3329,19 +3329,10 @@ void main() {
       "Connecting through your bridge…",
     );
     expect(l.bridgesNothingGotThrough, "Nothing got through");
-    expect(
-      l.bridgesKryfoTriesAgainBy,
-      "Kryfo tries again by itself now and then. A bridge from a friend can help.",
-    );
     expect(l.bridgesNoInternet, "No internet");
     expect(
       l.bridgesKryfoConnectsAsSoon,
       "Kryfo connects as soon as you're back online.",
-    );
-    expect(l.bridgesYourBridgeCouldNot, "Your bridge couldn't start");
-    expect(
-      l.bridgesKryfoStaysOfflineRather,
-      "Kryfo stays offline rather than connect without it.",
     );
     expect(l.bridgesAsleepBetweenCheckIns, "Asleep between check-ins");
     expect(l.bridgesCheckingForMessages, "Checking for messages…");
@@ -3359,10 +3350,6 @@ void main() {
       "Kryfo can ask the Tor Project for a bridge to get around it.",
     );
     expect(l.bridgesKryfoCanGetAround, "Kryfo can get around Tor blocks now");
-    expect(
-      l.bridgesAutomaticFindsAWay,
-      "Automatic finds a way by itself when Tor is blocked. It may reach a bridge outside Tor to do it.",
-    );
     expect(l.bridgesTurnOnAutomatic, "Turn on automatic");
     expect(l.bridgesInUse, "In use");
     expect(l.bridgesNothingYet, "Nothing yet");
@@ -3407,10 +3394,6 @@ void main() {
     expect(l.bridgesSavedLines, "Saved lines");
     expect(l.bridgesKryfoCanTUseThis, "Kryfo can't use this line");
     expect(l.bridgesTooLongForTor, "Too long for Tor to use");
-    expect(
-      l.bridgesPasteTheLineThey,
-      "Paste the line they sent you, or scan its code. Whoever runs a bridge can see when you use Tor, so take lines only from people you trust.",
-    );
     expect(l.bridgesPasteABridgeLine, "Paste a bridge line");
     expect(l.bridgesScanACode, "Scan a code");
     expect(l.bridgesUseThisBridge(5), "Use these 5 bridges");
@@ -3442,12 +3425,7 @@ void main() {
       l.settingsBridgesForNetworksThat,
       "Bridges, for networks that block Tor",
     );
-    expect(
-      l.torBootSplashIfTorIsBlocked,
-      "If Tor is blocked or risky where you are, Kryfo can start through a bridge instead.",
-    );
     expect(l.torBootSplashConnect, "Connect");
-    expect(l.torBootSplashTorIsBlockedOr, "Tor is blocked or risky here");
     expect(l.transportBridgeMode, "Bridges");
     expect(l.transportBridgePhase, "Phase");
     expect(l.transportBridgeMethod, "Method");
@@ -3457,6 +3435,43 @@ void main() {
       "When you ask for bridges, the Tor Project sees your address. That's normal: it's how Tor Browser and every Tor app get bridges, and all it tells them is that someone asked for bridges. Nothing about your chats.",
     );
     expect(l.bridgesFromTheTorProject, "From the Tor Project");
+    expect(l.bridgesSignInToThisWifi, "Sign in to this Wi-Fi");
+    expect(
+      l.bridgesThisNetworkWantsA,
+      "This network wants a sign-in first. Open your browser, then Kryfo connects.",
+    );
+    expect(l.bridgesUsingBuiltIn, "Using built-in bridges");
+    expect(l.bridgesUsingSnowflake, "Using Snowflake");
+    expect(l.bridgesUsingTorProject, "Using bridges from the Tor Project");
+    expect(
+      l.bridgesKryfoTriesAgainOnItsOwn,
+      "Kryfo tries again by itself now and then.",
+    );
+    expect(
+      l.bridgesTheTorProjectCanSuggest,
+      "The Tor Project can suggest a bridge that works here.",
+    );
+    expect(l.bridgesBridgeRemoved, "Bridge removed");
+    expect(l.bridgesUndo, "Undo");
+    expect(l.bridgesRemoveBridgeN("<n>"), "Remove bridge <n>");
+    expect(l.torBootSplashTorIsBlockedOr, "Tor is blocked here");
+    expect(
+      l.torBootSplashIfTorIsBlocked,
+      "If Tor is blocked where you are, Kryfo can start through a bridge instead.",
+    );
+    expect(
+      l.bridgesPasteTheLineThey,
+      "Paste the line they sent you, or scan its code. Take bridge lines from people you know.",
+    );
+    expect(
+      l.bridgesAutomaticFindsAWay,
+      "Automatic finds a way by itself when Tor is blocked. To do that, Kryfo may reach a bridge directly. Lots of people use bridges every day.",
+    );
+    expect(l.bridgesYourBridgeCouldNot, "Your bridge couldn't start");
+    expect(
+      l.bridgesKryfoStaysOfflineRather,
+      "Kryfo stays offline rather than connect without it.",
+    );
     expect(l.notesThisWeek, "This week");
     expect(l.notesShowMore, "Show more");
     expect(l.notesShowLess, "Show less");

@@ -6907,6 +6907,41 @@ class AppLocalizationsAr extends AppLocalizations {
       'يبقى Kryfo غير متصل بدل أن يتصل من دونه.';
 
   @override
+  String get bridgesSignInToThisWifi => 'سجّل الدخول إلى شبكة Wi-Fi هذه';
+
+  @override
+  String get bridgesThisNetworkWantsA =>
+      'تطلب هذه الشبكة تسجيل الدخول أولًا. افتح المتصفح، وبعدها يتصل Kryfo.';
+
+  @override
+  String get bridgesUsingBuiltIn => 'عبر الجسور المدمجة';
+
+  @override
+  String get bridgesUsingSnowflake => 'عبر Snowflake';
+
+  @override
+  String get bridgesUsingTorProject => 'عبر جسور من مشروع Tor';
+
+  @override
+  String get bridgesKryfoTriesAgainOnItsOwn =>
+      'يعيد Kryfo المحاولة من تلقاء نفسه بين حين وآخر.';
+
+  @override
+  String get bridgesTheTorProjectCanSuggest =>
+      'يستطيع مشروع Tor أن يقترح جسرًا يعمل هنا.';
+
+  @override
+  String get bridgesBridgeRemoved => 'أُزيل الجسر';
+
+  @override
+  String get bridgesUndo => 'تراجع';
+
+  @override
+  String bridgesRemoveBridgeN(String n) {
+    return 'إزالة الجسر ⁨$n⁩';
+  }
+
+  @override
   String get bridgesIran => 'إيران';
 
   @override
@@ -6920,7 +6955,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get bridgesPasteTheLineThey =>
-      'الصق السطر الذي أرسله إليك، أو اقرأ رمزه. يستطيع من يدير الجسر أن يرى متى تستخدم Tor، فلا تأخذ الأسطر إلا ممن تثق بهم.';
+      'الصق السطر الذي أرسله إليك، أو اقرأ رمزه. خذ أسطر الجسور ممن تعرفهم.';
 
   @override
   String get bridgesYouReOnAMode =>
@@ -6935,7 +6970,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get torBootSplashIfTorIsBlocked =>
-      'إن كان Tor محجوبًا أو محفوفًا بالمخاطر حيث أنت، فيستطيع Kryfo أن يبدأ عبر جسر بدلًا من ذلك.';
+      'إن كان Tor محجوبًا حيث أنت، فيستطيع Kryfo أن يبدأ عبر جسر بدلًا من ذلك.';
 
   @override
   String get bridgesScanACode => 'قراءة رمز';
@@ -6947,7 +6982,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bridgesSwitchToAutomatic => 'التبديل إلى الوضع التلقائي';
 
   @override
-  String get torBootSplashTorIsBlockedOr => 'Tor محجوب أو خطِر هنا';
+  String get torBootSplashTorIsBlockedOr => 'Tor محجوب هنا';
 
   @override
   String get bridgesTryingAnotherWay => 'جارٍ تجربة طريقة أخرى…';
@@ -7015,10 +7050,6 @@ class AppLocalizationsAr extends AppLocalizations {
       'جسور تأتي مع Kryfo (obfs4). سريعة التجربة، وكثيرًا ما تُحجب.';
 
   @override
-  String get bridgesKryfoTriesAgainBy =>
-      'يعيد Kryfo المحاولة من تلقاء نفسه بين حين وآخر. قد يساعدك جسر من صديق.';
-
-  @override
   String get bridgesYourNetworkMayBe => 'قد تكون شبكتك مقيّدة';
 
   @override
@@ -7076,7 +7107,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get bridgesAutomaticFindsAWay =>
-      'حين يُحجب Tor، يجد «تلقائي» طريقة بنفسه. وقد يتصل لذلك بجسر خارج Tor.';
+      'حين يُحجب Tor، يجد «تلقائي» طريقة بنفسه. ولذلك قد يتصل Kryfo بجسر مباشرةً. كثيرون يستخدمون الجسور كل يوم.';
 
   @override
   String get bridgesFromTheTorProjectLower => 'من مشروع Tor';

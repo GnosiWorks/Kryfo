@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the sheets around bridges: tor is blocked (with a yes to asking the tor
 // project), the yes on its own, a friend's lines, and the country.
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -8,6 +10,7 @@ import '../bidi_safe.dart';
 import '../bridge_mode.dart';
 import '../l10n/l10n.dart';
 import '../lock_guard.dart' show lockGuard;
+import '../lock_state.dart' show lockState;
 import '../main.dart' hide live;
 import '../stickers/sticker_bubble.dart' show StickerLibraryBuilder;
 import '../stickers/sticker_pack.dart' show StickerRef;
@@ -135,7 +138,13 @@ Future<void> showTorBlockedSheet(
       _quiet(l10n.bridgesNotNow, () => Navigator.pop(ctx, false)),
     ]),
   );
-  await appState.answerBridgeAsk(yes == true, asked: asked);
+  // only a button is an answer. closed another way, the question stands;
+  // shut by the lock, it comes back once the lock is open
+  if (yes == null) {
+    if (asked && lockState.locked) appState.bridgeAskAgain();
+    return;
+  }
+  await appState.answerBridgeAsk(yes, asked: asked);
 }
 
 /// the yes to asking the tor project, from "more"
@@ -181,7 +190,11 @@ Future<String?> showCountrySheet(
   current: current,
   choices: [
     SheetChoice('', l10n.bridgesLetTheTorProject),
-    for (final cc in kBridgeCountries)
+    // a guess the tor project has no advice for is still the person's
+    for (final cc in [
+      ...kBridgeCountries,
+      if (guess != null && !kBridgeCountries.contains(guess)) guess,
+    ])
       SheetChoice(
         cc,
         bridgeCountryName(cc),
@@ -227,12 +240,31 @@ class _FriendSheetState extends State<_FriendSheet> {
     _ctrl.text = have.isEmpty ? got.join('\n') : '$have\n${got.join('\n')}';
   }
 
+  // what came from the clipboard, so it can be cleared once used
+  String? _pasted;
+
   Future<void> _paste() async {
     final d = await Clipboard.getData('text/plain');
     final t = d?.text;
     if (t == null || t.trim().isEmpty || !mounted) return;
     HapticFeedback.selectionClick();
+    _pasted = t;
     _add(unmarked(t));
+  }
+
+  // a bridge line in the clipboard is a secret: gone once used, if the
+  // clipboard still holds it, as copySensitive does
+  Future<void> _clearPasted() async {
+    final p = _pasted;
+    if (p == null) return;
+    try {
+      final now = await Clipboard.getData(Clipboard.kTextPlain);
+      if (now?.text == p) {
+        await Clipboard.setData(const ClipboardData(text: ''));
+      }
+    } catch (_) {
+      // nothing to clear here
+    }
   }
 
   Future<void> _scan() async {
@@ -259,6 +291,7 @@ class _FriendSheetState extends State<_FriendSheet> {
       return;
     }
     HapticFeedback.mediumImpact();
+    unawaited(_clearPasted());
     Navigator.of(context).pop();
     final host = widget.host;
     if (r.broken > 0 && host.mounted) {
@@ -324,6 +357,8 @@ class _FriendSheetState extends State<_FriendSheet> {
                 decoration: InputDecoration(
                   border: InputBorder.none,
                   hintText: l10n.bridgesPasteABridgeLine,
+                  // the line is left to right, the hint the app's way
+                  hintTextDirection: Directionality.of(context),
                   hintStyle: HaloType.mono(size: 11.5, color: HaloColors.text2),
                 ),
               ),

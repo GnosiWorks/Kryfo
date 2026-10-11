@@ -6517,6 +6517,38 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesKryfoStaysOfflineRather => 'Kryfo 宁可保持离线，也不会在没有网桥的情况下连接。';
 
   @override
+  String get bridgesSignInToThisWifi => '登录这个 Wi-Fi';
+
+  @override
+  String get bridgesThisNetworkWantsA => '这个网络需要先登录。打开浏览器，然后 Kryfo 就会连接。';
+
+  @override
+  String get bridgesUsingBuiltIn => '正在使用内置网桥';
+
+  @override
+  String get bridgesUsingSnowflake => '正在使用 Snowflake';
+
+  @override
+  String get bridgesUsingTorProject => '正在使用 Tor 项目的网桥';
+
+  @override
+  String get bridgesKryfoTriesAgainOnItsOwn => 'Kryfo 会时不时自己重试。';
+
+  @override
+  String get bridgesTheTorProjectCanSuggest => 'Tor 项目可以推荐一个在这里能用的网桥。';
+
+  @override
+  String get bridgesBridgeRemoved => '网桥已移除';
+
+  @override
+  String get bridgesUndo => '撤销';
+
+  @override
+  String bridgesRemoveBridgeN(String n) {
+    return '移除网桥 $n';
+  }
+
+  @override
   String get bridgesIran => '伊朗';
 
   @override
@@ -6529,8 +6561,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesInUse => '正在使用';
 
   @override
-  String get bridgesPasteTheLineThey =>
-      '粘贴对方发给你的地址，或者扫码。架设网桥的人能看到你什么时候在用 Tor，所以只用你信任的人给的地址。';
+  String get bridgesPasteTheLineThey => '粘贴对方发给你的地址，或者扫码。网桥地址要找你认识的人拿。';
 
   @override
   String get bridgesYouReOnAMode => '你当前的模式不使用 Tor。切换回来后，这些选择才会生效。';
@@ -6542,8 +6573,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesNothingYet => '暂无';
 
   @override
-  String get torBootSplashIfTorIsBlocked =>
-      '如果你那里封锁了 Tor，或者用 Tor 有风险，Kryfo 可以改为通过网桥启动。';
+  String get torBootSplashIfTorIsBlocked => '如果你那里封锁了 Tor，Kryfo 可以改为通过网桥启动。';
 
   @override
   String get bridgesScanACode => '扫码';
@@ -6555,7 +6585,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesSwitchToAutomatic => '切换到自动';
 
   @override
-  String get torBootSplashTorIsBlockedOr => '这里 Tor 被封锁或有风险';
+  String get torBootSplashTorIsBlockedOr => '这里 Tor 被封锁';
 
   @override
   String get bridgesTryingAnotherWay => '正在尝试其他方式…';
@@ -6614,9 +6644,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesObfs4BridgesThatCome => 'Kryfo 自带的网桥（obfs4）。试起来快，但常被封锁。';
 
   @override
-  String get bridgesKryfoTriesAgainBy => 'Kryfo 会时不时自己重试。朋友给的网桥可能会有帮助。';
-
-  @override
   String get bridgesYourNetworkMayBe => '你的网络可能受到限制';
 
   @override
@@ -6670,7 +6697,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get bridgesAutomaticFindsAWay =>
-      'Tor 被封锁时，“自动”会自己找到办法。为此，它可能会在 Tor 之外连接网桥。';
+      'Tor 被封锁时，“自动”会自己找到办法。为此，Kryfo 可能会直接连接网桥。每天都有很多人在用网桥。';
 
   @override
   String get bridgesFromTheTorProjectLower => '来自 Tor 项目';
@@ -14246,6 +14273,38 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesKryfoStaysOfflineRather => 'Kryfo 寧可保持離線，也不會在沒有橋接的情況下連線。';
 
   @override
+  String get bridgesSignInToThisWifi => '登入這個 Wi-Fi';
+
+  @override
+  String get bridgesThisNetworkWantsA => '這個網路需要先登入。打開瀏覽器，接著 Kryfo 就會連線。';
+
+  @override
+  String get bridgesUsingBuiltIn => '正在使用內建橋接';
+
+  @override
+  String get bridgesUsingSnowflake => '正在使用 Snowflake';
+
+  @override
+  String get bridgesUsingTorProject => '正在使用 Tor 專案的橋接';
+
+  @override
+  String get bridgesKryfoTriesAgainOnItsOwn => 'Kryfo 會不時自己重試。';
+
+  @override
+  String get bridgesTheTorProjectCanSuggest => 'Tor 專案可以推薦一個在這裡可用的橋接。';
+
+  @override
+  String get bridgesBridgeRemoved => '已移除橋接';
+
+  @override
+  String get bridgesUndo => '復原';
+
+  @override
+  String bridgesRemoveBridgeN(String n) {
+    return '移除橋接 $n';
+  }
+
+  @override
   String get bridgesIran => '伊朗';
 
   @override
@@ -14258,8 +14317,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesInUse => '使用中';
 
   @override
-  String get bridgesPasteTheLineThey =>
-      '貼上對方傳給你的設定，或掃描它的 QR 碼。架設橋接的人看得到你何時在用 Tor，所以只用你信任的人給的設定。';
+  String get bridgesPasteTheLineThey => '貼上對方傳給你的設定，或掃描它的 QR 碼。橋接設定請向你認識的人拿。';
 
   @override
   String get bridgesYouReOnAMode => '你目前的模式不使用 Tor。切換回去後，這些選擇才會生效。';
@@ -14271,8 +14329,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesNothingYet => '還沒有';
 
   @override
-  String get torBootSplashIfTorIsBlocked =>
-      '如果你那裡封鎖了 Tor，或使用 Tor 有風險，Kryfo 可以改為透過橋接啟動。';
+  String get torBootSplashIfTorIsBlocked => '如果你那裡封鎖了 Tor，Kryfo 可以改為透過橋接啟動。';
 
   @override
   String get bridgesScanACode => '掃描 QR 碼';
@@ -14284,7 +14341,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesSwitchToAutomatic => '改用自動';
 
   @override
-  String get torBootSplashTorIsBlockedOr => '這裡 Tor 被封鎖或有風險';
+  String get torBootSplashTorIsBlockedOr => '這裡 Tor 被封鎖';
 
   @override
   String get bridgesTryingAnotherWay => '正在嘗試其他方式…';
@@ -14343,9 +14400,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesObfs4BridgesThatCome => 'Kryfo 內建的橋接（obfs4）。試起來快，但常被封鎖。';
 
   @override
-  String get bridgesKryfoTriesAgainBy => 'Kryfo 會不時自己重試。朋友給的橋接可能會有幫助。';
-
-  @override
   String get bridgesYourNetworkMayBe => '你的網路可能受到限制';
 
   @override
@@ -14399,7 +14453,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get bridgesAutomaticFindsAWay =>
-      'Tor 被封鎖時，「自動」會自己找到辦法。為此，它可能會在 Tor 之外連到橋接。';
+      'Tor 被封鎖時，「自動」會自己找到辦法。為此，Kryfo 可能會直接連到橋接。每天都有很多人在用橋接。';
 
   @override
   String get bridgesFromTheTorProjectLower => '來自 Tor 專案';

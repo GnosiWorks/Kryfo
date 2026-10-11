@@ -6815,6 +6815,41 @@ class AppLocalizationsTr extends AppLocalizations {
       'Kryfo onsuz bağlanmaktansa çevrimdışı kalır.';
 
   @override
+  String get bridgesSignInToThisWifi => 'Bu Wi-Fi ağına giriş yap';
+
+  @override
+  String get bridgesThisNetworkWantsA =>
+      'Bu ağ önce giriş yapmanı istiyor. Tarayıcını aç, sonra Kryfo bağlanır.';
+
+  @override
+  String get bridgesUsingBuiltIn => 'Yerleşik köprüler kullanılıyor';
+
+  @override
+  String get bridgesUsingSnowflake => 'Snowflake kullanılıyor';
+
+  @override
+  String get bridgesUsingTorProject => 'Tor Projesinin köprüleri kullanılıyor';
+
+  @override
+  String get bridgesKryfoTriesAgainOnItsOwn =>
+      'Kryfo ara sıra kendiliğinden yeniden dener.';
+
+  @override
+  String get bridgesTheTorProjectCanSuggest =>
+      'Tor Projesi burada işe yarayan bir köprü önerebilir.';
+
+  @override
+  String get bridgesBridgeRemoved => 'Köprü kaldırıldı';
+
+  @override
+  String get bridgesUndo => 'Geri al';
+
+  @override
+  String bridgesRemoveBridgeN(String n) {
+    return '$n. köprüyü kaldır';
+  }
+
+  @override
   String get bridgesIran => 'İran';
 
   @override
@@ -6828,7 +6863,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bridgesPasteTheLineThey =>
-      'Sana gönderdiği satırı yapıştır ya da kodunu tara. Bir köprüyü işleten kişi Tor’u ne zaman kullandığını görebilir, bu yüzden satırları yalnızca güvendiğin kişilerden al.';
+      'Sana gönderilen satırı yapıştır ya da kodunu tara. Köprü satırlarını tanıdığın kişilerden al.';
 
   @override
   String get bridgesYouReOnAMode =>
@@ -6843,7 +6878,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get torBootSplashIfTorIsBlocked =>
-      'Bulunduğun yerde Tor engelliyse ya da riskliyse, Kryfo bunun yerine bir köprü üzerinden başlayabilir.';
+      'Bulunduğun yerde Tor engelliyse, Kryfo bunun yerine bir köprü üzerinden başlayabilir.';
 
   @override
   String get bridgesScanACode => 'Kod tara';
@@ -6855,7 +6890,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get bridgesSwitchToAutomatic => 'Otomatiğe geç';
 
   @override
-  String get torBootSplashTorIsBlockedOr => 'Tor burada engelli ya da riskli';
+  String get torBootSplashTorIsBlockedOr => 'Tor burada engelli';
 
   @override
   String get bridgesTryingAnotherWay => 'Başka bir yol deneniyor…';
@@ -6920,10 +6955,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Kryfo ile gelen köprüler (obfs4). Denemesi hızlı, sık sık engellenir.';
 
   @override
-  String get bridgesKryfoTriesAgainBy =>
-      'Kryfo ara sıra kendiliğinden yeniden dener. Bir arkadaştan alacağın köprü işe yarayabilir.';
-
-  @override
   String get bridgesYourNetworkMayBe => 'Ağın kısıtlı olabilir';
 
   @override
@@ -6979,7 +7010,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bridgesAutomaticFindsAWay =>
-      'Tor engellendiğinde Otomatik kendiliğinden bir yol bulur. Bunun için Tor dışından bir köprüye bağlanabilir.';
+      'Tor engellendiğinde Otomatik kendiliğinden bir yol bulur. Bunun için Kryfo bir köprüye doğrudan bağlanabilir. Her gün pek çok kişi köprü kullanıyor.';
 
   @override
   String get bridgesFromTheTorProjectLower => 'Tor Projesinden';

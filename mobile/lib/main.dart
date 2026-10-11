@@ -446,8 +446,8 @@ class HaloEngine {
   // engine refreshed: json for the store, an error while a decoy is open
   String autoMemory() => _keep('HaloAutoMemory');
   String bridgeCache() => _keep('HaloBridgeCache');
-  void setAutoMemory(String json) => _give('HaloSetAutoMemory', json);
-  void setBridgeCache(String json) => _give('HaloSetBridgeCache', json);
+  String setAutoMemory(String json) => _give('HaloSetAutoMemory', json);
+  String setBridgeCache(String json) => _give('HaloSetBridgeCache', json);
 
   String _keep(String symbol) {
     try {
@@ -457,16 +457,16 @@ class HaloEngine {
     }
   }
 
-  void _give(String symbol, String json) {
+  String _give(String symbol, String json) {
     try {
       final a = json.toNativeUtf8();
       try {
-        _take(_lib.lookupFunction<OneArgFn, OneArgFnDart>(symbol)(a));
+        return _take(_lib.lookupFunction<OneArgFn, OneArgFnDart>(symbol)(a));
       } finally {
         malloc.free(a);
       }
     } on ArgumentError {
-      // an older engine
+      return 'error: no engine';
     }
   }
 
@@ -569,18 +569,19 @@ class HaloEngine {
   // what the tor project advises for a country, and the country it
   // guesses from the address it sees. outside tor, through meek, and only
   // with the person's yes. off the ui isolate: a network round trip
-  Future<String> moatSettings(String country) => _ffiOnIsolate(
-    'HaloMoatSettings',
-    [
-      jsonEncode({
-        'consent': true,
-        'via': 'meek',
-        if (country.isNotEmpty) 'country': country,
-      }),
-    ],
-    wait: const Duration(seconds: 60),
-    what: 'moat',
-  );
+  Future<String> moatSettings(String country, {bool overTor = false}) =>
+      _ffiOnIsolate(
+        'HaloMoatSettings',
+        [
+          jsonEncode({
+            'consent': true,
+            'via': overTor ? 'tor' : 'meek',
+            if (country.isNotEmpty) 'country': country,
+          }),
+        ],
+        wait: const Duration(seconds: 60),
+        what: 'moat',
+      );
 
   // everything the transport knows, in one read. no inference on this side.
   Map<String, dynamic> transportState() {
@@ -9180,6 +9181,10 @@ Future<(LinkKin, String)> _linkKin(
 // shared singletons + state
 
 HaloEngine _engine = HaloEngine();
+
+// a kill, as the tests stand one in: called before each bridge key write
+@visibleForTesting
+void Function(String key)? bridgeWriteTap;
 HaloEngine get engine => _engine;
 
 // tests stand a spy in for the engine, which needs the native library
@@ -12710,12 +12715,17 @@ class AppState extends ChangeNotifier {
     tellEngineDecoy(lockState.inDecoy || quiet);
     const st = secureStore;
     _bridgeHintOff = (await st.read(key: 'bridge_hint_off')) == '1';
+    final asked = _firstRunAsk;
     _bridge = await readBridgeSetup(firstStart: !onboardingComplete);
+    _firstRunAsk = _firstRunAsk || asked;
     // what automatic learnt and the lines the engine refreshed, back in
-    final mem = await st.read(key: 'bridge_auto_mem');
-    if (mem != null) engine.setAutoMemory(mem);
-    final cache = await st.read(key: 'bridge_cache');
-    if (cache != null) engine.setBridgeCache(cache);
+    _memKept = await st.read(key: 'bridge_auto_mem');
+    _cacheKept = await st.read(key: 'bridge_cache');
+    _handBridgeMemoryOver();
+    if (!_lockHooked) {
+      _lockHooked = true;
+      lockState.addListener(_bridgesOnLock);
+    }
     if (_firstRunAsk) {
       // tor waits for the answer, so the splash does not say it starts
       final phase = bootPhase;
@@ -12733,9 +12743,38 @@ class AppState extends ChangeNotifier {
   @visibleForTesting
   Future<void> loadBridgesForTest() => _loadBridges();
 
+  // what automatic learnt and the lines the engine refreshed, as kept. a
+  // decoy's engine takes neither, so they wait for it to close, and nothing
+  // is written back before they are in: an empty memory never overwrites
+  String? _memKept;
+  String? _cacheKept;
+  bool _memIn = false;
+  bool _lockHooked = false;
+
+  void _handBridgeMemoryOver() {
+    if (_memIn || inDecoyView) return;
+    final mem = _memKept, cache = _cacheKept;
+    final a = mem == null ? 'ok' : engine.setAutoMemory(mem);
+    final b = cache == null ? 'ok' : engine.setBridgeCache(cache);
+    _memIn = a == 'ok' && b == 'ok';
+  }
+
+  @visibleForTesting
+  bool get bridgeMemoryIn => _memIn;
+
+  // the lock coming up: a pick still waiting goes now, before a decoy can
+  // open over it. a decoy gone: what was kept goes to the engine
+  void _bridgesOnLock() {
+    if (lockState.locked && (_bridgeApply?.isActive ?? false)) {
+      applyBridgeNow();
+    }
+    if (!lockState.locked) _handBridgeMemoryOver();
+  }
+
   /// the kept mode, to the engine before tor starts. a decoy open or not:
   /// it shows automatic, and tor keeps what the person picked. with nothing
-  /// to use, automatic without tor alone, never direct
+  /// to use, or a mode the engine refuses, automatic without tor alone,
+  /// never direct; the engine falls back the same way
   @visibleForTesting
   String restoreBridgeAtBoot() {
     var m = _bridge.engineMode(
@@ -12743,10 +12782,16 @@ class AppState extends ChangeNotifier {
           ? engine.builtinBridges('obfs4')
           : const [],
     );
-    m ??= _bridge
-        .copyWith(choice: BridgeChoice.auto, skipDirect: true)
-        .engineMode();
+    if (m == null) {
+      _bridge = _bridge.copyWith(choice: BridgeChoice.auto, skipDirect: true);
+      m = _bridge.engineMode();
+    }
     final r = engine.restoreBridgeMode(m!.$1, m.$2);
+    if (r.startsWith('error') && r != 'error: mode already set') {
+      dlog('bridges: kept mode refused ($r)');
+      _bridge = _bridge.copyWith(choice: BridgeChoice.auto, skipDirect: true);
+      return r;
+    }
     if (m.$1 != 'auto' && m.$2.contains('"lines"')) {
       _lineChecks = BridgeLineCheck.parse(engine.bridgeLineChecks());
       _checksOf = _bridge.choice;
@@ -12754,26 +12799,62 @@ class AppState extends ChangeNotifier {
     return r;
   }
 
+  /// a new install, asked before tor starts. nothing is written until the
+  /// answer, so a kill on the question asks again
+  @visibleForTesting
+  Future<bool> firstRunWanted() async {
+    if (onboardingComplete) return false;
+    const st = secureStore;
+    if (await st.read(key: 'bridge_mode') != null) return false;
+    if (await st.read(key: 'bridges_on') != null) return false;
+    if ((await st.read(key: 'bridge_lines') ?? '').isNotEmpty) return false;
+    return WidgetsBinding.instance.lifecycleState != AppLifecycleState.paused;
+  }
+
+  // the offer of automatic to an upgrade: '1' up, 'again:<ms>' back once
+  // after a soft no, '0' done
+  String? _offerRaw;
+  bool _offerSecond = false;
+  static const offerAgainAfter = Duration(days: 7);
+
   // the setup as kept, or, on the first start of this version, what 0.5.0
-  // kept, moved over once. the old keys go after the new ones are written
+  // kept, moved over once, in an order a kill at any point survives
   @visibleForTesting
   Future<BridgeSetup> readBridgeSetup({required bool firstStart}) async {
     const st = secureStore;
     final mode = BridgeChoice.parse(await st.read(key: 'bridge_mode'));
+    final source = await st.read(key: 'bridge_source');
     if (mode != null) {
-      return BridgeSetup(
+      final offerRaw = await st.read(key: 'bridge_offer_auto');
+      _offerRaw = offerRaw;
+      var offer = offerRaw == '1';
+      final again = int.tryParse(
+        offerRaw != null && offerRaw.startsWith('again:')
+            ? offerRaw.substring(6)
+            : '',
+      );
+      if (again != null &&
+          mode != BridgeChoice.auto &&
+          DateTime.now().millisecondsSinceEpoch >= again) {
+        offer = _offerSecond = true;
+      }
+      final b = BridgeSetup(
         choice: mode,
-        friendLines: await st.read(key: 'bridge_lines') ?? '',
+        // a move cut short: bridge_lines still holds the tor project's
+        friendLines: source == 'moat'
+            ? ''
+            : await st.read(key: 'bridge_lines') ?? '',
         torProjectLines: await st.read(key: 'bridge_moat_lines') ?? '',
         consent: await st.read(key: 'bridge_consent') ?? 'no',
         skipDirect: (await st.read(key: 'bridge_skip_direct')) == '1',
         country: await st.read(key: 'bridge_country') ?? '',
-        offerAuto: (await st.read(key: 'bridge_offer_auto')) == '1',
+        offerAuto: offer,
       );
+      await _finishBridgeMove(source, b);
+      return b;
     }
     final on = await st.read(key: 'bridges_on');
     final lines = await st.read(key: 'bridge_lines');
-    final source = await st.read(key: 'bridge_source');
     final upgrade = !firstStart || on != null || (lines ?? '').isNotEmpty;
     final b = migrateBridges(
       upgrade: upgrade,
@@ -12781,31 +12862,59 @@ class AppState extends ChangeNotifier {
       lines: lines,
       source: source,
     );
-    await _writeBridgeSetup(b);
-    await st.delete(key: 'bridges_on');
-    await st.delete(key: 'bridge_source');
-    if (b.friendLines.isEmpty) await st.delete(key: 'bridge_lines');
     // asked only with a window to ask in
     _firstRunAsk =
         !upgrade &&
         WidgetsBinding.instance.lifecycleState != AppLifecycleState.paused;
+    // a new install keeps nothing before its answer
+    if (!upgrade) return b;
+    // the new keys, the tor project's lines first and the mode last, with
+    // bridge_lines as it was: a kill before the mode moves over again
+    await _writeBridgeSetup(b, lines: false);
+    await _finishBridgeMove(source, b);
     return b;
   }
 
-  Future<void> _writeBridgeSetup(BridgeSetup b) async {
+  // the old keys go once the mode is written. bridge_lines last, while
+  // bridge_source still says what it holds
+  Future<void> _finishBridgeMove(String? source, BridgeSetup b) async {
     const st = secureStore;
-    await st.write(key: 'bridge_lines', value: b.friendLines);
-    await st.write(key: 'bridge_moat_lines', value: b.torProjectLines);
-    await st.write(key: 'bridge_consent', value: b.consent);
-    await st.write(key: 'bridge_skip_direct', value: b.skipDirect ? '1' : '0');
-    await st.write(key: 'bridge_country', value: b.country);
-    await st.write(key: 'bridge_offer_auto', value: b.offerAuto ? '1' : '0');
-    // the mode last: a setup without it is read as not moved over yet
-    await st.write(key: 'bridge_mode', value: b.choice.id);
+    if (await st.read(key: 'bridges_on') != null) {
+      await _bridgeDelete('bridges_on');
+    }
+    if (source == null) return;
+    if (b.friendLines.isEmpty) await _bridgeDelete('bridge_lines');
+    await _bridgeDelete('bridge_source');
   }
 
-  /// the first-run answer: connect as usual, or tor is blocked or risky
-  /// here and automatic starts without trying it
+  Future<void> _bridgeWrite(String key, String value) async {
+    bridgeWriteTap?.call(key);
+    await secureStore.write(key: key, value: value);
+  }
+
+  Future<void> _bridgeDelete(String key) async {
+    bridgeWriteTap?.call(key);
+    await secureStore.delete(key: key);
+  }
+
+  Future<void> _writeBridgeSetup(BridgeSetup b, {bool lines = true}) async {
+    final offer = b.offerAuto
+        ? '1'
+        : !_offerSecond && (_offerRaw?.startsWith('again:') ?? false)
+        ? _offerRaw!
+        : '0';
+    await _bridgeWrite('bridge_moat_lines', b.torProjectLines);
+    await _bridgeWrite('bridge_consent', b.consent);
+    await _bridgeWrite('bridge_skip_direct', b.skipDirect ? '1' : '0');
+    await _bridgeWrite('bridge_country', b.country);
+    await _bridgeWrite('bridge_offer_auto', offer);
+    if (lines) await _bridgeWrite('bridge_lines', b.friendLines);
+    // the mode last: a setup without it is read as not moved over yet
+    await _bridgeWrite('bridge_mode', b.choice.id);
+  }
+
+  /// the first-run answer: connect as usual, or tor is blocked here and
+  /// automatic starts without trying it
   Future<void> pickFirstRun({required bool risky}) async {
     _bridge = _bridge.copyWith(skipDirect: risky);
     await _writeBridgeSetup(_bridge);
@@ -12874,14 +12983,15 @@ class AppState extends ChangeNotifier {
   }
 
   /// one kept line goes. with none left the friend's card hands over to
-  /// automatic
-  Future<void> removeBridgeLine(BridgeChoice from, int i) async {
+  /// automatic. what was there before comes back, for an undo
+  Future<BridgeSetup?> removeBridgeLine(BridgeChoice from, int i) async {
+    final before = _bridge;
     final ls = splitBridgeLines(
       from == BridgeChoice.friend
           ? _bridge.friendLines
           : _bridge.torProjectLines,
     );
-    if (i < 0 || i >= ls.length) return;
+    if (i < 0 || i >= ls.length) return null;
     ls.removeAt(i);
     _bridge = from == BridgeChoice.friend
         ? _bridge.copyWith(friendLines: ls.join('\n'))
@@ -12891,6 +13001,20 @@ class AppState extends ChangeNotifier {
       if (ls.isEmpty) _bridge = _bridge.copyWith(choice: BridgeChoice.auto);
       applyBridgeNow();
     }
+    notifyListeners();
+    await _writeBridgeSetup(_bridge);
+    return before;
+  }
+
+  /// the undo of a removed line
+  Future<void> putBridgeSetupBack(BridgeSetup before) async {
+    if (inDecoyView) return;
+    final again =
+        _bridge.choice != before.choice ||
+        _bridge.friendLines != before.friendLines ||
+        _bridge.torProjectLines != before.torProjectLines;
+    _bridge = before;
+    if (again) applyBridgeNow();
     notifyListeners();
     await _writeBridgeSetup(_bridge);
   }
@@ -12912,7 +13036,11 @@ class AppState extends ChangeNotifier {
     await _writeBridgeSetup(_bridge);
   }
 
+  /// a soft no: the offer comes back once, a week on
   Future<void> dismissAutoOffer() async {
+    _offerRaw = _offerSecond
+        ? '0'
+        : 'again:${DateTime.now().add(offerAgainAfter).millisecondsSinceEpoch}';
     _bridge = _bridge.copyWith(offerAuto: false);
     notifyListeners();
     await _writeBridgeSetup(_bridge);
@@ -12929,8 +13057,11 @@ class AppState extends ChangeNotifier {
   // new install that was never asked. once a process
   bool _askDue = false;
   bool _askShown = false;
-  bool get bridgeAskDue => _askDue && !_askShown && !inDecoyView;
+  // never over hidden chats either
+  bool get bridgeAskDue =>
+      _askDue && !_askShown && !inDecoyView && !lockState.inVault;
   void bridgeAskTaken() => _askShown = true;
+  void bridgeAskAgain() => _askShown = false;
 
   /// the answer on the tor-is-blocked sheet. yes lets automatic ask the
   /// tor project and puts automatic on; a no on the one-time sheet is final
@@ -12959,15 +13090,18 @@ class AppState extends ChangeNotifier {
   String? _moatGuess;
   String? get moatGuess => _moatGuess;
 
+  /// asked only when the person picks the tor project's guess: through
+  /// tor when it is up, else over meek, which needs the yes
   Future<String?> askMoatGuess() async {
-    if (inDecoyView || _bridge.consent != 'yes') return null;
+    if (inDecoyView) return null;
+    final overTor = torUsable;
+    if (!overTor && _bridge.consent != 'yes') return null;
     try {
-      final m = jsonDecode(await engine.moatSettings(''));
+      final m = jsonDecode(await engine.moatSettings('', overTor: overTor));
       final cc = m is Map ? m['country'] : null;
-      if (m is Map && m['ok'] == true && cc is String) {
-        _moatGuess = kBridgeCountries.contains(cc.toLowerCase())
-            ? cc.toLowerCase()
-            : null;
+      if (m is Map && m['ok'] == true && cc is String && cc.length == 2) {
+        _moatGuess = cc.toLowerCase();
+        notifyListeners();
       }
     } catch (e) {
       dlog('bridges: no country guess (${e.runtimeType})');
@@ -12991,7 +13125,7 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> _keepBridgeMemory() async {
-    if (inDecoyView) return;
+    if (inDecoyView || !_memIn) return;
     const st = secureStore;
     final mem = engine.autoMemory();
     if (!mem.contains('"error"')) {
@@ -17766,6 +17900,8 @@ class AppState extends ChangeNotifier {
     if (onboardingComplete) {
       await Future.delayed(const Duration(milliseconds: 300));
     }
+    // decided before the first screen, so onboarding never flashes first
+    _firstRunAsk = await firstRunWanted();
     ready = true;
     bootPhase = l10n.appStartingTor;
     dlog('BOOT ready +${bsw.elapsedMilliseconds}ms');

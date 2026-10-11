@@ -1204,8 +1204,11 @@ class _AutoOffer extends StatelessWidget {
     return ListenableBuilder(
       listenable: appState,
       builder: (context, _) => _HomeCard(
+        // one violet card at a time: tor looking blocked wins
         show:
             appState.bridge.offerAuto &&
+            appState.bridgeChoice != BridgeChoice.auto &&
+            !appState.suggestBridges &&
             !appState.inDecoyView &&
             appState.sendMode == 'private',
         id: 'auto-offer',

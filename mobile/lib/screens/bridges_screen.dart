@@ -3,11 +3,14 @@
 // itself, direct is tor alone, and a friend's bridge is a line someone
 // gave you. the details, transport names and all, wait behind "more".
 // a decoy sees automatic and the status line, nothing else.
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../bridge_mode.dart';
 import '../l10n/l10n.dart';
+import '../l10n/numbers.dart';
 import '../main.dart' hide live;
 import '../theme.dart';
 import '../widgets/ease_size.dart';
@@ -90,7 +93,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
               const SizedBox(height: 18),
               if (!decoy)
                 EaseSize(
-                  child: b.offerAuto
+                  child: b.offerAuto && b.choice != BridgeChoice.auto
                       ? Padding(
                           padding: const EdgeInsets.only(bottom: 12),
                           child: _OfferCard(
@@ -139,6 +142,30 @@ class _BridgesScreenState extends State<BridgesScreen> {
                   ],
                 ),
               ),
+              // a way picked under "more" shows here, so no card stands
+              // unexplained with none selected
+              if (!decoy)
+                EaseSize(
+                  child: _usingLine(chosen) == null
+                      ? const SizedBox(width: double.infinity)
+                      : Padding(
+                          padding: const EdgeInsetsDirectional.only(
+                            start: 4,
+                            top: 12,
+                          ),
+                          child: RiseSwap(
+                            child: Text(
+                              _usingLine(chosen)!,
+                              key: ValueKey(chosen),
+                              style: HaloType.mono(
+                                size: 12,
+                                weight: FontWeight.w600,
+                                color: HaloColors.violet,
+                              ),
+                            ),
+                          ),
+                        ),
+                ),
               if (!decoy) ...[
                 const SizedBox(height: 8),
                 _MoreToggle(
@@ -157,6 +184,13 @@ class _BridgesScreenState extends State<BridgesScreen> {
       },
     );
   }
+
+  String? _usingLine(BridgeChoice c) => switch (c) {
+    BridgeChoice.builtin => l10n.bridgesUsingBuiltIn,
+    BridgeChoice.snowflake => l10n.bridgesUsingSnowflake,
+    BridgeChoice.torProject => l10n.bridgesUsingTorProject,
+    _ => null,
+  };
 
   Future<void> _act(BridgeAction a) async {
     switch (a) {
@@ -184,16 +218,64 @@ String bridgeActionLabel(BridgeAction a) => switch (a) {
 /// the live status line: a dot, the state in plain words, how far along,
 /// and the one thing to do when stuck. a new state rises in; a percent or
 /// a count changes in place
-class BridgeStatusView extends StatelessWidget {
+class BridgeStatusView extends StatefulWidget {
   const BridgeStatusView({super.key, required this.line, this.onAction});
   final BridgeLine line;
   final void Function(BridgeAction a)? onAction;
 
   @override
+  State<BridgeStatusView> createState() => _BridgeStatusViewState();
+}
+
+class _BridgeStatusViewState extends State<BridgeStatusView> {
+  // the clock counts here, once a second, from what the engine last said:
+  // nothing else rebuilds for it
+  Timer? _tick;
+  int _ticks = 0;
+  int? _base;
+
+  @override
+  void initState() {
+    super.initState();
+    _clockFrom(widget.line.clockMs);
+  }
+
+  @override
+  void didUpdateWidget(BridgeStatusView old) {
+    super.didUpdateWidget(old);
+    if (old.line.clockMs != widget.line.clockMs) {
+      _clockFrom(widget.line.clockMs);
+    }
+  }
+
+  void _clockFrom(int? ms) {
+    _base = ms;
+    _ticks = 0;
+    _tick?.cancel();
+    _tick = ms == null
+        ? null
+        : Timer.periodic(const Duration(seconds: 1), (_) {
+            if (mounted) setState(() => _ticks++);
+          });
+  }
+
+  @override
+  void dispose() {
+    _tick?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final line = widget.line;
     final tint = bridgeToneColor(line.tone);
     final still = motionStill(context);
-    final action = onAction == null ? null : line.action;
+    final action = widget.onAction == null ? null : line.action;
+    final base = _base;
+    final clock = base == null
+        ? null
+        : bridgeClock(base + _ticks * 1000);
+    final detail = [?line.detail, ?clock].join(' · ');
     return AnimatedContainer(
       duration: still ? Duration.zero : const Duration(milliseconds: 300),
       curve: Curves.easeOutCubic,
@@ -211,11 +293,16 @@ class BridgeStatusView extends StatelessWidget {
         children: [
           Row(
             children: [
-              // the dot breathes only while something is at work
+              // a few breaths on each new state, then still, as the tor dot
               SizedBox(
                 width: 10,
                 child: line.moving
-                    ? BreathDot(key: ValueKey(tint), color: tint, size: 8)
+                    ? BreathDot(
+                        key: ValueKey((tint, line.head, line.detailKind)),
+                        color: tint,
+                        size: 8,
+                        breaths: 3,
+                      )
                     : AnimatedContainer(
                         duration: still
                             ? Duration.zero
@@ -229,14 +316,18 @@ class BridgeStatusView extends StatelessWidget {
                       ),
               ),
               const SizedBox(width: 10),
+              // read out once per new state, never the word leaving
               Expanded(
                 child: Semantics(
                   liveRegion: true,
-                  child: RiseSwap(
-                    child: Text(
-                      line.head,
-                      key: ValueKey(line.head),
-                      style: HaloType.serif(size: 20, color: HaloColors.text),
+                  label: line.head,
+                  child: ExcludeSemantics(
+                    child: RiseSwap(
+                      child: Text(
+                        line.head,
+                        key: ValueKey(line.head),
+                        style: HaloType.serif(size: 20, color: HaloColors.text),
+                      ),
                     ),
                   ),
                 ),
@@ -244,7 +335,7 @@ class BridgeStatusView extends StatelessWidget {
             ],
           ),
           EaseSize(
-            child: line.detail == null
+            child: detail.isEmpty
                 ? const SizedBox(width: double.infinity)
                 : Padding(
                     padding: const EdgeInsetsDirectional.only(
@@ -253,7 +344,7 @@ class BridgeStatusView extends StatelessWidget {
                     ),
                     child: RiseSwap(
                       child: Text(
-                        line.detail!,
+                        detail,
                         key: ValueKey(line.detailKind),
                         style: HaloType.mono(
                           size: 12,
@@ -263,8 +354,9 @@ class BridgeStatusView extends StatelessWidget {
                     ),
                   ),
           ),
+          // how far, where tor says: no endless sweep when it does not
           EaseSize(
-            child: line.moving
+            child: line.moving && line.progress != null
                 ? Padding(
                     padding: const EdgeInsetsDirectional.only(
                       start: 20,
@@ -285,7 +377,7 @@ class BridgeStatusView extends StatelessWidget {
                     padding: const EdgeInsets.only(top: 14),
                     child: HaloPrimaryButton(
                       label: bridgeActionLabel(action),
-                      onTap: () => onAction!(action),
+                      onTap: () => widget.onAction!(action),
                     ),
                   ),
           ),
@@ -612,7 +704,7 @@ class _MoreSection extends StatelessWidget {
           children: [
             _InfoRow(
               label: l10n.bridgesInUse,
-              value: bridgeMethodWords(status),
+              value: bridgeMethodWords(status, choice: setup.choice),
             ),
           ],
         ),
@@ -677,24 +769,48 @@ class _MoreSection extends StatelessWidget {
               for (var i = 0; i < friend.length; i++)
                 _LineRow(
                   line: friend[i],
+                  number: i + 1,
                   from: l10n.bridgesFromAFriendLower,
                   check: _check(BridgeChoice.friend, i),
-                  onRemove: () =>
-                      appState.removeBridgeLine(BridgeChoice.friend, i),
+                  onRemove: () => _remove(context, BridgeChoice.friend, i),
                 ),
               for (var i = 0; i < project.length; i++)
                 _LineRow(
                   line: project[i],
+                  number: friend.length + i + 1,
                   from: l10n.bridgesFromTheTorProjectLower,
                   check: _check(BridgeChoice.torProject, i),
-                  onRemove: () =>
-                      appState.removeBridgeLine(BridgeChoice.torProject, i),
+                  onRemove: () => _remove(context, BridgeChoice.torProject, i),
                 ),
             ],
           ),
         ],
       ],
     );
+  }
+
+  // the line goes at once, and comes back with the undo for a few seconds
+  Future<void> _remove(BuildContext context, BridgeChoice from, int i) async {
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    final before = await appState.removeBridgeLine(from, i);
+    if (before == null || messenger == null) return;
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          duration: const Duration(seconds: 5),
+          backgroundColor: HaloColors.surface3,
+          content: Text(
+            l10n.bridgesBridgeRemoved,
+            style: HaloType.sans(size: 13.5, color: HaloColors.text),
+          ),
+          action: SnackBarAction(
+            label: l10n.bridgesUndo,
+            textColor: HaloColors.amber,
+            onPressed: () => appState.putBridgeSetupBack(before),
+          ),
+        ),
+      );
   }
 
   BridgeLineCheck? _check(BridgeChoice of, int i) {
@@ -898,32 +1014,33 @@ class _CountryRow extends StatefulWidget {
 class _CountryRowState extends State<_CountryRow> {
   bool _asking = false;
 
+  // the sheet comes up at once. the tor project is asked only when its
+  // guess is picked
   Future<void> _open() async {
-    if (_asking) return;
-    var guess = appState.moatGuess;
-    if (widget.country.isEmpty && guess == null) {
-      setState(() => _asking = true);
-      guess = await appState.askMoatGuess();
-      if (!mounted) return;
-      setState(() => _asking = false);
-    }
-    if (!mounted) return;
     final picked = await showCountrySheet(
       context,
-      current: widget.country.isNotEmpty ? widget.country : (guess ?? ''),
-      guess: guess,
+      current: widget.country,
+      guess: appState.moatGuess,
     );
-    if (picked != null) await appState.setBridgeCountry(picked);
+    if (picked == null || !mounted) return;
+    await appState.setBridgeCountry(picked);
+    if (picked.isNotEmpty || !mounted) return;
+    setState(() => _asking = true);
+    await appState.askMoatGuess();
+    if (mounted) setState(() => _asking = false);
   }
 
   @override
   Widget build(BuildContext context) {
     final cc = widget.country;
+    final guess = appState.moatGuess;
     final value = _asking
         ? l10n.bridgesAsking
-        : cc.isEmpty
-        ? l10n.bridgesLetTheTorProject
-        : bridgeCountryName(cc);
+        : cc.isNotEmpty
+        ? bridgeCountryName(cc)
+        : guess != null
+        ? '${bridgeCountryName(guess)} · ${l10n.bridgesTheTorProjectSGuess}'
+        : l10n.bridgesLetTheTorProject;
     return Semantics(
       button: true,
       child: PressScale(
@@ -971,11 +1088,13 @@ class _CountryRowState extends State<_CountryRow> {
 class _LineRow extends StatelessWidget {
   const _LineRow({
     required this.line,
+    required this.number,
     required this.from,
     required this.check,
     required this.onRemove,
   });
   final String line;
+  final int number;
   final String from;
   final BridgeLineCheck? check;
   final VoidCallback onRemove;
@@ -1018,7 +1137,7 @@ class _LineRow extends StatelessWidget {
             ),
           ),
           IconButton(
-            tooltip: l10n.commonRemove,
+            tooltip: l10n.bridgesRemoveBridgeN(whole(number)),
             onPressed: () {
               HapticFeedback.selectionClick();
               onRemove();
