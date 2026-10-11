@@ -41,7 +41,8 @@ import 'in_front.dart';
 import 'reopen.dart';
 import 'tor_valve.dart';
 import 'auto_restart.dart';
-import 'drafts.dart' show restartKeepingDrafts, restoreKeptDrafts;
+import 'drafts.dart'
+    show dropDraft, everydayChats, restartKeepingDrafts, restoreKeptDrafts;
 import 'helper_push.dart';
 import 'screens/getting_messages_screen.dart';
 import 'screens/home_screen.dart';
@@ -1382,6 +1383,24 @@ class HaloDb implements GroupOwedStore {
     });
   }
 
+  // the people and groups a chat is held with: a deleted chat's row stays,
+  // archived and not accepted, and is none
+  Future<({Set<String> people, Set<String> groups})> draftChats() async {
+    final d = await open();
+    final people = await d.query(
+      'contacts',
+      columns: ['halo_id', 'accepted', 'archived'],
+    );
+    final groups = await d.query('groups', columns: ['group_id']);
+    return (
+      people: {
+        for (final r in people)
+          if (r['accepted'] != 0 || r['archived'] != 1) r['halo_id'] as String,
+      },
+      groups: {for (final r in groups) r['group_id'] as String},
+    );
+  }
+
   // a wrapped container copied for a backup, and the key it opens with,
   // which the backup carries inside its own encryption
   Future<String> copyWithKey(String to) async {
@@ -2464,6 +2483,7 @@ class HaloDb implements GroupOwedStore {
   }
 
   Future<void> deleteConversation(String haloId) async {
+    dropDraft(container.chatKey(haloId), group: false);
     final d = await open();
     final files = await d.transaction((t) async {
       final rows = await t.query(
@@ -3424,6 +3444,7 @@ class HaloDb implements GroupOwedStore {
   }
 
   Future<void> deleteGroup(String groupId) async {
+    dropDraft(container.chatKey(groupId), group: true);
     final db = await open();
     final room = (await getGroup(groupId))?['room_pub'] != null;
     // what its members were still sending goes with it
@@ -15980,6 +16001,8 @@ class AppState extends ChangeNotifier {
       }
       marks = marks.done(c);
       await m.putMarks(marks);
+      // its unsent words are not kept outside the vault
+      dropDraft(from.chatKey(c.id), group: c.group);
       _bumpChatRev(c.group ? 'group:${c.id}' : c.id);
       went.add(c);
     }
@@ -22044,6 +22067,9 @@ void main() async {
   lockState.onOutcome = appState.sessionFor;
   lockState.sessionsReady = appState.containersReady;
   lockState.picksDropped = dropPickerCopies;
+  // a draft is written down for a restart only for a chat that is still
+  // there
+  everydayChats = () => live.draftChats();
   unawaited(_sweepPlaintextLeftovers());
   // what a backup or a restore cut short left, before either can run again
   unawaited(sweepBackupLeftovers());

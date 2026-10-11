@@ -13,6 +13,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
+import 'package:kryfo/drafts.dart' show draftPerGroup, draftPerPeer;
 import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/main.dart'
     show
@@ -1725,8 +1726,13 @@ void main() {
       final w = await _World.make();
       await w.open();
       expect(session.isHidden(_v), isFalse);
+      final draft = HaloContainer.everyday.chatKey(_v);
+      draftPerPeer[draft] = 'half a thought';
+      addTearDown(draftPerPeer.clear);
       expect(await w.app.hideChats(people: [_v]), 1);
       expect(session.isHidden(_v), isTrue);
+      // its unsent words stay nowhere outside the vault
+      expect(draftPerPeer.containsKey(draft), isFalse);
       expect(w.app.contacts.firstWhere((c) => c.haloId == _v).hidden, isTrue);
       expect(w.router.hides(_v), isTrue);
       expect(w.vaultRows.uids, contains('v0'));
@@ -1841,7 +1847,11 @@ void main() {
       // a new one set up from the decoy replaces it
       expect(await w.type(decoyPin), PinResult.decoy);
       expect(await w.app.createVault('112233'), isTrue);
+      final draft = HaloContainer.decoy.chatKey(_dg);
+      draftPerGroup[draft] = 'see you';
+      addTearDown(draftPerGroup.clear);
       expect(await w.app.hideChats(groups: [_dg]), 1);
+      expect(draftPerGroup.containsKey(draft), isFalse);
       await w.app.vaultSetupDone();
       expect(w.homeIds, {_d1});
       await w.lockUpAll();
