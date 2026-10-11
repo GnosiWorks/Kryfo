@@ -489,6 +489,25 @@ func autoUseLines(gen int64, lines []string) (bool, bool) {
 	return true, useLines(lines)
 }
 
+// a step's lines, and whether it is automatic's own direct step, in one
+// go under the mode's lock: a new mode can never land between the two
+func autoUseStep(gen int64, s autoStep) (bool, bool) {
+	autoMu.Lock()
+	defer autoMu.Unlock()
+	if autoGenN != gen {
+		return false, false
+	}
+	changed := useLines(s.Lines)
+	if h := autoStepHook; h != nil {
+		h()
+	}
+	autoDirectOK.Store(s.Method == "direct")
+	return true, changed
+}
+
+// called between a step's lines and its direct mark, for the tests
+var autoStepHook func()
+
 // puts a set of lines in place, or none for direct. the same set again
 // changes nothing. true when something changed.
 func useLines(lines []string) bool {
@@ -897,17 +916,19 @@ func runAttempt(p passCtx, s autoStep, validated bool) string {
 	stSet(func() {
 		autoSt.phase, autoSt.method, autoSt.source, autoSt.since = "trying", s.Method, s.Source, autoNow()
 	})
-	ok, changed := autoUseLines(p.gen, s.Lines)
+	// automatic's own direct step is the one time it goes out without
+	// bridges
+	ok, changed := autoUseStep(p.gen, s)
 	if !ok {
 		return passInterrupted
 	}
-	// automatic's own direct step: the one time it goes out without bridges
-	autoDirectOK.Store(s.Method == "direct")
 	// listening before the bounce, so nothing it brings is missed
 	a := autoW.open()
 	defer autoW.close()
 	switch {
-	case !changed && autoW.started() && autoW.settled():
+	// held off the network all the same: put in place again, which clears
+	// the hold or fails on to the next way
+	case !changed && autoW.started() && autoW.settled() && networkHold() == "":
 		// these lines already carry tor on this network: no bounce
 		obsArm()
 	case autoW.started():
@@ -1044,6 +1065,8 @@ func autoLoop(gen int64) {
 		downSince time.Time
 		upSince   time.Time
 		lost      int
+		heldN     int
+		heldAt    time.Time
 		lastPass  time.Time
 		consent   = consentNow()
 		valid     = autoValidFlips.Load()
@@ -1070,15 +1093,21 @@ func autoLoop(gen int64) {
 				start = "network"
 			case result == passInterrupted:
 				start = "again"
-			// awake with no way in place, as after a wake: a pass finds one
-			case result == seenOK && networkHold() != "":
+			// awake with no way in place, as after a wake: a pass finds one,
+			// and one that keeps finding the hold backs off
+			case result == seenOK && networkHold() != "" && !now.Before(heldAt):
 				start = "held"
+				heldAt = now.Add(autoLostGap(heldN))
+				heldN++
 			case v != valid && result != seenOK:
 				start = "validated"
 			case result == "exhausted" && (autoRetryNow.Swap(false) || !now.Before(retryAt) || (c == "yes" && consent != "yes")):
 				start = "retry"
 			case result == seenOK:
 				epoch = ep
+				if networkHold() == "" {
+					heldN, heldAt = 0, time.Time{}
+				}
 				if autoW.torUp() {
 					downSince = time.Time{}
 					if upSince.IsZero() {
@@ -1327,10 +1356,9 @@ func putCheckInStep() string {
 	}
 	// these lines are what tor has from now on, whatever ran before
 	stSet(func() { autoSt.method, autoSt.source = s.Method, s.Source })
-	if ok, _ := autoUseLines(gen, s.Lines); !ok {
+	if ok, _ := autoUseStep(gen, s); !ok {
 		return "ok"
 	}
-	autoDirectOK.Store(s.Method == "direct")
 	mu.Lock()
 	t := torNode
 	mu.Unlock()

@@ -628,3 +628,101 @@ func TestFailedDirectIsOffBeforeAsking(t *testing.T) {
 		t.Fatalf("still out direct when asking: %v", f.sent())
 	}
 }
+
+// a pass that reports ok while the hold stays backs off as a lost pass
+// does: a few over two hours, never one every twenty seconds
+func TestHeldPassesBackOff(t *testing.T) {
+	f := useFakeAuto(t, wifi())
+	f.up = func() bool {
+		f.sleep(time.Minute)
+		return true
+	}
+	calls := runLoop(t, f, func(n int, why string) string {
+		if f.now.Sub(t0Auto) > 2*time.Hour || n > 50 {
+			stopLoop()
+		}
+		// ok, and still no way in place
+		autoDirectOK.Store(false)
+		return seenOK
+	})
+	if len(calls) > 8 {
+		t.Fatalf("%d passes in two hours: %v", len(calls), calls)
+	}
+	for i := 2; i < len(calls); i++ {
+		if calls[i].why != "held" {
+			t.Fatalf("pass %d: %v", i, calls)
+		}
+		if gap, last := calls[i].at-calls[i-1].at, calls[i-1].at-calls[max(i-2, 0)].at; i > 2 && gap < last {
+			t.Fatalf("held passes came closer: %v", calls)
+		}
+	}
+}
+
+// a held pass on lines already in place puts them in again, which brings
+// the listeners back and clears the hold
+func TestHeldPassReappliesAndClearsTheHold(t *testing.T) {
+	fa := useFakeAuto(t, wifi())
+	fa.settled = true
+	fa.proven = true
+	lines := []string{tbObfs4}
+	w := autoW
+	w.apply = func(s autoStep) string {
+		fa.applied = append(fa.applied, s.Method+"/"+s.Source)
+		if startPTListeners() != nil {
+			return errPTDown
+		}
+		noteLinesApplied(linesGen.Load())
+		return "ok"
+	}
+	autoW = w
+	autoMu.Lock()
+	autoGenN++
+	bmMode, bmOpts = bmAuto, modeOpts{Consent: "no"}
+	gen := autoGenN
+	autoMu.Unlock()
+	useLines(lines)
+	noteLinesApplied(linesGen.Load())
+	ptDown.Store(true)
+	t.Cleanup(func() { ptDown.Store(false) })
+	if networkHold() != errPTDown {
+		t.Fatalf("hold: %q", networkHold())
+	}
+	p := passCtx{gen: gen, epoch: netEpoch.Load(), valid: autoValidFlips.Load()}
+	v := runAttempt(p, autoStep{Method: "obfs4", Source: "builtin", Lines: lines}, true)
+	if len(fa.applied) != 1 {
+		t.Fatalf("not put in again: %v (%q)", fa.applied, v)
+	}
+	if ptDown.Load() || networkHold() != "" {
+		t.Fatalf("still held: %q", networkHold())
+	}
+}
+
+// a check-in's step and a new mode never interleave: the new mode's end
+// of direct is the last word
+func TestCheckInStepAndANewModeDoNotInterleave(t *testing.T) {
+	useFakeAuto(t, netInfo{On: false, Kind: "wifi"})
+	today := dayOf(autoNow())
+	memMu.Lock()
+	autoMem.Last = map[string]autoUse{"wifi": {Method: "direct", Day: today}}
+	memMu.Unlock()
+	autoMu.Lock()
+	autoGenN++
+	bmMode, bmOpts = bmAuto, modeOpts{Consent: "no"}
+	autoMu.Unlock()
+	done := make(chan struct{})
+	autoStepHook = func() {
+		autoStepHook = nil
+		go func() {
+			setBridgeMode(bmAuto, `{"skip_direct":true}`)
+			close(done)
+		}()
+		time.Sleep(50 * time.Millisecond)
+	}
+	t.Cleanup(func() { autoStepHook = nil })
+	checkIn(true)
+	t.Cleanup(func() { checkIn(false) })
+	<-done
+	if autoDirectOK.Load() {
+		t.Fatal("a check-in's direct mark landed over the new mode")
+	}
+}

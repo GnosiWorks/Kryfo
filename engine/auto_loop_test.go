@@ -99,17 +99,22 @@ func TestNetworkChangeDropsTheProof(t *testing.T) {
 // with tor still up is no reason for one
 func TestLostPassesBackOff(t *testing.T) {
 	f := useFakeAuto(t, wifi())
+	// the way the first pass found, in place and held by tor: no hold, so
+	// what follows is tor losing its circuits on it
+	useLines([]string{tbObfs4})
+	noteLinesApplied(linesGen.Load())
+	if why := networkHold(); why != "" {
+		t.Fatalf("hold: %q", why)
+	}
 	up := false
 	f.up = func() bool {
 		f.sleep(time.Minute)
 		return up
 	}
-	// each pass leaves its way in place, as a direct step that got through
 	calls := runLoop(t, f, func(n int, why string) string {
 		if n == 3 {
 			stopLoop()
 		}
-		autoDirectOK.Store(true)
 		return seenOK
 	})
 	if len(calls) != 3 || calls[1].why != "lost" || calls[2].why != "lost" {
@@ -131,10 +136,7 @@ func TestLostPassesBackOff(t *testing.T) {
 		}
 		return true
 	}
-	calls = runLoop(t, f, func(n int, why string) string {
-		autoDirectOK.Store(true)
-		return seenOK
-	})
+	calls = runLoop(t, f, func(n int, why string) string { return seenOK })
 	if len(calls) != 1 || routeOK() {
 		t.Fatalf("passes %v with tor up and the relays down", calls)
 	}
