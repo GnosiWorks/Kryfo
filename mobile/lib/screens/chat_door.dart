@@ -43,6 +43,7 @@ Future<bool> openChatAt(
         peerXPub: (row['xpub'] as String?) ?? '',
         avatarSeed: peer,
         avatarChoice: (row['avatar'] as num?)?.toInt(),
+        nickname: row['nickname'] as String?,
         jumpToUid: uid,
       ),
     );
