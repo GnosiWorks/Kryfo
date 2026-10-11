@@ -16,6 +16,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart' show lockState;
+import 'package:kryfo/voice_mask.dart' show LiveMask, maskWav;
 import 'package:kryfo/widgets/voice_mic.dart';
 import 'package:kryfo/widgets/voice_parts.dart' show VoiceRecordBar;
 
@@ -93,6 +94,7 @@ void main() {
   });
 
   tearDown(() {
+    HoldToTalkMicState.startLive = LiveMask.start;
     _mock('plugins.flutter.io/path_provider', null);
     _mock(_rec, null);
     tmp.deleteSync(recursive: true);
@@ -342,6 +344,60 @@ void main() {
       expect(sent.single.masked, isNull);
       await close(t);
     });
+
+    testWidgets('a disguised chat let go: the disguise made as it recorded '
+        'goes', (t) async {
+      await open(t, disguise: true);
+      final g = await hold(t);
+      await g.up();
+      await until(t, () => sent.isNotEmpty);
+      final raw = File(recording!).readAsBytesSync();
+      final take = sent.single;
+      expect(take.disguise, isTrue);
+      expect(take.path, recording);
+      expect(take.masked, isNotNull);
+      expect(take.masked!.length, raw.length);
+      expect(take.masked, isNot(raw));
+      await close(t);
+    });
+
+    testWidgets('with no live disguise the take is disguised whole', (t) async {
+      HoldToTalkMicState.startLive = (_) async => null;
+      await open(t, disguise: true);
+      final g = await hold(t);
+      await g.up();
+      await until(t, () => sent.isNotEmpty);
+      // let go: the chat disguises it whole on the way out
+      expect(sent.single.disguise, isTrue);
+      expect(sent.single.masked, isNull);
+      sent.clear();
+      // locked: the preview makes it whole, and it is heard and sent
+      await toPreview(t);
+      await until(t, () => mic(t).heard);
+      await t.tap(find.bySemanticsLabel(l10n.commonSend));
+      await settle(t);
+      final raw = File(recording!).readAsBytesSync();
+      expect(sent.single.masked, isNotNull);
+      expect(sent.single.masked!.length, raw.length);
+      expect(maskWav(raw), isNot(raw));
+      await close(t);
+    });
+
+    testWidgets(
+      'a disguised chat locked: the live disguise is heard and goes',
+      (t) async {
+        await open(t, disguise: true);
+        await toPreview(t);
+        await until(t, () => mic(t).heard);
+        final raw = File(recording!).readAsBytesSync();
+        await t.tap(find.bySemanticsLabel(l10n.commonSend));
+        await settle(t);
+        expect(sent.single.disguise, isTrue);
+        expect(sent.single.masked!.length, raw.length);
+        expect(sent.single.masked, isNot(raw));
+        await close(t);
+      },
+    );
 
     testWidgets('thrown away, both takes are shredded', (t) async {
       await open(t);

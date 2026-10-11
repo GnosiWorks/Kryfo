@@ -3,7 +3,9 @@
 // speed, the spectral envelope is smoothed and moved on its own, and the
 // voice is rebuilt band limited with phases of its own. each note draws its
 // own shift, inside a narrow band, and lets it wander slowly. plain dart,
-// so it runs in an isolate
+// so it runs in an isolate, while the note records or after
+import 'dart:async';
+import 'dart:io';
 import 'dart:isolate';
 import 'dart:math' as math;
 import 'dart:typed_data';
@@ -48,6 +50,12 @@ const _peak = 0.95 * 32767;
 /// number of samples. [seed] fixes the draw; without one each call draws
 /// fresh. null for anything that is not 16-bit pcm
 Uint8List? maskWav(Uint8List wav, {int? seed}) {
+  if (_pcmAt(wav) == null) return null;
+  final r = seed == null ? math.Random.secure() : math.Random(seed);
+  return _maskWith(wav, MaskDraw.from(r));
+}
+
+Uint8List? _maskWith(Uint8List wav, MaskDraw draw) {
   final at = _pcmAt(wav);
   if (at == null) return null;
   final (start, len, channels, rate) = at;
@@ -61,11 +69,23 @@ Uint8List? maskWav(Uint8List wav, {int? seed}) {
     }
     mono[i] = s / channels;
   }
-  final r = seed == null ? math.Random.secure() : math.Random(seed);
-  final out = maskSamples(mono, rate, MaskDraw.from(r));
-  final res = Uint8List.fromList(wav);
+  final out = maskSamples(mono, rate, draw);
+  mono.fillRange(0, frames, 0);
+  return _put(wav, start, channels, out);
+}
+
+// a copy of [wav] with [out] in place of its samples, or [wav] itself
+// written over
+Uint8List _put(
+  Uint8List wav,
+  int start,
+  int channels,
+  Float64List out, {
+  bool over = false,
+}) {
+  final res = over ? wav : Uint8List.fromList(wav);
   final o = ByteData.sublistView(res);
-  for (var i = 0; i < frames; i++) {
+  for (var i = 0; i < out.length; i++) {
     final v = out[i].round().clamp(-32767, 32767);
     for (var c = 0; c < channels; c++) {
       o.setInt16(start + 2 * (i * channels + c), v, Endian.little);
@@ -183,6 +203,386 @@ Float64List maskSamples(Float64List x, int rate, MaskDraw draw) {
     out[i] *= gain;
   }
   return out;
+}
+
+/// [maskSamples] as the samples come in: each pair of frames runs once its
+/// samples are there, and only the last frames and the level wait for
+/// [finish]. the same sums in the same order, so the same note
+class MaskStreamer {
+  MaskStreamer(int rate, MaskDraw draw) : _v = _Vocoder(rate, draw) {
+    _n = _v.n;
+    _hop = _v.hop;
+    _half = _v.half;
+    _fft = _Fft(_n);
+    _re = Float64List(_n);
+    _im = Float64List(_n);
+    _aRe = Float64List(_half + 1);
+    _aIm = Float64List(_half + 1);
+    _bRe = Float64List(_half + 1);
+    _bIm = Float64List(_half + 1);
+    _yr = Float64List(_half + 1);
+    _yi = Float64List(_half + 1);
+    _acc = Float64List(4 * _n);
+  }
+
+  final _Vocoder _v;
+  late final int _n, _hop, _half;
+  late final _Fft _fft;
+  late final Float64List _re, _im, _aRe, _aIm, _bRe, _bIm, _yr, _yi;
+  // the samples still read by a frame: x[_xBase + j] is _x[j]
+  Float64List _x = Float64List(1 << 14);
+  int _xBase = 0, _xLen = 0;
+  // the overlap still being added to: acc[_accBase + j] is _acc[j]
+  late Float64List _acc;
+  int _accBase = 0;
+  // what is done, before the level
+  Float64List _out = Float64List(1 << 14);
+  int _outLen = 0;
+  // the next pair's first frame
+  int _f = 0;
+  double _inSq = 0, _outSq = 0, _top = 0;
+  bool _done = false;
+
+  /// samples taken so far
+  int get taken => _xBase + _xLen;
+
+  /// samples whose disguise is made, short of the level
+  int get made => _outLen;
+
+  /// 16-bit little-endian mono samples, in order
+  void addPcm16(Uint8List b) {
+    final d = ByteData.sublistView(b);
+    final count = b.length ~/ 2;
+    final v = Float64List(count);
+    for (var i = 0; i < count; i++) {
+      v[i] = d.getInt16(2 * i, Endian.little) / 1;
+    }
+    add(v);
+    v.fillRange(0, count, 0);
+  }
+
+  void add(Float64List v) {
+    if (_done) throw StateError('finished');
+    _room(_xLen + v.length);
+    _x.setRange(_xLen, _xLen + v.length, v);
+    _xLen += v.length;
+    for (final s in v) {
+      _inSq += s * s;
+    }
+    // a pair whose second frame is all in
+    while (taken >= (_f + 1) * _hop) {
+      _pair(_f, true, taken);
+      _f += 2;
+      _settle(_f * _hop - _n);
+    }
+  }
+
+  /// the end of the note: the last frames, then all of it at the level it
+  /// went in at. the samples taken are zeroed; the note made stays here
+  /// until [clear]
+  Float64List finish() {
+    if (_done) throw StateError('finished');
+    _done = true;
+    final total = taken;
+    if (total == 0) return Float64List(0);
+    final frames = (total + _n) ~/ _hop + 1;
+    while (_f < frames) {
+      _pair(_f, _f + 1 < frames, total);
+      _f += 2;
+    }
+    _settle(total);
+    _x.fillRange(0, _x.length, 0);
+    _acc.fillRange(0, _acc.length, 0);
+    final out = Float64List.sublistView(_out, 0, total);
+    var gain = _outSq > 0 ? math.sqrt(_inSq / _outSq) : 0.0;
+    if (_top * gain > _peak) gain = _peak / _top;
+    for (var i = 0; i < total; i++) {
+      out[i] *= gain;
+    }
+    return out;
+  }
+
+  /// the samples taken, zeroed, and the note made let go
+  void clear() {
+    _x.fillRange(0, _x.length, 0);
+    _acc.fillRange(0, _acc.length, 0);
+    _out = Float64List(0);
+    _xLen = 0;
+    _outLen = 0;
+  }
+
+  // room for [want] samples in the window, dropping what no frame reads
+  void _room(int want) {
+    final keep = _f * _hop - _n - _xBase;
+    if (keep > 0) {
+      final drop = math.min(keep, _xLen);
+      _x.setRange(0, _xLen - drop, _x, drop);
+      _x.fillRange(_xLen - drop, _xLen, 0);
+      _xLen -= drop;
+      _xBase += drop;
+      want -= drop;
+    }
+    if (want > _x.length) {
+      var size = _x.length;
+      while (size < want) {
+        size *= 2;
+      }
+      final x = Float64List(size)..setRange(0, _xLen, _x);
+      _x.fillRange(0, _x.length, 0);
+      _x = x;
+    }
+  }
+
+  // the frames at f and f + 1, as maskSamples runs them
+  void _pair(int f, bool two, int total) {
+    final n = _n, half = _half, v = _v;
+    final re = _re, im = _im, aRe = _aRe, aIm = _aIm, bRe = _bRe, bIm = _bIm;
+    final a0 = f * _hop, b0 = a0 + _hop;
+    for (var i = 0; i < n; i++) {
+      final s = a0 + i - n, t = b0 + i - n;
+      re[i] = s >= 0 && s < total ? _x[s - _xBase] * v.win[i] : 0;
+      im[i] = two && t >= 0 && t < total ? _x[t - _xBase] * v.win[i] : 0;
+    }
+    _fft.run(re, im, false);
+    for (var k = 0; k <= half; k++) {
+      final m = k == 0 ? 0 : n - k;
+      aRe[k] = (re[k] + re[m]) / 2;
+      aIm[k] = (im[k] - im[m]) / 2;
+      bRe[k] = (im[k] + im[m]) / 2;
+      bIm[k] = (re[m] - re[k]) / 2;
+    }
+    v.frame(aRe, aIm, a0, envelope: true);
+    if (two) v.frame(bRe, bIm, b0, envelope: false);
+    for (var k = 0; k <= half; k++) {
+      _yr[k] = two ? bRe[k] : 0;
+      _yi[k] = two ? bIm[k] : 0;
+    }
+    for (var k = 0; k <= half; k++) {
+      re[k] = aRe[k] - _yi[k];
+      im[k] = aIm[k] + _yr[k];
+    }
+    for (var k = 1; k < half; k++) {
+      re[n - k] = aRe[k] + _yi[k];
+      im[n - k] = -aIm[k] + _yr[k];
+    }
+    _fft.run(re, im, true);
+    final end = b0 + n - _accBase;
+    if (end > _acc.length) {
+      var size = _acc.length;
+      while (size < end) {
+        size *= 2;
+      }
+      final acc = Float64List(size)..setRange(0, _acc.length, _acc);
+      _acc.fillRange(0, _acc.length, 0);
+      _acc = acc;
+    }
+    final acc = _acc, ab = a0 - _accBase, bb = b0 - _accBase;
+    for (var i = 0; i < n; i++) {
+      final w = v.win[i] / 1.5;
+      acc[ab + i] += re[i] * w;
+      if (two) acc[bb + i] += im[i] * w;
+    }
+  }
+
+  // samples before [to] are whole: out of the overlap and into the note
+  void _settle(int to) {
+    if (to <= _outLen) return;
+    if (to > _out.length) {
+      var size = _out.length;
+      while (size < to) {
+        size *= 2;
+      }
+      final o = Float64List(size)..setRange(0, _outLen, _out);
+      _out.fillRange(0, _out.length, 0);
+      _out = o;
+    }
+    for (var i = _outLen; i < to; i++) {
+      final j = i + _n - _accBase;
+      final y = j < _acc.length ? _acc[j] : 0.0;
+      _out[i] = y;
+      _outSq += y * y;
+      _top = math.max(_top, y.abs());
+    }
+    _outLen = to;
+    // the overlap from here on is all that is still added to
+    final drop = to + _n - _accBase;
+    if (drop > 0 && drop <= _acc.length) {
+      _acc.setRange(0, _acc.length - drop, _acc, drop);
+      _acc.fillRange(_acc.length - drop, _acc.length, 0);
+      _accBase += drop;
+    }
+  }
+}
+
+/// the disguise made while the note records. an isolate reads the
+/// recorder's file as it grows, after its 44-byte header, and runs every
+/// frame whose samples are in. [finish], once the recorder has stopped,
+/// leaves it only the last frames. a take that reads as anything else goes
+/// through the plain disguise whole, with the same draw
+class LiveMask {
+  LiveMask._(this._from);
+
+  final ReceivePort _from;
+  SendPort? _to;
+  final _port = Completer<SendPort?>();
+  final _result = Completer<Object?>();
+  bool _ended = false;
+
+  /// how far the isolate is, in samples made: for tests
+  final _made = StreamController<int>.broadcast();
+  Stream<int> get progress => _made.stream;
+
+  /// null when the isolate does not start: the take is disguised whole on
+  /// release instead. [every] is how often the file is read
+  static Future<LiveMask?> start(
+    String path, {
+    int rate = 16000,
+    int? seed,
+    Duration every = const Duration(milliseconds: 200),
+  }) async {
+    final from = ReceivePort();
+    try {
+      await Isolate.spawn(
+        _liveMain,
+        (from.sendPort, path, rate, seed, every.inMilliseconds),
+        onError: from.sendPort,
+        onExit: from.sendPort,
+      );
+      final m = LiveMask._(from);
+      from.listen(m._on);
+      return m;
+    } catch (_) {
+      from.close();
+      return null;
+    }
+  }
+
+  void _on(Object? msg) {
+    if (msg is SendPort) {
+      _to = msg;
+      if (!_port.isCompleted) _port.complete(msg);
+    } else if (msg is int) {
+      _made.add(msg);
+    } else if (msg is Uint8List || msg is _Failed) {
+      if (!_result.isCompleted) _result.complete(msg);
+    } else {
+      // an error or the isolate's exit with nothing sent
+      if (!_port.isCompleted) _port.complete(null);
+      if (!_result.isCompleted) _result.complete(null);
+    }
+  }
+
+  /// the disguised take, a wav as [maskWav] makes it. null when the isolate
+  /// failed: the caller disguises the take whole
+  Future<Uint8List?> finish() async {
+    if (_ended) return null;
+    _ended = true;
+    final to = _to ?? await _port.future;
+    to?.send('finish');
+    final r = await _result.future;
+    _close();
+    return r is Uint8List ? r : null;
+  }
+
+  /// the note is gone: the isolate zeroes what it holds and ends
+  void cancel() {
+    if (_ended) return;
+    _ended = true;
+    final to = _to;
+    if (to != null) {
+      to.send('cancel');
+      _result.future.whenComplete(_close).ignore();
+    } else {
+      _port.future.then((p) => p?.send('cancel')).whenComplete(() {
+        _result.future.whenComplete(_close).ignore();
+      }).ignore();
+    }
+  }
+
+  void _close() {
+    _from.close();
+    _made.close();
+  }
+}
+
+class _Failed {
+  const _Failed();
+}
+
+const _wavHead = 44;
+
+void _liveMain((SendPort, String, int, int?, int) a) {
+  final (out, path, rate, seed, every) = a;
+  final inbox = ReceivePort();
+  out.send(inbox.sendPort);
+  final draw = MaskDraw.from(
+    seed == null ? math.Random.secure() : math.Random(seed),
+  );
+  final s = MaskStreamer(rate, draw);
+  RandomAccessFile? file;
+  var at = _wavHead;
+  // at most two seconds a turn, so a finish never waits long behind one
+  final turn = rate * 2 * 2;
+
+  void pull() {
+    try {
+      file ??= File(path).openSync();
+      final f = file!;
+      var want = f.lengthSync() - at;
+      want -= want & 1;
+      if (want > turn) want = turn;
+      if (want <= 0) return;
+      f.setPositionSync(at);
+      final b = f.readSync(want);
+      final got = b.length - (b.length & 1);
+      s.addPcm16(Uint8List.sublistView(b, 0, got));
+      b.fillRange(0, b.length, 0);
+      at += got;
+      out.send(s.made);
+    } catch (_) {
+      // not there yet, or gone: the finish reads it whole
+    }
+  }
+
+  final tick = Timer.periodic(Duration(milliseconds: every), (_) => pull());
+  inbox.listen((msg) {
+    tick.cancel();
+    try {
+      file?.closeSync();
+    } catch (_) {}
+    if (msg != 'finish') {
+      s.clear();
+      inbox.close();
+      Isolate.exit(out, const _Failed());
+    }
+    Uint8List? done;
+    Uint8List? wav;
+    try {
+      wav = File(path).readAsBytesSync();
+      final p = _pcmAt(wav);
+      if (p != null) {
+        final (start, len, channels, r) = p;
+        if (start == _wavHead &&
+            channels == 1 &&
+            r == rate &&
+            at <= start + len) {
+          // the rest of the take, then its end
+          s.addPcm16(Uint8List.sublistView(wav, at, start + len));
+          // the take's samples written over with the disguised ones
+          done = _put(wav, start, 1, s.finish(), over: true);
+        } else {
+          // the file is not what was read: the whole take, same draw
+          done = _maskWith(wav, draw);
+        }
+      }
+    } catch (_) {
+      done = null;
+    }
+    if (!identical(done, wav)) wav?.fillRange(0, wav.length, 0);
+    s.clear();
+    inbox.close();
+    Isolate.exit(out, done ?? const _Failed());
+  });
 }
 
 // one frame at a time, in order: the spectrum in, the disguised one out in

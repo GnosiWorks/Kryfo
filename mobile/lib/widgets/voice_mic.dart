@@ -104,6 +104,12 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
   @visibleForTesting
   bool get heard => _maskedPath != null;
 
+  // how the disguise made while recording starts: a test stands in for it
+  @visibleForTesting
+  static Future<LiveMask?> Function(String path) startLive = LiveMask.start;
+
+  // the disguise made while a disguised note records
+  Future<LiveMask?>? _streaming;
   // the preview: the disguised take, made once, and its file to play
   Future<Uint8List?>? _maskJob;
   String? _maskedPath;
@@ -124,6 +130,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
     _level?.cancel();
     _overlay?.remove();
     _stopPlayer();
+    _dropStream();
     // a take still recording when the chat goes is never sent
     final take = _path;
     _path = null;
@@ -131,6 +138,26 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
     if (take != null) stopped.whenComplete(() => shredFile(take)).ignore();
     _dropPreview();
     super.dispose();
+  }
+
+  // the disguise made while recording is not wanted: zeroed and ended
+  void _dropStream() {
+    final s = _streaming;
+    _streaming = null;
+    s?.then((m) => m?.cancel()).ignore();
+  }
+
+  // the disguise made while recording, finished: null when there was none
+  // or it failed, and the take is disguised whole
+  Future<Uint8List?> _streamed() async {
+    final s = _streaming;
+    _streaming = null;
+    try {
+      return await (await s)?.finish();
+    } catch (e) {
+      dlog('voice: the live disguise failed (${e.runtimeType})');
+      return null;
+    }
   }
 
   // the note no longer holds a restart back or counts as recording
@@ -181,6 +208,8 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
       _levels.clear();
       _stage = VoiceStage.holding;
       _chip = widget.disguise || widget.disguiseLocked;
+      // disguised as it records, so it is ready when the finger lifts
+      if (_chip) _streaming = startLive(path);
       // the level meter only: an error on it leaves the recording going
       _level = _rec
           .onAmplitudeChanged(const Duration(milliseconds: 100))
@@ -219,6 +248,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
       _overlay?.remove();
       _overlay = null;
       _stage = VoiceStage.idle;
+      _dropStream();
       final p = _path;
       _path = null;
       // shredFile logs its own failure
@@ -237,7 +267,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
     // stopping into the preview: the preview takes it from there
     if (_stopping && !_willCancel) return;
     _release();
-    if (_ticker == null && _overlay == null) return;
+    if (_ticker == null && _overlay == null) return _dropStream();
     _ticker?.cancel();
     _ticker = null;
     _level?.cancel();
@@ -254,6 +284,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
     final mine = _path;
     _path = null;
     final take = await _rec.stop() ?? mine;
+    if (cancel || take == null) _dropStream();
     if (cancel) {
       // a cancelled note is still a recording of a voice: shredded
       if (take != null) await shredFile(take);
@@ -262,7 +293,11 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
     }
     HapticFeedback.mediumImpact();
     if (take != null) {
-      widget.onSend(VoiceTake(path: take, ms: ms, disguise: _chip));
+      final chip = _chip;
+      final masked = chip ? await _streamed() : null;
+      widget.onSend(
+        VoiceTake(path: take, ms: ms, disguise: chip, masked: masked),
+      );
     }
   }
 
@@ -295,7 +330,12 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
     final take = await _rec.stop() ?? mine;
     _stopping = false;
     if (take == null) return _abort();
+    // the disguise made while it recorded goes with this take
+    final live = _streaming;
+    _streaming = null;
+    void dropLive() => live?.then((m) => m?.cancel()).ignore();
     if (!mounted || _stage != VoiceStage.locked) {
+      dropLive();
       await shredFile(take);
       return;
     }
@@ -309,17 +349,32 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
     } catch (e) {
       dlog('voice: the take did not read (${e.runtimeType})');
     }
-    if (raw == null || _held != take) return;
+    if (raw == null || _held != take) {
+      dropLive();
+      raw?.fillRange(0, raw.length, 0);
+      return;
+    }
     _peaks = wavPeaks(raw, kVoiceBars);
     _overlay?.rebuild();
     // made at once, so the chip has it by the time it is touched
-    _maskJob = _makeMask(raw, take);
+    _maskJob = _makeMask(raw, take, live);
   }
 
-  Future<Uint8List?> _makeMask(Uint8List raw, String take) async {
+  // the disguise made while recording when there is one, else the whole
+  // take now
+  Future<Uint8List?> _makeMask(
+    Uint8List raw,
+    String take, [
+    Future<LiveMask?>? live,
+  ]) async {
     Uint8List? m;
     try {
-      m = await maskWavOff(raw);
+      m = await (await live)?.finish();
+    } catch (e) {
+      dlog('voice: the live disguise failed (${e.runtimeType})');
+    }
+    try {
+      m ??= await maskWavOff(raw);
     } catch (e) {
       dlog('voice: no disguise (${e.runtimeType})');
     }
