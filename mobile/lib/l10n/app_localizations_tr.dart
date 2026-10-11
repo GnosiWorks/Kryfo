@@ -1073,7 +1073,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get bridgesConnected => 'Bağlı';
 
   @override
-  String get bridgesFromTheTorProject => 'Tor projesinden';
+  String get bridgesFromTheTorProject => 'Tor Projesinden';
 
   @override
   String get bridgesPasteFromClipboard => 'Panodan yapıştır';
@@ -6758,7 +6758,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bridgesAskingTheTorProject =>
-      'Tor projesine burada neyin işe yaradığı soruluyor…';
+      'Tor Projesine burada neyin işe yaradığı soruluyor…';
 
   @override
   String get bridgesLookingForAVolunteer => 'Gönüllü aranıyor';
@@ -6767,7 +6767,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get bridgesFoundAVolunteer => 'Gönüllü bulundu, bağlanıyor';
 
   @override
-  String get bridgesCouldNotReachTheTor => 'Tor projesine ulaşılamadı';
+  String get bridgesCouldNotReachTheTor => 'Tor Projesine ulaşılamadı';
 
   @override
   String get bridgesConnectingThroughYourBridge =>
@@ -6814,7 +6814,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bridgesKryfoCanAskThe =>
-      'Kryfo bunu aşmak için Tor projesinden bir köprü isteyebilir.';
+      'Kryfo bunu aşmak için Tor Projesinden bir köprü isteyebilir.';
 
   @override
   String get bridgesKryfoCanGetAround =>
@@ -6840,7 +6840,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get bridgesBuiltIn => 'yerleşik';
 
   @override
-  String get bridgesFromTheTorProjectLower => 'Tor projesinden';
+  String get bridgesFromTheTorProjectLower => 'Tor Projesinden';
 
   @override
   String get bridgesFromAFriendLower => 'bir arkadaştan';
@@ -6863,27 +6863,27 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bridgesBridgesTheTorProject =>
-      'Tor projesinin sana daha önce verdiği köprüler.';
+      'Tor Projesinin sana daha önce verdiği köprüler.';
 
   @override
-  String get bridgesAskTorProject => 'Tor projesine sor';
+  String get bridgesAskTorProject => 'Tor Projesine sor';
 
   @override
   String get bridgesWhenTorIsBlockedAutomatic =>
-      'Tor engellendiğinde Otomatik, Tor projesine ülkende neyin işe yaradığını sorar.';
+      'Tor engellendiğinde Otomatik, Tor Projesine ülkende neyin işe yaradığını sorar.';
 
   @override
   String get bridgesCountry => 'Ülke';
 
   @override
-  String get bridgesLetTheTorProject => 'Tor projesi tahmin etsin';
+  String get bridgesLetTheTorProject => 'Tor Projesi tahmin etsin';
 
   @override
   String get bridgesTheTorProjectKnows =>
-      'Tor projesinin bu ülkeler için kendi önerileri var.';
+      'Tor Projesinin bu ülkeler için kendi önerileri var.';
 
   @override
-  String get bridgesTheTorProjectSGuess => 'Tor projesinin tahmini';
+  String get bridgesTheTorProjectSGuess => 'Tor Projesinin tahmini';
 
   @override
   String get bridgesBelarus => 'Belarus';
