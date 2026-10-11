@@ -842,6 +842,18 @@ class BackupSide {
     }
   }
 
+  // the copy rebuilt without its free pages: how many there are says
+  // nothing of what was taken out
+  Future<void> compact(String copy, String key) async {
+    final db = await openDatabase(copy, password: key, singleInstance: false);
+    try {
+      await db.execute('VACUUM');
+      await db.rawQuery('PRAGMA wal_checkpoint(TRUNCATE)');
+    } finally {
+      await db.close();
+    }
+  }
+
   // every copy of a container's database that leaves the phone: what waits
   // to be read counts from [at] in it (settleWaitingBurns)
   Future<void> settleBurns(String copy, String key, int at) async {
@@ -936,8 +948,10 @@ Future<BackupDraft> draftBackup(
   final docs = (await getApplicationDocumentsDirectory()).path;
   final id = side.identity();
   if (id.ed.isEmpty || id.x.isEmpty) throw BackupError('identity not loaded');
-  // read before the database is copied: no anchor is past what it holds
-  var catchUp = await catchUpAnchors(docs);
+  // read before the database is copied: no anchor is past what it holds.
+  // a file without the hidden chats carries none, vault or no vault, and
+  // its restore reads every relay whole
+  final catchUp = hidden ? await catchUpAnchors(docs) : const <String, int>{};
   final dbKey = await _secureStorage.read(key: _kDbPassphrase);
   if (dbKey == null) throw BackupError('db passphrase missing');
   final prefs = await SharedPreferences.getInstance();
@@ -968,11 +982,10 @@ Future<BackupDraft> draftBackup(
   await side.settleBurns(dbCopy, dbKey, at);
   if (!hidden) {
     final people = await side.scrub(dbCopy, dbKey);
-    // a file without its hidden chats names none of their addresses: with
-    // any left out it carries no anchors, and the restore reads it all
-    if (people.isNotEmpty) catchUp = const {};
+    // the same steps whoever was left out, so the file reads alike either
+    // way
     final fc = secure['peer_fc'];
-    if (fc != null && people.isNotEmpty) {
+    if (fc != null) {
       try {
         final m = Map<String, Object?>.from(jsonDecode(fc) as Map)
           ..removeWhere((k, _) => people.contains(k));
@@ -982,6 +995,8 @@ Future<BackupDraft> draftBackup(
       }
     }
   }
+  // no free pages left where the scrub took rows out
+  await side.compact(dbCopy, dbKey);
   final files = <BackupFileEntry>[];
   Future<void> add(String name, String from) async {
     final f = File(from);
@@ -1171,6 +1186,7 @@ Future<BackupDraft> _draftQuiet(
   await File(await c.dbPath()).copy(p.join(stage, 'halo.db'));
   await side.scrubDev(p.join(stage, 'halo.db'), dbKey);
   await side.settleBurns(p.join(stage, 'halo.db'), dbKey, at);
+  await side.compact(p.join(stage, 'halo.db'), dbKey);
   await File(
     p.join(stage, 'onion.key'),
   ).writeAsBytes(_hex(onion.first['v'] as String), flush: true);
