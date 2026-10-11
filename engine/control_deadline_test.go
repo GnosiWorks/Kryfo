@@ -232,3 +232,30 @@ func TestControlSilentCountsInARow(t *testing.T) {
 		t.Fatalf("an answer left the count at %d", got)
 	}
 }
+
+// each silent call drops its socket and the next one dials again: the count
+// lives past the redial, so a fresh connection does not hide a dead port
+func TestControlSilentSurvivesRedial(t *testing.T) {
+	old := ctrlDeadline
+	ctrlDeadline = 300 * time.Millisecond
+	defer func() { ctrlDeadline = old; ctrlReset(); atomic.StoreInt64(&ctrlSilent, 0) }()
+	ctrlReset()
+	atomic.StoreInt64(&ctrlSilent, 0)
+
+	d := newDeadControl(t)
+	defer d.close()
+	node := &tor.Tor{ControlPort: d.port()}
+
+	for i := 1; i <= 2; i++ {
+		dials := ctrlDialCount()
+		_ = ctrlDo(node, "SETCONF", func(c *control.Conn) error {
+			return c.SetConf(control.KeyVals("DisableNetwork", "1")...)
+		})
+		if got := ctrlDialCount() - dials; got != 1 {
+			t.Fatalf("call %d dialled %d times, want a fresh dial", i, got)
+		}
+		if got := ctrlSilentCount(); got != int64(i) {
+			t.Fatalf("after the redial of call %d the count is %d, want %d", i, got, i)
+		}
+	}
+}
