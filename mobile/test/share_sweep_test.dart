@@ -132,7 +132,7 @@ void main() {
     }
   });
 
-  test('a lock and an unlock unlink an open copy; a switch of pin and a '
+  test('a lock and an unlock unlink a handed copy; a switch of pin and a '
       'wipe shred it', () {
     final main = sourceOf('lib/main.dart');
     final lock = bodyOf(main, 'void lockingUp(');
@@ -148,9 +148,10 @@ void main() {
         'all: from != null && from != containerFor(r, vaultKey: vaultKey)',
       ),
     );
+    // a wipe shreds them with every other plaintext (wipe_order_test)
     expect(
       bodyOf(sourceOf('lib/wipe.dart'), 'Future<void> _erase('),
-      contains('await dropOpenCopies(all: true);'),
+      contains('entry.rename('),
     );
   });
 

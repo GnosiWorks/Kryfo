@@ -17,7 +17,10 @@ import 'package:kryfo/main.dart'
 import 'package:kryfo/session.dart';
 import 'package:kryfo/wipe.dart';
 import 'package:path/path.dart' as p;
+import 'package:kryfo/shred.dart' show shredTree;
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'shred_twin.dart';
 
 class _Engine implements HaloEngine {
   final calls = <String>[];
@@ -105,7 +108,124 @@ void main() {
   tearDown(() {
     final m = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
     m.setMockMethodCallHandler(const MethodChannel('halo/platform'), null);
+    wipeShred = shredTree;
     root.deleteSync(recursive: true);
+  });
+
+  group('plaintext', () {
+    late Directory twins;
+    setUp(() => twins = Directory.systemTemp.createTempSync('wipe_twins'));
+    tearDown(() => twins.deleteSync(recursive: true));
+
+    // every file that held plaintext or a key in the clear, with a link to
+    // its blocks
+    Map<String, File> plain() {
+      final out = <String, File>{};
+      for (final (f, size) in [
+        ('docs/media/v_1.mp4', 4 << 20),
+        ('docs/media/in_ab/doc.pdf', 30000),
+        ('docs/media_v/h.jpg', 20000),
+        ('docs/media_d/d.jpg', 20000),
+        ('docs/wallpapers/w.jpg', 20000),
+        ('docs/wallpapers_v/w.jpg', 20000),
+        ('docs/onion.key', 64),
+        ('support/backup_stage/onion.key', 64),
+        ('tmp/open/ab12/statement.pdf', 20000),
+        ('tmp/share/cd34/photo.jpg', 20000),
+        ('tmp/share_plus/x/old.jpg', 20000),
+        ('tmp/backup_out/ef56/kryfo.kryfo', 20000),
+        ('tmp/vn_1.wav', 20000),
+      ]) {
+        final file = File(dir(f))
+          ..createSync(recursive: true)
+          ..writeAsBytesSync(List.filled(size, 7), flush: true);
+        out[f] = twinOf(file.path, twins);
+      }
+      return out;
+    }
+
+    test('the visible erase is done at once and waits for no shred, and '
+        'every file is overwritten behind it', () async {
+      useEngineForTest(_Engine());
+      final files = plain();
+      final gate = Completer<void>();
+      final shredded = <String>[];
+      wipeShred = (path) async {
+        await gate.future;
+        shredded.add(path);
+        await shredTree(path);
+      };
+      final clock = Stopwatch()..start();
+      final done = wipeHalo();
+      // keys, prefs and every name but tor's
+      Future<bool> gone() async {
+        try {
+          return left('docs').every((e) => e.startsWith('tor')) &&
+              left('support').isEmpty &&
+              left('tmp').isEmpty &&
+              (await const FlutterSecureStorage().readAll()).isEmpty &&
+              (await SharedPreferences.getInstance()).getKeys().isEmpty;
+        } on FileSystemException {
+          return false;
+        }
+      }
+
+      while (!await gone() && clock.elapsed.inSeconds < 3) {
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+      }
+      // gone while not a byte was shredded yet
+      expect(await gone(), isTrue);
+      expect(shredded, isEmpty);
+      expect(clock.elapsed.inMilliseconds, lessThan(1000));
+      for (final f in files.keys) {
+        expect(File(dir(f)).existsSync(), isFalse, reason: f);
+      }
+      gate.complete();
+      await done;
+      await wipeShredding;
+      expect(exited, 0);
+      for (final MapEntry(key: f, value: twin) in files.entries) {
+        expect(zeroed(twin), isTrue, reason: f);
+      }
+      expect(Directory(dir(kWipeHeld)).existsSync(), isFalse);
+    });
+
+    test('a shred that never ends holds the end a moment at most', () async {
+      useEngineForTest(_Engine());
+      plain();
+      final stuck = Completer<void>();
+      addTearDown(stuck.complete);
+      wipeShred = (_) => stuck.future;
+      final clock = Stopwatch()..start();
+      await wipeHalo();
+      expect(exited, 0);
+      expect(
+        clock.elapsed,
+        lessThan(kWipeShredWait + const Duration(seconds: 2)),
+      );
+    });
+
+    test('what a wipe held and its process did not live to shred goes at '
+        'the next start', () async {
+      final f = File(dir('$kWipeHeld/0a1b2c3d4e5f6071/in_ab/doc.pdf'))
+        ..createSync(recursive: true)
+        ..writeAsBytesSync(List.filled(30000, 7), flush: true);
+      final twin = twinOf(f.path, twins);
+      await sweepWipeLeftovers();
+      expect(Directory(dir(kWipeHeld)).existsSync(), isFalse);
+      expect(zeroed(twin), isTrue);
+      expect(Directory(dir('docs')).existsSync(), isTrue);
+    });
+
+    test('the start sweeps run it', () {
+      final main = File('lib/main.dart').readAsStringSync();
+      final at = main.indexOf('Future<void> _sweepPlaintextLeftovers()');
+      expect(at, isNonNegative);
+      expect(
+        main.substring(at, main.indexOf('\n}\n', at)),
+        contains('await sweepWipeLeftovers();'),
+      );
+    });
   });
 
   test('from settings: keys and files go while the release is still out, '

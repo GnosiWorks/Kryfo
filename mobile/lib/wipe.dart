@@ -7,6 +7,7 @@
 // the fallback where that call refuses.
 
 import 'dart:io';
+import 'dart:math';
 import 'secure_store.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/services.dart';
@@ -16,7 +17,7 @@ import 'package:path_provider/path_provider.dart';
 import 'main.dart' show engine, session, sessionQuiet;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dlog.dart';
-import 'shred.dart' show dropOpenCopies;
+import 'shred.dart' show shredTree;
 
 // everything still running checks this before touching the database. the
 // timers outlive the widget tree and cannot all be cancelled from here.
@@ -29,6 +30,26 @@ void Function() wipeForget = () {};
 // how the wipe ends the process, so a test can watch what it leaves
 @visibleForTesting
 void Function(int code) wipeExit = exit;
+
+// what held plaintext or a key in the clear leaves its folder at once, under
+// a random name in here, beside the folders the wipe empties, and is
+// shredded behind it. what a process that died first left goes at the next
+// start (sweepWipeLeftovers)
+const kWipeHeld = 'wipe_held';
+
+// how long android's erase waits for that shred: it takes the rest
+// unzeroed, and a panic wipe stays quick
+const kWipeShredWait = Duration(seconds: 2);
+
+// the shred of one held entry, a stand-in in tests
+@visibleForTesting
+Future<void> Function(String path) wipeShred = shredTree;
+
+Future<void> _shredding = Future<void>.value();
+
+// every shred the wipe started, done
+@visibleForTesting
+Future<void> get wipeShredding => _shredding;
 
 // [releaseHandle] gives the handle back on the way, for a wipe chosen in
 // settings. a wipe from the lock screen or from a quiet session makes no
@@ -57,6 +78,7 @@ Future<void> wipeHalo({bool releaseHandle = false}) async {
   final cap = Future<void>.delayed(const Duration(seconds: 4));
   // keys, prefs and folders first. tor's own folder stays while tor runs
   await _erase(keep: const {'tor'});
+  final shredFrom = Stopwatch()..start();
   if (released != null) await Future.any([released, cap]);
   // the engine stops its relay listeners and takes tor off the network, and
   // what it wrote meanwhile goes with the rest
@@ -69,6 +91,10 @@ Future<void> wipeHalo({bool releaseHandle = false}) async {
     dlog('wipe: engine not held (${e.runtimeType})');
   }
   await _erase();
+  final wait = kWipeShredWait - shredFrom.elapsed;
+  if (wait > Duration.zero) {
+    await Future.any([_shredding, Future<void>.delayed(wait)]);
+  }
   // the call that finishes the job kills this process before it can
   // answer, so a reply at all means it did not happen.
   var native = false;
@@ -98,7 +124,9 @@ Future<void> _release(String h) async {
 }
 
 // secure storage, prefs and every app folder, but for the documents
-// folder's entries named in [keep]
+// folder's entries named in [keep]. the databases, sealed under keys
+// already gone, are unlinked. everything else leaves its folder by a
+// rename, at once, and is shredded behind
 Future<void> _erase({Set<String> keep = const {}}) async {
   try {
     // identity markers go first. if anything below fails the next launch
@@ -106,22 +134,30 @@ Future<void> _erase({Set<String> keep = const {}}) async {
     await secureStore.deleteAll();
     final prefs0 = await SharedPreferences.getInstance();
     await prefs0.clear();
-    // a file opened with another app is a decrypted copy: zeroed, not just
-    // left to the clear-data call
-    await dropOpenCopies(all: true);
-    // empty every app storage dir, so the wal/shm sidecars and media/ go
-    // with halo.db
     final docs = await getApplicationDocumentsDirectory();
+    final held = _heldIn(docs);
     final dirs = <Directory>[
       docs,
       await getApplicationSupportDirectory(),
       await getTemporaryDirectory(),
     ];
+    final behind = <String>[];
     for (final d in dirs) {
       if (!await d.exists()) continue;
-      await for (final entry in d.list()) {
-        if (d.path == docs.path && keep.contains(p.basename(entry.path))) {
-          continue;
+      await for (final entry in d.list(followLinks: false)) {
+        final name = p.basename(entry.path);
+        if (d.path == docs.path && keep.contains(name)) continue;
+        if (!_sealed(name) && entry is! Link) {
+          try {
+            await Directory(held).create(recursive: true);
+            behind.add((await entry.rename(p.join(held, _rnd()))).path);
+            continue;
+          } catch (e) {
+            // shredded where it lies, a while longer under its name
+            dlog('wipe: an entry not moved (${e.runtimeType})');
+            behind.add(entry.path);
+            continue;
+          }
         }
         try {
           await entry.delete(recursive: true);
@@ -132,10 +168,51 @@ Future<void> _erase({Set<String> keep = const {}}) async {
         }
       }
     }
+    _shredBehind(behind, held);
     dlog('wipe: files gone');
   } catch (e) {
     // never rethrow: the keys are already gone, and a half-wiped app left
     // running is worse than one that exits
     dlog('wipe error: $e');
+  }
+}
+
+// beside the app's folders, in the folder that holds them
+String _heldIn(Directory docs) => p.join(p.dirname(docs.path), kWipeHeld);
+
+// a database and its sidecars, ciphertext and often large, and tor's own
+// folder, which holds nothing of the person's: unlinked, never held
+bool _sealed(String name) =>
+    name == 'tor' || RegExp(r'\.db(-wal|-shm|-journal)?$').hasMatch(name);
+
+final _random = Random.secure();
+
+String _rnd() => [
+  for (var i = 0; i < 16; i++) _random.nextInt(256).toRadixString(16),
+].map((h) => h.padLeft(2, '0')).join();
+
+void _shredBehind(List<String> paths, String held) {
+  final before = _shredding;
+  _shredding = () async {
+    await Future.wait([
+      before,
+      for (final x in paths)
+        wipeShred(x).catchError((Object e) {
+          dlog('wipe: not shredded (${e.runtimeType})');
+        }),
+    ]);
+    try {
+      // only an emptied one
+      await Directory(held).delete();
+    } catch (_) {}
+  }();
+}
+
+/// what a wipe held and its process did not live to shred. at every start
+Future<void> sweepWipeLeftovers() async {
+  try {
+    await shredTree(_heldIn(await getApplicationDocumentsDirectory()));
+  } catch (e) {
+    dlog('wipe: leftovers stayed (${e.runtimeType})');
   }
 }

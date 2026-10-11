@@ -23673,6 +23673,8 @@ Future<void> _sweepPlaintextLeftovers() async {
     dlog('sweep: voice leftovers (${e.runtimeType})');
   }
   await sweepGifParts();
+  // what a wipe moved aside and did not live to shred
+  await sweepWipeLeftovers();
 }
 
 // every raw recording in [dir]: one that will not go is logged and the
