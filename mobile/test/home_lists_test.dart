@@ -247,6 +247,29 @@ void main() {
     });
   });
 
+  testWidgets('a contact\'s badge still shows on the list', (t) async {
+    phone(t);
+    await t.pumpWidget(
+      framed(
+        _home(
+          contacts: [
+            ContactPreview(
+              haloId: 'wren-oak-lamp',
+              avatarSeed: 'wren-oak-lamp',
+              supporterBadge: 'patron',
+            ),
+            _chat('slow-kite-moss'),
+          ],
+        ),
+      ),
+    );
+    await t.pump(const Duration(seconds: 1));
+    expect(find.text('wren-oak-lamp'), findsOneWidget);
+    expect(find.text('slow-kite-moss'), findsOneWidget);
+    expect(find.text(l10n.homeSupporter), findsOneWidget);
+    await drain(t);
+  });
+
   group('saved', () {
     testWidgets('a group message names its group and opens the group at it', (
       t,
