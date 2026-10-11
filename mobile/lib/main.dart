@@ -12656,6 +12656,8 @@ class AppState extends ChangeNotifier {
       } catch (e) {
         dlog('checkin: kick: $e');
       }
+      // the relays get their time from the kick, not from a slow wake
+      final kicked = _checkClock();
       // wait for the relays to be asked, then for every answer to be in. the
       // engine caps each relay at catchupCap (30s), so this ends when all
       // have finished or been given up on. the two escapes are for no relay
@@ -12664,7 +12666,8 @@ class AppState extends ChangeNotifier {
       var began = false;
       var tail = '';
       while (true) {
-        final secs = _checkClock().difference(started).inSeconds;
+        final now = _checkClock();
+        final secs = now.difference(kicked).inSeconds;
         final (active, begun) = engine.catchupState();
         if (begun > begunBefore) began = true;
         if (began && active == 0) {
@@ -12679,8 +12682,9 @@ class AppState extends ChangeNotifier {
         }
         // relays are capped at 30s each, so this should never bite. if it
         // ever does, something is holding catchupActive up and the line on
-        // the transport screen will say which relay.
-        if (secs >= 90) {
+        // the transport screen will say which relay. the job's three
+        // minutes bound it from the start too
+        if (secs >= 90 || now.difference(started).inSeconds >= 160) {
           tail = '_capped';
           break;
         }
@@ -12688,7 +12692,8 @@ class AppState extends ChangeNotifier {
       }
       _lastCheckRelays = _relayCatchupData();
       // no relay ever got going, most often no network: nothing was
-      // checked, and the last check-in stays the one that was
+      // checked, and the last check-in stays the one that was. no slices
+      // are asked for either: with no relay, the ask could not go
       if (tail == '_norelay') {
         how = 'norelay';
         return 0;
