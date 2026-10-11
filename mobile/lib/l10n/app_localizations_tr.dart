@@ -6871,6 +6871,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get bridgesTryingAnotherWay => 'Başka bir yol deneniyor…';
 
   @override
+  String get bridgesFindingAWayIn => 'Bir yol aranıyor…';
+
+  @override
   String get bridgesGoesThroughAVolunteer =>
       'Bir gönüllünün bilgisayarından geçer. Engellemesi zor, başlaması yavaş.';
 

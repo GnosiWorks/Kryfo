@@ -6860,6 +6860,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get bridgesTryingAnotherWay => 'در حال امتحان راهی دیگر…';
 
   @override
+  String get bridgesFindingAWayIn => 'در حال پیدا کردن راهی برای اتصال…';
+
+  @override
   String get bridgesGoesThroughAVolunteer =>
       'از رایانه‌ی یک داوطلب می‌گذرد. مسدود کردنش سخت است و شروعش کند.';
 

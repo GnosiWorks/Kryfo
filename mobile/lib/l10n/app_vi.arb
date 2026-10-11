@@ -271,6 +271,7 @@
   "bridgesScanABridgeCode": "Quét mã cầu nối",
   "torBootSplashTorIsBlockedHere": "Tor bị chặn ở đây",
   "bridgesTryingAnotherWay": "Đang thử cách khác…",
+  "bridgesFindingAWayIn": "Đang tìm cách kết nối…",
   "bridgesGoesThroughAVolunteer": "Đi qua máy tính của một tình nguyện viên. Khó bị chặn, nhưng khởi động chậm.",
   "settingsBridgesForNetworksThat": "Cầu nối, dành cho mạng chặn Tor",
   "bridgesCouldNotReachTheTor": "Không liên lạc được với Dự án Tor",

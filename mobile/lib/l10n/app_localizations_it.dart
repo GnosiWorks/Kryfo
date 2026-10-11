@@ -6917,6 +6917,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get bridgesTryingAnotherWay => 'Provo un\'altra strada…';
 
   @override
+  String get bridgesFindingAWayIn => 'Cerco una strada…';
+
+  @override
   String get bridgesGoesThroughAVolunteer =>
       'Passa dal computer di un volontario. Difficile da bloccare, lento ad avviarsi.';
 

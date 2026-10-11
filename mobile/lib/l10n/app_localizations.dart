@@ -11025,6 +11025,12 @@ abstract class AppLocalizations {
   /// **'Trying another way…'**
   String get bridgesTryingAnotherWay;
 
+  /// bridge_mode.dart: the status line's detail while automatic has no way in yet, as after a wake, under Connecting…
+  ///
+  /// In en, this message translates to:
+  /// **'Finding a way in…'**
+  String get bridgesFindingAWayIn;
+
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:

@@ -271,6 +271,7 @@
   "bridgesScanABridgeCode": "掃描橋接 QR 碼",
   "torBootSplashTorIsBlockedHere": "這裡 Tor 被封鎖",
   "bridgesTryingAnotherWay": "正在嘗試其他方式…",
+  "bridgesFindingAWayIn": "正在尋找連線方式…",
   "bridgesGoesThroughAVolunteer": "經由志願者的電腦連線。很難封鎖，但啟動較慢。",
   "settingsBridgesForNetworksThat": "橋接，適用於封鎖 Tor 的網路",
   "bridgesCouldNotReachTheTor": "聯絡不上 Tor 專案",

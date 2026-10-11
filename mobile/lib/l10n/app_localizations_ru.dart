@@ -6980,6 +6980,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get bridgesTryingAnotherWay => 'Пробуем другой способ…';
 
   @override
+  String get bridgesFindingAWayIn => 'Ищем способ подключиться…';
+
+  @override
   String get bridgesGoesThroughAVolunteer =>
       'Идёт через компьютер волонтёра. Трудно заблокировать, но долго запускается.';
 

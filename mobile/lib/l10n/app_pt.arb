@@ -271,6 +271,7 @@
   "bridgesScanABridgeCode": "Escanear um código de ponte",
   "torBootSplashTorIsBlockedHere": "Aqui o Tor está bloqueado",
   "bridgesTryingAnotherWay": "Tentando outro jeito…",
+  "bridgesFindingAWayIn": "Procurando um jeito de entrar…",
   "bridgesGoesThroughAVolunteer": "Passa pelo computador de um voluntário. Difícil de bloquear, lento para começar.",
   "settingsBridgesForNetworksThat": "Pontes, para redes que bloqueiam o Tor",
   "bridgesCouldNotReachTheTor": "Não deu para falar com o Projeto Tor",

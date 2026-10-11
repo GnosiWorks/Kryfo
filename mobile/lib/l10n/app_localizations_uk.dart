@@ -6972,6 +6972,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get bridgesTryingAnotherWay => 'Пробуємо інший спосіб…';
 
   @override
+  String get bridgesFindingAWayIn => 'Шукаємо спосіб підключитися…';
+
+  @override
   String get bridgesGoesThroughAVolunteer =>
       'Іде через комп’ютер волонтера. Важко заблокувати, але довго запускається.';
 

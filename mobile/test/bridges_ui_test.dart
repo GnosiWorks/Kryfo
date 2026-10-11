@@ -216,6 +216,46 @@ void main() {
       expect(l.tone, BridgeTone.amber);
     });
 
+    test('no way in yet, as after a wake: connecting, calmly', () {
+      for (final phase in ['trying', 'connected']) {
+        final l = line(
+          BridgeStatus(mode: 'auto', phase: phase, errorCode: 'auto_wait'),
+        );
+        expect(l.head, l10n.bridgesConnectingDots, reason: phase);
+        expect(l.detail, l10n.bridgesFindingAWayIn, reason: phase);
+        expect(l.detailKind, 'wait');
+        expect(l.tone, BridgeTone.amber);
+        expect(l.moving, isTrue);
+      }
+      // a pass past the usual way says what it tries instead
+      final a = line(
+        const BridgeStatus(
+          mode: 'auto',
+          phase: 'trying',
+          attempt: 2,
+          attempts: 3,
+          errorCode: 'auto_wait',
+        ),
+      );
+      expect(a.detailKind, 'another');
+      // a picked bridge never says it
+      final p = line(
+        const BridgeStatus(
+          mode: 'own',
+          phase: 'trying',
+          method: 'obfs4',
+          errorCode: 'auto_wait',
+        ),
+      );
+      expect(p.detail, isNot(l10n.bridgesFindingAWayIn));
+      // and the engine's json carries it through
+      final app = AppState()..bridgeSetupForTest = const BridgeSetup();
+      app.takeBridgeStatus(
+        '{"mode":"auto","phase":"connected","error_code":"auto_wait"}',
+      );
+      expect(app.bridgeLine.detailKind, 'wait');
+    });
+
     test('the usual way, with the percent tor knows', () {
       final l = line(
         const BridgeStatus(mode: 'auto', phase: 'trying', progress: 40),

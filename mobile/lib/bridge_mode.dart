@@ -481,7 +481,15 @@ BridgeLine bridgeStatusLine(
   var kind = '';
   final auto = s.mode == 'auto';
   final String head;
-  if (s.phase == 'connected') {
+  // automatic with no way in yet, as after a wake: a pass is on its way
+  if (auto &&
+      s.errorCode == 'auto_wait' &&
+      s.phase != 'asking' &&
+      !s.tryingAnother) {
+    head = l10n.bridgesConnectingDots;
+    parts.add(l10n.bridgesFindingAWayIn);
+    kind = 'wait';
+  } else if (s.phase == 'connected') {
     head = l10n.bridgesConnectingDots;
     parts.add(l10n.bridgesAlmostThere);
     kind = 'almost';

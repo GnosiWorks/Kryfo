@@ -6964,6 +6964,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bridgesTryingAnotherWay => 'جارٍ تجربة طريقة أخرى…';
 
   @override
+  String get bridgesFindingAWayIn => 'جارٍ البحث عن طريقة للاتصال…';
+
+  @override
   String get bridgesGoesThroughAVolunteer =>
       'يمر عبر حاسوب أحد المتطوعين. صعب الحجب، بطيء البدء.';
 

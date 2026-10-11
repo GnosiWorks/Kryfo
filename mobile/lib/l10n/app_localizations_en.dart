@@ -6844,6 +6844,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bridgesTryingAnotherWay => 'Trying another way…';
 
   @override
+  String get bridgesFindingAWayIn => 'Finding a way in…';
+
+  @override
   String get bridgesGoesThroughAVolunteer =>
       'Goes through a volunteer\'s computer. Hard to block, slow to start.';
 

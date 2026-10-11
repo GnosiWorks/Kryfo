@@ -6847,6 +6847,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get bridgesTryingAnotherWay => 'Mencoba cara lain…';
 
   @override
+  String get bridgesFindingAWayIn => 'Mencari jalan masuk…';
+
+  @override
   String get bridgesGoesThroughAVolunteer =>
       'Lewat komputer relawan. Sulit diblokir, lambat di awal.';
 

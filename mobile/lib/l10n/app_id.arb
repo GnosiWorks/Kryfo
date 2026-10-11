@@ -271,6 +271,7 @@
   "bridgesScanABridgeCode": "Pindai kode jembatan",
   "torBootSplashTorIsBlockedHere": "Tor diblokir di sini",
   "bridgesTryingAnotherWay": "Mencoba cara lain…",
+  "bridgesFindingAWayIn": "Mencari jalan masuk…",
   "bridgesGoesThroughAVolunteer": "Lewat komputer relawan. Sulit diblokir, lambat di awal.",
   "settingsBridgesForNetworksThat": "Jembatan, untuk jaringan yang memblokir Tor",
   "bridgesCouldNotReachTheTor": "Tidak bisa menghubungi Tor Project",

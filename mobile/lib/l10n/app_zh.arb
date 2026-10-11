@@ -271,6 +271,7 @@
   "bridgesScanABridgeCode": "扫描网桥 QR 码",
   "torBootSplashTorIsBlockedHere": "这里 Tor 被封锁",
   "bridgesTryingAnotherWay": "正在尝试其他方式…",
+  "bridgesFindingAWayIn": "正在寻找连接方式…",
   "bridgesGoesThroughAVolunteer": "经由志愿者的电脑连接。很难封锁，但启动慢。",
   "settingsBridgesForNetworksThat": "网桥，用于封锁 Tor 的网络",
   "bridgesCouldNotReachTheTor": "联系不上 Tor 项目",

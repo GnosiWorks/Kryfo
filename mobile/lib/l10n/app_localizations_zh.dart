@@ -6568,6 +6568,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesTryingAnotherWay => '正在尝试其他方式…';
 
   @override
+  String get bridgesFindingAWayIn => '正在寻找连接方式…';
+
+  @override
   String get bridgesGoesThroughAVolunteer => '经由志愿者的电脑连接。很难封锁，但启动慢。';
 
   @override
@@ -14330,6 +14333,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get bridgesTryingAnotherWay => '正在嘗試其他方式…';
+
+  @override
+  String get bridgesFindingAWayIn => '正在尋找連線方式…';
 
   @override
   String get bridgesGoesThroughAVolunteer => '經由志願者的電腦連線。很難封鎖，但啟動較慢。';

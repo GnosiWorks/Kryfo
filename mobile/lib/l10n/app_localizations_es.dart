@@ -6908,6 +6908,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get bridgesTryingAnotherWay => 'Probando otra forma…';
 
   @override
+  String get bridgesFindingAWayIn => 'Buscando una forma de entrar…';
+
+  @override
   String get bridgesGoesThroughAVolunteer =>
       'Pasa por la computadora de un voluntario. Difícil de bloquear, lento al arrancar.';
 

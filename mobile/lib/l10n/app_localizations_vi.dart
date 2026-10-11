@@ -6842,6 +6842,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get bridgesTryingAnotherWay => 'Đang thử cách khác…';
 
   @override
+  String get bridgesFindingAWayIn => 'Đang tìm cách kết nối…';
+
+  @override
   String get bridgesGoesThroughAVolunteer =>
       'Đi qua máy tính của một tình nguyện viên. Khó bị chặn, nhưng khởi động chậm.';
 

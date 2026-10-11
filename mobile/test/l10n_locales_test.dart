@@ -3066,6 +3066,7 @@ final _calls = <_Call>[
   ('appNoRelayReached', [], (l) => l.appNoRelayReached),
   ('appWaitingForARelay', [], (l) => l.appWaitingForARelay),
   ('handleStillReaching', ["Tor"], (l) => l.handleStillReaching),
+  ('bridgesFindingAWayIn', [], (l) => l.bridgesFindingAWayIn),
   ('supportTitle', [], (l) => l.supportTitle),
   ('supportWaiting', [], (l) => l.supportWaiting(0)),
   ('supportWaiting', [], (l) => l.supportWaiting(1)),
@@ -3169,7 +3170,10 @@ void main() {
       ((l) => l.bridgesUseThisBridge, '使用这个网桥'),
       ((l) => l.bridgesAskTorProject, '询问 Tor 项目'),
     ],
-    'zh_Hant': [((l) => l.bridgesAskTorProject, '詢問 Tor 專案')],
+    'zh_Hant': [
+      ((l) => l.bridgesAskTorProject, '詢問 Tor 專案'),
+      ((l) => l.bridgesFindingAWayIn, '正在尋找連線方式…'),
+    ],
     'vi': [((l) => l.bridgesAskTorProject, 'Hỏi Dự án Tor')],
   };
   for (final e in pinned.entries) {

@@ -271,6 +271,7 @@
   "bridgesScanABridgeCode": "اسکن کد پل",
   "torBootSplashTorIsBlockedHere": "Tor این‌جا مسدود است",
   "bridgesTryingAnotherWay": "در حال امتحان راهی دیگر…",
+  "bridgesFindingAWayIn": "در حال پیدا کردن راهی برای اتصال…",
   "bridgesGoesThroughAVolunteer": "از رایانه‌ی یک داوطلب می‌گذرد. مسدود کردنش سخت است و شروعش کند.",
   "settingsBridgesForNetworksThat": "پل‌ها، برای شبکه‌هایی که Tor را مسدود می‌کنند",
   "bridgesCouldNotReachTheTor": "دسترسی به پروژه‌ی Tor ممکن نشد",

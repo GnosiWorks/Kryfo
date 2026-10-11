@@ -3536,5 +3536,6 @@ void main() {
     expect(l.supportMovedToChats, "Moved to Chats");
     expect(l.supportMoveToInbox, "Move to inbox");
     expect(l.supportMovedToInbox, "Moved to inbox");
+    expect(l.bridgesFindingAWayIn, "Finding a way in…");
   });
 }

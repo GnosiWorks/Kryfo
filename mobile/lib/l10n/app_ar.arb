@@ -271,6 +271,7 @@
   "bridgesScanABridgeCode": "قراءة رمز جسر",
   "torBootSplashTorIsBlockedHere": "Tor محجوب هنا",
   "bridgesTryingAnotherWay": "جارٍ تجربة طريقة أخرى…",
+  "bridgesFindingAWayIn": "جارٍ البحث عن طريقة للاتصال…",
   "bridgesGoesThroughAVolunteer": "يمر عبر حاسوب أحد المتطوعين. صعب الحجب، بطيء البدء.",
   "settingsBridgesForNetworksThat": "الجسور، للشبكات التي تحجب Tor",
   "bridgesCouldNotReachTheTor": "تعذّر الوصول إلى مشروع Tor",
