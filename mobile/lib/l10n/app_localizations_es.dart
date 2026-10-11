@@ -3033,9 +3033,6 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get commonRetry => 'Reintentar';
-
-  @override
   String get homeNoKryfosYet => 'Aún no hay Kryfos.';
 
   @override

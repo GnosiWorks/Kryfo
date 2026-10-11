@@ -2887,9 +2887,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get commonRetry => '重试';
-
-  @override
   String get homeNoKryfosYet => '还没有 Kryfo 联系人。';
 
   @override
@@ -10653,9 +10650,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
     );
     return '$_temp0';
   }
-
-  @override
-  String get commonRetry => '重試';
 
   @override
   String get homeNoKryfosYet => '還沒有 Kryfo 聯絡人。';

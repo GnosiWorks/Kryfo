@@ -869,7 +869,6 @@
   "homeNothingWaitingToSend": "Niente in attesa di invio",
   "homeWaitingSendsWhenYou": "{count, plural, one{{count} in attesa · parte quando torni online} other{{count} in attesa · partono quando torni online}}",
   "homeWaitingTorIsStill": "{count, plural, other{{count} in attesa · tor si sta ancora connettendo}}",
-  "commonRetry": "Riprova",
   "homeNoKryfosYet": "Ancora nessun Kryfo.",
   "homeScanTheirCodeSend": "Scansiona il suo codice, mandagli un link o scrivi il @nome utente che ti ha dato.",
   "homeAddSomeone": "Aggiungi qualcuno",

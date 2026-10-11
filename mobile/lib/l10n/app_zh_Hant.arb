@@ -869,7 +869,6 @@
   "homeNothingWaitingToSend": "沒有待傳送的內容",
   "homeWaitingSendsWhenYou": "{count, plural, other{{count} 則等待中 · 你恢復連線後傳送}}",
   "homeWaitingTorIsStill": "{count, plural, other{{count} 則等待中 · tor 仍在連線}}",
-  "commonRetry": "重試",
   "homeNoKryfosYet": "還沒有 Kryfo 聯絡人。",
   "homeScanTheirCodeSend": "掃描對方的 QR 碼、傳連結給對方，或輸入對方給你的 @使用者名稱。",
   "homeAddSomeone": "新增聯絡人",

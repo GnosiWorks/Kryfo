@@ -1238,7 +1238,6 @@ final _calls = <_Call>[
   ('homeWaitingTorIsStill', [], (l) => l.homeWaitingTorIsStill(5)),
   ('homeWaitingTorIsStill', [], (l) => l.homeWaitingTorIsStill(21)),
   ('homeWaitingTorIsStill', [], (l) => l.homeWaitingTorIsStill(1000)),
-  ('commonRetry', [], (l) => l.commonRetry),
   ('homeNoKryfosYet', [], (l) => l.homeNoKryfosYet),
   ('homeScanTheirCodeSend', [], (l) => l.homeScanTheirCodeSend),
   ('homeAddSomeone', [], (l) => l.homeAddSomeone),

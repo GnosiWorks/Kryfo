@@ -3743,10 +3743,6 @@
       }
     }
   },
-  "commonRetry": "Retry",
-  "@commonRetry": {
-    "description": "screens/home_screen.dart"
-  },
   "homeNoKryfosYet": "No Kryfos yet.",
   "@homeNoKryfosYet": {
     "description": "screens/home_screen.dart"

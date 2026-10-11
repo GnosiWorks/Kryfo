@@ -3073,9 +3073,6 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get commonRetry => 'Повторити';
-
-  @override
   String get homeNoKryfosYet => 'Ще жодного Kryfo.';
 
   @override

@@ -3011,9 +3011,6 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
-  String get commonRetry => 'تلاش دوباره';
-
-  @override
   String get homeNoKryfosYet => 'هنوز هیچ مخاطبی نیست.';
 
   @override

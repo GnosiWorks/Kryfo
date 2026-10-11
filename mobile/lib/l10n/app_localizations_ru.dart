@@ -3085,9 +3085,6 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get commonRetry => 'Повторить';
-
-  @override
   String get homeNoKryfosYet => 'Пока ни одного Kryfo.';
 
   @override

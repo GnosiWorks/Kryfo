@@ -3031,9 +3031,6 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get commonRetry => 'Réessayer';
-
-  @override
   String get homeNoKryfosYet => 'Pas encore de Kryfos.';
 
   @override

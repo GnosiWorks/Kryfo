@@ -869,7 +869,6 @@
   "homeNothingWaitingToSend": "Bekleyen mesaj yok",
   "homeWaitingSendsWhenYou": "{count, plural, one{{count} bekliyor · bağlanınca gider} other{{count} bekliyor · bağlanınca gider}}",
   "homeWaitingTorIsStill": "{count, plural, one{{count} bekliyor · tor hâlâ bağlanıyor} other{{count} bekliyor · tor hâlâ bağlanıyor}}",
-  "commonRetry": "Yeniden dene",
   "homeNoKryfosYet": "Henüz Kryfo yok.",
   "homeScanTheirCodeSend": "Onun kodunu tara, ona bir bağlantı gönder ya da sana verdiği @kullanıcı adını yaz.",
   "homeAddSomeone": "Birini ekle",

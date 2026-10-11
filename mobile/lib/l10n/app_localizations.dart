@@ -4722,12 +4722,6 @@ abstract class AppLocalizations {
   /// screens/home_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Retry'**
-  String get commonRetry;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'No Kryfos yet.'**
   String get homeNoKryfosYet;
 

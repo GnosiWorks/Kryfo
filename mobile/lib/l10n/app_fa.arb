@@ -869,7 +869,6 @@
   "homeNothingWaitingToSend": "چیزی در انتظار ارسال نیست",
   "homeWaitingSendsWhenYou": "{count, plural, other{⁨{count}⁩ در انتظار · وقتی آنلاین شوید فرستاده می‌شود}}",
   "homeWaitingTorIsStill": "{count, plural, other{⁨{count}⁩ در انتظار · tor هنوز در حال اتصال است}}",
-  "commonRetry": "تلاش دوباره",
   "homeNoKryfosYet": "هنوز هیچ مخاطبی نیست.",
   "homeScanTheirCodeSend": "کد او را اسکن کنید، برایش پیوند بفرستید، یا نام کاربری‌ای را که به شما داده وارد کنید.",
   "homeAddSomeone": "افزودن یک نفر",

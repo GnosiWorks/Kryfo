@@ -3028,9 +3028,6 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get commonRetry => 'Reenviar';
-
-  @override
   String get homeNoKryfosYet => 'Nenhum Kryfo ainda.';
 
   @override

@@ -2994,9 +2994,6 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get commonRetry => 'Thử lại';
-
-  @override
   String get homeNoKryfosYet => 'Chưa có Kryfo nào.';
 
   @override

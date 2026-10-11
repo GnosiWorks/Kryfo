@@ -3093,9 +3093,6 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get commonRetry => 'أعد المحاولة';
-
-  @override
   String get homeNoKryfosYet => 'لا جهات اتصال بعد.';
 
   @override

@@ -2997,9 +2997,6 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get commonRetry => 'Coba lagi';
-
-  @override
   String get homeNoKryfosYet => 'Belum ada Kryfo.';
 
   @override

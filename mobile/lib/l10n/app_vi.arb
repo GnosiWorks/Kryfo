@@ -869,7 +869,6 @@
   "homeNothingWaitingToSend": "Không có gì chờ gửi",
   "homeWaitingSendsWhenYou": "{count, plural, other{{count} đang chờ · sẽ gửi khi bạn trực tuyến lại}}",
   "homeWaitingTorIsStill": "{count, plural, other{{count} đang chờ · tor vẫn đang kết nối}}",
-  "commonRetry": "Thử lại",
   "homeNoKryfosYet": "Chưa có Kryfo nào.",
   "homeScanTheirCodeSend": "Quét mã của họ, gửi cho họ một liên kết, hoặc nhập @tên người dùng họ đưa cho bạn.",
   "homeAddSomeone": "Thêm người",

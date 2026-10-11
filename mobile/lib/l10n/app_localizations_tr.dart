@@ -3009,9 +3009,6 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get commonRetry => 'Yeniden dene';
-
-  @override
   String get homeNoKryfosYet => 'Henüz Kryfo yok.';
 
   @override
