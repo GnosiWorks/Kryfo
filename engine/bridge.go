@@ -598,9 +598,17 @@ func applyBridgeConf(t *tor.Tor) error {
 		}
 		// the lines go too, or a later UseBridges 1 would quietly use the
 		// list from last time
-		return ctrlDo(t, "RESETCONF Bridge", func(c *control.Conn) error {
+		if err := ctrlDo(t, "RESETCONF Bridge", func(c *control.Conn) error {
 			return c.ResetConf(&control.KeyVal{Key: "Bridge"})
-		})
+		}); err != nil {
+			return err
+		}
+		if kv := censorConf(false); kv != nil {
+			return ctrlDo(t, "SETCONF censor", func(c *control.Conn) error {
+				return c.SetConf(kv...)
+			})
+		}
+		return nil
 	}
 	noteStep("pt listeners")
 	if err := startPTListeners(); err != nil {
@@ -610,6 +618,7 @@ func applyBridgeConf(t *tor.Tor) error {
 	for _, p := range ptPlugins() {
 		kv = append(kv, control.NewKeyVal("ClientTransportPlugin", p))
 	}
+	kv = append(kv, censorConf(true)...)
 	kv = append(kv, control.NewKeyVal("UseBridges", "1"))
 	lines := torBridgeLines()
 	for _, b := range lines {

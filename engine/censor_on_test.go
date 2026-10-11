@@ -48,6 +48,13 @@ func TestCensorResetsAndStalls(t *testing.T) {
 	if a[0] != "--Socks5Proxy" || !strings.HasPrefix(a[1], "127.0.0.1:") {
 		t.Fatalf("tor args %v", a)
 	}
+	// tor refuses an external transport next to a Socks5Proxy
+	if kv := censorConf(true); len(kv) != 1 || kv[0].Key != "Socks5Proxy" || kv[0].ValSet() {
+		t.Fatalf("with bridges: %+v", kv)
+	}
+	if kv := censorConf(false); len(kv) != 2 || kv[0].Key != "ClientTransportPlugin" || kv[0].ValSet() || kv[1].Val != a[1] {
+		t.Fatalf("without bridges: %+v", kv)
+	}
 	old := censorHow
 	defer func() { censorHow = old }()
 

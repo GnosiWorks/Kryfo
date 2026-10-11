@@ -15,6 +15,8 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+
+	"github.com/cretz/bine/control"
 )
 
 // the application id suffix of the test app, see build.gradle.kts
@@ -51,8 +53,27 @@ func censorTorArgs() []string {
 		return nil
 	}
 	addr := censorStart()
-	if addr == "" {
+	// tor takes no external transport next to a Socks5Proxy, and bridges
+	// reach tor through their own listeners anyway
+	if addr == "" || bridgesEnabled() {
 		return nil
 	}
 	return []string{"--Socks5Proxy", addr}
+}
+
+// what a bridge SETCONF adds for the censor, none outside the test app.
+// with bridges its proxy goes; without them it comes back and the
+// transport lines go, since tor refuses the two together.
+func censorConf(bridges bool) []*control.KeyVal {
+	if !censorBuild || !censorAllowed(procName(), runtime.GOOS) {
+		return nil
+	}
+	addr := censorStart()
+	if addr == "" {
+		return nil
+	}
+	if bridges {
+		return []*control.KeyVal{{Key: "Socks5Proxy"}}
+	}
+	return []*control.KeyVal{{Key: "ClientTransportPlugin"}, control.NewKeyVal("Socks5Proxy", addr)}
 }

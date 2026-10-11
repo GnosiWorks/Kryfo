@@ -17,6 +17,9 @@ func TestCensorNeverInRelease(t *testing.T) {
 		if a := censorTorArgs(); a != nil {
 			t.Fatalf("tor args without the tag: %v", a)
 		}
+		if kv := censorConf(false); kv != nil {
+			t.Fatalf("setconf without the tag: %v", kv)
+		}
 		if err := censorPTDial("obfs4", "192.0.2.1:443"); err != nil {
 			t.Fatalf("a dial cut without the tag: %v", err)
 		}
