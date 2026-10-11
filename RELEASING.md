@@ -15,6 +15,7 @@ a feature goes into a release finished or not at all.
 - after a plugin change, read the merged manifest in
   build/app/intermediates/merged_manifests/, plugins add permissions
 - a fresh clone resolves the lockfile: `flutter pub get --enforce-lockfile`
+- the update key is pinned: `KRYFO_RELEASE=1 flutter test test/update_key_test.dart`
 
 ## version
 
@@ -25,6 +26,30 @@ a feature goes into a release finished or not at all.
   `mobile/fastlane/metadata/android/en-US/changelogs/<N*10+1>.txt`, `+2`, `+3`
 
 commit it as `X.Y.Z`. no tag yet.
+
+## update notice
+
+copies from the site or github check https://kryfo.app/version.json once a
+day over tor. the file is signed with an ed25519 key kept offline.
+
+once, to make the key (outside any git tree, under a passphrase):
+
+    scripts/make-version-key.sh ~/offline/kryfo-version.pem
+
+it prints the public key: put it in `kVersionPubKeyB64` in
+mobile/lib/update_check.dart, in place of `kVersionKeyPlaceholder`.
+release.sh refuses to sign while the placeholder is in.
+
+each release, after site/release.py has the new version in release.json:
+
+    scripts/sign-version.sh X.Y.Z ~/offline/kryfo-version.pem [site folder]
+    scripts/sign-version.sh --pubkey ~/offline/kryfo-version.pem
+
+the second line has to print the key the app pins. the first writes
+static/version.json and version.json.sig into the site folder (site/ by
+default), and `site/build.py` and `site/check.py` take them into public/.
+deploy after the github release is up, so the notice never points at a
+page without the packages.
 
 ## build
 
