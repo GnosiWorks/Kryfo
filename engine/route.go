@@ -186,6 +186,10 @@ func routeNeedsRescue(now time.Time) string {
 	if !modeNeedsTor() || torIsPaused() {
 		return ""
 	}
+	// automatic owns the bounces while it tries: not counted as a rescue
+	if autoGateHeld() {
+		return ""
+	}
 	if atomic.LoadInt32(&reconnectRunning) == 1 || atomic.LoadInt32(&torRestarting) == 1 {
 		return ""
 	}
@@ -340,6 +344,11 @@ func netBounceWorker() {
 		// floors and back-offs were reset with the change. offline, the
 		// bounce and its check wait for the change that brings a network
 		if !modeNeedsTor() || torIsPaused() || netOffline.Load() {
+			return
+		}
+		// automatic starts its own pass on the new network
+		if autoGateHeld() {
+			log.Println("halo: network bounce left to automatic")
 			return
 		}
 		netBounce()

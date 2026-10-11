@@ -880,6 +880,7 @@ func HaloSetBridges(cLines *C.char, on C.int) *C.char {
 
 // HaloSetBridges in plain go, for the tests
 func setBridges(raw string, on bool) string {
+	legacyMode()
 	good, bad, checks := sortBridgeLines(raw)
 	lineChecksMu.Lock()
 	lineChecks = checks

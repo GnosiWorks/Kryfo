@@ -70,7 +70,11 @@ func directNostrClient() *http.Client {
 //
 //export HaloSetTransportMode
 func HaloSetTransportMode(cMode *C.char) *C.char {
-	m := goStr(cMode)
+	return C.CString(setTransportMode(goStr(cMode)))
+}
+
+// HaloSetTransportMode in plain go, for the tests
+func setTransportMode(m string) string {
 	switch m {
 	case modePrivate, modeBalanced, modeFast:
 	default:
@@ -89,7 +93,7 @@ func HaloSetTransportMode(cMode *C.char) *C.char {
 			go reconnectTor()
 		}
 	}
-	return C.CString(m)
+	return m
 }
 
 // the mode lands, and what was bound to the old route lets go. the route

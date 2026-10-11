@@ -666,6 +666,10 @@ func HaloLastReconnect() *C.char { return C.CString(lastReconnectOutcome()) }
 // the bounce itself. "ok", or a line starting with "error:".
 func reconnectTor() string { return reconnectTorAs(false) }
 
+// automatic's own bounce: past the gate and the floor, and it replaces a
+// reconnect still running
+func reconnectAuto() string { return reconnectTorBy(true, true) }
+
 // how long a reconnect may run before the next one takes over. every control
 // command in one carries a deadline, so a healthy one is done well inside it
 var stuckAfter = 2 * time.Minute
@@ -699,6 +703,10 @@ var reconnectStepHook func(owner int64, step string)
 func reconnectNow() string {
 	if torIsPaused() {
 		return "error: tor is asleep"
+	}
+	if autoGateHeld() {
+		log.Println("halo: reconnect deferred - automatic is trying a way in")
+		return "error: automatic is connecting"
 	}
 	routeFreshNetwork()
 	atomic.StoreInt64(&lastTorRestart, 0)
@@ -750,13 +758,23 @@ func reconnectRelease(me int64, done chan struct{}) {
 	close(done)
 }
 
-func reconnectTorAs(force bool) string {
+func reconnectTorAs(force bool) string { return reconnectTorBy(force, false) }
+
+// the one gate for every bounce. while automatic tries a way in, it alone
+// bounces tor: a rescue, the network bounce, the relay watchdog, a mode
+// switch or a manual restart would cut its attempt short. the gate has a
+// lifetime cap, see autoGateHeld.
+func reconnectTorBy(force, auto bool) string {
 	// asleep on purpose: the check-in mode takes tor off the network between
 	// checks, and every watchdog that finds it quiet comes through here. none
 	// of them may bring it back: that is the app's call, not a watchdog's.
 	if torIsPaused() {
 		log.Println("halo: reconnect skipped - tor is asleep on purpose")
 		return "error: tor is asleep"
+	}
+	if !auto && autoGateHeld() {
+		log.Println("halo: reconnect deferred - automatic is trying a way in")
+		return "error: automatic is connecting"
 	}
 	me, prev, done, why := reconnectClaim(force)
 	if why != "" {
@@ -777,7 +795,7 @@ func reconnectTorAs(force bool) string {
 	// a quiet-but-alive relay should not drive a loop. a bounce is cheap, so
 	// the floor is a minute.
 	now := time.Now().Unix()
-	if prev := atomic.LoadInt64(&lastTorRestart); !force && prev != 0 && now-prev < 60 {
+	if prev := atomic.LoadInt64(&lastTorRestart); !force && !auto && prev != 0 && now-prev < 60 {
 		log.Printf("halo: reconnect skipped - %ds since the last (floor 60s)", now-prev)
 		return "error: too soon"
 	}
@@ -883,6 +901,9 @@ func reconnectOn(t *tor.Tor, addr string, me int64) string {
 	}
 	if err := applyBridgeConf(t); err != nil {
 		log.Printf("halo: bridge config not applied: %v", err)
+		bridgeConfErr.Store(err.Error())
+	} else {
+		bridgeConfErr.Store("")
 	}
 	if !step("network on") {
 		return superseded
