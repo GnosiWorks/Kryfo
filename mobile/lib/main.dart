@@ -12466,6 +12466,7 @@ class AppState extends ChangeNotifier {
   // the window came to the front, or left it
   void appInFront(bool front) {
     _inFront = front;
+    if (front) retryStuckAuto();
     if (_deliveryMode == DeliveryMode.always) {
       if (front) backInFront();
       return;
@@ -13268,6 +13269,30 @@ class AppState extends ChangeNotifier {
     if (inDecoyView) return;
     engine.bridgeRetry();
     _newTorTry();
+  }
+
+  // back in front with automatic stuck, out of ways or held with none in
+  // place: it tries again, as it would on a tap. at most once a minute, so
+  // flicking between apps does not restart its passes. a decoy never asks
+  static const stuckRetryGap = Duration(minutes: 1);
+  DateTime? _stuckRetryAt;
+
+  @visibleForTesting
+  void retryStuckAuto({DateTime? now}) {
+    if (inDecoyView || _sendMode != 'private' || !_online || _torHeld) return;
+    if (_bridge.choice != BridgeChoice.auto) return;
+    final s = _bridgeStatus;
+    final held =
+        s.phase == 'trying' &&
+        !s.canSend &&
+        const {'pt_failed', 'not_applied', 'no_mode'}.contains(s.errorCode);
+    if (s.mode != 'auto' || !(s.exhausted || held)) return;
+    final at = now ?? DateTime.now();
+    final last = _stuckRetryAt;
+    if (last != null && at.difference(last) < stuckRetryGap) return;
+    _stuckRetryAt = at;
+    dlog('bridges: stuck on coming back, trying again');
+    bridgeRetry();
   }
 
   // the tor-is-blocked sheet is wanted: automatic found tor blocked on a

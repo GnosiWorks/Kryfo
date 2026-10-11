@@ -9,13 +9,19 @@
 // a tor stuck on a network that blocks it brings up the bridges card on time
 // alone, and a route torn down that climbs back to where it stuck keeps it.
 // bridges, a reconnect, a mode or a network the person changed start a try
-// of their own, and no card shows while it climbs.
+// of their own, and no card shows while it climbs. a mode that does not
+// save moves nothing, the app takes a mode once the engine has it, and a
+// tap on the modes page is never undone by a read still on its way. a stop
+// tor refuses is tried again, a check-in no relay answered is not taken for
+// one, and automatic stuck is asked again on coming back, once a minute.
 // the engine and the rows are stand-ins
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -23,8 +29,11 @@ import 'package:kryfo/container.dart';
 import 'package:kryfo/delivery_mode.dart';
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/main.dart'
-    show AppState, HaloEngine, useDatabasesForTest, useEngineForTest;
+    show AppState, HaloEngine, appState, useDatabasesForTest, useEngineForTest;
+import 'package:kryfo/l10n/l10n.dart';
+import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/router.dart';
+import 'package:kryfo/screens/modes_screen.dart';
 import 'package:kryfo/bridge_mode.dart';
 import 'package:kryfo/session.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -46,12 +55,16 @@ class _Engine implements HaloEngine {
   List<String> resumes = ['ok'];
   // a stop that takes its time, as one over a slow control port
   Completer<void>? stopGate;
+  // what each stop answers, the last one repeating. a refused one leaves
+  // tor on the network, as the engine does
+  List<String> stops = ['ok'];
   @override
   Future<String> torStop() async {
     log.add('stop');
     await stopGate?.future;
-    paused = true;
-    return 'ok';
+    final r = stops.length > 1 ? stops.removeAt(0) : stops.first;
+    if (!r.startsWith('error')) paused = true;
+    return r;
   }
 
   @override
@@ -93,6 +106,8 @@ class _Engine implements HaloEngine {
   @override
   void restartTor() => log.add('restart');
   @override
+  void bridgeRetry() => log.add('retry');
+  @override
   void networkChanged({bool online = true}) =>
       log.add(online ? 'network' : 'offline');
   @override
@@ -127,6 +142,28 @@ class _Rows extends ArrivalRows {
     calls.add('deleteConversation:$haloId');
     people.remove(haloId);
   }
+}
+
+// secure storage that can refuse the mode, as a keystore that fails does
+class _Store extends MapBase<String, String> {
+  final _m = <String, String>{};
+  bool refuse = false;
+  @override
+  String? operator [](Object? key) => _m[key];
+  @override
+  void operator []=(String key, String value) {
+    if (refuse && key == 'send_mode') {
+      throw PlatformException(code: 'keystore');
+    }
+    _m[key] = value;
+  }
+
+  @override
+  void clear() => _m.clear();
+  @override
+  Iterable<String> get keys => _m.keys;
+  @override
+  String? remove(Object? key) => _m.remove(key);
 }
 
 const _failing = [
@@ -381,12 +418,183 @@ void main() {
       expect(app.suggestFastFallback, isFalse);
     });
 
+    test('one that does not save moves nothing, and the next try still '
+        'moves the engine', () async {
+      final store = _Store();
+      FlutterSecureStorage.setMockInitialValues(store);
+      final app = await world();
+      store.refuse = true;
+      await expectLater(
+        app.setSendMode('balanced'),
+        throwsA(isA<PlatformException>()),
+      );
+      expect(app.sendMode, 'private');
+      expect(log.where((l) => l.startsWith('mode:')), isEmpty);
+
+      store.refuse = false;
+      await app.setSendMode('balanced');
+      expect(log.first, 'mode:balanced');
+      expect(app.sendMode, 'balanced');
+      expect(store['send_mode'], 'balanced');
+    });
+
+    test('the app takes the new mode once the engine has it', () async {
+      final app = await world();
+      final told = <String>[];
+      app.addListener(() {
+        final engineOn = log.lastWhere(
+          (l) => l.startsWith('mode:'),
+          orElse: () => 'mode:private',
+        );
+        told.add('${app.sendMode} ${engineOn.substring(5)}');
+      });
+      await app.setSendMode('balanced');
+      await app.setSendMode('private');
+      expect(told, isNotEmpty);
+      for (final t in told) {
+        final [app, engine] = t.split(' ');
+        expect(app, engine, reason: '$told');
+      }
+    });
+
+    testWidgets('a tap on the modes page is not undone by what the page read '
+        'as it opened', (t) async {
+      FlutterSecureStorage.setMockInitialValues({'send_mode': 'private'});
+      appState.sendModeForTest = 'private';
+      addTearDown(() => appState.sendModeForTest = 'private');
+      final live = ArrivalRows(HaloContainer.everyday);
+      useDatabasesForTest(live, Session(live));
+      await t.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const ModesScreen(),
+        ),
+      );
+      await t.pump();
+      await t.tap(find.text(l10n.modesRelay));
+      await t.pump();
+      // anything the page still had on its way comes in after the tap
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 200)),
+      );
+      await t.pump(const Duration(seconds: 1));
+      expect(log.lastWhere((l) => l.startsWith('mode:')), 'mode:balanced');
+      expect(appState.sendMode, 'balanced');
+      await t.pumpWidget(const SizedBox());
+      await t.pump(const Duration(seconds: 1));
+    });
+
     test('the boot sets the list before the invite address listens', () {
       final src = File('lib/main.dart').readAsStringSync();
       final boot = src.substring(src.indexOf("dlog('transport: booting in"));
       final init = boot.indexOf('engine.nostrInit(relaysFor(_sendMode));');
       expect(init, greaterThan(0));
       expect(init, lessThan(boot.indexOf('_loadFirstContact();')));
+    });
+  });
+
+  group('a tor stop that fails', () {
+    testWidgets('is tried again while tor is meant to sleep', (t) async {
+      eng.stops = ['error: timeout', 'ok'];
+      final app = AppState()..deliveryModeForTest = DeliveryMode.checkins;
+      app.appInFront(false);
+      await t.pump(const Duration(seconds: 95));
+      expect(log, ['stop']);
+      expect(eng.paused, isFalse);
+      await t.pump(const Duration(seconds: 31));
+      expect(log, ['stop', 'stop']);
+      expect(eng.paused, isTrue);
+      expect(app.torHeld, isTrue);
+      // asleep for real: nothing more
+      await t.pump(const Duration(minutes: 3));
+      expect(log, ['stop', 'stop']);
+    });
+
+    testWidgets('is not tried again once the app is back', (t) async {
+      eng.stops = ['error: timeout'];
+      final app = AppState()..deliveryModeForTest = DeliveryMode.checkins;
+      app.appInFront(false);
+      await t.pump(const Duration(seconds: 95));
+      app.appInFront(true);
+      await t.pump();
+      await t.pump(const Duration(minutes: 2));
+      expect(log.where((l) => l == 'stop'), hasLength(1));
+    });
+  });
+
+  group('a check-in', () {
+    testWidgets('that no relay answered is not taken for one', (t) async {
+      final app = AppState()
+        ..sendModeForTest = 'balanced'
+        ..deliveryModeForTest = DeliveryMode.checkins;
+      var at = DateTime(2026, 10, 11, 12);
+      app.checkClockForTest = () => at;
+      var n = -1;
+      unawaited(app.checkIn(why: 'job').then((v) => n = v));
+      for (var i = 0; i < 70; i++) {
+        at = at.add(const Duration(seconds: 1));
+        await t.pump(const Duration(seconds: 1));
+      }
+      expect(n, 0);
+      expect(app.lastCheckAt, 0);
+      expect(checkInOk(app.lastCheckHow), isFalse);
+      expect(checkInLine(app.lastCheckHow), contains(l10n.appNoRelayReached));
+    });
+  });
+
+  group('automatic stuck, on coming back', () {
+    final t0 = DateTime(2026, 10, 11, 12);
+    AppState stuck(BridgeStatus s) {
+      final app = AppState()
+        ..sendModeForTest = 'private'
+        ..bridgeSetupForTest = const BridgeSetup(choice: BridgeChoice.auto);
+      app.noteOnline(true);
+      app.setBridgeStatusForTest(s);
+      return app;
+    }
+
+    int retries() => log.where((l) => l == 'retry').length;
+
+    test('out of ways or held with none in place, it tries again, once a '
+        'minute at most', () {
+      for (final s in const [
+        BridgeStatus(mode: 'auto', phase: 'exhausted'),
+        BridgeStatus(mode: 'auto', phase: 'trying', errorCode: 'pt_failed'),
+      ]) {
+        log.clear();
+        final app = stuck(s);
+        app.appInFront(true);
+        expect(retries(), 1, reason: s.phase);
+        app.appInFront(false);
+        app.appInFront(true);
+        app.retryStuckAuto(
+          now: DateTime.now().add(const Duration(seconds: 30)),
+        );
+        expect(retries(), 1, reason: s.phase);
+        app.retryStuckAuto(
+          now: DateTime.now().add(const Duration(seconds: 61)),
+        );
+        expect(retries(), 2, reason: s.phase);
+      }
+    });
+
+    test('not while it gets somewhere, not off onion, never in a decoy', () {
+      stuck(
+        const BridgeStatus(mode: 'auto', phase: 'connected', canSend: true),
+      ).retryStuckAuto(now: t0);
+      stuck(
+        const BridgeStatus(mode: 'auto', phase: 'trying', progress: 40),
+      ).retryStuckAuto(now: t0);
+      (stuck(
+        const BridgeStatus(mode: 'auto', phase: 'exhausted'),
+      )..sendModeForTest = 'balanced').retryStuckAuto(now: t0);
+      lockState.inDecoy = true;
+      addTearDown(() => lockState.inDecoy = false);
+      stuck(
+        const BridgeStatus(mode: 'auto', phase: 'exhausted'),
+      ).retryStuckAuto(now: t0);
+      expect(retries(), 0);
     });
   });
 
