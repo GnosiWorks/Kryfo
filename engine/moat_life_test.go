@@ -298,6 +298,8 @@ func TestBridgeCacheKeepsOnlyLinesInUse(t *testing.T) {
 	if len(obfs) == 0 || len(wt) == 0 {
 		t.Fatal("fixture lacks obfs4 or webtunnel")
 	}
+	// the old call waits for the decoy to be known closed
+	setDecoy(false)
 	setBridges(obfs[0], true)
 
 	setDecoy(true)

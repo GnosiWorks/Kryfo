@@ -36,6 +36,9 @@ type fakeControl struct {
 }
 
 // the setconf and resetconf lines it was sent, in order
+// set, the fake answers a bridge SETCONF with tor's refusal
+var fakeBridgeFail atomic.Bool
+
 func (f *fakeControl) sent() []string {
 	f.mu.Lock()
 	defer f.mu.Unlock()
@@ -88,6 +91,10 @@ func (f *fakeControl) handle(c net.Conn) {
 			}
 			if strings.Contains(cmd, "BRIDGE") {
 				time.Sleep(time.Duration(f.slow.Load()))
+			}
+			if fakeBridgeFail.Load() && strings.HasPrefix(cmd, "SETCONF") && strings.Contains(cmd, "USEBRIDGES=1") {
+				fmt.Fprint(c, "552 nope\r\n")
+				continue
 			}
 			fmt.Fprint(c, "250 OK\r\n")
 		}

@@ -15,8 +15,10 @@ import (
 func unknownMode(t *testing.T) {
 	t.Helper()
 	modeSet.Store(false)
+	restoreUsed.Store(false)
 	t.Cleanup(func() {
 		modeSet.Store(true)
+		restoreUsed.Store(false)
 		decoyState.Store(decoyOff)
 	})
 }
@@ -42,7 +44,7 @@ func TestDecoyColdStartKeepsBridges(t *testing.T) {
 	if r := setBridgeMode(bmDirect, ""); r != "error: decoy" {
 		t.Fatalf("a pick in a decoy: %q", r)
 	}
-	if r := restoreBridgeMode(bmDirect, ""); r != "error: mode already set" {
+	if r := restoreBridgeMode(bmDirect, ""); r != "error: restore used" {
 		t.Fatalf("a second restore: %q", r)
 	}
 	if !bridgesEnabled() {

@@ -550,6 +550,7 @@ func bridgeTorArgs() []string {
 	if startPTListeners() != nil {
 		return nil
 	}
+	gen := linesGen.Load()
 	args := []string{"--UseBridges", "1"}
 	for _, p := range ptPlugins() {
 		args = append(args, "--ClientTransportPlugin", p)
@@ -559,6 +560,8 @@ func bridgeTorArgs() []string {
 		args = append(args, "--Bridge", b)
 	}
 	log.Printf("bridges: handing tor %d bridge lines", len(lines))
+	// tor starts holding these, unless they changed while read
+	linesApplied.Store(gen)
 	return args
 }
 
@@ -902,9 +905,9 @@ func setBridges(raw string, on bool) string {
 	if why := legacyMode(); why != "" {
 		return why
 	}
-	// the old way says it outright too: these lines, or none
-	modeSet.Store(true)
 	good, bad, checks := sortBridgeLines(raw)
+	// the old way says it outright too: these lines, or none. lines asked
+	// for with none readable say nothing
 	lineChecksMu.Lock()
 	lineChecks = checks
 	lineChecksMu.Unlock()
@@ -917,6 +920,10 @@ func setBridges(raw string, on bool) string {
 	bridgeOn = on && len(good) > 0
 	enabled := bridgeOn
 	bridgeMu.Unlock()
+	noteLinesChanged()
+	if !on || len(good) > 0 {
+		modeSet.Store(true)
+	}
 
 	if enabled {
 		if err := startPTListeners(); err != nil {
@@ -943,6 +950,10 @@ func HaloBridgeLineChecks() *C.char {
 }
 
 func bridgeLineChecks() string {
+	// what lines were kept is not a decoy's to know
+	if !decoyClosed() {
+		return "[]"
+	}
 	lineChecksMu.Lock()
 	defer lineChecksMu.Unlock()
 	b, _ := json.Marshal(append([]lineCheck{}, lineChecks...))

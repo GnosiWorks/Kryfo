@@ -131,13 +131,15 @@ func TestAutoBridgeStepWithoutListenersFails(t *testing.T) {
 	}
 }
 
-// tor came up without the step's bridges: the step fails at once, so the
-// pass, which has counted it, moves on
+// tor came up without the step's bridges: the step puts them in place by a
+// bounce of its own, and when that fails it fails at once, so the pass,
+// which has counted it, moves on
 func TestAutoPassSkipsAStepWithoutListeners(t *testing.T) {
 	fa := useFakeAuto(t, wifi())
 	ptListenersFail(t)
 	fa.started = false
 	fa.at(time.Second, func() { fa.started = true })
+	fa.applyErr["obfs4"] = errPTDown
 	p := passCtx{gen: autoGen(), epoch: netEpoch.Load(), valid: autoValidFlips.Load()}
 	s := autoStep{Method: "obfs4", Source: "builtin", Lines: builtinLines("obfs4")}
 	t0 := fa.now
@@ -146,5 +148,8 @@ func TestAutoPassSkipsAStepWithoutListeners(t *testing.T) {
 	}
 	if took := fa.now.Sub(t0); took > 5*time.Second {
 		t.Fatalf("took %v to give up", took)
+	}
+	if len(fa.applied) != 1 || fa.applied[0] != "obfs4/builtin" {
+		t.Fatalf("held tor not bounced: %v", fa.applied)
 	}
 }
