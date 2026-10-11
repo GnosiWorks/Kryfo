@@ -1073,7 +1073,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get bridgesMoatFailed =>
-      'Il progetto tor non risponde. Riprova tra un minuto, o incolla una riga bridge qui sotto.';
+      'Il Progetto Tor non risponde. Riprova tra un minuto, o incolla una riga bridge qui sotto.';
 
   @override
   String get bridgesGotBridgesSaveTo => 'Bridge ricevuti · salva per usarli';
@@ -1093,14 +1093,14 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get bridgesBridgesDisguiseYourConnection =>
-      'I bridge camuffano la tua connessione così può uscire. Scegli una via d\'accesso, salva, e tor si riconnette attraverso quella.';
+      'I bridge camuffano la tua connessione così può uscire. Scegli una via d\'accesso, salva, e Tor si riconnette attraverso quella.';
 
   @override
   String get bridgesBridgesOnlyChangeHow =>
-      'I bridge cambiano solo il modo in cui tor si connette, e ora non sei in modalità onion. Quello che imposti qui viene salvato, solo che non ha effetto finché non torni alla modalità onion.';
+      'I bridge cambiano solo il modo in cui Tor si connette, e ora non sei in modalità onion. Quello che imposti qui viene salvato, solo che non ha effetto finché non torni alla modalità onion.';
 
   @override
-  String get bridgesFromTheTorProject => 'Dal progetto tor';
+  String get bridgesFromTheTorProject => 'Dal Progetto Tor';
 
   @override
   String get bridgesNoise => 'Rumore';
@@ -1110,7 +1110,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get bridgesMakesTorTrafficLook =>
-      'Fa sembrare il traffico tor nulla di particolare. La scelta migliore per la maggior parte delle reti bloccate. Rispondi a un captcha, poi ti dà qualche riga.';
+      'Fa sembrare il traffico Tor nulla di particolare. La scelta migliore per la maggior parte delle reti bloccate. Rispondi a un captcha, poi ti dà qualche riga.';
 
   @override
   String get bridgesPrivateBridge => 'Bridge privato';
@@ -1153,7 +1153,7 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String get bridgesRestartingTor => 'Riavvio di tor…';
+  String get bridgesRestartingTor => 'Riavvio di Tor…';
 
   @override
   String bridgesFindingABridgeS(Object elapsed) {
@@ -1176,7 +1176,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get bridgesATorEntryPoint =>
-      'Un punto d\'ingresso a tor che nessuno ha pubblicato, raggiunto attraverso un involucro perché la connessione non sembri tor. Il resto del percorso sono i soliti tre salti.';
+      'Un punto d\'ingresso a Tor che nessuno ha pubblicato, raggiunto attraverso un involucro perché la connessione non sembri Tor. Il resto del percorso sono i soliti tre salti.';
 
   @override
   String get bridgesLooksLike => 'Sembra';
@@ -1189,15 +1189,15 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get bridgesAskTheTorProject =>
-      'Chiedili direttamente al progetto tor. Risolvi un rompicapo, così i bot non possono esaurire la scorta.';
+      'Chiedili direttamente al Progetto Tor. Risolvi un rompicapo, così i bot non possono esaurire la scorta.';
 
   @override
   String get bridgesTypeWhatYouSee =>
       'Scrivi quello che vedi. Vanno bene le minuscole.';
 
   @override
-  String get bridgesThisOneRequestDoes =>
-      'Questa sola richiesta non passa per tor - non può, visto che è proprio tor a non funzionare. Chi gestisce la tua rete vedrà che contatti il progetto tor. Se già questo è un problema dove ti trovi, procurati i bridge altrove e incollali qui sotto.';
+  String get bridgesWhenYouAskFor =>
+      'Quando chiedi dei bridge, il Progetto Tor vede il tuo indirizzo IP. È normale: è così che Tor Browser e ogni app Tor ottengono i bridge, e tutto ciò che ne ricavano è che qualcuno ha chiesto dei bridge. Niente sulle tue chat.';
 
   @override
   String get bridgesCouldNotDrawThe => 'Impossibile disegnare il rompicapo';

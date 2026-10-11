@@ -1059,7 +1059,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get bridgesMoatFailed =>
-      'Tidak bisa menghubungi tor project. Coba lagi sebentar lagi, atau tempel baris jembatan di bawah.';
+      'Tidak bisa menghubungi Tor Project. Coba lagi sebentar lagi, atau tempel baris jembatan di bawah.';
 
   @override
   String get bridgesGotBridgesSaveTo =>
@@ -1079,14 +1079,14 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get bridgesBridgesDisguiseYourConnection =>
-      'Jembatan menyamarkan koneksimu agar bisa lolos keluar. Pilih satu jalan masuk, simpan, lalu tor tersambung ulang lewat jalan itu.';
+      'Jembatan menyamarkan koneksimu agar bisa lolos keluar. Pilih satu jalan masuk, simpan, lalu Tor tersambung ulang lewat jalan itu.';
 
   @override
   String get bridgesBridgesOnlyChangeHow =>
-      'Jembatan hanya mengubah cara tor terhubung, dan saat ini kamu tidak di mode onion. Pengaturan di sini tetap disimpan, hanya saja tidak berpengaruh sampai kamu kembali ke mode itu.';
+      'Jembatan hanya mengubah cara Tor terhubung, dan saat ini kamu tidak di mode onion. Pengaturan di sini tetap disimpan, hanya saja tidak berpengaruh sampai kamu kembali ke mode itu.';
 
   @override
-  String get bridgesFromTheTorProject => 'Dari tor project';
+  String get bridgesFromTheTorProject => 'Dari Tor Project';
 
   @override
   String get bridgesNoise => 'Derau';
@@ -1096,7 +1096,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get bridgesMakesTorTrafficLook =>
-      'Membuat lalu lintas tor tidak tampak seperti apa pun. Pilihan bawaan terbaik untuk kebanyakan jaringan yang diblokir. Jawab captcha, lalu kamu dapat beberapa baris.';
+      'Membuat lalu lintas Tor tidak tampak seperti apa pun. Pilihan bawaan terbaik untuk kebanyakan jaringan yang diblokir. Jawab captcha, lalu kamu dapat beberapa baris.';
 
   @override
   String get bridgesPrivateBridge => 'Jembatan pribadi';
@@ -1138,7 +1138,7 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get bridgesRestartingTor => 'Memulai ulang tor…';
+  String get bridgesRestartingTor => 'Memulai ulang Tor…';
 
   @override
   String bridgesFindingABridgeS(Object elapsed) {
@@ -1161,7 +1161,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get bridgesATorEntryPoint =>
-      'Pintu masuk tor yang tidak dipublikasikan siapa pun, dicapai lewat pembungkus agar koneksinya tidak tampak seperti tor. Sisa rutenya tetap tiga lompatan seperti biasa.';
+      'Pintu masuk Tor yang tidak dipublikasikan siapa pun, dicapai lewat pembungkus agar koneksinya tidak tampak seperti Tor. Sisa rutenya tetap tiga lompatan seperti biasa.';
 
   @override
   String get bridgesLooksLike => 'Terlihat seperti';
@@ -1174,15 +1174,15 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get bridgesAskTheTorProject =>
-      'Minta langsung ke tor project. Kamu memecahkan teka-teki agar bot tidak bisa menghabiskan persediaannya.';
+      'Minta langsung ke Tor Project. Kamu memecahkan teka-teki agar bot tidak bisa menghabiskan persediaannya.';
 
   @override
   String get bridgesTypeWhatYouSee =>
       'Ketik yang kamu lihat. Huruf kecil tidak masalah.';
 
   @override
-  String get bridgesThisOneRequestDoes =>
-      'Permintaan yang satu ini tidak lewat tor - memang tidak bisa, karena tor-lah yang sedang tidak jalan. Siapa pun yang mengelola jaringanmu akan melihat kamu menghubungi tor project. Kalau itu saja sudah jadi masalah di tempatmu, cari jembatan di tempat lain dan tempel di bawah.';
+  String get bridgesWhenYouAskFor =>
+      'Saat kamu meminta jembatan, Tor Project melihat alamat IP-mu. Itu wajar: begitulah Tor Browser dan semua aplikasi Tor mendapatkan jembatan, dan yang mereka ketahui hanyalah ada seseorang yang meminta jembatan. Tidak ada apa pun tentang obrolanmu.';
 
   @override
   String get bridgesCouldNotDrawThe => 'Gagal menampilkan teka-teki';

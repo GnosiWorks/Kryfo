@@ -546,7 +546,7 @@ void main() {
     expect(l.bridgesThatWasNotIt, "That was not it. Here is another.");
     expect(
       l.bridgesMoatFailed,
-      "Couldn't reach the tor project. Try again in a minute, or paste a bridge line below.",
+      "Couldn't reach the Tor Project. Try again in a minute, or paste a bridge line below.",
     );
     expect(
       l.bridgesCouldNotApply,
@@ -559,18 +559,18 @@ void main() {
     expect(l.bridgesTorIsBlockedWhere, "Tor is blocked where you are?");
     expect(
       l.bridgesBridgesDisguiseYourConnection,
-      "Bridges disguise your connection so it can get out. Pick one way in, save, and tor reconnects through it.",
+      "Bridges disguise your connection so it can get out. Pick one way in, save, and Tor reconnects through it.",
     );
     expect(
       l.bridgesBridgesOnlyChangeHow,
-      "Bridges only change how tor connects, and you are not on onion mode right now. What you set here is saved, it just does nothing until you switch back.",
+      "Bridges only change how Tor connects, and you are not on onion mode right now. What you set here is saved, it just does nothing until you switch back.",
     );
-    expect(l.bridgesFromTheTorProject, "From the tor project");
+    expect(l.bridgesFromTheTorProject, "From the Tor Project");
     expect(l.bridgesNoise, "Noise");
     expect(l.bridgesGood, "Good");
     expect(
       l.bridgesMakesTorTrafficLook,
-      "Makes tor traffic look like nothing in particular. The best default for most blocked networks. Answers a captcha, then hands you a few lines.",
+      "Makes Tor traffic look like nothing in particular. The best default for most blocked networks. Answers a captcha, then hands you a few lines.",
     );
     expect(l.bridgesPrivateBridge, "Private bridge");
     expect(l.bridgesALineFromA, "A line from a friend");
@@ -587,7 +587,7 @@ void main() {
     expect(l.bridges1LineSaved(1), "1 line saved");
     expect(l.bridges1LineSaved(2), "2 lines saved");
     expect(l.bridges1LineSaved(5), "5 lines saved");
-    expect(l.bridgesRestartingTor, "Restarting tor…");
+    expect(l.bridgesRestartingTor, "Restarting Tor…");
     expect(
       l.bridgesFindingABridgeS("<elapsed>"),
       "Finding a bridge… <elapsed>s",
@@ -598,19 +598,19 @@ void main() {
     expect(l.bridgesWhatABridgeIs, "What a bridge is");
     expect(
       l.bridgesATorEntryPoint,
-      "A tor entry point nobody has published, reached through a wrapper so the connection does not look like tor. The rest of the route is the usual three hops.",
+      "A Tor entry point nobody has published, reached through a wrapper so the connection does not look like Tor. The rest of the route is the usual three hops.",
     );
     expect(l.bridgesLooksLike, "Looks like");
     expect(l.bridgesSpeed, "Speed");
     expect(l.bridgesGetBridges, "Get bridges");
     expect(
       l.bridgesAskTheTorProject,
-      "Ask the tor project directly. You solve a puzzle so bots cannot drain the supply.",
+      "Ask the Tor Project directly. You solve a puzzle so bots cannot drain the supply.",
     );
     expect(l.bridgesTypeWhatYouSee, "Type what you see. Lowercase is fine.");
     expect(
-      l.bridgesThisOneRequestDoes,
-      "This one request does not go through tor - it cannot, since tor is what is not working. Whoever runs your network will see you contacting the tor project. If that alone is a problem where you are, get bridges somewhere else and paste them below.",
+      l.bridgesWhenYouAskFor,
+      "When you ask for bridges, the Tor Project sees your address. That's normal: it's how Tor Browser and every Tor app get bridges, and all it tells them is that someone asked for bridges. Nothing about your chats.",
     );
     expect(l.bridgesCouldNotDrawThe, "Could not draw the puzzle");
     expect(l.bridgesAnswer, "Answer");

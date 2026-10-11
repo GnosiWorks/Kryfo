@@ -139,21 +139,49 @@ Future<bool> keepOwnGroupFile(String path, Future<bool> Function() save) async {
 
 // a group gone from here closes its screen. in front it simply goes; under
 // other screens only when this phone was taken out, since a leave from the
-// info screen pops both itself and one more pop would close the app
+// info screen pops both itself and one more pop would close the app.
+// [above] is what stands over it, nearest first: what it opened goes with
+// it, a chat opened over that from elsewhere stays with all above it
 @visibleForTesting
 bool closeGoneGroup(
   NavigatorState nav,
   Route<dynamic> route, {
   required bool removed,
+  List<Route<dynamic>> above = const [],
 }) {
   if (route.isCurrent) {
     nav.pop();
     return true;
   }
   if (!removed || !route.isActive) return false;
-  nav.popUntil((r) => r == route);
-  nav.pop();
+  final stop = above.indexWhere(isChatPage);
+  if (stop < 0) {
+    nav.popUntil((r) => r == route);
+    nav.pop();
+    return true;
+  }
+  for (final r in above.take(stop).toList().reversed) {
+    if (r.isActive) nav.removeRoute(r);
+  }
+  nav.removeRoute(route);
   return true;
+}
+
+/// an incoming bubble names its sender at the start of their run: after
+/// someone else, after one of ours, under a new day's chip. a flagged
+/// member's name line shows on every one, since the mark lives there
+@visibleForTesting
+bool startsSenderRun({
+  required String sender,
+  required DateTime when,
+  required ({String sender, bool inbound, DateTime when})? prev,
+  bool flagged = false,
+}) {
+  if (flagged || prev == null) return true;
+  if (prev.sender != sender || !prev.inbound) return true;
+  return prev.when.year != when.year ||
+      prev.when.month != when.month ||
+      prev.when.day != when.day;
 }
 
 // the groups open in the stack, by id: a tap for one goes back to it
@@ -746,7 +774,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         final route = ModalRoute.of(context);
         if (route == null) return;
         final nav = Navigator.of(context);
-        final closed = closeGoneGroup(nav, route, removed: removed != null);
+        final closed = closeGoneGroup(
+          nav,
+          route,
+          removed: removed != null,
+          above: routeStack.above(route),
+        );
         if (closed && removed != null) {
           showHaloToast(nav.context, l10n.groupChatYouWereRemovedFrom(removed));
         }
@@ -1181,14 +1214,20 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final m = _messages[i];
     final prev = i > 0 ? _messages[i - 1] : null;
     final shieldFlag = m.direction == 'in' ? _shieldFlags[m.sender] : null;
-    // a flagged member's name line shows on every one of their bubbles,
-    // since the mark lives there
     final showSender =
         m.direction == 'in' &&
-        (shieldFlag != null ||
-            prev == null ||
-            prev.sender != m.sender ||
-            prev.direction != 'in');
+        startsSenderRun(
+          sender: m.sender,
+          when: m.when,
+          flagged: shieldFlag != null,
+          prev: prev == null
+              ? null
+              : (
+                  sender: prev.sender,
+                  inbound: prev.direction == 'in',
+                  when: prev.when,
+                ),
+        );
     String? quoted;
     String? quotedAuthor;
     StickerWire? quotedSticker;
@@ -1540,6 +1579,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           fileName: m.mediaPath != null ? null : m.fileName,
           voice: m.fileName == 'voice.wav',
           voiceDisguised: m.voiceDisguised,
+          replyTo: m.replyTo,
           burnSeconds: m.burnSecs,
           // when it was written, not now
           writtenAt: m.when.millisecondsSinceEpoch,
@@ -1904,12 +1944,14 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final f = File('${mediaDir.path}/$uid.${pictureExt(bytes)}');
     await f.writeAsBytes(bytes);
     final burn = _ghost ? _burnSeconds : null;
+    final reply = _takeReply();
     final m = _GMsg(
       sender: appState.sessionId,
       direction: 'out',
       text: caption,
       when: DateTime.now(),
       msgUid: uid,
+      replyTo: reply,
       sending: true,
       mediaPath: f.path,
       burnSecs: burn,
@@ -1928,6 +1970,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         caption,
         groupId: widget.groupId,
         msgUid: uid,
+        replyTo: reply,
         mediaPath: f.path,
         burnSecs: burn,
       ),
@@ -1941,10 +1984,18 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           f.path,
           msgUid: uid,
           caption: caption,
+          replyTo: reply,
           burnSeconds: burn,
         ),
       ),
     );
+  }
+
+  // the message being answered goes with the next file, and its bar with it
+  String? _takeReply() {
+    final r = _replyTo?.msgUid;
+    if (_replyTo != null && mounted) setState(() => _replyTo = null);
+    return r;
   }
 
   Future<void> _sendGroupVoice(String srcPath, int ms) async {
@@ -1959,12 +2010,14 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final dest = File('${mediaDir.path}/vn_$uid.wav');
     await dest.writeAsBytes(bytes);
     final burn = _ghost ? _burnSeconds : null;
+    final reply = _takeReply();
     final m = _GMsg(
       sender: appState.sessionId,
       direction: 'out',
       text: '',
       when: DateTime.now(),
       msgUid: uid,
+      replyTo: reply,
       sending: true,
       filePath: dest.path,
       fileName: 'voice.wav',
@@ -1985,6 +2038,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         '',
         groupId: widget.groupId,
         msgUid: uid,
+        replyTo: reply,
         filePath: dest.path,
         fileName: 'voice.wav',
         voiceDisguised: _disguise,
@@ -1999,6 +2053,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           widget.groupId,
           dest.path,
           msgUid: uid,
+          replyTo: reply,
           fileName: 'voice.wav',
           voice: true,
           voiceDisguised: _disguise,
@@ -2104,12 +2159,14 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       return;
     }
     final burn = _ghost ? _burnSeconds : null;
+    final reply = _takeReply();
     final m = _GMsg(
       sender: appState.sessionId,
       direction: 'out',
       text: '',
       when: DateTime.now(),
       msgUid: uid,
+      replyTo: reply,
       sending: true,
       filePath: dest.path,
       fileName: name,
@@ -2129,6 +2186,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         '',
         groupId: widget.groupId,
         msgUid: uid,
+        replyTo: reply,
         filePath: dest.path,
         fileName: name,
         burnSecs: burn,
@@ -2142,6 +2200,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           widget.groupId,
           dest.path,
           msgUid: uid,
+          replyTo: reply,
           fileName: name,
           burnSeconds: burn,
         ),
@@ -2618,22 +2677,20 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                   child: fading(
                     MenuPop(
                       fromRight: isOut,
-                      child: Material(
-                        color: Colors.transparent,
-                        child: _EmojiPickerBubble(
-                          emojis: const ['❤️', '👍', '😂', '😮', '😢', '🔥'],
-                          selected: target.reactions[''],
-                          onPick: (e) {
-                            dismiss();
-                            final added = target.reactions[''] != e;
-                            _toggleReaction(target, e);
-                            if (added) _flashReaction(target);
-                          },
-                          onReply: () {
-                            dismiss();
-                            setState(() => _replyTo = target);
-                          },
-                        ),
+                      child: ReactionPicker(
+                        replyLabel: l10n.groupChatReply,
+                        emojis: const ['❤️', '👍', '😂', '😮', '😢', '🔥'],
+                        selected: target.reactions[''],
+                        onPick: (e) {
+                          dismiss();
+                          final added = target.reactions[''] != e;
+                          _toggleReaction(target, e);
+                          if (added) _flashReaction(target);
+                        },
+                        onReply: () {
+                          dismiss();
+                          setState(() => _replyTo = target);
+                        },
                       ),
                     ),
                   ),
@@ -5509,162 +5566,8 @@ class _GroupBubble extends StatelessWidget {
   String _fmtTime(DateTime t) => hourMinute(t);
 
   // the flame and what is left, the flame low while the clock waits
-  Widget _burnPill(int left, {required bool waits, required Color color}) {
-    final style = HaloType.mono(size: 9, color: color, letter: 0.2);
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        BurnFlame(
-          waiting: waits,
-          child: Text('🔥', style: style),
-        ),
-        Text(' ${burnLeft(left)}', style: style),
-      ],
-    );
-  }
-}
-
-// ───────── reaction picker ─────────
-
-// the reactions and reply over a long-pressed message. it grows in with
-// the menu around it
-class _EmojiPickerBubble extends StatelessWidget {
-  final List<String> emojis;
-  final String? selected;
-  final void Function(String) onPick;
-  final VoidCallback onReply;
-  const _EmojiPickerBubble({
-    required this.emojis,
-    required this.selected,
-    required this.onPick,
-    required this.onReply,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
-      decoration: BoxDecoration(
-        color: HaloColors.surface2,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: HaloColors.line, width: 0.5),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.5),
-            blurRadius: 28,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (final e in emojis)
-            _EmojiTap(
-              emoji: e,
-              selected: e == selected,
-              onTap: () => onPick(e),
-            ),
-          Container(
-            width: 0.5,
-            height: 28,
-            margin: const EdgeInsets.symmetric(horizontal: 4),
-            color: HaloColors.line2,
-          ),
-          Semantics(
-            label: l10n.groupChatReply,
-            button: true,
-            child: _ActionTap(icon: Icons.reply_rounded, onTap: onReply),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _EmojiTap extends StatefulWidget {
-  final String emoji;
-  final bool selected;
-  final VoidCallback onTap;
-  const _EmojiTap({
-    required this.emoji,
-    required this.selected,
-    required this.onTap,
-  });
-  @override
-  State<_EmojiTap> createState() => _EmojiTapState();
-}
-
-class _EmojiTapState extends State<_EmojiTap> {
-  double _scale = 1.0;
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _scale = 0.85),
-      onTapUp: (_) {
-        setState(() => _scale = 1.0);
-        widget.onTap();
-      },
-      onTapCancel: () => setState(() => _scale = 1.0),
-      child: AnimatedScale(
-        scale: _scale,
-        duration: const Duration(milliseconds: 90),
-        curve: Curves.easeOut,
-        child: Container(
-          width: 46,
-          height: 46,
-          decoration: BoxDecoration(
-            color: widget.selected ? HaloColors.amberSoft : Colors.transparent,
-            border: widget.selected
-                ? Border.all(color: HaloColors.amber, width: 1.2)
-                : null,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          alignment: Alignment.center,
-          child: Text(widget.emoji, style: const TextStyle(fontSize: 24)),
-        ),
-      ),
-    );
-  }
-}
-
-class _ActionTap extends StatefulWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-  const _ActionTap({required this.icon, required this.onTap});
-  @override
-  State<_ActionTap> createState() => _ActionTapState();
-}
-
-class _ActionTapState extends State<_ActionTap> {
-  double _scale = 1.0;
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _scale = 0.85),
-      onTapUp: (_) {
-        setState(() => _scale = 1.0);
-        widget.onTap();
-      },
-      onTapCancel: () => setState(() => _scale = 1.0),
-      child: AnimatedScale(
-        scale: _scale,
-        duration: const Duration(milliseconds: 90),
-        curve: Curves.easeOut,
-        child: Container(
-          width: 46,
-          height: 46,
-          decoration: BoxDecoration(
-            color: HaloColors.surface3,
-            border: Border.all(color: HaloColors.line, width: 0.5),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          alignment: Alignment.center,
-          child: Icon(widget.icon, size: 20, color: HaloColors.amber),
-        ),
-      ),
-    );
-  }
+  Widget _burnPill(int left, {required bool waits, required Color color}) =>
+      BurnLine(burnLeft(left), waits: waits, color: color);
 }
 
 // a photo whose file is gone: a quiet tile in the bubble's place

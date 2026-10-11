@@ -1097,7 +1097,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get bridgesMoatFailed =>
-      'Не удалось связаться с проектом tor. Попробуй через минуту или вставь строку моста ниже.';
+      'Не удалось связаться с проектом Tor. Попробуй через минуту или вставь строку моста ниже.';
 
   @override
   String get bridgesGotBridgesSaveTo =>
@@ -1118,14 +1118,14 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get bridgesBridgesDisguiseYourConnection =>
-      'Мосты маскируют твоё подключение, чтобы оно могло пробиться наружу. Выбери способ входа, сохрани — и tor переподключится через него.';
+      'Мосты маскируют твоё подключение, чтобы оно могло пробиться наружу. Выбери способ входа, сохрани — и Tor переподключится через него.';
 
   @override
   String get bridgesBridgesOnlyChangeHow =>
-      'Мосты меняют только то, как подключается tor, а ты сейчас не в режиме Onion. Всё, что ты здесь настроишь, сохранится, просто ничего не будет делать, пока ты не вернёшься в этот режим.';
+      'Мосты меняют только то, как подключается Tor, а ты сейчас не в режиме Onion. Всё, что ты здесь настроишь, сохранится, просто ничего не будет делать, пока ты не вернёшься в этот режим.';
 
   @override
-  String get bridgesFromTheTorProject => 'От проекта tor';
+  String get bridgesFromTheTorProject => 'От проекта Tor';
 
   @override
   String get bridgesNoise => 'Шум';
@@ -1135,7 +1135,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get bridgesMakesTorTrafficLook =>
-      'Делает трафик tor ни на что конкретное не похожим. Лучший выбор для большинства заблокированных сетей. Решаешь капчу — получаешь несколько строк.';
+      'Делает трафик Tor ни на что конкретное не похожим. Лучший выбор для большинства заблокированных сетей. Решаешь капчу — получаешь несколько строк.';
 
   @override
   String get bridgesPrivateBridge => 'Частный мост';
@@ -1180,7 +1180,7 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get bridgesRestartingTor => 'Перезапуск tor…';
+  String get bridgesRestartingTor => 'Перезапуск Tor…';
 
   @override
   String bridgesFindingABridgeS(Object elapsed) {
@@ -1203,7 +1203,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get bridgesATorEntryPoint =>
-      'Точка входа в tor, которую никто не публиковал. К ней подключаются через обёртку, чтобы соединение не было похоже на tor. Дальше маршрут — обычные три узла.';
+      'Точка входа в Tor, которую никто не публиковал. К ней подключаются через обёртку, чтобы соединение не было похоже на Tor. Дальше маршрут — обычные три узла.';
 
   @override
   String get bridgesLooksLike => 'Похоже на';
@@ -1216,14 +1216,14 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get bridgesAskTheTorProject =>
-      'Запроси мосты прямо у проекта tor. Нужно решить головоломку, чтобы боты не выгребли весь запас.';
+      'Запроси мосты прямо у проекта Tor. Нужно решить головоломку, чтобы боты не выгребли весь запас.';
 
   @override
   String get bridgesTypeWhatYouSee => 'Введи то, что видишь. Можно строчными.';
 
   @override
-  String get bridgesThisOneRequestDoes =>
-      'Этот единственный запрос идёт не через tor — иначе никак, ведь не работает как раз tor. Тот, кто управляет твоей сетью, увидит, что ты обращаешься к проекту tor. Если там, где ты, уже одно это — проблема, возьми мосты в другом месте и вставь их ниже.';
+  String get bridgesWhenYouAskFor =>
+      'Когда ты запрашиваешь мосты, проект Tor видит твой IP-адрес. Это нормально: так мосты получают Tor Browser и любое приложение Tor, и всё, что он из этого узнаёт, — что кто-то запросил мосты. Ничего о твоих чатах.';
 
   @override
   String get bridgesCouldNotDrawThe => 'Не удалось показать головоломку';

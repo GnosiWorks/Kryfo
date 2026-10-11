@@ -1829,7 +1829,8 @@ class _ChatScreenState extends State<ChatScreen>
                   child: MenuPop(
                     fromRight: alignRight,
                     closing: closing,
-                    child: _EmojiPickerBubble(
+                    child: ReactionPicker(
+                      replyLabel: l10n.chatReply,
                       emojis: const ['❤️', '👍', '😂', '😮', '😢', '🔥'],
                       selected: target.reactions[''],
                       onPick: (e) => dismiss(
@@ -7060,40 +7061,12 @@ class _Bubble extends StatelessWidget {
                                                   const EdgeInsets.symmetric(
                                                     horizontal: 4,
                                                   ),
-                                              child: Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  BurnFlame(
-                                                    waiting: msg.burnWaits,
-                                                    child: Icon(
-                                                      Icons
-                                                          .local_fire_department_outlined,
-                                                      size: 11,
-                                                      color: onAmberText
-                                                          ? HaloColors.onAmber
-                                                          : HaloColors.amber,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(width: 4),
-                                                  Text(
-                                                    burn,
-                                                    style:
-                                                        HaloType.mono(
-                                                          size: 9.5,
-                                                          color: onAmberText
-                                                              ? HaloColors
-                                                                    .onAmber
-                                                              : HaloColors
-                                                                    .amber,
-                                                          weight:
-                                                              FontWeight.w600,
-                                                        ).copyWith(
-                                                          letterSpacing: track(
-                                                            0.3,
-                                                          ),
-                                                        ),
-                                                  ),
-                                                ],
+                                              child: BurnLine(
+                                                burn,
+                                                waits: msg.burnWaits,
+                                                color: onAmberText
+                                                    ? HaloColors.onAmber
+                                                    : HaloColors.amber,
                                               ),
                                             ),
                                           ],
@@ -7484,56 +7457,6 @@ class _ViaDevTag extends StatelessWidget {
   }
 }
 
-// an emoji button in the reaction pill
-class _EmojiTap extends StatefulWidget {
-  final String emoji;
-  final bool selected;
-  final VoidCallback onTap;
-  const _EmojiTap({
-    required this.emoji,
-    required this.selected,
-    required this.onTap,
-  });
-  @override
-  State<_EmojiTap> createState() => _EmojiTapState();
-}
-
-class _EmojiTapState extends State<_EmojiTap> {
-  double _scale = 1.0;
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _scale = 0.85),
-      onTapUp: (_) {
-        setState(() => _scale = 1.0);
-        widget.onTap();
-      },
-      onTapCancel: () => setState(() => _scale = 1.0),
-      child: AnimatedScale(
-        scale: _scale,
-        duration: motionStill(context)
-            ? Duration.zero
-            : const Duration(milliseconds: 90),
-        curve: Curves.easeOut,
-        child: Container(
-          width: 46,
-          height: 46,
-          decoration: BoxDecoration(
-            color: widget.selected ? HaloColors.amberSoft : HaloColors.surface3,
-            border: Border.all(
-              color: widget.selected ? HaloColors.amber : HaloColors.line,
-              width: 0.5,
-            ),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          alignment: Alignment.center,
-          child: Text(widget.emoji, style: const TextStyle(fontSize: 24)),
-        ),
-      ),
-    );
-  }
-}
-
 // above the composer while writing a reply: a snippet of the target and an
 // X to cancel
 class _ReplyQuoteBar extends StatelessWidget {
@@ -7610,151 +7533,6 @@ class _ReplyQuoteBar extends StatelessWidget {
             onPressed: onCancel,
           ),
         ],
-      ),
-    );
-  }
-}
-
-// the reaction pill above the long-pressed bubble
-class _EmojiPickerBubble extends StatefulWidget {
-  final List<String> emojis;
-  final String? selected;
-  final void Function(String) onPick;
-  final VoidCallback onReply;
-  const _EmojiPickerBubble({
-    required this.emojis,
-    required this.selected,
-    required this.onPick,
-    required this.onReply,
-  });
-
-  @override
-  State<_EmojiPickerBubble> createState() => _EmojiPickerBubbleState();
-}
-
-class _EmojiPickerBubbleState extends State<_EmojiPickerBubble>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 240),
-    )..forward();
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // the bar grows with the menu (MenuPop); the emojis follow each other in
-    final still = motionStill(context);
-    return Material(
-      color: Colors.transparent,
-      child: FadeTransition(
-        opacity: _ctrl,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-          decoration: BoxDecoration(
-            color: HaloColors.surface3,
-            border: Border.all(color: HaloColors.line, width: 0.5),
-            borderRadius: BorderRadius.circular(30),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.5),
-                blurRadius: 28,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ...widget.emojis.asMap().entries.map((entry) {
-                final i = entry.key;
-                final e = entry.value;
-                final n = widget.emojis.length;
-                final start = (i / n) * 0.55;
-                final pop = CurvedAnimation(
-                  parent: _ctrl,
-                  curve: Interval(
-                    start,
-                    (start + 0.45).clamp(0.0, 1.0),
-                    curve: Curves.easeOutBack,
-                  ),
-                );
-                final tap = _EmojiTap(
-                  emoji: e,
-                  selected: e == widget.selected,
-                  onTap: () => widget.onPick(e),
-                );
-                return still ? tap : ScaleTransition(scale: pop, child: tap);
-              }),
-              Container(
-                width: 0.5,
-                height: 28,
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                color: HaloColors.line2,
-              ),
-              Semantics(
-                label: l10n.chatReply,
-                button: true,
-                child: _ActionTap(
-                  icon: Icons.reply_rounded,
-                  onTap: widget.onReply,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// an icon button in the reaction pill, drawn like _EmojiTap
-class _ActionTap extends StatefulWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-  const _ActionTap({required this.icon, required this.onTap});
-  @override
-  State<_ActionTap> createState() => _ActionTapState();
-}
-
-class _ActionTapState extends State<_ActionTap> {
-  double _scale = 1.0;
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _scale = 0.85),
-      onTapUp: (_) {
-        setState(() => _scale = 1.0);
-        widget.onTap();
-      },
-      onTapCancel: () => setState(() => _scale = 1.0),
-      child: AnimatedScale(
-        scale: _scale,
-        duration: motionStill(context)
-            ? Duration.zero
-            : const Duration(milliseconds: 90),
-        curve: Curves.easeOut,
-        child: Container(
-          width: 46,
-          height: 46,
-          decoration: BoxDecoration(
-            color: HaloColors.surface3,
-            border: Border.all(color: HaloColors.line, width: 0.5),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          alignment: Alignment.center,
-          child: Icon(widget.icon, size: 20, color: HaloColors.amber),
-        ),
       ),
     );
   }

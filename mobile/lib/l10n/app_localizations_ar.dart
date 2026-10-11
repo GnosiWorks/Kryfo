@@ -1107,7 +1107,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get bridgesMoatFailed =>
-      'تعذّر الوصول إلى مشروع tor. حاول مجددًا بعد دقيقة، أو الصق سطر جسر في الأسفل.';
+      'تعذّر الوصول إلى مشروع Tor. حاول مجددًا بعد دقيقة، أو الصق سطر جسر في الأسفل.';
 
   @override
   String get bridgesGotBridgesSaveTo => 'وصلت الجسور · احفظها لاستخدامها';
@@ -1116,24 +1116,24 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bridgesConnected => 'متصل';
 
   @override
-  String get bridgesNotThroughYetTor => 'لم يعبر بعد. يواصل tor المحاولة';
+  String get bridgesNotThroughYetTor => 'لم يعبر بعد. يواصل Tor المحاولة';
 
   @override
   String get bridgesBridges => 'الجسور';
 
   @override
-  String get bridgesTorIsBlockedWhere => 'هل tor محجوب حيث أنت؟';
+  String get bridgesTorIsBlockedWhere => 'هل Tor محجوب حيث أنت؟';
 
   @override
   String get bridgesBridgesDisguiseYourConnection =>
-      'تُموّه الجسور اتصالك ليتمكن من العبور. اختر طريقة دخول واحدة، واحفظ، فيعيد tor الاتصال عبرها.';
+      'تُموّه الجسور اتصالك ليتمكن من العبور. اختر طريقة دخول واحدة، واحفظ، فيعيد Tor الاتصال عبرها.';
 
   @override
   String get bridgesBridgesOnlyChangeHow =>
-      'الجسور لا تغيّر إلا طريقة اتصال tor، وأنت لست في وضع Onion الآن. ما تضبطه هنا يُحفظ، لكنه لا يفعل شيئًا حتى تعود إليه.';
+      'الجسور لا تغيّر إلا طريقة اتصال Tor، وأنت لست في وضع Onion الآن. ما تضبطه هنا يُحفظ، لكنه لا يفعل شيئًا حتى تعود إليه.';
 
   @override
-  String get bridgesFromTheTorProject => 'من مشروع tor';
+  String get bridgesFromTheTorProject => 'من مشروع Tor';
 
   @override
   String get bridgesNoise => 'ضجيج';
@@ -1143,7 +1143,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get bridgesMakesTorTrafficLook =>
-      'يجعل حركة tor لا تشبه شيئًا بعينه. الخيار الافتراضي الأفضل لمعظم الشبكات المحجوبة. حُلّ اختبار تحقق، فتحصل على بضعة أسطر.';
+      'يجعل حركة Tor لا تشبه شيئًا بعينه. الخيار الافتراضي الأفضل لمعظم الشبكات المحجوبة. حُلّ اختبار تحقق، فتحصل على بضعة أسطر.';
 
   @override
   String get bridgesPrivateBridge => 'جسر خاص';
@@ -1190,7 +1190,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get bridgesRestartingTor => 'جارٍ إعادة تشغيل tor…';
+  String get bridgesRestartingTor => 'جارٍ إعادة تشغيل Tor…';
 
   @override
   String bridgesFindingABridgeS(Object elapsed) {
@@ -1213,7 +1213,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get bridgesATorEntryPoint =>
-      'نقطة دخول إلى tor لم ينشرها أحد، يُوصل إليها عبر غلاف كي لا يبدو الاتصال كأنه tor. بقية المسار هي القفزات الثلاث المعتادة.';
+      'نقطة دخول إلى Tor لم ينشرها أحد، يُوصل إليها عبر غلاف كي لا يبدو الاتصال كأنه Tor. بقية المسار هي القفزات الثلاث المعتادة.';
 
   @override
   String get bridgesLooksLike => 'يشبه';
@@ -1226,15 +1226,15 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get bridgesAskTheTorProject =>
-      'اطلبها من مشروع tor مباشرة. تحلّ لغزًا كي لا تستنزف الروبوتات المخزون.';
+      'اطلبها من مشروع Tor مباشرة. تحلّ لغزًا كي لا تستنزف الروبوتات المخزون.';
 
   @override
   String get bridgesTypeWhatYouSee =>
       'اكتب ما تراه. الأحرف الصغيرة لا بأس بها.';
 
   @override
-  String get bridgesThisOneRequestDoes =>
-      'هذا الطلب وحده لا يمر عبر tor - ولا يمكنه ذلك، فـ tor هو ما لا يعمل. سيرى من يدير شبكتك أنك تتصل بمشروع tor. إن كان ذلك وحده مشكلة حيث أنت، فاحصل على الجسور من مكان آخر والصقها أدناه.';
+  String get bridgesWhenYouAskFor =>
+      'عندما تطلب جسورًا، يرى مشروع Tor عنوان IP الخاص بك. هذا أمر عادي: هكذا يحصل Tor Browser وكل تطبيقات Tor على الجسور، وكل ما يعرفونه من ذلك أن أحدًا طلب جسورًا. لا شيء عن محادثاتك.';
 
   @override
   String get bridgesCouldNotDrawThe => 'تعذّر رسم اللغز';

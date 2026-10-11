@@ -18,6 +18,14 @@ to deliver a message, Kryfo routes it through tor and, when the other person is 
 
 your ip is hidden behind tor on the default private mode. relay mode and fast mode skip tor to go quicker. relay mode connects straight to our own relay, which then sees your ip for that connection and writes nothing down. fast mode adds public relays, and each of them sees your ip too. both are off by default and labeled where you turn them on.
 
+## bridges
+
+bridges help tor start when your network blocks it. when you ask Kryfo to get bridges, it asks the tor project for them. the request goes through a cdn, so your network sees a connection to the cdn, not to the tor project. the tor project sees your ip address, and from it roughly where you are. that is normal: it is how tor browser and every tor app get bridges, and all it tells them is that someone asked for bridges. nothing about your chats, your contacts or who you talk to. Kryfo only asks after you say yes.
+
+once tor is connected, Kryfo checks about once a week for changes to the tor project's built-in bridges. that request goes through tor, so it shows nobody your ip address.
+
+a bridge is your first tor hop. whoever runs it sees your ip address and when you use tor, not what you send or to whom.
+
 ## handles and people search
 
 a handle (@name) is optional. without one, nothing about you sits anywhere central. if you claim one, the handle registry on relay.kryfo.app holds the handle, the invite it points to (already public), a bio if you write one, and the key that claimed it. anyone who knows the handle can open its page and message you.
@@ -40,7 +48,7 @@ there is no push service. the app checks for messages itself, over the same rout
 
 ## third parties
 
-Kryfo talks to tor relays and nostr relays. these are infrastructure for moving sealed data, not partners we share anything with. we do not sell, rent, or trade data, because we do not have any to give.
+Kryfo talks to tor relays and nostr relays, and to the tor project when you ask it for bridges. these are infrastructure for moving sealed data, not partners we share anything with. we do not sell, rent, or trade data, because we do not have any to give.
 
 ## law enforcement and data requests
 

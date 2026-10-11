@@ -1072,7 +1072,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bridgesMoatFailed =>
-      'tor projesine ulaşılamadı. Bir dakika sonra tekrar dene ya da aşağıya bir köprü satırı yapıştır.';
+      'Tor Projesine ulaşılamadı. Bir dakika sonra tekrar dene ya da aşağıya bir köprü satırı yapıştır.';
 
   @override
   String get bridgesGotBridgesSaveTo =>
@@ -1089,18 +1089,18 @@ class AppLocalizationsTr extends AppLocalizations {
   String get bridgesBridges => 'Köprüler';
 
   @override
-  String get bridgesTorIsBlockedWhere => 'Bulunduğun yerde tor engelli mi?';
+  String get bridgesTorIsBlockedWhere => 'Bulunduğun yerde Tor engelli mi?';
 
   @override
   String get bridgesBridgesDisguiseYourConnection =>
-      'Köprüler bağlantını kamufle eder, böylece dışarı çıkabilir. Bir giriş yolu seç, kaydet; tor onun üzerinden yeniden bağlanır.';
+      'Köprüler bağlantını kamufle eder, böylece dışarı çıkabilir. Bir giriş yolu seç, kaydet; Tor onun üzerinden yeniden bağlanır.';
 
   @override
   String get bridgesBridgesOnlyChangeHow =>
-      'Köprüler yalnızca tor’un nasıl bağlandığını değiştirir ve şu an Onion modunda değilsin. Burada ayarladığın kaydedilir, sadece geri geçene kadar bir işe yaramaz.';
+      'Köprüler yalnızca Tor’un nasıl bağlandığını değiştirir ve şu an Onion modunda değilsin. Burada ayarladığın kaydedilir, sadece geri geçene kadar bir işe yaramaz.';
 
   @override
-  String get bridgesFromTheTorProject => 'Tor projesinden';
+  String get bridgesFromTheTorProject => 'Tor Projesinden';
 
   @override
   String get bridgesNoise => 'Gürültü';
@@ -1176,7 +1176,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bridgesATorEntryPoint =>
-      'Kimsenin yayımlamadığı bir tor giriş noktası; bağlantı tor’a benzemesin diye bir sarmalayıcı üzerinden ulaşılır. Rotanın geri kalanı her zamanki üç atlamadır.';
+      'Kimsenin yayımlamadığı bir Tor giriş noktası; bağlantı Tor’a benzemesin diye bir sarmalayıcı üzerinden ulaşılır. Rotanın geri kalanı her zamanki üç atlamadır.';
 
   @override
   String get bridgesLooksLike => 'Görünüşü';
@@ -1189,14 +1189,14 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bridgesAskTheTorProject =>
-      'Doğrudan tor projesinden iste. Botlar stoku tüketemesin diye bir bulmaca çözersin.';
+      'Doğrudan Tor Projesinden iste. Botlar stoku tüketemesin diye bir bulmaca çözersin.';
 
   @override
   String get bridgesTypeWhatYouSee => 'Gördüğünü yaz. Küçük harf de olur.';
 
   @override
-  String get bridgesThisOneRequestDoes =>
-      'Bu tek istek tor üzerinden gitmez - gidemez, çünkü çalışmayan zaten tor. Ağını kim işletiyorsa tor projesiyle bağlantı kurduğunu görecek. Bulunduğun yerde tek başına bu bile sorunsa, köprüleri başka bir yerden al ve aşağıya yapıştır.';
+  String get bridgesWhenYouAskFor =>
+      'Köprü istediğinde Tor Projesi IP adresini görür. Bu normal: Tor Browser ve tüm Tor uygulamaları köprüleri böyle alır ve bu onlara yalnızca birinin köprü istediğini söyler. Sohbetlerin hakkında hiçbir şey söylemez.';
 
   @override
   String get bridgesCouldNotDrawThe => 'Bulmaca çizilemedi';
