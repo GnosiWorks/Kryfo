@@ -2192,6 +2192,12 @@ void _chatMenu(BuildContext context, ContactPreview c) {
   });
 }
 
+/// a group hides while hidden chats are open. a room cannot: it ends with
+/// its clock, and its rows never move
+@visibleForTesting
+bool groupMenuHides(GroupSummary g, {required bool inVault}) =>
+    inVault && !g.isRoom;
+
 // a group's or a room's menu: hide it while hidden chats are open, or
 // leave it, after saying what leaving costs
 void _groupMenu(BuildContext context, GroupSummary g) {
@@ -2204,7 +2210,7 @@ void _groupMenu(BuildContext context, GroupSummary g) {
       return SingleChildScrollView(
         child: MenuSheet(
           groups: [
-            if (lockState.inVault)
+            if (groupMenuHides(g, inVault: lockState.inVault))
               [
                 MenuSheetRow(
                   icon: g.hidden
