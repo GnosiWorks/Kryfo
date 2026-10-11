@@ -1,6 +1,6 @@
 module github.com/halo/engine
 
-go 1.25.14
+go 1.26.9
 
 require (
 	fiatjaf.com/nostr v0.0.0-20260508234157-a4c590d923ee
