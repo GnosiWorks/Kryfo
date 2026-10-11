@@ -16,7 +16,7 @@ const String kBadgePubKeyB64 = 'FQPd_T9fMWs-5RvSeGwDqiKe28eOvsQ1EG1jZvJnf0Q';
 
 // the paid tiers and the invoice flow. off: support shows the addresses only
 // and nothing asks the badge service. earned badges show either way
-const bool kBadgeTiersShown = false;
+const bool kBadgeTiersShown = true;
 
 class BadgeInvoice {
   final String id;
