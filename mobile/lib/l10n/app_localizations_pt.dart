@@ -7969,4 +7969,19 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get valveRestartKryfo => 'Reiniciar o Kryfo';
+
+  @override
+  String get updateAvailable => 'Atualização disponível';
+
+  @override
+  String updateReady(String version) {
+    return 'O Kryfo $version está pronto para baixar';
+  }
+
+  @override
+  String get settingsCheckForUpdates => 'Verificar atualizações';
+
+  @override
+  String get settingsCheckForUpdatesHint =>
+      'Uma vez por dia, pelo Tor. Pergunta ao kryfo.app qual é a versão mais recente e não envia nada sobre você.';
 }

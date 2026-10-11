@@ -2069,5 +2069,9 @@
   "shareNoOne": "No hay nadie con quien compartir",
   "valveStillConnecting": "Todavía conectando… Tus mensajes saldrán en cuanto vuelva la conexión.",
   "valveCouldNotReconnect": "Kryfo no pudo reconectarse. Un reinicio lo arregla y tus mensajes se conservan.",
-  "valveRestartKryfo": "Reiniciar Kryfo"
+  "valveRestartKryfo": "Reiniciar Kryfo",
+  "updateAvailable": "Actualización disponible",
+  "updateReady": "Kryfo {version} está listo para descargar",
+  "settingsCheckForUpdates": "Buscar actualizaciones",
+  "settingsCheckForUpdatesHint": "Una vez al día por Tor. Pide a kryfo.app la versión más reciente y no envía nada sobre ti."
 }

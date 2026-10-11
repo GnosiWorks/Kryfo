@@ -8038,4 +8038,19 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get valveRestartKryfo => 'إعادة تشغيل Kryfo';
+
+  @override
+  String get updateAvailable => 'يتوفر تحديث';
+
+  @override
+  String updateReady(String version) {
+    return 'Kryfo $version جاهز للتنزيل';
+  }
+
+  @override
+  String get settingsCheckForUpdates => 'التحقق من التحديثات';
+
+  @override
+  String get settingsCheckForUpdatesHint =>
+      'مرة واحدة يوميًا عبر Tor. يسأل kryfo.app عن أحدث إصدار ولا يرسل أي شيء عنك.';
 }

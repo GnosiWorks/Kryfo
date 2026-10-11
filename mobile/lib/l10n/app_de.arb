@@ -2069,5 +2069,9 @@
   "shareNoOne": "Niemand zum Teilen",
   "valveStillConnecting": "Verbindung wird noch aufgebaut… Deine Nachrichten gehen raus, sobald die Verbindung wieder da ist.",
   "valveCouldNotReconnect": "Kryfo konnte sich nicht neu verbinden. Ein Neustart behebt das, deine Nachrichten bleiben erhalten.",
-  "valveRestartKryfo": "Kryfo neu starten"
+  "valveRestartKryfo": "Kryfo neu starten",
+  "updateAvailable": "Update verfügbar",
+  "updateReady": "Kryfo {version} steht zum Download bereit",
+  "settingsCheckForUpdates": "Nach Updates suchen",
+  "settingsCheckForUpdatesHint": "Einmal am Tag über Tor. Fragt kryfo.app nach der neuesten Version und sendet nichts über dich."
 }

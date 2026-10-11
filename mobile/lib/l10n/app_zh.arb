@@ -2069,5 +2069,9 @@
   "shareNoOne": "没有可以分享的人",
   "valveStillConnecting": "仍在连接…连接恢复后，你的消息会立刻发出。",
   "valveCouldNotReconnect": "Kryfo 无法重新连接。重启即可解决，你的消息会保留。",
-  "valveRestartKryfo": "重启 Kryfo"
+  "valveRestartKryfo": "重启 Kryfo",
+  "updateAvailable": "有可用更新",
+  "updateReady": "Kryfo {version} 已可下载",
+  "settingsCheckForUpdates": "检查更新",
+  "settingsCheckForUpdatesHint": "每天一次，通过 Tor。只向 kryfo.app 询问最新版本，不发送任何关于你的信息。"
 }

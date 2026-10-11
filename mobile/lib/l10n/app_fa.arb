@@ -2069,5 +2069,9 @@
   "shareNoOne": "کسی برای هم‌رسانی نیست",
   "valveStillConnecting": "هنوز در حال اتصال… پیام‌های شما به محض برگشتن اتصال فرستاده می‌شوند.",
   "valveCouldNotReconnect": "Kryfo نتوانست دوباره وصل شود. راه‌اندازی دوباره این را درست می‌کند و پیام‌هایتان می‌مانند.",
-  "valveRestartKryfo": "راه‌اندازی دوبارهٔ Kryfo"
+  "valveRestartKryfo": "راه‌اندازی دوبارهٔ Kryfo",
+  "updateAvailable": "به‌روزرسانی موجود است",
+  "updateReady": "Kryfo {version} آماده‌ی دانلود است",
+  "settingsCheckForUpdates": "بررسی به‌روزرسانی",
+  "settingsCheckForUpdatesHint": "روزی یک بار از راه Tor. فقط تازه‌ترین نسخه را از kryfo.app می‌پرسد و چیزی درباره‌ی شما نمی‌فرستد."
 }

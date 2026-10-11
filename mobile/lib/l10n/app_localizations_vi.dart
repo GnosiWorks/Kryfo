@@ -7898,4 +7898,19 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get valveRestartKryfo => 'Khởi động lại Kryfo';
+
+  @override
+  String get updateAvailable => 'Có bản cập nhật';
+
+  @override
+  String updateReady(String version) {
+    return 'Kryfo $version đã sẵn sàng để tải về';
+  }
+
+  @override
+  String get settingsCheckForUpdates => 'Kiểm tra cập nhật';
+
+  @override
+  String get settingsCheckForUpdatesHint =>
+      'Mỗi ngày một lần qua Tor. Chỉ hỏi kryfo.app phiên bản mới nhất và không gửi gì về bạn.';
 }

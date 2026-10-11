@@ -9984,5 +9984,27 @@
   "valveRestartKryfo": "Restart Kryfo",
   "@valveRestartKryfo": {
     "description": "widgets/reconnect_valve.dart: button that restarts the app, queue kept"
+  },
+  "updateAvailable": "Update available",
+  "@updateAvailable": {
+    "description": "widgets/update_card.dart: card title, a newer Kryfo is on the site"
+  },
+  "updateReady": "Kryfo {version} is ready to download",
+  "@updateReady": {
+    "description": "widgets/update_card.dart: the line under the title, tap opens the download page",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "0.5.1"
+      }
+    }
+  },
+  "settingsCheckForUpdates": "Check for updates",
+  "@settingsCheckForUpdates": {
+    "description": "screens/settings_screen.dart: switch for the daily update check"
+  },
+  "settingsCheckForUpdatesHint": "Once a day over Tor. Asks kryfo.app for the newest version and sends nothing about you.",
+  "@settingsCheckForUpdatesHint": {
+    "description": "screens/settings_screen.dart: what the update check does"
   }
 }

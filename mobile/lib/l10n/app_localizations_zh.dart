@@ -7578,6 +7578,21 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get valveRestartKryfo => '重启 Kryfo';
+
+  @override
+  String get updateAvailable => '有可用更新';
+
+  @override
+  String updateReady(String version) {
+    return 'Kryfo $version 已可下载';
+  }
+
+  @override
+  String get settingsCheckForUpdates => '检查更新';
+
+  @override
+  String get settingsCheckForUpdatesHint =>
+      '每天一次，通过 Tor。只向 kryfo.app 询问最新版本，不发送任何关于你的信息。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -15034,4 +15049,19 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get valveRestartKryfo => '重新啟動 Kryfo';
+
+  @override
+  String get updateAvailable => '有可用的更新';
+
+  @override
+  String updateReady(String version) {
+    return 'Kryfo $version 已可下載';
+  }
+
+  @override
+  String get settingsCheckForUpdates => '檢查更新';
+
+  @override
+  String get settingsCheckForUpdatesHint =>
+      '每天一次，透過 Tor。只向 kryfo.app 詢問最新版本，不傳送任何關於你的資訊。';
 }

@@ -2069,5 +2069,9 @@
   "shareNoOne": "Paylaşılacak kimse yok",
   "valveStillConnecting": "Hâlâ bağlanıyor… Bağlantı geri gelir gelmez mesajların gidecek.",
   "valveCouldNotReconnect": "Kryfo yeniden bağlanamadı. Yeniden başlatmak bunu düzeltir, mesajların korunur.",
-  "valveRestartKryfo": "Kryfo’yu yeniden başlat"
+  "valveRestartKryfo": "Kryfo’yu yeniden başlat",
+  "updateAvailable": "Güncelleme var",
+  "updateReady": "Kryfo {version} indirilmeye hazır",
+  "settingsCheckForUpdates": "Güncellemeleri denetle",
+  "settingsCheckForUpdatesHint": "Günde bir kez Tor üzerinden en yeni sürümü kryfo.app’e sorar. Senin hakkında hiçbir şey göndermez."
 }
