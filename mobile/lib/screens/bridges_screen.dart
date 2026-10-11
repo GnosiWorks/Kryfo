@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 
 import '../bridge_mode.dart';
 import '../l10n/l10n.dart';
+import '../lock_state.dart' show lockState;
 import '../l10n/numbers.dart';
 import '../main.dart' hide live;
 import '../theme.dart';
@@ -57,6 +58,9 @@ class _BridgesScreenState extends State<BridgesScreen> {
         final chosen = decoy ? BridgeChoice.auto : b.choice;
         String? tag(BridgeChoice c) {
           if (c != chosen || line.tone == BridgeTone.quiet) return null;
+          if (!decoy && s.phase == 'captive') {
+            return l10n.bridgesWaitingForWifiSignIn;
+          }
           if (line.tone == BridgeTone.green) return l10n.bridgesConnected;
           if (line.tone == BridgeTone.amber) return l10n.bridgesConnecting;
           return null;
@@ -93,7 +97,10 @@ class _BridgesScreenState extends State<BridgesScreen> {
               const SizedBox(height: 18),
               if (!decoy)
                 EaseSize(
-                  child: b.offerAuto && b.choice != BridgeChoice.auto
+                  child:
+                      b.offerAuto &&
+                          b.choice != BridgeChoice.auto &&
+                          !lockState.inVault
                       ? Padding(
                           padding: const EdgeInsets.only(bottom: 12),
                           child: _OfferCard(
@@ -199,7 +206,22 @@ class _BridgesScreenState extends State<BridgesScreen> {
         appState.bridgeRetry();
       case BridgeAction.getBridge:
         await showTorBlockedSheet(context);
+      case BridgeAction.openWifi:
+        await openWifiSettings();
     }
+  }
+}
+
+/// android's wi-fi page, where a network's sign-in page is offered. no
+/// browser to a probe address of our own
+Future<bool> openWifiSettings() async {
+  try {
+    return await const MethodChannel(
+          'halo/platform',
+        ).invokeMethod<bool>('openWifiSettings') ??
+        false;
+  } catch (_) {
+    return false;
   }
 }
 
@@ -213,6 +235,7 @@ Color bridgeToneColor(BridgeTone t) => switch (t) {
 String bridgeActionLabel(BridgeAction a) => switch (a) {
   BridgeAction.tryAgain => l10n.commonTryAgain,
   BridgeAction.getBridge => l10n.bridgesGetABridge,
+  BridgeAction.openWifi => l10n.bridgesOpenWifiSettings,
 };
 
 /// the live status line: a dot, the state in plain words, how far along,
@@ -272,9 +295,7 @@ class _BridgeStatusViewState extends State<BridgeStatusView> {
     final still = motionStill(context);
     final action = widget.onAction == null ? null : line.action;
     final base = _base;
-    final clock = base == null
-        ? null
-        : bridgeClock(base + _ticks * 1000);
+    final clock = base == null ? null : bridgeClock(base + _ticks * 1000);
     final detail = [?line.detail, ?clock].join(' · ');
     return AnimatedContainer(
       duration: still ? Duration.zero : const Duration(milliseconds: 300),
@@ -319,6 +340,9 @@ class _BridgeStatusViewState extends State<BridgeStatusView> {
               // read out once per new state, never the word leaving
               Expanded(
                 child: Semantics(
+                  // its own node: the detail and the ticking clock are
+                  // never read out with it
+                  container: true,
                   liveRegion: true,
                   label: line.head,
                   child: ExcludeSemantics(
@@ -792,13 +816,16 @@ class _MoreSection extends StatelessWidget {
   // the line goes at once, and comes back with the undo for a few seconds
   Future<void> _remove(BuildContext context, BridgeChoice from, int i) async {
     final messenger = ScaffoldMessenger.maybeOf(context);
-    final before = await appState.removeBridgeLine(from, i);
-    if (before == null || messenger == null) return;
+    final change = await appState.removeBridgeLine(from, i);
+    if (change == null || messenger == null) return;
+    final (before, after) = change;
     messenger
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
+          // an action makes a snack bar stay by default: this one goes
           duration: const Duration(seconds: 5),
+          persist: false,
           backgroundColor: HaloColors.surface3,
           content: Text(
             l10n.bridgesBridgeRemoved,
@@ -807,7 +834,7 @@ class _MoreSection extends StatelessWidget {
           action: SnackBarAction(
             label: l10n.bridgesUndo,
             textColor: HaloColors.amber,
-            onPressed: () => appState.putBridgeSetupBack(before),
+            onPressed: () => appState.putBridgeSetupBack(before, after),
           ),
         ),
       );

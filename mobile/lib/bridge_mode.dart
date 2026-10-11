@@ -274,6 +274,24 @@ class BridgeStatus {
 
   bool get exhausted => phase == 'exhausted';
 
+  /// the same, at a later count of how long the attempt has run
+  BridgeStatus withSince(int ms) => BridgeStatus(
+    mode: mode,
+    phase: phase,
+    method: method,
+    source: source,
+    progress: progress,
+    attempt: attempt,
+    attempts: attempts,
+    sinceMs: ms,
+    canSend: canSend,
+    blocked: blocked,
+    limited: limited,
+    snowflake: snowflake,
+    errorCode: errorCode,
+    askConsent: askConsent,
+  );
+
   /// automatic is past the usual way: tor looked blocked or a disguise is
   /// being tried
   bool get tryingAnother =>
@@ -322,7 +340,7 @@ class BridgeStatus {
 enum BridgeTone { green, amber, rose, quiet }
 
 /// the one thing to do when stuck
-enum BridgeAction { tryAgain, getBridge }
+enum BridgeAction { tryAgain, getBridge, openWifi }
 
 /// the status line: words, colour, whether it is at work, how far along,
 /// and the way out when stuck
@@ -420,6 +438,7 @@ BridgeLine bridgeStatusLine(
         detail: l10n.bridgesThisNetworkWantsA,
         detailKind: 'captive',
         tone: BridgeTone.amber,
+        action: BridgeAction.openWifi,
       );
     case 'exhausted':
       // the words go with the button under them
@@ -511,7 +530,7 @@ BridgeLine bridgeStatusLine(
     tone: BridgeTone.amber,
     moving: true,
     progress: pct == null ? null : pct / 100,
-    clockMs: pct == null && s.sinceMs >= 1000 ? s.sinceMs : null,
+    clockMs: pct == null && s.sinceMs > 0 ? s.sinceMs : null,
   );
 }
 

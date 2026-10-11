@@ -267,7 +267,7 @@ class _TorBootSplashState extends State<TorBootSplash>
       ),
       const SizedBox(height: 8),
       HaloGhostButton(
-        label: l10n.torBootSplashTorIsBlockedOr,
+        label: l10n.torBootSplashTorIsBlockedHere,
         onTap: () async {
           final nav = Navigator.of(context);
           await appState.pickFirstRun(risky: true);

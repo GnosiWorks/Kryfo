@@ -6,19 +6,22 @@
 // a new install. a friend's lines are judged by the engine. 0.5.0's keys
 // move over once. right to left, less movement and a small phone at a
 // large text size hold. the engine is a stand-in
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/bridge_mode.dart';
 import 'package:kryfo/l10n/l10n.dart';
+import 'package:kryfo/l10n/numbers.dart' show whole;
 import 'package:kryfo/lock_guard.dart' show lockGuard;
 import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/main.dart'
     show AppState, HaloEngine, appState, bridgeWriteTap, useEngineForTest;
 import 'package:kryfo/screens/bridge_sheets.dart';
 import 'package:kryfo/screens/bridges_screen.dart';
-import 'package:kryfo/widgets/motion.dart' show BreathDot, kHouseCurve;
+import 'package:kryfo/widgets/motion.dart'
+    show BreathDot, TorStatus, kHouseCurve;
 import 'package:kryfo/widgets/press_scale.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -102,6 +105,32 @@ const _another = BridgeStatus(
 );
 
 late _Engine _eng;
+
+const _langs = [
+  'en',
+  'ar',
+  'de',
+  'es',
+  'fa',
+  'fr',
+  'id',
+  'it',
+  'pt',
+  'ru',
+  'tr',
+  'uk',
+  'vi',
+  'zh',
+  'zh_Hant',
+];
+
+Locale _loc(String lang) {
+  final p = lang.split('_');
+  return Locale.fromSubtags(
+    languageCode: p[0],
+    scriptCode: p.length > 1 ? p[1] : null,
+  );
+}
 
 Future<void> _open(
   WidgetTester t, {
@@ -195,6 +224,19 @@ void main() {
       expect(l.detail, '40%');
       expect(l.progress, 0.4);
       expect(l.moving, isTrue);
+    });
+
+    test('the clock shows from the first read, and stays current', () {
+      final app = AppState()..bridgeSetupForTest = const BridgeSetup();
+      app.takeBridgeStatus('{"mode":"auto","phase":"trying","since_ms":400}');
+      app.takeBridgeStatus('{"mode":"auto","phase":"trying","since_ms":5400}');
+      expect(app.bridgeLine.clockMs, 5400);
+      var told = 0;
+      app.addListener(() => told++);
+      app.takeBridgeStatus('{"mode":"auto","phase":"trying","since_ms":95000}');
+      expect(app.bridgeLine.clockMs, 95000);
+      // the seconds alone wake nobody
+      expect(told, 0);
     });
 
     test('no percent yet: the clock moves instead, in the view', () {
@@ -553,12 +595,12 @@ void main() {
     });
 
     testWidgets('shut by the lock, it is asked again after it', (t) async {
-      final app = AppState()..bridgeSetupForTest = const BridgeSetup();
-      app.takeBridgeStatus(
+      appState.bridgeSetupForTest = const BridgeSetup();
+      appState.takeBridgeStatus(
         '{"mode":"auto","phase":"trying","blocked":true,"ask_consent":true}',
       );
-      app.bridgeAskTaken();
-      expect(app.bridgeAskDue, isFalse);
+      appState.bridgeAskTaken();
+      expect(appState.bridgeAskDue, isFalse);
       await _open(t);
       showTorBlockedSheet(t.element(find.byType(BridgesScreen)), asked: true);
       await _in(t);
@@ -568,8 +610,10 @@ void main() {
       await _in(t);
       expect(find.text(l10n.bridgesTorIsBlockedOnThis), findsNothing);
       expect(appState.bridge.consent, 'ask');
+      // the lock opens: the question is due again
       lockState.openForTest();
-      expect(appState.bridgeAskDue, isFalse);
+      expect(appState.bridgeAskDue, isTrue);
+      appState.bridgeAskTaken();
       await _done(t);
     });
 
@@ -677,7 +721,9 @@ void main() {
         ...kept,
       });
       lockState.inDecoy = true;
-      await AppState().loadBridgesForTest();
+      final app = AppState();
+      await app.loadBridgesForTest();
+      addTearDown(app.dropBridgeHooks);
     }
 
     test('bridges on stay on', () async {
@@ -720,6 +766,24 @@ void main() {
       expect(app.bridge.skipDirect, isTrue);
     });
 
+    test('the fallback is kept at once, the yes and country with it', () async {
+      _eng.restoreAnswer = 'error: lines_bad';
+      final app = AppState()
+        ..bridgeSetupForTest = const BridgeSetup(
+          choice: BridgeChoice.friend,
+          friendLines: 'obfs4 mangled',
+          consent: 'yes',
+          country: 'ir',
+        );
+      app.restoreBridgeAtBoot();
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      const st = FlutterSecureStorage();
+      expect(await st.read(key: 'bridge_mode'), 'auto');
+      expect(await st.read(key: 'bridge_skip_direct'), '1');
+      expect(await st.read(key: 'bridge_consent'), 'yes');
+      expect(await st.read(key: 'bridge_country'), 'ir');
+    });
+
     test('what automatic learnt waits for the decoy to close', () async {
       const kept = '{"v":1,"last":{"wifi":{"m":"obfs4","s":"builtin","d":1}}}';
       FlutterSecureStorage.setMockInitialValues({
@@ -730,6 +794,7 @@ void main() {
       lockState.inDecoy = true;
       final app = AppState();
       await app.loadBridgesForTest();
+      addTearDown(app.dropBridgeHooks);
       expect(app.bridgeMemoryIn, isFalse);
       expect(_eng.memories, isEmpty);
       // something gets through in the decoy: nothing is written back
@@ -870,6 +935,41 @@ void main() {
       expect(b.engineMode(), ('direct', '{}'));
     });
 
+    test('ready only once it is known whether to ask', () async {
+      final app = AppState();
+      var askedAtReady = false;
+      app.addListener(() {});
+      await app.markReady();
+      askedAtReady = app.ready && app.firstRunAsk;
+      expect(askedAtReady, isTrue);
+    });
+
+    test(
+      'a new install started with no window is asked when in front',
+      () async {
+        final b = TestWidgetsFlutterBinding.instance;
+        b.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+        addTearDown(
+          () => b.handleAppLifecycleStateChanged(AppLifecycleState.resumed),
+        );
+        final app = AppState();
+        await app.readBridgeSetup(firstStart: true);
+        expect(app.firstRunAsk, isTrue);
+        const st = FlutterSecureStorage();
+        expect(await st.read(key: 'bridge_mode'), isNull);
+        // onboarding done meanwhile: still a new install, never an upgrade
+        final next = AppState()..onboardingComplete = true;
+        expect(await next.firstRunWanted(), isTrue);
+        final n = await next.readBridgeSetup(firstStart: false);
+        expect(n.choice, BridgeChoice.auto);
+        expect(n.offerAuto, isFalse);
+        expect(next.firstRunAsk, isTrue);
+        await next.pickFirstRun(risky: false);
+        expect(await st.read(key: 'bridge_fresh'), isNull);
+        expect(await AppState().firstRunWanted(), isFalse);
+      },
+    );
+
     test('a new install starts on automatic and is asked first', () async {
       final app = AppState();
       expect(await app.firstRunWanted(), isTrue);
@@ -949,6 +1049,55 @@ void main() {
       await _done(t);
     });
 
+    testWidgets('the undo goes after 5 s', (t) async {
+      await _open(
+        t,
+        setup: const BridgeSetup(
+          choice: BridgeChoice.friend,
+          friendLines:
+              'obfs4 192.0.2.1:443 A cert=x\nobfs4 192.0.2.2:443 B cert=y',
+        ),
+        size: const Size(400, 1600),
+      );
+      await t.tap(find.text(l10n.bridgesMore));
+      await _in(t);
+      final x = find.byTooltip(l10n.bridgesRemoveBridgeN('2'));
+      await t.ensureVisible(x);
+      await t.tap(x);
+      await _in(t);
+      expect(find.text(l10n.bridgesUndo), findsOneWidget);
+      for (var i = 0; i < 10; i++) {
+        await t.pump(const Duration(seconds: 1));
+      }
+      await t.pumpAndSettle();
+      expect(find.text(l10n.bridgesUndo), findsNothing);
+      await _done(t);
+    });
+
+    test(
+      'an undo after a change is refused; one not in use stays put',
+      () async {
+        final app = AppState()
+          ..bridgeSetupForTest = const BridgeSetup(
+            choice: BridgeChoice.friend,
+            friendLines: 'obfs4 192.0.2.1:443 A cert=x',
+            torProjectLines:
+                'obfs4 192.0.2.5:443 C cert=z\nobfs4 192.0.2.6:443 D cert=w',
+          );
+        // a tor project line, not the one in use: tor never bounces for it
+        final c = (await app.removeBridgeLine(BridgeChoice.torProject, 0))!;
+        _eng.calls.clear();
+        expect(await app.putBridgeSetupBack(c.$1, c.$2), isTrue);
+        expect(splitBridgeLines(app.bridge.torProjectLines), hasLength(2));
+        expect(_eng.calls, isEmpty);
+        // removed, then something else changed: the undo is refused
+        final d = (await app.removeBridgeLine(BridgeChoice.torProject, 0))!;
+        await app.setBridgeCountry('ir');
+        expect(await app.putBridgeSetupBack(d.$1, d.$2), isFalse);
+        expect(splitBridgeLines(app.bridge.torProjectLines), hasLength(1));
+      },
+    );
+
     testWidgets('a removed line comes back with the undo', (t) async {
       await _open(
         t,
@@ -996,10 +1145,220 @@ void main() {
       await _done(t);
     });
 
+    testWidgets('a wi-fi sign-in: its tag and the way to the wi-fi page', (
+      t,
+    ) async {
+      final opened = <String>[];
+      t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        const MethodChannel('halo/platform'),
+        (c) async {
+          opened.add(c.method);
+          return true;
+        },
+      );
+      addTearDown(
+        () => t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          const MethodChannel('halo/platform'),
+          null,
+        ),
+      );
+      await _open(
+        t,
+        status: const BridgeStatus(mode: 'auto', phase: 'captive'),
+      );
+      expect(find.text(l10n.bridgesWaitingForWifiSignIn), findsOneWidget);
+      expect(find.text(l10n.bridgesConnecting), findsNothing);
+      await t.tap(find.text(l10n.bridgesOpenWifiSettings));
+      await _in(t);
+      expect(opened, ['openWifiSettings']);
+      await _done(t);
+      // a decoy: offline, nothing to tap
+      lockState.inDecoy = true;
+      await _open(
+        t,
+        status: const BridgeStatus(mode: 'auto', phase: 'offline'),
+      );
+      expect(find.text(l10n.bridgesOffline), findsOneWidget);
+      expect(find.text(l10n.bridgesOpenWifiSettings), findsNothing);
+      expect(find.text(l10n.bridgesWaitingForWifiSignIn), findsNothing);
+      await _done(t);
+    });
+
+    test('with tor up there is no guess, only the list', () async {
+      final app = AppState()
+        ..bridgeSetupForTest = const BridgeSetup(consent: 'yes')
+        ..sendModeForTest = 'private';
+      app.setTorStatusForTest(TorStatus.publishing);
+      app.setRouteOKForTest(true);
+      expect(await app.askMoatGuess(), isNull);
+      expect(_eng.moat, 0);
+      app.setTorStatusForTest(TorStatus.starting);
+      app.setRouteOKForTest(false);
+      expect(await app.askMoatGuess(), 'ir');
+      expect(_eng.moat, 1);
+      // over meek only with the yes
+      final no = AppState()..bridgeSetupForTest = const BridgeSetup();
+      expect(await no.askMoatGuess(), isNull);
+      expect(_eng.moat, 1);
+    });
+
+    test('one bridge card on home at a time, in every combination', () {
+      final app = AppState()..sendModeForTest = 'private';
+      for (final choice in BridgeChoice.values) {
+        for (final offer in [false, true]) {
+          for (final struggling in [false, true]) {
+            for (final vault in [false, true]) {
+              app.bridgeSetupForTest = BridgeSetup(
+                choice: choice,
+                friendLines: 'obfs4 192.0.2.1:443 A cert=x',
+                offerAuto: offer,
+              );
+              app.setBridgeStatusForTest(
+                struggling
+                    ? const BridgeStatus(mode: 'auto', phase: 'exhausted')
+                    : BridgeStatus.none,
+              );
+              lockState.inVault = vault;
+              final shown = [
+                for (final c in ['auto', 'offer', 'stuck', 'hint'])
+                  if (app.homeBridgeCard == c) c,
+              ];
+              expect(shown.length, lessThanOrEqualTo(1));
+              if (vault) expect(app.homeBridgeCard, isNull);
+              if (offer && choice != BridgeChoice.auto && !vault) {
+                expect(app.homeBridgeCard, isNotNull);
+              }
+            }
+          }
+        }
+      }
+      lockState.inVault = false;
+    });
+
+    testWidgets('the live region holds the head alone, read once', (t) async {
+      final h = t.ensureSemantics();
+      await _open(
+        t,
+        status: const BridgeStatus(
+          mode: 'auto',
+          phase: 'trying',
+          sinceMs: 5000,
+        ),
+      );
+      final head = appState.bridgeLine.head;
+      final n = t.getSemantics(find.bySemanticsLabel(head));
+      expect(n.flagsCollection.isLiveRegion, isTrue);
+      expect(n.label, head);
+      await t.pump(const Duration(seconds: 2));
+      expect(t.getSemantics(find.bySemanticsLabel(head)).label, head);
+      appState.setBridgeStatusForTest(_through);
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 80));
+      expect(find.bySemanticsLabel(head), findsNothing);
+      expect(find.bySemanticsLabel(l10n.bridgesConnected), findsOneWidget);
+      await _done(t);
+      h.dispose();
+    });
+
+    testWidgets('the hint reads from the right in arabic', (t) async {
+      await _open(t, locale: const Locale('ar'));
+      await t.tap(find.text(l10n.bridgesBridgeFromAFriend));
+      await _in(t);
+      final tf = t.widget<TextField>(find.byType(TextField));
+      expect(tf.decoration!.hintTextDirection, TextDirection.rtl);
+      final hint = t.getRect(find.text(l10n.bridgesPasteABridgeLine));
+      final field = t.getRect(find.byType(TextField));
+      expect(field.right - hint.right, lessThan(40));
+      await _done(t);
+    });
+
+    testWidgets('the new words, every language, 360x640 at 1.5', (t) async {
+      final errs = <String>[];
+      final was = FlutterError.onError;
+      FlutterError.onError = (d) => errs.add(
+        '${d.exceptionAsString().split('\n').first} '
+        '${RegExp(r'The relevant error-causing widget was:\s*\n\s*.*\n\s*(.*)').firstMatch(d.toString())?.group(1)}',
+      );
+      try {
+        for (final lang in _langs) {
+          final where = '[$lang]';
+          Future<void> at({
+            BridgeSetup setup = const BridgeSetup(),
+            BridgeStatus status = _through,
+            double h = 640,
+          }) => _open(
+            t,
+            locale: _loc(lang),
+            scale: 1.5,
+            size: Size(360, h),
+            setup: setup,
+            status: status,
+          );
+          // the using line and the captive line with its button
+          await at(
+            setup: const BridgeSetup(
+              choice: BridgeChoice.torProject,
+              torProjectLines: 'obfs4 192.0.2.1:443 A cert=x',
+            ),
+            status: const BridgeStatus(mode: 'moat', phase: 'captive'),
+          );
+          await _done(t);
+          // nothing got through, both ways out
+          for (final c in ['no', 'yes']) {
+            await at(
+              setup: BridgeSetup(consent: c),
+              status: const BridgeStatus(mode: 'auto', phase: 'exhausted'),
+            );
+            await _done(t);
+          }
+          // the one-time sheet and the friend sheet
+          await at();
+          showTorBlockedSheet(
+            t.element(find.byType(BridgesScreen)),
+            asked: true,
+          );
+          await _in(t);
+          await _done(t);
+          await at();
+          await t.tap(find.text(l10n.bridgesBridgeFromAFriend));
+          await _in(t);
+          await _done(t);
+          // a removed line, its undo, and the country row with a guess
+          await at(
+            h: 4000,
+            setup: const BridgeSetup(
+              choice: BridgeChoice.friend,
+              consent: 'yes',
+              friendLines:
+                  'obfs4 192.0.2.1:443 A cert=x\nobfs4 192.0.2.2:443 B cert=y',
+            ),
+          );
+          await appState.askMoatGuess();
+          await t.tap(find.text(l10n.bridgesMore));
+          await _in(t);
+          final x = find.byTooltip(l10n.bridgesRemoveBridgeN(whole(2)));
+          if (x.evaluate().isEmpty) {
+            errs.add('$where no remove 2 tooltip');
+          } else {
+            await t.tap(x);
+            await _in(t);
+            if (find.text(l10n.bridgesUndo).evaluate().isEmpty) {
+              errs.add('$where no undo');
+            }
+          }
+          await _done(t);
+        }
+      } finally {
+        FlutterError.onError = was;
+      }
+      expect(errs, isEmpty, reason: errs.toSet().join('\n'));
+    });
+
     test('a pick still waiting goes before the lock', () async {
       final app = AppState()..bridgeSetupForTest = const BridgeSetup();
       FlutterSecureStorage.setMockInitialValues({'bridge_mode': 'auto'});
       await app.loadBridgesForTest();
+      addTearDown(app.dropBridgeHooks);
       _eng.calls.clear();
       await app.chooseBridge(BridgeChoice.direct);
       expect(_eng.calls, isEmpty);

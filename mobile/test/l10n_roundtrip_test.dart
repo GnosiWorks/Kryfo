@@ -3436,10 +3436,6 @@ void main() {
     );
     expect(l.bridgesFromTheTorProject, "From the Tor Project");
     expect(l.bridgesSignInToThisWifi, "Sign in to this Wi-Fi");
-    expect(
-      l.bridgesThisNetworkWantsA,
-      "This network wants a sign-in first. Open your browser, then Kryfo connects.",
-    );
     expect(l.bridgesUsingBuiltIn, "Using built-in bridges");
     expect(l.bridgesUsingSnowflake, "Using Snowflake");
     expect(l.bridgesUsingTorProject, "Using bridges from the Tor Project");
@@ -3454,7 +3450,6 @@ void main() {
     expect(l.bridgesBridgeRemoved, "Bridge removed");
     expect(l.bridgesUndo, "Undo");
     expect(l.bridgesRemoveBridgeN("<n>"), "Remove bridge <n>");
-    expect(l.torBootSplashTorIsBlockedOr, "Tor is blocked here");
     expect(
       l.torBootSplashIfTorIsBlocked,
       "If Tor is blocked where you are, Kryfo can start through a bridge instead.",
@@ -3463,15 +3458,22 @@ void main() {
       l.bridgesPasteTheLineThey,
       "Paste the line they sent you, or scan its code. Take bridge lines from people you know.",
     );
-    expect(
-      l.bridgesAutomaticFindsAWay,
-      "Automatic finds a way by itself when Tor is blocked. To do that, Kryfo may reach a bridge directly. Lots of people use bridges every day.",
-    );
     expect(l.bridgesYourBridgeCouldNot, "Your bridge couldn't start");
     expect(
       l.bridgesKryfoStaysOfflineRather,
       "Kryfo stays offline rather than connect without it.",
     );
+    expect(
+      l.bridgesAutomaticFindsAWay,
+      "Automatic finds a way by itself when Tor is blocked. To find a bridge, Kryfo may ask the Tor Project, if you agree. Lots of people use bridges every day.",
+    );
+    expect(
+      l.bridgesThisNetworkWantsA,
+      "This network wants a sign-in first. Once you're in, Kryfo connects.",
+    );
+    expect(l.bridgesWaitingForWifiSignIn, "Waiting for Wi-Fi sign-in");
+    expect(l.bridgesOpenWifiSettings, "Open Wi-Fi settings");
+    expect(l.torBootSplashTorIsBlockedHere, "Tor is blocked here");
     expect(l.notesThisWeek, "This week");
     expect(l.notesShowMore, "Show more");
     expect(l.notesShowLess, "Show less");

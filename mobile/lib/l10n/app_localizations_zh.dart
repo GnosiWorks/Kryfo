@@ -6520,7 +6520,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesSignInToThisWifi => '登录这个 Wi-Fi';
 
   @override
-  String get bridgesThisNetworkWantsA => '这个网络需要先登录。打开浏览器，然后 Kryfo 就会连接。';
+  String get bridgesThisNetworkWantsA => '这个网络需要先登录。登录后，Kryfo 就会连接。';
+
+  @override
+  String get bridgesWaitingForWifiSignIn => '等待 Wi-Fi 登录';
+
+  @override
+  String get bridgesOpenWifiSettings => '打开 Wi-Fi 设置';
 
   @override
   String get bridgesUsingBuiltIn => '正在使用内置网桥';
@@ -6585,7 +6591,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesSwitchToAutomatic => '切换到自动';
 
   @override
-  String get torBootSplashTorIsBlockedOr => '这里 Tor 被封锁';
+  String get torBootSplashTorIsBlockedHere => '这里 Tor 被封锁';
 
   @override
   String get bridgesTryingAnotherWay => '正在尝试其他方式…';
@@ -6697,7 +6703,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get bridgesAutomaticFindsAWay =>
-      'Tor 被封锁时，“自动”会自己找到办法。为此，Kryfo 可能会直接连接网桥。每天都有很多人在用网桥。';
+      'Tor 被封锁时，“自动”会自己找到办法。如果你同意，Kryfo 可能会向 Tor 项目询问网桥。每天都有很多人在用网桥。';
 
   @override
   String get bridgesFromTheTorProjectLower => '来自 Tor 项目';
@@ -14276,7 +14282,13 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesSignInToThisWifi => '登入這個 Wi-Fi';
 
   @override
-  String get bridgesThisNetworkWantsA => '這個網路需要先登入。打開瀏覽器，接著 Kryfo 就會連線。';
+  String get bridgesThisNetworkWantsA => '這個網路需要先登入。登入後，Kryfo 就會連線。';
+
+  @override
+  String get bridgesWaitingForWifiSignIn => '等待 Wi-Fi 登入';
+
+  @override
+  String get bridgesOpenWifiSettings => '開啟 Wi-Fi 設定';
 
   @override
   String get bridgesUsingBuiltIn => '正在使用內建橋接';
@@ -14341,7 +14353,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesSwitchToAutomatic => '改用自動';
 
   @override
-  String get torBootSplashTorIsBlockedOr => '這裡 Tor 被封鎖';
+  String get torBootSplashTorIsBlockedHere => '這裡 Tor 被封鎖';
 
   @override
   String get bridgesTryingAnotherWay => '正在嘗試其他方式…';
@@ -14453,7 +14465,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get bridgesAutomaticFindsAWay =>
-      'Tor 被封鎖時，「自動」會自己找到辦法。為此，Kryfo 可能會直接連到橋接。每天都有很多人在用橋接。';
+      'Tor 被封鎖時，「自動」會自己找到辦法。如果你同意，Kryfo 可能會向 Tor 專案詢問橋接。每天都有很多人在用橋接。';
 
   @override
   String get bridgesFromTheTorProjectLower => '來自 Tor 專案';

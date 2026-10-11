@@ -1163,7 +1163,7 @@ class _AutoStrip extends StatelessWidget {
         final line = appState.bridgeLine;
         final a = line.action;
         return _HomeCard(
-          show: appState.autoStruggling,
+          show: appState.homeBridgeCard == 'auto',
           id: 'auto',
           tint: line.tone == BridgeTone.rose
               ? HaloColors.rose
@@ -1204,13 +1204,7 @@ class _AutoOffer extends StatelessWidget {
     return ListenableBuilder(
       listenable: appState,
       builder: (context, _) => _HomeCard(
-        // one violet card at a time: tor looking blocked wins
-        show:
-            appState.bridge.offerAuto &&
-            appState.bridgeChoice != BridgeChoice.auto &&
-            !appState.suggestBridges &&
-            !appState.inDecoyView &&
-            appState.sendMode == 'private',
+        show: appState.homeBridgeCard == 'offer',
         id: 'auto-offer',
         tint: HaloColors.violet,
         wash: true,
@@ -1246,7 +1240,7 @@ class _BridgeStuckHint extends StatelessWidget {
     return ListenableBuilder(
       listenable: appState,
       builder: (context, _) => _HomeCard(
-        show: appState.suggestBridgesOff,
+        show: appState.homeBridgeCard == 'stuck',
         id: 'bridges-stuck',
         tint: HaloColors.rose,
         title: l10n.bridgesThisBridgeIsnTGetting,
@@ -1276,7 +1270,7 @@ class _BridgeHint extends StatelessWidget {
     return ListenableBuilder(
       listenable: appState,
       builder: (context, _) => _HomeCard(
-        show: appState.suggestBridges,
+        show: appState.homeBridgeCard == 'hint',
         id: 'bridges',
         tint: HaloColors.violet,
         wash: true,

@@ -569,19 +569,18 @@ class HaloEngine {
   // what the tor project advises for a country, and the country it
   // guesses from the address it sees. outside tor, through meek, and only
   // with the person's yes. off the ui isolate: a network round trip
-  Future<String> moatSettings(String country, {bool overTor = false}) =>
-      _ffiOnIsolate(
-        'HaloMoatSettings',
-        [
-          jsonEncode({
-            'consent': true,
-            'via': overTor ? 'tor' : 'meek',
-            if (country.isNotEmpty) 'country': country,
-          }),
-        ],
-        wait: const Duration(seconds: 60),
-        what: 'moat',
-      );
+  Future<String> moatSettings(String country) => _ffiOnIsolate(
+    'HaloMoatSettings',
+    [
+      jsonEncode({
+        'consent': true,
+        'via': 'meek',
+        if (country.isNotEmpty) 'country': country,
+      }),
+    ],
+    wait: const Duration(seconds: 60),
+    what: 'moat',
+  );
 
   // everything the transport knows, in one read. no inference on this side.
   Map<String, dynamic> transportState() {
@@ -12680,10 +12679,31 @@ class AppState extends ChangeNotifier {
 
   // the status line every screen shows
   BridgeLine get bridgeLine => bridgeStatusLine(
-    _bridgeStatus,
+    _bridgeStatus.withSince(_bridgeSinceMs),
     decoy: inDecoyView,
     consent: _bridge.consent,
   );
+
+  // how long the attempt has run, as last read: kept on every read, while
+  // a change in it alone wakes nobody
+  int _bridgeSinceMs = 0;
+
+  // the one bridge card the home shows, in this order: automatic's own
+  // line, a picked bridge not getting through, tor alone not getting
+  // through, the offer of automatic. never two at once, never over hidden
+  // chats
+  String? get homeBridgeCard {
+    if (inDecoyView || lockState.inVault) return null;
+    if (autoStruggling) return 'auto';
+    if (suggestBridgesOff) return 'stuck';
+    if (suggestBridges) return 'hint';
+    if (_bridge.offerAuto &&
+        _bridge.choice != BridgeChoice.auto &&
+        _sendMode == 'private') {
+      return 'offer';
+    }
+    return null;
+  }
 
   // a bridge picked by hand, not automatic and not tor alone
   bool get manualBridge =>
@@ -12706,6 +12726,7 @@ class AppState extends ChangeNotifier {
   @visibleForTesting
   void setBridgeStatusForTest(BridgeStatus s) {
     _bridgeStatus = s;
+    _bridgeSinceMs = s.sinceMs;
     notifyListeners();
   }
 
@@ -12727,7 +12748,8 @@ class AppState extends ChangeNotifier {
       lockState.addListener(_bridgesOnLock);
     }
     if (_firstRunAsk) {
-      // tor waits for the answer, so the splash does not say it starts
+      // tor waits for the answer, so the splash does not say it starts.
+      // started with no window, it waits for one and asks then
       final phase = bootPhase;
       bootPhase = '';
       _firstRunPick = Completer<void>();
@@ -12742,6 +12764,13 @@ class AppState extends ChangeNotifier {
 
   @visibleForTesting
   Future<void> loadBridgesForTest() => _loadBridges();
+
+  @visibleForTesting
+  void dropBridgeHooks() {
+    if (!_lockHooked) return;
+    _lockHooked = false;
+    lockState.removeListener(_bridgesOnLock);
+  }
 
   // what automatic learnt and the lines the engine refreshed, as kept. a
   // decoy's engine takes neither, so they wait for it to close, and nothing
@@ -12784,12 +12813,15 @@ class AppState extends ChangeNotifier {
     );
     if (m == null) {
       _bridge = _bridge.copyWith(choice: BridgeChoice.auto, skipDirect: true);
+      unawaited(_writeBridgeSetup(_bridge));
       m = _bridge.engineMode();
     }
     final r = engine.restoreBridgeMode(m!.$1, m.$2);
     if (r.startsWith('error') && r != 'error: mode already set') {
       dlog('bridges: kept mode refused ($r)');
+      // kept at once, the yes and the country with it, as the engine does
       _bridge = _bridge.copyWith(choice: BridgeChoice.auto, skipDirect: true);
+      unawaited(_writeBridgeSetup(_bridge));
       return r;
     }
     if (m.$1 != 'auto' && m.$2.contains('"lines"')) {
@@ -12803,12 +12835,22 @@ class AppState extends ChangeNotifier {
   /// answer, so a kill on the question asks again
   @visibleForTesting
   Future<bool> firstRunWanted() async {
-    if (onboardingComplete) return false;
     const st = secureStore;
     if (await st.read(key: 'bridge_mode') != null) return false;
+    // a fresh install asked before and not answered yet
+    if (await st.read(key: 'bridge_fresh') == '1') return true;
+    if (onboardingComplete) return false;
     if (await st.read(key: 'bridges_on') != null) return false;
-    if ((await st.read(key: 'bridge_lines') ?? '').isNotEmpty) return false;
-    return WidgetsBinding.instance.lifecycleState != AppLifecycleState.paused;
+    return (await st.read(key: 'bridge_lines') ?? '').isEmpty;
+  }
+
+  /// the boot's last step before the first screen: whether a new install
+  /// is asked how to connect is known by then, so onboarding never shows
+  /// first
+  @visibleForTesting
+  Future<void> markReady() async {
+    _firstRunAsk = await firstRunWanted();
+    ready = true;
   }
 
   // the offer of automatic to an upgrade: '1' up, 'again:<ms>' back once
@@ -12855,19 +12897,23 @@ class AppState extends ChangeNotifier {
     }
     final on = await st.read(key: 'bridges_on');
     final lines = await st.read(key: 'bridge_lines');
-    final upgrade = !firstStart || on != null || (lines ?? '').isNotEmpty;
+    // a fresh install stays one until its answer, whatever the onboarding
+    final fresh = await st.read(key: 'bridge_fresh') == '1';
+    final upgrade =
+        !fresh && (!firstStart || on != null || (lines ?? '').isNotEmpty);
     final b = migrateBridges(
       upgrade: upgrade,
       on: on,
       lines: lines,
       source: source,
     );
-    // asked only with a window to ask in
-    _firstRunAsk =
-        !upgrade &&
-        WidgetsBinding.instance.lifecycleState != AppLifecycleState.paused;
-    // a new install keeps nothing before its answer
-    if (!upgrade) return b;
+    // a new install keeps only that it is one, and is asked: now, or when
+    // it is next in front
+    if (!upgrade) {
+      _firstRunAsk = true;
+      if (!fresh) await _bridgeWrite('bridge_fresh', '1');
+      return b;
+    }
     // the new keys, the tor project's lines first and the mode last, with
     // bridge_lines as it was: a kill before the mode moves over again
     await _writeBridgeSetup(b, lines: false);
@@ -12918,6 +12964,7 @@ class AppState extends ChangeNotifier {
   Future<void> pickFirstRun({required bool risky}) async {
     _bridge = _bridge.copyWith(skipDirect: risky);
     await _writeBridgeSetup(_bridge);
+    await _bridgeDelete('bridge_fresh');
     _firstRunAsk = false;
     notifyListeners();
     final p = _firstRunPick;
@@ -12983,8 +13030,11 @@ class AppState extends ChangeNotifier {
   }
 
   /// one kept line goes. with none left the friend's card hands over to
-  /// automatic. what was there before comes back, for an undo
-  Future<BridgeSetup?> removeBridgeLine(BridgeChoice from, int i) async {
+  /// automatic. what was there before and after comes back, for an undo
+  Future<(BridgeSetup, BridgeSetup)?> removeBridgeLine(
+    BridgeChoice from,
+    int i,
+  ) async {
     final before = _bridge;
     final ls = splitBridgeLines(
       from == BridgeChoice.friend
@@ -13001,22 +13051,39 @@ class AppState extends ChangeNotifier {
       if (ls.isEmpty) _bridge = _bridge.copyWith(choice: BridgeChoice.auto);
       applyBridgeNow();
     }
+    final after = _bridge;
     notifyListeners();
     await _writeBridgeSetup(_bridge);
-    return before;
+    return (before, after);
   }
 
-  /// the undo of a removed line
-  Future<void> putBridgeSetupBack(BridgeSetup before) async {
-    if (inDecoyView) return;
+  static bool _sameSetup(BridgeSetup a, BridgeSetup b) =>
+      a.choice == b.choice &&
+      a.friendLines == b.friendLines &&
+      a.torProjectLines == b.torProjectLines &&
+      a.consent == b.consent &&
+      a.skipDirect == b.skipDirect &&
+      a.country == b.country;
+
+  // the lines tor uses under a setup, or null for none
+  static String? _linesInUse(BridgeSetup b) => switch (b.choice) {
+    BridgeChoice.friend => b.friendLines,
+    BridgeChoice.torProject => b.torProjectLines,
+    _ => null,
+  };
+
+  /// the undo of a removed line. refused once anything changed since, and
+  /// tor bounces only when the lines it uses come back
+  Future<bool> putBridgeSetupBack(BridgeSetup before, BridgeSetup after) async {
+    if (inDecoyView || !_sameSetup(_bridge, after)) return false;
     final again =
-        _bridge.choice != before.choice ||
-        _bridge.friendLines != before.friendLines ||
-        _bridge.torProjectLines != before.torProjectLines;
+        before.choice != after.choice ||
+        _linesInUse(before) != _linesInUse(after);
     _bridge = before;
     if (again) applyBridgeNow();
     notifyListeners();
     await _writeBridgeSetup(_bridge);
+    return true;
   }
 
   /// may automatic ask the tor project: yes or no
@@ -13090,14 +13157,13 @@ class AppState extends ChangeNotifier {
   String? _moatGuess;
   String? get moatGuess => _moatGuess;
 
-  /// asked only when the person picks the tor project's guess: through
-  /// tor when it is up, else over meek, which needs the yes
+  /// asked only when the person picks the tor project's guess, and only
+  /// over meek with the yes: through tor the guess would be the exit
+  /// relay's country, so with tor up there is no guess, only the list
   Future<String?> askMoatGuess() async {
-    if (inDecoyView) return null;
-    final overTor = torUsable;
-    if (!overTor && _bridge.consent != 'yes') return null;
+    if (inDecoyView || torUsable || _bridge.consent != 'yes') return null;
     try {
-      final m = jsonDecode(await engine.moatSettings('', overTor: overTor));
+      final m = jsonDecode(await engine.moatSettings(''));
       final cc = m is Map ? m['country'] : null;
       if (m is Map && m['ok'] == true && cc is String && cc.length == 2) {
         _moatGuess = cc.toLowerCase();
@@ -13113,6 +13179,7 @@ class AppState extends ChangeNotifier {
   @visibleForTesting
   void takeBridgeStatus(String raw) {
     final s = BridgeStatus.parse(raw);
+    _bridgeSinceMs = s.sinceMs;
     if (s == _bridgeStatus) return;
     final was = _bridgeStatus;
     _bridgeStatus = s;
@@ -17900,9 +17967,7 @@ class AppState extends ChangeNotifier {
     if (onboardingComplete) {
       await Future.delayed(const Duration(milliseconds: 300));
     }
-    // decided before the first screen, so onboarding never flashes first
-    _firstRunAsk = await firstRunWanted();
-    ready = true;
+    await markReady();
     bootPhase = l10n.appStartingTor;
     dlog('BOOT ready +${bsw.elapsedMilliseconds}ms');
     notifyListeners();

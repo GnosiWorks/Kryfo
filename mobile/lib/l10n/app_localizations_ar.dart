@@ -6911,7 +6911,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get bridgesThisNetworkWantsA =>
-      'تطلب هذه الشبكة تسجيل الدخول أولًا. افتح المتصفح، وبعدها يتصل Kryfo.';
+      'تطلب هذه الشبكة تسجيل الدخول أولًا. بعد دخولك، يتصل Kryfo.';
+
+  @override
+  String get bridgesWaitingForWifiSignIn => 'بانتظار تسجيل الدخول إلى Wi-Fi';
+
+  @override
+  String get bridgesOpenWifiSettings => 'فتح إعدادات Wi-Fi';
 
   @override
   String get bridgesUsingBuiltIn => 'عبر الجسور المدمجة';
@@ -6982,7 +6988,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bridgesSwitchToAutomatic => 'التبديل إلى الوضع التلقائي';
 
   @override
-  String get torBootSplashTorIsBlockedOr => 'Tor محجوب هنا';
+  String get torBootSplashTorIsBlockedHere => 'Tor محجوب هنا';
 
   @override
   String get bridgesTryingAnotherWay => 'جارٍ تجربة طريقة أخرى…';
@@ -7107,7 +7113,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get bridgesAutomaticFindsAWay =>
-      'حين يُحجب Tor، يجد «تلقائي» طريقة بنفسه. ولذلك قد يتصل Kryfo بجسر مباشرةً. كثيرون يستخدمون الجسور كل يوم.';
+      'حين يُحجب Tor، يجد «تلقائي» طريقة بنفسه. وللعثور على جسر، قد يسأل Kryfo مشروع Tor إن وافقت. كثيرون يستخدمون الجسور كل يوم.';
 
   @override
   String get bridgesFromTheTorProjectLower => 'من مشروع Tor';

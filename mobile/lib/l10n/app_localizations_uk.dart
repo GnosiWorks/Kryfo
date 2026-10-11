@@ -6920,7 +6920,13 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get bridgesThisNetworkWantsA =>
-      'Ця мережа спершу просить увійти. Відкрий браузер, і Kryfo підключиться.';
+      'Ця мережа спершу просить увійти. Щойно ввійдеш, Kryfo підключиться.';
+
+  @override
+  String get bridgesWaitingForWifiSignIn => 'Чекаємо на вхід у Wi-Fi';
+
+  @override
+  String get bridgesOpenWifiSettings => 'Відкрити налаштування Wi-Fi';
 
   @override
   String get bridgesUsingBuiltIn => 'Через вбудовані мости';
@@ -6991,7 +6997,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get bridgesSwitchToAutomatic => 'Перейти на «Авто»';
 
   @override
-  String get torBootSplashTorIsBlockedOr => 'Tor тут заблокований';
+  String get torBootSplashTorIsBlockedHere => 'Tor тут заблокований';
 
   @override
   String get bridgesTryingAnotherWay => 'Пробуємо інший спосіб…';
@@ -7114,7 +7120,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get bridgesAutomaticFindsAWay =>
-      'Режим «Авто» сам знаходить шлях, коли Tor заблоковано. Для цього Kryfo може з’єднатися з мостом напряму. Мостами щодня користується дуже багато людей.';
+      'Режим «Авто» сам знаходить шлях, коли Tor заблоковано. Щоб знайти міст, Kryfo може з твоєї згоди звернутися до проєкту Tor. Мостами щодня користується дуже багато людей.';
 
   @override
   String get bridgesFromTheTorProjectLower => 'від проєкту Tor';

@@ -178,12 +178,16 @@ func TestRefusedRestoreFallsBackNeverDirect(t *testing.T) {
 	if v := bridgeStatus(); v.Method == "direct" || v.ErrorCode != codeNoMode {
 		t.Fatalf("no mode yet: %+v", v)
 	}
-	if r := restoreBridgeMode(bmWebtunnel, `{"lines":["`+tbObfs4+`"]}`); r != "error: lines_bad" {
+	if r := restoreBridgeMode(bmWebtunnel, `{"consent":"yes","country":"ir","lines":["`+tbObfs4+`"]}`); r != "error: lines_bad" {
 		t.Fatalf("restore: %q", r)
 	}
 	mode, opts, _ := bridgeMode()
 	if mode != bmAuto || !opts.SkipDirect || !bridgeModeKnown() {
 		t.Fatalf("fallback: %q %+v", mode, opts)
+	}
+	// the yes and the country go with it
+	if opts.Consent != "yes" || opts.Country != "ir" {
+		t.Fatalf("fallback lost the person's choices: %+v", opts)
 	}
 	if v := bridgeStatus(); v.Method == "direct" {
 		t.Fatalf("status says direct: %+v", v)

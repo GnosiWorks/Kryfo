@@ -313,6 +313,7 @@ const deviceKeys = {
   'bridge_offer_auto',
   'bridge_auto_mem',
   'bridge_cache',
+  'bridge_fresh',
   'onboarding_done',
   'moved.at',
   'fc_counter',

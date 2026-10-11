@@ -8650,8 +8650,16 @@
   "@bridgesSignInToThisWifi": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesThisNetworkWantsA": "This network wants a sign-in first. Open your browser, then Kryfo connects.",
+  "bridgesThisNetworkWantsA": "This network wants a sign-in first. Once you're in, Kryfo connects.",
   "@bridgesThisNetworkWantsA": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesWaitingForWifiSignIn": "Waiting for Wi-Fi sign-in",
+  "@bridgesWaitingForWifiSignIn": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesOpenWifiSettings": "Open Wi-Fi settings",
+  "@bridgesOpenWifiSettings": {
     "description": "screens/bridges_screen.dart"
   },
   "bridgesUsingBuiltIn": "Using built-in bridges",
@@ -8748,7 +8756,7 @@
   "@bridgesNothingYet": {
     "description": "screens/bridges_screen.dart"
   },
-  "torBootSplashTorIsBlockedOr": "Tor is blocked here",
+  "torBootSplashTorIsBlockedHere": "Tor is blocked here",
   "bridgesTryingAnotherWay": "Trying another way…",
   "@bridgesFoundAVolunteer": {
     "description": "screens/bridges_screen.dart"
@@ -8761,7 +8769,7 @@
   },
   "bridgesGoesThroughAVolunteer": "Goes through a volunteer's computer. Hard to block, slow to start.",
   "bridgesLetTheTorProject": "Let the Tor Project guess",
-  "@torBootSplashTorIsBlockedOr": {
+  "@torBootSplashTorIsBlockedHere": {
     "description": "widgets/tor_boot_splash.dart"
   },
   "bridgesTorSeemsBlocked": "Tor seems blocked on this network",
@@ -8876,7 +8884,7 @@
   "@bridgesMyanmar": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesAutomaticFindsAWay": "Automatic finds a way by itself when Tor is blocked. To do that, Kryfo may reach a bridge directly. Lots of people use bridges every day.",
+  "bridgesAutomaticFindsAWay": "Automatic finds a way by itself when Tor is blocked. To find a bridge, Kryfo may ask the Tor Project, if you agree. Lots of people use bridges every day.",
   "@bridgesScanABridgeCode": {
     "description": "screens/bridges_screen.dart"
   },

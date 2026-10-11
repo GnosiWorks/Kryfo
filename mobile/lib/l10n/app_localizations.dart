@@ -10914,8 +10914,20 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'This network wants a sign-in first. Open your browser, then Kryfo connects.'**
+  /// **'This network wants a sign-in first. Once you\'re in, Kryfo connects.'**
   String get bridgesThisNetworkWantsA;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for Wi-Fi sign-in'**
+  String get bridgesWaitingForWifiSignIn;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Open Wi-Fi settings'**
+  String get bridgesOpenWifiSettings;
 
   /// screens/bridges_screen.dart
   ///
@@ -11041,7 +11053,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Tor is blocked here'**
-  String get torBootSplashTorIsBlockedOr;
+  String get torBootSplashTorIsBlockedHere;
 
   /// screens/bridges_screen.dart
   ///
@@ -11214,7 +11226,7 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Automatic finds a way by itself when Tor is blocked. To do that, Kryfo may reach a bridge directly. Lots of people use bridges every day.'**
+  /// **'Automatic finds a way by itself when Tor is blocked. To find a bridge, Kryfo may ask the Tor Project, if you agree. Lots of people use bridges every day.'**
   String get bridgesAutomaticFindsAWay;
 
   /// screens/bridges_screen.dart

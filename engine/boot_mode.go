@@ -9,6 +9,7 @@ package main
 import "C"
 
 import (
+	"encoding/json"
 	"log"
 	"sync"
 	"sync/atomic"
@@ -108,9 +109,23 @@ func restoreBridgeMode(mode, raw string) string {
 	r := applyBridgeMode(mode, raw)
 	if r != "ok" {
 		log.Printf("bridges: the kept mode was refused (%s), automatic without tor alone", r)
-		if fb := applyBridgeMode(bmAuto, `{"skip_direct":true}`); fb != "ok" {
+		if fb := applyBridgeMode(bmAuto, fallbackOpts(raw)); fb != "ok" {
 			log.Printf("bridges: fallback refused: %s", fb)
 		}
 	}
 	return r
+}
+
+// automatic without tor alone, keeping the person's yes or no to the tor
+// project and their country from what was kept, when that can be read
+func fallbackOpts(raw string) string {
+	var o modeOpts
+	_ = json.Unmarshal([]byte(raw), &o)
+	f := modeOpts{SkipDirect: true, Country: o.Country, Webtunnel: o.Webtunnel}
+	switch o.Consent {
+	case "yes", "ask":
+		f.Consent = o.Consent
+	}
+	b, _ := json.Marshal(f)
+	return string(b)
 }

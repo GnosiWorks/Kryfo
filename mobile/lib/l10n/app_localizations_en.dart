@@ -6791,7 +6791,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bridgesThisNetworkWantsA =>
-      'This network wants a sign-in first. Open your browser, then Kryfo connects.';
+      'This network wants a sign-in first. Once you\'re in, Kryfo connects.';
+
+  @override
+  String get bridgesWaitingForWifiSignIn => 'Waiting for Wi-Fi sign-in';
+
+  @override
+  String get bridgesOpenWifiSettings => 'Open Wi-Fi settings';
 
   @override
   String get bridgesUsingBuiltIn => 'Using built-in bridges';
@@ -6862,7 +6868,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bridgesSwitchToAutomatic => 'Switch to automatic';
 
   @override
-  String get torBootSplashTorIsBlockedOr => 'Tor is blocked here';
+  String get torBootSplashTorIsBlockedHere => 'Tor is blocked here';
 
   @override
   String get bridgesTryingAnotherWay => 'Trying another way…';
@@ -6983,7 +6989,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bridgesAutomaticFindsAWay =>
-      'Automatic finds a way by itself when Tor is blocked. To do that, Kryfo may reach a bridge directly. Lots of people use bridges every day.';
+      'Automatic finds a way by itself when Tor is blocked. To find a bridge, Kryfo may ask the Tor Project, if you agree. Lots of people use bridges every day.';
 
   @override
   String get bridgesFromTheTorProjectLower => 'from the Tor Project';

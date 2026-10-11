@@ -6819,7 +6819,13 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bridgesThisNetworkWantsA =>
-      'Bu ağ önce giriş yapmanı istiyor. Tarayıcını aç, sonra Kryfo bağlanır.';
+      'Bu ağ önce giriş yapmanı istiyor. Giriş yaptığında Kryfo bağlanır.';
+
+  @override
+  String get bridgesWaitingForWifiSignIn => 'Wi-Fi girişi bekleniyor';
+
+  @override
+  String get bridgesOpenWifiSettings => 'Wi-Fi ayarlarını aç';
 
   @override
   String get bridgesUsingBuiltIn => 'Yerleşik köprüler kullanılıyor';
@@ -6890,7 +6896,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get bridgesSwitchToAutomatic => 'Otomatiğe geç';
 
   @override
-  String get torBootSplashTorIsBlockedOr => 'Tor burada engelli';
+  String get torBootSplashTorIsBlockedHere => 'Tor burada engelli';
 
   @override
   String get bridgesTryingAnotherWay => 'Başka bir yol deneniyor…';
@@ -7010,7 +7016,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bridgesAutomaticFindsAWay =>
-      'Tor engellendiğinde Otomatik kendiliğinden bir yol bulur. Bunun için Kryfo bir köprüye doğrudan bağlanabilir. Her gün pek çok kişi köprü kullanıyor.';
+      'Tor engellendiğinde Otomatik kendiliğinden bir yol bulur. Köprü bulmak için Kryfo, izin verirsen Tor Projesine sorabilir. Her gün pek çok kişi köprü kullanıyor.';
 
   @override
   String get bridgesFromTheTorProjectLower => 'Tor Projesinden';

@@ -6790,7 +6790,13 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get bridgesThisNetworkWantsA =>
-      'Mạng này cần đăng nhập trước. Hãy mở trình duyệt, rồi Kryfo sẽ kết nối.';
+      'Mạng này cần đăng nhập trước. Khi bạn đã vào được, Kryfo sẽ kết nối.';
+
+  @override
+  String get bridgesWaitingForWifiSignIn => 'Đang chờ đăng nhập Wi-Fi';
+
+  @override
+  String get bridgesOpenWifiSettings => 'Mở cài đặt Wi-Fi';
 
   @override
   String get bridgesUsingBuiltIn => 'Đang dùng cầu nối có sẵn';
@@ -6861,7 +6867,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get bridgesSwitchToAutomatic => 'Chuyển sang tự động';
 
   @override
-  String get torBootSplashTorIsBlockedOr => 'Tor bị chặn ở đây';
+  String get torBootSplashTorIsBlockedHere => 'Tor bị chặn ở đây';
 
   @override
   String get bridgesTryingAnotherWay => 'Đang thử cách khác…';
@@ -6979,7 +6985,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get bridgesAutomaticFindsAWay =>
-      'Chế độ Tự động tự tìm đường khi Tor bị chặn. Để làm vậy, Kryfo có thể kết nối thẳng tới một cầu nối. Mỗi ngày có rất nhiều người dùng cầu nối.';
+      'Chế độ Tự động tự tìm đường khi Tor bị chặn. Để tìm cầu nối, Kryfo có thể hỏi Dự án Tor, nếu bạn đồng ý. Mỗi ngày có rất nhiều người dùng cầu nối.';
 
   @override
   String get bridgesFromTheTorProjectLower => 'từ Dự án Tor';

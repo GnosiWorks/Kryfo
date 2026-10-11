@@ -6795,7 +6795,13 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get bridgesThisNetworkWantsA =>
-      'Jaringan ini minta kamu masuk dulu. Buka browser-mu, lalu Kryfo akan terhubung.';
+      'Jaringan ini minta kamu masuk dulu. Setelah kamu masuk, Kryfo akan terhubung.';
+
+  @override
+  String get bridgesWaitingForWifiSignIn => 'Menunggu masuk ke Wi-Fi';
+
+  @override
+  String get bridgesOpenWifiSettings => 'Buka setelan Wi-Fi';
 
   @override
   String get bridgesUsingBuiltIn => 'Memakai jembatan bawaan';
@@ -6866,7 +6872,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get bridgesSwitchToAutomatic => 'Ganti ke otomatis';
 
   @override
-  String get torBootSplashTorIsBlockedOr => 'Tor diblokir di sini';
+  String get torBootSplashTorIsBlockedHere => 'Tor diblokir di sini';
 
   @override
   String get bridgesTryingAnotherWay => 'Mencoba cara lain…';
@@ -6985,7 +6991,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get bridgesAutomaticFindsAWay =>
-      'Otomatis mencari cara sendiri saat Tor diblokir. Untuk itu, Kryfo mungkin menghubungi jembatan secara langsung. Banyak orang memakai jembatan setiap hari.';
+      'Otomatis mencari cara sendiri saat Tor diblokir. Untuk menemukan jembatan, Kryfo mungkin bertanya ke Tor Project, jika kamu setuju. Banyak orang memakai jembatan setiap hari.';
 
   @override
   String get bridgesFromTheTorProjectLower => 'dari Tor Project';
