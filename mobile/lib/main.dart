@@ -2462,14 +2462,29 @@ class HaloDb implements GroupOwedStore {
       await _dropFilesComingFrom(t, haloId);
       // the row stays: it carries the xpub our nostr subscription is built
       // from. archived + unaccepted = invisible everywhere until they write.
-      // the name given them goes with the chat. the verified mark stays on
-      // its key, so a re-add on another key is still held
+      // what was set for the chat goes with it, so they come back as a new
+      // person. the block, the verified mark on its key and the vouches for
+      // them stay
       await t.update(
         'contacts',
-        {'accepted': 0, 'archived': 1, 'unread': 0, 'nickname': null},
+        {
+          'accepted': 0,
+          'archived': 1,
+          'unread': 0,
+          'nickname': null,
+          'note': null,
+          'atmosphere': null,
+          'voice_disguise': null,
+          'muted': 0,
+          'pinned': 0,
+        },
         where: 'halo_id = ?',
         whereArgs: [haloId],
       );
+      // a first message after this is checked afresh, and rings under a
+      // new tag the shade never ties to the old chat
+      await t.delete('shield', where: 'halo_id = ?', whereArgs: [haloId]);
+      await t.delete('notif_tags', where: 'chat = ?', whereArgs: [haloId]);
       return rows;
     });
     await _scrubMedia(files);
@@ -18408,6 +18423,7 @@ class AppState extends ChangeNotifier {
     // holds a live session and their next message is a plain whisper, which
     // back-pair (prekey-only) can't rebuild. keeping the session lets it
     // decrypt, find no contact, and land in requests like a new stranger.
+    dropChatDraft(haloId);
     await session.deleteConversation(haloId);
     // keep _xPubToHaloId: the row and subscription both survive so they can
     // still reach us, in requests instead of a live chat.

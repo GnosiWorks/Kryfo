@@ -153,6 +153,14 @@ bool landInOpenChat(String id, String words) {
   return false;
 }
 
+/// a deleted chat's unsent words go with it, from an open composer too
+void dropChatDraft(String id) {
+  for (final s in _openChats[id] ?? const <_ChatScreenState>[]) {
+    if (s.mounted) s._msgCtrl.clear();
+  }
+  draftPerPeer.remove(session.chatKey(id));
+}
+
 // newest message ms seen when the chat was last left, keyed by
 // session.chatKey like the drafts
 final Map<String, int> _lastReadPerPeer = {};
