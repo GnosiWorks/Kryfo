@@ -634,9 +634,14 @@ func livePoll(a *attemptSeen, s autoStep) {
 	}
 	a.allDead = dead
 	if s.Method == "snowflake" {
-		if _, at, _ := snowflakeStatus(); at.After(a.since) {
-			a.sfMoved = at
-		}
+		noteSnowflake(a)
+	}
+}
+
+// snowflake getting further than before counts as progress, and nothing else
+func noteSnowflake(a *attemptSeen) {
+	if _, at := snowflakeForward(); at.After(a.since) {
+		a.sfMoved = at
 	}
 }
 
