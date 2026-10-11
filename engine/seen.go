@@ -147,7 +147,7 @@ func dropAddressFiles(rcvPk string) {
 	}
 	seenFileMu.Lock()
 	defer seenFileMu.Unlock()
-	for _, p := range []string{seenPath, seenPath + ".tmp", lastPath, heardFile(rcvPk)} {
+	for _, p := range []string{seenPath, seenPath + ".tmp", lastPath, heardFile(rcvPk), heardFile(rcvPk) + ".tmp"} {
 		goneFiles.Store(p, struct{}{})
 		os.Remove(p)
 	}

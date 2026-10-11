@@ -15,6 +15,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -64,10 +65,14 @@ func TestEachLineSaysWhenItReachedTheRelay(t *testing.T) {
 	if h := heardOf(ck); h < began {
 		t.Fatalf("heard to %d, before the runner began at %d", h, began)
 	}
-	// on disk for the next runner
+	// on disk for the next runner at once, to the quarter hour
 	b, err := os.ReadFile(heardFile(rcv))
 	if err != nil || !strings.HasPrefix(string(b), relay.url()+" ") {
 		t.Fatalf("the heard file holds %q (%v)", b, err)
+	}
+	v, _ := strconv.ParseInt(strings.TrimSpace(strings.TrimPrefix(string(b), relay.url()+" ")), 10, 64)
+	if step := heardSaveStep.Milliseconds(); v%step != 0 || v > heardOf(ck) || v <= heardOf(ck)-step {
+		t.Fatalf("the file says %d for %d heard", v, heardOf(ck))
 	}
 
 	before := time.Now().UnixMilli()
@@ -81,6 +86,7 @@ func TestEachLineSaysWhenItReachedTheRelay(t *testing.T) {
 	// the socket goes, and what the relay takes meanwhile comes stored on
 	// the next connection, after what was heard before it
 	heard := heardOf(ck)
+	dropped := time.Now()
 	relay.dropAll()
 	relay.store(wrapTo(t, peer, myXPub, "gap"))
 	kickUntil(t, "the gap", func() bool { return inboxHas(tag + "|gap") })
@@ -88,6 +94,12 @@ func TestEachLineSaysWhenItReachedTheRelay(t *testing.T) {
 	if g.from < heard || g.until < g.from {
 		t.Fatalf("gap: from %d until %d, want from at least %d", g.from, g.until, heard)
 	}
+	// the next catch-up's end is written at once, within the minute too
+	waitFor(t, "the next catch-up written", 10*time.Second, func() bool {
+		heardMu.Lock()
+		defer heardMu.Unlock()
+		return heardSaved[rcv].After(dropped)
+	})
 
 	// a runner of another process reads the file
 	cancel()
@@ -107,7 +119,7 @@ func TestEachLineSaysWhenItReachedTheRelay(t *testing.T) {
 	if _, err := os.Stat(heardFile(rcv)); !os.IsNotExist(err) {
 		t.Fatalf("the heard file is still there (%v)", err)
 	}
-	noteHeard(context.Background(), relay.url(), rcv, time.Now().Add(time.Hour))
+	noteHeard(context.Background(), relay.url(), rcv, time.Now().Add(time.Hour), true)
 	if _, err := os.Stat(heardFile(rcv)); !os.IsNotExist(err) {
 		t.Fatal("a late note wrote the file of an address let go of")
 	}
@@ -116,21 +128,45 @@ func TestEachLineSaysWhenItReachedTheRelay(t *testing.T) {
 func TestHeardMovesOnlyForwardAndNotForARunnerLetGo(t *testing.T) {
 	savedOld := savedDataDir
 	savedDataDir = t.TempDir()
-	defer func() { savedDataDir = savedOld }()
+	nostrMu.Lock()
+	oldRelays := nostrRelays
+	nostrMu.Unlock()
+	setRelays([]string{"wss://r", "wss://s"})
+	defer func() { savedDataDir = savedOld; setRelays(oldRelays) }()
 	rcv := strings.Repeat("ab", 32)
 	t.Cleanup(func() { dropHeard(rcv) })
 	k := catchupKey("wss://r", rcv)
 	now := time.Now()
-	noteHeard(context.Background(), "wss://r", rcv, now)
-	noteHeard(context.Background(), "wss://r", rcv, now.Add(-time.Minute))
+	noteHeard(context.Background(), "wss://r", rcv, now, true)
+	noteHeard(context.Background(), "wss://r", rcv, now.Add(-time.Minute), true)
 	if heardOf(k) != now.UnixMilli() {
 		t.Fatalf("heard %d, want %d", heardOf(k), now.UnixMilli())
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	noteHeard(ctx, "wss://r", rcv, now.Add(time.Hour))
+	noteHeard(ctx, "wss://r", rcv, now.Add(time.Hour), true)
 	if heardOf(k) != now.UnixMilli() {
 		t.Fatal("a runner let go of moved it")
+	}
+	// within the minute a sign of life moves memory, not the file
+	before, _ := os.ReadFile(heardFile(rcv))
+	noteHeard(context.Background(), "wss://r", rcv, now.Add(30*time.Second), false)
+	after, _ := os.ReadFile(heardFile(rcv))
+	if heardOf(k) != now.Add(30*time.Second).UnixMilli() || string(before) != string(after) {
+		t.Fatalf("memory %d, file %q then %q", heardOf(k), before, after)
+	}
+	// a relay off the list is not written again, and nothing is left half
+	// written
+	heardMu.Lock()
+	heardAt[catchupKey("wss://gone", rcv)] = 5
+	heardMu.Unlock()
+	noteHeard(context.Background(), "wss://s", rcv, now, true)
+	b, _ := os.ReadFile(heardFile(rcv))
+	if strings.Contains(string(b), "wss://gone") || !strings.Contains(string(b), "wss://s ") {
+		t.Fatalf("the file holds %q", b)
+	}
+	if _, err := os.Stat(heardFile(rcv) + ".tmp"); !os.IsNotExist(err) {
+		t.Fatal("a tmp file is left")
 	}
 	// a torn line is passed over
 	if err := os.WriteFile(heardFile(rcv), []byte("wss://r x\nwss://s 77\ngarbage\n"), 0600); err != nil {

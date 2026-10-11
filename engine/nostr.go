@@ -1259,7 +1259,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 	if savedDataDir != "" {
 		seenPath, lastPath = addressFiles(rcvPk)
 		// a subscription on an address let go of before keeps files again
-		for _, p := range []string{seenPath, seenPath + ".tmp", lastPath, heardFile(rcvPk)} {
+		for _, p := range []string{seenPath, seenPath + ".tmp", lastPath, heardFile(rcvPk), heardFile(rcvPk) + ".tmp"} {
 			goneFiles.Delete(p)
 		}
 		loadHeard(rcvPk)
@@ -1562,12 +1562,12 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				aliveNow := func() {
 					markAlive()
 					if covered.Load() {
-						noteHeard(conn, u, rcvPk, time.Now())
+						noteHeard(conn, u, rcvPk, time.Now(), false)
 					}
 				}
 				caught := func() {
 					covered.Store(true)
-					noteHeard(conn, u, rcvPk, time.Now())
+					noteHeard(conn, u, rcvPk, time.Now(), true)
 				}
 				// a walk's pages reach back below the first answer
 				walked := func(ev nostr.Event) bool {
