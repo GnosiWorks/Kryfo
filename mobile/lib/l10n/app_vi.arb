@@ -305,6 +305,8 @@
   "bridgesSavedLines": "Dòng đã lưu",
   "bridgesStraightToTor": "Thẳng tới Tor, không cần cầu nối",
   "bridgesKryfoConnectsAsSoon": "Kryfo sẽ kết nối ngay khi bạn có mạng trở lại.",
+  "bridgesYourBridgeCouldNot": "Cầu nối của bạn không khởi động được",
+  "bridgesKryfoStaysOfflineRather": "Kryfo sẽ ngoại tuyến thay vì kết nối mà không có nó.",
   "bridgesMore": "Thêm",
   "bridgesFromAFriendLower": "từ bạn bè",
   "bridgesAlmostThere": "Sắp xong rồi",

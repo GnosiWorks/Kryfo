@@ -255,6 +255,23 @@ void main() {
       expect(line(s, c: 'yes').action, BridgeAction.tryAgain);
     });
 
+    test('a picked bridge that could not start waits, with a retry', () {
+      const s = BridgeStatus(
+        mode: 'own',
+        phase: 'trying',
+        method: 'obfs4',
+        errorCode: 'pt_failed',
+      );
+      final l = line(s);
+      expect(l.head, l10n.bridgesYourBridgeCouldNot);
+      expect(l.tone, BridgeTone.rose);
+      expect(l.action, BridgeAction.tryAgain);
+      expect(l.moving, isFalse);
+      // a decoy hears connecting, nothing more
+      expect(line(s, decoy: true).head, l10n.bridgesConnectingDots);
+      expect(line(s, decoy: true).action, isNull);
+    });
+
     test('no internet, asleep, a check-in, and not on tor', () {
       expect(
         line(const BridgeStatus(phase: 'no_internet')).head,

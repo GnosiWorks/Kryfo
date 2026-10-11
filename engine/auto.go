@@ -914,6 +914,12 @@ func runAttempt(p passCtx, s autoStep, validated bool) string {
 			}
 			autoSleep(autoPoll)
 		}
+		// tor came up without these bridges: their listeners would not
+		// start, so this way is out at once
+		if bridgesEnabled() && ptDown.Load() {
+			log.Printf("auto: %s not applied: transport listeners down", s.Method)
+			return seenFailed
+		}
 		now := autoNow()
 		obsMu.Lock()
 		a.since = now
@@ -1351,6 +1357,11 @@ func bridgeStatus() bridgeStatusView {
 			phase = "connected"
 		}
 		since = time.Time{}
+		// a picked bridge whose listeners would not start: tor waits off
+		// the network for a retry
+		if phase == "trying" && bridgesEnabled() && ptDown.Load() {
+			v.ErrorCode = codePTDown
+		}
 	}
 	switch why := autoIdleWhy(); {
 	case why == "not_tor_mode", why == "no_internet":
@@ -1431,9 +1442,17 @@ func HaloBridgeStatus() *C.char {
 //
 //export HaloBridgeRetry
 func HaloBridgeRetry() *C.char {
+	bridgeRetry()
+	return C.CString("ok")
+}
+
+// a picked bridge also gets its listeners tried again
+func bridgeRetry() {
 	autoRetryNow.Store(true)
 	autoKick()
-	return C.CString("ok")
+	if mode, _, _ := bridgeMode(); mode != bmAuto && torStarted() && !torIsPaused() {
+		go reconnectNow()
+	}
 }
 
 // what automatic remembers, as json for the secure store, or

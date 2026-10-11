@@ -305,6 +305,8 @@
   "bridgesSavedLines": "خط‌های ذخیره‌شده",
   "bridgesStraightToTor": "مستقیم به Tor، بدون نیاز به پل",
   "bridgesKryfoConnectsAsSoon": "Kryfo به محض این‌که دوباره آنلاین شوید وصل می‌شود.",
+  "bridgesYourBridgeCouldNot": "پل شما راه‌اندازی نشد",
+  "bridgesKryfoStaysOfflineRather": "Kryfo آفلاین می‌ماند تا بدون آن وصل نشود.",
   "bridgesMore": "بیشتر",
   "bridgesFromAFriendLower": "از یک دوست",
   "bridgesAlmostThere": "چیزی نمانده",

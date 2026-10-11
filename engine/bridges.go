@@ -544,8 +544,10 @@ func bridgeTorArgs() []string {
 	if !bridgesEnabled() {
 		return nil
 	}
-	if err := startPTListeners(); err != nil {
-		log.Printf("bridges: %v, starting direct instead", err)
+	// tor cannot take bridge lines without their listeners. it starts
+	// without them and stays off the network until they are up: never
+	// direct in their place
+	if startPTListeners() != nil {
 		return nil
 	}
 	args := []string{"--UseBridges", "1"}
@@ -584,6 +586,23 @@ func ptReg(name string) *ptListen {
 // set is kept, since tor holds the ports it was told about for the life of
 // the process.
 func startPTListeners() error {
+	err := startPTListenersLocked()
+	ptDown.Store(err != nil)
+	if err != nil {
+		// the kind only, no address
+		log.Println("bridges: transport listeners did not start, tor stays off the network")
+	}
+	return err
+}
+
+// the transport listeners would not start. tor goes out through bridges or
+// not at all, so with bridges wanted it stays off the network until they do
+var ptDown atomic.Bool
+
+// where a listener comes from, so the tests can make it fail
+var ptListenLocal = func() (net.Listener, error) { return net.Listen("tcp", "127.0.0.1:0") }
+
+func startPTListenersLocked() error {
 	ptMu.Lock()
 	defer ptMu.Unlock()
 	if ptRegs == nil {
@@ -597,7 +616,7 @@ func startPTListeners() error {
 		if err != nil {
 			return fmt.Errorf("%s client factory: %w", n, err)
 		}
-		ln, err := net.Listen("tcp", "127.0.0.1:0")
+		ln, err := ptListenLocal()
 		if err != nil {
 			return fmt.Errorf("pt listen: %w", err)
 		}

@@ -6511,6 +6511,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesEgypt => '埃及';
 
   @override
+  String get bridgesYourBridgeCouldNot => '网桥无法启动';
+
+  @override
+  String get bridgesKryfoStaysOfflineRather => 'Kryfo 宁可保持离线，也不会在没有网桥的情况下连接。';
+
+  @override
   String get bridgesIran => '伊朗';
 
   @override
@@ -14232,6 +14238,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get bridgesEgypt => '埃及';
+
+  @override
+  String get bridgesYourBridgeCouldNot => '橋接無法啟動';
+
+  @override
+  String get bridgesKryfoStaysOfflineRather => 'Kryfo 寧可保持離線，也不會在沒有橋接的情況下連線。';
 
   @override
   String get bridgesIran => '伊朗';

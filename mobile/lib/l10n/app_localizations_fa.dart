@@ -6797,6 +6797,13 @@ class AppLocalizationsFa extends AppLocalizations {
   String get bridgesEgypt => 'مصر';
 
   @override
+  String get bridgesYourBridgeCouldNot => 'پل شما راه‌اندازی نشد';
+
+  @override
+  String get bridgesKryfoStaysOfflineRather =>
+      'Kryfo آفلاین می‌ماند تا بدون آن وصل نشود.';
+
+  @override
   String get bridgesIran => 'ایران';
 
   @override

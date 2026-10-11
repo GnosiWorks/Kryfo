@@ -305,6 +305,8 @@
   "bridgesSavedLines": "Збережені рядки",
   "bridgesStraightToTor": "Напряму до Tor, міст не потрібен",
   "bridgesKryfoConnectsAsSoon": "Kryfo підключиться, щойно ти знову будеш онлайн.",
+  "bridgesYourBridgeCouldNot": "Міст не запустився",
+  "bridgesKryfoStaysOfflineRather": "Kryfo лишається офлайн, щоб не підключатися без нього.",
   "bridgesMore": "Більше",
   "bridgesFromAFriendLower": "від друга",
   "bridgesAlmostThere": "Майже готово",

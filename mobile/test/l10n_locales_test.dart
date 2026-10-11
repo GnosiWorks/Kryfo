@@ -2946,6 +2946,12 @@ final _calls = <_Call>[
   ('bridgesKryfoTriesAgainBy', [], (l) => l.bridgesKryfoTriesAgainBy),
   ('bridgesNoInternet', [], (l) => l.bridgesNoInternet),
   ('bridgesKryfoConnectsAsSoon', [], (l) => l.bridgesKryfoConnectsAsSoon),
+  ('bridgesYourBridgeCouldNot', [], (l) => l.bridgesYourBridgeCouldNot),
+  (
+    'bridgesKryfoStaysOfflineRather',
+    [],
+    (l) => l.bridgesKryfoStaysOfflineRather,
+  ),
   ('bridgesAsleepBetweenCheckIns', [], (l) => l.bridgesAsleepBetweenCheckIns),
   ('bridgesCheckingForMessages', [], (l) => l.bridgesCheckingForMessages),
   ('bridgesNotNeededRightNow', [], (l) => l.bridgesNotNeededRightNow),

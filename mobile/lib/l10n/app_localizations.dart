@@ -10896,6 +10896,18 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
+  /// **'Your bridge couldn\'t start'**
+  String get bridgesYourBridgeCouldNot;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo stays offline rather than connect without it.'**
+  String get bridgesKryfoStaysOfflineRather;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
   /// **'Iran'**
   String get bridgesIran;
 

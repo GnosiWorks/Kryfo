@@ -6917,6 +6917,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get bridgesEgypt => 'Египет';
 
   @override
+  String get bridgesYourBridgeCouldNot => 'Мост не запустился';
+
+  @override
+  String get bridgesKryfoStaysOfflineRather =>
+      'Kryfo остаётся офлайн, чтобы не подключаться без него.';
+
+  @override
   String get bridgesIran => 'Иран';
 
   @override

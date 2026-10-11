@@ -20,9 +20,26 @@ var (
 	modeMu sync.Mutex
 )
 
-const errNoMode = "error: no bridge mode yet"
+const (
+	errNoMode  = "error: no bridge mode yet"
+	errPTDown  = "error: bridges could not start"
+	errNoConf  = "error: bridges not applied"
+	codePTDown = "pt_failed"
+)
 
 func bridgeModeKnown() bool { return modeSet.Load() }
+
+// why tor may not go on the network now, "" when it may. direct only when
+// no bridge is wanted: the mode is direct, or automatic's direct step runs
+func networkHold() string {
+	if !bridgeModeKnown() {
+		return errNoMode
+	}
+	if bridgesEnabled() && ptDown.Load() {
+		return errPTDown
+	}
+	return ""
+}
 
 // the mode as the app kept it, handed over at start before tor runs, as
 // for HaloSetBridgeMode. it is taken with a decoy open too: a decoy shows

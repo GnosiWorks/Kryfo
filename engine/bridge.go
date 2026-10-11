@@ -415,8 +415,8 @@ func startListener(dataDir string) string {
 	// only on the branch NoWait skips, so turn it on here, over the engine's
 	// own connection (see control_events.go). with no bridge mode yet it
 	// stays off: the bounce that sets the mode turns it on.
-	if !bridgeModeKnown() {
-		log.Println("halo: no bridge mode yet, tor stays off the network")
+	if why := networkHold(); why != "" {
+		log.Printf("halo: tor stays off the network (%s)", why)
 	} else if eerr := ctrlDo(t, "DisableNetwork 0", func(c *control.Conn) error {
 		return c.SetConf(control.KeyVals("DisableNetwork", "0")...)
 	}); eerr != nil {
@@ -913,9 +913,11 @@ func reconnectOn(t *tor.Tor, addr string, me int64, auto bool) string {
 	if !step("bridge config") {
 		return superseded
 	}
+	confOK := true
 	if err := applyBridgeConf(t); err != nil {
-		log.Printf("halo: bridge config not applied: %v", err)
+		log.Println("halo: bridge config not applied")
 		bridgeConfErr.Store(err.Error())
+		confOK = false
 	} else {
 		bridgeConfErr.Store("")
 	}
@@ -928,11 +930,16 @@ func reconnectOn(t *tor.Tor, addr string, me int64, auto bool) string {
 		atomic.StoreInt32(&bounceOff, 0)
 		return "error: tor is asleep"
 	}
-	// an unknown mode is never direct
-	if !bridgeModeKnown() {
-		log.Println("halo: no bridge mode yet, leaving tor off the network")
+	// an unknown mode is never direct, and neither are bridges tor did not
+	// take: it would go out on whatever it had before
+	why := networkHold()
+	if why == "" && !confOK && bridgesEnabled() {
+		why = errNoConf
+	}
+	if why != "" {
+		log.Printf("halo: leaving tor off the network (%s)", why)
 		atomic.StoreInt32(&bounceOff, 0)
-		return errNoMode
+		return why
 	}
 	// what tor says from here on is about the switch an attempt waits on
 	obsArm()
@@ -1038,9 +1045,9 @@ func torResume() string {
 	if t == nil || t.Control == nil {
 		return "start"
 	}
-	if !bridgeModeKnown() {
-		log.Println("halo: no bridge mode yet, tor stays asleep")
-		return errNoMode
+	if why := networkHold(); why != "" {
+		log.Printf("halo: tor stays asleep (%s)", why)
+		return why
 	}
 	if err := ctrlDo(t, "DisableNetwork 0", func(c *control.Conn) error {
 		return c.SetConf(control.KeyVals("DisableNetwork", "0")...)

@@ -6909,6 +6909,13 @@ class AppLocalizationsUk extends AppLocalizations {
   String get bridgesEgypt => 'Єгипет';
 
   @override
+  String get bridgesYourBridgeCouldNot => 'Міст не запустився';
+
+  @override
+  String get bridgesKryfoStaysOfflineRather =>
+      'Kryfo лишається офлайн, щоб не підключатися без нього.';
+
+  @override
   String get bridgesIran => 'Іран';
 
   @override

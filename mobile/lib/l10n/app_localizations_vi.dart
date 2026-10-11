@@ -6778,6 +6778,14 @@ class AppLocalizationsVi extends AppLocalizations {
   String get bridgesEgypt => 'Ai Cập';
 
   @override
+  String get bridgesYourBridgeCouldNot =>
+      'Cầu nối của bạn không khởi động được';
+
+  @override
+  String get bridgesKryfoStaysOfflineRather =>
+      'Kryfo sẽ ngoại tuyến thay vì kết nối mà không có nó.';
+
+  @override
   String get bridgesIran => 'Iran';
 
   @override

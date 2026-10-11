@@ -305,6 +305,8 @@
   "bridgesSavedLines": "الأسطر المحفوظة",
   "bridgesStraightToTor": "مباشرة إلى Tor، دون حاجة إلى جسر",
   "bridgesKryfoConnectsAsSoon": "يتصل Kryfo فور عودتك إلى الإنترنت.",
+  "bridgesYourBridgeCouldNot": "تعذّر تشغيل الجسر",
+  "bridgesKryfoStaysOfflineRather": "يبقى Kryfo غير متصل بدل أن يتصل من دونه.",
   "bridgesMore": "المزيد",
   "bridgesFromAFriendLower": "من صديق",
   "bridgesAlmostThere": "اقتربنا",

@@ -305,6 +305,8 @@
   "bridgesSavedLines": "已保存的地址",
   "bridgesStraightToTor": "直连 Tor，无需网桥",
   "bridgesKryfoConnectsAsSoon": "你一恢复联网，Kryfo 就会连接。",
+  "bridgesYourBridgeCouldNot": "网桥无法启动",
+  "bridgesKryfoStaysOfflineRather": "Kryfo 宁可保持离线，也不会在没有网桥的情况下连接。",
   "bridgesMore": "更多",
   "bridgesFromAFriendLower": "来自朋友",
   "bridgesAlmostThere": "快好了",

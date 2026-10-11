@@ -416,6 +416,16 @@ BridgeLine bridgeStatusLine(
             : BridgeAction.getBridge,
       );
   }
+  // a picked bridge whose listeners would not start: tor waits offline
+  if (s.errorCode == 'pt_failed') {
+    return BridgeLine(
+      head: l10n.bridgesYourBridgeCouldNot,
+      detail: l10n.bridgesKryfoStaysOfflineRather,
+      detailKind: 'pt',
+      tone: BridgeTone.rose,
+      action: BridgeAction.tryAgain,
+    );
+  }
   if (s.phase == 'connected' && s.canSend) {
     final bridge = s.method.isNotEmpty && s.method != 'direct';
     return BridgeLine(

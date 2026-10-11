@@ -305,6 +305,8 @@
   "bridgesSavedLines": "Сохранённые строки",
   "bridgesStraightToTor": "Напрямую к Tor, мост не нужен",
   "bridgesKryfoConnectsAsSoon": "Kryfo подключится, как только ты снова будешь в сети.",
+  "bridgesYourBridgeCouldNot": "Мост не запустился",
+  "bridgesKryfoStaysOfflineRather": "Kryfo остаётся офлайн, чтобы не подключаться без него.",
   "bridgesMore": "Ещё",
   "bridgesFromAFriendLower": "от друга",
   "bridgesAlmostThere": "Почти готово",

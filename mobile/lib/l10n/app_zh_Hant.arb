@@ -305,6 +305,8 @@
   "bridgesSavedLines": "已儲存的設定",
   "bridgesStraightToTor": "直接連到 Tor，不需要橋接",
   "bridgesKryfoConnectsAsSoon": "你一恢復連網，Kryfo 就會連線。",
+  "bridgesYourBridgeCouldNot": "橋接無法啟動",
+  "bridgesKryfoStaysOfflineRather": "Kryfo 寧可保持離線，也不會在沒有橋接的情況下連線。",
   "bridgesMore": "更多",
   "bridgesFromAFriendLower": "來自朋友",
   "bridgesAlmostThere": "快好了",

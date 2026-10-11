@@ -6845,6 +6845,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get bridgesEgypt => 'Egipto';
 
   @override
+  String get bridgesYourBridgeCouldNot => 'Tu puente no pudo iniciarse';
+
+  @override
+  String get bridgesKryfoStaysOfflineRather =>
+      'Kryfo prefiere quedarse sin conexión antes que conectarse sin él.';
+
+  @override
   String get bridgesIran => 'Irán';
 
   @override

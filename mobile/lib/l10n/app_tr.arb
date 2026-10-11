@@ -305,6 +305,8 @@
   "bridgesSavedLines": "Kayıtlı satırlar",
   "bridgesStraightToTor": "Doğrudan Tor’a, köprüye gerek yok",
   "bridgesKryfoConnectsAsSoon": "Kryfo yeniden çevrimiçi olduğun anda bağlanır.",
+  "bridgesYourBridgeCouldNot": "Köprün başlatılamadı",
+  "bridgesKryfoStaysOfflineRather": "Kryfo onsuz bağlanmaktansa çevrimdışı kalır.",
   "bridgesMore": "Daha fazla",
   "bridgesFromAFriendLower": "bir arkadaştan",
   "bridgesAlmostThere": "Az kaldı",

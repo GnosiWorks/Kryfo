@@ -3338,6 +3338,11 @@ void main() {
       l.bridgesKryfoConnectsAsSoon,
       "Kryfo connects as soon as you're back online.",
     );
+    expect(l.bridgesYourBridgeCouldNot, "Your bridge couldn't start");
+    expect(
+      l.bridgesKryfoStaysOfflineRather,
+      "Kryfo stays offline rather than connect without it.",
+    );
     expect(l.bridgesAsleepBetweenCheckIns, "Asleep between check-ins");
     expect(l.bridgesCheckingForMessages, "Checking for messages…");
     expect(l.bridgesNotNeededRightNow, "Not needed right now");

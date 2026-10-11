@@ -305,6 +305,8 @@
   "bridgesSavedLines": "Baris tersimpan",
   "bridgesStraightToTor": "Langsung ke Tor, tanpa perlu jembatan",
   "bridgesKryfoConnectsAsSoon": "Kryfo langsung terhubung begitu kamu online lagi.",
+  "bridgesYourBridgeCouldNot": "Jembatanmu tidak bisa dimulai",
+  "bridgesKryfoStaysOfflineRather": "Kryfo tetap offline daripada terhubung tanpanya.",
   "bridgesMore": "Selengkapnya",
   "bridgesFromAFriendLower": "dari teman",
   "bridgesAlmostThere": "Sebentar lagi",

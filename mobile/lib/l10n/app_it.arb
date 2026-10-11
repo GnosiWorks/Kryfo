@@ -305,6 +305,8 @@
   "bridgesSavedLines": "Righe salvate",
   "bridgesStraightToTor": "Diretto a Tor, senza bisogno di bridge",
   "bridgesKryfoConnectsAsSoon": "Kryfo si connette appena torni online.",
+  "bridgesYourBridgeCouldNot": "Il tuo bridge non è partito",
+  "bridgesKryfoStaysOfflineRather": "Kryfo resta offline piuttosto che connettersi senza.",
   "bridgesMore": "Altro",
   "bridgesFromAFriendLower": "da un amico",
   "bridgesAlmostThere": "Ci siamo quasi",

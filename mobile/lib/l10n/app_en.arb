@@ -8638,6 +8638,14 @@
   "@bridgesKryfoConnectsAsSoon": {
     "description": "screens/bridges_screen.dart"
   },
+  "bridgesYourBridgeCouldNot": "Your bridge couldn't start",
+  "@bridgesYourBridgeCouldNot": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "bridgesKryfoStaysOfflineRather": "Kryfo stays offline rather than connect without it.",
+  "@bridgesKryfoStaysOfflineRather": {
+    "description": "screens/bridges_screen.dart"
+  },
   "@bridgesFromTheTorProjectLower": {
     "description": "screens/bridges_screen.dart"
   },
