@@ -509,35 +509,33 @@ class _ChoiceCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
+                    // a long tag goes under the title, never through it
+                    Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8,
+                      runSpacing: 2,
                       children: [
-                        Expanded(
-                          child: Text(
-                            title,
-                            style: HaloType.serif(
-                              size: 18,
-                              color: HaloColors.text,
-                            ),
+                        Text(
+                          title,
+                          style: HaloType.serif(
+                            size: 18,
+                            color: HaloColors.text,
                           ),
                         ),
                         RiseSwap(
                           alignment: AlignmentDirectional.centerEnd,
                           child: t == null
                               ? const SizedBox.shrink(key: ValueKey('none'))
-                              : Padding(
+                              : Text(
+                                  t,
                                   key: ValueKey(t),
-                                  padding: const EdgeInsetsDirectional.only(
-                                    start: 8,
-                                  ),
-                                  child: Text(
-                                    t,
-                                    style: HaloType.mono(
-                                      size: 10.5,
-                                      weight: FontWeight.w600,
-                                      color: t == l10n.bridgesConnected
-                                          ? HaloColors.green
-                                          : HaloColors.amber,
-                                    ),
+                                  style: HaloType.mono(
+                                    size: 10.5,
+                                    weight: FontWeight.w600,
+                                    color: t == l10n.bridgesConnected
+                                        ? HaloColors.green
+                                        : HaloColors.amber,
                                   ),
                                 ),
                         ),
