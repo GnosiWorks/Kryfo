@@ -8,9 +8,10 @@ package main
 // resort the app offers behind a warning, never something automatic does.
 // once tor is up the built-in lines are refreshed through tor instead.
 //
-// every call needs an explicit consent flag, and none is made while a
-// decoy session is open, or before the app has said whether one is. the
-// tls inside every path is pinned to the roots in moat_roots.crt.
+// every call but the built-in refresh through tor needs an explicit consent
+// flag, and none is made while a decoy session is open, or before the app
+// has said whether one is. the tls inside every path is pinned to the roots
+// in moat_roots.crt.
 // nothing moat returns is logged.
 
 import "C"
@@ -74,7 +75,8 @@ const (
 
 // what the app passes with every moat call
 type moatOpts struct {
-	// the person agreed to ask the tor project. no call without it.
+	// the person agreed to ask the tor project. no call without it except
+	// the built-in refresh through tor.
 	Consent bool `json:"consent"`
 	// meek (the default), plain or tor
 	Via string `json:"via,omitempty"`

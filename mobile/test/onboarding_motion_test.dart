@@ -384,6 +384,30 @@ void main() {
     expect(t.hasRunningAnimations, isTrue);
     await t.pumpWidget(const SizedBox());
   });
+
+  testWidgets('the splash names its hops in every language', (t) async {
+    phone(t, size: const Size(360, 640));
+    for (final loc in AppLocalizations.supportedLocales) {
+      setL10nLocale(loc);
+      addTearDown(() => setL10nLocale(const Locale('en')));
+      await t.pumpWidget(
+        framed(const TorBootSplash(), locale: loc, scale: 1.3),
+      );
+      await t.pump(const Duration(seconds: 1));
+      expect(t.takeException(), isNull, reason: '$loc');
+      for (final hop in [
+        l10n.torBootSplashHopEntry,
+        l10n.torBootSplashHopMiddle,
+        l10n.torBootSplashHopExit,
+      ]) {
+        expect(find.text(hop), findsOneWidget, reason: '$loc $hop');
+      }
+      for (final word in ['guard', 'relay', 'exit']) {
+        expect(find.text(word), findsNothing, reason: '$loc');
+      }
+      await t.pumpWidget(const SizedBox());
+    }
+  });
 }
 
 class _Db implements HaloDb {

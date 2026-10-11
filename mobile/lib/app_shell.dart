@@ -19,7 +19,7 @@ MaterialApp haloAppShell({
   return MaterialApp(
     navigatorKey: navigatorKey,
     // a chat under one that closes takes the screen back
-    navigatorObservers: [pageRoutes],
+    navigatorObservers: [pageRoutes, routeStack],
     // back reaches android through the lock, which keeps it while it is up
     onNavigationNotification: lockBack.navigation,
     scaffoldMessengerKey: haloMessengerKey,

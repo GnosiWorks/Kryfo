@@ -198,8 +198,8 @@ void main() {
 
   // the countdown as it starts, or a second in
   int running() =>
-      find.text(' 5m 00s').evaluate().length +
-      find.text(' 4m 59s').evaluate().length;
+      find.text('5m 00s').evaluate().length +
+      find.text('4m 59s').evaluate().length;
 
   testWidgets('shown, it starts counting from its whole window', (t) async {
     lockState.openForTest();
@@ -222,7 +222,7 @@ void main() {
     await open(t);
     expect(db.burnAt(_timed), isNull);
     expect(db.asked, isEmpty);
-    expect(find.text(' 5m 00s'), findsOneWidget);
+    expect(find.text('5m 00s'), findsOneWidget);
     expect(waits(t), isTrue);
 
     lockState.openForTest(enabled: true);
@@ -312,7 +312,7 @@ void main() {
     expect(
       find.descendant(
         of: find.byType(PollCard),
-        matching: find.text(' 5m 00s'),
+        matching: find.text('5m 00s'),
       ),
       findsOneWidget,
     );

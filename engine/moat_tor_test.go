@@ -17,14 +17,10 @@ func TestBuiltinRefreshOverTor(t *testing.T) {
 	resetBuiltinState(t)
 	defer decoyState.Store(decoyUnknown)
 
-	// no consent, or a decoy open: nothing goes out
-	setDecoy(false)
+	// a decoy open: nothing goes out
 	sent := sentCount()
-	if r := reply(t, builtinRefreshJSON(`{"force":true}`)); r["error"] != "no_consent" {
-		t.Fatalf("without consent: %v", r)
-	}
 	setDecoy(true)
-	if r := reply(t, builtinRefreshJSON(`{"consent":true,"force":true}`)); r["error"] != "decoy" {
+	if r := reply(t, builtinRefreshJSON(`{"force":true}`)); r["error"] != "decoy" {
 		t.Fatalf("in a decoy: %v", r)
 	}
 	if sentCount() != sent {
@@ -33,7 +29,7 @@ func TestBuiltinRefreshOverTor(t *testing.T) {
 
 	setDecoy(false)
 	t0 := time.Now()
-	r := reply(t, builtinRefreshJSON(`{"consent":true,"via":"plain"}`))
+	r := reply(t, builtinRefreshJSON(`{"via":"plain"}`))
 	if r["ok"] != true {
 		t.Fatalf("refresh: %v", r)
 	}
@@ -51,7 +47,7 @@ func TestBuiltinRefreshOverTor(t *testing.T) {
 	if int(r["kept"].(float64)) != want {
 		t.Errorf("moat's built-ins moved since builtin.json was made, run scripts/builtin-bridges.sh")
 	}
-	if r := reply(t, builtinRefreshJSON(`{"consent":true}`)); r["skipped"] != true {
+	if r := reply(t, builtinRefreshJSON(`{}`)); r["skipped"] != true {
 		t.Errorf("a second refresh within the week: %v", r)
 	}
 }

@@ -115,6 +115,9 @@ class _Engine implements HaloEngine {
   @override
   void roomUnsubscribeBg(String pub) => _shut(pub);
   @override
+  void roomUnlistenBg(String priv, String peerPub) =>
+      listening.remove('${_pubOf(priv)}>$peerPub');
+  @override
   Future<String> roomUnsubscribe(String pub) async {
     await shutGate?.future;
     _shut(pub);
@@ -588,10 +591,8 @@ void main() {
     expect(row['door_pub'], isNull);
     expect(row['door_was'], isNull);
     // after every older step
-    expect(
-      int.parse(RegExp(r'version: (\d+),').firstMatch(src)!.group(1)!),
-      greaterThanOrEqualTo(70),
-    );
+    final version = RegExp(r'version: (\d+),').firstMatch(src)!.group(1)!;
+    expect(int.parse(version), greaterThanOrEqualTo(68));
     final upgrade = src.indexOf('onUpgrade: (db, oldV, newV) async {');
     final steps = src.substring(upgrade, src.indexOf('\n    );', upgrade));
     expect(

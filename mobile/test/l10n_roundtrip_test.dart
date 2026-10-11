@@ -100,7 +100,6 @@ void main() {
     expect(l.appInvalidUri, "Invalid uri");
     expect(l.appBundleError("<e>"), "Bundle error: <e>");
     expect(l.appAlreadySaved("<parsed>"), "Already saved: <parsed>");
-    expect(l.appPeerImportedV1("<parsed>"), "Peer imported (v1): <parsed>");
     expect(l.appLongWindow("<line>"), "<line> long window");
     expect(
       l.appOf("<line>", 0, 0, "<c>", 0, 0),
@@ -547,7 +546,7 @@ void main() {
     expect(l.bridgesThatWasNotIt, "That was not it. Here is another.");
     expect(
       l.bridgesMoatFailed,
-      "Couldn't reach the tor project. Try again in a minute, or paste a bridge line below.",
+      "Couldn't reach the Tor Project. Try again in a minute, or paste a bridge line below.",
     );
     expect(
       l.bridgesCouldNotApply,
@@ -560,18 +559,18 @@ void main() {
     expect(l.bridgesTorIsBlockedWhere, "Tor is blocked where you are?");
     expect(
       l.bridgesBridgesDisguiseYourConnection,
-      "Bridges disguise your connection so it can get out. Pick one way in, save, and tor reconnects through it.",
+      "Bridges disguise your connection so it can get out. Pick one way in, save, and Tor reconnects through it.",
     );
     expect(
       l.bridgesBridgesOnlyChangeHow,
-      "Bridges only change how tor connects, and you are not on onion mode right now. What you set here is saved, it just does nothing until you switch back.",
+      "Bridges only change how Tor connects, and you are not on onion mode right now. What you set here is saved, it just does nothing until you switch back.",
     );
-    expect(l.bridgesFromTheTorProject, "From the tor project");
+    expect(l.bridgesFromTheTorProject, "From the Tor Project");
     expect(l.bridgesNoise, "Noise");
     expect(l.bridgesGood, "Good");
     expect(
       l.bridgesMakesTorTrafficLook,
-      "Makes tor traffic look like nothing in particular. The best default for most blocked networks. Answers a captcha, then hands you a few lines.",
+      "Makes Tor traffic look like nothing in particular. The best default for most blocked networks. Answers a captcha, then hands you a few lines.",
     );
     expect(l.bridgesPrivateBridge, "Private bridge");
     expect(l.bridgesALineFromA, "A line from a friend");
@@ -588,7 +587,7 @@ void main() {
     expect(l.bridges1LineSaved(1), "1 line saved");
     expect(l.bridges1LineSaved(2), "2 lines saved");
     expect(l.bridges1LineSaved(5), "5 lines saved");
-    expect(l.bridgesRestartingTor, "Restarting tor…");
+    expect(l.bridgesRestartingTor, "Restarting Tor…");
     expect(
       l.bridgesFindingABridgeS("<elapsed>"),
       "Finding a bridge… <elapsed>s",
@@ -599,19 +598,19 @@ void main() {
     expect(l.bridgesWhatABridgeIs, "What a bridge is");
     expect(
       l.bridgesATorEntryPoint,
-      "A tor entry point nobody has published, reached through a wrapper so the connection does not look like tor. The rest of the route is the usual three hops.",
+      "A Tor entry point nobody has published, reached through a wrapper so the connection does not look like Tor. The rest of the route is the usual three hops.",
     );
     expect(l.bridgesLooksLike, "Looks like");
     expect(l.bridgesSpeed, "Speed");
     expect(l.bridgesGetBridges, "Get bridges");
     expect(
       l.bridgesAskTheTorProject,
-      "Ask the tor project directly. You solve a puzzle so bots cannot drain the supply.",
+      "Ask the Tor Project directly. You solve a puzzle so bots cannot drain the supply.",
     );
     expect(l.bridgesTypeWhatYouSee, "Type what you see. Lowercase is fine.");
     expect(
-      l.bridgesThisOneRequestDoes,
-      "This one request does not go through tor - it cannot, since tor is what is not working. Whoever runs your network will see you contacting the tor project. If that alone is a problem where you are, get bridges somewhere else and paste them below.",
+      l.bridgesWhenYouAskFor,
+      "When you ask for bridges, the Tor Project sees your address. That's normal: it's how Tor Browser and every Tor app get bridges, and all it tells them is that someone asked for bridges. Nothing about your chats.",
     );
     expect(l.bridgesCouldNotDrawThe, "Could not draw the puzzle");
     expect(l.bridgesAnswer, "Answer");
@@ -879,8 +878,6 @@ void main() {
     expect(l.chatDisguiseVoice, "Disguise voice");
     expect(l.commonSend, "Send");
     expect(l.chatNoPhotosInThis, "No photos in this chat yet");
-    expect(l.chatSendPhoto, "Send photo");
-    expect(l.chatAddACaption, "Add a caption…");
     expect(l.chatSecurityCodeChanged, "Security code changed");
     expect(
       l.chatMayHaveReinstalledOr("<peerName>"),
@@ -1507,7 +1504,6 @@ void main() {
     expect(l.homeMembers(2), "2 members");
     expect(l.homeMembers(5), "5 members");
     expect(l.homeSupporter, "Supporter");
-    expect(l.homeArchivedChats, "Archived chats");
     expect(l.homeUnmute, "Unmute");
     expect(l.homeMute, "Mute");
     expect(l.homeArchive, "Archive");
@@ -2150,7 +2146,6 @@ void main() {
     expect(l.pinsNeedsAPinFirst, "Needs a PIN first");
     expect(l.pinsSet, "Set");
     expect(l.pinsChangeWipePin, "Change wipe PIN");
-    expect(l.pinsSetAWipePin, "Set a wipe PIN");
     expect(l.pinsRemove, "Remove");
     expect(l.pinsRemoveTheWipePin, "Remove the wipe PIN?");
     expect(
@@ -2592,8 +2587,6 @@ void main() {
       l.settingsWholeAppHiddenFromRecentsAnd,
       "Whole app hidden from recents and screenshots",
     );
-    expect(l.settingsOnNextStart, "On · next start");
-    expect(l.settingsOffNextStart, "Off · next start");
     expect(l.settingsLightTheme, "Light theme");
     expect(l.settingsSameProtectionBrighter, "Same protection, brighter");
     expect(l.settingsAppLock2, "App lock");
@@ -3046,6 +3039,9 @@ void main() {
     );
     expect(l.bootFailedCloseAndReopen, "Close and reopen Kryfo");
     expect(l.torBootSplashTakingLonger, "This is taking longer than usual");
+    expect(l.torBootSplashHopEntry, "Entry");
+    expect(l.torBootSplashHopMiddle, "Middle");
+    expect(l.torBootSplashHopExit, "Exit");
     expect(l.kryfoLinkTextThatLinkIsNot, "That link is not one Kryfo can read");
     expect(l.kryfoLinkTextAdd("<who>"), "Add <who>?");
     expect(

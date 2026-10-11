@@ -58,6 +58,7 @@ Future<void> openSupportChat(NavigatorState nav, String id) async {
         peerOnion: (c['onion'] as String?) ?? '',
         peerXPub: (c['xpub'] as String?) ?? '',
         avatarSeed: id,
+        nickname: c['nickname'] as String?,
         support: true,
       ),
     ),

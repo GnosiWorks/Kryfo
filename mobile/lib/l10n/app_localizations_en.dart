@@ -264,11 +264,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String appPeerImportedV1(Object parsed) {
-    return 'Peer imported (v1): $parsed';
-  }
-
-  @override
   String appLongWindow(Object line) {
     return '$line long window';
   }
@@ -1070,7 +1065,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bridgesMoatFailed =>
-      'Couldn\'t reach the tor project. Try again in a minute, or paste a bridge line below.';
+      'Couldn\'t reach the Tor Project. Try again in a minute, or paste a bridge line below.';
 
   @override
   String get bridgesGotBridgesSaveTo => 'Got bridges · save to use them';
@@ -1089,14 +1084,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bridgesBridgesDisguiseYourConnection =>
-      'Bridges disguise your connection so it can get out. Pick one way in, save, and tor reconnects through it.';
+      'Bridges disguise your connection so it can get out. Pick one way in, save, and Tor reconnects through it.';
 
   @override
   String get bridgesBridgesOnlyChangeHow =>
-      'Bridges only change how tor connects, and you are not on onion mode right now. What you set here is saved, it just does nothing until you switch back.';
+      'Bridges only change how Tor connects, and you are not on onion mode right now. What you set here is saved, it just does nothing until you switch back.';
 
   @override
-  String get bridgesFromTheTorProject => 'From the tor project';
+  String get bridgesFromTheTorProject => 'From the Tor Project';
 
   @override
   String get bridgesNoise => 'Noise';
@@ -1106,7 +1101,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bridgesMakesTorTrafficLook =>
-      'Makes tor traffic look like nothing in particular. The best default for most blocked networks. Answers a captcha, then hands you a few lines.';
+      'Makes Tor traffic look like nothing in particular. The best default for most blocked networks. Answers a captcha, then hands you a few lines.';
 
   @override
   String get bridgesPrivateBridge => 'Private bridge';
@@ -1149,7 +1144,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get bridgesRestartingTor => 'Restarting tor…';
+  String get bridgesRestartingTor => 'Restarting Tor…';
 
   @override
   String bridgesFindingABridgeS(Object elapsed) {
@@ -1172,7 +1167,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bridgesATorEntryPoint =>
-      'A tor entry point nobody has published, reached through a wrapper so the connection does not look like tor. The rest of the route is the usual three hops.';
+      'A Tor entry point nobody has published, reached through a wrapper so the connection does not look like Tor. The rest of the route is the usual three hops.';
 
   @override
   String get bridgesLooksLike => 'Looks like';
@@ -1185,14 +1180,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bridgesAskTheTorProject =>
-      'Ask the tor project directly. You solve a puzzle so bots cannot drain the supply.';
+      'Ask the Tor Project directly. You solve a puzzle so bots cannot drain the supply.';
 
   @override
   String get bridgesTypeWhatYouSee => 'Type what you see. Lowercase is fine.';
 
   @override
-  String get bridgesThisOneRequestDoes =>
-      'This one request does not go through tor - it cannot, since tor is what is not working. Whoever runs your network will see you contacting the tor project. If that alone is a problem where you are, get bridges somewhere else and paste them below.';
+  String get bridgesWhenYouAskFor =>
+      'When you ask for bridges, the Tor Project sees your address. That\'s normal: it\'s how Tor Browser and every Tor app get bridges, and all it tells them is that someone asked for bridges. Nothing about your chats.';
 
   @override
   String get bridgesCouldNotDrawThe => 'Could not draw the puzzle';
@@ -1847,12 +1842,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatHoldToRecord => 'Hold to record a voice note';
-
-  @override
-  String get chatSendPhoto => 'Send photo';
-
-  @override
-  String get chatAddACaption => 'Add a caption…';
 
   @override
   String get chatSecurityCodeChanged => 'Security code changed';
@@ -3222,9 +3211,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeSupporter => 'Supporter';
 
   @override
-  String get homeArchivedChats => 'Archived chats';
-
-  @override
   String get homeUnmute => 'Unmute';
 
   @override
@@ -4357,9 +4343,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pinsChangeWipePin => 'Change wipe PIN';
 
   @override
-  String get pinsSetAWipePin => 'Set a wipe PIN';
-
-  @override
   String get pinsRemove => 'Remove';
 
   @override
@@ -5206,12 +5189,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsWholeAppHiddenFromRecentsAnd =>
       'Whole app hidden from recents and screenshots';
-
-  @override
-  String get settingsOnNextStart => 'On · next start';
-
-  @override
-  String get settingsOffNextStart => 'Off · next start';
 
   @override
   String get settingsLightTheme => 'Light theme';
@@ -6607,6 +6584,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get torBootSplashTakingLonger => 'This is taking longer than usual';
 
   @override
+  String get torBootSplashHopEntry => 'Entry';
+
+  @override
+  String get torBootSplashHopMiddle => 'Middle';
+
+  @override
+  String get torBootSplashHopExit => 'Exit';
+
+  @override
   String get videoBubbleNothingHereOpensThat =>
       'Nothing here opens that · sharing instead';
 
@@ -7063,9 +7049,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pollPickSeveral => 'Pick one or more';
 
   @override
-  String get searchOpen => 'Search';
-
-  @override
   String get searchHint => 'Search chats and messages';
 
   @override
@@ -7250,9 +7233,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pinsDecoyLine => 'Opens an empty Kryfo, as if just installed.';
-
-  @override
-  String get pinsSetADecoyPin => 'Set a decoy PIN';
 
   @override
   String get pinsChangeDecoyPin => 'Change decoy PIN';

@@ -403,6 +403,33 @@ void main() {
       expect(unsend, contains('cancelMediaSend(targetMsgUid)'));
     });
 
+    test('a photo, voice or file sent in answer keeps its quote', () {
+      for (final sig in [
+        'Future<void> _sendGroupImage(',
+        'Future<void> _sendGroupVoice(',
+        'Future<void> _sendGroupFileFrom(',
+      ]) {
+        final body = bodyOf(screen, sig);
+        expect(body, contains('final reply = _takeReply();'), reason: sig);
+        // on the bubble, the row and the wire
+        expect('replyTo: reply,'.allMatches(body).length, 3, reason: sig);
+      }
+      final take = bodyOf(screen, 'String? _takeReply(');
+      expect(take, contains('_replyTo = null'));
+      expect(
+        bodyOf(screen, 'Future<void> _retryGroup('),
+        contains('replyTo: m.replyTo,'),
+      );
+      expect(
+        bodyOf(app, 'Future<void> _drainGroupMedia('),
+        contains("replyTo: r['reply_to'] as String?,"),
+      );
+      expect(
+        bodyOf(app, 'Future<String> sendMediaToGroup('),
+        contains('replyTo: replyTo,'),
+      );
+    });
+
     test('the outbox tells an open group its row moved', () {
       final body = bodyOf(app, 'Future<void> _drainGroupMedia(');
       expect("_bumpChatRev('group:\$groupId')".allMatches(body).length, 2);

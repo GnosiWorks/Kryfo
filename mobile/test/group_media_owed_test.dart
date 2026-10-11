@@ -677,6 +677,26 @@ void main() {
       expect({for (final e in toCarol) e.writtenAt}, {at});
     });
 
+    test('what a member is owed still answers the message it answered, '
+        'on every slice', () async {
+      await mem.update(
+        'messages',
+        {'reply_to': 'asked-uid'},
+        where: 'msg_uid = ?',
+        whereArgs: [_uid],
+      );
+      await _owe(mem, 'carol');
+      await db.markSent(_uid);
+      await tick();
+      final toCarol = [
+        for (final (_, c) in io.sent)
+          if (c.startsWith('to carol '))
+            unwrapMessage(c.substring('to carol '.length)),
+      ];
+      expect([for (final e in toCarol) e.chunkIndex], [0, 1, 2]);
+      expect({for (final e in toCarol) e.replyTo}, {'asked-uid'});
+    });
+
     test('a row the outbox still holds is left to it', () async {
       await _owe(mem, 'carol');
       await tick();

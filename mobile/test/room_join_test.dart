@@ -55,6 +55,7 @@ class _Engine implements HaloEngine {
   final listens = <String>[];
   final dropBoxes = <String>[];
   final unlistened = <String>[];
+  final unlistenedKeys = <String>[];
   final forgot = <String>[];
   final sent = <({String priv, String to, String msg})>[];
   final knocks = <({String priv, String to, String fc, String msg})>[];
@@ -72,6 +73,9 @@ class _Engine implements HaloEngine {
   void roomSubscribeFcBg(String priv) => dropBoxes.add(priv);
   @override
   void roomUnsubscribeBg(String pub) => unlistened.add(pub);
+  @override
+  void roomUnlistenBg(String priv, String peerPub) =>
+      unlistenedKeys.add(peerPub);
   @override
   void roomForgetBg(String priv, List<String> members) => forgot.add(priv);
   @override
@@ -476,6 +480,24 @@ void main() {
     expect(_stateOf(me), RoomJoin.live);
     // let in, the link is a room it is already in
     expect(await me.app.joinRoom(_link()), l10n.appYouAreAlreadyIn);
+  });
+
+  test('a room its maker left reads closed there until its end, and one a '
+      'member left does not', () async {
+    final here = HaloContainer.everyday.id;
+    final me = await _Phone.make();
+    await me.app.joinRoom(_link());
+    await _settle();
+    await me.app.leaveRoom(_room);
+    expect(endedRooms.ended(here, _room), isFalse);
+
+    final creator = await _creatorPhone();
+    final until = creator.room!['expires_at'] as int;
+    await creator.app.leaveRoom(_room);
+    expect(endedRooms.ended(here, _room), isTrue);
+    // the decoy holds rooms of its own
+    expect(endedRooms.ended(HaloContainer.decoy.id, _room), isFalse);
+    expect(endedRooms.ended(here, _room, now: until), isFalse);
   });
 
   test('leaving a waiting room leaves nothing behind', () async {

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // a queued edit, pin or frame keeps its tries and its next turn on disk,
 // and the order of edits and reactions taken in is kept per message. made
-// on create and on the upgrade to 71, the last step. a phone from before
+// on create and on the upgrade to 72, the last step. a phone from before
 // keeps what it had queued, each row due at once
 import 'dart:io';
 
@@ -15,9 +15,9 @@ void main() {
   final upgrade = src.indexOf('onUpgrade: (db, oldV, newV) async {');
   final steps = src.substring(upgrade, src.indexOf('\n    );', upgrade));
 
-  test('made on create, and on the upgrade to 71 after every older step', () {
+  test('made on create, and on the upgrade to 72 after every older step', () {
     final version = RegExp(r'version: (\d+),').firstMatch(src)!.group(1)!;
-    expect(int.parse(version), greaterThanOrEqualTo(71));
+    expect(int.parse(version), greaterThanOrEqualTo(72));
     for (final t in ['edits_out', 'pins_out', 'frames_out']) {
       final table = src.substring(
         src.indexOf('CREATE TABLE IF NOT EXISTS $t ('),
@@ -33,13 +33,13 @@ void main() {
     expect(create, contains('await frameOrderTable(db);'));
     expect(
       RegExp(
-        r'if \(oldV < 71\) \{[^}]*await queueTurnColumns\(db\);',
+        r'if \(oldV < 72\) \{[^}]*await queueTurnColumns\(db\);',
       ).hasMatch(steps),
       isTrue,
     );
-    final at71 = steps.indexOf('if (oldV < 71) {');
+    final at72 = steps.indexOf('if (oldV < 72) {');
     for (final m in RegExp(r'if \(oldV < (\d+)\) \{').allMatches(steps)) {
-      if (int.parse(m.group(1)!) < 71) expect(m.start, lessThan(at71));
+      if (int.parse(m.group(1)!) < 72) expect(m.start, lessThan(at72));
     }
     // wrapped: a column already there is no failed boot
     final at = src.indexOf('Future<void> queueTurnColumns(');

@@ -471,12 +471,6 @@ abstract class AppLocalizations {
   /// **'Already saved: {parsed}'**
   String appAlreadySaved(Object parsed);
 
-  /// main.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Peer imported (v1): {parsed}'**
-  String appPeerImportedV1(Object parsed);
-
   /// main.dart: after a relay's catch-up time, when it was asked for a longer stretch than usual
   ///
   /// In en, this message translates to:
@@ -1686,7 +1680,7 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Couldn\'t reach the tor project. Try again in a minute, or paste a bridge line below.'**
+  /// **'Couldn\'t reach the Tor Project. Try again in a minute, or paste a bridge line below.'**
   String get bridgesMoatFailed;
 
   /// screens/bridges_screen.dart
@@ -1722,19 +1716,19 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Bridges disguise your connection so it can get out. Pick one way in, save, and tor reconnects through it.'**
+  /// **'Bridges disguise your connection so it can get out. Pick one way in, save, and Tor reconnects through it.'**
   String get bridgesBridgesDisguiseYourConnection;
 
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Bridges only change how tor connects, and you are not on onion mode right now. What you set here is saved, it just does nothing until you switch back.'**
+  /// **'Bridges only change how Tor connects, and you are not on onion mode right now. What you set here is saved, it just does nothing until you switch back.'**
   String get bridgesBridgesOnlyChangeHow;
 
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'From the tor project'**
+  /// **'From the Tor Project'**
   String get bridgesFromTheTorProject;
 
   /// screens/bridges_screen.dart
@@ -1752,7 +1746,7 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Makes tor traffic look like nothing in particular. The best default for most blocked networks. Answers a captcha, then hands you a few lines.'**
+  /// **'Makes Tor traffic look like nothing in particular. The best default for most blocked networks. Answers a captcha, then hands you a few lines.'**
   String get bridgesMakesTorTrafficLook;
 
   /// screens/bridges_screen.dart
@@ -1812,7 +1806,7 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Restarting tor…'**
+  /// **'Restarting Tor…'**
   String get bridgesRestartingTor;
 
   /// screens/bridges_screen.dart
@@ -1848,7 +1842,7 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'A tor entry point nobody has published, reached through a wrapper so the connection does not look like tor. The rest of the route is the usual three hops.'**
+  /// **'A Tor entry point nobody has published, reached through a wrapper so the connection does not look like Tor. The rest of the route is the usual three hops.'**
   String get bridgesATorEntryPoint;
 
   /// screens/bridges_screen.dart
@@ -1872,7 +1866,7 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Ask the tor project directly. You solve a puzzle so bots cannot drain the supply.'**
+  /// **'Ask the Tor Project directly. You solve a puzzle so bots cannot drain the supply.'**
   String get bridgesAskTheTorProject;
 
   /// screens/bridges_screen.dart
@@ -1884,8 +1878,8 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'This one request does not go through tor - it cannot, since tor is what is not working. Whoever runs your network will see you contacting the tor project. If that alone is a problem where you are, get bridges somewhere else and paste them below.'**
-  String get bridgesThisOneRequestDoes;
+  /// **'When you ask for bridges, the Tor Project sees your address. That\'s normal: it\'s how Tor Browser and every Tor app get bridges, and all it tells them is that someone asked for bridges. Nothing about your chats.'**
+  String get bridgesWhenYouAskFor;
 
   /// screens/bridges_screen.dart
   ///
@@ -2984,18 +2978,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hold to record a voice note'**
   String get chatHoldToRecord;
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Send photo'**
-  String get chatSendPhoto;
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Add a caption…'**
-  String get chatAddACaption;
 
   /// screens/chat_screen.dart
   ///
@@ -5064,12 +5046,6 @@ abstract class AppLocalizations {
   /// screens/home_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Archived chats'**
-  String get homeArchivedChats;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Unmute'**
   String get homeUnmute;
 
@@ -6990,12 +6966,6 @@ abstract class AppLocalizations {
   /// screens/pins_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Set a wipe PIN'**
-  String get pinsSetAWipePin;
-
-  /// screens/pins_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Remove'**
   String get pinsRemove;
 
@@ -8432,18 +8402,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Whole app hidden from recents and screenshots'**
   String get settingsWholeAppHiddenFromRecentsAnd;
-
-  /// screens/settings_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'On · next start'**
-  String get settingsOnNextStart;
-
-  /// screens/settings_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Off · next start'**
-  String get settingsOffNextStart;
 
   /// screens/settings_screen.dart
   ///
@@ -10569,6 +10527,24 @@ abstract class AppLocalizations {
   /// **'This is taking longer than usual'**
   String get torBootSplashTakingLonger;
 
+  /// widgets/tor_boot_splash.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Entry'**
+  String get torBootSplashHopEntry;
+
+  /// widgets/tor_boot_splash.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Middle'**
+  String get torBootSplashHopMiddle;
+
+  /// widgets/tor_boot_splash.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Exit'**
+  String get torBootSplashHopExit;
+
   /// widgets/video_bubble.dart
   ///
   /// In en, this message translates to:
@@ -11349,12 +11325,6 @@ abstract class AppLocalizations {
   /// **'Pick one or more'**
   String get pollPickSeveral;
 
-  /// the search button on home, and its name for a screen reader
-  ///
-  /// In en, this message translates to:
-  /// **'Search'**
-  String get searchOpen;
-
   /// hint in the search field on home and in search
   ///
   /// In en, this message translates to:
@@ -11648,12 +11618,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Opens an empty Kryfo, as if just installed.'**
   String get pinsDecoyLine;
-
-  /// button
-  ///
-  /// In en, this message translates to:
-  /// **'Set a decoy PIN'**
-  String get pinsSetADecoyPin;
 
   /// button
   ///

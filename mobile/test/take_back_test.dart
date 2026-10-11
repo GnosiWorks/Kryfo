@@ -138,6 +138,24 @@ void main() {
       expect(_unread(mem, 'contacts', 'halo_id', _bob), 2);
     });
 
+    test('a group\'s last unread one taken back takes its mention too, one '
+        'of several leaves it', () async {
+      await mem.update(
+        'groups',
+        {'unread': 2, 'mentioned': 1},
+        where: 'group_id = ?',
+        whereArgs: [_g],
+      );
+      await came('g2', group: _g);
+      await db.deleteMessage('g2');
+      expect(_unread(mem, 'groups', 'group_id', _g), 1);
+      int mentioned() => mem.rows('groups').single['mentioned'] as int? ?? 0;
+      expect(mentioned(), 1);
+      await db.deleteMessage('g1');
+      expect(_unread(mem, 'groups', 'group_id', _g), 0);
+      expect(mentioned(), 0);
+    });
+
     test('one that burns unread takes its mark and says which', () async {
       await came('burns', burnAt: 1);
       await mem.update(

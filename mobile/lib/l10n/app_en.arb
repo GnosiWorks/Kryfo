@@ -310,15 +310,6 @@
       }
     }
   },
-  "appPeerImportedV1": "Peer imported (v1): {parsed}",
-  "@appPeerImportedV1": {
-    "description": "main.dart",
-    "placeholders": {
-      "parsed": {
-        "type": "Object"
-      }
-    }
-  },
   "appLongWindow": "{line} long window",
   "@appLongWindow": {
     "description": "main.dart: after a relay's catch-up time, when it was asked for a longer stretch than usual",
@@ -1339,7 +1330,7 @@
   "@bridgesThatWasNotIt": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesMoatFailed": "Couldn't reach the tor project. Try again in a minute, or paste a bridge line below.",
+  "bridgesMoatFailed": "Couldn't reach the Tor Project. Try again in a minute, or paste a bridge line below.",
   "@bridgesMoatFailed": {
     "description": "screens/bridges_screen.dart"
   },
@@ -1363,15 +1354,15 @@
   "@bridgesTorIsBlockedWhere": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesBridgesDisguiseYourConnection": "Bridges disguise your connection so it can get out. Pick one way in, save, and tor reconnects through it.",
+  "bridgesBridgesDisguiseYourConnection": "Bridges disguise your connection so it can get out. Pick one way in, save, and Tor reconnects through it.",
   "@bridgesBridgesDisguiseYourConnection": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesBridgesOnlyChangeHow": "Bridges only change how tor connects, and you are not on onion mode right now. What you set here is saved, it just does nothing until you switch back.",
+  "bridgesBridgesOnlyChangeHow": "Bridges only change how Tor connects, and you are not on onion mode right now. What you set here is saved, it just does nothing until you switch back.",
   "@bridgesBridgesOnlyChangeHow": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesFromTheTorProject": "From the tor project",
+  "bridgesFromTheTorProject": "From the Tor Project",
   "@bridgesFromTheTorProject": {
     "description": "screens/bridges_screen.dart"
   },
@@ -1383,7 +1374,7 @@
   "@bridgesGood": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesMakesTorTrafficLook": "Makes tor traffic look like nothing in particular. The best default for most blocked networks. Answers a captcha, then hands you a few lines.",
+  "bridgesMakesTorTrafficLook": "Makes Tor traffic look like nothing in particular. The best default for most blocked networks. Answers a captcha, then hands you a few lines.",
   "@bridgesMakesTorTrafficLook": {
     "description": "screens/bridges_screen.dart"
   },
@@ -1429,7 +1420,7 @@
       }
     }
   },
-  "bridgesRestartingTor": "Restarting tor…",
+  "bridgesRestartingTor": "Restarting Tor…",
   "@bridgesRestartingTor": {
     "description": "screens/bridges_screen.dart"
   },
@@ -1463,7 +1454,7 @@
   "@bridgesWhatABridgeIs": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesATorEntryPoint": "A tor entry point nobody has published, reached through a wrapper so the connection does not look like tor. The rest of the route is the usual three hops.",
+  "bridgesATorEntryPoint": "A Tor entry point nobody has published, reached through a wrapper so the connection does not look like Tor. The rest of the route is the usual three hops.",
   "@bridgesATorEntryPoint": {
     "description": "screens/bridges_screen.dart"
   },
@@ -1479,7 +1470,7 @@
   "@bridgesGetBridges": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesAskTheTorProject": "Ask the tor project directly. You solve a puzzle so bots cannot drain the supply.",
+  "bridgesAskTheTorProject": "Ask the Tor Project directly. You solve a puzzle so bots cannot drain the supply.",
   "@bridgesAskTheTorProject": {
     "description": "screens/bridges_screen.dart"
   },
@@ -1487,8 +1478,8 @@
   "@bridgesTypeWhatYouSee": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesThisOneRequestDoes": "This one request does not go through tor - it cannot, since tor is what is not working. Whoever runs your network will see you contacting the tor project. If that alone is a problem where you are, get bridges somewhere else and paste them below.",
-  "@bridgesThisOneRequestDoes": {
+  "bridgesWhenYouAskFor": "When you ask for bridges, the Tor Project sees your address. That's normal: it's how Tor Browser and every Tor app get bridges, and all it tells them is that someone asked for bridges. Nothing about your chats.",
+  "@bridgesWhenYouAskFor": {
     "description": "screens/bridges_screen.dart"
   },
   "bridgesCouldNotDrawThe": "Could not draw the puzzle",
@@ -2354,14 +2345,6 @@
   },
   "chatHoldToRecord": "Hold to record a voice note",
   "@chatHoldToRecord": {
-    "description": "screens/chat_screen.dart"
-  },
-  "chatSendPhoto": "Send photo",
-  "@chatSendPhoto": {
-    "description": "screens/chat_screen.dart"
-  },
-  "chatAddACaption": "Add a caption…",
-  "@chatAddACaption": {
     "description": "screens/chat_screen.dart"
   },
   "chatSecurityCodeChanged": "Security code changed",
@@ -4009,10 +3992,6 @@
   "@homeSupporter": {
     "description": "screens/home_screen.dart"
   },
-  "homeArchivedChats": "Archived chats",
-  "@homeArchivedChats": {
-    "description": "screens/home_screen.dart"
-  },
   "homeUnmute": "Unmute",
   "@homeUnmute": {
     "description": "screens/home_screen.dart"
@@ -5458,10 +5437,6 @@
   "@pinsChangeWipePin": {
     "description": "screens/pins_screen.dart"
   },
-  "pinsSetAWipePin": "Set a wipe PIN",
-  "@pinsSetAWipePin": {
-    "description": "screens/pins_screen.dart"
-  },
   "pinsRemove": "Remove",
   "@pinsRemove": {
     "description": "screens/pins_screen.dart"
@@ -6534,14 +6509,6 @@
   },
   "settingsWholeAppHiddenFromRecentsAnd": "Whole app hidden from recents and screenshots",
   "@settingsWholeAppHiddenFromRecentsAnd": {
-    "description": "screens/settings_screen.dart"
-  },
-  "settingsOnNextStart": "On · next start",
-  "@settingsOnNextStart": {
-    "description": "screens/settings_screen.dart"
-  },
-  "settingsOffNextStart": "Off · next start",
-  "@settingsOffNextStart": {
     "description": "screens/settings_screen.dart"
   },
   "settingsLightTheme": "Light theme",
@@ -8389,6 +8356,18 @@
   "@torBootSplashTakingLonger": {
     "description": "widgets/tor_boot_splash.dart"
   },
+  "torBootSplashHopEntry": "Entry",
+  "@torBootSplashHopEntry": {
+    "description": "widgets/tor_boot_splash.dart"
+  },
+  "torBootSplashHopMiddle": "Middle",
+  "@torBootSplashHopMiddle": {
+    "description": "widgets/tor_boot_splash.dart"
+  },
+  "torBootSplashHopExit": "Exit",
+  "@torBootSplashHopExit": {
+    "description": "widgets/tor_boot_splash.dart"
+  },
   "videoBubbleNothingHereOpensThat": "Nothing here opens that · sharing instead",
   "@videoBubbleNothingHereOpensThat": {
     "description": "widgets/video_bubble.dart"
@@ -8981,10 +8960,6 @@
   "@pollPickSeveral": {
     "description": "hint on a poll before voting: one or more answers"
   },
-  "searchOpen": "Search",
-  "@searchOpen": {
-    "description": "the search button on home, and its name for a screen reader"
-  },
   "searchHint": "Search chats and messages",
   "@searchHint": {
     "description": "hint in the search field on home and in search"
@@ -9220,10 +9195,6 @@
   "pinsDecoyLine": "Opens an empty Kryfo, as if just installed.",
   "@pinsDecoyLine": {
     "description": "App lock: one line on the decoy PIN row"
-  },
-  "pinsSetADecoyPin": "Set a decoy PIN",
-  "@pinsSetADecoyPin": {
-    "description": "button"
   },
   "pinsChangeDecoyPin": "Change decoy PIN",
   "@pinsChangeDecoyPin": {

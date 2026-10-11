@@ -273,11 +273,6 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String appPeerImportedV1(Object parsed) {
-    return 'Контакт імпортовано (v1): $parsed';
-  }
-
-  @override
   String appLongWindow(Object line) {
     return '$line довге вікно';
   }
@@ -1098,7 +1093,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get bridgesMoatFailed =>
-      'Не вдалося зв’язатися з проєктом tor. Спробуй за хвилину або встав рядок моста нижче.';
+      'Не вдалося зв’язатися з проєктом Tor. Спробуй за хвилину або встав рядок моста нижче.';
 
   @override
   String get bridgesGotBridgesSaveTo =>
@@ -1118,14 +1113,14 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get bridgesBridgesDisguiseYourConnection =>
-      'Мости маскують твоє підключення, щоб воно могло вибратися назовні. Обери один спосіб входу, збережи, і tor перепідключиться через нього.';
+      'Мости маскують твоє підключення, щоб воно могло вибратися назовні. Обери один спосіб входу, збережи, і Tor перепідключиться через нього.';
 
   @override
   String get bridgesBridgesOnlyChangeHow =>
-      'Мости змінюють лише те, як підключається tor, а ти зараз не в режимі Onion. Налаштоване тут збережеться, просто нічого не робитиме, доки ти не повернешся до цього режиму.';
+      'Мости змінюють лише те, як підключається Tor, а ти зараз не в режимі Onion. Налаштоване тут збережеться, просто нічого не робитиме, доки ти не повернешся до цього режиму.';
 
   @override
-  String get bridgesFromTheTorProject => 'Від проєкту tor';
+  String get bridgesFromTheTorProject => 'Від проєкту Tor';
 
   @override
   String get bridgesNoise => 'Шум';
@@ -1135,7 +1130,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get bridgesMakesTorTrafficLook =>
-      'Робить трафік tor ні на що конкретне не схожим. Найкращий вибір для більшості заблокованих мереж. Розв’язуєш капчу, і тобі видають кілька рядків.';
+      'Робить трафік Tor ні на що конкретне не схожим. Найкращий вибір для більшості заблокованих мереж. Розв’язуєш капчу, і тобі видають кілька рядків.';
 
   @override
   String get bridgesPrivateBridge => 'Приватний міст';
@@ -1180,7 +1175,7 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get bridgesRestartingTor => 'Перезапуск tor…';
+  String get bridgesRestartingTor => 'Перезапуск Tor…';
 
   @override
   String bridgesFindingABridgeS(Object elapsed) {
@@ -1203,7 +1198,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get bridgesATorEntryPoint =>
-      'Точка входу в tor, яку ніхто не публікував, куди підключаєшся через обгортку, щоб з’єднання не було схоже на tor. Решта маршруту - звичайні три вузли.';
+      'Точка входу в Tor, яку ніхто не публікував, куди підключаєшся через обгортку, щоб з’єднання не було схоже на Tor. Решта маршруту - звичайні три вузли.';
 
   @override
   String get bridgesLooksLike => 'Схоже на';
@@ -1216,15 +1211,15 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get bridgesAskTheTorProject =>
-      'Попроси їх напряму в проєкту tor. Ти розв’язуєш головоломку, щоб боти не могли вичерпати запас.';
+      'Попроси їх напряму в проєкту Tor. Ти розв’язуєш головоломку, щоб боти не могли вичерпати запас.';
 
   @override
   String get bridgesTypeWhatYouSee =>
       'Введи те, що бачиш. Малі літери теж підійдуть.';
 
   @override
-  String get bridgesThisOneRequestDoes =>
-      'Цей один запит іде не через tor - і не може, бо не працює саме tor. Той, хто керує твоєю мережею, побачить, що ти звертаєшся до проєкту tor. Якщо там, де ти є, це вже саме по собі проблема, дістань мости деінде і встав їх нижче.';
+  String get bridgesWhenYouAskFor =>
+      'Коли ти запитуєш мости, проєкт Tor бачить твою IP-адресу. Це нормально: так мости отримують Tor Browser і кожен застосунок Tor, і все, що він із цього дізнається, — що хтось попросив мости. Нічого про твої чати.';
 
   @override
   String get bridgesCouldNotDrawThe => 'Не вдалося показати головоломку';
@@ -1889,12 +1884,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get chatHoldToRecord => 'Утримуй, щоб записати голосове повідомлення';
-
-  @override
-  String get chatSendPhoto => 'Надіслати фото';
-
-  @override
-  String get chatAddACaption => 'Додай підпис…';
 
   @override
   String get chatSecurityCodeChanged => 'Код безпеки змінився';
@@ -3303,9 +3292,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get homeSupporter => 'Прихильник';
 
   @override
-  String get homeArchivedChats => 'Архівовані чати';
-
-  @override
   String get homeUnmute => 'Увімкнути звук';
 
   @override
@@ -4447,9 +4433,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get pinsChangeWipePin => 'Змінити PIN для стирання';
 
   @override
-  String get pinsSetAWipePin => 'Задати PIN для стирання';
-
-  @override
   String get pinsRemove => 'Прибрати';
 
   @override
@@ -5302,12 +5285,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get settingsWholeAppHiddenFromRecentsAnd =>
       'Увесь застосунок прихований у недавніх і на знімках екрана';
-
-  @override
-  String get settingsOnNextStart => 'Увімкнеться при запуску';
-
-  @override
-  String get settingsOffNextStart => 'Вимкнеться при запуску';
 
   @override
   String get settingsLightTheme => 'Світла тема';
@@ -6736,6 +6713,15 @@ class AppLocalizationsUk extends AppLocalizations {
   String get torBootSplashTakingLonger => 'Це триває довше, ніж зазвичай';
 
   @override
+  String get torBootSplashHopEntry => 'Вхід';
+
+  @override
+  String get torBootSplashHopMiddle => 'Середина';
+
+  @override
+  String get torBootSplashHopExit => 'Вихід';
+
+  @override
   String get videoBubbleNothingHereOpensThat =>
       'Тут це нема чим відкрити · пропонуємо поділитися';
 
@@ -7198,9 +7184,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get pollPickSeveral => 'Вибери один або кілька';
 
   @override
-  String get searchOpen => 'Пошук';
-
-  @override
   String get searchHint => 'Шукати в чатах і повідомленнях';
 
   @override
@@ -7390,9 +7373,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get pinsDecoyLine =>
       'Відкриває порожній Kryfo, наче його щойно встановили.';
-
-  @override
-  String get pinsSetADecoyPin => 'Задати PIN-приманку';
 
   @override
   String get pinsChangeDecoyPin => 'Змінити PIN-приманку';

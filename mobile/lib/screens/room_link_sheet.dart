@@ -151,6 +151,7 @@ class _RoomLinkSheetState extends State<_RoomLinkSheet> {
           peerXPub: (row['xpub'] as String?) ?? '',
           avatarSeed: who,
           avatarChoice: (row['avatar'] as num?)?.toInt(),
+          nickname: row['nickname'] as String?,
           initialText: uri,
         ),
       ),
