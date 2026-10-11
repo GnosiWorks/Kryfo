@@ -86,21 +86,39 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
       _seenCount = g.memberCount;
       break;
     }
+    _seenRev = appState.chatRevOf('group:${widget.groupId}');
+    appState.addListener(_onApp);
     _load();
     _loadMedia();
   }
 
   @override
   void dispose() {
+    appState.removeListener(_onApp);
     _scroll.dispose();
     super.dispose();
   }
 
+  // the group changed from elsewhere while this page is open: read it again
+  int _seenRev = 0;
+  void _onApp() {
+    final rev = appState.chatRevOf('group:${widget.groupId}');
+    if (rev == _seenRev) return;
+    _seenRev = rev;
+    _load();
+    _loadMedia();
+  }
+
+  // the newest read wins: an older one landing late changes nothing
+  int _loadGen = 0;
+  int _mediaGen = 0;
+
   Future<void> _load() async {
+    final gen = ++_loadGen;
     final g = await session.getGroup(widget.groupId);
     final members = await session.getGroupMembers(widget.groupId);
     final held = await keysHeldShown();
-    if (!mounted) return;
+    if (!mounted || gen != _loadGen) return;
     setState(() {
       _held = held;
       _name = (g?['name'] as String?) ?? l10n.groupInfoGroup;
@@ -115,6 +133,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   // newest first; a file that went missing draws as a missing tile, so
   // nothing is stat'ed up front
   Future<void> _loadMedia() async {
+    final gen = ++_mediaGen;
     final results = await Future.wait([
       session.loadGroupMessages(widget.groupId),
       session.blockedIds(),
@@ -134,7 +153,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
       media.add(mp);
       if ((r['secure'] as int? ?? 0) == 1) secure.add(mp);
     }
-    if (!mounted) return;
+    if (!mounted || gen != _mediaGen) return;
     setState(() {
       _media = media;
       _secure = secure;
@@ -514,7 +533,8 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                   onTap: _confirmResetLink,
                 ),
               // hidden chats open: out of the everyday list, or back in it
-              if (lockState.inVault && !_isRoom)
+              // a room before its first read too
+              if (lockState.inVault && !_isRoom && !_roomAtOpen)
                 HaloRow(
                   icon: session.isHidden(widget.groupId)
                       ? Icons.visibility_outlined
