@@ -11766,8 +11766,11 @@ class AppState extends ChangeNotifier {
   // is the default; 'normal' is an old name for it, migrated on load.
   String _sendMode = 'private';
   String get sendMode => _sendMode;
+  // the mode the engine was last told. it starts on private, as the engine
+  // does
+  String _engineMode = 'private';
   @visibleForTesting
-  set sendModeForTest(String m) => _sendMode = m;
+  set sendModeForTest(String m) => _sendMode = _engineMode = m;
 
   // the open session's own, like everything a screen sets for an identity
   Future<void> saveGhostPref(bool on, int secs) async {
@@ -11987,9 +11990,8 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> _switchSendMode(String m) async {
-    final changed = _sendMode != m;
-    _sendMode = m;
-    notifyListeners();
+    // saved first: a mode that was not saved is gone at the next start, so
+    // a failed save moves nothing and the caller hears of it
     await secureStore.write(key: 'send_mode', value: m);
     if (m == 'fast') {
       try {
@@ -11998,7 +12000,15 @@ class AppState extends ChangeNotifier {
         dlog('fast marker: $e');
       }
     }
-    if (!changed) return;
+    // measured against the engine, not the screen: the two only part when
+    // something failed half way, and then the engine still has to move
+    if (_engineMode == m) {
+      if (_sendMode != m) {
+        _sendMode = m;
+        notifyListeners();
+      }
+      return;
+    }
     // an outage seen on another mode is not this one's
     _relayDownSince = null;
     _fastHintShown = false;
@@ -12008,7 +12018,12 @@ class AppState extends ChangeNotifier {
     // one. the list is in place before anything subscribes: each runner
     // copies it once, as it starts
     engine.setTransportMode(m);
+    _engineMode = m;
     engine.nostrInit(relaysFor(m));
+    // the app follows the engine: nothing reads the new mode while the
+    // engine still routes the old way
+    _sendMode = m;
+    notifyListeners();
     await resubscribe();
     // the first-contact runner keeps the relay list it started with; it
     // has to follow the switch or strangers' openers go unread
@@ -18155,6 +18170,7 @@ class AppState extends ChangeNotifier {
     // the modes screen means the rest of the app never sees it.
     if (_sendMode == 'normal') await setSendMode('private');
     engine.setTransportMode(_sendMode);
+    _engineMode = _sendMode;
     dlog('transport: booting in $_sendMode');
     // only takes a lock in the engine, so it is set right here, before the
     // first-contact runner: that snapshots the list on start and gives up

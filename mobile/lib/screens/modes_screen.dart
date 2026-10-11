@@ -22,26 +22,23 @@ class ModesScreen extends StatefulWidget {
 }
 
 class _ModesScreenState extends State<ModesScreen> {
-  // what is in use now, so the page opens on the right card
+  // what is in use now, so the page opens on the right card. read from the
+  // app and never again from storage: a read still on its way when a card
+  // is tapped would put the old mode back over the new one
   late String _mode = appState.sendMode == 'normal'
       ? 'private'
       : appState.sendMode;
 
-  @override
-  void initState() {
-    super.initState();
-    _sync();
-  }
-
-  Future<void> _sync() async {
-    await appState.loadSendMode();
-    if (appState.sendMode == 'normal') await appState.setSendMode('private');
-    if (mounted) setState(() => _mode = appState.sendMode);
-  }
-
-  void _pick(String m) {
+  Future<void> _pick(String m) async {
     setState(() => _mode = m);
-    appState.setSendMode(m);
+    try {
+      await appState.setSendMode(m);
+    } catch (_) {
+      // not saved, so nothing moved: the card goes back to the mode in use
+      if (!mounted) return;
+      setState(() => _mode = appState.sendMode);
+      showHaloToast(context, l10n.modesNotChanged);
+    }
   }
 
   // fast is the one mode that costs something, so it says so first
@@ -50,7 +47,7 @@ class _ModesScreenState extends State<ModesScreen> {
     final ok = await showFastGateSheet(context);
     if (ok && mounted) {
       HapticFeedback.mediumImpact();
-      _pick('fast');
+      await _pick('fast');
     }
   }
 

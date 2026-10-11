@@ -1131,7 +1131,14 @@ class _RelayDownHint extends StatelessWidget {
               // address to public relays
               final ok = await showFastGateSheet(context);
               if (!ok || !context.mounted) return;
-              await appState.setSendMode('fast');
+              try {
+                await appState.setSendMode('fast');
+              } catch (_) {
+                if (context.mounted) {
+                  showHaloToast(context, l10n.modesNotChanged);
+                }
+                return;
+              }
               if (context.mounted) {
                 showHaloToast(context, l10n.homeSwitchedToFast);
               }
@@ -1280,7 +1287,14 @@ class _BridgeHint extends StatelessWidget {
           CardAction(
             label: l10n.homeUseOurRelay,
             onTap: () async {
-              await appState.setSendMode('balanced');
+              try {
+                await appState.setSendMode('balanced');
+              } catch (_) {
+                if (context.mounted) {
+                  showHaloToast(context, l10n.modesNotChanged);
+                }
+                return;
+              }
               if (context.mounted) {
                 showHaloToast(context, l10n.homeSwitchedToRelay);
               }

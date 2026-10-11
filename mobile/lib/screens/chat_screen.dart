@@ -1028,7 +1028,6 @@ class _ChatScreenState extends State<ChatScreen>
       if (mounted) setState(() => _disguise = d);
     });
     appState.addListener(_onAppStateChanged);
-    appState.loadSendMode();
     lockState.addListener(_lockLifted);
     claimChat(widget.peerHaloId);
     (_openChats[widget.peerHaloId] ??= []).add(this);
@@ -1132,7 +1131,9 @@ class _ChatScreenState extends State<ChatScreen>
     Future.delayed(const Duration(milliseconds: 1200), () {
       if (mounted) _suppressSticky = false;
     });
-    _loadMessages();
+    // read once more against the app as it is now: what failed while the
+    // chat was shut is tried, and what changed while it loaded is shown
+    _loadMessages().then((_) => _onAppStateChanged());
     _burn = _timers.until(_burnWait, _burnTick);
     // back in view: what shows now has been read
     _reads.keepTime(_timers);
