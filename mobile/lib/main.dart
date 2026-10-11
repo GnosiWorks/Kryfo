@@ -10373,9 +10373,18 @@ class AppState extends ChangeNotifier {
 
   // re-send anything the wire never confirmed. cheap when there's nothing to
   // do (one indexed query). skipped entirely while tor can't carry traffic.
-  Future<void> drainOutbox() async {
-    // count first, wire or no wire: the strip and the rows say what is
-    // waiting whether or not anything can move yet
+  // what waits, here and in the open vault, read and shown
+  Future<
+    ({
+      Set<String> held,
+      List<Map<String, Object?>> rows,
+      List<Map<String, Object?>> vRows,
+      _Queue q,
+      _Queue vq,
+      HaloDb? v,
+    })
+  >
+  _countOutbox() async {
     var held = await _heldOf(live);
     final rows = await live.unsentOutbox(skip: held);
     final q = await _queueOf(rows, live);
@@ -10403,6 +10412,15 @@ class AppState extends ChangeNotifier {
       _vq = vq;
       notifyListeners();
     }
+    return (held: held, rows: rows, vRows: vRows, q: q, vq: vq, v: v);
+  }
+
+  // [wait]: back once the sends this pass starts are done, or have had a
+  // while, rather than as they start
+  Future<void> drainOutbox({bool wait = false}) async {
+    // count first, wire or no wire: the strip and the rows say what is
+    // waiting whether or not anything can move yet
+    final (:held, :rows, :vRows, :q, :vq, :v) = await _countOutbox();
     // torReady already knows the mode: outside onion there is nothing to
     // wait for and a queued message should just go. with no network a try
     // only uses up the cap
@@ -10507,17 +10525,24 @@ class AppState extends ChangeNotifier {
     // an open chat that kept its pills while they ran reads them again,
     // once the pass is done
     if (going.isEmpty) return;
-    unawaited(
-      Future.wait(going)
-          .then((_) {}, onError: (Object e) => dlog('OUTBOX: ${e.runtimeType}'))
-          .whenComplete(() {
-            if (chats.isEmpty) return;
-            for (final p in chats) {
-              _bumpChatRev(p);
-            }
-            notifyListeners();
-          }),
-    );
+    final all = Future.wait(going)
+        .then((_) {}, onError: (Object e) => dlog('OUTBOX: ${e.runtimeType}'))
+        .whenComplete(() {
+          if (chats.isEmpty) return;
+          for (final p in chats) {
+            _bumpChatRev(p);
+          }
+          notifyListeners();
+        });
+    if (!wait) {
+      unawaited(all);
+      return;
+    }
+    try {
+      await all.timeout(flushWait);
+    } on TimeoutException {
+      dlog('outbox: still sending after the wait');
+    }
   }
 
   // people a seal to waits on their card, after a restore: the outbox and
@@ -19385,10 +19410,16 @@ class AppState extends ChangeNotifier {
 
   // user tapped retry. clears the backoff so the next sweep goes out now
   // rather than waiting out the doubling gap.
+  // how long send now waits on its sends before it counts what is left
+  static const flushWait = Duration(seconds: 30);
+
+  // the count after it is what still waits once the sends are done: the
+  // pass counts before it sends
   Future<void> flushOutboxNow() async {
     _outboxNextAt.clear();
     _outboxTries.clear();
-    await drainOutbox();
+    await drainOutbox(wait: true);
+    await _countOutbox();
   }
 
   // tiny ack: tells the original sender their message landed. reuses the
