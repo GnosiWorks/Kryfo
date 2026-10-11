@@ -3483,5 +3483,13 @@ void main() {
       l.settingsDisguiseByDefaultHint,
       "Each chat can change it in its menu",
     );
+    expect(l.modesNotChanged, "The mode didn't change. Try again.");
+    expect(l.modesSwitching, "Switching…");
+    expect(l.appNoRelayReached, "No relay reached");
+    expect(l.appWaitingForARelay, "Waiting for a relay");
+    expect(
+      l.handleStillReaching,
+      "Still reaching the registry. Over Tor this can take up to a minute.",
+    );
   });
 }

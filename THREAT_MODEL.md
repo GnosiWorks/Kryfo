@@ -5,9 +5,15 @@ put you in danger, read all of it.
 
 ## what it protects against
 
-- network observers. by default everything goes through tor. your isp sees
-  a tor connection, not who you talk to or what you say. relay and fast
-  modes, which you can choose, skip tor for speed.
+- network observers. by default your messages go through tor. your isp sees
+  a tor connection, or a bridge when tor is blocked, not who you talk to or
+  what you say. relay and fast modes, which you can choose, skip tor for
+  speed.
+- networks that block tor. automatic mode tries tor the usual way first.
+  when tor's own signals say the network cuts it off, it tries bridges one
+  at a time: what the tor project suggests (only after you say yes), the
+  built-in obfs4 bridges, snowflake and saved webtunnel lines. it keeps the
+  first that carries tor and remembers it per network type for 30 days.
 - the relays. offline messages sit on nostr relays sealed with nip-44/59. a
   relay learns neither who is talking nor what is said.
 - server seizure. there is no central server holding a contact graph or
@@ -33,6 +39,22 @@ put you in danger, read all of it.
 - global traffic analysis. tor raises the cost of correlation. an adversary
   watching large parts of the network can still try timing attacks. there is
   no cover traffic.
+- a network that punishes trying tor. automatic tries plain tor first,
+  unless you chose "Tor is blocked here" on the first start or plain tor was
+  blocked on that network type in the last 30 days. if trying tor alone is
+  risky where you are, choose that, or pick snowflake or a bridge from a
+  friend.
+- the services bridges use. snowflake asks public stun servers for your
+  address, reaches the tor project's broker through a cdn and connects
+  through a volunteer's computer. each of them sees your ip. asking the tor
+  project for bridges goes through a cdn and shows the tor project your ip,
+  and so roughly where you are. that is how every tor app gets bridges. none
+  of them see who you talk to or what you say.
+- a bridge you were given. whoever runs a bridge is your first tor hop and
+  sees your ip and when you use tor.
+- check-ins through snowflake, when it is the only bridge that worked on
+  that network type. each check-in meets the snowflake broker again, a
+  regular pattern a network can notice.
 - the fact that you communicated. metadata is minimized, not erased. if you
   send while a contact is online, that timing existed.
 - forensics on a seized unlocked device or on backups of it.

@@ -3062,6 +3062,11 @@ final _calls = <_Call>[
   ('voiceNotDisguised', [], (l) => l.voiceNotDisguised),
   ('settingsDisguiseByDefault', [], (l) => l.settingsDisguiseByDefault),
   ('settingsDisguiseByDefaultHint', [], (l) => l.settingsDisguiseByDefaultHint),
+  ('modesNotChanged', [], (l) => l.modesNotChanged),
+  ('modesSwitching', [], (l) => l.modesSwitching),
+  ('appNoRelayReached', [], (l) => l.appNoRelayReached),
+  ('appWaitingForARelay', [], (l) => l.appWaitingForARelay),
+  ('handleStillReaching', ["Tor"], (l) => l.handleStillReaching),
 ];
 
 void main() {

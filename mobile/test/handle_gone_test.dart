@@ -2,7 +2,10 @@
 // the registry's yes is kept even when the handle page is gone before it
 // arrives: a handle let go is forgotten, so the next check does not claim
 // it again, and a handle taken is remembered, so it can be let go later.
+// a slow registry is said calmly while it is asked, and the app waits on it
+// past the engine's own bound.
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart' hide Curve;
 import 'package:flutter/services.dart';
@@ -10,7 +13,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/handle_repoint.dart' show kHandleClaimedKey;
 import 'package:kryfo/l10n/l10n.dart';
-import 'package:kryfo/main.dart' show HaloEngine, appState, useEngineForTest;
+import 'package:kryfo/main.dart'
+    show HaloEngine, appState, registryWait, useEngineForTest;
 import 'package:kryfo/screens/handle_screen.dart';
 import 'package:kryfo/secure_store.dart';
 import 'package:kryfo/signal_session.dart';
@@ -157,5 +161,52 @@ void main() {
     expect(await secureStore.read(key: 'my_handle'), 'wren');
     expect(await secureStore.read(key: 'my_handle_bio'), 'hello');
     expect(await secureStore.read(key: kHandleClaimedKey), isNotNull);
+  });
+
+  testWidgets('a slow claim says the registry is still being reached, and '
+      'the line goes with the answer', (t) async {
+    _phone(t);
+    registry();
+    await devWorld();
+    addTearDown(() => appState.setMyHandle(null));
+    await t.pumpWidget(_app());
+    await t.tap(find.text('open'));
+    await _rest(t);
+    await t.enterText(find.byType(TextField).first, 'wren');
+    await t.pump();
+    await _rest(t);
+    await t.ensureVisible(find.text(l10n.handleClaimThisHandle));
+    await t.tap(find.text(l10n.handleClaimThisHandle));
+    await _rest(t, 5);
+    expect(find.text(l10n.handleStillReaching), findsNothing);
+    await _rest(t, 6);
+    expect(find.text(l10n.handleStillReaching), findsOneWidget);
+    reg.claim.complete('ok');
+    await _rest(t);
+    expect(find.text(l10n.handleStillReaching), findsNothing);
+    expect(appState.myHandle, 'wren');
+    await t.pumpWidget(const SizedBox());
+    await _rest(t);
+  });
+
+  test('the app waits on the registry past the engine\'s own bound', () {
+    final go = File('../engine/handle.go').readAsStringSync();
+    final m = RegExp(
+      r'var handleWait = (\d+) \* time\.Second',
+    ).firstMatch(go);
+    expect(m, isNotNull);
+    expect(registryWait, greaterThan(Duration(seconds: int.parse(m![1]!))));
+    final src = File('lib/main.dart').readAsStringSync();
+    for (final call in [
+      'HaloHandleCheck',
+      'HaloHandleClaim',
+      'HaloHandleRelease',
+      'HaloHandleListing',
+    ]) {
+      final at = src.indexOf("_ffiOnIsolate('$call'");
+      expect(at, isNonNegative, reason: call);
+      final end = src.indexOf(';', at);
+      expect(src.substring(at, end), contains('wait: registryWait'));
+    }
   });
 }

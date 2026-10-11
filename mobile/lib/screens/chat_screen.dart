@@ -1028,7 +1028,6 @@ class _ChatScreenState extends State<ChatScreen>
       if (mounted) setState(() => _disguise = d);
     });
     appState.addListener(_onAppStateChanged);
-    appState.loadSendMode();
     lockState.addListener(_lockLifted);
     claimChat(widget.peerHaloId);
     (_openChats[widget.peerHaloId] ??= []).add(this);
@@ -1132,7 +1131,9 @@ class _ChatScreenState extends State<ChatScreen>
     Future.delayed(const Duration(milliseconds: 1200), () {
       if (mounted) _suppressSticky = false;
     });
-    _loadMessages();
+    // read once more against the app as it is now: what failed while the
+    // chat was shut is tried, and what changed while it loaded is shown
+    _loadMessages().then((_) => _onAppStateChanged());
     _burn = _timers.until(_burnWait, _burnTick);
     // back in view: what shows now has been read
     _reads.keepTime(_timers);
@@ -3578,15 +3579,10 @@ class _ChatScreenState extends State<ChatScreen>
     return oldest;
   }
 
-  bool _torReadyToSend() {
-    // outside onion nothing is routed through tor, so there is nothing to
-    // wait for, and the relay still works where tor is blocked
-    if (appState.sendMode != 'private') return appState.online;
-    final s = appState.torStatus;
-    return s == TorStatus.bootstrapped ||
-        s == TorStatus.publishing ||
-        s == TorStatus.reachable;
-  }
+  // the outbox's own test: a network, and in onion a tor a relay has got
+  // through since the route was last torn down. tor's word alone can say
+  // ready while nothing gets through
+  bool _torReadyToSend() => appState.linkUp;
 
   // the sender side: a preview fetched over tor by this phone, waiting to
   // ride inside the next message. null when nothing is attached
@@ -5248,7 +5244,7 @@ class _ChatScreenState extends State<ChatScreen>
             // phone whose identity has moved, where tor is off on purpose.
             _Fold(
               appState.sendMode == 'private' &&
-                      !_torReadyToSend() &&
+                      !appState.torUsable &&
                       !appState.movedAway
                   ? Padding(
                       key: const ValueKey('tor-warm'),
