@@ -13,6 +13,7 @@ Features:
 * No phone number or email to sign up
 * End to end encryption (Signal protocol)
 * All traffic through an embedded Tor client by default
+* Works where Tor is blocked: Kryfo finds a way around it by itself
 * Direct onion delivery, relay fallback when a peer is offline
 * Groups with photos, files, voice messages, replies, reactions, pins and polls
 * Animated stickers that travel as a name, so no picture leaves the phone

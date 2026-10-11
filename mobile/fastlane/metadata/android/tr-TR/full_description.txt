@@ -13,6 +13,7 @@ hiçbir şey öğrenmez. Rehber asla yüklenmez.
 * Kayıt için telefon numarası ya da e-posta yok
 * Uçtan uca şifreleme (Signal protokolü)
 * Varsayılan olarak tüm trafik gömülü bir Tor istemcisinden geçer
+* Tor’un engellendiği yerde çalışır: Kryfo engeli aşmanın bir yolunu kendiliğinden bulur
 * Doğrudan onion teslimi, karşı taraf çevrimdışıysa aktarıcı üzerinden
 * Fotoğraf, dosya, sesli mesaj, yanıt, tepki, sabitleme ve anketli gruplar
 * Ad olarak gönderilen animasyonlu çıkartmalar, böylece hiçbir resim telefondan çıkmaz

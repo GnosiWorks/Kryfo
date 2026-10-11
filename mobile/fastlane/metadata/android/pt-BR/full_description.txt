@@ -14,6 +14,7 @@ Recursos:
 * Sem número de telefone nem e-mail para se cadastrar
 * Criptografia de ponta a ponta (protocolo Signal)
 * Por padrão, todo o tráfego por um cliente Tor embutido
+* Funciona onde o Tor está bloqueado: o Kryfo encontra sozinho um jeito de contornar o bloqueio
 * Entrega direta por onion, com retransmissores como reserva quando o contato está offline
 * Grupos com fotos, arquivos, mensagens de voz, respostas, reações, mensagens fixadas e enquetes
 * Figurinhas animadas que viajam como um nome, então nenhuma imagem sai do aparelho

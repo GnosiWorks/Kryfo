@@ -13,6 +13,7 @@ Funciones:
 * Sin número de teléfono ni correo para registrarte
 * Cifrado de extremo a extremo (protocolo Signal)
 * Por defecto, todo el tráfico pasa por un cliente Tor integrado
+* Funciona donde Tor está bloqueado: Kryfo encuentra por sí solo cómo sortear el bloqueo
 * Entrega directa por onion y, si el otro no tiene conexión, por repetidor
 * Grupos con fotos, archivos, mensajes de voz, respuestas, reacciones, fijados y encuestas
 * Stickers animados que viajan como un nombre, así ninguna imagen sale del teléfono

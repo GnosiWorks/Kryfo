@@ -7,6 +7,7 @@ Funzioni:
 * Nessun numero di telefono né email per registrarti
 * Cifratura end-to-end (protocollo Signal)
 * Di default tutto il traffico passa da un client Tor integrato
+* Funziona dove Tor è bloccato: Kryfo trova da solo una strada per aggirare il blocco
 * Consegna diretta via onion, con i relay come riserva quando l'altra persona è offline
 * Gruppi con foto, file, messaggi vocali, risposte, reazioni, messaggi fissati e sondaggi
 * Sticker animati che viaggiano come un nome, così nessuna immagine lascia il telefono

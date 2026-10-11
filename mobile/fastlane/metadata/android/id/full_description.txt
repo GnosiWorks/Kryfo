@@ -14,6 +14,7 @@ Fitur:
 * Tanpa nomor telepon atau email untuk mendaftar
 * Enkripsi ujung ke ujung (protokol Signal)
 * Secara bawaan, semua lalu lintas lewat klien Tor yang tertanam
+* Tetap jalan di tempat Tor diblokir: Kryfo menemukan sendiri cara menembusnya
 * Pengiriman onion langsung, relay sebagai jalur pengganti saat kontak offline
 * Grup dengan foto, file, pesan suara, balasan, reaksi, sematan, dan polling
 * Stiker animasi yang dikirim sebagai nama, jadi tidak ada gambar yang meninggalkan ponsel

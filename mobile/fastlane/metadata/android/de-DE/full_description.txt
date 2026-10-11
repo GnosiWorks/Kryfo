@@ -13,6 +13,7 @@ Funktionen:
 * Keine Telefonnummer oder E-Mail zur Anmeldung
 * Ende-zu-Ende-Verschlüsselung (Signal-Protokoll)
 * Aller Datenverkehr standardmäßig über einen eingebauten Tor-Client
+* Funktioniert, wo Tor blockiert ist: Kryfo findet von selbst einen Weg um die Sperre herum
 * Direkte Onion-Zustellung, Relais als Ausweichweg, wenn ein Kontakt offline ist
 * Gruppen mit Fotos, Dateien, Sprachnachrichten, Antworten, Reaktionen, angehefteten Nachrichten und Umfragen
 * Animierte Sticker, die nur als Name verschickt werden, sodass kein Bild das Handy verlässt
