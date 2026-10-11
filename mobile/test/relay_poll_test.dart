@@ -39,6 +39,24 @@ void main() {
     expect(got.written, [1791381223000, null, null, null]);
   });
 
+  test('when each reached the relay comes along where the engine says, and '
+      'a start it does not know or past the end is no start', () {
+    final got = parseRelayPoll(
+      '{"k":"5","m":[{"t":"a","c":"1","f":1000,"u":2000},'
+      '{"t":"b","c":"2","u":3000},{"t":"c","c":"3"},'
+      '{"t":"d","c":"4","f":5000,"u":4000},{"t":"e","c":"5","f":7,"u":0},'
+      '{"t":"f","c":"6","f":"x","u":"y"}]}',
+    );
+    expect(got.reached, [
+      (from: 1000, until: 2000),
+      (from: 0, until: 3000),
+      null,
+      (from: 0, until: 4000),
+      null,
+      null,
+    ]);
+  });
+
   test('nothing, or something that is not a batch, is no events', () {
     for (final raw in [
       '',

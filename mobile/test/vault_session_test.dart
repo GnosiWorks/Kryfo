@@ -21,7 +21,6 @@ import 'package:kryfo/main.dart'
         HaloDb,
         QuietIdentity,
         appState,
-        kUnblockGrace,
         searchFill,
         session,
         sessionQuiet,
@@ -130,8 +129,13 @@ class _Store implements RouterStore {
   @override
   Future<int> inboxCount() async => inbox.length;
   @override
-  Future<List<(int, int)>> inboxSizes() async => [
-    for (final r in inbox) (r['id'] as int, (r['sealed'] as List<int>).length),
+  Future<List<(int, int, bool)>> inboxSizes() async => [
+    for (final r in inbox)
+      (
+        r['id'] as int,
+        (r['sealed'] as List<int>).length,
+        r['part'] == kNotePart,
+      ),
   ];
   @override
   Future<List<Map<String, Object?>>> inboxOldest(
@@ -774,11 +778,7 @@ class _Db implements HaloDb {
 
   // no block here ever held
   @override
-  Future<bool> blockedAt(
-    String haloId,
-    int at, {
-    int slack = kUnblockGrace,
-  }) async => false;
+  Future<List<(int, int?)>> blockSpansOf(String haloId) async => const [];
   @override
   Future<void> noteBlockedDrop(String haloId, String uid) async {}
   @override

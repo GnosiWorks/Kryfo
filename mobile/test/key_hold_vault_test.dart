@@ -453,6 +453,10 @@ void main() {
           'CREATE TABLE v.group_members (group_id TEXT, halo_id TEXT)',
         );
         await db.execute(
+          'CREATE TABLE v.block_spans (peer_id TEXT, from_at INTEGER, '
+          'to_at INTEGER, listen_from INTEGER)',
+        );
+        await db.execute(
           "INSERT INTO v.contacts VALUES ('$_peer', 'o', 'x', 1, 0, "
           "'${_hex(_keyA)}'), ('member-two', 'o', 'y', 0, 0, NULL)",
         );
@@ -473,6 +477,32 @@ void main() {
         expect(
           {for (final m in members) m.id: m.verifiedKey},
           {_peer: _hex(_keyA), 'member-two': null},
+        );
+        // a block carries when it began, a seeded one when it is listened
+        // on from, an ended one nothing
+        await db.execute(
+          "UPDATE v.contacts SET blocked = 1 WHERE halo_id IN ('$_peer', "
+          "'member-two')",
+        );
+        await db.execute(
+          'INSERT INTO v.block_spans (peer_id, from_at, to_at, listen_from) '
+          "VALUES ('$_peer', 5, 9, NULL), ('$_peer', 70, NULL, NULL), "
+          "('member-two', 0, NULL, 80)",
+        );
+        final blocked = RouterCard.fromJson(
+          jsonDecode((await hiddenCard(db, const ChatRef(_peer)))!),
+        )!;
+        expect(blocked.blocked, isTrue);
+        expect(blocked.blockedFrom, kDay);
+        final seeded = jsonDecode(
+          (await hiddenCard(db, const ChatRef('g1', group: true)))!,
+        );
+        expect(
+          {
+            for (final m in (seeded as Map)['m'] as List)
+              RouterCard.fromJson(m)!.id: RouterCard.fromJson(m)!.blockedFrom,
+          },
+          {_peer: kDay, 'member-two': kDay},
         );
       },
       skip: SqliteMem.open() == null ? 'no sqlite on this host' : null,

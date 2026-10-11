@@ -9,6 +9,8 @@ import 'dart:typed_data';
 
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
+import 'relay_poll.dart' show Reached;
+
 // where an arrival goes
 enum RouteTo {
   // the everyday database
@@ -28,10 +30,21 @@ const kHiddenGroup = 'group';
 // dropped. a group's card says so with g
 const kHiddenGone = 'gone';
 
+// relays keep a wrap fourteen days (nip17.go). a block is listened on a
+// day past that, so nothing it held is left there
+const kBlockListenFor = 15 * kDay;
+const kDay = 86400000;
+
 // what may wait sealed while the vault is shut, in arrivals and in bytes.
 // past either the oldest go first
 const kMaxSealed = 5000;
 const kMaxSealedBytes = 100 << 20;
+
+// a uid noted from someone the vault blocked waits under this part. they
+// go first when the cap is reached, and no more than this many wait, so
+// what they send never pushes out a real arrival
+const kNotePart = -1;
+const kMaxSealedNotes = 2000;
 
 // the three tables, in every container. the vault's are unused but for
 // vault_meta, which holds its own key
@@ -74,6 +87,7 @@ class RouterCard {
     this.xpub, {
     this.backPaired = false,
     this.blocked = false,
+    this.blockedFrom,
     this.verifiedKey,
     this.markRead = true,
   });
@@ -83,6 +97,9 @@ class RouterCard {
   final String xpub;
   final bool backPaired;
   final bool blocked;
+  // when the block began, or when a span seeded without a start is
+  // listened on from. null on a card written before cards kept it
+  final int? blockedFrom;
   // the key the vault verified them under: while it is shut, another key
   // held for them holds what goes to them, as their row would
   final String? verifiedKey;
@@ -96,6 +113,10 @@ class RouterCard {
     'x': xpub,
     if (backPaired) 'bp': 1,
     if (blocked) 'bl': 1,
+    // to the day, rounded up: when the vault blocked them says no more than
+    // that on the everyday side
+    if (blocked && blockedFrom != null)
+      'bs': (blockedFrom! + kDay - 1) ~/ kDay * kDay,
     'vk': verifiedKey ?? '',
   };
 
@@ -106,12 +127,14 @@ class RouterCard {
     final o = j['o'];
     final x = j['x'];
     final vk = j['vk'];
+    final bs = j['bs'];
     return RouterCard(
       h,
       o is String ? o : '',
       x is String ? x : '',
       backPaired: j['bp'] == 1,
       blocked: j['bl'] == 1,
+      blockedFrom: j['bl'] == 1 && bs is int ? bs : null,
       verifiedKey: vk is String && vk.isNotEmpty ? vk.toLowerCase() : null,
       markRead: vk is String,
     );
@@ -161,6 +184,8 @@ class Unsealed {
     this.wrapped,
     this.keyChanged = false,
     this.receipt,
+    this.blockedDrop,
+    this.reached,
   });
 
   final String from;
@@ -178,12 +203,17 @@ class Unsealed {
   final int? resendSince;
   // when the sender wrapped it, by their clock, where the lane said
   final int? wrapped;
+  // when it reached the relay, by this clock, where the lane said
+  final Reached? reached;
   // no arrival: [from]'s key changed while the vault was shut, and their
   // chat shows it as the vault opens
   final bool keyChanged;
   // no arrival: a delivery receipt for this uid was held for [from] while
   // the vault was shut, and waits in it from its open
   final String? receipt;
+  // no arrival: [from], whom the vault blocked, sent this uid while it was
+  // shut. the vault notes it as it would have on arrival
+  final String? blockedDrop;
 }
 
 // the tables, behind a seam so the router runs on a stand-in
@@ -197,8 +227,9 @@ abstract class RouterStore {
   Future<bool> inboxHas(String uid, int? part);
   Future<int> inboxParts(String uid);
   Future<int> inboxCount();
-  // every row's id and size, oldest first, without what it holds
-  Future<List<(int, int)>> inboxSizes();
+  // every row's id and size, oldest first, without what it holds, and
+  // whether it is a note (kNotePart)
+  Future<List<(int, int, bool)>> inboxSizes();
   // oldest first
   // past [after], by id
   Future<List<Map<String, Object?>>> inboxOldest(int limit, {int after = 0});
@@ -351,7 +382,7 @@ class SqlRouterStore implements RouterStore {
   Future<int> inboxParts(String uid) async {
     final r = await (await _open()).rawQuery(
       'SELECT COUNT(DISTINCT part) c FROM vault_inbox '
-      'WHERE uid = ? AND part IS NOT NULL',
+      'WHERE uid = ? AND part >= 0',
       [uid],
     );
     return (r.first['c'] as int?) ?? 0;
@@ -366,11 +397,15 @@ class SqlRouterStore implements RouterStore {
   }
 
   @override
-  Future<List<(int, int)>> inboxSizes() async => [
+  Future<List<(int, int, bool)>> inboxSizes() async => [
     for (final r in await (await _open()).rawQuery(
-      'SELECT id, length(sealed) n FROM vault_inbox ORDER BY id ASC',
+      'SELECT id, length(sealed) n, part FROM vault_inbox ORDER BY id ASC',
     ))
-      ((r['id'] as num).toInt(), (r['n'] as num? ?? 0).toInt()),
+      (
+        (r['id'] as num).toInt(),
+        (r['n'] as num? ?? 0).toInt(),
+        r['part'] == kNotePart,
+      ),
   ];
 
   @override
@@ -693,12 +728,19 @@ class VaultRouter {
   // no tick for someone the vault blocked
   bool blocks(String id) => cardOf(id)?.blocked ?? false;
 
-  // the keys to listen on, each to its person. the vault's blocked too:
-  // what they send while it holds is dropped as it comes
-  Map<String, String> get listenFor => {
-    for (final c in [..._members.values, ..._peers.values])
-      if (c.xpub.isNotEmpty) c.xpub: c.id,
-  };
+  // the keys to listen on, each to its person. the vault's blocked too,
+  // while the block is young: what they send while it holds is dropped as
+  // it comes. one whose card does not say when it began is listened on
+  // until the vault opens and says
+  Map<String, String> get listenFor {
+    final old = DateTime.now().millisecondsSinceEpoch - kBlockListenFor;
+    return {
+      for (final c in [..._members.values, ..._peers.values])
+        if (c.xpub.isNotEmpty &&
+            !(c.blocked && c.blockedFrom != null && c.blockedFrom! <= old))
+          c.xpub: c.id,
+    };
+  }
 
   // an arrival sealed to the vault. false when there is nothing to seal to,
   // or when it alone is past the cap
@@ -716,36 +758,57 @@ class VaultRouter {
         'rc': ?a.receipt,
         'rf': ?a.resendSince,
         'a': ?a.wrapped,
+        'bd': ?a.blockedDrop,
+        if (a.reached case final r?) ...{'rl': r.from, 'rh': r.until},
       }),
     );
     final sealed = _sealer.seal(pub, base64Encode(plain));
     if (sealed == null) return false;
-    await _store.inboxAdd(uid, part, base64Decode(sealed), a.at);
+    await _store.inboxAdd(
+      uid,
+      a.blockedDrop != null ? kNotePart : part,
+      base64Decode(sealed),
+      a.at,
+    );
     _sealGen++;
     _maybeSealed = true;
     return _trim();
   }
 
-  // what waits sealed held to the cap, the oldest going first. false when
-  // the newest is past it on its own: it goes, and takes nothing with it
+  // what waits sealed held to the cap, notes first and then the oldest.
+  // false when the newest is past it on its own: it goes, and takes
+  // nothing with it
   Future<bool> _trim() async {
     final rows = await _store.inboxSizes();
     if (rows.isEmpty) return false;
-    final (newest, size) = rows.last;
+    final (newest, size, _) = rows.last;
     if (size > maxSealedBytes) {
       await _store.inboxDelete(newest);
       return false;
     }
     var n = rows.length;
     var bytes = 0;
-    for (final (_, size) in rows) {
+    var notes = 0;
+    for (final (_, size, note) in rows) {
       bytes += size;
+      if (note) notes++;
     }
-    for (final (id, size) in rows) {
-      if (n <= maxSealed && bytes <= maxSealedBytes) break;
+    for (final (id, size, note) in [
+      for (final r in rows)
+        if (r.$3) r,
+      for (final r in rows)
+        if (!r.$3) r,
+    ]) {
+      if (n <= maxSealed &&
+          bytes <= maxSealedBytes &&
+          (!note || notes <= kMaxSealedNotes)) {
+        if (note) continue;
+        break;
+      }
       await _store.inboxDelete(id);
       n--;
       bytes -= size;
+      if (note) notes--;
     }
     return true;
   }
@@ -791,6 +854,8 @@ class VaultRouter {
       if (f is! String || w is! String || at is! int) return null;
       final a = j['a'];
       final rf = j['rf'];
+      final rl = j['rl'];
+      final rh = j['rh'];
       return Unsealed(
         f,
         w,
@@ -801,6 +866,10 @@ class VaultRouter {
         wrapped: a is int ? a : null,
         keyChanged: j['kc'] == 1,
         receipt: j['rc'] is String ? j['rc'] as String : null,
+        blockedDrop: j['bd'] is String ? j['bd'] as String : null,
+        reached: rl is int && rh is int && rl <= rh
+            ? (from: rl, until: rh)
+            : null,
       );
     } catch (_) {
       return null;

@@ -10,18 +10,11 @@ import 'package:kryfo/container.dart';
 import 'package:kryfo/group_media_send.dart' show groupOwedGap;
 import 'package:kryfo/first_contact.dart' show firstKeepFits, firstRetryGap;
 import 'package:kryfo/main.dart'
-    show
-        AppIo,
-        FirstKept,
-        HaloDb,
-        blockedAtArgs,
-        groupUnsendOf,
-        groupUnsendRow,
-        kBlockListenFor,
-        kUnblockGrace;
+    show AppIo, FirstKept, HaloDb, groupUnsendOf, groupUnsendRow;
 import 'package:kryfo/media_resend.dart';
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
+import 'package:kryfo/relay_poll.dart' show Reached;
 import 'package:kryfo/rooms.dart' show kRoomJoinWait, kRoomRecent, roomUidPart;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/stranger_gate.dart'
@@ -83,13 +76,19 @@ class ArrivalStore implements RouterStore {
   @override
   Future<int> inboxParts(String uid) async => {
     for (final r in inbox)
-      if (r['uid'] == uid && r['part'] != null) r['part'],
+      if (r['uid'] == uid && r['part'] is int && (r['part'] as int) >= 0)
+        r['part'],
   }.length;
   @override
   Future<int> inboxCount() async => inbox.length;
   @override
-  Future<List<(int, int)>> inboxSizes() async => [
-    for (final r in inbox) (r['id'] as int, (r['sealed'] as List<int>).length),
+  Future<List<(int, int, bool)>> inboxSizes() async => [
+    for (final r in inbox)
+      (
+        r['id'] as int,
+        (r['sealed'] as List<int>).length,
+        r['part'] == kNotePart,
+      ),
   ];
   @override
   Future<List<Map<String, Object?>>> inboxOldest(
@@ -334,7 +333,7 @@ class ArrivalRows implements HaloDb {
   final seen = <String>{};
   final held = <String>[];
   // what was held, row by row, as heldOf hands it back
-  final heldRows = <String, List<({int id, String cipher})>>{};
+  final heldRows = <String, List<({int id, String cipher, int at})>>{};
   var _heldId = 0;
   Map<String, List<String>> get heldCiphers => {
     for (final e in heldRows.entries)
@@ -567,19 +566,10 @@ class ArrivalRows implements HaloDb {
     if (!blocked && open >= 0) spans[open] = (spans[open].$1, now);
   }
 
-  // as kBlockedAtWhere reads its arguments: an ended span, from its start
-  // to its end less the grace
   @override
-  Future<bool> blockedAt(
-    String haloId,
-    int at, {
-    int slack = kUnblockGrace,
-  }) async {
-    final a = blockedAtArgs(haloId, at, slack: slack);
-    return [...?blockSpans[haloId]].any(
-      (s) => s.$1 <= (a[1] as int) && s.$2 != null && s.$2! > (a[2] as int),
-    );
-  }
+  Future<List<(int, int?)>> blockSpansOf(String haloId) async => [
+    ...?blockSpans[haloId],
+  ];
 
   @override
   Future<int?> blockedSince(String haloId) async {
@@ -747,7 +737,11 @@ class ArrivalRows implements HaloDb {
     );
     if (v != Shelved.kept) return v;
     held.add(peerId);
-    rows.add((id: ++_heldId, cipher: cipher));
+    rows.add((
+      id: ++_heldId,
+      cipher: cipher,
+      at: DateTime.now().millisecondsSinceEpoch,
+    ));
     if (mediaId != null && !overflow) {
       heldMedia[_heldId] = mediaId;
       heldChunk[_heldId] = chunk;
@@ -797,7 +791,7 @@ class ArrivalRows implements HaloDb {
   }
 
   @override
-  Future<List<({int id, String cipher})>> heldOf(String peerId) async =>
+  Future<List<({int id, String cipher, int at})>> heldOf(String peerId) async =>
       _hit('heldOf', peerId, [...?heldRows[peerId]]);
 
   @override
@@ -852,6 +846,7 @@ class ArrivalRows implements HaloDb {
     String peer = '',
     String? uid,
     required int now,
+    Reached? reached,
   }) async {
     _hit('keepFirst', null, null);
     if (kept.containsKey(hash)) return true;
@@ -878,6 +873,7 @@ class ArrivalRows implements HaloDb {
       at: now,
       tries: 0,
       nextAt: now + firstRetryGap(0).inMilliseconds,
+      reached: reached,
     );
     return true;
   }
@@ -896,6 +892,7 @@ class ArrivalRows implements HaloDb {
       at: r.at,
       tries: tries,
       nextAt: nextAt,
+      reached: r.reached,
     );
   }
 

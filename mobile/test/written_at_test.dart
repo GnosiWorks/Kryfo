@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // when a message was written rides in its envelope as 'w', set once and
-// kept on every retry, so a block's spans judge a copy wrapped again by
-// when it was written. one without it, from an older version, reads as
-// before. what the spans are handed: never past the wrap, never far ahead
-// of this clock, and the grace only as far as the copy leaves it open
+// kept on every retry. one without it, from an older version, reads as
+// before. an ended block keeps out what may have reached the relay while
+// it held, by this clock, and what their own two stamps say was written
+// while it held: how long before the wrap it was written, never when
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kryfo/main.dart' show blockStamp, kStampAhead, kUnblockGrace;
+import 'package:kryfo/main.dart' show heldBySpans, kUnblockGrace, stampHeld;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/outbox.dart';
+import 'package:kryfo/relay_poll.dart' show Reached;
 import 'package:shared_preferences/shared_preferences.dart';
 
 const _sender = SenderInfo(
@@ -94,87 +95,131 @@ void main() {
     });
   });
 
-  group('what the spans are handed', () {
-    const now = 1791393419000;
+  group('what an ended block keeps out', () {
+    const h = 3600000;
+    // a block of two hours that ended at to
+    const from = 1791393419000;
+    const to = from + 2 * h;
+    const ended = [(from, to)];
+    const now = to + 3 * h;
 
-    test('the time it was written, with the grace, when the lane says '
-        'nothing of the wrap', () {
-      final s = blockStamp(written: now - 3600000, came: now, now: now);
-      expect(s, (at: now - 3600000, slack: kUnblockGrace));
+    bool held(Reached? reached, {int? written, int? wrapped, int? came}) =>
+        heldBySpans(
+          ended,
+          reached: reached,
+          came: came ?? reached?.until ?? now,
+          now: now,
+          written: written,
+          wrapped: wrapped,
+        );
+
+    test('what came live after the unblock is let in whatever their clock '
+        'reads: hours slow, or a day ahead', () {
+      for (final skew in [-5 * h, -20 * 60000, 0, 24 * h]) {
+        expect(
+          held(
+            (from: to + 1000, until: to + 1000),
+            written: to + 500 + skew,
+            wrapped: to + 900 + skew,
+          ),
+          isFalse,
+          reason: '$skew',
+        );
+      }
     });
 
-    test('the wrap time from a version that does not say', () {
-      final s = blockStamp(wrapped: now - 3600000, came: now, now: now);
-      expect(s, (at: now - 3600000, slack: kUnblockGrace));
-      expect(blockStamp(came: now, now: now), isNull);
-      expect(blockStamp(wrapped: 0, came: now, now: now), isNull);
+    test('a copy the relay took before the unblock, while the block held, '
+        'stays out whatever its stamps say', () {
+      for (final w in [from + h, to + 60000, to + 24 * h]) {
+        for (final r in [
+          (from: to - 60000, until: to - 1000),
+          (from: 0, until: to),
+        ]) {
+          expect(
+            held(r, written: w, wrapped: w),
+            isTrue,
+            reason: '$w $r',
+          );
+        }
+      }
     });
 
-    test('never past the wrap: both are their clock', () {
-      final s = blockStamp(
-        written: now + 86400000,
-        wrapped: now - 3600000,
-        came: now,
-        now: now,
-      );
-      expect(s!.at, now - 3600000);
+    test('a stored copy whose window runs past the unblock, or whose relay '
+        'was never heard before, is judged by its stamps: an hour after the '
+        'unblock comes in, an hour before stays out', () {
+      for (final r in [
+        (from: to - 180000, until: to + 2 * h),
+        (from: 0, until: to + 2 * h),
+      ]) {
+        expect(
+          held(r, written: to + h, wrapped: to + h),
+          isFalse,
+          reason: '$r',
+        );
+        expect(
+          held(r, written: to - h, wrapped: to - h),
+          isTrue,
+          reason: '$r',
+        );
+        // a version that says nothing: nothing to keep it out by
+        expect(held(r), isFalse, reason: '$r');
+      }
     });
 
-    test('one far ahead of this clock is taken as now', () {
-      expect(blockStamp(written: now + 86400000, came: now, now: now)!.at, now);
+    test('a stored copy the relay took after the unblock, or before the '
+        'block, is let in', () {
+      expect(held((from: to, until: to + h)), isFalse);
+      expect(held((from: from - h, until: from - 1000), came: to + h), isFalse);
+    });
+
+    test('a copy sent again after the unblock of what was written while it '
+        'held stays out by how long before it went it was written, with '
+        'their clock five hours slow', () {
+      const skew = -5 * h;
+      const wrote = from + 30 * 60000;
+      const went = to + 60000;
       expect(
-        blockStamp(written: now + kStampAhead + 1, came: now, now: now)!.at,
-        now,
+        held(
+          (from: went, until: went),
+          written: wrote + skew,
+          wrapped: went + skew,
+        ),
+        isTrue,
       );
-      // a little ahead is a clock a little fast, kept as it is
+      // written ten seconds after the unblock and sent again two minutes
+      // on, on the same slow clock: let in
       expect(
-        blockStamp(written: now + kStampAhead, came: now, now: now)!.at,
-        now + kStampAhead,
+        held(
+          (from: to + 120000, until: to + 120000),
+          written: to + 10000 + skew,
+          wrapped: to + 120000 + skew,
+        ),
+        isFalse,
       );
     });
 
-    test('the grace only as far as the copy leaves open: it came that long '
-        'after it was wrapped', () {
-      // wrapped a second before it came: their clock is at most that slow
+    test('with no wrap time, as on the onion lane, the written stamp and '
+        'the grace judge it', () {
+      const live = (from: to + 1000, until: to + 1000);
+      expect(held(live, written: from + h), isTrue);
+      expect(held(live, written: to - kUnblockGrace - 1000), isTrue);
+      // the last minutes before the unblock are given to a slow clock
+      expect(held(live, written: to - 5 * 60000), isFalse);
+      expect(held(live, written: to + 500), isFalse);
+      expect(held(live), isFalse);
+    });
+
+    test('with no lane to say when it reached the relay, its stamps judge '
+        'it as before, and it is not taken as held back', () {
+      expect(held(null, written: to + h, wrapped: to + h, came: now), isFalse);
+      expect(held(null), isFalse);
       expect(
-        blockStamp(
-          written: now - 200000,
-          wrapped: now - 1000,
-          came: now,
-          now: now,
-        ),
-        (at: now - 200000, slack: 1000),
+        held(null, written: from + h, wrapped: from + h, came: now),
+        isTrue,
       );
-      // held by a relay an hour: the grace
-      expect(
-        blockStamp(
-          written: now - 3600000,
-          wrapped: now - 3600000,
-          came: now,
-          now: now,
-        ),
-        (at: now - 3600000, slack: kUnblockGrace),
-      );
-      // their clock ahead of ours: nothing more than the stamp
-      expect(
-        blockStamp(
-          written: now + 5000,
-          wrapped: now + 5000,
-          came: now,
-          now: now,
-        ),
-        (at: now + 5000, slack: 0),
-      );
-      // opened from the seal: from when it came, not from now
-      expect(
-        blockStamp(
-          written: now - 7200000,
-          wrapped: now - 7200000 + 30000,
-          came: now - 7200000 + 60000,
-          now: now,
-        ),
-        (at: now - 7200000, slack: 30000),
-      );
+      // one far ahead is taken as now
+      expect(held(null, written: now + 24 * h, came: now), isFalse);
+      expect(stampHeld(ended, written: from + h, came: now, now: now), isTrue);
     });
   });
 }

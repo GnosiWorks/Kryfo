@@ -1283,7 +1283,7 @@ class HaloDb implements GroupOwedStore {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 74,
+      version: 75,
       onConfigure: eraseFreedPages,
       onCreate: (db, _) async {
         await db.execute('''
@@ -1447,7 +1447,7 @@ class HaloDb implements GroupOwedStore {
       },
       onUpgrade: (db, oldV, newV) async {
         // 62 runs after every older step, below: its index names columns
-        // they add. 66 runs after it: it reads what they all make. 67 to 72
+        // they add. 66 runs after it: it reads what they all make. 67 to 75
         // last
         if (oldV < 65) {
           // a room joined off a link and not let in yet: when the join went
@@ -1913,6 +1913,10 @@ class HaloDb implements GroupOwedStore {
         if (oldV < 74) {
           // which groups' texts went again to a member after a restore
           await groupResentTables(db);
+        }
+        if (oldV < 75) {
+          // when a span seeded at 64 is listened on from
+          await blockListenColumn(db);
         }
       },
     );
@@ -2508,27 +2512,20 @@ class HaloDb implements GroupOwedStore {
     }
   }
 
-  // whether [at], by the sender's own clock, falls in a time they were
-  // blocked here and that has ended. [slack]: how far behind ours their
-  // clock may run (blockStamp)
-  Future<bool> blockedAt(
-    String haloId,
-    int at, {
-    int slack = kUnblockGrace,
-  }) async {
+  // every span of a block on [haloId], from and to, to null while it holds
+  Future<List<(int, int?)>> blockSpansOf(String haloId) async {
     try {
       final db = await open();
       final r = await db.query(
         'block_spans',
-        columns: ['from_at'],
-        where: kBlockedAtWhere,
-        whereArgs: blockedAtArgs(haloId, at, slack: slack),
-        limit: 1,
+        columns: ['from_at', 'to_at'],
+        where: 'peer_id = ?',
+        whereArgs: [haloId],
       );
-      return r.isNotEmpty;
+      return [for (final x in r) (x['from_at'] as int, x['to_at'] as int?)];
     } catch (e) {
       dlog('block span: $e');
-      return false;
+      return const [];
     }
   }
 
@@ -4314,17 +4311,22 @@ class HaloDb implements GroupOwedStore {
 
   // what the shelf holds for them, oldest first. a row goes with
   // forgetHeld once it is in, so one that fails stays
-  Future<List<({int id, String cipher})>> heldOf(String peerId) async {
+  Future<List<({int id, String cipher, int at})>> heldOf(String peerId) async {
     final db = await open();
     final rows = await db.query(
       'held_onion',
-      columns: ['id', 'cipher'],
+      columns: ['id', 'cipher', 'at'],
       where: 'peer_id = ?',
       whereArgs: [peerId],
       orderBy: 'id ASC',
     );
     return [
-      for (final r in rows) (id: r['id'] as int, cipher: r['cipher'] as String),
+      for (final r in rows)
+        (
+          id: r['id'] as int,
+          cipher: r['cipher'] as String,
+          at: r['at'] as int? ?? 0,
+        ),
     ];
   }
 
@@ -4356,6 +4358,7 @@ class HaloDb implements GroupOwedStore {
     String peer = '',
     String? uid,
     required int now,
+    Reached? reached,
   }) async {
     final db = await open();
     final rows = await db.query(
@@ -4386,6 +4389,8 @@ class HaloDb implements GroupOwedStore {
       'at': now,
       'tries': 0,
       'next_at': now + firstRetryGap(0).inMilliseconds,
+      'reached_from': reached?.from,
+      'reached_until': reached?.until,
     }, conflictAlgorithm: ConflictAlgorithm.ignore);
     return true;
   }
@@ -4403,6 +4408,10 @@ class HaloDb implements GroupOwedStore {
           at: (r['at'] as num).toInt(),
           tries: (r['tries'] as num).toInt(),
           nextAt: (r['next_at'] as num).toInt(),
+          reached: switch ((r['reached_from'], r['reached_until'])) {
+            (final int f, final int u) => (from: f, until: u),
+            _ => null,
+          },
         ),
     ];
   }
@@ -7464,26 +7473,20 @@ Future<void> _supportTables(Database db) async {
 }
 
 // someone blocked before the spans were kept counts as blocked from the
-// start. one with a span open already keeps that one
+// start, and is listened on from now. one with a span open already keeps
+// that one
 const kSeedBlockSpans =
-    'INSERT INTO block_spans (peer_id, from_at) '
-    'SELECT halo_id, 0 FROM contacts WHERE blocked = 1 AND halo_id NOT IN '
+    'INSERT INTO block_spans (peer_id, from_at, listen_from) '
+    "SELECT halo_id, 0, CAST(strftime('%s', 'now') AS INTEGER) * 1000 "
+    'FROM contacts WHERE blocked = 1 AND halo_id NOT IN '
     '(SELECT peer_id FROM block_spans WHERE to_at IS NULL)';
 
-// an ended span of [peer_id] that held at a time, given twice
-// (blockedAtArgs). an open one adds nothing: isBlocked is asked first, and
-// one left open by a row that went must not hold over a later add
-const kBlockedAtWhere =
-    'peer_id = ? AND from_at <= ? AND to_at IS NOT NULL AND to_at > ?';
-
-// relays keep a wrap fourteen days (nip17.go). a block is listened on a
-// day past that, so nothing it held is left there; later its stamp judges
-const kBlockListenFor = 15 * 86400000;
-
-// every blocked row, and whether its open span began after the argument
+// every blocked row, and whether its open span is listened on from after
+// the argument: from its start, or from when a seeded one was made
 const kBlockedRowsSql =
     'SELECT c.*, EXISTS (SELECT 1 FROM block_spans s WHERE '
-    's.peer_id = c.halo_id AND s.to_at IS NULL AND s.from_at > ?) AS listen '
+    's.peer_id = c.halo_id AND s.to_at IS NULL AND '
+    'COALESCE(s.listen_from, s.from_at) > ?) AS listen '
     'FROM contacts c WHERE c.blocked = 1';
 
 // the stamp is the sender's clock, which may run behind this one. what
@@ -7494,31 +7497,82 @@ const kUnblockGrace = 10 * 60 * 1000;
 // a stamp further ahead of this clock than this is taken as now
 const kStampAhead = 10 * 60 * 1000;
 
-// the arguments of kBlockedAtWhere for a stamp [at]: the span's end has
-// to be past it by the slack, the grace unless the copy shows less
-List<Object> blockedAtArgs(
-  String haloId,
-  int at, {
-  int slack = kUnblockGrace,
-}) => [haloId, at, at + slack];
+// whether a copy from someone not blocked now may be what a block of
+// theirs held back. [ended]: their spans that ended, from and to.
+// [reached]: when it reached the relay, or this phone, by this clock: a
+// stored one between what the relay was known to have handed over and the
+// subscribe, a live one as it came. one that reached it while a block
+// held stays out whatever it says. one whose window runs past the unblock,
+// or that no lane dates, is judged by its stamps as it was before the
+// lanes said (stampHeld). one that reached it after is still kept out if
+// their own two stamps say it was written while one held: the wrap time
+// less when it was written is how long before it went it was written,
+// whatever their clock reads; with no wrap time, its written stamp and the
+// grace. nothing is noted by this: a copy sent again after the unblock
+// comes live, and only the uids noted while the block held keep that out
+bool heldBySpans(
+  List<(int, int)> ended, {
+  Reached? reached,
+  required int came,
+  int? now,
+  int? written,
+  int? wrapped,
+}) {
+  final at = now ?? DateTime.now().millisecondsSinceEpoch;
+  if (reached == null) {
+    return stampHeld(
+      ended,
+      written: written,
+      wrapped: wrapped,
+      came: came,
+      now: at,
+    );
+  }
+  final r = reached;
+  for (final span in ended) {
+    final (from, to) = span;
+    if (r.until <= from) continue;
+    if (r.until <= to) return true;
+    if (r.from < to || wrapped == null) {
+      if (stampHeld(
+        [span],
+        written: written,
+        wrapped: wrapped,
+        came: r.until,
+        now: at,
+      )) {
+        return true;
+      }
+      continue;
+    }
+    final age = written != null && wrapped > written ? wrapped - written : 0;
+    final wrote = r.until - age;
+    if (wrote >= from && wrote < to) return true;
+  }
+  return false;
+}
 
-// when their clock says it was written, never past the wrap, and how far
-// behind ours that clock may run: no further than the copy took to come.
-// for what comes after a block to a phone that heard nothing while it held
-({int at, int slack})? blockStamp({
+// the stamps alone: when it was written by their clock, never past the
+// wrap, never far ahead of this clock, inside an ended span less how far
+// behind ours their clock may run, no further than the copy took to come
+bool stampHeld(
+  List<(int, int)> ended, {
   int? written,
   int? wrapped,
   required int came,
   required int now,
 }) {
   var at = written ?? wrapped;
-  if (at == null || at <= 0) return null;
+  if (at == null || at <= 0) return false;
   if (wrapped != null && wrapped > 0 && wrapped < at) at = wrapped;
   if (at > now + kStampAhead) at = now;
   final slack = wrapped == null || wrapped <= 0
       ? kUnblockGrace
       : (came - wrapped).clamp(0, kUnblockGrace);
-  return (at: at, slack: slack);
+  for (final (from, to) in ended) {
+    if (from <= at && to > at + slack) return true;
+  }
+  return false;
 }
 
 // a contact row that goes ends its open span, so what is left of a block
@@ -7582,7 +7636,8 @@ Future<void> blockTables(DatabaseExecutor db, {bool seed = false}) async {
       CREATE TABLE IF NOT EXISTS block_spans (
         peer_id TEXT NOT NULL,
         from_at INTEGER NOT NULL,
-        to_at INTEGER
+        to_at INTEGER,
+        listen_from INTEGER
       )
     ''');
     await db.execute(
@@ -7601,9 +7656,48 @@ Future<void> blockTables(DatabaseExecutor db, {bool seed = false}) async {
       'CREATE INDEX IF NOT EXISTS blocked_drops_at ON blocked_drops(at)',
     );
     await db.execute(kCloseSpansOnDelete);
-    if (seed) await db.execute(kSeedBlockSpans);
+    if (seed) {
+      // a table made before the column was: the seed names it
+      await addColumn(
+        db,
+        'ALTER TABLE block_spans ADD COLUMN listen_from INTEGER',
+      );
+      await db.execute(kSeedBlockSpans);
+    }
   } catch (e) {
     dlog('block tables: $e');
+  }
+}
+
+// the upgrade to 75: when a seeded span is listened on from. one seeded
+// before is listened on from now, for as long as a new block would be.
+// and when a kept opener reached the relay
+@visibleForTesting
+Future<void> blockListenColumn(DatabaseExecutor db) async {
+  try {
+    await addColumn(
+      db,
+      'ALTER TABLE first_kept ADD COLUMN reached_from INTEGER',
+    );
+    await addColumn(
+      db,
+      'ALTER TABLE first_kept ADD COLUMN reached_until INTEGER',
+    );
+  } catch (e) {
+    dlog('first kept columns: $e');
+  }
+  try {
+    await addColumn(
+      db,
+      'ALTER TABLE block_spans ADD COLUMN listen_from INTEGER',
+    );
+    await db.execute(
+      "UPDATE block_spans SET listen_from = CAST(strftime('%s', 'now') AS "
+      'INTEGER) * 1000 WHERE from_at = 0 AND to_at IS NULL AND '
+      'listen_from IS NULL',
+    );
+  } catch (e) {
+    dlog('block listen column: $e');
   }
 }
 
@@ -7654,6 +7748,9 @@ typedef FirstKept = ({
   int at,
   int tries,
   int nextAt,
+  // when it reached the relay or this phone, by this clock, where the lane
+  // said: null for one kept before that was kept
+  Reached? reached,
 });
 
 // a stranger's opener that opened and did not file here, kept as it came
@@ -7670,7 +7767,9 @@ Future<void> firstContactTables(DatabaseExecutor db) async {
       uid TEXT,
       at INTEGER NOT NULL,
       tries INTEGER NOT NULL DEFAULT 0,
-      next_at INTEGER NOT NULL
+      next_at INTEGER NOT NULL,
+      reached_from INTEGER,
+      reached_until INTEGER
     )
   ''');
   // the words an opener went as go with it, however it goes
@@ -9633,6 +9732,7 @@ typedef _Early = ({
   String wire,
   int? arrivedAt,
   int? wrappedAt,
+  Reached? reached,
   int at,
 });
 
@@ -9839,6 +9939,7 @@ class AppState extends ChangeNotifier {
           arrivedAt: e.arrivedAt,
           marks: marks,
           wrappedAt: e.wrappedAt,
+          reached: e.reached,
         );
         // the newest by their clock, whichever came last
         final w = env.writtenAt ?? editedAt;
@@ -10315,6 +10416,17 @@ class AppState extends ChangeNotifier {
   Future<void> acceptNewKey(String peer) async {
     await session.acceptNewKey(peer);
     _recardFor(peer);
+  }
+
+  // a block in the open vault on someone its cards name: the cards say so
+  // while it is shut, and since when
+  Future<void> _recardBlock(String haloId) async {
+    if (_openVault == null || !_router.keeps(haloId)) return;
+    try {
+      await refreshHiddenCards();
+    } catch (e) {
+      dlog('vault: cards not read (${e.runtimeType})');
+    }
   }
 
   void _recardFor(String peer) {
@@ -12800,10 +12912,13 @@ class AppState extends ChangeNotifier {
     int? arrivedAt,
     // when the sender wrapped it by their clock, where the lane says. each
     // send wraps anew, so a retry carries its own. when it was written
-    // rides in the envelope (blockStamp)
+    // rides in the envelope (heldBySpans)
     int? wrappedAt,
     // a room message from a key taken out, owed from before that (roomOwes)
     bool late = false,
+    // when it reached the relay or this phone, by this clock, where the
+    // lane says (heldBySpans)
+    Reached? reached,
   }) async {
     // the dev chat takes a frame only while it runs, and only what his
     // chat may carry, said by his pinned key. the rest is dropped unseen
@@ -12826,6 +12941,7 @@ class AppState extends ChangeNotifier {
         into: into,
         arrivedAt: arrivedAt,
         wrappedAt: wrappedAt,
+        reached: reached,
       );
     }
     await _afterClose();
@@ -12845,6 +12961,7 @@ class AppState extends ChangeNotifier {
         marks: marks,
         wrappedAt: wrappedAt,
         late: late,
+        reached: reached,
       );
     } finally {
       for (final k in keys) {
@@ -12888,6 +13005,7 @@ class AppState extends ChangeNotifier {
     Set<String>? marks,
     int? wrappedAt,
     bool late = false,
+    Reached? reached,
   }) async {
     // a uid claimed and never saved is let go, or a copy that comes again
     // is taken for one already in and dropped
@@ -12904,6 +13022,7 @@ class AppState extends ChangeNotifier {
         claims: claims,
         wrappedAt: wrappedAt,
         late: late,
+        reached: reached,
       );
     } catch (_) {
       _inflightUids.removeAll(claims);
@@ -12939,6 +13058,7 @@ class AppState extends ChangeNotifier {
     required List<String> claims,
     required int? wrappedAt,
     required bool late,
+    required Reached? reached,
   }) async {
     // what is opened goes with the session it began in
     final epoch = _openedEpoch;
@@ -12957,6 +13077,7 @@ class AppState extends ChangeNotifier {
           wire,
           fromBackPair,
           wrappedAt: wrappedAt,
+          reached: reached,
         );
         return to;
       }
@@ -13042,20 +13163,23 @@ class AppState extends ChangeNotifier {
         }
       }
     }
-    // what a phone that heard nothing while a block held gets after it,
-    // the relays' copies or the sender's again, stays out by when it was
-    // written (blockStamp). nothing is noted by it: a stamp is their clock,
-    // and one running behind could match an ended span for something sent
-    // after it, whose copies must still come in
-    final heard = DateTime.now().millisecondsSinceEpoch;
-    final stamp = blockStamp(
-      written: env.writtenAt,
-      wrapped: wrappedAt,
-      came: arrivedAt ?? heard,
-      now: heard,
-    );
-    if (stamp != null &&
-        await db.blockedAt(senderHaloId, stamp.at, slack: stamp.slack)) {
+    // what comes from someone once blocked is judged by when it reached
+    // the relay or this phone, by this clock, and by how long before it
+    // went it was written, by theirs (heldBySpans). nothing is noted by it
+    final ended = [
+      for (final (f, t) in await db.blockSpansOf(senderHaloId))
+        if (t != null) (f, t),
+    ];
+    if (ended.isNotEmpty &&
+        heldBySpans(
+          ended,
+          reached: reached,
+          came: arrivedAt ?? DateTime.now().millisecondsSinceEpoch,
+          now: DateTime.now().millisecondsSinceEpoch,
+          written: env.writtenAt,
+          wrapped: wrappedAt,
+        )) {
+      dlog('recv: may be from a block that ended, dropped');
       return to;
     }
     // the developer's own phone: a chat started from the Marios row goes to
@@ -13097,6 +13221,7 @@ class AppState extends ChangeNotifier {
         wire: wire,
         arrivedAt: arrivedAt,
         wrappedAt: wrappedAt,
+        reached: reached,
         at: DateTime.now().millisecondsSinceEpoch,
       ));
     }
@@ -13882,9 +14007,23 @@ class AppState extends ChangeNotifier {
     // kept with it, so a block's spans in the vault judge it as they would
     // have on arrival
     int? wrappedAt,
+    Reached? reached,
   }) async {
-    // someone the vault blocked: nothing is sealed to wait for it
-    if (_router.blocks(sender)) return;
+    // someone the vault blocked: nothing of it waits, and nothing is
+    // answered. what they wrote is noted by its uid alone, for the vault to
+    // keep as it would have on arrival, so a copy after an unblock stays
+    // out. sealed like any arrival, the same size as a short one, and gone
+    // first when the cap is reached (kMaxSealedNotes)
+    if (_router.blocks(sender)) {
+      _lastSealAt = DateTime.now().millisecondsSinceEpoch;
+      final key = _dataFrame(env) ? env.msgUid ?? env.mediaId : null;
+      if (key == null || await _router.sealedHas(key, kNotePart)) return;
+      await _router.seal(
+        Unsealed(sender, '', false, _lastSealAt, blockedDrop: key),
+        uid: key,
+      );
+      return;
+    }
     _lastSealAt = DateTime.now().millisecondsSinceEpoch;
     final uid = env.msgUid;
     final total = env.chunkTotal;
@@ -13919,6 +14058,7 @@ class AppState extends ChangeNotifier {
         fromBackPair,
         DateTime.now().millisecondsSinceEpoch,
         wrapped: wrappedAt,
+        reached: reached,
       ),
       uid: uid,
       part: part,
@@ -13929,6 +14069,11 @@ class AppState extends ChangeNotifier {
     }
     if (ticks && await whole()) unawaited(_sendDeliveryReceipt(sender, uid));
   }
+
+  // whether a block on [haloId] in [db] held at [at], by this clock
+  static Future<bool> _blockedThen(HaloDb db, String haloId, int at) async => [
+    ...await db.blockSpansOf(haloId),
+  ].any((s) => s.$1 <= at && (s.$2 == null || s.$2! > at));
 
   // what came for the hidden chats while the vault was shut, oldest first:
   // a batch, a breath, the next. each goes into the vault as if it had just
@@ -13961,6 +14106,17 @@ class AppState extends ChangeNotifier {
             } catch (e) {
               if (!identical(_openVault, vault)) return;
               dlog('unseal: a receipt not kept (${e.runtimeType})');
+            }
+          } else if (u != null && u.blockedDrop != null) {
+            // kept only while a block of theirs here held when it came: a
+            // card that still said blocked after an unblock notes nothing
+            try {
+              if (await _blockedThen(vault, u.from, u.at)) {
+                await vault.noteBlockedDrop(u.from, u.blockedDrop!);
+              }
+            } catch (e) {
+              if (!identical(_openVault, vault)) return;
+              dlog('unseal: a blocked uid not kept (${e.runtimeType})');
             }
           } else if (u != null && u.keyChanged) {
             _keyChangeSealed.remove(u.from);
@@ -14008,6 +14164,7 @@ class AppState extends ChangeNotifier {
                 into: vault,
                 arrivedAt: u.at,
                 wrappedAt: u.wrapped,
+                reached: u.reached,
               );
             } on CapHeld catch (e) {
               // past a stranger's two: on the shelf, let in on accept. a
@@ -15955,7 +16112,7 @@ class AppState extends ChangeNotifier {
   // as it came, to be tried again. one that never opened is struck as any
   // other. the sender counts it in their share, or in the unnamed ones'
   // when a vault hides them. false when it was not kept
-  Future<bool> _keepFirst(String h, String cipher) async {
+  Future<bool> _keepFirst(String h, String cipher, Reached? reached) async {
     final o = _firstOpened[h];
     if (o == null) return false;
     final peer = _routeOf(o.haloId, null) == RouteTo.everyday ? o.haloId : '';
@@ -15967,6 +16124,7 @@ class AppState extends ChangeNotifier {
         peer: peer,
         uid: o.env.msgUid,
         now: now,
+        reached: reached,
       )) {
         firstFails.note('full');
         return false;
@@ -16070,6 +16228,7 @@ class AppState extends ChangeNotifier {
         await _receiveRelayOne(
           (peer: 'firstcontact', cipher: r.cipher),
           () {},
+          reached: r.reached,
           again: true,
         );
         // filed, or turned away for good: seen either way
@@ -16156,7 +16315,10 @@ class AppState extends ChangeNotifier {
   //
   // signal spends the prekey on the open, so one that fails after it is
   // kept as opened and throws: it goes on from there when it comes again
-  Future<(String, RouteTo)?> backPairFromCipher(String cipher) async {
+  Future<(String, RouteTo)?> backPairFromCipher(
+    String cipher, {
+    Reached? reached,
+  }) async {
     final epoch = _openedEpoch;
     final k = sha256.convert(utf8.encode(cipher)).toString();
     // one copy at a time: another is not kept now and comes again
@@ -16169,7 +16331,7 @@ class AppState extends ChangeNotifier {
         if (opened == null) return null;
         o = _FirstOpen(opened.haloId, opened.plain, opened.env);
       }
-      return await _backPairOpened(o);
+      return await _backPairOpened(o, reached);
     } catch (e) {
       if (o != null && epoch == _openedEpoch) {
         _firstOpened.put(k, o);
@@ -16181,7 +16343,10 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  Future<(String, RouteTo)?> _backPairOpened(_FirstOpen opened) async {
+  Future<(String, RouteTo)?> _backPairOpened(
+    _FirstOpen opened,
+    Reached? reached,
+  ) async {
     var h = opened.haloId;
     final env = opened.env;
     // the developer never starts a chat this way, and no one else may
@@ -16250,6 +16415,7 @@ class AppState extends ChangeNotifier {
         env,
         wire: opened.plain,
         fromBackPair: true,
+        reached: reached,
       );
     } on CapHeld catch (e) {
       // the row exists now. kept as opened, let in on accept
@@ -16487,7 +16653,9 @@ class AppState extends ChangeNotifier {
   }
 
   // a block older than kBlockListenFor is listened on no more: the relays
-  // hold nothing from its time now. a key someone else is heard on stays
+  // hold nothing from its time now. a key someone else is heard on stays.
+  // the vault's blocked go by their cards, on the same sweep whether it is
+  // open or shut
   @visibleForTesting
   Future<void> unlistenOldBlocks() async {
     if (sessionQuiet) return;
@@ -16497,9 +16665,13 @@ class AppState extends ChangeNotifier {
         for (final r in await live.blockedRows(now: now))
           if (r['listen'] != 1) r['halo_id'] as String,
       };
-      if (old.isEmpty) return;
+      final hidden = _router.listenFor;
       for (final e in _xPubToHaloId.entries.toList()) {
-        if (!old.contains(e.value) || _router.keeps(e.value)) continue;
+        final kept = _router.keeps(e.value);
+        final gone = kept
+            ? _router.blocks(e.value) && hidden[e.key] != e.value
+            : old.contains(e.value);
+        if (!gone) continue;
         _xPubToHaloId.remove(e.key);
         _io.unlisten(e.key);
       }
@@ -16508,11 +16680,21 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  // when the onion inbox was last taken in full. nothing in it is older
+  // than this start
+  int _onionDrainedAt = DateTime.now().millisecondsSinceEpoch;
+
   // what the onion inbox held. an arrival for a hidden chat while its vault
   // is shut changes nothing here: no refresh, and the transport screen does
   // not count it
   @visibleForTesting
   Future<void> receiveOnion(List<String> ciphers) async {
+    // each drain takes all the inbox holds: what this one brings came here
+    // after the one before it
+    final since = _onionDrainedAt;
+    _onionDrainedAt = DateTime.now().millisecondsSinceEpoch;
+    Reached came() =>
+        (from: since, until: DateTime.now().millisecondsSinceEpoch);
     var noted = false;
     void arrived() {
       if (noted) return;
@@ -16554,7 +16736,12 @@ class AppState extends ChangeNotifier {
         final env = unwrapMessage(known.plain);
         try {
           shown = _shown(
-            await _applyIncomingPayload(known.id, env, wire: known.plain),
+            await _applyIncomingPayload(
+              known.id,
+              env,
+              wire: known.plain,
+              reached: came(),
+            ),
           );
         } on CapHeld catch (e) {
           // no relay to replay from: kept here, let in on accept
@@ -16582,7 +16769,12 @@ class AppState extends ChangeNotifier {
             // proves them, and their client grinds nothing for it. a request
             // again, under the cap and the shelf as any other, as the relay
             // lane has it. only a block keeps them out
-            await _applyIncomingPayload(addr, env, wire: parked.plain);
+            await _applyIncomingPayload(
+              addr,
+              env,
+              wire: parked.plain,
+              reached: came(),
+            );
           } on CapHeld catch (e) {
             await _hold(e is _HeldIn ? e.into : live, addr, parked.plain, env);
           }
@@ -16596,7 +16788,7 @@ class AppState extends ChangeNotifier {
       if (!handled && _isPreKeyWire(cipher)) {
         (String, RouteTo)? paired;
         try {
-          paired = await backPairFromCipher(cipher);
+          paired = await backPairFromCipher(cipher, reached: came());
         } on FirstRefused catch (e) {
           // it never opens here: buried at once
           firstFails.note(e.why);
@@ -16612,7 +16804,7 @@ class AppState extends ChangeNotifier {
         dlog('drain: back-pair ${paired != null ? "ok" : "failed"}');
         // the door acked it already and nothing brings it again: kept on
         // disk as it came, and tried again
-        if (!handled) kept = await _keepFirst(h, cipher);
+        if (!handled) kept = await _keepFirst(h, cipher, came());
       }
       // only now is it safe to burn the dedup hash: the prekey is spent
       // and the message is filed. an unhandled cipher stays un-seen so a
@@ -16633,6 +16825,8 @@ class AppState extends ChangeNotifier {
     List<({String peer, String cipher})> msgs, {
     // when each was wrapped, by the sender's clock, where the lane says
     List<int?> written = const [],
+    // when each reached the relay, by this clock, where the engine says
+    List<Reached?> reached = const [],
     // filled with the places of those a full shelf leaves on the relay,
     // each with the file it is a slice of, or empty
     Map<int, String>? held,
@@ -16668,6 +16862,7 @@ class AppState extends ChangeNotifier {
           (peer: m.peer, cipher: m.cipher),
           arrived,
           wrappedAt: m.at < written.length ? written[m.at] : null,
+          reached: m.at < reached.length ? reached[m.at] : null,
         );
       } on _KnockWaits {
         failed.add(m.at);
@@ -16742,6 +16937,7 @@ class AppState extends ChangeNotifier {
     ({String peer, String cipher}) m,
     void Function() arrived, {
     int? wrappedAt,
+    Reached? reached,
     // a kept opener tried again (retryFirsts): one that fails is not kept
     // a second time
     bool again = false,
@@ -16756,7 +16952,9 @@ class AppState extends ChangeNotifier {
     }
     // his lanes are the dev chat's alone, and only while it runs on them
     if (devKeyOfTag(m.peer) != null) {
-      if (await _receiveDev(m.peer, m.cipher, h, epoch)) notifyListeners();
+      if (await _receiveDev(m.peer, m.cipher, h, epoch, reached)) {
+        notifyListeners();
+      }
       arrived();
       return;
     }
@@ -16766,10 +16964,10 @@ class AppState extends ChangeNotifier {
       // a knock on a room busy with a reset waits on its own, and the
       // inbox goes on. it is offered again until it is seen
       if (m.peer.startsWith('roomfc:') && _roomBusy(m.cipher)) {
-        _knockLater(m.peer, m.cipher, h);
+        _knockLater(m.peer, m.cipher, h, reached);
         throw const _KnockWaits();
       }
-      await _handleRoomFrame(m.peer, m.cipher);
+      await _handleRoomFrame(m.peer, m.cipher, reached: reached);
       await live.markSeen(h);
       notifyListeners();
       arrived();
@@ -16850,7 +17048,7 @@ class AppState extends ChangeNotifier {
       if (opener) {
         final (String, RouteTo)? paired;
         try {
-          paired = await backPairFromCipher(m.cipher);
+          paired = await backPairFromCipher(m.cipher, reached: reached);
         } on FirstRefused catch (e) {
           // it never opens here: buried at once, and acked
           firstFails.note(e.why);
@@ -16862,7 +17060,7 @@ class AppState extends ChangeNotifier {
           // one that threw before it opened, comes again as any failed line
           dlog('nostr: back-pair threw ($e)');
           firstFails.note('file');
-          if (again || await _keepFirst(h, m.cipher)) {
+          if (again || await _keepFirst(h, m.cipher, reached)) {
             throw const _FirstWaits();
           }
           rethrow;
@@ -16878,7 +17076,7 @@ class AppState extends ChangeNotifier {
       if (!landed && fcLane && opener) {
         // one that opened and did not file is kept and not acked; one that
         // never opened is struck below as any other
-        if (again || await _keepFirst(h, m.cipher)) {
+        if (again || await _keepFirst(h, m.cipher, reached)) {
           throw const _FirstWaits();
         }
       }
@@ -16910,6 +17108,7 @@ class AppState extends ChangeNotifier {
         env,
         wire: wrapped,
         wrappedAt: wrappedAt,
+        reached: reached,
       );
     } on CapHeld catch (e) {
       // kept as opened: signal has spent its keys, so accept lets it in
@@ -17373,6 +17572,7 @@ class AppState extends ChangeNotifier {
         final failed = await receiveRelay(
           batch.msgs,
           written: batch.written,
+          reached: batch.reached,
           held: held,
         );
         final keys = held.keys.toList()..sort();
@@ -17575,6 +17775,7 @@ class AppState extends ChangeNotifier {
   // may name someone the everyday app has in the shade
   Future<void> block(String haloId) async {
     await session.setBlocked(haloId, true);
+    await _recardBlock(haloId);
     // an open chat reads its rows again: what waited is not sent now
     _bumpChatRev(haloId);
     await session.dropHeld(haloId);
@@ -17719,7 +17920,7 @@ class AppState extends ChangeNotifier {
   // only once it is in, so one that fails stays for the next run
   Future<void> _letHeldIn(
     String haloId,
-    Future<List<({int id, String cipher})>> Function() rows,
+    Future<List<({int id, String cipher, int at})>> Function() rows,
     Future<void> Function(int id) forget, {
     bool Function()? still,
   }) {
@@ -17739,10 +17940,13 @@ class AppState extends ChangeNotifier {
           final wire = heldWireOf(cipher);
           final plain = wire ?? await _io.decrypt(haloId, cipher);
           if (plain != null) {
+            // judged as it came: a block drops the shelf, so it came
+            // after any that ended
             await _applyIncomingPayload(
               haloId,
               unwrapMessage(plain),
               wire: plain,
+              reached: (from: held.at, until: held.at),
             );
             // one kept as it came: its relay copy is the same cipher
             if (wire == null) {
@@ -17799,6 +18003,9 @@ class AppState extends ChangeNotifier {
   // an unblock listens for them, if nothing did yet
   Future<void> unblock(String haloId) async {
     await session.setBlocked(haloId, false);
+    // the card says so before the vault can shut: one still saying blocked
+    // would turn them away, and note what they send as sent while it held
+    await _recardBlock(haloId);
     if (!sessionQuiet) await subscribePeer(haloId);
     await refreshContacts();
   }
@@ -18156,6 +18363,7 @@ class AppState extends ChangeNotifier {
     String cipher,
     String h,
     int epoch,
+    Reached? reached,
   ) async {
     final DevChatRow? r;
     try {
@@ -18184,7 +18392,12 @@ class AppState extends ChangeNotifier {
     _keepOpened(h, id, plain, epoch);
     final RouteTo went;
     try {
-      went = await _applyIncomingPayload(id, unwrapMessage(plain), wire: plain);
+      went = await _applyIncomingPayload(
+        id,
+        unwrapMessage(plain),
+        wire: plain,
+        reached: reached,
+      );
     } on CapHeld catch (e) {
       // kept as opened, let in on accept
       await _hold(
@@ -19190,10 +19403,10 @@ class AppState extends ChangeNotifier {
   // knocks waiting their room's turn off the inbox, by hash
   final Set<String> _knocks = {};
 
-  void _knockLater(String tag, String content, String h) {
+  void _knockLater(String tag, String content, String h, Reached? reached) {
     if (!_knocks.add(h)) return;
     unawaited(
-      _handleRoomFrame(tag, content)
+      _handleRoomFrame(tag, content, reached: reached)
           .then((_) => live.markSeen(h))
           .then((_) => notifyListeners())
           .catchError((Object e) => dlog('room knock: ${e.runtimeType}'))
@@ -19614,7 +19827,11 @@ class AppState extends ChangeNotifier {
   // a frame off a room subscription. the tag says which room key took it
   // and which member key sent it; the content is the plain envelope, the
   // relay layer already opened the seal.
-  Future<void> _handleRoomFrame(String tag, String content) async {
+  Future<void> _handleRoomFrame(
+    String tag,
+    String content, {
+    Reached? reached,
+  }) async {
     final parts = tag.split(':');
     if (parts.length < 2) return;
     // a knock comes to the room's door: one on a door a reset closed finds
@@ -19669,7 +19886,13 @@ class AppState extends ChangeNotifier {
       return;
     }
     try {
-      await _applyIncomingPayload(from, env, wire: content, late: late);
+      await _applyIncomingPayload(
+        from,
+        env,
+        wire: content,
+        late: late,
+        reached: reached,
+      );
     } on CapHeld {
       // rooms are never strangers; here for completeness
     }

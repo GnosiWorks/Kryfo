@@ -21,7 +21,7 @@ void main() {
 
   test('made on create, and on the upgrade to 74 after every older step', () {
     final version = RegExp(r'version: (\d+),').firstMatch(src)!.group(1)!;
-    expect(int.parse(version), 74);
+    expect(int.parse(version), greaterThanOrEqualTo(74));
     expect(create, contains('await groupResentTables(db);'));
     expect(
       RegExp(
