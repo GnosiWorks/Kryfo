@@ -3486,6 +3486,14 @@ class HaloDb implements GroupOwedStore {
     ]) {
       await db.delete(table, where: 'group_id = ?', whereArgs: [groupId]);
     }
+    // what of it came in and went is known no longer
+    final gone = goneGroupPrefix(groupId);
+    for (final k in {
+      for (final r in await db.query('gone_in', columns: ['peer_id']))
+        if (r['peer_id'] case final String k when k.startsWith(gone)) k,
+    }) {
+      await db.delete('gone_in', where: 'peer_id = ?', whereArgs: [k]);
+    }
     // a take-back still goes to members who may hold the message, after
     // a leave or a remove too: they act on it without the group. a room's
     // keys go with it, and nothing of it could go
@@ -4008,8 +4016,10 @@ class HaloDb implements GroupOwedStore {
   // after a restore reads again. other relays keep what they choose
   static const kGoneFor = Duration(days: 15);
 
-  // the 1:1 rows of these that came in, kept by uid as they go. only what
-  // a resend could still bring: sent within kGoneFor and a day for clocks
+  // the rows of these that came in, kept by uid as they go: a 1:1 one by
+  // its sender, a group's or a room's by its group and sender (goneKey).
+  // only what a resend or the relays could still bring: sent within
+  // kGoneFor and a day for clocks
   static Future<void> _noteGone(
     DatabaseExecutor db,
     Iterable<Map<String, Object?>> rows,
@@ -4022,10 +4032,10 @@ class HaloDb implements GroupOwedStore {
       final peer = r['peer_id'] as String?;
       final sent = (r['sent_at'] as num?)?.toInt();
       if (uid == null || peer == null || r['direction'] != 'in') continue;
-      if (r['group_id'] != null || (sent != null && sent < from)) continue;
+      if (sent != null && sent < from) continue;
       await db.insert('gone_in', {
         'msg_uid': uid,
-        'peer_id': peer,
+        'peer_id': goneKey(peer, group: r['group_id'] as String?),
         'at': now,
       }, conflictAlgorithm: ConflictAlgorithm.replace);
     }
@@ -4385,10 +4395,11 @@ class HaloDb implements GroupOwedStore {
     final db = await open();
     final media = await db.query(
       'messages',
-      columns: _kFileCols,
+      columns: [..._kFileCols, ..._kUnreadCols, ..._kGoneCols],
       where: 'group_id = ?',
       whereArgs: [groupId],
     );
+    await _noteGone(db, media);
     await db.rawDelete(
       'DELETE FROM reactions WHERE msg_uid IN '
       '(SELECT msg_uid FROM messages WHERE group_id = ? AND msg_uid IS NOT NULL)',
@@ -8235,7 +8246,9 @@ Map<String, String> groupReactRow(String uid, String emoji) => {
 
 // a 1:1 message that came in and burned or was deleted here (kGoneFor).
 // a copy sent again, after a restore on the far side say, is known by its
-// uid and sender: acked again and never shown again
+// uid and sender: acked again and never shown again. a group's or a room's
+// is known by its group and sender, read again from the relays after a
+// restore too
 Future<void> _goneTable(DatabaseExecutor db) async {
   await db.execute('''
     CREATE TABLE IF NOT EXISTS gone_in (
@@ -8246,6 +8259,15 @@ Future<void> _goneTable(DatabaseExecutor db) async {
     )
   ''');
 }
+
+/// what a message that came in and went is kept under in gone_in: its
+/// sender, or in a group its group and sender. a hidden group's rows move
+/// with it, and one member's word never stands for another's
+String goneKey(String sender, {String? group}) =>
+    group == null ? sender : 'group:$group:$sender';
+
+/// the gone_in rows of [group]: its own, every sender's
+String goneGroupPrefix(String group) => 'group:$group:';
 
 // an unsend or a reaction in a 1:1 chat that has not reached the other
 // person yet, one of each kind a message and person: the latest word
@@ -14241,6 +14263,14 @@ class AppState extends ChangeNotifier {
         await db.noteTakenBack(senderHaloId, env.unsend!);
         await db.forgetFirstOf(senderHaloId, uid: env.unsend!);
       }
+      // a member's word in a group or a room: its copy the relays still
+      // hold stays away after a restart or a restore
+      if (env.groupId != null && !await db.messageExists(env.unsend!)) {
+        await db.noteTakenBack(
+          goneKey(senderHaloId, group: env.groupId),
+          env.unsend!,
+        );
+      }
       await db.deleteMessage(env.unsend!);
       changed();
       // the delete took its unread mark; its notification goes too
@@ -14445,7 +14475,10 @@ class AppState extends ChangeNotifier {
       // again. buffering it would start a copy that never finishes. one
       // receipt per pass, on the first slice, so the sender can stop. one
       // that went here, deleted or burned, stays gone the same way
-      final gone = !isGroup && await db.goneFrom(senderHaloId, mid);
+      final gone = await db.goneFrom(
+        goneKey(senderHaloId, group: env.groupId),
+        mid,
+      );
       if (gone || await db.messageExists(mid)) {
         if (!isGroup &&
             !unsealing &&
@@ -14549,7 +14582,7 @@ class AppState extends ChangeNotifier {
       final known =
           _inflightUids.contains(uid) ||
           await db.messageExists(uid) ||
-          (!isGroup && await db.goneFrom(senderHaloId, uid));
+          await db.goneFrom(goneKey(senderHaloId, group: env.groupId), uid);
       // a preview-only frame from an older client carries nothing we draw:
       // a sender never gets to put a title or an image on this screen
       final previewOnly =

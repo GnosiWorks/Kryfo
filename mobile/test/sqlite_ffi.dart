@@ -395,3 +395,40 @@ bool holds(Uint8List hay, String needle) {
   }
   return false;
 }
+
+/// the app's whole schema on [db], from the statements in its sources: every
+/// CREATE, then every column added later (one already there is passed
+/// over). the search index is made apart (searchTables), its statement
+/// being built from pieces
+Future<void> appSchemaOn(SqliteMem db) async {
+  final made = <String>[];
+  final added = <String>[];
+  for (final f in const [
+    'lib/main.dart',
+    'lib/router.dart',
+    'lib/devchat/dev_chat.dart',
+    'lib/devchat/support.dart',
+  ]) {
+    final src = File(f).readAsStringSync();
+    for (final m in RegExp(
+      r"'''([\s\S]*?)'''|'((?:[^'\\\n]|\\.)*)'",
+    ).allMatches(src)) {
+      final sql = (m.group(1) ?? m.group(2)!)
+          .replaceAll(r'${prefix}', '')
+          .trim();
+      if (sql.contains(r'$')) continue;
+      if (RegExp(r'^CREATE (TABLE|INDEX|UNIQUE INDEX)').hasMatch(sql)) {
+        made.add(sql);
+      } else if (sql.startsWith('ALTER TABLE')) {
+        added.add(sql);
+      }
+    }
+  }
+  for (final sql in [...made, ...added]) {
+    try {
+      await db.execute(sql);
+    } catch (_) {
+      // made already, a piece of a longer one, or a column already there
+    }
+  }
+}
