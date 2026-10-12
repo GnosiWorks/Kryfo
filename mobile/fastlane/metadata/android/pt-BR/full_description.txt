@@ -1,7 +1,7 @@
 Um mensageiro privado. Sem número de telefone, sem e-mail, sem conta. Você é um
-par de chaves gerado no seu aparelho. Ninguém, nem mesmo nós, consegue ligar
-suas conversas a uma identidade real, e só dá para buscar você se você reservar
-um nome de usuário público.
+par de chaves gerado no seu aparelho. Na rota padrão, ninguém, nem mesmo nós,
+consegue ligar suas conversas a uma identidade real, e só dá para buscar você
+se você reservar um nome de usuário público.
 
 Por padrão, tudo passa pelo Tor. O conteúdo é criptografado de ponta a ponta com
 o protocolo Signal. As mensagens passam por retransmissores, lacradas para que

@@ -1,7 +1,7 @@
 Gizli bir mesajlaşma uygulaması. Telefon numarası yok, e-posta yok, hesap yok.
-Sen, cihazında üretilmiş bir anahtar çiftisin. Biz dahil hiç kimse
-sohbetlerini gerçek bir kimliğe bağlayamaz. Ancak genel bir kullanıcı adı
-alırsan aranıp bulunabilirsin.
+Sen, cihazında üretilmiş bir anahtar çiftisin. Varsayılan rotada biz dahil hiç
+kimse sohbetlerini gerçek bir kimliğe bağlayamaz. Ancak genel bir kullanıcı
+adı alırsan aranıp bulunabilirsin.
 
 Varsayılan olarak her şey Tor üzerinden gider. İçerik, Signal protokolüyle
 uçtan uca şifrelenir. Mesajlar aktarıcılar üzerinden gider; hiçbir aktarıcı

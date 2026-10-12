@@ -1,7 +1,7 @@
 Ein privater Messenger. Keine Telefonnummer, keine E-Mail, kein Konto. Du bist
-ein Schlüsselpaar, erzeugt auf deinem Gerät. Niemand, auch wir nicht, kann
-deine Chats mit einer echten Identität verknüpfen, und suchen kann man dich
-nur, wenn du dir einen öffentlichen Benutzernamen sicherst.
+ein Schlüsselpaar, erzeugt auf deinem Gerät. Auf dem Standardweg kann niemand,
+auch wir nicht, deine Chats mit einer echten Identität verknüpfen, und suchen
+kann man dich nur, wenn du dir einen öffentlichen Benutzernamen sicherst.
 
 Standardmäßig läuft alles über Tor. Inhalte sind mit dem Signal-Protokoll
 Ende-zu-Ende-verschlüsselt. Nachrichten laufen über Relais, versiegelt, sodass

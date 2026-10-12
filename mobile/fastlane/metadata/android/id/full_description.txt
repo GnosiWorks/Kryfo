@@ -1,7 +1,8 @@
 Aplikasi pesan privat. Tanpa nomor telepon, tanpa email, tanpa akun. Kamu
-adalah sepasang kunci yang dibuat di perangkatmu. Tidak ada seorang pun,
-termasuk kami, yang bisa mengaitkan obrolanmu dengan identitas asli, dan
-kamu hanya bisa dicari kalau kamu mengklaim nama pengguna publik.
+adalah sepasang kunci yang dibuat di perangkatmu. Di jalur bawaan, tidak
+ada seorang pun, termasuk kami, yang bisa mengaitkan obrolanmu dengan
+identitas asli, dan kamu hanya bisa dicari kalau kamu mengklaim nama
+pengguna publik.
 
 Secara bawaan, semuanya berjalan lewat Tor. Isi pesan terenkripsi ujung
 ke ujung dengan protokol Signal. Pesan berjalan lewat relay, tersegel

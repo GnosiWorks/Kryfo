@@ -1,8 +1,8 @@
 Ứng dụng nhắn tin riêng tư. Không số điện thoại, không email, không tài
-khoản. Bạn là một cặp khóa được tạo trên thiết bị của bạn. Không ai, kể cả
-chúng tôi, có thể gắn các cuộc trò chuyện của bạn với một danh tính thật,
-và chỉ khi bạn đăng ký tên người dùng công khai, người khác mới tìm được
-bạn.
+khoản. Bạn là một cặp khóa được tạo trên thiết bị của bạn. Trên đường đi
+mặc định, không ai, kể cả chúng tôi, có thể gắn các cuộc trò chuyện của
+bạn với một danh tính thật, và chỉ khi bạn đăng ký tên người dùng công
+khai, người khác mới tìm được bạn.
 
 Theo mặc định, mọi thứ đều đi qua Tor. Nội dung được mã hóa đầu cuối bằng
 giao thức Signal. Tin nhắn đi qua các relay, được mã hóa kín để không relay
